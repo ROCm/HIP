@@ -121,7 +121,7 @@ unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N);
 
 
 template <typename T>
-__global__ void vectorADD(hipLaunchParm lp, const T* A_d, const T* B_d, T* C_d, size_t NELEM) {
+__global__ void vectorADD(const T* A_d, const T* B_d, T* C_d, size_t NELEM) {
     size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
     size_t stride = blockDim.x * gridDim.x;
 
@@ -132,7 +132,7 @@ __global__ void vectorADD(hipLaunchParm lp, const T* A_d, const T* B_d, T* C_d, 
 
 
 template <typename T>
-__global__ void vectorADDReverse(hipLaunchParm lp, const T* A_d, const T* B_d, T* C_d,
+__global__ void vectorADDReverse(const T* A_d, const T* B_d, T* C_d,
                                  size_t NELEM) {
     size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
     size_t stride = blockDim.x * gridDim.x;

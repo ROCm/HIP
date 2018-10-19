@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
-__global__ void vadd_hip(hipLaunchParm lp, const float* a, const float* b, float* c, int N) {
+__global__ void vadd_hip(const float* a, const float* b, float* c, int N) {
     int idx = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
 
     if (idx < N) {
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
     // Launch kernel onto default accelerator
     int blockSize = 256;                                      // pick arbitrary block size
     int blocks = (sizeElements + blockSize - 1) / blockSize;  // round up to launch enough blocks
-    hipLaunchKernel(vadd_hip, dim3(blocks), dim3(blockSize), 0, 0, A_d, B_d, C_d, sizeElements);
+    hipLaunchKernelGGL(vadd_hip, dim3(blocks), dim3(blockSize), 0, 0, A_d, B_d, C_d, sizeElements);
 
     // D2H Copy
     hipMemcpy(C_h, C_d, sizeBytes, hipMemcpyDeviceToHost);

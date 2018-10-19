@@ -64,7 +64,7 @@ T bitreverse(T num) {
     return reverse_num;
 }
 
-__global__ void HIP_kernel(hipLaunchParm lp, unsigned int* a, unsigned int* b,
+__global__ void HIP_kernel(unsigned int* a, unsigned int* b,
                            unsigned long long int* c, unsigned long long int* d, int width,
                            int height) {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
@@ -124,7 +124,7 @@ int main() {
         hipMemcpy(deviceD, hostD, NUM * sizeof(unsigned long long int), hipMemcpyHostToDevice));
 
 
-    hipLaunchKernel(HIP_kernel, dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
+    hipLaunchKernelGGL(HIP_kernel, dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, deviceA, deviceB, deviceC,
                     deviceD, WIDTH, HEIGHT);
 
