@@ -687,7 +687,11 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX900__=1 ";
     }
     if ($target_gfx906 eq 1) {
-        $HIPLDFLAGS .= " --amdgpu-target=gfx906";
+        $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx906";
+        $HIPLDFLAGS .= $GPU_ARCH_ARG;
+        if ($HIP_PLATFORM eq 'clang') {
+            $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
+        }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX906__=1 ";
     }
 }
