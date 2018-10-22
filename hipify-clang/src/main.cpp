@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include <chrono>
 #include <iomanip>
 #include <sstream>
-#include "CUDA2HipMap.h"
+#include "CUDA2HIP.h"
 #include "LLVMCompat.h"
 #include "HipifyAction.h"
 #include "ArgParse.h"
