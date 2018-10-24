@@ -28,6 +28,20 @@ THE SOFTWARE.
 static amd::Monitor streamSetLock("Guards global stream set");
 static std::unordered_set<amd::HostQueue*> streamSet;
 
+// Internal structure for stream callback handler
+class StreamCallback {
+   public:
+    StreamCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
+                  amd::Command* command)
+        : stream_(stream), callBack_(callback),
+          userData_(userData), command_(command) {
+        };
+    hipStream_t stream_;
+    hipStreamCallback_t callBack_;
+    void* userData_;
+    amd::Command* command_;
+};
+
 namespace hip {
 
 void syncStreams() {
@@ -39,6 +53,15 @@ void syncStreams() {
 }
 
 };
+
+void ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data) {
+
+  hipError_t status = hipSuccess;
+  StreamCallback* cbo = reinterpret_cast<StreamCallback*>(user_data);
+  cbo->callBack_(cbo->stream_, status, cbo->userData_);
+  cbo->command_->release();
+  delete cbo;
+}
 
 static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   amd::Device* device = hip::getCurrentContext()->devices()[0];
@@ -64,15 +87,6 @@ static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int fl
   *stream = reinterpret_cast<hipStream_t>(as_cl(queue));
 
   return hipSuccess;
-}
-
-
-void ihipStreamCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData) {
-    //Stream synchronize
-    hipError_t status = hipStreamSynchronize(stream);
-
-    // Call the callback function
-    callback(stream, status, userData);
 }
 
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
@@ -189,7 +203,18 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
                                 unsigned int flags) {
   HIP_INIT_API(stream, callback, userData, flags);
 
-  std::thread (ihipStreamCallback, stream, callback, userData).detach();
+  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>
+                              (stream))->asHostQueue();
+  amd::Command* command = hostQueue->getLastQueuedCommand(true);
+  amd::Event& event = command->event();
+  StreamCallback* cbo = new StreamCallback(stream, callback, userData, command);
+
+  if(!event.setCallback(CL_COMPLETE, ihipStreamCallback, reinterpret_cast<void*>(cbo))) {
+    command->release();
+    return hipErrorInvalidResourceHandle;
+  }
+
+  event.notifyCmdQueue();
 
   HIP_RETURN(hipSuccess);
 }
