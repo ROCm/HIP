@@ -23,7 +23,7 @@ set(CMAKE_CXX_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang++)
 set(CMAKE_C_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang)
 
 # Link against LLVM and CLANG libraries
-target_link_libraries(hipify-clang
+target_link_libraries(hipify-clang PRIVATE
     clangASTMatchers
     clangFrontend
     clangTooling
@@ -48,11 +48,11 @@ target_link_libraries(hipify-clang
     LLVMCore)
 
 if(WIN32)
-    target_link_libraries(hipify-clang version)
+    target_link_libraries(hipify-clang PRIVATE version)
 endif()
 
 if ((LLVM_PACKAGE_VERSION VERSION_EQUAL "7") OR (LLVM_PACKAGE_VERSION VERSION_GREATER "7"))
-    target_link_libraries(hipify-clang clangToolingInclusions)
+    target_link_libraries(hipify-clang PRIVATE clangToolingInclusions)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
