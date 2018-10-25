@@ -297,9 +297,16 @@ float __shfl(float var, int src_lane, int width = warpSize) {
 __device__
 inline
 double __shfl(double var, int src_lane, int width = warpSize) {
-    __u tmp; tmp.f = (float) var;
-    tmp.i = __shfl(tmp.i, src_lane, width);
-    return (double) tmp.f;
+    static_assert(sizeof(double) == 2 * sizeof(int), "");
+    static_assert(sizeof(double) == sizeof(uint64_t), "");
+
+    int tmp[2]; __builtin_memcpy(tmp, &var, sizeof(tmp));
+    tmp[0] = __shfl(tmp[0], src_lane, width);
+    tmp[1] = __shfl(tmp[1], src_lane, width);
+
+    uint64_t tmp0 = (static_cast<uint64_t>(tmp[1]) << 32ull) | static_cast<uint32_t>(tmp[0]);
+    double tmp1;  __builtin_memcpy(&tmp1, &tmp0, sizeof(tmp0));
+    return tmp1;
 }
 
  __device__
@@ -327,9 +334,16 @@ float __shfl_up(float var, unsigned int lane_delta, int width = warpSize) {
 __device__
 inline
 double __shfl_up(double var, unsigned int lane_delta, int width = warpSize) {
-    __u tmp; tmp.f = (float) var;
-    tmp.i = __shfl_up(tmp.i, lane_delta, width);
-    return (double) tmp.f;
+    static_assert(sizeof(double) == 2 * sizeof(int), "");
+    static_assert(sizeof(double) == sizeof(uint64_t), "");
+
+    int tmp[2]; __builtin_memcpy(tmp, &var, sizeof(tmp));
+    tmp[0] = __shfl_up(tmp[0], lane_delta, width);
+    tmp[1] = __shfl_up(tmp[1], lane_delta, width);
+
+    uint64_t tmp0 = (static_cast<uint64_t>(tmp[1]) << 32ull) | static_cast<uint32_t>(tmp[0]);
+    double tmp1;  __builtin_memcpy(&tmp1, &tmp0, sizeof(tmp0));
+    return tmp1;
 }
 
 __device__
@@ -357,9 +371,16 @@ float __shfl_down(float var, unsigned int lane_delta, int width = warpSize) {
 __device__
 inline
 double __shfl_down(double var, unsigned int lane_delta, int width = warpSize) {
-    __u tmp; tmp.f = (float) var;
-    tmp.i = __shfl_down(tmp.i, lane_delta, width);
-    return (double) tmp.f;
+    static_assert(sizeof(double) == 2 * sizeof(int), "");
+    static_assert(sizeof(double) == sizeof(uint64_t), "");
+
+    int tmp[2]; __builtin_memcpy(tmp, &var, sizeof(tmp));
+    tmp[0] = __shfl_down(tmp[0], lane_delta, width);
+    tmp[1] = __shfl_down(tmp[1], lane_delta, width);
+
+    uint64_t tmp0 = (static_cast<uint64_t>(tmp[1]) << 32ull) | static_cast<uint32_t>(tmp[0]);
+    double tmp1;  __builtin_memcpy(&tmp1, &tmp0, sizeof(tmp0));
+    return tmp1;
 }
 
 __device__
@@ -387,9 +408,16 @@ float __shfl_xor(float var, int lane_mask, int width = warpSize) {
 __device__
 inline
 double __shfl_xor(double var, int lane_mask, int width = warpSize) {
-    __u tmp; tmp.f = (float) var;
-    tmp.i = __shfl_xor(tmp.i, lane_mask, width);
-    return (double) tmp.f;
+    static_assert(sizeof(double) == 2 * sizeof(int), "");
+    static_assert(sizeof(double) == sizeof(uint64_t), "");
+
+    int tmp[2]; __builtin_memcpy(tmp, &var, sizeof(tmp));
+    tmp[0] = __shfl_xor(tmp[0], lane_mask, width);
+    tmp[1] = __shfl_xor(tmp[1], lane_mask, width);
+
+    uint64_t tmp0 = (static_cast<uint64_t>(tmp[1]) << 32ull) | static_cast<uint32_t>(tmp[0]);
+    double tmp1;  __builtin_memcpy(&tmp1, &tmp0, sizeof(tmp0));
+    return tmp1;
 }
 
 #define MASK1 0x00ff00ff
@@ -751,6 +779,80 @@ inline
 void *__amdgcn_get_dynamicgroupbaseptr() {
     return __get_dynamicgroupbaseptr();
 }
+
+#if defined(__HCC__) && (__hcc_minor__ < 3)
+// hip.amdgcn.bc - sync threads
+#define __CLK_LOCAL_MEM_FENCE    0x01
+typedef unsigned __cl_mem_fence_flags;
+
+typedef enum __memory_scope {
+  __memory_scope_work_item = __OPENCL_MEMORY_SCOPE_WORK_ITEM,
+  __memory_scope_work_group = __OPENCL_MEMORY_SCOPE_WORK_GROUP,
+  __memory_scope_device = __OPENCL_MEMORY_SCOPE_DEVICE,
+  __memory_scope_all_svm_devices = __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES,
+  __memory_scope_sub_group = __OPENCL_MEMORY_SCOPE_SUB_GROUP
+} __memory_scope;
+
+// enum values aligned with what clang uses in EmitAtomicExpr()
+typedef enum __memory_order
+{
+  __memory_order_relaxed = __ATOMIC_RELAXED,
+  __memory_order_acquire = __ATOMIC_ACQUIRE,
+  __memory_order_release = __ATOMIC_RELEASE,
+  __memory_order_acq_rel = __ATOMIC_ACQ_REL,
+  __memory_order_seq_cst = __ATOMIC_SEQ_CST
+} __memory_order;
+
+__device__
+inline
+static void
+__atomic_work_item_fence(__cl_mem_fence_flags flags, __memory_order order, __memory_scope scope)
+{
+    // We're tying global-happens-before and local-happens-before together as does HSA
+    if (order != __memory_order_relaxed) {
+        switch (scope) {
+        case __memory_scope_work_item:
+            break;
+        case __memory_scope_sub_group:
+            switch (order) {
+            case __memory_order_relaxed: break;
+            case __memory_order_acquire: __llvm_fence_acq_sg(); break;
+            case __memory_order_release: __llvm_fence_rel_sg(); break;
+            case __memory_order_acq_rel: __llvm_fence_ar_sg(); break;
+            case __memory_order_seq_cst: __llvm_fence_sc_sg(); break;
+            }
+            break;
+        case __memory_scope_work_group:
+            switch (order) {
+            case __memory_order_relaxed: break;
+            case __memory_order_acquire: __llvm_fence_acq_wg(); break;
+            case __memory_order_release: __llvm_fence_rel_wg(); break;
+            case __memory_order_acq_rel: __llvm_fence_ar_wg(); break;
+            case __memory_order_seq_cst: __llvm_fence_sc_wg(); break;
+            }
+            break;
+        case __memory_scope_device:
+            switch (order) {
+            case __memory_order_relaxed: break;
+            case __memory_order_acquire: __llvm_fence_acq_dev(); break;
+            case __memory_order_release: __llvm_fence_rel_dev(); break;
+            case __memory_order_acq_rel: __llvm_fence_ar_dev(); break;
+            case __memory_order_seq_cst: __llvm_fence_sc_dev(); break;
+            }
+            break;
+        case __memory_scope_all_svm_devices:
+            switch (order) {
+            case __memory_order_relaxed: break;
+            case __memory_order_acquire: __llvm_fence_acq_sys(); break;
+            case __memory_order_release: __llvm_fence_rel_sys(); break;
+            case __memory_order_acq_rel: __llvm_fence_ar_sys(); break;
+            case __memory_order_seq_cst: __llvm_fence_sc_sys(); break;
+            }
+            break;
+        }
+    }
+}
+#endif
 
 // Memory Fence Functions
 __device__
