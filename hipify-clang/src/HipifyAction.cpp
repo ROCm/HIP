@@ -4,7 +4,7 @@
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
 #include "LLVMCompat.h"
-#include "CUDA2HipMap.h"
+#include "CUDA2HIP.h"
 #include "StringUtils.h"
 #include "ArgParse.h"
 
