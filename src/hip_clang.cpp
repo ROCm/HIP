@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include <unordered_map>
 #include <string>
+#include <fstream>
 
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
@@ -112,6 +113,16 @@ __hipRegisterFatBinary(const void* data)
       if (module->executable.handle) {
         modules->at(deviceId) = module;
         tprintf(DB_FB, "Loaded code object for %s\n", name);
+        if (HIP_DUMP_CODE_OBJECT) {
+          char fname[30];
+          static std::atomic<int> index;
+          sprintf(fname, "__hip_dump_code_object%04d.o", index++);
+          tprintf(DB_FB, "Dump code object %s\n", fname);
+          std::ofstream ofs;
+          ofs.open(fname, std::ios::binary);
+          ofs << image;
+          ofs.close();
+        }
       } else {
         fprintf(stderr, "Failed to load code object for %s\n", name);
         abort();
