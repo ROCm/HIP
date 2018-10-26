@@ -30,11 +30,7 @@
 ## <a name="dependencies"></a> Dependencies
 
 `hipify-clang` requires:
-1. LLVM+CLANG of at least version 3.8.0, latest stable and recommended releases:
-   
-   6.0.1 (linux and windows),
-
-   7.0.0 (linux only).
+1. LLVM+CLANG of at least version 3.8.0, latest stable and recommended release: 6.0.1 (linux and windows).
 
 2. CUDA at least version 7.5, latest supported release is 9.2.
 
@@ -50,8 +46,8 @@
 | 5.0.1                    | 8.0                               |
 | 5.0.2                    | 8.0                               |
 | 6.0.0                    | 9.0                               |
-| 6.0.1                    | 9.0                               |
-| 7.0.0                    | 9.2                               | linux only |
+| **6.0.1**                | **9.0**                           | **LATEST STABLE RELEASE** |
+| 7.0.0                    | 9.2                               | windows is not supported, on linux there is a clang bug: https://bugs.llvm.org/show_bug.cgi?id=36384  |
 |                          | 10.0                              | not yet supported |
 
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
@@ -77,10 +73,10 @@ cmake \
 
 make -j install
 ```
-On Windows the following option should be specified for `cmake` at first place: `-G "Visual Studio 15 2017 Win64"` and after `cmake` the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make`.
+On Windows, the following option should be specified for `cmake` at first place: `-G "Visual Studio 15 2017 Win64"`; the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make.`
 
-Debug build type `-DCMAKE_BUILD_TYPE=Debug` is also supported and tested, `LLVM+CLANG` should be built in `Debug` mode as well.
-64 bit build mode `-Thost=x64` is supported as well, `LLVM+CLANG` should be built (installed) in 64bit mode as well.
+Debug build type `-DCMAKE_BUILD_TYPE=Debug` is also supported and tested; `LLVM+CLANG` should be built in `Debug` mode as well.
+64 bit build mode `-Thost=x64` is supported as well; `LLVM+CLANG` should be built in 64bit mode as well.
 
 The binary can then be found at `./dist/bin/hipify-clang`.
 
@@ -108,11 +104,11 @@ To run it:
 
     make -j install
     ```
-    On Windows the following option should be specified for `cmake` at first place: `-G "Visual Studio 15 2017 Win64"` and after `cmake` the generated `LLVM.sln` should be built by `Visual Studio 15 2017` instead of `make`.
+    On Windows the following option should be specified for `cmake` at first place: `-G "Visual Studio 15 2017 Win64"`; the generated `LLVM.sln` should be built by `Visual Studio 15 2017` instead of `make`.
 
 3. Ensure [`CUDA`](https://developer.nvidia.com/cuda-toolkit-archive) of minimum version 7.5 is installed.
 
-    * Having multiple CUDA installations in order to choose a concrete version the `DCUDA_TOOLKIT_ROOT_DIR` option should be specified:
+    * Having multiple CUDA installations, in order to choose a particular version the `DCUDA_TOOLKIT_ROOT_DIR` option should be specified:
 
       `-DCUDA_TOOLKIT_ROOT_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0"`
 
@@ -127,7 +123,9 @@ To run it:
       `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.1`
 
 5. Ensure [`python`](https://www.python.org/downloads) of minimum required version 2.7 is installed.
+
 6. Ensure `lit` and `FileCheck` are installed - these are distributed with LLVM.
+
     * installing `lit` into `python` might be required:
 
       `python f:/LLVM/6.0.1/llvm/utils/lit/setup.py install`,
@@ -139,7 +137,9 @@ To run it:
       `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.1/build/Release/bin/llvm-lit.py`,
 
       where `f:/LLVM/6.0.1/build/Release` is LLVM build directory.
+
 7. Build with the `HIPIFY_CLANG_TESTS` option turned on: -DHIPIFY_CLANG_TESTS=1.
+
 8. `make test-hipify`
 
     On Windows after `cmake` the project `test-hipify` in the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make test-hipify`.
@@ -178,7 +178,7 @@ A corresponding successful output:
 --    - CMake module path: F:/LLVM/6.0.1/dist/lib/cmake/llvm
 --    - Include path     : F:/LLVM/6.0.1/dist/include
 --    - Binary path      : F:/LLVM/6.0.1/dist/bin
--- Found PythonInterp: C:/Program Files/Python36/python.exe (found suitable version "3.6.4", minimum required is "2.7")
+-- Found PythonInterp: C:/Program Files/Python36/python.exe (found suitable version "3.6.4", minimum required is "3.6")
 -- Found lit: C:/Program Files/Python36/Scripts/lit.exe
 -- Found FileCheck: F:/LLVM/6.0.1/dist/bin/FileCheck.exe
 -- Found CUDA: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0 (found version "9.0")
