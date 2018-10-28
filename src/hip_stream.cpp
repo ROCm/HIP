@@ -31,12 +31,21 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // Stream
 //
+#if defined(__HCC__) && (__hcc_minor__ < 3)
+enum queue_priority
+{
+    priority_high = 0,
+    priority_normal = 0,
+    priority_low = 0
+};
+#else
 enum queue_priority
 {
     priority_high = Kalmar::priority_high,
     priority_normal = Kalmar::priority_normal,
     priority_low = Kalmar::priority_low
 };
+#endif
 
 //---
 hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags, int priority) {
@@ -59,7 +68,11 @@ hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags, int priorit
                 // Obtain mutex access to the device critical data, release by destructor
                 LockedAccessor_CtxCrit_t ctxCrit(ctx->criticalData());
 
+#if defined(__HCC__) && (__hcc_minor__ < 3)
+                auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
+#else
                 auto istream = new ihipStream_t(ctx, acc.create_view(Kalmar::execute_in_order, Kalmar::queuing_mode_automatic, (Kalmar::queue_priority)priority), flags);
+#endif
 
                 ctxCrit->addStream(istream);
                 *stream = istream;
@@ -223,8 +236,12 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
     } else if (stream == hipStreamNull) {
         return ihipLogStatus(hipErrorInvalidResourceHandle);
     } else {
+#if defined(__HCC__) && (__hcc_minor__ < 3)
+        *priority = 0;
+#else
         LockedAccessor_StreamCrit_t crit(stream->_criticalData);
         *priority = crit->_av.get_queue_priority();
+#endif
         return ihipLogStatus(hipSuccess);
     }
 }
