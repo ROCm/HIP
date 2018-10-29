@@ -90,21 +90,21 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuEventSynchronize",      {"hipEventSynchronize",   CONV_EVENT, API_DRIVER}},
 
   // External Resource Interoperability
-  {"cuSignalExternalSemaphoresAsync",          {"hipSignalExternalSemaphoresAsync",          CONV_EXTERNAL_RES, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuWaitExternalSemaphoresAsync",            {"hipWaitExternalSemaphoresAsync",            CONV_EXTERNAL_RES, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuImportExternalMemory",                   {"hipImportExternalMemory",                   CONV_EXTERNAL_RES, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuExternalMemoryGetMappedBuffer",          {"hipExternalMemoryGetMappedBuffer",          CONV_EXTERNAL_RES, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuExternalMemoryGetMappedMipmappedArray",  {"hipExternalMemoryGetMappedMipmappedArray",  CONV_EXTERNAL_RES, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuDestroyExternalMemory",                  {"hipDestroyExternalMemory",                  CONV_EXTERNAL_RES, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuImportExternalSemaphore",                {"hipImportExternalSemaphore",                CONV_EXTERNAL_RES, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuDestroyExternalSemaphore",               {"hipDestroyExternalSemaphore",               CONV_EXTERNAL_RES, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuSignalExternalSemaphoresAsync",          {"hipSignalExternalSemaphoresAsync",          CONV_EXT_RES, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuWaitExternalSemaphoresAsync",            {"hipWaitExternalSemaphoresAsync",            CONV_EXT_RES, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuImportExternalMemory",                   {"hipImportExternalMemory",                   CONV_EXT_RES, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuExternalMemoryGetMappedBuffer",          {"hipExternalMemoryGetMappedBuffer",          CONV_EXT_RES, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuExternalMemoryGetMappedMipmappedArray",  {"hipExternalMemoryGetMappedMipmappedArray",  CONV_EXT_RES, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuDestroyExternalMemory",                  {"hipDestroyExternalMemory",                  CONV_EXT_RES, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuImportExternalSemaphore",                {"hipImportExternalSemaphore",                CONV_EXT_RES, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuDestroyExternalSemaphore",               {"hipDestroyExternalSemaphore",               CONV_EXT_RES, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Execution Control
-  {"cuFuncGetAttribute",       {"hipFuncGetAttribute",       CONV_EXEC, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuFuncSetCacheConfig",     {"hipFuncSetCacheConfig",     CONV_EXEC, API_DRIVER}},
-  {"cuFuncSetSharedMemConfig", {"hipFuncSetSharedMemConfig", CONV_EXEC, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuLaunchKernel",           {"hipModuleLaunchKernel",     CONV_EXEC, API_DRIVER}},
-  {"cuLaunchHostFunc",         {"hipLaunchHostFunc",         CONV_EXEC, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuFuncGetAttribute",       {"hipFuncGetAttribute",       CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuFuncSetCacheConfig",     {"hipFuncSetCacheConfig",     CONV_EXECUTION, API_DRIVER}},
+  {"cuFuncSetSharedMemConfig", {"hipFuncSetSharedMemConfig", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuLaunchKernel",           {"hipModuleLaunchKernel",     CONV_EXECUTION, API_DRIVER}},
+  {"cuLaunchHostFunc",         {"hipLaunchHostFunc",         CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Execution Control [DEPRECATED]
   {"cuFuncSetBlockShape", {"hipFuncSetBlockShape", CONV_MODULE, API_DRIVER, HIP_UNSUPPORTED}},
@@ -178,125 +178,125 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuStreamIsCapturing",        {"hipStreamIsCapturing",        CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Memory management
-  {"cuArray3DCreate",           {"hipArray3DCreate",           CONV_MEM, API_DRIVER}},
-  {"cuArray3DGetDescriptor",    {"hipArray3DGetDescriptor",    CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuArrayCreate",             {"hipArrayCreate",             CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuArrayDestroy",            {"hipArrayDestroy",            CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuArrayGetDescriptor",      {"hipArrayGetDescriptor",      CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuIpcCloseMemHandle",       {"hipIpcCloseMemHandle",       CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuIpcGetEventHandle",       {"hipIpcGetEventHandle",       CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuIpcGetMemHandle",         {"hipIpcGetMemHandle",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuIpcOpenEventHandle",      {"hipIpcOpenEventHandle",      CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuIpcOpenMemHandle",        {"hipIpcOpenMemHandle",        CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemAlloc_v2",             {"hipMalloc",                  CONV_MEM, API_DRIVER}},
-  {"cuMemAllocHost",            {"hipMemAllocHost",            CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemAllocManaged",         {"hipMemAllocManaged",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemAllocPitch",           {"hipMemAllocPitch__",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemAllocPitch due to different signatures
-  {"cuMemcpy",                  {"hipMemcpy__",                CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy due to different signatures
-  {"cuMemcpy2D",                {"hipMemcpy2D__",              CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy2D due to different signatures
-  {"cuMemcpy2DAsync",           {"hipMemcpy2DAsync__",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy2DAsync due to different signatures
-  {"cuMemcpy2DUnaligned",       {"hipMemcpy2DUnaligned",       CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpy3D",                {"hipMemcpy3D__",              CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy3D due to different signatures
-  {"cuMemcpy3DAsync",           {"hipMemcpy3DAsync__",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy3DAsync due to different signatures
-  {"cuMemcpy3DPeer",            {"hipMemcpy3DPeer__",          CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy3DPeer due to different signatures
-  {"cuMemcpy3DPeerAsync",       {"hipMemcpy3DPeerAsync__",     CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy3DPeerAsync due to different signatures
-  {"cuMemcpyAsync",             {"hipMemcpyAsync__",           CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpyAsync due to different signatures
-  {"cuMemcpyAtoA",              {"hipMemcpyAtoA",              CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpyAtoD",              {"hipMemcpyAtoD",              CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpyAtoH",              {"hipMemcpyAtoH",              CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpyAtoHAsync",         {"hipMemcpyAtoHAsync",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpyDtoA",              {"hipMemcpyDtoA",              CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpyDtoD_v2",           {"hipMemcpyDtoD",              CONV_MEM, API_DRIVER}},
-  {"cuMemcpyDtoDAsync_v2",      {"hipMemcpyDtoDAsync",         CONV_MEM, API_DRIVER}},
-  {"cuMemcpyDtoH_v2",           {"hipMemcpyDtoH",              CONV_MEM, API_DRIVER}},
-  {"cuMemcpyDtoHAsync_v2",      {"hipMemcpyDtoHAsync",         CONV_MEM, API_DRIVER}},
-  {"cuMemcpyHtoA",              {"hipMemcpyHtoA",              CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpyHtoAAsync",         {"hipMemcpyHtoAAsync",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpyHtoD_v2",           {"hipMemcpyHtoD",              CONV_MEM, API_DRIVER}},
-  {"cuMemcpyHtoDAsync_v2",      {"hipMemcpyHtoDAsync",         CONV_MEM, API_DRIVER}},
-  {"cuMemcpyPeerAsync",         {"hipMemcpyPeerAsync__",       CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpyPeerAsync due to different signatures
-  {"cuMemcpyPeer",              {"hipMemcpyPeer__",            CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpyPeer due to different signatures
-  {"cuMemFree_v2",              {"hipFree",                    CONV_MEM, API_DRIVER}},
-  {"cuMemFreeHost",             {"hipHostFree",                CONV_MEM, API_DRIVER}},
-  {"cuMemGetAddressRange",      {"hipMemGetAddressRange",      CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemGetInfo_v2",           {"hipMemGetInfo",              CONV_MEM, API_DRIVER}},
-  {"cuMemHostAlloc",            {"hipHostMalloc",              CONV_MEM, API_DRIVER}},    // API_Runtime ANALOGUE (cudaHostAlloc)
-  {"cuMemHostGetDevicePointer", {"hipMemHostGetDevicePointer", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemHostGetFlags",         {"hipMemHostGetFlags",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemHostRegister_v2",      {"hipHostRegister",            CONV_MEM, API_DRIVER}},    // API_Runtime ANALOGUE (cudaHostAlloc)
-  {"cuMemHostUnregister",       {"hipHostUnregister",          CONV_MEM, API_DRIVER}},    // API_Runtime ANALOGUE (cudaHostUnregister)
-  {"cuMemsetD16_v2",            {"hipMemsetD16",               CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD16Async",          {"hipMemsetD16Async",          CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD2D16_v2",          {"hipMemsetD2D16",             CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD2D16Async",        {"hipMemsetD2D16Async",        CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD2D32_v2",          {"hipMemsetD2D32",             CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD2D32Async",        {"hipMemsetD2D32Async",        CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD2D8_v2",           {"hipMemsetD2D8",              CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD2D8Async",         {"hipMemsetD2D8Async",         CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD32_v2",            {"hipMemset",                  CONV_MEM, API_DRIVER}},    // API_Runtime ANALOGUE (cudaMemset)
-  {"cuMemsetD32Async",          {"hipMemsetAsync",             CONV_MEM, API_DRIVER}},    // API_Runtime ANALOGUE (cudaMemsetAsync)
-  {"cuMemsetD8_v2",             {"hipMemsetD8",                CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemsetD8Async",           {"hipMemsetD8Async",           CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMipmappedArrayCreate",    {"hipMipmappedArrayCreate",    CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMipmappedArrayDestroy",   {"hipMipmappedArrayDestroy",   CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMipmappedArrayGetLevel",  {"hipMipmappedArrayGetLevel",  CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuArray3DCreate",           {"hipArray3DCreate",           CONV_MEMORY, API_DRIVER}},
+  {"cuArray3DGetDescriptor",    {"hipArray3DGetDescriptor",    CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuArrayCreate",             {"hipArrayCreate",             CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuArrayDestroy",            {"hipArrayDestroy",            CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuArrayGetDescriptor",      {"hipArrayGetDescriptor",      CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuIpcCloseMemHandle",       {"hipIpcCloseMemHandle",       CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuIpcGetEventHandle",       {"hipIpcGetEventHandle",       CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuIpcGetMemHandle",         {"hipIpcGetMemHandle",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuIpcOpenEventHandle",      {"hipIpcOpenEventHandle",      CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuIpcOpenMemHandle",        {"hipIpcOpenMemHandle",        CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemAlloc_v2",             {"hipMalloc",                  CONV_MEMORY, API_DRIVER}},
+  {"cuMemAllocHost",            {"hipMemAllocHost",            CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemAllocManaged",         {"hipMemAllocManaged",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemAllocPitch",           {"hipMemAllocPitch__",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemAllocPitch due to different signatures
+  {"cuMemcpy",                  {"hipMemcpy__",                CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy due to different signatures
+  {"cuMemcpy2D",                {"hipMemcpy2D__",              CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy2D due to different signatures
+  {"cuMemcpy2DAsync",           {"hipMemcpy2DAsync__",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy2DAsync due to different signatures
+  {"cuMemcpy2DUnaligned",       {"hipMemcpy2DUnaligned",       CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpy3D",                {"hipMemcpy3D__",              CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy3D due to different signatures
+  {"cuMemcpy3DAsync",           {"hipMemcpy3DAsync__",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy3DAsync due to different signatures
+  {"cuMemcpy3DPeer",            {"hipMemcpy3DPeer__",          CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy3DPeer due to different signatures
+  {"cuMemcpy3DPeerAsync",       {"hipMemcpy3DPeerAsync__",     CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpy3DPeerAsync due to different signatures
+  {"cuMemcpyAsync",             {"hipMemcpyAsync__",           CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpyAsync due to different signatures
+  {"cuMemcpyAtoA",              {"hipMemcpyAtoA",              CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpyAtoD",              {"hipMemcpyAtoD",              CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpyAtoH",              {"hipMemcpyAtoH",              CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpyAtoHAsync",         {"hipMemcpyAtoHAsync",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpyDtoA",              {"hipMemcpyDtoA",              CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpyDtoD_v2",           {"hipMemcpyDtoD",              CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpyDtoDAsync_v2",      {"hipMemcpyDtoDAsync",         CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpyDtoH_v2",           {"hipMemcpyDtoH",              CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpyDtoHAsync_v2",      {"hipMemcpyDtoHAsync",         CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpyHtoA",              {"hipMemcpyHtoA",              CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpyHtoAAsync",         {"hipMemcpyHtoAAsync",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpyHtoD_v2",           {"hipMemcpyHtoD",              CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpyHtoDAsync_v2",      {"hipMemcpyHtoDAsync",         CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpyPeerAsync",         {"hipMemcpyPeerAsync__",       CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpyPeerAsync due to different signatures
+  {"cuMemcpyPeer",              {"hipMemcpyPeer__",            CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaMemcpyPeer due to different signatures
+  {"cuMemFree_v2",              {"hipFree",                    CONV_MEMORY, API_DRIVER}},
+  {"cuMemFreeHost",             {"hipHostFree",                CONV_MEMORY, API_DRIVER}},
+  {"cuMemGetAddressRange",      {"hipMemGetAddressRange",      CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemGetInfo_v2",           {"hipMemGetInfo",              CONV_MEMORY, API_DRIVER}},
+  {"cuMemHostAlloc",            {"hipHostMalloc",              CONV_MEMORY, API_DRIVER}},    // API_Runtime ANALOGUE (cudaHostAlloc)
+  {"cuMemHostGetDevicePointer", {"hipMemHostGetDevicePointer", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemHostGetFlags",         {"hipMemHostGetFlags",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemHostRegister_v2",      {"hipHostRegister",            CONV_MEMORY, API_DRIVER}},    // API_Runtime ANALOGUE (cudaHostAlloc)
+  {"cuMemHostUnregister",       {"hipHostUnregister",          CONV_MEMORY, API_DRIVER}},    // API_Runtime ANALOGUE (cudaHostUnregister)
+  {"cuMemsetD16_v2",            {"hipMemsetD16",               CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD16Async",          {"hipMemsetD16Async",          CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD2D16_v2",          {"hipMemsetD2D16",             CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD2D16Async",        {"hipMemsetD2D16Async",        CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD2D32_v2",          {"hipMemsetD2D32",             CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD2D32Async",        {"hipMemsetD2D32Async",        CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD2D8_v2",           {"hipMemsetD2D8",              CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD2D8Async",         {"hipMemsetD2D8Async",         CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD32_v2",            {"hipMemset",                  CONV_MEMORY, API_DRIVER}},    // API_Runtime ANALOGUE (cudaMemset)
+  {"cuMemsetD32Async",          {"hipMemsetAsync",             CONV_MEMORY, API_DRIVER}},    // API_Runtime ANALOGUE (cudaMemsetAsync)
+  {"cuMemsetD8_v2",             {"hipMemsetD8",                CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD8Async",           {"hipMemsetD8Async",           CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMipmappedArrayCreate",    {"hipMipmappedArrayCreate",    CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMipmappedArrayDestroy",   {"hipMipmappedArrayDestroy",   CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMipmappedArrayGetLevel",  {"hipMipmappedArrayGetLevel",  CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Unified Addressing
-  {"cuMemPrefetchAsync",      {"hipMemPrefetchAsync__",    CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE (cudaMemPrefetchAsync has different signature)
-  {"cuMemAdvise",             {"hipMemAdvise",             CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemAdvise)
-  {"cuMemRangeGetAttribute",  {"hipMemRangeGetAttribute",  CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemRangeGetAttribute)
-  {"cuMemRangeGetAttributes", {"hipMemRangeGetAttributes", CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemRangeGetAttributes)
-  {"cuPointerGetAttribute",   {"hipPointerGetAttribute",   CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuPointerGetAttributes",  {"hipPointerGetAttributes",  CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuPointerSetAttribute",   {"hipPointerSetAttribute",   CONV_MEM, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemPrefetchAsync",      {"hipMemPrefetchAsync__",    CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE (cudaMemPrefetchAsync has different signature)
+  {"cuMemAdvise",             {"hipMemAdvise",             CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemAdvise)
+  {"cuMemRangeGetAttribute",  {"hipMemRangeGetAttribute",  CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemRangeGetAttribute)
+  {"cuMemRangeGetAttributes", {"hipMemRangeGetAttributes", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},    // // API_Runtime ANALOGUE (cudaMemRangeGetAttributes)
+  {"cuPointerGetAttribute",   {"hipPointerGetAttribute",   CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuPointerGetAttributes",  {"hipPointerGetAttributes",  CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuPointerSetAttribute",   {"hipPointerSetAttribute",   CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Texture Reference Mngmnt
 
-  {"cuTexRefGetAddress",          {"hipTexRefGetAddress",          CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetAddressMode",      {"hipTexRefGetAddressMode",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetArray",            {"hipTexRefGetArray",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetBorderColor",      {"hipTexRefGetBorderColor",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
-  {"cuTexRefGetFilterMode",       {"hipTexRefGetFilterMode",       CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetFlags",            {"hipTexRefGetFlags",            CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetFormat",           {"hipTexRefGetFormat",           CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetMaxAnisotropy",    {"hipTexRefGetMaxAnisotropy",    CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetMipmapFilterMode", {"hipTexRefGetMipmapFilterMode", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetMipmapLevelBias",  {"hipTexRefGetMipmapLevelBias",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetMipmapLevelClamp", {"hipTexRefGetMipmapLevelClamp", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefGetMipmappedArray",   {"hipTexRefGetMipmappedArray",   CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefSetAddress",          {"hipTexRefSetAddress",          CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefSetAddress2D",        {"hipTexRefSetAddress2D",        CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefSetAddressMode",      {"hipTexRefSetAddressMode",      CONV_TEX, API_DRIVER}},
-  {"cuTexRefSetArray",            {"hipTexRefSetArray",            CONV_TEX, API_DRIVER}},
-  {"cuTexRefSetBorderColor",      {"hipTexRefSetBorderColor",      CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
-  {"cuTexRefSetFilterMode",       {"hipTexRefSetFilterMode",       CONV_TEX, API_DRIVER}},
-  {"cuTexRefSetFlags",            {"hipTexRefSetFlags",            CONV_TEX, API_DRIVER}},
-  {"cuTexRefSetFormat",           {"hipTexRefSetFormat",           CONV_TEX, API_DRIVER}},
-  {"cuTexRefSetMaxAnisotropy",    {"hipTexRefSetMaxAnisotropy",    CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefSetMipmapFilterMode", {"hipTexRefSetMipmapFilterMode", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefSetMipmapLevelBias",  {"hipTexRefSetMipmapLevelBias",  CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefSetMipmapLevelClamp", {"hipTexRefSetMipmapLevelClamp", CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefSetMipmappedArray",   {"hipTexRefSetMipmappedArray",   CONV_TEX, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetAddress",          {"hipTexRefGetAddress",          CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetAddressMode",      {"hipTexRefGetAddressMode",      CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetArray",            {"hipTexRefGetArray",            CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetBorderColor",      {"hipTexRefGetBorderColor",      CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
+  {"cuTexRefGetFilterMode",       {"hipTexRefGetFilterMode",       CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetFlags",            {"hipTexRefGetFlags",            CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetFormat",           {"hipTexRefGetFormat",           CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetMaxAnisotropy",    {"hipTexRefGetMaxAnisotropy",    CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetMipmapFilterMode", {"hipTexRefGetMipmapFilterMode", CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetMipmapLevelBias",  {"hipTexRefGetMipmapLevelBias",  CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetMipmapLevelClamp", {"hipTexRefGetMipmapLevelClamp", CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefGetMipmappedArray",   {"hipTexRefGetMipmappedArray",   CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefSetAddress",          {"hipTexRefSetAddress",          CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefSetAddress2D",        {"hipTexRefSetAddress2D",        CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefSetAddressMode",      {"hipTexRefSetAddressMode",      CONV_TEXTURE, API_DRIVER}},
+  {"cuTexRefSetArray",            {"hipTexRefSetArray",            CONV_TEXTURE, API_DRIVER}},
+  {"cuTexRefSetBorderColor",      {"hipTexRefSetBorderColor",      CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},    // // no API_Runtime ANALOGUE
+  {"cuTexRefSetFilterMode",       {"hipTexRefSetFilterMode",       CONV_TEXTURE, API_DRIVER}},
+  {"cuTexRefSetFlags",            {"hipTexRefSetFlags",            CONV_TEXTURE, API_DRIVER}},
+  {"cuTexRefSetFormat",           {"hipTexRefSetFormat",           CONV_TEXTURE, API_DRIVER}},
+  {"cuTexRefSetMaxAnisotropy",    {"hipTexRefSetMaxAnisotropy",    CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefSetMipmapFilterMode", {"hipTexRefSetMipmapFilterMode", CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefSetMipmapLevelBias",  {"hipTexRefSetMipmapLevelBias",  CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefSetMipmapLevelClamp", {"hipTexRefSetMipmapLevelClamp", CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefSetMipmappedArray",   {"hipTexRefSetMipmappedArray",   CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Texture Reference Mngmnt [DEPRECATED]
-  {"cuTexRefCreate",                 {"hipTexRefCreate",                 CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexRefDestroy",                {"hipTexRefDestroy",                CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefCreate",                 {"hipTexRefCreate",                 CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexRefDestroy",                {"hipTexRefDestroy",                CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Surface Reference Mngmnt
   {"cuSurfRefGetArray",              {"hipSurfRefGetArray",              CONV_SURFACE, API_DRIVER, HIP_UNSUPPORTED}},
   {"cuSurfRefSetArray",              {"hipSurfRefSetArray",              CONV_SURFACE, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Texture Object Mngmnt
-  {"cuTexObjectCreate",              {"hipTexObjectCreate",              CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexObjectDestroy",             {"hipTexObjectDestroy",             CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexObjectGetResourceDesc",     {"hipTexObjectGetResourceDesc",     CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexObjectGetResourceViewDesc", {"hipTexObjectGetResourceViewDesc", CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuTexObjectGetTextureDesc",      {"hipTexObjectGetTextureDesc",      CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexObjectCreate",              {"hipTexObjectCreate",              CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexObjectDestroy",             {"hipTexObjectDestroy",             CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexObjectGetResourceDesc",     {"hipTexObjectGetResourceDesc",     CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexObjectGetResourceViewDesc", {"hipTexObjectGetResourceViewDesc", CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuTexObjectGetTextureDesc",      {"hipTexObjectGetTextureDesc",      CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Surface Object Mngmnt
-  {"cuSurfObjectCreate",             {"hipSurfObjectCreate",             CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuSurfObjectDestroy",            {"hipSurfObjectDestroy",            CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuSurfObjectGetResourceDesc",    {"hipSurfObjectGetResourceDesc",    CONV_TEX,     API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuSurfObjectCreate",             {"hipSurfObjectCreate",             CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuSurfObjectDestroy",            {"hipSurfObjectDestroy",            CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuSurfObjectGetResourceDesc",    {"hipSurfObjectGetResourceDesc",    CONV_TEXTURE, API_DRIVER, HIP_UNSUPPORTED}},
 
   // Graphics Interoperability
   {"cuGraphicsMapResources",                    {"hipGraphicsMapResources",                    CONV_GRAPHICS, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsMapResources)
@@ -308,24 +308,24 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuGraphicsUnregisterResource",              {"hipGraphicsUnregisterResource",              CONV_GRAPHICS, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsUnregisterResource)
 
   // Profiler
-  {"cuProfilerInitialize", {"hipProfilerInitialize", CONV_OTHER, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaProfilerInitialize)
-  {"cuProfilerStart",      {"hipProfilerStart",      CONV_OTHER, API_DRIVER}},    // API_Runtime ANALOGUE (cudaProfilerStart)
-  {"cuProfilerStop",       {"hipProfilerStop",       CONV_OTHER, API_DRIVER}},    // API_Runtime ANALOGUE (cudaProfilerStop)
+  {"cuProfilerInitialize", {"hipProfilerInitialize", CONV_PROFILER, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaProfilerInitialize)
+  {"cuProfilerStart",      {"hipProfilerStart",      CONV_PROFILER, API_DRIVER}},    // API_Runtime ANALOGUE (cudaProfilerStart)
+  {"cuProfilerStop",       {"hipProfilerStop",       CONV_PROFILER, API_DRIVER}},    // API_Runtime ANALOGUE (cudaProfilerStop)
 
-  {"cuGLGetDevices",                  {"hipGLGetDevices",                  CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLGetDevices)
-  {"cuGraphicsGLRegisterBuffer",      {"hipGraphicsGLRegisterBuffer",      CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsGLRegisterBuffer)
-  {"cuGraphicsGLRegisterImage",       {"hipGraphicsGLRegisterImage",       CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsGLRegisterImage)
-  {"cuWGLGetDevice",                  {"hipWGLGetDevice",                  CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaWGLGetDevice)
+  {"cuGLGetDevices",                  {"hipGLGetDevices",                  CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLGetDevices)
+  {"cuGraphicsGLRegisterBuffer",      {"hipGraphicsGLRegisterBuffer",      CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsGLRegisterBuffer)
+  {"cuGraphicsGLRegisterImage",       {"hipGraphicsGLRegisterImage",       CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGraphicsGLRegisterImage)
+  {"cuWGLGetDevice",                  {"hipWGLGetDevice",                  CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaWGLGetDevice)
 
-  {"cuGLCtxCreate",                          {"hipGLCtxCreate",                          CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // no API_Runtime ANALOGUE
-  {"cuGLInit",                               {"hipGLInit",                               CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // no API_Runtime ANALOGUE
-  {"cuGLMapBufferObject",                    {"hipGLMapBufferObject",                    CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaGLMapBufferObject due to different signatures
-  {"cuGLMapBufferObjectAsync",               {"hipGLMapBufferObjectAsync",               CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaGLMapBufferObjectAsync due to different signatures
-  {"cuGLRegisterBufferObject",               {"hipGLRegisterBufferObject",               CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLRegisterBufferObject)
-  {"cuGLSetBufferObjectMapFlags",            {"hipGLSetBufferObjectMapFlags",            CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLSetBufferObjectMapFlags)
-  {"cuGLUnmapBufferObject",                  {"hipGLUnmapBufferObject",                  CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLUnmapBufferObject)
-  {"cuGLUnmapBufferObjectAsync",             {"hipGLUnmapBufferObjectAsync",             CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLUnmapBufferObjectAsync)
-  {"cuGLUnregisterBufferObject",             {"hipGLUnregisterBufferObject",             CONV_GL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLUnregisterBufferObject)
+  {"cuGLCtxCreate",                          {"hipGLCtxCreate",                          CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // no API_Runtime ANALOGUE
+  {"cuGLInit",                               {"hipGLInit",                               CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // no API_Runtime ANALOGUE
+  {"cuGLMapBufferObject",                    {"hipGLMapBufferObject",                    CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaGLMapBufferObject due to different signatures
+  {"cuGLMapBufferObjectAsync",               {"hipGLMapBufferObjectAsync",               CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // Not equal to cudaGLMapBufferObjectAsync due to different signatures
+  {"cuGLRegisterBufferObject",               {"hipGLRegisterBufferObject",               CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLRegisterBufferObject)
+  {"cuGLSetBufferObjectMapFlags",            {"hipGLSetBufferObjectMapFlags",            CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLSetBufferObjectMapFlags)
+  {"cuGLUnmapBufferObject",                  {"hipGLUnmapBufferObject",                  CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLUnmapBufferObject)
+  {"cuGLUnmapBufferObjectAsync",             {"hipGLUnmapBufferObjectAsync",             CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLUnmapBufferObjectAsync)
+  {"cuGLUnregisterBufferObject",             {"hipGLUnregisterBufferObject",             CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},    // API_Runtime ANALOGUE (cudaGLUnregisterBufferObject)
 
   {"cuD3D9CtxCreate",                   {"hipD3D9CtxCreate",                   CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // no API_Runtime ANALOGUE
   {"cuD3D9CtxCreateOnDevice",           {"hipD3D9CtxCreateOnDevice",           CONV_D3D9, API_DRIVER, HIP_UNSUPPORTED}},    // no API_Runtime ANALOGUE

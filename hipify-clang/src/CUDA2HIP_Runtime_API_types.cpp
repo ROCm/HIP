@@ -1207,108 +1207,108 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // 5. Defines
 
   // no analogue
-  {"CUDA_EGL_MAX_PLANES",                                              {"HIP_EGL_MAX_PLANES",                                       CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 3
+  {"CUDA_EGL_MAX_PLANES",                                              {"HIP_EGL_MAX_PLANES",                                       CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 3
   // CU_IPC_HANDLE_SIZE
-  {"CUDA_IPC_HANDLE_SIZE",                                             {"HIP_IPC_HANDLE_SIZE",                                      CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 64
+  {"CUDA_IPC_HANDLE_SIZE",                                             {"HIP_IPC_HANDLE_SIZE",                                      CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 64
   // no analogue
-  {"cudaArrayDefault",                                                 {"hipArrayDefault",                                          CONV_DEF, API_RUNTIME}}, // 0x00
+  {"cudaArrayDefault",                                                 {"hipArrayDefault",                                          CONV_DEFINE, API_RUNTIME}}, // 0x00
   // CUDA_ARRAY3D_LAYERED
-  {"cudaArrayLayered",                                                 {"hipArrayLayered",                                          CONV_DEF, API_RUNTIME}}, // 0x01
+  {"cudaArrayLayered",                                                 {"hipArrayLayered",                                          CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CUDA_ARRAY3D_SURFACE_LDST
-  {"cudaArraySurfaceLoadStore",                                        {"hipArraySurfaceLoadStore",                                 CONV_DEF, API_RUNTIME}}, // 0x02
+  {"cudaArraySurfaceLoadStore",                                        {"hipArraySurfaceLoadStore",                                 CONV_DEFINE, API_RUNTIME}}, // 0x02
   // CUDA_ARRAY3D_CUBEMAP
-  {"cudaArrayCubemap",                                                 {"hipArrayCubemap",                                          CONV_DEF, API_RUNTIME}}, // 0x04
+  {"cudaArrayCubemap",                                                 {"hipArrayCubemap",                                          CONV_DEFINE, API_RUNTIME}}, // 0x04
   // CUDA_ARRAY3D_TEXTURE_GATHER
-  {"cudaArrayTextureGather",                                           {"hipArrayTextureGather",                                    CONV_DEF, API_RUNTIME}}, // 0x08
+  {"cudaArrayTextureGather",                                           {"hipArrayTextureGather",                                    CONV_DEFINE, API_RUNTIME}}, // 0x08
   // CUDA_ARRAY3D_COLOR_ATTACHMENT
-  {"cudaArrayColorAttachment",                                         {"hipArrayColorAttachment",                                  CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x20
+  {"cudaArrayColorAttachment",                                         {"hipArrayColorAttachment",                                  CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x20
   // CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC
-  {"cudaCooperativeLaunchMultiDeviceNoPreSync",                        {"hipCooperativeLaunchMultiDeviceNoPreSync",                 CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
+  {"cudaCooperativeLaunchMultiDeviceNoPreSync",                        {"hipCooperativeLaunchMultiDeviceNoPreSync",                 CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
   // CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC
-  {"cudaCooperativeLaunchMultiDeviceNoPostSync",                       {"hipCooperativeLaunchMultiDeviceNoPostSync",                CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x02
+  {"cudaCooperativeLaunchMultiDeviceNoPostSync",                       {"hipCooperativeLaunchMultiDeviceNoPostSync",                CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x02
   // CU_DEVICE_CPU ((CUdevice)-1)
-  {"cudaCpuDeviceId",                                                  {"hipCpuDeviceId",                                           CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // ((int)-1)
+  {"cudaCpuDeviceId",                                                  {"hipCpuDeviceId",                                           CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // ((int)-1)
   // CU_DEVICE_INVALID ((CUdevice)-2)
-  {"cudaInvalidDeviceId",                                              {"hipInvalidDeviceId",                                       CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // ((int)-2)
+  {"cudaInvalidDeviceId",                                              {"hipInvalidDeviceId",                                       CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // ((int)-2)
   // CU_CTX_BLOCKING_SYNC
   // NOTE: Deprecated since CUDA 4.0 and replaced with cudaDeviceScheduleBlockingSync
-  {"cudaDeviceBlockingSync",                                           {"hipDeviceScheduleBlockingSync",                            CONV_DEF, API_RUNTIME}}, // 0x04
+  {"cudaDeviceBlockingSync",                                           {"hipDeviceScheduleBlockingSync",                            CONV_DEFINE, API_RUNTIME}}, // 0x04
   // CU_CTX_LMEM_RESIZE_TO_MAX
-  {"cudaDeviceLmemResizeToMax",                                        {"hipDeviceLmemResizeToMax",                                 CONV_DEF, API_RUNTIME}}, // 0x10
+  {"cudaDeviceLmemResizeToMax",                                        {"hipDeviceLmemResizeToMax",                                 CONV_DEFINE, API_RUNTIME}}, // 0x10
   // CU_CTX_MAP_HOST
-  {"cudaDeviceMapHost",                                                {"hipDeviceMapHost",                                         CONV_DEF, API_RUNTIME}}, // 0x08
+  {"cudaDeviceMapHost",                                                {"hipDeviceMapHost",                                         CONV_DEFINE, API_RUNTIME}}, // 0x08
   // CU_CTX_FLAGS_MASK
-  {"cudaDeviceMask",                                                   {"hipDeviceMask",                                            CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x1f
+  {"cudaDeviceMask",                                                   {"hipDeviceMask",                                            CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x1f
   // no analogue
-  {"cudaDevicePropDontCare",                                           {"hipDevicePropDontCare",                                    CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaDevicePropDontCare",                                           {"hipDevicePropDontCare",                                    CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}},
   // CU_CTX_SCHED_AUTO
-  {"cudaDeviceScheduleAuto",                                           {"hipDeviceScheduleAuto",                                    CONV_DEF, API_RUNTIME}}, // 0x00
+  {"cudaDeviceScheduleAuto",                                           {"hipDeviceScheduleAuto",                                    CONV_DEFINE, API_RUNTIME}}, // 0x00
   // CU_CTX_SCHED_SPIN
-  {"cudaDeviceScheduleSpin",                                           {"hipDeviceScheduleSpin",                                    CONV_DEF, API_RUNTIME}}, // 0x01
+  {"cudaDeviceScheduleSpin",                                           {"hipDeviceScheduleSpin",                                    CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CU_CTX_SCHED_YIELD
-  {"cudaDeviceScheduleYield",                                          {"hipDeviceScheduleYield",                                   CONV_DEF, API_RUNTIME}}, // 0x02
+  {"cudaDeviceScheduleYield",                                          {"hipDeviceScheduleYield",                                   CONV_DEFINE, API_RUNTIME}}, // 0x02
   // CU_CTX_SCHED_BLOCKING_SYNC
-  {"cudaDeviceScheduleBlockingSync",                                   {"hipDeviceScheduleBlockingSync",                            CONV_DEF, API_RUNTIME}}, // 0x04
+  {"cudaDeviceScheduleBlockingSync",                                   {"hipDeviceScheduleBlockingSync",                            CONV_DEFINE, API_RUNTIME}}, // 0x04
   // CU_CTX_SCHED_MASK
-  {"cudaDeviceScheduleMask",                                           {"hipDeviceScheduleMask",                                    CONV_DEF, API_RUNTIME}}, // 0x07
+  {"cudaDeviceScheduleMask",                                           {"hipDeviceScheduleMask",                                    CONV_DEFINE, API_RUNTIME}}, // 0x07
   // CU_EVENT_DEFAULT
-  {"cudaEventDefault",                                                 {"hipEventDefault",                                          CONV_DEF, API_RUNTIME}}, // 0x00
+  {"cudaEventDefault",                                                 {"hipEventDefault",                                          CONV_DEFINE, API_RUNTIME}}, // 0x00
   // CU_EVENT_BLOCKING_SYNC
-  {"cudaEventBlockingSync",                                            {"hipEventBlockingSync",                                     CONV_DEF, API_RUNTIME}}, // 0x01
+  {"cudaEventBlockingSync",                                            {"hipEventBlockingSync",                                     CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CU_EVENT_DISABLE_TIMING
-  {"cudaEventDisableTiming",                                           {"hipEventDisableTiming",                                    CONV_DEF, API_RUNTIME}}, // 0x02
+  {"cudaEventDisableTiming",                                           {"hipEventDisableTiming",                                    CONV_DEFINE, API_RUNTIME}}, // 0x02
   // CU_EVENT_INTERPROCESS
-  {"cudaEventInterprocess",                                            {"hipEventInterprocess",                                     CONV_DEF, API_RUNTIME}}, // 0x04
+  {"cudaEventInterprocess",                                            {"hipEventInterprocess",                                     CONV_DEFINE, API_RUNTIME}}, // 0x04
   // CUDA_EXTERNAL_MEMORY_DEDICATED
-  {"cudaExternalMemoryDedicated",                                      {"hipExternalMemoryDedicated",                               CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
+  {"cudaExternalMemoryDedicated",                                      {"hipExternalMemoryDedicated",                               CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
   // no analogue
-  {"cudaHostAllocDefault",                                             {"hipHostMallocDefault",                                     CONV_DEF, API_RUNTIME}}, // 0x00
+  {"cudaHostAllocDefault",                                             {"hipHostMallocDefault",                                     CONV_DEFINE, API_RUNTIME}}, // 0x00
   // CU_MEMHOSTALLOC_PORTABLE
-  {"cudaHostAllocPortable",                                            {"hipHostMallocPortable",                                    CONV_DEF, API_RUNTIME}}, // 0x01
+  {"cudaHostAllocPortable",                                            {"hipHostMallocPortable",                                    CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CU_MEMHOSTALLOC_DEVICEMAP
-  {"cudaHostAllocMapped",                                              {"hipHostMallocMapped",                                      CONV_DEF, API_RUNTIME}}, // 0x02
+  {"cudaHostAllocMapped",                                              {"hipHostMallocMapped",                                      CONV_DEFINE, API_RUNTIME}}, // 0x02
   // CU_MEMHOSTALLOC_WRITECOMBINED
-  {"cudaHostAllocWriteCombined",                                       {"hipHostAllocWriteCombined",                                CONV_DEF, API_RUNTIME}}, // 0x04
+  {"cudaHostAllocWriteCombined",                                       {"hipHostAllocWriteCombined",                                CONV_DEFINE, API_RUNTIME}}, // 0x04
   // no analogue
-  {"cudaHostRegisterDefault",                                          {"hipHostRegisterDefault",                                   CONV_DEF, API_RUNTIME}}, // 0x00
+  {"cudaHostRegisterDefault",                                          {"hipHostRegisterDefault",                                   CONV_DEFINE, API_RUNTIME}}, // 0x00
   // CU_MEMHOSTREGISTER_PORTABLE
-  {"cudaHostRegisterPortable",                                         {"hipHostRegisterPortable",                                  CONV_DEF, API_RUNTIME}}, // 0x01
+  {"cudaHostRegisterPortable",                                         {"hipHostRegisterPortable",                                  CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CU_MEMHOSTREGISTER_DEVICEMAP
-  {"cudaHostRegisterMapped",                                           {"hipHostRegisterMapped",                                    CONV_DEF, API_RUNTIME}}, // 0x02
+  {"cudaHostRegisterMapped",                                           {"hipHostRegisterMapped",                                    CONV_DEFINE, API_RUNTIME}}, // 0x02
   // CU_MEMHOSTREGISTER_IOMEMORY
-  {"cudaHostRegisterIoMemory",                                         {"hipHostRegisterIoMemory",                                  CONV_DEF, API_RUNTIME}}, // 0x04
+  {"cudaHostRegisterIoMemory",                                         {"hipHostRegisterIoMemory",                                  CONV_DEFINE, API_RUNTIME}}, // 0x04
   // CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS
-  {"cudaIpcMemLazyEnablePeerAccess",                                   {"hipIpcMemLazyEnablePeerAccess",                            CONV_DEF, API_RUNTIME}}, // 0x01
+  {"cudaIpcMemLazyEnablePeerAccess",                                   {"hipIpcMemLazyEnablePeerAccess",                            CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CU_MEM_ATTACH_GLOBAL
-  {"cudaMemAttachGlobal",                                              {"hipMemAttachGlobal",                                       CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
+  {"cudaMemAttachGlobal",                                              {"hipMemAttachGlobal",                                       CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
   // CU_MEM_ATTACH_HOST
-  {"cudaMemAttachHost",                                                {"hipMemAttachHost",                                         CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x02
+  {"cudaMemAttachHost",                                                {"hipMemAttachHost",                                         CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x02
   // CU_MEM_ATTACH_SINGLE
-  {"cudaMemAttachSingle",                                              {"hipMemAttachSingle",                                       CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x04
+  {"cudaMemAttachSingle",                                              {"hipMemAttachSingle",                                       CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x04
   // no analogue
-  {"cudaTextureType1D",                                                {"hipTextureType1D",                                         CONV_DEF, API_RUNTIME}}, // 0x01
+  {"cudaTextureType1D",                                                {"hipTextureType1D",                                         CONV_DEFINE, API_RUNTIME}}, // 0x01
   // no analogue
-  {"cudaTextureType2D",                                                {"hipTextureType2D",                                         CONV_DEF, API_RUNTIME}}, // 0x02
+  {"cudaTextureType2D",                                                {"hipTextureType2D",                                         CONV_DEFINE, API_RUNTIME}}, // 0x02
   // no analogue
-  {"cudaTextureType3D",                                                {"hipTextureType3D",                                         CONV_DEF, API_RUNTIME}}, // 0x03
+  {"cudaTextureType3D",                                                {"hipTextureType3D",                                         CONV_DEFINE, API_RUNTIME}}, // 0x03
   // no analogue
-  {"cudaTextureTypeCubemap",                                           {"hipTextureTypeCubemap",                                    CONV_DEF, API_RUNTIME}}, // 0x0C
+  {"cudaTextureTypeCubemap",                                           {"hipTextureTypeCubemap",                                    CONV_DEFINE, API_RUNTIME}}, // 0x0C
   // no analogue
-  {"cudaTextureType1DLayered",                                         {"hipTextureType1DLayered",                                  CONV_DEF, API_RUNTIME}}, // 0xF1
+  {"cudaTextureType1DLayered",                                         {"hipTextureType1DLayered",                                  CONV_DEFINE, API_RUNTIME}}, // 0xF1
   // no analogue
-  {"cudaTextureType2DLayered",                                         {"hipTextureType2DLayered",                                  CONV_DEF, API_RUNTIME}}, // 0xF2
+  {"cudaTextureType2DLayered",                                         {"hipTextureType2DLayered",                                  CONV_DEFINE, API_RUNTIME}}, // 0xF2
   // no analogue
-  {"cudaTextureTypeCubemapLayered",                                    {"hipTextureTypeCubemapLayered",                             CONV_DEF, API_RUNTIME}}, // 0xFC
+  {"cudaTextureTypeCubemapLayered",                                    {"hipTextureTypeCubemapLayered",                             CONV_DEFINE, API_RUNTIME}}, // 0xFC
   // CU_OCCUPANCY_DEFAULT
-  {"cudaOccupancyDefault",                                             {"hipOccupancyDefault",                                      CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x00
+  {"cudaOccupancyDefault",                                             {"hipOccupancyDefault",                                      CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x00
   // CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE
-  {"cudaOccupancyDisableCachingOverride",                              {"hipOccupancyDisableCachingOverride",                       CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
+  {"cudaOccupancyDisableCachingOverride",                              {"hipOccupancyDisableCachingOverride",                       CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
   // CU_STREAM_DEFAULT
-  {"cudaStreamDefault",                                                {"hipStreamDefault",                                         CONV_DEF, API_RUNTIME}}, // 0x00
+  {"cudaStreamDefault",                                                {"hipStreamDefault",                                         CONV_DEFINE, API_RUNTIME}}, // 0x00
   // CU_STREAM_NON_BLOCKING
-  {"cudaStreamNonBlocking",                                            {"hipStreamNonBlocking",                                     CONV_DEF, API_RUNTIME}}, // 0x01
+  {"cudaStreamNonBlocking",                                            {"hipStreamNonBlocking",                                     CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CU_STREAM_LEGACY ((CUstream)0x1)
-  {"cudaStreamLegacy",                                                 {"hipStreamLegacy",                                          CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // ((cudaStream_t)0x1)
+  {"cudaStreamLegacy",                                                 {"hipStreamLegacy",                                          CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // ((cudaStream_t)0x1)
   // CU_STREAM_PER_THREAD ((CUstream)0x2)
-  {"cudaStreamPerThread",                                              {"hipStreamPerThread",                                       CONV_DEF, API_RUNTIME, HIP_UNSUPPORTED}}, // ((cudaStream_t)0x2)
+  {"cudaStreamPerThread",                                              {"hipStreamPerThread",                                       CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // ((cudaStream_t)0x2)
 };
