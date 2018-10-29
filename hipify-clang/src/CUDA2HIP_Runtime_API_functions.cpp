@@ -2,19 +2,11 @@
 
 // Map of all functions
 const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
-
-/////////////////////////////// CUDA RT API ///////////////////////////////
-
   // Error API
   {"cudaGetLastError",    {"hipGetLastError",    CONV_ERROR, API_RUNTIME}},
   {"cudaPeekAtLastError", {"hipPeekAtLastError", CONV_ERROR, API_RUNTIME}},
   {"cudaGetErrorName",    {"hipGetErrorName",    CONV_ERROR, API_RUNTIME}},
   {"cudaGetErrorString",  {"hipGetErrorString",  CONV_ERROR, API_RUNTIME}},
-
-  // memcpy
-  // memcpy structs
-  {"cudaMemcpy3DParms",     {"hipMemcpy3DParms",     CONV_MEM, API_RUNTIME}},
-  {"cudaMemcpy3DPeerParms", {"hipMemcpy3DPeerParms", CONV_MEM, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // memcpy functions
   {"cudaMemcpy",                 {"hipMemcpy",                 CONV_MEM, API_RUNTIME}},
@@ -81,18 +73,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"make_cudaPitchedPtr", {"make_hipPitchedPtr", CONV_MEM, API_RUNTIME}},
   {"make_cudaPos",        {"make_hipPos",        CONV_MEM, API_RUNTIME}},
 
-  // Host Malloc Flags (#defines)
-  {"cudaHostAllocDefault",       {"hipHostMallocDefault",       CONV_MEM, API_RUNTIME}},
-  {"cudaHostAllocPortable",      {"hipHostMallocPortable",      CONV_MEM, API_RUNTIME}},
-  {"cudaHostAllocMapped",        {"hipHostMallocMapped",        CONV_MEM, API_RUNTIME}},
-  {"cudaHostAllocWriteCombined", {"hipHostMallocWriteCombined", CONV_MEM, API_RUNTIME}},
-
   // Host Register Flags
   {"cudaHostGetFlags",         {"hipHostGetFlags",         CONV_MEM, API_RUNTIME}},
-  {"cudaHostRegisterDefault",  {"hipHostRegisterDefault",  CONV_MEM, API_RUNTIME}},
-  {"cudaHostRegisterPortable", {"hipHostRegisterPortable", CONV_MEM, API_RUNTIME}},
-  {"cudaHostRegisterMapped",   {"hipHostRegisterMapped",   CONV_MEM, API_RUNTIME}},
-  {"cudaHostRegisterIoMemory", {"hipHostRegisterIoMemory", CONV_MEM, API_RUNTIME}},
 
   {"warpSize",    {"hipWarpSize",    CONV_SPECIAL_FUNC, API_RUNTIME}},
 
@@ -104,11 +86,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaEventElapsedTime",         {"hipEventElapsedTime",         CONV_EVENT,  API_RUNTIME}},
   {"cudaEventSynchronize",         {"hipEventSynchronize",         CONV_EVENT,  API_RUNTIME}},
   {"cudaEventQuery",               {"hipEventQuery",               CONV_EVENT,  API_RUNTIME}},
-  // Event Flags
-  {"cudaEventDefault",             {"hipEventDefault",             CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventBlockingSync",        {"hipEventBlockingSync",        CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventDisableTiming",       {"hipEventDisableTiming",       CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventInterprocess",        {"hipEventInterprocess",        CONV_EVENT,  API_RUNTIME}},
 
   // Streams
   {"cudaStreamCreate",             {"hipStreamCreate",             CONV_STREAM, API_RUNTIME}},
