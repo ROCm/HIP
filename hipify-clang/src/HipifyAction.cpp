@@ -24,7 +24,7 @@ void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
       Statistics::current().incrementCounter(counter, name.str());
       if (!counter.unsupported) {
         clang::SourceLocation sl = start.getLocWithOffset(begin + 1);
-        ct::Replacement Rep(SM, sl, name.size(), repName);
+        ct::Replacement Rep(SM, sl, name.size(), repName.str());
         clang::FullSourceLoc fullSL(sl, SM);
         insertReplacement(Rep, fullSL);
       }
@@ -70,7 +70,7 @@ void HipifyAction::RewriteToken(const clang::Token& t) {
     return;
   }
   StringRef repName = found->second.hipName;
-  ct::Replacement Rep(SM, sl, name.size(), repName);
+  ct::Replacement Rep(SM, sl, name.size(), repName.str());
   clang::FullSourceLoc fullSL(sl, SM);
   insertReplacement(Rep, fullSL);
 }
@@ -219,7 +219,7 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
   }
   const char *B = SM.getCharacterData(sl);
   const char *E = SM.getCharacterData(filename_range.getEnd());
-  ct::Replacement Rep(SM, sl, E - B, newInclude);
+  ct::Replacement Rep(SM, sl, E - B, newInclude.str());
   insertReplacement(Rep, clang::FullSourceLoc{sl, SM});
 }
 
@@ -284,7 +284,7 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
   ct::Replacement Rep(*SM, launchStart, length, OS.str());
   clang::FullSourceLoc fullSL(launchStart, *SM);
   insertReplacement(Rep, fullSL);
-  hipCounter counter = {"hipLaunchKernelGGL", ConvTypes::CONV_KERN, ApiTypes::API_RUNTIME};
+  hipCounter counter = {"hipLaunchKernelGGL", ConvTypes::CONV_EXECUTION, ApiTypes::API_RUNTIME};
   Statistics::current().incrementCounter(counter, refName.str());
   return true;
 }
@@ -329,7 +329,7 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
     ct::Replacement Rep(*SM, slStart, repLength, repName);
     clang::FullSourceLoc fullSL(slStart, *SM);
     insertReplacement(Rep, fullSL);
-    hipCounter counter = {"HIP_DYNAMIC_SHARED", ConvTypes::CONV_MEM, ApiTypes::API_RUNTIME};
+    hipCounter counter = {"HIP_DYNAMIC_SHARED", ConvTypes::CONV_MEMORY, ApiTypes::API_RUNTIME};
     Statistics::current().incrementCounter(counter, refName.str());
   }
   return true;

@@ -4,12 +4,42 @@
 #include <iomanip>
 
 const char *counterNames[NUM_CONV_TYPES] = {
-  "version", "init", "device", "mem", "kern", "coord_func", "math_func", "device_func",
-  "special_func", "stream", "event", "occupancy", "ctx", "peer", "module",
-  "cache", "exec", "external_resource_interop", "graph", "err", "def", "tex", "gl", "graphics",
-  "surface", "jit", "d3d9", "d3d10", "d3d11", "vdpau", "egl", "complex",
-  "thread", "other", "include", "include_cuda_main_header", "type", "literal",
-  "numeric_literal"
+  "error", // CONV_ERROR
+  "init", // CONV_INIT
+  "version", // CONV_VERSION
+  "device", // CONV_DEVICE
+  "context", // CONV_CONTEXT
+  "module", // CONV_MODULE
+  "memory", // CONV_MEMORY
+  "addressing", // CONV_ADDRESSING
+  "stream", // CONV_STREAM
+  "event", // CONV_EVENT
+  "external_resource_interop" // CONV_EXT_RES
+  "stream_memory", // CONV_STREAM_MEMORY
+  "execution", // CONV_EXECUTION
+  "graph", // CONV_GRAPH
+  "occupancy", // CONV_OCCUPANCY
+  "texture", // CONV_TEXTURE
+  "surface", // CONV_SURFACE
+  "peer", // CONV_PEER
+  "graphics", // CONV_GRAPHICS
+  "profiler", // CONV_PROFILER
+  "openGL", // CONV_OPENGL
+  "D3D9", // CONV_D3D9
+  "D3D10", // CONV_D3D10
+  "D3D11", // CONV_D3D11
+  "VDPAU", // CONV_VDPAU
+  "EGL", // CONV_EGL
+  "thread", // CONV_THREAD
+  "complex", // CONV_COMPLEX
+  "library", // CONV_LIB_FUNC
+  "device_library", // CONV_LIB_DEVICE_FUNC
+  "include", // CONV_INCLUDE
+  "include_cuda_main_header", // CONV_INCLUDE_CUDA_MAIN_H
+  "type", // CONV_TYPE
+  "literal", // CONV_LITERAL
+  "numeric_literal", // CONV_NUMERIC_LITERAL
+  "define" // CONV_DEFINE
 };
 
 const char *apiNames[NUM_API_TYPES] = {
