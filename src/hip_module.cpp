@@ -267,7 +267,12 @@ inline void track(const Agent_global& x) {
     hc::AmPointerInfo ptr_info(nullptr, x.address, x.address, x.byte_cnt, device->_acc, true,
                                false);
     hc::am_memtracker_add(x.address, ptr_info);
+#if USE_APP_PTR_FOR_CTX
+    hc::am_memtracker_update(x.address, device->_deviceId, 0u, ihipGetTlsDefaultCtx());
+#else
     hc::am_memtracker_update(x.address, device->_deviceId, 0u);
+#endif
+
 }
 
 template <typename Container = vector<Agent_global>>
