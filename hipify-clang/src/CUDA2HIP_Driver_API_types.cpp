@@ -1416,58 +1416,58 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
 
   // 5. Defines
 
-  {"__CUDACC__",                                                       {"__HIPCC__",                                                CONV_DEF, API_DRIVER}},
-  {"CUDA_CB",                                                          {"HIP_CB",                                                   CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}},
+  {"__CUDACC__",                                                       {"__HIPCC__",                                                CONV_DEFINE, API_DRIVER}},
+  {"CUDA_CB",                                                          {"HIP_CB",                                                   CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaCpuDeviceId ((int)-1)
-  {"CU_DEVICE_CPU",                                                    {"hipCpuDeviceId",                                           CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // ((CUdevice)-1)
+  {"CU_DEVICE_CPU",                                                    {"hipCpuDeviceId",                                           CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // ((CUdevice)-1)
   // cudaInvalidDeviceId ((int)-1)
-  {"CU_DEVICE_INVALID",                                                {"hipInvalidDeviceId",                                       CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // ((CUdevice)-2)
+  {"CU_DEVICE_INVALID",                                                {"hipInvalidDeviceId",                                       CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // ((CUdevice)-2)
   // CUDA_IPC_HANDLE_SIZE
-  {"CU_IPC_HANDLE_SIZE",                                               {"HIP_IPC_HANDLE_SIZE",                                      CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 64
-  {"CU_LAUNCH_PARAM_BUFFER_POINTER",                                   {"HIP_LAUNCH_PARAM_BUFFER_POINTER",                          CONV_DEF, API_DRIVER}}, // ((void*)0x01)
-  {"CU_LAUNCH_PARAM_BUFFER_SIZE",                                      {"HIP_LAUNCH_PARAM_BUFFER_SIZE",                             CONV_DEF, API_DRIVER}}, // ((void*)0x02)
-  {"CU_LAUNCH_PARAM_END",                                              {"HIP_LAUNCH_PARAM_END",                                     CONV_DEF, API_DRIVER}}, // ((void*)0x00)
+  {"CU_IPC_HANDLE_SIZE",                                               {"HIP_IPC_HANDLE_SIZE",                                      CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 64
+  {"CU_LAUNCH_PARAM_BUFFER_POINTER",                                   {"HIP_LAUNCH_PARAM_BUFFER_POINTER",                          CONV_DEFINE, API_DRIVER}}, // ((void*)0x01)
+  {"CU_LAUNCH_PARAM_BUFFER_SIZE",                                      {"HIP_LAUNCH_PARAM_BUFFER_SIZE",                             CONV_DEFINE, API_DRIVER}}, // ((void*)0x02)
+  {"CU_LAUNCH_PARAM_END",                                              {"HIP_LAUNCH_PARAM_END",                                     CONV_DEFINE, API_DRIVER}}, // ((void*)0x00)
   // cudaHostAllocPortable
-  {"CU_MEMHOSTALLOC_PORTABLE",                                         {"hipHostMallocPortable",                                    CONV_DEF, API_DRIVER}}, // 0x01
+  {"CU_MEMHOSTALLOC_PORTABLE",                                         {"hipHostMallocPortable",                                    CONV_DEFINE, API_DRIVER}}, // 0x01
   // cudaHostAllocMapped
-  {"CU_MEMHOSTALLOC_DEVICEMAP",                                        {"hipHostMallocMapped",                                      CONV_DEF, API_DRIVER}}, // 0x02
+  {"CU_MEMHOSTALLOC_DEVICEMAP",                                        {"hipHostMallocMapped",                                      CONV_DEFINE, API_DRIVER}}, // 0x02
   // cudaHostAllocWriteCombined
-  {"CU_MEMHOSTALLOC_WRITECOMBINED",                                    {"hipHostAllocWriteCombined",                                CONV_DEF, API_DRIVER}}, // 0x04
+  {"CU_MEMHOSTALLOC_WRITECOMBINED",                                    {"hipHostAllocWriteCombined",                                CONV_DEFINE, API_DRIVER}}, // 0x04
   // cudaHostRegisterPortable
-  {"CU_MEMHOSTREGISTER_PORTABLE",                                      {"hipHostRegisterPortable",                                  CONV_DEF, API_DRIVER}}, // 0x01
+  {"CU_MEMHOSTREGISTER_PORTABLE",                                      {"hipHostRegisterPortable",                                  CONV_DEFINE, API_DRIVER}}, // 0x01
   // cudaHostRegisterMapped
-  {"CU_MEMHOSTREGISTER_DEVICEMAP",                                     {"hipHostRegisterMapped",                                    CONV_DEF, API_DRIVER}}, // 0x02
+  {"CU_MEMHOSTREGISTER_DEVICEMAP",                                     {"hipHostRegisterMapped",                                    CONV_DEFINE, API_DRIVER}}, // 0x02
   // cudaHostRegisterIoMemory
-  {"CU_MEMHOSTREGISTER_IOMEMORY",                                      {"hipHostRegisterIoMemory",                                  CONV_DEF, API_DRIVER}}, // 0x04
-  {"CU_PARAM_TR_DEFAULT",                                              {"HIP_PARAM_TR_DEFAULT",                                     CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // -1
+  {"CU_MEMHOSTREGISTER_IOMEMORY",                                      {"hipHostRegisterIoMemory",                                  CONV_DEFINE, API_DRIVER}}, // 0x04
+  {"CU_PARAM_TR_DEFAULT",                                              {"HIP_PARAM_TR_DEFAULT",                                     CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // -1
   // cudaStreamLegacy ((cudaStream_t)0x1)
-  {"CU_STREAM_LEGACY",                                                 {"hipStreamLegacy",                                          CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // ((CUstream)0x1)
+  {"CU_STREAM_LEGACY",                                                 {"hipStreamLegacy",                                          CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // ((CUstream)0x1)
   // cudaStreamPerThread ((cudaStream_t)0x2)
-  {"CU_STREAM_PER_THREAD",                                             {"hipStreamPerThread",                                       CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // ((CUstream)0x2)
-  {"CU_TRSA_OVERRIDE_FORMAT",                                          {"HIP_TRSA_OVERRIDE_FORMAT",                                 CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
-  {"CU_TRSF_NORMALIZED_COORDINATES",                                   {"HIP_TRSF_NORMALIZED_COORDINATES",                          CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x02
-  {"CU_TRSF_READ_AS_INTEGER",                                          {"HIP_TRSF_READ_AS_INTEGER",                                 CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
-  {"CU_TRSF_SRGB",                                                     {"HIP_TRSF_SRGB",                                            CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x10
+  {"CU_STREAM_PER_THREAD",                                             {"hipStreamPerThread",                                       CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // ((CUstream)0x2)
+  {"CU_TRSA_OVERRIDE_FORMAT",                                          {"HIP_TRSA_OVERRIDE_FORMAT",                                 CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
+  {"CU_TRSF_NORMALIZED_COORDINATES",                                   {"HIP_TRSF_NORMALIZED_COORDINATES",                          CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x02
+  {"CU_TRSF_READ_AS_INTEGER",                                          {"HIP_TRSF_READ_AS_INTEGER",                                 CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
+  {"CU_TRSF_SRGB",                                                     {"HIP_TRSF_SRGB",                                            CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x10
   // no analogue
   // NOTE: Deprecated, use CUDA_ARRAY3D_LAYERED
-  {"CUDA_ARRAY3D_2DARRAY",                                             {"HIP_ARRAY3D_2DARRAY",                                      CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
+  {"CUDA_ARRAY3D_2DARRAY",                                             {"HIP_ARRAY3D_2DARRAY",                                      CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
   // cudaArrayLayered
-  {"CUDA_ARRAY3D_LAYERED",                                             {"hipArrayLayered",                                          CONV_DEF, API_DRIVER}}, // 0x01
+  {"CUDA_ARRAY3D_LAYERED",                                             {"hipArrayLayered",                                          CONV_DEFINE, API_DRIVER}}, // 0x01
   // cudaArraySurfaceLoadStore
-  {"CUDA_ARRAY3D_SURFACE_LDST",                                        {"hipArraySurfaceLoadStore",                                 CONV_DEF, API_DRIVER}}, // 0x02
+  {"CUDA_ARRAY3D_SURFACE_LDST",                                        {"hipArraySurfaceLoadStore",                                 CONV_DEFINE, API_DRIVER}}, // 0x02
   // cudaArrayCubemap
-  {"CUDA_ARRAY3D_CUBEMAP",                                             {"hipArrayCubemap",                                          CONV_DEF, API_DRIVER}}, // 0x04
+  {"CUDA_ARRAY3D_CUBEMAP",                                             {"hipArrayCubemap",                                          CONV_DEFINE, API_DRIVER}}, // 0x04
   // cudaArrayTextureGather
-  {"CUDA_ARRAY3D_TEXTURE_GATHER",                                      {"hipArrayTextureGather",                                    CONV_DEF, API_DRIVER}}, // 0x08
+  {"CUDA_ARRAY3D_TEXTURE_GATHER",                                      {"hipArrayTextureGather",                                    CONV_DEFINE, API_DRIVER}}, // 0x08
   // no analogue
-  {"CUDA_ARRAY3D_DEPTH_TEXTURE",                                       {"hipArrayDepthTexture",                                     CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x10
+  {"CUDA_ARRAY3D_DEPTH_TEXTURE",                                       {"hipArrayDepthTexture",                                     CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x10
   // cudaArrayColorAttachment
-  {"CUDA_ARRAY3D_COLOR_ATTACHMENT",                                    {"hipArrayColorAttachment",                                  CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x20
+  {"CUDA_ARRAY3D_COLOR_ATTACHMENT",                                    {"hipArrayColorAttachment",                                  CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x20
   // cudaCooperativeLaunchMultiDeviceNoPreSync
-  {"CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC",          {"hipCooperativeLaunchMultiDeviceNoPreSync",                 CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
+  {"CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC",          {"hipCooperativeLaunchMultiDeviceNoPreSync",                 CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
   // cudaCooperativeLaunchMultiDeviceNoPostSync
-  {"CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC",         {"hipCooperativeLaunchMultiDeviceNoPostSync",                CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x02
+  {"CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC",         {"hipCooperativeLaunchMultiDeviceNoPostSync",                CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x02
   // cudaExternalMemoryDedicated
-  {"CUDA_EXTERNAL_MEMORY_DEDICATED",                                   {"hipExternalMemoryDedicated",                               CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
-  {"CUDA_VERSION",                                                     {"HIP_VERSION",                                              CONV_DEF, API_DRIVER, HIP_UNSUPPORTED}}, // 10000
+  {"CUDA_EXTERNAL_MEMORY_DEDICATED",                                   {"hipExternalMemoryDedicated",                               CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
+  {"CUDA_VERSION",                                                     {"HIP_VERSION",                                              CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 10000
 };
