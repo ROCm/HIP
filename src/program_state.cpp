@@ -398,11 +398,10 @@ void read_kernarg_metadata(
             if (dx == string::npos) break;
 
             static constexpr decltype(tmp.size()) name_sz{5};
-            dx = tmp.find_first_not_of(' ', dx + name_sz);
+            dx = tmp.find_first_not_of(" '", dx + name_sz);
 
-            auto fn = tmp.substr(dx, tmp.find('\n', dx) - dx);
+            auto fn = tmp.substr(dx, tmp.find_first_of("'\n", dx) - dx);
             dx += fn.size();
-
             dx = tmp.find("Args:", dx);
 
             if (dx == string::npos) break;
@@ -590,6 +589,7 @@ unordered_map<string, vector<pair<size_t, size_t>>>& kernargs() {
         }
     });
 
+    for (auto&& x : r) std::cerr << x.first << std::endl;
     return r;
 }
 
