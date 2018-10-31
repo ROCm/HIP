@@ -723,9 +723,9 @@ if ($setStdLib eq 0 and $HIP_PLATFORM eq 'hcc')
 
 if ($needHipHcc) {
     if ($linkType eq 0) {
-        substr($HIPLDFLAGS,0,0) = "  $HIP_PATH/lib/libhip_hcc_static.a $HIP_PATH/lib/libhip_device.a " ;
+        substr($HIPLDFLAGS,0,0) = "  $HIP_PATH/lib/libhip_hcc_static.a " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = "  -Wl,--rpath=$HIP_PATH/lib $HIP_PATH/lib/libhip_hcc.so $HIP_PATH/lib/libhip_device.a ";
+        substr($HIPLDFLAGS,0,0) = "  -Wl,--rpath=$HIP_PATH/lib $HIP_PATH/lib/libhip_hcc.so ";
     }
 }
 

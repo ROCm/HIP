@@ -41,15 +41,5 @@ endif()
 list(APPEND _IMPORT_CHECK_TARGETS hip::hip_hcc )
 list(APPEND _IMPORT_CHECK_FILES_FOR_hip::hip_hcc "/opt/rocm/hip/lib/libhip_hcc.so" )
 
-# Import target "hip::hip_device" for configuration "Release"
-set_property(TARGET hip::hip_device APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-set_target_properties(hip::hip_device PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "/opt/rocm/hip/lib/libhip_device.a"
-  )
-
-list(APPEND _IMPORT_CHECK_TARGETS hip::hip_device )
-list(APPEND _IMPORT_CHECK_FILES_FOR_hip::hip_device "/opt/rocm/hip/lib/libhip_device.a" )
-
 # Commands beyond this point should not need to know the version.
 set(CMAKE_IMPORT_FILE_VERSION)
