@@ -94,7 +94,7 @@ typedef struct ihipModule_t* hipModule_t;
 
 typedef struct ihipModuleSymbol_t* hipFunction_t;
 
-struct hipFuncAttributes {
+typedef struct hipFuncAttributes {
     int binaryVersion;
     int cacheModeCA;
     size_t constSizeBytes;
@@ -105,7 +105,7 @@ struct hipFuncAttributes {
     int preferredShmemCarveout;
     int ptxVersion;
     size_t sharedSizeBytes;
-};
+} hipFuncAttributes;
 
 typedef struct ihipEvent_t* hipEvent_t;
 
