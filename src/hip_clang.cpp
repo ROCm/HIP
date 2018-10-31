@@ -165,11 +165,13 @@ extern "C" void __hipRegisterFunction(
   assert(modules && modules->size() >= g_deviceCnt);
   for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {
     hipFunction_t function;
-    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName)) {
+    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName) &&
+        function != nullptr) {
       functions[deviceId] = function;
     }
     else {
-      tprintf(DB_FB, "missing kernel %s for device %d\n", deviceName, deviceId);
+      tprintf(DB_FB, "__hipRegisterFunction cannot find kernel %s for"
+          " device %d\n", deviceName, deviceId);
     }
   }
 
@@ -249,9 +251,11 @@ hipError_t hipLaunchByPtr(const void *hostFunction)
 
   hipError_t e = hipSuccess;
   decltype(g_functions)::iterator it;
-  if ((it = g_functions.find(hostFunction)) == g_functions.end()) {
+  if ((it = g_functions.find(hostFunction)) == g_functions.end() ||
+      !it->second[deviceId]) {
     e = hipErrorUnknown;
-    fprintf(stderr, "kernel %p not found!\n", hostFunction);
+    fprintf(stderr, "hipLaunchByPtr cannot find kernel with stub address %p"
+        " for device %d!\n", hostFunction, deviceId);
     abort();
   } else {
     size_t size = exec._arguments.size();
