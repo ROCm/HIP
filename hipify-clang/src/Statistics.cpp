@@ -14,7 +14,7 @@ const char *counterNames[NUM_CONV_TYPES] = {
   "addressing", // CONV_ADDRESSING
   "stream", // CONV_STREAM
   "event", // CONV_EVENT
-  "external_resource_interop" // CONV_EXT_RES
+  "external_resource_interop", // CONV_EXT_RES
   "stream_memory", // CONV_STREAM_MEMORY
   "execution", // CONV_EXECUTION
   "graph", // CONV_GRAPH
@@ -74,7 +74,7 @@ void printStat(std::ostream *csv, llvm::raw_ostream* printOut, const std::string
 
 } // Anonymous namespace
 
-void StatCounter::incrementCounter(const hipCounter& counter, std::string name) {
+void StatCounter::incrementCounter(const hipCounter& counter, const std::string& name) {
   counters[name]++;
   apiCounters[(int) counter.apiType]++;
   convTypeCounters[(int) counter.type]++;
@@ -100,7 +100,7 @@ int StatCounter::getConvSum() {
   return acc;
 }
 
-void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, std::string prefix) {
+void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string& prefix) {
   conditionalPrint(csv, printOut, "\nCUDA ref type;Count\n", "[HIPIFY] info: " + prefix + " refs by type:\n");
   for (int i = 0; i < NUM_CONV_TYPES; i++) {
     if (convTypeCounters[i] > 0) {
@@ -117,7 +117,7 @@ void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, std::str
   }
 }
 
-Statistics::Statistics(std::string name): fileName(name) {
+Statistics::Statistics(const std::string& name): fileName(name) {
   // Compute the total bytes/lines in the input file.
   std::ifstream src_file(name, std::ios::binary | std::ios::ate);
   src_file.clear();
@@ -129,7 +129,7 @@ Statistics::Statistics(std::string name): fileName(name) {
 
 ///////// Counter update routines //////////
 
-void Statistics::incrementCounter(const hipCounter &counter, std::string name) {
+void Statistics::incrementCounter(const hipCounter &counter, const std::string& name) {
   if (counter.unsupported) {
     unsupported.incrementCounter(counter, name);
   } else {
@@ -218,7 +218,7 @@ Statistics& Statistics::current() {
   return *Statistics::currentStatistics;
 }
 
-void Statistics::setActive(std::string name) {
+void Statistics::setActive(const std::string& name) {
   stats.emplace(std::make_pair(name, Statistics{name}));
   Statistics::currentStatistics = &stats.at(name);
 }
