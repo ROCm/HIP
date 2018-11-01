@@ -574,24 +574,8 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
                 size = size * height;
             }
 
-            size_t allocSize = 0;
-            switch (desc->f) {
-                case hipChannelFormatKindSigned:
-                    allocSize = size * sizeof(int);
-                    break;
-                case hipChannelFormatKindUnsigned:
-                    allocSize = size * sizeof(unsigned int);
-                    break;
-                case hipChannelFormatKindFloat:
-                    allocSize = size * sizeof(float);
-                    break;
-                case hipChannelFormatKindNone:
-                    allocSize = size * sizeof(size_t);
-                    break;
-                default:
-                    hip_status = hipErrorUnknown;
-                    break;
-            }
+            const size_t allocSize = size * ((desc->x + desc->y + desc->z + desc->w) / 8);
+
             hc::accelerator acc = ctx->getDevice()->_acc;
             hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
@@ -800,24 +784,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
         const unsigned am_flags = 0;
         const size_t size = extent.width * extent.height * extent.depth;
 
-        size_t allocSize = 0;
-        switch (desc->f) {
-            case hipChannelFormatKindSigned:
-                allocSize = size * sizeof(int);
-                break;
-            case hipChannelFormatKindUnsigned:
-                allocSize = size * sizeof(unsigned int);
-                break;
-            case hipChannelFormatKindFloat:
-                allocSize = size * sizeof(float);
-                break;
-            case hipChannelFormatKindNone:
-                allocSize = size * sizeof(size_t);
-                break;
-            default:
-                hip_status = hipErrorUnknown;
-                break;
-        }
+        const size_t allocSize = size * ((desc->x + desc->y + desc->z + desc->w) / 8);
 
         hc::accelerator acc = ctx->getDevice()->_acc;
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
@@ -1688,7 +1655,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     } else {
         try {
             if(!isLocked){
-                for (int i = 0; i < height; ++i) 
+                for (int i = 0; i < height; ++i)
                     e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
                                           (unsigned char*)src + i * spitch, width, kind, stream);
             } else{
@@ -1738,7 +1705,7 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
         stream->locked_wait();
     } else {
         e = hipErrorInvalidValue;
-    } 
+    }
     return ihipLogStatus(e);
 }
 

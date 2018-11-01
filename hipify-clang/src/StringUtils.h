@@ -11,4 +11,4 @@ llvm::StringRef unquoteStr(llvm::StringRef s);
 /**
   * If `s` starts with `prefix`, remove it. Otherwise, does nothing.
   */
-void removePrefixIfPresent(std::string &s, std::string prefix);
+void removePrefixIfPresent(std::string &s, const std::string& prefix);
