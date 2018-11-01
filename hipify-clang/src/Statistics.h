@@ -22,7 +22,7 @@ enum ConvTypes {
   // Driver API : 5.5. Device Management, 5.6. Device Management [DEPRECATED]
   // Runtime API: 5.1. Device Management
   CONV_DEVICE,
-  // Driver API : 5.8.Context Management, 5.9. Context Management [DEPRECATED]
+  // Driver API : 5.7. Primary Context Management, 5.8.Context Management, 5.9. Context Management [DEPRECATED]
   CONV_CONTEXT,
   // Driver API : 5.10. Module Management
   CONV_MODULE,
@@ -134,11 +134,11 @@ private:
   int convTypeCounters[NUM_CONV_TYPES] = {};
 
 public:
-  void incrementCounter(const hipCounter& counter, std::string name);
+  void incrementCounter(const hipCounter& counter, const std::string& name);
   // Add the counters from `other` onto the counters of this object.
   void add(const StatCounter& other);
   int getConvSum();
-  void print(std::ostream* csv, llvm::raw_ostream* printOut, std::string prefix);
+  void print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string& prefix);
 };
 
 /**
@@ -156,8 +156,8 @@ class Statistics {
   chr::steady_clock::time_point completionTime;
 
 public:
-  Statistics(std::string name);
-  void incrementCounter(const hipCounter &counter, std::string name);
+  Statistics(const std::string& name);
+  void incrementCounter(const hipCounter &counter, const std::string& name);
   // Add the counters from `other` onto the counters of this object.
   void add(const Statistics &other);
   void lineTouched(int lineNumber);
@@ -192,5 +192,5 @@ public:
     * Set the active Statistics object to the named one, creating it if necessary, and write the completion
     * timestamp into the currently active one.
     */
-  static void setActive(std::string name);
+  static void setActive(const std::string& name);
 };
