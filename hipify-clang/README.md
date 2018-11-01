@@ -11,6 +11,7 @@
 - [Build and install](#build-and-install)
      * [Building](#building)
      * [Testing](#testing)
+     * [Linux](#linux)
      * [Windows](#windows)
 - [Running and using hipify-clang](#running-and-using-hipify-clang)
 - [Disclaimer](#disclaimer)
@@ -80,7 +81,7 @@ Debug build type `-DCMAKE_BUILD_TYPE=Debug` is also supported and tested; `LLVM+
 
 The binary can then be found at `./dist/bin/hipify-clang`.
 
-### <a name="testing"></a> Test
+### <a name="testing"></a> Testing
 
 `hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
@@ -88,61 +89,183 @@ The binary can then be found at `./dist/bin/hipify-clang`.
 
 To run it:
 1. Download [`LLVM`](http://releases.llvm.org/6.0.1/llvm-6.0.1.src.tar.xz)+[`CLANG`](http://releases.llvm.org/6.0.1/cfe-6.0.1.src.tar.xz) sources.
-2. Build [`LLVM+CLANG`](http://llvm.org/docs/CMake.html).
-    For instance:
-    ```shell
+2. Build [`LLVM+CLANG`](http://llvm.org/docs/CMake.html):
+   ```shell
    cd llvm
    mkdir build dist
    cd build
+   ```
+     - **Linux**:
 
-   cmake \
-     -DCMAKE_INSTALL_PREFIX=../dist \
-     -DLLVM_SOURCE_DIR=../llvm \
-     -DCMAKE_BUILD_TYPE=Release \
-     -Thost=x64 \
-     ../llvm
+   ```shell
+        cmake \
+         -DCMAKE_INSTALL_PREFIX=../dist \
+         -DLLVM_SOURCE_DIR=../llvm \
+         -DCMAKE_BUILD_TYPE=Release \
+         ../llvm
+        make -j install
+   ```
+     - **Windows**:
 
-    make -j install
-    ```
-    On Windows the following option should be specified for `cmake` at first place: `-G "Visual Studio 15 2017 Win64"`; the generated `LLVM.sln` should be built by `Visual Studio 15 2017` instead of `make`.
+```shell
+        cmake \
+         -G "Visual Studio 15 2017 Win64" \
+         -DCMAKE_INSTALL_PREFIX=../dist \
+         -DLLVM_SOURCE_DIR=../llvm \
+         -DCMAKE_BUILD_TYPE=Release \
+         -Thost=x64 \
+         ../llvm
+```
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Run `Visual Studio 15 2017`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
+
 
 3. Ensure [`CUDA`](https://developer.nvidia.com/cuda-toolkit-archive) of minimum version 7.5 is installed.
 
-    * Having multiple CUDA installations, in order to choose a particular version the `DCUDA_TOOLKIT_ROOT_DIR` option should be specified:
+    * Having multiple CUDA installations to choose a particular version the `DCUDA_TOOLKIT_ROOT_DIR` option should be specified:
 
-      `-DCUDA_TOOLKIT_ROOT_DIR="C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0"`
+        - Linux: `-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0`
 
-      * On Windows `CUDA_SDK_ROOT_DIR` option should be specified as well:
+        - Windows: `-DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0"`
 
-      `-DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v9.0"`
+          `-DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v9.0"`
 
 4. Ensure [`cuDNN`](https://developer.nvidia.com/rdp/cudnn-archive) of version corresponding to CUDA's version is installed.
 
     * Path to cuDNN should be specified by the `CUDA_DNN_ROOT_DIR` option:
 
-      `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.1`
+        - Linux: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-8.0-v7.1`
+
+        - Windows: `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.1`
 
 5. Ensure [`python`](https://www.python.org/downloads) of minimum required version 2.7 is installed.
 
 6. Ensure `lit` and `FileCheck` are installed - these are distributed with LLVM.
 
-    * installing `lit` into `python` might be required:
+    * Install `lit` into `python`:
 
-      `python f:/LLVM/6.0.1/llvm/utils/lit/setup.py install`,
+        - Linux: `python /srv/git/LLVM/6.0.1/llvm/utils/lit/setup.py install`
 
-      where `f:/LLVM/6.0.1/llvm` is LLVM sources root directory.
+        - Windows: `python f:/LLVM/6.0.1/llvm/utils/lit/setup.py install`
 
-    * Starting with LLVM 6.0.1 path to llvm-lit.py script should be specified by the `LLVM_EXTERNAL_LIT` option:
+    * Starting with LLVM 6.0.1 path to `llvm-lit` python script should be specified by the `LLVM_EXTERNAL_LIT` option:
 
-      `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.1/build/Release/bin/llvm-lit.py`,
+        - Linux: `-DLLVM_EXTERNAL_LIT=/srv/git/LLVM/6.0.1/build/bin/llvm-lit`
 
-      where `f:/LLVM/6.0.1/build/Release` is LLVM build directory.
+        - Windows: `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.1/build/Release/bin/llvm-lit.py`
 
-7. Build with the `HIPIFY_CLANG_TESTS` option turned on: -DHIPIFY_CLANG_TESTS=1.
+7. Set `HIPIFY_CLANG_TESTS` option turned on: `-DHIPIFY_CLANG_TESTS=1`.
 
-8. `make test-hipify`
+8. Run `cmake`:
+     * [Linux](#linux)
+     * [Windows](#windows)
 
-    On Windows after `cmake` the project `test-hipify` in the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make test-hipify`.
+9. Run tests:
+
+     - Linux: `make test-hipify`.
+
+     - Windows: run `Visual Studio 15 2017`, open the generated `hipify-clang.sln`, build project `test-hipify`.
+
+### <a name="linux"></a >Linux
+
+On Linux (Ubuntu 14-18) the following configurations are tested:
+
+LLVM 5.0.0 - 6.0.1, CUDA 8.0, cudnn-8.0
+
+Build system for the above configurations:
+
+Python 2.7 (min), cmake 3.5.2 (min), GNU C/C++ 5.4.0 (min).
+
+Here is an example of building `hipify-clang` with testing support on `Ubuntu 16.04`:
+
+```shell
+cmake
+ -DHIPIFY_CLANG_TESTS=1 \
+ -DCMAKE_BUILD_TYPE=Release \
+ -DCMAKE_INSTALL_PREFIX=../dist \
+ -DCMAKE_PREFIX_PATH=/srv/git/LLVM/6.0.1/dist \
+ -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
+ -DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-8.0-v7.1 \
+ -DLLVM_EXTERNAL_LIT=/srv/git/LLVM/6.0.1/build/bin/llvm-lit \
+ ..
+```
+*A corresponding successful output:*
+```shell
+-- The C compiler identification is GNU 5.4.0
+-- The CXX compiler identification is GNU 5.4.0
+-- Check for working C compiler: /usr/bin/cc
+-- Check for working C compiler: /usr/bin/cc -- works
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Check for working CXX compiler: /usr/bin/c++
+-- Check for working CXX compiler: /usr/bin/c++ -- works
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found LLVM 6.0.1:
+--    - CMake module path: /srv/git/LLVM/6.0.1/dist/lib/cmake/llvm
+--    - Include path     : /srv/git/LLVM/6.0.1/dist/include
+--    - Binary path      : /srv/git/LLVM/6.0.1/dist/bin
+-- Linker detection: GNU ld
+-- Found PythonInterp: /usr/bin/python2.7 (found suitable version "2.7.12", minimum required is "2.7")
+-- Found lit: /usr/local/bin/lit
+-- Found FileCheck: /srv/git/LLVM/6.0.1/dist/bin/FileCheck
+-- Looking for pthread.h
+-- Looking for pthread.h - found
+-- Looking for pthread_create
+-- Looking for pthread_create - not found
+-- Looking for pthread_create in pthreads
+-- Looking for pthread_create in pthreads - not found
+-- Looking for pthread_create in pthread
+-- Looking for pthread_create in pthread - found
+-- Found Threads: TRUE
+-- Found CUDA: /usr/local/cuda-8.0 (found version "8.0")
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /srv/git/HIP/hipify-clang/build
+```
+```shell
+make test-hipify
+```
+*A corresponding successful output:*
+```shell
+[100%] Running HIPify regression tests
+-- Testing: 28 tests, 12 threads --
+PASS: hipify :: allocators.cu (1 of 28)
+PASS: hipify :: coalescing.cu (2 of 28)
+PASS: hipify :: cuDNN/cudnn_softmax.cu (3 of 28)
+PASS: hipify :: cuFFT/simple_cufft.cu (4 of 28)
+PASS: hipify :: cuComplex/cuComplex_Julia.cu (5 of 28)
+PASS: hipify :: cuBLAS/cublas_sgemm_matrix_multiplication.cu (6 of 28)
+PASS: hipify :: cuBLAS/cublas_1_based_indexing.cu (7 of 28)
+PASS: hipify :: cuBLAS/cublas_0_based_indexing.cu (8 of 28)
+PASS: hipify :: axpy.cu (9 of 28)
+PASS: hipify :: dynamic_shared_memory.cu (10 of 28)
+PASS: hipify :: headers_test_01.cu (11 of 28)
+PASS: hipify :: headers_test_02.cu (12 of 28)
+PASS: hipify :: headers_test_03.cu (13 of 28)
+PASS: hipify :: headers_test_05.cu (14 of 28)
+PASS: hipify :: cuDNN/cudnn_convolution_forward.cu (15 of 28)
+PASS: hipify :: cuRAND/poisson_api_example.cu (16 of 28)
+PASS: hipify :: cudaRegister.cu (17 of 28)
+PASS: hipify :: headers_test_06.cu (18 of 28)
+PASS: hipify :: headers_test_04.cu (19 of 28)
+PASS: hipify :: intro.cu (20 of 28)
+PASS: hipify :: headers_test_07.cu (21 of 28)
+PASS: hipify :: square.cu (22 of 28)
+PASS: hipify :: static_shared_memory.cu (23 of 28)
+PASS: hipify :: vec_add.cu (24 of 28)
+PASS: hipify :: headers_test_08.cu (25 of 28)
+PASS: hipify :: cuRAND/benchmark_curand_generate.cpp (26 of 28)
+PASS: hipify :: cuRAND/benchmark_curand_kernel.cpp (27 of 28)
+PASS: hipify :: headers_test_09.cu (28 of 28)
+Testing Time: 1.71s
+  Expected Passes    : 28
+[100%] Built target test-hipify
+```
 
 ### <a name="windows"></a >Windows
 
@@ -172,7 +295,7 @@ cmake
  -Thost=x64
  ..
 ```
-A corresponding successful output:
+*A corresponding successful output:*
 ```shell
 -- Found LLVM 6.0.1:
 --    - CMake module path: F:/LLVM/6.0.1/dist/lib/cmake/llvm
@@ -194,12 +317,13 @@ To process a file, `hipify-clang` needs access to the same headers that would be
 For example:
 
 ```shell
-hipify-clang square.cu -- \
+./hipify-clang \
+  square.cu \
+  -- \
   -x cuda \
-  --cuda-path=/opt/cuda \
-  --cuda-gpu-arch=sm_30 \
-  -isystem /opt/cuda/samples/common/inc
-  -I /opt/cuda/cuDNN
+  --cuda-path=/usr/local/cuda-8.0 \
+  --cuda-gpu-arch=sm_50 \
+  -isystem /usr/local/cuda-8.0/samples/common/inc
 ```
 
 `hipify-clang` arguments are given first, followed by a separator, and then the arguments you'd pass to `clang` if you
