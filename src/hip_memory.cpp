@@ -28,6 +28,9 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
+__device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
+__device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
+
 // Internal HIP APIS:
 namespace hip_internal {
 
