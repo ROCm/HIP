@@ -551,6 +551,14 @@ inline static hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolN
         dst, symbolName, sizeBytes, offset, hipMemcpyKindToCudaMemcpyKind(kind), stream));
 }
 
+inline static hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
+    return hipCUDAErrorTohipError(cudaGetSymbolAddress(devPtr, symbolName);
+}
+
+inline static hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
+    return hipCUDAErrorTohipError(cudaGetSymbolSize(size, symbolName);
+}
+
 inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
                                      size_t width, size_t height, hipMemcpyKind kind) {
     return hipCUDAErrorTohipError(
