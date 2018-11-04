@@ -1099,6 +1099,23 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
     return ihipLogStatus(e);
 }
 
+
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), devPtr, symbolName);
+
+    size_t size = 0;
+    return hipModuleGetGlobal(devPtr, &size, 0, static_cast<const char*>(symbolName));
+}
+
+
+hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
+    HIP_INIT_SPECIAL_API((TRACE_MCMD), size, symbolName);
+
+    void* devPtr = nullptr;
+    return hipModuleGetGlobal(&devPtr, size, 0, static_cast<const char*>(symbolName));
+}
+
+
 //---
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
     HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, kind);
