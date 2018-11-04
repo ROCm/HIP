@@ -1390,7 +1390,7 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t siz
  *
  * @param[in]  symbolName - Symbol on device
  * @param[out] devPtr - Pointer to a pointer to the memory referred to by the symbol
- * @return #...
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
  *
  *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
@@ -1403,7 +1403,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName);
  *
  * @param[in]  symbolName - Symbol on device
  * @param[out] size - Pointer to the size of the symbol
- * @return #...
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
  *
  *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
