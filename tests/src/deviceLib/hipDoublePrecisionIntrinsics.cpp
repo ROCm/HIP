@@ -34,34 +34,38 @@ THE SOFTWARE.
 #pragma clang diagnostic ignored "-Wunused-variable"
 
 __device__ void double_precision_intrinsics() {
-    // __dadd_rd(0.0, 1.0);
-    // __dadd_rn(0.0, 1.0);
-    // __dadd_ru(0.0, 1.0);
-    // __dadd_rz(0.0, 1.0);
-    // __ddiv_rd(0.0, 1.0);
-    // __ddiv_rn(0.0, 1.0);
-    // __ddiv_ru(0.0, 1.0);
-    // __ddiv_rz(0.0, 1.0);
-    // __dmul_rd(1.0, 2.0);
-    // __dmul_rn(1.0, 2.0);
-    // __dmul_ru(1.0, 2.0);
-    // __dmul_rz(1.0, 2.0);
+#if defined OCML_BASIC_ROUNDED_OPERATIONS
+    __dadd_rd(0.0, 1.0);
+    __dadd_rn(0.0, 1.0);
+    __dadd_ru(0.0, 1.0);
+    __dadd_rz(0.0, 1.0);
+    __ddiv_rd(0.0, 1.0);
+    __ddiv_rn(0.0, 1.0);
+    __ddiv_ru(0.0, 1.0);
+    __ddiv_rz(0.0, 1.0);
+    __dmul_rd(1.0, 2.0);
+    __dmul_rn(1.0, 2.0);
+    __dmul_ru(1.0, 2.0);
+    __dmul_rz(1.0, 2.0);
+#endif
     __drcp_rd(2.0);
     __drcp_rn(2.0);
     __drcp_ru(2.0);
     __drcp_rz(2.0);
-    // __dsqrt_rd(4.0);
-    // __dsqrt_rn(4.0);
-    // __dsqrt_ru(4.0);
-    // __dsqrt_rz(4.0);
-    // __dsub_rd(2.0, 1.0);
-    // __dsub_rn(2.0, 1.0);
-    // __dsub_ru(2.0, 1.0);
-    // __dsub_rz(2.0, 1.0);
-    // __fma_rd(1.0, 2.0, 3.0);
-    // __fma_rn(1.0, 2.0, 3.0);
-    // __fma_ru(1.0, 2.0, 3.0);
-    // __fma_rz(1.0, 2.0, 3.0);
+#if defined OCML_BASIC_ROUNDED_OPERATIONS
+    __dsqrt_rd(4.0);
+    __dsqrt_rn(4.0);
+    __dsqrt_ru(4.0);
+    __dsqrt_rz(4.0);
+    __dsub_rd(2.0, 1.0);
+    __dsub_rn(2.0, 1.0);
+    __dsub_ru(2.0, 1.0);
+    __dsub_rz(2.0, 1.0);
+    __fma_rd(1.0, 2.0, 3.0);
+    __fma_rn(1.0, 2.0, 3.0);
+    __fma_ru(1.0, 2.0, 3.0);
+    __fma_rz(1.0, 2.0, 3.0);
+#endif
 }
 
 __global__ void compileDoublePrecisionIntrinsics(int ignored) {
