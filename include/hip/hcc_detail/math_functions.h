@@ -580,7 +580,6 @@ float __fmul_ru(float x, float y)  { return __ocml_mul_rtp_f32(x, y); }
 __DEVICE__
 inline
 float __fmul_rz(float x, float y) { return __ocml_mul_rtz_f32(x, y); }
-#endif
 __DEVICE__
 inline
 float __frcp_rd(float x) { return __llvm_amdgcn_rcp_f32(x); }
@@ -596,7 +595,6 @@ float __frcp_rz(float x) { return __llvm_amdgcn_rcp_f32(x); }
 __DEVICE__
 inline
 float __frsqrt_rn(float x) { return __llvm_amdgcn_rsq_f32(x); }
-#if defined OCML_BASIC_ROUNDED_OPERATIONS
 __DEVICE__
 inline
 float __fsqrt_rd(float x) { return __ocml_sqrt_rtn_f32(x); }
@@ -1077,7 +1075,6 @@ double __dmul_ru(double x, double y) { return __ocml_mul_rtp_f64(x, y); }
 __DEVICE__
 inline
 double __dmul_rz(double x, double y) { return __ocml_mul_rtz_f64(x, y); }
-#endif
 __DEVICE__
 inline
 double __drcp_rd(double x) { return __llvm_amdgcn_rcp_f64(x); }
@@ -1090,7 +1087,6 @@ double __drcp_ru(double x) { return __llvm_amdgcn_rcp_f64(x); }
 __DEVICE__
 inline
 double __drcp_rz(double x) { return __llvm_amdgcn_rcp_f64(x); }
-#if defined OCML_BASIC_ROUNDED_OPERATIONS
 __DEVICE__
 inline
 double __dsqrt_rd(double x) { return __ocml_sqrt_rtn_f64(x); }
