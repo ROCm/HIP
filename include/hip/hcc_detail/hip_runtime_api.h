@@ -2360,6 +2360,9 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
                               const char* name);
 
+hipError_t ihipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
+                               const char* name);
+
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that

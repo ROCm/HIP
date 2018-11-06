@@ -463,14 +463,19 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
                               const char* name) {
     HIP_INIT_API(dptr, bytes, hmod, name);
 
-    if (!dptr || !bytes) return ihipLogStatus(hipErrorInvalidValue);
+    return ihipLogStatus(ihipModuleGetGlobal(dptr, bytes, hmod, name));
+}
 
-    if (!name) return ihipLogStatus(hipErrorNotInitialized);
+hipError_t ihipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
+                               const char* name) {
+    if (!dptr || !bytes) return hipErrorInvalidValue;
+
+    if (!name) return hipErrorNotInitialized;
 
     const auto r = hmod ? read_agent_global_from_module(dptr, bytes, hmod, name)
                         : read_agent_global_from_process(dptr, bytes, name);
 
-    return ihipLogStatus(r);
+    return r;
 }
 
 namespace
