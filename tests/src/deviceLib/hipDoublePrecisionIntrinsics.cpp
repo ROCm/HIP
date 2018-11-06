@@ -47,12 +47,10 @@ __device__ void double_precision_intrinsics() {
     __dmul_rn(1.0, 2.0);
     __dmul_ru(1.0, 2.0);
     __dmul_rz(1.0, 2.0);
-#endif
     __drcp_rd(2.0);
     __drcp_rn(2.0);
     __drcp_ru(2.0);
     __drcp_rz(2.0);
-#if defined OCML_BASIC_ROUNDED_OPERATIONS
     __dsqrt_rd(4.0);
     __dsqrt_rn(4.0);
     __dsqrt_ru(4.0);

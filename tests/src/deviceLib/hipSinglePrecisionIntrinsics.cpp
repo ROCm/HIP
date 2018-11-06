@@ -59,13 +59,11 @@ __device__ void single_precision_intrinsics() {
     __fmul_rn(1.0f, 2.0f);
     __fmul_ru(1.0f, 2.0f);
     __fmul_rz(1.0f, 2.0f);
-#endif
     __frcp_rd(2.0f);
     __frcp_rn(2.0f);
     __frcp_ru(2.0f);
     __frcp_rz(2.0f);
     __frsqrt_rn(4.0f);
-#if defined OCML_BASIC_ROUNDED_OPERATIONS
     __fsqrt_rd(4.0f);
     __fsqrt_rn(4.0f);
     __fsqrt_ru(4.0f);

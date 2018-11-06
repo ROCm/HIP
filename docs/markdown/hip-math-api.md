@@ -1569,7 +1569,7 @@ __device__ static  float __fmul_rz(float x, float y);
 __device__  float __frcp_rd(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frcp_rn
@@ -1577,7 +1577,7 @@ __device__  float __frcp_rd(float x);
 __device__  float __frcp_rn(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frcp_ru
@@ -1585,7 +1585,7 @@ __device__  float __frcp_rn(float x);
 __device__  float __frcp_ru(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frcp_rz
@@ -1593,7 +1593,7 @@ __device__  float __frcp_ru(float x);
 __device__  float __frcp_rz(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frsqrt_rn
@@ -1601,7 +1601,7 @@ __device__  float __frcp_rz(float x);
 __device__  float __frsqrt_rn(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fsqrt_rd
@@ -1833,7 +1833,7 @@ __device__ static  double __dmul_rz(double x, double y);
 __device__  double __drcp_rd(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __drcp_rn
@@ -1841,7 +1841,7 @@ __device__  double __drcp_rd(double x);
 __device__  double __drcp_rn(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __drcp_ru
@@ -1849,7 +1849,7 @@ __device__  double __drcp_rn(double x);
 __device__  double __drcp_ru(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __drcp_rz
@@ -1857,7 +1857,7 @@ __device__  double __drcp_ru(double x);
 __device__  double __drcp_rz(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsqrt_rd
