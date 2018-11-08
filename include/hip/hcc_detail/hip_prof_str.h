@@ -4,6 +4,39 @@
 #include <sstream>
 #include <string>
 
+// Dummy API callbacks definition
+#define INIT_hipHccModuleLaunchKernel_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipHccGetAccelerator_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipHccGetAcceleratorView_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipDeviceCanAccessPeer2_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipMemcpyPeer2_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipMemcpyPeerAsync2_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipCreateTextureObject_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipDestroyTextureObject_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetTextureObjectResourceDesc_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetTextureObjectResourceViewDesc_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetTextureObjectTextureDesc_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipBindTexture_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipBindTexture2D_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipBindTextureToArray_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipBindTextureToMipmappedArray_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipUnbindTexture_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetChannelDesc_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetTextureAlignmentOffset_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetTextureReference_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipTexRefSetFormat_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipTexRefSetFlags_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipTexRefSetFilterMode_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipTexRefSetAddressMode_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipTexRefSetArray_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipTexRefSetAddress_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipTexRefSetAddress2D_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipMemcpyHtoH_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetErrorName_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetErrorString_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipCreateSurfaceObject_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipDestroySurfaceObject_CB_ARGS_DATA(cb_data) {};
+
 // HIP API callbacks ID enumaration
 enum hip_api_id_t {
   HIP_API_ID_hipHostFree = 0,
@@ -146,6 +179,38 @@ enum hip_api_id_t {
   HIP_API_ID_hipGetDeviceCount = 137,
   HIP_API_ID_NUMBER = 138,
   HIP_API_ID_ANY = 139,
+
+  HIP_API_ID_hipHccModuleLaunchKernel = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipHccGetAccelerator = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipHccGetAcceleratorView = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipDeviceCanAccessPeer2 = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipMemcpyPeer2 = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipMemcpyPeerAsync2 = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipCreateTextureObject = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipDestroyTextureObject = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetTextureObjectResourceDesc = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetTextureObjectResourceViewDesc = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetTextureObjectTextureDesc = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipBindTexture = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipBindTexture2D = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipBindTextureToArray = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipBindTextureToMipmappedArray = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipUnbindTexture = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetChannelDesc = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetTextureAlignmentOffset = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetTextureReference = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipTexRefSetFormat = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipTexRefSetFlags = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipTexRefSetFilterMode = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipTexRefSetAddressMode = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipTexRefSetArray = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipTexRefSetAddress = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipTexRefSetAddress2D = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipMemcpyHtoH = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetErrorName = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetErrorString = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipCreateSurfaceObject = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipDestroySurfaceObject = HIP_API_ID_NUMBER,
 };
 
 // Return HIP API string
