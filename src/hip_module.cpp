@@ -267,7 +267,12 @@ inline void track(const Agent_global& x) {
     hc::AmPointerInfo ptr_info(nullptr, x.address, x.address, x.byte_cnt, device->_acc, true,
                                false);
     hc::am_memtracker_add(x.address, ptr_info);
+#if USE_APP_PTR_FOR_CTX
+    hc::am_memtracker_update(x.address, device->_deviceId, 0u, ihipGetTlsDefaultCtx());
+#else
     hc::am_memtracker_update(x.address, device->_deviceId, 0u);
+#endif
+
 }
 
 template <typename Container = vector<Agent_global>>
@@ -342,7 +347,7 @@ hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes, hi
 
     tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(), it0->second.cend(), name);
 
-    return dptr ? hipSuccess : hipErrorNotFound;
+    return *dptr ? hipSuccess : hipErrorNotFound;
 }
 
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes, const char* name) {
@@ -367,7 +372,7 @@ hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes, c
 
     tie(*dptr, *bytes) = read_global_description(it->second.cbegin(), it->second.cend(), name);
 
-    return dptr ? hipSuccess : hipErrorNotFound;
+    return *dptr ? hipSuccess : hipErrorNotFound;
 }
 
 hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname) {
