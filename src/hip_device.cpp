@@ -30,7 +30,7 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // TODO - does this initialize HIP runtime?
 hipError_t hipGetDevice(int* deviceId) {
-    HIP_INIT_CB_API(hipGetDevice, deviceId);
+    HIP_INIT_API(hipGetDevice, deviceId);
 
     hipError_t e = hipSuccess;
 
@@ -69,12 +69,12 @@ hipError_t ihipGetDeviceCount(int* count) {
 }
 
 hipError_t hipGetDeviceCount(int* count) {
-    HIP_INIT_CB_API(hipGetDeviceCount, count);
+    HIP_INIT_API(hipGetDeviceCount, count);
     return ihipLogStatus(ihipGetDeviceCount(count));
 }
 
 hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig) {
-    HIP_INIT_CB_API(hipDeviceSetCacheConfig, cacheConfig);
+    HIP_INIT_API(hipDeviceSetCacheConfig, cacheConfig);
 
     // Nop, AMD does not support variable cache configs.
 
@@ -82,7 +82,7 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig) {
 }
 
 hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig) {
-    HIP_INIT_CB_API(hipDeviceGetCacheConfig, cacheConfig);
+    HIP_INIT_API(hipDeviceGetCacheConfig, cacheConfig);
 
     if (cacheConfig == nullptr) {
         return ihipLogStatus(hipErrorInvalidValue);
@@ -94,7 +94,7 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig) {
 }
 
 hipError_t hipDeviceGetLimit(size_t* pValue, hipLimit_t limit) {
-    HIP_INIT_CB_API(hipDeviceGetLimit, pValue, limit);
+    HIP_INIT_API(hipDeviceGetLimit, pValue, limit);
     if (pValue == nullptr) {
         return ihipLogStatus(hipErrorInvalidValue);
     }
@@ -107,7 +107,7 @@ hipError_t hipDeviceGetLimit(size_t* pValue, hipLimit_t limit) {
 }
 
 hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t cacheConfig) {
-    HIP_INIT_CB_API(hipFuncSetCacheConfig, cacheConfig);
+    HIP_INIT_API(hipFuncSetCacheConfig, cacheConfig);
 
     // Nop, AMD does not support variable cache configs.
 
@@ -115,7 +115,7 @@ hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t cacheConfig) {
 }
 
 hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config) {
-    HIP_INIT_CB_API(hipDeviceSetSharedMemConfig, config);
+    HIP_INIT_API(hipDeviceSetSharedMemConfig, config);
 
     // Nop, AMD does not support variable shared mem configs.
 
@@ -123,7 +123,7 @@ hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config) {
 }
 
 hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig) {
-    HIP_INIT_CB_API(hipDeviceGetSharedMemConfig, pConfig);
+    HIP_INIT_API(hipDeviceGetSharedMemConfig, pConfig);
 
     *pConfig = hipSharedMemBankSizeFourByte;
 
@@ -131,7 +131,7 @@ hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig) {
 }
 
 hipError_t hipSetDevice(int deviceId) {
-    HIP_INIT_CB_API(hipSetDevice, deviceId);
+    HIP_INIT_API(hipSetDevice, deviceId);
     if ((deviceId < 0) || (deviceId >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
@@ -142,12 +142,12 @@ hipError_t hipSetDevice(int deviceId) {
 }
 
 hipError_t hipDeviceSynchronize(void) {
-    HIP_INIT_SPECIAL_CB_API(hipDeviceSynchronize, TRACE_SYNC);
+    HIP_INIT_SPECIAL_API(hipDeviceSynchronize, TRACE_SYNC);
     return ihipLogStatus(ihipSynchronize());
 }
 
 hipError_t hipDeviceReset(void) {
-    HIP_INIT_CB_API(hipDeviceReset, );
+    HIP_INIT_API(hipDeviceReset, );
 
     auto* ctx = ihipGetTlsDefaultCtx();
 
@@ -287,7 +287,7 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
 }
 
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device) {
-    HIP_INIT_CB_API(hipDeviceGetAttribute, pi, attr, device);
+    HIP_INIT_API(hipDeviceGetAttribute, pi, attr, device);
     if ((device < 0) || (device >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     }
@@ -314,7 +314,7 @@ hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device) {
 }
 
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device) {
-    HIP_INIT_CB_API(hipGetDeviceProperties, props, device);
+    HIP_INIT_API(hipGetDeviceProperties, props, device);
     if ((device < 0) || (device >= g_deviceCnt)) {
         return ihipLogStatus(hipErrorInvalidDevice);
     }
@@ -322,7 +322,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* props, int device) {
 }
 
 hipError_t hipSetDeviceFlags(unsigned int flags) {
-    HIP_INIT_CB_API(hipSetDeviceFlags, flags);
+    HIP_INIT_API(hipSetDeviceFlags, flags);
 
     hipError_t e = hipSuccess;
 
@@ -367,7 +367,7 @@ hipError_t hipSetDeviceFlags(unsigned int flags) {
 };
 
 hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device) {
-    HIP_INIT_CB_API(hipDeviceComputeCapability, major, minor, device);
+    HIP_INIT_API(hipDeviceComputeCapability, major, minor, device);
     hipError_t e = hipSuccess;
     if ((device < 0) || (device >= g_deviceCnt)) {
         e = hipErrorInvalidDevice;
@@ -380,7 +380,7 @@ hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device
 
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device) {
     // Cast to void* here to avoid printing garbage in debug modes.
-    HIP_INIT_CB_API(hipDeviceGetName, (void*)name, len, device);
+    HIP_INIT_API(hipDeviceGetName, (void*)name, len, device);
     hipError_t e = hipSuccess;
     if ((device < 0) || (device >= g_deviceCnt)) {
         e = hipErrorInvalidDevice;
@@ -394,7 +394,7 @@ hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device) {
 
 hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device) {
     // Cast to void* here to avoid printing garbage in debug modes.
-    HIP_INIT_CB_API(hipDeviceGetPCIBusId, (void*)pciBusId, len, device);
+    HIP_INIT_API(hipDeviceGetPCIBusId, (void*)pciBusId, len, device);
     hipError_t e = hipErrorInvalidValue;
     if ((device < 0) || (device >= g_deviceCnt)) {
         e = hipErrorInvalidDevice;
@@ -413,7 +413,7 @@ hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device) {
 }
 
 hipError_t hipDeviceTotalMem(size_t* bytes, hipDevice_t device) {
-    HIP_INIT_CB_API(hipDeviceTotalMem, bytes, device);
+    HIP_INIT_API(hipDeviceTotalMem, bytes, device);
     hipError_t e = hipSuccess;
     if ((device < 0) || (device >= g_deviceCnt)) {
         e = hipErrorInvalidDevice;
@@ -425,7 +425,7 @@ hipError_t hipDeviceTotalMem(size_t* bytes, hipDevice_t device) {
 }
 
 hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId) {
-    HIP_INIT_CB_API(hipDeviceGetByPCIBusId, device, pciBusId);
+    HIP_INIT_API(hipDeviceGetByPCIBusId, device, pciBusId);
     hipDeviceProp_t tempProp;
     int deviceCount = 0;
     hipError_t e = hipErrorInvalidValue;
@@ -451,7 +451,7 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId) {
 }
 
 hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* prop) {
-    HIP_INIT_CB_API(hipChooseDevice, device, prop);
+    HIP_INIT_API(hipChooseDevice, device, prop);
     hipDeviceProp_t tempProp;
     hipError_t e = hipSuccess;
     if ((device == NULL) || (prop == NULL)) {

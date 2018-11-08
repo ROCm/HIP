@@ -127,9 +127,11 @@ typedef activity_sync_callback_t hip_act_callback_t;
 
 // HIP API callbacks spawner object macro
 #define HIP_CB_SPAWNER_OBJECT(CB_ID) \
-  hip_api_data_t api_data{}; \
-  INIT_CB_ARGS_DATA(CB_ID, api_data); \
-  api_callbacks_spawner_t __api_tracer(HIP_API_ID_##CB_ID, api_data);
+  if (HIP_API_ID_##CB_ID < HIP_API_ID_NUMBER) { \
+    hip_api_data_t api_data{}; \
+    INIT_CB_ARGS_DATA(CB_ID, api_data); \
+    api_callbacks_spawner_t __api_tracer(HIP_API_ID_##CB_ID, api_data); \
+  }
 
 typedef api_callbacks_table_templ<hip_api_record_t,
                                   hip_api_callback_t,
