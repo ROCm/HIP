@@ -6,7 +6,7 @@
 #include <iostream>
 #include <mutex>
 
-#include "hip/hip_prof_str.h"
+#include "hip/hcc_detail/hip_prof_str.h"
 
 template <typename Record, typename Fun, typename Act>
 class api_callbacks_table_templ {
