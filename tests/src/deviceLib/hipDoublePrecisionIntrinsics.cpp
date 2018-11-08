@@ -34,6 +34,7 @@ THE SOFTWARE.
 #pragma clang diagnostic ignored "-Wunused-variable"
 
 __device__ void double_precision_intrinsics() {
+#if defined OCML_BASIC_ROUNDED_OPERATIONS
     __dadd_rd(0.0, 1.0);
     __dadd_rn(0.0, 1.0);
     __dadd_ru(0.0, 1.0);
@@ -62,6 +63,7 @@ __device__ void double_precision_intrinsics() {
     __fma_rn(1.0, 2.0, 3.0);
     __fma_ru(1.0, 2.0, 3.0);
     __fma_rz(1.0, 2.0, 3.0);
+#endif
 }
 
 __global__ void compileDoublePrecisionIntrinsics(int ignored) {
