@@ -127,21 +127,19 @@ typedef activity_sync_callback_t hip_act_callback_t;
 
 // HIP API callbacks spawner object macro
 #define HIP_CB_SPAWNER_OBJECT(CB_ID) \
-  if (HIP_API_ID_##CB_ID < HIP_API_ID_NUMBER) { \
-    hip_api_data_t api_data{}; \
-    INIT_CB_ARGS_DATA(CB_ID, api_data); \
-    api_callbacks_spawner_t __api_tracer(HIP_API_ID_##CB_ID, api_data); \
-  }
+  hip_api_data_t api_data{}; \
+  INIT_CB_ARGS_DATA(CB_ID, api_data); \
+  api_callbacks_spawner_t<HIP_API_ID_##CB_ID> __api_tracer(HIP_API_ID_##CB_ID, api_data);
 
 typedef api_callbacks_table_templ<hip_api_record_t,
                                   hip_api_callback_t,
                                   hip_act_callback_t> api_callbacks_table_t;
 extern api_callbacks_table_t callbacks_table;
 
+template <int cid_>
 class api_callbacks_spawner_t {
  public:
   api_callbacks_spawner_t(const hip_api_id_t& cid, hip_api_data_t& api_data) :
-    cid_(cid),
     api_data_(api_data),
     record_({})
   {
@@ -174,7 +172,6 @@ class api_callbacks_spawner_t {
     return callbacks_table.entry(id);
   }
 
-  const hip_api_id_t cid_;
   hip_api_data_t& api_data_;
   hip_api_record_t record_;
 
@@ -182,6 +179,12 @@ class api_callbacks_spawner_t {
   void* a_arg;
   hip_api_callback_t fun;
   void* arg;
+};
+
+template <>
+class api_callbacks_spawner_t<HIP_API_ID_NUMBER> {
+ public:
+  api_callbacks_spawner_t(const hip_api_id_t& cid, hip_api_data_t& api_data) {}
 };
 
 #else
