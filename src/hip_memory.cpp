@@ -985,10 +985,9 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost ||
+    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDefault ||
         kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost) {
-        stream->lockedSymbolCopySync(acc, dst, (void*)src, count, offset, kind);
-        //  acc.memcpy_symbol(dst, (void*)src, count+offset);
+        stream->locked_copySync((char*)dst+offset, (void*)src, count, kind, false);
     } else {
         return ihipLogStatus(hipErrorInvalidValue);
     }
@@ -1018,9 +1017,9 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, 
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost ||
+    if (kind == hipMemcpyDefault || kind == hipMemcpyDeviceToHost ||
         kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost) {
-        stream->lockedSymbolCopySync(acc, dst, (void*)src, count, offset, kind);
+        stream->locked_copySync((void*)dst, (char*)src+offset, count, kind, false);
     } else {
         return ihipLogStatus(hipErrorInvalidValue);
     }
@@ -1052,7 +1051,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
 
     if (stream) {
         try {
-            stream->lockedSymbolCopyAsync(acc, dst, (void*)src, count, offset, kind);
+            hip_internal::memcpyAsync((char*)dst+offset, src, count, kind, stream);
         } catch (ihipException& ex) {
             e = ex._code;
         }
@@ -1088,7 +1087,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
     stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         try {
-            stream->lockedSymbolCopyAsync(acc, dst, src, count, offset, kind);
+            hip_internal::memcpyAsync(dst, (char*)src+offset, count, kind, stream);
         } catch (ihipException& ex) {
             e = ex._code;
         }
