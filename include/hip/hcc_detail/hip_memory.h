@@ -41,8 +41,14 @@ THE SOFTWARE.
 
 #define __HIP_SIZE_OF_HEAP (__HIP_NUM_PAGES * __HIP_SIZE_OF_PAGE)
 
+#if __HIP__ && __HIP_DEVICE_COMPILE__
+__attribute__((weak)) __device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
+__attribute__((weak)) __device__
+    uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
+#else
 extern __device__ char __hip_device_heap[];
 extern __device__ uint32_t __hip_device_page_flag[];
+#endif
 
 extern "C" inline __device__ void* __hip_malloc(size_t size) {
     char* heap = (char*)__hip_device_heap;
