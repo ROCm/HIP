@@ -108,21 +108,23 @@ __hipRegisterFatBinary(const void* data)
 
       std::string image{reinterpret_cast<const char*>(
           reinterpret_cast<uintptr_t>(header) + desc->offset), desc->size};
+
+      if (HIP_DUMP_CODE_OBJECT) {
+        char fname[30];
+        static std::atomic<int> index;
+        sprintf(fname, "__hip_dump_code_object%04d.o", index++);
+        tprintf(DB_FB, "Dump code object %s\n", fname);
+        std::ofstream ofs;
+        ofs.open(fname, std::ios::binary);
+        ofs << image;
+        ofs.close();
+      }
+
       module->executable = hip_impl::load_executable(image, module->executable, agent);
 
       if (module->executable.handle) {
         modules->at(deviceId) = module;
         tprintf(DB_FB, "Loaded code object for %s\n", name);
-        if (HIP_DUMP_CODE_OBJECT) {
-          char fname[30];
-          static std::atomic<int> index;
-          sprintf(fname, "__hip_dump_code_object%04d.o", index++);
-          tprintf(DB_FB, "Dump code object %s\n", fname);
-          std::ofstream ofs;
-          ofs.open(fname, std::ios::binary);
-          ofs << image;
-          ofs.close();
-        }
       } else {
         fprintf(stderr, "Failed to load code object for %s\n", name);
         abort();
