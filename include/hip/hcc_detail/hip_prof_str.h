@@ -5,7 +5,6 @@
 #include <string>
 
 // Dummy API callbacks definition
-#define INIT_hipHccModuleLaunchKernel_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipHccGetAccelerator_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipHccGetAcceleratorView_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipDeviceCanAccessPeer2_CB_ARGS_DATA(cb_data) {};
@@ -177,10 +176,10 @@ enum hip_api_id_t {
   HIP_API_ID_hipModuleGetFunction = 135,
   HIP_API_ID_hipGetDevice = 136,
   HIP_API_ID_hipGetDeviceCount = 137,
-  HIP_API_ID_NUMBER = 138,
-  HIP_API_ID_ANY = 139,
+  HIP_API_ID_hipHccModuleLaunchKernel = 138,
+  HIP_API_ID_NUMBER = 139,
+  HIP_API_ID_ANY = 140,
 
-  HIP_API_ID_hipHccModuleLaunchKernel = HIP_API_ID_NUMBER,
   HIP_API_ID_hipHccGetAccelerator = HIP_API_ID_NUMBER,
   HIP_API_ID_hipHccGetAcceleratorView = HIP_API_ID_NUMBER,
   HIP_API_ID_hipDeviceCanAccessPeer2 = HIP_API_ID_NUMBER,
@@ -340,6 +339,7 @@ static const char* hip_api_name(const uint32_t& id) {
     case HIP_API_ID_hipCtxEnablePeerAccess: return "hipCtxEnablePeerAccess";
     case HIP_API_ID_hipMemcpyDtoHAsync: return "hipMemcpyDtoHAsync";
     case HIP_API_ID_hipModuleLaunchKernel: return "hipModuleLaunchKernel";
+    case HIP_API_ID_hipHccModuleLaunchKernel: return "hipHccModuleLaunchKernel";
     case HIP_API_ID_hipModuleGetTexRef: return "hipModuleGetTexRef";
     case HIP_API_ID_hipRemoveActivityCallback: return "hipRemoveActivityCallback";
     case HIP_API_ID_hipDeviceGetLimit: return "hipDeviceGetLimit";
@@ -907,6 +907,9 @@ struct hip_api_data_t {
       void** kernelParams;
       void** extra;
     } hipModuleLaunchKernel;
+    struct {
+      hipFunction_t f;
+    } hipHccModuleLaunchKernel;
     struct {
       textureReference** texRef;
       hipModule_t hmod;
@@ -1525,6 +1528,9 @@ struct hip_api_data_t {
   cb_data.args.hipModuleLaunchKernel.stream = (hipStream_t)hStream; \
   cb_data.args.hipModuleLaunchKernel.kernelParams = (void**)kernelParams; \
   cb_data.args.hipModuleLaunchKernel.extra = (void**)extra; \
+};
+#define INIT_hipHccModuleLaunchKernel_CB_ARGS_DATA(cb_data) { \
+  cb_data.args.hipModuleLaunchKernel.f = (hipFunction_t)f; \
 };
 #define INIT_hipModuleGetTexRef_CB_ARGS_DATA(cb_data) { \
   cb_data.args.hipModuleGetTexRef.texRef = (textureReference**)texRef; \
@@ -2394,6 +2400,11 @@ const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {
           << " stream=" << data->args.hipModuleLaunchKernel.stream << ","
           << " kernelParams=" << data->args.hipModuleLaunchKernel.kernelParams << ","
           << " extra=" << data->args.hipModuleLaunchKernel.extra
+          << ")";
+    break;
+    case HIP_API_ID_hipHccModuleLaunchKernel:
+      oss << "hipHccModuleLaunchKernel("
+          << " f=" << data->args.hipHccModuleLaunchKernel.f << ","
           << ")";
     break;
     case HIP_API_ID_hipModuleGetTexRef:
