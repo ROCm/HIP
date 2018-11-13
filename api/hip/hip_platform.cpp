@@ -445,6 +445,9 @@ const std::vector<hipModule_t>& modules() {
       nullptr);
 
       for (auto&& bundle : bundles) {
+        if (bundle.empty()) {
+          continue;
+        }
         std::string magic(&bundle[0], sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
         if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR))
           continue;
