@@ -5,6 +5,7 @@
 #include <string>
 
 // Dummy API callbacks definition
+#define INIT_NONE_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipHccGetAccelerator_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipHccGetAcceleratorView_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipDeviceCanAccessPeer2_CB_ARGS_DATA(cb_data) {};
@@ -35,6 +36,9 @@
 #define INIT_hipGetErrorString_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipCreateSurfaceObject_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipDestroySurfaceObject_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipStreamCreateWithPriority_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipDeviceGetStreamPriorityRange_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipStreamGetPriority_CB_ARGS_DATA(cb_data) {};
 
 // HIP API callbacks ID enumaration
 enum hip_api_id_t {
@@ -180,6 +184,7 @@ enum hip_api_id_t {
   HIP_API_ID_NUMBER = 139,
   HIP_API_ID_ANY = 140,
 
+  HIP_API_ID_NONE = HIP_API_ID_NUMBER,
   HIP_API_ID_hipHccGetAccelerator = HIP_API_ID_NUMBER,
   HIP_API_ID_hipHccGetAcceleratorView = HIP_API_ID_NUMBER,
   HIP_API_ID_hipDeviceCanAccessPeer2 = HIP_API_ID_NUMBER,
@@ -210,6 +215,9 @@ enum hip_api_id_t {
   HIP_API_ID_hipGetErrorString = HIP_API_ID_NUMBER,
   HIP_API_ID_hipCreateSurfaceObject = HIP_API_ID_NUMBER,
   HIP_API_ID_hipDestroySurfaceObject = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipStreamCreateWithPriority = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipDeviceGetStreamPriorityRange = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipStreamGetPriority = HIP_API_ID_NUMBER,
 };
 
 // Return HIP API string
@@ -339,7 +347,6 @@ static const char* hip_api_name(const uint32_t& id) {
     case HIP_API_ID_hipCtxEnablePeerAccess: return "hipCtxEnablePeerAccess";
     case HIP_API_ID_hipMemcpyDtoHAsync: return "hipMemcpyDtoHAsync";
     case HIP_API_ID_hipModuleLaunchKernel: return "hipModuleLaunchKernel";
-    case HIP_API_ID_hipHccModuleLaunchKernel: return "hipHccModuleLaunchKernel";
     case HIP_API_ID_hipModuleGetTexRef: return "hipModuleGetTexRef";
     case HIP_API_ID_hipRemoveActivityCallback: return "hipRemoveActivityCallback";
     case HIP_API_ID_hipDeviceGetLimit: return "hipDeviceGetLimit";
@@ -2498,29 +2505,4 @@ const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {
 };
 #endif
 
-// HIP API activity record type
-// Base record type
-struct hip_act_record_t {
-  uint32_t domain;                                                    // activity domain id
-  uint32_t op_id;                                                     // operation id, dispatch/copy/barrier
-  uint32_t activity_kind;                                             // activity kind
-  uint64_t correlation_id;                                            // activity correlation ID
-  uint64_t begin_ns;                                                  // host begin timestamp, nano-seconds
-  uint64_t end_ns;                                                    // host end timestamp, nano-seconds
-};
-// Async record type
-struct hip_async_record_t : hip_act_record_t {
-  int device_id;
-  uint64_t stream_id;
-};
-// Dispatch record type
-struct hip_dispatch_record_t : hip_async_record_t {};
-// Barrier record type
-struct hip_barrier_record_t : hip_async_record_t {};
-// Memcpy record type
-struct hip_copy_record_t : hip_async_record_t {
-  size_t bytes;
-};
-// Generic async operation record
-typedef hip_copy_record_t hip_ops_record_t;
 #endif  // _HIP_CBSTR
