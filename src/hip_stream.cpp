@@ -104,7 +104,7 @@ hipError_t hipStreamCreate(hipStream_t* stream) {
 
 //---
 hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority) {
-    HIP_INIT_API(stream, flags, priority);
+    HIP_INIT_API(hipStreamCreateWithPriority, stream, flags, priority);
 
     // clamp priority to range [priority_high:priority_low]
     priority = (priority < priority_high ? priority_high : (priority > priority_low ? priority_low : priority));
@@ -113,7 +113,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
 
 //---
 hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority) {
-    HIP_INIT_API(leastPriority, greatestPriority);
+    HIP_INIT_API(hipDeviceGetStreamPriorityRange, leastPriority, greatestPriority);
 
     if (leastPriority != NULL) *leastPriority = priority_low;
     if (greatestPriority != NULL) *greatestPriority = priority_high;
@@ -229,7 +229,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
 
 //--
 hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
-    HIP_INIT_API(stream, priority);
+    HIP_INIT_API(hipStreamGetPriority, stream, priority);
 
     if (priority == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
