@@ -258,12 +258,16 @@ struct Agent_global {
     uint32_t byte_cnt;
 };
 
-inline void track(const Agent_global& x) {
+inline void track(const Agent_global& x, hsa_agent_t agent) {
     tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name.c_str(),
             x.address, x.byte_cnt);
 
-    auto device = ihipGetTlsDefaultCtx()->getWriteableDevice();
-
+    int deviceIndex =0;
+    for ( deviceIndex = 0; deviceIndex < g_deviceCnt; deviceIndex++) {
+        if(g_allAgents[deviceIndex] == agent)
+           break;
+    }
+    auto device = ihipGetDevice(deviceIndex - 1);
     hc::AmPointerInfo ptr_info(nullptr, x.address, x.address, x.byte_cnt, device->_acc, true,
                                false);
     hc::am_memtracker_add(x.address, ptr_info);
@@ -276,7 +280,7 @@ inline void track(const Agent_global& x) {
 }
 
 template <typename Container = vector<Agent_global>>
-inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t,
+inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t agent,
                                                 hsa_executable_symbol_t x, void* out) {
     assert(out);
 
@@ -286,7 +290,7 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t,
     if (t == HSA_SYMBOL_KIND_VARIABLE) {
         static_cast<Container*>(out)->push_back(Agent_global{name(x), address(x), size(x)});
 
-        track(static_cast<Container*>(out)->back());
+        track(static_cast<Container*>(out)->back(),agent);
     }
 
     return HSA_STATUS_SUCCESS;
