@@ -270,14 +270,14 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
   if (numArgs > 0) {
     OS << ", ";
     // Start of the first argument.
-    clang::SourceLocation argStart = launchKernel->getArg(0)->getLocStart();
+    clang::SourceLocation argStart = llcompat::getBeginLoc(launchKernel->getArg(0));
     // End of the last argument.
-    clang::SourceLocation argEnd = launchKernel->getArg(numArgs - 1)->getLocEnd();
+    clang::SourceLocation argEnd = llcompat::getEndLoc(launchKernel->getArg(numArgs - 1));
     OS << readSourceText(*SM, {argStart, argEnd});
   }
   OS << ")";
 
-  clang::SourceRange replacementRange = getWriteRange(*SM, {launchKernel->getLocStart(), launchKernel->getLocEnd()});
+  clang::SourceRange replacementRange = getWriteRange(*SM, {llcompat::getBeginLoc(launchKernel), llcompat::getEndLoc(launchKernel)});
   clang::SourceLocation launchStart = replacementRange.getBegin();
   clang::SourceLocation launchEnd = replacementRange.getEnd();
   size_t length = SM->getCharacterData(clang::Lexer::getLocForEndOfToken(launchEnd, 0, *SM, DefaultLangOptions)) - SM->getCharacterData(launchStart);
@@ -320,8 +320,8 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
   }
 
   if (!typeName.empty()) {
-    clang::SourceLocation slStart = sharedVar->getLocStart();
-    clang::SourceLocation slEnd = sharedVar->getLocEnd();
+    clang::SourceLocation slStart = llcompat::getBeginLoc(sharedVar->getTypeSourceInfo()->getTypeLoc());
+    clang::SourceLocation slEnd = llcompat::getEndLoc(sharedVar->getTypeSourceInfo()->getTypeLoc());
     clang::SourceManager* SM = Result.SourceManager;
     size_t repLength = SM->getCharacterData(slEnd) - SM->getCharacterData(slStart) + 1;
     std::string varName = sharedVar->getNameAsString();
