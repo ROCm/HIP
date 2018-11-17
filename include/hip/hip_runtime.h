@@ -37,6 +37,16 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_H
 
+#if __HIP__
+// Support std::atomic for hip-clang.
+// This needs to be included as early as possible to avoid <atomic> being
+// included directly or indirectly without force_cuda_host_device enabled,
+// which will cause C++ atomic functions not defined for __device__ __host__.
+#pragma clang force_cuda_host_device begin
+#include <atomic>
+#pragma clang force_cuda_host_device end
+#endif
+
 // Some standard header files, these are included by hc.hpp and so want to make them avail on both
 // paths to provide a consistent include env and avoid "missing symbol" errors that only appears
 // on NVCC path:
