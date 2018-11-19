@@ -15,6 +15,10 @@ extern const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP;
 extern const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP;
 // Maps the names of CUDA RUNTIME API types to the corresponding HIP types
 extern const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP;
+// Maps the names of CUDA Complex API types to the corresponding HIP types
+extern const std::map<llvm::StringRef, hipCounter> CUDA_COMPLEX_TYPE_NAME_MAP;
+// Maps the names of CUDA Complex API functions to the corresponding HIP functions
+extern const std::map<llvm::StringRef, hipCounter> CUDA_COMPLEX_FUNCTION_MAP;
 // Maps the names of CUDA RUNTIME API functions to the corresponding HIP functions
 extern const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP;
 // Maps the names of CUDA BLAS API types to the corresponding HIP types
