@@ -80,8 +80,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CUDA_TEXTURE_DESC_st",                                             {"HIP_TEXTURE_DESC",                                         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
   {"CUDA_TEXTURE_DESC",                                                {"HIP_TEXTURE_DESC",                                         CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
 
-  {"CUdevprop_st",                                                     {"hipDeviceProp_t",                                          CONV_TYPE, API_DRIVER}},
-  {"CUdevprop",                                                        {"hipDeviceProp_t",                                          CONV_TYPE, API_DRIVER}},
+  // no analogue
+  // NOTE: cudaDeviceProp differs
+  {"CUdevprop_st",                                                     {"hipDeviceProp_t",                                          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"CUdevprop",                                                        {"hipDeviceProp_t",                                          CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
 
   // cudaIpcEventHandle_st
   {"CUipcEventHandle_st",                                              {"ihipIpcEventHandle_t",                                     CONV_TYPE, API_DRIVER}},
