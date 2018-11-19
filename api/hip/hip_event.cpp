@@ -142,6 +142,11 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
 
   amd::Command* command = e->stream_->getLastQueuedCommand(true);
 
+  if (command == nullptr) {
+    command = new amd::Marker(*e->stream_, true);
+    command->enqueue();
+  }
+
   if (e->event_ != nullptr) {
     e->event_->release();
   }
