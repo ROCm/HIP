@@ -167,8 +167,6 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
     }
 
     // Cap the maximum amount of testing, in case of hangs
-    // Excluding hipVectorTypes test from automation; due to regression from HCC commit 2367133
-    // Excluding hipFloatMath test from automation; due to regression from ROCDL commit 2fc04e1
     timeout(time: 1, unit: 'HOURS')
     {
       stage("${platform} unit testing")
@@ -178,7 +176,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
             cd ${build_dir_rel}
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
-            ctest -E "(hipVectorTypes.tst|hipVectorTypesDevice.tst|hipFloatMath.tst)"
+            ctest
           """
         // If unit tests output a junit or xunit file in the future, jenkins can parse that file
         // to display test results on the dashboard
