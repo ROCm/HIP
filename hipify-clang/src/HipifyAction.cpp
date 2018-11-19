@@ -24,7 +24,7 @@ void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
       Statistics::current().incrementCounter(counter, name.str());
       if (!counter.unsupported) {
         clang::SourceLocation sl = start.getLocWithOffset(begin + 1);
-        ct::Replacement Rep(SM, sl, name.size(), repName);
+        ct::Replacement Rep(SM, sl, name.size(), repName.str());
         clang::FullSourceLoc fullSL(sl, SM);
         insertReplacement(Rep, fullSL);
       }
@@ -70,7 +70,7 @@ void HipifyAction::RewriteToken(const clang::Token& t) {
     return;
   }
   StringRef repName = found->second.hipName;
-  ct::Replacement Rep(SM, sl, name.size(), repName);
+  ct::Replacement Rep(SM, sl, name.size(), repName.str());
   clang::FullSourceLoc fullSL(sl, SM);
   insertReplacement(Rep, fullSL);
 }
@@ -219,7 +219,7 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
   }
   const char *B = SM.getCharacterData(sl);
   const char *E = SM.getCharacterData(filename_range.getEnd());
-  ct::Replacement Rep(SM, sl, E - B, newInclude);
+  ct::Replacement Rep(SM, sl, E - B, newInclude.str());
   insertReplacement(Rep, clang::FullSourceLoc{sl, SM});
 }
 
@@ -270,21 +270,21 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
   if (numArgs > 0) {
     OS << ", ";
     // Start of the first argument.
-    clang::SourceLocation argStart = launchKernel->getArg(0)->getLocStart();
+    clang::SourceLocation argStart = llcompat::getBeginLoc(launchKernel->getArg(0));
     // End of the last argument.
-    clang::SourceLocation argEnd = launchKernel->getArg(numArgs - 1)->getLocEnd();
+    clang::SourceLocation argEnd = llcompat::getEndLoc(launchKernel->getArg(numArgs - 1));
     OS << readSourceText(*SM, {argStart, argEnd});
   }
   OS << ")";
 
-  clang::SourceRange replacementRange = getWriteRange(*SM, {launchKernel->getLocStart(), launchKernel->getLocEnd()});
+  clang::SourceRange replacementRange = getWriteRange(*SM, {llcompat::getBeginLoc(launchKernel), llcompat::getEndLoc(launchKernel)});
   clang::SourceLocation launchStart = replacementRange.getBegin();
   clang::SourceLocation launchEnd = replacementRange.getEnd();
   size_t length = SM->getCharacterData(clang::Lexer::getLocForEndOfToken(launchEnd, 0, *SM, DefaultLangOptions)) - SM->getCharacterData(launchStart);
   ct::Replacement Rep(*SM, launchStart, length, OS.str());
   clang::FullSourceLoc fullSL(launchStart, *SM);
   insertReplacement(Rep, fullSL);
-  hipCounter counter = {"hipLaunchKernelGGL", ConvTypes::CONV_KERN, ApiTypes::API_RUNTIME};
+  hipCounter counter = {"hipLaunchKernelGGL", ConvTypes::CONV_EXECUTION, ApiTypes::API_RUNTIME};
   Statistics::current().incrementCounter(counter, refName.str());
   return true;
 }
@@ -320,8 +320,8 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
   }
 
   if (!typeName.empty()) {
-    clang::SourceLocation slStart = sharedVar->getLocStart();
-    clang::SourceLocation slEnd = sharedVar->getLocEnd();
+    clang::SourceLocation slStart = llcompat::getBeginLoc(sharedVar->getTypeSourceInfo()->getTypeLoc());
+    clang::SourceLocation slEnd = llcompat::getEndLoc(sharedVar->getTypeSourceInfo()->getTypeLoc());
     clang::SourceManager* SM = Result.SourceManager;
     size_t repLength = SM->getCharacterData(slEnd) - SM->getCharacterData(slStart) + 1;
     std::string varName = sharedVar->getNameAsString();
@@ -329,7 +329,7 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
     ct::Replacement Rep(*SM, slStart, repLength, repName);
     clang::FullSourceLoc fullSL(slStart, *SM);
     insertReplacement(Rep, fullSL);
-    hipCounter counter = {"HIP_DYNAMIC_SHARED", ConvTypes::CONV_MEM, ApiTypes::API_RUNTIME};
+    hipCounter counter = {"HIP_DYNAMIC_SHARED", ConvTypes::CONV_MEMORY, ApiTypes::API_RUNTIME};
     Statistics::current().incrementCounter(counter, refName.str());
   }
   return true;

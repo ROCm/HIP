@@ -1433,7 +1433,7 @@ __device__  float __expf(float x);
 __device__ static  float __fadd_rd(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fadd_rn
@@ -1441,7 +1441,7 @@ __device__ static  float __fadd_rd(float x, float y);
 __device__ static  float __fadd_rn(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fadd_ru
@@ -1449,7 +1449,7 @@ __device__ static  float __fadd_rn(float x, float y);
 __device__ static  float __fadd_ru(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fadd_rz
@@ -1457,7 +1457,7 @@ __device__ static  float __fadd_ru(float x, float y);
 __device__ static  float __fadd_rz(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fdiv_rd
@@ -1465,7 +1465,7 @@ __device__ static  float __fadd_rz(float x, float y);
 __device__ static  float __fdiv_rd(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fdiv_rn
@@ -1473,7 +1473,7 @@ __device__ static  float __fdiv_rd(float x, float y);
 __device__ static  float __fdiv_rn(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fdiv_ru
@@ -1481,7 +1481,7 @@ __device__ static  float __fdiv_rn(float x, float y);
 __device__ static  float __fdiv_ru(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fdiv_rz
@@ -1489,7 +1489,7 @@ __device__ static  float __fdiv_ru(float x, float y);
 __device__ static  float __fdiv_rz(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fdividef
@@ -1505,7 +1505,7 @@ __device__ static  float __fdividef(float x, float y);
 __device__  float __fmaf_rd(float x, float y, float z);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fmaf_rn
@@ -1513,7 +1513,7 @@ __device__  float __fmaf_rd(float x, float y, float z);
 __device__  float __fmaf_rn(float x, float y, float z);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fmaf_ru
@@ -1521,7 +1521,7 @@ __device__  float __fmaf_rn(float x, float y, float z);
 __device__  float __fmaf_ru(float x, float y, float z);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fmaf_rz
@@ -1529,7 +1529,7 @@ __device__  float __fmaf_ru(float x, float y, float z);
 __device__  float __fmaf_rz(float x, float y, float z);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fmul_rd
@@ -1537,7 +1537,7 @@ __device__  float __fmaf_rz(float x, float y, float z);
 __device__ static  float __fmul_rd(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fmul_rn
@@ -1545,7 +1545,7 @@ __device__ static  float __fmul_rd(float x, float y);
 __device__ static  float __fmul_rn(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fmul_ru
@@ -1553,7 +1553,7 @@ __device__ static  float __fmul_rn(float x, float y);
 __device__ static  float __fmul_ru(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fmul_rz
@@ -1561,7 +1561,7 @@ __device__ static  float __fmul_ru(float x, float y);
 __device__ static  float __fmul_rz(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frcp_rd
@@ -1569,7 +1569,7 @@ __device__ static  float __fmul_rz(float x, float y);
 __device__  float __frcp_rd(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frcp_rn
@@ -1577,7 +1577,7 @@ __device__  float __frcp_rd(float x);
 __device__  float __frcp_rn(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frcp_ru
@@ -1585,7 +1585,7 @@ __device__  float __frcp_rn(float x);
 __device__  float __frcp_ru(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frcp_rz
@@ -1593,7 +1593,7 @@ __device__  float __frcp_ru(float x);
 __device__  float __frcp_rz(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __frsqrt_rn
@@ -1601,7 +1601,7 @@ __device__  float __frcp_rz(float x);
 __device__  float __frsqrt_rn(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fsqrt_rd
@@ -1609,7 +1609,7 @@ __device__  float __frsqrt_rn(float x);
 __device__  float __fsqrt_rd(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fsqrt_rn
@@ -1617,7 +1617,7 @@ __device__  float __fsqrt_rd(float x);
 __device__  float __fsqrt_rn(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fsqrt_ru
@@ -1625,7 +1625,7 @@ __device__  float __fsqrt_rn(float x);
 __device__  float __fsqrt_ru(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fsqrt_rz
@@ -1633,7 +1633,7 @@ __device__  float __fsqrt_ru(float x);
 __device__  float __fsqrt_rz(float x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fsub_rd
@@ -1641,7 +1641,7 @@ __device__  float __fsqrt_rz(float x);
 __device__ static  float __fsub_rd(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fsub_rn
@@ -1649,7 +1649,7 @@ __device__ static  float __fsub_rd(float x, float y);
 __device__ static  float __fsub_rn(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fsub_ru
@@ -1657,7 +1657,15 @@ __device__ static  float __fsub_rn(float x, float y);
 __device__ static  float __fsub_ru(float x, float y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
+
+
+### __fsub_rz
+```cpp 
+__device__ static  float __fsub_rz(float x, float y);
+
+```
+**Description:**  Unsupported
 
 
 ### __log10f
@@ -1729,7 +1737,7 @@ __device__  float __tanf(float x);
 __device__ static  double __dadd_rd(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dadd_rn
@@ -1737,7 +1745,7 @@ __device__ static  double __dadd_rd(double x, double y);
 __device__ static  double __dadd_rn(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dadd_ru
@@ -1745,7 +1753,7 @@ __device__ static  double __dadd_rn(double x, double y);
 __device__ static  double __dadd_ru(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dadd_rz
@@ -1753,7 +1761,7 @@ __device__ static  double __dadd_ru(double x, double y);
 __device__ static  double __dadd_rz(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __ddiv_rd
@@ -1761,7 +1769,7 @@ __device__ static  double __dadd_rz(double x, double y);
 __device__ static  double __ddiv_rd(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __ddiv_rn
@@ -1769,7 +1777,7 @@ __device__ static  double __ddiv_rd(double x, double y);
 __device__ static  double __ddiv_rn(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __ddiv_ru
@@ -1777,7 +1785,7 @@ __device__ static  double __ddiv_rn(double x, double y);
 __device__ static  double __ddiv_ru(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __ddiv_rz
@@ -1785,7 +1793,7 @@ __device__ static  double __ddiv_ru(double x, double y);
 __device__ static  double __ddiv_rz(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dmul_rd
@@ -1793,7 +1801,7 @@ __device__ static  double __ddiv_rz(double x, double y);
 __device__ static  double __dmul_rd(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dmul_rn
@@ -1801,7 +1809,7 @@ __device__ static  double __dmul_rd(double x, double y);
 __device__ static  double __dmul_rn(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dmul_ru
@@ -1809,7 +1817,7 @@ __device__ static  double __dmul_rn(double x, double y);
 __device__ static  double __dmul_ru(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dmul_rz
@@ -1817,7 +1825,7 @@ __device__ static  double __dmul_ru(double x, double y);
 __device__ static  double __dmul_rz(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __drcp_rd
@@ -1825,7 +1833,7 @@ __device__ static  double __dmul_rz(double x, double y);
 __device__  double __drcp_rd(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __drcp_rn
@@ -1833,7 +1841,7 @@ __device__  double __drcp_rd(double x);
 __device__  double __drcp_rn(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __drcp_ru
@@ -1841,7 +1849,7 @@ __device__  double __drcp_rn(double x);
 __device__  double __drcp_ru(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __drcp_rz
@@ -1849,7 +1857,7 @@ __device__  double __drcp_ru(double x);
 __device__  double __drcp_rz(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsqrt_rd
@@ -1857,7 +1865,7 @@ __device__  double __drcp_rz(double x);
 __device__  double __dsqrt_rd(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsqrt_rn
@@ -1865,7 +1873,7 @@ __device__  double __dsqrt_rd(double x);
 __device__  double __dsqrt_rn(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsqrt_ru
@@ -1873,7 +1881,7 @@ __device__  double __dsqrt_rn(double x);
 __device__  double __dsqrt_ru(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsqrt_rz
@@ -1881,7 +1889,7 @@ __device__  double __dsqrt_ru(double x);
 __device__  double __dsqrt_rz(double x);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsub_rd
@@ -1889,7 +1897,7 @@ __device__  double __dsqrt_rz(double x);
 __device__ static  double __dsub_rd(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsub_rn
@@ -1897,7 +1905,7 @@ __device__ static  double __dsub_rd(double x, double y);
 __device__ static  double __dsub_rn(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsub_ru
@@ -1905,7 +1913,7 @@ __device__ static  double __dsub_rn(double x, double y);
 __device__ static  double __dsub_ru(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __dsub_rz
@@ -1913,7 +1921,7 @@ __device__ static  double __dsub_ru(double x, double y);
 __device__ static  double __dsub_rz(double x, double y);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fma_rd
@@ -1921,7 +1929,7 @@ __device__ static  double __dsub_rz(double x, double y);
 __device__  double __fma_rd(double x, double y, double z);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fma_rn
@@ -1929,7 +1937,7 @@ __device__  double __fma_rd(double x, double y, double z);
 __device__  double __fma_rn(double x, double y, double z);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fma_ru
@@ -1937,7 +1945,7 @@ __device__  double __fma_rn(double x, double y, double z);
 __device__  double __fma_ru(double x, double y, double z);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __fma_rz
@@ -1945,7 +1953,7 @@ __device__  double __fma_ru(double x, double y, double z);
 __device__  double __fma_rz(double x, double y, double z);
 
 ```
-**Description:**  Supported
+**Description:**  Unsupported
 
 
 ### __brev

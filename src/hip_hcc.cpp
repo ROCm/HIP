@@ -97,6 +97,8 @@ int HIP_INIT_ALLOC = -1;
 int HIP_SYNC_STREAM_WAIT = 0;
 int HIP_FORCE_NULL_STREAM = 0;
 
+int HIP_DUMP_CODE_OBJECT = 0;
+
 
 #if (__hcc_workweek__ >= 17300)
 // Make sure we have required bug fix in HCC
@@ -1293,6 +1295,10 @@ void HipReadEnv() {
                "are created with hipEventReleaseToDevice by default.  The defaults can be "
                "overridden by specifying hipEventReleaseToSystem or hipEventReleaseToDevice flag "
                "when creating the event.");
+
+    READ_ENV_I(release, HIP_DUMP_CODE_OBJECT, 0,
+               "If set, dump code object as __hip_dump_code_object[nnnn].o in the current directory,"
+               "where nnnn is the index number.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the
     // runtime flag but the compile-time flag is disabled.

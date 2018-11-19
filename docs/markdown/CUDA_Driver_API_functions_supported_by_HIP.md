@@ -22,12 +22,12 @@
 | typedef      |`CUDA_RESOURCE_VIEW_DESC_st`                                        |                                                            |
 | struct       |`CUDA_TEXTURE_DESC`                                                 |                                                            |
 | typedef      |`CUDA_TEXTURE_DESC_st`                                              |                                                            |
-| struct       |`CUdevprop`                                                         |`hipDeviceProp_t`                                           |
-| typedef      |`CUdevprop_st`                                                      |`hipDeviceProp_t`                                           |
-| struct       |`CUipcEventHandle`                                                  |                                                            |
-| typedef      |`CUipcEventHandle_st`                                               |                                                            |
-| struct       |`CUipcMemHandle`                                                    |                                                            |
-| typedef      |`CUipcMemHandle_st`                                                 |                                                            |
+| struct       |`CUdevprop`                                                         |                                                            |
+| typedef      |`CUdevprop_st`                                                      |                                                            |
+| struct       |`CUipcEventHandle`                                                  |`ihipIpcEventHandle_t`                                      |
+| typedef      |`CUipcEventHandle_st`                                               |`ihipIpcEventHandle_t`                                      |
+| struct       |`CUipcMemHandle`                                                    |`hipIpcMemHandle_t`                                         |
+| typedef      |`CUipcMemHandle_st`                                                 |`hipIpcMemHandle_st`                                        |
 | union        |`CUstreamBatchMemOpParams`                                          |                                                            |
 | typedef      |`CUstreamBatchMemOpParams_union`                                    |                                                            |
 | enum         |***`CUaddress_mode`***                                              |                                                            |
@@ -56,14 +56,14 @@
 |         0x20 |*`CU_AD_FORMAT_FLOAT`*                                              |*`HIP_AD_FORMAT_FLOAT`*                                     |
 | enum         |***`CUctx_flags`***                                                 |                                                            |
 | typedef      |***`CUctx_flags_enum`***                                            |                                                            |
-|         0x00 |*`CU_CTX_SCHED_AUTO`*                                               |                                                            |
-|         0x01 |*`CU_CTX_SCHED_SPIN`*                                               |                                                            |
-|         0x02 |*`CU_CTX_SCHED_YIELD`*                                              |                                                            |
-|         0x04 |*`CU_CTX_SCHED_BLOCKING_SYNC`*                                      |                                                            |
-|         0x04 |*`CU_CTX_BLOCKING_SYNC`*                                            |                                                            |
-|         0x07 |*`CU_CTX_SCHED_MASK`*                                               |                                                            |
-|         0x08 |*`CU_CTX_MAP_HOST`*                                                 |                                                            |
-|         0x10 |*`CU_CTX_LMEM_RESIZE_TO_MAX`*                                       |                                                            |
+|         0x00 |*`CU_CTX_SCHED_AUTO`*                                               |`hipDeviceScheduleAuto`                                     |
+|         0x01 |*`CU_CTX_SCHED_SPIN`*                                               |`hipDeviceScheduleSpin`                                     |
+|         0x02 |*`CU_CTX_SCHED_YIELD`*                                              |`hipDeviceScheduleYield`                                    |
+|         0x04 |*`CU_CTX_SCHED_BLOCKING_SYNC`*                                      |`hipDeviceScheduleBlockingSync`                             |
+|         0x04 |*`CU_CTX_BLOCKING_SYNC`*                                            |`hipDeviceScheduleBlockingSync`                             |
+|         0x07 |*`CU_CTX_SCHED_MASK`*                                               |`hipDeviceScheduleMask`                                     |
+|         0x08 |*`CU_CTX_MAP_HOST`*                                                 |`hipDeviceMapHost`                                          |
+|         0x10 |*`CU_CTX_LMEM_RESIZE_TO_MAX`*                                       |`hipDeviceLmemResizeToMax`                                  |
 |         0x1f |*`CU_CTX_FLAGS_MASK`*                                               |                                                            |
 | enum         |***`CUdevice_attribute`***                                          |***`hipDeviceAttribute_t`***                                |
 | typedef      |***`CUdevice_attribute_enum`***                                     |***`hipDeviceAttribute_t`***                                |
@@ -154,8 +154,8 @@
 |           80 |*`CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED`*                    |                                                            |
 |           81 |*`CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR`*        |*`hipDeviceAttributeMaxSharedMemoryPerMultiprocessor`*      |
 |           82 |*`CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR`*            |                                                            |
-|           83 |*`CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY`*                              |*`hipDeviceAttributeManagedMemory`*                         |
-|           84 |*`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD`*                             |                                                            |
+|           83 |*`CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY`*                              |                                                            |
+|           84 |*`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD`*                             |*`hipDeviceAttributeIsMultiGpuBoard`*                       |
 |           85 |*`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID`*                    |                                                            |
 |           86 |*`CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED`*                |                                                            |
 |           87 |*`CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO`*       |                                                            |
@@ -184,8 +184,8 @@
 | typedef      |***`CUfilter_mode_enum`***                                          |***`hipTextureFilterMode`***                                |
 |            0 |*`CU_TR_FILTER_MODE_POINT`*                                         |*`hipFilterModePoint`*                                      |
 |            1 |*`CU_TR_FILTER_MODE_LINEAR`*                                        |*`hipFilterModeLinear`*                                     |
-| enum         |***`CUfunc_cache`***                                                |***`hipFuncCache`***                                        |
-| typedef      |***`CUfunc_cache_enum`***                                           |***`hipFuncCache`***                                        |
+| enum         |***`CUfunc_cache`***                                                |***`hipFuncCache_t`***                                      |
+| typedef      |***`CUfunc_cache_enum`***                                           |***`hipFuncCache_t`***                                      |
 |         0x00 |*`CU_FUNC_CACHE_PREFER_NONE`*                                       |*`hipFuncCachePreferNone`*                                  |
 |         0x01 |*`CU_FUNC_CACHE_PREFER_SHARED`*                                     |*`hipFuncCachePreferShared`*                                |
 |         0x02 |*`CU_FUNC_CACHE_PREFER_L1`*                                         |*`hipFuncCachePreferL1`*                                    |
@@ -301,12 +301,12 @@
 |          0x1 |*`CU_MEM_ATTACH_GLOBAL`*                                            |                                                            |
 |          0x2 |*`CU_MEM_ATTACH_HOST`*                                              |                                                            |
 |          0x4 |*`CU_MEM_ATTACH_SINGLE`*                                            |                                                            |
-| enum         |***`CUmemorytype`***                                                |                                                            |
-| typedef      |***`CUmemorytype_enum`***                                           |                                                            |
-|         0x01 |*`CU_MEMORYTYPE_HOST`*                                              |                                                            |
-|         0x02 |*`CU_MEMORYTYPE_DEVICE`*                                            |                                                            |
-|         0x03 |*`CU_MEMORYTYPE_ARRAY`*                                             |                                                            |
-|         0x04 |*`CU_MEMORYTYPE_UNIFIED`*                                           |                                                            |
+| enum         |***`CUmemorytype`***                                                |*`hipMemoryType`*                                           |
+| typedef      |***`CUmemorytype_enum`***                                           |*`hipMemoryType`*                                           |
+|         0x01 |*`CU_MEMORYTYPE_HOST`*                                              |*`hipMemoryTypeHost`*                                       |
+|         0x02 |*`CU_MEMORYTYPE_DEVICE`*                                            |*`hipMemoryTypeDevice`*                                     |
+|         0x03 |*`CU_MEMORYTYPE_ARRAY`*                                             |*`hipMemoryTypeArray`*                                      |
+|         0x04 |*`CU_MEMORYTYPE_UNIFIED`*                                           |*`hipMemoryTypeUnified`*                                    |
 | enum         |***`CUmem_range_attribute`***                                       |                                                            |
 | typedef      |***`CUmem_range_attribute_enum`***                                  |                                                            |
 |            1 |*`CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY`*                              |                                                            |
@@ -513,28 +513,28 @@
 |         0x01 |*`CU_D3D11_DEVICE_LIST_ALL`*                                        |                                                            |
 |         0x02 |*`CU_D3D11_DEVICE_LIST_CURRENT_FRAME`*                              |                                                            |
 |         0x03 |*`CU_D3D11_DEVICE_LIST_NEXT_FRAME`*                                 |                                                            |
-| typedef      |`CUarray`                                                           |`hipArray *`                                                |
 | struct       |`CUarray_st`                                                        |`hipArray`                                                  |
+| typedef      |`CUarray`                                                           |`hipArray *`                                                |
 | struct       |`CUctx`                                                             |`ihipCtx_t`                                                 |
 | typedef      |`CUcontext_st`                                                      |`hipCtx_t`                                                  |
 | typedef      |`CUdevice`                                                          |`hipDevice_t`                                               |
 | typedef      |`CUdeviceptr`                                                       |`hipDeviceptr_t`                                            |
-| typedef      |`CUeglStreamConnection`                                             |                                                            |
 | struct       |`CUeglStreamConnection_st`                                          |                                                            |
+| typedef      |`CUeglStreamConnection`                                             |                                                            |
 | typedef      |`CUevent`                                                           |`hipEvent_t`                                                |
 | struct       |`CUevent_st`                                                        |`ihipEvent_t`                                               |
 | typedef      |`CUfunction`                                                        |`hipFunction_t`                                             |
 | struct       |`CUfunc_st`                                                         |`ihipModuleSymbol_t`                                        |
 | typedef      |`CUgraphicsResource`                                                |                                                            |
 | struct       |`CUgraphicsResource_st`                                             |                                                            |
-| typedef      |`CUmipmappedArray`                                                  |                                                            |
-| struct       |`CUmipmappedArray_st`                                               |                                                            |
+| typedef      |`CUmipmappedArray`                                                  |`hipMipmappedArray_t`                                       |
+| struct       |`CUmipmappedArray_st`                                               |`hipMipmappedArray`                                         |
 | typedef      |`CUmodule`                                                          |`hipModule_t`                                               |
 | struct       |`CUmod_st`                                                          |`ihipModule_t`                                              |
 | typedef      |`CUstream`                                                          |`hipStream_t`                                               |
 | struct       |`CUstream_st`                                                       |`ihipStream_t`                                              |
 | typedef      |`CUstreamCallback`                                                  |`hipStreamCallback_t`                                       |
-| typedef      |`CUsurfObject`                                                      |                                                            |
+| typedef      |`CUsurfObject`                                                      |`hipSurfaceObject_t`                                        |
 | typedef      |`CUsurfref`                                                         |                                                            |
 | struct       |`CUsurfref_st`                                                      |                                                            |
 | typedef      |`CUtexObject`                                                       |`hipTextureObject_t`                                        |
@@ -544,12 +544,12 @@
 | define       |`CU_LAUNCH_PARAM_BUFFER_POINTER`                                    |`HIP_LAUNCH_PARAM_BUFFER_POINTER`                           |
 | define       |`CU_LAUNCH_PARAM_BUFFER_SIZE`                                       |`HIP_LAUNCH_PARAM_BUFFER_SIZE`                              |
 | define       |`CU_LAUNCH_PARAM_END`                                               |`HIP_LAUNCH_PARAM_END`                                      |
-| define       |`CU_MEMHOSTALLOC_DEVICEMAP`                                         |                                                            |
-| define       |`CU_MEMHOSTALLOC_PORTABLE`                                          |                                                            |
-| define       |`CU_MEMHOSTALLOC_WRITECOMBINED`                                     |                                                            |
-| define       |`CU_MEMHOSTREGISTER_DEVICEMAP`                                      |                                                            |
-| define       |`CU_MEMHOSTREGISTER_IOMEMORY`                                       |                                                            |
-| define       |`CU_MEMHOSTREGISTER_PORTABLE`                                       |                                                            |
+| define       |`CU_MEMHOSTALLOC_DEVICEMAP`                                         |`hipHostMallocMapped`                                       |
+| define       |`CU_MEMHOSTALLOC_PORTABLE`                                          |`hipHostMallocPortable`                                     |
+| define       |`CU_MEMHOSTALLOC_WRITECOMBINED`                                     |`hipHostAllocWriteCombined`                                 |
+| define       |`CU_MEMHOSTREGISTER_DEVICEMAP`                                      |`hipHostRegisterMapped`                                     |
+| define       |`CU_MEMHOSTREGISTER_IOMEMORY`                                       |`hipHostRegisterIoMemory`                                   |
+| define       |`CU_MEMHOSTREGISTER_PORTABLE`                                       |`hipHostRegisterPortable`                                   |
 | define       |`CU_PARAM_TR_DEFAULT`                                               |                                                            |
 | define       |`CU_STREAM_LEGACY`                                                  |                                                            |
 | define       |`CU_STREAM_PER_THREAD`                                              |                                                            |
@@ -558,11 +558,11 @@
 | define       |`CU_TRSF_READ_AS_INTEGER`                                           |                                                            |
 | define       |`CU_TRSF_SRGB`                                                      |                                                            |
 | define       |`CUDA_ARRAY3D_2DARRAY`                                              |                                                            |
-| define       |`CUDA_ARRAY3D_CUBEMAP`                                              |                                                            |
+| define       |`CUDA_ARRAY3D_CUBEMAP`                                              |`hipArrayCubemap`                                           |
 | define       |`CUDA_ARRAY3D_DEPTH_TEXTURE`                                        |                                                            |
-| define       |`CUDA_ARRAY3D_LAYERED`                                              |                                                            |
-| define       |`CUDA_ARRAY3D_SURFACE_LDST`                                         |                                                            |
-| define       |`CUDA_ARRAY3D_TEXTURE_GATHER`                                       |                                                            |
+| define       |`CUDA_ARRAY3D_LAYERED`                                              |`hipArrayLayered`                                           |
+| define       |`CUDA_ARRAY3D_SURFACE_LDST`                                         |`hipArraySurfaceLoadStore`                                  |
+| define       |`CUDA_ARRAY3D_TEXTURE_GATHER`                                       |`hipArrayTextureGather`                                     |
 | define       |`CUDA_ARRAY3D_COLOR_ATTACHMENT`                                     |                                                            |
 | define       |`CUDA_VERSION`                                                      |                                                            |
 | typedef      |`CUexternalMemory`                                                  |                                                            |
@@ -697,8 +697,8 @@
 |            1 |*`CU_EGL_FRAME_TYPE_PITCH`*                                         |                                                            |
 | enum         |***`CUeglResourceLocationFlags`***                                  |                                                            |
 | typedef      |***`CUeglResourceLocationFlags_enum`***                             |                                                            |
-|            0 |*`CU_EGL_RESOURCE_LOCATION_SYSMEM`*                                 |                                                            |
-|            1 |*`CU_EGL_RESOURCE_LOCATION_VIDMEM`*                                 |                                                            |
+|         0x00 |*`CU_EGL_RESOURCE_LOCATION_SYSMEM`*                                 |                                                            |
+|         0x01 |*`CU_EGL_RESOURCE_LOCATION_VIDMEM`*                                 |                                                            |
 | enum         |***`CUexternalMemoryHandleType`***                                  |                                                            |
 | typedef      |***`CUexternalMemoryHandleType_enum`***                             |                                                            |
 |            1 |*`CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD`*                        |                                                            |
@@ -731,6 +731,8 @@
 | define       |`CUDA_CB`                                                           |                                                            |
 | define       |`CU_DEVICE_CPU`                                                     |                                                            |
 | define       |`CU_DEVICE_INVALID`                                                 |                                                            |
+| struct       |`CUuuid`                                                            |                                                            |
+| typedef      |`CUuuid_st`                                                         |                                                            |
 
 ## **2. Error Handling**
 
@@ -761,6 +763,7 @@
 | `cuDeviceGetName`                                         | `hipDeviceGetName`            |
 | `cuDeviceTotalMem`                                        | `hipDeviceTotalMem`           |
 | `cuDeviceGetLuid`                                         |                               |
+| `cuDeviceGetUuid`                                         |                               |
 
 ## **6. Device Management [DEPRECATED]**
 
@@ -790,9 +793,9 @@
 | `cuCtxGetCurrent`                                         | `hipCtxGetCurrent`            |
 | `cuCtxGetDevice`                                          | `hipCtxGetDevice`             |
 | `cuCtxGetFlags`                                           | `hipCtxGetFlags`              |
-| `cuCtxGetLimit`                                           |                               |
+| `cuCtxGetLimit`                                           | `hipDeviceGetLimit`           |
 | `cuCtxGetSharedMemConfig`                                 | `hipCtxGetSharedMemConfig`    |
-| `cuCtxGetStreamPriorityRange`                             |                               |
+| `cuCtxGetStreamPriorityRange`                             | `hipDeviceGetStreamPriorityRange`|
 | `cuCtxPopCurrent`                                         | `hipCtxPopCurrent`            |
 | `cuCtxPushCurrent`                                        | `hipCtxPushCurrent`           |
 | `cuCtxSetCacheConfig`                                     | `hipCtxSetCacheConfig`        |
@@ -833,16 +836,16 @@
 |-----------------------------------------------------------|-------------------------------|
 | `cuArray3DCreate`                                         | `hipArray3DCreate`            |
 | `cuArray3DGetDescriptor`                                  |                               |
-| `cuArrayCreate`                                           |                               |
+| `cuArrayCreate`                                           | `hipArrayCreate`              |
 | `cuArrayDestroy`                                          |                               |
 | `cuArrayGetDescriptor`                                    |                               |
 | `cuDeviceGetByPCIBusId`                                   | `hipDeviceGetByPCIBusId`      |
 | `cuDeviceGetPCIBusId`                                     | `hipDeviceGetPCIBusId`        |
-| `cuIpcCloseMemHandle`                                     |                               |
+| `cuIpcCloseMemHandle`                                     | `hipIpcCloseMemHandle`        |
 | `cuIpcGetEventHandle`                                     |                               |
-| `cuIpcGetMemHandle`                                       |                               |
+| `cuIpcGetMemHandle`                                       | `hipIpcGetMemHandle`          |
 | `cuIpcOpenEventHandle`                                    |                               |
-| `cuIpcOpenMemHandle`                                      |                               |
+| `cuIpcOpenMemHandle`                                      | `hipIpcOpenMemHandle`         |
 | `cuMemAlloc`                                              | `hipMalloc`                   |
 | `cuMemAllocHost`                                          |                               |
 | `cuMemAllocManaged`                                       |                               |
@@ -865,7 +868,7 @@
 | `cuMemcpyDtoDAsync`                                       | `hipMemcpyDtoDAsync`          |
 | `cuMemcpyDtoH`                                            | `hipMemcpyDtoH`               |
 | `cuMemcpyDtoHAsync`                                       | `hipMemcpyDtoHAsync`          |
-| `cuMemcpyHtoA`                                            |                               |
+| `cuMemcpyHtoA`                                            | `hipMemcpyHtoA`               |
 | `cuMemcpyHtoAAsync`                                       |                               |
 | `cuMemcpyHtoD`                                            | `hipMemcpyHtoD`               |
 | `cuMemcpyHtoDAsync`                                       | `hipMemcpyHtoDAsync`          |
@@ -873,11 +876,11 @@
 | `cuMemcpyPeerAsync`                                       |                               |
 | `cuMemFree`                                               | `hipFree`                     |
 | `cuMemFreeHost`                                           | `hipFreeHost`                 |
-| `cuMemGetAddressRange`                                    |                               |
+| `cuMemGetAddressRange`                                    | `hipMemGetAddressRange`       |
 | `cuMemGetInfo`                                            | `hipMemGetInfo`               |
 | `cuMemHostAlloc`                                          | `hipHostMalloc`               |
-| `cuMemHostGetDevicePointer`                               |                               |
-| `cuMemHostGetFlags`                                       |                               |
+| `cuMemHostGetDevicePointer`                               | `hipHostGetDevicePointer`     |
+| `cuMemHostGetFlags`                                       | `hipHostGetFlags`             |
 | `cuMemHostRegister`                                       | `hipHostRegister`             |
 | `cuMemHostUnregister`                                     | `hipHostUnregister`           |
 | `cuMemsetD16`                                             |                               |
@@ -890,8 +893,8 @@
 | `cuMemsetD2D8Async`                                       |                               |
 | `cuMemsetD32`                                             | `hipMemset`                   |
 | `cuMemsetD32Async`                                        | `hipMemsetAsync`              |
-| `cuMemsetD2D8`                                            |                               |
-| `cuMemsetD2D8Async`                                       |                               |
+| `cuMemsetD8`                                              | `hipMemsetD8`                 |
+| `cuMemsetD8Async`                                         |                               |
 | `cuMipmappedArrayCreate`                                  |                               |
 | `cuMipmappedArrayDestroy`                                 |                               |
 | `cuMipmappedArrayGetLevel`                                |                               |
@@ -914,8 +917,8 @@
 |-----------------------------------------------------------|-------------------------------|
 | `cuStreamAddCallback`                                     | `hipStreamAddCallback`        |
 | `cuStreamAttachMemAsync`                                  |                               |
-| `cuStreamCreate`                                          |                               |
-| `cuStreamCreateWithPriority`                              |                               |
+| `cuStreamCreate`                                          | `hipStreamCreateWithFlags`    |
+| `cuStreamCreateWithPriority`                              | `hipStreamCreateWithPriority` |
 | `cuStreamDestroy`                                         | `hipStreamDestroy`            |
 | `cuStreamGetFlags`                                        | `hipStreamGetFlags`           |
 | `cuStreamGetPriority`                                     | `hipStreamGetPriority`        |
@@ -930,7 +933,7 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-| `cuEventCreate`                                           | `hipEventCreate`              |
+| `cuEventCreate`                                           | `hipEventCreateWithFlags`     |
 | `cuEventDestroy`                                          | `hipEventDestroy`             |
 | `cuEventElapsedTime`                                      | `hipEventElapsedTime`         |
 | `cuEventQuery`                                            | `hipEventQuery`               |
@@ -965,10 +968,13 @@
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
 | `cuFuncGetAttribute`                                      |                               |
+| `cuFuncSetAttribute`                                      |                               |
 | `cuFuncSetCacheConfig`                                    | `hipFuncSetCacheConfig`       |
 | `cuFuncSetSharedMemConfig`                                |                               |
 | `cuLaunchKernel`                                          | `hipModuleLaunchKernel`       |
 | `cuLaunchHostFunc`                                        |                               |
+| `cuLaunchCooperativeKernel`                               |                               |
+| `cuLaunchCooperativeKernelMultiDevice`                    |                               |
 
 ## **18. Execution Control [DEPRECATED]**
 
@@ -1045,8 +1051,8 @@
 | `cuTexRefGetMipmapLevelBias`                              |                               |
 | `cuTexRefGetMipmapLevelClamp`                             |                               |
 | `cuTexRefGetMipmappedArray`                               |                               |
-| `cuTexRefSetAddress`                                      |                               |
-| `cuTexRefSetAddress2D`                                    |                               |
+| `cuTexRefSetAddress`                                      | `hipTexRefSetAddress`         |
+| `cuTexRefSetAddress2D`                                    | `hipTexRefSetAddress2D`       |
 | `cuTexRefSetAddressMode`                                  | `hipTexRefSetAddressMode`     |
 | `cuTexRefSetArray`                                        | `hipTexRefSetArray`           |
 | `cuTexRefSetBorderColor`                                  |                               |
@@ -1231,3 +1237,4 @@
 | `cuEGLStreamProducerReturnFrame`                          |                               |
 | `cuGraphicsEGLRegisterImage`                              |                               |
 | `cuGraphicsResourceGetMappedEglFrame`                     |                               |
+| `cuEventCreateFromEGLSync`                                |                               |

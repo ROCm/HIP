@@ -23,10 +23,6 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
-#ifdef __HIP_PLATFORM_HCC__
-#include <hc.hpp>
-#endif
-
 
 #define CHECK(cmd)                                                                                 \
     {                                                                                              \
@@ -44,7 +40,7 @@ __global__ void bit_extract_kernel(uint32_t* C_d, const uint32_t* A_d, size_t N)
 
     for (size_t i = offset; i < N; i += stride) {
 #ifdef __HIP_PLATFORM_HCC__
-        C_d[i] = hc::__bitextract_u32(A_d[i], 8, 4);
+        C_d[i] = __bitextract_u32(A_d[i], 8, 4);
 #else /* defined __HIP_PLATFORM_NVCC__ or other path */
         C_d[i] = ((A_d[i] & 0xf00) >> 8);
 #endif
