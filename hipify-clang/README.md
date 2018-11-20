@@ -27,13 +27,14 @@
 - [cuRAND](../docs/markdown/CURAND_API_supported_by_HIP.md)
 - [cuDNN](../docs/markdown/CUDNN_API_supported_by_HIP.md)
 - [cuFFT](../docs/markdown/CUFFT_API_supported_by_HIP.md)
+- [cuSPARSE](../docs/markdown/CUSPARSE_API_supported_by_HIP.md)
 
 ## <a name="dependencies"></a> Dependencies
 
 `hipify-clang` requires:
 1. LLVM+CLANG of at least version 3.8.0, latest stable and recommended release: 6.0.1 (linux and windows).
 
-2. CUDA at least version 7.5, latest supported release is 9.2.
+2. CUDA at least version 7.5, latest supported release is 9.0.
 
 | **LLVM release version** | **CUDA latest supported version** | **Comments** |
 |:------------------------:|:---------------------------------:|:------------:|
