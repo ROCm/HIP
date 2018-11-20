@@ -83,10 +83,10 @@ extern int HIP_SYNC_NULL_STREAM;
 extern int HIP_INIT_ALLOC;
 extern int HIP_FORCE_NULL_STREAM;
 
+extern int HIP_DUMP_CODE_OBJECT;
 
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
-
 
 // Class to assign a short TID to each new thread, for HIP debugging purposes.
 class TidInfo {

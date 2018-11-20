@@ -28,6 +28,9 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
+__device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
+__device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
+
 // Internal HIP APIS:
 namespace hip_internal {
 
@@ -574,24 +577,8 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
                 size = size * height;
             }
 
-            size_t allocSize = 0;
-            switch (desc->f) {
-                case hipChannelFormatKindSigned:
-                    allocSize = size * sizeof(int);
-                    break;
-                case hipChannelFormatKindUnsigned:
-                    allocSize = size * sizeof(unsigned int);
-                    break;
-                case hipChannelFormatKindFloat:
-                    allocSize = size * sizeof(float);
-                    break;
-                case hipChannelFormatKindNone:
-                    allocSize = size * sizeof(size_t);
-                    break;
-                default:
-                    hip_status = hipErrorUnknown;
-                    break;
-            }
+            const size_t allocSize = size * ((desc->x + desc->y + desc->z + desc->w) / 8);
+
             hc::accelerator acc = ctx->getDevice()->_acc;
             hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
@@ -800,24 +787,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
         const unsigned am_flags = 0;
         const size_t size = extent.width * extent.height * extent.depth;
 
-        size_t allocSize = 0;
-        switch (desc->f) {
-            case hipChannelFormatKindSigned:
-                allocSize = size * sizeof(int);
-                break;
-            case hipChannelFormatKindUnsigned:
-                allocSize = size * sizeof(unsigned int);
-                break;
-            case hipChannelFormatKindFloat:
-                allocSize = size * sizeof(float);
-                break;
-            case hipChannelFormatKindNone:
-                allocSize = size * sizeof(size_t);
-                break;
-            default:
-                hip_status = hipErrorUnknown;
-                break;
-        }
+        const size_t allocSize = size * ((desc->x + desc->y + desc->z + desc->w) / 8);
 
         hc::accelerator acc = ctx->getDevice()->_acc;
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
@@ -1015,10 +985,9 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost ||
+    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDefault ||
         kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost) {
-        stream->lockedSymbolCopySync(acc, dst, (void*)src, count, offset, kind);
-        //  acc.memcpy_symbol(dst, (void*)src, count+offset);
+        stream->locked_copySync((char*)dst+offset, (void*)src, count, kind, false);
     } else {
         return ihipLogStatus(hipErrorInvalidValue);
     }
@@ -1048,9 +1017,9 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, 
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost ||
+    if (kind == hipMemcpyDefault || kind == hipMemcpyDeviceToHost ||
         kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost) {
-        stream->lockedSymbolCopySync(acc, dst, (void*)src, count, offset, kind);
+        stream->locked_copySync((void*)dst, (char*)src+offset, count, kind, false);
     } else {
         return ihipLogStatus(hipErrorInvalidValue);
     }
@@ -1082,7 +1051,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
 
     if (stream) {
         try {
-            stream->lockedSymbolCopyAsync(acc, dst, (void*)src, count, offset, kind);
+            hip_internal::memcpyAsync((char*)dst+offset, src, count, kind, stream);
         } catch (ihipException& ex) {
             e = ex._code;
         }
@@ -1118,7 +1087,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
     stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         try {
-            stream->lockedSymbolCopyAsync(acc, dst, src, count, offset, kind);
+            hip_internal::memcpyAsync(dst, (char*)src+offset, count, kind, stream);
         } catch (ihipException& ex) {
             e = ex._code;
         }
@@ -1688,7 +1657,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     } else {
         try {
             if(!isLocked){
-                for (int i = 0; i < height; ++i) 
+                for (int i = 0; i < height; ++i)
                     e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
                                           (unsigned char*)src + i * spitch, width, kind, stream);
             } else{
@@ -1738,7 +1707,7 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
         stream->locked_wait();
     } else {
         e = hipErrorInvalidValue;
-    } 
+    }
     return ihipLogStatus(e);
 }
 
