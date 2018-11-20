@@ -9,6 +9,7 @@
 #include "Statistics.h"
 
 namespace ct = clang::tooling;
+using namespace llvm;
 
 /**
   * A FrontendAction that hipifies CUDA programs.

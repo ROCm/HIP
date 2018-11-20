@@ -1,6 +1,6 @@
 #include "CUDA2HIP.h"
 
-// Map of all functions
+// Map of all CUDA Runtime API functions
 const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // Error API
   {"cudaGetLastError",    {"hipGetLastError",    CONV_ERROR, API_RUNTIME}},
@@ -9,29 +9,49 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaGetErrorString",  {"hipGetErrorString",  CONV_ERROR, API_RUNTIME}},
 
   // memcpy functions
+  // no analogue
+  // NOTE: Not equal to cuMemcpy due to different signatures
   {"cudaMemcpy",                 {"hipMemcpy",                 CONV_MEMORY, API_RUNTIME}},
   {"cudaMemcpyToArray",          {"hipMemcpyToArray",          CONV_MEMORY, API_RUNTIME}},
   {"cudaMemcpyToSymbol",         {"hipMemcpyToSymbol",         CONV_MEMORY, API_RUNTIME}},
   {"cudaMemcpyToSymbolAsync",    {"hipMemcpyToSymbolAsync",    CONV_MEMORY, API_RUNTIME}},
+
   {"cudaMemcpyAsync",            {"hipMemcpyAsync",            CONV_MEMORY, API_RUNTIME}},
+  // no analogue
+  // NOTE: Not equal to cuMemcpy2D due to different signatures
   {"cudaMemcpy2D",               {"hipMemcpy2D",               CONV_MEMORY, API_RUNTIME}},
+  // no analogue
+  // NOTE: Not equal to cuMemcpy2DAsync due to different signatures
   {"cudaMemcpy2DAsync",          {"hipMemcpy2DAsync",          CONV_MEMORY, API_RUNTIME}},
   {"cudaMemcpy2DToArray",        {"hipMemcpy2DToArray",        CONV_MEMORY, API_RUNTIME}},
   {"cudaMemcpy2DArrayToArray",   {"hipMemcpy2DArrayToArray",   CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaMemcpy2DFromArray",      {"hipMemcpy2DFromArray",      CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaMemcpy2DFromArrayAsync", {"hipMemcpy2DFromArrayAsync", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaMemcpy2DToArrayAsync",   {"hipMemcpy2DToArrayAsync",   CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // no analogue
+  // NOTE: Not equal to cuMemcpy3D due to different signatures
   {"cudaMemcpy3D",               {"hipMemcpy3D",               CONV_MEMORY, API_RUNTIME}},
+  // no analogue
+  // NOTE: Not equal to cuMemcpy3DAsync due to different signatures
   {"cudaMemcpy3DAsync",          {"hipMemcpy3DAsync",          CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // no analogue
+  // NOTE: Not equal to cuMemcpy3DPeer due to different signatures
   {"cudaMemcpy3DPeer",           {"hipMemcpy3DPeer",           CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // no analogue
+  // NOTE: Not equal to cuMemcpy3DPeerAsync due to different signatures
   {"cudaMemcpy3DPeerAsync",      {"hipMemcpy3DPeerAsync",      CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // no analogue
+  // NOTE: Not equal to cuMemcpyAtoA due to different signatures
   {"cudaMemcpyArrayToArray",     {"hipMemcpyArrayToArray",     CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaMemcpyFromArrayAsync",   {"hipMemcpyFromArrayAsync",   CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaMemcpyFromSymbol",       {"hipMemcpyFromSymbol",       CONV_MEMORY, API_RUNTIME}},
   {"cudaMemcpyFromSymbolAsync",  {"hipMemcpyFromSymbolAsync",  CONV_MEMORY, API_RUNTIME}},
-  {"cudaMemAdvise",              {"hipMemAdvise",              CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},    //
-  {"cudaMemRangeGetAttribute",   {"hipMemRangeGetAttribute",   CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},    //
-  {"cudaMemRangeGetAttributes",  {"hipMemRangeGetAttributes",  CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},    //
+  // cuMemAdvise
+  {"cudaMemAdvise",              {"hipMemAdvise",              CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuMemRangeGetAttribute
+  {"cudaMemRangeGetAttribute",   {"hipMemRangeGetAttribute",   CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuMemRangeGetAttributes
+  {"cudaMemRangeGetAttributes",  {"hipMemRangeGetAttributes",  CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // memset
   {"cudaMemset",        {"hipMemset",        CONV_MEMORY, API_RUNTIME}},
@@ -42,13 +62,17 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaMemset3DAsync", {"hipMemset3DAsync", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // Memory management
+  // cuMemGetInfo
   {"cudaMemGetInfo",             {"hipMemGetInfo",             CONV_MEMORY, API_RUNTIME}},
   {"cudaArrayGetInfo",           {"hipArrayGetInfo",           CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // no analogue
+  // NOTE: Not equal to cuMipmappedArrayDestroy due to different signatures
   {"cudaFreeMipmappedArray",     {"hipFreeMipmappedArray",     CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaGetMipmappedArrayLevel", {"hipGetMipmappedArrayLevel", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaGetSymbolAddress",       {"hipGetSymbolAddress",       CONV_MEMORY, API_RUNTIME}},
   {"cudaGetSymbolSize",          {"hipGetSymbolSize",          CONV_MEMORY, API_RUNTIME}},
-  {"cudaMemPrefetchAsync",       {"hipMemPrefetchAsync",       CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},    // // API_Driver ANALOGUE (cuMemPrefetchAsync)
+  // TODO: double check cuMemPrefetchAsync
+  {"cudaMemPrefetchAsync",       {"hipMemPrefetchAsync",       CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // malloc
   {"cudaMalloc",               {"hipMalloc",               CONV_MEMORY, API_RUNTIME}},
@@ -57,15 +81,22 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaMalloc3D",             {"hipMalloc3D",             CONV_MEMORY, API_RUNTIME}},
   {"cudaMalloc3DArray",        {"hipMalloc3DArray",        CONV_MEMORY, API_RUNTIME}},
   {"cudaMallocManaged",        {"hipMallocManaged",        CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // no analogue
+  // NOTE: Not equal to cuMipmappedArrayCreate due to different signatures
   {"cudaMallocMipmappedArray", {"hipMallocMipmappedArray", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaMallocPitch",          {"hipMallocPitch",          CONV_MEMORY, API_RUNTIME}},
 
+  // cuMemFree
   {"cudaFree",           {"hipFree",           CONV_MEMORY, API_RUNTIME}},
+  // cuMemFreeHost
   {"cudaFreeHost",       {"hipHostFree",       CONV_MEMORY, API_RUNTIME}},
   {"cudaFreeArray",      {"hipFreeArray",      CONV_MEMORY, API_RUNTIME}},
+  // cuMemHostRegister
   {"cudaHostRegister",   {"hipHostRegister",   CONV_MEMORY, API_RUNTIME}},
+  // cuMemHostUnregister
   {"cudaHostUnregister", {"hipHostUnregister", CONV_MEMORY, API_RUNTIME}},
-  // hipHostAlloc deprecated - use hipHostMalloc instead
+  // cuMemHostAlloc
+  // NOTE: hipHostAlloc deprecated - use hipHostMalloc instead
   {"cudaHostAlloc",      {"hipHostMalloc",     CONV_MEMORY, API_RUNTIME}},
 
   // make memory functions
@@ -74,35 +105,81 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"make_cudaPos",        {"make_hipPos",        CONV_MEMORY, API_RUNTIME}},
 
   // Host Register Flags
+  // cuMemHostGetFlags
   {"cudaHostGetFlags",         {"hipHostGetFlags",         CONV_MEMORY, API_RUNTIME}},
 
   // Events
-  {"cudaEventCreate",              {"hipEventCreate",              CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventCreateWithFlags",     {"hipEventCreateWithFlags",     CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventDestroy",             {"hipEventDestroy",             CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventRecord",              {"hipEventRecord",              CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventElapsedTime",         {"hipEventElapsedTime",         CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventSynchronize",         {"hipEventSynchronize",         CONV_EVENT,  API_RUNTIME}},
-  {"cudaEventQuery",               {"hipEventQuery",               CONV_EVENT,  API_RUNTIME}},
+  // no analogue
+  // NOTE: Not equal to cuEventCreate due to different signatures
+  {"cudaEventCreate",              {"hipEventCreate",              CONV_EVENT, API_RUNTIME}},
+  // cuEventCreate
+  {"cudaEventCreateWithFlags",     {"hipEventCreateWithFlags",     CONV_EVENT, API_RUNTIME}},
+  // cuEventDestroy
+  {"cudaEventDestroy",             {"hipEventDestroy",             CONV_EVENT, API_RUNTIME}},
+  // cuEventRecord
+  {"cudaEventRecord",              {"hipEventRecord",              CONV_EVENT, API_RUNTIME}},
+  // cuEventElapsedTime
+  {"cudaEventElapsedTime",         {"hipEventElapsedTime",         CONV_EVENT, API_RUNTIME}},
+  // cuEventSynchronize
+  {"cudaEventSynchronize",         {"hipEventSynchronize",         CONV_EVENT, API_RUNTIME}},
+  // cuEventQuery
+  {"cudaEventQuery",               {"hipEventQuery",               CONV_EVENT, API_RUNTIME}},
+
+  // 5.6. External Resource Interoperability
+  // cuDestroyExternalMemory
+  {"cudaDestroyExternalMemory",                            {"hipDestroyExternalMemory",                                CONV_EXT_RES, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuDestroyExternalSemaphore
+  {"cudaDestroyExternalSemaphore",                         {"hipDestroyExternalSemaphore",                             CONV_EXT_RES, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuExternalMemoryGetMappedBuffer
+  {"cudaExternalMemoryGetMappedBuffer",                    {"hipExternalMemoryGetMappedBuffer",                        CONV_EXT_RES, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuExternalMemoryGetMappedMipmappedArray
+  {"cudaExternalMemoryGetMappedMipmappedArray",            {"hipExternalMemoryGetMappedMipmappedArray",                CONV_EXT_RES, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuImportExternalMemory
+  {"cudaImportExternalMemory",                             {"hipImportExternalMemory",                                 CONV_EXT_RES, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuImportExternalSemaphore
+  {"cudaImportExternalSemaphore",                          {"hipImportExternalSemaphore",                              CONV_EXT_RES, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuSignalExternalSemaphoresAsync
+  {"cudaSignalExternalSemaphoresAsync",                    {"hipSignalExternalSemaphoresAsync",                        CONV_EXT_RES, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuWaitExternalSemaphoresAsync
+  {"cudaWaitExternalSemaphoresAsync",                      {"hipWaitExternalSemaphoresAsync",                          CONV_EXT_RES, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // Streams
+  // no analogue
+  // NOTE: Not equal to cuStreamCreate due to different signatures
   {"cudaStreamCreate",             {"hipStreamCreate",             CONV_STREAM, API_RUNTIME}},
+  // cuStreamCreate
   {"cudaStreamCreateWithFlags",    {"hipStreamCreateWithFlags",    CONV_STREAM, API_RUNTIME}},
-  {"cudaStreamCreateWithPriority", {"hipStreamCreateWithPriority", CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuStreamCreateWithPriority
+  {"cudaStreamCreateWithPriority", {"hipStreamCreateWithPriority", CONV_STREAM, API_RUNTIME}},
+  // cuStreamDestroy
   {"cudaStreamDestroy",            {"hipStreamDestroy",            CONV_STREAM, API_RUNTIME}},
+  // cuStreamWaitEvent
   {"cudaStreamWaitEvent",          {"hipStreamWaitEvent",          CONV_STREAM, API_RUNTIME}},
+  // cuStreamSynchronize
   {"cudaStreamSynchronize",        {"hipStreamSynchronize",        CONV_STREAM, API_RUNTIME}},
+  // cuStreamGetFlags
   {"cudaStreamGetFlags",           {"hipStreamGetFlags",           CONV_STREAM, API_RUNTIME}},
+  // cuStreamQuery
   {"cudaStreamQuery",              {"hipStreamQuery",              CONV_STREAM, API_RUNTIME}},
+  // cuStreamAddCallback
   {"cudaStreamAddCallback",        {"hipStreamAddCallback",        CONV_STREAM, API_RUNTIME}},
+  // cuStreamAttachMemAsync
   {"cudaStreamAttachMemAsync",     {"hipStreamAttachMemAsync",     CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
-  {"cudaStreamGetPriority",        {"hipStreamGetPriority",        CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuStreamBeginCapture
+  {"cudaStreamBeginCapture",       {"hipStreamBeginCapture",       CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuStreamEndCapture
+  {"cudaStreamEndCapture",         {"hipStreamEndCapture",         CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuStreamIsCapturing
+  {"cudaStreamIsCapturing",        {"hipStreamIsCapturing",        CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuStreamGetPriority
+  {"cudaStreamGetPriority",        {"hipStreamGetPriority",        CONV_STREAM, API_RUNTIME}},
 
   // Other synchronization
   {"cudaDeviceSynchronize", {"hipDeviceSynchronize", CONV_DEVICE, API_RUNTIME}},
   {"cudaDeviceReset",       {"hipDeviceReset",       CONV_DEVICE, API_RUNTIME}},
   {"cudaSetDevice",         {"hipSetDevice",         CONV_DEVICE, API_RUNTIME}},
   {"cudaGetDevice",         {"hipGetDevice",         CONV_DEVICE, API_RUNTIME}},
+  // cuDeviceGetCount
   {"cudaGetDeviceCount",    {"hipGetDeviceCount",    CONV_DEVICE, API_RUNTIME}},
   {"cudaChooseDevice",      {"hipChooseDevice",      CONV_DEVICE, API_RUNTIME}},
 
@@ -118,20 +195,25 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaDeviceGetAttribute",                      {"hipDeviceGetAttribute",                              CONV_DEVICE, API_RUNTIME}},
 
   // Pointer Attributes
-  // struct cudaPointerAttributes
-  {"cudaPointerGetAttributes", {"hipPointerGetAttributes", CONV_MEMORY,  API_RUNTIME}},
-
+  // no analogue
+  // NOTE: Not equal to cuPointerGetAttributes due to different signatures
+  {"cudaPointerGetAttributes", {"hipPointerGetAttributes", CONV_ADDRESSING, API_RUNTIME}},
+  // cuMemHostGetDevicePointer
   {"cudaHostGetDevicePointer", {"hipHostGetDevicePointer", CONV_MEMORY,  API_RUNTIME}},
 
   // Device
   {"cudaGetDeviceProperties",          {"hipGetDeviceProperties",          CONV_DEVICE, API_RUNTIME}},
+  // cuDeviceGetPCIBusId
   {"cudaDeviceGetPCIBusId",            {"hipDeviceGetPCIBusId",            CONV_DEVICE, API_RUNTIME}},
+  // cuDeviceGetByPCIBusId
   {"cudaDeviceGetByPCIBusId",          {"hipDeviceGetByPCIBusId",          CONV_DEVICE, API_RUNTIME}},
-  {"cudaDeviceGetStreamPriorityRange", {"hipDeviceGetStreamPriorityRange", CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuCtxGetStreamPriorityRange
+  {"cudaDeviceGetStreamPriorityRange", {"hipDeviceGetStreamPriorityRange", CONV_DEVICE, API_RUNTIME}},
   {"cudaSetValidDevices",              {"hipSetValidDevices",              CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // Device Flags
-  {"cudaGetDeviceFlags", {"hipGetDeviceFlags", CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuCtxGetFlags
+  {"cudaGetDeviceFlags", {"hipCtxGetFlags", CONV_DEVICE, API_RUNTIME}},
   {"cudaSetDeviceFlags", {"hipSetDeviceFlags", CONV_DEVICE, API_RUNTIME}},
 
   // Cache config
@@ -179,7 +261,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   //     {"cudaThreadGetSharedMemConfig", {"hipDeviceGetSharedMemConfig", CONV_DEVICE, API_RUNTIME}},
   //     {"cudaThreadSetSharedMemConfig", {"hipDeviceSetSharedMemConfig", CONV_DEVICE, API_RUNTIME}},
 
-
+  // cuCtxGetLimit
   {"cudaDeviceGetLimit",                    {"hipDeviceGetLimit",                    CONV_DEVICE, API_RUNTIME}},
 
   // Profiler

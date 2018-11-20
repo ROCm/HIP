@@ -258,20 +258,29 @@ struct Agent_global {
     uint32_t byte_cnt;
 };
 
-inline void track(const Agent_global& x) {
+inline void track(const Agent_global& x, hsa_agent_t agent) {
     tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name.c_str(),
             x.address, x.byte_cnt);
 
-    auto device = ihipGetTlsDefaultCtx()->getWriteableDevice();
-
+    int deviceIndex =0;
+    for ( deviceIndex = 0; deviceIndex < g_deviceCnt; deviceIndex++) {
+        if(g_allAgents[deviceIndex] == agent)
+           break;
+    }
+    auto device = ihipGetDevice(deviceIndex - 1);
     hc::AmPointerInfo ptr_info(nullptr, x.address, x.address, x.byte_cnt, device->_acc, true,
                                false);
     hc::am_memtracker_add(x.address, ptr_info);
+#if USE_APP_PTR_FOR_CTX
+    hc::am_memtracker_update(x.address, device->_deviceId, 0u, ihipGetTlsDefaultCtx());
+#else
     hc::am_memtracker_update(x.address, device->_deviceId, 0u);
+#endif
+
 }
 
 template <typename Container = vector<Agent_global>>
-inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t,
+inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t agent,
                                                 hsa_executable_symbol_t x, void* out) {
     assert(out);
 
@@ -281,7 +290,7 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t,
     if (t == HSA_SYMBOL_KIND_VARIABLE) {
         static_cast<Container*>(out)->push_back(Agent_global{name(x), address(x), size(x)});
 
-        track(static_cast<Container*>(out)->back());
+        track(static_cast<Container*>(out)->back(),agent);
     }
 
     return HSA_STATUS_SUCCESS;
@@ -342,7 +351,7 @@ hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes, hi
 
     tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(), it0->second.cend(), name);
 
-    return dptr ? hipSuccess : hipErrorNotFound;
+    return *dptr ? hipSuccess : hipErrorNotFound;
 }
 
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes, const char* name) {
@@ -367,7 +376,7 @@ hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes, c
 
     tie(*dptr, *bytes) = read_global_description(it->second.cbegin(), it->second.cend(), name);
 
-    return dptr ? hipSuccess : hipErrorNotFound;
+    return *dptr ? hipSuccess : hipErrorNotFound;
 }
 
 hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname) {
