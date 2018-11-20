@@ -22,6 +22,7 @@ THE SOFTWARE.
 
 #include <unordered_map>
 #include <string>
+#include <fstream>
 
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
@@ -86,6 +87,7 @@ __hipRegisterFatBinary(const void* data)
 
     std::string target{&desc->triple[sizeof(AMDGCN_AMDHSA_TRIPLE)],
       desc->tripleSize - sizeof(AMDGCN_AMDHSA_TRIPLE)};
+    tprintf(DB_FB, "Found bundle for %s\n", target.c_str());
 
     for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {
       hsa_agent_t agent = g_allAgents[deviceId + 1];
@@ -110,7 +112,32 @@ __hipRegisterFatBinary(const void* data)
 
       if (module->executable.handle) {
         modules->at(deviceId) = module;
+        tprintf(DB_FB, "Loaded code object for %s\n", name);
+        if (HIP_DUMP_CODE_OBJECT) {
+          char fname[30];
+          static std::atomic<int> index;
+          sprintf(fname, "__hip_dump_code_object%04d.o", index++);
+          tprintf(DB_FB, "Dump code object %s\n", fname);
+          std::ofstream ofs;
+          ofs.open(fname, std::ios::binary);
+          ofs << image;
+          ofs.close();
+        }
+      } else {
+        fprintf(stderr, "Failed to load code object for %s\n", name);
+        abort();
       }
+    }
+  }
+
+  for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {
+    hsa_agent_t agent = g_allAgents[deviceId + 1];
+
+    char name[64] = {};
+    hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, name);
+    if (!(*modules)[deviceId]) {
+      fprintf(stderr, "No device code bundle for %s\n", name);
+      abort();
     }
   }
 
@@ -132,12 +159,19 @@ extern "C" void __hipRegisterFunction(
   dim3*        gridDim,
   int*         wSize)
 {
+  HIP_INIT_API(modules, hostFunction, deviceFunction, deviceName);
   std::vector<hipFunction_t> functions{g_deviceCnt};
 
+  assert(modules && modules->size() >= g_deviceCnt);
   for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {
     hipFunction_t function;
-    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName)) {
+    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName) &&
+        function != nullptr) {
       functions[deviceId] = function;
+    }
+    else {
+      tprintf(DB_FB, "__hipRegisterFunction cannot find kernel %s for"
+          " device %d\n", deviceName, deviceId);
     }
   }
 
@@ -180,6 +214,7 @@ hipError_t hipSetupArgument(
   size_t size,
   size_t offset)
 {
+  HIP_INIT_API(arg, size, offset);
   auto ctx = ihipGetTlsDefaultCtx();
   LockedAccessor_CtxCrit_t crit(ctx->criticalData());
   auto& arguments = crit->_execStack.top()._arguments;
@@ -194,6 +229,7 @@ hipError_t hipSetupArgument(
 
 hipError_t hipLaunchByPtr(const void *hostFunction)
 {
+  HIP_INIT_API(hostFunction);
   ihipExec_t exec;
   {
     auto ctx = ihipGetTlsDefaultCtx();
@@ -213,20 +249,28 @@ hipError_t hipLaunchByPtr(const void *hostFunction)
     deviceId = 0;
   }
 
+  hipError_t e = hipSuccess;
   decltype(g_functions)::iterator it;
-  if ((it = g_functions.find(hostFunction)) == g_functions.end())
-    return hipErrorUnknown;
+  if ((it = g_functions.find(hostFunction)) == g_functions.end() ||
+      !it->second[deviceId]) {
+    e = hipErrorUnknown;
+    fprintf(stderr, "hipLaunchByPtr cannot find kernel with stub address %p"
+        " for device %d!\n", hostFunction, deviceId);
+    abort();
+  } else {
+    size_t size = exec._arguments.size();
+    void *extra[] = {
+        HIP_LAUNCH_PARAM_BUFFER_POINTER, &exec._arguments[0],
+        HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
+        HIP_LAUNCH_PARAM_END
+      };
 
-  size_t size = exec._arguments.size();
-  void *extra[] = {
-      HIP_LAUNCH_PARAM_BUFFER_POINTER, &exec._arguments[0],
-      HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
-      HIP_LAUNCH_PARAM_END
-    };
+    e = hipModuleLaunchKernel(it->second[deviceId],
+      exec._gridDim.x, exec._gridDim.y, exec._gridDim.z,
+      exec._blockDim.x, exec._blockDim.y, exec._blockDim.z,
+      exec._sharedMem, exec._hStream, nullptr, extra);
+  }
 
-  return hipModuleLaunchKernel(it->second[deviceId],
-    exec._gridDim.x, exec._gridDim.y, exec._gridDim.z,
-    exec._blockDim.x, exec._blockDim.y, exec._blockDim.z,
-    exec._sharedMem, exec._hStream, nullptr, extra);
+  return ihipLogStatus(e);
 }
 
