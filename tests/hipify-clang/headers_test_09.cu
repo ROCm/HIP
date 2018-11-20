@@ -48,6 +48,7 @@
 // CHECK: #include <string>
 
 // CHECK: #include "hipfft.h"
+// CHECK: #include "hipsparse.h"
 
 #include <cuda.h>
 
@@ -95,3 +96,5 @@
 #include <string>
 
 #include "cufft.h"
+
+#include "cusparse.h"
