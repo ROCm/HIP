@@ -8,9 +8,11 @@ We have attempted to document known bugs and limitations - in particular the [HI
 
 ## Revision History:
 
+- ROCm 1.9.2 release has added support for 2D memcpy through SDMA. However there is no fall back supported in this release. Therefore if SDMA is not enabled or fails then there may be an HCC exception that would be thrown.
+
 ===================================================================================================
 Release: 1.5
-Date:
+Date: 2017.11.29
 - Support threadIdx, blockIdx, blockDim directly (no need for hipify conversions in kernels.)  HIP
   Kernel syntax is now identical to CUDA kernel syntax - no need for extra parms or conversions.
 - Refactor launch syntax.  HIP now extracts kernels from the executable and launches them using the 
