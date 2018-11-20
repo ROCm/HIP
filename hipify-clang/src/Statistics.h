@@ -103,11 +103,12 @@ constexpr int NUM_CONV_TYPES = (int) ConvTypes::CONV_LAST;
 enum ApiTypes {
   API_DRIVER = 0,
   API_RUNTIME,
+  API_COMPLEX,
   API_BLAS,
   API_RAND,
   API_DNN,
   API_FFT,
-  API_COMPLEX,
+  API_SPARSE,
   API_LAST
 };
 constexpr int NUM_API_TYPES = (int) ApiTypes::API_LAST;
