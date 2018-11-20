@@ -8,11 +8,11 @@ void PrintStackTraceOnErrorSignal() {
 #if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
   llvm::sys::PrintStackTraceOnErrorSignal();
 #else
-  llvm::sys::PrintStackTraceOnErrorSignal(clang::StringRef());
+  llvm::sys::PrintStackTraceOnErrorSignal(StringRef());
 #endif
 }
 
-ct::Replacements& getReplacements(ct::RefactoringTool& Tool, clang::StringRef file) {
+ct::Replacements& getReplacements(ct::RefactoringTool& Tool, StringRef file) {
 #if LLVM_VERSION_MAJOR > 3
   // getReplacements() now returns a map from filename to Replacements - so create an entry
   // for this source file and return a reference to it.
@@ -37,6 +37,38 @@ void EnterPreprocessorTokenStream(clang::Preprocessor& _pp, const clang::Token *
   _pp.EnterTokenStream(start, len, false, DisableMacroExpansion);
 #else
   _pp.EnterTokenStream(clang::ArrayRef<clang::Token>{start, len}, DisableMacroExpansion);
+#endif
+}
+
+clang::SourceLocation getBeginLoc(const clang::Stmt* stmt) {
+#if LLVM_VERSION_MAJOR < 8
+  return stmt->getLocStart();
+#else
+  return stmt->getBeginLoc();
+#endif
+}
+
+clang::SourceLocation getBeginLoc(const clang::TypeLoc& typeLoc) {
+#if LLVM_VERSION_MAJOR < 8
+  return typeLoc.getLocStart();
+#else
+  return typeLoc.getBeginLoc();
+#endif
+}
+
+clang::SourceLocation getEndLoc(const clang::Stmt* stmt) {
+#if LLVM_VERSION_MAJOR < 8
+  return stmt->getLocEnd();
+#else
+  return stmt->getEndLoc();
+#endif
+}
+
+clang::SourceLocation getEndLoc(const clang::TypeLoc& typeLoc) {
+#if LLVM_VERSION_MAJOR < 8
+  return typeLoc.getLocEnd();
+#else
+  return typeLoc.getEndLoc();
 #endif
 }
 

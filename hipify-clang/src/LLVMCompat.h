@@ -25,7 +25,15 @@ namespace llcompat {
   #define LLVM_DEBUG(X) DEBUG(X)
 #endif
 
+clang::SourceLocation getBeginLoc(const clang::Stmt* stmt);
+clang::SourceLocation getBeginLoc(const clang::TypeLoc& typeLoc);
+
+clang::SourceLocation getEndLoc(const clang::Stmt* stmt);
+clang::SourceLocation getEndLoc(const clang::TypeLoc& typeLoc);
+
 void PrintStackTraceOnErrorSignal();
+
+using namespace llvm;
 
 /**
   * Get the replacement map for a given filename in a RefactoringTool.
@@ -33,7 +41,7 @@ void PrintStackTraceOnErrorSignal();
   * Older LLVM versions don't actually support multiple filenames, so everything all gets
   * smushed together. It is the caller's responsibility to cope with this.
   */
-ct::Replacements& getReplacements(ct::RefactoringTool& Tool, clang::StringRef file);
+ct::Replacements& getReplacements(ct::RefactoringTool& Tool, StringRef file);
 
 /**
   * Add a Replacement to a Replacements.

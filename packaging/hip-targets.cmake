@@ -16,7 +16,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_targetsDefined)
 set(_targetsNotDefined)
 set(_expectedTargets)
-foreach(_expectedTarget hip::hip_hcc_static hip::hip_hcc hip::hip_device hip::host hip::device)
+foreach(_expectedTarget hip::hip_hcc_static hip::hip_hcc hip::host hip::device)
   list(APPEND _expectedTargets ${_expectedTarget})
   if(NOT TARGET ${_expectedTarget})
     list(APPEND _targetsNotDefined ${_expectedTarget})
@@ -57,14 +57,6 @@ set_target_properties(hip::hip_hcc PROPERTIES
   INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
 )
 
-# Create imported target hip::hip_device
-add_library(hip::hip_device STATIC IMPORTED)
-
-set_target_properties(hip::hip_device PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
-)
-
 # Create imported target hip::host
 add_library(hip::host INTERFACE IMPORTED)
 
@@ -75,13 +67,13 @@ set_target_properties(hip::host PROPERTIES
 # Create imported target hip::device
 add_library(hip::device INTERFACE IMPORTED)
 
-if(HIP_COMPILER STREQUAL "clang")
+if(HIP_COMPILER STREQUAL "hcc")
 set_target_properties(hip::device PROPERTIES
-  INTERFACE_LINK_LIBRARIES "hip::host;hip::hip_device"
+  INTERFACE_LINK_LIBRARIES "hip::host;hcc::hccrt;hcc::hc_am"
 )
 else()
 set_target_properties(hip::device PROPERTIES
-  INTERFACE_LINK_LIBRARIES "hip::host;hip::hip_device;hcc::hccrt;hcc::hc_am"
+  INTERFACE_LINK_LIBRARIES "hip::host"
 )
 endif()
 

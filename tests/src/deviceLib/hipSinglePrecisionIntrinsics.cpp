@@ -39,6 +39,7 @@ __device__ void single_precision_intrinsics() {
     __cosf(0.0f);
     __exp10f(0.0f);
     __expf(0.0f);
+#if defined OCML_BASIC_ROUNDED_OPERATIONS
     __fadd_rd(0.0f, 1.0f);
     __fadd_rn(0.0f, 1.0f);
     __fadd_ru(0.0f, 1.0f);
@@ -47,7 +48,9 @@ __device__ void single_precision_intrinsics() {
     __fdiv_rn(4.0f, 2.0f);
     __fdiv_ru(4.0f, 2.0f);
     __fdiv_rz(4.0f, 2.0f);
+#endif
     __fdividef(4.0f, 2.0f);
+#if defined OCML_BASIC_ROUNDED_OPERATIONS
     __fmaf_rd(1.0f, 2.0f, 3.0f);
     __fmaf_rn(1.0f, 2.0f, 3.0f);
     __fmaf_ru(1.0f, 2.0f, 3.0f);
@@ -69,6 +72,7 @@ __device__ void single_precision_intrinsics() {
     __fsub_rn(2.0f, 1.0f);
     __fsub_ru(2.0f, 1.0f);
     __fsub_rz(2.0f, 1.0f);
+#endif
     __log10f(1.0f);
     __log2f(1.0f);
     __logf(1.0f);

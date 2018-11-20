@@ -4,12 +4,42 @@
 #include <iomanip>
 
 const char *counterNames[NUM_CONV_TYPES] = {
-  "version", "init", "device", "mem", "kern", "coord_func", "math_func", "device_func",
-  "special_func", "stream", "event", "occupancy", "ctx", "peer", "module",
-  "cache", "exec", "external_resource_interop", "graph", "err", "def", "tex", "gl", "graphics",
-  "surface", "jit", "d3d9", "d3d10", "d3d11", "vdpau", "egl", "complex",
-  "thread", "other", "include", "include_cuda_main_header", "type", "literal",
-  "numeric_literal"
+  "error", // CONV_ERROR
+  "init", // CONV_INIT
+  "version", // CONV_VERSION
+  "device", // CONV_DEVICE
+  "context", // CONV_CONTEXT
+  "module", // CONV_MODULE
+  "memory", // CONV_MEMORY
+  "addressing", // CONV_ADDRESSING
+  "stream", // CONV_STREAM
+  "event", // CONV_EVENT
+  "external_resource_interop", // CONV_EXT_RES
+  "stream_memory", // CONV_STREAM_MEMORY
+  "execution", // CONV_EXECUTION
+  "graph", // CONV_GRAPH
+  "occupancy", // CONV_OCCUPANCY
+  "texture", // CONV_TEXTURE
+  "surface", // CONV_SURFACE
+  "peer", // CONV_PEER
+  "graphics", // CONV_GRAPHICS
+  "profiler", // CONV_PROFILER
+  "openGL", // CONV_OPENGL
+  "D3D9", // CONV_D3D9
+  "D3D10", // CONV_D3D10
+  "D3D11", // CONV_D3D11
+  "VDPAU", // CONV_VDPAU
+  "EGL", // CONV_EGL
+  "thread", // CONV_THREAD
+  "complex", // CONV_COMPLEX
+  "library", // CONV_LIB_FUNC
+  "device_library", // CONV_LIB_DEVICE_FUNC
+  "include", // CONV_INCLUDE
+  "include_cuda_main_header", // CONV_INCLUDE_CUDA_MAIN_H
+  "type", // CONV_TYPE
+  "literal", // CONV_LITERAL
+  "numeric_literal", // CONV_NUMERIC_LITERAL
+  "define" // CONV_DEFINE
 };
 
 const char *apiNames[NUM_API_TYPES] = {
@@ -44,7 +74,7 @@ void printStat(std::ostream *csv, llvm::raw_ostream* printOut, const std::string
 
 } // Anonymous namespace
 
-void StatCounter::incrementCounter(const hipCounter& counter, std::string name) {
+void StatCounter::incrementCounter(const hipCounter& counter, const std::string& name) {
   counters[name]++;
   apiCounters[(int) counter.apiType]++;
   convTypeCounters[(int) counter.type]++;
@@ -70,7 +100,7 @@ int StatCounter::getConvSum() {
   return acc;
 }
 
-void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, std::string prefix) {
+void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string& prefix) {
   conditionalPrint(csv, printOut, "\nCUDA ref type;Count\n", "[HIPIFY] info: " + prefix + " refs by type:\n");
   for (int i = 0; i < NUM_CONV_TYPES; i++) {
     if (convTypeCounters[i] > 0) {
@@ -87,7 +117,7 @@ void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, std::str
   }
 }
 
-Statistics::Statistics(std::string name): fileName(name) {
+Statistics::Statistics(const std::string& name): fileName(name) {
   // Compute the total bytes/lines in the input file.
   std::ifstream src_file(name, std::ios::binary | std::ios::ate);
   src_file.clear();
@@ -99,7 +129,7 @@ Statistics::Statistics(std::string name): fileName(name) {
 
 ///////// Counter update routines //////////
 
-void Statistics::incrementCounter(const hipCounter &counter, std::string name) {
+void Statistics::incrementCounter(const hipCounter &counter, const std::string& name) {
   if (counter.unsupported) {
     unsupported.incrementCounter(counter, name);
   } else {
@@ -188,7 +218,7 @@ Statistics& Statistics::current() {
   return *Statistics::currentStatistics;
 }
 
-void Statistics::setActive(std::string name) {
+void Statistics::setActive(const std::string& name) {
   stats.emplace(std::make_pair(name, Statistics{name}));
   Statistics::currentStatistics = &stats.at(name);
 }
