@@ -155,6 +155,10 @@ bool HipifyAction::Exclude(const hipCounter & hipToken) {
           if (insertedComplexHeader) { return true; }
           insertedComplexHeader = true;
           return false;
+        case API_SPARSE:
+          if (insertedSPARSEHeader) { return true; }
+          insertedSPARSEHeader = true;
+          return false;
         default:
           return false;
       }
