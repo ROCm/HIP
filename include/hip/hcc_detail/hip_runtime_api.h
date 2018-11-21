@@ -1386,6 +1386,32 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t siz
 
 
 /**
+ *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
+ *
+ * @param[in]  symbolName - Symbol on device
+ * @param[out] devPtr - Pointer to a pointer to the memory referred to by the symbol
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
+ *
+ *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
+ * hipMemcpyFromSymbolAsync
+ */
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName);
+
+
+/**
+ *  @brief Copies the size of symbol @p symbolName to @p size
+ *
+ * @param[in]  symbolName - Symbol on device
+ * @param[out] size - Pointer to the size of the symbol
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
+ *
+ *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
+ * hipMemcpyFromSymbolAsync
+ */
+hipError_t hipGetSymbolSize(size_t* size, const void* symbolName);
+
+
+/**
  *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area
  * pointed to by @p offset bytes from the start of symbol @p symbol
  *
@@ -2333,6 +2359,9 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
                               const char* name);
+
+hipError_t ihipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
+                               const char* name);
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**

@@ -287,6 +287,9 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
         $ft{'mem'} += s/\bcudaMemcpyToArray\b/hipMemcpyToArray/g;
 
+        $ft{'mem'} += s/\bcudaGetSymbolAddress\b/hipGetSymbolAddress/g;
+        $ft{'mem'} += s/\bcudaGetSymbolSize\b/hipGetSymbolSize/g;
+
         #--------
         # Memory management:
         $ft{'mem'} += s/\bcudaMalloc\b/hipMalloc/g;
