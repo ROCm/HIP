@@ -909,14 +909,22 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
                 }
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0],
                                                     vecAcc.size());
-#if USE_APP_PTR_FOR_CTX
-                hc::am_memtracker_update(hostPtr, device->_deviceId, flags, ctx);
-#else
-                hc::am_memtracker_update(hostPtr, device->_deviceId, flags);
-#endif
+                if ( am_status == AM_SUCCESS ) {
+                     am_status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
 
-                tprintf(DB_MEM, " %s registered ptr=%p and allowed access to %zu peers\n", __func__,
-                        hostPtr, vecAcc.size());
+                if ( am_status == AM_SUCCESS ) {
+                    void *devPtr = amPointerInfo._devicePointer;
+ #if USE_APP_PTR_FOR_CTX
+                    hc::am_memtracker_update(hostPtr, device->_deviceId, flags, ctx);
+                    hc::am_memtracker_update(devPtr, device->_deviceId, flags, ctx);
+ #else
+                    hc::am_memtracker_update(hostPtr, device->_deviceId, flags);
+                    hc::am_memtracker_update(devPtr, device->_deviceId, flags);
+ #endif
+                    tprintf(DB_MEM, " %s registered ptr=%p and allowed access to %zu peers\n", __func__,
+                                 hostPtr, vecAcc.size());
+                };
+                };
                 if (am_status == AM_SUCCESS) {
                     hip_status = hipSuccess;
                 } else {
