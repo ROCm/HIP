@@ -43,7 +43,14 @@ const char *counterNames[NUM_CONV_TYPES] = {
 };
 
 const char *apiNames[NUM_API_TYPES] = {
-  "CUDA Driver API", "CUDA RT API", "CUBLAS API", "CURAND API", "CUDNN API", "CUFFT API", "cuComplex API"
+  "CUDA Driver API",
+  "CUDA RT API",
+  "cuComplex API",
+  "cuBLAS API",
+  "cuRAND API",
+  "cuDNN API",
+  "cuFFT API",
+  "cuSPARSE"
 };
 
 namespace {
