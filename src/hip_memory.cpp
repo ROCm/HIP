@@ -961,7 +961,7 @@ inline hipDeviceptr_t agent_address_for_symbol(const char* symbolName) {
 
 #if __hcc_workweek__ >= 17481
     size_t byte_cnt = 0u;
-    hipModuleGetGlobal(&r, &byte_cnt, 0, symbolName);
+    ihipModuleGetGlobal(&r, &byte_cnt, 0, symbolName);
 #else
     auto ctx = ihipGetTlsDefaultCtx();
     auto acc = ctx->getDevice()->_acc;
@@ -1105,6 +1105,23 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 
     return ihipLogStatus(e);
 }
+
+
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
+    HIP_INIT_API(devPtr, symbolName);
+
+    size_t size = 0;
+    return ihipModuleGetGlobal(devPtr, &size, 0, static_cast<const char*>(symbolName));
+}
+
+
+hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
+    HIP_INIT_API(size, symbolName);
+
+    void* devPtr = nullptr;
+    return ihipModuleGetGlobal(&devPtr, size, 0, static_cast<const char*>(symbolName));
+}
+
 
 //---
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
