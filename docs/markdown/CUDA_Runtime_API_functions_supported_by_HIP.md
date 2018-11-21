@@ -132,8 +132,8 @@
 | `cudaFreeHost`                                            | `hipHostFree`                 |
 | `cudaFreeMipmappedArray`                                  |                               |
 | `cudaGetMipmappedArrayLevel`                              |                               |
-| `cudaGetSymbolAddress`                                    |                               |
-| `cudaGetSymbolSize`                                       |                               |
+| `cudaGetSymbolAddress`                                    | `hipGetSymbolAddress`         |
+| `cudaGetSymbolSize`                                       | `hipGetSymbolSize`            |
 | `cudaHostAlloc`                                           | `hipHostMalloc`               |
 | `cudaHostGetDevicePointer`                                | `hipHostGetDevicePointer`     |
 | `cudaHostGetFlags`                                        | `hipHostGetFlags`             |
@@ -383,8 +383,8 @@
 | `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`                         |
 | `cudaFuncGetAttributes`                                   |                                                |
 | `cudaFuncSetCacheConfig`                                  |                                                |
-| `cudaGetSymbolAddress`                                    |                                                |
-| `cudaGetSymbolSize`                                       |                                                |
+| `cudaGetSymbolAddress`                                    | `hipGetSymbolAddress`                          |
+| `cudaGetSymbolSize`                                       | `hipGetSymbolSize`                             |
 | `cudaGetTextureAlignmentOffset`                           |                                                |
 | `cudaLaunch`                                              |                                                |
 | `cudaLaunchKernel`                                        |                                                |
