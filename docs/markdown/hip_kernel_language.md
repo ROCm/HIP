@@ -159,7 +159,7 @@ void callMyKernel()
 ## Variable-Type Qualifiers
 
 ### `__constant__`
-The `__constant__` keyword is supported. The host writes constant memory before launching the kernel; from the GPU, this memory is read-only during kernel execution. The functions for accessing constant memory (hipGetSymbolAddress(), hipGetSymbolSize(), hipMemcpyToSymbol(), hipMemcpyToSymbolAsync, hipMemcpyFromSymbol, hipMemcpyFromSymbolAsync) are under development.
+The `__constant__` keyword is supported. The host writes constant memory before launching the kernel; from the GPU, this memory is read-only during kernel execution. The functions for accessing constant memory (hipGetSymbolAddress(), hipGetSymbolSize(), hipMemcpyToSymbol(), hipMemcpyToSymbolAsync(), hipMemcpyFromSymbol(), hipMemcpyFromSymbolAsync()) are available.
 
 ### `__shared__` 
 The `__shared__` keyword is supported.

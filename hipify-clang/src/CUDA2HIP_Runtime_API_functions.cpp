@@ -69,8 +69,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // NOTE: Not equal to cuMipmappedArrayDestroy due to different signatures
   {"cudaFreeMipmappedArray",     {"hipFreeMipmappedArray",     CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   {"cudaGetMipmappedArrayLevel", {"hipGetMipmappedArrayLevel", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
-  {"cudaGetSymbolAddress",       {"hipGetSymbolAddress",       CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
-  {"cudaGetSymbolSize",          {"hipGetSymbolSize",          CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaGetSymbolAddress",       {"hipGetSymbolAddress",       CONV_MEMORY, API_RUNTIME}},
+  {"cudaGetSymbolSize",          {"hipGetSymbolSize",          CONV_MEMORY, API_RUNTIME}},
   // TODO: double check cuMemPrefetchAsync
   {"cudaMemPrefetchAsync",       {"hipMemPrefetchAsync",       CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
 
