@@ -159,7 +159,7 @@ extern "C" void __hipRegisterFunction(
   dim3*        gridDim,
   int*         wSize)
 {
-  HIP_INIT_API(modules, hostFunction, deviceFunction, deviceName);
+  HIP_INIT_API(NONE, modules, hostFunction, deviceFunction, deviceName);
   std::vector<hipFunction_t> functions{g_deviceCnt};
 
   assert(modules && modules->size() >= g_deviceCnt);
@@ -214,7 +214,7 @@ hipError_t hipSetupArgument(
   size_t size,
   size_t offset)
 {
-  HIP_INIT_API(arg, size, offset);
+  HIP_INIT_API(hipSetupArgument, arg, size, offset);
   auto ctx = ihipGetTlsDefaultCtx();
   LockedAccessor_CtxCrit_t crit(ctx->criticalData());
   auto& arguments = crit->_execStack.top()._arguments;
@@ -229,7 +229,7 @@ hipError_t hipSetupArgument(
 
 hipError_t hipLaunchByPtr(const void *hostFunction)
 {
-  HIP_INIT_API(hostFunction);
+  HIP_INIT_API(hipLaunchByPtr, hostFunction);
   ihipExec_t exec;
   {
     auto ctx = ihipGetTlsDefaultCtx();

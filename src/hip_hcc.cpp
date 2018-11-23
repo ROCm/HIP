@@ -179,7 +179,7 @@ uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr) {
 
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
-        fprintf(stderr, "%s<<hip-api tid:%s @%lu%s\n", API_COLOR, fullStr->c_str(), apiStartTick,
+        fprintf(stderr, "%s<<hip-api pid:%d tid:%s @%lu%s\n", API_COLOR, tls_tidInfo.pid(), fullStr->c_str(), apiStartTick,
                 API_COLOR_END);
     }
 
@@ -237,6 +237,7 @@ hipError_t ihipSynchronize(void) {
 //=================================================================================================
 TidInfo::TidInfo() : _apiSeqNum(0) {
     _shortTid = g_lastShortTid.fetch_add(1);
+    _pid = getpid(); 
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
         std::stringstream tid_ss;
@@ -1535,7 +1536,7 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
     if ((HIP_TRACE_API & (1 << TRACE_KCMD)) || HIP_PROFILE_API ||
         (COMPILE_HIP_DB & HIP_TRACE_API)) {
         std::stringstream os;
-        os << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum() << " hipLaunchKernel '"
+        os << tls_tidInfo.pid() << " " << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum() << " hipLaunchKernel '"
            << kernelName << "'"
            << " gridDim:" << lp->grid_dim << " groupDim:" << lp->group_dim << " sharedMem:+"
            << lp->dynamic_group_mem_bytes << " " << *stream;
@@ -2288,7 +2289,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 //-------------------------------------------------------------------------------------------------
 // Profiler, really these should live elsewhere:
 hipError_t hipProfilerStart() {
-    HIP_INIT_API();
+    HIP_INIT_API(hipProfilerStart);
 #if COMPILE_HIP_ATP_MARKER
     amdtResumeProfiling(AMDT_ALL_PROFILING);
 #endif
@@ -2298,7 +2299,7 @@ hipError_t hipProfilerStart() {
 
 
 hipError_t hipProfilerStop() {
-    HIP_INIT_API();
+    HIP_INIT_API(hipProfilerStop);
 #if COMPILE_HIP_ATP_MARKER
     amdtStopProfiling(AMDT_ALL_PROFILING);
 #endif
@@ -2313,7 +2314,7 @@ hipError_t hipProfilerStop() {
 
 //---
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
-    HIP_INIT_API(deviceId, acc);
+    HIP_INIT_API(hipHccGetAccelerator, deviceId, acc);
 
     const ihipDevice_t* device = ihipGetDevice(deviceId);
     hipError_t err;
@@ -2329,7 +2330,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
 
 //---
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
-    HIP_INIT_API(stream, av);
+    HIP_INIT_API(hipHccGetAcceleratorView, stream, av);
 
     if (stream == hipStreamNull) {
         ihipCtx_t* device = ihipGetTlsDefaultCtx();

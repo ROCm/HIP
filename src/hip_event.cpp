@@ -95,20 +95,20 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags) {
 }
 
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
-    HIP_INIT_API(event, flags);
+    HIP_INIT_API(hipEventCreateWithFlags, event, flags);
 
     return ihipLogStatus(ihipEventCreate(event, flags));
 }
 
 hipError_t hipEventCreate(hipEvent_t* event) {
-    HIP_INIT_API(event);
+    HIP_INIT_API(hipEventCreate, event);
 
     return ihipLogStatus(ihipEventCreate(event, 0));
 }
 
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(TRACE_SYNC, event, stream);
+    HIP_INIT_SPECIAL_API(hipEventRecord, TRACE_SYNC, event, stream);
 
     auto ecd = event->locked_copyCrit();
 
@@ -153,7 +153,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
 
 
 hipError_t hipEventDestroy(hipEvent_t event) {
-    HIP_INIT_API(event);
+    HIP_INIT_API(hipEventDestroy, event);
 
     if (event) {
         delete event;
@@ -165,7 +165,7 @@ hipError_t hipEventDestroy(hipEvent_t event) {
 }
 
 hipError_t hipEventSynchronize(hipEvent_t event) {
-    HIP_INIT_SPECIAL_API(TRACE_SYNC, event);
+    HIP_INIT_SPECIAL_API(hipEventSynchronize, TRACE_SYNC, event);
 
     if (!(event->_flags & hipEventReleaseToSystem)) {
         tprintf(DB_WARN,
@@ -198,7 +198,7 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
 }
 
 hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
-    HIP_INIT_API(ms, start, stop);
+    HIP_INIT_API(hipEventElapsedTime, ms, start, stop);
 
     hipError_t status = hipSuccess;
 
@@ -255,7 +255,7 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
 }
 
 hipError_t hipEventQuery(hipEvent_t event) {
-    HIP_INIT_SPECIAL_API(TRACE_QUERY, event);
+    HIP_INIT_SPECIAL_API(hipEventQuery, TRACE_QUERY, event);
 
     if (!(event->_flags & hipEventReleaseToSystem)) {
         tprintf(DB_WARN,
