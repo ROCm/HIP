@@ -179,7 +179,7 @@ uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr) {
 
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
-        fprintf(stderr, "%s<<hip-api tid:%s @%lu%s\n", API_COLOR, fullStr->c_str(), apiStartTick,
+        fprintf(stderr, "%s<<hip-api pid:%d tid:%s @%lu%s\n", API_COLOR, tls_tidInfo.pid(), fullStr->c_str(), apiStartTick,
                 API_COLOR_END);
     }
 
@@ -237,6 +237,7 @@ hipError_t ihipSynchronize(void) {
 //=================================================================================================
 TidInfo::TidInfo() : _apiSeqNum(0) {
     _shortTid = g_lastShortTid.fetch_add(1);
+    _pid = getpid(); 
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
         std::stringstream tid_ss;
@@ -1535,7 +1536,7 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
     if ((HIP_TRACE_API & (1 << TRACE_KCMD)) || HIP_PROFILE_API ||
         (COMPILE_HIP_DB & HIP_TRACE_API)) {
         std::stringstream os;
-        os << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum() << " hipLaunchKernel '"
+        os << tls_tidInfo.pid() << " " << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum() << " hipLaunchKernel '"
            << kernelName << "'"
            << " gridDim:" << lp->grid_dim << " groupDim:" << lp->group_dim << " sharedMem:+"
            << lp->dynamic_group_mem_bytes << " " << *stream;

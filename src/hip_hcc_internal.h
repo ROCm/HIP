@@ -94,11 +94,13 @@ class TidInfo {
     TidInfo();
 
     int tid() const { return _shortTid; };
+    pid_t pid() const { return _pid; }; 
     uint64_t incApiSeqNum() { return ++_apiSeqNum; };
     uint64_t apiSeqNum() const { return _apiSeqNum; };
 
    private:
     int _shortTid;
+    pid_t _pid; 
 
     // monotonically increasing API sequence number for this threa.
     uint64_t _apiSeqNum;
@@ -243,14 +245,14 @@ static const DbName dbName[] = {
 
 
 #if COMPILE_HIP_DB
-#define tprintf(trace_level, ...)                                                                  \
-    {                                                                                              \
-        if (HIP_DB & (1 << (trace_level))) {                                                       \
-            char msgStr[1000];                                                                     \
-            snprintf(msgStr, sizeof(msgStr), __VA_ARGS__);                                         \
-            fprintf(stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color,                  \
-                    dbName[trace_level]._shortName, tls_tidInfo.tid(), msgStr, KNRM);              \
-        }                                                                                          \
+#define tprintf(trace_level, ...)                                                                                     \
+    {                                                                                                                 \
+        if (HIP_DB & (1 << (trace_level))) {                                                                          \
+            char msgStr[1000];                                                                                        \
+            snprintf(msgStr, sizeof(msgStr), __VA_ARGS__);                                                            \
+            fprintf(stderr, "  %ship-%s pid:%d tid:%d:%s%s", dbName[trace_level]._color,                              \
+                    dbName[trace_level]._shortName, tls_tidInfo.pid(), tls_tidInfo.tid(), msgStr, KNRM);              \
+        }                                                                                                             \
     }
 #else
 /* Compile to empty code */
@@ -315,22 +317,22 @@ extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
 // This macro should be called at the end of every HIP API, and only at the end of top-level hip
 // APIS (not internal hip) It has dual function: logs the last error returned for use by
 // hipGetLastError, and also prints the closing message when the debug trace is enabled.
-#define ihipLogStatus(hipStatus)                                                                   \
-    ({                                                                                             \
-        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/     \
-        tls_lastHipError = localHipStatus;                                                         \
-                                                                                                   \
-        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1 << TRACE_ALL)) {                   \
-            auto ticks = getTicks() - hipApiStartTick;                                             \
-            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>> +%lu ns%s\n",             \
-                    (localHipStatus == 0) ? API_COLOR : KRED, tls_tidInfo.tid(),                   \
-                    tls_tidInfo.apiSeqNum(), __func__, localHipStatus,                             \
-                    ihipErrorString(localHipStatus), ticks, API_COLOR_END);                        \
-        }                                                                                          \
-        if (HIP_PROFILE_API) {                                                                     \
-            MARKER_END();                                                                          \
-        }                                                                                          \
-        localHipStatus;                                                                            \
+#define ihipLogStatus(hipStatus)                                                                    \
+    ({                                                                                              \
+        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/      \
+        tls_lastHipError = localHipStatus;                                                          \
+                                                                                                    \
+        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1 << TRACE_ALL)) {                    \
+            auto ticks = getTicks() - hipApiStartTick;                                              \
+            fprintf(stderr, "  %ship-api pid:%d tid:%d.%lu %-30s ret=%2d (%s)>> +%lu ns%s\n",       \
+                    (localHipStatus == 0) ? API_COLOR : KRED, tls_tidInfo.pid(), tls_tidInfo.tid(), \
+                    tls_tidInfo.apiSeqNum(), __func__, localHipStatus,                              \
+                    ihipErrorString(localHipStatus), ticks, API_COLOR_END);                         \
+        }                                                                                           \
+        if (HIP_PROFILE_API) {                                                                      \
+            MARKER_END();                                                                           \
+        }                                                                                           \
+        localHipStatus;                                                                             \
     })
 
 
