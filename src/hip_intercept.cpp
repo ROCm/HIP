@@ -21,41 +21,29 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
-#include "hip_hcc_internal.h"
-#include "trace_helper.h"
+#include "hip/hcc_detail/hip_prof_api.h"
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-// Error Handling
-//---
+// HIP API callback/activity
 
-hipError_t hipGetLastError() {
-    HIP_INIT_API(hipGetLastError);
+api_callbacks_table_t callbacks_table;
 
-    // Return last error, but then reset the state:
-    hipError_t e = ihipLogStatus(tls_lastHipError);
-    tls_lastHipError = hipSuccess;
-    return e;
+extern std::string& FunctionSymbol(hipFunction_t f);
+const char* hipKernelNameRef(const hipFunction_t f) { return FunctionSymbol(f).c_str(); }
+
+hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg) {
+  return callbacks_table.set_callback(id, reinterpret_cast<api_callbacks_table_t::fun_t>(fun), arg) ?
+    hipSuccess : hipErrorInvalidValue;
 }
 
-hipError_t hipPeekAtLastError() {
-    HIP_INIT_API(hipPeekAtLastError);
-
-    // peek at last error, but don't reset it.
-    return ihipLogStatus(tls_lastHipError);
+hipError_t hipRemoveApiCallback(uint32_t id) {
+  return callbacks_table.set_callback(id, NULL, NULL) ? hipSuccess : hipErrorInvalidValue;
 }
 
-const char* hipGetErrorName(hipError_t hip_error) {
-    HIP_INIT_API(hipGetErrorName, hip_error);
-
-    return ihipErrorString(hip_error);
+hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg) {
+  return callbacks_table.set_activity(id, reinterpret_cast<api_callbacks_table_t::act_t>(fun), arg) ?
+    hipSuccess : hipErrorInvalidValue;
 }
 
-const char* hipGetErrorString(hipError_t hip_error) {
-    HIP_INIT_API(hipGetErrorString, hip_error);
-
-    // TODO - return a message explaining the error.
-    // TODO - This should be set up to return the same string reported in the the doxygen comments,
-    // somehow.
-    return hipGetErrorName(hip_error);
+hipError_t hipRemoveActivityCallback(uint32_t id) {
+  return callbacks_table.set_activity(id, NULL, NULL) ? hipSuccess : hipErrorInvalidValue;
 }

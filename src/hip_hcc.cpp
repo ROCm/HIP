@@ -2288,7 +2288,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 //-------------------------------------------------------------------------------------------------
 // Profiler, really these should live elsewhere:
 hipError_t hipProfilerStart() {
-    HIP_INIT_API();
+    HIP_INIT_API(hipProfilerStart);
 #if COMPILE_HIP_ATP_MARKER
     amdtResumeProfiling(AMDT_ALL_PROFILING);
 #endif
@@ -2298,7 +2298,7 @@ hipError_t hipProfilerStart() {
 
 
 hipError_t hipProfilerStop() {
-    HIP_INIT_API();
+    HIP_INIT_API(hipProfilerStop);
 #if COMPILE_HIP_ATP_MARKER
     amdtStopProfiling(AMDT_ALL_PROFILING);
 #endif
@@ -2313,7 +2313,7 @@ hipError_t hipProfilerStop() {
 
 //---
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
-    HIP_INIT_API(deviceId, acc);
+    HIP_INIT_API(hipHccGetAccelerator, deviceId, acc);
 
     const ihipDevice_t* device = ihipGetDevice(deviceId);
     hipError_t err;
@@ -2329,7 +2329,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
 
 //---
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
-    HIP_INIT_API(stream, av);
+    HIP_INIT_API(hipHccGetAcceleratorView, stream, av);
 
     if (stream == hipStreamNull) {
         ihipCtx_t* device = ihipGetTlsDefaultCtx();

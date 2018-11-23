@@ -41,7 +41,7 @@ void saveSurfaceInfo(const hipSurface* pSurface, const hipResourceDesc* pResDesc
 // Surface Object APIs
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
                                   const hipResourceDesc* pResDesc) {
-    HIP_INIT_API(pSurfObject, pResDesc);
+    HIP_INIT_API(hipCreateSurfaceObject, pSurfObject, pResDesc);
     hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -71,7 +71,7 @@ hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
 }
 
 hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
-    HIP_INIT_API(surfaceObject);
+    HIP_INIT_API(hipDestroySurfaceObject, surfaceObject);
 
     hipError_t hip_status = hipSuccess;
 
