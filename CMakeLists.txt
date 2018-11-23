@@ -153,16 +153,20 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 ################
 # Detect profiling API
 ################
-if (USE_PROF_API EQUAL 1)
-add_definitions(-DUSE_PROF_API=1)
-find_path(PROF_API_HEADER_DIR NAMES prof_protocol.h PATHS ${PROF_API_HEADER_PATH} /opt/rocm/roctracer/include/roctracer NO_DEFAULT_PATH)
-if (NOT PROF_API_HEADER_DIR)
+if(USE_PROF_API EQUAL 1)
+if(NOT DEFINED PROF_API_HEADER_PATH)
+  set(PROF_API_HEADER_PATH /opt/rocm/roctracer/include/ext)
+endif ()
+find_path(PROF_API_HEADER_DIR NAMES prof_protocol.h PATHS ${PROF_API_HEADER_PATH} NO_DEFAULT_PATH)
+if(NOT PROF_API_HEADER_DIR)
+  MESSAGE("PROF_API_HEADER_PATH = ${PROF_API_HEADER_PATH}")
   MESSAGE("Profiling API header not found, use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
-else ()
+else()
+  add_definitions(-DUSE_PROF_API=1)
   include_directories ( ${PROF_API_HEADER_DIR} )
-endif ()
-MESSAGE("PROF_API_HEADER_DIR = ${PROF_API_HEADER_DIR}")
-endif ()
+  MESSAGE("PROF_API_HEADER_DIR = ${PROF_API_HEADER_DIR}")
+endif()
+endif()
 
 #############################
 # Build steps
