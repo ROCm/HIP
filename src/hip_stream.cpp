@@ -90,21 +90,21 @@ hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags, int priorit
 
 //---
 hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags) {
-    HIP_INIT_API(stream, flags);
+    HIP_INIT_API(hipStreamCreateWithFlags, stream, flags);
 
     return ihipLogStatus(ihipStreamCreate(stream, flags, priority_normal));
 }
 
 //---
 hipError_t hipStreamCreate(hipStream_t* stream) {
-    HIP_INIT_API(stream);
+    HIP_INIT_API(hipStreamCreate, stream);
 
     return ihipLogStatus(ihipStreamCreate(stream, hipStreamDefault, priority_normal));
 }
 
 //---
 hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority) {
-    HIP_INIT_API(stream, flags, priority);
+    HIP_INIT_API(hipStreamCreateWithPriority, stream, flags, priority);
 
     // clamp priority to range [priority_high:priority_low]
     priority = (priority < priority_high ? priority_high : (priority > priority_low ? priority_low : priority));
@@ -113,7 +113,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
 
 //---
 hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority) {
-    HIP_INIT_API(leastPriority, greatestPriority);
+    HIP_INIT_API(hipDeviceGetStreamPriorityRange, leastPriority, greatestPriority);
 
     if (leastPriority != NULL) *leastPriority = priority_low;
     if (greatestPriority != NULL) *greatestPriority = priority_high;
@@ -121,7 +121,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
 }
 
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
-    HIP_INIT_SPECIAL_API(TRACE_SYNC, stream, event, flags);
+    HIP_INIT_SPECIAL_API(hipStreamWaitEvent, TRACE_SYNC, stream, event, flags);
 
     hipError_t e = hipSuccess;
 
@@ -152,7 +152,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
 //---
 hipError_t hipStreamQuery(hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(TRACE_QUERY, stream);
+    HIP_INIT_SPECIAL_API(hipStreamQuery, TRACE_QUERY, stream);
 
     // Use default stream if 0 specified:
     if (stream == hipStreamNull) {
@@ -175,7 +175,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
 
 //---
 hipError_t hipStreamSynchronize(hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(TRACE_SYNC, stream);
+    HIP_INIT_SPECIAL_API(hipStreamSynchronize, TRACE_SYNC, stream);
 
     return ihipLogStatus(ihipStreamSynchronize(stream));
 }
@@ -186,7 +186,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
  * @return #hipSuccess, #hipErrorInvalidResourceHandle
  */
 hipError_t hipStreamDestroy(hipStream_t stream) {
-    HIP_INIT_API(stream);
+    HIP_INIT_API(hipStreamDestroy, stream);
 
     hipError_t e = hipSuccess;
 
@@ -214,7 +214,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 
 //---
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
-    HIP_INIT_API(stream, flags);
+    HIP_INIT_API(hipStreamGetFlags, stream, flags);
 
     if (flags == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
@@ -229,7 +229,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
 
 //--
 hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
-    HIP_INIT_API(stream, priority);
+    HIP_INIT_API(hipStreamGetPriority, stream, priority);
 
     if (priority == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
@@ -250,7 +250,7 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
 //---
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags) {
-    HIP_INIT_API(stream, callback, userData, flags);
+    HIP_INIT_API(hipStreamAddCallback, stream, callback, userData, flags);
     hipError_t e = hipSuccess;
 
     // Create a thread in detached mode to handle callback
