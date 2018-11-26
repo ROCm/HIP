@@ -95,15 +95,19 @@ $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
 ($HIP_VERSION_MAJOR, $HIP_VERSION_MINOR, $HIP_VERSION_PATCH) = split(/\./, $HIP_VERSION);
 
 if (defined $HIP_VDI_HOME) {
+    my $bits = "";
+    if (-d "$HIP_VDI_HOME/bin/x86_64") {
+        $bits = "/x86_64";
+    }
     if (!defined $HIP_CLANG_PATH) {
-        $HIP_CLANG_PATH = "$HIP_VDI_HOME/bin/x86_64";
+        $HIP_CLANG_PATH = "$HIP_VDI_HOME/bin" . $bits;
     }
     if (!defined $DEVICE_LIB_PATH) {
-        $DEVICE_LIB_PATH = "$HIP_VDI_HOME/lib/x86_64/bitcode";
+        $DEVICE_LIB_PATH = "$HIP_VDI_HOME/lib" . $bits . "/bitcode";
     }
     $HIP_CLANG_INCLUDE_PATH = "$HIP_VDI_HOME/include/clang";
     $HIP_INCLUDE_PATH = "$HIP_VDI_HOME/include";
-    $HIP_LIB_PATH = "$HIP_VDI_HOME/lib/x86_64";
+    $HIP_LIB_PATH = "$HIP_VDI_HOME/lib" . $bits;
 }
 
 if (defined $HIP_CLANG_PATH) {
