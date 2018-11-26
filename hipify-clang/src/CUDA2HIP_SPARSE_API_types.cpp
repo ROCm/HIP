@@ -97,7 +97,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP{
   {"CUSPARSE_SOLVE_POLICY_NO_LEVEL",            {"HIPSPARSE_SOLVE_POLICY_NO_LEVEL",            CONV_NUMERIC_LITERAL, API_SPARSE}},
   {"CUSPARSE_SOLVE_POLICY_USE_LEVEL",           {"HIPSPARSE_SOLVE_POLICY_USE_LEVEL",           CONV_NUMERIC_LITERAL, API_SPARSE}},
 
-  {"cusparseStatus_t",                          {"hipsparseMatrixType_t",                      CONV_TYPE, API_SPARSE}},
+  {"cusparseStatus_t",                          {"hipsparseStatus_t",                          CONV_TYPE, API_SPARSE}},
   {"CUSPARSE_STATUS_SUCCESS",                   {"HIPSPARSE_STATUS_SUCCESS",                   CONV_NUMERIC_LITERAL, API_SPARSE}},
   {"CUSPARSE_STATUS_NOT_INITIALIZED",           {"HIPSPARSE_STATUS_NOT_INITIALIZED",           CONV_NUMERIC_LITERAL, API_SPARSE}},
   {"CUSPARSE_STATUS_ALLOC_FAILED",              {"HIPSPARSE_STATUS_ALLOC_FAILED",              CONV_NUMERIC_LITERAL, API_SPARSE}},
