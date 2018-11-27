@@ -83,7 +83,156 @@
 | struct       |`pruneInfo`                                                    |                                                            |
 | typedef      |`pruneInfo_t`                                                  |                                                            |
 
-## **2. CUSPARSE API functions**
+## **2.cuSPARSE Helper Function Reference**
 
 |   **CUDA**                                                |   **HIP**                                       |
 |-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseCreate`                                           |`hipsparseCreate`                                |
+|`cusparseCreateSolveAnalysisInfo`                          |                                                 |
+|`cusparseCreateHybMat`                                     |`hipsparseCreateHybMat`                          |
+|`cusparseCreateMatDescr`                                   |`hipsparseCreateMatDescr`                        |
+|`cusparseDestroy`                                          |`hipsparseDestroy`                               |
+|`cusparseDestroySolveAnalysisInfo`                         |                                                 |
+|`cusparseDestroyHybMat`                                    |`hipsparseDestroyHybMat`                         |
+|`cusparseDestroyMatDescr`                                  |`hipsparseDestroyMatDescr`                       |
+|`cusparseGetLevelInfo`                                     |                                                 |
+|`cusparseGetMatDiagType`                                   |`hipsparseGetMatDiagType`                        |
+|`cusparseGetMatFillMode`                                   |`hipsparseGetMatFillMode`                        |
+|`cusparseGetMatIndexBase`                                  |`hipsparseGetMatIndexBase`                       |
+|`cusparseGetMatType`                                       |`hipsparseGetMatType`                            |
+|`cusparseGetPointerMode`                                   |`hipsparseGetPointerMode`                        |
+|`cusparseGetVersion`                                       |`hipsparseGetVersion`                            |
+|`cusparseSetMatDiagType`                                   |`hipsparseSetMatDiagType`                        |
+|`cusparseSetMatFillMode`                                   |`hipsparseSetMatFillMode`                        |
+|`cusparseSetMatType`                                       |`hipsparseSetMatType`                            |
+|`cusparseSetPointerMode`                                   |`hipsparseSetPointerMode`                        |
+|`cusparseSetStream`                                        |`hipsparseSetStream`                             |
+|`cusparseGetStream`                                        |`hipsparseGetStream`                             |
+|`cusparseCreateCsrsv2Info`                                 |`hipsparseCreateCsrsv2Info`                      |
+|`cusparseDestroyCsrsv2Info`                                |`hipsparseDestroyCsrsv2Info`                     |
+|`cusparseCreateCsrsm2Info`                                 |                                                 |
+|`cusparseDestroyCsrsm2Info`                                |                                                 |
+|`cusparseCreateCsric02Info`                                |                                                 |
+|`cusparseDestroyCsric02Info`                               |                                                 |
+|`cusparseCreateCsrilu02Info`                               |`hipsparseCreateCsrilu02Info`                    |
+|`cusparseDestroyCsrilu02Info`                              |`hipsparseDestroyCsrilu02Info`                   |
+|`cusparseCreateBsrsv2Info`                                 |                                                 |
+|`cusparseDestroyBsrsv2Info`                                |                                                 |
+|`cusparseCreateBsrsm2Info`                                 |                                                 |
+|`cusparseDestroyBsrsm2Info`                                |                                                 |
+|`cusparseCreateBsric02Info`                                |                                                 |
+|`cusparseDestroyBsric02Info`                               |                                                 |
+|`cusparseCreateBsrilu02Info`                               |                                                 |
+|`cusparseDestroyBsrilu02Info`                              |                                                 |
+|`cusparseCreateCsrgemm2Info`                               |                                                 |
+|`cusparseDestroyCsrgemm2Info`                              |                                                 |
+|`cusparseCreatePruneInfo`                                  |                                                 |
+|`cusparseDestroyPruneInfo`                                 |                                                 |
+
+## **3.cuSPARSE Level 1 Function Reference**
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseSaxpyi`                                           |`hipsparseSaxpyi`                                |
+|`cusparseDaxpyi`                                           |`hipsparseDaxpyi`                                |
+|`cusparseCaxpyi`                                           |                                                 |
+|`cusparseZaxpyi`                                           |                                                 |
+|`cusparseSdoti`                                            |`hipsparseSdoti`                                 |
+|`cusparseDdoti`                                            |`hipsparseDdoti`                                 |
+|`cusparseCdoti`                                            |                                                 |
+|`cusparseZdoti`                                            |                                                 |
+|`cusparseCdotci`                                           |                                                 |
+|`cusparseZdotci`                                           |                                                 |
+|`cusparseSgthr`                                            |`hipsparseSgthr`                                 |
+|`cusparseDgthr`                                            |`hipsparseDgthr`                                 |
+|`cusparseCgthr`                                            |                                                 |
+|`cusparseZgthr`                                            |                                                 |
+|`cusparseSgthrz`                                           |`hipsparseSgthrz`                                |
+|`cusparseDgthrz`                                           |`hipsparseDgthrz`                                |
+|`cusparseCgthrz`                                           |                                                 |
+|`cusparseZgthrz`                                           |                                                 |
+|`cusparseSroti`                                            |`hipsparseSroti`                                 |
+|`cusparseDroti`                                            |`hipsparseDroti`                                 |
+|`cusparseSsctr`                                            |`hipsparseSsctr`                                 |
+|`cusparseDsctr`                                            |`hipsparseDsctr`                                 |
+|`cusparseCsctr`                                            |                                                 |
+|`cusparseZsctr`                                            |                                                 |
+
+## **4.cuSPARSE Level 2 Function Reference**
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseSbsrmv`                                           |                                                 |
+|`cusparseDbsrmv`                                           |                                                 |
+|`cusparseCbsrmv`                                           |                                                 |
+|`cusparseZbsrmv`                                           |                                                 |
+|`cusparseSbsrxmv`                                          |                                                 |
+|`cusparseDbsrxmv`                                          |                                                 |
+|`cusparseCbsrxmv`                                          |                                                 |
+|`cusparseZbsrxmv`                                          |                                                 |
+|`cusparseScsrmv`                                           |`hipsparseScsrmv`                                |
+|`cusparseDcsrmv`                                           |`hipsparseDcsrmv`                                |
+|`cusparseCcsrmv`                                           |                                                 |
+|`cusparseZcsrmv`                                           |                                                 |
+|`cusparseCsrmvEx`                                          |                                                 |
+|`cusparseCsrmvEx_bufferSize`                               |                                                 |
+|`cusparseScsrmv_mp`                                        |                                                 |
+|`cusparseDcsrmv_mp`                                        |                                                 |
+|`cusparseCcsrmv_mp`                                        |                                                 |
+|`cusparseZcsrmv_mp`                                        |                                                 |
+|`cusparseSgemvi`                                           |                                                 |
+|`cusparseDgemvi`                                           |                                                 |
+|`cusparseCgemvi`                                           |                                                 |
+|`cusparseZgemvi`                                           |                                                 |
+|`cusparseSgemvi_bufferSize`                                |                                                 |
+|`cusparseDgemvi_bufferSize`                                |                                                 |
+|`cusparseCgemvi_bufferSize`                                |                                                 |
+|`cusparseZgemvi_bufferSize`                                |                                                 |
+|`cusparseSbsrsv2_bufferSize`                               |                                                 |
+|`cusparseDbsrsv2_bufferSize`                               |                                                 |
+|`cusparseCbsrsv2_bufferSize`                               |                                                 |
+|`cusparseZbsrsv2_bufferSize`                               |                                                 |
+|`cusparseSbsrsv2_analysis`                                 |                                                 |
+|`cusparseDbsrsv2_analysis`                                 |                                                 |
+|`cusparseCbsrsv2_analysis`                                 |                                                 |
+|`cusparseZbsrsv2_analysis`                                 |                                                 |
+|`cusparseScsrsv_solve`                                     |                                                 |
+|`cusparseDcsrsv_solve`                                     |                                                 |
+|`cusparseCcsrsv_solve`                                     |                                                 |
+|`cusparseZcsrsv_solve`                                     |                                                 |
+|`cusparseXbsrsv2_zeroPivot`                                |                                                 |
+|`cusparseScsrsv_analysis`                                  |                                                 |
+|`cusparseDcsrsv_analysis`                                  |                                                 |
+|`cusparseCcsrsv_analysis`                                  |                                                 |
+|`cusparseZcsrsv_analysis`                                  |                                                 |
+|`cusparseCsrsv_analysisEx`                                 |                                                 |
+|`cusparseScsrsv_solve`                                     |                                                 |
+|`cusparseDcsrsv_solve`                                     |                                                 |
+|`cusparseCcsrsv_solve`                                     |                                                 |
+|`cusparseZcsrsv_solve`                                     |                                                 |
+|`cusparseCsrsv_solveEx`                                    |                                                 |
+|`cusparseScsrsv2_bufferSize`                               |`hipsparseScsrsv2_bufferSize`                    |
+|`cusparseDcsrsv2_bufferSize`                               |`hipsparseDcsrsv2_bufferSize`                    |
+|`cusparseCcsrsv2_bufferSize`                               |                                                 |
+|`cusparseZcsrsv2_bufferSize`                               |                                                 |
+|`cusparseScsrsv2_analysis`                                 |`hipsparseScsrsv2_analysis`                      |
+|`cusparseDcsrsv2_analysis`                                 |`hipsparseDcsrsv2_analysis`                      |
+|`cusparseCcsrsv2_analysis`                                 |                                                 |
+|`cusparseZcsrsv2_analysis`                                 |                                                 |
+|`cusparseScsrsv2_solve`                                    |`hipsparseScsrsv2_solve`                         |
+|`cusparseDcsrsv2_solve`                                    |`hipsparseDcsrsv2_solve`                         |
+|`cusparseCcsrsv2_solve`                                    |                                                 |
+|`cusparseZcsrsv2_solve`                                    |                                                 |
+|`cusparseXcsrsv2_zeroPivot`                                |`hipsparseXcsrsv2_zeroPivot`                     |
+|`cusparseShybmv`                                           |`hipsparseShybmv`                                |
+|`cusparseDhybmv`                                           |`hipsparseDhybmv`                                |
+|`cusparseChybmv`                                           |                                                 |
+|`cusparseZhybmv`                                           |                                                 |
+|`cusparseShybsv_analysis`                                  |                                                 |
+|`cusparseDhybsv_analysis`                                  |                                                 |
+|`cusparseChybsv_analysis`                                  |                                                 |
+|`cusparseZhybsv_analysis`                                  |                                                 |
+|`cusparseShybsv_solve`                                     |                                                 |
+|`cusparseDhybsv_solve`                                     |                                                 |
+|`cusparseChybsv_solve`                                     |                                                 |
+|`cusparseZhybsv_solve`                                     |                                                 |
