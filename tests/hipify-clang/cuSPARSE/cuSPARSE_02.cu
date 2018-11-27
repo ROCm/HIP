@@ -116,7 +116,7 @@ int main(int argc, char*argv[])
     assert(CUSPARSE_STATUS_SUCCESS == cusparseStat);
 
     // step 2: configuration of matrix A
-    // cusparseStat = hipsparseCreateMatDescr(&descrA);
+    // CHECK: cusparseStat = hipsparseCreateMatDescr(&descrA);
     cusparseStat = cusparseCreateMatDescr(&descrA);
     // assert(HIPSPARSE_STATUS_SUCCESS == cusparseStat);
     assert(CUSPARSE_STATUS_SUCCESS == cusparseStat);
