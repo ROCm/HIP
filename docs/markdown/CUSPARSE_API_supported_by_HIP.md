@@ -1,6 +1,6 @@
 # CUSPARSE API supported by HIP
 
-## **1. CUSPARSE Data types**
+## **1. cuSPARSE Data types**
 
 | **type**     |   **CUDA**                                                    |   **HIP**                                                  |
 |-------------:|---------------------------------------------------------------|------------------------------------------------------------|
@@ -83,7 +83,7 @@
 | struct       |`pruneInfo`                                                    |                                                            |
 | typedef      |`pruneInfo_t`                                                  |                                                            |
 
-## **2.cuSPARSE Helper Function Reference**
+## **2. cuSPARSE Helper Function Reference**
 
 |   **CUDA**                                                |   **HIP**                                       |
 |-----------------------------------------------------------|-------------------------------------------------|
@@ -129,7 +129,7 @@
 |`cusparseCreatePruneInfo`                                  |                                                 |
 |`cusparseDestroyPruneInfo`                                 |                                                 |
 
-## **3.cuSPARSE Level 1 Function Reference**
+## **3. cuSPARSE Level 1 Function Reference**
 
 |   **CUDA**                                                |   **HIP**                                       |
 |-----------------------------------------------------------|-------------------------------------------------|
@@ -158,7 +158,7 @@
 |`cusparseCsctr`                                            |                                                 |
 |`cusparseZsctr`                                            |                                                 |
 
-## **4.cuSPARSE Level 2 Function Reference**
+## **4. cuSPARSE Level 2 Function Reference**
 
 |   **CUDA**                                                |   **HIP**                                       |
 |-----------------------------------------------------------|-------------------------------------------------|
@@ -237,7 +237,7 @@
 |`cusparseChybsv_solve`                                     |                                                 |
 |`cusparseZhybsv_solve`                                     |                                                 |
 
-## **5.cuSPARSE Level 3 Function Reference**
+## **5. cuSPARSE Level 3 Function Reference**
 
 |   **CUDA**                                                |   **HIP**                                       |
 |-----------------------------------------------------------|-------------------------------------------------|
@@ -292,3 +292,23 @@
 |`cusparseCgemmi`                                           |                                                 |
 |`cusparseZgemmi`                                           |                                                 |
 
+## **6. cuSPARSE Extra Function Reference**
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseXcsrgeamNnz`                                      |                                                 |
+|`cusparseScsrgeam`                                         |                                                 |
+|`cusparseDcsrgeam`                                         |                                                 |
+|`cusparseCcsrgeam`                                         |                                                 |
+|`cusparseScsrgeam2_bufferSizeExt`                          |                                                 |
+|`cusparseDcsrgeam2_bufferSizeExt`                          |                                                 |
+|`cusparseCcsrgeam2_bufferSizeExt`                          |                                                 |
+|`cusparseZcsrgeam2_bufferSizeExt`                          |                                                 |
+|`cusparseXcsrgemmNnz`                                      |                                                 |
+|`cusparseScsrgemm`                                         |                                                 |
+|`cusparseDcsrgemm`                                         |                                                 |
+|`cusparseCcsrgemm`                                         |                                                 |
+|`cusparseScsrgemm2_bufferSizeExt`                          |                                                 |
+|`cusparseDcsrgemm2_bufferSizeExt`                          |                                                 |
+|`cusparseCcsrgemm2_bufferSizeExt`                          |                                                 |
+|`cusparseZcsrgemm2_bufferSizeExt`                          |                                                 |
