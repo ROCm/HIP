@@ -261,7 +261,7 @@ int main(){
         return 2;
     }
     /* exercise Level 1 routines (scatter vector elements) */
-    // TODO: status= hipsparseDsctr(handle, nnz_vector, xVal, xInd,
+    // CHECK: status= hipsparseDsctr(handle, nnz_vector, xVal, xInd,
     // CHECK: &y[n], HIPSPARSE_INDEX_BASE_ZERO);
     status= cusparseDsctr(handle, nnz_vector, xVal, xInd,
                           &y[n], CUSPARSE_INDEX_BASE_ZERO);
@@ -299,7 +299,7 @@ int main(){
         CLEANUP("Memset on Device failed");
         return 1;
     }
-    // TODO: status= hipsparseDcsrmm(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE, n, 2, n,
+    // CHECK: status= hipsparseDcsrmm(handle, HIPSPARSE_OPERATION_NON_TRANSPOSE, n, 2, n,
     status= cusparseDcsrmm(handle, CUSPARSE_OPERATION_NON_TRANSPOSE, n, 2, n,
                            nnz, &dfive, descr, cooVal, csrRowPtr, cooColIndex,
                            y, n, &dzero, z, n+1);
