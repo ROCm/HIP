@@ -45,12 +45,7 @@ THE SOFTWARE.
 
 unsigned int firstbit_u32(unsigned int a) {
     if (a == 0) {
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-
-        return -1;
-#else
         return 32;
-#endif
     }
     unsigned int pos = 0;
     while ((int)a > 0) {
@@ -62,11 +57,7 @@ unsigned int firstbit_u32(unsigned int a) {
 
 unsigned int firstbit_u64(unsigned long long int a) {
     if (a == 0) {
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-        return -1;
-#else
         return 64;
-#endif
     }
     unsigned int pos = 0;
     while ((long long int)a > 0) {
@@ -76,7 +67,22 @@ unsigned int firstbit_u64(unsigned long long int a) {
     return pos;
 }
 
-__global__ void HIP_kernel(hipLaunchParm lp, unsigned int* a, unsigned int* b, unsigned int* c,
+// Check implicit conversion will not cause ambiguity.
+__device__ void test_ambiguity() {
+  short s;
+  unsigned short us;
+  float f;
+  int i;
+  unsigned int ui;
+  __clz(f);
+  __clz(s);
+  __clz(us);
+  __clzll(f);
+  __clzll(i);
+  __clzll(ui);
+}
+
+__global__ void HIP_kernel(unsigned int* a, unsigned int* b, unsigned int* c,
                            unsigned long long int* d, int width, int height) {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     int y = blockDim.y * blockIdx.y + threadIdx.y;
@@ -132,7 +138,7 @@ int main() {
     HIP_ASSERT(
         hipMemcpy(deviceD, hostD, NUM * sizeof(unsigned long long int), hipMemcpyHostToDevice));
 
-    hipLaunchKernel(HIP_kernel, dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
+    hipLaunchKernelGGL(HIP_kernel, dim3(WIDTH / THREADS_PER_BLOCK_X, HEIGHT / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, deviceA, deviceB, deviceC,
                     deviceD, WIDTH, HEIGHT);
 

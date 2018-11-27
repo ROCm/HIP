@@ -23,8 +23,6 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_SURFACE_FUNCTIONS_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_SURFACE_FUNCTIONS_H
 
-#include <hc.hpp>
-#include <hc_short_vector.hpp>
 #include <hip/hcc_detail/hip_surface_types.h>
 
 #define __SURFACE_FUNCTIONS_DECL__ static __inline__ __device__

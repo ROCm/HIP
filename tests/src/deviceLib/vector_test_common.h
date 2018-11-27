@@ -67,39 +67,3 @@ bool is_vec() {
         ((dimension == 3) ? decltype(is_vec3(std::declval<T>())){} :
             decltype(is_vec4(std::declval<T>())){}));
 }
-
-template<typename T, typename U, Enable_if_t<is_vec<T, 1>()>* = nullptr>
-__host__ __device__
-inline
-bool cmp(const T& x, U expected) {
-    const auto r = x == T(expected);
-
-    return r.x != 0;
-}
-
-template<typename T, typename U, Enable_if_t<is_vec<T, 2>()>* = nullptr>
-__host__ __device__
-inline
-bool cmp(const T& x, U expected) {
-    const auto r = x == T(expected);
-
-    return r.x != 0 && r.y != 0;
-}
-
-template<typename T, typename U, Enable_if_t<is_vec<T, 3>()>* = nullptr>
-__host__ __device__
-inline
-bool cmp(const T& x, U expected) {
-    const auto r = x == T(expected);
-
-    return r.x != 0 && r.y != 0 && r.z != 0;
-}
-
-template<typename T, typename U, Enable_if_t<is_vec<T, 4>()>* = nullptr>
-__host__ __device__
-inline
-bool cmp(const T& x, U expected) {
-    const auto r = x == T(expected);
-
-    return r.x != 0 && r.y != 0 && r.z != 0 && r.w != 0;
-}

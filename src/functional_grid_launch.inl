@@ -92,13 +92,19 @@ namespace hip_impl
         hipStream_t stream,
         void** kernarg)
     {
-        const auto it0 = functions().find(function_address);
+        auto it0 = functions().find(function_address);
 
         if (it0 == functions().cend()) {
-            throw runtime_error{
-                "No device code available for function: " +
-                name(function_address)
-            };
+            // Re-init device code maps once again to help locate kernels
+            // loaded after HIP runtime initialization via means such as
+            // dlopen().
+            it0 = functions(true).find(function_address);
+            if (it0 == functions().cend()) {
+                throw runtime_error{
+                    "No device code available for function: " +
+                    name(function_address)
+                };
+            }
         }
 
         auto agent = target_agent(stream);
@@ -117,21 +123,17 @@ namespace hip_impl
             };
         }
 
-        for (auto&& agent_kernel : it0->second) {
-            if (agent.handle == agent_kernel.first.handle) {
-                hipModuleLaunchKernel(
-                    agent_kernel.second,
-                    numBlocks.x,
-                    numBlocks.y,
-                    numBlocks.z,
-                    dimBlocks.x,
-                    dimBlocks.y,
-                    dimBlocks.z,
-                    sharedMemBytes,
-                    stream,
-                    nullptr,
-                    kernarg);
-            }
-        }
+        hipModuleLaunchKernel(
+            it1->second,
+            numBlocks.x,
+            numBlocks.y,
+            numBlocks.z,
+            dimBlocks.x,
+            dimBlocks.y,
+            dimBlocks.z,
+            sharedMemBytes,
+            stream,
+            nullptr,
+            kernarg);
     }
 }

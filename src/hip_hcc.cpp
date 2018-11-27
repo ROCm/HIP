@@ -97,6 +97,8 @@ int HIP_INIT_ALLOC = -1;
 int HIP_SYNC_STREAM_WAIT = 0;
 int HIP_FORCE_NULL_STREAM = 0;
 
+int HIP_DUMP_CODE_OBJECT = 0;
+
 
 #if (__hcc_workweek__ >= 17300)
 // Make sure we have required bug fix in HCC
@@ -177,7 +179,7 @@ uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr) {
 
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
-        fprintf(stderr, "%s<<hip-api tid:%s @%lu%s\n", API_COLOR, fullStr->c_str(), apiStartTick,
+        fprintf(stderr, "%s<<hip-api pid:%d tid:%s @%lu%s\n", API_COLOR, tls_tidInfo.pid(), fullStr->c_str(), apiStartTick,
                 API_COLOR_END);
     }
 
@@ -235,6 +237,7 @@ hipError_t ihipSynchronize(void) {
 //=================================================================================================
 TidInfo::TidInfo() : _apiSeqNum(0) {
     _shortTid = g_lastShortTid.fetch_add(1);
+    _pid = getpid(); 
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
         std::stringstream tid_ss;
@@ -900,6 +903,13 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
         prop->canMapHostMemory = 0;
     }
 #endif
+    // Get profile
+    hsa_profile_t agent_profile;
+    err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_PROFILE, &agent_profile);
+    DeviceErrorCheck(err);
+    if(agent_profile == HSA_PROFILE_FULL) {
+        prop->integrated = 1;
+    }
     return e;
 }
 
@@ -1221,7 +1231,7 @@ void HipReadEnv() {
 
     READ_ENV_C(release, HIP_DB, 0,
                "Print debug info.  Bitmask (HIP_DB=0xff) or flags separated by '+' "
-               "(HIP_DB=api+sync+mem+copy)",
+               "(HIP_DB=api+sync+mem+copy+fatbin)",
                HIP_DB_callback);
     if ((HIP_DB & (1 << DB_API)) && (HIP_TRACE_API == 0)) {
         // Set HIP_TRACE_API default before we read it, so it is printed correctly.
@@ -1286,6 +1296,10 @@ void HipReadEnv() {
                "are created with hipEventReleaseToDevice by default.  The defaults can be "
                "overridden by specifying hipEventReleaseToSystem or hipEventReleaseToDevice flag "
                "when creating the event.");
+
+    READ_ENV_I(release, HIP_DUMP_CODE_OBJECT, 0,
+               "If set, dump code object as __hip_dump_code_object[nnnn].o in the current directory,"
+               "where nnnn is the index number.");
 
     // Some flags have both compile-time and runtime flags - generate a warning if user enables the
     // runtime flag but the compile-time flag is disabled.
@@ -1445,10 +1459,6 @@ hipError_t ihipStreamSynchronize(hipStream_t stream) {
 void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
     hipError_t e = hipSuccess;
 
-    // Notify hipStreamAddCallback that callback handler thread is active
-    std::lock_guard<std::mutex> guard(cb->_mtx);
-    cb->_ready = true;
-
     // Synchronize stream
     tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n",
             ToString(cb->_stream).c_str());
@@ -1526,7 +1536,7 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
     if ((HIP_TRACE_API & (1 << TRACE_KCMD)) || HIP_PROFILE_API ||
         (COMPILE_HIP_DB & HIP_TRACE_API)) {
         std::stringstream os;
-        os << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum() << " hipLaunchKernel '"
+        os << tls_tidInfo.pid() << " " << tls_tidInfo.tid() << "." << tls_tidInfo.apiSeqNum() << " hipLaunchKernel '"
            << kernelName << "'"
            << " gridDim:" << lp->grid_dim << " groupDim:" << lp->group_dim << " sharedMem:+"
            << lp->dynamic_group_mem_bytes << " " << *stream;
@@ -1805,7 +1815,7 @@ bool ihipStream_t::canSeeMemory(const ihipCtx_t* copyEngineCtx, const hc::AmPoin
     // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
     if (dstPtrInfo->_sizeBytes == 0) {
         return false;
-    } else {
+    } else if (dstPtrInfo->_appId != -1) {
 #if USE_APP_PTR_FOR_CTX
         ihipCtx_t* dstCtx = static_cast<ihipCtx_t*>(dstPtrInfo->_appPtr);
 #else
@@ -1828,7 +1838,7 @@ bool ihipStream_t::canSeeMemory(const ihipCtx_t* copyEngineCtx, const hc::AmPoin
     // TODO - pointer-info stores a deviceID not a context,may have some unusual side-effects here:
     if (srcPtrInfo->_sizeBytes == 0) {
         return false;
-    } else {
+    } else if (srcPtrInfo->_appId != -1) {
 #if USE_APP_PTR_FOR_CTX
         ihipCtx_t* srcCtx = static_cast<ihipCtx_t*>(srcPtrInfo->_appPtr);
 #else
@@ -2279,7 +2289,7 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
 //-------------------------------------------------------------------------------------------------
 // Profiler, really these should live elsewhere:
 hipError_t hipProfilerStart() {
-    HIP_INIT_API();
+    HIP_INIT_API(hipProfilerStart);
 #if COMPILE_HIP_ATP_MARKER
     amdtResumeProfiling(AMDT_ALL_PROFILING);
 #endif
@@ -2289,7 +2299,7 @@ hipError_t hipProfilerStart() {
 
 
 hipError_t hipProfilerStop() {
-    HIP_INIT_API();
+    HIP_INIT_API(hipProfilerStop);
 #if COMPILE_HIP_ATP_MARKER
     amdtStopProfiling(AMDT_ALL_PROFILING);
 #endif
@@ -2304,7 +2314,7 @@ hipError_t hipProfilerStop() {
 
 //---
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
-    HIP_INIT_API(deviceId, acc);
+    HIP_INIT_API(hipHccGetAccelerator, deviceId, acc);
 
     const ihipDevice_t* device = ihipGetDevice(deviceId);
     hipError_t err;
@@ -2320,7 +2330,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
 
 //---
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
-    HIP_INIT_API(stream, av);
+    HIP_INIT_API(hipHccGetAcceleratorView, stream, av);
 
     if (stream == hipStreamNull) {
         ihipCtx_t* device = ihipGetTlsDefaultCtx();

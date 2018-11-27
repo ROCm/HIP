@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include <hip/device_functions.h>
 #define HIP_ASSERT(x) (assert((x) == hipSuccess))
 
-__global__ void warpvote(hipLaunchParm lp, int* device_any, int* device_all,
+__global__ void warpvote(int* device_any, int* device_all,
                          int Num_Warps_per_Block, int pshift) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     device_any[threadIdx.x >> pshift] = __any(tid - 77);
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
     HIP_ASSERT(hipMemcpy(device_any, host_any, sizeof(int), hipMemcpyHostToDevice));
     HIP_ASSERT(hipMemcpy(device_all, host_all, sizeof(int), hipMemcpyHostToDevice));
 
-    hipLaunchKernel(warpvote, dim3(Num_Blocks_per_Grid), dim3(Num_Threads_per_Block), 0, 0,
+    hipLaunchKernelGGL(warpvote, dim3(Num_Blocks_per_Grid), dim3(Num_Threads_per_Block), 0, 0,
                     device_any, device_all, Num_Warps_per_Block, pshift);
 
 
@@ -86,24 +86,15 @@ int main(int argc, char* argv[]) {
         printf("warp no. %d __all = %d \n", i, host_all[i]);
 
         if (host_all[i] != 1) ++allcount;
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-        if (host_any[i] != 64) ++anycount;
-#else
         if (host_any[i] != 1) ++anycount;
-#endif
     }
 
-#if defined(__HIP_PLATFORM_HCC__) && !defined(NVCC_COMPAT)
-    if (anycount == 1 && allcount == 1)
-        printf("PASSED\n");
-    else
-        printf("FAILED\n");
-#else
     if (anycount == 0 && allcount == 1)
         printf("PASSED\n");
-    else
+    else {
         printf("FAILED\n");
-#endif
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

@@ -72,7 +72,7 @@ void D2H(T* Dst, T* Src, size_t size) {
 }
 
 template <typename T>
-__global__ void Inc(hipLaunchParm lp, T* In) {
+__global__ void Inc(T* In) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
     In[tx] = In[tx] + 1;
 }

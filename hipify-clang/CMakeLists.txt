@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.8)
+cmake_minimum_required(VERSION 2.8.12)
 project(hipify-clang)
 
 find_package(LLVM REQUIRED)
@@ -23,7 +23,7 @@ set(CMAKE_CXX_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang++)
 set(CMAKE_C_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang)
 
 # Link against LLVM and CLANG libraries
-target_link_libraries(hipify-clang
+target_link_libraries(hipify-clang PRIVATE
     clangASTMatchers
     clangFrontend
     clangTooling
@@ -48,13 +48,17 @@ target_link_libraries(hipify-clang
     LLVMCore)
 
 if(WIN32)
-    target_link_libraries(hipify-clang version)
+    target_link_libraries(hipify-clang PRIVATE version)
+endif()
+
+if ((LLVM_PACKAGE_VERSION VERSION_EQUAL "7") OR (LLVM_PACKAGE_VERSION VERSION_GREATER "7"))
+    target_link_libraries(hipify-clang PRIVATE clangToolingInclusions)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CFLAGS}")
 if(MSVC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR- /EHs- /EHc-")
+    target_compile_options(hipify-clang PRIVATE "/Od /GR- /EHs- /EHc-")
     set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} /SUBSYSTEM:WINDOWS")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread -fno-rtti -fvisibility-inlines-hidden")
@@ -85,7 +89,8 @@ if (HIPIFY_CLANG_TESTS)
     if ((CUDA_VERSION VERSION_LESS "7.0") OR (LLVM_PACKAGE_VERSION VERSION_LESS "3.8") OR
         (CUDA_VERSION VERSION_GREATER "7.5" AND LLVM_PACKAGE_VERSION VERSION_LESS "4.0") OR
         (CUDA_VERSION VERSION_GREATER "8.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "6.0") OR
-        (CUDA_VERSION VERSION_GREATER "9.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "7.0"))
+        (CUDA_VERSION VERSION_GREATER "9.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "7.0") OR
+         CUDA_VERSION VERSION_EQUAL "10.0")
         message(SEND_ERROR "CUDA ${CUDA_VERSION} is not supported by clang ${LLVM_PACKAGE_VERSION}.")
         if (CUDA_VERSION VERSION_LESS "7.0")
             message(STATUS "Please install CUDA 7.0 or higher.")
@@ -95,7 +100,7 @@ if (HIPIFY_CLANG_TESTS)
             message(STATUS "Please install clang 4.0 or higher.")
         elseif (CUDA_VERSION VERSION_EQUAL "9.0")
             message(STATUS "Please install clang 6.0 or higher.")
-        elseif (CUDA_VERSION VERSION_EQUAL "9.1")
+        elseif ((CUDA_VERSION VERSION_EQUAL "9.1") OR (CUDA_VERSION VERSION_EQUAL "9.2"))
             message(STATUS "Please install clang 7.0 or higher.")
         endif()
     endif()

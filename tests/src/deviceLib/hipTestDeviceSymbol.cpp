@@ -34,10 +34,16 @@ THE SOFTWARE.
 __device__ int globalIn[NUM];
 __device__ int globalOut[NUM];
 
-__global__ void Assign(hipLaunchParm lp, int* Out) {
+__global__ void Assign(int* Out) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Out[tid] = globalIn[tid];
     globalOut[tid] = globalIn[tid];
+}
+
+__device__ __constant__ int globalConst[NUM];
+
+__global__ void checkAddress(int* addr, bool* out) {
+    *out = (globalConst == addr);
 }
 
 int main() {
@@ -63,7 +69,7 @@ int main() {
     hipStreamCreate(&stream);
     hipMemcpyToSymbolAsync(HIP_SYMBOL(globalIn), Am, SIZE, 0, hipMemcpyHostToDevice, stream);
     hipStreamSynchronize(stream);
-    hipLaunchKernel(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
+    hipLaunchKernelGGL(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
     hipMemcpyFromSymbolAsync(Cm, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost, stream);
     hipStreamSynchronize(stream);
@@ -78,7 +84,7 @@ int main() {
     }
 
     hipMemcpyToSymbol(HIP_SYMBOL(globalIn), A, SIZE, 0, hipMemcpyHostToDevice);
-    hipLaunchKernel(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
+    hipLaunchKernelGGL(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
     hipMemcpyFromSymbol(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost);
     for (int i = 0; i < NUM; i++) {
@@ -93,7 +99,7 @@ int main() {
 
     hipMemcpyToSymbolAsync(HIP_SYMBOL(globalIn), A, SIZE, 0, hipMemcpyHostToDevice, stream);
     hipStreamSynchronize(stream);
-    hipLaunchKernel(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
+    hipLaunchKernelGGL(Assign, dim3(1, 1, 1), dim3(NUM, 1, 1), 0, 0, Ad);
     hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost);
     hipMemcpyFromSymbolAsync(C, HIP_SYMBOL(globalOut), SIZE, 0, hipMemcpyDeviceToHost, stream);
     hipStreamSynchronize(stream);
@@ -101,6 +107,20 @@ int main() {
         assert(A[i] == B[i]);
         assert(A[i] == C[i]);
     }
+
+    bool *checkOkD;
+    bool checkOk = false;
+    size_t symbolSize = 0;
+    int *symbolAddress;
+    hipGetSymbolSize(&symbolSize, HIP_SYMBOL(globalConst));
+    hipGetSymbolAddress((void**) &symbolAddress, HIP_SYMBOL(globalConst));
+    hipMalloc((void**)&checkOkD, sizeof(bool));
+    hipLaunchKernelGGL(checkAddress, dim3(1, 1, 1), dim3(1, 1, 1), 0, 0, symbolAddress, checkOkD);
+    hipMemcpy(&checkOk, checkOkD, sizeof(bool), hipMemcpyDeviceToHost);
+    hipFree(checkOkD);
+    assert(checkOk);
+    assert(symbolSize == SIZE);
+
     hipHostFree(Am);
     hipHostFree(Cm);
     hipFree(Ad);

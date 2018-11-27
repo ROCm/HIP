@@ -35,8 +35,7 @@ THE SOFTWARE.
 #define THREADS_PER_BLOCK_Z 1
 
 // Device (Kernel) function, it must be void
-// hipLaunchParm provides the execution configuration
-__global__ void matrixTranspose(hipLaunchParm lp, float* out, float* in, const int width) {
+__global__ void matrixTranspose(float* out, float* in, const int width) {
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
     float val = in[y * width + x];
@@ -86,7 +85,7 @@ int main() {
     hipMemcpy(gpuMatrix, Matrix, NUM * sizeof(float), hipMemcpyHostToDevice);
 
     // Lauching kernel from host
-    hipLaunchKernel(matrixTranspose, dim3(1), dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0,
+    hipLaunchKernelGGL(matrixTranspose, dim3(1), dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0,
                     gpuTransposeMatrix, gpuMatrix, WIDTH);
 
     // Memory transfer from device to host

@@ -29,14 +29,6 @@ THE SOFTWARE.
  Heap size computation for malloc and free device functions.
 */
 
-#define NUM_PAGES_PER_THREAD 16
-#define SIZE_OF_PAGE 64
-#define NUM_THREADS_PER_CU 64
-#define NUM_CUS_PER_GPU 64  // Specific for r9 Nano
-#define NUM_PAGES NUM_PAGES_PER_THREAD* NUM_THREADS_PER_CU* NUM_CUS_PER_GPU
-#define SIZE_MALLOC NUM_PAGES* SIZE_OF_PAGE
-#define SIZE_OF_HEAP SIZE_MALLOC
-
 #define HIP_SQRT_2 1.41421356237
 #define HIP_SQRT_PI 1.77245385091
 
@@ -61,9 +53,6 @@ THE SOFTWARE.
 #define __hip_erfinvd0 1
 
 #define HIP_PI 3.14159265358979323846
-
-__device__ void* __hip_hc_malloc(size_t size);
-__device__ void* __hip_hc_free(void* ptr);
 
 __device__ float __hip_erfinvf(float x);
 __device__ double __hip_erfinv(double x);
@@ -125,7 +114,6 @@ __device__ double __hip_fast_dsqrt_rd(double x);
 __device__ double __hip_fast_dsqrt_rn(double x);
 __device__ double __hip_fast_dsqrt_ru(double x);
 __device__ double __hip_fast_dsqrt_rz(double x);
-__device__ void __threadfence_system(void);
 
 float __hip_host_j0f(float x);
 double __hip_host_j0(double x);

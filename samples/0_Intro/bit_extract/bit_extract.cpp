@@ -23,10 +23,6 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
-#ifdef __HIP_PLATFORM_HCC__
-#include <hc.hpp>
-#endif
-
 
 #define CHECK(cmd)                                                                                 \
     {                                                                                              \
@@ -38,13 +34,13 @@ THE SOFTWARE.
         }                                                                                          \
     }
 
-__global__ void bit_extract_kernel(hipLaunchParm lp, uint32_t* C_d, const uint32_t* A_d, size_t N) {
+__global__ void bit_extract_kernel(uint32_t* C_d, const uint32_t* A_d, size_t N) {
     size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
     size_t stride = hipBlockDim_x * hipGridDim_x;
 
     for (size_t i = offset; i < N; i += stride) {
 #ifdef __HIP_PLATFORM_HCC__
-        C_d[i] = hc::__bitextract_u32(A_d[i], 8, 4);
+        C_d[i] = __bitextract_u32(A_d[i], 8, 4);
 #else /* defined __HIP_PLATFORM_NVCC__ or other path */
         C_d[i] = ((A_d[i] & 0xf00) >> 8);
 #endif
@@ -85,7 +81,7 @@ int main(int argc, char* argv[]) {
     printf("info: launch 'bit_extract_kernel' \n");
     const unsigned blocks = 512;
     const unsigned threadsPerBlock = 256;
-    hipLaunchKernel(bit_extract_kernel, dim3(blocks), dim3(threadsPerBlock), 0, 0, C_d, A_d, N);
+    hipLaunchKernelGGL(bit_extract_kernel, dim3(blocks), dim3(threadsPerBlock), 0, 0, C_d, A_d, N);
 
     printf("info: copy Device2Host\n");
     CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));

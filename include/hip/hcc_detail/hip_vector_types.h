@@ -43,90 +43,671 @@ THE SOFTWARE.
         __attribute__((vector_size(__ROUND_UP_TO_NEXT_POT__(n) * sizeof(T))))
 #endif
 
-typedef unsigned char uchar1 __NATIVE_VECTOR__(1, unsigned char);
-typedef unsigned char uchar2 __NATIVE_VECTOR__(2, unsigned char);
-typedef unsigned char uchar3 __NATIVE_VECTOR__(3, unsigned char);
-typedef unsigned char uchar4 __NATIVE_VECTOR__(4, unsigned char);
+#if defined(__cplusplus)
+    #include <type_traits>
 
-typedef char char1 __NATIVE_VECTOR__(1, char);
-typedef char char2 __NATIVE_VECTOR__(2, char);
-typedef char char3 __NATIVE_VECTOR__(3, char);
-typedef char char4 __NATIVE_VECTOR__(4, char);
+    template<typename T, unsigned int n> struct HIP_vector_base;
 
-typedef unsigned short ushort1 __NATIVE_VECTOR__(1, unsigned short);
-typedef unsigned short ushort2 __NATIVE_VECTOR__(2, unsigned short);
-typedef unsigned short ushort3 __NATIVE_VECTOR__(3, unsigned short);
-typedef unsigned short ushort4 __NATIVE_VECTOR__(4, unsigned short);
+    template<typename T>
+    struct HIP_vector_base<T, 1> {
+        typedef T Native_vec_ __NATIVE_VECTOR__(1, T);
 
-typedef short short1 __NATIVE_VECTOR__(1, short);
-typedef short short2 __NATIVE_VECTOR__(2, short);
-typedef short short3 __NATIVE_VECTOR__(3, short);
-typedef short short4 __NATIVE_VECTOR__(4, short);
+        union {
+            Native_vec_ data;
+            struct {
+                T x;
+            };
+        };
+    };
 
-typedef unsigned int uint1 __NATIVE_VECTOR__(1, unsigned int);
-typedef unsigned int uint2 __NATIVE_VECTOR__(2, unsigned int);
-typedef unsigned int uint3 __NATIVE_VECTOR__(3, unsigned int);
-typedef unsigned int uint4 __NATIVE_VECTOR__(4, unsigned int);
+    template<typename T>
+    struct HIP_vector_base<T, 2> {
+        typedef T Native_vec_ __NATIVE_VECTOR__(2, T);
 
-typedef int int1 __NATIVE_VECTOR__(1, int);
-typedef int int2 __NATIVE_VECTOR__(2, int);
-typedef int int3 __NATIVE_VECTOR__(3, int);
-typedef int int4 __NATIVE_VECTOR__(4, int);
+        union {
+            Native_vec_ data;
+            struct {
+                T x;
+                T y;
+            };
+        };
+    };
 
-typedef unsigned long ulong1 __NATIVE_VECTOR__(1, unsigned long);
-typedef unsigned long ulong2 __NATIVE_VECTOR__(2, unsigned long);
-typedef unsigned long ulong3 __NATIVE_VECTOR__(3, unsigned long);
-typedef unsigned long ulong4 __NATIVE_VECTOR__(4, unsigned long);
+    template<typename T>
+    struct HIP_vector_base<T, 3> {
+        typedef T Native_vec_ __NATIVE_VECTOR__(3, T);
 
-typedef long long1 __NATIVE_VECTOR__(1, long);
-typedef long long2 __NATIVE_VECTOR__(2, long);
-typedef long long3 __NATIVE_VECTOR__(3, long);
-typedef long long4 __NATIVE_VECTOR__(4, long);
+        union {
+            Native_vec_ data;
+            struct {
+                T x;
+                T y;
+                T z;
+            };
+        };
+    };
 
-typedef unsigned long long ulonglong1 __NATIVE_VECTOR__(1, unsigned long long);
-typedef unsigned long long ulonglong2 __NATIVE_VECTOR__(2, unsigned long long);
-typedef unsigned long long ulonglong3 __NATIVE_VECTOR__(3, unsigned long long);
-typedef unsigned long long ulonglong4 __NATIVE_VECTOR__(4, unsigned long long);
+    template<typename T>
+    struct HIP_vector_base<T, 4> {
+        typedef T Native_vec_ __NATIVE_VECTOR__(4, T);
 
-typedef long long longlong1 __NATIVE_VECTOR__(1, long long);
-typedef long long longlong2 __NATIVE_VECTOR__(2, long long);
-typedef long long longlong3 __NATIVE_VECTOR__(3, long long);
-typedef long long longlong4 __NATIVE_VECTOR__(4, long long);
+        union {
+            Native_vec_ data;
+            struct {
+                T x;
+                T y;
+                T z;
+                T w;
+            };
+        };
+    };
 
-typedef float float1 __NATIVE_VECTOR__(1, float);
-typedef float float2 __NATIVE_VECTOR__(2, float);
-typedef float float3 __NATIVE_VECTOR__(3, float);
-typedef float float4 __NATIVE_VECTOR__(4, float);
+    template<typename T, unsigned int rank>
+    struct HIP_vector_type : public HIP_vector_base<T, rank> {
+        using HIP_vector_base<T, rank>::data;
+        using typename HIP_vector_base<T, rank>::Native_vec_;
 
-typedef double double1 __NATIVE_VECTOR__(1, double);
-typedef double double2 __NATIVE_VECTOR__(2, double);
-typedef double double3 __NATIVE_VECTOR__(3, double);
-typedef double double4 __NATIVE_VECTOR__(4, double);
+        __host__ __device__
+        HIP_vector_type() = default;
+        template<
+            typename U,
+            typename std::enable_if<
+                std::is_convertible<U, T>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type(U x) noexcept
+        {
+            for (auto i = 0u; i != rank; ++i) data[i] = x;
+        }
+        template< // TODO: constrain based on type as well.
+            typename... Us,
+            typename std::enable_if<
+                (rank > 1) && sizeof...(Us) == rank>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type(Us... xs) noexcept { data = Native_vec_{static_cast<T>(xs)...}; }
+        __host__ __device__
+        HIP_vector_type(const HIP_vector_type&) = default;
+        __host__ __device__
+        HIP_vector_type(HIP_vector_type&&) = default;
+        __host__ __device__
+        ~HIP_vector_type() = default;
+
+        __host__ __device__
+        HIP_vector_type& operator=(const HIP_vector_type&) = default;
+        __host__ __device__
+        HIP_vector_type& operator=(HIP_vector_type&&) = default;
+
+        // Operators
+        __host__ __device__
+        HIP_vector_type& operator++() noexcept
+        {
+            return *this += HIP_vector_type{1};
+        }
+        __host__ __device__
+        HIP_vector_type operator++(int) noexcept
+        {
+            auto tmp(*this);
+            ++*this;
+            return tmp;
+        }
+        __host__ __device__
+        HIP_vector_type& operator--() noexcept
+        {
+            return *this -= HIP_vector_type{1};
+        }
+        __host__ __device__
+        HIP_vector_type operator--(int) noexcept
+        {
+            auto tmp(*this);
+            --*this;
+            return tmp;
+        }
+        __host__ __device__
+        HIP_vector_type& operator+=(const HIP_vector_type& x) noexcept
+        {
+            data += x.data;
+            return *this;
+        }
+        __host__ __device__
+        HIP_vector_type& operator-=(const HIP_vector_type& x) noexcept
+        {
+            data -= x.data;
+            return *this;
+        }
+        template<
+            typename U,
+            typename std::enable_if<
+                std::is_convertible<U, T>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type& operator-=(U x) noexcept
+        {
+            return *this -= HIP_vector_type{x};
+        }
+        __host__ __device__
+        HIP_vector_type& operator*=(const HIP_vector_type& x) noexcept
+        {
+            data *= x.data;
+            return *this;
+        }
+        __host__ __device__
+        HIP_vector_type& operator/=(const HIP_vector_type& x) noexcept
+        {
+            data /= x.data;
+            return *this;
+        }
+
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_signed<U>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type operator-() noexcept
+        {
+            auto tmp(*this);
+            tmp.data = -tmp.data;
+            return tmp;
+        }
+
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type operator~() noexcept
+        {
+            HIP_vector_type r{*this};
+            r.data = ~r.data;
+            return r;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type& operator%=(const HIP_vector_type& x) noexcept
+        {
+            data %= x.data;
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type& operator^=(const HIP_vector_type& x) noexcept
+        {
+            data ^= x.data;
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type& operator|=(const HIP_vector_type& x) noexcept
+        {
+            data |= x.data;
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type& operator&=(const HIP_vector_type& x) noexcept
+        {
+            data &= x.data;
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type& operator>>=(const HIP_vector_type& x) noexcept
+        {
+            data >>= x.data;
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        HIP_vector_type& operator<<=(const HIP_vector_type& x) noexcept
+        {
+            data <<= x.data;
+            return *this;
+        }
+    };
+
+
+    template<typename T, unsigned int n>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator+(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} += y;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator+(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} += y;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator+(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return y + x;
+    }
+
+    template<typename T, unsigned int n>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator-(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} -= y;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator-(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} -= y;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator-(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} -= y;
+    }
+
+    template<typename T, unsigned int n>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator*(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} *= y;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator*(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} *= y;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator*(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return y * x;
+    }
+
+    template<typename T, unsigned int n>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator/(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} /= y;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator/(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} /= y;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    HIP_vector_type<T, n> operator/(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} /= y;
+    }
+
+    template<typename T, unsigned int n>
+    __host__ __device__
+    inline
+    bool operator==(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        auto tmp = x.data == y.data;
+        for (auto i = 0u; i != n; ++i) if (tmp[i] == 0) return false;
+        return true;
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    bool operator==(const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return x == HIP_vector_type<T, n>{y};
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    bool operator==(U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} == y;
+    }
+
+    template<typename T, unsigned int n>
+    __host__ __device__
+    inline
+    bool operator!=(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return !(x == y);
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    bool operator!=(const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return !(x == y);
+    }
+    template<typename T, unsigned int n, typename U>
+    __host__ __device__
+    inline
+    bool operator!=(U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return !(x == y);
+    }
+
+    template<
+        typename T,
+        unsigned int n,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator%(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} %= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator%(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} %= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator%(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} %= y;
+    }
+
+    template<
+        typename T,
+        unsigned int n,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator^(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} ^= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator^(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} ^= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator^(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} ^= y;
+    }
+
+    template<
+        typename T,
+        unsigned int n,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator|(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} |= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator|(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} |= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator|(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} |= y;
+    }
+
+    template<
+        typename T,
+        unsigned int n,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator&(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} &= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator&(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} &= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator&(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} &= y;
+    }
+
+    template<
+        typename T,
+        unsigned int n,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator>>(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} >>= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator>>(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} >>= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator>>(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} >>= y;
+    }
+
+    template<
+        typename T,
+        unsigned int n,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator<<(
+        const HIP_vector_type<T, n>& x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} <<= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator<<(
+        const HIP_vector_type<T, n>& x, U y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} <<= y;
+    }
+    template<
+        typename T,
+        unsigned int n,
+        typename U,
+        typename std::enable_if<std::is_integral<T>{}>* = nullptr>
+    inline
+    HIP_vector_type<T, n> operator<<(
+        U x, const HIP_vector_type<T, n>& y) noexcept
+    {
+        return HIP_vector_type<T, n>{x} <<= y;
+    }
+
+    #define __MAKE_VECTOR_TYPE__(CUDA_name, T) \
+        using CUDA_name##1 = HIP_vector_type<T, 1>;\
+        using CUDA_name##2 = HIP_vector_type<T, 2>;\
+        using CUDA_name##3 = HIP_vector_type<T, 3>;\
+        using CUDA_name##4 = HIP_vector_type<T, 4>;
+#else
+    #define __MAKE_VECTOR_TYPE__(CUDA_name, T) \
+        typedef T CUDA_name##_impl1 __NATIVE_VECTOR__(1, T);\
+        typedef T CUDA_name##_impl2 __NATIVE_VECTOR__(2, T);\
+        typedef T CUDA_name##_impl3 __NATIVE_VECTOR__(3, T);\
+        typedef T CUDA_name##_impl4 __NATIVE_VECTOR__(4, T);\
+        typedef struct {\
+            union {\
+                CUDA_name##_impl1 data;\
+                struct {\
+                    T x;\
+                };\
+            };\
+        } CUDA_name##1;\
+        typedef struct {\
+            union {\
+                CUDA_name##_impl2 data;\
+                struct {\
+                    T x;\
+                    T y;\
+                };\
+            };\
+        } CUDA_name##2;\
+        typedef struct {\
+            union {\
+                CUDA_name##_impl3 data;\
+                struct {\
+                    T x;\
+                    T y;\
+                    T z;\
+                };\
+            };\
+        } CUDA_name##3;\
+        typedef struct {\
+            union {\
+                CUDA_name##_impl4 data;\
+                struct {\
+                    T x;\
+                    T y;\
+                    T z;\
+                    T w;\
+                };\
+            };\
+        } CUDA_name##4;
+#endif
+
+__MAKE_VECTOR_TYPE__(uchar, unsigned char);
+__MAKE_VECTOR_TYPE__(char, char);
+__MAKE_VECTOR_TYPE__(ushort, unsigned short);
+__MAKE_VECTOR_TYPE__(short, short);
+__MAKE_VECTOR_TYPE__(uint, unsigned int);
+__MAKE_VECTOR_TYPE__(int, int);
+__MAKE_VECTOR_TYPE__(ulong, unsigned long);
+__MAKE_VECTOR_TYPE__(long, long);
+__MAKE_VECTOR_TYPE__(ulonglong, unsigned long long);
+__MAKE_VECTOR_TYPE__(longlong, long long);
+__MAKE_VECTOR_TYPE__(float, float);
+__MAKE_VECTOR_TYPE__(double, double);
 
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
     __device__ __host__ \
     static \
     inline \
-    type make_##type(comp x) { return type{x}; }
+    type make_##type(comp x) { type r = {x}; return r; }
 
 #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
     __device__ __host__ \
     static \
     inline \
-    type make_##type(comp x, comp y) { return type{x, y}; }
+    type make_##type(comp x, comp y) { type r = {x, y}; return r; }
 
 #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
     __device__ __host__ \
     static \
     inline \
-    type make_##type(comp x, comp y, comp z) { return type{x, y, z}; }
+    type make_##type(comp x, comp y, comp z) { type r = {x, y, z}; return r; }
 
 #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
     __device__ __host__ \
     static \
     inline \
     type make_##type(comp x, comp y, comp z, comp w) { \
-        return type{x, y, z, w}; \
+        type r = {x, y, z, w}; \
+        return r; \
     }
 
 DECLOP_MAKE_ONE_COMPONENT(unsigned char, uchar1);
@@ -179,14 +760,14 @@ DECLOP_MAKE_TWO_COMPONENT(signed long, long2);
 DECLOP_MAKE_THREE_COMPONENT(signed long, long3);
 DECLOP_MAKE_FOUR_COMPONENT(signed long, long4);
 
-DECLOP_MAKE_ONE_COMPONENT(unsigned long, ulonglong1);
-DECLOP_MAKE_TWO_COMPONENT(unsigned long, ulonglong2);
-DECLOP_MAKE_THREE_COMPONENT(unsigned long, ulonglong3);
-DECLOP_MAKE_FOUR_COMPONENT(unsigned long, ulonglong4);
+DECLOP_MAKE_ONE_COMPONENT(unsigned long long, ulonglong1);
+DECLOP_MAKE_TWO_COMPONENT(unsigned long long, ulonglong2);
+DECLOP_MAKE_THREE_COMPONENT(unsigned long long, ulonglong3);
+DECLOP_MAKE_FOUR_COMPONENT(unsigned long long, ulonglong4);
 
-DECLOP_MAKE_ONE_COMPONENT(signed long, longlong1);
-DECLOP_MAKE_TWO_COMPONENT(signed long, longlong2);
-DECLOP_MAKE_THREE_COMPONENT(signed long, longlong3);
-DECLOP_MAKE_FOUR_COMPONENT(signed long, longlong4);
+DECLOP_MAKE_ONE_COMPONENT(signed long long, longlong1);
+DECLOP_MAKE_TWO_COMPONENT(signed long long, longlong2);
+DECLOP_MAKE_THREE_COMPONENT(signed long long, longlong3);
+DECLOP_MAKE_FOUR_COMPONENT(signed long long, longlong4);
 
 #endif

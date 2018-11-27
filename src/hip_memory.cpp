@@ -28,6 +28,9 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
+__device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
+__device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
+
 // Internal HIP APIS:
 namespace hip_internal {
 
@@ -61,19 +64,20 @@ int sharePtr(void* ptr, ihipCtx_t* ctx, bool shareWithAll, unsigned hipFlags) {
 
     auto device = ctx->getWriteableDevice();
 
-#if USE_APP_PTR_FOR_CTX
-    hc::am_memtracker_update(ptr, device->_deviceId, hipFlags, ctx);
-#else
-    hc::am_memtracker_update(ptr, device->_deviceId, hipFlags);
-#endif
-
     if (shareWithAll) {
+        // shareWithAll memory is not mapped to any device
+        hc::am_memtracker_update(ptr, -1, hipFlags);
         hsa_status_t s = hsa_amd_agents_allow_access(g_deviceCnt + 1, g_allAgents, NULL, ptr);
         tprintf(DB_MEM, "    allow access to CPU + all %d GPUs (shareWithAll)\n", g_deviceCnt);
         if (s != HSA_STATUS_SUCCESS) {
             ret = -1;
         }
     } else {
+#if USE_APP_PTR_FOR_CTX
+        hc::am_memtracker_update(ptr, device->_deviceId, hipFlags, ctx);
+#else
+        hc::am_memtracker_update(ptr, device->_deviceId, hipFlags);
+#endif
         int peerCnt = 0;
         {
             LockedAccessor_CtxCrit_t crit(ctx->criticalData());
@@ -155,7 +159,7 @@ void* allocAndSharePtr(const char* msg, size_t sizeBytes, ihipCtx_t* ctx, bool s
 // TODO - add more info here when available.
 //
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
-    HIP_INIT_API(attributes, ptr);
+    HIP_INIT_API(hipPointerGetAttributes, attributes, ptr);
 
     hipError_t e = hipSuccess;
     if ((attributes == nullptr) || (ptr == nullptr)) {
@@ -202,7 +206,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
 
 
 hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsigned flags) {
-    HIP_INIT_API(devicePointer, hostPointer, flags);
+    HIP_INIT_API(hipHostGetDevicePointer, devicePointer, hostPointer, flags);
 
     hipError_t e = hipSuccess;
 
@@ -233,7 +237,7 @@ hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsi
 
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr, sizeBytes);
+    HIP_INIT_SPECIAL_API(hipMalloc, (TRACE_MEM), ptr, sizeBytes);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
@@ -262,7 +266,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
 
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr, sizeBytes, flags);
+    HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
@@ -363,7 +367,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
         hsa_ext_image_descriptor_t imageDescriptor;
         imageDescriptor.width = *pitch;
         imageDescriptor.height = height;
-        imageDescriptor.depth = 0;  // depth;
+        imageDescriptor.depth = depth;
         imageDescriptor.array_size = 0;
         if (depth == 0)
             imageDescriptor.geometry = HSA_EXT_IMAGE_GEOMETRY_2D;
@@ -394,7 +398,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
 
 // width in bytes
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr, pitch, width, height);
+    HIP_INIT_SPECIAL_API(hipMallocPitch, (TRACE_MEM), ptr, pitch, width, height);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
@@ -405,7 +409,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
-    HIP_INIT_API(pitchedDevPtr, &extent);
+    HIP_INIT_API(hipMalloc3D, pitchedDevPtr, &extent);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
@@ -440,7 +444,7 @@ extern void getChannelOrderAndType(const hipChannelFormatDesc& desc,
                                    hsa_ext_image_channel_type_t* channelType);
 
 hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), array, pAllocateArray);
+    HIP_INIT_SPECIAL_API(hipArrayCreate, (TRACE_MEM), array, pAllocateArray);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
     if (pAllocateArray->width > 0) {
@@ -550,7 +554,7 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
 
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width,
                           size_t height, unsigned int flags) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), array, desc, width, height, flags);
+    HIP_INIT_SPECIAL_API(hipMallocArray, (TRACE_MEM), array, desc, width, height, flags);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
     if (width > 0) {
@@ -573,24 +577,8 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
                 size = size * height;
             }
 
-            size_t allocSize = 0;
-            switch (desc->f) {
-                case hipChannelFormatKindSigned:
-                    allocSize = size * sizeof(int);
-                    break;
-                case hipChannelFormatKindUnsigned:
-                    allocSize = size * sizeof(unsigned int);
-                    break;
-                case hipChannelFormatKindFloat:
-                    allocSize = size * sizeof(float);
-                    break;
-                case hipChannelFormatKindNone:
-                    allocSize = size * sizeof(size_t);
-                    break;
-                default:
-                    hip_status = hipErrorUnknown;
-                    break;
-            }
+            const size_t allocSize = size * ((desc->x + desc->y + desc->z + desc->w) / 8);
+
             hc::accelerator acc = ctx->getDevice()->_acc;
             hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
@@ -647,7 +635,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
 }
 
 hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), array, pAllocateArray);
+    HIP_INIT_SPECIAL_API(hipArray3DCreate, (TRACE_MEM), array, pAllocateArray);
     hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -774,15 +762,15 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
 
 
 
-    HIP_INIT_API(array, desc, &extent, flags);
+    HIP_INIT_API(hipMalloc3DArray, array, desc, &extent, flags);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
-        if(array==NULL )
-        {
+    if(array==NULL )
+    {
          hip_status=hipErrorInvalidValue;
         return ihipLogStatus(hip_status);
-        }
+    }
     auto ctx = ihipGetTlsDefaultCtx();
 
     *array = (hipArray*)malloc(sizeof(hipArray));
@@ -799,24 +787,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
         const unsigned am_flags = 0;
         const size_t size = extent.width * extent.height * extent.depth;
 
-        size_t allocSize = 0;
-        switch (desc->f) {
-            case hipChannelFormatKindSigned:
-                allocSize = size * sizeof(int);
-                break;
-            case hipChannelFormatKindUnsigned:
-                allocSize = size * sizeof(unsigned int);
-                break;
-            case hipChannelFormatKindFloat:
-                allocSize = size * sizeof(float);
-                break;
-            case hipChannelFormatKindNone:
-                allocSize = size * sizeof(size_t);
-                break;
-            default:
-                hip_status = hipErrorUnknown;
-                break;
-        }
+        const size_t allocSize = size * ((desc->x + desc->y + desc->z + desc->w) / 8);
 
         hc::accelerator acc = ctx->getDevice()->_acc;
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
@@ -830,7 +801,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
         hsa_ext_image_descriptor_t imageDescriptor;
         imageDescriptor.width = extent.width;
         imageDescriptor.height = extent.height;
-        imageDescriptor.depth = 0;
+        imageDescriptor.depth = extent.depth;
         imageDescriptor.array_size = 0;
         switch (flags) {
             case hipArrayLayered:
@@ -875,7 +846,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
 }
 
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
-    HIP_INIT_API(flagsPtr, hostPtr);
+    HIP_INIT_API(hipHostGetFlags, flagsPtr, hostPtr);
 
     hipError_t hip_status = hipSuccess;
 
@@ -903,7 +874,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
 
 // TODO - need to fix several issues here related to P2P access, host memory fallback.
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) {
-    HIP_INIT_API(hostPtr, sizeBytes, flags);
+    HIP_INIT_API(hipHostRegister, hostPtr, sizeBytes, flags);
 
     hipError_t hip_status = hipSuccess;
 
@@ -938,14 +909,22 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
                 }
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0],
                                                     vecAcc.size());
-#if USE_APP_PTR_FOR_CTX
-                hc::am_memtracker_update(hostPtr, device->_deviceId, flags, ctx);
-#else
-                hc::am_memtracker_update(hostPtr, device->_deviceId, flags);
-#endif
+                if ( am_status == AM_SUCCESS ) {
+                     am_status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
 
-                tprintf(DB_MEM, " %s registered ptr=%p and allowed access to %zu peers\n", __func__,
-                        hostPtr, vecAcc.size());
+                if ( am_status == AM_SUCCESS ) {
+                    void *devPtr = amPointerInfo._devicePointer;
+ #if USE_APP_PTR_FOR_CTX
+                    hc::am_memtracker_update(hostPtr, device->_deviceId, flags, ctx);
+                    hc::am_memtracker_update(devPtr, device->_deviceId, flags, ctx);
+ #else
+                    hc::am_memtracker_update(hostPtr, device->_deviceId, flags);
+                    hc::am_memtracker_update(devPtr, device->_deviceId, flags);
+ #endif
+                    tprintf(DB_MEM, " %s registered ptr=%p and allowed access to %zu peers\n", __func__,
+                                 hostPtr, vecAcc.size());
+                };
+                };
                 if (am_status == AM_SUCCESS) {
                     hip_status = hipSuccess;
                 } else {
@@ -960,7 +939,7 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
 }
 
 hipError_t hipHostUnregister(void* hostPtr) {
-    HIP_INIT_API(hostPtr);
+    HIP_INIT_API(hipHostUnregister, hostPtr);
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t hip_status = hipSuccess;
     if (hostPtr == NULL) {
@@ -982,7 +961,7 @@ inline hipDeviceptr_t agent_address_for_symbol(const char* symbolName) {
 
 #if __hcc_workweek__ >= 17481
     size_t byte_cnt = 0u;
-    hipModuleGetGlobal(&r, &byte_cnt, 0, symbolName);
+    ihipModuleGetGlobal(&r, &byte_cnt, 0, symbolName);
 #else
     auto ctx = ihipGetTlsDefaultCtx();
     auto acc = ctx->getDevice()->_acc;
@@ -995,7 +974,7 @@ inline hipDeviceptr_t agent_address_for_symbol(const char* symbolName) {
 
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t count, size_t offset,
                              hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, src, count, offset, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpyToSymbol, (TRACE_MCMD), symbolName, src, count, offset, kind);
 
     if (symbolName == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
@@ -1014,10 +993,9 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost ||
+    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDefault ||
         kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost) {
-        stream->lockedSymbolCopySync(acc, dst, (void*)src, count, offset, kind);
-        //  acc.memcpy_symbol(dst, (void*)src, count+offset);
+        stream->locked_copySync((char*)dst+offset, (void*)src, count, kind, false);
     } else {
         return ihipLogStatus(hipErrorInvalidValue);
     }
@@ -1028,7 +1006,7 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
 
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, size_t offset,
                                hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, dst, count, offset, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpyFromSymbol, (TRACE_MCMD), symbolName, dst, count, offset, kind);
 
     if (symbolName == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
@@ -1047,9 +1025,9 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, 
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDeviceToHost ||
+    if (kind == hipMemcpyDefault || kind == hipMemcpyDeviceToHost ||
         kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost) {
-        stream->lockedSymbolCopySync(acc, dst, (void*)src, count, offset, kind);
+        stream->locked_copySync((void*)dst, (char*)src+offset, count, kind, false);
     } else {
         return ihipLogStatus(hipErrorInvalidValue);
     }
@@ -1060,7 +1038,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, 
 
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_t count,
                                   size_t offset, hipMemcpyKind kind, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, src, count, offset, kind, stream);
+    HIP_INIT_SPECIAL_API(hipMemcpyToSymbolAsync, (TRACE_MCMD), symbolName, src, count, offset, kind, stream);
 
     if (symbolName == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
@@ -1081,7 +1059,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
 
     if (stream) {
         try {
-            stream->lockedSymbolCopyAsync(acc, dst, (void*)src, count, offset, kind);
+            hip_internal::memcpyAsync((char*)dst+offset, src, count, kind, stream);
         } catch (ihipException& ex) {
             e = ex._code;
         }
@@ -1095,7 +1073,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
 
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t count, size_t offset,
                                     hipMemcpyKind kind, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), symbolName, dst, count, offset, kind, stream);
+    HIP_INIT_SPECIAL_API(hipMemcpyFromSymbolAsync, (TRACE_MCMD), symbolName, dst, count, offset, kind, stream);
 
     if (symbolName == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
@@ -1117,7 +1095,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
     stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         try {
-            stream->lockedSymbolCopyAsync(acc, dst, src, count, offset, kind);
+            hip_internal::memcpyAsync(dst, (char*)src+offset, count, kind, stream);
         } catch (ihipException& ex) {
             e = ex._code;
         }
@@ -1128,9 +1106,26 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
     return ihipLogStatus(e);
 }
 
+
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
+    HIP_INIT_API(devPtr, symbolName);
+
+    size_t size = 0;
+    return ihipModuleGetGlobal(devPtr, &size, 0, static_cast<const char*>(symbolName));
+}
+
+
+hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
+    HIP_INIT_API(size, symbolName);
+
+    void* devPtr = nullptr;
+    return ihipModuleGetGlobal(&devPtr, size, 0, static_cast<const char*>(symbolName));
+}
+
+
 //---
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpy, (TRACE_MCMD), dst, src, sizeBytes, kind);
 
     hipError_t e = hipSuccess;
 
@@ -1157,7 +1152,7 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 
 
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes);
+    HIP_INIT_SPECIAL_API(hipMemcpyHtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1176,7 +1171,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
 
 
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes);
+    HIP_INIT_SPECIAL_API(hipMemcpyDtoH, (TRACE_MCMD), dst, src, sizeBytes);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1195,7 +1190,7 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
 
 
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes);
+    HIP_INIT_SPECIAL_API(hipMemcpyDtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1213,7 +1208,7 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 }
 
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes);
+    HIP_INIT_SPECIAL_API(hipMemcpyHtoH, (TRACE_MCMD), dst, src, sizeBytes);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1232,13 +1227,13 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
 
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
                           hipStream_t stream) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, kind, stream);
+    HIP_INIT_SPECIAL_API(hipMemcpyAsync, (TRACE_MCMD), dst, src, sizeBytes, kind, stream);
 
     return ihipLogStatus(hip_internal::memcpyAsync(dst, src, sizeBytes, kind, stream));
 }
 
 hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, stream);
+    HIP_INIT_SPECIAL_API(hipMemcpyHtoDAsync, (TRACE_MCMD), dst, src, sizeBytes, stream);
 
     return ihipLogStatus(
         hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyHostToDevice, stream));
@@ -1246,14 +1241,14 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes, h
 
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, stream);
+    HIP_INIT_SPECIAL_API(hipMemcpyDtoDAsync, (TRACE_MCMD), dst, src, sizeBytes, stream);
 
     return ihipLogStatus(
         hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToDevice, stream));
 }
 
 hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, src, sizeBytes, stream);
+    HIP_INIT_SPECIAL_API(hipMemcpyDtoHAsync, (TRACE_MCMD), dst, src, sizeBytes, stream);
 
     return ihipLogStatus(
         hip_internal::memcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToHost, stream));
@@ -1261,7 +1256,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 
 hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
                               size_t spitch, size_t width, size_t height, hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, wOffset, hOffset, src, spitch, width, height, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpy2DToArray, (TRACE_MCMD), dst, wOffset, hOffset, src, spitch, width, height, kind);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1313,7 +1308,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
 
 hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
                             size_t count, hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, wOffset, hOffset, src, count, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpyToArray, (TRACE_MCMD), dst, wOffset, hOffset, src, count, kind);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1332,7 +1327,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
 
 hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset, size_t hOffset,
                               size_t count, hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, srcArray, wOffset, hOffset, count, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpyFromArray, (TRACE_MCMD), dst, srcArray, wOffset, hOffset, count, kind);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1350,7 +1345,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
 }
 
 hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHost, size_t count) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dstArray, dstOffset, srcHost, count);
+    HIP_INIT_SPECIAL_API(hipMemcpyHtoA, (TRACE_MCMD), dstArray, dstOffset, srcHost, count);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1368,7 +1363,7 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
 }
 
 hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t count) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, srcArray, srcOffset, count);
+    HIP_INIT_SPECIAL_API(hipMemcpyAtoH, (TRACE_MCMD), dst, srcArray, srcOffset, count);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
@@ -1387,14 +1382,13 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
 }
 
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), p);
+    HIP_INIT_SPECIAL_API(hipMemcpy3D, (TRACE_MCMD), p);
     hipError_t e = hipSuccess;
     if (p) {
         size_t byteSize;
         size_t depth;
         size_t height;
         size_t widthInBytes;
-        size_t dstWidthInbytes;
         size_t srcPitch;
         size_t dstPitch;
         void* srcPtr;
@@ -1425,13 +1419,13 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
                 srcPitch = p->srcPtr.pitch;
                 srcPtr = p->srcPtr.ptr;
                 ySize = p->srcPtr.ysize;
-                dstWidthInbytes = p->dstArray->width * byteSize;
+                dstPitch = p->dstArray->width * byteSize;
                 dstPtr = p->dstArray->data;
             } else {
                 depth = p->Depth;
                 height = p->Height;
                 widthInBytes = p->WidthInBytes;
-                dstWidthInbytes = p->dstArray->width * 4;
+                dstPitch = p->dstArray->width * 4;
                 srcPitch = p->srcPitch;
                 srcPtr = (void*)p->srcHost;
                 ySize = p->srcHeight;
@@ -1446,21 +1440,25 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
             srcPtr = p->srcPtr.ptr;
             dstPtr = p->dstPtr.ptr;
             ySize = p->srcPtr.ysize;
-            dstWidthInbytes = p->dstPtr.pitch;
+            dstPitch = p->dstPtr.pitch;
         }
         hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
         hc::completion_future marker;
         try {
-            for (int i = 0; i < depth; i++) {
-                for (int j = 0; j < height; j++) {
-                    // TODO: p->srcPos or p->dstPos are not 0.
-                    unsigned char* src =
-                        (unsigned char*)srcPtr + i * ySize * srcPitch + j * srcPitch;
-                    unsigned char* dst =
-                        (unsigned char*)dstPtr + i * height * dstWidthInbytes + j * dstWidthInbytes;
-                    stream->locked_copySync(dst, src, widthInBytes, p->kind);
+            if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
+                stream->locked_copySync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind, false);
+            } else {
+                for (int i = 0; i < depth; i++) {
+                    for (int j = 0; j < height; j++) {
+                        // TODO: p->srcPos or p->dstPos are not 0.
+                        unsigned char* src =
+                             (unsigned char*)srcPtr + i * ySize * srcPitch + j * srcPitch;
+                        unsigned char* dst =
+                             (unsigned char*)dstPtr + i * height * dstPitch + j * dstPitch;
+                        stream->locked_copySync(dst, src, widthInBytes, p->kind);
+                     }
                 }
-            }
+           }
         } catch (ihipException ex) {
             e = ex._code;
         }
@@ -1539,6 +1537,8 @@ hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t strea
 {
     hipError_t e = hipSuccess;
 
+    if (sizeBytes == 0) return e;
+
     if (stream && (dst != NULL)) {
         if(copyDataType == ihipMemsetDataTypeChar){
             if ((sizeBytes & 0x3) == 0) {
@@ -1586,7 +1586,7 @@ hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t strea
     return e;
 };
 
-hipError_t getLockedPointer(const void *hostPtr, size_t dataLen, void **devicePtrPtr)
+hipError_t getLockedPointer(void *hostPtr, size_t dataLen, void **devicePtrPtr)
 {
         hc::accelerator acc;
 
@@ -1597,7 +1597,8 @@ hipError_t getLockedPointer(const void *hostPtr, size_t dataLen, void **devicePt
 #endif
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
         if (status == AM_SUCCESS) {
-            *devicePtrPtr =  (char*)amPointerInfo._devicePointer;
+            *devicePtrPtr = static_cast<char*>(amPointerInfo._devicePointer) +
+                (static_cast<char*>(hostPtr) - static_cast<char*>(amPointerInfo._hostPointer));
             return(hipSuccess);
         };
         return(hipErrorHostMemoryNotRegistered);
@@ -1649,7 +1650,7 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
 
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                        size_t height, hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpy2D, (TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind);
     hipError_t e = hipSuccess;
     e = ihipMemcpy2D(dst, dpitch, src, spitch, width, height, kind);
     return ihipLogStatus(e);
@@ -1657,13 +1658,14 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
 
 hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                             size_t height, hipMemcpyKind kind, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind, stream);
+    HIP_INIT_SPECIAL_API(hipMemcpy2DAsync, (TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind, stream);
     if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return ihipLogStatus(hipErrorInvalidValue);
     hipError_t e = hipSuccess;
     int isLocked = 0;
     void *pinnedPtr=NULL;
     void *actualSrc = (void*)src;
     void *actualDest = dst;
+    stream = ihipSyncAndResolveStream(stream);
     if(kind == hipMemcpyHostToDevice ) {
         if(getLockedPointer((void*)src, spitch, &pinnedPtr) == hipSuccess ){
             isLocked = 1;
@@ -1680,7 +1682,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     } else {
         try {
             if(!isLocked){
-                for (int i = 0; i < height; ++i) 
+                for (int i = 0; i < height; ++i)
                     e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
                                           (unsigned char*)src + i * spitch, width, kind, stream);
             } else{
@@ -1695,7 +1697,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
 }
 
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), pCopy);
+    HIP_INIT_SPECIAL_API(hipMemcpyParam2D, (TRACE_MCMD), pCopy);
     hipError_t e = hipSuccess;
     if (pCopy == nullptr) {
         e = hipErrorInvalidValue;
@@ -1707,7 +1709,7 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
 
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
 hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes, stream);
+    HIP_INIT_SPECIAL_API(hipMemsetAsync, (TRACE_MCMD), dst, value, sizeBytes, stream);
 
     hipError_t e = hipSuccess;
 
@@ -1719,7 +1721,7 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
 };
 
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
+    HIP_INIT_SPECIAL_API(hipMemset, (TRACE_MCMD), dst, value, sizeBytes);
 
     hipError_t e = hipSuccess;
 
@@ -1730,12 +1732,12 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
         stream->locked_wait();
     } else {
         e = hipErrorInvalidValue;
-    } 
+    }
     return ihipLogStatus(e);
 }
 
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height);
+    HIP_INIT_SPECIAL_API(hipMemset2D, (TRACE_MCMD), dst, pitch, value, width, height);
 
     hipError_t e = hipSuccess;
 
@@ -1754,7 +1756,7 @@ hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t 
 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream )
 {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, pitch, value, width, height, stream);
+    HIP_INIT_SPECIAL_API(hipMemset2DAsync, (TRACE_MCMD), dst, pitch, value, width, height, stream);
 
     hipError_t e = hipSuccess;
 
@@ -1771,7 +1773,7 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, si
 };
 
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), dst, value, sizeBytes);
+    HIP_INIT_SPECIAL_API(hipMemsetD8, (TRACE_MCMD), dst, value, sizeBytes);
 
     hipError_t e = hipSuccess;
 
@@ -1788,7 +1790,7 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
 
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent )
 {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), &pitchedDevPtr, value, &extent);
+    HIP_INIT_SPECIAL_API(hipMemset3D, (TRACE_MCMD), &pitchedDevPtr, value, &extent);
     hipError_t e = hipSuccess;
 
     hipStream_t stream = hipStreamNull;
@@ -1807,7 +1809,7 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent
 
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream )
 {
-    HIP_INIT_SPECIAL_API((TRACE_MCMD), &pitchedDevPtr, value, &extent);
+    HIP_INIT_SPECIAL_API(hipMemset3DAsync, (TRACE_MCMD), &pitchedDevPtr, value, &extent);
     hipError_t e = hipSuccess;
 
     // TODO - call an ihip memset so HIP_TRACE is correct.
@@ -1823,7 +1825,7 @@ hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent e
 }
 
 hipError_t hipMemGetInfo(size_t* free, size_t* total) {
-    HIP_INIT_API(free, total);
+    HIP_INIT_API(hipMemGetInfo, free, total);
 
     hipError_t e = hipSuccess;
 
@@ -1857,7 +1859,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
 }
 
 hipError_t hipMemPtrGetInfo(void* ptr, size_t* size) {
-    HIP_INIT_API(ptr, size);
+    HIP_INIT_API(hipMemPtrGetInfo, ptr, size);
 
     hipError_t e = hipSuccess;
 
@@ -1882,7 +1884,7 @@ hipError_t hipMemPtrGetInfo(void* ptr, size_t* size) {
 
 
 hipError_t hipFree(void* ptr) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr);
+    HIP_INIT_SPECIAL_API(hipFree, (TRACE_MEM), ptr);
 
     hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
@@ -1914,7 +1916,7 @@ hipError_t hipFree(void* ptr) {
 
 
 hipError_t hipHostFree(void* ptr) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), ptr);
+    HIP_INIT_SPECIAL_API(hipHostFree, (TRACE_MEM), ptr);
 
     // Synchronize to ensure all work has finished.
     ihipGetTlsDefaultCtx()->locked_waitAllStreams();  // ignores non-blocking streams, this waits
@@ -1949,7 +1951,7 @@ hipError_t hipHostFree(void* ptr) {
 hipError_t hipFreeHost(void* ptr) { return hipHostFree(ptr); }
 
 hipError_t hipFreeArray(hipArray* array) {
-    HIP_INIT_SPECIAL_API((TRACE_MEM), array);
+    HIP_INIT_SPECIAL_API(hipFreeArray, (TRACE_MEM), array);
 
     hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
@@ -1977,7 +1979,7 @@ hipError_t hipFreeArray(hipArray* array) {
 }
 
 hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDeviceptr_t dptr) {
-    HIP_INIT_API(pbase, psize, dptr);
+    HIP_INIT_API(hipMemGetAddressRange, pbase, psize, dptr);
     hipError_t hipStatus = hipSuccess;
     hc::accelerator acc;
 #if (__hcc_workweek__ >= 17332)
@@ -1998,7 +2000,7 @@ hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDevice
 // TODO: IPC implementaiton:
 
 hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
-    HIP_INIT_API(handle, devPtr);
+    HIP_INIT_API(hipIpcGetMemHandle, handle, devPtr);
     hipError_t hipStatus = hipSuccess;
     // Get the size of allocated pointer
     size_t psize = 0u;
@@ -2034,7 +2036,7 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
 }
 
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags) {
-    HIP_INIT_API(devPtr, &handle, flags);
+    HIP_INIT_API(hipIpcOpenMemHandle, devPtr, &handle, flags);
     hipError_t hipStatus = hipSuccess;
     if (devPtr == NULL) {
         hipStatus = hipErrorInvalidValue;
@@ -2064,7 +2066,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
 }
 
 hipError_t hipIpcCloseMemHandle(void* devPtr) {
-    HIP_INIT_API(devPtr);
+    HIP_INIT_API(hipIpcCloseMemHandle, devPtr);
     hipError_t hipStatus = hipSuccess;
     if (devPtr == NULL) {
         hipStatus = hipErrorInvalidValue;

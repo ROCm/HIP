@@ -114,6 +114,7 @@ typedef struct hipDeviceProp_t {
     int isMultiGpuBoard;                      ///< 1 if device is on a multi-GPU board, 0 if not.
     int canMapHostMemory;                     ///< Check whether HIP can map host memory
     int gcnArch;                              ///< AMD GCN Arch Value. Eg: 803, 701
+    int integrated;            ///< APU vs dGPU
 } hipDeviceProp_t;
 
 
@@ -289,8 +290,15 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,  ///< Maximum Shared Memory Per
                                                          ///< Multiprocessor.
     hipDeviceAttributeIsMultiGpuBoard,                   ///< Multiple GPU devices.
+    hipDeviceAttributeIntegrated,                        ///< iGPU
 } hipDeviceAttribute_t;
 
+enum hipComputeMode {
+    hipComputeModeDefault = 0,
+    hipComputeModeExclusive = 1,
+    hipComputeModeProhibited = 2,
+    hipComputeModeExclusiveProcess = 3
+};
 
 /**
  *     @}

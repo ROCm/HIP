@@ -36,7 +36,7 @@ THE SOFTWARE.
 
 #define HIP_ASSERT(x) (assert((x) == hipSuccess))
 
-__global__ void HIP_kernel(hipLaunchParm lp, unsigned int* mbcnt_lo, unsigned int* mbcnt_hi, unsigned int* lane_id) {
+__global__ void HIP_kernel(unsigned int* mbcnt_lo, unsigned int* mbcnt_hi, unsigned int* lane_id) {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
     mbcnt_lo[x] = __mbcnt_lo(0xFFFFFFFF, 0);
     mbcnt_hi[x] = __mbcnt_hi(0xFFFFFFFF, 0);
@@ -70,7 +70,7 @@ int main() {
     HIP_ASSERT(hipMalloc((void**)&device_mbcnt_hi, buffer_size));
     HIP_ASSERT(hipMalloc((void**)&device_lane_id, buffer_size));
 
-    hipLaunchKernel(HIP_kernel, dim3(num_blocks),
+    hipLaunchKernelGGL(HIP_kernel, dim3(num_blocks),
                     dim3(num_threads_per_block), 0, 0, device_mbcnt_lo, device_mbcnt_hi, device_lane_id);
 
     unsigned int* host_mbcnt_lo = (unsigned int*) malloc(buffer_size);
@@ -88,7 +88,7 @@ int main() {
     for (unsigned int i = 0; i < num_threads; i++) {
         unsigned int this_lane_id = i % wave_size;
         unsigned int this_mbcnt_lo = this_lane_id >= 32 ? 32 : this_lane_id;
-        unsigned int this_mbcnt_hi = this_lane_id < 32 ? 0 : (this_lane_id - 22);
+        unsigned int this_mbcnt_hi = this_lane_id < 32 ? 0 : (this_lane_id - 32);
 
         if (host_mbcnt_lo[i] != this_mbcnt_lo)
             mbcnt_lo_errors++;

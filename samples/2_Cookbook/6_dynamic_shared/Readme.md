@@ -25,7 +25,7 @@ Shared memory is way more faster than that of global and constant memory and acc
 here the first parameter is the data type while the second one is the variable name.
 
 The other important change is:
-`  hipLaunchKernel(matrixTranspose,                                                   `
+`  hipLaunchKernelGGL(matrixTranspose,                                                   `
                   dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                   sizeof(float)*WIDTH*WIDTH, 0,

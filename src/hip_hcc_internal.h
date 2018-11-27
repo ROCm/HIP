@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include <hsa/hsa.h>
 #include <unordered_map>
+#include <stack>
 
 #include "hsa/hsa_ext_amd.h"
 #include "hip/hip_runtime.h"
@@ -82,10 +83,10 @@ extern int HIP_SYNC_NULL_STREAM;
 extern int HIP_INIT_ALLOC;
 extern int HIP_FORCE_NULL_STREAM;
 
+extern int HIP_DUMP_CODE_OBJECT;
 
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
-
 
 // Class to assign a short TID to each new thread, for HIP debugging purposes.
 class TidInfo {
@@ -93,11 +94,13 @@ class TidInfo {
     TidInfo();
 
     int tid() const { return _shortTid; };
+    pid_t pid() const { return _pid; }; 
     uint64_t incApiSeqNum() { return ++_apiSeqNum; };
     uint64_t apiSeqNum() const { return _apiSeqNum; };
 
    private:
     int _shortTid;
+    pid_t _pid; 
 
     // monotonically increasing API sequence number for this threa.
     uint64_t _apiSeqNum;
@@ -222,7 +225,8 @@ extern const char* API_COLOR_END;
 #define DB_MEM 2  /* 0x04 - trace memory allocation / deallocation */
 #define DB_COPY 3 /* 0x08 - trace memory copy and peer commands. . */
 #define DB_WARN 4 /* 0x10 - warn about sub-optimal or shady behavior */
-#define DB_MAX_FLAG 5
+#define DB_FB 5   /* 0x20 - trace loading fat binary */
+#define DB_MAX_FLAG 6
 // When adding a new debug flag, also add to the char name table below.
 //
 //
@@ -236,18 +240,19 @@ struct DbName {
 static const DbName dbName[] = {
     {KGRN, "api"},  // not used,
     {KYEL, "sync"}, {KCYN, "mem"}, {KMAG, "copy"}, {KRED, "warn"},
+    {KBLU, "fatbin"},
 };
 
 
 #if COMPILE_HIP_DB
-#define tprintf(trace_level, ...)                                                                  \
-    {                                                                                              \
-        if (HIP_DB & (1 << (trace_level))) {                                                       \
-            char msgStr[1000];                                                                     \
-            snprintf(msgStr, sizeof(msgStr), __VA_ARGS__);                                         \
-            fprintf(stderr, "  %ship-%s tid:%d:%s%s", dbName[trace_level]._color,                  \
-                    dbName[trace_level]._shortName, tls_tidInfo.tid(), msgStr, KNRM);              \
-        }                                                                                          \
+#define tprintf(trace_level, ...)                                                                                     \
+    {                                                                                                                 \
+        if (HIP_DB & (1 << (trace_level))) {                                                                          \
+            char msgStr[1000];                                                                                        \
+            snprintf(msgStr, sizeof(msgStr), __VA_ARGS__);                                                            \
+            fprintf(stderr, "  %ship-%s pid:%d tid:%d:%s%s", dbName[trace_level]._color,                              \
+                    dbName[trace_level]._shortName, tls_tidInfo.pid(), tls_tidInfo.tid(), msgStr, KNRM);              \
+        }                                                                                                             \
     }
 #else
 /* Compile to empty code */
@@ -294,38 +299,40 @@ extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
 // This macro should be called at the beginning of every HIP API.
 // It initializes the hip runtime (exactly once), and
 // generates a trace string that can be output to stderr or to ATP file.
-#define HIP_INIT_API(...)                                                                          \
+#define HIP_INIT_API(cid, ...)                                                                     \
     HIP_INIT()                                                                                     \
-    API_TRACE(0, __VA_ARGS__);
+    API_TRACE(0, __VA_ARGS__);                                                                     \
+    HIP_CB_SPAWNER_OBJECT(cid);
 
 
 // Like above, but will trace with a specified "special" bit.
 // Replace HIP_INIT_API with this call inside HIP APIs that launch work on the GPU:
 // kernel launches, copy commands, memory sets, etc.
-#define HIP_INIT_SPECIAL_API(tbit, ...)                                                            \
+#define HIP_INIT_SPECIAL_API(cid, tbit, ...)                                                       \
     HIP_INIT()                                                                                     \
-    API_TRACE((HIP_TRACE_API & (1 << tbit)), __VA_ARGS__);
+    API_TRACE((HIP_TRACE_API & (1 << tbit)), __VA_ARGS__);                                         \
+    HIP_CB_SPAWNER_OBJECT(cid);
 
 
 // This macro should be called at the end of every HIP API, and only at the end of top-level hip
 // APIS (not internal hip) It has dual function: logs the last error returned for use by
 // hipGetLastError, and also prints the closing message when the debug trace is enabled.
-#define ihipLogStatus(hipStatus)                                                                   \
-    ({                                                                                             \
-        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/     \
-        tls_lastHipError = localHipStatus;                                                         \
-                                                                                                   \
-        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1 << TRACE_ALL)) {                   \
-            auto ticks = getTicks() - hipApiStartTick;                                             \
-            fprintf(stderr, "  %ship-api tid:%d.%lu %-30s ret=%2d (%s)>> +%lu ns%s\n",             \
-                    (localHipStatus == 0) ? API_COLOR : KRED, tls_tidInfo.tid(),                   \
-                    tls_tidInfo.apiSeqNum(), __func__, localHipStatus,                             \
-                    ihipErrorString(localHipStatus), ticks, API_COLOR_END);                        \
-        }                                                                                          \
-        if (HIP_PROFILE_API) {                                                                     \
-            MARKER_END();                                                                          \
-        }                                                                                          \
-        localHipStatus;                                                                            \
+#define ihipLogStatus(hipStatus)                                                                    \
+    ({                                                                                              \
+        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/      \
+        tls_lastHipError = localHipStatus;                                                          \
+                                                                                                    \
+        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1 << TRACE_ALL)) {                    \
+            auto ticks = getTicks() - hipApiStartTick;                                              \
+            fprintf(stderr, "  %ship-api pid:%d tid:%d.%lu %-30s ret=%2d (%s)>> +%lu ns%s\n",       \
+                    (localHipStatus == 0) ? API_COLOR : KRED, tls_tidInfo.pid(), tls_tidInfo.tid(), \
+                    tls_tidInfo.apiSeqNum(), __func__, localHipStatus,                              \
+                    ihipErrorString(localHipStatus), ticks, API_COLOR_END);                         \
+        }                                                                                           \
+        if (HIP_PROFILE_API) {                                                                      \
+            MARKER_END();                                                                           \
+        }                                                                                           \
+        localHipStatus;                                                                             \
     })
 
 
@@ -620,13 +627,10 @@ class ihipStreamCallback_t {
    public:
     ihipStreamCallback_t(hipStream_t stream, hipStreamCallback_t callback, void* userData)
         : _stream(stream), _callback(callback), _userData(userData) {
-        _ready = false;
     };
     hipStream_t _stream;
     hipStreamCallback_t _callback;
     void* _userData;
-    std::mutex _mtx;
-    bool _ready;
 };
 
 

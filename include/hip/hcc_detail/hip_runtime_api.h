@@ -94,7 +94,7 @@ typedef struct ihipModule_t* hipModule_t;
 
 typedef struct ihipModuleSymbol_t* hipFunction_t;
 
-struct hipFuncAttributes {
+typedef struct hipFuncAttributes {
     int binaryVersion;
     int cacheModeCA;
     size_t constSizeBytes;
@@ -105,7 +105,7 @@ struct hipFuncAttributes {
     int preferredShmemCarveout;
     int ptxVersion;
     size_t sharedSizeBytes;
-};
+} hipFuncAttributes;
 
 typedef struct ihipEvent_t* hipEvent_t;
 
@@ -590,8 +590,6 @@ const char* hipGetErrorString(hipError_t hipError);
  *
  *  The following Stream APIs are not (yet) supported in HIP:
  *  - cudaStreamAttachMemAsync
- *  - cudaStreamCreateWithPriority
- *  - cudaStreamGetPriority
  */
 
 
@@ -609,7 +607,7 @@ const char* hipGetErrorString(hipError_t hipError);
  *
  * @return #hipSuccess, #hipErrorInvalidValue
  *
- * @see hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ * @see hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
  */
 hipError_t hipStreamCreate(hipStream_t* stream);
 
@@ -628,10 +626,48 @@ hipError_t hipStreamCreate(hipStream_t* stream);
  * stream.  See #hipStreamDefault, #hipStreamNonBlocking.
  *
  *
- * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ * @see hipStreamCreate, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
  */
 
 hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags);
+
+
+/**
+ * @brief Create an asynchronous stream with the specified priority.
+ *
+ * @param[in, out] stream Pointer to new stream
+ * @param[in ] flags to control stream creation.
+ * @param[in ] priority of the stream. Lower numbers represent higher priorities.
+ * @return #hipSuccess, #hipErrorInvalidValue
+ *
+ * Create a new asynchronous stream with the specified priority.  @p stream returns an opaque handle
+ * that can be used to reference the newly created stream in subsequent hipStream* commands.  The
+ * stream is allocated on the heap and will remain allocated even if the handle goes out-of-scope.
+ * To release the memory used by the stream, applicaiton must call hipStreamDestroy. Flags controls
+ * behavior of the stream.  See #hipStreamDefault, #hipStreamNonBlocking.
+ *
+ *
+ * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ */
+
+hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority);
+
+
+/**
+ * @brief Returns numerical values that correspond to the least and greatest stream priority.
+ *
+ * @param[in, out] leastPriority pointer in which value corresponding to least priority is returned.
+ * @param[in, out] greatestPriority pointer in which value corresponding to greatest priority is returned.
+ *
+ * Returns in *leastPriority and *greatestPriority the numerical values that correspond to the least
+ * and greatest stream priority respectively. Stream priorities follow a convention where lower numbers
+ * imply greater priorities. The range of meaningful stream priorities is given by
+ * [*greatestPriority, *leastPriority]. If the user attempts to create a stream with a priority value
+ * that is outside the the meaningful range as specified by this API, the priority is automatically
+ * clamped to within the valid range.
+ */
+
+hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority);
 
 
 /**
@@ -649,7 +685,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags);
  * The queue may be destroyed while some commands are still inflight, or may wait for all commands
  * queued to the stream before destroying it.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamQuery, hipStreamWaitEvent,
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamQuery, hipStreamWaitEvent,
  * hipStreamSynchronize
  */
 hipError_t hipStreamDestroy(hipStream_t stream);
@@ -667,7 +703,7 @@ hipError_t hipStreamDestroy(hipStream_t stream);
  * host threads are sending work to the stream, the status may change immediately after the function
  * is called.  It is typically used for debug.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamSynchronize,
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamWaitEvent, hipStreamSynchronize,
  * hipStreamDestroy
  */
 hipError_t hipStreamQuery(hipStream_t stream);
@@ -689,7 +725,7 @@ hipError_t hipStreamQuery(hipStream_t stream);
  * This command honors the hipDeviceLaunchBlocking flag, which controls whether the wait is active
  * or blocking.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamWaitEvent, hipStreamDestroy
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamWaitEvent, hipStreamDestroy
  *
  */
 hipError_t hipStreamSynchronize(hipStream_t stream);
@@ -712,7 +748,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  * does not impliciy wait for commands in the default stream to complete, even if the specified
  * stream is created with hipStreamNonBlocking = 0.
  *
- * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamSynchronize, hipStreamDestroy
+ * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamCreateWithPriority, hipStreamSynchronize, hipStreamDestroy
  */
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags);
 
@@ -732,6 +768,23 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
  */
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags);
 
+
+/**
+ * @brief Query the priority of a stream.
+ *
+ * @param[in] stream stream to be queried
+ * @param[in,out] priority Pointer to an unsigned integer in which the stream's priority is returned
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ *
+ * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidResourceHandle
+ *
+ * Query the priority of a stream. The priority is returned in in priority.
+ *
+ * @see hipStreamCreateWithFlags
+ */
+hipError_t hipStreamGetPriority(hipStream_t stream, int* priority);
+
+
 /**
  * Stream CallBack struct
  */
@@ -749,7 +802,7 @@ typedef void (*hipStreamCallback_t)(hipStream_t stream, hipError_t status, void*
  * @return #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorNotSupported
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamQuery, hipStreamSynchronize,
- * hipStreamWaitEvent, hipStreamDestroy
+ * hipStreamWaitEvent, hipStreamDestroy, hipStreamCreateWithPriority
  *
  */
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
@@ -1330,6 +1383,32 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  */
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t sizeBytes,
                              size_t offset __dparm(0), hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
+
+
+/**
+ *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
+ *
+ * @param[in]  symbolName - Symbol on device
+ * @param[out] devPtr - Pointer to a pointer to the memory referred to by the symbol
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
+ *
+ *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
+ * hipMemcpyFromSymbolAsync
+ */
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName);
+
+
+/**
+ *  @brief Copies the size of symbol @p symbolName to @p size
+ *
+ * @param[in]  symbolName - Symbol on device
+ * @param[out] size - Pointer to the size of the symbol
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
+ *
+ *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
+ * hipMemcpyFromSymbolAsync
+ */
+hipError_t hipGetSymbolSize(size_t* size, const void* symbolName);
 
 
 /**
@@ -2281,6 +2360,9 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
                               const char* name);
 
+hipError_t ihipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
+                               const char* name);
+
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that
@@ -2528,6 +2610,24 @@ hipError_t hipLaunchByPtr(const void* func);
 } /* extern "c" */
 #endif
 
+#include <hip/hcc_detail/hip_prof_api.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+/**
+ * Callback/Activity API
+ */
+hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
+hipError_t hipRemoveApiCallback(uint32_t id);
+hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg);
+hipError_t hipRemoveActivityCallback(uint32_t id);
+static inline const char* hipApiName(const uint32_t& id) { return hip_api_name(id); }
+const char* hipKernelNameRef(hipFunction_t f);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #ifdef __cplusplus
 
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
@@ -2619,6 +2719,13 @@ template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array,
                                  const struct hipChannelFormatDesc& desc) {
     return ihipBindTextureToArrayImpl(dim, readMode, array, desc, &tex);
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
+                                               hipArray_const_t array,
+                                               const struct hipChannelFormatDesc* desc) {
+    return ihipBindTextureToArrayImpl(dim, readMode, array, *desc, tex);
 }
 
 // C API

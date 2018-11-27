@@ -28,7 +28,7 @@ THE SOFTWARE.
 
 const int NN = 1 << 21;
 
-__global__ void kernel(hipLaunchParm lp, float* x, float* y, int n) {
+__global__ void kernel(float* x, float* y, int n) {
     int tid = threadIdx.x;
     if (tid < 1) {
         for (int i = 0; i < n; i++) {
@@ -38,7 +38,7 @@ __global__ void kernel(hipLaunchParm lp, float* x, float* y, int n) {
     }
 }
 
-__global__ void nKernel(hipLaunchParm lp, float* y) {
+__global__ void nKernel(float* y) {
     int tid = threadIdx.x;
     y[tid] = y[tid] + 1.0f;
 }
@@ -55,8 +55,8 @@ int main() {
     for (int i = 0; i < num_streams; i++) {
         HIPCHECK(hipStreamCreate(&streams[i]));
         HIPCHECK(hipMalloc(&data[i], NN * sizeof(float)));
-        hipLaunchKernel(HIP_KERNEL_NAME(kernel), dim3(1), dim3(1), 0, streams[i], data[i], xd, N);
-        hipLaunchKernel(HIP_KERNEL_NAME(nKernel), dim3(1), dim3(1), 0, 0, yd);
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(kernel), dim3(1), dim3(1), 0, streams[i], data[i], xd, N);
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(nKernel), dim3(1), dim3(1), 0, 0, yd);
     }
 
     HIPCHECK(hipMemcpy(&x, xd, sizeof(float), hipMemcpyDeviceToHost));

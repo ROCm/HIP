@@ -31,9 +31,24 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // Stream
 //
+#if defined(__HCC__) && (__hcc_minor__ < 3)
+enum queue_priority
+{
+    priority_high = 0,
+    priority_normal = 0,
+    priority_low = 0
+};
+#else
+enum queue_priority
+{
+    priority_high = Kalmar::priority_high,
+    priority_normal = Kalmar::priority_normal,
+    priority_low = Kalmar::priority_low
+};
+#endif
 
 //---
-hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags) {
+hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags, int priority) {
     ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
 
     hipError_t e = hipSuccess;
@@ -53,7 +68,11 @@ hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags) {
                 // Obtain mutex access to the device critical data, release by destructor
                 LockedAccessor_CtxCrit_t ctxCrit(ctx->criticalData());
 
+#if defined(__HCC__) && (__hcc_minor__ < 3)
                 auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
+#else
+                auto istream = new ihipStream_t(ctx, acc.create_view(Kalmar::execute_in_order, Kalmar::queuing_mode_automatic, (Kalmar::queue_priority)priority), flags);
+#endif
 
                 ctxCrit->addStream(istream);
                 *stream = istream;
@@ -71,21 +90,38 @@ hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags) {
 
 //---
 hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags) {
-    HIP_INIT_API(stream, flags);
+    HIP_INIT_API(hipStreamCreateWithFlags, stream, flags);
 
-    return ihipLogStatus(ihipStreamCreate(stream, flags));
+    return ihipLogStatus(ihipStreamCreate(stream, flags, priority_normal));
 }
 
 //---
 hipError_t hipStreamCreate(hipStream_t* stream) {
-    HIP_INIT_API(stream);
+    HIP_INIT_API(hipStreamCreate, stream);
 
-    return ihipLogStatus(ihipStreamCreate(stream, hipStreamDefault));
+    return ihipLogStatus(ihipStreamCreate(stream, hipStreamDefault, priority_normal));
 }
 
+//---
+hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority) {
+    HIP_INIT_API(hipStreamCreateWithPriority, stream, flags, priority);
+
+    // clamp priority to range [priority_high:priority_low]
+    priority = (priority < priority_high ? priority_high : (priority > priority_low ? priority_low : priority));
+    return ihipLogStatus(ihipStreamCreate(stream, flags, priority));
+}
+
+//---
+hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority) {
+    HIP_INIT_API(hipDeviceGetStreamPriorityRange, leastPriority, greatestPriority);
+
+    if (leastPriority != NULL) *leastPriority = priority_low;
+    if (greatestPriority != NULL) *greatestPriority = priority_high;
+    return ihipLogStatus(hipSuccess);
+}
 
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
-    HIP_INIT_SPECIAL_API(TRACE_SYNC, stream, event, flags);
+    HIP_INIT_SPECIAL_API(hipStreamWaitEvent, TRACE_SYNC, stream, event, flags);
 
     hipError_t e = hipSuccess;
 
@@ -116,7 +152,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
 //---
 hipError_t hipStreamQuery(hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(TRACE_QUERY, stream);
+    HIP_INIT_SPECIAL_API(hipStreamQuery, TRACE_QUERY, stream);
 
     // Use default stream if 0 specified:
     if (stream == hipStreamNull) {
@@ -139,7 +175,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
 
 //---
 hipError_t hipStreamSynchronize(hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(TRACE_SYNC, stream);
+    HIP_INIT_SPECIAL_API(hipStreamSynchronize, TRACE_SYNC, stream);
 
     return ihipLogStatus(ihipStreamSynchronize(stream));
 }
@@ -150,7 +186,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
  * @return #hipSuccess, #hipErrorInvalidResourceHandle
  */
 hipError_t hipStreamDestroy(hipStream_t stream) {
-    HIP_INIT_API(stream);
+    HIP_INIT_API(hipStreamDestroy, stream);
 
     hipError_t e = hipSuccess;
 
@@ -178,7 +214,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 
 //---
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
-    HIP_INIT_API(stream, flags);
+    HIP_INIT_API(hipStreamGetFlags, stream, flags);
 
     if (flags == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
@@ -191,24 +227,35 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
 }
 
 
+//--
+hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
+    HIP_INIT_API(hipStreamGetPriority, stream, priority);
+
+    if (priority == NULL) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    } else if (stream == hipStreamNull) {
+        return ihipLogStatus(hipErrorInvalidResourceHandle);
+    } else {
+#if defined(__HCC__) && (__hcc_minor__ < 3)
+        *priority = 0;
+#else
+        LockedAccessor_StreamCrit_t crit(stream->_criticalData);
+        *priority = crit->_av.get_queue_priority();
+#endif
+        return ihipLogStatus(hipSuccess);
+    }
+}
+
+
 //---
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags) {
-    HIP_INIT_API(stream, callback, userData, flags);
+    HIP_INIT_API(hipStreamAddCallback, stream, callback, userData, flags);
     hipError_t e = hipSuccess;
 
     // Create a thread in detached mode to handle callback
     ihipStreamCallback_t* cb = new ihipStreamCallback_t(stream, callback, userData);
     std::thread(ihipStreamCallbackHandler, cb).detach();
-
-    // Wait for thread to be ready
-    cb->_mtx.lock();
-    while (cb->_ready != true) {
-        cb->_mtx.unlock();
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        cb->_mtx.lock();
-    }
-    cb->_mtx.unlock();
 
     return ihipLogStatus(e);
 }

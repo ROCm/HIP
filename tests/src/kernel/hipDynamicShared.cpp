@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include "test_common.h"
 
 template <typename T>
-__global__ void testExternSharedKernel(hipLaunchParm lp, const T* A_d, const T* B_d, T* C_d,
+__global__ void testExternSharedKernel(const T* A_d, const T* B_d, T* C_d,
                                        size_t numElements, size_t groupElements) {
     // declare dynamic shared memory
 #if defined(__HIP_PLATFORM_HCC__)
@@ -114,7 +114,7 @@ void testExternShared(size_t N, size_t groupElements) {
     size_t groupMemBytes = groupElements * sizeof(T);
 
     // launch kernel with dynamic shared memory
-    hipLaunchKernel(HIP_KERNEL_NAME(testExternSharedKernel<T>), dim3(blocks), dim3(threadsPerBlock),
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(testExternSharedKernel<T>), dim3(blocks), dim3(threadsPerBlock),
                     groupMemBytes, 0, A_d, B_d, C_d, N, groupElements);
 
     HIPCHECK(hipDeviceSynchronize());

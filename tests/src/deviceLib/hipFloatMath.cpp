@@ -33,16 +33,18 @@ THE SOFTWARE.
 #define SIZE LEN << 2
 
 
-__global__ void floatMath(hipLaunchParm lp, float* In, float* Out) {
+__global__ void floatMath(float* In, float* Out) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     Out[tid] = __cosf(In[tid]);
     Out[tid] = __exp10f(Out[tid]);
     Out[tid] = __expf(Out[tid]);
+#if defined OCML_BASIC_ROUNDED_OPERATIONS
     Out[tid] = __frsqrt_rn(Out[tid]);
     Out[tid] = __fsqrt_rd(Out[tid]);
     Out[tid] = __fsqrt_rn(Out[tid]);
     Out[tid] = __fsqrt_ru(Out[tid]);
     Out[tid] = __fsqrt_rz(Out[tid]);
+#endif
     Out[tid] = __log10f(Out[tid]);
     Out[tid] = __log2f(Out[tid]);
     Out[tid] = __logf(Out[tid]);
@@ -57,6 +59,6 @@ int main() {
     float *Ind, *Outd;
     hipMalloc((void**)&Ind, SIZE);
     hipMalloc((void**)&Outd, SIZE);
-    hipLaunchKernel(floatMath, dim3(LEN, 1, 1), dim3(1, 1, 1), 0, 0, Ind, Outd);
+    hipLaunchKernelGGL(floatMath, dim3(LEN, 1, 1), dim3(1, 1, 1), 0, 0, Ind, Outd);
     passed();
 }
