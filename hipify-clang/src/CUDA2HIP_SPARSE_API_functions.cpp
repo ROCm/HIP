@@ -239,4 +239,25 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseDgemmi",                         {"hipsparseDgemmi",                         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCgemmi",                         {"hipsparseCgemmi",                         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZgemmi",                         {"hipsparseZgemmi",                         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  // 9. cuSPARSE Extra Function Reference
+  {"cusparseXcsrgeamNnz",                    {"hipsparseXcsrgeamNnz",                    CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseScsrgeam",                       {"hipsparseScsrgeam",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsrgeam",                       {"hipsparseDcsrgeam",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrgeam",                       {"hipsparseCcsrgeam",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsrgeam2_bufferSizeExt",        {"hipsparseScsrgeam2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsrgeam2_bufferSizeExt",        {"hipsparseDcsrgeam2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrgeam2_bufferSizeExt",        {"hipsparseCcsrgeam2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrgeam2_bufferSizeExt",        {"hipsparseZcsrgeam2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseXcsrgemmNnz",                    {"hipsparseXcsrgemmNnz",                    CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseScsrgemm",                       {"hipsparseScsrgemm",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsrgemm",                       {"hipsparseDcsrgemm",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrgemm",                       {"hipsparseCcsrgemm",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsrgemm2_bufferSizeExt",        {"hipsparseScsrgemm2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsrgemm2_bufferSizeExt",        {"hipsparseDcsrgemm2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrgemm2_bufferSizeExt",        {"hipsparseCcsrgemm2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrgemm2_bufferSizeExt",        {"hipsparseZcsrgemm2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 };
