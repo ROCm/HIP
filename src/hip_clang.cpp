@@ -26,33 +26,8 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
+#include "hip_fatbin.h"
 #include "trace_helper.h"
-
-constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
-
-#define CLANG_OFFLOAD_BUNDLER_MAGIC "__CLANG_OFFLOAD_BUNDLE__"
-#define AMDGCN_AMDHSA_TRIPLE "hip-amdgcn-amd-amdhsa"
-
-struct __ClangOffloadBundleDesc {
-  uint64_t offset;
-  uint64_t size;
-  uint64_t tripleSize;
-  const char triple[1];
-};
-
-struct __ClangOffloadBundleHeader {
-  const char magic[sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC) - 1];
-  uint64_t numBundles;
-  __ClangOffloadBundleDesc desc[1];
-};
-
-struct __CudaFatBinaryWrapper {
-  unsigned int                magic;
-  unsigned int                version;
-  __ClangOffloadBundleHeader* binary;
-  void*                       unused;
-};
-
 
 extern "C" std::vector<hipModule_t>*
 __hipRegisterFatBinary(const void* data)
@@ -108,21 +83,13 @@ __hipRegisterFatBinary(const void* data)
 
       std::string image{reinterpret_cast<const char*>(
           reinterpret_cast<uintptr_t>(header) + desc->offset), desc->size};
+      if (HIP_DUMP_CODE_OBJECT)
+        __hipDumpCodeObject(image);
       module->executable = hip_impl::load_executable(image, module->executable, agent);
 
       if (module->executable.handle) {
         modules->at(deviceId) = module;
         tprintf(DB_FB, "Loaded code object for %s\n", name);
-        if (HIP_DUMP_CODE_OBJECT) {
-          char fname[30];
-          static std::atomic<int> index;
-          sprintf(fname, "__hip_dump_code_object%04d.o", index++);
-          tprintf(DB_FB, "Dump code object %s\n", fname);
-          std::ofstream ofs;
-          ofs.open(fname, std::ios::binary);
-          ofs << image;
-          ofs.close();
-        }
       } else {
         fprintf(stderr, "Failed to load code object for %s\n", name);
         abort();
