@@ -260,4 +260,40 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseDcsrgemm2_bufferSizeExt",        {"hipsparseDcsrgemm2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCcsrgemm2_bufferSizeExt",        {"hipsparseCcsrgemm2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrgemm2_bufferSizeExt",        {"hipsparseZcsrgemm2_bufferSizeExt",        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  // 10. cuSPARSE Preconditioners Reference
+  // 10.1. Incomplete Cholesky Factorization : level 0
+  {"cusparseScsric0",                        {"hipsparseScsric0",                        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsric0",                        {"hipsparseDcsric0",                        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsric0",                        {"hipsparseCcsric0",                        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsric0",                        {"hipsparseZcsric0",                        CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsric02_bufferSize",            {"hipsparseScsric02_bufferSize",            CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsric02_bufferSize",            {"hipsparseDcsric02_bufferSize",            CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsric02_bufferSize",            {"hipsparseCcsric02_bufferSize",            CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsric02_bufferSize",            {"hipsparseZcsric02_bufferSize",            CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsric02_analysis",              {"hipsparseScsric02_analysis",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsric02_analysis",              {"hipsparseDcsric02_analysis",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsric02_analysis",              {"hipsparseCcsric02_analysis",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsric02_analysis",              {"hipsparseZcsric02_analysis",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsric02",                       {"hipsparseScsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsric02",                       {"hipsparseDcsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsric02",                       {"hipsparseCcsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsric02",                       {"hipsparseZcsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseXcsric02_zeroPivot",             {"hipsparseXcsric02_zeroPivot",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseSbsric02_analysis",              {"hipsparseSbsric02_analysis",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsric02_analysis",              {"hipsparseDbsric02_analysis",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsric02_analysis",              {"hipsparseCbsric02_analysis",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsric02_analysis",              {"hipsparseZbsric02_analysis",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseSbsric02",                       {"hipsparseSbsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsric02",                       {"hipsparseDbsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsric02",                       {"hipsparseCbsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsric02",                       {"hipsparseZbsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseXbsric02_zeroPivot",             {"hipsparseXbsric02_zeroPivot",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 };
