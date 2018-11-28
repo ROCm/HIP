@@ -334,7 +334,7 @@ foreach $arg (@ARGV)
     $trimarg = $arg;
     $trimarg =~ s/^\s+|\s+$//g;  # Remive whitespace
     my $swallowArg = 0;
-    if ($arg eq '-c') {
+    if ($arg eq '-c' or $arg eq '--genco') {
         $compileOnly = 1;
         $needCXXFLAGS = 1;
         $needLDFLAGS  = 0;
@@ -384,6 +384,10 @@ foreach $arg (@ARGV)
     # hip-clang does not accept --amdgpu-target= options.
     if (($arg =~ /--amdgpu-target=/) and $HIP_PLATFORM eq 'clang' ) {
         $swallowArg = 1;
+    }
+
+    if (($arg =~ /--genco/) and $HIP_PLATFORM eq 'clang' ) {
+        $arg = "--cuda-device-only";
     }
 
     if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
