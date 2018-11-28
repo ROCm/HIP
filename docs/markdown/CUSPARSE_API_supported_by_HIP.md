@@ -312,3 +312,40 @@
 |`cusparseDcsrgemm2_bufferSizeExt`                          |                                                 |
 |`cusparseCcsrgemm2_bufferSizeExt`                          |                                                 |
 |`cusparseZcsrgemm2_bufferSizeExt`                          |                                                 |
+
+## **7. cuSPARSE Preconditioners Reference**
+
+## ***7.1. Incomplete Cholesky Factorization: level 0***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseScsric0`                                          |                                                 |
+|`cusparseDcsric0`                                          |                                                 |
+|`cusparseCcsric0`                                          |                                                 |
+|`cusparseZcsric0`                                          |                                                 |
+|`cusparseScsric02_bufferSize`                              |                                                 |
+|`cusparseDcsric02_bufferSize`                              |                                                 |
+|`cusparseCcsric02_bufferSize`                              |                                                 |
+|`cusparseZcsric02_bufferSize`                              |                                                 |
+|`cusparseScsric02_analysis`                                |                                                 |
+|`cusparseDcsric02_analysis`                                |                                                 |
+|`cusparseCcsric02_analysis`                                |                                                 |
+|`cusparseZcsric02_analysis`                                |                                                 |
+|`cusparseScsric02`                                         |                                                 |
+|`cusparseDcsric02`                                         |                                                 |
+|`cusparseCcsric02`                                         |                                                 |
+|`cusparseZcsric02`                                         |                                                 |
+|`cusparseXcsric02_zeroPivot`                               |                                                 |
+|`cusparseSbsric02_bufferSize`                              |                                                 |
+|`cusparseDbsric02_bufferSize`                              |                                                 |
+|`cusparseCbsric02_bufferSize`                              |                                                 |
+|`cusparseZbsric02_bufferSize`                              |                                                 |
+|`cusparseSbsric02_analysis`                                |                                                 |
+|`cusparseDbsric02_analysis`                                |                                                 |
+|`cusparseCbsric02_analysis`                                |                                                 |
+|`cusparseZbsric02_analysis`                                |                                                 |
+|`cusparseSbsric02`                                         |                                                 |
+|`cusparseDbsric02`                                         |                                                 |
+|`cusparseCbsric02`                                         |                                                 |
+|`cusparseZbsric02`                                         |                                                 |
+|`cusparseXbsric02_zeroPivot`                               |                                                 |
