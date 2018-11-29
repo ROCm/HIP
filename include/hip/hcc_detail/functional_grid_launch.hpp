@@ -102,8 +102,6 @@ inline std::vector<std::uint8_t> make_kernarg(
     static_assert(sizeof...(Formals) == sizeof...(Actuals),
         "The count of formal arguments must match the count of actuals.");
 
-    if (sizeof...(Formals) == 0) return {};
-
     const auto it = function_names().find(
         reinterpret_cast<std::uintptr_t>(kernel));
 
