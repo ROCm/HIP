@@ -347,7 +347,6 @@ size_t parse_args(
     size_t l,
     vector<pair<size_t, size_t>>& size_align) {
     if (f == l) return f;
-    if (!size_align.empty()) return l;
 
     do {
         static constexpr size_t size_sz{5};
@@ -596,6 +595,7 @@ unordered_map<string, vector<pair<size_t, size_t>>>& kernargs() {
         }
     });
 
+    for (auto&& x : r) std::cerr << x.first << std::endl;
     return r;
 }
 
