@@ -409,18 +409,13 @@ void read_kernarg_metadata(
 
             auto fn = tmp.substr(dx, tmp.find_first_of("'\n", dx) - dx);
             dx += fn.size();
-
-            auto dx1 = tmp.find("CodeProps", dx);
             dx = tmp.find("Args:", dx);
 
-            if (dx1 < dx) {
-                dx = dx1;
-                continue;
-            }
             if (dx == string::npos) break;
 
             static constexpr decltype(tmp.size()) args_sz{5};
-            dx = parse_args(tmp, dx + args_sz, dx1, kernargs[fn]);
+            dx = parse_args(
+                tmp, dx + args_sz, tmp.find("CodeProps", dx), kernargs[fn]);
         } while (true);
     }
 }
