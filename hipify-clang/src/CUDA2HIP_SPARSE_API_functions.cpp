@@ -296,4 +296,56 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZbsric02",                       {"hipsparseZbsric02",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseXbsric02_zeroPivot",             {"hipsparseXbsric02_zeroPivot",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  // 10.2. Incomplete LU Factorization: level 0
+  {"cusparseScsrilu0",                       {"hipsparseScsrilu0",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsrilu0",                       {"hipsparseDcsrilu0",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrilu0",                       {"hipsparseCcsrilu0",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrilu0",                       {"hipsparseZcsrilu0",                       CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseCsrilu0Ex",                      {"hipsparseCsrilu0Ex",                      CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsrilu02_numericBoost",         {"hipsparseScsrilu02_numericBoost",         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsrilu02_numericBoost",         {"hipsparseDcsrilu02_numericBoost",         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrilu02_numericBoost",         {"hipsparseCcsrilu02_numericBoost",         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrilu02_numericBoost",         {"hipsparseZcsrilu02_numericBoost",         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsrilu02_bufferSize",           {"hipsparseScsrilu02_bufferSize",           CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseDcsrilu02_bufferSize",           {"hipsparseDcsrilu02_bufferSize",           CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseCcsrilu02_bufferSize",           {"hipsparseCcsrilu02_bufferSize",           CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrilu02_bufferSize",           {"hipsparseZcsrilu02_bufferSize",           CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsrilu02_analysis",             {"hipsparseScsrilu02_analysis",             CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseDcsrilu02_analysis",             {"hipsparseDcsrilu02_analysis",             CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseCcsrilu02_analysis",             {"hipsparseCcsrilu02_analysis",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrilu02_analysis",             {"hipsparseZcsrilu02_analysis",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseScsrilu02",                      {"hipsparseScsrilu02",                      CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseDcsrilu02",                      {"hipsparseDcsrilu02",                      CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseCcsrilu02",                      {"hipsparseCcsrilu02",                      CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrilu02",                      {"hipsparseZcsrilu02",                      CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseXbsric02_zeroPivot",             {"hipsparseXcsrilu02_zeroPivot",            CONV_LIB_FUNC, API_SPARSE}},
+
+  {"cusparseSbsrilu02_numericBoost",         {"hipsparseSbsrilu02_numericBoost",         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrilu02_numericBoost",         {"hipsparseDbsrilu02_numericBoost",         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrilu02_numericBoost",         {"hipsparseCbsrilu02_numericBoost",         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrilu02_numericBoost",         {"hipsparseZbsrilu02_numericBoost",         CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseSbsrilu02_bufferSize",           {"hipsparseSbsrilu02_bufferSize",           CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrilu02_bufferSize",           {"hipsparseDbsrilu02_bufferSize",           CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrilu02_bufferSize",           {"hipsparseCbsrilu02_bufferSize",           CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrilu02_bufferSize",           {"hipsparseZbsrilu02_bufferSize",           CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseSbsrilu02_analysis",             {"hipsparseSbsrilu02_analysis",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrilu02_analysis",             {"hipsparseDbsrilu02_analysis",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrilu02_analysis",             {"hipsparseCbsrilu02_analysis",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrilu02_analysis",             {"hipsparseZbsrilu02_analysis",             CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseSbsrilu02",                      {"hipsparseSbsrilu02",                      CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrilu02",                      {"hipsparseDbsrilu02",                      CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrilu02",                      {"hipsparseCbsrilu02",                      CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrilu02",                      {"hipsparseZbsrilu02",                      CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseXbsrilu02_zeroPivot",            {"hipsparseXbsrilu02_zeroPivot",            CONV_LIB_FUNC, API_SPARSE}},
 };
