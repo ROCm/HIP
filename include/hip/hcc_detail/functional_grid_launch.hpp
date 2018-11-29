@@ -33,7 +33,6 @@ THE SOFTWARE.
 
 #include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <functional>
 #include <iostream>
 #include <mutex>
@@ -57,9 +56,7 @@ template <
     typename... Ts,
     typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
-    const std::tuple<Ts...>&,
-    const std::vector<std::pair<std::size_t, std::size_t>>&,
-    std::vector<std::uint8_t> kernarg) {
+    std::vector<std::uint8_t> kernarg, const std::tuple<Ts...>&) {
     return kernarg;
 }
 
@@ -68,9 +65,7 @@ template <
     typename... Ts,
     typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
-    const std::tuple<Ts...>& formals,
-    const std::vector<std::pair<std::size_t, std::size_t>>& size_align,
-    std::vector<std::uint8_t> kernarg) {
+    std::vector<std::uint8_t> kernarg, const std::tuple<Ts...>& formals) {
     using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
 
     static_assert(
@@ -85,42 +80,24 @@ inline std::vector<std::uint8_t> make_kernarg(
     #endif
 
     kernarg.resize(round_up_to_next_multiple_nonnegative(
-        kernarg.size(), size_align[n].second) +
-        size_align[n].first);
+        kernarg.size(), alignof(T)) + sizeof(T));
 
-    std::memcpy(
-        kernarg.data() + kernarg.size() - size_align[n].first,
-        &std::get<n>(formals),
-        size_align[n].first);
+    new (kernarg.data() + kernarg.size() - sizeof(T)) T{std::get<n>(formals)};
 
-    return make_kernarg<n + 1>(formals, size_align, std::move(kernarg));
+    return make_kernarg<n + 1>(std::move(kernarg), formals);
 }
 
 template <typename... Formals, typename... Actuals>
 inline std::vector<std::uint8_t> make_kernarg(
-    void (*kernel)(Formals...), std::tuple<Actuals...> actuals) {
+    void (*)(Formals...), std::tuple<Actuals...> actuals) {
     static_assert(sizeof...(Formals) == sizeof...(Actuals),
         "The count of formal arguments must match the count of actuals.");
-
-    const auto it = function_names().find(
-        reinterpret_cast<std::uintptr_t>(kernel));
-
-    if (it == function_names().cend()) {
-        throw std::runtime_error{"Undefined __global__ function."};
-    }
-
-    const auto it1 = kernargs().find(it->second);
-
-    if (it1 == kernargs().end()) {
-        throw std::runtime_error{
-            "Missing metadata for __global__ function: " + it->second};
-    }
 
     std::tuple<Formals...> to_formals{std::move(actuals)};
     std::vector<std::uint8_t> kernarg;
     kernarg.reserve(sizeof(to_formals));
 
-    return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
+    return make_kernarg<0>(std::move(kernarg), to_formals);
 }
 
 void hipLaunchKernelGGLImpl(std::uintptr_t function_address, const dim3& numBlocks,
