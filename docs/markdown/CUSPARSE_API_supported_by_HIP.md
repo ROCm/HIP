@@ -312,3 +312,151 @@
 |`cusparseDcsrgemm2_bufferSizeExt`                          |                                                 |
 |`cusparseCcsrgemm2_bufferSizeExt`                          |                                                 |
 |`cusparseZcsrgemm2_bufferSizeExt`                          |                                                 |
+
+## **7. cuSPARSE Preconditioners Reference**
+
+## ***7.1. Incomplete Cholesky Factorization: level 0***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseScsric0`                                          |                                                 |
+|`cusparseDcsric0`                                          |                                                 |
+|`cusparseCcsric0`                                          |                                                 |
+|`cusparseZcsric0`                                          |                                                 |
+|`cusparseScsric02_bufferSize`                              |                                                 |
+|`cusparseDcsric02_bufferSize`                              |                                                 |
+|`cusparseCcsric02_bufferSize`                              |                                                 |
+|`cusparseZcsric02_bufferSize`                              |                                                 |
+|`cusparseScsric02_analysis`                                |                                                 |
+|`cusparseDcsric02_analysis`                                |                                                 |
+|`cusparseCcsric02_analysis`                                |                                                 |
+|`cusparseZcsric02_analysis`                                |                                                 |
+|`cusparseScsric02`                                         |                                                 |
+|`cusparseDcsric02`                                         |                                                 |
+|`cusparseCcsric02`                                         |                                                 |
+|`cusparseZcsric02`                                         |                                                 |
+|`cusparseXcsric02_zeroPivot`                               |                                                 |
+|`cusparseSbsric02_bufferSize`                              |                                                 |
+|`cusparseDbsric02_bufferSize`                              |                                                 |
+|`cusparseCbsric02_bufferSize`                              |                                                 |
+|`cusparseZbsric02_bufferSize`                              |                                                 |
+|`cusparseSbsric02_analysis`                                |                                                 |
+|`cusparseDbsric02_analysis`                                |                                                 |
+|`cusparseCbsric02_analysis`                                |                                                 |
+|`cusparseZbsric02_analysis`                                |                                                 |
+|`cusparseSbsric02`                                         |                                                 |
+|`cusparseDbsric02`                                         |                                                 |
+|`cusparseCbsric02`                                         |                                                 |
+|`cusparseZbsric02`                                         |                                                 |
+|`cusparseXbsric02_zeroPivot`                               |                                                 |
+
+## ***7.2. Incomplete LU Factorization: level 0***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseScsrilu0`                                         |                                                 |
+|`cusparseDcsrilu0`                                         |                                                 |
+|`cusparseCcsrilu0`                                         |                                                 |
+|`cusparseZcsrilu0`                                         |                                                 |
+|`cusparseCsrilu0Ex`                                        |                                                 |
+|`cusparseScsrilu02_numericBoost`                           |                                                 |
+|`cusparseDcsrilu02_numericBoost`                           |                                                 |
+|`cusparseCcsrilu02_numericBoost`                           |                                                 |
+|`cusparseZcsrilu02_numericBoost`                           |                                                 |
+|`cusparseScsrilu02_bufferSize`                             |`hipsparseScsrilu02_bufferSize`                  |
+|`cusparseDcsrilu02_bufferSize`                             |`hipsparseDcsrilu02_bufferSize`                  |
+|`cusparseCcsrilu02_bufferSize`                             |                                                 |
+|`cusparseZcsrilu02_bufferSize`                             |                                                 |
+|`cusparseScsrilu02_analysis`                               |`hipsparseScsrilu02_analysis`                    |
+|`cusparseDcsrilu02_analysis`                               |`hipsparseDcsrilu02_analysis`                    |
+|`cusparseCcsrilu02_analysis`                               |                                                 |
+|`cusparseZcsrilu02_analysis`                               |                                                 |
+|`cusparseScsrilu02`                                        |`hipsparseScsrilu02`                             |
+|`cusparseDcsrilu02`                                        |`hipsparseDcsrilu02`                             |
+|`cusparseCcsrilu02`                                        |                                                 |
+|`cusparseZcsrilu02`                                        |                                                 |
+|`cusparseXbsric02_zeroPivot`                               |`hipsparseXcsrilu02_zeroPivot`                   |
+|`cusparseSbsrilu02_numericBoost`                           |                                                 |
+|`cusparseDbsrilu02_numericBoost`                           |                                                 |
+|`cusparseCbsrilu02_numericBoost`                           |                                                 |
+|`cusparseZbsrilu02_numericBoost`                           |                                                 |
+|`cusparseSbsrilu02_bufferSize`                             |                                                 |
+|`cusparseDbsrilu02_bufferSize`                             |                                                 |
+|`cusparseCbsrilu02_bufferSize`                             |                                                 |
+|`cusparseZbsrilu02_bufferSize`                             |                                                 |
+|`cusparseSbsrilu02_analysis`                               |                                                 |
+|`cusparseDbsrilu02_analysis`                               |                                                 |
+|`cusparseCbsrilu02_analysis`                               |                                                 |
+|`cusparseZbsrilu02_analysis`                               |                                                 |
+|`cusparseSbsrilu02`                                        |                                                 |
+|`cusparseDbsrilu02`                                        |                                                 |
+|`cusparseCbsrilu02`                                        |                                                 |
+|`cusparseZbsrilu02`                                        |                                                 |
+|`cusparseXbsrilu02_zeroPivot`                              |                                                 |
+
+## ***7.3. Tridiagonal Solve***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseSgtsv`                                            |                                                 |
+|`cusparseDgtsv`                                            |                                                 |
+|`cusparseCgtsv`                                            |                                                 |
+|`cusparseZgtsv`                                            |                                                 |
+|`cusparseSgtsv_nopivot`                                    |                                                 |
+|`cusparseDgtsv_nopivot`                                    |                                                 |
+|`cusparseCgtsv_nopivot`                                    |                                                 |
+|`cusparseZgtsv_nopivot`                                    |                                                 |
+|`cusparseSgtsv2_bufferSizeExt`                             |                                                 |
+|`cusparseDgtsv2_bufferSizeExt`                             |                                                 |
+|`cusparseCgtsv2_bufferSizeExt`                             |                                                 |
+|`cusparseZgtsv2_bufferSizeExt`                             |                                                 |
+|`cusparseSgtsv2`                                           |                                                 |
+|`cusparseDgtsv2`                                           |                                                 |
+|`cusparseCgtsv2`                                           |                                                 |
+|`cusparseZgtsv2`                                           |                                                 |
+|`cusparseSgtsv2_nopivot_bufferSizeExt`                     |                                                 |
+|`cusparseDgtsv2_nopivot_bufferSizeExt`                     |                                                 |
+|`cusparseCgtsv2_nopivot_bufferSizeExt`                     |                                                 |
+|`cusparseZgtsv2_nopivot_bufferSizeExt`                     |                                                 |
+|`cusparseSgtsv2_nopivot`                                   |                                                 |
+|`cusparseDgtsv2_nopivot`                                   |                                                 |
+|`cusparseCgtsv2_nopivot`                                   |                                                 |
+|`cusparseZgtsv2_nopivot`                                   |                                                 |
+
+## ***7.4. Batched Tridiagonal Solve***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseSgtsvStridedBatch`                                |                                                 |
+|`cusparseDgtsvStridedBatch`                                |                                                 |
+|`cusparseCgtsvStridedBatch`                                |                                                 |
+|`cusparseZgtsvStridedBatch`                                |                                                 |
+|`cusparseSgtsv2StridedBatch_bufferSizeExt`                 |                                                 |
+|`cusparseDgtsv2StridedBatch_bufferSizeExt`                 |                                                 |
+|`cusparseCgtsv2StridedBatch_bufferSizeExt`                 |                                                 |
+|`cusparseZgtsv2StridedBatch_bufferSizeExt`                 |                                                 |
+|`cusparseSgtsv2StridedBatch`                               |                                                 |
+|`cusparseDgtsv2StridedBatch`                               |                                                 |
+|`cusparseCgtsv2StridedBatch`                               |                                                 |
+|`cusparseZgtsv2StridedBatch`                               |                                                 |
+|`cusparseSgtsvInterleavedBatch_bufferSizeExt`              |                                                 |
+|`cusparseDgtsvInterleavedBatch_bufferSizeExt`              |                                                 |
+|`cusparseCgtsvInterleavedBatch_bufferSizeExt`              |                                                 |
+|`cusparseZgtsvInterleavedBatch_bufferSizeExt`              |                                                 |
+|`cusparseSgtsvInterleavedBatch`                            |                                                 |
+|`cusparseDgtsvInterleavedBatch`                            |                                                 |
+|`cusparseCgtsvInterleavedBatch`                            |                                                 |
+|`cusparseZgtsvInterleavedBatch`                            |                                                 |
+
+## ***7.5. Batched Pentadiagonal Solve***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseSgpsvInterleavedBatch_bufferSizeExt`              |                                                 |
+|`cusparseDgpsvInterleavedBatch_bufferSizeExt`              |                                                 |
+|`cusparseCgpsvInterleavedBatch_bufferSizeExt`              |                                                 |
+|`cusparseZgpsvInterleavedBatch_bufferSizeExt`              |                                                 |
+|`cusparseSgpsvInterleavedBatch`                            |                                                 |
+|`cusparseDgpsvInterleavedBatch`                            |                                                 |
+|`cusparseCgpsvInterleavedBatch`                            |                                                 |
+|`cusparseZgpsvInterleavedBatch`                            |                                                 |
