@@ -349,3 +349,47 @@
 |`cusparseCbsric02`                                         |                                                 |
 |`cusparseZbsric02`                                         |                                                 |
 |`cusparseXbsric02_zeroPivot`                               |                                                 |
+
+## ***7.2. Incomplete LU Factorization: level 0***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseScsrilu0`                                         |                                                 |
+|`cusparseDcsrilu0`                                         |                                                 |
+|`cusparseCcsrilu0`                                         |                                                 |
+|`cusparseZcsrilu0`                                         |                                                 |
+|`cusparseCsrilu0Ex`                                        |                                                 |
+|`cusparseScsrilu02_numericBoost`                           |                                                 |
+|`cusparseDcsrilu02_numericBoost`                           |                                                 |
+|`cusparseCcsrilu02_numericBoost`                           |                                                 |
+|`cusparseZcsrilu02_numericBoost`                           |                                                 |
+|`cusparseScsrilu02_bufferSize`                             |`hipsparseScsrilu02_bufferSize`                  |
+|`cusparseDcsrilu02_bufferSize`                             |`hipsparseDcsrilu02_bufferSize`                  |
+|`cusparseCcsrilu02_bufferSize`                             |                                                 |
+|`cusparseZcsrilu02_bufferSize`                             |                                                 |
+|`cusparseScsrilu02_analysis`                               |`hipsparseScsrilu02_analysis`                    |
+|`cusparseDcsrilu02_analysis`                               |`hipsparseDcsrilu02_analysis`                    |
+|`cusparseCcsrilu02_analysis`                               |                                                 |
+|`cusparseZcsrilu02_analysis`                               |                                                 |
+|`cusparseScsrilu02`                                        |`hipsparseScsrilu02`                             |
+|`cusparseDcsrilu02`                                        |`hipsparseDcsrilu02`                             |
+|`cusparseCcsrilu02`                                        |                                                 |
+|`cusparseZcsrilu02`                                        |                                                 |
+|`cusparseXbsric02_zeroPivot`                               |`hipsparseXcsrilu02_zeroPivot`                   |
+|`cusparseSbsrilu02_numericBoost`                           |                                                 |
+|`cusparseDbsrilu02_numericBoost`                           |                                                 |
+|`cusparseCbsrilu02_numericBoost`                           |                                                 |
+|`cusparseZbsrilu02_numericBoost`                           |                                                 |
+|`cusparseSbsrilu02_bufferSize`                             |                                                 |
+|`cusparseDbsrilu02_bufferSize`                             |                                                 |
+|`cusparseCbsrilu02_bufferSize`                             |                                                 |
+|`cusparseZbsrilu02_bufferSize`                             |                                                 |
+|`cusparseSbsrilu02_analysis`                               |                                                 |
+|`cusparseDbsrilu02_analysis`                               |                                                 |
+|`cusparseCbsrilu02_analysis`                               |                                                 |
+|`cusparseZbsrilu02_analysis`                               |                                                 |
+|`cusparseSbsrilu02`                                        |                                                 |
+|`cusparseDbsrilu02`                                        |                                                 |
+|`cusparseCbsrilu02`                                        |                                                 |
+|`cusparseZbsrilu02`                                        |                                                 |
+|`cusparseXbsrilu02_zeroPivot`                              |                                                 |
