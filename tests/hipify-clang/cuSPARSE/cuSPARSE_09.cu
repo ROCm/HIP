@@ -44,7 +44,7 @@ int main(int argc, char*argv[])
 {
   // CHECK: hipsparseHandle_t cusparseH = NULL;
   cusparseHandle_t cusparseH = NULL;
-  // CHECK: hipblasHandle_t cublasH = NULL;
+  //  CHECK: hipblasHandle_t cublasH = NULL;
   cublasHandle_t cublasH = NULL;
   // CHECK: hipStream_t stream = NULL;
   cudaStream_t stream = NULL;
@@ -113,11 +113,11 @@ int main(int argc, char*argv[])
   assert(cudaSuccess == cudaStat1);
   // CHECK: status = hipsparseCreate(&cusparseH);
   status = cusparseCreate(&cusparseH);
-  //CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
+  // CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
   assert(CUSPARSE_STATUS_SUCCESS == status);
   // CHECK: status = hipsparseSetStream(cusparseH, stream);
   status = cusparseSetStream(cusparseH, stream);
-  //CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
+  // CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
   assert(CUSPARSE_STATUS_SUCCESS == status);
   // CHECK: cublasStat = hipblasCreate(&cublasH);
   cublasStat = cublasCreate(&cublasH);
@@ -198,18 +198,18 @@ int main(int argc, char*argv[])
     n, /* leading dimension of dl0 */
     &h_zero,
     NULL,
-    n,         /* don't cae */
+    n,         /* don't care */
     d_dl,      /* dl is batchSize-by-n */
     batchSize  /* leading dimension of dl */
   );
   // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
   assert(CUBLAS_STATUS_SUCCESS == cublasStat);
   /* convert d to interleaved format
-   *  d = transpose(d0)
-   */
+       *  d = transpose(d0)
+       */
   // CHECK: cublasStat = hipblasSgeam(
-  // CHECK: HIPBLAS_OP_T,
-  // CHECK: HIPBLAS_OP_T,
+  // CHECK: HIPBLAS_OP_T
+  // CHECK: HIPBLAS_OP_T
   cublasStat = cublasSgeam(
     cublasH,
     CUBLAS_OP_T, /* transa */
@@ -232,8 +232,8 @@ int main(int argc, char*argv[])
    *  du = transpose(du0)
    */
   // CHECK: cublasStat = hipblasSgeam(
-  // CHECK: HIPBLAS_OP_T,
-  // CHECK: HIPBLAS_OP_T,
+  // CHECK: HIPBLAS_OP_T
+  // CHECK: HIPBLAS_OP_T
   cublasStat = cublasSgeam(
     cublasH,
     CUBLAS_OP_T, /* transa */
@@ -256,8 +256,8 @@ int main(int argc, char*argv[])
    *  X = transpose(B)
    */
   // CHECK: cublasStat = hipblasSgeam(
-  // CHECK: HIPBLAS_OP_T,
-  // CHECK: HIPBLAS_OP_T,
+  // CHECK: HIPBLAS_OP_T
+  // CHECK: HIPBLAS_OP_T
   cublasStat = cublasSgeam(
     cublasH,
     CUBLAS_OP_T, /* transa */
@@ -300,7 +300,7 @@ int main(int argc, char*argv[])
   /* step 5: solve Aj*xj = bj */
   // NOTE: CUDA 10.0
   // TODO: status = hipsparseSgtsvInterleavedBatch(
-   status = cusparseSgtsvInterleavedBatch(
+  status = cusparseSgtsvInterleavedBatch(
     cusparseH,
     algo,
     n,
@@ -320,8 +320,8 @@ int main(int argc, char*argv[])
   /* step 6: convert X back to aggregate format  */
       /* B = transpose(X) */
   // CHECK: cublasStat = hipblasSgeam(
-  // CHECK: HIPBLAS_OP_T,
-  // CHECK: HIPBLAS_OP_T,
+  // CHECK: HIPBLAS_OP_T
+  // CHECK: HIPBLAS_OP_T
   cublasStat = cublasSgeam(
     cublasH,
     CUBLAS_OP_T, /* transa */
@@ -349,6 +349,7 @@ int main(int argc, char*argv[])
   assert(cudaSuccess == cudaStat1);
   // CHECK: hipDeviceSynchronize();
   cudaDeviceSynchronize();
+
   printf("==== x1 = inv(A1)*b1 \n");
   for (int j = 0; j < n; j++) {
     printf("x1[%d] = %f\n", j, X[j]);

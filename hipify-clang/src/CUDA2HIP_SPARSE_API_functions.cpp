@@ -554,7 +554,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseXcsrsort_bufferSizeExt",              {"hipsparseXcsrsort_bufferSizeExt",              CONV_LIB_FUNC, API_SPARSE}},
   {"cusparseXcsrsort",                            {"hipsparseXcsrsort",                            CONV_LIB_FUNC, API_SPARSE}},
 
-  {"cusparseScusparseXcscsort_bufferSizeExtnnz",  {"hipsparseXcscsort_bufferSizeExt",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseXcscsort_bufferSizeExt",              {"hipsparseXcscsort_bufferSizeExt",              CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseXcscsort",                            {"hipsparseXcscsort",                            CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseCreateCsru2csrInfo",                  {"hipsparseCreateCsru2csrInfo",                  CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},

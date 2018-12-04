@@ -576,7 +576,7 @@
 |`cusparseXcoosortByColumn`                                 |`hipsparseXcoosortByColumn`                      |
 |`cusparseXcsrsort_bufferSizeExt`                           |`hipsparseXcsrsort_bufferSizeExt`                |
 |`cusparseXcsrsort`                                         |`hipsparseXcsrsort`                              |
-|`cusparseScusparseXcscsort_bufferSizeExtnnz`               |                                                 |
+|`cusparseXcscsort_bufferSizeExt`                           |                                                 |
 |`cusparseXcscsort`                                         |                                                 |
 |`cusparseCreateCsru2csrInfo`                               |                                                 |
 |`cusparseDestroyCsru2csrInfo`                              |                                                 |
