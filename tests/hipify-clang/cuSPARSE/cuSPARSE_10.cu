@@ -16,9 +16,11 @@
  */
 void residaul_eval(
   int n,
+  const float *ds,
   const float *dl,
   const float *d,
   const float *du,
+  const float *dw,
   const float *b,
   const float *x,
   float *r_nrminf_ptr)
@@ -26,12 +28,18 @@ void residaul_eval(
   float r_nrminf = 0;
   for (int i = 0; i < n; i++) {
     float dot = 0;
+    if (i > 1) {
+      dot += ds[i] * x[i - 2];
+    }
     if (i > 0) {
       dot += dl[i] * x[i - 1];
     }
     dot += d[i] * x[i];
     if (i < (n - 1)) {
       dot += du[i] * x[i + 1];
+    }
+    if (i < (n - 2)) {
+      dot += dw[i] * x[i + 2];
     }
     float ri = b[i] - dot;
     r_nrminf = (r_nrminf > fabs(ri)) ? r_nrminf : fabs(ri);
@@ -55,56 +63,59 @@ int main(int argc, char*argv[])
   // CHECK: hipError_t cudaStat1 = hipSuccess;
   cudaError_t cudaStat1 = cudaSuccess;
 
-  const int n = 3;
+  const int n = 4;
   const int batchSize = 2;
+
   /*
-   *      |    1     6     0  |       | 1 |       | -0.603960 |
-   *  A1 =|    4     2     7  |, b1 = | 2 |, x1 = |  0.267327 |
-   *      |    0     5     3  |       | 3 |       |  0.554455 |
+   *      |  1    8   13   0  |       | 1 |       | -0.0592 |
+   *  A1 =|  5    2    9  14  |, b1 = | 2 |, x1 = |  0.3428 |
+   *      | 11    6    3  10  |       | 3 |       | -0.1295 |
+   *      |  0   12    7   4  |       | 4 |       |  0.1982 |
    *
-   *      |    8    13     0  |       | 4 |       | -0.063291 |
-   *  A2 =|   11     9    14  |, b2 = | 5 |, x2 = |  0.346641 |
-   *      |    0    12    10  |       | 6 |       |  0.184031 |
+   *      | 15   22   27   0  |       | 5 |       | -0.0012 |
+   *  A2 =| 19   16   23  28  |, b2 = | 6 |, x2 = |  0.2792 |
+   *      | 25   20   17  24  |       | 7 |       | -0.0416 |
+   *      |  0   26   21  18  |       | 8 |       |  0.0898 |
    */
 
    /*
-    * A = (dl, d, du), B and X are in aggregate format
+    * A = (ds, dl, d, du, dw), B and X are in aggregate format
     */
-  const float dl[n * batchSize] = { 0, 4, 5,  0, 11, 12 };
-  const float  d[n * batchSize] = { 1, 2, 3,  8,  9, 10 };
-  const float du[n * batchSize] = { 6, 7, 0, 13, 14,  0 };
-  const float  B[n * batchSize] = { 1, 2, 3,  4,  5,  6 };
+  const float ds[n * batchSize] = { 0, 0, 11, 12,  0,  0, 25, 26 };
+  const float dl[n * batchSize] = { 0, 5,  6,  7,  0, 19, 20, 21 };
+  const float  d[n * batchSize] = { 1, 2,  3,  4, 15, 16, 17, 18 };
+  const float du[n * batchSize] = { 8, 9, 10,  0, 22, 23, 24,  0 };
+  const float dw[n * batchSize] = { 13,14,  0,  0, 27, 28,  0,  0 };
+  const float  B[n * batchSize] = { 1, 2,  3,  4,  5,  6,  7,  8 };
   float X[n * batchSize]; /* Xj = Aj \ Bj */
 
 /* device memory
- * (d_dl0, d_d0, d_du0) is aggregate format
- * (d_dl, d_d, d_du) is interleaved format
+ * (d_ds0, d_dl0, d_d0, d_du0, d_dw0) is aggregate format
+ * (d_ds, d_dl, d_d, d_du, d_dw) is interleaved format
  */
+  float *d_ds0 = NULL;
   float *d_dl0 = NULL;
   float *d_d0 = NULL;
   float *d_du0 = NULL;
+  float *d_dw0 = NULL;
+  float *d_ds = NULL;
   float *d_dl = NULL;
   float *d_d = NULL;
   float *d_du = NULL;
+  float *d_dw = NULL;
   float *d_B = NULL;
   float *d_X = NULL;
 
   size_t lworkInBytes = 0;
   char *d_work = NULL;
 
-  /*
-   * algo = 0: cuThomas (unstable)
-   * algo = 1: LU with pivoting (stable)
-   * algo = 2: QR (stable)
-   */
-  const int algo = 2;
-
   const float h_one = 1;
   const float h_zero = 0;
 
-  printf("example of gtsv (interleaved format) \n");
-  printf("choose algo = 0,1,2 to select different algorithms \n");
-  printf("n = %d, batchSize = %d, algo = %d \n", n, batchSize, algo);
+  int algo = 0; /* QR factorization */
+
+  printf("example of gpsv (interleaved format) \n");
+  printf("n = %d, batchSize = %d\n", n, batchSize);
 
   /* step 1: create cusparse/cublas handle, bind a stream */
   // CHECK: cudaStat1 = hipStreamCreateWithFlags(&stream, hipStreamNonBlocking);
@@ -113,22 +124,25 @@ int main(int argc, char*argv[])
   assert(cudaSuccess == cudaStat1);
   // CHECK: status = hipsparseCreate(&cusparseH);
   status = cusparseCreate(&cusparseH);
-  //CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
+  // CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
   assert(CUSPARSE_STATUS_SUCCESS == status);
   // CHECK: status = hipsparseSetStream(cusparseH, stream);
   status = cusparseSetStream(cusparseH, stream);
-  //CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
+  // CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
   assert(CUSPARSE_STATUS_SUCCESS == status);
   // CHECK: cublasStat = hipblasCreate(&cublasH);
-  cublasStat = cublasCreate(&cublasH);
+  cublasStat = cublasCreate(cublasH);
   // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
   assert(CUBLAS_STATUS_SUCCESS == cublasStat);
   // CHECK: cublasStat = hipblasSetStream(cublasH, stream);
   cublasStat = cublasSetStream(cublasH, stream);
   // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
   assert(CUBLAS_STATUS_SUCCESS == cublasStat);
-
   /* step 2: allocate device memory */
+  // CHECK: cudaStat1 = hipMalloc((void**)&d_ds0, sizeof(float)*n*batchSize);
+  cudaStat1 = cudaMalloc((void**)&d_ds0, sizeof(float)*n*batchSize);
+  // CHECK: assert(hipSuccess == cudaStat1);
+  assert(cudaSuccess == cudaStat1);
   // CHECK: cudaStat1 = hipMalloc((void**)&d_dl0, sizeof(float)*n*batchSize);
   cudaStat1 = cudaMalloc((void**)&d_dl0, sizeof(float)*n*batchSize);
   // CHECK: assert(hipSuccess == cudaStat1);
@@ -139,6 +153,14 @@ int main(int argc, char*argv[])
   assert(cudaSuccess == cudaStat1);
   // CHECK: cudaStat1 = hipMalloc((void**)&d_du0, sizeof(float)*n*batchSize);
   cudaStat1 = cudaMalloc((void**)&d_du0, sizeof(float)*n*batchSize);
+  // CHECK: assert(hipSuccess == cudaStat1);
+  assert(cudaSuccess == cudaStat1);
+  // CHECK: cudaStat1 = hipMalloc((void**)&d_dw0, sizeof(float)*n*batchSize);
+  cudaStat1 = cudaMalloc((void**)&d_dw0, sizeof(float)*n*batchSize);
+  // CHECK: assert(hipSuccess == cudaStat1);
+  assert(cudaSuccess == cudaStat1);
+  // CHECK: cudaStat1 = hipMalloc((void**)&d_ds, sizeof(float)*n*batchSize);
+  cudaStat1 = cudaMalloc((void**)&d_ds, sizeof(float)*n*batchSize);
   // CHECK: assert(hipSuccess == cudaStat1);
   assert(cudaSuccess == cudaStat1);
   // CHECK: cudaStat1 = hipMalloc((void**)&d_dl, sizeof(float)*n*batchSize);
@@ -153,6 +175,10 @@ int main(int argc, char*argv[])
   cudaStat1 = cudaMalloc((void**)&d_du, sizeof(float)*n*batchSize);
   // CHECK: assert(hipSuccess == cudaStat1);
   assert(cudaSuccess == cudaStat1);
+  // CHECK: cudaStat1 = hipMalloc((void**)&d_dw, sizeof(float)*n*batchSize);
+  cudaStat1 = cudaMalloc((void**)&d_dw, sizeof(float)*n*batchSize);
+  // CHECK: assert(hipSuccess == cudaStat1);
+  assert(cudaSuccess == cudaStat1);
   // CHECK: cudaStat1 = hipMalloc((void**)&d_B, sizeof(float)*n*batchSize);
   cudaStat1 = cudaMalloc((void**)&d_B, sizeof(float)*n*batchSize);
   // CHECK: assert(hipSuccess == cudaStat1);
@@ -161,8 +187,11 @@ int main(int argc, char*argv[])
   cudaStat1 = cudaMalloc((void**)&d_X, sizeof(float)*n*batchSize);
   // CHECK: assert(hipSuccess == cudaStat1);
   assert(cudaSuccess == cudaStat1);
-
   /* step 3: prepare data in device, interleaved format */
+  // CHECK: cudaStat1 = hipMemcpy(d_ds0, ds, sizeof(float)*n*batchSize, hipMemcpyHostToDevice);
+  cudaStat1 = cudaMemcpy(d_ds0, ds, sizeof(float)*n*batchSize, cudaMemcpyHostToDevice);
+  // CHECK: assert(hipSuccess == cudaStat1);
+  assert(cudaSuccess == cudaStat1);
   // CHECK: cudaStat1 = hipMemcpy(d_dl0, dl, sizeof(float)*n*batchSize, hipMemcpyHostToDevice);
   cudaStat1 = cudaMemcpy(d_dl0, dl, sizeof(float)*n*batchSize, cudaMemcpyHostToDevice);
   // CHECK: assert(hipSuccess == cudaStat1);
@@ -175,15 +204,40 @@ int main(int argc, char*argv[])
   cudaStat1 = cudaMemcpy(d_du0, du, sizeof(float)*n*batchSize, cudaMemcpyHostToDevice);
   // CHECK: assert(hipSuccess == cudaStat1);
   assert(cudaSuccess == cudaStat1);
+  // CHECK: cudaStat1 = hipMemcpy(d_dw0, dw, sizeof(float)*n*batchSize, hipMemcpyHostToDevice);
+  cudaStat1 = cudaMemcpy(d_dw0, dw, sizeof(float)*n*batchSize, cudaMemcpyHostToDevice);
+  // CHECK: assert(hipSuccess == cudaStat1);
+  assert(cudaSuccess == cudaStat1);
   // CHECK: cudaStat1 = hipMemcpy(d_B, B, sizeof(float)*n*batchSize, hipMemcpyHostToDevice);
   cudaStat1 = cudaMemcpy(d_B, B, sizeof(float)*n*batchSize, cudaMemcpyHostToDevice);
   // CHECK: assert(hipSuccess == cudaStat1);
   assert(cudaSuccess == cudaStat1);
   // CHECK: hipDeviceSynchronize();
   cudaDeviceSynchronize();
+  /* convert ds to interleaved format
+   *  ds = transpose(ds0) */
+  // CHECK: cublasStat = hipblasSgeam(
+  // CHECK: HIPBLAS_OP_T,
+  // CHECK: HIPBLAS_OP_T,
+  cublasStat = cublasSgeam(
+    cublasH,
+    CUBLAS_OP_T, /* transa */
+    CUBLAS_OP_T, /* transb, don't care */
+    batchSize, /* number of rows of ds */
+    n,         /* number of columns of ds */
+    &h_one,
+    d_ds0,  /* ds0 is n-by-batchSize */
+    n, /* leading dimension of ds0 */
+    &h_zero,
+    NULL,
+    n,         /* don't cae */
+    d_ds,      /* ds is batchSize-by-n */
+    batchSize);  /* leading dimension of ds */
+  // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
+  assert(CUBLAS_STATUS_SUCCESS == cublasStat);
   /* convert dl to interleaved format
-   *  dl = transpose(dl0)
-   */
+     *  dl = transpose(dl0)
+     */
   // CHECK: cublasStat = hipblasSgeam(
   // CHECK: HIPBLAS_OP_T,
   // CHECK: HIPBLAS_OP_T,
@@ -204,6 +258,7 @@ int main(int argc, char*argv[])
   );
   // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
   assert(CUBLAS_STATUS_SUCCESS == cublasStat);
+
   /* convert d to interleaved format
    *  d = transpose(d0)
    */
@@ -229,8 +284,8 @@ int main(int argc, char*argv[])
   assert(CUBLAS_STATUS_SUCCESS == cublasStat);
 
   /* convert du to interleaved format
-   *  du = transpose(du0)
-   */
+    *  du = transpose(du0)
+    */
   // CHECK: cublasStat = hipblasSgeam(
   // CHECK: HIPBLAS_OP_T,
   // CHECK: HIPBLAS_OP_T,
@@ -248,6 +303,29 @@ int main(int argc, char*argv[])
     n,         /* don't cae */
     d_du,      /* du is batchSize-by-n */
     batchSize  /* leading dimension of du */
+  );
+  // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
+  assert(CUBLAS_STATUS_SUCCESS == cublasStat);
+  /* convert dw to interleaved format
+    *  dw = transpose(dw0)
+    */
+  // CHECK: cublasStat = hipblasSgeam(
+  // CHECK: HIPBLAS_OP_T,
+  // CHECK: HIPBLAS_OP_T,
+  cublasStat = cublasSgeam(
+    cublasH,
+    CUBLAS_OP_T, /* transa */
+    CUBLAS_OP_T, /* transb, don't care */
+    batchSize, /* number of rows of dw */
+    n,         /* number of columns of dw */
+    &h_one,
+    d_dw0, /* dw0 is n-by-batchSize */
+    n, /* leading dimension of dw0 */
+    &h_zero,
+    NULL,
+    n,         /* don't cae */
+    d_dw,      /* dw is batchSize-by-n */
+    batchSize  /* leading dimension of dw */
   );
   // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
   assert(CUBLAS_STATUS_SUCCESS == cublasStat);
@@ -275,16 +353,19 @@ int main(int argc, char*argv[])
   );
   // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
   assert(CUBLAS_STATUS_SUCCESS == cublasStat);
+
   /* step 4: prepare workspace */
   // NOTE: CUDA 10.0
-  // TODO: status = hipsparseSgtsvInterleavedBatch_bufferSizeExt(
-  status = cusparseSgtsvInterleavedBatch_bufferSizeExt(
+  // TODO: status = hipsparseSgpsvInterleavedBatch_bufferSizeExt(
+  status = cusparseSgpsvInterleavedBatch_bufferSizeExt(
     cusparseH,
     algo,
     n,
+    d_ds,
     d_dl,
     d_d,
     d_du,
+    d_dw,
     d_X,
     batchSize,
     &lworkInBytes);
@@ -296,17 +377,18 @@ int main(int argc, char*argv[])
   cudaStat1 = cudaMalloc((void**)&d_work, lworkInBytes);
   // CHECK: assert(hipSuccess == cudaStat1);
   assert(cudaSuccess == cudaStat1);
-
   /* step 5: solve Aj*xj = bj */
   // NOTE: CUDA 10.0
-  // TODO: status = hipsparseSgtsvInterleavedBatch(
-   status = cusparseSgtsvInterleavedBatch(
+  // TODO: status = hipsparseSgpsvInterleavedBatch(
+  status = cusparseSgpsvInterleavedBatch(
     cusparseH,
     algo,
     n,
+    d_ds,
     d_dl,
     d_d,
     d_du,
+    d_dw,
     d_X,
     batchSize,
     d_work);
@@ -349,6 +431,7 @@ int main(int argc, char*argv[])
   assert(cudaSuccess == cudaStat1);
   // CHECK: hipDeviceSynchronize();
   cudaDeviceSynchronize();
+
   printf("==== x1 = inv(A1)*b1 \n");
   for (int j = 0; j < n; j++) {
     printf("x1[%d] = %f\n", j, X[j]);
@@ -357,15 +440,16 @@ int main(int argc, char*argv[])
   float r1_nrminf;
   residaul_eval(
     n,
+    ds,
     dl,
     d,
     du,
+    dw,
     B,
     X,
     &r1_nrminf
   );
   printf("|b1 - A1*x1| = %E\n", r1_nrminf);
-
   printf("\n==== x2 = inv(A2)*b2 \n");
   for (int j = 0; j < n; j++) {
     printf("x2[%d] = %f\n", j, X[n + j]);
@@ -374,9 +458,11 @@ int main(int argc, char*argv[])
   float r2_nrminf;
   residaul_eval(
     n,
+    ds + n,
     dl + n,
     d + n,
     du + n,
+    dw + n,
     B + n,
     X + n,
     &r2_nrminf
@@ -384,18 +470,26 @@ int main(int argc, char*argv[])
   printf("|b2 - A2*x2| = %E\n", r2_nrminf);
 
   /* free resources */
+  // CHECK: if (d_ds0) hipFree(d_ds0);
+  if (d_ds0) cudaFree(d_ds0);
   // CHECK: if (d_dl0) hipFree(d_dl0);
   if (d_dl0) cudaFree(d_dl0);
   // CHECK: if (d_d0) hipFree(d_d0);
   if (d_d0) cudaFree(d_d0);
   // CHECK: if (d_du0) hipFree(d_du0);
   if (d_du0) cudaFree(d_du0);
+  // CHECK: if (d_dw0) hipFree(d_dw0);
+  if (d_dw0) cudaFree(d_dw0);
+  // CHECK: if (d_ds) hipFree(d_ds);
+  if (d_ds) cudaFree(d_ds);
   // CHECK: if (d_dl) hipFree(d_dl);
   if (d_dl) cudaFree(d_dl);
   // CHECK: if (d_d) hipFree(d_d);
   if (d_d) cudaFree(d_d);
   // CHECK: if (d_du) hipFree(d_du);
   if (d_du) cudaFree(d_du);
+  // CHECK: if (d_dw) hipFree(d_dw);
+  if (d_dw) cudaFree(d_dw);
   // CHECK: if (d_B) hipFree(d_B);
   if (d_B) cudaFree(d_B);
   // CHECK: if (d_X) hipFree(d_X);
