@@ -167,8 +167,6 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
     }
 
     // Cap the maximum amount of testing, in case of hangs
-    // Excluding hipVectorTypes test from automation; due to regression from HCC commit 2367133
-    // Excluding hipFloatMath test from automation; due to regression from ROCDL commit 2fc04e1
     timeout(time: 1, unit: 'HOURS')
     {
       stage("${platform} unit testing")
@@ -178,7 +176,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
             cd ${build_dir_rel}
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
-            ctest -E "(hipVectorTypes.tst|hipVectorTypesDevice.tst|hipFloatMath.tst)"
+            ctest
           """
         // If unit tests output a junit or xunit file in the future, jenkins can parse that file
         // to display test results on the dashboard
@@ -303,6 +301,51 @@ parallel rocm_1_9:
   {
     String hcc_ver = 'rocm-1.9.x'
     String from_image = 'ci_test_nodes/rocm-1.9.x/ubuntu-16.04:latest'
+    String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
+
+    // Checkout source code, dependencies and version files
+    String source_hip_rel = checkout_and_version( hcc_ver )
+
+    // Create/reuse a docker image that represents the hip build environment
+    def hip_build_image = docker_build_image( hcc_ver, 'hip', '', source_hip_rel, from_image )
+
+    // Print system information for the log
+    hip_build_image.inside( inside_args )
+    {
+      sh  """#!/usr/bin/env bash
+          set -x
+          /opt/rocm/bin/rocm_agent_enumerator -t ALL
+          /opt/rocm/bin/hcc --version
+        """
+    }
+
+    // Conctruct a binary directory path based on build config
+    String build_hip_rel = build_directory_rel( build_config );
+
+    // Build hip inside of the build environment
+    docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
+
+    // Clean docker build image
+    docker_clean_images( 'hip', docker_build_image_name( ) )
+
+    // After a successful build, upload a docker image of the results
+    /*
+    String hip_image_name = docker_upload_artifactory( hcc_ver, job_name, from_image, source_hip_rel, build_hip_rel )
+    if( params.push_image_to_docker_hub )
+    {
+      docker_upload_dockerhub( job_name, hip_image_name, 'rocm' )
+      docker_clean_images( 'rocm', hip_image_name )
+    }
+    docker_clean_images( job_name, hip_image_name )
+    */
+  }
+},
+rocm_2_0:
+{
+  node('hip-rocm')
+  {
+    String hcc_ver = 'rocm-2.0.x'
+    String from_image = 'ci_test_nodes/rocm-2.0.x/ubuntu-16.04:latest'
     String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
 
     // Checkout source code, dependencies and version files

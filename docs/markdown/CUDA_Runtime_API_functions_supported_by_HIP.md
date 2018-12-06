@@ -11,7 +11,7 @@
 | `cudaDeviceGetLimit`                                      | `hipDeviceGetLimit`           |
 | `cudaDeviceGetPCIBusId`                                   | `hipDeviceGetPCIBusId`        |
 | `cudaDeviceGetSharedMemConfig`                            | `hipDeviceGetSharedMemConfig` |
-| `cudaDeviceGetStreamPriorityRange`                        |                               |
+| `cudaDeviceGetStreamPriorityRange`                        | `hipDeviceGetStreamPriorityRange` |
 | `cudaDeviceReset`                                         | `hipDeviceReset`              |
 | `cudaDeviceSetCacheConfig`                                | `hipDeviceSetCacheConfig`     |
 | `cudaDeviceSetLimit`                                      | `hipDeviceSetLimit`           |
@@ -19,7 +19,7 @@
 | `cudaDeviceSynchronize`                                   | `hipDeviceSynchronize`        |
 | `cudaGetDevice`                                           | `hipGetDevice`                |
 | `cudaGetDeviceCount`                                      | `hipGetDeviceCount`           |
-| `cudaGetDeviceFlags`                                      |                               |
+| `cudaGetDeviceFlags`                                      | `hipCtxGetFlags`              |
 | `cudaGetDeviceProperties`                                 | `hipGetDeviceProperties`      |
 | `cudaIpcCloseMemHandle`                                   | `hipIpcCloseMemHandle`        |
 | `cudaIpcGetEventHandle`                                   | `hipIpcGetEventHandle`        |
@@ -56,12 +56,15 @@
 |-----------------------------------------------------------|-------------------------------|
 | `cudaStreamAddCallback`                                   | `hipStreamAddCallback`        |
 | `cudaStreamAttachMemAsync`                                |                               |
+| `cudaStreamBeginCapture`                                  |                               |
+| `cudaStreamEndCapture`                                    |                               |
+| `cudaStreamIsCapturing`                                   |                               |
 | `cudaStreamCreate`                                        | `hipStreamCreate`             |
 | `cudaStreamCreateWithFlags`                               | `hipStreamCreateWithFlags`    |
-| `cudaStreamCreateWithPriority`                            |                               |
+| `cudaStreamCreateWithPriority`                            | `hipStreamCreateWithPriority` |
 | `cudaStreamDestroy`                                       | `hipStreamDestroy`            |
 | `cudaStreamGetFlags`                                      | `hipStreamGetFlags`           |
-| `cudaStreamGetPriority`                                   |                               |
+| `cudaStreamGetPriority`                                   | `hipStreamGetPriority`        |
 | `cudaStreamQuery`                                         | `hipStreamQuery`              |
 | `cudaStreamSynchronize`                                   | `hipStreamSynchronize`        |
 | `cudaStreamWaitEvent`                                     | `hipStreamWaitEvent`          |
@@ -82,7 +85,14 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
-
+| `cudaSignalExternalSemaphoresAsync`                       |                               |
+| `cudaWaitExternalSemaphoresAsync`                         |                               |
+| `cudaImportExternalMemory`                                |                               |
+| `cudaExternalMemoryGetMappedBuffer`                       |                               |
+| `cudaExternalMemoryGetMappedMipmappedArray`               |                               |
+| `cudaDestroyExternalMemory`                               |                               |
+| `cudaImportExternalSemaphore`                             |                               |
+| `cudaDestroyExternalSemaphore`                            |                               |
 
 ## **7. Execution Control**
 
@@ -122,8 +132,8 @@
 | `cudaFreeHost`                                            | `hipHostFree`                 |
 | `cudaFreeMipmappedArray`                                  |                               |
 | `cudaGetMipmappedArrayLevel`                              |                               |
-| `cudaGetSymbolAddress`                                    |                               |
-| `cudaGetSymbolSize`                                       |                               |
+| `cudaGetSymbolAddress`                                    | `hipGetSymbolAddress`         |
+| `cudaGetSymbolSize`                                       | `hipGetSymbolSize`            |
 | `cudaHostAlloc`                                           | `hipHostMalloc`               |
 | `cudaHostGetDevicePointer`                                | `hipHostGetDevicePointer`     |
 | `cudaHostGetFlags`                                        | `hipHostGetFlags`             |
@@ -373,8 +383,8 @@
 | `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`                         |
 | `cudaFuncGetAttributes`                                   |                                                |
 | `cudaFuncSetCacheConfig`                                  |                                                |
-| `cudaGetSymbolAddress`                                    |                                                |
-| `cudaGetSymbolSize`                                       |                                                |
+| `cudaGetSymbolAddress`                                    | `hipGetSymbolAddress`                          |
+| `cudaGetSymbolSize`                                       | `hipGetSymbolSize`                             |
 | `cudaGetTextureAlignmentOffset`                           |                                                |
 | `cudaLaunch`                                              |                                                |
 | `cudaLaunchKernel`                                        |                                                |

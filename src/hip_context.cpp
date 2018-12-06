@@ -40,7 +40,7 @@ void ihipCtxStackUpdate() {
 }
 
 hipError_t hipInit(unsigned int flags) {
-    HIP_INIT_API(flags);
+    HIP_INIT_API(hipInit, flags);
 
     hipError_t e = hipSuccess;
 
@@ -53,7 +53,7 @@ hipError_t hipInit(unsigned int flags) {
 }
 
 hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device) {
-    HIP_INIT_API(ctx, flags, device);  // FIXME - review if we want to init
+    HIP_INIT_API(hipCtxCreate, ctx, flags, device);  // FIXME - review if we want to init
     hipError_t e = hipSuccess;
     auto deviceHandle = ihipGetDevice(device);
     {
@@ -71,7 +71,7 @@ hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device) {
 }
 
 hipError_t hipDeviceGet(hipDevice_t* device, int deviceId) {
-    HIP_INIT_API(device, deviceId);  // FIXME - review if we want to init
+    HIP_INIT_API(hipDeviceGet, device, deviceId);  // FIXME - review if we want to init
 
     auto deviceHandle = ihipGetDevice(deviceId);
 
@@ -86,7 +86,7 @@ hipError_t hipDeviceGet(hipDevice_t* device, int deviceId) {
 };
 
 hipError_t hipDriverGetVersion(int* driverVersion) {
-    HIP_INIT_API(driverVersion);
+    HIP_INIT_API(hipDriverGetVersion, driverVersion);
     hipError_t e = hipSuccess;
     if (driverVersion) {
         *driverVersion = 4;
@@ -98,7 +98,7 @@ hipError_t hipDriverGetVersion(int* driverVersion) {
 }
 
 hipError_t hipRuntimeGetVersion(int* runtimeVersion) {
-    HIP_INIT_API(runtimeVersion);
+    HIP_INIT_API(hipRuntimeGetVersion, runtimeVersion);
     hipError_t e = hipSuccess;
     if (runtimeVersion) {
         *runtimeVersion = HIP_VERSION_PATCH;
@@ -110,7 +110,7 @@ hipError_t hipRuntimeGetVersion(int* runtimeVersion) {
 }
 
 hipError_t hipCtxDestroy(hipCtx_t ctx) {
-    HIP_INIT_API(ctx);
+    HIP_INIT_API(hipCtxDestroy, ctx);
     hipError_t e = hipSuccess;
     ihipCtx_t* currentCtx = ihipGetTlsDefaultCtx();
     ihipCtx_t* primaryCtx = ((ihipDevice_t*)ctx->getDevice())->_primaryCtx;
@@ -134,7 +134,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
 }
 
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
-    HIP_INIT_API(ctx);
+    HIP_INIT_API(hipCtxPopCurrent, ctx);
     hipError_t e = hipSuccess;
     ihipCtx_t* currentCtx = ihipGetTlsDefaultCtx();
     auto deviceHandle = currentCtx->getDevice();
@@ -155,7 +155,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
 }
 
 hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
-    HIP_INIT_API(ctx);
+    HIP_INIT_API(hipCtxPushCurrent, ctx);
     hipError_t e = hipSuccess;
     if (ctx != NULL) {  // TODO- is this check needed?
         ihipSetTlsDefaultCtx(ctx);
@@ -168,7 +168,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
 }
 
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
-    HIP_INIT_API(ctx);
+    HIP_INIT_API(hipCtxGetCurrent, ctx);
     hipError_t e = hipSuccess;
     if ((tls_getPrimaryCtx) || tls_ctxStack.empty()) {
         *ctx = ihipGetTlsDefaultCtx();
@@ -179,7 +179,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
 }
 
 hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
-    HIP_INIT_API(ctx);
+    HIP_INIT_API(hipCtxSetCurrent, ctx);
     hipError_t e = hipSuccess;
     if (ctx == NULL) {
         tls_ctxStack.pop();
@@ -192,7 +192,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
 }
 
 hipError_t hipCtxGetDevice(hipDevice_t* device) {
-    HIP_INIT_API(device);
+    HIP_INIT_API(hipCtxGetDevice, device);
     hipError_t e = hipSuccess;
 
     ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
@@ -208,7 +208,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device) {
 }
 
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
-    HIP_INIT_API(apiVersion);
+    HIP_INIT_API(hipCtxGetApiVersion, apiVersion);
 
     if (apiVersion) {
         *apiVersion = 4;
@@ -218,7 +218,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
 }
 
 hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
-    HIP_INIT_API(cacheConfig);
+    HIP_INIT_API(hipCtxGetCacheConfig, cacheConfig);
 
     *cacheConfig = hipFuncCachePreferNone;
 
@@ -226,7 +226,7 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
 }
 
 hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
-    HIP_INIT_API(cacheConfig);
+    HIP_INIT_API(hipCtxSetCacheConfig, cacheConfig);
 
     // Nop, AMD does not support variable cache configs.
 
@@ -234,7 +234,7 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
 }
 
 hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
-    HIP_INIT_API(config);
+    HIP_INIT_API(hipCtxSetSharedMemConfig, config);
 
     // Nop, AMD does not support variable shared mem configs.
 
@@ -242,7 +242,7 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
 }
 
 hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig) {
-    HIP_INIT_API(pConfig);
+    HIP_INIT_API(hipCtxGetSharedMemConfig, pConfig);
 
     *pConfig = hipSharedMemBankSizeFourByte;
 
@@ -250,12 +250,12 @@ hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig) {
 }
 
 hipError_t hipCtxSynchronize(void) {
-    HIP_INIT_API(1);
+    HIP_INIT_API(hipCtxSynchronize, 1);
     return ihipLogStatus(ihipSynchronize());  // TODP Shall check validity of ctx?
 }
 
 hipError_t hipCtxGetFlags(unsigned int* flags) {
-    HIP_INIT_API(flags);
+    HIP_INIT_API(hipCtxGetFlags, flags);
     hipError_t e = hipSuccess;
     ihipCtx_t* tempCtx;
     tempCtx = ihipGetTlsDefaultCtx();
@@ -264,7 +264,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags) {
 }
 
 hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int* active) {
-    HIP_INIT_API(dev, flags, active);
+    HIP_INIT_API(hipDevicePrimaryCtxGetState, dev, flags, active);
     hipError_t e = hipSuccess;
     auto deviceHandle = ihipGetDevice(dev);
 
@@ -286,7 +286,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
 }
 
 hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev) {
-    HIP_INIT_API(dev);
+    HIP_INIT_API(hipDevicePrimaryCtxRelease, dev);
     hipError_t e = hipSuccess;
     auto deviceHandle = ihipGetDevice(dev);
 
@@ -297,7 +297,7 @@ hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev) {
 }
 
 hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev) {
-    HIP_INIT_API(pctx, dev);
+    HIP_INIT_API(hipDevicePrimaryCtxRetain, pctx, dev);
     hipError_t e = hipSuccess;
     auto deviceHandle = ihipGetDevice(dev);
 
@@ -309,7 +309,7 @@ hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev) {
 }
 
 hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev) {
-    HIP_INIT_API(dev);
+    HIP_INIT_API(hipDevicePrimaryCtxReset, dev);
     hipError_t e = hipSuccess;
     auto deviceHandle = ihipGetDevice(dev);
 
@@ -322,7 +322,7 @@ hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev) {
 }
 
 hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags) {
-    HIP_INIT_API(dev, flags);
+    HIP_INIT_API(hipDevicePrimaryCtxSetFlags, dev, flags);
     hipError_t e = hipSuccess;
     auto deviceHandle = ihipGetDevice(dev);
 

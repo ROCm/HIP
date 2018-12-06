@@ -26,33 +26,8 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
+#include "hip_fatbin.h"
 #include "trace_helper.h"
-
-constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
-
-#define CLANG_OFFLOAD_BUNDLER_MAGIC "__CLANG_OFFLOAD_BUNDLE__"
-#define AMDGCN_AMDHSA_TRIPLE "hip-amdgcn-amd-amdhsa"
-
-struct __ClangOffloadBundleDesc {
-  uint64_t offset;
-  uint64_t size;
-  uint64_t tripleSize;
-  const char triple[1];
-};
-
-struct __ClangOffloadBundleHeader {
-  const char magic[sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC) - 1];
-  uint64_t numBundles;
-  __ClangOffloadBundleDesc desc[1];
-};
-
-struct __CudaFatBinaryWrapper {
-  unsigned int                magic;
-  unsigned int                version;
-  __ClangOffloadBundleHeader* binary;
-  void*                       unused;
-};
-
 
 extern "C" std::vector<hipModule_t>*
 __hipRegisterFatBinary(const void* data)
@@ -108,21 +83,13 @@ __hipRegisterFatBinary(const void* data)
 
       std::string image{reinterpret_cast<const char*>(
           reinterpret_cast<uintptr_t>(header) + desc->offset), desc->size};
+      if (HIP_DUMP_CODE_OBJECT)
+        __hipDumpCodeObject(image);
       module->executable = hip_impl::load_executable(image, module->executable, agent);
 
       if (module->executable.handle) {
         modules->at(deviceId) = module;
         tprintf(DB_FB, "Loaded code object for %s\n", name);
-        if (HIP_DUMP_CODE_OBJECT) {
-          char fname[30];
-          static std::atomic<int> index;
-          sprintf(fname, "__hip_dump_code_object%04d.o", index++);
-          tprintf(DB_FB, "Dump code object %s\n", fname);
-          std::ofstream ofs;
-          ofs.open(fname, std::ios::binary);
-          ofs << image;
-          ofs.close();
-        }
       } else {
         fprintf(stderr, "Failed to load code object for %s\n", name);
         abort();
@@ -159,17 +126,19 @@ extern "C" void __hipRegisterFunction(
   dim3*        gridDim,
   int*         wSize)
 {
-  HIP_INIT_API(modules, hostFunction, deviceFunction, deviceName);
+  HIP_INIT_API(NONE, modules, hostFunction, deviceFunction, deviceName);
   std::vector<hipFunction_t> functions{g_deviceCnt};
 
   assert(modules && modules->size() >= g_deviceCnt);
   for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {
     hipFunction_t function;
-    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName)) {
+    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName) &&
+        function != nullptr) {
       functions[deviceId] = function;
     }
     else {
-      tprintf(DB_FB, "missing kernel %s for device %d\n", deviceName, deviceId);
+      tprintf(DB_FB, "__hipRegisterFunction cannot find kernel %s for"
+          " device %d\n", deviceName, deviceId);
     }
   }
 
@@ -212,7 +181,7 @@ hipError_t hipSetupArgument(
   size_t size,
   size_t offset)
 {
-  HIP_INIT_API(arg, size, offset);
+  HIP_INIT_API(hipSetupArgument, arg, size, offset);
   auto ctx = ihipGetTlsDefaultCtx();
   LockedAccessor_CtxCrit_t crit(ctx->criticalData());
   auto& arguments = crit->_execStack.top()._arguments;
@@ -227,7 +196,7 @@ hipError_t hipSetupArgument(
 
 hipError_t hipLaunchByPtr(const void *hostFunction)
 {
-  HIP_INIT_API(hostFunction);
+  HIP_INIT_API(hipLaunchByPtr, hostFunction);
   ihipExec_t exec;
   {
     auto ctx = ihipGetTlsDefaultCtx();
@@ -249,9 +218,11 @@ hipError_t hipLaunchByPtr(const void *hostFunction)
 
   hipError_t e = hipSuccess;
   decltype(g_functions)::iterator it;
-  if ((it = g_functions.find(hostFunction)) == g_functions.end()) {
+  if ((it = g_functions.find(hostFunction)) == g_functions.end() ||
+      !it->second[deviceId]) {
     e = hipErrorUnknown;
-    fprintf(stderr, "kernel %p not found!\n", hostFunction);
+    fprintf(stderr, "hipLaunchByPtr cannot find kernel with stub address %p"
+        " for device %d!\n", hostFunction, deviceId);
     abort();
   } else {
     size_t size = exec._arguments.size();
