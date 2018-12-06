@@ -9,6 +9,7 @@
 #include "Statistics.h"
 
 namespace ct = clang::tooling;
+using namespace llvm;
 
 /**
   * A FrontendAction that hipifies CUDA programs.
@@ -28,6 +29,7 @@ private:
   bool insertedRAND_kernelHeader = false;
   bool insertedDNNHeader = false;
   bool insertedFFTHeader = false;
+  bool insertedSPARSEHeader = false;
   bool insertedComplexHeader = false;
   bool firstHeader = false;
   bool pragmaOnce = false;
