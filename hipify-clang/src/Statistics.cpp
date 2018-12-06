@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <sstream>
 #include <iomanip>
+#include "ArgParse.h"
 
 const char *counterNames[NUM_CONV_TYPES] = {
   "error", // CONV_ERROR
@@ -137,7 +138,8 @@ Statistics::Statistics(const std::string& name): fileName(name) {
 ///////// Counter update routines //////////
 
 void Statistics::incrementCounter(const hipCounter &counter, const std::string& name) {
-  if (counter.unsupported) {
+  if ((!TranslateToRoc && (HIP_UNSUPPORTED == (counter.supportDegree & HIP_UNSUPPORTED))) ||
+      (TranslateToRoc  && (ROC_UNSUPPORTED == (counter.supportDegree & ROC_UNSUPPORTED)))) {
     unsupported.incrementCounter(counter, name);
   } else {
     supported.incrementCounter(counter, name);
