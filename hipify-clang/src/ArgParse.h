@@ -15,3 +15,4 @@ extern cl::opt<bool> PrintStats;
 extern cl::opt<std::string> OutputStatsFilename;
 extern cl::opt<bool> Examine;
 extern cl::extrahelp CommonHelp;
+extern cl::opt<bool> TranslateToRoc;
