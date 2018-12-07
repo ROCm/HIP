@@ -187,14 +187,14 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
             attributes->allocationFlags = amPointerInfo._appAllocationFlags;
             attributes->device = amPointerInfo._appId;
 
-            if (attributes->device < 0) {
+            if (attributes->device < -1) {
                 e = hipErrorInvalidDevice;
             }
         } else {
             attributes->memoryType = hipMemoryTypeDevice;
             attributes->hostPointer = 0;
             attributes->devicePointer = 0;
-            attributes->device = -1;
+            attributes->device = -2;
             attributes->isManaged = 0;
             attributes->allocationFlags = 0;
 
