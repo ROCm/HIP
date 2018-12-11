@@ -7,6 +7,11 @@ cl::opt<std::string> OutputFilename("o",
   cl::value_desc("filename"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt <bool> TranslateToRoc("roc",
+  cl::desc("Translate to roc instead of hip where it is possible"),
+  cl::value_desc("roc"),
+  cl::cat(ToolTemplateCategory));
+
 cl::opt<bool> Inplace("inplace",
   cl::desc("Modify input file inplace, replacing input with hipified output, save backup in .prehip file"),
   cl::value_desc("inplace"),
