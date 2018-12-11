@@ -23,12 +23,22 @@ config.test_source_root = os.path.dirname(__file__)
 
 config.excludes = ['cmdparser.hpp']
 
-config.cuda_version = "@CUDA_VERSION@"
-if config.cuda_version not in ['10.0']:
+cuda_version_major = int("@CUDA_VERSION_MAJOR@")
+cuda_version = "@CUDA_VERSION@"
+
+if cuda_version_major < 9:
+    config.excludes.append('cuSPARSE_04.cu')
+    config.excludes.append('cuSPARSE_05.cu')
+    config.excludes.append('cuSPARSE_06.cu')
+    config.excludes.append('cuSPARSE_07.cu')
+
+if cuda_version_major < 10:
     config.excludes.append('cuSPARSE_08.cu')
     config.excludes.append('cuSPARSE_09.cu')
     config.excludes.append('cuSPARSE_10.cu')
     config.excludes.append('cuSPARSE_11.cu')
+
+print("CUDA " + cuda_version + " will be used for testing.")
 
 # test_exec_root: The path where tests are located (default is the test suite root).
 #config.test_exec_root = config.test_source_root
