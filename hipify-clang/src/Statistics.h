@@ -113,15 +113,23 @@ enum ApiTypes {
 };
 constexpr int NUM_API_TYPES = (int) ApiTypes::API_LAST;
 
+enum SupportDegree {
+  FULL = 0,
+  HIP_UNSUPPORTED = 1,
+  ROC_UNSUPPORTED = 2,
+  UNSUPPORTED = 3
+};
+
 // The names of various fields in in the statistics reports.
 extern const char *counterNames[NUM_CONV_TYPES];
 extern const char *apiNames[NUM_API_TYPES];
 
 struct hipCounter {
   llvm::StringRef hipName;
+  llvm::StringRef rocName;
   ConvTypes type;
   ApiTypes apiType;
-  bool unsupported;
+  SupportDegree supportDegree;
 };
 
 /**
