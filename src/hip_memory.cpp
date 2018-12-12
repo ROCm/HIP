@@ -187,14 +187,14 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
             attributes->allocationFlags = amPointerInfo._appAllocationFlags;
             attributes->device = amPointerInfo._appId;
 
-            if (attributes->device < 0) {
+            if (attributes->device < -1) {
                 e = hipErrorInvalidDevice;
             }
         } else {
             attributes->memoryType = hipMemoryTypeDevice;
             attributes->hostPointer = 0;
             attributes->devicePointer = 0;
-            attributes->device = -1;
+            attributes->device = -2;
             attributes->isManaged = 0;
             attributes->allocationFlags = 0;
 
@@ -1637,8 +1637,7 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
                     stream->locked_copySync((unsigned char*)dst + i * dpitch,
                                     (unsigned char*)src + i * spitch, width, kind);
             } else {
-                ihipMemcpy2dKernel<uint32_t> (stream, static_cast<uint32_t*> (actualDest), static_cast<const uint32_t*> (actualSrc), width, height, dpitch, spitch);
-                stream->locked_wait();
+                stream->locked_copy2DSync(dst, src, width, height, spitch, dpitch, kind);
             }
         } catch (ihipException& ex) {
             e = ex._code;
@@ -1686,7 +1685,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
                     e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
                                           (unsigned char*)src + i * spitch, width, kind, stream);
             } else{
-                ihipMemcpy2dKernel<uint32_t> (stream, static_cast<uint32_t*> (actualDest), static_cast<const uint32_t*> (actualSrc), width, height, dpitch, spitch);
+                stream->locked_copy2DAsync(dst, src, width, height, spitch, dpitch, kind);
             }
         } catch (ihipException& ex) {
             e = ex._code;

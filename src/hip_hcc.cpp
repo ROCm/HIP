@@ -2114,6 +2114,59 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     }
 }
 
+void ihipStream_t::locked_copy2DSync(void* dst, const void* src, size_t width, size_t height, size_t srcPitch, size_t dstPitch, unsigned kind,
+                                   bool resolveOn) {
+    ihipCtx_t* ctx = this->getCtx();
+    const ihipDevice_t* device = ctx->getDevice();
+
+    if (device == NULL) {
+        throw ihipException(hipErrorInvalidDevice);
+    }
+    size_t sizeBytes = width*height;
+    hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
+    bool dstTracked = getTailoredPtrInfo("    dst", &dstPtrInfo, dst, sizeBytes);
+    bool srcTracked = getTailoredPtrInfo("    src", &srcPtrInfo, src, sizeBytes);
+
+    // Some code in HCC and in printPointerInfo uses _sizeBytes==0 as an indication ptr is not
+    //     // valid, so check it here:
+    if (!dstTracked) {
+        assert(dstPtrInfo._sizeBytes == 0);
+    }
+    if (!srcTracked) {
+        assert(srcPtrInfo._sizeBytes == 0);
+    }
+
+
+    hc::hcCommandKind hcCopyDir;
+    ihipCtx_t* copyDevice;
+    bool forceUnpinnedCopy;
+    resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice,
+                             &forceUnpinnedCopy);
+
+    {
+        LockedAccessor_StreamCrit_t crit(_criticalData);
+        tprintf(DB_COPY,
+                "copy2DSync copyDev:%d  dst=%p (phys_dev:%d, isDevMem:%d)  src=%p(phys_dev:%d, "
+                "isDevMem:%d)   sz=%zu dir=%s forceUnpinnedCopy=%d\n",
+                copyDevice ? copyDevice->getDeviceNum() : -1, dst, dstPtrInfo._appId,
+                dstPtrInfo._isInDeviceMem, src, srcPtrInfo._appId, srcPtrInfo._isInDeviceMem,
+                sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
+        printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
+        printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
+
+        crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
+                           copyDevice ? &copyDevice->getDevice()->_acc : nullptr,
+                           forceUnpinnedCopy);
+    }
+}
+
 void ihipStream_t::addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes) {
 #if (__hcc_workweek__ >= 17332)
     hc::AmPointerInfo ptrInfo(NULL, ptr, ptr, sizeBytes, acc, true, false);
@@ -2284,6 +2337,68 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
     }
 }
 
+void ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, size_t height, size_t srcPitch, size_t dstPitch, unsigned kind)
+{
+    const ihipCtx_t* ctx = this->getCtx();
+
+    if ((ctx == nullptr) || (ctx->getDevice() == nullptr)) {
+        tprintf(DB_COPY, "locked_copy2DAsync bad ctx or device\n");
+        throw ihipException(hipErrorInvalidDevice);
+    }
+    hc::accelerator acc;
+    size_t sizeBytes = width*height;
+#if (__hcc_workweek__ >= 17332)
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
+    hc::AmPointerInfo dstPtrInfo(NULL, NULL, 0, acc, 0, 0);
+    hc::AmPointerInfo srcPtrInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
+    tprintf(DB_COPY, "copy2DAsync dst=%p src=%p, sz=%zu\n", dst, src, sizeBytes);
+    bool dstTracked = getTailoredPtrInfo("    dst", &dstPtrInfo, dst, sizeBytes);
+    bool srcTracked = getTailoredPtrInfo("    src", &srcPtrInfo, src, sizeBytes);
+
+
+    hc::hcCommandKind hcCopyDir;
+    ihipCtx_t* copyDevice;
+    bool forceUnpinnedCopy;
+    resolveHcMemcpyDirection(kind, &dstPtrInfo, &srcPtrInfo, &hcCopyDir, &copyDevice,
+                             &forceUnpinnedCopy);
+    tprintf(DB_COPY, "  copyDev:%d   dir=%s forceUnpinnedCopy=%d\n",
+            copyDevice ? copyDevice->getDeviceNum() : -1, hcMemcpyStr(hcCopyDir),
+               forceUnpinnedCopy);
+    if (dstTracked && srcTracked && !forceUnpinnedCopy &&
+        copyDevice /*code below assumes this is !nullptr*/) {
+        LockedAccessor_StreamCrit_t crit(_criticalData);
+
+        try {
+             if (HIP_FORCE_SYNC_COPY) {
+                 crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
+                           &copyDevice->getDevice()->_acc,
+                           forceUnpinnedCopy);
+
+             } else {
+                 crit->_av.copy2d_async_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
+                                          &copyDevice->getDevice()->_acc);
+             }
+         } catch (Kalmar::runtime_exception) {
+                throw ihipException(hipErrorRuntimeOther);
+         };
+
+         if (HIP_API_BLOCKING) {
+             tprintf(DB_SYNC, "%s LAUNCH_BLOCKING for completion of hipMemcpy2DAsync(sz=%zu)\n",
+                        ToString(this).c_str(), sizeBytes);
+             this->wait(crit);
+         }
+
+    } else {
+         //Do sync 2D copy
+         LockedAccessor_StreamCrit_t crit(_criticalData);
+         crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
+                           copyDevice ? &copyDevice->getDevice()->_acc : nullptr,
+                           forceUnpinnedCopy);
+    } 
+}
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
