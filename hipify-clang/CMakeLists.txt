@@ -111,12 +111,6 @@ if (HIPIFY_CLANG_TESTS)
         @ONLY
     )
 
-    configure_file(
-        ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.cfg.in
-        ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.cfg
-        @ONLY
-    )
-
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
         ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang
         PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
