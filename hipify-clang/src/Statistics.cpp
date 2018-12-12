@@ -130,8 +130,12 @@ Statistics::Statistics(const std::string& name): fileName(name) {
   std::ifstream src_file(name, std::ios::binary | std::ios::ate);
   src_file.clear();
   src_file.seekg(0);
-  totalLines = (int) std::count(std::istreambuf_iterator<char>(src_file), std::istreambuf_iterator<char>(), '\n');
+  totalLines = (unsigned) std::count(std::istreambuf_iterator<char>(src_file), std::istreambuf_iterator<char>(), '\n');
   totalBytes = (int) src_file.tellg();
+  if (totalBytes < 0) {
+    totalBytes = 0;
+    hasErrors = true;
+  }
   startTime = chr::steady_clock::now();
 }
 
@@ -171,23 +175,24 @@ void Statistics::print(std::ostream* csv, llvm::raw_ostream* printOut, bool skip
     std::string str = "file \'" + fileName + "\' statistics:\n";
     conditionalPrint(csv, printOut, "\n" + str, "\n[HIPIFY] info: " + str);
   }
+  if (hasErrors || totalBytes <= 0 || totalLines <= 0) {
+    std::string str = "\n  ERROR: Statistics is invalid due to failed hipification.\n\n";
+    conditionalPrint(csv, printOut, str, str);
+  }
   size_t changedLines = touchedLines.size();
   // Total number of (un)supported refs that were converted.
   int supportedSum = supported.getConvSum();
   int unsupportedSum = unsupported.getConvSum();
+  int allSum = supportedSum + unsupportedSum;
   printStat(csv, printOut, "CONVERTED refs count", supportedSum);
   printStat(csv, printOut, "UNCONVERTED refs count", unsupportedSum);
-  printStat(csv, printOut, "CONVERSION %", 100 - std::lround(double(unsupportedSum * 100) / double(supportedSum + unsupportedSum)));
+  printStat(csv, printOut, "CONVERSION %", 100 - (0 == allSum ? 100 : std::lround(double(unsupportedSum * 100) / double(allSum))));
   printStat(csv, printOut, "REPLACED bytes", touchedBytes);
   printStat(csv, printOut, "TOTAL bytes", totalBytes);
   printStat(csv, printOut, "CHANGED lines of code", changedLines);
   printStat(csv, printOut, "TOTAL lines of code", totalLines);
-  if (totalBytes > 0) {
-    printStat(csv, printOut, "CODE CHANGED (in bytes) %", std::lround(double(touchedBytes * 100) / double(totalBytes)));
-  }
-  if (totalLines > 0) {
-    printStat(csv, printOut, "CODE CHANGED (in lines) %", std::lround(double(changedLines * 100) / double(totalLines)));
-  }
+  printStat(csv, printOut, "CODE CHANGED (in bytes) %", 0 == totalBytes ? 0 : std::lround(double(touchedBytes * 100) / double(totalBytes)));
+  printStat(csv, printOut, "CODE CHANGED (in lines) %", 0 == totalLines ? 0 : std::lround(double(changedLines * 100) / double(totalLines)));
   typedef std::chrono::duration<double, std::milli> duration;
   duration elapsed = completionTime - startTime;
   std::stringstream stream;
@@ -199,6 +204,7 @@ void Statistics::print(std::ostream* csv, llvm::raw_ostream* printOut, bool skip
 
 void Statistics::printAggregate(std::ostream *csv, llvm::raw_ostream* printOut) {
   Statistics globalStats = getAggregate();
+  globalStats.hasErrors = false;
   conditionalPrint(csv, printOut, "\nTOTAL statistics:\n", "\n[HIPIFY] info: TOTAL statistics:\n");
   // A file is considered "converted" if we made any changes to it.
   int convertedFiles = 0;
@@ -206,16 +212,23 @@ void Statistics::printAggregate(std::ostream *csv, llvm::raw_ostream* printOut) 
     if (!p.second.touchedLines.empty()) {
       convertedFiles++;
     }
+    if (!globalStats.hasErrors && p.second.hasErrors) {
+      globalStats.hasErrors = true;
+    }
+    if (globalStats.startTime > p.second.startTime) {
+      globalStats.startTime = p.second.startTime;
+    }
   }
   printStat(csv, printOut, "CONVERTED files", convertedFiles);
   printStat(csv, printOut, "PROCESSED files", stats.size());
+  globalStats.markCompletion();
   globalStats.print(csv, printOut);
 }
 
 //// Static state management ////
 
 Statistics Statistics::getAggregate() {
-  Statistics globalStats("global");
+  Statistics globalStats("GLOBAL");
   for (const auto& p : stats) {
     globalStats.add(p.second);
   }

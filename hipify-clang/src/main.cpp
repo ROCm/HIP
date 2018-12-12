@@ -117,6 +117,8 @@ int main(int argc, const char **argv) {
     Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
     // Hipify _all_ the things!
     if (Tool.runAndSave(&actionFactory)) {
+      Statistics& currentStat = Statistics::current();
+      currentStat.hasErrors = true;
       LLVM_DEBUG(llvm::dbgs() << "Skipped some replacements.\n");
     }
     // Either move the tmpfile to the output, or remove it.
