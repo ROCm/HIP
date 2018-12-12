@@ -158,8 +158,8 @@ class Statistics {
   StatCounter unsupported;
   std::string fileName;
   std::set<int> touchedLines = {};
-  int touchedBytes = 0;
-  int totalLines = 0;
+  unsigned touchedBytes = 0;
+  unsigned totalLines = 0;
   int totalBytes = 0;
   chr::steady_clock::time_point startTime;
   chr::steady_clock::time_point completionTime;
@@ -202,4 +202,6 @@ public:
     * timestamp into the currently active one.
     */
   static void setActive(const std::string& name);
+  // Set this flag in case of hipification errors
+  bool hasErrors = false;
 };
