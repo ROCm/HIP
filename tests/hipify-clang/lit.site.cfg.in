@@ -5,10 +5,12 @@ config.llvm_tools_dir = "@LLVM_TOOLS_BINARY_DIR@"
 config.obj_root = "@CMAKE_CURRENT_BINARY_DIR@"
 config.cuda_root = "@CUDA_TOOLKIT_ROOT_DIR@"
 config.cuda_dnn_root = "@CUDA_DNN_ROOT_DIR@"
+config.cuda_version_major = int("@CUDA_VERSION_MAJOR@")
+config.cuda_version = "@CUDA_VERSION@"
 if sys.platform in ['win32']:
     config.cuda_sdk_root = "@CUDA_SDK_ROOT_DIR@"
     if not config.cuda_sdk_root or config.cuda_sdk_root == "CUDA_SDK_ROOT_DIR-NOTFOUND":
-        cuda_version = "@CUDA_VERSION@"
+        cuda_version = config.cuda_version
         cuda_version = cuda_version.replace('.','_')
         config.cuda_samples_root = os.environ.get('NVCUDASAMPLES' + cuda_version + '_ROOT')
         if not config.cuda_samples_root:
