@@ -1509,6 +1509,13 @@ __global__ void hip_copy2d_n(T* dst, const T* src, size_t width, size_t height, 
 
 template <typename T>
 void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t sizeBytes) {
+
+    if(sizeof(T) == sizeof(uint32_t)){
+        // for all sizeof(uint32_t) use the fast path using hsa specialization
+        hsa_amd_memory_fill(ptr, reinterpret_cast<const std::uint32_t&>(val), sizeBytes);
+        return;
+    }
+
     static constexpr uint32_t block_dim = 256;
 
     const uint32_t grid_dim = clamp_integer<size_t>(sizeBytes / block_dim, 1, UINT32_MAX);
