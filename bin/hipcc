@@ -156,6 +156,7 @@ $target_gfx802 = 0;
 $target_gfx803 = 0;
 $target_gfx900 = 0;
 $target_gfx906 = 0;
+$target_gfx908 = 0;
 $target_gfx1010 = 0;
 $target_gfx1012 = 0;
 $default_amdgpu_target = 1;
@@ -429,6 +430,11 @@ foreach $arg (@ARGV)
         $target_gfx906 = 1;
         $default_amdgpu_target = 0;
     }
+    if($arg eq '--amdgpu-target=gfx908')
+    {
+        $target_gfx908 = 1;
+        $default_amdgpu_target = 0;
+    }
     if($arg eq '--amdgpu-target=gfx1010')
     {
         $target_gfx1010 = 1;
@@ -670,6 +676,11 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
                 $target_gfx906 = 1;
                 $default_amdgpu_target = 0;
             }
+            if($target eq 'gfx908')
+            {
+                $target_gfx908 = 1;
+                $default_amdgpu_target = 0;
+            }
             if($target eq 'gfx1010')
             {
                 $target_gfx1010 = 1;
@@ -713,6 +724,10 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
             }
             if($val eq "gfx906") {
                 $target_gfx906 = 1;
+                $default_amdgpu_target = 0;
+            }
+            if($val eq "gfx908") {
+                $target_gfx908 = 1;
                 $default_amdgpu_target = 0;
             }
             if($val eq 'gfx1010')
@@ -788,6 +803,14 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
             $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
         }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX906__=1 ";
+    }
+    if ($target_gfx908 eq 1) {
+        $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx908";
+        $HIPLDFLAGS .= $GPU_ARCH_ARG;
+        if ($HIP_PLATFORM eq 'clang') {
+            $HIPCXXFLAGS .= $GPU_ARCH_ARG;;
+        }
+        $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX908__=1 ";
     }
     if ($target_gfx1010 eq 1) {
         $GPU_ARCH_ARG = $GPU_ARCH_OPT . "gfx1010";
