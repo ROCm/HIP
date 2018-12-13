@@ -68,9 +68,12 @@ $HSA_PATH=$ENV{'HSA_PATH'} // '/opt/rocm/hsa';
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
 if (not defined $HIP_PLATFORM) {
     $NAMDGPUNODES=`cat /sys/class/kfd/kfd/topology/nodes/*/properties 2>/dev/null | grep -c 'simd_count [1-9]'`;
+    $NAMDGPUAGENTS=`/opt/rocm/bin/rocm_agent_enumerator -t GPU | wc -l`;
 
     if ($NAMDGPUNODES > 0) {
-        $HIP_PLATFORM = "hcc"
+        $HIP_PLATFORM = "hcc";
+    } elsif ( $NAMDGPUAGENTS > 1) {
+        $HIP_PLATFORM = "hcc";
     } else {
         $HIP_PLATFORM = "nvcc";
     }
