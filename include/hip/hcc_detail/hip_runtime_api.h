@@ -90,8 +90,6 @@ typedef struct ihipIpcEventHandle_t* hipIpcEventHandle_t;
 
 // END TODO
 
-typedef struct ihipProgram_t* hipProgram_t;
-
 typedef struct ihipModule_t* hipModule_t;
 
 typedef struct ihipModuleSymbol_t* hipFunction_t;
@@ -2601,98 +2599,6 @@ hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
  */
 hipError_t hipLaunchByPtr(const void* func);
 
-/**
- * @}
- */
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup HIP Runtime Compilation API
- *  @{
- */
-
-/**
- * @brief Create a new instance of hipProgram_t
- *
- * @param [out] prog Program
- * @param [in] src Program source code
- * @param [in] name Program name
- * @param [in] numHeaders Number of include headers
- * @param [in] headers Headers source code
- * @param [in] headerNames Headers names
- *
- * @returns hipSuccess, hipErrorOutOfMemory, hipErrorInvalidValue
- *
- */
-hipError_t hipCreateProgram(hipProgram_t* prog, const char* src, const char* name,
-                            int numHeaders, const char** headers, const char** headerNames);
-
-/**
- * @brief Compile the given program
- *
- * @param [in] prog Program to compile
- * @param [in] numOptions Number of compile options
- * @param [in] options Compile options
- *
- * @returns hipSuccess, hipErrorOutOfMemory, hipErrorInvalidProgram
- *
- */
-hipError_t hipCompileProgram(hipProgram_t prog, int numOptions, const char** options);
-
-/**
- * @brief Destroy the given program
- *
- * @param [in] prog Program to destroy
- *
- * @returns hipSuccess, hipErrorInvalidProgram
- *
- */
-hipError_t hipDestroyProgram(hipProgram_t* prog);
-
-/**
- * @brief Return the device binary
- *
- * @param [in] prog Program
- * @param [out] binary Device binary
- *
- * @returns hipSuccess, hipErrorInvalidProgram
- *
- */
-hipError_t hipGetProgramBinary(hipProgram_t prog, char* binary);
-
-/**
- * @brief Return the size required to store the device binary
- *
- * @param [in] prog
- * @param [out] binarySizeRet Size of the device binary
- *
- * @returns hipSuccess, hipErrorInvalidProgram
- *
- */
-hipError_t hipGetProgramBinarySize(hipProgram_t prog, size_t* binarySizeRet);
-
-/**
- * @brief Return the compilation log
- *
- * @param [in] prog Program
- * @param [out] log Compilation log
- *
- * @returns hipSuccess, hipErrorInvalidProgram
- *
- */
-hipError_t hipGetProgramLog(hipProgram_t prog, char* log);
-
-/**
- * @brief Return the size required to store the compilation log
- *
- * @param [in] prog Program
- * @param [out] logSizeRet
- *
- * @returns hipSuccess, hipErrorInvalidProgram
- *
- */
-hipError_t hipGetProgramLogSize(hipProgram_t prog, size_t* logSizeRet);
 
 
 /**
