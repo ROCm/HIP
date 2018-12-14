@@ -113,15 +113,23 @@ enum ApiTypes {
 };
 constexpr int NUM_API_TYPES = (int) ApiTypes::API_LAST;
 
+enum SupportDegree {
+  FULL = 0,
+  HIP_UNSUPPORTED = 1,
+  ROC_UNSUPPORTED = 2,
+  UNSUPPORTED = 3
+};
+
 // The names of various fields in in the statistics reports.
 extern const char *counterNames[NUM_CONV_TYPES];
 extern const char *apiNames[NUM_API_TYPES];
 
 struct hipCounter {
   llvm::StringRef hipName;
+  llvm::StringRef rocName;
   ConvTypes type;
   ApiTypes apiType;
-  bool unsupported;
+  SupportDegree supportDegree;
 };
 
 /**
@@ -149,9 +157,10 @@ class Statistics {
   StatCounter supported;
   StatCounter unsupported;
   std::string fileName;
-  std::set<int> touchedLines = {};
-  int touchedBytes = 0;
-  int totalLines = 0;
+  std::set<int> touchedLinesSet = {};
+  unsigned touchedLines = 0;
+  unsigned totalLines = 0;
+  unsigned touchedBytes = 0;
   int totalBytes = 0;
   chr::steady_clock::time_point startTime;
   chr::steady_clock::time_point completionTime;
@@ -194,4 +203,6 @@ public:
     * timestamp into the currently active one.
     */
   static void setActive(const std::string& name);
+  // Set this flag in case of hipification errors
+  bool hasErrors = false;
 };

@@ -5,8 +5,6 @@
 #include <map>
 #include "Statistics.h"
 
-#define HIP_UNSUPPORTED true
-
 // Maps CUDA header names to HIP header names
 extern const std::map<llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP;
 // Maps the names of CUDA DRIVER API types to the corresponding HIP types

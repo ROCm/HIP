@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <sstream>
 #include <iomanip>
+#include "ArgParse.h"
 
 const char *counterNames[NUM_CONV_TYPES] = {
   "error", // CONV_ERROR
@@ -50,7 +51,7 @@ const char *apiNames[NUM_API_TYPES] = {
   "cuRAND API",
   "cuDNN API",
   "cuFFT API",
-  "cuSPARSE"
+  "cuSPARSE API"
 };
 
 namespace {
@@ -108,19 +109,33 @@ int StatCounter::getConvSum() {
 }
 
 void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string& prefix) {
-  conditionalPrint(csv, printOut, "\nCUDA ref type;Count\n", "[HIPIFY] info: " + prefix + " refs by type:\n");
+  for (int i = 0; i < NUM_CONV_TYPES; i++) {
+    if (convTypeCounters[i] > 0) {
+      conditionalPrint(csv, printOut, "\nCUDA ref type;Count\n", "[HIPIFY] info: " + prefix + " refs by type:\n");
+      break;
+    }
+  }
   for (int i = 0; i < NUM_CONV_TYPES; i++) {
     if (convTypeCounters[i] > 0) {
       printStat(csv, printOut, counterNames[i], convTypeCounters[i]);
     }
   }
-  conditionalPrint(csv, printOut, "\nCUDA API;Count\n", "[HIPIFY] info: " + prefix + " refs by API:\n");
   for (int i = 0; i < NUM_API_TYPES; i++) {
-    printStat(csv, printOut, apiNames[i], apiCounters[i]);
+    if (apiCounters[i] > 0) {
+      conditionalPrint(csv, printOut, "\nCUDA API;Count\n", "[HIPIFY] info: " + prefix + " refs by API:\n");
+      break;
+    }
   }
-  conditionalPrint(csv, printOut, "\nCUDA ref name;Count\n", "[HIPIFY] info: " + prefix + " refs by names:\n");
-  for (const auto &it : counters) {
-    printStat(csv, printOut, it.first, it.second);
+  for (int i = 0; i < NUM_API_TYPES; i++) {
+    if (apiCounters[i] > 0) {
+      printStat(csv, printOut, apiNames[i], apiCounters[i]);
+    }
+  }
+  if (counters.size() > 0) {
+    conditionalPrint(csv, printOut, "\nCUDA ref name;Count\n", "[HIPIFY] info: " + prefix + " refs by names:\n");
+    for (const auto &it : counters) {
+      printStat(csv, printOut, it.first, it.second);
+    }
   }
 }
 
@@ -129,15 +144,19 @@ Statistics::Statistics(const std::string& name): fileName(name) {
   std::ifstream src_file(name, std::ios::binary | std::ios::ate);
   src_file.clear();
   src_file.seekg(0);
-  totalLines = (int) std::count(std::istreambuf_iterator<char>(src_file), std::istreambuf_iterator<char>(), '\n');
+  totalLines = (unsigned) std::count(std::istreambuf_iterator<char>(src_file), std::istreambuf_iterator<char>(), '\n');
   totalBytes = (int) src_file.tellg();
+  if (totalBytes < 0) {
+    totalBytes = 0;
+  }
   startTime = chr::steady_clock::now();
 }
 
 ///////// Counter update routines //////////
 
 void Statistics::incrementCounter(const hipCounter &counter, const std::string& name) {
-  if (counter.unsupported) {
+  if ((!TranslateToRoc && (HIP_UNSUPPORTED == (counter.supportDegree & HIP_UNSUPPORTED))) ||
+      (TranslateToRoc  && (ROC_UNSUPPORTED == (counter.supportDegree & ROC_UNSUPPORTED)))) {
     unsupported.incrementCounter(counter, name);
   } else {
     supported.incrementCounter(counter, name);
@@ -147,17 +166,27 @@ void Statistics::incrementCounter(const hipCounter &counter, const std::string& 
 void Statistics::add(const Statistics &other) {
   supported.add(other.supported);
   unsupported.add(other.unsupported);
-  totalBytes += other.totalBytes;
-  totalLines += other.totalLines;
   touchedBytes += other.touchedBytes;
+  totalBytes += other.totalBytes;
+  touchedLines += other.touchedLines;
+  totalLines += other.totalLines;
+  if (other.hasErrors && !hasErrors) {
+    hasErrors = true;
+  }
+  if (startTime > other.startTime) {
+    startTime = other.startTime;
+  }
 }
 
 void Statistics::lineTouched(int lineNumber) {
-  touchedLines.insert(lineNumber);
+  touchedLinesSet.insert(lineNumber);
+  touchedLines = touchedLinesSet.size();
 }
+
 void Statistics::bytesChanged(int bytes) {
   touchedBytes += bytes;
 }
+
 void Statistics::markCompletion() {
   completionTime = chr::steady_clock::now();
 }
@@ -169,23 +198,23 @@ void Statistics::print(std::ostream* csv, llvm::raw_ostream* printOut, bool skip
     std::string str = "file \'" + fileName + "\' statistics:\n";
     conditionalPrint(csv, printOut, "\n" + str, "\n[HIPIFY] info: " + str);
   }
-  size_t changedLines = touchedLines.size();
+  if (hasErrors || totalBytes <= 0 || totalLines <= 0) {
+    std::string str = "\n  ERROR: Statistics is invalid due to failed hipification.\n\n";
+    conditionalPrint(csv, printOut, str, str);
+  }
   // Total number of (un)supported refs that were converted.
   int supportedSum = supported.getConvSum();
   int unsupportedSum = unsupported.getConvSum();
+  int allSum = supportedSum + unsupportedSum;
   printStat(csv, printOut, "CONVERTED refs count", supportedSum);
   printStat(csv, printOut, "UNCONVERTED refs count", unsupportedSum);
-  printStat(csv, printOut, "CONVERSION %", 100 - std::lround(double(unsupportedSum * 100) / double(supportedSum + unsupportedSum)));
+  printStat(csv, printOut, "CONVERSION %", 100 - (0 == allSum ? 100 : std::lround(double(unsupportedSum * 100) / double(allSum))));
   printStat(csv, printOut, "REPLACED bytes", touchedBytes);
   printStat(csv, printOut, "TOTAL bytes", totalBytes);
-  printStat(csv, printOut, "CHANGED lines of code", changedLines);
+  printStat(csv, printOut, "CHANGED lines of code", touchedLines);
   printStat(csv, printOut, "TOTAL lines of code", totalLines);
-  if (totalBytes > 0) {
-    printStat(csv, printOut, "CODE CHANGED (in bytes) %", std::lround(double(touchedBytes * 100) / double(totalBytes)));
-  }
-  if (totalLines > 0) {
-    printStat(csv, printOut, "CODE CHANGED (in lines) %", std::lround(double(changedLines * 100) / double(totalLines)));
-  }
+  printStat(csv, printOut, "CODE CHANGED (in bytes) %", 0 == totalBytes ? 0 : std::lround(double(touchedBytes * 100) / double(totalBytes)));
+  printStat(csv, printOut, "CODE CHANGED (in lines) %", 0 == totalLines ? 0 : std::lround(double(touchedLines * 100) / double(totalLines)));
   typedef std::chrono::duration<double, std::milli> duration;
   duration elapsed = completionTime - startTime;
   std::stringstream stream;
@@ -197,23 +226,26 @@ void Statistics::print(std::ostream* csv, llvm::raw_ostream* printOut, bool skip
 
 void Statistics::printAggregate(std::ostream *csv, llvm::raw_ostream* printOut) {
   Statistics globalStats = getAggregate();
-  conditionalPrint(csv, printOut, "\nTOTAL statistics:\n", "\n[HIPIFY] info: TOTAL statistics:\n");
   // A file is considered "converted" if we made any changes to it.
   int convertedFiles = 0;
   for (const auto& p : stats) {
-    if (!p.second.touchedLines.empty()) {
+    if (p.second.touchedLines && p.second.totalBytes &&
+        p.second.totalLines && !p.second.hasErrors) {
       convertedFiles++;
     }
   }
+  globalStats.markCompletion();
+  globalStats.print(csv, printOut);
+  std::string str = "TOTAL statistics:";
+  conditionalPrint(csv, printOut, "\n" + str + "\n", "\n[HIPIFY] info: " + str + "\n");
   printStat(csv, printOut, "CONVERTED files", convertedFiles);
   printStat(csv, printOut, "PROCESSED files", stats.size());
-  globalStats.print(csv, printOut);
 }
 
 //// Static state management ////
 
 Statistics Statistics::getAggregate() {
-  Statistics globalStats("global");
+  Statistics globalStats("GLOBAL");
   for (const auto& p : stats) {
     globalStats.add(p.second);
   }

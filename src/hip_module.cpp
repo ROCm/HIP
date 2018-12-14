@@ -48,6 +48,7 @@ THE SOFTWARE.
 #include <utility>
 #include <vector>
 #include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "hip_fatbin.h"
 // TODO Use Pool APIs from HCC to get memory regions.
 
 using namespace ELFIO;
@@ -555,6 +556,12 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     auto ctx = ihipGetTlsDefaultCtx();
     if (!ctx) return hipErrorInvalidContext;
+
+    // try extracting code object from image as fatbin.
+    char name[64] = {};
+    hsa_agent_get_info(this_agent(), HSA_AGENT_INFO_NAME, name);
+    if (auto *code_obj = __hipExtractCodeObjectFromFatBinary(image, name))
+      image = code_obj;
 
     hsa_executable_create_alt(HSA_PROFILE_FULL, HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT, nullptr,
                               &(*module)->executable);
