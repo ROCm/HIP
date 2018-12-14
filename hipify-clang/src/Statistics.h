@@ -157,9 +157,10 @@ class Statistics {
   StatCounter supported;
   StatCounter unsupported;
   std::string fileName;
-  std::set<int> touchedLines = {};
-  unsigned touchedBytes = 0;
+  std::set<int> touchedLinesSet = {};
+  unsigned touchedLines = 0;
   unsigned totalLines = 0;
+  unsigned touchedBytes = 0;
   int totalBytes = 0;
   chr::steady_clock::time_point startTime;
   chr::steady_clock::time_point completionTime;
