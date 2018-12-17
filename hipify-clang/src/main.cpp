@@ -37,6 +37,7 @@ THE SOFTWARE.
 #include "HipifyAction.h"
 #include "ArgParse.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/Path.h"
 
 #define DEBUG_TYPE "cuda2hip"
 
@@ -95,19 +96,35 @@ int main(int argc, const char **argv) {
       llvm::errs() << "[HIPIFY] conflict: both -o and -inplace options are specified.\n";
       return 1;
     }
-    std::string tmpFile = src + ".hipify-tmp";
     // Create a copy of the file to work on. When we're done, we'll move this onto the
     // output (which may mean overwriting the input, if we're in-place).
     // Should we fail for some reason, we'll just leak this file and not corrupt the input.
-    copyFile(src, tmpFile);
+    SmallString<128> tmpFile;
+    int FD;
+    StringRef Extension = "hipified-tmp";
+    std::error_code EC = sys::fs::createTemporaryFile("hipify-clang", Extension, FD, tmpFile);
+    if (EC) {
+      llvm::errs() << EC.message() << "\n";
+      return 1;
+    }
+    SmallString<256> sourceAbsPath;
+    EC = llvm::sys::fs::real_path(src.c_str(), sourceAbsPath, true);
+    if (EC) {
+      llvm::errs() << EC.message() << "\n";
+      return 1;
+    }
+    StringRef sourceDir = llvm::sys::path::parent_path(sourceAbsPath);
+    copyFile(src, tmpFile.c_str());
     // Initialise the statistics counters for this file.
     Statistics::setActive(src);
     // RefactoringTool operates on the file in-place. Giving it the output path is no good,
     // because that'll break relative includes, and we don't want to overwrite the input file.
     // So what we do is operate on a copy, which we then move to the output.
-    ct::RefactoringTool Tool(OptionsParser.getCompilations(), tmpFile);
-    ct::Replacements& replacementsToUse = llcompat::getReplacements(Tool, tmpFile);
+    ct::RefactoringTool Tool(OptionsParser.getCompilations(), std::string(tmpFile.c_str()));
+    ct::Replacements& replacementsToUse = llcompat::getReplacements(Tool, tmpFile.c_str());
     ReplacementsFrontendActionFactory<HipifyAction> actionFactory(&replacementsToUse);
+    std::string sInclude = "-I" + sourceDir.str();
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
     // Ensure at least c++11 is used.
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-std=c++11", ct::ArgumentInsertPosition::BEGIN));
