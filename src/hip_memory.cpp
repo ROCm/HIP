@@ -1510,9 +1510,9 @@ __global__ void hip_copy2d_n(T* dst, const T* src, size_t width, size_t height, 
 template <typename T>
 void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t sizeBytes) {
 
-    if(sizeof(T) == sizeof(uint32_t)){
+    if(sizeof(T) == sizeof(uint32_t) && (sizeBytes % sizeof(uint32_t) == 0)){
         // for all sizeof(uint32_t) use the fast path using hsa specialization
-        hsa_amd_memory_fill(ptr, reinterpret_cast<const std::uint32_t&>(val), sizeBytes);
+        hsa_amd_memory_fill(ptr, reinterpret_cast<const std::uint32_t&>(val), sizeBytes/sizeof(uint32_t));
         return;
     }
 
