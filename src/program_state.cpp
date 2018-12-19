@@ -591,14 +591,15 @@ unordered_map<string, vector<pair<size_t, size_t>>>& kernargs() {
     static once_flag f;
 
     call_once(f, []() {
-        for (auto&& blob : code_object_blobs()) {
-            stringstream tmp{std::string{
-                blob.second.front().cbegin(), blob.second.front().cend()}};
+        for (auto&& isa_blobs : code_object_blobs()) {
+            for (auto&& blob : isa_blobs.second) {
+                stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
 
-            elfio reader;
-            if (!reader.load(tmp)) continue;
+                elfio reader;
+                if (!reader.load(tmp)) continue;
 
-            read_kernarg_metadata(reader, r);
+                read_kernarg_metadata(reader, r);
+            }
         }
     });
 
