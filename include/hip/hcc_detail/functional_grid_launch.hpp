@@ -103,18 +103,23 @@ inline std::vector<std::uint8_t> make_kernarg(
 
     if (sizeof...(Formals) == 0) return {};
 
-    const auto it = function_names().find(
-        reinterpret_cast<std::uintptr_t>(kernel));
-
+    auto it = function_names().find(reinterpret_cast<std::uintptr_t>(kernel));
     if (it == function_names().cend()) {
-        throw std::runtime_error{"Undefined __global__ function."};
+        it =
+            function_names(true).find(reinterpret_cast<std::uintptr_t>(kernel));
+        if (it == function_names().cend()) {
+            throw std::runtime_error{"Undefined __global__ function."};
+        }
     }
 
-    const auto it1 = kernargs().find(it->second);
-
+    auto it1 = kernargs().find(it->second);
     if (it1 == kernargs().end()) {
-        throw std::runtime_error{
-            "Missing metadata for __global__ function: " + it->second};
+        it1 = kernargs(true).find(it->second);
+
+        if (it1 == kernargs().end()) {
+            throw std::runtime_error{
+                "Missing metadata for __global__ function: " + it->second};
+        }
     }
 
     std::tuple<Formals...> to_formals{std::move(actuals)};

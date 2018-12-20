@@ -538,6 +538,7 @@ const unordered_map<uintptr_t, vector<pair<hsa_agent_t, Kernel_descriptor>>>& fu
             // created previously
 
             function_names(rebuild);
+            kernargs(rebuild);
             kernels(rebuild);
             globals(rebuild);
         }
@@ -585,12 +586,12 @@ unordered_map<string, void*>& globals(bool rebuild) {
     return r;
 }
 
-
-unordered_map<string, vector<pair<size_t, size_t>>>& kernargs() {
+const unordered_map<string, vector<pair<size_t, size_t>>>& kernargs(
+    bool rebuild) {
     static unordered_map<string, vector<pair<size_t, size_t>>> r;
     static once_flag f;
 
-    call_once(f, []() {
+    static const auto build_map = [](decltype(r)& x) {
         for (auto&& isa_blobs : code_object_blobs()) {
             for (auto&& blob : isa_blobs.second) {
                 stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
@@ -598,10 +599,28 @@ unordered_map<string, vector<pair<size_t, size_t>>>& kernargs() {
                 elfio reader;
                 if (!reader.load(tmp)) continue;
 
-                read_kernarg_metadata(reader, r);
+                read_kernarg_metadata(reader, x);
             }
         }
-    });
+    };
+    call_once(f, []() { r.reserve(function_names().size()); build_map(r); });
+
+    if (rebuild) {
+        static mutex mtx;
+        thread_local static decltype(r) tmp;
+
+        {
+            lock_guard<mutex> lck{mtx};
+
+            tmp.insert(r.cbegin(), r.cend()); // Should use merge in C++17.
+        }
+
+        build_map(tmp);
+
+        lock_guard<mutex> lck{mtx};
+
+        r.insert(tmp.cbegin(), tmp.cend());
+    }
 
     return r;
 }

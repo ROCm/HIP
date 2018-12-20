@@ -99,8 +99,9 @@ const std::unordered_map<std::uintptr_t, std::vector<std::pair<hsa_agent_t, Kern
 functions(bool rebuild = false);
 const std::unordered_map<std::uintptr_t, std::string>& function_names(bool rebuild = false);
 std::unordered_map<std::string, void*>& globals(bool rebuild = false);
-std::unordered_map<
-    std::string, std::vector<std::pair<std::size_t, std::size_t>>>& kernargs();
+const std::unordered_map<
+    std::string, std::vector<std::pair<std::size_t, std::size_t>>>&
+    kernargs(bool rebuild = false);
 
 hsa_executable_t load_executable(const std::string& file, hsa_executable_t executable,
                                  hsa_agent_t agent);
