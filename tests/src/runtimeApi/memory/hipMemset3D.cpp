@@ -24,8 +24,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * //Small copy
- * RUN: %t -N 10    --memsetval 0x42
+ * RUN: %t
  * HIT_END
  */
 
