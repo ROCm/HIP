@@ -43,16 +43,6 @@ THE SOFTWARE.
 
 namespace ct = clang::tooling;
 
-namespace {
-
-void copyFile(const std::string& src, const std::string& dst) {
-  std::ifstream source(src, std::ios::binary);
-  std::ofstream dest(dst, std::ios::binary);
-  dest << source.rdbuf();
-}
-
-} // anonymous namespace
-
 int main(int argc, const char **argv) {
   llcompat::PrintStackTraceOnErrorSignal();
   ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
@@ -108,13 +98,17 @@ int main(int argc, const char **argv) {
       return 1;
     }
     SmallString<256> sourceAbsPath;
-    EC = llvm::sys::fs::real_path(src.c_str(), sourceAbsPath, true);
+    EC = sys::fs::real_path(src.c_str(), sourceAbsPath, true);
     if (EC) {
       llvm::errs() << EC.message() << "\n";
       return 1;
     }
-    StringRef sourceDir = llvm::sys::path::parent_path(sourceAbsPath);
-    copyFile(src, tmpFile.c_str());
+    StringRef sourceDir = sys::path::parent_path(sourceAbsPath);
+    EC = sys::fs::copy_file(src, tmpFile);
+    if (EC) {
+      llvm::errs() << EC.message() << "\n";
+      return 1;
+    }
     // Initialise the statistics counters for this file.
     Statistics::setActive(src);
     // RefactoringTool operates on the file in-place. Giving it the output path is no good,
@@ -132,18 +126,22 @@ int main(int argc, const char **argv) {
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
     Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
+    Statistics& currentStat = Statistics::current();
     // Hipify _all_ the things!
     if (Tool.runAndSave(&actionFactory)) {
-      Statistics& currentStat = Statistics::current();
       currentStat.hasErrors = true;
       LLVM_DEBUG(llvm::dbgs() << "Skipped some replacements.\n");
     }
-    // Either move the tmpfile to the output, or remove it.
-    if (!NoOutput) {
-      rename(tmpFile.c_str(), dst.c_str());
-    } else {
-      remove(tmpFile.c_str());
+    // Copy the tmpfile to the output
+    if (!NoOutput && !currentStat.hasErrors) {
+      EC = sys::fs::copy_file(tmpFile, dst);
+      if (EC) {
+        llvm::errs() << EC.message() << "\n";
+        return 1;
+      }
     }
+    // Remove the tmp file without error check
+    sys::fs::remove(tmpFile);
     Statistics::current().markCompletion();
     Statistics::current().print(csv.get(), statPrint);
     dst.clear();
