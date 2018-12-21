@@ -19,11 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-/**
-  * @file Cuda2Hip.cpp
-  *
-  * This file is compiled and linked into clang based hipify tool.
-  */
 
 #include <cstdio>
 #include <fstream>
@@ -47,25 +42,54 @@ int main(int argc, const char **argv) {
   llcompat::PrintStackTraceOnErrorSignal();
   ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
-  std::string dst = OutputFilename;
-  if (!dst.empty() && fileSources.size() > 1) {
-    llvm::errs() << "[HIPIFY] conflict: -o and multiple source files are specified.\n";
-    return 1;
-  }
-  if (NoOutput) {
+  std::string dst = OutputFilename, sHipify = "[HIPIFY] ", sConflict = "conflict: ", sError = "error: ";
+  if (!dst.empty()) {
+    if (fileSources.size() > 1) {
+      llvm::errs() << sHipify << sConflict << "-o and multiple source files are specified.\n";
+      return 1;
+    }
     if (Inplace) {
-      llvm::errs() << "[HIPIFY] conflict: both -no-output and -inplace options are specified.\n";
+      llvm::errs() << sHipify << sConflict << "both -o and -inplace options are specified.\n";
       return 1;
     }
-    if (!dst.empty()) {
-      llvm::errs() << "[HIPIFY] conflict: both -no-output and -o options are specified.\n";
+    if (NoOutput) {
+      llvm::errs() << sHipify << sConflict << "both -no-output and -o options are specified.\n";
       return 1;
     }
+  }
+  if (NoOutput && Inplace) {
+    llvm::errs() << sHipify << sConflict << "both -no-output and -inplace options are specified.\n";
+    return 1;
   }
   if (Examine) {
     NoOutput = PrintStats = true;
   }
   int Result = 0;
+  std::error_code EC;
+  SmallString<128> tmpFile;
+  SmallString<256> sourceAbsPath, tmpDirAbsPath;
+  StringRef sourceFileName, sourceDir, ext = "hip";
+  std::string sTmpDirAbsParh, sTmpFileName;
+  if (!TemporaryDir.empty()) {
+    EC = sys::fs::real_path(TemporaryDir, tmpDirAbsPath, true);
+    if (!EC && sys::fs::is_regular_file(tmpDirAbsPath)) {
+      llvm::errs() << "\n" << sHipify << sError << TemporaryDir << " is not a directory\n";
+      return 1;
+    }
+    if (EC) {
+      EC = sys::fs::create_directory(TemporaryDir);
+      if (EC) {
+        llvm::errs() << "\n" << sHipify << sError << EC.message() << ": temporary directory: " << TemporaryDir << "\n";
+        return 1;
+      }
+      EC = sys::fs::real_path(TemporaryDir, tmpDirAbsPath, true);
+      if (EC) {
+        llvm::errs() << "\n" << sHipify << sError << EC.message() << ": temporary directory: " << TemporaryDir << "\n";
+        return 1;
+      }
+    }
+    sTmpDirAbsParh = tmpDirAbsPath.c_str();
+  }
   // Arguments for the Statistics print routines.
   std::unique_ptr<std::ostream> csv = nullptr;
   llvm::raw_ostream* statPrint = nullptr;
@@ -75,39 +99,41 @@ int main(int argc, const char **argv) {
   if (PrintStats) {
     statPrint = &llvm::errs();
   }
+  int FD;
   for (const auto & src : fileSources) {
     if (dst.empty()) {
       if (Inplace) {
         dst = src;
       } else {
-        dst = src + ".hip";
+        dst = src + "." + ext.str();
       }
-    } else if (Inplace) {
-      llvm::errs() << "[HIPIFY] conflict: both -o and -inplace options are specified.\n";
-      return 1;
     }
     // Create a copy of the file to work on. When we're done, we'll move this onto the
     // output (which may mean overwriting the input, if we're in-place).
     // Should we fail for some reason, we'll just leak this file and not corrupt the input.
-    SmallString<128> tmpFile;
-    int FD;
-    StringRef Extension = "hipified-tmp";
-    std::error_code EC = sys::fs::createTemporaryFile("hipify-clang", Extension, FD, tmpFile);
+    EC = sys::fs::real_path(src, sourceAbsPath, true);
     if (EC) {
-      llvm::errs() << EC.message() << "\n";
-      return 1;
+      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << src << "\n";
+      Result = 1;
+      continue;
     }
-    SmallString<256> sourceAbsPath;
-    EC = sys::fs::real_path(src.c_str(), sourceAbsPath, true);
-    if (EC) {
-      llvm::errs() << EC.message() << "\n";
-      return 1;
+    if (TemporaryDir.empty()) {
+      EC = sys::fs::createTemporaryFile(src, ext, FD, tmpFile);
+      if (EC) {
+        llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << tmpFile << "\n";
+        Result = 1;
+        continue;
+      }
+    } else {
+      sourceFileName = sys::path::filename(sourceAbsPath);
+      sTmpFileName = sTmpDirAbsParh + "/" + sourceFileName.str() + "." + ext.str();
+      tmpFile = sTmpFileName;
     }
-    StringRef sourceDir = sys::path::parent_path(sourceAbsPath);
     EC = sys::fs::copy_file(src, tmpFile);
     if (EC) {
-      llvm::errs() << EC.message() << "\n";
-      return 1;
+      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << src << " to " << tmpFile << "\n";
+      Result = 1;
+      continue;
     }
     // Initialise the statistics counters for this file.
     Statistics::setActive(src);
@@ -117,7 +143,7 @@ int main(int argc, const char **argv) {
     ct::RefactoringTool Tool(OptionsParser.getCompilations(), std::string(tmpFile.c_str()));
     ct::Replacements& replacementsToUse = llcompat::getReplacements(Tool, tmpFile.c_str());
     ReplacementsFrontendActionFactory<HipifyAction> actionFactory(&replacementsToUse);
-    std::string sInclude = "-I" + sourceDir.str();
+    std::string sInclude = "-I" + sys::path::parent_path(sourceAbsPath).str();
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
     // Ensure at least c++11 is used.
@@ -136,12 +162,15 @@ int main(int argc, const char **argv) {
     if (!NoOutput && !currentStat.hasErrors) {
       EC = sys::fs::copy_file(tmpFile, dst);
       if (EC) {
-        llvm::errs() << EC.message() << "\n";
-        return 1;
+        llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << tmpFile << " to " << dst << "\n";
+        Result = 1;
+        continue;
       }
     }
     // Remove the tmp file without error check
-    sys::fs::remove(tmpFile);
+    if (!SaveTemps) {
+      sys::fs::remove(tmpFile);
+    }
     Statistics::current().markCompletion();
     Statistics::current().print(csv.get(), statPrint);
     dst.clear();
