@@ -30,7 +30,9 @@ namespace ct = clang::tooling;
 
 extern cl::OptionCategory ToolTemplateCategory;
 extern cl::opt<std::string> OutputFilename;
+extern cl::opt<std::string> TemporaryDir;
 extern cl::opt<bool> Inplace;
+extern cl::opt<bool> SaveTemps;
 extern cl::opt<bool> NoBackup;
 extern cl::opt<bool> NoOutput;
 extern cl::opt<bool> PrintStats;
