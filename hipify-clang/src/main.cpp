@@ -36,13 +36,47 @@ THE SOFTWARE.
 
 #define DEBUG_TYPE "cuda2hip"
 
+std::string sHipify = "[HIPIFY] ", sConflict = "conflict: ", sError = "error: ";
 namespace ct = clang::tooling;
+
+std::string getAbsoluteDirectory(const std::string& sDir, std::error_code& EC,
+                                 const std::string& sDirType = "temporary",
+                                 bool bCreateDir = true) {
+  if (sDir.empty()) {
+    return sDir;
+  }
+  SmallString<256> dirAbsPath;
+  EC = sys::fs::real_path(sDir, dirAbsPath, true);
+  if (!EC && sys::fs::is_regular_file(dirAbsPath)) {
+    llvm::errs() << "\n" << sHipify << sError << sDir << " is not a directory\n";
+    EC = std::error_code(static_cast<int>(std::errc::not_a_directory), std::generic_category());
+    return "";
+  }
+  if (EC && bCreateDir) {
+    EC = sys::fs::create_directory(sDir);
+    if (EC) {
+      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << sDirType << " directory: " << sDir << "\n";
+      return "";
+    }
+    EC = sys::fs::real_path(sDir, dirAbsPath, true);
+    if (EC) {
+      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << sDirType << " directory: " << sDir << "\n";
+      return "";
+    }
+  }
+  return dirAbsPath.c_str();
+}
 
 int main(int argc, const char **argv) {
   llcompat::PrintStackTraceOnErrorSignal();
   ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
-  std::string dst = OutputFilename, sHipify = "[HIPIFY] ", sConflict = "conflict: ", sError = "error: ";
+  std::string dst = OutputFilename, dstDir = OutputDir;
+  std::error_code EC;
+  std::string sOutputDirAbsPath = getAbsoluteDirectory(OutputDir, EC, "output");
+  if (EC) {
+    return 1;
+  }
   if (!dst.empty()) {
     if (fileSources.size() > 1) {
       llvm::errs() << sHipify << sConflict << "-o and multiple source files are specified.\n";
@@ -56,39 +90,29 @@ int main(int argc, const char **argv) {
       llvm::errs() << sHipify << sConflict << "both -no-output and -o options are specified.\n";
       return 1;
     }
+    if (!dstDir.empty()) {
+      dst = sOutputDirAbsPath + "/" + dst;
+    }
   }
   if (NoOutput && Inplace) {
     llvm::errs() << sHipify << sConflict << "both -no-output and -inplace options are specified.\n";
+    return 1;
+  }
+  if (!dstDir.empty() && Inplace) {
+    llvm::errs() << sHipify << sConflict << "both -o-dir and -inplace options are specified.\n";
     return 1;
   }
   if (Examine) {
     NoOutput = PrintStats = true;
   }
   int Result = 0;
-  std::error_code EC;
   SmallString<128> tmpFile;
-  SmallString<256> sourceAbsPath, tmpDirAbsPath;
-  StringRef sourceFileName, sourceDir, ext = "hip";
-  std::string sTmpDirAbsParh, sTmpFileName;
-  if (!TemporaryDir.empty()) {
-    EC = sys::fs::real_path(TemporaryDir, tmpDirAbsPath, true);
-    if (!EC && sys::fs::is_regular_file(tmpDirAbsPath)) {
-      llvm::errs() << "\n" << sHipify << sError << TemporaryDir << " is not a directory\n";
-      return 1;
-    }
-    if (EC) {
-      EC = sys::fs::create_directory(TemporaryDir);
-      if (EC) {
-        llvm::errs() << "\n" << sHipify << sError << EC.message() << ": temporary directory: " << TemporaryDir << "\n";
-        return 1;
-      }
-      EC = sys::fs::real_path(TemporaryDir, tmpDirAbsPath, true);
-      if (EC) {
-        llvm::errs() << "\n" << sHipify << sError << EC.message() << ": temporary directory: " << TemporaryDir << "\n";
-        return 1;
-      }
-    }
-    sTmpDirAbsParh = tmpDirAbsPath.c_str();
+  SmallString<256> sourceAbsPath;
+  StringRef sourceFileName, ext = "hip";
+  std::string sTmpFileName;
+  std::string sTmpDirAbsParh = getAbsoluteDirectory(TemporaryDir, EC);
+  if (EC) {
+    return 1;
   }
   // Arguments for the Statistics print routines.
   std::unique_ptr<std::ostream> csv = nullptr;
@@ -106,6 +130,9 @@ int main(int argc, const char **argv) {
         dst = src;
       } else {
         dst = src + "." + ext.str();
+        if (!dstDir.empty()) {
+          dst = sOutputDirAbsPath + "/" + dst;
+        }
       }
     }
     // Create a copy of the file to work on. When we're done, we'll move this onto the
