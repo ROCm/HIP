@@ -29,6 +29,11 @@ cl::opt<std::string> OutputFilename("o",
   cl::value_desc("filename"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt<std::string> OutputDir("o-dir",
+  cl::desc("Output direcory"),
+  cl::value_desc("directory"),
+  cl::cat(ToolTemplateCategory));
+
 cl::opt<std::string> TemporaryDir("temp-dir",
   cl::desc("Temporary direcory"),
   cl::value_desc("directory"),
