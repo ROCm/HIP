@@ -123,7 +123,6 @@ int main(int argc, const char **argv) {
   if (PrintStats) {
     statPrint = &llvm::errs();
   }
-  int FD;
   for (const auto & src : fileSources) {
     if (dst.empty()) {
       if (Inplace) {
@@ -145,7 +144,7 @@ int main(int argc, const char **argv) {
       continue;
     }
     if (TemporaryDir.empty()) {
-      EC = sys::fs::createTemporaryFile(src, ext, FD, tmpFile);
+      EC = sys::fs::createTemporaryFile(src, ext, tmpFile);
       if (EC) {
         llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << tmpFile << "\n";
         Result = 1;
