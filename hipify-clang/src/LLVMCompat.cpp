@@ -94,4 +94,13 @@ clang::SourceLocation getEndLoc(const clang::TypeLoc& typeLoc) {
 #endif
 }
 
+std::error_code real_path(const Twine &path, SmallVectorImpl<char> &output,
+                          bool expand_tilde) {
+#if LLVM_VERSION_MAJOR < 5
+  return sys::fs::make_absolute(path, output);
+#else
+  return sys::fs::real_path(path, output, expand_tilde);
+#endif
+}
+
 } // namespace llcompat
