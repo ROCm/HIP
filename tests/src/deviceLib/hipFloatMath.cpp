@@ -38,10 +38,12 @@ __global__ void floatMath(float* In, float* Out) {
     Out[tid] = __cosf(In[tid]);
     Out[tid] = __exp10f(Out[tid]);
     Out[tid] = __expf(Out[tid]);
-#if defined OCML_BASIC_ROUNDED_OPERATIONS
     Out[tid] = __frsqrt_rn(Out[tid]);
+#if defined OCML_BASIC_ROUNDED_OPERATIONS
     Out[tid] = __fsqrt_rd(Out[tid]);
+#endif
     Out[tid] = __fsqrt_rn(Out[tid]);
+#if defined OCML_BASIC_ROUNDED_OPERATIONS
     Out[tid] = __fsqrt_ru(Out[tid]);
     Out[tid] = __fsqrt_rz(Out[tid]);
 #endif
