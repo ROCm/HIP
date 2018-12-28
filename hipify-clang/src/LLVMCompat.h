@@ -78,4 +78,7 @@ void EnterPreprocessorTokenStream(clang::Preprocessor& _pp,
                                   size_t len,
                                   bool DisableMacroExpansion);
 
+std::error_code real_path(const Twine &path, SmallVectorImpl<char> &output,
+                          bool expand_tilde = false);
+
 } // namespace llcompat
