@@ -322,7 +322,6 @@ For example:
   square.cu \
   -- \
   --cuda-path=/usr/local/cuda-8.0 \
-  --cuda-gpu-arch=sm_50 \
   -isystem /usr/local/cuda-8.0/samples/common/inc
 ```
 
@@ -338,5 +337,5 @@ The information contained herein is for informational purposes only, and is subj
 
 AMD, the AMD Arrow logo, and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
 
-Copyright (c) 2014-2018 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2014-2019 Advanced Micro Devices, Inc. All rights reserved.
 
