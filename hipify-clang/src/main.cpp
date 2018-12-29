@@ -173,7 +173,11 @@ int main(int argc, const char **argv) {
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
     // Ensure at least c++11 is used.
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-std=c++11", ct::ArgumentInsertPosition::BEGIN));
+    std::string stdCpp = "-std=c++11";
+#if defined(_MSC_VER)
+    stdCpp = "-std=c++14";
+#endif
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(stdCpp.c_str(), ct::ArgumentInsertPosition::BEGIN));
 #if defined(HIPIFY_CLANG_RES)
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
