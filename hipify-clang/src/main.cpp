@@ -171,6 +171,8 @@ int main(int argc, const char **argv) {
     ReplacementsFrontendActionFactory<HipifyAction> actionFactory(&replacementsToUse);
     std::string sInclude = "-I" + sys::path::parent_path(sourceAbsPath).str();
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("cuda", ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-x", ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
     // Ensure at least c++11 is used.
     std::string stdCpp = "-std=c++11";
