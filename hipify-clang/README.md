@@ -321,7 +321,6 @@ For example:
 ./hipify-clang \
   square.cu \
   -- \
-  -x cuda \
   --cuda-path=/usr/local/cuda-8.0 \
   --cuda-gpu-arch=sm_50 \
   -isystem /usr/local/cuda-8.0/samples/common/inc
