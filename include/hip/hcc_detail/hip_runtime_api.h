@@ -2573,7 +2573,7 @@ hipError_t hipIpcCloseMemHandle(void* devPtr);
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
-hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem = 0, hipStream_t stream = 0);
+hipError_t hipConfigureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem __dparm(0), hipStream_t stream __dparm(0));
 
 
 /**
