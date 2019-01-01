@@ -74,12 +74,43 @@ int test_gl2(size_t N) {
     return 0;
 }
 
+#if __HIP__
+int test_triple_chevron(size_t N) {
+    size_t Nbytes = N * sizeof(int);
+
+    int *A_d, *B_d, *C_d;
+    int *A_h, *B_h, *C_h;
+
+    HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N);
+
+
+    unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
+
+
+    // Full vadd in one large chunk, to get things started:
+    HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
+    HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
+
+    vectorADD2<<<dim3(blocks), dim3(threadsPerBlock)>>>(A_d, B_d, C_d, N);
+
+    HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
+
+    HIPCHECK(hipDeviceSynchronize());
+
+    HipTest::checkVectorADD(A_h, B_h, C_h, N);
+
+    return 0;
+}
+#endif
 
 int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
     test_gl2(N);
 
+#if __HIP__
+    test_triple_chevron(N);
+#endif
 
     passed();
 }
