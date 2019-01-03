@@ -34,7 +34,7 @@
 `hipify-clang` requires:
 1. LLVM+CLANG of at least version 3.8.0, latest stable and recommended release: 6.0.1 (linux and windows).
 
-2. CUDA at least version 7.5, latest supported release is 9.0.
+2. CUDA at least version 7.0, latest supported version is 9.0.
 
 | **LLVM release version** | **CUDA latest supported version** | **Comments** |
 |:------------------------:|:---------------------------------:|:------------:|
