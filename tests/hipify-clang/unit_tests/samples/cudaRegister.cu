@@ -22,12 +22,6 @@ THE SOFTWARE.
 #include<cuda.h>
 #include<cuda_runtime.h>
 #include<iostream>
-#ifdef _WIN32
-#include <windows.h>
-#define sleep(x) Sleep(x)
-#else
-#include <unistd.h>
-#endif
 #include<stdio.h>
 #include<malloc.h>
 
@@ -90,7 +84,6 @@ int main(){
 
   // CHECK: hipLaunchKernelGGL(Inc1, dim3(dimGrid), dim3(dimBlock), 0, 0, Ad, Bd);
 	Inc1<<<dimGrid, dimBlock>>>(Ad, Bd);
-	sleep(3);
 	A[0] = -(ITER*1.0f);
 	std::cout<<"Same cache line before completion: \t"<< A[0]<<std::endl;
 
@@ -104,7 +97,6 @@ int main(){
 
   // CHECK: hipLaunchKernelGGL(Inc2, dim3(dimGrid), dim3(dimBlock), 0, 0, Ad, Bd);
 	Inc2<<<dimGrid, dimBlock>>>(Ad, Bd);
-	sleep(3);
 	A[0] = -(ITER*1.0f);
 	std::cout<<"Diff cache line before completion: \t"<<A[0]<<std::endl;
 
