@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.12.3)
 project(hipify-clang)
 
 if (MSVC AND MSVC_VERSION VERSION_LESS "1900")
