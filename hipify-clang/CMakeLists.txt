@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 2.8.12)
 project(hipify-clang)
 
+if (MSVC AND MSVC_VERSION VERSION_LESS "1900")
+    message(SEND_ERROR "hipify-clang could be built by Visual Studio 14 2015 or higher.")
+    return()
+endif()
+
 find_package(LLVM REQUIRED)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}:")
 message(STATUS "   - CMake module path: ${LLVM_CMAKE_DIR}")
