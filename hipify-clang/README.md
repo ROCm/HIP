@@ -55,7 +55,7 @@
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
 
 Failing that or having multiple versions of LLVM, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
-[CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.10/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\6.0.1\dist`
+[CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.12/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\6.0.1\dist`
 
 ## <a name="build-and-install"></a> Build and install
 
@@ -175,7 +175,7 @@ LLVM 5.0.0 - 6.0.1, CUDA 8.0, cudnn-8.0
 
 Build system for the above configurations:
 
-Python 2.7 (min), cmake 3.5.2 (min), GNU C/C++ 5.4.0 (min).
+Python 2.7 (min), cmake 3.12.3 (min), GNU C/C++ 5.4.0 (min).
 
 Here is an example of building `hipify-clang` with testing support on `Ubuntu 16.04`:
 
@@ -278,7 +278,7 @@ LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn-8.0
 
 Build system for the above configurations:
 
-Python 3.6 (min), cmake 3.10 (min), Visual Studio 15.5 2017 (min).
+Python 3.6 (min), cmake 3.12.3 (min), Visual Studio 15.5 2017 (min).
 
 Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 15 2017`:
 
