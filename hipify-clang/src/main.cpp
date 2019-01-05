@@ -138,20 +138,20 @@ int main(int argc, const char **argv) {
     // output (which may mean overwriting the input, if we're in-place).
     // Should we fail for some reason, we'll just leak this file and not corrupt the input.
     EC = llcompat::real_path(src, sourceAbsPath, true);
+    sourceFileName = sys::path::filename(sourceAbsPath);
     if (EC) {
       llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << src << "\n";
       Result = 1;
       continue;
     }
     if (TemporaryDir.empty()) {
-      EC = sys::fs::createTemporaryFile(src, ext, tmpFile);
+      EC = sys::fs::createTemporaryFile(sourceFileName, ext, tmpFile);
       if (EC) {
         llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << tmpFile << "\n";
         Result = 1;
         continue;
       }
     } else {
-      sourceFileName = sys::path::filename(sourceAbsPath);
       sTmpFileName = sTmpDirAbsParh + "/" + sourceFileName.str() + "." + ext.str();
       tmpFile = sTmpFileName;
     }
