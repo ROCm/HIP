@@ -46,7 +46,7 @@ std::string getAbsoluteDirectory(const std::string& sDir, std::error_code& EC,
     return sDir;
   }
   SmallString<256> dirAbsPath;
-  EC = sys::fs::real_path(sDir, dirAbsPath, true);
+  EC = llcompat::real_path(sDir, dirAbsPath, true);
   if (!EC && sys::fs::is_regular_file(dirAbsPath)) {
     llvm::errs() << "\n" << sHipify << sError << sDir << " is not a directory\n";
     EC = std::error_code(static_cast<int>(std::errc::not_a_directory), std::generic_category());
@@ -58,7 +58,7 @@ std::string getAbsoluteDirectory(const std::string& sDir, std::error_code& EC,
       llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << sDirType << " directory: " << sDir << "\n";
       return "";
     }
-    EC = sys::fs::real_path(sDir, dirAbsPath, true);
+    EC = llcompat::real_path(sDir, dirAbsPath, true);
     if (EC) {
       llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << sDirType << " directory: " << sDir << "\n";
       return "";
@@ -137,7 +137,7 @@ int main(int argc, const char **argv) {
     // Create a copy of the file to work on. When we're done, we'll move this onto the
     // output (which may mean overwriting the input, if we're in-place).
     // Should we fail for some reason, we'll just leak this file and not corrupt the input.
-    EC = sys::fs::real_path(src, sourceAbsPath, true);
+    EC = llcompat::real_path(src, sourceAbsPath, true);
     if (EC) {
       llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << src << "\n";
       Result = 1;
@@ -171,9 +171,20 @@ int main(int argc, const char **argv) {
     ReplacementsFrontendActionFactory<HipifyAction> actionFactory(&replacementsToUse);
     std::string sInclude = "-I" + sys::path::parent_path(sourceAbsPath).str();
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("cuda", ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-x", ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
+    // Includes for clang's CUDA wrappers for using by packaged hipify-clang
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include", ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include/cuda_wrappers", ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));
     // Ensure at least c++11 is used.
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-std=c++11", ct::ArgumentInsertPosition::BEGIN));
+    std::string stdCpp = "-std=c++11";
+#if defined(_MSC_VER)
+    stdCpp = "-std=c++14";
+#endif
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(stdCpp.c_str(), ct::ArgumentInsertPosition::BEGIN));
 #if defined(HIPIFY_CLANG_RES)
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
