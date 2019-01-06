@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "LLVMCompat.h"
+#include "llvm/Support/Path.h"
 
 namespace llcompat {
 
@@ -97,7 +98,13 @@ clang::SourceLocation getEndLoc(const clang::TypeLoc& typeLoc) {
 std::error_code real_path(const Twine &path, SmallVectorImpl<char> &output,
                           bool expand_tilde) {
 #if LLVM_VERSION_MAJOR < 5
-  return sys::fs::make_absolute(path, output);
+  output.clear();
+  std::string s = path.str();
+  output.append(s.begin(), s.end());
+  if (sys::path::is_relative(path)) {
+    return sys::fs::make_absolute(output);
+  }
+  return std::error_code();
 #else
   return sys::fs::real_path(path, output, expand_tilde);
 #endif
