@@ -23,7 +23,11 @@ HIP code can be developed either on AMD ROCm platform using hcc or clang compile
 
 ## AMD-hcc
 
-* Install the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) packages.  ROCm will install all of the necessary components, including the kernel driver, runtime software, HCC compiler, and HIP.
+* Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
+* Install the "hip_hcc" package. This will install HCC and the HIP porting layer.
+```
+apt-get install hip_hcc
+```
 
 * Default paths and environment variables:
 
@@ -67,7 +71,7 @@ HIP code can be developed either on AMD ROCm platform using hcc or clang compile
    * Optionally, set HIPCC_VERBOSE=7 to output the command line for compilation to make sure clang is used instead of hcc.
 
 ## NVIDIA-nvcc
-* Configure the additional package server as described [here](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/).  
+* Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
 * Install the "hip_nvcc" package.  This will install CUDA SDK and the HIP porting layer.
 ```
 apt-get install hip_nvcc
@@ -121,21 +125,4 @@ make install
 ```
 
 * After installation, make sure HIP_PATH is pointed to `/where/to/install/hip`. 
-
-## HCC Options
-
-### Using HIP with the AMD Native-GCN compiler.
-AMD recently released a direct-to-GCN-ISA target.  This compiler generates GCN ISA directly from LLVM, without going through an intermediate compiler 
-IR such as HSAIL or PTX.
-The native GCN target is included with upstream LLVM, and has also been integrated with HCC compiler and can be used to compiler HIP programs for AMD.
-Binary packages for the direct-to-isa package are included with the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) package. 
-Alternatively, this sections describes how to build it from source: 
-
-1. Install the ROCm packages as described above.
-2. Follow the instructions [here](https://github.com/RadeonOpenCompute/HCC-Native-GCN-ISA/wiki)
-   * In the make step for HCC, we recommend setting -DCMAKE_INSTALL_PREFIX.  
-   * Set HCC_HOME environment variable before compiling HIP program to point to the native compiler:
-```shell
-export HCC_HOME=/path/to/native/hcc
-```
 
