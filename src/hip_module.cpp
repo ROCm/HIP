@@ -325,21 +325,19 @@ pair<hipDeviceptr_t, size_t> read_global_description(ForwardIterator f, ForwardI
 
 hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
                                          const char* name) {
-    static unordered_map<hipModule_t, vector<Agent_global>> agent_globals;
+    static unordered_map<std::string, vector<Agent_global>> agent_globals;
 
-    // TODO: this is not particularly robust.
-    if (agent_globals.count(hmod) == 0) {
+    auto key = hmod->hash;
+    if (agent_globals.count(key) == 0) {
         static mutex mtx;
         lock_guard<mutex> lck{mtx};
 
-        if (agent_globals.count(hmod) == 0) {
-            agent_globals.emplace(hmod, read_agent_globals(this_agent(), hmod->executable));
+        if (agent_globals.count(key) == 0) {
+            agent_globals.emplace(key, read_agent_globals(this_agent(), hmod->executable));
         }
     }
 
-    // TODO: This is unsafe iff some other emplacement triggers rehashing.
-    //       It will have to be properly fleshed out in the future.
-    const auto it0 = agent_globals.find(hmod);
+    const auto it0 = agent_globals.find(key);
     if (it0 == agent_globals.cend()) {
         throw runtime_error{"agent_globals data structure corrupted."};
     }
@@ -536,6 +534,21 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     return hipSuccess;
 }
 
+// calculate MD5 checksum
+static std::string checksum(size_t size, const char *source) {
+    // FNV-1a hashing, 64-bit version
+    const uint64_t FNV_prime = 0x100000001b3;
+    const uint64_t FNV_basis = 0xcbf29ce484222325;
+    uint64_t hash = FNV_basis;
+
+    const char *str = static_cast<const char *>(source);
+    for (auto i = 0; i < size; ++i) {
+        hash ^= *str++;
+        hash *= FNV_prime;
+    }
+    return std::to_string(hash);
+}
+
 hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     if (!module) return hipErrorInvalidValue;
@@ -550,8 +563,13 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     auto tmp = code_object_blob_for_agent(image, this_agent());
 
-    (*module)->executable = hip_impl::load_executable(
-        tmp.empty() ? read_elf_file_as_string(image) : tmp, (*module)->executable, this_agent());
+    auto content = tmp.empty() ? read_elf_file_as_string(image) : tmp;
+
+    (*module)->executable = hip_impl::load_executable(content,
+                                                      (*module)->executable,
+                                                      this_agent());
+
+    (*module)->hash = checksum(content.length(), content.data());
 
     return (*module)->executable.handle ? hipSuccess : hipErrorUnknown;
 }
