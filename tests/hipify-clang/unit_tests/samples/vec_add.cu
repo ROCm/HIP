@@ -1,4 +1,4 @@
-// RUN: %run_test hipify "%s" "%t" %cuda_args
+// RUN: %run_test hipify "%s" "%t" %hipify_args %clang_args
 
 // Kernel definition
 __global__ void  vecAdd(float* A, float* B, float* C)
