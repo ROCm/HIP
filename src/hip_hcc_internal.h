@@ -374,6 +374,7 @@ struct ihipModule_t {
     std::string fileName;
     hsa_executable_t executable = {};
     hsa_code_object_reader_t coReader = {};
+    std::string hash;
 
     ~ihipModule_t() {
         if (executable.handle) hsa_executable_destroy(executable);
