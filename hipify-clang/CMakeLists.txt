@@ -1,4 +1,16 @@
-cmake_minimum_required(VERSION 3.12.3)
+if (CUDA_VERSION VERSION_GREATER "9.2")
+    cmake_minimum_required(VERSION 3.12.3)
+else()
+    if (CUDA_VERSION VERSION_LESS "9.0")
+        cmake_minimum_required(VERSION 3.5.0)
+    else()
+        cmake_minimum_required(VERSION 3.6.0)
+    endif()
+    if (MSVC AND MSVC_VERSION VERSION_GREATER "1900")
+        cmake_minimum_required(VERSION 3.7.2)
+    endif()
+endif()
+
 project(hipify-clang)
 
 if (MSVC AND MSVC_VERSION VERSION_LESS "1900")
