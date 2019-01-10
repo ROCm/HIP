@@ -63,7 +63,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   }
 
   if (hip::getCurrentContext()->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
-    return hipErrorOutOfMemory;
+    return hipErrorMemoryAllocation;
   }
 
   *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), flags, sizeBytes, hip::getCurrentContext()->devices()[0]->info().memBaseAddrAlign_);
@@ -173,6 +173,9 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 }
 
 hipError_t hipFree(void* ptr) {
+  if (ptr == nullptr) {
+    HIP_RETURN(hipSuccess);
+  }
   if (amd::SvmBuffer::malloced(ptr)) {
     hip::syncStreams();
     hip::getNullStream()->finish();

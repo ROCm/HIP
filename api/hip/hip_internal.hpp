@@ -24,6 +24,8 @@ THE SOFTWARE.
 #define HIP_SRC_HIP_INTERNAL_H
 
 #include "cl_common.hpp"
+#include "trace_helper.h"
+#include "utils/debug.hpp"
 #include <unordered_set>
 #include <thread>
 #include <stack>
@@ -37,6 +39,7 @@ THE SOFTWARE.
 
 // This macro should be called at the beginning of every HIP API.
 #define HIP_INIT_API(...)                                    \
+  LogPrintfInfo("%s ( %s )", __func__, ToString( __VA_ARGS__ ).c_str()); \
   amd::Thread* thread = amd::Thread::current();              \
   if (!CL_CHECK_THREAD(thread)) {                            \
     HIP_RETURN(hipErrorOutOfMemory);                         \
@@ -81,5 +84,15 @@ extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
         DebugInfoGuarantee(hip::g_lastError == hipSuccess); \
         return hip::g_lastError; \
 
+inline std::ostream& operator<<(std::ostream& os, const dim3& s) {
+    os << '{';
+    os << s.x;
+    os << ',';
+    os << s.y;
+    os << ',';
+    os << s.z;
+    os << '}';
+    return os;
+}
 
 #endif // HIP_SRC_HIP_INTERNAL_H
