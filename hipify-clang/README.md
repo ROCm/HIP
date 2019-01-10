@@ -320,9 +320,9 @@ For example:
 ```shell
 ./hipify-clang \
   square.cu \
-  -- \
   --cuda-path=/usr/local/cuda-8.0 \
-  -isystem /usr/local/cuda-8.0/samples/common/inc
+  -- \
+  -I /usr/local/cuda-8.0/samples/common/inc
 ```
 
 `hipify-clang` arguments are given first, followed by a separator, and then the arguments you'd pass to `clang` if you
