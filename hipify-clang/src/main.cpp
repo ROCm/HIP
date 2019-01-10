@@ -68,6 +68,13 @@ std::string getAbsoluteDirectory(const std::string& sDir, std::error_code& EC,
 }
 
 int main(int argc, const char **argv) {
+  std::vector<const char*> new_argv(argv, argv + argc);
+  if (std::find(new_argv.begin(), new_argv.end(), std::string("--")) == new_argv.end()) {
+    new_argv.push_back("--");
+    new_argv.push_back(nullptr);
+    argv = new_argv.data();
+    argc++;
+  }
   llcompat::PrintStackTraceOnErrorSignal();
   ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();

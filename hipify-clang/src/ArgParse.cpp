@@ -84,4 +84,9 @@ cl::opt<bool> Examine("examine",
   cl::value_desc("examine"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt<bool> DashDash("-",
+  cl::desc("Separator between hipify-clang and clang options;\ndon't specify if there are no clang options."),
+  cl::value_desc("--"),
+  cl::cat(ToolTemplateCategory));
+
 cl::extrahelp CommonHelp(ct::CommonOptionsParser::HelpMessage);
