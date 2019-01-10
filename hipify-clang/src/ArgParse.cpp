@@ -39,6 +39,11 @@ cl::opt<std::string> TemporaryDir("temp-dir",
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt<std::string> CudaPath("cuda-path",
+  cl::desc("CUDA installation path"),
+  cl::value_desc("directory"),
+  cl::cat(ToolTemplateCategory));
+
 cl::opt <bool> SaveTemps("save-temps",
   cl::desc("Save temporary files"),
   cl::value_desc("save-temps"),
