@@ -35,7 +35,7 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [HIP Programming Guide](docs/markdown/hip_programming_guide.md)
 - [HIP Profiling ](docs/markdown/hip_profiling.md)
 - [HIP Debugging](docs/markdown/hip_debugging.md)
-- [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
+- [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenCL)
 - [hipify-clang](hipify-clang/README.md)
 - [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
 - [Release Notes](RELEASE.md)
