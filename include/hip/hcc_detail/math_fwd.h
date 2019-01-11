@@ -28,6 +28,30 @@ THE SOFTWARE.
     extern "C" {
 #endif
 
+// DOT FUNCTIONS
+typedef _Float16 __2f16 __attribute__((ext_vector_type(2)));
+__device__
+__attribute__((const))
+float __ockl_fdot2(__2f16 a, __2f16 b, float c, bool s);
+__device__
+__attribute__((const))
+int __ockl_sdot2(short2 a, short2 b, int c, bool s);
+__device__
+__attribute__((const))
+unsigned int __ockl_udot2(ushort2 a, ushort2 b, unsigned int c, bool s);
+__device__
+__attribute__((const))
+int __ockl_sdot4(char4 a, char4 b, int c, bool s);
+__device__
+__attribute__((const))
+unsigned int __ockl_udot4(uchar4 a, uchar4 b, unsigned int c, bool s);
+__device__
+__attribute__((const))
+int __ockl_sdot8(int a, int b, int c, bool s);
+__device__
+__attribute__((const))
+unsigned int __ockl_udot8(unsigned int a, unsigned int b, unsigned int c, bool s);
+
 // BEGIN FLOAT
 __device__
 __attribute__((const))
