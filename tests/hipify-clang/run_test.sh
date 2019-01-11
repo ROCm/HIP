@@ -9,9 +9,9 @@ set -o errexit
 HIPIFY=$1
 IN_FILE=$2
 TMP_FILE=$3
-shift 3
+CUDA_ROOT=$4
+shift 4
 
 # Remaining args are the ones to forward to clang proper.
 
-$HIPIFY -o=$TMP_FILE $IN_FILE -- $@ && cat $TMP_FILE | sed -Ee 's|//.+|// |g' | FileCheck $IN_FILE
-
+$HIPIFY -o=$TMP_FILE $IN_FILE $CUDA_ROOT -- $@ && cat $TMP_FILE | sed -Ee 's|//.+|// |g' | FileCheck $IN_FILE
