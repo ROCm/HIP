@@ -68,6 +68,13 @@ std::string getAbsoluteDirectory(const std::string& sDir, std::error_code& EC,
 }
 
 int main(int argc, const char **argv) {
+  std::vector<const char*> new_argv(argv, argv + argc);
+  if (std::find(new_argv.begin(), new_argv.end(), std::string("--")) == new_argv.end()) {
+    new_argv.push_back("--");
+    new_argv.push_back(nullptr);
+    argv = new_argv.data();
+    argc++;
+  }
   llcompat::PrintStackTraceOnErrorSignal();
   ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
@@ -174,6 +181,10 @@ int main(int argc, const char **argv) {
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("cuda", ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-x", ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
+    if (!CudaPath.empty()) {
+      std::string sCudaPath = "--cuda-path=" + CudaPath;
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaPath.c_str(), ct::ArgumentInsertPosition::BEGIN));
+    }
     // Includes for clang's CUDA wrappers for using by packaged hipify-clang
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include", ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));

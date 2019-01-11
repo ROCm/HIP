@@ -650,7 +650,7 @@ extern "C" void __attribute__((constructor)) __startup_kernel_loader_init() {
     int hip_startup_loader=0;
     if (std::getenv("HIP_STARTUP_LOADER"))
         hip_startup_loader = atoi(std::getenv("HIP_STARTUP_LOADER"));
-    if (hip_startup_loader) functions();
+    if (hip_startup_loader) functions(true);
 }
 
 extern "C" void __attribute__((destructor)) __startup_kernel_loader_fini() {

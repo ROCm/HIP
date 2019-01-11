@@ -39,6 +39,11 @@ cl::opt<std::string> TemporaryDir("temp-dir",
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt<std::string> CudaPath("cuda-path",
+  cl::desc("CUDA installation path"),
+  cl::value_desc("directory"),
+  cl::cat(ToolTemplateCategory));
+
 cl::opt <bool> SaveTemps("save-temps",
   cl::desc("Save temporary files"),
   cl::value_desc("save-temps"),
@@ -77,6 +82,11 @@ cl::opt<std::string> OutputStatsFilename("o-stats",
 cl::opt<bool> Examine("examine",
   cl::desc("Combines -no-output and -print-stats options"),
   cl::value_desc("examine"),
+  cl::cat(ToolTemplateCategory));
+
+cl::opt<bool> DashDash("-",
+  cl::desc("Separator between hipify-clang and clang options;\ndon't specify if there are no clang options."),
+  cl::value_desc("--"),
   cl::cat(ToolTemplateCategory));
 
 cl::extrahelp CommonHelp(ct::CommonOptionsParser::HelpMessage);

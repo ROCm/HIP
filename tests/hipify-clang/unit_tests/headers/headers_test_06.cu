@@ -1,4 +1,4 @@
-// RUN: %run_test hipify "%s" "%t" %cuda_args
+// RUN: %run_test hipify "%s" "%t" %hipify_args %clang_args
 
 // CHECK: #include <hipblas.h>
 // CHECK-NOT: #include <cublas_v2.h>

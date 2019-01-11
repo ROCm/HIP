@@ -1,4 +1,4 @@
-// RUN: %run_test hipify "%s" "%t" %cuda_args
+// RUN: %run_test hipify "%s" "%t" %hipify_args %clang_args
 
 // Taken from: http://docs.nvidia.com/cuda/curand/device-api-overview.html#poisson-api-example
 /*
