@@ -25,7 +25,7 @@ THE SOFTWARE.
 
 #include <hip/hcc_detail/hip_surface_types.h>
 
-#define __SURFACE_FUNCTIONS_DECL__ static __inline__ __device__
+#define __SURFACE_FUNCTIONS_DECL__ static inline __device__
 template <class T>
 __SURFACE_FUNCTIONS_DECL__ void surf2Dread(T* data, hipSurfaceObject_t surfObj, int x, int y,
                                            int boundaryMode = hipBoundaryModeZero) {

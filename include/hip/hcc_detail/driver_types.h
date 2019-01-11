@@ -279,7 +279,7 @@ typedef struct hipMemcpy3DParms {
     size_t srcZ;
 }hipMemcpy3DParms;
 
-static __inline__ struct hipPitchedPtr make_hipPitchedPtr(void* d, size_t p, size_t xsz,
+static inline struct hipPitchedPtr make_hipPitchedPtr(void* d, size_t p, size_t xsz,
                                                           size_t ysz) {
     struct hipPitchedPtr s;
 
@@ -291,7 +291,7 @@ static __inline__ struct hipPitchedPtr make_hipPitchedPtr(void* d, size_t p, siz
     return s;
 }
 
-static __inline__ struct hipPos make_hipPos(size_t x, size_t y, size_t z) {
+static inline struct hipPos make_hipPos(size_t x, size_t y, size_t z) {
     struct hipPos p;
 
     p.x = x;
@@ -301,7 +301,7 @@ static __inline__ struct hipPos make_hipPos(size_t x, size_t y, size_t z) {
     return p;
 }
 
-static __inline__ struct hipExtent make_hipExtent(size_t w, size_t h, size_t d) {
+static inline struct hipExtent make_hipExtent(size_t w, size_t h, size_t d) {
     struct hipExtent e;
 
     e.width = w;

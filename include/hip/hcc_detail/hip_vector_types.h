@@ -34,6 +34,7 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
+#if !defined(_MSC_VER)
 #if defined(__clang__)
     #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
 #elif defined(__GNUC__) // N.B.: GCC does not support .xyzw syntax.
@@ -769,5 +770,111 @@ DECLOP_MAKE_ONE_COMPONENT(signed long long, longlong1);
 DECLOP_MAKE_TWO_COMPONENT(signed long long, longlong2);
 DECLOP_MAKE_THREE_COMPONENT(signed long long, longlong3);
 DECLOP_MAKE_FOUR_COMPONENT(signed long long, longlong4);
+#else // defined(_MSC_VER)
+#include <mmintrin.h>
+#include <xmmintrin.h>
+#include <emmintrin.h>
+#include <immintrin.h>
 
+typedef union { char data; } char1;
+typedef union { char data[2]; } char2;
+typedef union { char data[4]; } char4;
+typedef union { char4 data; } char3;
+typedef union { __m64 data; } char8;
+typedef union { __m128i data; } char16;
+
+typedef union { unsigned char data; } uchar1;
+typedef union { unsigned char data[2]; } uchar2;
+typedef union { unsigned char data[4]; } uchar4;
+typedef union { uchar4 data; } uchar3;
+typedef union { __m64 data; } uchar8;
+typedef union { __m128i data; } uchar16;
+
+typedef union { short data; } short1;
+typedef union { short data[2]; } short2;
+typedef union { __m64 data; } short4;
+typedef union { short4 data; } short3;
+typedef union { __m128i data; } short8;
+typedef union { __m128i data[2]; } short16;
+
+typedef union { unsigned short data; } ushort1;
+typedef union { unsigned short data[2]; } ushort2;
+typedef union { __m64 data; } ushort4;
+typedef union { ushort4 data; } ushort3;
+typedef union { __m128i data; } ushort8;
+typedef union { __m128i data[2]; } ushort16;
+
+typedef union { int data; } int1;
+typedef union { __m64 data; } int2;
+typedef union { __m128i data; } int4;
+typedef union { int4 data; } int3;
+typedef union { __m128i data[2]; } int8;
+typedef union { __m128i data[4];} int16;
+
+typedef union { unsigned int data; } uint1;
+typedef union { __m64 data; } uint2;
+typedef union { __m128i data; } uint4;
+typedef union { uint4 data; } uint3;
+typedef union { __m128i data[2]; } uint8;
+typedef union { __m128i data[4]; } uint16;
+
+#if !defined(_WIN64)
+typedef union { int data; } long1;
+typedef union { __m64 data; } long2;
+typedef union { __m128i data; } long4;
+typedef union { long4 data; } long3;
+typedef union { __m128i data[2]; } long8;
+typedef union { __m128i data[4]; } long16;
+
+typedef union { unsigned int data; } ulong1;
+typedef union { __m64 data; } ulong2;
+typedef union { __m128i data; } ulong4;
+typedef union { ulong4 data; } ulong3;
+typedef union { __m128i data[2]; } ulong8;
+typedef union { __m128i data[4]; } ulong16;
+#else // defined(_WIN64)
+typedef union { __m64 data; } long1;
+typedef union { __m128i data; } long2;
+typedef union { __m128i data[2]; } long4;
+typedef union { long4 data; } long3;
+typedef union { __m128i data[4]; } long8;
+typedef union { __m128i data[8]; } long16;
+
+typedef union { __m64 data; } ulong1;
+typedef union { __m128i data; } ulong2;
+typedef union { __m128i data[2]; } ulong4;
+typedef union { ulong4 data; } ulong3;
+typedef union { __m128i data[4]; } ulong8;
+typedef union { __m128i data[8]; } ulong16;
+#endif // defined(_WIN64)
+
+typedef union { __m64 data; } longlong1;
+typedef union { __m128i data; } longlong2;
+typedef union { __m128i data[2]; } longlong4;
+typedef union { longlong4 data; } longlong3;
+typedef union { __m128i data[4]; } longlong8;
+typedef union { __m128i data[8]; } longlong16;
+
+typedef union { __m64 data; } ulonglong1;
+typedef union { __m128i data; } ulonglong2;
+typedef union { __m128i data[2]; } ulonglong4;
+typedef union { ulonglong4 data; } ulonglong3;
+typedef union { __m128i data[4]; } ulonglong8;
+typedef union { __m128i data[8]; } ulonglong16;
+
+typedef union { float data; } float1;
+typedef union { __m64 data; } float2;
+typedef union { __m128 data; } float4;
+typedef union { float4 data; } float3;
+typedef union { __m256 data; } float8;
+typedef union { __m256 data[2]; } float16;
+
+typedef union { double data; } double1;
+typedef union { __m128d data; } double2;
+typedef union { __m256d data; } double4;
+typedef union { double4 data; } double3;
+typedef union { __m256d data[2]; } double8;
+typedef union { __m256d data[4]; } double16;
+
+#endif // defined(_MSC_VER)
 #endif
