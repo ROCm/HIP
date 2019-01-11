@@ -23,6 +23,7 @@ THE SOFTWARE.
 #pragma once
 
 #include "hip_fp16_math_fwd.h"
+#include "hip_vector_types.h"
 #include "math_fwd.h"
 
 #include <hip/hcc_detail/host_defines.h>
@@ -117,6 +118,43 @@ uint64_t __make_mantissa(const char* tagp)
     }
 
     return __make_mantissa_base10(tagp);
+}
+
+// DOT FUNCTIONS
+__DEVICE__
+inline
+float amd_mixed_dot(__2f16 a, __2f16 b, float c, bool saturate) {
+    return __ockl_fdot2(a, b, c, saturate);
+}
+__DEVICE__
+inline
+int amd_mixed_dot(short2 a, short2 b, int c, bool saturate) {
+    return __ockl_sdot2(a, b, c, saturate);
+}
+__DEVICE__
+inline
+uint amd_mixed_dot(ushort2 a, ushort2 b, uint c, bool saturate) {
+    return __ockl_udot2(a, b, c, saturate);
+}
+__DEVICE__
+inline
+int amd_mixed_dot(char4 a, char4 b, int c, bool saturate) {
+    return __ockl_sdot4(a, b, c, saturate);
+}
+__DEVICE__
+inline
+uint amd_mixed_dot(uchar4 a, uchar4 b, uint c, bool saturate) {
+    return __ockl_udot4(a, b, c, saturate);
+}
+__DEVICE__
+inline
+int amd_mixed_dot(int a, int b, int c, bool saturate) {
+    return __ockl_sdot8(a, b, c, saturate);
+}
+__DEVICE__
+inline
+uint amd_mixed_dot(uint a, uint b, uint c, bool saturate) {
+    return __ockl_udot8(a, b, c, saturate);
 }
 
 // BEGIN FLOAT
