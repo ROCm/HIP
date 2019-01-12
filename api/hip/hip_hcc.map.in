@@ -49,7 +49,6 @@ global:
     hipEventSynchronize;
     hipFree;
     hipFreeArray;
-    hipFreeHost;
     hipFuncSetCacheConfig;
     hipGetDevice;
     hipGetDeviceCount;
@@ -72,7 +71,6 @@ global:
     hipMalloc3D;
     hipMalloc3DArray;
     hipMallocArray;
-    hipMallocHost;
     hipMallocPitch;
     hipMemcpy;
     hipMemcpy2D;
@@ -109,7 +107,6 @@ global:
     hipModuleLaunchKernelExt;
     hipModuleLoad;
     hipModuleLoadData;
-    hipModuleLoadDataEx;
     hipModuleUnload;
     hipFuncGetAttributes;
     hipPeekAtLastError;

@@ -48,7 +48,6 @@ hipEventRecord
 hipEventSynchronize
 hipFree
 hipFreeArray
-hipFreeHost
 hipFuncSetCacheConfig
 hipGetDevice
 hipGetDeviceCount
@@ -71,7 +70,6 @@ hipMalloc
 hipMalloc3D
 hipMalloc3DArray
 hipMallocArray
-hipMallocHost
 hipMallocPitch
 hipMemcpy
 hipMemcpy2D
@@ -109,7 +107,6 @@ hipModuleLaunchKernelExt
 hipHccModuleLaunchKernel
 hipModuleLoad
 hipModuleLoadData
-hipModuleLoadDataEx
 hipModuleUnload
 hipFuncGetAttributes
 hipPeekAtLastError
@@ -131,8 +128,6 @@ __hipRegisterFatBinary
 __hipRegisterFunction
 __hipRegisterVar
 __hipUnregisterFatBinary
-__gnu_f2h_ieee
-__gnu_h2f_ieee
 hipConfigureCall
 hipSetupArgument
 hipLaunchByPtr
