@@ -89,14 +89,14 @@ cl::opt<bool> DashDash("-",
   cl::value_desc("--"),
   cl::cat(ToolTemplateCategory));
 
-cl::list<std::string> I("I",
+cl::list<std::string> IncludeDirs("I",
   cl::desc("Add directory to include search path"),
   cl::value_desc("directory"),
   cl::ZeroOrMore,
   cl::Prefix,
   cl::cat(ToolTemplateCategory));
 
-cl::list<std::string> D("D",
+cl::list<std::string> MacroNames("D",
   cl::desc("Define <macro> to <value> or 1 if <value> omitted"),
   cl::value_desc("macro>=<value"),
   cl::ZeroOrMore,
