@@ -89,4 +89,11 @@ cl::opt<bool> DashDash("-",
   cl::value_desc("--"),
   cl::cat(ToolTemplateCategory));
 
+cl::list<std::string> I("I",
+  cl::desc("Add directory to include search path"),
+  cl::value_desc("directory"),
+  cl::ZeroOrMore,
+  cl::Prefix,
+  cl::cat(ToolTemplateCategory));
+
 cl::extrahelp CommonHelp(ct::CommonOptionsParser::HelpMessage);
