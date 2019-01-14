@@ -63,6 +63,8 @@ float __ocml_copysign_f32(float, float);
 __device__
 float __ocml_cos_f32(float);
 __device__
+float __ocml_native_cos_f32(float);
+__device__
 __attribute__((pure))
 __device__
 float __ocml_cosh_f32(float);
@@ -226,6 +228,8 @@ __device__
 float __ocml_sincospi_f32(float, __attribute__((address_space(5))) float*);
 __device__
 float __ocml_sin_f32(float);
+__device__
+float __ocml_native_sin_f32(float);
 __device__
 __attribute__((pure))
 float __ocml_sinh_f32(float);
