@@ -123,11 +123,6 @@ uint64_t __make_mantissa(const char* tagp)
 // DOT FUNCTIONS
 __DEVICE__
 inline
-float amd_mixed_dot(__2f16 a, __2f16 b, float c, bool saturate) {
-    return __ockl_fdot2(a, b, c, saturate);
-}
-__DEVICE__
-inline
 int amd_mixed_dot(short2 a, short2 b, int c, bool saturate) {
     return __ockl_sdot2(a, b, c, saturate);
 }

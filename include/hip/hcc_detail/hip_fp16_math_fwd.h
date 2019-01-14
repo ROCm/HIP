@@ -53,6 +53,8 @@ extern "C"
     typedef _Float16 __2f16 __attribute__((ext_vector_type(2)));
     typedef short __2i16 __attribute__((ext_vector_type(2)));
 
+    __device__ __attribute__((const)) float __ockl_fdot2(__2f16 a, __2f16 b, float c, bool s);
+
     __device__ __attribute__((const)) __2f16 __ocml_ceil_2f16(__2f16);
     __device__ __2f16 __ocml_cos_2f16(__2f16);
     __device__ __attribute__((pure)) __2f16 __ocml_exp_2f16(__2f16);

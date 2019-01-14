@@ -29,10 +29,6 @@ THE SOFTWARE.
 #endif
 
 // DOT FUNCTIONS
-typedef _Float16 __2f16 __attribute__((ext_vector_type(2)));
-__device__
-__attribute__((const))
-float __ockl_fdot2(__2f16 a, __2f16 b, float c, bool s);
 __device__
 __attribute__((const))
 int __ockl_sdot2(short2 a, short2 b, int c, bool s);
