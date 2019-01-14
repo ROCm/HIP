@@ -199,14 +199,14 @@ int main(int argc, const char **argv) {
 #if defined(HIPIFY_CLANG_RES)
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
-    if (!D.empty()) {
-      for (std::string s : D) {
+    if (!MacroNames.empty()) {
+      for (std::string s : MacroNames) {
         Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::END));
         Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
       }
     }
-    if (!I.empty()) {
-      for (std::string s : I) {
+    if (!IncludeDirs.empty()) {
+      for (std::string s : IncludeDirs) {
         Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-I", ct::ArgumentInsertPosition::END));
         Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
       }
