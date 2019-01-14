@@ -1403,6 +1403,7 @@ THE SOFTWARE.
             }
 
             // Math functions
+            #if (__hcc_workweek__ >= 19015)
             inline
             __device__
             float amd_mixed_dot(__half2 a, __half2 b, float c, bool saturate) {
@@ -1410,6 +1411,7 @@ THE SOFTWARE.
                                     static_cast<__half2_raw>(b).data,
                                     c, saturate);
             }
+            #endif
             inline
             __device__
             __half htrunc(__half x)

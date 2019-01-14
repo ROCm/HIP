@@ -121,6 +121,7 @@ uint64_t __make_mantissa(const char* tagp)
 }
 
 // DOT FUNCTIONS
+#if (__hcc_workweek__ >= 19015)
 __DEVICE__
 inline
 int amd_mixed_dot(short2 a, short2 b, int c, bool saturate) {
@@ -151,6 +152,7 @@ inline
 uint amd_mixed_dot(uint a, uint b, uint c, bool saturate) {
     return __ockl_udot8(a, b, c, saturate);
 }
+#endif
 
 // BEGIN FLOAT
 __DEVICE__

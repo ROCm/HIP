@@ -29,6 +29,7 @@ THE SOFTWARE.
 #endif
 
 // DOT FUNCTIONS
+#if (__hcc_workweek__ >= 19015)
 __device__
 __attribute__((const))
 int __ockl_sdot2(short2 a, short2 b, int c, bool s);
@@ -47,6 +48,7 @@ int __ockl_sdot8(int a, int b, int c, bool s);
 __device__
 __attribute__((const))
 unsigned int __ockl_udot8(unsigned int a, unsigned int b, unsigned int c, bool s);
+#endif
 
 // BEGIN FLOAT
 __device__
