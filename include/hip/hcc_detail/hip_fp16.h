@@ -1405,6 +1405,13 @@ THE SOFTWARE.
             // Math functions
             inline
             __device__
+            float amd_mixed_dot(__half2 a, __half2 b, float c, bool saturate) {
+                return __ockl_fdot2(static_cast<__half2_raw>(a).data,
+                                    static_cast<__half2_raw>(b).data,
+                                    c, saturate);
+            }
+            inline
+            __device__
             __half htrunc(__half x)
             {
                 return __half_raw{
