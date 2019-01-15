@@ -34,7 +34,8 @@ link_directories(${LLVM_LIBRARY_DIRS})
 add_definitions(${LLVM_DEFINITIONS})
 
 file(GLOB_RECURSE HIPIFY_SOURCES src/*.cpp)
-add_llvm_executable(hipify-clang ${HIPIFY_SOURCES})
+file(GLOB_RECURSE HIPIFY_HEADERS src/*.h)
+add_llvm_executable(hipify-clang ${HIPIFY_SOURCES} ${HIPIFY_HEADERS})
 
 set(CMAKE_CXX_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang++)
 set(CMAKE_C_COMPILER ${LLVM_TOOLS_BINARY_DIR}/clang)
