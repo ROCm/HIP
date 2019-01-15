@@ -199,6 +199,18 @@ int main(int argc, const char **argv) {
 #if defined(HIPIFY_CLANG_RES)
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
+    if (!MacroNames.empty()) {
+      for (std::string s : MacroNames) {
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::END));
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
+      }
+    }
+    if (!IncludeDirs.empty()) {
+      for (std::string s : IncludeDirs) {
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-I", ct::ArgumentInsertPosition::END));
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
+      }
+    }
     Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
     Statistics& currentStat = Statistics::current();
     // Hipify _all_ the things!

@@ -85,8 +85,22 @@ cl::opt<bool> Examine("examine",
   cl::cat(ToolTemplateCategory));
 
 cl::opt<bool> DashDash("-",
-  cl::desc("Separator between hipify-clang and clang options;\ndon't specify if there are no clang options."),
+  cl::desc("Separator between hipify-clang and clang options;\ndon't specify if there are no clang options"),
   cl::value_desc("--"),
+  cl::cat(ToolTemplateCategory));
+
+cl::list<std::string> IncludeDirs("I",
+  cl::desc("Add directory to include search path"),
+  cl::value_desc("directory"),
+  cl::ZeroOrMore,
+  cl::Prefix,
+  cl::cat(ToolTemplateCategory));
+
+cl::list<std::string> MacroNames("D",
+  cl::desc("Define <macro> to <value> or 1 if <value> omitted"),
+  cl::value_desc("macro>=<value"),
+  cl::ZeroOrMore,
+  cl::Prefix,
   cl::cat(ToolTemplateCategory));
 
 cl::extrahelp CommonHelp(ct::CommonOptionsParser::HelpMessage);
