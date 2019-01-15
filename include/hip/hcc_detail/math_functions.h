@@ -510,10 +510,10 @@ inline
 float __cosf(float x) { return __ocml_native_cos_f32(x); }
 __DEVICE__
 inline
-float __exp10f(float x) { return __ocml_exp10_f32(x); }
+float __exp10f(float x) { return __ocml_native_exp10_f32(x); }
 __DEVICE__
 inline
-float __expf(float x) { return __ocml_exp_f32(x); }
+float __expf(float x) { return __ocml_native_exp_f32(x); }
 #if defined OCML_BASIC_ROUNDED_OPERATIONS
 __DEVICE__
 inline
@@ -613,7 +613,7 @@ float __fsqrt_rd(float x) { return __ocml_sqrt_rtn_f32(x); }
 #endif
 __DEVICE__
 inline
-float __fsqrt_rn(float x) { return __ocml_sqrt_f32(x); }
+float __fsqrt_rn(float x) { return __ocml_native_sqrt_f32(x); }
 #if defined OCML_BASIC_ROUNDED_OPERATIONS
 __DEVICE__
 inline
@@ -638,13 +638,13 @@ float __fsub_rz(float x, float y) { return __ocml_sub_rtz_f32(x, y); }
 #endif
 __DEVICE__
 inline
-float __log10f(float x) { return __ocml_log10_f32(x); }
+float __log10f(float x) { return __ocml_native_log10_f32(x); }
 __DEVICE__
 inline
-float __log2f(float x) { return __ocml_log2_f32(x); }
+float __log2f(float x) { return __ocml_native_log2_f32(x); }
 __DEVICE__
 inline
-float __logf(float x) { return __ocml_log_f32(x); }
+float __logf(float x) { return __ocml_native_log_f32(x); }
 __DEVICE__
 inline
 float __powf(float x, float y) { return __ocml_pow_f32(x, y); }
