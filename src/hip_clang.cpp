@@ -86,6 +86,10 @@ __hipRegisterFatBinary(const void* data)
       if (HIP_DUMP_CODE_OBJECT)
         __hipDumpCodeObject(image);
       module->executable = hip_impl::load_executable(image, module->executable, agent);
+      if (ihipModuleLoadMetadata(module->executable.handle, image) != hipSuccess) {
+        fprintf(stderr, "Failed to load code object metadata for %s\n", name);
+        abort();
+      }
 
       if (module->executable.handle) {
         modules->at(deviceId) = module;
@@ -135,6 +139,7 @@ extern "C" void __hipRegisterFunction(
     if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName) &&
         function != nullptr) {
       functions[deviceId] = function;
+      ihipAssociateKernelWithModule(function, modules->at(deviceId)->executable.handle);
     }
     else {
       tprintf(DB_FB, "__hipRegisterFunction cannot find kernel %s for"
@@ -184,13 +189,8 @@ hipError_t hipSetupArgument(
   HIP_INIT_API(hipSetupArgument, arg, size, offset);
   auto ctx = ihipGetTlsDefaultCtx();
   LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-  auto& arguments = crit->_execStack.top()._arguments;
-
-  if (arguments.size() < offset + size) {
-    arguments.resize(offset + size);
-  }
-
-  ::memcpy(&arguments[offset], arg, size);
+  auto& info = crit->_execStack.top();
+  info._argPtr.push_back(arg);
   return hipSuccess;
 }
 
@@ -225,17 +225,10 @@ hipError_t hipLaunchByPtr(const void *hostFunction)
         " for device %d!\n", hostFunction, deviceId);
     abort();
   } else {
-    size_t size = exec._arguments.size();
-    void *extra[] = {
-        HIP_LAUNCH_PARAM_BUFFER_POINTER, &exec._arguments[0],
-        HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
-        HIP_LAUNCH_PARAM_END
-      };
-
     e = hipModuleLaunchKernel(it->second[deviceId],
       exec._gridDim.x, exec._gridDim.y, exec._gridDim.z,
       exec._blockDim.x, exec._blockDim.y, exec._blockDim.z,
-      exec._sharedMem, exec._hStream, nullptr, extra);
+      exec._sharedMem, exec._hStream, (void**)exec._argPtr.data(), nullptr);
   }
 
   return ihipLogStatus(e);

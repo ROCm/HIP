@@ -79,13 +79,33 @@ inline uint64_t alignTo(uint64_t Value, uint64_t Align, uint64_t Skew = 0) {
 
 struct ihipKernArgInfo {
     vector<uint32_t> Size;
-    vector<uint32_t> Align;
+    vector<uint32_t> Offset;
     vector<string> ArgType;
     vector<string> ArgName;
     uint32_t totalSize;
 };
 
-map<string, ihipKernArgInfo> kernelArguments;
+// maps kernel to code object handle.
+map<hipFunction_t, uint64_t> kernelToModule;
+
+// associate kernel with the code object containing it.
+void ihipAssociateKernelWithModule(hipFunction_t kernel, uint64_t module) {
+  kernelToModule[kernel] = module;
+}
+
+// get the handle of the containing code object.
+uint64_t ihipGetModuleByKernel(hipFunction_t kernel) {
+  auto loc = kernelToModule.find(kernel);
+  return loc != kernelToModule.end() ? loc->second : 0;
+}
+
+// maps (code_object_handle, kernel_name) to kernel argument info.
+// One HIP application may access multiple code objects from different
+// dynamic shared libraries or for different GPU's.
+// There may be identical kernel names in different code object.
+// Therefore kernel name itself does not identify a unique kernel used
+// by a HIP application. A code object handle and kernel name pair does.
+map<std::pair<uint64_t, string>, ihipKernArgInfo> kernelArguments;
 
 struct ihipModuleSymbol_t {
     uint64_t _object{};  // The kernel object.
@@ -148,13 +168,12 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
         if (kernelParams != NULL) {
             std::string name = f->_name;
-            struct ihipKernArgInfo pl = kernelArguments[name];
+            uint64_t module = ihipGetModuleByKernel(f);
+            struct ihipKernArgInfo pl = kernelArguments[std::make_pair(module, name)];
             char* argBuf = (char*)malloc(pl.totalSize);
             memset(argBuf, 0, pl.totalSize);
-            int index = 0;
             for (int i = 0; i < pl.Size.size(); i++) {
-                memcpy(argBuf + index, kernelParams[i], pl.Size[i]);
-                index += pl.Align[i];
+                memcpy(argBuf + pl.Offset[i], kernelParams[i], pl.Size[i]);
             }
             config[1] = (void*)argBuf;
             kernArgSize = pl.totalSize;
@@ -561,6 +580,45 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     *attr = make_function_attributes(*header);
 
     return hipSuccess;
+}
+
+// Populate kernelArguments by extracting metadata from a string containing
+// code object.
+hipError_t ihipModuleLoadMetadata(uint64_t handle, const string &blob) {
+  static unordered_map<string, vector<pair<size_t, size_t>>> md;
+  stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
+  elfio reader;
+  if (!reader.load(tmp)) {
+    fprintf(stderr, "Failed to load code object for metadata\n");
+    abort();
+    return hipErrorUnknown;
+  }
+  read_kernarg_metadata(reader, md);
+  if (!md.size())
+    return hipSuccess;
+
+  for (auto &&i : md) {
+    auto &name = i.first;
+    auto loc = kernelArguments.find(std::make_pair(handle, name));
+    if (loc != kernelArguments.end()) {
+      fprintf(stderr, "%s is duplicate\n", name.c_str());
+      abort();
+      return hipErrorUnknown;
+    }
+    auto &arg = kernelArguments[std::make_pair(handle, name)];
+    size_t offset = 0;
+    for (auto &&info : i.second) {
+      size_t size = info.first;
+      size_t align = info.second;
+      assert(size <= UINT_MAX && align <= UINT_MAX);
+      arg.Size.push_back(size);
+      offset = alignTo(offset, align);
+      arg.Offset.push_back(offset);
+      offset += size;
+    }
+    arg.totalSize = offset;
+  }
+  return hipSuccess;
 }
 
 hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {

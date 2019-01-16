@@ -28,11 +28,11 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <stack>
 
+#include "elfio/elfio.hpp"
 #include "hsa/hsa_ext_amd.h"
 #include "hip/hip_runtime.h"
 #include "hip_util.h"
 #include "env.h"
-
 
 #if (__hcc_workweek__ < 16354)
 #error("This version of HIP requires a newer version of HCC.");
@@ -807,7 +807,7 @@ struct ihipExec_t {
   dim3 _blockDim;
   size_t _sharedMem;
   hipStream_t _hStream;
-  std::vector<char> _arguments;
+  std::vector<const void*> _argPtr;
 };
 
 //=============================================================================
@@ -955,6 +955,12 @@ ihipCtx_t* ihipGetPrimaryCtx(unsigned deviceIndex);
 hipStream_t ihipSyncAndResolveStream(hipStream_t);
 hipError_t ihipStreamSynchronize(hipStream_t stream);
 void ihipStreamCallbackHandler(ihipStreamCallback_t* cb);
+
+void read_kernarg_metadata(
+    ELFIO::elfio& reader,
+    std::unordered_map<std::string, std::vector<std::pair<size_t, size_t>>>& kernargs);
+hipError_t ihipModuleLoadMetadata(uint64_t handle, const std::string &blob);
+void ihipAssociateKernelWithModule(hipFunction_t kernel, uint64_t module);
 
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s) {

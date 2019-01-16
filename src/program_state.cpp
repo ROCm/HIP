@@ -368,6 +368,7 @@ size_t parse_args(
         size_align.emplace_back(size, align);
     } while (true);
 }
+}  // namespace
 
 void read_kernarg_metadata(
     elfio& reader,
@@ -424,7 +425,6 @@ void read_kernarg_metadata(
         } while (true);
     }
 }
-}  // namespace
 
 namespace hip_impl {
 const unordered_map<hsa_agent_t, vector<hsa_executable_t>>&
