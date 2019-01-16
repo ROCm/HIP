@@ -63,6 +63,8 @@ float __ocml_copysign_f32(float, float);
 __device__
 float __ocml_cos_f32(float);
 __device__
+float __ocml_native_cos_f32(float);
+__device__
 __attribute__((pure))
 __device__
 float __ocml_cosh_f32(float);
@@ -92,10 +94,16 @@ __attribute__((pure))
 float __ocml_exp10_f32(float);
 __device__
 __attribute__((pure))
+float __ocml_native_exp10_f32(float);
+__device__
+__attribute__((pure))
 float __ocml_exp2_f32(float);
 __device__
 __attribute__((pure))
 float __ocml_exp_f32(float);
+__device__
+__attribute__((pure))
+float __ocml_native_exp_f32(float);
 __device__
 __attribute__((pure))
 float __ocml_expm1_f32(float);
@@ -152,16 +160,25 @@ __attribute__((pure))
 float __ocml_log10_f32(float);
 __device__
 __attribute__((pure))
+float __ocml_native_log10_f32(float);
+__device__
+__attribute__((pure))
 float __ocml_log1p_f32(float);
 __device__
 __attribute__((pure))
 float __ocml_log2_f32(float);
+__device__
+__attribute__((pure))
+float __ocml_native_log2_f32(float);
 __device__
 __attribute__((const))
 float __ocml_logb_f32(float);
 __device__
 __attribute__((pure))
 float __ocml_log_f32(float);
+__device__
+__attribute__((pure))
+float __ocml_native_log_f32(float);
 __device__
 float __ocml_modf_f32(float, __attribute__((address_space(5))) float*);
 __device__
@@ -227,6 +244,8 @@ float __ocml_sincospi_f32(float, __attribute__((address_space(5))) float*);
 __device__
 float __ocml_sin_f32(float);
 __device__
+float __ocml_native_sin_f32(float);
+__device__
 __attribute__((pure))
 float __ocml_sinh_f32(float);
 __device__
@@ -234,6 +253,9 @@ float __ocml_sinpi_f32(float);
 __device__
 __attribute__((const))
 float __ocml_sqrt_f32(float);
+__device__
+__attribute__((const))
+float __ocml_native_sqrt_f32(float);
 __device__
 float __ocml_tan_f32(float);
 __device__
