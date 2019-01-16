@@ -321,7 +321,6 @@ For example:
 ./hipify-clang \
   square.cu \
   --cuda-path=/usr/local/cuda-8.0 \
-  -- \
   -I /usr/local/cuda-8.0/samples/common/inc
 ```
 

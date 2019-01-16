@@ -39,30 +39,56 @@ THE SOFTWARE.
 std::string sHipify = "[HIPIFY] ", sConflict = "conflict: ", sError = "error: ";
 namespace ct = clang::tooling;
 
-std::string getAbsoluteDirectory(const std::string& sDir, std::error_code& EC,
+std::string getAbsoluteFilePath(const std::string& sFile, std::error_code& EC) {
+  if (sFile.empty()) {
+    return sFile;
+  }
+  if (!sys::fs::exists(sFile)) {
+    llvm::errs() << "\n" << sHipify << sError << "source file: " << sFile << " doesn't exist\n";
+    EC = std::error_code(static_cast<int>(std::errc::no_such_file_or_directory), std::generic_category());
+    return "";
+  }
+  SmallString<256> fileAbsPath;
+  EC = llcompat::real_path(sFile, fileAbsPath, true);
+  if (EC) {
+    llvm::errs() << "\n" << sHipify << sError << EC.message() << ": source file: " << sFile << "\n";
+    return "";
+  }
+  EC = std::error_code();
+  return fileAbsPath.c_str();
+}
+
+std::string getAbsoluteDirectoryPath(const std::string& sDir, std::error_code& EC,
                                  const std::string& sDirType = "temporary",
                                  bool bCreateDir = true) {
   if (sDir.empty()) {
     return sDir;
   }
+  EC = std::error_code();
   SmallString<256> dirAbsPath;
-  EC = llcompat::real_path(sDir, dirAbsPath, true);
-  if (!EC && sys::fs::is_regular_file(dirAbsPath)) {
-    llvm::errs() << "\n" << sHipify << sError << sDir << " is not a directory\n";
-    EC = std::error_code(static_cast<int>(std::errc::not_a_directory), std::generic_category());
-    return "";
+  if (sys::fs::exists(sDir)) {
+    if (sys::fs::is_regular_file(sDir)) {
+      llvm::errs() << "\n" << sHipify << sError << sDir << " is not a directory\n";
+      EC = std::error_code(static_cast<int>(std::errc::not_a_directory), std::generic_category());
+      return "";
+    }
+  } else {
+    if (bCreateDir) {
+      EC = sys::fs::create_directory(sDir);
+      if (EC) {
+        llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << sDirType << " directory: " << sDir << "\n";
+        return "";
+      }
+    } else {
+      llvm::errs() << "\n" << sHipify << sError << sDirType << " directory: " << sDir << " doesn't exist\n";
+      EC = std::error_code(static_cast<int>(std::errc::no_such_file_or_directory), std::generic_category());
+      return "";
+    }
   }
-  if (EC && bCreateDir) {
-    EC = sys::fs::create_directory(sDir);
-    if (EC) {
-      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << sDirType << " directory: " << sDir << "\n";
-      return "";
-    }
-    EC = llcompat::real_path(sDir, dirAbsPath, true);
-    if (EC) {
-      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << sDirType << " directory: " << sDir << "\n";
-      return "";
-    }
+  EC = llcompat::real_path(sDir, dirAbsPath, true);
+  if (EC) {
+    llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << sDirType << " directory: " << sDir << "\n";
+    return "";
   }
   return dirAbsPath.c_str();
 }
@@ -80,7 +106,7 @@ int main(int argc, const char **argv) {
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   std::string dst = OutputFilename, dstDir = OutputDir;
   std::error_code EC;
-  std::string sOutputDirAbsPath = getAbsoluteDirectory(OutputDir, EC, "output");
+  std::string sOutputDirAbsPath = getAbsoluteDirectoryPath(OutputDir, EC, "output");
   if (EC) {
     return 1;
   }
@@ -114,10 +140,9 @@ int main(int argc, const char **argv) {
   }
   int Result = 0;
   SmallString<128> tmpFile;
-  SmallString<256> sourceAbsPath;
   StringRef sourceFileName, ext = "hip";
-  std::string sTmpFileName;
-  std::string sTmpDirAbsParh = getAbsoluteDirectory(TemporaryDir, EC);
+  std::string sTmpFileName, sSourceAbsPath;
+  std::string sTmpDirAbsParh = getAbsoluteDirectoryPath(TemporaryDir, EC);
   if (EC) {
     return 1;
   }
@@ -131,25 +156,23 @@ int main(int argc, const char **argv) {
     statPrint = &llvm::errs();
   }
   for (const auto & src : fileSources) {
+    // Create a copy of the file to work on. When we're done, we'll move this onto the
+    // output (which may mean overwriting the input, if we're in-place).
+    // Should we fail for some reason, we'll just leak this file and not corrupt the input.
+    sSourceAbsPath = getAbsoluteFilePath(src, EC);
+    if (EC) {
+      continue;
+    }
+    sourceFileName = sys::path::filename(sSourceAbsPath);
     if (dst.empty()) {
       if (Inplace) {
         dst = src;
       } else {
         dst = src + "." + ext.str();
         if (!dstDir.empty()) {
-          dst = sOutputDirAbsPath + "/" + dst;
+          dst = sOutputDirAbsPath + "/" + sourceFileName.str() + "." + ext.str();
         }
       }
-    }
-    // Create a copy of the file to work on. When we're done, we'll move this onto the
-    // output (which may mean overwriting the input, if we're in-place).
-    // Should we fail for some reason, we'll just leak this file and not corrupt the input.
-    EC = llcompat::real_path(src, sourceAbsPath, true);
-    sourceFileName = sys::path::filename(sourceAbsPath);
-    if (EC) {
-      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << src << "\n";
-      Result = 1;
-      continue;
     }
     if (TemporaryDir.empty()) {
       EC = sys::fs::createTemporaryFile(sourceFileName, ext, tmpFile);
@@ -176,7 +199,7 @@ int main(int argc, const char **argv) {
     ct::RefactoringTool Tool(OptionsParser.getCompilations(), std::string(tmpFile.c_str()));
     ct::Replacements& replacementsToUse = llcompat::getReplacements(Tool, tmpFile.c_str());
     ReplacementsFrontendActionFactory<HipifyAction> actionFactory(&replacementsToUse);
-    std::string sInclude = "-I" + sys::path::parent_path(sourceAbsPath).str();
+    std::string sInclude = "-I" + sys::path::parent_path(sSourceAbsPath).str();
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("cuda", ct::ArgumentInsertPosition::BEGIN));
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-x", ct::ArgumentInsertPosition::BEGIN));
@@ -199,6 +222,18 @@ int main(int argc, const char **argv) {
 #if defined(HIPIFY_CLANG_RES)
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
+    if (!MacroNames.empty()) {
+      for (std::string s : MacroNames) {
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::END));
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
+      }
+    }
+    if (!IncludeDirs.empty()) {
+      for (std::string s : IncludeDirs) {
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-I", ct::ArgumentInsertPosition::END));
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
+      }
+    }
     Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
     Statistics& currentStat = Statistics::current();
     // Hipify _all_ the things!
