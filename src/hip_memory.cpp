@@ -1108,7 +1108,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 
 
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
-    HIP_INIT_API(devPtr, symbolName);
+    HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
 
     size_t size = 0;
     return ihipModuleGetGlobal(devPtr, &size, 0, static_cast<const char*>(symbolName));
@@ -1116,7 +1116,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
 
 
 hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
-    HIP_INIT_API(size, symbolName);
+    HIP_INIT_API(hipGetSymbolSize, size, symbolName);
 
     void* devPtr = nullptr;
     return ihipModuleGetGlobal(&devPtr, size, 0, static_cast<const char*>(symbolName));
