@@ -39,6 +39,8 @@
 #define INIT_hipStreamCreateWithPriority_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipDeviceGetStreamPriorityRange_CB_ARGS_DATA(cb_data) {};
 #define INIT_hipStreamGetPriority_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetSymbolAddress_CB_ARGS_DATA(cb_data) {};
+#define INIT_hipGetSymbolSize_CB_ARGS_DATA(cb_data) {};
 
 // HIP API callbacks ID enumaration
 enum hip_api_id_t {
@@ -218,6 +220,8 @@ enum hip_api_id_t {
   HIP_API_ID_hipStreamCreateWithPriority = HIP_API_ID_NUMBER,
   HIP_API_ID_hipDeviceGetStreamPriorityRange = HIP_API_ID_NUMBER,
   HIP_API_ID_hipStreamGetPriority = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetSymbolAddress = HIP_API_ID_NUMBER,
+  HIP_API_ID_hipGetSymbolSize = HIP_API_ID_NUMBER,
 };
 
 // Return HIP API string
