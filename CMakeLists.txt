@@ -154,18 +154,18 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 # Detect profiling API
 ################
 if(USE_PROF_API EQUAL 1)
-if(NOT DEFINED PROF_API_HEADER_PATH)
-  set(PROF_API_HEADER_PATH /opt/rocm/roctracer/include/ext)
-endif ()
-find_path(PROF_API_HEADER_DIR NAMES prof_protocol.h PATHS ${PROF_API_HEADER_PATH} NO_DEFAULT_PATH)
-if(NOT PROF_API_HEADER_DIR)
-  MESSAGE("PROF_API_HEADER_PATH = ${PROF_API_HEADER_PATH}")
-  MESSAGE(FATAL_ERROR "Profiling API header not found, use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
-else()
-  add_definitions(-DUSE_PROF_API=1)
-  include_directories ( ${PROF_API_HEADER_DIR} )
-  MESSAGE(STATUS "Profiling API: ${PROF_API_HEADER_DIR}")
-endif()
+    if(NOT DEFINED PROF_API_HEADER_PATH)
+        set(PROF_API_HEADER_PATH /opt/rocm/roctracer/include/ext)
+    endif()
+    find_path(PROF_API_HEADER_DIR NAMES prof_protocol.h PATHS ${PROF_API_HEADER_PATH} NO_DEFAULT_PATH)
+    if(NOT PROF_API_HEADER_DIR)
+        MESSAGE(STATUS "PROF_API_HEADER_PATH = ${PROF_API_HEADER_PATH}")
+        MESSAGE(WARNING "Profiling API header not found. Disabling roctracer integration. Use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
+    else()
+        add_definitions(-DUSE_PROF_API=1)
+        include_directories(${PROF_API_HEADER_DIR})
+        MESSAGE(STATUS "Profiling API: ${PROF_API_HEADER_DIR}")
+    endif()
 endif()
 
 #############################
@@ -235,8 +235,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
     if(HIP_COMPILER STREQUAL "hcc")
-      target_link_libraries(hip_hcc PRIVATE hc_am)
-      target_link_libraries(hip_hcc_static PRIVATE hc_am)
+        target_link_libraries(hip_hcc PRIVATE hc_am)
+        target_link_libraries(hip_hcc_static PRIVATE hc_am)
     endif()
 
     string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
@@ -304,19 +304,19 @@ if(HIP_PLATFORM STREQUAL "hcc")
     include(CMakePackageConfigHelpers)
 
     if(HIP_COMPILER STREQUAL "hcc")
-    configure_package_config_file(
-        hip-config-hcc.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
-        INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
-        PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
-        )
+        configure_package_config_file(
+            hip-config-hcc.cmake.in
+            ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+            INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
+            PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
+            )
     elseif(HIP_COMPILER STREQUAL "clang")
-    configure_package_config_file(
-        hip-config-clang.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
-        INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
-        PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
-        )
+        configure_package_config_file(
+            hip-config-clang.cmake.in
+            ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+            INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
+            PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
+            )
     endif()
 
     write_basic_package_version_file(
