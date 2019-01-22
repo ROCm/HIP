@@ -129,7 +129,7 @@ hipError_t ihipEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
             LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
             // Add thisCtx to peerCtx's access list so that new allocations on peer will be made
             // visible to this device:
-            bool isNewPeer = peerCrit->addPeerWatcher(peerCtx, thisCtx);
+            bool isNewPeer = peerCrit->addPeerWatcher(thisCtx, peerCtx);
             if (isNewPeer) {
                 tprintf(DB_MEM, "device=%s can now see all memory allocated on peer=%s\n",
                         thisCtx->toString().c_str(), peerCtx->toString().c_str());
