@@ -19,7 +19,11 @@ THE SOFTWARE.
 
 #include <iostream>
 #include <iomanip>
+#if __CUDACC__
 #include <sys/time.h>
+#else
+#include <chrono>
+#endif
 #include <stddef.h>
 
 #include "hip/hip_runtime.h"
@@ -105,9 +109,14 @@ namespace HipTest {
 
 // Returns the current system time in microseconds
 inline long long get_time() {
+#if __CUDACC__
     struct timeval tv;
     gettimeofday(&tv, 0);
     return (tv.tv_sec * 1000000) + tv.tv_usec;
+#else
+    return std::chrono::high_resolution_clock::now().time_since_epoch()
+        /std::chrono::microseconds(1);
+#endif
 }
 
 double elapsed_time(long long startTimeUs, long long stopTimeUs);
