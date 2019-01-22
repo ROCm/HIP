@@ -121,7 +121,7 @@ uint64_t __make_mantissa(const char* tagp)
 }
 
 // DOT FUNCTIONS
-#if (__hcc_workweek__ >= 19015)
+#if (__hcc_workweek__ >= 19015) || defined(__HIP_CLANG_ONLY__)
 __DEVICE__
 inline
 int amd_mixed_dot(short2 a, short2 b, int c, bool saturate) {
