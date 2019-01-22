@@ -32,22 +32,39 @@ THE SOFTWARE.
 #if (__hcc_workweek__ >= 19015) || defined(__HIP_CLANG_ONLY__)
 __device__
 __attribute__((const))
-int __ockl_sdot2(short2 a, short2 b, int c, bool s);
+int __ockl_sdot2(
+    HIP_vector_base<short, 2>::Native_vec_,
+    HIP_vector_base<short, 2>::Native_vec_,
+    int, bool);
+
 __device__
 __attribute__((const))
-unsigned int __ockl_udot2(ushort2 a, ushort2 b, unsigned int c, bool s);
+unsigned int __ockl_udot2(
+    HIP_vector_base<unsigned short, 2>::Native_vec_,
+    HIP_vector_base<unsigned short, 2>::Native_vec_,
+    unsigned int, bool);
+
 __device__
 __attribute__((const))
-int __ockl_sdot4(char4 a, char4 b, int c, bool s);
+int __ockl_sdot4(
+    HIP_vector_base<char, 4>::Native_vec_,
+    HIP_vector_base<char, 4>::Native_vec_,
+    int, bool);
+
 __device__
 __attribute__((const))
-unsigned int __ockl_udot4(uchar4 a, uchar4 b, unsigned int c, bool s);
+unsigned int __ockl_udot4(
+    HIP_vector_base<unsigned char, 4>::Native_vec_,
+    HIP_vector_base<unsigned char, 4>::Native_vec_,
+    unsigned int, bool);
+
 __device__
 __attribute__((const))
-int __ockl_sdot8(int a, int b, int c, bool s);
+int __ockl_sdot8(int, int, int, bool);
+
 __device__
 __attribute__((const))
-unsigned int __ockl_udot8(unsigned int a, unsigned int b, unsigned int c, bool s);
+unsigned int __ockl_udot8(unsigned int, unsigned int, unsigned int, bool);
 #endif
 
 // BEGIN FLOAT
