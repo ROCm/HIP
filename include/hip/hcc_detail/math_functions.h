@@ -125,22 +125,22 @@ uint64_t __make_mantissa(const char* tagp)
 __DEVICE__
 inline
 int amd_mixed_dot(short2 a, short2 b, int c, bool saturate) {
-    return __ockl_sdot2(a, b, c, saturate);
+    return __ockl_sdot2(a.data, b.data, c, saturate);
 }
 __DEVICE__
 inline
 uint amd_mixed_dot(ushort2 a, ushort2 b, uint c, bool saturate) {
-    return __ockl_udot2(a, b, c, saturate);
+    return __ockl_udot2(a.data, b.data, c, saturate);
 }
 __DEVICE__
 inline
 int amd_mixed_dot(char4 a, char4 b, int c, bool saturate) {
-    return __ockl_sdot4(a, b, c, saturate);
+    return __ockl_sdot4(a.data, b.data, c, saturate);
 }
 __DEVICE__
 inline
 uint amd_mixed_dot(uchar4 a, uchar4 b, uint c, bool saturate) {
-    return __ockl_udot4(a, b, c, saturate);
+    return __ockl_udot4(a.data, b.data, c, saturate);
 }
 __DEVICE__
 inline
