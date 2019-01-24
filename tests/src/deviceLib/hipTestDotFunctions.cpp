@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
- * RUN: %t
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
+ * RUN: %t EXCLUDE_HIP_PLATFORM nvcc
  * HIT_END
  */
 
