@@ -1403,7 +1403,7 @@ THE SOFTWARE.
             }
 
             // Math functions
-            #if (__hcc_workweek__ >= 19015) || defined(__HIP_CLANG_ONLY__)
+            #if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
             inline
             __device__
             float amd_mixed_dot(__half2 a, __half2 b, float c, bool saturate) {
