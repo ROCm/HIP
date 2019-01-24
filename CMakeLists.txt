@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.4.3)
 project(hip)
 
 #############################
@@ -155,7 +155,13 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 ################
 if(USE_PROF_API EQUAL 1)
     if(NOT DEFINED PROF_API_HEADER_PATH)
-        set(PROF_API_HEADER_PATH /opt/rocm/roctracer/include/ext)
+        find_package(PkgConfig)
+        pkg_check_modules(ROCTRACERPROTO QUIET roctracer-proto)
+        if(ROCTRACERPROTO_FOUND EQUAL 1)
+            pkg_get_variable(PROF_API_HEADER_PATH roctracer-proto prefix)
+        else()
+            set(PROF_API_HEADER_PATH /opt/rocm/roctracer/include/ext)
+        endif()
     endif()
     find_path(PROF_API_HEADER_DIR NAMES prof_protocol.h PATHS ${PROF_API_HEADER_PATH} NO_DEFAULT_PATH)
     if(NOT PROF_API_HEADER_DIR)
