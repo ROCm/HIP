@@ -283,7 +283,7 @@ int main(int argc, char* argv[]) {
     CURAND_CALL(curandGetVersion(&version));
     int runtime_version;
     // cudaRuntimeGetVersion is yet unsupported by HIP
-    // CHECK-NOT: CUDA_CALL(hipRuntimeGetVersion(&runtime_version));
+    // CHECK: CUDA_CALL(hipRuntimeGetVersion(&runtime_version));
     CUDA_CALL(cudaRuntimeGetVersion(&runtime_version));
     int device_id;
     // CHECK: CUDA_CALL(hipGetDevice(&device_id));
