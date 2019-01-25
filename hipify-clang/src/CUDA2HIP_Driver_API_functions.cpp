@@ -26,10 +26,10 @@ THE SOFTWARE.
 const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   // 5.2. Error Handling
   // no analogue
-  // NOTE: cudaGetErrorName and hipGetErrorName have different signature
+  // NOTE: cudaGetErrorName and cuGetErrorName have different signatures
   {"cuGetErrorName",                                       {"hipGetErrorName_",                                        "", CONV_ERROR, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
-  // NOTE: cudaGetErrorString and hipGetErrorString have different signature
+  // NOTE: cudaGetErrorString and cuGetErrorString have different signatures
   {"cuGetErrorString",                                     {"hipGetErrorString_",                                      "", CONV_ERROR, API_DRIVER, HIP_UNSUPPORTED}},
 
   // 5.3. Initialization
@@ -60,7 +60,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
 
   // 5.6. Device Management [DEPRECATED]
   {"cuDeviceComputeCapability",                            {"hipDeviceComputeCapability",                              "", CONV_DEVICE, API_DRIVER}},
-  {"cuDeviceGetProperties",                                {"hipGetDeviceProperties",                                  "", CONV_DEVICE, API_DRIVER}},
+  // no analogue
+  // NOTE: Not equal to cudaGetDeviceProperties due to different attributes: cudaDeviceProp and CUdevprop
+  {"cuDeviceGetProperties",                                {"hipGetDeviceProperties_",                                 "", CONV_DEVICE, API_DRIVER, HIP_UNSUPPORTED}},
 
   // 5.7. Primary Context Management
   // no analogues
@@ -85,6 +87,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuCtxGetFlags",                                        {"hipCtxGetFlags",                                          "", CONV_CONTEXT, API_DRIVER}},
   // cudaDeviceGetLimit
   {"cuCtxGetLimit",                                        {"hipDeviceGetLimit",                                       "", CONV_CONTEXT, API_DRIVER}},
+  // cudaDeviceGetSharedMemConfig
+  // TODO: rename to hipDeviceGetSharedMemConfig
   {"cuCtxGetSharedMemConfig",                              {"hipCtxGetSharedMemConfig",                                "", CONV_CONTEXT, API_DRIVER}},
   // cudaDeviceGetStreamPriorityRange
   {"cuCtxGetStreamPriorityRange",                          {"hipDeviceGetStreamPriorityRange",                         "", CONV_CONTEXT, API_DRIVER}},
@@ -94,8 +98,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuCtxPushCurrent_v2",                                  {"hipCtxPushCurrent",                                       "", CONV_CONTEXT, API_DRIVER}},
   {"cuCtxSetCacheConfig",                                  {"hipCtxSetCacheConfig",                                    "", CONV_CONTEXT, API_DRIVER}},
   {"cuCtxSetCurrent",                                      {"hipCtxSetCurrent",                                        "", CONV_CONTEXT, API_DRIVER}},
-  {"cuCtxSetLimit",                                        {"hipCtxSetLimit",                                          "", CONV_CONTEXT, API_DRIVER, HIP_UNSUPPORTED}},
+  // cudaDeviceSetLimit
+  {"cuCtxSetLimit",                                        {"hipDeviceSetLimit",                                       "", CONV_CONTEXT, API_DRIVER}},
+  // cudaDeviceSetSharedMemConfig
+  // TODO: rename to hipDeviceSetSharedMemConfig
   {"cuCtxSetSharedMemConfig",                              {"hipCtxSetSharedMemConfig",                                "", CONV_CONTEXT, API_DRIVER}},
+  // cudaDeviceSynchronize
+  // TODO: rename to hipDeviceSynchronize
   {"cuCtxSynchronize",                                     {"hipCtxSynchronize",                                       "", CONV_CONTEXT, API_DRIVER}},
 
   // 5.9. Context Management [DEPRECATED]
@@ -158,6 +167,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   // no analogue
   {"cuMemAllocManaged",                                    {"hipMemAllocManaged",                                      "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
+  // NOTE: Not equal to cudaMallocPitch due to different signatures
   {"cuMemAllocPitch",                                      {"hipMemAllocPitch",                                        "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   {"cuMemAllocPitch_v2",                                   {"hipMemAllocPitch",                                        "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
@@ -199,8 +209,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuMemcpyAtoD",                                         {"hipMemcpyAtoD",                                           "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   {"cuMemcpyAtoD_v2",                                      {"hipMemcpyAtoD",                                           "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
-  {"cuMemcpyAtoH",                                         {"hipMemcpyAtoH",                                           "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpyAtoH_v2",                                      {"hipMemcpyAtoH",                                           "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpyAtoH",                                         {"hipMemcpyAtoH",                                           "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpyAtoH_v2",                                      {"hipMemcpyAtoH",                                           "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   {"cuMemcpyAtoHAsync",                                    {"hipMemcpyAtoHAsync",                                      "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   {"cuMemcpyAtoHAsync_v2",                                 {"hipMemcpyAtoHAsync",                                      "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
@@ -399,14 +409,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   // NOTE: Not equal to cudaFuncSetCacheConfig due to different signatures
   {"cuFuncSetCacheConfig",                                 {"hipFuncSetCacheConfig",                                   "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
-  // NOTE: Not equal to cudaFuncSetCacheConfig due to different signatures
+  // NOTE: Not equal to cudaFuncSetSharedMemConfig due to different signatures
   {"cuFuncSetSharedMemConfig",                             {"hipFuncSetSharedMemConfig",                               "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
   // NOTE: Not equal to cudaLaunchCooperativeKernel due to different signatures
-  {"cuLaunchCooperativeKernel",                            {"hipLaunchCooperativeKernel",                              "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuLaunchCooperativeKernel",                            {"hipLaunchCooperativeKernel_",                             "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
   // NOTE: Not equal to cudaLaunchCooperativeKernelMultiDevice due to different signatures
-  {"cuLaunchCooperativeKernelMultiDevice",                 {"hipLaunchCooperativeKernelMultiDevice",                   "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuLaunchCooperativeKernelMultiDevice",                 {"hipLaunchCooperativeKernelMultiDevice_",                  "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaLaunchHostFunc
   {"cuLaunchHostFunc",                                     {"hipLaunchHostFunc",                                       "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
@@ -632,10 +642,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuGLCtxCreate",                                        {"hipGLCtxCreate",                                          "", CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
   {"cuGLInit",                                             {"hipGLInit",                                               "", CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},
+  // no analogue
   // NOTE: Not equal to cudaGLMapBufferObject due to different signatures
-  {"cuGLMapBufferObject",                                  {"hipGLMapBufferObject",                                    "", CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuGLMapBufferObject",                                  {"hipGLMapBufferObject_",                                   "", CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},
+  // no analogue
   // NOTE: Not equal to cudaGLMapBufferObjectAsync due to different signatures
-  {"cuGLMapBufferObjectAsync",                             {"hipGLMapBufferObjectAsync",                               "", CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuGLMapBufferObjectAsync",                             {"hipGLMapBufferObjectAsync_",                              "", CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaGLRegisterBufferObject
   {"cuGLRegisterBufferObject",                             {"hipGLRegisterBufferObject",                               "", CONV_OPENGL, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaGLSetBufferObjectMapFlags

@@ -29,6 +29,7 @@
 | `cudaSetDevice`                                           | `hipSetDevice`                |
 | `cudaSetDeviceFlags`                                      | `hipSetDeviceFlags`           |
 | `cudaSetValidDevices`                                     |                               |
+| `cudaDeviceGetP2PAttribute`                               |                               |
 
 ## **2. Thread Management [DEPRECATED]**
 
@@ -99,6 +100,7 @@
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
 | `cudaFuncGetAttributes`                                   |                               |
+| `cudaFuncSetAttribute`                                    |                               |
 | `cudaFuncSetCacheConfig`                                  | `hipFuncSetCacheConfig`       |
 | `cudaFuncSetSharedMemConfig`                              |                               |
 | `cudaGetParameterBuffer`                                  |                               |
@@ -106,6 +108,9 @@
 | `cudaLaunchKernel`                                        | `hipLaunchKernel`             |
 | `cudaSetDoubleForDevice`                                  |                               |
 | `cudaSetDoubleForHost`                                    |                               |
+| `cudaLaunchCooperativeKernel`                             |                               |
+| `cudaLaunchCooperativeKernelMultiDevice`                  |                               |
+| `cudaLaunchHostFunc`                                      |                               |
 
 ## **8. Occupancy**
 
@@ -148,6 +153,7 @@
 | `cudaMallocMipmappedArray`                                |                               |
 | `cudaMallocPitch`                                         |                               |
 | `cudaMemGetInfo`                                          | `hipMemGetInfo`               |
+| `cudaMemPrefetchAsync`                                    |                               |
 | `cudaMemcpy`                                              | `hipMemcpy`                   |
 | `cudaMemcpy2D`                                            | `hipMemcpy2D`                 |
 | `cudaMemcpy2DArrayToArray`                                |                               |
@@ -162,10 +168,10 @@
 | `cudaMemcpy3DPeerAsync`                                   |                               |
 | `cudaMemcpyArrayToArray`                                  |                               |
 | `cudaMemcpyAsync`                                         | `hipMemcpyAsync`              |
-| `cudaMemcpyFromArray`                                     | `MemcpyFromArray`             |
+| `cudaMemcpyFromArray`                                     | `hipMemcpyFromArray`          |
 | `cudaMemcpyFromArrayAsync`                                |                               |
 | `cudaMemcpyFromSymbol`                                    | `hipMemcpyFromSymbol`         |
-| `cudaMemcpyFromSymbolAsync`                               |                               |
+| `cudaMemcpyFromSymbolAsync`                               | `hipMemcpyFromSymbolAsync`    |
 | `cudaMemcpyPeer`                                          | `hipMemcpyPeer`               |
 | `cudaMemcpyPeerAsync`                                     | `hipMemcpyPeerAsync`          |
 | `cudaMemcpyToArray`                                       | `hipMemcpyToArray`            |
@@ -299,11 +305,13 @@
 | `cudaEGLStreamConsumerAcquireFrame`                       |                               |
 | `cudaEGLStreamConsumerConnect`                            |                               |
 | `cudaEGLStreamConsumerConnectWithFlags`                   |                               |
+| `cudaEGLStreamConsumerDisconnect`                         |                               |
 | `cudaEGLStreamConsumerReleaseFrame`                       |                               |
 | `cudaEGLStreamProducerConnect`                            |                               |
 | `cudaEGLStreamProducerDisconnect`                         |                               |
 | `cudaEGLStreamProducerPresentFrame`                       |                               |
 | `cudaEGLStreamProducerReturnFrame`                        |                               |
+| `cudaEventCreateFromEGLSync`                              |                               |
 | `cudaGraphicsEGLRegisterImage`                            |                               |
 | `cudaGraphicsResourceGetMappedEglFrame`                   |                               |
 
@@ -321,17 +329,17 @@
 
 ## **24. Texture Reference Management**
 
-|   **CUDA**                                                |   **HIP**                     |
-|-----------------------------------------------------------|-------------------------------|
-| `cudaBindTexture`                                         | `hipBindTexture`              |
-| `cudaBindTexture2D`                                       | `hipBindTexture2D`            |
-| `cudaBindTextureToArray`                                  | `hipBindTextureToArray`       |
-| `cudaBindTextureToMipmappedArray`                         |                               |
-| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`        |
-| `cudaGetChannelDesc`                                      | `hipGetChannelDesc`           |
-| `cudaGetTextureAlignmentOffset`                           |                               |
-| `cudaGetTextureReference`                                 |                               |
-| `cudaUnbindTexture`                                       | `hipUnbindTexture`            |
+|   **CUDA**                                                |   **HIP**                        |
+|-----------------------------------------------------------|----------------------------------|
+| `cudaBindTexture`                                         | `hipBindTexture`                 |
+| `cudaBindTexture2D`                                       | `hipBindTexture2D`               |
+| `cudaBindTextureToArray`                                  | `hipBindTextureToArray`          |
+| `cudaBindTextureToMipmappedArray`                         | `hipBindTextureToMipmappedArray` |
+| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`           |
+| `cudaGetChannelDesc`                                      | `hipGetChannelDesc`              |
+| `cudaGetTextureAlignmentOffset`                           | `hipGetTextureAlignmentOffset`   |
+| `cudaGetTextureReference`                                 | `hipGetTextureReference`         |
+| `cudaUnbindTexture`                                       | `hipUnbindTexture`               |
 
 ## **25. Surface Reference Management**
 
@@ -369,6 +377,37 @@
 
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
+| `cudaGraphAddChildGraphNode`                              |                               |
+| `cudaGraphAddDependencies`                                |                               |
+| `cudaGraphAddEmptyNode`                                   |                               |
+| `cudaGraphAddHostNode`                                    |                               |
+| `cudaGraphAddKernelNode`                                  |                               |
+| `cudaGraphAddMemcpyNode`                                  |                               |
+| `cudaGraphAddMemsetNode`                                  |                               |
+| `cudaGraphChildGraphNodeGetGraph`                         |                               |
+| `cudaGraphClone`                                          |                               |
+| `cudaGraphCreate`                                         |                               |
+| `cudaGraphDestroy`                                        |                               |
+| `cudaGraphDestroyNode`                                    |                               |
+| `cudaGraphExecDestroy`                                    |                               |
+| `cudaGraphGetEdges`                                       |                               |
+| `cudaGraphGetNodes`                                       |                               |
+| `cudaGraphGetRootNodes`                                   |                               |
+| `cudaGraphHostNodeGetParams`                              |                               |
+| `cudaGraphHostNodeSetParams`                              |                               |
+| `cudaGraphInstantiate`                                    |                               |
+| `cudaGraphKernelNodeGetParams`                            |                               |
+| `cudaGraphKernelNodeSetParams`                            |                               |
+| `cudaGraphLaunch`                                         |                               |
+| `cudaGraphMemcpyNodeGetParams`                            |                               |
+| `cudaGraphMemcpyNodeSetParams`                            |                               |
+| `cudaGraphMemsetNodeGetParams`                            |                               |
+| `cudaGraphMemsetNodeSetParams`                            |                               |
+| `cudaGraphNodeFindInClone`                                |                               |
+| `cudaGraphNodeGetDependencies`                            |                               |
+| `cudaGraphNodeGetDependentNodes`                          |                               |
+| `cudaGraphNodeGetType`                                    |                               |
+| `cudaGraphRemoveDependencies`                             |                               |
 
 ## **30. C++ API Routines**
 *(7.0 contains, 7.5 doesn’t)*
@@ -381,12 +420,15 @@
 | `cudaBindTextureToArray`                                  |                                                |
 | `cudaBindTextureToMipmappedArray`                         |                                                |
 | `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`                         |
+| `cudaEventCreate`                                         |                                                |
 | `cudaFuncGetAttributes`                                   |                                                |
+| `cudaFuncSetAttribute`                                    |                                                |
 | `cudaFuncSetCacheConfig`                                  |                                                |
 | `cudaGetSymbolAddress`                                    | `hipGetSymbolAddress`                          |
 | `cudaGetSymbolSize`                                       | `hipGetSymbolSize`                             |
 | `cudaGetTextureAlignmentOffset`                           |                                                |
 | `cudaLaunch`                                              |                                                |
+| `cudaLaunchCooperativeKernel`                             |                                                |
 | `cudaLaunchKernel`                                        |                                                |
 | `cudaMallocHost`                                          |                                                |
 | `cudaMallocManaged`                                       |                                                |
@@ -397,9 +439,9 @@
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor` |
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                                                |
 | `cudaOccupancyMaxPotentialBlockSize`                      | `hipOccupancyMaxPotentialBlockSize`            |
+| `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                                                |
 | `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                                                |
 | `cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags` |                                                |
-| `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                                                |
 | `cudaSetupArgument`                                       |                                                |
 | `cudaStreamAttachMemAsync`                                |                                                |
 | `cudaUnbindTexture`                                       | `hipUnbindTexture`                             |
@@ -871,11 +913,6 @@
 | enum         |***`cudaSurfaceFormatMode`***                        |                                                            |
 |            0 |*`cudaFormatModeForced`*                             |                                                            |
 |            1 |*`cudaFormatModeAuto`*                               |                                                            |
-| enum         |***`cudaTextureAddressMode`***                       |***`hipTextureAddressMode`***                               |
-|            0 |*`cudaAddressModeWrap`*                              |*`hipAddressModeWrap`*                                      |
-|            1 |*`cudaAddressModeClamp`*                             |*`hipAddressModeClamp`*                                     |
-|            2 |*`cudaAddressModeMirror`*                            |*`hipAddressModeMirror`*                                    |
-|            3 |*`cudaAddressModeBorder`*                            |*`hipAddressModeBorder`*                                    |
 | enum         |***`cudaTextureAddressMode`***                       |***`hipTextureAddressMode`***                               |
 |            0 |*`cudaAddressModeWrap`*                              |*`hipAddressModeWrap`*                                      |
 |            1 |*`cudaAddressModeClamp`*                             |*`hipAddressModeClamp`*                                     |
