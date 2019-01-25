@@ -978,6 +978,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
  * hipHostFree, hipHostMalloc
  */
 hipError_t hipMalloc(void** ptr, size_t size);
+hipError_t hipMallocVanilla(void** ptr, size_t size);
 
 /**
  *  @brief Allocate pinned host memory [Deprecated]
@@ -1008,6 +1009,7 @@ hipError_t hipMallocHost(void** ptr, size_t size)
  *  @see hipSetDeviceFlags, hipHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
+hipError_t hipHostMallocVanilla(void** ptr, size_t size, unsigned int flags);
 
 /**
  *  @brief Allocate device accessible page locked host memory [Deprecated]

@@ -261,6 +261,9 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipMallocVanilla(void** ptr, size_t sizeBytes) {
+    return hipMalloc(ptr, sizeBytes);
+}
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     HIP_INIT_SPECIAL_API((TRACE_MEM), ptr, sizeBytes, flags);
@@ -326,6 +329,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
         hipDeviceSynchronize();
     }
     return ihipLogStatus(hip_status);
+}
+
+hipError_t hipHostMallocVanilla(void** ptr, size_t sizeBytes, unsigned int flags) {
+    return hipHostMalloc(ptr, sizeBytes, flags);
 }
 
 // Deprecated function:

@@ -150,7 +150,9 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
 
-    $HIPLDFLAGS = `${HCC_HOME}/bin/hcc-config --ldflags`;
+    # XXX #1 do NOT link with HCC runtime
+    #$HIPLDFLAGS = `${HCC_HOME}/bin/hcc-config --ldflags`;
+    $HIPLDFLAGS = "-hc";
 
     #### GCC system includes workaround ####
     $HCC_WA_FLAGS = " ";
@@ -184,7 +186,9 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPCXXFLAGS .= " -I$HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
 
-    $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am ";
+    # XXX #3: do NOT link with ROCR runtime or hc_am
+    #$HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am ";
+    
 #    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
 
     # Add trace marker library:
@@ -198,7 +202,8 @@ if ($HIP_PLATFORM eq "clang") {
 
     $marker_lib_path = "$marker_path/bin/x86_64";
     if (-e $marker_lib_path) {
-        $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
+        # XXX #4: do NOT link with CXLActivityLogger
+        #$HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
     }
 
     $HIPLDFLAGS .= " -lm";
@@ -611,7 +616,8 @@ if ($needHipHcc) {
     if ($linkType eq 0) {
         substr($HIPLDFLAGS,0,0) = "  $HIP_PATH/lib/libhip_hcc_static.a $HIP_PATH/lib/libhip_device.a " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = "  -Wl,--rpath=$HIP_PATH/lib $HIP_PATH/lib/libhip_hcc.so $HIP_PATH/lib/libhip_device.a ";
+        # XXX #2: do NOT link with HIP runtime
+        #substr($HIPLDFLAGS,0,0) = "  -Wl,--rpath=$HIP_PATH/lib $HIP_PATH/lib/libhip_hcc.so $HIP_PATH/lib/libhip_device.a ";
     }
 }
 
