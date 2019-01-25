@@ -770,7 +770,7 @@
 |   **CUDA**                                                |   **HIP**                     |
 |-----------------------------------------------------------|-------------------------------|
 | `cuDeviceComputeCapability`                               | `hipDeviceComputeCapability`  |
-| `cuDeviceGetProperties`                                   | `hipGetDeviceProperties`      |
+| `cuDeviceGetProperties`                                   |                               |
 
 ## **7. Primary Context Management**
 
@@ -800,7 +800,7 @@
 | `cuCtxPushCurrent`                                        | `hipCtxPushCurrent`           |
 | `cuCtxSetCacheConfig`                                     | `hipCtxSetCacheConfig`        |
 | `cuCtxSetCurrent`                                         | `hipCtxSetCurrent`            |
-| `cuCtxSetLimit`                                           |                               |
+| `cuCtxSetLimit`                                           | `hipDeviceSetLimit`           |
 | `cuCtxSetSharedMemConfig`                                 | `hipCtxSetSharedMemConfig`    |
 | `cuCtxSynchronize`                                        | `hipCtxSynchronize`           |
 
@@ -861,7 +861,7 @@
 | `cuMemcpyAsync`                                           |                               |
 | `cuMemcpyAtoA`                                            |                               |
 | `cuMemcpyAtoD`                                            |                               |
-| `cuMemcpyAtoH`                                            |                               |
+| `cuMemcpyAtoH`                                            | `hipMemcpyAtoH`               |
 | `cuMemcpyAtoHAsync`                                       |                               |
 | `cuMemcpyDtoA`                                            |                               |
 | `cuMemcpyDtoD`                                            | `hipMemcpyDtoD`               |
