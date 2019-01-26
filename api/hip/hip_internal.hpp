@@ -31,6 +31,16 @@ THE SOFTWARE.
 #include <stack>
 #include <mutex>
 
+/*! IHIP IPC MEMORY Structure */
+#define IHIP_IPC_MEM_HANDLE_SIZE   32
+#define IHIP_IPC_MEM_RESERVED_SIZE LP64_SWITCH(28,24)
+
+typedef struct ihipIpcMemHandle_st {
+  char ipc_handle[IHIP_IPC_MEM_HANDLE_SIZE];  ///< ipc memory handle on ROCr
+  size_t psize;
+  char reserved[IHIP_IPC_MEM_RESERVED_SIZE];
+} ihipIpcMemHandle_t;
+
 #define HIP_INIT() \
   std::call_once(hip::g_ihipInitialized, hip::init);        \
   if (hip::g_context == nullptr && g_devices.size() > 0) {  \
