@@ -1249,28 +1249,96 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
-  HIP_INIT_API(handle, devPtr);
+hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* dev_ptr) {
+  HIP_INIT_API(handle, dev_ptr);
 
-  assert(0 && "Unimplemented");
+  size_t offset = 0;
+  amd::Memory* amd_mem_obj = nullptr;
+  device::Memory* dev_mem_obj = nullptr;
+  ihipIpcMemHandle_t* ihandle = nullptr;
 
-  HIP_RETURN(hipErrorUnknown);
+  if ((handle == nullptr) || (dev_ptr == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  /* Get AMD::Memory object corresponding to this pointer */
+  amd_mem_obj = getMemoryObject(dev_ptr, offset);
+  if (amd_mem_obj == nullptr) {
+    HIP_RETURN(hipErrorInvalidDevicePointer);
+  }
+
+  /* Get Device::Memory object pointer */
+  dev_mem_obj = amd_mem_obj->getDeviceMemory(*hip::getCurrentContext()->devices()[0],false);
+  if (dev_mem_obj == nullptr) {
+    HIP_RETURN(hipErrorInvalidDevicePointer);
+  }
+
+  /* Create an handle for IPC. Store the memory size inside the handle */
+  ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(handle);
+  dev_mem_obj->IpcCreate(offset, &(ihandle->psize), &(ihandle->ipc_handle));
+
+  HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags) {
-  HIP_INIT_API(devPtr, &handle, flags);
+hipError_t hipIpcOpenMemHandle(void** dev_ptr, hipIpcMemHandle_t handle, unsigned int flags) {
+  HIP_INIT_API(dev_ptr, &handle, flags);
 
-  assert(0 && "Unimplemented");
+  amd::Memory* amd_mem_obj = nullptr;
+  amd::Device* device = nullptr;
+  ihipIpcMemHandle_t* ihandle = nullptr;
 
-  HIP_RETURN(hipErrorUnknown);
+  if (dev_ptr == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  /* Call the IPC Attach from Device class */
+  device = hip::getCurrentContext()->devices()[0];
+  ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(&handle);
+
+  amd_mem_obj = device->IpcAttach(&(ihandle->ipc_handle), ihandle->psize, flags, dev_ptr);
+  if (amd_mem_obj == nullptr) {
+    HIP_RETURN(hipErrorInvalidDevicePointer);
+  }
+
+  /* Add the memory to the MemObjMap */
+  amd::MemObjMap::AddMemObj(*dev_ptr, amd_mem_obj);
+
+  HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipIpcCloseMemHandle(void* devPtr) {
-  HIP_INIT_API(devPtr);
+hipError_t hipIpcCloseMemHandle(void* dev_ptr) {
+  HIP_INIT_API(dev_ptr);
 
-  assert(0 && "Unimplemented");
+  size_t offset = 0;
+  amd::Device* device = nullptr;
+  amd::Memory* amd_mem_obj = nullptr;
 
-  HIP_RETURN(hipErrorUnknown);
+  hip::syncStreams();
+  hip::getNullStream()->finish();
+
+  if (dev_ptr == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  /* Get the amd::Memory object */
+  amd_mem_obj = getMemoryObject(dev_ptr, offset);
+  if (amd_mem_obj == nullptr) {
+    HIP_RETURN(hipErrorInvalidDevicePointer);
+  }
+
+  /* Call IPC Detach from Device class */
+  device = hip::getCurrentContext()->devices()[0];
+  if (device == nullptr) {
+    HIP_RETURN(hipErrorNoDevice);
+  }
+
+  /* Remove the memory from MemObjMap */
+  amd::MemObjMap::RemoveMemObj(amd_mem_obj);
+
+  /* detach the memory */
+  device->IpcDetach(*amd_mem_obj);
+
+  HIP_RETURN(hipSuccess);
 }
 
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) {
