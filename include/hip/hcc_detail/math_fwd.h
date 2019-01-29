@@ -28,6 +28,45 @@ THE SOFTWARE.
     extern "C" {
 #endif
 
+// DOT FUNCTIONS
+#if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
+__device__
+__attribute__((const))
+int __ockl_sdot2(
+    HIP_vector_base<short, 2>::Native_vec_,
+    HIP_vector_base<short, 2>::Native_vec_,
+    int, bool);
+
+__device__
+__attribute__((const))
+unsigned int __ockl_udot2(
+    HIP_vector_base<unsigned short, 2>::Native_vec_,
+    HIP_vector_base<unsigned short, 2>::Native_vec_,
+    unsigned int, bool);
+
+__device__
+__attribute__((const))
+int __ockl_sdot4(
+    HIP_vector_base<char, 4>::Native_vec_,
+    HIP_vector_base<char, 4>::Native_vec_,
+    int, bool);
+
+__device__
+__attribute__((const))
+unsigned int __ockl_udot4(
+    HIP_vector_base<unsigned char, 4>::Native_vec_,
+    HIP_vector_base<unsigned char, 4>::Native_vec_,
+    unsigned int, bool);
+
+__device__
+__attribute__((const))
+int __ockl_sdot8(int, int, int, bool);
+
+__device__
+__attribute__((const))
+unsigned int __ockl_udot8(unsigned int, unsigned int, unsigned int, bool);
+#endif
+
 // BEGIN FLOAT
 __device__
 __attribute__((const))
