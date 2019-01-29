@@ -1403,6 +1403,15 @@ THE SOFTWARE.
             }
 
             // Math functions
+            #if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
+            inline
+            __device__
+            float amd_mixed_dot(__half2 a, __half2 b, float c, bool saturate) {
+                return __ockl_fdot2(static_cast<__half2_raw>(a).data,
+                                    static_cast<__half2_raw>(b).data,
+                                    c, saturate);
+            }
+            #endif
             inline
             __device__
             __half htrunc(__half x)

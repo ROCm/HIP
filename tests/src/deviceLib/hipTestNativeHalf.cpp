@@ -156,6 +156,11 @@ void __half2Test(bool* result, __half2 a) {
     result[0] = (a >= a) && result[0];
     result[0] = !(a < a) && result[0];
     result[0] = !(a > a) && result[0];
+
+    #if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
+    // Dot Functions
+    result[0] = amd_mixed_dot(a, a, 1, 1) && result[0];
+    #endif
 }
 
 #endif
