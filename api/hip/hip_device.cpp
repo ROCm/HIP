@@ -158,7 +158,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.minor = info.gfxipVersion_ % 100;
   deviceProps.multiProcessorCount = info.maxComputeUnits_;
   deviceProps.l2CacheSize = info.l2CacheSize_;
-  deviceProps.maxThreadsPerMultiProcessor = info.simdPerCU_;
+  deviceProps.maxThreadsPerMultiProcessor = info.maxThreadsPerCU_;
   deviceProps.computeMode = 0;
   deviceProps.clockInstructionRate = info.timeStampFrequency_;
   deviceProps.arch.hasGlobalInt32Atomics       = 1;
