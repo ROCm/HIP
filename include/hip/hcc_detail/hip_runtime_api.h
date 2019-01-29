@@ -2634,7 +2634,6 @@ hipError_t hipLaunchByPtr(const void* func);
 
 #include <hip/hcc_detail/hip_prof_api.h>
 
-#if USE_PROF_API
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -2649,7 +2648,6 @@ static inline const char* hipApiName(const uint32_t& id) { return hip_api_name(i
 const char* hipKernelNameRef(hipFunction_t f);
 #ifdef __cplusplus
 } /* extern "C" */
-#endif
 #endif
 
 #ifdef __cplusplus
