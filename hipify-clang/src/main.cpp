@@ -234,6 +234,9 @@ int main(int argc, const char **argv) {
         Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
       }
     }
+    if (Verbose) {
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-v", ct::ArgumentInsertPosition::END));
+    }
     Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
     Statistics& currentStat = Statistics::current();
     // Hipify _all_ the things!

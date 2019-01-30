@@ -37,6 +37,7 @@ extern cl::list<std::string> IncludeDirs;
 extern cl::list<std::string> MacroNames;
 extern cl::opt<bool> Inplace;
 extern cl::opt<bool> SaveTemps;
+extern cl::opt<bool> Verbose;
 extern cl::opt<bool> NoBackup;
 extern cl::opt<bool> NoOutput;
 extern cl::opt<bool> PrintStats;
