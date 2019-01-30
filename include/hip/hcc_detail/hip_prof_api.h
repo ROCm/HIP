@@ -195,8 +195,8 @@ class api_callbacks_table_t {
  public:
   typedef void* act_t;
   typedef void* fun_t;
-  bool set_activity(uint32_t id, act_t fun, void* arg) { return true; }
-  bool set_callback(uint32_t id, fun_t fun, void* arg) { return true; }
+  bool set_activity(uint32_t id, act_t fun, void* arg) { return false; }
+  bool set_callback(uint32_t id, fun_t fun, void* arg) { return false; }
 };
 
 #endif
