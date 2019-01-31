@@ -113,4 +113,4 @@ allocated.
 
 ## Use of Long Double Type
 
-In HCC and HIP-Clang, long double type is 80-bit extended precision format for x86_64, which is not supported by AMDGPU. HCC and HIP-Cang treat long double type as IEEE double type for AMDGPU. Using long double type in HIP source code will not cause issue as long as data of long double type is not transferred between host and device. However, long double type should not be used as kernel argument type.
+In HCC and HIP-Clang, long double type is 80-bit extended precision format for x86_64, which is not supported by AMDGPU. HCC and HIP-Clang treat long double type as IEEE double type for AMDGPU. Using long double type in HIP source code will not cause issue as long as data of long double type is not transferred between host and device. However, long double type should not be used as kernel argument type.
