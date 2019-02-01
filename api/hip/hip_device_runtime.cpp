@@ -391,21 +391,27 @@ hipError_t hipDeviceSynchronize ( void ) {
   HIP_RETURN(hipSuccess);
 }
 
+int ihipGetDevice() {
+  for (unsigned int i = 0; i < g_devices.size(); i++) {
+    if (g_devices[i] == hip::getCurrentContext()) {
+      return i;
+    }
+  }
+  assert(0 && "Current device not found?!");
+  return -1;
+}
+
 hipError_t hipGetDevice ( int* deviceId ) {
   HIP_INIT_API(deviceId);
 
   if (deviceId != nullptr) {
-    for (unsigned int i = 0; i < g_devices.size(); i++) {
-      if (g_devices[i] == hip::getCurrentContext()) {
-        *deviceId = i;
-        HIP_RETURN(hipSuccess);
-      }
-    }
+    int dev = ihipGetDevice();
+    assert(dev != -1); 
+    *deviceId = dev;
+    HIP_RETURN(hipSuccess);
   } else {
     HIP_RETURN(hipErrorInvalidValue);
   }
-
-  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipGetDeviceCount ( int* count ) {
