@@ -87,6 +87,7 @@ namespace hip {
 };
 extern std::vector<amd::Context*> g_devices;
 extern hipError_t ihipDeviceGetCount(int* count);
+extern int ihipGetDevice();
 extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 
 #define HIP_RETURN(ret)          \

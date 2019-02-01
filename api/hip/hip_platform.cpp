@@ -55,7 +55,7 @@ struct __ClangOffloadBundleHeader {
   __ClangOffloadBundleDesc desc[1];
 };
 
-extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
+extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
 {
   HIP_INIT();
 
@@ -71,9 +71,7 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
     return nullptr;
   }
 
-  amd::Program* program = new amd::Program(*hip::getCurrentContext());
-  if (!program)
-    return nullptr;
+  auto programs = new std::vector<hipModule_t>{g_devices.size()};
 
   const auto obheader = reinterpret_cast<const __ClangOffloadBundleHeader*>(fbwrapper->binary);
   const auto* desc = &obheader->desc[0];
@@ -87,19 +85,30 @@ extern "C" hipModule_t __hipRegisterFatBinary(const void* data)
 
     std::string target(desc->triple + sizeof(HIP_AMDGCN_AMDHSA_TRIPLE),
                        desc->tripleSize - sizeof(HIP_AMDGCN_AMDHSA_TRIPLE));
-    if (target.compare(hip::getCurrentContext()->devices()[0]->info().name_))
-      continue;
 
     const void *image = reinterpret_cast<const void*>(
         reinterpret_cast<uintptr_t>(obheader) + desc->offset);
     size_t size = desc->size;
 
-    if (CL_SUCCESS == program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, size) &&
-        CL_SUCCESS == program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr))
-      break;
+    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+      amd::Context* ctx = g_devices[dev];
+
+      if (target.compare(ctx->devices()[0]->info().name_)) {
+        continue;
+      }
+
+      amd::Program* program = new amd::Program(*ctx);
+      if (program == nullptr) {
+        return nullptr;
+      }
+      if (CL_SUCCESS == program->addDeviceProgram(*ctx->devices()[0], image, size) &&
+          CL_SUCCESS == program->build(ctx->devices(), nullptr, nullptr, nullptr)) {
+        programs->at(dev) = reinterpret_cast<hipModule_t>(as_cl(program));
+      }
+    }
   }
 
-  return reinterpret_cast<hipModule_t>(as_cl(program));
+  return programs;
 }
 
 struct ihipExec_t {
@@ -115,7 +124,7 @@ thread_local std::stack<ihipExec_t> execStack_;
 class PlatformState {
   amd::Monitor lock_;
 private:
-  std::unordered_map<const void*, hip::Function*> functions_;
+  std::unordered_map<const void*, std::vector<hipFunction_t> > functions_;
 
   struct RegisteredVar {
     char* var;
@@ -125,22 +134,18 @@ private:
     bool  constant;
   };
 
-  std::unordered_map<hipModule_t, RegisteredVar> vars_;
+  std::unordered_map<std::vector<hipModule_t>*, RegisteredVar> vars_;
 
   static PlatformState* platform_;
 
   PlatformState() : lock_("Guards global function map") {}
-  ~PlatformState() {
-    for (const auto it : functions_) {
-      delete it.second;
-    }
-  }
+  ~PlatformState() {}
 public:
   static PlatformState& instance() {
     return *platform_;
   }
 
-  void registerVar(hipModule_t modules,
+  void registerVar(std::vector<hipModule_t>* modules,
                    char* var,
                    char* hostVar,
                    char* deviceVar,
@@ -153,18 +158,17 @@ public:
     vars_.insert(std::make_pair(modules, rvar));
   }
 
-  void registerFunction(const void* hostFunction, amd::Kernel* func) {
+  void registerFunction(const void* hostFunction, const std::vector<hipFunction_t>& funcs) {
     amd::ScopedLock lock(lock_);
 
-    hip::Function* f = new hip::Function(func);
-    functions_.insert(std::make_pair(hostFunction, f));
+    functions_.insert(std::make_pair(hostFunction, funcs));
   }
 
-  hip::Function* getFunc(const void* hostFunction) {
+  hipFunction_t getFunc(const void* hostFunction, int deviceId) {
     amd::ScopedLock lock(lock_);
     const auto it = functions_.find(hostFunction);
     if (it != functions_.cend()) {
-      return it->second;
+      return it->second[deviceId];
     } else {
       return nullptr;
     }
@@ -197,7 +201,7 @@ public:
 PlatformState* PlatformState::platform_ = new PlatformState();
 
 extern "C" void __hipRegisterFunction(
-  hipModule_t  module,
+  std::vector<hipModule_t>* modules,
   const void*  hostFunction,
   char*        deviceFunction,
   const char*  deviceName,
@@ -210,15 +214,21 @@ extern "C" void __hipRegisterFunction(
 {
   HIP_INIT();
 
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>(module));
+  std::vector<hipFunction_t> functions{g_devices.size()};
 
-  const amd::Symbol* symbol = program->findSymbol(deviceName);
-  if (!symbol) return;
+  for (size_t deviceId=0; deviceId < g_devices.size(); ++deviceId) {
+    hipFunction_t function = nullptr;
+    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName) &&
+        function != nullptr) {
+      functions[deviceId] = function;
+    }
+    else {
+ //     tprintf(DB_FB, "__hipRegisterFunction cannot find kernel %s for"
+ //         " device %d\n", deviceName, deviceId);
+    }
+  }
 
-  amd::Kernel* kernel = new amd::Kernel(*program, *symbol, deviceName);
-  if (!kernel) return;
-
-  PlatformState::instance().registerFunction(hostFunction, kernel);
+  PlatformState::instance().registerFunction(hostFunction, functions);
 }
 
 // Registers a device-side global variable.
@@ -227,7 +237,7 @@ extern "C" void __hipRegisterFunction(
 // track of the value of the device side global variable between kernel
 // executions.
 extern "C" void __hipRegisterVar(
-  hipModule_t modules,   // The device modules containing code object
+  std::vector<hipModule_t>* modules,   // The device modules containing code object
   char*       var,       // The shadow variable in host code
   char*       hostVar,   // Variable name in host code
   char*       deviceVar, // Variable name in device code
@@ -241,11 +251,16 @@ extern "C" void __hipRegisterVar(
   PlatformState::instance().registerVar(modules, var, hostVar, deviceVar, size, constant != 0);
 }
 
-extern "C" void __hipUnregisterFatBinary(
-  hipModule_t module
-)
+extern "C" void __hipUnregisterFatBinary(std::vector<hipModule_t>* modules)
 {
   HIP_INIT();
+
+  std::for_each(modules->begin(), modules->end(), [](hipModule_t module){
+    if (module != nullptr) {
+      as_amd(reinterpret_cast<cl_program>(module))->release();
+    }
+  });
+  delete modules;
 }
 
 extern "C" hipError_t hipConfigureCall(
@@ -277,7 +292,8 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 {
   HIP_INIT_API(hostFunction);
 
-  hip::Function* func = PlatformState::instance().getFunc(hostFunction);
+  int deviceId = ihipGetDevice();
+  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
   if (func == nullptr) {
     HIP_RETURN(hipErrorUnknown);
   }
@@ -292,7 +308,7 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
       HIP_LAUNCH_PARAM_END
     };
 
-  HIP_RETURN(hipModuleLaunchKernel(func->asHipFunction(),
+  HIP_RETURN(hipModuleLaunchKernel(func,
     exec.gridDim_.x, exec.gridDim_.y, exec.gridDim_.z,
     exec.blockDim_.x, exec.blockDim_.y, exec.blockDim_.z,
     exec.sharedMem_, exec.hStream_, nullptr, extra));
