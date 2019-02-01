@@ -58,8 +58,8 @@ $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
 $HIP_VDI_HOME=$ENV{'HIP_VDI_HOME'};
-$HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
-$DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
+$HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "/opt/rocm/llvm/bin";
+$DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'} // "/opt/rocm/lib";
 $HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibility mode
 
 #---
@@ -93,6 +93,7 @@ sub delete_temp_dirs {
 $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform` // "hcc";
 $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
 ($HIP_VERSION_MAJOR, $HIP_VERSION_MINOR, $HIP_VERSION_PATCH) = split(/\./, $HIP_VERSION);
+$HIP_COMPILER=$hipConfig{'HIP_COMPILER'};
 
 if (defined $HIP_VDI_HOME) {
     my $bits = "";
@@ -110,7 +111,7 @@ if (defined $HIP_VDI_HOME) {
     $HIP_LIB_PATH = "$HIP_VDI_HOME/lib" . $bits;
 }
 
-if (defined $HIP_CLANG_PATH) {
+if ($HIP_COMPILER eq "clang") {
   $HIP_PLATFORM = "clang"
 }
 
