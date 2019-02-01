@@ -71,6 +71,7 @@ if(NOT (HIP_COMPILER STREQUAL "hcc" OR HIP_COMPILER STREQUAL "clang"))
     message(FATAL_ERROR "Must use HIP_COMPILER as hcc or clang")
 endif()
 message(STATUS "HIP Compiler: " ${HIP_COMPILER})
+add_to_config(_buildInfo HIP_COMPILER)
 
 
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_PATH to be defined
