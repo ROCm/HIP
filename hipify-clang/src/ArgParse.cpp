@@ -49,6 +49,11 @@ cl::opt <bool> SaveTemps("save-temps",
   cl::value_desc("save-temps"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt <bool> Verbose("v",
+  cl::desc("Show commands to run and use verbose output"),
+  cl::value_desc("v"),
+  cl::cat(ToolTemplateCategory));
+
 cl::opt <bool> TranslateToRoc("roc",
   cl::desc("Translate to roc instead of hip where it is possible"),
   cl::value_desc("roc"),
