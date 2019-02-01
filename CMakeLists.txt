@@ -73,6 +73,15 @@ endif()
 message(STATUS "HIP Compiler: " ${HIP_COMPILER})
 add_to_config(_buildInfo HIP_COMPILER)
 
+# Determine HIP_RUNTIME
+# Either HCC or VDI; default is HCC
+if(NOT DEFINED ENV{HIP_RUNTIME})
+    set(HIP_RUNTIME "HCC" CACHE STRING "HIP Runtime")
+else()
+    set(HIP_RUNTIME $ENV{HIP_RUNTIME} CACHE STRING "HIP Runtime")
+endif()
+add_to_config(_buildInfo HIP_RUNTIME)
+
 
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_PATH to be defined
 if(HIP_PLATFORM STREQUAL "hcc")
