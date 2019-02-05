@@ -750,6 +750,11 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
 }
 
+# Windows specific options
+if ($^O eq 'MSWin32' and $HIP_PLATFORM eq "clang") {
+    $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility"
+}
+
 if ($HIPCC_COMPILE_FLAGS_APPEND) {
     $HIPCXXFLAGS .= " $HIPCC_COMPILE_FLAGS_APPEND";
 }
