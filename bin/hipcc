@@ -53,6 +53,8 @@ sub parse_config_file {
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
 
+$isWindows = $^O eq 'MSWin32';
+
 $HIPCC_COMPILE_FLAGS_APPEND=$ENV{'HIPCC_COMPILE_FLAGS_APPEND'};
 $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 
@@ -182,7 +184,11 @@ if ($HIP_PLATFORM eq "clang") {
     # is required.
     $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
     $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
-    $HIPLDFLAGS .= " $HIP_DEVLIB_FLAGS -L$HIP_LIB_PATH -Wl,--rpath=$HIP_LIB_PATH -lhip_hcc";
+    $HIPLDFLAGS .= " $HIP_DEVLIB_FLAGS -L$HIP_LIB_PATH";
+    if (not $isWindows) {
+      $HIPLDFLAGS .= " -Wl,--rpath=$HIP_LIB_PATH";
+    }
+    $HIPLDFLAGS .= " -lhip_hcc";
     if ($HIP_CLANG_HCC_COMPAT_MODE) {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
@@ -262,7 +268,9 @@ if ($HIP_PLATFORM eq "clang") {
         $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
     }
 
-    $HIPLDFLAGS .= " -lm";
+    if (not $isWindows) {
+        $HIPLDFLAGS .= " -lm";
+    }
 
     if ($verbose & 0x2) {
         print ("HSA_PATH=$HSA_PATH\n");
@@ -760,13 +768,13 @@ if ($needHipHcc) {
 # pass-through CPP mode.
 
 if ($HIP_PLATFORM eq "clang") {
-    $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
+    if ($isWindows) {
+        $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility";
+    } else {
+        $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
+    }
 }
 
-# Windows specific options
-if ($^O eq 'MSWin32' and $HIP_PLATFORM eq "clang") {
-    $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility"
-}
 
 if ($HIPCC_COMPILE_FLAGS_APPEND) {
     $HIPCXXFLAGS .= " $HIPCC_COMPILE_FLAGS_APPEND";
