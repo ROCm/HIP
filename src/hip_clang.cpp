@@ -132,8 +132,12 @@ extern "C" void __hipRegisterFunction(
   assert(modules && modules->size() >= g_deviceCnt);
   for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {
     hipFunction_t function;
-    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName) &&
-        function != nullptr) {
+    if ((hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName) ||
+        // With code-object-v3, we need to match the kernel descriptor symbol name
+        (hipSuccess == hipModuleGetFunction(
+                           &function, modules->at(deviceId),
+                           (std::string(deviceName) + std::string(".kd")).c_str()
+                       ))) && function != nullptr) {
       functions[deviceId] = function;
     }
     else {
