@@ -177,8 +177,7 @@ Statistics::Statistics(const std::string& name): fileName(name) {
 ///////// Counter update routines //////////
 
 void Statistics::incrementCounter(const hipCounter &counter, const std::string& name) {
-  if ((!TranslateToRoc && (HIP_UNSUPPORTED == (counter.supportDegree & HIP_UNSUPPORTED))) ||
-      (TranslateToRoc  && (ROC_UNSUPPORTED == (counter.supportDegree & ROC_UNSUPPORTED)))) {
+  if (Statistics::isUnsupported(counter)) {
     unsupported.incrementCounter(counter, name);
   } else {
     supported.incrementCounter(counter, name);
@@ -202,7 +201,7 @@ void Statistics::add(const Statistics &other) {
 
 void Statistics::lineTouched(int lineNumber) {
   touchedLinesSet.insert(lineNumber);
-  touchedLines = touchedLinesSet.size();
+  touchedLines = unsigned(touchedLinesSet.size());
 }
 
 void Statistics::bytesChanged(int bytes) {
@@ -282,6 +281,26 @@ Statistics& Statistics::current() {
 void Statistics::setActive(const std::string& name) {
   stats.emplace(std::make_pair(name, Statistics{name}));
   Statistics::currentStatistics = &stats.at(name);
+}
+
+bool Statistics::isToRoc(const hipCounter &counter) {
+  return TranslateToRoc && counter.apiType == API_BLAS;
+}
+
+bool Statistics::isHipUnsupported(const hipCounter &counter) {
+  return HIP_UNSUPPORTED == (counter.supportDegree & HIP_UNSUPPORTED);
+}
+
+bool Statistics::isRocUnsupported(const hipCounter &counter) {
+  return ROC_UNSUPPORTED == (counter.supportDegree & ROC_UNSUPPORTED);
+}
+
+bool Statistics::isUnsupported(const hipCounter &counter) {
+  if (Statistics::isToRoc(counter)) {
+    return Statistics::isRocUnsupported(counter);
+  } else {
+    return Statistics::isHipUnsupported(counter);
+  }
 }
 
 std::map<std::string, Statistics> Statistics::stats = {};
