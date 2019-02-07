@@ -93,6 +93,13 @@ sub delete_temp_dirs {
 $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform` // "hcc";
 $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
 ($HIP_VERSION_MAJOR, $HIP_VERSION_MINOR, $HIP_VERSION_PATCH) = split(/\./, $HIP_VERSION);
+$HIP_COMPILER= $hipConfig{'HIP_COMPILER'};
+$HIP_RUNTIME= $hipConfig{'HIP_RUNTIME'};
+
+# If using VDI runtime, need to find HIP_VDI_HOME
+if ($HIP_RUNTIME eq "VDI" and !defined $HIP_VDI_HOME) {
+    $HIP_VDI_HOME = "/opt/rocm/hip"
+}
 
 if (defined $HIP_VDI_HOME) {
     my $bits = "";
@@ -110,8 +117,14 @@ if (defined $HIP_VDI_HOME) {
     $HIP_LIB_PATH = "$HIP_VDI_HOME/lib" . $bits;
 }
 
-if (defined $HIP_CLANG_PATH) {
-  $HIP_PLATFORM = "clang"
+if ($HIP_COMPILER eq "clang") {
+  $HIP_PLATFORM = "clang";
+  if (!defined $HIP_CLANG_PATH) {
+    $HIP_CLANG_PATH = "/opt/rocm/llvm/bin";
+  }
+  if (!defined $DEVICE_LIB_PATH) {
+    $DEVICE_LIB_PATH = "/opt/rocm/lib";
+  }
 }
 
 if ($verbose & 0x2) {
