@@ -41,11 +41,10 @@ void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
     StringRef name = s.slice(begin, end);
     const auto found = CUDA_RENAMES_MAP().find(name);
     if (found != CUDA_RENAMES_MAP().end()) {
-      StringRef repName = TranslateToRoc ? found->second.rocName : found->second.hipName;
+      StringRef repName = Statistics::isToRoc(found->second) ? found->second.rocName : found->second.hipName;
       hipCounter counter = {"[string literal]", "", ConvTypes::CONV_LITERAL, ApiTypes::API_RUNTIME, found->second.supportDegree};
       Statistics::current().incrementCounter(counter, name.str());
-      if ((!TranslateToRoc && (HIP_UNSUPPORTED != (counter.supportDegree & HIP_UNSUPPORTED))) ||
-          (TranslateToRoc  && (ROC_UNSUPPORTED != (counter.supportDegree & ROC_UNSUPPORTED)))) {
+      if (!Statistics::isUnsupported(counter)) {
         clang::SourceLocation sl = start.getLocWithOffset(begin + 1);
         ct::Replacement Rep(SM, sl, name.size(), repName.str());
         clang::FullSourceLoc fullSL(sl, SM);
@@ -60,7 +59,7 @@ void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
 }
 
 /**
-  * Look at, and consider altering, a given token. 
+  * Look at, and consider altering, a given token.
   *
   * If it's not a CUDA identifier, nothing happens.
   * If it's an unsupported CUDA identifier, a warning is emitted.
@@ -68,7 +67,7 @@ void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
   */
 void HipifyAction::RewriteToken(const clang::Token& t) {
   clang::SourceManager& SM = getCompilerInstance().getSourceManager();
-  // String literals containing CUDA references need fixing...
+  // String literals containing CUDA references need fixing.
   if (t.is(clang::tok::string_literal)) {
     StringRef s(t.getLiteralData(), t.getLength());
     RewriteString(unquoteStr(s), t.getLocation());
@@ -86,26 +85,16 @@ void HipifyAction::RewriteToken(const clang::Token& t) {
   Statistics::current().incrementCounter(found->second, name.str());
   clang::SourceLocation sl = t.getLocation();
   clang::DiagnosticsEngine& DE = getCompilerInstance().getDiagnostics();
-  bool bWarn = false;
-  std::string sWarn = "HIP";
-  if (TranslateToRoc) {
-    if ((found->second.supportDegree & ROC_UNSUPPORTED) == ROC_UNSUPPORTED) {
-      sWarn = "ROCm";
-      bWarn = true;
-    }
-  } else {
-    if ((found->second.supportDegree & HIP_UNSUPPORTED) == HIP_UNSUPPORTED) {
-      bWarn = true;
-    }
-  }
   // Warn the user about unsupported identifier.
-  if (bWarn) {
+  if (Statistics::isUnsupported(found->second)) {
+    std::string sWarn;
+    Statistics::isToRoc(found->second) ? sWarn = "ROC" : sWarn = "HIP";
     sWarn = "" + sWarn;
     const auto ID = DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "CUDA identifier is unsupported in %0.");
     DE.Report(sl, ID) << sWarn;
     return;
   }
-  StringRef repName = TranslateToRoc ? found->second.rocName : found->second.hipName;
+  StringRef repName = Statistics::isToRoc(found->second) ? found->second.rocName : found->second.hipName;
   ct::Replacement Rep(SM, sl, name.size(), repName.str());
   clang::FullSourceLoc fullSL(sl, SM);
   insertReplacement(Rep, fullSL);
@@ -238,8 +227,7 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
   Statistics::current().incrementCounter(found->second, file_name.str());
 
   clang::SourceLocation sl = filename_range.getBegin();
-  if ((!TranslateToRoc && (HIP_UNSUPPORTED == (found->second.supportDegree & HIP_UNSUPPORTED))) ||
-      (TranslateToRoc  && (ROC_UNSUPPORTED == (found->second.supportDegree & ROC_UNSUPPORTED)))) {
+  if (Statistics::isUnsupported(found->second)) {
     clang::DiagnosticsEngine& DE = getCompilerInstance().getDiagnostics();
     DE.Report(sl, DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Unsupported CUDA header."));
     return;
@@ -249,7 +237,7 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
   // Keep the same include type that the user gave.
   if (!exclude) {
     clang::SmallString<128> includeBuffer;
-    llvm::StringRef name = TranslateToRoc ? found->second.rocName : found->second.hipName;
+    llvm::StringRef name = Statistics::isToRoc(found->second) ? found->second.rocName : found->second.hipName;
     if (is_angled) {
       newInclude = llvm::Twine("<" + name+ ">").toStringRef(includeBuffer);
     } else {

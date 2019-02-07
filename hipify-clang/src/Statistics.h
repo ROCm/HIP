@@ -225,6 +225,17 @@ public:
     * timestamp into the currently active one.
     */
   static void setActive(const std::string& name);
+  // Check the counter and option TranslateToRoc whether it should be translated to Roc or not.
+  static bool isToRoc(const hipCounter &counter);
+  // Check whether the counter is HIP_UNSUPPORTED or not.
+  static bool isHipUnsupported(const hipCounter &counter);
+  // Check whether the counter is ROC_UNSUPPORTED or not.
+  static bool isRocUnsupported(const hipCounter &counter);
+  /**
+    * Check whether the counter is ROC_UNSUPPORTED/HIP_UNSUPPORTED/UNSUPPORTED or not
+    * based on counter's API_TYPE and option TranslateToRoc.
+    */
+  static bool isUnsupported(const hipCounter &counter);
   // Set this flag in case of hipification errors
   bool hasErrors = false;
 };
