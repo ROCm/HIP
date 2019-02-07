@@ -62,10 +62,16 @@ $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
 $DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
 $HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibility mode
 
+if (defined $HIP_VDI_HOME) {
+    $HIP_INFO_PATH= "$HIP_VDI_HOME/lib/.hipInfo";
+} else {
+    $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo";
+}
+
 #---
 # Read .hipInfo
 my %hipConfig = ();
-parse_config_file("$HIP_PATH/lib/.hipInfo", \%hipConfig);
+parse_config_file("$HIP_INFO_PATH", \%hipConfig);
 
 #---
 # Temporary directories
