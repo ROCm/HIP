@@ -206,7 +206,7 @@ if ($HIP_PLATFORM eq "clang") {
 
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
-    $HCCFLAGS = "-hc  -D__HIPCC__ -I$HCC_HOME/include ";
+    $HCCFLAGS = "-hc  -D__HIPCC__ -isystem $HCC_HOME/include ";
 
     $HIPCC=$HCC;
     $HIPCXXFLAGS = $HCCFLAGS;
@@ -228,7 +228,7 @@ if ($HIP_PLATFORM eq "clang") {
         # That's because HCC already uses libstdc++ by default if a newer g++/libstdc++ is available
         # Cent OS 7 and RHEL 7.4 cannot use libstdc++ for compilation, default to libc++
         if (${GCC_CUR_VER} eq ${GPP_CUR_VER} and $GPP_VER_FIELDS[0] < 5 and ($HOST_OSNAME ne "\"centos\"") and ($HOST_OSNAME ne "\"rhel\"")) {
-            $HCC_WA_FLAGS .= " -stdlib=libstdc++  -I/usr/include/x86_64-linux-gnu -I/usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -I/usr/include/c++/${GCC_CUR_VER} ";
+            $HCC_WA_FLAGS .= " -stdlib=libstdc++  -isystem /usr/include/x86_64-linux-gnu -isystem /usr/include/x86_64-linux-gnu/c++/${GCC_CUR_VER} -isystem /usr/include/c++/${GCC_CUR_VER} ";
             # Add C++ libs for GCC.
             $HIPLDFLAGS .= " -lstdc++";
         }
@@ -241,8 +241,8 @@ if ($HIP_PLATFORM eq "clang") {
         $setStdLib = 1;
     }
 
-    $HIPCXXFLAGS .= " -I$HIP_PATH/include/hip/hcc_detail/cuda";
-    $HIPCXXFLAGS .= " -I$HSA_PATH/include";
+    $HIPCXXFLAGS .= " -isystem $HIP_PATH/include/hip/hcc_detail/cuda";
+    $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
 
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am ";
@@ -253,7 +253,7 @@ if ($HIP_PLATFORM eq "clang") {
     if ($HIP_ATP_MARKER) {
         $marker_inc_path = "$marker_path/include";
         if (-e $marker_inc_path) {
-            $HIPCXXFLAGS .= " -I$marker_inc_path";
+            $HIPCXXFLAGS .= " -isystem $marker_inc_path";
         }
     }
 
@@ -278,7 +278,7 @@ if ($HIP_PLATFORM eq "clang") {
 
     $HIPCC="$CUDA_PATH/bin/nvcc";
     $HIPCXXFLAGS .= " -Wno-deprecated-gpu-targets ";
-    $HIPCXXFLAGS .= " -I$CUDA_PATH/include";
+    $HIPCXXFLAGS .= " -isystem $CUDA_PATH/include";
 
     $HIPLDFLAGS = " -Wno-deprecated-gpu-targets -lcuda -lcudart -L$CUDA_PATH/lib64";
 } else {
@@ -287,7 +287,7 @@ if ($HIP_PLATFORM eq "clang") {
 }
 
 # Add paths to common HIP includes:
-$HIPCXXFLAGS .= " -I$HIP_INCLUDE_PATH -DHIP_VERSION_MAJOR=$HIP_VERSION_MAJOR -DHIP_VERSION_MINOR=$HIP_VERSION_MINOR -DHIP_VERSION_PATCH=$HIP_VERSION_PATCH" ;
+$HIPCXXFLAGS .= " -isystem $HIP_INCLUDE_PATH -DHIP_VERSION_MAJOR=$HIP_VERSION_MAJOR -DHIP_VERSION_MINOR=$HIP_VERSION_MINOR -DHIP_VERSION_PATCH=$HIP_VERSION_PATCH" ;
 
 my $compileOnly = 0;
 my $needCXXFLAGS = 0;  # need to add CXX flags to compile step
