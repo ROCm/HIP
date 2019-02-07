@@ -34,7 +34,7 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) || __HIP_DEVICE_COMPILE__
 #if defined(__clang__)
     #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
 #elif defined(__GNUC__) // N.B.: GCC does not support .xyzw syntax.
