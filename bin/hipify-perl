@@ -269,7 +269,8 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMemcpyDeviceToHost\b/hipMemcpyDeviceToHost/g;
         $ft{'mem'} += s/\bcudaMemcpyDeviceToDevice\b/hipMemcpyDeviceToDevice/g;
         $ft{'mem'} += s/\bcudaMemcpyDefault\b/hipMemcpyDefault/g;
-        $ft{'mem'} += s/\bcudaMemcpyToSymbol\b/hipMemcpyToSymbol/g;
+        $ft{'mem'} += s/\bcudaMemcpyToSymbol\s*\(\s*(\w+)\b/hipMemcpyToSymbol\(HIP_SYMBOL\($1\)/g;
+        $ft{'mem'} += s/\bcudaMemcpyFromSymbol\s*\(\s*(.+?)\s*,\s*(.+?)\b/hipMemcpyFromSymbol\($1, HIP_SYMBOL\($2\)/g;
 
         $ft{'mem'} += s/\bcudaMemset\b/hipMemset/g;
         $ft{'mem'} += s/\bcudaMemsetAsync\b/hipMemsetAsync/g;
@@ -287,8 +288,8 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
         $ft{'mem'} += s/\bcudaMemcpyToArray\b/hipMemcpyToArray/g;
 
-        $ft{'mem'} += s/\bcudaGetSymbolAddress\b/hipGetSymbolAddress/g;
-        $ft{'mem'} += s/\bcudaGetSymbolSize\b/hipGetSymbolSize/g;
+        $ft{'mem'} += s/\bcudaGetSymbolAddress\s*\(\s*(.+?)\s*,\s*(.+?)\b/hipGetSymbolAddress\($1, HIP_SYMBOL\($2\)/g;
+        $ft{'mem'} += s/\bcudaGetSymbolSize\s*\(\s*&(\w+)\s*,\s*(.+?)\b/hipGetSymbolSize(&$1, HIP_SYMBOL\($2\)/g;
 
         #--------
         # Memory management:

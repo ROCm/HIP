@@ -37,8 +37,8 @@ const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
   // cuComplex includes
   {"cuComplex.h",               {"hip/hip_complex.h",        "", CONV_INCLUDE_CUDA_MAIN_H, API_COMPLEX}},
   // cuBLAS includes
-  {"cublas.h",                  {"hipblas.h",                "", CONV_INCLUDE_CUDA_MAIN_H, API_BLAS}},
-  {"cublas_v2.h",               {"hipblas.h",                "", CONV_INCLUDE_CUDA_MAIN_H, API_BLAS}},
+  {"cublas.h",                  {"hipblas.h",                "rocblas.h", CONV_INCLUDE_CUDA_MAIN_H, API_BLAS}},
+  {"cublas_v2.h",               {"hipblas.h",                "rocblas.h", CONV_INCLUDE_CUDA_MAIN_H, API_BLAS}},
   // cuRAND includes
   {"curand.h",                  {"hiprand.h",                "", CONV_INCLUDE_CUDA_MAIN_H, API_RAND}},
   {"curand_kernel.h",           {"hiprand_kernel.h",         "", CONV_INCLUDE,             API_RAND}},
