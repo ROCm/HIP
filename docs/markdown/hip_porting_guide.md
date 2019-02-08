@@ -418,6 +418,8 @@ HIP support for hipMemcpyToSymbol is complete.  This feature allows a kernel
 to define a device-side data symbol which can be accessed on the host side.  The symbol
 can be in __constant or device space.
 
+Note that the symbol name needs to be encased in the HIP_SYMBOL macro, as shown in the code example below. This also applies to hipMemcpyFromSymbol, hipGetSymbolAddress, and hipGetSymbolSize.
+
 For example:
 
 Device Code:
