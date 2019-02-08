@@ -37,9 +37,9 @@
 #include <curand.h>
 // CHECK: #include <hiprand_kernel.h>
 #include <curand_kernel.h>
-// CHECK-NOT: #include <curand_mtgp32_host.h>
-// CHECK-NOT: #include <curand_mtgp32dc_p_11213.h>
+// CHECK: #include <hiprand_mtgp32_host.h>
 #include <curand_mtgp32_host.h>
+// CHECK: #include <rocrand_mtgp32_11213.h>
 #include <curand_mtgp32dc_p_11213.h>
 
 // CHECK: if ((x) != hipSuccess) {
@@ -201,11 +201,9 @@ struct runner<curandStateMtgp32_t>
         CUDA_CALL(cudaMalloc((void **)&states, states_size * sizeof(curandStateMtgp32_t)));
         // CHECK: CUDA_CALL(hipMalloc((void **)&d_param, sizeof(mtgp32_kernel_params)));
         CUDA_CALL(cudaMalloc((void **)&d_param, sizeof(mtgp32_kernel_params)));
-        // curandMakeMTGP32Constants is yet unsupported by HIP
-        // CHECK-NOT: CURAND_CALL(hiprandMakeMTGP32Constants(mtgp32dc_params_fast_11213, d_param));
+        // CHECK: CURAND_CALL(hiprandMakeMTGP32Constants(mtgp32dc_params_fast_11213, d_param));
         CURAND_CALL(curandMakeMTGP32Constants(mtgp32dc_params_fast_11213, d_param));
-        // curandMakeMTGP32KernelState is yet unsupported by HIP
-        // CHECK-NOT: CURAND_CALL(hiprandMakeMTGP32KernelState(states, mtgp32dc_params_fast_11213, d_param, states_size, seed));
+        // CHECK: CURAND_CALL(hiprandMakeMTGP32KernelState(states, mtgp32dc_params_fast_11213, d_param, states_size, seed));
         CURAND_CALL(curandMakeMTGP32KernelState(states, mtgp32dc_params_fast_11213, d_param, states_size, seed));
     }
 
