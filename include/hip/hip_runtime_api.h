@@ -318,9 +318,13 @@ enum hipComputeMode {
  *
  * Perform automatic type conversion to eliminate need for excessive typecasting (ie void**)
  *
+ * __HIP_DISABLE_CPP_FUNCTIONS__ macro can be defined to suppress these
+ * wrappers. It is useful for applications which need to obtain decltypes of
+ * HIP runtime APIs.
+ *
  * @see hipMalloc
  */
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(__HIP_DISABLE_CPP_FUNCTIONS__)
 template <class T>
 static inline hipError_t hipMalloc(T** devPtr, size_t size) {
     return hipMalloc((void**)devPtr, size);
