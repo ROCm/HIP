@@ -743,7 +743,7 @@ if ($buildDeps and $HIP_PLATFORM eq 'clang') {
 
 if ($useCodeObjectV3 and $HIP_PLATFORM eq 'clang') {
     $HIPCXXFLAGS .= " -mcode-object-v3";
-} else {
+} elsif ($HIP_PLATFORM eq 'clang') {
     $HIPCXXFLAGS .= " -mno-code-object-v3";
 }
 
