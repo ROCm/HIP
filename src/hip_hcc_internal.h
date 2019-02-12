@@ -130,7 +130,7 @@ struct ProfTrigger {
 
 
 //---
-// Extern tls
+// Extern TLS
 // Use a single struct to hold all TLS data. Attempt to reduce TLS accesses.
 struct TlsData {
     explicit TlsData() {
@@ -141,9 +141,12 @@ struct TlsData {
 
     hipError_t lastHipError;
     TidInfo tidInfo;
-    bool getPrimaryCtx;
+    // This is the implicit context used by all HIP commands.
+    // It can be set by hipSetDevice or by the CTX manipulation commands:
     ihipCtx_t* defaultCtx;
+    // Stack of contexts
     std::stack<ihipCtx_t*> ctxStack;
+    bool getPrimaryCtx;
 };
 TlsData* tls_get_ptr();
 #define GET_TLS() TlsData *tls = tls_get_ptr()
