@@ -147,12 +147,12 @@ uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::string& a
     auto tid = tls->tidInfo.tid();
 
     if ((tid < g_dbStartTriggers.size()) && (apiSeqNum >= g_dbStartTriggers[tid].nextTrigger())) {
-        std::printf("info: resume profiling at %lu\n", apiSeqNum);
+        printf("info: resume profiling at %lu\n", apiSeqNum);
         RESUME_PROFILING;
         g_dbStartTriggers.pop_back();
     };
     if ((tid < g_dbStopTriggers.size()) && (apiSeqNum >= g_dbStopTriggers[tid].nextTrigger())) {
-        std::printf("info: stop profiling at %lu\n", apiSeqNum);
+        printf("info: stop profiling at %lu\n", apiSeqNum);
         STOP_PROFILING;
         g_dbStopTriggers.pop_back();
     };
@@ -386,7 +386,7 @@ void ihipStream_t::lockclose_postKernelCommand(const char* kernelName, hc::accel
         for (auto o = g_hipLaunchBlockingKernels.begin(); o != g_hipLaunchBlockingKernels.end();
              o++) {
             if ((*o == kernelNameString)) {
-                // std::printf ("force blocking for kernel %s\n", o->c_str());
+                // printf ("force blocking for kernel %s\n", o->c_str());
                 blockThisKernel = true;
             }
         }
@@ -581,7 +581,7 @@ void ihipDevice_t::locked_reset() {
 
 void error_check(hsa_status_t hsa_error_code, int line_num, std::string str) {
     if ((hsa_error_code != HSA_STATUS_SUCCESS) && (hsa_error_code != HSA_STATUS_INFO_BREAK)) {
-        std::printf("HSA reported error!\n In file: %s\nAt line: %d\n", str.c_str(), line_num);
+        printf("HSA reported error!\n In file: %s\nAt line: %d\n", str.c_str(), line_num);
     }
 }
 
