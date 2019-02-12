@@ -397,7 +397,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 };
 
 // width in bytes
-hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
+hipError_t ihipMallocPitch(TlsData* tls, void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
     hipError_t hip_status = hipSuccess;
     if(ptr==NULL || pitch == NULL)
      {
@@ -408,7 +408,6 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
     *pitch = ((((int)width - 1) / 128) + 1) * 128;
     const size_t sizeBytes = (*pitch) * height * ((depth==0) ? 1 : depth);
 
-    GET_TLS();
     auto ctx = ihipGetTlsDefaultCtx();
 
     if (ctx) {
@@ -461,7 +460,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 
     if (width == 0 || height == 0) return ihipLogStatus(hipErrorUnknown);
 
-    hip_status = ihipMallocPitch(ptr, pitch, width, height, 0);
+    hip_status = ihipMallocPitch(tls, ptr, pitch, width, height, 0);
     return ihipLogStatus(hip_status);
 }
 
@@ -476,7 +475,7 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
     size_t pitch;
 
     hip_status =
-        ihipMallocPitch(&pitchedDevPtr->ptr, &pitch, extent.width, extent.height, extent.depth);
+        ihipMallocPitch(tls, &pitchedDevPtr->ptr, &pitch, extent.width, extent.height, extent.depth);
     if (hip_status == hipSuccess) {
         pitchedDevPtr->pitch = pitch;
         pitchedDevPtr->xsize = extent.width;

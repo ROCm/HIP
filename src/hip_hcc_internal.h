@@ -210,7 +210,7 @@ extern const char* API_COLOR_END;
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function
 // boundary.
 // TODO - currently we print the trace message at the beginning. if we waited, we could also
-// tls_tidInfo return codes, and any values returned through ptr-to-args (ie the pointers allocated
+// tls->tidInfo return codes, and any values returned through ptr-to-args (ie the pointers allocated
 // by hipMalloc).
 #if COMPILE_HIP_ATP_MARKER
 #include "CXLActivityLogger.h"
