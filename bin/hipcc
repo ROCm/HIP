@@ -204,6 +204,9 @@ if ($HIP_PLATFORM eq "clang") {
     }
 } elsif ($HIP_PLATFORM eq "hcc") {
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
+    if (! defined $HIP_LIB_PATH) {
+        $HIP_LIB_PATH = "$HIP_PATH/lib";
+    }
     $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
 
     $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "/opt/rocm/hcc";
@@ -778,7 +781,7 @@ if ($needHipHcc) {
     if ($linkType eq 0) {
         substr($HIPLDFLAGS,0,0) = "  $HIP_LIB_PATH/libhip_hcc_static.a " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = "  -Wl,--rpath=$HIP_LIB_PATH $HIP_PATH/lib/libhip_hcc.so ";
+        substr($HIPLDFLAGS,0,0) = "  -Wl,--rpath=$HIP_LIB_PATH $HIP_LIB_PATH/libhip_hcc.so ";
     }
 }
 
