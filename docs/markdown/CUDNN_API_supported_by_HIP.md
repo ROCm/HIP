@@ -27,7 +27,6 @@
 |            0 |*`CUDNN_ERRQUERY_RAWCODE`*                                     |                                                            |
 |            1 |*`CUDNN_ERRQUERY_NONBLOCKING`*                                 |                                                            |
 |            2 |*`CUDNN_ERRQUERY_BLOCKING`*                                    |                                                            |
-| enum         |***`libraryPropertyType_t`***                                  |                                                            |
 | struct       |`cudnnTensorStruct`                                            |                                                            |
 | struct*      |`cudnnTensorDescriptor_t`                                      |`hipdnnTensorDescriptor_t`                                  |
 | struct       |`cudnnConvolutionStruct`                                       |                                                            |
@@ -55,8 +54,9 @@
 |            3 |*`CUDNN_DATA_INT8`*                                            |*`HIPDNN_DATA_INT8`*                                        |
 |            4 |*`CUDNN_DATA_INT32`*                                           |*`HIPDNN_DATA_INT32`*                                       |
 |            5 |*`CUDNN_DATA_INT8x4`*                                          |*`HIPDNN_DATA_INT8x4`*                                      |
-|            6 |*`CUDNN_DATA_UINT8`*                                           |*`HIPDNN_DATA_UINT8`*                                       |
-|            7 |*`CUDNN_DATA_UINT8x4`*                                         |*`HIPDNN_DATA_UINT8x4`*                                     |
+|            6 |*`CUDNN_DATA_UINT8`*                                           |                                                            |
+|            7 |*`CUDNN_DATA_UINT8x4`*                                         |                                                            |
+|            8 |*`CUDNN_DATA_INT8x32`*                                         |                                                            |
 | enum         |***`cudnnMathType_t`***                                        |***`hipdnnMathType_t`***                                    |
 |            0 |*`CUDNN_DEFAULT_MATH`*                                         |*`HIPDNN_DEFAULT_MATH`*                                     |
 |            1 |*`CUDNN_TENSOR_OP_MATH`*                                       |*`HIPDNN_TENSOR_OP_MATH`*                                   |
@@ -77,7 +77,7 @@
 |            2 |*`CUDNN_OP_TENSOR_MIN`*                                        |*`HIPDNN_OP_TENSOR_MIN`*                                    |
 |            3 |*`CUDNN_OP_TENSOR_MAX`*                                        |*`HIPDNN_OP_TENSOR_MAX`*                                    |
 |            4 |*`CUDNN_OP_TENSOR_SQRT`*                                       |*`HIPDNN_OP_TENSOR_SQRT`*                                   |
-|            5 |*`CUDNN_OP_TENSOR_NOT`*                                        |                                                            |
+|            5 |*`CUDNN_OP_TENSOR_NOT`*                                        |*`HIPDNN_OP_TENSOR_NOT`*                                    |
 | enum         |***`cudnnReduceTensorOp_t`***                                  |***`hipdnnReduceTensorOp_t`***                              |
 |            0 |*`CUDNN_REDUCE_TENSOR_ADD`*                                    |*`HIPDNN_REDUCE_TENSOR_ADD`*                                |
 |            1 |*`CUDNN_REDUCE_TENSOR_MUL`*                                    |*`HIPDNN_REDUCE_TENSOR_MUL`*                                |
@@ -199,6 +199,22 @@
 | define       |`CUDNN_SEV_INFO_EN`                                            |                                                            |
 | struct       |`cudnnDebug_t`                                                 |                                                            |
 | struct       |`cudnnCallback_t`                                              |                                                            |
+| enum         |***`cudnnBatchNormOps_t`***                                    |                                                            |
+|            0 |*`CUDNN_BATCHNORM_OPS_BN`*                                     |                                                            |
+|            1 |*`CUDNN_BATCHNORM_OPS_BN_ACTIVATION`*                          |                                                            |
+|            2 |*`CUDNN_BATCHNORM_OPS_BN_ADD_ACTIVATION`*                      |                                                            |
+| enum         |***`cudnnRNNClipMode_t`***                                     |                                                            |
+|            0 |*`CUDNN_RNN_CLIP_NONE`*                                        |                                                            |
+|            1 |*`CUDNN_RNN_CLIP_MINMAX`*                                      |                                                            |
+| struct       |`cudnnRNNDataStruct`                                           |                                                            |
+| struct*      |`cudnnRNNDataDescriptor_t`                                     |                                                            |
+| enum         |***`cudnnRNNDataLayout_t`***                                   |                                                            |
+|            0 |*`CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_UNPACKED`*                   |                                                            |
+|            1 |*`CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_PACKED`*                     |                                                            |
+|            2 |*`CUDNN_RNN_DATA_LAYOUT_BATCH_MAJOR_UNPACKED`*                 |                                                            |
+| enum         |***`cudnnRNNPaddingMode_t`***                                  |                                                            |
+|            0 |*`CUDNN_RNN_PADDED_IO_DISABLED`*                               |                                                            |
+|            1 |*`CUDNN_RNN_PADDED_IO_ENABLED`*                                |                                                            |
 
 ## **2. CUDNN API functions**
 
@@ -215,7 +231,7 @@
 |`cudnnSetStream`                                           |`hipdnnGetStream`                                |
 |`cudnnCreateTensorDescriptor`                              |`hipdnnCreateTensorDescriptor`                   |
 |`cudnnSetTensor4dDescriptor`                               |`hipdnnSetTensor4dDescriptor`                    |
-|`cudnnSetTensor4dDescriptorEx`                             |                                                 |
+|`cudnnSetTensor4dDescriptorEx`                             |`hipdnnSetTensor4dDescriptorEx`                  |
 |`cudnnGetTensor4dDescriptor`                               |`hipdnnGetTensor4dDescriptor`                    |
 |`cudnnSetTensorNdDescriptor`                               |`hipdnnSetTensorNdDescriptor`                    |
 |`cudnnSetTensorNdDescriptorEx`                             |                                                 |
@@ -239,15 +255,15 @@
 |`cudnnSetTensor`                                           |`hipdnnSetTensor`                                |
 |`cudnnScaleTensor`                                         |`hipdnnScaleTensor`                              |
 |`cudnnCreateFilterDescriptor`                              |`hipdnnCreateFilterDescriptor`                   |
-|`cudnnSetFilter4dDescriptor`                               |`hipdnnSetFilter4dDescriptor`                    |
-|`cudnnGetFilter4dDescriptor`                               |`hipdnnGetFilter4dDescriptor`                    |
+|`cudnnSetFilter4dDescriptor`                               |                                                 |
+|`cudnnGetFilter4dDescriptor`                               |                                                 |
 |`cudnnSetFilterNdDescriptor`                               |`hipdnnSetFilterNdDescriptor`                    |
 |`cudnnGetFilterNdDescriptor`                               |`hipdnnGetFilterNdDescriptor`                    |
 |`cudnnDestroyFilterDescriptor`                             |`hipdnnDestroyFilterDescriptor`                  |
 |`cudnnCreateConvolutionDescriptor`                         |`hipdnnCreateConvolutionDescriptor`              |
 |`cudnnSetConvolutionMathType`                              |`hipdnnSetConvolutionMathType`                   |
 |`cudnnGetConvolutionMathType`                              |                                                 |
-|`cudnnSetConvolutionGroupCount`                            |                                                 |
+|`cudnnSetConvolutionGroupCount`                            |`hipdnnSetConvolutionGroupCount`                 |
 |`cudnnGetConvolutionGroupCount`                            |                                                 |
 |`cudnnSetConvolution2dDescriptor`                          |`hipdnnSetConvolution2dDescriptor`               |
 |`cudnnGetConvolution2dDescriptor`                          |`hipdnnGetConvolution2dDescriptor`               |
@@ -308,8 +324,10 @@
 |`cudnnDivisiveNormalizationBackward`                       |                                                 |
 |`cudnnDeriveBNTensorDescriptor`                            |`hipdnnDeriveBNTensorDescriptor`                 |
 |`cudnnBatchNormalizationForwardTraining`                   |`hipdnnBatchNormalizationForwardTraining`        |
+|`cudnnBatchNormalizationForwardTrainingEx`                 |                                                 |
 |`cudnnBatchNormalizationForwardInference`                  |`hipdnnBatchNormalizationForwardInference`       |
 |`cudnnBatchNormalizationBackward`                          |`hipdnnBatchNormalizationBackward`               |
+|`cudnnBatchNormalizationBackwardEx`                        |                                                 |
 |`cudnnCreateSpatialTransformerDescriptor`                  |                                                 |
 |`cudnnSetSpatialTransformerNdDescriptor`                   |                                                 |
 |`cudnnDestroySpatialTransformerDescriptor`                 |                                                 |
@@ -340,7 +358,7 @@
 |`cudnnSetPersistentRNNPlan`                                |`hipdnnSetPersistentRNNPlan`                     |
 |`cudnnDestroyPersistentRNNPlan`                            |`hipdnnDestroyPersistentRNNPlan`                 |
 |`cudnnSetRNNDescriptor`                                    |`hipdnnSetRNNDescriptor`                         |
-|`cudnnGetRNNDescriptor`                                    |                                                 |
+|`cudnnGetRNNDescriptor`                                    |`hipdnnGetRNNDescriptor`                         |
 |`cudnnSetRNNProjectionLayers`                              |                                                 |
 |`cudnnGetRNNProjectionLayers`                              |                                                 |
 |`cudnnSetRNNAlgorithmDescriptor`                           |                                                 |
@@ -352,9 +370,19 @@
 |`cudnnGetRNNLinLayerMatrixParams`                          |`hipdnnGetRNNLinLayerMatrixParams`               |
 |`cudnnGetRNNLinLayerBiasParams`                            |`hipdnnGetRNNLinLayerBiasParams`                 |
 |`cudnnRNNForwardInference`                                 |`hipdnnRNNForwardInference`                      |
+|`cudnnRNNForwardInferenceEx`                               |                                                 |
 |`cudnnRNNForwardTraining`                                  |`hipdnnRNNForwardTraining`                       |
+|`cudnnRNNForwardTrainingEx`                                |                                                 |
 |`cudnnRNNBackwardData`                                     |`hipdnnRNNBackwardData`                          |
+|`cudnnRNNBackwardDataEx`                                   |                                                 |
 |`cudnnRNNBackwardWeights`                                  |`hipdnnRNNBackwardWeights`                       |
+|`cudnnRNNBackwardWeightsEx`                                |                                                 |
+|`cudnnSetRNNPaddingMode`                                   |                                                 |
+|`cudnnGetRNNPaddingMode`                                   |                                                 |
+|`cudnnCreateRNNDataDescriptor`                             |                                                 |
+|`cudnnDestroyRNNDataDescriptor`                            |                                                 |
+|`cudnnSetRNNDataDescriptor`                                |                                                 |
+|`cudnnGetRNNDataDescriptor`                                |                                                 |
 |`cudnnCreateCTCLossDescriptor`                             |                                                 |
 |`cudnnSetCTCLossDescriptor`                                |                                                 |
 |`cudnnGetCTCLossDescriptor`                                |                                                 |
@@ -377,3 +405,8 @@
 |`cudnnSetRNNDescriptor_v6`                                 |`hipdnnSetRNNDescriptor_v6`                      |
 |`cudnnSetCallback`                                         |                                                 |
 |`cudnnGetCallback`                                         |                                                 |
+|`cudnnGetBatchNormalizationForwardTrainingExWorkspaceSize` |                                                 |
+|`cudnnGetBatchNormalizationBackwardExWorkspaceSize`        |                                                 |
+|`cudnnGetBatchNormalizationTrainingExReserveSpaceSize`     |                                                 |
+|`cudnnRNNSetClip`                                          |                                                 |
+|`cudnnRNNGetClip`                                          |                                                 |
