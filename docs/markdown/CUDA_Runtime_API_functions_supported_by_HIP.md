@@ -1070,3 +1070,8 @@
 | typedef      |`cudaGraphicsResource_t`                             |                                                            |
 | struct       |`cudaGraphicsResource`                               |                                                            |
 | typedef      |`cudaHostFn_t`                                       |                                                            |
+| enum         |***`libraryPropertyType`***                          |                                                            |
+| typedef      |***`libraryPropertyType_t`***                        |                                                            |
+|            0 |*`MAJOR_VERSION`*                                    |                                                            |
+|            1 |*`MINOR_VERSION`*                                    |                                                            |
+|            2 |*`PATCH_LEVEL`*                                      |                                                            |
