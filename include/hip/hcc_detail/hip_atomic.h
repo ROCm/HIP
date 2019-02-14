@@ -112,7 +112,7 @@ unsigned int atomicExch(unsigned int* address, unsigned int val)
 }
 __device__
 inline
-unsigned int atomicExch(unsigned long long* address, unsigned long long val)
+unsigned long long atomicExch(unsigned long long* address, unsigned long long val)
 {
     return __atomic_exchange_n(address, val, __ATOMIC_RELAXED);
 }
