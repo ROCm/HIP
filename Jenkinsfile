@@ -295,7 +295,7 @@ def docker_upload_dockerhub( String local_org, String image_name, String remote_
 String build_config = 'Release'
 String job_name = env.JOB_NAME.toLowerCase( )
 
-// The following launches 3 builds in parallel: rocm-head, rocm-2.1.x and cuda-9.x
+// The following launches 3 builds in parallel: rocm-head, rocm-2.1.x and cuda-10.x
 parallel rocm_2_1:
 {
   node('hip-rocm')
@@ -386,14 +386,14 @@ rocm_head:
     */
   }
 },
-cuda_9_x:
+cuda_10_x:
 {
   node('hip-cuda')
   {
     ////////////////////////////////////////////////////////////////////////
     // Block of string constants customizing behavior for cuda
-    String nvcc_ver = 'nvcc-9.x'
-    String from_image = 'ci_test_nodes/cuda-9.x/ubuntu-16.04:latest'
+    String nvcc_ver = 'cuda-10.x'
+    String from_image = 'ci_test_nodes/cuda-10.x/ubuntu-16.04:latest'
     String inside_args = '--runtime=nvidia';
 
     // Checkout source code, dependencies and version files

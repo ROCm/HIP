@@ -10,14 +10,17 @@ popd () {
 
 ROCMDIR=/opt/rocm
 HIPDIR=$ROCMDIR/hip
+([ ! -d $ROCMDIR ] || [ ! -d $HIPDIR ]) && exit 0
 
 # Remove soft-link to bin files
-HIPBINFILES=$HIPDIR/bin/*
+HIPBINDIR=$HIPDIR/bin
 ROCMBINDIR=$ROCMDIR/bin
+([ ! -d $ROCMBINDIR ] || [ ! -d $HIPBINDIR ]) && exit 0
+HIPBINFILES=$HIPBINDIR/*
 pushd $ROCMBINDIR
-for f in $HIPBINFILES
-do
-rm $(basename $f)
+for f in $HIPBINFILES; do
+    [ -e $f ] || continue
+    rm $(basename $f)
 done
 rm .hipVersion
 popd
@@ -26,6 +29,7 @@ rmdir --ignore-fail-on-non-empty $ROCMBINDIR
 # Remove soft-link to headers
 HIPINCDIR=$HIPDIR/include
 ROCMINCDIR=$ROCMDIR/include
+([ ! -d $ROCMINCDIR ] || [ ! -d $HIPINCDIR ]) && exit 0
 pushd $ROCMINCDIR
 rm hip
 popd
