@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "hip/hip_hcc.h"
 #include "hip_runtime.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -121,27 +122,101 @@ inline std::vector<std::uint8_t> make_kernarg(
     return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
 }
 
-void hipLaunchKernelGGLImpl(std::uintptr_t function_address,
-                            const dim3& numBlocks, const dim3& dimBlocks,
-                            std::uint32_t sharedMemBytes, hipStream_t stream,
-                            void** kernarg);
-}  // Namespace hip_impl.
+inline
+std::string name(std::uintptr_t function_address)
+{
+    const auto it = function_names().find(function_address);
 
+    if (it == function_names().cend())  {
+        throw std::runtime_error{
+            "Invalid function passed to hipLaunchKernelGGL."};
+    }
+
+    return it->second;
+}
+
+inline
+std::string name(hsa_agent_t agent)
+{
+    char n[64]{};
+    hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
+
+    return std::string{n};
+}
+
+hsa_agent_t target_agent(hipStream_t stream);
+
+namespace {
+    inline
+    void hipLaunchKernelGGLImpl(
+        std::uintptr_t function_address,
+        const dim3& numBlocks,
+        const dim3& dimBlocks,
+        std::uint32_t sharedMemBytes,
+        hipStream_t stream,
+        void** kernarg)
+    {
+        auto it0 = functions().find(function_address);
+
+        if (it0 == functions().cend()) {
+            throw std::runtime_error{
+                "No device code available for function: " +
+                name(function_address)};
+        }
+
+        auto agent = target_agent(stream);
+
+        const auto it1 = std::find_if(
+            it0->second.cbegin(),
+            it0->second.cend(),
+            [=](const std::pair<hsa_agent_t, Kernel_descriptor>& x) {
+            return x.first == agent;
+        });
+
+        if (it1 == it0->second.cend()) {
+            throw std::runtime_error{
+                "No code available for function: " + name(function_address) +
+                ", for agent: " + name(agent)};
+        }
+
+        hipModuleLaunchKernel(
+            it1->second,
+            numBlocks.x,
+            numBlocks.y,
+            numBlocks.z,
+            dimBlocks.x,
+            dimBlocks.y,
+            dimBlocks.z,
+            sharedMemBytes,
+            stream,
+            nullptr,
+            kernarg);
+    }
+} // Unnamed namespace.
+} // Namespace hip_impl.
+
+namespace {
 template <typename... Args, typename F = void (*)(Args...)>
-inline void hipLaunchKernelGGL(F kernel, const dim3& numBlocks,
-                               const dim3& dimBlocks,
-                               std::uint32_t sharedMemBytes,
-                               hipStream_t stream, Args... args) {
+inline
+void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                        std::uint32_t sharedMemBytes,
+                        hipStream_t stream, Args... args) {
     auto kernarg = hip_impl::make_kernarg(
         kernel, std::tuple<Args...>{std::move(args)...});
     std::size_t kernarg_size = kernarg.size();
 
-    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, kernarg.data(), HIP_LAUNCH_PARAM_BUFFER_SIZE,
-                      &kernarg_size, HIP_LAUNCH_PARAM_END};
+    void* config[]{
+        HIP_LAUNCH_PARAM_BUFFER_POINTER,
+        kernarg.data(),
+        HIP_LAUNCH_PARAM_BUFFER_SIZE,
+        &kernarg_size,
+        HIP_LAUNCH_PARAM_END};
 
-    hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel), numBlocks, dimBlocks,
-                                     sharedMemBytes, stream, &config[0]);
+    hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
+                                     numBlocks, dimBlocks, sharedMemBytes,
+                                     stream, &config[0]);
 }
+} // Unnamed namespace.
 
 template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
 [[deprecated("hipLaunchKernel is deprecated and will be removed in the next "

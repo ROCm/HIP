@@ -131,6 +131,7 @@ ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
     return it != reader.sections.end() ? *it : nullptr;
 }
 
+namespace {
 inline
 const std::unordered_map<
     hsa_isa_t, std::vector<std::vector<char>>>& code_object_blobs() {
@@ -176,7 +177,8 @@ const std::unordered_map<
     });
 
     return r;
-};
+}
+} // Unnamed namespace.
 
 struct Symbol {
     std::string name;
@@ -200,6 +202,7 @@ Symbol read_symbol(const ELFIO::symbol_section_accessor& section,
     return r;
 }
 
+namespace {
 inline
 const std::unordered_map<
     std::string,
@@ -249,6 +252,7 @@ std::unordered_map<std::string, void*>& globals() {
 
     return r;
 }
+} // Unnamed namespace.
 
 inline
 std::vector<std::string> copy_names_of_undefined_symbols(
@@ -363,6 +367,7 @@ hsa_executable_t load_executable(const std::string& file,
     return executable;
 }
 
+namespace {
 inline
 const std::unordered_map<
     hsa_agent_t, std::vector<hsa_executable_t>>& executables() {
@@ -406,6 +411,7 @@ const std::unordered_map<
 
     return r;
 }
+} // Unnamed namespace.
 
 inline
 std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
@@ -428,6 +434,7 @@ std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
     return r;
 }
 
+namespace {
 inline
 const std::unordered_map<std::uintptr_t, std::string>& function_names() {
     static std::unordered_map<std::uintptr_t, std::string> r;
@@ -512,6 +519,7 @@ const std::unordered_map<
 
     return r;
 }
+} // Unnamed namespace.
 
 inline
 std::size_t parse_args(
@@ -602,6 +610,7 @@ void read_kernarg_metadata(
     }
 }
 
+namespace {
 inline
 const std::unordered_map<
     std::string, std::vector<std::pair<std::size_t, std::size_t>>>& kernargs() {
@@ -625,4 +634,5 @@ const std::unordered_map<
 
     return r;
 }
+} // Unnamed namespace.
 }  // Namespace hip_impl.
