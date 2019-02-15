@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "elfio/elfio.hpp"
 #include "hip/hip_runtime.h"
+#include "hip/hcc_detail/elfio/elfio.hpp"
+#include "hip/hcc_detail/hsa_helpers.hpp"
 #include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
-#include "hsa_helpers.hpp"
 #include "trace_helper.h"
 
 #include <hsa/amd_hsa_kernel_code.h>
@@ -428,10 +428,11 @@ string read_elf_file_as_string(
     //               Little Endian.
     if (!file) return {};
 
-    auto h = static_cast<const Elf64_Ehdr*>(file);
+    auto h = static_cast<const ELFIO::Elf64_Ehdr*>(file);
     auto s = static_cast<const char*>(file);
     // This assumes the common case of SHT being the last part of the ELF.
-    auto sz = sizeof(Elf64_Ehdr) + h->e_shoff + h->e_shentsize * h->e_shnum;
+    auto sz =
+        sizeof(ELFIO::Elf64_Ehdr) + h->e_shoff + h->e_shentsize * h->e_shnum;
 
     return string{s, s + sz};
 }
@@ -517,7 +518,7 @@ namespace
         // TODO: at the moment there is no way to query the count of registers
         //       available per CU, therefore we hardcode it to 64 KiRegisters.
         prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
-        
+
         r.localSizeBytes = header.workitem_private_segment_byte_size;
         r.sharedSizeBytes = header.workgroup_group_segment_byte_size;
         r.maxDynamicSharedSizeBytes =

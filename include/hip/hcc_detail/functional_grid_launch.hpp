@@ -105,21 +105,13 @@ inline std::vector<std::uint8_t> make_kernarg(
 
     auto it = function_names().find(reinterpret_cast<std::uintptr_t>(kernel));
     if (it == function_names().cend()) {
-        it =
-            function_names(true).find(reinterpret_cast<std::uintptr_t>(kernel));
-        if (it == function_names().cend()) {
-            throw std::runtime_error{"Undefined __global__ function."};
-        }
+        throw std::runtime_error{"Undefined __global__ function."};
     }
 
     auto it1 = kernargs().find(it->second);
     if (it1 == kernargs().end()) {
-        it1 = kernargs(true).find(it->second);
-
-        if (it1 == kernargs().end()) {
-            throw std::runtime_error{
-                "Missing metadata for __global__ function: " + it->second};
-        }
+        throw std::runtime_error{
+            "Missing metadata for __global__ function: " + it->second};
     }
 
     std::tuple<Formals...> to_formals{std::move(actuals)};
@@ -129,14 +121,17 @@ inline std::vector<std::uint8_t> make_kernarg(
     return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
 }
 
-void hipLaunchKernelGGLImpl(std::uintptr_t function_address, const dim3& numBlocks,
-                            const dim3& dimBlocks, std::uint32_t sharedMemBytes, hipStream_t stream,
+void hipLaunchKernelGGLImpl(std::uintptr_t function_address,
+                            const dim3& numBlocks, const dim3& dimBlocks,
+                            std::uint32_t sharedMemBytes, hipStream_t stream,
                             void** kernarg);
 }  // Namespace hip_impl.
 
 template <typename... Args, typename F = void (*)(Args...)>
-inline void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
-                               std::uint32_t sharedMemBytes, hipStream_t stream, Args... args) {
+inline void hipLaunchKernelGGL(F kernel, const dim3& numBlocks,
+                               const dim3& dimBlocks,
+                               std::uint32_t sharedMemBytes,
+                               hipStream_t stream, Args... args) {
     auto kernarg = hip_impl::make_kernarg(
         kernel, std::tuple<Args...>{std::move(args)...});
     std::size_t kernarg_size = kernarg.size();
