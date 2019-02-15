@@ -134,6 +134,8 @@
 | `curandSetPseudoRandomGeneratorSeed`                      | `hiprandSetPseudoRandomGeneratorSeed`      |
 | `curandSetQuasiRandomGeneratorDimensions`                 | `hiprandSetQuasiRandomGeneratorDimensions` |
 | `curandSetStream`                                         | `hiprandSetStream`                         |
+| `curandMakeMTGP32Constants`                               | `hiprandMakeMTGP32Constants`               |
+| `curandMakeMTGP32KernelState`                             | `hiprandMakeMTGP32KernelState`             |
 
 ## **3. Device API Functions**
 

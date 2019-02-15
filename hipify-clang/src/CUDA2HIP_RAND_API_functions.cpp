@@ -51,6 +51,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RAND_FUNCTION_MAP{
   {"curandSetPseudoRandomGeneratorSeed",            {"hiprandSetPseudoRandomGeneratorSeed",            "", CONV_LIB_FUNC, API_RAND}},
   {"curandSetQuasiRandomGeneratorDimensions",       {"hiprandSetQuasiRandomGeneratorDimensions",       "", CONV_LIB_FUNC, API_RAND}},
   {"curandSetStream",                               {"hiprandSetStream",                               "", CONV_LIB_FUNC, API_RAND}},
+  {"curandMakeMTGP32Constants",                     {"hiprandMakeMTGP32Constants",                     "", CONV_LIB_FUNC, API_RAND}},
+  {"curandMakeMTGP32KernelState",                   {"hiprandMakeMTGP32KernelState",                   "", CONV_LIB_FUNC, API_RAND}},
 
   // RAND Device functions
   {"curand",                                        {"hiprand",                                        "", CONV_LIB_DEVICE_FUNC, API_RAND}},

@@ -899,6 +899,7 @@ __DEVICE__
 inline
 double nan(const char* tagp)
 {
+#if !_WIN32
     union {
         double val;
         struct ieee_double {
@@ -906,8 +907,7 @@ double nan(const char* tagp)
             uint32_t quiet : 1;
             uint32_t exponent : 11;
             uint32_t sign : 1;
-        } bits;
-
+        }  bits;
         static_assert(sizeof(double) == sizeof(ieee_double), "");
     } tmp;
 
@@ -917,6 +917,11 @@ double nan(const char* tagp)
     tmp.bits.mantissa = __make_mantissa(tagp);
 
     return tmp.val;
+#else
+    uint64_t val = __make_mantissa(tagp);
+    val |= 0xFFF << 51;
+    return reinterpret_cast<double>(val);
+#endif
 }
 __DEVICE__
 inline
