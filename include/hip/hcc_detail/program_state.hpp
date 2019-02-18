@@ -25,8 +25,6 @@ THE SOFTWARE.
 #include "code_object_bundle.hpp"
 #include "hsa_helpers.hpp"
 
-#include <hc.hpp>
-
 #include "elfio/elfio.hpp"
 
 #include <hsa/amd_hsa_kernel_code.h>
@@ -375,12 +373,33 @@ const std::unordered_map<
     static std::once_flag f;
 
     std::call_once(f, []() {
-        for (auto&& acc : hc::accelerator::get_all()) {
-            auto agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+        std::vector<hsa_agent_t> agents;
 
-            if (!agent || !acc.is_hsa_accelerator()) continue;
+        hsa_iterate_agents([](hsa_agent_t agent, void *data) {
+            hsa_status_t status;
+            hsa_device_type_t device_type;
+            std::vector<hsa_agent_t>* pAgents = nullptr;
 
-            hsa_agent_iterate_isas(*agent, [](hsa_isa_t x, void* pa) {
+            if (data == nullptr) {
+                return HSA_STATUS_ERROR_INVALID_ARGUMENT;
+            } else {
+                pAgents = static_cast<std::vector<hsa_agent_t>*>(data);
+            }
+
+            hsa_status_t stat = hsa_agent_get_info(agent, HSA_AGENT_INFO_DEVICE, &device_type);
+            if (stat != HSA_STATUS_SUCCESS) {
+                return stat;
+            }
+
+            if (device_type == HSA_DEVICE_TYPE_GPU)  {
+                pAgents->push_back(agent);
+            }
+
+            return HSA_STATUS_SUCCESS;
+        }, &agents);
+
+        for (auto& agent : agents) {
+            hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* pa) {
                 const auto it = code_object_blobs().find(x);
 
                 if (it == code_object_blobs().cend()) return HSA_STATUS_SUCCESS;
@@ -405,7 +424,7 @@ const std::unordered_map<
                 }
 
                 return HSA_STATUS_SUCCESS;
-            }, agent);
+            }, &agent);
         }
     });
 
