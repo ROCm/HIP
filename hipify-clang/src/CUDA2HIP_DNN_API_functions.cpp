@@ -41,7 +41,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   // cuDNN Tensor functions
   {"cudnnCreateTensorDescriptor",                         {"hipdnnCreateTensorDescriptor",                         "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnSetTensor4dDescriptor",                          {"hipdnnSetTensor4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
-  {"cudnnSetTensor4dDescriptorEx",                        {"hipdnnSetTensor4dDescriptorEx",                        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSetTensor4dDescriptorEx",                        {"hipdnnSetTensor4dDescriptorEx",                        "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetTensor4dDescriptor",                          {"hipdnnGetTensor4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnSetTensorNdDescriptor",                          {"hipdnnSetTensorNdDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnSetTensorNdDescriptorEx",                        {"hipdnnSetTensorNdDescriptorEx",                        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
@@ -69,7 +69,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
 
   // cuDNN Filter functions
   {"cudnnCreateFilterDescriptor",                         {"hipdnnCreateFilterDescriptor",                         "", CONV_LIB_FUNC, API_DNN}},
-  {"cudnnSetFilter4dDescriptor",                          {"hipdnnSetFilter4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnSetFilter4dDescriptor",                          {"hipdnnSetFilter4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnGetFilter4dDescriptor",                          {"hipdnnGetFilter4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSetFilterNdDescriptor",                          {"hipdnnSetFilterNdDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetFilterNdDescriptor",                          {"hipdnnGetFilterNdDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
@@ -79,7 +79,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnCreateConvolutionDescriptor",                    {"hipdnnCreateConvolutionDescriptor",                    "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnSetConvolutionMathType",                         {"hipdnnSetConvolutionMathType",                         "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetConvolutionMathType",                         {"hipdnnGetConvolutionMathType",                         "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
-  {"cudnnSetConvolutionGroupCount",                       {"hipdnnSetConvolutionGroupCount",                       "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSetConvolutionGroupCount",                       {"hipdnnSetConvolutionGroupCount",                       "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetConvolutionGroupCount",                       {"hipdnnGetConvolutionGroupCount",                       "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSetConvolution2dDescriptor",                     {"hipdnnSetConvolution2dDescriptor",                     "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetConvolution2dDescriptor",                     {"hipdnnGetConvolution2dDescriptor",                     "", CONV_LIB_FUNC, API_DNN}},
@@ -149,10 +149,15 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnDivisiveNormalizationBackward",                  {"hipdnnDivisiveNormalizationBackward",                  "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
 
   // cuDNN Batch Normalization functions
-  {"cudnnDeriveBNTensorDescriptor",                       {"hipdnnDeriveBNTensorDescriptor",                       "", CONV_LIB_FUNC, API_DNN}},
-  {"cudnnBatchNormalizationForwardTraining",              {"hipdnnBatchNormalizationForwardTraining",              "", CONV_LIB_FUNC, API_DNN}},
-  {"cudnnBatchNormalizationForwardInference",             {"hipdnnBatchNormalizationForwardInference",             "", CONV_LIB_FUNC, API_DNN}},
-  {"cudnnBatchNormalizationBackward",                     {"hipdnnBatchNormalizationBackward",                     "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnDeriveBNTensorDescriptor",                            {"hipdnnDeriveBNTensorDescriptor",                            "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnBatchNormalizationForwardTraining",                   {"hipdnnBatchNormalizationForwardTraining",                   "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnBatchNormalizationForwardTrainingEx",                 {"hipdnnBatchNormalizationForwardTrainingEx",                 "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnBatchNormalizationForwardInference",                  {"hipdnnBatchNormalizationForwardInference",                  "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnBatchNormalizationBackward",                          {"hipdnnBatchNormalizationBackward",                          "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnBatchNormalizationBackwardEx",                        {"hipdnnBatchNormalizationBackwardEx",                        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetBatchNormalizationForwardTrainingExWorkspaceSize", {"hipdnnGetBatchNormalizationForwardTrainingExWorkspaceSize", "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetBatchNormalizationBackwardExWorkspaceSize",        {"hipdnnGetBatchNormalizationBackwardExWorkspaceSize",        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetBatchNormalizationTrainingExReserveSpaceSize",     {"hipdnnGetBatchNormalizationTrainingExReserveSpaceSize",     "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
 
   // cuDNN Spatial Transformer functions
   {"cudnnCreateSpatialTransformerDescriptor",             {"hipdnnCreateSpatialTransformerDescriptor",             "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
@@ -188,8 +193,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnCreatePersistentRNNPlan",                        {"hipdnnCreatePersistentRNNPlan",                        "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnSetPersistentRNNPlan",                           {"hipdnnSetPersistentRNNPlan",                           "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnDestroyPersistentRNNPlan",                       {"hipdnnDestroyPersistentRNNPlan",                       "", CONV_LIB_FUNC, API_DNN}},
+  // NOTE" hipdnnSetRNNDescriptor has additional argument hipdnnRNNBiasMode_t *biasMode without default value
   {"cudnnSetRNNDescriptor",                               {"hipdnnSetRNNDescriptor",                               "", CONV_LIB_FUNC, API_DNN}},
-  {"cudnnGetRNNDescriptor",                               {"hipdnnGetRNNDescriptor",                               "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  // NOTE" hipdnnGetRNNDescriptor has additional argument hipdnnRNNBiasMode_t *biasMode without default value
+  {"cudnnGetRNNDescriptor",                               {"hipdnnGetRNNDescriptor",                               "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnSetRNNProjectionLayers",                         {"hipdnnSetRNNProjectionLayers",                         "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnGetRNNProjectionLayers",                         {"hipdnnGetRNNProjectionLayers",                         "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSetRNNAlgorithmDescriptor",                      {"hipdnnSetRNNAlgorithmDescriptor",                      "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
@@ -201,11 +208,21 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnGetRNNLinLayerMatrixParams",                     {"hipdnnGetRNNLinLayerMatrixParams",                     "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetRNNLinLayerBiasParams",                       {"hipdnnGetRNNLinLayerBiasParams",                       "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnRNNForwardInference",                            {"hipdnnRNNForwardInference",                            "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnRNNForwardInferenceEx",                          {"hipdnnRNNForwardInferenceEx",                          "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnRNNForwardTraining",                             {"hipdnnRNNForwardTraining",                             "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnRNNForwardTrainingEx",                           {"hipdnnRNNForwardTrainingEx",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnRNNBackwardData",                                {"hipdnnRNNBackwardData",                                "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnRNNBackwardDataEx",                              {"hipdnnRNNBackwardDataEx",                              "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnRNNBackwardWeights",                             {"hipdnnRNNBackwardWeights",                             "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnRNNBackwardWeightsEx",                           {"hipdnnRNNBackwardWeightsEx",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSetRNNDescriptor_v5",                            {"hipdnnSetRNNDescriptor_v5",                            "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnSetRNNDescriptor_v6",                            {"hipdnnSetRNNDescriptor_v6",                            "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnSetRNNPaddingMode",                              {"hipdnnSetRNNPaddingMode",                              "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetRNNPaddingMode",                              {"hipdnnGetRNNPaddingMode",                              "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnCreateRNNDataDescriptor",                        {"hipdnnCreateRNNDataDescriptor",                        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnDestroyRNNDataDescriptor",                       {"hipdnnDestroyRNNDataDescriptor",                       "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSetRNNDataDescriptor",                           {"hipdnnSetRNNDataDescriptor",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetRNNDataDescriptor",                           {"hipdnnGetRNNDataDescriptor",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
 
   // cuDNN Connectionist Temporal Classification loss functions
   {"cudnnCreateCTCLossDescriptor",                        {"hipdnnCreateCTCLossDescriptor",                        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
@@ -228,4 +245,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnGetAlgorithmSpaceSize",                          {"hipdnnGetAlgorithmSpaceSize",                          "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSaveAlgorithm",                                  {"hipdnnSaveAlgorithm",                                  "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnRestoreAlgorithm",                               {"hipdnnRestoreAlgorithm",                               "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+
+  // cuDNN Clipping functions
+  {"cudnnRNNSetClip",                                     {"hipdnnRNNSetClip",                                     "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnRNNGetClip",                                     {"hipdnnRNNGetClip",                                     "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+
 };
