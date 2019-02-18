@@ -52,7 +52,6 @@ THE SOFTWARE.
 // TODO Use Pool APIs from HCC to get memory regions.
 
 using namespace ELFIO;
-using namespace hip_impl;
 using namespace std;
 
 // calculate MD5 checksum
@@ -319,6 +318,8 @@ inline void track(const Agent_global& x, hsa_agent_t agent) {
 template <typename Container = vector<Agent_global>>
 inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t agent,
                                                 hsa_executable_symbol_t x, void* out) {
+    using namespace hip_impl;
+
     assert(out);
 
     hsa_symbol_kind_t t = {};
@@ -334,6 +335,8 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
 }
 
 hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname) {
+    using namespace hip_impl;
+
     pair<const char*, hsa_executable_symbol_t> r{kname, {}};
 
     hsa_executable_iterate_agent_symbols(
@@ -375,6 +378,8 @@ string read_elf_file_as_string(const void* file) {
 }
 
 string code_object_blob_for_agent(const void* maybe_bundled_code, hsa_agent_t agent) {
+    using namespace hip_impl;
+
     if (!maybe_bundled_code) return {};
 
     Bundled_code_header tmp{maybe_bundled_code};
@@ -407,6 +412,7 @@ namespace hip_impl {
 } // Namespace hip_impl.
 
 hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const char* name) {
+    using namespace hip_impl;
 
     if (!func || !name) return hipErrorInvalidValue;
 
@@ -463,6 +469,8 @@ hipFuncAttributes make_function_attributes(const amd_kernel_code_t& header) {
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
+    using namespace hip_impl;
+
     if (!attr) return hipErrorInvalidValue;
     if (!func) return hipErrorInvalidDeviceFunction;
 
@@ -490,6 +498,7 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 }
 
 hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
+    using namespace hip_impl;
 
     if (!module) return hipErrorInvalidValue;
 
@@ -511,9 +520,8 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     auto content = tmp.empty() ? read_elf_file_as_string(image) : tmp;
 
-    (*module)->executable = hip_impl::load_executable(content,
-                                                      (*module)->executable,
-                                                      this_agent());
+    (*module)->executable = load_executable(content, (*module)->executable,
+                                            this_agent());
 
     // compute the hash of the code object
     (*module)->hash = checksum(content.length(), content.data());
@@ -547,6 +555,8 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
 }
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
+    using namespace hip_impl;
+
     HIP_INIT_API(hipModuleGetTexRef, texRef, hmod, name);
 
     hipError_t ret = hipErrorNotFound;
