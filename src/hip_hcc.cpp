@@ -27,6 +27,7 @@ THE SOFTWARE.
  * everywhere. This file is compiled and linked into apps running HIP / HCC path.
  */
 #include <assert.h>
+#include <exception>
 #include <stdint.h>
 #include <iostream>
 #include <sstream>
@@ -2473,5 +2474,15 @@ namespace hip_impl {
         }
 
         return r;
+    }
+
+    [[noreturn]]
+    void hip_throw(const std::exception& ex) {
+        #if defined(__cpp_exceptions)
+            throw ex;
+        #else
+            std::cerr << ex.what() << std::endl;
+            std::terminate();
+        #endif
     }
 } // Namespace hip_impl.

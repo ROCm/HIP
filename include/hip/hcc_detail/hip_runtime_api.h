@@ -2518,7 +2518,8 @@ hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
 
     const auto it0 = agent_globals.find(key);
     if (it0 == agent_globals.cend()) {
-        throw std::runtime_error{"agent_globals data structure corrupted."};
+        hip_throw(
+            std::runtime_error{"agent_globals data structure corrupted."});
     }
 
     std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),

@@ -106,13 +106,13 @@ inline std::vector<std::uint8_t> make_kernarg(
 
     auto it = function_names().find(reinterpret_cast<std::uintptr_t>(kernel));
     if (it == function_names().cend()) {
-        throw std::runtime_error{"Undefined __global__ function."};
+        hip_throw(std::runtime_error{"Undefined __global__ function."});
     }
 
     auto it1 = kernargs().find(it->second);
     if (it1 == kernargs().end()) {
-        throw std::runtime_error{
-            "Missing metadata for __global__ function: " + it->second};
+        hip_throw(std::runtime_error{
+            "Missing metadata for __global__ function: " + it->second});
     }
 
     std::tuple<Formals...> to_formals{std::move(actuals)};
@@ -128,8 +128,8 @@ std::string name(std::uintptr_t function_address)
     const auto it = function_names().find(function_address);
 
     if (it == function_names().cend())  {
-        throw std::runtime_error{
-            "Invalid function passed to hipLaunchKernelGGL."};
+        hip_throw(std::runtime_error{
+            "Invalid function passed to hipLaunchKernelGGL."});
     }
 
     return it->second;
@@ -159,9 +159,9 @@ namespace {
         auto it0 = functions().find(function_address);
 
         if (it0 == functions().cend()) {
-            throw std::runtime_error{
+            hip_throw(std::runtime_error{
                 "No device code available for function: " +
-                name(function_address)};
+                name(function_address)});
         }
 
         auto agent = target_agent(stream);
@@ -174,9 +174,9 @@ namespace {
         });
 
         if (it1 == it0->second.cend()) {
-            throw std::runtime_error{
+            hip_throw(std::runtime_error{
                 "No code available for function: " + name(function_address) +
-                ", for agent: " + name(agent)};
+                ", for agent: " + name(agent)});
         }
 
         hipModuleLaunchKernel(

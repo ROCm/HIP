@@ -25,7 +25,15 @@ THE SOFTWARE.
 #include "code_object_bundle.hpp"
 #include "hsa_helpers.hpp"
 
+#if !defined(__cpp_exceptions)
+    #define try if (true)
+    #define catch(...) if (false)
+#endif
 #include "elfio/elfio.hpp"
+#if !defined(__cpp_exceptions)
+    #undef try
+    #undef catch
+#endif
 
 #include <hsa/amd_hsa_kernel_code.h>
 #include <hsa/hsa.h>
@@ -269,6 +277,9 @@ std::vector<std::string> copy_names_of_undefined_symbols(
     return r;
 }
 
+[[noreturn]]
+void hip_throw(const std::exception&);
+
 inline
 void associate_code_object_symbols_with_host_allocation(
     const ELFIO::elfio& reader,
@@ -286,7 +297,8 @@ void associate_code_object_symbols_with_host_allocation(
         const auto it1 = symbol_addresses().find(x);
 
         if (it1 == symbol_addresses().cend()) {
-            throw std::runtime_error{"Global symbol: " + x + " is undefined."};
+            hip_throw(std::runtime_error{
+                "Global symbol: " + x + " is undefined."});
         }
 
         static std::mutex mtx;
