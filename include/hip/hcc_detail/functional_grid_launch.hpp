@@ -146,61 +146,49 @@ std::string name(hsa_agent_t agent)
 
 hsa_agent_t target_agent(hipStream_t stream);
 
-namespace {
-    inline
-    void hipLaunchKernelGGLImpl(
-        std::uintptr_t function_address,
-        const dim3& numBlocks,
-        const dim3& dimBlocks,
-        std::uint32_t sharedMemBytes,
-        hipStream_t stream,
-        void** kernarg)
-    {
-        auto it0 = functions().find(function_address);
+inline
+__attribute__((visibility("hidden")))
+void hipLaunchKernelGGLImpl(
+    std::uintptr_t function_address,
+    const dim3& numBlocks,
+    const dim3& dimBlocks,
+    std::uint32_t sharedMemBytes,
+    hipStream_t stream,
+    void** kernarg) {
+    auto it0 = functions().find(function_address);
 
-        if (it0 == functions().cend()) {
-            hip_throw(std::runtime_error{
-                "No device code available for function: " +
-                name(function_address)});
-        }
-
-        auto agent = target_agent(stream);
-
-        const auto it1 = std::find_if(
-            it0->second.cbegin(),
-            it0->second.cend(),
-            [=](const std::pair<hsa_agent_t, Kernel_descriptor>& x) {
-            return x.first == agent;
-        });
-
-        if (it1 == it0->second.cend()) {
-            hip_throw(std::runtime_error{
-                "No code available for function: " + name(function_address) +
-                ", for agent: " + name(agent)});
-        }
-
-        hipModuleLaunchKernel(
-            it1->second,
-            numBlocks.x,
-            numBlocks.y,
-            numBlocks.z,
-            dimBlocks.x,
-            dimBlocks.y,
-            dimBlocks.z,
-            sharedMemBytes,
-            stream,
-            nullptr,
-            kernarg);
+    if (it0 == functions().cend()) {
+        hip_throw(std::runtime_error{
+            "No device code available for function: " +
+            name(function_address)});
     }
-} // Unnamed namespace.
+
+    auto agent = target_agent(stream);
+
+    const auto it1 = std::find_if(
+        it0->second.cbegin(),
+        it0->second.cend(),
+        [=](const std::pair<hsa_agent_t, Kernel_descriptor>& x) {
+        return x.first == agent;
+    });
+
+    if (it1 == it0->second.cend()) {
+        hip_throw(std::runtime_error{
+            "No code available for function: " + name(function_address) +
+            ", for agent: " + name(agent)});
+    }
+
+    hipModuleLaunchKernel(it1->second, numBlocks.x, numBlocks.y, numBlocks.z,
+                          dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
+                          stream, nullptr, kernarg);
+}
 } // Namespace hip_impl.
 
-namespace {
 template <typename... Args, typename F = void (*)(Args...)>
 inline
 void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
-                        std::uint32_t sharedMemBytes,
-                        hipStream_t stream, Args... args) {
+                        std::uint32_t sharedMemBytes, hipStream_t stream,
+                        Args... args) {
     auto kernarg = hip_impl::make_kernarg(
         kernel, std::tuple<Args...>{std::move(args)...});
     std::size_t kernarg_size = kernarg.size();
@@ -216,7 +204,6 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                                      numBlocks, dimBlocks, sharedMemBytes,
                                      stream, &config[0]);
 }
-} // Unnamed namespace.
 
 template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
 [[deprecated("hipLaunchKernel is deprecated and will be removed in the next "

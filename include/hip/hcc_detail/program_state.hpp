@@ -42,6 +42,7 @@ THE SOFTWARE.
 
 #include <link.h>
 
+#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -137,8 +138,8 @@ ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
     return it != reader.sections.end() ? *it : nullptr;
 }
 
-namespace {
 inline
+__attribute__((visibility("hidden")))
 const std::unordered_map<
     hsa_isa_t, std::vector<std::vector<char>>>& code_object_blobs() {
     static std::unordered_map<hsa_isa_t, std::vector<std::vector<char>>> r;
@@ -184,7 +185,6 @@ const std::unordered_map<
 
     return r;
 }
-} // Unnamed namespace.
 
 struct Symbol {
     std::string name;
@@ -208,8 +208,8 @@ Symbol read_symbol(const ELFIO::symbol_section_accessor& section,
     return r;
 }
 
-namespace {
 inline
+__attribute__((visibility("hidden")))
 const std::unordered_map<
     std::string,
     std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>>& symbol_addresses() {
@@ -250,6 +250,7 @@ const std::unordered_map<
 }
 
 inline
+__attribute__((visibility("hidden")))
 std::unordered_map<std::string, void*>& globals() {
     static std::unordered_map<std::string, void*> r;
     static std::once_flag f;
@@ -258,7 +259,6 @@ std::unordered_map<std::string, void*>& globals() {
 
     return r;
 }
-} // Unnamed namespace.
 
 inline
 std::vector<std::string> copy_names_of_undefined_symbols(
@@ -379,8 +379,10 @@ hsa_executable_t load_executable(const std::string& file,
 
 std::vector<hsa_agent_t> all_hsa_agents();
 
-namespace {
+std::atomic<int> cnt{0};
+
 inline
+__attribute__((visibility("hidden")))
 const std::unordered_map<
     hsa_agent_t, std::vector<hsa_executable_t>>& executables() {
     static std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>> r;
@@ -419,7 +421,6 @@ const std::unordered_map<
 
     return r;
 }
-} // Unnamed namespace.
 
 inline
 std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
@@ -442,8 +443,8 @@ std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
     return r;
 }
 
-namespace {
 inline
+__attribute__((visibility("hidden")))
 const std::unordered_map<std::uintptr_t, std::string>& function_names() {
     static std::unordered_map<std::uintptr_t, std::string> r;
     static std::once_flag f;
@@ -477,6 +478,7 @@ const std::unordered_map<std::uintptr_t, std::string>& function_names() {
 }
 
 inline
+__attribute__((visibility("hidden")))
 const std::unordered_map<
     std::string, std::vector<hsa_executable_symbol_t>>& kernels() {
     static std::unordered_map<
@@ -503,6 +505,7 @@ const std::unordered_map<
 }
 
 inline
+__attribute__((visibility("hidden")))
 const std::unordered_map<
     std::uintptr_t,
     std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions() {
@@ -527,7 +530,6 @@ const std::unordered_map<
 
     return r;
 }
-} // Unnamed namespace.
 
 inline
 std::size_t parse_args(
@@ -618,8 +620,8 @@ void read_kernarg_metadata(
     }
 }
 
-namespace {
 inline
+__attribute__((visibility("hidden")))
 const std::unordered_map<
     std::string, std::vector<std::pair<std::size_t, std::size_t>>>& kernargs() {
     static std::unordered_map<
@@ -642,5 +644,4 @@ const std::unordered_map<
 
     return r;
 }
-} // Unnamed namespace.
 }  // Namespace hip_impl.

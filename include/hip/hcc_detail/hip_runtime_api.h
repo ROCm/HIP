@@ -1371,7 +1371,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
 
-static
+__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
 
@@ -1385,8 +1385,8 @@ hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
  *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
 
@@ -1405,8 +1405,8 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
  *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
 
@@ -1450,8 +1450,8 @@ extern "C" {
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
                              size_t sizeBytes, size_t offset __dparm(0),
                              hipMemcpyKind kind __dparm(hipMemcpyHostToDevice)) {
@@ -1506,8 +1506,8 @@ extern "C" {
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
                                   size_t sizeBytes, size_t offset,
                                   hipMemcpyKind kind, hipStream_t stream __dparm(0)) {
@@ -1521,8 +1521,8 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
                                             (const char*)symbolName);
 }
 
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
                                size_t sizeBytes, size_t offset __dparm(0),
                                hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost)) {
@@ -1535,8 +1535,8 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
                                          (const char*)symbolName);
 }
 
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
@@ -2496,8 +2496,8 @@ std::vector<Agent_global> read_agent_globals(hsa_agent_t agent,
                                              hsa_executable_t executable);
 hsa_agent_t this_agent();
 
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
                                          hipModule_t hmod, const char* name) {
     // the key of the map would the hash of code object associated with the
@@ -2528,8 +2528,8 @@ hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
     return *dptr ? hipSuccess : hipErrorNotFound;
 }
 
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                           const char* name) {
     static std::unordered_map<
@@ -2576,8 +2576,8 @@ extern "C" {
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
-static
 inline
+__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
                               hipModule_t hmod, const char* name) {
     if (!dptr || !bytes) return hipErrorInvalidValue;
