@@ -42,7 +42,6 @@ THE SOFTWARE.
 
 #include <link.h>
 
-#include <atomic>
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -378,8 +377,6 @@ hsa_executable_t load_executable(const std::string& file,
 }
 
 std::vector<hsa_agent_t> all_hsa_agents();
-
-std::atomic<int> cnt{0};
 
 inline
 __attribute__((visibility("hidden")))
