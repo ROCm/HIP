@@ -221,7 +221,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
     eStart->event_ = &startCommand->event();
   }
 
-  amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(*queue, waitList, *kernel, ndrange);
+  amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(*queue, waitList, *kernel, ndrange, sharedMemBytes);
   if (!command) {
     return hipErrorOutOfMemory;
   }
