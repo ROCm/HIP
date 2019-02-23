@@ -23,6 +23,16 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 #include <hip/hcc_detail/texture_types.h>
 #include "hip_internal.hpp"
+#include "platform/sampler.hpp"
+
+namespace hip {
+  struct TextureObject {
+    uint32_t imageSRD[HIP_IMAGE_OBJECT_SIZE_DWORD];
+    uint32_t samplerSRD[HIP_SAMPLER_OBJECT_SIZE_DWORD];
+    amd::Image* image;
+    amd::Sampler* sampler;
+  };
+};
 
 void getDrvChannelOrderAndType(const enum hipArray_Format Format, unsigned int NumChannels,
                                cl_channel_order* channelOrder,
@@ -137,6 +147,68 @@ void getChannelOrderAndType(const hipChannelFormatDesc& desc, enum hipTextureRea
     }
 }
 
+amd::Sampler* fillSamplerDescriptor(enum hipTextureAddressMode addressMode,
+                           enum hipTextureFilterMode filterMode, int normalizedCoords) {
+#ifndef CL_FILTER_NONE
+#define CL_FILTER_NONE 0x1142
+#endif
+  uint32_t filter_mode = CL_FILTER_NONE;
+  switch (filterMode) {
+    case hipFilterModePoint:
+      filter_mode = CL_FILTER_NEAREST;
+      break;
+    case hipFilterModeLinear:
+      filter_mode = CL_FILTER_LINEAR;
+      break;
+  }
+
+  uint32_t address_mode = CL_ADDRESS_NONE;
+  switch (addressMode) {
+    case hipAddressModeWrap:
+      address_mode = CL_ADDRESS_REPEAT;
+      break;
+    case hipAddressModeClamp:
+      address_mode = CL_ADDRESS_CLAMP;
+      break;
+    case hipAddressModeMirror:
+      address_mode = CL_ADDRESS_MIRRORED_REPEAT;
+      break;
+    case hipAddressModeBorder:
+      address_mode = CL_ADDRESS_CLAMP_TO_EDGE;
+      break;
+  }
+  amd::Sampler* sampler =  new amd::Sampler(*hip::getCurrentContext(),
+                          normalizedCoords == CL_TRUE,
+                          address_mode, filter_mode, CL_FILTER_NONE, 0.f, CL_MAXFLOAT);
+  if (sampler == nullptr) {
+    return nullptr;
+  }
+  if (!sampler->create()) {
+    delete sampler;
+    return nullptr;
+  }
+  return sampler;
+}
+
+hip::TextureObject* ihipCreateTextureObject(amd::Image& image, amd::Sampler& sampler) {
+  hip::TextureObject* texture;
+  ihipMalloc(reinterpret_cast<void**>(&texture), sizeof(hip::TextureObject), CL_MEM_SVM_FINE_GRAIN_BUFFER);
+
+  if (texture == nullptr) {
+    return nullptr;
+  }
+
+  device::Memory* imageMem = image.getDeviceMemory(*hip::getCurrentContext()->devices()[0]);
+  memcpy(texture->imageSRD, imageMem->cpuSrd(), sizeof(uint32_t)*HIP_IMAGE_OBJECT_SIZE_DWORD);
+  texture->image = &image;
+
+  device::Sampler* devSampler = sampler.getDeviceSampler(*hip::getCurrentContext()->devices()[0]);
+  memcpy(texture->samplerSRD, devSampler->hwState(), sizeof(uint32_t)*HIP_SAMPLER_OBJECT_SIZE_DWORD);
+  texture->sampler = &sampler;
+
+  return texture;
+}
+
 hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResourceDesc* pResDesc,
                                   const hipTextureDesc* pTexDesc,
                                   const hipResourceViewDesc* pResViewDesc) {
@@ -186,13 +258,19 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
       assert(0);
       break;
     case hipResourceTypeLinear:
-      assert(pResViewDesc == nullptr);
-      memory = getMemoryObject(pResDesc->res.linear.devPtr, offset);
+      {
+        assert(pResViewDesc == nullptr);
+        memory = getMemoryObject(pResDesc->res.linear.devPtr, offset);
 
-      image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
-        CL_MEM_OBJECT_IMAGE1D, memory->getMemFlags(), imageFormat,
-        pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize(), 1, 1,
-        pResDesc->res.linear.sizeInBytes, 0);
+        getChannelOrderAndType(pResDesc->res.linear.desc, pTexDesc->readMode,
+                             &image_format.image_channel_order, &image_format.image_channel_data_type);
+        const amd::Image::Format imageFormat(image_format);
+
+        image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+          CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
+          pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize(), 1, 1,
+          pResDesc->res.linear.sizeInBytes, 0);
+      }
       break;
     case hipResourceTypePitch2D:
       assert(pResViewDesc == nullptr);
@@ -205,15 +283,32 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
       break;
     default: HIP_RETURN(hipErrorInvalidValue);
   }
-  *pTexObject = reinterpret_cast<hipTextureObject_t>(as_cl(image));
 
-  HIP_RETURN(hipErrorUnknown);
+  if (!image->create()) {
+    delete image;
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  amd::Sampler* sampler = fillSamplerDescriptor(pTexDesc->addressMode[0], pTexDesc->filterMode, pTexDesc->normalizedCoords);
+
+  *pTexObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(*image, *sampler));
+
+  HIP_RETURN(hipSuccess);
+}
+
+void ihipDestroyTextureObject(hip::TextureObject* texture) {
+  texture->image->release();
+  texture->sampler->release();
+
+  hipFree(texture);
 }
 
 hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject) {
   HIP_INIT_API(textureObject);
 
-  as_amd(reinterpret_cast<cl_mem>(textureObject))->release();
+  hip::TextureObject* texture = reinterpret_cast<hip::TextureObject*>(textureObject);
+
+  ihipDestroyTextureObject(texture);
 
   HIP_RETURN(hipSuccess);
 }
@@ -267,11 +362,17 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
     amd::Image* image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
       type, memory->getMemFlags(), imageFormat, width, height, 1, pitch, 0);
 
+    if (!image->create()) {
+      delete image;
+      return hipErrorUnknown;
+    }
+
     *offset = 0;
     if (tex->textureObject) {
-      as_amd(reinterpret_cast<cl_mem>(tex->textureObject))->release();
+      ihipDestroyTextureObject(reinterpret_cast<hip::TextureObject*>(tex->textureObject));
     }
-    tex->textureObject = reinterpret_cast<hipTextureObject_t>(as_cl(image));
+    amd::Sampler* sampler = fillSamplerDescriptor(tex->addressMode[0], tex->filterMode, tex->normalized);
+    tex->textureObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(*image, *sampler));
     return hipSuccess;
   }
   return hipErrorUnknown;
