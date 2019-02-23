@@ -73,7 +73,8 @@ const char *apiNames[NUM_API_TYPES] = {
   "cuRAND API",
   "cuDNN API",
   "cuFFT API",
-  "cuSPARSE API"
+  "cuSPARSE API",
+  "CAFFE2 API"
 };
 
 namespace {

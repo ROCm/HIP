@@ -61,6 +61,10 @@ extern const std::map<llvm::StringRef, hipCounter> CUDA_FFT_FUNCTION_MAP;
 extern const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP;
 // Maps the names of CUDA SPARSE API functions to the corresponding HIP functions
 extern const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP;
+// Maps the names of CUDA CAFFE2 API types to the corresponding HIP types
+extern const std::map<llvm::StringRef, hipCounter> CUDA_CAFFE2_TYPE_NAME_MAP;
+// Maps the names of CUDA CAFFE2 API functions to the corresponding HIP functions
+extern const std::map<llvm::StringRef, hipCounter> CUDA_CAFFE2_FUNCTION_MAP;
 
 /**
   * The union of all the above maps, except includes.
