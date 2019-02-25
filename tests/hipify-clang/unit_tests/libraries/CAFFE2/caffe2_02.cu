@@ -65,8 +65,7 @@ template <class Context>
 class Operator : public OperatorBase {
  public:
   explicit Operator(const OperatorDef& operator_def, Workspace* ws)
-      : OperatorBase(operator_def, ws), context_(operator_def.device_option()) {
-    context_.SwitchToDevice();
+      : OperatorBase(operator_def, ws) {
   }
   ~Operator() noexcept override {}
 };
