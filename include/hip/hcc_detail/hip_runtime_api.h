@@ -1505,6 +1505,17 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes);
 hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes);
 
 /**
+ *  @brief Fills the memory area pointed to by dest with the constant integer
+ * value for specified number of times.
+ *
+ *  @param[out] dst Data being filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  number of values to be set
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD32(hipDeviceptr_t dest, int value, size_t count);
+
+/**
  *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dev with the constant
  * byte value value.
  *
@@ -1520,6 +1531,23 @@ hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeByte
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
 hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Fills the memory area pointed to by dev with the constant integer
+ * value for specified number of times.
+ *
+ *  hipMemsetD32Async() is asynchronous with respect to the host, so the call may return before the
+ * memset is complete. The operation can optionally be associated to a stream by passing a non-zero
+ * stream argument. If stream is non-zero, the operation may overlap with operations in other
+ * streams.
+ *
+ *  @param[out] dst Pointer to device memory
+ *  @param[in]  value - Value to set for each byte of specified memory
+ *  @param[in]  count - number of values to be set
+ *  @param[in]  stream - Stream identifier
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
+ */
+hipError_t hipMemsetD32Async(void* dst, int value, size_t count, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the memory area pointed to by dst with the constant value.
