@@ -79,6 +79,8 @@ THE SOFTWARE.
 /**
  * Function and kernel markers
  */
+#if defined(__clang__)
+
 #define __host__
 #define __device__
 
@@ -89,6 +91,21 @@ THE SOFTWARE.
 
 #define __shared__
 #define __constant__
+
+#else
+
+#define __host__
+#define __device__
+
+#define __global__
+
+#define __noinline__
+#define __forceinline__
+
+#define __shared__
+#define __constant__
+
+#endif
 
 #endif
 
