@@ -64,6 +64,17 @@ const std::map <llvm::StringRef, hipCounter> CUDA_INCLUDE_MAP{
   // cuBLAS includes
   {"cusparse.h",                {"hipsparse.h",              "", CONV_INCLUDE_CUDA_MAIN_H, API_SPARSE}},
   {"cusparse_v2.h",             {"hipsparse.h",              "", CONV_INCLUDE_CUDA_MAIN_H, API_SPARSE}},
+  // CAFFE2 includes
+  {"caffe2/core/common_gpu.h",                              {"caffe2/core/hip/common_gpu.h",                          "", CONV_INCLUDE, API_CAFFE2, UNSUPPORTED}},
+  {"caffe2/core/context_gpu.h",                             {"caffe2/core/hip/context_gpu.h",                         "", CONV_INCLUDE, API_CAFFE2, UNSUPPORTED}},
+  {"caffe2/operators/operator_fallback_gpu.h",              {"",                                                      "", CONV_INCLUDE, API_CAFFE2, UNSUPPORTED}},
+  {"caffe2/operators/spatial_batch_norm_op.h",              {"caffe2/operators/hip/spatial_batch_norm_op_miopen.hip", "", CONV_INCLUDE, API_CAFFE2}},
+  {"caffe2/operators/generate_proposals_op_util_nms_gpu.h", {"",                                                      "", CONV_INCLUDE, API_CAFFE2, UNSUPPORTED}},
+  {"caffe2/operators/max_pool_with_index_gpu.h",            {"",                                                      "", CONV_INCLUDE, API_CAFFE2, UNSUPPORTED}},
+  {"caffe2/operators/rnn/recurrent_network_executor_gpu.h", {"",                                                      "", CONV_INCLUDE, API_CAFFE2, UNSUPPORTED}},
+  {"caffe2/utils/math/reduce.cuh",                          {"caffe2/utils/math/hip/reduce.cuh",                      "", CONV_INCLUDE, API_CAFFE2, UNSUPPORTED}},
+  {"caffe2/operators/gather_op.cuh",                        {"caffe2/operators/math/gather_op.cuh",                   "", CONV_INCLUDE, API_CAFFE2, UNSUPPORTED}},
+  {"caffe2/core/common_cudnn.h",                            {"caffe2/core/hip/common_miopen.h",                       "", CONV_INCLUDE, API_CAFFE2}},
 };
 
 const std::map<llvm::StringRef, hipCounter>& CUDA_RENAMES_MAP() {
@@ -88,5 +99,7 @@ const std::map<llvm::StringRef, hipCounter>& CUDA_RENAMES_MAP() {
   ret.insert(CUDA_FFT_FUNCTION_MAP.begin(), CUDA_FFT_FUNCTION_MAP.end());
   ret.insert(CUDA_SPARSE_TYPE_NAME_MAP.begin(), CUDA_SPARSE_TYPE_NAME_MAP.end());
   ret.insert(CUDA_SPARSE_FUNCTION_MAP.begin(), CUDA_SPARSE_FUNCTION_MAP.end());
+  ret.insert(CUDA_CAFFE2_TYPE_NAME_MAP.begin(), CUDA_CAFFE2_TYPE_NAME_MAP.end());
+  ret.insert(CUDA_CAFFE2_FUNCTION_MAP.begin(), CUDA_CAFFE2_FUNCTION_MAP.end());
   return ret;
 };
