@@ -320,7 +320,6 @@ my $runCmd = 1;
 my $buildDeps = 0;
 my $linkType = 1;
 my $setLinkType = 0;
-my $useCodeObjectV3 = 0;
 
 my @options = ();
 my @inputs  = ();
@@ -422,10 +421,6 @@ foreach $arg (@ARGV)
     # hip-clang does not accept --amdgpu-target= options.
     if (($arg =~ /--amdgpu-target=/) and $HIP_PLATFORM eq 'clang' ) {
         $swallowArg = 1;
-    }
-
-    if (($trimarg eq '-mcode-object-v3') and ($HIP_PLATFORM eq 'clang') ) {
-        $useCodeObjectV3 = 1;
     }
 
     if (($arg =~ /--genco/) and $HIP_PLATFORM eq 'clang' ) {
@@ -759,12 +754,6 @@ if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
 
 if ($buildDeps and $HIP_PLATFORM eq 'clang') {
     $HIPCXXFLAGS .= " --cuda-host-only";
-}
-
-if ($useCodeObjectV3 and $HIP_PLATFORM eq 'clang') {
-    $HIPCXXFLAGS .= " -mcode-object-v3";
-} else {
-    $HIPCXXFLAGS .= " -mno-code-object-v3";
 }
 
 # Add --hip-link only if there are no source files.
