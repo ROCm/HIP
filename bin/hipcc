@@ -424,14 +424,8 @@ foreach $arg (@ARGV)
         $swallowArg = 1;
     }
 
-    if (($trimarg eq '-mno-code-object-v3') and ($HIP_PLATFORM eq 'clang') ) {
-        $useCodeObjectV3 = 0;
-        $swallowArg = 1;
-    }
-
     if (($trimarg eq '-mcode-object-v3') and ($HIP_PLATFORM eq 'clang') ) {
         $useCodeObjectV3 = 1;
-        $swallowArg = 1;
     }
 
     if (($arg =~ /--genco/) and $HIP_PLATFORM eq 'clang' ) {
