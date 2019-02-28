@@ -205,7 +205,7 @@ void RunBenchmark_H2D(ResultDatabase& resultDB) {
             }
 
             double speed =
-                (double(sizeToBytes(thisSize) * p_beatsperiteration) / (1000 * 1000)) / t;
+                (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) /  1000) / t;
             char sizeStr[256];
             if (p_beatsperiteration > 1) {
                 sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(), p_beatsperiteration);
@@ -377,7 +377,8 @@ void RunBenchmark_D2H(ResultDatabase& resultDB) {
                 std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
             }
 
-            double speed = (double(sizeToBytes(thisSize)) / (1000 * 1000)) / t;
+            double speed =
+                (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) / 1000) / t;
             char sizeStr[256];
             sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
             if (p_beatsperiteration > 1) {
@@ -744,7 +745,7 @@ void RunBenchmark_P2P_Unidir(ResultDatabase& resultDB) {
                     }
 
                     double speed =
-                        (double(sizeToBytes(thisSize) * p_beatsperiteration) / (1000 * 1000)) / t;
+                        (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) / 1000) / t;
                     char sizeStr[256];
                     if (p_beatsperiteration > 1) {
                         sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(),
@@ -812,6 +813,7 @@ void RunBenchmark_P2P_Bidir(ResultDatabase& resultDB) {
             hipSetDevice(currentGpu);
             hipMalloc((void**)&currentGpuMem[0], sizeof(float) * numMaxFloats);
             hipMalloc((void**)&currentGpuMem[1], sizeof(float) * numMaxFloats);
+            enablePeer2Peer(peerGpu,currentGpu);
 
             hipSetDevice(peerGpu);
             hipMalloc((void**)&peerGpuMem[0], sizeof(float) * numMaxFloats);
@@ -867,7 +869,7 @@ void RunBenchmark_P2P_Bidir(ResultDatabase& resultDB) {
                     }
 
                     double speed =
-                        (double(sizeToBytes(2 * thisSize) * p_beatsperiteration) / (1000 * 1000)) /
+                        (double(double(sizeToBytes(2 * thisSize)/1000) * p_beatsperiteration) / 1000) /
                         t;
                     char sizeStr[256];
                     if (p_beatsperiteration > 1) {
@@ -899,6 +901,7 @@ void RunBenchmark_P2P_Bidir(ResultDatabase& resultDB) {
             }
 
             disablePeer2Peer(currentGpu, peerGpu);
+            disablePeer2Peer(peerGpu, currentGpu);
 
             hipEventDestroy(start);
             hipEventDestroy(stop);
