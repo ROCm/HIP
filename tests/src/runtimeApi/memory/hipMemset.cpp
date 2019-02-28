@@ -37,32 +37,66 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
+bool testhipMemset(int memsetval,int p_gpuDevice)
+{
+    size_t Nbytes = N*sizeof(char);
+    printf ("testhipMemset N=%zu  memsetval=%2x device=%d\n", N, memsetval, p_gpuDevice);
+    char *A_d;
+    char *A_h;
+    bool testResult = true;
 
-int main(int argc, char* argv[]) {
-    HipTest::parseStandardArguments(argc, argv, true);
-
-    HIPCHECK(hipSetDevice(p_gpuDevice));
-
-    size_t Nbytes = N * sizeof(char);
-
-    printf("N=%zu  memsetval=%2x device=%d\n", N, memsetval, p_gpuDevice);
-
-    char* A_d;
-    char* A_h;
-
-    HIPCHECK(hipMalloc(&A_d, Nbytes));
+    HIPCHECK ( hipMalloc(&A_d, Nbytes) );
     A_h = (char*)malloc(Nbytes);
+    HIPCHECK ( hipMemset(A_d, memsetval, Nbytes) );
+    HIPCHECK ( hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
 
-    HIPCHECK(hipMemset(A_d, memsetval, Nbytes));
-
-    HIPCHECK(hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
-
-    for (int i = 0; i < N; i++) {
+    for (int i=0; i<N; i++) {
         if (A_h[i] != memsetval) {
-            failed("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i],
-                   (int)memsetval);
+            testResult = false;
+            printf("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i], (int)memsetval);
+            break;
         }
     }
+    hipFree(A_d);
+    free(A_h);
+    return testResult;
+}
 
-    passed();
+bool testhipMemsetAsync(int memsetval,int p_gpuDevice)
+{
+    size_t Nbytes = N*sizeof(int);
+    printf ("testhipMemsetAsync N=%zu  memsetval=%2x device=%d\n", N, memsetval, p_gpuDevice);
+    hipDeviceptr_t A_d;
+    char *A_h;
+    bool testResult = true;
+
+    HIPCHECK ( hipMalloc((void**)&A_d, Nbytes) );
+    A_h = (char*)malloc(Nbytes);
+    hipStream_t stream;
+    HIPCHECK(hipStreamCreate(&stream));
+    HIPCHECK ( hipMemsetAsync(A_d, memsetval, Nbytes, stream ));
+    HIPCHECK ( hipMemcpy(A_h, (void*)A_d, Nbytes, hipMemcpyDeviceToHost));
+
+    for (int i=0; i<N; i++) {
+        if (A_h[i] != memsetval) {
+            testResult = false;
+            printf("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i], (int)memsetval);
+            break;
+        }
+    }
+    hipFree((void*)A_d);
+    free(A_h);
+    return testResult;
+}
+
+int main(int argc, char *argv[])
+{
+    HipTest::parseStandardArguments(argc, argv, true);
+    bool testResult = false;
+    HIPCHECK(hipSetDevice(p_gpuDevice));
+    testResult = testhipMemset(memsetval, p_gpuDevice);
+    if(testResult)
+        testResult = testhipMemsetAsync(memsetval, p_gpuDevice);
+    if(testResult)
+        passed();
 }
