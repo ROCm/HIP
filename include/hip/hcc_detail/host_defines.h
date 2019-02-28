@@ -85,7 +85,7 @@ THE SOFTWARE.
 #define __global__
 
 #define __noinline__
-#define __forceinline__
+#define __forceinline__ inline
 
 #define __shared__
 #define __constant__
