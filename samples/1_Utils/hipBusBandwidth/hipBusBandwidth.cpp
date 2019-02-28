@@ -813,6 +813,7 @@ void RunBenchmark_P2P_Bidir(ResultDatabase& resultDB) {
             hipSetDevice(currentGpu);
             hipMalloc((void**)&currentGpuMem[0], sizeof(float) * numMaxFloats);
             hipMalloc((void**)&currentGpuMem[1], sizeof(float) * numMaxFloats);
+            enablePeer2Peer(peerGpu,currentGpu);
 
             hipSetDevice(peerGpu);
             hipMalloc((void**)&peerGpuMem[0], sizeof(float) * numMaxFloats);
@@ -900,6 +901,7 @@ void RunBenchmark_P2P_Bidir(ResultDatabase& resultDB) {
             }
 
             disablePeer2Peer(currentGpu, peerGpu);
+            disablePeer2Peer(peerGpu, currentGpu);
 
             hipEventDestroy(start);
             hipEventDestroy(stop);
