@@ -66,7 +66,7 @@ bool testhipMemsetAsync(int memsetval,int p_gpuDevice)
 {
     size_t Nbytes = N*sizeof(int);
     printf ("testhipMemsetAsync N=%zu  memsetval=%2x device=%d\n", N, memsetval, p_gpuDevice);
-    hipDeviceptr_t A_d;
+    char *A_d;
     char *A_h;
     bool testResult = true;
 
