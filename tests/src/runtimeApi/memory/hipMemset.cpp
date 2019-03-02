@@ -57,7 +57,7 @@ bool testhipMemset(int memsetval,int p_gpuDevice)
             break;
         }
     }
-    hipFree(A_d);
+    HIPCHECK(hipFree(A_d));
     free(A_h);
     return testResult;
 }
@@ -75,6 +75,7 @@ bool testhipMemsetAsync(int memsetval,int p_gpuDevice)
     hipStream_t stream;
     HIPCHECK(hipStreamCreate(&stream));
     HIPCHECK ( hipMemsetAsync(A_d, memsetval, Nbytes, stream ));
+    HIPCHECK ( hipStreamSynchronize(stream));
     HIPCHECK ( hipMemcpy(A_h, (void*)A_d, Nbytes, hipMemcpyDeviceToHost));
 
     for (int i=0; i<N; i++) {
@@ -84,7 +85,8 @@ bool testhipMemsetAsync(int memsetval,int p_gpuDevice)
             break;
         }
     }
-    hipFree((void*)A_d);
+    HIPCHECK(hipFree((void*)A_d));
+    HIPCHECK(hipStreamDestroy(stream));
     free(A_h);
     return testResult;
 }
@@ -92,11 +94,10 @@ bool testhipMemsetAsync(int memsetval,int p_gpuDevice)
 int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
-    bool testResult = false;
+    bool testResult = true;
     HIPCHECK(hipSetDevice(p_gpuDevice));
-    testResult = testhipMemset(memsetval, p_gpuDevice);
-    if(testResult)
-        testResult = testhipMemsetAsync(memsetval, p_gpuDevice);
-    if(testResult)
-        passed();
+    testResult &= testhipMemset(memsetval, p_gpuDevice);
+    testResult &= testhipMemsetAsync(memsetval, p_gpuDevice);
+    if (testResult) passed();
+    failed("Output Mismatch\n"); 
 }
