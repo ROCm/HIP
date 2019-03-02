@@ -350,7 +350,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
      }
     // hardcoded 128 bytes
     *pitch = ((((int)width - 1) / 128) + 1) * 128;
-    const size_t sizeBytes = (*pitch) * height;
+    const size_t sizeBytes = (*pitch) * height * ((depth==0) ? 1 : depth);
 
     auto ctx = ihipGetTlsDefaultCtx();
 
