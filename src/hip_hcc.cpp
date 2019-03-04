@@ -2114,8 +2114,9 @@ void ihipStream_t::locked_copySync(void* dst, const void* src, size_t sizeBytes,
     }
 }
 
-void ihipStream_t::locked_copy2DSync(void* dst, const void* src, size_t width, size_t height, size_t srcPitch, size_t dstPitch, unsigned kind,
+bool ihipStream_t::locked_copy2DSync(void* dst, const void* src, size_t width, size_t height, size_t srcPitch, size_t dstPitch, unsigned kind,
                                    bool resolveOn) {
+    bool retStatus = true;
     ihipCtx_t* ctx = this->getCtx();
     const ihipDevice_t* device = ctx->getDevice();
 
@@ -2161,10 +2162,14 @@ void ihipStream_t::locked_copy2DSync(void* dst, const void* src, size_t width, s
         printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
         printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
 
-        crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
+        if(!crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                            copyDevice ? &copyDevice->getDevice()->_acc : nullptr,
-                           forceUnpinnedCopy);
+                           forceUnpinnedCopy)) {
+            tprintf(DB_COPY,"locked_copy2DSync failed to use SDMA\n");
+            retStatus = false;
+        }
     }
+    return retStatus;
 }
 
 void ihipStream_t::addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes) {
@@ -2337,8 +2342,9 @@ void ihipStream_t::locked_copyAsync(void* dst, const void* src, size_t sizeBytes
     }
 }
 
-void ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, size_t height, size_t srcPitch, size_t dstPitch, unsigned kind)
+bool ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, size_t height, size_t srcPitch, size_t dstPitch, unsigned kind)
 {
+    bool retStatus = true;
     const ihipCtx_t* ctx = this->getCtx();
 
     if ((ctx == nullptr) || (ctx->getDevice() == nullptr)) {
@@ -2373,13 +2379,19 @@ void ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, 
 
         try {
              if (HIP_FORCE_SYNC_COPY) {
-                 crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
+                 if(!crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                            &copyDevice->getDevice()->_acc,
-                           forceUnpinnedCopy);
+                           forceUnpinnedCopy)){
+                     retStatus = false;
+                 }
 
              } else {
-                 crit->_av.copy2d_async_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
+                 const auto& future = crit->_av.copy2d_async_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                                           &copyDevice->getDevice()->_acc);
+                 if(!future.valid()) {
+                   tprintf(DB_COPY, "locked_copy2DAsync failed to use SDMA\n");
+                   retStatus = false;
+                 }
              }
          } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
@@ -2394,10 +2406,13 @@ void ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, 
     } else {
          //Do sync 2D copy
          LockedAccessor_StreamCrit_t crit(_criticalData);
-         crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
+         if(!crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                            copyDevice ? &copyDevice->getDevice()->_acc : nullptr,
-                           forceUnpinnedCopy);
-    } 
+                           forceUnpinnedCopy)) {
+             retStatus = false;
+         }
+    }
+    return retStatus;
 }
 
 //-------------------------------------------------------------------------------------------------
