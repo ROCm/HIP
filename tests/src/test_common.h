@@ -98,6 +98,7 @@ THE SOFTWARE.
 // standard command-line variables:
 extern size_t N;
 extern char memsetval;
+extern int memsetD32val;
 extern int iterations;
 extern unsigned blocksPerCU;
 extern unsigned threadsPerBlock;
