@@ -655,7 +655,7 @@ inline static hipError_t hipMemset(void* devPtr, int value, size_t count) {
     return hipCUDAErrorTohipError(cudaMemset(devPtr, value, count));
 }
 
-inline static hipError_t hipMemsetD32(void* devPtr, int value, size_t count) {
+inline static hipError_t hipMemsetD32(hipDeviceptr_t devPtr, int value, size_t count) {
     return hipCUDAErrorTohipError(cuMemsetD32(devPtr, value, count));
 }
 
@@ -664,8 +664,8 @@ inline static hipError_t hipMemsetAsync(void* devPtr, int value, size_t count,
     return hipCUDAErrorTohipError(cudaMemsetAsync(devPtr, value, count, stream));
 }
 
-inline static hipError_t hipMemsetD32Async(void* devPtr, int value, size_t count,
-                                        hipStream_t stream __dparm(0)) {
+inline static hipError_t hipMemsetD32Async(hipDeviceptr_t devPtr, int value, size_t count,
+                                           hipStream_t stream __dparm(0)) {
     return hipCUDAErrorTohipError(cuMemsetD32Async(devPtr, value, count, stream));
 }
 
