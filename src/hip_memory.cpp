@@ -1719,7 +1719,7 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
     return ihipLogStatus(e);
 };
 
-hipError_t hipMemsetD32Async(void* dst, int value, size_t count, hipStream_t stream) {
+hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemsetD32Async, (TRACE_MCMD), dst, value, count, stream);
 
     hipError_t e = hipSuccess;

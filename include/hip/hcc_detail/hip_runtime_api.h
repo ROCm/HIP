@@ -1547,7 +1547,8 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
  *  @param[in]  stream - Stream identifier
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree
  */
-hipError_t hipMemsetD32Async(void* dst, int value, size_t count, hipStream_t stream __dparm(0));
+hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count,
+                             hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the memory area pointed to by dst with the constant value.
