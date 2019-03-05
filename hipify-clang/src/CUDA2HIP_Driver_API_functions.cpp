@@ -291,10 +291,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   // no analogue
   {"cuMemsetD2D8Async",                                    {"hipMemsetD2D8Async",                                      "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaMemset
-  {"cuMemsetD32",                                          {"hipMemset",                                               "", CONV_MEMORY, API_DRIVER}},
-  {"cuMemsetD32_v2",                                       {"hipMemset",                                               "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemsetD32",                                          {"hipMemsetD32",                                            "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemsetD32_v2",                                       {"hipMemsetD32",                                            "", CONV_MEMORY, API_DRIVER}},
   // cudaMemsetAsync
-  {"cuMemsetD32Async",                                     {"hipMemsetAsync",                                          "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemsetD32Async",                                     {"hipMemsetD32Async",                                       "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   {"cuMemsetD8",                                           {"hipMemsetD8",                                             "", CONV_MEMORY, API_DRIVER}},
   {"cuMemsetD8_v2",                                        {"hipMemsetD8",                                             "", CONV_MEMORY, API_DRIVER}},
