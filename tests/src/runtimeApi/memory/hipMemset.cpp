@@ -72,7 +72,7 @@ bool testhipMemsetD32(int memsetD32val,int p_gpuDevice)
 
     HIPCHECK ( hipMalloc(&A_d, Nbytes) );
     A_h = (int*)malloc(Nbytes);
-    HIPCHECK ( hipMemsetD32(A_d, memsetD32val, N) );
+    HIPCHECK ( hipMemsetD32((hipDeviceptr_t)A_d, memsetD32val, N) );
     HIPCHECK ( hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
 
     for (int i=0; i<N; i++) {
@@ -127,7 +127,7 @@ bool testhipMemsetD32Async(int memsetD32val,int p_gpuDevice)
     A_h = (int*)malloc(Nbytes);
     hipStream_t stream;
     HIPCHECK(hipStreamCreate(&stream));
-    HIPCHECK ( hipMemsetD32Async(A_d, memsetD32val, N, stream ));
+    HIPCHECK ( hipMemsetD32Async((hipDeviceptr_t)A_d, memsetD32val, N, stream ));
     HIPCHECK ( hipStreamSynchronize(stream));
     HIPCHECK ( hipMemcpy(A_h, (void*)A_d, Nbytes, hipMemcpyDeviceToHost));
 
