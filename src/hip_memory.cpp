@@ -1508,13 +1508,13 @@ __global__ void hip_copy2d_n(T* dst, const T* src, size_t width, size_t height, 
 }  // namespace
 
 template <typename T>
-void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t sizeBytes) {
+void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t count) {
     static constexpr uint32_t block_dim = 256;
 
-    const uint32_t grid_dim = clamp_integer<size_t>(sizeBytes / block_dim, 1, UINT32_MAX);
+    const uint32_t grid_dim = clamp_integer<size_t>(count / block_dim, 1, UINT32_MAX);
 
     hipLaunchKernelGGL(hip_fill_n<block_dim>, dim3(grid_dim), dim3{block_dim}, 0u, stream, ptr,
-                       sizeBytes, std::move(val));
+                       count, std::move(val));
 }
 
 template <typename T>
@@ -1533,20 +1533,20 @@ typedef enum ihipMemsetDataType {
     ihipMemsetDataTypeInt    = 2
 }ihipMemsetDataType;
 
-hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t stream, enum ihipMemsetDataType copyDataType  )
+hipError_t ihipMemset(void* dst, int  value, size_t count, hipStream_t stream, enum ihipMemsetDataType copyDataType  )
 {
     hipError_t e = hipSuccess;
 
-    if (sizeBytes == 0) return e;
+    if (count == 0) return e;
 
     if (stream && (dst != NULL)) {
         if(copyDataType == ihipMemsetDataTypeChar){
-            if ((sizeBytes & 0x3) == 0) {
+            if ((count & 0x3) == 0) {
                 // use a faster dword-per-workitem copy:
                 try {
                     value = value & 0xff;
                     uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                    ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, sizeBytes/sizeof(uint32_t));
+                    ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, count/sizeof(uint32_t));
                 }
                 catch (std::exception &ex) {
                     e = hipErrorInvalidValue;
@@ -1554,7 +1554,7 @@ hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t strea
              } else {
                 // use a slow byte-per-workitem copy:
                 try {
-                    ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, sizeBytes);
+                    ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, count);
                 }
                 catch (std::exception &ex) {
                     e = hipErrorInvalidValue;
@@ -1563,14 +1563,14 @@ hipError_t ihipMemset(void* dst, int  value, size_t sizeBytes, hipStream_t strea
         } else {
            if(copyDataType == ihipMemsetDataTypeInt) { // 4 Bytes value
                try {
-                   ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value, sizeBytes);
+                   ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value, count);
                } catch (std::exception &ex) {
                    e = hipErrorInvalidValue;
                }
             } else if(copyDataType == ihipMemsetDataTypeShort) {
                try {
                    value = value & 0xffff;
-                   ihipMemsetKernel<uint16_t> (stream, static_cast<uint16_t*> (dst), value, sizeBytes);
+                   ihipMemsetKernel<uint16_t> (stream, static_cast<uint16_t*> (dst), value, count);
                } catch (std::exception &ex) {
                    e = hipErrorInvalidValue;
                }
@@ -1719,6 +1719,18 @@ hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t st
     return ihipLogStatus(e);
 };
 
+hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count, hipStream_t stream) {
+    HIP_INIT_SPECIAL_API(hipMemsetD32Async, (TRACE_MCMD), dst, value, count, stream);
+
+    hipError_t e = hipSuccess;
+
+    stream = ihipSyncAndResolveStream(stream);
+
+    e = ihipMemset(dst, value, count, stream, ihipMemsetDataTypeInt);
+
+    return ihipLogStatus(e);
+};
+
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemset, (TRACE_MCMD), dst, value, sizeBytes);
 
@@ -1780,6 +1792,22 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
     stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar);
+        stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD32(hipDeviceptr_t dst, int value, size_t count) {
+    HIP_INIT_SPECIAL_API(hipMemsetD32, (TRACE_MCMD), dst, value, count);
+
+    hipError_t e = hipSuccess;
+
+    hipStream_t stream = hipStreamNull;
+    stream = ihipSyncAndResolveStream(stream);
+    if (stream) {
+        e = ihipMemset(dst, value, count, stream, ihipMemsetDataTypeInt);
         stream->locked_wait();
     } else {
         e = hipErrorInvalidValue;

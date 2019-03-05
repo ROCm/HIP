@@ -24,6 +24,7 @@ THE SOFTWARE.
 // standard global variables that can be set on command line
 size_t N = 4 * 1024 * 1024;
 char memsetval = 0x42;
+int memsetD32val = 0xDEADBEEF;
 int iterations = 1;
 unsigned blocksPerCU = 6;  // to hide latency
 unsigned threadsPerBlock = 256;
@@ -99,6 +100,12 @@ int parseStandardArguments(int argc, char* argv[], bool failOnUndefinedArg) {
                 failed("Bad memsetval argument");
             }
             memsetval = ex;
+        } else if (!strcmp(arg, "--memsetD32val")) {
+            int ex;
+            if (++i >= argc || !HipTest::parseInt(argv[i], &ex)) {
+                failed("Bad memsetD32val argument");
+            }
+            memsetD32val = ex;
         } else if (!strcmp(arg, "--iterations") || (!strcmp(arg, "-i"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &iterations)) {
                 failed("Bad iterations argument");
