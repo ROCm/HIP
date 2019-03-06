@@ -59,6 +59,18 @@ sub parse_config_file {
     }
 }
 
+#---
+# Function to check if executable can be run
+sub can_run {
+    my ($exe) = @_;
+    `$exe --version 2>&1`;
+    if ($? == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
 $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
 $HCC_HOME=$ENV{'HCC_HOME'} // '/opt/rocm/hcc';
 $HSA_PATH=$ENV{'HSA_PATH'} // '/opt/rocm/hsa';
@@ -67,12 +79,13 @@ $HSA_PATH=$ENV{'HSA_PATH'} // '/opt/rocm/hsa';
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
 if (not defined $HIP_PLATFORM) {
-    $NAMDGPUNODES=`cat /sys/class/kfd/kfd/topology/nodes/*/properties 2>/dev/null | grep -c 'simd_count [1-9]'`;
-
-    if ($NAMDGPUNODES > 0) {
-        $HIP_PLATFORM = "hcc"
-    } else {
+    if (can_run("$HCC_HOME/bin/hcc") or can_run("hcc")) {
+        $HIP_PLATFORM = "hcc";
+    } elsif (can_run("$CUDA_PATH/bin/nvcc") or can_run("nvcc")) {
         $HIP_PLATFORM = "nvcc";
+    } else {
+        # Default to hcc for now
+        $HIP_PLATFORM = "hcc";
     }
 }
 

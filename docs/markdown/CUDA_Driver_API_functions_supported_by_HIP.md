@@ -891,8 +891,8 @@
 | `cuMemsetD2D32Async`                                      |                               |
 | `cuMemsetD2D8`                                            |                               |
 | `cuMemsetD2D8Async`                                       |                               |
-| `cuMemsetD32`                                             | `hipMemset`                   |
-| `cuMemsetD32Async`                                        | `hipMemsetAsync`              |
+| `cuMemsetD32`                                             | `hipMemsetD32`                |
+| `cuMemsetD32Async`                                        | `hipMemsetD32Async`           |
 | `cuMemsetD8`                                              | `hipMemsetD8`                 |
 | `cuMemsetD8Async`                                         |                               |
 | `cuMipmappedArrayCreate`                                  |                               |
