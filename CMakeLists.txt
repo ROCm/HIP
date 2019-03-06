@@ -164,18 +164,15 @@ add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 # Detect profiling API
 ################
 if(USE_PROF_API EQUAL 1)
-    if(NOT DEFINED PROF_API_HEADER_PATH)
-        find_package(PkgConfig)
-        pkg_check_modules(ROCTRACERPROTO QUIET roctracer-proto)
-        if(ROCTRACERPROTO_FOUND EQUAL 1)
-            pkg_get_variable(PROF_API_HEADER_PATH roctracer-proto includedir)
-        else()
-            set(PROF_API_HEADER_PATH /opt/rocm/roctracer/include/ext)
-        endif()
-    endif()
-    find_path(PROF_API_HEADER_DIR NAMES prof_protocol.h PATHS ${PROF_API_HEADER_PATH} NO_DEFAULT_PATH)
+    find_path(PROF_API_HEADER_DIR prof_protocol.h
+        HINTS
+            ${PROF_API_HEADER_PATH}
+        PATHS
+            /opt/rocm/roctracer
+        PATH_SUFFIXES
+            include/ext
+    )
     if(NOT PROF_API_HEADER_DIR)
-        MESSAGE(STATUS "PROF_API_HEADER_PATH = ${PROF_API_HEADER_PATH}")
         MESSAGE(WARNING "Profiling API header not found. Disabling roctracer integration. Use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
     else()
         add_definitions(-DUSE_PROF_API=1)
