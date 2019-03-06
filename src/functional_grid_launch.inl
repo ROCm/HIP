@@ -41,99 +41,20 @@ using namespace std;
 
 namespace hip_impl
 {
-    namespace
+    hsa_agent_t target_agent(hipStream_t stream)
     {
-        inline
-        string name(uintptr_t function_address)
-        {
-            const auto it = function_names().find(function_address);
-
-            if (it == function_names().cend())  {
-                throw runtime_error{
-                    "Invalid function passed to hipLaunchKernelGGL."};
-            }
-
-            return it->second;
+        if (stream) {
+            return *static_cast<hsa_agent_t*>(
+                stream->locked_getAv()->get_hsa_agent());
         }
-
-        inline
-        string name(hsa_agent_t agent)
-        {
-            char n[64] = {};
-            hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
-
-            return string{n};
+        else if (
+            ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()) {
+            return ihipGetDevice(
+                ihipGetTlsDefaultCtx()->getDevice()->_deviceId)->_hsaAgent;
         }
-
-        inline
-        hsa_agent_t target_agent(hipStream_t stream)
-        {
-            if (stream) {
-                return *static_cast<hsa_agent_t*>(
-                    stream->locked_getAv()->get_hsa_agent());
-            }
-            else if (
-                ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()) {
-                return ihipGetDevice(
-                    ihipGetTlsDefaultCtx()->getDevice()->_deviceId)->_hsaAgent;
-            }
-            else {
-                return *static_cast<hsa_agent_t*>(
-                    accelerator{}.get_default_view().get_hsa_agent());
-            }
+        else {
+            return *static_cast<hsa_agent_t*>(
+                accelerator{}.get_default_view().get_hsa_agent());
         }
-    }
-
-    void hipLaunchKernelGGLImpl(
-        uintptr_t function_address,
-        const dim3& numBlocks,
-        const dim3& dimBlocks,
-        uint32_t sharedMemBytes,
-        hipStream_t stream,
-        void** kernarg)
-    {
-        auto it0 = functions().find(function_address);
-
-        if (it0 == functions().cend()) {
-            // Re-init device code maps once again to help locate kernels
-            // loaded after HIP runtime initialization via means such as
-            // dlopen().
-            it0 = functions(true).find(function_address);
-            if (it0 == functions().cend()) {
-                throw runtime_error{
-                    "No device code available for function: " +
-                    name(function_address)
-                };
-            }
-        }
-
-        auto agent = target_agent(stream);
-
-        const auto it1 = find_if(
-            it0->second.cbegin(),
-            it0->second.cend(),
-            [=](const pair<hsa_agent_t, Kernel_descriptor>& x) {
-            return x.first == agent;
-        });
-
-        if (it1 == it0->second.cend()) {
-            throw runtime_error{
-                "No code available for function: " + name(function_address) +
-                ", for agent: " + name(agent)
-            };
-        }
-
-        hipModuleLaunchKernel(
-            it1->second,
-            numBlocks.x,
-            numBlocks.y,
-            numBlocks.z,
-            dimBlocks.x,
-            dimBlocks.y,
-            dimBlocks.z,
-            sharedMemBytes,
-            stream,
-            nullptr,
-            kernarg);
     }
 }

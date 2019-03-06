@@ -20,11 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "elfio/elfio.hpp"
 #include "hip/hip_runtime.h"
+#include "hip/hcc_detail/elfio/elfio.hpp"
+#include "hip/hcc_detail/hsa_helpers.hpp"
 #include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
-#include "hsa_helpers.hpp"
 #include "trace_helper.h"
 
 #include <hsa/amd_hsa_kernel_code.h>
@@ -52,7 +52,6 @@ THE SOFTWARE.
 // TODO Use Pool APIs from HCC to get memory regions.
 
 using namespace ELFIO;
-using namespace hip_impl;
 using namespace std;
 
 // calculate MD5 checksum
@@ -268,13 +267,33 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
 }
 
-namespace {
-struct Agent_global {
-    string name;
-    hipDeviceptr_t address;
-    uint32_t byte_cnt;
-};
+namespace hip_impl {
+    hsa_executable_t executable_for(hipModule_t hmod) {
+        return hmod->executable;
+    }
 
+    const std::string& hash_for(hipModule_t hmod) {
+        return hmod->hash;
+    }
+
+    hsa_agent_t this_agent() {
+        auto ctx = ihipGetTlsDefaultCtx();
+
+        if (!ctx) throw runtime_error{"No active HIP context."};
+
+        auto device = ctx->getDevice();
+
+        if (!device) throw runtime_error{"No device available for HIP."};
+
+        ihipDevice_t* currentDevice = ihipGetDevice(device->_deviceId);
+
+        if (!currentDevice) throw runtime_error{"No active device for HIP."};
+
+        return currentDevice->_hsaAgent;
+    }
+} // Namespace hip_impl.
+
+namespace {
 inline void track(const Agent_global& x, hsa_agent_t agent) {
     tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name.c_str(),
             x.address, x.byte_cnt);
@@ -299,6 +318,8 @@ inline void track(const Agent_global& x, hsa_agent_t agent) {
 template <typename Container = vector<Agent_global>>
 inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t agent,
                                                 hsa_executable_symbol_t x, void* out) {
+    using namespace hip_impl;
+
     assert(out);
 
     hsa_symbol_kind_t t = {};
@@ -313,90 +334,9 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
     return HSA_STATUS_SUCCESS;
 }
 
-inline hsa_agent_t this_agent() {
-    auto ctx = ihipGetTlsDefaultCtx();
-
-    if (!ctx) throw runtime_error{"No active HIP context."};
-
-    auto device = ctx->getDevice();
-
-    if (!device) throw runtime_error{"No device available for HIP."};
-
-    ihipDevice_t* currentDevice = ihipGetDevice(device->_deviceId);
-
-    if (!currentDevice) throw runtime_error{"No active device for HIP."};
-
-    return currentDevice->_hsaAgent;
-}
-
-inline vector<Agent_global> read_agent_globals(hsa_agent_t agent, hsa_executable_t executable) {
-    vector<Agent_global> r;
-
-    hsa_executable_iterate_agent_symbols(executable, agent, copy_agent_global_variables, &r);
-
-    return r;
-}
-
-template <typename ForwardIterator>
-pair<hipDeviceptr_t, size_t> read_global_description(ForwardIterator f, ForwardIterator l,
-                                                     const char* name) {
-    const auto it = std::find_if(f, l, [=](const Agent_global& x) { return x.name == name; });
-
-    return it == l ? make_pair(nullptr, 0u) : make_pair(it->address, it->byte_cnt);
-}
-
-hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
-                                         const char* name) {
-    // the key of the map would the hash of code object associated with the
-    // hipModule_t instance
-    static unordered_map<std::string, vector<Agent_global>> agent_globals;
-    auto key = hmod->hash;
-
-    if (agent_globals.count(key) == 0) {
-        static mutex mtx;
-        lock_guard<mutex> lck{mtx};
-
-        if (agent_globals.count(key) == 0) {
-            agent_globals.emplace(key, read_agent_globals(this_agent(), hmod->executable));
-        }
-    }
-
-    const auto it0 = agent_globals.find(key);
-    if (it0 == agent_globals.cend()) {
-        throw runtime_error{"agent_globals data structure corrupted."};
-    }
-
-    tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(), it0->second.cend(), name);
-
-    return *dptr ? hipSuccess : hipErrorNotFound;
-}
-
-hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes, const char* name) {
-    static unordered_map<hsa_agent_t, vector<Agent_global>> agent_globals;
-    static std::once_flag f;
-
-    call_once(f, []() {
-        for (auto&& agent_executables : hip_impl::executables()) {
-            vector<Agent_global> tmp0;
-            for (auto&& executable : agent_executables.second) {
-                auto tmp1 = read_agent_globals(agent_executables.first, executable);
-                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
-                            make_move_iterator(tmp1.end()));
-            }
-            agent_globals.emplace(agent_executables.first, move(tmp0));
-        }
-    });
-
-    const auto it = agent_globals.find(this_agent());
-
-    if (it == agent_globals.cend()) return hipErrorNotInitialized;
-
-    tie(*dptr, *bytes) = read_global_description(it->second.cbegin(), it->second.cend(), name);
-
-    return *dptr ? hipSuccess : hipErrorNotFound;
-}
-
 hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname) {
+    using namespace hip_impl;
+
     pair<const char*, hsa_executable_symbol_t> r{kname, {}};
 
     hsa_executable_iterate_agent_symbols(
@@ -418,8 +358,8 @@ hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const c
     return r.second;
 }
 
-string read_elf_file_as_string(
-    const void* file) {  // Precondition: file points to an ELF image that was BITWISE loaded
+string read_elf_file_as_string(const void* file) {
+    // Precondition: file points to an ELF image that was BITWISE loaded
     //               into process accessible memory, and not one loaded by
     //               the loader. This is because in the latter case
     //               alignment may differ, which will break the size
@@ -428,15 +368,18 @@ string read_elf_file_as_string(
     //               Little Endian.
     if (!file) return {};
 
-    auto h = static_cast<const Elf64_Ehdr*>(file);
+    auto h = static_cast<const ELFIO::Elf64_Ehdr*>(file);
     auto s = static_cast<const char*>(file);
     // This assumes the common case of SHT being the last part of the ELF.
-    auto sz = sizeof(Elf64_Ehdr) + h->e_shoff + h->e_shentsize * h->e_shnum;
+    auto sz =
+        sizeof(ELFIO::Elf64_Ehdr) + h->e_shoff + h->e_shentsize * h->e_shnum;
 
     return string{s, s + sz};
 }
 
 string code_object_blob_for_agent(const void* maybe_bundled_code, hsa_agent_t agent) {
+    using namespace hip_impl;
+
     if (!maybe_bundled_code) return {};
 
     Bundled_code_header tmp{maybe_bundled_code};
@@ -454,9 +397,22 @@ string code_object_blob_for_agent(const void* maybe_bundled_code, hsa_agent_t ag
 
     return string{it->blob.cbegin(), it->blob.cend()};
 }
-}  // namespace
+} // Unnamed namespace.
+
+namespace hip_impl {
+    vector<Agent_global> read_agent_globals(hsa_agent_t agent,
+                                            hsa_executable_t executable) {
+        vector<Agent_global> r;
+
+        hsa_executable_iterate_agent_symbols(
+            executable, agent, copy_agent_global_variables, &r);
+
+        return r;
+    }
+} // Namespace hip_impl.
 
 hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const char* name) {
+    using namespace hip_impl;
 
     if (!func || !name) return hipErrorInvalidValue;
 
@@ -485,58 +441,36 @@ hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const ch
     return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name));
 }
 
-hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
-                              const char* name) {
-    HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
+namespace {
+hipFuncAttributes make_function_attributes(const amd_kernel_code_t& header) {
+    hipFuncAttributes r{};
 
-    return ihipLogStatus(ihipModuleGetGlobal(dptr, bytes, hmod, name));
-}
+    hipDeviceProp_t prop{};
+    hipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+    // TODO: at the moment there is no way to query the count of registers
+    //       available per CU, therefore we hardcode it to 64 KiRegisters.
+    prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
-hipError_t ihipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
-                               const char* name) {
-    if (!dptr || !bytes) return hipErrorInvalidValue;
-
-    if (!name) return hipErrorNotInitialized;
-
-    const auto r = hmod ? read_agent_global_from_module(dptr, bytes, hmod, name)
-                        : read_agent_global_from_process(dptr, bytes, name);
+    r.localSizeBytes = header.workitem_private_segment_byte_size;
+    r.sharedSizeBytes = header.workgroup_group_segment_byte_size;
+    r.maxDynamicSharedSizeBytes = prop.sharedMemPerBlock - r.sharedSizeBytes;
+    r.numRegs = header.workitem_vgpr_count;
+    r.maxThreadsPerBlock = r.numRegs ?
+        std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
+        prop.maxThreadsPerBlock;
+    r.binaryVersion =
+        header.amd_machine_version_major * 10 +
+        header.amd_machine_version_minor;
+    r.ptxVersion = prop.major * 10 + prop.minor; // HIP currently presents itself as PTX 3.0.
 
     return r;
 }
-
-namespace
-{
-    inline
-    hipFuncAttributes make_function_attributes(const amd_kernel_code_t& header)
-    {
-        hipFuncAttributes r{};
-
-        hipDeviceProp_t prop{};
-        hipGetDeviceProperties(
-            &prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
-        // TODO: at the moment there is no way to query the count of registers
-        //       available per CU, therefore we hardcode it to 64 KiRegisters.
-        prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
-        
-        r.localSizeBytes = header.workitem_private_segment_byte_size;
-        r.sharedSizeBytes = header.workgroup_group_segment_byte_size;
-        r.maxDynamicSharedSizeBytes =
-            prop.sharedMemPerBlock - r.sharedSizeBytes;
-        r.numRegs = header.workitem_vgpr_count;
-        r.maxThreadsPerBlock = r.numRegs ?
-            std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
-            prop.maxThreadsPerBlock;
-        r.binaryVersion =
-            header.amd_machine_version_major * 10 +
-            header.amd_machine_version_minor;
-        r.ptxVersion = prop.major * 10 + prop.minor; // HIP currently presents itself as PTX 3.0.
-
-        return r;
-    }
-}
+} // Unnamed namespace.
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
+    using namespace hip_impl;
+
     if (!attr) return hipErrorInvalidValue;
     if (!func) return hipErrorInvalidDeviceFunction;
 
@@ -564,6 +498,7 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 }
 
 hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
+    using namespace hip_impl;
 
     if (!module) return hipErrorInvalidValue;
 
@@ -585,9 +520,8 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     auto content = tmp.empty() ? read_elf_file_as_string(image) : tmp;
 
-    (*module)->executable = hip_impl::load_executable(content,
-                                                      (*module)->executable,
-                                                      this_agent());
+    (*module)->executable = load_executable(content, (*module)->executable,
+                                            this_agent());
 
     // compute the hash of the code object
     (*module)->hash = checksum(content.length(), content.data());
@@ -621,6 +555,8 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
 }
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
+    using namespace hip_impl;
+
     HIP_INIT_API(hipModuleGetTexRef, texRef, hmod, name);
 
     hipError_t ret = hipErrorNotFound;
