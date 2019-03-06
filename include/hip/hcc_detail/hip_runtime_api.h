@@ -35,11 +35,14 @@ THE SOFTWARE.
 #define GENERIC_GRID_LAUNCH 1
 #endif
 
+#include <hsa/hsa.h>
+
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
 #include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
 #include <hip/hcc_detail/hip_surface_types.h>
+#include <hip/hcc_detail/program_state.hpp>
 
 #if defined(_MSC_VER)
 #define DEPRECATED(msg) __declspec(deprecated(msg))
@@ -58,6 +61,11 @@ THE SOFTWARE.
 #define HIP_LAUNCH_PARAM_END ((void*)0x03)
 
 #ifdef __cplusplus
+  #include <mutex>
+  #include <string>
+  #include <unordered_map>
+  #include <vector>
+
   #define __dparm(x) \
           = x
 #else
@@ -1363,6 +1371,61 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
 
+__attribute__((visibility("hidden")))
+hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
+
+
+/**
+ *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
+ *
+ * @param[in]  symbolName - Symbol on device
+ * @param[out] devPtr - Pointer to a pointer to the memory referred to by the symbol
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
+ *
+ *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
+ * hipMemcpyFromSymbolAsync
+ */
+inline
+__attribute__((visibility("hidden")))
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
+    //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
+
+    size_t size = 0;
+    return hipModuleGetGlobal(devPtr, &size, 0, (const char*)symbolName);
+}
+
+
+/**
+ *  @brief Copies the size of symbol @p symbolName to @p size
+ *
+ * @param[in]  symbolName - Symbol on device
+ * @param[out] size - Pointer to the size of the symbol
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
+ *
+ *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
+ * hipMemcpyFromSymbolAsync
+ */
+inline
+__attribute__((visibility("hidden")))
+hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
+    // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
+
+    void* devPtr = nullptr;
+    return hipModuleGetGlobal(&devPtr, size, 0, (const char*)symbolName);
+}
+
+#if defined(__cplusplus)
+} // extern "C"
+#endif
+
+namespace hip_impl {
+hipError_t hipMemcpyToSymbol(void*, const void*, size_t, size_t, hipMemcpyKind,
+                             const char*);
+} // Namespace hip_impl.
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /**
  *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area
@@ -1387,35 +1450,36 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
-hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t sizeBytes,
-                             size_t offset __dparm(0), hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
+inline
+__attribute__((visibility("hidden")))
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
+                             size_t sizeBytes, size_t offset __dparm(0),
+                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice)) {
+    if (!symbolName) return hipErrorInvalidSymbol;
 
+    hipDeviceptr_t dst = NULL;
+    hipGetSymbolAddress(&dst, (const char*)symbolName);
 
-/**
- *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
- *
- * @param[in]  symbolName - Symbol on device
- * @param[out] devPtr - Pointer to a pointer to the memory referred to by the symbol
- * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
- *
- *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
- * hipMemcpyFromSymbolAsync
- */
-hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName);
+    return hip_impl::hipMemcpyToSymbol(dst, src, sizeBytes, offset, kind,
+                                       (const char*)symbolName);
+}
 
+#if defined(__cplusplus)
+} // extern "C"
+#endif
 
-/**
- *  @brief Copies the size of symbol @p symbolName to @p size
- *
- * @param[in]  symbolName - Symbol on device
- * @param[out] size - Pointer to the size of the symbol
- * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
- *
- *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
- * hipMemcpyFromSymbolAsync
- */
-hipError_t hipGetSymbolSize(size_t* size, const void* symbolName);
+namespace hip_impl {
+hipError_t hipMemcpyToSymbolAsync(void*, const void*, size_t, size_t,
+                                  hipMemcpyKind, hipStream_t, const char*);
+hipError_t hipMemcpyFromSymbol(void*, const void*, size_t, size_t,
+                               hipMemcpyKind, const char*);
+hipError_t hipMemcpyFromSymbolAsync(void*, const void*, size_t, size_t,
+                                    hipMemcpyKind, hipStream_t, const char*);
+} // Namespace hip_impl.
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
 
 /**
  *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area
@@ -1442,14 +1506,50 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbolName);
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
-hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_t sizeBytes,
-                                  size_t offset, hipMemcpyKind kind, hipStream_t stream __dparm(0));
+inline
+__attribute__((visibility("hidden")))
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
+                                  size_t sizeBytes, size_t offset,
+                                  hipMemcpyKind kind, hipStream_t stream __dparm(0)) {
+    if (!symbolName) return hipErrorInvalidSymbol;
 
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t sizeBytes,
-                               size_t offset __dparm(0), hipMemcpyKind kind __dparm( hipMemcpyDeviceToHost ));
+    hipDeviceptr_t dst = NULL;
+    hipGetSymbolAddress(&dst, symbolName);
 
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t sizeBytes,
-                                    size_t offset, hipMemcpyKind kind, hipStream_t stream __dparm(0));
+    return hip_impl::hipMemcpyToSymbolAsync(dst, src, sizeBytes, offset, kind,
+                                            stream,
+                                            (const char*)symbolName);
+}
+
+inline
+__attribute__((visibility("hidden")))
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
+                               size_t sizeBytes, size_t offset __dparm(0),
+                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost)) {
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t src = NULL;
+    hipGetSymbolAddress(&src, symbolName);
+
+    return hip_impl::hipMemcpyFromSymbol(dst, src, sizeBytes, offset, kind,
+                                         (const char*)symbolName);
+}
+
+inline
+__attribute__((visibility("hidden")))
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
+                                    size_t sizeBytes, size_t offset,
+                                    hipMemcpyKind kind,
+                                    hipStream_t stream __dparm(0)) {
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t src = NULL;
+    hipGetSymbolAddress(&src, symbolName);
+
+    return hip_impl::hipMemcpyFromSymbolAsync(dst, src, sizeBytes, offset, kind,
+                                              stream,
+                                              (const char*)symbolName);
+}
 
 /**
  *  @brief Copy data from src to dst asynchronously.
@@ -2397,6 +2497,103 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
 
+struct Agent_global {
+    std::string name;
+    hipDeviceptr_t address;
+    uint32_t byte_cnt;
+};
+#if defined(__cplusplus)
+} // extern "C"
+#endif
+
+namespace hip_impl {
+hsa_executable_t executable_for(hipModule_t);
+const std::string& hash_for(hipModule_t);
+
+template<typename ForwardIterator>
+std::pair<hipDeviceptr_t, std::size_t> read_global_description(
+    ForwardIterator f, ForwardIterator l, const char* name) {
+    const auto it = std::find_if(f, l, [=](const Agent_global& x) {
+        return x.name == name;
+    });
+
+    return it == l ?
+        std::make_pair(nullptr, 0u) : std::make_pair(it->address, it->byte_cnt);
+}
+
+std::vector<Agent_global> read_agent_globals(hsa_agent_t agent,
+                                             hsa_executable_t executable);
+hsa_agent_t this_agent();
+
+inline
+__attribute__((visibility("hidden")))
+hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+                                         hipModule_t hmod, const char* name) {
+    // the key of the map would the hash of code object associated with the
+    // hipModule_t instance
+    static std::unordered_map<
+        std::string, std::vector<Agent_global>> agent_globals;
+    auto key = hash_for(hmod);
+
+    if (agent_globals.count(key) == 0) {
+        static std::mutex mtx;
+        std::lock_guard<std::mutex> lck{mtx};
+
+        if (agent_globals.count(key) == 0) {
+            agent_globals.emplace(
+                key, read_agent_globals(this_agent(), executable_for(hmod)));
+        }
+    }
+
+    const auto it0 = agent_globals.find(key);
+    if (it0 == agent_globals.cend()) {
+        hip_throw(
+            std::runtime_error{"agent_globals data structure corrupted."});
+    }
+
+    std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
+                                                      it0->second.cend(), name);
+
+    return *dptr ? hipSuccess : hipErrorNotFound;
+}
+
+inline
+__attribute__((visibility("hidden")))
+hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                                          const char* name) {
+    static std::unordered_map<
+        hsa_agent_t, std::vector<Agent_global>> agent_globals;
+    static std::once_flag f;
+
+    std::call_once(f, []() {
+        for (auto&& agent_executables : executables()) {
+            std::vector<Agent_global> tmp0;
+            for (auto&& executable : agent_executables.second) {
+                auto tmp1 = read_agent_globals(agent_executables.first,
+                                               executable);
+
+                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
+                            make_move_iterator(tmp1.end()));
+            }
+            agent_globals.emplace(agent_executables.first, move(tmp0));
+        }
+    });
+
+    const auto it = agent_globals.find(this_agent());
+
+    if (it == agent_globals.cend()) return hipErrorNotInitialized;
+
+    std::tie(*dptr, *bytes) = read_global_description(it->second.cbegin(),
+                                                      it->second.cend(), name);
+
+    return *dptr ? hipSuccess : hipErrorNotFound;
+}
+} // Namespace hip_impl.
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 /**
  * @brief returns device memory pointer and size of the kernel present in the module with symbol @p
  * name
@@ -2408,11 +2605,20 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
-hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
-                              const char* name);
+inline
+__attribute__((visibility("hidden")))
+hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
+                              hipModule_t hmod, const char* name) {
+    if (!dptr || !bytes) return hipErrorInvalidValue;
 
-hipError_t ihipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
-                               const char* name);
+    if (!name) return hipErrorNotInitialized;
+
+    const auto r = hmod ?
+        hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name) :
+        hip_impl::read_agent_global_from_process(dptr, bytes, name);
+
+    return r;
+}
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**
