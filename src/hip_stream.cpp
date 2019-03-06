@@ -61,8 +61,11 @@ hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags, int priorit
 
             // TODO - se try-catch loop to detect memory exception?
             //
-            // Note this is an execute_in_order queue, so all kernels submitted will atuomatically
-            // wait for prev to complete: This matches CUDA stream behavior:
+            // Note this is an execute_any_order queue, 
+            // CUDA stream behavior is that all kernels submitted will automatically
+            // wait for prev to complete, this behaviour will be mainatined by 
+            // hipModuleLaunchKernel. execute_any_order will help 
+            // hipExtModuleLaunchKernel , which uses a special flag
 
             {
                 // Obtain mutex access to the device critical data, release by destructor
@@ -71,7 +74,7 @@ hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags, int priorit
 #if defined(__HCC__) && (__hcc_minor__ < 3)
                 auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
 #else
-                auto istream = new ihipStream_t(ctx, acc.create_view(Kalmar::execute_in_order, Kalmar::queuing_mode_automatic, (Kalmar::queue_priority)priority), flags);
+                auto istream = new ihipStream_t(ctx, acc.create_view(Kalmar::execute_any_order, Kalmar::queuing_mode_automatic, (Kalmar::queue_priority)priority), flags);
 #endif
 
                 ctxCrit->addStream(istream);
