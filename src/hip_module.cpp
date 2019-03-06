@@ -310,7 +310,7 @@ namespace hip_impl {
 
 namespace {
 inline void track(const Agent_global& x, hsa_agent_t agent) {
-    tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name.c_str(),
+    tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name,
             x.address, x.byte_cnt);
 
     int deviceIndex =0;
@@ -341,7 +341,10 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
     hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_TYPE, &t);
 
     if (t == HSA_SYMBOL_KIND_VARIABLE) {
-        static_cast<Container*>(out)->push_back(Agent_global{name(x), address(x), size(x)});
+        Agent_global tmp = {nullptr, address(x), size(x)};
+        tmp.name = (char *) malloc(sizeof(name(x).c_str()));
+        strcpy(tmp.name, name(x).c_str());
+        static_cast<Container*>(out)->push_back(tmp);
 
         track(static_cast<Container*>(out)->back(),agent);
     }
