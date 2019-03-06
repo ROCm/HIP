@@ -287,8 +287,8 @@ namespace hip_impl {
         return hmod->executable;
     }
 
-    const std::string& hash_for(hipModule_t hmod) {
-        return hmod->hash;
+    const char* hash_for(hipModule_t hmod) {
+        return hmod->hash.c_str();
     }
 
     hsa_agent_t this_agent() {
