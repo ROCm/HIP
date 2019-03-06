@@ -240,7 +240,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_surface.cpp
         src/hip_intercept.cpp
         src/env.cpp
-        src/program_state.cpp
         src/h2f.cpp)
 
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
