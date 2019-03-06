@@ -2518,7 +2518,7 @@ struct Agent_global {
 
 namespace hip_impl {
 hsa_executable_t executable_for(hipModule_t);
-const std::string& hash_for(hipModule_t);
+const char* hash_for(hipModule_t);
 
 template<typename ForwardIterator>
 std::pair<hipDeviceptr_t, std::size_t> read_global_description(
@@ -2543,7 +2543,8 @@ hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
     // hipModule_t instance
     static std::unordered_map<
         std::string, std::vector<Agent_global>> agent_globals;
-    auto key = hash_for(hmod);
+    const char* hash = hash_for(hmod);
+    std::string key(hash);
 
     if (agent_globals.count(key) == 0) {
         static std::mutex mtx;
