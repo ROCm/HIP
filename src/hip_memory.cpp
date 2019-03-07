@@ -955,37 +955,14 @@ hipError_t hipHostUnregister(void* hostPtr) {
     return ihipLogStatus(hip_status);
 }
 
-namespace {
-inline hipDeviceptr_t agent_address_for_symbol(const char* symbolName) {
-    hipDeviceptr_t r = nullptr;
+namespace hip_impl {
+hipError_t hipMemcpyToSymbol(void* dst, const void* src, size_t count,
+                             size_t offset, hipMemcpyKind kind,
+                             const char* symbol_name) {
+    HIP_INIT_SPECIAL_API(hipMemcpyToSymbol, (TRACE_MCMD), symbol_name, src,
+                         count, offset, kind);
 
-#if __hcc_workweek__ >= 17481
-    size_t byte_cnt = 0u;
-    ihipModuleGetGlobal(&r, &byte_cnt, 0, symbolName);
-#else
-    auto ctx = ihipGetTlsDefaultCtx();
-    auto acc = ctx->getDevice()->_acc;
-    r = acc.get_symbol_address(symbolName);
-#endif
-
-    return r;
-}
-}  // namespace
-
-hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t count, size_t offset,
-                             hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API(hipMemcpyToSymbol, (TRACE_MCMD), symbolName, src, count, offset, kind);
-
-    if (symbolName == nullptr) {
-        return ihipLogStatus(hipErrorInvalidSymbol);
-    }
-
-    auto ctx = ihipGetTlsDefaultCtx();
-
-    hc::accelerator acc = ctx->getDevice()->_acc;
-
-    hipDeviceptr_t dst = agent_address_for_symbol(static_cast<const char*>(symbolName));
-    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
     if (dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
@@ -1003,21 +980,13 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
     return ihipLogStatus(hipSuccess);
 }
 
+hipError_t hipMemcpyFromSymbol(void* dst, const void* src, size_t count,
+                               size_t offset, hipMemcpyKind kind,
+                               const char* symbol_name) {
+    HIP_INIT_SPECIAL_API(hipMemcpyFromSymbol, (TRACE_MCMD), symbol_name, dst,
+                         count, offset, kind);
 
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, size_t offset,
-                               hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API(hipMemcpyFromSymbol, (TRACE_MCMD), symbolName, dst, count, offset, kind);
-
-    if (symbolName == nullptr) {
-        return ihipLogStatus(hipErrorInvalidSymbol);
-    }
-
-    auto ctx = ihipGetTlsDefaultCtx();
-
-    hc::accelerator acc = ctx->getDevice()->_acc;
-
-    hipDeviceptr_t src = agent_address_for_symbol(static_cast<const char*>(symbolName));
-    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
     if (dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
@@ -1036,27 +1005,19 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count, 
 }
 
 
-hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_t count,
-                                  size_t offset, hipMemcpyKind kind, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(hipMemcpyToSymbolAsync, (TRACE_MCMD), symbolName, src, count, offset, kind, stream);
+hipError_t hipMemcpyToSymbolAsync(void* dst, const void* src, size_t count,
+                                  size_t offset, hipMemcpyKind kind,
+                                  hipStream_t stream, const char* symbol_name) {
+    HIP_INIT_SPECIAL_API(hipMemcpyToSymbolAsync, (TRACE_MCMD), symbol_name, src,
+                         count, offset, kind, stream);
 
-    if (symbolName == nullptr) {
-        return ihipLogStatus(hipErrorInvalidSymbol);
-    }
-
-    hipError_t e = hipSuccess;
-
-    auto ctx = ihipGetTlsDefaultCtx();
-
-    hc::accelerator acc = ctx->getDevice()->_acc;
-
-    hipDeviceptr_t dst = agent_address_for_symbol(static_cast<const char*>(symbolName));
-    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, dst);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
     if (dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
 
+    hipError_t e = hipSuccess;
     if (stream) {
         try {
             hip_internal::memcpyAsync((char*)dst+offset, src, count, kind, stream);
@@ -1070,28 +1031,19 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
     return ihipLogStatus(e);
 }
 
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* src, size_t count,
+                                    size_t offset, hipMemcpyKind kind,
+                                    hipStream_t stream, const char* symbol_name) {
+    HIP_INIT_SPECIAL_API(hipMemcpyFromSymbolAsync, (TRACE_MCMD), symbol_name,
+                         dst, count, offset, kind, stream);
 
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t count, size_t offset,
-                                    hipMemcpyKind kind, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(hipMemcpyFromSymbolAsync, (TRACE_MCMD), symbolName, dst, count, offset, kind, stream);
-
-    if (symbolName == nullptr) {
-        return ihipLogStatus(hipErrorInvalidSymbol);
-    }
-
-    hipError_t e = hipSuccess;
-
-    auto ctx = ihipGetTlsDefaultCtx();
-
-    hc::accelerator acc = ctx->getDevice()->_acc;
-
-    hipDeviceptr_t src = agent_address_for_symbol(static_cast<const char*>(symbolName));
-    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbolName, src);
+    tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, src);
 
     if (src == nullptr || dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
 
+    hipError_t e = hipSuccess;
     stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         try {
@@ -1105,23 +1057,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
 
     return ihipLogStatus(e);
 }
-
-
-hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
-    HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
-
-    size_t size = 0;
-    return ihipModuleGetGlobal(devPtr, &size, 0, static_cast<const char*>(symbolName));
-}
-
-
-hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
-    HIP_INIT_API(hipGetSymbolSize, size, symbolName);
-
-    void* devPtr = nullptr;
-    return ihipModuleGetGlobal(&devPtr, size, 0, static_cast<const char*>(symbolName));
-}
-
+} // Namespace hip_impl.
 
 //---
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {

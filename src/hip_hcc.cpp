@@ -27,6 +27,7 @@ THE SOFTWARE.
  * everywhere. This file is compiled and linked into apps running HIP / HCC path.
  */
 #include <assert.h>
+#include <exception>
 #include <stdint.h>
 #include <iostream>
 #include <sstream>
@@ -237,7 +238,7 @@ hipError_t ihipSynchronize(void) {
 //=================================================================================================
 TidInfo::TidInfo() : _apiSeqNum(0) {
     _shortTid = g_lastShortTid.fetch_add(1);
-    _pid = getpid(); 
+    _pid = getpid();
 
     if (COMPILE_HIP_DB && HIP_TRACE_API) {
         std::stringstream tid_ss;
@@ -2397,7 +2398,7 @@ void ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, 
          crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                            copyDevice ? &copyDevice->getDevice()->_acc : nullptr,
                            forceUnpinnedCopy);
-    } 
+    }
 }
 
 //-------------------------------------------------------------------------------------------------
@@ -2460,3 +2461,28 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 
 //// TODO - add identifier numbers for streams and devices to help with debugging.
 // TODO - add a contect sequence number for debug. Print operator<< ctx:0.1 (device.ctx)
+
+namespace hip_impl {
+    std::vector<hsa_agent_t> all_hsa_agents() {
+        std::vector<hsa_agent_t> r{};
+        for (auto&& acc : hc::accelerator::get_all()) {
+            const auto agent = acc.get_hsa_agent();
+
+            if (!agent || !acc.is_hsa_accelerator()) continue;
+
+            r.emplace_back(*static_cast<hsa_agent_t*>(agent));
+        }
+
+        return r;
+    }
+
+    [[noreturn]]
+    void hip_throw(const std::exception& ex) {
+        #if defined(__cpp_exceptions)
+            throw ex;
+        #else
+            std::cerr << ex.what() << std::endl;
+            std::terminate();
+        #endif
+    }
+} // Namespace hip_impl.
