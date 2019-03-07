@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 #include "hip_internal.hpp"
 #include "platform/runtime.hpp"
+#include "utils/flags.hpp"
 #include "utils/versions.hpp"
 
 std::vector<amd::Context*> g_devices;
@@ -38,6 +39,7 @@ std::map<amd::Context*, amd::HostQueue*> g_nullStreams;
 
 void init() {
   if (!amd::Runtime::initialized()) {
+    amd::IS_HIP = true;
     amd::Runtime::init();
   }
 
