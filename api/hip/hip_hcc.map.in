@@ -96,8 +96,10 @@ global:
     hipMemGetInfo;
     hipMemPtrGetInfo;
     hipMemset;
+    hipMemsetD32;
     hipMemset2D;
     hipMemsetAsync;
+    hipMemsetD32Async;
     hipMemset2DAsync;
     hipMemsetD8;
     hipMemset3D;
