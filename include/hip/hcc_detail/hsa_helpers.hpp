@@ -27,15 +27,6 @@ THE SOFTWARE.
 #include <functional>
 #include <string>
 
-inline constexpr bool operator==(hsa_isa_t x, hsa_isa_t y) { return x.handle == y.handle; }
-
-namespace std {
-template <>
-struct hash<hsa_isa_t> {
-    size_t operator()(hsa_isa_t x) const { return hash<decltype(x.handle)>{}(x.handle); }
-};
-}  // namespace std
-
 namespace hip_impl {
 inline void* address(hsa_executable_symbol_t x) {
     void* r = nullptr;

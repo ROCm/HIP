@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include "hip/hip_hcc.h"
 #include "hip_runtime.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -105,21 +106,13 @@ inline std::vector<std::uint8_t> make_kernarg(
 
     auto it = function_names().find(reinterpret_cast<std::uintptr_t>(kernel));
     if (it == function_names().cend()) {
-        it =
-            function_names(true).find(reinterpret_cast<std::uintptr_t>(kernel));
-        if (it == function_names().cend()) {
-            throw std::runtime_error{"Undefined __global__ function."};
-        }
+        hip_throw(std::runtime_error{"Undefined __global__ function."});
     }
 
     auto it1 = kernargs().find(it->second);
     if (it1 == kernargs().end()) {
-        it1 = kernargs(true).find(it->second);
-
-        if (it1 == kernargs().end()) {
-            throw std::runtime_error{
-                "Missing metadata for __global__ function: " + it->second};
-        }
+        hip_throw(std::runtime_error{
+            "Missing metadata for __global__ function: " + it->second});
     }
 
     std::tuple<Formals...> to_formals{std::move(actuals)};
@@ -129,23 +122,87 @@ inline std::vector<std::uint8_t> make_kernarg(
     return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
 }
 
-void hipLaunchKernelGGLImpl(std::uintptr_t function_address, const dim3& numBlocks,
-                            const dim3& dimBlocks, std::uint32_t sharedMemBytes, hipStream_t stream,
-                            void** kernarg);
-}  // Namespace hip_impl.
+inline
+std::string name(std::uintptr_t function_address)
+{
+    const auto it = function_names().find(function_address);
+
+    if (it == function_names().cend())  {
+        hip_throw(std::runtime_error{
+            "Invalid function passed to hipLaunchKernelGGL."});
+    }
+
+    return it->second;
+}
+
+inline
+std::string name(hsa_agent_t agent)
+{
+    char n[64]{};
+    hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
+
+    return std::string{n};
+}
+
+hsa_agent_t target_agent(hipStream_t stream);
+
+inline
+__attribute__((visibility("hidden")))
+void hipLaunchKernelGGLImpl(
+    std::uintptr_t function_address,
+    const dim3& numBlocks,
+    const dim3& dimBlocks,
+    std::uint32_t sharedMemBytes,
+    hipStream_t stream,
+    void** kernarg) {
+    auto it0 = functions().find(function_address);
+
+    if (it0 == functions().cend()) {
+        hip_throw(std::runtime_error{
+            "No device code available for function: " +
+            name(function_address)});
+    }
+
+    auto agent = target_agent(stream);
+
+    const auto it1 = std::find_if(
+        it0->second.cbegin(),
+        it0->second.cend(),
+        [=](const std::pair<hsa_agent_t, Kernel_descriptor>& x) {
+        return x.first == agent;
+    });
+
+    if (it1 == it0->second.cend()) {
+        hip_throw(std::runtime_error{
+            "No code available for function: " + name(function_address) +
+            ", for agent: " + name(agent)});
+    }
+
+    hipModuleLaunchKernel(it1->second, numBlocks.x, numBlocks.y, numBlocks.z,
+                          dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
+                          stream, nullptr, kernarg);
+}
+} // Namespace hip_impl.
 
 template <typename... Args, typename F = void (*)(Args...)>
-inline void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
-                               std::uint32_t sharedMemBytes, hipStream_t stream, Args... args) {
+inline
+void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                        std::uint32_t sharedMemBytes, hipStream_t stream,
+                        Args... args) {
     auto kernarg = hip_impl::make_kernarg(
         kernel, std::tuple<Args...>{std::move(args)...});
     std::size_t kernarg_size = kernarg.size();
 
-    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, kernarg.data(), HIP_LAUNCH_PARAM_BUFFER_SIZE,
-                      &kernarg_size, HIP_LAUNCH_PARAM_END};
+    void* config[]{
+        HIP_LAUNCH_PARAM_BUFFER_POINTER,
+        kernarg.data(),
+        HIP_LAUNCH_PARAM_BUFFER_SIZE,
+        &kernarg_size,
+        HIP_LAUNCH_PARAM_END};
 
-    hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel), numBlocks, dimBlocks,
-                                     sharedMemBytes, stream, &config[0]);
+    hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
+                                     numBlocks, dimBlocks, sharedMemBytes,
+                                     stream, &config[0]);
 }
 
 template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>

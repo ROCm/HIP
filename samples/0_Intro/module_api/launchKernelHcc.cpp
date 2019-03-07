@@ -88,7 +88,7 @@ int main() {
                       HIP_LAUNCH_PARAM_END};
 
     HIP_CHECK(
-        hipHccModuleLaunchKernel(Function, LEN, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
+        hipExtModuleLaunchKernel(Function, LEN, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config, 0));
 
     hipMemcpyDtoH(B, Bd, SIZE);
 
