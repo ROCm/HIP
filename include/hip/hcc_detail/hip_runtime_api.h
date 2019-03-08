@@ -35,14 +35,20 @@ THE SOFTWARE.
 #define GENERIC_GRID_LAUNCH 1
 #endif
 
-#include <hsa/hsa.h>
+#ifndef __HIP_VDI__
+#define __HIP_VDI__ 0
+#endif
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hip_runtime_api.h>
 #include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
 #include <hip/hcc_detail/hip_surface_types.h>
+
+#if !__HIP_VDI__
+#include <hsa/hsa.h>
 #include <hip/hcc_detail/program_state.hpp>
+#endif
 
 #if defined(_MSC_VER)
 #define DEPRECATED(msg) __declspec(deprecated(msg))
@@ -1371,6 +1377,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
 
+#if !__HIP_VDI__
 __attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
@@ -1551,6 +1558,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
                                               (const char*)symbolName);
 }
 
+#endif // __HIP_VDI__
 /**
  *  @brief Copy data from src to dst asynchronously.
  *
@@ -2502,6 +2510,8 @@ struct Agent_global {
     hipDeviceptr_t address;
     uint32_t byte_cnt;
 };
+
+#if !__HIP_VDI__
 #if defined(__cplusplus)
 } // extern "C"
 #endif
@@ -2593,7 +2603,6 @@ hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
 #if defined(__cplusplus)
 extern "C" {
 #endif
-
 /**
  * @brief returns device memory pointer and size of the kernel present in the module with symbol @p
  * name
@@ -2619,6 +2628,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 
     return r;
 }
+#endif // __HIP_VDI__
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 /**
