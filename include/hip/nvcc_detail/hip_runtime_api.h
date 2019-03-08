@@ -79,6 +79,12 @@ typedef enum hipChannelFormatKind {
 #define hipBoundaryModeTrap cudaBoundaryModeTrap
 #define hipBoundaryModeClamp cudaBoundaryModeClamp
 
+// hipFuncCache
+#define hipFuncCachePreferNone cudaFuncCachePreferNone
+#define hipFuncCachePreferShared cudaFuncCachePreferShared
+#define hipFuncCachePreferL1 cudaFuncCachePreferL1
+#define hipFuncCachePreferEqual cudaFuncCachePreferEqual
+
 // hipResourceType
 #define hipResourceType cudaResourceType
 #define hipResourceTypeArray cudaResourceTypeArray
@@ -612,6 +618,10 @@ inline static hipError_t hipDeviceSynchronize() {
 
 inline static hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* pCacheConfig) {
     return hipCUDAErrorTohipError(cudaDeviceGetCacheConfig(pCacheConfig));
+}
+
+inline static hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig) {
+    return hipCUDAErrorTohipError(cudaDeviceSetCacheConfig(cacheConfig));
 }
 
 inline static const char* hipGetErrorString(hipError_t error) {
