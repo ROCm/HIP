@@ -2577,8 +2577,7 @@ hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
     // hipModule_t instance
     static std::unordered_map<
         std::string, std::vector<Agent_global>> agent_globals;
-    const char* hash = hash_for(hmod);
-    std::string key(hash);
+    std::string key(hash_for(hmod));
 
     if (agent_globals.count(key) == 0) {
         static std::mutex mtx;
