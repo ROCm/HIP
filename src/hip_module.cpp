@@ -341,10 +341,8 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
     hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_TYPE, &t);
 
     if (t == HSA_SYMBOL_KIND_VARIABLE) {
-        Agent_global tmp = {nullptr, address(x), size(x)};
-        tmp.name = (char *) malloc(sizeof(name(x).c_str()));
-        strcpy(tmp.name, name(x).c_str());
-        static_cast<Container*>(out)->push_back(tmp);
+        Agent_global tmp(name(x).c_str(), address(x), size(x));
+        static_cast<Container*>(out)->push_back(std::move(tmp));
 
         track(static_cast<Container*>(out)->back(),agent);
     }
