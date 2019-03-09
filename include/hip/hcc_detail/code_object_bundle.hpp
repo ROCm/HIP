@@ -59,20 +59,6 @@ std::string isa_name(std::string triple)
 
     triple.erase(0, sizeof(offload_prefix) - 1);
 
-    static hsa_isa_t tmp{};
-    static const bool is_old_rocr{
-        hsa_isa_from_name(triple.c_str(), &tmp) != HSA_STATUS_SUCCESS};
-
-    if (is_old_rocr) {
-        std::string tmp{triple.substr(triple.rfind('x') + 1)};
-        triple.replace(0, std::string::npos, "AMD:AMDGPU");
-
-        for (auto&& x : tmp) {
-            triple.push_back(':');
-            triple.push_back(x);
-        }
-    }
-
     return triple;
 }
 
