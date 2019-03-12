@@ -183,8 +183,10 @@ enum hip_api_id_t {
   HIP_API_ID_hipGetDevice = 136,
   HIP_API_ID_hipGetDeviceCount = 137,
   HIP_API_ID_hipHccModuleLaunchKernel = 138,
-  HIP_API_ID_NUMBER = 139,
-  HIP_API_ID_ANY = 140,
+  HIP_API_ID_hipMemsetD32 = 139,
+  HIP_API_ID_hipMemsetD32Async = 140,
+  HIP_API_ID_NUMBER = 141,
+  HIP_API_ID_ANY = 142,
 
   HIP_API_ID_NONE = HIP_API_ID_NUMBER,
   HIP_API_ID_hipHccGetAccelerator = HIP_API_ID_NUMBER,
@@ -365,6 +367,8 @@ static const char* hip_api_name(const uint32_t& id) {
     case HIP_API_ID_hipModuleGetFunction: return "hipModuleGetFunction";
     case HIP_API_ID_hipGetDevice: return "hipGetDevice";
     case HIP_API_ID_hipGetDeviceCount: return "hipGetDeviceCount";
+    case HIP_API_ID_hipMemsetD32: return "hipMemsetD32";
+    case HIP_API_ID_hipMemsetD32Async: return "hipMemsetD32Async";
   };
   return "unknown";
 };
@@ -378,7 +382,7 @@ struct hip_api_data_t {
       void* ptr;
     } hipHostFree;
     struct {
-      const void* symbolName;
+      const void* symbol_name;
       const void* src;
       size_t sizeBytes;
       size_t offset;
@@ -414,7 +418,7 @@ struct hip_api_data_t {
     } hipSetupArgument;
     struct {
       void* dst;
-      const void* symbolName;
+      const void* symbol_name;
       size_t sizeBytes;
       size_t offset;
       hipMemcpyKind kind;
@@ -488,7 +492,7 @@ struct hip_api_data_t {
     } hipMemGetAddressRange;
     struct {
       void* dst;
-      const void* symbolName;
+      const void* symbol_name;
       size_t sizeBytes;
       size_t offset;
       hipMemcpyKind kind;
@@ -870,7 +874,7 @@ struct hip_api_data_t {
       hipStream_t stream;
     } hipMemsetAsync;
     struct {
-      const void* symbolName;
+      const void* symbol_name;
       const void* src;
       size_t sizeBytes;
       size_t offset;
@@ -978,6 +982,17 @@ struct hip_api_data_t {
     struct {
       int* count;
     } hipGetDeviceCount;
+    struct {
+      hipDeviceptr_t dest;
+      int value;
+      size_t count;
+    } hipMemsetD32;
+    struct {
+      hipDeviceptr_t dst;
+      int value;
+      size_t count;
+      hipStream_t stream;
+    } hipMemsetD32Async;
   } args;
 };
 
@@ -986,7 +1001,7 @@ struct hip_api_data_t {
   cb_data.args.hipHostFree.ptr = (void*)ptr; \
 };
 #define INIT_hipMemcpyToSymbolAsync_CB_ARGS_DATA(cb_data) { \
-  cb_data.args.hipMemcpyToSymbolAsync.symbolName = (const void*)symbolName; \
+  cb_data.args.hipMemcpyToSymbolAsync.symbol_name = (const void*)symbol_name; \
   cb_data.args.hipMemcpyToSymbolAsync.src = (const void*)src; \
   cb_data.args.hipMemcpyToSymbolAsync.sizeBytes = (size_t)count; \
   cb_data.args.hipMemcpyToSymbolAsync.offset = (size_t)offset; \
@@ -1024,7 +1039,7 @@ struct hip_api_data_t {
 };
 #define INIT_hipMemcpyFromSymbolAsync_CB_ARGS_DATA(cb_data) { \
   cb_data.args.hipMemcpyFromSymbolAsync.dst = (void*)dst; \
-  cb_data.args.hipMemcpyFromSymbolAsync.symbolName = (const void*)symbolName; \
+  cb_data.args.hipMemcpyFromSymbolAsync.symbol_name = (const void*)symbol_name; \
   cb_data.args.hipMemcpyFromSymbolAsync.sizeBytes = (size_t)count; \
   cb_data.args.hipMemcpyFromSymbolAsync.offset = (size_t)offset; \
   cb_data.args.hipMemcpyFromSymbolAsync.kind = (hipMemcpyKind)kind; \
@@ -1098,7 +1113,7 @@ struct hip_api_data_t {
 };
 #define INIT_hipMemcpyFromSymbol_CB_ARGS_DATA(cb_data) { \
   cb_data.args.hipMemcpyFromSymbol.dst = (void*)dst; \
-  cb_data.args.hipMemcpyFromSymbol.symbolName = (const void*)symbolName; \
+  cb_data.args.hipMemcpyFromSymbol.symbol_name = (const void*)symbol_name; \
   cb_data.args.hipMemcpyFromSymbol.sizeBytes = (size_t)count; \
   cb_data.args.hipMemcpyFromSymbol.offset = (size_t)offset; \
   cb_data.args.hipMemcpyFromSymbol.kind = (hipMemcpyKind)kind; \
@@ -1492,7 +1507,7 @@ struct hip_api_data_t {
   cb_data.args.hipMemsetAsync.stream = (hipStream_t)stream; \
 };
 #define INIT_hipMemcpyToSymbol_CB_ARGS_DATA(cb_data) { \
-  cb_data.args.hipMemcpyToSymbol.symbolName = (const void*)symbolName; \
+  cb_data.args.hipMemcpyToSymbol.symbol_name = (const void*)symbol_name; \
   cb_data.args.hipMemcpyToSymbol.src = (const void*)src; \
   cb_data.args.hipMemcpyToSymbol.sizeBytes = (size_t)count; \
   cb_data.args.hipMemcpyToSymbol.offset = (size_t)offset; \
@@ -1600,6 +1615,17 @@ struct hip_api_data_t {
 #define INIT_hipGetDeviceCount_CB_ARGS_DATA(cb_data) { \
   cb_data.args.hipGetDeviceCount.count = (int*)count; \
 };
+#define INIT_hipMemsetD32_CB_ARGS_DATA(cb_data) { \
+  cb_data.args.hipMemsetD32.dest = (hipDeviceptr_t)dst; \
+  cb_data.args.hipMemsetD32.value = (int)value; \
+  cb_data.args.hipMemsetD32.count = (size_t)count; \
+};
+#define INIT_hipMemsetD32Async_CB_ARGS_DATA(cb_data) { \
+  cb_data.args.hipMemsetD32Async.dst = (hipDeviceptr_t)dst; \
+  cb_data.args.hipMemsetD32Async.value = (int)value; \
+  cb_data.args.hipMemsetD32Async.count = (size_t)count; \
+  cb_data.args.hipMemsetD32Async.stream = (hipStream_t)stream; \
+};
 #define INIT_CB_ARGS_DATA(cb_id, cb_data) INIT_##cb_id##_CB_ARGS_DATA(cb_data)
 
 #if 0
@@ -1614,7 +1640,7 @@ const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {
     break;
     case HIP_API_ID_hipMemcpyToSymbolAsync:
       oss << "hipMemcpyToSymbolAsync("
-          << " symbolName=" << data->args.hipMemcpyToSymbolAsync.symbolName << ","
+          << " symbol_name=" << data->args.hipMemcpyToSymbolAsync.symbol_name << ","
           << " src=" << data->args.hipMemcpyToSymbolAsync.src << ","
           << " sizeBytes=" << data->args.hipMemcpyToSymbolAsync.sizeBytes << ","
           << " offset=" << data->args.hipMemcpyToSymbolAsync.offset << ","
@@ -1668,7 +1694,7 @@ const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {
     case HIP_API_ID_hipMemcpyFromSymbolAsync:
       oss << "hipMemcpyFromSymbolAsync("
           << " dst=" << data->args.hipMemcpyFromSymbolAsync.dst << ","
-          << " symbolName=" << data->args.hipMemcpyFromSymbolAsync.symbolName << ","
+          << " symbol_name=" << data->args.hipMemcpyFromSymbolAsync.symbol_name << ","
           << " sizeBytes=" << data->args.hipMemcpyFromSymbolAsync.sizeBytes << ","
           << " offset=" << data->args.hipMemcpyFromSymbolAsync.offset << ","
           << " kind=" << data->args.hipMemcpyFromSymbolAsync.kind << ","
@@ -1772,7 +1798,7 @@ const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {
     case HIP_API_ID_hipMemcpyFromSymbol:
       oss << "hipMemcpyFromSymbol("
           << " dst=" << data->args.hipMemcpyFromSymbol.dst << ","
-          << " symbolName=" << data->args.hipMemcpyFromSymbol.symbolName << ","
+          << " symbol_name=" << data->args.hipMemcpyFromSymbol.symbol_name << ","
           << " sizeBytes=" << data->args.hipMemcpyFromSymbol.sizeBytes << ","
           << " offset=" << data->args.hipMemcpyFromSymbol.offset << ","
           << " kind=" << data->args.hipMemcpyFromSymbol.kind
@@ -2350,7 +2376,7 @@ const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {
     break;
     case HIP_API_ID_hipMemcpyToSymbol:
       oss << "hipMemcpyToSymbol("
-          << " symbolName=" << data->args.hipMemcpyToSymbol.symbolName << ","
+          << " symbol_name=" << data->args.hipMemcpyToSymbol.symbol_name << ","
           << " src=" << data->args.hipMemcpyToSymbol.src << ","
           << " sizeBytes=" << data->args.hipMemcpyToSymbol.sizeBytes << ","
           << " offset=" << data->args.hipMemcpyToSymbol.offset << ","
