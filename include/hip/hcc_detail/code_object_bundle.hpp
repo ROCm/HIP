@@ -35,7 +35,6 @@ THE SOFTWARE.
 namespace hip_impl {
 
 inline
-__attribute__((visibility("hidden")))
 std::string transmogrify_triple(const std::string& triple)
 {
     static constexpr const char old_prefix[]{"hcc-amdgcn--amdhsa-gfx"};
@@ -49,7 +48,6 @@ std::string transmogrify_triple(const std::string& triple)
 }
 
 inline
-__attribute__((visibility("hidden")))
 std::string isa_name(std::string triple)
 {
     static constexpr const char offload_prefix[]{"hcc-"};
@@ -63,7 +61,6 @@ std::string isa_name(std::string triple)
 }
 
 inline
-__attribute__((visibility("hidden")))
 hsa_isa_t triple_to_hsa_isa(const std::string& triple) {
     const std::string isa{isa_name(std::move(triple))};
 
