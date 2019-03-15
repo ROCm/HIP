@@ -73,7 +73,7 @@ hipError_t ihipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_
  */
 //---
 hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t peerCtx) {
-    HIP_INIT_API(hipDeviceCanAccessPeer2, canAccessPeer, thisCtx, peerCtx);
+    HIP_INIT_API(NONE, canAccessPeer, thisCtx, peerCtx);
 
     return ihipLogStatus(ihipDeviceCanAccessPeer(canAccessPeer, thisCtx, peerCtx));
 }
@@ -150,7 +150,7 @@ hipError_t ihipEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
 //---
 hipError_t hipMemcpyPeer(void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t srcCtx,
                          size_t sizeBytes) {
-    HIP_INIT_API(hipMemcpyPeer2, dst, dstCtx, src, srcCtx, sizeBytes);
+    HIP_INIT_API(NONE, dst, dstCtx, src, srcCtx, sizeBytes);
 
     // TODO - move to ihip memory copy implementaion.
     // HCC has a unified memory architecture so device specifiers are not required.
@@ -161,7 +161,7 @@ hipError_t hipMemcpyPeer(void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t s
 //---
 hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hipCtx_t srcDevice,
                               size_t sizeBytes, hipStream_t stream) {
-    HIP_INIT_API(hipMemcpyPeerAsync2, dst, dstDevice, src, srcDevice, sizeBytes, stream);
+    HIP_INIT_API(NONE, dst, dstDevice, src, srcDevice, sizeBytes, stream);
 
     // TODO - move to ihip memory copy implementaion.
     // HCC has a unified memory architecture so device specifiers are not required.
