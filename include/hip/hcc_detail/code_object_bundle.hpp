@@ -33,7 +33,48 @@ THE SOFTWARE.
 #include <vector>
 
 namespace hip_impl {
-hsa_isa_t triple_to_hsa_isa(const std::string& triple);
+
+inline
+std::string transmogrify_triple(const std::string& triple)
+{
+    static constexpr const char old_prefix[]{"hcc-amdgcn--amdhsa-gfx"};
+    static constexpr const char new_prefix[]{"hcc-amdgcn-amd-amdhsa--gfx"};
+
+    if (triple.find(old_prefix) == 0) {
+        return new_prefix + triple.substr(sizeof(old_prefix) - 1);
+    }
+
+    return (triple.find(new_prefix) == 0) ? triple : "";
+}
+
+inline
+std::string isa_name(std::string triple)
+{
+    static constexpr const char offload_prefix[]{"hcc-"};
+
+    triple = transmogrify_triple(triple);
+    if (triple.empty()) return {};
+
+    triple.erase(0, sizeof(offload_prefix) - 1);
+
+    return triple;
+}
+
+inline
+hsa_isa_t triple_to_hsa_isa(const std::string& triple) {
+    const std::string isa{isa_name(std::move(triple))};
+
+    if (isa.empty()) return hsa_isa_t({});
+
+    hsa_isa_t r{};
+
+    if(HSA_STATUS_SUCCESS != hsa_isa_from_name(isa.c_str(), &r)) {
+        r.handle = 0;
+    }
+
+    return r;
+}
+
 
 struct Bundled_code {
     union Header {
