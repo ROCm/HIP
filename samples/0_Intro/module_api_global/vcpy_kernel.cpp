@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 #define ARRAY_SIZE (16)
 
-extern float myDeviceGlobal;
+__device__ float myDeviceGlobal;
 extern float myDeviceGlobalArray[16];
 ;
 
