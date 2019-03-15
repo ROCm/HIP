@@ -31,7 +31,6 @@ THE SOFTWARE.
 #define SIZE LEN * sizeof(float)
 
 #define fileName "vcpy_kernel.code"
-float myDeviceGlobal;
 float myDeviceGlobalArray[16];
 #define HIP_CHECK(cmd)                                                                             \
     {                                                                                              \
@@ -69,7 +68,10 @@ int main() {
     HIP_CHECK(hipModuleLoad(&Module, fileName));
 
     float myDeviceGlobal_h = 42.0;
-    myDeviceGlobal = 42.0;
+    float* deviceGlobal;
+    size_t deviceGlobalSize;
+    HIP_CHECK(hipModuleGetGlobal((void**)&deviceGlobal, &deviceGlobalSize, Module, "myDeviceGlobal"));
+    *deviceGlobal = 42.0;
 
 #define ARRAY_SIZE 16
 
