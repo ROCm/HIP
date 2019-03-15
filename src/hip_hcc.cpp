@@ -1567,7 +1567,6 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    hip_impl::hip_init();
     stream = ihipSyncAndResolveStream(stream);
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
@@ -1589,7 +1588,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    hip_impl::hip_init();
     stream = ihipSyncAndResolveStream(stream);
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
@@ -1610,7 +1608,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    hip_impl::hip_init();
     stream = ihipSyncAndResolveStream(stream);
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
@@ -1631,7 +1628,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    hip_impl::hip_init();
     stream = ihipSyncAndResolveStream(stream);
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
