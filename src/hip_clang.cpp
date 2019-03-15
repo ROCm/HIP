@@ -32,7 +32,7 @@ THE SOFTWARE.
 extern "C" std::vector<hipModule_t>*
 __hipRegisterFatBinary(const void* data)
 {
-  HIP_INIT();
+  hip_impl::hip_init();
 
   tprintf(DB_FB, "Enter __hipRegisterFatBinary(%p)\n", data);
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);

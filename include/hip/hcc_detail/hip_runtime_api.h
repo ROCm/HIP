@@ -78,6 +78,10 @@ THE SOFTWARE.
   #define __dparm(x)
 #endif
 
+namespace hip_impl {
+hipError_t hip_init();
+}  // namespace hip_impl
+
 // Structure definitions:
 #ifdef __cplusplus
 extern "C" {
@@ -1396,7 +1400,7 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
-
+    hip_impl::hip_init();
     size_t size = 0;
     return hipModuleGetGlobal(devPtr, &size, 0, (const char*)symbolName);
 }
@@ -1416,7 +1420,7 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
-
+    hip_impl::hip_init();
     void* devPtr = nullptr;
     return hipModuleGetGlobal(&devPtr, size, 0, (const char*)symbolName);
 }
