@@ -99,7 +99,7 @@ string ToString(hipFunction_t v) {
     return ss.str();
 };
 
-std::string& FunctionSymbol(hipFunction_t f) { return f->_name; };
+const std::string& FunctionSymbol(const hipFunction_t f) { return f->_name; };
 
 #define CHECK_HSA(hsaStatus, hipStatus)                                                            \
     if (hsaStatus != HSA_STATUS_SUCCESS) {                                                         \
@@ -262,7 +262,7 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags) {
-    HIP_INIT_API(hipHccModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
+    HIP_INIT_API(hipExtModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
                  localWorkSizeY, localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra);
     return ihipLogStatus(ihipModuleLaunchKernel(
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
