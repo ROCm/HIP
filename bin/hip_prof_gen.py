@@ -84,7 +84,6 @@ def parse_api(inp_file_p, out):
   nms_open_pattern = re.compile(r'namespace hip_impl {')
   nms_close_pattern = re.compile(r'}')
 
-  inp_file = inp_file_p
   inp = open(inp_file, 'r')
 
   found = 0
@@ -424,7 +423,7 @@ opts_map = {}
 # Parsing API header
 parse_api(api_hfile, api_map)
 
-# Sources path is given as an argument
+# Parsing sources
 parse_src(api_map, src_dir, src_pat, opts_map)
 
 # Checking for non-conformant APIs
