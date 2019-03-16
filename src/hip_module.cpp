@@ -99,7 +99,7 @@ string ToString(hipFunction_t v) {
     return ss.str();
 };
 
-std::string& FunctionSymbol(hipFunction_t f) { return f->_name; };
+const std::string& FunctionSymbol(const hipFunction_t f) { return f->_name; };
 
 #define CHECK_HSA(hsaStatus, hipStatus)                                                            \
     if (hsaStatus != HSA_STATUS_SUCCESS) {                                                         \
@@ -262,7 +262,7 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags) {
-    HIP_INIT_API(hipHccModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
+    HIP_INIT_API(hipExtModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
                  localWorkSizeY, localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra);
     return ihipLogStatus(ihipModuleLaunchKernel(
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
@@ -287,8 +287,8 @@ namespace hip_impl {
         return hmod->executable;
     }
 
-    const std::string& hash_for(hipModule_t hmod) {
-        return hmod->hash;
+    const char* hash_for(hipModule_t hmod) {
+        return hmod->hash.c_str();
     }
 
     hsa_agent_t this_agent() {
@@ -310,7 +310,7 @@ namespace hip_impl {
 
 namespace {
 inline void track(const Agent_global& x, hsa_agent_t agent) {
-    tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name.c_str(),
+    tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name,
             x.address, x.byte_cnt);
 
     int deviceIndex =0;
@@ -341,7 +341,8 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
     hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_TYPE, &t);
 
     if (t == HSA_SYMBOL_KIND_VARIABLE) {
-        static_cast<Container*>(out)->push_back(Agent_global{name(x), address(x), size(x)});
+        Agent_global tmp(name(x).c_str(), address(x), size(x));
+        static_cast<Container*>(out)->push_back(std::move(tmp));
 
         track(static_cast<Container*>(out)->back(),agent);
     }
