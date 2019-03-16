@@ -457,16 +457,16 @@ endif()
 # Profiling API support
 #############################
 # Generate profiling API macros/structures header
-set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/bin/hip_prof_gen.py")
-set(PROF_API_STR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_prof_str.h")
+set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_prof_str.h")
 set(PROF_API_API "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/bin/hip_prof_gen.py")
 add_custom_command(
-    OUTPUT ${PROF_API_STR}
-    COMMAND ${PROF_API_GEN} ${OPT_PROF_API} ${PROF_API_API} ${PROF_API_SRC} ${PROF_API_STR}
+    OUTPUT ${PROF_API_HDR}
+    COMMAND ${PROF_API_GEN} ${OPT_PROF_API} ${PROF_API_API} ${PROF_API_SRC} ${PROF_API_HDR}
     DEPENDS ${PROF_API_GEN} ${PROF_API_API}
 )
-add_custom_target(prof ALL DEPENDS ${PROF_API_STR})
+add_custom_target(prof ALL DEPENDS ${PROF_API_HDR})
 
 # Enable profiling API
 if(USE_PROF_API EQUAL 1)
