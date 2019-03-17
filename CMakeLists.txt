@@ -161,6 +161,40 @@ endif()
 add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 
 #############################
+# Profiling API support
+#############################
+# Generate profiling API macros/structures header
+set(PROF_API_STR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_prof_str.h")
+set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_runtime_api.h")
+set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
+add_custom_command(
+    OUTPUT ${PROF_API_STR}
+    COMMAND ${PROF_API_GEN} ${OPT_PROF_API} ${PROF_API_HDR} ${PROF_API_SRC} ${PROF_API_STR}
+    DEPENDS ${PROF_API_GEN} ${PROF_API_HDR}
+)
+add_custom_target(prof ALL DEPENDS ${PROF_API_STR})
+
+# Enable profiling API
+if(USE_PROF_API EQUAL 1)
+    find_path(PROF_API_HEADER_DIR prof_protocol.h
+        HINTS
+            ${PROF_API_HEADER_PATH}
+        PATHS
+            /opt/rocm/roctracer
+        PATH_SUFFIXES
+            include/ext
+    )
+    if(NOT PROF_API_HEADER_DIR)
+        MESSAGE(WARNING "Profiling API header not found. Disabling roctracer integration. Use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
+    else()
+        add_definitions(-DUSE_PROF_API=1)
+        include_directories(${PROF_API_HEADER_DIR})
+        MESSAGE(STATUS "Profiling API: ${PROF_API_HEADER_DIR}")
+    endif()
+endif()
+
+#############################
 # Build steps
 #############################
 # Build clang hipify if enabled
@@ -453,39 +487,4 @@ else()
     message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
 endif()
 
-#############################
-# Profiling API support
-#############################
-# Generate profiling API macros/structures header
-set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_prof_str.h")
-set(PROF_API_API "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_runtime_api.h")
-set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
-set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/bin/hip_prof_gen.py")
-add_custom_command(
-    OUTPUT ${PROF_API_HDR}
-    COMMAND ${PROF_API_GEN} ${OPT_PROF_API} ${PROF_API_API} ${PROF_API_SRC} ${PROF_API_HDR}
-    DEPENDS ${PROF_API_GEN} ${PROF_API_API}
-)
-add_custom_target(prof ALL DEPENDS ${PROF_API_HDR})
-
-# Enable profiling API
-if(USE_PROF_API EQUAL 1)
-    find_path(PROF_API_HEADER_DIR prof_protocol.h
-        HINTS
-            ${PROF_API_HEADER_PATH}
-        PATHS
-            /opt/rocm/roctracer
-        PATH_SUFFIXES
-            include/ext
-    )
-    if(NOT PROF_API_HEADER_DIR)
-        MESSAGE(WARNING "Profiling API header not found. Disabling roctracer integration. Use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
-    else()
-        add_definitions(-DUSE_PROF_API=1)
-        include_directories(${PROF_API_HEADER_DIR})
-        MESSAGE(STATUS "Profiling API: ${PROF_API_HEADER_DIR}")
-    endif()
-endif()
-
-#############################
 # vim: ts=4:sw=4:expandtab:smartindent
