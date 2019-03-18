@@ -557,36 +557,96 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
                              size_t offset, hipMemcpyKind kind) {
   HIP_INIT_API(symbolName, src, count, offset, kind);
 
-  assert(0 && "Unimplemented");
+  size_t sym_size = 0;
+  hipDeviceptr_t device_ptr = nullptr;
 
-  HIP_RETURN(hipErrorUnknown);
+  /* Get address and size for the global symbol */
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
+                                              &sym_size)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  /* Size Check to make sure offset is correct */
+  if ((offset + count) != sym_size) {
+    return HIP_RETURN(hipErrorUnknown);
+  }
+
+  device_ptr = reinterpret_cast<address>(device_ptr) + offset;
+
+  /* Copy memory from source to destination address */
+  HIP_RETURN(hipMemcpy(device_ptr, src, count, kind));
 }
 
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count,
                                size_t offset, hipMemcpyKind kind) {
   HIP_INIT_API(symbolName, dst, count, offset, kind);
 
-  assert(0 && "Unimplemented");
+  size_t sym_size = 0;
+  hipDeviceptr_t device_ptr = nullptr;
 
-  HIP_RETURN(hipErrorUnknown);
+  /* Get address and size for the global symbol */
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
+                                              &sym_size)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  /* Size Check to make sure offset is correct */
+  if ((offset + count) != sym_size) {
+    return HIP_RETURN(hipErrorUnknown);
+  }
+
+  device_ptr = reinterpret_cast<address>(device_ptr) + offset;
+
+  /* Copy memory from source to destination address */
+  HIP_RETURN(hipMemcpy(dst, device_ptr, count, kind));
 }
 
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_t count,
                                   size_t offset, hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(symbolName, src, count, offset, kind, stream);
 
-  assert(0 && "Unimplemented");
+  size_t sym_size = 0;
+  hipDeviceptr_t device_ptr = nullptr;
 
-  HIP_RETURN(hipErrorUnknown);
+  /* Get address and size for the global symbol */
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
+                                              &sym_size)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  /* Size Check to make sure offset is correct */
+  if ((offset + count) != sym_size) {
+    return HIP_RETURN(hipErrorUnknown);
+  }
+
+  device_ptr = reinterpret_cast<address>(device_ptr) + offset;
+
+  /* Copy memory from source to destination address */
+  HIP_RETURN(hipMemcpyAsync(device_ptr, src, count, kind, stream));
 }
 
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t count,
                                     size_t offset, hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(symbolName, dst, count, offset, kind, stream);
 
-  assert(0 && "Unimplemented");
+  size_t sym_size = 0;
+  hipDeviceptr_t device_ptr = nullptr;
 
-  HIP_RETURN(hipErrorUnknown);
+  /* Get address and size for the global symbol */
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
+                                              &sym_size)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  /* Size Check to make sure offset is correct */
+  if ((offset + count) != sym_size) {
+    return HIP_RETURN(hipErrorUnknown);
+  }
+
+  device_ptr = reinterpret_cast<address>(device_ptr) + offset;
+
+  /* Copy memory from source to destination address */
+  HIP_RETURN(hipMemcpyAsync(dst, device_ptr, count, kind, stream));
 }
 
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {

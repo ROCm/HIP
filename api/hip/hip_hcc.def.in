@@ -92,6 +92,8 @@ hipMemcpyFromArray
 hipMemcpyToSymbol
 hipMemcpyToSymbolAsync
 hipMemGetAddressRange
+hipGetSymbolAddress
+hipGetSymbolSize
 hipMemGetInfo
 hipMemPtrGetInfo
 hipMemset
