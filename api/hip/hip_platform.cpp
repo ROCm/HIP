@@ -31,6 +31,9 @@ THE SOFTWARE.
 
 constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
 
+thread_local std::stack<ihipExec_t> execStack_;
+PlatformState* PlatformState::platform_ = new PlatformState();
+
 struct __CudaFatBinaryWrapper {
   unsigned int magic;
   unsigned int version;
@@ -111,94 +114,82 @@ extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
   return programs;
 }
 
-struct ihipExec_t {
-  dim3 gridDim_;
-  dim3 blockDim_;
-  size_t sharedMem_;
-  hipStream_t hStream_;
-  std::vector<char> arguments_;
-};
+PlatformState::RegisteredVar::RegisteredVar(char* hostVar, size_t size, hipDeviceptr_t devicePtr)
+                                            : hostVar_(hostVar), size_(size), devicePtr_(devicePtr) {
+  amd::Memory* amd_mem_obj = nullptr;
+  uint32_t flags = 0;
 
-thread_local std::stack<ihipExec_t> execStack_;
+  /* Create an amd Memory object for the pointer */
+  amd_mem_obj
+    = new (*hip::getCurrentContext()) amd::Buffer(*hip::getCurrentContext(), flags, size, devicePtr_);
 
-class PlatformState {
-  amd::Monitor lock_;
-private:
-  std::unordered_map<const void*, std::vector<hipFunction_t> > functions_;
-
-  struct RegisteredVar {
-    char* var;
-    char* hostVar;
-    char* deviceVar;
-    int   size;
-    bool  constant;
-  };
-
-  std::unordered_map<std::vector<hipModule_t>*, RegisteredVar> vars_;
-
-  static PlatformState* platform_;
-
-  PlatformState() : lock_("Guards global function map") {}
-  ~PlatformState() {}
-public:
-  static PlatformState& instance() {
-    return *platform_;
+  if (amd_mem_obj == nullptr) {
+    LogError("[OCL] failed to create a mem object!");
   }
 
-  void registerVar(std::vector<hipModule_t>* modules,
-                   char* var,
-                   char* hostVar,
-                   char* deviceVar,
-                   int   size,
-                   bool  constant) {
-    amd::ScopedLock lock(lock_);
-
-    const RegisteredVar rvar = { var, hostVar, deviceVar, size, constant != 0 };
-
-    vars_.insert(std::make_pair(modules, rvar));
+  if (!amd_mem_obj->create(nullptr)) {
+    LogError("[OCL] failed to create a svm hidden buffer!");
+    amd_mem_obj->release();
   }
 
-  void registerFunction(const void* hostFunction, const std::vector<hipFunction_t>& funcs) {
-    amd::ScopedLock lock(lock_);
+  /* Add the memory to the MemObjMap */
+  amd::MemObjMap::AddMemObj(devicePtr_, amd_mem_obj);
+}
 
-    functions_.insert(std::make_pair(hostFunction, funcs));
+void PlatformState::registerVar(const char* hostvar,
+                                const std::vector<RegisteredVar>& rvar) {
+  amd::ScopedLock lock(lock_);
+  vars_.insert(std::make_pair(hostvar, rvar));
+}
+
+void PlatformState::registerFunction(const void* hostFunction,
+                                     const std::vector<hipFunction_t>& funcs) {
+  amd::ScopedLock lock(lock_);
+  functions_.insert(std::make_pair(hostFunction, funcs));
+}
+
+hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
+  amd::ScopedLock lock(lock_);
+  const auto it = functions_.find(hostFunction);
+  if (it != functions_.cend()) {
+    return it->second[deviceId];
+  } else {
+    return nullptr;
+  }
+}
+
+bool PlatformState::getGlobalVar(const void* hostVar, int deviceId,
+                                 hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
+  amd::ScopedLock lock(lock_);
+  const auto it = vars_.find(hostVar);
+  if (it != vars_.cend()) {
+    *size_ptr = it->second[deviceId].getvarsize();
+    *dev_ptr = it->second[deviceId].getdeviceptr();
+    return true;
+  } else {
+    return false;
+  }
+}
+
+void PlatformState::setupArgument(const void *arg, size_t size, size_t offset) {
+  auto& arguments = execStack_.top().arguments_;
+
+  if (arguments.size() < offset + size) {
+    arguments.resize(offset + size);
   }
 
-  hipFunction_t getFunc(const void* hostFunction, int deviceId) {
-    amd::ScopedLock lock(lock_);
-    const auto it = functions_.find(hostFunction);
-    if (it != functions_.cend()) {
-      return it->second[deviceId];
-    } else {
-      return nullptr;
-    }
-  }
+  ::memcpy(&arguments[offset], arg, size);
+}
 
-  void setupArgument(const void *arg,
-                     size_t size,
-                     size_t offset) {
-    auto& arguments = execStack_.top().arguments_;
+void PlatformState::configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem,
+                                  hipStream_t stream) {
+  execStack_.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
+}
 
-    if (arguments.size() < offset + size) {
-      arguments.resize(offset + size);
-    }
-
-    ::memcpy(&arguments[offset], arg, size);
-  }
-
-  void configureCall(dim3 gridDim,
-                     dim3 blockDim,
-                     size_t sharedMem,
-                     hipStream_t stream) {
-    execStack_.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
-  }
-
-  void popExec(ihipExec_t& exec) {
-    exec = std::move(execStack_.top());
-    execStack_.pop();
-  }
-};
-PlatformState* PlatformState::platform_ = new PlatformState();
+void PlatformState::popExec(ihipExec_t& exec) {
+  exec = std::move(execStack_.top());
+  execStack_.pop();
+}
 
 extern "C" void __hipRegisterFunction(
   std::vector<hipModule_t>* modules,
@@ -248,7 +239,26 @@ extern "C" void __hipRegisterVar(
 {
   HIP_INIT();
 
-  PlatformState::instance().registerVar(modules, var, hostVar, deviceVar, size, constant != 0);
+  size_t sym_size = 0;
+  std::vector<PlatformState::RegisteredVar> global_vars{g_devices.size()};
+
+  for (size_t deviceId=0; deviceId < g_devices.size(); ++deviceId) {
+    hipDeviceptr_t device_ptr = nullptr;
+    if((hipSuccess == hipModuleGetGlobal(&device_ptr, &sym_size, modules->at(deviceId),
+                                         hostVar)) && (device_ptr != nullptr)) {
+
+      if (static_cast<size_t>(size) != sym_size) {
+        LogError("[OCL] Size Mismatch with the HSA Symbol retrieved \n");
+      }
+
+      global_vars[deviceId] = PlatformState::RegisteredVar(hostVar, sym_size, device_ptr);
+
+    } else {
+      LogError("[OCL] __hipRegisterVar cannot find kernel for device \n");
+    }
+  }
+
+  PlatformState::instance().registerVar(hostVar, global_vars);
 }
 
 extern "C" void __hipUnregisterFatBinary(std::vector<hipModule_t>* modules)
@@ -312,6 +322,22 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
     exec.gridDim_.x, exec.gridDim_.y, exec.gridDim_.z,
     exec.blockDim_.x, exec.blockDim_.y, exec.blockDim_.z,
     exec.sharedMem_, exec.hStream_, nullptr, extra));
+}
+
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
+  size_t size = 0;
+  if(!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), devPtr, &size)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbolName) {
+  hipDeviceptr_t devPtr = nullptr;
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &devPtr, sizePtr)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+  HIP_RETURN(hipSuccess);
 }
 
 #if defined(ATI_OS_LINUX)

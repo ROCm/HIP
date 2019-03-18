@@ -85,6 +85,59 @@ namespace hip {
     static Function* asFunction(hipFunction_t f) { return reinterpret_cast<Function*>(f); }
   };
 };
+
+struct ihipExec_t {
+  dim3 gridDim_;
+  dim3 blockDim_;
+  size_t sharedMem_;
+  hipStream_t hStream_;
+  std::vector<char> arguments_;
+};
+
+class PlatformState {
+  amd::Monitor lock_;
+
+public:
+  struct RegisteredVar {
+  public:
+    RegisteredVar(): hostVar_(nullptr), size_(0), devicePtr_(nullptr) {}
+    RegisteredVar(char* hostVar, size_t size, hipDeviceptr_t devicePtr);
+    ~RegisteredVar() {}
+
+    hipDeviceptr_t getdeviceptr() const { return devicePtr_; };
+    size_t getvarsize() const { return size_; };
+
+  private:
+    char*  hostVar_;            // Variable name in host code
+    size_t size_;               // Size of the variable
+    hipDeviceptr_t devicePtr_;  //Device Memory Address of the variable.
+  };
+
+private:
+  std::unordered_map<const void*, std::vector<hipFunction_t> > functions_;
+  std::unordered_map<const void*, std::vector<RegisteredVar> > vars_;
+
+  static PlatformState* platform_;
+
+  PlatformState() : lock_("Guards global function map") {}
+  ~PlatformState() {}
+public:
+  static PlatformState& instance() {
+    return *platform_;
+  }
+
+  void registerVar(const char* hostvar, const std::vector<RegisteredVar>& rvar);
+  void registerFunction(const void* hostFunction, const std::vector<hipFunction_t>& funcs);
+
+  hipFunction_t getFunc(const void* hostFunction, int deviceId);
+  bool getGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
+                    size_t* size_ptr);
+  void setupArgument(const void *arg, size_t size, size_t offset);
+  void configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
+
+  void popExec(ihipExec_t& exec);
+};
+
 extern std::vector<amd::Context*> g_devices;
 extern hipError_t ihipDeviceGetCount(int* count);
 extern int ihipGetDevice();
