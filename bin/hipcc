@@ -196,8 +196,10 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPLDFLAGS .= " $HIP_DEVLIB_FLAGS -L$HIP_LIB_PATH";
     if (not $isWindows) {
       $HIPLDFLAGS .= " -Wl,--rpath=$HIP_LIB_PATH";
+      $HIPLDFLAGS .= " -lhip_hcc";
+    } else {
+      $HIPLDFLAGS .= " -lamdhip64";
     }
-    $HIPLDFLAGS .= " -lhip_hcc";
     if ($HIP_CLANG_HCC_COMPAT_MODE) {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
