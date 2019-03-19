@@ -77,7 +77,7 @@ HIP code provides the same performance as native CUDA code, plus the benefits of
 HIP APIs and features do not map to a specific CUDA version. HIP provides a strong subset of functionality provided in CUDA, and the hipify tools can 
 scan code to identify any unsupported CUDA functions - this is useful for identifying the specific features required by a given application.
 
-However, we can provide a rough summary of the features included in each CUDA SDK and the support level in HIP:
+However, we can provide a rough summary of the features included in each CUDA SDK and the support level in HIP. Each bullet below lists the major new language features in each CUDA release and then indicate which are supported/not supported in HIP:
 
 - CUDA 4.0 and earlier :  
     - HIP supports CUDA 4.0 except for the limitations described above.
