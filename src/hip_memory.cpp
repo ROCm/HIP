@@ -264,6 +264,37 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags) {
+    HIP_INIT_SPECIAL_API(hipExtMallocWithFlags, (TRACE_MEM), ptr, sizeBytes, flags);
+    HIP_SET_DEVICE();
+    hipError_t hip_status = hipSuccess;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    // return NULL pointer when malloc size is 0
+    if (sizeBytes == 0) {
+        *ptr = NULL;
+        hip_status = hipSuccess;
+    } else if ((ctx == nullptr) || (ptr == nullptr)) {
+        hip_status = hipErrorInvalidValue;
+    } else {
+        unsigned amFlags = 0;
+        if (flags & hipDeviceMallocFinegrained) {
+            amFlags = amDeviceFinegrained;
+        } else if (flags != hipDeviceMallocDefault) {
+            hip_status = hipErrorInvalidValue;
+            return ihipLogStatus(hip_status);
+        }
+        auto device = ctx->getWriteableDevice();
+        *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx, false /*shareWithAll*/,
+                                              amFlags /*amFlags*/, 0 /*hipFlags*/, 0);
+
+        if (sizeBytes && (*ptr == NULL)) {
+            hip_status = hipErrorMemoryAllocation;
+        }
+    }
+
+    return ihipLogStatus(hip_status);
+}
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);

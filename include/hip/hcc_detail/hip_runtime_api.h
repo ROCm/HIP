@@ -173,6 +173,8 @@ enum hipLimit_t {
     0x80000000  ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
                 ///< allocation.
 
+#define hipDeviceMallocDefault 0x0
+#define hipDeviceMallocFinegrained 0x1  ///< Memory is allocated in fine grained region of device.
 
 //! Flags that can be used with hipHostRegister
 #define hipHostRegisterDefault 0x0   ///< Memory is Mapped and Portable
@@ -1050,6 +1052,22 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
  * hipHostFree, hipHostMalloc
  */
 hipError_t hipMalloc(void** ptr, size_t size);
+
+/**
+ *  @brief Allocate memory on the default accelerator
+ *
+ *  @param[out] ptr Pointer to the allocated memory
+ *  @param[in]  size Requested memory size
+ *  @param[in]  flags Type of memory allocation
+ *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation, #hipErrorInvalidValue (bad context, null *ptr)
+ *
+ *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray,
+ * hipHostFree, hipHostMalloc
+ */
+hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags);
 
 /**
  *  @brief Allocate pinned host memory [Deprecated]
