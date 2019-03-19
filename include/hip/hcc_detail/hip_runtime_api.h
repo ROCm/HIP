@@ -1377,11 +1377,10 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
 
-#if !__HIP_VDI__
-__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
 
+#if !__HIP_VDI__
 /**
  *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
  *
