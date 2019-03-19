@@ -58,6 +58,9 @@ struct __ClangOffloadBundleHeader {
   __ClangOffloadBundleDesc desc[1];
 };
 
+hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
+    hipModule_t hmod, const char* name);
+
 extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
 {
   HIP_INIT();
