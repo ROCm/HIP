@@ -123,7 +123,7 @@ def parse_api(inp_file_p, out):
   inp.close()
   line_num = -1
 #############################################################
-# Patching API implementation
+# Parsing API implementation
 # hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset) {
 #    HIP_INIT_CB(hipSetupArgument, arg, size, offset);
 # inp_file - input implementation source file
