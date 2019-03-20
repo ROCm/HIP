@@ -1,24 +1,35 @@
 #!/usr/bin/python
 import os, sys, re
 
-verbose = 0
 PROF_HEADER = "hip_prof_str.h"
 OUTPUT = PROF_HEADER
 REC_MAX_LEN = 1024
 
-# Fatal error termination
+# Messages and errors controll
+verbose = 0
+errexit = 0
 inp_file = 'none'
 line_num = -1
-def fatal(msg):
-  if line_num != -1:
-    msg += ", file '" + inp_file + "', line (" + str(line_num) + ")"
-  print >>sys.stdout, "Error: " + msg
-  print >>sys.stderr, sys.argv[0] + " fatal error: " + msg
-  sys.exit(1)
 
 # Verbose message
 def message(msg):
   if verbose: print >>sys.stdout, msg
+
+# Fatal error termination
+def error(msg):
+  if line_num != -1:
+    msg += ", file '" + inp_file + "', line (" + str(line_num) + ")"
+  if errexit:
+    msg = " Error: " + msg
+  else:
+    msg = " Warning: " + msg
+
+  print >>sys.stdout, msg
+  print >>sys.stderr, sys.argv[0] + msg
+
+def fatal(msg):
+  error(msg)
+  if errexit: sys.exit(1)
 
 #############################################################
 # Normalizing API arguments
@@ -403,6 +414,10 @@ if (len(sys.argv) > 1) and (sys.argv[1] == '-v'):
   verbose = 1
   sys.argv.pop(1)
 
+if (len(sys.argv) > 1) and (sys.argv[1] == '-e'):
+  errexit = 1
+  sys.argv.pop(1)
+
 if (len(sys.argv) < 3):
   fatal ("Usage: " + sys.argv[0] + " [-v] <input HIP API .h file> <patched srcs path>\n" +
          "  -v - verbose messages\n" +
@@ -450,10 +465,10 @@ if len(opts_map) != 0:
     args_str = api_map[name];
     api_map[name] = list_api_args(args_str)
     if not name in opts_map:
-      fatal("not found: " + name)
+      error("not found: " + name)
       not_found += 1
 if not_found != 0:
-  fatal(not_found + " API calls not found")
+  fatal(str(not_found) + " API calls not found")
 
 # Generating output header file
 with open(OUTPUT, 'w') as f:
