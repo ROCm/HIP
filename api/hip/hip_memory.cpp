@@ -1438,7 +1438,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
   int device = 0;
 
   if (memObj != nullptr) {
-    attributes->memoryType = (CL_MEM_SVM_FINE_GRAIN_BUFFER | memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
+    attributes->memoryType = (CL_MEM_SVM_FINE_GRAIN_BUFFER & memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
     attributes->hostPointer = memObj->getSvmPtr();
     attributes->devicePointer = memObj->getSvmPtr();
     attributes->isManaged = 0;
