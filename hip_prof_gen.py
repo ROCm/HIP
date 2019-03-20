@@ -11,9 +11,9 @@ inp_file = 'none'
 line_num = -1
 def fatal(msg):
   if line_num != -1:
-    print >>sys.stdout, "Error: " + msg + ", file '" + inp_file + "', line (" + str(line_num) + ")"
-  else:
-    print >>sys.stdout, "Error: " + msg
+    msg += ", file '" + inp_file + "', line (" + str(line_num) + ")"
+  print >>sys.stdout, "Error: " + msg
+  print >>sys.stderr, sys.argv[0] + " fatal error: " + msg
   sys.exit(1)
 
 # Verbose message
