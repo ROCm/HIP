@@ -1438,11 +1438,11 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
   int device = 0;
 
   if (memObj != nullptr) {
-    attributes->memoryType = hipMemoryTypeDevice;
+    attributes->memoryType = (CL_MEM_SVM_FINE_GRAIN_BUFFER | memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
     attributes->hostPointer = memObj->getSvmPtr();
     attributes->devicePointer = memObj->getSvmPtr();
     attributes->isManaged = 0;
-    attributes->allocationFlags = memObj->getMemFlags();
+    attributes->allocationFlags = memObj->getMemFlags() >> 16;
   
     amd::Context &memObjCtx = memObj->getContext();
     for (auto& ctx : g_devices) {
