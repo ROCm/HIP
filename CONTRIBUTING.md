@@ -80,7 +80,7 @@ For applications and benchmarks outside the directed test environment, developme
 ## Environment Variables
 - **HIP_PATH** : Location of HIP include, src, bin, lib directories.  
 - **HCC_HOME** : Path to HCC compiler.  Default /opt/rocm/hcc.
-- **HSA_PATH** : Path to HSA include, lib.  Default /opt/rocm/hsa.
+- **HSA_PATH** : Path to HSA include, lib.  Default /opt/rocm.
 - **CUDA_PATH* : On nvcc system, this points to root of CUDA installation.
 
 ### Contribution guidelines ###

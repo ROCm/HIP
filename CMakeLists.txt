@@ -117,7 +117,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     # Determine HSA_PATH
     if(NOT DEFINED HSA_PATH)
         if(NOT DEFINED ENV{HSA_PATH})
-            set(HSA_PATH "/opt/rocm/hsa" CACHE PATH "Path to which HSA runtime has been installed")
+            set(HSA_PATH "/opt/rocm" CACHE PATH "Path to which HSA runtime has been installed")
         else()
             set(HSA_PATH $ENV{HSA_PATH} CACHE PATH "Path to which HSA runtime has been installed")
         endif()

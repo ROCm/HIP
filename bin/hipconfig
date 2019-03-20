@@ -73,7 +73,7 @@ sub can_run {
 
 $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
 $HCC_HOME=$ENV{'HCC_HOME'} // '/opt/rocm/hcc';
-$HSA_PATH=$ENV{'HSA_PATH'} // '/opt/rocm/hsa';
+$HSA_PATH=$ENV{'HSA_PATH'} // '/opt/rocm';
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:

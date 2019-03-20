@@ -23,7 +23,7 @@ use Cwd 'abs_path';
 # HIP_PATH  : Path to HIP directory, default is one dir level above location of this script
 # CUDA_PATH : Path to CUDA SDK (default /usr/local/cuda). Used on NVIDIA platforms only.
 # HCC_HOME  : Path to HCC SDK (default /opt/rocm/hcc).  Used on AMD platforms only.
-# HSA_PATH  : Path to HSA dir (default /opt/rocm/hsa).  Used on AMD platforms only.
+# HSA_PATH  : Path to HSA dir (default /opt/rocm).  Used on AMD platforms only.
 # HIP_VDI_HOME : Path to HIP/VDI directory. Used on AMD platforms only.
 
 if(scalar @ARGV == 0){
@@ -209,7 +209,7 @@ if ($HIP_PLATFORM eq "clang") {
     if (! defined $HIP_LIB_PATH) {
         $HIP_LIB_PATH = "$HIP_PATH/lib";
     }
-    $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
+    $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm";
 
     $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "/opt/rocm/hcc";
 

@@ -45,16 +45,16 @@ set(_IMPORT_PREFIX "/opt/rocm/hip")
 add_library(hip::hip_hcc_static STATIC IMPORTED)
 
 set_target_properties(hip::hip_hcc_static PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/include"
 )
 
 # Create imported target hip::hip_hcc
 add_library(hip::hip_hcc SHARED IMPORTED)
 
 set_target_properties(hip::hip_hcc PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/include"
 )
 
 # Create imported target hip::host
