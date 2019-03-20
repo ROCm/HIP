@@ -168,9 +168,10 @@ set(PROF_API_STR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_prof_st
 set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
+set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
 add_custom_command(
     OUTPUT ${PROF_API_STR}
-    COMMAND ${PROF_API_GEN} ${OPT_PROF_API} ${PROF_API_HDR} ${PROF_API_SRC} ${PROF_API_STR}
+    COMMAND ${PROF_API_GEN} -v ${PROF_API_HDR} ${PROF_API_SRC} ${PROF_API_STR} >${PROF_API_LOG}
     DEPENDS ${PROF_API_GEN} ${PROF_API_HDR}
 )
 add_custom_target(prof ALL DEPENDS ${PROF_API_STR})

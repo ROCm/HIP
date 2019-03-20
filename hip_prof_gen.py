@@ -11,9 +11,9 @@ inp_file = 'none'
 line_num = -1
 def fatal(msg):
   if line_num != -1:
-    print >>sys.stderr, "Error: " + msg + ", file '" + inp_file + "', line (" + str(line_num) + ")"
+    print >>sys.stdout, "Error: " + msg + ", file '" + inp_file + "', line (" + str(line_num) + ")"
   else:
-    print >>sys.stderr, "Error: " + msg
+    print >>sys.stdout, "Error: " + msg
   sys.exit(1)
 
 # Verbose message
@@ -77,7 +77,7 @@ def parse_api(inp_file_p, out):
   global line_num
   inp_file = inp_file_p
 
-  beg_pattern = re.compile("^(hipError_t|const char\s*\*)\s+[^\(]+\(");
+  beg_pattern = re.compile("^(hipError_t|const char\s*\*)\s+([^\(]+)\(");
   api_pattern = re.compile("^(hipError_t|const char\s*\*)\s+([^\(]+)\(([^\)]*)\)");
   end_pattern = re.compile("Texture");
   hidden_pattern = re.compile(r'__attribute__\(\(visibility\("hidden"\)\)\)')
@@ -99,7 +99,16 @@ def parse_api(inp_file_p, out):
     if len(record) > REC_MAX_LEN:
       fatal("bad record \"" + record + "\"")
 
-    if beg_pattern.match(record) and (hidden == 0) and (nms_level == 0): found = 1
+    m = beg_pattern.match(line)
+    if m:
+      name = m.group(2)
+      if hidden != 0:
+        message("api: " + name + " - hidden")
+      elif nms_level != 0:
+        message("api: " + name + " - hip_impl")
+      else:
+        message("api: " + name)
+        found = 1
 
     if found != 0:
       record = re.sub("\s__dparm\([^\)]*\)", '', record);
@@ -206,7 +215,7 @@ def parse_content(inp_file_p, api_map, out):
           else:
             # Warning about mismatched API, possible non public overloaded version
             api_diff = '\t\t' + inp_file + " line(" + str(line_num) + ")\n\t\tapi: " + api_types + "\n\t\teta: " + eta_types
-            message("\t" + api_name + ':\n' + api_diff + '\n')
+            message("\t" + api_name + ' args mismatch:\n' + api_diff + '\n')
 
     # API found action
     if found == 2:
