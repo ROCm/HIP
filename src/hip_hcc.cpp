@@ -119,9 +119,6 @@ int HCC_OPT_FLUSH = 1;
 int HCC_OPT_FLUSH = 0;
 #endif
 
-
-std::once_flag hip_initialized;
-
 // Array of pointers to devices.
 ihipDevice_t** g_deviceArray;
 
@@ -1442,6 +1439,15 @@ void ihipInit() {
             g_numLogicalThreads);
 }
 
+namespace hip_impl {
+hipError_t hip_init() {
+  static std::once_flag hip_initialized;
+  std::call_once(hip_initialized, ihipInit);
+  ihipCtxStackUpdate();
+  return hipSuccess;
+}
+}
+
 hipError_t ihipStreamSynchronize(hipStream_t stream) {
     hipError_t e = hipSuccess;
 
@@ -1561,7 +1567,6 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
@@ -1583,7 +1588,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;
@@ -1604,7 +1608,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, gri
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
@@ -1625,7 +1628,6 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, gri
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    HIP_INIT();
     stream = ihipSyncAndResolveStream(stream);
     lp->grid_dim.x = grid;
     lp->grid_dim.y = 1;

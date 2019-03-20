@@ -43,7 +43,7 @@ void __hipDumpCodeObject(const std::string& image) {
 const void* __hipExtractCodeObjectFromFatBinary(const void* data,
     const char* agent_name)
 {
-  HIP_INIT();
+  hip_impl::hip_init();
 
   tprintf(DB_FB, "Enter __hipExtractCodeObjectFromFatBinary(%p, \"%s\")\n",
       data, agent_name);

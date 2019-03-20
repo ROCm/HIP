@@ -259,7 +259,7 @@ __device__ static inline unsigned __hip_ds_swizzle_N(unsigned int src) {
 }
 
 template <int pattern>
-__device__ static inline float __hip_ds2_swizzlef_N(float src) {
+__device__ static inline float __hip_ds_swizzlef_N(float src) {
     union { int i; unsigned u; float f; } tmp; tmp.f = src;
     tmp.i = __builtin_amdgcn_ds_swizzle(tmp.i, pattern);
     return tmp.f;
@@ -269,7 +269,7 @@ __device__ static inline float __hip_ds2_swizzlef_N(float src) {
   __hip_move_dpp_N<(dpp_ctrl), (row_mask), (bank_mask), (bound_ctrl)>((src))
 
 template <int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl>
-__device__ static inline int __hip2_move_dpp_N(int src) {
+__device__ static inline int __hip_move_dpp_N(int src) {
     return __llvm_amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask,
                                   bound_ctrl);
 }
