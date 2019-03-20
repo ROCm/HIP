@@ -54,7 +54,7 @@ void syncStreams() {
 
 };
 
-void ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data) {
+void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data) {
 
   hipError_t status = hipSuccess;
   StreamCallback* cbo = reinterpret_cast<StreamCallback*>(user_data);
