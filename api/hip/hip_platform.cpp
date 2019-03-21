@@ -240,6 +240,7 @@ extern "C" void __hipRegisterVar(
   int         constant,  // Whether this variable is constant
   int         global)    // Unknown, always 0
 {
+#if 0
   HIP_INIT();
 
   size_t sym_size = 0;
@@ -262,6 +263,7 @@ extern "C" void __hipRegisterVar(
   }
 
   PlatformState::instance().registerVar(hostVar, global_vars);
+#endif
 }
 
 extern "C" void __hipUnregisterFatBinary(std::vector<hipModule_t>* modules)
