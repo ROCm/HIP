@@ -1419,7 +1419,6 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
                                     hipMemcpyKind kind,
                                     hipStream_t stream __dparm(0));
 #else
-__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
 
@@ -2710,20 +2709,8 @@ extern "C" {
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
-inline
-__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
-                              hipModule_t hmod, const char* name) {
-    if (!dptr || !bytes) return hipErrorInvalidValue;
-
-    if (!name) return hipErrorNotInitialized;
-
-    const auto r = hmod ?
-        hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name) :
-        hip_impl::read_agent_global_from_process(dptr, bytes, name);
-
-    return r;
-}
+                              hipModule_t hmod, const char* name);
 #endif // __HIP_VDI__
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);

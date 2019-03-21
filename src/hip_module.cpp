@@ -282,6 +282,19 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, 0));
 }
 
+hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
+                              hipModule_t hmod, const char* name) {
+    if (!dptr || !bytes) return hipErrorInvalidValue;
+
+    if (!name) return hipErrorNotInitialized;
+
+    const auto r = hmod ?
+        hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name) :
+        hip_impl::read_agent_global_from_process(dptr, bytes, name);
+
+    return r;
+}
+
 namespace hip_impl {
     hsa_executable_t executable_for(hipModule_t hmod) {
         return hmod->executable;
