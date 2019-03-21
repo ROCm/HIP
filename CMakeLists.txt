@@ -171,15 +171,8 @@ set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
 set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
 set(PROF_API_CMD "${PROF_API_GEN} -v ${OPT_PROF_API} ${PROF_API_HDR} ${PROF_API_SRC} ${PROF_API_STR} >${PROF_API_LOG}")
 MESSAGE(STATUS "Generating profiling promitives:")
-execute_process(
-  COMMAND sh -xc "rm -f ${PROF_API_STR}"
-  COMMAND sh -xc "${PROF_API_CMD}"
-)
-add_custom_target(prof)
-add_custom_command(
-  TARGET prof
-  COMMAND sh -xc "${PROF_API_CMD}"
-)
+execute_process(COMMAND sh -c "rm -f ${PROF_API_STR}; ${PROF_API_CMD}")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${PROF_API_GEN} ${PROF_API_HDR} ${PROF_API_STR})
 
 # Enable profiling API
 if(USE_PROF_API EQUAL 1)
