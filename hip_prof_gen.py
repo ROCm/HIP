@@ -465,10 +465,10 @@ if len(opts_map) != 0:
     args_str = api_map[name];
     api_map[name] = list_api_args(args_str)
     if not name in opts_map:
-      error("not found: " + name)
+      error("implementation not found: " + name)
       not_found += 1
 if not_found != 0:
-  fatal(str(not_found) + " API calls not found")
+  fatal(str(not_found) + " API calls missing in interception layer")
 
 # Generating output header file
 with open(OUTPUT, 'w') as f:
