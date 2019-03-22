@@ -190,10 +190,13 @@ __device__ float __hip_ds_bpermutef(int index, float src);
 __device__ unsigned __hip_ds_permute(int index, unsigned src);
 __device__ float __hip_ds_permutef(int index, float src);
 
-__device__ unsigned __hip_ds_swizzle(unsigned int src, int pattern);
-__device__ float __hip_ds_swizzlef(float src, int pattern);
+template <int pattern>
+__device__ unsigned __hip_ds_swizzle_N(unsigned int src);
+template <int pattern>
+__device__ float __hip_ds_swizzlef_N(float src);
 
-__device__ int __hip_move_dpp(int src, int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl);
+template <int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl>
+__device__ int __hip_move_dpp_N(int src);
 
 #endif  //__HIP_ARCH_GFX803__ == 1
 
@@ -331,18 +334,15 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 typedef int hipLaunchParm;
 
-template <typename... Args, typename F = void (*)(Args...)>
-inline void hipLaunchKernelGGL(F&& kernelName, const dim3& numblocks, const dim3& numthreads,
-                               unsigned memperblock, hipStream_t streamId, Args... args) {
-  kernelName<<<numblocks, numthreads, memperblock, streamId>>>(args...);
-}
+#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)             \
+    do {                                                                                           \
+        kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(hipLaunchParam{}, ##__VA_ARGS__); \
+    } while (0)
 
-template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
-inline void hipLaunchKernel(F&& kernel, const dim3& numBlocks, const dim3& dimBlocks,
-                            std::uint32_t groupMemBytes, hipStream_t stream, Args... args) {
-    hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
-                       std::move(args)...);
-}
+#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
+    do {                                                                                           \
+        kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(__VA_ARGS__);         \
+    } while (0)
 
 #include <hip/hip_runtime_api.h>
 

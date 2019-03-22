@@ -46,7 +46,7 @@ __device__ static inline unsigned int __popcll(unsigned long long int input) {
 }
 
 __device__ static inline int __clz(int input) {
-  return __ockl_clz_u32((uint)input);
+    return __ockl_clz_u32((uint)input);
 }
 
 __device__ static inline int __clzll(long long int input) {
@@ -224,56 +224,59 @@ __device__ static inline unsigned int __lane_id() { return  __mbcnt_hi(-1, __mbc
 HIP specific device functions
 */
 
-// utility union type
-union __u {
-    int i;
-    unsigned int u;
-    float f;
-};
-
 __device__ static inline unsigned __hip_ds_bpermute(int index, unsigned src) {
-    __u tmp; tmp.u = src;
+    union { int i; unsigned u; float f; } tmp; tmp.u = src;
     tmp.i = __llvm_amdgcn_ds_bpermute(index, tmp.i);
     return tmp.u;
 }
 
 __device__ static inline float __hip_ds_bpermutef(int index, float src) {
-    __u tmp; tmp.f = src;
+    union { int i; unsigned u; float f; } tmp; tmp.f = src;
     tmp.i = __llvm_amdgcn_ds_bpermute(index, tmp.i);
     return tmp.f;
 }
 
 __device__ static inline unsigned __hip_ds_permute(int index, unsigned src) {
-  __u tmp; tmp.u = src;
-  tmp.i = __llvm_amdgcn_ds_permute(index, tmp.i);
-  return tmp.u;
+    union { int i; unsigned u; float f; } tmp; tmp.u = src;
+    tmp.i = __llvm_amdgcn_ds_permute(index, tmp.i);
+    return tmp.u;
 }
 
 __device__ static inline float __hip_ds_permutef(int index, float src) {
-  __u tmp; tmp.u = src;
-  tmp.i = __llvm_amdgcn_ds_permute(index, tmp.i);
-  return tmp.u;
-}
-
-__device__ static inline unsigned __hip_ds_swizzle(unsigned int src, int pattern) {
-    __u tmp; tmp.u = src;
-    tmp.i = __llvm_amdgcn_ds_swizzle(tmp.i, pattern);
+    union { int i; unsigned u; float f; } tmp; tmp.u = src;
+    tmp.i = __llvm_amdgcn_ds_permute(index, tmp.i);
     return tmp.u;
 }
-__device__ static inline float __hip_ds_swizzlef(float src, int pattern) {
-    __u tmp; tmp.f = src;
-    tmp.i = __llvm_amdgcn_ds_swizzle(tmp.i, pattern);
+
+#define __hip_ds_swizzle(src, pattern)  __hip_ds_swizzle_N<(pattern)>((src))
+#define __hip_ds_swizzlef(src, pattern) __hip_ds_swizzlef_N<(pattern)>((src))
+
+template <int pattern>
+__device__ static inline unsigned __hip_ds_swizzle_N(unsigned int src) {
+    union { int i; unsigned u; float f; } tmp; tmp.u = src;
+    tmp.i = __builtin_amdgcn_ds_swizzle(tmp.i, pattern);
+    return tmp.u;
+}
+
+template <int pattern>
+__device__ static inline float __hip_ds_swizzlef_N(float src) {
+    union { int i; unsigned u; float f; } tmp; tmp.f = src;
+    tmp.i = __builtin_amdgcn_ds_swizzle(tmp.i, pattern);
     return tmp.f;
 }
 
-__device__ static inline int __hip_move_dpp(int src, int dpp_ctrl, int row_mask,
-                                            int bank_mask, bool bound_ctrl) {
-    return __llvm_amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl);
+#define __hip_move_dpp(src, dpp_ctrl, row_mask, bank_mask, bound_ctrl) \
+  __hip_move_dpp_N<(dpp_ctrl), (row_mask), (bank_mask), (bound_ctrl)>((src))
+
+template <int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl>
+__device__ static inline int __hip_move_dpp_N(int src) {
+    return __llvm_amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask,
+                                  bound_ctrl);
 }
 
 static constexpr int warpSize = 64;
 
- __device__
+__device__
 inline
 int __shfl(int var, int src_lane, int width = warpSize) {
     int self = __lane_id();
@@ -283,14 +286,14 @@ int __shfl(int var, int src_lane, int width = warpSize) {
 __device__
 inline
 unsigned int __shfl(unsigned int var, int src_lane, int width = warpSize) {
-     __u tmp; tmp.u = var;
+     union { int i; unsigned u; float f; } tmp; tmp.u = var;
     tmp.i = __shfl(tmp.i, src_lane, width);
     return tmp.u;
 }
 __device__
 inline
 float __shfl(float var, int src_lane, int width = warpSize) {
-    __u tmp; tmp.f = var;
+    union { int i; unsigned u; float f; } tmp; tmp.f = var;
     tmp.i = __shfl(tmp.i, src_lane, width);
     return tmp.f;
 }
@@ -320,14 +323,14 @@ int __shfl_up(int var, unsigned int lane_delta, int width = warpSize) {
 __device__
 inline
 unsigned int __shfl_up(unsigned int var, unsigned int lane_delta, int width = warpSize) {
-    __u tmp; tmp.u = var;
+    union { int i; unsigned u; float f; } tmp; tmp.u = var;
     tmp.i = __shfl_up(tmp.i, lane_delta, width);
     return tmp.u;
 }
 __device__
 inline
 float __shfl_up(float var, unsigned int lane_delta, int width = warpSize) {
-    __u tmp; tmp.f = var;
+    union { int i; unsigned u; float f; } tmp; tmp.f = var;
     tmp.i = __shfl_up(tmp.i, lane_delta, width);
     return tmp.f;
 }
@@ -357,14 +360,14 @@ int __shfl_down(int var, unsigned int lane_delta, int width = warpSize) {
 __device__
 inline
 unsigned int __shfl_down(unsigned int var, unsigned int lane_delta, int width = warpSize) {
-    __u tmp; tmp.u = var;
+    union { int i; unsigned u; float f; } tmp; tmp.u = var;
     tmp.i = __shfl_down(tmp.i, lane_delta, width);
     return tmp.u;
 }
 __device__
 inline
 float __shfl_down(float var, unsigned int lane_delta, int width = warpSize) {
-    __u tmp; tmp.f = var;
+    union { int i; unsigned u; float f; } tmp; tmp.f = var;
     tmp.i = __shfl_down(tmp.i, lane_delta, width);
     return tmp.f;
 }
@@ -394,14 +397,14 @@ int __shfl_xor(int var, int lane_mask, int width = warpSize) {
 __device__
 inline
 unsigned int __shfl_xor(unsigned int var, int lane_mask, int width = warpSize) {
-    __u tmp; tmp.u = var;
+    union { int i; unsigned u; float f; } tmp; tmp.u = var;
     tmp.i = __shfl_xor(tmp.i, lane_mask, width);
     return tmp.u;
 }
 __device__
 inline
 float __shfl_xor(float var, int lane_mask, int width = warpSize) {
-    __u tmp; tmp.f = var;
+    union { int i; unsigned u; float f; } tmp; tmp.f = var;
     tmp.i = __shfl_xor(tmp.i, lane_mask, width);
     return tmp.f;
 }
@@ -681,9 +684,9 @@ inline  __attribute((always_inline))
 long long int __clock64() {
 // ToDo: Unify HCC and HIP implementation.
 #if __HCC__
-  return (long long int) __clock_u64();
+    return (long long int) __clock_u64();
 #else
-  return (long long int) __builtin_amdgcn_s_memrealtime();
+    return (long long int) __builtin_amdgcn_s_memrealtime();
 #endif
 }
 
@@ -881,7 +884,7 @@ __device__
 inline
 __attribute__((weak))
 void abort() {
-  return __builtin_trap();
+    return __builtin_trap();
 }
 
 

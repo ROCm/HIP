@@ -78,6 +78,10 @@ THE SOFTWARE.
   #define __dparm(x)
 #endif
 
+namespace hip_impl {
+hipError_t hip_init();
+}  // namespace hip_impl
+
 // Structure definitions:
 #ifdef __cplusplus
 extern "C" {
@@ -1377,7 +1381,26 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
 
-#if !__HIP_VDI__
+#if __HIP_VDI__
+hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
+    hipModule_t hmod, const char* name);
+
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName);
+hipError_t hipGetSymbolSize(size_t* size, const void* symbolName);
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
+                             size_t sizeBytes, size_t offset __dparm(0),
+                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
+                                  size_t sizeBytes, size_t offset,
+                                  hipMemcpyKind kind, hipStream_t stream __dparm(0));
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
+                               size_t sizeBytes, size_t offset __dparm(0),
+                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
+                                    size_t sizeBytes, size_t offset,
+                                    hipMemcpyKind kind,
+                                    hipStream_t stream __dparm(0));
+#else
 __attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
@@ -1396,7 +1419,7 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
-
+    hip_impl::hip_init();
     size_t size = 0;
     return hipModuleGetGlobal(devPtr, &size, 0, (const char*)symbolName);
 }
@@ -1416,7 +1439,7 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
-
+    hip_impl::hip_init();
     void* devPtr = nullptr;
     return hipModuleGetGlobal(&devPtr, size, 0, (const char*)symbolName);
 }

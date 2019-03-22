@@ -288,19 +288,13 @@ extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
 #define API_TRACE(IS_CMD, ...) tls_tidInfo.incApiSeqNum();
 #endif
 
-
-// Just initialize the HIP runtime, but don't log any trace information.
-#define HIP_INIT()                                                                                 \
-    std::call_once(hip_initialized, ihipInit);                                                     \
-    ihipCtxStackUpdate();
 #define HIP_SET_DEVICE() ihipDeviceSetState();
-
 
 // This macro should be called at the beginning of every HIP API.
 // It initializes the hip runtime (exactly once), and
 // generates a trace string that can be output to stderr or to ATP file.
 #define HIP_INIT_API(cid, ...)                                                                     \
-    HIP_INIT()                                                                                     \
+    hip_impl::hip_init();                                                                                    \
     API_TRACE(0, __VA_ARGS__);                                                                     \
     HIP_CB_SPAWNER_OBJECT(cid);
 
@@ -309,7 +303,7 @@ extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
 // Replace HIP_INIT_API with this call inside HIP APIs that launch work on the GPU:
 // kernel launches, copy commands, memory sets, etc.
 #define HIP_INIT_SPECIAL_API(cid, tbit, ...)                                                       \
-    HIP_INIT()                                                                                     \
+    hip_impl::hip_init();                                                                                    \
     API_TRACE((HIP_TRACE_API & (1 << tbit)), __VA_ARGS__);                                         \
     HIP_CB_SPAWNER_OBJECT(cid);
 
@@ -933,7 +927,6 @@ class ihipCtx_t {
 
 //=================================================================================================
 // Global variable definition:
-extern std::once_flag hip_initialized;
 extern unsigned g_deviceCnt;
 extern hsa_agent_t g_cpu_agent;   // the CPU agent.
 extern hsa_agent_t* g_allAgents;  // CPU agents + all the visible GPU agents.
