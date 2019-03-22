@@ -284,6 +284,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
                               hipModule_t hmod, const char* name) {
+    HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
     if (!dptr || !bytes) return hipErrorInvalidValue;
 
     if (!name) return hipErrorNotInitialized;
