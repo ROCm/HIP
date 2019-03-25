@@ -1132,6 +1132,30 @@ std::string HIP_DB_callback(void* var_ptr, const char* envVarString) {
 }
 
 
+// Return all visible accelerators according to HIP_VISIBLE_DEVICES.
+// If HIP_VISIBLE_DEVICES was not set, this returns all accelerators.
+static inline std::vector<hc::accelerator> visible_accelerators() {
+    std::vector<hc::accelerator> r{};
+    int accelerator_index = 0;
+    for (auto&& acc : hc::accelerator::get_all()) {
+        const auto agent = acc.get_hsa_agent();
+
+        if (!agent || !acc.is_hsa_accelerator()) continue;
+
+        // We know agent is an accelerator.
+        // If HIP_VISIBLE_DEVICES was set, and if device is not in visible devices list, ignore.
+        // Post increment accelerator_index.
+        if (g_visible_device &&
+                std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), accelerator_index++) ==
+                g_hip_visible_devices.end()) continue;
+
+        r.emplace_back(acc);
+    }
+
+    return r;
+}
+
+
 // Callback used to process list of visible devices.
 std::string HIP_VISIBLE_DEVICES_callback(void* var_ptr, const char* envVarString) {
     // Parse the string stream of env and store the device ids to g_hip_visible_devices global
@@ -1381,11 +1405,9 @@ void ihipInit() {
     /*
      * Build a table of valid compute devices.
      */
-    auto accs = hc::accelerator::get_all();
-
     int deviceCnt = 0;
-    for (int i = 0; i < accs.size(); i++) {
-        if (!accs[i].get_is_emulated()) {
+    for (auto&& acc : hc::accelerator::get_all()) {
+        if (!acc.get_is_emulated()) {
             deviceCnt++;
         }
     };
@@ -1407,18 +1429,9 @@ void ihipInit() {
 
     g_deviceArray = new ihipDevice_t*[deviceCnt];
     g_deviceCnt = 0;
-    for (int i = 0; i < accs.size(); i++) {
-        // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
-        if (!accs[i].get_is_emulated()) {
-            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i - 1)) ==
-                    g_hip_visible_devices.end() &&
-                g_visible_device) {
-                // If device is not in visible devices list, ignore
-                continue;
-            }
-            g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
-            g_deviceCnt++;
-        }
+    for (auto&& acc : visible_accelerators()) {
+        g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, acc);
+        g_deviceCnt++;
     }
 
     g_allAgents = static_cast<hsa_agent_t*>(malloc((g_deviceCnt + 1) * sizeof(hsa_agent_t)));
@@ -2467,20 +2480,10 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 namespace hip_impl {
     std::vector<hsa_agent_t> all_hsa_agents() {
         std::vector<hsa_agent_t> r{};
-        auto accelerators = hc::accelerator::get_all();
-        for (int i = 0; i < accelerators.size(); i++) {
-            auto&& acc = accelerators[i];
+        for (auto&& acc : visible_accelerators()) {
             const auto agent = acc.get_hsa_agent();
-
-            if (!agent || !acc.is_hsa_accelerator()) continue;
-
-            // If device is not in visible devices list, ignore
-            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i - 1)) ==
-                    g_hip_visible_devices.end()) continue;
-
             r.emplace_back(*static_cast<hsa_agent_t*>(agent));
         }
-
         return r;
     }
 
