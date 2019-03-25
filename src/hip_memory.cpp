@@ -267,6 +267,8 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
 hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags) {
     HIP_INIT_SPECIAL_API(hipExtMallocWithFlags, (TRACE_MEM), ptr, sizeBytes, flags);
     HIP_SET_DEVICE();
+
+#if (__hcc_workweek__ >= 19115)
     hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -292,6 +294,9 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
             hip_status = hipErrorMemoryAllocation;
         }
     }
+#else
+    hipError_t hip_status = hipErrorMemoryAllocation;
+#endif
 
     return ihipLogStatus(hip_status);
 }
