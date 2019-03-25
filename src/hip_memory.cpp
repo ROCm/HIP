@@ -339,15 +339,19 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
             hip_status = hipErrorInvalidValue;
         } else {
             auto device = ctx->getWriteableDevice();
-
+#if (__hcc_workweek__ >= 19115)
+            //Avoid mapping host pinned memory to all devices by HCC
+            unsigned amFlags = amHostUnmapped;
+#else
             unsigned amFlags = 0;
+#endif
             if (flags & hipHostMallocCoherent) {
-                amFlags = amHostCoherent;
+                amFlags |= amHostCoherent;
             } else if (flags & hipHostMallocNonCoherent) {
-                amFlags = amHostNonCoherent;
+                amFlags |= amHostNonCoherent;
             } else {
                 // depends on env variables:
-                amFlags = HIP_HOST_COHERENT ? amHostCoherent : amHostNonCoherent;
+                amFlags |= HIP_HOST_COHERENT ? amHostCoherent : amHostNonCoherent;
             }
 
 
