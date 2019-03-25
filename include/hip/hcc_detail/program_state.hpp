@@ -376,7 +376,7 @@ hsa_executable_t load_executable(const std::string& file,
     return executable;
 }
 
-std::vector<hsa_agent_t> all_hsa_agents();
+hsa_agent_t current_hsa_agent();
 
 inline
 __attribute__((visibility("hidden")))
@@ -386,7 +386,7 @@ const std::unordered_map<
     static std::once_flag f;
 
     std::call_once(f, []() {
-        for (auto&& agent : hip_impl::all_hsa_agents()) {
+            auto agent = current_hsa_agent();
             hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* pa) {
                 const auto it = code_object_blobs().find(x);
 
@@ -413,7 +413,6 @@ const std::unordered_map<
 
                 return HSA_STATUS_SUCCESS;
             }, &agent);
-        }
     });
 
     return r;
