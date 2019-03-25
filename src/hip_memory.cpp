@@ -264,6 +264,42 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags) {
+    HIP_INIT_SPECIAL_API(hipExtMallocWithFlags, (TRACE_MEM), ptr, sizeBytes, flags);
+    HIP_SET_DEVICE();
+
+#if (__hcc_workweek__ >= 19115)
+    hipError_t hip_status = hipSuccess;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    // return NULL pointer when malloc size is 0
+    if (sizeBytes == 0) {
+        *ptr = NULL;
+        hip_status = hipSuccess;
+    } else if ((ctx == nullptr) || (ptr == nullptr)) {
+        hip_status = hipErrorInvalidValue;
+    } else {
+        unsigned amFlags = 0;
+        if (flags & hipDeviceMallocFinegrained) {
+            amFlags = amDeviceFinegrained;
+        } else if (flags != hipDeviceMallocDefault) {
+            hip_status = hipErrorInvalidValue;
+            return ihipLogStatus(hip_status);
+        }
+        auto device = ctx->getWriteableDevice();
+        *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx, false /*shareWithAll*/,
+                                              amFlags /*amFlags*/, 0 /*hipFlags*/, 0);
+
+        if (sizeBytes && (*ptr == NULL)) {
+            hip_status = hipErrorMemoryAllocation;
+        }
+    }
+#else
+    hipError_t hip_status = hipErrorMemoryAllocation;
+#endif
+
+    return ihipLogStatus(hip_status);
+}
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
@@ -1573,7 +1609,10 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
                     stream->locked_copySync((unsigned char*)dst + i * dpitch,
                                     (unsigned char*)src + i * spitch, width, kind);
             } else {
-                stream->locked_copy2DSync(dst, src, width, height, spitch, dpitch, kind);
+                if(!stream->locked_copy2DSync(dst, src, width, height, spitch, dpitch, kind)){
+                    ihipMemcpy2dKernel<uint8_t> (stream, static_cast<uint8_t*> (dst), static_cast<const uint8_t*> (src), width, height, dpitch, spitch);
+                    stream->locked_wait();
+                }
             }
         } catch (ihipException& ex) {
             e = ex._code;
@@ -1621,7 +1660,9 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
                     e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
                                           (unsigned char*)src + i * spitch, width, kind, stream);
             } else{
-                stream->locked_copy2DAsync(dst, src, width, height, spitch, dpitch, kind);
+                if(!stream->locked_copy2DAsync(dst, src, width, height, spitch, dpitch, kind)){
+                    ihipMemcpy2dKernel<uint8_t> (stream, static_cast<uint8_t*> (dst), static_cast<const uint8_t*> (src), width, height, dpitch, spitch);
+                }
             }
         } catch (ihipException& ex) {
             e = ex._code;
