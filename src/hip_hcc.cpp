@@ -2162,7 +2162,7 @@ bool ihipStream_t::locked_copy2DSync(void* dst, const void* src, size_t width, s
                 sizeBytes, hcMemcpyStr(hcCopyDir), forceUnpinnedCopy);
         printPointerInfo(DB_COPY, "  dst", dst, dstPtrInfo);
         printPointerInfo(DB_COPY, "  src", src, srcPtrInfo);
-#if (__hcc_workweek__ >= 19062)
+#if (__hcc_workweek__ >= 19101)
         if(!crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                            copyDevice ? &copyDevice->getDevice()->_acc : nullptr,
                            forceUnpinnedCopy)) {
@@ -2385,7 +2385,7 @@ bool ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, 
 
         try {
              if (HIP_FORCE_SYNC_COPY) {
-#if (__hcc_workweek__ >= 19062)
+#if (__hcc_workweek__ >= 19101)
                  if(!crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                            &copyDevice->getDevice()->_acc,
                            forceUnpinnedCopy)){
@@ -2419,7 +2419,7 @@ bool ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, 
     } else {
          //Do sync 2D copy
          LockedAccessor_StreamCrit_t crit(_criticalData);
-#if (__hcc_workweek__ >= 19062)
+#if (__hcc_workweek__ >= 19101)
          if(!crit->_av.copy2d_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                            copyDevice ? &copyDevice->getDevice()->_acc : nullptr,
                            forceUnpinnedCopy)){
