@@ -328,8 +328,8 @@ __device__ __host__ static inline hipComplex hipCfmaf(hipComplex p, hipComplex q
 
 __device__ __host__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, hipDoubleComplex q,
                                                            hipDoubleComplex r) {
-    float real = (p.x * q.x) + r.x;
-    float imag = (q.x * p.y) + r.y;
+    double real = (p.x * q.x) + r.x;
+    double imag = (q.x * p.y) + r.y;
 
     real = -(p.y * q.y) + real;
     imag = (p.x * q.y) + imag;
