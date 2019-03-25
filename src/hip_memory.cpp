@@ -1573,7 +1573,10 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
                     stream->locked_copySync((unsigned char*)dst + i * dpitch,
                                     (unsigned char*)src + i * spitch, width, kind);
             } else {
-                stream->locked_copy2DSync(dst, src, width, height, spitch, dpitch, kind);
+                if(!stream->locked_copy2DSync(dst, src, width, height, spitch, dpitch, kind)){
+                    ihipMemcpy2dKernel<uint8_t> (stream, static_cast<uint8_t*> (dst), static_cast<const uint8_t*> (src), width, height, dpitch, spitch);
+                    stream->locked_wait();
+                }
             }
         } catch (ihipException& ex) {
             e = ex._code;
@@ -1621,7 +1624,9 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
                     e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
                                           (unsigned char*)src + i * spitch, width, kind, stream);
             } else{
-                stream->locked_copy2DAsync(dst, src, width, height, spitch, dpitch, kind);
+                if(!stream->locked_copy2DAsync(dst, src, width, height, spitch, dpitch, kind)){
+                    ihipMemcpy2dKernel<uint8_t> (stream, static_cast<uint8_t*> (dst), static_cast<const uint8_t*> (src), width, height, dpitch, spitch);
+                }
             }
         } catch (ihipException& ex) {
             e = ex._code;
