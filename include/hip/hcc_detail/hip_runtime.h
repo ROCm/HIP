@@ -336,7 +336,7 @@ typedef int hipLaunchParm;
 
 #define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)             \
     do {                                                                                           \
-        kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(hipLaunchParam{}, ##__VA_ARGS__); \
+        kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(hipLaunchParm{}, ##__VA_ARGS__); \
     } while (0)
 
 #define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
