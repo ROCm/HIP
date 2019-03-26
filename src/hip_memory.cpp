@@ -357,7 +357,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 
             *ptr = hip_internal::allocAndSharePtr(
                 (amFlags & amHostCoherent) ? "finegrained_host" : "pinned_host", sizeBytes, ctx,
-                (trueFlags & hipHostMallocPortable) /*shareWithAll*/, amFlags, flags, 0);
+                true  /*shareWithAll*/, amFlags, flags, 0);
 
             if (sizeBytes && (*ptr == NULL)) {
                 hip_status = hipErrorMemoryAllocation;
