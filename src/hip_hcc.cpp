@@ -2478,8 +2478,13 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 // TODO - add a contect sequence number for debug. Print operator<< ctx:0.1 (device.ctx)
 
 namespace hip_impl {
-    hsa_agent_t current_hsa_agent() {
-        return ihipGetTlsDefaultCtx()->getDevice()->_hsaAgent;
+    std::vector<hsa_agent_t> all_hsa_agents() {
+        std::vector<hsa_agent_t> r{};
+        for (auto&& acc : visible_accelerators()) {
+            const auto agent = acc.get_hsa_agent();
+            r.emplace_back(*static_cast<hsa_agent_t*>(agent));
+        }
+        return r;
     }
 
     [[noreturn]]
