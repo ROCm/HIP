@@ -2660,29 +2660,34 @@ __attribute__((visibility("hidden")))
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                           const char* name) {
     static std::unordered_map<hsa_agent_t, std::pair<std::once_flag,
-        std::vector<Agent_global>>> agent_globals;
+        std::vector<Agent_global>>> globals;
     static std::once_flag f;
     auto agent = this_agent();
 
+    // Create placeholder for each agent in the map.
     std::call_once(f, []() {
-        for (auto&& agent : hip_impl::all_hsa_agents()) {
-            agent_globals[agent].second.clear();
+        for (auto&& x : hip_impl::all_hsa_agents()) {
+            (void)globals[x];
         }
     });
 
-    std::call_once(agent_globals[agent].first, [](hsa_agent_t agent) {
+    if (globals.find(agent) == globals.cend()) {
+        hip_throw(std::runtime_error{"invalid agent"});
+    }
+
+    std::call_once(globals[agent].first, [](hsa_agent_t aa) {
         std::vector<Agent_global> tmp0;
-        for (auto&& executable : executables(agent)) {
-            auto tmp1 = read_agent_globals(agent, executable);
+        for (auto&& executable : executables(aa)) {
+            auto tmp1 = read_agent_globals(aa, executable);
             tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
                         make_move_iterator(tmp1.end()));
         }
-        agent_globals[agent].second = move(tmp0);
+        globals[aa].second = move(tmp0);
     }, agent);
 
-    const auto it = agent_globals.find(agent);
+    const auto it = globals.find(agent);
 
-    if (it == agent_globals.cend()) return hipErrorNotInitialized;
+    if (it == globals.cend()) return hipErrorNotInitialized;
 
     std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
                                                       it->second.second.cend(), name);
