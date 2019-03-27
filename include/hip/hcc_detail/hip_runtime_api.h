@@ -2659,30 +2659,33 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                           const char* name) {
-    static std::unordered_map<
-        hsa_agent_t, std::vector<Agent_global>> agent_globals;
+    static std::unordered_map<hsa_agent_t, std::pair<std::once_flag,
+        std::vector<Agent_global>>> agent_globals;
     static std::once_flag f;
+    auto agent = this_agent();
 
     std::call_once(f, []() {
-        for (auto&& agent_executables : executables()) {
-            std::vector<Agent_global> tmp0;
-            for (auto&& executable : agent_executables.second) {
-                auto tmp1 = read_agent_globals(agent_executables.first,
-                                               executable);
-
-                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
-                            make_move_iterator(tmp1.end()));
-            }
-            agent_globals.emplace(agent_executables.first, move(tmp0));
+        for (auto&& agent : hip_impl::all_hsa_agents()) {
+            agent_globals[agent].second.clear();
         }
     });
 
-    const auto it = agent_globals.find(this_agent());
+    std::call_once(agent_globals[agent].first, [](hsa_agent_t agent) {
+        std::vector<Agent_global> tmp0;
+        for (auto&& executable : executables(agent)) {
+            auto tmp1 = read_agent_globals(agent, executable);
+            tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
+                        make_move_iterator(tmp1.end()));
+        }
+        agent_globals[agent].second = move(tmp0);
+    }, agent);
+
+    const auto it = agent_globals.find(agent);
 
     if (it == agent_globals.cend()) return hipErrorNotInitialized;
 
-    std::tie(*dptr, *bytes) = read_global_description(it->second.cbegin(),
-                                                      it->second.cend(), name);
+    std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
+                                                      it->second.second.cend(), name);
 
     return *dptr ? hipSuccess : hipErrorNotFound;
 }

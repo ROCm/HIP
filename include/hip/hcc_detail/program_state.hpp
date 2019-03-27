@@ -83,6 +83,9 @@ inline constexpr bool operator==(hsa_isa_t x, hsa_isa_t y) {
 }
 
 namespace hip_impl {
+
+std::vector<hsa_agent_t> all_hsa_agents();
+
 class Kernel_descriptor {
     std::uint64_t kernel_object_{};
     amd_kernel_code_t const* kernel_header_{nullptr};
@@ -376,47 +379,50 @@ hsa_executable_t load_executable(const std::string& file,
     return executable;
 }
 
-std::vector<hsa_agent_t> all_hsa_agents();
-
 inline
 __attribute__((visibility("hidden")))
-const std::unordered_map<
-    hsa_agent_t, std::vector<hsa_executable_t>>& executables() {
-    static std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>> r;
+const std::vector<hsa_executable_t>& executables(hsa_agent_t agent) {
+    static std::unordered_map<hsa_agent_t, std::pair<std::once_flag,
+        std::vector<hsa_executable_t>>> r;
     static std::once_flag f;
 
+    // Create placeholder for each agent in the map.
     std::call_once(f, []() {
         for (auto&& agent : hip_impl::all_hsa_agents()) {
-            hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* pa) {
-                const auto it = code_object_blobs().find(x);
-
-                if (it == code_object_blobs().cend()) return HSA_STATUS_SUCCESS;
-
-                hsa_agent_t a = *static_cast<hsa_agent_t*>(pa);
-
-                for (auto&& blob : it->second) {
-                    hsa_executable_t tmp = {};
-
-                    hsa_executable_create_alt(
-                        HSA_PROFILE_FULL,
-                        HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
-                        nullptr,
-                        &tmp);
-
-                    // TODO: this is massively inefficient and only meant for
-                    // illustration.
-                    std::string blob_to_str{blob.cbegin(), blob.cend()};
-                    tmp = load_executable(blob_to_str, tmp, a);
-
-                    if (tmp.handle) r[a].push_back(tmp);
-                }
-
-                return HSA_STATUS_SUCCESS;
-            }, &agent);
+            r[agent].second.clear();
         }
     });
 
-    return r;
+    std::call_once(r[agent].first, [](hsa_agent_t agent) {
+        hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* pa) {
+            const auto it = code_object_blobs().find(x);
+
+            if (it == code_object_blobs().cend()) return HSA_STATUS_SUCCESS;
+
+            hsa_agent_t a = *static_cast<hsa_agent_t*>(pa);
+
+            for (auto&& blob : it->second) {
+                hsa_executable_t tmp = {};
+
+                hsa_executable_create_alt(
+                    HSA_PROFILE_FULL,
+                    HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
+                    nullptr,
+                    &tmp);
+
+                // TODO: this is massively inefficient and only meant for
+                // illustration.
+                std::string blob_to_str{blob.cbegin(), blob.cend()};
+                tmp = load_executable(blob_to_str, tmp, a);
+
+                if (tmp.handle) r[a].second.push_back(tmp);
+            }
+
+            return HSA_STATUS_SUCCESS;
+        }, &agent);
+    }, agent);
+
+    return r[agent].second;
 }
 
 inline
@@ -477,55 +483,66 @@ const std::unordered_map<std::uintptr_t, std::string>& function_names() {
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
-    std::string, std::vector<hsa_executable_symbol_t>>& kernels() {
-    static std::unordered_map<
-        std::string, std::vector<hsa_executable_symbol_t>> r;
+    std::string, std::vector<hsa_executable_symbol_t>>& kernels(hsa_agent_t agent) {
+    static std::unordered_map<hsa_agent_t, std::pair<std::once_flag,
+        std::unordered_map<std::string, std::vector<hsa_executable_symbol_t>>>> r;
     static std::once_flag f;
 
+    // Create placeholder for each agent in the map.
     std::call_once(f, []() {
+        for (auto&& agent : hip_impl::all_hsa_agents()) {
+            r[agent].second.clear();
+        }
+    });
+
+    std::call_once(r[agent].first, [](hsa_agent_t agent) {
         static const auto copy_kernels = [](
-            hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void*) {
-            if (type(x) == HSA_SYMBOL_KIND_KERNEL) r[name(x)].push_back(x);
+            hsa_executable_t, hsa_agent_t agent, hsa_executable_symbol_t x, void*) {
+            if (type(x) == HSA_SYMBOL_KIND_KERNEL) r[agent].second[name(x)].push_back(x);
 
             return HSA_STATUS_SUCCESS;
         };
 
-        for (auto&& agent_executables : executables()) {
-            for (auto&& executable : agent_executables.second) {
-                hsa_executable_iterate_agent_symbols(
-                    executable, agent_executables.first, copy_kernels, nullptr);
-            }
+        for (auto&& executable : executables(agent)) {
+            hsa_executable_iterate_agent_symbols(
+                executable, agent, copy_kernels, nullptr);
         }
-    });
+    }, agent);
 
-    return r;
+    return r[agent].second;
 }
 
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
     std::uintptr_t,
-    std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions() {
-    static std::unordered_map<
-        std::uintptr_t,
-        std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>> r;
+    Kernel_descriptor>& functions(hsa_agent_t agent) {
+    static std::unordered_map<hsa_agent_t, std::pair<std::once_flag,
+        std::unordered_map<std::uintptr_t, Kernel_descriptor>>> r;
     static std::once_flag f;
 
+    // Create placeholder for each agent in the map.
     std::call_once(f, []() {
-        for (auto&& function : function_names()) {
-            const auto it = kernels().find(function.second);
-
-            if (it == kernels().cend()) continue;
-
-            for (auto&& kernel_symbol : it->second) {
-                r[function.first].emplace_back(
-                    agent(kernel_symbol),
-                    Kernel_descriptor{kernel_object(kernel_symbol), it->first});
-            }
+        for (auto&& agent : hip_impl::all_hsa_agents()) {
+            r[agent].second.clear();
         }
     });
 
-    return r;
+    std::call_once(r[agent].first, [](hsa_agent_t agent) {
+        for (auto&& function : function_names()) {
+            const auto it = kernels(agent).find(function.second);
+
+            if (it == kernels(agent).cend()) continue;
+
+            for (auto&& kernel_symbol : it->second) {
+                r[agent].second.emplace(
+                    function.first,
+                    Kernel_descriptor{kernel_object(kernel_symbol), it->first});
+            }
+        }
+    }, agent);
+
+    return r[agent].second;
 }
 
 inline
