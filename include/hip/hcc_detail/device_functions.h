@@ -254,14 +254,22 @@ __device__ static inline float __hip_ds_permutef(int index, float src) {
 template <int pattern>
 __device__ static inline unsigned __hip_ds_swizzle_N(unsigned int src) {
     union { int i; unsigned u; float f; } tmp; tmp.u = src;
+#if defined(__HCC__)
+    tmp.i = __llvm_amdgcn_ds_swizzle(tmp.i, pattern);
+#else
     tmp.i = __builtin_amdgcn_ds_swizzle(tmp.i, pattern);
+#endif
     return tmp.u;
 }
 
 template <int pattern>
 __device__ static inline float __hip_ds_swizzlef_N(float src) {
     union { int i; unsigned u; float f; } tmp; tmp.f = src;
+#if defined(__HCC__)
+    tmp.i = __llvm_amdgcn_ds_swizzle(tmp.i, pattern);
+#else
     tmp.i = __builtin_amdgcn_ds_swizzle(tmp.i, pattern);
+#endif
     return tmp.f;
 }
 
