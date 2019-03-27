@@ -100,7 +100,12 @@ extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
       amd::Context* ctx = g_devices[dev];
 
       if (target.compare(ctx->devices()[0]->info().name_)) {
-        continue;
+        // Workaround for gfx906 device name mismatch.
+        // If bundle target id starts with gfx906 and device name starts with
+        // gfx906, treat them as match.
+        if (target.find("gfx906") != 0 ||
+            std::string(ctx->devices()[0]->info().name_).find("gfx906") != 0)
+          continue;
       }
 
       amd::Program* program = new amd::Program(*ctx);
