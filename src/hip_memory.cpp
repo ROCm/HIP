@@ -1586,21 +1586,24 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
     if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return hipErrorInvalidValue;
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-    int isLocked = 0;
+    int isLockedOrD2D = 0;
     void *pinnedPtr=NULL;
     void *actualSrc = (void*)src;
     void *actualDest = dst;
     if(kind == hipMemcpyHostToDevice ) {
         if(getLockedPointer((void*)src, spitch, &pinnedPtr) == hipSuccess ){
-            isLocked = 1;
+            isLockedOrD2D = 1;
             actualSrc = pinnedPtr;
         }
     } else if(kind == hipMemcpyDeviceToHost) {
           if(getLockedPointer((void*)dst, dpitch, &pinnedPtr) == hipSuccess ){
-            isLocked = 1;
+            isLockedOrD2D = 1;
             actualDest = pinnedPtr;
           }
+    } else if(kind == hipMemcpyDeviceToDevice) {
+        isLockedOrD2D = 1;
     }
+
     hc::completion_future marker;
 
     hipError_t e = hipSuccess;
@@ -1608,7 +1611,7 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
         stream->locked_copySync((void*)dst, (void*)src, width*height, kind, false);
     } else {
         try {
-            if(!isLocked) {
+            if(!isLockedOrD2D) {
                 for (int i = 0; i < height; ++i)
                     stream->locked_copySync((unsigned char*)dst + i * dpitch,
                                     (unsigned char*)src + i * spitch, width, kind);
@@ -1639,27 +1642,30 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     HIP_INIT_SPECIAL_API(hipMemcpy2DAsync, (TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind, stream);
     if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return ihipLogStatus(hipErrorInvalidValue);
     hipError_t e = hipSuccess;
-    int isLocked = 0;
+    int isLockedOrD2D = 0;
     void *pinnedPtr=NULL;
     void *actualSrc = (void*)src;
     void *actualDest = dst;
     stream = ihipSyncAndResolveStream(stream);
     if(kind == hipMemcpyHostToDevice ) {
         if(getLockedPointer((void*)src, spitch, &pinnedPtr) == hipSuccess ){
-            isLocked = 1;
+            isLockedOrD2D = 1;
             actualSrc = pinnedPtr;
         }
     } else if(kind == hipMemcpyDeviceToHost) {
           if(getLockedPointer((void*)dst, dpitch, &pinnedPtr) == hipSuccess ){
-            isLocked = 1;
+            isLockedOrD2D = 1;
             actualDest = pinnedPtr;
           }
+    } else if(kind == hipMemcpyDeviceToDevice) {
+        isLockedOrD2D = 1;
     }
+
     if((width == dpitch) && (width == spitch)) {
             hip_internal::memcpyAsync(dst, src, width*height, kind, stream);
     } else {
         try {
-            if(!isLocked){
+            if(!isLockedOrD2D){
                 for (int i = 0; i < height; ++i)
                     e = hip_internal::memcpyAsync((unsigned char*)dst + i * dpitch,
                                           (unsigned char*)src + i * spitch, width, kind, stream);
