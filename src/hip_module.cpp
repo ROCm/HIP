@@ -285,15 +285,11 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
                               hipModule_t hmod, const char* name) {
     HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
-    if (!dptr || !bytes) return hipErrorInvalidValue;
+    if (!dptr || !bytes || !hmod) return hipErrorInvalidValue;
 
     if (!name) return hipErrorNotInitialized;
 
-    const auto r = hmod ?
-        hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name) :
-        hip_impl::read_agent_global_from_process(dptr, bytes, name);
-
-    return r;
+    return hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name);
 }
 
 namespace hip_impl {

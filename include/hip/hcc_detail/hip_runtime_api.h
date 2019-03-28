@@ -1421,6 +1421,12 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 #else
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
+namespace hip_impl {
+inline
+__attribute__((visibility("hidden")))
+hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                                          const char* name);
+} // Namespace hip_impl.
 
 /**
  *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
@@ -1438,7 +1444,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
     hip_impl::hip_init();
     size_t size = 0;
-    return hipModuleGetGlobal(devPtr, &size, 0, (const char*)symbolName);
+    return hip_impl::read_agent_global_from_process(devPtr, &size, (const char*)symbolName);
 }
 
 
@@ -1458,7 +1464,7 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
     hip_impl::hip_init();
     void* devPtr = nullptr;
-    return hipModuleGetGlobal(&devPtr, size, 0, (const char*)symbolName);
+    return hip_impl::read_agent_global_from_process(&devPtr, size, (const char*)symbolName);
 }
 
 #if defined(__cplusplus)
