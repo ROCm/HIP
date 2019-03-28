@@ -155,30 +155,18 @@ void hipLaunchKernelGGLImpl(
     std::uint32_t sharedMemBytes,
     hipStream_t stream,
     void** kernarg) {
-    auto it0 = functions().find(function_address);
-
-    if (it0 == functions().cend()) {
-        hip_throw(std::runtime_error{
-            "No device code available for function: " +
-            name(function_address)});
-    }
 
     auto agent = target_agent(stream);
+    auto it = functions(agent).find(function_address);
 
-    const auto it1 = std::find_if(
-        it0->second.cbegin(),
-        it0->second.cend(),
-        [=](const std::pair<hsa_agent_t, Kernel_descriptor>& x) {
-        return x.first == agent;
-    });
-
-    if (it1 == it0->second.cend()) {
+    if (it == functions(agent).cend()) {
         hip_throw(std::runtime_error{
-            "No code available for function: " + name(function_address) +
+            "No device code available for function: " +
+            name(function_address) +
             ", for agent: " + name(agent)});
     }
 
-    hipModuleLaunchKernel(it1->second, numBlocks.x, numBlocks.y, numBlocks.z,
+    hipModuleLaunchKernel(it->second, numBlocks.x, numBlocks.y, numBlocks.z,
                           dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
                           stream, nullptr, kernarg);
 }
