@@ -175,28 +175,6 @@ hipError_t hipLaunchKernelGGLImpl(
 
 template <typename... Args, typename F = void (*)(Args...)>
 inline
-void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
-                        std::uint32_t sharedMemBytes, hipStream_t stream,
-                        Args... args) {
-    hip_impl::hip_init();
-    auto kernarg = hip_impl::make_kernarg(
-        kernel, std::tuple<Args...>{std::move(args)...});
-    std::size_t kernarg_size = kernarg.size();
-
-    void* config[]{
-        HIP_LAUNCH_PARAM_BUFFER_POINTER,
-        kernarg.data(),
-        HIP_LAUNCH_PARAM_BUFFER_SIZE,
-        &kernarg_size,
-        HIP_LAUNCH_PARAM_END};
-
-    hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
-                                     numBlocks, dimBlocks, sharedMemBytes,
-                                     stream, &config[0]);
-}
-
-template <typename... Args, typename F = void (*)(Args...)>
-inline
 hipError_t hipLaunchKernelGGLEx(F kernel, const dim3& numBlocks,
                                 const dim3& dimBlocks,
                                 std::uint32_t sharedMemBytes,
@@ -216,6 +194,15 @@ hipError_t hipLaunchKernelGGLEx(F kernel, const dim3& numBlocks,
     return hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
                                             numBlocks, dimBlocks, sharedMemBytes,
                                             stream, &config[0]);
+}
+
+template <typename... Args, typename F = void (*)(Args...)>
+inline
+void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                        std::uint32_t sharedMemBytes, hipStream_t stream,
+                        Args... args) {
+    hipLaunchKernelGGLEx(kernel, numBlocks, dimBlocks, sharedMemBytes, stream,
+                         std::move(args)...);
 }
 
 template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
