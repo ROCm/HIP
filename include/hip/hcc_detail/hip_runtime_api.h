@@ -1419,9 +1419,14 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
                                     hipMemcpyKind kind,
                                     hipStream_t stream __dparm(0));
 #else
-__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
+namespace hip_impl {
+inline
+__attribute__((visibility("hidden")))
+hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                                          const char* name);
+} // Namespace hip_impl.
 
 /**
  *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
@@ -1439,7 +1444,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
     hip_impl::hip_init();
     size_t size = 0;
-    return hipModuleGetGlobal(devPtr, &size, 0, (const char*)symbolName);
+    return hip_impl::read_agent_global_from_process(devPtr, &size, (const char*)symbolName);
 }
 
 
@@ -1459,7 +1464,7 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
     hip_impl::hip_init();
     void* devPtr = nullptr;
-    return hipModuleGetGlobal(&devPtr, size, 0, (const char*)symbolName);
+    return hip_impl::read_agent_global_from_process(&devPtr, size, (const char*)symbolName);
 }
 
 #if defined(__cplusplus)
@@ -2659,30 +2664,38 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                           const char* name) {
-    static std::unordered_map<
-        hsa_agent_t, std::vector<Agent_global>> agent_globals;
+    static std::unordered_map<hsa_agent_t, std::pair<std::once_flag,
+        std::vector<Agent_global>>> globals;
     static std::once_flag f;
+    auto agent = this_agent();
 
+    // Create placeholder for each agent in the map.
     std::call_once(f, []() {
-        for (auto&& agent_executables : executables()) {
-            std::vector<Agent_global> tmp0;
-            for (auto&& executable : agent_executables.second) {
-                auto tmp1 = read_agent_globals(agent_executables.first,
-                                               executable);
-
-                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
-                            make_move_iterator(tmp1.end()));
-            }
-            agent_globals.emplace(agent_executables.first, move(tmp0));
+        for (auto&& x : hip_impl::all_hsa_agents()) {
+            (void)globals[x];
         }
     });
 
-    const auto it = agent_globals.find(this_agent());
+    if (globals.find(agent) == globals.cend()) {
+        hip_throw(std::runtime_error{"invalid agent"});
+    }
 
-    if (it == agent_globals.cend()) return hipErrorNotInitialized;
+    std::call_once(globals[agent].first, [](hsa_agent_t aa) {
+        std::vector<Agent_global> tmp0;
+        for (auto&& executable : executables(aa)) {
+            auto tmp1 = read_agent_globals(aa, executable);
+            tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
+                        make_move_iterator(tmp1.end()));
+        }
+        globals[aa].second = move(tmp0);
+    }, agent);
 
-    std::tie(*dptr, *bytes) = read_global_description(it->second.cbegin(),
-                                                      it->second.cend(), name);
+    const auto it = globals.find(agent);
+
+    if (it == globals.cend()) return hipErrorNotInitialized;
+
+    std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
+                                                      it->second.second.cend(), name);
 
     return *dptr ? hipSuccess : hipErrorNotFound;
 }
@@ -2702,20 +2715,8 @@ extern "C" {
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
-inline
-__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
-                              hipModule_t hmod, const char* name) {
-    if (!dptr || !bytes) return hipErrorInvalidValue;
-
-    if (!name) return hipErrorNotInitialized;
-
-    const auto r = hmod ?
-        hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name) :
-        hip_impl::read_agent_global_from_process(dptr, bytes, name);
-
-    return r;
-}
+                              hipModule_t hmod, const char* name);
 #endif // __HIP_VDI__
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
