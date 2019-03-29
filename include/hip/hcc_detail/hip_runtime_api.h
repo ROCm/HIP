@@ -1419,9 +1419,14 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
                                     hipMemcpyKind kind,
                                     hipStream_t stream __dparm(0));
 #else
-__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
+namespace hip_impl {
+inline
+__attribute__((visibility("hidden")))
+hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                                          const char* name);
+} // Namespace hip_impl.
 
 /**
  *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
@@ -1439,7 +1444,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
     hip_impl::hip_init();
     size_t size = 0;
-    return hipModuleGetGlobal(devPtr, &size, 0, (const char*)symbolName);
+    return hip_impl::read_agent_global_from_process(devPtr, &size, (const char*)symbolName);
 }
 
 
@@ -1459,7 +1464,7 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
     hip_impl::hip_init();
     void* devPtr = nullptr;
-    return hipModuleGetGlobal(&devPtr, size, 0, (const char*)symbolName);
+    return hip_impl::read_agent_global_from_process(&devPtr, size, (const char*)symbolName);
 }
 
 #if defined(__cplusplus)
@@ -2710,20 +2715,8 @@ extern "C" {
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
  */
-inline
-__attribute__((visibility("hidden")))
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
-                              hipModule_t hmod, const char* name) {
-    if (!dptr || !bytes) return hipErrorInvalidValue;
-
-    if (!name) return hipErrorNotInitialized;
-
-    const auto r = hmod ?
-        hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name) :
-        hip_impl::read_agent_global_from_process(dptr, bytes, name);
-
-    return r;
-}
+                              hipModule_t hmod, const char* name);
 #endif // __HIP_VDI__
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
