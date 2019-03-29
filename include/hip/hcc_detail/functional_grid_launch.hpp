@@ -148,7 +148,7 @@ hsa_agent_t target_agent(hipStream_t stream);
 
 inline
 __attribute__((visibility("hidden")))
-void hipLaunchKernelGGLImpl(
+hipError_t hipLaunchKernelGGLImpl(
     std::uintptr_t function_address,
     const dim3& numBlocks,
     const dim3& dimBlocks,
@@ -166,9 +166,10 @@ void hipLaunchKernelGGLImpl(
             ", for agent: " + name(agent)});
     }
 
-    hipModuleLaunchKernel(it->second, numBlocks.x, numBlocks.y, numBlocks.z,
-                          dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
-                          stream, nullptr, kernarg);
+    return hipModuleLaunchKernel(it->second, numBlocks.x, numBlocks.y,
+                                 numBlocks.z, dimBlocks.x, dimBlocks.y,
+                                 dimBlocks.z, sharedMemBytes, stream, nullptr,
+                                 kernarg);
 }
 } // Namespace hip_impl.
 
@@ -192,6 +193,29 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
     hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
                                      numBlocks, dimBlocks, sharedMemBytes,
                                      stream, &config[0]);
+}
+
+template <typename... Args, typename F = void (*)(Args...)>
+inline
+hipError_t hipLaunchKernelGGLEx(F kernel, const dim3& numBlocks,
+                                const dim3& dimBlocks,
+                                std::uint32_t sharedMemBytes,
+                                hipStream_t stream, Args... args) {
+    hip_impl::hip_init();
+    auto kernarg = hip_impl::make_kernarg(
+        kernel, std::tuple<Args...>{std::move(args)...});
+    std::size_t kernarg_size = kernarg.size();
+
+    void* config[]{
+        HIP_LAUNCH_PARAM_BUFFER_POINTER,
+        kernarg.data(),
+        HIP_LAUNCH_PARAM_BUFFER_SIZE,
+        &kernarg_size,
+        HIP_LAUNCH_PARAM_END};
+
+    return hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
+                                            numBlocks, dimBlocks, sharedMemBytes,
+                                            stream, &config[0]);
 }
 
 template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
