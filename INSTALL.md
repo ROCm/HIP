@@ -36,37 +36,34 @@ apt-get install hip_hcc
    * By default HIP is installed into /opt/rocm/hip (can be overridden by setting HIP_PATH environment variable).
    * Optionally, consider adding /opt/rocm/bin to your PATH to make it easier to use the tools.
 
-## AMD-clang
+## HIP-clang
 
 * Using clang to compile HIP program for AMD GPU is under development. Users need to build LLVM, clang, lld, ROCm device library, and HIP from source.
 
 * Install the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) packages.  ROCm will install some of the necessary components, including the kernel driver, HSA runtime, etc.
 
-* Build LLVM/clang/lld by using the following repository and branch and following the general LLVM/clang build procedure:
+* Build LLVM/clang/lld by using the following repository and branch and following the general LLVM/clang build procedure. It is recommended to use -DCMAKE_INSTALL_PREFIX=/opt/rocm/llvm with cmake so that LLVM/clang/lld are installed to the default path expected by hipcc.
 
    * LLVM: https://github.com/RadeonOpenCompute/llvm.git amd-common branch
-   * clang: https://github.com/RadeonOpenCompute/clang checkout amd-hip-upstream branch, then merge with amd-common branch to match LLVM/lld
+   * clang: https://github.com/RadeonOpenCompute/clang amd-common branch
    * lld: https://github.com/RadeonOpenCompute/lld amd-common branch
    
 * Build Rocm device library
 
-   * Checkout https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git amd-hip branch and build it with clang built from the last step.
+   * Checkout https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git master branch and build it with clang built from the last step.
    
 * Build HIP
 
-   * Checkout https://github.com/ROCm-Developer-Tools/HIP.git hip-clang branch and build it with HCC installed with ROCm packages.
+   * Checkout https://github.com/ROCm-Developer-Tools/HIP.git master branch and build it with HCC installed with ROCm packages. Please use -DHIP_COMPILER=clang with cmake to enable hip-clang.
    
 * Environment variables to let hipcc to use clang to compile HIP program
 
-   By default hipcc uses hcc to compile HIP program for AMD GPU. To let hipcc to use clang to compile HIP program, the following environment variables must be set:
-
-   * HIP_CLANG_PATH - Path to clang   
-   * DEVICE_LIB_PATH - Path to the device library
-   
 * Default paths and environment variables:
 
    * By default HIP looks for HSA in /opt/rocm/hsa (can be overridden by setting HSA_PATH environment variable) 
    * By default HIP is installed into /opt/rocm/hip (can be overridden by setting HIP_PATH environment variable).
+   * By default HIP looks for clang in /opt/rocm/llvm/bin (can be overridden by setting HIP_CLANG_PATH environment variable)
+   * By default HIP looks for device library in /opt/rocm/lib (can be overriden by setting DEVICE_LIB_PATH environment variable).
    * Optionally, consider adding /opt/rocm/bin to your PATH to make it easier to use the tools.
    * Optionally, set HIPCC_VERBOSE=7 to output the command line for compilation to make sure clang is used instead of hcc.
 
@@ -99,6 +96,9 @@ HIP source code is available and the project can be built from source on the HCC
 2. Download HIP source code (from the [GitHub repot](https://github.com/ROCm-Developer-Tools/HIP).)
 3. Install HIP build-time dependencies using ```sudo apt-get install libelf-dev```.
 4. Build and install HIP (This is the simple version assuming default paths ; see below for additional options.)
+
+By default, HIP uses HCC to compile programs. To use HIP-Clang, add -DHIP_COMPILER=clang to cmake command line.
+
 ```
 cd HIP
 mkdir build
