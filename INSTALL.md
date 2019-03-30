@@ -56,8 +56,6 @@ apt-get install hip_hcc
 
    * Checkout https://github.com/ROCm-Developer-Tools/HIP.git master branch and build it with HCC installed with ROCm packages. Please use -DHIP_COMPILER=clang with cmake to enable hip-clang.
    
-* Environment variables to let hipcc to use clang to compile HIP program
-
 * Default paths and environment variables:
 
    * By default HIP looks for HSA in /opt/rocm/hsa (can be overridden by setting HSA_PATH environment variable) 
