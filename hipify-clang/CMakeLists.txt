@@ -108,7 +108,7 @@ if (HIPIFY_CLANG_TESTS)
         (CUDA_VERSION VERSION_GREATER "7.5" AND LLVM_PACKAGE_VERSION VERSION_LESS "4.0") OR
         (CUDA_VERSION VERSION_GREATER "8.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "6.0") OR
         (CUDA_VERSION VERSION_GREATER "9.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "7.0") OR
-         CUDA_VERSION VERSION_EQUAL "10.0")
+        (CUDA_VERSION VERSION_GREATER "10.1" AND LLVM_PACKAGE_VERSION VERSION_LESS "8.0"))
         message(SEND_ERROR "CUDA ${CUDA_VERSION} is not supported by clang ${LLVM_PACKAGE_VERSION}.")
         if (CUDA_VERSION VERSION_LESS "7.0")
             message(STATUS "Please install CUDA 7.0 or higher.")
@@ -120,6 +120,8 @@ if (HIPIFY_CLANG_TESTS)
             message(STATUS "Please install clang 6.0 or higher.")
         elseif ((CUDA_VERSION VERSION_EQUAL "9.1") OR (CUDA_VERSION VERSION_EQUAL "9.2"))
             message(STATUS "Please install clang 7.0 or higher.")
+        elseif ((CUDA_VERSION VERSION_EQUAL "10.0") OR (CUDA_VERSION VERSION_EQUAL "10.1"))
+            message(STATUS "Please install clang 8.0 or higher.")
         endif()
     endif()
 
