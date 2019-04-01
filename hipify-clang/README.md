@@ -52,7 +52,8 @@
 | 7.0.0                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
 | 7.0.1                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
 | 7.1.0                    | 9.2 (?)                           | - <br/> LLVM 7.1.0 <br/> is not yet released | - <br/> LLVM 7.1.0 <br/> is not yet released |
-| 8.0.0                    | 10.0 (?)                          | - <br/> LLVM 8.0.0 <br/> is not yet released | - <br/> LLVM 8.0.0 <br/> is not yet released |
+| 8.0.0                    | 10.1                              | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
+| 8.0.1                    | 10.1                              | - <br/> LLVM 8.0.1 <br/> is not yet released | - <br/> LLVM 8.0.1 <br/> is not yet released |
 
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
 
