@@ -131,7 +131,7 @@ int main(int argc, char*argv[])
   // CHECK: assert(HIPSPARSE_STATUS_SUCCESS == status);
   assert(CUSPARSE_STATUS_SUCCESS == status);
   // CHECK: cublasStat = hipblasCreate(&cublasH);
-  cublasStat = cublasCreate(cublasH);
+  cublasStat = cublasCreate(&cublasH);
   // CHECK: assert(HIPBLAS_STATUS_SUCCESS == cublasStat);
   assert(CUBLAS_STATUS_SUCCESS == cublasStat);
   // CHECK: cublasStat = hipblasSetStream(cublasH, stream);
