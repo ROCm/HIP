@@ -76,6 +76,11 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
 hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
                       amd::HostQueue& queue, bool isAsync = false) {
+  if (sizeBytes == 0) {
+    // Skip if nothing needs writing.
+    return hipSuccess;
+  }
+
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
 
@@ -114,6 +119,10 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
 
 hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
                       hipStream_t stream, bool isAsync = false) {
+  if (sizeBytes == 0) {
+    // Skip if nothing needs filling.
+    return hipSuccess;
+  }
 
   if (dst == nullptr) {
     return hipErrorInvalidValue;
