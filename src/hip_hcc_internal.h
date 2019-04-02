@@ -943,6 +943,8 @@ extern hipError_t ihipDeviceSetState();
 
 extern ihipDevice_t* ihipGetDevice(int);
 ihipCtx_t* ihipGetPrimaryCtx(unsigned deviceIndex);
+hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
+                                  const char* name, hsa_agent_t *agent);
 
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t);
