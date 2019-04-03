@@ -501,6 +501,16 @@ const std::unordered_map<
     return r;
 }
 
+class function_table_impl;
+class function_table {
+    function_table() : handle(init_function_table()) {}
+    ~function_table() { release_function_table(handle); }
+private:
+    function_table_impl* init_function_table();
+    void release_function_table(function_table_impl*);
+    function_table_impl* handle;
+};
+
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
