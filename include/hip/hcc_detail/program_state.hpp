@@ -656,9 +656,8 @@ void checkError(
     if (status != AMD_COMGR_STATUS_SUCCESS) {
         const char *status_str;
         status = amd_comgr_status_string(status, &status_str);
-        std::stringstream error_ss;
-        error_ss << "FAILED: " << str << "\n  REASON: " <<  status_str << std::endl;
-        hip_throw(std::runtime_error{error_ss.str()});
+        std::cerr << "FAILED: " << str << "\n  REASON: " <<  status_str << std::endl;
+        hip_throw(std::runtime_error{"Metadata parsing failed."});
     }
 }
 
@@ -728,8 +727,8 @@ void read_kernarg_metadata_comgr(
     amd_comgr_metadata_node_t kernelMap;
     amd_comgr_metadata_node_t kernArgList;
     amd_comgr_metadata_node_t kernArgMap;
-    size_t num_kernels;
-    size_t num_kern_args;
+    size_t num_kernels = 0;
+    size_t num_kern_args = 0;
 
     // Kernels is a list of MAPS!!
     hcc_stat = amd_comgr_metadata_lookup(metaHcc, "Kernels", &kernelList);
@@ -758,50 +757,44 @@ void read_kernarg_metadata_comgr(
         create_string_from_string_node(printNode, printString);
         //std::cout << "  SymbolName: " << printString << std::endl;
 
-        //std::cout << "  Args:" << std::endl;
         hcc_stat = amd_comgr_metadata_lookup(kernelMap, "Args", &kernArgList);
-        checkError(hcc_stat, "amd_comgr_metadata_lookup");
-
-        hcc_stat = amd_comgr_get_metadata_kind(kernArgList, &mkindLookupHcc);
-        if (mkindLookupHcc != AMD_COMGR_METADATA_KIND_LIST) {
-             hip_throw(std::runtime_error{"Lookup of Args didn't return a list\n"});
-        }
-
         if (hcc_stat == AMD_COMGR_STATUS_SUCCESS ) {
-            hcc_stat = amd_comgr_get_metadata_list_size(kernArgList, &num_kern_args);
-            checkError(hcc_stat, "amd_comgr_get_metadata_list_size");
-            //std::cout << "  num_args: " << num_kern_args << std::endl;
+            //std::cout << "  Args:" << std::endl;
+            hcc_stat = amd_comgr_get_metadata_kind(kernArgList, &mkindLookupHcc);
+            if (mkindLookupHcc != AMD_COMGR_METADATA_KIND_LIST) {
+                 hip_throw(std::runtime_error{"Lookup of Args didn't return a list\n"});
+            }
 
-            if(!kernargs[kernel_name].empty()) continue;
+            if (hcc_stat == AMD_COMGR_STATUS_SUCCESS ) {
+                hcc_stat = amd_comgr_get_metadata_list_size(kernArgList, &num_kern_args);
+                checkError(hcc_stat, "amd_comgr_get_metadata_list_size");
+                //std::cout << "  num_args: " << num_kern_args << std::endl;
 
-            for (int k_ar = 0; k_ar < num_kern_args; k_ar++) {
-                hcc_stat = amd_comgr_index_list_metadata(kernArgList, k_ar, &kernArgMap);
-                checkError(hcc_stat, "amd_comgr_index_list_metadata");
-                std::string k_arg_name;
-                size_t k_arg_size, k_arg_align;
+                if(!kernargs[kernel_name].empty()) continue;
 
-                hcc_stat = amd_comgr_metadata_lookup(kernArgMap, "Name", &printNode);
-                checkError(hcc_stat, "amd_comgr_metadata_lookup");
-                create_string_from_string_node(printNode, k_arg_name);
-                //std::cout << "    Name: " << k_arg_name << std::endl;
+                for (int k_ar = 0; k_ar < num_kern_args; k_ar++) {
+                    hcc_stat = amd_comgr_index_list_metadata(kernArgList, k_ar, &kernArgMap);
+                    checkError(hcc_stat, "amd_comgr_index_list_metadata");
+                    size_t k_arg_size, k_arg_align;
 
-                hcc_stat = amd_comgr_metadata_lookup(kernArgMap, "Size", &printNode);
-                checkError(hcc_stat, "amd_comgr_metadata_lookup");
-                create_string_from_string_node(printNode, printString);
-                k_arg_size = std::stoul(printString);
-                //std::cout << "      Size: " << k_arg_size << std::endl;
+                    hcc_stat = amd_comgr_metadata_lookup(kernArgMap, "Size", &printNode);
+                    checkError(hcc_stat, "amd_comgr_metadata_lookup");
+                    create_string_from_string_node(printNode, printString);
+                    k_arg_size = std::stoul(printString);
+                    //std::cout << "      Size: " << k_arg_size << std::endl;
 
-                hcc_stat = amd_comgr_metadata_lookup(kernArgMap, "Align", &printNode);
-                checkError(hcc_stat, "amd_comgr_metadata_lookup");
-                create_string_from_string_node(printNode, printString);
-                k_arg_align = std::stoul(printString);
-                //std::cout << "      Align: " << k_arg_align << std::endl;
+                    hcc_stat = amd_comgr_metadata_lookup(kernArgMap, "Align", &printNode);
+                    checkError(hcc_stat, "amd_comgr_metadata_lookup");
+                    create_string_from_string_node(printNode, printString);
+                    k_arg_align = std::stoul(printString);
+                    //std::cout << "      Align: " << k_arg_align << std::endl;
 
-                // Save it into our kernargs
-                kernargs[kernel_name].emplace_back(k_arg_size, k_arg_align);
+                    // Save it into our kernargs
+                    kernargs[kernel_name].emplace_back(k_arg_size, k_arg_align);
 
-                hcc_stat = amd_comgr_destroy_metadata(kernArgMap);
-                checkError(hcc_stat, "amd_comgr_destroy_metadata");
+                    hcc_stat = amd_comgr_destroy_metadata(kernArgMap);
+                    checkError(hcc_stat, "amd_comgr_destroy_metadata");
+                }
             }
         }
     }
