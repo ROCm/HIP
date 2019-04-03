@@ -31,17 +31,17 @@ The parser looks for a code block similar to the one below.
 ```
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * RUN: %t
+ * TEST: %t
  * //Small copy
- * RUN: %t -N 10    --memsetval 0x42
+ * TEST: %t -N 10    --memsetval 0x42
  * // Oddball size
- * RUN: %t -N 10013 --memsetval 0x5a
+ * TEST: %t -N 10013 --memsetval 0x5a
  * // Big copy
- * RUN: %t -N 256M  --memsetval 0xa6
+ * TEST: %t -N 256M  --memsetval 0xa6
  * HIT_END
  */
 ```
-In the above, BUILD commands provide instructions on how to build the test case while RUN commands provide instructions on how to execute the test case.
+In the above, BUILD commands provide instructions on how to build the test case while TEST commands provide instructions on how to execute the test case.
 
 #### BUILD command
 
@@ -57,21 +57,21 @@ NVCC_OPTIONS: All options specified after this delimiter are passed to hipcc on 
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms.
 
 
-#### RUN command
+#### TEST command
 
-The supported syntax for the RUN command is:
+The supported syntax for the TEST command is:
 ```
-RUN: %t <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all>
+TEST: %t <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all>
 ```
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
-EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms. Note that if the test has been excluded for a specific platform in the BUILD command, it is automatically excluded from the RUN command as well for the same platform.
+EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms. Note that if the test has been excluded for a specific platform in the BUILD command, it is automatically excluded from the TEST command as well for the same platform.
 
 
-#### RUN_NAMED command
+#### TEST_NAMED command
 
-When using the RUN command, HIT will squash and append the arguments specified to the test executable name to generate the CMAKE test name. Sometimes we might want to specify a more descriptive name. The RUN_NAMED command is used for that. The supported syntax for the RUN_NAMED command is:
+When using the TEST command, HIT will squash and append the arguments specified to the test executable name to generate the CMAKE test name. Sometimes we might want to specify a more descriptive name. The TEST_NAMED command is used for that. The supported syntax for the TEST_NAMED command is:
 ```
-RUN: %t CMAKE_TEST_NAME <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all>
+TEST: %t CMAKE_TEST_NAME <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all>
 ```
 
 
@@ -111,7 +111,7 @@ Find the test and commandline that fail:
 
 (From the build directory, perhaps hip/build)
 grep -IR hipMemcpy-modes -IR ../tests/
-../tests/src/runtimeApi/memory/hipMemcpy.cpp: * RUN_NAMED: %t hipMemcpy-modes --tests 0x1
+../tests/src/runtimeApi/memory/hipMemcpy.cpp: * TEST_NAMED: %t hipMemcpy-modes --tests 0x1
 
 # Guidelines for adding new tests
 

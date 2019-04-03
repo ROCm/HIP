@@ -8,7 +8,7 @@ use File::Spec;
 sub parse_file {
     my $file = shift;
     (my $exe = $file) =~ s/\.[^.]+$//g;
-    my (@buildCMDs, @runCMDs, @runNamedCMDs, @cmakeCMDs);
+    my (@buildCMDs, @testCMDs, @testNamedCMDs, @cmakeCMDs);
     if (open (SOURCE, '<:encoding(UTF-8)', "$file")) {
         while (<SOURCE>) {
             my $line=$_;
@@ -20,21 +20,21 @@ sub parse_file {
                 $line =~ s/\R//g;               # Remove line endings
                 push @buildCMDs, $line;
             }
-            # Look for RUN instructions
-            if ($line =~ /^ \* RUN:/) {
-                $line =~ s/^ \* RUN: //g;       # Remove " * RUN: "
+            # Look for TEST instructions
+            if ($line =~ /^ \* TEST:/) {
+                $line =~ s/^ \* TEST: //g;      # Remove " * TEST: "
                 $line =~ s/%s/$file/g;          # Substitute %s -> filename
                 $line =~ s/%t/$exe/g;           # Subsitute %t -> targetname
                 $line =~ s/\R//g;               # Remove line endings
-                push @runCMDs, $line;
+                push @testCMDs, $line;
             }
-            # Look for RUN_NAMED instructions
-            if ($line =~ /^ \* RUN_NAMED:/) {
-                $line =~ s/^ \* RUN_NAMED: //g; # Remove " * RUN_NAMED: "
+            # Look for TEST_NAMED instructions
+            if ($line =~ /^ \* TEST_NAMED:/) {
+                $line =~ s/^ \* TEST_NAMED: //g;# Remove " * TEST_NAMED: "
                 $line =~ s/%s/$file/g;          # Substitute %s -> filename
                 $line =~ s/%t/$exe/g;           # Subsitute %t -> targetname
                 $line =~ s/\R//g;               # Remove line endings
-                push @runNamedCMDs, $line;
+                push @testNamedCMDs, $line;
             }
             # Look for CMAKECMD instructions
             if ($line =~ /^ \* CMAKECMD:/) {
@@ -46,7 +46,7 @@ sub parse_file {
         }
         close(SOURCE);
     }
-    return (\@buildCMDs, \@runCMDs, \@runNamedCMDs, \@cmakeCMDs);
+    return (\@buildCMDs, \@testCMDs, \@testNamedCMDs, \@cmakeCMDs);
 }
 
 # Exit if no arguments specified
@@ -58,21 +58,21 @@ if(scalar @ARGV == 0){
 # Parse command
 my @options = ();
 my $retBuildCMDs = 0;
-my $retRunCMDs = 0;
-my $retRunNamedCMDs = 0;
+my $retTestCMDs = 0;
+my $retTestNamedCMDs = 0;
 my $retCmakeCMDs = 0;
 foreach $arg (@ARGV) {
-    if ($retBuildCMDs or $retRunCMDs or $retRunNamedCMDs or $retCmakeCMDs) {
+    if ($retBuildCMDs or $retTestCMDs or $retTestNamedCMDs or $retCmakeCMDs) {
         push (@options, $arg);
     }
     if ($arg eq '--buildCMDs') {
         $retBuildCMDs = 1;
     }
-    if ($arg eq '--runCMDs') {
-        $retRunCMDs = 1;
+    if ($arg eq '--testCMDs') {
+        $retTestCMDs = 1;
     }
-    if ($arg eq '--runNamedCMDs') {
-        $retRunNamedCMDs = 1;
+    if ($arg eq '--testNamedCMDs') {
+        $retTestNamedCMDs = 1;
     }
     if ($arg eq '--cmakeCMDs') {
         $retCmakeCMDs = 1;
@@ -80,26 +80,26 @@ foreach $arg (@ARGV) {
 }
 
 # Atleast one command needs to be specified
-if (($retBuildCMDs eq 0) and ($retRunCMDs eq 0) and ($retRunNamedCMDs eq 0) and ($retCmakeCMDs eq 0)) {
-    die "Usage: $0 <--buildCMDs|--runCMDs|--runNamedCMDs|--cmakeCMDs> FILENAMEs\n";
+if (($retBuildCMDs eq 0) and ($retTestCMDs eq 0) and ($retTestNamedCMDs eq 0) and ($retCmakeCMDs eq 0)) {
+    die "Usage: $0 <--buildCMDs|--testCMDs|--testNamedCMDs|--cmakeCMDs> FILENAMEs\n";
 }
 
 # Iterate over input files
 foreach $file (@options) {
     # Convert absolute path to path relative to working directory
     my $relfile = File::Spec->abs2rel($file);
-    my ($buildCMDs, $runCMDs, $runNamedCMDs, $cmakeCMDs) = parse_file("$relfile");
+    my ($buildCMDs, $testCMDs, $testNamedCMDs, $cmakeCMDs) = parse_file("$relfile");
     if ($retBuildCMDs) {
         # print "BuildCMDs:\n";
         print "$_\n" for @$buildCMDs;
     }
-    if ($retRunCMDs) {
-        # print "RunCMDs:\n";
-        print "$_\n" for @$runCMDs;
+    if ($retTestCMDs) {
+        # print "TestCMDs:\n";
+        print "$_\n" for @$testCMDs;
     }
-    if ($retRunNamedCMDs) {
-        # print "RunNamedCMDs:\n";
-        print "$_\n" for @$runNamedCMDs;
+    if ($retTestNamedCMDs) {
+        # print "TestNamedCMDs:\n";
+        print "$_\n" for @$testNamedCMDs;
     }
     if ($retCmakeCMDs) {
         # print "CmakeCMDs:\n";

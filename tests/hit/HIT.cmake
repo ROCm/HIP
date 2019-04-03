@@ -55,8 +55,8 @@ macro(PARSE_BUILD_COMMAND _target _sources _hipcc_options _hcc_options _nvcc_opt
     endforeach()
 endmacro()
 
-# Helper macro to parse RUN instructions
-macro(PARSE_RUN_COMMAND _target _arguments _exclude_platforms)
+# Helper macro to parse TEST instructions
+macro(PARSE_TEST_COMMAND _target _arguments _exclude_platforms)
     set(${_target})
     set(${_arguments} " ")
     set(${_exclude_platforms})
@@ -78,8 +78,8 @@ macro(PARSE_RUN_COMMAND _target _arguments _exclude_platforms)
     endforeach()
 endmacro()
 
-# Helper macro to parse RUN_NAMED instructions
-macro(PARSE_RUN_NAMED_COMMAND _target _testname _arguments _exclude_platforms)
+# Helper macro to parse TEST_NAMED instructions
+macro(PARSE_TEST_NAMED_COMMAND _target _testname _arguments _exclude_platforms)
     set(${_target})
     set(${_arguments} " ")
     set(${_exclude_platforms})
@@ -170,7 +170,7 @@ macro(HIT_ADD_FILES _dir _label _parent)
         endforeach()
 
         # Add tests
-        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --runCMDs ${file}
+        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --testCMDs ${file}
             OUTPUT_VARIABLE _contents
             ERROR_QUIET
             WORKING_DIRECTORY ${_dir}
@@ -178,7 +178,7 @@ macro(HIT_ADD_FILES _dir _label _parent)
         string(REGEX REPLACE "\n" ";" _contents "${_contents}")
         foreach(_cmd ${_contents})
             string(REGEX REPLACE " " ";" _cmd "${_cmd}")
-            parse_run_command(_target _arguments _exclude_platforms ${_cmd})
+            parse_test_command(_target _arguments _exclude_platforms ${_cmd})
             string(REGEX REPLACE "/" "." target ${_label}/${_target})
             read_from_map("_exclude" "${target}" _exclude_platforms_from_build)
             if(_exclude_platforms STREQUAL "all" OR _exclude_platforms STREQUAL ${HIP_PLATFORM} OR
@@ -189,7 +189,7 @@ macro(HIT_ADD_FILES _dir _label _parent)
         endforeach()
 
         # Add named tests
-        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --runNamedCMDs ${file}
+        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --testNamedCMDs ${file}
             OUTPUT_VARIABLE _contents
             ERROR_QUIET
             WORKING_DIRECTORY ${_dir}
@@ -197,7 +197,7 @@ macro(HIT_ADD_FILES _dir _label _parent)
         string(REGEX REPLACE "\n" ";" _contents "${_contents}")
         foreach(_cmd ${_contents})
             string(REGEX REPLACE " " ";" _cmd "${_cmd}")
-            parse_run_named_command(_target _testname _arguments _exclude_platforms ${_cmd})
+            parse_test_named_command(_target _testname _arguments _exclude_platforms ${_cmd})
             string(REGEX REPLACE "/" "." target ${_label}/${_target})
             read_from_map("_exclude" "${target}" _exclude_platforms_from_build)
             if(_exclude_platforms STREQUAL "all" OR _exclude_platforms STREQUAL ${HIP_PLATFORM} OR

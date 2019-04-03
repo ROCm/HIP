@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --Wno-deprecated-declarations
- * RUN: %t
+ * TEST: %t
  * HIT_END
  */
 
