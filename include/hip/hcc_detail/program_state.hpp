@@ -561,95 +561,6 @@ const std::unordered_map<
 }
 
 inline
-std::size_t parse_args(
-    const std::string& metadata,
-    std::size_t f,
-    std::size_t l,
-    std::vector<std::pair<std::size_t, std::size_t>>& size_align) {
-    if (f == l) return f;
-    if (!size_align.empty()) return l;
-
-    do {
-        static constexpr size_t size_sz{5};
-        f = metadata.find("Size:", f) + size_sz;
-
-        if (l <= f) return f;
-
-        auto size = std::strtoul(&metadata[f], nullptr, 10);
-
-        static constexpr size_t align_sz{6};
-        f = metadata.find("Align:", f) + align_sz;
-
-        char* l{};
-        auto align = std::strtoul(&metadata[f], &l, 10);
-
-        f += (l - &metadata[f]) + 1;
-
-        size_align.emplace_back(size, align);
-    } while (true);
-}
-
-inline
-void read_kernarg_metadata(
-    ELFIO::elfio& reader,
-    std::unordered_map<
-        std::string,
-        std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
-    // TODO: this is inefficient.
-    auto it = find_section_if(reader, [](const ELFIO::section* x) {
-        return x->get_type() == SHT_NOTE;
-    });
-
-    if (!it) return;
-
-    const ELFIO::note_section_accessor acc{reader, it};
-    for (decltype(acc.get_notes_num()) i = 0; i != acc.get_notes_num(); ++i) {
-        ELFIO::Elf_Word type{};
-        std::string name{};
-        void* desc{};
-        ELFIO::Elf_Word desc_size{};
-
-        acc.get_note(i, type, name, desc, desc_size);
-
-        if (name != "AMD") continue; // TODO: switch to using NT_AMD_AMDGPU_HSA_METADATA.
-
-        std::string tmp{
-            static_cast<char*>(desc), static_cast<char*>(desc) + desc_size};
-
-        auto dx = tmp.find("Kernels:");
-
-        if (dx == std::string::npos) continue;
-
-        static constexpr decltype(tmp.size()) kernels_sz{8};
-        dx += kernels_sz;
-
-        do {
-            dx = tmp.find("Name:", dx);
-
-            if (dx == std::string::npos) break;
-
-            static constexpr decltype(tmp.size()) name_sz{5};
-            dx = tmp.find_first_not_of(" '", dx + name_sz);
-
-            auto fn = tmp.substr(dx, tmp.find_first_of("'\n", dx) - dx);
-            dx += fn.size();
-
-            auto dx1 = tmp.find("CodeProps", dx);
-            dx = tmp.find("Args:", dx);
-
-            if (dx1 < dx) {
-                dx = dx1;
-                continue;
-            }
-            if (dx == std::string::npos) break;
-
-            static constexpr decltype(tmp.size()) args_sz{5};
-            dx = parse_args(tmp, dx + args_sz, dx1, kernargs[fn]);
-        } while (true);
-    }
-}
-
-inline
 void checkError(
     amd_comgr_status_t status,
     char const *str) {
@@ -684,7 +595,7 @@ void create_string_from_string_node_and_destroy(
 }
 
 inline
-void process_kernarg_metadata_comgr(
+void process_kernarg_metadata(
     amd_comgr_metadata_node_t metaHcc,
     std::unordered_map<
         std::string,
@@ -778,7 +689,7 @@ void process_kernarg_metadata_comgr(
 }
 
 inline
-void read_kernarg_metadata_comgr(
+void read_kernarg_metadata(
     std::string blob,
     std::unordered_map<
         std::string,
@@ -812,7 +723,7 @@ void read_kernarg_metadata_comgr(
         hip_throw(std::runtime_error{"Root is not map\n"});
     }
 
-    process_kernarg_metadata_comgr(metaHcc, kernargs);
+    process_kernarg_metadata(metaHcc, kernargs);
 
     hcc_stat = amd_comgr_destroy_metadata(metaHcc);
     checkError(hcc_stat, "amd_comgr_destroy_metadata");
@@ -831,15 +742,7 @@ const std::unordered_map<
     std::call_once(f, []() {
         for (auto&& isa_blobs : code_object_blobs()) {
             for (auto&& blob : isa_blobs.second) {
-//                std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
-
-//                ELFIO::elfio reader;
-
-//                if (!reader.load(tmp)) continue;
-
-                read_kernarg_metadata_comgr(std::string{blob.cbegin(), blob.cend()}, r);
-
-//                read_kernarg_metadata(reader, r);
+                read_kernarg_metadata(std::string{blob.cbegin(), blob.cend()}, r);
             }
         }
     });
