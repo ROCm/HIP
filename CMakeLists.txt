@@ -197,43 +197,41 @@ endif()
 # Detect Code Object Manager
 ################
 
-if(USE_COMGR EQUAL 1)
-    if(DEFINED ENV{CODE_OBJ_HEADER_DIR})
-        set(CODE_OBJ_HEADER_DIR $ENV{CODE_OBJ_HEADER_DIR})
-    endif()
-    if(DEFINED ENV{CODE_OBJ_MGR_DIR})
-        set(CODE_OBJ_MGR_DIR $ENV{CODE_OBJ_MGR_DIR})
-    endif()
+if(DEFINED ENV{CODE_OBJ_HEADER_DIR})
+    set(CODE_OBJ_HEADER_DIR $ENV{CODE_OBJ_HEADER_DIR})
+endif()
+if(DEFINED ENV{CODE_OBJ_MGR_DIR})
+    set(CODE_OBJ_MGR_DIR $ENV{CODE_OBJ_MGR_DIR})
+endif()
 
-    find_path(CODE_OBJ_HEADER amd_comgr.h
-        HINTS
-            ${CODE_OBJ_HEADER_DIR}
-        PATHS
-            /opt/rocm/include
-    )
-    if(NOT CODE_OBJ_HEADER)
-        MESSAGE(WARNING "Code Object Manager header not found. Use -DCODE_OBJ_HEADER_DIR=<path_to_amd_comgr.h>.")
-    endif()
+find_path(CODE_OBJ_HEADER amd_comgr.h
+    HINTS
+        ${CODE_OBJ_HEADER_DIR}
+    PATHS
+        /opt/rocm/include
+)
+if(NOT CODE_OBJ_HEADER)
+    MESSAGE(WARNING "Code Object Manager header not found. Use -DCODE_OBJ_HEADER_DIR=<path_to_amd_comgr.h>.")
+endif()
 
-    find_library(CODE_OBJ_MGR amd_comgr
-        HINTS
-            ${CODE_OBJ_MGR_DIR}
-        PATHS
-            /opt/rocm/lib
+find_library(CODE_OBJ_MGR amd_comgr
+    HINTS
+        ${CODE_OBJ_MGR_DIR}
+    PATHS
+        /opt/rocm/lib
+)
+if (NOT CODE_OBJ_MGR)
+    MESSAGE(FATAL_ERROR "Code Object Manager not found. Use -DCODE_OBJ_MGR_DIR=<path_to_libamd_comgr.so>.")
+else()
+    include_directories(${CODE_OBJ_HEADER})
+    add_library(amd_comgr SHARED IMPORTED GLOBAL)
+    set_target_properties(amd_comgr PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${CODE_OBJ_HEADER}"
+        IMPORTED_LOCATION "${CODE_OBJ_MGR}"
+        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${CODE_OBJ_HEADER}"
     )
-    if (NOT CODE_OBJ_MGR)
-        MESSAGE(FATAL_ERROR "Code Object Manager not found. Use -DCODE_OBJ_MGR_DIR=<path_to_libamd_comgr.so>.")
-    else()
-        include_directories(${CODE_OBJ_HEADER})
-        add_library(amd_comgr SHARED IMPORTED GLOBAL)
-        set_target_properties(amd_comgr PROPERTIES
-            INTERFACE_INCLUDE_DIRECTORIES "${CODE_OBJ_HEADER}"
-            IMPORTED_LOCATION "${CODE_OBJ_MGR}"
-            INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${CODE_OBJ_HEADER}"
-        )
-        MESSAGE(STATUS "Code Object Manager Header found at: ${CODE_OBJ_HEADER}")
-        MESSAGE(STATUS "Code Object Manager Library found at: ${CODE_OBJ_MGR}")
-    endif()
+    MESSAGE(STATUS "Code Object Manager Header found at: ${CODE_OBJ_HEADER}")
+    MESSAGE(STATUS "Code Object Manager Library found at: ${CODE_OBJ_MGR}")
 endif()
 
 #############################
@@ -307,10 +305,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
         target_link_libraries(hip_hcc_static PRIVATE hc_am)
     endif()
 
-    if(USE_COMGR EQUAL 1)
-        target_link_libraries(hip_hcc PRIVATE amd_comgr)
-        target_link_libraries(hip_hcc_static PRIVATE amd_comgr)
-    endif()
+    target_link_libraries(hip_hcc PRIVATE amd_comgr)
+    target_link_libraries(hip_hcc_static PRIVATE amd_comgr)
 
     string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
     foreach(TARGET hip_hcc hip_hcc_static)
