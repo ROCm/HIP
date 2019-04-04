@@ -576,32 +576,32 @@ inline
 void create_string_from_string_node_and_destroy(
     amd_comgr_metadata_node_t printNode,
     std::string& value) {
-    amd_comgr_status_t hcc_stat;
+    amd_comgr_status_t status;
     size_t printSize;
     char *printString;
 
-    hcc_stat = amd_comgr_get_metadata_string(printNode, &printSize, NULL);
-    checkError(hcc_stat, "amd_comgr_get_metadata_string");
+    status = amd_comgr_get_metadata_string(printNode, &printSize, NULL);
+    checkError(status, "amd_comgr_get_metadata_string");
     printString = (char*)malloc(printSize);
 
-    hcc_stat = amd_comgr_get_metadata_string(printNode, &printSize, printString);
-    checkError(hcc_stat, "amd_comgr_get_metadata_string");
+    status = amd_comgr_get_metadata_string(printNode, &printSize, printString);
+    checkError(status, "amd_comgr_get_metadata_string");
 
     value = printString;
     free(printString);
 
-    hcc_stat = amd_comgr_destroy_metadata(printNode);
-    checkError(hcc_stat, "amd_comgr_destroy_metadata");
+    status = amd_comgr_destroy_metadata(printNode);
+    checkError(status, "amd_comgr_destroy_metadata");
 }
 
 inline
 void process_kernarg_metadata(
-    amd_comgr_metadata_node_t metaHcc,
+    amd_comgr_metadata_node_t blob_meta,
     std::unordered_map<
         std::string,
         std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
-    amd_comgr_status_t hcc_stat;
-    amd_comgr_metadata_kind_t mkindLookupHcc;
+    amd_comgr_status_t status;
+    amd_comgr_metadata_kind_t mkindLookup;
     amd_comgr_metadata_node_t kernelList, kernelMap;
     amd_comgr_metadata_node_t kernArgList, kernArgMap;
     amd_comgr_metadata_node_t printNode;
@@ -610,82 +610,74 @@ void process_kernarg_metadata(
     size_t num_kern_args = 0;
 
     // Kernels is a list of MAPS!!
-    hcc_stat = amd_comgr_metadata_lookup(metaHcc, "Kernels", &kernelList);
-    if(hcc_stat != AMD_COMGR_STATUS_SUCCESS)
+    status = amd_comgr_metadata_lookup(blob_meta, "Kernels", &kernelList);
+    if(status != AMD_COMGR_STATUS_SUCCESS)
         return;
 
-    hcc_stat = amd_comgr_get_metadata_kind(kernelList, &mkindLookupHcc);
-    if (mkindLookupHcc != AMD_COMGR_METADATA_KIND_LIST) {
+    status = amd_comgr_get_metadata_kind(kernelList, &mkindLookup);
+    if (mkindLookup != AMD_COMGR_METADATA_KIND_LIST) {
         hip_throw(std::runtime_error{"Lookup of Kernels didn't return a list\n"});
     }
 
-    hcc_stat = amd_comgr_get_metadata_list_size(kernelList, &num_kernels);
-    checkError(hcc_stat, "amd_comgr_get_metadata_list_size");
-    std::cout << "Kernels:\nnum_kernels: " << num_kernels << std::endl;
-
+    status = amd_comgr_get_metadata_list_size(kernelList, &num_kernels);
+    checkError(status, "amd_comgr_get_metadata_list_size");
     for (int i = 0; i < num_kernels; i++) {
-        hcc_stat = amd_comgr_index_list_metadata(kernelList, i, &kernelMap);
-        checkError(hcc_stat, "amd_comgr_index_list_metadata");
+        status = amd_comgr_index_list_metadata(kernelList, i, &kernelMap);
+        checkError(status, "amd_comgr_index_list_metadata");
 
         std::string kernel_name;
-        hcc_stat = amd_comgr_metadata_lookup(kernelMap, "Name", &printNode);
-        checkError(hcc_stat, "amd_comgr_metadata_lookup");
+        status = amd_comgr_metadata_lookup(kernelMap, "Name", &printNode);
+        checkError(status, "amd_comgr_metadata_lookup");
         create_string_from_string_node_and_destroy(printNode, kernel_name);
-        std::cout << "  Name: " << kernel_name << std::endl;
 
         // Check if this kernel was already processed
         if(!kernargs[kernel_name].empty()) {
-            hcc_stat = amd_comgr_destroy_metadata(kernelMap);
-            checkError(hcc_stat, "amd_comgr_destroy_metadata");
+            status = amd_comgr_destroy_metadata(kernelMap);
+            checkError(status, "amd_comgr_destroy_metadata");
             continue;
         }
 
-        hcc_stat = amd_comgr_metadata_lookup(kernelMap, "Args", &kernArgList);
-        if (hcc_stat == AMD_COMGR_STATUS_SUCCESS ) {
-            std::cout << "  Args:" << std::endl;
-            hcc_stat = amd_comgr_get_metadata_kind(kernArgList, &mkindLookupHcc);
-            if (mkindLookupHcc != AMD_COMGR_METADATA_KIND_LIST) {
+        status = amd_comgr_metadata_lookup(kernelMap, "Args", &kernArgList);
+        if (status == AMD_COMGR_STATUS_SUCCESS ) {
+            status = amd_comgr_get_metadata_kind(kernArgList, &mkindLookup);
+            if (mkindLookup != AMD_COMGR_METADATA_KIND_LIST) {
                  hip_throw(std::runtime_error{"Lookup of Args didn't return a list\n"});
             }
 
-            if (hcc_stat == AMD_COMGR_STATUS_SUCCESS ) {
-                hcc_stat = amd_comgr_get_metadata_list_size(kernArgList, &num_kern_args);
-                checkError(hcc_stat, "amd_comgr_get_metadata_list_size");
-                std::cout << "  num_args: " << num_kern_args << std::endl;
-
+            if (status == AMD_COMGR_STATUS_SUCCESS ) {
+                status = amd_comgr_get_metadata_list_size(kernArgList, &num_kern_args);
+                checkError(status, "amd_comgr_get_metadata_list_size");
                 for (int k_ar = 0; k_ar < num_kern_args; k_ar++) {
-                    hcc_stat = amd_comgr_index_list_metadata(kernArgList, k_ar, &kernArgMap);
-                    checkError(hcc_stat, "amd_comgr_index_list_metadata");
+                    status = amd_comgr_index_list_metadata(kernArgList, k_ar, &kernArgMap);
+                    checkError(status, "amd_comgr_index_list_metadata");
                     size_t k_arg_size, k_arg_align;
 
-                    hcc_stat = amd_comgr_metadata_lookup(kernArgMap, "Size", &printNode);
-                    checkError(hcc_stat, "amd_comgr_metadata_lookup");
+                    status = amd_comgr_metadata_lookup(kernArgMap, "Size", &printNode);
+                    checkError(status, "amd_comgr_metadata_lookup");
                     create_string_from_string_node_and_destroy(printNode, printString);
                     k_arg_size = std::stoul(printString);
-                    std::cout << "      Size: " << k_arg_size << std::endl;
 
-                    hcc_stat = amd_comgr_metadata_lookup(kernArgMap, "Align", &printNode);
-                    checkError(hcc_stat, "amd_comgr_metadata_lookup");
+                    status = amd_comgr_metadata_lookup(kernArgMap, "Align", &printNode);
+                    checkError(status, "amd_comgr_metadata_lookup");
                     create_string_from_string_node_and_destroy(printNode, printString);
                     k_arg_align = std::stoul(printString);
-                    std::cout << "      Align: " << k_arg_align << std::endl;
 
                     // Save it into our kernargs
                     kernargs[kernel_name].emplace_back(k_arg_size, k_arg_align);
 
-                    hcc_stat = amd_comgr_destroy_metadata(kernArgMap);
-                    checkError(hcc_stat, "amd_comgr_destroy_metadata");
+                    status = amd_comgr_destroy_metadata(kernArgMap);
+                    checkError(status, "amd_comgr_destroy_metadata");
                 }
             }
-            hcc_stat = amd_comgr_destroy_metadata(kernArgList);
-            checkError(hcc_stat, "amd_comgr_destroy_metadata");
+            status = amd_comgr_destroy_metadata(kernArgList);
+            checkError(status, "amd_comgr_destroy_metadata");
         }
-        hcc_stat = amd_comgr_destroy_metadata(kernelMap);
-        checkError(hcc_stat, "amd_comgr_destroy_metadata");
+        status = amd_comgr_destroy_metadata(kernelMap);
+        checkError(status, "amd_comgr_destroy_metadata");
     }
 
-    hcc_stat = amd_comgr_destroy_metadata(kernelList);
-    checkError(hcc_stat, "amd_comgr_destroy_metadata");
+    status = amd_comgr_destroy_metadata(kernelList);
+    checkError(status, "amd_comgr_destroy_metadata");
 }
 
 inline
@@ -695,40 +687,40 @@ void read_kernarg_metadata(
         std::string,
         std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
 
-    const char *bufHcc = blob.data();
-    long size = blob.size();
+    const char *blob_buf = blob.data();
+    long blob_size = blob.size();
 
-    amd_comgr_status_t hcc_stat;
-    amd_comgr_data_t dataHcc;
-    hcc_stat = amd_comgr_create_data(AMD_COMGR_DATA_KIND_RELOCATABLE, &dataHcc);
-    checkError(hcc_stat, "amd_comgr_create_data");
+    amd_comgr_status_t status;
+    amd_comgr_data_t blob_data;
+    status = amd_comgr_create_data(AMD_COMGR_DATA_KIND_RELOCATABLE, &blob_data);
+    checkError(status, "amd_comgr_create_data");
 
-    hcc_stat = amd_comgr_set_data(dataHcc, size, bufHcc);
-    if(hcc_stat != AMD_COMGR_STATUS_SUCCESS)
+    status = amd_comgr_set_data(blob_data, blob_size, blob_buf);
+    if(status != AMD_COMGR_STATUS_SUCCESS)
         return;
 
     // We have a valid code object now
-    hcc_stat = amd_comgr_set_data_name(dataHcc, "HIP Code Object");
-    checkError(hcc_stat, "amd_comgr_set_data_name");
+    status = amd_comgr_set_data_name(blob_data, "HIP Code Object");
+    checkError(status, "amd_comgr_set_data_name");
 
-    amd_comgr_metadata_node_t metaHcc;
-    hcc_stat = amd_comgr_get_data_metadata(dataHcc, &metaHcc);
-    checkError(hcc_stat, "amd_comgr_get_data_metadata");
+    amd_comgr_metadata_node_t blob_meta;
+    status = amd_comgr_get_data_metadata(blob_data, &blob_meta);
+    checkError(status, "amd_comgr_get_data_metadata");
 
     // Root is a map
-    amd_comgr_metadata_kind_t mkindHcc;
-    hcc_stat = amd_comgr_get_metadata_kind(metaHcc, &mkindHcc);
-    checkError(hcc_stat, "amd_comgr_get_metadata_kind");
-    if (mkindHcc != AMD_COMGR_METADATA_KIND_MAP) {
+    amd_comgr_metadata_kind_t blob_mkind;
+    status = amd_comgr_get_metadata_kind(blob_meta, &blob_mkind);
+    checkError(status, "amd_comgr_get_metadata_kind");
+    if (blob_mkind != AMD_COMGR_METADATA_KIND_MAP) {
         hip_throw(std::runtime_error{"Root is not map\n"});
     }
 
-    process_kernarg_metadata(metaHcc, kernargs);
+    process_kernarg_metadata(blob_meta, kernargs);
 
-    hcc_stat = amd_comgr_destroy_metadata(metaHcc);
-    checkError(hcc_stat, "amd_comgr_destroy_metadata");
-    hcc_stat = amd_comgr_release_data(dataHcc);
-    checkError(hcc_stat, "amd_comgr_release_data");
+    status = amd_comgr_destroy_metadata(blob_meta);
+    checkError(status, "amd_comgr_destroy_metadata");
+    status = amd_comgr_release_data(blob_data);
+    checkError(status, "amd_comgr_release_data");
 }
 
 inline
