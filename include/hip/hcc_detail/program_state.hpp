@@ -137,6 +137,29 @@ ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
     return it != reader.sections.end() ? *it : nullptr;
 }
 
+
+
+class code_object_blobs_map_impl;
+class code_object_blobs_map {
+public:
+    code_object_blobs_map();
+    ~code_object_blobs_map();
+
+    // temporary, should be removed
+    const std::unordered_map<hsa_isa_t, std::vector<std::vector<char>>>&
+    get();
+private:
+    code_object_blobs_map_impl* handle;
+};
+
+inline
+__attribute__((visibility("hidden")))
+code_object_blobs_map& get_code_object_blobs_map() {
+    static code_object_blobs_map r;
+    return r;
+}
+
+#if 0
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
@@ -184,6 +207,7 @@ const std::unordered_map<
 
     return r;
 }
+#endif
 
 struct Symbol {
     std::string name;
@@ -224,7 +248,7 @@ const std::unordered_map<
 
             if (!tmp.load(elf)) return 0;
 
-            auto it = find_section_if(tmp, [](const ELFIO::section* x) {
+            auto it = find_section_if(tmp, [](const ELFIO::section* x) { 
                 return x->get_type() == SHT_SYMTAB;
             });
 
@@ -388,9 +412,14 @@ const std::unordered_map<
     std::call_once(f, []() {
         for (auto&& agent : hip_impl::all_hsa_agents()) {
             hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* pa) {
-                const auto it = code_object_blobs().find(x);
 
-                if (it == code_object_blobs().cend()) return HSA_STATUS_SUCCESS;
+
+                //const auto it = code_object_blobs().find(x);
+                //if (it == code_object_blobs().cend()) return HSA_STATUS_SUCCESS;
+
+                
+                const auto it = get_code_object_blobs_map().get().find(x);
+                if (it == get_code_object_blobs_map().get().cend()) return HSA_STATUS_SUCCESS;
 
                 hsa_agent_t a = *static_cast<hsa_agent_t*>(pa);
 
@@ -511,6 +540,17 @@ private:
     function_table_impl* handle;
 };
 
+#if 0
+
+inline
+__attribute__((visibility("hidden")))
+const function_table& functions() {
+  static function_table ft;
+  return ft;
+}
+
+#else
+
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
@@ -537,6 +577,7 @@ const std::unordered_map<
 
     return r;
 }
+#endif
 
 inline
 std::size_t parse_args(
@@ -636,7 +677,8 @@ const std::unordered_map<
     static std::once_flag f;
 
     std::call_once(f, []() {
-        for (auto&& isa_blobs : code_object_blobs()) {
+        //for (auto&& isa_blobs : code_object_blobs()) {
+        for (auto&& isa_blobs : get_code_object_blobs_map().get()) {
             for (auto&& blob : isa_blobs.second) {
                 std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
 

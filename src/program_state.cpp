@@ -16,8 +16,69 @@
 
 namespace hip_impl {
 
-class function_table_impl {
+class code_object_blobs_map_impl {
+public:
+    void populate() {
+        std::call_once(f, [this]() {
+            static std::vector<std::vector<char>> blobs{};
 
+            dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
+                ELFIO::elfio tmp;
+
+                const auto elf =
+                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+
+                if (!tmp.load(elf)) return 0;
+
+                const auto it = find_section_if(tmp, [](const ELFIO::section* x) {
+                    return x->get_name() == ".kernel";
+                });
+
+                if (!it) return 0;
+
+                blobs.emplace_back(it->get_data(), it->get_data() + it->get_size());
+
+                return 0;
+            }, nullptr);
+
+            for (auto&& multi_arch_blob : blobs) {
+                auto it = multi_arch_blob.begin();
+                while (it != multi_arch_blob.end()) {
+                    Bundled_code_header tmp{it, multi_arch_blob.end()};
+
+                    if (!valid(tmp)) break;
+
+                    for (auto&& bundle : bundles(tmp)) {
+                        r[triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
+                    }
+
+                    it += tmp.bundled_code_size;
+                };
+            }
+        });
+    }
+    friend class code_object_blobs_map;
+private:
+    std::unordered_map<hsa_isa_t, std::vector<std::vector<char>>> r;
+    std::once_flag f;
+};
+
+code_object_blobs_map::code_object_blobs_map() {
+    handle = new(code_object_blobs_map_impl);
+}
+
+code_object_blobs_map::~code_object_blobs_map() {
+    if (handle)
+        delete(handle);
+}
+
+const std::unordered_map<hsa_isa_t, std::vector<std::vector<char>>>&
+code_object_blobs_map::get() {
+  handle->populate();
+  return handle->r;
+}
+
+class function_table_impl {
     void build_table() {
         std::call_once(f, [this]() {
             for (auto&& function : function_names()) {
