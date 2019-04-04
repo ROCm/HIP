@@ -100,8 +100,8 @@ class PlatformState {
 public:
   struct RegisteredVar {
   public:
-    RegisteredVar(): hostVar_(nullptr), size_(0), devicePtr_(nullptr) {}
-    RegisteredVar(char* hostVar, size_t size, hipDeviceptr_t devicePtr);
+    RegisteredVar(): hostVar_(nullptr), size_(0), devicePtr_(nullptr), amd_mem_obj_(nullptr) {}
+    RegisteredVar(char* hostVar, size_t size, hipDeviceptr_t devicePtr, amd::Memory* amd_mem_obj);
     ~RegisteredVar() {}
 
     hipDeviceptr_t getdeviceptr() const { return devicePtr_; };
@@ -111,6 +111,7 @@ public:
     char*  hostVar_;            // Variable name in host code
     size_t size_;               // Size of the variable
     hipDeviceptr_t devicePtr_;  //Device Memory Address of the variable.
+    amd::Memory* amd_mem_obj_;
   };
 
 private:
