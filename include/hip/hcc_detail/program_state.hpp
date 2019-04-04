@@ -684,59 +684,24 @@ void create_string_from_string_node_and_destroy(
 }
 
 inline
-void read_kernarg_metadata_comgr(
-    std::string blob,
+void process_kernarg_metadata_comgr(
+    amd_comgr_metadata_node_t metaHcc,
     std::unordered_map<
         std::string,
         std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
-
-    const char *bufHcc = blob.data();
-    long size = blob.size();
+    amd_comgr_status_t hcc_stat;
+    amd_comgr_metadata_kind_t mkindLookupHcc;
+    amd_comgr_metadata_node_t kernelList, kernelMap;
+    amd_comgr_metadata_node_t kernArgList, kernArgMap;
     amd_comgr_metadata_node_t printNode;
     std::string printString;
-
-    amd_comgr_status_t hcc_stat;
-    amd_comgr_data_t dataHcc;
-    hcc_stat = amd_comgr_create_data(AMD_COMGR_DATA_KIND_RELOCATABLE, &dataHcc);
-    checkError(hcc_stat, "amd_comgr_create_data");
-
-    hcc_stat = amd_comgr_set_data(dataHcc, size, bufHcc);
-    if(hcc_stat != AMD_COMGR_STATUS_SUCCESS)
-        return;
-
-    // We have a valid code object now
-    hcc_stat = amd_comgr_set_data_name(dataHcc, "HIP Code Object");
-    checkError(hcc_stat, "amd_comgr_set_data_name");
-
-    amd_comgr_metadata_node_t metaHcc;
-    hcc_stat = amd_comgr_get_data_metadata(dataHcc, &metaHcc);
-    checkError(hcc_stat, "amd_comgr_get_data_metadata");
-
-    // Root is a map
-    amd_comgr_metadata_kind_t mkindHcc;
-    hcc_stat = amd_comgr_get_metadata_kind(metaHcc, &mkindHcc);
-    checkError(hcc_stat, "amd_comgr_get_metadata_kind");
-    if (mkindHcc != AMD_COMGR_METADATA_KIND_MAP) {
-        hip_throw(std::runtime_error{"Root is not map\n"});
-    }
-
-    amd_comgr_metadata_kind_t mkindLookupHcc;
-    amd_comgr_metadata_node_t kernelList;
-    amd_comgr_metadata_node_t kernelMap;
-    amd_comgr_metadata_node_t kernArgList;
-    amd_comgr_metadata_node_t kernArgMap;
     size_t num_kernels = 0;
     size_t num_kern_args = 0;
 
     // Kernels is a list of MAPS!!
     hcc_stat = amd_comgr_metadata_lookup(metaHcc, "Kernels", &kernelList);
-    if(hcc_stat != AMD_COMGR_STATUS_SUCCESS) {
-        hcc_stat = amd_comgr_destroy_metadata(metaHcc);
-        checkError(hcc_stat, "amd_comgr_destroy_metadata");
-        hcc_stat = amd_comgr_release_data(dataHcc);
-        checkError(hcc_stat, "amd_comgr_release_data");
+    if(hcc_stat != AMD_COMGR_STATUS_SUCCESS)
         return;
-    }
 
     hcc_stat = amd_comgr_get_metadata_kind(kernelList, &mkindLookupHcc);
     if (mkindLookupHcc != AMD_COMGR_METADATA_KIND_LIST) {
@@ -810,6 +775,45 @@ void read_kernarg_metadata_comgr(
 
     hcc_stat = amd_comgr_destroy_metadata(kernelList);
     checkError(hcc_stat, "amd_comgr_destroy_metadata");
+}
+
+inline
+void read_kernarg_metadata_comgr(
+    std::string blob,
+    std::unordered_map<
+        std::string,
+        std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
+
+    const char *bufHcc = blob.data();
+    long size = blob.size();
+
+    amd_comgr_status_t hcc_stat;
+    amd_comgr_data_t dataHcc;
+    hcc_stat = amd_comgr_create_data(AMD_COMGR_DATA_KIND_RELOCATABLE, &dataHcc);
+    checkError(hcc_stat, "amd_comgr_create_data");
+
+    hcc_stat = amd_comgr_set_data(dataHcc, size, bufHcc);
+    if(hcc_stat != AMD_COMGR_STATUS_SUCCESS)
+        return;
+
+    // We have a valid code object now
+    hcc_stat = amd_comgr_set_data_name(dataHcc, "HIP Code Object");
+    checkError(hcc_stat, "amd_comgr_set_data_name");
+
+    amd_comgr_metadata_node_t metaHcc;
+    hcc_stat = amd_comgr_get_data_metadata(dataHcc, &metaHcc);
+    checkError(hcc_stat, "amd_comgr_get_data_metadata");
+
+    // Root is a map
+    amd_comgr_metadata_kind_t mkindHcc;
+    hcc_stat = amd_comgr_get_metadata_kind(metaHcc, &mkindHcc);
+    checkError(hcc_stat, "amd_comgr_get_metadata_kind");
+    if (mkindHcc != AMD_COMGR_METADATA_KIND_MAP) {
+        hip_throw(std::runtime_error{"Root is not map\n"});
+    }
+
+    process_kernarg_metadata_comgr(metaHcc, kernargs);
+
     hcc_stat = amd_comgr_destroy_metadata(metaHcc);
     checkError(hcc_stat, "amd_comgr_destroy_metadata");
     hcc_stat = amd_comgr_release_data(dataHcc);
