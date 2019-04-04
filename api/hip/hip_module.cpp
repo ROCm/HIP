@@ -132,24 +132,13 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
   HIP_RETURN(hipSuccess);
 }
 
-
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod, const char* name)
 {
   HIP_INIT_API(dptr, bytes, hmod, name);
 
-  amd::Program* program = nullptr;
-  const device::Program* dev_program = nullptr;
-
-  /* Get Device Program pointer*/
-  program = as_amd(reinterpret_cast<cl_program>(hmod));
-  dev_program = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
-
-  if (dev_program == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
-  }
-
-  /* Find the global Symbols */
-  if(!dev_program->findGlobalSymbols(dptr, bytes, name)) {
+  /* Get address and size for the global symbol */
+  if (!PlatformState::instance().getGlobalVar(name, ihipGetDevice(), dptr,
+                                              bytes)) {
     HIP_RETURN(hipErrorUnknown);
   }
 

@@ -61,6 +61,9 @@ struct __ClangOffloadBundleHeader {
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
 
+hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memory** amd_mem_obj,
+                                  hipDeviceptr_t* dptr, size_t* bytes);
+
 extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
 {
   HIP_INIT();
@@ -122,26 +125,13 @@ extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
   return programs;
 }
 
-PlatformState::RegisteredVar::RegisteredVar(char* hostVar, size_t size, hipDeviceptr_t devicePtr)
-                                            : hostVar_(hostVar), size_(size), devicePtr_(devicePtr) {
-  amd::Memory* amd_mem_obj = nullptr;
-  uint32_t flags = 0;
-
-  /* Create an amd Memory object for the pointer */
-  amd_mem_obj
-    = new (*hip::getCurrentContext()) amd::Buffer(*hip::getCurrentContext(), flags, size, devicePtr_);
-
-  if (amd_mem_obj == nullptr) {
-    LogError("[OCL] failed to create a mem object!");
-  }
-
-  if (!amd_mem_obj->create(nullptr)) {
-    LogError("[OCL] failed to create a svm hidden buffer!");
-    amd_mem_obj->release();
-  }
+PlatformState::RegisteredVar::RegisteredVar(char* hostVar, size_t size, hipDeviceptr_t devicePtr,
+                                            amd::Memory* amd_mem_obj) : hostVar_(hostVar),
+                                            size_(size), devicePtr_(devicePtr),
+                                            amd_mem_obj_(amd_mem_obj) {
 
   /* Add the memory to the MemObjMap */
-  amd::MemObjMap::AddMemObj(devicePtr_, amd_mem_obj);
+  amd::MemObjMap::AddMemObj(devicePtr_, amd_mem_obj_);
 }
 
 void PlatformState::registerVar(const char* hostvar,
@@ -245,7 +235,6 @@ extern "C" void __hipRegisterVar(
   int         constant,  // Whether this variable is constant
   int         global)    // Unknown, always 0
 {
-#if 0
   HIP_INIT();
 
   size_t sym_size = 0;
@@ -253,14 +242,17 @@ extern "C" void __hipRegisterVar(
 
   for (size_t deviceId=0; deviceId < g_devices.size(); ++deviceId) {
     hipDeviceptr_t device_ptr = nullptr;
-    if((hipSuccess == hipModuleGetGlobal(&device_ptr, &sym_size, modules->at(deviceId),
-                                         hostVar)) && (device_ptr != nullptr)) {
+    amd::Memory* amd_mem_obj = nullptr;
+
+    if((hipSuccess == ihipCreateGlobalVarObj(hostVar, modules->at(deviceId), &amd_mem_obj,
+                                             &device_ptr, &sym_size))
+         && (device_ptr != nullptr)) {
 
       if (static_cast<size_t>(size) != sym_size) {
         LogError("[OCL] Size Mismatch with the HSA Symbol retrieved \n");
       }
 
-      global_vars[deviceId] = PlatformState::RegisteredVar(hostVar, sym_size, device_ptr);
+      global_vars[deviceId] = PlatformState::RegisteredVar(hostVar, sym_size, device_ptr, amd_mem_obj);
 
     } else {
       LogError("[OCL] __hipRegisterVar cannot find kernel for device \n");
@@ -268,7 +260,6 @@ extern "C" void __hipRegisterVar(
   }
 
   PlatformState::instance().registerVar(hostVar, global_vars);
-#endif
 }
 
 extern "C" void __hipUnregisterFatBinary(std::vector<hipModule_t>* modules)
@@ -349,6 +340,30 @@ hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbolName) {
   }
   HIP_RETURN(hipSuccess);
 }
+
+hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memory** amd_mem_obj, hipDeviceptr_t* dptr, size_t* bytes)
+{
+  HIP_INIT();
+
+  amd::Program* program = nullptr;
+  device::Program* dev_program = nullptr;
+
+  /* Get Device Program pointer*/
+  program = as_amd(reinterpret_cast<cl_program>(hmod));
+  dev_program = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+
+  if (dev_program == nullptr) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  /* Find the global Symbols */
+  if(!dev_program->createGlobalVarObj(amd_mem_obj, dptr, bytes, name)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
 
 #if defined(ATI_OS_LINUX)
 
