@@ -579,18 +579,16 @@ std::string lookup_keyword_value(
     amd_comgr_status_t status;
     size_t value_size;
     amd_comgr_metadata_node_t value_node;
-    std::string value;
-    char *printString;
 
     status = amd_comgr_metadata_lookup(in_node, keyword.c_str(), &value_node);
     checkError(status, "amd_comgr_metadata_lookup");
     status = amd_comgr_get_metadata_string(value_node, &value_size, NULL);
     checkError(status, "amd_comgr_get_metadata_string");
-    printString = (char*)malloc(value_size);
-    status = amd_comgr_get_metadata_string(value_node, &value_size, printString);
+    // Since value_size returns size with null terminator, we don't include for C++ string size
+    value_size--;
+    std::string value(value_size, '\0');
+    status = amd_comgr_get_metadata_string(value_node, &value_size, &value[0]);
     checkError(status, "amd_comgr_get_metadata_string");
-    value = printString;
-    free(printString);
 
     status = amd_comgr_destroy_metadata(value_node);
     checkError(status, "amd_comgr_destroy_metadata");
@@ -627,7 +625,7 @@ void process_kernarg_metadata(
         status = amd_comgr_index_list_metadata(kernelList, i, &kernelMap);
         checkError(status, "amd_comgr_index_list_metadata");
 
-        kernel_name = lookup_keyword_value(kernelMap, "Name");
+        kernel_name = std::move(lookup_keyword_value(kernelMap, "Name"));
 
         // Check if this kernel was already processed
         if(!kernargs[kernel_name].empty()) {
