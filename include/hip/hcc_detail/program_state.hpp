@@ -573,25 +573,28 @@ void checkError(
 }
 
 inline
-void create_string_from_string_node_and_destroy(
-    amd_comgr_metadata_node_t printNode,
-    std::string& value) {
+std::string lookup_keyword_value(
+    amd_comgr_metadata_node_t& in_node,
+    std::string keyword) {
     amd_comgr_status_t status;
-    size_t printSize;
+    size_t value_size;
+    amd_comgr_metadata_node_t value_node;
+    std::string value;
     char *printString;
 
-    status = amd_comgr_get_metadata_string(printNode, &printSize, NULL);
+    status = amd_comgr_metadata_lookup(in_node, keyword.c_str(), &value_node);
+    checkError(status, "amd_comgr_metadata_lookup");
+    status = amd_comgr_get_metadata_string(value_node, &value_size, NULL);
     checkError(status, "amd_comgr_get_metadata_string");
-    printString = (char*)malloc(printSize);
-
-    status = amd_comgr_get_metadata_string(printNode, &printSize, printString);
+    printString = (char*)malloc(value_size);
+    status = amd_comgr_get_metadata_string(value_node, &value_size, printString);
     checkError(status, "amd_comgr_get_metadata_string");
-
     value = printString;
     free(printString);
 
-    status = amd_comgr_destroy_metadata(printNode);
+    status = amd_comgr_destroy_metadata(value_node);
     checkError(status, "amd_comgr_destroy_metadata");
+    return value;
 }
 
 inline
@@ -604,8 +607,7 @@ void process_kernarg_metadata(
     amd_comgr_metadata_kind_t mkindLookup;
     amd_comgr_metadata_node_t kernelList, kernelMap;
     amd_comgr_metadata_node_t kernArgList, kernArgMap;
-    amd_comgr_metadata_node_t printNode;
-    std::string printString;
+    std::string kernel_name;
     size_t num_kernels = 0;
     size_t num_kern_args = 0;
 
@@ -625,10 +627,7 @@ void process_kernarg_metadata(
         status = amd_comgr_index_list_metadata(kernelList, i, &kernelMap);
         checkError(status, "amd_comgr_index_list_metadata");
 
-        std::string kernel_name;
-        status = amd_comgr_metadata_lookup(kernelMap, "Name", &printNode);
-        checkError(status, "amd_comgr_metadata_lookup");
-        create_string_from_string_node_and_destroy(printNode, kernel_name);
+        kernel_name = lookup_keyword_value(kernelMap, "Name");
 
         // Check if this kernel was already processed
         if(!kernargs[kernel_name].empty()) {
@@ -652,15 +651,8 @@ void process_kernarg_metadata(
                     checkError(status, "amd_comgr_index_list_metadata");
                     size_t k_arg_size, k_arg_align;
 
-                    status = amd_comgr_metadata_lookup(kernArgMap, "Size", &printNode);
-                    checkError(status, "amd_comgr_metadata_lookup");
-                    create_string_from_string_node_and_destroy(printNode, printString);
-                    k_arg_size = std::stoul(printString);
-
-                    status = amd_comgr_metadata_lookup(kernArgMap, "Align", &printNode);
-                    checkError(status, "amd_comgr_metadata_lookup");
-                    create_string_from_string_node_and_destroy(printNode, printString);
-                    k_arg_align = std::stoul(printString);
+                    k_arg_size = std::stoul(lookup_keyword_value(kernArgMap, "Size"));
+                    k_arg_align = std::stoul(lookup_keyword_value(kernArgMap, "Align"));
 
                     // Save it into our kernargs
                     kernargs[kernel_name].emplace_back(k_arg_size, k_arg_align);
