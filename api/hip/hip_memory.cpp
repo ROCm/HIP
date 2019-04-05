@@ -62,11 +62,14 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return hipErrorInvalidValue;
   }
 
-  if (hip::getCurrentContext()->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
+  amd::Context* amdContext = ((flags & CL_MEM_SVM_FINE_GRAIN_BUFFER) != 0)?
+    hip::host_context : hip::getCurrentContext();
+
+  if (amdContext->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
     return hipErrorMemoryAllocation;
   }
 
-  *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), flags, sizeBytes, hip::getCurrentContext()->devices()[0]->info().memBaseAddrAlign_);
+  *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_);
   if (*ptr == nullptr) {
     return hipErrorOutOfMemory;
   }
@@ -518,8 +521,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(hostPtr, sizeBytes, flags);
   if(hostPtr != nullptr) {
-    amd::Context *amdContext = hip::getCurrentContext();
-    amd::Memory* mem = new (*amdContext) amd::Buffer(*amdContext, CL_MEM_USE_HOST_PTR, sizeBytes);
+    amd::Memory* mem = new (*hip::host_context) amd::Buffer(*hip::host_context, CL_MEM_USE_HOST_PTR, sizeBytes);
 
     if (!mem->create(hostPtr)) {
       mem->release();
@@ -538,7 +540,7 @@ hipError_t hipHostUnregister(void* hostPtr) {
   if (amd::SvmBuffer::malloced(hostPtr)) {
     hip::syncStreams();
     hip::getNullStream()->finish();
-    amd::SvmBuffer::free(*hip::getCurrentContext(), hostPtr);
+    amd::SvmBuffer::free(*hip::host_context, hostPtr);
     HIP_RETURN(hipSuccess);
   } else {
     size_t offset = 0;

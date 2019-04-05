@@ -34,6 +34,7 @@ thread_local amd::Context* g_context = nullptr;
 thread_local std::stack<amd::Context*> g_ctxtStack;
 thread_local hipError_t g_lastError = hipSuccess;
 std::once_flag g_ihipInitialized;
+amd::Context* host_context = nullptr;
 
 std::map<amd::Context*, amd::HostQueue*> g_nullStreams;
 
@@ -55,6 +56,13 @@ void init() {
     } else {
       g_devices.push_back(context);
     }
+  }
+
+  host_context = new amd::Context(devices, amd::Context::Info());
+  if (!host_context) return;
+
+  if (host_context && CL_SUCCESS != host_context->create(nullptr)) {
+    host_context->release();
   }
 }
 

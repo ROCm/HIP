@@ -65,6 +65,7 @@ namespace hip {
   extern std::once_flag g_ihipInitialized;
   extern thread_local amd::Context* g_context;
   extern thread_local hipError_t g_lastError;
+  extern amd::Context* host_context;
 
   extern void init();
 
