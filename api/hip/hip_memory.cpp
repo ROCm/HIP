@@ -1459,18 +1459,12 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
     for (auto& ctx : g_devices) {
       if (*ctx == memObjCtx) {
         attributes->device = device;
-        break;
+        HIP_RETURN(hipSuccess);
       }
       ++device;
     }
-  } else {
-    attributes->memoryType = hipMemoryTypeHost;
-    attributes->hostPointer = (void*)ptr;
-    attributes->devicePointer = 0;
-    attributes->device = -1;
-    attributes->isManaged = 0;
-    attributes->allocationFlags = 0;
+    HIP_RETURN(hipErrorInvalidDevice);
   }
 
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipErrorInvalidValue);
 }
