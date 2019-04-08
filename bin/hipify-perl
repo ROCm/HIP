@@ -243,6 +243,7 @@ while (@ARGV) {
         $ft{'err'} += s/\bcudaErrorMemoryAllocation\b/hipErrorMemoryAllocation/g;
         $ft{'err'} += s/\bcudaErrorMemoryFree\b/hipErrorMemoryFree/g;
         $ft{'err'} += s/\bcudaErrorUnknownSymbol\b/hipErrorUnknownSymbol/g;
+	$ft{'err'} += s/\bcudaErrorInvalidSymbol\b/hipErrorInvalidSymbol/g;
         $ft{'err'} += s/\bcudaErrorOutOfResources\b/hipErrorOutOfResources/g;
         $ft{'err'} += s/\bcudaErrorInvalidValue\b/hipErrorInvalidValue/g;
         $ft{'err'} += s/\bcudaErrorInvalidResourceHandle\b/hipErrorInvalidResourceHandle/g;
