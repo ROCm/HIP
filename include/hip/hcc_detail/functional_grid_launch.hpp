@@ -58,6 +58,7 @@ template <
     typename... Ts,
     typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
+    program_state&,
     const std::tuple<Ts...>&,
     const std::vector<std::pair<std::size_t, std::size_t>>&,
     std::vector<std::uint8_t> kernarg) {
@@ -69,6 +70,7 @@ template <
     typename... Ts,
     typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
+    program_state& ps,
     const std::tuple<Ts...>& formals,
     const std::vector<std::pair<std::size_t, std::size_t>>& size_align,
     std::vector<std::uint8_t> kernarg) {
@@ -93,24 +95,25 @@ inline std::vector<std::uint8_t> make_kernarg(
         &std::get<n>(formals),
         size_align[n].first);
 
-    return make_kernarg<n + 1>(formals, size_align, std::move(kernarg));
+    return make_kernarg<n + 1>(ps, formals, size_align, std::move(kernarg));
 }
 
 template <typename... Formals, typename... Actuals>
 inline std::vector<std::uint8_t> make_kernarg(
+    program_state& ps,
     void (*kernel)(Formals...), std::tuple<Actuals...> actuals) {
     static_assert(sizeof...(Formals) == sizeof...(Actuals),
         "The count of formal arguments must match the count of actuals.");
 
     if (sizeof...(Formals) == 0) return {};
 
-    auto it = function_names().find(reinterpret_cast<std::uintptr_t>(kernel));
-    if (it == function_names().cend()) {
+    auto it = function_names(ps).find(reinterpret_cast<std::uintptr_t>(kernel));
+    if (it == function_names(ps).cend()) {
         hip_throw(std::runtime_error{"Undefined __global__ function."});
     }
 
-    auto it1 = kernargs().find(it->second);
-    if (it1 == kernargs().end()) {
+    auto it1 = kernargs(ps).find(it->second);
+    if (it1 == kernargs(ps).end()) {
         hip_throw(std::runtime_error{
             "Missing metadata for __global__ function: " + it->second});
     }
@@ -119,15 +122,15 @@ inline std::vector<std::uint8_t> make_kernarg(
     std::vector<std::uint8_t> kernarg;
     kernarg.reserve(sizeof(to_formals));
 
-    return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
+    return make_kernarg<0>(ps, to_formals, it1->second, std::move(kernarg));
 }
 
 inline
-std::string name(std::uintptr_t function_address)
+std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
 {
-    const auto it = function_names().find(function_address);
+    const auto it = function_names(ps).find(function_address);
 
-    if (it == function_names().cend())  {
+    if (it == function_names(ps).cend())  {
         hip_throw(std::runtime_error{
             "Invalid function passed to hipLaunchKernelGGL."});
     }
@@ -155,12 +158,15 @@ void hipLaunchKernelGGLImpl(
     std::uint32_t sharedMemBytes,
     hipStream_t stream,
     void** kernarg) {
-    auto it0 = functions().find(function_address);
 
-    if (it0 == functions().cend()) {
+    auto& ps = hip_impl::get_program_state();
+
+    auto it0 = functions(ps).find(function_address);
+
+    if (it0 == functions(ps).cend()) {
         hip_throw(std::runtime_error{
             "No device code available for function: " +
-            name(function_address)});
+            name(ps, function_address)});
     }
 
     auto agent = target_agent(stream);
@@ -174,7 +180,7 @@ void hipLaunchKernelGGLImpl(
 
     if (it1 == it0->second.cend()) {
         hip_throw(std::runtime_error{
-            "No code available for function: " + name(function_address) +
+            "No code available for function: " + name(ps, function_address) +
             ", for agent: " + name(agent)});
     }
 
@@ -190,7 +196,7 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                         std::uint32_t sharedMemBytes, hipStream_t stream,
                         Args... args) {
     hip_impl::hip_init();
-    auto kernarg = hip_impl::make_kernarg(
+    auto kernarg = hip_impl::make_kernarg(hip_impl::get_program_state(),
         kernel, std::tuple<Args...>{std::move(args)...});
     std::size_t kernarg_size = kernarg.size();
 

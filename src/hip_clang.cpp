@@ -85,7 +85,8 @@ __hipRegisterFatBinary(const void* data)
           reinterpret_cast<uintptr_t>(header) + desc->offset), desc->size};
       if (HIP_DUMP_CODE_OBJECT)
         __hipDumpCodeObject(image);
-      module->executable = hip_impl::load_executable(image, module->executable, agent);
+      module->executable = hip_impl::load_executable(hip_impl::get_program_state(), 
+                                                     image, module->executable, agent);
 
       if (module->executable.handle) {
         modules->at(deviceId) = module;

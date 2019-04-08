@@ -2683,7 +2683,7 @@ hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
     static std::once_flag f;
 
     std::call_once(f, []() {
-        for (auto&& agent_executables : executables()) {
+        for (auto&& agent_executables : executables(hip_impl::get_program_state())) {
             std::vector<Agent_global> tmp0;
             for (auto&& executable : agent_executables.second) {
                 auto tmp1 = read_agent_globals(agent_executables.first,
@@ -2726,6 +2726,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 #endif // __HIP_VDI__
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
+
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that
  * location.

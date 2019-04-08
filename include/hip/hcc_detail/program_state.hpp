@@ -139,35 +139,69 @@ ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
 
 
 
-class code_object_blobs_map_impl;
-class code_object_blobs_map {
-public:
-    code_object_blobs_map();
-    ~code_object_blobs_map();
+class program_state_impl {
 
-    // temporary, should be removed
-    const std::unordered_map<hsa_isa_t, std::vector<std::vector<char>>>&
-    get();
-private:
-    code_object_blobs_map_impl* handle;
+public:
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<
+            hsa_isa_t,
+            std::vector<std::vector<char>>>> code_object_blobs;
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<
+            std::string, 
+            std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>>> symbol_addresses;
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>>> executables;        
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<
+            std::string, std::vector<hsa_executable_symbol_t>>> kernels;        
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<
+            std::string, std::vector<std::pair<std::size_t, std::size_t>>>> kernargs;
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<std::uintptr_t, std::string>> function_names;
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<
+            std::uintptr_t,
+            std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>> functions;
+      
+    std::pair<
+        std::once_flag,
+        std::unordered_map<std::string, void*>> globals;
+};
+
+class program_state {
+public:
+    program_state_impl impl;
 };
 
 inline
 __attribute__((visibility("hidden")))
-code_object_blobs_map& get_code_object_blobs_map() {
-    static code_object_blobs_map r;
-    return r;
+program_state& get_program_state() {
+    static program_state ps;
+    return ps;
 }
 
-#if 0
-inline
-__attribute__((visibility("hidden")))
-const std::unordered_map<
-    hsa_isa_t, std::vector<std::vector<char>>>& code_object_blobs() {
-    static std::unordered_map<hsa_isa_t, std::vector<std::vector<char>>> r;
-    static std::once_flag f;
 
-    std::call_once(f, []() {
+inline
+const std::unordered_map<
+    hsa_isa_t, std::vector<std::vector<char>>>& code_object_blobs(program_state& ps) {
+
+    std::call_once(ps.impl.code_object_blobs.first, [&ps]() {
         static std::vector<std::vector<char>> blobs{};
 
         dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
@@ -197,7 +231,7 @@ const std::unordered_map<
                 if (!valid(tmp)) break;
 
                 for (auto&& bundle : bundles(tmp)) {
-                    r[triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
+                    ps.impl.code_object_blobs.second[triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
                 }
 
                 it += tmp.bundled_code_size;
@@ -205,9 +239,8 @@ const std::unordered_map<
         }
     });
 
-    return r;
+    return ps.impl.code_object_blobs.second;
 }
-#endif
 
 struct Symbol {
     std::string name;
@@ -232,16 +265,18 @@ Symbol read_symbol(const ELFIO::symbol_section_accessor& section,
 }
 
 inline
-__attribute__((visibility("hidden")))
 const std::unordered_map<
     std::string,
-    std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>>& symbol_addresses() {
-    static std::unordered_map<
-        std::string, std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>> r;
-    static std::once_flag f;
+    std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>>& symbol_addresses(program_state& ps) {
 
-    std::call_once(f, []() {
-        dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
+    std::call_once(ps.impl.symbol_addresses.first, [&ps]() {
+        dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* ps_ptr) {
+
+            if (!ps_ptr)
+                return 0;
+
+            program_state& ps = *static_cast<program_state*>(ps_ptr);
+
             ELFIO::elfio tmp;
             const auto elf =
                 info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
@@ -262,16 +297,27 @@ const std::unordered_map<
                 if (s.type != STT_OBJECT || s.sect_idx == SHN_UNDEF) continue;
 
                 const auto addr = s.value + info->dlpi_addr;
-                r.emplace(std::move(s.name), std::make_pair(addr, s.size));
+                ps.impl.symbol_addresses.second.emplace(std::move(s.name), std::make_pair(addr, s.size));
             }
 
             return 0;
-        }, nullptr);
+        }, &ps);
     });
 
-    return r;
+    return ps.impl.symbol_addresses.second;
 }
 
+
+#if 1
+
+inline
+std::unordered_map<std::string, void*>& globals(program_state& ps) {
+    std::call_once(ps.impl.globals.first, [&ps]() { 
+        ps.impl.globals.second.reserve(symbol_addresses(ps).size()); 
+    });
+    return ps.impl.globals.second;
+}
+#else
 inline
 __attribute__((visibility("hidden")))
 std::unordered_map<std::string, void*>& globals() {
@@ -282,6 +328,7 @@ std::unordered_map<std::string, void*>& globals() {
 
     return r;
 }
+#endif
 
 inline
 std::vector<std::string> copy_names_of_undefined_symbols(
@@ -305,6 +352,7 @@ void hip_throw(const std::exception&);
 
 inline
 void associate_code_object_symbols_with_host_allocation(
+    program_state& ps,
     const ELFIO::elfio& reader,
     ELFIO::section* code_object_dynsym,
     hsa_agent_t agent,
@@ -315,11 +363,11 @@ void associate_code_object_symbols_with_host_allocation(
         ELFIO::symbol_section_accessor{reader, code_object_dynsym});
 
     for (auto&& x : undefined_symbols) {
-        if (globals().find(x) != globals().cend()) return;
+        if (globals(ps).find(x) != globals(ps).cend()) return;
 
-        const auto it1 = symbol_addresses().find(x);
+        const auto it1 = symbol_addresses(ps).find(x);
 
-        if (it1 == symbol_addresses().cend()) {
+        if (it1 == symbol_addresses(ps).cend()) {
             hip_throw(std::runtime_error{
                 "Global symbol: " + x + " is undefined."});
         }
@@ -327,9 +375,9 @@ void associate_code_object_symbols_with_host_allocation(
         static std::mutex mtx;
         std::lock_guard<std::mutex> lck{mtx};
 
-        if (globals().find(x) != globals().cend()) return;
+        if (globals(ps).find(x) != globals(ps).cend()) return;
 
-        globals().emplace(x, (void*)(it1->second.first));
+        globals(ps).emplace(x, (void*)(it1->second.first));
         void* p = nullptr;
         hsa_amd_memory_lock(
             reinterpret_cast<void*>(it1->second.first),
@@ -378,7 +426,8 @@ void load_code_object_and_freeze_executable(
 }
 
 inline
-hsa_executable_t load_executable(const std::string& file,
+hsa_executable_t load_executable(program_state& ps,
+                                 const std::string& file,
                                  hsa_executable_t executable,
                                  hsa_agent_t agent) {
     ELFIO::elfio reader;
@@ -391,7 +440,7 @@ hsa_executable_t load_executable(const std::string& file,
             return x->get_type() == SHT_DYNSYM;
     });
 
-    associate_code_object_symbols_with_host_allocation(reader,
+    associate_code_object_symbols_with_host_allocation(ps, reader,
                                                        code_object_dynsym,
                                                        agent, executable);
 
@@ -401,6 +450,56 @@ hsa_executable_t load_executable(const std::string& file,
 }
 
 std::vector<hsa_agent_t> all_hsa_agents();
+
+
+
+
+#if 1
+
+inline
+const std::unordered_map<
+    hsa_agent_t, std::vector<hsa_executable_t>>& executables(program_state& ps) {
+
+    std::call_once(ps.impl.executables.first, [&ps]() {
+        for (auto&& agent : hip_impl::all_hsa_agents()) {
+
+            auto data = std::make_pair(&ps, &agent);
+
+            hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* d) {
+
+                auto& p = *static_cast<decltype(data)*>(d);
+
+                const auto it = code_object_blobs(*(p.first)).find(x);
+                if (it == code_object_blobs(*(p.first)).cend()) return HSA_STATUS_SUCCESS;
+
+                hsa_agent_t a = *static_cast<hsa_agent_t*>(p.second);
+
+                for (auto&& blob : it->second) {
+                    hsa_executable_t tmp = {};
+
+                    hsa_executable_create_alt(
+                        HSA_PROFILE_FULL,
+                        HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
+                        nullptr,
+                        &tmp);
+
+                    // TODO: this is massively inefficient and only meant for
+                    // illustration.
+                    std::string blob_to_str{blob.cbegin(), blob.cend()};
+                    tmp = load_executable(*(p.first), blob_to_str, tmp, a);
+
+                    if (tmp.handle) p.first->impl.executables.second[a].push_back(tmp);
+                }
+
+                return HSA_STATUS_SUCCESS;
+            }, &data);
+        }
+    });
+
+    return ps.impl.executables.second;
+}
+
+#else
 
 inline
 __attribute__((visibility("hidden")))
@@ -413,13 +512,8 @@ const std::unordered_map<
         for (auto&& agent : hip_impl::all_hsa_agents()) {
             hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* pa) {
 
-
-                //const auto it = code_object_blobs().find(x);
-                //if (it == code_object_blobs().cend()) return HSA_STATUS_SUCCESS;
-
-                
-                const auto it = get_code_object_blobs_map().get().find(x);
-                if (it == get_code_object_blobs_map().get().cend()) return HSA_STATUS_SUCCESS;
+                const auto it = code_object_blobs().find(x);
+                if (it == code_object_blobs().cend()) return HSA_STATUS_SUCCESS;
 
                 hsa_agent_t a = *static_cast<hsa_agent_t*>(pa);
 
@@ -448,6 +542,8 @@ const std::unordered_map<
     return r;
 }
 
+#endif
+
 inline
 std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
     const ELFIO::elfio& reader, ELFIO::section* symtab) {
@@ -468,6 +564,44 @@ std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
 
     return r;
 }
+
+
+#if 1
+
+inline
+const std::unordered_map<std::uintptr_t, std::string>& function_names(program_state& ps) {
+
+    std::call_once(ps.impl.function_names.first, [&ps]() {
+        dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
+            ELFIO::elfio tmp;
+            const auto elf =
+                info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+
+            if (!tmp.load(elf)) return 0;
+
+            const auto it = find_section_if(tmp, [](const ELFIO::section* x) {
+                return x->get_type() == SHT_SYMTAB;
+            });
+
+            if (!it) return 0;
+
+            auto names = function_names_for(tmp, it);
+            for (auto&& x : names) x.first += info->dlpi_addr;
+
+            auto& ps = *static_cast<program_state*>(p);
+            ps.impl.function_names.second.insert(
+                std::make_move_iterator(names.begin()),
+                std::make_move_iterator(names.end()));
+
+            return 0;
+        }, &ps);
+    });
+
+    return ps.impl.function_names.second;
+}
+
+
+#else
 
 inline
 __attribute__((visibility("hidden")))
@@ -503,6 +637,38 @@ const std::unordered_map<std::uintptr_t, std::string>& function_names() {
     return r;
 }
 
+#endif
+
+
+#if 1
+
+inline
+const std::unordered_map<
+    std::string, std::vector<hsa_executable_symbol_t>>& kernels(program_state& ps) {
+
+    std::call_once(ps.impl.kernels.first, [&ps]() {
+        static const auto copy_kernels = [](
+            hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* p) {
+            auto& ps = *static_cast<program_state*>(p);
+            if (type(x) == HSA_SYMBOL_KIND_KERNEL) ps.impl.kernels.second[name(x)].push_back(x);
+
+            return HSA_STATUS_SUCCESS;
+        };
+
+        for (auto&& agent_executables : executables(ps)) {
+            for (auto&& executable : agent_executables.second) {
+                hsa_executable_iterate_agent_symbols(
+                    executable, agent_executables.first, copy_kernels, &ps);
+            }
+        }
+    });
+
+    return ps.impl.kernels.second;
+}
+
+
+#else
+
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
@@ -530,27 +696,33 @@ const std::unordered_map<
     return r;
 }
 
-class function_table_impl;
-class function_table {
-    function_table() : handle(init_function_table()) {}
-    ~function_table() { release_function_table(handle); }
-private:
-    function_table_impl* init_function_table();
-    void release_function_table(function_table_impl*);
-    function_table_impl* handle;
-};
+#endif
 
-#if 0
+#if 1
 
 inline
-__attribute__((visibility("hidden")))
-const function_table& functions() {
-  static function_table ft;
-  return ft;
+const std::unordered_map<
+    std::uintptr_t,
+    std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions(program_state& ps) {
+
+    std::call_once(ps.impl.functions.first, [&ps]() {
+        for (auto&& function : function_names(ps)) {
+            const auto it = kernels(ps).find(function.second);
+
+            if (it == kernels(ps).cend()) continue;
+
+            for (auto&& kernel_symbol : it->second) {
+                ps.impl.functions.second[function.first].emplace_back(
+                    agent(kernel_symbol),
+                    Kernel_descriptor{kernel_object(kernel_symbol), it->first});
+            }
+        }
+    });
+
+    return ps.impl.functions.second;
 }
 
 #else
-
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
@@ -668,6 +840,31 @@ void read_kernarg_metadata(
     }
 }
 
+#if 1
+
+inline
+const std::unordered_map<
+    std::string, std::vector<std::pair<std::size_t, std::size_t>>>& kernargs(program_state& ps) {
+
+    std::call_once(ps.impl.kernargs.first, [&ps]() {
+        for (auto&& isa_blobs : code_object_blobs(ps)) {
+            for (auto&& blob : isa_blobs.second) {
+                std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
+
+                ELFIO::elfio reader;
+
+                if (!reader.load(tmp)) continue;
+
+                read_kernarg_metadata(reader, ps.impl.kernargs.second);
+            }
+        }
+    });
+
+    return ps.impl.kernargs.second;
+}
+
+#else
+
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
@@ -677,8 +874,7 @@ const std::unordered_map<
     static std::once_flag f;
 
     std::call_once(f, []() {
-        //for (auto&& isa_blobs : code_object_blobs()) {
-        for (auto&& isa_blobs : get_code_object_blobs_map().get()) {
+        for (auto&& isa_blobs : code_object_blobs()) {
             for (auto&& blob : isa_blobs.second) {
                 std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
 
@@ -693,4 +889,7 @@ const std::unordered_map<
 
     return r;
 }
+
+#endif
+
 }  // Namespace hip_impl.

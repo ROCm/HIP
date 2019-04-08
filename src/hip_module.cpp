@@ -511,9 +511,11 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     if (!attr) return hipErrorInvalidValue;
     if (!func) return hipErrorInvalidDeviceFunction;
 
-    const auto it0 = functions().find(reinterpret_cast<uintptr_t>(func));
+    auto& ps = get_program_state();
 
-    if (it0 == functions().cend()) return hipErrorInvalidDeviceFunction;
+    const auto it0 = functions(ps).find(reinterpret_cast<uintptr_t>(func));
+
+    if (it0 == functions(ps).cend()) return hipErrorInvalidDeviceFunction;
 
     auto agent = this_agent();
     const auto it1 = find_if(
@@ -557,7 +559,8 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     auto content = tmp.empty() ? read_elf_file_as_string(image) : tmp;
 
-    (*module)->executable = load_executable(content, (*module)->executable,
+    (*module)->executable = load_executable(get_program_state(),
+                                            content, (*module)->executable,
                                             this_agent());
 
     // compute the hash of the code object
@@ -601,8 +604,10 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
     if (!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
 
-    const auto it = globals().find(name);
-    if (it == globals().end()) return ihipLogStatus(hipErrorInvalidValue);
+    auto& ps = get_program_state();
+
+    const auto it = globals(ps).find(name);
+    if (it == globals(ps).end()) return ihipLogStatus(hipErrorInvalidValue);
 
     *texRef = reinterpret_cast<textureReference*>(it->second);
     return ihipLogStatus(hipSuccess);
