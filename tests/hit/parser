@@ -8,7 +8,7 @@ use File::Spec;
 sub parse_file {
     my $file = shift;
     (my $exe = $file) =~ s/\.[^.]+$//g;
-    my (@buildCMDs, @testCMDs, @testNamedCMDs, @cmakeCMDs);
+    my (@buildCMDs, @testCMDs, @testNamedCMDs);
     if (open (SOURCE, '<:encoding(UTF-8)', "$file")) {
         while (<SOURCE>) {
             my $line=$_;
@@ -36,17 +36,10 @@ sub parse_file {
                 $line =~ s/\R//g;               # Remove line endings
                 push @testNamedCMDs, $line;
             }
-            # Look for CMAKECMD instructions
-            if ($line =~ /^ \* CMAKECMD:/) {
-                $line =~ s/^ \* CMAKECMD: //g;  # Remove " * CMAKECMD: "
-                # Substitute %S -> srcdir and %B -> builddir happens in cmake
-                $line =~ s/\R//g;               # Remove line endings
-                push @cmakeCMDs, $line;
-            }
         }
         close(SOURCE);
     }
-    return (\@buildCMDs, \@testCMDs, \@testNamedCMDs, \@cmakeCMDs);
+    return (\@buildCMDs, \@testCMDs, \@testNamedCMDs);
 }
 
 # Exit if no arguments specified
@@ -60,9 +53,8 @@ my @options = ();
 my $retBuildCMDs = 0;
 my $retTestCMDs = 0;
 my $retTestNamedCMDs = 0;
-my $retCmakeCMDs = 0;
 foreach $arg (@ARGV) {
-    if ($retBuildCMDs or $retTestCMDs or $retTestNamedCMDs or $retCmakeCMDs) {
+    if ($retBuildCMDs or $retTestCMDs or $retTestNamedCMDs) {
         push (@options, $arg);
     }
     if ($arg eq '--buildCMDs') {
@@ -74,21 +66,18 @@ foreach $arg (@ARGV) {
     if ($arg eq '--testNamedCMDs') {
         $retTestNamedCMDs = 1;
     }
-    if ($arg eq '--cmakeCMDs') {
-        $retCmakeCMDs = 1;
-    }
 }
 
 # Atleast one command needs to be specified
-if (($retBuildCMDs eq 0) and ($retTestCMDs eq 0) and ($retTestNamedCMDs eq 0) and ($retCmakeCMDs eq 0)) {
-    die "Usage: $0 <--buildCMDs|--testCMDs|--testNamedCMDs|--cmakeCMDs> FILENAMEs\n";
+if (($retBuildCMDs eq 0) and ($retTestCMDs eq 0) and ($retTestNamedCMDs eq 0)) {
+    die "Usage: $0 <--buildCMDs|--testCMDs|--testNamedCMDs> FILENAMEs\n";
 }
 
 # Iterate over input files
 foreach $file (@options) {
     # Convert absolute path to path relative to working directory
     my $relfile = File::Spec->abs2rel($file);
-    my ($buildCMDs, $testCMDs, $testNamedCMDs, $cmakeCMDs) = parse_file("$relfile");
+    my ($buildCMDs, $testCMDs, $testNamedCMDs) = parse_file("$relfile");
     if ($retBuildCMDs) {
         # print "BuildCMDs:\n";
         print "$_\n" for @$buildCMDs;
@@ -100,10 +89,6 @@ foreach $file (@options) {
     if ($retTestNamedCMDs) {
         # print "TestNamedCMDs:\n";
         print "$_\n" for @$testNamedCMDs;
-    }
-    if ($retCmakeCMDs) {
-        # print "CmakeCMDs:\n";
-        print "$_\n" for @$cmakeCMDs;
     }
 }
 
