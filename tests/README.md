@@ -75,18 +75,6 @@ TEST: %t CMAKE_TEST_NAME <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hc
 ```
 
 
-#### CMAKECMD command
-
-The supported syntax for the CMAKECMD command is:
-```
-CMAKECMD: <cmake_command> <options_to_cmake_command>
-```
-cmake_command: refers to any of the commands supported by ```cmake -E``` as specified in the [cmake documentation](https://cmake.org/cmake/help/latest/manual/cmake.1.html#command-line-tool-mode). Note that the commands are limited by the version of cmake the user is running.
-options_to_cmake_command: refers to the arguments supported by the specific cmake_command. The arguments are parsed by HIT to replace special markers. The markers supported by HIT are:
-%S: Refers to the source directory containing the current source file.
-%B: Refers to the build directory for the current cmake project i.e. CMAKE_CURRENT_BINARY_DIR.
-
-
 ### Running tests:
 ```
 ctest

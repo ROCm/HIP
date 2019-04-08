@@ -155,20 +155,6 @@ macro(HIT_ADD_FILES _dir _label _parent)
             endif()
         endforeach()
 
-        # Run cmake commands
-        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --cmakeCMDs ${file}
-            OUTPUT_VARIABLE _contents
-            ERROR_QUIET
-            WORKING_DIRECTORY ${_dir}
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-        string(REGEX REPLACE "\n" ";" _contents "${_contents}")
-        string(REGEX REPLACE "%S" ${_dir} _contents "${_contents}")
-        string(REGEX REPLACE "%B" ${CMAKE_CURRENT_BINARY_DIR} _contents "${_contents}")
-        foreach(_cmd ${_contents})
-            string(REGEX REPLACE " " ";" _cmd "${_cmd}")
-            execute_process(COMMAND ${CMAKE_COMMAND} -E ${_cmd})
-        endforeach()
-
         # Add tests
         execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --testCMDs ${file}
             OUTPUT_VARIABLE _contents
