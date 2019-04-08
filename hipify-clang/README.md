@@ -32,9 +32,9 @@
 ## <a name="dependencies"></a> Dependencies
 
 `hipify-clang` requires:
-1. LLVM+CLANG of at least version 3.8.0, the latest stable and recommended release: 6.0.1 (Linux and windows).
+1. **LLVM+CLANG** of at least version 3.8.0, the latest stable and recommended release: **6.0.1 on Windows**, and **8.0.0 on Linux**.
 
-2. CUDA at least version 7.0, the latest supported version is 9.0.
+2. **CUDA** at least version 7.0, the latest supported version is **9.0 on Windows**, and **10.0 on Linux**.
 
 | **LLVM release version** | **CUDA latest supported version** | **Windows**  | **Linux** |
 |:------------------------:|:---------------------------------:|:------------:|:---------:|
@@ -48,12 +48,12 @@
 | 5.0.1                    | 8.0                               | +            | +         |
 | 5.0.2                    | 8.0                               | +            | +         |
 | 6.0.0                    | 9.0                               | +            | +         |
-| **6.0.1**                | **9.0**                           | + <br/> **LATEST STABLE RELEASE** | + <br/> **LATEST STABLE RELEASE** |
+| **6.0.1**                | **9.0**                           | + <br/> **LATEST STABLE RELEASE** | + |
 | 7.0.0                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
 | 7.0.1                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
 | 7.1.0                    | 9.2 (?)                           | - <br/> LLVM 7.1.0 <br/> is not yet released | - <br/> LLVM 7.1.0 <br/> is not yet released |
-| 8.0.0                    | 10.1                              | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
-| 8.0.1                    | 10.1                              | - <br/> LLVM 8.0.1 <br/> is not yet released | - <br/> LLVM 8.0.1 <br/> is not yet released |
+| **8.0.0**                | **10.0**                          | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | + <br/> **LATEST STABLE RELEASE** |
+| 8.0.1                    | 10.1 (?)                          | - <br/> LLVM 8.0.1 <br/> is not yet released | - <br/> LLVM 8.0.1 <br/> is not yet released |
 
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
 
@@ -89,7 +89,7 @@ The binary can then be found at `./dist/bin/hipify-clang`.
 
 `hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
-**LLVM+CLANG should be built from sources, Pre-Built Binaries are not exhaustive for testing.**
+**LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive for testing.**
 
 To run it:
 1. Download [`LLVM`](http://releases.llvm.org/6.0.1/llvm-6.0.1.src.tar.xz)+[`CLANG`](http://releases.llvm.org/6.0.1/cfe-6.0.1.src.tar.xz) sources.
@@ -124,11 +124,11 @@ To run it:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Run `Visual Studio 15 2017`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
 
 
-3. Ensure [`CUDA`](https://developer.nvidia.com/cuda-toolkit-archive) of minimum version 7.5 is installed.
+3. Ensure [`CUDA`](https://developer.nvidia.com/cuda-toolkit-archive) of minimum version 7.0 is installed.
 
     * Having multiple CUDA installations to choose a particular version the `DCUDA_TOOLKIT_ROOT_DIR` option should be specified:
 
-        - Linux: `-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0`
+        - Linux: `-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-10.0`
 
         - Windows: `-DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0"`
 
@@ -138,7 +138,7 @@ To run it:
 
     * Path to cuDNN should be specified by the `CUDA_DNN_ROOT_DIR` option:
 
-        - Linux: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-8.0-v7.1`
+        - Linux: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.0-v7.5.0.56`
 
         - Windows: `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.1`
 
@@ -148,13 +148,13 @@ To run it:
 
     * Install `lit` into `python`:
 
-        - Linux: `python /srv/git/LLVM/6.0.1/llvm/utils/lit/setup.py install`
+        - Linux: `python /srv/git/LLVM/8.0.0/llvm/utils/lit/setup.py install`
 
         - Windows: `python f:/LLVM/6.0.1/llvm/utils/lit/setup.py install`
 
     * Starting with LLVM 6.0.1 path to `llvm-lit` python script should be specified by the `LLVM_EXTERNAL_LIT` option:
 
-        - Linux: `-DLLVM_EXTERNAL_LIT=/srv/git/LLVM/6.0.1/build/bin/llvm-lit`
+        - Linux: `-DLLVM_EXTERNAL_LIT=/srv/git/LLVM/8.0.0/build/bin/llvm-lit`
 
         - Windows: `-DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.1/build/Release/bin/llvm-lit.py`
 
@@ -172,9 +172,11 @@ To run it:
 
 ### <a name="linux"></a >Linux
 
-On Linux (Ubuntu 14-18) the following configurations are tested:
+On Linux the following configurations are tested:
 
-LLVM 5.0.0 - 6.0.1, CUDA 8.0, cudnn-8.0
+Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-8.0 - cudnn-9.0
+
+Ubuntu 16-18: LLVM 8.0.0, CUDA 8.0 - 10.0, cudnn-8.0 - cudnn-10.0
 
 Build system for the above configurations:
 
@@ -187,10 +189,10 @@ cmake
  -DHIPIFY_CLANG_TESTS=1 \
  -DCMAKE_BUILD_TYPE=Release \
  -DCMAKE_INSTALL_PREFIX=../dist \
- -DCMAKE_PREFIX_PATH=/srv/git/LLVM/6.0.1/dist \
- -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-8.0 \
- -DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-8.0-v7.1 \
- -DLLVM_EXTERNAL_LIT=/srv/git/LLVM/6.0.1/build/bin/llvm-lit \
+ -DCMAKE_PREFIX_PATH=/srv/git/LLVM/8.0.0/dist \
+ -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-10.0 \
+ -DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.0-v7.5.0.56 \
+ -DLLVM_EXTERNAL_LIT=/srv/git/LLVM/8.0.0/build/bin/llvm-lit \
  ..
 ```
 *A corresponding successful output:*
@@ -209,14 +211,14 @@ cmake
 -- Detecting CXX compiler ABI info - done
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
--- Found LLVM 6.0.1:
---    - CMake module path: /srv/git/LLVM/6.0.1/dist/lib/cmake/llvm
---    - Include path     : /srv/git/LLVM/6.0.1/dist/include
---    - Binary path      : /srv/git/LLVM/6.0.1/dist/bin
+-- Found LLVM 8.0.0:
+--    - CMake module path: /srv/git/LLVM/8.0.0/dist/lib/cmake/llvm
+--    - Include path     : /srv/git/LLVM/8.0.0/dist/include
+--    - Binary path      : /srv/git/LLVM/8.0.0/dist/bin
 -- Linker detection: GNU ld
 -- Found PythonInterp: /usr/bin/python2.7 (found suitable version "2.7.12", minimum required is "2.7")
 -- Found lit: /usr/local/bin/lit
--- Found FileCheck: /srv/git/LLVM/6.0.1/dist/bin/FileCheck
+-- Found FileCheck: /srv/git/LLVM/8.0.0/dist/bin/FileCheck
 -- Looking for pthread.h
 -- Looking for pthread.h - found
 -- Looking for pthread_create
@@ -226,7 +228,7 @@ cmake
 -- Looking for pthread_create in pthread
 -- Looking for pthread_create in pthread - found
 -- Found Threads: TRUE
--- Found CUDA: /usr/local/cuda-8.0 (found version "8.0")
+-- Found CUDA: /usr/local/cuda-10.0 (found version "10.0")
 -- Configuring done
 -- Generating done
 -- Build files have been written to: /srv/git/HIP/hipify-clang/build
@@ -237,45 +239,61 @@ make test-hipify
 *A corresponding successful output:*
 ```shell
 [100%] Running HIPify regression tests
-CUDA 8.0 will be used for testing.
--- Testing: 35 tests, 12 threads --
-PASS: hipify :: unit_tests/headers/headers_test_05.cu (1 of 35)
-PASS: hipify :: unit_tests/headers/headers_test_01.cu (2 of 35)
-PASS: hipify :: unit_tests/headers/headers_test_02.cu (3 of 35)
-PASS: hipify :: unit_tests/headers/headers_test_03.cu (4 of 35)
-PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_0_based_indexing.cu (5 of 35)
-PASS: hipify :: unit_tests/headers/headers_test_06.cu (6 of 35)
-PASS: hipify :: unit_tests/headers/headers_test_07.cu (7 of 35)
-PASS: hipify :: unit_tests/libraries/CAFFE2/caffe2_02.cu (8 of 35)
-PASS: hipify :: unit_tests/headers/headers_test_04.cu (9 of 35)
-PASS: hipify :: unit_tests/headers/headers_test_08.cu (10 of 35)
-PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_1_based_indexing.cu (11 of 35)
-PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_sgemm_matrix_multiplication.cu (12 of 35)
-PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_1_based_indexing_rocblas.cu (13 of 35)
-PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_0_based_indexing_rocblas.cu (14 of 35)
-PASS: hipify :: unit_tests/libraries/cuComplex/cuComplex_Julia.cu (15 of 35)
-PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_sgemm_matrix_multiplication_rocblas.cu (16 of 35)
-PASS: hipify :: unit_tests/libraries/cuDNN/cudnn_softmax.cu (17 of 35)
-PASS: hipify :: unit_tests/libraries/cuFFT/simple_cufft.cu (18 of 35)
-PASS: hipify :: unit_tests/samples/allocators.cu (19 of 35)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_02.cu (20 of 35)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_01.cu (21 of 35)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_03.cu (22 of 35)
-PASS: hipify :: unit_tests/samples/coalescing.cu (23 of 35)
-PASS: hipify :: unit_tests/libraries/cuDNN/cudnn_convolution_forward.cu (24 of 35)
-PASS: hipify :: unit_tests/libraries/cuRAND/poisson_api_example.cu (25 of 35)
-PASS: hipify :: unit_tests/libraries/CAFFE2/caffe2_01.cu (26 of 35)
-PASS: hipify :: unit_tests/samples/intro.cu (27 of 35)
-PASS: hipify :: unit_tests/samples/static_shared_memory.cu (28 of 35)
-PASS: hipify :: unit_tests/samples/axpy.cu (29 of 35)
-PASS: hipify :: unit_tests/samples/dynamic_shared_memory.cu (30 of 35)
-PASS: hipify :: unit_tests/samples/square.cu (31 of 35)
-PASS: hipify :: unit_tests/samples/cudaRegister.cu (32 of 35)
-PASS: hipify :: unit_tests/samples/vec_add.cu (33 of 35)
-PASS: hipify :: unit_tests/headers/headers_test_09.cu (34 of 35)
-PASS: hipify :: unit_tests/libraries/cuRAND/benchmark_curand_generate.cpp (35 of 35)
-Testing Time: 1.81s
-  Expected Passes    : 35
+========================================
+CUDA 10.0 - will be used for testing
+LLVM 8.0.0 - will be used for testing
+x86_64 - Platform architecture
+Linux 4.13.0-32-generic - Platform OS
+64 - hipify-clang binary bitness
+64 - python 2.7.12 binary bitness
+========================================
+-- Testing: 44 tests, 12 threads --
+PASS: hipify :: unit_tests/headers/headers_test_03.cu (1 of 44)
+PASS: hipify :: unit_tests/headers/headers_test_02.cu (2 of 44)
+PASS: hipify :: unit_tests/headers/headers_test_05.cu (3 of 44)
+PASS: hipify :: unit_tests/headers/headers_test_01.cu (4 of 44)
+PASS: hipify :: unit_tests/headers/headers_test_06.cu (5 of 44)
+PASS: hipify :: unit_tests/headers/headers_test_07.cu (6 of 44)
+PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_0_based_indexing.cu (7 of 44)
+PASS: hipify :: unit_tests/libraries/CAFFE2/caffe2_02.cu (8 of 44)
+PASS: hipify :: unit_tests/headers/headers_test_04.cu (9 of 44)
+PASS: hipify :: unit_tests/headers/headers_test_08.cu (10 of 44)
+PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_1_based_indexing.cu (11 of 44)
+PASS: hipify :: unit_tests/libraries/cuComplex/cuComplex_Julia.cu (12 of 44)
+PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_1_based_indexing_rocblas.cu (13 of 44)
+PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_sgemm_matrix_multiplication.cu (14 of 44)
+PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_0_based_indexing_rocblas.cu (15 of 44)
+PASS: hipify :: unit_tests/libraries/cuDNN/cudnn_softmax.cu (16 of 44)
+PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_sgemm_matrix_multiplication_rocblas.cu (17 of 44)
+PASS: hipify :: unit_tests/libraries/cuFFT/simple_cufft.cu (18 of 44)
+PASS: hipify :: unit_tests/libraries/CAFFE2/caffe2_01.cu (19 of 44)
+PASS: hipify :: unit_tests/libraries/cuDNN/cudnn_convolution_forward.cu (20 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_01.cu (21 of 44)
+PASS: hipify :: unit_tests/libraries/cuRAND/poisson_api_example.cu (22 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_02.cu (23 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_03.cu (24 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_04.cu (25 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_05.cu (26 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_06.cu (27 of 44)
+PASS: hipify :: unit_tests/samples/allocators.cu (28 of 44)
+PASS: hipify :: unit_tests/samples/coalescing.cu (29 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_07.cu (30 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_11.cu (31 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_09.cu (32 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_08.cu (33 of 44)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_10.cu (34 of 44)
+PASS: hipify :: unit_tests/headers/headers_test_09.cu (35 of 44)
+PASS: hipify :: unit_tests/samples/axpy.cu (36 of 44)
+PASS: hipify :: unit_tests/samples/cudaRegister.cu (37 of 44)
+PASS: hipify :: unit_tests/samples/dynamic_shared_memory.cu (38 of 44)
+PASS: hipify :: unit_tests/samples/vec_add.cu (39 of 44)
+PASS: hipify :: unit_tests/samples/intro.cu (40 of 44)
+PASS: hipify :: unit_tests/samples/square.cu (41 of 44)
+PASS: hipify :: unit_tests/samples/static_shared_memory.cu (42 of 44)
+PASS: hipify :: unit_tests/libraries/cuRAND/benchmark_curand_generate.cpp (43 of 44)
+PASS: hipify :: unit_tests/libraries/cuRAND/benchmark_curand_kernel.cpp (44 of 44)
+Testing Time: 2.51s
+  Expected Passes    : 44
 [100%] Built target test-hipify
 ```
 
@@ -283,9 +301,9 @@ Testing Time: 1.81s
 
 On Windows the following configurations are tested:
 
-LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-9.0
-
 LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn-8.0
+
+LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-9.0
 
 Build system for the above configurations:
 
@@ -329,7 +347,7 @@ To process a file, `hipify-clang` needs access to the same headers that would be
 For example:
 
 ```shell
-./hipify-clang square.cu --cuda-path=/usr/local/cuda-8.0 -I /usr/local/cuda-8.0/samples/common/inc
+./hipify-clang square.cu --cuda-path=/usr/local/cuda-10.0 -I /usr/local/cuda-10.0/samples/common/inc
 ```
 
 `hipify-clang` arguments are given first, followed by a separator, and then the arguments you'd pass to `clang` if you
