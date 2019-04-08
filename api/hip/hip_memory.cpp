@@ -1456,6 +1456,8 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
     attributes->allocationFlags = memObj->getMemFlags() >> 16;
 
     amd::Context &memObjCtx = memObj->getContext();
+    if (*hip::host_context == memObjCtx)
+        HIP_RETURN(hipSuccess);
     for (auto& ctx : g_devices) {
       if (*ctx == memObjCtx) {
         attributes->device = device;
