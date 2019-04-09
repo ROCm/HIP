@@ -186,7 +186,9 @@ public:
 
 class program_state {
 public:
-    program_state_impl impl;
+    program_state();
+    ~program_state();
+    program_state_impl& impl;
 };
 
 inline
@@ -195,7 +197,6 @@ program_state& get_program_state() {
     static program_state ps;
     return ps;
 }
-
 
 inline
 const std::unordered_map<
@@ -307,9 +308,6 @@ const std::unordered_map<
     return ps.impl.symbol_addresses.second;
 }
 
-
-#if 1
-
 inline
 std::unordered_map<std::string, void*>& globals(program_state& ps) {
     std::call_once(ps.impl.globals.first, [&ps]() { 
@@ -317,18 +315,6 @@ std::unordered_map<std::string, void*>& globals(program_state& ps) {
     });
     return ps.impl.globals.second;
 }
-#else
-inline
-__attribute__((visibility("hidden")))
-std::unordered_map<std::string, void*>& globals() {
-    static std::unordered_map<std::string, void*> r;
-    static std::once_flag f;
-
-    std::call_once(f, []() { r.reserve(symbol_addresses().size()); });
-
-    return r;
-}
-#endif
 
 inline
 std::vector<std::string> copy_names_of_undefined_symbols(
@@ -451,11 +437,6 @@ hsa_executable_t load_executable(program_state& ps,
 
 std::vector<hsa_agent_t> all_hsa_agents();
 
-
-
-
-#if 1
-
 inline
 const std::unordered_map<
     hsa_agent_t, std::vector<hsa_executable_t>>& executables(program_state& ps) {
@@ -499,51 +480,6 @@ const std::unordered_map<
     return ps.impl.executables.second;
 }
 
-#else
-
-inline
-__attribute__((visibility("hidden")))
-const std::unordered_map<
-    hsa_agent_t, std::vector<hsa_executable_t>>& executables() {
-    static std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>> r;
-    static std::once_flag f;
-
-    std::call_once(f, []() {
-        for (auto&& agent : hip_impl::all_hsa_agents()) {
-            hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* pa) {
-
-                const auto it = code_object_blobs().find(x);
-                if (it == code_object_blobs().cend()) return HSA_STATUS_SUCCESS;
-
-                hsa_agent_t a = *static_cast<hsa_agent_t*>(pa);
-
-                for (auto&& blob : it->second) {
-                    hsa_executable_t tmp = {};
-
-                    hsa_executable_create_alt(
-                        HSA_PROFILE_FULL,
-                        HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
-                        nullptr,
-                        &tmp);
-
-                    // TODO: this is massively inefficient and only meant for
-                    // illustration.
-                    std::string blob_to_str{blob.cbegin(), blob.cend()};
-                    tmp = load_executable(blob_to_str, tmp, a);
-
-                    if (tmp.handle) r[a].push_back(tmp);
-                }
-
-                return HSA_STATUS_SUCCESS;
-            }, &agent);
-        }
-    });
-
-    return r;
-}
-
-#endif
-
 inline
 std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
     const ELFIO::elfio& reader, ELFIO::section* symtab) {
@@ -564,9 +500,6 @@ std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
 
     return r;
 }
-
-
-#if 1
 
 inline
 const std::unordered_map<std::uintptr_t, std::string>& function_names(program_state& ps) {
@@ -600,48 +533,6 @@ const std::unordered_map<std::uintptr_t, std::string>& function_names(program_st
     return ps.impl.function_names.second;
 }
 
-
-#else
-
-inline
-__attribute__((visibility("hidden")))
-const std::unordered_map<std::uintptr_t, std::string>& function_names() {
-    static std::unordered_map<std::uintptr_t, std::string> r;
-    static std::once_flag f;
-
-    std::call_once(f, []() {
-        dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
-            ELFIO::elfio tmp;
-            const auto elf =
-                info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
-
-            if (!tmp.load(elf)) return 0;
-
-            const auto it = find_section_if(tmp, [](const ELFIO::section* x) {
-                return x->get_type() == SHT_SYMTAB;
-            });
-
-            if (!it) return 0;
-
-            auto names = function_names_for(tmp, it);
-            for (auto&& x : names) x.first += info->dlpi_addr;
-
-            r.insert(
-                std::make_move_iterator(names.begin()),
-                std::make_move_iterator(names.end()));
-
-            return 0;
-        }, nullptr);
-    });
-
-    return r;
-}
-
-#endif
-
-
-#if 1
-
 inline
 const std::unordered_map<
     std::string, std::vector<hsa_executable_symbol_t>>& kernels(program_state& ps) {
@@ -666,40 +557,6 @@ const std::unordered_map<
     return ps.impl.kernels.second;
 }
 
-
-#else
-
-inline
-__attribute__((visibility("hidden")))
-const std::unordered_map<
-    std::string, std::vector<hsa_executable_symbol_t>>& kernels() {
-    static std::unordered_map<
-        std::string, std::vector<hsa_executable_symbol_t>> r;
-    static std::once_flag f;
-
-    std::call_once(f, []() {
-        static const auto copy_kernels = [](
-            hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void*) {
-            if (type(x) == HSA_SYMBOL_KIND_KERNEL) r[name(x)].push_back(x);
-
-            return HSA_STATUS_SUCCESS;
-        };
-
-        for (auto&& agent_executables : executables()) {
-            for (auto&& executable : agent_executables.second) {
-                hsa_executable_iterate_agent_symbols(
-                    executable, agent_executables.first, copy_kernels, nullptr);
-            }
-        }
-    });
-
-    return r;
-}
-
-#endif
-
-#if 1
-
 inline
 const std::unordered_map<
     std::uintptr_t,
@@ -721,35 +578,6 @@ const std::unordered_map<
 
     return ps.impl.functions.second;
 }
-
-#else
-inline
-__attribute__((visibility("hidden")))
-const std::unordered_map<
-    std::uintptr_t,
-    std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions() {
-    static std::unordered_map<
-        std::uintptr_t,
-        std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>> r;
-    static std::once_flag f;
-
-    std::call_once(f, []() {
-        for (auto&& function : function_names()) {
-            const auto it = kernels().find(function.second);
-
-            if (it == kernels().cend()) continue;
-
-            for (auto&& kernel_symbol : it->second) {
-                r[function.first].emplace_back(
-                    agent(kernel_symbol),
-                    Kernel_descriptor{kernel_object(kernel_symbol), it->first});
-            }
-        }
-    });
-
-    return r;
-}
-#endif
 
 inline
 std::size_t parse_args(
@@ -840,8 +668,6 @@ void read_kernarg_metadata(
     }
 }
 
-#if 1
-
 inline
 const std::unordered_map<
     std::string, std::vector<std::pair<std::size_t, std::size_t>>>& kernargs(program_state& ps) {
@@ -862,34 +688,5 @@ const std::unordered_map<
 
     return ps.impl.kernargs.second;
 }
-
-#else
-
-inline
-__attribute__((visibility("hidden")))
-const std::unordered_map<
-    std::string, std::vector<std::pair<std::size_t, std::size_t>>>& kernargs() {
-    static std::unordered_map<
-        std::string, std::vector<std::pair<std::size_t, std::size_t>>> r;
-    static std::once_flag f;
-
-    std::call_once(f, []() {
-        for (auto&& isa_blobs : code_object_blobs()) {
-            for (auto&& blob : isa_blobs.second) {
-                std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
-
-                ELFIO::elfio reader;
-
-                if (!reader.load(tmp)) continue;
-
-                read_kernarg_metadata(reader, r);
-            }
-        }
-    });
-
-    return r;
-}
-
-#endif
 
 }  // Namespace hip_impl.

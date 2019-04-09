@@ -16,13 +16,12 @@
 
 namespace hip_impl {
 
-
-#if 0
-program_state::program_state() : impl(new(program_state_impl)) { }
+program_state::program_state() : 
+    impl(*new program_state_impl) {
+}
 
 program_state::~program_state() {
-  if (ps) free(ps);
+    delete(&impl);
 }
-#endif
 
 };
