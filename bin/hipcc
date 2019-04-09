@@ -204,6 +204,12 @@ if ($HIP_PLATFORM eq "clang") {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
     }
+
+    if ($HIP_RUNTIME eq "HCC" ) {
+      $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
+      $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
+    }
+
 } elsif ($HIP_PLATFORM eq "hcc") {
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     if (! defined $HIP_LIB_PATH) {
