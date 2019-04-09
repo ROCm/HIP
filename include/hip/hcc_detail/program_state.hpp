@@ -689,6 +689,21 @@ const std::unordered_map<
     return ps.impl.kernargs.second;
 }
 
+#if 1
+inline
+std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
+{
+    const auto it = function_names(ps).find(function_address);
+
+    if (it == function_names(ps).cend())  {
+        hip_throw(std::runtime_error{
+            "Invalid function passed to hipLaunchKernelGGL."});
+    }
+
+    return it->second;
+}
+
+#else
 inline
 const char* name(program_state& ps, std::uintptr_t function_address) {
     const auto it = function_names(ps).find(function_address);
@@ -700,6 +715,7 @@ const char* name(program_state& ps, std::uintptr_t function_address) {
 
     return it->second.c_str();
 }
+#endif
 
 inline
 std::string name(hsa_agent_t agent)
