@@ -361,13 +361,13 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
 }
 
 hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname,
-                                            hsa_agent_t agent) {
+                                            hsa_agent_t* agent = nullptr) {
     using namespace hip_impl;
 
     pair<const char*, hsa_executable_symbol_t> r{kname, {}};
 
     hsa_executable_iterate_agent_symbols(
-        executable, agent,
+        executable, agent ? *agent : this_agent(),
         [](hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* s) {
             auto p = static_cast<pair<const char*, hsa_executable_symbol_t>*>(s);
 
@@ -383,10 +383,6 @@ hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const c
         &r);
 
     return r.second;
-}
-
-hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname) {
-    return find_kernel_by_name(executable, kname, hip_impl::this_agent());
 }
 
 
@@ -457,10 +453,7 @@ hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const ch
 
     if (!*func) return hipErrorInvalidValue;
 
-    if (!agent)
-      *agent = this_agent();
-
-    auto kernel = find_kernel_by_name(hmod->executable, name, *agent);
+    auto kernel = find_kernel_by_name(hmod->executable, name, agent);
 
     if (kernel.handle == 0u) return hipErrorNotFound;
 
