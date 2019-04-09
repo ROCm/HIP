@@ -58,9 +58,9 @@ template <
     typename... Ts,
     typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
-    program_state&,
     const std::tuple<Ts...>&,
-    const std::vector<std::pair<std::size_t, std::size_t>>&,
+    //const std::vector<std::pair<std::size_t, std::size_t>>&,
+    const kernargs_size_align&,
     std::vector<std::uint8_t> kernarg) {
     return kernarg;
 }
@@ -70,9 +70,9 @@ template <
     typename... Ts,
     typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
-    program_state& ps,
     const std::tuple<Ts...>& formals,
-    const std::vector<std::pair<std::size_t, std::size_t>>& size_align,
+    //const std::vector<std::pair<std::size_t, std::size_t>>& size_align,
+    const kernargs_size_align& size_align,
     std::vector<std::uint8_t> kernarg) {
     using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
 
@@ -87,6 +87,8 @@ inline std::vector<std::uint8_t> make_kernarg(
                 "function");
     #endif
 
+
+#if 0
     kernarg.resize(round_up_to_next_multiple_nonnegative(
         kernarg.size(), size_align[n].second) + size_align[n].first);
 
@@ -94,19 +96,28 @@ inline std::vector<std::uint8_t> make_kernarg(
         kernarg.data() + kernarg.size() - size_align[n].first,
         &std::get<n>(formals),
         size_align[n].first);
+#else
+    kernarg.resize(round_up_to_next_multiple_nonnegative(
+        kernarg.size(), size_align.size(n) + size_align.alignment(n)));
 
-    return make_kernarg<n + 1>(ps, formals, size_align, std::move(kernarg));
+    std::memcpy(
+        kernarg.data() + kernarg.size() - size_align.size(n),
+        &std::get<n>(formals),
+        size_align.alignment(n));
+#endif
+    return make_kernarg<n + 1>(formals, size_align, std::move(kernarg));
 }
 
 template <typename... Formals, typename... Actuals>
 inline std::vector<std::uint8_t> make_kernarg(
-    program_state& ps,
     void (*kernel)(Formals...), std::tuple<Actuals...> actuals) {
     static_assert(sizeof...(Formals) == sizeof...(Actuals),
         "The count of formal arguments must match the count of actuals.");
 
     if (sizeof...(Formals) == 0) return {};
 
+#if 0
+    auto& ps = hip_impl::get_program_state();
     auto it = function_names(ps).find(reinterpret_cast<std::uintptr_t>(kernel));
     if (it == function_names(ps).cend()) {
         hip_throw(std::runtime_error{"Undefined __global__ function."});
@@ -117,14 +128,24 @@ inline std::vector<std::uint8_t> make_kernarg(
         hip_throw(std::runtime_error{
             "Missing metadata for __global__ function: " + it->second});
     }
+#endif
+
 
     std::tuple<Formals...> to_formals{std::move(actuals)};
     std::vector<std::uint8_t> kernarg;
     kernarg.reserve(sizeof(to_formals));
 
-    return make_kernarg<0>(ps, to_formals, it1->second, std::move(kernarg));
+#if 0
+    return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
+#else
+    return make_kernarg<0>(to_formals, 
+                           kern_size_align(hip_impl::get_program_state(),
+                                           reinterpret_cast<std::uintptr_t>(kernel)), 
+                           std::move(kernarg));
+#endif
 }
 
+#if 0
 inline
 std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
 {
@@ -137,7 +158,9 @@ std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
 
     return it->second;
 }
+#endif
 
+#if 0
 inline
 std::string name(hsa_agent_t agent)
 {
@@ -146,6 +169,7 @@ std::string name(hsa_agent_t agent)
 
     return std::string{n};
 }
+#endif
 
 hsa_agent_t target_agent(hipStream_t stream);
 
@@ -159,6 +183,7 @@ void hipLaunchKernelGGLImpl(
     hipStream_t stream,
     void** kernarg) {
 
+#if 0
     auto& ps = hip_impl::get_program_state();
 
     auto it0 = functions(ps).find(function_address);
@@ -166,7 +191,7 @@ void hipLaunchKernelGGLImpl(
     if (it0 == functions(ps).cend()) {
         hip_throw(std::runtime_error{
             "No device code available for function: " +
-            name(ps, function_address)});
+            std::string(hip_impl::name(ps, function_address))});
     }
 
     auto agent = target_agent(stream);
@@ -180,13 +205,23 @@ void hipLaunchKernelGGLImpl(
 
     if (it1 == it0->second.cend()) {
         hip_throw(std::runtime_error{
-            "No code available for function: " + name(ps, function_address) +
+            "No code available for function: " + std::string(hip_impl::name(ps, function_address)) +
             ", for agent: " + name(agent)});
     }
 
     hipModuleLaunchKernel(it1->second, numBlocks.x, numBlocks.y, numBlocks.z,
                           dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
                           stream, nullptr, kernarg);
+#else
+
+    auto& kd = kernel_descriptor(hip_impl::get_program_state(),
+                                 function_address, target_agent(stream));
+
+    hipModuleLaunchKernel(kd, numBlocks.x, numBlocks.y, numBlocks.z,
+                          dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
+                          stream, nullptr, kernarg);
+
+#endif
 }
 } // Namespace hip_impl.
 
@@ -196,8 +231,7 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                         std::uint32_t sharedMemBytes, hipStream_t stream,
                         Args... args) {
     hip_impl::hip_init();
-    auto kernarg = hip_impl::make_kernarg(hip_impl::get_program_state(),
-        kernel, std::tuple<Args...>{std::move(args)...});
+    auto kernarg = hip_impl::make_kernarg(kernel, std::tuple<Args...>{std::move(args)...});
     std::size_t kernarg_size = kernarg.size();
 
     void* config[]{

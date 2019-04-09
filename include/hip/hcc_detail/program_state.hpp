@@ -689,4 +689,91 @@ const std::unordered_map<
     return ps.impl.kernargs.second;
 }
 
+inline
+const char* name(program_state& ps, std::uintptr_t function_address) {
+    const auto it = function_names(ps).find(function_address);
+
+    if (it == function_names(ps).cend())  {
+        hip_throw(std::runtime_error{
+            "Invalid function passed to hipLaunchKernelGGL."});
+    }
+
+    return it->second.c_str();
+}
+
+inline
+std::string name(hsa_agent_t agent)
+{
+    char n[64]{};
+    hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
+
+    return std::string{n};
+}
+
+inline
+const Kernel_descriptor& kernel_descriptor(program_state& ps, 
+                                           std::uintptr_t function_address,
+                                           hsa_agent_t agent) {
+
+
+    auto it0 = functions(ps).find(function_address);
+
+    if (it0 == functions(ps).cend()) {
+        hip_throw(std::runtime_error{
+            "No device code available for function: " +
+            std::string(hip_impl::name(ps, function_address))});
+    }
+
+    const auto it1 = std::find_if(
+        it0->second.cbegin(),
+        it0->second.cend(),
+        [=](const std::pair<hsa_agent_t, Kernel_descriptor>& x) {
+        return x.first == agent;
+    });
+
+    if (it1 == it0->second.cend()) {
+        hip_throw(std::runtime_error{
+            "No code available for function: " + std::string(hip_impl::name(ps, function_address)) +
+            ", for agent: " + name(agent)});
+    }
+
+    return it1->second;
+}
+
+class kernargs_size_align {
+public:
+    std::size_t size(std::size_t n) const;
+    std::size_t alignment(std::size_t n) const;
+    const void* handle;
+};
+
+inline
+std::size_t kernargs_size_align::size(std::size_t n) const{
+    return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].first;
+}
+
+inline
+std::size_t kernargs_size_align::alignment(std::size_t n) const{
+    return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].second;
+}
+
+inline
+const kernargs_size_align kern_size_align(program_state& ps,
+                                           std::uintptr_t kernel_address) {
+    auto it = function_names(ps).find(kernel_address);
+    if (it == function_names(ps).cend()) {
+        hip_throw(std::runtime_error{"Undefined __global__ function."});
+    }
+    auto it1 = kernargs(ps).find(it->second);
+    if (it1 == kernargs(ps).end()) {
+        hip_throw(std::runtime_error{
+            "Missing metadata for __global__ function: " + it->second});
+    }
+
+    kernargs_size_align r;
+    r.handle = reinterpret_cast<const void*>(&it1->second);
+    return r;
+}
+
+
 }  // Namespace hip_impl.
