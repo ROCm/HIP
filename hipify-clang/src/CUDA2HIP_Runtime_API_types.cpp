@@ -770,6 +770,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorSystemNotReady",                                          {"hipErrorSystemNotReady",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 83
   // CUDA_ERROR_ILLEGAL_STATE = 401
   {"cudaErrorIllegalState",                                            {"hipErrorIllegalState",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 84
+  // CUDA_ERROR_SYSTEM_DRIVER_MISMATCH
+  {"cudaErrorSystemDriverMismatch",                                    {"hipErrorSystemDriverMismatch",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 803
+  // CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE
+  {"cudaErrorCompatNotSupportedOnDevice",                              {"hipErrorCompatNotSupportedOnDevice",                       "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 804
   // no analogue
   {"cudaErrorStartupFailure",                                          {"hipErrorStartupFailure",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 127
   // CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED = 900
@@ -788,6 +792,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorStreamCaptureImplicit",                                   {"hipErrorStreamCaptureImplicit",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 906
   // CUDA_ERROR_CAPTURED_EVENT = 907
   {"cudaErrorCapturedEvent",                                           {"hipErrorCapturedEvent",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 907
+  // CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD = 908
+  {"cudaErrorStreamCaptureWrongThread",                                {"hipErrorStreamCaptureWrongThread",                         "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 908
   // Deprecated since CUDA 4.1
   {"cudaErrorApiFailureBase",                                          {"hipErrorApiFailureBase",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 10000
 
@@ -1082,6 +1088,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaStreamCaptureStatusActive",                                    {"hipStreamCaptureStatusActive",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 1
   // CU_STREAM_CAPTURE_STATUS_INVALIDATED
   {"cudaStreamCaptureStatusInvalidated",                               {"hipStreamCaptureStatusInvalidated",                        "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 2
+
+  // CUstreamCaptureMode
+  {"cudaStreamCaptureMode",                                            {"hipStreamCaptureMode",                                     "", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cudaStreamCaptureMode enum values
+  // CU_STREAM_CAPTURE_MODE_GLOBAL
+  {"cudaStreamCaptureModeGlobal",                                      {"hipStreamCaptureModeGlobal",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 0
+  // CU_STREAM_CAPTURE_MODE_THREAD_LOCAL
+  {"cudaStreamCaptureModeThreadLocal",                                 {"hipStreamCaptureModeThreadLocal",                          "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 1
+  // CU_STREAM_CAPTURE_MODE_RELAXED
+  {"cudaStreamCaptureModeRelaxed",                                     {"hipStreamCaptureModeRelaxed",                              "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 2
 
   // no analogue
   {"cudaSurfaceBoundaryMode",                                          {"hipSurfaceBoundaryMode",                                   "", CONV_TYPE, API_RUNTIME}},
