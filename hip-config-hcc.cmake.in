@@ -39,6 +39,8 @@ if (NOT _CMakeFindDependencyMacro_FOUND)
   endmacro()
 endif()
 
+set(HIP_COMPILER "@HIP_COMPILER@")
+set(HIP_RUNTIME "@HIP_RUNTIME@")
 
 set_and_check( hip_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@" )
 set_and_check( hip_INCLUDE_DIRS "${hip_INCLUDE_DIR}" )
