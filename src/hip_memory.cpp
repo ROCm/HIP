@@ -1887,10 +1887,6 @@ hipError_t hipFree(void* ptr) {
 
     hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
-    // Synchronize to ensure all work has finished.
-    ihipGetTlsDefaultCtx()->locked_waitAllStreams();  // ignores non-blocking streams, this waits
-                                                      // for all activity to finish.
-
     if (ptr) {
         hc::accelerator acc;
 #if (__hcc_workweek__ >= 17332)
@@ -1901,6 +1897,19 @@ hipError_t hipFree(void* ptr) {
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
         if (status == AM_SUCCESS) {
             if (amPointerInfo._hostPointer == NULL) {
+                ihipCtx_t* ctx;
+                if (amPointerInfo._appId != -1) {
+#if USE_APP_PTR_FOR_CTX
+                    ctx = static_cast<ihipCtx_t*>(amPointerInfo._appPtr);
+#else
+                    ctx = ihipGetPrimaryCtx(amPointerInfo._appId);
+#endif
+                } else {
+                    ctx = ihipGetTlsDefaultCtx();
+                }
+                // Synchronize to ensure all work has finished.
+                ctx->locked_waitAllStreams();  // ignores non-blocking streams, this waits
+                                               // for all activity to finish.
                 hc::am_free(ptr);
                 hipStatus = hipSuccess;
             }
