@@ -514,6 +514,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED",                  {"hipDeviceP2PAttributeNativeAtomicSupported",               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x03
   // cudaDevP2PAttrCudaArrayAccessSupported = 4
   // NOTE" deprecated, use CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED instead
+  {"CU_DEVICE_P2P_ATTRIBUTE_ACCESS_ACCESS_SUPPORTED",                  {"hipDevP2PAttributeCudaArrayAccessSupported",               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x04
+  // NOTE" deprecated, use CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED instead
   {"CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED",            {"hipDevP2PAttributeCudaArrayAccessSupported",               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x04
   // cudaDevP2PAttrCudaArrayAccessSupported = 4
   {"CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED",              {"hipDevP2PAttributeCudaArrayAccessSupported",               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x04
@@ -900,6 +902,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CU_TARGET_COMPUTE_61",                                             {"hipJitTargetCompute61",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 61
   {"CU_TARGET_COMPUTE_62",                                             {"hipJitTargetCompute62",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 62
   {"CU_TARGET_COMPUTE_70",                                             {"hipJitTargetCompute70",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 70
+  {"CU_TARGET_COMPUTE_72",                                             {"hipJitTargetCompute72",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 70
   // NOTE: Deprecated
   {"CU_TARGET_COMPUTE_73",                                             {"hipJitTargetCompute73",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 73
   {"CU_TARGET_COMPUTE_75",                                             {"hipJitTargetCompute75",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 75
@@ -1234,6 +1237,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CUDA_ERROR_NOT_SUPPORTED",                                         {"hipErrorNotSupported",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 801
   // cudaErrorSystemNotReady = 83
   {"CUDA_ERROR_SYSTEM_NOT_READY",                                      {"hipErrorSystemNotReady",                                   "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 802
+  // cudaErrorSystemDriverMismatch = 803
+  {"CUDA_ERROR_SYSTEM_DRIVER_MISMATCH",                                {"hipErrorSystemDriverMismatch",                             "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 803
+  // cudaErrorCompatNotSupportedOnDevice = 804
+  {"CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE",                        {"hipErrorCompatNotSupportedOnDevice",                       "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 804
   // cudaErrorStreamCaptureUnsupported = 900
   {"CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED",                            {"hipErrorStreamCaptureUnsupported",                         "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 900
   // cudaErrorStreamCaptureInvalidated = 901
@@ -1250,6 +1257,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CUDA_ERROR_STREAM_CAPTURE_IMPLICIT",                               {"hipErrorStreamCaptureImplicit",                            "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 906
   // cudaErrorCapturedEvent = 907
   {"CUDA_ERROR_CAPTURED_EVENT",                                        {"hipErrorCapturedEvent",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 907
+  // cudaErrorStreamCaptureWrongThread = 908
+  {"CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD",                           {"hipErrorStreamCaptureWrongThread",                         "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 908
   // cudaErrorUnknown = 30
   {"CUDA_ERROR_UNKNOWN",                                               {"hipErrorUnknown",                                          "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 999
 
@@ -1304,6 +1313,17 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CU_STREAM_CAPTURE_STATUS_ACTIVE",                                  {"hipStreamCaptureStatusActive",                             "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 1
   // cudaStreamCaptureStatusInvalidated
   {"CU_STREAM_CAPTURE_STATUS_INVALIDATED",                             {"hipStreamCaptureStatusInvalidated",                        "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 2
+
+  // cudaStreamCaptureMode
+  {"CUstreamCaptureMode",                                              {"hipStreamCaptureMode",                                     "", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"CUstreamCaptureMode_enum",                                         {"hipStreamCaptureMode",                                     "", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+  // CUstreamCaptureMode enum values
+  // cudaStreamCaptureModeGlobal
+  {"CU_STREAM_CAPTURE_MODE_GLOBAL",                                    {"hipStreamCaptureModeGlobal",                               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0
+  // cudaStreamCaptureModeThreadLocal
+  {"CU_STREAM_CAPTURE_MODE_THREAD_LOCAL",                              {"hipStreamCaptureModeThreadLocal",                          "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 1
+  // cudaStreamCaptureModeRelaxed
+  {"CU_STREAM_CAPTURE_MODE_RELAXED",                                   {"hipStreamCaptureModeRelaxed",                              "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 2
 
   // no analogue
   {"CUstreamWaitValue_flags",                                          {"hipStreamWaitValueFlags",                                  "", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
