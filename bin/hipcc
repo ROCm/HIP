@@ -188,12 +188,8 @@ if ($HIP_PLATFORM eq "clang") {
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
     }
 
-
-    # By default, hip-clang assumes -fno-gpu-rdc, therefore device lib path
-    # is required.
-    $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
-    $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
-    $HIPLDFLAGS .= " $HIP_DEVLIB_FLAGS -L$HIP_LIB_PATH";
+    $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
+    $HIPLDFLAGS .= " -L$HIP_LIB_PATH";
     if (not $isWindows) {
       $HIPLDFLAGS .= " -Wl,--rpath=$HIP_LIB_PATH";
       $HIPLDFLAGS .= " -lhip_hcc";
@@ -204,6 +200,12 @@ if ($HIP_PLATFORM eq "clang") {
         ## Allow __fp16 as function parameter and return type.
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
     }
+
+    if ($HIP_RUNTIME eq "HCC" ) {
+      $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
+      $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
+    }
+
 } elsif ($HIP_PLATFORM eq "hcc") {
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     if (! defined $HIP_LIB_PATH) {
@@ -367,6 +369,8 @@ if($HIP_PLATFORM eq "nvcc"){
 }
 
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
+my $optArg = ""; # -O args
+my $rdc = 0;
 
 foreach $arg (@ARGV)
 {
@@ -457,6 +461,18 @@ foreach $arg (@ARGV)
     {
         $linkType = 1;
         $setLinkType = 1;
+    }
+    if($arg =~ m/^-O/)
+    {
+        $optArg = $arg;
+    }
+    if($arg =~ /-fgpu-rdc/)
+    {
+        $rdc = 1;
+    }
+    if($arg =~ /-fno-gpu-rdc/)
+    {
+        $rdc = 0;
     }
 
     ## process linker response file for hip-clang
@@ -782,6 +798,17 @@ if ($needHipHcc) {
 # pass-through CPP mode.
 
 if ($HIP_PLATFORM eq "clang") {
+    # Set default optimization level to -O3 for hip-clang.
+    if ($optArg eq "") {
+        $HIPCXXFLAGS .= " -O3";
+        $HIPLDFLAGS .= " -O3";
+    }
+    $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
+    if ($rdc eq 0) {
+        $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
+    } else {
+        $HIPLDFLAGS .= " $HIP_DEVLIB_FLAGS";
+    }
     if ($isWindows) {
         $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility";
     } else {
