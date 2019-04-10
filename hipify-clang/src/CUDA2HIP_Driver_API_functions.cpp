@@ -334,6 +334,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuStreamAttachMemAsync",                               {"hipStreamAttachMemAsync",                                 "", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaStreamBeginCapture
   {"cuStreamBeginCapture",                                 {"hipStreamBeginCapture",                                   "", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuStreamBeginCapture_v2",                              {"hipStreamBeginCapture",                                   "", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuStreamBeginCapture_ptsz",                            {"hipStreamBeginCapture",                                   "", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaStreamCreateWithFlags
   {"cuStreamCreate",                                       {"hipStreamCreateWithFlags",                                "", CONV_STREAM, API_DRIVER}},
   // cudaStreamCreateWithPriority
@@ -343,6 +345,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuStreamDestroy_v2",                                   {"hipStreamDestroy",                                        "", CONV_STREAM, API_DRIVER}},
   // cudaStreamEndCapture
   {"cuStreamEndCapture",                                   {"hipStreamEndCapture",                                     "", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
+  // cudaStreamGetCaptureInfo
+  {"cuStreamGetCaptureInfo",                               {"hipStreamGetCaptureInfo",                                 "", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
   {"cuStreamGetCtx",                                       {"hipStreamGetContext",                                     "", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaStreamGetFlags
@@ -357,6 +361,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuStreamSynchronize",                                  {"hipStreamSynchronize",                                    "", CONV_STREAM, API_DRIVER}},
   // cudaStreamWaitEvent
   {"cuStreamWaitEvent",                                    {"hipStreamWaitEvent",                                      "", CONV_STREAM, API_DRIVER}},
+  // cudaThreadExchangeStreamCaptureMode
+  {"cuThreadExchangeStreamCaptureMode",                    {"hipThreadExchangeStreamCaptureMode",                      "", CONV_STREAM, API_DRIVER, HIP_UNSUPPORTED}},
 
   // 5.14. Event Management
   // cudaEventCreateWithFlags
@@ -485,6 +491,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuGraphHostNodeSetParams",                             {"hipGraphHostNodeSetParams",                               "", CONV_GRAPH, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaGraphInstantiate
   {"cuGraphInstantiate",                                   {"hipGraphInstantiate",                                     "", CONV_GRAPH, API_DRIVER, HIP_UNSUPPORTED}},
+  // cudaGraphExecKernelNodeSetParams
+  {"cuGraphExecKernelNodeSetParams",                       {"hipGraphExecKernelNodeSetParams",                         "", CONV_GRAPH, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaGraphKernelNodeGetParams
   {"cuGraphKernelNodeGetParams",                           {"hipGraphKernelNodeGetParams",                             "", CONV_GRAPH, API_DRIVER, HIP_UNSUPPORTED}},
   // cudaGraphKernelNodeSetParams
