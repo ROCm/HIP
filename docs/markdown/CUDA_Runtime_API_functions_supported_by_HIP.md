@@ -60,6 +60,7 @@
 | `cudaStreamBeginCapture`                                  |                               |
 | `cudaStreamEndCapture`                                    |                               |
 | `cudaStreamIsCapturing`                                   |                               |
+| `cudaStreamGetCaptureInfo`                                |                               |
 | `cudaStreamCreate`                                        | `hipStreamCreate`             |
 | `cudaStreamCreateWithFlags`                               | `hipStreamCreateWithFlags`    |
 | `cudaStreamCreateWithPriority`                            | `hipStreamCreateWithPriority` |
@@ -69,6 +70,7 @@
 | `cudaStreamQuery`                                         | `hipStreamQuery`              |
 | `cudaStreamSynchronize`                                   | `hipStreamSynchronize`        |
 | `cudaStreamWaitEvent`                                     | `hipStreamWaitEvent`          |
+| `cudaThreadExchangeStreamCaptureMode`                     |                               |
 
 ## **5. Event Management**
 
@@ -396,6 +398,7 @@
 | `cudaGraphHostNodeGetParams`                              |                               |
 | `cudaGraphHostNodeSetParams`                              |                               |
 | `cudaGraphInstantiate`                                    |                               |
+| `cudaGraphExecKernelNodeSetParams`                        |                               |
 | `cudaGraphKernelNodeGetParams`                            |                               |
 | `cudaGraphKernelNodeSetParams`                            |                               |
 | `cudaGraphLaunch`                                         |                               |
@@ -784,6 +787,8 @@
 |           83 |*`cudaErrorSystemNotReady`*                          |                                                            |
 |           84 |*`cudaErrorIllegalState`*                            |                                                            |
 |          127 |*`cudaErrorStartupFailure`*                          |                                                            |
+|          803 |*`cudaErrorSystemDriverMismatch`*                    |                                                            |
+|          804 |*`cudaErrorCompatNotSupportedOnDevice`*              |                                                            |
 |          900 |*`cudaErrorStreamCaptureUnsupported`*                |                                                            |
 |          901 |*`cudaErrorStreamCaptureInvalidated`*                |                                                            |
 |          902 |*`cudaErrorStreamCaptureMerge`*                      |                                                            |
@@ -792,6 +797,7 @@
 |          905 |*`cudaErrorStreamCaptureIsolation`*                  |                                                            |
 |          906 |*`cudaErrorStreamCaptureImplicit`*                   |                                                            |
 |          907 |*`cudaErrorCapturedEvent`*                           |                                                            |
+|          908 |*`cudaErrorStreamCaptureWrongThread`*                |                                                            |
 |        10000 |*`cudaErrorApiFailureBase`*                          |                                                            |
 | enum         |***`cudaFuncCache`***                                |***`hipFuncCache_t`***                                      |
 |            0 |*`cudaFuncCachePreferNone`*                          |*`hipFuncCachePreferNone`*                                  |
@@ -906,6 +912,10 @@
 |            0 |*`cudaStreamCaptureStatusNone`*                      |                                                            |
 |            1 |*`cudaStreamCaptureStatusActive`*                    |                                                            |
 |            2 |*`cudaStreamCaptureStatusInvalidated`*               |                                                            |
+| enum         |***`cudaStreamCaptureMode`***                        |                                                            |
+|            0 |*`cudaStreamCaptureModeGlobal`*                      |                                                            |
+|            1 |*`cudaStreamCaptureModeThreadLocal`*                 |                                                            |
+|            2 |*`cudaStreamCaptureModeRelaxed`*                     |                                                            |
 | enum         |***`cudaSurfaceBoundaryMode`***                      |***`hipSurfaceBoundaryMode`***                              |
 |            0 |*`cudaBoundaryModeZero`*                             |*`hipBoundaryModeZero`*                                     |
 |            1 |*`cudaBoundaryModeClamp`*                            |*`hipBoundaryModeClamp`*                                    |
