@@ -131,12 +131,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaStreamGetPriority",                                   {"hipStreamGetPriority",                                   "", CONV_STREAM, API_RUNTIME}},
   // cuStreamIsCapturing
   {"cudaStreamIsCapturing",                                   {"hipStreamIsCapturing",                                   "", CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuStreamGetCaptureInfo
+  {"cudaStreamGetCaptureInfo",                                {"hipStreamGetCaptureInfo",                                "", CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuStreamQuery
   {"cudaStreamQuery",                                         {"hipStreamQuery",                                         "", CONV_STREAM, API_RUNTIME}},
   // cuStreamSynchronize
   {"cudaStreamSynchronize",                                   {"hipStreamSynchronize",                                   "", CONV_STREAM, API_RUNTIME}},
   // cuStreamWaitEvent
   {"cudaStreamWaitEvent",                                     {"hipStreamWaitEvent",                                     "", CONV_STREAM, API_RUNTIME}},
+  // cuThreadExchangeStreamCaptureMode
+  {"cudaThreadExchangeStreamCaptureMode",                     {"hipThreadExchangeStreamCaptureMode",                     "", CONV_STREAM, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // 5.5.Event Management
   // no analogue
@@ -640,6 +644,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaGraphHostNodeSetParams",                              {"hipGraphHostNodeSetParams",                              "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuGraphInstantiate
   {"cudaGraphInstantiate",                                    {"hipGraphInstantiate",                                    "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuGraphExecKernelNodeSetParams
+  {"cudaGraphExecKernelNodeSetParams",                        {"hipGraphExecKernelNodeSetParams",                        "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuGraphKernelNodeGetParams
   {"cudaGraphKernelNodeGetParams",                            {"hipGraphKernelNodeGetParams",                            "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuGraphKernelNodeSetParams
