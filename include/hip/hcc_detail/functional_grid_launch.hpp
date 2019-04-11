@@ -122,7 +122,7 @@ inline std::vector<std::uint8_t> make_kernarg(
 
     if (sizeof...(Formals) == 0) return {};
 
-#if 1
+#if 0
     auto& ps = hip_impl::get_program_state();
     auto it = function_names(ps).find(reinterpret_cast<std::uintptr_t>(kernel));
     if (it == function_names(ps).cend()) {
@@ -141,8 +141,15 @@ inline std::vector<std::uint8_t> make_kernarg(
     std::vector<std::uint8_t> kernarg;
     kernarg.reserve(sizeof(to_formals));
 
+
 #if 1
-    return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
+    //return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
+
+    return make_kernarg<0>(to_formals, 
+                           hip_impl::kernargs_size_align(
+                               hip_impl::get_program_state(), 
+                               reinterpret_cast<std::uintptr_t>(kernel)),
+                           std::move(kernarg));
 #else
     return make_kernarg<0>(to_formals, 
                            kern_size_align(hip_impl::get_program_state(),
@@ -151,31 +158,6 @@ inline std::vector<std::uint8_t> make_kernarg(
 #endif
 }
 
-#if 0
-inline
-std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
-{
-    const auto it = function_names(ps).find(function_address);
-
-    if (it == function_names(ps).cend())  {
-        hip_throw(std::runtime_error{
-            "Invalid function passed to hipLaunchKernelGGL."});
-    }
-
-    return it->second;
-}
-#endif
-
-#if 0
-inline
-std::string name(hsa_agent_t agent)
-{
-    char n[64]{};
-    hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
-
-    return std::string{n};
-}
-#endif
 
 hsa_agent_t target_agent(hipStream_t stream);
 

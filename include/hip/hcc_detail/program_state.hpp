@@ -689,7 +689,6 @@ const std::unordered_map<
     return ps.impl.kernargs.second;
 }
 
-#if 1
 inline
 std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
 {
@@ -702,20 +701,6 @@ std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
 
     return it->second;
 }
-
-#else
-inline
-const char* name(program_state& ps, std::uintptr_t function_address) {
-    const auto it = function_names(ps).find(function_address);
-
-    if (it == function_names(ps).cend())  {
-        hip_throw(std::runtime_error{
-            "Invalid function passed to hipLaunchKernelGGL."});
-    }
-
-    return it->second.c_str();
-}
-#endif
 
 inline
 std::string name(hsa_agent_t agent)
@@ -791,5 +776,23 @@ const kernargs_size_align kern_size_align(program_state& ps,
     return r;
 }
 
+
+inline
+const std::vector<std::pair<std::size_t, std::size_t>>& 
+kernargs_size_align(program_state& ps, std::uintptr_t kernel) {
+
+    auto it = function_names(ps).find(kernel);
+    if (it == function_names(ps).cend()) {
+        hip_throw(std::runtime_error{"Undefined __global__ function."});
+    }
+
+    auto it1 = kernargs(ps).find(it->second);
+    if (it1 == kernargs(ps).end()) {
+        hip_throw(std::runtime_error{
+            "Missing metadata for __global__ function: " + it->second});
+    }
+
+    return it1->second;
+}
 
 }  // Namespace hip_impl.
