@@ -57,6 +57,12 @@ THE SOFTWARE.
 
 #if __HCC_OR_HIP_CLANG__
 
+#if __HIP__
+#if !defined(__align__)
+#define __align__(x) __attribute__((aligned(x)))
+#endif
+#endif
+
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
