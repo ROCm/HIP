@@ -779,7 +779,7 @@ const kernargs_size_align kern_size_align(program_state& ps,
 
 inline
 const std::vector<std::pair<std::size_t, std::size_t>>& 
-kernargs_size_align(program_state& ps, std::uintptr_t kernel) {
+kernargs_size_align_impl(program_state& ps, std::uintptr_t kernel) {
 
     auto it = function_names(ps).find(kernel);
     if (it == function_names(ps).cend()) {
@@ -793,6 +793,13 @@ kernargs_size_align(program_state& ps, std::uintptr_t kernel) {
     }
 
     return it1->second;
+}
+
+
+inline kernargs_size_align get_kernargs_size_align(program_state& ps, std::uintptr_t kernel) {
+  kernargs_size_align t;
+  t.handle = reinterpret_cast<const void*>(&kernargs_size_align_impl(ps, kernel));
+  return t;
 }
 
 }  // Namespace hip_impl.

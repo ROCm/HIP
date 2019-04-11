@@ -59,11 +59,7 @@ template <
     typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
     const std::tuple<Ts...>&,
-#if 1
-    const std::vector<std::pair<std::size_t, std::size_t>>&,
-#else
-    const kernargs_size_align,
-#endif
+    const kernargs_size_align&,
     std::vector<std::uint8_t> kernarg) {
     return kernarg;
 }
@@ -74,11 +70,7 @@ template <
     typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
     const std::tuple<Ts...>& formals,
-#if 1
-    const std::vector<std::pair<std::size_t, std::size_t>>& size_align,
-#else
-    const kernargs_size_align size_align,
-#endif
+    const kernargs_size_align& size_align,
     std::vector<std::uint8_t> kernarg) {
     using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
 
@@ -93,24 +85,13 @@ inline std::vector<std::uint8_t> make_kernarg(
                 "function");
     #endif
 
-
-#if 1
     kernarg.resize(round_up_to_next_multiple_nonnegative(
-        kernarg.size(), size_align[n].second) + size_align[n].first);
-
-    std::memcpy(
-        kernarg.data() + kernarg.size() - size_align[n].first,
-        &std::get<n>(formals),
-        size_align[n].first);
-#else
-    kernarg.resize(round_up_to_next_multiple_nonnegative(
-        kernarg.size(), size_align.size(n) + size_align.alignment(n)));
+        kernarg.size(), size_align.alignment(n)) + size_align.size(n));
 
     std::memcpy(
         kernarg.data() + kernarg.size() - size_align.size(n),
         &std::get<n>(formals),
-        size_align.alignment(n));
-#endif
+        size_align.size(n));
     return make_kernarg<n + 1>(formals, size_align, std::move(kernarg));
 }
 
@@ -122,40 +103,15 @@ inline std::vector<std::uint8_t> make_kernarg(
 
     if (sizeof...(Formals) == 0) return {};
 
-#if 0
-    auto& ps = hip_impl::get_program_state();
-    auto it = function_names(ps).find(reinterpret_cast<std::uintptr_t>(kernel));
-    if (it == function_names(ps).cend()) {
-        hip_throw(std::runtime_error{"Undefined __global__ function."});
-    }
-
-    auto it1 = kernargs(ps).find(it->second);
-    if (it1 == kernargs(ps).end()) {
-        hip_throw(std::runtime_error{
-            "Missing metadata for __global__ function: " + it->second});
-    }
-#endif
-
-
     std::tuple<Formals...> to_formals{std::move(actuals)};
     std::vector<std::uint8_t> kernarg;
     kernarg.reserve(sizeof(to_formals));
 
-
-#if 1
-    //return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
-
     return make_kernarg<0>(to_formals, 
-                           hip_impl::kernargs_size_align(
+                           hip_impl::get_kernargs_size_align(
                                hip_impl::get_program_state(), 
                                reinterpret_cast<std::uintptr_t>(kernel)),
                            std::move(kernarg));
-#else
-    return make_kernarg<0>(to_formals, 
-                           kern_size_align(hip_impl::get_program_state(),
-                                           reinterpret_cast<std::uintptr_t>(kernel)), 
-                           std::move(kernarg));
-#endif
 }
 
 
