@@ -512,22 +512,9 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     if (!func) return hipErrorInvalidDeviceFunction;
 
     auto& ps = get_program_state();
-
-    const auto it0 = functions(ps).find(reinterpret_cast<uintptr_t>(func));
-
-    if (it0 == functions(ps).cend()) return hipErrorInvalidDeviceFunction;
-
     auto agent = this_agent();
-    const auto it1 = find_if(
-        it0->second.cbegin(),
-        it0->second.cend(),
-        [=](const pair<hsa_agent_t, Kernel_descriptor>& x) {
-        return x.first == agent;
-    });
-
-    if (it1 == it0->second.cend()) return hipErrorInvalidDeviceFunction;
-
-    const auto header = static_cast<hipFunction_t>(it1->second)->_header;
+    auto& kd = kernel_descriptor(ps,  reinterpret_cast<uintptr_t>(func), agent);
+    const auto header = static_cast<hipFunction_t>(kd)->_header;
 
     if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 
@@ -603,12 +590,10 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     if (!texRef) return ihipLogStatus(hipErrorInvalidValue);
 
     if (!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
+    
+    auto addr = global_addr_by_name(get_program_state(), name);
+    if (addr == nullptr) return ihipLogStatus(hipErrorInvalidValue);
 
-    auto& ps = get_program_state();
-
-    const auto it = globals(ps).find(name);
-    if (it == globals(ps).end()) return ihipLogStatus(hipErrorInvalidValue);
-
-    *texRef = reinterpret_cast<textureReference*>(it->second);
+    *texRef = reinterpret_cast<textureReference*>(addr);
     return ihipLogStatus(hipSuccess);
 }

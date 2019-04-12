@@ -317,6 +317,15 @@ std::unordered_map<std::string, void*>& globals(program_state& ps) {
 }
 
 inline
+void* global_addr_by_name(program_state& ps, const char* name) {
+    const auto it = globals(ps).find(name);
+    if (it == globals(ps).end())
+      return nullptr;
+    else
+      return it->second;
+}
+
+inline
 std::vector<std::string> copy_names_of_undefined_symbols(
     const ELFIO::symbol_section_accessor& section) {
     std::vector<std::string> r;
