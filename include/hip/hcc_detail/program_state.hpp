@@ -716,11 +716,11 @@ void read_kernarg_metadata(
     comgr_data blob_data;
     status = amd_comgr_create_data(AMD_COMGR_DATA_KIND_RELOCATABLE, &blob_data.data);
     checkError(status, "amd_comgr_create_data");
+    blob_data.set_active(true);
 
     status = amd_comgr_set_data(blob_data.data, blob_size, blob_buf);
     if(status != AMD_COMGR_STATUS_SUCCESS)
         return;
-    blob_data.set_active(true);
 
     // We have a valid code object now
     status = amd_comgr_set_data_name(blob_data.data, "HIP Code Object");
