@@ -128,6 +128,47 @@ public:
     }
 };
 
+
+class kernargs_size_align;
+class program_state_impl;
+class program_state {
+public:
+    program_state();
+    ~program_state();
+
+    const Kernel_descriptor& kernel_descriptor(std::uintptr_t function_address,
+                                               hsa_agent_t agent);
+    
+    kernargs_size_align get_kernargs_size_align(std::uintptr_t kernel);
+    hsa_executable_t load_executable(const char* file,
+                                     hsa_executable_t executable,
+                                     hsa_agent_t agent);
+
+    program_state_impl& impl;
+};
+
+class kernargs_size_align {
+public:
+    std::size_t size(std::size_t n) const;
+    std::size_t alignment(std::size_t n) const;
+private:
+    const void* handle;
+    friend kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t);
+};
+
+inline
+__attribute__((visibility("hidden")))
+program_state& get_program_state() {
+    static program_state ps;
+    return ps;
+}
+
+
+
+
+
+
+
 template<typename P>
 inline
 ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
@@ -136,8 +177,6 @@ ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
 
     return it != reader.sections.end() ? *it : nullptr;
 }
-
-
 
 class program_state_impl {
 
@@ -184,19 +223,14 @@ public:
         std::unordered_map<std::string, void*>> globals;
 };
 
-class program_state {
-public:
-    program_state();
-    ~program_state();
-    program_state_impl& impl;
-};
-
-inline
-__attribute__((visibility("hidden")))
-program_state& get_program_state() {
-    static program_state ps;
-    return ps;
+std::size_t kernargs_size_align::kernargs_size_align::size(std::size_t n) const{
+    return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].first;
 }
+
+std::size_t kernargs_size_align::alignment(std::size_t n) const{
+    return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].second;
+}
+
 
 inline
 const std::unordered_map<
@@ -420,13 +454,11 @@ void load_code_object_and_freeze_executable(
     code_readers.push_back(move(tmp));
 }
 
-inline
-hsa_executable_t load_executable(program_state& ps,
-                                 const std::string& file,
-                                 hsa_executable_t executable,
-                                 hsa_agent_t agent) {
+hsa_executable_t program_state::load_executable(const char* file,
+                                                hsa_executable_t executable,
+                                                hsa_agent_t agent) {
     ELFIO::elfio reader;
-    std::stringstream tmp{file};
+    std::stringstream tmp{std::string(file)};
 
     if (!reader.load(tmp)) return hsa_executable_t{};
 
@@ -435,7 +467,7 @@ hsa_executable_t load_executable(program_state& ps,
             return x->get_type() == SHT_DYNSYM;
     });
 
-    associate_code_object_symbols_with_host_allocation(ps, reader,
+    associate_code_object_symbols_with_host_allocation(*this, reader,
                                                        code_object_dynsym,
                                                        agent, executable);
 
@@ -476,7 +508,7 @@ const std::unordered_map<
                     // TODO: this is massively inefficient and only meant for
                     // illustration.
                     std::string blob_to_str{blob.cbegin(), blob.cend()};
-                    tmp = load_executable(*(p.first), blob_to_str, tmp, a);
+                    tmp = p.first->load_executable(blob_to_str.c_str(), tmp, a);
 
                     if (tmp.handle) p.first->impl.executables.second[a].push_back(tmp);
                 }
@@ -720,18 +752,16 @@ std::string name(hsa_agent_t agent)
     return std::string{n};
 }
 
-inline
-const Kernel_descriptor& kernel_descriptor(program_state& ps, 
-                                           std::uintptr_t function_address,
-                                           hsa_agent_t agent) {
+const Kernel_descriptor& program_state::kernel_descriptor(std::uintptr_t function_address,
+                                                          hsa_agent_t agent) {
 
 
-    auto it0 = functions(ps).find(function_address);
+    auto it0 = functions(*this).find(function_address);
 
-    if (it0 == functions(ps).cend()) {
+    if (it0 == functions(*this).cend()) {
         hip_throw(std::runtime_error{
             "No device code available for function: " +
-            std::string(hip_impl::name(ps, function_address))});
+            std::string(hip_impl::name(*this, function_address))});
     }
 
     const auto it1 = std::find_if(
@@ -743,48 +773,12 @@ const Kernel_descriptor& kernel_descriptor(program_state& ps,
 
     if (it1 == it0->second.cend()) {
         hip_throw(std::runtime_error{
-            "No code available for function: " + std::string(hip_impl::name(ps, function_address)) +
+            "No code available for function: " + std::string(hip_impl::name(*this, function_address)) +
             ", for agent: " + name(agent)});
     }
 
     return it1->second;
 }
-
-class kernargs_size_align {
-public:
-    std::size_t size(std::size_t n) const;
-    std::size_t alignment(std::size_t n) const;
-    const void* handle;
-};
-
-inline
-std::size_t kernargs_size_align::size(std::size_t n) const{
-    return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].first;
-}
-
-inline
-std::size_t kernargs_size_align::alignment(std::size_t n) const{
-    return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].second;
-}
-
-inline
-const kernargs_size_align kern_size_align(program_state& ps,
-                                           std::uintptr_t kernel_address) {
-    auto it = function_names(ps).find(kernel_address);
-    if (it == function_names(ps).cend()) {
-        hip_throw(std::runtime_error{"Undefined __global__ function."});
-    }
-    auto it1 = kernargs(ps).find(it->second);
-    if (it1 == kernargs(ps).end()) {
-        hip_throw(std::runtime_error{
-            "Missing metadata for __global__ function: " + it->second});
-    }
-
-    kernargs_size_align r;
-    r.handle = reinterpret_cast<const void*>(&it1->second);
-    return r;
-}
-
 
 inline
 const std::vector<std::pair<std::size_t, std::size_t>>& 
@@ -805,9 +799,9 @@ kernargs_size_align_impl(program_state& ps, std::uintptr_t kernel) {
 }
 
 
-inline kernargs_size_align get_kernargs_size_align(program_state& ps, std::uintptr_t kernel) {
+kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t kernel) {
   kernargs_size_align t;
-  t.handle = reinterpret_cast<const void*>(&kernargs_size_align_impl(ps, kernel));
+  t.handle = reinterpret_cast<const void*>(&kernargs_size_align_impl(*this, kernel));
   return t;
 }
 

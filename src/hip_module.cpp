@@ -511,9 +511,8 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     if (!attr) return hipErrorInvalidValue;
     if (!func) return hipErrorInvalidDeviceFunction;
 
-    auto& ps = get_program_state();
     auto agent = this_agent();
-    auto& kd = kernel_descriptor(ps,  reinterpret_cast<uintptr_t>(func), agent);
+    auto& kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
     const auto header = static_cast<hipFunction_t>(kd)->_header;
 
     if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
@@ -546,8 +545,8 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     auto content = tmp.empty() ? read_elf_file_as_string(image) : tmp;
 
-    (*module)->executable = load_executable(get_program_state(),
-                                            content, (*module)->executable,
+    (*module)->executable = get_program_state().load_executable(
+                                            content.c_str(), (*module)->executable,
                                             this_agent());
 
     // compute the hash of the code object
