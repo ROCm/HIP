@@ -2683,7 +2683,7 @@ hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
     static std::once_flag f;
 
     std::call_once(f, []() {
-        for (auto&& agent_executables : executables(hip_impl::get_program_state())) {
+        for (auto&& agent_executables : hip_impl::get_program_state().executables()) {
             std::vector<Agent_global> tmp0;
             for (auto&& executable : agent_executables.second) {
                 auto tmp1 = read_agent_globals(agent_executables.first,

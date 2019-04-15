@@ -590,7 +590,7 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
     if (!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
     
-    auto addr = global_addr_by_name(get_program_state(), name);
+    auto addr = get_program_state().global_addr_by_name(name);
     if (addr == nullptr) return ihipLogStatus(hipErrorInvalidValue);
 
     *texRef = reinterpret_cast<textureReference*>(addr);
