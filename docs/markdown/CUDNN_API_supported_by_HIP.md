@@ -47,6 +47,8 @@
 | struct*      |`cudnnReduceTensorDescriptor_t`                                |`hipdnnReduceTensorDescriptor_t`                            |
 | struct       |`cudnnCTCLossStruct`                                           |                                                            |
 | struct*      |`cudnnCTCLossDescriptor_t`                                     |                                                            |
+| struct       |`cudnnTensorTransformStruct`                                   |                                                            |
+| struct*      |`cudnnTensorTransformDescriptor_t`                             |                                                            |
 | enum         |***`cudnnDataType_t`***                                        |***`hipdnnDataType_t`***                                    |
 |            0 |*`CUDNN_DATA_FLOAT`*                                           |*`HIPDNN_DATA_FLOAT`*                                       |
 |            1 |*`CUDNN_DATA_DOUBLE`*                                          |*`HIPDNN_DATA_DOUBLE`*                                      |
@@ -71,6 +73,9 @@
 |            0 |*`CUDNN_TENSOR_NCHW`*                                          |*`HIPDNN_TENSOR_NCHW`*                                      |
 |            1 |*`CUDNN_TENSOR_NHWC`*                                          |*`HIPDNN_TENSOR_NHWC`*                                      |
 |            2 |*`CUDNN_TENSOR_NCHW_VECT_C`*                                   |*`HIPDNN_TENSOR_NCHW_VECT_C`*                               |
+| enum         |***`cudnnFoldingDirection_t`***                                |                                                            |
+|            0 |*`CUDNN_TRANSFORM_FOLD`*                                       |                                                            |
+|            1 |*`CUDNN_TRANSFORM_UNFOLD`*                                     |                                                            |
 | enum         |***`cudnnOpTensorOp_t`***                                      |***`hipdnnOpTensorOp_t`***                                  |
 |            0 |*`CUDNN_OP_TENSOR_ADD`*                                        |*`HIPDNN_OP_TENSOR_ADD`*                                    |
 |            1 |*`CUDNN_OP_TENSOR_MUL`*                                        |*`HIPDNN_OP_TENSOR_MUL`*                                    |
@@ -169,6 +174,11 @@
 |            1 |*`CUDNN_RNN_TANH`*                                             |*`HIPDNN_RNN_TANH`*                                         |
 |            2 |*`CUDNN_LSTM`*                                                 |*`HIPDNN_LSTM`*                                             |
 |            3 |*`CUDNN_GRU`*                                                  |*`HIPDNN_GRU`*                                              |
+| enum         |***`cudnnRNNBiasMode_t`***                                     |                                                            |
+|            0 |*`CUDNN_RNN_NO_BIAS`*                                          |                                                            |
+|            1 |*`CUDNN_RNN_SINGLE_INP_BIAS`*                                  |                                                            |
+|            2 |*`CUDNN_RNN_DOUBLE_BIAS`*                                      |                                                            |
+|            3 |*`CUDNN_RNN_SINGLE_REC_BIAS`*                                  |                                                            |
 | enum         |***`cudnnDirectionMode_t`***                                   |***`hipdnnDirectionMode_t`***                               |
 |            0 |*`CUDNN_UNIDIRECTIONAL`*                                       |*`HIPDNN_UNIDIRECTIONAL`*                                   |
 |            1 |*`CUDNN_BIDIRECTIONAL`*                                        |*`HIPDNN_BIDIRECTIONAL`*                                    |
@@ -215,6 +225,27 @@
 | enum         |***`cudnnRNNPaddingMode_t`***                                  |                                                            |
 |            0 |*`CUDNN_RNN_PADDED_IO_DISABLED`*                               |                                                            |
 |            1 |*`CUDNN_RNN_PADDED_IO_ENABLED`*                                |                                                            |
+| enum         |***`cudnnSeqDataAxis_t`***                                     |                                                            |
+|            0 |*`CUDNN_SEQDATA_TIME_DIM`*                                     |                                                            |
+|            1 |*`CUDNN_SEQDATA_BATCH_DIM`*                                    |                                                            |
+|            2 |*`CUDNN_SEQDATA_BEAM_DIM`*                                     |                                                            |
+|            3 |*`CUDNN_SEQDATA_VECT_DIM`*                                     |                                                            |
+| define       |`CUDNN_SEQDATA_DIM_COUNT`                                      |                                                            |
+| struct       |`cudnnSeqDataStruct`                                           |                                                            |
+| struct*      |`cudnnSeqDataDescriptor_t`                                     |                                                            |
+| enum         |***`cudnnAttnQueryMap_t`***                                    |                                                            |
+|            0 |*`CUDNN_ATTN_QUERYMAP_ALL_TO_ONE`*                             |                                                            |
+|            1 |*`CUDNN_ATTN_QUERYMAP_ONE_TO_ONE`*                             |                                                            |
+| struct       |`cudnnAttnStruct`                                              |                                                            |
+| struct*      |`cudnnAttnDescriptor_t`                                        |                                                            |
+| enum         |***`cudnnMultiHeadAttnWeightKind_t`***                         |                                                            |
+|            0 |*`CUDNN_MH_ATTN_Q_WEIGHTS`*                                    |                                                            |
+|            1 |*`CUDNN_MH_ATTN_K_WEIGHTS`*                                    |                                                            |
+|            2 |*`CUDNN_MH_ATTN_V_WEIGHTS`*                                    |                                                            |
+|            3 |*`CUDNN_MH_ATTN_O_WEIGHTS`*                                    |                                                            |
+| enum         |***`cudnnWgradMode_t`***                                       |                                                            |
+|            0 |*`CUDNN_WGRAD_MODE_ADD`*                                       |                                                            |
+|            1 |*`CUDNN_WGRAD_MODE_SET`*                                       |                                                            |
 
 ## **2. CUDNN API functions**
 
@@ -239,6 +270,12 @@
 |`cudnnGetTensorSizeInBytes`                                |                                                 |
 |`cudnnDestroyTensorDescriptor`                             |`hipdnnDestroyTensorDescriptor`                  |
 |`cudnnTransformTensor`                                     |                                                 |
+|`cudnnTransformTensorEx`                                   |                                                 |
+|`cudnnInitTransformDest`                                   |                                                 |
+|`cudnnCreateTensorTransformDescriptor`                     |                                                 |
+|`cudnnSetTensorTransformDescriptor`                        |                                                 |
+|`cudnnGetTensorTransformDescriptor`                        |                                                 |
+|`cudnnDestroyTensorTransformDescriptor`                    |                                                 |
 |`cudnnAddTensor`                                           |`hipdnnAddTensor`                                |
 |`cudnnCreateOpTensorDescriptor`                            |`hipdnnCreateOpTensorDescriptor`                 |
 |`cudnnSetOpTensorDescriptor`                               |`hipdnnSetOpTensorDescriptor`                    |
@@ -383,6 +420,8 @@
 |`cudnnDestroyRNNDataDescriptor`                            |                                                 |
 |`cudnnSetRNNDataDescriptor`                                |                                                 |
 |`cudnnGetRNNDataDescriptor`                                |                                                 |
+|`cudnnSetRNNBiasMode`                                      |                                                 |
+|`cudnnGetRNNBiasMode`                                      |                                                 |
 |`cudnnCreateCTCLossDescriptor`                             |                                                 |
 |`cudnnSetCTCLossDescriptor`                                |                                                 |
 |`cudnnGetCTCLossDescriptor`                                |                                                 |
@@ -410,3 +449,16 @@
 |`cudnnGetBatchNormalizationTrainingExReserveSpaceSize`     |                                                 |
 |`cudnnRNNSetClip`                                          |                                                 |
 |`cudnnRNNGetClip`                                          |                                                 |
+|`cudnnCreateSeqDataDescriptor`                             |                                                 |
+|`cudnnDestroySeqDataDescriptor`                            |                                                 |
+|`cudnnSetSeqDataDescriptor`                                |                                                 |
+|`cudnnGetSeqDataDescriptor`                                |                                                 |
+|`cudnnCreateAttnDescriptor`                                |                                                 |
+|`cudnnDestroyAttnDescriptor`                               |                                                 |
+|`cudnnSetAttnDescriptor`                                   |                                                 |
+|`cudnnGetAttnDescriptor`                                   |                                                 |
+|`cudnnGetMultiHeadAttnBuffers`                             |                                                 |
+|`cudnnGetMultiHeadAttnWeights`                             |                                                 |
+|`cudnnMultiHeadAttnForward`                                |                                                 |
+|`cudnnMultiHeadAttnBackwardData`                           |                                                 |
+|`cudnnMultiHeadAttnBackwardWeights`                        |                                                 |
