@@ -91,6 +91,7 @@ int HIP_EVENT_SYS_RELEASE = 0;
 int HIP_HOST_COHERENT = 1;
 
 int HIP_SYNC_HOST_ALLOC = 1;
+int HIP_SYNC_FREE = 0;
 
 
 int HIP_INIT_ALLOC = -1;
@@ -1281,6 +1282,8 @@ void HipReadEnv() {
 
     READ_ENV_I(release, HIP_SYNC_STREAM_WAIT, 0, "hipStreamWaitEvent will synchronize to host");
 
+    READ_ENV_I(release, HIP_SYNC_FREE, 0,
+               "Force all calls to hipFree to sync all devices and all streams");
 
     READ_ENV_I(release, HIP_HOST_COHERENT, 0,
                "If set, all host memory will be allocated as fine-grained system memory.  This "

@@ -1897,19 +1897,29 @@ hipError_t hipFree(void* ptr) {
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
         if (status == AM_SUCCESS) {
             if (amPointerInfo._hostPointer == NULL) {
-                ihipCtx_t* ctx;
-                if (amPointerInfo._appId != -1) {
-#if USE_APP_PTR_FOR_CTX
-                    ctx = static_cast<ihipCtx_t*>(amPointerInfo._appPtr);
-#else
-                    ctx = ihipGetPrimaryCtx(amPointerInfo._appId);
-#endif
-                } else {
-                    ctx = ihipGetTlsDefaultCtx();
+                if (HIP_SYNC_FREE) {
+                    // Synchronize all devices, all streams
+                    // to ensure all work has finished on all devices.
+                    // This is disabled by default.
+                    for (unsigned i = 0; i < g_deviceCnt; i++) {
+                        ihipGetPrimaryCtx(i)->locked_waitAllStreams();
+                    }
                 }
-                // Synchronize to ensure all work has finished.
-                ctx->locked_waitAllStreams();  // ignores non-blocking streams, this waits
-                                               // for all activity to finish.
+                else {
+                    ihipCtx_t* ctx;
+                    if (amPointerInfo._appId != -1) {
+#if USE_APP_PTR_FOR_CTX
+                        ctx = static_cast<ihipCtx_t*>(amPointerInfo._appPtr);
+#else
+                        ctx = ihipGetPrimaryCtx(amPointerInfo._appId);
+#endif
+                    } else {
+                        ctx = ihipGetTlsDefaultCtx();
+                    }
+                    // Synchronize to ensure all work has finished on device owning the memory.
+                    ctx->locked_waitAllStreams();  // ignores non-blocking streams, this waits
+                                                   // for all activity to finish.
+                }
                 hc::am_free(ptr);
                 hipStatus = hipSuccess;
             }
