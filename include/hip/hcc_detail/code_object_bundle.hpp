@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include <string>
 #include <utility>
 #include <vector>
+#include <sstream>
+#include "elfio/elfio.hpp"
 
 namespace hip_impl {
 
@@ -124,6 +126,18 @@ class Bundled_code_header {
                 y.triple.assign(it, it + y.header.triple_sz);
 
                 std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
+
+                // we need to read the blob (ELF) for this bundle to get the feature flags
+                std::stringstream tmp{std::string{y.blob.cbegin(), y.blob.cend()}};
+                ELFIO::elfio reader;
+                if (reader.load(tmp)) {
+                  unsigned int xnack_enabled = reader.get_flags() & 0x100;
+                  unsigned int sram_ecc_enabled = reader.get_flags() & 0x200;
+                  if (xnack_enabled)
+                    y.triple.append("+xnack");
+                  if (sram_ecc_enabled)
+                    y.triple.append("+sram-ecc");
+                }
 
                 it += y.header.triple_sz;
 
