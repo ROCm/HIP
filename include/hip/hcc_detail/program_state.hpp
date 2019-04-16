@@ -144,7 +144,7 @@ public:
                                                hsa_agent_t);
     
     kernargs_size_align get_kernargs_size_align(std::uintptr_t);
-    hsa_executable_t load_executable(const char*,
+    hsa_executable_t load_executable(const char*, const size_t,
                                      hsa_executable_t,
                                      hsa_agent_t);
 
@@ -154,6 +154,7 @@ public:
     const std::unordered_map<
          hsa_agent_t, std::vector<hsa_executable_t>>& executables();
 
+    program_state(const program_state&) = delete;
 
     program_state_impl& impl;
 };

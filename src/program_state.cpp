@@ -304,14 +304,15 @@ void load_code_object_and_freeze_executable(
     code_readers.push_back(move(tmp));
 }
 
-hsa_executable_t program_state::load_executable(const char* file,
+hsa_executable_t program_state::load_executable(const char* data,
+                                                const size_t data_size,
                                                 hsa_executable_t executable,
                                                 hsa_agent_t agent) {
     ELFIO::elfio reader;
-    std::stringstream tmp{std::string(file)};
+    std::string ts = std::string(data, data_size);
+    std::stringstream tmp{ts};
 
     if (!reader.load(tmp)) return hsa_executable_t{};
-
     const auto code_object_dynsym = find_section_if(
         reader, [](const ELFIO::section* x) {
             return x->get_type() == SHT_DYNSYM;
@@ -321,7 +322,7 @@ hsa_executable_t program_state::load_executable(const char* file,
                                                        code_object_dynsym,
                                                        agent, executable);
 
-    load_code_object_and_freeze_executable(file, agent, executable);
+    load_code_object_and_freeze_executable(ts, agent, executable);
 
     return executable;
 }
@@ -357,8 +358,7 @@ const std::unordered_map<
 
                     // TODO: this is massively inefficient and only meant for
                     // illustration.
-                    std::string blob_to_str{blob.cbegin(), blob.cend()};
-                    tmp = p.first->load_executable(blob_to_str.c_str(), tmp, a);
+                    tmp = p.first->load_executable(blob.data(), blob.size(), tmp, a);
 
                     if (tmp.handle) p.first->impl.executables.second[a].push_back(tmp);
                 }

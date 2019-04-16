@@ -546,7 +546,7 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
     auto content = tmp.empty() ? read_elf_file_as_string(image) : tmp;
 
     (*module)->executable = get_program_state().load_executable(
-                                            content.c_str(), (*module)->executable,
+                                            content.data(), content.size(), (*module)->executable,
                                             this_agent());
 
     // compute the hash of the code object
