@@ -2,8 +2,8 @@
 
 ## **1. CUDNN Data types**
 
-| **type**     |   **CUDA**                                                    |   **HIP**                                                  |
-|-------------:|---------------------------------------------------------------|------------------------------------------------------------|
+| **type**     |   **CUDA**                                                    |   **HIP**                                                  |**HIP value** (if differs) |
+|-------------:|---------------------------------------------------------------|------------------------------------------------------------|---------------------------|
 | define       |`CUDNN_VERSION`                                                |`HIPDNN_VERSION`                                            |
 | struct       |`cudnnContext`                                                 |                                                            |
 | struct*      |`cudnnHandle_t`                                                |`hipdnnHandle_t`                                            |
@@ -174,11 +174,11 @@
 |            1 |*`CUDNN_RNN_TANH`*                                             |*`HIPDNN_RNN_TANH`*                                         |
 |            2 |*`CUDNN_LSTM`*                                                 |*`HIPDNN_LSTM`*                                             |
 |            3 |*`CUDNN_GRU`*                                                  |*`HIPDNN_GRU`*                                              |
-| enum         |***`cudnnRNNBiasMode_t`***                                     |                                                            |
-|            0 |*`CUDNN_RNN_NO_BIAS`*                                          |                                                            |
-|            1 |*`CUDNN_RNN_SINGLE_INP_BIAS`*                                  |                                                            |
-|            2 |*`CUDNN_RNN_DOUBLE_BIAS`*                                      |                                                            |
-|            3 |*`CUDNN_RNN_SINGLE_REC_BIAS`*                                  |                                                            |
+| enum         |***`cudnnRNNBiasMode_t`***                                     |***`hipdnnRNNBiasMode_t`***                                 |
+|            0 |*`CUDNN_RNN_NO_BIAS`*                                          |*`HIPDNN_RNN_NO_BIAS`*                                      |
+|            1 |*`CUDNN_RNN_SINGLE_INP_BIAS`*                                  |*`HIPDNN_RNN_WITH_BIAS`*                                    |
+|            2 |*`CUDNN_RNN_DOUBLE_BIAS`*                                      |*`HIPDNN_RNN_WITH_BIAS`*                                    | 1                         |
+|            3 |*`CUDNN_RNN_SINGLE_REC_BIAS`*                                  |*`HIPDNN_RNN_WITH_BIAS`*                                    | 1                         |
 | enum         |***`cudnnDirectionMode_t`***                                   |***`hipdnnDirectionMode_t`***                               |
 |            0 |*`CUDNN_UNIDIRECTIONAL`*                                       |*`HIPDNN_UNIDIRECTIONAL`*                                   |
 |            1 |*`CUDNN_BIDIRECTIONAL`*                                        |*`HIPDNN_BIDIRECTIONAL`*                                    |

@@ -151,11 +151,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"CUDNN_RNN_TANH",                                      {"HIPDNN_RNN_TANH",                                      "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
   {"CUDNN_LSTM",                                          {"HIPDNN_LSTM",                                          "", CONV_NUMERIC_LITERAL, API_DNN}},    // 2
   {"CUDNN_GRU",                                           {"HIPDNN_GRU",                                           "", CONV_NUMERIC_LITERAL, API_DNN}},    // 3
-  {"cudnnRNNBiasMode_t",                                  {"hipdnnRNNBiasMode_t",                                  "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
-  {"CUDNN_RNN_NO_BIAS",                                   {"HIPDNN_RNN_NO_BIAS",                                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
-  {"CUDNN_RNN_SINGLE_INP_BIAS",                           {"HIPDNN_RNN_SINGLE_INP_BIAS",                           "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
-  {"CUDNN_RNN_DOUBLE_BIAS",                               {"HIPDNN_RNN_DOUBLE_BIAS",                               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
-  {"CUDNN_RNN_SINGLE_REC_BIAS",                           {"HIPDNN_RNN_SINGLE_REC_BIAS",                           "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 3
+  {"cudnnRNNBiasMode_t",                                  {"hipdnnRNNBiasMode_t",                                  "", CONV_TYPE, API_DNN}},
+  {"CUDNN_RNN_NO_BIAS",                                   {"HIPDNN_RNN_NO_BIAS",                                   "", CONV_NUMERIC_LITERAL, API_DNN}},    // 0
+  {"CUDNN_RNN_SINGLE_INP_BIAS",                           {"HIPDNN_RNN_WITH_BIAS",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+  {"CUDNN_RNN_DOUBLE_BIAS",                               {"HIPDNN_RNN_WITH_BIAS",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+  {"CUDNN_RNN_SINGLE_REC_BIAS",                           {"HIPDNN_RNN_WITH_BIAS",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
   {"cudnnOpTensorOp_t",                                   {"hipdnnOpTensorOp_t",                                   "", CONV_TYPE, API_DNN}},
   {"CUDNN_OP_TENSOR_ADD",                                 {"HIPDNN_OP_TENSOR_ADD",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 0
   {"CUDNN_OP_TENSOR_MUL",                                 {"HIPDNN_OP_TENSOR_MUL",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
