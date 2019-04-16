@@ -83,6 +83,8 @@ extern int HIP_SYNC_NULL_STREAM;
 extern int HIP_INIT_ALLOC;
 extern int HIP_FORCE_NULL_STREAM;
 
+extern int HIP_SYNC_FREE;
+
 extern int HIP_DUMP_CODE_OBJECT;
 
 // TODO - remove when this is standard behavior.

@@ -31,6 +31,8 @@ THE SOFTWARE.
 #include <string>
 #include <utility>
 #include <vector>
+#include <sstream>
+#include "elfio/elfio.hpp"
 
 namespace hip_impl {
 
@@ -89,9 +91,10 @@ struct Bundled_code {
     std::vector<char> blob;
 };
 
+#define magic_string_  "__CLANG_OFFLOAD_BUNDLE__"
+
 class Bundled_code_header {
     // DATA - STATICS
-    static constexpr const char magic_string_[] = "__CLANG_OFFLOAD_BUNDLE__";
     static constexpr auto magic_string_sz_ = sizeof(magic_string_) - 1;
 
     // DATA
@@ -124,6 +127,18 @@ class Bundled_code_header {
 
                 std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
 
+                // we need to read the blob (ELF) for this bundle to get the feature flags
+                std::stringstream tmp{std::string{y.blob.cbegin(), y.blob.cend()}};
+                ELFIO::elfio reader;
+                if (reader.load(tmp)) {
+                  unsigned int xnack_enabled = reader.get_flags() & 0x100;
+                  unsigned int sram_ecc_enabled = reader.get_flags() & 0x200;
+                  if (xnack_enabled)
+                    y.triple.append("+xnack");
+                  if (sram_ecc_enabled)
+                    y.triple.append("+sram-ecc");
+                }
+
                 it += y.header.triple_sz;
 
                 x.bundled_code_size = std::max(x.bundled_code_size, 
@@ -143,12 +158,12 @@ class Bundled_code_header {
             std::vector<char>{std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{}},
             x);
     }
-
     // FRIENDS - ACCESSORS
     friend inline bool valid(const Bundled_code_header& x) {
-        return std::equal(magic_string_, magic_string_ + magic_string_sz_,
-                          x.header_.bundler_magic_string_);
+        const std::string ms = {magic_string_};
+        return std::equal(ms.begin(), ms.end(), x.header_.bundler_magic_string_);
     }
+
     friend inline const std::vector<Bundled_code>& bundles(const Bundled_code_header& x) {
         return x.bundles_;
     }
