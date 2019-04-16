@@ -265,9 +265,11 @@ if ($HIP_PLATFORM eq "clang") {
 
     $HIPCXXFLAGS .= " -isystem $HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
+    $HIPCXXFLAGS .= " -isystem /opt/rocm/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
 
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am ";
+    $HIPLDFLAGS .= " -L/opt/rocm/lib -Wl,--rpath=/opt/rocm/lib -lamd_comgr ";
 #    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
 
     # Add trace marker library:
