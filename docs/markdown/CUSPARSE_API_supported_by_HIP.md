@@ -82,6 +82,27 @@
 | typedef      |`cusparseColorInfo_t`                                          |                                                            |
 | struct       |`pruneInfo`                                                    |                                                            |
 | typedef      |`pruneInfo_t`                                                  |                                                            |
+| enum         |***`cusparseCsr2CscAlg_t`***                                   |                                                            |
+|            1 |*`CUSPARSE_CSR2CSC_ALG1`*                                      |                                                            |
+|            2 |*`CUSPARSE_CSR2CSC_ALG2`*                                      |                                                            |
+| enum         |***`cusparseFormat_t`***                                       |                                                            |
+|            1 |*`CUSPARSE_FORMAT_CSR`*                                        |                                                            |
+|            2 |*`CUSPARSE_FORMAT_CSC`*                                        |                                                            |
+|            3 |*`CUSPARSE_FORMAT_COO`*                                        |                                                            |
+| enum         |***`cusparseOrder_t`***                                        |                                                            |
+|            1 |*`CUSPARSE_ORDER_COL`*                                         |                                                            |
+|            2 |*`CUSPARSE_ORDER_ROW`*                                         |                                                            |
+| enum         |***`cusparseSpMMAlg_t`***                                      |                                                            |
+|            1 |*`CUSPARSE_COOMM_ALG1`*                                        |                                                            |
+|            2 |*`CUSPARSE_COOMM_ALG2`*                                        |                                                            |
+|            3 |*`CUSPARSE_COOMM_ALG3`*                                        |                                                            |
+| enum         |***`cusparseIndexType_t`***                                    |                                                            |
+|            1 |*`CUSPARSE_INDEX_16U`*                                         |                                                            |
+|            2 |*`CUSPARSE_INDEX_32I`*                                         |                                                            |
+| struct       |`cusparseSpMatDescr`                                           |                                                            |
+| typedef      |`cusparseSpMatDescr_t`                                         |                                                            |
+| struct       |`cusparseDnMatDescr`                                           |                                                            |
+| typedef      |`cusparseDnMatDescr_t`                                         |                                                            |
 
 ## **2. cuSPARSE Helper Function Reference**
 
@@ -530,6 +551,8 @@
 |`cusparseCcsr2csc`                                         |                                                 |
 |`cusparseZcsr2csc`                                         |                                                 |
 |`cusparseCsr2cscEx`                                        |                                                 |
+|`cusparseCsr2cscEx2`                                       |                                                 |
+|`cusparseCsr2cscEx2_bufferSize`                            |                                                 |
 |`cusparseScsr2dense`                                       |                                                 |
 |`cusparseDcsr2dense`                                       |                                                 |
 |`cusparseCcsr2dense`                                       |                                                 |
@@ -616,3 +639,34 @@
 |`cusparseDnnz_compress`                                    |                                                 |
 |`cusparseCnnz_compress`                                    |                                                 |
 |`cusparseZnnz_compress`                                    |                                                 |
+
+## **10. cuSPARSE Generic API Reference**
+
+## ***10.1. Generic Sparse API helper functions***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseCreateCoo`                                        |                                                 |
+|`cusparseDestroySpMat`                                     |                                                 |
+|`cusparseCooGet`                                           |                                                 |
+|`cusparseSpMatGetFormat`                                   |                                                 |
+|`cusparseSpMatGetIndexBase`                                |                                                 |
+|`cusparseSpMatSetNumBatches`                               |                                                 |
+|`cusparseSpMatGetNumBatches`                               |                                                 |
+
+## ***10.2. Generic Dense API helper functions***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseCreateDnMat`                                      |                                                 |
+|`cusparseDestroyDnMat`                                     |                                                 |
+|`cusparseDnMatGet`                                         |                                                 |
+|`cusparseDnMatSetStridedBatch`                             |                                                 |
+|`cusparseDnMatGetStridedBatch`                             |                                                 |
+
+## ***10.3. Generic SpMM API functions***
+
+|   **CUDA**                                                |   **HIP**                                       |
+|-----------------------------------------------------------|-------------------------------------------------|
+|`cusparseSpMM`                                             |                                                 |
+|`cusparseSpMM_bufferSize`                                  |                                                 |
