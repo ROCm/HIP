@@ -68,6 +68,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP{
   {"pruneInfo",                                 {"pruneInfo",                                  "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
   {"pruneInfo_t",                               {"pruneInfo_t",                                "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseSpMatDescr",                        {"hipsparseSpMatDescr",                        "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatDescr_t",                      {"hipsparseSpMatDescr_t",                      "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseDnMatDescr",                        {"hipsparseDnMatDescr",                        "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnMatDescr_t",                      {"hipsparseDnMatDescr_t",                      "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+
   // 2. Enums
   {"cusparseAction_t",                          {"hipsparseAction_t",                          "", CONV_TYPE, API_SPARSE}},
   {"CUSPARSE_ACTION_SYMBOLIC",                  {"HIPSPARSE_ACTION_SYMBOLIC",                  "", CONV_NUMERIC_LITERAL, API_SPARSE}},
@@ -130,4 +136,27 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP{
   {"CUSPARSE_STATUS_INTERNAL_ERROR",            {"HIPSPARSE_STATUS_INTERNAL_ERROR",            "", CONV_NUMERIC_LITERAL, API_SPARSE}},
   {"CUSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED", {"HIPSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED", "", CONV_NUMERIC_LITERAL, API_SPARSE}},
   {"CUSPARSE_STATUS_ZERO_PIVOT",                {"HIPSPARSE_STATUS_ZERO_PIVOT",                "", CONV_NUMERIC_LITERAL, API_SPARSE}},
+
+  {"cusparseCsr2CscAlg_t",                      {"hipsparseCsr2CscAlg_t",                      "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_CSR2CSC_ALG1",                     {"HIPSPARSE_CSR2CSC_ALG1",                     "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_CSR2CSC_ALG2",                     {"HIPSPARSE_CSR2CSC_ALG2",                     "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseFormat_t",                          {"hipsparseFormat_t",                          "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_FORMAT_CSR",                       {"HIPSPARSE_FORMAT_CSR",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_FORMAT_CSC",                       {"HIPSPARSE_FORMAT_CSC",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_FORMAT_COO",                       {"HIPSPARSE_FORMAT_COO",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseOrder_t",                           {"hipsparseOrder_t",                           "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_ORDER_COL",                        {"HIPSPARSE_ORDER_COL",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_ORDER_ROW",                        {"HIPSPARSE_ORDER_ROW",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseSpMMAlg_t",                         {"hipsparseSpMMAlg_t",                         "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_COOMM_ALG1",                       {"HIPSPARSE_COOMM_ALG1",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_COOMM_ALG2",                       {"HIPSPARSE_COOMM_ALG2",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_COOMM_ALG3",                       {"HIPSPARSE_COOMM_ALG3",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseIndexType_t",                       {"hipsparseIndexType_t",                       "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_INDEX_16U",                        {"HIPSPARSE_INDEX_16U",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_INDEX_32I",                        {"HIPSPARSE_INDEX_32I",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+
 };
