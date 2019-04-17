@@ -75,19 +75,23 @@ void setCurrentContext(unsigned int index) {
   g_context = g_devices[index];
 }
 
-amd::HostQueue* getNullStream() {
-  auto stream = g_nullStreams.find(getCurrentContext());
+amd::HostQueue* getNullStream(amd::Context& context) {
+  auto stream = g_nullStreams.find(&context);
   if (stream == g_nullStreams.end()) {
-    amd::Device* device = getCurrentContext()->devices()[0];
+    amd::Device* device = context.devices()[0];
     cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-    amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, properties,
+    amd::HostQueue* queue = new amd::HostQueue(context, *device, properties,
                                                amd::CommandQueue::RealTimeDisabled,
                                                amd::CommandQueue::Priority::Normal);
-    g_nullStreams[getCurrentContext()] = queue;
+    g_nullStreams[&context] = queue;
     return queue;
   }
   syncStreams();
   return stream->second;
+}
+
+amd::HostQueue* getNullStream() {
+  return getNullStream(*getCurrentContext());
 }
 
 };

@@ -103,6 +103,53 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
     command = new amd::ReadMemoryCommand(queue, CL_COMMAND_READ_BUFFER, waitList,
               *srcMemory->asBuffer(), sOffset, sizeBytes, dst);
   } else if ((srcMemory != nullptr) && (dstMemory != nullptr)) {
+    static const uint hostMem = CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR;
+    if ((kind == hipMemcpyDeviceToDevice ||
+         kind == hipMemcpyDefault) &&
+        ((srcMemory->getMemFlags() & hostMem) == 0) &&
+        ((dstMemory->getMemFlags() & hostMem) == 0)) {
+      amd::Device* queueDevice = &queue.device();
+      if (queueDevice != srcMemory->getContext().devices()[0]) {
+        void* staging = nullptr;
+        ihipMalloc(&staging, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER);
+        ihipMemcpy(staging, src, sizeBytes, hipMemcpyDeviceToHost, *hip::getNullStream(srcMemory->getContext()));
+        ihipMemcpy(dst, staging, sizeBytes, hipMemcpyHostToDevice, queue);
+        hipFree(staging);
+#if 0
+        amd::Coord3D srcOffset(sOffset, 0, 0);
+        amd::Coord3D dstOffset(dOffset, 0, 0);
+        amd::Coord3D copySize(sizeBytes, 1, 1);
+        command = new amd::CopyMemoryP2PCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
+                  *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcOffset, dstOffset, copySize);
+        command->enqueue();
+        if (!isAsync) {
+          command->awaitCompletion();
+        }
+        command->release();
+#endif
+        return hipSuccess;
+      }
+      if (queueDevice != dstMemory->getContext().devices()[0]) {
+        void* staging = nullptr;
+        ihipMalloc(&staging, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER);
+        ihipMemcpy(staging, src, sizeBytes, hipMemcpyDeviceToHost, queue);
+        ihipMemcpy(dst, staging, sizeBytes, hipMemcpyHostToDevice, *hip::getNullStream(dstMemory->getContext()));
+        hipFree(staging);
+#if 0
+        amd::Coord3D srcOffset(sOffset, 0, 0);
+        amd::Coord3D dstOffset(dOffset, 0, 0);
+        amd::Coord3D copySize(sizeBytes, 1, 1);
+        command = new amd::CopyMemoryP2PCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
+                  *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcOffset, dstOffset, copySize);
+        command->enqueue();
+        if (!isAsync) {
+          command->awaitCompletion();
+        }
+        command->release();
+#endif
+        return hipSuccess;
+      }
+    }
     command = new amd::CopyMemoryCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
               *srcMemory->asBuffer(),*dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
   }
