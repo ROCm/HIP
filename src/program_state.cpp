@@ -98,9 +98,10 @@ public:
             std::uintptr_t,
             std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>> functions;
       
-    std::pair<
+    std::tuple<
         std::once_flag,
-        std::unordered_map<std::string, void*>> globals;
+        std::unordered_map<std::string, void*>,
+        std::mutex> globals;
 
 
     const std::unordered_map<
@@ -191,10 +192,14 @@ public:
     }
 
     std::unordered_map<std::string, void*>& get_globals() {
-        std::call_once(globals.first, [this]() { 
-            this->globals.second.reserve(this->get_symbol_addresses().size()); 
+        std::call_once(std::get<0>(globals), [this]() { 
+            std::get<1>(this->globals).reserve(this->get_symbol_addresses().size()); 
         });
-        return globals.second;
+        return std::get<1>(globals);
+    }
+
+    std::mutex& get_globals_mutex() {
+        return std::get<2>(globals);
     }
 
 };  // class program_state_impl 
@@ -245,6 +250,7 @@ void associate_code_object_symbols_with_host_allocation(
         ELFIO::symbol_section_accessor{reader, code_object_dynsym});
 
     auto& g = ps.impl.get_globals();
+    auto& g_mutex = ps.impl.get_globals_mutex();
     for (auto&& x : undefined_symbols) {
 
         if (g.find(x) != g.cend()) return;
@@ -256,8 +262,7 @@ void associate_code_object_symbols_with_host_allocation(
                 "Global symbol: " + x + " is undefined."});
         }
 
-        static std::mutex mtx;
-        std::lock_guard<std::mutex> lck{mtx};
+        std::lock_guard<std::mutex> lck{g_mutex};
 
         if (g.find(x) != g.cend()) return;
 
