@@ -13,6 +13,9 @@
 
 namespace hip_impl {
 
+[[noreturn]]
+void hip_throw(const std::exception&);
+
 template<typename P>
 inline
 ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
@@ -187,6 +190,12 @@ public:
         return symbol_addresses.second;
     }
 
+    std::unordered_map<std::string, void*>& get_globals() {
+        std::call_once(globals.first, [this]() { 
+            this->globals.second.reserve(this->get_symbol_addresses().size()); 
+        });
+        return globals.second;
+    }
 
 };  // class program_state_impl 
 
@@ -198,17 +207,9 @@ program_state::~program_state() {
     delete(&impl);
 }
 
-inline
-std::unordered_map<std::string, void*>& globals(program_state& ps) {
-    std::call_once(ps.impl.globals.first, [&ps]() { 
-        ps.impl.globals.second.reserve(ps.impl.get_symbol_addresses().size()); 
-    });
-    return ps.impl.globals.second;
-}
-
 void* program_state::global_addr_by_name(const char* name) {
-    const auto it = globals(*this).find(name);
-    if (it == globals(*this).end())
+    const auto it = impl.get_globals().find(name);
+    if (it == impl.get_globals().end())
       return nullptr;
     else
       return it->second;
@@ -231,9 +232,6 @@ std::vector<std::string> copy_names_of_undefined_symbols(
     return r;
 }
 
-[[noreturn]]
-void hip_throw(const std::exception&);
-
 inline
 void associate_code_object_symbols_with_host_allocation(
     program_state& ps,
@@ -246,8 +244,10 @@ void associate_code_object_symbols_with_host_allocation(
     const auto undefined_symbols = copy_names_of_undefined_symbols(
         ELFIO::symbol_section_accessor{reader, code_object_dynsym});
 
+    auto& g = ps.impl.get_globals();
     for (auto&& x : undefined_symbols) {
-        if (globals(ps).find(x) != globals(ps).cend()) return;
+
+        if (g.find(x) != g.cend()) return;
 
         const auto it1 = ps.impl.get_symbol_addresses().find(x);
 
@@ -259,9 +259,9 @@ void associate_code_object_symbols_with_host_allocation(
         static std::mutex mtx;
         std::lock_guard<std::mutex> lck{mtx};
 
-        if (globals(ps).find(x) != globals(ps).cend()) return;
+        if (g.find(x) != g.cend()) return;
 
-        globals(ps).emplace(x, (void*)(it1->second.first));
+        g.emplace(x, (void*)(it1->second.first));
         void* p = nullptr;
         hsa_amd_memory_lock(
             reinterpret_cast<void*>(it1->second.first),
