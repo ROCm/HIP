@@ -30,6 +30,31 @@ std::size_t kernargs_size_align::alignment(std::size_t n) const{
     return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].second;
 }
 
+struct Symbol {
+    std::string name;
+    ELFIO::Elf64_Addr value = 0;
+    ELFIO::Elf_Xword size = 0;
+    ELFIO::Elf_Half sect_idx = 0;
+    std::uint8_t bind = 0;
+    std::uint8_t type = 0;
+    std::uint8_t other = 0;
+};
+
+inline
+Symbol read_symbol(const ELFIO::symbol_section_accessor& section,
+                   unsigned int idx) {
+    assert(idx < section.get_symbols_num());
+
+    Symbol r;
+    section.get_symbol(
+        idx, r.name, r.value, r.size, r.bind, r.type, r.sect_idx, r.other);
+
+    return r;
+}
+
+
+
+
 class program_state_impl {
 
 public:
@@ -73,7 +98,97 @@ public:
     std::pair<
         std::once_flag,
         std::unordered_map<std::string, void*>> globals;
-};
+
+
+    const std::unordered_map<
+        hsa_isa_t, std::vector<std::vector<char>>>& get_code_object_blobs() {
+
+        std::call_once(code_object_blobs.first, [this]() {
+            static std::vector<std::vector<char>> blobs{};
+
+            dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
+                ELFIO::elfio tmp;
+
+                const auto elf =
+                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+
+                if (!tmp.load(elf)) return 0;
+
+                const auto it = find_section_if(tmp, [](const ELFIO::section* x) {
+                    return x->get_name() == ".kernel";
+                });
+
+                if (!it) return 0;
+
+                blobs.emplace_back(it->get_data(), it->get_data() + it->get_size());
+
+                return 0;
+            }, nullptr);
+
+            for (auto&& multi_arch_blob : blobs) {
+                auto it = multi_arch_blob.begin();
+                while (it != multi_arch_blob.end()) {
+                    Bundled_code_header tmp{it, multi_arch_blob.end()};
+
+                    if (!valid(tmp)) break;
+
+                    for (auto&& bundle : bundles(tmp)) {
+                        auto& bv = this->code_object_blobs.second[triple_to_hsa_isa(bundle.triple)];
+                        bv.push_back(bundle.blob);
+                    }
+
+                    it += tmp.bundled_code_size;
+                };
+            }
+        });
+
+        return code_object_blobs.second;
+    }
+
+    const std::unordered_map<
+        std::string,
+        std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>>& get_symbol_addresses() {
+
+        std::call_once(symbol_addresses.first, [this]() {
+            dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* psi_ptr) {
+
+                if (!psi_ptr)
+                    return 0;
+
+                program_state_impl* t = static_cast<program_state_impl*>(psi_ptr);
+
+                ELFIO::elfio tmp;
+                const auto elf =
+                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+
+                if (!tmp.load(elf)) return 0;
+
+                auto it = find_section_if(tmp, [](const ELFIO::section* x) { 
+                    return x->get_type() == SHT_SYMTAB;
+                });
+
+                if (!it) return 0;
+
+                const ELFIO::symbol_section_accessor symtab{tmp, it};
+
+                for (auto i = 0u; i != symtab.get_symbols_num(); ++i) {
+                    auto s = read_symbol(symtab, i);
+
+                    if (s.type != STT_OBJECT || s.sect_idx == SHN_UNDEF) continue;
+
+                    const auto addr = s.value + info->dlpi_addr;
+                    t->symbol_addresses.second.emplace(std::move(s.name), std::make_pair(addr, s.size));
+                }
+
+                return 0;
+            }, this);
+        });
+
+        return symbol_addresses.second;
+    }
+
+
+};  // class program_state_impl 
 
 program_state::program_state() : 
     impl(*new program_state_impl) {
@@ -84,119 +199,9 @@ program_state::~program_state() {
 }
 
 inline
-const std::unordered_map<
-    hsa_isa_t, std::vector<std::vector<char>>>& code_object_blobs(program_state& ps) {
-
-    std::call_once(ps.impl.code_object_blobs.first, [&ps]() {
-        static std::vector<std::vector<char>> blobs{};
-
-        dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
-            ELFIO::elfio tmp;
-
-            const auto elf =
-                info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
-
-            if (!tmp.load(elf)) return 0;
-
-            const auto it = find_section_if(tmp, [](const ELFIO::section* x) {
-                return x->get_name() == ".kernel";
-            });
-
-            if (!it) return 0;
-
-            blobs.emplace_back(it->get_data(), it->get_data() + it->get_size());
-
-            return 0;
-        }, nullptr);
-
-        for (auto&& multi_arch_blob : blobs) {
-            auto it = multi_arch_blob.begin();
-            while (it != multi_arch_blob.end()) {
-                Bundled_code_header tmp{it, multi_arch_blob.end()};
-
-                if (!valid(tmp)) break;
-
-                for (auto&& bundle : bundles(tmp)) {
-                    ps.impl.code_object_blobs.second[triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
-                }
-
-                it += tmp.bundled_code_size;
-            };
-        }
-    });
-
-    return ps.impl.code_object_blobs.second;
-}
-
-struct Symbol {
-    std::string name;
-    ELFIO::Elf64_Addr value = 0;
-    ELFIO::Elf_Xword size = 0;
-    ELFIO::Elf_Half sect_idx = 0;
-    std::uint8_t bind = 0;
-    std::uint8_t type = 0;
-    std::uint8_t other = 0;
-};
-
-inline
-Symbol read_symbol(const ELFIO::symbol_section_accessor& section,
-                   unsigned int idx) {
-    assert(idx < section.get_symbols_num());
-
-    Symbol r;
-    section.get_symbol(
-        idx, r.name, r.value, r.size, r.bind, r.type, r.sect_idx, r.other);
-
-    return r;
-}
-
-inline
-const std::unordered_map<
-    std::string,
-    std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>>& symbol_addresses(program_state& ps) {
-
-    std::call_once(ps.impl.symbol_addresses.first, [&ps]() {
-        dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* ps_ptr) {
-
-            if (!ps_ptr)
-                return 0;
-
-            program_state& ps = *static_cast<program_state*>(ps_ptr);
-
-            ELFIO::elfio tmp;
-            const auto elf =
-                info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
-
-            if (!tmp.load(elf)) return 0;
-
-            auto it = find_section_if(tmp, [](const ELFIO::section* x) { 
-                return x->get_type() == SHT_SYMTAB;
-            });
-
-            if (!it) return 0;
-
-            const ELFIO::symbol_section_accessor symtab{tmp, it};
-
-            for (auto i = 0u; i != symtab.get_symbols_num(); ++i) {
-                auto s = read_symbol(symtab, i);
-
-                if (s.type != STT_OBJECT || s.sect_idx == SHN_UNDEF) continue;
-
-                const auto addr = s.value + info->dlpi_addr;
-                ps.impl.symbol_addresses.second.emplace(std::move(s.name), std::make_pair(addr, s.size));
-            }
-
-            return 0;
-        }, &ps);
-    });
-
-    return ps.impl.symbol_addresses.second;
-}
-
-inline
 std::unordered_map<std::string, void*>& globals(program_state& ps) {
     std::call_once(ps.impl.globals.first, [&ps]() { 
-        ps.impl.globals.second.reserve(symbol_addresses(ps).size()); 
+        ps.impl.globals.second.reserve(ps.impl.get_symbol_addresses().size()); 
     });
     return ps.impl.globals.second;
 }
@@ -244,9 +249,9 @@ void associate_code_object_symbols_with_host_allocation(
     for (auto&& x : undefined_symbols) {
         if (globals(ps).find(x) != globals(ps).cend()) return;
 
-        const auto it1 = symbol_addresses(ps).find(x);
+        const auto it1 = ps.impl.get_symbol_addresses().find(x);
 
-        if (it1 == symbol_addresses(ps).cend()) {
+        if (it1 == ps.impl.get_symbol_addresses().cend()) {
             hip_throw(std::runtime_error{
                 "Global symbol: " + x + " is undefined."});
         }
@@ -341,9 +346,10 @@ const std::unordered_map<
             hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* d) {
 
                 auto& p = *static_cast<decltype(data)*>(d);
-
-                const auto it = code_object_blobs(*(p.first)).find(x);
-                if (it == code_object_blobs(*(p.first)).cend()) return HSA_STATUS_SUCCESS;
+                auto& program_state = *(p.first);
+                auto& code_object_blobs = program_state.impl.get_code_object_blobs();
+                const auto it = code_object_blobs.find(x);
+                if (it == code_object_blobs.cend()) return HSA_STATUS_SUCCESS;
 
                 hsa_agent_t a = *static_cast<hsa_agent_t*>(p.second);
 
@@ -569,7 +575,7 @@ const std::unordered_map<
     std::string, std::vector<std::pair<std::size_t, std::size_t>>>& kernargs(program_state& ps) {
 
     std::call_once(ps.impl.kernargs.first, [&ps]() {
-        for (auto&& isa_blobs : code_object_blobs(ps)) {
+        for (auto&& isa_blobs : ps.impl.get_code_object_blobs()) {
             for (auto&& blob : isa_blobs.second) {
                 std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
 
