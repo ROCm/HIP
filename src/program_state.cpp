@@ -6,6 +6,7 @@
 #include <hsa/hsa_ven_amd_loader.h>
 
 #include <cstdint>
+#include <cstdio>
 #include <mutex>
 #include <unordered_map>
 #include <utility>
@@ -100,9 +101,15 @@ public:
       
     std::tuple<
         std::once_flag,
-        std::unordered_map<std::string, void*>,
-        std::mutex> globals;
+        std::mutex,
+        std::unordered_map<std::string, void*>> globals;
 
+    using RAII_code_reader =
+        std::unique_ptr<hsa_code_object_reader_t, 
+                        std::function<void(hsa_code_object_reader_t*)>>;
+    std::pair<
+        std::mutex,
+        std::vector<RAII_code_reader>> code_readers;
 
     const std::unordered_map<
         hsa_isa_t, std::vector<std::vector<char>>>& get_code_object_blobs() {
@@ -193,13 +200,13 @@ public:
 
     std::unordered_map<std::string, void*>& get_globals() {
         std::call_once(std::get<0>(globals), [this]() { 
-            std::get<1>(this->globals).reserve(this->get_symbol_addresses().size()); 
+            std::get<2>(this->globals).reserve(this->get_symbol_addresses().size()); 
         });
-        return std::get<1>(globals);
+        return std::get<2>(globals);
     }
 
     std::mutex& get_globals_mutex() {
-        return std::get<2>(globals);
+        return std::get<1>(globals);
     }
 
     std::vector<std::string> copy_names_of_undefined_symbols(
@@ -258,6 +265,33 @@ public:
                 executable, agent, x.c_str(), p);
         }
     }
+
+    void load_code_object_and_freeze_executable(
+        const std::string& file, hsa_agent_t agent, hsa_executable_t executable) {
+        // TODO: the following sequence is inefficient, should be refactored
+        //       into a single load of the file and subsequent ELFIO
+        //       processing.
+        if (file.empty()) return;
+
+        static const auto cor_deleter = [] (hsa_code_object_reader_t* p) {
+            if (!p) return;
+            hsa_code_object_reader_destroy(*p);
+            delete p;
+        };
+
+        RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
+        hsa_code_object_reader_create_from_memory(
+            file.data(), file.size(), tmp.get());
+
+        hsa_executable_load_agent_code_object(
+            executable, agent, *tmp, nullptr, nullptr);
+
+        hsa_executable_freeze(executable, nullptr);
+
+        std::lock_guard<std::mutex> lck{code_readers.first};
+        code_readers.second.push_back(move(tmp));
+    }
+
 };  // class program_state_impl
 
 program_state::program_state() :
@@ -278,39 +312,6 @@ void* program_state::global_addr_by_name(const char* name) {
 
 
 
-inline
-void load_code_object_and_freeze_executable(
-    const std::string& file, hsa_agent_t agent, hsa_executable_t executable) {
-    // TODO: the following sequence is inefficient, should be refactored
-    //       into a single load of the file and subsequent ELFIO
-    //       processing.
-    static const auto cor_deleter = [](hsa_code_object_reader_t* p) {
-        if (!p) return;
-
-        hsa_code_object_reader_destroy(*p);
-        delete p;
-    };
-
-    using RAII_code_reader =
-        std::unique_ptr<hsa_code_object_reader_t, decltype(cor_deleter)>;
-
-    if (file.empty()) return;
-
-    RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
-    hsa_code_object_reader_create_from_memory(
-        file.data(), file.size(), tmp.get());
-
-    hsa_executable_load_agent_code_object(
-        executable, agent, *tmp, nullptr, nullptr);
-
-    hsa_executable_freeze(executable, nullptr);
-
-    static std::vector<RAII_code_reader> code_readers;
-    static std::mutex mtx;
-
-    std::lock_guard<std::mutex> lck{mtx};
-    code_readers.push_back(move(tmp));
-}
 
 hsa_executable_t program_state::load_executable(const char* data,
                                                 const size_t data_size,
@@ -330,7 +331,7 @@ hsa_executable_t program_state::load_executable(const char* data,
                                                             code_object_dynsym,
                                                             agent, executable);
 
-    load_code_object_and_freeze_executable(ts, agent, executable);
+    impl.load_code_object_and_freeze_executable(ts, agent, executable);
 
     return executable;
 }
