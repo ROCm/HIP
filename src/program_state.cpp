@@ -202,9 +202,65 @@ public:
         return std::get<2>(globals);
     }
 
-};  // class program_state_impl 
+    std::vector<std::string> copy_names_of_undefined_symbols(
+        const ELFIO::symbol_section_accessor& section) {
+        std::vector<std::string> r;
 
-program_state::program_state() : 
+        for (auto i = 0u; i != section.get_symbols_num(); ++i) {
+            // TODO: this is boyscout code, caching the temporaries
+            //       may be of worth.
+            auto tmp = read_symbol(section, i);
+            if (tmp.sect_idx != SHN_UNDEF || tmp.name.empty()) continue;
+
+            r.push_back(std::move(tmp.name));
+        }
+
+        return r;
+    }
+
+    void associate_code_object_symbols_with_host_allocation(
+        const ELFIO::elfio& reader,
+        ELFIO::section* code_object_dynsym,
+        hsa_agent_t agent,
+        hsa_executable_t executable) {
+        if (!code_object_dynsym) return;
+
+        const auto undefined_symbols = copy_names_of_undefined_symbols(
+            ELFIO::symbol_section_accessor{reader, code_object_dynsym});
+
+        auto& g = get_globals();
+        auto& g_mutex = get_globals_mutex();
+        for (auto&& x : undefined_symbols) {
+
+            if (g.find(x) != g.cend()) return;
+
+            const auto it1 = get_symbol_addresses().find(x);
+
+            if (it1 == get_symbol_addresses().cend()) {
+                hip_throw(std::runtime_error{
+                    "Global symbol: " + x + " is undefined."});
+            }
+
+            std::lock_guard<std::mutex> lck{g_mutex};
+
+            if (g.find(x) != g.cend()) return;
+
+            g.emplace(x, (void*)(it1->second.first));
+            void* p = nullptr;
+            hsa_amd_memory_lock(
+                reinterpret_cast<void*>(it1->second.first),
+                it1->second.second,
+                nullptr,  // All agents.
+                0,
+                &p);
+
+            hsa_executable_agent_global_variable_define(
+                executable, agent, x.c_str(), p);
+        }
+    }
+};  // class program_state_impl
+
+program_state::program_state() :
     impl(*new program_state_impl) {
 }
 
@@ -220,65 +276,7 @@ void* program_state::global_addr_by_name(const char* name) {
       return it->second;
 }
 
-inline
-std::vector<std::string> copy_names_of_undefined_symbols(
-    const ELFIO::symbol_section_accessor& section) {
-    std::vector<std::string> r;
 
-    for (auto i = 0u; i != section.get_symbols_num(); ++i) {
-        // TODO: this is boyscout code, caching the temporaries
-        //       may be of worth.
-        auto tmp = read_symbol(section, i);
-        if (tmp.sect_idx != SHN_UNDEF || tmp.name.empty()) continue;
-
-        r.push_back(std::move(tmp.name));
-    }
-
-    return r;
-}
-
-inline
-void associate_code_object_symbols_with_host_allocation(
-    program_state& ps,
-    const ELFIO::elfio& reader,
-    ELFIO::section* code_object_dynsym,
-    hsa_agent_t agent,
-    hsa_executable_t executable) {
-    if (!code_object_dynsym) return;
-
-    const auto undefined_symbols = copy_names_of_undefined_symbols(
-        ELFIO::symbol_section_accessor{reader, code_object_dynsym});
-
-    auto& g = ps.impl.get_globals();
-    auto& g_mutex = ps.impl.get_globals_mutex();
-    for (auto&& x : undefined_symbols) {
-
-        if (g.find(x) != g.cend()) return;
-
-        const auto it1 = ps.impl.get_symbol_addresses().find(x);
-
-        if (it1 == ps.impl.get_symbol_addresses().cend()) {
-            hip_throw(std::runtime_error{
-                "Global symbol: " + x + " is undefined."});
-        }
-
-        std::lock_guard<std::mutex> lck{g_mutex};
-
-        if (g.find(x) != g.cend()) return;
-
-        g.emplace(x, (void*)(it1->second.first));
-        void* p = nullptr;
-        hsa_amd_memory_lock(
-            reinterpret_cast<void*>(it1->second.first),
-            it1->second.second,
-            nullptr,  // All agents.
-            0,
-            &p);
-
-        hsa_executable_agent_global_variable_define(
-            executable, agent, x.c_str(), p);
-    }
-}
 
 inline
 void load_code_object_and_freeze_executable(
@@ -328,9 +326,9 @@ hsa_executable_t program_state::load_executable(const char* data,
             return x->get_type() == SHT_DYNSYM;
     });
 
-    associate_code_object_symbols_with_host_allocation(*this, reader,
-                                                       code_object_dynsym,
-                                                       agent, executable);
+    impl.associate_code_object_symbols_with_host_allocation(reader,
+                                                            code_object_dynsym,
+                                                            agent, executable);
 
     load_code_object_and_freeze_executable(ts, agent, executable);
 
