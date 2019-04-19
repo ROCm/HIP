@@ -110,15 +110,19 @@ hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
     HIP_RETURN(hipErrorInvalidDevice);
   }
 
-  if (name == nullptr) {
+  if (name == nullptr || len <= 0) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
   auto* deviceHandle = g_devices[device]->devices()[0];
   const auto& info = deviceHandle->info();
+  const auto nameLen = ::strlen(info.boardName_);
 
-  len = ((cl_uint)len < ::strlen(info.boardName_)) ? len : 128;
-  ::strncpy(name, info.boardName_, len);
+  if (nameLen > (cl_uint)len) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  ::strncpy(name, info.boardName_, nameLen);
 
   HIP_RETURN(hipSuccess);
 }
