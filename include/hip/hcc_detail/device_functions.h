@@ -42,7 +42,7 @@ __device__ static inline unsigned int __popc(unsigned int input) {
     return __builtin_popcount(input);
 }
 __device__ static inline unsigned int __popcll(unsigned long long int input) {
-    return __builtin_popcountl(input);
+    return __builtin_popcountll(input);
 }
 
 __device__ static inline int __clz(int input) {
