@@ -382,7 +382,7 @@ hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags) {
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
     if(flags != hipMemAttachGlobal)
-        hip_status = hipErrorNotSupported;
+        hip_status = hipErrorInvalidValue;
     else
         hip_status = ihipHostMalloc(devPtr, size, hipHostMallocDefault);
     return ihipLogStatus(hip_status);
