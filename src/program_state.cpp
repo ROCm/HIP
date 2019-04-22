@@ -419,7 +419,7 @@ public:
             static const auto copy_kernels = [](
                 hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* p) {
                 auto& impl = *static_cast<program_state_impl*>(p);
-                if (type(x) == HSA_SYMBOL_KIND_KERNEL) impl.kernels.second[name(x)].push_back(x);
+                if (type(x) == HSA_SYMBOL_KIND_KERNEL) impl.kernels.second[hip_impl::name(x)].push_back(x);
 
                 return HSA_STATUS_SUCCESS;
             };
@@ -544,24 +544,72 @@ public:
     }
 
     const std::unordered_map<std::string, 
-          std::vector<std::pair<std::size_t, std::size_t>>>& get_kernargs() {
+        std::vector<std::pair<std::size_t, std::size_t>>>& get_kernargs() {
 
-              std::call_once(kernargs.first, [this]() {
-                  for (auto&& isa_blobs : get_code_object_blobs()) {
-                      for (auto&& blob : isa_blobs.second) {
-                          std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
+        std::call_once(kernargs.first, [this]() {
+            for (auto&& isa_blobs : get_code_object_blobs()) {
+                for (auto&& blob : isa_blobs.second) {
+                    std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
 
-                          ELFIO::elfio reader;
+                    ELFIO::elfio reader;
 
-                          if (!reader.load(tmp)) continue;
+                    if (!reader.load(tmp)) continue;
 
-                          read_kernarg_metadata(reader, kernargs.second);
-                      }
-                  }
-              });
+                    read_kernarg_metadata(reader, kernargs.second);
+                }
+            }
+        });
 
-              return kernargs.second;
-          }
+        return kernargs.second;
+    }
+
+    std::string name(std::uintptr_t function_address)
+    {
+        const auto it = get_function_names().find(function_address);
+
+        if (it == get_function_names().cend())  {
+            hip_throw(std::runtime_error{
+                    "Invalid function passed to hipLaunchKernelGGL."});
+        }
+
+        return it->second;
+    }
+
+    std::string name(hsa_agent_t agent)
+    {
+        char n[64]{};
+        hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
+
+        return std::string{n};
+    }
+
+    const Kernel_descriptor& kernel_descriptor(std::uintptr_t function_address,
+            hsa_agent_t agent) {
+
+
+        auto it0 = get_functions().find(function_address);
+
+        if (it0 == get_functions().cend()) {
+            hip_throw(std::runtime_error{
+                    "No device code available for function: " +
+                    std::string(name(function_address))});
+        }
+
+        const auto it1 = std::find_if(
+                it0->second.cbegin(),
+                it0->second.cend(),
+                [=](const std::pair<hsa_agent_t, Kernel_descriptor>& x) {
+                return x.first == agent;
+                });
+
+        if (it1 == it0->second.cend()) {
+            hip_throw(std::runtime_error{
+                    "No code available for function: " + std::string(name(function_address)) +
+                    ", for agent: " + name(agent)});
+        }
+
+        return it1->second;
+    }
 
 };  // class program_state_impl
 
@@ -593,54 +641,9 @@ const std::unordered_map<
     return impl.get_executables();
 }
 
-inline
-std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
-{
-    const auto it = ps.impl.get_function_names().find(function_address);
-
-    if (it == ps.impl.get_function_names().cend())  {
-        hip_throw(std::runtime_error{
-            "Invalid function passed to hipLaunchKernelGGL."});
-    }
-
-    return it->second;
-}
-
-inline
-std::string name(hsa_agent_t agent)
-{
-    char n[64]{};
-    hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
-
-    return std::string{n};
-}
-
 const Kernel_descriptor& program_state::kernel_descriptor(std::uintptr_t function_address,
                                                           hsa_agent_t agent) {
-
-
-    auto it0 = impl.get_functions().find(function_address);
-
-    if (it0 == impl.get_functions().cend()) {
-        hip_throw(std::runtime_error{
-            "No device code available for function: " +
-            std::string(hip_impl::name(*this, function_address))});
-    }
-
-    const auto it1 = std::find_if(
-        it0->second.cbegin(),
-        it0->second.cend(),
-        [=](const std::pair<hsa_agent_t, Kernel_descriptor>& x) {
-        return x.first == agent;
-    });
-
-    if (it1 == it0->second.cend()) {
-        hip_throw(std::runtime_error{
-            "No code available for function: " + std::string(hip_impl::name(*this, function_address)) +
-            ", for agent: " + name(agent)});
-    }
-
-    return it1->second;
+    return impl.kernel_descriptor(function_address, agent);
 }
 
 inline
