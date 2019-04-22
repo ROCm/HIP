@@ -118,11 +118,13 @@ hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
   const auto& info = deviceHandle->info();
   const auto nameLen = ::strlen(info.boardName_);
 
-  if (nameLen > (cl_uint)len) {
+  // Make sure that the size of `dest` is big enough to hold `src` including
+  // trailing zero byte
+  if (nameLen > (cl_uint)(len - 1)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  ::strncpy(name, info.boardName_, nameLen);
+  ::strncpy(name, info.boardName_, (nameLen + 1));
 
   HIP_RETURN(hipSuccess);
 }
