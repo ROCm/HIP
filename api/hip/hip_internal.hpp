@@ -102,23 +102,30 @@ class PlatformState {
 public:
   struct RegisteredVar {
   public:
-    RegisteredVar(): hostVar_(nullptr), size_(0), devicePtr_(nullptr), amd_mem_obj_(nullptr) {}
-    RegisteredVar(char* hostVar, size_t size, hipDeviceptr_t devicePtr, amd::Memory* amd_mem_obj);
+    RegisteredVar(): size_(0), devicePtr_(nullptr), amd_mem_obj_(nullptr) {}
     ~RegisteredVar() {}
 
     hipDeviceptr_t getdeviceptr() const { return devicePtr_; };
     size_t getvarsize() const { return size_; };
 
-  private:
-    char*  hostVar_;            // Variable name in host code
     size_t size_;               // Size of the variable
     hipDeviceptr_t devicePtr_;  //Device Memory Address of the variable.
     amd::Memory* amd_mem_obj_;
   };
 
+  struct DeviceFunction {
+    std::string deviceName;
+    std::vector< std::pair< hipModule_t, bool > >* modules;
+    std::vector<hipFunction_t> functions;
+  };
+  struct DeviceVar {
+    std::string hostVar;
+    std::vector< std::pair< hipModule_t, bool > >* modules;
+    std::vector<RegisteredVar> rvars;
+  };
 private:
-  std::unordered_map<const void*, std::vector<hipFunction_t> > functions_;
-  std::unordered_map<const void*, std::vector<RegisteredVar> > vars_;
+  std::unordered_map<const void*, DeviceFunction > functions_;
+  std::unordered_map<const void*, DeviceVar > vars_;
 
   static PlatformState* platform_;
 
@@ -129,8 +136,8 @@ public:
     return *platform_;
   }
 
-  void registerVar(const char* hostvar, const std::vector<RegisteredVar>& rvar);
-  void registerFunction(const void* hostFunction, const std::vector<hipFunction_t>& funcs);
+  void registerVar(const void* hostvar, const DeviceVar& var);
+  void registerFunction(const void* hostFunction, const DeviceFunction& func);
 
   hipFunction_t getFunc(const void* hostFunction, int deviceId);
   bool getGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,

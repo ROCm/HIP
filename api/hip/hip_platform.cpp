@@ -64,7 +64,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memory** amd_mem_obj,
                                   hipDeviceptr_t* dptr, size_t* bytes);
 
-extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
+extern "C" std::vector< std::pair<hipModule_t, bool> >* __hipRegisterFatBinary(const void* data)
 {
   HIP_INIT();
 
@@ -80,7 +80,7 @@ extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
     return nullptr;
   }
 
-  auto programs = new std::vector<hipModule_t>{g_devices.size()};
+  auto programs = new std::vector< std::pair<hipModule_t, bool> >{g_devices.size()};
 
   const auto obheader = reinterpret_cast<const __ClangOffloadBundleHeader*>(fbwrapper->binary);
   const auto* desc = &obheader->desc[0];
@@ -115,9 +115,8 @@ extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
       if (program == nullptr) {
         return nullptr;
       }
-      if (CL_SUCCESS == program->addDeviceProgram(*ctx->devices()[0], image, size) &&
-          CL_SUCCESS == program->build(ctx->devices(), nullptr, nullptr, nullptr)) {
-        programs->at(dev) = reinterpret_cast<hipModule_t>(as_cl(program));
+      if (CL_SUCCESS == program->addDeviceProgram(*ctx->devices()[0], image, size)) {
+        programs->at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)) , false);
       }
     }
   }
@@ -125,35 +124,45 @@ extern "C" std::vector<hipModule_t>* __hipRegisterFatBinary(const void* data)
   return programs;
 }
 
-PlatformState::RegisteredVar::RegisteredVar(char* hostVar, size_t size, hipDeviceptr_t devicePtr,
-                                            amd::Memory* amd_mem_obj) : hostVar_(hostVar),
-                                            size_(size), devicePtr_(devicePtr),
-                                            amd_mem_obj_(amd_mem_obj) {
-
-  /* Add the memory to the MemObjMap */
-  amd::MemObjMap::AddMemObj(devicePtr_, amd_mem_obj_);
-}
-
-void PlatformState::registerVar(const char* hostvar,
-                                const std::vector<RegisteredVar>& rvar) {
+void PlatformState::registerVar(const void* hostvar,
+                                const DeviceVar& rvar) {
   amd::ScopedLock lock(lock_);
   vars_.insert(std::make_pair(hostvar, rvar));
 }
 
 void PlatformState::registerFunction(const void* hostFunction,
-                                     const std::vector<hipFunction_t>& funcs) {
+                                     const DeviceFunction& func) {
   amd::ScopedLock lock(lock_);
-  functions_.insert(std::make_pair(hostFunction, funcs));
+  functions_.insert(std::make_pair(hostFunction, func));
 }
 
 hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
   amd::ScopedLock lock(lock_);
   const auto it = functions_.find(hostFunction);
   if (it != functions_.cend()) {
-    return it->second[deviceId];
-  } else {
-    return nullptr;
+    PlatformState::DeviceFunction& devFunc = it->second;
+    if (devFunc.functions[deviceId] == 0) {
+      hipModule_t module = (*devFunc.modules)[deviceId].first;
+      if (!(*devFunc.modules)[deviceId].second) {
+        amd::Program* program = as_amd(reinterpret_cast<cl_program>(module));
+        if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr)) {
+          return nullptr;
+        }
+        (*devFunc.modules)[deviceId].second = true;
+      }
+      hipFunction_t function = nullptr;
+      if (hipSuccess == hipModuleGetFunction(&function, module, devFunc.deviceName.c_str()) &&
+          function != nullptr) {
+        devFunc.functions[deviceId] = function;
+      }
+      else {
+   //     tprintf(DB_FB, "__hipRegisterFunction cannot find kernel %s for"
+   //         " device %d\n", deviceName, deviceId);
+      }
+    }
+    return devFunc.functions[deviceId];
   }
+  return nullptr;
 }
 
 bool PlatformState::getGlobalVar(const void* hostVar, int deviceId,
@@ -161,8 +170,32 @@ bool PlatformState::getGlobalVar(const void* hostVar, int deviceId,
   amd::ScopedLock lock(lock_);
   const auto it = vars_.find(hostVar);
   if (it != vars_.cend()) {
-    *size_ptr = it->second[deviceId].getvarsize();
-    *dev_ptr = it->second[deviceId].getdeviceptr();
+    DeviceVar& dvar = it->second;
+    if (dvar.rvars[deviceId].getdeviceptr() == nullptr) {
+      size_t sym_size = 0;
+      hipDeviceptr_t device_ptr = nullptr;
+      amd::Memory* amd_mem_obj = nullptr;
+
+      if (!(*dvar.modules)[deviceId].second) {
+        amd::Program* program = as_amd(reinterpret_cast<cl_program>((*dvar.modules)[deviceId].first));
+        if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr)) {
+          return false;
+        }
+        (*dvar.modules)[deviceId].second = true;
+      }
+      if((hipSuccess == ihipCreateGlobalVarObj(dvar.hostVar.c_str(), (*dvar.modules)[deviceId].first,
+                                               &amd_mem_obj, &device_ptr, &sym_size))
+           && (device_ptr != nullptr)) {
+        dvar.rvars[deviceId].size_ = sym_size;
+        dvar.rvars[deviceId].devicePtr_ = device_ptr;
+        dvar.rvars[deviceId].amd_mem_obj_ = amd_mem_obj;
+        amd::MemObjMap::AddMemObj(device_ptr, amd_mem_obj);
+      } else {
+        LogError("[HIP] __hipRegisterVar cannot find kernel for device \n");
+      }
+    }
+    *size_ptr = dvar.rvars[deviceId].getvarsize();
+    *dev_ptr = dvar.rvars[deviceId].getdeviceptr();
     return true;
   } else {
     return false;
@@ -190,7 +223,7 @@ void PlatformState::popExec(ihipExec_t& exec) {
 }
 
 extern "C" void __hipRegisterFunction(
-  std::vector<hipModule_t>* modules,
+  std::vector<std::pair<hipModule_t,bool> >* modules,
   const void*  hostFunction,
   char*        deviceFunction,
   const char*  deviceName,
@@ -203,21 +236,9 @@ extern "C" void __hipRegisterFunction(
 {
   HIP_INIT();
 
-  std::vector<hipFunction_t> functions{g_devices.size()};
+  PlatformState::DeviceFunction func{ std::string{deviceName}, modules, std::vector<hipFunction_t>{ g_devices.size() }};
 
-  for (size_t deviceId=0; deviceId < g_devices.size(); ++deviceId) {
-    hipFunction_t function = nullptr;
-    if (hipSuccess == hipModuleGetFunction(&function, modules->at(deviceId), deviceName) &&
-        function != nullptr) {
-      functions[deviceId] = function;
-    }
-    else {
- //     tprintf(DB_FB, "__hipRegisterFunction cannot find kernel %s for"
- //         " device %d\n", deviceName, deviceId);
-    }
-  }
-
-  PlatformState::instance().registerFunction(hostFunction, functions);
+  PlatformState::instance().registerFunction(hostFunction, func);
 }
 
 // Registers a device-side global variable.
@@ -226,7 +247,7 @@ extern "C" void __hipRegisterFunction(
 // track of the value of the device side global variable between kernel
 // executions.
 extern "C" void __hipRegisterVar(
-  std::vector<hipModule_t>* modules,   // The device modules containing code object
+  std::vector<std::pair<hipModule_t,bool> >* modules,   // The device modules containing code object
   char*       var,       // The shadow variable in host code
   char*       hostVar,   // Variable name in host code
   char*       deviceVar, // Variable name in device code
@@ -237,38 +258,19 @@ extern "C" void __hipRegisterVar(
 {
   HIP_INIT();
 
-  size_t sym_size = 0;
-  std::vector<PlatformState::RegisteredVar> global_vars{g_devices.size()};
+  PlatformState::DeviceVar dvar{ std::string{ hostVar }, modules,
+    std::vector<PlatformState::RegisteredVar>{ g_devices.size() } };
 
-  for (size_t deviceId=0; deviceId < g_devices.size(); ++deviceId) {
-    hipDeviceptr_t device_ptr = nullptr;
-    amd::Memory* amd_mem_obj = nullptr;
-
-    if((hipSuccess == ihipCreateGlobalVarObj(hostVar, modules->at(deviceId), &amd_mem_obj,
-                                             &device_ptr, &sym_size))
-         && (device_ptr != nullptr)) {
-
-      if (static_cast<size_t>(size) != sym_size) {
-        LogError("[OCL] Size Mismatch with the HSA Symbol retrieved \n");
-      }
-
-      global_vars[deviceId] = PlatformState::RegisteredVar(hostVar, sym_size, device_ptr, amd_mem_obj);
-
-    } else {
-      LogError("[OCL] __hipRegisterVar cannot find kernel for device \n");
-    }
-  }
-
-  PlatformState::instance().registerVar(hostVar, global_vars);
+  PlatformState::instance().registerVar(hostVar, dvar);
 }
 
-extern "C" void __hipUnregisterFatBinary(std::vector<hipModule_t>* modules)
+extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, bool> >* modules)
 {
   HIP_INIT();
 
-  std::for_each(modules->begin(), modules->end(), [](hipModule_t module){
-    if (module != nullptr) {
-      as_amd(reinterpret_cast<cl_program>(module))->release();
+  std::for_each(modules->begin(), modules->end(), [](std::pair<hipModule_t, bool> module){
+    if (module.first != nullptr) {
+      as_amd(reinterpret_cast<cl_program>(module.first))->release();
     }
   });
   delete modules;
@@ -355,7 +357,6 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
   if (dev_program == nullptr) {
     HIP_RETURN(hipErrorUnknown);
   }
-
   /* Find the global Symbols */
   if(!dev_program->createGlobalVarObj(amd_mem_obj, dptr, bytes, name)) {
     HIP_RETURN(hipErrorUnknown);
