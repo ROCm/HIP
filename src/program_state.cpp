@@ -435,6 +435,28 @@ public:
         return kernels.second;
     }
 
+    const std::unordered_map<
+        std::uintptr_t,
+        std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& get_functions() {
+
+        std::call_once(functions.first, [this]() {
+            auto& impl = *static_cast<program_state_impl*>(this);
+            for (auto&& function : impl.get_function_names()) {
+                const auto it = impl.get_kernels().find(function.second);
+
+                if (it == impl.get_kernels().cend()) continue;
+
+                for (auto&& kernel_symbol : it->second) {
+                    impl.functions.second[function.first].emplace_back(
+                        agent(kernel_symbol),
+                        Kernel_descriptor{kernel_object(kernel_symbol), it->first});
+                }
+            }
+        });
+
+        return functions.second;
+    }
+
 };  // class program_state_impl
 
 program_state::program_state() :
@@ -463,28 +485,6 @@ hsa_executable_t program_state::load_executable(const char* data,
 const std::unordered_map<
     hsa_agent_t, std::vector<hsa_executable_t>>& program_state::executables() {
     return impl.get_executables();
-}
-
-inline
-const std::unordered_map<
-    std::uintptr_t,
-    std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions(program_state& ps) {
-
-    std::call_once(ps.impl.functions.first, [&ps]() {
-        for (auto&& function : ps.impl.get_function_names()) {
-            const auto it = ps.impl.get_kernels().find(function.second);
-
-            if (it == ps.impl.get_kernels().cend()) continue;
-
-            for (auto&& kernel_symbol : it->second) {
-                ps.impl.functions.second[function.first].emplace_back(
-                    agent(kernel_symbol),
-                    Kernel_descriptor{kernel_object(kernel_symbol), it->first});
-            }
-        }
-    });
-
-    return ps.impl.functions.second;
 }
 
 inline
@@ -623,9 +623,9 @@ const Kernel_descriptor& program_state::kernel_descriptor(std::uintptr_t functio
                                                           hsa_agent_t agent) {
 
 
-    auto it0 = functions(*this).find(function_address);
+    auto it0 = impl.get_functions().find(function_address);
 
-    if (it0 == functions(*this).cend()) {
+    if (it0 == impl.get_functions().cend()) {
         hip_throw(std::runtime_error{
             "No device code available for function: " +
             std::string(hip_impl::name(*this, function_address))});
