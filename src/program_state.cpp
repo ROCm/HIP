@@ -146,7 +146,7 @@ public:
                     if (!valid(tmp)) break;
 
                     for (auto&& bundle : bundles(tmp)) {
-                        auto& bv = this->code_object_blobs.second[triple_to_hsa_isa(bundle.triple)];
+                        auto& bv = code_object_blobs.second[triple_to_hsa_isa(bundle.triple)];
                         bv.push_back(bundle.blob);
                     }
 
@@ -202,7 +202,7 @@ public:
 
     std::unordered_map<std::string, void*>& get_globals() {
         std::call_once(std::get<0>(globals), [this]() { 
-            std::get<2>(this->globals).reserve(this->get_symbol_addresses().size()); 
+            std::get<2>(globals).reserve(get_symbol_addresses().size()); 
         });
         return std::get<2>(globals);
     }
@@ -424,7 +424,7 @@ public:
                 return HSA_STATUS_SUCCESS;
             };
 
-            for (auto&& agent_executables : this->get_executables()) {
+            for (auto&& agent_executables : get_executables()) {
                 for (auto&& executable : agent_executables.second) {
                     hsa_executable_iterate_agent_symbols(
                         executable, agent_executables.first, copy_kernels, this);
@@ -440,14 +440,13 @@ public:
         std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& get_functions() {
 
         std::call_once(functions.first, [this]() {
-            auto& impl = *static_cast<program_state_impl*>(this);
-            for (auto&& function : impl.get_function_names()) {
-                const auto it = impl.get_kernels().find(function.second);
+            for (auto&& function : get_function_names()) {
+                const auto it = get_kernels().find(function.second);
 
-                if (it == impl.get_kernels().cend()) continue;
+                if (it == get_kernels().cend()) continue;
 
                 for (auto&& kernel_symbol : it->second) {
-                    impl.functions.second[function.first].emplace_back(
+                    functions.second[function.first].emplace_back(
                         agent(kernel_symbol),
                         Kernel_descriptor{kernel_object(kernel_symbol), it->first});
                 }
@@ -456,6 +455,113 @@ public:
 
         return functions.second;
     }
+
+    std::size_t parse_args(
+            const std::string& metadata,
+            std::size_t f,
+            std::size_t l,
+            std::vector<std::pair<std::size_t, std::size_t>>& size_align) {
+        if (f == l) return f;
+        if (!size_align.empty()) return l;
+
+        do {
+            static constexpr size_t size_sz{5};
+            f = metadata.find("Size:", f) + size_sz;
+
+            if (l <= f) return f;
+
+            auto size = std::strtoul(&metadata[f], nullptr, 10);
+
+            static constexpr size_t align_sz{6};
+            f = metadata.find("Align:", f) + align_sz;
+
+            char* l{};
+            auto align = std::strtoul(&metadata[f], &l, 10);
+
+            f += (l - &metadata[f]) + 1;
+
+            size_align.emplace_back(size, align);
+        } while (true);
+    }
+
+    void read_kernarg_metadata(
+            ELFIO::elfio& reader,
+            std::unordered_map<
+            std::string,
+            std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
+        // TODO: this is inefficient.
+        auto it = find_section_if(reader, [](const ELFIO::section* x) {
+                return x->get_type() == SHT_NOTE;
+                });
+
+        if (!it) return;
+
+        const ELFIO::note_section_accessor acc{reader, it};
+        for (decltype(acc.get_notes_num()) i = 0; i != acc.get_notes_num(); ++i) {
+            ELFIO::Elf_Word type{};
+            std::string name{};
+            void* desc{};
+            ELFIO::Elf_Word desc_size{};
+
+            acc.get_note(i, type, name, desc, desc_size);
+
+            if (name != "AMD") continue; // TODO: switch to using NT_AMD_AMDGPU_HSA_METADATA.
+
+            std::string tmp{
+                static_cast<char*>(desc), static_cast<char*>(desc) + desc_size};
+
+            auto dx = tmp.find("Kernels:");
+
+            if (dx == std::string::npos) continue;
+
+            static constexpr decltype(tmp.size()) kernels_sz{8};
+            dx += kernels_sz;
+
+            do {
+                dx = tmp.find("Name:", dx);
+
+                if (dx == std::string::npos) break;
+
+                static constexpr decltype(tmp.size()) name_sz{5};
+                dx = tmp.find_first_not_of(" '", dx + name_sz);
+
+                auto fn = tmp.substr(dx, tmp.find_first_of("'\n", dx) - dx);
+                dx += fn.size();
+
+                auto dx1 = tmp.find("CodeProps", dx);
+                dx = tmp.find("Args:", dx);
+
+                if (dx1 < dx) {
+                    dx = dx1;
+                    continue;
+                }
+                if (dx == std::string::npos) break;
+
+                static constexpr decltype(tmp.size()) args_sz{5};
+                dx = parse_args(tmp, dx + args_sz, dx1, kernargs[fn]);
+            } while (true);
+        }
+    }
+
+    const std::unordered_map<std::string, 
+          std::vector<std::pair<std::size_t, std::size_t>>>& get_kernargs() {
+
+              std::call_once(kernargs.first, [this]() {
+                  for (auto&& isa_blobs : get_code_object_blobs()) {
+                      for (auto&& blob : isa_blobs.second) {
+                          std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
+
+                          ELFIO::elfio reader;
+
+                          if (!reader.load(tmp)) continue;
+
+                          read_kernarg_metadata(reader, kernargs.second);
+                      }
+                  }
+              });
+
+              return kernargs.second;
+          }
 
 };  // class program_state_impl
 
@@ -485,116 +591,6 @@ hsa_executable_t program_state::load_executable(const char* data,
 const std::unordered_map<
     hsa_agent_t, std::vector<hsa_executable_t>>& program_state::executables() {
     return impl.get_executables();
-}
-
-inline
-std::size_t parse_args(
-    const std::string& metadata,
-    std::size_t f,
-    std::size_t l,
-    std::vector<std::pair<std::size_t, std::size_t>>& size_align) {
-    if (f == l) return f;
-    if (!size_align.empty()) return l;
-
-    do {
-        static constexpr size_t size_sz{5};
-        f = metadata.find("Size:", f) + size_sz;
-
-        if (l <= f) return f;
-
-        auto size = std::strtoul(&metadata[f], nullptr, 10);
-
-        static constexpr size_t align_sz{6};
-        f = metadata.find("Align:", f) + align_sz;
-
-        char* l{};
-        auto align = std::strtoul(&metadata[f], &l, 10);
-
-        f += (l - &metadata[f]) + 1;
-
-        size_align.emplace_back(size, align);
-    } while (true);
-}
-
-inline
-void read_kernarg_metadata(
-    ELFIO::elfio& reader,
-    std::unordered_map<
-        std::string,
-        std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
-    // TODO: this is inefficient.
-    auto it = find_section_if(reader, [](const ELFIO::section* x) {
-        return x->get_type() == SHT_NOTE;
-    });
-
-    if (!it) return;
-
-    const ELFIO::note_section_accessor acc{reader, it};
-    for (decltype(acc.get_notes_num()) i = 0; i != acc.get_notes_num(); ++i) {
-        ELFIO::Elf_Word type{};
-        std::string name{};
-        void* desc{};
-        ELFIO::Elf_Word desc_size{};
-
-        acc.get_note(i, type, name, desc, desc_size);
-
-        if (name != "AMD") continue; // TODO: switch to using NT_AMD_AMDGPU_HSA_METADATA.
-
-        std::string tmp{
-            static_cast<char*>(desc), static_cast<char*>(desc) + desc_size};
-
-        auto dx = tmp.find("Kernels:");
-
-        if (dx == std::string::npos) continue;
-
-        static constexpr decltype(tmp.size()) kernels_sz{8};
-        dx += kernels_sz;
-
-        do {
-            dx = tmp.find("Name:", dx);
-
-            if (dx == std::string::npos) break;
-
-            static constexpr decltype(tmp.size()) name_sz{5};
-            dx = tmp.find_first_not_of(" '", dx + name_sz);
-
-            auto fn = tmp.substr(dx, tmp.find_first_of("'\n", dx) - dx);
-            dx += fn.size();
-
-            auto dx1 = tmp.find("CodeProps", dx);
-            dx = tmp.find("Args:", dx);
-
-            if (dx1 < dx) {
-                dx = dx1;
-                continue;
-            }
-            if (dx == std::string::npos) break;
-
-            static constexpr decltype(tmp.size()) args_sz{5};
-            dx = parse_args(tmp, dx + args_sz, dx1, kernargs[fn]);
-        } while (true);
-    }
-}
-
-inline
-const std::unordered_map<
-    std::string, std::vector<std::pair<std::size_t, std::size_t>>>& kernargs(program_state& ps) {
-
-    std::call_once(ps.impl.kernargs.first, [&ps]() {
-        for (auto&& isa_blobs : ps.impl.get_code_object_blobs()) {
-            for (auto&& blob : isa_blobs.second) {
-                std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
-
-                ELFIO::elfio reader;
-
-                if (!reader.load(tmp)) continue;
-
-                read_kernarg_metadata(reader, ps.impl.kernargs.second);
-            }
-        }
-    });
-
-    return ps.impl.kernargs.second;
 }
 
 inline
@@ -656,8 +652,8 @@ kernargs_size_align_impl(program_state& ps, std::uintptr_t kernel) {
         hip_throw(std::runtime_error{"Undefined __global__ function."});
     }
 
-    auto it1 = kernargs(ps).find(it->second);
-    if (it1 == kernargs(ps).end()) {
+    auto it1 = ps.impl.get_kernargs().find(it->second);
+    if (it1 == ps.impl.get_kernargs().end()) {
         hip_throw(std::runtime_error{
             "Missing metadata for __global__ function: " + it->second});
     }
