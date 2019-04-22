@@ -17,6 +17,8 @@ namespace hip_impl {
 [[noreturn]]
 void hip_throw(const std::exception&);
 
+std::vector<hsa_agent_t> all_hsa_agents();
+
 template<typename P>
 inline
 ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
@@ -292,6 +294,125 @@ public:
         code_readers.second.push_back(move(tmp));
     }
 
+
+    const std::unordered_map<
+        hsa_agent_t, std::vector<hsa_executable_t>>& get_executables() {
+
+        std::call_once(executables.first, [this]() {
+            for (auto&& agent : hip_impl::all_hsa_agents()) {
+
+                auto data = std::make_pair(this, &agent);
+
+                hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* d) {
+
+                    auto& p = *static_cast<decltype(data)*>(d);
+                    auto& impl = *(p.first);
+                    auto& code_object_blobs = impl.get_code_object_blobs();
+                    const auto it = code_object_blobs.find(x);
+                    if (it == code_object_blobs.cend()) return HSA_STATUS_SUCCESS;
+
+                    hsa_agent_t a = *static_cast<hsa_agent_t*>(p.second);
+
+                    for (auto&& blob : it->second) {
+                        hsa_executable_t tmp = {};
+
+                        hsa_executable_create_alt(
+                            HSA_PROFILE_FULL,
+                            HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
+                            nullptr,
+                            &tmp);
+
+                        // TODO: this is massively inefficient and only meant for
+                        // illustration.
+                        tmp = impl.load_executable(blob.data(), blob.size(), tmp, a);
+
+                        if (tmp.handle) impl.executables.second[a].push_back(tmp);
+                    }
+
+                    return HSA_STATUS_SUCCESS;
+                }, &data);
+            }
+        });
+
+        return executables.second;
+    }
+    
+    hsa_executable_t load_executable(const char* data,
+                                     const size_t data_size,
+                                     hsa_executable_t executable,
+                                     hsa_agent_t agent) {
+        ELFIO::elfio reader;
+        std::string ts = std::string(data, data_size);
+        std::stringstream tmp{ts};
+
+        if (!reader.load(tmp)) return hsa_executable_t{};
+        const auto code_object_dynsym = find_section_if(
+            reader, [](const ELFIO::section* x) {
+                return x->get_type() == SHT_DYNSYM;
+        });
+
+        associate_code_object_symbols_with_host_allocation(reader,
+                                                           code_object_dynsym,
+                                                           agent, executable);
+
+        load_code_object_and_freeze_executable(ts, agent, executable);
+
+        return executable;
+    }
+
+    std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
+        const ELFIO::elfio& reader, ELFIO::section* symtab) {
+        std::vector<std::pair<std::uintptr_t, std::string>> r;
+        ELFIO::symbol_section_accessor symbols{reader, symtab};
+
+        for (auto i = 0u; i != symbols.get_symbols_num(); ++i) {
+            // TODO: this is boyscout code, caching the temporaries
+            //       may be of worth.
+            auto tmp = read_symbol(symbols, i);
+
+            if (tmp.type != STT_FUNC) continue;
+            if (tmp.type == SHN_UNDEF) continue;
+            if (tmp.name.empty()) continue;
+
+            r.emplace_back(tmp.value, tmp.name);
+        }
+
+        return r;
+    }
+
+    const std::unordered_map<std::uintptr_t, std::string>& get_function_names() {
+
+        std::call_once(function_names.first, [this]() {
+            dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
+                ELFIO::elfio tmp;
+                const auto elf =
+                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+
+                if (!tmp.load(elf)) return 0;
+
+                const auto it = find_section_if(tmp, [](const ELFIO::section* x) {
+                    return x->get_type() == SHT_SYMTAB;
+                });
+
+                if (!it) return 0;
+
+                auto& impl = *static_cast<program_state_impl*>(p);
+       
+                auto names = impl.function_names_for(tmp, it);
+                for (auto&& x : names) x.first += info->dlpi_addr;
+
+                impl.function_names.second.insert(
+                    std::make_move_iterator(names.begin()),
+                    std::make_move_iterator(names.end()));
+
+                return 0;
+            }, this);
+        });
+
+        return function_names.second;
+    }
+
+
 };  // class program_state_impl
 
 program_state::program_state() :
@@ -310,133 +431,16 @@ void* program_state::global_addr_by_name(const char* name) {
       return it->second;
 }
 
-
-
-
 hsa_executable_t program_state::load_executable(const char* data,
                                                 const size_t data_size,
                                                 hsa_executable_t executable,
                                                 hsa_agent_t agent) {
-    ELFIO::elfio reader;
-    std::string ts = std::string(data, data_size);
-    std::stringstream tmp{ts};
-
-    if (!reader.load(tmp)) return hsa_executable_t{};
-    const auto code_object_dynsym = find_section_if(
-        reader, [](const ELFIO::section* x) {
-            return x->get_type() == SHT_DYNSYM;
-    });
-
-    impl.associate_code_object_symbols_with_host_allocation(reader,
-                                                            code_object_dynsym,
-                                                            agent, executable);
-
-    impl.load_code_object_and_freeze_executable(ts, agent, executable);
-
-    return executable;
-}
-
-std::vector<hsa_agent_t> all_hsa_agents();
-
-inline
-const std::unordered_map<
-    hsa_agent_t, std::vector<hsa_executable_t>>& executables(program_state& ps) {
-
-    std::call_once(ps.impl.executables.first, [&ps]() {
-        for (auto&& agent : hip_impl::all_hsa_agents()) {
-
-            auto data = std::make_pair(&ps, &agent);
-
-            hsa_agent_iterate_isas(agent, [](hsa_isa_t x, void* d) {
-
-                auto& p = *static_cast<decltype(data)*>(d);
-                auto& program_state = *(p.first);
-                auto& code_object_blobs = program_state.impl.get_code_object_blobs();
-                const auto it = code_object_blobs.find(x);
-                if (it == code_object_blobs.cend()) return HSA_STATUS_SUCCESS;
-
-                hsa_agent_t a = *static_cast<hsa_agent_t*>(p.second);
-
-                for (auto&& blob : it->second) {
-                    hsa_executable_t tmp = {};
-
-                    hsa_executable_create_alt(
-                        HSA_PROFILE_FULL,
-                        HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
-                        nullptr,
-                        &tmp);
-
-                    // TODO: this is massively inefficient and only meant for
-                    // illustration.
-                    tmp = p.first->load_executable(blob.data(), blob.size(), tmp, a);
-
-                    if (tmp.handle) p.first->impl.executables.second[a].push_back(tmp);
-                }
-
-                return HSA_STATUS_SUCCESS;
-            }, &data);
-        }
-    });
-
-    return ps.impl.executables.second;
+    return impl.load_executable(data, data_size, executable, agent);
 }
 
 const std::unordered_map<
     hsa_agent_t, std::vector<hsa_executable_t>>& program_state::executables() {
-    return ::hip_impl::executables(*this);
-}
-
-inline
-std::vector<std::pair<std::uintptr_t, std::string>> function_names_for(
-    const ELFIO::elfio& reader, ELFIO::section* symtab) {
-    std::vector<std::pair<std::uintptr_t, std::string>> r;
-    ELFIO::symbol_section_accessor symbols{reader, symtab};
-
-    for (auto i = 0u; i != symbols.get_symbols_num(); ++i) {
-        // TODO: this is boyscout code, caching the temporaries
-        //       may be of worth.
-        auto tmp = read_symbol(symbols, i);
-
-        if (tmp.type != STT_FUNC) continue;
-        if (tmp.type == SHN_UNDEF) continue;
-        if (tmp.name.empty()) continue;
-
-        r.emplace_back(tmp.value, tmp.name);
-    }
-
-    return r;
-}
-
-inline
-const std::unordered_map<std::uintptr_t, std::string>& function_names(program_state& ps) {
-
-    std::call_once(ps.impl.function_names.first, [&ps]() {
-        dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
-            ELFIO::elfio tmp;
-            const auto elf =
-                info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
-
-            if (!tmp.load(elf)) return 0;
-
-            const auto it = find_section_if(tmp, [](const ELFIO::section* x) {
-                return x->get_type() == SHT_SYMTAB;
-            });
-
-            if (!it) return 0;
-
-            auto names = function_names_for(tmp, it);
-            for (auto&& x : names) x.first += info->dlpi_addr;
-
-            auto& ps = *static_cast<program_state*>(p);
-            ps.impl.function_names.second.insert(
-                std::make_move_iterator(names.begin()),
-                std::make_move_iterator(names.end()));
-
-            return 0;
-        }, &ps);
-    });
-
-    return ps.impl.function_names.second;
+    return impl.get_executables();
 }
 
 inline
@@ -452,7 +456,7 @@ const std::unordered_map<
             return HSA_STATUS_SUCCESS;
         };
 
-        for (auto&& agent_executables : executables(ps)) {
+        for (auto&& agent_executables : ps.impl.get_executables()) {
             for (auto&& executable : agent_executables.second) {
                 hsa_executable_iterate_agent_symbols(
                     executable, agent_executables.first, copy_kernels, &ps);
@@ -469,7 +473,7 @@ const std::unordered_map<
     std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions(program_state& ps) {
 
     std::call_once(ps.impl.functions.first, [&ps]() {
-        for (auto&& function : function_names(ps)) {
+        for (auto&& function : ps.impl.get_function_names()) {
             const auto it = kernels(ps).find(function.second);
 
             if (it == kernels(ps).cend()) continue;
@@ -598,9 +602,9 @@ const std::unordered_map<
 inline
 std::string name(hip_impl::program_state& ps, std::uintptr_t function_address)
 {
-    const auto it = function_names(ps).find(function_address);
+    const auto it = ps.impl.get_function_names().find(function_address);
 
-    if (it == function_names(ps).cend())  {
+    if (it == ps.impl.get_function_names().cend())  {
         hip_throw(std::runtime_error{
             "Invalid function passed to hipLaunchKernelGGL."});
     }
@@ -649,8 +653,8 @@ inline
 const std::vector<std::pair<std::size_t, std::size_t>>& 
 kernargs_size_align_impl(program_state& ps, std::uintptr_t kernel) {
 
-    auto it = function_names(ps).find(kernel);
-    if (it == function_names(ps).cend()) {
+    auto it = ps.impl.get_function_names().find(kernel);
+    if (it == ps.impl.get_function_names().cend()) {
         hip_throw(std::runtime_error{"Undefined __global__ function."});
     }
 
