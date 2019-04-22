@@ -412,6 +412,28 @@ public:
         return function_names.second;
     }
 
+    const std::unordered_map<
+        std::string, std::vector<hsa_executable_symbol_t>>& get_kernels() {
+
+        std::call_once(kernels.first, [this]() {
+            static const auto copy_kernels = [](
+                hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* p) {
+                auto& impl = *static_cast<program_state_impl*>(p);
+                if (type(x) == HSA_SYMBOL_KIND_KERNEL) impl.kernels.second[name(x)].push_back(x);
+
+                return HSA_STATUS_SUCCESS;
+            };
+
+            for (auto&& agent_executables : this->get_executables()) {
+                for (auto&& executable : agent_executables.second) {
+                    hsa_executable_iterate_agent_symbols(
+                        executable, agent_executables.first, copy_kernels, this);
+                }
+            }
+        });
+
+        return kernels.second;
+    }
 
 };  // class program_state_impl
 
@@ -445,38 +467,14 @@ const std::unordered_map<
 
 inline
 const std::unordered_map<
-    std::string, std::vector<hsa_executable_symbol_t>>& kernels(program_state& ps) {
-
-    std::call_once(ps.impl.kernels.first, [&ps]() {
-        static const auto copy_kernels = [](
-            hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* p) {
-            auto& ps = *static_cast<program_state*>(p);
-            if (type(x) == HSA_SYMBOL_KIND_KERNEL) ps.impl.kernels.second[name(x)].push_back(x);
-
-            return HSA_STATUS_SUCCESS;
-        };
-
-        for (auto&& agent_executables : ps.impl.get_executables()) {
-            for (auto&& executable : agent_executables.second) {
-                hsa_executable_iterate_agent_symbols(
-                    executable, agent_executables.first, copy_kernels, &ps);
-            }
-        }
-    });
-
-    return ps.impl.kernels.second;
-}
-
-inline
-const std::unordered_map<
     std::uintptr_t,
     std::vector<std::pair<hsa_agent_t, Kernel_descriptor>>>& functions(program_state& ps) {
 
     std::call_once(ps.impl.functions.first, [&ps]() {
         for (auto&& function : ps.impl.get_function_names()) {
-            const auto it = kernels(ps).find(function.second);
+            const auto it = ps.impl.get_kernels().find(function.second);
 
-            if (it == kernels(ps).cend()) continue;
+            if (it == ps.impl.get_kernels().cend()) continue;
 
             for (auto&& kernel_symbol : it->second) {
                 ps.impl.functions.second[function.first].emplace_back(
