@@ -46,21 +46,6 @@ struct Symbol {
     std::uint8_t other = 0;
 };
 
-inline
-Symbol read_symbol(const ELFIO::symbol_section_accessor& section,
-                   unsigned int idx) {
-    assert(idx < section.get_symbols_num());
-
-    Symbol r;
-    section.get_symbol(
-        idx, r.name, r.value, r.size, r.bind, r.type, r.sect_idx, r.other);
-
-    return r;
-}
-
-
-
-
 class program_state_impl {
 
 public:
@@ -158,6 +143,17 @@ public:
         return code_object_blobs.second;
     }
 
+    Symbol read_symbol(const ELFIO::symbol_section_accessor& section,
+                   unsigned int idx) {
+        assert(idx < section.get_symbols_num());
+
+        Symbol r;
+        section.get_symbol(
+            idx, r.name, r.value, r.size, r.bind, r.type, r.sect_idx, r.other);
+
+        return r;
+    }
+
     const std::unordered_map<
         std::string,
         std::pair<ELFIO::Elf64_Addr, ELFIO::Elf_Xword>>& get_symbol_addresses() {
@@ -185,7 +181,7 @@ public:
                 const ELFIO::symbol_section_accessor symtab{tmp, it};
 
                 for (auto i = 0u; i != symtab.get_symbols_num(); ++i) {
-                    auto s = read_symbol(symtab, i);
+                    auto s = t->read_symbol(symtab, i);
 
                     if (s.type != STT_OBJECT || s.sect_idx == SHN_UNDEF) continue;
 
@@ -611,6 +607,22 @@ public:
         return it1->second;
     }
 
+    const std::vector<std::pair<std::size_t, std::size_t>>& 
+        kernargs_size_align(std::uintptr_t kernel) {
+
+        auto it = get_function_names().find(kernel);
+        if (it == get_function_names().cend()) {
+            hip_throw(std::runtime_error{"Undefined __global__ function."});
+        }
+
+        auto it1 = get_kernargs().find(it->second);
+        if (it1 == get_kernargs().end()) {
+            hip_throw(std::runtime_error{
+                      "Missing metadata for __global__ function: " + it->second});
+        }
+
+        return it1->second;
+    }
 };  // class program_state_impl
 
 program_state::program_state() :
@@ -646,28 +658,9 @@ const Kernel_descriptor& program_state::kernel_descriptor(std::uintptr_t functio
     return impl.kernel_descriptor(function_address, agent);
 }
 
-inline
-const std::vector<std::pair<std::size_t, std::size_t>>& 
-kernargs_size_align_impl(program_state& ps, std::uintptr_t kernel) {
-
-    auto it = ps.impl.get_function_names().find(kernel);
-    if (it == ps.impl.get_function_names().cend()) {
-        hip_throw(std::runtime_error{"Undefined __global__ function."});
-    }
-
-    auto it1 = ps.impl.get_kernargs().find(it->second);
-    if (it1 == ps.impl.get_kernargs().end()) {
-        hip_throw(std::runtime_error{
-            "Missing metadata for __global__ function: " + it->second});
-    }
-
-    return it1->second;
-}
-
-
 kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t kernel) {
   kernargs_size_align t;
-  t.handle = reinterpret_cast<const void*>(&kernargs_size_align_impl(*this, kernel));
+  t.handle = reinterpret_cast<const void*>(&impl.kernargs_size_align(kernel));
   return t;
 }
 };
