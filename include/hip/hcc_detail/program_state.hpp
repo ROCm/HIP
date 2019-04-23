@@ -156,7 +156,8 @@ public:
 
     program_state(const program_state&) = delete;
 
-    program_state_impl& impl;
+private:
+    program_state_impl* impl;
 };
 
 class kernargs_size_align {
