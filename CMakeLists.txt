@@ -200,7 +200,10 @@ endif()
 if(HIP_PLATFORM STREQUAL "hcc")
     find_package(amd_comgr REQUIRED CONFIG
         PATHS
-            /opt/rocm/lib/cmake/amd_comgr
+            /opt/rocm/
+        PATH_SUFFIXES
+            cmake/amd_comgr
+            lib/cmake/amd_comgr
     )
     MESSAGE(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 endif()
