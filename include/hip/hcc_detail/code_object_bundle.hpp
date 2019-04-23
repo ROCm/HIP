@@ -89,9 +89,10 @@ struct Bundled_code {
     std::vector<char> blob;
 };
 
+#define magic_string_  "__CLANG_OFFLOAD_BUNDLE__"
+
 class Bundled_code_header {
     // DATA - STATICS
-    static constexpr const char magic_string_[] = "__CLANG_OFFLOAD_BUNDLE__";
     static constexpr auto magic_string_sz_ = sizeof(magic_string_) - 1;
 
     // DATA
@@ -143,12 +144,12 @@ class Bundled_code_header {
             std::vector<char>{std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{}},
             x);
     }
-
     // FRIENDS - ACCESSORS
     friend inline bool valid(const Bundled_code_header& x) {
-        return std::equal(magic_string_, magic_string_ + magic_string_sz_,
-                          x.header_.bundler_magic_string_);
+        const std::string ms = {magic_string_};
+        return std::equal(ms.begin(), ms.end(), x.header_.bundler_magic_string_);
     }
+
     friend inline const std::vector<Bundled_code>& bundles(const Bundled_code_header& x) {
         return x.bundles_;
     }

@@ -29,6 +29,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_BLAS_TYPE_NAME_MAP{
   {"CUBLAS_OP_N",                    {"HIPBLAS_OP_N",                    "rocblas_operation_none",                CONV_NUMERIC_LITERAL, API_BLAS}},
   {"CUBLAS_OP_T",                    {"HIPBLAS_OP_T",                    "rocblas_operation_transpose",           CONV_NUMERIC_LITERAL, API_BLAS}},
   {"CUBLAS_OP_C",                    {"HIPBLAS_OP_C",                    "rocblas_operation_conjugate_transpose", CONV_NUMERIC_LITERAL, API_BLAS}},
+  {"CUBLAS_OP_HERMITAN",             {"HIPBLAS_OP_C",                    "rocblas_operation_conjugate_transpose", CONV_NUMERIC_LITERAL, API_BLAS}},
+  {"CUBLAS_OP_CONJG",                {"HIPBLAS_OP_CONJG",                "rocblas_operation_conjugate",           CONV_NUMERIC_LITERAL, API_BLAS, UNSUPPORTED}},
 
   // Blas statuses
   {"cublasStatus",                   {"hipblasStatus_t",                 "rocblas_status",                        CONV_TYPE, API_BLAS}},
@@ -48,6 +50,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_BLAS_TYPE_NAME_MAP{
   {"cublasFillMode_t",               {"hipblasFillMode_t",               "rocblas_fill",                          CONV_TYPE, API_BLAS}},
   {"CUBLAS_FILL_MODE_LOWER",         {"HIPBLAS_FILL_MODE_LOWER",         "rocblas_fill_lower",                    CONV_NUMERIC_LITERAL, API_BLAS}},
   {"CUBLAS_FILL_MODE_UPPER",         {"HIPBLAS_FILL_MODE_UPPER",         "rocblas_fill_upper",                    CONV_NUMERIC_LITERAL, API_BLAS}},
+  {"CUBLAS_FILL_MODE_FULL",          {"HIPBLAS_FILL_MODE_FULL",          "rocblas_fill_full",                     CONV_NUMERIC_LITERAL, API_BLAS}},
 
   // Blas Diag Types
   {"cublasDiagType_t",               {"hipblasDiagType_t",               "rocblas_diagonal",                      CONV_TYPE, API_BLAS}},
