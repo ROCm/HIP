@@ -12,6 +12,14 @@
 
 namespace hip_impl {
 
+std::size_t kernargs_size_align::kernargs_size_align::size(std::size_t n) const{
+    return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].first;
+}
+
+std::size_t kernargs_size_align::alignment(std::size_t n) const{
+    return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].second;
+}
+
 program_state::program_state() :
     impl(new program_state_impl) {
     if (!impl) hip_throw(std::runtime_error {
