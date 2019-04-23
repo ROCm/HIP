@@ -66,52 +66,6 @@ namespace hip_impl {
 [[noreturn]]
 void hip_throw(const std::exception&);
 
-class Kernel_descriptor {
-    std::uint64_t kernel_object_{};
-    amd_kernel_code_t const* kernel_header_{nullptr};
-    std::string name_{};
-public:
-    Kernel_descriptor() = default;
-    Kernel_descriptor(std::uint64_t kernel_object, const std::string& name)
-        : kernel_object_{kernel_object}, name_{name}
-    {
-        bool supported{false};
-        std::uint16_t min_v{UINT16_MAX};
-        auto r = hsa_system_major_extension_supported(
-            HSA_EXTENSION_AMD_LOADER, 1, &min_v, &supported);
-
-        if (r != HSA_STATUS_SUCCESS || !supported) return;
-
-        hsa_ven_amd_loader_1_01_pfn_t tbl{};
-
-        r = hsa_system_get_major_extension_table(
-            HSA_EXTENSION_AMD_LOADER,
-            1,
-            sizeof(tbl),
-            reinterpret_cast<void*>(&tbl));
-
-        if (r != HSA_STATUS_SUCCESS) return;
-        if (!tbl.hsa_ven_amd_loader_query_host_address) return;
-
-        r = tbl.hsa_ven_amd_loader_query_host_address(
-            reinterpret_cast<void*>(kernel_object_),
-            reinterpret_cast<const void**>(&kernel_header_));
-
-        if (r != HSA_STATUS_SUCCESS) return;
-    }
-    Kernel_descriptor(const Kernel_descriptor&) = default;
-    Kernel_descriptor(Kernel_descriptor&&) = default;
-    ~Kernel_descriptor() = default;
-
-    Kernel_descriptor& operator=(const Kernel_descriptor&) = default;
-    Kernel_descriptor& operator=(Kernel_descriptor&&) = default;
-
-    operator hipFunction_t() const {  // TODO: this is awful and only meant for illustration.
-        return reinterpret_cast<hipFunction_t>(const_cast<Kernel_descriptor*>(this));
-    }
-};
-
-
 class kernargs_size_align;
 class program_state_impl;
 class program_state {
@@ -119,8 +73,8 @@ public:
     program_state();
     ~program_state();
 
-    const Kernel_descriptor& kernel_descriptor(std::uintptr_t,
-                                               hsa_agent_t);
+    hipFunction_t kernel_descriptor(std::uintptr_t,
+                                    hsa_agent_t);
     
     kernargs_size_align get_kernargs_size_align(std::uintptr_t);
     hsa_executable_t load_executable(const char*, const size_t,

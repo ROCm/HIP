@@ -127,7 +127,7 @@ void hipLaunchKernelGGLImpl(
     hipStream_t stream,
     void** kernarg) {
 
-    auto& kd = hip_impl::get_program_state().kernel_descriptor(function_address, 
+    const auto& kd = hip_impl::get_program_state().kernel_descriptor(function_address, 
                                                                target_agent(stream));
 
     hipModuleLaunchKernel(kd, numBlocks.x, numBlocks.y, numBlocks.z,

@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/hsa_helpers.hpp"
 #include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
+#include "program_state.inl"
 #include "trace_helper.h"
 
 #include <hsa/amd_hsa_kernel_code.h>
@@ -512,8 +513,8 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     if (!func) return hipErrorInvalidDeviceFunction;
 
     auto agent = this_agent();
-    auto& kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
-    const auto header = static_cast<hipFunction_t>(kd)->_header;
+    auto kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
+    const auto header = kd->_header;
 
     if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 

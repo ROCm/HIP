@@ -50,9 +50,10 @@ const std::unordered_map<
     return impl->get_executables();
 }
 
-const Kernel_descriptor& program_state::kernel_descriptor(std::uintptr_t function_address,
+hipFunction_t program_state::kernel_descriptor(std::uintptr_t function_address,
                                                           hsa_agent_t agent) {
-    return impl->kernel_descriptor(function_address, agent);
+    auto& kd = impl->kernel_descriptor(function_address, agent);
+    return kd;
 }
 
 kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t kernel) {
