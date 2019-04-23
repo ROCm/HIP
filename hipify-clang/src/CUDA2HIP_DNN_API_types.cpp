@@ -35,6 +35,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"CUDNN_SEV_ERROR_EN",                                  {"HIPDNN_SEV_ERROR_EN",                                  "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},
   {"CUDNN_SEV_WARNING_EN",                                {"HIPDNN_SEV_WARNING_EN",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},
   {"CUDNN_SEV_INFO_EN",                                   {"HIPDNN_SEV_INFO_EN",                                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_SEQDATA_DIM_COUNT",                             {"HIPDNN_SEQDATA_DIM_COUNT",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 4
 
   // cuDNN enums
   {"cudnnStatus_t",                                       {"hipdnnStatus_t",                                       "", CONV_TYPE, API_DNN}},
@@ -60,6 +61,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"CUDNN_TENSOR_NCHW",                                   {"HIPDNN_TENSOR_NCHW",                                   "", CONV_NUMERIC_LITERAL, API_DNN}},    // 0
   {"CUDNN_TENSOR_NHWC",                                   {"HIPDNN_TENSOR_NHWC",                                   "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
   {"CUDNN_TENSOR_NCHW_VECT_C",                            {"HIPDNN_TENSOR_NCHW_VECT_C",                            "", CONV_NUMERIC_LITERAL, API_DNN}},    // 2
+  {"cudnnFoldingDirection_t",                             {"hipdnnFoldingDirection_t",                             "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_TRANSFORM_FOLD",                                {"HIPDNN_TRANSFORM_FOLD",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0U
+  {"CUDNN_TRANSFORM_UNFOLD",                              {"HIPDNN_TRANSFORM_UNFOLD",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1U
   {"cudnnDataType_t",                                     {"hipdnnDataType_t",                                     "", CONV_TYPE, API_DNN}},
   {"CUDNN_DATA_FLOAT",                                    {"HIPDNN_DATA_FLOAT",                                    "", CONV_NUMERIC_LITERAL, API_DNN}},    // 0
   {"CUDNN_DATA_DOUBLE",                                   {"HIPDNN_DATA_DOUBLE",                                   "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
@@ -147,6 +151,11 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"CUDNN_RNN_TANH",                                      {"HIPDNN_RNN_TANH",                                      "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
   {"CUDNN_LSTM",                                          {"HIPDNN_LSTM",                                          "", CONV_NUMERIC_LITERAL, API_DNN}},    // 2
   {"CUDNN_GRU",                                           {"HIPDNN_GRU",                                           "", CONV_NUMERIC_LITERAL, API_DNN}},    // 3
+  {"cudnnRNNBiasMode_t",                                  {"hipdnnRNNBiasMode_t",                                  "", CONV_TYPE, API_DNN}},
+  {"CUDNN_RNN_NO_BIAS",                                   {"HIPDNN_RNN_NO_BIAS",                                   "", CONV_NUMERIC_LITERAL, API_DNN}},    // 0
+  {"CUDNN_RNN_SINGLE_INP_BIAS",                           {"HIPDNN_RNN_WITH_BIAS",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+  {"CUDNN_RNN_DOUBLE_BIAS",                               {"HIPDNN_RNN_WITH_BIAS",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
+  {"CUDNN_RNN_SINGLE_REC_BIAS",                           {"HIPDNN_RNN_WITH_BIAS",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
   {"cudnnOpTensorOp_t",                                   {"hipdnnOpTensorOp_t",                                   "", CONV_TYPE, API_DNN}},
   {"CUDNN_OP_TENSOR_ADD",                                 {"HIPDNN_OP_TENSOR_ADD",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 0
   {"CUDNN_OP_TENSOR_MUL",                                 {"HIPDNN_OP_TENSOR_MUL",                                 "", CONV_NUMERIC_LITERAL, API_DNN}},    // 1
@@ -215,6 +224,22 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"cudnnRNNPaddingMode_t",                               {"hipdnnRNNPaddingMode_t",                               "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"CUDNN_RNN_PADDED_IO_DISABLED",                        {"HIPDNN_RNN_PADDED_IO_DISABLED",                        "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
   {"CUDNN_RNN_PADDED_IO_ENABLED",                         {"HIPDNN_RNN_PADDED_IO_ENABLED",                         "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"cudnnSeqDataAxis_t",                                  {"hipdnnSeqDataAxis_t",                                  "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_SEQDATA_TIME_DIM",                              {"HIPDNN_SEQDATA_TIME_DIM",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_SEQDATA_BATCH_DIM",                             {"HIPDNN_SEQDATA_BATCH_DIM",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"CUDNN_SEQDATA_BEAM_DIM",                              {"HIPDNN_SEQDATA_BEAM_DIM",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
+  {"CUDNN_SEQDATA_VECT_DIM",                              {"HIPDNN_SEQDATA_VECT_DIM",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 3
+  {"cudnnAttnQueryMap_t",                                 {"hipdnnAttnQueryMap_t",                                 "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_ATTN_QUERYMAP_ALL_TO_ONE",                      {"HIPDNN_ATTN_QUERYMAP_ALL_TO_ONE",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_ATTN_QUERYMAP_ONE_TO_ONE",                      {"HIPDNN_ATTN_QUERYMAP_ONE_TO_ONE",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"cudnnMultiHeadAttnWeightKind_t",                      {"hipdnnMultiHeadAttnWeightKind_t",                      "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_MH_ATTN_Q_WEIGHTS",                             {"HIPDNN_MH_ATTN_Q_WEIGHTS",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_MH_ATTN_K_WEIGHTS",                             {"HIPDNN_MH_ATTN_K_WEIGHTS",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"CUDNN_MH_ATTN_V_WEIGHTS",                             {"HIPDNN_MH_ATTN_V_WEIGHTS",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
+  {"CUDNN_MH_ATTN_O_WEIGHTS",                             {"HIPDNN_MH_ATTN_O_WEIGHTS",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 3
+  {"cudnnWgradMode_t",                                    {"hipdnnWgradMode_t",                                    "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_WGRAD_MODE_ADD",                                {"HIPDNN_WGRAD_MODE_ADD",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_WGRAD_MODE_SET",                                {"HIPDNN_WGRAD_MODE_SET",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
 
   // cuDNN types
   {"cudnnContext",                                        {"hipdnnContext",                                        "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
@@ -239,6 +264,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"cudnnReduceTensorDescriptor_t",                       {"hipdnnReduceTensorDescriptor_t",                       "", CONV_TYPE, API_DNN}},
   {"cudnnCTCLossStruct",                                  {"hipdnnCTCLossStruct",                                  "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnCTCLossDescriptor_t",                            {"hipdnnCTCLossDescriptor_t",                            "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnTensorTransformStruct",                          {"hipdnnTensorTransformStruct",                          "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnTensorTransformDescriptor_t",                    {"hipdnnTensorTransformDescriptor_t",                    "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnConvolutionFwdAlgoPerf_t",                       {"hipdnnConvolutionFwdAlgoPerf_t",                       "", CONV_TYPE, API_DNN}},
   {"cudnnConvolutionBwdFilterAlgoPerf_t",                 {"hipdnnConvolutionBwdFilterAlgoPerf_t",                 "", CONV_TYPE, API_DNN}},
   {"cudnnConvolutionBwdDataAlgoPerf_t",                   {"hipdnnConvolutionBwdDataAlgoPerf_t",                   "", CONV_TYPE, API_DNN}},
@@ -257,4 +284,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"cudnnCallback_t",                                     {"hipdnnCallback_t",                                     "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnRNNDataStruct",                                  {"hipdnnRNNDataStruct",                                  "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnRNNDataDescriptor_t",                            {"hipdnnRNNDataDescriptor_t",                            "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSeqDataStruct",                                  {"hipdnnSeqDataStruct",                                  "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSeqDataDescriptor_t",                            {"hipdnnSeqDataDescriptor_t",                            "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnAttnStruct",                                     {"hipdnnAttnStruct",                                     "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnAttnDescriptor_t",                               {"hipdnnAttnDescriptor_t",                               "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+
 };

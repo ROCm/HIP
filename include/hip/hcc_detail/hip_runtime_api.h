@@ -2549,7 +2549,7 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
  * @returns hipSuccess, hipErrorInvalidDeviceFunction
  */
 
-hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
+hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
 
 struct Agent_global {
 
