@@ -1,13 +1,33 @@
 #include "../include/hip/hcc_detail/program_state.hpp"
 
+#include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "../include/hip/hcc_detail/hsa_helpers.hpp"
+
+#if !defined(__cpp_exceptions)
+    #define try if (true)
+    #define catch(...) if (false)
+#endif
+#include "../include/hip/hcc_detail/elfio/elfio.hpp"
+#if !defined(__cpp_exceptions)
+    #undef try
+    #undef catch
+#endif
+
 #include <hsa/amd_hsa_kernel_code.h>
 #include <hsa/hsa.h>
 #include <hsa/hsa_ext_amd.h>
 #include <hsa/hsa_ven_amd_loader.h>
 
+#include <link.h>
+
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <mutex>
+#include <string>
+#include <sstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>

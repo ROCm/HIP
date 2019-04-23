@@ -1,17 +1,13 @@
 #include "../include/hip/hcc_detail/program_state.hpp"
 
-#include <hsa/amd_hsa_kernel_code.h>
 #include <hsa/hsa.h>
-#include <hsa/hsa_ext_amd.h>
-#include <hsa/hsa_ven_amd_loader.h>
 
 #include <cstdint>
-#include <cstdio>
-#include <mutex>
+#include <stdexcept>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
+// contains implementation of program_state_impl
 #include "program_state.inl"
 
 namespace hip_impl {

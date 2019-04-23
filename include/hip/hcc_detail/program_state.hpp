@@ -22,38 +22,17 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "code_object_bundle.hpp"
-#include "hsa_helpers.hpp"
-
-#if !defined(__cpp_exceptions)
-    #define try if (true)
-    #define catch(...) if (false)
-#endif
-#include "elfio/elfio.hpp"
-#if !defined(__cpp_exceptions)
-    #undef try
-    #undef catch
-#endif
-
 #include <hsa/amd_hsa_kernel_code.h>
 #include <hsa/hsa.h>
 #include <hsa/hsa_ext_amd.h>
 #include <hsa/hsa_ven_amd_loader.h>
 
-#include <link.h>
-
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <istream>
-#include <memory>
-#include <mutex>
-#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 struct ihipModuleSymbol_t;
