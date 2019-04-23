@@ -49,11 +49,13 @@
 | 5.0.2                    | 8.0                               | +            | +         |
 | 6.0.0                    | 9.0                               | +            | +         |
 | **6.0.1**                | **9.0**                           | + <br/> **LATEST STABLE RELEASE** | + |
-| 7.0.0                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
-| 7.0.1                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
+| 7.0.0                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_7.0.0_bug_38811.zip)*</br> | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
+| 7.0.1                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_7.0.1_bug_38811.zip)*</br> | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
 | 7.1.0                    | 9.2 (?)                           | - <br/> LLVM 7.1.0 <br/> is not yet released | - <br/> LLVM 7.1.0 <br/> is not yet released |
-| **8.0.0**                | **10.0**                          | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | + <br/> **LATEST STABLE RELEASE** |
+| **8.0.0**                | **10.0**                          | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_8.0.0_bug_38811.zip)*</br> | + <br/> **LATEST STABLE RELEASE** |
 | 8.0.1                    | 10.1 (?)                          | - <br/> LLVM 8.0.1 <br/> is not yet released | - <br/> LLVM 8.0.1 <br/> is not yet released |
+
+`*` Download the patch and unpack it into your LLVM distributive directory; a few header files will be overwritten; rebuilding of LLVM is not needed.
 
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
 
