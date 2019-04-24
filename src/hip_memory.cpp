@@ -301,9 +301,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
-    HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
-    HIP_SET_DEVICE();
+hipError_t ihipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     hipError_t hip_status = hipSuccess;
 
     if (HIP_SYNC_HOST_ALLOC) {
@@ -368,6 +366,25 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     if (HIP_SYNC_HOST_ALLOC) {
         hipDeviceSynchronize();
     }
+    return hip_status;
+}
+
+hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
+    HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
+    HIP_SET_DEVICE();
+    hipError_t hip_status = hipSuccess;
+    hip_status = ihipHostMalloc(ptr, sizeBytes, flags);
+    return ihipLogStatus(hip_status);
+}
+
+hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags) {
+    HIP_INIT_SPECIAL_API(hipMallocManaged, (TRACE_MEM), devPtr, size, flags);
+    HIP_SET_DEVICE();
+    hipError_t hip_status = hipSuccess;
+    if(flags != hipMemAttachGlobal)
+        hip_status = hipErrorInvalidValue;
+    else
+        hip_status = ihipHostMalloc(devPtr, size, hipHostMallocDefault);
     return ihipLogStatus(hip_status);
 }
 
