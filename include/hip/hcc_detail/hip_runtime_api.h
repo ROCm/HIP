@@ -2636,7 +2636,12 @@ private:
     std::pair<
         std::mutex,
         std::unordered_map<
-        std::string, std::vector<Agent_global>>> globals_from_module;
+            std::string, std::vector<Agent_global>>> globals_from_module;
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<
+            hsa_agent_t, std::vector<Agent_global>>> globals_from_process;
 
 public:
 
@@ -2679,7 +2684,34 @@ public:
         //return *dptr ? hipSuccess : hipErrorNotFound;
         return hipSuccess;
     }
-   
+
+    hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+            const char* name) {
+
+        std::call_once(globals_from_process.first, [this]() {
+            for (auto&& agent_executables : hip_impl::get_program_state().executables()) {
+                std::vector<Agent_global> tmp0;
+                for (auto&& executable : agent_executables.second) {
+                    auto tmp1 = read_agent_globals(agent_executables.first,
+                                                   executable);
+
+                    tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
+                                make_move_iterator(tmp1.end()));
+                }
+                globals_from_process.second.emplace(agent_executables.first, move(tmp0));
+            }
+        });
+
+        const auto it = globals_from_process.second.find(this_agent());
+
+        if (it == globals_from_process.second.cend()) return hipErrorNotInitialized;
+
+        std::tie(*dptr, *bytes) = read_global_description(it->second.cbegin(),
+                it->second.cend(), name);
+
+        return *dptr ? hipSuccess : hipErrorNotFound;
+    }
+  
 };
 
 class agent_globals {
@@ -2695,6 +2727,12 @@ public:
                                              hipModule_t hmod, const char* name) {
         return impl->read_agent_global_from_module(dptr, bytes, hmod, name);
     }
+
+    hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                                              const char* name) {
+        return impl->read_agent_global_from_process(dptr, bytes, name);
+    }
+
 private:
     agent_globals_impl* impl;
 };
@@ -2706,43 +2744,6 @@ agent_globals& get_agent_globals() {
     return ag;
 }
 
-inline
-hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
-                                         hipModule_t hmod, const char* name) {
-    return get_agent_globals().read_agent_global_from_module(dptr, bytes, hmod, name);
-}
-
-inline
-__attribute__((visibility("hidden")))
-hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-                                          const char* name) {
-    static std::unordered_map<
-        hsa_agent_t, std::vector<Agent_global>> agent_globals;
-    static std::once_flag f;
-
-    std::call_once(f, []() {
-        for (auto&& agent_executables : hip_impl::get_program_state().executables()) {
-            std::vector<Agent_global> tmp0;
-            for (auto&& executable : agent_executables.second) {
-                auto tmp1 = read_agent_globals(agent_executables.first,
-                                               executable);
-
-                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
-                            make_move_iterator(tmp1.end()));
-            }
-            agent_globals.emplace(agent_executables.first, move(tmp0));
-        }
-    });
-
-    const auto it = agent_globals.find(this_agent());
-
-    if (it == agent_globals.cend()) return hipErrorNotInitialized;
-
-    std::tie(*dptr, *bytes) = read_global_description(it->second.cbegin(),
-                                                      it->second.cend(), name);
-
-    return *dptr ? hipSuccess : hipErrorNotFound;
-}
 } // Namespace hip_impl.
 
 #if defined(__cplusplus)
