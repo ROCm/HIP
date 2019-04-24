@@ -42,7 +42,7 @@ __device__ static inline unsigned int __popc(unsigned int input) {
     return __builtin_popcount(input);
 }
 __device__ static inline unsigned int __popcll(unsigned long long int input) {
-    return __builtin_popcountl(input);
+    return __builtin_popcountll(input);
 }
 
 __device__ static inline int __clz(int input) {
@@ -58,7 +58,7 @@ __device__ static inline unsigned int __ffs(unsigned int input) {
 }
 
 __device__ static inline unsigned int __ffsll(unsigned long long int input) {
-    return ( input == 0 ? -1 : __builtin_ctzl(input) ) + 1;
+    return ( input == 0 ? -1 : __builtin_ctzll(input) ) + 1;
 }
 
 __device__ static inline unsigned int __ffs(int input) {
@@ -66,7 +66,7 @@ __device__ static inline unsigned int __ffs(int input) {
 }
 
 __device__ static inline unsigned int __ffsll(long long int input) {
-    return ( input == 0 ? -1 : __builtin_ctzl(input) ) + 1;
+    return ( input == 0 ? -1 : __builtin_ctzll(input) ) + 1;
 }
 
 __device__ static inline unsigned int __brev(unsigned int input) {
