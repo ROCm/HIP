@@ -337,6 +337,12 @@ static inline hipError_t hipHostMalloc(T** ptr, size_t size,
                                        unsigned int flags = hipHostMallocDefault) {
     return hipHostMalloc((void**)ptr, size, flags);
 }
+
+template <class T>
+static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
+                                       unsigned int flags = hipMemAttachGlobal) {
+    return hipMallocManaged((void**)devPtr, size, flags);
+}
 #endif
 
 #endif
