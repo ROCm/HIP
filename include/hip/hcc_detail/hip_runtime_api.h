@@ -177,6 +177,9 @@ enum hipLimit_t {
     0x80000000  ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
                 ///< allocation.
 
+#define hipMemAttachGlobal 0x0
+#define hipMemAttachHost 0x1
+
 #define hipDeviceMallocDefault 0x0
 #define hipDeviceMallocFinegrained 0x1  ///< Memory is allocated in fine grained region of device.
 
@@ -1102,6 +1105,17 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  *  @see hipSetDeviceFlags, hipHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
+
+/**
+ *  @brief Allocates memory that will be automatically managed by the Unified Memory system.
+ *
+ *  @param[out] ptr Pointer to the allocated managed memory
+ *  @param[in]  size Requested memory size
+ *  @param[in]  flags must be either hipMemAttachGlobal/hipMemAttachHost
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
+ */
+hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags __dparm(0));
 
 /**
  *  @brief Allocate device accessible page locked host memory [Deprecated]
