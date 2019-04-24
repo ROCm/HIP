@@ -474,7 +474,7 @@ hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const ch
 // Get kernel for the given hsa agent. Internal use only.
 hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
                                   const char* name, hsa_agent_t *agent) {
-    HIP_INIT_API(hipModuleGetFunctionEx, hfunc, hmod, name);
+    HIP_INIT_API(hipModuleGetFunctionEx, hfunc, hmod, name, agent);
     return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name, agent));
 }
 
