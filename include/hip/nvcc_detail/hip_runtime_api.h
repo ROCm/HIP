@@ -873,7 +873,7 @@ inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBl
     return hipCUDAErrorTohipError(cerror);
 }
 
-inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, void* ptr) {
+inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
     struct cudaPointerAttributes cPA;
     hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));
     if (err == hipSuccess) {
