@@ -2980,7 +2980,9 @@ hipError_t hipLaunchByPtr(const void* func);
 } /* extern "c" */
 #endif
 
+#ifdef __cplusplus
 #include <hip/hcc_detail/hip_prof_api.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
