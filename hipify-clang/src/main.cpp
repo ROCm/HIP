@@ -222,6 +222,9 @@ int main(int argc, const char **argv) {
 #if defined(HIPIFY_CLANG_RES)
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
 #endif
+    if (llcompat::pragma_once_outside_header()) {
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-Wno-pragma-once-outside-header", ct::ArgumentInsertPosition::BEGIN));
+    }
     if (!MacroNames.empty()) {
       for (std::string s : MacroNames) {
         Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::END));
