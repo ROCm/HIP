@@ -2630,49 +2630,86 @@ std::vector<Agent_global> read_agent_globals(hsa_agent_t agent,
                                              hsa_executable_t executable);
 hsa_agent_t this_agent();
 
+
+class agent_globals_impl {
+private:
+    std::pair<
+        std::mutex,
+        std::unordered_map<
+        std::string, std::vector<Agent_global>>> globals_from_module;
+
+public:
+
+    hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+            hipModule_t hmod, const char* name) {
+        // the key of the map would the hash of code object associated with the
+        // hipModule_t instance
+        std::string key(hash_for(hmod));
+
+        if (globals_from_module.second.count(key) == 0) {
+            std::lock_guard<std::mutex> lck{globals_from_module.first};
+
+            if (globals_from_module.second.count(key) == 0) {
+                globals_from_module.second.emplace(
+                        key, read_agent_globals(this_agent(), executable_for(hmod)));
+            }
+        }
+
+        const auto it0 = globals_from_module.second.find(key);
+        if (it0 == globals_from_module.second.cend()) {
+            hip_throw(
+                    std::runtime_error{"agent_globals data structure corrupted."});
+        }
+
+        std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
+                it0->second.cend(), name);
+
+        // HACK for SWDEV-173477
+        //
+        // For code objects with global symbols of length 0, ROCR runtime would
+        // ignore them even though they exist in the symbol table. Therefore the
+        // result from read_agent_globals() can't be trusted entirely.
+        //
+        // As a workaround to tame applications which depend on the existence of
+        // global symbols with length 0, always return hipSuccess here.
+        //
+        // This behavior shall be reverted once ROCR runtime has been fixed to
+        // address SWDEV-173477
+
+        //return *dptr ? hipSuccess : hipErrorNotFound;
+        return hipSuccess;
+    }
+   
+};
+
+class agent_globals {
+public:
+    agent_globals() : impl(new agent_globals_impl()) { 
+        if (!impl) 
+            hip_throw(
+                std::runtime_error{"Error when constructing agent global data structures."});
+    }
+    ~agent_globals() { delete impl; }
+
+    hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+                                             hipModule_t hmod, const char* name) {
+        return impl->read_agent_global_from_module(dptr, bytes, hmod, name);
+    }
+private:
+    agent_globals_impl* impl;
+};
+
 inline
 __attribute__((visibility("hidden")))
+agent_globals& get_agent_globals() {
+    static agent_globals ag;
+    return ag;
+}
+
+inline
 hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
                                          hipModule_t hmod, const char* name) {
-    // the key of the map would the hash of code object associated with the
-    // hipModule_t instance
-    static std::unordered_map<
-        std::string, std::vector<Agent_global>> agent_globals;
-    std::string key(hash_for(hmod));
-
-    if (agent_globals.count(key) == 0) {
-        static std::mutex mtx;
-        std::lock_guard<std::mutex> lck{mtx};
-
-        if (agent_globals.count(key) == 0) {
-            agent_globals.emplace(
-                key, read_agent_globals(this_agent(), executable_for(hmod)));
-        }
-    }
-
-    const auto it0 = agent_globals.find(key);
-    if (it0 == agent_globals.cend()) {
-        hip_throw(
-            std::runtime_error{"agent_globals data structure corrupted."});
-    }
-
-    std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
-                                                      it0->second.cend(), name);
-
-    // HACK for SWDEV-173477
-    //
-    // For code objects with global symbols of length 0, ROCR runtime would
-    // ignore them even though they exist in the symbol table. Therefore the
-    // result from read_agent_globals() can't be trusted entirely.
-    //
-    // As a workaround to tame applications which depend on the existence of
-    // global symbols with length 0, always return hipSuccess here.
-    //
-    // This behavior shall be reverted once ROCR runtime has been fixed to
-    // address SWDEV-173477
-
-    //return *dptr ? hipSuccess : hipErrorNotFound;
-    return hipSuccess;
+    return get_agent_globals().read_agent_global_from_module(dptr, bytes, hmod, name);
 }
 
 inline
