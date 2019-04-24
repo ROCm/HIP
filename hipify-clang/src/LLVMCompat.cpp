@@ -110,4 +110,12 @@ std::error_code real_path(const Twine &path, SmallVectorImpl<char> &output,
 #endif
 }
 
+bool pragma_once_outside_header() {
+#if LLVM_VERSION_MAJOR < 4
+  return false;
+#else
+  return true;
+#endif
+}
+
 } // namespace llcompat
