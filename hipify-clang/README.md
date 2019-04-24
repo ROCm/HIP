@@ -32,9 +32,11 @@
 ## <a name="dependencies"></a> Dependencies
 
 `hipify-clang` requires:
-1. **LLVM+CLANG** of at least version 3.8.0, the latest stable and recommended release: **6.0.1 on Windows**, and **8.0.0 on Linux**.
+1. **LLVM+CLANG** of at least version 3.8.0; the latest stable and recommended release: **6.0.1 on Windows**, and **8.0.0 on Linux**.
 
 2. **CUDA** at least version 7.0, the latest supported version is **9.0 on Windows**, and **10.0 on Linux**.
+
+If the target CUDA is 9.1, 9.2 or 10.0, to work on Windows you may apply patches*: [for LLVM 7.0.0](patches/patch_for_clang_7.0.0_bug_38811.zip), [for LLVM 7.0.1](patches/patch_for_clang_7.0.1_bug_38811.zip), [for LLVM 8.0.0](patches/patch_for_clang_8.0.0_bug_38811.zip).
 
 | **LLVM release version** | **CUDA latest supported version** | **Windows**  | **Linux** |
 |:------------------------:|:---------------------------------:|:------------:|:---------:|
@@ -176,9 +178,9 @@ To run it:
 
 On Linux the following configurations are tested:
 
-Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-8.0 - cudnn-9.0
+Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.5.0.56
 
-Ubuntu 16-18: LLVM 8.0.0, CUDA 8.0 - 10.0, cudnn-8.0 - cudnn-10.0
+Ubuntu 16-18: LLVM 8.0.0, CUDA 8.0 - 10.0, cudnn-5.1.10 - cudnn-7.5.0.56
 
 Build system for the above configurations:
 
@@ -301,11 +303,13 @@ Testing Time: 2.51s
 
 ### <a name="windows"></a >Windows
 
-On Windows the following configurations are tested:
+On Windows 10 the following configurations are tested:
 
-LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn-8.0
+LLVM 5.0.0 - 5.0.2, CUDA 8.0,  cudnn-5.1.10 - cudnn-7.1.4.18
 
-LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-9.0
+LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-7.0.5.15 - cudnn-7.5.0.56
+
+LLVM 7.0.0 - 8.0.0 (with patch*), CUDA 7.5 - 10.0, cudnn-7.0.5.15 - cudnn-7.5.0.56
 
 Build system for the above configurations:
 
