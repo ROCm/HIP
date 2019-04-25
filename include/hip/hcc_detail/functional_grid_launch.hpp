@@ -135,16 +135,8 @@ std::string name(std::uintptr_t function_address)
     return it->second;
 }
 
-inline
-std::string name(hsa_agent_t agent)
-{
-    char n[64]{};
-    hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
-
-    return std::string{n};
-}
-
 hsa_agent_t target_agent(hipStream_t stream);
+std::string target_name(hsa_agent_t agent);
 
 inline
 __attribute__((visibility("hidden")))
@@ -157,13 +149,15 @@ void hipLaunchKernelGGLImpl(
     void** kernarg) {
 
     auto agent = target_agent(stream);
+
     auto it = functions(agent).find(function_address);
 
     if (it == functions(agent).cend()) {
+        auto agent_name = target_name(agent);
         hip_throw(std::runtime_error{
             "No device code available for function: " +
             name(function_address) +
-            ", for agent: " + name(agent)});
+            ", for agent: " + agent_name});
     }
 
     hipModuleLaunchKernel(it->second, numBlocks.x, numBlocks.y, numBlocks.z,

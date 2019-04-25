@@ -57,4 +57,11 @@ namespace hip_impl
                 accelerator{}.get_default_view().get_hsa_agent());
         }
     }
+
+    std::string target_name(hsa_agent_t agent)
+    {
+        char n[64]{};
+        hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
+        return std::string{n};
+    }
 }
