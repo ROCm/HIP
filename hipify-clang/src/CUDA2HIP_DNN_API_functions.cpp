@@ -75,7 +75,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
 
   // cuDNN Filter functions
   {"cudnnCreateFilterDescriptor",                         {"hipdnnCreateFilterDescriptor",                         "", CONV_LIB_FUNC, API_DNN}},
-  {"cudnnSetFilter4dDescriptor",                          {"hipdnnSetFilter4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSetFilter4dDescriptor",                          {"hipdnnSetFilter4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetFilter4dDescriptor",                          {"hipdnnGetFilter4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSetFilterNdDescriptor",                          {"hipdnnSetFilterNdDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetFilterNdDescriptor",                          {"hipdnnGetFilterNdDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
