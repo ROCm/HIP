@@ -553,10 +553,6 @@ sub warnUnsupportedSpecialFunctions
     my $line_num =  shift;
     my $m = 0;
     foreach $func (
-        # memory fence:
-        "__threadfence_block",
-        "__threadfence",
-        "__threadfence_system",
         # Synchronization:
         "__syncthreads_count",
         "__syncthreads_and",
