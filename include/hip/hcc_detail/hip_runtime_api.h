@@ -2638,10 +2638,11 @@ private:
         std::unordered_map<
             std::string, std::vector<Agent_global>>> globals_from_module;
 
-    std::pair<
-        std::once_flag,
-        std::unordered_map<
-            hsa_agent_t, std::vector<Agent_global>>> globals_from_process;
+    std::unordered_map<
+        hsa_agent_t,
+        std::pair<
+            std::once_flag,
+            std::vector<Agent_global>>> globals_from_process;
 
 public:
 
@@ -2688,26 +2689,24 @@ public:
     hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
             const char* name) {
 
-        std::call_once(globals_from_process.first, [this]() {
-            for (auto&& agent_executables : hip_impl::get_program_state().executables()) {
-                std::vector<Agent_global> tmp0;
-                for (auto&& executable : agent_executables.second) {
-                    auto tmp1 = read_agent_globals(agent_executables.first,
-                                                   executable);
+        auto agent = this_agent();
 
-                    tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
-                                make_move_iterator(tmp1.end()));
-                }
-                globals_from_process.second.emplace(agent_executables.first, move(tmp0));
+        std::call_once(globals_from_process[agent].first, [this](hsa_agent_t aa) {
+            std::vector<Agent_global> tmp0;
+            for (auto&& executable : hip_impl::get_program_state().executables(aa)) {
+                auto tmp1 = read_agent_globals(aa, executable);
+                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
+                            make_move_iterator(tmp1.end()));
             }
-        });
+            globals_from_process[aa].second = move(move(tmp0));
+        }, agent);
 
-        const auto it = globals_from_process.second.find(this_agent());
+        const auto it = globals_from_process.find(agent);
 
-        if (it == globals_from_process.second.cend()) return hipErrorNotInitialized;
+        if (it == globals_from_process.cend()) return hipErrorNotInitialized;
 
-        std::tie(*dptr, *bytes) = read_global_description(it->second.cbegin(),
-                it->second.cend(), name);
+        std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
+                it->second.second.cend(), name);
 
         return *dptr ? hipSuccess : hipErrorNotFound;
     }

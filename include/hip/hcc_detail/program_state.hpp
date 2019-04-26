@@ -84,8 +84,7 @@ public:
     void* global_addr_by_name(const char* name);
 
     // to fix later
-    const std::unordered_map<
-         hsa_agent_t, std::vector<hsa_executable_t>>& executables();
+    const std::vector<hsa_executable_t>& executables(hsa_agent_t agent);
 
     program_state(const program_state&) = delete;
 
