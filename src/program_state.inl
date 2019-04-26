@@ -39,6 +39,8 @@ void hip_throw(const std::exception&);
 
 std::vector<hsa_agent_t> all_hsa_agents();
 
+void executables_cache(std::string, hsa_isa_t, hsa_agent_t, std::vector<hsa_executable_t>&, bool);
+
 template<typename P>
 inline
 ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
@@ -110,8 +112,10 @@ public:
     std::pair<
         std::once_flag,
         std::unordered_map<
-            hsa_isa_t,
-            std::vector<std::vector<char>>>> code_object_blobs;
+            std::string,
+                std::unordered_map<
+                    hsa_isa_t,
+                    std::vector<std::vector<char>>>>> code_object_blobs;
 
     std::pair<
         std::once_flag,
@@ -172,12 +176,13 @@ public:
     }
 
     const std::unordered_map<
-        hsa_isa_t, std::vector<std::vector<char>>>& get_code_object_blobs() {
+        std::string,
+            std::unordered_map<
+                hsa_isa_t,
+                std::vector<std::vector<char>>>>& get_code_object_blobs() {
 
         std::call_once(code_object_blobs.first, [this]() {
-            static std::vector<std::vector<char>> blobs{};
-
-            dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void*) {
+            dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
                 ELFIO::elfio tmp;
 
                 const auto elf =
@@ -191,26 +196,24 @@ public:
 
                 if (!it) return 0;
 
-                blobs.emplace_back(it->get_data(), it->get_data() + it->get_size());
+                auto& impl = *static_cast<program_state_impl*>(p);
 
-                return 0;
-            }, nullptr);
-
-            for (auto&& multi_arch_blob : blobs) {
-                auto it = multi_arch_blob.begin();
-                while (it != multi_arch_blob.end()) {
-                    Bundled_code_header tmp{it, multi_arch_blob.end()};
+                std::vector<char> multi_arch_blob(it->get_data(), it->get_data() + it->get_size());
+                auto blob_it = multi_arch_blob.begin();
+                while (blob_it != multi_arch_blob.end()) {
+                    Bundled_code_header tmp{blob_it, multi_arch_blob.end()};
 
                     if (!valid(tmp)) break;
 
                     for (auto&& bundle : bundles(tmp)) {
-                        auto& bv = code_object_blobs.second[triple_to_hsa_isa(bundle.triple)];
-                        bv.push_back(bundle.blob);
+                        impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
                     }
 
-                    it += tmp.bundled_code_size;
+                    blob_it += tmp.bundled_code_size;
                 };
-            }
+
+                return 0;
+            }, this);
         });
 
         return code_object_blobs.second;
@@ -375,29 +378,46 @@ public:
             hsa_agent_iterate_isas(aa, [](hsa_isa_t x, void* d) {
                 auto& p = *static_cast<decltype(data)*>(d);
                 auto& impl = *(p.first);
-                auto& code_object_blobs = impl.get_code_object_blobs();
-                const auto it = code_object_blobs.find(x);
+                for (const auto code_object_it : impl.get_code_object_blobs()) {
+                    const auto elf = code_object_it.first;
+                    const auto code_object_blobs = code_object_it.second;
+                    const auto it = code_object_blobs.find(x);
 
-                if (it == code_object_blobs.cend()) return HSA_STATUS_SUCCESS;
+                    if (it == code_object_blobs.cend()) continue;
 
-                hsa_agent_t a = *static_cast<hsa_agent_t*>(p.second);
+                    hsa_agent_t a = *static_cast<hsa_agent_t*>(p.second);
 
-                for (auto&& blob : it->second) {
-                    hsa_executable_t tmp = {};
+                    std::vector<hsa_executable_t> current_exes;
+                    // check the cache for already loaded executables
+                    hip_impl::executables_cache(elf, x, a, current_exes, false/*read, not write*/);
+                    if (!current_exes.empty()) {
+                        // found cached executables_cache, append and continue with next elf
+                        impl.executables[a].second.insert(impl.executables[a].second.end(),
+                                current_exes.begin(), current_exes.end());
+                        continue;
+                    }
+                    // executables do not yet exist for this elf+isa+agent, create and cache them
+                    for (auto&& blob : it->second) {
+                        hsa_executable_t tmp = {};
 
-                    hsa_executable_create_alt(
-                        HSA_PROFILE_FULL,
-                        HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
-                        nullptr,
-                        &tmp);
+                        hsa_executable_create_alt(
+                            HSA_PROFILE_FULL,
+                            HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
+                            nullptr,
+                            &tmp);
 
-                    // TODO: this is massively inefficient and only meant for
-                    // illustration.
-                    tmp = impl.load_executable(blob.data(), blob.size(), tmp, a);
+                        // TODO: this is massively inefficient and only meant for
+                        // illustration.
+                        tmp = impl.load_executable(blob.data(), blob.size(), tmp, a);
 
-                    if (tmp.handle) impl.executables[a].second.push_back(tmp);
+                        if (tmp.handle) current_exes.push_back(tmp);
+                    }
+                    // cache the newly loaded executables
+                    hip_impl::executables_cache(elf, x, a, current_exes, true/*write, not read*/);
+                    // append to our agent's vector of executables
+                    impl.executables[a].second.insert(impl.executables[a].second.end(),
+                            current_exes.begin(), current_exes.end());
                 }
-
                 return HSA_STATUS_SUCCESS;
             }, &data);
         }, agent);
@@ -621,15 +641,17 @@ public:
         std::vector<std::pair<std::size_t, std::size_t>>>& get_kernargs() {
 
         std::call_once(kernargs.first, [this]() {
-            for (auto&& isa_blobs : get_code_object_blobs()) {
-                for (auto&& blob : isa_blobs.second) {
-                    std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
+            for (auto&& name_and_isa_blobs : get_code_object_blobs()) {
+                for (auto&& isa_blobs : name_and_isa_blobs.second) {
+                    for (auto&& blob : isa_blobs.second) {
+                        std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
 
-                    ELFIO::elfio reader;
+                        ELFIO::elfio reader;
 
-                    if (!reader.load(tmp)) continue;
+                        if (!reader.load(tmp)) continue;
 
-                    read_kernarg_metadata(reader, kernargs.second);
+                        read_kernarg_metadata(reader, kernargs.second);
+                    }
                 }
             }
         });
@@ -689,4 +711,5 @@ public:
         return it1->second;
     }
 };  // class program_state_impl
+
 };
