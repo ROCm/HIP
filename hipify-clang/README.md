@@ -32,9 +32,11 @@
 ## <a name="dependencies"></a> Dependencies
 
 `hipify-clang` requires:
-1. **LLVM+CLANG** of at least version 3.8.0, the latest stable and recommended release: **6.0.1 on Windows**, and **8.0.0 on Linux**.
+1. **LLVM+CLANG** of at least version 3.8.0; the latest stable and recommended release: **6.0.1 on Windows**, and **8.0.0 on Linux**.
 
 2. **CUDA** at least version 7.0, the latest supported version is **9.0 on Windows**, and **10.0 on Linux**.
+
+If the target CUDA is 9.1, 9.2 or 10.0, to work on Windows you may apply patches*: [for LLVM 7.0.0](patches/patch_for_clang_7.0.0_bug_38811.zip), [for LLVM 7.0.1](patches/patch_for_clang_7.0.1_bug_38811.zip), [for LLVM 8.0.0](patches/patch_for_clang_8.0.0_bug_38811.zip).
 
 | **LLVM release version** | **CUDA latest supported version** | **Windows**  | **Linux** |
 |:------------------------:|:---------------------------------:|:------------:|:---------:|
@@ -49,11 +51,13 @@
 | 5.0.2                    | 8.0                               | +            | +         |
 | 6.0.0                    | 9.0                               | +            | +         |
 | **6.0.1**                | **9.0**                           | + <br/> **LATEST STABLE RELEASE** | + |
-| 7.0.0                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
-| 7.0.1                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
+| 7.0.0                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_7.0.0_bug_38811.zip)*</br> | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
+| 7.0.1                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_7.0.1_bug_38811.zip)*</br> | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
 | 7.1.0                    | 9.2 (?)                           | - <br/> LLVM 7.1.0 <br/> is not yet released | - <br/> LLVM 7.1.0 <br/> is not yet released |
-| **8.0.0**                | **10.0**                          | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) | + <br/> **LATEST STABLE RELEASE** |
+| **8.0.0**                | **10.0**                          | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_8.0.0_bug_38811.zip)*</br> | + <br/> **LATEST STABLE RELEASE** |
 | 8.0.1                    | 10.1 (?)                          | - <br/> LLVM 8.0.1 <br/> is not yet released | - <br/> LLVM 8.0.1 <br/> is not yet released |
+
+`*` Download the patch and unpack it into your LLVM distributive directory; a few header files will be overwritten; rebuilding of LLVM is not needed.
 
 In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
 
@@ -174,9 +178,9 @@ To run it:
 
 On Linux the following configurations are tested:
 
-Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-8.0 - cudnn-9.0
+Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.5.0.56
 
-Ubuntu 16-18: LLVM 8.0.0, CUDA 8.0 - 10.0, cudnn-8.0 - cudnn-10.0
+Ubuntu 16-18: LLVM 8.0.0, CUDA 8.0 - 10.0, cudnn-5.1.10 - cudnn-7.5.0.56
 
 Build system for the above configurations:
 
@@ -299,11 +303,13 @@ Testing Time: 2.51s
 
 ### <a name="windows"></a >Windows
 
-On Windows the following configurations are tested:
+On Windows 10 the following configurations are tested:
 
-LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn-8.0
+LLVM 5.0.0 - 5.0.2, CUDA 8.0,  cudnn-5.1.10 - cudnn-7.1.4.18
 
-LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-9.0
+LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-7.0.5.15 - cudnn-7.5.0.56
+
+LLVM 7.0.0 - 8.0.0 (with patch*), CUDA 7.5 - 10.0, cudnn-7.0.5.15 - cudnn-7.5.0.56
 
 Build system for the above configurations:
 

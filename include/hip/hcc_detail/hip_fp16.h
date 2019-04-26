@@ -21,6 +21,11 @@ THE SOFTWARE.
 */
 
 #pragma once
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_FP16_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_FP16_H
+
+#include <hip/hcc_detail/hip_common.h>
+
 #include "hip/hcc_detail/host_defines.h"
 #include <assert.h>
 #if defined(__cplusplus)
@@ -1643,3 +1648,5 @@ THE SOFTWARE.
 #elif defined(__GNUC__)
     #include "hip_fp16_gcc.h"
 #endif // !defined(__clang__) && defined(__GNUC__)
+
+#endif // HIP_INCLUDE_HIP_HCC_DETAIL_HIP_FP16_H

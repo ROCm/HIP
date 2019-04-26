@@ -81,4 +81,6 @@ void EnterPreprocessorTokenStream(clang::Preprocessor& _pp,
 std::error_code real_path(const Twine &path, SmallVectorImpl<char> &output,
                           bool expand_tilde = false);
 
+bool pragma_once_outside_header();
+
 } // namespace llcompat

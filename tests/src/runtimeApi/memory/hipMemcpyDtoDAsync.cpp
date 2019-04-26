@@ -58,8 +58,8 @@ int main() {
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
-        HIPCHECK(hipStreamCreate(&s));
         HIPCHECK(hipSetDevice(1));
+        HIPCHECK(hipStreamCreate(&s));
         HIPCHECK(hipMemcpyDtoDAsync((hipDeviceptr_t)X_d, (hipDeviceptr_t)A_d, Nbytes, s));
         HIPCHECK(hipMemcpyDtoDAsync((hipDeviceptr_t)Y_d, (hipDeviceptr_t)B_d, Nbytes, s));
 
