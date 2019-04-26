@@ -46,7 +46,7 @@ T bit_insert(T src0, T src1, unsigned int src2, unsigned int src3) {
   unsigned int bits = sizeof(T) * 8;
   T offset = src2 & (bits - 1);
   T width = src3 & (bits - 1);
-  T mask = (1 << width) - 1;
+  T mask = (((T)1) << width) - 1;
   return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
 }
 
