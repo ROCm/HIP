@@ -162,6 +162,15 @@ public:
         std::mutex,
         std::vector<RAII_code_reader>> code_readers;
 
+    program_state_impl() {
+        // Create placeholder for each agent for the per-agent members.
+        for (auto&& x : hip_impl::all_hsa_agents()) {
+            (void)executables[x];
+            (void)kernels[x];
+            (void)functions[x];
+        }
+    }
+
     const std::unordered_map<
         hsa_isa_t, std::vector<std::vector<char>>>& get_code_object_blobs() {
 
@@ -356,14 +365,6 @@ public:
 
 
     const std::vector<hsa_executable_t>& get_executables(hsa_agent_t agent) {
-        static std::once_flag f;
-
-        // Create placeholder for each agent in the map.
-        std::call_once(f, [this]() {
-            for (auto&& x : hip_impl::all_hsa_agents()) {
-                (void)executables[x];
-            }
-        });
 
         if (executables.find(agent) == executables.cend()) {
             hip_throw(std::runtime_error{"invalid agent"});
@@ -482,15 +483,6 @@ public:
     const std::unordered_map<
         std::string, std::vector<hsa_executable_symbol_t>>& get_kernels(hsa_agent_t agent) {
 
-        static std::once_flag f;
-
-        // Create placeholder for each agent in the map.
-        std::call_once(f, [this]() {
-            for (auto&& x : hip_impl::all_hsa_agents()) {
-                (void)kernels[x];
-            }
-        });
-
         if (kernels.find(agent) == kernels.cend()) {
             hip_throw(std::runtime_error{"invalid agent"});
         }
@@ -516,15 +508,6 @@ public:
     const std::unordered_map<
         std::uintptr_t,
         Kernel_descriptor>& get_functions(hsa_agent_t agent) {
-
-        static std::once_flag f;
-
-        // Create placeholder for each agent in the map.
-        std::call_once(f, [this]() {
-            for (auto&& x : hip_impl::all_hsa_agents()) {
-                (void)functions[x];
-            }
-        });
 
         if (functions.find(agent) == functions.cend()) {
             hip_throw(std::runtime_error{"invalid agent"});
@@ -676,7 +659,6 @@ public:
 
     const Kernel_descriptor& kernel_descriptor(std::uintptr_t function_address,
             hsa_agent_t agent) {
-
 
         auto it0 = get_functions(agent).find(function_address);
 
