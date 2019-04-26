@@ -149,7 +149,11 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
   HIP_INIT_API(attr, func);
 
-  HIP_RETURN(hipErrorInvalidDeviceFunction);
+  if (!PlatformState::instance().getFuncAttr(func, attr)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  HIP_RETURN(hipSuccess);
 }
 
 

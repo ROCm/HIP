@@ -140,6 +140,7 @@ public:
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
 
   hipFunction_t getFunc(const void* hostFunction, int deviceId);
+  bool getFuncAttr(const void* hostFunction, hipFuncAttributes* func_attr);
   bool getGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                     size_t* size_ptr);
   void setupArgument(const void *arg, size_t size, size_t offset);
