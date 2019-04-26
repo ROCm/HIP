@@ -111,6 +111,9 @@ typedef enum hipChannelFormatKind {
 #define hipHostMallocCoherent 0x0
 #define hipHostMallocNonCoherent 0x0
 
+#define hipMemAttachGlobal cudaMemAttachGlobal
+#define hipMemAttachHost cudaMemAttachHost
+
 #define hipHostRegisterDefault cudaHostRegisterDefault
 #define hipHostRegisterPortable cudaHostRegisterPortable
 #define hipHostRegisterMapped cudaHostRegisterMapped
@@ -418,6 +421,10 @@ inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flag
 
 inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) {
     return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
+}
+
+inline static hipError_t hipMallocManaged(void** ptr, size_t size, unsigned int flags) {
+    return hipCUDAErrorTohipError(cudaMallocManaged(ptr, size, flags));
 }
 
 inline static hipError_t hipMallocArray(hipArray** array, const struct hipChannelFormatDesc* desc,
@@ -866,7 +873,7 @@ inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBl
     return hipCUDAErrorTohipError(cerror);
 }
 
-inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, void* ptr) {
+inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
     struct cudaPointerAttributes cPA;
     hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));
     if (err == hipSuccess) {
