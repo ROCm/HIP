@@ -2522,14 +2522,14 @@ namespace hip_impl {
         #endif
     }
 
+    std::mutex executables_cache_mutex;
+
     void executables_cache(
             std::string elf, hsa_isa_t isa, hsa_agent_t agent,
             std::vector<hsa_executable_t>& exes, bool write) {
         static std::unordered_map<std::string,
             std::unordered_map<hsa_isa_t,
                 std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>>>> cache;
-        static std::mutex mtx;
-        std::lock_guard<std::mutex> lock(mtx);
         if (write) {
             cache[elf][isa][agent] = exes;
         } else {

@@ -86,6 +86,7 @@ namespace hip_impl {
 
 std::vector<hsa_agent_t> all_hsa_agents();
 void executables_cache(std::string, hsa_isa_t, hsa_agent_t, std::vector<hsa_executable_t>&, bool);
+extern std::mutex executables_cache_mutex;
 
 class Kernel_descriptor {
     std::uint64_t kernel_object_{};
@@ -405,6 +406,7 @@ const std::vector<hsa_executable_t>& executables(hsa_agent_t agent) {
 
                 hsa_agent_t a = *static_cast<hsa_agent_t*>(pa);
 
+                std::lock_guard<std::mutex> lock(executables_cache_mutex);
                 std::vector<hsa_executable_t> current_exes;
                 // check the cache for already loaded executables
                 hip_impl::executables_cache(elf, x, a, current_exes, false/*read, not write*/);
