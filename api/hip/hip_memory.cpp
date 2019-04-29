@@ -110,12 +110,6 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
         ((dstMemory->getMemFlags() & hostMem) == 0)) {
       amd::Device* queueDevice = &queue.device();
       if (queueDevice != srcMemory->getContext().devices()[0]) {
-        void* staging = nullptr;
-        ihipMalloc(&staging, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER);
-        ihipMemcpy(staging, src, sizeBytes, hipMemcpyDeviceToHost, *hip::getNullStream(srcMemory->getContext()));
-        ihipMemcpy(dst, staging, sizeBytes, hipMemcpyHostToDevice, queue, isAsync);
-        hipFree(staging);
-#if 0
         amd::Coord3D srcOffset(sOffset, 0, 0);
         amd::Coord3D dstOffset(dOffset, 0, 0);
         amd::Coord3D copySize(sizeBytes, 1, 1);
@@ -126,16 +120,9 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
           command->awaitCompletion();
         }
         command->release();
-#endif
         return hipSuccess;
       }
       if (queueDevice != dstMemory->getContext().devices()[0]) {
-        void* staging = nullptr;
-        ihipMalloc(&staging, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER);
-        ihipMemcpy(staging, src, sizeBytes, hipMemcpyDeviceToHost, queue);
-        ihipMemcpy(dst, staging, sizeBytes, hipMemcpyHostToDevice, *hip::getNullStream(dstMemory->getContext()), isAsync);
-        hipFree(staging);
-#if 0
         amd::Coord3D srcOffset(sOffset, 0, 0);
         amd::Coord3D dstOffset(dOffset, 0, 0);
         amd::Coord3D copySize(sizeBytes, 1, 1);
@@ -146,7 +133,6 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
           command->awaitCompletion();
         }
         command->release();
-#endif
         return hipSuccess;
       }
     }
