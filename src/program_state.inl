@@ -39,6 +39,8 @@ void hip_throw(const std::exception&);
 
 std::vector<hsa_agent_t> all_hsa_agents();
 
+extern std::mutex executables_cache_mutex;
+
 void executables_cache(std::string, hsa_isa_t, hsa_agent_t, std::vector<hsa_executable_t>&, bool);
 
 template<typename P>
@@ -386,6 +388,8 @@ public:
                     if (it == code_object_blobs.cend()) continue;
 
                     hsa_agent_t a = *static_cast<hsa_agent_t*>(p.second);
+
+                    std::lock_guard<std::mutex> lck{executables_cache_mutex};
 
                     std::vector<hsa_executable_t> current_exes;
                     // check the cache for already loaded executables
