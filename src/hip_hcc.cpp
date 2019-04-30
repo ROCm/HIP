@@ -130,6 +130,7 @@ std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 hsa_agent_t* g_allAgents;  // CPU agents + all the visible GPU agents.
 unsigned g_numLogicalThreads;
+bool g_initDeviceFound = false;
 
 std::atomic<int> g_lastShortTid(1);
 
@@ -1405,9 +1406,11 @@ void ihipInit() {
     hsa_status_t err = hsa_iterate_agents(findCpuAgent, &g_cpu_agent);
     if (err != HSA_STATUS_INFO_BREAK) {
         // didn't find a CPU.
-        throw ihipException(hipErrorRuntimeOther);
+        g_initDeviceFound = false;
+        return;
     }
 
+    g_initDeviceFound = true;
     g_deviceArray = new ihipDevice_t*[deviceCnt];
     g_deviceCnt = 0;
     for (int i = 0; i < accs.size(); i++) {
@@ -1446,8 +1449,13 @@ namespace hip_impl {
 hipError_t hip_init() {
   static std::once_flag hip_initialized;
   std::call_once(hip_initialized, ihipInit);
-  ihipCtxStackUpdate();
-  return hipSuccess;
+  if (g_initDeviceFound) {
+      ihipCtxStackUpdate();
+      return hipSuccess;
+  }
+  else {
+      return hipErrorInsufficientDriver;
+  }
 }
 }
 
