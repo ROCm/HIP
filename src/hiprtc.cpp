@@ -85,7 +85,7 @@ struct _hiprtcProgram {
     // DATA
     std::vector<std::pair<std::string, std::string>> headers;
     std::vector<std::pair<std::string, std::string>> names;
-    std::vector<std::string> lowered_names;
+    std::vector<std::string> loweredNames;
     std::vector<char> elf;
     std::string source;
     std::string name;
@@ -131,7 +131,11 @@ struct _hiprtcProgram {
 
             name.erase(++dx);
         }
-        else if (name.find('(') != string::npos) name.erase(name.find('('));
+        else {
+            const auto dy{name.find('(')};
+
+            if (dy != string::npos) name.erase(dy);
+        }
 
         return name;
     }
@@ -156,10 +160,8 @@ struct _hiprtcProgram {
     static
     bool isValid(_hiprtcProgram* p) noexcept
     {
-        using namespace std;
-
-        return find_if(programs.cbegin(), programs.cend(),
-                       [=](const unique_ptr<_hiprtcProgram>& x) {
+        return std::find_if(programs.cbegin(), programs.cend(),
+                            [=](const std::unique_ptr<_hiprtcProgram>& x) {
             return x.get() == p;
         }) != programs.cend();
     }
@@ -187,7 +189,7 @@ struct _hiprtcProgram {
         return true;
     }
 
-    bool read_lowered_names()
+    bool readLoweredNames()
     {
         using namespace hip_impl;
         using namespace std;
@@ -206,11 +208,14 @@ struct _hiprtcProgram {
             return x->get_type() == SHT_SYMTAB;
         })};
 
+        loweredNames.resize(names.size());
+
         ELFIO::symbol_section_accessor symbols{reader, it};
 
-        lowered_names.resize(names.size());
-
         auto n{symbols.get_symbols_num()};
+
+        if (n < loweredNames.size()) return false;
+
         while (n--) {
             const auto tmp{read_symbol(symbols, n)};
 
@@ -232,14 +237,14 @@ struct _hiprtcProgram {
                 if (it == names.cend()) continue;
             }
 
-            lowered_names[distance(names.cbegin(), it)] = tmp.name;
+            loweredNames[distance(names.cbegin(), it)] = tmp.name;
         }
 
         return true;
     }
 
-    std::experimental::filesystem::path write_temporary_files(
-        const std::experimental::filesystem::path& program_folder)
+    std::experimental::filesystem::path writeTemporaryFiles(
+        const std::experimental::filesystem::path& programFolder)
     {
         using namespace std;
 
@@ -247,12 +252,12 @@ struct _hiprtcProgram {
         transform(headers.cbegin(), headers.cend(), begin(fut),
                   [&](const pair<string, string>& x) {
             return async([&]() {
-                ofstream h{program_folder / x.first};
+                ofstream h{programFolder / x.first};
                 h.write(x.second.data(), x.second.size());
             });
         });
 
-        auto tmp{(program_folder / name).replace_extension(".cpp")};
+        auto tmp{(programFolder / name).replace_extension(".cpp")};
         ofstream{tmp}.write(source.data(), source.size());
 
         return tmp;
@@ -290,7 +295,9 @@ hiprtcResult hiprtcAddNameExpression(hiprtcProgram p, const char* n)
         p->names.back().second.pop_back();
         p->names.back().second.erase(0, p->names.back().second.find('('));
     }
-    if (p->names.back().second.front() == '&') p->names.back().second.erase(0, 1);
+    if (p->names.back().second.front() == '&') {
+        p->names.back().second.erase(0, 1);
+    }
 
     const auto var{"__hiprtc_" + std::to_string(id)};
     p->source.append("\nextern \"C\" constexpr auto " + var + " = " + n + ';');
@@ -357,12 +364,14 @@ namespace hip_impl
 
 namespace
 {
+    constexpr const char defaultTarget[]{"--targets=gfx900"};
+
     inline
-    void handle_target(std::vector<std::string>& args)
+    void handleTarget(std::vector<std::string>& args)
     {
         using namespace std;
 
-        bool has_target{false};
+        bool hasTarget{false};
         for (auto&& x : args) {
             const auto dx{x.find("--gpu-architecture")};
             const auto dy{(dx == string::npos) ? x.find("-arch")
@@ -371,11 +380,11 @@ namespace
             if (dx == dy) continue;
 
             x.replace(0, x.find('=', min(dx, dy)), "--targets");
-            has_target = true;
+            hasTarget = true;
 
             break;
         }
-        if (!has_target) args.emplace_back("--targets=gfx900");
+        if (!hasTarget) args.emplace_back(defaultTarget);
     }
 } // Unnamed namespace.
 
@@ -398,12 +407,12 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
     Unique_temporary_path tmp{};
     experimental::filesystem::create_directory(tmp.path());
 
-    const auto src{p->write_temporary_files(tmp.path())};
+    const auto src{p->writeTemporaryFiles(tmp.path())};
 
     vector<string> args{hipcc, "--genco"};
     if (n) args.insert(args.cend(), o, o + n);
 
-    handle_target(args);
+    handleTarget(args);
 
     args.emplace_back(src);
     args.emplace_back("-o");
@@ -412,7 +421,7 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
     const auto compile{p->compile(args, tmp.path())};
 
     if (!p->compile(args, tmp.path())) return HIPRTC_ERROR_INTERNAL_ERROR;
-    if (!p->read_lowered_names()) return HIPRTC_ERROR_INTERNAL_ERROR;
+    if (!p->readLoweredNames()) return HIPRTC_ERROR_INTERNAL_ERROR;
 
     p->compiled = true;
 
@@ -420,22 +429,19 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
 }
 
 hiprtcResult hiprtcCreateProgram(hiprtcProgram* p, const char* src,
-                                 const char* name, int n_hdr, const char** hdrs,
-                                 const char** inc_names)
+                                 const char* name, int n, const char** hdrs,
+                                 const char** incs)
 {
     using namespace std;
 
     if (!p) return HIPRTC_ERROR_INVALID_PROGRAM;
-    if (n_hdr < 0) return HIPRTC_ERROR_INVALID_INPUT;
-    if (n_hdr && (!hdrs || !inc_names)) return HIPRTC_ERROR_INVALID_INPUT;
+    if (n < 0) return HIPRTC_ERROR_INVALID_INPUT;
+    if (n && (!hdrs || !incs)) return HIPRTC_ERROR_INVALID_INPUT;
 
-    string s{src};
-    string n{name ? name : "default_name"};
     vector<pair<string, string>> h;
+    for (auto i = 0; i != n; ++i) h.emplace_back(incs[i], hdrs[i]);
 
-    for (auto i = 0; i != n_hdr; ++i) h.emplace_back(inc_names[i], hdrs[i]);
-
-    *p = _hiprtcProgram::make(move(s), move(n), move(h));
+    *p = _hiprtcProgram::make(src, name ? name : "default_name", move(h));
 
     return HIPRTC_SUCCESS;
 }
@@ -463,7 +469,7 @@ hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n,
 
     if (it == p->names.cend()) return HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID;
 
-    *ln = p->lowered_names[distance(p->names.cbegin(), it)].c_str();
+    *ln = p->loweredNames[distance(p->names.cbegin(), it)].c_str();
 
     return HIPRTC_SUCCESS;
 }
