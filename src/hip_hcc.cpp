@@ -2524,16 +2524,11 @@ namespace hip_impl {
 
     std::mutex executables_cache_mutex;
 
-    void executables_cache(
-            std::string elf, hsa_isa_t isa, hsa_agent_t agent,
-            std::vector<hsa_executable_t>& exes, bool write) {
+    std::vector<hsa_executable_t>& executables_cache(
+            std::string elf, hsa_isa_t isa, hsa_agent_t agent) {
         static std::unordered_map<std::string,
             std::unordered_map<hsa_isa_t,
                 std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>>>> cache;
-        if (write) {
-            cache[elf][isa][agent] = exes;
-        } else {
-            exes = cache[elf][isa][agent];
-        }
+        return cache[elf][isa][agent];
     }
 } // Namespace hip_impl.
