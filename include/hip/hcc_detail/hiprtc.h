@@ -102,7 +102,7 @@ namespace hip_impl
         {
             if (!result) return HIPRTC_ERROR_INVALID_INPUT;
 
-            *result = demangle(typeid(T).name());
+            *result = hip_impl::demangle(typeid(T).name());
 
             return (result->empty()) ? HIPRTC_ERROR_INTERNAL_ERROR :
                                        HIPRTC_SUCCESS;
