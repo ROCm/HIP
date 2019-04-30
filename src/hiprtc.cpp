@@ -166,7 +166,7 @@ struct _hiprtcProgram {
         }) != programs.cend();
     }
 
-    // ACCESSORS
+    // MANIPULATORS
     bool compile(const std::vector<std::string>& args,
                  const std::experimental::filesystem::path& program_folder)
     {
@@ -208,8 +208,6 @@ struct _hiprtcProgram {
             return x->get_type() == SHT_SYMTAB;
         })};
 
-        loweredNames.resize(names.size());
-
         ELFIO::symbol_section_accessor symbols{reader, it};
 
         auto n{symbols.get_symbols_num()};
@@ -243,8 +241,9 @@ struct _hiprtcProgram {
         return true;
     }
 
+    // ACCESSORS
     std::experimental::filesystem::path writeTemporaryFiles(
-        const std::experimental::filesystem::path& programFolder)
+        const std::experimental::filesystem::path& programFolder) const
     {
         using namespace std;
 
@@ -290,6 +289,7 @@ hiprtcResult hiprtcAddNameExpression(hiprtcProgram p, const char* n)
     const auto id{p->names.size()};
 
     p->names.emplace_back(n, n);
+    p->loweredNames.emplace_back();
 
     if (p->names.back().second.back() == ')') {
         p->names.back().second.pop_back();
@@ -417,8 +417,6 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
     args.emplace_back(src);
     args.emplace_back("-o");
     args.emplace_back(tmp.path() / "hiprtc.out");
-
-    const auto compile{p->compile(args, tmp.path())};
 
     if (!p->compile(args, tmp.path())) return HIPRTC_ERROR_INTERNAL_ERROR;
     if (!p->readLoweredNames()) return HIPRTC_ERROR_INTERNAL_ERROR;
