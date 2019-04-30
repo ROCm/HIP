@@ -41,7 +41,7 @@ std::vector<hsa_agent_t> all_hsa_agents();
 
 extern std::mutex executables_cache_mutex;
 
-void executables_cache(std::string, hsa_isa_t, hsa_agent_t, std::vector<hsa_executable_t>&, bool);
+std::vector<hsa_executable_t>& executables_cache(std::string, hsa_isa_t, hsa_agent_t);
 
 template<typename P>
 inline
@@ -391,34 +391,28 @@ public:
 
                     std::lock_guard<std::mutex> lck{executables_cache_mutex};
 
-                    std::vector<hsa_executable_t> current_exes;
+                    std::vector<hsa_executable_t>& current_exes =
+                            hip_impl::executables_cache(elf, x, a);
                     // check the cache for already loaded executables
-                    hip_impl::executables_cache(elf, x, a, current_exes, false/*read, not write*/);
-                    if (!current_exes.empty()) {
-                        // found cached executables_cache, append and continue with next elf
-                        impl.executables[a].second.insert(impl.executables[a].second.end(),
-                                current_exes.begin(), current_exes.end());
-                        continue;
+                    if (current_exes.empty()) {
+                        // executables do not yet exist for this elf+isa+agent, create and cache them
+                        for (auto&& blob : it->second) {
+                            hsa_executable_t tmp = {};
+
+                            hsa_executable_create_alt(
+                                HSA_PROFILE_FULL,
+                                HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
+                                nullptr,
+                                &tmp);
+
+                            // TODO: this is massively inefficient and only meant for
+                            // illustration.
+                            tmp = impl.load_executable(blob.data(), blob.size(), tmp, a);
+
+                            if (tmp.handle) current_exes.push_back(tmp);
+                        }
                     }
-                    // executables do not yet exist for this elf+isa+agent, create and cache them
-                    for (auto&& blob : it->second) {
-                        hsa_executable_t tmp = {};
-
-                        hsa_executable_create_alt(
-                            HSA_PROFILE_FULL,
-                            HSA_DEFAULT_FLOAT_ROUNDING_MODE_DEFAULT,
-                            nullptr,
-                            &tmp);
-
-                        // TODO: this is massively inefficient and only meant for
-                        // illustration.
-                        tmp = impl.load_executable(blob.data(), blob.size(), tmp, a);
-
-                        if (tmp.handle) current_exes.push_back(tmp);
-                    }
-                    // cache the newly loaded executables
-                    hip_impl::executables_cache(elf, x, a, current_exes, true/*write, not read*/);
-                    // append to our agent's vector of executables
+                    // append cached executables to our agent's vector of executables
                     impl.executables[a].second.insert(impl.executables[a].second.end(),
                             current_exes.begin(), current_exes.end());
                 }
