@@ -267,6 +267,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         target_include_directories(
             hiprtc SYSTEM
                 PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
+        target_link_libraries(hiprtc PUBLIC stdc++fs)
     endif()
 
     string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
