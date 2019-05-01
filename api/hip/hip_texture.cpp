@@ -31,6 +31,7 @@ namespace hip {
     uint32_t samplerSRD[HIP_SAMPLER_OBJECT_SIZE_DWORD];
     amd::Image* image;
     amd::Sampler* sampler;
+    hipResourceDesc resDesc;
   };
 };
 
@@ -190,7 +191,7 @@ amd::Sampler* fillSamplerDescriptor(enum hipTextureAddressMode addressMode,
   return sampler;
 }
 
-hip::TextureObject* ihipCreateTextureObject(amd::Image& image, amd::Sampler& sampler) {
+hip::TextureObject* ihipCreateTextureObject(const hipResourceDesc& resDesc, amd::Image& image, amd::Sampler& sampler) {
   hip::TextureObject* texture;
   ihipMalloc(reinterpret_cast<void**>(&texture), sizeof(hip::TextureObject), CL_MEM_SVM_FINE_GRAIN_BUFFER);
 
@@ -205,6 +206,8 @@ hip::TextureObject* ihipCreateTextureObject(amd::Image& image, amd::Sampler& sam
   device::Sampler* devSampler = sampler.getDeviceSampler(*hip::getCurrentContext()->devices()[0]);
   memcpy(texture->samplerSRD, devSampler->hwState(), sizeof(uint32_t)*HIP_SAMPLER_OBJECT_SIZE_DWORD);
   texture->sampler = &sampler;
+
+  memcpy(&texture->resDesc, &resDesc, sizeof(hipResourceDesc));
 
   return texture;
 }
@@ -291,7 +294,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
 
   amd::Sampler* sampler = fillSamplerDescriptor(pTexDesc->addressMode[0], pTexDesc->filterMode, pTexDesc->normalizedCoords);
 
-  *pTexObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(*image, *sampler));
+  *pTexObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(*pResDesc, *image, *sampler));
 
   HIP_RETURN(hipSuccess);
 }
@@ -317,7 +320,11 @@ hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
                                            hipTextureObject_t textureObject) {
   HIP_INIT_API(pResDesc, textureObject);
 
-  assert(0 && "Unimplemented");
+  hip::TextureObject* texture = reinterpret_cast<hip::TextureObject*>(textureObject);
+
+  if (pResDesc != nullptr && texture != nullptr) {
+    memcpy(pResDesc, &(texture->resDesc), sizeof(hipResourceDesc));
+  }
 
   HIP_RETURN(hipErrorUnknown);
 }
@@ -372,7 +379,32 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
       ihipDestroyTextureObject(reinterpret_cast<hip::TextureObject*>(tex->textureObject));
     }
     amd::Sampler* sampler = fillSamplerDescriptor(tex->addressMode[0], tex->filterMode, tex->normalized);
-    tex->textureObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(*image, *sampler));
+
+    hipResourceDesc resDesc;
+    memset(&resDesc, 0, sizeof(hipResourceDesc));
+    switch (type) {
+      case CL_MEM_OBJECT_IMAGE1D:
+        resDesc.resType = hipResourceTypeLinear;
+        resDesc.res.linear.devPtr = const_cast<void*>(devPtr);
+        resDesc.res.linear.desc = *desc;
+        resDesc.res.linear.sizeInBytes = image->getSize();
+        break;
+      case CL_MEM_OBJECT_IMAGE2D:
+        resDesc.resType = hipResourceTypePitch2D;
+        resDesc.res.pitch2D.devPtr = const_cast<void*>(devPtr);
+        resDesc.res.pitch2D.desc = *desc;
+        resDesc.res.pitch2D.width = width;
+        resDesc.res.pitch2D.height = height;
+        resDesc.res.pitch2D.pitchInBytes = pitch;
+        break;
+      default:
+        resDesc.resType = hipResourceTypeArray;
+        resDesc.res.array.array = nullptr;
+        break;
+    }
+
+    tex->textureObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(resDesc, *image, *sampler));
+
     return hipSuccess;
   }
   return hipErrorUnknown;
@@ -440,9 +472,11 @@ hipError_t hipUnbindTexture(const textureReference* tex) {
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array) {
   HIP_INIT_API(desc, array);
 
-  assert(0 && "Unimplemented");
+  if (desc != nullptr) {
+    *desc = array->desc;
+  }
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* tex) {
