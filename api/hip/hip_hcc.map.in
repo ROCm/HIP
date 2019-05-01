@@ -25,6 +25,7 @@ global:
     hipDeviceGetAttribute;
     hipDeviceGetByPCIBusId;
     hipDeviceGetCacheConfig;
+    hipDeviceGetStreamPriorityRange;
     hipDeviceGetLimit;
     hipDeviceGetName;
     hipDeviceGetPCIBusId;
@@ -123,6 +124,7 @@ global:
     hipStreamAddCallback;
     hipStreamCreate;
     hipStreamCreateWithFlags;
+    hipStreamCreateWithPriority;
     hipStreamDestroy;
     hipStreamGetFlags;
     hipStreamQuery;

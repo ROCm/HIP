@@ -63,13 +63,13 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
   delete cbo;
 }
 
-static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
+static hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags, amd::CommandQueue::Priority priority) {
   amd::Device* device = hip::getCurrentContext()->devices()[0];
 
   cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
   amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, properties,
                                              amd::CommandQueue::RealTimeDisabled,
-                                             amd::CommandQueue::Priority::Normal);
+                                             priority);
 
   if (queue == nullptr || !queue->create()) {
     return hipErrorOutOfMemory;
@@ -92,13 +92,38 @@ static hipError_t ihipStreamCreateWithFlags(hipStream_t *stream, unsigned int fl
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   HIP_INIT_API(stream, flags);
 
-  HIP_RETURN(ihipStreamCreateWithFlags(stream, flags));
+  HIP_RETURN(ihipStreamCreate(stream, flags, amd::CommandQueue::Priority::Normal));
 }
 
 hipError_t hipStreamCreate(hipStream_t *stream) {
   HIP_INIT_API(stream);
 
-  HIP_RETURN(ihipStreamCreateWithFlags(stream, hipStreamDefault));
+  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, amd::CommandQueue::Priority::Normal));
+}
+
+hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority) {
+  HIP_INIT_API(stream, flags, priority);
+
+  if (priority > static_cast<int>(amd::CommandQueue::Priority::High)) {
+    priority = static_cast<int>(amd::CommandQueue::Priority::High);
+  } else if (priority < static_cast<int>(amd::CommandQueue::Priority::Normal)) {
+    priority = static_cast<int>(amd::CommandQueue::Priority::Normal);
+  }
+
+  return HIP_RETURN(ihipStreamCreate(stream, flags, static_cast<amd::CommandQueue::Priority>(priority)));
+}
+
+hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority) {
+  HIP_INIT_API(leastPriority, greatestPriority);
+
+  if (leastPriority != nullptr) {
+    *leastPriority = static_cast<int>(amd::CommandQueue::Priority::Normal);
+  }
+  if (greatestPriority != nullptr) {
+    // Only report one kind of priority for now.
+    *greatestPriority = static_cast<int>(amd::CommandQueue::Priority::Normal);
+  }
+  return HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {

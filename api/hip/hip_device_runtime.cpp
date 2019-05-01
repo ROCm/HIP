@@ -343,11 +343,6 @@ hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig ) {
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipDeviceGetStreamPriorityRange ( int* leastPriority, int* greatestPriority ) {
-  assert(0);
-  HIP_RETURN(hipSuccess);
-}
-
 hipError_t hipDeviceReset ( void ) {
   HIP_INIT_API();
 

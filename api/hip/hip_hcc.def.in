@@ -24,6 +24,7 @@ hipDeviceGet
 hipDeviceGetAttribute
 hipDeviceGetByPCIBusId
 hipDeviceGetCacheConfig
+hipDeviceGetStreamPriorityRange
 hipDeviceGetLimit
 hipDeviceGetName
 hipDeviceGetPCIBusId
@@ -123,6 +124,7 @@ hipSetDeviceFlags
 hipStreamAddCallback
 hipStreamCreate
 hipStreamCreateWithFlags
+hipStreamCreateWithPriority
 hipStreamDestroy
 hipStreamGetFlags
 hipStreamQuery
