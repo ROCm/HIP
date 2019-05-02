@@ -55,6 +55,10 @@ THE SOFTWARE.
 using namespace ELFIO;
 using namespace std;
 
+// For HIP implicit kernargs.
+static const size_t HIP_IMPLICIT_KERNARG_SIZE = 48;
+static const size_t HIP_IMPLICIT_KERNARG_ALIGNMENT = 8;
+
 // calculate MD5 checksum
 inline std::string checksum(size_t size, const char *source) {
     // FNV-1a hashing, 64-bit version
@@ -146,33 +150,28 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         ihipDevice_t* currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
-        void* config[5] = {0};
-        size_t kernArgSize;
-
-        std::vector<char> tmp{};
+        std::vector<char> kernargs{};
         if (kernelParams) {
             if (extra) return hipErrorInvalidValue;
 
             for (auto&& x : f->_kernarg_layout) {
                 const auto p{static_cast<const char*>(*kernelParams)};
 
-                tmp.insert(
-                    tmp.cend(),
+                kernargs.insert(
+                    kernargs.cend(),
                     round_up_to_next_multiple_nonnegative(
-                        tmp.size(), x.second) - tmp.size(),
+                        kernargs.size(), x.second) - kernargs.size(),
                     '\0');
-                tmp.insert(tmp.cend(), p, p + x.first);
+                kernargs.insert(kernargs.cend(), p, p + x.first);
 
                 ++kernelParams;
             }
-            config[1] = static_cast<void*>(tmp.data());
-
-            kernArgSize = tmp.size();
         } else if (extra) {
-            memcpy(config, extra, sizeof(size_t) * 5);
-            if (config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER &&
-                config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END) {
-                kernArgSize = *(size_t*)(config[3]);
+            if (extra[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER &&
+                extra[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && extra[4] == HIP_LAUNCH_PARAM_END) {
+                auto args = (char*)extra[1];
+                size_t argSize = *(size_t*)(extra[3]);
+                kernargs.insert(kernargs.end(), args, args+argSize);
             } else {
                 return hipErrorNotInitialized;
             }
@@ -181,6 +180,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             return hipErrorInvalidValue;
         }
 
+        // Insert 48-bytes at the end for implicit kernel arguments and fill with value zero.
+        size_t padSize = (~kernargs.size() + 1) & (HIP_IMPLICIT_KERNARG_ALIGNMENT - 1);
+        kernargs.insert(kernargs.end(), padSize + HIP_IMPLICIT_KERNARG_SIZE, 0);
 
         /*
           Kernel argument preparation.
@@ -230,7 +232,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
         hc::completion_future cf;
 
-        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize,
+        lp.av->dispatch_hsa_kernel(&aql, kernargs.data(), kernargs.size(),
                                    (startEvent || stopEvent) ? &cf : nullptr
 #if (__hcc_workweek__ > 17312)
                                    ,
