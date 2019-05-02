@@ -145,9 +145,12 @@ if ($verbose & 0x2) {
 
 #---
 # Find COMGR location
-$COMGR_PATH=$ENV{'COMGR_PATH'};
-if (!defined $COMGR_PATH) {
-  $COMGR_PATH = "/opt/rocm";
+$USE_COMGR= $hipConfig{'USE_COMGR'};
+if ($USE_COMGR eq 1) {
+  $COMGR_PATH=$ENV{'COMGR_PATH'};
+  if (!defined $COMGR_PATH) {
+    $COMGR_PATH = "/opt/rocm";
+  }
 }
 
 # set if user explicitly requests -stdlib=libc++. (else we default to libstdc++ for better interop with g++):
@@ -272,11 +275,9 @@ if ($HIP_PLATFORM eq "clang") {
 
     $HIPCXXFLAGS .= " -isystem $HIP_PATH/include/hip/hcc_detail/cuda";
     $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
-    $HIPCXXFLAGS .= " -isystem $COMGR_PATH/include";
     $HIPCXXFLAGS .= " -Wno-deprecated-register";
 
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am ";
-    $HIPLDFLAGS .= " -L$COMGR_PATH/lib -Wl,--rpath=$COMGR_PATH/lib -lamd_comgr ";
 #    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
 
     # Add trace marker library:
@@ -286,6 +287,11 @@ if ($HIP_PLATFORM eq "clang") {
         if (-e $marker_inc_path) {
             $HIPCXXFLAGS .= " -isystem $marker_inc_path";
         }
+    }
+
+    if ($USE_COMGR eq 1) {
+        $HIPCXXFLAGS .= " -DUSE_COMGR=1 -isystem $COMGR_PATH/include";
+        $HIPLDFLAGS .= " -L$COMGR_PATH/lib -Wl,--rpath=$COMGR_PATH/lib -lamd_comgr ";
     }
 
     $marker_lib_path = "$marker_path/bin/x86_64";

@@ -210,6 +210,7 @@ if(USE_COMGR EQUAL 1)
         MESSAGE(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
     endif()
 endif()
+add_to_config(_buildInfo USE_COMGR)
 
 #############################
 # Build steps
