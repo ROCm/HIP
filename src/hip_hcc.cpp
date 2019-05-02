@@ -1410,7 +1410,6 @@ void ihipInit() {
         return;
     }
 
-    g_initDeviceFound = true;
     g_deviceArray = new ihipDevice_t*[deviceCnt];
     g_deviceCnt = 0;
     for (int i = 0; i < accs.size(); i++) {
@@ -1443,6 +1442,8 @@ void ihipInit() {
 
     tprintf(DB_SYNC, "pid=%u %-30s g_numLogicalThreads=%u\n", getpid(), "<ihipInit>",
             g_numLogicalThreads);
+
+    g_initDeviceFound = true;
 }
 
 namespace hip_impl {
