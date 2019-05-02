@@ -193,6 +193,24 @@ if(USE_PROF_API EQUAL 1)
     endif()
 endif()
 
+################
+# Detect Code Object Manager
+################
+
+if(USE_COMGR EQUAL 1)
+    if(HIP_PLATFORM STREQUAL "hcc")
+        find_package(amd_comgr REQUIRED CONFIG
+            PATHS
+                /opt/rocm/
+            PATH_SUFFIXES
+                cmake/amd_comgr
+                lib/cmake/amd_comgr
+        )
+        add_definitions(-DUSE_COMGR=1)
+        MESSAGE(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
+    endif()
+endif()
+
 #############################
 # Build steps
 #############################
@@ -262,6 +280,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
     if(HIP_COMPILER STREQUAL "hcc")
         target_link_libraries(hip_hcc PRIVATE hc_am)
         target_link_libraries(hip_hcc_static PRIVATE hc_am)
+    endif()
+
+    if(USE_COMGR EQUAL 1)
+        target_link_libraries(hip_hcc PRIVATE amd_comgr)
+        target_link_libraries(hip_hcc_static PRIVATE amd_comgr)
     endif()
 
     string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})

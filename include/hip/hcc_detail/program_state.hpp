@@ -40,6 +40,10 @@ THE SOFTWARE.
 #include <hsa/hsa_ext_amd.h>
 #include <hsa/hsa_ven_amd_loader.h>
 
+#if USE_COMGR
+#include <amd_comgr.h>
+#endif
+
 #include <link.h>
 
 #include <cassert>
@@ -55,6 +59,7 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 struct ihipModuleSymbol_t;
 using hipFunction_t = ihipModuleSymbol_t*;
@@ -557,6 +562,190 @@ const std::unordered_map<
     return r[agent].second;
 }
 
+#if USE_COMGR
+inline
+void checkError(
+    amd_comgr_status_t status,
+    char const *str) {
+    if (status != AMD_COMGR_STATUS_SUCCESS) {
+        const char *status_str;
+        status = amd_comgr_status_string(status, &status_str);
+        if (status == AMD_COMGR_STATUS_SUCCESS)
+            std::cerr << "FAILED: " << str << "\n  REASON: " <<  status_str << std::endl;
+        hip_throw(std::runtime_error{"Metadata parsing failed."});
+    }
+}
+
+class comgr_metadata_node {
+ public:
+    amd_comgr_metadata_node_t node;
+    bool active;
+    comgr_metadata_node() : active(false) {}
+    ~comgr_metadata_node() {
+        if(active)
+            checkError(amd_comgr_destroy_metadata(node), "amd_comgr_destroy_metadata");
+    }
+    bool is_active() { return active; }
+    void set_active(bool value) { active = value; }
+    comgr_metadata_node(const comgr_metadata_node&) = delete;
+    comgr_metadata_node(comgr_metadata_node&&) = delete;
+    comgr_metadata_node& operator=(const comgr_metadata_node&) = delete;
+    comgr_metadata_node& operator=(comgr_metadata_node&&) = delete;
+
+};
+
+class comgr_data {
+ public:
+    amd_comgr_data_t data;
+    bool active;
+    comgr_data() : active(false) {}
+    ~comgr_data() {
+        if(active)
+            checkError(amd_comgr_release_data(data), "amd_comgr_release_data");
+    }
+    bool is_active() { return active; }
+    void set_active(bool value) { active = value; }
+    comgr_data(const comgr_data&) = delete;
+    comgr_data(comgr_data&&) = delete;
+    comgr_data& operator=(const comgr_data&) = delete;
+    comgr_data& operator=(comgr_data&&) = delete;
+
+};
+
+inline
+std::string lookup_keyword_value(
+    amd_comgr_metadata_node_t& in_node,
+    std::string keyword) {
+    amd_comgr_status_t status;
+    size_t value_size;
+    comgr_metadata_node value_meta;
+
+    status = amd_comgr_metadata_lookup(in_node, keyword.c_str(), &value_meta.node);
+    checkError(status, "amd_comgr_metadata_lookup");
+    value_meta.set_active(true);
+    status = amd_comgr_get_metadata_string(value_meta.node, &value_size, NULL);
+    checkError(status, "amd_comgr_get_metadata_string");
+    // Since value_size returns size with null terminator, we don't include for C++ string size
+    value_size--;
+    std::string value(value_size, '\0');
+    status = amd_comgr_get_metadata_string(value_meta.node, &value_size, &value[0]);
+    checkError(status, "amd_comgr_get_metadata_string");
+
+    return value;
+}
+
+inline
+void process_kernarg_metadata(
+    amd_comgr_metadata_node_t blob_meta,
+    std::unordered_map<
+        std::string,
+        std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
+    amd_comgr_status_t status;
+    amd_comgr_metadata_kind_t mkindLookup;
+    comgr_metadata_node kernelList;
+    std::string kernel_name;
+    size_t num_kernels = 0;
+    size_t num_kern_args = 0;
+
+    // Kernels is a list of MAPS!!
+    status = amd_comgr_metadata_lookup(blob_meta, "Kernels", &kernelList.node);
+    // FIXME - few hip memset kernels are missing Kernels node
+    if(status != AMD_COMGR_STATUS_SUCCESS)
+        return;
+    kernelList.set_active(true);
+
+    status = amd_comgr_get_metadata_kind(kernelList.node, &mkindLookup);
+    if (mkindLookup != AMD_COMGR_METADATA_KIND_LIST) {
+        hip_throw(std::runtime_error{"Lookup of Kernels didn't return a list\n"});
+    }
+
+    status = amd_comgr_get_metadata_list_size(kernelList.node, &num_kernels);
+    checkError(status, "amd_comgr_get_metadata_list_size");
+    for (int i = 0; i < num_kernels; i++) {
+        comgr_metadata_node kernelMap;
+        status = amd_comgr_index_list_metadata(kernelList.node, i, &kernelMap.node);
+        checkError(status, "amd_comgr_index_list_metadata");
+        kernelMap.set_active(true);
+
+        kernel_name = std::move(lookup_keyword_value(kernelMap.node, "Name"));
+
+        // Check if this kernel was already processed
+        if(!kernargs[kernel_name].empty()) {
+            continue;
+        }
+
+        comgr_metadata_node kernArgList;
+        status = amd_comgr_metadata_lookup(kernelMap.node, "Args", &kernArgList.node);
+        if (status == AMD_COMGR_STATUS_SUCCESS ) {
+            kernArgList.set_active(true);
+            status = amd_comgr_get_metadata_kind(kernArgList.node, &mkindLookup);
+            if (mkindLookup != AMD_COMGR_METADATA_KIND_LIST) {
+                 hip_throw(std::runtime_error{"Lookup of Args didn't return a list\n"});
+            }
+
+            if (status == AMD_COMGR_STATUS_SUCCESS ) {
+                status = amd_comgr_get_metadata_list_size(kernArgList.node, &num_kern_args);
+                checkError(status, "amd_comgr_get_metadata_list_size");
+                for (int k_ar = 0; k_ar < num_kern_args; k_ar++) {
+                    comgr_metadata_node kernArgMap;
+                    status = amd_comgr_index_list_metadata(kernArgList.node, k_ar, &kernArgMap.node);
+                    checkError(status, "amd_comgr_index_list_metadata");
+                    kernArgMap.set_active(true);
+                    size_t k_arg_size, k_arg_align;
+
+                    k_arg_size = std::stoul(lookup_keyword_value(kernArgMap.node, "Size"));
+                    k_arg_align = std::stoul(lookup_keyword_value(kernArgMap.node, "Align"));
+
+                    // Save it into our kernargs
+                    kernargs[kernel_name].emplace_back(k_arg_size, k_arg_align);
+
+                } // end kernArgMap
+            }
+        } // end kernArgList
+    } // end kernelMap
+} // end kernelList
+
+inline
+void read_kernarg_metadata(
+    std::string blob,
+    std::unordered_map<
+        std::string,
+        std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
+
+    const char *blob_buf = blob.data();
+    long blob_size = blob.size();
+
+    amd_comgr_status_t status;
+    comgr_data blob_data;
+    status = amd_comgr_create_data(AMD_COMGR_DATA_KIND_RELOCATABLE, &blob_data.data);
+    checkError(status, "amd_comgr_create_data");
+    blob_data.set_active(true);
+
+    status = amd_comgr_set_data(blob_data.data, blob_size, blob_buf);
+    if(status != AMD_COMGR_STATUS_SUCCESS)
+        return;
+
+    // We have a valid code object now
+    status = amd_comgr_set_data_name(blob_data.data, "HIP Code Object");
+    checkError(status, "amd_comgr_set_data_name");
+
+    comgr_metadata_node blob_meta;
+    status = amd_comgr_get_data_metadata(blob_data.data, &blob_meta.node);
+    checkError(status, "amd_comgr_get_data_metadata");
+    blob_meta.set_active(true);
+
+    // Root is a map
+    amd_comgr_metadata_kind_t blob_mkind;
+    status = amd_comgr_get_metadata_kind(blob_meta.node, &blob_mkind);
+    checkError(status, "amd_comgr_get_metadata_kind");
+    if (blob_mkind != AMD_COMGR_METADATA_KIND_MAP) {
+        hip_throw(std::runtime_error{"Root is not map\n"});
+    }
+
+    process_kernarg_metadata(blob_meta.node, kernargs);
+}
+
+#else
 inline
 std::size_t parse_args(
     const std::string& metadata,
@@ -645,6 +834,7 @@ void read_kernarg_metadata(
         } while (true);
     }
 }
+#endif
 
 inline
 __attribute__((visibility("hidden")))
@@ -657,6 +847,9 @@ const std::unordered_map<
     std::call_once(f, []() {
         for (auto&& isa_blobs : code_object_blobs()) {
             for (auto&& blob : isa_blobs.second) {
+#if USE_COMGR
+                read_kernarg_metadata(std::string{blob.cbegin(), blob.cend()}, r);
+#else
                 std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
 
                 ELFIO::elfio reader;
@@ -664,6 +857,7 @@ const std::unordered_map<
                 if (!reader.load(tmp)) continue;
 
                 read_kernarg_metadata(reader, r);
+#endif
             }
         }
     });
