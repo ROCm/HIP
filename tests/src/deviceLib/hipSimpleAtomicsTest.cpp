@@ -195,38 +195,64 @@ bool computeGold(T* gpuData, int len) {
     return computeGoldBitwise(gpuData, len);
 }
 
+// Refer https://stackoverflow.com/questions/44585504/partial-template-function-specialization-with-enable-if-make-default-implementa
+// for how `_rank<N>` help to resolve the desired implementation from the
+// default one.
+template <unsigned N>
+struct _rank : _rank<N - 1> {};
+template <>
+struct _rank<0> {};
+
+template <typename T>
 __device__
-void testKernelExch(...) {}
+void _testKernelExch(T *, _rank<0>) {
+    static_assert(std::is_same<T, double>::value, "");
+}
 
 template<typename T, typename enable_if<!is_same<T, double>{}>::type* = nullptr>
 __device__
-void testKernelExch(T* g_odata) {
+void _testKernelExch(T* g_odata, _rank<1>) {
     // access thread id
     const T tid = blockDim.x * blockIdx.x + threadIdx.x;
 
     // Atomic exchange
     atomicExch(&g_odata[2], tid);
 }
-
+template <typename T>
 __device__
-void testKernelSub(...) {}
+void testKernelExch(T* t) {
+    _testKernelExch(t, _rank<1>{});
+}
 
+template <typename T>
+__device__
+void _testKernelSub(T *, _rank<0>) {
+    static_assert(!(std::is_same<T, int>::value ||
+                    std::is_same<T, unsigned>::value), "");
+}
 template<
-    typename T, 
+    typename T,
     typename enable_if<
         is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
 __device__
-void testKernelSub(T* g_odata) {
+void _testKernelSub(T* g_odata, _rank<1>) {
     // Atomic subtraction (final should be 0)
     atomicSub(&g_odata[1], 10);
 }
-
+template <typename T>
 __device__
-void testKernelIntegral(...) {}
+void testKernelSub(T* t) {
+    _testKernelSub(t, _rank<1>{});
+}
 
+template <typename T>
+__device__
+void _testKernelIntegral(T*, _rank<0>) {
+    static_assert(!std::is_integral<T>::value, "");
+}
 template<typename T, typename enable_if<is_integral<T>{}>::type* = nullptr>
 __device__
-void testKernelIntegral(T* g_odata) {
+void _testKernelIntegral(T* g_odata, _rank<1>) {
     // access thread id
     const T tid = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -257,6 +283,12 @@ void testKernelIntegral(T* g_odata) {
     atomicXor(&g_odata[10], tid);
 
     testKernelSub(g_odata);
+}
+
+template <typename T>
+__device__
+void testKernelIntegral(T* t) {
+    _testKernelIntegral(t, _rank<1>{});
 }
 
 template<typename T>
