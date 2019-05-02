@@ -195,12 +195,15 @@ bool computeGold(T* gpuData, int len) {
     return computeGoldBitwise(gpuData, len);
 }
 
+template<typename T, typename enable_if<is_same<T, double>{}>::type* = nullptr>
 __device__
-void testKernelExch(...) {}
+void testKernelExch(T *) {
+    static_assert(std::is_same<T, double>::value, "");
+}
 
 template<typename T, typename enable_if<!is_same<T, double>{}>::type* = nullptr>
 __device__
-void testKernelExch(T* g_odata) {
+void testKernelExch(T *g_odata) {
     // access thread id
     const T tid = blockDim.x * blockIdx.x + threadIdx.x;
 
@@ -208,11 +211,17 @@ void testKernelExch(T* g_odata) {
     atomicExch(&g_odata[2], tid);
 }
 
-__device__
-void testKernelSub(...) {}
-
 template<
-    typename T, 
+    typename T,
+    typename enable_if<
+        !is_same<T, int>{} && !is_same<T, unsigned int>{}>::type* = nullptr>
+__device__
+void testKernelSub(T *) {
+    static_assert(!(std::is_same<T, int>::value ||
+                    std::is_same<T, unsigned>::value), "");
+}
+template<
+    typename T,
     typename enable_if<
         is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
 __device__
@@ -221,12 +230,14 @@ void testKernelSub(T* g_odata) {
     atomicSub(&g_odata[1], 10);
 }
 
+template<typename T, typename enable_if<!is_integral<T>{}>::type* = nullptr>
 __device__
-void testKernelIntegral(...) {}
-
+void testKernelIntegral(T *) {
+    static_assert(!std::is_integral<T>::value, "");
+}
 template<typename T, typename enable_if<is_integral<T>{}>::type* = nullptr>
 __device__
-void testKernelIntegral(T* g_odata) {
+void testKernelIntegral(T *g_odata) {
     // access thread id
     const T tid = blockDim.x * blockIdx.x + threadIdx.x;
 
