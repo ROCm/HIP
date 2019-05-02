@@ -7,7 +7,7 @@ clang=/opt/rocm/llvm/bin/clang
 exec > clang_options.md
 
 echo "# Support of Clang options"
-echo " Clang versiion: $($clang --version | head -1)"
+echo " Clang version: $($clang --version | head -1)"
 echo
 echo "|Option|Support|Description|"
 echo "|-------|------|-------|"
