@@ -233,6 +233,9 @@ hipError_t hipLaunchByPtr(const void *hostFunction)
         " for device %d!\n", hostFunction, deviceId);
     abort();
   } else {
+    // Insert 48-bytes at the end for implicit kernel arguments and fill with value zero.
+    size_t padSize = (~exec._arguments.size() + 1) & (HIP_KERNARG_ALIGNMENT - 1);
+    exec._arguments.insert(exec._arguments.end(), padSize + HIP_IMPLICIT_KERNARG_SIZE, 0);
     size_t size = exec._arguments.size();
     void *extra[] = {
         HIP_LAUNCH_PARAM_BUFFER_POINTER, &exec._arguments[0],

@@ -27,6 +27,10 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime_api.h"
 
+// HIP implicit kernargs.
+#define HIP_IMPLICIT_KERNARG_SIZE 48
+#define HIP_KERNARG_ALIGNMENT 8
+
 // Forward declarations:
 namespace hc {
 class accelerator;

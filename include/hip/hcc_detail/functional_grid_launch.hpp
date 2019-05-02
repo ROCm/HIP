@@ -108,10 +108,14 @@ inline std::vector<std::uint8_t> make_kernarg(
     kernarg.reserve(sizeof(to_formals));
 
     auto& ps = hip_impl::get_program_state();
-    return make_kernarg<0>(to_formals, 
+    auto kernargs =  make_kernarg<0>(to_formals,
                            ps.get_kernargs_size_align(
                                reinterpret_cast<std::uintptr_t>(kernel)),
                            std::move(kernarg));
+    // Insert 48-bytes at the end for implicit kernel arguments and fill with value zero.
+    size_t padSize = (~kernargs.size() + 1) & (HIP_KERNARG_ALIGNMENT - 1);
+    kernargs.insert(kernargs.end(), padSize + HIP_IMPLICIT_KERNARG_SIZE, 0);
+    return kernargs;
 }
 
 
