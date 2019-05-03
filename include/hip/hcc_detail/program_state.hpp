@@ -23,6 +23,7 @@ THE SOFTWARE.
 #pragma once
 
 #include "code_object_bundle.hpp"
+#include "kernel_metadata.hpp"
 #include "hsa_helpers.hpp"
 
 #if !defined(__cpp_exceptions)
@@ -635,11 +636,84 @@ std::string lookup_keyword_value(
 }
 
 inline
-void process_kernarg_metadata(
+void populate_kernprops(
+    const comgr_metadata_node& kernelMeta,
+    KernelMD* kern_desc) {
+
+    amd_comgr_status_t status;
+
+    amd_comgr_metadata_node_t symbolName;
+    status = amd_comgr_metadata_lookup(kernelMeta.node, "SymbolName", &(symbolName));
+    if (status == AMD_COMGR_STATUS_SUCCESS) {
+        status = getMetaBuf(symbolName, &(kern_desc->mSymbolName));
+        amd_comgr_destroy_metadata(symbolName);
+    }
+
+    amd_comgr_metadata_node_t attrMeta;
+    if (status == AMD_COMGR_STATUS_SUCCESS) {
+        if (amd_comgr_metadata_lookup(kernelMeta.node, "Attrs", &attrMeta) ==
+            AMD_COMGR_STATUS_SUCCESS) {
+              status = amd_comgr_iterate_map_metadata(attrMeta, populateAttrs,
+                                                      static_cast<void*>(kern_desc));
+              amd_comgr_destroy_metadata(attrMeta);
+        }
+    }
+
+    // extract the code properties metadata
+    amd_comgr_metadata_node_t codePropsMeta;
+    if (status == AMD_COMGR_STATUS_SUCCESS) {
+        status = amd_comgr_metadata_lookup(kernelMeta.node, "CodeProps", &codePropsMeta);
+    }
+
+    if (status == AMD_COMGR_STATUS_SUCCESS) {
+        status = amd_comgr_iterate_map_metadata(codePropsMeta, populateCodeProps,
+                                                static_cast<void*>(kern_desc));
+        amd_comgr_destroy_metadata(codePropsMeta);
+    }
+}
+
+inline
+void populate_kernargs(
+    const comgr_metadata_node& kernelMap,
+    std::vector<std::pair<std::size_t, std::size_t>>* args_info) {
+    amd_comgr_status_t status;
+    amd_comgr_metadata_kind_t mkindLookup;
+    comgr_metadata_node kernArgList;
+
+    status = amd_comgr_metadata_lookup(kernelMap.node, "Args", &kernArgList.node);
+
+    if (status != AMD_COMGR_STATUS_SUCCESS ) {
+        return;
+    }
+
+    kernArgList.set_active(true);
+    status = amd_comgr_get_metadata_kind(kernArgList.node, &mkindLookup);
+    if (mkindLookup != AMD_COMGR_METADATA_KIND_LIST) {
+        hip_throw(std::runtime_error{"Lookup of Args didn't return a list\n"});
+    }
+
+    if (status == AMD_COMGR_STATUS_SUCCESS ) {
+        size_t num_kern_args = 0;
+        status = amd_comgr_get_metadata_list_size(kernArgList.node, &num_kern_args);
+        checkError(status, "amd_comgr_get_metadata_list_size");
+        for (int k_ar = 0; k_ar < num_kern_args; k_ar++) {
+            comgr_metadata_node kernArgMap;
+            status = amd_comgr_index_list_metadata(kernArgList.node, k_ar, &kernArgMap.node);
+            checkError(status, "amd_comgr_index_list_metadata");
+            kernArgMap.set_active(true);
+
+            size_t k_arg_size, k_arg_align;
+            k_arg_size = std::stoul(lookup_keyword_value(kernArgMap.node, "Size"));
+            k_arg_align = std::stoul(lookup_keyword_value(kernArgMap.node, "Align"));
+            args_info->emplace_back(std::make_pair(k_arg_size, k_arg_align));
+        }
+    }
+}
+
+inline
+void process_kernel_metadata(
     amd_comgr_metadata_node_t blob_meta,
-    std::unordered_map<
-        std::string,
-        std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
+    std::unordered_map<std::string, kernelInfo>& kernmeta) {
     amd_comgr_status_t status;
     amd_comgr_metadata_kind_t mkindLookup;
     comgr_metadata_node kernelList;
@@ -649,11 +723,10 @@ void process_kernarg_metadata(
 
     // Kernels is a list of MAPS!!
     status = amd_comgr_metadata_lookup(blob_meta, "Kernels", &kernelList.node);
-    // FIXME - few hip memset kernels are missing Kernels node
     if(status != AMD_COMGR_STATUS_SUCCESS)
         return;
-    kernelList.set_active(true);
 
+    kernelList.set_active(true);
     status = amd_comgr_get_metadata_kind(kernelList.node, &mkindLookup);
     if (mkindLookup != AMD_COMGR_METADATA_KIND_LIST) {
         hip_throw(std::runtime_error{"Lookup of Kernels didn't return a list\n"});
@@ -670,47 +743,24 @@ void process_kernarg_metadata(
         kernel_name = std::move(lookup_keyword_value(kernelMap.node, "Name"));
 
         // Check if this kernel was already processed
-        if(!kernargs[kernel_name].empty()) {
+        if (kernmeta.find(kernel_name) != kernmeta.end()) {
             continue;
         }
 
-        comgr_metadata_node kernArgList;
-        status = amd_comgr_metadata_lookup(kernelMap.node, "Args", &kernArgList.node);
-        if (status == AMD_COMGR_STATUS_SUCCESS ) {
-            kernArgList.set_active(true);
-            status = amd_comgr_get_metadata_kind(kernArgList.node, &mkindLookup);
-            if (mkindLookup != AMD_COMGR_METADATA_KIND_LIST) {
-                 hip_throw(std::runtime_error{"Lookup of Args didn't return a list\n"});
-            }
+        // Populate kernel information
+        kernelInfo kernel_info;
+        populate_kernargs(kernelMap, &(kernel_info.args_info));
+        populate_kernprops(kernelMap, &(kernel_info.descriptor));
 
-            if (status == AMD_COMGR_STATUS_SUCCESS ) {
-                status = amd_comgr_get_metadata_list_size(kernArgList.node, &num_kern_args);
-                checkError(status, "amd_comgr_get_metadata_list_size");
-                for (int k_ar = 0; k_ar < num_kern_args; k_ar++) {
-                    comgr_metadata_node kernArgMap;
-                    status = amd_comgr_index_list_metadata(kernArgList.node, k_ar, &kernArgMap.node);
-                    checkError(status, "amd_comgr_index_list_metadata");
-                    kernArgMap.set_active(true);
-                    size_t k_arg_size, k_arg_align;
-
-                    k_arg_size = std::stoul(lookup_keyword_value(kernArgMap.node, "Size"));
-                    k_arg_align = std::stoul(lookup_keyword_value(kernArgMap.node, "Align"));
-
-                    // Save it into our kernargs
-                    kernargs[kernel_name].emplace_back(k_arg_size, k_arg_align);
-
-                } // end kernArgMap
-            }
-        } // end kernArgList
-    } // end kernelMap
-} // end kernelList
+        // Save it into our kernmeta
+        kernmeta[kernel_name] = kernel_info;
+    }
+}
 
 inline
-void read_kernarg_metadata(
+void read_kernel_metadata(
     std::string blob,
-    std::unordered_map<
-        std::string,
-        std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
+    std::unordered_map<std::string,kernelInfo>& kernel_metadata) {
 
     const char *blob_buf = blob.data();
     long blob_size = blob.size();
@@ -742,10 +792,27 @@ void read_kernarg_metadata(
         hip_throw(std::runtime_error{"Root is not map\n"});
     }
 
-    process_kernarg_metadata(blob_meta.node, kernargs);
+    process_kernel_metadata(blob_meta.node, kernel_metadata);
 }
 
-#else
+inline
+__attribute__((visibility("hidden")))
+const std::unordered_map<std::string, kernelInfo>& kernel_metadata() {
+
+    static std::unordered_map<std::string, kernelInfo> r;
+    static std::once_flag f;
+
+    std::call_once(f, []() {
+        for (auto&& isa_blobs : code_object_blobs()) {
+            for (auto&& blob : isa_blobs.second) {
+                read_kernel_metadata(std::string{blob.cbegin(), blob.cend()}, r);
+            }
+        }
+    });
+
+    return r;
+}
+#else // USE_COMGR
 inline
 std::size_t parse_args(
     const std::string& metadata,
@@ -834,8 +901,9 @@ void read_kernarg_metadata(
         } while (true);
     }
 }
-#endif
+#endif // USE_COMGR
 
+#if USE_COMGR == 0
 inline
 __attribute__((visibility("hidden")))
 const std::unordered_map<
@@ -847,9 +915,6 @@ const std::unordered_map<
     std::call_once(f, []() {
         for (auto&& isa_blobs : code_object_blobs()) {
             for (auto&& blob : isa_blobs.second) {
-#if USE_COMGR
-                read_kernarg_metadata(std::string{blob.cbegin(), blob.cend()}, r);
-#else
                 std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
 
                 ELFIO::elfio reader;
@@ -857,11 +922,11 @@ const std::unordered_map<
                 if (!reader.load(tmp)) continue;
 
                 read_kernarg_metadata(reader, r);
-#endif
             }
         }
     });
 
     return r;
 }
+#endif
 }  // Namespace hip_impl.
