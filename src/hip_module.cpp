@@ -511,12 +511,21 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     if (!attr) return hipErrorInvalidValue;
     if (!func) return hipErrorInvalidDeviceFunction;
 
+    const auto it0 = functions().find(reinterpret_cast<uintptr_t>(func));
+
+    if (it0 == functions().cend()) return hipErrorInvalidDeviceFunction;
+
     auto agent = this_agent();
-    const auto it = functions(agent).find(reinterpret_cast<uintptr_t>(func));
+    const auto it1 = find_if(
+        it0->second.cbegin(),
+        it0->second.cend(),
+        [=](const pair<hsa_agent_t, Kernel_descriptor>& x) {
+        return x.first == agent;
+    });
 
-    if (it == functions(agent).cend()) return hipErrorInvalidDeviceFunction;
+    if (it1 == it0->second.cend()) return hipErrorInvalidDeviceFunction;
 
-    const auto header = static_cast<hipFunction_t>(it->second)->_header;
+    const auto header = static_cast<hipFunction_t>(it1->second)->_header;
 
     if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 
