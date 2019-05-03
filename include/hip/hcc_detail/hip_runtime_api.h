@@ -2743,6 +2743,16 @@ agent_globals& get_agent_globals() {
     return ag;
 }
 
+
+extern "C"
+inline
+__attribute__((visibility("hidden")))
+hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                                          const char* name) {
+    return get_agent_globals().read_agent_global_from_process(dptr, bytes, name);
+}
+
+
 } // Namespace hip_impl.
 
 #if defined(__cplusplus)

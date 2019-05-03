@@ -290,7 +290,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 
     if (!name) return hipErrorNotInitialized;
 
-    return hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name);
+    return hip_impl::get_agent_globals().read_agent_global_from_module(dptr, bytes, hmod, name);
 }
 
 namespace hip_impl {
