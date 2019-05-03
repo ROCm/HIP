@@ -162,8 +162,7 @@ void hipLaunchKernelGGLImpl(
     if (it == functions(agent).cend()) {
         hip_throw(std::runtime_error{
             "No device code available for function: " +
-            name(function_address) +
-            ", for agent: " + name(agent)});
+            name(function_address)});
     }
 
     hipModuleLaunchKernel(it->second, numBlocks.x, numBlocks.y, numBlocks.z,
