@@ -57,10 +57,10 @@ template <
     std::size_t n,
     typename... Ts,
     typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
-inline std::vector<std::uint8_t> make_kernarg(
+inline hip_impl::kernarg make_kernarg(
     const std::tuple<Ts...>&,
     const kernargs_size_align&,
-    std::vector<std::uint8_t> kernarg) {
+    hip_impl::kernarg kernarg) {
     return kernarg;
 }
 
@@ -68,10 +68,10 @@ template <
     std::size_t n,
     typename... Ts,
     typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
-inline std::vector<std::uint8_t> make_kernarg(
+inline hip_impl::kernarg make_kernarg(
     const std::tuple<Ts...>& formals,
     const kernargs_size_align& size_align,
-    std::vector<std::uint8_t> kernarg) {
+    hip_impl::kernarg kernarg) {
     using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
 
     static_assert(
@@ -96,7 +96,7 @@ inline std::vector<std::uint8_t> make_kernarg(
 }
 
 template <typename... Formals, typename... Actuals>
-inline std::vector<std::uint8_t> make_kernarg(
+inline hip_impl::kernarg make_kernarg(
     void (*kernel)(Formals...), std::tuple<Actuals...> actuals) {
     static_assert(sizeof...(Formals) == sizeof...(Actuals),
         "The count of formal arguments must match the count of actuals.");
@@ -104,7 +104,7 @@ inline std::vector<std::uint8_t> make_kernarg(
     if (sizeof...(Formals) == 0) return {};
 
     std::tuple<Formals...> to_formals{std::move(actuals)};
-    std::vector<std::uint8_t> kernarg;
+    hip_impl::kernarg kernarg;
     kernarg.reserve(sizeof(to_formals));
 
     auto& ps = hip_impl::get_program_state();
