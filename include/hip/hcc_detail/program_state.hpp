@@ -30,38 +30,11 @@ THE SOFTWARE.
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
-#include <stdexcept>
 
 struct ihipModuleSymbol_t;
 using hipFunction_t = ihipModuleSymbol_t*;
 
-namespace std {
-template<>
-struct hash<hsa_agent_t> {
-    size_t operator()(hsa_agent_t x) const {
-        return hash<decltype(x.handle)>{}(x.handle);
-    }
-};
-
-template<>
-struct hash<hsa_isa_t> {
-    size_t operator()(hsa_isa_t x) const {
-        return hash<decltype(x.handle)>{}(x.handle);
-    }
-};
-}  // namespace std
-
-inline constexpr bool operator==(hsa_agent_t x, hsa_agent_t y) {
-    return x.handle == y.handle;
-}
-inline constexpr bool operator==(hsa_isa_t x, hsa_isa_t y) {
-    return x.handle == y.handle;
-}
-
 namespace hip_impl {
-
-[[noreturn]]
-void hip_throw(const std::exception&);
 
 class kernargs_size_align;
 class program_state_impl;
