@@ -10,6 +10,34 @@
 #include <vector>
 
 namespace hip_impl {
+    
+    kernarg::kernarg() : impl(new kernarg_impl) { 
+    }
+
+    kernarg::kernarg(kernarg&& k) : impl(k.impl) {
+        k.impl = nullptr;
+    }
+
+    kernarg::~kernarg() {
+        if (impl)
+            delete(impl);
+    }
+
+    std::uint8_t* kernarg::data() {
+        return impl->v.data();
+    }
+
+    std::size_t kernarg::size() {
+        return impl->v.size();
+    }
+
+    void kernarg::reserve(std::size_t c) {
+        impl->v.reserve(c);
+    }
+
+    void kernarg::resize(std::size_t c) {
+        impl->v.resize(c);
+    }
 
     std::size_t kernargs_size_align::kernargs_size_align::size(std::size_t n) const{
         return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].first;

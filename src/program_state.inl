@@ -743,4 +743,9 @@ public:
     }
 };  // class program_state_impl
 
+struct kernarg_impl {
+    std::vector<std::uint8_t> v;
+};
+
+
 };

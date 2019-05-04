@@ -36,6 +36,20 @@ using hipFunction_t = ihipModuleSymbol_t*;
 
 namespace hip_impl {
 
+struct kernarg_impl;
+class kernarg {
+public:
+    kernarg();
+    kernarg(kernarg&&);
+    ~kernarg();
+    std::uint8_t* data();
+    std::size_t   size();
+    void reserve(std::size_t);
+    void resize(std::size_t);
+private:
+    kernarg_impl* impl;
+};
+
 class kernargs_size_align;
 class program_state_impl;
 class program_state {
