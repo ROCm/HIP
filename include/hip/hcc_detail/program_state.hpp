@@ -31,9 +31,6 @@ THE SOFTWARE.
 #include <cstdint>
 #include <cstdlib>
 #include <stdexcept>
-#include <string>
-#include <unordered_map>
-#include <vector>
 
 struct ihipModuleSymbol_t;
 using hipFunction_t = ihipModuleSymbol_t*;
@@ -72,6 +69,7 @@ class program_state {
 public:
     program_state();
     ~program_state();
+    program_state(const program_state&) = delete;
 
     hipFunction_t kernel_descriptor(std::uintptr_t,
                                     hsa_agent_t);
@@ -83,12 +81,8 @@ public:
 
     void* global_addr_by_name(const char* name);
 
-    // to fix later
-    const std::vector<hsa_executable_t>& executables(hsa_agent_t agent);
-
-    program_state(const program_state&) = delete;
-
 private:
+    friend class agent_globals_impl;
     program_state_impl* impl;
 };
 

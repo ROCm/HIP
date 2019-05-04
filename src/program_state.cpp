@@ -45,10 +45,6 @@ hsa_executable_t program_state::load_executable(const char* data,
     return impl->load_executable(data, data_size, executable, agent);
 }
 
-const std::vector<hsa_executable_t>& program_state::executables(hsa_agent_t agent) {
-    return impl->get_executables(agent);
-}
-
 hipFunction_t program_state::kernel_descriptor(std::uintptr_t function_address,
                                                           hsa_agent_t agent) {
     auto& kd = impl->kernel_descriptor(function_address, agent);

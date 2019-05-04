@@ -415,7 +415,7 @@ namespace hip_impl {
 
                 std::call_once(globals_from_process[agent].first, [this](hsa_agent_t aa) {
                     std::vector<Agent_global> tmp0;
-                    for (auto&& executable : hip_impl::get_program_state().executables(aa)) {
+                    for (auto&& executable : hip_impl::get_program_state().impl->get_executables(aa)) {
                         auto tmp1 = read_agent_globals(aa, executable);
                         tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
                             make_move_iterator(tmp1.end()));
