@@ -84,12 +84,21 @@ struct is_callable_impl<F(Ts...), 4u, void_t_<decltype(std::declval<F>()(std::de
 // Not callable.
 template <FunctionalProcedure F>
 struct is_callable_impl<F, 5u> : std::false_type {};
-#else
+#elif  (__cplusplus < 201703L)
 template <typename, typename = void>
 struct is_callable_impl : std::false_type {};
 
 template <FunctionalProcedure F, typename... Ts>
 struct is_callable_impl<F(Ts...), void_t_<std::result_of_t<F(Ts...)> > > : std::true_type {};
+#else
+
+// C++17
+
+template <typename, typename = void>
+struct is_callable_impl : std::false_type {};
+
+template <FunctionalProcedure F, typename... Ts>
+struct is_callable_impl<F(Ts...), void_t_<std::invoke_result<F(Ts...)> > > : std::true_type {};
 #endif
 template <typename Call>
 struct is_callable : is_callable_impl<Call> {};
