@@ -24,6 +24,7 @@ THE SOFTWARE.
 #define HIP_EVENT_H
 
 #include "hip_internal.hpp"
+#include "thread/monitor.hpp"
 
 namespace hip {
 
@@ -38,7 +39,7 @@ public:
 
 class Event {
 public:
-  Event(unsigned int flags) : flags(flags), stream_(nullptr), event_(nullptr) {}
+  Event(unsigned int flags) : flags(flags), lock_("hipEvent_t"), stream_(nullptr), event_(nullptr) {}
   ~Event() {
     if (event_ != nullptr) {
       event_->release();
@@ -46,8 +47,19 @@ public:
   }
   unsigned int flags;
 
+  hipError_t query();
+  hipError_t synchronize();
+  hipError_t elapsedTime(Event& stop, float& ms);
+  hipError_t streamWait(hipStream_t stream, uint flags);
+
+  void addMarker(amd::HostQueue* queue, amd::Command* command);
+
+private:
+  amd::Monitor lock_;
   amd::HostQueue* stream_;
   amd::Event* event_;
+
+  bool ready();
 };
 
 };

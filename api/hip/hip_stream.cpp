@@ -192,24 +192,9 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
     HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
-  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
-  cl_event clEvent = as_cl(e->event_);
 
-  amd::Command::EventWaitList eventWaitList;
-  cl_int err = amd::clSetEventWaitList(eventWaitList, *hostQueue, 1, &clEvent);
-  if (err != CL_SUCCESS) {
-    HIP_RETURN(hipErrorUnknown);
-  }
-
-  amd::Command* command = new amd::Marker(*hostQueue, true, eventWaitList);
-  if (command == NULL) {
-    HIP_RETURN(hipErrorOutOfMemory);
-  }
-  command->enqueue();
-  command->release();
-
-  HIP_RETURN(hipSuccess);
+  return HIP_RETURN(e->streamWait(stream, flags));
 }
 
 hipError_t hipStreamQuery(hipStream_t stream) {
