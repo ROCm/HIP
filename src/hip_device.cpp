@@ -531,3 +531,52 @@ hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* prop) {
     }
     return ihipLogStatus(e);
 }
+
+#define HSA_ERROR_CHECK(hsa_error_code) \
+    if ((hsa_error_code != HSA_STATUS_SUCCESS) && (hsa_error_code != HSA_STATUS_INFO_BREAK)) { \
+        return ihipLogStatus(hipErrorRuntimeOther); \
+    }
+
+hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* linktype, uint32_t* hopcount) {
+    HIP_INIT_API(hipExtGetLinkTypeAndHopCount, device1, device2, linktype, hopcount);
+
+    if ((device1 < 0) || (device1 >= g_deviceCnt) || (device2 < 0) || (device2 >= g_deviceCnt)) {
+        return ihipLogStatus(hipErrorInvalidDevice);
+    } else {
+        auto device1Handle = ihipGetDevice(device1);
+        auto device2Handle = ihipGetDevice(device2);
+
+        const auto& find_pool = [](hsa_amd_memory_pool_t pool, void* data) {
+            bool allowed;
+            hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_ALLOWED, &allowed);
+            if (allowed) {
+                hsa_amd_segment_t segment;
+                hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SEGMENT, &segment);
+                if (HSA_AMD_SEGMENT_GLOBAL != segment) return HSA_STATUS_SUCCESS;
+
+                uint32_t flags;
+                hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_GLOBAL_FLAGS, &flags);
+                if (flags & HSA_AMD_MEMORY_POOL_GLOBAL_FLAG_COARSE_GRAINED) {
+                    *((hsa_amd_memory_pool_t*)data) = pool;
+                    return HSA_STATUS_INFO_BREAK;
+                }
+            }
+            return HSA_STATUS_SUCCESS;
+        };
+
+        hsa_status_t err;
+        hsa_amd_memory_pool_t pool;
+        err = hsa_amd_agent_iterate_memory_pools(device2Handle->_hsaAgent, find_pool, (void*)&pool);
+        HSA_ERROR_CHECK(err);
+
+        hsa_amd_memory_pool_link_info_t link_info;
+        err = hsa_amd_agent_memory_pool_get_info(device1Handle->_hsaAgent, pool, HSA_AMD_AGENT_MEMORY_POOL_INFO_LINK_INFO, &link_info);
+        HSA_ERROR_CHECK(err);
+        *linktype = link_info.link_type;
+
+        err = hsa_amd_agent_memory_pool_get_info(device1Handle->_hsaAgent, pool, HSA_AMD_AGENT_MEMORY_POOL_INFO_NUM_LINK_HOPS, hopcount);
+        HSA_ERROR_CHECK(err);
+
+        return ihipLogStatus(hipSuccess);
+    }
+}
