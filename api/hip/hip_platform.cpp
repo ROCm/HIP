@@ -642,9 +642,9 @@ static inline int clamp_int(int i, int l, int h) { return std::min(std::max(i, l
 // half float, the f16 is in the low 16 bits of the input argument
 static inline float __convert_half_to_float(std::uint32_t a) noexcept {
   std::uint32_t u = ((a << 13) + 0x70000000U) & 0x8fffe000U;
-  std::uint32_t v = f32_as_u32(u32_as_f32(u) * 0x1.0p+112f) + 0x38000000U;
+  std::uint32_t v = f32_as_u32(u32_as_f32(u) * u32_as_f32(0x77800000U)/*0x1.0p+112f*/) + 0x38000000U;
   u = (a & 0x7fff) != 0 ? v : u;
-  return u32_as_f32(u) * 0x1.0p-112f;
+  return u32_as_f32(u) * u32_as_f32(0x07800000U)/*0x1.0p-112f*/;
 }
 
 // float half with nearest even rounding
