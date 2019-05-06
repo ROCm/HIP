@@ -48,6 +48,7 @@ global:
     hipEventQuery;
     hipEventRecord;
     hipEventSynchronize;
+    hipExtModuleLaunchKernel;
     hipFree;
     hipFreeArray;
     hipFuncSetCacheConfig;
