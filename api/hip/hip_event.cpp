@@ -24,6 +24,98 @@ THE SOFTWARE.
 
 #include "hip_event.hpp"
 
+namespace hip {
+
+bool Event::ready() {
+  event_->notifyCmdQueue();
+
+  return (event_->status() == CL_COMPLETE);
+}
+
+hipError_t Event::query() {
+  amd::ScopedLock lock(lock_);
+
+  if (event_ == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  return ready() ? hipSuccess : hipErrorNotReady;
+}
+
+hipError_t Event::synchronize() {
+  amd::ScopedLock lock(lock_);
+
+  if (event_ == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  event_->awaitCompletion();
+
+  return hipSuccess;
+}
+
+hipError_t Event::elapsedTime(Event& eStop, float& ms) {
+  amd::ScopedLock startLock(lock_);
+  amd::ScopedLock stopLock(eStop.lock_);
+
+  if (event_ == nullptr ||
+      eStop.event_  == nullptr) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  if ((flags | eStop.flags) & hipEventDisableTiming) {
+    return hipErrorInvalidResourceHandle;
+  }
+
+  if (!ready() || !eStop.ready()) {
+    return hipErrorNotReady;
+  }
+
+  ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().submitted_ -
+                          event_->profilingInfo().submitted_))/1000000.f;
+
+  return hipSuccess;
+}
+
+hipError_t Event::streamWait(hipStream_t stream, uint flags) {
+  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+
+  if (stream_ == hostQueue) return hipSuccess;
+
+  amd::ScopedLock lock(lock_);
+
+  cl_event clEvent = as_cl(event_);
+
+  amd::Command::EventWaitList eventWaitList;
+  cl_int err = amd::clSetEventWaitList(eventWaitList, *hostQueue, 1, &clEvent);
+  if (err != CL_SUCCESS) {
+    return hipErrorUnknown;
+  }
+
+  amd::Command* command = new amd::Marker(*hostQueue, true, eventWaitList);
+  if (command == NULL) {
+    return hipErrorOutOfMemory;
+  }
+  command->enqueue();
+  command->release();
+
+  return hipSuccess;
+}
+
+void Event::addMarker(amd::HostQueue* queue, amd::Command* command) {
+  amd::ScopedLock lock(lock_);
+
+  stream_ = queue;
+
+  if (event_ != nullptr) {
+    event_->release();
+  }
+
+  event_ = &command->event();
+}
+
+}
+
 hipError_t ihipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
   if (event == nullptr) {
     return hipErrorInvalidValue;
@@ -58,13 +150,7 @@ hipError_t ihipEventQuery(hipEvent_t event) {
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
 
-  if (e->event_ == nullptr) {
-    return hipErrorInvalidResourceHandle;
-  }
-
-  e->event_->notifyCmdQueue();
-
-  return (e->event_->status() == CL_COMPLETE) ? hipSuccess : hipErrorNotReady;
+  return e->query();
 }
 
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
@@ -98,31 +184,14 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
     HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 
-  hip::Event* eStart = reinterpret_cast<hip::Event*>(start);
-  hip::Event* eStop  = reinterpret_cast<hip::Event*>(stop);
-
-  if (eStart->event_ == nullptr ||
-      eStop->event_  == nullptr) {
-    HIP_RETURN(hipErrorInvalidResourceHandle);
-  }
-
-  if ((eStart->flags | eStop->flags) & hipEventDisableTiming) {
-    HIP_RETURN(hipErrorInvalidResourceHandle);
-  }
-
-  if (ihipEventQuery(start) == hipErrorNotReady ||
-      ihipEventQuery(stop) == hipErrorNotReady) {
-    HIP_RETURN(hipErrorNotReady);
-  }
-
   if (ms == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *ms = static_cast<float>(static_cast<int64_t>(eStop->event_->profilingInfo().submitted_ -
-                           eStart->event_->profilingInfo().submitted_))/1000000.f;
+  hip::Event* eStart = reinterpret_cast<hip::Event*>(start);
+  hip::Event* eStop  = reinterpret_cast<hip::Event*>(stop);
 
-  HIP_RETURN(hipSuccess);
+  return HIP_RETURN(eStart->elapsedTime(*eStop, *ms));
 }
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
@@ -134,24 +203,21 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
 
+  amd::HostQueue* queue;
   if (stream == nullptr) {
-    e->stream_ = hip::getNullStream();
+    queue = hip::getNullStream();
   } else {
-    e->stream_ = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+    queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
 
-  amd::Command* command = e->stream_->getLastQueuedCommand(true);
+  amd::Command* command = queue->getLastQueuedCommand(true);
 
   if (command == nullptr) {
-    command = new amd::Marker(*e->stream_, true);
+    command = new amd::Marker(*queue, true);
     command->enqueue();
   }
 
-  if (e->event_ != nullptr) {
-    e->event_->release();
-  }
-
-  e->event_ = &command->event();
+  e->addMarker(queue, command);
 
   HIP_RETURN(hipSuccess);
 }
@@ -165,13 +231,7 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
 
-  if (e->event_ == nullptr) {
-    HIP_RETURN(hipErrorInvalidResourceHandle);
-  }
-
-  e->event_->awaitCompletion();
-
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(e->synchronize());
 }
 
 hipError_t hipEventQuery(hipEvent_t event) {

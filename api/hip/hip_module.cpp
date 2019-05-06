@@ -219,15 +219,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   }
 
   if(startEvent != nullptr) {
-    eStart->stream_ = queue;
-    amd::Command* startCommand = new hip::TimerMarker(*eStart->stream_);
+    amd::Command* startCommand = new hip::TimerMarker(*queue);
     startCommand->enqueue();
-
-    if (eStart->event_ != nullptr) {
-      eStart->event_->release();
-    }
-
-    eStart->event_ = &startCommand->event();
+    eStart->addMarker(queue, startCommand);
   }
 
   amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(*queue, waitList, *kernel, ndrange, sharedMemBytes);
@@ -244,11 +238,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   command->enqueue();
 
   if(stopEvent != nullptr) {
-    if (eStop->event_ != nullptr) {
-      eStop->event_->release();
-    }
-    eStop->stream_ = queue;
-    eStop->event_ = &command->event();
+    eStop->addMarker(queue, command);
     command->retain();
   }
 
