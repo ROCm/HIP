@@ -103,7 +103,7 @@ __device__ static inline unsigned int __bitinsert_u32(unsigned int src0, unsigne
 __device__ static inline uint64_t __bitinsert_u64(uint64_t src0, uint64_t src1, unsigned int src2, unsigned int src3) {
     uint64_t offset = src2 & 63;
     uint64_t width = src3 & 63;
-    uint64_t mask = (1 << width) - 1;
+    uint64_t mask = (1ULL << width) - 1;
     return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
 }
 
@@ -736,13 +736,21 @@ int __any(int predicate) {
 __device__
 inline
 unsigned long long int __ballot(int predicate) {
+#if defined(__HCC__)
     return __llvm_amdgcn_icmp_i32(predicate, 0, ICMP_NE);
+#else
+     return __builtin_amdgcn_uicmp(predicate, 0, ICMP_NE);
+#endif
 }
 
 __device__
 inline
 unsigned long long int __ballot64(int predicate) {
+#if defined(__HCC__)
     return __llvm_amdgcn_icmp_i32(predicate, 0, ICMP_NE);
+#else
+     return __builtin_amdgcn_uicmp(predicate, 0, ICMP_NE);
+#endif
 }
 
 // hip.amdgcn.bc - lanemask
@@ -753,7 +761,7 @@ int64_t  __lanemask_gt()
     int32_t activelane = __ockl_activelane_u32();
     int64_t ballot = __ballot64(1);
     if (activelane != 63) {
-        int64_t tmp = (~0UL) << (activelane + 1);
+        int64_t tmp = (~0ULL) << (activelane + 1);
         return tmp & ballot;
     }
     return 0;

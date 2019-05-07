@@ -117,7 +117,7 @@ __hip_as_write_block(__ockl_as_stream_t *stream, uchar service_id,
                      uchar flags)
 {
     __ockl_as_stream_t ATTR_GLOBAL *gstream =
-        reinterpret_cast<__ockl_as_stream_t ATTR_GLOBAL *>(stream);
+        (__ockl_as_stream_t ATTR_GLOBAL *)(stream);
     return __ockl_as_write_block(gstream, service_id, connection_id, str, len,
                                  flags);
 }

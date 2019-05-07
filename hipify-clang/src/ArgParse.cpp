@@ -34,6 +34,21 @@ cl::opt<std::string> OutputDir("o-dir",
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt <bool> GeneratePerl("perl",
+  cl::desc("Generate hipify-perl"),
+  cl::value_desc("perl"),
+  cl::cat(ToolTemplateCategory));
+
+cl::opt<std::string> OutputPerlMapFilename("o-perl-map",
+  cl::desc("Output filename for Perl map"),
+  cl::value_desc("filename"),
+  cl::cat(ToolTemplateCategory));
+
+cl::opt<std::string> OutputPerlMapDir("o-perl-map-dir",
+  cl::desc("Output direcory for Perl map"),
+  cl::value_desc("directory"),
+  cl::cat(ToolTemplateCategory));
+
 cl::opt<std::string> TemporaryDir("temp-dir",
   cl::desc("Temporary direcory"),
   cl::value_desc("directory"),
