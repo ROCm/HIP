@@ -191,7 +191,7 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
     $HIPLDFLAGS .= " -L$HIP_LIB_PATH";
     if (not $isWindows) {
-      $HIPLDFLAGS .= " -Wl,--rpath=$HIP_LIB_PATH";
+      $HIPLDFLAGS .= " -Wl,--rpath-link=$HIP_LIB_PATH";
       $HIPLDFLAGS .= " -lhip_hcc";
     } else {
       $HIPLDFLAGS .= " -lamdhip64";
