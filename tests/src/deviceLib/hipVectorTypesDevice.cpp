@@ -37,9 +37,12 @@ THE SOFTWARE.
 
 using namespace std;
 
+template <class T> __device__
+typename std::add_rvalue_reference<T>::type _declval() noexcept;
+
 template<
     typename V,
-    Enable_if_t<!is_integral<decltype(declval<V>().x)>{}>* = nullptr>
+    Enable_if_t<!is_integral<decltype(_declval<V>().x)>{}>* = nullptr>
 __device__
 constexpr
 bool integer_unary_tests(const V&, const V&) {
@@ -48,7 +51,7 @@ bool integer_unary_tests(const V&, const V&) {
 
 template<
     typename V,
-    Enable_if_t<is_integral<decltype(declval<V>().x)>{}>* = nullptr>
+    Enable_if_t<is_integral<decltype(_declval<V>().x)>{}>* = nullptr>
 __device__
 bool integer_unary_tests(V& f1, V& f2) {
     f1 %= f2;
@@ -73,7 +76,7 @@ bool integer_unary_tests(V& f1, V& f2) {
 
 template<
     typename V,
-    Enable_if_t<!is_integral<decltype(declval<V>().x)>{}>* = nullptr>
+    Enable_if_t<!is_integral<decltype(_declval<V>().x)>{}>* = nullptr>
 __device__
 constexpr
 bool integer_binary_tests(const V&, const V&, const V&) {
@@ -82,7 +85,7 @@ bool integer_binary_tests(const V&, const V&, const V&) {
 
 template<
     typename V,
-    Enable_if_t<is_integral<decltype(declval<V>().x)>{}>* = nullptr>
+    Enable_if_t<is_integral<decltype(_declval<V>().x)>{}>* = nullptr>
 __device__
 bool integer_binary_tests(V& f1, V& f2, V& f3) {
     f3 = f1 % f2;
