@@ -64,13 +64,9 @@ int main()
                         "saxpy.cu", // name
                         0,          // numHeaders
                         nullptr,    // headers
-                        nullptr);  // includeNames
+                        nullptr);   // includeNames
 
-    static const char* opts[]{"--gpu-architecture=gfx900"};
-
-    hiprtcResult compileResult{hiprtcCompileProgram(prog,
-                                                    sizeof(opts) / sizeof(opts[0]),
-                                                    opts)};
+    hiprtcResult compileResult{hiprtcCompileProgram(prog, 0, nullptr)};
 
     size_t logSize;
     hiprtcGetProgramLogSize(prog, &logSize);
