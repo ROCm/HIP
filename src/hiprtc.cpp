@@ -27,6 +27,8 @@ THE SOFTWARE.
 
 #include "../lpl_ca/pstreams/pstream.h"
 
+#include <hsa/hsa.h>
+
 #include <cxxabi.h>
 
 #include <algorithm>
@@ -170,17 +172,21 @@ struct _hiprtcProgram {
     bool compile(const std::vector<std::string>& args,
                  const std::experimental::filesystem::path& program_folder)
     {
+        using namespace redi;
         using namespace std;
 
-        redi::pstream compile{args.front(), args};
+        ipstream compile{args.front(), args, pstreambuf::pstderr};
+
+        constexpr const auto tmp_size{1024u};
+        char tmp[tmp_size]{};
+        while (!compile.eof()) {
+            log.append(tmp, tmp + compile.readsome(tmp, tmp_size));
+        }
 
         compile.close();
 
-        ostringstream{log} << compile.rdbuf();
-
-        if (compile.rdbuf()->status() != EXIT_SUCCESS) return false;
-
-        cerr << log << endl;
+        if (compile.rdbuf()->exited() &&
+            compile.rdbuf()->status() != EXIT_SUCCESS) return false;
 
         ifstream in{args.back()};
         elf.resize(experimental::filesystem::file_size(args.back()));
@@ -364,7 +370,45 @@ namespace hip_impl
 
 namespace
 {
-    constexpr const char defaultTarget[]{"--targets=gfx900"};
+    const std::string& defaultTarget()
+    {
+        using namespace std;
+
+        static string r{"gfx900"};
+        static once_flag f{};
+
+        call_once(f, []() {
+            static hsa_agent_t a{};
+            hsa_iterate_agents([](hsa_agent_t x, void*) {
+                hsa_device_type_t t{};
+                hsa_agent_get_info(x, HSA_AGENT_INFO_DEVICE, &t);
+
+                if (t != HSA_DEVICE_TYPE_GPU) return HSA_STATUS_SUCCESS;
+
+                a = x;
+
+                return HSA_STATUS_INFO_BREAK;
+            }, nullptr);
+
+            if (!a.handle) return;
+
+            hsa_agent_iterate_isas(a, [](hsa_isa_t x, void*){
+                uint32_t n{};
+                hsa_isa_get_info_alt(x, HSA_ISA_INFO_NAME_LENGTH, &n);
+
+                if (n == 0) return HSA_STATUS_SUCCESS;
+
+                r.resize(n);
+                hsa_isa_get_info_alt(x, HSA_ISA_INFO_NAME, &r[0]);
+
+                r.erase(0, r.find("gfx"));
+
+                return HSA_STATUS_INFO_BREAK;
+            }, nullptr);
+        });
+
+        return r;
+    }
 
     inline
     void handleTarget(std::vector<std::string>& args)
@@ -384,7 +428,7 @@ namespace
 
             break;
         }
-        if (!hasTarget) args.emplace_back(defaultTarget);
+        if (!hasTarget) args.push_back("--targets=" + defaultTarget());
     }
 } // Unnamed namespace.
 
@@ -490,7 +534,7 @@ hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram p, std::size_t* sz)
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
     if (!p->compiled) return HIPRTC_ERROR_INVALID_PROGRAM;
 
-    *sz = p->log.size() + 1;
+    *sz = p->log.empty() ? 0 : p->log.size() + 1;
 
     return HIPRTC_SUCCESS;
 }
