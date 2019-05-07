@@ -1591,63 +1591,19 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    stream = ihipSyncAndResolveStream(stream);
-    lp->grid_dim.x = grid;
-    lp->grid_dim.y = 1;
-    lp->grid_dim.z = 1;
-    lp->group_dim.x = block.x;
-    lp->group_dim.y = block.y;
-    lp->group_dim.z = block.z;
-    lp->barrier_bit = barrier_bit_queue_default;
-    lp->launch_fence = -1;
-
-    auto crit = stream->lockopen_preKernelCommand();
-    lp->av = &(crit->_av);
-    lp->cf = nullptr;
-    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
-    return (stream);
+    return ihipPreLaunchKernel(stream, dim3(grid), block, lp, kernelNameStr);
 }
 
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    stream = ihipSyncAndResolveStream(stream);
-    lp->grid_dim.x = grid.x;
-    lp->grid_dim.y = grid.y;
-    lp->grid_dim.z = grid.z;
-    lp->group_dim.x = block;
-    lp->group_dim.y = 1;
-    lp->group_dim.z = 1;
-    lp->barrier_bit = barrier_bit_queue_default;
-    lp->launch_fence = -1;
-
-    auto crit = stream->lockopen_preKernelCommand();
-    lp->av = &(crit->_av);
-    lp->cf = nullptr;
-    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
-    return (stream);
+    return ihipPreLaunchKernel(stream, grid, dim3(block), lp, kernelNameStr);
 }
 
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    stream = ihipSyncAndResolveStream(stream);
-    lp->grid_dim.x = grid;
-    lp->grid_dim.y = 1;
-    lp->grid_dim.z = 1;
-    lp->group_dim.x = block;
-    lp->group_dim.y = 1;
-    lp->group_dim.z = 1;
-    lp->barrier_bit = barrier_bit_queue_default;
-    lp->launch_fence = -1;
-
-    auto crit = stream->lockopen_preKernelCommand();
-    lp->av = &(crit->_av);
-    lp->cf = nullptr;
-
-
-    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
-    return (stream);
+    return ihipPreLaunchKernel(stream, dim3(grid), dim3(block), lp, kernelNameStr);
 }
 
 
