@@ -542,6 +542,20 @@ hipError_t hipSetDeviceFlags(unsigned flags);
  */
 hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* prop);
 
+/**
+ * @brief Returns the link type and hop count between two devices
+ *
+ * @param [in] device1 Ordinal for device1
+ * @param [in] device2 Ordinal for device2
+ * @param [out] linktype Returns the link type (See hsa_amd_link_info_type_t) between the two devices
+ * @param [out] hopcount Returns the hop count between the two devices
+ *
+ * Queries and returns the HSA link type and the hop count between the two specified devices.
+ *
+ * @returns #hipSuccess, #hipInvalidDevice, #hipErrorRuntimeOther
+ */
+hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* linktype, uint32_t* hopcount);
+
 // end doxygen Device
 /**
  * @}
