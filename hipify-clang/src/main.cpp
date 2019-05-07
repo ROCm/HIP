@@ -93,6 +93,57 @@ std::string getAbsoluteDirectoryPath(const std::string& sDir, std::error_code& E
   return dirAbsPath.c_str();
 }
 
+bool generatePerl(bool Generate = true) {
+  if (!Generate) {
+    return true;
+  }
+  std::string dstPerlMap = OutputPerlMapFilename, dstPerlMapDir = OutputPerlMapDir;
+  if (dstPerlMap.empty()) {
+    dstPerlMap = "hipify-perl-map";
+  }
+  std::error_code EC;
+  if (!dstPerlMapDir.empty()) {
+    std::string sOutputPerlMapDirAbsPath = getAbsoluteDirectoryPath(OutputPerlMapDir, EC, "output hipify-perl map");
+    if (EC) {
+      return false;
+    }
+    dstPerlMap = sOutputPerlMapDirAbsPath + "/" + dstPerlMap;
+  }
+  SmallString<128> tmpFile;
+  StringRef ext = "hipify-tmp";
+  EC = sys::fs::createTemporaryFile(dstPerlMap, ext, tmpFile);
+  if (EC) {
+    llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << tmpFile << "\n";
+    return false;
+  }
+  std::unique_ptr<std::ostream> perlStreamPtr = std::unique_ptr<std::ostream>(new std::ofstream(tmpFile.c_str(), std::ios_base::trunc));
+  std::string sConv = "my $conversions = ";
+  *perlStreamPtr.get() << "@statNames = (";
+  for (int i = 0; i < NUM_CONV_TYPES - 1; i++) {
+    *perlStreamPtr.get() << "\"" << counterNames[i] << "\", ";
+    sConv += "$ft{'" + std::string(counterNames[i]) + "'} + ";
+  }
+  *perlStreamPtr.get() << "\"" << counterNames[NUM_CONV_TYPES - 1] << "\");\n\n";
+  *perlStreamPtr.get() << sConv << "$ft{'" << counterNames[NUM_CONV_TYPES - 1] << "'};\n\n";
+  for (auto& ma : CUDA_RENAMES_MAP()) {
+    if (Statistics::isUnsupported(ma.second)) {
+      continue;
+    }
+    *perlStreamPtr.get() << "$ft{'" + std::string(counterNames[ma.second.type]) + "'} += s/\\b" + std::string(ma.first) + "\\b/" + std::string(ma.second.hipName) + "/g;\n";
+  }
+  perlStreamPtr.get()->flush();
+  bool ret = true;
+  EC = sys::fs::copy_file(tmpFile, dstPerlMap);
+  if (EC) {
+    llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << tmpFile << " to " << dstPerlMap << "\n";
+    ret = false;
+  }
+  if (!SaveTemps) {
+    sys::fs::remove(tmpFile);
+  }
+  return ret;
+}
+
 int main(int argc, const char **argv) {
   std::vector<const char*> new_argv(argv, argv + argc);
   if (std::find(new_argv.begin(), new_argv.end(), std::string("--")) == new_argv.end()) {
@@ -102,8 +153,19 @@ int main(int argc, const char **argv) {
     argc++;
   }
   llcompat::PrintStackTraceOnErrorSignal();
-  ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::OneOrMore);
+  ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::Optional);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
+  if (fileSources.empty() && !GeneratePerl) {
+    llvm::errs() << "\n" << sHipify << sError << "Must specify at least 1 positional argument for source file." << "\n";
+    return 1;
+  }
+  if (!generatePerl(GeneratePerl)) {
+    llvm::errs() << "\n" << sHipify << sError << "hipify-perl generating failed." << "\n";
+    return 1;
+  }
+  if (fileSources.empty()) {
+    return 0;
+  }
   std::string dst = OutputFilename, dstDir = OutputDir;
   std::error_code EC;
   std::string sOutputDirAbsPath = getAbsoluteDirectoryPath(OutputDir, EC, "output");
