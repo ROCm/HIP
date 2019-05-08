@@ -39,6 +39,11 @@ cl::opt <bool> GeneratePerl("perl",
   cl::value_desc("perl"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt <bool> GeneratePython("python",
+  cl::desc("Generate hipify-python"),
+  cl::value_desc("python"),
+  cl::cat(ToolTemplateCategory));
+
 cl::opt<std::string> OutputPerlMapFilename("o-perl-map",
   cl::desc("Output filename for Perl map"),
   cl::value_desc("filename"),
@@ -46,6 +51,11 @@ cl::opt<std::string> OutputPerlMapFilename("o-perl-map",
 
 cl::opt<std::string> OutputPerlMapDir("o-perl-map-dir",
   cl::desc("Output direcory for Perl map"),
+  cl::value_desc("directory"),
+  cl::cat(ToolTemplateCategory));
+
+cl::opt<std::string> OutputPythonMapDir("o-python-map-dir",
+  cl::desc("Output direcory for Python map"),
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
