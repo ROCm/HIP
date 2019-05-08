@@ -16,3 +16,5 @@ bin/hipify-clang
 include/hip/hcc_detail/hip_prof_str.h
 
 samples/1_Utils/hipInfo/hipInfo
+install
+.vscode
