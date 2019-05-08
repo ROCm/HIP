@@ -125,11 +125,26 @@ bool generatePerl(bool Generate = true) {
   }
   *perlStreamPtr.get() << "\"" << counterNames[NUM_CONV_TYPES - 1] << "\");\n\n";
   *perlStreamPtr.get() << sConv << "$ft{'" << counterNames[NUM_CONV_TYPES - 1] << "'};\n\n";
-  for (auto& ma : CUDA_RENAMES_MAP()) {
-    if (Statistics::isUnsupported(ma.second)) {
-      continue;
+  for (int i = 0; i < NUM_CONV_TYPES; i++) {
+    if (i == CONV_INCLUDE_CUDA_MAIN_H || i == CONV_INCLUDE) {
+      for (auto& ma : CUDA_INCLUDE_MAP) {
+        if (Statistics::isUnsupported(ma.second)) {
+          continue;
+        }
+        if (i == ma.second.type) {
+          *perlStreamPtr.get() << "$ft{'" + std::string(counterNames[ma.second.type]) + "'} += s/\\b" + std::string(ma.first) + "\\b/" + std::string(ma.second.hipName) + "/g;\n";
+        }
+      }
+    } else {
+      for (auto& ma : CUDA_RENAMES_MAP()) {
+        if (Statistics::isUnsupported(ma.second)) {
+          continue;
+        }
+        if (i == ma.second.type) {
+          *perlStreamPtr.get() << "$ft{'" + std::string(counterNames[ma.second.type]) + "'} += s/\\b" + std::string(ma.first) + "\\b/" + std::string(ma.second.hipName) + "/g;\n";
+        }
+      }
     }
-    *perlStreamPtr.get() << "$ft{'" + std::string(counterNames[ma.second.type]) + "'} += s/\\b" + std::string(ma.first) + "\\b/" + std::string(ma.second.hipName) + "/g;\n";
   }
   perlStreamPtr.get()->flush();
   bool ret = true;
