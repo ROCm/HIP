@@ -65,6 +65,45 @@ const char *counterNames[NUM_CONV_TYPES] = {
   "define" // CONV_DEFINE
 };
 
+const char *counterTypes[NUM_CONV_TYPES] = {
+  "CONV_ERROR",
+  "CONV_INIT",
+  "CONV_VERSION",
+  "CONV_DEVICE",
+  "CONV_CONTEXT",
+  "CONV_MODULE",
+  "CONV_MEMORY",
+  "CONV_ADDRESSING",
+  "CONV_STREAM",
+  "CONV_EVENT",
+  "CONV_EXT_RES",
+  "CONV_STREAM_MEMORY",
+  "CONV_EXECUTION",
+  "CONV_GRAPH",
+  "CONV_OCCUPANCY",
+  "CONV_TEXTURE",
+  "CONV_SURFACE",
+  "CONV_PEER",
+  "CONV_GRAPHICS",
+  "CONV_PROFILER",
+  "CONV_OPENGL",
+  "CONV_D3D9",
+  "CONV_D3D10",
+  "CONV_D3D11",
+  "CONV_VDPAU",
+  "CONV_EGL",
+  "CONV_THREAD",
+  "CONV_COMPLEX",
+  "CONV_LIB_FUNC",
+  "CONV_LIB_DEVICE_FUNC",
+  "CONV_INCLUDE",
+  "CONV_INCLUDE_CUDA_MAIN_H",
+  "CONV_TYPE",
+  "CONV_LITERAL",
+  "CONV_NUMERIC_LITERAL",
+  "CONV_DEFINE"
+};
+
 const char *apiNames[NUM_API_TYPES] = {
   "CUDA Driver API",
   "CUDA RT API",
@@ -75,6 +114,18 @@ const char *apiNames[NUM_API_TYPES] = {
   "cuFFT API",
   "cuSPARSE API",
   "CAFFE2 API"
+};
+
+const char *apiTypes[NUM_API_TYPES] = {
+  "API_DRIVER",
+  "API_RUNTIME",
+  "API_COMPLEX",
+  "API_BLAS",
+  "API_RAND",
+  "API_DNN",
+  "API_FFT",
+  "API_SPARSE",
+  "API_CAFFE2"
 };
 
 namespace {
