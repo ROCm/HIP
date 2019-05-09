@@ -141,7 +141,6 @@ int main()
     hipFree(dOut);
 
     hipModuleUnload(module);
-    hiprtcDestroyProgram(&prog);
 
     passed();
 }
