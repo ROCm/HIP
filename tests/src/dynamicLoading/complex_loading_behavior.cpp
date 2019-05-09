@@ -20,13 +20,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/**
- * Build the test:
- * hipcc complex_loading_behavior.cpp -o libfoo.so -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY
- * hipcc complex_loading_behavior.cpp -o complex_loading_behavior -ldl
- *
- * Run the test:
- * ./complex_loading_behavior
+/* HIT_START
+ * BUILD_CMD: libfoo %hc %S/%s -o libfoo.so -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY
+ * BUILD_CMD: %t %hc %S/%s -o %T/%t -ldl
+ * TEST: %t
+ * HIT_END
  */
 
 #if !defined(TEST_SHARED_LIBRARY)
@@ -93,8 +91,7 @@ int launch_local_kernel() {
     free(B_h);
     free(C_h);
 
-    std::cout << "local launch succedded\n";
-
+    std::cout << "PASSED!\n";
     return 0;
 }
 
