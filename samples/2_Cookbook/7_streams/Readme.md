@@ -23,22 +23,28 @@ In this tutorial, we'll use both instances of shared memory (i.e., static and dy
 `  hipStream_t streams[num_streams];                                             `
 
 and create stream using `hipStreamCreate` as follows:
-`  for(int i=0;i<num_streams;i++)                                                `
-`  hipStreamCreate(&streams[i]);                                                 `
+```
+for(int i=0;i<num_streams;i++)
+	hipStreamCreate(&streams[i]);
+```
 
 and while kernel launch, we make the following changes in 5th parameter to hipLaunchKernelGGL(having 0 as the default stream value):
 
-`  hipLaunchKernelGGL(matrixTranspose_static_shared,                             `
+```
+ hipLaunchKernelGGL(matrixTranspose_static_shared,
                     dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                     0, streams[0],
                     gpuTransposeMatrix[0], data[0], width);
+```
 
-`  hipLaunchKernelGGL(matrixTranspose_dynamic_shared,                            `
+```
+ hipLaunchKernelGGL(matrixTranspose_dynamic_shared,
                     dim3(WIDTH/THREADS_PER_BLOCK_X, WIDTH/THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
                     sizeof(float)*WIDTH*WIDTH, streams[1],
                     gpuTransposeMatrix[1], data[1], width);
+```
 
 here we replaced 4th parameter with amount of additional shared memory to allocate when launching the kernel.
 
