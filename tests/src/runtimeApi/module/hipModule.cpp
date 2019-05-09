@@ -57,20 +57,19 @@ int main() {
     hipFunction_t Function;
     HIPCHECK(hipModuleLoad(&Module, fileName));
     HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    hipFunction_t f;
-    HIPCHECK(hipModuleGetFunction(&f, Module, kernel_name));
-    assert(f == Function);
     hipStream_t stream;
     HIPCHECK(hipStreamCreate(&stream));
-    void* args[2] = {&Ad, &Bd};
 
-    std::vector<void*> argBuffer(5);
-    memcpy(&argBuffer[3], &Ad, sizeof(void*));
-    memcpy(&argBuffer[4], &Bd, sizeof(void*));
+    struct {
+        int    launchParm;
+        float *src;
+        float *dst;
+    } args;
 
-    size_t size = argBuffer.size() * sizeof(void*);
+    args = { 0, Ad, Bd };
+    size_t size = sizeof(args);
 
-    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &argBuffer[0], HIP_LAUNCH_PARAM_BUFFER_SIZE,
+    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE,
                       &size, HIP_LAUNCH_PARAM_END};
 
     hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config);
@@ -83,12 +82,6 @@ int main() {
         assert(A[i] == B[i]);
     }
 
-    std::vector<hipFunction_t> vec(1024 * 1024 * 64);
-    for (unsigned i = 0; i < 1024 * 1024 * 64; i++) {
-        hipFunction_t func;
-        hipModuleGetFunction(&func, Module, kernel_name);
-        vec[i] = func;
-    }
     passed();
     return 0;
 }
