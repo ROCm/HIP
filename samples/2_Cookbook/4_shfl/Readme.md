@@ -6,18 +6,18 @@ In this tutorial, we'll explain how to use the warp shfl operations to improve t
 
 Let's talk about Warp first. The kernel code is executed in groups of fixed number of threads known as Warp. For nvidia WarpSize is 32 while for AMD, 32 for Polaris architecture and 64 for rest. Threads in a warp are referred to as lanes and are numbered from 0 to warpSize -1. With the help of shfl ops, we can directly exchange values of variable between threads without using any memory ops within a warp. There are four types of shfl ops:
 ```
-   int   __shfl      (int var,   int srcLane, int width=warpSize);              
-   float __shfl      (float var, int srcLane, int width=warpSize);             
-   int   __shfl_up   (int var,   unsigned int delta, int width=warpSize);       
-   float __shfl_up   (float var, unsigned int delta, int width=warpSize);       
-   int   __shfl_down (int var,   unsigned int delta, int width=warpSize);       
-   float __shfl_down (float var, unsigned int delta, int width=warpSize);       
-   int   __shfl_xor  (int var,   int laneMask, int width=warpSize)              
-   float __shfl_xor  (float var, int laneMask, int width=warpSize);             
+   int   __shfl      (int var,   int srcLane, int width=warpSize);
+   float __shfl      (float var, int srcLane, int width=warpSize);
+   int   __shfl_up   (int var,   unsigned int delta, int width=warpSize);
+   float __shfl_up   (float var, unsigned int delta, int width=warpSize);
+   int   __shfl_down (int var,   unsigned int delta, int width=warpSize);
+   float __shfl_down (float var, unsigned int delta, int width=warpSize);
+   int   __shfl_xor  (int var,   int laneMask, int width=warpSize)
+   float __shfl_xor  (float var, int laneMask, int width=warpSize);
 ```
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md)
 
 ## prerequiste knowledge:
 

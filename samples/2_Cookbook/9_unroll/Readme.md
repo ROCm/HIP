@@ -22,11 +22,11 @@ In this tutorial, we'll use `#pragma unroll`. In the same sourcecode, we used fo
 
 ```
 #pragma unroll
-    for(int i=0;i<width;i++)
-    {
-        for(int j=0;j<width;j++)
-            out[i*width + j] = __shfl(val,j*width + i);
-    }
+	for(int i=0;i<width;i++)
+	{
+		for(int j=0;j<width;j++)
+			out[i*width + j] = __shfl(val,j*width + i);
+	}
 ```
 
 Specifying the optional parameter, #pragma unroll value, directs the unroller to unroll the loop value times. Be careful while using it.
