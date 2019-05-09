@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD_CMD: vcpy_kernel.code %hc --genco %S/vcpy_kernel.cpp -o vcpy_kernel.code
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
  */
@@ -66,12 +66,11 @@ int main() {
 
     HIPCHECK(hipMalloc((void**)&Ad, SIZE));
     HIPCHECK(hipMalloc((void**)&Bd, SIZE));
-    HIPCHECK(hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice));
-    HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
+    HIPCHECK(hipMemcpyHtoD(Ad, A, SIZE));
+    HIPCHECK(hipMemcpyHtoD(Bd, B, SIZE));
 
     hipModule_t Module;
     hipFunction_t Function;
-    hipFunction_t f;
     HIPCHECK(hipModuleLoad(&Module, fileName));
     HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
@@ -92,7 +91,7 @@ int main() {
 
     HIPCHECK(hipStreamDestroy(stream));
 
-    HIPCHECK(hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpyDtoH(B, Bd, SIZE));
 
     for (uint32_t i = 0; i < LEN; i++) {
         assert(A[i] == B[i]);
