@@ -57,6 +57,20 @@ NVCC_OPTIONS: All options specified after this delimiter are passed to hipcc on 
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms.
 
 
+#### BUILD_CMD command
+
+The supported syntax for the BUILD_CMD command is:
+```
+BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all>
+```
+%s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
+%t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
+%hc: refers to hipcc pointed to by $CMAKE_INSTALL_PREFIX/bin/hipcc.
+%cc: refers to system c compiler pointed to by $CC.
+%S: refers to path to current source file.
+%T: refers to path to current build target.
+
+
 #### TEST command
 
 The supported syntax for the TEST command is:

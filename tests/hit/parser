@@ -4,16 +4,21 @@ use 5.006; use v5.10.1;
 use File::Basename;
 use File::Spec;
 
+my $patBUILD = "^".quotemeta(" * BUILD:");
+my $patTEST = "^".quotemeta(" * TEST:");
+my $patTEST_NAMED = "^".quotemeta(" * TEST_NAMED:");
+my $patBUILD_CMD = "^".quotemeta(" * BUILD_CMD:");
+
 # Scan input file for HIT information
 sub parse_file {
     my $file = shift;
     (my $exe = $file) =~ s/\.[^.]+$//g;
-    my (@buildCMDs, @testCMDs, @testNamedCMDs);
+    my (@buildCMDs, @testCMDs, @testNamedCMDs, @customBuildCMDs);
     if (open (SOURCE, '<:encoding(UTF-8)', "$file")) {
         while (<SOURCE>) {
             my $line=$_;
             # Look for BUILD instructions
-            if ($line =~ /^ \* BUILD:/) {
+            if ($line =~ /$patBUILD/) {
                 $line =~ s/^ \* BUILD: //g;     # Remove " * BUILD: "
                 $line =~ s/%s/$file/g;          # Substitute %s -> filename
                 $line =~ s/%t/$exe/g;           # Substitute %t -> targetname
@@ -21,7 +26,7 @@ sub parse_file {
                 push @buildCMDs, $line;
             }
             # Look for TEST instructions
-            if ($line =~ /^ \* TEST:/) {
+            if ($line =~ /$patTEST/) {
                 $line =~ s/^ \* TEST: //g;      # Remove " * TEST: "
                 $line =~ s/%s/$file/g;          # Substitute %s -> filename
                 $line =~ s/%t/$exe/g;           # Subsitute %t -> targetname
@@ -29,17 +34,27 @@ sub parse_file {
                 push @testCMDs, $line;
             }
             # Look for TEST_NAMED instructions
-            if ($line =~ /^ \* TEST_NAMED:/) {
+            if ($line =~ /$patTEST_NAMED/) {
                 $line =~ s/^ \* TEST_NAMED: //g;# Remove " * TEST_NAMED: "
                 $line =~ s/%s/$file/g;          # Substitute %s -> filename
                 $line =~ s/%t/$exe/g;           # Subsitute %t -> targetname
                 $line =~ s/\R//g;               # Remove line endings
                 push @testNamedCMDs, $line;
             }
+            # Look for BUILD_CMD instructions
+            if ($line =~ /$patBUILD_CMD/) {
+                $line =~ s/^ \* BUILD_CMD: //g; # Remove " * BUILD_CMD: "
+                $line =~ s/%s/$file/g;          # Substitute %s -> filename
+                $line =~ s/%t/$exe/g;           # Substitute %t -> targetname
+                # Substitute %hc -> /path/to/hipcc and %cc -> /path/to/cc happens in cmake
+                # Substitute %S -> src dir and %T -> target build dir happens in cmake
+                $line =~ s/\R//g;               # Remove line endings
+                push @customBuildCMDs, $line;
+            }
         }
         close(SOURCE);
     }
-    return (\@buildCMDs, \@testCMDs, \@testNamedCMDs);
+    return (\@buildCMDs, \@testCMDs, \@testNamedCMDs, \@customBuildCMDs);
 }
 
 # Exit if no arguments specified
@@ -53,8 +68,9 @@ my @options = ();
 my $retBuildCMDs = 0;
 my $retTestCMDs = 0;
 my $retTestNamedCMDs = 0;
+my $retCustomBuildCMDs = 0;
 foreach $arg (@ARGV) {
-    if ($retBuildCMDs or $retTestCMDs or $retTestNamedCMDs) {
+    if ($retBuildCMDs or $retTestCMDs or $retTestNamedCMDs or $retCustomBuildCMDs) {
         push (@options, $arg);
     }
     if ($arg eq '--buildCMDs') {
@@ -66,18 +82,21 @@ foreach $arg (@ARGV) {
     if ($arg eq '--testNamedCMDs') {
         $retTestNamedCMDs = 1;
     }
+    if ($arg eq '--customBuildCMDs') {
+        $retCustomBuildCMDs = 1;
+    }
 }
 
 # Atleast one command needs to be specified
-if (($retBuildCMDs eq 0) and ($retTestCMDs eq 0) and ($retTestNamedCMDs eq 0)) {
-    die "Usage: $0 <--buildCMDs|--testCMDs|--testNamedCMDs> FILENAMEs\n";
+if (($retBuildCMDs eq 0) and ($retTestCMDs eq 0) and ($retTestNamedCMDs eq 0) and($retCustomBuildCMDs eq 0)) {
+    die "Usage: $0 <--buildCMDs|--testCMDs|--testNamedCMDs|--customBuildCMDs> FILENAMEs\n";
 }
 
 # Iterate over input files
 foreach $file (@options) {
     # Convert absolute path to path relative to working directory
     my $relfile = File::Spec->abs2rel($file);
-    my ($buildCMDs, $testCMDs, $testNamedCMDs) = parse_file("$relfile");
+    my ($buildCMDs, $testCMDs, $testNamedCMDs, $customBuildCMDs) = parse_file("$relfile");
     if ($retBuildCMDs) {
         # print "BuildCMDs:\n";
         print "$_\n" for @$buildCMDs;
@@ -89,6 +108,10 @@ foreach $file (@options) {
     if ($retTestNamedCMDs) {
         # print "TestNamedCMDs:\n";
         print "$_\n" for @$testNamedCMDs;
+    }
+    if ($retCustomBuildCMDs) {
+        # print "CustomBuildCMDs:\n";
+        print "$_\n" for @$customBuildCMDs;
     }
 }
 
