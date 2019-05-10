@@ -172,6 +172,7 @@ global:
     hipCreateSurfaceObject*;
     hipDestroySurfaceObject*;
     hipHccModuleLaunchKernel*;
+    hipExtModuleLaunchKernel*;
     };
 local:
     *;
