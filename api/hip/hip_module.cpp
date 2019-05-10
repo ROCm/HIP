@@ -59,7 +59,7 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  std::ifstream file{fname};
+  std::ifstream file(fname, std::ios::binary);
 
   if (!file.is_open()) {
     HIP_RETURN(hipErrorFileNotFound);
