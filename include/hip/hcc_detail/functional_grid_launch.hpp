@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "code_object_bundle.hpp"
 #include "concepts.hpp"
 #include "helpers.hpp"
 #include "program_state.hpp"

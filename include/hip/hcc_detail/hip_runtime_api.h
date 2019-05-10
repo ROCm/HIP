@@ -2590,48 +2590,6 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
 
 hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
 
-#if 0
-struct Agent_global {
-
-    Agent_global() : name(nullptr), address(nullptr), byte_cnt(0) {}
-    Agent_global(const char* name, hipDeviceptr_t address, uint32_t byte_cnt) 
-      : name(nullptr), address(address), byte_cnt(byte_cnt) {
-      if (name)
-        this->name = strdup(name);
-    }
-
-    Agent_global& operator=(Agent_global&& t) {
-      if (this == &t) return *this;
-
-      if (name) free(name);
-      name = t.name;
-      address = t.address;
-      byte_cnt = t.byte_cnt;
-
-      t.name = nullptr;
-      t.address = nullptr;
-      t.byte_cnt = 0;
-
-      return *this;
-    }
-
-    Agent_global(Agent_global&& t) 
-      : name(nullptr), address(nullptr), byte_cnt(0) {
-      *this = std::move(t);
-    }
-
-    // not needed, delete them to prevent bugs
-    Agent_global(const Agent_global&) = delete;
-    Agent_global& operator=(Agent_global& t) = delete;
-
-    ~Agent_global() { if (name) free(name); }
-    
-    char* name;
-    hipDeviceptr_t address;
-    uint32_t byte_cnt;
-};
-#endif
-
 #if !__HIP_VDI__
 #if defined(__cplusplus)
 } // extern "C"
