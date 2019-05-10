@@ -145,7 +145,9 @@ enum SupportDegree {
 
 // The names of various fields in in the statistics reports.
 extern const char *counterNames[NUM_CONV_TYPES];
+extern const char *counterTypes[NUM_CONV_TYPES];
 extern const char *apiNames[NUM_API_TYPES];
+extern const char *apiTypes[NUM_API_TYPES];
 
 struct hipCounter {
   llvm::StringRef hipName;

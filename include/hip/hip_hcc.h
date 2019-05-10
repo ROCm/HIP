@@ -105,7 +105,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent = nullptr,
                                     hipEvent_t stopEvent = nullptr)
-                                    __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));;
+                                    __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
 
 // doxygen end HCC-specific features
 /**
