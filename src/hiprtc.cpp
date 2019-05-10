@@ -123,8 +123,11 @@ struct _hiprtcProgram {
 
         if (name.find("void ") == 0) name.erase(0, strlen("void "));
 
-        auto dx{name.find('<')};
-        if (dx != string::npos) {
+        auto dx{name.find_first_of("(<")};
+
+        if (dx == string::npos) return name;
+
+        if (name[dx] == '<') {
             auto cnt{1u};
             do {
                 ++dx;
@@ -133,11 +136,7 @@ struct _hiprtcProgram {
 
             name.erase(++dx);
         }
-        else {
-            const auto dy{name.find('(')};
-
-            if (dy != string::npos) name.erase(dy);
-        }
+        else name.erase(dx);
 
         return name;
     }
@@ -172,6 +171,8 @@ struct _hiprtcProgram {
     bool compile(const std::vector<std::string>& args,
                  const std::experimental::filesystem::path& program_folder)
     {
+        using namespace ELFIO;
+        using namespace hip_impl;
         using namespace redi;
         using namespace std;
 
@@ -188,29 +189,40 @@ struct _hiprtcProgram {
         if (compile.rdbuf()->exited() &&
             compile.rdbuf()->status() != EXIT_SUCCESS) return false;
 
-        ifstream in{args.back()};
-        elf.resize(experimental::filesystem::file_size(args.back()));
-        in.read(elf.data(), elf.size());
+        elfio reader;
+        if (!reader.load(args.back())) return false;
+
+        const auto it{find_section_if(reader, [](const section* x) {
+            return x->get_name() == ".kernel";
+        })};
+
+        if (!it) return false;
+
+        Bundled_code_header h{it->get_data()};
+
+        if (bundles(h).empty()) return false;
+
+        elf.assign(bundles(h).back().blob.cbegin(),
+                   bundles(h).back().blob.cend());
 
         return true;
     }
 
     bool readLoweredNames()
     {
+        using namespace ELFIO;
         using namespace hip_impl;
         using namespace std;
 
         if (names.empty()) return true;
 
-        Bundled_code_header h{elf.data()};
-        istringstream blob{string{bundles(h).back().blob.cbegin(),
-                                  bundles(h).back().blob.cend()}};
+        istringstream blob{string{elf.cbegin(), elf.cend()}};
 
-        ELFIO::elfio reader;
+        elfio reader;
 
         if (!reader.load(blob)) return false;
 
-        const auto it{find_section_if(reader, [](const ELFIO::section* x) {
+        const auto it{find_section_if(reader, [](const section* x) {
             return x->get_type() == SHT_SYMTAB;
         })};
 
@@ -423,12 +435,12 @@ namespace
 
             if (dx == dy) continue;
 
-            x.replace(0, x.find('=', min(dx, dy)), "--targets");
+            x.replace(0, x.find('=', min(dx, dy)), "--amdgpu-target");
             hasTarget = true;
 
             break;
         }
-        if (!hasTarget) args.push_back("--targets=" + defaultTarget());
+        if (!hasTarget) args.push_back("--amdgpu-target=" + defaultTarget());
     }
 } // Unnamed namespace.
 
@@ -453,7 +465,7 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
 
     const auto src{p->writeTemporaryFiles(tmp.path())};
 
-    vector<string> args{hipcc, "--genco"};
+    vector<string> args{hipcc, "-shared"};
     if (n) args.insert(args.cend(), o, o + n);
 
     handleTarget(args);
