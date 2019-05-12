@@ -5,31 +5,35 @@ This tutorial is follow-up of the previous tutorial, where we learned how to use
 ## Introduction:
 
 Let's talk about Warp first. The kernel code is executed in groups of fixed number of threads known as Warp. For nvidia WarpSize is 32 while for AMD, 32 for Polaris architecture and 64 for rest. Threads in a warp are referred to as lanes and are numbered from 0 to warpSize -1. With the help of shfl ops, we can directly exchange values of variable between threads without using any memory ops within a warp. There are four types of shfl ops:
-`  int   __shfl      (int var,   int srcLane, int width=warpSize);              `
-`  float __shfl      (float var, int srcLane, int width=warpSize);              `
-`  int   __shfl_up   (int var,   unsigned int delta, int width=warpSize);       `
-`  float __shfl_up   (float var, unsigned int delta, int width=warpSize);       `
-`  int   __shfl_down (int var,   unsigned int delta, int width=warpSize);       `
-`  float __shfl_down (float var, unsigned int delta, int width=warpSize);       `
-`  int   __shfl_xor  (int var,   int laneMask, int width=warpSize)              `
-`  float __shfl_xor  (float var, int laneMask, int width=warpSize);             `
+```
+   int   __shfl      (int var,   int srcLane, int width=warpSize);
+   float __shfl      (float var, int srcLane, int width=warpSize);
+   int   __shfl_up   (int var,   unsigned int delta, int width=warpSize);
+   float __shfl_up   (float var, unsigned int delta, int width=warpSize);
+   int   __shfl_down (int var,   unsigned int delta, int width=warpSize);
+   float __shfl_down (float var, unsigned int delta, int width=warpSize);
+   int   __shfl_xor  (int var,   int laneMask, int width=warpSize);
+   float __shfl_xor  (float var, int laneMask, int width=warpSize);
+```
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md)
 
 ## prerequiste knowledge:
 
 Programmers familiar with CUDA, OpenCL will be able to quickly learn and start coding with the HIP API. In case you are not, don't worry. You choose to start with the best one. We'll be explaining everything assuming you are completely new to gpgpu programming.
 
-## Simple Matrix Transpose 
+## Simple Matrix Transpose
 
 We will be using the Simple Matrix Transpose application from the previous tutorial and modify it to learn how to use shared memory.
 
 ## __shfl ops in 2D
 
 In the same sourcecode, we used for MatrixTranspose. We'll add the following:
-`  int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;                     `
-`  out[x*width + y] = __shfl(val,y*width + x);                                 `
+```
+	int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+	out[x*width + y] = __shfl(val,y*width + x);
+```
 
 With the help of this application, we can say that kernel code can be converted into  multi-dimensional threads with ease.
 

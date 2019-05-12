@@ -2489,4 +2489,14 @@ namespace hip_impl {
             std::terminate();
         #endif
     }
+
+    std::mutex executables_cache_mutex;
+
+    std::vector<hsa_executable_t>& executables_cache(
+            std::string elf, hsa_isa_t isa, hsa_agent_t agent) {
+        static std::unordered_map<std::string,
+            std::unordered_map<hsa_isa_t,
+                std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>>>> cache;
+        return cache[elf][isa][agent];
+    }
 } // Namespace hip_impl.
