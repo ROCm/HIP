@@ -1,6 +1,6 @@
 ## Using Pragma unroll ###
 
-In this tutorial, we'll explain how to use #pragma unroll to improve the performance. 
+In this tutorial, we'll explain how to use #pragma unroll to improve the performance.
 
 ## Introduction:
 
@@ -8,24 +8,26 @@ Loop unrolling optimization hints can be specified with #pragma unroll and #prag
 Specifying #pragma unroll without a parameter directs the loop unroller to attempt to fully unroll the loop if the trip count is known at compile time and attempt to partially unroll the loop if the trip count is not known at compile time.
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md)
 
 ## prerequiste knowledge:
 
 Programmers familiar with CUDA, OpenCL will be able to quickly learn and start coding with the HIP API. In case you are not, don't worry. You choose to start with the best one. We'll be explaining everything assuming you are completely new to gpgpu programming.
 
-## Simple Matrix Transpose 
+## Simple Matrix Transpose
 
 For this tutorial we will be using MatrixTranspose with shfl operation i.e., our 4_shfl tutorial since it is the only examples where we used loops inside the kernel.
 
 In this tutorial, we'll use `#pragma unroll`. In the same sourcecode, we used for MatrixTranspose. We'll add it just before the for loop as following:
 
-`#pragma unroll                                                        `
-`    for(int i=0;i<width;i++)                                          `
-`    {                                                                 `
-`        for(int j=0;j<width;j++)                                      `
-`            out[i*width + j] = __shfl(val,j*width + i);               `
-`    }                                                                 `
+```
+#pragma unroll
+	for(int i=0;i<width;i++)
+	{
+		for(int j=0;j<width;j++)
+			out[i*width + j] = __shfl(val,j*width + i);
+	}
+```
 
 Specifying the optional parameter, #pragma unroll value, directs the unroller to unroll the loop value times. Be careful while using it.
 Specifying #pragma nounroll indicates that the loop should not be unroll. #pragma unroll 1 will show the same behaviour.
