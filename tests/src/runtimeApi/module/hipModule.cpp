@@ -17,6 +17,13 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD_CMD: vcpy_kernel.code %hc --genco %S/vcpy_kernel.cpp -o vcpy_kernel.code
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * TEST: %t
+ * HIT_END
+ */
+
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
 #include <iostream>
@@ -33,13 +40,15 @@ THE SOFTWARE.
 #define fileName "vcpy_kernel.code"
 #define kernel_name "hello_world"
 
-__global__ void Cpy(hipLaunchParm lp, float* Ad, float* Bd) {
-    int tx = threadIdx.x;
-    Bd[tx] = Ad[tx];
-}
+#define HIP_CHECK(status)                                                                          \
+    if (status != hipSuccess) {                                                                    \
+        std::cout << "Got Status: " << status << " at Line: " << __LINE__ << std::endl;            \
+        exit(0);                                                                                   \
+    }
 
 int main() {
-    float *A, *B, *Ad, *Bd;
+    float *A, *B;
+    hipDeviceptr_t Ad, Bd;
     A = new float[LEN];
     B = new float[LEN];
 
@@ -48,47 +57,46 @@ int main() {
         B[i] = 0.0f;
     }
 
+    HIPCHECK(hipInit(0));
+
+    hipDevice_t device;
+    hipCtx_t context;
+    HIPCHECK(hipDeviceGet(&device, 0));
+    HIPCHECK(hipCtxCreate(&context, 0, device));
+
     HIPCHECK(hipMalloc((void**)&Ad, SIZE));
     HIPCHECK(hipMalloc((void**)&Bd, SIZE));
+    HIPCHECK(hipMemcpyHtoD(Ad, A, SIZE));
+    HIPCHECK(hipMemcpyHtoD(Bd, B, SIZE));
 
-    HIPCHECK(hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice));
-    HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
     hipModule_t Module;
     hipFunction_t Function;
     HIPCHECK(hipModuleLoad(&Module, fileName));
     HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    hipFunction_t f;
-    HIPCHECK(hipModuleGetFunction(&f, Module, kernel_name));
-    assert(f == Function);
+
     hipStream_t stream;
     HIPCHECK(hipStreamCreate(&stream));
-    void* args[2] = {&Ad, &Bd};
 
-    std::vector<void*> argBuffer(5);
-    memcpy(&argBuffer[3], &Ad, sizeof(void*));
-    memcpy(&argBuffer[4], &Bd, sizeof(void*));
+    struct {
+        void* _Ad;
+        void* _Bd;
+    } args;
+    args._Ad = (void*) Ad;
+    args._Bd = (void*) Bd;
+    size_t size = sizeof(args);
 
-    size_t size = argBuffer.size() * sizeof(void*);
-
-    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &argBuffer[0], HIP_LAUNCH_PARAM_BUFFER_SIZE,
-                      &size, HIP_LAUNCH_PARAM_END};
-
-    hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config);
+    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
+                      HIP_LAUNCH_PARAM_END};
+    HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config));
 
     HIPCHECK(hipStreamDestroy(stream));
 
-    HIPCHECK(hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpyDtoH(B, Bd, SIZE));
 
     for (uint32_t i = 0; i < LEN; i++) {
         assert(A[i] == B[i]);
     }
 
-    std::vector<hipFunction_t> vec(1024 * 1024 * 64);
-    for (unsigned i = 0; i < 1024 * 1024 * 64; i++) {
-        hipFunction_t func;
-        hipModuleGetFunction(&func, Module, kernel_name);
-        vec[i] = func;
-    }
+	HIPCHECK(hipCtxDestroy(context));
     passed();
-    return 0;
 }

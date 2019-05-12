@@ -1,6 +1,6 @@
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp
- * RUN: %t
+ * TEST: %t
  * HIT_END
  */
 #include <stdio.h>

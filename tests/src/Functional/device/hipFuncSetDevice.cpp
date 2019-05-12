@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * RUN: %t EXCLUDE_HIP_PLATFORM
+ * TEST: %t EXCLUDE_HIP_PLATFORM
  * HIT_END
  */
 
