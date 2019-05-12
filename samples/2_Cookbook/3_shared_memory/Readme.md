@@ -7,13 +7,13 @@ Earlier we learned how to write our first hip program, in which we compute Matri
 As we mentioned earlier  that Memory bottlenecks is the main problem why we are not able to get the highest performance, therefore minimizing the latency for memory access plays prominent role in application optimization. In this tutorial, we'll learn how to use static shared memory and will explain the dynamic one latter.
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md)
 
 ## prerequiste knowledge:
 
 Programmers familiar with CUDA, OpenCL will be able to quickly learn and start coding with the HIP API. In case you are not, don't worry. You choose to start with the best one. We'll be explaining everything assuming you are completely new to gpgpu programming.
 
-## Simple Matrix Transpose 
+## Simple Matrix Transpose
 
 We will be using the Simple Matrix Transpose application from the previous tutorial and modify it to learn how to use shared memory.
 

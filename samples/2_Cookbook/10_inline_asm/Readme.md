@@ -6,7 +6,7 @@ This tutorial is about how to use inline GCN asm in kernel. In this tutorial, we
 
 If you want to take advantage of the extra performance benefits of writing in assembly as well as take advantage of special GPU hardware features that were only available through assemby, then this tutorial is for you. In this tutorial we'll be explaining how to start writing inline asm in kernel.
 
-For more insight Please read the following blogs by Ben Sander 
+For more insight Please read the following blogs by Ben Sander
 [The Art of AMDGCN Assembly: How to Bend the Machine to Your Will](gpuopen.com/amdgcn-assembly)
 [AMD GCN Assembly: Cross-Lane Operations](http://gpuopen.com/amd-gcn-assembly-cross-lane-operations/)
 
@@ -15,13 +15,13 @@ For more information:
 [User Guide for AMDGPU Back-end](llvm.org/docs/AMDGPUUsage.html)
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md)
 
 ## prerequiste knowledge:
 
 Programmers familiar with CUDA, OpenCL will be able to quickly learn and start coding with the HIP API. In case you are not, don't worry. You choose to start with the best one. We'll be explaining everything assuming you are completely new to gpgpu programming.
 
-## Simple Matrix Transpose 
+## Simple Matrix Transpose
 
 We will be using the Simple Matrix Transpose application from the our very first tutorial.
 

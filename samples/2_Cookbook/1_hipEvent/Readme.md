@@ -7,13 +7,13 @@ This tutorial is follow-up of the previous one where we learn how to write our f
 Memory transfer and kernel execution are the most important parameter in parallel computing (specially HPC and machine learning). Memory bottlenecks is the main problem why we are not able to get the highest performance, therefore obtaining the memory transfer timing and kernel execution timing plays key role in application optimization.
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md) 
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md)
 
 ## prerequiste knowledge:
 
 Programmers familiar with CUDA, OpenCL will be able to quickly learn and start coding with the HIP API. In case you are not, don't worry. You choose to start with the best one. We'll be explaining everything assuming you are completely new to gpgpu programming.
 
-## Simple Matrix Transpose 
+## Simple Matrix Transpose
 
 We will be using the Simple Matrix Transpose application from the previous tutorial and modify it to learn how to get the performance score for memory transfer and kernel execution time.
 
@@ -21,12 +21,16 @@ We will be using the Simple Matrix Transpose application from the previous tutor
 
 We'll learn how to use the event management functionality of HIP runtime api. In the same sourcecode, we used for MatrixTranspose we will declare the following events as follows:
 
-`  hipEvent_t start, stop;`
+```
+   hipEvent_t start, stop;
+```
 
 We'll create the event with the help of following code:
 
-`  hipEventCreate(&start);`
-`  hipEventCreate(&stop);`
+```
+   hipEventCreate(&start);
+   hipEventCreate(&stop);
+```
 
 We'll use the "eventMs" variable to store the time taken value:
 `  float eventMs = 1.0f;`
@@ -41,11 +45,13 @@ Now, we'll have the operation for which we need to compute the time taken. For t
 `  hipMemcpy(gpuMatrix, Matrix, NUM*sizeof(float), hipMemcpyHostToDevice);`
 
 and for kernel execution time we'll use `hipKernelLaunch`:
-`  hipLaunchKernelGGL(matrixTranspose,                                                    `
-`                  dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),        `
-`                  dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),                     `
-`                  0, 0,                                                               `
-`                  gpuTransposeMatrix , gpuMatrix, WIDTH ,HEIGHT);                     `
+```
+hipLaunchKernelGGL(matrixTranspose,
+                   dim3(WIDTH/THREADS_PER_BLOCK_X, HEIGHT/THREADS_PER_BLOCK_Y),
+                   dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y),
+                   0, 0,
+                   gpuTransposeMatrix , gpuMatrix, WIDTH ,HEIGHT);
+```
 
 Now to mark the end of the eventRecord, we will again use the hipEventRecord by passing the stop event:
 `  hipEventRecord(stop, NULL);`
