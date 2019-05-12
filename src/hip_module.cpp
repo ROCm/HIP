@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/hsa_helpers.hpp"
 #include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
+#include "program_state.inl"
 #include "trace_helper.h"
 
 #include <hsa/amd_hsa_kernel_code.h>
@@ -289,7 +290,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 
     if (!name) return hipErrorNotInitialized;
 
-    return hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name);
+    return hip_impl::get_agent_globals().read_agent_global_from_module(dptr, bytes, hmod, name);
 }
 
 namespace hip_impl {
@@ -512,11 +513,8 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     if (!func) return hipErrorInvalidDeviceFunction;
 
     auto agent = this_agent();
-    const auto it = functions(agent).find(reinterpret_cast<uintptr_t>(func));
-
-    if (it == functions(agent).cend()) return hipErrorInvalidDeviceFunction;
-
-    const auto header = static_cast<hipFunction_t>(it->second)->_header;
+    auto kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
+    const auto header = kd->_header;
 
     if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 
@@ -548,7 +546,8 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     auto content = tmp.empty() ? read_elf_file_as_string(image) : tmp;
 
-    (*module)->executable = load_executable(content, (*module)->executable,
+    (*module)->executable = get_program_state().load_executable(
+                                            content.data(), content.size(), (*module)->executable,
                                             this_agent());
 
     // compute the hash of the code object
@@ -591,10 +590,10 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     if (!texRef) return ihipLogStatus(hipErrorInvalidValue);
 
     if (!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
+    
+    auto addr = get_program_state().global_addr_by_name(name);
+    if (addr == nullptr) return ihipLogStatus(hipErrorInvalidValue);
 
-    const auto it = globals().find(name);
-    if (it == globals().end()) return ihipLogStatus(hipErrorInvalidValue);
-
-    *texRef = reinterpret_cast<textureReference*>(it->second);
+    *texRef = reinterpret_cast<textureReference*>(addr);
     return ihipLogStatus(hipSuccess);
 }
