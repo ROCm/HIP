@@ -31,6 +31,10 @@ THE SOFTWARE.
 #include "hip/hip_hcc.h"
 #include "hip_runtime.h"
 
+#if USE_COMGR
+#include "kernel_metadata.hpp"
+#endif
+
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
@@ -53,6 +57,75 @@ inline T round_up_to_next_multiple_nonnegative(T x, T y) {
     return tmp - tmp % y;
 }
 
+#if USE_COMGR
+template <
+    std::size_t n,
+    typename... Ts,
+    typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
+inline std::vector<std::uint8_t> make_kernarg(
+    const std::tuple<Ts...>&,
+    const kernel_meta_size_align&,
+    std::vector<std::uint8_t> kernarg) {
+    return kernarg;
+}
+
+template <
+    std::size_t n,
+    typename... Ts,
+    typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
+inline std::vector<std::uint8_t> make_kernarg(
+    const std::tuple<Ts...>& formals,
+    const kernel_meta_size_align& meta_size_align,
+    std::vector<std::uint8_t> kernarg) {
+    using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
+
+    static_assert(
+        !std::is_reference<T>{},
+        "A __global__ function cannot have a reference as one of its "
+            "arguments.");
+    #if defined(HIP_STRICT)
+        static_assert(
+            std::is_trivially_copyable<T>{},
+            "Only TriviallyCopyable types can be arguments to a __global__ "
+                "function");
+    #endif
+
+    kernarg.resize(round_up_to_next_multiple_nonnegative(
+        kernarg.size(), meta_size_align.args_alignment(n)) + meta_size_align.args_size(n));
+
+    std::memcpy(
+        kernarg.data() + kernarg.size() - meta_size_align.args_size(n),
+        &std::get<n>(formals),
+        meta_size_align.args_size(n));
+    return make_kernarg<n + 1>(formals, meta_size_align, std::move(kernarg));
+}
+
+template <typename... Formals, typename... Actuals>
+inline std::vector<std::uint8_t> make_kernarg(
+    void (*kernel)(Formals...), std::tuple<Actuals...> actuals) {
+    static_assert(sizeof...(Formals) == sizeof...(Actuals),
+        "The count of formal arguments must match the count of actuals.");
+
+    if (sizeof...(Formals) == 0) return {};
+
+    auto& ps = hip_impl::get_program_state();
+    const kernel_meta_size_align k = ps.get_kernel_meta_args(
+                                        reinterpret_cast<std::uintptr_t>(kernel));
+
+    std::tuple<Formals...> to_formals{std::move(actuals)};
+    std::vector<std::uint8_t> kernarg;
+    kernarg.reserve(sizeof(to_formals));
+    return make_kernarg<0>(to_formals, k, std::move(kernarg));
+}
+
+inline KernelMD make_kernel_metadata(void* kernel) {
+
+    auto& ps = hip_impl::get_program_state();
+    const kernel_meta_size_align k = ps.get_kernel_meta_args(
+                                        reinterpret_cast<std::uintptr_t>(kernel));
+    return k.metadata();
+}
+#else
 template <
     std::size_t n,
     typename... Ts,
@@ -113,7 +186,7 @@ inline std::vector<std::uint8_t> make_kernarg(
                                reinterpret_cast<std::uintptr_t>(kernel)),
                            std::move(kernarg));
 }
-
+#endif
 
 hsa_agent_t target_agent(hipStream_t stream);
 

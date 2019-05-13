@@ -35,6 +35,10 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <vector>
 
+#if USE_COMGR
+#include "kernel_metadata.hpp"
+#endif
+
 struct ihipModuleSymbol_t;
 using hipFunction_t = ihipModuleSymbol_t*;
 
@@ -66,6 +70,9 @@ namespace hip_impl {
 [[noreturn]]
 void hip_throw(const std::exception&);
 
+#if USE_COMGR
+class kernel_meta_size_align;
+#endif
 class kernargs_size_align;
 class program_state_impl;
 class program_state {
@@ -75,8 +82,12 @@ public:
 
     hipFunction_t kernel_descriptor(std::uintptr_t,
                                     hsa_agent_t);
-    
+
     kernargs_size_align get_kernargs_size_align(std::uintptr_t);
+#if USE_COMGR
+    const kernel_meta_size_align get_kernel_meta_args(std::uintptr_t);
+#endif
+
     hsa_executable_t load_executable(const char*, const size_t,
                                      hsa_executable_t,
                                      hsa_agent_t);
@@ -100,6 +111,25 @@ private:
     const void* handle;
     friend kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t);
 };
+
+#if USE_COMGR
+class kernel_meta_size_align {
+public:
+    std::size_t args_size(std::size_t n) const;
+    std::size_t args_alignment(std::size_t n) const;
+    std::vector<std::pair<std::size_t, std::size_t>> size_align() const { return args_size_align; };
+    KernelMD metadata() const { return kernel_meta; };
+
+    std::vector<std::pair<std::size_t, std::size_t>>* args_handle() { return &args_size_align; };
+    KernelMD* meta_handle() { return &kernel_meta; };
+private:
+    /// Vector of kernel argument information: size, align (for v2)
+    std::vector<std::pair<std::size_t, std::size_t>> args_size_align;
+    KernelMD kernel_meta;        /// attributes and code properties
+    friend const kernel_meta_size_align program_state::get_kernel_meta_args(std::uintptr_t);
+};
+#endif
+
 
 inline
 __attribute__((visibility("hidden")))

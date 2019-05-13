@@ -143,6 +143,16 @@ if ($verbose & 0x2) {
     print ("HIP_PLATFORM=$HIP_PLATFORM\n");
 }
 
+#---
+# Find COMGR location
+$USE_COMGR= $hipConfig{'USE_COMGR'};
+if ($USE_COMGR eq 1) {
+  $COMGR_PATH=$ENV{'COMGR_PATH'};
+  if (!defined $COMGR_PATH) {
+    $COMGR_PATH = "/opt/rocm";
+  }
+}
+
 # set if user explicitly requests -stdlib=libc++. (else we default to libstdc++ for better interop with g++):
 $setStdLib = 0;  # TODO - set to 0
 
@@ -277,6 +287,11 @@ if ($HIP_PLATFORM eq "clang") {
         if (-e $marker_inc_path) {
             $HIPCXXFLAGS .= " -isystem $marker_inc_path";
         }
+    }
+
+    if ($USE_COMGR eq 1) {
+        $HIPCXXFLAGS .= " -DUSE_COMGR=1 -isystem $COMGR_PATH/include";
+        $HIPLDFLAGS .= " -L$COMGR_PATH/lib -Wl,--rpath=$COMGR_PATH/lib -lamd_comgr ";
     }
 
     $marker_lib_path = "$marker_path/bin/x86_64";

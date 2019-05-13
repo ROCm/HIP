@@ -12,6 +12,15 @@
 
 namespace hip_impl {
 
+#if USE_COMGR
+std::size_t kernel_meta_size_align::args_size(std::size_t n) const{
+    return args_size_align[n].first;
+}
+
+std::size_t kernel_meta_size_align::args_alignment(std::size_t n) const{
+    return args_size_align[n].second;
+}
+#else
 std::size_t kernargs_size_align::kernargs_size_align::size(std::size_t n) const{
     return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].first;
 }
@@ -19,6 +28,7 @@ std::size_t kernargs_size_align::kernargs_size_align::size(std::size_t n) const{
 std::size_t kernargs_size_align::alignment(std::size_t n) const{
     return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].second;
 }
+#endif
 
 program_state::program_state() :
     impl(new program_state_impl) {
@@ -55,9 +65,15 @@ hipFunction_t program_state::kernel_descriptor(std::uintptr_t function_address,
     return kd;
 }
 
-kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t kernel) {
-  kernargs_size_align t;
-  t.handle = reinterpret_cast<const void*>(&impl->kernargs_size_align(kernel));
-  return t;
+#if USE_COMGR
+const kernel_meta_size_align program_state::get_kernel_meta_args(std::uintptr_t kernel) {
+    return impl->get_kernel_meta_args(kernel);
 }
+#else
+kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t kernel) {
+    kernargs_size_align t;
+    t.handle = reinterpret_cast<const void*>(&impl->kernargs_size_align(kernel));
+    return t;
+}
+#endif
 };
