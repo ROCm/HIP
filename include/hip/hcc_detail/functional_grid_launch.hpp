@@ -59,7 +59,7 @@ template <
     typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
     const std::tuple<Ts...>&,
-    const std::vector<std::pair<std::size_t, std::size_t>>&,
+    const kernargs_size_align&,
     std::vector<std::uint8_t> kernarg) {
     return kernarg;
 }
@@ -70,7 +70,7 @@ template <
     typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
 inline std::vector<std::uint8_t> make_kernarg(
     const std::tuple<Ts...>& formals,
-    const std::vector<std::pair<std::size_t, std::size_t>>& size_align,
+    const kernargs_size_align& size_align,
     std::vector<std::uint8_t> kernarg) {
     using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
 
@@ -86,13 +86,12 @@ inline std::vector<std::uint8_t> make_kernarg(
     #endif
 
     kernarg.resize(round_up_to_next_multiple_nonnegative(
-        kernarg.size(), size_align[n].second) + size_align[n].first);
+        kernarg.size(), size_align.alignment(n)) + size_align.size(n));
 
     std::memcpy(
-        kernarg.data() + kernarg.size() - size_align[n].first,
+        kernarg.data() + kernarg.size() - size_align.size(n),
         &std::get<n>(formals),
-        size_align[n].first);
-
+        size_align.size(n));
     return make_kernarg<n + 1>(formals, size_align, std::move(kernarg));
 }
 
@@ -104,45 +103,17 @@ inline std::vector<std::uint8_t> make_kernarg(
 
     if (sizeof...(Formals) == 0) return {};
 
-    auto it = function_names().find(reinterpret_cast<std::uintptr_t>(kernel));
-    if (it == function_names().cend()) {
-        hip_throw(std::runtime_error{"Undefined __global__ function."});
-    }
-
-    auto it1 = kernargs().find(it->second);
-    if (it1 == kernargs().end()) {
-        hip_throw(std::runtime_error{
-            "Missing metadata for __global__ function: " + it->second});
-    }
-
     std::tuple<Formals...> to_formals{std::move(actuals)};
     std::vector<std::uint8_t> kernarg;
     kernarg.reserve(sizeof(to_formals));
 
-    return make_kernarg<0>(to_formals, it1->second, std::move(kernarg));
+    auto& ps = hip_impl::get_program_state();
+    return make_kernarg<0>(to_formals, 
+                           ps.get_kernargs_size_align(
+                               reinterpret_cast<std::uintptr_t>(kernel)),
+                           std::move(kernarg));
 }
 
-inline
-std::string name(std::uintptr_t function_address)
-{
-    const auto it = function_names().find(function_address);
-
-    if (it == function_names().cend())  {
-        hip_throw(std::runtime_error{
-            "Invalid function passed to hipLaunchKernelGGL."});
-    }
-
-    return it->second;
-}
-
-inline
-std::string name(hsa_agent_t agent)
-{
-    char n[64]{};
-    hsa_agent_get_info(agent, HSA_AGENT_INFO_NAME, n);
-
-    return std::string{n};
-}
 
 hsa_agent_t target_agent(hipStream_t stream);
 
@@ -156,17 +127,10 @@ void hipLaunchKernelGGLImpl(
     hipStream_t stream,
     void** kernarg) {
 
-    auto agent = target_agent(stream);
-    auto it = functions(agent).find(function_address);
+    const auto& kd = hip_impl::get_program_state().kernel_descriptor(function_address, 
+                                                               target_agent(stream));
 
-    if (it == functions(agent).cend()) {
-        hip_throw(std::runtime_error{
-            "No device code available for function: " +
-            name(function_address) +
-            ", for agent: " + name(agent)});
-    }
-
-    hipModuleLaunchKernel(it->second, numBlocks.x, numBlocks.y, numBlocks.z,
+    hipModuleLaunchKernel(kd, numBlocks.x, numBlocks.y, numBlocks.z,
                           dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
                           stream, nullptr, kernarg);
 }
@@ -178,8 +142,7 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                         std::uint32_t sharedMemBytes, hipStream_t stream,
                         Args... args) {
     hip_impl::hip_init();
-    auto kernarg = hip_impl::make_kernarg(
-        kernel, std::tuple<Args...>{std::move(args)...});
+    auto kernarg = hip_impl::make_kernarg(kernel, std::tuple<Args...>{std::move(args)...});
     std::size_t kernarg_size = kernarg.size();
 
     void* config[]{

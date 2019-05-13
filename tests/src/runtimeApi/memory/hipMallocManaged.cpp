@@ -4,7 +4,7 @@
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * RUN: %t -N 256M
+ * TEST: %t -N 256M
  * HIT_END
  */
 

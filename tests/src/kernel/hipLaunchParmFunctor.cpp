@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp HIPCC_OPTIONS -O3
- * RUN: %t
+ * TEST: %t
  * HIT_END
  */
 
