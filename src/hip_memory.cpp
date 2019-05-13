@@ -957,8 +957,8 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
         }
         // TODO-test : multi-gpu access to registered host memory.
         if (ctx) {
-            if ((flags & hipHostRegisterDefault) || (flags & hipHostRegisterPortable) ||
-                (flags & hipHostRegisterMapped)) {
+            if ((flags == hipHostRegisterDefault) || (flags & hipHostRegisterPortable) ||
+                (flags & hipHostRegisterMapped) || (flags == hipExtHostRegisterCoarseGrained)) {
                 auto device = ctx->getWriteableDevice();
                 std::vector<hc::accelerator> vecAcc;
                 for (int i = 0; i < g_deviceCnt; i++) {
