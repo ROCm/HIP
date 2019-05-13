@@ -2687,7 +2687,7 @@ public:
         return *dptr ? hipSuccess : hipErrorNotFound;
     }
 
-  hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+    hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
             const char* name) {
 
         auto agent = this_agent();
