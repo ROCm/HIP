@@ -92,6 +92,7 @@ int HIP_EVENT_SYS_RELEASE = 0;
 int HIP_HOST_COHERENT = 1;
 
 int HIP_SYNC_HOST_ALLOC = 1;
+int HIP_SYNC_FREE = 0;
 
 
 int HIP_INIT_ALLOC = -1;
@@ -129,6 +130,7 @@ std::vector<int> g_hip_visible_devices;
 hsa_agent_t g_cpu_agent;
 hsa_agent_t* g_allAgents;  // CPU agents + all the visible GPU agents.
 unsigned g_numLogicalThreads;
+bool g_initDeviceFound = false;
 
 std::atomic<int> g_lastShortTid(1);
 
@@ -1279,6 +1281,8 @@ void HipReadEnv() {
 
     READ_ENV_I(release, HIP_SYNC_STREAM_WAIT, 0, "hipStreamWaitEvent will synchronize to host");
 
+    READ_ENV_I(release, HIP_SYNC_FREE, 0,
+               "Force all calls to hipFree to sync all devices and all streams");
 
     READ_ENV_I(release, HIP_HOST_COHERENT, 0,
                "If set, all host memory will be allocated as fine-grained system memory.  This "
@@ -1402,7 +1406,8 @@ void ihipInit() {
     hsa_status_t err = hsa_iterate_agents(findCpuAgent, &g_cpu_agent);
     if (err != HSA_STATUS_INFO_BREAK) {
         // didn't find a CPU.
-        throw ihipException(hipErrorRuntimeOther);
+        g_initDeviceFound = false;
+        return;
     }
 
     g_deviceArray = new ihipDevice_t*[deviceCnt];
@@ -1437,14 +1442,21 @@ void ihipInit() {
 
     tprintf(DB_SYNC, "pid=%u %-30s g_numLogicalThreads=%u\n", getpid(), "<ihipInit>",
             g_numLogicalThreads);
+
+    g_initDeviceFound = true;
 }
 
 namespace hip_impl {
 hipError_t hip_init() {
   static std::once_flag hip_initialized;
   std::call_once(hip_initialized, ihipInit);
-  ihipCtxStackUpdate();
-  return hipSuccess;
+  if (g_initDeviceFound) {
+      ihipCtxStackUpdate();
+      return hipSuccess;
+  }
+  else {
+      return hipErrorInsufficientDriver;
+  }
 }
 }
 
@@ -1588,63 +1600,19 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    stream = ihipSyncAndResolveStream(stream);
-    lp->grid_dim.x = grid;
-    lp->grid_dim.y = 1;
-    lp->grid_dim.z = 1;
-    lp->group_dim.x = block.x;
-    lp->group_dim.y = block.y;
-    lp->group_dim.z = block.z;
-    lp->barrier_bit = barrier_bit_queue_default;
-    lp->launch_fence = -1;
-
-    auto crit = stream->lockopen_preKernelCommand();
-    lp->av = &(crit->_av);
-    lp->cf = nullptr;
-    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
-    return (stream);
+    return ihipPreLaunchKernel(stream, dim3(grid), block, lp, kernelNameStr);
 }
 
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    stream = ihipSyncAndResolveStream(stream);
-    lp->grid_dim.x = grid.x;
-    lp->grid_dim.y = grid.y;
-    lp->grid_dim.z = grid.z;
-    lp->group_dim.x = block;
-    lp->group_dim.y = 1;
-    lp->group_dim.z = 1;
-    lp->barrier_bit = barrier_bit_queue_default;
-    lp->launch_fence = -1;
-
-    auto crit = stream->lockopen_preKernelCommand();
-    lp->av = &(crit->_av);
-    lp->cf = nullptr;
-    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
-    return (stream);
+    return ihipPreLaunchKernel(stream, grid, dim3(block), lp, kernelNameStr);
 }
 
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm* lp,
                                 const char* kernelNameStr) {
-    stream = ihipSyncAndResolveStream(stream);
-    lp->grid_dim.x = grid;
-    lp->grid_dim.y = 1;
-    lp->grid_dim.z = 1;
-    lp->group_dim.x = block;
-    lp->group_dim.y = 1;
-    lp->group_dim.z = 1;
-    lp->barrier_bit = barrier_bit_queue_default;
-    lp->launch_fence = -1;
-
-    auto crit = stream->lockopen_preKernelCommand();
-    lp->av = &(crit->_av);
-    lp->cf = nullptr;
-
-
-    ihipPrintKernelLaunch(kernelNameStr, lp, stream);
-    return (stream);
+    return ihipPreLaunchKernel(stream, dim3(grid), dim3(block), lp, kernelNameStr);
 }
 
 
@@ -2501,14 +2469,16 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 namespace hip_impl {
     std::vector<hsa_agent_t> all_hsa_agents() {
         std::vector<hsa_agent_t> r{};
-        for (auto&& acc : hc::accelerator::get_all()) {
+        std::vector<hc::accelerator> visible_accelerators;
+        for (int i=0; i < g_deviceCnt; i++)
+            visible_accelerators.push_back(g_deviceArray[i]->_acc);
+        for (auto&& acc : visible_accelerators) {
             const auto agent = acc.get_hsa_agent();
 
             if (!agent || !acc.is_hsa_accelerator()) continue;
 
             r.emplace_back(*static_cast<hsa_agent_t*>(agent));
         }
-
         return r;
     }
 
@@ -2520,5 +2490,15 @@ namespace hip_impl {
             std::cerr << ex.what() << std::endl;
             std::terminate();
         #endif
+    }
+
+    std::mutex executables_cache_mutex;
+
+    std::vector<hsa_executable_t>& executables_cache(
+            std::string elf, hsa_isa_t isa, hsa_agent_t agent) {
+        static std::unordered_map<std::string,
+            std::unordered_map<hsa_isa_t,
+                std::unordered_map<hsa_agent_t, std::vector<hsa_executable_t>>>> cache;
+        return cache[elf][isa][agent];
     }
 } // Namespace hip_impl.

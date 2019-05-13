@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/hsa_helpers.hpp"
 #include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
+#include "program_state.inl"
 #include "trace_helper.h"
 
 #include <hsa/amd_hsa_kernel_code.h>
@@ -289,7 +290,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 
     if (!name) return hipErrorNotInitialized;
 
-    return hip_impl::read_agent_global_from_module(dptr, bytes, hmod, name);
+    return hip_impl::get_agent_globals().read_agent_global_from_module(dptr, bytes, hmod, name);
 }
 
 namespace hip_impl {
@@ -361,13 +362,13 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
 }
 
 hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname,
-                                            hsa_agent_t agent) {
+                                            hsa_agent_t* agent = nullptr) {
     using namespace hip_impl;
 
     pair<const char*, hsa_executable_symbol_t> r{kname, {}};
 
     hsa_executable_iterate_agent_symbols(
-        executable, agent,
+        executable, agent ? *agent : this_agent(),
         [](hsa_executable_t, hsa_agent_t, hsa_executable_symbol_t x, void* s) {
             auto p = static_cast<pair<const char*, hsa_executable_symbol_t>*>(s);
 
@@ -383,10 +384,6 @@ hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const c
         &r);
 
     return r.second;
-}
-
-hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname) {
-    return find_kernel_by_name(executable, kname, hip_impl::this_agent());
 }
 
 
@@ -457,10 +454,7 @@ hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const ch
 
     if (!*func) return hipErrorInvalidValue;
 
-    if (!agent)
-      *agent = this_agent();
-
-    auto kernel = find_kernel_by_name(hmod->executable, name, *agent);
+    auto kernel = find_kernel_by_name(hmod->executable, name, agent);
 
     if (kernel.handle == 0u) return hipErrorNotFound;
 
@@ -481,7 +475,7 @@ hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const ch
 // Get kernel for the given hsa agent. Internal use only.
 hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
                                   const char* name, hsa_agent_t *agent) {
-    HIP_INIT_API(hipModuleGetFunctionEx, hfunc, hmod, name);
+    HIP_INIT_API(hipModuleGetFunctionEx, hfunc, hmod, name, agent);
     return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name, agent));
 }
 
@@ -519,11 +513,8 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     if (!func) return hipErrorInvalidDeviceFunction;
 
     auto agent = this_agent();
-    const auto it = functions(agent).find(reinterpret_cast<uintptr_t>(func));
-
-    if (it == functions(agent).cend()) return hipErrorInvalidDeviceFunction;
-
-    const auto header = static_cast<hipFunction_t>(it->second)->_header;
+    auto kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
+    const auto header = kd->_header;
 
     if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 
@@ -555,7 +546,8 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
     auto content = tmp.empty() ? read_elf_file_as_string(image) : tmp;
 
-    (*module)->executable = load_executable(content, (*module)->executable,
+    (*module)->executable = get_program_state().load_executable(
+                                            content.data(), content.size(), (*module)->executable,
                                             this_agent());
 
     // compute the hash of the code object
@@ -598,10 +590,10 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     if (!texRef) return ihipLogStatus(hipErrorInvalidValue);
 
     if (!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
+    
+    auto addr = get_program_state().global_addr_by_name(name);
+    if (addr == nullptr) return ihipLogStatus(hipErrorInvalidValue);
 
-    const auto it = globals().find(name);
-    if (it == globals().end()) return ihipLogStatus(hipErrorInvalidValue);
-
-    *texRef = reinterpret_cast<textureReference*>(it->second);
+    *texRef = reinterpret_cast<textureReference*>(addr);
     return ihipLogStatus(hipSuccess);
 }

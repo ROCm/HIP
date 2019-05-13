@@ -96,7 +96,7 @@ typedef int hipLaunchParm;
 #define hipGridDim_y gridDim.y
 #define hipGridDim_z gridDim.z
 
-#define HIP_SYMBOL(X) X
+#define HIP_SYMBOL(X) &X
 
 /**
  * extern __shared__

@@ -20,7 +20,7 @@ THE SOFTWARE.
 /*
  * HIT_START
  * BUILD: %t %s ../test_common.cpp HIPCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvcc
- * RUN: %t
+ * TEST: %t
  * HIT_END
  */
 
@@ -117,7 +117,7 @@ __hip_as_write_block(__ockl_as_stream_t *stream, uchar service_id,
                      uchar flags)
 {
     __ockl_as_stream_t ATTR_GLOBAL *gstream =
-        reinterpret_cast<__ockl_as_stream_t ATTR_GLOBAL *>(stream);
+        (__ockl_as_stream_t ATTR_GLOBAL *)(stream);
     return __ockl_as_write_block(gstream, service_id, connection_id, str, len,
                                  flags);
 }

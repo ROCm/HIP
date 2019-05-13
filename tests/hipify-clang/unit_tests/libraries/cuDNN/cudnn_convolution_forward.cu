@@ -113,7 +113,7 @@ int main() {
   cudnnFilterDescriptor_t filt_desc;
   // CHECK: CUDNN_CALL(hipdnnCreateFilterDescriptor(&filt_desc));
   CUDNN_CALL(cudnnCreateFilterDescriptor(&filt_desc));
-  // CHECK-NOT: CUDNN_CALL(hipdnnSetFilter4dDescriptor(
+  // CHECK: CUDNN_CALL(hipdnnSetFilter4dDescriptor(
   CUDNN_CALL(cudnnSetFilter4dDescriptor(
         // CHECK: filt_desc, HIPDNN_DATA_FLOAT, HIPDNN_TENSOR_NCHW,
         filt_desc, CUDNN_DATA_FLOAT, CUDNN_TENSOR_NCHW,

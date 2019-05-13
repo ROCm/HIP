@@ -67,6 +67,7 @@ THE SOFTWARE.
 #define HIP_LAUNCH_PARAM_END ((void*)0x03)
 
 #ifdef __cplusplus
+  #include <algorithm>
   #include <mutex>
   #include <string>
   #include <unordered_map>
@@ -177,6 +178,9 @@ enum hipLimit_t {
     0x80000000  ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
                 ///< allocation.
 
+#define hipMemAttachGlobal 0x0
+#define hipMemAttachHost 0x1
+
 #define hipDeviceMallocDefault 0x0
 #define hipDeviceMallocFinegrained 0x1  ///< Memory is allocated in fine grained region of device.
 
@@ -187,7 +191,7 @@ enum hipLimit_t {
     0x2  ///< Map the allocation into the address space for the current device.  The device pointer
          ///< can be obtained with #hipHostGetDevicePointer.
 #define hipHostRegisterIoMemory 0x4  ///< Not supported.
-
+#define hipExtHostRegisterCoarseGrained 0x8  ///< Coarse Grained host memory lock
 
 #define hipDeviceScheduleAuto 0x0  ///< Automatically select between Spin and Yield
 #define hipDeviceScheduleSpin                                                                      \
@@ -538,6 +542,20 @@ hipError_t hipSetDeviceFlags(unsigned flags);
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* prop);
+
+/**
+ * @brief Returns the link type and hop count between two devices
+ *
+ * @param [in] device1 Ordinal for device1
+ * @param [in] device2 Ordinal for device2
+ * @param [out] linktype Returns the link type (See hsa_amd_link_info_type_t) between the two devices
+ * @param [out] hopcount Returns the hop count between the two devices
+ *
+ * Queries and returns the HSA link type and the hop count between the two specified devices.
+ *
+ * @returns #hipSuccess, #hipInvalidDevice, #hipErrorRuntimeOther
+ */
+hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* linktype, uint32_t* hopcount);
 
 // end doxygen Device
 /**
@@ -1102,6 +1120,17 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  *  @see hipSetDeviceFlags, hipHostFree
  */
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
+
+/**
+ *  @brief Allocates memory that will be automatically managed by the Unified Memory system.
+ *
+ *  @param[out] ptr Pointer to the allocated managed memory
+ *  @param[in]  size Requested memory size
+ *  @param[in]  flags must be either hipMemAttachGlobal/hipMemAttachHost
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
+ */
+hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags __dparm(0));
 
 /**
  *  @brief Allocate device accessible page locked host memory [Deprecated]
@@ -2549,7 +2578,7 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
  * @returns hipSuccess, hipErrorInvalidDeviceFunction
  */
 
-hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func);
+hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
 
 struct Agent_global {
 
@@ -2615,77 +2644,116 @@ std::vector<Agent_global> read_agent_globals(hsa_agent_t agent,
                                              hsa_executable_t executable);
 hsa_agent_t this_agent();
 
+
+class agent_globals_impl {
+private:
+    std::pair<
+        std::mutex,
+        std::unordered_map<
+            std::string, std::vector<Agent_global>>> globals_from_module;
+
+    std::unordered_map<
+        hsa_agent_t,
+        std::pair<
+            std::once_flag,
+            std::vector<Agent_global>>> globals_from_process;
+
+public:
+
+    hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+            hipModule_t hmod, const char* name) {
+        // the key of the map would the hash of code object associated with the
+        // hipModule_t instance
+        std::string key(hash_for(hmod));
+
+        if (globals_from_module.second.count(key) == 0) {
+            std::lock_guard<std::mutex> lck{globals_from_module.first};
+
+            if (globals_from_module.second.count(key) == 0) {
+                globals_from_module.second.emplace(
+                        key, read_agent_globals(this_agent(), executable_for(hmod)));
+            }
+        }
+
+        const auto it0 = globals_from_module.second.find(key);
+        if (it0 == globals_from_module.second.cend()) {
+            hip_throw(
+                    std::runtime_error{"agent_globals data structure corrupted."});
+        }
+
+        std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
+                it0->second.cend(), name);
+
+        return *dptr ? hipSuccess : hipErrorNotFound;
+    }
+
+  hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+            const char* name) {
+
+        auto agent = this_agent();
+
+        std::call_once(globals_from_process[agent].first, [this](hsa_agent_t aa) {
+            std::vector<Agent_global> tmp0;
+            for (auto&& executable : hip_impl::get_program_state().executables(aa)) {
+                auto tmp1 = read_agent_globals(aa, executable);
+                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
+                            make_move_iterator(tmp1.end()));
+            }
+            globals_from_process[aa].second = move(move(tmp0));
+        }, agent);
+
+        const auto it = globals_from_process.find(agent);
+
+        if (it == globals_from_process.cend()) return hipErrorNotInitialized;
+
+        std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
+                it->second.second.cend(), name);
+
+        return *dptr ? hipSuccess : hipErrorNotFound;
+    }
+  
+};
+
+class agent_globals {
+public:
+    agent_globals() : impl(new agent_globals_impl()) { 
+        if (!impl) 
+            hip_throw(
+                std::runtime_error{"Error when constructing agent global data structures."});
+    }
+    ~agent_globals() { delete impl; }
+
+    hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+                                             hipModule_t hmod, const char* name) {
+        return impl->read_agent_global_from_module(dptr, bytes, hmod, name);
+    }
+
+    hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                                              const char* name) {
+        return impl->read_agent_global_from_process(dptr, bytes, name);
+    }
+
+private:
+    agent_globals_impl* impl;
+};
+
 inline
 __attribute__((visibility("hidden")))
-hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
-                                         hipModule_t hmod, const char* name) {
-    // the key of the map would the hash of code object associated with the
-    // hipModule_t instance
-    static std::unordered_map<
-        std::string, std::vector<Agent_global>> agent_globals;
-    std::string key(hash_for(hmod));
-
-    if (agent_globals.count(key) == 0) {
-        static std::mutex mtx;
-        std::lock_guard<std::mutex> lck{mtx};
-
-        if (agent_globals.count(key) == 0) {
-            agent_globals.emplace(
-                key, read_agent_globals(this_agent(), executable_for(hmod)));
-        }
-    }
-
-    const auto it0 = agent_globals.find(key);
-    if (it0 == agent_globals.cend()) {
-        hip_throw(
-            std::runtime_error{"agent_globals data structure corrupted."});
-    }
-
-    std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
-                                                      it0->second.cend(), name);
-
-    return *dptr ? hipSuccess : hipErrorNotFound;
+agent_globals& get_agent_globals() {
+    static agent_globals ag;
+    return ag;
 }
 
+
+extern "C"
 inline
 __attribute__((visibility("hidden")))
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                           const char* name) {
-    static std::unordered_map<hsa_agent_t, std::pair<std::once_flag,
-        std::vector<Agent_global>>> globals;
-    static std::once_flag f;
-    auto agent = this_agent();
-
-    // Create placeholder for each agent in the map.
-    std::call_once(f, []() {
-        for (auto&& x : hip_impl::all_hsa_agents()) {
-            (void)globals[x];
-        }
-    });
-
-    if (globals.find(agent) == globals.cend()) {
-        hip_throw(std::runtime_error{"invalid agent"});
-    }
-
-    std::call_once(globals[agent].first, [](hsa_agent_t aa) {
-        std::vector<Agent_global> tmp0;
-        for (auto&& executable : executables(aa)) {
-            auto tmp1 = read_agent_globals(aa, executable);
-            tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
-                        make_move_iterator(tmp1.end()));
-        }
-        globals[aa].second = move(tmp0);
-    }, agent);
-
-    const auto it = globals.find(agent);
-
-    if (it == globals.cend()) return hipErrorNotInitialized;
-
-    std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
-                                                      it->second.second.cend(), name);
-
-    return *dptr ? hipSuccess : hipErrorNotFound;
+    return get_agent_globals().read_agent_global_from_process(dptr, bytes, name);
 }
+
+
 } // Namespace hip_impl.
 
 #if defined(__cplusplus)
@@ -2707,6 +2775,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 #endif // __HIP_VDI__
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
+
 /**
  * @brief builds module from code object which resides in host memory. Image is pointer to that
  * location.
@@ -2953,7 +3022,9 @@ hipError_t hipLaunchByPtr(const void* func);
 } /* extern "c" */
 #endif
 
+#ifdef __cplusplus
 #include <hip/hcc_detail/hip_prof_api.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

@@ -269,6 +269,7 @@
 |           61 |*`CU_TARGET_COMPUTE_61`*                                            |                                                            |
 |           62 |*`CU_TARGET_COMPUTE_62`*                                            |                                                            |
 |           70 |*`CU_TARGET_COMPUTE_70`*                                            |                                                            |
+|           72 |*`CU_TARGET_COMPUTE_72`*                                            |                                                            |
 |           73 |*`CU_TARGET_COMPUTE_73`*                                            |                                                            |
 |           75 |*`CU_TARGET_COMPUTE_75`*                                            |                                                            |
 | enum         |***`CUjitInputType`***                                              |                                                            |
@@ -440,6 +441,8 @@
 |          800 |*`CUDA_ERROR_NOT_PERMITTED`*                                        |                                                            |
 |          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                        |                                                            |
 |          802 |*`CUDA_ERROR_SYSTEM_NOT_READY`*                                     |                                                            |
+|          803 |*`CUDA_ERROR_SYSTEM_DRIVER_MISMATCH`*                               |                                                            |
+|          804 |*`CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE`*                       |                                                            |
 |          900 |*`CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED`*                           |                                                            |
 |          901 |*`CUDA_ERROR_STREAM_CAPTURE_INVALIDATED`*                           |                                                            |
 |          902 |*`CUDA_ERROR_STREAM_CAPTURE_MERGE`*                                 |                                                            |
@@ -448,6 +451,7 @@
 |          905 |*`CUDA_ERROR_STREAM_CAPTURE_ISOLATION`*                             |                                                            |
 |          906 |*`CUDA_ERROR_STREAM_CAPTURE_IMPLICIT`*                              |                                                            |
 |          907 |*`CUDA_ERROR_CAPTURED_EVENT`*                                       |                                                            |
+|          908 |*`CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD`*                          |                                                            |
 |          999 |*`CUDA_ERROR_UNKNOWN`*                                              |                                                            |
 | enum         |***`CUsharedconfig`***                                              |***`hipSharedMemConfig`***                                  |
 | typedef      |***`CUsharedconfig_enum`***                                         |***`hipSharedMemConfig`***                                  |
@@ -599,6 +603,11 @@
 |            0 |*`CU_STREAM_CAPTURE_STATUS_NONE`*                                   |                                                            |
 |            1 |*`CU_STREAM_CAPTURE_STATUS_ACTIVE`*                                 |                                                            |
 |            2 |*`CU_STREAM_CAPTURE_STATUS_INVALIDATED`*                            |                                                            |
+| enum         |***`CUstreamCaptureMode`***                                         |                                                            |
+| typedef      |***`CUstreamCaptureMode_enum`***                                    |                                                            |
+|            0 |*`CU_STREAM_CAPTURE_MODE_GLOBAL`*                                   |                                                            |
+|            1 |*`CU_STREAM_CAPTURE_MODE_THREAD_LOCAL`*                             |                                                            |
+|            2 |*`CU_STREAM_CAPTURE_MODE_RELAXED`*                                  |                                                            |
 | enum         |***`CUstreamWaitValue_flags`***                                     |                                                            |
 | typedef      |***`CUstreamWaitValue_flags_enum`***                                |                                                            |
 |          0x0 |*`CU_STREAM_WAIT_VALUE_GEQ`*                                        |                                                            |
@@ -614,6 +623,7 @@
 |         0x01 |*`CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK`*                        |                                                            |
 |         0x02 |*`CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED`*                        |                                                            |
 |         0x03 |*`CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED`*                 |                                                            |
+|         0x04 |*`CU_DEVICE_P2P_ATTRIBUTE_ACCESS_ACCESS_SUPPORTED`*                 |                                                            |
 |         0x04 |*`CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED`*           |                                                            |
 |         0x04 |*`CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED`*             |                                                            |
 | enum         |***`CUeglColorFormat`***                                            |                                                            |
@@ -926,8 +936,11 @@
 | `cuStreamSynchronize`                                     | `hipStreamSynchronize`        |
 | `cuStreamWaitEvent`                                       | `hipStreamWaitEvent`          |
 | `cuStreamBeginCapture`                                    |                               |
+| `cuStreamBeginCapture_ptsz`                               |                               |
 | `cuStreamEndCapture`                                      |                               |
+| `cuStreamGetCaptureInfo`                                  |                               |
 | `cuStreamIsCapturing`                                     |                               |
+| `cuThreadExchangeStreamCaptureMode`                       |                               |
 
 ## **14. Event Management**
 
@@ -1024,6 +1037,7 @@
 | `cuGraphDestroyNode`                                      |                               |
 | `cuGraphInstantiate`                                      |                               |
 | `cuGraphExecDestroy`                                      |                               |
+| `cuGraphExecKernelNodeSetParams`                          |                               |
 | `cuGraphDestroy`                                          |                               |
 
 ## **20. Occupancy**

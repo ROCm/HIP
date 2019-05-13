@@ -1,14 +1,19 @@
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
- * RUN_NAMED: %t hipMultiThreadDevice-serial --tests 0x1
- * RUN_NAMED: %t hipMultiThreadDevice-pyramid --tests 0x4
- * RUN_NAMED: %t hipMultiThreadDevice-nearzero --tests 0x10
+ * TEST_NAMED: %t hipMultiThreadDevice-serial --tests 0x1
+ * TEST_NAMED: %t hipMultiThreadDevice-pyramid --tests 0x4
+ * TEST_NAMED: %t hipMultiThreadDevice-nearzero --tests 0x10
  * HIT_END
  */
 
 #include "hip/hip_runtime_api.h"
 #include "test_common.h"
 
+#ifdef _WIN32
+#define MAX_BURST_SIZE   40
+#else
+#define MAX_BURST_SIZE   100
+#endif
 
 // Create a lot of streams and then destroy 'em.
 void createThenDestroyStreams(int iterations, int burstSize) {
@@ -50,8 +55,8 @@ void waitStreams(int iterations) {
 // Some create many queue, some not many.
 //
 void multiThread_pyramid(bool serialize, int iters) {
-    printf("%s creating %d streams\n", __func__, iters * 100);
-    std::thread t1(createThenDestroyStreams, iters * 1, 100);
+    printf("%s creating %d streams\n", __func__, iters * MAX_BURST_SIZE);
+    std::thread t1(createThenDestroyStreams, iters * 1, MAX_BURST_SIZE);
     if (serialize) {
         t1.join();
         printf("t1 done\n");

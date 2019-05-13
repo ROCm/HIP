@@ -301,9 +301,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
-    HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
-    HIP_SET_DEVICE();
+hipError_t ihipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     hipError_t hip_status = hipSuccess;
 
     if (HIP_SYNC_HOST_ALLOC) {
@@ -368,6 +366,25 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     if (HIP_SYNC_HOST_ALLOC) {
         hipDeviceSynchronize();
     }
+    return hip_status;
+}
+
+hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
+    HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
+    HIP_SET_DEVICE();
+    hipError_t hip_status = hipSuccess;
+    hip_status = ihipHostMalloc(ptr, sizeBytes, flags);
+    return ihipLogStatus(hip_status);
+}
+
+hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags) {
+    HIP_INIT_SPECIAL_API(hipMallocManaged, (TRACE_MEM), devPtr, size, flags);
+    HIP_SET_DEVICE();
+    hipError_t hip_status = hipSuccess;
+    if(flags != hipMemAttachGlobal)
+        hip_status = hipErrorInvalidValue;
+    else
+        hip_status = ihipHostMalloc(devPtr, size, hipHostMallocDefault);
     return ihipLogStatus(hip_status);
 }
 
@@ -940,15 +957,25 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
         }
         // TODO-test : multi-gpu access to registered host memory.
         if (ctx) {
-            if (flags == hipHostRegisterDefault || flags == hipHostRegisterPortable ||
-                flags == hipHostRegisterMapped) {
+            if ((flags == hipHostRegisterDefault) || (flags & hipHostRegisterPortable) ||
+                (flags & hipHostRegisterMapped) || (flags == hipExtHostRegisterCoarseGrained)) {
                 auto device = ctx->getWriteableDevice();
                 std::vector<hc::accelerator> vecAcc;
                 for (int i = 0; i < g_deviceCnt; i++) {
                     vecAcc.push_back(ihipGetDevice(i)->_acc);
                 }
+#if (__hcc_workweek__ >= 19183)
+                if(flags & hipExtHostRegisterCoarseGrained) {
+                    am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0],
+                                                    vecAcc.size());
+                } else {
+                    am_status = hc::am_memory_host_lock_with_flag(device->_acc, hostPtr, sizeBytes, &vecAcc[0],
+                                                    vecAcc.size());
+                }
+#else
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0],
                                                     vecAcc.size());
+#endif
                 if ( am_status == AM_SUCCESS ) {
                      am_status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
 
@@ -1902,10 +1929,6 @@ hipError_t hipFree(void* ptr) {
 
     hipError_t hipStatus = hipErrorInvalidDevicePointer;
 
-    // Synchronize to ensure all work has finished.
-    ihipGetTlsDefaultCtx()->locked_waitAllStreams();  // ignores non-blocking streams, this waits
-                                                      // for all activity to finish.
-
     if (ptr) {
         hc::accelerator acc;
 #if (__hcc_workweek__ >= 17332)
@@ -1916,6 +1939,29 @@ hipError_t hipFree(void* ptr) {
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
         if (status == AM_SUCCESS) {
             if (amPointerInfo._hostPointer == NULL) {
+                if (HIP_SYNC_FREE) {
+                    // Synchronize all devices, all streams
+                    // to ensure all work has finished on all devices.
+                    // This is disabled by default.
+                    for (unsigned i = 0; i < g_deviceCnt; i++) {
+                        ihipGetPrimaryCtx(i)->locked_waitAllStreams();
+                    }
+                }
+                else {
+                    ihipCtx_t* ctx;
+                    if (amPointerInfo._appId != -1) {
+#if USE_APP_PTR_FOR_CTX
+                        ctx = static_cast<ihipCtx_t*>(amPointerInfo._appPtr);
+#else
+                        ctx = ihipGetPrimaryCtx(amPointerInfo._appId);
+#endif
+                    } else {
+                        ctx = ihipGetTlsDefaultCtx();
+                    }
+                    // Synchronize to ensure all work has finished on device owning the memory.
+                    ctx->locked_waitAllStreams();  // ignores non-blocking streams, this waits
+                                                   // for all activity to finish.
+                }
                 hc::am_free(ptr);
                 hipStatus = hipSuccess;
             }

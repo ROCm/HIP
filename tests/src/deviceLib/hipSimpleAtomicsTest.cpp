@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11 --gpu-architecture=sm_60
- * RUN: %t
+ * TEST: %t
  * HIT_END
  */
 

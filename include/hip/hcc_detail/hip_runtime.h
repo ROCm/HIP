@@ -29,19 +29,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_H
 
-#if defined(__HCC__)
-#define __HCC_OR_HIP_CLANG__ 1
-#define __HCC_ONLY__ 1
-#define __HIP_CLANG_ONLY__ 0
-#elif defined(__clang__) && defined(__HIP__)
-#define __HCC_OR_HIP_CLANG__ 1
-#define __HCC_ONLY__ 0
-#define __HIP_CLANG_ONLY__ 1
-#else
-#define __HCC_OR_HIP_CLANG__ 0
-#define __HCC_ONLY__ 0
-#define __HIP_CLANG_ONLY__ 0
-#endif
+#include <hip/hcc_detail/hip_common.h>
 
 //---
 // Top part of file can be compiled with any compiler
@@ -56,6 +44,12 @@ THE SOFTWARE.
 #endif  //__cplusplus
 
 #if __HCC_OR_HIP_CLANG__
+
+#if __HIP__
+#if !defined(__align__)
+#define __align__(x) __attribute__((aligned(x)))
+#endif
+#endif
 
 #define CUDA_SUCCESS hipSuccess
 
@@ -465,6 +459,14 @@ hc_get_workitem_absolute_id(int dim)
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 
+hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+                                    uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
+                                    uint32_t localWorkSizeX, uint32_t localWorkSizeY,
+                                    uint32_t localWorkSizeZ, size_t sharedMemBytes,
+                                    hipStream_t hStream, void** kernelParams, void** extra,
+                                    hipEvent_t startEvent = nullptr,
+                                    hipEvent_t stopEvent = nullptr,
+                                    uint32_t flags = 0);
 
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
@@ -472,7 +474,8 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent = nullptr,
-                                    hipEvent_t stopEvent = nullptr);
+                                    hipEvent_t stopEvent = nullptr)
+                                    __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
 
 #endif // defined(__clang__) && defined(__HIP__)
 
