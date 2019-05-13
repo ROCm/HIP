@@ -24,13 +24,13 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * RUN: %t
+ * TEST: %t
  * //Small copy
- * RUN: %t -N 10    --memsetval 0x42 --memsetD32val 0x101
+ * TEST: %t -N 10    --memsetval 0x42 --memsetD32val 0x101
  * // Oddball size
- * RUN: %t -N 10013 --memsetval 0x5a --memsetD32val 0xDEADBEEF
+ * TEST: %t -N 10013 --memsetval 0x5a --memsetD32val 0xDEADBEEF
  * // Big copy
- * RUN: %t -N 256M  --memsetval 0xa6 --memsetD32val 0xCAFEBABE
+ * TEST: %t -N 256M  --memsetval 0xa6 --memsetD32val 0xCAFEBABE
  * HIT_END
  */
 

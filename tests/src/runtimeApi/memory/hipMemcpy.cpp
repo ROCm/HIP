@@ -22,11 +22,11 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
- * RUN_NAMED: %t hipMemcpy-modes --tests 0x1
- * RUN_NAMED: %t hipMemcpy-size --tests 0x6
- * RUN_NAMED: %t hipMemcpy-dev-offsets --tests 0x10
- * RUN_NAMED: %t hipMemcpy-host-offsets --tests 0x20
- * RUN_NAMED: %t hipMemcpy-multithreaded --tests 0x8
+ * TEST_NAMED: %t hipMemcpy-modes --tests 0x1
+ * TEST_NAMED: %t hipMemcpy-size --tests 0x6
+ * TEST_NAMED: %t hipMemcpy-dev-offsets --tests 0x10
+ * TEST_NAMED: %t hipMemcpy-host-offsets --tests 0x20
+ * TEST_NAMED: %t hipMemcpy-multithreaded --tests 0x8
  * HIT_END
  */
 
