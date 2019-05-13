@@ -957,15 +957,25 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
         }
         // TODO-test : multi-gpu access to registered host memory.
         if (ctx) {
-            if (flags == hipHostRegisterDefault || flags == hipHostRegisterPortable ||
-                flags == hipHostRegisterMapped) {
+            if ((flags == hipHostRegisterDefault) || (flags & hipHostRegisterPortable) ||
+                (flags & hipHostRegisterMapped) || (flags == hipExtHostRegisterCoarseGrained)) {
                 auto device = ctx->getWriteableDevice();
                 std::vector<hc::accelerator> vecAcc;
                 for (int i = 0; i < g_deviceCnt; i++) {
                     vecAcc.push_back(ihipGetDevice(i)->_acc);
                 }
+#if (__hcc_workweek__ >= 19183)
+                if(flags & hipExtHostRegisterCoarseGrained) {
+                    am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0],
+                                                    vecAcc.size());
+                } else {
+                    am_status = hc::am_memory_host_lock_with_flag(device->_acc, hostPtr, sizeBytes, &vecAcc[0],
+                                                    vecAcc.size());
+                }
+#else
                 am_status = hc::am_memory_host_lock(device->_acc, hostPtr, sizeBytes, &vecAcc[0],
                                                     vecAcc.size());
+#endif
                 if ( am_status == AM_SUCCESS ) {
                      am_status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
 
