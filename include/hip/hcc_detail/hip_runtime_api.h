@@ -191,7 +191,7 @@ enum hipLimit_t {
     0x2  ///< Map the allocation into the address space for the current device.  The device pointer
          ///< can be obtained with #hipHostGetDevicePointer.
 #define hipHostRegisterIoMemory 0x4  ///< Not supported.
-
+#define hipExtHostRegisterCoarseGrained 0x8  ///< Coarse Grained host memory lock
 
 #define hipDeviceScheduleAuto 0x0  ///< Automatically select between Spin and Yield
 #define hipDeviceScheduleSpin                                                                      \
