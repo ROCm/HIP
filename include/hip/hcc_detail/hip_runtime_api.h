@@ -2684,20 +2684,7 @@ public:
         std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
                 it0->second.cend(), name);
 
-        // HACK for SWDEV-173477
-        //
-        // For code objects with global symbols of length 0, ROCR runtime would
-        // ignore them even though they exist in the symbol table. Therefore the
-        // result from read_agent_globals() can't be trusted entirely.
-        //
-        // As a workaround to tame applications which depend on the existence of
-        // global symbols with length 0, always return hipSuccess here.
-        //
-        // This behavior shall be reverted once ROCR runtime has been fixed to
-        // address SWDEV-173477
-
-        //return *dptr ? hipSuccess : hipErrorNotFound;
-        return hipSuccess;
+        return *dptr ? hipSuccess : hipErrorNotFound;
     }
 
     hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
