@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * RUN: %t
- * RUN_NAMED: %t hipMemcpyAsync-simple --async
+ * TEST: %t
+ * TEST_NAMED: %t hipMemcpyAsync-simple --async
  * HIT_END
  */
 
