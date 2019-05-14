@@ -108,7 +108,7 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, SyncMode s
             HIPCHECK(hipStreamSynchronize(0));  // wait on host for null stream:
             break;
         case syncOtherStream:
-            // Does this synchronize with the null stream?
+            // This syncs with null stream if "otherStream" is created with "hipStreamDefault" flag.
             HIPCHECK(hipStreamSynchronize(otherStream));
             break;
         case syncMarkerThenOtherStream:
@@ -178,7 +178,7 @@ void runTests(int64_t numElements) {
     {
         test(0x01, C_d, C_h, numElements, syncNone, true /*expectMismatch*/);
         test(0x02, C_d, C_h, numElements, syncNullStream, false /*expectMismatch*/);
-        test(0x04, C_d, C_h, numElements, syncOtherStream, true /*expectMismatch*/);
+        test(0x04, C_d, C_h, numElements, syncOtherStream, false /*expectMismatch*/);
         test(0x08, C_d, C_h, numElements, syncDevice, false /*expectMismatch*/);
 
         // Sending a marker to to null stream may synchronize the otherStream
