@@ -557,7 +557,9 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
                                             this_agent());
     istringstream elf{content};
     ELFIO::elfio reader;
-    if (reader.load(elf)) read_kernarg_metadata(reader, (*module)->kernargs);
+    if (reader.load(elf)) {
+        program_state_impl::read_kernarg_metadata(reader, (*module)->kernargs);
+    }
 
     // compute the hash of the code object
     (*module)->hash = checksum(content.length(), content.data());

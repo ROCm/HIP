@@ -32,6 +32,7 @@ THE SOFTWARE.
 #include <cxxabi.h>
 
 #include <algorithm>
+#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <experimental/filesystem>
@@ -78,6 +79,31 @@ const char* hiprtcGetErrorString(hiprtcResult x)
     default: throw std::logic_error{"Invalid HIPRTC result."};
     };
 }
+
+namespace
+{
+    struct Symbol {
+        std::string name;
+        ELFIO::Elf64_Addr value = 0;
+        ELFIO::Elf_Xword size = 0;
+        ELFIO::Elf_Half sect_idx = 0;
+        std::uint8_t bind = 0;
+        std::uint8_t type = 0;
+        std::uint8_t other = 0;
+    };
+
+    inline
+    Symbol read_symbol(const ELFIO::symbol_section_accessor& section,
+                    unsigned int idx) {
+        assert(idx < section.get_symbols_num());
+
+        Symbol r;
+        section.get_symbol(
+            idx, r.name, r.value, r.size, r.bind, r.type, r.sect_idx, r.other);
+
+        return r;
+    }
+} // Unnamed namespace.
 
 struct _hiprtcProgram {
     // DATA - STATICS
@@ -172,7 +198,6 @@ struct _hiprtcProgram {
                  const std::experimental::filesystem::path& program_folder)
     {
         using namespace ELFIO;
-        using namespace hip_impl;
         using namespace redi;
         using namespace std;
 
@@ -192,13 +217,14 @@ struct _hiprtcProgram {
         elfio reader;
         if (!reader.load(args.back())) return false;
 
-        const auto it{find_section_if(reader, [](const section* x) {
+        const auto it{find_if(reader.sections.begin(), reader.sections.end(),
+                              [](const section* x) {
             return x->get_name() == ".kernel";
         })};
 
-        if (!it) return false;
+        if (it == reader.sections.end()) return false;
 
-        Bundled_code_header h{it->get_data()};
+        hip_impl::Bundled_code_header h{(*it)->get_data()};
 
         if (bundles(h).empty()) return false;
 
@@ -222,11 +248,12 @@ struct _hiprtcProgram {
 
         if (!reader.load(blob)) return false;
 
-        const auto it{find_section_if(reader, [](const section* x) {
+        const auto it{find_if(reader.sections.begin(), reader.sections.end(),
+                              [](const section* x) {
             return x->get_type() == SHT_SYMTAB;
         })};
 
-        ELFIO::symbol_section_accessor symbols{reader, it};
+        ELFIO::symbol_section_accessor symbols{reader, *it};
 
         auto n{symbols.get_symbols_num()};
 
