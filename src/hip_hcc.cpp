@@ -2469,14 +2469,16 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 namespace hip_impl {
     std::vector<hsa_agent_t> all_hsa_agents() {
         std::vector<hsa_agent_t> r{};
-        for (auto&& acc : hc::accelerator::get_all()) {
+        std::vector<hc::accelerator> visible_accelerators;
+        for (int i=0; i < g_deviceCnt; i++)
+            visible_accelerators.push_back(g_deviceArray[i]->_acc);
+        for (auto&& acc : visible_accelerators) {
             const auto agent = acc.get_hsa_agent();
 
             if (!agent || !acc.is_hsa_accelerator()) continue;
 
             r.emplace_back(*static_cast<hsa_agent_t*>(agent));
         }
-
         return r;
     }
 
