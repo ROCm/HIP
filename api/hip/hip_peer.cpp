@@ -55,7 +55,7 @@ hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDevi
 
   *canAccessPeer = 0;
 
-  return hipErrorInvalidDevice;
+  return HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
