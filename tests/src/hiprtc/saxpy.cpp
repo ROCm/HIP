@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp LINK_OPTIONS hiprtc EXCLUDE_HIP_PLATFORM nvcc
- * RUN: %t EXCLUDE_HIP_PLATFORM nvcc
+ * TEST: %t
  * HIT_END
  */
 
