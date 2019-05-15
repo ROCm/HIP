@@ -102,7 +102,7 @@ void* config1[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args1, HIP_LAUNCH_PARAM_BUF
 
 time(&start);
 for(i=0;i<200;i++)
-HIP_CHECK(hipExtModuleLaunchKernel(Function, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config, NULL, NULL,1 ));
+HIP_CHECK(hipExtModuleLaunchKernel(Function, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config, NULL, NULL,0));
 HIP_CHECK(hipDeviceSynchronize());
 time(&end);
 double dif1 = difftime (end,start);
@@ -110,8 +110,8 @@ cout<<"Time taken to complete 200 kernel launches: "<<dif1<<" seconds."<<endl;
 
 time(&start);
 for(i=0;i<200;i++){
-HIP_CHECK(hipExtModuleLaunchKernel(Function, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config, NULL, NULL,1 ));
-HIP_CHECK(hipExtModuleLaunchKernel(Function, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,1 ));}
+HIP_CHECK(hipExtModuleLaunchKernel(Function, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config, NULL, NULL,1));
+HIP_CHECK(hipExtModuleLaunchKernel(Function, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,1));}
 HIP_CHECK(hipDeviceSynchronize());
 time(&end);
 double dif2 = difftime (end,start);
