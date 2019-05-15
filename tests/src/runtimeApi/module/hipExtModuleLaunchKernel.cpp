@@ -55,7 +55,7 @@ int *C=new int[N*N*sizeof(int)];
 int *C1=new int[N*N*sizeof(int)];
 
 time_t start,end;
-hipDeviceptr_t *Ad,*Bd,*Cd,*Cd1,*Ad1,*Bd1;
+hipDeviceptr_t *Ad,*Bd,*Cd,*Cd1;
 
 for(i=0;i<N;i++)
 	for(j=0;j<N;j++){
