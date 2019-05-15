@@ -608,3 +608,110 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     *texRef = reinterpret_cast<textureReference*>(addr);
     return ihipLogStatus(hipSuccess);
 }
+
+hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                              hipFunction_t f, size_t dynSharedMemPerBlk,
+                                              uint32_t blockSizeLimit)
+{
+    using namespace hip_impl;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    hipError_t ret = hipSuccess;
+
+    if (ctx == nullptr) {
+        ret = hipErrorInvalidDevice;
+    }
+
+    hipDeviceProp_t prop{};
+    hipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+
+    prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
+
+    const auto header = f->_header;
+    size_t usedVGPRS = header->workitem_vgpr_count;
+    size_t usedLDS = header->workgroup_group_segment_byte_size;
+
+    // try different workgroup sizes to find the maximum potential occupancy
+    // based on the usage of VGPRs and LDS
+    size_t wavefrontSize = prop.warpSize;
+    size_t maxWavefrontsPerBlock = prop.maxThreadsPerBlock / wavefrontSize;
+    size_t maxWavefrontsPerCU = prop.maxThreadsPerMultiProcessor /  wavefrontSize;
+
+    size_t maxActivWaves = 0;
+    size_t maxWavefronts = 0;
+    for (int i = 0; i < maxWavefrontsPerBlock; i++) {
+        size_t wavefrontsPerWG = i + 1;
+
+        // workgroup per CU is 40 for WG size of 1 wavefront; otherwise it is 16
+        size_t maxWorkgroupPerCU = (wavefrontsPerWG == 1) ? 40 : 16;
+        size_t maxWavesWGLimited = min(wavefrontsPerWG * maxWorkgroupPerCU, maxWavefrontsPerCU);
+
+        // Compute VGPR limited wavefronts per block
+        size_t wavefrontsVGPRS;
+        if (usedVGPRS == 0) {
+            wavefrontsVGPRS = maxWavesWGLimited;
+        }
+        else {
+            // find how many VGPRs are available for each SIMD
+            size_t numSIMD = 4;
+            size_t numVGPRsPerSIMD = (prop.regsPerBlock / wavefrontSize / numSIMD);
+
+            // VGPR is handled as unit of 4
+            size_t numVGPRs = ((usedVGPRS + 3) / 4) * 4;
+            wavefrontsVGPRS = (numVGPRsPerSIMD / numVGPRs) * numSIMD;
+        }
+
+        size_t maxWavesVGPRSLimited = 0;
+        if (wavefrontsVGPRS > maxWavesWGLimited) {
+            maxWavesVGPRSLimited = maxWavesWGLimited;
+        }
+        else {
+            maxWavesVGPRSLimited = (wavefrontsVGPRS / wavefrontsPerWG) * wavefrontsPerWG;
+        }
+
+        // Compute LDS limited wavefronts per block
+        size_t wavefrontsLDS;
+        if (usedLDS == 0) {
+            wavefrontsLDS = maxWorkgroupPerCU * wavefrontsPerWG;
+        }
+        else {
+            size_t availableSharedMemPerCU = prop.maxSharedMemoryPerMultiProcessor;
+            size_t workgroupPerCU = availableSharedMemPerCU / (usedLDS + dynSharedMemPerBlk);
+            wavefrontsLDS = min(workgroupPerCU, maxWorkgroupPerCU) * wavefrontsPerWG;
+        }
+
+        size_t maxWavesLDSLimited = min(wavefrontsLDS, maxWavefrontsPerCU);
+
+        size_t activeWavefronts = 0;
+        size_t tmp_min = (size_t)min(maxWavesLDSLimited, maxWavesWGLimited);
+        activeWavefronts = min(maxWavesVGPRSLimited, tmp_min);
+
+        if (maxActivWaves < activeWavefronts) {
+            maxActivWaves = activeWavefronts;
+            maxWavefronts = wavefrontsPerWG;
+        }
+    }
+
+    // determine the grid and block sizes for maximum potential occupancy
+    size_t maxThreadsCnt = prop.maxThreadsPerMultiProcessor*prop.multiProcessorCount;
+    if (blockSizeLimit > 0) {
+       maxThreadsCnt = min(maxThreadsCnt, blockSizeLimit);
+    }
+
+    *blockSize = maxWavefronts * wavefrontSize;
+    *gridSize = min((maxThreadsCnt + *blockSize - 1) / *blockSize, prop.multiProcessorCount);
+
+    return ret;
+}
+
+
+hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             uint32_t blockSizeLimit)
+{
+    HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit);
+
+    return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(
+        gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit));
+}
+
