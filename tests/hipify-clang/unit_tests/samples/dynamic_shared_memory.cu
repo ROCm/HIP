@@ -9,6 +9,7 @@
 __global__ void dynamicReverse(int *d, int n)
 {
   // Dynamic shared memory
+  // CHECK-NOT: extern __shared__
   // CHECK: HIP_DYNAMIC_SHARED(int, s);
   extern __shared__ int s[];
   int t = threadIdx.x;
