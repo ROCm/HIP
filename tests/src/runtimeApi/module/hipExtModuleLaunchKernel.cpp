@@ -160,8 +160,10 @@ else{
 free(A);
 free(B);
 free(C);
+free(C1);
 HIP_CHECK(hipFree(Ad));
 HIP_CHECK(hipFree(Bd));
 HIP_CHECK(hipFree(Cd));
+HIP_CHECK(hipFree(Cd1));
 passed();
 }
