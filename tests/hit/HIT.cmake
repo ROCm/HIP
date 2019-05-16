@@ -157,12 +157,12 @@ macro(MAKE_TEST exe)
     string(REPLACE " " "" smush_args ${ARGN})
     set(testname ${exe}${smush_args}.tst)
     add_test(NAME ${testname} COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN})
-    set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+    set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ENVIRONMENT HIP_PATH=${HIP_ROOT_DIR})
 endmacro()
 
 macro(MAKE_NAMED_TEST exe testname)
     add_test(NAME ${testname} COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN})
-    set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+    set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ENVIRONMENT HIP_PATH=${HIP_ROOT_DIR})
 endmacro()
 #-------------------------------------------------------------------------------
 
