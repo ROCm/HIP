@@ -293,7 +293,7 @@
 |`cudnnScaleTensor`                                         |`hipdnnScaleTensor`                              |
 |`cudnnCreateFilterDescriptor`                              |`hipdnnCreateFilterDescriptor`                   |
 |`cudnnSetFilter4dDescriptor`                               |`hipdnnSetFilter4dDescriptor`                    |
-|`cudnnGetFilter4dDescriptor`                               |                                                 |
+|`cudnnGetFilter4dDescriptor`                               |`hipdnnGetFilter4dDescriptor`                    |
 |`cudnnSetFilterNdDescriptor`                               |`hipdnnSetFilterNdDescriptor`                    |
 |`cudnnGetFilterNdDescriptor`                               |`hipdnnGetFilterNdDescriptor`                    |
 |`cudnnDestroyFilterDescriptor`                             |`hipdnnDestroyFilterDescriptor`                  |

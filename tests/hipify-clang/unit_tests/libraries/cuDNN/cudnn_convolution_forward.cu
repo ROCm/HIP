@@ -176,6 +176,19 @@ int main() {
         out_desc, CUDNN_TENSOR_NCHW, CUDNN_DATA_FLOAT,
         out_n, out_c, out_h, out_w));
 
+
+  cudnnDataType_t *dataType = nullptr;
+  cudnnTensorFormat_t *tensorFormat = nullptr;
+  int *p_filt_k = nullptr;
+  int *p_filt_c = nullptr;
+  int *p_filt_h = nullptr;
+  int *p_filt_w = nullptr;
+
+  // CHECK: CUDNN_CALL(hipdnnGetFilter4dDescriptor(
+  CUDNN_CALL(cudnnGetFilter4dDescriptor(
+    filt_desc, dataType, tensorFormat,
+    p_filt_k, p_filt_c, p_filt_h, p_filt_w));
+
   float *out_data;
   // CHECK: CUDA_CALL(hipMalloc(
   CUDA_CALL(cudaMalloc(
