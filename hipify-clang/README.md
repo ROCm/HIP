@@ -1,23 +1,3 @@
-<style>
-pre {
-  max-height: 300px;
-  float: left;
-  width: 100%;
-  overflow-y: auto;
-}
-
-pre.r {
-  max-height: none;
-}
-
-.scroll {
-  max-height: 300px;
-  float: left;
-  width: 100%;
-  overflow-y: auto;
-}
-</style>
-
 # hipify-clang
 
 `hipify-clang` is a clang-based tool to translate CUDA source code into portable HIP C++ automatically.
