@@ -253,7 +253,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/h2f.cpp)
 
     execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS} -Wl,-Bsymbolic")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS}")
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906")
     if(COMPILE_HIP_ATP_MARKER)
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
@@ -263,6 +263,12 @@ if(HIP_PLATFORM STREQUAL "hcc")
     if(HIP_COMPILER STREQUAL "hcc")
         target_link_libraries(hip_hcc PRIVATE hc_am)
         target_link_libraries(hip_hcc_static PRIVATE hc_am)
+
+        add_library(hiprtc SHARED src/hiprtc.cpp)
+        target_include_directories(
+            hiprtc SYSTEM
+                PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
+        target_link_libraries(hiprtc PUBLIC stdc++fs)
     endif()
 
     string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
@@ -297,7 +303,7 @@ endif()
 #############################
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-    install(TARGETS hip_hcc_static hip_hcc DESTINATION lib)
+    install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)

@@ -66,10 +66,17 @@ class Kernel_descriptor {
     std::uint64_t kernel_object_{};
     amd_kernel_code_t const* kernel_header_{nullptr};
     std::string name_{};
+    std::vector<std::pair<std::size_t, std::size_t>> kernarg_layout_{};
 public:
     Kernel_descriptor() = default;
-    Kernel_descriptor(std::uint64_t kernel_object, const std::string& name)
-        : kernel_object_{kernel_object}, name_{name}
+    Kernel_descriptor(
+        std::uint64_t kernel_object,
+        const std::string& name,
+        std::vector<std::pair<std::size_t, std::size_t>> kernarg_layout = {})
+        :
+        kernel_object_{kernel_object},
+        name_{name},
+        kernarg_layout_{std::move(kernarg_layout)}
     {
         bool supported{false};
         std::uint16_t min_v{UINT16_MAX};
@@ -548,6 +555,7 @@ public:
         return functions[agent].second;
     }
 
+    static
     std::size_t parse_args(
             const std::string& metadata,
             std::size_t f,
@@ -576,6 +584,7 @@ public:
         } while (true);
     }
 
+    static
     void read_kernarg_metadata(
             ELFIO::elfio& reader,
             std::unordered_map<

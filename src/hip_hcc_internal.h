@@ -371,6 +371,8 @@ struct ihipModule_t {
     hsa_executable_t executable = {};
     hsa_code_object_reader_t coReader = {};
     std::string hash;
+    std::unordered_map<
+        std::string, std::vector<std::pair<std::size_t, std::size_t>>> kernargs;
 
     ~ihipModule_t() {
         if (executable.handle) hsa_executable_destroy(executable);
