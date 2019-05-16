@@ -574,9 +574,10 @@ hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* link
         HSA_ERROR_CHECK(err);
         *linktype = link_info.link_type;
 
-        err = hsa_amd_agent_memory_pool_get_info(device1Handle->_hsaAgent, pool, HSA_AMD_AGENT_MEMORY_POOL_INFO_NUM_LINK_HOPS, hopcount);
-        HSA_ERROR_CHECK(err);
-
+        if (link_info.numa_distance < 30)
+            *hopcount = 1;
+        else
+            *hopcount = 2;
         return ihipLogStatus(hipSuccess);
     }
 }
