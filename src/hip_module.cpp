@@ -91,6 +91,7 @@ struct ihipModuleSymbol_t {
     uint64_t _object{};  // The kernel object.
     amd_kernel_code_t const* _header{};
     string _name;  // TODO - review for performance cost.  Name is just used for debug.
+    vector<pair<size_t, size_t>> _kernarg_layout{};
 };
 
 template <>
@@ -132,6 +133,8 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                   uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                   hipStream_t hStream, void** kernelParams, void** extra,
                                   hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags) {
+    using namespace hip_impl;
+
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
 
@@ -146,19 +149,26 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         void* config[5] = {0};
         size_t kernArgSize;
 
-        if (kernelParams != NULL) {
-            std::string name = f->_name;
-            struct ihipKernArgInfo pl = kernelArguments[name];
-            char* argBuf = (char*)malloc(pl.totalSize);
-            memset(argBuf, 0, pl.totalSize);
-            int index = 0;
-            for (int i = 0; i < pl.Size.size(); i++) {
-                memcpy(argBuf + index, kernelParams[i], pl.Size[i]);
-                index += pl.Align[i];
+        std::vector<char> tmp{};
+        if (kernelParams) {
+            if (extra) return hipErrorInvalidValue;
+
+            for (auto&& x : f->_kernarg_layout) {
+                const auto p{static_cast<const char*>(*kernelParams)};
+
+                tmp.insert(
+                    tmp.cend(),
+                    round_up_to_next_multiple_nonnegative(
+                        tmp.size(), x.second) - tmp.size(),
+                    '\0');
+                tmp.insert(tmp.cend(), p, p + x.first);
+
+                ++kernelParams;
             }
-            config[1] = (void*)argBuf;
-            kernArgSize = pl.totalSize;
-        } else if (extra != NULL) {
+            config[1] = static_cast<void*>(tmp.data());
+
+            kernArgSize = tmp.size();
+        } else if (extra) {
             memcpy(config, extra, sizeof(size_t) * 5);
             if (config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER &&
                 config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END) {
@@ -236,10 +246,6 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             stopEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStopCommand);
         }
 
-
-        if (kernelParams != NULL) {
-            free(config[1]);
-        }
         ihipPostLaunchKernel(f->_name.c_str(), hStream, lp);
     }
 
@@ -461,7 +467,7 @@ hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const ch
     // TODO: refactor the whole ihipThisThat, which is a mess and yields the
     //       below, due to hipFunction_t being a pointer to ihipModuleSymbol_t.
     func[0][0] = *static_cast<hipFunction_t>(
-        Kernel_descriptor{kernel_object(kernel), name});
+        Kernel_descriptor{kernel_object(kernel), name, hmod->kernargs[name]});
 
     return hipSuccess;
 }
@@ -549,6 +555,11 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
     (*module)->executable = get_program_state().load_executable(
                                             content.data(), content.size(), (*module)->executable,
                                             this_agent());
+    istringstream elf{content};
+    ELFIO::elfio reader;
+    if (reader.load(elf)) {
+        program_state_impl::read_kernarg_metadata(reader, (*module)->kernargs);
+    }
 
     // compute the hash of the code object
     (*module)->hash = checksum(content.length(), content.data());

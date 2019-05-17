@@ -352,7 +352,7 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
   }
 
   if (!typeName.empty()) {
-    clang::SourceLocation slStart = llcompat::getBeginLoc(sharedVar->getTypeSourceInfo()->getTypeLoc());
+    clang::SourceLocation slStart = sharedVar->getOuterLocStart();
     clang::SourceLocation slEnd = llcompat::getEndLoc(sharedVar->getTypeSourceInfo()->getTypeLoc());
     clang::SourceManager* SM = Result.SourceManager;
     size_t repLength = SM->getCharacterData(slEnd) - SM->getCharacterData(slStart) + 1;

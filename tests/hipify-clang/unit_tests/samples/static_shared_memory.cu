@@ -8,6 +8,8 @@
 
 __global__ void staticReverse(int *d, int n)
 {
+  // CHECK-NOT: HIP_DYNAMIC_SHARED(int, s);
+  // CHECK: __shared__ int s[64];
   __shared__ int s[64];
   int t = threadIdx.x;
   int tr = n-t-1;
