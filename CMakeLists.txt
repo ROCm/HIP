@@ -303,7 +303,11 @@ endif()
 #############################
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-    install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
+    if(HIP_COMPILER STREQUAL "hcc")
+      install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
+    else()
+      install(TARGETS hip_hcc_static hip_hcc DESTINATION lib)
+    endif()
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
