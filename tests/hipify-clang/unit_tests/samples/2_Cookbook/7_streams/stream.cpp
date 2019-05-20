@@ -37,7 +37,7 @@ using namespace std;
 
 __global__ void matrixTranspose_static_shared(float* out, float* in,
                                               const int width) {
-    // CHECK-NOT: HIP_DYNAMIC_SHARED(int, sharedMem);
+    // CHECK-NOT: HIP_DYNAMIC_SHARED(float, sharedMem);
     // CHECK: __shared__ float sharedMem[WIDTH * WIDTH];
     __shared__ float sharedMem[WIDTH * WIDTH];
 
