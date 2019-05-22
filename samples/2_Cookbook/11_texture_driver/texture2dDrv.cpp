@@ -71,8 +71,8 @@ bool runTest(int argc, char** argv) {
     copyParam.srcMemoryType = hipMemoryTypeHost;
     copyParam.srcHost = hData;
     copyParam.srcPitch = width * sizeof(float);
-    copyParam.widthInBytes = copyParam.srcPitch;
-    copyParam.height = height;
+    copyParam.WidthInBytes = copyParam.srcPitch;
+    copyParam.Height = height;
     hipMemcpyParam2D(&copyParam);
 
     textureReference* texref;
