@@ -32,30 +32,30 @@
 ## <a name="dependencies"></a> Dependencies
 
 `hipify-clang` requires:
-1. **LLVM+CLANG** of at least version 3.8.0; the latest stable and recommended release: **6.0.1 on Windows**, and **8.0.0 on Linux**.
+1. [**LLVM+CLANG**](http://releases.llvm.org) of at least version [3.8.0](http://releases.llvm.org/download.html#3.8.0); the latest stable and recommended release: [**6.0.1**](http://releases.llvm.org/download.html#6.0.1) on **Windows**, and [**8.0.0**](http://releases.llvm.org/download.html#8.0.0) on **Linux**.
 
-2. **CUDA** at least version 7.0, the latest supported version is **9.0 on Windows**, and **10.0 on Linux**.
+2. **CUDA** at least version [7.0](https://developer.nvidia.com/cuda-toolkit-70), the latest supported version is [**9.0**](https://developer.nvidia.com/cuda-90-download-archive) on **Windows**, and [**10.0**](https://developer.nvidia.com/cuda-10.0-download-archive) on **Linux**.
 
-If the target CUDA is 9.1, 9.2 or 10.0, to work on Windows you may apply patches*: [for LLVM 7.0.0](patches/patch_for_clang_7.0.0_bug_38811.zip), [for LLVM 7.0.1](patches/patch_for_clang_7.0.1_bug_38811.zip), [for LLVM 8.0.0](patches/patch_for_clang_8.0.0_bug_38811.zip).
+If the target CUDA is [9.1](https://developer.nvidia.com/cuda-91-download-archive), [9.2](https://developer.nvidia.com/cuda-92-download-archive) or [10.0](https://developer.nvidia.com/cuda-10.0-download-archive), to work on Windows you may apply patches*: [for LLVM 7.0.0](patches/patch_for_clang_7.0.0_bug_38811.zip), [for LLVM 7.0.1](patches/patch_for_clang_7.0.1_bug_38811.zip), [for LLVM 8.0.0](patches/patch_for_clang_8.0.0_bug_38811.zip).
 
-| **LLVM release version** | **CUDA latest supported version** | **Windows**  | **Linux** |
-|:------------------------:|:---------------------------------:|:------------:|:---------:|
-| 3.8.0                    | 7.5                               | +            | +         |
-| 3.8.1                    | 7.5                               | +            | +         |
-| 3.9.0                    | 7.5                               | +            | +         |
-| 3.9.1                    | 7.5                               | +            | +         |
-| 4.0.0                    | 8.0                               | +            | +         |
-| 4.0.1                    | 8.0                               | +            | +         |
-| 5.0.0                    | 8.0                               | +            | +         |
-| 5.0.1                    | 8.0                               | +            | +         |
-| 5.0.2                    | 8.0                               | +            | +         |
-| 6.0.0                    | 9.0                               | +            | +         |
-| **6.0.1**                | **9.0**                           | + <br/> **LATEST STABLE RELEASE** | + |
-| 7.0.0                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_7.0.0_bug_38811.zip)*</br> | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
-| 7.0.1                    | 9.2                               | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_7.0.1_bug_38811.zip)*</br> | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
-| 7.1.0                    | 9.2 (?)                           | - <br/> LLVM 7.1.0 <br/> is not yet released | - <br/> LLVM 7.1.0 <br/> is not yet released |
-| **8.0.0**                | **10.0**                          | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_8.0.0_bug_38811.zip)*</br> | + <br/> **LATEST STABLE RELEASE** |
-| 8.0.1                    | 10.1 (?)                          | - <br/> LLVM 8.0.1 <br/> is not yet released | - <br/> LLVM 8.0.1 <br/> is not yet released |
+| **LLVM release version**                                   | **CUDA latest supported version**                                   | **Windows**  | **Linux** |
+|:----------------------------------------------------------:|:-------------------------------------------------------------------:|:------------:|:---------:|
+| [3.8.0](http://releases.llvm.org/download.html#3.8.0)      | [7.5](https://developer.nvidia.com/cuda-75-downloads-archive)       | +            | +         |
+| [3.8.1](http://releases.llvm.org/download.html#3.8.1)      | [7.5](https://developer.nvidia.com/cuda-75-downloads-archive)       | +            | +         |
+| [3.9.0](http://releases.llvm.org/download.html#3.9.0)      | [7.5](https://developer.nvidia.com/cuda-75-downloads-archive)       | +            | +         |
+| [3.9.1](http://releases.llvm.org/download.html#3.9.1)      | [7.5](https://developer.nvidia.com/cuda-75-downloads-archive)       | +            | +         |
+| [4.0.0](http://releases.llvm.org/download.html#4.0.0)      | [8.0](https://developer.nvidia.com/cuda-80-ga2-download-archive)    | +            | +         |
+| [4.0.1](http://releases.llvm.org/download.html#4.0.1)      | [8.0](https://developer.nvidia.com/cuda-80-ga2-download-archive)    | +            | +         |
+| [5.0.0](http://releases.llvm.org/download.html#5.0.0)      | [8.0](https://developer.nvidia.com/cuda-80-ga2-download-archive)    | +            | +         |
+| [5.0.1](http://releases.llvm.org/download.html#5.0.1)      | [8.0](https://developer.nvidia.com/cuda-80-ga2-download-archive)    | +            | +         |
+| [5.0.2](http://releases.llvm.org/download.html#5.0.2)      | [8.0](https://developer.nvidia.com/cuda-80-ga2-download-archive)    | +            | +         |
+| [6.0.0](http://releases.llvm.org/download.html#6.0.0)      | [9.0](https://developer.nvidia.com/cuda-90-download-archive)        | +            | +         |
+| [**6.0.1**](http://releases.llvm.org/download.html#6.0.1)  | [**9.0**](https://developer.nvidia.com/cuda-90-download-archive)    | + <br/> **LATEST STABLE RELEASE** | + |
+| [7.0.0](http://releases.llvm.org/download.html#7.0.0)      | [9.2](https://developer.nvidia.com/cuda-92-download-archive)        | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_7.0.0_bug_38811.zip)*</br> | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
+| [7.0.1](http://releases.llvm.org/download.html#7.0.1)      | [9.2](https://developer.nvidia.com/cuda-92-download-archive)        | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_7.0.1_bug_38811.zip)*</br> | - <br/> not working due to <br/> the clang's bug [36384](https://bugs.llvm.org/show_bug.cgi?id=36384) |
+| 7.1.0                                                      | 9.2 (?)                                                             | - <br/> LLVM 7.1.0 <br/> is not yet released | - <br/> LLVM 7.1.0 <br/> is not yet released |
+| [**8.0.0**](http://releases.llvm.org/download.html#8.0.0)  | [**10.0**](https://developer.nvidia.com/cuda-10.0-download-archive) | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_8.0.0_bug_38811.zip)*</br> | + <br/> **LATEST STABLE RELEASE** |
+| 8.0.1                                                      | 10.1 (?)                                                            | - <br/> LLVM 8.0.1 <br/> is not yet released | - <br/> LLVM 8.0.1 <br/> is not yet released |
 
 `*` Download the patch and unpack it into your LLVM distributive directory; a few header files will be overwritten; rebuilding of LLVM is not needed.
 
@@ -317,7 +317,7 @@ LLVM 7.0.0 - 8.0.0 (with patch*), CUDA 7.5 - 10.0, cudnn-7.0.5.15 - cudnn-7.5.1.
 
 Build system for the above configurations:
 
-Python 3.6 (min), cmake 3.12.3 (min), Visual Studio 15.5 2017 (min).
+Python 3.6 (min), cmake 3.12.3 (min), Visual Studio 15.5.2 2017 - 16.0.4 2019.
 
 Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 15 2017`:
 
