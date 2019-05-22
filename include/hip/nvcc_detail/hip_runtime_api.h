@@ -145,6 +145,12 @@ typedef enum hipChannelFormatKind {
 #define hipJitOptionFastCompile CU_JIT_FAST_COMPILE
 #define hipJitOptionNumOptions CU_JIT_NUM_OPTIONS
 
+// enum CUmemorytype redefines
+#define hipMemoryTypeHost CU_MEMORYTYPE_HOST
+#define hipMemoryTypeDevice CU_MEMORYTYPE_DEVICE
+#define hipMemoryTypeArray CU_MEMORYTYPE_ARRAY
+#define hipMemoryTypeUnified CU_MEMORYTYPE_UNIFIED
+
 typedef cudaEvent_t hipEvent_t;
 typedef cudaStream_t hipStream_t;
 typedef cudaIpcEventHandle_t hipIpcEventHandle_t;
@@ -162,6 +168,8 @@ typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
 typedef cudaFuncAttributes hipFuncAttributes;
+typedef enum CUmemorytype hipMemoryType;
+typedef struct CUDA_MEMCPY2D hip_Memcpy2D;
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
 #define hipArrayLayered cudaArrayLayered
@@ -576,6 +584,10 @@ inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, 
                                      size_t width, size_t height, hipMemcpyKind kind) {
     return hipCUDAErrorTohipError(
         cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
+  return hipCUDAErrorTohipError(cuMemcpy2D(hip_Memcpy2D));
 }
 
 inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
