@@ -580,7 +580,7 @@ inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, 
 }
 
 inline static hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
-  return hipCUResultTohipError(cuMemcpy2D(hip_Memcpy2D));
+  return hipCUResultTohipError(cuMemcpy2D(pCopy));
 }
 
 inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
