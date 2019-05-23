@@ -80,22 +80,22 @@ typedef struct hipArray {
 }hipArray;
 
 typedef struct hip_Memcpy2D {
-    size_t height;
-    size_t widthInBytes;
-    hipArray* dstArray;
-    hipDeviceptr_t dstDevice;
-    void* dstHost;
-    hipMemoryType dstMemoryType;
-    size_t dstPitch;
-    size_t dstXInBytes;
-    size_t dstY;
-    hipArray* srcArray;
-    hipDeviceptr_t srcDevice;
-    const void* srcHost;
-    hipMemoryType srcMemoryType;
-    size_t srcPitch;
     size_t srcXInBytes;
     size_t srcY;
+    hipMemoryType srcMemoryType;
+    const void* srcHost;
+    hipDeviceptr_t srcDevice;
+    hipArray* srcArray;
+    size_t srcPitch;
+    size_t dstXInBytes;
+    size_t dstY;
+    hipMemoryType dstMemoryType;
+    void* dstHost;
+    hipDeviceptr_t dstDevice;
+    hipArray* dstArray;
+    size_t dstPitch;
+    size_t WidthInBytes;
+    size_t Height;
 } hip_Memcpy2D;
 
 
