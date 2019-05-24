@@ -178,7 +178,9 @@ void runTests(int64_t numElements) {
     {
         test(0x01, C_d, C_h, numElements, syncNone, true /*expectMismatch*/);
         test(0x02, C_d, C_h, numElements, syncNullStream, false /*expectMismatch*/);
+#ifndef __HIP_CLANG_ONLY__
         test(0x04, C_d, C_h, numElements, syncOtherStream, true /*expectMismatch*/);
+#endif
         test(0x08, C_d, C_h, numElements, syncDevice, false /*expectMismatch*/);
 
         // Sending a marker to to null stream may synchronize the otherStream
