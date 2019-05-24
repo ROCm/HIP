@@ -35,6 +35,9 @@
 - [Warp Cross-Lane Functions](#warp-cross-lane-functions)
   * [Warp Vote and Ballot Functions](#warp-vote-and-ballot-functions)
   * [Warp Shuffle Functions](#warp-shuffle-functions)
+- [Cooperative Groups Functions](#cooperative-groups-functions)
+- [Warp Matrix Functions](#warp-matrix-functions)
+- [Independent Thread Scheduling](#independent-thread-scheduling)
 - [Profiler Counter Function](#profiler-counter-function)
 - [Assert](#assert)
 - [Printf](#printf)
@@ -598,6 +601,70 @@ int   __shfl_xor  (int var,   int laneMask, int width=warpSize)
 float __shfl_xor  (float var, int laneMask, int width=warpSize);
 
 ```
+
+## Cooperative Groups Functions
+
+Cooperative groups is a mechanism for forming and communicating between groups of threads at
+a granularity different than the block.  This feature was introduced in Cuda 9.
+
+HIP does not support any of the kernel language cooperative groups
+types or functions.
+
+
+| **Function** | **Supported in HIP** | **Supported in CUDA** |
+| --- | --- | --- |
+| `void thread_group.sync()` | | ✓ |
+| `unsigned thread_group.size()` | | ✓ |
+| `unsigned thread_group.thread_rank()` | | ✓ |
+| `bool thread_group.is_valid()` | | ✓ |
+| `thread_group tiled_partition(thread_group, size)` | | ✓ |
+| `thread_block_tile<N> tiled_partition<N>(thread_group)` | | ✓ |
+| `thread_block this_thread_block()` | | ✓ |
+| `T thread_block_tile.shfl()` | | ✓ |
+| `T thread_block_tile.shfl_down()` | | ✓ |
+| `T thread_block_tile.shfl_up()` | | ✓ |
+| `T thread_block_tile.shfl_xor()` | | ✓ |
+| `T thread_block_tile.any()` | | ✓ |
+| `T thread_block_tile.all()` | | ✓ |
+| `T thread_block_tile.ballot()` | | ✓ |
+| `T thread_block_tile.match_any()` | | ✓ |
+| `T thread_block_tile.match_all()` | | ✓ |
+| `coalesced_group coalesced_threads()` | | ✓ |
+| `grid_group this_grid()` | | ✓ |
+| `void grid_group.sync()` | | ✓ |
+| `unsigned grid_group.size()` | | ✓ |
+| `unsigned grid_group.thread_rank()` | | ✓ |
+| `bool grid_group.is_valid()` | | ✓ |
+| `multi_grid_group this_multi_grid()` | | ✓ |
+| `void multi_grid_group.sync()` | | ✓ |
+| `unsigned multi_grid_group.size()` | | ✓ |
+| `unsigned multi_grid_group.thread_rank()` | | ✓ |
+| `bool multi_grid_group.is_valid()` | | ✓ |
+
+## Warp Matrix Functions
+
+Warp matrix functions allow a warp to cooperatively operate on small matrices
+whose elements are spread over the lanes in an unspecified manner.  This feature
+was introduced in Cuda 9.
+
+HIP does not support any of the kernel language warp matrix
+types or functions.
+
+| **Function** | **Supported in HIP** | **Supported in CUDA** |
+| --- | --- | --- |
+| `void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda)` | | ✓ |
+| `void load_matrix_sync(fragment<...> &a, const T* mptr, unsigned lda, layout_t layout)` | | ✓ |
+| `void store_matrix_sync(T* mptr, fragment<...> &a,  unsigned lda, layout_t layout)` | | ✓ |
+| `void fill_fragment(fragment<...> &a, const T &value)` | | ✓ |
+| `void mma_sync(fragment<...> &d, const fragment<...> &a, const fragment<...> &b, const fragment<...> &c , bool sat)` | | ✓ |
+
+## Independent Thread Scheduling
+
+The hardware support for independent thread scheduling introduced in certain architectures
+supporting Cuda allows threads to progress independently of each other and enables
+intra-warp synchronizations that were previously not allowed.
+
+HIP does not support this type of scheduling.
 
 ## Profiler Counter Function
 
