@@ -1715,8 +1715,8 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
     if (pCopy == nullptr) {
         e = hipErrorInvalidValue;
     }
-    e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->widthInBytes, pCopy->srcHost, pCopy->srcPitch,
-                     pCopy->widthInBytes, pCopy->height, hipMemcpyDefault);
+    e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
+                     pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
     return ihipLogStatus(e);
 }
 
