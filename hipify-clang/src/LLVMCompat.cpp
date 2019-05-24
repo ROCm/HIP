@@ -59,7 +59,11 @@ void EnterPreprocessorTokenStream(clang::Preprocessor& _pp, const clang::Token *
 #if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
   _pp.EnterTokenStream(start, len, false, DisableMacroExpansion);
 #else
-  _pp.EnterTokenStream(clang::ArrayRef<clang::Token>{start, len}, DisableMacroExpansion);
+  #if (LLVM_VERSION_MAJOR < 9)
+    _pp.EnterTokenStream(clang::ArrayRef<clang::Token>{start, len}, DisableMacroExpansion);
+  #else
+    _pp.EnterTokenStream(clang::ArrayRef<clang::Token>{start, len}, DisableMacroExpansion, false);
+  #endif
 #endif
 }
 
