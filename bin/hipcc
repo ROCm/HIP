@@ -370,7 +370,6 @@ if($HIP_PLATFORM eq "nvcc"){
 
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 my $optArg = ""; # -O args
-my $rdc = 0;
 
 foreach $arg (@ARGV)
 {
@@ -465,14 +464,6 @@ foreach $arg (@ARGV)
     if($arg =~ m/^-O/)
     {
         $optArg = $arg;
-    }
-    if($arg =~ /-fgpu-rdc/)
-    {
-        $rdc = 1;
-    }
-    if($arg =~ /-fno-gpu-rdc/)
-    {
-        $rdc = 0;
     }
 
     ## process linker response file for hip-clang
@@ -804,11 +795,7 @@ if ($HIP_PLATFORM eq "clang") {
         $HIPLDFLAGS .= " -O3";
     }
     $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
-    if ($rdc eq 0) {
-        $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
-    } else {
-        $HIPLDFLAGS .= " $HIP_DEVLIB_FLAGS";
-    }
+    $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
     if ($isWindows) {
         $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility";
     } else {
