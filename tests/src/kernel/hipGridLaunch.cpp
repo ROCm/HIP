@@ -47,24 +47,7 @@ __global__ void vectorADD2(T* A_d, T* B_d, T* C_d, size_t N) {
     }
 }
 
-__global__ void vectorADD2float(float* A_d, float* B_d, float* C_d, size_t N) {
-    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
-    size_t stride = blockDim.x * gridDim.x;
-
-    for (size_t i = offset; i < N; i += stride) {
-        double foo = __hiloint2double(A_d[i], B_d[i]);
-        C_d[i] = __double2loint(foo) + __double2hiint(foo);  // A_d[i] + B_d[i] ;
-    }
-}
-
 int test_gl2(size_t N) {
-
-// Test for hipOccupancyMaxPotentialBlockSize()
-    uint32_t gridSize = 0;
-    uint32_t blockSize = 0;
-    hipOccupancyMaxPotentialBlockSize<void(*)(int *, int *, int *, size_t)>(&gridSize, &blockSize, vectorADD2, 0, 0);
-    hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, vectorADD2float, 0, 0);
-
     size_t Nbytes = N * sizeof(int);
 
     int *A_d, *B_d, *C_d;
@@ -80,7 +63,6 @@ int test_gl2(size_t N) {
     HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
     HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
-
     hipLaunchKernelGGL(vectorADD2, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
 
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
@@ -94,7 +76,6 @@ int test_gl2(size_t N) {
 
 #if __HIP__
 int test_triple_chevron(size_t N) {
-
     size_t Nbytes = N * sizeof(int);
 
     int *A_d, *B_d, *C_d;
