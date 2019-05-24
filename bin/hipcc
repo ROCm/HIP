@@ -848,7 +848,21 @@ if ($runCmd) {
         print ("HIP ($HIP_PATH) was built using hcc $hipConfig{'HCC_VERSION'}, but you are using $HCC_HOME/hcc with version $HCC_VERSION from hipcc. Please rebuild HIP including cmake or update HCC_HOME variable.\n") ;
         die unless $ENV{'HIP_IGNORE_HCC_VERSION'};
     }
-    system ("$CMD") or delete_temp_dirs () and die ();
+    system ("$CMD");
+    if ($? == -1) {
+        print "failed to execute: $!\n";
+        exit($?);
+    }
+    elsif ($? & 127) {
+        printf "child died with signal %d, %s coredump\n",
+        ($? & 127),  ($? & 128) ? 'with' : 'without';
+        exit($?);
+    }
+    else {
+         $CMD_EXIT_CODE = $? >> 8;
+    }
+    $? or delete_temp_dirs ();
+    exit($CMD_EXIT_CODE);
 }
 
 # vim: ts=4:sw=4:expandtab:smartindent
