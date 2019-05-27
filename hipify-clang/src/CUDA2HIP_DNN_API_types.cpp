@@ -240,6 +240,93 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"cudnnWgradMode_t",                                    {"hipdnnWgradMode_t",                                    "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"CUDNN_WGRAD_MODE_ADD",                                {"HIPDNN_WGRAD_MODE_ADD",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
   {"CUDNN_WGRAD_MODE_SET",                                {"HIPDNN_WGRAD_MODE_SET",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"cudnnReorderType_t",                                  {"hipdnnReorderType_t",                                  "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_DEFAULT_REORDER",                               {"HIPDNN_DEFAULT_REORDER",                               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_NO_REORDER",                                    {"HIPDNN_NO_REORDER",                                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"cudnnLossNormalizationMode_t",                        {"hipdnnLossNormalizationMode_t",                        "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_LOSS_NORMALIZATION_NONE",                       {"HIPDNN_LOSS_NORMALIZATION_NONE",                       "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_LOSS_NORMALIZATION_SOFTMAX",                    {"HIPDNN_LOSS_NORMALIZATION_SOFTMAX",                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"cudnnFusedOps_t",                                     {"hipdnnFusedOps_t",                                     "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_FUSED_SCALE_BIAS_ACTIVATION_CONV_BNSTATS",      {"HIPDNN_FUSED_SCALE_BIAS_ACTIVATION_CONV_BNSTATS",      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_FUSED_SCALE_BIAS_ACTIVATION_WGRAD",             {"HIPDNN_FUSED_SCALE_BIAS_ACTIVATION_WGRAD",             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"CUDNN_FUSED_BN_FINALIZE_STATISTICS_TRAINING",         {"HIPDNN_FUSED_BN_FINALIZE_STATISTICS_TRAINING",         "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
+  {"CUDNN_FUSED_BN_FINALIZE_STATISTICS_INFERENCE",        {"HIPDNN_FUSED_BN_FINALIZE_STATISTICS_INFERENCE",        "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 3
+  {"CUDNN_FUSED_CONV_SCALE_BIAS_ADD_ACTIVATION",          {"HIPDNN_FUSED_CONV_SCALE_BIAS_ADD_ACTIVATION",          "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 4
+  {"CUDNN_FUSED_SCALE_BIAS_ADD_ACTIVATION_GEN_BITMASK",   {"HIPDNN_FUSED_SCALE_BIAS_ADD_ACTIVATION_GEN_BITMASK",   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 5
+  {"CUDNN_FUSED_DACTIVATION_FORK_DBATCHNORM",             {"HIPDNN_FUSED_DACTIVATION_FORK_DBATCHNORM",             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 6
+  {"cudnnFusedOpsConstParamLabel_t",                      {"hipdnnFusedOpsConstParamLabel_t",                      "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_PARAM_XDESC",                                   {"HIPDNN_PARAM_XDESC",                                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_PARAM_XDATA_PLACEHOLDER",                       {"HIPDNN_PARAM_XDATA_PLACEHOLDER",                       "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"CUDNN_PARAM_BN_MODE",                                 {"HIPDNN_PARAM_BN_MODE",                                 "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
+  {"CUDNN_PARAM_BN_EQSCALEBIAS_DESC",                     {"HIPDNN_PARAM_BN_EQSCALEBIAS_DESC",                     "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 3
+  {"CUDNN_PARAM_BN_EQSCALE_PLACEHOLDER",                  {"HIPDNN_PARAM_BN_EQSCALE_PLACEHOLDER",                  "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 4
+  {"CUDNN_PARAM_BN_EQBIAS_PLACEHOLDER",                   {"HIPDNN_PARAM_BN_EQBIAS_PLACEHOLDER",                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 5
+  {"CUDNN_PARAM_ACTIVATION_DESC",                         {"HIPDNN_PARAM_ACTIVATION_DESC",                         "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 6
+  {"CUDNN_PARAM_CONV_DESC",                               {"HIPDNN_PARAM_CONV_DESC",                               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 7
+  {"CUDNN_PARAM_WDESC",                                   {"HIPDNN_PARAM_WDESC",                                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 8
+  {"CUDNN_PARAM_WDATA_PLACEHOLDER",                       {"HIPDNN_PARAM_WDATA_PLACEHOLDER",                       "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 9
+  {"CUDNN_PARAM_DWDESC",                                  {"HIPDNN_PARAM_DWDESC",                                  "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 10
+  {"CUDNN_PARAM_DWDATA_PLACEHOLDER",                      {"HIPDNN_PARAM_DWDATA_PLACEHOLDER",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 11
+  {"CUDNN_PARAM_YDESC",                                   {"HIPDNN_PARAM_YDESC",                                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 12
+  {"CUDNN_PARAM_YDATA_PLACEHOLDER",                       {"HIPDNN_PARAM_YDATA_PLACEHOLDER",                       "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 13
+  {"CUDNN_PARAM_DYDESC",                                  {"HIPDNN_PARAM_DYDESC",                                  "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 14
+  {"CUDNN_PARAM_DYDATA_PLACEHOLDER",                      {"HIPDNN_PARAM_DYDATA_PLACEHOLDER",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 15
+  {"CUDNN_PARAM_YSTATS_DESC",                             {"HIPDNN_PARAM_YSTATS_DESC",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 16
+  {"CUDNN_PARAM_YSUM_PLACEHOLDER",                        {"HIPDNN_PARAM_YSUM_PLACEHOLDER",                        "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 17
+  {"CUDNN_PARAM_YSQSUM_PLACEHOLDER",                      {"HIPDNN_PARAM_YSQSUM_PLACEHOLDER",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 18
+  {"CUDNN_PARAM_BN_SCALEBIAS_MEANVAR_DESC",               {"HIPDNN_PARAM_BN_SCALEBIAS_MEANVAR_DESC",               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 19
+  {"CUDNN_PARAM_BN_SCALE_PLACEHOLDER",                    {"HIPDNN_PARAM_BN_SCALE_PLACEHOLDER",                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 20
+  {"CUDNN_PARAM_BN_BIAS_PLACEHOLDER",                     {"HIPDNN_PARAM_BN_BIAS_PLACEHOLDER",                     "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 21
+  {"CUDNN_PARAM_BN_SAVED_MEAN_PLACEHOLDER",               {"HIPDNN_PARAM_BN_SAVED_MEAN_PLACEHOLDER",               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 22
+  {"CUDNN_PARAM_BN_SAVED_INVSTD_PLACEHOLDER",             {"HIPDNN_PARAM_BN_SAVED_INVSTD_PLACEHOLDER",             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 23
+  {"CUDNN_PARAM_BN_RUNNING_MEAN_PLACEHOLDER",             {"HIPDNN_PARAM_BN_RUNNING_MEAN_PLACEHOLDER",             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 24
+  {"CUDNN_PARAM_BN_RUNNING_VAR_PLACEHOLDER",              {"HIPDNN_PARAM_BN_RUNNING_VAR_PLACEHOLDER",              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 25
+  {"CUDNN_PARAM_ZDESC",                                   {"HIPDNN_PARAM_ZDESC",                                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 26
+  {"CUDNN_PARAM_ZDATA_PLACEHOLDER",                       {"HIPDNN_PARAM_ZDATA_PLACEHOLDER",                       "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 27
+  {"CUDNN_PARAM_BN_Z_EQSCALEBIAS_DESC",                   {"HIPDNN_PARAM_BN_Z_EQSCALEBIAS_DESC",                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 28
+  {"CUDNN_PARAM_BN_Z_EQSCALE_PLACEHOLDER",                {"HIPDNN_PARAM_BN_Z_EQSCALE_PLACEHOLDER",                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 29
+  {"CUDNN_PARAM_BN_Z_EQBIAS_PLACEHOLDER",                 {"HIPDNN_PARAM_BN_Z_EQBIAS_PLACEHOLDER",                 "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 30
+  {"CUDNN_PARAM_ACTIVATION_BITMASK_DESC",                 {"HIPDNN_PARAM_ACTIVATION_BITMASK_DESC",                 "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 31
+  {"CUDNN_PARAM_ACTIVATION_BITMASK_PLACEHOLDER",          {"HIPDNN_PARAM_ACTIVATION_BITMASK_PLACEHOLDER",          "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 32
+  {"CUDNN_PARAM_DXDESC",                                  {"HIPDNN_PARAM_DXDESC",                                  "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 33
+  {"CUDNN_PARAM_DXDATA_PLACEHOLDER",                      {"HIPDNN_PARAM_DXDATA_PLACEHOLDER",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 34
+  {"CUDNN_PARAM_DZDESC",                                  {"HIPDNN_PARAM_DZDESC",                                  "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 35
+  {"CUDNN_PARAM_DZDATA_PLACEHOLDER",                      {"HIPDNN_PARAM_DZDATA_PLACEHOLDER",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 36
+  {"CUDNN_PARAM_BN_DSCALE_PLACEHOLDER",                   {"HIPDNN_PARAM_BN_DSCALE_PLACEHOLDER",                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 37
+  {"CUDNN_PARAM_BN_DBIAS_PLACEHOLDER",                    {"HIPDNN_PARAM_BN_DBIAS_PLACEHOLDER",                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 38
+  {"cudnnFusedOpsPointerPlaceHolder_t",                   {"hipdnnActivationMode_t",                               "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_PTR_NULL",                                      {"HIPDNN_ACTIVATION_SIGMOID",                            "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_PTR_ELEM_ALIGNED",                              {"HIPDNN_ACTIVATION_RELU",                               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"CUDNN_PTR_16B_ALIGNED",                               {"HIPDNN_ACTIVATION_TANH",                               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
+  {"cudnnFusedOpsVariantParamLabel_t",                    {"hipdnnFusedOpsVariantParamLabel_t",                    "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"CUDNN_PTR_XDATA",                                     {"HIPDNN_PTR_XDATA",                                     "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_PTR_BN_EQSCALE",                                {"HIPDNN_PTR_BN_EQSCALE",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"CUDNN_PTR_BN_EQBIAS",                                 {"HIPDNN_PTR_BN_EQBIAS",                                 "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
+  {"CUDNN_PTR_WDATA",                                     {"HIPDNN_PTR_WDATA",                                     "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 3
+  {"CUDNN_PTR_DWDATA",                                    {"HIPDNN_PTR_DWDATA",                                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 4
+  {"CUDNN_PTR_YDATA",                                     {"HIPDNN_PTR_YDATA",                                     "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 5
+  {"CUDNN_PTR_DYDATA",                                    {"HIPDNN_PTR_DYDATA",                                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 6
+  {"CUDNN_PTR_YSUM",                                      {"HIPDNN_PTR_YSUM",                                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 7
+  {"CUDNN_PTR_YSQSUM",                                    {"HIPDNN_PTR_YSQSUM",                                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 8
+  {"CUDNN_PTR_WORKSPACE",                                 {"HIPDNN_PTR_WORKSPACE",                                 "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 9
+  {"CUDNN_PTR_BN_SCALE",                                  {"HIPDNN_PTR_BN_SCALE",                                  "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 10
+  {"CUDNN_PTR_BN_BIAS",                                   {"HIPDNN_PTR_BN_BIAS",                                   "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 11
+  {"CUDNN_PTR_BN_SAVED_MEAN",                             {"HIPDNN_PTR_BN_SAVED_MEAN",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 12
+  {"CUDNN_PTR_BN_SAVED_INVSTD",                           {"HIPDNN_PTR_BN_SAVED_INVSTD",                           "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 13
+  {"CUDNN_PTR_BN_RUNNING_MEAN",                           {"HIPDNN_PTR_BN_RUNNING_MEAN",                           "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 14
+  {"CUDNN_PTR_BN_RUNNING_VAR",                            {"HIPDNN_PTR_BN_RUNNING_VAR",                            "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 15
+  {"CUDNN_PTR_ZDATA",                                     {"HIPDNN_PTR_ZDATA",                                     "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 16
+  {"CUDNN_PTR_BN_Z_EQSCALE",                              {"HIPDNN_PTR_BN_Z_EQSCALE",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 17
+  {"CUDNN_PTR_BN_Z_EQBIAS",                               {"HIPDNN_PTR_BN_Z_EQBIAS",                               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 18
+  {"CUDNN_PTR_ACTIVATION_BITMASK",                        {"HIPDNN_PTR_ACTIVATION_BITMASK",                        "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 19
+  {"CUDNN_PTR_DXDATA",                                    {"HIPDNN_PTR_DXDATA",                                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 20
+  {"CUDNN_PTR_DZDATA",                                    {"HIPDNN_PTR_DZDATA",                                    "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 21
+  {"CUDNN_PTR_BN_DSCALE",                                 {"HIPDNN_PTR_BN_DSCALE",                                 "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 22
+  {"CUDNN_PTR_BN_DBIAS",                                  {"HIPDNN_PTR_BN_DBIAS",                                  "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 23
+  {"CUDNN_SCALAR_SIZE_T_WORKSPACE_SIZE_IN_BYTES",         {"HIPDNN_SCALAR_SIZE_T_WORKSPACE_SIZE_IN_BYTES",         "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 100
+  {"CUDNN_SCALAR_INT64_T_BN_ACCUMULATION_COUNT",          {"HIPDNN_SCALAR_INT64_T_BN_ACCUMULATION_COUNT",          "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 101
+  {"CUDNN_SCALAR_DOUBLE_BN_EXP_AVG_FACTOR",               {"HIPDNN_SCALAR_DOUBLE_BN_EXP_AVG_FACTOR",               "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 102
+  {"CUDNN_SCALAR_DOUBLE_BN_EPSILON",                      {"HIPDNN_SCALAR_DOUBLE_BN_EPSILON",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 103
 
   // cuDNN types
   {"cudnnContext",                                        {"hipdnnContext",                                        "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
@@ -288,5 +375,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"cudnnSeqDataDescriptor_t",                            {"hipdnnSeqDataDescriptor_t",                            "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnAttnStruct",                                     {"hipdnnAttnStruct",                                     "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnAttnDescriptor_t",                               {"hipdnnAttnDescriptor_t",                               "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
-
+  {"cudnnFusedOpsConstParamStruct",                       {"hipdnnFusedOpsConstParamStruct",                       "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnFusedOpsConstParamPack_t",                       {"hipdnnFusedOpsConstParamPack_t",                       "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnFusedOpsVariantParamStruct",                     {"hipdnnFusedOpsVariantParamStruct",                     "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnFusedOpsVariantParamPack_t",                     {"hipdnnFusedOpsVariantParamPack_t",                     "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnFusedOpsPlanStruct",                             {"hipdnnFusedOpsPlanStruct",                             "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnFusedOpsPlan_t",                                 {"hipdnnFusedOpsPlan_t",                                 "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
 };
