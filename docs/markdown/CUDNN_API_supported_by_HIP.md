@@ -246,6 +246,99 @@
 | enum         |***`cudnnWgradMode_t`***                                       |                                                            |
 |            0 |*`CUDNN_WGRAD_MODE_ADD`*                                       |                                                            |
 |            1 |*`CUDNN_WGRAD_MODE_SET`*                                       |                                                            |
+| enum         |***`cudnnReorderType_t`***                                     |                                                            |
+|            0 |*`CUDNN_DEFAULT_REORDER`*                                      |                                                            |
+|            1 |*`CUDNN_NO_REORDER`*                                           |                                                            |
+| enum         |***`cudnnLossNormalizationMode_t`***                           |                                                            |
+|            0 |*`CUDNN_LOSS_NORMALIZATION_NONE`*                              |                                                            |
+|            1 |*`CUDNN_LOSS_NORMALIZATION_SOFTMAX`*                           |                                                            |
+| struct       |`cudnnFusedOpsConstParamStruct`                                |                                                            |
+| struct*      |`cudnnFusedOpsConstParamPack_t`                                |                                                            |
+| struct       |`cudnnFusedOpsVariantParamStruct`                              |                                                            |
+| struct*      |`cudnnFusedOpsVariantParamPack_t`                              |                                                            |
+| struct       |`cudnnFusedOpsPlanStruct`                                      |                                                            |
+| struct*      |`cudnnFusedOpsPlan_t`                                          |                                                            |
+| enum         |***`cudnnFusedOps_t`***                                        |                                                            |
+|            0 |*`CUDNN_FUSED_SCALE_BIAS_ACTIVATION_CONV_BNSTATS`*             |                                                            |
+|            1 |*`CUDNN_FUSED_SCALE_BIAS_ACTIVATION_WGRAD`*                    |                                                            |
+|            2 |*`CUDNN_FUSED_BN_FINALIZE_STATISTICS_TRAINING`*                |                                                            |
+|            3 |*`CUDNN_FUSED_BN_FINALIZE_STATISTICS_INFERENCE`*               |                                                            |
+|            4 |*`CUDNN_FUSED_CONV_SCALE_BIAS_ADD_ACTIVATION`*                 |                                                            |
+|            5 |*`CUDNN_FUSED_SCALE_BIAS_ADD_ACTIVATION_GEN_BITMASK`*          |                                                            |
+|            6 |*`CUDNN_FUSED_DACTIVATION_FORK_DBATCHNORM`*                    |                                                            |
+| enum         |***`cudnnFusedOpsConstParamLabel_t`***                         |                                                            |
+|            0 |*`CUDNN_PARAM_XDESC`*                                          |                                                            |
+|            1 |*`CUDNN_PARAM_XDATA_PLACEHOLDER`*                              |                                                            |
+|            2 |*`CUDNN_PARAM_BN_MODE`*                                        |                                                            |
+|            3 |*`CUDNN_PARAM_BN_EQSCALEBIAS_DESC`*                            |                                                            |
+|            4 |*`CUDNN_PARAM_BN_EQSCALE_PLACEHOLDER`*                         |                                                            |
+|            5 |*`CUDNN_PARAM_BN_EQBIAS_PLACEHOLDER`*                          |                                                            |
+|            6 |*`CUDNN_PARAM_ACTIVATION_DESC`*                                |                                                            |
+|            7 |*`CUDNN_PARAM_CONV_DESC`*                                      |                                                            |
+|            8 |*`CUDNN_PARAM_WDESC`*                                          |                                                            |
+|            9 |*`CUDNN_PARAM_WDATA_PLACEHOLDER`*                              |                                                            |
+|           10 |*`CUDNN_PARAM_DWDESC`*                                         |                                                            |
+|           11 |*`CUDNN_PARAM_DWDATA_PLACEHOLDER`*                             |                                                            |
+|           12 |*`CUDNN_PARAM_YDESC`*                                          |                                                            |
+|           13 |*`CUDNN_PARAM_YDATA_PLACEHOLDER`*                              |                                                            |
+|           14 |*`CUDNN_PARAM_DYDESC`*                                         |                                                            |
+|           15 |*`CUDNN_PARAM_DYDATA_PLACEHOLDER`*                             |                                                            |
+|           16 |*`CUDNN_PARAM_YSTATS_DESC`*                                    |                                                            |
+|           17 |*`CUDNN_PARAM_YSUM_PLACEHOLDER`*                               |                                                            |
+|           18 |*`CUDNN_PARAM_YSQSUM_PLACEHOLDER`*                             |                                                            |
+|           19 |*`CUDNN_PARAM_BN_SCALEBIAS_MEANVAR_DESC`*                      |                                                            |
+|           20 |*`CUDNN_PARAM_BN_SCALE_PLACEHOLDER`*                           |                                                            |
+|           21 |*`CUDNN_PARAM_BN_BIAS_PLACEHOLDER`*                            |                                                            |
+|           22 |*`CUDNN_PARAM_BN_SAVED_MEAN_PLACEHOLDER`*                      |                                                            |
+|           23 |*`CUDNN_PARAM_BN_SAVED_INVSTD_PLACEHOLDER`*                    |                                                            |
+|           24 |*`CUDNN_PARAM_BN_RUNNING_MEAN_PLACEHOLDER`*                    |                                                            |
+|           25 |*`CUDNN_PARAM_BN_RUNNING_VAR_PLACEHOLDER`*                     |                                                            |
+|           26 |*`CUDNN_PARAM_ZDESC`*                                          |                                                            |
+|           27 |*`CUDNN_PARAM_ZDATA_PLACEHOLDER`*                              |                                                            |
+|           28 |*`CUDNN_PARAM_BN_Z_EQSCALEBIAS_DESC`*                          |                                                            |
+|           29 |*`CUDNN_PARAM_BN_Z_EQSCALE_PLACEHOLDER`*                       |                                                            |
+|           30 |*`CUDNN_PARAM_BN_Z_EQBIAS_PLACEHOLDER`*                        |                                                            |
+|           31 |*`CUDNN_PARAM_ACTIVATION_BITMASK_DESC`*                        |                                                            |
+|           32 |*`CUDNN_PARAM_ACTIVATION_BITMASK_PLACEHOLDER`*                 |                                                            |
+|           33 |*`CUDNN_PARAM_DXDESC`*                                         |                                                            |
+|           34 |*`CUDNN_PARAM_DXDATA_PLACEHOLDER`*                             |                                                            |
+|           35 |*`CUDNN_PARAM_DZDESC`*                                         |                                                            |
+|           36 |*`CUDNN_PARAM_DZDATA_PLACEHOLDER`*                             |                                                            |
+|           37 |*`CUDNN_PARAM_BN_DSCALE_PLACEHOLDER`*                          |                                                            |
+|           38 |*`CUDNN_PARAM_BN_DBIAS_PLACEHOLDER`*                           |                                                            |
+| enum         |***`cudnnFusedOpsPointerPlaceHolder_t`***                      |                                                            |
+|            0 |*`CUDNN_PTR_NULL`*                                             |                                                            |
+|            1 |*`CUDNN_PTR_ELEM_ALIGNED`*                                     |                                                            |
+|            2 |*`CUDNN_PTR_16B_ALIGNED`*                                      |                                                            |
+| enum         |***`cudnnFusedOpsVariantParamLabel_t`***                       |                                                            |
+|            0 |*`CUDNN_PTR_XDATA`*                                            |                                                            |
+|            1 |*`CUDNN_PTR_BN_EQSCALE`*                                       |                                                            |
+|            2 |*`CUDNN_PTR_BN_EQBIAS`*                                        |                                                            |
+|            3 |*`CUDNN_PTR_WDATA`*                                            |                                                            |
+|            4 |*`CUDNN_PTR_DWDATA`*                                           |                                                            |
+|            5 |*`CUDNN_PTR_YDATA`*                                            |                                                            |
+|            6 |*`CUDNN_PTR_DYDATA`*                                           |                                                            |
+|            7 |*`CUDNN_PTR_YSUM`*                                             |                                                            |
+|            8 |*`CUDNN_PTR_YSQSUM`*                                           |                                                            |
+|            9 |*`CUDNN_PTR_WORKSPACE`*                                        |                                                            |
+|           10 |*`CUDNN_PTR_BN_SCALE`*                                         |                                                            |
+|           11 |*`CUDNN_PTR_BN_BIAS`*                                          |                                                            |
+|           12 |*`CUDNN_PTR_BN_SAVED_MEAN`*                                    |                                                            |
+|           13 |*`CUDNN_PTR_BN_SAVED_INVSTD`*                                  |                                                            |
+|           14 |*`CUDNN_PTR_BN_RUNNING_MEAN`*                                  |                                                            |
+|           15 |*`CUDNN_PTR_BN_RUNNING_VAR`*                                   |                                                            |
+|           16 |*`CUDNN_PTR_ZDATA`*                                            |                                                            |
+|           17 |*`CUDNN_PTR_BN_Z_EQSCALE`*                                     |                                                            |
+|           18 |*`CUDNN_PTR_BN_Z_EQBIAS`*                                      |                                                            |
+|           19 |*`CUDNN_PTR_ACTIVATION_BITMASK`*                               |                                                            |
+|           20 |*`CUDNN_PTR_DXDATA`*                                           |                                                            |
+|           21 |*`CUDNN_PTR_DZDATA`*                                           |                                                            |
+|           22 |*`CUDNN_PTR_BN_DSCALE`*                                        |                                                            |
+|           23 |*`CUDNN_PTR_BN_DBIAS`*                                         |                                                            |
+|          100 |*`CUDNN_SCALAR_SIZE_T_WORKSPACE_SIZE_IN_BYTES`*                |                                                            |
+|          101 |*`CUDNN_SCALAR_INT64_T_BN_ACCUMULATION_COUNT`*                 |                                                            |
+|          102 |*`CUDNN_SCALAR_DOUBLE_BN_EXP_AVG_FACTOR`*                      |                                                            |
+|          103 |*`CUDNN_SCALAR_DOUBLE_BN_EPSILON`*                             |                                                            |
 
 ## **2. CUDNN API functions**
 
@@ -282,6 +375,7 @@
 |`cudnnGetOpTensorDescriptor`                               |`hipdnnGetOpTensorDescriptor`                    |
 |`cudnnDestroyOpTensorDescriptor`                           |`hipdnnDestroyOpTensorDescriptor`                |
 |`cudnnOpTensor`                                            |`hipdnnOpTensor`                                 |
+|`cudnnGetFoldedConvBackwardDataDescriptors`                |                                                 |
 |`cudnnCreateReduceTensorDescriptor`                        |`hipdnnCreateReduceTensorDescriptor`             |
 |`cudnnSetReduceTensorDescriptor`                           |`hipdnnSetReduceTensorDescriptor`                |
 |`cudnnGetReduceTensorDescriptor`                           |`hipdnnGetReduceTensorDescriptor`                |
@@ -296,12 +390,17 @@
 |`cudnnGetFilter4dDescriptor`                               |`hipdnnGetFilter4dDescriptor`                    |
 |`cudnnSetFilterNdDescriptor`                               |`hipdnnSetFilterNdDescriptor`                    |
 |`cudnnGetFilterNdDescriptor`                               |`hipdnnGetFilterNdDescriptor`                    |
+|`cudnnGetFilterSizeInBytes`                                |                                                 |
+|`cudnnTransformFilter`                                     |                                                 |
 |`cudnnDestroyFilterDescriptor`                             |`hipdnnDestroyFilterDescriptor`                  |
+|`cudnnReorderFilterAndBias`                                |                                                 |
 |`cudnnCreateConvolutionDescriptor`                         |`hipdnnCreateConvolutionDescriptor`              |
 |`cudnnSetConvolutionMathType`                              |`hipdnnSetConvolutionMathType`                   |
 |`cudnnGetConvolutionMathType`                              |                                                 |
 |`cudnnSetConvolutionGroupCount`                            |`hipdnnSetConvolutionGroupCount`                 |
 |`cudnnGetConvolutionGroupCount`                            |                                                 |
+|`cudnnSetConvolutionReorderType`                           |                                                 |
+|`cudnnGetConvolutionReorderType`                           |                                                 |
 |`cudnnSetConvolution2dDescriptor`                          |`hipdnnSetConvolution2dDescriptor`               |
 |`cudnnGetConvolution2dDescriptor`                          |`hipdnnGetConvolution2dDescriptor`               |
 |`cudnnGetConvolution2dForwardOutputDim`                    |`hipdnnGetConvolution2dForwardOutputDim`         |
@@ -424,7 +523,9 @@
 |`cudnnGetRNNBiasMode`                                      |                                                 |
 |`cudnnCreateCTCLossDescriptor`                             |                                                 |
 |`cudnnSetCTCLossDescriptor`                                |                                                 |
+|`cudnnSetCTCLossDescriptorEx`                              |                                                 |
 |`cudnnGetCTCLossDescriptor`                                |                                                 |
+|`cudnnGetCTCLossDescriptorEx`                              |                                                 |
 |`cudnnDestroyCTCLossDescriptor`                            |                                                 |
 |`cudnnCTCLoss`                                             |                                                 |
 |`cudnnGetCTCLossWorkspaceSize`                             |                                                 |
@@ -462,3 +563,15 @@
 |`cudnnMultiHeadAttnForward`                                |                                                 |
 |`cudnnMultiHeadAttnBackwardData`                           |                                                 |
 |`cudnnMultiHeadAttnBackwardWeights`                        |                                                 |
+|`cudnnCreateFusedOpsConstParamPack`                        |                                                 |
+|`cudnnDestroyFusedOpsConstParamPack`                       |                                                 |
+|`cudnnSetFusedOpsConstParamPackAttribute`                  |                                                 |
+|`cudnnGetFusedOpsConstParamPackAttribute`                  |                                                 |
+|`cudnnCreateFusedOpsVariantParamPack`                      |                                                 |
+|`cudnnDestroyFusedOpsVariantParamPack`                     |                                                 |
+|`cudnnSetFusedOpsVariantParamPackAttribute`                |                                                 |
+|`cudnnGetFusedOpsVariantParamPackAttribute`                |                                                 |
+|`cudnnCreateFusedOpsPlan`                                  |                                                 |
+|`cudnnDestroyFusedOpsPlan`                                 |                                                 |
+|`cudnnMakeFusedOpsPlan`                                    |                                                 |
+|`cudnnFusedOpsExecute`                                     |                                                 |
