@@ -107,24 +107,25 @@ $HIP_RUNTIME= $hipConfig{'HIP_RUNTIME'};
 
 # If using VDI runtime, need to find HIP_VDI_HOME
 if ($HIP_RUNTIME eq "VDI" and !defined $HIP_VDI_HOME) {
-    $HIP_VDI_HOME = "/opt/rocm/hip"
+    my $hipcc_dir = dirname($0);
+    if (-e "$hipcc_dir/.hipVersion") {
+        $HIP_VDI_HOME = abs_path($hipcc_dir . "/..");
+    } else {
+        $HIP_VDI_HOME = "/opt/rocm/hip";
+    }
 }
 
 if (defined $HIP_VDI_HOME) {
-    my $bits = "";
-    if (-d "$HIP_VDI_HOME/bin/x86_64") {
-        $bits = "/x86_64";
+    if (!defined $HIP_CLANG_PATH and -e "$HIP_VDI_HOME/bin/clang") {
+        $HIP_CLANG_PATH = "$HIP_VDI_HOME/bin";
+        $HIP_CLANG_INCLUDE_PATH = "$HIP_VDI_HOME/include/clang";
     }
-    if (!defined $HIP_CLANG_PATH) {
-        $HIP_CLANG_PATH = "$HIP_VDI_HOME/bin" . $bits;
+    if (!defined $DEVICE_LIB_PATH and -e "$HIP_VDI_HOME/lib/bitcode") {
+        $DEVICE_LIB_PATH = "$HIP_VDI_HOME/lib/bitcode";
     }
-    if (!defined $DEVICE_LIB_PATH) {
-        $DEVICE_LIB_PATH = "$HIP_VDI_HOME/lib" . $bits . "/bitcode";
-    }
-    $HIP_CLANG_INCLUDE_PATH = "$HIP_VDI_HOME/include/clang";
     $HIP_INCLUDE_PATH = "$HIP_VDI_HOME/include";
     if (!defined $HIP_LIB_PATH) {
-        $HIP_LIB_PATH = "$HIP_VDI_HOME/lib" . $bits;
+        $HIP_LIB_PATH = "$HIP_VDI_HOME/lib";
     }
 }
 
@@ -169,7 +170,7 @@ if ($HIP_PLATFORM eq "clang") {
     $HIP_CLANG_VERSION=$1;
 
     if (! defined $HIP_CLANG_INCLUDE_PATH) {
-        $HIP_CLANG_INCLUDE_PATH = "$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include";
+        $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
     }
     if (! defined $HIP_INCLUDE_PATH) {
         $HIP_INCLUDE_PATH = "$HIP_PATH/include";
@@ -370,6 +371,7 @@ if($HIP_PLATFORM eq "nvcc"){
 
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 my $optArg = ""; # -O args
+my $gArg = ""; # -g args
 
 foreach $arg (@ARGV)
 {
@@ -464,6 +466,10 @@ foreach $arg (@ARGV)
     if($arg =~ m/^-O/)
     {
         $optArg = $arg;
+    }
+    if($arg =~ m/^-g/)
+    {
+        $gArg = $arg;
     }
 
     ## process linker response file for hip-clang
@@ -790,7 +796,7 @@ if ($needHipHcc) {
 
 if ($HIP_PLATFORM eq "clang") {
     # Set default optimization level to -O3 for hip-clang.
-    if ($optArg eq "") {
+    if ($optArg eq "" and $gArg ne "-g") {
         $HIPCXXFLAGS .= " -O3";
         $HIPLDFLAGS .= " -O3";
     }
