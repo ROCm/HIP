@@ -188,7 +188,11 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
   HIP_INIT_API(stream, event, flags);
 
-  if (stream == nullptr || event == nullptr) {
+  if (stream == nullptr) {
+    stream = reinterpret_cast<hipStream_t>(as_cl(hip::getNullStream()));
+  }
+
+  if (event == nullptr) {
     HIP_RETURN(hipErrorInvalidResourceHandle);
   }
 

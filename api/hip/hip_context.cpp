@@ -255,7 +255,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
@@ -263,7 +263,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
@@ -271,7 +271,7 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
@@ -279,7 +279,7 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
@@ -287,7 +287,7 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipCtxSynchronize(void) {
@@ -295,7 +295,7 @@ hipError_t hipCtxSynchronize(void) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipCtxGetFlags(unsigned int* flags) {
@@ -303,7 +303,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int* active) {
@@ -311,7 +311,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev) {
@@ -319,7 +319,7 @@ hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev) {
@@ -327,7 +327,7 @@ hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev) {
@@ -335,7 +335,7 @@ hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
 
 hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags) {
@@ -343,5 +343,5 @@ hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags) {
 
   assert(0 && "Unimplemented");
 
-  return hipErrorUnknown;
+  HIP_RETURN(hipErrorUnknown);
 }
