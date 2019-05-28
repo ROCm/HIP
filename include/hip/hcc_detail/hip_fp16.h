@@ -34,7 +34,7 @@ THE SOFTWARE.
     #include <utility>
 #endif
 
-#if __HCC__ || __HIP__ 
+#if __HCC_OR_HIP_CLANG__
     typedef _Float16 _Float16_2 __attribute__((ext_vector_type(2)));
 
     struct __half_raw {
