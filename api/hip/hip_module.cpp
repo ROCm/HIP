@@ -93,8 +93,16 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
   HIP_RETURN(ihipModuleLoadData(module, image));
 }
 
+extern bool __hipExtractCodeObjectFromFatBinary(const void* data,
+                                                const std::vector<const char*>& devices,
+                                                std::vector<std::pair<const void*, size_t>>& code_objs);
+
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
 {
+  std::vector<std::pair<const void*, size_t>> code_objs;
+  if (__hipExtractCodeObjectFromFatBinary(image, {hip::getCurrentContext()->devices()[0]->info().name_}, code_objs))
+    image = code_objs[0].first;
+
   amd::Program* program = new amd::Program(*hip::getCurrentContext());
   if (program == NULL) {
     return hipErrorOutOfMemory;
