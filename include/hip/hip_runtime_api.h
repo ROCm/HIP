@@ -115,6 +115,8 @@ typedef struct hipDeviceProp_t {
     int canMapHostMemory;                     ///< Check whether HIP can map host memory
     int gcnArch;                              ///< AMD GCN Arch Value. Eg: 803, 701
     int integrated;            ///< APU vs dGPU
+    int cooperativeLaunch;            ///< HIP device supports cooperative launch
+    int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices 
 } hipDeviceProp_t;
 
 
@@ -291,6 +293,8 @@ typedef enum hipDeviceAttribute_t {
                                                          ///< Multiprocessor.
     hipDeviceAttributeIsMultiGpuBoard,                   ///< Multiple GPU devices.
     hipDeviceAttributeIntegrated,                        ///< iGPU
+    hipDeviceAttributeCooperativeLaunch,                 ///< Support cooperative launch
+    hipDeviceAttributeCooperativeMultiDeviceLaunch,      ///< Support cooperative launch on multiple devices
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {
