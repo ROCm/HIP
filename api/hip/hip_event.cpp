@@ -84,13 +84,11 @@ hipError_t Event::streamWait(hipStream_t stream, uint flags) {
 
   amd::ScopedLock lock(lock_);
 
-  cl_event clEvent = as_cl(event_);
-
-  amd::Command::EventWaitList eventWaitList;
-  cl_int err = amd::clSetEventWaitList(eventWaitList, *hostQueue, 1, &clEvent);
-  if (err != CL_SUCCESS) {
+  if (!event_->notifyCmdQueue()) {
     return hipErrorUnknown;
   }
+  amd::Command::EventWaitList eventWaitList;
+  eventWaitList.push_back(event_);
 
   amd::Command* command = new amd::Marker(*hostQueue, true, eventWaitList);
   if (command == NULL) {
