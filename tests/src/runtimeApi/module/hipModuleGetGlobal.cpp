@@ -75,18 +75,12 @@ int main() {
     HIP_CHECK(hipModuleLoad(&Module, fileName));
 
     float myDeviceGlobal_h = 42.0;
-    float *deviceGlobal;
+    hipDeviceptr_t deviceGlobal;
     size_t deviceGlobalSize;
-    HIP_CHECK(hipModuleGetGlobal((void**)&deviceGlobal, &deviceGlobalSize, Module, "myDeviceGlobal"));
-    HIP_CHECK(hipMemcpy(deviceGlobal,&myDeviceGlobal_h,deviceGlobalSize,hipMemcpyHostToDevice));
+    HIP_CHECK(hipModuleGetGlobal(&deviceGlobal, &deviceGlobalSize, Module, "myDeviceGlobal"));
+    HIP_CHECK(hipMemcpy((float*)deviceGlobal,&myDeviceGlobal_h,deviceGlobalSize,hipMemcpyHostToDevice));
 
 #define ARRAY_SIZE 16
-
-    float myDeviceGlobalArray_h[ARRAY_SIZE];
-    for (int i = 0; i < ARRAY_SIZE; i++) {
-        myDeviceGlobalArray_h[i] = i * 1000.0f;
-        myDeviceGlobalArray[i] = i * 1000.0f;
-    }
 
     struct {
         void* _Ad;
@@ -106,7 +100,7 @@ int main() {
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "hello_world"));
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
-        hipMemcpyDtoH(B, Bd, SIZE);
+        hipMemcpyDtoH(B, hipDeviceptr_t(Bd), SIZE);
 
         int mismatchCount = 0;
         for (uint32_t i = 0; i < LEN; i++) {
@@ -131,11 +125,11 @@ int main() {
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "test_globals"));
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
-        hipMemcpyDtoH(B, Bd, SIZE);
+        hipMemcpyDtoH(B, hipDeviceptr_t(Bd), SIZE);
 
         int mismatchCount = 0;
         for (uint32_t i = 0; i < LEN; i++) {
-            float expected = A[i] + myDeviceGlobal_h + myDeviceGlobalArray_h[i % 16];
+            float expected = A[i] + myDeviceGlobal_h;
             if (expected != B[i]) {
                 mismatchCount++;
                 std::cout << "error: mismatch " << expected << " != " << B[i] << std::endl;
