@@ -2906,6 +2906,21 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, const void* f, int  blockSize, size_t dynamicSMemSize, unsigned int flags);
 
+/**
+ * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
+ * on respective streams before enqueuing any other work on the specified streams from any other threads
+ *
+ *
+ * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] numDevices               Size of the launchParamsList array.
+ * @param [in] flags                    Flags to control launch behavior.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags);
+
+
 
 // doxygen end Version Management
 /**
@@ -3260,6 +3275,12 @@ template <class T>
 inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                         unsigned int  numDevices, unsigned int  flags = 0) {
     return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
+}
+
+template <class T>
+inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                     unsigned int  numDevices, unsigned int  flags = 0) {
+    return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
 
