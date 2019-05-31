@@ -189,7 +189,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         lp.dynamic_group_mem_bytes =
             sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
         hStream = ihipPreLaunchKernel(
-            hStream, dim3(globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ),
+            hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
             dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
 
 
