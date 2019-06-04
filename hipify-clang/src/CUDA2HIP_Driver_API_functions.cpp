@@ -175,8 +175,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuMemcpy",                                             {"hipMemcpy_",                                              "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
   // NOTE: Not equal to cudaMemcpy2D due to different signatures
-  {"cuMemcpy2D",                                           {"hipMemcpy2D_",                                            "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpy2D_v2",                                        {"hipMemcpy2D_",                                            "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemcpy2D",                                           {"hipMemcpyParam2D",                                        "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpy2D_v2",                                        {"hipMemcpyParam2D",                                        "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   // NOTE: Not equal to cudaMemcpy2DAsync due to different signatures
   {"cuMemcpy2DAsync",                                      {"hipMemcpy2DAsync_",                                       "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},

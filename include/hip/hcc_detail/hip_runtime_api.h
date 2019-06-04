@@ -275,6 +275,15 @@ typedef struct dim3 {
 #endif
 } dim3;
 
+typedef struct hipLaunchParams_t {
+    void* func;             ///< Device function symbol
+    dim3 gridDim;           ///< Grid dimentions
+    dim3 blockDim;          ///< Block dimentions
+    void **args;            ///< Arguments
+    size_t sharedMem;       ///< Shared memory
+    hipStream_t stream;     ///< Stream identifier
+} hipLaunchParams;
+
 
 // Doxygen end group GlobalDefs
 /**  @} */
@@ -1858,6 +1867,16 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
  */
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                        size_t height, hipMemcpyKind kind);
+
+/**
+*  @brief Copies memory for 2D arrays.
+*  @param[in]   pCopy Parameters for the memory copy
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
+ * hipMemcpyToSymbol, hipMemcpyAsync
+*/
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
 
 /**
@@ -2832,6 +2851,77 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  unsigned int sharedMemBytes, hipStream_t stream,
                                  void** kernelParams, void** extra);
 
+/**
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
+ * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
+ *
+ * @param [in] f         Kernel to launch.
+ * @param [in] gridDim   Grid dimensions specified as multiple of blockDim.
+ * @param [in] blockDim  Block dimensions specified in work-items
+ * @param [in] kernelParams A list of kernel arguments
+ * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The
+ * kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th
+ * default stream is used with associated synchronization rules.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDimX,
+                                      void** kernelParams, unsigned int sharedMemBytes,
+                                      hipStream_t stream);
+
+/**
+ * @brief Launches kernels on multiple devices where thread blocks can cooperate and
+ * synchronize as they execute.
+ *
+ * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] numDevices               Size of the launchParamsList array.
+ * @param [in] flags                    Flags to control launch behavior.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                 int  numDevices, unsigned int  flags);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  func             Kernel function for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynamicSMemSize  Per - block dynamic shared memory usage intended, in bytes
+ */
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+   int* numBlocks, const void* f, int  blockSize, size_t dynamicSMemSize);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  func             Kernel function for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynamicSMemSize  Per - block dynamic shared memory usage intended, in bytes
+ * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
+ */
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+   int* numBlocks, const void* f, int  blockSize, size_t dynamicSMemSize, unsigned int flags);
+
+/**
+ * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
+ * on respective streams before enqueuing any other work on the specified streams from any other threads
+ *
+ *
+ * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] numDevices               Size of the launchParamsList array.
+ * @param [in] flags                    Flags to control launch behavior.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags);
+
+
+
 // doxygen end Version Management
 /**
  * @}
@@ -3159,6 +3249,40 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
                                           const hipChannelFormatDesc& desc) {
     return hipSuccess;
 }
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    int* numBlocks, T f, int  blockSize, size_t dynamicSMemSize) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessor(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynamicSMemSize);
+}
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    int* numBlocks, T f, int  blockSize, size_t dynamicSMemSize, unsigned int flags) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynamicSMemSize, flags);
+}
+
+template <class T>
+inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
+                                             void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {
+    return hipLaunchCooperativeKernel(reinterpret_cast<const void*>(f), gridDim,
+                                      blockDim, kernelParams, sharedMemBytes, stream);
+}
+
+template <class T>
+inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                        unsigned int  numDevices, unsigned int  flags = 0) {
+    return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
+}
+
+template <class T>
+inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                     unsigned int  numDevices, unsigned int  flags = 0) {
+    return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
+}
+
 
 /*
  * @brief Unbinds the textuer bound to @p tex

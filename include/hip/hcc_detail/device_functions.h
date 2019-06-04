@@ -1009,14 +1009,20 @@ void __syncthreads()
 
 #define GETREG_IMMED(SZ,OFF,REG) (SZ << 11) | (OFF << 6) | REG
 
+/*
+  __smid returns the wave's assigned Compute Unit and Shader Engine.
+  The Compute Unit, CU_ID returned in bits 3:0, and Shader Engine, SE_ID in bits 5:4.
+  Note: the results vary over time.
+  SZ minus 1 since SIZE is 1-based.
+*/
 __device__
 inline
 unsigned __smid(void)
 {
     unsigned cu_id = __builtin_amdgcn_s_getreg(
-            GETREG_IMMED(HW_ID_CU_ID_SIZE, HW_ID_CU_ID_OFFSET, HW_ID));
+            GETREG_IMMED(HW_ID_CU_ID_SIZE-1, HW_ID_CU_ID_OFFSET, HW_ID));
     unsigned se_id = __builtin_amdgcn_s_getreg(
-            GETREG_IMMED(HW_ID_SE_ID_SIZE, HW_ID_SE_ID_OFFSET, HW_ID));
+            GETREG_IMMED(HW_ID_SE_ID_SIZE-1, HW_ID_SE_ID_OFFSET, HW_ID));
 
     /* Each shader engine has 16 CU */
     return (se_id << HW_ID_CU_ID_SIZE) + cu_id;

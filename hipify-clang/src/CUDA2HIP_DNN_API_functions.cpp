@@ -61,6 +61,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnGetOpTensorDescriptor",                          {"hipdnnGetOpTensorDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnDestroyOpTensorDescriptor",                      {"hipdnnDestroyOpTensorDescriptor",                      "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnOpTensor",                                       {"hipdnnOpTensor",                                       "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnGetFoldedConvBackwardDataDescriptors",           {"hipdnnGetFoldedConvBackwardDataDescriptors",           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
 
   // cuDNN Reduce Tensor functions
   {"cudnnCreateReduceTensorDescriptor",                   {"hipdnnCreateReduceTensorDescriptor",                   "", CONV_LIB_FUNC, API_DNN}},
@@ -79,7 +80,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnGetFilter4dDescriptor",                          {"hipdnnGetFilter4dDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnSetFilterNdDescriptor",                          {"hipdnnSetFilterNdDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetFilterNdDescriptor",                          {"hipdnnGetFilterNdDescriptor",                          "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnGetFilterSizeInBytes",                           {"hipdnnGetFilterSizeInBytes",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnTransformFilter",                                {"hipdnnTransformFilter",                                "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnDestroyFilterDescriptor",                        {"hipdnnDestroyFilterDescriptor",                        "", CONV_LIB_FUNC, API_DNN}},
+  {"cudnnReorderFilterAndBias",                           {"hipdnnReorderFilterAndBias",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
 
   // cuDNN Convolution functions
   {"cudnnCreateConvolutionDescriptor",                    {"hipdnnCreateConvolutionDescriptor",                    "", CONV_LIB_FUNC, API_DNN}},
@@ -87,6 +91,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnGetConvolutionMathType",                         {"hipdnnGetConvolutionMathType",                         "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSetConvolutionGroupCount",                       {"hipdnnSetConvolutionGroupCount",                       "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetConvolutionGroupCount",                       {"hipdnnGetConvolutionGroupCount",                       "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSetConvolutionReorderType",                      {"hipdnnSetConvolutionReorderType",                      "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetConvolutionReorderType",                      {"hipdnnGetConvolutionReorderType",                      "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSetConvolution2dDescriptor",                     {"hipdnnSetConvolution2dDescriptor",                     "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetConvolution2dDescriptor",                     {"hipdnnGetConvolution2dDescriptor",                     "", CONV_LIB_FUNC, API_DNN}},
   {"cudnnGetConvolution2dForwardOutputDim",               {"hipdnnGetConvolution2dForwardOutputDim",               "", CONV_LIB_FUNC, API_DNN}},
@@ -235,7 +241,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   // cuDNN Connectionist Temporal Classification loss functions
   {"cudnnCreateCTCLossDescriptor",                        {"hipdnnCreateCTCLossDescriptor",                        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnSetCTCLossDescriptor",                           {"hipdnnSetCTCLossDescriptor",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSetCTCLossDescriptorEx",                         {"hipdnnSetCTCLossDescriptorEx",                         "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnGetCTCLossDescriptor",                           {"hipdnnGetCTCLossDescriptor",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetCTCLossDescriptorEx",                         {"hipdnnGetCTCLossDescriptorEx",                         "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnDestroyCTCLossDescriptor",                       {"hipdnnDestroyCTCLossDescriptor",                       "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnCTCLoss",                                        {"hipdnnCTCLoss",                                        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnGetCTCLossWorkspaceSize",                        {"hipdnnGetCTCLossWorkspaceSize",                        "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
@@ -274,4 +282,18 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_FUNCTION_MAP{
   {"cudnnMultiHeadAttnForward",                           {"hipdnnMultiHeadAttnForward",                           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnMultiHeadAttnBackwardData",                      {"hipdnnMultiHeadAttnBackwardData",                      "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
   {"cudnnMultiHeadAttnBackwardWeights",                   {"hipdnnMultiHeadAttnBackwardWeights",                   "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+
+  // cuDNN Fuse functions
+  {"cudnnCreateFusedOpsConstParamPack",                   {"hipdnnCreateFusedOpsConstParamPack",                   "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnDestroyFusedOpsConstParamPack",                  {"hipdnnDestroyFusedOpsConstParamPack",                  "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSetFusedOpsConstParamPackAttribute",             {"hipdnnSetFusedOpsConstParamPackAttribute",             "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetFusedOpsConstParamPackAttribute",             {"hipdnnGetFusedOpsConstParamPackAttribute",             "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnCreateFusedOpsVariantParamPack",                 {"hipdnnCreateFusedOpsVariantParamPack",                 "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnDestroyFusedOpsVariantParamPack",                {"hipdnnDestroyFusedOpsVariantParamPack",                "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnSetFusedOpsVariantParamPackAttribute",           {"hipdnnSetFusedOpsVariantParamPackAttribute",           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnGetFusedOpsVariantParamPackAttribute",           {"hipdnnGetFusedOpsVariantParamPackAttribute",           "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnCreateFusedOpsPlan",                             {"hipdnnCreateFusedOpsPlan",                             "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnDestroyFusedOpsPlan",                            {"hipdnnDestroyFusedOpsPlan",                            "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnMakeFusedOpsPlan",                               {"hipdnnMakeFusedOpsPlan",                               "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnFusedOpsExecute",                                {"hipdnnFusedOpsExecute",                                "", CONV_LIB_FUNC, API_DNN, HIP_UNSUPPORTED}},
 };
