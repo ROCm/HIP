@@ -560,6 +560,22 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
       mem->release();
       HIP_RETURN(hipErrorMemoryAllocation);
     }
+
+    std::vector<void*> devPtrs;
+    for (const auto& device: hip::getCurrentContext()->devices()) {
+      const device::Memory* devMem = mem->getDeviceMemory(*device);
+      if (devMem != nullptr) {
+        devPtrs.emplace_back(reinterpret_cast<void*>(devMem->virtualAddress()));
+      } else {
+        mem->release();
+        HIP_RETURN(hipErrorMemoryAllocation);
+      }
+    }
+    // Since the amd::Memory object is shared between all devices
+    // it's fine to have multiple addresses mapped to it
+    for (const auto& devPtr: devPtrs) {
+      amd::MemObjMap::AddMemObj(devPtr, mem);
+    }
     amd::MemObjMap::AddMemObj(hostPtr, mem);
     HIP_RETURN(hipSuccess);
   } else {
@@ -582,6 +598,10 @@ hipError_t hipHostUnregister(void* hostPtr) {
     if(mem) {
       hip::syncStreams();
       hip::getNullStream()->finish();
+      for (const auto& device: hip::getCurrentContext()->devices()) {
+        const device::Memory* devMem = mem->getDeviceMemory(*device);
+        amd::MemObjMap::RemoveMemObj(reinterpret_cast<void*>(devMem->virtualAddress()));
+      }
       amd::MemObjMap::RemoveMemObj(hostPtr);
       mem->release();
       HIP_RETURN(hipSuccess);
