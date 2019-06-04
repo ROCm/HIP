@@ -120,51 +120,102 @@ THE SOFTWARE.
         ret.y = lhs.y * rhs;                                                                       \
         return ret;                                                                                \
     }
-#define MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(ComplexT, T)                                      \
-    explicit __device__ __host__ ComplexT(T val) : x(val), y(val) {}                               \
-    __device__ __host__ ComplexT(T val1, T val2) : x(val1), y(val2) {}
 
 #endif
 
-struct hipFloatComplex {
-#ifdef __cplusplus
-   public:
-   typedef float value_type;
-    __device__ __host__ hipFloatComplex() : x(0.0f), y(0.0f) {}
-    explicit __device__ __host__ hipFloatComplex(float x) : x(x), y(0.0f) {}
-    __device__ __host__ hipFloatComplex(float x, float y) : x(x), y(y) {}
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned short)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed short)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned int)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed int)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, double)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned long)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed long)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, unsigned long long)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipFloatComplex, signed long long)
-#endif
-    float x, y;
-} __attribute__((aligned(8)));
+typedef float2 hipFloatComplex;
 
-struct hipDoubleComplex {
-#ifdef __cplusplus
-   public:
-   typedef double value_type;
-    __device__ __host__ hipDoubleComplex() : x(0.0f), y(0.0f) {}
-    explicit __device__ __host__ hipDoubleComplex(double x) : x(x), y(0.0f) {}
-    __device__ __host__ hipDoubleComplex(double x, double y) : x(x), y(y) {}
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, unsigned short)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, signed short)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, unsigned int)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, signed int)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, float)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, unsigned long)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, signed long)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, unsigned long long)
-    MAKE_COMPONENT_CONSTRUCTOR_TWO_COMPONENT(hipDoubleComplex, signed long long)
-#endif
-    double x, y;
-} __attribute__((aligned(16)));
+__device__ __host__ static inline float hipCrealf(hipFloatComplex z) { return z.x; }
+
+__device__ __host__ static inline float hipCimagf(hipFloatComplex z) { return z.y; }
+
+__device__ __host__ static inline hipFloatComplex make_hipFloatComplex(float a, float b) {
+    hipFloatComplex z;
+    z.x = a;
+    z.y = b;
+    return z;
+}
+
+__device__ __host__ static inline hipFloatComplex hipConjf(hipFloatComplex z) {
+    hipFloatComplex ret;
+    ret.x = z.x;
+    ret.y = -z.y;
+    return ret;
+}
+
+__device__ __host__ static inline float hipCsqabsf(hipFloatComplex z) {
+    return z.x * z.x + z.y * z.y;
+}
+
+__device__ __host__ static inline hipFloatComplex hipCaddf(hipFloatComplex p, hipFloatComplex q) {
+    return make_hipFloatComplex(p.x + q.x, p.y + q.y);
+}
+
+__device__ __host__ static inline hipFloatComplex hipCsubf(hipFloatComplex p, hipFloatComplex q) {
+    return make_hipFloatComplex(p.x - q.x, p.y - q.y);
+}
+
+__device__ __host__ static inline hipFloatComplex hipCmulf(hipFloatComplex p, hipFloatComplex q) {
+    return make_hipFloatComplex(p.x * q.x - p.y * q.y, p.y * q.x + p.x * q.y);
+}
+
+__device__ __host__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hipFloatComplex q) {
+    float sqabs = hipCsqabsf(q);
+    hipFloatComplex ret;
+    ret.x = (p.x * q.x + p.y * q.y) / sqabs;
+    ret.y = (p.y * q.x - p.x * q.y) / sqabs;
+    return ret;
+}
+
+__device__ __host__ static inline float hipCabsf(hipFloatComplex z) { return sqrtf(hipCsqabsf(z)); }
+
+
+typedef double2 hipDoubleComplex;
+
+__device__ __host__ static inline double hipCreal(hipDoubleComplex z) { return z.x; }
+
+__device__ __host__ static inline double hipCimag(hipDoubleComplex z) { return z.y; }
+
+__device__ __host__ static inline hipDoubleComplex make_hipDoubleComplex(double a, double b) {
+    hipDoubleComplex z;
+    z.x = a;
+    z.y = b;
+    return z;
+}
+
+__device__ __host__ static inline hipDoubleComplex hipConj(hipDoubleComplex z) {
+    hipDoubleComplex ret;
+    ret.x = z.x;
+    ret.y = z.y;
+    return ret;
+}
+
+__device__ __host__ static inline double hipCsqabs(hipDoubleComplex z) {
+    return z.x * z.x + z.y * z.y;
+}
+
+__device__ __host__ static inline hipDoubleComplex hipCadd(hipDoubleComplex p, hipDoubleComplex q) {
+    return make_hipDoubleComplex(p.x + q.x, p.y + q.y);
+}
+
+__device__ __host__ static inline hipDoubleComplex hipCsub(hipDoubleComplex p, hipDoubleComplex q) {
+    return make_hipDoubleComplex(p.x - q.x, p.y - q.y);
+}
+
+__device__ __host__ static inline hipDoubleComplex hipCmul(hipDoubleComplex p, hipDoubleComplex q) {
+    return make_hipDoubleComplex(p.x * q.x - p.y * q.y, p.y * q.x + p.x * q.y);
+}
+
+__device__ __host__ static inline hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q) {
+    double sqabs = hipCsqabs(q);
+    hipDoubleComplex ret;
+    ret.x = (p.x * q.x + p.y * q.y) / sqabs;
+    ret.y = (p.y * q.x - p.x * q.y) / sqabs;
+    return ret;
+}
+
+__device__ __host__ static inline double hipCabs(hipDoubleComplex z) { return sqrtf(hipCsqabs(z)); }
+
 
 #if __cplusplus
 
@@ -214,93 +265,6 @@ COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, unsigned long long)
 
 #endif
 
-__device__ __host__ static inline float hipCrealf(hipFloatComplex z) { return z.x; }
-
-__device__ __host__ static inline float hipCimagf(hipFloatComplex z) { return z.y; }
-
-__device__ __host__ static inline hipFloatComplex make_hipFloatComplex(float a, float b) {
-    hipFloatComplex z;
-    z.x = a;
-    z.y = b;
-    return z;
-}
-
-__device__ __host__ static inline hipFloatComplex hipConjf(hipFloatComplex z) {
-    hipFloatComplex ret;
-    ret.x = z.x;
-    ret.y = -z.y;
-    return ret;
-}
-
-__device__ __host__ static inline float hipCsqabsf(hipFloatComplex z) {
-    return z.x * z.x + z.y * z.y;
-}
-
-__device__ __host__ static inline hipFloatComplex hipCaddf(hipFloatComplex p, hipFloatComplex q) {
-    return make_hipFloatComplex(p.x + q.x, p.y + q.y);
-}
-
-__device__ __host__ static inline hipFloatComplex hipCsubf(hipFloatComplex p, hipFloatComplex q) {
-    return make_hipFloatComplex(p.x - q.x, p.y - q.y);
-}
-
-__device__ __host__ static inline hipFloatComplex hipCmulf(hipFloatComplex p, hipFloatComplex q) {
-    return make_hipFloatComplex(p.x * q.x - p.y * q.y, p.y * q.x + p.x * q.y);
-}
-
-__device__ __host__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hipFloatComplex q) {
-    float sqabs = hipCsqabsf(q);
-    hipFloatComplex ret;
-    ret.x = (p.x * q.x + p.y * q.y) / sqabs;
-    ret.y = (p.y * q.x - p.x * q.y) / sqabs;
-    return ret;
-}
-
-__device__ __host__ static inline float hipCabsf(hipFloatComplex z) { return sqrtf(hipCsqabsf(z)); }
-
-__device__ __host__ static inline double hipCreal(hipDoubleComplex z) { return z.x; }
-
-__device__ __host__ static inline double hipCimag(hipDoubleComplex z) { return z.y; }
-
-__device__ __host__ static inline hipDoubleComplex make_hipDoubleComplex(double a, double b) {
-    hipDoubleComplex z;
-    z.x = a;
-    z.y = b;
-    return z;
-}
-
-__device__ __host__ static inline hipDoubleComplex hipConj(hipDoubleComplex z) {
-    hipDoubleComplex ret;
-    ret.x = z.x;
-    ret.y = z.y;
-    return ret;
-}
-
-__device__ __host__ static inline double hipCsqabs(hipDoubleComplex z) {
-    return z.x * z.x + z.y * z.y;
-}
-
-__device__ __host__ static inline hipDoubleComplex hipCadd(hipDoubleComplex p, hipDoubleComplex q) {
-    return make_hipDoubleComplex(p.x + q.x, p.y + q.y);
-}
-
-__device__ __host__ static inline hipDoubleComplex hipCsub(hipDoubleComplex p, hipDoubleComplex q) {
-    return make_hipDoubleComplex(p.x - q.x, p.y - q.y);
-}
-
-__device__ __host__ static inline hipDoubleComplex hipCmul(hipDoubleComplex p, hipDoubleComplex q) {
-    return make_hipDoubleComplex(p.x * q.x - p.y * q.y, p.y * q.x + p.x * q.y);
-}
-
-__device__ __host__ static inline hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q) {
-    double sqabs = hipCsqabs(q);
-    hipDoubleComplex ret;
-    ret.x = (p.x * q.x + p.y * q.y) / sqabs;
-    ret.y = (p.y * q.x - p.x * q.y) / sqabs;
-    return ret;
-}
-
-__device__ __host__ static inline double hipCabs(hipDoubleComplex z) { return sqrtf(hipCsqabs(z)); }
 
 typedef hipFloatComplex hipComplex;
 
