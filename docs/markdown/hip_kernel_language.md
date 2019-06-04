@@ -793,10 +793,13 @@ hipcc now supports compiling C++/HIP kernels to binary code objects.
 The user can specify the target for which the binary can be generated. HIP/HCC does not yet support fat binaries so only a single target may be specified.
 The file format for binary is `.co` which means Code Object. The following command builds the code object using `hipcc`.
 
-`hipcc --genco --target-isa=[TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]`
-```[TARGET GPU] = gfx803/gfx701
+`hipcc --genco --targets [TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]`
+
+```
+[TARGET GPU] = gfx900 gfx803 gfx701
 [INPUT FILE] = Name of the file containing kernels
-[OUTPUT FILE] = Name of the generated code object file```
+[OUTPUT FILE] = Name of the generated code object file
+```
 
 Note that one important fact to remember when using binary code objects is that the number of arguments to the kernel are different on HCC and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
 
