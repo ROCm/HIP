@@ -55,6 +55,18 @@ THE SOFTWARE.
 using namespace ELFIO;
 using namespace std;
 
+struct amd_kernel_code_v3_t {
+  uint32_t group_segment_fixed_size;
+  uint32_t private_segment_fixed_size;
+  uint8_t reserved0[8];
+  int64_t kernel_code_entry_byte_offset;
+  uint8_t reserved1[24];
+  uint32_t compute_pgm_rsrc1;
+  uint32_t compute_pgm_rsrc2;
+  uint16_t kernel_code_properties;
+  uint8_t reserved2[6];
+};
+
 // calculate MD5 checksum
 inline std::string checksum(size_t size, const char *source) {
     // FNV-1a hashing, 64-bit version
@@ -189,7 +201,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         lp.dynamic_group_mem_bytes =
             sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
         hStream = ihipPreLaunchKernel(
-            hStream, dim3(globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ),
+            hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
             dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
 
 
@@ -206,10 +218,20 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         aql.grid_size_x = globalWorkSizeX;
         aql.grid_size_y = globalWorkSizeY;
         aql.grid_size_z = globalWorkSizeZ;
-        aql.group_segment_size =
-            f->_header->workgroup_group_segment_byte_size + sharedMemBytes;
-        aql.private_segment_size =
-            f->_header->workitem_private_segment_byte_size;
+        bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
+        if (is_code_object_v3) {
+            const auto* header =
+                reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
+            aql.group_segment_size =
+                header->group_segment_fixed_size + sharedMemBytes;
+            aql.private_segment_size =
+                header->private_segment_fixed_size;
+        } else {
+            aql.group_segment_size =
+                f->_header->workgroup_group_segment_byte_size + sharedMemBytes;
+            aql.private_segment_size =
+                f->_header->workitem_private_segment_byte_size;
+        }
         aql.kernel_object = f->_object;
         aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
         aql.header =
@@ -462,6 +484,12 @@ hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const ch
 
     auto kernel = find_kernel_by_name(hmod->executable, name, agent);
 
+    if (kernel.handle == 0u) {
+        std::string name_str(name);
+        name_str.append(".kd");
+        kernel = find_kernel_by_name(hmod->executable, name_str.c_str(), agent);
+    }
+
     if (kernel.handle == 0u) return hipErrorNotFound;
 
     // TODO: refactor the whole ihipThisThat, which is a mess and yields the
@@ -486,7 +514,11 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
 }
 
 namespace {
-hipFuncAttributes make_function_attributes(const amd_kernel_code_t& header) {
+const amd_kernel_code_v3_t *header_v3(const ihipModuleSymbol_t& kd) {
+  return reinterpret_cast<const amd_kernel_code_v3_t*>(kd._header);
+}
+
+hipFuncAttributes make_function_attributes(const ihipModuleSymbol_t& kd) {
     hipFuncAttributes r{};
 
     hipDeviceProp_t prop{};
@@ -495,16 +527,31 @@ hipFuncAttributes make_function_attributes(const amd_kernel_code_t& header) {
     //       available per CU, therefore we hardcode it to 64 KiRegisters.
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
-    r.localSizeBytes = header.workitem_private_segment_byte_size;
-    r.sharedSizeBytes = header.workgroup_group_segment_byte_size;
+    bool is_code_object_v3 = kd._name.find(".kd") != std::string::npos;
+    if (is_code_object_v3) {
+        r.localSizeBytes = header_v3(kd)->private_segment_fixed_size;
+        r.sharedSizeBytes = header_v3(kd)->group_segment_fixed_size;
+    } else {
+        r.localSizeBytes = kd._header->workitem_private_segment_byte_size;
+        r.sharedSizeBytes = kd._header->workgroup_group_segment_byte_size;
+    }
     r.maxDynamicSharedSizeBytes = prop.sharedMemPerBlock - r.sharedSizeBytes;
-    r.numRegs = header.workitem_vgpr_count;
+    if (is_code_object_v3) {
+        r.numRegs = ((header_v3(kd)->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
+    } else {
+        r.numRegs = kd._header->workitem_vgpr_count;
+    }
     r.maxThreadsPerBlock = r.numRegs ?
         std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
         prop.maxThreadsPerBlock;
-    r.binaryVersion =
-        header.amd_machine_version_major * 10 +
-        header.amd_machine_version_minor;
+    if (is_code_object_v3) {
+        r.binaryVersion = 0; // FIXME: should it be the ISA version or code
+                             //        object format version?
+    } else {
+        r.binaryVersion =
+            kd._header->amd_machine_version_major * 10 +
+            kd._header->amd_machine_version_minor;
+    }
     r.ptxVersion = prop.major * 10 + prop.minor; // HIP currently presents itself as PTX 3.0.
 
     return r;
@@ -520,11 +567,10 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 
     auto agent = this_agent();
     auto kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
-    const auto header = kd->_header;
 
-    if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
+    if (!kd->_header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 
-    *attr = make_function_attributes(*header);
+    *attr = make_function_attributes(*kd);
 
     return hipSuccess;
 }
@@ -555,11 +601,9 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
     (*module)->executable = get_program_state().load_executable(
                                             content.data(), content.size(), (*module)->executable,
                                             this_agent());
-    istringstream elf{content};
-    ELFIO::elfio reader;
-    if (reader.load(elf)) {
-        program_state_impl::read_kernarg_metadata(reader, (*module)->kernargs);
-    }
+
+    std::vector<char> blob(content.cbegin(), content.cend());
+    program_state_impl::read_kernarg_metadata(blob, (*module)->kernargs);
 
     // compute the hash of the code object
     (*module)->hash = checksum(content.length(), content.data());
