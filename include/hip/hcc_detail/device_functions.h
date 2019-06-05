@@ -1007,7 +1007,7 @@ void __syncthreads()
    SIZE         15:11   Range: 1..32
  */
 
-#define GETREG_IMMED(SZ,OFF,REG) (SZ << 11) | (OFF << 6) | REG
+#define GETREG_IMMED(SZ,OFF,REG) (((SZ) << 11) | ((OFF) << 6) | (REG))
 
 /*
   __smid returns the wave's assigned Compute Unit and Shader Engine.
