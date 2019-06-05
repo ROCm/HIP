@@ -27,11 +27,35 @@
 #include <cstdio>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+namespace std {
+template<>
+struct hash<hsa_agent_t> {
+    size_t operator()(hsa_agent_t x) const {
+        return hash<decltype(x.handle)>{}(x.handle);
+    }
+};
+
+template<>
+struct hash<hsa_isa_t> {
+    size_t operator()(hsa_isa_t x) const {
+        return hash<decltype(x.handle)>{}(x.handle);
+    }
+};
+}  // namespace std
+
+inline constexpr bool operator==(hsa_agent_t x, hsa_agent_t y) {
+    return x.handle == y.handle;
+}
+inline constexpr bool operator==(hsa_isa_t x, hsa_isa_t y) {
+    return x.handle == y.handle;
+}
 
 namespace hip_impl {
 
@@ -800,5 +824,10 @@ public:
         return it1->second;
     }
 };  // class program_state_impl
+
+struct kernarg_impl {
+    std::vector<std::uint8_t> v;
+};
+
 
 };
