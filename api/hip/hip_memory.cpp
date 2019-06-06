@@ -556,26 +556,21 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
   if(hostPtr != nullptr) {
     amd::Memory* mem = new (*hip::host_context) amd::Buffer(*hip::host_context, CL_MEM_USE_HOST_PTR, sizeBytes);
 
-    if (!mem->create(hostPtr)) {
+    constexpr bool sysMemAlloc = false;
+    constexpr bool skipAlloc = false;
+    constexpr bool forceAlloc = true;
+    if (!mem->create(hostPtr, sysMemAlloc, skipAlloc, forceAlloc)) {
       mem->release();
       HIP_RETURN(hipErrorMemoryAllocation);
     }
 
-    std::vector<void*> devPtrs;
     for (const auto& device: hip::getCurrentContext()->devices()) {
+      // Since the amd::Memory object is shared between all devices
+      // it's fine to have multiple addresses mapped to it
       const device::Memory* devMem = mem->getDeviceMemory(*device);
-      if (devMem != nullptr) {
-        devPtrs.emplace_back(reinterpret_cast<void*>(devMem->virtualAddress()));
-      } else {
-        mem->release();
-        HIP_RETURN(hipErrorMemoryAllocation);
-      }
+      amd::MemObjMap::AddMemObj(reinterpret_cast<void*>(devMem->virtualAddress()), mem);
     }
-    // Since the amd::Memory object is shared between all devices
-    // it's fine to have multiple addresses mapped to it
-    for (const auto& devPtr: devPtrs) {
-      amd::MemObjMap::AddMemObj(devPtr, mem);
-    }
+
     amd::MemObjMap::AddMemObj(hostPtr, mem);
     HIP_RETURN(hipSuccess);
   } else {
