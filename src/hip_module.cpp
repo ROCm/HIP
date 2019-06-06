@@ -667,7 +667,7 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
     }
 
     hipDeviceProp_t prop{};
-    hipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+    ihipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
 
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
