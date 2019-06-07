@@ -148,7 +148,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY,
                                   uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                   hipStream_t hStream, void** kernelParams, void** extra,
-                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags) {
+                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags, bool lockHSAQueue = 0) {
     using namespace hip_impl;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -206,6 +206,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
             dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
 
+        if (lockHSAQueue) {
+            lp.av->acquire_locked_hsa_queue();
+        }
 
         hsa_kernel_dispatch_packet_t aql;
 
@@ -271,6 +274,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         }
 
         ihipPostLaunchKernel(f->_name.c_str(), hStream, lp);
+
+        if (lockHSAQueue) {
+            lp.av->release_locked_hsa_queue();
+        }
+
     }
 
     return ret;
@@ -311,6 +319,50 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     return ihipLogStatus(ihipModuleLaunchKernel(
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, 0));
+}
+
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags) {
+
+    hipError_t result;
+    int nGPUs, currentDevice;
+
+    hipGetDevice(&currentDevice);
+    hipGetDeviceCount(&nGPUs);
+
+    if ((numDevices > nGPUs) || (launchParamsList == nullptr)) {
+        return hipErrorInvalidValue;
+    }
+
+    for (int i = 0; i < numDevices; ++i) {
+        hipSetDevice(i);
+        hipDeviceSynchronize();
+    }
+
+    for (int i = 0; i < numDevices; ++i) {
+        hipSetDevice(i);
+        const hipLaunchParams& lp = launchParamsList[i];
+        hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(lp.func),
+                hip_impl::target_agent(lp.stream));
+        if (kd == nullptr) {
+            return hipErrorInvalidValue;
+        }
+        hip_impl::kernargs_size_align kargs = hip_impl::get_program_state().get_kernargs_size_align(
+                reinterpret_cast<std::uintptr_t>(lp.func));
+        kd->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
+                kargs.getHandle());
+
+        result = ihipModuleLaunchKernel(kd,
+                lp.gridDim.x * lp.blockDim.x,
+                lp.gridDim.y * lp.blockDim.y,
+                lp.gridDim.z * lp.blockDim.z,
+                lp.blockDim.x, lp.blockDim.y,
+                lp.blockDim.z, lp.sharedMem,
+                lp.stream, lp.args, nullptr, nullptr, nullptr, 0, true);
+    }
+
+    hipSetDevice(currentDevice);
+    return result;
 }
 
 namespace hip_impl {
