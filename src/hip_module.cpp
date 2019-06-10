@@ -206,9 +206,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
             dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
 
+#if (__hcc_workweek__ >= 19213)
         if (lockHSAQueue) {
             lp.av->acquire_locked_hsa_queue();
         }
+#endif
 
         hsa_kernel_dispatch_packet_t aql;
 
@@ -275,9 +277,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
         ihipPostLaunchKernel(f->_name.c_str(), hStream, lp);
 
+#if (__hcc_workweek__ >= 19213)
         if (lockHSAQueue) {
             lp.av->release_locked_hsa_queue();
         }
+#endif
 
     }
 
