@@ -22,7 +22,6 @@ THE SOFTWARE.
 // Test the Grid_Launch syntax.
 
 /* HIT_START
- * BUILD_CMD: vcpy_kernel.code %hc --genco %S/vcpy_kernel.cpp -o vcpy_kernel.code
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
