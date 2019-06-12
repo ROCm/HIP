@@ -2973,9 +2973,7 @@ hipError_t hipLaunchByPtr(const void* func);
 } /* extern "c" */
 #endif
 
-#ifdef __cplusplus
-#include <hip/hcc_detail/hip_prof_api.h>
-#endif
+#include <hip/hcc_detail/hip_prof_str.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -2987,7 +2985,7 @@ hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
 hipError_t hipRemoveApiCallback(uint32_t id);
 hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg);
 hipError_t hipRemoveActivityCallback(uint32_t id);
-static inline const char* hipApiName(const uint32_t& id) { return hip_api_name(id); }
+const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 #ifdef __cplusplus
 } /* extern "C" */
