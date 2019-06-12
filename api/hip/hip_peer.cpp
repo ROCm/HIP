@@ -98,18 +98,14 @@ hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevic
                          size_t sizeBytes) {
   HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes);
 
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipMemcpy(dst, src, sizeBytes, hipMemcpyDeviceToDevice));
 }
 
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
                               size_t sizeBytes, hipStream_t stream) {
   HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
 
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipMemcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToDevice, stream));
 }
 
 hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
