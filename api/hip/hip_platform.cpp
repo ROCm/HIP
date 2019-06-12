@@ -448,6 +448,69 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
 }
 
 
+namespace hip_impl {
+
+hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
+                                                         const void* f,
+                                                         int  blockSize,
+                                                         size_t dynamicSMemSize)
+{
+  HIP_INIT_API(f, blockSize, dynamicSMemSize);
+  int deviceId = ihipGetDevice();
+  hipFunction_t func = PlatformState::instance().getFunc(f, deviceId);
+  if (func == nullptr) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  hip::Function* function = hip::Function::asFunction(func);
+  amd::Kernel* kernel = function->function_;
+  if (!kernel) {
+    HIP_RETURN(hipErrorOutOfMemory);
+  }
+  if (blockSize == 0) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  amd::Device* device = hip::getCurrentContext()->devices()[0];
+  const device::Kernel::WorkGroupInfo* wrkGrpInfo = kernel->getDeviceKernel(*device)->workGroupInfo();
+
+  // Find threads accupancy per CU => simd_per_cu * GPR usage
+  constexpr size_t MaxWavesPerSimd = 8;  // Limited by SPI 32 per CU, hence 8 per SIMD
+  size_t alu_accupancy = device->info().simdPerCU_ *
+    std::min(MaxWavesPerSimd, (wrkGrpInfo->availableVGPRs_ / amd::alignUp(wrkGrpInfo->usedVGPRs_, 4)));
+
+  alu_accupancy *= wrkGrpInfo->wavefrontSize_;
+  // Calculate blocks occupancy per CU
+  *numBlocks = alu_accupancy / amd::alignUp(blockSize, wrkGrpInfo->wavefrontSize_);
+
+  size_t total_used_lds = wrkGrpInfo->usedLDSSize_ + dynamicSMemSize;
+  if (total_used_lds != 0) {
+    // Calculate LDS occupacy per CU. lds_per_cu / (static_lsd + dynamic_lds)
+    int lds_occupancy = static_cast<int>(device->info().localMemSize_ / total_used_lds);
+    *numBlocks = std::min(*numBlocks, lds_occupancy);
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
+                                                        const void* f,
+                                                        int  blockSize,
+                                                        size_t dynamicSMemSize)
+{
+  HIP_RETURN(hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynamicSMemSize));
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
+                                                                 const void* f,
+                                                                 int  blockSize,
+                                                                 size_t dynamicSMemSize,
+                                                                 unsigned int flags)
+{
+  HIP_RETURN(hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynamicSMemSize));
+}
+
+
 #if defined(ATI_OS_LINUX)
 
 namespace hip_impl {
@@ -666,6 +729,20 @@ void hipLaunchKernelGGLImpl(
     numBlocks.x, numBlocks.y, numBlocks.z,
     dimBlocks.x, dimBlocks.y, dimBlocks.z,
     sharedMemBytes, stream, nullptr, kernarg);
+}
+
+void hipLaunchCooperativeKernelGGLImpl(
+  uintptr_t function_address,
+  const dim3& numBlocks,
+  const dim3& dimBlocks,
+  uint32_t sharedMemBytes,
+  hipStream_t stream,
+  void** kernarg)
+{
+  HIP_INIT();
+
+  hipLaunchCooperativeKernel(reinterpret_cast<void*>(function_address),
+    numBlocks, dimBlocks, kernarg, sharedMemBytes, stream);
 }
 
 }
