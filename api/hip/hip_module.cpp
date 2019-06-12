@@ -170,7 +170,8 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
                                  uint32_t sharedMemBytes, hipStream_t hStream,
                                  void **kernelParams, void **extra,
-                                 hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0)
+                                 hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0,
+                                 uint32_t params = 0)
 {
   HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
                blockDimX, blockDimY, blockDimZ,
@@ -193,6 +194,14 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
     hip::getNullStream()->finish();
     queue = as_amd(reinterpret_cast<cl_command_queue>(hStream))->asHostQueue();
   }
+  if ((params & amd::NDRangeKernelCommand::CooperativeGroups) &&
+      !device->info().cooperativeGroups_) {
+    return hipErrorLaunchFailure;
+  }
+  if ((params & amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups) &&
+      !device->info().cooperativeMultiDeviceGroups_) {
+    return hipErrorLaunchFailure;
+  }
   if (!queue) {
     return hipErrorOutOfMemory;
   }
@@ -203,25 +212,29 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
   amd::Command::EventWaitList waitList;
 
+  address kernargs = nullptr;
+
   // 'extra' is a struct that contains the following info: {
   //   HIP_LAUNCH_PARAM_BUFFER_POINTER, kernargs,
   //   HIP_LAUNCH_PARAM_BUFFER_SIZE, &kernargs_size,
   //   HIP_LAUNCH_PARAM_END }
-  if (extra[0] != HIP_LAUNCH_PARAM_BUFFER_POINTER ||
-      extra[2] != HIP_LAUNCH_PARAM_BUFFER_SIZE || extra[4] != HIP_LAUNCH_PARAM_END) {
-    return hipErrorNotInitialized;
+  if (extra != nullptr) {
+    if (extra[0] != HIP_LAUNCH_PARAM_BUFFER_POINTER ||
+        extra[2] != HIP_LAUNCH_PARAM_BUFFER_SIZE || extra[4] != HIP_LAUNCH_PARAM_END) {
+      return hipErrorNotInitialized;
+    }
+    kernargs = reinterpret_cast<address>(extra[1]);
   }
-  address kernargs = reinterpret_cast<address>(extra[1]);
 
   const amd::KernelSignature& signature = kernel->signature();
   for (size_t i = 0; i < signature.numParameters(); ++i) {
     const amd::KernelParameterDescriptor& desc = signature.at(i);
     if (kernelParams == nullptr) {
-      assert(extra);
+      assert(kernargs != nullptr);
       kernel->parameters().set(i, desc.size_, kernargs + desc.offset_,
                                desc.type_ == T_POINTER/*svmBound*/);
     } else {
-      assert(!extra);
+      assert(extra == nullptr);
       kernel->parameters().set(i, desc.size_, kernelParams[i], desc.type_ == T_POINTER/*svmBound*/);
     }
   }
@@ -232,7 +245,8 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
     eStart->addMarker(queue, startCommand);
   }
 
-  amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(*queue, waitList, *kernel, ndrange, sharedMemBytes);
+  amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(
+    *queue, waitList, *kernel, ndrange, sharedMemBytes, params);
   if (!command) {
     return hipErrorOutOfMemory;
   }
@@ -303,4 +317,43 @@ hipError_t hipModuleLaunchKernelExt(hipFunction_t f, uint32_t gridDimX,
                                 sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
 }
 
+hipError_t hipLaunchCooperativeKernel(const void* f,
+                                      dim3 gridDim, dim3 blockDim,
+                                      void **kernelParams, uint32_t sharedMemBytes, hipStream_t hStream)
+{
+  int deviceId = ihipGetDevice();
+  hipFunction_t func = PlatformState::instance().getFunc(f, deviceId);
+  if (func == nullptr) {
+    HIP_RETURN(hipErrorUnknown);
+  }
 
+  HIP_RETURN(ihipModuleLaunchKernel(func, gridDim.x * blockDim.x, gridDim.y * blockDim.y, gridDim.z * blockDim.z,
+                                blockDim.x, blockDim.y, blockDim.z,
+                                sharedMemBytes, hStream, kernelParams, nullptr, nullptr, nullptr, 0,
+                                amd::NDRangeKernelCommand::CooperativeGroups));
+}
+
+hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                 int  numDevices, unsigned int  flags)
+{
+  int deviceId = ihipGetDevice();
+
+  hipError_t result = hipErrorUnknown;
+  for (int i = 0; i < numDevices; ++i) {
+    const hipLaunchParams& launch = launchParamsList[i];
+    amd::HostQueue* queue = as_amd(reinterpret_cast<cl_command_queue>(launch.stream))->asHostQueue();
+    hipFunction_t func = PlatformState::instance().getFunc(launch.func, deviceId);
+    if (func == nullptr) {
+      HIP_RETURN(result);
+    }
+    result = ihipModuleLaunchKernel(func,
+      launch.gridDim.x * launch.blockDim.x,
+      launch.gridDim.y * launch.blockDim.y,
+      launch.gridDim.z * launch.blockDim.z,
+      launch.blockDim.x, launch.blockDim.y, launch.blockDim.z,
+      launch.sharedMem, launch.stream,
+      launch.args, nullptr, nullptr, nullptr, flags,
+      (amd::NDRangeKernelCommand::CooperativeGroups | amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups));
+  }
+  return result;
+}

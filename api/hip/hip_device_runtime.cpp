@@ -235,6 +235,12 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   case hipDeviceAttributeIsMultiGpuBoard:
     *pi = prop.isMultiGpuBoard;
     break;
+  case hipDeviceAttributeCooperativeLaunch:
+    *pi = prop.cooperativeLaunch;
+    break;
+  case hipDeviceAttributeCooperativeMultiDeviceLaunch:
+    *pi = prop.cooperativeMultiDeviceLaunch;
+    break;
   default:
     HIP_RETURN(hipErrorInvalidValue);
   }
@@ -401,7 +407,7 @@ hipError_t hipGetDevice ( int* deviceId ) {
 
   if (deviceId != nullptr) {
     int dev = ihipGetDevice();
-    assert(dev != -1); 
+    assert(dev != -1);
     *deviceId = dev;
     HIP_RETURN(hipSuccess);
   } else {

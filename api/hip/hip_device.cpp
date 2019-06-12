@@ -192,6 +192,8 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   //deviceProps.isMultiGpuBoard = info.;
   deviceProps.canMapHostMemory = 1;
   deviceProps.gcnArch = info.gfxipVersion_;
+  deviceProps.cooperativeLaunch = info.cooperativeGroups_;
+  deviceProps.cooperativeMultiDeviceLaunch = info.cooperativeMultiDeviceGroups_;
 
   *props = deviceProps;
   HIP_RETURN(hipSuccess);

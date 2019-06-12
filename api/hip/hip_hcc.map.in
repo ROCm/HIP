@@ -111,9 +111,13 @@ global:
     hipModuleGetGlobal;
     hipModuleLaunchKernel;
     hipModuleLaunchKernelExt;
+    hipLaunchCooperativeKernel;
+    hipLaunchCooperativeMultiDeviceKernel;
     hipModuleLoad;
     hipModuleLoadData;
     hipModuleUnload;
+    hipOccupancyMaxActiveBlocksPerMultiprocessor;
+    hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags;
     hipFuncGetAttributes;
     hipPeekAtLastError;
     hipPointerGetAttributes;
