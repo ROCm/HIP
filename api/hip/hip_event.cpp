@@ -56,6 +56,23 @@ hipError_t Event::synchronize() {
 
 hipError_t Event::elapsedTime(Event& eStop, float& ms) {
   amd::ScopedLock startLock(lock_);
+
+  if (this == &eStop) {
+    if (event_ == nullptr) {
+      return hipErrorInvalidResourceHandle;
+    }
+
+    if (flags & hipEventDisableTiming) {
+      return hipErrorInvalidResourceHandle;
+    }
+
+    if (!ready()) {
+      return hipErrorNotReady;
+    }
+
+    ms = 0.f;
+    return hipSuccess;
+  }
   amd::ScopedLock stopLock(eStop.lock_);
 
   if (event_ == nullptr ||
@@ -189,7 +206,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
   hip::Event* eStart = reinterpret_cast<hip::Event*>(start);
   hip::Event* eStop  = reinterpret_cast<hip::Event*>(stop);
 
-  return HIP_RETURN(eStart->elapsedTime(*eStop, *ms));
+  HIP_RETURN(eStart->elapsedTime(*eStop, *ms));
 }
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
