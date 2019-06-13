@@ -47,6 +47,8 @@ hipEventElapsedTime
 hipEventQuery
 hipEventRecord
 hipEventSynchronize
+hipExtGetLinkTypeAndHopCount
+hipExtMallocWithFlags
 hipExtModuleLaunchKernel
 hipFree
 hipFreeArray

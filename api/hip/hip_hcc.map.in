@@ -48,6 +48,8 @@ global:
     hipEventQuery;
     hipEventRecord;
     hipEventSynchronize;
+    hipExtGetLinkTypeAndHopCount;
+    hipExtMallocWithFlags;
     hipExtModuleLaunchKernel;
     hipFree;
     hipFreeArray;
