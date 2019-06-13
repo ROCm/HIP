@@ -428,8 +428,20 @@ namespace hip_impl {
 
                 std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
                         it0->second.cend(), name);
-                
-                return *dptr ? hipSuccess : hipErrorNotFound;
+                // HACK for SWDEV-173477
+                //
+                // For code objects with global symbols of length 0, ROCR runtime's fix
+                // may not be working correctly. Therefore the
+                // result from read_agent_globals() can't be trusted entirely.
+                //
+                // As a workaround to tame applications which depend on the existence of
+                // global symbols with length 0, always return hipSuccess here.
+                //
+                // This behavior shall be reverted once ROCR runtime has been fixed to
+                // address SWDEV-173477 and SWDEV-190701
+
+                //return *dptr ? hipSuccess : hipErrorNotFound;
+                return hipSuccess;                
             }
 
             hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
