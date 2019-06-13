@@ -476,3 +476,22 @@ hipError_t hipSetValidDevices ( int* device_arr, int  len ) {
   HIP_RETURN(hipErrorUnknown);
 }
 
+hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* linktype, uint32_t* hopcount) {
+  HIP_INIT_API(device1, device2, linktype, hopcount);
+
+  const int numDevices = static_cast<int>(g_devices.size());
+
+  if ((device1 < 0) || (device1 >= numDevices) || (device2 < 0) || (device2 >= numDevices)) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
+
+  if (linktype != nullptr) {
+    *linktype = 0;
+  }
+  if (hopcount != nullptr) {
+    *hopcount = 1;
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
