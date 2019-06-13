@@ -113,7 +113,7 @@ hipModuleGetGlobal
 hipModuleLaunchKernel
 hipModuleLaunchKernelExt
 hipLaunchCooperativeKernel
-hipLaunchCooperativeMultiDeviceKernel
+hipLaunchCooperativeKernelMultiDevice
 hipHccModuleLaunchKernel
 hipModuleLoad
 hipModuleLoadData
