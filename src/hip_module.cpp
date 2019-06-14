@@ -329,22 +329,12 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags) {
 
     hipError_t result;
-    int nGPUs, currentDevice;
 
-    hipGetDevice(&currentDevice);
-    hipGetDeviceCount(&nGPUs);
-
-    if ((numDevices > nGPUs) || (launchParamsList == nullptr)) {
+    if ((numDevices > g_deviceCnt) || (launchParamsList == nullptr)) {
         return hipErrorInvalidValue;
     }
 
     for (int i = 0; i < numDevices; ++i) {
-        hipSetDevice(i);
-        hipDeviceSynchronize();
-    }
-
-    for (int i = 0; i < numDevices; ++i) {
-        hipSetDevice(i);
         const hipLaunchParams& lp = launchParamsList[i];
         hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(lp.func),
                 hip_impl::target_agent(lp.stream));
@@ -365,7 +355,6 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                 lp.stream, lp.args, nullptr, nullptr, nullptr, 0, true);
     }
 
-    hipSetDevice(currentDevice);
     return result;
 }
 
