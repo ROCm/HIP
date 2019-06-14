@@ -118,6 +118,9 @@ if ($HIP_RUNTIME eq "VDI" and !defined $HIP_VDI_HOME) {
 if (defined $HIP_VDI_HOME) {
     if (!defined $HIP_CLANG_PATH and (-e "$HIP_VDI_HOME/bin/clang" or -e "$HIP_VDI_HOME/bin/clang.exe")) {
         $HIP_CLANG_PATH = "$HIP_VDI_HOME/bin";
+    }
+    # With HIP_VDI_HOME defined, assume the installation of clang components, including headers.
+    if (!defined $HIP_CLANG_INCLUDE_PATH) {
         $HIP_CLANG_INCLUDE_PATH = "$HIP_VDI_HOME/include/clang";
     }
     if (!defined $DEVICE_LIB_PATH and -e "$HIP_VDI_HOME/lib/bitcode") {
