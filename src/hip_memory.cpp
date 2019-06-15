@@ -507,7 +507,8 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
     if (pAllocateArray->width > 0) {
         auto ctx = ihipGetTlsDefaultCtx();
         *array = (hipArray*)malloc(sizeof(hipArray));
-        array[0]->drvDesc = *pAllocateArray;
+        array[0]->format = pAllocateArray->format;
+        array[0]->numChannels = pAllocateArray->numChannels;
         array[0]->width = pAllocateArray->width;
         array[0]->height = pAllocateArray->height;
         array[0]->isDrv = true;
@@ -691,7 +692,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
     return ihipLogStatus(hip_status);
 }
 
-hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
+hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray) {
     HIP_INIT_SPECIAL_API(hipArray3DCreate, (TRACE_MEM), array, pAllocateArray);
     hipError_t hip_status = hipSuccess;
 
@@ -702,7 +703,8 @@ hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAlloc
     array[0]->width = pAllocateArray->width;
     array[0]->height = pAllocateArray->height;
     array[0]->depth = pAllocateArray->depth;
-    array[0]->drvDesc = *pAllocateArray;
+    array[0]->format = pAllocateArray->format;
+    array[0]->numChannels = pAllocateArray->numChannels;
     array[0]->isDrv = true;
     array[0]->textureType = hipTextureType3D;
     void** ptr = &array[0]->data;

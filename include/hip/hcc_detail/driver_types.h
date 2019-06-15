@@ -63,9 +63,16 @@ typedef struct HIP_ARRAY_DESCRIPTOR {
     unsigned int numChannels;
     size_t width;
     size_t height;
+}HIP_ARRAY_DESCRIPTOR;
+
+typedef struct HIP_ARRAY3D_DESCRIPTOR {
+    enum hipArray_Format format;
+    unsigned int numChannels;
+    size_t width;
+    size_t height;
     unsigned int flags;
     size_t depth;
-}HIP_ARRAY_DESCRIPTOR;
+}HIP_ARRAY3D_DESCRIPTOR;
 
 typedef struct hipArray {
     void* data;  // FIXME: generalize this
@@ -74,7 +81,8 @@ typedef struct hipArray {
     unsigned int width;
     unsigned int height;
     unsigned int depth;
-    struct HIP_ARRAY_DESCRIPTOR drvDesc;
+    enum hipArray_Format format;
+    unsigned int numChannels;
     bool isDrv;
     unsigned int textureType;
 }hipArray;

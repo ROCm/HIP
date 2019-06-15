@@ -584,7 +584,7 @@ hipError_t ihipBindTextureToArrayImpl(int dim, enum hipTextureReadMode readMode,
         hsa_ext_image_channel_order_t channelOrder;
         hsa_ext_image_channel_type_t channelType;
         if (array->isDrv) {
-            getDrvChannelOrderAndType(array->drvDesc.format, array->drvDesc.numChannels,
+            getDrvChannelOrderAndType(array->format, array->numChannels,
                                       &channelOrder, &channelType);
         } else {
             getChannelOrderAndType(desc, readMode, &channelOrder, &channelType);
