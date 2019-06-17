@@ -549,7 +549,7 @@ class ihipStream_t {
     // Member functions that begin with locked_ are thread-safe accessors - these acquire / release
     // the critical mutex.
     LockedAccessor_StreamCrit_t lockopen_preKernelCommand();
-    void lockclose_postKernelCommand(const char* kernelName, hc::accelerator_view* av);
+    void lockclose_postKernelCommand(const char* kernelName, hc::accelerator_view* av, bool unlockNotNeeded = 0);
 
 
     void locked_wait();
@@ -951,7 +951,7 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
                                   const char* name, hsa_agent_t *agent);
 
 
-hipStream_t ihipSyncAndResolveStream(hipStream_t);
+hipStream_t ihipSyncAndResolveStream(hipStream_t, bool lockAcquired = 0);
 hipError_t ihipStreamSynchronize(hipStream_t stream);
 void ihipStreamCallbackHandler(ihipStreamCallback_t* cb);
 

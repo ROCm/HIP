@@ -404,7 +404,7 @@ LockedAccessor_StreamCrit_t ihipStream_t::lockopen_preKernelCommand() {
 //---
 // Must be called after kernel finishes, this releases the lock on the stream so other commands can
 // submit.
-void ihipStream_t::lockclose_postKernelCommand(const char* kernelName, hc::accelerator_view* av) {
+void ihipStream_t::lockclose_postKernelCommand(const char* kernelName, hc::accelerator_view* av, bool unlockPostponed) {
     bool blockThisKernel = false;
 
     if (!g_hipLaunchBlockingKernels.empty()) {
@@ -426,7 +426,10 @@ void ihipStream_t::lockclose_postKernelCommand(const char* kernelName, hc::accel
                 kernelName);
     }
 
-    _criticalData.unlock();  // paired with lock from lockopen_preKernelCommand.
+    // if unlockPostponed is true then this stream will be unlocked later (e.g., see hipExtLaunchMultiKernelMultiDevice for a sample call)
+    if (!unlockPostponed) {
+        _criticalData.unlock();  // paired with lock from lockopen_preKernelCommand.
+    }
 };
 
 
@@ -1493,7 +1496,7 @@ void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
 //
 // If stream==NULL synchronize appropriately with other streams and return the default av for the
 // device. If stream is valid, return the AV to use.
-hipStream_t ihipSyncAndResolveStream(hipStream_t stream) {
+hipStream_t ihipSyncAndResolveStream(hipStream_t stream, bool lockAcquired) {
     if (stream == hipStreamNull) {
         // Submitting to NULL stream, call locked_syncDefaultStream to wait for all other streams:
         ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
@@ -1535,9 +1538,14 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream) {
                 if (needGatherMarker) {
                     // ensure any commands sent to this stream wait on the NULL stream before
                     // continuing
-                    LockedAccessor_StreamCrit_t thisStreamCrit(stream->criticalData());
-                    // TODO - could be "noret" version of create_blocking_marker
-                    thisStreamCrit->_av.create_blocking_marker(dcf, hc::accelerator_scope);
+                    if (!lockAcquired) {
+                        LockedAccessor_StreamCrit_t thisStreamCrit(stream->criticalData());
+                        // TODO - could be "noret" version of create_blocking_marker
+                        thisStreamCrit->_av.create_blocking_marker(dcf, hc::accelerator_scope);
+                    } else {
+                        // this stream is already locked (e.g., call from hipExtLaunchMultiKernelMultiDevice)
+                        stream->criticalData()._av.create_blocking_marker(dcf, hc::accelerator_scope);
+                    }
                     tprintf(
                         DB_SYNC,
                         "  %s adding marker to wait for freshly recorded default-stream marker \n",
@@ -1578,8 +1586,8 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm* lp,
-                                const char* kernelNameStr) {
-    stream = ihipSyncAndResolveStream(stream);
+                                const char* kernelNameStr, bool lockAcquired) {
+    stream = ihipSyncAndResolveStream(stream, lockAcquired);
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
@@ -1589,8 +1597,13 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     lp->barrier_bit = barrier_bit_queue_default;
     lp->launch_fence = -1;
 
-    auto crit = stream->lockopen_preKernelCommand();
-    lp->av = &(crit->_av);
+    if (!lockAcquired) {
+        auto crit = stream->lockopen_preKernelCommand();
+        lp->av = &(crit->_av);
+    } else {
+        // this stream is already locked (e.g., call from hipExtLaunchMultiKernelMultiDevice)
+        lp->av = &(stream->criticalData()._av);
+    }
     lp->cf = nullptr;
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
 
@@ -1599,30 +1612,30 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
 
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block, grid_launch_parm* lp,
-                                const char* kernelNameStr) {
-    return ihipPreLaunchKernel(stream, dim3(grid), block, lp, kernelNameStr);
+                                const char* kernelNameStr, bool lockAcquired) {
+    return ihipPreLaunchKernel(stream, dim3(grid), block, lp, kernelNameStr, lockAcquired);
 }
 
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block, grid_launch_parm* lp,
-                                const char* kernelNameStr) {
-    return ihipPreLaunchKernel(stream, grid, dim3(block), lp, kernelNameStr);
+                                const char* kernelNameStr, bool lockAcquired) {
+    return ihipPreLaunchKernel(stream, grid, dim3(block), lp, kernelNameStr, lockAcquired);
 }
 
 
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, grid_launch_parm* lp,
-                                const char* kernelNameStr) {
-    return ihipPreLaunchKernel(stream, dim3(grid), dim3(block), lp, kernelNameStr);
+                                const char* kernelNameStr, bool lockAcquired) {
+    return ihipPreLaunchKernel(stream, dim3(grid), dim3(block), lp, kernelNameStr, lockAcquired);
 }
 
 
 //---
 // Called after kernel finishes execution.
 // This releases the lock on the stream.
-void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp) {
+void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp, bool unlockPostponed) {
     tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
 
-    stream->lockclose_postKernelCommand(kernelName, lp.av);
+    stream->lockclose_postKernelCommand(kernelName, lp.av, unlockPostponed);
     if (HIP_PROFILE_API) {
         MARKER_END();
     }
