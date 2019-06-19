@@ -701,7 +701,9 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
     // based on the usage of VGPRs and LDS
     size_t wavefrontSize = prop.warpSize;
     size_t maxWavefrontsPerBlock = prop.maxThreadsPerBlock / wavefrontSize;
-    size_t maxWavefrontsPerCU = prop.maxThreadsPerMultiProcessor /  wavefrontSize;
+
+    // Due to SPI and private memory limitations, the max of wavefronts per CU in 32
+    size_t maxWavefrontsPerCU = min(prop.maxThreadsPerMultiProcessor / wavefrontSize, 32);
 
     const size_t numSIMD = 4;
     size_t maxActivWaves = 0;
@@ -738,7 +740,7 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
             wavefrontsSGPRS = maxWavesWGLimited;
         }
         else {
-            const size_t numSGPRsPerSIMD = 800;
+            const size_t numSGPRsPerSIMD = (prop.gcnArch < 900) ? 512 : 800;
             wavefrontsSGPRS = (numSGPRsPerSIMD / usedSGPRS) * numSIMD;
         }
 
