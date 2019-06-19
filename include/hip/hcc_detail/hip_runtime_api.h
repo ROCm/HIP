@@ -2599,180 +2599,41 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
 
 hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
 
-struct Agent_global {
-
-    Agent_global() : name(nullptr), address(nullptr), byte_cnt(0) {}
-    Agent_global(const char* name, hipDeviceptr_t address, uint32_t byte_cnt) 
-      : name(nullptr), address(address), byte_cnt(byte_cnt) {
-      if (name)
-        this->name = strdup(name);
-    }
-
-    Agent_global& operator=(Agent_global&& t) {
-      if (this == &t) return *this;
-
-      if (name) free(name);
-      name = t.name;
-      address = t.address;
-      byte_cnt = t.byte_cnt;
-
-      t.name = nullptr;
-      t.address = nullptr;
-      t.byte_cnt = 0;
-
-      return *this;
-    }
-
-    Agent_global(Agent_global&& t) 
-      : name(nullptr), address(nullptr), byte_cnt(0) {
-      *this = std::move(t);
-    }
-
-    // not needed, delete them to prevent bugs
-    Agent_global(const Agent_global&) = delete;
-    Agent_global& operator=(Agent_global& t) = delete;
-
-    ~Agent_global() { if (name) free(name); }
-    
-    char* name;
-    hipDeviceptr_t address;
-    uint32_t byte_cnt;
-};
-
 #if !__HIP_VDI__
 #if defined(__cplusplus)
 } // extern "C"
 #endif
 
 namespace hip_impl {
-hsa_executable_t executable_for(hipModule_t);
-const char* hash_for(hipModule_t);
+    class agent_globals_impl;
+    class agent_globals {
+        public:
+            agent_globals();
+            ~agent_globals();
+            agent_globals(const agent_globals&) = delete;
 
-template<typename ForwardIterator>
-std::pair<hipDeviceptr_t, std::size_t> read_global_description(
-    ForwardIterator f, ForwardIterator l, const char* name) {
-    const auto it = std::find_if(f, l, [=](const Agent_global& x) {
-        return strcmp(x.name, name) == 0;
-    });
+            hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+                    hipModule_t hmod, const char* name);
+            hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                    const char* name);
+        private:
+            agent_globals_impl* impl;
+    };
 
-    return it == l ?
-        std::make_pair(nullptr, 0u) : std::make_pair(it->address, it->byte_cnt);
-}
-
-std::vector<Agent_global> read_agent_globals(hsa_agent_t agent,
-                                             hsa_executable_t executable);
-hsa_agent_t this_agent();
-
-
-class agent_globals_impl {
-private:
-    std::pair<
-        std::mutex,
-        std::unordered_map<
-            std::string, std::vector<Agent_global>>> globals_from_module;
-
-    std::unordered_map<
-        hsa_agent_t,
-        std::pair<
-            std::once_flag,
-            std::vector<Agent_global>>> globals_from_process;
-
-public:
-
-    hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
-            hipModule_t hmod, const char* name) {
-        // the key of the map would the hash of code object associated with the
-        // hipModule_t instance
-        std::string key(hash_for(hmod));
-
-        if (globals_from_module.second.count(key) == 0) {
-            std::lock_guard<std::mutex> lck{globals_from_module.first};
-
-            if (globals_from_module.second.count(key) == 0) {
-                globals_from_module.second.emplace(
-                        key, read_agent_globals(this_agent(), executable_for(hmod)));
-            }
-        }
-
-        const auto it0 = globals_from_module.second.find(key);
-        if (it0 == globals_from_module.second.cend()) {
-            hip_throw(
-                    std::runtime_error{"agent_globals data structure corrupted."});
-        }
-
-        std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
-                it0->second.cend(), name);
-
-        return *dptr ? hipSuccess : hipErrorNotFound;
+    inline
+    __attribute__((visibility("hidden")))
+    agent_globals& get_agent_globals() {
+        static agent_globals ag;
+        return ag;
     }
 
+    extern "C"
+    inline
+    __attribute__((visibility("hidden")))
     hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-            const char* name) {
-
-        auto agent = this_agent();
-
-        std::call_once(globals_from_process[agent].first, [this](hsa_agent_t aa) {
-            std::vector<Agent_global> tmp0;
-            for (auto&& executable : hip_impl::get_program_state().executables(aa)) {
-                auto tmp1 = read_agent_globals(aa, executable);
-                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
-                            make_move_iterator(tmp1.end()));
-            }
-            globals_from_process[aa].second = move(move(tmp0));
-        }, agent);
-
-        const auto it = globals_from_process.find(agent);
-
-        if (it == globals_from_process.cend()) return hipErrorNotInitialized;
-
-        std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
-                it->second.second.cend(), name);
-
-        return *dptr ? hipSuccess : hipErrorNotFound;
+        const char* name) {
+        return get_agent_globals().read_agent_global_from_process(dptr, bytes, name);
     }
-  
-};
-
-class agent_globals {
-public:
-    agent_globals() : impl(new agent_globals_impl()) { 
-        if (!impl) 
-            hip_throw(
-                std::runtime_error{"Error when constructing agent global data structures."});
-    }
-    ~agent_globals() { delete impl; }
-
-    hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
-                                             hipModule_t hmod, const char* name) {
-        return impl->read_agent_global_from_module(dptr, bytes, hmod, name);
-    }
-
-    hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-                                              const char* name) {
-        return impl->read_agent_global_from_process(dptr, bytes, name);
-    }
-
-private:
-    agent_globals_impl* impl;
-};
-
-inline
-__attribute__((visibility("hidden")))
-agent_globals& get_agent_globals() {
-    static agent_globals ag;
-    return ag;
-}
-
-
-extern "C"
-inline
-__attribute__((visibility("hidden")))
-hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-                                          const char* name) {
-    return get_agent_globals().read_agent_global_from_process(dptr, bytes, name);
-}
-
-
 } // Namespace hip_impl.
 
 #if defined(__cplusplus)
@@ -2905,6 +2766,21 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, const void* f, int  blockSize, size_t dynamicSMemSize, unsigned int flags);
+
+/**
+ * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
+ * on respective streams before enqueuing any other work on the specified streams from any other threads
+ *
+ *
+ * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] numDevices               Size of the launchParamsList array.
+ * @param [in] flags                    Flags to control launch behavior.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags);
+
 
 
 // doxygen end Version Management
@@ -3260,6 +3136,12 @@ template <class T>
 inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                         unsigned int  numDevices, unsigned int  flags = 0) {
     return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
+}
+
+template <class T>
+inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                     unsigned int  numDevices, unsigned int  flags = 0) {
+    return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
 

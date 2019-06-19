@@ -114,7 +114,7 @@ THE SOFTWARE.
             typename U,
             typename std::enable_if<
                 std::is_convertible<U, T>{}>::type* = nullptr>
-        inline __host__ __device__
+        explicit inline __host__ __device__
         HIP_vector_type(U x) noexcept
         {
             for (auto i = 0u; i != rank; ++i) data[i] = x;
@@ -286,14 +286,14 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator+(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} += y;
+        return HIP_vector_type<T, n>{x} += HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
     inline __host__ __device__
     HIP_vector_type<T, n> operator+(
         U x, const HIP_vector_type<T, n>& y) noexcept
     {
-        return y + x;
+        return HIP_vector_type<T, n>{x} += y;
     }
 
     template<typename T, unsigned int n>
@@ -308,7 +308,7 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator-(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} -= y;
+        return HIP_vector_type<T, n>{x} -= HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
     inline __host__ __device__
@@ -330,14 +330,14 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator*(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} *= y;
+        return HIP_vector_type<T, n>{x} *= HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
     inline __host__ __device__
     HIP_vector_type<T, n> operator*(
         U x, const HIP_vector_type<T, n>& y) noexcept
     {
-        return y * x;
+        return HIP_vector_type<T, n>{x} *= y;
     }
 
     template<typename T, unsigned int n>
@@ -352,7 +352,7 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator/(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} /= y;
+        return HIP_vector_type<T, n>{x} /= HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
     inline __host__ __device__
@@ -423,7 +423,7 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator%(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} %= y;
+        return HIP_vector_type<T, n>{x} %= HIP_vector_type<T, n>{y};
     }
     template<
         typename T,
@@ -456,7 +456,7 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator^(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} ^= y;
+        return HIP_vector_type<T, n>{x} ^= HIP_vector_type<T, n>{y};
     }
     template<
         typename T,
@@ -489,7 +489,7 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator|(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} |= y;
+        return HIP_vector_type<T, n>{x} |= HIP_vector_type<T, n>{y};
     }
     template<
         typename T,
@@ -522,7 +522,7 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator&(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} &= y;
+        return HIP_vector_type<T, n>{x} &= HIP_vector_type<T, n>{y};
     }
     template<
         typename T,
@@ -555,7 +555,7 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator>>(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} >>= y;
+        return HIP_vector_type<T, n>{x} >>= HIP_vector_type<T, n>{y};
     }
     template<
         typename T,
@@ -588,7 +588,7 @@ THE SOFTWARE.
     HIP_vector_type<T, n> operator<<(
         const HIP_vector_type<T, n>& x, U y) noexcept
     {
-        return HIP_vector_type<T, n>{x} <<= y;
+        return HIP_vector_type<T, n>{x} <<= HIP_vector_type<T, n>{y};
     }
     template<
         typename T,
@@ -668,20 +668,20 @@ __MAKE_VECTOR_TYPE__(double, double);
 
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
     static inline __device__ __host__ \
-    type make_##type(comp x) { type r = {x}; return r; }
+    type make_##type(comp x) { type r{x}; return r; }
 
 #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
     static inline __device__ __host__ \
-    type make_##type(comp x, comp y) { type r = {x, y}; return r; }
+    type make_##type(comp x, comp y) { type r{x, y}; return r; }
 
 #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
     static inline __device__ __host__ \
-    type make_##type(comp x, comp y, comp z) { type r = {x, y, z}; return r; }
+    type make_##type(comp x, comp y, comp z) { type r{x, y, z}; return r; }
 
 #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
     static inline __device__ __host__ \
     type make_##type(comp x, comp y, comp z, comp w) { \
-        type r = {x, y, z, w}; \
+        type r{x, y, z, w}; \
         return r; \
     }
 

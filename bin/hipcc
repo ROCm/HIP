@@ -108,7 +108,7 @@ $HIP_RUNTIME= $hipConfig{'HIP_RUNTIME'};
 # If using VDI runtime, need to find HIP_VDI_HOME
 if ($HIP_RUNTIME eq "VDI" and !defined $HIP_VDI_HOME) {
     my $hipcc_dir = dirname($0);
-    if (-e "$hipcc_dir/.hipVersion") {
+    if (-e "$hipcc_dir/../lib/bitcode") {
         $HIP_VDI_HOME = abs_path($hipcc_dir . "/..");
     } else {
         $HIP_VDI_HOME = "/opt/rocm/hip";

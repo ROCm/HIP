@@ -55,6 +55,22 @@ THE SOFTWARE.
 using namespace ELFIO;
 using namespace std;
 
+// For HIP implicit kernargs.
+static const size_t HIP_IMPLICIT_KERNARG_SIZE = 48;
+static const size_t HIP_IMPLICIT_KERNARG_ALIGNMENT = 8;
+
+struct amd_kernel_code_v3_t {
+  uint32_t group_segment_fixed_size;
+  uint32_t private_segment_fixed_size;
+  uint8_t reserved0[8];
+  int64_t kernel_code_entry_byte_offset;
+  uint8_t reserved1[24];
+  uint32_t compute_pgm_rsrc1;
+  uint32_t compute_pgm_rsrc2;
+  uint16_t kernel_code_properties;
+  uint8_t reserved2[6];
+};
+
 // calculate MD5 checksum
 inline std::string checksum(size_t size, const char *source) {
     // FNV-1a hashing, 64-bit version
@@ -146,33 +162,28 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         ihipDevice_t* currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
-        void* config[5] = {0};
-        size_t kernArgSize;
-
-        std::vector<char> tmp{};
+        std::vector<char> kernargs{};
         if (kernelParams) {
             if (extra) return hipErrorInvalidValue;
 
             for (auto&& x : f->_kernarg_layout) {
                 const auto p{static_cast<const char*>(*kernelParams)};
 
-                tmp.insert(
-                    tmp.cend(),
+                kernargs.insert(
+                    kernargs.cend(),
                     round_up_to_next_multiple_nonnegative(
-                        tmp.size(), x.second) - tmp.size(),
+                        kernargs.size(), x.second) - kernargs.size(),
                     '\0');
-                tmp.insert(tmp.cend(), p, p + x.first);
+                kernargs.insert(kernargs.cend(), p, p + x.first);
 
                 ++kernelParams;
             }
-            config[1] = static_cast<void*>(tmp.data());
-
-            kernArgSize = tmp.size();
         } else if (extra) {
-            memcpy(config, extra, sizeof(size_t) * 5);
-            if (config[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER &&
-                config[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && config[4] == HIP_LAUNCH_PARAM_END) {
-                kernArgSize = *(size_t*)(config[3]);
+            if (extra[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER &&
+                extra[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && extra[4] == HIP_LAUNCH_PARAM_END) {
+                auto args = (char*)extra[1];
+                size_t argSize = *(size_t*)(extra[3]);
+                kernargs.insert(kernargs.end(), args, args+argSize);
             } else {
                 return hipErrorNotInitialized;
             }
@@ -181,6 +192,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             return hipErrorInvalidValue;
         }
 
+        // Insert 48-bytes at the end for implicit kernel arguments and fill with value zero.
+        size_t padSize = (~kernargs.size() + 1) & (HIP_IMPLICIT_KERNARG_ALIGNMENT - 1);
+        kernargs.insert(kernargs.end(), padSize + HIP_IMPLICIT_KERNARG_SIZE, 0);
 
         /*
           Kernel argument preparation.
@@ -189,7 +203,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         lp.dynamic_group_mem_bytes =
             sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
         hStream = ihipPreLaunchKernel(
-            hStream, dim3(globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ),
+            hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
             dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
 
 
@@ -206,10 +220,20 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         aql.grid_size_x = globalWorkSizeX;
         aql.grid_size_y = globalWorkSizeY;
         aql.grid_size_z = globalWorkSizeZ;
-        aql.group_segment_size =
-            f->_header->workgroup_group_segment_byte_size + sharedMemBytes;
-        aql.private_segment_size =
-            f->_header->workitem_private_segment_byte_size;
+        bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
+        if (is_code_object_v3) {
+            const auto* header =
+                reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
+            aql.group_segment_size =
+                header->group_segment_fixed_size + sharedMemBytes;
+            aql.private_segment_size =
+                header->private_segment_fixed_size;
+        } else {
+            aql.group_segment_size =
+                f->_header->workgroup_group_segment_byte_size + sharedMemBytes;
+            aql.private_segment_size =
+                f->_header->workitem_private_segment_byte_size;
+        }
         aql.kernel_object = f->_object;
         aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
         aql.header =
@@ -230,7 +254,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
         hc::completion_future cf;
 
-        lp.av->dispatch_hsa_kernel(&aql, config[1] /* kernarg*/, kernArgSize,
+        lp.av->dispatch_hsa_kernel(&aql, kernargs.data(), kernargs.size(),
                                    (startEvent || stopEvent) ? &cf : nullptr
 #if (__hcc_workweek__ > 17312)
                                    ,
@@ -289,16 +313,6 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, 0));
 }
 
-hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
-                              hipModule_t hmod, const char* name) {
-    HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
-    if (!dptr || !bytes || !hmod) return hipErrorInvalidValue;
-
-    if (!name) return hipErrorNotInitialized;
-
-    return hip_impl::get_agent_globals().read_agent_global_from_module(dptr, bytes, hmod, name);
-}
-
 namespace hip_impl {
     hsa_executable_t executable_for(hipModule_t hmod) {
         return hmod->executable;
@@ -323,10 +337,171 @@ namespace hip_impl {
 
         return currentDevice->_hsaAgent;
     }
+
+    struct Agent_global {
+        Agent_global() : name(nullptr), address(nullptr), byte_cnt(0) {}
+        Agent_global(const char* name, hipDeviceptr_t address, uint32_t byte_cnt) 
+            : name(nullptr), address(address), byte_cnt(byte_cnt) {
+                if (name)
+                    this->name = strdup(name);
+        }
+
+        Agent_global& operator=(Agent_global&& t) {
+            if (this == &t) return *this;
+
+            if (name) free(name);
+            name = t.name;
+            address = t.address;
+            byte_cnt = t.byte_cnt;
+
+            t.name = nullptr;
+            t.address = nullptr;
+            t.byte_cnt = 0;
+
+            return *this;
+        }
+
+        Agent_global(Agent_global&& t) 
+            : name(nullptr), address(nullptr), byte_cnt(0) {
+                *this = std::move(t);
+        }
+
+        // not needed, delete them to prevent bugs
+        Agent_global(const Agent_global&) = delete;
+        Agent_global& operator=(Agent_global& t) = delete;
+
+        ~Agent_global() { if (name) free(name); }
+
+        char* name;
+        hipDeviceptr_t address;
+        uint32_t byte_cnt;
+    };
+
+    template<typename ForwardIterator>
+    std::pair<hipDeviceptr_t, std::size_t> read_global_description(
+        ForwardIterator f, ForwardIterator l, const char* name) {
+        const auto it = std::find_if(f, l, [=](const Agent_global& x) {
+            return strcmp(x.name, name) == 0;
+        });
+
+        return it == l ?
+            std::make_pair(nullptr, 0u) : std::make_pair(it->address, it->byte_cnt);
+    }
+
+    std::vector<Agent_global> read_agent_globals(hsa_agent_t agent,
+                                            hsa_executable_t executable);
+    class agent_globals_impl {
+        private:
+            std::pair<
+                std::mutex,
+                std::unordered_map<
+                    std::string, std::vector<Agent_global>>> globals_from_module;
+
+            std::unordered_map<
+                hsa_agent_t,
+                std::pair<
+                    std::once_flag,
+                    std::vector<Agent_global>>> globals_from_process;
+
+        public:
+
+            hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+                    hipModule_t hmod, const char* name) {
+                // the key of the map would the hash of code object associated with the
+                // hipModule_t instance
+                std::string key(hash_for(hmod));
+
+                if (globals_from_module.second.count(key) == 0) {
+                    std::lock_guard<std::mutex> lck{globals_from_module.first};
+
+                    if (globals_from_module.second.count(key) == 0) {
+                        globals_from_module.second.emplace(
+                                key, read_agent_globals(this_agent(), executable_for(hmod)));
+                    }
+                }
+
+                const auto it0 = globals_from_module.second.find(key);
+                if (it0 == globals_from_module.second.cend()) {
+                    hip_throw(
+                            std::runtime_error{"agent_globals data structure corrupted."});
+                }
+
+                std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
+                        it0->second.cend(), name);
+                // HACK for SWDEV-173477
+                //
+                // For code objects with global symbols of length 0, ROCR runtime's fix
+                // may not be working correctly. Therefore the
+                // result from read_agent_globals() can't be trusted entirely.
+                //
+                // As a workaround to tame applications which depend on the existence of
+                // global symbols with length 0, always return hipSuccess here.
+                //
+                // This behavior shall be reverted once ROCR runtime has been fixed to
+                // address SWDEV-173477 and SWDEV-190701
+
+                //return *dptr ? hipSuccess : hipErrorNotFound;
+                return hipSuccess;                
+            }
+
+            hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                    const char* name) {
+
+                auto agent = this_agent();
+
+                std::call_once(globals_from_process[agent].first, [this](hsa_agent_t aa) {
+                    std::vector<Agent_global> tmp0;
+                    for (auto&& executable : hip_impl::get_program_state().impl->get_executables(aa)) {
+                        auto tmp1 = read_agent_globals(aa, executable);
+                        tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
+                            make_move_iterator(tmp1.end()));
+                    }
+                    globals_from_process[aa].second = move(move(tmp0));
+                }, agent);
+
+                const auto it = globals_from_process.find(agent);
+
+                if (it == globals_from_process.cend()) return hipErrorNotInitialized;
+
+                std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
+                        it->second.second.cend(), name);
+
+                return *dptr ? hipSuccess : hipErrorNotFound;
+            }
+
+    };
+
+    agent_globals::agent_globals() : impl(new agent_globals_impl()) { 
+        if (!impl) 
+            hip_throw(
+                std::runtime_error{"Error when constructing agent global data structures."});
+    }
+    agent_globals::~agent_globals() { delete impl; }
+
+    hipError_t agent_globals::read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+                                             hipModule_t hmod, const char* name) {
+        return impl->read_agent_global_from_module(dptr, bytes, hmod, name);
+    }
+
+    hipError_t agent_globals::read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                                              const char* name) {
+        return impl->read_agent_global_from_process(dptr, bytes, name);
+    }
+
 } // Namespace hip_impl.
 
+hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
+                              hipModule_t hmod, const char* name) {
+    HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
+    if (!dptr || !bytes || !hmod) return hipErrorInvalidValue;
+
+    if (!name) return hipErrorNotInitialized;
+
+    return hip_impl::get_agent_globals().read_agent_global_from_module(dptr, bytes, hmod, name);
+}
+
 namespace {
-inline void track(const Agent_global& x, hsa_agent_t agent) {
+inline void track(const hip_impl::Agent_global& x, hsa_agent_t agent) {
     tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name,
             x.address, x.byte_cnt);
 
@@ -347,7 +522,7 @@ inline void track(const Agent_global& x, hsa_agent_t agent) {
 
 }
 
-template <typename Container = vector<Agent_global>>
+template <typename Container = vector<hip_impl::Agent_global>>
 inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t agent,
                                                 hsa_executable_symbol_t x, void* out) {
     using namespace hip_impl;
@@ -358,7 +533,7 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
     hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_TYPE, &t);
 
     if (t == HSA_SYMBOL_KIND_VARIABLE) {
-        Agent_global tmp(name(x).c_str(), address(x), size(x));
+        hip_impl::Agent_global tmp(name(x).c_str(), address(x), size(x));
         static_cast<Container*>(out)->push_back(std::move(tmp));
 
         track(static_cast<Container*>(out)->back(),agent);
@@ -462,6 +637,12 @@ hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const ch
 
     auto kernel = find_kernel_by_name(hmod->executable, name, agent);
 
+    if (kernel.handle == 0u) {
+        std::string name_str(name);
+        name_str.append(".kd");
+        kernel = find_kernel_by_name(hmod->executable, name_str.c_str(), agent);
+    }
+
     if (kernel.handle == 0u) return hipErrorNotFound;
 
     // TODO: refactor the whole ihipThisThat, which is a mess and yields the
@@ -486,7 +667,11 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
 }
 
 namespace {
-hipFuncAttributes make_function_attributes(const amd_kernel_code_t& header) {
+const amd_kernel_code_v3_t *header_v3(const ihipModuleSymbol_t& kd) {
+  return reinterpret_cast<const amd_kernel_code_v3_t*>(kd._header);
+}
+
+hipFuncAttributes make_function_attributes(const ihipModuleSymbol_t& kd) {
     hipFuncAttributes r{};
 
     hipDeviceProp_t prop{};
@@ -495,16 +680,31 @@ hipFuncAttributes make_function_attributes(const amd_kernel_code_t& header) {
     //       available per CU, therefore we hardcode it to 64 KiRegisters.
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
-    r.localSizeBytes = header.workitem_private_segment_byte_size;
-    r.sharedSizeBytes = header.workgroup_group_segment_byte_size;
+    bool is_code_object_v3 = kd._name.find(".kd") != std::string::npos;
+    if (is_code_object_v3) {
+        r.localSizeBytes = header_v3(kd)->private_segment_fixed_size;
+        r.sharedSizeBytes = header_v3(kd)->group_segment_fixed_size;
+    } else {
+        r.localSizeBytes = kd._header->workitem_private_segment_byte_size;
+        r.sharedSizeBytes = kd._header->workgroup_group_segment_byte_size;
+    }
     r.maxDynamicSharedSizeBytes = prop.sharedMemPerBlock - r.sharedSizeBytes;
-    r.numRegs = header.workitem_vgpr_count;
+    if (is_code_object_v3) {
+        r.numRegs = ((header_v3(kd)->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
+    } else {
+        r.numRegs = kd._header->workitem_vgpr_count;
+    }
     r.maxThreadsPerBlock = r.numRegs ?
         std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
         prop.maxThreadsPerBlock;
-    r.binaryVersion =
-        header.amd_machine_version_major * 10 +
-        header.amd_machine_version_minor;
+    if (is_code_object_v3) {
+        r.binaryVersion = 0; // FIXME: should it be the ISA version or code
+                             //        object format version?
+    } else {
+        r.binaryVersion =
+            kd._header->amd_machine_version_major * 10 +
+            kd._header->amd_machine_version_minor;
+    }
     r.ptxVersion = prop.major * 10 + prop.minor; // HIP currently presents itself as PTX 3.0.
 
     return r;
@@ -520,11 +720,10 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 
     auto agent = this_agent();
     auto kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
-    const auto header = kd->_header;
 
-    if (!header) throw runtime_error{"Ill-formed Kernel_descriptor."};
+    if (!kd->_header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 
-    *attr = make_function_attributes(*header);
+    *attr = make_function_attributes(*kd);
 
     return hipSuccess;
 }
@@ -555,11 +754,9 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
     (*module)->executable = get_program_state().load_executable(
                                             content.data(), content.size(), (*module)->executable,
                                             this_agent());
-    istringstream elf{content};
-    ELFIO::elfio reader;
-    if (reader.load(elf)) {
-        program_state_impl::read_kernarg_metadata(reader, (*module)->kernargs);
-    }
+
+    std::vector<char> blob(content.cbegin(), content.cend());
+    program_state_impl::read_kernarg_metadata(blob, (*module)->kernargs);
 
     // compute the hash of the code object
     (*module)->hash = checksum(content.length(), content.data());
