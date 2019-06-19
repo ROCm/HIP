@@ -331,6 +331,10 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
     // prepare all kernel descriptors for each device as all streams will be locked in the next loop
     for (int i = 0; i < numDevices; ++i) {
         const hipLaunchParams& lp = launchParamsList[i];
+        if (lp.stream == nullptr) {
+            free(kds);
+            return hipErrorNotInitialized;
+        }
         kds[i] = hip_impl::get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(lp.func),
                 hip_impl::target_agent(lp.stream));
         if (kds[i] == nullptr) {
@@ -345,9 +349,6 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 
     // lock all streams before launching kernels to each device
     for (int i = 0; i < numDevices; ++i) {
-        if (launchParamsList[i].stream == nullptr) {
-            return hipErrorNotInitialized;
-        }
         LockedAccessor_StreamCrit_t streamCrit(launchParamsList[i].stream->criticalData(), false);
  #if (__hcc_workweek__ >= 19213)
         streamCrit->_av.acquire_locked_hsa_queue();
