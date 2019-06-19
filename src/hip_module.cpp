@@ -115,6 +115,8 @@ string ToString(hipFunction_t v) {
 
 const std::string& FunctionSymbol(const hipFunction_t f) { return f->_name; };
 
+extern hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device);
+
 #define CHECK_HSA(hsaStatus, hipStatus)                                                            \
     if (hsaStatus != HSA_STATUS_SUCCESS) {                                                         \
         return hipStatus;                                                                          \

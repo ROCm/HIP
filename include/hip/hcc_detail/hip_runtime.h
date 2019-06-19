@@ -279,8 +279,6 @@ extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t b
                                        grid_launch_parm* lp, const char* kernelNameStr);
 extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp);
 
-extern hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device);
-
 #if GENERIC_GRID_LAUNCH == 0
 //#warning "Original hipLaunchKernel defined"
 // Due to multiple overloaded versions of ihipPreLaunchKernel, the numBlocks3D and blockDim3D can be
