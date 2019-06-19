@@ -13,7 +13,7 @@ line_num = -1
 
 # Verbose message
 def message(msg):
-  if verbose: print >>sys.stdout, msg
+  if verbose: sys.stdout.write(msg + '\n')
 
 # Fatal error termination
 def error(msg):
@@ -24,8 +24,8 @@ def error(msg):
   else:
     msg = " Warning: " + msg
 
-  print >>sys.stdout, msg
-  print >>sys.stderr, sys.argv[0] + msg
+  sys.stdout.write(msg + '\n')
+  sys.stderr.write(sys.argv[0] + msg +'\n')
 
 def fatal(msg):
   error(msg)
@@ -452,7 +452,7 @@ parse_api(api_hfile, api_map)
 parse_src(api_map, src_dir, src_pat, opts_map)
 
 # Checking for non-conformant APIs
-for name in opts_map.keys():
+for name in list(opts_map.keys()):
   m = re.match(r'\.(\S*)', name)
   if m:
     message("Init missing: " + m.group(1))
