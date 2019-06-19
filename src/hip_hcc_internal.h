@@ -30,6 +30,7 @@ THE SOFTWARE.
 
 #include "hsa/hsa_ext_amd.h"
 #include "hip/hip_runtime.h"
+#include "hip_prof_api.h"
 #include "hip_util.h"
 #include "env.h"
 
