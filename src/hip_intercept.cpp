@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
-#include "hip/hcc_detail/hip_prof_api.h"
+#include "hip_prof_api.h"
 
 // HIP API callback/activity
 
@@ -46,4 +46,8 @@ hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg) {
 
 hipError_t hipRemoveActivityCallback(uint32_t id) {
   return callbacks_table.set_activity(id, NULL, NULL) ? hipSuccess : hipErrorInvalidValue;
+}
+
+const char* hipApiName(uint32_t id) {
+  return hip_api_name(id);
 }
