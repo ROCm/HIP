@@ -234,7 +234,7 @@ int main(int argc, const char **argv) {
     argc++;
   }
   llcompat::PrintStackTraceOnErrorSignal();
-  ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::Optional);
+  ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::ZeroOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   if (fileSources.empty() && !GeneratePerl && !GeneratePython) {
     llvm::errs() << "\n" << sHipify << sError << "Must specify at least 1 positional argument for source file." << "\n";
