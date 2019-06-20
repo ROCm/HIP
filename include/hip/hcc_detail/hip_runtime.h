@@ -270,14 +270,14 @@ static inline __device__ void printf(const char* format, All... all) {}
 
 #if defined __HCC_CPP__
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block,
-                                       grid_launch_parm* lp, const char* kernelNameStr);
+                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block,
-                                       grid_launch_parm* lp, const char* kernelNameStr);
+                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block,
-                                       grid_launch_parm* lp, const char* kernelNameStr);
+                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block,
-                                       grid_launch_parm* lp, const char* kernelNameStr);
-extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp);
+                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
+extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp, bool unlockPostponed = 0);
 
 #if GENERIC_GRID_LAUNCH == 0
 //#warning "Original hipLaunchKernel defined"
