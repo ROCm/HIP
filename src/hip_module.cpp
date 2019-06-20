@@ -150,7 +150,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY,
                                   uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                   hipStream_t hStream, void** kernelParams, void** extra,
-                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags) {
+                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags, bool isStreamLocked = 0) {
     using namespace hip_impl;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -206,8 +206,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
         hStream = ihipPreLaunchKernel(
             hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
-            dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
-
+            dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str(), isStreamLocked);
 
         hsa_kernel_dispatch_packet_t aql;
 
@@ -272,7 +271,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             stopEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStopCommand);
         }
 
-        ihipPostLaunchKernel(f->_name.c_str(), hStream, lp);
+        ihipPostLaunchKernel(f->_name.c_str(), hStream, lp, isStreamLocked);
+
+
     }
 
     return ret;
@@ -313,6 +314,75 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     return ihipLogStatus(ihipModuleLaunchKernel(
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, 0));
+}
+
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags) {
+
+    hipError_t result;
+
+    if ((numDevices > g_deviceCnt) || (launchParamsList == nullptr)) {
+        return hipErrorInvalidValue;
+    }
+
+    hipFunction_t* kds = reinterpret_cast<hipFunction_t*>(malloc(sizeof(hipFunction_t) * numDevices));
+    if (kds == nullptr) {
+        return hipErrorNotInitialized;
+    }
+
+    // prepare all kernel descriptors for each device as all streams will be locked in the next loop
+    for (int i = 0; i < numDevices; ++i) {
+        const hipLaunchParams& lp = launchParamsList[i];
+        if (lp.stream == nullptr) {
+            free(kds);
+            return hipErrorNotInitialized;
+        }
+        kds[i] = hip_impl::get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(lp.func),
+                hip_impl::target_agent(lp.stream));
+        if (kds[i] == nullptr) {
+            free(kds);
+            return hipErrorInvalidValue;
+        }
+        hip_impl::kernargs_size_align kargs = hip_impl::get_program_state().get_kernargs_size_align(
+                reinterpret_cast<std::uintptr_t>(lp.func));
+        kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
+                kargs.getHandle());
+    }
+
+    // lock all streams before launching kernels to each device
+    for (int i = 0; i < numDevices; ++i) {
+        LockedAccessor_StreamCrit_t streamCrit(launchParamsList[i].stream->criticalData(), false);
+ #if (__hcc_workweek__ >= 19213)
+        streamCrit->_av.acquire_locked_hsa_queue();
+ #endif
+     }
+
+    // launch kernels for each  device
+    for (int i = 0; i < numDevices; ++i) {
+        const hipLaunchParams& lp = launchParamsList[i];
+
+        result = ihipModuleLaunchKernel(kds[i],
+                lp.gridDim.x * lp.blockDim.x,
+                lp.gridDim.y * lp.blockDim.y,
+                lp.gridDim.z * lp.blockDim.z,
+                lp.blockDim.x, lp.blockDim.y,
+                lp.blockDim.z, lp.sharedMem,
+                lp.stream, lp.args, nullptr, nullptr, nullptr, 0,
+                true /* stream is already locked above and will be unlocked
+                        in the below code after launching kernels on all devices*/);
+    }
+
+    // unlock all streams
+    for (int i = 0; i < numDevices; ++i) {
+        launchParamsList[i].stream->criticalData().unlock();
+ #if (__hcc_workweek__ >= 19213)
+        launchParamsList[i].stream->criticalData()._av.release_locked_hsa_queue();
+ #endif
+     }
+
+    free(kds);
+
+    return result;
 }
 
 namespace hip_impl {
