@@ -242,7 +242,7 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
 #if defined(__HCC__) && (__hcc_minor__ < 3)
         *priority = 0;
 #else
-        LockedAccessor_StreamCrit_t crit(stream->_criticalData);
+        LockedAccessor_StreamCrit_t crit(stream->criticalData());
         *priority = crit->_av.get_queue_priority();
 #endif
         return ihipLogStatus(hipSuccess);
