@@ -105,6 +105,10 @@ int main() {
         std::cout << "FAILED!\n";
     };
 
+    hipFree(Ad);
+    hipFree(Bd);
+    delete A;
+    delete B;
     hipCtxDestroy(context);
     return 0;
 }

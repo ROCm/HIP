@@ -77,6 +77,7 @@ class kernargs_size_align {
 public:
     std::size_t size(std::size_t n) const;
     std::size_t alignment(std::size_t n) const;
+    const void* getHandle() const {return handle;};
 private:
     const void* handle;
     friend kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t);
