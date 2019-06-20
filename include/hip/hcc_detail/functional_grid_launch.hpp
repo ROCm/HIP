@@ -135,6 +135,22 @@ void hipLaunchKernelGGLImpl(
 }
 } // Namespace hip_impl.
 
+
+template <typename F>
+inline
+void hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+    F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
+
+    using namespace hip_impl;
+
+    hip_impl::hip_init();
+    auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
+                                                   target_agent(0));
+
+    hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
+                                      dynSharedMemPerBlk, blockSizeLimit);
+}
+
 template <typename... Args, typename F = void (*)(Args...)>
 inline
 void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
