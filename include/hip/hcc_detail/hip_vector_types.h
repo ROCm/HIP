@@ -214,8 +214,11 @@ THE SOFTWARE.
             __host__ __device__
             Vec3_cmp operator==(const Native_vec_& x) const noexcept
             {
-                return
-                    {-(d[0] == x.d[0]), -(d[1] == x.d[1]), -(d[2] == x.d[2])};
+                Vec3_cmp r;
+                r[0] = d[0] == x.d[0];
+                r[1] = d[1] == x.d[1];
+                r[2] = d[2] == x.d[2];
+                return -r;
             }
         };
 
