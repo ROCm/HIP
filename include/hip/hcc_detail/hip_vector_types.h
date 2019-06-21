@@ -45,7 +45,6 @@ THE SOFTWARE.
 #endif
 
 #if defined(__cplusplus)
-    #include <array>
     #include <type_traits>
 
     template<typename T, unsigned int n> struct HIP_vector_base;
