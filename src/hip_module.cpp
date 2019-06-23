@@ -119,6 +119,8 @@ string ToString(hipFunction_t v) {
 
 const std::string& FunctionSymbol(const hipFunction_t f) { return f->_name; };
 
+extern hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device);
+
 #define CHECK_HSA(hsaStatus, hipStatus)                                                            \
     if (hsaStatus != HSA_STATUS_SUCCESS) {                                                         \
         return hipStatus;                                                                          \
@@ -148,7 +150,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY,
                                   uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                   hipStream_t hStream, void** kernelParams, void** extra,
-                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags) {
+                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags, bool isStreamLocked = 0) {
     using namespace hip_impl;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -204,8 +206,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
         hStream = ihipPreLaunchKernel(
             hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
-            dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str());
-
+            dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str(), isStreamLocked);
 
         hsa_kernel_dispatch_packet_t aql;
 
@@ -270,7 +271,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
             stopEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStopCommand);
         }
 
-        ihipPostLaunchKernel(f->_name.c_str(), hStream, lp);
+        ihipPostLaunchKernel(f->_name.c_str(), hStream, lp, isStreamLocked);
+
+
     }
 
     return ret;
@@ -311,6 +314,75 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     return ihipLogStatus(ihipModuleLaunchKernel(
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, 0));
+}
+
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags) {
+
+    hipError_t result;
+
+    if ((numDevices > g_deviceCnt) || (launchParamsList == nullptr)) {
+        return hipErrorInvalidValue;
+    }
+
+    hipFunction_t* kds = reinterpret_cast<hipFunction_t*>(malloc(sizeof(hipFunction_t) * numDevices));
+    if (kds == nullptr) {
+        return hipErrorNotInitialized;
+    }
+
+    // prepare all kernel descriptors for each device as all streams will be locked in the next loop
+    for (int i = 0; i < numDevices; ++i) {
+        const hipLaunchParams& lp = launchParamsList[i];
+        if (lp.stream == nullptr) {
+            free(kds);
+            return hipErrorNotInitialized;
+        }
+        kds[i] = hip_impl::get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(lp.func),
+                hip_impl::target_agent(lp.stream));
+        if (kds[i] == nullptr) {
+            free(kds);
+            return hipErrorInvalidValue;
+        }
+        hip_impl::kernargs_size_align kargs = hip_impl::get_program_state().get_kernargs_size_align(
+                reinterpret_cast<std::uintptr_t>(lp.func));
+        kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
+                kargs.getHandle());
+    }
+
+    // lock all streams before launching kernels to each device
+    for (int i = 0; i < numDevices; ++i) {
+        LockedAccessor_StreamCrit_t streamCrit(launchParamsList[i].stream->criticalData(), false);
+ #if (__hcc_workweek__ >= 19213)
+        streamCrit->_av.acquire_locked_hsa_queue();
+ #endif
+     }
+
+    // launch kernels for each  device
+    for (int i = 0; i < numDevices; ++i) {
+        const hipLaunchParams& lp = launchParamsList[i];
+
+        result = ihipModuleLaunchKernel(kds[i],
+                lp.gridDim.x * lp.blockDim.x,
+                lp.gridDim.y * lp.blockDim.y,
+                lp.gridDim.z * lp.blockDim.z,
+                lp.blockDim.x, lp.blockDim.y,
+                lp.blockDim.z, lp.sharedMem,
+                lp.stream, lp.args, nullptr, nullptr, nullptr, 0,
+                true /* stream is already locked above and will be unlocked
+                        in the below code after launching kernels on all devices*/);
+    }
+
+    // unlock all streams
+    for (int i = 0; i < numDevices; ++i) {
+        launchParamsList[i].stream->criticalData().unlock();
+ #if (__hcc_workweek__ >= 19213)
+        launchParamsList[i].stream->criticalData()._av.release_locked_hsa_queue();
+ #endif
+     }
+
+    free(kds);
+
+    return result;
 }
 
 namespace hip_impl {
@@ -804,4 +876,148 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
     *texRef = reinterpret_cast<textureReference*>(addr);
     return ihipLogStatus(hipSuccess);
+}
+
+hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                              hipFunction_t f, size_t dynSharedMemPerBlk,
+                                              uint32_t blockSizeLimit)
+{
+    using namespace hip_impl;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    hipError_t ret = hipSuccess;
+
+    if (ctx == nullptr) {
+        ret = hipErrorInvalidDevice;
+    }
+
+    hipDeviceProp_t prop{};
+    ihipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+
+    prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
+
+    size_t usedVGPRS = 0;
+    size_t usedSGPRS = 0;
+    size_t usedLDS = 0;
+    bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
+    if (is_code_object_v3) {
+        const auto header = reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
+        // GRANULATED_WAVEFRONT_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
+        // the granularity for gfx6-gfx9 is max(0, ceil(vgprs_used / 4) - 1)
+        usedVGPRS = ((header->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
+        // GRANULATED_WAVEFRONT_SGPR_COUNT is specified in 6:9 bits of COMPUTE_PGM_RSRC1
+        // the granularity for gfx9+ is 2 * max(0, ceil(sgprs_used / 16) - 1)
+        usedSGPRS = ((((header->compute_pgm_rsrc1 & 0x3C0) >> 6) >> 1) + 1) << 4;
+        usedLDS = header->group_segment_fixed_size;
+    }
+    else {
+        const auto header = f->_header;
+        // VGPRs granularity is 4
+        usedVGPRS = ((header->workitem_vgpr_count + 3) >> 2) << 2;
+        // adding 2 to take into account the 2 VCC registers & handle the granularity of 16
+        usedSGPRS = header->wavefront_sgpr_count + 2;
+        usedSGPRS = ((usedSGPRS + 15) >> 4) << 4;
+        usedLDS = header->workgroup_group_segment_byte_size;
+    }
+
+    // try different workgroup sizes to find the maximum potential occupancy
+    // based on the usage of VGPRs and LDS
+    size_t wavefrontSize = prop.warpSize;
+    size_t maxWavefrontsPerBlock = prop.maxThreadsPerBlock / wavefrontSize;
+
+    // Due to SPI and private memory limitations, the max of wavefronts per CU in 32
+    size_t maxWavefrontsPerCU = min(prop.maxThreadsPerMultiProcessor / wavefrontSize, 32);
+
+    const size_t numSIMD = 4;
+    size_t maxActivWaves = 0;
+    size_t maxWavefronts = 0;
+    for (int i = 0; i < maxWavefrontsPerBlock; i++) {
+        size_t wavefrontsPerWG = i + 1;
+
+        // workgroup per CU is 40 for WG size of 1 wavefront; otherwise it is 16
+        size_t maxWorkgroupPerCU = (wavefrontsPerWG == 1) ? 40 : 16;
+        size_t maxWavesWGLimited = min(wavefrontsPerWG * maxWorkgroupPerCU, maxWavefrontsPerCU);
+
+        // Compute VGPR limited wavefronts per block
+        size_t wavefrontsVGPRS;
+        if (usedVGPRS == 0) {
+            wavefrontsVGPRS = maxWavesWGLimited;
+        }
+        else {
+            // find how many VGPRs are available for each SIMD
+            size_t numVGPRsPerSIMD = (prop.regsPerBlock / wavefrontSize / numSIMD);
+            wavefrontsVGPRS = (numVGPRsPerSIMD / usedVGPRS) * numSIMD;
+        }
+
+        size_t maxWavesVGPRSLimited = 0;
+        if (wavefrontsVGPRS > maxWavesWGLimited) {
+            maxWavesVGPRSLimited = maxWavesWGLimited;
+        }
+        else {
+            maxWavesVGPRSLimited = (wavefrontsVGPRS / wavefrontsPerWG) * wavefrontsPerWG;
+        }
+
+        // Compute SGPR limited wavefronts per block
+        size_t wavefrontsSGPRS;
+        if (usedSGPRS == 0) {
+            wavefrontsSGPRS = maxWavesWGLimited;
+        }
+        else {
+            const size_t numSGPRsPerSIMD = (prop.gcnArch < 900) ? 512 : 800;
+            wavefrontsSGPRS = (numSGPRsPerSIMD / usedSGPRS) * numSIMD;
+        }
+
+        size_t maxWavesSGPRSLimited = 0;
+        if (wavefrontsSGPRS > maxWavesWGLimited) {
+            maxWavesSGPRSLimited = maxWavesWGLimited;
+        }
+        else {
+            maxWavesSGPRSLimited = (wavefrontsSGPRS / wavefrontsPerWG) * wavefrontsPerWG;
+        }
+
+        // Compute LDS limited wavefronts per block
+        size_t wavefrontsLDS;
+        if (usedLDS == 0) {
+            wavefrontsLDS = maxWorkgroupPerCU * wavefrontsPerWG;
+        }
+        else {
+            size_t availableSharedMemPerCU = prop.maxSharedMemoryPerMultiProcessor;
+            size_t workgroupPerCU = availableSharedMemPerCU / (usedLDS + dynSharedMemPerBlk);
+            wavefrontsLDS = min(workgroupPerCU, maxWorkgroupPerCU) * wavefrontsPerWG;
+        }
+
+        size_t maxWavesLDSLimited = min(wavefrontsLDS, maxWavefrontsPerCU);
+
+        size_t activeWavefronts = 0;
+        size_t tmp_min = (size_t)min(maxWavesLDSLimited, maxWavesWGLimited);
+        tmp_min = min(maxWavesSGPRSLimited, tmp_min);
+        activeWavefronts = min(maxWavesVGPRSLimited, tmp_min);
+
+        if (maxActivWaves < activeWavefronts) {
+            maxActivWaves = activeWavefronts;
+            maxWavefronts = wavefrontsPerWG;
+        }
+    }
+
+    // determine the grid and block sizes for maximum potential occupancy
+    size_t maxThreadsCnt = prop.maxThreadsPerMultiProcessor*prop.multiProcessorCount;
+    if (blockSizeLimit > 0) {
+       maxThreadsCnt = min(maxThreadsCnt, blockSizeLimit);
+    }
+
+    *blockSize = maxWavefronts * wavefrontSize;
+    *gridSize = min((maxThreadsCnt + *blockSize - 1) / *blockSize, prop.multiProcessorCount);
+
+    return ret;
+}
+
+
+hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             uint32_t blockSizeLimit)
+{
+    HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit);
+
+    return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(
+        gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit));
 }

@@ -2745,6 +2745,21 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
                                                  int  numDevices, unsigned int  flags);
 
 /**
+ * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
+ *
+ * @param [out] gridSize           minimum grid size for maximum potential occupancy
+ * @param [out] blockSize          block size for maximum potential occupancy
+ * @param [in]  f                  kernel to launch
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ */
+hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             uint32_t blockSizeLimit);
+
+/**
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
@@ -2780,7 +2795,6 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  */
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags);
-
 
 
 // doxygen end Version Management
@@ -2973,9 +2987,7 @@ hipError_t hipLaunchByPtr(const void* func);
 } /* extern "c" */
 #endif
 
-#ifdef __cplusplus
-#include <hip/hcc_detail/hip_prof_api.h>
-#endif
+#include <hip/hcc_detail/hip_prof_str.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -2987,7 +2999,7 @@ hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
 hipError_t hipRemoveApiCallback(uint32_t id);
 hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg);
 hipError_t hipRemoveActivityCallback(uint32_t id);
-static inline const char* hipApiName(const uint32_t& id) { return hip_api_name(id); }
+const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 #ifdef __cplusplus
 } /* extern "C" */
