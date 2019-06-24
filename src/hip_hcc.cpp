@@ -1418,13 +1418,16 @@ void ihipInit() {
     for (int i = 0; i < accs.size(); i++) {
         // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
         if (!accs[i].get_is_emulated()) {
-            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i - 1)) ==
-                    g_hip_visible_devices.end() &&
-                g_visible_device) {
+            std::vector<int>::iterator  it= std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i - 1));
+            int index = i-1;
+            if (it == g_hip_visible_devices.end() && g_visible_device) {
                 // If device is not in visible devices list, ignore
                 continue;
+            } else {
+                 if(g_visible_device)
+                     index = std::distance(g_hip_visible_devices.begin(), it);
             }
-            g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
+            g_deviceArray[index] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
             g_deviceCnt++;
         }
     }
