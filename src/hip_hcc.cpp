@@ -40,6 +40,10 @@ THE SOFTWARE.
 #include <atomic>
 #include <mutex>
 
+#ifdef WITH_HOSTCALL
+#include <amd_hostcall.h>
+#endif // WITH_HOSTCALL
+
 #include <hc.hpp>
 #include <hc_am.hpp>
 #include "hsa/hsa_ext_amd.h"
@@ -139,6 +143,102 @@ std::atomic<int> g_lastShortTid(1);
 //
 std::vector<ProfTrigger> g_dbStartTriggers;
 std::vector<ProfTrigger> g_dbStopTriggers;
+
+#ifdef WITH_HOSTCALL
+//=================================================================================================
+// Hostcall global state; destructed on application exit
+//=================================================================================================
+
+class hostcallState {
+    amd_hostcall_consumer_t *consumer;
+    std::unordered_multimap<const void*, void*> deviceQueues;
+    std::unordered_map<void*, void*> buffers;
+    std::mutex _mutex;
+
+    // Functions with suffix _internal do not try to obtain a
+    // lock. They should be called from a context where the critical
+    // data is already locked.
+    void removeBuffer_internal(void *queue) {
+        auto buffer = findBuffer_internal(queue);
+        if (!buffer)
+            return;
+        amd_hostcall_deregister_buffer(consumer, buffer);
+        buffers.erase(queue);
+
+        tprintf(DB_SYNC, "discarded hostcall buffer %p for queue %p\n", buffer, queue);
+    }
+
+    void* findBuffer_internal(void *queue) {
+        if (buffers.find(queue) == buffers.end())
+            return nullptr;
+        return buffers[queue];
+    }
+
+public:
+    hostcallState() : consumer(nullptr) {}
+
+    ~hostcallState() {
+        if (consumer) {
+            amd_hostcall_destroy_consumer(consumer);
+        }
+    }
+
+    amd_hostcall_consumer_t* launchConsumer() {
+        std::lock_guard<decltype(_mutex)> lock(_mutex);
+        if (consumer) {
+            throw ihipException(hipErrorInitializationError);
+        }
+        if (amd_hostcall_create_consumer(&consumer) != AMD_HOSTCALL_SUCCESS) {
+            throw ihipException(hipErrorInitializationError);
+        }
+        if (amd_hostcall_launch_consumer(consumer) != AMD_HOSTCALL_SUCCESS) {
+            throw ihipException(hipErrorInitializationError);
+        }
+        return consumer;
+    }
+
+    void addBuffer(hc::accelerator_view *av, void *queue, void *buffer) {
+        std::lock_guard<decltype(_mutex)> lock(_mutex);
+        buffers[queue] = buffer;
+        amd_hostcall_register_buffer(consumer, buffer);
+
+        // The view provides a copy of the accelerator, which is not
+        // unique enough to track hostcall buffers allocated on the
+        // same device. Instead, we extract the raw pointer to the
+        // underlying device, which is guarantee to be unique.
+        auto acc = av->get_accelerator();
+        auto device = acc.get_raw_device();
+
+        deviceQueues.insert(std::make_pair(device, queue));
+        tprintf(DB_SYNC, "registered hostcall buffer %p on queue %p for raw device %p\n",
+                buffer, queue, device);
+    }
+
+    void* findBuffer(void *queue) {
+        std::lock_guard<decltype(_mutex)> lock(_mutex);
+        return findBuffer_internal(queue);
+    }
+
+    amd_hostcall_consumer_t *getConsumer() {
+        std::lock_guard<decltype(_mutex)> lock(_mutex);
+        return consumer;
+    }
+
+    void resetDevice(hc::accelerator acc)
+    {
+        std::lock_guard<decltype(_mutex)> lock(_mutex);
+        auto device = acc.get_raw_device();
+        auto queues = deviceQueues.equal_range(device);
+        tprintf(DB_SYNC, "resetting hostcall buffers for raw device %p\n", device);
+        for (auto q = queues.first; q != queues.second; ++q) {
+            removeBuffer_internal(q->second);
+        }
+        deviceQueues.erase(device);
+    }
+};
+
+hostcallState g_hostcallState;
+#endif // WITH_HOSTCALL
 
 //=================================================================================================
 // Top-level "free" functions:
@@ -535,6 +635,10 @@ void ihipDevice_t::locked_reset() {
     //---
     // Wait for pending activity to complete?  TODO - check if this is required behavior:
     tprintf(DB_SYNC, "locked_reset waiting for activity to complete.\n");
+
+#ifdef WITH_HOSTCALL
+    g_hostcallState.resetDevice(_acc);
+#endif // WITH_HOSTCALL
 
     // Reset and remove streams:
     // Delete all created streams including the default one.
@@ -969,6 +1073,9 @@ void ihipCtx_t::locked_reset() {
     // FIXME - This is clearly a non-const action!  Is this a context reset or a device reset - maybe should reference count?
     ihipDevice_t *device = getWriteableDevice();
     device->_state = 0;
+
+    // WARNING: If reseting allocated memory, g_hostcallState must also be reset for this device.
+    // See ihipDevice_t::locked_reset() for details.
     am_memtracker_reset(device->_acc);
 #endif
 };
@@ -1360,11 +1467,19 @@ void HipReadEnv() {
 
 
 //---
-// Function called one-time at initialization time to construct a table of all GPU devices.
-// HIP/CUDA uses integer "deviceIds" - these are indexes into this table.
-// AMP maintains a table of accelerators, but some are emulated - ie for debug or CPU.
-// This function creates a vector with only the GPU accelerators.
-// It is called with C++11 call_once, which provided thread-safety.
+// Function called once at initialization time for the following:
+//
+// 1. Construct a table of all GPU devices. HIP/CUDA uses integer
+//    "deviceIds" - these are indexes into this table. AMP maintains a
+//    table of accelerators, but some are emulated - ie for debug or
+//    CPU. This function creates a vector with only the GPU
+//    accelerators.
+//
+// 2. Launch the global hostcall consumer. This runs in a separate
+//    thread, and must be terminated before the application exits.
+//
+// std::call_once is used to ensure thread safety.
+//
 void ihipInit() {
 #if COMPILE_HIP_ATP_MARKER
     amdtInitializeActivityLogger();
@@ -1441,6 +1556,9 @@ void ihipInit() {
             g_numLogicalThreads);
 
     g_initDeviceFound = true;
+#ifdef WITH_HOSTCALL
+    auto consumer = g_hostcallState.launchConsumer();
+#endif // WITH_HOSTCALL
 }
 
 namespace hip_impl {
@@ -1580,6 +1698,77 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
     }
 }
 
+#ifdef WITH_HOSTCALL
+uint32_t
+getMinHostcallPackets(void *aptr)
+{
+    auto agent = reinterpret_cast<hsa_agent_t*>(aptr);
+    hsa_device_type_t dtype;
+    if (hsa_agent_get_info(*agent, HSA_AGENT_INFO_DEVICE, &dtype) !=
+        HSA_STATUS_SUCCESS)
+        return 0;
+
+    if (dtype != HSA_DEVICE_TYPE_GPU)
+        return 0;
+
+    uint32_t numCu;
+    if (hsa_agent_get_info(*agent,
+                           (hsa_agent_info_t)
+                               HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT,
+                           &numCu) != HSA_STATUS_SUCCESS)
+        return 0;
+
+    uint32_t waverPerCu;
+    if (hsa_agent_get_info(*agent,
+                           (hsa_agent_info_t)
+                               HSA_AMD_AGENT_INFO_MAX_WAVES_PER_CU,
+                           &waverPerCu) != HSA_STATUS_SUCCESS)
+        return 0;
+
+    return numCu * waverPerCu;
+}
+
+static void*
+createHostcallBuffer(hc::accelerator_view *av)
+{
+    auto num_packets = getMinHostcallPackets(av->get_hsa_agent());
+    if (num_packets == 0) {
+        throw ihipException(hipErrorInitializationError);
+    }
+
+    auto size = amd_hostcall_get_buffer_size(num_packets);
+    auto align = amd_hostcall_get_buffer_alignment();
+
+    auto acc = av->get_accelerator();
+    void *ptr = hc::am_aligned_alloc(size, acc, amHostCoherent, align);
+    if (!ptr) {
+        throw ihipException(hipErrorRuntimeMemory);
+    }
+    if (amd_hostcall_initialize_buffer(ptr, num_packets)
+        != AMD_HOSTCALL_SUCCESS) {
+        throw ihipException(hipErrorInitializationError);
+    }
+    tprintf(DB_SYNC, "created hostcall buffer %p with %d packets for raw device %p\n",
+            ptr, num_packets, acc.get_raw_device());
+    return ptr;
+}
+
+#endif // WITH_HOSTCALL
+static void* assignHostcallBuffer(hc::accelerator_view *av, void *hwqueue)
+{
+#ifdef WITH_HOSTCALL
+    void *buffer = g_hostcallState.findBuffer(hwqueue);
+    if (!buffer) {
+        buffer = createHostcallBuffer(av);
+        g_hostcallState.addBuffer(av, hwqueue, buffer);
+    }
+    assert(buffer);
+    return buffer;
+#else
+    return nullptr;
+#endif // WITH_HOSTCALL
+}
+
 // Called just before a kernel is launched from hipLaunchKernel.
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm* lp,
@@ -1602,6 +1791,10 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
         lp->av = &(stream->criticalData()._av);
     }
     lp->cf = nullptr;
+    void *hwqueue = lp->av->acquire_locked_hsa_queue();
+    lp->hostcall_buffer = assignHostcallBuffer(lp->av, hwqueue);
+    tprintf(DB_SYNC, "using hostcall buffer %p for %s\n",
+            lp->hostcall_buffer, ToString(stream).c_str());
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
 
     return (stream);
@@ -1632,6 +1825,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block, g
 void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp, bool unlockPostponed) {
     tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
 
+    lp.av->release_locked_hsa_queue();
     stream->lockclose_postKernelCommand(kernelName, lp.av, unlockPostponed);
     if (HIP_PROFILE_API) {
         MARKER_END();

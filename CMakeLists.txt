@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.4.3)
 project(hip)
 
+# Threads are required by the hostcall tests. The check uses the
+# system compiler, but it is affected by CMAKE_CXX_FLAGS. Later parts
+# of this file add flags like "-hc", which cause the system compiler
+# to error out.
+find_package(Threads)
+
 #############################
 # Options
 #############################
@@ -224,6 +230,12 @@ if(HIP_PLATFORM STREQUAL "hcc")
         set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DCOMPILE_HIP_ATP_MARKER=1")
     endif()
 
+    # FIXME: Make this a required package ASAP
+    find_package(amd_hostcall)
+    if (${amd_hostcall_FOUND})
+        set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DWITH_HOSTCALL")
+    endif()
+
     # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_GITDATE}")
 
@@ -290,6 +302,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     target_link_libraries(hip_hcc PRIVATE amd_comgr)
     target_link_libraries(hip_hcc_static PRIVATE amd_comgr)
+
+    if (${amd_hostcall_FOUND})
+        target_link_libraries(hip_hcc PRIVATE amd_hostcall)
+        target_link_libraries(hip_hcc_static PRIVATE amd_hostcall)
+    endif()
 
     string(REPLACE " " ";" HCC_CXX_FLAGS_LIST ${HCC_CXX_FLAGS})
     foreach(TARGET hip_hcc hip_hcc_static)
@@ -513,6 +530,17 @@ if(${RUN_HIT} EQUAL 0)
 
     # Add custom target: check
     add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
+
+    # Add independent tests for hostcall
+    if (${amd_hostcall_FOUND})
+        if(${Threads_FOUND})
+            add_custom_target(hostcall_tests)
+            add_subdirectory(${HIP_SRC_PATH}/tests/hostcall EXCLUDE_FROM_ALL)
+            add_dependencies(build_tests hostcall_tests)
+        else()
+            message(STATUS "Disbled hostcall tests; thread library not found.")
+        endif()
+    endif()
 else()
     message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
 endif()

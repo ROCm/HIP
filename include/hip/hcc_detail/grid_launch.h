@@ -62,6 +62,8 @@ typedef struct grid_launch_parm
   //! waiting on younger commands.
   hc::completion_future *cf;
 
+  void *hostcall_buffer;
+
   grid_launch_parm() = default;
 } grid_launch_parm;
 

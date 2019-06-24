@@ -208,6 +208,12 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
             hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
             dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str(), isStreamLocked);
 
+        auto implicit_begin = reinterpret_cast<void**>(kernargs.data() + (kernargs.size() - HIP_IMPLICIT_KERNARG_SIZE));
+        auto hostcall_buffer = implicit_begin + 3;
+        tprintf(DB_SYNC, "using hostcall buffer %p for %s\n",
+                lp.hostcall_buffer, ToString(hStream).c_str());
+        *hostcall_buffer = lp.hostcall_buffer;
+
         hsa_kernel_dispatch_packet_t aql;
 
         memset(&aql, 0, sizeof(aql));
