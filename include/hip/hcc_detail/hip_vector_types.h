@@ -776,7 +776,7 @@ THE SOFTWARE.
         } CUDA_name##2;\
         typedef struct {\
             union {\
-                CUDA_name##_impl3 data;\
+                T data[3];\
                 struct {\
                     T x;\
                     T y;\
