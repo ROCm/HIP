@@ -1427,7 +1427,7 @@ void ihipInit() {
                  if(g_visible_device)
                      index = std::distance(g_hip_visible_devices.begin(), it);
             }
-            g_deviceArray[index] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
+            g_deviceArray[index] = new ihipDevice_t(index, deviceCnt, accs[i]);
             g_deviceCnt++;
         }
     }
