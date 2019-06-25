@@ -219,8 +219,8 @@ public:
             dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
                 ELFIO::elfio tmp;
 
-                const auto elf =
-                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+                const auto elf = (info->dlpi_addr && std::strlen(info->dlpi_name) != 0) ?
+                    info->dlpi_name : "/proc/self/exe";
 
                 if (!tmp.load(elf)) return 0;
 
@@ -277,8 +277,8 @@ public:
                 program_state_impl* t = static_cast<program_state_impl*>(psi_ptr);
 
                 ELFIO::elfio tmp;
-                const auto elf =
-                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+                const auto elf = (info->dlpi_addr && std::strlen(info->dlpi_name) != 0) ?
+                    info->dlpi_name : "/proc/self/exe";
 
                 if (!tmp.load(elf)) return 0;
 
@@ -503,8 +503,8 @@ public:
         std::call_once(function_names.first, [this]() {
             dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
                 ELFIO::elfio tmp;
-                const auto elf =
-                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+                const auto elf = (info->dlpi_addr && std::strlen(info->dlpi_name) != 0) ?
+                    info->dlpi_name : "/proc/self/exe";
 
                 if (!tmp.load(elf)) return 0;
 
