@@ -190,7 +190,7 @@ bool CheckVectorTypes() {
 int main() {
     static_assert(sizeof(float1) == 4, "");
     static_assert(sizeof(float2) >= 8, "");
-    static_assert(sizeof(float3) >= 12, "");
+    static_assert(sizeof(float3) == 12, "");
     static_assert(sizeof(float4) >= 16, "");
 
     if (CheckVectorTypes()) {
