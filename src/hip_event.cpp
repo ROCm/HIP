@@ -85,7 +85,7 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags) {
         (flags & ~supportedFlags) ||             // can't set any unsupported flags.
         (flags & releaseFlags) == releaseFlags;  // can't set both release flags
 
-    if (!illegalFlags) {
+    if (event && !illegalFlags) {
         *event = new ihipEvent_t(flags);
     } else {
         e = hipErrorInvalidValue;
@@ -202,11 +202,13 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
 
     hipError_t status = hipSuccess;
 
-    *ms = 0.0f;
-
-    if ((start == nullptr) || (stop == nullptr)) {
+    if (ms == nullptr) {
+        status = hipErrorInvalidValue;
+    }
+    else if ((start == nullptr) || (stop == nullptr)) {
         status = hipErrorInvalidResourceHandle;
     } else {
+        *ms = 0.0f;
         auto startEcd = start->locked_copyCrit();
         auto stopEcd = stop->locked_copyCrit();
 
@@ -256,18 +258,22 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
 
 hipError_t hipEventQuery(hipEvent_t event) {
     HIP_INIT_SPECIAL_API(hipEventQuery, TRACE_QUERY, event);
-
-    if (!(event->_flags & hipEventReleaseToSystem)) {
-        tprintf(DB_WARN,
-                "hipEventQuery on event without system-scope fence ; consider creating with "
-                "hipEventReleaseToSystem\n");
-    }
-
-    auto ecd = event->locked_copyCrit();
-
-    if ((ecd._state == hipEventStatusRecording) && !ecd._stream->locked_eventIsReady(event)) {
-        return ihipLogStatus(hipErrorNotReady);
+    if ( NULL == event)
+    {
+        return hipErrorInvalidResourceHandle;
     } else {
-        return ihipLogStatus(hipSuccess);
+        if (!(event->_flags & hipEventReleaseToSystem)) {
+            tprintf(DB_WARN,
+                    "hipEventQuery on event without system-scope fence ; consider creating with "
+                    "hipEventReleaseToSystem\n");
+        }
+
+        auto ecd = event->locked_copyCrit();
+
+        if ((ecd._state == hipEventStatusRecording) && !ecd._stream->locked_eventIsReady(event)) {
+            return ihipLogStatus(hipErrorNotReady);
+        } else {
+            return ihipLogStatus(hipSuccess);
+        }
     }
 }
