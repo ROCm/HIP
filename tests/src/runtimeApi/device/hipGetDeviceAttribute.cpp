@@ -109,5 +109,7 @@ int main(int argc, char* argv[]) {
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,
                                      props.maxSharedMemoryPerMultiProcessor));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIntegrated, props.integrated));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCooperativeLaunch, props.cooperativeLaunch));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCooperativeMultiDeviceLaunch, props.cooperativeMultiDeviceLaunch));
     passed();
 };

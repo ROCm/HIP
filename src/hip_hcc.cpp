@@ -913,6 +913,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     if(agent_profile == HSA_PROFILE_FULL) {
         prop->integrated = 1;
     }
+
+    // Enable the cooperative group for gfx9+
+    prop->cooperativeLaunch = (prop->gcnArch < 900) ? 0 : 1;
+    prop->cooperativeMultiDeviceLaunch = (prop->gcnArch < 900) ? 0 : 1;
+
     return e;
 }
 

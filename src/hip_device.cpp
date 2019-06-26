@@ -276,6 +276,12 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
             case hipDeviceAttributeIntegrated:
                 *pi = prop->integrated;
                 break;
+            case hipDeviceAttributeCooperativeLaunch:
+                *pi = prop->cooperativeLaunch;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceLaunch:
+                *pi = prop->cooperativeMultiDeviceLaunch;
+                break;
             default:
                 e = hipErrorInvalidValue;
                 break;
