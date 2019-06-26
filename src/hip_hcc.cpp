@@ -1156,6 +1156,11 @@ std::string HIP_VISIBLE_DEVICES_callback(void* var_ptr, const char* envVarString
         }
     }
 
+    if(g_hip_visible_devices.size()==0) {
+        g_visible_device = false;
+        g_hip_visible_devices.push_back(0);
+    }
+
     std::string valueString;
     // Print out the number of ids
     for (int i = 0; i < g_hip_visible_devices.size(); i++) {
