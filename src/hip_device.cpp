@@ -276,6 +276,18 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
             case hipDeviceAttributeIntegrated:
                 *pi = prop->integrated;
                 break;
+            case hipDeviceAttributeHdpMemFlushCntl:
+                {
+                    uint32_t** hdp = reinterpret_cast<uint32_t**>(pi);
+                    *hdp = prop->hdpMemFlushCntl;
+                }
+                break;
+            case hipDeviceAttributeHdpRegFlushCntl:
+                {
+                    uint32_t** hdp = reinterpret_cast<uint32_t**>(pi);
+                    *hdp = prop->hdpRegFlushCntl;
+                }
+                break;
             default:
                 e = hipErrorInvalidValue;
                 break;

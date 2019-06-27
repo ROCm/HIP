@@ -117,6 +117,8 @@ typedef struct hipDeviceProp_t {
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
     int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices 
+    uint32_t* hdpMemFlushCntl; ///< Addres of HDP_MEM_COHERENCY_FLUSH_CNTL register
+    uint32_t* hdpRegFlushCntl; ///< Addres of HDP_REG_COHERENCY_FLUSH_CNTL register
 } hipDeviceProp_t;
 
 
@@ -295,6 +297,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIntegrated,                        ///< iGPU
     hipDeviceAttributeCooperativeLaunch,                 ///< Support cooperative launch
     hipDeviceAttributeCooperativeMultiDeviceLaunch,      ///< Support cooperative launch on multiple devices
+    hipDeviceAttributeHdpMemFlushCntl,                   ///< Address of the HDP_MEM_COHERENCY_FLUSH_CNTL register
+    hipDeviceAttributeHdpRegFlushCntl,                   ///< Address of the HDP_REG_COHERENCY_FLUSH_CNTL register
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {
