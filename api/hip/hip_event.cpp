@@ -100,6 +100,12 @@ hipError_t Event::streamWait(hipStream_t stream, uint flags) {
   if (stream_ == hostQueue) return hipSuccess;
 
   amd::ScopedLock lock(lock_);
+  bool retain = false;
+
+  if (event_ == nullptr) {
+    event_ = stream_->getLastQueuedCommand(true);
+    retain = true;
+  }
 
   if (!event_->notifyCmdQueue()) {
     return hipErrorUnknown;
@@ -113,6 +119,11 @@ hipError_t Event::streamWait(hipStream_t stream, uint flags) {
   }
   command->enqueue();
   command->release();
+
+  if (retain) {
+    event_->release();
+    event_ = nullptr;
+  }
 
   return hipSuccess;
 }
