@@ -66,12 +66,17 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
 
 static bool isCompatibleCodeObject(const std::string& codeobj_target_id,
                                    const char* device_name) {
-  // Workaround for gfx906 device name mismatch.
-  // If bundle target id starts with gfx906 and device name starts with
-  // gfx906, treat them as match.
-  return codeobj_target_id.compare(device_name) == 0 ||
-         (codeobj_target_id.find("gfx906") == 0 &&
-          std::string(device_name).find("gfx906") == 0);
+  // Workaround for device name mismatch.
+  // Device name may contain feature strings delimited by '+', e.g.
+  // gfx900+xnack. Currently HIP-Clang does not include feature strings
+  // in code object target id in fat binary. Therefore drop the feature
+  // strings from device name before comparing it with code object target id.
+  std::string short_name(device_name);
+  auto feature_loc = short_name.find('+');
+  if (feature_loc != std::string::npos) {
+    short_name.erase(feature_loc);
+  }
+  return codeobj_target_id == short_name;
 }
 
 // Extracts code objects from fat binary in data for device names given in devices.
