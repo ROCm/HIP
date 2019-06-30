@@ -963,7 +963,7 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
             wavefrontsSGPRS = maxWavesWGLimited;
         }
         else {
-            const size_t numSGPRsPerSIMD = (prop.gcnArch < 900) ? 512 : 800;
+            const size_t numSGPRsPerSIMD = (prop.gcnArch < 800) ? 512 : 800;
             wavefrontsSGPRS = (numSGPRsPerSIMD / usedSGPRS) * numSIMD;
         }
 
