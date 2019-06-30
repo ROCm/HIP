@@ -76,7 +76,151 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 3> {
-        typedef T Native_vec_ __NATIVE_VECTOR__(3, T);
+        struct Native_vec_ {
+            T d[3];
+
+            __host__ __device__
+            constexpr
+            Native_vec_() = default;
+            __host__ __device__
+            explicit
+            constexpr
+            Native_vec_(T x) noexcept : d{x, x, x} {}
+            __host__ __device__
+            constexpr
+            Native_vec_(T x, T y, T z) noexcept : d{x, y, z} {}
+            __host__ __device__
+            constexpr
+            Native_vec_(const Native_vec_&) = default;
+            __host__ __device__
+            constexpr
+            Native_vec_(Native_vec_&&) = default;
+            __host__ __device__
+            ~Native_vec_() = default;
+
+            __host__ __device__
+            Native_vec_& operator=(const Native_vec_&) = default;
+            __host__ __device__
+            Native_vec_& operator=(Native_vec_&&) = default;
+
+            __host__ __device__
+            T& operator[](unsigned int idx) noexcept { return d[idx]; }
+            __host__ __device__
+            T operator[](unsigned int idx) const noexcept { return d[idx]; }
+
+            __host__ __device__
+            Native_vec_& operator+=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] += x.d[i];
+                return *this;
+            }
+            __host__ __device__
+            Native_vec_& operator-=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] -= x.d[i];
+                return *this;
+            }
+
+            __host__ __device__
+            Native_vec_& operator*=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] *= x.d[i];
+                return *this;
+            }
+            __host__ __device__
+            Native_vec_& operator/=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] /= x.d[i];
+                return *this;
+            }
+
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_signed<U>{}>::type* = nullptr>
+            __host__ __device__
+            Native_vec_ operator-() const noexcept
+            {
+                auto r{*this};
+                for (auto&& x : r.d) x = -x;
+                return r;
+            }
+
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Native_vec_ operator~() const noexcept
+            {
+                auto r{*this};
+                for (auto&& x : r.d) x = ~x;
+                return r;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Native_vec_& operator%=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] %= x.d[i];
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Native_vec_& operator^=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] ^= x.d[i];
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Native_vec_& operator|=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] |= x.d[i];
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Native_vec_& operator&=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] &= x.d[i];
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Native_vec_& operator>>=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] >>= x.d[i];
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Native_vec_& operator<<=(const Native_vec_& x) noexcept
+            {
+                for (auto i = 0u; i != 3u; ++i) d[i] <<= x.d[i];
+                return *this;
+            }
+
+            using Vec3_cmp = T __NATIVE_VECTOR__(3, int);
+            __host__ __device__
+            Vec3_cmp operator==(const Native_vec_& x) const noexcept
+            {
+                Vec3_cmp r;
+                r[0] = d[0] == x.d[0];
+                r[1] = d[1] == x.d[1];
+                r[2] = d[2] == x.d[2];
+                return -r;
+            }
+        };
 
         union {
             Native_vec_ data;
@@ -632,7 +776,7 @@ THE SOFTWARE.
         } CUDA_name##2;\
         typedef struct {\
             union {\
-                CUDA_name##_impl3 data;\
+                T data[3];\
                 struct {\
                     T x;\
                     T y;\

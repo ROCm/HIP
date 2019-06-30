@@ -50,6 +50,7 @@ set_and_check( hip_BIN_INSTALL_DIR "@PACKAGE_BIN_INSTALL_DIR@" )
 set_and_check(hip_HIPCC_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipcc")
 set_and_check(hip_HIPCONFIG_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipconfig")
 
+find_dependency(amd_comgr)
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
 
 set( hip_LIBRARIES hip::host hip::device)
