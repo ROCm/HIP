@@ -1219,7 +1219,7 @@ inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int
                                                            int blockSizeLimit = 0,
                                                            unsigned int flags = 0) {
     cudaError_t cerror;
-    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize,
+    cerror = cudaOccupancyMaxPotentialBlockSizeWithFlags(minGridSize, blockSize, func, dynamicSMemSize,
                                                 blockSizeLimit, flags);
     return hipCUDAErrorTohipError(cerror);
 }
