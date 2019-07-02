@@ -34,7 +34,7 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HIP_VECTOR_TYPES_H
 
 #if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
-#if defined(__cplusplus) && defined(__HIP_VDI__)
+#if __cplusplus && __HIP_VDI__
 #include <hip/hcc_detail/hip_cooperative_groups.h>
 #endif
 #elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)

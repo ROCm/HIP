@@ -35,7 +35,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_H
 
-#if defined(__cplusplus) && defined(__HIP_VDI__)
+#if __cplusplus && __HIP_VDI__
 #include <hip/hcc_detail/hip_cooperative_groups_helper.h>
 
 namespace cooperative_groups {
