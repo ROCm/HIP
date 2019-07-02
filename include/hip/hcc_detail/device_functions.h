@@ -756,26 +756,94 @@ unsigned long long int __ballot64(int predicate) {
 // hip.amdgcn.bc - lanemask
 __device__
 inline
-int64_t  __lanemask_gt()
+uint64_t  __lanemask_gt()
 {
-    int32_t activelane = __ockl_activelane_u32();
-    int64_t ballot = __ballot64(1);
-    if (activelane != 63) {
-        int64_t tmp = (~0ULL) << (activelane + 1);
-        return tmp & ballot;
-    }
-    return 0;
+    uint32_t lane = __ockl_lane_u32();
+    if (lane == 63)
+      return 0;
+    uint64_t ballot = __ballot64(1);
+    uint64_t mask = (~((uint64_t)0)) << (lane + 1);
+    return mask & ballot;
 }
 
 __device__
 inline
-int64_t __lanemask_lt()
+uint64_t __lanemask_lt()
 {
-    int32_t activelane = __ockl_activelane_u32();
+    uint32_t lane = __ockl_lane_u32();
+    if (lane == 0)
+      return 0;
     int64_t ballot = __ballot64(1);
-    if (activelane == 0)
-        return 0;
-    return ballot;
+    uint64_t mask = ((uint64_t)1 << lane) - (uint64_t)1;
+    return mask & ballot;
+}
+
+__device__
+inline
+uint64_t  __lanemask_eq()
+{
+    uint32_t lane = __ockl_lane_u32();
+    int64_t mask = ((uint64_t)1 << lane);
+    return mask;
+}
+
+__device__
+inline
+uint64_t __activemask()
+{
+    return __builtin_amdgcn_read_exec();
+}
+
+__device__
+inline
+uint32_t __lane()
+{
+    return __ockl_lane_u32();
+}
+
+/**
+ * grid and multi-grid cooperative groups related device library API wrappers
+ */
+__device__
+inline
+void __grid_sync() {
+  __ockl_grid_sync();
+}
+
+__device__
+inline
+uint32_t __multi_grid_num_grids() {
+  return (uint32_t)__ockl_multi_grid_num_grids();
+}
+
+__device__
+inline
+uint32_t __multi_grid_grid_rank() {
+  return (uint32_t)__ockl_multi_grid_grid_rank();
+}
+
+__device__
+inline
+uint32_t __multi_grid_size() {
+  return (uint32_t)__ockl_multi_grid_size();
+}
+
+__device__
+inline
+uint32_t __multi_grid_thread_rank() {
+  return (uint32_t)__ockl_multi_grid_thread_rank();
+}
+
+__device__
+inline
+bool __multi_grid_is_valid() {
+  return __ockl_multi_grid_is_valid();
+}
+
+__device__
+inline
+void __multi_grid_sync() {
+  __ockl_multi_grid_sync();
 }
 
 __device__ inline void* __local_to_generic(void* p) { return p; }

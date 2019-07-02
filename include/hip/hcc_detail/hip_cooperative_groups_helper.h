@@ -1,0 +1,262 @@
+/*
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+/**
+ *  @file  hcc_detail/hip_cooperative_groups_helper.h
+ *
+ *  @brief Device side implementation of cooperative group feature.
+ *
+ *  Defines helper constructs and APIs which aid the types and device API
+ *  wrappers defined within `hcc_detail/hip_cooperative_groups.h`.
+ *
+ *  The `Cooperative Group` feature is supported only for hip/vdi runtime, as
+ *  such, the feature is implemented only in case of hip/vdi runtime
+ */
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_HELPER_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_HELPER_H
+
+#if defined(__cplusplus) && defined(__HIP_VDI__)
+#include <hip/hcc_detail/device_functions.h>
+
+#if !defined(__align__)
+#define __align__(x) __attribute__((aligned(x)))
+#endif
+
+#if !defined(__CG_STATIC_QUALIFIER__)
+#define __CG_STATIC_QUALIFIER__ __device__ __forceinline__
+#endif
+
+#if !defined(__CG_STATIC_QUALIFIER__)
+#define __CG_STATIC_QUALIFIER__ __device__ static __forceinline__
+#endif
+
+#if !defined(WAVEFRONT_SIZE)
+#define WAVEFRONT_SIZE 64
+#endif
+
+namespace cooperative_groups {
+
+namespace internal {
+
+/** \brief Enums representing different cooperative group types
+ */
+typedef enum {
+  cg_invalid,
+  cg_multi_grid,
+  cg_grid,
+  cg_workgroup,
+  cg_coalesced,
+  cg_tiled_partition_dynamic,
+  cg_tiled_partition_static
+} group_type;
+
+/**
+ *  Internal wrappers around device builtins/intrinsics
+ */
+__CG_STATIC_QUALIFIER__ uint64_t lanemask_gt() {
+  return __lanemask_gt();
+}
+
+__CG_STATIC_QUALIFIER__ uint64_t lanemask_lt() {
+  return __lanemask_lt();
+}
+
+__CG_STATIC_QUALIFIER__ uint64_t lanemask_eq() {
+  return __lanemask_eq();
+}
+
+__CG_STATIC_QUALIFIER__ uint64_t activemask() {
+  return __activemask();
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t lane() {
+  return __lane();
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t popcll(uint64_t mask) {
+  return __popcll(mask);
+}
+
+/**
+ *  Internal helper functions
+ */
+__CG_STATIC_QUALIFIER__ bool is_tile_size_valid(const uint32_t tile_sz,
+                                                const uint32_t parent_size) {
+  // Tile size should be power of two, and it should be between the range
+  // [1, wavefront_size]
+  const bool pow2_tile_sz = ((tile_sz & (tile_sz - 1)) == 0);
+  if (!pow2_tile_sz || tile_sz < 1 || tile_sz > WAVEFRONT_SIZE ||
+      tile_sz > parent_size)
+    return false;
+
+  return true;
+}
+
+__CG_STATIC_QUALIFIER__ uint64_t get_new_tiled_mask(const uint32_t tile_sz) {
+  // It is assumed that the caller has already verified that tile size is a
+  // power of two value
+
+  // Construct the mask for new tiled group - First, create a mask where only
+  // the `tile_sz` number of LSB bits are active, and, then left shift those
+  // active bits to a sub-wavefront position where the current thread belongs
+  // to
+  uint64_t mask = (~((uint64_t)0)) >> (WAVEFRONT_SIZE - tile_sz);
+  uint32_t mask_start_position = (internal::lane() & ~(tile_sz - 1));
+  mask = mask << mask_start_position;
+
+  return mask;
+}
+
+/**
+ *  Functionalities related to multi-grid cooperative group type
+ */
+namespace multi_grid {
+
+__CG_STATIC_QUALIFIER__ uint32_t num_grids() {
+  return __multi_grid_num_grids();
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t grid_rank() {
+  return __multi_grid_grid_rank();
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t size() const {
+  return __multi_grid_size();
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank() const {
+  return __multi_grid_thread_rank();
+}
+
+__CG_STATIC_QUALIFIER__ bool is_valid() const {
+  return __multi_grid_is_valid();
+}
+
+__CG_STATIC_QUALIFIER__ void sync() {
+  __multi_grid_sync();
+}
+
+} // namespace multi_grid
+
+/**
+ *  Functionalities related to grid cooperative group type
+ */
+namespace grid {
+
+__CG_STATIC_QUALIFIER__ uint32_t size() const {
+  return (uint32_t)((hipBlockDim_z * hipGridDim_z) *
+                    (hipBlockDim_y * hipGridDim_y) *
+                    (hipBlockDim_x * hipGridDim_x));
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank() const {
+  // Compute global id of the workgroup to which the current threads belongs to
+  uint32_t blkIdx =
+           (uint32_t)((hipBlockIdx_z * hipGridDim_y * hipGridDim_x) +
+                      (hipBlockIdx_y * hipGridDim_x) +
+                      (hipBlockIdx_x));
+
+  // Compute total number of threads being passed to reach current workgroup
+  // within grid
+  uint32_t num_threads_till_current_workgroup =
+           (uint32_t)(blkIdx * (hipBlockIdx_x * hipBlockIdx_y * hipBlockIdx_z));
+
+  // Compute thread local rank within current workgroup
+  uint32_t local_thread_rank =
+           (uint32_t)((hipThreadIdx_z * hipBlockDim_y * hipBlockDim_x) +
+                      (hipThreadIdx_y * hipBlockDim_x) +
+                      (hipThreadIdx_x));
+
+  return (num_threads_till_current_workgroup + local_thread_rank);
+}
+
+__CG_STATIC_QUALIFIER__ bool is_valid() const {
+  //TODO(mahesha) anything to do here? I believe not
+  return true;
+}
+
+__CG_STATIC_QUALIFIER__ void sync() const {
+  __grid_sync();
+}
+
+} // namespace grid
+
+/**
+ *  Functionalities related to coalesced cooperative group type
+ */
+namespace coalesced {
+
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank(uint64_t mask) const {
+  return internal::popcll(mask & internal::lanemask_lt());
+}
+
+__CG_STATIC_QUALIFIER__ bool is_valid() const {
+  //TODO(mahesha) anything to do here? I believe not
+  return true;
+}
+
+__CG_STATIC_QUALIFIER__ void sync() const {
+  // Do nothing, as wavefront is always run synchronously on AMD hardware
+}
+
+} // namespace coalesced
+
+/**
+ *  Functionalities related to thread_block cooperative group type
+ */
+namespace workgroup {
+
+__CG_STATIC_QUALIFIER__ dim3 group_index() {
+  return (dim3(hipBlockIdx_x, hipBlockIdx_y, hipBlockIdx_z));
+}
+
+__CG_STATIC_QUALIFIER__ dim3 thread_index() {
+  return (dim3(hipThreadIdx_x, hipThreadIdx_y, hipThreadIdx_z));
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t size() const {
+  return((uint32_t)(hipBlockDim_x * hipBlockDim_y * hipBlockDim_z));
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank() const {
+  return ((uint32_t)((hipThreadIdx_z * hipBlockDim_y * hipBlockDim_x) +
+                     (hipThreadIdx_y * hipBlockDim_x) +
+                     (hipThreadIdx_x)));
+}
+
+__CG_STATIC_QUALIFIER__ bool is_valid() const {
+  //TODO(mahesha) anything to do here? I believe not
+  return true;
+}
+
+__CG_STATIC_QUALIFIER__ void sync() const {
+  __syncthreads();
+}
+
+} // namespace workgroup
+
+} // namespace internal
+
+} // namespace cooperative_groups
+
+#endif // (__cplusplus) && (__HIP_VDI__)
+#endif // HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_HELPER_H
