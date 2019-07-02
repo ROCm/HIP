@@ -40,6 +40,11 @@ THE SOFTWARE.
 
 namespace cooperative_groups {
 
+// Forward declaration of class which represents templated tiled cooperative
+// groups
+template <uint32_t tile_sz>
+class thread_block_tile;
+
 /** \brief The base type of all cooperative group types
  *
  *  \details Holds the key properties of a constructed cooperative group type
@@ -153,7 +158,7 @@ class multi_grid_group : public thread_group {
  */
 __CG_QUALIFIER__ multi_grid_group
 this_multi_grid() {
-  return this_multi_grid(internal::multi_grid::size());
+  return multi_grid_group(internal::multi_grid::size());
 }
 
 /** \brief The grid cooperative group type
@@ -182,7 +187,7 @@ class grid_group : public thread_group {
     return internal::grid::thread_rank();
   }
   __CG_QUALIFIER__ bool is_valid() const {
-    return internal::grid::isvalid();
+    return internal::grid::is_valid();
   }
   __CG_QUALIFIER__ void sync() const {
     internal::grid::sync();
@@ -198,7 +203,7 @@ class grid_group : public thread_group {
  */
 __CG_QUALIFIER__ grid_group
 this_grid() {
-  return this_grid(internal::grid::size());
+  return grid_group(internal::grid::size());
 }
 
 /** \brief The workgroup (thread-block in CUDA terminology) cooperative group
@@ -341,15 +346,8 @@ class thread_block_tile_base : public coalesced_group {
 
 /** \brief The tiled partitioned cooperative group type
  *
- *  \details This class derives the class `thread_block_tile_base` and is
- *           explicitly instantiated for all the allowed valid tile sizes
- */
-template <uint32_t tile_sz>
-class thread_block_tile;
-
-/** Explicit specialization of tiled partitioned cooperative group type.
- *  Currently, only allowed tile sizes are between 1 and 64 (wavefront size),
- *  with an additional restriction that the tile size should be power of 2
+ *  \details These classes derive the class `thread_block_tile_base` and they
+ *           are explicitly instantiated for the allowed tile sizes
  */
 template <>
 class thread_block_tile<1> : public thread_block_tile_base<1> {
@@ -525,7 +523,7 @@ tiled_partition(const thread_group& parent, uint32_t tile_sz) {
     }
   }
 
-  return coalesced_group(gtype, tiled_sz, mask);
+  return coalesced_group(gtype, tile_sz, mask);
 }
 
 /** \brief User exposed API interface to construct new templated (dynamic) tiled
@@ -556,7 +554,7 @@ tiled_partition(const thread_group& parent) {
     }
   }
 
-  return thread_block_tile<tile_size>(gtype, mask);
+  return thread_block_tile<tile_sz>(gtype, mask);
 }
 
 /**
@@ -565,18 +563,18 @@ tiled_partition(const thread_group& parent) {
 __CG_QUALIFIER__ uint32_t thread_group::thread_rank() const {
   switch (this->_type) {
     case internal::cg_multi_grid: {
-      return (static_cast<multi_grid_group*>(this)->thread_rank());
+      return (static_cast<const multi_grid_group*>(this)->thread_rank());
     }
     case internal::cg_grid: {
-      return (static_cast<grid_group*>(this)->thread_rank());
+      return (static_cast<const grid_group*>(this)->thread_rank());
     }
     case internal::cg_workgroup: {
-      return (static_cast<thread_block*>(this)->thread_rank());
+      return (static_cast<const thread_block*>(this)->thread_rank());
     }
     case internal::cg_coalesced:
     case internal::cg_tiled_partition_dynamic:
     case internal::cg_tiled_partition_static: {
-      return (static_cast<coalesced_group*>(this)->thread_rank());
+      return (static_cast<const coalesced_group*>(this)->thread_rank());
     }
     default: {
       return 0; //TODO(mahesha)
@@ -587,18 +585,18 @@ __CG_QUALIFIER__ uint32_t thread_group::thread_rank() const {
 __CG_QUALIFIER__ bool thread_group::is_valid() const {
   switch (this->_type) {
     case internal::cg_multi_grid: {
-      return (static_cast<multi_grid_group*>(this)->is_valid());
+      return (static_cast<const multi_grid_group*>(this)->is_valid());
     }
     case internal::cg_grid: {
-      return (static_cast<grid_group*>(this)->is_valid());
+      return (static_cast<const grid_group*>(this)->is_valid());
     }
     case internal::cg_workgroup: {
-      return (static_cast<thread_block*>(this)->is_valid());
+      return (static_cast<const thread_block*>(this)->is_valid());
     }
     case internal::cg_coalesced:
     case internal::cg_tiled_partition_dynamic:
     case internal::cg_tiled_partition_static: {
-      return (static_cast<coalesced_group*>(this)->is_valid());
+      return (static_cast<const coalesced_group*>(this)->is_valid());
     }
     default: {
       return false;
@@ -609,21 +607,21 @@ __CG_QUALIFIER__ bool thread_group::is_valid() const {
 __CG_QUALIFIER__ void thread_group::sync() const {
   switch (this->_type) {
     case internal::cg_multi_grid: {
-      static_cast<multi_grid_group*>(this)->sync();
+      static_cast<const multi_grid_group*>(this)->sync();
       break;
     }
     case internal::cg_grid: {
-      static_cast<grid_group*>(this)->sync();
+      static_cast<const grid_group*>(this)->sync();
       break;
     }
     case internal::cg_workgroup: {
-      static_cast<thread_block*>(this)->sync();
+      static_cast<const thread_block*>(this)->sync();
       break;
     }
     case internal::cg_coalesced:
     case internal::cg_tiled_partition_dynamic:
     case internal::cg_tiled_partition_static: {
-      static_cast<coalesced_group*>(this)->sync();
+      static_cast<const coalesced_group*>(this)->sync();
       break;
     }
   }

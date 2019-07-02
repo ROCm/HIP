@@ -35,14 +35,15 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_HELPER_H
 
 #if defined(__cplusplus) && defined(__HIP_VDI__)
+#include <hip/hcc_detail/hip_runtime_api.h>
 #include <hip/hcc_detail/device_functions.h>
 
 #if !defined(__align__)
 #define __align__(x) __attribute__((aligned(x)))
 #endif
 
-#if !defined(__CG_STATIC_QUALIFIER__)
-#define __CG_STATIC_QUALIFIER__ __device__ __forceinline__
+#if !defined(__CG_QUALIFIER__)
+#define __CG_QUALIFIER__ __device__ __forceinline__
 #endif
 
 #if !defined(__CG_STATIC_QUALIFIER__)
@@ -139,15 +140,15 @@ __CG_STATIC_QUALIFIER__ uint32_t grid_rank() {
   return __multi_grid_grid_rank();
 }
 
-__CG_STATIC_QUALIFIER__ uint32_t size() const {
+__CG_STATIC_QUALIFIER__ uint32_t size() {
   return __multi_grid_size();
 }
 
-__CG_STATIC_QUALIFIER__ uint32_t thread_rank() const {
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
   return __multi_grid_thread_rank();
 }
 
-__CG_STATIC_QUALIFIER__ bool is_valid() const {
+__CG_STATIC_QUALIFIER__ bool is_valid() {
   return __multi_grid_is_valid();
 }
 
@@ -162,13 +163,13 @@ __CG_STATIC_QUALIFIER__ void sync() {
  */
 namespace grid {
 
-__CG_STATIC_QUALIFIER__ uint32_t size() const {
+__CG_STATIC_QUALIFIER__ uint32_t size() {
   return (uint32_t)((hipBlockDim_z * hipGridDim_z) *
                     (hipBlockDim_y * hipGridDim_y) *
                     (hipBlockDim_x * hipGridDim_x));
 }
 
-__CG_STATIC_QUALIFIER__ uint32_t thread_rank() const {
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
   // Compute global id of the workgroup to which the current threads belongs to
   uint32_t blkIdx =
            (uint32_t)((hipBlockIdx_z * hipGridDim_y * hipGridDim_x) +
@@ -189,12 +190,12 @@ __CG_STATIC_QUALIFIER__ uint32_t thread_rank() const {
   return (num_threads_till_current_workgroup + local_thread_rank);
 }
 
-__CG_STATIC_QUALIFIER__ bool is_valid() const {
+__CG_STATIC_QUALIFIER__ bool is_valid() {
   //TODO(mahesha) anything to do here? I believe not
   return true;
 }
 
-__CG_STATIC_QUALIFIER__ void sync() const {
+__CG_STATIC_QUALIFIER__ void sync() {
   __grid_sync();
 }
 
@@ -205,16 +206,16 @@ __CG_STATIC_QUALIFIER__ void sync() const {
  */
 namespace coalesced {
 
-__CG_STATIC_QUALIFIER__ uint32_t thread_rank(uint64_t mask) const {
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank(uint64_t mask) {
   return internal::popcll(mask & internal::lanemask_lt());
 }
 
-__CG_STATIC_QUALIFIER__ bool is_valid() const {
+__CG_STATIC_QUALIFIER__ bool is_valid() {
   //TODO(mahesha) anything to do here? I believe not
   return true;
 }
 
-__CG_STATIC_QUALIFIER__ void sync() const {
+__CG_STATIC_QUALIFIER__ void sync() {
   // Do nothing, as wavefront is always run synchronously on AMD hardware
 }
 
@@ -226,29 +227,31 @@ __CG_STATIC_QUALIFIER__ void sync() const {
 namespace workgroup {
 
 __CG_STATIC_QUALIFIER__ dim3 group_index() {
-  return (dim3(hipBlockIdx_x, hipBlockIdx_y, hipBlockIdx_z));
+  return (dim3((uint32_t)hipBlockIdx_x, (uint32_t)hipBlockIdx_y,
+               (uint32_t)hipBlockIdx_z));
 }
 
 __CG_STATIC_QUALIFIER__ dim3 thread_index() {
-  return (dim3(hipThreadIdx_x, hipThreadIdx_y, hipThreadIdx_z));
+  return (dim3((uint32_t)hipThreadIdx_x, (uint32_t)hipThreadIdx_y,
+               (uint32_t)hipThreadIdx_z));
 }
 
-__CG_STATIC_QUALIFIER__ uint32_t size() const {
+__CG_STATIC_QUALIFIER__ uint32_t size() {
   return((uint32_t)(hipBlockDim_x * hipBlockDim_y * hipBlockDim_z));
 }
 
-__CG_STATIC_QUALIFIER__ uint32_t thread_rank() const {
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
   return ((uint32_t)((hipThreadIdx_z * hipBlockDim_y * hipBlockDim_x) +
                      (hipThreadIdx_y * hipBlockDim_x) +
                      (hipThreadIdx_x)));
 }
 
-__CG_STATIC_QUALIFIER__ bool is_valid() const {
+__CG_STATIC_QUALIFIER__ bool is_valid() {
   //TODO(mahesha) anything to do here? I believe not
   return true;
 }
 
-__CG_STATIC_QUALIFIER__ void sync() const {
+__CG_STATIC_QUALIFIER__ void sync() {
   __syncthreads();
 }
 
