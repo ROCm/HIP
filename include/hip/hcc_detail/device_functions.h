@@ -807,43 +807,55 @@ uint32_t __lane()
 __device__
 inline
 void __grid_sync() {
-  __ockl_grid_sync();
+  //TODO(mahesha)
+  //__ockl_grid_sync();
 }
 
 __device__
 inline
 uint32_t __multi_grid_num_grids() {
-  return (uint32_t)__ockl_multi_grid_num_grids();
+  //TODO(mahesha)
+  //return (uint32_t)__ockl_multi_grid_num_grids();
+  return (uint32_t)0;
 }
 
 __device__
 inline
 uint32_t __multi_grid_grid_rank() {
-  return (uint32_t)__ockl_multi_grid_grid_rank();
+  //TODO(mahesha)
+  //return (uint32_t)__ockl_multi_grid_grid_rank();
+  return (uint32_t)0;
 }
 
 __device__
 inline
 uint32_t __multi_grid_size() {
-  return (uint32_t)__ockl_multi_grid_size();
+  //TODO(mahesha)
+  //return (uint32_t)__ockl_multi_grid_size();
+  return (uint32_t)0;
 }
 
 __device__
 inline
 uint32_t __multi_grid_thread_rank() {
-  return (uint32_t)__ockl_multi_grid_thread_rank();
+  //TODO(mahesha)
+  //return (uint32_t)__ockl_multi_grid_thread_rank();
+  return (uint32_t)0;
 }
 
 __device__
 inline
 bool __multi_grid_is_valid() {
-  return __ockl_multi_grid_is_valid();
+  //TODO(mahesha)
+  //return __ockl_multi_grid_is_valid();
+  return true;
 }
 
 __device__
 inline
 void __multi_grid_sync() {
-  __ockl_multi_grid_sync();
+  //TODO(mahesha)
+  //__ockl_multi_grid_sync();
 }
 
 __device__ inline void* __local_to_generic(void* p) { return p; }
