@@ -60,11 +60,6 @@ class thread_group {
   friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
       const thread_group& parent);
 
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_group(const thread_group&);
-  __CG_QUALIFIER__ thread_group& operator=(const thread_group&);
-
  protected:
   uint32_t _type; // thread_group type
   uint32_t _size; // total number of threads in the tread_group
@@ -117,11 +112,6 @@ class multi_grid_group : public thread_group {
   // and access its resources
   friend __CG_QUALIFIER__ multi_grid_group this_multi_grid();
 
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ multi_grid_group(const multi_grid_group&);
-  __CG_QUALIFIER__ multi_grid_group& operator=(const multi_grid_group&);
-
  protected:
   // Construct mutli-grid thread group (through the API this_multi_grid())
   __CG_QUALIFIER__ multi_grid_group(uint32_t size)
@@ -172,11 +162,6 @@ class grid_group : public thread_group {
   // and access its resources
   friend __CG_QUALIFIER__ grid_group this_grid();
 
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ grid_group(const grid_group&);
-  __CG_QUALIFIER__ grid_group& operator=(const grid_group&);
-
  protected:
   // Construct grid thread group (through the API this_grid())
   __CG_QUALIFIER__ grid_group(uint32_t size)
@@ -217,11 +202,6 @@ class thread_block : public thread_group {
   // Only these friend functions are allowed to construct an object of this class
   // and access its resources
   friend __CG_QUALIFIER__ thread_block this_thread_block();
-
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block(const thread_block&);
-  __CG_QUALIFIER__ thread_block& operator=(const thread_block&);
 
  protected:
   // Construct a workgroup thread group (through the API this_thread_block())
@@ -273,11 +253,6 @@ class coalesced_group : public thread_group {
   friend __CG_QUALIFIER__ coalesced_group coalesced_threads();
   friend __CG_QUALIFIER__ thread_group tiled_partition(
       const thread_group& parent, uint32_t tile_sz);
-
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ coalesced_group(const coalesced_group&);
-  __CG_QUALIFIER__ coalesced_group& operator=(const coalesced_group&);
 
  protected:
   // Construct a coalesced thread group (through the API coalesced_threads())
@@ -332,10 +307,6 @@ class thread_block_tile_base : public coalesced_group {
  private:
    static const uint32_t num_threads = tile_sz;
 
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block_tile_base(const thread_block_tile_base&);
-  __CG_QUALIFIER__ thread_block_tile_base& operator=(const thread_block_tile_base&);
-
  protected:
   __CG_QUALIFIER__ thread_block_tile_base(uint64_t mask)
       : coalesced_group(internal::cg_tiled_partition_static, num_threads, mask) { }
@@ -357,11 +328,6 @@ class thread_block_tile<1> : public thread_block_tile_base<1> {
   friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
       const thread_group& parent);
 
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block_tile(const thread_block_tile&);
-  __CG_QUALIFIER__ thread_block_tile& operator=(const thread_block_tile&);
-
  protected:
   __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
@@ -377,11 +343,6 @@ class thread_block_tile<2> : public thread_block_tile_base<2> {
   template <uint32_t tile_sz>
   friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
       const thread_group& parent);
-
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block_tile(const thread_block_tile&);
-  __CG_QUALIFIER__ thread_block_tile& operator=(const thread_block_tile&);
 
  protected:
   __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
@@ -399,11 +360,6 @@ class thread_block_tile<4> : public thread_block_tile_base<4> {
   friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
       const thread_group& parent);
 
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block_tile(const thread_block_tile&);
-  __CG_QUALIFIER__ thread_block_tile& operator=(const thread_block_tile&);
-
  protected:
   __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
@@ -419,11 +375,6 @@ class thread_block_tile<8> : public thread_block_tile_base<8> {
   template <uint32_t tile_sz>
   friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
       const thread_group& parent);
-
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block_tile(const thread_block_tile&);
-  __CG_QUALIFIER__ thread_block_tile& operator=(const thread_block_tile&);
 
  protected:
   __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
@@ -441,11 +392,6 @@ class thread_block_tile<16> : public thread_block_tile_base<16> {
   friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
       const thread_group& parent);
 
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block_tile(const thread_block_tile&);
-  __CG_QUALIFIER__ thread_block_tile& operator=(const thread_block_tile&);
-
  protected:
   __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
@@ -462,11 +408,6 @@ class thread_block_tile<32> : public thread_block_tile_base<32> {
   friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
       const thread_group& parent);
 
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block_tile(const thread_block_tile&);
-  __CG_QUALIFIER__ thread_block_tile& operator=(const thread_block_tile&);
-
  protected:
   __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
@@ -482,11 +423,6 @@ class thread_block_tile<64> : public thread_block_tile_base<64> {
   template <uint32_t tile_sz>
   friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
       const thread_group& parent);
-
- private:
-  // Disable copy construction and copy assignment
-  __CG_QUALIFIER__ thread_block_tile(const thread_block_tile&);
-  __CG_QUALIFIER__ thread_block_tile& operator=(const thread_block_tile&);
 
  protected:
   __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
