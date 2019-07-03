@@ -122,11 +122,11 @@ int main() {
   HIP_ASSERT(hipMemcpy(h_sTile64Size, d_sTile64Size, nBytes, hipMemcpyDeviceToHost));
   HIP_ASSERT(hipMemcpy(h_sTile32Size, d_sTile32Size, nBytes, hipMemcpyDeviceToHost));
 
-  unsigned int exptectBlockSize = (BLOCK_X * BLOCK_Y * BLOCK_Z);
-  unsigned int exptectGrdSize = ((GRID_X * GRID_Y * GRID_Z) * exptectBlockSize);
+  unsigned int expectedBlockSize = (BLOCK_X * BLOCK_Y * BLOCK_Z);
+  unsigned int expectedGridSize = ((GRID_X * GRID_Y * GRID_Z) * expectedBlockSize);
 
-  RESULT_ASSERT(*h_gridSize, exptectGrdSize);
-  RESULT_ASSERT(*h_blockSize, exptectBlockSize);
+  RESULT_ASSERT(*h_gridSize, expectedGridSize);
+  RESULT_ASSERT(*h_blockSize, expectedBlockSize);
   RESULT_ASSERT(*h_dTile64Size, 64);
   RESULT_ASSERT(*h_dTile32Size, 32);
   RESULT_ASSERT(*h_sTile64Size, 64);
