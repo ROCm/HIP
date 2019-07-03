@@ -771,8 +771,6 @@ inline
 uint64_t __lanemask_lt()
 {
     uint32_t lane = __ockl_lane_u32();
-    if (lane == 0)
-      return 0;
     int64_t ballot = __ballot64(1);
     uint64_t mask = ((uint64_t)1 << lane) - (uint64_t)1;
     return mask & ballot;
@@ -815,7 +813,7 @@ __device__
 inline
 uint32_t __multi_grid_num_grids() {
   //TODO(mahesha)
-  //return (uint32_t)__ockl_multi_grid_num_grids();
+  //return __ockl_multi_grid_num_grids();
   return (uint32_t)0;
 }
 
@@ -823,7 +821,7 @@ __device__
 inline
 uint32_t __multi_grid_grid_rank() {
   //TODO(mahesha)
-  //return (uint32_t)__ockl_multi_grid_grid_rank();
+  //return __ockl_multi_grid_grid_rank();
   return (uint32_t)0;
 }
 
@@ -831,7 +829,7 @@ __device__
 inline
 uint32_t __multi_grid_size() {
   //TODO(mahesha)
-  //return (uint32_t)__ockl_multi_grid_size();
+  //return __ockl_multi_grid_size();
   return (uint32_t)0;
 }
 
@@ -839,7 +837,7 @@ __device__
 inline
 uint32_t __multi_grid_thread_rank() {
   //TODO(mahesha)
-  //return (uint32_t)__ockl_multi_grid_thread_rank();
+  //return __ockl_multi_grid_thread_rank();
   return (uint32_t)0;
 }
 
