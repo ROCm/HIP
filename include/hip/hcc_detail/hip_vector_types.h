@@ -210,7 +210,7 @@ THE SOFTWARE.
                 return *this;
             }
 
-            using Vec3_cmp = T __NATIVE_VECTOR__(3, int);
+            using Vec3_cmp = int __NATIVE_VECTOR__(3, int);
             __host__ __device__
             Vec3_cmp operator==(const Native_vec_& x) const noexcept
             {
