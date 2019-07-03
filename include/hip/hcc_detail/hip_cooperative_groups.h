@@ -304,15 +304,13 @@ coalesced_threads() {
  */
 template <uint32_t tile_sz>
 class thread_block_tile_base : public coalesced_group {
- private:
-   static const uint32_t num_threads = tile_sz;
-
  protected:
   explicit __CG_QUALIFIER__ thread_block_tile_base(uint64_t mask)
-      : coalesced_group(internal::cg_tiled_partition_static, num_threads, mask) { }
+      : coalesced_group(internal::cg_tiled_partition_static,
+                        internal::popcll(mask), mask) { }
 
   __CG_QUALIFIER__ thread_block_tile_base(internal::group_type type, uint64_t mask)
-      : coalesced_group(type, num_threads, mask) { }
+      : coalesced_group(type, internal::popcll(mask), mask) { }
 };
 
 /** \brief The tiled partitioned cooperative group type
@@ -459,7 +457,7 @@ tiled_partition(const thread_group& parent, uint32_t tile_sz) {
     }
   }
 
-  return coalesced_group(gtype, tile_sz, mask);
+  return coalesced_group(gtype, internal::popcll(mask), mask);
 }
 
 /** \brief User exposed API interface to construct new templated (dynamic) tiled
