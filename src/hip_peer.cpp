@@ -41,8 +41,10 @@ THE SOFTWARE.
 hipError_t ihipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t peerCtx) {
     hipError_t err = hipSuccess;
 
-
-    if ((thisCtx != NULL) && (peerCtx != NULL)) {
+    if(canAccessPeer == NULL) {
+       err = hipErrorInvalidValue;
+    }
+    else if ((thisCtx != NULL) && (peerCtx != NULL)) {
         if (thisCtx == peerCtx) {
             *canAccessPeer = 0;
             tprintf(DB_MEM, "Can't be peer to self. (this=%s, peer=%s)\n",
