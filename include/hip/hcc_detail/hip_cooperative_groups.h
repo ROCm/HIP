@@ -314,117 +314,29 @@ class thread_block_tile_base : public coalesced_group {
  *  \details These classes derive the class `thread_block_tile_base` and they
  *           are explicitly instantiated for the allowed tile sizes
  */
-template <>
-class thread_block_tile<1> : public thread_block_tile_base<1> {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  template <uint32_t tile_sz>
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
-      const thread_group& parent);
-
- protected:
-  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
-    : thread_block_tile_base(mask) { }
-
-  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
-    : thread_block_tile_base(type, mask) { }
+#define THREAD_BLOCK_TILE_CLASS(TL_SIZE)                                       \
+  template <>                                                                  \
+  class thread_block_tile<TL_SIZE> : public thread_block_tile_base<TL_SIZE> {  \
+  template <uint32_t tile_sz>                                                  \
+  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(          \
+      const thread_group& parent);                                             \
+                                                                               \
+ protected:                                                                    \
+  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)                   \
+    : thread_block_tile_base(mask) { }                                         \
+                                                                               \
+  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask) \
+    : thread_block_tile_base(type, mask) { }                                   \
 };
 
-template <>
-class thread_block_tile<2> : public thread_block_tile_base<2> {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  template <uint32_t tile_sz>
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
-      const thread_group& parent);
-
- protected:
-  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
-    : thread_block_tile_base(mask) { }
-
-  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
-    : thread_block_tile_base(type, mask) { }
-};
-
-template <>
-class thread_block_tile<4> : public thread_block_tile_base<4> {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  template <uint32_t tile_sz>
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
-      const thread_group& parent);
-
- protected:
-  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
-    : thread_block_tile_base(mask) { }
-
-  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
-    : thread_block_tile_base(type, mask) { }
-};
-
-template <>
-class thread_block_tile<8> : public thread_block_tile_base<8> {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  template <uint32_t tile_sz>
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
-      const thread_group& parent);
-
- protected:
-  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
-    : thread_block_tile_base(mask) { }
-
-  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
-    : thread_block_tile_base(type, mask) { }
-};
-
-template <>
-class thread_block_tile<16> : public thread_block_tile_base<16> {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  template <uint32_t tile_sz>
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
-      const thread_group& parent);
-
- protected:
-  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
-    : thread_block_tile_base(mask) { }
-
-  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
-    : thread_block_tile_base(type, mask) { }
-};
-
-template <>
-class thread_block_tile<32> : public thread_block_tile_base<32> {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  template <uint32_t tile_sz>
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
-      const thread_group& parent);
-
- protected:
-  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
-    : thread_block_tile_base(mask) { }
-
-  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
-    : thread_block_tile_base(type, mask) { }
-};
-
-template <>
-class thread_block_tile<64> : public thread_block_tile_base<64> {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  template <uint32_t tile_sz>
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
-      const thread_group& parent);
-
- protected:
-  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
-    : thread_block_tile_base(mask) { }
-
-  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
-    : thread_block_tile_base(type, mask) { }
-};
+THREAD_BLOCK_TILE_CLASS(1)
+THREAD_BLOCK_TILE_CLASS(2)
+THREAD_BLOCK_TILE_CLASS(4)
+THREAD_BLOCK_TILE_CLASS(8)
+THREAD_BLOCK_TILE_CLASS(16)
+THREAD_BLOCK_TILE_CLASS(32)
+THREAD_BLOCK_TILE_CLASS(64)
+#undef THREAD_BLOCK_TILE_CLASS
 
 /** \brief User exposed API interface to construct new coalesced (dynamic) tiled
  *         partitioned group from an `exiting` intra-workgroup (and only
