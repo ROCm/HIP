@@ -256,12 +256,11 @@ class coalesced_group : public thread_group {
 
  protected:
   // Construct a coalesced thread group (through the API coalesced_threads())
-  __CG_QUALIFIER__ coalesced_group(uint32_t size, uint64_t mask)
-      : thread_group(internal::cg_coalesced, size, mask) { }
+  explicit __CG_QUALIFIER__ coalesced_group(uint64_t mask)
+      : thread_group(internal::cg_coalesced, internal::popcll(mask), mask) { }
 
-  __CG_QUALIFIER__ coalesced_group(internal::group_type type, uint32_t size,
-                                   uint64_t mask)
-      : thread_group(type, size, mask) { }
+  __CG_QUALIFIER__ coalesced_group(internal::group_type type, uint64_t mask)
+      : thread_group(type, internal::popcll(mask), mask) { }
 
  public:
   __CG_QUALIFIER__ uint32_t thread_rank() const {
@@ -284,9 +283,7 @@ class coalesced_group : public thread_group {
  */
 __CG_QUALIFIER__ coalesced_group
 coalesced_threads() {
-  uint64_t mask = internal::activemask();
-  uint32_t size = internal::popcll(mask);
-  return coalesced_group(size, mask);
+  return coalesced_group(internal::activemask());
 }
 
 /** \brief Templated (static) tiled partitioning of `exiting` intra-workgroup
@@ -306,11 +303,10 @@ template <uint32_t tile_sz>
 class thread_block_tile_base : public coalesced_group {
  protected:
   explicit __CG_QUALIFIER__ thread_block_tile_base(uint64_t mask)
-      : coalesced_group(internal::cg_tiled_partition_static,
-                        internal::popcll(mask), mask) { }
+      : coalesced_group(internal::cg_tiled_partition_static, mask) { }
 
   __CG_QUALIFIER__ thread_block_tile_base(internal::group_type type, uint64_t mask)
-      : coalesced_group(type, internal::popcll(mask), mask) { }
+      : coalesced_group(type, mask) { }
 };
 
 /** \brief The tiled partitioned cooperative group type
@@ -457,7 +453,7 @@ tiled_partition(const thread_group& parent, uint32_t tile_sz) {
     }
   }
 
-  return coalesced_group(gtype, internal::popcll(mask), mask);
+  return coalesced_group(gtype, mask);
 }
 
 /** \brief User exposed API interface to construct new templated (dynamic) tiled
