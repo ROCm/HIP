@@ -102,6 +102,7 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
   } else if ((srcMemory != nullptr) && (dstMemory == nullptr)) {
     command = new amd::ReadMemoryCommand(queue, CL_COMMAND_READ_BUFFER, waitList,
               *srcMemory->asBuffer(), sOffset, sizeBytes, dst);
+    isAsync = false;
   } else if ((srcMemory != nullptr) && (dstMemory != nullptr)) {
     static const uint hostMem = CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR;
     if ((kind == hipMemcpyDeviceToDevice ||
