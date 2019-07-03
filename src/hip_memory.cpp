@@ -243,13 +243,12 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
 
     auto ctx = ihipGetTlsDefaultCtx();
     // return NULL pointer when malloc size is 0
-    if (sizeBytes == 0) {
+    if ( nullptr == ctx || nullptr == ptr)  {
+        hip_status = hipErrorInvalidValue;
+    }
+    else if (sizeBytes == 0) {
         *ptr = NULL;
         hip_status = hipSuccess;
-
-    } else if ((ctx == nullptr) || (ptr == nullptr)) {
-        hip_status = hipErrorInvalidValue;
-
     } else {
         auto device = ctx->getWriteableDevice();
         *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx, false /*shareWithAll*/,
@@ -309,12 +308,12 @@ hipError_t ihipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     }
 
     auto ctx = ihipGetTlsDefaultCtx();
-
-    if (sizeBytes == 0) {
+    if ((ctx == nullptr) || (ptr == nullptr)) {
+        hip_status = hipErrorInvalidValue;
+    }
+    else if (sizeBytes == 0) {
         hip_status = hipSuccess;
         // TODO - should size of 0 return err or be siliently ignored?
-    } else if ((ctx == nullptr) || (ptr == nullptr)) {
-        hip_status = hipErrorInvalidValue;
     } else {
         unsigned trueFlags = flags;
         if (flags == hipHostMallocDefault) {
@@ -400,7 +399,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 // width in bytes
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
     hipError_t hip_status = hipSuccess;
-    if(ptr==NULL)
+    if(ptr==NULL || pitch == NULL)
      {
 	hip_status=hipErrorInvalidValue;
        	return hip_status;
@@ -916,11 +915,8 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
     am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
     if (status == AM_SUCCESS) {
         *flagsPtr = amPointerInfo._appAllocationFlags;
-        if (*flagsPtr == 0) {
-            hip_status = hipErrorInvalidValue;
-        } else {
-            hip_status = hipSuccess;
-        }
+        //0 is valid flag hipHostMallocDefault, and during hipHostMalloc if unsupported flags are passed as parameter it throws error
+        hip_status = hipSuccess;
         tprintf(DB_MEM, " %s: host ptr=%p\n", __func__, hostPtr);
     } else {
         hip_status = hipErrorInvalidValue;
