@@ -16,17 +16,15 @@ Programmers familiar with CUDA, OpenCL will be able to quickly learn and start c
 
 ## Simple Matrix Transpose
 
-For this tutorial we will be using MatrixTranspose with shfl operation i.e., our 4_shfl tutorial since it is the only examples where we used loops inside the kernel.
+For this tutorial we will be using an example which sums up the row of a 2D matrix and writes it in a 1D array. 
 
-In this tutorial, we'll use `#pragma unroll`. In the same sourcecode, we used for MatrixTranspose. We'll add it just before the for loop as following:
+In this tutorial, we'll use `#pragma unroll`. In the same sourcecode, we used for gpuMatrixRowSum. We'll add it just before the for loop as following:
 
 ```
 #pragma unroll
-	for(int i=0;i<width;i++)
-	{
-		for(int j=0;j<width;j++)
-			out[i*width + j] = __shfl(val,j*width + i);
-	}
+for (int i = 0; i < width; i++) {
+    output[index] += input[index * width + i]
+}
 ```
 
 Specifying the optional parameter, #pragma unroll value, directs the unroller to unroll the loop value times. Be careful while using it.

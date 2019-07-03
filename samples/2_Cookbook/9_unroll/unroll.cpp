@@ -25,100 +25,98 @@ THE SOFTWARE.
 // hip header file
 #include "hip/hip_runtime.h"
 
+#define LENGTH 4
 
-#define WIDTH 4
+#define SIZE (LENGTH * LENGTH)
 
-#define NUM (WIDTH * WIDTH)
+#define THREADS_PER_BLOCK 1
+#define BLOCKS_PER_GRID LENGTH
 
-#define THREADS_PER_BLOCK_X 4
-#define THREADS_PER_BLOCK_Y 4
-#define THREADS_PER_BLOCK_Z 1
-
-// Device (Kernel) function, it must be void
-__global__ void matrixTranspose(float* out, float* in, const int width) {
-    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-    float val = in[x];
-
-#pragma unroll
+// CPU function - basically scan each row and save the output in array
+void matrixRowSum(int* input, int* output, int width) {
     for (int i = 0; i < width; i++) {
-        for (int j = 0; j < width; j++) out[i * width + j] = __shfl(val, j * width + i);
-    }
-}
-
-// CPU implementation of matrix transpose
-void matrixTransposeCPUReference(float* output, float* input, const unsigned int width) {
-    for (unsigned int j = 0; j < width; j++) {
-        for (unsigned int i = 0; i < width; i++) {
-            output[i * width + j] = input[j * width + i];
+        for (int j = 0; j < width; j++) {
+            output[i] += input[i * width + j];
         }
     }
 }
 
-int main() {
-    float* Matrix;
-    float* TransposeMatrix;
-    float* cpuTransposeMatrix;
+// Device (kernel) function
+__global__ void gpuMatrixRowSum(int* input, int* output, int width) {
+    int index = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+#pragma unroll
+    for (int i = 0; i < width; i++) {
+        output[index] += input[index * width + i];
+    }
+}
 
-    float* gpuMatrix;
-    float* gpuTransposeMatrix;
+int main() {
+    int* Matrix;
+    int* sumMatrix;
+    int* cpuSumMatrix;
+
+    int* gpuMatrix;
+    int* gpuSumMatrix;
 
     hipDeviceProp_t devProp;
     hipGetDeviceProperties(&devProp, 0);
 
     std::cout << "Device name " << devProp.name << std::endl;
 
-    int i;
-    int errors;
+    Matrix = (int*)malloc(sizeof(int) * SIZE);
+    sumMatrix = (int*)malloc(sizeof(int) * LENGTH);
+    cpuSumMatrix = (int*)malloc(sizeof(int) * LENGTH);
 
-    Matrix = (float*)malloc(NUM * sizeof(float));
-    TransposeMatrix = (float*)malloc(NUM * sizeof(float));
-    cpuTransposeMatrix = (float*)malloc(NUM * sizeof(float));
-
-    // initialize the input data
-    for (i = 0; i < NUM; i++) {
-        Matrix[i] = (float)i * 10.0f;
+    for (int i = 0; i < SIZE; i++) {
+        Matrix[i] = i * 2;
     }
 
-    // allocate the memory on the device side
-    hipMalloc((void**)&gpuMatrix, NUM * sizeof(float));
-    hipMalloc((void**)&gpuTransposeMatrix, NUM * sizeof(float));
+    for (int i = 0; i < LENGTH; i++) {
+        cpuSumMatrix[i] = 0;
+    }
 
-    // Memory transfer from host to device
-    hipMemcpy(gpuMatrix, Matrix, NUM * sizeof(float), hipMemcpyHostToDevice);
+    // Allocated Device Memory
+    hipMalloc((void**)&gpuMatrix, SIZE * sizeof(int));
+    hipMalloc((void**)&gpuSumMatrix, LENGTH * sizeof(int));
 
-    // Lauching kernel from host
-    hipLaunchKernelGGL(matrixTranspose, dim3(1), dim3(THREADS_PER_BLOCK_X * THREADS_PER_BLOCK_Y), 0, 0,
-                    gpuTransposeMatrix, gpuMatrix, WIDTH);
+    // Memory Copy to Device
+    hipMemcpy(gpuMatrix, Matrix, SIZE * sizeof(int), hipMemcpyHostToDevice);
+    hipMemcpy(gpuSumMatrix, cpuSumMatrix, LENGTH * sizeof(float), hipMemcpyHostToDevice);
 
-    // Memory transfer from device to host
-    hipMemcpy(TransposeMatrix, gpuTransposeMatrix, NUM * sizeof(float), hipMemcpyDeviceToHost);
+    // Launch device kernels
+    hipLaunchKernelGGL(gpuMatrixRowSum, dim3(BLOCKS_PER_GRID), dim3(THREADS_PER_BLOCK), 0, 0,
+                       gpuMatrix, gpuSumMatrix, LENGTH);
 
-    // CPU MatrixTranspose computation
-    matrixTransposeCPUReference(cpuTransposeMatrix, Matrix, WIDTH);
+    // Memory copy back to device
+    hipMemcpy(sumMatrix, gpuSumMatrix, LENGTH * sizeof(int), hipMemcpyDeviceToHost);
+
+    // Cpu implementation
+    matrixRowSum(Matrix, cpuSumMatrix, LENGTH);
+
 
     // verify the results
-    errors = 0;
-    double eps = 1.0E-6;
-    for (i = 0; i < NUM; i++) {
-        if (std::abs(TransposeMatrix[i] - cpuTransposeMatrix[i]) > eps) {
-            printf("%d cpu: %f gpu  %f\n", i, cpuTransposeMatrix[i], TransposeMatrix[i]);
+    int errors = 0;
+    for (int i = 0; i < LENGTH; i++) {
+        if (sumMatrix[i] != cpuSumMatrix[i]) {
+            printf("%d - cpu: %d gpu: %d\n", i, sumMatrix[i], cpuSumMatrix[i]);
             errors++;
         }
     }
-    if (errors != 0) {
-        printf("FAILED: %d errors\n", errors);
+
+    if (errors == 0) {
+        printf("PASSED\n");
     } else {
-        printf("PASSED!\n");
+        printf("FAILED with %d errors\n", errors);
     }
 
-    // free the resources on device side
+    // GPU Free
     hipFree(gpuMatrix);
-    hipFree(gpuTransposeMatrix);
+    hipFree(gpuSumMatrix);
 
-    // free the resources on host side
+    // CPU Free
     free(Matrix);
-    free(TransposeMatrix);
-    free(cpuTransposeMatrix);
+    free(sumMatrix);
+    free(cpuSumMatrix);
 
     return errors;
 }
