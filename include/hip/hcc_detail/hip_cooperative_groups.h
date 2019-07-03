@@ -114,7 +114,7 @@ class multi_grid_group : public thread_group {
 
  protected:
   // Construct mutli-grid thread group (through the API this_multi_grid())
-  __CG_QUALIFIER__ multi_grid_group(uint32_t size)
+  explicit __CG_QUALIFIER__ multi_grid_group(uint32_t size)
       : thread_group(internal::cg_multi_grid, size) { }
 
  public:
@@ -164,7 +164,7 @@ class grid_group : public thread_group {
 
  protected:
   // Construct grid thread group (through the API this_grid())
-  __CG_QUALIFIER__ grid_group(uint32_t size)
+  explicit __CG_QUALIFIER__ grid_group(uint32_t size)
       : thread_group(internal::cg_grid, size) { }
 
  public:
@@ -205,7 +205,7 @@ class thread_block : public thread_group {
 
  protected:
   // Construct a workgroup thread group (through the API this_thread_block())
-  __CG_QUALIFIER__ thread_block(uint32_t size)
+  explicit __CG_QUALIFIER__ thread_block(uint32_t size)
       : thread_group(internal::cg_workgroup, size) { }
 
  public:
@@ -308,7 +308,7 @@ class thread_block_tile_base : public coalesced_group {
    static const uint32_t num_threads = tile_sz;
 
  protected:
-  __CG_QUALIFIER__ thread_block_tile_base(uint64_t mask)
+  explicit __CG_QUALIFIER__ thread_block_tile_base(uint64_t mask)
       : coalesced_group(internal::cg_tiled_partition_static, num_threads, mask) { }
 
   __CG_QUALIFIER__ thread_block_tile_base(internal::group_type type, uint64_t mask)
@@ -329,7 +329,7 @@ class thread_block_tile<1> : public thread_block_tile_base<1> {
       const thread_group& parent);
 
  protected:
-  __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
+  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
 
   __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
@@ -345,7 +345,7 @@ class thread_block_tile<2> : public thread_block_tile_base<2> {
       const thread_group& parent);
 
  protected:
-  __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
+  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
 
   __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
@@ -361,7 +361,7 @@ class thread_block_tile<4> : public thread_block_tile_base<4> {
       const thread_group& parent);
 
  protected:
-  __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
+  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
 
   __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
@@ -377,7 +377,7 @@ class thread_block_tile<8> : public thread_block_tile_base<8> {
       const thread_group& parent);
 
  protected:
-  __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
+  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
 
   __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
@@ -393,7 +393,7 @@ class thread_block_tile<16> : public thread_block_tile_base<16> {
       const thread_group& parent);
 
  protected:
-  __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
+  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
 
   __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
@@ -409,7 +409,7 @@ class thread_block_tile<32> : public thread_block_tile_base<32> {
       const thread_group& parent);
 
  protected:
-  __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
+  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
 
   __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
@@ -425,7 +425,7 @@ class thread_block_tile<64> : public thread_block_tile_base<64> {
       const thread_group& parent);
 
  protected:
-  __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
+  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)
     : thread_block_tile_base(mask) { }
 
   __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask)
@@ -471,7 +471,7 @@ __CG_QUALIFIER__ thread_block_tile<tile_sz>
 tiled_partition(const thread_group& parent) {
   if (!internal::is_tile_size_valid(tile_sz, parent.size())) {
     //TODO(mahesha) Do we need to abort the thread here?
-    return thread_group(internal::cg_invalid, 0);
+    return thread_block_tile<tile_sz>(internal::cg_invalid, 0);
   }
 
   uint64_t mask = 0;
