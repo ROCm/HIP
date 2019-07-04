@@ -609,12 +609,10 @@ class ihipStream_t {
 
     void addSymbolPtrToTracker(hc::accelerator& acc, void* ptr, size_t sizeBytes);
 
-
-   public:  // TODO - move private
+   private:  // Data
     // Critical Data - MUST be accessed through LockedAccessor_StreamCrit_t
     ihipStreamCritical_t _criticalData;
 
-   private:  // Data
     std::mutex _hasQueueLock;
 
     ihipCtx_t* _ctx;  // parent context that owns this stream.
