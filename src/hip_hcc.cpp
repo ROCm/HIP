@@ -1038,7 +1038,7 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
             }
         } else {
             if (waitThisStream) {
-                LockedAccessor_StreamCrit_t streamCrit(stream->_criticalData);
+                LockedAccessor_StreamCrit_t streamCrit(stream->criticalData());
 
                 // The last marker will provide appropriate visibility:
                 if (!streamCrit->_av.get_is_empty()) {
@@ -1056,7 +1056,7 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
 
     // Enqueue a barrier to wait on all the barriers we sent above:
     if (!HIP_SYNC_NULL_STREAM && !depOps.empty()) {
-        LockedAccessor_StreamCrit_t defaultStreamCrit(_defaultStream->_criticalData);
+        LockedAccessor_StreamCrit_t defaultStreamCrit(_defaultStream->criticalData());
         tprintf(DB_SYNC, "  null-stream wait on %zu non-empty streams. sync_host=%d\n",
                 depOps.size(), syncHost);
         hc::completion_future defaultCf = defaultStreamCrit->_av.create_blocking_marker(
