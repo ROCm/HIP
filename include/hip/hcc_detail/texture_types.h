@@ -45,7 +45,8 @@ THE SOFTWARE.
 /**
  * An opaque value that represents a hip texture object
  */
-typedef unsigned long long hipTextureObject_t;
+struct __hip_texture;
+typedef struct __hip_texture* hipTextureObject_t;
 
 /**
  * hip texture address modes

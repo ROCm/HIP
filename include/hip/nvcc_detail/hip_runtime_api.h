@@ -1216,11 +1216,9 @@ inline static hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t 
 template <class T>
 inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
                                                            size_t dynamicSMemSize = 0,
-                                                           int blockSizeLimit = 0,
-                                                           unsigned int flags = 0) {
+                                                           int blockSizeLimit = 0) {
     cudaError_t cerror;
-    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize,
-                                                blockSizeLimit, flags);
+    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize, blockSizeLimit);
     return hipCUDAErrorTohipError(cerror);
 }
 
