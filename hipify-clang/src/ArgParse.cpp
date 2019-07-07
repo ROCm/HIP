@@ -104,6 +104,11 @@ cl::opt<bool> PrintStats("print-stats",
   cl::value_desc("print-stats"),
   cl::cat(ToolTemplateCategory));
 
+cl::opt<bool> PrintStatsCSV("print-stats-csv",
+  cl::desc("Print translation statistics in CSV file"),
+  cl::value_desc("print-stats-csv"),
+  cl::cat(ToolTemplateCategory));
+
 cl::opt<std::string> OutputStatsFilename("o-stats",
   cl::desc("Output filename for statistics"),
   cl::value_desc("filename"),

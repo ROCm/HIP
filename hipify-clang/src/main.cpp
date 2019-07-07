@@ -291,7 +291,7 @@ int main(int argc, const char **argv) {
   }
   int Result = 0;
   SmallString<128> tmpFile;
-  StringRef sourceFileName, ext = "hip";
+  StringRef sourceFileName, ext = "hip", csv_ext = "csv";
   std::string sTmpFileName, sSourceAbsPath;
   std::string sTmpDirAbsParh = getAbsoluteDirectoryPath(TemporaryDir, EC);
   if (EC) {
@@ -300,7 +300,20 @@ int main(int argc, const char **argv) {
   // Arguments for the Statistics print routines.
   std::unique_ptr<std::ostream> csv = nullptr;
   llvm::raw_ostream* statPrint = nullptr;
+  bool create_csv = false;
   if (!OutputStatsFilename.empty()) {
+    PrintStatsCSV = true;
+    create_csv = true;
+  } else {
+    if (PrintStatsCSV && fileSources.size() > 1) {
+      OutputStatsFilename = "sum_stat.csv";
+      create_csv = true;
+    }
+  }
+  if (create_csv) {
+    if (!OutputDir.empty()) {
+      OutputStatsFilename = sOutputDirAbsPath + "/" + OutputStatsFilename;
+    }
     csv = std::unique_ptr<std::ostream>(new std::ofstream(OutputStatsFilename, std::ios_base::trunc));
   }
   if (PrintStats) {
@@ -341,6 +354,17 @@ int main(int argc, const char **argv) {
       llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << src << " to " << tmpFile << "\n";
       Result = 1;
       continue;
+    }
+    if (PrintStatsCSV) {
+      if (OutputStatsFilename.empty()) {
+        OutputStatsFilename = sourceFileName.str() + "." + csv_ext.str();
+        if (!OutputDir.empty()) {
+          OutputStatsFilename = sOutputDirAbsPath + "/" + OutputStatsFilename;
+        }
+      }
+      if (!csv) {
+        csv = std::unique_ptr<std::ostream>(new std::ofstream(OutputStatsFilename, std::ios_base::trunc));
+      }
     }
     // Initialise the statistics counters for this file.
     Statistics::setActive(src);
