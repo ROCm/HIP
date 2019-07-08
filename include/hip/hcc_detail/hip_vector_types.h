@@ -218,7 +218,7 @@ THE SOFTWARE.
                 r[0] = d[0] == x.d[0];
                 r[1] = d[1] == x.d[1];
                 r[2] = d[2] == x.d[2];
-                return -r;
+                return r;
             }
         };
 
