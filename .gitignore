@@ -14,5 +14,5 @@ bin/hipBusBandwidth
 bin/hipDispatchLatency
 bin/hipify-clang
 include/hip/hcc_detail/hip_prof_str.h
-
+tags
 samples/1_Utils/hipInfo/hipInfo
