@@ -88,8 +88,12 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
     return hipErrorNotReady;
   }
 
-  ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().submitted_ -
-                          event_->profilingInfo().submitted_))/1000000.f;
+  if (event_ != eStop.event_) {
+    ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
+                            event_->profilingInfo().start_))/1000000.f;
+  } else {
+    ms = 0.f;
+  }
 
   return hipSuccess;
 }
