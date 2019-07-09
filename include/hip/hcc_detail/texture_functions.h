@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_TEXTURE_FUNCTIONS_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_TEXTURE_FUNCTIONS_H
-
 #include <hip/hcc_detail/hip_vector_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
 
@@ -120,6 +119,8 @@ union TData {
 
 #define TEXTURE_RETURN_FLOAT return texel.f.x;
 
+#define TEXTURE_FLOAT_VALUE texel.f.x
+
 #define TEXTURE_RETURN_SIGNED return texel.i.x;
 
 #define TEXTURE_RETURN_UNSIGNED return texel.u.x;
@@ -165,6 +166,8 @@ union TData {
 #define TEXTURE_RETURN_UINT_XYZW return make_uint4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
 
 #define TEXTURE_RETURN_FLOAT_XYZW return make_float4(texel.f.x, texel.f.y, texel.f.z, texel.f.w);
+
+#define TEXTURE_FLOAT_NORMALIZED_VALUE(size) texel.u.x/size
 
 extern "C" {
 
@@ -3863,11 +3866,24 @@ __TEXTURE_FUNCTIONS_DECL__ float tex1D(texture<float, texType, mode> texRef,
     TEXTURE_RETURN_FLOAT;
 }
 //////
+
+__device__ __constant__ static int texFormatToSize[] = {
+    [HIP_AD_FORMAT_UNSIGNED_INT8] = UCHAR_MAX ,
+    [HIP_AD_FORMAT_UNSIGNED_INT16]= USHRT_MAX,
+    [HIP_AD_FORMAT_UNSIGNED_INT32]= 1    ,
+    [HIP_AD_FORMAT_SIGNED_INT8]   = SCHAR_MAX,
+    [HIP_AD_FORMAT_SIGNED_INT16]  = SHRT_MAX,
+    [HIP_AD_FORMAT_SIGNED_INT32]  = 1    ,
+    [HIP_AD_FORMAT_HALF]          = 1    ,
+    [HIP_AD_FORMAT_FLOAT]         = 1
+};
+
 template <int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float tex1D(texture<float, texType, mode> texRef, float x) {
     TEXTURE_REF_PARAMETERS_INIT;
     texel.f = __ockl_image_sample_1D(i, s, x);
-    TEXTURE_RETURN_FLOAT;
+    float retVal = (texFormatToSize[texRef.format] == 1)? TEXTURE_FLOAT_VALUE : (float)TEXTURE_FLOAT_NORMALIZED_VALUE(texFormatToSize[texRef.format]);
+    return retVal;
 }
 
 template <int texType, enum hipTextureReadMode mode>
