@@ -45,7 +45,7 @@ THE SOFTWARE.
 #include <hip/hcc_detail/hip_texture_types.h>
 #include <hip/hcc_detail/hip_surface_types.h>
 
-#if !__HIP_VDI__
+#if !__HIP_VDI__ && defined(__cplusplus)
 #include <hsa/hsa.h>
 #include <hip/hcc_detail/program_state.hpp>
 #endif
@@ -79,9 +79,13 @@ THE SOFTWARE.
   #define __dparm(x)
 #endif
 
+#ifdef __cplusplus
 namespace hip_impl {
 hipError_t hip_init();
 }  // namespace hip_impl
+#else
+hipError_t hip_init();
+#endif
 
 // Structure definitions:
 #ifdef __cplusplus
@@ -1459,12 +1463,14 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 #else
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
+#ifdef __cplusplus
 namespace hip_impl {
 inline
 __attribute__((visibility("hidden")))
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                           const char* name);
 } // Namespace hip_impl.
+#endif
 
 /**
  *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
@@ -1480,9 +1486,16 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
+#ifdef __cplusplus
     hip_impl::hip_init();
     size_t size = 0;
     return hip_impl::read_agent_global_from_process(devPtr, &size, (const char*)symbolName);
+#else
+    hip_init();
+    // read_agent_global_from_process is defined in cpp file hence returning error here to indicate
+    // func not implemented for 'c' code
+    return hipErrorTbd;   
+#endif
 }
 
 
@@ -1500,19 +1513,28 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
+#ifdef __cplusplus    
     hip_impl::hip_init();
     void* devPtr = nullptr;
     return hip_impl::read_agent_global_from_process(&devPtr, size, (const char*)symbolName);
+#else
+    hip_init();
+    // read_agent_global_from_process is defined in cpp file hence returning error here to indicate
+    // func not implemented for 'c' code
+    return hipErrorTbd;    
+#endif
 }
 
 #if defined(__cplusplus)
 } // extern "C"
 #endif
 
+#ifdef __cplusplus
 namespace hip_impl {
 hipError_t hipMemcpyToSymbol(void*, const void*, size_t, size_t, hipMemcpyKind,
                              const char*);
 } // Namespace hip_impl.
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -1550,15 +1572,20 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
 
     hipDeviceptr_t dst = NULL;
     hipGetSymbolAddress(&dst, (const char*)symbolName);
-
+#ifdef __cplusplus
     return hip_impl::hipMemcpyToSymbol(dst, src, sizeBytes, offset, kind,
                                        (const char*)symbolName);
+#else
+     // TODO : Func is not implemented for 'c' code
+     return hipErrorTbd;
+#endif
 }
 
 #if defined(__cplusplus)
 } // extern "C"
 #endif
 
+#ifdef __cplusplus
 namespace hip_impl {
 hipError_t hipMemcpyToSymbolAsync(void*, const void*, size_t, size_t,
                                   hipMemcpyKind, hipStream_t, const char*);
@@ -1567,6 +1594,7 @@ hipError_t hipMemcpyFromSymbol(void*, const void*, size_t, size_t,
 hipError_t hipMemcpyFromSymbolAsync(void*, const void*, size_t, size_t,
                                     hipMemcpyKind, hipStream_t, const char*);
 } // Namespace hip_impl.
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -1606,10 +1634,14 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
 
     hipDeviceptr_t dst = NULL;
     hipGetSymbolAddress(&dst, symbolName);
-
+#ifdef __cplusplus
     return hip_impl::hipMemcpyToSymbolAsync(dst, src, sizeBytes, offset, kind,
                                             stream,
                                             (const char*)symbolName);
+#else
+     // TODO : Func is not implemented for 'c' code
+     return hipErrorTbd;
+#endif
 }
 
 inline
@@ -1621,9 +1653,13 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
 
     hipDeviceptr_t src = NULL;
     hipGetSymbolAddress(&src, symbolName);
-
+#ifdef __cplusplus
     return hip_impl::hipMemcpyFromSymbol(dst, src, sizeBytes, offset, kind,
                                          (const char*)symbolName);
+#else
+     // TODO : Func is not implemented for 'c' code
+     return hipErrorTbd;
+#endif
 }
 
 inline
@@ -1636,10 +1672,14 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 
     hipDeviceptr_t src = NULL;
     hipGetSymbolAddress(&src, symbolName);
-
+#ifdef __cplusplus
     return hip_impl::hipMemcpyFromSymbolAsync(dst, src, sizeBytes, offset, kind,
                                               stream,
                                               (const char*)symbolName);
+#else
+     // TODO : Func is not implemented for 'c' code
+     return hipErrorTbd;
+#endif
 }
 
 #endif // __HIP_VDI__
@@ -2604,6 +2644,7 @@ hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func
 } // extern "C"
 #endif
 
+#ifdef __cplusplus
 namespace hip_impl {
     class agent_globals_impl;
     class agent_globals {
@@ -2635,6 +2676,7 @@ namespace hip_impl {
         return get_agent_globals().read_agent_global_from_process(dptr, bytes, name);
     }
 } // Namespace hip_impl.
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
