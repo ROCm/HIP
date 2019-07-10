@@ -738,6 +738,7 @@ THE SOFTWARE.
         typename T,
         unsigned int n,
         typename U,
+        typename std::enable_if<std::is_arithmetic<U>::value>::type,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
     inline __host__ __device__
     HIP_vector_type<T, n> operator<<(
