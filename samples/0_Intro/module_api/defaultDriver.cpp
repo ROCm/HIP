@@ -68,7 +68,7 @@ int main() {
     for (uint32_t i = 0; i < LEN; i++) {
         if (A[i] != B[i]) {
             mismatchCount++;
-            std::cout << "error: mismatch " << A[i] << " != " << C[i] << std::endl;
+            std::cout << "error: mismatch " << A[i] << " != " << B[i] << std::endl;
         }
     }
 
