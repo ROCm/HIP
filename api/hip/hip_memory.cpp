@@ -99,6 +99,7 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
   } else if ((srcMemory == nullptr) && (dstMemory != nullptr)) {
     command = new amd::WriteMemoryCommand(queue, CL_COMMAND_WRITE_BUFFER, waitList,
               *dstMemory->asBuffer(), dOffset, sizeBytes, src);
+    isAsync = false;
   } else if ((srcMemory != nullptr) && (dstMemory == nullptr)) {
     command = new amd::ReadMemoryCommand(queue, CL_COMMAND_READ_BUFFER, waitList,
               *srcMemory->asBuffer(), sOffset, sizeBytes, dst);
