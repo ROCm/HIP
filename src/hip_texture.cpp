@@ -584,7 +584,7 @@ hipError_t ihipBindTextureToArrayImpl(int dim, enum hipTextureReadMode readMode,
         hsa_ext_image_channel_order_t channelOrder;
         hsa_ext_image_channel_type_t channelType;
         if (array->isDrv) {
-            getDrvChannelOrderAndType(array->drvDesc.format, array->drvDesc.numChannels,
+            getDrvChannelOrderAndType(array->Format, array->NumChannels,
                                       &channelOrder, &channelType);
         } else {
             getChannelOrderAndType(desc, readMode, &channelOrder, &channelType);
@@ -749,6 +749,6 @@ hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPT
     hipError_t hip_status = hipSuccess;
     // TODO: hipReadModeElementType is default.
     hip_status = ihipBindTexture2DImpl(hipTextureType2D, hipReadModeElementType, &offset, devPtr,
-                                       NULL, desc->width, desc->height, tex);
+                                       NULL, desc->Width, desc->Height, tex);
     return ihipLogStatus(hip_status);
 }
