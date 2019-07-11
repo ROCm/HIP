@@ -168,7 +168,6 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
 
     // Cap the maximum amount of testing, in case of hangs
     // Excluding hipMultiThreadDevice-pyramid test from automation; due to its flakiness which requires some investigation
-    // Excluding hipLaunchParm test from automation, due to bug in HCC.
     timeout(time: 1, unit: 'HOURS')
     {
       stage("${platform} unit testing")
@@ -178,7 +177,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
             cd ${build_dir_rel}
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
-            ctest -E "(pyramid|hipLaunchParm.tst)"
+            ctest -E pyramid
           """
         // If unit tests output a junit or xunit file in the future, jenkins can parse that file
         // to display test results on the dashboard
