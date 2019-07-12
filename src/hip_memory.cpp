@@ -513,6 +513,8 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
         array3D.NumChannels = pAllocateArray->NumChannels;
         array[0]->width = pAllocateArray->Width;
         array[0]->height = pAllocateArray->Height;
+        array[0]->Format = pAllocateArray->Format;
+        array[0]->NumChannels = pAllocateArray->NumChannels;
         array[0]->isDrv = true;
         array[0]->textureType = hipTextureType2D;
         void** ptr = &array[0]->data;
@@ -705,6 +707,8 @@ hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAll
     array[0]->width = pAllocateArray->Width;
     array[0]->height = pAllocateArray->Height;
     array[0]->depth = pAllocateArray->Depth;
+    array[0]->Format = pAllocateArray->Format;
+    array[0]->NumChannels = pAllocateArray->NumChannels;
     array[0]->isDrv = true;
     array[0]->textureType = hipTextureType3D;
     void** ptr = &array[0]->data;
