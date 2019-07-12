@@ -8,7 +8,6 @@
 
 #include <hip/hip_runtime.h>
 #ifdef __HIP_PLATFORM_HCC__
-#include <elf.h>
 #endif
 
 #include <sys/time.h>
