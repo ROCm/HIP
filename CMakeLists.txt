@@ -48,7 +48,7 @@ if(CMAKE_CXX_COMPILER MATCHES ".*hcc")
     set(HIP_RUNTIME "HCC" CACHE STRING "HIP Runtime")
     get_filename_component(CXX_PATH ${CMAKE_CXX_COMPILER} DIRECTORY)
     get_filename_component(CXX_PATH ${CXX_PATH} DIRECTORY)
-    set(HCC_HOME "${HCC_PATH}" CACHE PATH "Path to which HCC has been installed")
+    set(HCC_HOME "${CXX_PATH}" CACHE PATH "Path to which HCC has been installed")
 endif()
 
 
