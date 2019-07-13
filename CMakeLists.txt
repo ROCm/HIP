@@ -43,6 +43,15 @@ add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
 add_to_config(_versionInfo HIP_VERSION_PATCH)
 
+if(CMAKE_CXX_COMPILER MATCHES ".*hcc")
+    set(HIP_PLATFORM "hcc" CACHE STRING "HIP Platform")
+    set(HIP_RUNTIME "HCC" CACHE STRING "HIP Runtime")
+    get_filename_component(CXX_PATH ${CMAKE_CXX_COMPILER} DIRECTORY)
+    get_filename_component(CXX_PATH ${CXX_PATH} DIRECTORY)
+    set(HCC_HOME "${HCC_PATH}" CACHE PATH "Path to which HCC has been installed")
+endif()
+
+
 #############################
 # Configure variables
 #############################
