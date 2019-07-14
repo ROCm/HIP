@@ -858,6 +858,24 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         case hipDeviceAttributeIntegrated:
             cdattr = cudaDevAttrIntegrated;
             break;
+        case hipDeviceAttributeMaxTexture1DWidth:
+            cdattr = cudaDevAttrMaxTexture1DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture2DWidth:
+            cdattr = cudaDevAttrMaxTexture2DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture2DHeight:
+            cdattr = cudaDevAttrMaxTexture2DHeight;
+            break;
+        case hipDeviceAttributeMaxTexture3DWidth:
+            cdattr = cudaDevAttrMaxTexture3DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture3DHeight:
+            cdattr = cudaDevAttrMaxTexture3DHeight;
+            break;
+        case hipDeviceAttributeMaxTexture3DDepth:
+            cdattr = cudaDevAttrMaxTexture3DDepth;
+            break;
         default:
             cerror = cudaErrorInvalidValue;
             break;

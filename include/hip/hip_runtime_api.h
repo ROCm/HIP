@@ -116,7 +116,10 @@ typedef struct hipDeviceProp_t {
     int gcnArch;                              ///< AMD GCN Arch Value. Eg: 803, 701
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
-    int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices 
+    int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices
+    int maxTexture1D;          ///< Maximum number of elements in 1D images
+    int maxTexture2D[2];       ///< Maximum dimensions (width, height) of 2D images, in image elements
+    int maxTexture3D[3];       ///< Maximum dimensions (width, height, depth) of 3D images, in image elements
 } hipDeviceProp_t;
 
 
@@ -295,6 +298,14 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIntegrated,                        ///< iGPU
     hipDeviceAttributeCooperativeLaunch,                 ///< Support cooperative launch
     hipDeviceAttributeCooperativeMultiDeviceLaunch,      ///< Support cooperative launch on multiple devices
+
+    hipDeviceAttributeMaxTexture1DWidth,    ///< Maximum number of elements in 1D images
+    hipDeviceAttributeMaxTexture2DWidth,    ///< Maximum dimension width of 2D images in image elements
+    hipDeviceAttributeMaxTexture2DHeight,   ///< Maximum dimension height of 2D images in image elements
+    hipDeviceAttributeMaxTexture3DWidth,    ///< Maximum dimension width of 3D images in image elements
+    hipDeviceAttributeMaxTexture3DHeight,   ///< Maximum dimensions height of 3D images in image elements
+    hipDeviceAttributeMaxTexture3DDepth     ///< Maximum dimensions depth of 3D images in image elements
+
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {

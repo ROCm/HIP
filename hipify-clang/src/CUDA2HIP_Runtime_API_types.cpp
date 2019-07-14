@@ -255,17 +255,17 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_DEVICE_ATTRIBUTE_COMPUTE_MODE
   {"cudaDevAttrComputeMode",                                           {"hipDeviceAttributeComputeMode",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 20
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH
-  {"cudaDevAttrMaxTexture1DWidth",                                     {"hipDeviceAttributeMaxTexture1DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 21
+  {"cudaDevAttrMaxTexture1DWidth",                                     {"hipDeviceAttributeMaxTexture1DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 21
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH
-  {"cudaDevAttrMaxTexture2DWidth",                                     {"hipDeviceAttributeMaxTexture2DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 22
+  {"cudaDevAttrMaxTexture2DWidth",                                     {"hipDeviceAttributeMaxTexture2DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 22
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT
-  {"cudaDevAttrMaxTexture2DHeight",                                    {"hipDeviceAttributeMaxTexture2DHeight",                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 23
+  {"cudaDevAttrMaxTexture2DHeight",                                    {"hipDeviceAttributeMaxTexture2DHeight",                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 23
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH
-  {"cudaDevAttrMaxTexture3DWidth",                                     {"hipDeviceAttributeMaxTexture3DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 24
+  {"cudaDevAttrMaxTexture3DWidth",                                     {"hipDeviceAttributeMaxTexture3DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 24
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT
-  {"cudaDevAttrMaxTexture3DHeight",                                    {"hipDeviceAttributeMaxTexture3DHeight",                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 25
+  {"cudaDevAttrMaxTexture3DHeight",                                    {"hipDeviceAttributeMaxTexture3DHeight",                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 25
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH
-  {"cudaDevAttrMaxTexture3DDepth",                                     {"hipDeviceAttributeMaxTexture3DDepth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 26
+  {"cudaDevAttrMaxTexture3DDepth",                                     {"hipDeviceAttributeMaxTexture3DDepth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 26
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH
   {"cudaDevAttrMaxTexture2DLayeredWidth",                              {"hipDeviceAttributeMaxTexture2DLayeredWidth",               "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 27
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT
