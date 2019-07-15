@@ -65,20 +65,31 @@ set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU targets to compile for")
 
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
 
-set_target_properties(hip::host PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "__HIP__=1"
+set_property(TARGET hip::host APPEND PROPERTY 
+  INTERFACE_COMPILE_DEFINITIONS __HIP__=1
 )
 
-set_target_properties(hip::device PROPERTIES
-  INTERFACE_COMPILE_OPTIONS "-x;hip;--hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}"
-  INTERFACE_LINK_LIBRARIES "--hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX};--hip-link"
+set_property(TARGET hip::device APPEND PROPERTY 
+  INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
+)
+
+set_property(TARGET hip::device APPEND PROPERTY 
+  INTERFACE_LINK_LIBRARIES --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib --hip-link
+)
+
+set_property(TARGET hip::device APPEND PROPERTY 
   INTERFACE_INCLUDE_DIRECTORIES "${HIP_CLANG_INCLUDE_PATH}"
+)
+
+set_property(TARGET hip::device APPEND PROPERTY 
   INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_CLANG_INCLUDE_PATH}"
 )
 
 foreach(GPU_TARGET ${GPU_TARGETS})
-    set_target_properties(hip::device PROPERTIES
+    set_property(TARGET hip::device APPEND PROPERTY 
       INTERFACE_COMPILE_OPTIONS "--cuda-gpu-arch=${GPU_TARGET}"
+    )
+    set_property(TARGET hip::device APPEND PROPERTY 
       INTERFACE_LINK_LIBRARIES "--cuda-gpu-arch=${GPU_TARGET}"
     )
 endforeach()
