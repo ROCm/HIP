@@ -577,5 +577,5 @@ hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPT
   }
 
   size_t offset;
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, devPtr, nullptr, desc->width, desc->height, pitch));
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, devPtr, nullptr, desc->Width, desc->Height, pitch));
 }
