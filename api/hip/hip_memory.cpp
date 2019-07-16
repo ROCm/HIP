@@ -437,22 +437,21 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
   }
 
   *array = (hipArray*)malloc(sizeof(hipArray));
-  array[0]->drvDesc = *pAllocateArray;
-  array[0]->width = pAllocateArray->width;
-  array[0]->height = pAllocateArray->height;
+  array[0]->width = pAllocateArray->Width;
+  array[0]->height = pAllocateArray->Height;
   array[0]->isDrv = true;
   array[0]->textureType = hipTextureType2D;
   void** ptr = &array[0]->data;
 
   cl_channel_order channelOrder;
   cl_channel_type channelType;
-  getDrvChannelOrderAndType(pAllocateArray->format, pAllocateArray->numChannels,
+  getDrvChannelOrderAndType(pAllocateArray->Format, pAllocateArray->NumChannels,
                             &channelOrder, &channelType);
 
   const cl_image_format image_format = { channelOrder, channelType };
-  size_t size = pAllocateArray->width;
-  if (pAllocateArray->height > 0) {
-      size = size * pAllocateArray->height;
+  size_t size = pAllocateArray->Width;
+  if (pAllocateArray->Height > 0) {
+      size = size * pAllocateArray->Height;
   }
 
   size_t pitch = 0;
