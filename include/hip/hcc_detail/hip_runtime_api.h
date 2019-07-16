@@ -1821,7 +1821,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
                           size_t height __dparm(0), unsigned int flags __dparm(hipArrayDefault));
 hipError_t hipArrayCreate(hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
 
-hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
+hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray);
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
 

@@ -58,10 +58,10 @@ bool runTest(int argc, char** argv) {
 
     hipArray* array;
     HIP_ARRAY_DESCRIPTOR desc;
-    desc.format = HIP_AD_FORMAT_FLOAT;
-    desc.numChannels = 1;
-    desc.width = width;
-    desc.height = height;
+    desc.Format = HIP_AD_FORMAT_FLOAT;
+    desc.NumChannels = 1;
+    desc.Width = width;
+    desc.Height = height;
     hipArrayCreate(&array, &desc);
 
     hip_Memcpy2D copyParam;
