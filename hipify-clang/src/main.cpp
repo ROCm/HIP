@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <regex>
 #include "CUDA2HIP.h"
 #include "LLVMCompat.h"
 #include "HipifyAction.h"
@@ -132,7 +133,11 @@ bool generatePerl(bool Generate = true) {
           continue;
         }
         if (i == ma.second.type) {
-          *perlStreamPtr.get() << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << ma.first.str() << "\\b/" << ma.second.hipName.str() << "/g;\n";
+          std::string sCUDA = ma.first.str();
+          std::string sHIP = ma.second.hipName.str();
+          sCUDA = std::regex_replace(sCUDA, std::regex("/"), "\\/");
+          sHIP = std::regex_replace(sHIP, std::regex("/"), "\\/");
+          *perlStreamPtr.get() << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << sCUDA << "\\b/" << sHIP << "/g;\n";
         }
       }
     } else {
