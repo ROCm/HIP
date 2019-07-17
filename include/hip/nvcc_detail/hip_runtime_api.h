@@ -772,6 +772,13 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->maxSharedMemoryPerMultiProcessor = cdprop.sharedMemPerMultiprocessor;
     p_prop->isMultiGpuBoard = cdprop.isMultiGpuBoard;
 
+    p_prop->maxTexture1D    = cdprop.maxTexture1D;
+    p_prop->maxTexture2D[0] = cdprop.maxTexture2D[0];
+    p_prop->maxTexture2D[1] = cdprop.maxTexture2D[1];
+    p_prop->maxTexture3D[0] = cdprop.maxTexture3D[0];
+    p_prop->maxTexture3D[1] = cdprop.maxTexture3D[1];
+    p_prop->maxTexture3D[2] = cdprop.maxTexture3D[2];
+
     return hipCUDAErrorTohipError(cerror);
 }
 
