@@ -157,6 +157,8 @@ union TData {
 
 #define TEXTURE_RETURN_UINT_XYZW return make_uint4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
 
+#define HIP_AD_FORMAT_NOT_INITIALIZED 0
+
 #define TEXTURE_RETURN_FLOAT return (texFormatToSize[texRef.format] == 1)? texel.f.x : (float)texel.u.x/texFormatToSize[texRef.format];
 
 #define TEXTURE_RETURN_FLOAT_X return (texFormatToSize[texRef.format] == 1)? make_float1(texel.f.x) : make_float1((float)texel.u.x/texFormatToSize[texRef.format]);
@@ -168,6 +170,7 @@ union TData {
 extern "C" {
 
  __device__ __constant__ static int texFormatToSize[] = {
+    [HIP_AD_FORMAT_NOT_INITIALIZED] = 1  ,
     [HIP_AD_FORMAT_UNSIGNED_INT8] = UCHAR_MAX ,
     [HIP_AD_FORMAT_UNSIGNED_INT16]= USHRT_MAX,
     [HIP_AD_FORMAT_UNSIGNED_INT32]= 1    ,
