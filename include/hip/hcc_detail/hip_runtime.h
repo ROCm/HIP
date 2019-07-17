@@ -206,12 +206,15 @@ class Coordinates {
 
     struct X {
         __device__ operator R() const { return f(0); }
+        __device__ uint32_t operator=(R _) { return f(0); }
     };
     struct Y {
         __device__ operator R() const { return f(1); }
+        __device__ uint32_t operator=(R _) { return f(1); }
     };
     struct Z {
         __device__ operator R() const { return f(2); }
+        __device__ uint32_t operator=(R _) { return f(2); }
     };
 
    public:
@@ -270,14 +273,14 @@ static inline __device__ void printf(const char* format, All... all) {}
 
 #if defined __HCC_CPP__
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block,
-                                       grid_launch_parm* lp, const char* kernelNameStr);
+                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block,
-                                       grid_launch_parm* lp, const char* kernelNameStr);
+                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block,
-                                       grid_launch_parm* lp, const char* kernelNameStr);
+                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
 extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block,
-                                       grid_launch_parm* lp, const char* kernelNameStr);
-extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp);
+                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
+extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp, bool unlockPostponed = 0);
 
 #if GENERIC_GRID_LAUNCH == 0
 //#warning "Original hipLaunchKernel defined"

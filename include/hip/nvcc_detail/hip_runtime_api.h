@@ -162,6 +162,7 @@ typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
 typedef cudaFuncAttributes hipFuncAttributes;
+#define hip_Memcpy2D CUDA_MEMCPY2D
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
 #define hipArrayLayered cudaArrayLayered
@@ -576,6 +577,10 @@ inline static hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, 
                                      size_t width, size_t height, hipMemcpyKind kind) {
     return hipCUDAErrorTohipError(
         cudaMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
+  return hipCUResultTohipError(cuMemcpy2D(pCopy));
 }
 
 inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
@@ -1211,11 +1216,9 @@ inline static hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t 
 template <class T>
 inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
                                                            size_t dynamicSMemSize = 0,
-                                                           int blockSizeLimit = 0,
-                                                           unsigned int flags = 0) {
+                                                           int blockSizeLimit = 0) {
     cudaError_t cerror;
-    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize,
-                                                blockSizeLimit, flags);
+    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize, blockSizeLimit);
     return hipCUDAErrorTohipError(cerror);
 }
 

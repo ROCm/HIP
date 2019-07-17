@@ -17,6 +17,7 @@
 #include <hsa/hsa.h>
 #include <hsa/hsa_ext_amd.h>
 #include <hsa/hsa_ven_amd_loader.h>
+#include <amd_comgr.h>
 
 #include <link.h>
 
@@ -26,11 +27,35 @@
 #include <cstdio>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <sstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+namespace std {
+template<>
+struct hash<hsa_agent_t> {
+    size_t operator()(hsa_agent_t x) const {
+        return hash<decltype(x.handle)>{}(x.handle);
+    }
+};
+
+template<>
+struct hash<hsa_isa_t> {
+    size_t operator()(hsa_isa_t x) const {
+        return hash<decltype(x.handle)>{}(x.handle);
+    }
+};
+}  // namespace std
+
+inline constexpr bool operator==(hsa_agent_t x, hsa_agent_t y) {
+    return x.handle == y.handle;
+}
+inline constexpr bool operator==(hsa_isa_t x, hsa_isa_t y) {
+    return x.handle == y.handle;
+}
 
 namespace hip_impl {
 
@@ -194,8 +219,8 @@ public:
             dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
                 ELFIO::elfio tmp;
 
-                const auto elf =
-                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+                const auto elf = (info->dlpi_addr && std::strlen(info->dlpi_name) != 0) ?
+                    info->dlpi_name : "/proc/self/exe";
 
                 if (!tmp.load(elf)) return 0;
 
@@ -252,8 +277,8 @@ public:
                 program_state_impl* t = static_cast<program_state_impl*>(psi_ptr);
 
                 ELFIO::elfio tmp;
-                const auto elf =
-                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+                const auto elf = (info->dlpi_addr && std::strlen(info->dlpi_name) != 0) ?
+                    info->dlpi_name : "/proc/self/exe";
 
                 if (!tmp.load(elf)) return 0;
 
@@ -478,8 +503,8 @@ public:
         std::call_once(function_names.first, [this]() {
             dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
                 ELFIO::elfio tmp;
-                const auto elf =
-                    info->dlpi_addr ? info->dlpi_name : "/proc/self/exe";
+                const auto elf = (info->dlpi_addr && std::strlen(info->dlpi_name) != 0) ?
+                    info->dlpi_name : "/proc/self/exe";
 
                 if (!tmp.load(elf)) return 0;
 
@@ -540,9 +565,13 @@ public:
 
         std::call_once(functions[agent].first, [this](hsa_agent_t aa) {
             for (auto&& function : get_function_names()) {
-                const auto it = get_kernels(aa).find(function.second);
+                auto it = get_kernels(aa).find(function.second);
 
-                if (it == get_kernels(aa).cend()) continue;
+                if (it == get_kernels(aa).cend()) {
+                    it = get_kernels(aa).find(function.second + ".kd");
+                    if (it == get_kernels(aa).cend())
+                        continue;
+                }
 
                 for (auto&& kernel_symbol : it->second) {
                     functions[aa].second.emplace(
@@ -556,92 +585,172 @@ public:
     }
 
     static
-    std::size_t parse_args(
-            const std::string& metadata,
-            std::size_t f,
-            std::size_t l,
+    std::string metadata_to_string(const amd_comgr_metadata_node_t& md) {
+        std::string str;
+        size_t size;
+
+        if (amd_comgr_get_metadata_string(md, &size, NULL)
+            == AMD_COMGR_STATUS_SUCCESS) {
+            str.resize(size - 1);
+            amd_comgr_get_metadata_string(md, &size, &str[0]);
+        }
+        return str;
+    }
+
+    static
+    void parse_args(
+            const amd_comgr_metadata_node_t& args_md,
+            bool is_code_object_v3,
             std::vector<std::pair<std::size_t, std::size_t>>& size_align) {
-        if (f == l) return f;
-        if (!size_align.empty()) return l;
+        size_t arg_count = 0;
+        if (amd_comgr_get_metadata_list_size(args_md, &arg_count)
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
 
-        do {
-            static constexpr size_t size_sz{5};
-            f = metadata.find("Size:", f) + size_sz;
+        for (size_t i = 0; i < arg_count; ++i) {
+            amd_comgr_metadata_node_t arg_md;
 
-            if (l <= f) return f;
+            if (amd_comgr_index_list_metadata(args_md, i, &arg_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
 
-            auto size = std::strtoul(&metadata[f], nullptr, 10);
+            amd_comgr_metadata_node_t arg_size_md;
+            if (amd_comgr_metadata_lookup(arg_md,
+                                          is_code_object_v3 ? ".size" : "Size",
+                                          &arg_size_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
 
-            static constexpr size_t align_sz{6};
-            f = metadata.find("Align:", f) + align_sz;
+            size_t arg_size = std::stoul(metadata_to_string(arg_size_md));
 
-            char* l{};
-            auto align = std::strtoul(&metadata[f], &l, 10);
+            if (amd_comgr_destroy_metadata(arg_size_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
 
-            f += (l - &metadata[f]) + 1;
+            size_t arg_align;
 
-            size_align.emplace_back(size, align);
-        } while (true);
+            if (is_code_object_v3) {
+                amd_comgr_metadata_node_t arg_offset_md;
+                if (amd_comgr_metadata_lookup(arg_md, ".offset", &arg_offset_md)
+                    != AMD_COMGR_STATUS_SUCCESS)
+                    return;
+
+                size_t arg_offset
+                    = std::stoul(metadata_to_string(arg_offset_md));
+
+                if (amd_comgr_destroy_metadata(arg_offset_md)
+                    != AMD_COMGR_STATUS_SUCCESS)
+                    return;
+
+                arg_align = 1;
+                while (arg_offset && (arg_offset & 1) == 0) {
+                    arg_offset >>= 1;
+                    arg_align <<= 1;
+                }
+            } else {
+                amd_comgr_metadata_node_t arg_align_md;
+                if (amd_comgr_metadata_lookup(arg_md, "Align", &arg_align_md)
+                    != AMD_COMGR_STATUS_SUCCESS)
+                    return;
+
+                arg_align = std::stoul(metadata_to_string(arg_align_md));
+
+                if (amd_comgr_destroy_metadata(arg_align_md)
+                    != AMD_COMGR_STATUS_SUCCESS)
+                    return;
+            }
+
+            size_align.emplace_back(arg_size, arg_align);
+
+            if (amd_comgr_destroy_metadata(arg_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
+        }
     }
 
     static
     void read_kernarg_metadata(
-            ELFIO::elfio& reader,
+            const std::vector<char>& blob,
             std::unordered_map<
             std::string,
             std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
-        // TODO: this is inefficient.
-        auto it = find_section_if(reader, [](const ELFIO::section* x) {
-                return x->get_type() == SHT_NOTE;
-                });
+        amd_comgr_data_t dataIn;
+        amd_comgr_status_t status;
 
-        if (!it) return;
+        if (amd_comgr_create_data(AMD_COMGR_DATA_KIND_RELOCATABLE, &dataIn)
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
 
-        const ELFIO::note_section_accessor acc{reader, it};
-        for (decltype(acc.get_notes_num()) i = 0; i != acc.get_notes_num(); ++i) {
-            ELFIO::Elf_Word type{};
-            std::string name{};
-            void* desc{};
-            ELFIO::Elf_Word desc_size{};
+        if (amd_comgr_set_data(dataIn, blob.size(), blob.data())
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
 
-            acc.get_note(i, type, name, desc, desc_size);
+        amd_comgr_metadata_node_t metadata;
+        if (amd_comgr_get_data_metadata(dataIn, &metadata)
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
 
-            if (name != "AMD") continue; // TODO: switch to using NT_AMD_AMDGPU_HSA_METADATA.
-
-            std::string tmp{
-                static_cast<char*>(desc), static_cast<char*>(desc) + desc_size};
-
-            auto dx = tmp.find("Kernels:");
-
-            if (dx == std::string::npos) continue;
-
-            static constexpr decltype(tmp.size()) kernels_sz{8};
-            dx += kernels_sz;
-
-            do {
-                dx = tmp.find("Name:", dx);
-
-                if (dx == std::string::npos) break;
-
-                static constexpr decltype(tmp.size()) name_sz{5};
-                dx = tmp.find_first_not_of(" '", dx + name_sz);
-
-                auto fn = tmp.substr(dx, tmp.find_first_of("'\n", dx) - dx);
-                dx += fn.size();
-
-                auto dx1 = tmp.find("CodeProps", dx);
-                dx = tmp.find("Args:", dx);
-
-                if (dx1 < dx) {
-                    dx = dx1;
-                    continue;
-                }
-                if (dx == std::string::npos) break;
-
-                static constexpr decltype(tmp.size()) args_sz{5};
-                dx = parse_args(tmp, dx + args_sz, dx1, kernargs[fn]);
-            } while (true);
+        bool is_code_object_v3 = false;
+        amd_comgr_metadata_node_t kernels_md;
+        if (amd_comgr_metadata_lookup(metadata, "Kernels", &kernels_md)
+            != AMD_COMGR_STATUS_SUCCESS) {
+            if (amd_comgr_metadata_lookup(metadata,
+                                          "amdhsa.kernels",
+                                          &kernels_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
+            is_code_object_v3 = true;
         }
+
+        size_t kernel_count = 0;
+        if (amd_comgr_get_metadata_list_size(kernels_md, &kernel_count)
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
+
+        for (size_t i = 0; i < kernel_count; i++) {
+            amd_comgr_metadata_node_t kernel_md;
+
+            if (amd_comgr_index_list_metadata(kernels_md, i, &kernel_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+
+            amd_comgr_metadata_node_t name_md;
+            if (amd_comgr_metadata_lookup(kernel_md,
+                                          is_code_object_v3 ? ".name" : "Name",
+                                          &name_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+
+            std::string kernel_name_str = metadata_to_string(name_md);
+
+            if (amd_comgr_destroy_metadata(name_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+
+            if (is_code_object_v3)
+                kernel_name_str.append(".kd");
+
+
+            amd_comgr_metadata_node_t args_md;
+            if (amd_comgr_metadata_lookup(kernel_md,
+                                          is_code_object_v3 ? ".args" : "Args",
+                                          &args_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+
+            parse_args(args_md, is_code_object_v3, kernargs[kernel_name_str]);
+
+            if (amd_comgr_destroy_metadata(args_md) != AMD_COMGR_STATUS_SUCCESS
+                || amd_comgr_destroy_metadata(kernel_md)
+                   != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+        }
+
+        if (amd_comgr_destroy_metadata(kernels_md) != AMD_COMGR_STATUS_SUCCESS
+            || amd_comgr_destroy_metadata(metadata) != AMD_COMGR_STATUS_SUCCESS)
+            return;
+
+        amd_comgr_release_data(dataIn);
     }
 
     const std::unordered_map<std::string, 
@@ -651,13 +760,7 @@ public:
             for (auto&& name_and_isa_blobs : get_code_object_blobs()) {
                 for (auto&& isa_blobs : name_and_isa_blobs.second) {
                     for (auto&& blob : isa_blobs.second) {
-                        std::stringstream tmp{std::string{blob.cbegin(), blob.cend()}};
-
-                        ELFIO::elfio reader;
-
-                        if (!reader.load(tmp)) continue;
-
-                        read_kernarg_metadata(reader, kernargs.second);
+                        read_kernarg_metadata(blob, kernargs.second);
                     }
                 }
             }
@@ -711,12 +814,20 @@ public:
 
         auto it1 = get_kernargs().find(it->second);
         if (it1 == get_kernargs().end()) {
-            hip_throw(std::runtime_error{
-                      "Missing metadata for __global__ function: " + it->second});
+            it1 = get_kernargs().find(it->second + ".kd");
+            if (it1 == get_kernargs().end()) {
+                hip_throw(std::runtime_error{
+                          "Missing metadata for __global__ function: " + it->second});
+            }
         }
 
         return it1->second;
     }
 };  // class program_state_impl
+
+struct kernarg_impl {
+    std::vector<std::uint8_t> v;
+};
+
 
 };

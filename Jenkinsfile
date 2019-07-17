@@ -168,7 +168,6 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
 
     // Cap the maximum amount of testing, in case of hangs
     // Excluding hipMultiThreadDevice-pyramid test from automation; due to its flakiness which requires some investigation
-    // Excluding hipLaunchParm test from automation, due to bug in HCC.
     timeout(time: 1, unit: 'HOURS')
     {
       stage("${platform} unit testing")
@@ -178,7 +177,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
             cd ${build_dir_rel}
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
-            ctest -E "(pyramid|hipLaunchParm.tst)"
+            ctest -E pyramid
           """
         // If unit tests output a junit or xunit file in the future, jenkins can parse that file
         // to display test results on the dashboard
@@ -296,13 +295,13 @@ def docker_upload_dockerhub( String local_org, String image_name, String remote_
 String build_config = 'Release'
 String job_name = env.JOB_NAME.toLowerCase( )
 
-// The following launches 3 builds in parallel: rocm-head, rocm-2.4.x and cuda-10.x
-parallel rocm_2_4:
+// The following launches 3 builds in parallel: rocm-head, rocm-2.6.x and cuda-10.x
+parallel rocm_2_6:
 {
   node('hip-rocm')
   {
-    String hcc_ver = 'rocm-2.4.x'
-    String from_image = 'ci_test_nodes/rocm-2.4.x/ubuntu-16.04:latest'
+    String hcc_ver = 'rocm-2.6.x'
+    String from_image = 'ci_test_nodes/rocm-2.6.x/ubuntu-16.04:latest'
     String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
 
     // Checkout source code, dependencies and version files

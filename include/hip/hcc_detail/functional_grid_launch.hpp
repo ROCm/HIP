@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #pragma once
 
-#include "code_object_bundle.hpp"
 #include "concepts.hpp"
 #include "helpers.hpp"
 #include "program_state.hpp"
@@ -57,10 +56,10 @@ template <
     std::size_t n,
     typename... Ts,
     typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
-inline std::vector<std::uint8_t> make_kernarg(
+inline hip_impl::kernarg make_kernarg(
     const std::tuple<Ts...>&,
     const kernargs_size_align&,
-    std::vector<std::uint8_t> kernarg) {
+    hip_impl::kernarg kernarg) {
     return kernarg;
 }
 
@@ -68,10 +67,10 @@ template <
     std::size_t n,
     typename... Ts,
     typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
-inline std::vector<std::uint8_t> make_kernarg(
+inline hip_impl::kernarg make_kernarg(
     const std::tuple<Ts...>& formals,
     const kernargs_size_align& size_align,
-    std::vector<std::uint8_t> kernarg) {
+    hip_impl::kernarg kernarg) {
     using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
 
     static_assert(
@@ -96,7 +95,7 @@ inline std::vector<std::uint8_t> make_kernarg(
 }
 
 template <typename... Formals, typename... Actuals>
-inline std::vector<std::uint8_t> make_kernarg(
+inline hip_impl::kernarg make_kernarg(
     void (*kernel)(Formals...), std::tuple<Actuals...> actuals) {
     static_assert(sizeof...(Formals) == sizeof...(Actuals),
         "The count of formal arguments must match the count of actuals.");
@@ -104,7 +103,7 @@ inline std::vector<std::uint8_t> make_kernarg(
     if (sizeof...(Formals) == 0) return {};
 
     std::tuple<Formals...> to_formals{std::move(actuals)};
-    std::vector<std::uint8_t> kernarg;
+    hip_impl::kernarg kernarg;
     kernarg.reserve(sizeof(to_formals));
 
     auto& ps = hip_impl::get_program_state();
@@ -135,6 +134,22 @@ void hipLaunchKernelGGLImpl(
                           stream, nullptr, kernarg);
 }
 } // Namespace hip_impl.
+
+
+template <typename F>
+inline
+void hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+    F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
+
+    using namespace hip_impl;
+
+    hip_impl::hip_init();
+    auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
+                                                   target_agent(0));
+
+    hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
+                                      dynSharedMemPerBlk, blockSizeLimit);
+}
 
 template <typename... Args, typename F = void (*)(Args...)>
 inline

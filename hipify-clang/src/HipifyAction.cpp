@@ -189,6 +189,9 @@ bool HipifyAction::Exclude(const hipCounter & hipToken) {
       }
       return false;
     case CONV_INCLUDE:
+      if (hipToken.hipName.empty()) {
+        return true;
+      }
       switch (hipToken.apiType) {
         case API_RAND:
           if (hipToken.hipName == "hiprand_kernel.h") {

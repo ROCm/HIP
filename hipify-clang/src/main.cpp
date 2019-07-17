@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include <chrono>
 #include <iomanip>
 #include <sstream>
+#include <regex>
 #include "CUDA2HIP.h"
 #include "LLVMCompat.h"
 #include "HipifyAction.h"
@@ -132,7 +133,11 @@ bool generatePerl(bool Generate = true) {
           continue;
         }
         if (i == ma.second.type) {
-          *perlStreamPtr.get() << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << ma.first.str() << "\\b/" << ma.second.hipName.str() << "/g;\n";
+          std::string sCUDA = ma.first.str();
+          std::string sHIP = ma.second.hipName.str();
+          sCUDA = std::regex_replace(sCUDA, std::regex("/"), "\\/");
+          sHIP = std::regex_replace(sHIP, std::regex("/"), "\\/");
+          *perlStreamPtr.get() << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << sCUDA << "\\b/" << sHIP << "/g;\n";
         }
       }
     } else {
@@ -234,7 +239,7 @@ int main(int argc, const char **argv) {
     argc++;
   }
   llcompat::PrintStackTraceOnErrorSignal();
-  ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::Optional);
+  ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::ZeroOrMore);
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   if (fileSources.empty() && !GeneratePerl && !GeneratePython) {
     llvm::errs() << "\n" << sHipify << sError << "Must specify at least 1 positional argument for source file." << "\n";
@@ -291,7 +296,7 @@ int main(int argc, const char **argv) {
   }
   int Result = 0;
   SmallString<128> tmpFile;
-  StringRef sourceFileName, ext = "hip";
+  StringRef sourceFileName, ext = "hip", csv_ext = "csv";
   std::string sTmpFileName, sSourceAbsPath;
   std::string sTmpDirAbsParh = getAbsoluteDirectoryPath(TemporaryDir, EC);
   if (EC) {
@@ -300,7 +305,20 @@ int main(int argc, const char **argv) {
   // Arguments for the Statistics print routines.
   std::unique_ptr<std::ostream> csv = nullptr;
   llvm::raw_ostream* statPrint = nullptr;
+  bool create_csv = false;
   if (!OutputStatsFilename.empty()) {
+    PrintStatsCSV = true;
+    create_csv = true;
+  } else {
+    if (PrintStatsCSV && fileSources.size() > 1) {
+      OutputStatsFilename = "sum_stat.csv";
+      create_csv = true;
+    }
+  }
+  if (create_csv) {
+    if (!OutputDir.empty()) {
+      OutputStatsFilename = sOutputDirAbsPath + "/" + OutputStatsFilename;
+    }
     csv = std::unique_ptr<std::ostream>(new std::ofstream(OutputStatsFilename, std::ios_base::trunc));
   }
   if (PrintStats) {
@@ -341,6 +359,17 @@ int main(int argc, const char **argv) {
       llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << src << " to " << tmpFile << "\n";
       Result = 1;
       continue;
+    }
+    if (PrintStatsCSV) {
+      if (OutputStatsFilename.empty()) {
+        OutputStatsFilename = sourceFileName.str() + "." + csv_ext.str();
+        if (!OutputDir.empty()) {
+          OutputStatsFilename = sOutputDirAbsPath + "/" + OutputStatsFilename;
+        }
+      }
+      if (!csv) {
+        csv = std::unique_ptr<std::ostream>(new std::ofstream(OutputStatsFilename, std::ios_base::trunc));
+      }
     }
     // Initialise the statistics counters for this file.
     Statistics::setActive(src);

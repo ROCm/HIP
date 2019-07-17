@@ -1,5 +1,6 @@
+// RUN: %run_test hipify "%s" "%t" %hipify_args %clang_args
 /*
-Copyright (c) 2017-present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,19 +21,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "hip/hip_runtime.h"
+// CHECK: #include <hip/hip_runtime.h>
+#include <cuda.h>
+// CHECK-NOT: #include <texture_fetch_functions.h>
+#include <texture_fetch_functions.h>
 
-#define ARRAY_SIZE (16)
+// CHECK: extern texture<float, 2, hipReadModeElementType> tex;
+extern texture<float, 2, cudaReadModeElementType> tex;
 
-__device__ float myDeviceGlobal;
-__device__ float myDeviceGlobalArray[16];
-
-extern "C" __global__ void hello_world(const float* a, float* b) {
-    int tx = hipThreadIdx_x;
-    b[tx] = a[tx];
-}
-
-extern "C" __global__ void test_globals(const float* a, float* b) {
-    int tx = hipThreadIdx_x;
-    b[tx] = a[tx] + myDeviceGlobal + myDeviceGlobalArray[tx % ARRAY_SIZE];
+extern "C" __global__ void tex2dKernel(float* outputData, int width, int height) {
+  int x = blockDim.x * blockIdx.x + threadIdx.x;
+  int y = blockDim.y * blockIdx.y + threadIdx.y;
+  outputData[y * width + x] = tex2D(tex, x, y);
 }

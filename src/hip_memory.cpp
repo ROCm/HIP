@@ -243,13 +243,12 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
 
     auto ctx = ihipGetTlsDefaultCtx();
     // return NULL pointer when malloc size is 0
-    if (sizeBytes == 0) {
+    if ( nullptr == ctx || nullptr == ptr)  {
+        hip_status = hipErrorInvalidValue;
+    }
+    else if (sizeBytes == 0) {
         *ptr = NULL;
         hip_status = hipSuccess;
-
-    } else if ((ctx == nullptr) || (ptr == nullptr)) {
-        hip_status = hipErrorInvalidValue;
-
     } else {
         auto device = ctx->getWriteableDevice();
         *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx, false /*shareWithAll*/,
@@ -309,12 +308,12 @@ hipError_t ihipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     }
 
     auto ctx = ihipGetTlsDefaultCtx();
-
-    if (sizeBytes == 0) {
+    if ((ctx == nullptr) || (ptr == nullptr)) {
+        hip_status = hipErrorInvalidValue;
+    }
+    else if (sizeBytes == 0) {
         hip_status = hipSuccess;
         // TODO - should size of 0 return err or be siliently ignored?
-    } else if ((ctx == nullptr) || (ptr == nullptr)) {
-        hip_status = hipErrorInvalidValue;
     } else {
         unsigned trueFlags = flags;
         if (flags == hipHostMallocDefault) {
@@ -400,7 +399,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 // width in bytes
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
     hipError_t hip_status = hipSuccess;
-    if(ptr==NULL)
+    if(ptr==NULL || pitch == NULL)
      {
 	hip_status=hipErrorInvalidValue;
        	return hip_status;
@@ -916,11 +915,8 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
     am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, hostPtr);
     if (status == AM_SUCCESS) {
         *flagsPtr = amPointerInfo._appAllocationFlags;
-        if (*flagsPtr == 0) {
-            hip_status = hipErrorInvalidValue;
-        } else {
-            hip_status = hipSuccess;
-        }
+        //0 is valid flag hipHostMallocDefault, and during hipHostMalloc if unsupported flags are passed as parameter it throws error
+        hip_status = hipSuccess;
         tprintf(DB_MEM, " %s: host ptr=%p\n", __func__, hostPtr);
     } else {
         hip_status = hipErrorInvalidValue;
@@ -1510,6 +1506,29 @@ __global__ void hip_copy2d_n(T* dst, const T* src, size_t width, size_t height, 
 }
 }  // namespace
 
+//Get the allocated size
+hipError_t ihipMemPtrGetInfo(void* ptr, size_t* size) {
+    hipError_t e = hipSuccess;
+    if (ptr != nullptr && size != nullptr) {
+        *size = 0;
+        hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
+        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
+        if (status == AM_SUCCESS) {
+            *size = amPointerInfo._sizeBytes;
+        } else {
+            e = hipErrorInvalidValue;
+        }
+    } else {
+        e = hipErrorInvalidValue;
+    }
+    return e;
+}
+
 template <typename T>
 void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t count) {
     static constexpr uint32_t block_dim = 256;
@@ -1536,13 +1555,17 @@ typedef enum ihipMemsetDataType {
     ihipMemsetDataTypeInt    = 2
 }ihipMemsetDataType;
 
-hipError_t ihipMemset(void* dst, int  value, size_t count, hipStream_t stream, enum ihipMemsetDataType copyDataType  )
+hipError_t ihipMemset(void* dst, int  value, size_t count, hipStream_t stream, enum ihipMemsetDataType copyDataType)
 {
     hipError_t e = hipSuccess;
 
     if (count == 0) return e;
 
-    if (stream && (dst != NULL)) {
+    size_t allocSize = 0;
+    bool isInbound = (ihipMemPtrGetInfo(dst, &allocSize) == hipSuccess);
+    isInbound &= (allocSize >= count);
+
+    if (stream && (dst != NULL) && isInbound) {
         if(copyDataType == ihipMemsetDataTypeChar){
             if ((count & 0x3) == 0) {
                 // use a faster dword-per-workitem copy:
@@ -1715,8 +1738,8 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
     if (pCopy == nullptr) {
         e = hipErrorInvalidValue;
     }
-    e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->widthInBytes, pCopy->srcHost, pCopy->srcPitch,
-                     pCopy->widthInBytes, pCopy->height, hipMemcpyDefault);
+    e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
+                     pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
     return ihipLogStatus(e);
 }
 
@@ -1902,25 +1925,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
 hipError_t hipMemPtrGetInfo(void* ptr, size_t* size) {
     HIP_INIT_API(hipMemPtrGetInfo, ptr, size);
 
-    hipError_t e = hipSuccess;
-
-    if (ptr != nullptr && size != nullptr) {
-        hc::accelerator acc;
-#if (__hcc_workweek__ >= 17332)
-        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
-#else
-        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
-#endif
-        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
-        if (status == AM_SUCCESS) {
-            *size = amPointerInfo._sizeBytes;
-        } else {
-            e = hipErrorInvalidValue;
-        }
-    } else {
-        e = hipErrorInvalidValue;
-    }
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemPtrGetInfo(ptr, size));
 }
 
 

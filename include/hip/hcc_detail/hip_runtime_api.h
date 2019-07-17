@@ -271,9 +271,18 @@ typedef struct dim3 {
     uint32_t y;  ///< y
     uint32_t z;  ///< z
 #ifdef __cplusplus
-    dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z){};
+    __host__ __device__ dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z){};
 #endif
 } dim3;
+
+typedef struct hipLaunchParams_t {
+    void* func;             ///< Device function symbol
+    dim3 gridDim;           ///< Grid dimentions
+    dim3 blockDim;          ///< Block dimentions
+    void **args;            ///< Arguments
+    size_t sharedMem;       ///< Shared memory
+    hipStream_t stream;     ///< Stream identifier
+} hipLaunchParams;
 
 
 // Doxygen end group GlobalDefs
@@ -1858,6 +1867,16 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
  */
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                        size_t height, hipMemcpyKind kind);
+
+/**
+*  @brief Copies memory for 2D arrays.
+*  @param[in]   pCopy Parameters for the memory copy
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
+ * hipMemcpyToSymbol, hipMemcpyAsync
+*/
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
 
 /**
@@ -2580,180 +2599,41 @@ hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, con
 
 hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
 
-struct Agent_global {
-
-    Agent_global() : name(nullptr), address(nullptr), byte_cnt(0) {}
-    Agent_global(const char* name, hipDeviceptr_t address, uint32_t byte_cnt) 
-      : name(nullptr), address(address), byte_cnt(byte_cnt) {
-      if (name)
-        this->name = strdup(name);
-    }
-
-    Agent_global& operator=(Agent_global&& t) {
-      if (this == &t) return *this;
-
-      if (name) free(name);
-      name = t.name;
-      address = t.address;
-      byte_cnt = t.byte_cnt;
-
-      t.name = nullptr;
-      t.address = nullptr;
-      t.byte_cnt = 0;
-
-      return *this;
-    }
-
-    Agent_global(Agent_global&& t) 
-      : name(nullptr), address(nullptr), byte_cnt(0) {
-      *this = std::move(t);
-    }
-
-    // not needed, delete them to prevent bugs
-    Agent_global(const Agent_global&) = delete;
-    Agent_global& operator=(Agent_global& t) = delete;
-
-    ~Agent_global() { if (name) free(name); }
-    
-    char* name;
-    hipDeviceptr_t address;
-    uint32_t byte_cnt;
-};
-
 #if !__HIP_VDI__
 #if defined(__cplusplus)
 } // extern "C"
 #endif
 
 namespace hip_impl {
-hsa_executable_t executable_for(hipModule_t);
-const char* hash_for(hipModule_t);
+    class agent_globals_impl;
+    class agent_globals {
+        public:
+            agent_globals();
+            ~agent_globals();
+            agent_globals(const agent_globals&) = delete;
 
-template<typename ForwardIterator>
-std::pair<hipDeviceptr_t, std::size_t> read_global_description(
-    ForwardIterator f, ForwardIterator l, const char* name) {
-    const auto it = std::find_if(f, l, [=](const Agent_global& x) {
-        return strcmp(x.name, name) == 0;
-    });
+            hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
+                    hipModule_t hmod, const char* name);
+            hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
+                    const char* name);
+        private:
+            agent_globals_impl* impl;
+    };
 
-    return it == l ?
-        std::make_pair(nullptr, 0u) : std::make_pair(it->address, it->byte_cnt);
-}
-
-std::vector<Agent_global> read_agent_globals(hsa_agent_t agent,
-                                             hsa_executable_t executable);
-hsa_agent_t this_agent();
-
-
-class agent_globals_impl {
-private:
-    std::pair<
-        std::mutex,
-        std::unordered_map<
-            std::string, std::vector<Agent_global>>> globals_from_module;
-
-    std::unordered_map<
-        hsa_agent_t,
-        std::pair<
-            std::once_flag,
-            std::vector<Agent_global>>> globals_from_process;
-
-public:
-
-    hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
-            hipModule_t hmod, const char* name) {
-        // the key of the map would the hash of code object associated with the
-        // hipModule_t instance
-        std::string key(hash_for(hmod));
-
-        if (globals_from_module.second.count(key) == 0) {
-            std::lock_guard<std::mutex> lck{globals_from_module.first};
-
-            if (globals_from_module.second.count(key) == 0) {
-                globals_from_module.second.emplace(
-                        key, read_agent_globals(this_agent(), executable_for(hmod)));
-            }
-        }
-
-        const auto it0 = globals_from_module.second.find(key);
-        if (it0 == globals_from_module.second.cend()) {
-            hip_throw(
-                    std::runtime_error{"agent_globals data structure corrupted."});
-        }
-
-        std::tie(*dptr, *bytes) = read_global_description(it0->second.cbegin(),
-                it0->second.cend(), name);
-
-        return *dptr ? hipSuccess : hipErrorNotFound;
+    inline
+    __attribute__((visibility("hidden")))
+    agent_globals& get_agent_globals() {
+        static agent_globals ag;
+        return ag;
     }
 
+    extern "C"
+    inline
+    __attribute__((visibility("hidden")))
     hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-            const char* name) {
-
-        auto agent = this_agent();
-
-        std::call_once(globals_from_process[agent].first, [this](hsa_agent_t aa) {
-            std::vector<Agent_global> tmp0;
-            for (auto&& executable : hip_impl::get_program_state().executables(aa)) {
-                auto tmp1 = read_agent_globals(aa, executable);
-                tmp0.insert(tmp0.end(), make_move_iterator(tmp1.begin()),
-                            make_move_iterator(tmp1.end()));
-            }
-            globals_from_process[aa].second = move(move(tmp0));
-        }, agent);
-
-        const auto it = globals_from_process.find(agent);
-
-        if (it == globals_from_process.cend()) return hipErrorNotInitialized;
-
-        std::tie(*dptr, *bytes) = read_global_description(it->second.second.cbegin(),
-                it->second.second.cend(), name);
-
-        return *dptr ? hipSuccess : hipErrorNotFound;
+        const char* name) {
+        return get_agent_globals().read_agent_global_from_process(dptr, bytes, name);
     }
-  
-};
-
-class agent_globals {
-public:
-    agent_globals() : impl(new agent_globals_impl()) { 
-        if (!impl) 
-            hip_throw(
-                std::runtime_error{"Error when constructing agent global data structures."});
-    }
-    ~agent_globals() { delete impl; }
-
-    hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
-                                             hipModule_t hmod, const char* name) {
-        return impl->read_agent_global_from_module(dptr, bytes, hmod, name);
-    }
-
-    hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-                                              const char* name) {
-        return impl->read_agent_global_from_process(dptr, bytes, name);
-    }
-
-private:
-    agent_globals_impl* impl;
-};
-
-inline
-__attribute__((visibility("hidden")))
-agent_globals& get_agent_globals() {
-    static agent_globals ag;
-    return ag;
-}
-
-
-extern "C"
-inline
-__attribute__((visibility("hidden")))
-hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-                                          const char* name) {
-    return get_agent_globals().read_agent_global_from_process(dptr, bytes, name);
-}
-
-
 } // Namespace hip_impl.
 
 #if defined(__cplusplus)
@@ -2831,6 +2711,91 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  unsigned int blockDimY, unsigned int blockDimZ,
                                  unsigned int sharedMemBytes, hipStream_t stream,
                                  void** kernelParams, void** extra);
+
+/**
+ * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
+ * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
+ *
+ * @param [in] f         Kernel to launch.
+ * @param [in] gridDim   Grid dimensions specified as multiple of blockDim.
+ * @param [in] blockDim  Block dimensions specified in work-items
+ * @param [in] kernelParams A list of kernel arguments
+ * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The
+ * kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th
+ * default stream is used with associated synchronization rules.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDimX,
+                                      void** kernelParams, unsigned int sharedMemBytes,
+                                      hipStream_t stream);
+
+/**
+ * @brief Launches kernels on multiple devices where thread blocks can cooperate and
+ * synchronize as they execute.
+ *
+ * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] numDevices               Size of the launchParamsList array.
+ * @param [in] flags                    Flags to control launch behavior.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                 int  numDevices, unsigned int  flags);
+
+/**
+ * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
+ *
+ * @param [out] gridSize           minimum grid size for maximum potential occupancy
+ * @param [out] blockSize          block size for maximum potential occupancy
+ * @param [in]  f                  kernel to launch
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ */
+hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             uint32_t blockSizeLimit);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  func             Kernel function for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynamicSMemSize  Per - block dynamic shared memory usage intended, in bytes
+ */
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+   int* numBlocks, const void* f, int  blockSize, size_t dynamicSMemSize);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  func             Kernel function for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynamicSMemSize  Per - block dynamic shared memory usage intended, in bytes
+ * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
+ */
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+   int* numBlocks, const void* f, int  blockSize, size_t dynamicSMemSize, unsigned int flags);
+
+/**
+ * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
+ * on respective streams before enqueuing any other work on the specified streams from any other threads
+ *
+ *
+ * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] numDevices               Size of the launchParamsList array.
+ * @param [in] flags                    Flags to control launch behavior.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags);
+
 
 // doxygen end Version Management
 /**
@@ -3022,9 +2987,7 @@ hipError_t hipLaunchByPtr(const void* func);
 } /* extern "c" */
 #endif
 
-#ifdef __cplusplus
-#include <hip/hcc_detail/hip_prof_api.h>
-#endif
+#include <hip/hcc_detail/hip_prof_str.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -3036,7 +2999,7 @@ hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
 hipError_t hipRemoveApiCallback(uint32_t id);
 hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg);
 hipError_t hipRemoveActivityCallback(uint32_t id);
-static inline const char* hipApiName(const uint32_t& id) { return hip_api_name(id); }
+const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 #ifdef __cplusplus
 } /* extern "C" */
@@ -3159,6 +3122,40 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
                                           const hipChannelFormatDesc& desc) {
     return hipSuccess;
 }
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    int* numBlocks, T f, int  blockSize, size_t dynamicSMemSize) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessor(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynamicSMemSize);
+}
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    int* numBlocks, T f, int  blockSize, size_t dynamicSMemSize, unsigned int flags) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynamicSMemSize, flags);
+}
+
+template <class T>
+inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
+                                             void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {
+    return hipLaunchCooperativeKernel(reinterpret_cast<const void*>(f), gridDim,
+                                      blockDim, kernelParams, sharedMemBytes, stream);
+}
+
+template <class T>
+inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                        unsigned int  numDevices, unsigned int  flags = 0) {
+    return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
+}
+
+template <class T>
+inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                     unsigned int  numDevices, unsigned int  flags = 0) {
+    return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
+}
+
 
 /*
  * @brief Unbinds the textuer bound to @p tex
