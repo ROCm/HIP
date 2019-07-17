@@ -4,8 +4,8 @@
 
 | **type**     |   **CUDA**                                                         |   **HIP**                                                  |
 |-------------:|--------------------------------------------------------------------|------------------------------------------------------------|
-| struct       |`CUDA_ARRAY3D_DESCRIPTOR`                                           |                                                            |
-| typedef      |`CUDA_ARRAY3D_DESCRIPTOR_st`                                        |                                                            |
+| struct       |`CUDA_ARRAY3D_DESCRIPTOR`                                           |`HIP_ARRAY3D_DESCRIPTOR`                                    |
+| typedef      |`CUDA_ARRAY3D_DESCRIPTOR_st`                                        |`HIP_ARRAY3D_DESCRIPTOR`                                    |
 | struct       |`CUDA_ARRAY_DESCRIPTOR`                                             |`HIP_ARRAY_DESCRIPTOR`                                      |
 | typedef      |`CUDA_ARRAY_DESCRIPTOR_st`                                          |`HIP_ARRAY_DESCRIPTOR`                                      |
 | struct       |`CUDA_MEMCPY2D`                                                     |`hip_Memcpy2D`                                              |
@@ -30,12 +30,12 @@
 | typedef      |`CUipcMemHandle_st`                                                 |`hipIpcMemHandle_st`                                        |
 | union        |`CUstreamBatchMemOpParams`                                          |                                                            |
 | typedef      |`CUstreamBatchMemOpParams_union`                                    |                                                            |
-| enum         |***`CUaddress_mode`***                                              |                                                            |
-| typedef      |***`CUaddress_mode_enum`***                                         |                                                            |
-|            0 |*`CU_TR_ADDRESS_MODE_WRAP`*                                         |                                                            |
-|            1 |*`CU_TR_ADDRESS_MODE_CLAMP`*                                        |                                                            |
-|            2 |*`CU_TR_ADDRESS_MODE_MIRROR`*                                       |                                                            |
-|            3 |*`CU_TR_ADDRESS_MODE_BORDER`*                                       |                                                            |
+| enum         |***`CUaddress_mode`***                                              |***`hipTextureAddressMode`***                               |
+| typedef      |***`CUaddress_mode_enum`***                                         |***`hipTextureAddressMode`***                               |
+|            0 |*`CU_TR_ADDRESS_MODE_WRAP`*                                         |*`hipAddressModeWrap`*                                      |
+|            1 |*`CU_TR_ADDRESS_MODE_CLAMP`*                                        |*`hipAddressModeClamp`*                                     |
+|            2 |*`CU_TR_ADDRESS_MODE_MIRROR`*                                       |*`hipAddressModeMirror`*                                    |
+|            3 |*`CU_TR_ADDRESS_MODE_BORDER`*                                       |*`hipAddressModeBorder`*                                    |
 | enum         |***`CUarray_cubemap_face`***                                        |                                                            |
 | typedef      |***`CUarray_cubemap_face_enum`***                                   |                                                            |
 |         0x00 |*`CU_CUBEMAP_FACE_POSITIVE_X`*                                      |                                                            |
@@ -557,9 +557,9 @@
 | define       |`CU_PARAM_TR_DEFAULT`                                               |                                                            |
 | define       |`CU_STREAM_LEGACY`                                                  |                                                            |
 | define       |`CU_STREAM_PER_THREAD`                                              |                                                            |
-| define       |`CU_TRSA_OVERRIDE_FORMAT`                                           |                                                            |
-| define       |`CU_TRSF_NORMALIZED_COORDINATES`                                    |                                                            |
-| define       |`CU_TRSF_READ_AS_INTEGER`                                           |                                                            |
+| define       |`CU_TRSA_OVERRIDE_FORMAT`                                           |`HIP_TRSA_OVERRIDE_FORMAT`                                  |
+| define       |`CU_TRSF_NORMALIZED_COORDINATES`                                    |`HIP_TRSF_NORMALIZED_COORDINATES`                           |
+| define       |`CU_TRSF_READ_AS_INTEGER`                                           |`HIP_TRSF_READ_AS_INTEGER`                                  |
 | define       |`CU_TRSF_SRGB`                                                      |                                                            |
 | define       |`CUDA_ARRAY3D_2DARRAY`                                              |                                                            |
 | define       |`CUDA_ARRAY3D_CUBEMAP`                                              |`hipArrayCubemap`                                           |

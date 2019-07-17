@@ -55,7 +55,7 @@ int main() {
     for (int i = 0; i < num_streams; i++) {
         HIPCHECK(hipStreamCreate(&streams[i]));
         HIPCHECK(hipMalloc(&data[i], NN * sizeof(float)));
-        hipLaunchKernelGGL(HIP_KERNEL_NAME(kernel), dim3(1), dim3(1), 0, streams[i], data[i], xd, N);
+        hipLaunchKernelGGL(HIP_KERNEL_NAME(kernel), dim3(1), dim3(1), 0, streams[i], data[i], xd, NN);
         hipLaunchKernelGGL(HIP_KERNEL_NAME(nKernel), dim3(1), dim3(1), 0, 0, yd);
     }
 
