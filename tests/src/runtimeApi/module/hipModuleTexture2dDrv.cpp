@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -64,10 +64,10 @@ bool runTest(int argc, char** argv) {
 
     hipArray* array;
     HIP_ARRAY_DESCRIPTOR desc;
-    desc.format = HIP_AD_FORMAT_FLOAT;
-    desc.numChannels = 1;
-    desc.width = width;
-    desc.height = height;
+    desc.Format = HIP_AD_FORMAT_FLOAT;
+    desc.NumChannels = 1;
+    desc.Width = width;
+    desc.Height = height;
     hipArrayCreate(&array, &desc);
 
     hip_Memcpy2D copyParam;
@@ -77,8 +77,8 @@ bool runTest(int argc, char** argv) {
     copyParam.srcMemoryType = hipMemoryTypeHost;
     copyParam.srcHost = hData;
     copyParam.srcPitch = width * sizeof(float);
-    copyParam.widthInBytes = copyParam.srcPitch;
-    copyParam.height = height;
+    copyParam.WidthInBytes = copyParam.srcPitch;
+    copyParam.Height = height;
     hipMemcpyParam2D(&copyParam);
 
     textureReference* texref;

@@ -38,7 +38,6 @@ THE SOFTWARE.
 #define SIZE LEN * sizeof(float)
 
 #define fileName "global_kernel.code"
-float myDeviceGlobalArray[16];
 #define HIP_CHECK(cmd)                                                                             \
     {                                                                                              \
         hipError_t status = cmd;                                                                   \
@@ -78,9 +77,18 @@ int main() {
     hipDeviceptr_t deviceGlobal;
     size_t deviceGlobalSize;
     HIP_CHECK(hipModuleGetGlobal(&deviceGlobal, &deviceGlobalSize, Module, "myDeviceGlobal"));
-    HIP_CHECK(hipMemcpy((float*)deviceGlobal,&myDeviceGlobal_h,deviceGlobalSize,hipMemcpyHostToDevice));
-
+    HIP_CHECK(hipMemcpyHtoD(hipDeviceptr_t(deviceGlobal), &myDeviceGlobal_h, deviceGlobalSize));
 #define ARRAY_SIZE 16
+    float myDeviceGlobalArray_h[ARRAY_SIZE];
+    hipDeviceptr_t myDeviceGlobalArray;
+    size_t myDeviceGlobalArraySize;
+
+    HIP_CHECK(hipModuleGetGlobal((hipDeviceptr_t*)&myDeviceGlobalArray, &myDeviceGlobalArraySize, Module, "myDeviceGlobalArray"));
+
+    for (int i = 0; i < ARRAY_SIZE; i++) {
+        myDeviceGlobalArray_h[i] = i * 1000.0f;
+        HIP_CHECK(hipMemcpyHtoD(hipDeviceptr_t(myDeviceGlobalArray), &myDeviceGlobalArray_h, myDeviceGlobalArraySize));
+    }
 
     struct {
         void* _Ad;
@@ -129,7 +137,7 @@ int main() {
 
         int mismatchCount = 0;
         for (uint32_t i = 0; i < LEN; i++) {
-            float expected = A[i] + myDeviceGlobal_h;
+            float expected = A[i] + myDeviceGlobal_h + + myDeviceGlobalArray_h[i % 16];
             if (expected != B[i]) {
                 mismatchCount++;
                 std::cout << "error: mismatch " << expected << " != " << B[i] << std::endl;

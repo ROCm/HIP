@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 #define ARRAY_SIZE (16)
 
-__device__ float myDeviceGlobal=0;
+__device__ float myDeviceGlobal;
+__device__ float myDeviceGlobalArray[16];
+
 
 extern "C" __global__ void hello_world(const float* a, float* b) {
     int tx = hipThreadIdx_x;
@@ -33,5 +35,5 @@ extern "C" __global__ void hello_world(const float* a, float* b) {
 
 extern "C" __global__ void test_globals(const float* a, float* b) {
     int tx = hipThreadIdx_x;
-    b[tx] = a[tx] + myDeviceGlobal;
+    b[tx] = a[tx] + myDeviceGlobal + myDeviceGlobalArray[tx % ARRAY_SIZE];
 }
