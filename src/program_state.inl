@@ -738,7 +738,11 @@ public:
                 != AMD_COMGR_STATUS_SUCCESS)
                 continue;
 
-            parse_args(args_md, is_code_object_v3, kernargs[kernel_name_str]);
+            auto foundKernel = kernargs.find(kernel_name_str);
+            // parse arguments for a given kernel only once
+            if (foundKernel == kernargs.end()) {
+                parse_args(args_md, is_code_object_v3, kernargs[kernel_name_str]);
+            }
 
             if (amd_comgr_destroy_metadata(args_md) != AMD_COMGR_STATUS_SUCCESS
                 || amd_comgr_destroy_metadata(kernel_md)
