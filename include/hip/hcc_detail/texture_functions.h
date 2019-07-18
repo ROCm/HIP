@@ -22,7 +22,6 @@ THE SOFTWARE.
 
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_TEXTURE_FUNCTIONS_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_TEXTURE_FUNCTIONS_H
-
 #include <hip/hcc_detail/hip_vector_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
 
@@ -118,8 +117,6 @@ union TData {
 
 #define TEXTURE_RETURN_UINT return texel.u.x;
 
-#define TEXTURE_RETURN_FLOAT return texel.f.x;
-
 #define TEXTURE_RETURN_SIGNED return texel.i.x;
 
 #define TEXTURE_RETURN_UNSIGNED return texel.u.x;
@@ -136,8 +133,6 @@ union TData {
 
 #define TEXTURE_RETURN_UINT_X return make_uint1(texel.u.x);
 
-#define TEXTURE_RETURN_FLOAT_X return make_float1(texel.f.x);
-
 #define TEXTURE_RETURN_CHAR_XY return make_char2(texel.i.x, texel.i.y);
 
 #define TEXTURE_RETURN_UCHAR_XY return make_uchar2(texel.u.x, texel.u.y);
@@ -149,8 +144,6 @@ union TData {
 #define TEXTURE_RETURN_INT_XY return make_int2(texel.i.x, texel.i.y);
 
 #define TEXTURE_RETURN_UINT_XY return make_uint2(texel.u.x, texel.u.y);
-
-#define TEXTURE_RETURN_FLOAT_XY return make_float2(texel.f.x, texel.f.y);
 
 #define TEXTURE_RETURN_CHAR_XYZW return make_char4(texel.i.x, texel.i.y, texel.i.z, texel.i.w);
 
@@ -164,9 +157,29 @@ union TData {
 
 #define TEXTURE_RETURN_UINT_XYZW return make_uint4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
 
-#define TEXTURE_RETURN_FLOAT_XYZW return make_float4(texel.f.x, texel.f.y, texel.f.z, texel.f.w);
+#define HIP_AD_FORMAT_NOT_INITIALIZED 0
+
+#define TEXTURE_RETURN_FLOAT return (texFormatToSize[texRef.format] == 1)? texel.f.x : (float)texel.u.x/texFormatToSize[texRef.format];
+
+#define TEXTURE_RETURN_FLOAT_X return (texFormatToSize[texRef.format] == 1)? make_float1(texel.f.x) : make_float1((float)texel.u.x/texFormatToSize[texRef.format]);
+
+#define TEXTURE_RETURN_FLOAT_XY return (texFormatToSize[texRef.format] == 1)? make_float2(texel.f.x, texel.f.y) : make_float2((float)texel.u.x/texFormatToSize[texRef.format], (float)texel.u.y/texFormatToSize[texRef.format]);
+
+#define TEXTURE_RETURN_FLOAT_XYZW return (texFormatToSize[texRef.format] == 1)? make_float4(texel.f.x, texel.f.y, texel.f.z, texel.f.w) : make_float4((float)texel.u.x/texFormatToSize[texRef.format], (float)texel.u.y/texFormatToSize[texRef.format], (float)texel.u.z/texFormatToSize[texRef.format], (float)texel.u.w/texFormatToSize[texRef.format]) ;
 
 extern "C" {
+
+ __device__ __constant__ static int texFormatToSize[] = {
+    [HIP_AD_FORMAT_NOT_INITIALIZED] = 1  ,
+    [HIP_AD_FORMAT_UNSIGNED_INT8] = UCHAR_MAX ,
+    [HIP_AD_FORMAT_UNSIGNED_INT16]= USHRT_MAX,
+    [HIP_AD_FORMAT_UNSIGNED_INT32]= 1    ,
+    [HIP_AD_FORMAT_SIGNED_INT8]   = SCHAR_MAX,
+    [HIP_AD_FORMAT_SIGNED_INT16]  = SHRT_MAX,
+    [HIP_AD_FORMAT_SIGNED_INT32]  = 1    ,
+    [HIP_AD_FORMAT_HALF]          = 1    ,
+    [HIP_AD_FORMAT_FLOAT]         = 1
+};
 
 __device__
 __hip_float4_vector_value_type __ockl_image_sample_1D(
@@ -3863,6 +3876,7 @@ __TEXTURE_FUNCTIONS_DECL__ float tex1D(texture<float, texType, mode> texRef,
     TEXTURE_RETURN_FLOAT;
 }
 //////
+
 template <int texType, enum hipTextureReadMode mode>
 __TEXTURE_FUNCTIONS_DECL__ float tex1D(texture<float, texType, mode> texRef, float x) {
     TEXTURE_REF_PARAMETERS_INIT;
