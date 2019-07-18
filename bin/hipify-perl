@@ -321,6 +321,12 @@ while (@ARGV) {
         $ft{'err'} += s/\bcudaDevAttrMaxSharedMemoryPerMultiprocessor\b/hipDeviceAttributeMaxSharedMemoryPerMultiprocessor/g;
         $ft{'err'} += s/\bcudaDevAttrMemoryClockRate\b/hipDeviceAttributeMemoryClockRate/g;
         $ft{'err'} += s/\bcudaDevAttrGlobalMemoryBusWidth\b/hipDeviceAttributeMemoryBusWidth/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxTexture1DWidth\b/hipDeviceAttributeMaxTexture1DWidth/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxTexture2DWidth\b/hipDeviceAttributeMaxTexture2DWidth/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxTexture2DHeight\b/hipDeviceAttributeMaxTexture2DHeight/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxTexture3DWidth\b/hipDeviceAttributeMaxTexture3DWidth/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxTexture3DHeight\b/hipDeviceAttributeMaxTexture3DHeight/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxTexture3DDepth\b/hipDeviceAttributeMaxTexture3DDepth/g;
         #--------
         $ft{'dev'} += s/\bcudaDeviceAttr\b/hipDeviceAttribute_t/g;
         $ft{'dev'} += s/\bcudaDeviceGetAttribute\b/hipDeviceGetAttribute/g;

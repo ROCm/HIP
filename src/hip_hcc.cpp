@@ -43,7 +43,7 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include <hc_am.hpp>
 #include "hsa/hsa_ext_amd.h"
-
+#include "hsa/hsa_ext_image.h"
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
@@ -913,6 +913,18 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     if(agent_profile == HSA_PROFILE_FULL) {
         prop->integrated = 1;
     }
+
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_1D_MAX_ELEMENTS,
+          &prop->maxTexture1D);
+    DeviceErrorCheck(err);
+
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_2D_MAX_ELEMENTS,
+          prop->maxTexture2D);
+    DeviceErrorCheck(err);
+
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_3D_MAX_ELEMENTS,
+          prop->maxTexture3D);
+    DeviceErrorCheck(err);
     return e;
 }
 
