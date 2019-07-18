@@ -271,7 +271,7 @@ typedef struct dim3 {
     uint32_t y;  ///< y
     uint32_t z;  ///< z
 #ifdef __cplusplus
-    dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z){};
+    __host__ __device__ dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z){};
 #endif
 } dim3;
 
@@ -1821,7 +1821,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
                           size_t height __dparm(0), unsigned int flags __dparm(hipArrayDefault));
 hipError_t hipArrayCreate(hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
 
-hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
+hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray);
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
 

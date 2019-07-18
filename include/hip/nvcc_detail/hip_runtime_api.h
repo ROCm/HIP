@@ -772,6 +772,13 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->maxSharedMemoryPerMultiProcessor = cdprop.sharedMemPerMultiprocessor;
     p_prop->isMultiGpuBoard = cdprop.isMultiGpuBoard;
 
+    p_prop->maxTexture1D    = cdprop.maxTexture1D;
+    p_prop->maxTexture2D[0] = cdprop.maxTexture2D[0];
+    p_prop->maxTexture2D[1] = cdprop.maxTexture2D[1];
+    p_prop->maxTexture3D[0] = cdprop.maxTexture3D[0];
+    p_prop->maxTexture3D[1] = cdprop.maxTexture3D[1];
+    p_prop->maxTexture3D[2] = cdprop.maxTexture3D[2];
+
     return hipCUDAErrorTohipError(cerror);
 }
 
@@ -857,6 +864,24 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeIntegrated:
             cdattr = cudaDevAttrIntegrated;
+            break;
+        case hipDeviceAttributeMaxTexture1DWidth:
+            cdattr = cudaDevAttrMaxTexture1DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture2DWidth:
+            cdattr = cudaDevAttrMaxTexture2DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture2DHeight:
+            cdattr = cudaDevAttrMaxTexture2DHeight;
+            break;
+        case hipDeviceAttributeMaxTexture3DWidth:
+            cdattr = cudaDevAttrMaxTexture3DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture3DHeight:
+            cdattr = cudaDevAttrMaxTexture3DHeight;
+            break;
+        case hipDeviceAttributeMaxTexture3DDepth:
+            cdattr = cudaDevAttrMaxTexture3DDepth;
             break;
         default:
             cerror = cudaErrorInvalidValue;
@@ -1216,11 +1241,9 @@ inline static hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t 
 template <class T>
 inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
                                                            size_t dynamicSMemSize = 0,
-                                                           int blockSizeLimit = 0,
-                                                           unsigned int flags = 0) {
+                                                           int blockSizeLimit = 0) {
     cudaError_t cerror;
-    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize,
-                                                blockSizeLimit, flags);
+    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize, blockSizeLimit);
     return hipCUDAErrorTohipError(cerror);
 }
 

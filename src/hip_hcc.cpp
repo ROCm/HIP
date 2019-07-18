@@ -43,7 +43,7 @@ THE SOFTWARE.
 #include <hc.hpp>
 #include <hc_am.hpp>
 #include "hsa/hsa_ext_amd.h"
-
+#include "hsa/hsa_ext_image.h"
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
@@ -922,6 +922,17 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     prop->hdpMemFlushCntl = hdpinfo.HDP_MEM_FLUSH_CNTL;
     prop->hdpRegFlushCntl = hdpinfo.HDP_REG_FLUSH_CNTL;
 
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_1D_MAX_ELEMENTS,
+          &prop->maxTexture1D);
+    DeviceErrorCheck(err);
+
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_2D_MAX_ELEMENTS,
+          prop->maxTexture2D);
+    DeviceErrorCheck(err);
+
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_3D_MAX_ELEMENTS,
+          prop->maxTexture3D);
+    DeviceErrorCheck(err);
     return e;
 }
 
@@ -1047,7 +1058,7 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
             }
         } else {
             if (waitThisStream) {
-                LockedAccessor_StreamCrit_t streamCrit(stream->_criticalData);
+                LockedAccessor_StreamCrit_t streamCrit(stream->criticalData());
 
                 // The last marker will provide appropriate visibility:
                 if (!streamCrit->_av.get_is_empty()) {
@@ -1065,7 +1076,7 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
 
     // Enqueue a barrier to wait on all the barriers we sent above:
     if (!HIP_SYNC_NULL_STREAM && !depOps.empty()) {
-        LockedAccessor_StreamCrit_t defaultStreamCrit(_defaultStream->_criticalData);
+        LockedAccessor_StreamCrit_t defaultStreamCrit(_defaultStream->criticalData());
         tprintf(DB_SYNC, "  null-stream wait on %zu non-empty streams. sync_host=%d\n",
                 depOps.size(), syncHost);
         hc::completion_future defaultCf = defaultStreamCrit->_av.create_blocking_marker(
@@ -1408,7 +1419,7 @@ void ihipInit() {
 
     // Make sure the hip visible devices are within the deviceCnt range
     for (int i = 0; i < g_hip_visible_devices.size(); i++) {
-        if (g_hip_visible_devices[i] >= deviceCnt) {
+        if ((g_hip_visible_devices[i] >= deviceCnt) ||(g_hip_visible_devices[i] < 0)){
             // Make sure any DeviceID after invalid DeviceID will be erased.
             g_hip_visible_devices.resize(i);
             break;
@@ -1424,17 +1435,21 @@ void ihipInit() {
 
     g_deviceArray = new ihipDevice_t*[deviceCnt];
     g_deviceCnt = 0;
-    for (int i = 0; i < accs.size(); i++) {
-        // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
-        if (!accs[i].get_is_emulated()) {
-            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i - 1)) ==
-                    g_hip_visible_devices.end() &&
-                g_visible_device) {
-                // If device is not in visible devices list, ignore
-                continue;
+
+    if(g_visible_device) {
+        for (int i = 0; i < g_hip_visible_devices.size(); i++) {
+            int devIndex = g_hip_visible_devices[i];
+            if (!accs[devIndex+1].get_is_emulated()) {
+                g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[devIndex+1]);
+                g_deviceCnt++;
             }
-            g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
-            g_deviceCnt++;
+        }
+    }else {
+        for (int i = 0; i < accs.size(); i++) {
+            if (!accs[i].get_is_emulated()) {
+                g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
+                g_deviceCnt++;
+            }
         }
     }
 

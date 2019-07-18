@@ -127,5 +127,11 @@ int main(int argc, char* argv[]) {
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIntegrated, props.integrated));
     CHECK(test_hipDeviceGetHdpAddress(deviceId, hipDeviceAttributeHdpMemFlushCntl, props.hdpMemFlushCntl));
     CHECK(test_hipDeviceGetHdpAddress(deviceId, hipDeviceAttributeHdpRegFlushCntl, props.hdpRegFlushCntl));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture1DWidth, props.maxTexture1D));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture2DWidth, props.maxTexture2D[0]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture2DHeight, props.maxTexture2D[1]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DWidth, props.maxTexture3D[0]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DHeight, props.maxTexture3D[1]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DDepth, props.maxTexture3D[2]));
     passed();
 };

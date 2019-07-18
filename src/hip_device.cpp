@@ -287,6 +287,23 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
                     uint32_t** hdp = reinterpret_cast<uint32_t**>(pi);
                     *hdp = prop->hdpRegFlushCntl;
                 }
+            case hipDeviceAttributeMaxTexture1DWidth:
+                *pi = prop->maxTexture1D;
+                break;
+            case hipDeviceAttributeMaxTexture2DWidth:
+                *pi = prop->maxTexture2D[0];
+                break;
+            case hipDeviceAttributeMaxTexture2DHeight:
+                *pi = prop->maxTexture2D[1];
+                break;
+            case hipDeviceAttributeMaxTexture3DWidth:
+                *pi = prop->maxTexture3D[0];
+                break;
+            case hipDeviceAttributeMaxTexture3DHeight:
+                *pi = prop->maxTexture3D[1];
+                break;
+            case hipDeviceAttributeMaxTexture3DDepth:
+                *pi = prop->maxTexture3D[2];
                 break;
             default:
                 e = hipErrorInvalidValue;
