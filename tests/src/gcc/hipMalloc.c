@@ -17,6 +17,13 @@
  * THE SOFTWARE.
  * */
 
+/* HIT_START
+ * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_HCC__ -I%hip-path/include %S/%s -L%hip-path/lib -l:libhip_hcc.so -o %T/%t
+ * TEST: %t
+ * HIT_END
+ */
+
+
 #include<hip/hip_runtime_api.h>
 #include<stdio.h>
 
