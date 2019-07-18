@@ -120,6 +120,8 @@ typedef struct hipDeviceProp_t {
     int maxTexture1D;          ///< Maximum number of elements in 1D images
     int maxTexture2D[2];       ///< Maximum dimensions (width, height) of 2D images, in image elements
     int maxTexture3D[3];       ///< Maximum dimensions (width, height, depth) of 3D images, in image elements
+    unsigned int* hdpMemFlushCntl;      ///< Addres of HDP_MEM_COHERENCY_FLUSH_CNTL register
+    unsigned int* hdpRegFlushCntl;      ///< Addres of HDP_REG_COHERENCY_FLUSH_CNTL register
 } hipDeviceProp_t;
 
 
@@ -304,8 +306,10 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxTexture2DHeight,   ///< Maximum dimension height of 2D images in image elements
     hipDeviceAttributeMaxTexture3DWidth,    ///< Maximum dimension width of 3D images in image elements
     hipDeviceAttributeMaxTexture3DHeight,   ///< Maximum dimensions height of 3D images in image elements
-    hipDeviceAttributeMaxTexture3DDepth     ///< Maximum dimensions depth of 3D images in image elements
+    hipDeviceAttributeMaxTexture3DDepth,    ///< Maximum dimensions depth of 3D images in image elements
 
+    hipDeviceAttributeHdpMemFlushCntl,      ///< Address of the HDP_MEM_COHERENCY_FLUSH_CNTL register
+    hipDeviceAttributeHdpRegFlushCntl       ///< Address of the HDP_REG_COHERENCY_FLUSH_CNTL register
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {
