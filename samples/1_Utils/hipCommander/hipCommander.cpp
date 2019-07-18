@@ -7,11 +7,6 @@
 #include <typeinfo>
 
 #include <hip/hip_runtime.h>
-#ifdef __HIP_PLATFORM_HCC__
-#include <elf.h>
-#include <hsa/hsa.h>
-#include <hc.hpp>
-#endif
 
 #include <sys/time.h>
 
@@ -283,100 +278,6 @@ class Command {
 #define FILENAME "nullkernel.hsaco"
 #define KERNEL_NAME "NullKernel"
 
-
-#ifdef __HIP_PLATFORM_HCC__
-//=================================================================================================
-// Use Aql to launch the NULL kernel.
-class AqlKernelCommand : public Command {
-   public:
-    AqlKernelCommand(CommandStream* cmdStream, const std::vector<std::string> args)
-        : Command(cmdStream, args) {
-        hc::accelerator_view* av;
-        HIPCHECK(hipHccGetAcceleratorView(cmdStream->currentStream(), &av));
-
-        hc::accelerator acc = av->get_accelerator();
-
-        hsa_region_t systemRegion = *(hsa_region_t*)acc.get_hsa_am_system_region();
-
-        _hsaAgent = *(hsa_agent_t*)acc.get_hsa_agent();
-
-        std::ifstream file(FILENAME, std::ios::binary | std::ios::ate);
-        std::streamsize fsize = file.tellg();
-        file.seekg(0, std::ios::beg);
-
-        std::vector<char> buffer(fsize);
-        if (file.read(buffer.data(), fsize)) {
-            uint64_t elfSize = ElfSize(&buffer[0]);
-
-            assert(fsize == elfSize);
-
-            // TODO - replace module load code with explicit module load and unload.
-
-            hipModule_t module;
-            HIPCHECK(hipModuleLoadData(&module, &buffer[0]));
-            HIPCHECK(hipModuleGetFunction(&_function, module, KERNEL_NAME));
-
-        } else {
-            failed("could not open code object '%s'\n", FILENAME);
-        }
-    };
-
-    ~AqlKernelCommand(){};
-
-    void run() override {
-#define LEN 64
-        uint32_t len = LEN;
-        uint32_t one = 1;
-
-        float* Ad = NULL;
-
-        size_t argSize = 36;
-        char argBuffer[argSize];
-        *(uint32_t*)(&argBuffer[0]) = len;
-        *(uint32_t*)(&argBuffer[4]) = one;
-        *(uint32_t*)(&argBuffer[8]) = one;
-        *(uint32_t*)(&argBuffer[12]) = len;
-        *(uint32_t*)(&argBuffer[16]) = one;
-        *(uint32_t*)(&argBuffer[20]) = one;
-        *(float**)(&argBuffer[24]) = Ad;  // Ad pointer argument
-
-
-        void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &argBuffer[0],
-                          HIP_LAUNCH_PARAM_BUFFER_SIZE, &argSize, HIP_LAUNCH_PARAM_END};
-
-        hipModuleLaunchKernel(_function, len, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config);
-    };
-
-
-   public:
-    hsa_queue_t _hsaQueue;
-    hsa_agent_t _hsaAgent;
-
-    hipFunction_t _function;
-
-   private:
-    static uint64_t ElfSize(const void* emi) {
-        const Elf64_Ehdr* ehdr = (const Elf64_Ehdr*)emi;
-        const Elf64_Shdr* shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
-
-        uint64_t max_offset = ehdr->e_shoff;
-        uint64_t total_size = max_offset + ehdr->e_shentsize * ehdr->e_shnum;
-
-        for (uint16_t i = 0; i < ehdr->e_shnum; ++i) {
-            uint64_t cur_offset = static_cast<uint64_t>(shdr[i].sh_offset);
-            if (max_offset < cur_offset) {
-                max_offset = cur_offset;
-                total_size = max_offset;
-                if (SHT_NOBITS != shdr[i].sh_type) {
-                    total_size += static_cast<uint64_t>(shdr[i].sh_size);
-                }
-            }
-        }
-        return total_size;
-    }
-};
-#endif
-
 //=================================================================================================
 // HCC optimizes away fully NULL kernel calls, so run one that is nearly null:
 class ModuleKernelCommand : public Command {
@@ -391,26 +292,18 @@ class ModuleKernelCommand : public Command {
 
     void run() override {
 #define LEN 64
-        uint32_t len = LEN;
-        uint32_t one = 1;
+        float *X = NULL;
+        HIPCHECK(hipMalloc((void**)&X, sizeof(float)));
+        struct {
+               float *Ad;
+        }args;
+        args.Ad = X;
+        size_t argSize = sizeof(args);
 
-        float* Ad = NULL;
-
-        size_t argSize = 36;
-        char argBuffer[argSize];
-        *(uint32_t*)(&argBuffer[0]) = len;
-        *(uint32_t*)(&argBuffer[4]) = one;
-        *(uint32_t*)(&argBuffer[8]) = one;
-        *(uint32_t*)(&argBuffer[12]) = len;
-        *(uint32_t*)(&argBuffer[16]) = one;
-        *(uint32_t*)(&argBuffer[20]) = one;
-        *(float**)(&argBuffer[24]) = Ad;  // Ad pointer argument
-
-
-        void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &argBuffer[0],
+        void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args,
                           HIP_LAUNCH_PARAM_BUFFER_SIZE, &argSize, HIP_LAUNCH_PARAM_END};
 
-        hipModuleLaunchKernel(_function, len, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config);
+        hipModuleLaunchKernel(_function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config);
     };
 
 
@@ -446,33 +339,6 @@ class KernelCommand : public Command {
     Type _kind;
     hipStream_t _stream;
 };
-
-
-#ifdef __HIP_PLATFORM_HCC__
-//=================================================================================================
-class PfeCommand : public Command {
-   public:
-    PfeCommand(CommandStream* cmdStream, const std::vector<std::string> args,
-               hipStream_t stream = 0)
-        : Command(cmdStream, args) {
-        HIPCHECK(hipHccGetAcceleratorView(stream, &_av));
-    }
-
-    ~PfeCommand() {}
-
-
-    void run() override {
-        static const int gridX = 64;
-        static const int groupX = 64;
-        auto cf = hc::parallel_for_each(*_av, hc::extent<1>(gridX).tile(groupX),
-                                        [=](hc::index<1>& idx) __HC__ {});
-    }
-
-   private:
-    hc::accelerator_view* _av;
-};
-#endif
-
 
 //=================================================================================================
 class CopyCommand : public Command {
@@ -708,10 +574,8 @@ CommandStream::CommandStream(std::string commandStreamString, int iterations)
     std::vector<std::string> tokens;
     tokenize(commandStreamString, ';', tokens);
 
-
-    std::for_each(tokens.begin(), tokens.end(), [&](const std::string s) { this->parse(s); });
-
     setStream(0);
+    std::for_each(tokens.begin(), tokens.end(), [&](const std::string s) { this->parse(s); });
 }
 
 
@@ -830,14 +694,6 @@ void CommandStream::parse(std::string fullCmd) {
 
     } else if (c == "vectoraddkernel") {
         cmd = new KernelCommand(cmdStream, args, KernelCommand::VectorAdd);
-
-#ifdef __HIP_PLATFORM_HCC__
-    } else if (c == "nullpfe") {
-        cmd = new PfeCommand(cmdStream, args);
-
-    } else if (c == "aqlkernel") {
-        cmd = new AqlKernelCommand(cmdStream, args);
-#endif
 
     } else if (c == "devicesync") {
         cmd = new DeviceSyncCommand(cmdStream, args);
