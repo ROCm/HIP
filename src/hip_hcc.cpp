@@ -1399,7 +1399,7 @@ void ihipInit() {
 
     // Make sure the hip visible devices are within the deviceCnt range
     for (int i = 0; i < g_hip_visible_devices.size(); i++) {
-        if (g_hip_visible_devices[i] >= deviceCnt) {
+        if ((g_hip_visible_devices[i] >= deviceCnt) ||(g_hip_visible_devices[i] < 0)){
             // Make sure any DeviceID after invalid DeviceID will be erased.
             g_hip_visible_devices.resize(i);
             break;
@@ -1415,17 +1415,21 @@ void ihipInit() {
 
     g_deviceArray = new ihipDevice_t*[deviceCnt];
     g_deviceCnt = 0;
-    for (int i = 0; i < accs.size(); i++) {
-        // check if the device id is included in the HIP_VISIBLE_DEVICES env variable
-        if (!accs[i].get_is_emulated()) {
-            if (std::find(g_hip_visible_devices.begin(), g_hip_visible_devices.end(), (i - 1)) ==
-                    g_hip_visible_devices.end() &&
-                g_visible_device) {
-                // If device is not in visible devices list, ignore
-                continue;
+
+    if(g_visible_device) {
+        for (int i = 0; i < g_hip_visible_devices.size(); i++) {
+            int devIndex = g_hip_visible_devices[i];
+            if (!accs[devIndex+1].get_is_emulated()) {
+                g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[devIndex+1]);
+                g_deviceCnt++;
             }
-            g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
-            g_deviceCnt++;
+        }
+    }else {
+        for (int i = 0; i < accs.size(); i++) {
+            if (!accs[i].get_is_emulated()) {
+                g_deviceArray[g_deviceCnt] = new ihipDevice_t(g_deviceCnt, deviceCnt, accs[i]);
+                g_deviceCnt++;
+            }
         }
     }
 
