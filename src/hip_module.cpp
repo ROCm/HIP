@@ -56,7 +56,7 @@ using namespace ELFIO;
 using namespace std;
 
 // For HIP implicit kernargs.
-static const size_t HIP_IMPLICIT_KERNARG_SIZE = 48;
+static const size_t HIP_IMPLICIT_KERNARG_SIZE = 56;
 static const size_t HIP_IMPLICIT_KERNARG_ALIGNMENT = 8;
 
 struct amd_kernel_code_v3_t {

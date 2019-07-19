@@ -46,7 +46,8 @@ sub parse_file {
                 $line =~ s/^ \* BUILD_CMD: //g; # Remove " * BUILD_CMD: "
                 $line =~ s/%s/$file/g;          # Substitute %s -> filename
                 $line =~ s/%t/$exe/g;           # Substitute %t -> targetname
-                # Substitute %hc -> /path/to/hipcc and %cc -> /path/to/cc happens in cmake
+                # Substitute %hc -> /path/to/hipcc and %hip-path -> /path/to/hip happens in cmake
+                # Substitute %cc -> /usr/bin/cc and %cxx -> /usr/bin/c++ happens in cmake
                 # Substitute %S -> src dir and %T -> target build dir happens in cmake
                 $line =~ s/\R//g;               # Remove line endings
                 push @customBuildCMDs, $line;
