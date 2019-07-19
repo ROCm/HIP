@@ -3,7 +3,7 @@
 ## Host Memory
 
 ### Introduction
-hipHostMemory allocates pinned host memory which is mapped into the address space of all GPUs in the system.
+hipHostMalloc allocates pinned host memory which is mapped into the address space of all GPUs in the system.
 There are two use cases for this host memory:
 - Faster HostToDevice and DeviceToHost Data Transfers:
 The runtime tracks the hipHostMalloc allocations and can avoid some of the setup required for regular unpinned memory.  For exact measurements on a specific system, experiment with --unpinned and --pinned switches for the hipBusBandwidth tool.
