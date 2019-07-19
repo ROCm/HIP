@@ -34,12 +34,12 @@ cl::opt<std::string> OutputDir("o-dir",
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
-cl::opt <bool> GeneratePerl("perl",
+cl::opt<bool> GeneratePerl("perl",
   cl::desc("Generate hipify-perl"),
   cl::value_desc("perl"),
   cl::cat(ToolTemplateCategory));
 
-cl::opt <bool> GeneratePython("python",
+cl::opt<bool> GeneratePython("python",
   cl::desc("Generate hipify-python"),
   cl::value_desc("python"),
   cl::cat(ToolTemplateCategory));
@@ -69,17 +69,17 @@ cl::opt<std::string> CudaPath("cuda-path",
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
-cl::opt <bool> SaveTemps("save-temps",
+cl::opt<bool> SaveTemps("save-temps",
   cl::desc("Save temporary files"),
   cl::value_desc("save-temps"),
   cl::cat(ToolTemplateCategory));
 
-cl::opt <bool> Verbose("v",
+cl::opt<bool> Verbose("v",
   cl::desc("Show commands to run and use verbose output"),
   cl::value_desc("v"),
   cl::cat(ToolTemplateCategory));
 
-cl::opt <bool> TranslateToRoc("roc",
+cl::opt<bool> TranslateToRoc("roc",
   cl::desc("Translate to roc instead of hip where it is possible"),
   cl::value_desc("roc"),
   cl::cat(ToolTemplateCategory));
@@ -119,9 +119,9 @@ cl::opt<bool> Examine("examine",
   cl::value_desc("examine"),
   cl::cat(ToolTemplateCategory));
 
-cl::opt<bool> DashDash("-",
+cl::opt<bool> DashDash("  ",
   cl::desc("Separator between hipify-clang and clang options;\ndon't specify if there are no clang options"),
-  cl::value_desc("--"),
+  cl::ValueDisallowed,
   cl::cat(ToolTemplateCategory));
 
 cl::list<std::string> IncludeDirs("I",
