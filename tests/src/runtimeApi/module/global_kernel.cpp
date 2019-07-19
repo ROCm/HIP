@@ -27,6 +27,7 @@ THE SOFTWARE.
 __device__ float myDeviceGlobal;
 __device__ float myDeviceGlobalArray[16];
 
+
 extern "C" __global__ void hello_world(const float* a, float* b) {
     int tx = hipThreadIdx_x;
     b[tx] = a[tx];

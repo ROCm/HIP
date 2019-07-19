@@ -20,6 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD_CMD: global_kernel.code %hc --genco %S/global_kernel.cpp -o global_kernel.code
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * TEST: %t
+ * HIT_END
+ */
+
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
 #include <iostream>
@@ -30,7 +37,7 @@ THE SOFTWARE.
 #define LEN 64
 #define SIZE LEN * sizeof(float)
 
-#define fileName "vcpy_kernel.code"
+#define fileName "global_kernel.code"
 #define HIP_CHECK(cmd)                                                                             \
     {                                                                                              \
         hipError_t status = cmd;                                                                   \
@@ -67,17 +74,17 @@ int main() {
     HIP_CHECK(hipModuleLoad(&Module, fileName));
 
     float myDeviceGlobal_h = 42.0;
-    float* deviceGlobal;
+    hipDeviceptr_t deviceGlobal;
     size_t deviceGlobalSize;
-    HIP_CHECK(hipModuleGetGlobal((void**)&deviceGlobal, &deviceGlobalSize, Module, "myDeviceGlobal"));
+    HIP_CHECK(hipModuleGetGlobal(&deviceGlobal, &deviceGlobalSize, Module, "myDeviceGlobal"));
     HIP_CHECK(hipMemcpyHtoD(hipDeviceptr_t(deviceGlobal), &myDeviceGlobal_h, deviceGlobalSize));
-
 #define ARRAY_SIZE 16
-
     float myDeviceGlobalArray_h[ARRAY_SIZE];
-    float *myDeviceGlobalArray;
+    hipDeviceptr_t myDeviceGlobalArray;
     size_t myDeviceGlobalArraySize;
-    HIP_CHECK(hipModuleGetGlobal((void**)&myDeviceGlobalArray, &myDeviceGlobalArraySize, Module, "myDeviceGlobalArray"));
+
+    HIP_CHECK(hipModuleGetGlobal((hipDeviceptr_t*)&myDeviceGlobalArray, &myDeviceGlobalArraySize, Module, "myDeviceGlobalArray"));
+
     for (int i = 0; i < ARRAY_SIZE; i++) {
         myDeviceGlobalArray_h[i] = i * 1000.0f;
         HIP_CHECK(hipMemcpyHtoD(hipDeviceptr_t(myDeviceGlobalArray), &myDeviceGlobalArray_h, myDeviceGlobalArraySize));
@@ -101,7 +108,7 @@ int main() {
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "hello_world"));
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
-        hipMemcpyDtoH(B, Bd, SIZE);
+        hipMemcpyDtoH(B, hipDeviceptr_t(Bd), SIZE);
 
         int mismatchCount = 0;
         for (uint32_t i = 0; i < LEN; i++) {
@@ -126,11 +133,11 @@ int main() {
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "test_globals"));
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
-        hipMemcpyDtoH(B, Bd, SIZE);
+        hipMemcpyDtoH(B, hipDeviceptr_t(Bd), SIZE);
 
         int mismatchCount = 0;
         for (uint32_t i = 0; i < LEN; i++) {
-            float expected = A[i] + myDeviceGlobal_h + myDeviceGlobalArray_h[i % 16];
+            float expected = A[i] + myDeviceGlobal_h + + myDeviceGlobalArray_h[i % 16];
             if (expected != B[i]) {
                 mismatchCount++;
                 std::cout << "error: mismatch " << expected << " != " << B[i] << std::endl;
@@ -147,10 +154,6 @@ int main() {
         };
     }
 
-    hipFree(Ad);
-    hipFree(Bd);
-    delete A;
-    delete B;
     hipCtxDestroy(context);
     return 0;
 }

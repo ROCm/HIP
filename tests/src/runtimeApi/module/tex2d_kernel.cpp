@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017-present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,19 +20,16 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD_CMD: tex2d_kernel.code %hc --genco %S/tex2d_kernel.cpp -o tex2d_kernel.code
+ * HIT_END
+ */
+
 #include "hip/hip_runtime.h"
+extern texture<float, 2, hipReadModeElementType> tex;
 
-#define ARRAY_SIZE (16)
-
-__device__ float myDeviceGlobal;
-__device__ float myDeviceGlobalArray[16];
-
-extern "C" __global__ void hello_world(const float* a, float* b) {
-    int tx = hipThreadIdx_x;
-    b[tx] = a[tx];
-}
-
-extern "C" __global__ void test_globals(const float* a, float* b) {
-    int tx = hipThreadIdx_x;
-    b[tx] = a[tx] + myDeviceGlobal + myDeviceGlobalArray[tx % ARRAY_SIZE];
+extern "C" __global__ void tex2dKernel(float* outputData, int width, int height) {
+    int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+    int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+    outputData[y * width + x] = tex2D(tex, x, y);
 }
