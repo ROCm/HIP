@@ -33,9 +33,13 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime.h"
 #include "test_common.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include "sys/types.h"
 #include "sys/sysinfo.h"
-
+#endif
 
 void printSep() {
     printf(
@@ -282,6 +286,15 @@ void memcpytest2_for_type(size_t numElements) {
     }
 }
 
+#ifdef _WIN32
+void memcpytest2_get_host_memory(size_t& free, size_t& total) {
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    free = status.ullAvailPhys;
+    total = status.ullTotalPhys;
+}
+#else
 struct sysinfo memInfo;
 void memcpytest2_get_host_memory(size_t& free, size_t& total) {
     sysinfo(&memInfo);
@@ -292,6 +305,7 @@ void memcpytest2_get_host_memory(size_t& free, size_t& total) {
     totalPhysMem *= memInfo.mem_unit;
     total = totalPhysMem;
 }
+#endif
 
 //---
 // Try many different sizes to memory copy.
