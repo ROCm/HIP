@@ -299,10 +299,10 @@ void memcpytest2_get_host_memory(size_t& free, size_t& total) {
 struct sysinfo memInfo;
 void memcpytest2_get_host_memory(size_t& free, size_t& total) {
     sysinfo(&memInfo);
-    long long freePhysMem=memInfo.freeram + memInfo.freeswap;
+    long long freePhysMem=memInfo.freeram;
     freePhysMem *= memInfo.mem_unit;
     free = freePhysMem;
-    long long totalPhysMem=memInfo.totalram + memInfo.totalswap;
+    long long totalPhysMem=memInfo.totalram;
     totalPhysMem *= memInfo.mem_unit;
     total = totalPhysMem;
 }
