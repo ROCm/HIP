@@ -31,10 +31,16 @@ THE SOFTWARE.
 #include <cstdint>
 #include <cstdlib>
 
+#include <hip/hip_common.h>
+
 struct ihipModuleSymbol_t;
 using hipFunction_t = ihipModuleSymbol_t*;
 
 namespace hip_impl {
+
+// This section contains internal APIs that
+// needs to be exported
+#pragma GCC visibility push (default)
 
 struct kernarg_impl;
 class kernarg {
@@ -82,6 +88,8 @@ private:
     const void* handle;
     friend kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t);
 };
+
+#pragma GCC visibility pop
 
 inline
 __attribute__((visibility("hidden")))
