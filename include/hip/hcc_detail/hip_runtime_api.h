@@ -1494,7 +1494,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     hip_init();
     // read_agent_global_from_process is defined in cpp file hence returning error here to indicate
     // func not implemented for 'c' code
-    return hipErrorTbd;   
+    return hipErrorNotSupported;
 #endif
 }
 
@@ -1521,7 +1521,7 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     hip_init();
     // read_agent_global_from_process is defined in cpp file hence returning error here to indicate
     // func not implemented for 'c' code
-    return hipErrorTbd;    
+    return hipErrorNotSupported;
 #endif
 }
 
@@ -1577,7 +1577,7 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
                                        (const char*)symbolName);
 #else
      // TODO : Func is not implemented for 'c' code
-     return hipErrorTbd;
+     return hipErrorNotSupported;
 #endif
 }
 
@@ -1640,7 +1640,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
                                             (const char*)symbolName);
 #else
      // TODO : Func is not implemented for 'c' code
-     return hipErrorTbd;
+     return hipErrorNotSupported;
 #endif
 }
 
@@ -1658,7 +1658,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
                                          (const char*)symbolName);
 #else
      // TODO : Func is not implemented for 'c' code
-     return hipErrorTbd;
+     return hipErrorNotSupported;
 #endif
 }
 
@@ -1678,7 +1678,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
                                               (const char*)symbolName);
 #else
      // TODO : Func is not implemented for 'c' code
-     return hipErrorTbd;
+     return hipErrorNotSupported;
 #endif
 }
 

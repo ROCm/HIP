@@ -18,8 +18,8 @@
  * */
 
 /* HIT_START
- * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_HCC__ -I%hip-path/include %S/%s -L%hip-path/lib -l:libhip_hcc.so -o %T/%t
- * TEST: %t
+ * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_HCC__ -I%hip-path/include %S/%s -L%hip-path/lib -l:libhip_hcc.so -o %T/%t EXCLUDE_HIP_PLATFORM nvcc
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvcc
  * HIT_END
  */
 

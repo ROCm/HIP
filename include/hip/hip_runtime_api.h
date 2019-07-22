@@ -248,6 +248,8 @@ typedef enum __HIP_NODISCARD hipError_t {
         1071,    ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorAssert =
         1081,    ///< Produced when the kernel calls assert.
+    hipErrorNotSupported = 
+        1082,    ///< Produced when the hip API is not supported/implemented 
     hipErrorTbd  ///< Marker that more error codes are needed.
 } hipError_t;
 
