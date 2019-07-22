@@ -270,7 +270,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
                 PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
         target_link_libraries(hiprtc PUBLIC stdc++fs)
     endif()
-
+    set_target_properties(hip_hcc PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(hip_hcc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
 
     if(HIP_PLATFORM STREQUAL "hcc")
         find_package(amd_comgr REQUIRED CONFIG

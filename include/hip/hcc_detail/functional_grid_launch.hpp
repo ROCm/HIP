@@ -114,7 +114,7 @@ inline hip_impl::kernarg make_kernarg(
 }
 
 
-hsa_agent_t target_agent(hipStream_t stream);
+HIP_INTERNAL_EXPORTED_API hsa_agent_t target_agent(hipStream_t stream);
 
 inline
 __attribute__((visibility("hidden")))
