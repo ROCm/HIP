@@ -267,11 +267,12 @@ void HipifyAction::PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntro
     return;
   }
   clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
-  const clang::Token tok = PP.LookAhead(0);
+  clang::Token tok;
+  PP.Lex(tok);
   StringRef Text(SM.getCharacterData(tok.getLocation()), tok.getLength());
   if (Text == "once") {
     pragmaOnce = true;
-    pragmaOnceLoc = PP.LookAhead(1).getLocation();
+    pragmaOnceLoc = tok.getEndLoc();
   }
 }
 
