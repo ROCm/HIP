@@ -117,11 +117,13 @@ typedef struct hipDeviceProp_t {
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
     int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices
+#if !__HIP_VDI__ // Temporarily disable the following five new fields for HIP/VDI runtime
     int maxTexture1D;          ///< Maximum number of elements in 1D images
     int maxTexture2D[2];       ///< Maximum dimensions (width, height) of 2D images, in image elements
     int maxTexture3D[3];       ///< Maximum dimensions (width, height, depth) of 3D images, in image elements
     unsigned int* hdpMemFlushCntl;      ///< Addres of HDP_MEM_COHERENCY_FLUSH_CNTL register
     unsigned int* hdpRegFlushCntl;      ///< Addres of HDP_REG_COHERENCY_FLUSH_CNTL register
+#endif
 } hipDeviceProp_t;
 
 

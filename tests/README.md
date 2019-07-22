@@ -66,7 +66,9 @@ BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all>
 %s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
 %hc: refers to hipcc pointed to by $CMAKE_INSTALL_PREFIX/bin/hipcc.
-%cc: refers to system c compiler pointed to by $CC.
+%hip-path: refers to hip installed location pointed to by $CMAKE_INSTALL_PREFIX
+%cc: refers to system c compiler pointed to by /usr/bin/cc.
+%cxx: refers to system c compiler pointed to by /usr/bin/c++.
 %S: refers to path to current source file.
 %T: refers to path to current build target.
 
