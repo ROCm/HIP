@@ -31,4 +31,5 @@ int main()
 {
   int *Ad;
   hipMalloc((void**)&Ad, 1024);
+  printf("PASSED!\n");
 }

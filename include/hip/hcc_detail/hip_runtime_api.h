@@ -83,8 +83,6 @@ THE SOFTWARE.
 namespace hip_impl {
 hipError_t hip_init();
 }  // namespace hip_impl
-#else
-hipError_t hip_init();
 #endif
 
 // Structure definitions:
@@ -1491,7 +1489,6 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     size_t size = 0;
     return hip_impl::read_agent_global_from_process(devPtr, &size, (const char*)symbolName);
 #else
-    hip_init();
     // read_agent_global_from_process is defined in cpp file hence returning error here to indicate
     // func not implemented for 'c' code
     return hipErrorNotSupported;
@@ -1518,7 +1515,6 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     void* devPtr = nullptr;
     return hip_impl::read_agent_global_from_process(&devPtr, size, (const char*)symbolName);
 #else
-    hip_init();
     // read_agent_global_from_process is defined in cpp file hence returning error here to indicate
     // func not implemented for 'c' code
     return hipErrorNotSupported;
