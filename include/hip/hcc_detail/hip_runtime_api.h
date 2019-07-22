@@ -67,12 +67,6 @@ THE SOFTWARE.
 #define HIP_LAUNCH_PARAM_END ((void*)0x03)
 
 #ifdef __cplusplus
-  #include <algorithm>
-  #include <mutex>
-  #include <string>
-  #include <unordered_map>
-  #include <vector>
-
   #define __dparm(x) \
           = x
 #else
