@@ -48,6 +48,7 @@ class accelerator_view;
  * @brief Return hc::accelerator associated with the specified deviceId
  * @return #hipSuccess, #hipErrorInvalidDevice
  */
+HIP_PUBLIC_API
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc);
 
 /**
@@ -56,6 +57,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc);
  * If stream is 0, the accelerator_view for the default stream is returned.
  * @return #hipSuccess
  */
+HIP_PUBLIC_API
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av);
 
 
@@ -89,6 +91,7 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 
  * HIP/ROCm actually updates the start event when the associated kernel completes.
  */
+HIP_PUBLIC_API
 hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                     uint32_t localWorkSizeX, uint32_t localWorkSizeY,
@@ -98,6 +101,7 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr,
                                     uint32_t flags = 0);
 
+HIP_PUBLIC_API
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                     uint32_t localWorkSizeX, uint32_t localWorkSizeY,
