@@ -914,6 +914,10 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
         prop->integrated = 1;
     }
 
+    // Enable the cooperative group for gfx9+
+    prop->cooperativeLaunch = (prop->gcnArch < 900) ? 0 : 1;
+    prop->cooperativeMultiDeviceLaunch = (prop->gcnArch < 900) ? 0 : 1;
+
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_1D_MAX_ELEMENTS,
           &prop->maxTexture1D);
     DeviceErrorCheck(err);
@@ -925,6 +929,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_3D_MAX_ELEMENTS,
           prop->maxTexture3D);
     DeviceErrorCheck(err);
+
     return e;
 }
 

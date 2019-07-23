@@ -294,6 +294,12 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
             case hipDeviceAttributeMaxTexture3DDepth:
                 *pi = prop->maxTexture3D[2];
                 break;
+            case hipDeviceAttributeCooperativeLaunch:
+                *pi = prop->cooperativeLaunch;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceLaunch:
+                *pi = prop->cooperativeMultiDeviceLaunch;
+                break;
             default:
                 e = hipErrorInvalidValue;
                 break;

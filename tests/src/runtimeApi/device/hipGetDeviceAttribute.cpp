@@ -116,5 +116,9 @@ int main(int argc, char* argv[]) {
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DWidth, props.maxTexture3D[0]));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DHeight, props.maxTexture3D[1]));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DDepth, props.maxTexture3D[2]));
+
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCooperativeLaunch, props.cooperativeLaunch));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCooperativeMultiDeviceLaunch, props.cooperativeMultiDeviceLaunch));
+
     passed();
 };
