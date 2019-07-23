@@ -851,6 +851,13 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
   amd::Memory* srcMemory = getMemoryObject(src, sOrigin[0]);
   amd::Memory* dstMemory = getMemoryObject(dst, dOrigin[0]);
 
+  if (src_slice_pitch == 0 ||
+      dst_slice_pitch == 0 ||
+      dst == nullptr ||
+      src == nullptr) {
+    return hipSuccess;
+  }
+
   if (!srcRect.create(sOrigin, region, spitch, src_slice_pitch) ||
       !dstRect.create(dOrigin, region, dpitch, dst_slice_pitch)) {
     return hipErrorInvalidValue;
