@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: libfoo %hc %S/%s -o libfoo.so -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY
+ * BUILD_CMD: libfoo %hc %S/%s -o libfoo.so -Xcompiler -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY
  * BUILD_CMD: %t %hc %S/%s -o %T/%t -ldl
  * TEST: %t
  * HIT_END
