@@ -125,7 +125,7 @@ public:
   };
 private:
   std::unordered_map<const void*, DeviceFunction > functions_;
-  std::unordered_map<const void*, DeviceVar > vars_;
+  std::unordered_map<std::string, DeviceVar > vars_;
 
   static PlatformState* platform_;
 
@@ -135,6 +135,8 @@ public:
   static PlatformState& instance() {
     return *platform_;
   }
+
+  void unregisterVar(hipModule_t hmod);
 
   void registerVar(const void* hostvar, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
