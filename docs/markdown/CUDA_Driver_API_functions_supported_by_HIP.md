@@ -2,7 +2,7 @@
 
 ## **1. Data types used by CUDA driver**
 
-| **type**     |   **CUDA**                                                         |   **HIP**                                                  |**CUDA version* **|
+| **type**     |   **CUDA**                                                         |   **HIP**                                                  |**CUDA version\***|
 |-------------:|:-------------------------------------------------------------------|:-----------------------------------------------------------|:----------------:|
 | struct       |`CUDA_ARRAY3D_DESCRIPTOR`                                           |`HIP_ARRAY3D_DESCRIPTOR`                                    |
 | typedef      |`CUDA_ARRAY3D_DESCRIPTOR_st`                                        |`HIP_ARRAY3D_DESCRIPTOR`                                    |
@@ -18,8 +18,7 @@
 | typedef      |`CUDA_POINTER_ATTRIBUTE_P2P_TOKENS_st`                              |                                                            |
 | struct       |`CUDA_RESOURCE_DESC`                                                |                                                            |
 | typedef      |`CUDA_RESOURCE_DESC_st`                                             |                                                            |
-| struct       |`CUDA_RESOURCE_VIEW_DESC`                                           |                                                            |
-| typedef      |`CUDA_RESOURCE_VIEW_DESC_st`                                        |                                                            |
+| struct       |`CUDA_RESOURCE_VIEW_DESC`                                           |                                                            || typedef      |`CUDA_RESOURCE_VIEW_DESC_st`                                        |                                                            |
 | struct       |`CUDA_TEXTURE_DESC`                                                 |                                                            |
 | typedef      |`CUDA_TEXTURE_DESC_st`                                              |                                                            |
 | struct       |`CUdevprop`                                                         |                                                            |
@@ -746,26 +745,26 @@
 
 ## **2. Error Handling**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuGetErrorName`                                          |                               |
 | `cuGetErrorString`                                        |                               |
 
 ## **3. Initialization**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuInit`                                                  | `hipInit`                     |
 
 ## **4. Version Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuDriverGetVersion`                                      | `hipDriverGetVersion`         |
 
 ## **5. Device Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuDriverGetVersion`                                      | `hipGetDevice`                |
 | `cuDeviceGetAttribute`                                    | `hipDeviceGetAttribute`       |
@@ -777,14 +776,14 @@
 
 ## **6. Device Management [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuDeviceComputeCapability`                               | `hipDeviceComputeCapability`  |
 | `cuDeviceGetProperties`                                   |                               |
 
 ## **7. Primary Context Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuDevicePrimaryCtxGetState`                              | `hipDevicePrimaryCtxGetState` |
 | `cuDevicePrimaryCtxRelease`                               | `hipDevicePrimaryCtxRelease`  |
@@ -794,7 +793,7 @@
 
 ## **8. Context Management**
 
-|   **CUDA**                                                |   **HIP**                        |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                        |**CUDA version\***|
 |-----------------------------------------------------------|----------------------------------|------------------|
 | `cuCtxCreate`                                             | `hipCtxCreate`                   |
 | `cuCtxDestroy`                                            | `hipCtxDestroy`                  |
@@ -816,14 +815,14 @@
 
 ## **9. Context Management [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuCtxAttach`                                             |                               |
 | `cuCtxDetach`                                             |                               |
 
 ## **10. Module Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuLinkAddData`                                           |                               |
 | `cuLinkAddFile`                                           |                               |
@@ -842,7 +841,7 @@
 
 ## **11. Memory Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuArray3DCreate`                                         | `hipArray3DCreate`            |
 | `cuArray3DGetDescriptor`                                  |                               |
@@ -911,7 +910,7 @@
 
 ## **12. Unified Addressing**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuMemAdvise`                                             |                               | 8.0              |
 | `cuMemPrefetchAsync`                                      |                               | 8.0              |
@@ -923,7 +922,7 @@
 
 ## **13. Stream Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuStreamAddCallback`                                     | `hipStreamAddCallback`        |
 | `cuStreamAttachMemAsync`                                  |                               |
@@ -944,7 +943,7 @@
 
 ## **14. Event Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuEventCreate`                                           | `hipEventCreateWithFlags`     |
 | `cuEventDestroy`                                          | `hipEventDestroy`             |
@@ -955,7 +954,7 @@
 
 ## **15. External Resource Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuSignalExternalSemaphoresAsync`                         |                               | 10.0             |
 | `cuWaitExternalSemaphoresAsync`                           |                               | 10.0             |
@@ -968,7 +967,7 @@
 
 ## **16. Stream Memory Operations**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuStreamBatchMemOp`                                      |                               | 8.0              |
 | `cuStreamWaitValue32`                                     |                               | 8.0              |
@@ -978,7 +977,7 @@
 
 ## **17. Execution Control**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuFuncGetAttribute`                                      |                               |
 | `cuFuncSetAttribute`                                      |                               | 9.0              |
@@ -991,7 +990,7 @@
 
 ## **18. Execution Control [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuFuncSetBlockShape`                                     |                               |
 | `cuFuncSetSharedSize`                                     |                               |
@@ -1005,7 +1004,7 @@
 
 ## **19. Graph Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuGraphCreate`                                           |                               | 10.0             |
 | `cuGraphLaunch`                                           |                               | 10.0             |
@@ -1042,7 +1041,7 @@
 
 ## **20. Occupancy**
 
-|   **CUDA**                                                |   **HIP**                                               |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                                               |**CUDA version\***|
 |-----------------------------------------------------------|---------------------------------------------------------|------------------|
 | `cuOccupancyMaxActiveBlocksPerMultiprocessor`             | `hipOccupancyMaxActiveBlocksPerMultiprocessor`          |
 | `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |                                                         |
@@ -1051,7 +1050,7 @@
 
 ## **21. Texture Reference Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuTexRefGetAddress`                                      |                               |
 | `cuTexRefGetAddressMode`                                  |                               |
@@ -1081,21 +1080,21 @@
 
 ## **22. Texture Reference Management [DEPRECATED]**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuTexRefCreate`                                          |                               |
 | `cuTexRefDestroy`                                         |                               |
 
 ## **23. Surface Reference Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuSurfRefGetArray`                                       |                               |
 | `cuSurfRefSetArray`                                       |                               |
 
 ## **24. Texture Object Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuTexObjectCreate`                                       |                               |
 | `cuTexObjectDestroy`                                      |                               |
@@ -1105,7 +1104,7 @@
 
 ## **25. Surface Object Management**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuSurfObjectCreate`                                      |                               |
 | `cuSurfObjectDestroy`                                     |                               |
@@ -1113,7 +1112,7 @@
 
 ## **26. Peer Context Memory Access**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuCtxEnablePeerAccess`                                   | `hipCtxEnablePeerAccess`      |
 | `cuCtxDisablePeerAccess`                                  | `hipCtxDisablePeerAccess`     |
@@ -1122,7 +1121,7 @@
 
 ## **27. Graphics Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuGraphicsMapResources`                                  |                               |
 | `cuGraphicsResourceGetMappedMipmappedArray`               |                               |
@@ -1134,7 +1133,7 @@
 
 ## **28. Profiler Control**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuProfilerInitialize`                                    |                               |
 | `cuProfilerStart`                                         | `hipProfilerStart`            |
@@ -1142,7 +1141,7 @@
 
 ## **29. OpenGL Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuGLGetDevices`                                          |                               |
 | `cuGraphicsGLRegisterBuffer`                              |                               |
@@ -1150,7 +1149,7 @@
 | `cuWGLGetDevice`                                          |                               |
 
 ## **29.1. OpenGL Interoperability [DEPRECATED]**
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuGLCtxCreate`                                           |                               |
 | `cuGLInit`                                                |                               |
@@ -1164,7 +1163,7 @@
 
 ## **30. Direct3D 9 Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuD3D9CtxCreate`                                         |                               |
 | `cuD3D9CtxCreateOnDevice`                                 |                               |
@@ -1174,7 +1173,7 @@
 | `cuGraphicsD3D9RegisterResource`                          |                               |
 
 ## **30.1. Direct3D 9 Interoperability [DEPRECATED]**
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuD3D9MapResources`                                      |                               |
 | `cuD3D9RegisterResource`                                  |                               |
@@ -1189,14 +1188,14 @@
 
 ## **31. Direct3D 10 Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuD3D10GetDevice`                                        |                               |
 | `cuD3D10GetDevices`                                       |                               |
 | `cuGraphicsD3D10RegisterResource`                         |                               |
 
 ## **31.1. Direct3D 10 Interoperability [DEPRECATED]**
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuD3D10CtxCreate`                                        |                               |
 | `cuD3D10CtxCreateOnDevice`                                |                               |
@@ -1214,14 +1213,14 @@
 
 ## **32. Direct3D 11 Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuD3D11GetDevice`                                        |                               |
 | `cuD3D11GetDevices`                                       |                               |
 | `cuGraphicsD3D11RegisterResource`                         |                               |
 
 ## **32.1. Direct3D 11 Interoperability [DEPRECATED]**
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuD3D11CtxCreate`                                        |                               |
 | `cuD3D11CtxCreateOnDevice`                                |                               |
@@ -1229,7 +1228,7 @@
 
 ## **33. VDPAU Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
 | `cuGraphicsVDPAURegisterOutputSurface`                    |                               |
 | `cuGraphicsVDPAURegisterVideoSurface`                     |                               |
@@ -1238,7 +1237,7 @@
 
 ## **34. EGL Interoperability**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version* **|
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuEGLStreamConsumerAcquireFrame`                         |                               | 8.0              |
 | `cuEGLStreamConsumerConnect`                              |                               | 8.0              |
