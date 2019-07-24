@@ -18,7 +18,8 @@
 | typedef      |`CUDA_POINTER_ATTRIBUTE_P2P_TOKENS_st`                              |                                                            |
 | struct       |`CUDA_RESOURCE_DESC`                                                |                                                            |
 | typedef      |`CUDA_RESOURCE_DESC_st`                                             |                                                            |
-| struct       |`CUDA_RESOURCE_VIEW_DESC`                                           |                                                            || typedef      |`CUDA_RESOURCE_VIEW_DESC_st`                                        |                                                            |
+| struct       |`CUDA_RESOURCE_VIEW_DESC`                                           |                                                            |
+| typedef      |`CUDA_RESOURCE_VIEW_DESC_st`                                        |                                                            |
 | struct       |`CUDA_TEXTURE_DESC`                                                 |                                                            |
 | typedef      |`CUDA_TEXTURE_DESC_st`                                              |                                                            |
 | struct       |`CUdevprop`                                                         |                                                            |
