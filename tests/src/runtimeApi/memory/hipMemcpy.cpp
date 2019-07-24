@@ -34,6 +34,13 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#else
+#include "sys/types.h"
+#include "sys/sysinfo.h"
+#endif
 
 void printSep() {
     printf(
@@ -280,6 +287,26 @@ void memcpytest2_for_type(size_t numElements) {
     }
 }
 
+#ifdef _WIN32
+void memcpytest2_get_host_memory(size_t& free, size_t& total) {
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    GlobalMemoryStatusEx(&status);
+    free = status.ullAvailPhys;
+    total = status.ullTotalPhys;
+}
+#else
+struct sysinfo memInfo;
+void memcpytest2_get_host_memory(size_t& free, size_t& total) {
+    sysinfo(&memInfo);
+    long long freePhysMem=memInfo.freeram;
+    freePhysMem *= memInfo.mem_unit;
+    free = freePhysMem;
+    long long totalPhysMem=memInfo.totalram;
+    totalPhysMem *= memInfo.mem_unit;
+    total = totalPhysMem;
+}
+#endif
 
 //---
 // Try many different sizes to memory copy.
@@ -291,12 +318,20 @@ void memcpytest2_sizes(size_t maxElem = 0) {
     int deviceId;
     HIPCHECK(hipGetDevice(&deviceId));
 
-    size_t free, total;
+    size_t free, total, freeCPU, totalCPU;
     HIPCHECK(hipMemGetInfo(&free, &total));
+    memcpytest2_get_host_memory(freeCPU, totalCPU);
 
     if (maxElem == 0) {
-        maxElem = free / sizeof(T) / 8;
+        // Use lesser maxElem if not enough host memory available
+        size_t maxElemGPU = free / sizeof(T) / 8;
+        size_t maxElemCPU = freeCPU / sizeof(T) / 8;
+        maxElem = maxElemGPU < maxElemCPU ? maxElemGPU : maxElemCPU;
     }
+    printf(
+        "  Host: free=%zu (%4.2fMB) total=%zu (%4.2fMB)\n",
+        freeCPU, (float)(freeCPU / 1024.0 / 1024.0),
+        totalCPU, (float)(totalCPU / 1024.0 / 1024.0));
 
     printf(
         "  device#%d: hipMemGetInfo: free=%zu (%4.2fMB) total=%zu (%4.2fMB)    maxSize=%6.1fMB\n",
