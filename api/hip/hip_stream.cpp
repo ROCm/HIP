@@ -210,7 +210,18 @@ hipError_t hipStreamQuery(hipStream_t stream) {
   } else {
     hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
   }
-  HIP_RETURN(hostQueue->isEmpty() ? hipSuccess : hipErrorNotReady);
+
+  amd::Command* command = hostQueue->getLastQueuedCommand(false);
+  if (command == nullptr) {
+    HIP_RETURN(hipSuccess);
+  }
+
+  amd::Event& event = command->event();
+
+  if (command->type() != CL_COMMAND_MARKER) {
+    event.notifyCmdQueue();
+  }
+  HIP_RETURN((command->status() == CL_COMPLETE) ? hipSuccess : hipErrorNotReady);
 }
 
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
