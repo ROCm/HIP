@@ -165,10 +165,23 @@ extern "C" std::vector< std::pair<hipModule_t, bool> >* __hipRegisterFatBinary(c
   return programs;
 }
 
+void PlatformState::unregisterVar(hipModule_t hmod) {
+  auto it = vars_.begin();
+  while (it != vars_.end()) {
+    DeviceVar& dvar = it->second;
+    if ((*dvar.modules)[0].first == hmod) {
+      delete dvar.modules;
+      vars_.erase(it++);
+    } else {
+      ++it;
+    }
+  }
+}
+
 void PlatformState::registerVar(const void* hostvar,
                                 const DeviceVar& rvar) {
   amd::ScopedLock lock(lock_);
-  vars_.insert(std::make_pair(hostvar, rvar));
+  vars_.insert(std::make_pair(std::string(reinterpret_cast<const char*>(hostvar)), rvar));
 }
 
 void PlatformState::registerFunction(const void* hostFunction,
@@ -253,11 +266,10 @@ bool PlatformState::getFuncAttr(const void* hostFunction,
   return true;
 }
 
-
 bool PlatformState::getGlobalVar(const void* hostVar, int deviceId,
                                  hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
   amd::ScopedLock lock(lock_);
-  const auto it = vars_.find(hostVar);
+  const auto it = vars_.find(std::string(reinterpret_cast<const char*>(hostVar)));
   if (it != vars_.cend()) {
     DeviceVar& dvar = it->second;
     if (dvar.rvars[deviceId].getdeviceptr() == nullptr) {

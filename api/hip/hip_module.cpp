@@ -70,6 +70,10 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
   HIP_RETURN(ihipModuleLoadData(module, tmp.data()));
 }
 
+bool ihipModuleUnregisterGlobal(hipModule_t hmod) {
+  PlatformState::instance().unregisterVar(hmod);
+  return true;
+}
 
 hipError_t hipModuleUnload(hipModule_t hmod)
 {
@@ -80,6 +84,10 @@ hipError_t hipModuleUnload(hipModule_t hmod)
   }
 
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
+
+  if(!ihipModuleUnregisterGlobal(hmod)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
 
   program->release();
 
@@ -96,6 +104,33 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 extern bool __hipExtractCodeObjectFromFatBinary(const void* data,
                                                 const std::vector<const char*>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
+
+bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
+
+  size_t var_size = 0;
+  hipDeviceptr_t device_ptr = nullptr;
+  std::vector<std::string> var_names;
+
+  device::Program* dev_program
+    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+
+  if (!dev_program->getGlobalSymbolsFromCodeObj(&var_names)) {
+    return false;
+  }
+
+  for (auto it = var_names.begin(); it != var_names.end(); ++it) {
+    auto modules = new std::vector<std::pair<hipModule_t, bool> >{g_devices.size()};
+    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+      modules->at(dev) = std::make_pair(*module, false);
+    }
+
+    PlatformState::DeviceVar dvar{it->c_str(), modules,
+      std::vector<PlatformState::RegisteredVar>{ g_devices.size()}};
+    PlatformState::instance().registerVar(it->c_str(), dvar);
+  }
+
+  return true;
+}
 
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
 {
@@ -114,6 +149,10 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
   }
 
   *module = reinterpret_cast<hipModule_t>(as_cl(program));
+
+  if (!ihipModuleRegisterGlobal(program, module)) {
+    return hipErrorUnknown;
+  }
 
   return hipSuccess;
 }
