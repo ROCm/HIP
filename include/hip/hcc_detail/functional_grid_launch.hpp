@@ -25,25 +25,14 @@ THE SOFTWARE.
 #include "concepts.hpp"
 #include "helpers.hpp"
 #include "program_state.hpp"
+#include "hip_runtime_api.h"
 
-#include "hc.hpp"
-#include "hip/hip_hcc.h"
-#include "hip_runtime.h"
-
-#include <algorithm>
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <functional>
-#include <iostream>
-#include <mutex>
 #include <stdexcept>
-#include <string>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
-#include <vector>
 
 namespace hip_impl {
 template <typename T, typename std::enable_if<std::is_integral<T>{}>::type* = nullptr>
