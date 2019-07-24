@@ -34,6 +34,8 @@ THE SOFTWARE.
 #include <type_traits>
 #include <utility>
 
+#pragma GCC visibility push(hidden)
+
 namespace hip_impl {
 template <typename T, typename std::enable_if<std::is_integral<T>{}>::type* = nullptr>
 inline T round_up_to_next_multiple_nonnegative(T x, T y) {
@@ -183,3 +185,5 @@ inline void hipLaunchKernel(F kernel, const dim3& numBlocks, const dim3& dimBloc
     hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
                        std::move(args)...);
 }
+
+#pragma GCC visibility pop
