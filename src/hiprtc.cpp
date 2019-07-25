@@ -354,13 +354,17 @@ namespace
 {
     class Unique_temporary_path {
         // DATA
+        std::string defaultName{"/tmp/hipTmpFile_"};
         std::experimental::filesystem::path path_{};
-    public:
+        static long counter;
+
+       public:
         // CREATORS
-        Unique_temporary_path() : path_{std::tmpnam(nullptr)}
+        Unique_temporary_path() : path_{defaultName.c_str()}
         {
             while (std::experimental::filesystem::exists(path_)) {
-                path_ = std::tmpnam(nullptr);
+                auto fileName = defaultName + std::to_string(counter++);
+                path_ = fileName.c_str();
             }
         }
         Unique_temporary_path(const std::string& extension)
@@ -388,6 +392,7 @@ namespace
             return path_;
         }
     };
+    long Unique_temporary_path::counter = 0;
 } // Unnamed namespace.
 
 namespace hip_impl
