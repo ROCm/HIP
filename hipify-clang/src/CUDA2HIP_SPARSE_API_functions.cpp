@@ -149,6 +149,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseCcsrsv_solve",                        {"hipsparseCcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrsv_solve",                        {"hipsparseZcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseSbsrsv2_solve",                       {"hipsparseSbsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrsv2_solve",                       {"hipsparseDbsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrsv2_solve",                       {"hipsparseCbsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrsv2_solve",                       {"hipsparseZbsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseXbsrsv2_zeroPivot",                   {"hipsparseXbsrsv2_zeroPivot",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsrsv_analysis",                     {"hipsparseScsrsv_analysis",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -157,12 +161,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZcsrsv_analysis",                     {"hipsparseZcsrsv_analysis",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseCsrsv_analysisEx",                    {"hipsparseCsrsv_analysisEx",                    "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-
-  {"cusparseScsrsv_solve",                        {"hipsparseScsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseDcsrsv_solve",                        {"hipsparseDcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseCcsrsv_solve",                        {"hipsparseCcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseZcsrsv_solve",                        {"hipsparseZcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-
   {"cusparseCsrsv_solveEx",                       {"hipsparseCsrsv_solveEx",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsrsv2_bufferSize",                  {"hipsparseScsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE}},
