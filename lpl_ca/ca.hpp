@@ -23,7 +23,7 @@ inline clara::Parser cmdline_parser(bool& help, std::vector<std::string>& inputs
                "https://reviews.llvm.org/D13909; "
                "the code object format is documented at: "
                "https://www.llvm.org/docs/AMDGPUUsage.html#code-object.") |
-           clara::Opt{targets, "gfx803,gfx900,gfx906 etc."}["-t"]["--targets"](
+           clara::Opt{targets, "gfx803,gfx900,gfx906,gfx908 etc."}["-t"]["--targets"](
                "targets for which code objects are to be extracted from "
                "the fat binary; must be included in the set of processors "
                "with ROCm support from "

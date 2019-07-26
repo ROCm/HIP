@@ -132,7 +132,7 @@ inline clara::Parser cmdline_parser(bool& help, std::vector<std::string>& source
                "file is documented at: https://reviews.llvm.org/D13909.") |
            clara::Arg{sources,
                       "a.cpp b.cpp etc."}("inputs for compilation; must contain valid C++ code.") |
-           clara::Opt{targets, "gfx803,gfx900,gfx906 etc."}["-t"]["--targets"](
+           clara::Opt{targets, "gfx803,gfx900,gfx906,gfx908 etc."}["-t"]["--targets"](
                "targets for AMDGPU lowering; must be included in the set "
                "of processors with ROCm support from "
                "https://www.llvm.org/docs/AMDGPUUsage.html#processors.");
