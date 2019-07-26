@@ -145,18 +145,28 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP{
   {"CUSPARSE_FORMAT_CSR",                       {"HIPSPARSE_FORMAT_CSR",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_FORMAT_CSC",                       {"HIPSPARSE_FORMAT_CSC",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_FORMAT_COO",                       {"HIPSPARSE_FORMAT_COO",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_FORMAT_COO_AOS",                   {"HIPSPARSE_FORMAT_COO_AOS",                   "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseOrder_t",                           {"hipsparseOrder_t",                           "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_ORDER_COL",                        {"HIPSPARSE_ORDER_COL",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_ORDER_ROW",                        {"HIPSPARSE_ORDER_ROW",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseSpMVAlg_t",                         {"hipsparseSpMVAlg_t",                         "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_MV_ALG_DEFAULT",                   {"HIPSPARSE_MV_ALG_DEFAULT",                   "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_COOMV_ALG",                        {"HIPSPARSE_COOMV_ALG",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_CSRMV_ALG1",                       {"HIPSPARSE_CSRMV_ALG1",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_CSRMV_ALG2",                       {"HIPSPARSE_CSRMV_ALG2",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+
   {"cusparseSpMMAlg_t",                         {"hipsparseSpMMAlg_t",                         "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_MM_ALG_DEFAULT",                   {"HIPSPARSE_MM_ALG_DEFAULT",                   "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_COOMM_ALG1",                       {"HIPSPARSE_COOMM_ALG1",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_COOMM_ALG2",                       {"HIPSPARSE_COOMM_ALG2",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_COOMM_ALG3",                       {"HIPSPARSE_COOMM_ALG3",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_CSRMM_ALG1",                       {"HIPSPARSE_CSRMM_ALG1",                       "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseIndexType_t",                       {"hipsparseIndexType_t",                       "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_INDEX_16U",                        {"HIPSPARSE_INDEX_16U",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_INDEX_32I",                        {"HIPSPARSE_INDEX_32I",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_INDEX_64I",                        {"HIPSPARSE_INDEX_64I",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
 
 };
