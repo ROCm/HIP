@@ -486,7 +486,7 @@ We recommend the following for functional portability:
 
 - For programs that use textures only to benefit from improved caching, use the __ldg instruction
 - Programs that use texture object APIs, work well on HIP
-- For program that use texture reference APIs, use conditional compilation (see [Identify HIP Target Platform](#identify-hip-target-platform)) 
+- For program that use texture reference APIs, use conditional compilation (see [Identify HIP Target Platform](#identifying-hip-target-platform)) 
    - For the `__HIP_PLATFORM_HCC__` path, pass an additional argument to the kernel and in texture fetch API inside kernel as shown below:-
 
 ``` 
