@@ -785,6 +785,7 @@ hipFuncAttributes make_function_attributes(const ihipModuleSymbol_t& kd) {
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
+    HIP_INIT_API(hipFuncGetAttributes, attr, func);
     using namespace hip_impl;
 
     if (!attr) return hipErrorInvalidValue;
@@ -797,7 +798,7 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 
     *attr = make_function_attributes(*kd);
 
-    return hipSuccess;
+    return ihipLogStatus(hipSuccess);
 }
 
 hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
