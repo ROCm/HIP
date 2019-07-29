@@ -318,7 +318,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags) {
-
+    HIP_INIT_API(hipExtLaunchMultiKernelMultiDevice, launchParamsList,numDevices,flags);
     hipError_t result;
 
     if ((numDevices > g_deviceCnt) || (launchParamsList == nullptr)) {
@@ -382,7 +382,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 
     free(kds);
 
-    return result;
+    return ihipLogStatus(result);
 }
 
 namespace hip_impl {
