@@ -381,9 +381,10 @@ hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
 }
 
 // Texture Reference APIs
-hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
+hipError_t ihipBindTextureImpl(TlsData *tls_, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                const void* devPtr, const struct hipChannelFormatDesc* desc,
                                size_t size, textureReference* tex) {
+    TlsData *tls = (tls_ == nullptr) ? tls_get_ptr() : tls_;
     hipError_t hip_status = hipSuccess;
     enum hipTextureAddressMode addressMode = tex->addressMode[0];
     enum hipTextureFilterMode filterMode = tex->filterMode;
@@ -524,10 +525,11 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
     return ihipLogStatus(hip_status);
 }
 
-hipError_t ihipBindTextureToArrayImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode,
+hipError_t ihipBindTextureToArrayImpl(TlsData *tls_, int dim, enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
                                       textureReference* tex) {
+    TlsData *tls = (tls_ == nullptr) ? tls_get_ptr() : tls_;
     hipError_t hip_status = hipSuccess;
     enum hipTextureAddressMode addressMode = tex->addressMode[0];
     enum hipTextureFilterMode filterMode = tex->filterMode;
