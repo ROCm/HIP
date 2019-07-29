@@ -704,22 +704,55 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
 
   // 13. cuSPARSE Generic API Reference
   // Generic Sparse API helper functions
+  // Sparse Matrix descriptor
   {"cusparseCreateCoo",                           {"hipsparseCreateCoo",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCreateCooAoS",                        {"hipsparseCreateCooAoS",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCreateCsr",                           {"hipsparseCreateCsr",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDestroySpMat",                        {"hipsparseDestroySpMat",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCooGet",                              {"hipsparseCooGet",                              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCooAoSGet",                           {"hipsparseCooAoSGet",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCsrGet",                              {"hipsparseCsrGet",                              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMatGetFormat",                      {"hipsparseSpMatGetFormat",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMatGetIndexBase",                   {"hipsparseSpMatGetIndexBase",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatGetValues",                      {"hipsparseSpMatGetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatSetValues",                      {"hipsparseSpMatSetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatGetStridedBatch",                {"hipsparseSpMatGetStridedBatch",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatSetStridedBatch",                {"hipsparseSpMatSetStridedBatch",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMatSetNumBatches",                  {"hipsparseSpMatSetNumBatches",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMatGetNumBatches",                  {"hipsparseSpMatGetNumBatches",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  // Sparse Vector descriptor
+  {"cusparseCreateSpVec",                         {"hipsparseCreateSpVec",                         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDestroySpVec",                        {"hipsparseDestroySpVec",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecGet",                            {"hipsparseSpVecGet",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecGetIndexBase",                   {"hipsparseSpVecGetIndexBase",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecGetValues",                      {"hipsparseSpVecGetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecSetValues",                      {"hipsparseSpVecSetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   // Generic Dense API helper functions
+  // Dense Matrix descriptor
   {"cusparseCreateDnMat",                         {"hipsparseCreateDnMat",                         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDestroyDnMat",                        {"hipsparseDestroyDnMat",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDnMatGet",                            {"hipsparseDnMatGet",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnMatGetValues",                      {"hipsparseDnMatGetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnMatSetValues",                      {"hipsparseDnMatSetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDnMatSetStridedBatch",                {"hipsparseDnMatSetStridedBatch",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDnMatGetStridedBatch",                {"hipsparseDnMatGetStridedBatch",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  // Dense Vector descriptor
+  {"cusparseCreateDnVec",                         {"hipsparseCreateDnVec",                         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDestroyDnVec",                        {"hipsparseDestroyDnVec",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnVecGet",                            {"hipsparseDnVecGet",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnVecGetValues",                      {"hipsparseDnVecGetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnVecSetValues",                      {"hipsparseDnVecSetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
-  // Generic SpMM API functions
+  // Sparse Matrix * Matrix Multiplication
   {"cusparseSpMM",                                {"hipsparseSpMM",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMM_bufferSize",                     {"hipsparseSpMM_bufferSize",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  // Sparse Vector * Vector Multiplication
+  {"cusparseSpVV",                                {"hipsparseSpVV",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVV_bufferSize",                     {"hipsparseSpVV_bufferSize",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  // Sparse Matrix * Vector Multiplication
+  {"cusparseSpMV",                                {"hipsparseSpMV",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMV_bufferSize",                     {"hipsparseSpMV_bufferSize",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 };
