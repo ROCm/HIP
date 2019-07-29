@@ -112,6 +112,10 @@
 | typedef      |`cusparseSpMatDescr_t`                                         | 10.1             |                                                            |
 | struct       |`cusparseDnMatDescr`                                           | 10.1             |                                                            |
 | typedef      |`cusparseDnMatDescr_t`                                         | 10.1             |                                                            |
+| struct       |`cusparseSpVecDescr`                                           | 10.1             |                                                            |
+| typedef      |`cusparseSpVecDescr_t`                                         | 10.1             |                                                            |
+| struct       |`cusparseDnVecDescr`                                           | 10.1             |                                                            |
+| typedef      |`cusparseDnVecDescr_t`                                         | 10.1             |                                                            |
 
 ## **2. cuSPARSE Helper Function Reference**
 
@@ -725,12 +729,26 @@
 |   **CUDA**                                                |   **HIP**                                       |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------------------------|:----------------:|
 |`cusparseCreateCoo`                                        |                                                 | 10.1             |
+|`cusparseCreateCooAoS`                                     |                                                 | 10.1             |
+|`cusparseCreateCsr`                                        |                                                 | 10.1             |
 |`cusparseDestroySpMat`                                     |                                                 | 10.1             |
 |`cusparseCooGet`                                           |                                                 | 10.1             |
+|`cusparseCooAoSGet`                                        |                                                 | 10.1             |
+|`cusparseCsrGet`                                           |                                                 | 10.1             |
 |`cusparseSpMatGetFormat`                                   |                                                 | 10.1             |
 |`cusparseSpMatGetIndexBase`                                |                                                 | 10.1             |
-|`cusparseSpMatSetNumBatches`                               |                                                 | 10.1             |
+|`cusparseSpMatGetValues`                                   |                                                 | 10.1             |
+|`cusparseSpMatSetValues`                                   |                                                 | 10.1             |
+|`cusparseSpMatGetStridedBatch`                             |                                                 | 10.1             |
+|`cusparseSpMatSetStridedBatch`                             |                                                 | 10.1             |
 |`cusparseSpMatGetNumBatches`                               |                                                 | 10.1             |
+|`cusparseSpMatSetNumBatches`                               |                                                 | 10.1             |
+|`cusparseCreateSpVec`                                      |                                                 | 10.1             |
+|`cusparseDestroySpVec`                                     |                                                 | 10.1             |
+|`cusparseSpVecGet`                                         |                                                 | 10.1             |
+|`cusparseSpVecGetIndexBase`                                |                                                 | 10.1             |
+|`cusparseSpVecGetValues`                                   |                                                 | 10.1             |
+|`cusparseSpVecSetValues`                                   |                                                 | 10.1             |
 
 ## ***10.2. Generic Dense API helper functions***
 
@@ -739,8 +757,15 @@
 |`cusparseCreateDnMat`                                      |                                                 | 10.1             |
 |`cusparseDestroyDnMat`                                     |                                                 | 10.1             |
 |`cusparseDnMatGet`                                         |                                                 | 10.1             |
+|`cusparseDnMatGetValues`                                   |                                                 | 10.1             |
+|`cusparseDnMatSetValues`                                   |                                                 | 10.1             |
 |`cusparseDnMatSetStridedBatch`                             |                                                 | 10.1             |
 |`cusparseDnMatGetStridedBatch`                             |                                                 | 10.1             |
+|`cusparseCreateDnVec`                                      |                                                 | 10.1             |
+|`cusparseDestroyDnVec`                                     |                                                 | 10.1             |
+|`cusparseDnVecGet`                                         |                                                 | 10.1             |
+|`cusparseDnVecGetValues`                                   |                                                 | 10.1             |
+|`cusparseDnVecSetValues`                                   |                                                 | 10.1             |
 
 ## ***10.3. Generic SpMM API functions***
 
@@ -748,5 +773,19 @@
 |-----------------------------------------------------------|-------------------------------------------------|:----------------:|
 |`cusparseSpMM`                                             |                                                 | 10.1             |
 |`cusparseSpMM_bufferSize`                                  |                                                 | 10.1             |
+
+## ***10.4. Generic SpVV API functions [Undocumented]***
+
+|   **CUDA**                                                |   **HIP**                                       |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------------------------|:----------------:|
+|`cusparseSpVV`                                             |                                                 | 10.1             |
+|`cusparseSpVV_bufferSize`                                  |                                                 | 10.1             |
+
+## ***10.5. Generic SpMV API functions [Undocumented]***
+
+|   **CUDA**                                                |   **HIP**                                       |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------------------------|:----------------:|
+|`cusparseSpMV`                                             |                                                 | 10.1             |
+|`cusparseSpMV_bufferSize`                                  |                                                 | 10.1             |
 
 \* CUDA version, in which API has appeared and (optional) last version before abandoning it; no value in case of earlier versions < 7.5.

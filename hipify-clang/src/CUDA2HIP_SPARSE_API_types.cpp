@@ -74,6 +74,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP{
   {"cusparseDnMatDescr",                        {"hipsparseDnMatDescr",                        "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDnMatDescr_t",                      {"hipsparseDnMatDescr_t",                      "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseSpVecDescr",                        {"hipsparseSpVecDescr",                        "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecDescr_t",                      {"hipsparseSpVecDescr_t",                      "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseDnVecDescr",                        {"hipsparseDnVecDescr",                        "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnVecDescr_t",                      {"hipsparseDnVecDescr_t",                      "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+
   // 2. Enums
   {"cusparseAction_t",                          {"hipsparseAction_t",                          "", CONV_TYPE, API_SPARSE}},
   {"CUSPARSE_ACTION_SYMBOLIC",                  {"HIPSPARSE_ACTION_SYMBOLIC",                  "", CONV_NUMERIC_LITERAL, API_SPARSE}},
