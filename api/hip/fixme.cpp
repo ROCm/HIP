@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "cl_common.hpp"
+#include <icd/loader/icd_dispatch.h>
 
 KHRicdVendorDispatch amd::ICDDispatchedObject::icdVendorDispatch_[] = {0};
 amd::PlatformIDS amd::PlatformID::Platform = {amd::ICDDispatchedObject::icdVendorDispatch_};
