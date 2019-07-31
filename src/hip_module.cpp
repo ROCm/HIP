@@ -327,7 +327,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 
     hipFunction_t* kds = reinterpret_cast<hipFunction_t*>(malloc(sizeof(hipFunction_t) * numDevices));
     if (kds == nullptr) {
-        return hipLogStatus(hipErrorNotInitialized);
+        return ihipLogStatus(hipErrorNotInitialized);
     }
 
     // prepare all kernel descriptors for each device as all streams will be locked in the next loop
