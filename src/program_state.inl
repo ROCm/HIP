@@ -13,6 +13,8 @@
     #undef catch
 #endif
 
+#include "hip_util.h"
+
 #include <hsa/amd_hsa_kernel_code.h>
 #include <hsa/hsa.h>
 #include <hsa/hsa_ext_amd.h>
@@ -58,9 +60,6 @@ inline constexpr bool operator==(hsa_isa_t x, hsa_isa_t y) {
 }
 
 namespace hip_impl {
-
-[[noreturn]]
-void hip_throw(const std::exception&);
 
 std::vector<hsa_agent_t> all_hsa_agents();
 

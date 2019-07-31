@@ -2511,14 +2511,4 @@ namespace hip_impl {
         return r;
     }
 
-    [[noreturn]]
-    void hip_throw(const std::exception& ex) {
-        #if defined(__cpp_exceptions)
-            throw ex;
-        #else
-            std::cerr << ex.what() << std::endl;
-            std::terminate();
-        #endif
-    }
-
 } // Namespace hip_impl.

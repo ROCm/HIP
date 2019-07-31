@@ -34,5 +34,11 @@ THE SOFTWARE.
 #include <vector>
 #include <algorithm>
 
+#if defined(__cpp_exceptions)
+    #define hip_throw(ex) {throw ex;}
+#else
+    #define hip_throw(ex) {std::cerr<< ex.what()<< std::endl;\
+			   std::terminate();}
+#endif
 
 #endif

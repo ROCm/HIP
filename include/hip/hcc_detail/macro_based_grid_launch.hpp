@@ -85,7 +85,7 @@ requires(Domain<K> ==
         hc::parallel_for_each(acc_v, d, k);
     } catch (std::exception& ex) {
         std::cerr << "Failed in " << __func__ << ", with exception: " << ex.what() << std::endl;
-        hip_throw(ex);
+        throw;
     }
 }
 
@@ -113,7 +113,7 @@ requires(Domain<K> == {Ts...}) inline void grid_launch_hip_impl_(New_grid_launch
                               group_mem_bytes, acc_v, std::move(k));
     } catch (std::exception& ex) {
         std::cerr << "Failed in " << __func__ << ", with exception: " << ex.what() << std::endl;
-        hip_throw(ex);
+        throw;
     }
 }
 
