@@ -240,6 +240,8 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 }
 
 hipError_t hipFree(void* ptr) {
+  HIP_INIT_API(ptr);
+
   if (ptr == nullptr) {
     HIP_RETURN(hipSuccess);
   }
