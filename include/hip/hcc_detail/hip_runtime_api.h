@@ -1461,14 +1461,14 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 #else
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
-#ifdef __cplusplus
+#ifdef __cplusplus //Start : Not supported in gcc 
 namespace hip_impl {
 inline
 __attribute__((visibility("hidden")))
 hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                           const char* name);
 } // Namespace hip_impl.
-#endif
+
 
 /**
  *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
@@ -1484,15 +1484,10 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
-#ifdef __cplusplus
+
     hip_impl::hip_init();
     size_t size = 0;
     return hip_impl::read_agent_global_from_process(devPtr, &size, (const char*)symbolName);
-#else
-    // read_agent_global_from_process is defined in cpp file hence returning error here to indicate
-    // func not implemented for 'c' code
-    return hipErrorNotSupported;
-#endif
 }
 
 
@@ -1510,16 +1505,12 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
-#ifdef __cplusplus    
+    
     hip_impl::hip_init();
     void* devPtr = nullptr;
     return hip_impl::read_agent_global_from_process(&devPtr, size, (const char*)symbolName);
-#else
-    // read_agent_global_from_process is defined in cpp file hence returning error here to indicate
-    // func not implemented for 'c' code
-    return hipErrorNotSupported;
-#endif
 }
+#endif // End : Not supported in gcc
 
 #if defined(__cplusplus)
 } // extern "C"
@@ -1559,6 +1550,7 @@ extern "C" {
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
+#ifdef __cplusplus
 inline
 __attribute__((visibility("hidden")))
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
@@ -1568,14 +1560,11 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
 
     hipDeviceptr_t dst = NULL;
     hipGetSymbolAddress(&dst, (const char*)symbolName);
-#ifdef __cplusplus
+
     return hip_impl::hipMemcpyToSymbol(dst, src, sizeBytes, offset, kind,
                                        (const char*)symbolName);
-#else
-     // TODO : Func is not implemented for 'c' code
-     return hipErrorNotSupported;
-#endif
 }
+#endif
 
 #if defined(__cplusplus)
 } // extern "C"
@@ -1621,6 +1610,8 @@ extern "C" {
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
+
+#ifdef __cplusplus //Start : Not supported in gcc
 inline
 __attribute__((visibility("hidden")))
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
@@ -1630,14 +1621,10 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
 
     hipDeviceptr_t dst = NULL;
     hipGetSymbolAddress(&dst, symbolName);
-#ifdef __cplusplus
+
     return hip_impl::hipMemcpyToSymbolAsync(dst, src, sizeBytes, offset, kind,
                                             stream,
                                             (const char*)symbolName);
-#else
-     // TODO : Func is not implemented for 'c' code
-     return hipErrorNotSupported;
-#endif
 }
 
 inline
@@ -1649,13 +1636,9 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
 
     hipDeviceptr_t src = NULL;
     hipGetSymbolAddress(&src, symbolName);
-#ifdef __cplusplus
+
     return hip_impl::hipMemcpyFromSymbol(dst, src, sizeBytes, offset, kind,
                                          (const char*)symbolName);
-#else
-     // TODO : Func is not implemented for 'c' code
-     return hipErrorNotSupported;
-#endif
 }
 
 inline
@@ -1668,15 +1651,12 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 
     hipDeviceptr_t src = NULL;
     hipGetSymbolAddress(&src, symbolName);
-#ifdef __cplusplus
+
     return hip_impl::hipMemcpyFromSymbolAsync(dst, src, sizeBytes, offset, kind,
                                               stream,
                                               (const char*)symbolName);
-#else
-     // TODO : Func is not implemented for 'c' code
-     return hipErrorNotSupported;
-#endif
 }
+#endif // End : Not supported in gcc
 
 #endif // __HIP_VDI__
 /**
