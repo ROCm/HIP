@@ -167,7 +167,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
     }
 
     // Cap the maximum amount of testing, in case of hangs
-    // Excluding hipMultiThreadDevice-pyramid test from automation; due to its flakiness which requires some investigation
+    // Excluding hipMultiThreadDevice-pyramid & hipMemoryAllocateCoherentDriver tests from automation; due to its flakiness which requires some investigation
     timeout(time: 1, unit: 'HOURS')
     {
       stage("${platform} unit testing")
@@ -177,7 +177,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
             cd ${build_dir_rel}
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
-            ctest -E pyramid
+            ctest -E "(hipMultiThreadDevice-pyramid|hipMemoryAllocateCoherentDriver)"
           """
         // If unit tests output a junit or xunit file in the future, jenkins can parse that file
         // to display test results on the dashboard

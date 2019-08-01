@@ -485,39 +485,7 @@ AMD compilers currently load all data into both the L1 and L2 caches, so __ldg i
 We recommend the following for functional portability:
 
 - For programs that use textures only to benefit from improved caching, use the __ldg instruction
-- Programs that use texture object APIs, work well on HIP
-- For program that use texture reference APIs, use conditional compilation (see [Identify HIP Target Platform](#identify-hip-target-platform)) 
-   - For the `__HIP_PLATFORM_HCC__` path, pass an additional argument to the kernel and in texture fetch API inside kernel as shown below:-
-
-``` 
-texture<float, 2, hipReadModeElementType> tex;
-
-__global__ void tex2DKernel(float* outputData,
-#ifdef __HIP_PLATFORM_HCC__
-                             hipTextureObject_t textureObject,
-#endif
-                             int width,
-                             int height)
-{
-    int x = blockIdx.x*blockDim.x + threadIdx.x;
-    int y = blockIdx.y*blockDim.y + threadIdx.y;
-#ifdef __HIP_PLATFORM_HCC__
-    outputData[y*width + x] = tex2D(tex, textureObject, x, y);
-#else
-    outputData[y*width + x] = tex2D(tex, x, y);
-#endif
-}
-
-// Host code:
-void myFunc () 
-{
-    // ...
-
-#ifdef __HIP_PLATFORM_HCC__
-    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, tex.textureObject, width, height);
-#else
-    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, width, height);
-#endif
+- Programs that use texture object and reference APIs, work well on HIP
 
 
 ``` 
