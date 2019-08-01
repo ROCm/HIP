@@ -39,7 +39,6 @@ void fn(float* px, float* py)
 }
 
 int main() {
-    hipInit(0);
 
     hipFuncAttributes attr{};
 

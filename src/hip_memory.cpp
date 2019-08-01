@@ -198,7 +198,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
             attributes->isManaged = 0;
             attributes->allocationFlags = 0;
 
-            e = hipErrorUnknown;  // TODO - should be hipErrorInvalidValue ?
+            e = hipErrorInvalidValue;
         }
     }
     return ihipLogStatus(e);

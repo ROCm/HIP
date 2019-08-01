@@ -142,9 +142,8 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
                 // conservative wait on host for the specified event to complete:
                 // return _stream->locked_eventWaitComplete(this, waitMode);
                 //
-                ecd._stream->locked_eventWaitComplete(
-                ecd.marker(), (event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
-                                                                     : hc::hcWaitModeActive);
+                ecd.marker().wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
+                                                                         : hc::hcWaitModeActive);
             } else {
                 stream = ihipSyncAndResolveStream(stream);
                 // This will use create_blocking_marker to wait on the specified queue.

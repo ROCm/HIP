@@ -497,7 +497,7 @@ template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
    public:
     ihipStreamCriticalBase_t(ihipStream_t* parentStream, hc::accelerator_view av)
-        : _kernelCnt(0), _av(av), _parent(parentStream){};
+        : _av(av), _parent(parentStream){};
 
     ~ihipStreamCriticalBase_t() {}
 
@@ -521,7 +521,6 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
 
    public:
     ihipStream_t* _parent;
-    uint32_t _kernelCnt;  // Count of inflight kernels in this stream.  Reset at ::wait().
 
     hc::accelerator_view _av;
 
@@ -585,7 +584,6 @@ class ihipStream_t {
     hc::completion_future locked_recordEvent(hipEvent_t event);
 
     bool locked_eventIsReady(hipEvent_t event);
-    void locked_eventWaitComplete(hc::completion_future& marker, hc::hcWaitMode waitMode);
 
     ihipStreamCritical_t& criticalData() { return _criticalData; };
 
