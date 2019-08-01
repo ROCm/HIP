@@ -915,6 +915,15 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_3D_MAX_ELEMENTS,
           prop->maxTexture3D);
     DeviceErrorCheck(err);
+
+    // Get Agent HDP Flush Register Memory
+    hsa_amd_hdp_flush_t hdpinfo;
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_HDP_FLUSH, &hdpinfo);
+    DeviceErrorCheck(err);
+
+    prop->hdpMemFlushCntl = hdpinfo.HDP_MEM_FLUSH_CNTL;
+    prop->hdpRegFlushCntl = hdpinfo.HDP_REG_FLUSH_CNTL;
+
     return e;
 }
 
