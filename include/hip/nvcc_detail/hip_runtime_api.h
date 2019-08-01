@@ -715,17 +715,20 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     struct cudaDeviceProp cdprop;
     cudaError_t cerror;
     cerror = cudaGetDeviceProperties(&cdprop, device);
+
     strncpy(p_prop->name, cdprop.name, 256);
     p_prop->totalGlobalMem = cdprop.totalGlobalMem;
     p_prop->sharedMemPerBlock = cdprop.sharedMemPerBlock;
     p_prop->regsPerBlock = cdprop.regsPerBlock;
     p_prop->warpSize = cdprop.warpSize;
+    p_prop->maxThreadsPerBlock = cdprop.maxThreadsPerBlock;
     for (int i = 0; i < 3; i++) {
         p_prop->maxThreadsDim[i] = cdprop.maxThreadsDim[i];
         p_prop->maxGridSize[i] = cdprop.maxGridSize[i];
     }
-    p_prop->maxThreadsPerBlock = cdprop.maxThreadsPerBlock;
     p_prop->clockRate = cdprop.clockRate;
+    p_prop->memoryClockRate = cdprop.memoryClockRate;
+    p_prop->memoryBusWidth = cdprop.memoryBusWidth;
     p_prop->totalConstMem = cdprop.totalConstMem;
     p_prop->major = cdprop.major;
     p_prop->minor = cdprop.minor;
@@ -733,44 +736,38 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->l2CacheSize = cdprop.l2CacheSize;
     p_prop->maxThreadsPerMultiProcessor = cdprop.maxThreadsPerMultiProcessor;
     p_prop->computeMode = cdprop.computeMode;
-    p_prop->canMapHostMemory = cdprop.canMapHostMemory;
-    p_prop->memoryClockRate = cdprop.memoryClockRate;
-    p_prop->memoryBusWidth = cdprop.memoryBusWidth;
-
-    // Same as clock-rate:
-    p_prop->clockInstructionRate = cdprop.clockRate;
+    p_prop->clockInstructionRate = cdprop.clockRate; // Same as clock-rate:
 
     int ccVers = p_prop->major * 100 + p_prop->minor * 10;
-
     p_prop->arch.hasGlobalInt32Atomics = (ccVers >= 110);
     p_prop->arch.hasGlobalFloatAtomicExch = (ccVers >= 110);
     p_prop->arch.hasSharedInt32Atomics = (ccVers >= 120);
     p_prop->arch.hasSharedFloatAtomicExch = (ccVers >= 120);
-
     p_prop->arch.hasFloatAtomicAdd = (ccVers >= 200);
-
     p_prop->arch.hasGlobalInt64Atomics = (ccVers >= 120);
     p_prop->arch.hasSharedInt64Atomics = (ccVers >= 110);
-
     p_prop->arch.hasDoubles = (ccVers >= 130);
-
     p_prop->arch.hasWarpVote = (ccVers >= 120);
     p_prop->arch.hasWarpBallot = (ccVers >= 200);
     p_prop->arch.hasWarpShuffle = (ccVers >= 300);
     p_prop->arch.hasFunnelShift = (ccVers >= 350);
-
     p_prop->arch.hasThreadFenceSystem = (ccVers >= 200);
     p_prop->arch.hasSyncThreadsExt = (ccVers >= 200);
-
     p_prop->arch.hasSurfaceFuncs = (ccVers >= 200);
     p_prop->arch.has3dGrid = (ccVers >= 200);
     p_prop->arch.hasDynamicParallelism = (ccVers >= 350);
 
     p_prop->concurrentKernels = cdprop.concurrentKernels;
+    p_prop->pciDomainID = cdprop.pciDomainID;
     p_prop->pciBusID = cdprop.pciBusID;
     p_prop->pciDeviceID = cdprop.pciDeviceID;
     p_prop->maxSharedMemoryPerMultiProcessor = cdprop.sharedMemPerMultiprocessor;
     p_prop->isMultiGpuBoard = cdprop.isMultiGpuBoard;
+    p_prop->canMapHostMemory = cdprop.canMapHostMemory;
+    p_prop->gcnArch = 0; // Not a GCN arch
+    p_prop->integrated = cdprop.integrated;
+    p_prop->cooperativeLaunch = cdprop.cooperativeLaunch;
+    p_prop->cooperativeMultiDeviceLaunch = cdprop.cooperativeMultiDeviceLaunch;
 
     p_prop->maxTexture1D    = cdprop.maxTexture1D;
     p_prop->maxTexture2D[0] = cdprop.maxTexture2D[0];
