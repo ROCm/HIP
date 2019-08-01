@@ -316,16 +316,20 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t& crit) {
     tprintf(DB_SYNC, "%s wait for queue-empty..\n", ToString(this).c_str());
 
     crit->_av.wait(waitMode());
-
-    crit->_kernelCnt = 0;
 }
 
 //---
 // Wait for all kernel and data copy commands in this stream to complete.
 void ihipStream_t::locked_wait() {
-    LockedAccessor_StreamCrit_t crit(_criticalData);
+    // create a marker while holding stream lock,
+    // but release lock prior to waiting on the marker
+    hc::completion_future marker;
+    {
+        LockedAccessor_StreamCrit_t crit(_criticalData);
+        marker = crit->_av.create_marker(hc::no_scope);
+    }
 
-    wait(crit);
+    marker.wait(waitMode());
 };
 
 // Causes current stream to wait for specified event to complete:
@@ -340,30 +344,14 @@ void ihipStream_t::locked_streamWaitEvent(ihipEventData_t& ecd) {
 // Causes current stream to wait for specified event to complete:
 // Note this does not provide any kind of host serialization.
 bool ihipStream_t::locked_eventIsReady(hipEvent_t event) {
-    // Event query that returns "Complete" may cause HCC to manipulate
-    // internal queue state so lock the stream's queue here.
-    LockedAccessor_StreamCrit_t scrit(_criticalData);
-
     LockedAccessor_EventCrit_t ecrit(event->criticalData());
 
     return (ecrit->_eventData.marker().is_ready());
 }
 
-// Waiting on event can cause HCC to reclaim stream resources - so need to lock the stream.
-void ihipStream_t::locked_eventWaitComplete(hc::completion_future& marker,
-                                            hc::hcWaitMode waitMode) {
-    LockedAccessor_StreamCrit_t crit(_criticalData);
-
-    marker.wait(waitMode);
-}
-
-
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
 hc::completion_future ihipStream_t::locked_recordEvent(hipEvent_t event) {
-    // Lock the stream to prevent simultaneous access
-    LockedAccessor_StreamCrit_t crit(_criticalData);
-
     auto scopeFlag = hc::accelerator_scope;
     // The env var HIP_EVENT_SYS_RELEASE sets the default,
     // The explicit flags override the env var (if specified)
@@ -375,6 +363,8 @@ hc::completion_future ihipStream_t::locked_recordEvent(hipEvent_t event) {
         scopeFlag = HIP_EVENT_SYS_RELEASE ? hc::system_scope : hc::accelerator_scope;
     }
 
+    // Lock the stream to prevent simultaneous access
+    LockedAccessor_StreamCrit_t crit(_criticalData);
     return crit->_av.create_marker(scopeFlag);
 };
 
