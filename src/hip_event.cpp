@@ -191,10 +191,8 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
             ctx->locked_syncDefaultStream(true, true);
             return ihipLogStatus(hipSuccess);
         } else {
-            ecd._stream->locked_eventWaitComplete(
-                ecd.marker(), (event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
+            ecd.marker().wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
                                                                      : hc::hcWaitModeActive);
-
             return ihipLogStatus(hipSuccess);
         }
     } else {

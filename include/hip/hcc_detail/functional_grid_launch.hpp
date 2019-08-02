@@ -151,6 +151,20 @@ void hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
                                       dynSharedMemPerBlk, blockSizeLimit);
 }
 
+template <typename F>
+inline
+void hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks, F kernel,
+    uint32_t blockSize, size_t dynSharedMemPerBlk) {
+
+    using namespace hip_impl;
+
+    hip_impl::hip_init();
+    auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
+                                                   target_agent(0));
+
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynSharedMemPerBlk);
+}
+
 template <typename... Args, typename F = void (*)(Args...)>
 inline
 void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,

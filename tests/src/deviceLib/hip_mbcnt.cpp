@@ -59,12 +59,12 @@ int main() {
 
     cout << "hip Device prop succeeded " << endl;
 
-    constexpr unsigned int wave_size = 64;
     constexpr unsigned int num_waves_per_block = 2;
-    constexpr unsigned int num_threads_per_block = wave_size * num_waves_per_block;
-    constexpr unsigned int num_blocks = 2;
-    constexpr unsigned int num_threads = num_threads_per_block * num_blocks;
-    constexpr size_t buffer_size = num_threads * sizeof(unsigned int);
+    const unsigned int wave_size = devProp.warpSize;
+    const unsigned int num_threads_per_block = wave_size * num_waves_per_block;
+    const unsigned int num_blocks = 2;
+    const unsigned int num_threads = num_threads_per_block * num_blocks;
+    const size_t buffer_size = num_threads * sizeof(unsigned int);
 
     HIP_ASSERT(hipMalloc((void**)&device_mbcnt_lo, buffer_size));
     HIP_ASSERT(hipMalloc((void**)&device_mbcnt_hi, buffer_size));

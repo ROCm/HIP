@@ -318,16 +318,16 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags) {
-
+    HIP_INIT_API(hipExtLaunchMultiKernelMultiDevice, launchParamsList,numDevices,flags);
     hipError_t result;
 
     if ((numDevices > g_deviceCnt) || (launchParamsList == nullptr)) {
-        return hipErrorInvalidValue;
+        return ihipLogStatus(hipErrorInvalidValue);
     }
 
     hipFunction_t* kds = reinterpret_cast<hipFunction_t*>(malloc(sizeof(hipFunction_t) * numDevices));
     if (kds == nullptr) {
-        return hipErrorNotInitialized;
+        return ihipLogStatus(hipErrorNotInitialized);
     }
 
     // prepare all kernel descriptors for each device as all streams will be locked in the next loop
@@ -335,13 +335,13 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
         const hipLaunchParams& lp = launchParamsList[i];
         if (lp.stream == nullptr) {
             free(kds);
-            return hipErrorNotInitialized;
+            return ihipLogStatus(hipErrorNotInitialized);
         }
         kds[i] = hip_impl::get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(lp.func),
                 hip_impl::target_agent(lp.stream));
         if (kds[i] == nullptr) {
             free(kds);
-            return hipErrorInvalidValue;
+            return ihipLogStatus(hipErrorInvalidValue);
         }
         hip_impl::kernargs_size_align kargs = hip_impl::get_program_state().get_kernargs_size_align(
                 reinterpret_cast<std::uintptr_t>(lp.func));
@@ -382,7 +382,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 
     free(kds);
 
-    return result;
+    return ihipLogStatus(result);
 }
 
 namespace hip_impl {
@@ -785,6 +785,7 @@ hipFuncAttributes make_function_attributes(const ihipModuleSymbol_t& kd) {
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
+    HIP_INIT_API(hipFuncGetAttributes, attr, func);
     using namespace hip_impl;
 
     if (!attr) return hipErrorInvalidValue;
@@ -797,7 +798,7 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 
     *attr = make_function_attributes(*kd);
 
-    return hipSuccess;
+    return ihipLogStatus(hipSuccess);
 }
 
 hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
@@ -878,6 +879,30 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     return ihipLogStatus(hipSuccess);
 }
 
+void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size_t* usedLDS)
+{
+    bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
+    if (is_code_object_v3) {
+        const auto header = reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
+        // GRANULATED_WAVEFRONT_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
+        // the granularity for gfx6-gfx9 is max(0, ceil(vgprs_used / 4) - 1)
+        *usedVGPRS = ((header->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
+        // GRANULATED_WAVEFRONT_SGPR_COUNT is specified in 6:9 bits of COMPUTE_PGM_RSRC1
+        // the granularity for gfx9+ is 2 * max(0, ceil(sgprs_used / 16) - 1)
+        *usedSGPRS = ((((header->compute_pgm_rsrc1 & 0x3C0) >> 6) >> 1) + 1) << 4;
+        *usedLDS = header->group_segment_fixed_size;
+    }
+    else {
+        const auto header = f->_header;
+        // VGPRs granularity is 4
+        *usedVGPRS = ((header->workitem_vgpr_count + 3) >> 2) << 2;
+        // adding 2 to take into account the 2 VCC registers & handle the granularity of 16
+        *usedSGPRS = header->wavefront_sgpr_count + 2;
+        *usedSGPRS = ((*usedSGPRS + 15) >> 4) << 4;
+        *usedLDS = header->workgroup_group_segment_byte_size;
+    }
+}
+
 hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
                                               hipFunction_t f, size_t dynSharedMemPerBlk,
                                               uint32_t blockSizeLimit)
@@ -885,10 +910,8 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
     using namespace hip_impl;
 
     auto ctx = ihipGetTlsDefaultCtx();
-    hipError_t ret = hipSuccess;
-
     if (ctx == nullptr) {
-        ret = hipErrorInvalidDevice;
+        return hipErrorInvalidDevice;
     }
 
     hipDeviceProp_t prop{};
@@ -899,26 +922,7 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
     size_t usedVGPRS = 0;
     size_t usedSGPRS = 0;
     size_t usedLDS = 0;
-    bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
-    if (is_code_object_v3) {
-        const auto header = reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
-        // GRANULATED_WAVEFRONT_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
-        // the granularity for gfx6-gfx9 is max(0, ceil(vgprs_used / 4) - 1)
-        usedVGPRS = ((header->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
-        // GRANULATED_WAVEFRONT_SGPR_COUNT is specified in 6:9 bits of COMPUTE_PGM_RSRC1
-        // the granularity for gfx9+ is 2 * max(0, ceil(sgprs_used / 16) - 1)
-        usedSGPRS = ((((header->compute_pgm_rsrc1 & 0x3C0) >> 6) >> 1) + 1) << 4;
-        usedLDS = header->group_segment_fixed_size;
-    }
-    else {
-        const auto header = f->_header;
-        // VGPRs granularity is 4
-        usedVGPRS = ((header->workitem_vgpr_count + 3) >> 2) << 2;
-        // adding 2 to take into account the 2 VCC registers & handle the granularity of 16
-        usedSGPRS = header->wavefront_sgpr_count + 2;
-        usedSGPRS = ((usedSGPRS + 15) >> 4) << 4;
-        usedLDS = header->workgroup_group_segment_byte_size;
-    }
+    getGprsLdsUsage(f, &usedVGPRS, &usedSGPRS, &usedLDS);
 
     // try different workgroup sizes to find the maximum potential occupancy
     // based on the usage of VGPRs and LDS
@@ -1008,9 +1012,8 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
     *blockSize = maxWavefronts * wavefrontSize;
     *gridSize = min((maxThreadsCnt + *blockSize - 1) / *blockSize, prop.multiProcessorCount);
 
-    return ret;
+    return hipSuccess;
 }
-
 
 hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
@@ -1020,4 +1023,75 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
 
     return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(
         gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit));
+}
+
+hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+{
+    using namespace hip_impl;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    if (ctx == nullptr) {
+        return hipErrorInvalidDevice;
+    }
+
+    hipDeviceProp_t prop{};
+    ihipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+
+    prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
+
+    size_t usedVGPRS = 0;
+    size_t usedSGPRS = 0;
+    size_t usedLDS = 0;
+    getGprsLdsUsage(f, &usedVGPRS, &usedSGPRS, &usedLDS);
+
+    // Due to SPI and private memory limitations, the max of wavefronts per CU in 32
+    size_t wavefrontSize = prop.warpSize;
+    size_t maxWavefrontsPerCU = min(prop.maxThreadsPerMultiProcessor / wavefrontSize, 32);
+
+    const size_t simdPerCU = 4;
+    const size_t maxWavesPerSimd = maxWavefrontsPerCU / simdPerCU;
+
+    size_t numWavefronts = (blockSize + wavefrontSize - 1) / wavefrontSize;
+
+    size_t availableVGPRs = (prop.regsPerBlock / wavefrontSize / simdPerCU);
+    size_t vgprs_alu_occupancy = simdPerCU * std::min(maxWavesPerSimd, availableVGPRs / usedVGPRS);
+
+    // Calculate blocks occupancy per CU based on VGPR usage
+    *numBlocks = vgprs_alu_occupancy / numWavefronts;
+
+    const size_t availableSGPRs = (prop.gcnArch < 800) ? 512 : 800;
+    size_t sgprs_alu_occupancy = simdPerCU * ((usedSGPRS == 0) ? maxWavesPerSimd
+        : std::min(maxWavesPerSimd, availableSGPRs / usedSGPRS));
+
+    // Calculate blocks occupancy per CU based on SGPR usage
+    *numBlocks = std::min(*numBlocks, (uint32_t) (sgprs_alu_occupancy / numWavefronts)); 
+
+    size_t total_used_lds = usedLDS + dynSharedMemPerBlk;
+    if (total_used_lds != 0) {
+      // Calculate LDS occupacy per CU. lds_per_cu / (static_lsd + dynamic_lds)
+      size_t lds_occupancy = prop.maxSharedMemoryPerMultiProcessor / total_used_lds;
+      *numBlocks = std::min(*numBlocks, (uint32_t) lds_occupancy);
+    }
+
+    return hipSuccess;
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+{
+    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
+
+    return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+        numBlocks, f, blockSize, dynSharedMemPerBlk));
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+   uint32_t* numBlocks, hipFunction_t f, uint32_t  blockSize, size_t dynSharedMemPerBlk,
+   unsigned int flags)
+{
+    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
+
+    return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+        numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
