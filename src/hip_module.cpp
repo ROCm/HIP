@@ -1028,7 +1028,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
 }
 
 hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+   TlsData *tls, uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
 {
     using namespace hip_impl;
 
@@ -1085,7 +1085,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
     HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
@@ -1095,5 +1095,5 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
     HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
