@@ -788,8 +788,8 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     HIP_INIT_API(hipFuncGetAttributes, attr, func);
     using namespace hip_impl;
 
-    if (!attr) return hipErrorInvalidValue;
-    if (!func) return hipErrorInvalidDeviceFunction;
+    if (!attr) return ihipLogStatus(hipErrorInvalidValue);
+    if (!func) return ihipLogStatus(hipErrorInvalidDeviceFunction);
 
     auto agent = this_agent();
     auto kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
