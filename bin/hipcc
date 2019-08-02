@@ -195,7 +195,12 @@ if ($HIP_PLATFORM eq "clang") {
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
     }
 
-    $HIPCXXFLAGS .= " -std=c++11 -isystem $HIP_CLANG_INCLUDE_PATH";
+    if ($isWindows) {
+      $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility";
+    } else {
+      $HIPCXXFLAGS .= " -std=c++11";
+    }
+    $HIPCXXFLAGS .= " -isystem $HIP_CLANG_INCLUDE_PATH";
     $HIPLDFLAGS .= " -L$HIP_LIB_PATH";
     if (not $isWindows) {
       $HIPLDFLAGS .= " -Wl,--rpath-link=$HIP_LIB_PATH";
@@ -876,9 +881,7 @@ if ($HIP_PLATFORM eq "clang") {
     }
     $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
     $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
-    if ($isWindows) {
-        $HIPCXXFLAGS .= " -std=c++14 -fms-extensions -fms-compatibility";
-    } else {
+    if (not $isWindows) {
         $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
     }
 }
