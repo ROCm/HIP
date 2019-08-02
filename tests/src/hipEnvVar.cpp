@@ -27,11 +27,25 @@ THE SOFTWARE.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include <iostream>
 #include <string>
 #include "hip/hip_runtime.h"
+#ifdef _WIN64
+#include <tchar.h>
+#include "XGetopt.h"
+#elif __unix__
+#include <getopt.h>
+#else
+#error "Could not detect OS platform."
+#endif
 
+#ifdef _WIN64
+#define SETENV(x,y,z) _putenv_s(x,y)
+#elif __unix__
+#define SETENV(x,y,z) setenv(x,y,z)
+#else
+	#error "Could not detect OS platform."
+#endif
 using namespace std;
 
 void usage() {
@@ -75,8 +89,10 @@ int main(int argc, char** argv) {
     if (setEnvVar) {
         // env = "export HIP_VISIBLE_DEVICES=" + env;
         // cout<<"The received env var is: "<<env<<endl;
-        setenv("HIP_VISIBLE_DEVICES", env.c_str(), 1);
-        setenv("CUDA_VISIBLE_DEVICES", env.c_str(), 1);
+        //setenv("HIP_VISIBLE_DEVICES", env.c_str(), 1);
+		SETENV("HIP_VISIBLE_DEVICES", env.c_str(), 1);
+        //setenv("CUDA_VISIBLE_DEVICES", env.c_str(), 1);
+		SETENV("CUDA_VISIBLE_DEVICES", env.c_str(), 1);
         cout << "set env HIP_VISIBLE_DEVICES = " << env.c_str() << endl;
         // verify if the environment variable is set
         char* pPath;
