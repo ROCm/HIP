@@ -1484,7 +1484,6 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
     //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
-
     hip_impl::hip_init();
     size_t size = 0;
     return hip_impl::read_agent_global_from_process(devPtr, &size, (const char*)symbolName);
@@ -1505,7 +1504,6 @@ inline
 __attribute__((visibility("hidden")))
 hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
     // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
-    
     hip_impl::hip_init();
     void* devPtr = nullptr;
     return hip_impl::read_agent_global_from_process(&devPtr, size, (const char*)symbolName);
