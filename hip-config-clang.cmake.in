@@ -1,4 +1,16 @@
 @PACKAGE_INIT@
+if(NOT DEFINED HSA_PATH)
+    if(NOT DEFINED ENV{HSA_PATH})
+        set(HSA_PATH "/opt/rocm/hsa" CACHE PATH "Path to which HSA runtime has been installed")
+    else()
+        set(HSA_PATH $ENV{HSA_PATH} CACHE PATH "Path to which HSA runtime has been installed")
+    endif()
+endif()
+if(IS_ABSOLUTE ${HSA_PATH} AND EXISTS ${HSA_PATH} AND IS_DIRECTORY ${HSA_PATH})
+    message(STATUS "Looking for HSA runtime in: " ${HSA_PATH})
+else()
+    message(FATAL_ERROR "Don't know where to find HSA runtime. Please specify absolute path using -DHSA_PATH")
+endif()
 
 include(CMakeFindDependencyMacro OPTIONAL RESULT_VARIABLE _CMakeFindDependencyMacro_FOUND)
 if (NOT _CMakeFindDependencyMacro_FOUND)
@@ -43,7 +55,8 @@ set(HIP_COMPILER "@HIP_COMPILER@")
 set(HIP_RUNTIME "@HIP_RUNTIME@")
 
 set_and_check( hip_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@" )
-set_and_check( hip_INCLUDE_DIRS "${hip_INCLUDE_DIR}" )
+set_and_check( HSA_INCLUDE_PATH "${HSA_PATH}/include" )
+set( hip_INCLUDE_DIRS "${hip_INCLUDE_DIR}" "${HSA_INCLUDE_PATH}" )
 set_and_check( hip_LIB_INSTALL_DIR "@PACKAGE_LIB_INSTALL_DIR@" )
 set_and_check( hip_BIN_INSTALL_DIR "@PACKAGE_BIN_INSTALL_DIR@" )
 

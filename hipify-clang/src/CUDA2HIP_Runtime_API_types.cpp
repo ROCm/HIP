@@ -1067,7 +1067,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_SHAREDMEM_CARVEOUT_MAX_SHARED
   {"cudaSharedmemCarveoutMaxShared",                                   {"hipSharedmemCarveoutMaxShared",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 100
   // CU_SHAREDMEM_CARVEOUT_MAX_L1
-  {"cudaSharedmemCarveoutMaxShared",                                   {"hipSharedmemCarveoutMaxL1",                                "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 0
+  {"cudaSharedmemCarveoutMaxL1",                                       {"hipSharedmemCarveoutMaxL1",                                "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 0
 
   // CUsharedconfig
   {"cudaSharedMemConfig",                                              {"hipSharedMemConfig",                                       "", CONV_TYPE, API_RUNTIME}},
@@ -1243,6 +1243,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
 
   // CUtexObject
   {"cudaTextureObject_t",                                              {"hipTextureObject_t",                                       "", CONV_TYPE, API_RUNTIME}},
+
+  // CUuuid
+  {"cudaUUID_t",                                                       {"hipUUID_t",                                                "", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // 5. Defines
 
