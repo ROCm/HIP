@@ -309,39 +309,58 @@ hipError_t hipCtxGetFlags(unsigned int* flags) {
 hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int* active) {
   HIP_INIT_API(dev, flags, active);
 
-  assert(0 && "Unimplemented");
+  if (static_cast<unsigned int>(dev) >= g_devices.size()) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
 
-  HIP_RETURN(hipErrorUnknown);
+  if (flags != nullptr) {
+    *flags = 0;
+  }
+
+  if (active != nullptr) {
+    *active = (g_devices[dev] == hip::getCurrentContext())? 1 : 0;
+  }
+
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev) {
   HIP_INIT_API(dev);
 
-  assert(0 && "Unimplemented");
+  if (static_cast<unsigned int>(dev) >= g_devices.size()) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev) {
   HIP_INIT_API(pctx, dev);
 
-  assert(0 && "Unimplemented");
+  if (static_cast<unsigned int>(dev) >= g_devices.size()) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
+  if (pctx == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
 
-  HIP_RETURN(hipErrorUnknown);
+  *pctx = reinterpret_cast<hipCtx_t>(g_devices[dev]);
+
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev) {
   HIP_INIT_API(dev);
 
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags) {
   HIP_INIT_API(dev, flags);
 
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorUnknown);
+  if (static_cast<unsigned int>(dev) >= g_devices.size()) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  } else {
+    HIP_RETURN(hipErrorContextAlreadyInUse);
+  }
 }
