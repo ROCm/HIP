@@ -2517,8 +2517,8 @@ namespace hip_impl {
     [[noreturn]]
     void hip_throw(const std::exception& ex) {
         #if defined(__cpp_exceptions)
-            if (auto rte = dynamic_cast(&ex)) throw *rte;
-            if (auto lge = dynamic_cast(&ex)) throw *lge;
+            if (auto rte = dynamic_cast<std::runtime_error>(&ex)) throw *rte;
+            if (auto lge = dynamic_cast<std::logic_error>(&ex)) throw *lge;
             throw ex;
         #else
             std::cerr << ex.what() << std::endl;
