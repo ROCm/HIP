@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/ASTMatchers/ASTMatchFinder.h"
 #include "clang/ASTMatchers/ASTMatchers.h"
+#include "clang/Lex/HeaderSearch.h"
 #include "LLVMCompat.h"
 #include "CUDA2HIP.h"
 #include "StringUtils.h"
@@ -398,20 +399,50 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
   return Finder->newASTConsumer();
 }
 
+void HipifyAction::Ifndef(clang::SourceLocation Loc, const clang::Token &MacroNameTok, const clang::MacroDefinition &MD) {
+  clang::SourceManager& SM = getCompilerInstance().getSourceManager();
+  if (!SM.isWrittenInMainFile(Loc)) {
+    return;
+  }
+  StringRef Text(SM.getCharacterData(MacroNameTok.getLocation()), MacroNameTok.getLength());
+  Ifndefs.insert(std::make_pair(Text.str(), MacroNameTok.getEndLoc()));
+}
+
 void HipifyAction::EndSourceFileAction() {
   // Insert the hip header, if we didn't already do it by accident during substitution.
   if (!insertedRuntimeHeader) {
     // It's not sufficient to just replace CUDA headers with hip ones, because numerous CUDA headers are
     // implicitly included by the compiler. Instead, we _delete_ CUDA headers, and unconditionally insert
     // one copy of the hip include into every file.
+    bool placeForIncludeCalculated = false;
+    clang::SourceLocation sl, controllingMacroLoc;
     clang::SourceManager& SM = getCompilerInstance().getSourceManager();
-    clang::SourceLocation sl;
+    clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
+    clang::HeaderSearch& HS = PP.getHeaderSearchInfo();
+    clang::ExternalPreprocessorSource* EPL = HS.getExternalLookup();
+    const clang::FileEntry* FE = SM.getFileEntryForID(SM.getMainFileID());
+    const clang::IdentifierInfo* controllingMacro = HS.getFileInfo(FE).getControllingMacro(EPL);
+    if (controllingMacro) {
+      auto found = Ifndefs.find(controllingMacro->getName().str());
+      if (found != Ifndefs.end()) {
+        controllingMacroLoc = found->second;
+        placeForIncludeCalculated = true;
+      }
+    }
     if (pragmaOnce) {
-      sl = pragmaOnceLoc;
-    } else if (firstHeader) {
-      sl = firstHeaderLoc;
-    } else {
-      sl = SM.getLocForStartOfFile(SM.getMainFileID());
+      if (placeForIncludeCalculated) {
+        sl = pragmaOnceLoc < controllingMacroLoc ? pragmaOnceLoc : controllingMacroLoc;
+      } else {
+        sl = pragmaOnceLoc;
+      }
+      placeForIncludeCalculated = true;
+    }
+    if (!placeForIncludeCalculated) {
+      if (firstHeader) {
+        sl = firstHeaderLoc;
+      } else {
+        sl = SM.getLocForStartOfFile(SM.getMainFileID());
+      }
     }
     clang::FullSourceLoc fullSL(sl, SM);
     ct::Replacement Rep(SM, sl, 0, "\n#include <hip/hip_runtime.h>\n");
@@ -444,6 +475,10 @@ public:
 
   void PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntroducerKind Introducer) override {
     hipifyAction.PragmaDirective(Loc, Introducer);
+  }
+
+  void Ifndef(clang::SourceLocation Loc, const clang::Token &MacroNameTok, const clang::MacroDefinition &MD) override {
+    hipifyAction.Ifndef(Loc, MacroNameTok, MD);
   }
 };
 
