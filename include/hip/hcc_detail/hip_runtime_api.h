@@ -3007,10 +3007,12 @@ const char* hipKernelNameRef(const hipFunction_t f);
 
 #ifdef __cplusplus
 
+class TlsData;
+
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
                           const hipChannelFormatDesc* desc, size_t size = UINT_MAX);
 
-hipError_t ihipBindTextureImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
+hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                const void* devPtr, const struct hipChannelFormatDesc* desc,
                                size_t size, textureReference* tex);
 
@@ -3032,7 +3034,7 @@ hipError_t ihipBindTextureImpl(int dim, enum hipTextureReadMode readMode, size_t
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
                           const struct hipChannelFormatDesc& desc, size_t size = UINT_MAX) {
-    return ihipBindTextureImpl(dim, readMode, offset, devPtr, &desc, size, &tex);
+    return ihipBindTextureImpl(nullptr, dim, readMode, offset, devPtr, &desc, size, &tex);
 }
 
 /*
@@ -3052,7 +3054,7 @@ hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
                           size_t size = UINT_MAX) {
-    return ihipBindTextureImpl(dim, readMode, offset, devPtr, &(tex.channelDesc), size, &tex);
+    return ihipBindTextureImpl(nullptr, dim, readMode, offset, devPtr, &(tex.channelDesc), size, &tex);
 }
 
 // C API
@@ -3082,27 +3084,27 @@ hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& te
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
                                  const hipChannelFormatDesc* desc);
 
-hipError_t ihipBindTextureToArrayImpl(int dim, enum hipTextureReadMode readMode,
+hipError_t ihipBindTextureToArrayImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
                                       textureReference* tex);
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array) {
-    return ihipBindTextureToArrayImpl(dim, readMode, array, tex.channelDesc, &tex);
+    return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, tex.channelDesc, &tex);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array,
                                  const struct hipChannelFormatDesc& desc) {
-    return ihipBindTextureToArrayImpl(dim, readMode, array, desc, &tex);
+    return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, desc, &tex);
 }
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
                                                hipArray_const_t array,
                                                const struct hipChannelFormatDesc* desc) {
-    return ihipBindTextureToArrayImpl(dim, readMode, array, *desc, tex);
+    return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, *desc, tex);
 }
 
 // C API

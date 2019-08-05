@@ -136,14 +136,14 @@ hipError_t hipSetDevice(int deviceId) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
         ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(deviceId));
-        tls_getPrimaryCtx = true;
+        tls->getPrimaryCtx = true;
         return ihipLogStatus(hipSuccess);
     }
 }
 
 hipError_t hipDeviceSynchronize(void) {
     HIP_INIT_SPECIAL_API(hipDeviceSynchronize, TRACE_SYNC);
-    return ihipLogStatus(ihipSynchronize());
+    return ihipLogStatus(ihipSynchronize(tls));
 }
 
 hipError_t hipDeviceReset(void) {
@@ -171,7 +171,7 @@ hipError_t hipDeviceReset(void) {
 }
 
 
-hipError_t ihipDeviceSetState(void) {
+hipError_t ihipDeviceSetState(TlsData *tls) {
     hipError_t e = hipErrorInvalidContext;
     auto* ctx = ihipGetTlsDefaultCtx();
 

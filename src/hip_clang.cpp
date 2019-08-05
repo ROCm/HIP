@@ -177,6 +177,7 @@ hipError_t hipConfigureCall(
   size_t sharedMem,
   hipStream_t stream)
 {
+  GET_TLS();
   auto ctx = ihipGetTlsDefaultCtx();
   LockedAccessor_CtxCrit_t crit(ctx->criticalData());
 
