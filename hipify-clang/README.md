@@ -143,9 +143,9 @@ To run it:
 
     * Path to cuDNN should be specified by the `CUDA_DNN_ROOT_DIR` option:
 
-        - Linux: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.0-v7.6.1.34`
+        - Linux: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.0-v7.6.2.24`
 
-        - Windows: `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.6.1.34`
+        - Windows: `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.6.2.24`
 
 5. Ensure [`python`](https://www.python.org/downloads) of minimum required version 2.7 is installed.
 
@@ -179,9 +179,9 @@ To run it:
 
 On Linux the following configurations are tested:
 
-Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.6.1.34
+Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.6.2.24
 
-Ubuntu 16-18: LLVM 8.0.0 - 8.0.1, CUDA 8.0 - 10.0, cudnn-5.1.10 - cudnn-7.6.1.34
+Ubuntu 16-18: LLVM 8.0.0 - 8.0.1, CUDA 8.0 - 10.0, cudnn-5.1.10 - cudnn-7.6.2.24
 
 Build system for the above configurations:
 
@@ -196,7 +196,7 @@ cmake
  -DCMAKE_INSTALL_PREFIX=../dist \
  -DCMAKE_PREFIX_PATH=/srv/git/LLVM/8.0.1/dist \
  -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-10.0 \
- -DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.0-v7.6.1.34 \
+ -DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.0-v7.6.2.24 \
  -DLLVM_EXTERNAL_LIT=/srv/git/LLVM/8.0.1/build/bin/llvm-lit \
  ..
 ```
@@ -248,65 +248,67 @@ Running HIPify regression tests
 CUDA 10.0 - will be used for testing
 LLVM 8.0.1 - will be used for testing
 x86_64 - Platform architecture
-Linux 4.13.0-32-generic - Platform OS
+Linux 5.2.0-rc1-kfd-compute-roc-master-int-hipclang-623 - Platform OS
 64 - hipify-clang binary bitness
 64 - python 2.7.12 binary bitness
 ========================================
--- Testing: 52 tests, 12 threads --
-PASS: hipify :: unit_tests/headers/headers_test_03.cu (1 of 52)
-PASS: hipify :: unit_tests/headers/headers_test_02.cu (2 of 52)
-PASS: hipify :: unit_tests/headers/headers_test_01.cu (3 of 52)
-PASS: hipify :: unit_tests/headers/headers_test_05.cu (4 of 52)
-PASS: hipify :: unit_tests/libraries/CAFFE2/caffe2_02.cu (5 of 52)
-PASS: hipify :: unit_tests/headers/headers_test_07.cu (6 of 52)
-PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_0_based_indexing.cu (7 of 52)
-PASS: hipify :: unit_tests/headers/headers_test_06.cu (8 of 52)
-PASS: hipify :: unit_tests/headers/headers_test_04.cu (9 of 52)
-PASS: hipify :: unit_tests/headers/headers_test_08.cu (10 of 52)
-PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_sgemm_matrix_multiplication.cu (11 of 52)
-PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_0_based_indexing_rocblas.cu (12 of 52)
-PASS: hipify :: unit_tests/libraries/cuComplex/cuComplex_Julia.cu (13 of 52)
-PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_1_based_indexing.cu (14 of 52)
-PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_1_based_indexing_rocblas.cu (15 of 52)
-PASS: hipify :: unit_tests/libraries/cuDNN/cudnn_softmax.cu (16 of 52)
-PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_sgemm_matrix_multiplication_rocblas.cu (17 of 52)
-PASS: hipify :: unit_tests/libraries/cuFFT/simple_cufft.cu (18 of 52)
-PASS: hipify :: unit_tests/libraries/CAFFE2/caffe2_01.cu (19 of 52)
-PASS: hipify :: unit_tests/libraries/cuDNN/cudnn_convolution_forward.cu (20 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_03.cu (21 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_02.cu (22 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_01.cu (23 of 52)
-PASS: hipify :: unit_tests/libraries/cuRAND/poisson_api_example.cu (24 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_04.cu (25 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_05.cu (26 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_06.cu (27 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_07.cu (28 of 52)
-PASS: hipify :: unit_tests/samples/2_Cookbook/11_texture_driver/tex2dKernel.cpp (29 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_08.cu (30 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_09.cu (31 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_11.cu (32 of 52)
-PASS: hipify :: unit_tests/headers/headers_test_09.cu (33 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_10.cu (34 of 52)
-PASS: hipify :: unit_tests/samples/2_Cookbook/0_MatrixTranspose/MatrixTranspose.cpp (35 of 52)
-PASS: hipify :: unit_tests/samples/allocators.cu (36 of 52)
-PASS: hipify :: unit_tests/samples/2_Cookbook/11_texture_driver/texture2dDrv.cpp (37 of 52)
-PASS: hipify :: unit_tests/samples/coalescing.cu (38 of 52)
-PASS: hipify :: unit_tests/samples/2_Cookbook/1_hipEvent/hipEvent.cpp (39 of 52)
-PASS: hipify :: unit_tests/samples/2_Cookbook/2_Profiler/Profiler.cpp (40 of 52)
-PASS: hipify :: unit_tests/samples/2_Cookbook/7_streams/stream.cpp (41 of 52)
-PASS: hipify :: unit_tests/libraries/cuRAND/benchmark_curand_generate.cpp (42 of 52)
-PASS: hipify :: unit_tests/samples/axpy.cu (43 of 52)
-PASS: hipify :: unit_tests/samples/2_Cookbook/8_peer2peer/peer2peer.cpp (44 of 52)
-PASS: hipify :: unit_tests/samples/dynamic_shared_memory.cu (45 of 52)
-PASS: hipify :: unit_tests/samples/intro.cu (46 of 52)
-PASS: hipify :: unit_tests/samples/square.cu (47 of 52)
-PASS: hipify :: unit_tests/samples/cudaRegister.cu (48 of 52)
-PASS: hipify :: unit_tests/samples/vec_add.cu (49 of 52)
-PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_12.cu (50 of 52)
-PASS: hipify :: unit_tests/samples/static_shared_memory.cu (51 of 52)
-PASS: hipify :: unit_tests/libraries/cuRAND/benchmark_curand_kernel.cpp (52 of 52)
-Testing Time: 3.05s
-  Expected Passes    : 52
+-- Testing: 54 tests, 12 threads --
+PASS: hipify :: unit_tests/headers/headers_test_03.cu (1 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_02.cu (2 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_01.cu (3 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_05.cu (4 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_11.cu (5 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_10.cu (6 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_07.cu (7 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_06.cu (8 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_04.cu (9 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_08.cu (10 of 54)
+PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_sgemm_matrix_multiplication.cu (11 of 54)
+PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_1_based_indexing.cu (12 of 54)
+PASS: hipify :: unit_tests/libraries/cuBLAS/cublas_0_based_indexing.cu (13 of 54)
+PASS: hipify :: unit_tests/libraries/cuComplex/cuComplex_Julia.cu (14 of 54)
+PASS: hipify :: unit_tests/libraries/CAFFE2/caffe2_02.cu (15 of 54)
+PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_0_based_indexing_rocblas.cu (16 of 54)
+PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_1_based_indexing_rocblas.cu (17 of 54)
+PASS: hipify :: unit_tests/libraries/cuBLAS/rocBLAS/cublas_sgemm_matrix_multiplication_rocblas.cu (18 of 54)
+PASS: hipify :: unit_tests/libraries/cuDNN/cudnn_softmax.cu (19 of 54)
+PASS: hipify :: unit_tests/libraries/cuFFT/simple_cufft.cu (20 of 54)
+PASS: hipify :: unit_tests/libraries/CAFFE2/caffe2_01.cu (21 of 54)
+PASS: hipify :: unit_tests/libraries/cuRAND/poisson_api_example.cu (22 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_01.cu (23 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_02.cu (24 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_03.cu (25 of 54)
+PASS: hipify :: unit_tests/libraries/cuDNN/cudnn_convolution_forward.cu (26 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_04.cu (27 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_05.cu (28 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_06.cu (29 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_07.cu (30 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_08.cu (31 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_10.cu (32 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_09.cu (33 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_11.cu (34 of 54)
+PASS: hipify :: unit_tests/headers/headers_test_09.cu (35 of 54)
+PASS: hipify :: unit_tests/samples/2_Cookbook/11_texture_driver/tex2dKernel.cpp (36 of 54)
+PASS: hipify :: unit_tests/samples/2_Cookbook/0_MatrixTranspose/MatrixTranspose.cpp (37 of 54)
+PASS: hipify :: unit_tests/samples/allocators.cu (38 of 54)
+PASS: hipify :: unit_tests/samples/coalescing.cu (39 of 54)
+PASS: hipify :: unit_tests/samples/2_Cookbook/11_texture_driver/texture2dDrv.cpp (40 of 54)
+PASS: hipify :: unit_tests/samples/2_Cookbook/1_hipEvent/hipEvent.cpp (41 of 54)
+PASS: hipify :: unit_tests/samples/2_Cookbook/2_Profiler/Profiler.cpp (42 of 54)
+PASS: hipify :: unit_tests/samples/2_Cookbook/7_streams/stream.cpp (43 of 54)
+PASS: hipify :: unit_tests/samples/2_Cookbook/8_peer2peer/peer2peer.cpp (44 of 54)
+PASS: hipify :: unit_tests/samples/dynamic_shared_memory.cu (45 of 54)
+PASS: hipify :: unit_tests/samples/axpy.cu (46 of 54)
+PASS: hipify :: unit_tests/samples/intro.cu (47 of 54)
+PASS: hipify :: unit_tests/libraries/cuRAND/benchmark_curand_generate.cpp (48 of 54)
+PASS: hipify :: unit_tests/samples/cudaRegister.cu (49 of 54)
+PASS: hipify :: unit_tests/samples/vec_add.cu (50 of 54)
+PASS: hipify :: unit_tests/samples/square.cu (51 of 54)
+PASS: hipify :: unit_tests/samples/static_shared_memory.cu (52 of 54)
+PASS: hipify :: unit_tests/libraries/cuSPARSE/cuSPARSE_12.cu (53 of 54)
+PASS: hipify :: unit_tests/libraries/cuRAND/benchmark_curand_kernel.cpp (54 of 54)
+Testing Time: 2.92s
+  Expected Passes    : 54
 [100%] Built target test-hipify
 ```
 ### <a name="windows"></a >Windows
@@ -315,13 +317,13 @@ On Windows 10 the following configurations are tested:
 
 LLVM 5.0.0 - 5.0.2, CUDA 8.0,  cudnn-5.1.10 - cudnn-7.1.4.18
 
-LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-7.0.5.15 - cudnn-7.6.1.34
+LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-7.0.5.15 - cudnn-7.6.2.24
 
-LLVM 7.0.0 - 8.0.1 (with patch*), CUDA 7.5 - 10.0, cudnn-7.0.5.15 - cudnn-7.6.1.34
+LLVM 7.0.0 - 8.0.1 (with patch*), CUDA 7.5 - 10.0, cudnn-7.0.5.15 - cudnn-7.6.2.24
 
 Build system for the above configurations:
 
-Python 3.6 (min), cmake 3.12.3 (min), Visual Studio 15.5.2 2017 - 16.1.6 2019.
+Python 3.6 (min), cmake 3.12.3 (min), Visual Studio 2017 (15.5.2) - 2019 (16.2.0).
 
 Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 15 2017`:
 
@@ -334,7 +336,7 @@ cmake
  -DCMAKE_PREFIX_PATH=f:/LLVM/6.0.1/dist \
  -DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0" \
  -DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v9.0" \
- -DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.6.1.34 \
+ -DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-9.0-windows10-x64-v7.6.2.24 \
  -DLLVM_EXTERNAL_LIT=f:/LLVM/6.0.1/build/Release/bin/llvm-lit.py \
  -Thost=x64
  ..
@@ -345,7 +347,7 @@ cmake
 --    - CMake module path: F:/LLVM/6.0.1/dist/lib/cmake/llvm
 --    - Include path     : F:/LLVM/6.0.1/dist/include
 --    - Binary path      : F:/LLVM/6.0.1/dist/bin
--- Found PythonInterp: C:/Program Files/Python36/python.exe (found suitable version "3.6.4", minimum required is "3.6")
+-- Found PythonInterp: C:/Program Files/Python36/python.exe (found suitable version "3.7.4", minimum required is "3.6")
 -- Found lit: C:/Program Files/Python36/Scripts/lit.exe
 -- Found FileCheck: F:/LLVM/6.0.1/dist/bin/FileCheck.exe
 -- Found CUDA: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v9.0 (found version "9.0")
