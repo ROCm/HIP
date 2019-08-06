@@ -71,7 +71,8 @@ namespace hip_impl
 
             if (COMPILE_HIP_DB && HIP_TRACE_API) {
                 std::string fullStr;
-                recordApiTrace(&fullStr, os.str());
+                GET_TLS();
+                recordApiTrace(tls, &fullStr, os.str());
             }
         }
     }

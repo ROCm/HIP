@@ -47,8 +47,8 @@ namespace hip_impl
             return *static_cast<hsa_agent_t*>(
                 stream->locked_getAv()->get_hsa_agent());
         }
-        else if (
-            ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()) {
+        GET_TLS();
+        if (ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()) {
             return ihipGetDevice(
                 ihipGetTlsDefaultCtx()->getDevice()->_deviceId)->_hsaAgent;
         }

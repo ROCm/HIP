@@ -84,7 +84,7 @@ hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t
 //---
 // Disable visibility of this device into memory allocated on peer device.
 // Remove this device from peer device peerlist.
-hipError_t ihipDisablePeerAccess(hipCtx_t peerCtx) {
+hipError_t ihipDisablePeerAccess(TlsData* tls, hipCtx_t peerCtx) {
     hipError_t err = hipSuccess;
 
     auto thisCtx = ihipGetTlsDefaultCtx();
@@ -119,7 +119,7 @@ hipError_t ihipDisablePeerAccess(hipCtx_t peerCtx) {
 //---
 // Allow the current device to see all memory allocated on peerCtx.
 // This should add this device to the peer-device peer list.
-hipError_t ihipEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
+hipError_t ihipEnablePeerAccess(TlsData* tls, hipCtx_t peerCtx, unsigned int flags) {
     hipError_t err = hipSuccess;
     if (flags != 0) {
         err = hipErrorInvalidValue;
@@ -186,14 +186,14 @@ hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDevi
 hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
     HIP_INIT_API(hipDeviceDisablePeerAccess, peerDeviceId);
 
-    return ihipLogStatus(ihipDisablePeerAccess(ihipGetPrimaryCtx(peerDeviceId)));
+    return ihipLogStatus(ihipDisablePeerAccess(tls, ihipGetPrimaryCtx(peerDeviceId)));
 }
 
 
 hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
     HIP_INIT_API(hipDeviceEnablePeerAccess, peerDeviceId, flags);
 
-    return ihipLogStatus(ihipEnablePeerAccess(ihipGetPrimaryCtx(peerDeviceId), flags));
+    return ihipLogStatus(ihipEnablePeerAccess(tls, ihipGetPrimaryCtx(peerDeviceId), flags));
 }
 
 
@@ -214,11 +214,11 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int src
 hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
     HIP_INIT_API(hipCtxEnablePeerAccess, peerCtx, flags);
 
-    return ihipLogStatus(ihipEnablePeerAccess(peerCtx, flags));
+    return ihipLogStatus(ihipEnablePeerAccess(tls, peerCtx, flags));
 }
 
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx) {
     HIP_INIT_API(hipCtxDisablePeerAccess, peerCtx);
 
-    return ihipLogStatus(ihipDisablePeerAccess(peerCtx));
+    return ihipLogStatus(ihipDisablePeerAccess(tls, peerCtx));
 }

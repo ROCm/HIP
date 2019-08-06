@@ -849,6 +849,7 @@ __MAKE_VECTOR_TYPE__(longlong, long long);
 __MAKE_VECTOR_TYPE__(float, float);
 __MAKE_VECTOR_TYPE__(double, double);
 
+#ifdef __cplusplus
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
     static inline __device__ __host__ \
     type make_##type(comp x) { type r{x}; return r; }
@@ -867,6 +868,26 @@ __MAKE_VECTOR_TYPE__(double, double);
         type r{x, y, z, w}; \
         return r; \
     }
+#else
+ #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
+     static inline __device__ __host__ \
+     type make_##type(comp x) { type r; r.x =x; return r; }
+
+ #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
+     static inline __device__ __host__ \
+     type make_##type(comp x, comp y) { type r; r.x=x; r.y=y; return r; }
+
+ #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
+     static inline __device__ __host__ \
+     type make_##type(comp x, comp y, comp z) { type r; r.x=x; r.y=y; r.z=z; return r; }
+
+ #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
+     static inline __device__ __host__ \
+     type make_##type(comp x, comp y, comp z, comp w) { \
+         type r; r.x=x; r.y=y; r.z=z; r.w=w; \
+         return r; \
+     }
+#endif
 
 DECLOP_MAKE_ONE_COMPONENT(unsigned char, uchar1);
 DECLOP_MAKE_TWO_COMPONENT(unsigned char, uchar2);

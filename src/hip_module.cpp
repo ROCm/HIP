@@ -137,7 +137,7 @@ hipError_t hipModuleUnload(hipModule_t hmod) {
     // TODO - improve this synchronization so it is thread-safe.
     // Currently we want for all inflight activity to complete, but don't prevent another
     // thread from launching new kernels before we finish this operation.
-    ihipSynchronize();
+    ihipSynchronize(tls);
 
     delete hmod;  // The ihipModule_t dtor will clean everything up.
     hmod = nullptr;
@@ -145,7 +145,7 @@ hipError_t hipModuleUnload(hipModule_t hmod) {
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t globalWorkSizeX,
                                   uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY,
                                   uint32_t localWorkSizeZ, size_t sharedMemBytes,
@@ -285,7 +285,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX, uint32_t gr
                                  void** kernelParams, void** extra) {
     HIP_INIT_API(hipModuleLaunchKernel, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, sharedMemBytes,
                  hStream, kernelParams, extra);
-    return ihipLogStatus(ihipModuleLaunchKernel(
+    return ihipLogStatus(ihipModuleLaunchKernel(tls,
         f, blockDimX * gridDimX, blockDimY * gridDimY, gridDimZ * blockDimZ, blockDimX, blockDimY,
         blockDimZ, sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr, 0));
 }
@@ -298,7 +298,7 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags) {
     HIP_INIT_API(hipExtModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
                  localWorkSizeY, localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra);
-    return ihipLogStatus(ihipModuleLaunchKernel(
+    return ihipLogStatus(ihipModuleLaunchKernel(tls,
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags));
 }
@@ -311,14 +311,14 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t startEvent, hipEvent_t stopEvent) {
     HIP_INIT_API(hipHccModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
                  localWorkSizeY, localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra);
-    return ihipLogStatus(ihipModuleLaunchKernel(
+    return ihipLogStatus(ihipModuleLaunchKernel(tls,
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, 0));
 }
 
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags) {
-    HIP_INIT_API(hipExtLaunchMultiKernelMultiDevice, launchParamsList,numDevices,flags);
+    HIP_INIT_API(hipExtLaunchMultiKernelMultiDevice, launchParamsList, numDevices, flags);
     hipError_t result;
 
     if ((numDevices > g_deviceCnt) || (launchParamsList == nullptr)) {
@@ -361,7 +361,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
     for (int i = 0; i < numDevices; ++i) {
         const hipLaunchParams& lp = launchParamsList[i];
 
-        result = ihipModuleLaunchKernel(kds[i],
+        result = ihipModuleLaunchKernel(tls, kds[i],
                 lp.gridDim.x * lp.blockDim.x,
                 lp.gridDim.y * lp.blockDim.y,
                 lp.gridDim.z * lp.blockDim.z,
@@ -395,6 +395,7 @@ namespace hip_impl {
     }
 
     hsa_agent_t this_agent() {
+        GET_TLS();
         auto ctx = ihipGetTlsDefaultCtx();
 
         if (!ctx) throw runtime_error{"No active HIP context."};
@@ -574,6 +575,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 
 namespace {
 inline void track(const hip_impl::Agent_global& x, hsa_agent_t agent) {
+    GET_TLS();
     tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name,
             x.address, x.byte_cnt);
 
@@ -693,7 +695,7 @@ namespace hip_impl {
     }
 } // Namespace hip_impl.
 
-hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const char* name,
+hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t hmod, const char* name,
                                  hsa_agent_t *agent = nullptr) {
     using namespace hip_impl;
 
@@ -728,14 +730,14 @@ hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const ch
 // Get kernel for the current hsa agent.
 hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
     HIP_INIT_API(hipModuleGetFunction, hfunc, hmod, name);
-    return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name));
+    return ihipLogStatus(ihipModuleGetFunction(tls, hfunc, hmod, name));
 }
 
 // Get kernel for the given hsa agent. Internal use only.
 hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
                                   const char* name, hsa_agent_t *agent) {
     HIP_INIT_API(hipModuleGetFunctionEx, hfunc, hmod, name, agent);
-    return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name, agent));
+    return ihipLogStatus(ihipModuleGetFunction(tls, hfunc, hmod, name, agent));
 }
 
 namespace {
@@ -743,7 +745,7 @@ const amd_kernel_code_v3_t *header_v3(const ihipModuleSymbol_t& kd) {
   return reinterpret_cast<const amd_kernel_code_v3_t*>(kd._header);
 }
 
-hipFuncAttributes make_function_attributes(const ihipModuleSymbol_t& kd) {
+hipFuncAttributes make_function_attributes(TlsData *tls, const ihipModuleSymbol_t& kd) {
     hipFuncAttributes r{};
 
     hipDeviceProp_t prop{};
@@ -788,20 +790,20 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     HIP_INIT_API(hipFuncGetAttributes, attr, func);
     using namespace hip_impl;
 
-    if (!attr) return hipErrorInvalidValue;
-    if (!func) return hipErrorInvalidDeviceFunction;
+    if (!attr) return ihipLogStatus(hipErrorInvalidValue);
+    if (!func) return ihipLogStatus(hipErrorInvalidDeviceFunction);
 
     auto agent = this_agent();
     auto kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
 
     if (!kd->_header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 
-    *attr = make_function_attributes(*kd);
+    *attr = make_function_attributes(tls, *kd);
 
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
+hipError_t ihipModuleLoadData(TlsData *tls, hipModule_t* module, const void* image) {
     using namespace hip_impl;
 
     if (!module) return hipErrorInvalidValue;
@@ -839,7 +841,7 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
 hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
     HIP_INIT_API(hipModuleLoadData, module, image);
-    return ihipLogStatus(ihipModuleLoadData(module,image));
+    return ihipLogStatus(ihipModuleLoadData(tls,module,image));
 }
 
 hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
@@ -853,13 +855,13 @@ hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
 
     vector<char> tmp{istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
 
-    return ihipLogStatus(ihipModuleLoadData(module, tmp.data()));
+    return ihipLogStatus(ihipModuleLoadData(tls, module, tmp.data()));
 }
 
 hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned int numOptions,
                                hipJitOption* options, void** optionValues) {
     HIP_INIT_API(hipModuleLoadDataEx, module, image, numOptions, options, optionValues);
-    return ihipLogStatus(ihipModuleLoadData(module, image));
+    return ihipLogStatus(ihipModuleLoadData(tls, module, image));
 }
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
@@ -903,7 +905,7 @@ void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size
     }
 }
 
-hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+hipError_t ihipOccupancyMaxPotentialBlockSize(TlsData *tls, uint32_t* gridSize, uint32_t* blockSize,
                                               hipFunction_t f, size_t dynSharedMemPerBlk,
                                               uint32_t blockSizeLimit)
 {
@@ -1021,12 +1023,12 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
 {
     HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit);
 
-    return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(
+    return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(tls,
         gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit));
 }
 
 hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+   TlsData *tls, uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
 {
     using namespace hip_impl;
 
@@ -1083,7 +1085,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
     HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
@@ -1093,5 +1095,5 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
     HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }

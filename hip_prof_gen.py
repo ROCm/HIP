@@ -333,7 +333,7 @@ def generate_prof_header(f, api_map, opts_map):
   
   # Generating the callbacks ID enumaration
   f.write('\n// Return HIP API string\n')
-  f.write('static inline const char* hip_api_name(const uint32_t& id) {\n')
+  f.write('static inline const char* hip_api_name(const uint32_t id) {\n')
   f.write('  switch(id) {\n')
   for name in api_map.keys():
     f.write('    case HIP_API_ID_' + name + ': return "' +  name + '";\n')
@@ -353,7 +353,10 @@ def generate_prof_header(f, api_map, opts_map):
     if len(args) != 0:
       f.write('    struct {\n')
       for arg_tuple in args:
-        f.write('      ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
+	if arg_tuple[0] == "hipLimit_t":
+	    f.write('      enum ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
+	else:
+            f.write('      ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
       f.write('    } ' + name + ';\n')
   f.write(
   '  } args;\n' +
