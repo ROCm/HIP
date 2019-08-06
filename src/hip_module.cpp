@@ -847,7 +847,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
     return ihipLogStatus(retVal);
 }
 
-hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
+hipError_t ihipModuleLoadData(TlsData *tls, hipModule_t* module, const void* image) {
     using namespace hip_impl;
 
     if (!module) return hipErrorInvalidValue;
