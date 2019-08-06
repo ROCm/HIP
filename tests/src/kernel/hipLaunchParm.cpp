@@ -577,16 +577,11 @@ __global__ void vAdd(float* a) {}
 // Some wrapper macro for testing:
 #define WRAP(...) __VA_ARGS__
 
-#include <sys/time.h>
 #define GPU_PRINT_TIME(cmd, elapsed, quiet)                         \
     do {                                                            \
-        struct timeval start, stop;                                 \
-        float elapsed;                                              \
-        gettimeofday(&start, NULL);                                 \
         hipDeviceSynchronize();                                     \
         cmd;                                                        \
         hipDeviceSynchronize();                                     \
-        gettimeofday(&stop, NULL);                                  \
     } while (0);
 
 
