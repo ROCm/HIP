@@ -73,7 +73,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   if (*ptr == nullptr) {
     return hipErrorOutOfMemory;
   }
-
+  LogPrintfInfo("ihipMalloc ptr=0x%zx", *ptr);
   return hipSuccess;
 }
 

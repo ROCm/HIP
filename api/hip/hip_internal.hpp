@@ -159,7 +159,7 @@ extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 
 #define HIP_RETURN(ret)          \
         hip::g_lastError = ret;  \
-        LogPrintfInfo("[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, hipGetErrorName(ret)); \
+        LogPrintfInfo("[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
         return hip::g_lastError; \
 
 inline std::ostream& operator<<(std::ostream& os, const dim3& s) {
