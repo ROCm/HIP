@@ -2608,7 +2608,7 @@ hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func
  *
  * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidDeviceFunction
  */
-hipError_t hipFuncGetAttribute (int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
+hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
 
 #if !__HIP_VDI__
 #if defined(__cplusplus)

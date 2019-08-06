@@ -803,8 +803,9 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 
 hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc)
 {
-    using namespace hip_impl;
     HIP_INIT_API(hipFuncGetAttribute, value, attrib, hfunc);
+    using namespace hip_impl;
+    
     hipError_t retVal = hipSuccess;
     if (!value) return ihipLogStatus(hipErrorInvalidValue);
     hipFuncAttributes attr{};
