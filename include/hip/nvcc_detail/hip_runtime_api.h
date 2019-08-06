@@ -583,6 +583,10 @@ inline static hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
   return hipCUResultTohipError(cuMemcpy2D(pCopy));
 }
 
+inline static hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream __dparm(0)) {
+  return hipCUResultTohipError(cuMemcpy2DAsync(pCopy, stream));
+}
+
 inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
 {
     return hipCUDAErrorTohipError(cudaMemcpy3D(p));
