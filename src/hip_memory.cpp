@@ -300,7 +300,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     return ihipLogStatus(hip_status);
 }
 
-hipError_t ihipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
+hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags) {
     hipError_t hip_status = hipSuccess;
 
     if (HIP_SYNC_HOST_ALLOC) {
@@ -372,7 +372,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
-    hip_status = ihipHostMalloc(ptr, sizeBytes, flags);
+    hip_status = ihipHostMalloc(tls, ptr, sizeBytes, flags);
     return ihipLogStatus(hip_status);
 }
 
@@ -383,7 +383,7 @@ hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags) {
     if(flags != hipMemAttachGlobal)
         hip_status = hipErrorInvalidValue;
     else
-        hip_status = ihipHostMalloc(devPtr, size, hipHostMallocDefault);
+        hip_status = ihipHostMalloc(tls, devPtr, size, hipHostMallocDefault);
     return ihipLogStatus(hip_status);
 }
 
@@ -397,7 +397,7 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 };
 
 // width in bytes
-hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
+hipError_t ihipMallocPitch(TlsData* tls, void** ptr, size_t* pitch, size_t width, size_t height, size_t depth) {
     hipError_t hip_status = hipSuccess;
     if(ptr==NULL || pitch == NULL)
      {
@@ -460,7 +460,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 
     if (width == 0 || height == 0) return ihipLogStatus(hipErrorUnknown);
 
-    hip_status = ihipMallocPitch(ptr, pitch, width, height, 0);
+    hip_status = ihipMallocPitch(tls, ptr, pitch, width, height, 0);
     return ihipLogStatus(hip_status);
 }
 
@@ -475,7 +475,7 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
     size_t pitch;
 
     hip_status =
-        ihipMallocPitch(&pitchedDevPtr->ptr, &pitch, extent.width, extent.height, extent.depth);
+        ihipMallocPitch(tls, &pitchedDevPtr->ptr, &pitch, extent.width, extent.height, extent.depth);
     if (hip_status == hipSuccess) {
         pitchedDevPtr->pitch = pitch;
         pitchedDevPtr->xsize = extent.width;
