@@ -32,6 +32,11 @@ def fatal(msg):
   if errexit: sys.exit(1)
 
 #############################################################
+# Normalizing API name
+def filtr_api_name(name):
+  name = re.sub(r'\s*$', r'', name);
+  return name
+
 # Normalizing API arguments
 def filtr_api_args(args_str):
   args_str = re.sub(r'^\s*', r'', args_str);
@@ -127,7 +132,7 @@ def parse_api(inp_file_p, out):
       if m:
         found = 0
         if end_pattern.search(record): break
-        out[m.group(2)] = m.group(3)
+        out[filtr_api_name(m.group(2))] = m.group(3)
       else: continue
 
     hidden = 0
@@ -201,7 +206,7 @@ def parse_content(inp_file_p, api_map, out):
       # Checking if complete API matched
       if m:
         found = 2
-        api_name = m.group(2);
+        api_name = filtr_api_name(m.group(2));
         # Checking if API name is in the API map
         if api_name in api_map:
           # Getting API arguments
@@ -333,7 +338,7 @@ def generate_prof_header(f, api_map, opts_map):
   
   # Generating the callbacks ID enumaration
   f.write('\n// Return HIP API string\n')
-  f.write('static inline const char* hip_api_name(const uint32_t id) {\n')
+  f.write('static inline const char* hip_api_name(const uint32_t& id) {\n')
   f.write('  switch(id) {\n')
   for name in api_map.keys():
     f.write('    case HIP_API_ID_' + name + ': return "' +  name + '";\n')
@@ -353,10 +358,10 @@ def generate_prof_header(f, api_map, opts_map):
     if len(args) != 0:
       f.write('    struct {\n')
       for arg_tuple in args:
-	if arg_tuple[0] == "hipLimit_t":
-	    f.write('      enum ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
-	else:
-            f.write('      ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
+        if arg_tuple[0] == "hipLimit_t":
+          f.write('      enum ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
+        else:
+          f.write('      ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
       f.write('    } ' + name + ';\n')
   f.write(
   '  } args;\n' +
