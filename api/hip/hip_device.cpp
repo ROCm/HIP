@@ -99,6 +99,10 @@ hipError_t ihipDeviceGetCount(int* count) {
   // Get all available devices
   *count = g_devices.size();
 
+  if (*count < 1) {
+    return hipErrorNoDevice;
+  }
+
   return hipSuccess;
 }
 
