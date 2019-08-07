@@ -811,7 +811,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
     hipError_t retVal = hipSuccess;
     if (!value) return ihipLogStatus(hipErrorInvalidValue);
     hipFuncAttributes attr{};
-    attr = make_function_attributes(*hfunc);
+    attr = make_function_attributes(tls, *hfunc);
     switch(attrib) {
         case HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES:
             *value = (int) attr.sharedSizeBytes;
