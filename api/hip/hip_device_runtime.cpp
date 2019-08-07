@@ -241,6 +241,30 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   case hipDeviceAttributeCooperativeMultiDeviceLaunch:
     *pi = prop.cooperativeMultiDeviceLaunch;
     break;
+  case hipDeviceAttributeMaxTexture1DWidth:
+    *pi = prop.maxTexture1D;
+    break;
+  case hipDeviceAttributeMaxTexture2DWidth:
+    *pi = prop.maxTexture2D[0];
+    break;
+  case hipDeviceAttributeMaxTexture2DHeight:
+    *pi = prop.maxTexture2D[1];
+    break;
+  case hipDeviceAttributeMaxTexture3DWidth:
+    *pi = prop.maxTexture3D[0];
+    break;
+  case hipDeviceAttributeMaxTexture3DHeight:
+    *pi = prop.maxTexture3D[1];
+    break;
+  case hipDeviceAttributeMaxTexture3DDepth:
+    *pi = prop.maxTexture3D[2];
+    break;
+  case hipDeviceAttributeHdpMemFlushCntl:
+    *reinterpret_cast<unsigned int**>(pi) = prop.hdpMemFlushCntl;
+    break;
+  case hipDeviceAttributeHdpRegFlushCntl:
+    *reinterpret_cast<unsigned int**>(pi) = prop.hdpRegFlushCntl;
+    break;
   default:
     HIP_RETURN(hipErrorInvalidValue);
   }
