@@ -195,6 +195,15 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.cooperativeLaunch = info.cooperativeGroups_;
   deviceProps.cooperativeMultiDeviceLaunch = info.cooperativeMultiDeviceGroups_;
 
+  deviceProps.maxTexture1D = info.imageMaxBufferSize_;
+  deviceProps.maxTexture2D[0] = info.image2DMaxWidth_;
+  deviceProps.maxTexture2D[1] = info.image2DMaxHeight_;
+  deviceProps.maxTexture3D[0] = info.image3DMaxWidth_;
+  deviceProps.maxTexture3D[1] = info.image3DMaxHeight_;
+  deviceProps.maxTexture3D[2] = info.image3DMaxDepth_;
+  deviceProps.hdpMemFlushCntl = nullptr;
+  deviceProps.hdpRegFlushCntl = nullptr;
+
   *props = deviceProps;
   HIP_RETURN(hipSuccess);
 }
