@@ -166,6 +166,7 @@ extern "C" std::vector< std::pair<hipModule_t, bool> >* __hipRegisterFatBinary(c
 }
 
 void PlatformState::unregisterVar(hipModule_t hmod) {
+  amd::ScopedLock lock(lock_);
   auto it = vars_.begin();
   while (it != vars_.end()) {
     DeviceVar& dvar = it->second;
