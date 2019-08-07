@@ -27,7 +27,6 @@ THE SOFTWARE.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include <iostream>
 #include "clara/clara.hpp"
 #include <string>
@@ -59,9 +58,9 @@ inline clara::Parser cmdline_parser(bool& help, std::string& env, int &device, b
         ["-d"]["--device"]
         ("select one GPU and return its pciBusID")  |
 
-        clara::Opt{env,"env varibale value"}
+        clara::Opt{env,"Set Env Value"}
         ["-v"]["--EnvValue"]
-        ("send the list to HIP_VISIBLE_DEVICES env var");
+        ("send the list to HIP_VISIBLE_DEVICES env var, syntax -v=<value>");
 }
 
 int main(int argc, char** argv) {
