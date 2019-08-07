@@ -162,7 +162,7 @@ typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
 typedef cudaFuncAttributes hipFuncAttributes;
-typedef enum CUfunction_attribute hipFunction_attribute;
+typedef CUfunction_attribute hipFunction_attribute;
 #define hip_Memcpy2D CUDA_MEMCPY2D
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
