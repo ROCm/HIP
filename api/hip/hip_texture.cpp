@@ -442,7 +442,7 @@ hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
   HIP_RETURN(hipErrorUnknown);
 }
 
-hipError_t ihipBindTextureToArrayImpl(int dim, enum hipTextureReadMode readMode,
+hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
                                       textureReference* tex) {
