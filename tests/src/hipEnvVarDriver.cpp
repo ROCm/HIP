@@ -30,6 +30,21 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "hip/hip_runtime.h"
 #include <chrono>
 #include <thread>
+
+#ifdef _WIN64
+    #define SETENV(x,y,z) _putenv_s(x,y)
+    #define UNSETENV(x) _putenv_s(x,"")
+    #define POPEN(x,y) _popen(x,y)
+    #define PCLOSE(x) _pclose(x)
+#elif __unix__
+    #define SETENV(x,y,z) setenv(x,y,z)
+    #define UNSETENV(x) unsetenv(x)
+    #define POPEN(x,y) popen(x,y)
+    #define PCLOSE(x) pclose(x)
+#else
+    #error "Could not detect OS platform."
+#endif
+
 using namespace std;
 
 int getDeviceNumber() {
@@ -37,16 +52,16 @@ int getDeviceNumber() {
     char buff[512];
     string str;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    if (!(in = popen("./directed_tests/hipEnvVar -c", "r"))) {
+    if (!(in = POPEN("./directed_tests/hipEnvVar -c", "r"))) {
         // Check at same level
-        if (!(in = popen("./hipEnvVar -c", "r"))) {
+        if (!(in = POPEN("./hipEnvVar -c", "r"))) {
             return 1;
         }
     }
     while (fgets(buff, 512, in) != NULL) {
         cout << buff;
     }
-    pclose(in);
+    PCLOSE(in);
     return atoi(buff);
 }
 
@@ -56,9 +71,9 @@ void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
     string str = "./directed_tests/hipEnvVar -d ";
     str += std::to_string(deviceID);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    if (!(in = popen(str.c_str(), "r"))) {
+    if (!(in = POPEN(str.c_str(), "r"))) {
         // Check at same level
-        if (!(in = popen("./hipEnvVar -d ", "r"))) {
+        if (!(in = POPEN("./hipEnvVar -d ", "r"))) {
             exit(1);
         }
 
@@ -66,7 +81,7 @@ void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
     while (fgets(pciBusID, 100, in) != NULL) {
         cout << pciBusID;
     }
-    pclose(in);
+    PCLOSE(in);
 }
 
 // Query the current device ID locally on AMD path
@@ -79,8 +94,8 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 }
 
 int main() {
-    unsetenv("HIP_VISIBLE_DEVICES");
-    unsetenv("CUDA_VISIBLE_DEVICES");
+    UNSETENV("HIP_VISIBLE_DEVICES");
+    UNSETENV("CUDA_VISIBLE_DEVICES");
 
     std::vector<std::string> devPCINum;
     char pciBusID[100];
@@ -98,8 +113,8 @@ int main() {
     // select each of the available devices to be the target device,
     // query the returned device pci bus number, check if match the database
     for (int i = 0; i < totalDeviceNum; i++) {
-        setenv("HIP_VISIBLE_DEVICES", (char*)std::to_string(i).c_str(), 1);
-        setenv("CUDA_VISIBLE_DEVICES", (char*)std::to_string(i).c_str(), 1);
+        SETENV("HIP_VISIBLE_DEVICES", (char*)std::to_string(i).c_str(), 1);
+        SETENV("CUDA_VISIBLE_DEVICES", (char*)std::to_string(i).c_str(), 1);
         getDevicePCIBusNumRemote(0, pciBusID);
         if (devPCINum[i] == pciBusID) {
             std::cout << "The returned PciBusID is not correct" << std::endl;
@@ -111,27 +126,27 @@ int main() {
     }
 
     // check when set an invalid device number
-    setenv("HIP_VISIBLE_DEVICES", "1000,0,1", 1);
-    setenv("CUDA_VISIBLE_DEVICES", "1000,0,1", 1);
+    SETENV("HIP_VISIBLE_DEVICES", "1000,0,1", 1);
+    SETENV("CUDA_VISIBLE_DEVICES", "1000,0,1", 1);
     assert(getDeviceNumber() == 0);
 
     if (totalDeviceNum > 2) {
-        setenv("HIP_VISIBLE_DEVICES", "0,1,1000,2", 1);
-        setenv("CUDA_VISIBLE_DEVICES", "0,1,1000,2", 1);
+        SETENV("HIP_VISIBLE_DEVICES", "0,1,1000,2", 1);
+        SETENV("CUDA_VISIBLE_DEVICES", "0,1,1000,2", 1);
         assert(getDeviceNumber() == 2);
 
-        setenv("HIP_VISIBLE_DEVICES", "0,1,2", 1);
-        setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
+        SETENV("HIP_VISIBLE_DEVICES", "0,1,2", 1);
+        SETENV("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
         // test if CUDA_VISIBLE_DEVICES will be accepted by the runtime
-        unsetenv("HIP_VISIBLE_DEVICES");
-        unsetenv("CUDA_VISIBLE_DEVICES");
-        setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
+        UNSETENV("HIP_VISIBLE_DEVICES");
+        UNSETENV("CUDA_VISIBLE_DEVICES");
+        SETENV("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
     }
 
-    setenv("HIP_VISIBLE_DEVICES", "-100,0,1", 1);
-    setenv("CUDA_VISIBLE_DEVICES", "-100,0,1", 1);
+    SETENV("HIP_VISIBLE_DEVICES", "-100,0,1", 1);
+    SETENV("CUDA_VISIBLE_DEVICES", "-100,0,1", 1);
     assert(getDeviceNumber() == 0);
 
     std::cout << "PASSED" << std::endl;
