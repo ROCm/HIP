@@ -624,7 +624,7 @@ foreach $arg (@ARGV)
         #print "O: <$arg>\n";
     } else {
         # input files and libraries
-        if (($arg =~ /\.cpp$/) or ($arg =~ /\.c$/) or ($arg =~ /\.cc$/) ) {
+        if (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.c$/) or ($arg =~ /\.cc$/) ) {
             $hasC = 1;
             $needCXXFLAGS = 1;
             if ($HIP_PLATFORM eq 'clang') {
