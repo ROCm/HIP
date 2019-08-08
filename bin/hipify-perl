@@ -252,6 +252,8 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaHostAllocPortable\b/hipHostMallocPortable/g;
         $ft{'mem'} += s/\bcudaHostAllocMapped\b/hipHostMallocMapped/g;
         $ft{'mem'} += s/\bcudaHostAllocWriteCombined\b/hipHostMallocWriteCombined/g;
+        $ft{'mem'} += s/\bcudaHostRegisterDefault\b/hipHostRegisterDefault/g;
+        $ft{'mem'} += s/\bcudaHostRegisterPortable\b/hipHostRegisterPortable/g;
         $ft{'mem'} += s/\bcudaHostRegisterMapped\b/hipHostRegisterMapped/g;
         $ft{'mem'} += s/\bcudaHostRegister\b/hipHostRegister/g;
         $ft{'mem'} += s/\bcudaHostUnregister\b/hipHostUnregister/g;
