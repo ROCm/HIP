@@ -2603,15 +2603,26 @@ hipError_t hipModuleUnload(hipModule_t module);
 hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, const char* kname);
 
 /**
- * @bried Find out attributes for a given function.
+ * @brief Find out attributes for a given function.
  *
  * @param [out] attr
  * @param [in] func
  *
- * @returns hipSuccess, hipErrorInvalidDeviceFunction
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidDeviceFunction
  */
 
 hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
+
+/**
+ * @brief Find out a specific attribute for a given function.
+ *
+ * @param [out] value
+ * @param [in]  attrib
+ * @param [in]  hfunc
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidDeviceFunction
+ */
+hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
 
 #if !__HIP_VDI__
 #if defined(__cplusplus)
