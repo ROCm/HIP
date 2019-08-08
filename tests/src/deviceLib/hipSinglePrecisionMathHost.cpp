@@ -58,7 +58,9 @@ __host__ void single_precision_math_functions() {
     // erfcxf(0.0f);
     erff(0.0f);
     // erfinvf(1.0f);
+    #ifdef __unix__
     exp10f(0.0f);
+    #endif
     exp2f(0.0f);
     expf(0.0f);
     expm1f(0.0f);
@@ -78,9 +80,11 @@ __host__ void single_precision_math_functions() {
     std::isfinite(0.0f);
     std::isinf(0.0f);
     std::isnan(0.0f);
+    #ifdef __unix__
     j0f(0.0f);
     j1f(0.0f);
     jnf(-1.0f, 1.0f);
+    #endif
     ldexpf(0.0f, 0);
     lgammaf(1.0f);
     llrintf(0.0f);
@@ -121,7 +125,9 @@ __host__ void single_precision_math_functions() {
     scalblnf(0.0f, 1);
     scalbnf(0.0f, 1);
     std::signbit(1.0f);
+    #ifdef __unix__
     sincosf(0.0f, &fX, &fY);
+    #endif
     // sincospif(0.0f, &fX, &fY);
     sinf(0.0f);
     sinhf(0.0f);
@@ -131,9 +137,11 @@ __host__ void single_precision_math_functions() {
     tanhf(0.0f);
     tgammaf(2.0f);
     truncf(0.0f);
+    #ifdef __unix__
     y0f(1.0f);
     y1f(1.0f);
     ynf(1, 1.0f);
+    #endif
 }
 
 static void compileOnHost() { single_precision_math_functions(); }
