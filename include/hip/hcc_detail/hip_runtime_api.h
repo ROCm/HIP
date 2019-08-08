@@ -67,19 +67,18 @@ THE SOFTWARE.
 #define HIP_LAUNCH_PARAM_END ((void*)0x03)
 
 #ifdef __cplusplus
-  #include <algorithm>
-  #include <mutex>
-  #include <string>
-  #include <unordered_map>
-  #include <vector>
-
   #define __dparm(x) \
           = x
 #else
   #define __dparm(x)
 #endif
 
+#ifdef __GNUC__
+#pragma GCC visibility push (default)
+#endif
+
 #ifdef __cplusplus
+
 namespace hip_impl {
 hipError_t hip_init();
 }  // namespace hip_impl
@@ -2603,15 +2602,26 @@ hipError_t hipModuleUnload(hipModule_t module);
 hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule_t module, const char* kname);
 
 /**
- * @bried Find out attributes for a given function.
+ * @brief Find out attributes for a given function.
  *
  * @param [out] attr
  * @param [in] func
  *
- * @returns hipSuccess, hipErrorInvalidDeviceFunction
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidDeviceFunction
  */
 
 hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func);
+
+/**
+ * @brief Find out a specific attribute for a given function.
+ *
+ * @param [out] value
+ * @param [in]  attrib
+ * @param [in]  hfunc
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorInvalidDeviceFunction
+ */
+hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
 
 #if !__HIP_VDI__
 #if defined(__cplusplus)
@@ -3222,6 +3232,9 @@ hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
 
 #endif
 
+#ifdef __GNUC__
+#pragma GCC visibility pop
+#endif
 
 /**
  *-------------------------------------------------------------------------------------------------

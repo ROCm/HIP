@@ -37,6 +37,15 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [HIP Debugging](docs/markdown/hip_debugging.md)
 - [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenCL)
 - [hipify-clang](hipify-clang/README.md)
+- Supported CUDA APIs:
+  * [Runtime API](docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
+  * [Driver API](docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
+  * [cuComplex API](docs/markdown/cuComplex_API_supported_by_HIP.md)
+  * [cuBLAS](docs/markdown/CUBLAS_API_supported_by_HIP.md)
+  * [cuRAND](docs/markdown/CURAND_API_supported_by_HIP.md)
+  * [cuDNN](docs/markdown/CUDNN_API_supported_by_HIP.md)
+  * [cuFFT](docs/markdown/CUFFT_API_supported_by_HIP.md)
+  * [cuSPARSE](docs/markdown/CUSPARSE_API_supported_by_HIP.md)
 - [Developer/CONTRIBUTING Info](CONTRIBUTING.md)
 - [Release Notes](RELEASE.md)
 
