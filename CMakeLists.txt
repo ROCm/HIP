@@ -249,6 +249,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/hip_texture.cpp
         src/hip_surface.cpp
         src/hip_intercept.cpp
+        src/hip_launch_kernel.cpp
         src/env.cpp
         src/h2f.cpp)
 

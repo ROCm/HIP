@@ -1521,6 +1521,41 @@ hipError_t hipMemcpyToSymbol(void*, const void*, size_t, size_t, hipMemcpyKind,
 } // Namespace hip_impl.
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @brief C complined kernel launch API
+ *
+ * @param [in] function_address - kernel function pointer.
+ * @param [in] numBlocks - number of blocks
+ * @param [in] dimBlocks - dimension of a block
+ * @param [in] args - kernel arguments
+ * @param [in] sharedMemBytes - Amount of dynamic shared memory to allocate for this kernel.  The
+ *  Kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream - Stream where the kernel should be dispatched.  May be 0, in which case th
+ *  default stream is used with associated synchronization rules.
+ * @param [in] argument array size
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, hipInvalidDevice
+ *
+ * @warning should be used from gcc compiled host code only
+ */
+
+hipError_t  hipLaunchKernel(
+    const void* function_address,
+    dim3 numBlocks,
+    dim3 dimBlocks,
+    void** args,
+    size_t sharedMemBytes,
+    hipStream_t stream,
+    size_t szKernArg);
+
+#ifdef __cplusplus
+}
+#endif
+
 #if defined(__cplusplus)
 extern "C" {
 #endif
