@@ -1751,9 +1751,10 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
     hipError_t e = hipSuccess;
     if (pCopy == nullptr) {
         e = hipErrorInvalidValue;
-    }
-    e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
+    } else {
+        e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
                      pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
+    }
     return ihipLogStatus(e);
 }
 
@@ -1762,9 +1763,10 @@ hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream) 
     hipError_t e = hipSuccess;
     if (pCopy == nullptr) {
         e = hipErrorInvalidValue;
-    }
-    e = ihipMemcpy2DAsync(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
+    } else {
+        e = ihipMemcpy2DAsync(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
                      pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault, stream);
+    }
     return ihipLogStatus(e);
 }
 
