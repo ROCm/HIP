@@ -803,6 +803,52 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
     return ihipLogStatus(hipSuccess);
 }
 
+hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc)
+{
+    HIP_INIT_API(hipFuncGetAttribute, value, attrib, hfunc);
+    using namespace hip_impl;
+    
+    hipError_t retVal = hipSuccess;
+    if (!value) return ihipLogStatus(hipErrorInvalidValue);
+    hipFuncAttributes attr{};
+    attr = make_function_attributes(tls, *hfunc);
+    switch(attrib) {
+        case HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES:
+            *value = (int) attr.sharedSizeBytes;
+            break;
+        case HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK:
+            *value = attr.maxThreadsPerBlock;
+            break;
+        case HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES:
+            *value = (int) attr.constSizeBytes;
+            break;
+        case HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES:
+            *value = (int) attr.localSizeBytes;
+            break;
+        case HIP_FUNC_ATTRIBUTE_NUM_REGS:
+            *value = attr.numRegs;
+            break;
+        case HIP_FUNC_ATTRIBUTE_PTX_VERSION:
+            *value = attr.ptxVersion;
+            break;
+        case HIP_FUNC_ATTRIBUTE_BINARY_VERSION:
+            *value = attr.binaryVersion;
+            break;
+        case HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA:
+            *value = attr.cacheModeCA;
+            break;
+        case HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES:
+            *value = attr.maxDynamicSharedSizeBytes;
+            break;
+        case HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT:
+            *value = attr.preferredShmemCarveout;
+            break;
+        default:
+             retVal = hipErrorInvalidValue;
+    }
+    return ihipLogStatus(retVal);
+}
+
 hipError_t ihipModuleLoadData(TlsData *tls, hipModule_t* module, const void* image) {
     using namespace hip_impl;
 
