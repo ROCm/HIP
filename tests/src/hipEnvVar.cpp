@@ -33,16 +33,11 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 
 #ifdef _WIN64
-    #include <tchar.h>
+#include <tchar.h>
 #endif
 
-
 #ifdef _WIN64
-    #define SETENV(x,y,z) _putenv_s(x,y)
-#elif __unix__
-    #define SETENV(x,y,z) setenv(x,y,z)
-#else
-    #error "Could not detect OS platform."
+#define setenv(x,y,z) _putenv_s(x,y)
 #endif
 
 using namespace std;
@@ -78,8 +73,8 @@ int main(int argc, char** argv) {
         cout << cmd << endl;
 
     if (!env.empty()) {
-        SETENV("HIP_VISIBLE_DEVICES", env.c_str(), 1);
-        SETENV("CUDA_VISIBLE_DEVICES", env.c_str(), 1);
+        setenv("HIP_VISIBLE_DEVICES", env.c_str(), 1);
+        setenv("CUDA_VISIBLE_DEVICES", env.c_str(), 1);
         cout << "set env HIP_VISIBLE_DEVICES = " << env.c_str() << endl;
 
         // verify if the environment variable is set
