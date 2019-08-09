@@ -47,7 +47,7 @@ int getDeviceNumber() {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     if (!(in = popen("./directed_tests/hipEnvVar -c", "r"))) {
         // Check at same level
-        if (!(in = POPEN("./hipEnvVar -c", "r"))) {
+        if (!(in = popen("./hipEnvVar -c", "r"))) {
             return 1;
         }
     }
@@ -74,7 +74,7 @@ void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
     while (fgets(pciBusID, 100, in) != NULL) {
         cout << pciBusID;
     }
-    PCLOSE(in);
+    pclose(in);
 }
 
 // Query the current device ID locally on AMD path
