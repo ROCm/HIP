@@ -41,7 +41,7 @@ using namespace std;
 
 namespace hip_impl
 {
-    hsa_agent_t target_agent(hipStream_t stream)
+    HIP_INTERNAL_EXPORTED_API hsa_agent_t target_agent(hipStream_t stream)
     {
         if (stream) {
             return *static_cast<hsa_agent_t*>(

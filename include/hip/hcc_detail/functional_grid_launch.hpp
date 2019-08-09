@@ -25,25 +25,16 @@ THE SOFTWARE.
 #include "concepts.hpp"
 #include "helpers.hpp"
 #include "program_state.hpp"
+#include "hip_runtime_api.h"
 
-#include "hc.hpp"
-#include "hip/hip_hcc.h"
-#include "hip_runtime.h"
-
-#include <algorithm>
-#include <cstddef>
 #include <cstdint>
 #include <cstring>
-#include <functional>
-#include <iostream>
-#include <mutex>
 #include <stdexcept>
-#include <string>
 #include <tuple>
 #include <type_traits>
-#include <unordered_map>
 #include <utility>
-#include <vector>
+
+#pragma GCC visibility push(hidden)
 
 namespace hip_impl {
 template <typename T, typename std::enable_if<std::is_integral<T>{}>::type* = nullptr>
@@ -114,7 +105,7 @@ inline hip_impl::kernarg make_kernarg(
 }
 
 
-hsa_agent_t target_agent(hipStream_t stream);
+HIP_INTERNAL_EXPORTED_API hsa_agent_t target_agent(hipStream_t stream);
 
 inline
 __attribute__((visibility("hidden")))
@@ -194,3 +185,5 @@ inline void hipLaunchKernel(F kernel, const dim3& numBlocks, const dim3& dimBloc
     hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
                        std::move(args)...);
 }
+
+#pragma GCC visibility pop

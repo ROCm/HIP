@@ -124,6 +124,11 @@ int main() {
     {
         hipFunction_t Function;
         HIP_CHECK(hipModuleGetFunction(&Function, Module, "test_globals"));
+        int val =-1;
+        HIP_CHECK(hipFuncGetAttribute(&val, HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES,Function));
+        printf("Shared Size Bytes = %d\n",val);
+        HIP_CHECK(hipFuncGetAttribute(&val, HIP_FUNC_ATTRIBUTE_NUM_REGS, Function));
+        printf("Num Regs = %d\n",val);
         HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, 0, NULL, (void**)&config));
 
         hipMemcpyDtoH(B, Bd, SIZE);

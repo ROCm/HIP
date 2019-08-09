@@ -23,11 +23,13 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_CHANNEL_DESCRIPTOR_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_CHANNEL_DESCRIPTOR_H
 
+#include <hip/hip_common.h>
 #include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/hip_vector_types.h>
 
 #ifdef __cplusplus
 
+HIP_PUBLIC_API
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f);
 
 static inline hipChannelFormatDesc hipCreateChannelDescHalf() {
