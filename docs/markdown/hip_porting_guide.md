@@ -186,8 +186,8 @@ Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, an
 |Define  		|  hcc      |  hip-clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.) 
 |--- | --- | --- | --- |---|
 |HIP-related defines:|
-|`__HIP_PLATFORM_HCC___`| Defined | Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
-|`__HIP_PLATFORM_NVCC___`| Undefined | Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
+|`__HIP_PLATFORM_HCC__`| Defined | Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
+|`__HIP_PLATFORM_NVCC__`| Undefined | Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
 |`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined 
 |`__HIPCC__`		| Defined   | Defined | Defined 		|  Undefined
 |`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) |0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0 
