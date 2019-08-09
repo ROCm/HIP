@@ -29,6 +29,13 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <assert.h>
 #include <string>
 #include "hip/hip_runtime.h"
+
+#ifdef _WIN64
+#define popen(x,y) _popen(x,y)
+#define pclose(x) _pclose(x)
+#define setenv(x,y,z) _putenv_s(x,y)
+#endif
+
 using namespace std;
 
 string getRes() {

@@ -30,6 +30,14 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "hip/hip_runtime.h"
 #include <chrono>
 #include <thread>
+
+#ifdef _WIN64
+#define popen(x,y) _popen(x,y)
+#define pclose(x) _pclose(x)
+#define setenv(x,y,z) _putenv_s(x,y)
+#define unsetenv(x) _putenv_s(x,"")
+#endif
+
 using namespace std;
 
 int getDeviceNumber() {

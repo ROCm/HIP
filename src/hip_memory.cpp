@@ -1694,10 +1694,9 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
     return ihipLogStatus(e);
 }
 
-hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
+hipError_t ihipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                             size_t height, hipMemcpyKind kind, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(hipMemcpy2DAsync, (TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind, stream);
-    if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return ihipLogStatus(hipErrorInvalidValue);
+    if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return hipErrorInvalidValue;
     hipError_t e = hipSuccess;
     int isLockedOrD2D = 0;
     void *pinnedPtr=NULL;
@@ -1736,6 +1735,14 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
         }
     }
 
+    return e;
+}
+
+hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
+                            size_t height, hipMemcpyKind kind, hipStream_t stream) {
+    HIP_INIT_SPECIAL_API(hipMemcpy2DAsync, (TRACE_MCMD), dst, dpitch, src, spitch, width, height, kind, stream);
+    hipError_t e = hipSuccess;
+    e = ihipMemcpy2DAsync(dst, dpitch, src, spitch, width, height, kind, stream);
     return ihipLogStatus(e);
 }
 
@@ -1744,9 +1751,22 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
     hipError_t e = hipSuccess;
     if (pCopy == nullptr) {
         e = hipErrorInvalidValue;
-    }
-    e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
+    } else {
+        e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
                      pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
+    }
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream) {
+    HIP_INIT_SPECIAL_API(hipMemcpyParam2DAsync, (TRACE_MCMD), pCopy, stream);
+    hipError_t e = hipSuccess;
+    if (pCopy == nullptr) {
+        e = hipErrorInvalidValue;
+    } else {
+        e = ihipMemcpy2DAsync(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
+                     pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault, stream);
+    }
     return ihipLogStatus(e);
 }
 
