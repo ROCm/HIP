@@ -95,6 +95,10 @@ THE SOFTWARE.
         }                                                                                          \
     }
 
+#ifdef _WIN64
+#define aligned_alloc _aligned_malloc
+#endif
+
 // standard command-line variables:
 extern size_t N;
 extern char memsetval;
