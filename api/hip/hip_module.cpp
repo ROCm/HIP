@@ -231,7 +231,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
     queue = hip::getNullStream();
   } else {
     hip::getNullStream()->finish();
-    queue = as_amd(reinterpret_cast<cl_command_queue>(hStream))->asHostQueue();
+    queue = reinterpret_cast<hip::Stream*>(hStream)->asHostQueue();
   }
   if ((params & amd::NDRangeKernelCommand::CooperativeGroups) &&
       !device->info().cooperativeGroups_) {
@@ -387,7 +387,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
   for (int i = 0; i < numDevices; ++i) {
     hipSetDevice(i);
     const hipLaunchParams& launch = launchParamsList[i];
-    amd::HostQueue* queue = as_amd(reinterpret_cast<cl_command_queue>(launch.stream))->asHostQueue();
+    amd::HostQueue* queue = reinterpret_cast<hip::Stream*>(launch.stream)->asHostQueue();
     hipFunction_t func = PlatformState::instance().getFunc(launch.func, i);
     if (func == nullptr) {
       HIP_RETURN(result);

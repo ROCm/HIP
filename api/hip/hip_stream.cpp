@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "thread/monitor.hpp"
 
 static amd::Monitor streamSetLock("Guards global stream set");
-static std::unordered_set<amd::HostQueue*> streamSet;
+static std::unordered_set<hip::Stream*> streamSet;
 
 // Internal structure for stream callback handler
 class StreamCallback {
@@ -52,6 +52,37 @@ void syncStreams() {
   }
 }
 
+Stream::Stream(amd::Device* dev, amd::Context* ctx, amd::CommandQueue::Priority p, unsigned int f) :
+  queue(nullptr), device(dev), context(ctx), priority(p), flags(f) {}
+
+void Stream::create() {
+  cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
+  queue = new amd::HostQueue(*context, *device, properties,
+                             amd::CommandQueue::RealTimeDisabled, priority);
+  assert(queue != nullptr);
+  queue->create();
+}
+
+amd::HostQueue* Stream::asHostQueue() {
+  if (queue == nullptr) {
+    create();
+  }
+  return queue;
+}
+
+void Stream::destroy() {
+  if (queue != nullptr) {
+    queue->release();
+    queue = nullptr;
+  }
+}
+
+void Stream::finish() {
+  if (queue != nullptr) {
+    queue->finish();
+  }
+}
+
 };
 
 void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data) {
@@ -66,12 +97,9 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
 static hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags, amd::CommandQueue::Priority priority) {
   amd::Device* device = hip::getCurrentContext()->devices()[0];
 
-  cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-  amd::HostQueue* queue = new amd::HostQueue(*hip::getCurrentContext(), *device, properties,
-                                             amd::CommandQueue::RealTimeDisabled,
-                                             priority);
+  hip::Stream* hStream = new hip::Stream(device, hip::getCurrentContext(), priority, flags);
 
-  if (queue == nullptr || !queue->create()) {
+  if (hStream == nullptr) {
     return hipErrorOutOfMemory;
   }
 
@@ -80,11 +108,11 @@ static hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags, amd:
 
     {
       amd::ScopedLock lock(streamSetLock);
-      streamSet.insert(queue);
+      streamSet.insert(hStream);
     }
   }
 
-  *stream = reinterpret_cast<hipStream_t>(as_cl(queue));
+  *stream = reinterpret_cast<hipStream_t>(hStream);
 
   return hipSuccess;
 }
@@ -129,11 +157,10 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
   HIP_INIT_API(stream, flags);
 
-  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
-  auto it = streamSet.find(hostQueue);
+  hip::Stream* hStream = reinterpret_cast<hip::Stream*>(stream);
 
-  if(flags != nullptr) {
-    *flags = (it == streamSet.end()) ? hipStreamNonBlocking : hipStreamDefault;
+  if(flags != nullptr && hStream != nullptr) {
+    *flags = hStream->flags;
   } else {
     HIP_RETURN(hipErrorInvalidValue);
   }
@@ -150,18 +177,15 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
     hip::syncStreams();
 
     hostQueue = hip::getNullStream();
+
+    hostQueue->finish();
   } else {
     hip::getNullStream()->finish();
 
-    hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+    hip::Stream* hStream = reinterpret_cast<hip::Stream*>(stream);
+
+    hStream->finish();
   }
-
-  if (hostQueue == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
-  }
-
-  hostQueue->finish();
-
   HIP_RETURN(hipSuccess);
 }
 
@@ -174,13 +198,12 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 
   amd::ScopedLock lock(streamSetLock);
 
-  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+  hip::Stream* hStream = reinterpret_cast<hip::Stream*>(stream);
 
-  // Release last tracked command
-  hostQueue->setLastQueuedCommand(nullptr);
+  hStream->destroy();
+  streamSet.erase(hStream);
 
-  hostQueue->release();
-  streamSet.erase(hostQueue);
+  delete hStream;
 
   HIP_RETURN(hipSuccess);
 }
@@ -188,8 +211,12 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
   HIP_INIT_API(stream, event, flags);
 
+  amd::HostQueue* queue;
+
   if (stream == nullptr) {
-    stream = reinterpret_cast<hipStream_t>(as_cl(hip::getNullStream()));
+    queue = hip::getNullStream();
+  } else {
+    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
   }
 
   if (event == nullptr) {
@@ -198,7 +225,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
 
-  return HIP_RETURN(e->streamWait(stream, flags));
+  return HIP_RETURN(e->streamWait(queue, flags));
 }
 
 hipError_t hipStreamQuery(hipStream_t stream) {
@@ -208,7 +235,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
   if (stream == nullptr) {
     hostQueue = hip::getNullStream();
   } else {
-    hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+    hostQueue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
   }
 
   amd::Command* command = hostQueue->getLastQueuedCommand(false);
@@ -228,8 +255,8 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
                                 unsigned int flags) {
   HIP_INIT_API(stream, callback, userData, flags);
 
-  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>
-                              (stream))->asHostQueue();
+  amd::HostQueue* hostQueue = reinterpret_cast<hip::Stream*>
+                              (stream)->asHostQueue();
   amd::Command* command = hostQueue->getLastQueuedCommand(true);
   amd::Event& event = command->event();
   StreamCallback* cbo = new StreamCallback(stream, callback, userData, command);

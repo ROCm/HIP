@@ -98,9 +98,7 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
   return hipSuccess;
 }
 
-hipError_t Event::streamWait(hipStream_t stream, uint flags) {
-  amd::HostQueue* hostQueue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
-
+hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
   if (stream_ == hostQueue) return hipSuccess;
 
   amd::ScopedLock lock(lock_);
@@ -237,7 +235,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   if (stream == nullptr) {
     queue = hip::getNullStream();
   } else {
-    queue = as_amd(reinterpret_cast<cl_command_queue>(stream))->asHostQueue();
+    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
   }
 
   amd::Command* command = queue->getLastQueuedCommand(true);
