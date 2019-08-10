@@ -50,7 +50,7 @@ public:
   hipError_t query();
   hipError_t synchronize();
   hipError_t elapsedTime(Event& stop, float& ms);
-  hipError_t streamWait(hipStream_t stream, uint flags);
+  hipError_t streamWait(amd::HostQueue* queue, uint flags);
 
   void addMarker(amd::HostQueue* queue, amd::Command* command);
 

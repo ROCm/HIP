@@ -86,6 +86,22 @@ namespace hip {
 
     static Function* asFunction(hipFunction_t f) { return reinterpret_cast<Function*>(f); }
   };
+
+  struct Stream {
+    amd::HostQueue* queue;
+
+    amd::Device* device;
+    amd::Context* context;
+    amd::CommandQueue::Priority priority;
+    unsigned int flags;
+
+    Stream(amd::Device* dev, amd::Context* ctx, amd::CommandQueue::Priority p, unsigned int f);
+    void create();
+    amd::HostQueue* asHostQueue();
+    void destroy();
+    void finish();
+  };
+
 };
 
 struct ihipExec_t {
