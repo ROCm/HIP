@@ -1882,15 +1882,27 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
                        size_t height, hipMemcpyKind kind);
 
 /**
-*  @brief Copies memory for 2D arrays.
-*  @param[in]   pCopy Parameters for the memory copy
+ *  @brief Copies memory for 2D arrays.
+ *  @param[in]   pCopy Parameters for the memory copy
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
+ * hipMemcpyToSymbol, hipMemcpyAsync
+*/
+hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
+
+/**
+ *  @brief Copies memory for 2D arrays.
+ *  @param[in]   pCopy Parameters for the memory copy
+ *  @param[in]   stream Stream to use
  *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
  *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
  * hipMemcpyToSymbol, hipMemcpyAsync
 */
-hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
+hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Copies data between host and device.

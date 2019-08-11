@@ -28,16 +28,23 @@ list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)
 list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
 
 # get date information based on UTC
-# use the last two digits of year + week number + day in the week as HIP_VERSION_PATCH
+# use the last two digits of year + week number + day in the week as HIP_VERSION_GITDATE
 # use the commit date, instead of build date
 # add xargs to remove strange trailing newline character
 execute_process(COMMAND git show -s --format=@%ct
     COMMAND xargs
     COMMAND date -f - --utc +%y%U%w
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE HIP_VERSION_PATCH
+    OUTPUT_VARIABLE HIP_VERSION_GITDATE
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# get commit short hash
+execute_process(COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE HIP_VERSION_GITHASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}-${HIP_VERSION_GITHASH})
 set(HIP_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
 add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
@@ -218,7 +225,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     endif()
 
     # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_GITDATE}")
 
     # Add remaining flags
     set(HCC_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
@@ -370,7 +377,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     write_basic_package_version_file(
         ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
-        VERSION "${HIP_VERSION}"
+        VERSION "${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_GITDATE}"
         COMPATIBILITY SameMajorVersion
         )
     install(

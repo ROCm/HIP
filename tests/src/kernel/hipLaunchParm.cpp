@@ -577,16 +577,11 @@ __global__ void vAdd(float* a) {}
 // Some wrapper macro for testing:
 #define WRAP(...) __VA_ARGS__
 
-#include <sys/time.h>
-#define GPU_PRINT_TIME(cmd, elapsed, quiet)                         \
+#define MY_LAUNCH_MACRO(cmd, elapsed, quiet)                         \
     do {                                                            \
-        struct timeval start, stop;                                 \
-        float elapsed;                                              \
-        gettimeofday(&start, NULL);                                 \
         hipDeviceSynchronize();                                     \
         cmd;                                                        \
         hipDeviceSynchronize();                                     \
-        gettimeofday(&stop, NULL);                                  \
     } while (0);
 
 
@@ -918,14 +913,14 @@ int main() {
 
     // Test: Passing hipLaunchKernelGGL inside another macro:
     float e0;
-    GPU_PRINT_TIME(hipLaunchKernelGGL(vAdd, dim3(1024),
+    MY_LAUNCH_MACRO(hipLaunchKernelGGL(vAdd, dim3(1024),
                    dim3(1), 0, 0, Ad), e0, j);
-    GPU_PRINT_TIME(WRAP(hipLaunchKernelGGL(vAdd, dim3(1024),
+    MY_LAUNCH_MACRO(WRAP(hipLaunchKernelGGL(vAdd, dim3(1024),
                    dim3(1), 0, 0, Ad)), e0, j);
 
 #ifdef EXTRA_PARENS_1
     // Don't wrap hipLaunchKernelGGL in extra set of parens:
-    GPU_PRINT_TIME((hipLaunchKernelGGL(vAdd, dim3(1024),
+    MY_LAUNCH_MACRO((hipLaunchKernelGGL(vAdd, dim3(1024),
                     dim3(1), 0, 0, Ad)), e0, j);
 #endif
 

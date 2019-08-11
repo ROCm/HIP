@@ -108,12 +108,12 @@ typedef struct {
 
 extern "C" __device__ __ockl_as_status_t
 __ockl_as_write_block(__ockl_as_stream_t ATTR_GLOBAL *stream, uchar service_id,
-                      ulong *connection_id, const uchar *str, uint32_t len,
+                      uint64_t *connection_id, const uchar *str, uint32_t len,
                       uchar flags);
 
 __device__ __ockl_as_status_t
 __hip_as_write_block(__ockl_as_stream_t *stream, uchar service_id,
-                     ulong *connection_id, const uchar *str, uint32_t len,
+                     uint64_t *connection_id, const uchar *str, uint32_t len,
                      uchar flags)
 {
     __ockl_as_stream_t ATTR_GLOBAL *gstream =
