@@ -93,16 +93,24 @@
 |           11 |*`CURAND_3RD`*                                                 |                                                            |
 |           12 |*`CURAND_DEFINITION`*                                          |                                                            |
 |           13 |*`CURAND_POISSON`*                                             |                                                            |
-| struct       | `curandStateMtgp32_t`                                         | `hiprandStateMtgp32_t`                                     |
-| struct       | `curandStateScrambledSobol64_t`                               |                                                            |
-| struct       | `curandStateSobol64_t`                                        |                                                            |
-| struct       | `curandStateScrambledSobol32_t`                               |                                                            |
-| struct       | `curandStateSobol32_t`                                        | `hiprandStateSobol32_t`                                    |
-| struct       | `curandStateMRG32k3a_t`                                       | `hiprandStateMRG32k3a_t`                                   |
-| struct       | `curandStatePhilox4_32_10_t`                                  | `hiprandStatePhilox4_32_10_t`                              |
-| struct       | `curandStateXORWOW_t`                                         | `hiprandStateXORWOW_t`                                     |
-| struct       | `curandState_t`                                               | `hiprandState_t`                                           |
-| struct       | `curandState`                                                 | `hiprandState_t`                                           |
+| struct       | `curandStateMtgp32`                                           | `hiprandStateMtgp32`                                       |
+| typedef      | `curandStateMtgp32_t`                                         | `hiprandStateMtgp32_t`                                     |
+| struct       | `curandStateScrambledSobol64`                                 |                                                            |
+| typedef      | `curandStateScrambledSobol64_t`                               |                                                            |
+| struct       | `curandStateSobol64`                                          |                                                            |
+| typedef      | `curandStateSobol64_t`                                        |                                                            |
+| struct       | `curandStateScrambledSobol32`                                 |                                                            |
+| typedef      | `curandStateScrambledSobol32_t`                               |                                                            |
+| struct       | `curandStateSobol32`                                          | `hiprandStateSobol32`                                      |
+| typedef      | `curandStateSobol32_t`                                        | `hiprandStateSobol32_t`                                    |
+| struct       | `curandStateMRG32k3a`                                         | `hiprandStateMRG32k3a`                                     |
+| typedef      | `curandStateMRG32k3a_t`                                       | `hiprandStateMRG32k3a_t`                                   |
+| struct       | `curandStatePhilox4_32_10`                                    | `hiprandStatePhilox4_32_10`                                |
+| typedef      | `curandStatePhilox4_32_10_t`                                  | `hiprandStatePhilox4_32_10_t`                              |
+| struct       | `curandStateXORWOW`                                           | `hiprandStateXORWOW`                                       |
+| typedef      | `curandStateXORWOW_t`                                         | `hiprandStateXORWOW_t`                                     |
+| struct       | `curandState`                                                 | `hiprandState`                                             |
+| typedef      | `curandState_t`                                               | `hiprandState_t`                                           |
 
 ## **2. Host API Functions**
 

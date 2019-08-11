@@ -52,7 +52,7 @@ API_TYPE api;
 int report_break;
 int cashiers_load_h[HOURS];
 __constant__ int cashiers_load[HOURS];
-// CHECK: __global__ void setup_kernel(hiprandState_t *state)
+// CHECK: __global__ void setup_kernel(hiprandState *state)
 __global__ void setup_kernel(curandState *state)
 {
     int id = threadIdx.x + blockIdx.x * blockDim.x;
@@ -79,15 +79,15 @@ void update_queue(int id, int min, unsigned int new_customers,
         = queue_length;
 }
 
-// CHECK: __global__ void simple_device_API_kernel(hiprandState_t *state,
-__global__ void simple_device_API_kernel(curandState *state, 
+// CHECK: __global__ void simple_device_API_kernel(hiprandState *state,
+__global__ void simple_device_API_kernel(curandState *state,
                     unsigned int *queue_lengths, size_t pitch)
 {
     int id = threadIdx.x + blockIdx.x * blockDim.x;
     unsigned int new_customers;
     unsigned int queue_length = 0;
     /* Copy state to local memory for efficiency */
-    // CHECK: hiprandState_t localState = state[id];
+    // CHECK: hiprandState localState = state[id];
     curandState localState = state[id];
     /* Simulate queue in time */
     for(int min = 1; min <= 60 * HOURS; min++) {
@@ -120,7 +120,7 @@ __global__ void host_API_kernel(unsigned int *poisson_numbers,
                      queue_lengths, pitch);
     }
 }
-// CHECK: __global__ void robust_device_API_kernel(hiprandState_t *state,
+// CHECK: __global__ void robust_device_API_kernel(hiprandState *state,
 // CHECK: hiprandDiscreteDistribution_t poisson_1,
 // CHECK: hiprandDiscreteDistribution_t poisson_2,
 // CHECK: hiprandDiscreteDistribution_t poisson_3,
@@ -134,7 +134,7 @@ __global__ void robust_device_API_kernel(curandState *state,
     unsigned int new_customers;
     unsigned int queue_length = 0;
     /* Copy state to local memory for efficiency */
-    // CHECK: hiprandState_t localState = state[id];
+    // CHECK: hiprandState localState = state[id];
     curandState localState = state[id];
     /* Simulate queue in time */
     /* first 3 hours */
@@ -165,7 +165,7 @@ __global__ void robust_device_API_kernel(curandState *state,
                     curand_discrete(&localState, poisson_3);
         /* Update queue */
         update_queue(id, min, new_customers, queue_length,
-                                    queue_lengths, pitch);       
+                                    queue_lengths, pitch);
     }
     /* Copy state back to global memory */
     state[id] = localState;
@@ -298,12 +298,11 @@ void print_statistics(unsigned int *hostResults, size_t pitch)
     }
 }
 
-
 int main(int argc, char *argv[])
 {
     int n;
     size_t pitch;
-    // CHECK: hiprandState_t *devStates;
+    // CHECK: hiprandState *devStates;
     curandState *devStates;
     unsigned int *devResults, *hostResults;
     unsigned int *poisson_numbers_d;
@@ -328,7 +327,7 @@ int main(int argc, char *argv[])
 
     /* Allocate space for prng states on device */
     // CHECK: CUDA_CALL(hipMalloc((void **)&devStates, 64 * 64 *
-    // CHECK: sizeof(hiprandState_t)));
+    // CHECK: sizeof(hiprandState)));
     CUDA_CALL(cudaMalloc((void **)&devStates, 64 * 64 * 
               sizeof(curandState)));
 
