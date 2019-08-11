@@ -209,6 +209,23 @@ bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFunc
   return true;
 }
 
+bool PlatformState::getShadowVarInfo(std::string var_name, void** var_addr, size_t* var_size) {
+  const auto it = vars_.find(var_name);
+  if (it != vars_.cend()) {
+    DeviceVar& dvar = it->second;
+    *var_addr = dvar.shadowVptr;
+    *var_size = dvar.size;
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
+                             size_t* var_size) {
+  return PlatformState::instance().getShadowVarInfo(var_name, var_addr, var_size);
+}
+
 hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
   amd::ScopedLock lock(lock_);
   const auto it = functions_.find(hostFunction);
@@ -218,6 +235,7 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
       hipModule_t module = (*devFunc.modules)[deviceId].first;
       if (!(*devFunc.modules)[deviceId].second) {
         amd::Program* program = as_amd(reinterpret_cast<cl_program>(module));
+        program->setVarInfoCallBack(&getSvarInfo);
         if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr)) {
           return nullptr;
         }
@@ -280,6 +298,7 @@ bool PlatformState::getGlobalVar(const void* hostVar, int deviceId,
 
       if (!(*dvar.modules)[deviceId].second) {
         amd::Program* program = as_amd(reinterpret_cast<cl_program>((*dvar.modules)[deviceId].first));
+        program->setVarInfoCallBack(&getSvarInfo);
         if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr)) {
           return false;
         }
@@ -358,7 +377,7 @@ extern "C" void __hipRegisterVar(
 {
   HIP_INIT();
 
-  PlatformState::DeviceVar dvar{ std::string{ hostVar }, modules,
+  PlatformState::DeviceVar dvar{var, std::string{ hostVar }, static_cast<size_t>(size), modules,
     std::vector<PlatformState::RegisteredVar>{ g_devices.size() } };
 
   PlatformState::instance().registerVar(hostVar, dvar);

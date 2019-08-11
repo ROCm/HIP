@@ -111,6 +111,7 @@ global:
     hipMemset3D;
     hipModuleGetFunction;
     hipModuleGetGlobal;
+    hipModuleGetTexRef;
     hipModuleLaunchKernel;
     hipModuleLaunchKernelExt;
     hipLaunchCooperativeKernel;

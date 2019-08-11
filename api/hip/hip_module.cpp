@@ -114,7 +114,7 @@ bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
   device::Program* dev_program
     = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
 
-  if (!dev_program->getGlobalSymbolsFromCodeObj(&var_names)) {
+  if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
     return false;
   }
 
@@ -124,7 +124,7 @@ bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
       modules->at(dev) = std::make_pair(*module, false);
     }
 
-    PlatformState::DeviceVar dvar{it->c_str(), modules,
+    PlatformState::DeviceVar dvar{nullptr, it->c_str(), 0, modules,
       std::vector<PlatformState::RegisteredVar>{ g_devices.size()}};
     PlatformState::instance().registerVar(it->c_str(), dvar);
   }
@@ -417,3 +417,25 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int numDevices, unsigned int flags) {
   return ihipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags, 0);
 }
+
+hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
+  HIP_INIT_API(texRef, hmod, name);
+
+  hipDeviceptr_t dptr = nullptr;
+  size_t bytes = 0;
+
+  /* input args check */
+  if ((texRef == nullptr) || (name == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+   /* Get address and size for the global symbol */
+  if (!PlatformState::instance().getGlobalVar(name, ihipGetDevice(), &dptr,
+                                              &bytes)) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  *texRef = reinterpret_cast<textureReference*>(dptr);
+  HIP_RETURN(hipSuccess);
+}
+

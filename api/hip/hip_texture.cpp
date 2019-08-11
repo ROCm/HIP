@@ -442,13 +442,38 @@ hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
   HIP_RETURN(hipErrorUnknown);
 }
 
+hipError_t ihipBindTextureImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
+                               const void* devPtr, const struct hipChannelFormatDesc* desc,
+                               size_t size, textureReference* tex) {
+  HIP_INIT_API(dim, readMode, offset, devPtr, size, tex);
+
+  assert(1 == dim);
+
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, desc, 1, 1, size));
+}
+
 hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
                                       textureReference* tex) {
-  assert(0 && "Unimplemented");
+  HIP_INIT_API(dim, readMode, &desc, array, tex);
 
-  return hipErrorUnknown;
+  cl_mem_object_type clType;
+  size_t offset = 0;
+
+  switch (dim) {
+    case 1:
+      clType = CL_MEM_OBJECT_IMAGE1D_ARRAY;
+      break;
+    case 2:
+      clType = CL_MEM_OBJECT_IMAGE2D_ARRAY;
+      break;
+    default:
+      HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  HIP_RETURN(ihipBindTexture(clType, &offset, tex, array->data, &desc, array->width,
+                             array->height, array->depth));
 }
 
 hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
@@ -464,7 +489,7 @@ hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
 hipError_t hipUnbindTexture(const textureReference* tex) {
   HIP_INIT_API(tex);
 
-  as_amd(reinterpret_cast<cl_mem>(tex->textureObject))->release();
+  ihipDestroyTextureObject(reinterpret_cast<hip::TextureObject*>(tex->textureObject));
 
   HIP_RETURN(hipSuccess);
 }
@@ -482,9 +507,13 @@ hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array)
 hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* tex) {
   HIP_INIT_API(offset, tex);
 
-  assert(0 && "Unimplemented");
+  if ((offset == nullptr) || (tex == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
 
-  HIP_RETURN(hipErrorUnknown);
+  *offset = 0;
+
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipGetTextureReference(const textureReference** tex, const void* symbol) {
