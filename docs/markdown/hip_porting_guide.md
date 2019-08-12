@@ -412,7 +412,7 @@ run hipcc when appropriate.
 ### warpSize
 Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](hip_kernel_language.md#warp-cross-lane-functions) for information on how to write portable wave-aware code.
 
-### Kernel launch with group size is > 256
+### Kernel launch with group size > 256
 Kernel code should be prefixed with __attribute__((amdgpu_flat_work_group_size(<min>,<max>))).
 
 ## memcpyToSymbol
