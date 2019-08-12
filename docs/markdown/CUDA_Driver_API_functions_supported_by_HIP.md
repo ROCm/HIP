@@ -166,8 +166,8 @@
 |           92 |*`CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS`*                      |                                                            | 9.0              |
 |           93 |*`CU_DEVICE_ATTRIBUTE_CAN_USE_64_BIT_STREAM_MEM_OPS`*               |                                                            | 9.0              |
 |           94 |*`CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR`*               |                                                            | 9.0              |
-|           95 |*`CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH`*                          |                                                            | 9.0              |
-|           96 |*`CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH`*             |                                                            | 9.0              |
+|           95 |*`CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH`*                          |*`hipDeviceAttributeCooperativeLaunch`*                     | 9.0              |
+|           96 |*`CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH`*             |*`hipDeviceAttributeCooperativeMultiDeviceLaunch`*          | 9.0              |
 |           97 |*`CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN`*           |                                                            | 9.0              |
 |           98 |*`CU_DEVICE_ATTRIBUTE_CAN_FLUSH_REMOTE_WRITES`*                     |                                                            | 9.2              |
 |           99 |*`CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED`*                     |                                                            | 9.2              |
@@ -1044,9 +1044,9 @@
 
 |   **CUDA**                                                |   **HIP**                                               |**CUDA version\***|
 |-----------------------------------------------------------|---------------------------------------------------------|------------------|
-| `cuOccupancyMaxActiveBlocksPerMultiprocessor`             | `hipOccupancyMaxActiveBlocksPerMultiprocessor`          |
-| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |                                                         |
-| `cuOccupancyMaxPotentialBlockSize`                        | `hipOccupancyMaxPotentialBlockSize`                     |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessor`             |`hipOccupancyMaxActiveBlocksPerMultiprocessor`           |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |
+| `cuOccupancyMaxPotentialBlockSize`                        |`hipOccupancyMaxPotentialBlockSize`                      |
 | `cuOccupancyMaxPotentialBlockSizeWithFlags`               |                                                         |
 
 ## **21. Texture Reference Management**
