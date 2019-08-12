@@ -99,7 +99,7 @@ THE SOFTWARE.
 #define aligned_alloc _aligned_malloc
 #define popen(x,y) _popen(x,y)
 #define pclose(x) _pclose(x)
-#define setenv(x,y,z) _putenv_s(x,y,z)
+#define setenv(x,y,z) _putenv_s(x,y)
 #endif
 
 // standard command-line variables:
