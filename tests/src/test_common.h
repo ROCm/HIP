@@ -96,6 +96,7 @@ THE SOFTWARE.
     }
 
 #ifdef _WIN64
+#include <tchar.h>
 #define aligned_alloc _aligned_malloc
 #define popen(x,y) _popen(x,y)
 #define pclose(x) _pclose(x)
