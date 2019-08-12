@@ -1526,7 +1526,7 @@ extern "C" {
 #endif
 
 /**
- * @brief C complined kernel launch API
+ * @brief C compliant kernel launch API
  *
  * @param [in] function_address - kernel function pointer.
  * @param [in] numBlocks - number of blocks

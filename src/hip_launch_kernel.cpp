@@ -35,9 +35,10 @@ hipError_t hipLaunchKernel(
     hipStream_t stream,
     size_t szKernArg)
 {
+   hip_impl::hip_init();
+
    const hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)function_address,
 				                           hip_impl::target_agent(stream));
-
    void* config[]{
         HIP_LAUNCH_PARAM_BUFFER_POINTER,
         args,
@@ -49,6 +50,7 @@ hipError_t hipLaunchKernel(
 	{
 	   config[1] = NULL;
 	}
+
    return hipModuleLaunchKernel(kd, numBlocks.x, numBlocks.y, numBlocks.z,
                           dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
                           stream,nullptr,(void**)&config);

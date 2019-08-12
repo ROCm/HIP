@@ -1221,7 +1221,7 @@ inline static hipError_t hipLaunchKernel(void* function_address,
 					 hipStream_t stream,
 					 size_t szkernarg)
 {
-   return hipCUResultTohipError(cudaLaunchKernel(function_address,numBlocks,dimBlocks,args,sharedMemBytes,stream));
+   return hipCUDAErrorTohipError(cudaLaunchKernel(function_address,numBlocks,dimBlocks,args,sharedMemBytes,stream));
 }
 
 inline static hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX,
