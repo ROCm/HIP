@@ -522,7 +522,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   // cudaOccupancyMaxActiveBlocksPerMultiprocessor
   {"cuOccupancyMaxActiveBlocksPerMultiprocessor",          {"hipOccupancyMaxActiveBlocksPerMultiprocessor",            "", CONV_OCCUPANCY, API_DRIVER}},
   // cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
-  {"cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags", {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",   "", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags", {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",   "", CONV_OCCUPANCY, API_DRIVER}},
   // cudaOccupancyMaxPotentialBlockSize
   {"cuOccupancyMaxPotentialBlockSize",                     {"hipOccupancyMaxPotentialBlockSize",                       "", CONV_OCCUPANCY, API_DRIVER}},
   // cudaOccupancyMaxPotentialBlockSizeWithFlags
