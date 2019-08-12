@@ -1387,10 +1387,9 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
     return ihipLogStatus(e);
 }
 
-hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
-    HIP_INIT_SPECIAL_API(hipMemcpy3D, (TRACE_MCMD), p);
+hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync) {
     hipError_t e = hipSuccess;
-    if (p) {
+    if(stream && p) {
         size_t byteSize;
         size_t depth;
         size_t height;
@@ -1448,11 +1447,14 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
             ySize = p->srcPtr.ysize;
             dstPitch = p->dstPtr.pitch;
         }
-        hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
         hc::completion_future marker;
         try {
             if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
-                stream->locked_copySync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind, false);
+                if(isAsync)
+                    stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind);
+                else
+                    stream->locked_copySync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind, false);
             } else {
                 for (int i = 0; i < depth; i++) {
                     for (int j = 0; j < height; j++) {
@@ -1461,7 +1463,10 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
                              (unsigned char*)srcPtr + i * ySize * srcPitch + j * srcPitch;
                         unsigned char* dst =
                              (unsigned char*)dstPtr + i * height * dstPitch + j * dstPitch;
-                        stream->locked_copySync(dst, src, widthInBytes, p->kind);
+                        if(isAsync)
+                            stream->locked_copyAsync(dst, src, widthInBytes, p->kind);
+                        else
+                            stream->locked_copySync(dst, src, widthInBytes, p->kind);
                      }
                 }
            }
@@ -1471,6 +1476,22 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
     } else {
         e = hipErrorInvalidValue;
     }
+    return e;
+}
+
+hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
+    HIP_INIT_SPECIAL_API(hipMemcpy3D, (TRACE_MCMD), p);
+    hipError_t e = hipSuccess;
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+    e = ihipMemcpy3D(p, stream, false);
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t inStream) {
+    HIP_INIT_SPECIAL_API(hipMemcpy3DAsync, (TRACE_MCMD), p, stream);
+    hipError_t e = hipSuccess;
+    hipStream_t stream = ihipSyncAndResolveStream(inStream);
+    e = ihipMemcpy3D(p, stream, true);
     return ihipLogStatus(e);
 }
 
