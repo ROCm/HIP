@@ -99,27 +99,27 @@
 
 ## **7. Execution Control**
 
-|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
-|-----------------------------------------------------------|-------------------------------|:----------------:|
-| `cudaFuncGetAttributes`                                   |                               |
-| `cudaFuncSetAttribute`                                    |                               | 9.0              |
-| `cudaFuncSetCacheConfig`                                  | `hipFuncSetCacheConfig`       |
-| `cudaFuncSetSharedMemConfig`                              |                               |
-| `cudaGetParameterBuffer`                                  |                               |
-| `cudaGetParameterBufferV2`                                |                               |
-| `cudaLaunchKernel`                                        | `hipLaunchKernel`             |
-| `cudaSetDoubleForDevice`                                  |                               |
-| `cudaSetDoubleForHost`                                    |                               |
-| `cudaLaunchCooperativeKernel`                             |                               | 9.0              |
-| `cudaLaunchCooperativeKernelMultiDevice`                  |                               | 9.0              |
-| `cudaLaunchHostFunc`                                      |                               | 10.0             |
+|   **CUDA**                                                |   **HIP**                             |**CUDA version\***|
+|-----------------------------------------------------------|---------------------------------------|:----------------:|
+| `cudaFuncGetAttributes`                                   |                                       |
+| `cudaFuncSetAttribute`                                    |                                       | 9.0              |
+| `cudaFuncSetCacheConfig`                                  |`hipFuncSetCacheConfig`                |
+| `cudaFuncSetSharedMemConfig`                              |                                       |
+| `cudaGetParameterBuffer`                                  |                                       |
+| `cudaGetParameterBufferV2`                                |                                       |
+| `cudaLaunchKernel`                                        |`hipLaunchKernel`                      |
+| `cudaSetDoubleForDevice`                                  |                                       |
+| `cudaSetDoubleForHost`                                    |                                       |
+| `cudaLaunchCooperativeKernel`                             |`hipLaunchCooperativeKernel`           | 9.0              |
+| `cudaLaunchCooperativeKernelMultiDevice`                  |`hipLaunchCooperativeKernelMultiDevice`| 9.0              |
+| `cudaLaunchHostFunc`                                      |                                       | 10.0             |
 
 ## **8. Occupancy**
 
-|   **CUDA**                                                |   **HIP**                                     |**CUDA version\***|
-|-----------------------------------------------------------|-----------------------------------------------|:----------------:|
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor`|
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                                               |
+|   **CUDA**                                                |   **HIP**                                             |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------------------------------|:----------------:|
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           |`hipOccupancyMaxActiveBlocksPerMultiprocessor`         |
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
 
 ## **9. Execution Control [DEPRECATED since 7.0]**
 
@@ -413,41 +413,42 @@
 | `cudaGraphRemoveDependencies`                             |                               | 10.0             |
 
 ## **30. C++ API Routines**
-*(7.0 contains, 7.5 doesn’t)*
+*(7.0 contains, 7.5 doesn't)*
 
-|   **CUDA**                                                |   **HIP**                                      |**CUDA version\***|
-|-----------------------------------------------------------|------------------------------------------------|:----------------:|
-| `cudaBindSurfaceToArray`                                  |                                                |
-| `cudaBindTexture`                                         | `hipBindTexture`                               |
-| `cudaBindTexture2D`                                       |                                                |
-| `cudaBindTextureToArray`                                  |                                                |
-| `cudaBindTextureToMipmappedArray`                         |                                                |
-| `cudaCreateChannelDesc`                                   | `hipCreateChannelDesc`                         |
-| `cudaEventCreate`                                         |                                                |
-| `cudaFuncGetAttributes`                                   |                                                |
-| `cudaFuncSetAttribute`                                    |                                                |
-| `cudaFuncSetCacheConfig`                                  |                                                |
-| `cudaGetSymbolAddress`                                    | `hipGetSymbolAddress`                          |
-| `cudaGetSymbolSize`                                       | `hipGetSymbolSize`                             |
-| `cudaGetTextureAlignmentOffset`                           |                                                |
-| `cudaLaunch`                                              |                                                |
-| `cudaLaunchCooperativeKernel`                             |                                                |
-| `cudaLaunchKernel`                                        |                                                |
-| `cudaMallocHost`                                          |                                                |
-| `cudaMallocManaged`                                       |                                                |
-| `cudaMemcpyFromSymbol`                                    |                                                |
-| `cudaMemcpyFromSymbolAsync`                               |                                                |
-| `cudaMemcpyToSymbol`                                      |                                                |
-| `cudaMemcpyToSymbolAsync`                                 |                                                |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           | `hipOccupancyMaxActiveBlocksPerMultiprocessor` |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |                                                |
-| `cudaOccupancyMaxPotentialBlockSize`                      | `hipOccupancyMaxPotentialBlockSize`            |
-| `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                                                |
-| `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                                                |
-| `cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags` |                                                |
-| `cudaSetupArgument`                                       |                                                |
-| `cudaStreamAttachMemAsync`                                |                                                |
-| `cudaUnbindTexture`                                       | `hipUnbindTexture`                             |
+|   **CUDA**                                                |   **HIP**                                             |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------------------------------|:----------------:|
+| `cudaBindSurfaceToArray`                                  |                                                       |
+| `cudaBindTexture`                                         |`hipBindTexture`                                       |
+| `cudaBindTexture2D`                                       |                                                       |
+| `cudaBindTextureToArray`                                  |                                                       |
+| `cudaBindTextureToMipmappedArray`                         |                                                       |
+| `cudaCreateChannelDesc`                                   |`hipCreateChannelDesc`                                 |
+| `cudaEventCreate`                                         |                                                       |
+| `cudaFuncGetAttributes`                                   |                                                       |
+| `cudaFuncSetAttribute`                                    |                                                       |
+| `cudaFuncSetCacheConfig`                                  |                                                       |
+| `cudaGetSymbolAddress`                                    |`hipGetSymbolAddress`                                  |
+| `cudaGetSymbolSize`                                       |`hipGetSymbolSize`                                     |
+| `cudaGetTextureAlignmentOffset`                           |                                                       |
+| `cudaLaunch`                                              |                                                       |
+| `cudaLaunchCooperativeKernel`                             |`hipLaunchCooperativeKernel`                           |
+| `cudaLaunchCooperativeKernelMultiDevice`                  |`hipLaunchCooperativeKernelMultiDevice`                |
+| `cudaLaunchKernel`                                        |                                                       |
+| `cudaMallocHost`                                          |                                                       |
+| `cudaMallocManaged`                                       |                                                       |
+| `cudaMemcpyFromSymbol`                                    |                                                       |
+| `cudaMemcpyFromSymbolAsync`                               |                                                       |
+| `cudaMemcpyToSymbol`                                      |                                                       |
+| `cudaMemcpyToSymbolAsync`                                 |                                                       |
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           |`hipOccupancyMaxActiveBlocksPerMultiprocessor`         |
+| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
+| `cudaOccupancyMaxPotentialBlockSize`                      |`hipOccupancyMaxPotentialBlockSize`                    |
+| `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                                                       |
+| `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                                                       |
+| `cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags` |                                                       |
+| `cudaSetupArgument`                                       |                                                       |
+| `cudaStreamAttachMemAsync`                                |                                                       |
+| `cudaUnbindTexture`                                       |`hipUnbindTexture`                                     |
 
 ## **32. Profiler Control**
 
@@ -593,8 +594,8 @@
 |           92 |*`cudaDevAttrReserved92`*                            | 9.0              |                                                            |
 |           93 |*`cudaDevAttrReserved93`*                            | 9.0              |                                                            |
 |           94 |*`cudaDevAttrReserved94`*                            | 9.0              |                                                            |
-|           95 |*`cudaDevAttrCooperativeLaunch`*                     | 9.0              |                                                            |
-|           96 |*`cudaDevAttrCooperativeMultiDeviceLaunch`*          | 9.0              |                                                            |
+|           95 |*`cudaDevAttrCooperativeLaunch`*                     | 9.0              |*`hipDeviceAttributeCooperativeLaunch`*                     |
+|           96 |*`cudaDevAttrCooperativeMultiDeviceLaunch`*          | 9.0              |*`hipDeviceAttributeCooperativeMultiDeviceLaunch`*          |
 |           97 |*`cudaDevAttrMaxSharedMemoryPerBlockOptin`*          | 9.0              |                                                            |
 |           98 |*`cudaDevAttrCanFlushRemoteWrites`*                  | 9.2              |                                                            |
 |           99 |*`cudaDevAttrHostRegisterSupported`*                 | 9.2              |                                                            |
@@ -1063,7 +1064,7 @@
 | struct       |`cudaExternalSemaphoreSignalParams`                  | 10.0             |                                                            |
 | struct       |`cudaExternalSemaphoreWaitParams`                    | 10.0             |                                                            |
 | struct       |`cudaHostNodeParams`                                 | 10.0             |                                                            |
-| struct       |`cudaLaunchParams`                                   | 9.0              |                                                            |
+| struct       |`cudaLaunchParams`                                   | 9.0              |`hipLaunchParams`                                           |
 | struct       |`cudaMemsetParams`                                   | 10.0             |                                                            |
 | struct       |`CUeglStreamConnection_st`                           | 9.1              |                                                            |
 | typedef      |`cudaEglStreamConnection`                            | 9.1              |                                                            |
