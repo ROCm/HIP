@@ -115,7 +115,7 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
   amd::Command::EventWaitList eventWaitList;
   eventWaitList.push_back(event_);
 
-  amd::Command* command = new amd::Marker(*hostQueue, true, eventWaitList);
+  amd::Command* command = new amd::Marker(*hostQueue, false, eventWaitList);
   if (command == NULL) {
     return hipErrorOutOfMemory;
   }
@@ -241,7 +241,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   amd::Command* command = queue->getLastQueuedCommand(true);
 
   if (command == nullptr) {
-    command = new amd::Marker(*queue, true);
+    command = new amd::Marker(*queue, false);
     command->enqueue();
   }
 
