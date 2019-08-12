@@ -244,8 +244,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
   }
 
   amd::Event& event = command->event();
-
-  if (command->type() != CL_COMMAND_MARKER) {
+  if (command->type() != 0) {
     event.notifyCmdQueue();
   }
   HIP_RETURN((command->status() == CL_COMPLETE) ? hipSuccess : hipErrorNotReady);

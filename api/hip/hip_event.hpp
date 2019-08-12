@@ -30,7 +30,7 @@ namespace hip {
 
 class TimerMarker: public amd::Marker {
 public:
-  TimerMarker(amd::HostQueue& queue) : amd::Marker(queue, true) {
+  TimerMarker(amd::HostQueue& queue) : amd::Marker(queue, false) {
     profilingInfo_.enabled_ = true;
     profilingInfo_.callback_ = nullptr;
     profilingInfo_.start_ = profilingInfo_.end_ = 0;
