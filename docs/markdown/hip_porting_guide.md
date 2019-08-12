@@ -34,7 +34,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Choosing HIP File Extensions](#choosing-hip-file-extensions)
 - [Workarounds](#workarounds)
   * [warpSize](#warpsize)
-  * [Kernel launch with group size > 256](#kernel_launch_with_group_size_256)
+  * [Kernel launch with group size > 256](#kernel-launch-with-group-size--256)
 - [memcpyToSymbol](#memcpytosymbol)
 - [threadfence_system](#threadfence_system)
   * [Textures and Cache Control](#textures-and-cache-control)
