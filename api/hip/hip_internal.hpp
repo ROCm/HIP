@@ -175,6 +175,8 @@ extern hipError_t ihipDeviceGetCount(int* count);
 extern int ihipGetDevice();
 extern hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags);
 extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
+extern bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
+                                    size_t* var_size);
 
 #define HIP_RETURN(ret)          \
         hip::g_lastError = ret;  \
