@@ -299,8 +299,8 @@
 |            6 |*`CU_MEM_ADVISE_UNSET_ACCESSED_BY`*                                 |                                                            | 8.0              |
 | enum         |***`CUmemAttach_flags`***                                           |                                                            |
 | typedef      |***`CUmemAttach_flags_enum`***                                      |                                                            |
-|          0x1 |*`CU_MEM_ATTACH_GLOBAL`*                                            |                                                            |
-|          0x2 |*`CU_MEM_ATTACH_HOST`*                                              |                                                            |
+|          0x1 |*`CU_MEM_ATTACH_GLOBAL`*                                            |*`hipMemAttachGlobal`*                                      |
+|          0x2 |*`CU_MEM_ATTACH_HOST`*                                              |*`hipMemAttachHost`*                                        |
 |          0x4 |*`CU_MEM_ATTACH_SINGLE`*                                            |                                                            |
 | enum         |***`CUmemorytype`***                                                |*`hipMemoryType`*                                           |
 | typedef      |***`CUmemorytype_enum`***                                           |*`hipMemoryType`*                                           |
@@ -858,7 +858,7 @@
 | `cuIpcOpenMemHandle`                                      | `hipIpcOpenMemHandle`         |
 | `cuMemAlloc`                                              | `hipMalloc`                   |
 | `cuMemAllocHost`                                          |                               |
-| `cuMemAllocManaged`                                       |                               |
+| `cuMemAllocManaged`                                       | `hipMemAllocManaged`          |
 | `cuMemAllocPitch`                                         |                               |
 | `cuMemcpy`                                                |                               |
 | `cuMemcpy2D`                                              | `hipMemcpyParam2D`            |
