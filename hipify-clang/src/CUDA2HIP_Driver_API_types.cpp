@@ -754,31 +754,31 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CU_FUNC_CACHE_PREFER_EQUAL",                                       {"hipFuncCachePreferEqual",                                  "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 0x03
 
   // cudaFuncAttribute
-  {"CUfunction_attribute",                                             {"hipFuncAttribute",                                         "", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
-  {"CUfunction_attribute_enum",                                        {"hipFuncAttribute",                                         "", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
+  {"CUfunction_attribute",                                             {"hipFunction_attribute",                                    "", CONV_TYPE, API_DRIVER}},
+  {"CUfunction_attribute_enum",                                        {"hipFunction_attribute",                                    "", CONV_TYPE, API_DRIVER}},
   // CUfunction_attribute enum values
   // no analogue
-  {"CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK",                          {"hipFuncAttributeMaxThreadsPerBlocks",                      "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  0
+  {"CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK",                          {"HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK",                 "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  0
   // no analogue
-  {"CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES",                              {"hipFuncAttributeSharedSizeBytes",                          "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  1
+  {"CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES",                              {"HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES",                     "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  1
   // no analogue
-  {"CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES",                               {"hipFuncAttributeConstSizeBytes",                           "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  2
+  {"CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES",                               {"HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES",                      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  2
   // no analogue
-  {"CU_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES",                               {"hipFuncAttributeLocalSizeBytes",                           "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  3
+  {"CU_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES",                               {"HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES",                      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  3
   // no analogue
-  {"CU_FUNC_ATTRIBUTE_NUM_REGS",                                       {"hipFuncAttributeNumRegs",                                  "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  4
+  {"CU_FUNC_ATTRIBUTE_NUM_REGS",                                       {"HIP_FUNC_ATTRIBUTE_NUM_REGS",                              "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  4
   // no analogue
-  {"CU_FUNC_ATTRIBUTE_PTX_VERSION",                                    {"hipFuncAttributePtxVersion",                               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  5
+  {"CU_FUNC_ATTRIBUTE_PTX_VERSION",                                    {"HIP_FUNC_ATTRIBUTE_PTX_VERSION",                           "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  5
   // no analogue
-  {"CU_FUNC_ATTRIBUTE_BINARY_VERSION",                                 {"hipFuncAttributeBinaryVersion",                            "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  6
+  {"CU_FUNC_ATTRIBUTE_BINARY_VERSION",                                 {"HIP_FUNC_ATTRIBUTE_BINARY_VERSION",                        "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  6
   // no analogue
-  {"CU_FUNC_ATTRIBUTE_CACHE_MODE_CA",                                  {"hipFuncAttributeCacheModeCA",                              "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  7
+  {"CU_FUNC_ATTRIBUTE_CACHE_MODE_CA",                                  {"HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA",                         "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  7
   // cudaFuncAttributeMaxDynamicSharedMemorySize
-  {"CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES",                  {"hipFuncAttributeMaxDynamicSharedMemorySize",               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  8
+  {"CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES",                  {"HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES",         "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  8
   // cudaFuncAttributePreferredSharedMemoryCarveout
-  {"CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT",               {"hipFuncAttributePreferredSharedMemoryCarveout",            "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, //  9
+  {"CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT",               {"HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT",      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, //  9
   // cudaFuncAttributeMax
-  {"CU_FUNC_ATTRIBUTE_MAX",                                            {"hipFuncAttributeMax",                                      "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 10
+  {"CU_FUNC_ATTRIBUTE_MAX",                                            {"HIP_FUNC_ATTRIBUTE_MAX",                                   "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 10
 
   //cudaGraphicsMapFlags
   {"CUgraphicsMapResourceFlags",                                       {"hipGraphicsMapFlags",                                      "", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
