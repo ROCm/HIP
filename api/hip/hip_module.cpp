@@ -143,6 +143,8 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
     return hipErrorOutOfMemory;
   }
 
+  program->setVarInfoCallBack(&getSvarInfo);
+
   if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, ElfSize(image)) ||
     CL_SUCCESS != program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr)) {
     return hipErrorUnknown;
