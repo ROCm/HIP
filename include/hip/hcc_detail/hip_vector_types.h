@@ -210,7 +210,7 @@ THE SOFTWARE.
                 return *this;
             }
 
-            using Vec3_cmp = T __NATIVE_VECTOR__(3, int);
+            using Vec3_cmp = int __NATIVE_VECTOR__(3, int);
             __host__ __device__
             Vec3_cmp operator==(const Native_vec_& x) const noexcept
             {
@@ -218,7 +218,7 @@ THE SOFTWARE.
                 r[0] = d[0] == x.d[0];
                 r[1] = d[1] == x.d[1];
                 r[2] = d[2] == x.d[2];
-                return -r;
+                return r;
             }
         };
 
@@ -294,6 +294,7 @@ THE SOFTWARE.
             ++*this;
             return tmp;
         }
+
         inline __host__ __device__
         HIP_vector_type& operator--() noexcept
         {
@@ -306,12 +307,23 @@ THE SOFTWARE.
             --*this;
             return tmp;
         }
+
         inline __host__ __device__
         HIP_vector_type& operator+=(const HIP_vector_type& x) noexcept
         {
             data += x.data;
             return *this;
         }
+        template<
+            typename U,
+            typename std::enable_if<
+                std::is_convertible<U, T>{}>::type* = nullptr>
+        inline __host__ __device__
+        HIP_vector_type& operator+=(U x) noexcept
+        {
+            return *this += HIP_vector_type{x};
+        }
+
         inline __host__ __device__
         HIP_vector_type& operator-=(const HIP_vector_type& x) noexcept
         {
@@ -327,17 +339,37 @@ THE SOFTWARE.
         {
             return *this -= HIP_vector_type{x};
         }
+
         inline __host__ __device__
         HIP_vector_type& operator*=(const HIP_vector_type& x) noexcept
         {
             data *= x.data;
             return *this;
         }
+        template<
+            typename U,
+            typename std::enable_if<
+                std::is_convertible<U, T>{}>::type* = nullptr>
+        inline __host__ __device__
+        HIP_vector_type& operator*=(U x) noexcept
+        {
+            return *this *= HIP_vector_type{x};
+        }
+
         inline __host__ __device__
         HIP_vector_type& operator/=(const HIP_vector_type& x) noexcept
         {
             data /= x.data;
             return *this;
+        }
+        template<
+            typename U,
+            typename std::enable_if<
+                std::is_convertible<U, T>{}>::type* = nullptr>
+        inline __host__ __device__
+        HIP_vector_type& operator/=(U x) noexcept
+        {
+            return *this /= HIP_vector_type{x};
         }
 
         template<
@@ -361,6 +393,7 @@ THE SOFTWARE.
             r.data = ~r.data;
             return r;
         }
+
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
@@ -370,6 +403,7 @@ THE SOFTWARE.
             data %= x.data;
             return *this;
         }
+
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
@@ -379,6 +413,7 @@ THE SOFTWARE.
             data ^= x.data;
             return *this;
         }
+
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
@@ -388,6 +423,7 @@ THE SOFTWARE.
             data |= x.data;
             return *this;
         }
+
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
@@ -397,6 +433,7 @@ THE SOFTWARE.
             data &= x.data;
             return *this;
         }
+
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
@@ -406,6 +443,7 @@ THE SOFTWARE.
             data >>= x.data;
             return *this;
         }
+
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
@@ -738,6 +776,7 @@ THE SOFTWARE.
         typename T,
         unsigned int n,
         typename U,
+        typename std::enable_if<std::is_arithmetic<U>::value>::type,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
     inline __host__ __device__
     HIP_vector_type<T, n> operator<<(
@@ -810,6 +849,7 @@ __MAKE_VECTOR_TYPE__(longlong, long long);
 __MAKE_VECTOR_TYPE__(float, float);
 __MAKE_VECTOR_TYPE__(double, double);
 
+#ifdef __cplusplus
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
     static inline __device__ __host__ \
     type make_##type(comp x) { type r{x}; return r; }
@@ -828,6 +868,26 @@ __MAKE_VECTOR_TYPE__(double, double);
         type r{x, y, z, w}; \
         return r; \
     }
+#else
+ #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
+     static inline __device__ __host__ \
+     type make_##type(comp x) { type r; r.x =x; return r; }
+
+ #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
+     static inline __device__ __host__ \
+     type make_##type(comp x, comp y) { type r; r.x=x; r.y=y; return r; }
+
+ #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
+     static inline __device__ __host__ \
+     type make_##type(comp x, comp y, comp z) { type r; r.x=x; r.y=y; r.z=z; return r; }
+
+ #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
+     static inline __device__ __host__ \
+     type make_##type(comp x, comp y, comp z, comp w) { \
+         type r; r.x=x; r.y=y; r.z=z; r.w=w; \
+         return r; \
+     }
+#endif
 
 DECLOP_MAKE_ONE_COMPONENT(unsigned char, uchar1);
 DECLOP_MAKE_TWO_COMPONENT(unsigned char, uchar2);

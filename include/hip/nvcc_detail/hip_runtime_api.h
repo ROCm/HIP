@@ -162,6 +162,7 @@ typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_const_t;
 typedef cudaFuncAttributes hipFuncAttributes;
+typedef CUfunction_attribute hipFunction_attribute;
 #define hip_Memcpy2D CUDA_MEMCPY2D
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
@@ -196,6 +197,19 @@ typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipSharedMemBankSizeDefault cudaSharedMemBankSizeDefault
 #define hipSharedMemBankSizeFourByte cudaSharedMemBankSizeFourByte
 #define hipSharedMemBankSizeEightByte cudaSharedMemBankSizeEightByte
+
+//Function Attributes
+#define HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK
+#define HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES
+#define HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES
+#define HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES CU_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES
+#define HIP_FUNC_ATTRIBUTE_NUM_REGS CU_FUNC_ATTRIBUTE_NUM_REGS
+#define HIP_FUNC_ATTRIBUTE_PTX_VERSION CU_FUNC_ATTRIBUTE_PTX_VERSION
+#define HIP_FUNC_ATTRIBUTE_BINARY_VERSION CU_FUNC_ATTRIBUTE_BINARY_VERSION
+#define HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA CU_FUNC_ATTRIBUTE_CACHE_MODE_CA
+#define HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES
+#define HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT
+#define HIP_FUNC_ATTRIBUTE_MAX CU_FUNC_ATTRIBUTE_MAX
 
 inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
     switch (cuError) {
@@ -583,6 +597,10 @@ inline static hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
   return hipCUResultTohipError(cuMemcpy2D(pCopy));
 }
 
+inline static hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream __dparm(0)) {
+  return hipCUResultTohipError(cuMemcpy2DAsync(pCopy, stream));
+}
+
 inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
 {
     return hipCUDAErrorTohipError(cudaMemcpy3D(p));
@@ -715,17 +733,20 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     struct cudaDeviceProp cdprop;
     cudaError_t cerror;
     cerror = cudaGetDeviceProperties(&cdprop, device);
+
     strncpy(p_prop->name, cdprop.name, 256);
     p_prop->totalGlobalMem = cdprop.totalGlobalMem;
     p_prop->sharedMemPerBlock = cdprop.sharedMemPerBlock;
     p_prop->regsPerBlock = cdprop.regsPerBlock;
     p_prop->warpSize = cdprop.warpSize;
+    p_prop->maxThreadsPerBlock = cdprop.maxThreadsPerBlock;
     for (int i = 0; i < 3; i++) {
         p_prop->maxThreadsDim[i] = cdprop.maxThreadsDim[i];
         p_prop->maxGridSize[i] = cdprop.maxGridSize[i];
     }
-    p_prop->maxThreadsPerBlock = cdprop.maxThreadsPerBlock;
     p_prop->clockRate = cdprop.clockRate;
+    p_prop->memoryClockRate = cdprop.memoryClockRate;
+    p_prop->memoryBusWidth = cdprop.memoryBusWidth;
     p_prop->totalConstMem = cdprop.totalConstMem;
     p_prop->major = cdprop.major;
     p_prop->minor = cdprop.minor;
@@ -733,44 +754,45 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->l2CacheSize = cdprop.l2CacheSize;
     p_prop->maxThreadsPerMultiProcessor = cdprop.maxThreadsPerMultiProcessor;
     p_prop->computeMode = cdprop.computeMode;
-    p_prop->canMapHostMemory = cdprop.canMapHostMemory;
-    p_prop->memoryClockRate = cdprop.memoryClockRate;
-    p_prop->memoryBusWidth = cdprop.memoryBusWidth;
-
-    // Same as clock-rate:
-    p_prop->clockInstructionRate = cdprop.clockRate;
+    p_prop->clockInstructionRate = cdprop.clockRate; // Same as clock-rate:
 
     int ccVers = p_prop->major * 100 + p_prop->minor * 10;
-
     p_prop->arch.hasGlobalInt32Atomics = (ccVers >= 110);
     p_prop->arch.hasGlobalFloatAtomicExch = (ccVers >= 110);
     p_prop->arch.hasSharedInt32Atomics = (ccVers >= 120);
     p_prop->arch.hasSharedFloatAtomicExch = (ccVers >= 120);
-
     p_prop->arch.hasFloatAtomicAdd = (ccVers >= 200);
-
     p_prop->arch.hasGlobalInt64Atomics = (ccVers >= 120);
     p_prop->arch.hasSharedInt64Atomics = (ccVers >= 110);
-
     p_prop->arch.hasDoubles = (ccVers >= 130);
-
     p_prop->arch.hasWarpVote = (ccVers >= 120);
     p_prop->arch.hasWarpBallot = (ccVers >= 200);
     p_prop->arch.hasWarpShuffle = (ccVers >= 300);
     p_prop->arch.hasFunnelShift = (ccVers >= 350);
-
     p_prop->arch.hasThreadFenceSystem = (ccVers >= 200);
     p_prop->arch.hasSyncThreadsExt = (ccVers >= 200);
-
     p_prop->arch.hasSurfaceFuncs = (ccVers >= 200);
     p_prop->arch.has3dGrid = (ccVers >= 200);
     p_prop->arch.hasDynamicParallelism = (ccVers >= 350);
 
     p_prop->concurrentKernels = cdprop.concurrentKernels;
+    p_prop->pciDomainID = cdprop.pciDomainID;
     p_prop->pciBusID = cdprop.pciBusID;
     p_prop->pciDeviceID = cdprop.pciDeviceID;
     p_prop->maxSharedMemoryPerMultiProcessor = cdprop.sharedMemPerMultiprocessor;
     p_prop->isMultiGpuBoard = cdprop.isMultiGpuBoard;
+    p_prop->canMapHostMemory = cdprop.canMapHostMemory;
+    p_prop->gcnArch = 0; // Not a GCN arch
+    p_prop->integrated = cdprop.integrated;
+    p_prop->cooperativeLaunch = cdprop.cooperativeLaunch;
+    p_prop->cooperativeMultiDeviceLaunch = cdprop.cooperativeMultiDeviceLaunch;
+
+    p_prop->maxTexture1D    = cdprop.maxTexture1D;
+    p_prop->maxTexture2D[0] = cdprop.maxTexture2D[0];
+    p_prop->maxTexture2D[1] = cdprop.maxTexture2D[1];
+    p_prop->maxTexture3D[0] = cdprop.maxTexture3D[0];
+    p_prop->maxTexture3D[1] = cdprop.maxTexture3D[1];
+    p_prop->maxTexture3D[2] = cdprop.maxTexture3D[2];
 
     return hipCUDAErrorTohipError(cerror);
 }
@@ -857,6 +879,24 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeIntegrated:
             cdattr = cudaDevAttrIntegrated;
+            break;
+        case hipDeviceAttributeMaxTexture1DWidth:
+            cdattr = cudaDevAttrMaxTexture1DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture2DWidth:
+            cdattr = cudaDevAttrMaxTexture2DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture2DHeight:
+            cdattr = cudaDevAttrMaxTexture2DHeight;
+            break;
+        case hipDeviceAttributeMaxTexture3DWidth:
+            cdattr = cudaDevAttrMaxTexture3DWidth;
+            break;
+        case hipDeviceAttributeMaxTexture3DHeight:
+            cdattr = cudaDevAttrMaxTexture3DHeight;
+            break;
+        case hipDeviceAttributeMaxTexture3DDepth:
+            cdattr = cudaDevAttrMaxTexture3DDepth;
             break;
         default:
             cerror = cudaErrorInvalidValue;
@@ -1175,6 +1215,10 @@ inline static hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const voi
     return hipCUDAErrorTohipError(cudaFuncGetAttributes(attr, func));
 }
 
+inline static hipError_t hipFuncGetAttribute (int* value, hipFunction_attribute attrib, hipFunction_t hfunc) {
+    return hipCUResultTohipError(cuFuncGetAttribute(value, attrib, hfunc));
+}
+
 inline static hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod,
                                             const char* name) {
     return hipCUResultTohipError(cuModuleGetGlobal(dptr, bytes, hmod, name));
@@ -1216,11 +1260,9 @@ inline static hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t 
 template <class T>
 inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
                                                            size_t dynamicSMemSize = 0,
-                                                           int blockSizeLimit = 0,
-                                                           unsigned int flags = 0) {
+                                                           int blockSizeLimit = 0) {
     cudaError_t cerror;
-    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize,
-                                                blockSizeLimit, flags);
+    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize, blockSizeLimit);
     return hipCUDAErrorTohipError(cerror);
 }
 

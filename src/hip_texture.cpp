@@ -381,9 +381,10 @@ hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
 }
 
 // Texture Reference APIs
-hipError_t ihipBindTextureImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
+hipError_t ihipBindTextureImpl(TlsData *tls_, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                const void* devPtr, const struct hipChannelFormatDesc* desc,
                                size_t size, textureReference* tex) {
+    TlsData *tls = (tls_ == nullptr) ? tls_get_ptr() : tls_;
     hipError_t hip_status = hipSuccess;
     enum hipTextureAddressMode addressMode = tex->addressMode[0];
     enum hipTextureFilterMode filterMode = tex->filterMode;
@@ -447,12 +448,12 @@ hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* dev
     HIP_INIT_API(hipBindTexture, offset, tex, devPtr, desc, size);
     hipError_t hip_status = hipSuccess;
     // TODO: hipReadModeElementType is default.
-    hip_status = ihipBindTextureImpl(hipTextureType1D, hipReadModeElementType, offset, devPtr, desc,
+    hip_status = ihipBindTextureImpl(tls, hipTextureType1D, hipReadModeElementType, offset, devPtr, desc,
                                      size, tex);
     return ihipLogStatus(hip_status);
 }
 
-hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
+hipError_t ihipBindTexture2DImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                  const void* devPtr, const struct hipChannelFormatDesc* desc,
                                  size_t width, size_t height, textureReference* tex) {
     hipError_t hip_status = hipSuccess;
@@ -519,15 +520,16 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
                             size_t pitch) {
     HIP_INIT_API(hipBindTexture2D, offset, tex, devPtr, desc, width, height, pitch);
     hipError_t hip_status = hipSuccess;
-    hip_status = ihipBindTexture2DImpl(hipTextureType2D, hipReadModeElementType, offset, devPtr,
+    hip_status = ihipBindTexture2DImpl(tls, hipTextureType2D, hipReadModeElementType, offset, devPtr,
                                        desc, width, height, tex);
     return ihipLogStatus(hip_status);
 }
 
-hipError_t ihipBindTextureToArrayImpl(int dim, enum hipTextureReadMode readMode,
+hipError_t ihipBindTextureToArrayImpl(TlsData *tls_, int dim, enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
                                       textureReference* tex) {
+    TlsData *tls = (tls_ == nullptr) ? tls_get_ptr() : tls_;
     hipError_t hip_status = hipSuccess;
     enum hipTextureAddressMode addressMode = tex->addressMode[0];
     enum hipTextureFilterMode filterMode = tex->filterMode;
@@ -584,7 +586,7 @@ hipError_t ihipBindTextureToArrayImpl(int dim, enum hipTextureReadMode readMode,
         hsa_ext_image_channel_order_t channelOrder;
         hsa_ext_image_channel_type_t channelType;
         if (array->isDrv) {
-            getDrvChannelOrderAndType(array->drvDesc.format, array->drvDesc.numChannels,
+            getDrvChannelOrderAndType(array->Format, array->NumChannels,
                                       &channelOrder, &channelType);
         } else {
             getChannelOrderAndType(desc, readMode, &channelOrder, &channelType);
@@ -617,7 +619,7 @@ hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
     hipError_t hip_status = hipSuccess;
     // TODO: hipReadModeElementType is default.
     hip_status =
-        ihipBindTextureToArrayImpl(array->textureType, hipReadModeElementType, array, *desc, tex);
+        ihipBindTextureToArrayImpl(tls, array->textureType, hipReadModeElementType, array, *desc, tex);
     return ihipLogStatus(hip_status);
 }
 
@@ -629,7 +631,7 @@ hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
     return ihipLogStatus(hip_status);
 }
 
-hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
+hipError_t ihipUnbindTextureImpl(TlsData *tls, const hipTextureObject_t& textureObject) {
     hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -654,7 +656,7 @@ hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
 hipError_t hipUnbindTexture(const textureReference* tex) {
     HIP_INIT_API(hipUnbindTexture, tex);
     hipError_t hip_status = hipSuccess;
-    hip_status = ihipUnbindTextureImpl(tex->textureObject);
+    hip_status = ihipUnbindTextureImpl(tls, tex->textureObject);
     return ihipLogStatus(hip_status);
 }
 
@@ -726,7 +728,7 @@ hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsi
     HIP_INIT_API(hipTexRefSetArray, tex, array, flags);
     hipError_t hip_status = hipSuccess;
 
-    hip_status = ihipBindTextureToArrayImpl(array->textureType, hipReadModeElementType, array,
+    hip_status = ihipBindTextureToArrayImpl(tls, array->textureType, hipReadModeElementType, array,
                                             array->desc, tex);
     return ihipLogStatus(hip_status);
 }
@@ -737,7 +739,7 @@ hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDevicep
     HIP_INIT_API(hipTexRefSetAddress, offset, tex, devPtr, size);
     hipError_t hip_status = hipSuccess;
     // TODO: hipReadModeElementType is default.
-    hip_status = ihipBindTextureImpl(hipTextureType1D, hipReadModeElementType, offset, devPtr, NULL,
+    hip_status = ihipBindTextureImpl(tls, hipTextureType1D, hipReadModeElementType, offset, devPtr, NULL,
                                      size, tex);
     return ihipLogStatus(hip_status);
 }
@@ -748,7 +750,7 @@ hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPT
     size_t offset;
     hipError_t hip_status = hipSuccess;
     // TODO: hipReadModeElementType is default.
-    hip_status = ihipBindTexture2DImpl(hipTextureType2D, hipReadModeElementType, &offset, devPtr,
-                                       NULL, desc->width, desc->height, tex);
+    hip_status = ihipBindTexture2DImpl(tls, hipTextureType2D, hipReadModeElementType, &offset, devPtr,
+                                       NULL, desc->Width, desc->Height, tex);
     return ihipLogStatus(hip_status);
 }

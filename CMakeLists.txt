@@ -28,16 +28,23 @@ list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)
 list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
 
 # get date information based on UTC
-# use the last two digits of year + week number + day in the week as HIP_VERSION_PATCH
+# use the last two digits of year + week number + day in the week as HIP_VERSION_GITDATE
 # use the commit date, instead of build date
 # add xargs to remove strange trailing newline character
 execute_process(COMMAND git show -s --format=@%ct
     COMMAND xargs
     COMMAND date -f - --utc +%y%U%w
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE HIP_VERSION_PATCH
+    OUTPUT_VARIABLE HIP_VERSION_GITDATE
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# get commit short hash
+execute_process(COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE HIP_VERSION_GITHASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}-${HIP_VERSION_GITHASH})
 set(HIP_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
 add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
@@ -218,10 +225,10 @@ if(HIP_PLATFORM STREQUAL "hcc")
     endif()
 
     # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_PATCH}")
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_GITDATE}")
 
     # Add remaining flags
-    execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --cxxflags OUTPUT_VARIABLE HCC_CXX_FLAGS)
+    set(HCC_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include")
 
     # Set compiler and compiler flags
@@ -252,9 +259,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/env.cpp
         src/h2f.cpp)
 
-    execute_process(COMMAND ${HCC_HOME}/bin/hcc-config --ldflags OUTPUT_VARIABLE HCC_LD_FLAGS)
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${HCC_LD_FLAGS}")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --amdgpu-target=gfx701 --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906")
     if(COMPILE_HIP_ATP_MARKER)
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
     endif()
@@ -270,7 +274,8 @@ if(HIP_PLATFORM STREQUAL "hcc")
                 PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
         target_link_libraries(hiprtc PUBLIC stdc++fs)
     endif()
-
+    set_target_properties(hip_hcc PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(hip_hcc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
 
     if(HIP_PLATFORM STREQUAL "hcc")
         find_package(amd_comgr REQUIRED CONFIG
@@ -372,7 +377,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     write_basic_package_version_file(
         ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
-        VERSION "${HIP_VERSION}"
+        VERSION "${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_GITDATE}"
         COMPATIBILITY SameMajorVersion
         )
     install(

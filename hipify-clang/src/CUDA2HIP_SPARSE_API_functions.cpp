@@ -135,9 +135,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZgemvi_bufferSize",                   {"hipsparseZgemvi_bufferSize",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSbsrsv2_bufferSize",                  {"hipsparseSbsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSbsrsv2_bufferSizeExt",               {"hipsparseSbsrsv2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDbsrsv2_bufferSize",                  {"hipsparseDbsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrsv2_bufferSizeExt",               {"hipsparseDbsrsv2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCbsrsv2_bufferSize",                  {"hipsparseCbsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrsv2_bufferSizeExt",               {"hipsparseCbsrsv2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZbsrsv2_bufferSize",                  {"hipsparseZbsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrsv2_bufferSizeExt",               {"hipsparseZbsrsv2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSbsrsv2_analysis",                    {"hipsparseSbsrsv2_analysis",                    "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDbsrsv2_analysis",                    {"hipsparseDbsrsv2_analysis",                    "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -149,6 +153,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseCcsrsv_solve",                        {"hipsparseCcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrsv_solve",                        {"hipsparseZcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseSbsrsv2_solve",                       {"hipsparseSbsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrsv2_solve",                       {"hipsparseDbsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrsv2_solve",                       {"hipsparseCbsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrsv2_solve",                       {"hipsparseZbsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseXbsrsv2_zeroPivot",                   {"hipsparseXbsrsv2_zeroPivot",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsrsv_analysis",                     {"hipsparseScsrsv_analysis",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -157,18 +165,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZcsrsv_analysis",                     {"hipsparseZcsrsv_analysis",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseCsrsv_analysisEx",                    {"hipsparseCsrsv_analysisEx",                    "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-
-  {"cusparseScsrsv_solve",                        {"hipsparseScsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseDcsrsv_solve",                        {"hipsparseDcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseCcsrsv_solve",                        {"hipsparseCcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseZcsrsv_solve",                        {"hipsparseZcsrsv_solve",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-
   {"cusparseCsrsv_solveEx",                       {"hipsparseCsrsv_solveEx",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsrsv2_bufferSize",                  {"hipsparseScsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseScsrsv2_bufferSizeExt",               {"hipsparseScsrsv2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE}},
   {"cusparseDcsrsv2_bufferSize",                  {"hipsparseDcsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseDcsrsv2_bufferSizeExt",               {"hipsparseDcsrsv2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE}},
   {"cusparseCcsrsv2_bufferSize",                  {"hipsparseCcsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrsv2_bufferSizeExt",               {"hipsparseCcsrsv2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrsv2_bufferSize",                  {"hipsparseZcsrsv2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrsv2_bufferSizeExt",               {"hipsparseZcsrsv2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsrsv2_analysis",                    {"hipsparseScsrsv2_analysis",                    "", CONV_LIB_FUNC, API_SPARSE}},
   {"cusparseDcsrsv2_analysis",                    {"hipsparseDcsrsv2_analysis",                    "", CONV_LIB_FUNC, API_SPARSE}},
@@ -179,7 +185,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseDcsrsv2_solve",                       {"hipsparseDcsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE}},
   {"cusparseCcsrsv2_solve",                       {"hipsparseCcsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrsv2_solve",                       {"hipsparseZcsrsv2_solve",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-
   {"cusparseXcsrsv2_zeroPivot",                   {"hipsparseXcsrsv2_zeroPivot",                   "", CONV_LIB_FUNC, API_SPARSE}},
 
   {"cusparseShybmv",                              {"hipsparseShybmv",                              "", CONV_LIB_FUNC, API_SPARSE}},
@@ -241,9 +246,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZbsrmm",                              {"hipsparseZbsrmm",                              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSbsrsm2_bufferSize",                  {"hipsparseCbsrsm2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSbsrsm2_bufferSizeExt",               {"hipsparseCbsrsm2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDbsrsm2_bufferSize",                  {"hipsparseDbsrsm2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrsm2_bufferSizeExt",               {"hipsparseDbsrsm2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCbsrsm2_bufferSize",                  {"hipsparseCbsrsm2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrsm2_bufferSizeExt",               {"hipsparseCbsrsm2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZbsrsm2_bufferSize",                  {"hipsparseZbsrsm2_bufferSize",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrsm2_bufferSizeExt",               {"hipsparseZbsrsm2_bufferSizeExt",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSbsrsm2_analysis",                    {"hipsparseSbsrsm2_analysis",                    "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDbsrsm2_analysis",                    {"hipsparseDbsrsm2_analysis",                    "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -269,6 +278,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseCcsrgeam",                            {"hipsparseCcsrgeam",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrgeam",                            {"hipsparseZcsrgeam",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseXcsrgeam2Nnz",                        {"hipsparseXcsrgeam2Nnz",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseScsrgeam2",                           {"hipsparseScsrgeam2",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsrgeam2",                           {"hipsparseDcsrgeam2",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrgeam2",                           {"hipsparseCcsrgeam2",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrgeam2",                           {"hipsparseZcsrgeam2",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
   {"cusparseScsrgeam2_bufferSizeExt",             {"hipsparseScsrgeam2_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDcsrgeam2_bufferSizeExt",             {"hipsparseDcsrgeam2_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCcsrgeam2_bufferSizeExt",             {"hipsparseCcsrgeam2_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -279,6 +294,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseDcsrgemm",                            {"hipsparseDcsrgemm",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCcsrgemm",                            {"hipsparseCcsrgemm",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrgemm",                            {"hipsparseZcsrgemm",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseXcsrgemm2Nnz",                        {"hipsparseXcsrgemm2Nnz",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseScsrgemm2",                           {"hipsparseScsrgemm2",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsrgemm2",                           {"hipsparseDcsrgemm2",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrgemm2",                           {"hipsparseCcsrgemm2",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrgemm2",                           {"hipsparseZcsrgemm2",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsrgemm2_bufferSizeExt",             {"hipsparseScsrgemm2_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDcsrgemm2_bufferSizeExt",             {"hipsparseDcsrgemm2_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -293,9 +314,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZcsric0",                             {"hipsparseZcsric0",                             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsric02_bufferSize",                 {"hipsparseScsric02_bufferSize",                 "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseScsric02_bufferSizeExt",              {"hipsparseScsric02_bufferSizeExt",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDcsric02_bufferSize",                 {"hipsparseDcsric02_bufferSize",                 "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsric02_bufferSizeExt",              {"hipsparseDcsric02_bufferSizeExt",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCcsric02_bufferSize",                 {"hipsparseCcsric02_bufferSize",                 "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsric02_bufferSizeExt",              {"hipsparseCcsric02_bufferSizeExt",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsric02_bufferSize",                 {"hipsparseZcsric02_bufferSize",                 "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsric02_bufferSizeExt",              {"hipsparseZcsric02_bufferSizeExt",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsric02_analysis",                   {"hipsparseScsric02_analysis",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDcsric02_analysis",                   {"hipsparseDcsric02_analysis",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -308,6 +333,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZcsric02",                            {"hipsparseZcsric02",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseXcsric02_zeroPivot",                  {"hipsparseXcsric02_zeroPivot",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSbsric02_bufferSize",                 {"hipsparseSbsric02_bufferSize",                 "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSbsric02_bufferSizeExt",              {"hipsparseSbsric02_bufferSizeExt",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsric02_bufferSize",                 {"hipsparseDbsric02_bufferSize",                 "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsric02_bufferSizeExt",              {"hipsparseDbsric02_bufferSizeExt",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsric02_bufferSize",                 {"hipsparseCbsric02_bufferSize",                 "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsric02_bufferSizeExt",              {"hipsparseCbsric02_bufferSizeExt",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsric02_bufferSize",                 {"hipsparseZbsric02_bufferSize",                 "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsric02_bufferSizeExt",              {"hipsparseZbsric02_bufferSizeExt",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSbsric02_analysis",                   {"hipsparseSbsric02_analysis",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDbsric02_analysis",                   {"hipsparseDbsric02_analysis",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -333,11 +366,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseDcsrilu02_numericBoost",              {"hipsparseDcsrilu02_numericBoost",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCcsrilu02_numericBoost",              {"hipsparseCcsrilu02_numericBoost",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrilu02_numericBoost",              {"hipsparseZcsrilu02_numericBoost",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseXcsrilu02_zeroPivot",                 {"hipsparseXcsrilu02_zeroPivot",                 "", CONV_LIB_FUNC, API_SPARSE}},
 
   {"cusparseScsrilu02_bufferSize",                {"hipsparseScsrilu02_bufferSize",                "", CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseScsrilu02_bufferSizeExt",             {"hipsparseScsrilu02_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE}},
   {"cusparseDcsrilu02_bufferSize",                {"hipsparseDcsrilu02_bufferSize",                "", CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseDcsrilu02_bufferSizeExt",             {"hipsparseDcsrilu02_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE}},
   {"cusparseCcsrilu02_bufferSize",                {"hipsparseCcsrilu02_bufferSize",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsrilu02_bufferSizeExt",             {"hipsparseCcsrilu02_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsrilu02_bufferSize",                {"hipsparseZcsrilu02_bufferSize",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsrilu02_bufferSizeExt",             {"hipsparseZcsrilu02_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsrilu02_analysis",                  {"hipsparseScsrilu02_analysis",                  "", CONV_LIB_FUNC, API_SPARSE}},
   {"cusparseDcsrilu02_analysis",                  {"hipsparseDcsrilu02_analysis",                  "", CONV_LIB_FUNC, API_SPARSE}},
@@ -357,9 +395,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZbsrilu02_numericBoost",              {"hipsparseZbsrilu02_numericBoost",              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSbsrilu02_bufferSize",                {"hipsparseSbsrilu02_bufferSize",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSbsrilu02_bufferSizeExt",             {"hipsparseSbsrilu02_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDbsrilu02_bufferSize",                {"hipsparseDbsrilu02_bufferSize",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDbsrilu02_bufferSizeExt",             {"hipsparseDbsrilu02_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCbsrilu02_bufferSize",                {"hipsparseCbsrilu02_bufferSize",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCbsrilu02_bufferSizeExt",             {"hipsparseCbsrilu02_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZbsrilu02_bufferSize",                {"hipsparseZbsrilu02_bufferSize",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZbsrilu02_bufferSizeExt",             {"hipsparseZbsrilu02_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSbsrilu02_analysis",                  {"hipsparseSbsrilu02_analysis",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDbsrilu02_analysis",                  {"hipsparseDbsrilu02_analysis",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -454,9 +496,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZbsr2csr",                            {"hipsparseZbsr2csr",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSgebsr2gebsc_bufferSize",             {"hipsparseSgebsr2gebsc_bufferSize",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSgebsr2gebsc_bufferSizeExt",          {"hipsparseSgebsr2gebsc_bufferSizeExt",          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDgebsr2gebsc_bufferSize",             {"hipsparseDgebsr2gebsc_bufferSize",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDgebsr2gebsc_bufferSizeExt",          {"hipsparseDgebsr2gebsc_bufferSizeExt",          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCgebsr2gebsc_bufferSize",             {"hipsparseCgebsr2gebsc_bufferSize",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCgebsr2gebsc_bufferSizeExt",          {"hipsparseCgebsr2gebsc_bufferSizeExt",          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZgebsr2gebsc_bufferSize",             {"hipsparseZgebsr2gebsc_bufferSize",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZgebsr2gebsc_bufferSizeExt",          {"hipsparseZgebsr2gebsc_bufferSizeExt",          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSgebsr2gebsc",                        {"hipsparseSgebsr2gebsc",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDgebsr2gebsc",                        {"hipsparseDgebsr2gebsc",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -464,10 +510,15 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZgebsr2gebsc",                        {"hipsparseZgebsr2gebsc",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseSgebsr2gebsr_bufferSize",             {"hipsparseSgebsr2gebsr_bufferSize",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSgebsr2gebsr_bufferSizeExt",          {"hipsparseSgebsr2gebsr_bufferSizeExt",          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDgebsr2gebsr_bufferSize",             {"hipsparseDgebsr2gebsr_bufferSize",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDgebsr2gebsr_bufferSizeExt",          {"hipsparseDgebsr2gebsr_bufferSizeExt",          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCgebsr2gebsr_bufferSize",             {"hipsparseCgebsr2gebsr_bufferSize",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCgebsr2gebsr_bufferSizeExt",          {"hipsparseCgebsr2gebsr_bufferSizeExt",          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZgebsr2gebsr_bufferSize",             {"hipsparseZgebsr2gebsr_bufferSize",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZgebsr2gebsr_bufferSizeExt",          {"hipsparseZgebsr2gebsr_bufferSizeExt",          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseXgebsr2csr",                          {"hipsparseXgebsr2csr",                          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSgebsr2csr",                          {"hipsparseSgebsr2csr",                          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDgebsr2csr",                          {"hipsparseDgebsr2csr",                          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCgebsr2csr",                          {"hipsparseCgebsr2csr",                          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -480,9 +531,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseZgebsr2gebsr",                        {"hipsparseZgebsr2gebsr",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsr2gebsr_bufferSize",               {"hipsparseScsr2gebsr_bufferSize",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseScsr2gebsr_bufferSizeExt",            {"hipsparseScsr2gebsr_bufferSizeExt",            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDcsr2gebsr_bufferSize",               {"hipsparseDcsr2gebsr_bufferSize",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsr2gebsr_bufferSizeExt",            {"hipsparseDcsr2gebsr_bufferSizeExt",            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCcsr2gebsr_bufferSize",               {"hipsparseCcsr2gebsr_bufferSize",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsr2gebsr_bufferSizeExt",            {"hipsparseCcsr2gebsr_bufferSizeExt",            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsr2gebsr_bufferSize",               {"hipsparseZcsr2gebsr_bufferSize",               "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsr2gebsr_bufferSizeExt",            {"hipsparseZcsr2gebsr_bufferSizeExt",            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseXcsr2gebsrNnz",                       {"hipsparseXcsr2gebsrNnz",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseScsr2gebsr",                          {"hipsparseScsr2gebsr",                          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -589,10 +644,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseCcsru2csr_bufferSizeExt",             {"hipsparseCcsru2csr_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsru2csr_bufferSizeExt",             {"hipsparseZcsru2csr_bufferSizeExt",             "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
-  {"cusparseScsru2csr",                           {"hipsparseScsru2csr",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseDcsru2csr",                           {"hipsparseDcsru2csr",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseCcsru2csr",                           {"hipsparseCcsru2csr",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseZcsru2csr",                           {"hipsparseZcsru2csr",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseScsr2csru",                           {"hipsparseScsr2csru",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDcsr2csru",                           {"hipsparseDcsr2csru",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsr2csru",                           {"hipsparseCcsr2csru",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseZcsr2csru",                           {"hipsparseZcsr2csru",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseHpruneDense2csr",                     {"hipsparseHpruneDense2csr",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpruneDense2csr",                     {"hipsparseSpruneDense2csr",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDpruneDense2csr",                     {"hipsparseDpruneDense2csr",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseHpruneDense2csr_bufferSizeExt",       {"hipsparseHpruneDense2csr_bufferSizeExt",       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpruneDense2csr_bufferSizeExt",       {"hipsparseSpruneDense2csr_bufferSizeExt",       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -602,6 +661,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseSpruneDense2csrNnz",                  {"hipsparseSpruneDense2csrNnz",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDpruneDense2csrNnz",                  {"hipsparseDpruneDense2csrNnz",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseHpruneCsr2csr",                       {"hipsparseHpruneCsr2csr",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpruneCsr2csr",                       {"hipsparseSpruneCsr2csr",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDpruneCsr2csr",                       {"hipsparseDpruneCsr2csr",                       "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
   {"cusparseHpruneCsr2csr_bufferSizeExt",         {"hipsparseHpruneCsr2csr_bufferSizeExt",         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpruneCsr2csr_bufferSizeExt",         {"hipsparseSpruneCsr2csr_bufferSizeExt",         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDpruneCsr2csr_bufferSizeExt",         {"hipsparseDpruneCsr2csr_bufferSizeExt",         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -610,6 +673,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseSpruneCsr2csrNnz",                    {"hipsparseSpruneCsr2csrNnz",                    "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDpruneCsr2csrNnz",                    {"hipsparseDpruneCsr2csrNnz",                    "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
+  {"cusparseHpruneDense2csrByPercentage",         {"hipsparseHpruneDense2csrByPercentage",         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpruneDense2csrByPercentage",         {"hipsparseSpruneDense2csrByPercentage",         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDpruneDense2csrByPercentage",         {"hipsparseDpruneDense2csrByPercentage",         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
   {"cusparseHpruneDense2csrByPercentage_bufferSizeExt", {"hipsparseHpruneDense2csrByPercentage_bufferSizeExt", "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpruneDense2csrByPercentage_bufferSizeExt", {"hipsparseSpruneDense2csrByPercentage_bufferSizeExt", "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDpruneDense2csrByPercentage_bufferSizeExt", {"hipsparseDpruneDense2csrByPercentage_bufferSizeExt", "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -617,6 +684,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseHpruneDense2csrNnzByPercentage",      {"hipsparseHpruneDense2csrNnzByPercentage",      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpruneDense2csrNnzByPercentage",      {"hipsparseSpruneDense2csrNnzByPercentage",      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDpruneDense2csrNnzByPercentage",      {"hipsparseDpruneDense2csrNnzByPercentage",      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  {"cusparseHpruneCsr2csrByPercentage",           {"hipsparseHpruneCsr2csrByPercentage",           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpruneCsr2csrByPercentage",           {"hipsparseSpruneCsr2csrByPercentage",           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDpruneCsr2csrByPercentage",           {"hipsparseDpruneCsr2csrByPercentage",           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseHpruneCsr2csrByPercentage_bufferSizeExt", {"hipsparseHpruneCsr2csrByPercentage_bufferSizeExt",     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpruneCsr2csrByPercentage_bufferSizeExt", {"hipsparseSpruneCsr2csrByPercentage_bufferSizeExt",     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
@@ -633,22 +704,55 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
 
   // 13. cuSPARSE Generic API Reference
   // Generic Sparse API helper functions
+  // Sparse Matrix descriptor
   {"cusparseCreateCoo",                           {"hipsparseCreateCoo",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCreateCooAoS",                        {"hipsparseCreateCooAoS",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCreateCsr",                           {"hipsparseCreateCsr",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDestroySpMat",                        {"hipsparseDestroySpMat",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseCooGet",                              {"hipsparseCooGet",                              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCooAoSGet",                           {"hipsparseCooAoSGet",                           "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCsrGet",                              {"hipsparseCsrGet",                              "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMatGetFormat",                      {"hipsparseSpMatGetFormat",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMatGetIndexBase",                   {"hipsparseSpMatGetIndexBase",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatGetValues",                      {"hipsparseSpMatGetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatSetValues",                      {"hipsparseSpMatSetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatGetStridedBatch",                {"hipsparseSpMatGetStridedBatch",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMatSetStridedBatch",                {"hipsparseSpMatSetStridedBatch",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMatSetNumBatches",                  {"hipsparseSpMatSetNumBatches",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMatGetNumBatches",                  {"hipsparseSpMatGetNumBatches",                  "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  // Sparse Vector descriptor
+  {"cusparseCreateSpVec",                         {"hipsparseCreateSpVec",                         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDestroySpVec",                        {"hipsparseDestroySpVec",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecGet",                            {"hipsparseSpVecGet",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecGetIndexBase",                   {"hipsparseSpVecGetIndexBase",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecGetValues",                      {"hipsparseSpVecGetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVecSetValues",                      {"hipsparseSpVecSetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   // Generic Dense API helper functions
+  // Dense Matrix descriptor
   {"cusparseCreateDnMat",                         {"hipsparseCreateDnMat",                         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDestroyDnMat",                        {"hipsparseDestroyDnMat",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDnMatGet",                            {"hipsparseDnMatGet",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnMatGetValues",                      {"hipsparseDnMatGetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnMatSetValues",                      {"hipsparseDnMatSetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDnMatSetStridedBatch",                {"hipsparseDnMatSetStridedBatch",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDnMatGetStridedBatch",                {"hipsparseDnMatGetStridedBatch",                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  // Dense Vector descriptor
+  {"cusparseCreateDnVec",                         {"hipsparseCreateDnVec",                         "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDestroyDnVec",                        {"hipsparseDestroyDnVec",                        "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnVecGet",                            {"hipsparseDnVecGet",                            "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnVecGetValues",                      {"hipsparseDnVecGetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDnVecSetValues",                      {"hipsparseDnVecSetValues",                      "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
-  // Generic SpMM API functions
+  // Sparse Matrix * Matrix Multiplication
   {"cusparseSpMM",                                {"hipsparseSpMM",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseSpMM_bufferSize",                     {"hipsparseSpMM_bufferSize",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  // Sparse Vector * Vector Multiplication
+  {"cusparseSpVV",                                {"hipsparseSpVV",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpVV_bufferSize",                     {"hipsparseSpVV_bufferSize",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+
+  // Sparse Matrix * Vector Multiplication
+  {"cusparseSpMV",                                {"hipsparseSpMV",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSpMV_bufferSize",                     {"hipsparseSpMV_bufferSize",                     "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 };

@@ -206,12 +206,15 @@ class Coordinates {
 
     struct X {
         __device__ operator R() const { return f(0); }
+        __device__ uint32_t operator=(R _) { return f(0); }
     };
     struct Y {
         __device__ operator R() const { return f(1); }
+        __device__ uint32_t operator=(R _) { return f(1); }
     };
     struct Z {
         __device__ operator R() const { return f(2); }
+        __device__ uint32_t operator=(R _) { return f(2); }
     };
 
    public:

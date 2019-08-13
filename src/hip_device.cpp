@@ -136,14 +136,14 @@ hipError_t hipSetDevice(int deviceId) {
         return ihipLogStatus(hipErrorInvalidDevice);
     } else {
         ihipSetTlsDefaultCtx(ihipGetPrimaryCtx(deviceId));
-        tls_getPrimaryCtx = true;
+        tls->getPrimaryCtx = true;
         return ihipLogStatus(hipSuccess);
     }
 }
 
 hipError_t hipDeviceSynchronize(void) {
     HIP_INIT_SPECIAL_API(hipDeviceSynchronize, TRACE_SYNC);
-    return ihipLogStatus(ihipSynchronize());
+    return ihipLogStatus(ihipSynchronize(tls));
 }
 
 hipError_t hipDeviceReset(void) {
@@ -171,7 +171,7 @@ hipError_t hipDeviceReset(void) {
 }
 
 
-hipError_t ihipDeviceSetState(void) {
+hipError_t ihipDeviceSetState(TlsData *tls) {
     hipError_t e = hipErrorInvalidContext;
     auto* ctx = ihipGetTlsDefaultCtx();
 
@@ -275,6 +275,41 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
                 break;
             case hipDeviceAttributeIntegrated:
                 *pi = prop->integrated;
+                break;
+            case hipDeviceAttributeMaxTexture1DWidth:
+                *pi = prop->maxTexture1D;
+                break;
+            case hipDeviceAttributeMaxTexture2DWidth:
+                *pi = prop->maxTexture2D[0];
+                break;
+            case hipDeviceAttributeMaxTexture2DHeight:
+                *pi = prop->maxTexture2D[1];
+                break;
+            case hipDeviceAttributeMaxTexture3DWidth:
+                *pi = prop->maxTexture3D[0];
+                break;
+            case hipDeviceAttributeMaxTexture3DHeight:
+                *pi = prop->maxTexture3D[1];
+                break;
+            case hipDeviceAttributeMaxTexture3DDepth:
+                *pi = prop->maxTexture3D[2];
+            case hipDeviceAttributeHdpMemFlushCntl:
+                {
+                    uint32_t** hdp = reinterpret_cast<uint32_t**>(pi);
+                    *hdp = prop->hdpMemFlushCntl;
+                }
+                break;
+            case hipDeviceAttributeHdpRegFlushCntl:
+                {
+                    uint32_t** hdp = reinterpret_cast<uint32_t**>(pi);
+                    *hdp = prop->hdpRegFlushCntl;
+                }
+                break;
+            case hipDeviceAttributeCooperativeLaunch:
+                *pi = prop->cooperativeLaunch;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceLaunch:
+                *pi = prop->cooperativeMultiDeviceLaunch;
                 break;
             default:
                 e = hipErrorInvalidValue;
