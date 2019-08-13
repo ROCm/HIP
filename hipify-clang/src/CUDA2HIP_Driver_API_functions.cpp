@@ -407,7 +407,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
 
   // 5.17.Execution Control
   // no analogue
-  {"cuFuncGetAttribute",                                   {"hipFuncGetAttribute",                                     "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuFuncGetAttribute",                                   {"hipFuncGetAttribute",                                     "", CONV_EXECUTION, API_DRIVER}},
   // no analogue
   // NOTE: Not equal to cudaFuncSetAttribute due to different signatures
   {"cuFuncSetAttribute",                                   {"hipFuncSetAttribute",                                     "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},

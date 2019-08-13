@@ -190,19 +190,19 @@
 |         0x01 |*`CU_FUNC_CACHE_PREFER_SHARED`*                                     |*`hipFuncCachePreferShared`*                                |
 |         0x02 |*`CU_FUNC_CACHE_PREFER_L1`*                                         |*`hipFuncCachePreferL1`*                                    |
 |         0x03 |*`CU_FUNC_CACHE_PREFER_EQUAL`*                                      |*`hipFuncCachePreferEqual`*                                 |
-| enum         |***`CUfunction_attribute`***                                        |                                                            |
-| typedef      |***`CUfunction_attribute_enum`***                                   |                                                            |
-|            0 |*`CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK`*                         |                                                            |
-|            1 |*`CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES`*                             |                                                            |
-|            2 |*`CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES`*                              |                                                            |
-|            3 |*`CU_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES`*                              |                                                            |
-|            4 |*`CU_FUNC_ATTRIBUTE_NUM_REGS`*                                      |                                                            |
-|            5 |*`CU_FUNC_ATTRIBUTE_PTX_VERSION`*                                   |                                                            |
-|            6 |*`CU_FUNC_ATTRIBUTE_BINARY_VERSION`*                                |                                                            |
-|            7 |*`CU_FUNC_ATTRIBUTE_CACHE_MODE_CA`*                                 |                                                            |
-|            8 |*`CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES`*                 |                                                            | 9.0              |
-|            9 |*`CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT`*              |                                                            | 9.0              |
-|           10 |*`CU_FUNC_ATTRIBUTE_MAX`*                                           |                                                            |
+| enum         |***`CUfunction_attribute`***                                        |***`hipFunction_attribute`***                               |
+| typedef      |***`CUfunction_attribute_enum`***                                   |***`hipFunction_attribute`***                               |
+|            0 |*`CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK`*                         |*`HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK`*                |
+|            1 |*`CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES`*                             |*`HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES`*                    |
+|            2 |*`CU_FUNC_ATTRIBUTE_CONST_SIZE_BYTES`*                              |*`HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES`*                     |
+|            3 |*`CU_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES`*                              |*`HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES`*                     |
+|            4 |*`CU_FUNC_ATTRIBUTE_NUM_REGS`*                                      |*`HIP_FUNC_ATTRIBUTE_NUM_REGS`*                             |
+|            5 |*`CU_FUNC_ATTRIBUTE_PTX_VERSION`*                                   |*`HIP_FUNC_ATTRIBUTE_PTX_VERSION`*                          |
+|            6 |*`CU_FUNC_ATTRIBUTE_BINARY_VERSION`*                                |*`HIP_FUNC_ATTRIBUTE_BINARY_VERSION`*                       |
+|            7 |*`CU_FUNC_ATTRIBUTE_CACHE_MODE_CA`*                                 |*`HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA`*                        |
+|            8 |*`CU_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES`*                 |*`HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES`*        | 9.0              |
+|            9 |*`CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT`*              |*`HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT`*     | 9.0              |
+|           10 |*`CU_FUNC_ATTRIBUTE_MAX`*                                           |*`HIP_FUNC_ATTRIBUTE_MAX`*                                  |
 | enum         |***`CUgraphicsMapResourceFlags`***                                  |                                                            |
 | typedef      |***`CUgraphicsMapResourceFlags_enum`***                             |                                                            |
 |         0x00 |*`CU_GRAPHICS_MAP_RESOURCE_FLAGS_NONE`*                             |                                                            |
@@ -980,7 +980,7 @@
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
-| `cuFuncGetAttribute`                                      |                               |
+| `cuFuncGetAttribute`                                      | `hipFuncGetAttribute`         |
 | `cuFuncSetAttribute`                                      |                               | 9.0              |
 | `cuFuncSetCacheConfig`                                    | `hipFuncSetCacheConfig`       |
 | `cuFuncSetSharedMemConfig`                                |                               |
