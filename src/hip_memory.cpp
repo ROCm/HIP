@@ -2137,18 +2137,35 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
         // Get the current device agent.
         hc::accelerator acc;
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
-        if (!agent) return hipErrorInvalidResourceHandle;
-
-        ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*)&handle;
-        // Attach ipc memory
-        auto ctx = ihipGetTlsDefaultCtx();
-        {
-            LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-            // the peerCnt always stores self so make sure the trace actually
-            hsa_status_t hsa_status = hsa_amd_ipc_memory_attach(
-                (hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, crit->peerCnt(),
-                crit->peerAgents(), devPtr);
-            if (hsa_status != HSA_STATUS_SUCCESS) hipStatus = hipErrorMapBufferObjectFailed;
+        if (!agent) {
+            hipStatus = hipErrorInvalidResourceHandle;
+        } else {
+            ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*)&handle;
+            // Attach ipc memory
+            auto ctx = ihipGetTlsDefaultCtx();
+            {
+                LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+                auto device = ctx->getWriteableDevice();
+                // the peerCnt always stores self so make sure the trace actually
+                hsa_status_t hsa_status = hsa_amd_ipc_memory_attach(
+                    (hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, crit->peerCnt(),
+                    crit->peerAgents(), devPtr);
+                if (hsa_status == HSA_STATUS_SUCCESS) {
+                    hc::AmPointerInfo ampi(NULL, *devPtr, *devPtr, sizeof(*devPtr), acc, true, true);
+                    am_status_t am_status = hc::am_memtracker_add(*devPtr,ampi);
+                    if (am_status == AM_SUCCESS) {
+#if USE_APP_PTR_FOR_CTX
+                        hc::am_memtracker_update(*devPtr, device->_deviceId, 0, ctx);
+#else
+                        hc::am_memtracker_update(*devPtr, device->_deviceId, 0);
+#endif
+                    } else {
+                        hipStatus = hipErrorInvalidValue;
+                    }
+                } else {
+                    hipStatus = hipErrorMapBufferObjectFailed;
+                }
+            }
         }
 #else
         hipStatus = hipErrorRuntimeOther;
@@ -2164,8 +2181,12 @@ hipError_t hipIpcCloseMemHandle(void* devPtr) {
         hipStatus = hipErrorInvalidValue;
     } else {
 #if USE_IPC
-        hsa_status_t hsa_status = hsa_amd_ipc_memory_detach(devPtr);
-        if (hsa_status != HSA_STATUS_SUCCESS) return hipErrorInvalidResourceHandle;
+        am_status_t am_status = hc::am_memtracker_remove(devPtr);
+        if (am_status == AM_SUCCESS) {
+            hsa_status_t hsa_status = hsa_amd_ipc_memory_detach(devPtr);
+            if (hsa_status != HSA_STATUS_SUCCESS) 
+                hipStatus = hipErrorInvalidResourceHandle;
+        } else hipStatus = hipErrorInvalidValue;
 #else
         hipStatus = hipErrorRuntimeOther;
 #endif
