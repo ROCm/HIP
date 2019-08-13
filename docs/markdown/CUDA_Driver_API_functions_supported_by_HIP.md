@@ -862,7 +862,7 @@
 | `cuMemAllocPitch`                                         |                               |
 | `cuMemcpy`                                                |                               |
 | `cuMemcpy2D`                                              | `hipMemcpyParam2D`            |
-| `cuMemcpy2DAsync`                                         |                               |
+| `cuMemcpy2DAsync`                                         | `hipMemcpyParam2DAsync`       |
 | `cuMemcpy2DUnaligned`                                     |                               |
 | `cuMemcpy3D`                                              |                               |
 | `cuMemcpy3DAsync`                                         |                               |
