@@ -1097,3 +1097,28 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
         tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
+
+hipError_t hipLaunchKernel(
+    const void* func_addr, dim3 numBlocks, dim3 dimBlocks, void** args,
+    size_t sharedMemBytes, hipStream_t stream, size_t szKernArg)
+{
+   HIP_INIT_API(hipLaunchKernel,func_addr,numBlocks,dimBlocks,args,sharedMemBytes,stream,szKernArg);
+
+   hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)func_addr,
+                                                           hip_impl::target_agent(stream));
+   void* config[]{
+        HIP_LAUNCH_PARAM_BUFFER_POINTER,
+        args,
+        HIP_LAUNCH_PARAM_BUFFER_SIZE,
+        &szKernArg,
+        HIP_LAUNCH_PARAM_END};
+
+        if(args == NULL)
+        {
+           config[1] = NULL;
+        }
+
+   return ihipLogStatus(ihipModuleLaunchKernel(tls, kd, numBlocks.x * dimBlocks.x, numBlocks.y * dimBlocks.y, numBlocks.z * dimBlocks.z,
+                          dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes, stream, nullptr, (void**)&config, nullptr, nullptr, 0));
+}
+
