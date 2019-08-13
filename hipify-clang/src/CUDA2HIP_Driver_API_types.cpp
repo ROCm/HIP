@@ -959,9 +959,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CUmemAttach_flags_enum",                                           {"hipMemAttachFlags_t",                                      "", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
   // CUmemAttach_flags enum values
   // cudaMemAttachGlobal
-  {"CU_MEM_ATTACH_GLOBAL",                                             {"hipMemAttachGlobal",                                       "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x1
+  {"CU_MEM_ATTACH_GLOBAL",                                             {"hipMemAttachGlobal",                                       "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 0x1
   // cudaMemAttachHost
-  {"CU_MEM_ATTACH_HOST",                                               {"hipMemAttachHost",                                         "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x2
+  {"CU_MEM_ATTACH_HOST",                                               {"hipMemAttachHost",                                         "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 0x2
   // cudaMemAttachSingle
   {"CU_MEM_ATTACH_SINGLE",                                             {"hipMemAttachSingle",                                       "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x4
 
