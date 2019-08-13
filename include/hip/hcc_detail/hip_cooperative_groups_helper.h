@@ -191,8 +191,7 @@ __CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
 }
 
 __CG_STATIC_QUALIFIER__ bool is_valid() {
-  //TODO(mahesha) anything to do here? I believe not
-  return true;
+  return __grid_is_valid();
 }
 
 __CG_STATIC_QUALIFIER__ void sync() {

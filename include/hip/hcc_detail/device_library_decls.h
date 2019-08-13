@@ -59,13 +59,14 @@ extern "C" __device__ __attribute__((const)) float __ocml_fmin_f32(float, float)
 extern "C" __device__ __attribute__((const)) float __ocml_fmax_f32(float, float);
 
 extern "C" __device__ __attribute__((const)) uint32_t __ockl_lane_u32();
-extern "C" __device__ __attribute__((const)) void __ockl_grid_sync();
-extern "C" __device__ __attribute__((const)) uint32_t __ockl_multi_grid_num_grids();
-extern "C" __device__ __attribute__((const)) uint32_t __ockl_multi_grid_grid_rank();
-extern "C" __device__ __attribute__((const)) uint32_t __ockl_multi_grid_size();
-extern "C" __device__ __attribute__((const)) uint32_t __ockl_multi_grid_thread_rank();
-extern "C" __device__ __attribute__((const)) bool __ockl_multi_grid_is_valid();
-extern "C" __device__ __attribute__((const)) void __ockl_multi_grid_sync();
+extern "C" __device__ __attribute__((convergent)) int __ockl_grid_is_valid(void);
+extern "C" __device__ __attribute__((convergent)) void __ockl_grid_sync(void);
+extern "C" __device__ __attribute__((const)) uint __ockl_multi_grid_num_grids(void);
+extern "C" __device__ __attribute__((convergent)) uint __ockl_multi_grid_grid_rank(void);
+extern "C" __device__ __attribute__((convergent)) uint __ockl_multi_grid_size(void);
+extern "C" __device__ __attribute__((convergent)) uint __ockl_multi_grid_thread_rank(void);
+extern "C" __device__ __attribute__((convergent)) int __ockl_multi_grid_is_valid(void);
+extern "C" __device__ __attribute__((convergent)) void __ockl_multi_grid_sync(void);
 
 // Introduce local address space
 #define __local __attribute__((address_space(3)))
