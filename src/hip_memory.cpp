@@ -1488,7 +1488,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
 }
 
 hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t inStream) {
-    HIP_INIT_SPECIAL_API(hipMemcpy3DAsync, (TRACE_MCMD), p, stream);
+    HIP_INIT_SPECIAL_API(hipMemcpy3DAsync, (TRACE_MCMD), p, inStream);
     hipError_t e = hipSuccess;
     hipStream_t stream = ihipSyncAndResolveStream(inStream);
     e = ihipMemcpy3D(p, stream, true);
