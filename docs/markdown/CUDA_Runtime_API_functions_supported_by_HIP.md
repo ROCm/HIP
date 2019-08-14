@@ -151,7 +151,7 @@
 | `cudaMalloc3DArray`                                       | `hipMalloc3DArray`            |
 | `cudaMallocArray`                                         | `hipMallocArray`              |
 | `cudaMallocHost`                                          | `hipHostMalloc`               |
-| `cudaMallocManaged`                                       |                               |
+| `cudaMallocManaged`                                       | `hipMallocManaged`            |
 | `cudaMallocMipmappedArray`                                |                               |
 | `cudaMallocPitch`                                         |                               |
 | `cudaMemGetInfo`                                          | `hipMemGetInfo`               |
@@ -1024,8 +1024,8 @@
 | define       |`cudaHostRegisterMapped`                             |                  |`hipHostRegisterMapped`                                     |
 | define       |`cudaHostRegisterPortable`                           |                  |`hipHostRegisterPortable`                                   |
 | define       |`cudaIpcMemLazyEnablePeerAccess`                     |                  |`hipIpcMemLazyEnablePeerAccess`                             | 0                         |
-| define       |`cudaMemAttachGlobal`                                |                  |                                                            |
-| define       |`cudaMemAttachHost`                                  |                  |                                                            |
+| define       |`cudaMemAttachGlobal`                                |                  |`hipMemAttachGlobal`                                        |
+| define       |`cudaMemAttachHost`                                  |                  |`hipMemAttachHost`                                          |
 | define       |`cudaMemAttachSingle`                                |                  |                                                            |
 | define       |`cudaOccupancyDefault`                               |                  |                                                            |
 | define       |`cudaOccupancyDisableCachingOverride`                |                  |                                                            |
