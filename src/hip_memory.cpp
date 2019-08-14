@@ -1447,7 +1447,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             ySize = p->srcPtr.ysize;
             dstPitch = p->dstPtr.pitch;
         }
-
+        hipStream_t stream = ihipSyncAndResolveStream(stream);
         hc::completion_future marker;
         try {
             if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
@@ -1482,15 +1482,13 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
     HIP_INIT_SPECIAL_API(hipMemcpy3D, (TRACE_MCMD), p);
     hipError_t e = hipSuccess;
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-    e = ihipMemcpy3D(p, stream, false);
+    e = ihipMemcpy3D(p, hipStreamNull, false);
     return ihipLogStatus(e);
 }
 
-hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t inStream) {
-    HIP_INIT_SPECIAL_API(hipMemcpy3DAsync, (TRACE_MCMD), p, inStream);
+hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream) {
+    HIP_INIT_SPECIAL_API(hipMemcpy3DAsync, (TRACE_MCMD), p, stream);
     hipError_t e = hipSuccess;
-    hipStream_t stream = ihipSyncAndResolveStream(inStream);
     e = ihipMemcpy3D(p, stream, true);
     return ihipLogStatus(e);
 }
