@@ -67,12 +67,12 @@ typedef enum hipMemcpyKind {
 #define hipReadModeElementType cudaReadModeElementType
 #define hipReadModeNormalizedFloat cudaReadModeNormalizedFloat
 
-typedef enum hipChannelFormatKind {
-    hipChannelFormatKindSigned = 0,
-    hipChannelFormatKindUnsigned = 1,
-    hipChannelFormatKindFloat = 2,
-    hipChannelFormatKindNone = 3
-} hipChannelFormatKind;
+// hipChannelFormatKind
+#define hipChannelFormatKind            cudaChannelFormatKind
+#define hipChannelFormatKindSigned      cudaChannelFormatKindSigned
+#define hipChannelFormatKindUnsigned    cudaChannelFormatKindUnsigned
+#define hipChannelFormatKindFloat       cudaChannelFormatKindFloat
+#define hipChannelFormatKindNone        cudaChannelFormatKindNone
 
 #define hipSurfaceBoundaryMode cudaSurfaceBoundaryMode
 #define hipBoundaryModeZero cudaBoundaryModeZero
