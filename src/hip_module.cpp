@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/hsa_helpers.hpp"
 #include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
+#include "hip/hip_hcc.h"
 #include "program_state.inl"
 #include "trace_helper.h"
 
