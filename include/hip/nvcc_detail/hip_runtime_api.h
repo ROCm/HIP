@@ -160,6 +160,7 @@ typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
+typedef struct cudaArray* hipArray_t;
 typedef struct cudaArray* hipArray_const_t;
 typedef cudaFuncAttributes hipFuncAttributes;
 typedef CUfunction_attribute hipFunction_attribute;
