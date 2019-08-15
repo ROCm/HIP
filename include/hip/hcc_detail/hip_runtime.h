@@ -462,7 +462,6 @@ hc_get_workitem_absolute_id(int dim)
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 
-
 #endif // defined(__clang__) && defined(__HIP__)
 
 #include <hip/hcc_detail/hip_memory.h>
