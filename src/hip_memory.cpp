@@ -1389,7 +1389,7 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
 
 hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync) {
     hipError_t e = hipSuccess;
-    if(stream && p) {
+    if(p) {
         size_t byteSize;
         size_t depth;
         size_t height;
@@ -1447,7 +1447,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             ySize = p->srcPtr.ysize;
             dstPitch = p->dstPtr.pitch;
         }
-        hipStream_t stream = ihipSyncAndResolveStream(stream);
+        stream = ihipSyncAndResolveStream(stream);
         hc::completion_future marker;
         try {
             if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
