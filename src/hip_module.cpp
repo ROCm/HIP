@@ -386,6 +386,118 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
     return ihipLogStatus(result);
 }
 
+namespace {
+// kernel for initializing GWS
+// nwm1 is the total number of wavefronts minus 1 and rid is the GWS resource id
+__global__ void init_gws(uint nwm1, uint rid) {
+    __ockl_gws_init(nwm1, rid);
+}
+}
+
+hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
+        dim3 blockDimX, void** kernelParams, unsigned int sharedMemBytes,
+        hipStream_t stream) {
+
+    HIP_INIT_API(hipLaunchCooperativeKernel, f, gridDim, blockDimX, kernelParams, sharedMemBytes, stream);
+    hipError_t result;
+
+
+    if ((f == nullptr) || (stream == nullptr) || (kernelParams == nullptr)) {
+        return ihipLogStatus(hipErrorNotInitialized);
+    }
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    if (ctx == nullptr) {
+        return ihipLogStatus(hipErrorInvalidDevice);
+    }
+    int deviceId = ctx->getDevice()->_deviceId;
+    ihipDevice_t* currentDevice = ihipGetDevice(deviceId);
+
+    if (!currentDevice->_props.cooperativeLaunch) {
+        return ihipLogStatus(hipErrorInvalidConfiguration);
+    }
+
+    // Prepare the kernel descriptor for initializing the GWS
+    hipFunction_t gwsKD = hip_impl::get_program_state().kernel_descriptor(
+            reinterpret_cast<std::uintptr_t>(&init_gws),
+            hip_impl::target_agent(stream));
+
+    if (gwsKD == nullptr) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    hip_impl::kernargs_size_align gwsKargs =
+            hip_impl::get_program_state().get_kernargs_size_align(
+                    reinterpret_cast<std::uintptr_t>(&init_gws));
+
+    gwsKD->_kernarg_layout = *reinterpret_cast<const std::vector<
+            std::pair<std::size_t, std::size_t>>*>(gwsKargs.getHandle());
+
+    // Prepare the kernel descriptor for the main kernel
+    hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor(
+            reinterpret_cast<std::uintptr_t>(f),
+            hip_impl::target_agent(stream));
+    if (kd == nullptr) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    hip_impl::kernargs_size_align kargs =
+            hip_impl::get_program_state().get_kernargs_size_align(
+                    reinterpret_cast<std::uintptr_t>(f));
+
+    kd->_kernarg_layout = *reinterpret_cast<const std::vector<
+            std::pair<std::size_t, std::size_t>>*>(kargs.getHandle());
+
+
+    void *gwsKernelParams[2];
+    uint nwm1, rid;
+    rid = 0;
+
+    const uint32_t wavefrontSize = 1 << kd->_header->wavefront_size;
+    uint32_t alignedBlockDim = ((blockDimX.x * blockDimX.y * blockDimX.z) + wavefrontSize - 1) &
+                                ~(wavefrontSize - 1);
+
+    // calculate total number of wavefronts minus 1 for the main kernel
+    nwm1 = ((gridDim.x * gridDim.y * gridDim.z) *
+                alignedBlockDim / wavefrontSize) - 1;
+
+    // program the kernel arguments for init_gws kernel
+    gwsKernelParams[0] = &nwm1;
+    gwsKernelParams[1] = &rid;
+
+    LockedAccessor_StreamCrit_t streamCrit(stream->criticalData(), false);
+#if (__hcc_workweek__ >= 19213)
+    streamCrit->_av.acquire_locked_hsa_queue();
+#endif
+
+    // launch the init_gws kernel to initialize the GWS
+    result = ihipModuleLaunchKernel(tls, gwsKD, 1, 1, 1, 1, 1, 1,
+             0, stream, gwsKernelParams, nullptr, nullptr, nullptr, 0, true);
+
+    if (result != hipSuccess) {
+        stream->criticalData().unlock();
+#if (__hcc_workweek__ >= 19213)
+        stream->criticalData()._av.release_locked_hsa_queue();
+#endif
+
+        return ihipLogStatus(hipErrorLaunchFailure);
+    }
+
+    // launch the main kernel
+    result = ihipModuleLaunchKernel(tls, kd,
+            gridDim.x * blockDimX.x,
+            gridDim.y * blockDimX.y,
+            gridDim.z * blockDimX.z,
+            blockDimX.x, blockDimX.y, blockDimX.z,
+            sharedMemBytes, stream, kernelParams, nullptr, nullptr,
+            nullptr, 0, true);
+
+    stream->criticalData().unlock();
+#if (__hcc_workweek__ >= 19213)
+    stream->criticalData()._av.release_locked_hsa_queue();
+#endif
+
+    return ihipLogStatus(result);
+}
+
 namespace hip_impl {
     hsa_executable_t executable_for(hipModule_t hmod) {
         return hmod->executable;
