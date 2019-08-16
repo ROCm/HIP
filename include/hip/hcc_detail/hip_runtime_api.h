@@ -2022,6 +2022,19 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
  */
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p);
 
+/**
+ *  @brief Copies data between host and device asynchronously.
+ *
+ *  @param[in]   p        3D memory copy parameters
+ *  @param[in]   stream   Stream to use
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream __dparm(0));
+
 // doxygen end Memory
 /**
  * @}
