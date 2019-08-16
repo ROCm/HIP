@@ -449,7 +449,7 @@ hipError_t ihipBindTextureImpl(TlsData* tls, int dim, enum hipTextureReadMode re
 
   assert(1 == dim);
 
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, desc, 1, 1, size));
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, desc, size, 1, 0));
 }
 
 hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureReadMode readMode,
