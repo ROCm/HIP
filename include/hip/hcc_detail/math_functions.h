@@ -29,7 +29,14 @@ THE SOFTWARE.
 #include <hip/hcc_detail/host_defines.h>
 
 #include <algorithm>
+
+// assert.h is only for the host version of assert.
+// The device version of assert is implemented in hip/hcc_detail/hip_runtime.h.
+// Users should include hip_runtime.h for the device version of assert.
+#if !__HIP_DEVICE_COMPILE__
 #include <assert.h>
+#endif
+
 #include <limits.h>
 #include <limits>
 #include <stdint.h>
