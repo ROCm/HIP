@@ -106,7 +106,7 @@ THE SOFTWARE.
             #if !defined(__HIP_NO_HALF_CONVERSIONS__)
                 template<
                     typename T, Enable_if_t<std::is_integral<T>{}>* = nullptr>
-                __device__
+                __host__ __device__
                 __half(T x) : data{static_cast<_Float16>(x)} {}
             #endif
 
@@ -233,11 +233,10 @@ THE SOFTWARE.
                 return __half_raw{data};
             }
 
-            // ACCESSORS - DEVICE ONLY
             #if !defined(__HIP_NO_HALF_CONVERSIONS__)
                 template<
                     typename T, Enable_if_t<std::is_integral<T>{}>* = nullptr>
-                __device__
+                __host__ __device__
                 operator T() const { return data; }
             #endif
 
