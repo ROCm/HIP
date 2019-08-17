@@ -22,10 +22,8 @@ THE SOFTWARE.
 
 #ifndef HIP_INCLUDE_HIP_HIP_HCC_H
 #define HIP_INCLUDE_HIP_HIP_HCC_H
-
-#ifdef __HCC__
-
 #include "hip/hip_runtime_api.h"
+#ifdef __HCC__
 
 // Forward declarations:
 namespace hc {
@@ -59,6 +57,8 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc);
  */
 HIP_PUBLIC_API
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av);
+
+#endif  // #ifdef __HCC__
 
 
 /**
@@ -115,5 +115,4 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 /**
  * @}
  */
-#endif  // #ifdef __HCC__
 #endif  // #ifdef HIP_INCLUDE_HIP_HIP_HCC_H
