@@ -27,14 +27,11 @@ THE SOFTWARE.
  *
  *  Defines helper constructs and APIs which aid the types and device API
  *  wrappers defined within `hcc_detail/hip_cooperative_groups.h`.
- *
- *  The `Cooperative Group` feature is supported only for hip/vdi runtime, as
- *  such, the feature is implemented only in case of hip/vdi runtime
  */
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_HELPER_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_HELPER_H
 
-#if __cplusplus && __HIP_VDI__
+#if __cplusplus
 #include <hip/hcc_detail/hip_runtime_api.h>
 #include <hip/hcc_detail/device_functions.h>
 
@@ -63,11 +60,7 @@ namespace internal {
 typedef enum {
   cg_invalid,
   cg_multi_grid,
-  cg_grid,
-  cg_workgroup,
-  cg_coalesced,
-  cg_tiled_partition_dynamic,
-  cg_tiled_partition_static
+  cg_grid
 } group_type;
 
 /**
@@ -95,36 +88,6 @@ __CG_STATIC_QUALIFIER__ uint32_t lane() {
 
 __CG_STATIC_QUALIFIER__ uint32_t popcll(uint64_t mask) {
   return __popcll(mask);
-}
-
-/**
- *  Internal helper functions
- */
-__CG_STATIC_QUALIFIER__ bool is_tile_size_valid(const uint32_t tile_sz,
-                                                const uint32_t parent_size) {
-  // Tile size should be power of two, and it should be between the range
-  // [1, wavefront_size]
-  const bool pow2_tile_sz = ((tile_sz & (tile_sz - 1)) == 0);
-  if (!pow2_tile_sz || tile_sz < 1 || tile_sz > WAVEFRONT_SIZE ||
-      tile_sz > parent_size)
-    return false;
-
-  return true;
-}
-
-__CG_STATIC_QUALIFIER__ uint64_t get_new_tiled_mask(const uint32_t tile_sz) {
-  // It is assumed that the caller has already verified that tile size is a
-  // power of two value
-
-  // Construct the mask for new tiled group - First, create a mask where only
-  // the `tile_sz` number of LSB bits are active, and, then left shift those
-  // active bits to a sub-wavefront position where the current thread belongs
-  // to
-  uint64_t mask = (~((uint64_t)0)) >> (WAVEFRONT_SIZE - tile_sz);
-  uint32_t mask_start_position = (internal::lane() & ~(tile_sz - 1));
-  mask = mask << mask_start_position;
-
-  return mask;
 }
 
 /**
@@ -200,65 +163,9 @@ __CG_STATIC_QUALIFIER__ void sync() {
 
 } // namespace grid
 
-/**
- *  Functionalities related to coalesced cooperative group type
- */
-namespace coalesced {
-
-__CG_STATIC_QUALIFIER__ uint32_t thread_rank(uint64_t mask) {
-  return internal::popcll(mask & internal::lanemask_lt());
-}
-
-__CG_STATIC_QUALIFIER__ bool is_valid() {
-  //TODO(mahesha) anything to do here? I believe not
-  return true;
-}
-
-__CG_STATIC_QUALIFIER__ void sync() {
-  // Do nothing, as wavefront is always run synchronously on AMD hardware
-}
-
-} // namespace coalesced
-
-/**
- *  Functionalities related to thread_block cooperative group type
- */
-namespace workgroup {
-
-__CG_STATIC_QUALIFIER__ dim3 group_index() {
-  return (dim3((uint32_t)hipBlockIdx_x, (uint32_t)hipBlockIdx_y,
-               (uint32_t)hipBlockIdx_z));
-}
-
-__CG_STATIC_QUALIFIER__ dim3 thread_index() {
-  return (dim3((uint32_t)hipThreadIdx_x, (uint32_t)hipThreadIdx_y,
-               (uint32_t)hipThreadIdx_z));
-}
-
-__CG_STATIC_QUALIFIER__ uint32_t size() {
-  return((uint32_t)(hipBlockDim_x * hipBlockDim_y * hipBlockDim_z));
-}
-
-__CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
-  return ((uint32_t)((hipThreadIdx_z * hipBlockDim_y * hipBlockDim_x) +
-                     (hipThreadIdx_y * hipBlockDim_x) +
-                     (hipThreadIdx_x)));
-}
-
-__CG_STATIC_QUALIFIER__ bool is_valid() {
-  //TODO(mahesha) anything to do here? I believe not
-  return true;
-}
-
-__CG_STATIC_QUALIFIER__ void sync() {
-  __syncthreads();
-}
-
-} // namespace workgroup
-
 } // namespace internal
 
 } // namespace cooperative_groups
 
-#endif // (__cplusplus) && (__HIP_VDI__)
+#endif // __cplusplus
 #endif // HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_HELPER_H

@@ -25,16 +25,13 @@ THE SOFTWARE.
  *
  *  @brief Defines new types and device API wrappers for `Cooperative Group`
  *  feature.
- *
- *  The `Cooperative Group` feature is supported only for hip/vdi runtime, as
- *  such, the necesary header(s) are included only in case of hip/vdi runtime
  */
 
 #ifndef  HIP_INCLUDE_HIP_HIP_COOPERATIVE_GROUP_H
 #define HIP_INCLUDE_HIP_HIP_VECTOR_TYPES_H
 
 #if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
-#if __cplusplus && __HIP_VDI__
+#if __cplusplus
 #include <hip/hcc_detail/hip_cooperative_groups.h>
 #endif
 #elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)

@@ -28,22 +28,14 @@ THE SOFTWARE.
  *  Defines new types and device API wrappers related to `Cooperative Group`
  *  feature, which the programmer can directly use in his kernel(s) in order to
  *  make use of this feature.
- *
- *  The `Cooperative Group` feature is supported only for hip/vdi runtime, as
- *  such, the the feature is implemented in case of hip/vdi runtime
  */
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_H
 
-#if __cplusplus && __HIP_VDI__
+#if __cplusplus
 #include <hip/hcc_detail/hip_cooperative_groups_helper.h>
 
 namespace cooperative_groups {
-
-// Forward declaration of class which represents templated tiled cooperative
-// groups
-template <uint32_t tile_sz>
-class thread_block_tile;
 
 /** \brief The base type of all cooperative group types
  *
@@ -51,15 +43,6 @@ class thread_block_tile;
  *           object, like the group type, its size, etc
  */
 class thread_group {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  friend __CG_QUALIFIER__ thread_group this_thread();
-  friend __CG_QUALIFIER__ thread_group tiled_partition(
-      const thread_group& parent, uint32_t tile_sz);
-  template <uint32_t tile_sz>
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(
-      const thread_group& parent);
-
  protected:
   uint32_t _type; // thread_group type
   uint32_t _size; // total number of threads in the tread_group
@@ -92,14 +75,6 @@ class thread_group {
   // synchronize the threads in the thread group
   __CG_QUALIFIER__ void sync() const;
 };
-
-/** \brief User exposed API interface to construct a generic `thread_group`
- *         object containing only the calling thread
- */
-__CG_QUALIFIER__ thread_group
-this_thread() {
-  return thread_group(internal::cg_coalesced, (uint32_t)1, internal::lanemask_eq());
-}
 
 /** \brief The multi-grid cooperative group type
  *
@@ -191,214 +166,6 @@ this_grid() {
   return grid_group(internal::grid::size());
 }
 
-/** \brief The workgroup (thread-block in CUDA terminology) cooperative group
- *         type
- *
- *  \details Represents an intra-workgroup cooperative group type where the
- *           participating threads within the group are exctly the same threads
- *           which are participated in the currently executing `workgroup`
- */
-class thread_block : public thread_group {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  friend __CG_QUALIFIER__ thread_block this_thread_block();
-
- protected:
-  // Construct a workgroup thread group (through the API this_thread_block())
-  explicit __CG_QUALIFIER__ thread_block(uint32_t size)
-      : thread_group(internal::cg_workgroup, size) { }
-
- public:
-  // 3-dimensional block index within the grid
-  __CG_QUALIFIER__ dim3 group_index() {
-    return internal::workgroup::group_index();
-  }
-  // 3-dimensional thread index within the block
-  __CG_QUALIFIER__ dim3 thread_index() {
-    return internal::workgroup::thread_index();
-  }
-  __CG_QUALIFIER__ uint32_t thread_rank() const {
-    return internal::workgroup::thread_rank();
-  }
-  __CG_QUALIFIER__ bool is_valid() const {
-    return internal::workgroup::is_valid();
-  }
-  __CG_QUALIFIER__ void sync() const {
-    internal::workgroup::sync();
-  }
-};
-
-/** \brief User exposed API interface to construct workgroup cooperative
- *         group type object - `thread_block`
- *
- *  \details User is not allowed to directly construct an object of type
- *           `thread_block`. Instead, he should construct it through this API
- *           function
- */
-__CG_QUALIFIER__ thread_block
-this_thread_block() {
-  return thread_block(internal::workgroup::size());
-}
-
-/** \brief The coalesced cooperative group type
- *
- *  \details Represents an intra-workgroup cooperative group type where each
- *           thread belongs to this group is an `active` lane of currently
- *           executing wavefront, and as such the allowed group size is only
- *           power of two and upto wavefront size.
- */
-class coalesced_group : public thread_group {
-  // Only these friend functions are allowed to construct an object of this class
-  // and access its resources
-  friend __CG_QUALIFIER__ coalesced_group coalesced_threads();
-  friend __CG_QUALIFIER__ thread_group tiled_partition(
-      const thread_group& parent, uint32_t tile_sz);
-
- protected:
-  // Construct a coalesced thread group (through the API coalesced_threads())
-  explicit __CG_QUALIFIER__ coalesced_group(uint64_t mask)
-      : thread_group(internal::cg_coalesced, internal::popcll(mask), mask) { }
-
-  __CG_QUALIFIER__ coalesced_group(internal::group_type type, uint64_t mask)
-      : thread_group(type, internal::popcll(mask), mask) { }
-
- public:
-  __CG_QUALIFIER__ uint32_t thread_rank() const {
-    return internal::coalesced::thread_rank(_mask);
-  }
-  __CG_QUALIFIER__ bool is_valid() const {
-    return internal::coalesced::is_valid();
-  }
-  __CG_QUALIFIER__ void sync() const {
-    internal::coalesced::sync();
-  }
-};
-
-/** \brief User exposed API interface to construct coalesced cooperative group
- *         type object - `coalesced_group`
- *
- *  \details User is not allowed to directly construct an object of type
- *           `coalesced_group`. Instead, he should construct it through this API
- *           function
- */
-__CG_QUALIFIER__ coalesced_group
-coalesced_threads() {
-  return coalesced_group(internal::activemask());
-}
-
-/** \brief Templated (static) tiled partitioning of `exiting` intra-workgroup
- *         (and only intra-workgroup) cooperative group types
- *
- *  \details This class acts as a common base class definittion for all the
- *           templated tiled partitioned cooperative group type with varying
- *           tile sizes. The number of participating threads within this
- *           templated tiled partitioned cooperative group is specified at
- *           compile time as a template parameter. The allowed group size is
- *           only power of two and upto wavefront size. All the machinery of the
- *           tmplated partitioned cooperative group type implementation goes
- *           within this base class. The type derived from this base class is
- *           explicitly instantiated for all the allowed valid tile sizes.
- */
-template <uint32_t tile_sz>
-class thread_block_tile_base : public coalesced_group {
- protected:
-  explicit __CG_QUALIFIER__ thread_block_tile_base(uint64_t mask)
-      : coalesced_group(internal::cg_tiled_partition_static, mask) { }
-
-  __CG_QUALIFIER__ thread_block_tile_base(internal::group_type type, uint64_t mask)
-      : coalesced_group(type, mask) { }
-};
-
-/** \brief The tiled partitioned cooperative group type
- *
- *  \details These classes derive the class `thread_block_tile_base` and they
- *           are explicitly instantiated for the allowed tile sizes
- */
-#define THREAD_BLOCK_TILE_CLASS(TL_SIZE)                                       \
-  template <>                                                                  \
-  class thread_block_tile<TL_SIZE> : public thread_block_tile_base<TL_SIZE> {  \
-  template <uint32_t tile_sz>                                                  \
-  friend __CG_QUALIFIER__ thread_block_tile<tile_sz> tiled_partition(          \
-      const thread_group& parent);                                             \
-                                                                               \
- protected:                                                                    \
-  explicit __CG_QUALIFIER__ thread_block_tile(uint64_t mask)                   \
-    : thread_block_tile_base(mask) { }                                         \
-                                                                               \
-  __CG_QUALIFIER__ thread_block_tile(internal::group_type type, uint64_t mask) \
-    : thread_block_tile_base(type, mask) { }                                   \
-};
-
-THREAD_BLOCK_TILE_CLASS(1)
-THREAD_BLOCK_TILE_CLASS(2)
-THREAD_BLOCK_TILE_CLASS(4)
-THREAD_BLOCK_TILE_CLASS(8)
-THREAD_BLOCK_TILE_CLASS(16)
-THREAD_BLOCK_TILE_CLASS(32)
-THREAD_BLOCK_TILE_CLASS(64)
-#undef THREAD_BLOCK_TILE_CLASS
-
-/** \brief User exposed API interface to construct new coalesced (dynamic) tiled
- *         partitioned group from an `exiting` intra-workgroup (and only
- *         intra-workgroup) cooperative group types
- */
-__CG_QUALIFIER__ thread_group
-tiled_partition(const thread_group& parent, uint32_t tile_sz) {
-  if (!internal::is_tile_size_valid(tile_sz, parent.size())) {
-    //TODO(mahesha) Do we need to abort the thread here?
-    return thread_group(internal::cg_invalid, 0);
-  }
-
-  uint64_t mask = 0;
-  internal::group_type gtype = internal::cg_invalid;
-  switch (parent._type) {
-    case internal::cg_workgroup:
-    case internal::cg_tiled_partition_dynamic:
-    case internal::cg_tiled_partition_static: {
-      mask = internal::get_new_tiled_mask(tile_sz);
-      gtype = internal::cg_tiled_partition_dynamic;
-      break;
-    }
-    case internal::cg_coalesced: {
-      //TODO(mahesha):
-      break;
-    }
-  }
-
-  return coalesced_group(gtype, mask);
-}
-
-/** \brief User exposed API interface to construct new templated (dynamic) tiled
- *         partitioned group from an `exiting` intra-workgroup (and only
- *         intra-workgroup) cooperative group types
- */
-template <uint32_t tile_sz>
-__CG_QUALIFIER__ thread_block_tile<tile_sz>
-tiled_partition(const thread_group& parent) {
-  if (!internal::is_tile_size_valid(tile_sz, parent.size())) {
-    //TODO(mahesha) Do we need to abort the thread here?
-    return thread_block_tile<tile_sz>(internal::cg_invalid, 0);
-  }
-
-  uint64_t mask = 0;
-  internal::group_type gtype = internal::cg_invalid;
-  switch (parent._type) {
-    case internal::cg_workgroup:
-    case internal::cg_tiled_partition_dynamic:
-    case internal::cg_tiled_partition_static: {
-      mask = internal::get_new_tiled_mask(tile_sz);
-      gtype = internal::cg_tiled_partition_static;
-      break;
-    }
-    case internal::cg_coalesced: {
-      //TODO(mahesha):
-      break;
-    }
-  }
-
-  return thread_block_tile<tile_sz>(gtype, mask);
-}
-
 /**
  *  Implemenation of all publicly exposed base class APIs
  */
@@ -409,14 +176,6 @@ __CG_QUALIFIER__ uint32_t thread_group::thread_rank() const {
     }
     case internal::cg_grid: {
       return (static_cast<const grid_group*>(this)->thread_rank());
-    }
-    case internal::cg_workgroup: {
-      return (static_cast<const thread_block*>(this)->thread_rank());
-    }
-    case internal::cg_coalesced:
-    case internal::cg_tiled_partition_dynamic:
-    case internal::cg_tiled_partition_static: {
-      return (static_cast<const coalesced_group*>(this)->thread_rank());
     }
     default: {
       return 0; //TODO(mahesha)
@@ -431,14 +190,6 @@ __CG_QUALIFIER__ bool thread_group::is_valid() const {
     }
     case internal::cg_grid: {
       return (static_cast<const grid_group*>(this)->is_valid());
-    }
-    case internal::cg_workgroup: {
-      return (static_cast<const thread_block*>(this)->is_valid());
-    }
-    case internal::cg_coalesced:
-    case internal::cg_tiled_partition_dynamic:
-    case internal::cg_tiled_partition_static: {
-      return (static_cast<const coalesced_group*>(this)->is_valid());
     }
     default: {
       return false;
@@ -456,20 +207,10 @@ __CG_QUALIFIER__ void thread_group::sync() const {
       static_cast<const grid_group*>(this)->sync();
       break;
     }
-    case internal::cg_workgroup: {
-      static_cast<const thread_block*>(this)->sync();
-      break;
-    }
-    case internal::cg_coalesced:
-    case internal::cg_tiled_partition_dynamic:
-    case internal::cg_tiled_partition_static: {
-      static_cast<const coalesced_group*>(this)->sync();
-      break;
-    }
   }
 }
 
 } // namespace cooperative_groups
 
-#endif // (__cplusplus) && (__HIP_VDI__)
+#endif // __cplusplus
 #endif // HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COOPERATIVE_GROUPS_H
