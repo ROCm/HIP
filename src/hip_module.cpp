@@ -388,9 +388,9 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 
 namespace {
 // kernel for initializing GWS
-// nwm1 is the total number of workgroups minus 1 and rid is the GWS resource id
-__global__ void init_gws(uint nwm1, uint rid) {
-    __ockl_gws_init(nwm1, rid);
+// nwm1 is the total number of work groups minus 1
+__global__ void init_gws(uint nwm1) {
+    __ockl_gws_init(nwm1, 0);
 }
 }
 
@@ -447,16 +447,10 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
             std::pair<std::size_t, std::size_t>>*>(kargs.getHandle());
 
 
-    void *gwsKernelParams[2];
-    uint nwm1, rid;
-    rid = 0;
-
-    // calculate total number of workgroups minus 1 for the main kernel
-    nwm1 = (gridDim.x * gridDim.y * gridDim.z) - 1;
-
-    // program the kernel arguments for init_gws kernel
-    gwsKernelParams[0] = &nwm1;
-    gwsKernelParams[1] = &rid;
+    void *gwsKernelParam[1];
+    // calculate total number of work groups minus 1 for the main kernel
+    uint nwm1 = (gridDim.x * gridDim.y * gridDim.z) - 1;
+    gwsKernelParam[0] = &nwm1;
 
     LockedAccessor_StreamCrit_t streamCrit(stream->criticalData(), false);
 #if (__hcc_workweek__ >= 19213)
@@ -465,7 +459,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
 
     // launch the init_gws kernel to initialize the GWS
     result = ihipModuleLaunchKernel(tls, gwsKD, 1, 1, 1, 1, 1, 1,
-             0, stream, gwsKernelParams, nullptr, nullptr, nullptr, 0, true);
+             0, stream, gwsKernelParam, nullptr, nullptr, nullptr, 0, true);
 
     if (result != hipSuccess) {
         stream->criticalData().unlock();
