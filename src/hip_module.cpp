@@ -388,7 +388,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 
 namespace {
 // kernel for initializing GWS
-// nwm1 is the total number of wavefronts minus 1 and rid is the GWS resource id
+// nwm1 is the total number of workgroups minus 1 and rid is the GWS resource id
 __global__ void init_gws(uint nwm1, uint rid) {
     __ockl_gws_init(nwm1, rid);
 }
@@ -451,13 +451,8 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     uint nwm1, rid;
     rid = 0;
 
-    const uint32_t wavefrontSize = 1 << kd->_header->wavefront_size;
-    uint32_t alignedBlockDim = ((blockDimX.x * blockDimX.y * blockDimX.z) + wavefrontSize - 1) &
-                                ~(wavefrontSize - 1);
-
-    // calculate total number of wavefronts minus 1 for the main kernel
-    nwm1 = ((gridDim.x * gridDim.y * gridDim.z) *
-                alignedBlockDim / wavefrontSize) - 1;
+    // calculate total number of workgroups minus 1 for the main kernel
+    nwm1 = (gridDim.x * gridDim.y * gridDim.z) - 1;
 
     // program the kernel arguments for init_gws kernel
     gwsKernelParams[0] = &nwm1;
