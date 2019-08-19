@@ -1532,6 +1532,57 @@ __global__ void hip_copy2d_n(T* dst, const T* src, size_t width, size_t height, 
 }
 }  // namespace
 
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
+                             size_t sizeBytes, size_t offset,
+                             hipMemcpyKind kind) {
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t dst = NULL;
+    hipGetSymbolAddress(&dst, (const char*)symbolName);
+
+    return hip_impl::hipMemcpyToSymbol(dst, src, sizeBytes, offset, kind,
+                                       (const char*)symbolName);
+}
+
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
+                                  size_t sizeBytes, size_t offset,
+                                  hipMemcpyKind kind, hipStream_t stream) {
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t dst = NULL;
+    hipGetSymbolAddress(&dst, symbolName);
+
+    return hip_impl::hipMemcpyToSymbolAsync(dst, src, sizeBytes, offset, kind,
+                                            stream,
+                                            (const char*)symbolName);
+}
+
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
+                               size_t sizeBytes, size_t offset,
+                               hipMemcpyKind kind) {
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t src = NULL;
+    hipGetSymbolAddress(&src, symbolName);
+
+    return hip_impl::hipMemcpyFromSymbol(dst, src, sizeBytes, offset, kind,
+                                         (const char*)symbolName);
+}
+
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
+                                    size_t sizeBytes, size_t offset,
+                                    hipMemcpyKind kind,
+                                    hipStream_t stream) {
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t src = NULL;
+    hipGetSymbolAddress(&src, symbolName);
+
+    return hip_impl::hipMemcpyFromSymbolAsync(dst, src, sizeBytes, offset, kind,
+                                              stream,
+                                              (const char*)symbolName);
+}
+
 //Get the allocated size
 hipError_t ihipMemPtrGetInfo(void* ptr, size_t* size) {
     hipError_t e = hipSuccess;
