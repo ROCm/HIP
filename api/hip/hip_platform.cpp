@@ -139,44 +139,42 @@ extern "C" std::vector< std::pair<hipModule_t, bool> >* __hipRegisterFatBinary(c
     return nullptr;
   }
 
-  std::vector<const char*> devices;
-  std::vector<std::pair<const void*, size_t>> code_objs;
-  for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-    amd::Context* ctx = g_devices[dev];
-    devices.push_back(ctx->devices()[0]->info().name_);
-  }
-
-  if (!__hipExtractCodeObjectFromFatBinary((char*)fbwrapper->binary, devices, code_objs)) {
-    return nullptr;
-  }
-
-  auto programs = new std::vector< std::pair<hipModule_t, bool> >{g_devices.size()};
-  for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-    amd::Context* ctx = g_devices[dev];
-    amd::Program* program = new amd::Program(*ctx);
-    if (program == nullptr) {
-      return nullptr;
-    }
-    if (CL_SUCCESS == program->addDeviceProgram(*ctx->devices()[0], code_objs[dev].first, code_objs[dev].second)) {
-      programs->at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)) , false);
-    }
-  }
-
-  return programs;
+  return ihipModuleLoadModule(fbwrapper->binary);
 }
 
-void PlatformState::unregisterVar(hipModule_t hmod) {
+void PlatformState::unregisterVar(std::vector< std::pair<hipModule_t, bool> >* modules) {
   amd::ScopedLock lock(lock_);
   auto it = vars_.begin();
   while (it != vars_.end()) {
     DeviceVar& dvar = it->second;
-    if ((*dvar.modules)[0].first == hmod) {
-      delete dvar.modules;
+    if (dvar.modules == modules) {
       vars_.erase(it++);
     } else {
       ++it;
     }
   }
+}
+
+void PlatformState::registerMod(hipModule_t hmod, const DeviceModules& rmod) {
+  amd::ScopedLock lock(lock_);
+  mods_.insert(std::make_pair(hmod, rmod));
+}
+
+void PlatformState::unregisterMod(hipModule_t hmod) {
+  amd::ScopedLock lock(lock_);
+  auto it = mods_.find(hmod);
+  if (it != mods_.cend()) {
+    mods_.erase(it);
+  }
+}
+
+std::vector< std::pair< hipModule_t, bool > >* PlatformState::findModules(hipModule_t hmod) {
+  amd::ScopedLock lock(lock_);
+  const auto it = mods_.find(hmod);
+  if (it == mods_.cend()) {
+    return nullptr;
+  }
+  return it->second.modules;
 }
 
 void PlatformState::registerVar(const void* hostvar,
@@ -387,12 +385,7 @@ extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, boo
 {
   HIP_INIT();
 
-  std::for_each(modules->begin(), modules->end(), [](std::pair<hipModule_t, bool> module){
-    if (module.first != nullptr) {
-      as_amd(reinterpret_cast<cl_program>(module.first))->release();
-    }
-  });
-  delete modules;
+  ihipModuleUnload(modules);
 }
 
 extern "C" hipError_t hipConfigureCall(

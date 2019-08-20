@@ -51,7 +51,7 @@ static uint64_t ElfSize(const void *emi)
   return total_size;
 }
 
-hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
+hipError_t hipModuleLoad(hipModule_t* module, const char* fname)
 {
   HIP_INIT_API(module, fname);
 
@@ -70,26 +70,37 @@ hipError_t hipModuleLoad(hipModule_t *module, const char *fname)
   HIP_RETURN(ihipModuleLoadData(module, tmp.data()));
 }
 
-bool ihipModuleUnregisterGlobal(hipModule_t hmod) {
-  PlatformState::instance().unregisterVar(hmod);
+bool ihipModuleUnload(std::vector< std::pair<hipModule_t, bool> >* modules) {
+
+  if (modules == nullptr) {
+    return false;
+  }
+
+  PlatformState::instance().unregisterVar(modules);
+
+  std::for_each(modules->begin(), modules->end(), [](std::pair<hipModule_t, bool> module) {
+    if (module.first != nullptr) {
+      as_amd(reinterpret_cast<cl_program>(module.first))->release();
+    }
+  });
+
+  PlatformState::instance().unregisterMod((*modules)[0].first);
+  delete modules;
   return true;
 }
 
-hipError_t hipModuleUnload(hipModule_t hmod)
-{
+hipError_t hipModuleUnload(hipModule_t hmod) {
   HIP_INIT_API(hmod);
 
-  if (hmod == nullptr) {
+  std::vector< std::pair<hipModule_t, bool> >* modules
+    = PlatformState::instance().findModules(hmod);
+  if (modules == nullptr) {
     HIP_RETURN(hipErrorUnknown);
   }
 
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
-
-  if(!ihipModuleUnregisterGlobal(hmod)) {
+  if (!ihipModuleUnload(modules)) {
     HIP_RETURN(hipErrorUnknown);
   }
-
-  program->release();
 
   HIP_RETURN(hipSuccess);
 }
@@ -105,57 +116,74 @@ extern bool __hipExtractCodeObjectFromFatBinary(const void* data,
                                                 const std::vector<const char*>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
 
-bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
+bool ihipModuleRegisterGlobal(amd::Program* program, int device_id,
+                              std::vector< std::pair<hipModule_t, bool> >* modules) {
 
-  size_t var_size = 0;
-  hipDeviceptr_t device_ptr = nullptr;
   std::vector<std::string> var_names;
 
   device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+    = program->getDeviceProgram(*(g_devices[device_id]->devices()[0]));
 
   if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
     return false;
   }
 
   for (auto it = var_names.begin(); it != var_names.end(); ++it) {
-    auto modules = new std::vector<std::pair<hipModule_t, bool> >{g_devices.size()};
-    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-      modules->at(dev) = std::make_pair(*module, false);
-    }
-
     PlatformState::DeviceVar dvar{nullptr, it->c_str(), 0, modules,
-      std::vector<PlatformState::RegisteredVar>{ g_devices.size()}};
+      std::vector<PlatformState::RegisteredVar>{ g_devices.size()} };
     PlatformState::instance().registerVar(it->c_str(), dvar);
   }
 
   return true;
 }
 
-hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
-{
+std::vector< std::pair<hipModule_t, bool> >* ihipModuleLoadModule(const void* image) {
+  std::vector<const char*> devices;
   std::vector<std::pair<const void*, size_t>> code_objs;
-  if (__hipExtractCodeObjectFromFatBinary(image, {hip::getCurrentContext()->devices()[0]->info().name_}, code_objs))
-    image = code_objs[0].first;
-
-  amd::Program* program = new amd::Program(*hip::getCurrentContext());
-  if (program == NULL) {
-    return hipErrorOutOfMemory;
+  for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+    amd::Context* ctx = g_devices[dev];
+    devices.push_back(ctx->devices()[0]->info().name_);
   }
 
-  program->setVarInfoCallBack(&getSvarInfo);
-
-  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, ElfSize(image)) ||
-    CL_SUCCESS != program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr)) {
-    return hipErrorUnknown;
+  if (!__hipExtractCodeObjectFromFatBinary(image, devices, code_objs)) {
+    return nullptr;
   }
 
-  *module = reinterpret_cast<hipModule_t>(as_cl(program));
-
-  if (!ihipModuleRegisterGlobal(program, module)) {
-    return hipErrorUnknown;
+  auto programs = new std::vector< std::pair<hipModule_t, bool> >{g_devices.size()};
+  for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+    amd::Context* ctx = g_devices[dev];
+    amd::Program* program = new amd::Program(*ctx);
+    if (program == nullptr) {
+      return nullptr;
+    }
+    if (CL_SUCCESS == program->addDeviceProgram(*ctx->devices()[0], code_objs[dev].first, code_objs[dev].second)) {
+      programs->at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)), false);
+    }
   }
 
+  PlatformState::DeviceModules dmod { programs };
+  PlatformState::instance().registerMod((*dmod.modules)[0].first, dmod);
+
+  return programs;
+}
+
+hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
+  std::vector< std::pair<hipModule_t, bool> >* modules = ihipModuleLoadModule(image);
+
+  for (size_t deviceId = 0; deviceId < modules->size(); ++deviceId) {
+    amd::Program* program = as_amd(reinterpret_cast<cl_program>((*modules)[deviceId].first));
+    program->setVarInfoCallBack(&getSvarInfo);
+    program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr);
+    (*modules)[deviceId].second = true;
+
+    if (static_cast<size_t>(ihipGetDevice()) == deviceId) {
+      *module = reinterpret_cast<hipModule_t>(as_cl(program));
+    }
+
+    if (!ihipModuleRegisterGlobal(program, deviceId, modules)) {
+      return hipErrorUnknown;
+    }
+  }
   return hipSuccess;
 }
 
