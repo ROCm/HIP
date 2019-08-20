@@ -1514,13 +1514,6 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
 #endif
 
 #ifdef __cplusplus
-namespace hip_impl {
-hipError_t hipMemcpyToSymbol(void*, const void*, size_t, size_t, hipMemcpyKind,
-                             const char*);
-} // Namespace hip_impl.
-#endif
-
-#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -1547,36 +1540,21 @@ extern "C" {
  * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
  * hipMemcpyFromSymbolAsync
  */
+
 #ifdef __cplusplus
-inline
-__attribute__((visibility("hidden")))
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
                              size_t sizeBytes, size_t offset __dparm(0),
-                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice)) {
-    if (!symbolName) return hipErrorInvalidSymbol;
-
-    hipDeviceptr_t dst = NULL;
-    hipGetSymbolAddress(&dst, (const char*)symbolName);
-
-    return hip_impl::hipMemcpyToSymbol(dst, src, sizeBytes, offset, kind,
-                                       (const char*)symbolName);
-}
+                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
+#else
+hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
+                              size_t sizeBytes, size_t offset,
+                              hipMemcpyKind kind);
 #endif
 
 #if defined(__cplusplus)
 } // extern "C"
 #endif
 
-#ifdef __cplusplus
-namespace hip_impl {
-hipError_t hipMemcpyToSymbolAsync(void*, const void*, size_t, size_t,
-                                  hipMemcpyKind, hipStream_t, const char*);
-hipError_t hipMemcpyFromSymbol(void*, const void*, size_t, size_t,
-                               hipMemcpyKind, const char*);
-hipError_t hipMemcpyFromSymbolAsync(void*, const void*, size_t, size_t,
-                                    hipMemcpyKind, hipStream_t, const char*);
-} // Namespace hip_impl.
-#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -1608,52 +1586,31 @@ extern "C" {
  * hipMemcpyFromSymbolAsync
  */
 
-#ifdef __cplusplus //Start : Not supported in gcc
-inline
-__attribute__((visibility("hidden")))
+#ifdef __cplusplus
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
                                   size_t sizeBytes, size_t offset,
-                                  hipMemcpyKind kind, hipStream_t stream __dparm(0)) {
-    if (!symbolName) return hipErrorInvalidSymbol;
+                                  hipMemcpyKind kind, hipStream_t stream __dparm(0));
 
-    hipDeviceptr_t dst = NULL;
-    hipGetSymbolAddress(&dst, symbolName);
-
-    return hip_impl::hipMemcpyToSymbolAsync(dst, src, sizeBytes, offset, kind,
-                                            stream,
-                                            (const char*)symbolName);
-}
-
-inline
-__attribute__((visibility("hidden")))
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
                                size_t sizeBytes, size_t offset __dparm(0),
-                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost)) {
-    if (!symbolName) return hipErrorInvalidSymbol;
+                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
 
-    hipDeviceptr_t src = NULL;
-    hipGetSymbolAddress(&src, symbolName);
-
-    return hip_impl::hipMemcpyFromSymbol(dst, src, sizeBytes, offset, kind,
-                                         (const char*)symbolName);
-}
-
-inline
-__attribute__((visibility("hidden")))
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
-                                    hipStream_t stream __dparm(0)) {
-    if (!symbolName) return hipErrorInvalidSymbol;
+                                    hipStream_t stream __dparm(0));
+#else
+hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
+                                  size_t sizeBytes, size_t offset,
+                                  hipMemcpyKind kind, hipStream_t stream);
 
-    hipDeviceptr_t src = NULL;
-    hipGetSymbolAddress(&src, symbolName);
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
+                               size_t sizeBytes, size_t offset, hipMemcpyKind kind);
 
-    return hip_impl::hipMemcpyFromSymbolAsync(dst, src, sizeBytes, offset, kind,
-                                              stream,
-                                              (const char*)symbolName);
-}
-#endif // End : Not supported in gcc
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
+                                    size_t sizeBytes, size_t offset,
+                                    hipMemcpyKind kind, hipStream_t stream);
+#endif
 
 #endif // __HIP_VDI__
 /**
