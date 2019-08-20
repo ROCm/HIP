@@ -129,6 +129,10 @@ public:
     amd::Memory* amd_mem_obj_;
   };
 
+  struct DeviceModules {
+    std::vector< std::pair< hipModule_t, bool > >* modules;
+  };
+
   struct DeviceFunction {
     std::string deviceName;
     std::vector< std::pair< hipModule_t, bool > >* modules;
@@ -142,6 +146,7 @@ public:
     std::vector<RegisteredVar> rvars;
   };
 private:
+  std::unordered_map<hipModule_t, DeviceModules >mods_;
   std::unordered_map<const void*, DeviceFunction > functions_;
   std::unordered_map<std::string, DeviceVar > vars_;
 
@@ -154,7 +159,11 @@ public:
     return *platform_;
   }
 
-  void unregisterVar(hipModule_t hmod);
+  void registerMod(hipModule_t hmod, const DeviceModules& dmod);
+  void unregisterMod(hipModule_t hmod);
+  std::vector< std::pair< hipModule_t, bool > >* findModules(hipModule_t hmod);
+
+  void unregisterVar(std::vector< std::pair<hipModule_t, bool> >* modules);
 
   void registerVar(const void* hostvar, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
@@ -169,6 +178,9 @@ public:
 
   void popExec(ihipExec_t& exec);
 };
+
+std::vector< std::pair<hipModule_t, bool> >* ihipModuleLoadModule(const void* image);
+bool ihipModuleUnload(std::vector< std::pair<hipModule_t, bool> >* modules);
 
 extern std::vector<amd::Context*> g_devices;
 extern hipError_t ihipDeviceGetCount(int* count);
