@@ -1,4 +1,2 @@
 file(GLOB files *.cpp)
-foreach(file ${files})
-    hostcall_add_test(device ${file})
-endforeach()
+hostcall_add_tests("${files}")

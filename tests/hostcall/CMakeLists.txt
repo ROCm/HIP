@@ -1,5 +1,3 @@
-cmake_minimum_required(VERSION 3.4.3)
-
 include(${HIP_SRC_PATH}/cmake/FindHIP.cmake)
 message(STATUS "Using hipcc for hostcall tests: ${HIP_HIPCC_EXECUTABLE}")
 
@@ -34,10 +32,12 @@ endif()
 
 set(HOSTCALL_TEST_INC ${CMAKE_CURRENT_LIST_DIR})
 
-function(hostcall_add_test prefix filename)
+function(hostcall_build_test _testname filename)
+    get_filename_component(prefix ${CMAKE_CURRENT_LIST_DIR} NAME)
     get_filename_component(basename_we ${filename} NAME_WE)
     get_filename_component(basename ${filename} NAME)
     set(testname hostcall-${prefix}-${basename_we})
+    set(${_testname} ${testname} PARENT_SCOPE)
 
     add_custom_target(
         ${testname}
@@ -49,8 +49,19 @@ function(hostcall_add_test prefix filename)
         ${filename} -o ${testname}
         COMMENT "Building ${testname}")
 
-    add_test(${testname} ${testname})
     add_dependencies(hostcall_tests ${testname})
+endfunction()
+
+function(hostcall_add_test _testname filename)
+    hostcall_build_test(testname ${filename})
+    add_test(${testname} ${testname})
+    set(${_testname} ${testname} PARENT_SCOPE)
+endfunction()
+
+function(hostcall_add_tests files)
+    foreach(file ${files})
+        hostcall_add_test(testname ${file})
+    endforeach()
 endfunction()
 
 add_subdirectory(basic EXCLUDE_FROM_ALL)
