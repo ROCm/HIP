@@ -406,14 +406,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
         return ihipLogStatus(hipErrorNotInitialized);
     }
 
-    auto ctx = ihipGetTlsDefaultCtx();
-    if (ctx == nullptr) {
-        return ihipLogStatus(hipErrorInvalidDevice);
-    }
-    int deviceId = ctx->getDevice()->_deviceId;
-    ihipDevice_t* currentDevice = ihipGetDevice(deviceId);
-
-    if (!currentDevice->_props.cooperativeLaunch) {
+    if (!stream->getDevice()->_props.cooperativeLaunch) {
         return ihipLogStatus(hipErrorInvalidConfiguration);
     }
 
