@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,24 +17,15 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* HIT_START
- * BUILD_CMD: vcpy_kernel.code %hc --genco %S/vcpy_kernel.cpp -o vcpy_kernel.code
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
- * TEST: %t
- * HIT_END
- */
-
 #include "hip/hip_runtime.h"
-#include "hip/hip_runtime_api.h"
 #include <iostream>
-
 #define NUM 1000000
+
 const unsigned threadsperblock = 32;
 const unsigned blocks = (NUM/threadsperblock)+1;
 
 uint32_t gridSize = 0;
 uint32_t blockSize = 0;
-
 
 #define HIP_CHECK(status)                                                                          \
     if (status != hipSuccess) {                                                                    \
@@ -45,10 +36,10 @@ uint32_t blockSize = 0;
 // Device (Kernel) function
 __global__ void multiply(float* C, float* A, float* B, int N){
       
-    int tx = hipBlockDim_x*hipBlockIdx_x+hipThreadIdx_x;
+    int tx = blockDim.x*blockIdx.x+threadIdx.x;
     
     if (tx < N){
-        C[tx] = A[tx] * B[tx];
+	C[tx] = A[tx] * B[tx];
     }
 }
 // CPU implementation
@@ -57,7 +48,6 @@ void multiplyCPU(float* C, float* A, float* B, int N){
     for(unsigned int i=0; i<N; i++){     
         C[i] = A[i] * B[i];      
     }
-
 }
 
 void launchKernel(float* C, float* A, float* B, int N, bool manual){
@@ -72,14 +62,14 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
      int activeWarps, maxWarps;
       
      if (manual){
-      	blockSize = threadsperblock; 
+	blockSize = threadsperblock; 
      	gridSize  = blocks;
         std::cout << std::endl << "Manual Configuration with block size " << blockSize << std::endl;
      }
      else{
      	hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, multiply, 0, 0);
 	std::cout << std::endl << "Automatic Configuation based on hipOccupancyMaxPotentialBlockSize " << std::endl;
-        std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << gridSize << std::endl; 
+	std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << gridSize << std::endl; 
      }
 
      // Record the start event
@@ -99,20 +89,21 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
      uint32_t numBlock = 0;
      hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, multiply, blockSize, 0);
      
-     //std::cout << "numBlock is " << numBlock << std::endl;
-     activeWarps = numBlock* blockSize/devProp.warpSize;
-     maxWarps = devProp.maxThreadsPerMultiProcessor/devProp.warpSize;
-
-     //std::cout << activeWarps << "and " << maxWarps << "and blockSize is" << blockSize << std::endl;
-     std::cout << "Theoretical Occupancy is " << (double)activeWarps/maxWarps * 100 << "%" << std::endl;
-
+     if(devProp.warpSize){
+	activeWarps = numBlock* blockSize/devProp.warpSize;
+	maxWarps = devProp.maxThreadsPerMultiProcessor/devProp.warpSize;
+	std::cout << "Theoretical Occupancy is " << (double)activeWarps/maxWarps * 100 << "%" << std::endl;
+     }	
+    else{
+	 std::cout << "Invalid warpsize" << std::endl;
+	 std::cout << "No. of Active Blocks per multiprocessor returned by hipOccupancyMaxActiveBlocksPerMultiprocessor is " << numBlock << std::endl;
+         exit(0);
+     }
 }
 
 int main() {
      float *A, *B, *C, *cpuC;
-   
      float *Ad, *Bd, *Cd;
-
      int errors;
      int i;
      int manual = 0;
@@ -123,9 +114,8 @@ int main() {
      C = (float *)malloc(NUM * sizeof(float));
      cpuC = (float *)malloc(NUM * sizeof(float));
      
-
      for(i=0; i< NUM; i++){
-        A[i] = i;
+	A[i] = i;
 	B[i] = i;
      }
     
@@ -151,7 +141,6 @@ int main() {
      multiplyCPU(cpuC, A, B, NUM);
 
      //verify the results
-     
      errors = 0;
      double eps = 1.0E-6;
      

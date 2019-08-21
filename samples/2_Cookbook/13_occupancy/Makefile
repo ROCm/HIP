@@ -2,35 +2,19 @@ HIP_PATH?= $(wildcard /opt/rocm/hip)
 ifeq (,$(HIP_PATH))
 	HIP_PATH=../../..
 endif
-
 HIPCC=$(HIP_PATH)/bin/hipcc
 
-TARGET=hcc
-
-SOURCES = occupancy.cpp
-OBJECTS = $(SOURCES:.cpp=.o)
-
-EXECUTABLE=./occupancy
+EXE=./occupancy
 
 .PHONY: test
 
+all: test
 
-all: $(EXECUTABLE) test
+$(EXE): occupancy.cpp
+	$(HIPCC) $^ -o $@
 
-CXXFLAGS =-g
-CXX=$(HIPCC)
-
-
-$(EXECUTABLE): $(OBJECTS)
-	$(HIPCC) $(OBJECTS) -o $@
-
-
-test: $(EXECUTABLE)
-	$(EXECUTABLE)
-
+test: $(EXE)
+	$(EXE)
 
 clean:
-	rm -f $(EXECUTABLE)
-	rm -f $(OBJECTS)
-	rm -f $(HIP_PATH)/src/*.o
-
+	rm -f *.o $(EXE)
