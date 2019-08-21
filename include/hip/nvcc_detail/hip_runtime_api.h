@@ -1241,6 +1241,13 @@ inline static hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* im
         cuModuleLoadDataEx(module, image, numOptions, options, optionValues));
 }
 
+inline static hipError_t hipLaunchKernel(void* function_address, dim3 numBlocks,
+					 dim3 dimBlocks, void** args, size_t sharedMemBytes,
+					 hipStream_t stream)
+{
+   return hipCUDAErrorTohipError(cudaLaunchKernel(function_address,numBlocks,dimBlocks,args,sharedMemBytes,stream));
+}
+
 inline static hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX,
                                                unsigned int gridDimY, unsigned int gridDimZ,
                                                unsigned int blockDimX, unsigned int blockDimY,
