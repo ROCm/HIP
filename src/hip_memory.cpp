@@ -2131,14 +2131,14 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
     HIP_INIT_API(hipIpcOpenMemHandle, devPtr, &handle, flags);
     hipError_t hipStatus = hipSuccess;
     if (devPtr == NULL) {
-        hipStatus = hipErrorInvalidValue;
+        return ihipLogStatus(hipErrorInvalidValue);
     } else {
 #if USE_IPC
         // Get the current device agent.
         hc::accelerator acc;
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
         if (!agent) {
-            hipStatus = hipErrorInvalidResourceHandle;
+            return ihipLogStatus(hipErrorInvalidResourceHandle);
         } else {
             ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*)&handle;
             // Attach ipc memory
@@ -2155,10 +2155,12 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
                     am_status_t am_status = hc::am_memtracker_add(*devPtr,ampi);
                     if (am_status == AM_SUCCESS) {
 #if USE_APP_PTR_FOR_CTX
-                        hc::am_memtracker_update(*devPtr, device->_deviceId, 0, ctx);
+                        am_status = hc::am_memtracker_update(*devPtr, device->_deviceId, 0, ctx);
 #else
-                        hc::am_memtracker_update(*devPtr, device->_deviceId, 0);
+                        am_status = hc::am_memtracker_update(*devPtr, device->_deviceId, 0);
 #endif
+                        if(am_status != AM_SUCCESS)
+                            return ihipLogStatus(hipErrorMapBufferObjectFailed);
                     } else {
                         hipStatus = hipErrorInvalidValue;
                     }
