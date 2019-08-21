@@ -107,7 +107,7 @@ $HIP_COMPILER= $hipConfig{'HIP_COMPILER'};
 $HIP_RUNTIME= $hipConfig{'HIP_RUNTIME'};
 
 # If using VDI runtime, need to find HIP_VDI_HOME
-if ($HIP_RUNTIME eq "VDI" and !defined $HIP_VDI_HOME) {
+if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "VDI" and !defined $HIP_VDI_HOME) {
     my $hipcc_dir = dirname($0);
     if (-e "$hipcc_dir/../lib/bitcode") {
         $HIP_VDI_HOME = abs_path($hipcc_dir . "/..");
@@ -133,7 +133,7 @@ if (defined $HIP_VDI_HOME) {
     }
 }
 
-if ($HIP_COMPILER eq "clang") {
+if (defined $HIP_COMPILER and $HIP_COMPILER eq "clang") {
   $HIP_PLATFORM = "clang";
   if (!defined $HIP_CLANG_PATH) {
     $HIP_CLANG_PATH = "/opt/rocm/llvm/bin";

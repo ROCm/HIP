@@ -67,12 +67,12 @@ typedef enum hipMemcpyKind {
 #define hipReadModeElementType cudaReadModeElementType
 #define hipReadModeNormalizedFloat cudaReadModeNormalizedFloat
 
-typedef enum hipChannelFormatKind {
-    hipChannelFormatKindSigned = 0,
-    hipChannelFormatKindUnsigned = 1,
-    hipChannelFormatKindFloat = 2,
-    hipChannelFormatKindNone = 3
-} hipChannelFormatKind;
+// hipChannelFormatKind
+#define hipChannelFormatKind            cudaChannelFormatKind
+#define hipChannelFormatKindSigned      cudaChannelFormatKindSigned
+#define hipChannelFormatKindUnsigned    cudaChannelFormatKindUnsigned
+#define hipChannelFormatKindFloat       cudaChannelFormatKindFloat
+#define hipChannelFormatKindNone        cudaChannelFormatKindNone
 
 #define hipSurfaceBoundaryMode cudaSurfaceBoundaryMode
 #define hipBoundaryModeZero cudaBoundaryModeZero
@@ -605,6 +605,11 @@ inline static hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStr
 inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
 {
     return hipCUDAErrorTohipError(cudaMemcpy3D(p));
+}
+
+inline static hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms *p, hipStream_t stream)
+{
+    return hipCUDAErrorTohipError(cudaMemcpy3DAsync(p, stream));
 }
 
 inline static hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch,

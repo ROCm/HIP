@@ -29,9 +29,6 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "test_common.h"
-#ifdef _WIN64
-#define aligned_alloc _aligned_malloc
-#endif
 
 bool p_async = false;
 
