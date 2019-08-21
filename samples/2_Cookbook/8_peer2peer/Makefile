@@ -17,12 +17,10 @@ EXECUTABLE=./peer2peer
 
 all: $(EXECUTABLE) test
 
-CXXFLAGS =-g
-CXX=$(HIPCC)
-
+CXXFLAGS =-O3
 
 $(EXECUTABLE): $(OBJECTS)
-	$(HIPCC) $(OBJECTS) -o $@
+	$(HIPCC) $(CXXFLAGS) $(OBJECTS) -o $@
 
 
 test: $(EXECUTABLE)
