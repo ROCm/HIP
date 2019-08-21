@@ -4,6 +4,11 @@
 
 | **type**     |   **CUDA**                                                    |**CUDA version\***|   **HIP**                                                  |
 |-------------:|---------------------------------------------------------------|:-----------------|------------------------------------------------------------|
+| define       |`CUSPARSE_VER_MAJOR`                                           | 10.1 Update 2    |                                                            |
+| define       |`CUSPARSE_VER_MINOR`                                           | 10.1 Update 2    |                                                            |
+| define       |`CUSPARSE_VER_PATCH`                                           | 10.1 Update 2    |                                                            |
+| define       |`CUSPARSE_VER_BUILD`                                           | 10.1 Update 2    |                                                            |
+| define       |`CUSPARSE_VERSION`                                             | 10.1 Update 2    |                                                            |
 | enum         |***`cusparseAction_t`***                                       |                  |***`hipsparseAction_t`***                                   |
 |            0 |*`CUSPARSE_ACTION_SYMBOLIC`*                                   |                  |*`HIPSPARSE_ACTION_SYMBOLIC`*                               |
 |            1 |*`CUSPARSE_ACTION_NUMERIC`*                                    |                  |*`HIPSPARSE_ACTION_NUMERIC`*                                |
