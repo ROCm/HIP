@@ -31,14 +31,7 @@ THE SOFTWARE.
 #include "clara/clara.hpp"
 #include <string>
 #include "hip/hip_runtime.h"
-
-#ifdef _WIN64
-#include <tchar.h>
-#endif
-
-#ifdef _WIN64
-#define setenv(x,y,z) _putenv_s(x,y)
-#endif
+#include "test_common.h"
 
 using namespace std;
 using namespace clara;

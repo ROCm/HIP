@@ -44,11 +44,24 @@ execute_process(COMMAND git rev-parse --short HEAD
     OUTPUT_VARIABLE HIP_VERSION_GITHASH
     OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# get commit count
+execute_process(COMMAND git rev-list --count HEAD
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    OUTPUT_VARIABLE HIP_VERSION_GITCOUNT
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}-${HIP_VERSION_GITHASH})
-set(HIP_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
 add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
 add_to_config(_versionInfo HIP_VERSION_PATCH)
+
+# overwrite HIP_VERSION_PATCH for packaging
+if(DEFINED ENV{ROCM_BUILD_ID})
+    set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-$ENV{ROCM_BUILD_ID}-${HIP_VERSION_GITHASH})
+else()
+    set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-${HIP_VERSION_GITHASH})
+endif()
+set(HIP_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
 
 #############################
 # Configure variables
@@ -424,7 +437,7 @@ add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR}
-    DEPENDS hip_hcc hip_hcc_static)
+    DEPENDS hip_hcc hip_hcc_static hiprtc)
 
 # Package: hip_nvcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc)
@@ -464,7 +477,11 @@ if(POLICY CMP0037)
     cmake_policy(PUSH)
     cmake_policy(SET CMP0037 OLD)
 endif()
-add_custom_target(package DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
+add_custom_target(package
+    COMMAND rename -v "'s/([a-z0-9_.\-]).deb/$1-amd64.deb/'" *.deb
+    COMMAND rename -v "'s/([a-z0-9_.\-]).rpm/$1.x86_64.rpm/'" *.rpm
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
 if(POLICY CMP0037)
     cmake_policy(POP)
 endif()

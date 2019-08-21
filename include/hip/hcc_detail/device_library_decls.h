@@ -34,6 +34,7 @@ typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
+typedef unsigned long long ullong;
 
 extern "C" __device__ __attribute__((const)) bool __ockl_wfany_i32(int);
 extern "C" __device__ __attribute__((const)) bool __ockl_wfall_i32(int);
@@ -48,7 +49,7 @@ extern "C" __device__ __attribute__((const)) uint __ockl_sad_u32(uint, uint, uin
 extern "C" __device__ __attribute__((const)) uchar __ockl_clz_u8(uchar);
 extern "C" __device__ __attribute__((const)) ushort __ockl_clz_u16(ushort);
 extern "C" __device__ __attribute__((const)) uint __ockl_clz_u32(uint);
-extern "C" __device__ __attribute__((const)) ulong __ockl_clz_u64(ulong);
+extern "C" __device__ __attribute__((const)) ullong __ockl_clz_u64(ullong);
 
 extern "C" __device__ __attribute__((const)) float __ocml_floor_f32(float);
 extern "C" __device__ __attribute__((const)) float __ocml_rint_f32(float);

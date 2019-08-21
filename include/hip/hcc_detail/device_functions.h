@@ -50,7 +50,7 @@ __device__ static inline int __clz(int input) {
 }
 
 __device__ static inline int __clzll(long long int input) {
-    return __ockl_clz_u64((ulong)input);
+    return __ockl_clz_u64((ullong)input);
 }
 
 __device__ static inline unsigned int __ffs(unsigned int input) {
