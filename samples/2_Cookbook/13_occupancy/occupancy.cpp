@@ -21,12 +21,6 @@ THE SOFTWARE.
 #include <iostream>
 #define NUM 1000000
 
-const unsigned threadsperblock = 32;
-const unsigned blocks = (NUM/threadsperblock)+1;
-
-uint32_t gridSize = 0;
-uint32_t blockSize = 0;
-
 #define HIP_CHECK(status)                                                                          \
     if (status != hipSuccess) {                                                                    \
         std::cout << "Got Status: " << status << " at Line: " << __LINE__ << std::endl;            \
@@ -59,7 +53,11 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
      HIP_CHECK(hipEventCreate(&start));
      HIP_CHECK(hipEventCreate(&stop));
      float eventMs = 1.0f;
-     int activeWarps, maxWarps;
+     const unsigned threadsperblock = 32;
+     const unsigned blocks = (NUM/threadsperblock)+1;
+
+     uint32_t gridSize = 0;
+     uint32_t blockSize = 0;
       
      if (manual){
 	blockSize = threadsperblock; 
@@ -67,7 +65,7 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
         std::cout << std::endl << "Manual Configuration with block size " << blockSize << std::endl;
      }
      else{
-     	hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, multiply, 0, 0);
+     	HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, multiply, 0, 0));
 	std::cout << std::endl << "Automatic Configuation based on hipOccupancyMaxPotentialBlockSize " << std::endl;
 	std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << gridSize << std::endl; 
      }
@@ -87,18 +85,11 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
 
      //Calculate Occupancy
      uint32_t numBlock = 0;
-     hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, multiply, blockSize, 0);
+     HIP_CHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, multiply, blockSize, 0));
      
-     if(devProp.warpSize){
-	activeWarps = numBlock* blockSize/devProp.warpSize;
-	maxWarps = devProp.maxThreadsPerMultiProcessor/devProp.warpSize;
-	std::cout << "Theoretical Occupancy is " << (double)activeWarps/maxWarps * 100 << "%" << std::endl;
+     if(devProp.maxThreadsPerMultiProcessor){
+	std::cout << "Theoretical Occupancy is " << (double)numBlock* blockSize/devProp.maxThreadsPerMultiProcessor * 100 << "%" << std::endl;
      }	
-    else{
-	 std::cout << "Invalid warpsize" << std::endl;
-	 std::cout << "No. of Active Blocks per multiprocessor returned by hipOccupancyMaxActiveBlocksPerMultiprocessor is " << numBlock << std::endl;
-         exit(0);
-     }
 }
 
 int main() {
@@ -106,7 +97,6 @@ int main() {
      float *Ad, *Bd, *Cd;
      int errors;
      int i;
-     int manual = 0;
 
      // initialize the input data
      A = (float *)malloc(NUM * sizeof(float));
