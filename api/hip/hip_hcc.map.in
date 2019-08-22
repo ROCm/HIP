@@ -180,6 +180,9 @@ global:
     hipDestroySurfaceObject*;
     hipHccModuleLaunchKernel*;
     hipExtModuleLaunchKernel*;
+    InitActivityCallback;
+    EnableActivityCallback;
+    GetCmdName;
     };
 local:
     *;
