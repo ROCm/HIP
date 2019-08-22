@@ -88,27 +88,27 @@ __CG_STATIC_QUALIFIER__ uint32_t popcll(uint64_t mask) {
 namespace multi_grid {
 
 __CG_STATIC_QUALIFIER__ uint32_t num_grids() {
-  return __multi_grid_num_grids();
+  return (uint32_t)__ockl_multi_grid_num_grids();
 }
 
 __CG_STATIC_QUALIFIER__ uint32_t grid_rank() {
-  return __multi_grid_grid_rank();
+  return (uint32_t)__ockl_multi_grid_grid_rank();
 }
 
 __CG_STATIC_QUALIFIER__ uint32_t size() {
-  return __multi_grid_size();
+  return (uint32_t)__ockl_multi_grid_size();
 }
 
 __CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
-  return __multi_grid_thread_rank();
+  return (uint32_t)__ockl_multi_grid_thread_rank();
 }
 
 __CG_STATIC_QUALIFIER__ bool is_valid() {
-  return __multi_grid_is_valid();
+  return (bool)__ockl_multi_grid_is_valid();
 }
 
 __CG_STATIC_QUALIFIER__ void sync() {
-  __multi_grid_sync();
+  __ockl_multi_grid_sync();
 }
 
 } // namespace multi_grid
@@ -146,11 +146,11 @@ __CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
 }
 
 __CG_STATIC_QUALIFIER__ bool is_valid() {
-  return __grid_is_valid();
+  return (bool)__ockl_grid_is_valid();
 }
 
 __CG_STATIC_QUALIFIER__ void sync() {
-  __grid_sync();
+  __ockl_grid_sync();
 }
 
 } // namespace grid
