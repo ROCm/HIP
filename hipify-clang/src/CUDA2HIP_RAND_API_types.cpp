@@ -24,6 +24,14 @@ THE SOFTWARE.
 
 // Map of all functions
 const std::map<llvm::StringRef, hipCounter> CUDA_RAND_TYPE_NAME_MAP{
+  // RAND defines
+  {"CURAND_VER_MAJOR",              {"HIPRAND_VER_MAJOR",              "", CONV_DEFINE, API_RAND, HIP_UNSUPPORTED}},
+  {"CURAND_VER_MINOR",              {"HIPRAND_VER_MINOR",              "", CONV_DEFINE, API_RAND, HIP_UNSUPPORTED}},
+  {"CURAND_VER_PATCH",              {"HIPRAND_VER_PATCH",              "", CONV_DEFINE, API_RAND, HIP_UNSUPPORTED}},
+  {"CURAND_VER_BUILD",              {"HIPRAND_VER_BUILD",              "", CONV_DEFINE, API_RAND, HIP_UNSUPPORTED}},
+  {"CURAND_VERSION",                {"HIPRAND_VERSION",                "", CONV_DEFINE, API_RAND, HIP_UNSUPPORTED}},
+
+  // RAND Host types
   {"curandStatus",                  {"hiprandStatus_t",                "", CONV_TYPE, API_RAND}},
   {"curandStatus_t",                {"hiprandStatus_t",                "", CONV_TYPE, API_RAND}},
   {"curandRngType",                 {"hiprandRngType_t",               "", CONV_TYPE, API_RAND}},
@@ -52,7 +60,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RAND_TYPE_NAME_MAP{
   {"curandMethod_t",                {"hiprandMethod_t",                "", CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
   {"curandDirectionVectors32_t",    {"hiprandDirectionVectors32_t",    "", CONV_TYPE, API_RAND}},
   {"curandDirectionVectors64_t",    {"hiprandDirectionVectors64_t",    "", CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},
-  // cuRAND types for Device functions
+
+  // RAND types for Device functions
   {"curandStateMtgp32",             {"hiprandStateMtgp32",             "", CONV_TYPE, API_RAND}},
   {"curandStateMtgp32_t",           {"hiprandStateMtgp32_t",           "", CONV_TYPE, API_RAND}},
   {"curandStateScrambledSobol64",   {"hiprandStateScrambledSobol64",   "", CONV_TYPE, API_RAND, HIP_UNSUPPORTED}},

@@ -4,6 +4,11 @@
 
 | **type**     |   **CUDA**                                                    |**CUDA version\***|   **HIP**                                                  |**HIP value** (if differs) |
 |-------------:|---------------------------------------------------------------|:----------------:|------------------------------------------------------------|---------------------------|
+| define       |`CUBLAS_VER_MAJOR`                                             | 10.1 Update 2    |                                                            |
+| define       |`CUBLAS_VER_MINOR`                                             | 10.1 Update 2    |                                                            |
+| define       |`CUBLAS_VER_PATCH`                                             | 10.1 Update 2    |                                                            |
+| define       |`CUBLAS_VER_BUILD`                                             | 10.1 Update 2    |                                                            |
+| define       |`CUBLAS_VERSION`                                               | 10.1 Update 2    |                                                            |
 | enum         |***`cublasStatus`***                                           |                  |***`hipblasStatus_t`***                                     |
 | enum         |***`cublasStatus_t`***                                         |                  |***`hipblasStatus_t`***                                     |
 |            0 |*`CUBLAS_STATUS_SUCCESS`*                                      |                  |*`HIPBLAS_STATUS_SUCCESS`*                                  |
