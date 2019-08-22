@@ -78,14 +78,6 @@ __CG_STATIC_QUALIFIER__ uint64_t lanemask_eq() {
   return __lanemask_eq();
 }
 
-__CG_STATIC_QUALIFIER__ uint64_t activemask() {
-  return __activemask();
-}
-
-__CG_STATIC_QUALIFIER__ uint32_t lane() {
-  return __lane();
-}
-
 __CG_STATIC_QUALIFIER__ uint32_t popcll(uint64_t mask) {
   return __popcll(mask);
 }

@@ -777,20 +777,6 @@ uint64_t  __lanemask_eq()
     return mask;
 }
 
-__device__
-inline
-uint64_t __activemask()
-{
-    return __builtin_amdgcn_read_exec();
-}
-
-__device__
-inline
-uint32_t __lane()
-{
-    return __ockl_lane_u32();
-}
-
 /**
  * grid and multi-grid cooperative groups related device library API wrappers
  */
