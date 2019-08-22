@@ -2147,11 +2147,9 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
         LockedAccessor_CtxCrit_t crit(ctx->criticalData());
         auto device = ctx->getWriteableDevice();
         // the peerCnt always stores self so make sure the trace actually
-        hsa_status_t hsa_status = hsa_amd_ipc_memory_attach(
+        if(hsa_amd_ipc_memory_attach(
             (hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, crit->peerCnt(),
-             crit->peerAgents(), devPtr);
-
-        if (hsa_status != HSA_STATUS_SUCCESS)
+             crit->peerAgents(), devPtr) != HSA_STATUS_SUCCESS)
             return ihipLogStatus(hipErrorRuntimeOther);
 
         hc::AmPointerInfo ampi(NULL, *devPtr, *devPtr, sizeof(*devPtr), acc, true, true);
@@ -2181,12 +2179,10 @@ hipError_t hipIpcCloseMemHandle(void* devPtr) {
         return ihipLogStatus(hipErrorInvalidValue);
 
 #if USE_IPC
-    am_status_t am_status = hc::am_memtracker_remove(devPtr);
-    if (am_status != AM_SUCCESS)
+    if(hc::am_memtracker_remove(devPtr) != AM_SUCCESS)
         return ihipLogStatus(hipErrorInvalidValue);
 
-    hsa_status_t hsa_status = hsa_amd_ipc_memory_detach(devPtr);
-    if (hsa_status != HSA_STATUS_SUCCESS)
+    if (hsa_amd_ipc_memory_detach(devPtr) != HSA_STATUS_SUCCESS)
         return ihipLogStatus(hipErrorInvalidResourceHandle);
 #else
     hipStatus = hipErrorRuntimeOther;
