@@ -1538,7 +1538,6 @@ extern "C" {
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, hipInvalidDevice
  *
- * @warning should be used from gcc compiled host code only
  */
 
 hipError_t  hipLaunchKernel(const void* function_address,

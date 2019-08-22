@@ -28,56 +28,56 @@
 
 
 #include "hip/hip_runtime.h"
-#include "hip/hip_runtime_api.h"
 #include <stdio.h>
 #include "LaunchKernel.h"
 
-void LaunchKernelArg()
+#define HIPCHECK(error)                                                                            \
+    {                                                                                              \
+        hipError_t localError = error;                                                             \
+        if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
+            printf("%serror: '%s'(%d) from %s at %s:%d%s\n", "\x1B[31m", hipGetErrorString(localError),  \
+                   localError, #error, __FILE__, __LINE__, "\x1B[0m");                             \
+            return false;	                                                                       \
+        }                                                                                          \
+    }
+
+
+bool LaunchKernelArg()
 {
-  hipError_t status = hipSuccess;
   dim3 blocks 	    = {1,1,1};
   dim3 threads      = {1,1,1};
 
-  printf(" -----: Launch Zero Argument Kernel :------ \n");
-  status = hipLaunchKernel(kernel, blocks, threads,NULL, 0, 0);
-  printf("hipLaunchKernel status %s\n",hipGetErrorString(status));
+  HIPCHECK(hipLaunchKernel(kernel, blocks, threads,NULL, 0, 0));
 
-  printf("Test Passed!!\n\n");
+  return true;
 }
 
-void LaunchKernelArg1()
+bool LaunchKernelArg1()
 {
-  hipError_t status = hipSuccess;
   int A = 0;
   int *A_d = NULL;
   dim3 blocks       = {1,1,1};
   dim3 threads      = {1,1,1};
 
-  printf(" -----: Launch One Argument Kernel :------ \n");
-
   // Allocate Device memory
-  status = hipMalloc((void**)&A_d, sizeof(int));
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipMalloc((void**)&A_d, sizeof(int)));
 
   void* Args[]={A_d};
-  hipLaunchKernel(kernel1, blocks, threads, Args,0,0);
-  printf("hipLaunchKernel status %s\n",hipGetErrorString(status));
+  HIPCHECK(hipLaunchKernel(kernel1, blocks, threads, Args,0,0));
 
   // Get the result back to host memory
-  status = hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost);
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
-
-  if(A == 333)
-    printf("Test Passed!!\n\n");
-  else
-    printf("Test Failed :Value of A is %d\n\n",A);
+  HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
 
   hipFree(A_d);
+
+  if(A != 333)
+	return false;
+
+  return true;
 }
 
-void LaunchKernelArg2()
+bool LaunchKernelArg2()
 {
-  hipError_t status = hipSuccess;
   int A = 0;
   int B = 123;
   int *A_d = NULL;
@@ -86,40 +86,31 @@ void LaunchKernelArg2()
   dim3 blocks       = {1,1,1};
   dim3 threads      = {1,1,1};
 
-  printf(" -----: Launch Two Argument Kernel :------ \n");
-
   // Allocate Device memory
-  status = hipMalloc((void**)&A_d, sizeof(int));
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipMalloc((void**)&A_d, sizeof(int)));
 
-  status = hipMalloc((void**)&B_d, sizeof(int));
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipMalloc((void**)&B_d, sizeof(int)));
 
   // Copy data from host memory to device memory
-  status = hipMemcpy(B_d,&B, sizeof(int), hipMemcpyHostToDevice);
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
-
+  HIPCHECK(hipMemcpy(B_d,&B, sizeof(int), hipMemcpyHostToDevice));
 
   void* Args[]={A_d,B_d};
-  hipLaunchKernel(kernel2, blocks, threads, Args,0,0);
-  printf("hipLaunchKernel status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipLaunchKernel(kernel2, blocks, threads, Args,0,0));
 
   // Get the result back to host memory
-  status = hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost);
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
-
-  if(A == 123)
-    printf("Test Passed!! \n\n");
-  else
-    printf("Test Failed : Value of A is %d\n\n",A);
+  HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
 
   hipFree(A_d);
   hipFree(B_d);
+
+  if(A != 123)
+    return false;
+
+  return true;
 }
 
-void LaunchKernelArg3()
+bool LaunchKernelArg3()
 {
-  hipError_t status = hipSuccess;
   int A = 321;
   int B = 123;
   int C = 0;
@@ -130,51 +121,45 @@ void LaunchKernelArg3()
   dim3 blocks       = {1,1,1};
   dim3 threads      = {1,1,1};
 
-  printf(" -----: Launch Three Argument Kernel :------ \n");
-
   // Allocate Device memory
-  status = hipMalloc((void**)&A_d, sizeof(int));
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipMalloc((void**)&A_d, sizeof(int)));
 
-  status = hipMalloc((void**)&B_d, sizeof(int));
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipMalloc((void**)&B_d, sizeof(int)));
 
-  status = hipMalloc((void**)&C_d, sizeof(int));
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipMalloc((void**)&C_d, sizeof(int)));
 
   // Copy data from host memory to device memory
-  status = hipMemcpy(A_d,&A, sizeof(int), hipMemcpyHostToDevice);
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipMemcpy(A_d,&A, sizeof(int), hipMemcpyHostToDevice));
 
-  status = hipMemcpy(B_d,&B, sizeof(int), hipMemcpyHostToDevice);
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
-
+  HIPCHECK(hipMemcpy(B_d,&B, sizeof(int), hipMemcpyHostToDevice));
 
   void* Args[]={A_d,B_d,C_d};
-  hipLaunchKernel(kernel3, blocks, threads, Args,0,0);
-  printf("hipLaunchKernel status %s\n", hipGetErrorString(status));
+  HIPCHECK(hipLaunchKernel(kernel3, blocks, threads, Args,0,0));
 
   // Get the result back to host memory
-  status = hipMemcpy(&C, C_d, sizeof(int), hipMemcpyDeviceToHost);
-  printf("hipMalloc status %s\n", hipGetErrorString(status));
-
-  if(C == 444)
-    printf("Test Passed\n\n");
-  else
-    printf("Test Failed : Value of C is %d\n\n",C);
+  HIPCHECK(hipMemcpy(&C, C_d, sizeof(int), hipMemcpyDeviceToHost));
 
   hipFree(A_d);
   hipFree(B_d);
   hipFree(C_d);
+
+  if(C != 444)
+    return false;
+
+  return true;
 }
 
 
 int main()
 {
-  LaunchKernelArg();
-  LaunchKernelArg1();
-  LaunchKernelArg2();
-  LaunchKernelArg3();
 
-  printf("PASSED!\n");
+  if( LaunchKernelArg()  &&
+      LaunchKernelArg1() &&
+      LaunchKernelArg2() &&
+      LaunchKernelArg3())
+    {
+      printf("PASSED!\n");
+    }
+  else
+    printf("FAILED\n");
 }

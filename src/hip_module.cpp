@@ -1153,10 +1153,14 @@ hipError_t hipLaunchKernel(
 
    hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)func_addr,
                                                            hip_impl::target_agent(stream));
-   size_t szKernArg = 0;
 
-   if(kd != nullptr && kd->_header != nullptr)
-       szKernArg = kd->_header->kernarg_segment_byte_size;
+   if(kd == nullptr || kd->_header == nullptr)
+       return ihipLogStatus(hipErrorInvalidValue);
+
+   size_t szKernArg = kd->_header->kernarg_segment_byte_size;
+
+   if(args == NULL && szKernArg != 0)
+      return ihipLogStatus(hipErrorInvalidValue);
 
    void* config[]{
         HIP_LAUNCH_PARAM_BUFFER_POINTER,
@@ -1164,11 +1168,6 @@ hipError_t hipLaunchKernel(
         HIP_LAUNCH_PARAM_BUFFER_SIZE,
 	    &szKernArg,
         HIP_LAUNCH_PARAM_END};
-
-        if(args == NULL)
-        {
-           config[1] = NULL;
-        }
 
    return ihipLogStatus(ihipModuleLaunchKernel(tls, kd, numBlocks.x * dimBlocks.x, numBlocks.y * dimBlocks.y, numBlocks.z * dimBlocks.z,
                           dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes, stream, nullptr, (void**)&config, nullptr, nullptr, 0));
