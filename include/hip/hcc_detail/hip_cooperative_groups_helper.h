@@ -64,25 +64,6 @@ typedef enum {
 } group_type;
 
 /**
- *  Internal wrappers around device builtins/intrinsics
- */
-__CG_STATIC_QUALIFIER__ uint64_t lanemask_gt() {
-  return __lanemask_gt();
-}
-
-__CG_STATIC_QUALIFIER__ uint64_t lanemask_lt() {
-  return __lanemask_lt();
-}
-
-__CG_STATIC_QUALIFIER__ uint64_t lanemask_eq() {
-  return __lanemask_eq();
-}
-
-__CG_STATIC_QUALIFIER__ uint32_t popcll(uint64_t mask) {
-  return __popcll(mask);
-}
-
-/**
  *  Functionalities related to multi-grid cooperative group type
  */
 namespace multi_grid {
