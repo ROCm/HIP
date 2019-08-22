@@ -61,11 +61,11 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
       
      if (manual){
 	blockSize = threadsperblock; 
-     	gridSize  = blocks;
-        std::cout << std::endl << "Manual Configuration with block size " << blockSize << std::endl;
+	gridSize  = blocks;
+	std::cout << std::endl << "Manual Configuration with block size " << blockSize << std::endl;
      }
      else{
-     	HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, multiply, 0, 0));
+	HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, multiply, 0, 0));
 	std::cout << std::endl << "Automatic Configuation based on hipOccupancyMaxPotentialBlockSize " << std::endl;
 	std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << gridSize << std::endl; 
      }
