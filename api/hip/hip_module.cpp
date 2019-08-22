@@ -253,8 +253,6 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
   amd::Command::EventWaitList waitList;
 
-  address kernargs = nullptr;
-
   // 'extra' is a struct that contains the following info: {
   //   HIP_LAUNCH_PARAM_BUFFER_POINTER, kernargs,
   //   HIP_LAUNCH_PARAM_BUFFER_SIZE, &kernargs_size,
@@ -264,19 +262,17 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
         extra[2] != HIP_LAUNCH_PARAM_BUFFER_SIZE || extra[4] != HIP_LAUNCH_PARAM_END) {
       return hipErrorNotInitialized;
     }
-    kernargs = reinterpret_cast<address>(extra[1]);
+    address kernargs = reinterpret_cast<address>(extra[1]);
+    ::memcpy(kernel->parameters().values(), kernargs, *(size_t*)(extra[3]));
+//    assert(kernel->signature().paramsSize()>=reinterpret_cast<size_t>(extra[3]));
   }
 
-  const amd::KernelSignature& signature = kernel->signature();
-  for (size_t i = 0; i < signature.numParameters(); ++i) {
-    const amd::KernelParameterDescriptor& desc = signature.at(i);
-    if (kernelParams == nullptr) {
-      assert(kernargs != nullptr);
-      kernel->parameters().set(i, desc.size_, kernargs + desc.offset_,
-                               desc.type_ == T_POINTER/*svmBound*/);
-    } else {
+  if (kernelParams != nullptr) {
+    const amd::KernelSignature& signature = kernel->signature();
+    for (size_t i = 0; i < signature.numParameters(); ++i) {
+      const amd::KernelParameterDescriptor& desc = signature.at(i);
       assert(extra == nullptr);
-      kernel->parameters().set(i, desc.size_, kernelParams[i], desc.type_ == T_POINTER/*svmBound*/);
+      kernel->parameters().set(i, desc.size_, kernelParams[i], desc.type_ == T_POINTER);
     }
   }
 
@@ -287,7 +283,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   }
 
   amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(
-    *queue, waitList, *kernel, ndrange, sharedMemBytes, params);
+    *queue, waitList, *kernel, ndrange, sharedMemBytes, params, true);
   if (!command) {
     return hipErrorOutOfMemory;
   }
