@@ -29,6 +29,10 @@ THE SOFTWARE.
 #include "hip_fatbin.h"
 #include "trace_helper.h"
 
+#ifdef __GNUC__
+#pragma GCC visibility push (default)
+#endif
+
 extern "C" std::vector<hipModule_t>*
 __hipRegisterFatBinary(const void* data)
 {
@@ -249,4 +253,6 @@ hipError_t hipLaunchByPtr(const void *hostFunction)
 
   return ihipLogStatus(e);
 }
-
+#ifdef __GNUC__
+#pragma GCC visibility pop
+#endif

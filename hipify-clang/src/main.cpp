@@ -426,6 +426,7 @@ int main(int argc, const char **argv) {
     if (Tool.runAndSave(&actionFactory)) {
       currentStat.hasErrors = true;
       LLVM_DEBUG(llvm::dbgs() << "Skipped some replacements.\n");
+      Result = 1;
     }
     // Copy the tmpfile to the output
     if (!NoOutput && !currentStat.hasErrors) {

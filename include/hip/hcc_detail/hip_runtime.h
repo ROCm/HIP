@@ -462,6 +462,7 @@ hc_get_workitem_absolute_id(int dim)
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 
+#if __HIP_VDI__
 hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                     uint32_t localWorkSizeX, uint32_t localWorkSizeY,
@@ -479,7 +480,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t startEvent = nullptr,
                                     hipEvent_t stopEvent = nullptr)
                                     __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
-
+#endif // __HIP_VDI__
 #endif // defined(__clang__) && defined(__HIP__)
 
 #include <hip/hcc_detail/hip_memory.h>
