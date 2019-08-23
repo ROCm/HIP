@@ -192,6 +192,7 @@ int main(int argc, char* argv[]) {
     HIPCHECK(hipGetDeviceCount(&deviceCnt));
 
     for (int i = 0; i < deviceCnt; i++) {
+        hipSetDevice(i);
         printDeviceProp(i);
     }
 
