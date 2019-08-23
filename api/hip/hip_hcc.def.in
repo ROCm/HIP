@@ -48,6 +48,7 @@ hipEventQuery
 hipEventRecord
 hipEventSynchronize
 hipExtGetLinkTypeAndHopCount
+hipExtLaunchMultiKernelMultiDevice
 hipExtMallocWithFlags
 hipExtModuleLaunchKernel
 hipFree
