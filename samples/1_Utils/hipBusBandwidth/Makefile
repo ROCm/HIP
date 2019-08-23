@@ -5,7 +5,7 @@ endif
 HIPCC=$(HIP_PATH)/bin/hipcc
 
 EXE=hipBusBandwidth
-CXXFLAGS = -O3 -g
+CXXFLAGS = -O3
 
 all: install
 

@@ -24,6 +24,13 @@ THE SOFTWARE.
 
 // Map of all functions
 const std::map<llvm::StringRef, hipCounter> CUDA_BLAS_TYPE_NAME_MAP{
+  // Blas defines
+  {"CUBLAS_VER_MAJOR",              {"HIPBLAS_VER_MAJOR",                "", CONV_DEFINE, API_BLAS, HIP_UNSUPPORTED}},
+  {"CUBLAS_VER_MINOR",              {"HIPBLAS_VER_MINOR",                "", CONV_DEFINE, API_BLAS, HIP_UNSUPPORTED}},
+  {"CUBLAS_VER_PATCH",              {"HIPBLAS_VER_PATCH",                "", CONV_DEFINE, API_BLAS, HIP_UNSUPPORTED}},
+  {"CUBLAS_VER_BUILD",              {"HIPBLAS_VER_BUILD",                "", CONV_DEFINE, API_BLAS, HIP_UNSUPPORTED}},
+  {"CUBLAS_VERSION",                {"HIPBLAS_VERSION",                  "", CONV_DEFINE, API_BLAS, HIP_UNSUPPORTED}},
+
   // Blas operations
   {"cublasOperation_t",              {"hipblasOperation_t",              "rocblas_operation",                     CONV_TYPE, API_BLAS}},
   {"CUBLAS_OP_N",                    {"HIPBLAS_OP_N",                    "rocblas_operation_none",                CONV_NUMERIC_LITERAL, API_BLAS}},

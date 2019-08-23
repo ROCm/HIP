@@ -175,4 +175,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP{
   {"CUSPARSE_INDEX_32I",                        {"HIPSPARSE_INDEX_32I",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
   {"CUSPARSE_INDEX_64I",                        {"HIPSPARSE_INDEX_64I",                        "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
 
+  // 3. Defines
+  {"CUSPARSE_VER_MAJOR",                        {"HIPSPARSE_VER_MAJOR",                        "", CONV_DEFINE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_VER_MINOR",                        {"HIPSPARSE_VER_MINOR",                        "", CONV_DEFINE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_VER_PATCH",                        {"HIPSPARSE_VER_PATCH",                        "", CONV_DEFINE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_VER_BUILD",                        {"HIPSPARSE_VER_BUILD",                        "", CONV_DEFINE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"CUSPARSE_VERSION",                          {"HIPSPARSE_VERSION",                          "", CONV_DEFINE, API_SPARSE, HIP_UNSUPPORTED}},
 };
