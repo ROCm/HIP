@@ -44,7 +44,7 @@ void multiplyCPU(float* C, float* A, float* B, int N){
     }
 }
 
-void launchKernel(float* C, float* A, float* B, int N, bool manual){
+void launchKernel(float* C, float* A, float* B, bool manual){
      
      hipDeviceProp_t devProp;
      HIP_CHECK(hipGetDeviceProperties(&devProp, 0));
@@ -56,18 +56,20 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
      const unsigned threadsperblock = 32;
      const unsigned blocks = (NUM/threadsperblock)+1;
 
+     uint32_t mingridSize = 0;
      uint32_t gridSize = 0;
      uint32_t blockSize = 0;
-      
+     
      if (manual){
 	blockSize = threadsperblock; 
 	gridSize  = blocks;
 	std::cout << std::endl << "Manual Configuration with block size " << blockSize << std::endl;
      }
      else{
-	HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, multiply, 0, 0));
+	HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&mingridSize, &blockSize, multiply, 0, 0));
 	std::cout << std::endl << "Automatic Configuation based on hipOccupancyMaxPotentialBlockSize " << std::endl;
-	std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << gridSize << std::endl; 
+	std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << mingridSize << std::endl;
+	gridSize = (NUM/blockSize)+1; 
      }
 
      // Record the start event
@@ -79,7 +81,7 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
      // Record the stop event
      HIP_CHECK(hipEventRecord(stop, NULL));
      HIP_CHECK(hipEventSynchronize(stop));
-         
+
      HIP_CHECK(hipEventElapsedTime(&eventMs, start, stop));
      printf("kernel Execution time = %6.3fms\n", eventMs);
 
@@ -89,19 +91,20 @@ void launchKernel(float* C, float* A, float* B, int N, bool manual){
      
      if(devProp.maxThreadsPerMultiProcessor){
 	std::cout << "Theoretical Occupancy is " << (double)numBlock* blockSize/devProp.maxThreadsPerMultiProcessor * 100 << "%" << std::endl;
-     }	
+     }
 }
 
 int main() {
-     float *A, *B, *C, *cpuC;
-     float *Ad, *Bd, *Cd;
-     int errors;
+     float *A, *B, *C0, *C1, *cpuC;
+     float *Ad, *Bd, *C0d, *C1d;
+     int errors=0;
      int i;
 
      // initialize the input data
-     A = (float *)malloc(NUM * sizeof(float));
-     B = (float *)malloc(NUM * sizeof(float));
-     C = (float *)malloc(NUM * sizeof(float));
+     A  = (float *)malloc(NUM * sizeof(float));
+     B  = (float *)malloc(NUM * sizeof(float));
+     C0 = (float *)malloc(NUM * sizeof(float));
+     C1 = (float *)malloc(NUM * sizeof(float));
      cpuC = (float *)malloc(NUM * sizeof(float));
      
      for(i=0; i< NUM; i++){
@@ -112,46 +115,62 @@ int main() {
      // allocate the memory on the device side   
      HIP_CHECK(hipMalloc((void**)&Ad, NUM * sizeof(float)));
      HIP_CHECK(hipMalloc((void**)&Bd, NUM * sizeof(float)));
-     HIP_CHECK(hipMalloc((void**)&Cd, NUM * sizeof(float)));
+     HIP_CHECK(hipMalloc((void**)&C0d, NUM * sizeof(float)));
+     HIP_CHECK(hipMalloc((void**)&C1d, NUM * sizeof(float)));
  
      // Memory transfer from host to device
      HIP_CHECK(hipMemcpy(Ad,A,NUM * sizeof(float), hipMemcpyHostToDevice));
      HIP_CHECK(hipMemcpy(Bd,B,NUM * sizeof(float), hipMemcpyHostToDevice));
 
      //Kernel launch with manual/default block size
-     launchKernel(Cd, Ad, Bd, NUM, 1);
+     launchKernel(C0d, Ad, Bd, 1);
      
      //Kernel launch with the block size suggested by hipOccupancyMaxPotentialBlockSize 
-     launchKernel(Cd, Ad, Bd, NUM, 0);
+     launchKernel(C1d, Ad, Bd, 0);
 
      // Memory transfer from device to host
-     HIP_CHECK(hipMemcpy(C,Cd, NUM * sizeof(float), hipMemcpyDeviceToHost));
+     HIP_CHECK(hipMemcpy(C0,C0d, NUM * sizeof(float), hipMemcpyDeviceToHost));
+     HIP_CHECK(hipMemcpy(C1,C1d, NUM * sizeof(float), hipMemcpyDeviceToHost));
 
      // CPU computation
      multiplyCPU(cpuC, A, B, NUM);
 
      //verify the results
-     errors = 0;
      double eps = 1.0E-6;
      
-     for (i = 0; i < NUM; i++) {
-	  if (std::abs(C[i] - cpuC[i]) > eps) {
+       for (i = 0; i < NUM; i++) {
+	  if (std::abs(C0[i] - cpuC[i]) > eps) {
 		  errors++;
-	  }
+	}
      }
           
      if (errors != 0){
-	     printf("\nFAILED: %d errors\n", errors);
+	printf("\nManual Test FAILED: %d errors\n", errors);
+	errors=0;
      } else {
-	     printf("\nPASSED!\n");
+	printf("\nManual Test PASSED!\n");
+     }
+     
+     for (i = 0; i < NUM; i++) {
+	  if (std::abs(C1[i] - cpuC[i]) > eps) {
+		  errors++;
+	}
+     }
+          
+     if (errors != 0){
+	printf("\n Automatic Test FAILED: %d errors\n", errors);
+     } else {
+	printf("\nAutomatic Test PASSED!\n");
      }
 
      HIP_CHECK(hipFree(Ad));
      HIP_CHECK(hipFree(Bd));
-     HIP_CHECK(hipFree(Cd));
+     HIP_CHECK(hipFree(C0d));
+     HIP_CHECK(hipFree(C1d));
 
      free(A);
      free(B);
-     free(C);
+     free(C0);
+     free(C1);
      free(cpuC);
 }
