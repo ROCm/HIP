@@ -89,7 +89,7 @@ template <typename, typename = void>
 struct is_callable_impl : std::false_type {};
 
 template <FunctionalProcedure F, typename... Ts>
-struct is_callable_impl<F(Ts...), void_t_<std::result_of_t<F(Ts...)> > > : std::true_type {};
+struct is_callable_impl<F(Ts...), void_t_<typename> std::result_of<F>::type(Ts...) > > : std::true_type {};
 #else
 
 // C++17
