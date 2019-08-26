@@ -59,6 +59,10 @@ extern "C" __device__ __attribute__((const)) float __ocml_trunc_f32(float);
 extern "C" __device__ __attribute__((const)) float __ocml_fmin_f32(float, float);
 extern "C" __device__ __attribute__((const)) float __ocml_fmax_f32(float, float);
 
+extern "C" __device__ __attribute__((convergent)) void __ockl_gws_init(uint nwm1, uint rid);
+extern "C" __device__ __attribute__((convergent)) void __ockl_gws_barrier(uint nwm1, uint rid);
+
+
 // Introduce local address space
 #define __local __attribute__((address_space(3)))
 
