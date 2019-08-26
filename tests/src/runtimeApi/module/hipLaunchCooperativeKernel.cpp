@@ -43,7 +43,6 @@ __global__ void test_gws(uint* buf, uint bufSize, long* tmpBuf, long* result)
     extern __shared__ long tmp[];
     uint offset = blockIdx.x * blockDim.x + threadIdx.x;
     uint stride = gridDim.x  * blockDim.x;
-    uint nwm1   = gridDim.x  * gridDim.y * gridDim.z - 1;
 
     long sum = 0;
     for (uint i = offset; i < bufSize; i += stride) {
@@ -62,7 +61,7 @@ __global__ void test_gws(uint* buf, uint bufSize, long* tmpBuf, long* result)
     }
 
     // TODO replace this line with the sync function once it's available
-    __ockl_gws_barrier(nwm1, 0);
+    __ockl_grid_sync();
 
     if (offset == 0) {
         for (uint i = 1; i < gridDim.x; ++i) {
