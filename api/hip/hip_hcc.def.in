@@ -166,6 +166,8 @@ hipTexRefSetAddressMode
 hipTexRefSetArray
 hipTexRefSetAddress
 hipTexRefSetAddress2D
+ihipBindTextureImpl
+ihipBindTextureToArrayImpl
 hipCreateChannelDesc
 hipProfilerStart
 hipProfilerStop
