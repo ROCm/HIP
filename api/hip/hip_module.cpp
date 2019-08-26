@@ -71,7 +71,11 @@ hipError_t hipModuleLoad(hipModule_t* module, const char* fname)
 }
 
 bool ihipModuleUnregisterGlobal(hipModule_t hmod) {
-  PlatformState::instance().unregisterVar(hmod);
+  std::vector< std::pair<hipModule_t, bool> >* modules =
+    PlatformState::instance().unregisterVar(hmod);
+  if (modules != nullptr) {
+    delete modules;
+  }
   return true;
 }
 

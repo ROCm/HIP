@@ -165,18 +165,20 @@ extern "C" std::vector< std::pair<hipModule_t, bool> >* __hipRegisterFatBinary(c
   return programs;
 }
 
-void PlatformState::unregisterVar(hipModule_t hmod) {
+std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipModule_t hmod) {
   amd::ScopedLock lock(lock_);
+  std::vector< std::pair<hipModule_t, bool> >* rmodules = nullptr;
   auto it = vars_.begin();
   while (it != vars_.end()) {
     DeviceVar& dvar = it->second;
     if ((*dvar.modules)[0].first == hmod) {
-      delete dvar.modules;
+      rmodules = dvar.modules;
       vars_.erase(it++);
     } else {
       ++it;
     }
   }
+  return rmodules;
 }
 
 void PlatformState::registerVar(const void* hostvar,
@@ -392,6 +394,7 @@ extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, boo
       as_amd(reinterpret_cast<cl_program>(module.first))->release();
     }
   });
+  PlatformState::instance().unregisterVar((*modules)[0].first);
   delete modules;
 }
 
