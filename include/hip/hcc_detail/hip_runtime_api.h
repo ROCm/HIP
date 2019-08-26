@@ -1514,6 +1514,13 @@ hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
 #endif
 
 #ifdef __cplusplus
+namespace hip_impl {
+hipError_t hipMemcpyToSymbol(void*, const void*, size_t, size_t, hipMemcpyKind,
+                             const char*);
+} // Namespace hip_impl.
+#endif
+
+#if defined(__cplusplus)
 extern "C" {
 #endif
 
@@ -1542,9 +1549,19 @@ extern "C" {
  */
 
 #ifdef __cplusplus
+inline
+__attribute__((visibility("hidden")))
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
                              size_t sizeBytes, size_t offset __dparm(0),
-                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
+                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice)) {
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t dst = NULL;
+    hipGetSymbolAddress(&dst, (const char*)symbolName);
+
+    return hip_impl::hipMemcpyToSymbol(dst, src, sizeBytes, offset, kind,
+                                       (const char*)symbolName);
+}
 #else
 hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
                               size_t sizeBytes, size_t offset,
@@ -1555,6 +1572,16 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
 } // extern "C"
 #endif
 
+#if defined(__cplusplus)
+namespace hip_impl {
+hipError_t hipMemcpyToSymbolAsync(void*, const void*, size_t, size_t,
+                                  hipMemcpyKind, hipStream_t, const char*);
+hipError_t hipMemcpyFromSymbol(void*, const void*, size_t, size_t,
+                               hipMemcpyKind, const char*);
+hipError_t hipMemcpyFromSymbolAsync(void*, const void*, size_t, size_t,
+                                    hipMemcpyKind, hipStream_t, const char*);
+} // Namespace hip_impl.
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -1587,18 +1614,51 @@ extern "C" {
  */
 
 #ifdef __cplusplus
+inline
+__attribute__((visibility("hidden")))
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
                                   size_t sizeBytes, size_t offset,
-                                  hipMemcpyKind kind, hipStream_t stream __dparm(0));
+                                  hipMemcpyKind kind, hipStream_t stream __dparm(0)){
 
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t dst = NULL;
+    hipGetSymbolAddress(&dst, symbolName);
+
+    return hip_impl::hipMemcpyToSymbolAsync(dst, src, sizeBytes, offset, kind,
+                                            stream,
+                                            (const char*)symbolName);
+}
+
+inline
+__attribute__((visibility("hidden")))
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
                                size_t sizeBytes, size_t offset __dparm(0),
-                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
+                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost)) {
+    if (!symbolName) return hipErrorInvalidSymbol;
 
+    hipDeviceptr_t src = NULL;
+    hipGetSymbolAddress(&src, symbolName);
+
+    return hip_impl::hipMemcpyFromSymbol(dst, src, sizeBytes, offset, kind,
+                                         (const char*)symbolName);
+}
+
+inline
+__attribute__((visibility("hidden")))
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
-                                    hipStream_t stream __dparm(0));
+                                    hipStream_t stream __dparm(0)){
+
+    if (!symbolName) return hipErrorInvalidSymbol;
+
+    hipDeviceptr_t src = NULL;
+    hipGetSymbolAddress(&src, symbolName);
+
+    return hip_impl::hipMemcpyFromSymbolAsync(dst, src, sizeBytes, offset, kind,
+                                             stream,(const char*)symbolName);
+}
 #else
 hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
                                   size_t sizeBytes, size_t offset,
