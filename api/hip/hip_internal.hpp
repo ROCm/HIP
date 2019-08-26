@@ -154,7 +154,7 @@ public:
     return *platform_;
   }
 
-  void unregisterVar(hipModule_t hmod);
+  std::vector< std::pair<hipModule_t, bool> >* unregisterVar(hipModule_t hmod);
 
   void registerVar(const void* hostvar, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
