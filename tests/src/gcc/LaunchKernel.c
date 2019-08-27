@@ -68,7 +68,7 @@ bool LaunchKernelArg1()
   // Get the result back to host memory
   HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
 
-  hipFree(A_d);
+  HIPCHECK(hipFree(A_d));
 
   if(A != 333)
 	return false;
@@ -100,8 +100,8 @@ bool LaunchKernelArg2()
   // Get the result back to host memory
   HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
 
-  hipFree(A_d);
-  hipFree(B_d);
+  HIPCHECK(hipFree(A_d));
+  HIPCHECK(hipFree(B_d));
 
   if(A != 123)
     return false;
@@ -139,9 +139,9 @@ bool LaunchKernelArg3()
   // Get the result back to host memory
   HIPCHECK(hipMemcpy(&C, C_d, sizeof(int), hipMemcpyDeviceToHost));
 
-  hipFree(A_d);
-  hipFree(B_d);
-  hipFree(C_d);
+  HIPCHECK(hipFree(A_d));
+  HIPCHECK(hipFree(B_d));
+  HIPCHECK(hipFree(C_d));
 
   if(C != 444)
     return false;
