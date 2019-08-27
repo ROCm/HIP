@@ -486,7 +486,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
     HIP_INIT_API(hipLaunchCooperativeKernelMultiDevice, launchParamsList, numDevices, flags);
     hipError_t result;
 
-    if ((numDevices > g_deviceCnt) || (launchParamsList == nullptr)) {
+    if (numDevices > g_deviceCnt || launchParamsList == nullptr) {
         return ihipLogStatus(hipErrorInvalidValue);
     }
 
@@ -498,7 +498,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 
     hipFunction_t* gwsKds = reinterpret_cast<hipFunction_t*>(malloc(sizeof(hipFunction_t) * numDevices));
     hipFunction_t* kds    = reinterpret_cast<hipFunction_t*>(malloc(sizeof(hipFunction_t) * numDevices));
-    if ((kds == nullptr) || (gwsKds == nullptr)) {
+    if (kds == nullptr || gwsKds == nullptr) {
         return ihipLogStatus(hipErrorNotInitialized);
     }
 
