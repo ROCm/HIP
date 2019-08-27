@@ -19,11 +19,11 @@ mkdir -p $ROCMLIBDIR/cmake
 pushd $ROCMLIBDIR
 for f in $HIPLIBFILES
 do
-    ln -s $HIPLIBDIR/$f $(basename $f)
+    ln -s -f $HIPLIBDIR/$f $(basename $f)
 done
 # Make the hip cmake directory link.
 pushd cmake
-ln -s $HIPLIBDIR/cmake/hip hip
+ln -s -f $HIPLIBDIR/cmake/hip hip
 popd
 popd
 
