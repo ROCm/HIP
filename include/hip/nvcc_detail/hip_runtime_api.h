@@ -1241,7 +1241,7 @@ inline static hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* im
         cuModuleLoadDataEx(module, image, numOptions, options, optionValues));
 }
 
-inline static hipError_t hipLaunchKernel(void* function_address, dim3 numBlocks,
+inline static hipError_t hipLaunchKernel(const void* function_address, dim3 numBlocks,
 					 dim3 dimBlocks, void** args, size_t sharedMemBytes,
 					 hipStream_t stream)
 {
