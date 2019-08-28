@@ -414,6 +414,8 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                  int numDevices, unsigned int flags)
 {
+  HIP_INIT_API(launchParamsList, numDevices, flags);
+
   return ihipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags,
                                                 (amd::NDRangeKernelCommand::CooperativeGroups |
                                                  amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups));
@@ -421,6 +423,8 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int numDevices, unsigned int flags) {
+  HIP_INIT_API(launchParamsList, numDevices, flags);
+
   return ihipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags, 0);
 }
 
