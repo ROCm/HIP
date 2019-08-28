@@ -329,6 +329,11 @@ while (@ARGV) {
         $ft{'err'} += s/\bcudaDevAttrMaxTexture3DWidth\b/hipDeviceAttributeMaxTexture3DWidth/g;
         $ft{'err'} += s/\bcudaDevAttrMaxTexture3DHeight\b/hipDeviceAttributeMaxTexture3DHeight/g;
         $ft{'err'} += s/\bcudaDevAttrMaxTexture3DDepth\b/hipDeviceAttributeMaxTexture3DDepth/g;
+        $ft{'err'} += s/\bcudaDevAttrMaxPitch\b/hipDeviceAttributeMaxPitch/g;
+        $ft{'err'} += s/\bcudaDevAttrTextureAlignment\b/hipDeviceAttributeTextureAlignment/g;
+        $ft{'err'} += s/\bcudaDevAttrKernelExecTimeout\b/hipDeviceAttributeKernelExecTimeout/g;
+        $ft{'err'} += s/\bcudaDevAttrCanMapHostMemory\b/hipDeviceAttributeCanMapHostMemory/g;
+        $ft{'err'} += s/\bcudaDevAttrEccEnabled\b/hipDeviceAttributeEccEnabled/g;
         #--------
         $ft{'dev'} += s/\bcudaDeviceAttr\b/hipDeviceAttribute_t/g;
         $ft{'dev'} += s/\bcudaDeviceGetAttribute\b/hipDeviceGetAttribute/g;
