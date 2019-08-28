@@ -37,7 +37,6 @@ THE SOFTWARE.
 
 #define DEBUG_TYPE "cuda2hip"
 
-std::string sHipify = "[HIPIFY] ", sConflict = "conflict: ", sError = "error: ";
 namespace ct = clang::tooling;
 
 std::string getAbsoluteFilePath(const std::string& sFile, std::error_code& EC) {
@@ -240,13 +239,16 @@ int main(int argc, const char **argv) {
   }
   llcompat::PrintStackTraceOnErrorSignal();
   ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::ZeroOrMore);
+  if (!llcompat::CheckCompatibility()) {
+    return 1;
+  }
   std::vector<std::string> fileSources = OptionsParser.getSourcePathList();
   if (fileSources.empty() && !GeneratePerl && !GeneratePython) {
-    llvm::errs() << "\n" << sHipify << sError << "Must specify at least 1 positional argument for source file." << "\n";
+    llvm::errs() << "\n" << sHipify << sError << "Must specify at least 1 positional argument for source file" << "\n";
     return 1;
   }
   if (!generatePerl(GeneratePerl)) {
-    llvm::errs() << "\n" << sHipify << sError << "hipify-perl generating failed." << "\n";
+    llvm::errs() << "\n" << sHipify << sError << "hipify-perl generating failed" << "\n";
     return 1;
   }
   bool bToRoc = TranslateToRoc;
@@ -254,7 +256,7 @@ int main(int argc, const char **argv) {
   bool bToPython = generatePython(GeneratePython);
   TranslateToRoc = bToRoc;
   if (!bToPython) {
-    llvm::errs() << "\n" << sHipify << sError << "hipify-python generating failed." << "\n";
+    llvm::errs() << "\n" << sHipify << sError << "hipify-python generating failed" << "\n";
     return 1;
   }
   if (fileSources.empty()) {
@@ -268,15 +270,15 @@ int main(int argc, const char **argv) {
   }
   if (!dst.empty()) {
     if (fileSources.size() > 1) {
-      llvm::errs() << sHipify << sConflict << "-o and multiple source files are specified.\n";
+      llvm::errs() << sHipify << sConflict << "-o and multiple source files are specified\n";
       return 1;
     }
     if (Inplace) {
-      llvm::errs() << sHipify << sConflict << "both -o and -inplace options are specified.\n";
+      llvm::errs() << sHipify << sConflict << "both -o and -inplace options are specified\n";
       return 1;
     }
     if (NoOutput) {
-      llvm::errs() << sHipify << sConflict << "both -no-output and -o options are specified.\n";
+      llvm::errs() << sHipify << sConflict << "both -no-output and -o options are specified\n";
       return 1;
     }
     if (!dstDir.empty()) {
@@ -284,11 +286,11 @@ int main(int argc, const char **argv) {
     }
   }
   if (NoOutput && Inplace) {
-    llvm::errs() << sHipify << sConflict << "both -no-output and -inplace options are specified.\n";
+    llvm::errs() << sHipify << sConflict << "both -no-output and -inplace options are specified\n";
     return 1;
   }
   if (!dstDir.empty() && Inplace) {
-    llvm::errs() << sHipify << sConflict << "both -o-dir and -inplace options are specified.\n";
+    llvm::errs() << sHipify << sConflict << "both -o-dir and -inplace options are specified\n";
     return 1;
   }
   if (Examine) {
@@ -425,8 +427,8 @@ int main(int argc, const char **argv) {
     // Hipify _all_ the things!
     if (Tool.runAndSave(&actionFactory)) {
       currentStat.hasErrors = true;
-      LLVM_DEBUG(llvm::dbgs() << "Skipped some replacements.\n");
       Result = 1;
+      LLVM_DEBUG(llvm::dbgs() << "Skipped some replacements.\n");
     }
     // Copy the tmpfile to the output
     if (!NoOutput && !currentStat.hasErrors) {
