@@ -570,7 +570,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(hostPtr, sizeBytes, flags);
   if(hostPtr != nullptr) {
-    amd::Memory* mem = new (*hip::host_context) amd::Buffer(*hip::host_context, CL_MEM_USE_HOST_PTR, sizeBytes);
+    amd::Memory* mem = new (*hip::host_context) amd::Buffer(*hip::host_context, CL_MEM_USE_HOST_PTR | CL_MEM_SVM_ATOMICS, sizeBytes);
 
     constexpr bool sysMemAlloc = false;
     constexpr bool skipAlloc = false;
