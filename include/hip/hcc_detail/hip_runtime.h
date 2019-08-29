@@ -331,11 +331,6 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 typedef int hipLaunchParm;
 
-#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)             \
-    do {                                                                                           \
-        kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(hipLaunchParm{}, ##__VA_ARGS__); \
-    } while (0)
-
 #define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
     do {                                                                                           \
         kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(__VA_ARGS__);         \
