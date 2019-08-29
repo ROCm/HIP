@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,16 +20,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "hip/hip_runtime.h"
-#if __HIP__
-__hip_pinned_shadow__
-#else
-extern
-#endif
-texture<float, 2, hipReadModeElementType> tex;
+/**
+ *  @file  hip_cooperative_groups.h
+ *
+ *  @brief Defines new types and device API wrappers for `Cooperative Group`
+ *  feature.
+ */
 
-extern "C" __global__ void tex2dKernel(float* outputData, int width, int height) {
-    int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    outputData[y * width + x] = tex2D(tex, x, y);
-}
+#ifndef  HIP_INCLUDE_HIP_HIP_COOPERATIVE_GROUP_H
+#define HIP_INCLUDE_HIP_HIP_VECTOR_TYPES_H
+
+#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
+#if __cplusplus
+#include <hip/hcc_detail/hip_cooperative_groups.h>
+#endif
+#elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)
+#include <cooperative_groups.h>
+#else
+#error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
+#endif
+
+#endif // HIP_INCLUDE_HIP_HIP_COOPERATIVE_GROUP_H
