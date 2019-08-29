@@ -426,6 +426,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   // cudaLaunchHostFunc
   {"cuLaunchHostFunc",                                     {"hipLaunchHostFunc",                                       "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
+  {"cudaLaunchKernel",                                     {"hipLaunchKernel",                                         "", CONV_EXECUTION, API_DRIVER}},
+  // no analogue
   // NOTE: Not equal to cudaLaunchKernel due to different signatures
   {"cuLaunchKernel",                                       {"hipModuleLaunchKernel",                                   "", CONV_EXECUTION, API_DRIVER}},
 
