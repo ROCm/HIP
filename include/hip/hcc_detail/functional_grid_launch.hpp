@@ -177,13 +177,4 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                                      stream, &config[0]);
 }
 
-template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
-[[deprecated("hipLaunchKernel is deprecated and will be removed in the next "
-             "version of HIP; please upgrade to hipLaunchKernelGGL.")]]
-inline void hipLaunchKernel(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
-                            std::uint32_t groupMemBytes, hipStream_t stream, Args... args) {
-    hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
-                       std::move(args)...);
-}
-
 #pragma GCC visibility pop
