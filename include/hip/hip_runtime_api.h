@@ -320,7 +320,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxPitch,             ///< Maximum pitch in bytes allowed by memory copies
     hipDeviceAttributeTextureAlignment,     ///<Alignment requirement for textures
     hipDeviceAttributeKernelExecTimeout,    ///<Run time limit for kernels executed on the device
-    hipDeviceAttributeCanMapHostMemory,     ///<Device can map host memory into CUDA address space
+    hipDeviceAttributeCanMapHostMemory,     ///<Device can map host memory into device address space
     hipDeviceAttributeEccEnabled            ///<Device has ECC support enabled
 
 } hipDeviceAttribute_t;
