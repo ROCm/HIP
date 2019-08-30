@@ -383,7 +383,6 @@ if($HIP_PLATFORM eq "nvcc"){
 
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 my $optArg = ""; # -O args
-my $gArg = ""; # -g args
 
 foreach $arg (@ARGV)
 {
@@ -493,10 +492,6 @@ foreach $arg (@ARGV)
     if($arg =~ m/^-O/)
     {
         $optArg = $arg;
-    }
-    if($arg =~ m/^-g/)
-    {
-        $gArg = $arg;
     }
 
     ## process linker response file for hip-clang
@@ -876,7 +871,7 @@ if ($needHipHcc) {
 
 if ($HIP_PLATFORM eq "clang") {
     # Set default optimization level to -O3 for hip-clang.
-    if ($optArg eq "" and $gArg ne "-g") {
+    if ($optArg eq "") {
         $HIPCXXFLAGS .= " -O3";
         $HIPLDFLAGS .= " -O3";
     }

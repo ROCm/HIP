@@ -20,8 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "ArgParse.h"
 #include "LLVMCompat.h"
 #include "llvm/Support/Path.h"
+#include "clang/Lex/PreprocessorOptions.h"
+#include "clang/Frontend/CompilerInstance.h"
+
+const std::string sHipify = "[HIPIFY] ", sConflict = "conflict: ", sError = "error: ", sWarning = "warning: ";
 
 namespace llcompat {
 
@@ -120,6 +125,22 @@ bool pragma_once_outside_header() {
 #else
   return true;
 #endif
+}
+
+void RetainExcludedConditionalBlocks(clang::CompilerInstance &CI) {
+#if LLVM_VERSION_MAJOR > 9
+  clang::PreprocessorOptions &PPOpts = CI.getPreprocessorOpts();
+  PPOpts.RetainExcludedConditionalBlocks = !SkipExcludedPPConditionalBlocks;
+#endif
+}
+
+bool CheckCompatibility() {
+#if LLVM_VERSION_MAJOR < 10
+  if (SkipExcludedPPConditionalBlocks) {
+    llvm::errs() << "\n" << sHipify << sWarning << "Option '" << SkipExcludedPPConditionalBlocks.ArgStr.str() << "' is supported starting from LLVM version 10.0\n";
+  }
+#endif
+  return true;
 }
 
 } // namespace llcompat

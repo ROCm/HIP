@@ -138,4 +138,9 @@ cl::list<std::string> MacroNames("D",
   cl::Prefix,
   cl::cat(ToolTemplateCategory));
 
+cl::opt<bool> SkipExcludedPPConditionalBlocks("skip-excluded-preprocessor-conditional-blocks",
+  cl::desc("Enable default preprocessor behaviour by skipping undefined conditional blocks"),
+  cl::value_desc("skip-excluded-preprocessor-conditional-blocks"),
+  cl::cat(ToolTemplateCategory));
+
 cl::extrahelp CommonHelp(ct::CommonOptionsParser::HelpMessage);

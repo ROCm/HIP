@@ -91,6 +91,8 @@ protected:
   void insertReplacement(const ct::Replacement& rep, const clang::FullSourceLoc& fullSL);
   // FrontendAction entry point.
   void ExecuteAction() override;
+  // Callback before starting processing a single input; used by hipify-clang for setting Preprocessor options.
+  bool BeginInvocation(clang::CompilerInstance &CI) override;
   // Called at the start of each new file to process.
   void EndSourceFileAction() override;
   // MatchCallback API entry point. Called by the AST visitor while searching the AST for things we registered an interest for.

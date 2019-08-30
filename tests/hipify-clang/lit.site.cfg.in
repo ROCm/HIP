@@ -3,6 +3,7 @@ import os
 
 config.pointer_size = @CMAKE_SIZEOF_VOID_P@
 config.llvm_version = "@LLVM_PACKAGE_VERSION@"
+config.llvm_version_major = int("@LLVM_VERSION_MAJOR@")
 config.llvm_tools_dir = "@LLVM_TOOLS_BINARY_DIR@"
 config.obj_root = "@CMAKE_CURRENT_BINARY_DIR@"
 config.cuda_root = "@CUDA_TOOLKIT_ROOT_DIR@"
