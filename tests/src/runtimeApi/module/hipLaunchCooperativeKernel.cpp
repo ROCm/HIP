@@ -30,11 +30,14 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
 #include "hip/hcc_detail/device_library_decls.h"
+#include "hip/hcc_detail/hip_cooperative_groups.h"
 #include <iostream>
 #include <chrono>
 #include "test_common.h"
 
 using namespace std::chrono;
+
+namespace cg = cooperative_groups;
 
 const static uint BufferSizeInDwords = 448 * 1024 * 1024;
 
@@ -43,6 +46,7 @@ __global__ void test_gws(uint* buf, uint bufSize, long* tmpBuf, long* result)
     extern __shared__ long tmp[];
     uint offset = blockIdx.x * blockDim.x + threadIdx.x;
     uint stride = gridDim.x  * blockDim.x;
+    cg::grid_group gg = cg::this_grid();
 
     long sum = 0;
     for (uint i = offset; i < bufSize; i += stride) {
@@ -60,8 +64,7 @@ __global__ void test_gws(uint* buf, uint bufSize, long* tmpBuf, long* result)
         tmpBuf[blockIdx.x] = sum;
     }
 
-    // TODO replace this line with the sync function once it's available
-    __ockl_grid_sync();
+    gg.sync();
 
     if (offset == 0) {
         for (uint i = 1; i < gridDim.x; ++i) {
