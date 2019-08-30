@@ -61,7 +61,6 @@ extern "C" __device__ __attribute__((const)) float __ocml_fmax_f32(float, float)
 
 extern "C" __device__ __attribute__((convergent)) void __ockl_gws_init(uint nwm1, uint rid);
 extern "C" __device__ __attribute__((convergent)) void __ockl_gws_barrier(uint nwm1, uint rid);
-extern "C" __device__ __attribute__((convergent)) void __ockl_grid_sync(void);
 
 extern "C" __device__ __attribute__((const)) uint32_t __ockl_lane_u32();
 extern "C" __device__ __attribute__((const)) int __ockl_grid_is_valid(void);
