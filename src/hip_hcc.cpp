@@ -1671,6 +1671,8 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorProfilerAlreadyStarted";
         case hipErrorProfilerAlreadyStopped:
             return "hipErrorProfilerAlreadyStopped";
+         case hipErrorInsufficientDriver:
+            return "hipErrorInsufficientDriver";
         case hipErrorInvalidImage:
             return "hipErrorInvalidImage";
         case hipErrorInvalidContext:
@@ -1725,6 +1727,8 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorNotFound";
         case hipErrorIllegalAddress:
             return "hipErrorIllegalAddress";
+        case hipErrorInvalidSymbol:
+            return "hipErrorInvalidSymbol";
 
         case hipErrorMissingConfiguration:
             return "hipErrorMissingConfiguration";
@@ -1773,6 +1777,12 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorHostMemoryAlreadyRegistered";
         case hipErrorHostMemoryNotRegistered:
             return "hipErrorHostMemoryNotRegistered";
+        case hipErrorMapBufferObjectFailed:
+            return "hipErrorMapBufferObjectFailed";
+        case hipErrorAssert:
+            return "hipErrorAssert";
+        case hipErrorNotSupported:
+            return "hipErrorNotSupported";
         case hipErrorTbd:
             return "hipErrorTbd";
         default:

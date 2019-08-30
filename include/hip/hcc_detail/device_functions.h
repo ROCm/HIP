@@ -748,27 +748,35 @@ unsigned long long int __ballot64(int predicate) {
 // hip.amdgcn.bc - lanemask
 __device__
 inline
-int64_t  __lanemask_gt()
+uint64_t  __lanemask_gt()
 {
-    int32_t activelane = __ockl_activelane_u32();
-    int64_t ballot = __ballot64(1);
-    if (activelane != 63) {
-        int64_t tmp = (~0ULL) << (activelane + 1);
-        return tmp & ballot;
-    }
-    return 0;
+    uint32_t lane = __ockl_lane_u32();
+    if (lane == 63)
+      return 0;
+    uint64_t ballot = __ballot64(1);
+    uint64_t mask = (~((uint64_t)0)) << (lane + 1);
+    return mask & ballot;
 }
 
 __device__
 inline
-int64_t __lanemask_lt()
+uint64_t __lanemask_lt()
 {
-    int32_t activelane = __ockl_activelane_u32();
+    uint32_t lane = __ockl_lane_u32();
     int64_t ballot = __ballot64(1);
-    if (activelane == 0)
-        return 0;
-    return ballot;
+    uint64_t mask = ((uint64_t)1 << lane) - (uint64_t)1;
+    return mask & ballot;
 }
+
+__device__
+inline
+uint64_t  __lanemask_eq()
+{
+    uint32_t lane = __ockl_lane_u32();
+    int64_t mask = ((uint64_t)1 << lane);
+    return mask;
+}
+
 
 __device__ inline void* __local_to_generic(void* p) { return p; }
 
