@@ -29,8 +29,6 @@ GetOptions(
     , "count-conversions" => \$count_conversions         # count conversions.
     , "quiet-warnings" => \$quiet_warnings               # don't print warnings on unknown CUDA functions.
     , "warn-whitelist=s"=> \$warn_whitelist
-    , "no-translate-builtins" => \$no_translate_builtins # don't translate math functions.
-    , "no-translate-textures" => \$no_translate_textures # don't translate texture functions.
     , "no-output" => \$no_output                         # don't write any translated output to stdout.
     , "inplace" => \$inplace                             # modify input file inplace, replacing input with hipified output, save backup in ".prehip" file.
                                                          # If .prehip file exists, use that as input to hip.
@@ -77,14 +75,11 @@ $no_output   = 1 if $n;
 # Allow users to add their own functions.
 push (@warn_whitelist, split(',',$warn_whitelist));
 
-#---
 #Stats tracking code:
 @statNames = ("dev", "mem", "kern", 'coord_func', "math_func", "special_func", "stream", "event", "err", "def", "tex", "extern_shared", "other");
 
-#---
 #Compute total of all individual counts:
-sub totalStats
-{
+sub totalStats {
     my %count = %{ shift() };
     my $total = 0;
     foreach $key (keys %count) {
@@ -93,9 +88,7 @@ sub totalStats
     return $total;
 };
 
-#---
-sub printStats
-{
+sub printStats {
     my $label     = shift();
     my @statNames = @{ shift() };
     my %counts    = %{ shift() };
@@ -109,10 +102,8 @@ sub printStats
     printf STDERR ") warn:%d LOC:%d", $warnings, $loc;
 }
 
-#---
 # Add adder stats to dest. Used to add stats for current file to a running total for all files:
-sub addStats
-{
+sub addStats {
     my $dest_ref  =  shift();
     my %adder = %{ shift() };
     foreach $key (keys %adder) {
@@ -121,9 +112,7 @@ sub addStats
     }
 }
 
-#---
-sub clearStats
-{
+sub clearStats {
     my $dest_ref  =  shift() ;
     my @statNames = @{ shift() };
     foreach $stat (@statNames) {
@@ -131,7 +120,6 @@ sub clearStats
     }
 }
 
-#---
 # count of transforms in all files:
 my %tt;
 clearStats(\%tt, \@statNames);
@@ -177,7 +165,6 @@ while (@ARGV) {
     undef $/; # Read whole file at once, so we can match newlines.
     while (<INFILE>)
     {
-        #--------
         # Compiler Defines
         # __CUDACC__ is set by NVCC to indicate it is treating the input file as CUDA code (as opposed to host)
         # Typically we want any code treated as CUDA code to be treated as accelerator code by Kalmar too
@@ -186,13 +173,12 @@ while (@ARGV) {
         # __CUDA_ARCH is often used to detect when a function or kernel is being compiled for the device.
         # Don't automaticall convert this - likely these will need special attention with HIP_ARCH_HAS_* macros
         #$ft{'def'} += s/\b__CUDA_ARCH__\b/__HIP_ARCH__/g;
-        #--------
+
         #Includes:
         $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime\.h[>"]/$1<hip\/hip_runtime.h>/;
         $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime_api\.h[>"]/$1<hip\/hip_runtime_api.h>/;
         $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_fp16\.h[>"]/$1<hip\/hip_fp16.h>/;
-        #--------
-        # Error codes and return types:
+
         $ft{'err'} += s/\bcudaError_t\b/hipError_t/g;
         $ft{'err'} += s/\bcudaError\b/hipError_t/g;
         $ft{'err'} += s/\bcudaSuccess\b/hipSuccess/g;
@@ -210,14 +196,10 @@ while (@ARGV) {
         $ft{'err'} += s/\bcudaErrorNotReady\b/hipErrorNotReady/g;
         $ft{'err'} += s/\bcudaErrorUnknown\b/hipErrorUnknown/g;
         $ft{'err'} += s/\bcudaErrorPeerAccessAlreadyEnabled\b/hipErrorPeerAccessAlreadyEnabled/g;
-        #--------
-        # error APIs:
         $ft{'err'} += s/\bcudaGetLastError\b/hipGetLastError/g;
         $ft{'err'} += s/\bcudaPeekAtLastError\b/hipPeekAtLastError/g;
         $ft{'err'} += s/\bcudaGetErrorName\b/hipGetErrorName/g;
         $ft{'err'} += s/\bcudaGetErrorString\b/hipGetErrorString/g;
-        #--------
-        # Memcpy
         $ft{'mem'} += s/\bcudaMemcpy\b/hipMemcpy/g;
         $ft{'mem'} += s/\bcudaMemcpyHostToHost\b/hipMemcpyHostToHost/g;
         $ft{'mem'} += s/\bcudaMemcpyHostToDevice\b/hipMemcpyHostToDevice/g;
@@ -238,13 +220,9 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMemcpyToArray\b/hipMemcpyToArray/g;
         $ft{'mem'} += s/\bcudaGetSymbolAddress\s*\(\s*(.+?)\s*,\s*(.+?)\b/hipGetSymbolAddress\($1, HIP_SYMBOL\($2\)/g;
         $ft{'mem'} += s/\bcudaGetSymbolSize\s*\(\s*&(\w+)\s*,\s*(.+?)\b/hipGetSymbolSize(&$1, HIP_SYMBOL\($2\)/g;
-        #--------
-        # Memory management:
         $ft{'mem'} += s/\bcudaMalloc\b/hipMalloc/g;
-        # note conversion to standard hipHost* naming convention
         $ft{'mem'} += s/\bcudaMallocHost\b/hipHostMalloc/g;
         $ft{'mem'} += s/\bcudaFree\b/hipFree/g;
-        # note conversion to standard hipHost* naming convention
         $ft{'mem'} += s/\bcudaFreeHost\b/hipHostFree/g;
         $ft{'mem'} += s/\bcudaHostAlloc\b/hipHostMalloc/g;
         $ft{'mem'} += s/\bcudaHostGetDevicePointer\b/hipHostGetDevicePointer/g;
@@ -261,8 +239,6 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaMallocArray\b/hipMallocArray/g;
         $ft{'mem'} += s/\bcudaFreeArray\b/hipFreeArray/g;
         $ft{'mem'} += s/\bcudaMallocPitch\b/hipMallocPitch/g;
-        #--------
-        # Events
         $ft{'event'} += s/\bcudaEvent_t\b/hipEvent_t/g;
         $ft{'event'} += s/\bcudaEventCreate\b/hipEventCreate/g;
         $ft{'event'} += s/\bcudaEventCreateWithFlags\b/hipEventCreateWithFlags/g;
@@ -272,8 +248,6 @@ while (@ARGV) {
         $ft{'event'} += s/\bcudaEventSynchronize\b/hipEventSynchronize/g;
         $ft{'event'} += s/\bcudaEventDisableTiming\b/hipEventDisableTiming/g;
         $ft{'event'} += s/\bcudaEventQuery\b/hipEventQuery/g;
-        #--------
-        # Streams
         $ft{'stream'} += s/\bcudaStream_t\b/hipStream_t/g;
         $ft{'stream'} += s/\bcudaStreamCreate\b/hipStreamCreate/g;
         $ft{'stream'} += s/\bcudaStreamCreateWithFlags\b/hipStreamCreateWithFlags/g;
@@ -282,23 +256,15 @@ while (@ARGV) {
         $ft{'stream'} += s/\bcudaStreamSynchronize\b/hipStreamSynchronize/g;
         $ft{'stream'} += s/\bcudaStreamDefault\b/hipStreamDefault/g;
         $ft{'stream'} += s/\bcudaStreamNonBlocking\b/hipStreamNonBlocking/g;
-        #--------
-        # Other synchronization
         $ft{'dev'} += s/\bcudaDeviceSynchronize\b/hipDeviceSynchronize/g;
-        # translate deprecated cudaThreadSynchronize
         $ft{'dev'} += s/\bcudaThreadSynchronize\b/hipDeviceSynchronize/g;
         $ft{'dev'} += s/\bcudaDeviceReset\b/hipDeviceReset/g;
-        # translate deprecated cudaThreadExit
         $ft{'dev'} += s/\bcudaThreadExit\b/hipDeviceReset/g;
         $ft{'dev'} += s/\bcudaSetDevice\b/hipSetDevice/g;
         $ft{'dev'} += s/\bcudaGetDevice\b/hipGetDevice/g;
-        #--------
-        # Device
         $ft{'dev'} += s/\bcudaDeviceProp\b/hipDeviceProp_t/g;
         $ft{'dev'} += s/\bcudaGetDeviceProperties\b/hipGetDeviceProperties/g;
         $ft{'dev'} += s/\bcudaDeviceGetPCIBusId\b/hipDeviceGetPCIBusId/g;
-        #--------
-        # Attribute
         $ft{'err'} += s/\bcudaDevAttrMaxThreadsPerBlock\b/hipDeviceAttributeMaxThreadsPerBlock/g;
         $ft{'err'} += s/\bcudaDevAttrMaxBlockDimX\b/hipDeviceAttributeMaxBlockDimX/g;
         $ft{'err'} += s/\bcudaDevAttrMaxBlockDimY\b/hipDeviceAttributeMaxBlockDimY/g;
@@ -329,11 +295,8 @@ while (@ARGV) {
         $ft{'err'} += s/\bcudaDevAttrMaxTexture3DWidth\b/hipDeviceAttributeMaxTexture3DWidth/g;
         $ft{'err'} += s/\bcudaDevAttrMaxTexture3DHeight\b/hipDeviceAttributeMaxTexture3DHeight/g;
         $ft{'err'} += s/\bcudaDevAttrMaxTexture3DDepth\b/hipDeviceAttributeMaxTexture3DDepth/g;
-        #--------
         $ft{'dev'} += s/\bcudaDeviceAttr\b/hipDeviceAttribute_t/g;
         $ft{'dev'} += s/\bcudaDeviceGetAttribute\b/hipDeviceGetAttribute/g;
-        #--------
-        # Cache config
         $ft{'dev'} += s/\bcudaDeviceSetCacheConfig\b/hipDeviceSetCacheConfig/g;
         $ft{'dev'} += s/\bcudaThreadSetCacheConfig\b/hipDeviceSetCacheConfig/g; # translate deprecated
         $ft{'dev'} += s/\bcudaDeviceGetCacheConfig\b/hipDeviceGetCacheConfig/g;
@@ -343,11 +306,8 @@ while (@ARGV) {
         $ft{'dev'} += s/\bcudaFuncCachePreferShared\b/hipFuncCachePreferShared/g;
         $ft{'dev'} += s/\bcudaFuncCachePreferL1\b/hipFuncCachePreferL1/g;
         $ft{'dev'} += s/\bcudaFuncCachePreferEqual\b/hipFuncCachePreferEqual/g;
-        # function
         $ft{'dev'} += s/\bcudaFuncSetCacheConfig\b/hipFuncSetCacheConfig/g;
         $ft{'dev'} += s/\bcudaDriverGetVersion\b/hipDriverGetVersion/g;
-        #--------
-        # Peer2Peer
         $ft{'dev'} += s/\bcudaDeviceCanAccessPeer\b/hipDeviceCanAccessPeer/g;
         $ft{'dev'} += s/\bcudaDeviceDisablePeerAccess\b/hipDeviceDisablePeerAccess/g;
         $ft{'dev'} += s/\bcudaDeviceEnablePeerAccess\b/hipDeviceEnablePeerAccess/g;
@@ -358,8 +318,6 @@ while (@ARGV) {
         $ft{'mem'} += s/\bcudaIpcGetMemHandle\b/hipIpcGetMemHandle/g;
         $ft{'mem'} += s/\bcudaIpcMemHandle_t\b/hipIpcMemHandle_t/g;
         $ft{'mem'} += s/\bcudaIpcMemLazyEnablePeerAccess\b/hipIpcMemLazyEnablePeerAccess/g;
-        #--------
-        # Shared mem:
         $ft{'dev'} += s/\bcudaDeviceSetSharedMemConfig\b/hipDeviceSetSharedMemConfig/g;
         $ft{'dev'} += s/\bcudaThreadSetSharedMemConfig\b/hipDeviceSetSharedMemConfig/g; # translate deprecated
         $ft{'dev'} += s/\bcudaDeviceGetSharedMemConfig\b/hipDeviceGetSharedMemConfig/g;
@@ -369,15 +327,23 @@ while (@ARGV) {
         $ft{'dev'} += s/\bcudaSharedMemBankSizeFourByte\b/hipSharedMemBankSizeFourByte/g;
         $ft{'dev'} += s/\bcudaSharedMemBankSizeEightByte\b/hipSharedMemBankSizeEightByte/g;
         $ft{'dev'} += s/\bcudaGetDeviceCount\b/hipGetDeviceCount/g;
-        #--------
-        # Profiler
-        #$aOt += s/\bcudaProfilerInitialize\b/hipProfilerInitialize/g;
         $ft{'other'} += s/\bcudaProfilerStart\b/hipProfilerStart/g;
         $ft{'other'} += s/\bcudaProfilerStop\b/hipProfilerStop/g;
-        #--------
+        $ft{'tex'} += s/\bcudaChannelFormatDesc\b/hipChannelFormatDesc/g;
+        $ft{'tex'} += s/\bcudaFilterModePoint\b/hipFilterModePoint/g;
+        $ft{'tex'} += s/\bcudaReadModeElementType\b/hipReadModeElementType/g;
+        $ft{'tex'} += s/\bcudaArray\b/hipArray/g;
+        $ft{'tex'} += s/\bcudaCreateChannelDesc\b/hipCreateChannelDesc/g;
+        $ft{'tex'} += s/\bcudaBindTexture\b/hipBindTexture/g;
+        $ft{'tex'} += s/\bcudaBindTextureToArray\b/hipBindTextureToArray/g;
+        $ft{'tex'} += s/\bcudaUnbindTexture\b/hipUnbindTexture/g;
+        $ft{'tex'} += s/\bcudaChannelFormatKindFloat\b/hipChannelFormatKindFloat/g;
+        $ft{'tex'} += s/\bcudaAddressMode/hipAddressMode/g;
+        $ft{'tex'} += s/\bcudaFilterMode/hipFilterMode/g;
+
         $countKeywords += m/__global__/;
         $countKeywords += m/__shared__/;
-        #--------
+
         # CUDA extern __shared__ syntax
         # Note these only work if declaration is on a single line.
         {
@@ -400,41 +366,28 @@ while (@ARGV) {
             #'extern __attribute__((used)) __shared__ typename mapper<Float>::type s_data[];'
             $ft{'extern_shared'} += $k;
         }
-        #--------
-        # CUDA Launch Syntax
-        # Note these only work if launch is on a single line.
-        # Handle the <<numBlocks, blockDim>>> syntax:
+
+        # CUDA Launch Syntax. Note these only work if launch is on a single line.
         {
             # match uses ? for <.*> which will be unitialized if this is not present in launch syntax.
             no warnings qw/uninitialized/;
             my $k = 0;
-            my $kernelName;
-            # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>([\s*\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), $5, $6, /g;
-            $kernelName = $1 if $k;
-            # Handle the <<numBlocks, blockDim, sharedSize>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>([\s*\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), $5, 0, /g;
-            $kernelName = $1 if $k;
-            # Handle the <<numBlocks, blockDim>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>([\s\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), 0, 0, /g;
-            $kernelName = $1 if $k;
-            $ft{'kern'} += $k;
+            # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax with empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, $6)/g;
+            # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax with non-empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, $6, /g;
+            # Handle the <<numBlocks, blockDim, sharedSize>>> syntax with empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, 0)/g;
+            # Handle the <<numBlocks, blockDim, sharedSize>>> syntax with non-empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, 0, /g;
+            # Handle the <<numBlocks, blockDim>>> syntax with empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), 0, 0)/g;
+            # Handle the <<numBlocks, blockDim>>> syntax with non-empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), 0, 0, /g;
             if ($k) {
-                $Tkernels{$kernelName} ++;
+                $ft{'kern'} += $k;
+                $Tkernels{$1} ++;
             }
-        }
-        unless ($no_translate_textures) {
-            $ft{'tex'} += s/\bcudaChannelFormatDesc\b/hipChannelFormatDesc/g;
-            $ft{'tex'} += s/\bcudaFilterModePoint\b/hipFilterModePoint/g;
-            $ft{'tex'} += s/\bcudaReadModeElementType\b/hipReadModeElementType/g;
-            $ft{'tex'} += s/\bcudaArray\b/hipArray/g;
-            $ft{'tex'} += s/\bcudaCreateChannelDesc\b/hipCreateChannelDesc/g;
-            $ft{'tex'} += s/\bcudaBindTexture\b/hipBindTexture/g;
-            $ft{'tex'} += s/\bcudaBindTextureToArray\b/hipBindTextureToArray/g;
-            $ft{'tex'} += s/\bcudaUnbindTexture\b/hipUnbindTexture/g;
-            $ft{'tex'} += s/\bcudaChannelFormatKindFloat\b/hipChannelFormatKindFloat/g;
-            $ft{'tex'} += s/\bcudaAddressMode/hipAddressMode/g;
-            $ft{'tex'} += s/\bcudaFilterMode/hipFilterMode/g;
         }
         if ($count_conversions) {
             while (/(\bhip[A-Z]\w+\b)/g) {
@@ -481,13 +434,12 @@ while (@ARGV) {
                 $_ = $tmp;
             }
         }
-        #--------
         # Math libraries
         # To limit bogus translations, try to make sure we are in a kernel (ft{'builtin'} != 0):
-        if (not $no_translate_builtins and ($hasDeviceCode > 0)) {
+        if ($hasDeviceCode > 0) {
             $ft{'special_func'} += countSupportedSpecialFunctions();
         }
-        #--------
+
         # Print it!
         # TODO - would like to move this code outside loop but it uses $_ which contains the whole file.
         unless ($no_output) {
