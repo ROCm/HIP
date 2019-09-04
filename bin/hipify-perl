@@ -403,24 +403,25 @@ while (@ARGV) {
         #--------
         # CUDA Launch Syntax
         # Note these only work if launch is on a single line.
-        # Handle the <<numBlocks, blockDim>>> syntax:
         {
             # match uses ? for <.*> which will be unitialized if this is not present in launch syntax.
             no warnings qw/uninitialized/;
             my $k = 0;
-            my $kernelName;
-            # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>([\s*\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), $5, $6, /g;
-            $kernelName = $1 if $k;
-            # Handle the <<numBlocks, blockDim, sharedSize>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>([\s*\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), $5, 0, /g;
-            $kernelName = $1 if $k;
-            # Handle the <<numBlocks, blockDim>>> syntax:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>([\s\\]*)\(/hipLaunchKernelGGL(($1$2), dim3($3), dim3($4), 0, 0, /g;
-            $kernelName = $1 if $k;
-            $ft{'kern'} += $k;
+            # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax with empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, $6)/g;
+            # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax with non-empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, $6, /g;
+            # Handle the <<numBlocks, blockDim, sharedSize>>> syntax with empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, 0)/g;
+            # Handle the <<numBlocks, blockDim, sharedSize>>> syntax with non-empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, 0, /g;
+            # Handle the <<numBlocks, blockDim>>> syntax with empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), 0, 0)/g;
+            # Handle the <<numBlocks, blockDim>>> syntax with non-empty args:
+            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), 0, 0, /g;
             if ($k) {
-                $Tkernels{$kernelName} ++;
+                $ft{'kern'} += $k;
+                $Tkernels{$1} ++;
             }
         }
         unless ($no_translate_textures) {
