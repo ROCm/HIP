@@ -2,106 +2,111 @@
 
 ## **1. CUBLAS Data types**
 
-| **type**     |   **CUDA**                                                    |   **HIP**                                                  |**HIP value** (if differs) |
-|-------------:|---------------------------------------------------------------|------------------------------------------------------------|---------------------------|
-| enum         |***`cublasStatus`***                                           |***`hipblasStatus_t`***                                     |
-| enum         |***`cublasStatus_t`***                                         |***`hipblasStatus_t`***                                     |
-|            0 |*`CUBLAS_STATUS_SUCCESS`*                                      |*`HIPBLAS_STATUS_SUCCESS`*                                  |
-|            1 |*`CUBLAS_STATUS_NOT_INITIALIZED`*                              |*`HIPBLAS_STATUS_NOT_INITIALIZED`*                          |
-|            3 |*`CUBLAS_STATUS_ALLOC_FAILED`*                                 |*`HIPBLAS_STATUS_ALLOC_FAILED`*                             | 2                         |
-|            7 |*`CUBLAS_STATUS_INVALID_VALUE`*                                |*`HIPBLAS_STATUS_INVALID_VALUE`*                            | 3                         |
-|            8 |*`CUBLAS_STATUS_ARCH_MISMATCH`*                                |*`HIPBLAS_STATUS_ARCH_MISMATCH`*                            |                           |
-|           11 |*`CUBLAS_STATUS_MAPPING_ERROR`*                                |*`HIPBLAS_STATUS_MAPPING_ERROR`*                            | 4                         |
-|           13 |*`CUBLAS_STATUS_EXECUTION_FAILED`*                             |*`HIPBLAS_STATUS_EXECUTION_FAILED`*                         | 5                         |
-|           14 |*`CUBLAS_STATUS_INTERNAL_ERROR`*                               |*`HIPBLAS_STATUS_INTERNAL_ERROR`*                           | 6                         |
-|           15 |*`CUBLAS_STATUS_NOT_SUPPORTED`*                                |*`HIPBLAS_STATUS_NOT_SUPPORTED`*                            | 7                         |
-|           16 |*`CUBLAS_STATUS_LICENSE_ERROR`*                                |                                                            |
-| enum         |***`cublasOperation_t`***                                      |***`hipblasOperation_t`***                                  |
-|            0 |*`CUBLAS_OP_N`*                                                |*`HIPBLAS_OP_N`*                                            | 111                       |
-|            1 |*`CUBLAS_OP_T`*                                                |*`HIPBLAS_OP_T`*                                            | 112                       |
-|            2 |*`CUBLAS_OP_C`*                                                |*`HIPBLAS_OP_C`*                                            | 113                       |
-|            2 |*`CUBLAS_OP_HERMITAN`*                                         |*`HIPBLAS_OP_C`*                                            | 113                       |
-|            3 |*`CUBLAS_OP_CONJG`*                                            |                                                            |
-| enum         |***`cublasFillMode_t`***                                       |***`hipblasFillMode_t`***                                   |
-|            0 |*`CUBLAS_FILL_MODE_LOWER`*                                     |*`HIPBLAS_FILL_MODE_LOWER`*                                 | 121                       |
-|            1 |*`CUBLAS_FILL_MODE_UPPER`*                                     |*`HIPBLAS_FILL_MODE_UPPER`*                                 | 122                       |
-|            1 |*`CUBLAS_FILL_MODE_FULL`*                                      |*`HIPBLAS_FILL_MODE_FULL`*                                  | 123                       |
-| enum         |***`cublasDiagType_t`***                                       |***`hipblasDiagType_t`***                                   |
-|            0 |*`CUBLAS_DIAG_NON_UNIT`*                                       |*`HIPBLAS_DIAG_NON_UNIT`*                                   | 131                       |
-|            1 |*`CUBLAS_DIAG_UNIT`*                                           |*`HIPBLAS_DIAG_UNIT`*                                       | 132                       |
-| enum         |***`cublasSideMode_t`***                                       |***`hipblasSideMode_t`***                                   |
-|            0 |*`CUBLAS_SIDE_LEFT`*                                           |*`HIPBLAS_SIDE_LEFT`*                                       | 141                       |
-|            1 |*`CUBLAS_SIDE_RIGHT`*                                          |*`HIPBLAS_SIDE_RIGHT`*                                      | 142                       |
-| enum         |***`cublasPointerMode_t`***                                    |***`hipblasPointerMode_t`***                                |
-|            0 |*`CUBLAS_POINTER_MODE_HOST`*                                   |*`HIPBLAS_POINTER_MODE_HOST`*                               |
-|            1 |*`CUBLAS_POINTER_MODE_DEVICE`*                                 |*`HIPBLAS_POINTER_MODE_DEVICE`*                             |
-| enum         |***`cublasAtomicsMode_t`***                                    |                                                            |
-|            0 |*`CUBLAS_ATOMICS_NOT_ALLOWED`*                                 |                                                            |
-|            1 |*`CUBLAS_ATOMICS_ALLOWED`*                                     |                                                            |
-| enum         |***`cublasGemmAlgo_t`***                                       |***`hipblasGemmAlgo_t`***                                   |
-|           -1 |*`CUBLAS_GEMM_DFALT`*                                          |*`HIPBLAS_GEMM_DEFAULT`*                                    | 160                       |
-|           -1 |*`CUBLAS_GEMM_DEFAULT`*                                        |*`HIPBLAS_GEMM_DEFAULT`*                                    | 160                       |
-|            0 |*`CUBLAS_GEMM_ALGO0`*                                          |                                                            |
-|            1 |*`CUBLAS_GEMM_ALGO1`*                                          |                                                            |
-|            2 |*`CUBLAS_GEMM_ALGO2`*                                          |                                                            |
-|            3 |*`CUBLAS_GEMM_ALGO3`*                                          |                                                            |
-|            4 |*`CUBLAS_GEMM_ALGO4`*                                          |                                                            |
-|            5 |*`CUBLAS_GEMM_ALGO5`*                                          |                                                            |
-|            6 |*`CUBLAS_GEMM_ALGO6`*                                          |                                                            |
-|            7 |*`CUBLAS_GEMM_ALGO7`*                                          |                                                            |
-|            8 |*`CUBLAS_GEMM_ALGO8`*                                          |                                                            |
-|            9 |*`CUBLAS_GEMM_ALGO9`*                                          |                                                            |
-|           10 |*`CUBLAS_GEMM_ALGO10`*                                         |                                                            |
-|           11 |*`CUBLAS_GEMM_ALGO11`*                                         |                                                            |
-|           12 |*`CUBLAS_GEMM_ALGO12`*                                         |                                                            |
-|           13 |*`CUBLAS_GEMM_ALGO13`*                                         |                                                            |
-|           14 |*`CUBLAS_GEMM_ALGO14`*                                         |                                                            |
-|           15 |*`CUBLAS_GEMM_ALGO15`*                                         |                                                            |
-|           16 |*`CUBLAS_GEMM_ALGO16`*                                         |                                                            |
-|           17 |*`CUBLAS_GEMM_ALGO17`*                                         |                                                            |
-|           18 |*`CUBLAS_GEMM_ALGO18`*                                         |                                                            |
-|           19 |*`CUBLAS_GEMM_ALGO19`*                                         |                                                            |
-|           20 |*`CUBLAS_GEMM_ALGO20`*                                         |                                                            |
-|           21 |*`CUBLAS_GEMM_ALGO21`*                                         |                                                            |
-|           22 |*`CUBLAS_GEMM_ALGO22`*                                         |                                                            |
-|           23 |*`CUBLAS_GEMM_ALGO23`*                                         |                                                            |
-|           99 |*`CUBLAS_GEMM_DEFAULT_TENSOR_OP`*                              |                                                            |
-|           99 |*`CUBLAS_GEMM_DFALT_TENSOR_OP`*                                |                                                            |
-|          100 |*`CUBLAS_GEMM_ALGO0_TENSOR_OP`*                                |                                                            |
-|          101 |*`CUBLAS_GEMM_ALGO1_TENSOR_OP`*                                |                                                            |
-|          102 |*`CUBLAS_GEMM_ALGO2_TENSOR_OP`*                                |                                                            |
-|          103 |*`CUBLAS_GEMM_ALGO3_TENSOR_OP`*                                |                                                            |
-|          104 |*`CUBLAS_GEMM_ALGO4_TENSOR_OP`*                                |                                                            |
-|          105 |*`CUBLAS_GEMM_ALGO5_TENSOR_OP`*                                |                                                            |
-|          106 |*`CUBLAS_GEMM_ALGO6_TENSOR_OP`*                                |                                                            |
-|          107 |*`CUBLAS_GEMM_ALGO7_TENSOR_OP`*                                |                                                            |
-|          108 |*`CUBLAS_GEMM_ALGO8_TENSOR_OP`*                                |                                                            |
-|          109 |*`CUBLAS_GEMM_ALGO9_TENSOR_OP`*                                |                                                            |
-|          110 |*`CUBLAS_GEMM_ALGO10_TENSOR_OP`*                               |                                                            |
-|          111 |*`CUBLAS_GEMM_ALGO11_TENSOR_OP`*                               |                                                            |
-|          112 |*`CUBLAS_GEMM_ALGO12_TENSOR_OP`*                               |                                                            |
-|          113 |*`CUBLAS_GEMM_ALGO13_TENSOR_OP`*                               |                                                            |
-|          114 |*`CUBLAS_GEMM_ALGO14_TENSOR_OP`*                               |                                                            |
-|          115 |*`CUBLAS_GEMM_ALGO15_TENSOR_OP`*                               |                                                            |
-| enum         |***`cublasMath_t`***                                           |                                                            |
-|            0 |*`CUBLAS_DEFAULT_MATH`*                                        |                                                            |
-|            1 |*`CUBLAS_TENSOR_OP_MATH`*                                      |                                                            |
-| enum*        |`cublasDataType_t`                                             |                                                            |
-| struct       |`cublasContext`                                                |                                                            |
-| struct*      |`cublasHandle_t`                                               |`hipblasHandle_t`                                           |
+| **type**     |   **CUDA**                                                    |**CUDA version\***|   **HIP**                                                  |**HIP value** (if differs) |
+|-------------:|---------------------------------------------------------------|:----------------:|------------------------------------------------------------|---------------------------|
+| define       |`CUBLAS_VER_MAJOR`                                             | 10.1 Update 2    |                                                            |
+| define       |`CUBLAS_VER_MINOR`                                             | 10.1 Update 2    |                                                            |
+| define       |`CUBLAS_VER_PATCH`                                             | 10.1 Update 2    |                                                            |
+| define       |`CUBLAS_VER_BUILD`                                             | 10.1 Update 2    |                                                            |
+| define       |`CUBLAS_VERSION`                                               | 10.1 Update 2    |                                                            |
+| enum         |***`cublasStatus`***                                           |                  |***`hipblasStatus_t`***                                     |
+| enum         |***`cublasStatus_t`***                                         |                  |***`hipblasStatus_t`***                                     |
+|            0 |*`CUBLAS_STATUS_SUCCESS`*                                      |                  |*`HIPBLAS_STATUS_SUCCESS`*                                  |
+|            1 |*`CUBLAS_STATUS_NOT_INITIALIZED`*                              |                  |*`HIPBLAS_STATUS_NOT_INITIALIZED`*                          |
+|            3 |*`CUBLAS_STATUS_ALLOC_FAILED`*                                 |                  |*`HIPBLAS_STATUS_ALLOC_FAILED`*                             | 2                         |
+|            7 |*`CUBLAS_STATUS_INVALID_VALUE`*                                |                  |*`HIPBLAS_STATUS_INVALID_VALUE`*                            | 3                         |
+|            8 |*`CUBLAS_STATUS_ARCH_MISMATCH`*                                |                  |*`HIPBLAS_STATUS_ARCH_MISMATCH`*                            |                           |
+|           11 |*`CUBLAS_STATUS_MAPPING_ERROR`*                                |                  |*`HIPBLAS_STATUS_MAPPING_ERROR`*                            | 4                         |
+|           13 |*`CUBLAS_STATUS_EXECUTION_FAILED`*                             |                  |*`HIPBLAS_STATUS_EXECUTION_FAILED`*                         | 5                         |
+|           14 |*`CUBLAS_STATUS_INTERNAL_ERROR`*                               |                  |*`HIPBLAS_STATUS_INTERNAL_ERROR`*                           | 6                         |
+|           15 |*`CUBLAS_STATUS_NOT_SUPPORTED`*                                |                  |*`HIPBLAS_STATUS_NOT_SUPPORTED`*                            | 7                         |
+|           16 |*`CUBLAS_STATUS_LICENSE_ERROR`*                                |                  |                                                            |
+| enum         |***`cublasOperation_t`***                                      |                  |***`hipblasOperation_t`***                                  |
+|            0 |*`CUBLAS_OP_N`*                                                |                  |*`HIPBLAS_OP_N`*                                            | 111                       |
+|            1 |*`CUBLAS_OP_T`*                                                |                  |*`HIPBLAS_OP_T`*                                            | 112                       |
+|            2 |*`CUBLAS_OP_C`*                                                |                  |*`HIPBLAS_OP_C`*                                            | 113                       |
+|            2 |*`CUBLAS_OP_HERMITAN`*                                         | 10.1             |*`HIPBLAS_OP_C`*                                            | 113                       |
+|            3 |*`CUBLAS_OP_CONJG`*                                            | 10.1             |                                                            |
+| enum         |***`cublasFillMode_t`***                                       |                  |***`hipblasFillMode_t`***                                   |
+|            0 |*`CUBLAS_FILL_MODE_LOWER`*                                     |                  |*`HIPBLAS_FILL_MODE_LOWER`*                                 | 121                       |
+|            1 |*`CUBLAS_FILL_MODE_UPPER`*                                     |                  |*`HIPBLAS_FILL_MODE_UPPER`*                                 | 122                       |
+|            2 |*`CUBLAS_FILL_MODE_FULL`*                                      | 10.1             |*`HIPBLAS_FILL_MODE_FULL`*                                  | 123                       |
+| enum         |***`cublasDiagType_t`***                                       |                  |***`hipblasDiagType_t`***                                   |
+|            0 |*`CUBLAS_DIAG_NON_UNIT`*                                       |                  |*`HIPBLAS_DIAG_NON_UNIT`*                                   | 131                       |
+|            1 |*`CUBLAS_DIAG_UNIT`*                                           |                  |*`HIPBLAS_DIAG_UNIT`*                                       | 132                       |
+| enum         |***`cublasSideMode_t`***                                       |                  |***`hipblasSideMode_t`***                                   |
+|            0 |*`CUBLAS_SIDE_LEFT`*                                           |                  |*`HIPBLAS_SIDE_LEFT`*                                       | 141                       |
+|            1 |*`CUBLAS_SIDE_RIGHT`*                                          |                  |*`HIPBLAS_SIDE_RIGHT`*                                      | 142                       |
+| enum         |***`cublasPointerMode_t`***                                    |                  |***`hipblasPointerMode_t`***                                |
+|            0 |*`CUBLAS_POINTER_MODE_HOST`*                                   |                  |*`HIPBLAS_POINTER_MODE_HOST`*                               |
+|            1 |*`CUBLAS_POINTER_MODE_DEVICE`*                                 |                  |*`HIPBLAS_POINTER_MODE_DEVICE`*                             |
+| enum         |***`cublasAtomicsMode_t`***                                    |                  |                                                            |
+|            0 |*`CUBLAS_ATOMICS_NOT_ALLOWED`*                                 |                  |                                                            |
+|            1 |*`CUBLAS_ATOMICS_ALLOWED`*                                     |                  |                                                            |
+| enum         |***`cublasGemmAlgo_t`***                                       | 8.0              |***`hipblasGemmAlgo_t`***                                   |
+|           -1 |*`CUBLAS_GEMM_DFALT`*                                          | 8.0              |*`HIPBLAS_GEMM_DEFAULT`*                                    | 160                       |
+|           -1 |*`CUBLAS_GEMM_DEFAULT`*                                        | 8.0              |*`HIPBLAS_GEMM_DEFAULT`*                                    | 160                       |
+|            0 |*`CUBLAS_GEMM_ALGO0`*                                          | 8.0              |                                                            |
+|            1 |*`CUBLAS_GEMM_ALGO1`*                                          | 8.0              |                                                            |
+|            2 |*`CUBLAS_GEMM_ALGO2`*                                          | 8.0              |                                                            |
+|            3 |*`CUBLAS_GEMM_ALGO3`*                                          | 8.0              |                                                            |
+|            4 |*`CUBLAS_GEMM_ALGO4`*                                          | 8.0              |                                                            |
+|            5 |*`CUBLAS_GEMM_ALGO5`*                                          | 8.0              |                                                            |
+|            6 |*`CUBLAS_GEMM_ALGO6`*                                          | 8.0              |                                                            |
+|            7 |*`CUBLAS_GEMM_ALGO7`*                                          | 8.0              |                                                            |
+|            8 |*`CUBLAS_GEMM_ALGO8`*                                          | 9.0              |                                                            |
+|            9 |*`CUBLAS_GEMM_ALGO9`*                                          | 9.0              |                                                            |
+|           10 |*`CUBLAS_GEMM_ALGO10`*                                         | 9.0              |                                                            |
+|           11 |*`CUBLAS_GEMM_ALGO11`*                                         | 9.0              |                                                            |
+|           12 |*`CUBLAS_GEMM_ALGO12`*                                         | 9.0              |                                                            |
+|           13 |*`CUBLAS_GEMM_ALGO13`*                                         | 9.0              |                                                            |
+|           14 |*`CUBLAS_GEMM_ALGO14`*                                         | 9.0              |                                                            |
+|           15 |*`CUBLAS_GEMM_ALGO15`*                                         | 9.0              |                                                            |
+|           16 |*`CUBLAS_GEMM_ALGO16`*                                         | 9.0              |                                                            |
+|           17 |*`CUBLAS_GEMM_ALGO17`*                                         | 9.0              |                                                            |
+|           18 |*`CUBLAS_GEMM_ALGO18`*                                         | 9.2              |                                                            |
+|           19 |*`CUBLAS_GEMM_ALGO19`*                                         | 9.2              |                                                            |
+|           20 |*`CUBLAS_GEMM_ALGO20`*                                         | 9.2              |                                                            |
+|           21 |*`CUBLAS_GEMM_ALGO21`*                                         | 9.2              |                                                            |
+|           22 |*`CUBLAS_GEMM_ALGO22`*                                         | 9.2              |                                                            |
+|           23 |*`CUBLAS_GEMM_ALGO23`*                                         | 9.2              |                                                            |
+|           99 |*`CUBLAS_GEMM_DEFAULT_TENSOR_OP`*                              | 9.0              |                                                            |
+|           99 |*`CUBLAS_GEMM_DFALT_TENSOR_OP`*                                | 9.0              |                                                            |
+|          100 |*`CUBLAS_GEMM_ALGO0_TENSOR_OP`*                                | 9.0              |                                                            |
+|          101 |*`CUBLAS_GEMM_ALGO1_TENSOR_OP`*                                | 9.0              |                                                            |
+|          102 |*`CUBLAS_GEMM_ALGO2_TENSOR_OP`*                                | 9.0              |                                                            |
+|          103 |*`CUBLAS_GEMM_ALGO3_TENSOR_OP`*                                | 9.0              |                                                            |
+|          104 |*`CUBLAS_GEMM_ALGO4_TENSOR_OP`*                                | 9.0              |                                                            |
+|          105 |*`CUBLAS_GEMM_ALGO5_TENSOR_OP`*                                | 9.2              |                                                            |
+|          106 |*`CUBLAS_GEMM_ALGO6_TENSOR_OP`*                                | 9.2              |                                                            |
+|          107 |*`CUBLAS_GEMM_ALGO7_TENSOR_OP`*                                | 9.2              |                                                            |
+|          108 |*`CUBLAS_GEMM_ALGO8_TENSOR_OP`*                                | 9.2              |                                                            |
+|          109 |*`CUBLAS_GEMM_ALGO9_TENSOR_OP`*                                | 9.2              |                                                            |
+|          110 |*`CUBLAS_GEMM_ALGO10_TENSOR_OP`*                               | 9.2              |                                                            |
+|          111 |*`CUBLAS_GEMM_ALGO11_TENSOR_OP`*                               | 9.2              |                                                            |
+|          112 |*`CUBLAS_GEMM_ALGO12_TENSOR_OP`*                               | 9.2              |                                                            |
+|          113 |*`CUBLAS_GEMM_ALGO13_TENSOR_OP`*                               | 9.2              |                                                            |
+|          114 |*`CUBLAS_GEMM_ALGO14_TENSOR_OP`*                               | 9.2              |                                                            |
+|          115 |*`CUBLAS_GEMM_ALGO15_TENSOR_OP`*                               | 9.2              |                                                            |
+| enum         |***`cublasMath_t`***                                           | 9.0              |                                                            |
+|            0 |*`CUBLAS_DEFAULT_MATH`*                                        | 9.0              |                                                            |
+|            1 |*`CUBLAS_TENSOR_OP_MATH`*                                      | 9.0              |                                                            |
+| enum*        |`cublasDataType_t`                                             | 7.5              |                                                            |
+| struct       |`cublasContext`                                                |                  |                                                            |
+| struct*      |`cublasHandle_t`                                               |                  |`hipblasHandle_t`                                           |
 
 ## **2. CUBLAS API functions**
 
-|   **CUDA**                                                |   **HIP**                                       |
-|-----------------------------------------------------------|-------------------------------------------------|
+|   **CUDA**                                                |   **HIP**                                       |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------------------------|:----------------:|
 |`cublasCreate`                                             |`hipblasCreate`                                  |
 |`cublasCreate_v2`                                          |`hipblasCreate`                                  |
 |`cublasDestroy`                                            |`hipblasDestroy`                                 |
 |`cublasDestroy_v2`                                         |`hipblasDestroy`                                 |
 |`cublasGetVersion`                                         |                                                 |
 |`cublasGetVersion_v2`                                      |                                                 |
-|`cublasGetProperty`                                        |                                                 |
-|`cublasGetCudartVersion`                                   |                                                 |
+|`cublasGetProperty`                                        |                                                 | 8.0              |
+|`cublasGetCudartVersion`                                   |                                                 | 10.1             |
 |`cublasGetStream`                                          |`hipblasGetStream`                               |
 |`cublasGetStream_v2`                                       |`hipblasGetStream`                               |
 |`cublasSetStream`                                          |`hipblasSetStream`                               |
@@ -112,12 +117,12 @@
 |`cublasSetPointerMode_v2`                                  |`hipblasSetPointerMode`                          |
 |`cublasGetAtomicsMode`                                     |                                                 |
 |`cublasSetAtomicsMode`                                     |                                                 |
-|`cublasGetMathMode`                                        |                                                 |
-|`cublasSetMathMode`                                        |                                                 |
-|`cublasLogCallback`                                        |                                                 |
-|`cublasLoggerConfigure`                                    |                                                 |
-|`cublasSetLoggerCallback`                                  |                                                 |
-|`cublasGetLoggerCallback`                                  |                                                 |
+|`cublasGetMathMode`                                        |                                                 | 9.0              |
+|`cublasSetMathMode`                                        |                                                 | 9.0              |
+|`cublasLogCallback`                                        |                                                 | 9.2              |
+|`cublasLoggerConfigure`                                    |                                                 | 9.2              |
+|`cublasSetLoggerCallback`                                  |                                                 | 9.2              |
+|`cublasGetLoggerCallback`                                  |                                                 | 9.2              |
 |`cublasSetVector`                                          |`hipblasSetVector`                               |
 |`cublasGetVector`                                          |`hipblasGetVector`                               |
 |`cublasSetMatrix`                                          |`hipblasSetMatrix`                               |
@@ -127,7 +132,7 @@
 |`cublasSetMatrixAsync`                                     |                                                 |
 |`cublasGetMatrixAsync`                                     |                                                 |
 |`cublasXerbla`                                             |                                                 |
-|`cublasNrm2Ex`                                             |                                                 |
+|`cublasNrm2Ex`                                             |                                                 | 8.0              |
 |`cublasSnrm2`                                              |`hipblasSnrm2`                                   |
 |`cublasSnrm2_v2`                                           |`hipblasSnrm2`                                   |
 |`cublasDnrm2`                                              |`hipblasDnrm2`                                   |
@@ -136,8 +141,8 @@
 |`cublasScnrm2_v2`                                          |                                                 |
 |`cublasDznrm2`                                             |                                                 |
 |`cublasDznrm2_v2`                                          |                                                 |
-|`cublasDotEx`                                              |                                                 |
-|`cublasDotcEx`                                             |                                                 |
+|`cublasDotEx`                                              |                                                 | 8.0              |
+|`cublasDotcEx`                                             |                                                 | 8.0              |
 |`cublasSdot`                                               |`hipblasSdot`                                    |
 |`cublasSdot_v2`                                            |`hipblasSdot`                                    |
 |`cublasDdot`                                               |`hipblasDdot`                                    |
@@ -150,7 +155,7 @@
 |`cublasZdotu_v2`                                           |                                                 |
 |`cublasZdotc`                                              |                                                 |
 |`cublasZdotc_v2`                                           |                                                 |
-|`cublasScalEx`                                             |                                                 |
+|`cublasScalEx`                                             |                                                 | 8.0              |
 |`cublasSscal`                                              |`hipblasSscal`                                   |
 |`cublasSscal_v2`                                           |`hipblasSscal`                                   |
 |`cublasDscal`                                              |`hipblasDscal`                                   |
@@ -163,7 +168,7 @@
 |`cublasZscal_v2`                                           |                                                 |
 |`cublasZdscal`                                             |                                                 |
 |`cublasZdscal_v2`                                          |                                                 |
-|`cublasAxpyEx`                                             |                                                 |
+|`cublasAxpyEx`                                             |                                                 | 8.0              |
 |`cublasSaxpy`                                              |`hipblasSaxpy`                                   |
 |`cublasSaxpy_v2`                                           |`hipblasSaxpy`                                   |
 |`cublasDaxpy`                                              |`hipblasDaxpy`                                   |
@@ -177,7 +182,7 @@
 |`cublasDcopy`                                              |`hipblasDcopy`                                   |
 |`cublasDcopy_v2`                                           |`hipblasDcopy`                                   |
 |`cublasCcopy`                                              |                                                 |
-|`cublasCopyEx`                                             |                                                 |
+|`cublasCopyEx`                                             |                                                 | 10.1             |
 |`cublasCcopy_v2`                                           |                                                 |
 |`cublasZcopy`                                              |                                                 |
 |`cublasZcopy_v2`                                           |                                                 |
@@ -189,7 +194,7 @@
 |`cublasCswap_v2`                                           |                                                 |
 |`cublasZswap`                                              |                                                 |
 |`cublasZswap_v2`                                           |                                                 |
-|`cublasIamaxEx`                                            |                                                 |
+|`cublasIamaxEx`                                            |                                                 | 10.1             |
 |`cublasIsamax`                                             |`hipblasIsamax`                                  |
 |`cublasIsamax_v2`                                          |`hipblasIsamax`                                  |
 |`cublasIdamax`                                             |`hipblasIdamax`                                  |
@@ -198,7 +203,7 @@
 |`cublasIcamax_v2`                                          |                                                 |
 |`cublasIzamax`                                             |                                                 |
 |`cublasIzamax_v2`                                          |                                                 |
-|`cublasIaminEx`                                            |                                                 |
+|`cublasIaminEx`                                            |                                                 | 10.1             |
 |`cublasIsamin`                                             |                                                 |
 |`cublasIsamin_v2`                                          |                                                 |
 |`cublasIdamin`                                             |                                                 |
@@ -207,7 +212,7 @@
 |`cublasIcamin_v2`                                          |                                                 |
 |`cublasIzamin`                                             |                                                 |
 |`cublasIzamin_v2`                                          |                                                 |
-|`cublasAsumEx`                                             |                                                 |
+|`cublasAsumEx`                                             |                                                 | 10.1             |
 |`cublasSasum`                                              |`hipblasSasum`                                   |
 |`cublasSasum_v2`                                           |`hipblasSasum`                                   |
 |`cublasDasum`                                              |`hipblasDasum`                                   |
@@ -216,7 +221,7 @@
 |`cublasScasum_v2`                                          |                                                 |
 |`cublasDzasum`                                             |                                                 |
 |`cublasDzasum_v2`                                          |                                                 |
-|`cublasRotEx`                                              |                                                 |
+|`cublasRotEx`                                              |                                                 | 10.1             |
 |`cublasSrot`                                               |                                                 |
 |`cublasSrot_v2`                                            |                                                 |
 |`cublasDrot`                                               |                                                 |
@@ -225,7 +230,7 @@
 |`cublasCrot_v2`                                            |                                                 |
 |`cublasZrot`                                               |                                                 |
 |`cublasZrot_v2`                                            |                                                 |
-|`cublasRotgEx`                                             |                                                 |
+|`cublasRotgEx`                                             |                                                 | 10.1             |
 |`cublasZdrot`                                              |                                                 |
 |`cublasZdrot_v2`                                           |                                                 |
 |`cublasSrotg`                                              |                                                 |
@@ -236,12 +241,12 @@
 |`cublasCrotg_v2`                                           |                                                 |
 |`cublasZrotg`                                              |                                                 |
 |`cublasZrotg_v2`                                           |                                                 |
-|`cublasRotmEx`                                             |                                                 |
+|`cublasRotmEx`                                             |                                                 | 10.1             |
 |`cublasSrotm`                                              |                                                 |
 |`cublasSrotm_v2`                                           |                                                 |
 |`cublasDrotm`                                              |                                                 |
 |`cublasDrotm_v2`                                           |                                                 |
-|`cublasRotmgEx`                                            |                                                 |
+|`cublasRotmgEx`                                            |                                                 | 10.1             |
 |`cublasSrotmg`                                             |                                                 |
 |`cublasSrotmg_v2`                                          |                                                 |
 |`cublasDrotmg`                                             |                                                 |
@@ -396,16 +401,16 @@
 |`cublasDgemm_v2`                                           |`hipblasDgemm`                                   |
 |`cublasCgemm`                                              |                                                 |
 |`cublasCgemm_v2`                                           |                                                 |
-|`cublasCgemm3m`                                            |                                                 |
-|`cublasCgemm3mEx`                                          |                                                 |
+|`cublasCgemm3m`                                            |                                                 | 8.0              |
+|`cublasCgemm3mEx`                                          |                                                 | 8.0              |
 |`cublasZgemm`                                              |                                                 |
 |`cublasZgemm_v2`                                           |                                                 |
-|`cublasZgemm3m`                                            |                                                 |
-|`cublasHgemm`                                              |`hipblasHgemm`                                   |
-|`cublasSgemmEx`                                            |                                                 |
-|`cublasGemmEx`                                             |`hipblasGemmEx`                                  |
-|`cublasCgemmEx`                                            |                                                 |
-|`cublasUint8gemmBias`                                      |                                                 |
+|`cublasZgemm3m`                                            |                                                 | 8.0              |
+|`cublasHgemm`                                              |`hipblasHgemm`                                   | 7.5              |
+|`cublasSgemmEx`                                            |                                                 | 7.5              |
+|`cublasGemmEx`                                             |`hipblasGemmEx`                                  | 8.0              |
+|`cublasCgemmEx`                                            |                                                 | 8.0              |
+|`cublasUint8gemmBias`                                      |                                                 | 8.0              |
 |`cublasSsyrk`                                              |                                                 |
 |`cublasSsyrk_v2`                                           |                                                 |
 |`cublasDsyrk`                                              |                                                 |
@@ -414,14 +419,14 @@
 |`cublasCsyrk_v2`                                           |                                                 |
 |`cublasZsyrk`                                              |                                                 |
 |`cublasZsyrk_v2`                                           |                                                 |
-|`cublasCsyrkEx`                                            |                                                 |
-|`cublasCsyrk3mEx`                                          |                                                 |
+|`cublasCsyrkEx`                                            |                                                 | 8.0              |
+|`cublasCsyrk3mEx`                                          |                                                 | 8.0              |
 |`cublasCherk`                                              |                                                 |
 |`cublasCherk_v2`                                           |                                                 |
 |`cublasZherk`                                              |                                                 |
 |`cublasZherk_v2`                                           |                                                 |
-|`cublasCherkEx`                                            |                                                 |
-|`cublasCherk3mEx`                                          |                                                 |
+|`cublasCherkEx`                                            |                                                 | 8.0              |
+|`cublasCherk3mEx`                                          |                                                 | 8.0              |
 |`cublasSsyr2k`                                             |                                                 |
 |`cublasSsyr2k_v2`                                          |                                                 |
 |`cublasDsyr2k`                                             |                                                 |
@@ -468,20 +473,20 @@
 |`cublasCtrmm_v2`                                           |                                                 |
 |`cublasZtrmm`                                              |                                                 |
 |`cublasZtrmm_v2`                                           |                                                 |
-|`cublasHgemmBatched`                                       |                                                 |
+|`cublasHgemmBatched`                                       |                                                 | 9.0              |
 |`cublasSgemmBatched`                                       |`hipblasSgemmBatched`                            |
 |`cublasDgemmBatched`                                       |`hipblasDgemmBatched`                            |
 |`cublasCgemmBatched`                                       |                                                 |
-|`cublasCgemm3mBatched`                                     |                                                 |
+|`cublasCgemm3mBatched`                                     |                                                 | 8.0              |
 |`cublasZgemmBatched`                                       |                                                 |
-|`cublasGemmBatchedEx`                                      |                                                 |
-|`cublasGemmStridedBatchedEx`                               |                                                 |
-|`cublasSgemmStridedBatched`                                |`hipblasSgemmStridedBatched`                     |
-|`cublasDgemmStridedBatched`                                |`hipblasDgemmStridedBatched`                     |
-|`cublasCgemmStridedBatched`                                |                                                 |
-|`cublasCgemm3mStridedBatched`                              |                                                 |
-|`cublasZgemmStridedBatched`                                |                                                 |
-|`cublasHgemmStridedBatched`                                |                                                 |
+|`cublasGemmBatchedEx`                                      |                                                 | 9.1              |
+|`cublasGemmStridedBatchedEx`                               |                                                 | 9.1              |
+|`cublasSgemmStridedBatched`                                |`hipblasSgemmStridedBatched`                     | 8.0              |
+|`cublasDgemmStridedBatched`                                |`hipblasDgemmStridedBatched`                     | 8.0              |
+|`cublasCgemmStridedBatched`                                |                                                 | 8.0              |
+|`cublasCgemm3mStridedBatched`                              |                                                 | 8.0              |
+|`cublasZgemmStridedBatched`                                |                                                 | 8.0              |
+|`cublasHgemmStridedBatched`                                |                                                 | 8.0              |
 |`cublasSgeam`                                              |`hipblasSgeam`                                   |
 |`cublasDgeam`                                              |`hipblasDgeam`                                   |
 |`cublasCgeam`                                              |                                                 |
@@ -526,3 +531,5 @@
 |`cublasDtrttp`                                             |                                                 |
 |`cublasCtrttp`                                             |                                                 |
 |`cublasZtrttp`                                             |                                                 |
+
+\* CUDA version, in which API has appeared and (optional) last version before abandoning it; no value in case of earlier versions < 7.5.

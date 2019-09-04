@@ -59,7 +59,9 @@ __host__ void double_precision_math_functions() {
     // erfcx(0.0);
     // erfinv(1.0);
     exp(0.0);
+	#ifdef __unix__
     exp10(0.0);
+	#endif
     exp2(0.0);
     expm1(0.0);
     fabs(1.0);
@@ -75,9 +77,15 @@ __host__ void double_precision_math_functions() {
     std::isfinite(0.0);
     std::isinf(0.0);
     std::isnan(0.0);
+    #ifdef __unix__
     j0(0.0);
     j1(0.0);
     jn(-1.0, 1.0);
+    #elif _WIN64
+    _j0(0.0);
+    _j1(0.0);
+    _jn(-1.0, 1.0);
+    #endif
     ldexp(0.0, 0);
     //    lgamma(1.0);
     llrint(0.0);
@@ -120,7 +128,9 @@ __host__ void double_precision_math_functions() {
     scalbn(0.0, 1);
     std::signbit(1.0);
     sin(0.0);
+    #ifdef _unix__
     sincos(0.0, &fX, &fY);
+    #endif
     // sincospi(0.0, &fX, &fY);
     sinh(0.0);
     // sinpi(0.0);
@@ -129,9 +139,15 @@ __host__ void double_precision_math_functions() {
     tanh(0.0);
     tgamma(2.0);
     trunc(0.0);
+    #ifdef __unix__
     y0(1.0);
     y1(1.0);
     yn(1, 1.0);
+    #elif _WIN64
+    _y0(1.0);
+    _y1(1.0);
+    _yn(1, 1.0);
+    #endif
 }
 
 static void compileOnHost() { double_precision_math_functions(); }

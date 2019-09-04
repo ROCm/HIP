@@ -164,8 +164,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   // cudaHostAlloc
   {"cuMemAllocHost",                                       {"hipMemAllocHost",                                         "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   {"cuMemAllocHost_v2",                                    {"hipMemAllocHost",                                         "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
-  // no analogue
-  {"cuMemAllocManaged",                                    {"hipMemAllocManaged",                                      "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  // cudaMallocManaged
+  {"cuMemAllocManaged",                                    {"hipMemAllocManaged",                                      "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   // NOTE: Not equal to cudaMallocPitch due to different signatures
   {"cuMemAllocPitch",                                      {"hipMemAllocPitch",                                        "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
@@ -178,9 +178,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuMemcpy2D",                                           {"hipMemcpyParam2D",                                        "", CONV_MEMORY, API_DRIVER}},
   {"cuMemcpy2D_v2",                                        {"hipMemcpyParam2D",                                        "", CONV_MEMORY, API_DRIVER}},
   // no analogue
-  // NOTE: Not equal to cudaMemcpy2DAsync due to different signatures
-  {"cuMemcpy2DAsync",                                      {"hipMemcpy2DAsync_",                                       "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
-  {"cuMemcpy2DAsync_v2",                                   {"hipMemcpy2DAsync_",                                       "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  // NOTE: Not equal to cudaMemcpy2DAsync/hipMemcpy2DAsync due to different signatures
+  {"cuMemcpy2DAsync",                                      {"hipMemcpyParam2DAsync",                                   "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemcpy2DAsync_v2",                                   {"hipMemcpyParam2DAsync",                                   "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   {"cuMemcpy2DUnaligned",                                  {"hipMemcpy2DUnaligned",                                    "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
   {"cuMemcpy2DUnaligned_v2",                               {"hipMemcpy2DUnaligned",                                    "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
@@ -407,7 +407,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
 
   // 5.17.Execution Control
   // no analogue
-  {"cuFuncGetAttribute",                                   {"hipFuncGetAttribute",                                     "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuFuncGetAttribute",                                   {"hipFuncGetAttribute",                                     "", CONV_EXECUTION, API_DRIVER}},
   // no analogue
   // NOTE: Not equal to cudaFuncSetAttribute due to different signatures
   {"cuFuncSetAttribute",                                   {"hipFuncSetAttribute",                                     "", CONV_EXECUTION, API_DRIVER, HIP_UNSUPPORTED}},
@@ -522,7 +522,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   // cudaOccupancyMaxActiveBlocksPerMultiprocessor
   {"cuOccupancyMaxActiveBlocksPerMultiprocessor",          {"hipOccupancyMaxActiveBlocksPerMultiprocessor",            "", CONV_OCCUPANCY, API_DRIVER}},
   // cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
-  {"cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags", {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",   "", CONV_OCCUPANCY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags", {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",   "", CONV_OCCUPANCY, API_DRIVER}},
   // cudaOccupancyMaxPotentialBlockSize
   {"cuOccupancyMaxPotentialBlockSize",                     {"hipOccupancyMaxPotentialBlockSize",                       "", CONV_OCCUPANCY, API_DRIVER}},
   // cudaOccupancyMaxPotentialBlockSizeWithFlags

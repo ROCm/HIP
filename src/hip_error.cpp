@@ -33,8 +33,8 @@ hipError_t hipGetLastError() {
     HIP_INIT_API(hipGetLastError);
 
     // Return last error, but then reset the state:
-    hipError_t e = ihipLogStatus(tls_lastHipError);
-    tls_lastHipError = hipSuccess;
+    hipError_t e = ihipLogStatus(tls->lastHipError);
+    tls->lastHipError = hipSuccess;
     return e;
 }
 
@@ -42,7 +42,7 @@ hipError_t hipPeekAtLastError() {
     HIP_INIT_API(hipPeekAtLastError);
 
     // peek at last error, but don't reset it.
-    return ihipLogStatus(tls_lastHipError);
+    return ihipLogStatus(tls->lastHipError);
 }
 
 const char* hipGetErrorName(hipError_t hip_error) {

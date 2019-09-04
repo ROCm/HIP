@@ -41,14 +41,14 @@ using namespace std;
 
 namespace hip_impl
 {
-    hsa_agent_t target_agent(hipStream_t stream)
+    HIP_INTERNAL_EXPORTED_API hsa_agent_t target_agent(hipStream_t stream)
     {
         if (stream) {
             return *static_cast<hsa_agent_t*>(
                 stream->locked_getAv()->get_hsa_agent());
         }
-        else if (
-            ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()) {
+        GET_TLS();
+        if (ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()) {
             return ihipGetDevice(
                 ihipGetTlsDefaultCtx()->getDevice()->_deviceId)->_hsaAgent;
         }

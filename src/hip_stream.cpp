@@ -48,7 +48,7 @@ enum queue_priority
 #endif
 
 //---
-hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags, int priority) {
+hipError_t ihipStreamCreate(TlsData *tls, hipStream_t* stream, unsigned int flags, int priority) {
     ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
 
     hipError_t e = hipSuccess;
@@ -97,7 +97,7 @@ hipError_t ihipStreamCreate(hipStream_t* stream, unsigned int flags, int priorit
 hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags) {
     HIP_INIT_API(hipStreamCreateWithFlags, stream, flags);
     if(flags == hipStreamDefault || flags == hipStreamNonBlocking)
-        return ihipLogStatus(ihipStreamCreate(stream, flags, priority_normal));
+        return ihipLogStatus(ihipStreamCreate(tls, stream, flags, priority_normal));
     else
         return ihipLogStatus(hipErrorInvalidValue);
 }
@@ -106,7 +106,7 @@ hipError_t hipStreamCreateWithFlags(hipStream_t* stream, unsigned int flags) {
 hipError_t hipStreamCreate(hipStream_t* stream) {
     HIP_INIT_API(hipStreamCreate, stream);
 
-    return ihipLogStatus(ihipStreamCreate(stream, hipStreamDefault, priority_normal));
+    return ihipLogStatus(ihipStreamCreate(tls, stream, hipStreamDefault, priority_normal));
 }
 
 //---
@@ -115,7 +115,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
 
     // clamp priority to range [priority_high:priority_low]
     priority = (priority < priority_high ? priority_high : (priority > priority_low ? priority_low : priority));
-    return ihipLogStatus(ihipStreamCreate(stream, flags, priority));
+    return ihipLogStatus(ihipStreamCreate(tls, stream, flags, priority));
 }
 
 //---
@@ -142,9 +142,8 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
                 // conservative wait on host for the specified event to complete:
                 // return _stream->locked_eventWaitComplete(this, waitMode);
                 //
-                ecd._stream->locked_eventWaitComplete(
-                ecd.marker(), (event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
-                                                                     : hc::hcWaitModeActive);
+                ecd.marker().wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
+                                                                         : hc::hcWaitModeActive);
             } else {
                 stream = ihipSyncAndResolveStream(stream);
                 // This will use create_blocking_marker to wait on the specified queue.
@@ -184,7 +183,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
 hipError_t hipStreamSynchronize(hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipStreamSynchronize, TRACE_SYNC, stream);
 
-    return ihipLogStatus(ihipStreamSynchronize(stream));
+    return ihipLogStatus(ihipStreamSynchronize(tls, stream));
 }
 
 
