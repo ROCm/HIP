@@ -150,6 +150,15 @@ global:
     hipLaunchByPtr;
     hipProfilerStart;
     hipProfilerStop;
+    hiprtcCompileProgram;
+    hiprtcCreateProgram;
+    hiprtcDestroyProgram;
+    hiprtcGetLoweredName;
+    hiprtcGetProgramLog;
+    hiprtcGetProgramLogSize;
+    hiprtcGetCode;
+    hiprtcGetCodeSize;
+    hiprtcGetErrorString;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hipCreateTextureObject*;
@@ -181,9 +190,19 @@ global:
     hipDestroySurfaceObject*;
     hipHccModuleLaunchKernel*;
     hipExtModuleLaunchKernel*;
-    InitActivityCallback;
-    EnableActivityCallback;
-    GetCmdName;
+    InitActivityCallback*;
+    EnableActivityCallback*;
+    GetCmdName*;
+    hiprtcAddNameExpression*;
+    hiprtcCompileProgram*;
+    hiprtcCreateProgram*;
+    hiprtcDestroyProgram*;
+    hiprtcGetLoweredName*;
+    hiprtcGetProgramLog*;
+    hiprtcGetProgramLogSize*;
+    hiprtcGetCode*;
+    hiprtcGetCodeSize*;
+    hiprtcGetErrorString*;
     };
 local:
     *;
