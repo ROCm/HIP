@@ -47,7 +47,7 @@ In the above, BUILD commands provide instructions on how to build the test case 
 
 The supported syntax for the BUILD command is:
 ```
-BUILD: %t %s HIPCC_OPTIONS <hipcc_specific_options> HCC_OPTIONS <hcc_specific_options> NVCC_OPTIONS <nvcc_specific_options> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all>
+BUILD: %t %s HIPCC_OPTIONS <hipcc_specific_options> HCC_OPTIONS <hcc_specific_options> NVCC_OPTIONS <nvcc_specific_options> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> DEPENDS <dependencies>
 ```
 %s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
@@ -55,20 +55,25 @@ HIPCC_OPTIONS: All options specified after this delimiter are passed to hipcc on
 HCC_OPTIONS: All options specified after this delimiter are passed to hipcc on HCC platform only.
 NVCC_OPTIONS: All options specified after this delimiter are passed to hipcc on NVCC platform only.
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms.
+DEPENDS: This can be used to specify dependencies that need to be built before building the current target.
 
 
 #### BUILD_CMD command
 
 The supported syntax for the BUILD_CMD command is:
 ```
-BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all>
+BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> DEPENDS <dependencies>
 ```
 %s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
 %hc: refers to hipcc pointed to by $CMAKE_INSTALL_PREFIX/bin/hipcc.
-%cc: refers to system c compiler pointed to by $CC.
+%hip-path: refers to hip installed location pointed to by $CMAKE_INSTALL_PREFIX
+%cc: refers to system c compiler pointed to by /usr/bin/cc.
+%cxx: refers to system c compiler pointed to by /usr/bin/c++.
 %S: refers to path to current source file.
 %T: refers to path to current build target.
+EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms.
+DEPENDS: This can be used to specify dependencies that need to be built before building the current target.
 
 
 #### TEST command

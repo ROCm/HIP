@@ -194,10 +194,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaGetParameterBufferV2",                                {"hipGetParameterBufferV2",                                "", CONV_EXECUTION, API_RUNTIME, HIP_UNSUPPORTED}},
   // no analogue
   // NOTE: Not equal to cuLaunchCooperativeKernel due to different signatures
-  {"cudaLaunchCooperativeKernel",                             {"hipLaunchCooperativeKernel",                             "", CONV_EXECUTION, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaLaunchCooperativeKernel",                             {"hipLaunchCooperativeKernel",                             "", CONV_EXECUTION, API_RUNTIME}},
   // no analogue
   // NOTE: Not equal to cuLaunchCooperativeKernelMultiDevice due to different signatures
-  {"cudaLaunchCooperativeKernelMultiDevice",                  {"hipLaunchCooperativeKernelMultiDevice",                  "", CONV_EXECUTION, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaLaunchCooperativeKernelMultiDevice",                  {"hipLaunchCooperativeKernelMultiDevice",                  "", CONV_EXECUTION, API_RUNTIME}},
   // cuLaunchHostFunc
   {"cudaLaunchHostFunc",                                      {"hipLaunchHostFunc",                                      "", CONV_EXECUTION, API_RUNTIME, HIP_UNSUPPORTED}},
   // no analogue
@@ -212,7 +212,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // 
   {"cudaOccupancyMaxActiveBlocksPerMultiprocessor",           {"hipOccupancyMaxActiveBlocksPerMultiprocessor",           "", CONV_OCCUPANCY, API_RUNTIME}},
   // cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
-  {"cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",  {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",  "", CONV_OCCUPANCY, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",  {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",  "", CONV_OCCUPANCY, API_RUNTIME}},
   // cuOccupancyMaxPotentialBlockSize
   {"cudaOccupancyMaxPotentialBlockSize",                      {"hipOccupancyMaxPotentialBlockSize",                      "", CONV_OCCUPANCY, API_RUNTIME}},
   // cuOccupancyMaxPotentialBlockSizeWithFlags
@@ -271,8 +271,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaMallocArray",                                         {"hipMallocArray",                                         "", CONV_MEMORY, API_RUNTIME}},
   // cuMemHostAlloc
   {"cudaMallocHost",                                          {"hipHostMalloc",                                          "", CONV_MEMORY, API_RUNTIME}},
-  // no analogue
-  {"cudaMallocManaged",                                       {"hipMallocManaged",                                       "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuMemAllocManaged
+  {"cudaMallocManaged",                                       {"hipMallocManaged",                                       "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   // NOTE: Not equal to cuMipmappedArrayCreate due to different signatures
   {"cudaMallocMipmappedArray",                                {"hipMallocMipmappedArray",                                "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},

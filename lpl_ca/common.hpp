@@ -12,7 +12,7 @@ namespace hip_impl {
 inline const std::unordered_set<std::string>& amdgpu_targets() {  // The evolving list lives at:
     // https://www.llvm.org/docs/AMDGPUUsage.html#processors.
     static const std::unordered_set<std::string> r{"gfx701", "gfx801", "gfx802", "gfx803",
-                                                   "gfx900", "gfx906"};
+                                                   "gfx900", "gfx906", "gfx908"};
 
     return r;
 }

@@ -21,7 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: libfoo %hc %S/%s -o libfoo.so -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY
+ * BUILD_CMD: libfoo_amd %hc %S/%s -o libfoo.so -Xcompiler -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD_CMD: libfoo_nvidia %hc %S/%s -o libfoo.so -Xcompiler -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY EXCLUDE_HIP_PLATFORM hcc
  * BUILD_CMD: %t %hc %S/%s -o %T/%t -ldl
  * TEST: %t
  * HIT_END

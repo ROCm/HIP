@@ -116,7 +116,12 @@ typedef struct hipDeviceProp_t {
     int gcnArch;                              ///< AMD GCN Arch Value. Eg: 803, 701
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
-    int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices 
+    int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices
+    int maxTexture1D;          ///< Maximum number of elements in 1D images
+    int maxTexture2D[2];       ///< Maximum dimensions (width, height) of 2D images, in image elements
+    int maxTexture3D[3];       ///< Maximum dimensions (width, height, depth) of 3D images, in image elements
+    unsigned int* hdpMemFlushCntl;      ///< Addres of HDP_MEM_COHERENCY_FLUSH_CNTL register
+    unsigned int* hdpRegFlushCntl;      ///< Addres of HDP_REG_COHERENCY_FLUSH_CNTL register
 } hipDeviceProp_t;
 
 
@@ -248,6 +253,8 @@ typedef enum __HIP_NODISCARD hipError_t {
         1071,    ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorAssert =
         1081,    ///< Produced when the kernel calls assert.
+    hipErrorNotSupported = 
+        1082,    ///< Produced when the hip API is not supported/implemented 
     hipErrorTbd  ///< Marker that more error codes are needed.
 } hipError_t;
 
@@ -295,6 +302,16 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIntegrated,                        ///< iGPU
     hipDeviceAttributeCooperativeLaunch,                 ///< Support cooperative launch
     hipDeviceAttributeCooperativeMultiDeviceLaunch,      ///< Support cooperative launch on multiple devices
+
+    hipDeviceAttributeMaxTexture1DWidth,    ///< Maximum number of elements in 1D images
+    hipDeviceAttributeMaxTexture2DWidth,    ///< Maximum dimension width of 2D images in image elements
+    hipDeviceAttributeMaxTexture2DHeight,   ///< Maximum dimension height of 2D images in image elements
+    hipDeviceAttributeMaxTexture3DWidth,    ///< Maximum dimension width of 3D images in image elements
+    hipDeviceAttributeMaxTexture3DHeight,   ///< Maximum dimensions height of 3D images in image elements
+    hipDeviceAttributeMaxTexture3DDepth,    ///< Maximum dimensions depth of 3D images in image elements
+
+    hipDeviceAttributeHdpMemFlushCntl,      ///< Address of the HDP_MEM_COHERENCY_FLUSH_CNTL register
+    hipDeviceAttributeHdpRegFlushCntl       ///< Address of the HDP_REG_COHERENCY_FLUSH_CNTL register
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {

@@ -11,6 +11,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [General Tips](#general-tips)
   * [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort)
   * [Converting a project "in-place"](#converting-a-project-in-place)
+  * [CUDA to HIP Math Library Equivalents](#library-equivalents)
 - [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
   * [Identifying HIP Target Platform](#identifying-hip-target-platform)
   * [Identifying the Compiler: hcc, hip-clang, or nvcc](#identifying-the-compiler-hcc-hip-clang-or-nvcc)
@@ -34,6 +35,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Choosing HIP File Extensions](#choosing-hip-file-extensions)
 - [Workarounds](#workarounds)
   * [warpSize](#warpsize)
+  * [Kernel launch with group size > 256](#kernel-launch-with-group-size--256)
 - [memcpyToSymbol](#memcpytosymbol)
 - [threadfence_system](#threadfence_system)
   * [Textures and Cache Control](#textures-and-cache-control)
@@ -45,7 +47,6 @@ and provides practical suggestions on how to port CUDA code and work through com
     + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
   * [HIP Environment Variables](#hip-environment-variables)
   * [Editor Highlighting](#editor-highlighting)
-  * [CUDA to HIP Math Library Equivalents](#library-equivalents)
   
 
 <!-- tocstop -->
@@ -123,7 +124,21 @@ directory names.
 > hipconvertinplace.sh MY_SRC_DIR
 ```
 
+### Library Equivalents
 
+| CUDA Library | ROCm Library | Comment |
+|------- | ---------   | -----   |
+| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines 
+| cuFFT        |    rocFFT     | Fast Fourier Transfer Library   
+| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV 
+| cuSolver     |    rocSolver   | Lapack library
+| AMG-X    |    rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
+| Thrust    |    hipThrust | C++ parallel algorithms library
+| CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
+| cuDNN    |    MIOpen | Deep learning Solver Library 
+| cuRAND    |    rocRAND | Random Number Generator Library
+| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers, 
+| NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents
 
 
  
@@ -186,8 +201,8 @@ Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, an
 |Define  		|  hcc      |  hip-clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.) 
 |--- | --- | --- | --- |---|
 |HIP-related defines:|
-|`__HIP_PLATFORM_HCC___`| Defined | Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
-|`__HIP_PLATFORM_NVCC___`| Undefined | Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
+|`__HIP_PLATFORM_HCC__`| Defined | Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
+|`__HIP_PLATFORM_NVCC__`| Undefined | Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
 |`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined 
 |`__HIPCC__`		| Defined   | Defined | Defined 		|  Undefined
 |`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) |0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0 
@@ -412,6 +427,14 @@ run hipcc when appropriate.
 ### warpSize
 Code should not assume a warp size of 32 or 64.  See [Warp Cross-Lane Functions](hip_kernel_language.md#warp-cross-lane-functions) for information on how to write portable wave-aware code.
 
+### Kernel launch with group size > 256
+Kernel code should use ``` __attribute__((amdgpu_flat_work_group_size(<min>,<max>)))```.
+
+For example:
+```
+__global__ void dot(double *a,double *b,const int n) __attribute__((amdgpu_flat_work_group_size(1, 512)))
+```
+
 ## memcpyToSymbol
 
 HIP support for hipMemcpyToSymbol is complete.  This feature allows a kernel
@@ -485,39 +508,7 @@ AMD compilers currently load all data into both the L1 and L2 caches, so __ldg i
 We recommend the following for functional portability:
 
 - For programs that use textures only to benefit from improved caching, use the __ldg instruction
-- Programs that use texture object APIs, work well on HIP
-- For program that use texture reference APIs, use conditional compilation (see [Identify HIP Target Platform](#identify-hip-target-platform)) 
-   - For the `__HIP_PLATFORM_HCC__` path, pass an additional argument to the kernel and in texture fetch API inside kernel as shown below:-
-
-``` 
-texture<float, 2, hipReadModeElementType> tex;
-
-__global__ void tex2DKernel(float* outputData,
-#ifdef __HIP_PLATFORM_HCC__
-                             hipTextureObject_t textureObject,
-#endif
-                             int width,
-                             int height)
-{
-    int x = blockIdx.x*blockDim.x + threadIdx.x;
-    int y = blockIdx.y*blockDim.y + threadIdx.y;
-#ifdef __HIP_PLATFORM_HCC__
-    outputData[y*width + x] = tex2D(tex, textureObject, x, y);
-#else
-    outputData[y*width + x] = tex2D(tex, x, y);
-#endif
-}
-
-// Host code:
-void myFunc () 
-{
-    // ...
-
-#ifdef __HIP_PLATFORM_HCC__
-    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, tex.textureObject, width, height);
-#else
-    hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, width, height);
-#endif
+- Programs that use texture object and reference APIs, work well on HIP
 
 
 ``` 
@@ -582,18 +573,3 @@ HIP_VISIBLE_DEVICES            =  0 : Only devices whose index is present in the
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.
 
 
-### Library Equivalents
-
-| CUDA Library | ROCm Library | Comment |
-|------- | ---------   | -----   |
-| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines 
-| cuFFT        |    rocFFT     | Fast Fourier Transfer Library   
-| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV 
-| cuSolver     |    rocSolver   | Lapack library
-| AMG-X    |    rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
-| Thrust    |    hipThrust | C++ parallel algorithms library
-| CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
-| cuDNN    |    MIOpen | Deep learning Solver Library 
-| cuRAND    |    rocRAND | Random Number Generator Library
-| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers, 
-| NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents

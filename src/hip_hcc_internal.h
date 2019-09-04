@@ -130,10 +130,26 @@ struct ProfTrigger {
 
 
 //---
-// Extern tls
-extern thread_local hipError_t tls_lastHipError;
-extern thread_local TidInfo tls_tidInfo;
-extern thread_local bool tls_getPrimaryCtx;
+// Extern TLS
+// Use a single struct to hold all TLS data. Attempt to reduce TLS accesses.
+struct TlsData {
+    explicit TlsData() {
+        lastHipError = hipSuccess;
+        getPrimaryCtx = true;
+        defaultCtx = nullptr;
+    }
+
+    hipError_t lastHipError;
+    TidInfo tidInfo;
+    // This is the implicit context used by all HIP commands.
+    // It can be set by hipSetDevice or by the CTX manipulation commands:
+    ihipCtx_t* defaultCtx;
+    // Stack of contexts
+    std::stack<ihipCtx_t*> ctxStack;
+    bool getPrimaryCtx;
+};
+TlsData* tls_get_ptr();
+#define GET_TLS() TlsData *tls = tls_get_ptr()
 
 extern std::vector<ProfTrigger> g_dbStartTriggers;
 extern std::vector<ProfTrigger> g_dbStopTriggers;
@@ -194,7 +210,7 @@ extern const char* API_COLOR_END;
 // Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function
 // boundary.
 // TODO - currently we print the trace message at the beginning. if we waited, we could also
-// tls_tidInfo return codes, and any values returned through ptr-to-args (ie the pointers allocated
+// tls->tidInfo return codes, and any values returned through ptr-to-args (ie the pointers allocated
 // by hipMalloc).
 #if COMPILE_HIP_ATP_MARKER
 #include "CXLActivityLogger.h"
@@ -251,10 +267,11 @@ static const DbName dbName[] = {
 #define tprintf(trace_level, ...)                                                                                     \
     {                                                                                                                 \
         if (HIP_DB & (1 << (trace_level))) {                                                                          \
+            GET_TLS();                                                                                                \
             char msgStr[1000];                                                                                        \
             snprintf(msgStr, sizeof(msgStr), __VA_ARGS__);                                                            \
             fprintf(stderr, "  %ship-%s pid:%d tid:%d:%s%s", dbName[trace_level]._color,                              \
-                    dbName[trace_level]._shortName, tls_tidInfo.pid(), tls_tidInfo.tid(), msgStr, KNRM);              \
+                    dbName[trace_level]._shortName, tls->tidInfo.pid(), tls->tidInfo.tid(), msgStr, KNRM);            \
         }                                                                                                             \
     }
 #else
@@ -266,18 +283,19 @@ static const DbName dbName[] = {
 static inline uint64_t getTicks() { return hc::get_system_ticks(); }
 
 //---
-extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
+extern uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::string& apiStr);
 
 #if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(forceTrace, ...)                                                                 \
+    GET_TLS();                                                                                     \
     uint64_t hipApiStartTick = 0;                                                                  \
     {                                                                                              \
-        tls_tidInfo.incApiSeqNum();                                                                \
+        tls->tidInfo.incApiSeqNum();                                                               \
         if (forceTrace ||                                                                          \
             (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1 << TRACE_ALL))))) {         \
             std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';       \
             std::string fullStr;                                                                   \
-            hipApiStartTick = recordApiTrace(&fullStr, apiStr);                                    \
+            hipApiStartTick = recordApiTrace(tls, &fullStr, apiStr);                               \
             if (HIP_PROFILE_API == 0x1) {                                                          \
                 MARKER_BEGIN(__func__, "HIP")                                                      \
             } else if (HIP_PROFILE_API == 0x2) {                                                   \
@@ -288,10 +306,13 @@ extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
 
 #else
 // Swallow API_TRACE
-#define API_TRACE(IS_CMD, ...) tls_tidInfo.incApiSeqNum();
+#define API_TRACE(IS_CMD, ...) GET_TLS(); tls->tidInfo.incApiSeqNum();
 #endif
 
-#define HIP_SET_DEVICE() ihipDeviceSetState();
+#define ihipGetTlsDefaultCtx() iihipGetTlsDefaultCtx(tls)
+#define ihipSetTlsDefaultCtx(ctx) tls->defaultCtx = ctx
+
+#define HIP_SET_DEVICE() ihipDeviceSetState(tls);
 
 // This macro should be called at the beginning of every HIP API.
 // It initializes the hip runtime (exactly once), and
@@ -314,22 +335,22 @@ extern uint64_t recordApiTrace(std::string* fullStr, const std::string& apiStr);
 // This macro should be called at the end of every HIP API, and only at the end of top-level hip
 // APIS (not internal hip) It has dual function: logs the last error returned for use by
 // hipGetLastError, and also prints the closing message when the debug trace is enabled.
-#define ihipLogStatus(hipStatus)                                                                    \
-    ({                                                                                              \
-        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/      \
-        tls_lastHipError = localHipStatus;                                                          \
-                                                                                                    \
-        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1 << TRACE_ALL)) {                    \
-            auto ticks = getTicks() - hipApiStartTick;                                              \
-            fprintf(stderr, "  %ship-api pid:%d tid:%d.%lu %-30s ret=%2d (%s)>> +%lu ns%s\n",       \
-                    (localHipStatus == 0) ? API_COLOR : KRED, tls_tidInfo.pid(), tls_tidInfo.tid(), \
-                    tls_tidInfo.apiSeqNum(), __func__, localHipStatus,                              \
-                    ihipErrorString(localHipStatus), ticks, API_COLOR_END);                         \
-        }                                                                                           \
-        if (HIP_PROFILE_API) {                                                                      \
-            MARKER_END();                                                                           \
-        }                                                                                           \
-        localHipStatus;                                                                             \
+#define ihipLogStatus(hipStatus)                                                                      \
+    ({                                                                                                \
+        hipError_t localHipStatus = hipStatus; /*local copy so hipStatus only evaluated once*/        \
+        tls->lastHipError = localHipStatus;                                                           \
+                                                                                                      \
+        if ((COMPILE_HIP_TRACE_API & 0x2) && HIP_TRACE_API & (1 << TRACE_ALL)) {                      \
+            auto ticks = getTicks() - hipApiStartTick;                                                \
+            fprintf(stderr, "  %ship-api pid:%d tid:%d.%lu %-30s ret=%2d (%s)>> +%lu ns%s\n",         \
+                    (localHipStatus == 0) ? API_COLOR : KRED, tls->tidInfo.pid(), tls->tidInfo.tid(), \
+                    tls->tidInfo.apiSeqNum(), __func__, localHipStatus,                               \
+                    ihipErrorString(localHipStatus), ticks, API_COLOR_END);                           \
+        }                                                                                             \
+        if (HIP_PROFILE_API) {                                                                        \
+            MARKER_END();                                                                             \
+        }                                                                                             \
+        localHipStatus;                                                                               \
     })
 
 
@@ -476,7 +497,7 @@ template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
    public:
     ihipStreamCriticalBase_t(ihipStream_t* parentStream, hc::accelerator_view av)
-        : _kernelCnt(0), _av(av), _parent(parentStream){};
+        : _av(av), _parent(parentStream){};
 
     ~ihipStreamCriticalBase_t() {}
 
@@ -500,7 +521,6 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
 
    public:
     ihipStream_t* _parent;
-    uint32_t _kernelCnt;  // Count of inflight kernels in this stream.  Reset at ::wait().
 
     hc::accelerator_view _av;
 
@@ -564,7 +584,6 @@ class ihipStream_t {
     hc::completion_future locked_recordEvent(hipEvent_t event);
 
     bool locked_eventIsReady(hipEvent_t event);
-    void locked_eventWaitComplete(hc::completion_future& marker, hc::hcWaitMode waitMode);
 
     ihipStreamCritical_t& criticalData() { return _criticalData; };
 
@@ -938,11 +957,9 @@ extern hsa_agent_t* g_allAgents;  // CPU agents + all the visible GPU agents.
 // Extern functions:
 extern void ihipInit();
 extern const char* ihipErrorString(hipError_t);
-extern ihipCtx_t* ihipGetTlsDefaultCtx();
-extern void ihipSetTlsDefaultCtx(ihipCtx_t* ctx);
-extern hipError_t ihipSynchronize(void);
+extern hipError_t ihipSynchronize(TlsData *tls);
 extern void ihipCtxStackUpdate();
-extern hipError_t ihipDeviceSetState();
+extern hipError_t ihipDeviceSetState(TlsData *tls);
 
 extern ihipDevice_t* ihipGetDevice(int);
 ihipCtx_t* ihipGetPrimaryCtx(unsigned deviceIndex);
@@ -951,7 +968,7 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
 
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t, bool lockAcquired = 0);
-hipError_t ihipStreamSynchronize(hipStream_t stream);
+hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream);
 void ihipStreamCallbackHandler(ihipStreamCallback_t* cb);
 
 // Stream printf functions:
@@ -1004,5 +1021,18 @@ hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKi
                        hipStream_t stream);
 };
 
+//---
+// TODO - review the context creation strategy here.  Really should be:
+//  - first "non-device" runtime call creates the context for this thread.  Allowed to call
+//  setDevice first.
+//  - hipDeviceReset destroys the primary context for device?
+//  - Then context is created again for next usage.
+static inline ihipCtx_t* iihipGetTlsDefaultCtx(TlsData* tls) {
+    // Per-thread initialization of the TLS:
+    if ((tls->defaultCtx == nullptr) && (g_deviceCnt > 0)) {
+        tls->defaultCtx = ihipGetPrimaryCtx(0);
+    }
+    return tls->defaultCtx;
+}
 
 #endif

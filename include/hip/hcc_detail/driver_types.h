@@ -59,13 +59,20 @@ typedef enum hipArray_Format {
 }hipArray_Format;
 
 typedef struct HIP_ARRAY_DESCRIPTOR {
-    enum hipArray_Format format;
-    unsigned int numChannels;
-    size_t width;
-    size_t height;
-    unsigned int flags;
-    size_t depth;
+  size_t Width;
+  size_t Height;
+  enum hipArray_Format Format;
+  unsigned int NumChannels;
 }HIP_ARRAY_DESCRIPTOR;
+
+typedef struct HIP_ARRAY3D_DESCRIPTOR {
+  size_t Width;
+  size_t Height;
+  size_t Depth;
+  enum hipArray_Format Format;
+  unsigned int NumChannels;
+  unsigned int Flags;
+}HIP_ARRAY3D_DESCRIPTOR;
 
 typedef struct hipArray {
     void* data;  // FIXME: generalize this
@@ -74,7 +81,8 @@ typedef struct hipArray {
     unsigned int width;
     unsigned int height;
     unsigned int depth;
-    struct HIP_ARRAY_DESCRIPTOR drvDesc;
+    enum hipArray_Format Format;
+    unsigned int NumChannels;
     bool isDrv;
     unsigned int textureType;
 }hipArray;
@@ -310,5 +318,19 @@ static inline struct hipExtent make_hipExtent(size_t w, size_t h, size_t d) {
 
     return e;
 }
+
+typedef enum hipFunction_attribute {
+    HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK,
+    HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES,
+    HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES,
+    HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES,
+    HIP_FUNC_ATTRIBUTE_NUM_REGS,
+    HIP_FUNC_ATTRIBUTE_PTX_VERSION,
+    HIP_FUNC_ATTRIBUTE_BINARY_VERSION,
+    HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA,
+    HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES,
+    HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT,
+    HIP_FUNC_ATTRIBUTE_MAX
+}hipFunction_attribute;
 
 #endif

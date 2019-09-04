@@ -56,6 +56,22 @@ hipError_t test_hipDeviceGetAttribute(int deviceId, hipDeviceAttribute_t attr,
     return hipSuccess;
 }
 
+hipError_t test_hipDeviceGetHdpAddress(int deviceId, hipDeviceAttribute_t attr,
+                                       uint32_t* expectedValue = (uint32_t*)0xdeadbeef) {
+    uint32_t* value = 0;
+    std::cout << "Test hipDeviceGetHdpAddress attribute " << attr;
+    if (expectedValue != (uint32_t*)0xdeadbeef) {
+        std::cout << " expected value " << expectedValue;
+    }
+    hipError_t e = hipDeviceGetAttribute((int*) &value, attr, deviceId);
+    std::cout << " actual value " << value << std::endl;
+    if ((expectedValue != (uint32_t*)0xdeadbeef) && value != expectedValue) {
+        std::cout << "fail" << std::endl;
+        return hipErrorInvalidValue;
+    }
+    return hipSuccess;
+}
+
 int main(int argc, char* argv[]) {
     int deviceId;
     CHECK(hipGetDevice(&deviceId));
@@ -109,5 +125,20 @@ int main(int argc, char* argv[]) {
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,
                                      props.maxSharedMemoryPerMultiProcessor));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeIntegrated, props.integrated));
+
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture1DWidth, props.maxTexture1D));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture2DWidth, props.maxTexture2D[0]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture2DHeight, props.maxTexture2D[1]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DWidth, props.maxTexture3D[0]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DHeight, props.maxTexture3D[1]));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxTexture3DDepth, props.maxTexture3D[2]));
+
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCooperativeLaunch, props.cooperativeLaunch));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCooperativeMultiDeviceLaunch, props.cooperativeMultiDeviceLaunch));
+
+#ifndef __HIP_PLATFORM_NVCC__
+    CHECK(test_hipDeviceGetHdpAddress(deviceId, hipDeviceAttributeHdpMemFlushCntl, props.hdpMemFlushCntl));
+    CHECK(test_hipDeviceGetHdpAddress(deviceId, hipDeviceAttributeHdpRegFlushCntl, props.hdpRegFlushCntl));
+#endif
     passed();
 };

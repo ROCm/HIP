@@ -27,57 +27,49 @@ THE SOFTWARE.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <getopt.h>
 #include <iostream>
+#include "clara/clara.hpp"
 #include <string>
 #include "hip/hip_runtime.h"
+#include "test_common.h"
 
 using namespace std;
+using namespace clara;
+inline clara::Parser cmdline_parser(bool& help, std::string& env, int &device, bool &retDevCnt) {
+    return clara::Opt{retDevCnt}
+        ["-c"]
+        ("total number of GPUs available") |
 
-void usage() {
-    printf(
-        "hipEnvVar [otpions]\n\
-    -c,\t\ttotal number of available GPUs and their pciBusID\n\
-    -d,\t\tselect one GPU and return its pciBusID\n\
-    -v,\t\tsend the list to HIP_VISIBLE_DEVICES env var\n\
-    -h,\t\tshow this help message\n\
-    ");
+        clara::Help{help} |
+
+        clara::Opt{device,"device"}
+        ["-d"]["--device"]
+        ("select one GPU and return its pciBusID")  |
+
+        clara::Opt{env,"Set Env Value"}
+        ["-v"]["--EnvValue"]
+        ("send the list to HIP_VISIBLE_DEVICES env var, syntax -v=<value>");
 }
-int main(int argc, char** argv) {
-    // string str = getenv("HIP_VISIBLE_DEVICES");
-    // std::cout << "The current env HIP_VISIBLE_DEVICES is"<<str << std::endl;
-    extern char* optarg;
-    extern int optind;
-    int c = 0;
-    int retDevCnt = 0, retDevInfo = 0, setEnvVar = 0;
-    int device = 0;
-    string env;
-    while ((c = getopt(argc, argv, "cd:v:h")) != -1) switch (c) {
-            case 'c':
-                retDevCnt = true;
-                break;
-            case 'd':
-                retDevInfo = true;
-                device = atoi(optarg);
-                break;
-            case 'v':
-                setEnvVar = true;
-                env = optarg;
-                break;
-            case 'h':
-                usage();
-                return 0;
-            default:
-                // usage();
-                return -1;
-        }
 
-    if (setEnvVar) {
-        // env = "export HIP_VISIBLE_DEVICES=" + env;
-        // cout<<"The received env var is: "<<env<<endl;
+int main(int argc, char** argv) {
+    bool help = false;
+    bool retDevCnt = false;
+    int c = 0;
+    int device = INT_MAX;
+    string env;
+
+    auto cmd = cmdline_parser(help, env, device, retDevCnt);
+    const auto r = cmd.parse(Args{argc, argv});
+    if (!r) { std::cout<<"Valid device must be >= 0"<<std::endl; return -1;}
+
+    if (help)
+        cout << cmd << endl;
+
+    if (!env.empty()) {
         setenv("HIP_VISIBLE_DEVICES", env.c_str(), 1);
         setenv("CUDA_VISIBLE_DEVICES", env.c_str(), 1);
         cout << "set env HIP_VISIBLE_DEVICES = " << env.c_str() << endl;
+
         // verify if the environment variable is set
         char* pPath;
         pPath = getenv("HIP_VISIBLE_DEVICES");
@@ -91,23 +83,20 @@ int main(int argc, char** argv) {
     int devCount = 0;
     hipGetDeviceCount(&devCount);
 
-    // printf("\nTotal number of GPU devices in the system is %d\n",devCount);
-
     if (devCount == 0) {
         printf("No HIP enabled device\n");
         return -1;
     }
-    if (device < 0 || device > devCount - 1) {
+    if (device != INT_MAX && (device < 0 || device > devCount - 1)) {
         printf("Selected device %d is out of bound. Devices on your system are in range %d - %d\n",
                device, 0, devCount - 1);
         return -1;
     }
 
     if (retDevCnt) {
-        // std::cout << "Total number of devices visible in system is "<< devCount  << std::endl;
         std::cout << devCount << std::endl;
     }
-    if (retDevInfo) {
+    if (device != INT_MAX) {
         hipDevice_t deviceT;
         hipDeviceGet(&deviceT, device);
 

@@ -40,6 +40,7 @@ class HipifyAction : public clang::ASTFrontendAction,
                      public clang::ast_matchers::MatchFinder::MatchCallback {
 private:
   ct::Replacements* replacements;
+  std::map<std::string, clang::SourceLocation> Ifndefs;
   std::unique_ptr<clang::ast_matchers::MatchFinder> Finder;
   // CUDA implicitly adds its runtime header. We rewrite explicitly-provided CUDA includes with equivalent
   // ones, and track - using this flag - if the result led to us including the hip runtime header. If it did
@@ -81,12 +82,17 @@ public:
                           const clang::Module *imported);
   // Called by the preprocessor for each pragma directive during the non-raw lexing pass.
   void PragmaDirective(clang::SourceLocation Loc, clang::PragmaIntroducerKind Introducer);
+  // Called by the preprocessor for each ifndef directive during the non-raw lexing pass.
+  // Found ifndef will be used in EndSourceFileAction() for catching include guard controlling macro.
+  void Ifndef(clang::SourceLocation Loc, const clang::Token &MacroNameTok, const clang::MacroDefinition &MD);
 
 protected:
   // Add a Replacement for the current file. These will all be applied after executing the FrontendAction.
   void insertReplacement(const ct::Replacement& rep, const clang::FullSourceLoc& fullSL);
   // FrontendAction entry point.
   void ExecuteAction() override;
+  // Callback before starting processing a single input; used by hipify-clang for setting Preprocessor options.
+  bool BeginInvocation(clang::CompilerInstance &CI) override;
   // Called at the start of each new file to process.
   void EndSourceFileAction() override;
   // MatchCallback API entry point. Called by the AST visitor while searching the AST for things we registered an interest for.

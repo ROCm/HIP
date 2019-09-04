@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
-$HIP_BASE_VERSION_MAJOR = "1";
-$HIP_BASE_VERSION_MINOR = "5";
+$HIP_BASE_VERSION_MAJOR = "2";
+$HIP_BASE_VERSION_MINOR = "8";
 
 # Need perl > 5.10 to use logic-defined or
 use 5.006; use v5.10.1;
@@ -92,7 +92,7 @@ if (not defined $HIP_PLATFORM) {
 $HIP_PATH=$ENV{'HIP_PATH'} // Cwd::realpath (dirname (dirname $0)); # use parent directory of this tool
 
 if ($HIP_PLATFORM eq "hcc") {
-    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=   -I$HIP_PATH/include -I$HCC_HOME/include";
+    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=   -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
 }
 if ($HIP_PLATFORM eq "nvcc") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";

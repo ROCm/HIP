@@ -29,6 +29,8 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <assert.h>
 #include <string>
 #include "hip/hip_runtime.h"
+#include "test_common.h"
+
 using namespace std;
 
 string getRes() {

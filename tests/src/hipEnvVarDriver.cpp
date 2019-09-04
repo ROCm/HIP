@@ -30,6 +30,8 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include "hip/hip_runtime.h"
 #include <chrono>
 #include <thread>
+#include "test_common.h"
+
 using namespace std;
 
 int getDeviceNumber() {

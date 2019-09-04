@@ -25,6 +25,7 @@ THE SOFTWARE.
 #include "hip/hcc_detail/hsa_helpers.hpp"
 #include "hip/hcc_detail/program_state.hpp"
 #include "hip_hcc_internal.h"
+#include "hip/hip_hcc.h"
 #include "program_state.inl"
 #include "trace_helper.h"
 
@@ -56,7 +57,7 @@ using namespace ELFIO;
 using namespace std;
 
 // For HIP implicit kernargs.
-static const size_t HIP_IMPLICIT_KERNARG_SIZE = 48;
+static const size_t HIP_IMPLICIT_KERNARG_SIZE = 56;
 static const size_t HIP_IMPLICIT_KERNARG_ALIGNMENT = 8;
 
 struct amd_kernel_code_v3_t {
@@ -137,7 +138,7 @@ hipError_t hipModuleUnload(hipModule_t hmod) {
     // TODO - improve this synchronization so it is thread-safe.
     // Currently we want for all inflight activity to complete, but don't prevent another
     // thread from launching new kernels before we finish this operation.
-    ihipSynchronize();
+    ihipSynchronize(tls);
 
     delete hmod;  // The ihipModule_t dtor will clean everything up.
     hmod = nullptr;
@@ -145,7 +146,7 @@ hipError_t hipModuleUnload(hipModule_t hmod) {
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t globalWorkSizeX,
                                   uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY,
                                   uint32_t localWorkSizeZ, size_t sharedMemBytes,
@@ -285,7 +286,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX, uint32_t gr
                                  void** kernelParams, void** extra) {
     HIP_INIT_API(hipModuleLaunchKernel, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, sharedMemBytes,
                  hStream, kernelParams, extra);
-    return ihipLogStatus(ihipModuleLaunchKernel(
+    return ihipLogStatus(ihipModuleLaunchKernel(tls,
         f, blockDimX * gridDimX, blockDimY * gridDimY, gridDimZ * blockDimZ, blockDimX, blockDimY,
         blockDimZ, sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr, 0));
 }
@@ -298,7 +299,7 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags) {
     HIP_INIT_API(hipExtModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
                  localWorkSizeY, localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra);
-    return ihipLogStatus(ihipModuleLaunchKernel(
+    return ihipLogStatus(ihipModuleLaunchKernel(tls,
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags));
 }
@@ -311,23 +312,23 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t startEvent, hipEvent_t stopEvent) {
     HIP_INIT_API(hipHccModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX,
                  localWorkSizeY, localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra);
-    return ihipLogStatus(ihipModuleLaunchKernel(
+    return ihipLogStatus(ihipModuleLaunchKernel(tls,
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, 0));
 }
 
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags) {
-
+    HIP_INIT_API(hipExtLaunchMultiKernelMultiDevice, launchParamsList, numDevices, flags);
     hipError_t result;
 
     if ((numDevices > g_deviceCnt) || (launchParamsList == nullptr)) {
-        return hipErrorInvalidValue;
+        return ihipLogStatus(hipErrorInvalidValue);
     }
 
     hipFunction_t* kds = reinterpret_cast<hipFunction_t*>(malloc(sizeof(hipFunction_t) * numDevices));
     if (kds == nullptr) {
-        return hipErrorNotInitialized;
+        return ihipLogStatus(hipErrorNotInitialized);
     }
 
     // prepare all kernel descriptors for each device as all streams will be locked in the next loop
@@ -335,13 +336,13 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
         const hipLaunchParams& lp = launchParamsList[i];
         if (lp.stream == nullptr) {
             free(kds);
-            return hipErrorNotInitialized;
+            return ihipLogStatus(hipErrorNotInitialized);
         }
         kds[i] = hip_impl::get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(lp.func),
                 hip_impl::target_agent(lp.stream));
         if (kds[i] == nullptr) {
             free(kds);
-            return hipErrorInvalidValue;
+            return ihipLogStatus(hipErrorInvalidValue);
         }
         hip_impl::kernargs_size_align kargs = hip_impl::get_program_state().get_kernargs_size_align(
                 reinterpret_cast<std::uintptr_t>(lp.func));
@@ -361,7 +362,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
     for (int i = 0; i < numDevices; ++i) {
         const hipLaunchParams& lp = launchParamsList[i];
 
-        result = ihipModuleLaunchKernel(kds[i],
+        result = ihipModuleLaunchKernel(tls, kds[i],
                 lp.gridDim.x * lp.blockDim.x,
                 lp.gridDim.y * lp.blockDim.y,
                 lp.gridDim.z * lp.blockDim.z,
@@ -382,7 +383,101 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 
     free(kds);
 
-    return result;
+    return ihipLogStatus(result);
+}
+
+namespace {
+// kernel for initializing GWS
+// nwm1 is the total number of work groups minus 1
+__global__ void init_gws(uint nwm1) {
+    __ockl_gws_init(nwm1, 0);
+}
+}
+
+hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
+        dim3 blockDimX, void** kernelParams, unsigned int sharedMemBytes,
+        hipStream_t stream) {
+
+    HIP_INIT_API(hipLaunchCooperativeKernel, f, gridDim, blockDimX, kernelParams, sharedMemBytes, stream);
+    hipError_t result;
+
+
+    if ((f == nullptr) || (stream == nullptr) || (kernelParams == nullptr)) {
+        return ihipLogStatus(hipErrorNotInitialized);
+    }
+
+    if (!stream->getDevice()->_props.cooperativeLaunch) {
+        return ihipLogStatus(hipErrorInvalidConfiguration);
+    }
+
+    // Prepare the kernel descriptor for initializing the GWS
+    hipFunction_t gwsKD = hip_impl::get_program_state().kernel_descriptor(
+            reinterpret_cast<std::uintptr_t>(&init_gws),
+            hip_impl::target_agent(stream));
+
+    if (gwsKD == nullptr) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    hip_impl::kernargs_size_align gwsKargs =
+            hip_impl::get_program_state().get_kernargs_size_align(
+                    reinterpret_cast<std::uintptr_t>(&init_gws));
+
+    gwsKD->_kernarg_layout = *reinterpret_cast<const std::vector<
+            std::pair<std::size_t, std::size_t>>*>(gwsKargs.getHandle());
+
+    // Prepare the kernel descriptor for the main kernel
+    hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor(
+            reinterpret_cast<std::uintptr_t>(f),
+            hip_impl::target_agent(stream));
+    if (kd == nullptr) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    hip_impl::kernargs_size_align kargs =
+            hip_impl::get_program_state().get_kernargs_size_align(
+                    reinterpret_cast<std::uintptr_t>(f));
+
+    kd->_kernarg_layout = *reinterpret_cast<const std::vector<
+            std::pair<std::size_t, std::size_t>>*>(kargs.getHandle());
+
+
+    void *gwsKernelParam[1];
+    // calculate total number of work groups minus 1 for the main kernel
+    uint nwm1 = (gridDim.x * gridDim.y * gridDim.z) - 1;
+    gwsKernelParam[0] = &nwm1;
+
+    LockedAccessor_StreamCrit_t streamCrit(stream->criticalData(), false);
+#if (__hcc_workweek__ >= 19213)
+    streamCrit->_av.acquire_locked_hsa_queue();
+#endif
+
+    // launch the init_gws kernel to initialize the GWS
+    result = ihipModuleLaunchKernel(tls, gwsKD, 1, 1, 1, 1, 1, 1,
+             0, stream, gwsKernelParam, nullptr, nullptr, nullptr, 0, true);
+
+    if (result != hipSuccess) {
+        stream->criticalData().unlock();
+#if (__hcc_workweek__ >= 19213)
+        stream->criticalData()._av.release_locked_hsa_queue();
+#endif
+
+        return ihipLogStatus(hipErrorLaunchFailure);
+    }
+
+    // launch the main kernel
+    result = ihipModuleLaunchKernel(tls, kd,
+            gridDim.x * blockDimX.x,
+            gridDim.y * blockDimX.y,
+            gridDim.z * blockDimX.z,
+            blockDimX.x, blockDimX.y, blockDimX.z,
+            sharedMemBytes, stream, kernelParams, nullptr, nullptr,
+            nullptr, 0, true);
+
+    stream->criticalData().unlock();
+#if (__hcc_workweek__ >= 19213)
+    stream->criticalData()._av.release_locked_hsa_queue();
+#endif
+
+    return ihipLogStatus(result);
 }
 
 namespace hip_impl {
@@ -395,6 +490,7 @@ namespace hip_impl {
     }
 
     hsa_agent_t this_agent() {
+        GET_TLS();
         auto ctx = ihipGetTlsDefaultCtx();
 
         if (!ctx) throw runtime_error{"No active HIP context."};
@@ -574,6 +670,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 
 namespace {
 inline void track(const hip_impl::Agent_global& x, hsa_agent_t agent) {
+    GET_TLS();
     tprintf(DB_MEM, "  add variable '%s' with ptr=%p size=%u to tracker\n", x.name,
             x.address, x.byte_cnt);
 
@@ -693,7 +790,7 @@ namespace hip_impl {
     }
 } // Namespace hip_impl.
 
-hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const char* name,
+hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t hmod, const char* name,
                                  hsa_agent_t *agent = nullptr) {
     using namespace hip_impl;
 
@@ -728,14 +825,14 @@ hipError_t ihipModuleGetFunction(hipFunction_t* func, hipModule_t hmod, const ch
 // Get kernel for the current hsa agent.
 hipError_t hipModuleGetFunction(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
     HIP_INIT_API(hipModuleGetFunction, hfunc, hmod, name);
-    return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name));
+    return ihipLogStatus(ihipModuleGetFunction(tls, hfunc, hmod, name));
 }
 
 // Get kernel for the given hsa agent. Internal use only.
 hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
                                   const char* name, hsa_agent_t *agent) {
     HIP_INIT_API(hipModuleGetFunctionEx, hfunc, hmod, name, agent);
-    return ihipLogStatus(ihipModuleGetFunction(hfunc, hmod, name, agent));
+    return ihipLogStatus(ihipModuleGetFunction(tls, hfunc, hmod, name, agent));
 }
 
 namespace {
@@ -743,7 +840,7 @@ const amd_kernel_code_v3_t *header_v3(const ihipModuleSymbol_t& kd) {
   return reinterpret_cast<const amd_kernel_code_v3_t*>(kd._header);
 }
 
-hipFuncAttributes make_function_attributes(const ihipModuleSymbol_t& kd) {
+hipFuncAttributes make_function_attributes(TlsData *tls, const ihipModuleSymbol_t& kd) {
     hipFuncAttributes r{};
 
     hipDeviceProp_t prop{};
@@ -785,22 +882,69 @@ hipFuncAttributes make_function_attributes(const ihipModuleSymbol_t& kd) {
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
+    HIP_INIT_API(hipFuncGetAttributes, attr, func);
     using namespace hip_impl;
 
-    if (!attr) return hipErrorInvalidValue;
-    if (!func) return hipErrorInvalidDeviceFunction;
+    if (!attr) return ihipLogStatus(hipErrorInvalidValue);
+    if (!func) return ihipLogStatus(hipErrorInvalidDeviceFunction);
 
     auto agent = this_agent();
     auto kd = get_program_state().kernel_descriptor(reinterpret_cast<uintptr_t>(func), agent);
 
     if (!kd->_header) throw runtime_error{"Ill-formed Kernel_descriptor."};
 
-    *attr = make_function_attributes(*kd);
+    *attr = make_function_attributes(tls, *kd);
 
-    return hipSuccess;
+    return ihipLogStatus(hipSuccess);
 }
 
-hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
+hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc)
+{
+    HIP_INIT_API(hipFuncGetAttribute, value, attrib, hfunc);
+    using namespace hip_impl;
+    
+    hipError_t retVal = hipSuccess;
+    if (!value) return ihipLogStatus(hipErrorInvalidValue);
+    hipFuncAttributes attr{};
+    attr = make_function_attributes(tls, *hfunc);
+    switch(attrib) {
+        case HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES:
+            *value = (int) attr.sharedSizeBytes;
+            break;
+        case HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK:
+            *value = attr.maxThreadsPerBlock;
+            break;
+        case HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES:
+            *value = (int) attr.constSizeBytes;
+            break;
+        case HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES:
+            *value = (int) attr.localSizeBytes;
+            break;
+        case HIP_FUNC_ATTRIBUTE_NUM_REGS:
+            *value = attr.numRegs;
+            break;
+        case HIP_FUNC_ATTRIBUTE_PTX_VERSION:
+            *value = attr.ptxVersion;
+            break;
+        case HIP_FUNC_ATTRIBUTE_BINARY_VERSION:
+            *value = attr.binaryVersion;
+            break;
+        case HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA:
+            *value = attr.cacheModeCA;
+            break;
+        case HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES:
+            *value = attr.maxDynamicSharedSizeBytes;
+            break;
+        case HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT:
+            *value = attr.preferredShmemCarveout;
+            break;
+        default:
+             retVal = hipErrorInvalidValue;
+    }
+    return ihipLogStatus(retVal);
+}
+
+hipError_t ihipModuleLoadData(TlsData *tls, hipModule_t* module, const void* image) {
     using namespace hip_impl;
 
     if (!module) return hipErrorInvalidValue;
@@ -838,7 +982,7 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* image) {
 
 hipError_t hipModuleLoadData(hipModule_t* module, const void* image) {
     HIP_INIT_API(hipModuleLoadData, module, image);
-    return ihipLogStatus(ihipModuleLoadData(module,image));
+    return ihipLogStatus(ihipModuleLoadData(tls,module,image));
 }
 
 hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
@@ -852,13 +996,13 @@ hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
 
     vector<char> tmp{istreambuf_iterator<char>{file}, istreambuf_iterator<char>{}};
 
-    return ihipLogStatus(ihipModuleLoadData(module, tmp.data()));
+    return ihipLogStatus(ihipModuleLoadData(tls, module, tmp.data()));
 }
 
 hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned int numOptions,
                                hipJitOption* options, void** optionValues) {
     HIP_INIT_API(hipModuleLoadDataEx, module, image, numOptions, options, optionValues);
-    return ihipLogStatus(ihipModuleLoadData(module, image));
+    return ihipLogStatus(ihipModuleLoadData(tls, module, image));
 }
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
@@ -878,17 +1022,39 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size_t* usedLDS)
+{
+    bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
+    if (is_code_object_v3) {
+        const auto header = reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
+        // GRANULATED_WAVEFRONT_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
+        // the granularity for gfx6-gfx9 is max(0, ceil(vgprs_used / 4) - 1)
+        *usedVGPRS = ((header->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
+        // GRANULATED_WAVEFRONT_SGPR_COUNT is specified in 6:9 bits of COMPUTE_PGM_RSRC1
+        // the granularity for gfx9+ is 2 * max(0, ceil(sgprs_used / 16) - 1)
+        *usedSGPRS = ((((header->compute_pgm_rsrc1 & 0x3C0) >> 6) >> 1) + 1) << 4;
+        *usedLDS = header->group_segment_fixed_size;
+    }
+    else {
+        const auto header = f->_header;
+        // VGPRs granularity is 4
+        *usedVGPRS = ((header->workitem_vgpr_count + 3) >> 2) << 2;
+        // adding 2 to take into account the 2 VCC registers & handle the granularity of 16
+        *usedSGPRS = header->wavefront_sgpr_count + 2;
+        *usedSGPRS = ((*usedSGPRS + 15) >> 4) << 4;
+        *usedLDS = header->workgroup_group_segment_byte_size;
+    }
+}
+
+hipError_t ihipOccupancyMaxPotentialBlockSize(TlsData *tls, uint32_t* gridSize, uint32_t* blockSize,
                                               hipFunction_t f, size_t dynSharedMemPerBlk,
                                               uint32_t blockSizeLimit)
 {
     using namespace hip_impl;
 
     auto ctx = ihipGetTlsDefaultCtx();
-    hipError_t ret = hipSuccess;
-
     if (ctx == nullptr) {
-        ret = hipErrorInvalidDevice;
+        return hipErrorInvalidDevice;
     }
 
     hipDeviceProp_t prop{};
@@ -899,26 +1065,7 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
     size_t usedVGPRS = 0;
     size_t usedSGPRS = 0;
     size_t usedLDS = 0;
-    bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
-    if (is_code_object_v3) {
-        const auto header = reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
-        // GRANULATED_WAVEFRONT_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
-        // the granularity for gfx6-gfx9 is max(0, ceil(vgprs_used / 4) - 1)
-        usedVGPRS = ((header->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
-        // GRANULATED_WAVEFRONT_SGPR_COUNT is specified in 6:9 bits of COMPUTE_PGM_RSRC1
-        // the granularity for gfx9+ is 2 * max(0, ceil(sgprs_used / 16) - 1)
-        usedSGPRS = ((((header->compute_pgm_rsrc1 & 0x3C0) >> 6) >> 1) + 1) << 4;
-        usedLDS = header->group_segment_fixed_size;
-    }
-    else {
-        const auto header = f->_header;
-        // VGPRs granularity is 4
-        usedVGPRS = ((header->workitem_vgpr_count + 3) >> 2) << 2;
-        // adding 2 to take into account the 2 VCC registers & handle the granularity of 16
-        usedSGPRS = header->wavefront_sgpr_count + 2;
-        usedSGPRS = ((usedSGPRS + 15) >> 4) << 4;
-        usedLDS = header->workgroup_group_segment_byte_size;
-    }
+    getGprsLdsUsage(f, &usedVGPRS, &usedSGPRS, &usedLDS);
 
     // try different workgroup sizes to find the maximum potential occupancy
     // based on the usage of VGPRs and LDS
@@ -993,7 +1140,7 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
         tmp_min = min(maxWavesSGPRSLimited, tmp_min);
         activeWavefronts = min(maxWavesVGPRSLimited, tmp_min);
 
-        if (maxActivWaves < activeWavefronts) {
+        if (maxActivWaves <= activeWavefronts) {
             maxActivWaves = activeWavefronts;
             maxWavefronts = wavefrontsPerWG;
         }
@@ -1008,9 +1155,8 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* bloc
     *blockSize = maxWavefronts * wavefrontSize;
     *gridSize = min((maxThreadsCnt + *blockSize - 1) / *blockSize, prop.multiProcessorCount);
 
-    return ret;
+    return hipSuccess;
 }
-
 
 hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
@@ -1018,6 +1164,105 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
 {
     HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit);
 
-    return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(
+    return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(tls,
         gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit));
+}
+
+hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+   TlsData *tls, uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+{
+    using namespace hip_impl;
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    if (ctx == nullptr) {
+        return hipErrorInvalidDevice;
+    }
+
+    hipDeviceProp_t prop{};
+    ihipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+
+    prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
+
+    size_t usedVGPRS = 0;
+    size_t usedSGPRS = 0;
+    size_t usedLDS = 0;
+    getGprsLdsUsage(f, &usedVGPRS, &usedSGPRS, &usedLDS);
+
+    // Due to SPI and private memory limitations, the max of wavefronts per CU in 32
+    size_t wavefrontSize = prop.warpSize;
+    size_t maxWavefrontsPerCU = min(prop.maxThreadsPerMultiProcessor / wavefrontSize, 32);
+
+    const size_t simdPerCU = 4;
+    const size_t maxWavesPerSimd = maxWavefrontsPerCU / simdPerCU;
+
+    size_t numWavefronts = (blockSize + wavefrontSize - 1) / wavefrontSize;
+
+    size_t availableVGPRs = (prop.regsPerBlock / wavefrontSize / simdPerCU);
+    size_t vgprs_alu_occupancy = simdPerCU * std::min(maxWavesPerSimd, availableVGPRs / usedVGPRS);
+
+    // Calculate blocks occupancy per CU based on VGPR usage
+    *numBlocks = vgprs_alu_occupancy / numWavefronts;
+
+    const size_t availableSGPRs = (prop.gcnArch < 800) ? 512 : 800;
+    size_t sgprs_alu_occupancy = simdPerCU * ((usedSGPRS == 0) ? maxWavesPerSimd
+        : std::min(maxWavesPerSimd, availableSGPRs / usedSGPRS));
+
+    // Calculate blocks occupancy per CU based on SGPR usage
+    *numBlocks = std::min(*numBlocks, (uint32_t) (sgprs_alu_occupancy / numWavefronts)); 
+
+    size_t total_used_lds = usedLDS + dynSharedMemPerBlk;
+    if (total_used_lds != 0) {
+      // Calculate LDS occupacy per CU. lds_per_cu / (static_lsd + dynamic_lds)
+      size_t lds_occupancy = prop.maxSharedMemoryPerMultiProcessor / total_used_lds;
+      *numBlocks = std::min(*numBlocks, (uint32_t) lds_occupancy);
+    }
+
+    return hipSuccess;
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+{
+    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
+
+    return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+   uint32_t* numBlocks, hipFunction_t f, uint32_t  blockSize, size_t dynSharedMemPerBlk,
+   unsigned int flags)
+{
+    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
+
+    return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
+}
+
+hipError_t hipLaunchKernel(
+    const void* func_addr, dim3 numBlocks, dim3 dimBlocks, void** args,
+    size_t sharedMemBytes, hipStream_t stream)
+{
+   HIP_INIT_API(hipLaunchKernel,func_addr,numBlocks,dimBlocks,args,sharedMemBytes,stream);
+
+   hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)func_addr,
+                                                           hip_impl::target_agent(stream));
+
+   if(kd == nullptr || kd->_header == nullptr)
+       return ihipLogStatus(hipErrorInvalidValue);
+
+   size_t szKernArg = kd->_header->kernarg_segment_byte_size;
+
+   if(args == NULL && szKernArg != 0)
+      return ihipLogStatus(hipErrorInvalidValue);
+
+   void* config[]{
+        HIP_LAUNCH_PARAM_BUFFER_POINTER,
+        args,
+        HIP_LAUNCH_PARAM_BUFFER_SIZE,
+	    &szKernArg,
+        HIP_LAUNCH_PARAM_END};
+
+   return ihipLogStatus(ihipModuleLaunchKernel(tls, kd, numBlocks.x * dimBlocks.x, numBlocks.y * dimBlocks.y, numBlocks.z * dimBlocks.z,
+                          dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes, stream, nullptr, (void**)&config, nullptr, nullptr, 0));
 }

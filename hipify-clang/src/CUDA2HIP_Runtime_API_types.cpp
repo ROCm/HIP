@@ -84,7 +84,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
 
   // no analogue
   // CUDA_LAUNCH_PARAMS struct differs
-  {"cudaLaunchParams",                                                 {"hipLaunchParams",                                          "", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaLaunchParams",                                                 {"hipLaunchParams",                                          "", CONV_TYPE, API_RUNTIME}},
 
   // no analogue
   // NOTE: HIP struct is bigger and contains cudaMemcpy3DParms only in the beginning
@@ -255,17 +255,17 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_DEVICE_ATTRIBUTE_COMPUTE_MODE
   {"cudaDevAttrComputeMode",                                           {"hipDeviceAttributeComputeMode",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 20
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH
-  {"cudaDevAttrMaxTexture1DWidth",                                     {"hipDeviceAttributeMaxTexture1DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 21
+  {"cudaDevAttrMaxTexture1DWidth",                                     {"hipDeviceAttributeMaxTexture1DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 21
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH
-  {"cudaDevAttrMaxTexture2DWidth",                                     {"hipDeviceAttributeMaxTexture2DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 22
+  {"cudaDevAttrMaxTexture2DWidth",                                     {"hipDeviceAttributeMaxTexture2DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 22
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT
-  {"cudaDevAttrMaxTexture2DHeight",                                    {"hipDeviceAttributeMaxTexture2DHeight",                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 23
+  {"cudaDevAttrMaxTexture2DHeight",                                    {"hipDeviceAttributeMaxTexture2DHeight",                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 23
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_WIDTH
-  {"cudaDevAttrMaxTexture3DWidth",                                     {"hipDeviceAttributeMaxTexture3DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 24
+  {"cudaDevAttrMaxTexture3DWidth",                                     {"hipDeviceAttributeMaxTexture3DWidth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 24
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_HEIGHT
-  {"cudaDevAttrMaxTexture3DHeight",                                    {"hipDeviceAttributeMaxTexture3DHeight",                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 25
+  {"cudaDevAttrMaxTexture3DHeight",                                    {"hipDeviceAttributeMaxTexture3DHeight",                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 25
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE3D_DEPTH
-  {"cudaDevAttrMaxTexture3DDepth",                                     {"hipDeviceAttributeMaxTexture3DDepth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 26
+  {"cudaDevAttrMaxTexture3DDepth",                                     {"hipDeviceAttributeMaxTexture3DDepth",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 26
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_WIDTH
   {"cudaDevAttrMaxTexture2DLayeredWidth",                              {"hipDeviceAttributeMaxTexture2DLayeredWidth",               "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 27
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_LAYERED_HEIGHT
@@ -402,9 +402,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR
   {"cudaDevAttrReserved94",                                            {"hipDeviceAttributeCanUseStreamWaitValueNor",               "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 94
   // CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH
-  {"cudaDevAttrCooperativeLaunch",                                     {"hipDeviceAttributeCooperativeLaunch",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 95
+  {"cudaDevAttrCooperativeLaunch",                                     {"hipDeviceAttributeCooperativeLaunch",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 95
   // CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH
-  {"cudaDevAttrCooperativeMultiDeviceLaunch",                          {"hipDeviceAttributeCooperativeMultiDeviceLaunch",           "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 96
+  {"cudaDevAttrCooperativeMultiDeviceLaunch",                          {"hipDeviceAttributeCooperativeMultiDeviceLaunch",           "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 96
   // CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN
   {"cudaDevAttrMaxSharedMemoryPerBlockOptin",                          {"hipDeviceAttributeMaxSharedMemoryPerBlockOptin",           "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 97
   // CU_DEVICE_ATTRIBUTE_CAN_FLUSH_REMOTE_WRITES
@@ -1067,7 +1067,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_SHAREDMEM_CARVEOUT_MAX_SHARED
   {"cudaSharedmemCarveoutMaxShared",                                   {"hipSharedmemCarveoutMaxShared",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 100
   // CU_SHAREDMEM_CARVEOUT_MAX_L1
-  {"cudaSharedmemCarveoutMaxShared",                                   {"hipSharedmemCarveoutMaxL1",                                "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 0
+  {"cudaSharedmemCarveoutMaxL1",                                       {"hipSharedmemCarveoutMaxL1",                                "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 0
 
   // CUsharedconfig
   {"cudaSharedMemConfig",                                              {"hipSharedMemConfig",                                       "", CONV_TYPE, API_RUNTIME}},
@@ -1244,6 +1244,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CUtexObject
   {"cudaTextureObject_t",                                              {"hipTextureObject_t",                                       "", CONV_TYPE, API_RUNTIME}},
 
+  // CUuuid
+  {"cudaUUID_t",                                                       {"hipUUID_t",                                                "", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
+
   // 5. Defines
 
   // no analogue
@@ -1320,9 +1323,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS
   {"cudaIpcMemLazyEnablePeerAccess",                                   {"hipIpcMemLazyEnablePeerAccess",                            "", CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CU_MEM_ATTACH_GLOBAL
-  {"cudaMemAttachGlobal",                                              {"hipMemAttachGlobal",                                       "", CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x01
+  {"cudaMemAttachGlobal",                                              {"hipMemAttachGlobal",                                       "", CONV_DEFINE, API_RUNTIME}}, // 0x01
   // CU_MEM_ATTACH_HOST
-  {"cudaMemAttachHost",                                                {"hipMemAttachHost",                                         "", CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x02
+  {"cudaMemAttachHost",                                                {"hipMemAttachHost",                                         "", CONV_DEFINE, API_RUNTIME}}, // 0x02
   // CU_MEM_ATTACH_SINGLE
   {"cudaMemAttachSingle",                                              {"hipMemAttachSingle",                                       "", CONV_DEFINE, API_RUNTIME, HIP_UNSUPPORTED}}, // 0x04
   // no analogue
