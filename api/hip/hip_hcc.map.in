@@ -203,6 +203,8 @@ global:
     hiprtcGetCode*;
     hiprtcGetCodeSize*;
     hiprtcGetErrorString*;
+    hiprtcVersion*;
+    hiprtcGetTypeName*;
     };
 local:
     *;

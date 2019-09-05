@@ -188,3 +188,5 @@ hiprtcGetProgramLogSize
 hiprtcGetCode
 hiprtcGetCodeSize
 hiprtcGetErrorString
+hiprtcVersion;
+hiprtcGetTypeName;
