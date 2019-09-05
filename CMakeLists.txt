@@ -55,6 +55,14 @@ add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
 add_to_config(_versionInfo HIP_VERSION_PATCH)
 
+if(CMAKE_CXX_COMPILER MATCHES ".*hcc")
+    set(HIP_COMPILER "hcc" CACHE STRING "HIP Compiler")
+    set(HIP_PLATFORM "hcc" CACHE STRING "HIP Platform")
+    get_filename_component(CXX_PATH ${CMAKE_CXX_COMPILER} DIRECTORY)
+    get_filename_component(CXX_PATH ${CXX_PATH} DIRECTORY)
+    set(HCC_HOME "${CXX_PATH}" CACHE PATH "Path to which HCC has been installed")
+endif()
+
 # overwrite HIP_VERSION_PATCH for packaging
 if(DEFINED ENV{ROCM_BUILD_ID})
     set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-$ENV{ROCM_BUILD_ID}-${HIP_VERSION_GITHASH})
