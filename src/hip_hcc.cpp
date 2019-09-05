@@ -220,8 +220,17 @@ TidInfo::TidInfo() : _apiSeqNum(0) {
         tid_ss_num << std::this_thread::get_id();
         tid_ss << std::hex << std::stoull(tid_ss_num.str());
 
-        tprintf(DB_API, "HIP initialized short_tid#%d (maps to full_tid: 0x%s)\n", _shortTid,
-                tid_ss.str().c_str());
+        // cannot use tprintf here since it will recurse back into TlsData constructor
+#if COMPILE_HIP_DB
+        if (HIP_DB & (1 << DB_API)) {
+            char msgStr[1000];
+            snprintf(msgStr, sizeof(msgStr),
+                    "HIP initialized short_tid#%d (maps to full_tid: 0x%s)\n",
+                    tid(), tid_ss.str().c_str());
+            fprintf(stderr, "  %ship-%s pid:%d tid:%d:%s%s", dbName[DB_API]._color,
+                    dbName[DB_API]._shortName, pid(), tid(), msgStr, KNRM);
+        }
+#endif
     };
 }
 
