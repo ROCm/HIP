@@ -24,6 +24,10 @@ THE SOFTWARE.
 #include <cstddef>
 #include <string>
 
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 enum hiprtcResult {
     HIPRTC_SUCCESS = 0,
     HIPRTC_ERROR_OUT_OF_MEMORY = 1,
@@ -108,4 +112,8 @@ namespace hip_impl
                                        HIPRTC_SUCCESS;
         }
     #endif
+#endif
+
+#if defined(__cplusplus)
+} // extern "C" {
 #endif
