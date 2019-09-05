@@ -970,7 +970,7 @@ static void __barrier(int n)
 
 __device__
 inline
-__attribute__((noduplicate))
+__attribute__((convergent))
 void __syncthreads()
 {
   __barrier(__CLK_LOCAL_MEM_FENCE);
