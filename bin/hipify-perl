@@ -41,9 +41,7 @@ $no_output   = 1 if $n;
 # These uses of cuda[A-Z] are commonly used in CUDA code but don't actually map to any CUDA API:
 # TODO - use a hash lookup for these.
 @warn_whitelist = (
-         "cudaError"
-        ,"cudaStatus"
-        ,"cudaDevice"
+         "cudaDevice"
         ,"cudaDevice_t"
         ,"cudaIDs"
         ,"cudaGridDim"
@@ -56,18 +54,15 @@ $no_output   = 1 if $n;
         ,"cudaOutput",
         ,"cudaGradInput",
         ,"cudaIndices",
-        ,"cudaColorSpinorField"
         ,"cudaGaugeField"
         ,"cudaMom"
         ,"cudaGauge"
         ,"cudaInGauge"
-        ,"cudaGaugeField"
         ,"cudaColorSpinorField"
         ,"cudaSiteLink"
         ,"cudaFatLink"
         ,"cudaStaple"
         ,"cudaCloverField"
-        ,"cudaFatLink"
         ,"cudaParam"
     );
 #print "WW=@warn_whitelist\n";
@@ -76,7 +71,7 @@ $no_output   = 1 if $n;
 push (@warn_whitelist, split(',',$warn_whitelist));
 
 #Stats tracking code:
-@statNames = ("error", "init", "version", "device", "context", "module", "memory", "addressing", "stream", "event", "external_resource_interop", "stream_memory", "execution", "graph", "occupancy", "texture", "surface", "peer", "graphics", "profiler", "openGL", "D3D9", "D3D10", "D3D11", "VDPAU", "EGL", "thread", "complex", "library", "device_library", "include", "include_cuda_main_header", "type", "literal", "numeric_literal", "define", "special_func", "extern_shared", "kern");
+@statNames = ("error", "init", "version", "device", "context", "module", "memory", "addressing", "stream", "event", "external_resource_interop", "stream_memory", "execution", "graph", "occupancy", "texture", "surface", "peer", "graphics", "profiler", "openGL", "D3D9", "D3D10", "D3D11", "VDPAU", "EGL", "thread", "complex", "library", "device_library", "include", "include_cuda_main_header", "type", "literal", "numeric_literal", "define", "kernel_func", "extern_shared", "kern_launch");
 
 #Compute total of all individual counts:
 sub totalStats {
@@ -1636,20 +1631,6 @@ while (@ARGV) {
         $ft{'define'} += s/\bcudaTextureTypeCubemap\b/hipTextureTypeCubemap/g;
         $ft{'define'} += s/\bcudaTextureTypeCubemapLayered\b/hipTextureTypeCubemapLayered/g;
 
-        # Compiler Defines
-        # __CUDACC__ is set by NVCC to indicate it is treating the input file as CUDA code (as opposed to host)
-        # Typically we want any code treated as CUDA code to be treated as accelerator code by Kalmar too
-        # __HIPCC__ will set KALMARCC
-        $ft{'define'} += s/\b__CUDACC__\b/__HIPCC__/g;
-        # __CUDA_ARCH is often used to detect when a function or kernel is being compiled for the device.
-        # Don't automaticall convert this - likely these will need special attention with HIP_ARCH_HAS_* macros
-        #$ft{'define'} += s/\b__CUDA_ARCH__\b/__HIP_ARCH__/g;
-
-        #Includes:
-        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime\.h[>"]/$1<hip\/hip_runtime.h>/;
-        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_runtime_api\.h[>"]/$1<hip\/hip_runtime_api.h>/;
-        $countIncludes += s/(\s*#\s*include\s+)[<"]cuda_fp16\.h[>"]/$1<hip\/hip_fp16.h>/;
-
         $countKeywords += m/__global__/;
         $countKeywords += m/__shared__/;
 
@@ -1694,7 +1675,7 @@ while (@ARGV) {
             # Handle the <<numBlocks, blockDim>>> syntax with non-empty args:
             $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), 0, 0, /g;
             if ($k) {
-                $ft{'kern'} += $k;
+                $ft{'kern_launch'} += $k;
                 $Tkernels{$1} ++;
             }
         }
@@ -1706,7 +1687,7 @@ while (@ARGV) {
         }
         # guess that we are in device code , or at least in a file that calls device code.
         # will almost certainly call one of the coordiante functions - could be fooled by clever macros but usually works:
-        my $hasDeviceCode = $countKeywords + $ft{'special_func'};
+        my $hasDeviceCode = $countKeywords + $ft{'kernel_func'};
         unless ($quiet_warnings) {
             #print STDERR "Check WARNINGs\n";
             # copy into array of lines, process line-by-line to show warnings:
@@ -1737,26 +1718,27 @@ while (@ARGV) {
                         print STDERR "  warning: $fileName:#$line_num : $_";
                         print STDERR "\n";
                     }
-                    $s = warnUnsupportedSpecialFunctions($line_num);
+                    $s = warnUnsupportedDeviceFunctions($line_num);
                     $warnings += $s;
                 }
                 $_ = $tmp;
             }
         }
-        # Math libraries
+
         # To limit bogus translations, try to make sure we are in a kernel:
         if ($hasDeviceCode > 0) {
-            $ft{'special_func'} += countSupportedSpecialFunctions();
+            $ft{'kernel_func'} += countSupportedDeviceFunctions();
         }
 
         # Print it!
         # TODO - would like to move this code outside loop but it uses $_ which contains the whole file.
         unless ($no_output) {
-            my $apiCalls   = $ft{'error'} + $ft{'init'} + $ft{'version'} + $ft{'device'} + $ft{'context'} + $ft{'module'} + $ft{'memory'} + $ft{'addressing'} + $ft{'stream'} + $ft{'event'} + $ft{'external_resource_interop'} + $ft{'stream_memory'} + $ft{'execution'} + $ft{'graph'} + $ft{'occupancy'} + $ft{'texture'} + $ft{'surface'} + $ft{'peer'} + $ft{'graphics'} + $ft{'profiler'} + $ft{'openGL'} + $ft{'D3D9'} + $ft{'D3D10'} + $ft{'D3D11'} + $ft{'VDPAU'} + $ft{'EGL'} + $ft{'thread'} + $ft{'complex'} + $ft{'library'} + $ft{'device_library'} + $ft{'include'} + $ft{'include_cuda_main_header'} + $ft{'type'} + $ft{'literal'} + $ft{'numeric_literal'} + $ft{'define'} + $ft{'special_func'};
-            my $kernStuff  = $hasDeviceCode + $ft{'kern'};
+            my $apiCalls   = $ft{'error'} + $ft{'init'} + $ft{'version'} + $ft{'device'} + $ft{'context'} + $ft{'module'} + $ft{'memory'} + $ft{'addressing'} + $ft{'stream'} + $ft{'event'} + $ft{'external_resource_interop'} + $ft{'stream_memory'} + $ft{'execution'} + $ft{'graph'} + $ft{'occupancy'} + $ft{'texture'} + $ft{'surface'} + $ft{'peer'} + $ft{'graphics'} + $ft{'profiler'} + $ft{'openGL'} + $ft{'D3D9'} + $ft{'D3D10'} + $ft{'D3D11'} + $ft{'VDPAU'} + $ft{'EGL'} + $ft{'thread'} + $ft{'complex'} + $ft{'library'} + $ft{'device_library'} + $ft{'include'} + $ft{'include_cuda_main_header'} + $ft{'type'} + $ft{'literal'} + $ft{'numeric_literal'} + $ft{'define'};
+            my $kernStuff  = $hasDeviceCode + $ft{'kern_launch'} + $ft{'kernel_func'};
             my $totalCalls = $apiCalls + $kernStuff;
             $is_dos = m/\r\n$/;
             if ($totalCalls and ($countIncludes == 0) and ($kernStuff != 0)) {
+                # TODO: implement hipify-clang's logic with header files AMAP
                 # If this file makes kernel builtin calls, and does not include the cuda_runtime.h,
                 # then add an #include to match "magic" includes provided by NVCC.
                 # This logic can miss cases where cuda_runtime.h is included by another include file.
@@ -1802,50 +1784,31 @@ if ($count_conversions) {
     }
 }
 
-sub countSupportedSpecialFunctions
+sub countSupportedDeviceFunctions
 {
     my $m = 0;
-    #supported special functions:
+    # TODO: list all of the supported functions
+    # TODO: split the list on math, device, and maybe fp16
     foreach $func (
         # Synchronization:
         "__syncthreads",
     )
     {
-        # match math at the beginning of a word, but not if it already has a namespace qualifier ('::') :
+        # match device func at the beginning of a word, but not if it already has a namespace qualifier ('::') :
         $m += m/[:]?[:]?\b($func)\b(\w*\()/g;
     }
     return $m;
 }
 
-sub warnUnsupportedSpecialFunctions
+sub warnUnsupportedDeviceFunctions
 {
     my $line_num =  shift;
     my $m = 0;
+    # ToDo: list all of the supported functions
     foreach $func (
-        # Synchronization:
-        "__syncthreads_count",
         "__syncthreads_and",
         "__syncthreads_or",
-        # Read-only cache function:
-        "__ldg",
-        # Cross-lane and warp-vote instructions:
-        #"__all",
-        #"__any",
-        #"__ballot",
-        #"__popc",
-        #"__clz",
-        #"__shfl",
-        #"__shfl_up",
-        #"__shfl_down",
-        #"__shfl_xor",
-        "__prof_trigger",
-        # too popular, and we can't tell if we are in device or host code.
-        #"assert",
-        #"printf",
-        #"malloc",
-        #"free",
-        #"memset",
-        #"memcpy"
+        "__prof_trigger"
     )
     {
         # match math at the beginning of a word, but not if it already has a namespace qualifier ('::') :
