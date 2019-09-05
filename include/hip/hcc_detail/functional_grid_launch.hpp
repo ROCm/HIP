@@ -129,7 +129,7 @@ void hipLaunchKernelGGLImpl(
 
 template <typename F>
 inline
-void hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
     F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
 
     using namespace hip_impl;
@@ -138,13 +138,13 @@ void hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
     auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
                                                    target_agent(0));
 
-    hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
+    return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
                                       dynSharedMemPerBlk, blockSizeLimit);
 }
 
 template <typename F>
 inline
-void hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks, F kernel,
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks, F kernel,
     uint32_t blockSize, size_t dynSharedMemPerBlk) {
 
     using namespace hip_impl;
@@ -153,7 +153,7 @@ void hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks, F kernel,
     auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
                                                    target_agent(0));
 
-    hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynSharedMemPerBlk);
+    return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynSharedMemPerBlk);
 }
 
 template <typename... Args, typename F = void (*)(Args...)>
@@ -175,15 +175,6 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
     hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
                                      numBlocks, dimBlocks, sharedMemBytes,
                                      stream, &config[0]);
-}
-
-template <typename... Args, typename F = void (*)(hipLaunchParm, Args...)>
-[[deprecated("hipLaunchKernel is deprecated and will be removed in the next "
-             "version of HIP; please upgrade to hipLaunchKernelGGL.")]]
-inline void hipLaunchKernel(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
-                            std::uint32_t groupMemBytes, hipStream_t stream, Args... args) {
-    hipLaunchKernelGGL(kernel, numBlocks, dimBlocks, groupMemBytes, stream, hipLaunchParm{},
-                       std::move(args)...);
 }
 
 #pragma GCC visibility pop

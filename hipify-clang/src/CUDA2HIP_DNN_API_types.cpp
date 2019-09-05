@@ -229,14 +229,21 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DNN_TYPE_NAME_MAP{
   {"CUDNN_SEQDATA_BATCH_DIM",                             {"HIPDNN_SEQDATA_BATCH_DIM",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
   {"CUDNN_SEQDATA_BEAM_DIM",                              {"HIPDNN_SEQDATA_BEAM_DIM",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
   {"CUDNN_SEQDATA_VECT_DIM",                              {"HIPDNN_SEQDATA_VECT_DIM",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 3
-  {"cudnnAttnQueryMap_t",                                 {"hipdnnAttnQueryMap_t",                                 "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
+  {"cudnnAttnQueryMap_t",                                 {"hipdnnAttnQueryMap_t",                                 "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},
   {"CUDNN_ATTN_QUERYMAP_ALL_TO_ONE",                      {"HIPDNN_ATTN_QUERYMAP_ALL_TO_ONE",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
-  {"CUDNN_ATTN_QUERYMAP_ONE_TO_ONE",                      {"HIPDNN_ATTN_QUERYMAP_ONE_TO_ONE",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
+  {"CUDNN_ATTN_QUERYMAP_ONE_TO_ONE",                      {"HIPDNN_ATTN_QUERYMAP_ONE_TO_ONE",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1U << 0
+  {"CUDNN_ATTN_DISABLE_PROJ_BIASES",                      {"HIPDNN_ATTN_DISABLE_PROJ_BIASES",                      "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
+  {"CUDNN_ATTN_ENABLE_PROJ_BIASES",                       {"HIPDNN_ATTN_ENABLE_PROJ_BIASES",                       "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1U << 1
   {"cudnnMultiHeadAttnWeightKind_t",                      {"hipdnnMultiHeadAttnWeightKind_t",                      "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"CUDNN_MH_ATTN_Q_WEIGHTS",                             {"HIPDNN_MH_ATTN_Q_WEIGHTS",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
   {"CUDNN_MH_ATTN_K_WEIGHTS",                             {"HIPDNN_MH_ATTN_K_WEIGHTS",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
   {"CUDNN_MH_ATTN_V_WEIGHTS",                             {"HIPDNN_MH_ATTN_V_WEIGHTS",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 2
   {"CUDNN_MH_ATTN_O_WEIGHTS",                             {"HIPDNN_MH_ATTN_O_WEIGHTS",                             "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 3
+  {"CUDNN_MH_ATTN_Q_BIASES",                              {"HIPDNN_MH_ATTN_Q_BIASES",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 4
+  {"CUDNN_MH_ATTN_K_BIASES",                              {"HIPDNN_MH_ATTN_K_BIASES",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 5
+  {"CUDNN_MH_ATTN_V_BIASES",                              {"HIPDNN_MH_ATTN_V_BIASES",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 6
+  {"CUDNN_MH_ATTN_O_BIASES",                              {"HIPDNN_MH_ATTN_O_BIASES",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 7
+  {"CUDNN_ATTN_WKIND_COUNT",                              {"HIPDNN_ATTN_WKIND_COUNT",                              "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 8
   {"cudnnWgradMode_t",                                    {"hipdnnWgradMode_t",                                    "", CONV_TYPE, API_DNN, HIP_UNSUPPORTED}},
   {"CUDNN_WGRAD_MODE_ADD",                                {"HIPDNN_WGRAD_MODE_ADD",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 0
   {"CUDNN_WGRAD_MODE_SET",                                {"HIPDNN_WGRAD_MODE_SET",                                "", CONV_NUMERIC_LITERAL, API_DNN, HIP_UNSUPPORTED}},    // 1
