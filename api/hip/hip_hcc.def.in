@@ -74,9 +74,11 @@ hipIpcOpenMemHandle
 hipMalloc
 hipMalloc3D
 hipMalloc3DArray
+hipArrayCreate
 hipMallocArray
 hipMallocPitch
 hipMemcpy
+hipMemcpyParam2D
 hipMemcpy2D
 hipMemcpy2DAsync
 hipMemcpy2DToArray
