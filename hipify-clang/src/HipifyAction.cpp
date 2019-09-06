@@ -484,6 +484,11 @@ public:
 
 }
 
+bool HipifyAction::BeginInvocation(clang::CompilerInstance &CI) {
+  llcompat::RetainExcludedConditionalBlocks(CI);
+  return true;
+}
+
 void HipifyAction::ExecuteAction() {
   clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
   clang::SourceManager& SM = getCompilerInstance().getSourceManager();

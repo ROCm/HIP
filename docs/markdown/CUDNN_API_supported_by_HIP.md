@@ -233,9 +233,11 @@
 | define       |`CUDNN_SEQDATA_DIM_COUNT`                                      | 9.0              |                                                            |
 | struct       |`cudnnSeqDataStruct`                                           | 9.0              |                                                            |
 | struct*      |`cudnnSeqDataDescriptor_t`                                     | 9.0              |                                                            |
-| enum         |***`cudnnAttnQueryMap_t`***                                    | 9.0              |                                                            |
+| unsigned     |***`cudnnAttnQueryMap_t`***                                    | 9.0              |                                                            |
 |            0 |*`CUDNN_ATTN_QUERYMAP_ALL_TO_ONE`*                             | 9.0              |                                                            |
-|            1 |*`CUDNN_ATTN_QUERYMAP_ONE_TO_ONE`*                             | 9.0              |                                                            |
+|      1U << 0 |*`CUDNN_ATTN_QUERYMAP_ONE_TO_ONE`*                             | 9.0              |                                                            |
+|            1 |*`CUDNN_ATTN_DISABLE_PROJ_BIASES`*                             | 10.1 Update 2    |                                                            |
+|      1U << 1 |*`CUDNN_ATTN_ENABLE_PROJ_BIASES`*                              | 10.1 Update 2    |                                                            |
 | struct       |`cudnnAttnStruct`                                              | 9.0              |                                                            |
 | struct*      |`cudnnAttnDescriptor_t`                                        | 9.0              |                                                            |
 | enum         |***`cudnnMultiHeadAttnWeightKind_t`***                         | 9.0              |                                                            |
@@ -243,6 +245,11 @@
 |            1 |*`CUDNN_MH_ATTN_K_WEIGHTS`*                                    | 9.0              |                                                            |
 |            2 |*`CUDNN_MH_ATTN_V_WEIGHTS`*                                    | 9.0              |                                                            |
 |            3 |*`CUDNN_MH_ATTN_O_WEIGHTS`*                                    | 9.0              |                                                            |
+|            4 |*`CUDNN_MH_ATTN_Q_BIASES`*                                     | 10.1 Update 2    |                                                            |
+|            5 |*`CUDNN_MH_ATTN_K_BIASES`*                                     | 10.1 Update 2    |                                                            |
+|            6 |*`CUDNN_MH_ATTN_V_BIASES`*                                     | 10.1 Update 2    |                                                            |
+|            7 |*`CUDNN_MH_ATTN_O_BIASES`*                                     | 10.1 Update 2    |                                                            |
+| define     8 |`CUDNN_ATTN_WKIND_COUNT`                                       | 10.1 Update 2    |                                                            |
 | enum         |***`cudnnWgradMode_t`***                                       | 9.0              |                                                            |
 |            0 |*`CUDNN_WGRAD_MODE_ADD`*                                       | 9.0              |                                                            |
 |            1 |*`CUDNN_WGRAD_MODE_SET`*                                       | 9.0              |                                                            |

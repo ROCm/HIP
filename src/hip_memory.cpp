@@ -1568,13 +1568,6 @@ hipError_t ihipMemPtrGetInfo(void* ptr, size_t* size) {
 
 template <typename T>
 void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t count) {
-    // Just Use count, instead of dividing by 4, the calling API already does it
-    if (sizeof(T) == sizeof(uint32_t) && (count % sizeof(uint32_t) == 0) &&
-        !hsa_amd_memory_fill(ptr, reinterpret_cast<const std::uint32_t&>(val), count)) {
-        // Only return if the execution completes without error
-        // if error occured, try the normal version
-        return;
-    }
     static constexpr uint32_t block_dim = 256;
 
     const uint32_t grid_dim = clamp_integer<size_t>(count / block_dim, 1, UINT32_MAX);
