@@ -859,7 +859,7 @@
 | `cuMemAlloc`                                              | `hipMalloc`                   |
 | `cuMemAllocHost`                                          |                               |
 | `cuMemAllocManaged`                                       | `hipMemAllocManaged`          |
-| `cuMemAllocPitch`                                         |                               |
+| `cuMemAllocPitch`                                         | `hipMemAllocPitch`            |
 | `cuMemcpy`                                                |                               |
 | `cuMemcpy2D`                                              | `hipMemcpyParam2D`            |
 | `cuMemcpy2DAsync`                                         | `hipMemcpyParam2DAsync`       |

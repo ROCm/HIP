@@ -464,6 +464,17 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes){
+    HIP_INIT_SPECIAL_API(hipMemAllocPitch, (TRACE_MEM), dptr, pitch, widthInBytes, height,elementSizeBytes);
+    HIP_SET_DEVICE();
+    hipError_t hip_status = hipSuccess;
+    
+    if (widthInBytes == 0 || height == 0) return ihipLogStatus(hipErrorUnknown);
+    
+    hip_status = ihipMallocPitch(tls, dptr, pitch, widthInBytes, height, 0);
+    return ihipLogStatus(hip_status);
+}
+
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
     HIP_INIT_API(hipMalloc3D, pitchedDevPtr, &extent);
     HIP_SET_DEVICE();

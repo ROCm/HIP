@@ -1252,6 +1252,30 @@ hipError_t hipHostUnregister(void* hostPtr);
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height);
 
 /**
+ *  Allocates at least width (in bytes) * height bytes of linear memory
+ *  Padding may occur to ensure alighnment requirements are met for the given row
+ *  The change in width size due to padding will be returned in *pitch.
+ *  Currently the alignment is set to 128 bytes
+ *
+ *  @param[out] dptr Pointer to the allocated device memory
+ *  @param[out] pitch Pitch for allocation (in bytes)
+ *  @param[in]  width Requested pitched allocation width (in bytes)
+ *  @param[in]  height Requested pitched allocation height
+ *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array. 
+ *  Given the row and column of an array element of type T, the address is computed as:
+ *  T* pElement = (T*)((char*)BaseAddress + Row * Pitch) + Column;
+ *
+ *  @return Error code
+ *
+ *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipHostFree, hipMalloc3D,
+ * hipMalloc3DArray, hipHostMalloc
+ */
+
+hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes);
+
+/**
  *  @brief Free memory allocated by the hcc hip memory allocation API.
  *  This API performs an implicit hipDeviceSynchronize() call.
  *  If pointer is NULL, the hip runtime is initialized and hipSuccess is returned.
