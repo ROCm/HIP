@@ -1166,6 +1166,11 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
 
     hipError_t e = hipSuccess;
 
+    if(dst==NULL || src==NULL)
+	{
+	e=hipErrorInvalidValue;
+	return ihipLogStatus(e);
+	}
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
     } catch (ihipException& ex) {
@@ -1185,6 +1190,11 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
 
     hipError_t e = hipSuccess;
 
+    if(dst==NULL || src==NULL)
+	{
+	e=hipErrorInvalidValue;
+	return ihipLogStatus(e);
+	}
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
     } catch (ihipException& ex) {
@@ -1204,6 +1214,11 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 
     hipError_t e = hipSuccess;
 
+    if(dst==NULL || src==NULL)
+	{
+	e=hipErrorInvalidValue;
+	return ihipLogStatus(e);
+	}
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
     } catch (ihipException& ex) {
@@ -1222,6 +1237,11 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
 
     hipError_t e = hipSuccess;
 
+    if(dst==NULL || src==NULL)
+	{
+	e=hipErrorInvalidValue;
+	return ihipLogStatus(e);
+	}
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
     } catch (ihipException& ex) {
