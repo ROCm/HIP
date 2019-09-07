@@ -57,6 +57,7 @@ const char *counterNames[NUM_CONV_TYPES] = {
   "complex", // CONV_COMPLEX
   "library", // CONV_LIB_FUNC
   "device_library", // CONV_LIB_DEVICE_FUNC
+  "device_function", // CONV_DEVICE_FUNC
   "include", // CONV_INCLUDE
   "include_cuda_main_header", // CONV_INCLUDE_CUDA_MAIN_H
   "type", // CONV_TYPE
