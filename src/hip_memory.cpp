@@ -1166,10 +1166,8 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
 
     hipError_t e = hipSuccess;
 
-    if(dst==NULL || src==NULL)
-	{
-	e=hipErrorInvalidValue;
-	return ihipLogStatus(e);
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
 	}
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
@@ -1190,10 +1188,8 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
 
     hipError_t e = hipSuccess;
 
-    if(dst==NULL || src==NULL)
-	{
-	e=hipErrorInvalidValue;
-	return ihipLogStatus(e);
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
 	}
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
@@ -1214,10 +1210,8 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 
     hipError_t e = hipSuccess;
 
-    if(dst==NULL || src==NULL)
-	{
-	e=hipErrorInvalidValue;
-	return ihipLogStatus(e);
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
 	}
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
@@ -1237,10 +1231,8 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
 
     hipError_t e = hipSuccess;
 
-    if(dst==NULL || src==NULL)
-	{
-	e=hipErrorInvalidValue;
-	return ihipLogStatus(e);
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
 	}
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
