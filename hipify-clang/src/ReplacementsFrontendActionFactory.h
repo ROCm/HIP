@@ -43,7 +43,13 @@ public:
     ct::FrontendActionFactory(),
     replacements(r) {}
 
+#if LLVM_VERSION_MAJOR < 10
   clang::FrontendAction* create() override {
     return new T(replacements);
   }
+#else
+  std::unique_ptr <clang::FrontendAction> create() override {
+    return std::unique_ptr<clang::FrontendAction>(new T(replacements));
+  }
+#endif
 };
