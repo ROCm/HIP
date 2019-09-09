@@ -331,11 +331,6 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 typedef int hipLaunchParm;
 
-#define hipLaunchKernel(kernelName, numblocks, numthreads, memperblock, streamId, ...)             \
-    do {                                                                                           \
-        kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(hipLaunchParm{}, ##__VA_ARGS__); \
-    } while (0)
-
 #define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
     do {                                                                                           \
         kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(__VA_ARGS__);         \
@@ -452,6 +447,7 @@ hc_get_workitem_absolute_id(int dim)
 #endif
 
 // Support std::complex.
+#ifndef _OPENMP
 #pragma push_macro("__CUDA__")
 #define __CUDA__
 #include <__clang_cuda_math_forward_declares.h>
@@ -461,6 +457,7 @@ hc_get_workitem_absolute_id(int dim)
 #include <cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
+#endif // ndef _OPENMP
 
 #if __HIP_VDI__
 hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,

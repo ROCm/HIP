@@ -67,7 +67,6 @@ void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
   * Otherwise, the source file is updated with the corresponding hipification.
   */
 void HipifyAction::RewriteToken(const clang::Token& t) {
-  clang::SourceManager& SM = getCompilerInstance().getSourceManager();
   // String literals containing CUDA references need fixing.
   if (t.is(clang::tok::string_literal)) {
     StringRef s(t.getLiteralData(), t.getLength());
@@ -78,13 +77,19 @@ void HipifyAction::RewriteToken(const clang::Token& t) {
     return;
   }
   StringRef name = t.getRawIdentifier();
-  const auto found = CUDA_RENAMES_MAP().find(name);
-  if (found == CUDA_RENAMES_MAP().end()) {
+  clang::SourceLocation sl = t.getLocation();
+  FindAndReplace(name, sl, CUDA_RENAMES_MAP());
+}
+
+void HipifyAction::FindAndReplace(llvm::StringRef name,
+                                  clang::SourceLocation sl,
+                                  const std::map<llvm::StringRef, hipCounter>& repMap) {
+  const auto found = repMap.find(name);
+  if (found == repMap.end()) {
     // So it's an identifier, but not CUDA? Boring.
     return;
   }
   Statistics::current().incrementCounter(found->second, name.str());
-  clang::SourceLocation sl = t.getLocation();
   clang::DiagnosticsEngine& DE = getCompilerInstance().getDiagnostics();
   // Warn the user about unsupported identifier.
   if (Statistics::isUnsupported(found->second)) {
@@ -96,6 +101,7 @@ void HipifyAction::RewriteToken(const clang::Token& t) {
     return;
   }
   StringRef repName = Statistics::isToRoc(found->second) ? found->second.rocName : found->second.hipName;
+  clang::SourceManager& SM = getCompilerInstance().getSourceManager();
   ct::Replacement Rep(SM, sl, name.size(), repName.str());
   clang::FullSourceLoc fullSL(sl, SM);
   insertReplacement(Rep, fullSL);
@@ -372,6 +378,14 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
   return true;
 }
 
+bool HipifyAction::cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
+  if (const clang::CallExpr *call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaDeviceFuncCall")) {
+    const clang::FunctionDecl *funcDcl = call->getDirectCallee();
+    FindAndReplace(funcDcl->getDeclName().getAsString(), llcompat::getBeginLoc(call), CUDA_DEVICE_FUNC_MAP);
+  }
+  return true;
+}
+
 void HipifyAction::insertReplacement(const ct::Replacement& rep, const clang::FullSourceLoc& fullSL) {
   llcompat::insertReplacement(*replacements, rep);
   if (PrintStats) {
@@ -395,7 +409,22 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
     ).bind("cudaSharedIncompleteArrayVar"),
     this
   );
-  // Ownership is transferred to the caller...
+  Finder->addMatcher(
+    mat::callExpr(
+      mat::isExpansionInMainFile(),
+      mat::callee(
+        mat::functionDecl(
+          mat::anyOf(
+            mat::hasAttr(clang::attr::CUDADevice),
+            mat::hasAttr(clang::attr::CUDAGlobal)
+          ),
+          mat::unless(mat::hasAttr(clang::attr::CUDAHost))
+        )
+      )
+    ).bind("cudaDeviceFuncCall"),
+    this
+  );
+  // Ownership is transferred to the caller.
   return Finder->newASTConsumer();
 }
 
@@ -517,4 +546,5 @@ void HipifyAction::ExecuteAction() {
 void HipifyAction::run(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
   if (cudaLaunchKernel(Result)) return;
   if (cudaSharedIncompleteArrayVar(Result)) return;
+  if (cudaDeviceFuncCall(Result)) return;
 }

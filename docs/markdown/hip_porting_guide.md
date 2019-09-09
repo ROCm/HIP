@@ -11,6 +11,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [General Tips](#general-tips)
   * [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort)
   * [Converting a project "in-place"](#converting-a-project-in-place)
+  * [CUDA to HIP Math Library Equivalents](#library-equivalents)
 - [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
   * [Identifying HIP Target Platform](#identifying-hip-target-platform)
   * [Identifying the Compiler: hcc, hip-clang, or nvcc](#identifying-the-compiler-hcc-hip-clang-or-nvcc)
@@ -46,7 +47,6 @@ and provides practical suggestions on how to port CUDA code and work through com
     + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
   * [HIP Environment Variables](#hip-environment-variables)
   * [Editor Highlighting](#editor-highlighting)
-  * [CUDA to HIP Math Library Equivalents](#library-equivalents)
   
 
 <!-- tocstop -->
@@ -124,7 +124,21 @@ directory names.
 > hipconvertinplace.sh MY_SRC_DIR
 ```
 
+### Library Equivalents
 
+| CUDA Library | ROCm Library | Comment |
+|------- | ---------   | -----   |
+| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines 
+| cuFFT        |    rocFFT     | Fast Fourier Transfer Library   
+| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV 
+| cuSolver     |    rocSolver   | Lapack library
+| AMG-X    |    rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
+| Thrust    |    hipThrust | C++ parallel algorithms library
+| CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
+| cuDNN    |    MIOpen | Deep learning Solver Library 
+| cuRAND    |    rocRAND | Random Number Generator Library
+| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers, 
+| NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents
 
 
  
@@ -559,18 +573,3 @@ HIP_VISIBLE_DEVICES            =  0 : Only devices whose index is present in the
 See the utils/vim or utils/gedit directories to add handy highlighting to hip files.
 
 
-### Library Equivalents
-
-| CUDA Library | ROCm Library | Comment |
-|------- | ---------   | -----   |
-| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines 
-| cuFFT        |    rocFFT     | Fast Fourier Transfer Library   
-| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV 
-| cuSolver     |    rocSolver   | Lapack library
-| AMG-X    |    rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
-| Thrust    |    hipThrust | C++ parallel algorithms library
-| CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
-| cuDNN    |    MIOpen | Deep learning Solver Library 
-| cuRAND    |    rocRAND | Random Number Generator Library
-| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers, 
-| NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents
