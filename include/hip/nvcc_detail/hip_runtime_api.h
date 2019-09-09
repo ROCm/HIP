@@ -475,6 +475,12 @@ inline static hipError_t hipMallocHost(void** ptr, size_t size) {
     return hipCUDAErrorTohipError(cudaMallocHost(ptr, size));
 }
 
+inline static hipError_t hipMemAllocHost(void** ptr, size_t size)
+    __attribute__((deprecated("use hipHostMalloc instead")));
+inline static hipError_t hipMemAllocHost(void** ptr, size_t size) {
+    return hipCUResultTohipError(cuMemAllocHost(ptr, size));
+}
+
 inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags)
     __attribute__((deprecated("use hipHostMalloc instead")));
 inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags) {
@@ -763,6 +769,18 @@ inline static hipError_t hipMemsetD32Async(hipDeviceptr_t devPtr, int value, siz
 
 inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes) {
     return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
+}
+
+inline static hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes) {
+    return hipCUResultTohipError(cuMemsetD8Async(dest, value, sizeBytes));
+}
+
+inline static hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes) {
+    return hipCUResultTohipError(cuMemsetD16(dest, value, sizeBytes));
+}
+
+inline static hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes) {
+    return hipCUResultTohipError(cuMemsetD16Async(dest, value, sizeBytes));
 }
 
 inline static hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {

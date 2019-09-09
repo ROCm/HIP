@@ -1117,6 +1117,21 @@ DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMallocHost(void** ptr, size_t size);
 
 /**
+ *  @brief Allocate pinned host memory [Deprecated]
+ *
+ *  @param[out] ptr Pointer to the allocated host pinned memory
+ *  @param[in]  size Requested memory size
+ *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @deprecated use hipHostMalloc() instead
+ */
+DEPRECATED("use hipHostMalloc instead")
+hipError_t hipMemAllocHost(void** ptr, size_t size);
+
+/**
  *  @brief Allocate device accessible page locked host memory
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
@@ -1760,6 +1775,49 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes);
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes);
+
+/**
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
+ * byte value value.
+ *
+ * hipMemsetD8Async() is asynchronous with respect to the host, so the call may return before the
+ * memset is complete. The operation can optionally be associated to a stream by passing a non-zero
+ * stream argument. If stream is non-zero, the operation may overlap with operations in other
+ * streams.
+ *
+ *  @param[out] dst Data ptr to be filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes);
+
+/**
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
+ * short value value.
+ *
+ *  @param[out] dst Data ptr to be filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes);
+
+/**
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
+ * short value value.
+ *
+ * hipMemsetD16Async() is asynchronous with respect to the host, so the call may return before the
+ * memset is complete. The operation can optionally be associated to a stream by passing a non-zero
+ * stream argument. If stream is non-zero, the operation may overlap with operations in other
+ * streams.
+ *
+ *  @param[out] dst Data ptr to be filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes);
 
 /**
  *  @brief Fills the memory area pointed to by dest with the constant integer

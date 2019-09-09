@@ -857,7 +857,7 @@
 | `cuIpcOpenEventHandle`                                    |                               |
 | `cuIpcOpenMemHandle`                                      | `hipIpcOpenMemHandle`         |
 | `cuMemAlloc`                                              | `hipMalloc`                   |
-| `cuMemAllocHost`                                          |                               |
+| `cuMemAllocHost`                                          | `hipMemAllocHost`             |
 | `cuMemAllocManaged`                                       | `hipMemAllocManaged`          |
 | `cuMemAllocPitch`                                         | `hipMemAllocPitch`            |
 | `cuMemcpy`                                                |                               |
@@ -893,8 +893,8 @@
 | `cuMemHostGetFlags`                                       | `hipHostGetFlags`             |
 | `cuMemHostRegister`                                       | `hipHostRegister`             |
 | `cuMemHostUnregister`                                     | `hipHostUnregister`           |
-| `cuMemsetD16`                                             |                               |
-| `cuMemsetD16Async`                                        |                               |
+| `cuMemsetD16`                                             | `hipMemsetD16`                |
+| `cuMemsetD16Async`                                        | `hipMemsetD16Async`           |
 | `cuMemsetD2D16`                                           |                               |
 | `cuMemsetD2D16Async`                                      |                               |
 | `cuMemsetD2D32`                                           |                               |
@@ -904,7 +904,7 @@
 | `cuMemsetD32`                                             | `hipMemsetD32`                |
 | `cuMemsetD32Async`                                        | `hipMemsetD32Async`           |
 | `cuMemsetD8`                                              | `hipMemsetD8`                 |
-| `cuMemsetD8Async`                                         |                               |
+| `cuMemsetD8Async`                                         | `hipMemsetD8Async`            |
 | `cuMipmappedArrayCreate`                                  |                               |
 | `cuMipmappedArrayDestroy`                                 |                               |
 | `cuMipmappedArrayGetLevel`                                |                               |
