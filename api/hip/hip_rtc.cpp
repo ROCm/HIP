@@ -208,7 +208,7 @@ hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n, const char** l
   }
 
   const auto it{ std::find_if(p->names.cbegin(), p->names.cend(),
-                             [=](const pair<string, string>& x)
+                             [=](const std::pair<std::string, std::string>& x)
                                 { return x.first == n; })};
 
   if (it == p->names.cend()) {
