@@ -93,8 +93,7 @@ struct _hiprtcProgram {
   static hiprtcResult destroy(_hiprtcProgram* p) {
     amd::ScopedLock lock(_hiprtcProgram::lock_);
 
-    const auto it {
-        std::find_if(programs_.cbegin(), programs_.cend(),
+    const auto it{ std::find_if(programs_.cbegin(), programs_.cend(),
                      [=](const std::unique_ptr<_hiprtcProgram>& x)
                      { return x.get() == p; }) };
 
@@ -195,7 +194,29 @@ hiprtcResult hiprtcDestroyProgram(hiprtcProgram* p) {
   return _hiprtcProgram::destroy(*p);
 }
 
-hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n, const char** ln) {
+hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n, const char** loweredNames) {
+  if (n == nullptr || loweredNames == nullptr) {
+    return HIPRTC_ERROR_INVALID_INPUT;
+  }
+
+  if (!isValidProgram(p)) {
+    return HIPRTC_ERROR_INVALID_PROGRAM;
+  }
+
+  if (!p->compiled) {
+    return HIPRTC_ERROR_INVALID_PROGRAM;
+  }
+
+  const auto it{ std::find_if(p->names.cbegin(), p->names.cend(),
+                             [=](const pair<string, string>& x)
+                                { return x.first == n; })};
+
+  if (it == p->names.cend()) {
+    return HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID;
+  }
+
+  *loweredNames = p->loweredNames[distance(p->names.cbegin(), it)].c_str();
+
   return HIPRTC_SUCCESS;
 }
 
