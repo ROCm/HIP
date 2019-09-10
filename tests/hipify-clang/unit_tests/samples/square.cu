@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     const unsigned threadsPerBlock = 256;
 
     printf ("info: launch 'vector_square' kernel\n");
-    // CHECK: hipLaunchKernelGGL(vector_square, dim3(blocks), dim3(threadsPerBlock), 0, 0, C_d, A_d, N);
+    // CHECK: hipLaunchKernelGGL((vector_square), dim3(blocks), dim3(threadsPerBlock), 0, 0, C_d, A_d, N);
     vector_square <<<blocks, threadsPerBlock>>> (C_d, A_d, N);
 
     printf ("info: copy Device2Host\n");
