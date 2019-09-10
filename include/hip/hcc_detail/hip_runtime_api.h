@@ -1788,9 +1788,10 @@ hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeByte
  *  @param[out] dst Data ptr to be filled
  *  @param[in]  constant value to be set
  *  @param[in]  sizeBytes Data size in bytes
+ *  @param[in]  stream - Stream identifier
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
-hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes);
+hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
@@ -1815,9 +1816,10 @@ hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBy
  *  @param[out] dst Data ptr to be filled
  *  @param[in]  constant value to be set
  *  @param[in]  sizeBytes Data size in bytes
+ *  @param[in]  stream - Stream identifier
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
-hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes);
+hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the memory area pointed to by dest with the constant integer

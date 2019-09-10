@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -82,7 +82,7 @@ void memcpy2Dtest(size_t numW, size_t numH, bool usePinnedHost) {
     HIPCHECK(hipMemcpy2D(A_d, pitch_A, A_h, width, width, numH, hipMemcpyHostToDevice));
     hip_Memcpy2D ins;
     initMemCpyParam2D(ins,pitch_B,width,width,numH,hipMemoryTypeDevice,hipMemoryTypeHost);
-    ins.dstDevice = B_d;
+    ins.dstDevice = (hipDeviceptr_t)B_d;
     ins.srcHost   = B_h;
     HIPCHECK(hipMemcpyParam2D(&ins));
 

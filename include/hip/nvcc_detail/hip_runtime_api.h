@@ -771,16 +771,18 @@ inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, s
     return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
 }
 
-inline static hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes) {
-    return hipCUResultTohipError(cuMemsetD8Async(dest, value, sizeBytes));
+inline static hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes,
+                                          hipStream_t stream __dparm(0)) {
+    return hipCUResultTohipError(cuMemsetD8Async(dest, value, sizeBytes, stream));
 }
 
 inline static hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes) {
     return hipCUResultTohipError(cuMemsetD16(dest, value, sizeBytes));
 }
 
-inline static hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes) {
-    return hipCUResultTohipError(cuMemsetD16Async(dest, value, sizeBytes));
+inline static hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes,
+                                           hipStream_t stream __dparm(0)) {
+    return hipCUResultTohipError(cuMemsetD16Async(dest, value, sizeBytes, stream));
 }
 
 inline static hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {

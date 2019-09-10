@@ -1926,10 +1926,10 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
     return ihipLogStatus(e);
 }
 
-hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API(hipMemsetD8Async, (TRACE_MCMD), dst, value, sizeBytes);
+hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes , hipStream_t stream ) {
+    HIP_INIT_SPECIAL_API(hipMemsetD8Async, (TRACE_MCMD), dst, value, sizeBytes, stream);
 
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+    stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         return ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar);
     } else {
@@ -1951,10 +1951,10 @@ hipError_t hipMemsetD16(hipDeviceptr_t dst, unsigned short value, size_t sizeByt
     return ihipLogStatus(e);
 }
 
-hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t sizeBytes){
-    HIP_INIT_SPECIAL_API(hipMemsetD16Async, (TRACE_MCMD), dst, value, sizeBytes);
+hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t sizeBytes, hipStream_t stream ){
+    HIP_INIT_SPECIAL_API(hipMemsetD16Async, (TRACE_MCMD), dst, value, sizeBytes, stream);
 
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+    stream = ihipSyncAndResolveStream(stream);
     if (stream) {
         return ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeShort);
     } else {
