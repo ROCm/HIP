@@ -163,13 +163,13 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuMemAlloc_v2",                                        {"hipMalloc",                                               "", CONV_MEMORY, API_DRIVER}},
   // cudaHostAlloc
   {"cuMemAllocHost",                                       {"hipMemAllocHost",                                         "", CONV_MEMORY, API_DRIVER}},
-  {"cuMemAllocHost_v2",                                    {"hipMemAllocHost",                                         "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemAllocHost_v2",                                    {"hipMemAllocHost",                                         "", CONV_MEMORY, API_DRIVER}},
   // cudaMallocManaged
   {"cuMemAllocManaged",                                    {"hipMemAllocManaged",                                      "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   // NOTE: Not equal to cudaMallocPitch due to different signatures
   {"cuMemAllocPitch",                                      {"hipMemAllocPitch",                                        "", CONV_MEMORY, API_DRIVER}},
-  {"cuMemAllocPitch_v2",                                   {"hipMemAllocPitch",                                        "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemAllocPitch_v2",                                   {"hipMemAllocPitch",                                        "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   // NOTE: Not equal to cudaMemcpy due to different signatures
   {"cuMemcpy",                                             {"hipMemcpy_",                                              "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
@@ -272,7 +272,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuMemHostUnregister",                                  {"hipHostUnregister",                                       "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   {"cuMemsetD16",                                          {"hipMemsetD16",                                            "", CONV_MEMORY, API_DRIVER}},
-  {"cuMemsetD16_v2",                                       {"hipMemsetD16",                                            "", CONV_MEMORY, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuMemsetD16_v2",                                       {"hipMemsetD16",                                            "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   {"cuMemsetD16Async",                                     {"hipMemsetD16Async",                                       "", CONV_MEMORY, API_DRIVER}},
   // no analogue
