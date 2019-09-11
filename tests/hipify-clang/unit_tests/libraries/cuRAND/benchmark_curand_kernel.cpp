@@ -121,7 +121,7 @@ struct runner
         const size_t states_size = blocks * threads;
         // CHECK: CUDA_CALL(hipMalloc((void **)&states, states_size * sizeof(GeneratorState)));
         CUDA_CALL(cudaMalloc((void **)&states, states_size * sizeof(GeneratorState)));
-        // CHECK: hipLaunchKernelGGL(init_kernel, dim3(blocks), dim3(threads), 0, 0, states, seed, offset);
+        // CHECK: hipLaunchKernelGGL((init_kernel), dim3(blocks), dim3(threads), 0, 0, states, seed, offset);
         init_kernel<<<blocks, threads>>>(states, seed, offset);
         // CHECK: CUDA_CALL(hipPeekAtLastError());
         // CHECK: CUDA_CALL(hipDeviceSynchronize());
@@ -142,7 +142,7 @@ struct runner
                   const GenerateFunc& generate_func,
                   const Extra extra)
     {
-        // CHECK: hipLaunchKernelGGL(generate_kernel, dim3(blocks), dim3(threads), 0, 0, states, data, size, generate_func, extra);
+        // CHECK: hipLaunchKernelGGL((generate_kernel), dim3(blocks), dim3(threads), 0, 0, states, data, size, generate_func, extra);
         generate_kernel<<<blocks, threads>>>(states, data, size, generate_func, extra);
     }
 };
@@ -223,7 +223,7 @@ struct runner<curandStateMtgp32_t>
                   const GenerateFunc& generate_func,
                   const Extra extra)
     {
-        // CHECK: hipLaunchKernelGGL(generate_kernel, dim3(std::min((size_t)200, blocks)), dim3(256), 0, 0, states, data, size, generate_func, extra);
+        // CHECK: hipLaunchKernelGGL((generate_kernel), dim3(std::min((size_t)200, blocks)), dim3(256), 0, 0, states, data, size, generate_func, extra);
         generate_kernel<<<std::min((size_t)200, blocks), 256>>>(states, data, size, generate_func, extra);
     }
 };
@@ -304,7 +304,7 @@ struct runner<curandStateSobol32_t>
         CUDA_CALL(cudaMemcpy(directions, h_directions, size, cudaMemcpyHostToDevice));
 
         const size_t blocks_x = next_power2((blocks + dimensions - 1) / dimensions);
-        // CHECK: hipLaunchKernelGGL(init_kernel, dim3(dim3(blocks_x, dimensions)), dim3(threads), 0, 0, states, directions, offset);
+        // CHECK: hipLaunchKernelGGL((init_kernel), dim3(dim3(blocks_x, dimensions)), dim3(threads), 0, 0, states, directions, offset);
         init_kernel<<<dim3(blocks_x, dimensions), threads>>>(states, directions, offset);
         // CHECK: CUDA_CALL(hipPeekAtLastError());
         // CHECK: CUDA_CALL(hipDeviceSynchronize());
@@ -329,7 +329,7 @@ struct runner<curandStateSobol32_t>
                   const Extra extra)
     {
         const size_t blocks_x = next_power2((blocks + dimensions - 1) / dimensions);
-        // CHECK: hipLaunchKernelGGL(generate_kernel, dim3(dim3(blocks_x, dimensions)), dim3(threads), 0, 0, states, data, size / dimensions, generate_func, extra);
+        // CHECK: hipLaunchKernelGGL((generate_kernel), dim3(dim3(blocks_x, dimensions)), dim3(threads), 0, 0, states, data, size / dimensions, generate_func, extra);
         generate_kernel<<<dim3(blocks_x, dimensions), threads>>>(states, data, size / dimensions, generate_func, extra);
     }
 };
