@@ -218,11 +218,6 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0,
                                  uint32_t params = 0)
 {
-  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
-               blockDimX, blockDimY, blockDimZ,
-               sharedMemBytes, hStream,
-               kernelParams, extra, startEvent, stopEvent, flags);
-
   hip::Function* function = hip::Function::asFunction(f);
   amd::Kernel* kernel = function->function_;
   amd::Device* device = hip::getCurrentContext()->devices()[0];
@@ -320,6 +315,11 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t sharedMemBytes, hipStream_t hStream,
                                  void **kernelParams, void **extra)
 {
+  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
+               blockDimX, blockDimY, blockDimZ,
+               sharedMemBytes, hStream,
+               kernelParams, extra);
+
   HIP_RETURN(ihipModuleLaunchKernel(f, gridDimX * blockDimX, gridDimY * blockDimY, gridDimZ * blockDimZ,
                                 blockDimX, blockDimY, blockDimZ,
                                 sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr));
@@ -332,6 +332,11 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags)
 {
+  HIP_INIT_API(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
+               localWorkSizeX, localWorkSizeY, localWorkSizeZ,
+               sharedMemBytes, hStream,
+               kernelParams, extra, startEvent, stopEvent, flags);
+
   HIP_RETURN(ihipModuleLaunchKernel(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
       localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags));
 }
@@ -346,6 +351,11 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX,
                                     hipEvent_t startEvent,
                                     hipEvent_t stopEvent)
 {
+  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
+               blockDimX, blockDimY, blockDimZ,
+               sharedMemBytes, hStream,
+               kernelParams, extra, startEvent, stopEvent);
+
   HIP_RETURN(ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
                                 sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
 }
@@ -358,6 +368,11 @@ hipError_t hipModuleLaunchKernelExt(hipFunction_t f, uint32_t gridDimX,
                                     hipEvent_t startEvent,
                                     hipEvent_t stopEvent)
 {
+  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
+               blockDimX, blockDimY, blockDimZ,
+               sharedMemBytes, hStream,
+               kernelParams, extra, startEvent, stopEvent);
+
   HIP_RETURN(ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
                                 sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
 }
@@ -366,6 +381,9 @@ hipError_t hipLaunchCooperativeKernel(const void* f,
                                       dim3 gridDim, dim3 blockDim,
                                       void **kernelParams, uint32_t sharedMemBytes, hipStream_t hStream)
 {
+  HIP_INIT_API(f, gridDim, blockDim, 
+               sharedMemBytes, hStream);
+
   int deviceId = ihipGetDevice();
   hipFunction_t func = PlatformState::instance().getFunc(f, deviceId);
   if (func == nullptr) {
