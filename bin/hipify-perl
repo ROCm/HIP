@@ -1662,18 +1662,37 @@ while (@ARGV) {
             # match uses ? for <.*> which will be unitialized if this is not present in launch syntax.
             no warnings qw/uninitialized/;
             my $k = 0;
-            # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax with empty args:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, $6)/g;
-            # Handle the <<numBlocks, blockDim, sharedSize, stream>>> syntax with non-empty args:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, $6, /g;
-            # Handle the <<numBlocks, blockDim, sharedSize>>> syntax with empty args:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, 0)/g;
-            # Handle the <<numBlocks, blockDim, sharedSize>>> syntax with non-empty args:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), $5, 0, /g;
-            # Handle the <<numBlocks, blockDim>>> syntax with empty args:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), 0, 0)/g;
-            # Handle the <<numBlocks, blockDim>>> syntax with non-empty args:
-            $k += s/(\w+)\s*(<.*>)?\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1$2, dim3($3), dim3($4), 0, 0, /g;
+
+            # Handle the kern<...><<<numBlocks, blockDim, sharedSize, stream>>> syntax with empty args:
+            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, $6)/g;
+            # Handle the kern<<<numBlocks, blockDim, sharedSize, stream>>> syntax with empty args:
+            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5)/g;
+
+            # Handle the kern<...><<<numBlocks, blockDim, sharedSize, stream>>> syntax with non-empty args:
+            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, $6, /g;
+            # Handle the kern<<<numBlocks, blockDim, sharedSize, stream>>> syntax with non-empty args:
+            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5, /g;
+
+            # Handle the kern<...><<<numBlocks, blockDim, sharedSize>>> syntax with empty args:
+            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, 0)/g;
+            # Handle the kern<<<numBlocks, blockDim, sharedSize>>> syntax with empty args:
+            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0)/g;
+
+            # Handle the kern<...><<<numBlocks, blockDim, sharedSize>>> syntax with non-empty args:
+            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, 0, /g;
+            # Handle the kern<<<numBlocks, blockDim, sharedSize>>> syntax with non-empty args:
+            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0, /g;
+
+            # Handle the kern<...><<<numBlocks, blockDim>>> syntax with empty args:
+            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), 0, 0)/g;
+            # Handle the kern<<<numBlocks, blockDim>>> syntax with empty args:
+            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0)/g;
+
+            # Handle the kern<...><<<numBlocks, blockDim>>> syntax with non-empty args:
+            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), 0, 0, /g;
+            # Handle the kern<<<numBlocks, blockDim>>> syntax with non-empty args:
+            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0, /g;
+
             if ($k) {
                 $ft{'kern_launch'} += $k;
                 $Tkernels{$1} ++;
