@@ -289,24 +289,35 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
   if (!launchKernel) {
     return false;
   }
+  const clang::Expr* calleeExpr = launchKernel->getCallee();
+  if (!calleeExpr) {
+    return false;
+  }
+  const clang::FunctionDecl *caleeDecl = launchKernel->getDirectCallee();
+  if (!caleeDecl) {
+    return false;
+  }
+  const clang::CallExpr* config = launchKernel->getConfig();
+  if (!config) {
+    return false;
+  }
   clang::SmallString<40> XStr;
   llvm::raw_svector_ostream OS(XStr);
   clang::LangOptions DefaultLangOptions;
   clang::SourceManager* SM = Result.SourceManager;
-
-  const clang::Expr& calleeExpr = *(launchKernel->getCallee());
-  OS << "hipLaunchKernelGGL(" << readSourceText(*SM, calleeExpr.getSourceRange()) << ", ";
+  OS << "hipLaunchKernelGGL(";
+  if (caleeDecl->isTemplateInstantiation()) OS << "(";
+  OS << readSourceText(*SM, calleeExpr->getSourceRange());
+  if (caleeDecl->isTemplateInstantiation()) OS << ")";
+  OS << ", ";
 
   // Next up are the four kernel configuration parameters, the last two of which are optional and default to zero.
-  const clang::CallExpr& config = *(launchKernel->getConfig());
-
   // Copy the two dimensional arguments verbatim.
-  OS << "dim3(" << readSourceText(*SM, config.getArg(0)->getSourceRange()) << "), ";
-  OS << "dim3(" << readSourceText(*SM, config.getArg(1)->getSourceRange()) << "), ";
-
+  OS << "dim3(" << readSourceText(*SM, config->getArg(0)->getSourceRange()) << "), ";
+  OS << "dim3(" << readSourceText(*SM, config->getArg(1)->getSourceRange()) << "), ";
   // The stream/memory arguments default to zero if omitted.
-  OS << stringifyZeroDefaultedArg(*SM, config.getArg(2)) << ", ";
-  OS << stringifyZeroDefaultedArg(*SM, config.getArg(3));
+  OS << stringifyZeroDefaultedArg(*SM, config->getArg(2)) << ", ";
+  OS << stringifyZeroDefaultedArg(*SM, config->getArg(3));
 
   // If there are ordinary arguments to the kernel, just copy them verbatim into our new call.
   int numArgs = launchKernel->getNumArgs();
