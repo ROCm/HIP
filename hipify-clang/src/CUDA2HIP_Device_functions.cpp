@@ -149,4 +149,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DEVICE_FUNC_MAP{
   {"__vnegss4",       {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
   {"__vabsdiffs4",    {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
   {"__vsads4",        {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  // fp16 functions
+  {"__shfl_sync",     {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__shfl_up_sync",  {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__shfl_down_sync",{"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__shfl_xor_sync", {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__shfl_sync",     {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__shfl_up_sync",  {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__shfl_down_sync",{"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__shfl_xor_sync", {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__shfl_xor_sync", {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
 };
