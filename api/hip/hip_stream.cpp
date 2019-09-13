@@ -173,21 +173,9 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
 hipError_t hipStreamSynchronize(hipStream_t stream) {
   HIP_INIT_API(stream);
 
-  amd::HostQueue* hostQueue;
+  amd::HostQueue* hostQueue = hip::getQueue(stream);
+  hostQueue->finish();
 
-  if (stream == nullptr) {
-    hip::syncStreams();
-
-    hostQueue = hip::getNullStream();
-
-    hostQueue->finish();
-  } else {
-    hip::getNullStream()->finish();
-
-    hip::Stream* hStream = reinterpret_cast<hip::Stream*>(stream);
-
-    hStream->finish();
-  }
   HIP_RETURN(hipSuccess);
 }
 

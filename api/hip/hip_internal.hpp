@@ -72,6 +72,7 @@ namespace hip {
   extern amd::Context* getCurrentContext();
   extern void setCurrentContext(unsigned int index);
 
+  extern amd::HostQueue* getQueue(hipStream_t s);
   extern amd::HostQueue* getNullStream(amd::Context&);
   extern amd::HostQueue* getNullStream();
   extern void syncStreams();

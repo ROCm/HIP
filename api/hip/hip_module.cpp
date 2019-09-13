@@ -218,6 +218,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0,
                                  uint32_t params = 0)
 {
+  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+    sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags, params);
+
   hip::Function* function = hip::Function::asFunction(f);
   amd::Kernel* kernel = function->function_;
   amd::Device* device = hip::getCurrentContext()->devices()[0];
@@ -226,14 +229,8 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
 
   hip::Event* eStart = reinterpret_cast<hip::Event*>(startEvent);
   hip::Event* eStop = reinterpret_cast<hip::Event*>(stopEvent);
-  amd::HostQueue* queue;
-  if (hStream == nullptr) {
-    hip::syncStreams();
-    queue = hip::getNullStream();
-  } else {
-    hip::getNullStream()->finish();
-    queue = reinterpret_cast<hip::Stream*>(hStream)->asHostQueue();
-  }
+  amd::HostQueue* queue = hip::getQueue(hStream);
+
   if ((params & amd::NDRangeKernelCommand::CooperativeGroups) &&
       !device->info().cooperativeGroups_) {
     return hipErrorLaunchFailure;
