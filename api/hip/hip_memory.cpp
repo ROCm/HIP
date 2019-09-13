@@ -95,6 +95,7 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
 
   if (((srcMemory == nullptr) && (dstMemory == nullptr)) ||
       (kind == hipMemcpyHostToHost)) {
+    queue.finish();
     memcpy(dst, src, sizeBytes);
     return hipSuccess;
   } else if ((srcMemory == nullptr) && (dstMemory != nullptr)) {
@@ -169,16 +170,8 @@ hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
   }
 
   size_t offset = 0;
-  amd::HostQueue* queue = nullptr;
+  amd::HostQueue* queue = hip::getQueue(stream);
   amd::Memory* memory = getMemoryObject(dst, offset);
-
-  if (stream == nullptr) {
-    hip::syncStreams();
-    queue = hip::getNullStream();
-  } else {
-    hip::getNullStream()->finish();
-    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
 
   if (memory != nullptr) {
     // Device memory
@@ -764,15 +757,7 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
                           hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(dst, src, sizeBytes, kind, stream);
 
-  amd::HostQueue* queue = nullptr;
-
-  if (stream == nullptr) {
-    hip::syncStreams();
-    queue = hip::getNullStream();
-  } else {
-    hip::getNullStream()->finish();
-    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
+  amd::HostQueue* queue = hip::getQueue(stream);
 
   HIP_RETURN(ihipMemcpy(dst, src, sizeBytes, kind, *queue, true));
 }
@@ -782,15 +767,7 @@ hipError_t hipMemcpyHtoDAsync(hipDeviceptr_t dst, void* src, size_t sizeBytes,
                               hipStream_t stream) {
   HIP_INIT_API(dst, src, sizeBytes, stream);
 
-  amd::HostQueue* queue = nullptr;
-
-  if (stream == nullptr) {
-    hip::syncStreams();
-    queue = hip::getNullStream();
-  } else {
-    hip::getNullStream()->finish();
-    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
+  amd::HostQueue* queue = hip::getQueue(stream);
 
   HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyHostToDevice,
                     *queue, true));
@@ -800,15 +777,7 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
                               hipStream_t stream) {
   HIP_INIT_API(dst, src, sizeBytes, stream);
 
-  amd::HostQueue* queue = nullptr;
-
-  if (stream == nullptr) {
-    hip::syncStreams();
-    queue = hip::getNullStream();
-  } else {
-    hip::getNullStream()->finish();
-    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
+  amd::HostQueue* queue = hip::getQueue(stream);
 
   HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToDevice,
                    *queue, true));
@@ -818,15 +787,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream) {
   HIP_INIT_API(dst, src, sizeBytes, stream);
 
-  amd::HostQueue* queue = nullptr;
-
-  if (stream == nullptr) {
-    hip::syncStreams();
-    queue = hip::getNullStream();
-  } else {
-    hip::getNullStream()->finish();
-    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
+  amd::HostQueue* queue = hip::getQueue(stream);
 
   HIP_RETURN(ihipMemcpy(reinterpret_cast<void*>(dst), (const void*) src, sizeBytes, hipMemcpyDeviceToHost,
                    *queue, true));
@@ -921,15 +882,7 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
                             size_t height, hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(dst, dpitch, src, spitch, width, height, kind, stream);
 
-  amd::HostQueue* queue;
-
-  if (stream == nullptr) {
-    hip::syncStreams();
-    queue = hip::getNullStream();
-  } else {
-    hip::getNullStream()->finish();
-    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
+  amd::HostQueue* queue = hip::getQueue(stream);
 
   HIP_RETURN(ihipMemcpy2D(dst, dpitch, src, spitch, width, height, kind, *queue, true));
 }
@@ -1349,14 +1302,7 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
                             size_t width, size_t height, hipStream_t stream) {
   HIP_INIT_API(dst, pitch, value, width, height, stream);
 
-  amd::HostQueue* queue = nullptr;
-  if (stream == nullptr) {
-    hip::syncStreams();
-    queue = hip::getNullStream();
-  } else {
-    hip::getNullStream()->finish();
-    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
+  amd::HostQueue* queue = hip::getQueue(stream);
 
   HIP_RETURN(ihipMemset2D(dst, pitch, value, width, height, *queue, true));
 }

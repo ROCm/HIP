@@ -75,6 +75,19 @@ void setCurrentContext(unsigned int index) {
   g_context = g_devices[index];
 }
 
+amd::HostQueue* getQueue(hipStream_t stream) {
+ if (stream == nullptr) {
+    syncStreams();
+    return getNullStream();
+  } else {
+    hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
+    if ((s->flags & hipStreamNonBlocking) == 0) {
+      getNullStream()->finish();
+    }
+    return s->asHostQueue();
+  }
+}
+
 amd::HostQueue* getNullStream(amd::Context& context) {
   auto stream = g_nullStreams.find(&context);
   if (stream == g_nullStreams.end()) {
@@ -86,7 +99,6 @@ amd::HostQueue* getNullStream(amd::Context& context) {
     g_nullStreams[&context] = queue;
     return queue;
   }
-  syncStreams();
   return stream->second;
 }
 
