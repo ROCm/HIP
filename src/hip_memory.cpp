@@ -1989,7 +1989,8 @@ hipError_t hipFree(void* ptr) {
 #endif
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
         if (status == AM_SUCCESS) {
-            if (amPointerInfo._hostPointer == NULL) {
+            /*if (amPointerInfo._hostPointer == NULL) */ //TODO: Fix it when there is proper managed memory support
+            {
                 if (HIP_SYNC_FREE) {
                     // Synchronize all devices, all streams
                     // to ensure all work has finished on all devices.
