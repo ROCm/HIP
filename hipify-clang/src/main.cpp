@@ -150,6 +150,33 @@ bool generatePerl(bool Generate = true) {
       }
     }
   }
+
+  unsigned int num = 0;
+  std::stringstream sUnsupported;
+  const std::string space = "    ";
+  const std::string double_space = space + space;
+  const std::string triple_space = double_space + space;
+  for (auto& ma : CUDA_DEVICE_FUNC_MAP) {
+    if (Statistics::isUnsupported(ma.second)) {
+      sUnsupported << (num ? ",\n" : "") << double_space << "\"" << ma.first.str() << "\"";
+      num++;
+    }
+  }
+  if (num) {
+    *perlStreamPtr.get() << "\nsub warnUnsupportedDeviceFunctions\n" << "{\n" << space << "my $line_num = shift;\n" << space << "my $m = 0;\n" << space << "foreach $func (\n";
+    *perlStreamPtr.get() << sUnsupported.str() << "\n" << space << ")\n";
+    *perlStreamPtr.get() << space << "{\n";
+    *perlStreamPtr.get() << double_space << "# match math at the beginning of a word, but not if it already has a namespace qualifier ('::') :\n";
+    *perlStreamPtr.get() << double_space << "my $mt = m/[:]?[:]?\\b($func)\\b(\\w*\\()/g;\n";
+    *perlStreamPtr.get() << double_space << "if ($mt) {\n";
+    *perlStreamPtr.get() << triple_space << "$m += $mt;\n";
+    *perlStreamPtr.get() << triple_space << "print STDERR \"  warning: $fileName:#$line_num : unsupported device function : $_\\n\";\n";
+    *perlStreamPtr.get() << double_space << "}\n";
+    *perlStreamPtr.get() << space << "}\n";
+    *perlStreamPtr.get() << space << "return $m;\n";
+    *perlStreamPtr.get() << "}\n";
+  }
+
   perlStreamPtr.get()->flush();
   bool ret = true;
   EC = sys::fs::copy_file(tmpFile, dstPerlMap);
