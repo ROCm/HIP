@@ -22,27 +22,12 @@ THE SOFTWARE.
 
 #pragma once
 
-#include <string>
-#include "llvm/ADT/StringRef.h"
+namespace perl {
 
-/**
-  * Remove double-quotes from the start/end of a string, if present.
-  */
-llvm::StringRef unquoteStr(llvm::StringRef s);
+  bool generate(bool Generate = true);
+}
 
-/**
-  * If `s` starts with `prefix`, remove it. Otherwise, does nothing.
-  */
-void removePrefixIfPresent(std::string &s, const std::string& prefix);
+namespace python {
 
-/**
-  * Returns Absolute File Path based on filename, otherwise - error.
-  */
-std::string getAbsoluteFilePath(const std::string& sFile, std::error_code& EC);
-
-/**
-  * Returns Absolute Directory Path based on directory name, otherwise - error;
-  * by default the directory is temporary and created.
-  */
-std::string getAbsoluteDirectoryPath(const std::string& sDir, std::error_code& EC,
-  const std::string& sDirType = "temporary", bool bCreateDir = true);
+  bool generate(bool Generate = true);
+}
