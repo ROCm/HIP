@@ -53,11 +53,13 @@ namespace perl {
       *perlStreamPtr.get() << "\nsub warnUnsupportedDeviceFunctions\n" << "{\n" << space << "my $line_num = shift;\n" << space << "my $m = 0;\n" << space << "foreach $func (\n";
       *perlStreamPtr.get() << sUnsupported.str() << "\n" << space << ")\n";
       *perlStreamPtr.get() << space << "{\n";
-      *perlStreamPtr.get() << double_space << "# match math at the beginning of a word, but not if it already has a namespace qualifier ('::') :\n";
-      *perlStreamPtr.get() << double_space << "my $mt = m/[:]?[:]?\\b($func)\\b(\\w*\\()/g;\n";
-      *perlStreamPtr.get() << double_space << "if ($mt) {\n";
+      *perlStreamPtr.get() << double_space << "# match device function from the list of unsupported, except those, which have a namespace prefix (aka somenamespace::umin(...));\n";
+      *perlStreamPtr.get() << double_space << "# function with only global namespace qualifier '::' (aka ::umin(...)) should be treated as a device function (and warned as well as without such qualifier);\n";
+      *perlStreamPtr.get() << double_space << "my $mt_namespace = m/(\\w+)::($func)\\s*\\(\\s*.*\\s*\\)/g;\n";
+      *perlStreamPtr.get() << double_space << "my $mt = m/($func)\\s*\\(\\s*.*\\s*\\)/g;\n";
+      *perlStreamPtr.get() << double_space << "if ($mt && !$mt_namespace) {\n";
       *perlStreamPtr.get() << triple_space << "$m += $mt;\n";
-      *perlStreamPtr.get() << triple_space << "print STDERR \"  warning: $fileName:#$line_num : unsupported device function : $_\\n\";\n";
+      *perlStreamPtr.get() << triple_space << "print STDERR \"  warning: $fileName:$line_num: unsupported device function \\\"$func\\\": $_\\n\";\n";
       *perlStreamPtr.get() << double_space << "}\n";
       *perlStreamPtr.get() << space << "}\n";
       *perlStreamPtr.get() << space << "return $m;\n";
