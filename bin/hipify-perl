@@ -1956,11 +1956,13 @@ sub warnUnsupportedDeviceFunctions
         "umul24"
     )
     {
-        # match math at the beginning of a word, but not if it already has a namespace qualifier ('::') :
-        my $mt = m/[:]?[:]?\b($func)\b(\w*\()/g;
-        if ($mt) {
+        # match device function from the list of unsupported, except those, which have a namespace prefix (aka somenamespace::umin(...));
+        # function with only global namespace qualifier '::' (aka ::umin(...)) should be treated as a device function (and warned as well as without such qualifier);
+        my $mt_namespace = m/(\w+)::($func)\s*\(\s*.*\s*\)/g;
+        my $mt = m/($func)\s*\(\s*.*\s*\)/g;
+        if ($mt && !$mt_namespace) {
             $m += $mt;
-            print STDERR "  warning: $fileName:#$line_num : unsupported device function : $_\n";
+            print STDERR "  warning: $fileName:$line_num: unsupported device function \"$func\": $_\n";
         }
     }
     return $m;
