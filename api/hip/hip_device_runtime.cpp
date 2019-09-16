@@ -265,6 +265,21 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   case hipDeviceAttributeHdpRegFlushCntl:
     *reinterpret_cast<unsigned int**>(pi) = prop.hdpRegFlushCntl;
     break;
+  case hipDeviceAttributeMaxPitch:
+    *pi = prop.memPitch;
+    break;
+  case hipDeviceAttributeTextureAlignment:
+    *pi = prop.textureAlignment;
+    break;
+  case hipDeviceAttributeKernelExecTimeout:
+    *pi = prop.kernelExecTimeoutEnabled;
+    break;
+  case hipDeviceAttributeCanMapHostMemory:
+    *pi = prop.canMapHostMemory;
+    break;
+  case hipDeviceAttributeEccEnabled:
+    *pi = prop.ECCEnabled;
+    break;
   default:
     HIP_RETURN(hipErrorInvalidValue);
   }
