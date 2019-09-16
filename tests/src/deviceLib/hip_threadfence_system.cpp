@@ -71,12 +71,21 @@ int main() {
     }
 
     volatile int* data;
-    HIP_ASSERT(hipHostMalloc(&data, sizeof(int), hipHostMallocCoherent));
+    if (hipHostMalloc(&data, sizeof(int), hipHostMallocCoherent) != hipSuccess) {
+        warn("Memory allocation failed. Skip test. Is SVM atomic supported?")
+        passed();
+        return 0;
+    }
+
     constexpr int init_data = 1000;
     *data = init_data;
 
     volatile int* flag;
-    HIP_ASSERT(hipHostMalloc(&flag, sizeof(int), hipHostMallocCoherent));
+    if (hipHostMalloc(&flag, sizeof(int), hipHostMallocCoherent) != hipSuccess) {
+        warn("Memory allocation failed. Skip test. Is SVM atomic supported?")
+        passed();
+        return 0;
+    }
     *flag = 0;
 
     // number of rounds per device

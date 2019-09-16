@@ -176,15 +176,19 @@ int main() {
 
         if (1) {
             int* A = nullptr;
-            HIPCHECK(hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent));
-            const char* ptrType = "coherent";
-            CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_DEVICE, ptrType);
-            CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_STREAM, ptrType);
-            CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_EVENT, ptrType);
+            if (hipHostMalloc((void**)&A, sizeBytes, hipHostMallocCoherent) == hipSuccess) {
+                const char* ptrType = "coherent";
+                CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_DEVICE, ptrType);
+                CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_STREAM, ptrType);
+                CheckHostPointer(numElements, A, hipEventReleaseToDevice, SYNC_EVENT, ptrType);
 
-            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_DEVICE, ptrType);
-            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_STREAM, ptrType);
-            CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_EVENT, ptrType);
+                CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_DEVICE, ptrType);
+                CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_STREAM, ptrType);
+                CheckHostPointer(numElements, A, hipEventReleaseToSystem, SYNC_EVENT, ptrType);
+            }
+            else {
+                warn("Coherence memory allocation failed. Is SVM atomic supported?")
+            }
         }
 
 
