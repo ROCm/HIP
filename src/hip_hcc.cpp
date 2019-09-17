@@ -782,9 +782,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     DeviceErrorCheck(err);
 
     // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - Function/DomainID]
-    prop->pciDomainID = bdf_id & 0x7;
     prop->pciDeviceID = (bdf_id >> 3) & 0x1F;
     prop->pciBusID = (bdf_id >> 8) & 0xFF;
+
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_DOMAIN, &prop->pciDomainID);
+    DeviceErrorCheck(err);
 
     // Masquerade as a 3.0-level device. This will change as more HW functions are properly
     // supported. Application code should use the arch.has* to do detailed feature detection.
