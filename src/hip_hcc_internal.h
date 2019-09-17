@@ -652,6 +652,7 @@ class ihipStreamCallback_t {
         : _stream(stream), _callback(callback), _userData(userData) {
     };
     hipStream_t _stream;
+    hsa_signal_t _signal;
     hipStreamCallback_t _callback;
     void* _userData;
 };
@@ -969,7 +970,7 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t, bool lockAcquired = 0);
 hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream);
-void ihipStreamCallbackHandler(ihipStreamCallback_t* cb);
+bool ihipStreamCallbackHandler(hsa_signal_value_t value, void* cbArgs);
 
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s) {
