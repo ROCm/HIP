@@ -1612,41 +1612,39 @@ hipError_t ihipMemset(void* dst, int  value, size_t count, hipStream_t stream, e
     isInbound &= (allocSize >= count);
 
     if (stream && (dst != NULL) && isInbound) {
-        if(copyDataType == ihipMemsetDataTypeChar){
-            if ((count & 0x3) == 0) {
-                // use a faster dword-per-workitem copy:
-                try {
-                    value = value & 0xff;
-                    uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                    ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, count/sizeof(uint32_t));
+        switch (copyDataType) {
+            case ihipMemsetDataTypeChar:
+                if ((count % 4) == 0) {
+                    count /=4;
+                    value &= 0xff;
+                    value = ((value << 24) | (value << 16) | (value << 8) | (value)) ;
+                    copyDataType = ihipMemsetDataTypeInt;
                 }
-                catch (std::exception &ex) {
-                    e = hipErrorInvalidValue;
+                break;
+            case ihipMemsetDataTypeShort:
+                if ((count % 2) == 0) {
+                    count /= 2;
+                    value &= 0xffff;
+                    value = ((value << 16) | (value));
+                    copyDataType = ihipMemsetDataTypeInt;
                 }
-             } else {
-                // use a slow byte-per-workitem copy:
-                try {
-                    ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, count);
-                }
-                catch (std::exception &ex) {
-                    e = hipErrorInvalidValue;
-                }
+                break;
+            default:
+                break;
+        }
+        try {
+            if (copyDataType == ihipMemsetDataTypeChar) {
+                ihipMemsetKernel<char>(stream, static_cast<char*>(dst), value, count);
+            } else if (copyDataType == ihipMemsetDataTypeInt) {  // 4 Bytes value
+                ihipMemsetKernel<uint32_t>(stream, static_cast<uint32_t*>(dst), value, count);
+            } else if (copyDataType == ihipMemsetDataTypeShort) {
+                value = value & 0xffff;
+                ihipMemsetKernel<uint16_t>(stream, static_cast<uint16_t*>(dst), value, count);
+            } else {
+                e = hipErrorInvalidValue;
             }
-        } else {
-           if(copyDataType == ihipMemsetDataTypeInt) { // 4 Bytes value
-               try {
-                   ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value, count);
-               } catch (std::exception &ex) {
-                   e = hipErrorInvalidValue;
-               }
-            } else if(copyDataType == ihipMemsetDataTypeShort) {
-               try {
-                   value = value & 0xffff;
-                   ihipMemsetKernel<uint16_t> (stream, static_cast<uint16_t*> (dst), value, count);
-               } catch (std::exception &ex) {
-                   e = hipErrorInvalidValue;
-               }
-            }
+        } catch (std::exception& ex) {
+            e = hipErrorInvalidValue;
         }
         if (HIP_API_BLOCKING) {
             tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
