@@ -83,7 +83,7 @@ void HipifyAction::RewriteToken(const clang::Token& t) {
 
 void HipifyAction::FindAndReplace(llvm::StringRef name,
                                   clang::SourceLocation sl,
-                                  const std::map<llvm::StringRef, hipCounter>& repMap) {
+                                  const std::map<llvm::StringRef, hipCounter>& repMap, bool bReplace) {
   const auto found = repMap.find(name);
   if (found == repMap.end()) {
     // So it's an identifier, but not CUDA? Boring.
@@ -98,6 +98,9 @@ void HipifyAction::FindAndReplace(llvm::StringRef name,
     sWarn = "" + sWarn;
     const auto ID = DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "CUDA identifier is unsupported in %0.");
     DE.Report(sl, ID) << sWarn;
+    return;
+  }
+  if (!bReplace) {
     return;
   }
   StringRef repName = Statistics::isToRoc(found->second) ? found->second.rocName : found->second.hipName;
@@ -392,7 +395,7 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
 bool HipifyAction::cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
   if (const clang::CallExpr *call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaDeviceFuncCall")) {
     const clang::FunctionDecl *funcDcl = call->getDirectCallee();
-    FindAndReplace(funcDcl->getDeclName().getAsString(), llcompat::getBeginLoc(call), CUDA_DEVICE_FUNC_MAP);
+    FindAndReplace(funcDcl->getDeclName().getAsString(), llcompat::getBeginLoc(call), CUDA_DEVICE_FUNC_MAP, false);
   }
   return true;
 }
