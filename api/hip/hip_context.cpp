@@ -41,6 +41,7 @@ std::map<amd::Context*, amd::HostQueue*> g_nullStreams;
 void init() {
   if (!amd::Runtime::initialized()) {
     amd::IS_HIP = true;
+    GPU_NUM_MEM_DEPENDENCY = 0;
     amd::Runtime::init();
   }
 
