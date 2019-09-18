@@ -446,11 +446,6 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
                             &channelOrder, &channelType);
 
   const cl_image_format image_format = { channelOrder, channelType };
-  size_t size = pAllocateArray->Width;
-  if (pAllocateArray->Height > 0) {
-      size = size * pAllocateArray->Height;
-  }
-
   size_t pitch = 0;
   hipError_t status = ihipMallocPitch(ptr, &pitch, array[0]->width, array[0]->height, 1, CL_MEM_OBJECT_IMAGE2D,
                       &image_format);
@@ -496,6 +491,33 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
   }
   size_t pitch = 0;
   hipError_t status = ihipMallocPitch(ptr, &pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D,
+                      &image_format);
+
+  HIP_RETURN(status);
+}
+
+hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray) {
+  HIP_INIT_API(array, pAllocateArray);
+
+  *array = (hipArray*)malloc(sizeof(hipArray));
+  array[0]->type = pAllocateArray->Flags;
+  array[0]->width = pAllocateArray->Width;
+  array[0]->height = pAllocateArray->Height;
+  array[0]->depth = pAllocateArray->Depth;
+  array[0]->Format = pAllocateArray->Format;
+  array[0]->NumChannels = pAllocateArray->NumChannels;
+  array[0]->isDrv = true;
+  array[0]->textureType = hipTextureType3D;
+  void** ptr = &array[0]->data;
+
+  cl_channel_order channelOrder;
+  cl_channel_type channelType;
+  getDrvChannelOrderAndType(pAllocateArray->Format, pAllocateArray->NumChannels,
+                            &channelOrder, &channelType);
+
+  const cl_image_format image_format = { channelOrder, channelType };
+  size_t pitch = 0;
+  hipError_t status = ihipMallocPitch(ptr, &pitch, array[0]->width, array[0]->height, array[0]->depth, CL_MEM_OBJECT_IMAGE3D,
                       &image_format);
 
   HIP_RETURN(status);
