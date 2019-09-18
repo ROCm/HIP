@@ -1556,8 +1556,11 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
                              hipMemcpyKind kind __dparm(hipMemcpyHostToDevice)) {
     if (!symbolName) return hipErrorInvalidSymbol;
 
+    hipError_t status = hipSuccess;
     hipDeviceptr_t dst = NULL;
-    hipGetSymbolAddress(&dst, (const char*)symbolName);
+
+    status = hipGetSymbolAddress(&dst, (const char*)symbolName);
+    if(status != hipSuccess) return status;
 
     return hip_impl::hipMemcpyToSymbol(dst, src, sizeBytes, offset, kind,
                                        (const char*)symbolName);
@@ -1622,8 +1625,10 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
 
     if (!symbolName) return hipErrorInvalidSymbol;
 
+    hipError_t status = hipSuccess;
     hipDeviceptr_t dst = NULL;
-    hipGetSymbolAddress(&dst, symbolName);
+    status = hipGetSymbolAddress(&dst, symbolName);
+    if(status != hipSuccess) return status;
 
     return hip_impl::hipMemcpyToSymbolAsync(dst, src, sizeBytes, offset, kind,
                                             stream,
@@ -1637,8 +1642,10 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
                                hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost)) {
     if (!symbolName) return hipErrorInvalidSymbol;
 
+    hipError_t status = hipSuccess;
     hipDeviceptr_t src = NULL;
-    hipGetSymbolAddress(&src, symbolName);
+    status = hipGetSymbolAddress(&src, symbolName);
+    if(status != hipSuccess) return status;
 
     return hip_impl::hipMemcpyFromSymbol(dst, src, sizeBytes, offset, kind,
                                          (const char*)symbolName);
@@ -1653,8 +1660,12 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 
     if (!symbolName) return hipErrorInvalidSymbol;
 
+    hipError_t status = hipSuccess;
+
     hipDeviceptr_t src = NULL;
-    hipGetSymbolAddress(&src, symbolName);
+    status = hipGetSymbolAddress(&src, symbolName);
+
+    if(status != hipSuccess)return status;
 
     return hip_impl::hipMemcpyFromSymbolAsync(dst, src, sizeBytes, offset, kind,
                                              stream,(const char*)symbolName);
