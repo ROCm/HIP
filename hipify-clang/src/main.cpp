@@ -34,6 +34,9 @@ THE SOFTWARE.
 #include "ArgParse.h"
 #include "StringUtils.h"
 #include "llvm/Support/Debug.h"
+#if LLVM_VERSION_MAJOR < 8
+#include "llvm/Support/Path.h"
+#endif
 
 constexpr auto DEBUG_TYPE = "cuda2hip";
 
