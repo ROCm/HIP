@@ -39,32 +39,64 @@ namespace perl {
   const std::string space = "    ";
   const std::string double_space = space + space;
   const std::string triple_space = double_space + space;
+  const std::string sSub = "sub";
+  const std::string sReturn_0 = "return 0;\n";
 
-  void generateUnsupportedDeviceFunctions(std::unique_ptr<std::ostream>& perlStreamPtr) {
-    unsigned int num = 0;
+  void generateDeviceFunctions(std::unique_ptr<std::ostream>& perlStreamPtr) {
+    unsigned int countUnsupported = 0;
+    unsigned int countSupported = 0;
+    std::stringstream sSupported;
     std::stringstream sUnsupported;
     for (auto& ma : CUDA_DEVICE_FUNC_MAP) {
-      if (Statistics::isUnsupported(ma.second)) {
-        sUnsupported << (num ? ",\n" : "") << double_space << "\"" << ma.first.str() << "\"";
-        num++;
+      bool isUnsupported = Statistics::isUnsupported(ma.second);
+      (isUnsupported ? sUnsupported : sSupported) << ((isUnsupported && countUnsupported) || (!isUnsupported && countSupported) ? ",\n" : "") << double_space << "\"" << ma.first.str() << "\"";
+      if (isUnsupported) {
+        countUnsupported++;
+      } else {
+        countSupported++;
       }
     }
-    if (num) {
-      *perlStreamPtr.get() << "\nsub warnUnsupportedDeviceFunctions\n" << "{\n" << space << "my $line_num = shift;\n" << space << "my $m = 0;\n" << space << "foreach $func (\n";
-      *perlStreamPtr.get() << sUnsupported.str() << "\n" << space << ")\n";
-      *perlStreamPtr.get() << space << "{\n";
-      *perlStreamPtr.get() << double_space << "# match device function from the list of unsupported, except those, which have a namespace prefix (aka somenamespace::umin(...));\n";
-      *perlStreamPtr.get() << double_space << "# function with only global namespace qualifier '::' (aka ::umin(...)) should be treated as a device function (and warned as well as without such qualifier);\n";
-      *perlStreamPtr.get() << double_space << "my $mt_namespace = m/(\\w+)::($func)\\s*\\(\\s*.*\\s*\\)/g;\n";
-      *perlStreamPtr.get() << double_space << "my $mt = m/($func)\\s*\\(\\s*.*\\s*\\)/g;\n";
-      *perlStreamPtr.get() << double_space << "if ($mt && !$mt_namespace) {\n";
-      *perlStreamPtr.get() << triple_space << "$m += $mt;\n";
-      *perlStreamPtr.get() << triple_space << "print STDERR \"  warning: $fileName:$line_num: unsupported device function \\\"$func\\\": $_\\n\";\n";
-      *perlStreamPtr.get() << double_space << "}\n";
-      *perlStreamPtr.get() << space << "}\n";
-      *perlStreamPtr.get() << space << "return $m;\n";
-      *perlStreamPtr.get() << "}\n";
+    std::stringstream subCountSupported;
+    std::stringstream subWarnUnsupported;
+    std::stringstream subCommon;
+    std::string sCommon = space + "my $m = 0;\n" + space + "foreach $func (\n";
+    subCountSupported << "\n" << sSub << " countSupportedDeviceFunctions\n" << "{\n" << (countSupported ? sCommon : space + sReturn_0);
+    subWarnUnsupported << "\n" << sSub << " warnUnsupportedDeviceFunctions\n" << "{\n" << (countUnsupported ? space + "my $line_num = shift;\n" + sCommon : space + sReturn_0);
+    if (countSupported) {
+      subCountSupported << sSupported.str() << "\n" << space << ")\n";
     }
+    if (countUnsupported) {
+      subWarnUnsupported << sUnsupported.str() << "\n" << space << ")\n";
+    }
+    if (countSupported || countUnsupported) {
+      subCommon << space << "{\n";
+      subCommon << double_space << "# match device function from the list, except those, which have a namespace prefix (aka somenamespace::umin(...));\n";
+      subCommon << double_space << "# function with only global namespace qualifier '::' (aka ::umin(...)) should be treated as a device function (and warned as well as without such qualifier);\n";
+      subCommon << double_space << "my $mt_namespace = m/(\\w+)::($func)\\s*\\(\\s*.*\\s*\\)/g;\n";
+      subCommon << double_space << "my $mt = m/($func)\\s*\\(\\s*.*\\s*\\)/g;\n";
+      subCommon << double_space << "if ($mt && !$mt_namespace) {\n";
+      subCommon << triple_space << "$m += $mt;\n";
+    }
+    if (countSupported) {
+      subCountSupported << subCommon.str();
+    }
+    if (countUnsupported) {
+      subWarnUnsupported << subCommon.str();
+      subWarnUnsupported << triple_space << "print STDERR \"  warning: $fileName:$line_num: unsupported device function \\\"$func\\\": $_\\n\";\n";
+    }
+    if (countSupported || countUnsupported) {
+      sCommon = double_space + "}\n" + space + "}\n" + space + "return $m;\n";
+    }
+    if (countSupported) {
+      subCountSupported << sCommon;
+    }
+    if (countUnsupported) {
+      subWarnUnsupported << sCommon;
+    }
+    subCountSupported << "}\n";
+    subWarnUnsupported << "}\n";
+    *perlStreamPtr.get() << subCountSupported.str();
+    *perlStreamPtr.get() << subWarnUnsupported.str();
   }
 
   bool generate(bool Generate) {
@@ -125,7 +157,7 @@ namespace perl {
         }
       }
     }
-    generateUnsupportedDeviceFunctions(perlStreamPtr);
+    generateDeviceFunctions(perlStreamPtr);
     perlStreamPtr.get()->flush();
     bool ret = true;
     EC = sys::fs::copy_file(tmpFile, dstPerlMap);
