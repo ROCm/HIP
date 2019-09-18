@@ -140,5 +140,10 @@ int main(int argc, char* argv[]) {
     CHECK(test_hipDeviceGetHdpAddress(deviceId, hipDeviceAttributeHdpMemFlushCntl, props.hdpMemFlushCntl));
     CHECK(test_hipDeviceGetHdpAddress(deviceId, hipDeviceAttributeHdpRegFlushCntl, props.hdpRegFlushCntl));
 #endif
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeMaxPitch, props.memPitch));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeTextureAlignment, props.textureAlignment));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeKernelExecTimeout, props.kernelExecTimeoutEnabled));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCanMapHostMemory, props.canMapHostMemory));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeEccEnabled, props.ECCEnabled));
     passed();
 };
