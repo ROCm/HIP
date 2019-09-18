@@ -311,6 +311,21 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
             case hipDeviceAttributeCooperativeMultiDeviceLaunch:
                 *pi = prop->cooperativeMultiDeviceLaunch;
                 break;
+            case hipDeviceAttributeMaxPitch:
+                *pi = prop->memPitch;
+                break;
+	    case hipDeviceAttributeTextureAlignment:
+                *pi = prop->textureAlignment;
+                break;
+            case hipDeviceAttributeKernelExecTimeout:
+                *pi = prop->kernelExecTimeoutEnabled;
+                break;
+            case hipDeviceAttributeCanMapHostMemory:
+                *pi = prop->canMapHostMemory;
+                break;
+            case hipDeviceAttributeEccEnabled:
+                *pi = prop->ECCEnabled;
+                break;
             default:
                 e = hipErrorInvalidValue;
                 break;

@@ -762,6 +762,7 @@ while (@ARGV) {
         $ft{'include'} += s/\bcaffe2\/core\/common_cudnn.h\b/caffe2\/core\/hip\/common_miopen.h/g;
         $ft{'include'} += s/\bcaffe2\/operators\/spatial_batch_norm_op.h\b/caffe2\/operators\/hip\/spatial_batch_norm_op_miopen.hip/g;
         $ft{'include'} += s/\bchannel_descriptor.h\b/hip\/channel_descriptor.h/g;
+        $ft{'include'} += s/\bcooperative_groups.h\b/hip\/hip_cooperative_groups.h/g;
         $ft{'include'} += s/\bcuda_fp16.h\b/hip\/hip_fp16.h/g;
         $ft{'include'} += s/\bcuda_profiler_api.h\b/hip\/hip_profile.h/g;
         $ft{'include'} += s/\bcuda_runtime_api.h\b/hip\/hip_runtime_api.h/g;
@@ -1442,6 +1443,7 @@ while (@ARGV) {
         $ft{'numeric_literal'} += s/\bcudaComputeModeExclusive\b/hipComputeModeExclusive/g;
         $ft{'numeric_literal'} += s/\bcudaComputeModeExclusiveProcess\b/hipComputeModeExclusiveProcess/g;
         $ft{'numeric_literal'} += s/\bcudaComputeModeProhibited\b/hipComputeModeProhibited/g;
+        $ft{'numeric_literal'} += s/\bcudaDevAttrCanMapHostMemory\b/hipDeviceAttributeCanMapHostMemory/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrClockRate\b/hipDeviceAttributeClockRate/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrComputeCapabilityMajor\b/hipDeviceAttributeComputeCapabilityMajor/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrComputeCapabilityMinor\b/hipDeviceAttributeComputeCapabilityMinor/g;
@@ -1449,9 +1451,11 @@ while (@ARGV) {
         $ft{'numeric_literal'} += s/\bcudaDevAttrConcurrentKernels\b/hipDeviceAttributeConcurrentKernels/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrCooperativeLaunch\b/hipDeviceAttributeCooperativeLaunch/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrCooperativeMultiDeviceLaunch\b/hipDeviceAttributeCooperativeMultiDeviceLaunch/g;
+        $ft{'numeric_literal'} += s/\bcudaDevAttrEccEnabled\b/hipDeviceAttributeEccEnabled/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrGlobalMemoryBusWidth\b/hipDeviceAttributeMemoryBusWidth/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrIntegrated\b/hipDeviceAttributeIntegrated/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrIsMultiGpuBoard\b/hipDeviceAttributeIsMultiGpuBoard/g;
+        $ft{'numeric_literal'} += s/\bcudaDevAttrKernelExecTimeout\b/hipDeviceAttributeKernelExecTimeout/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrL2CacheSize\b/hipDeviceAttributeL2CacheSize/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrMaxBlockDimX\b/hipDeviceAttributeMaxBlockDimX/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrMaxBlockDimY\b/hipDeviceAttributeMaxBlockDimY/g;
@@ -1459,6 +1463,7 @@ while (@ARGV) {
         $ft{'numeric_literal'} += s/\bcudaDevAttrMaxGridDimX\b/hipDeviceAttributeMaxGridDimX/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrMaxGridDimY\b/hipDeviceAttributeMaxGridDimY/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrMaxGridDimZ\b/hipDeviceAttributeMaxGridDimZ/g;
+        $ft{'numeric_literal'} += s/\bcudaDevAttrMaxPitch\b/hipDeviceAttributeMaxPitch/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrMaxRegistersPerBlock\b/hipDeviceAttributeMaxRegistersPerBlock/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrMaxSharedMemoryPerBlock\b/hipDeviceAttributeMaxSharedMemoryPerBlock/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrMaxSharedMemoryPerMultiprocessor\b/hipDeviceAttributeMaxSharedMemoryPerMultiprocessor/g;
@@ -1474,6 +1479,7 @@ while (@ARGV) {
         $ft{'numeric_literal'} += s/\bcudaDevAttrMultiProcessorCount\b/hipDeviceAttributeMultiprocessorCount/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrPciBusId\b/hipDeviceAttributePciBusId/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrPciDeviceId\b/hipDeviceAttributePciDeviceId/g;
+        $ft{'numeric_literal'} += s/\bcudaDevAttrTextureAlignment\b/hipDeviceAttributeTextureAlignment/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrTotalConstantMemory\b/hipDeviceAttributeTotalConstantMemory/g;
         $ft{'numeric_literal'} += s/\bcudaDevAttrWarpSize\b/hipDeviceAttributeWarpSize/g;
         $ft{'numeric_literal'} += s/\bcudaErrorAssert\b/hipErrorAssert/g;
@@ -1821,20 +1827,142 @@ sub countSupportedDeviceFunctions
 
 sub warnUnsupportedDeviceFunctions
 {
-    my $line_num =  shift;
+    my $line_num = shift;
     my $m = 0;
-    # ToDo: list all of the supported functions
     foreach $func (
-        "__syncthreads_and",
-        "__syncthreads_or",
-        "__prof_trigger"
+        "_Pow_int",
+        "__brkpt",
+        "__finite",
+        "__finitef",
+        "__finitel",
+        "__isinf",
+        "__isinff",
+        "__isinfl",
+        "__isnan",
+        "__isnanf",
+        "__isnanl",
+        "__pm0",
+        "__pm1",
+        "__pm2",
+        "__pm3",
+        "__prof_trigger",
+        "__shfl_down_sync",
+        "__shfl_sync",
+        "__shfl_up_sync",
+        "__shfl_xor_sync",
+        "__signbit",
+        "__signbitf",
+        "__signbitl",
+        "__trap",
+        "__vabs2",
+        "__vabs4",
+        "__vabsdiffs2",
+        "__vabsdiffs4",
+        "__vabsdiffu2",
+        "__vabsdiffu4",
+        "__vabsss2",
+        "__vabsss4",
+        "__vadd2",
+        "__vadd4",
+        "__vaddss2",
+        "__vaddss4",
+        "__vaddus2",
+        "__vaddus4",
+        "__vavgs2",
+        "__vavgs4",
+        "__vavgu2",
+        "__vavgu4",
+        "__vcmpeq2",
+        "__vcmpeq4",
+        "__vcmpges2",
+        "__vcmpges4",
+        "__vcmpgeu2",
+        "__vcmpgeu4",
+        "__vcmpgts2",
+        "__vcmpgts4",
+        "__vcmpgtu2",
+        "__vcmpgtu4",
+        "__vcmples2",
+        "__vcmples4",
+        "__vcmpleu4",
+        "__vcmplts2",
+        "__vcmplts4",
+        "__vcmpltu2",
+        "__vcmpltu4",
+        "__vcmpne2",
+        "__vcmpne4",
+        "__vhaddu2",
+        "__vhaddu4",
+        "__vmaxs2",
+        "__vmaxs4",
+        "__vmaxu2",
+        "__vmaxu4",
+        "__vmins2",
+        "__vmins4",
+        "__vminu2",
+        "__vminu4",
+        "__vneg2",
+        "__vneg4",
+        "__vnegss2",
+        "__vnegss4",
+        "__vsads2",
+        "__vsads4",
+        "__vsadu2",
+        "__vsadu4",
+        "__vseteq2",
+        "__vseteq4",
+        "__vsetges2",
+        "__vsetges4",
+        "__vsetgeu2",
+        "__vsetgeu4",
+        "__vsetgts2",
+        "__vsetgts4",
+        "__vsetgtu4",
+        "__vsetles2",
+        "__vsetles4",
+        "__vsetleu2",
+        "__vsetleu4",
+        "__vsetlts2",
+        "__vsetlts4",
+        "__vsetltu2",
+        "__vsetltu4",
+        "__vsetne2",
+        "__vsetne4",
+        "__vsub2",
+        "__vsub4",
+        "__vsubss2",
+        "__vsubss4",
+        "__vsubus2",
+        "__vsubus4",
+        "_fdsign",
+        "_ldsign",
+        "float2int",
+        "float_as_int",
+        "float_as_uint",
+        "int2float",
+        "int_as_float",
+        "llmax",
+        "llmin",
+        "mul24",
+        "mul64hi",
+        "mulhi",
+        "saturate",
+        "uint2float",
+        "uint_as_float",
+        "ullmax",
+        "ullmin",
+        "umax",
+        "umin",
+        "umul24"
     )
     {
-        # match math at the beginning of a word, but not if it already has a namespace qualifier ('::') :
-        my $mt = m/[:]?[:]?\b($func)\b(\w*\()/g;
-        if  ($mt) {
+        # match device function from the list of unsupported, except those, which have a namespace prefix (aka somenamespace::umin(...));
+        # function with only global namespace qualifier '::' (aka ::umin(...)) should be treated as a device function (and warned as well as without such qualifier);
+        my $mt_namespace = m/(\w+)::($func)\s*\(\s*.*\s*\)/g;
+        my $mt = m/($func)\s*\(\s*.*\s*\)/g;
+        if ($mt && !$mt_namespace) {
             $m += $mt;
-            print STDERR "  warning: $fileName:#$line_num : unsupported device function : $_\n";
+            print STDERR "  warning: $fileName:$line_num: unsupported device function \"$func\": $_\n";
         }
     }
     return $m;
