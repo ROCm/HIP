@@ -363,6 +363,7 @@ while (@ARGV) {
         $ft{'execution'} += s/\bcuFuncGetAttribute\b/hipFuncGetAttribute/g;
         $ft{'execution'} += s/\bcuLaunchKernel\b/hipModuleLaunchKernel/g;
         $ft{'execution'} += s/\bcudaConfigureCall\b/hipConfigureCall/g;
+        $ft{'execution'} += s/\bcudaFuncGetAttributes\b/hipFuncGetAttributes/g;
         $ft{'execution'} += s/\bcudaLaunch\b/hipLaunchByPtr/g;
         $ft{'execution'} += s/\bcudaLaunchCooperativeKernel\b/hipLaunchCooperativeKernel/g;
         $ft{'execution'} += s/\bcudaLaunchCooperativeKernelMultiDevice\b/hipLaunchCooperativeKernelMultiDevice/g;
