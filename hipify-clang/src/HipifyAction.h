@@ -100,5 +100,5 @@ protected:
   void run(const clang::ast_matchers::MatchFinder::MatchResult& Result) override;
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, llvm::StringRef InFile) override;
   bool Exclude(const hipCounter & hipToken);
-  void FindAndReplace(llvm::StringRef name, clang::SourceLocation sl, const std::map<llvm::StringRef, hipCounter>& repMap);
+  void FindAndReplace(llvm::StringRef name, clang::SourceLocation sl, const std::map<llvm::StringRef, hipCounter>& repMap, bool bReplace = true);
 };
