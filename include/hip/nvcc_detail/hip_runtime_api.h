@@ -846,6 +846,7 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->textureAlignment         = cdprop.textureAlignment;
     p_prop->kernelExecTimeoutEnabled = cdprop.kernelExecTimeoutEnabled;
     p_prop->ECCEnabled               = cdprop.ECCEnabled;
+    p_prop->tccDriver                = cdprop.tccDriver;
 
     return hipCUDAErrorTohipError(cerror);
 }
