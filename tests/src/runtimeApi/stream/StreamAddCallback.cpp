@@ -2,6 +2,7 @@
 #include <hip/hip_runtime.h>
 #include <unistd.h>
 #include "test_common.h"
+#include <atomic>
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
@@ -9,20 +10,39 @@
  * HIT_END
  */
 
+enum class ExecState
+{
+   EXEC_NOT_STARTED,
+   EXEC_STARTED,
+   EXEC_CB_STARTED,
+   EXEC_CB_FINISHED,
+   EXEC_FINISHED
+};
+
 struct UserData
 {
     size_t size;
     int* ptr;
 };
 
+// Global variable to check exection order
+std::atomic<ExecState> gData(ExecState::EXEC_NOT_STARTED);
+
+
 void myCallback(hipStream_t stream, hipError_t status, void* user_data)
 {
+    if(gData.load() != ExecState::EXEC_STARTED)
+        return; // Error hence return early
+
+    gData.store(ExecState::EXEC_CB_STARTED);
+
     UserData* data = reinterpret_cast<UserData*>(user_data);
-    printf("Callback called with arg.size = %lu ; arg.ptr = %p\nsleeping for 1 sec...\n", data->size, data->ptr);
+    printf("Callback started\n");
 
     sleep(1);
 
     printf("Callback ending.\n");
+    gData.store(ExecState::EXEC_CB_FINISHED);
 }
 
 bool test(int count)
@@ -31,6 +51,8 @@ bool test(int count)
     // Stream
     hipStream_t stream;
     bool result = true;
+
+    gData.store(ExecState::EXEC_STARTED);
 
     HIPCHECK(hipStreamCreate(&stream));
 
@@ -49,7 +71,7 @@ bool test(int count)
     HIPCHECK(hipHostMalloc((void**)&host, sizeof(int) * size));
 
     // Print host ptr address
-    printf("Host ptr address = %p\n", host);
+    printf("In main thread\n");
 
     // Initialize user_data for callback
     UserData arg;
@@ -70,30 +92,39 @@ bool test(int count)
 
     // This should happen before the callback actually gets called
     // when the size is large enough
-    printf("This should happen before the callback (assuming sufficiently large size).\n");
+    if(gData.load() != ExecState::EXEC_STARTED)
+         result = false;
+
+    printf("Will wait in main thread until callback completes\n");
 
     //This should synchronize the stream (including the callback)
     HIPCHECK(hipStreamSynchronize(stream));
 
-    printf("This should happen after the callback, since we synchronized stream before.\n");
-
-    if(host[size/2] != -1)
+    if(gData.load() != ExecState::EXEC_CB_FINISHED)
          result = false;
 
-    // Print some host data that just got copied
-    printf("Pseudo host data printing (should be -1): %d\n", host[size/2]);
+    printf("Callback completed will resume main thread execution\n");
+
+    if(host[size/2] != -1)
+    {
+         // Print some host data that just got copied
+         printf("Pseudo host data printing (should be -1): %d\n", host[size/2]);
+         result = false;
+    }
 
     HIPCHECK(hipMemcpy(host, data, sizeof(int)*size, hipMemcpyDeviceToHost));
 
     if(host[size-1] != 0)
+    {
+         printf("Pseudo host data printing (should be 0): %d\n", host[size-1]);
          result = false;
-
-    printf("Pseudo host data printing (should be 0): %d\n", host[size-1]);
+    }
 
     HIPCHECK(hipFree(data));
     HIPCHECK(hipHostFree(host));
     HIPCHECK(hipStreamDestroy(stream));
 
+    gData.store(ExecState::EXEC_FINISHED);
     return result;
 }
 

@@ -259,13 +259,16 @@ hipError_t setCallbackPacket(hsa_queue_t* queue,
                              hsa_barrier_and_packet_t** barrier1,
                              hsa_barrier_and_packet_t** barrier2){
 
+    if(queue == nullptr ||
+       barrier1 == nullptr || barrier2 == nullptr)
+            return hipErrorInvalidValue;
+
     uint64_t tempIndex = 0;
     uint32_t mask = queue->size - 1;
     hsa_barrier_and_packet_t* tempBarrier;
 
-    // Check for empty barrier packets
+    // Check for empty packets
     do{
-
         tempIndex = hsa_queue_load_write_index_scacquire(queue);
         tempBarrier = &(((hsa_barrier_and_packet_t*)(queue->base_address))[tempIndex & mask]);
     }while(!(tempBarrier->header & HSA_PACKET_TYPE_INVALID));
@@ -306,18 +309,44 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
     HIP_INIT_API(hipStreamAddCallback, stream, callback, userData, flags);
     hipError_t e = hipSuccess;
 
+    if(stream == hipStreamNull)
+    {
+        ihipCtx_t* device = ihipGetTlsDefaultCtx();
+        stream = device->_defaultStream;
+    }
+
     // 1. Lock the queue
     hsa_queue_t* lockedQ = static_cast<hsa_queue_t*> (stream->criticalData()._av.acquire_locked_hsa_queue());
+
+    if(lockedQ == nullptr)
+    {
+        // No queue attached to stream hence exiting early
+        return ihipLogStatus(hipErrorMissingConfiguration);
+    }
 
     // 2. Allocate a singals
     hsa_signal_t signal;
     hsa_status_t status = hsa_signal_create(1, 0, NULL, &signal);
 
+    if(status != HSA_STATUS_SUCCESS)
+    {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+
     hsa_signal_t depSignal;
     status = hsa_signal_create(1, 0, NULL, &depSignal);
 
+    if(status != HSA_STATUS_SUCCESS)
+    {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+
     // 3. Store callback details
     ihipStreamCallback_t* cb = new ihipStreamCallback_t(stream, callback, userData);
+    if(cb == nullptr)
+    {
+        return ihipLogStatus(hipErrorMemoryAllocation);
+    }
     cb->_signal = depSignal;
 
     // 4. Create barrier packets
@@ -335,7 +364,8 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
     uint16_t header = (HSA_PACKET_TYPE_BARRIER_AND << HSA_PACKET_HEADER_TYPE)| 1 << HSA_PACKET_HEADER_BARRIER;
 
-    // 5. Update packet header
+    // 5. Update packet header,
+    // Intentionally updated second barrier header before first in order to avoid race
     depBarrier->header = header;
     barrier->header = header;
 
