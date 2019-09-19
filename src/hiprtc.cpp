@@ -211,7 +211,7 @@ struct _hiprtcProgram {
 
         compile.close();
 
-        if (compile.rdbuf()->exited() &&
+        /*if (compile.rdbuf()->exited() &&
             compile.rdbuf()->status() != EXIT_SUCCESS) return false;
 
         elfio reader;
@@ -229,7 +229,22 @@ struct _hiprtcProgram {
         if (bundles(h).empty()) return false;
 
         elf.assign(bundles(h).back().blob.cbegin(),
-                   bundles(h).back().blob.cend());
+                   bundles(h).back().blob.cend()); */
+        if (compile.rdbuf()->exited() && compile.rdbuf()->status() != EXIT_SUCCESS) return false;
+
+        // Append Elf to code
+        auto elfName = program_folder / "hiprtc.out";
+        std::ifstream t(elfName.c_str());
+        std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+        elf.reserve(str.size());
+        for(auto i: str) {
+            elf.push_back(i);
+        }
+
+        this->loweredNames.clear();
+        for (auto i : names) {
+            this->loweredNames.push_back(i.second);
+        }
 
         return true;
     }
@@ -492,17 +507,20 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
 
     const auto src{p->writeTemporaryFiles(tmp.path())};
 
-    vector<string> args{hipcc, "-shared"};
+    //vector<string> args{hipcc, "-shared"};
+    vector<string> args{hipcc, "--genco"};
     if (n) args.insert(args.cend(), o, o + n);
 
-    handleTarget(args);
+    // TODO Add targets
+    // handleTarget(args);
 
     args.emplace_back(src);
     args.emplace_back("-o");
     args.emplace_back(tmp.path() / "hiprtc.out");
 
     if (!p->compile(args, tmp.path())) return HIPRTC_ERROR_INTERNAL_ERROR;
-    if (!p->readLoweredNames()) return HIPRTC_ERROR_INTERNAL_ERROR;
+    // Comment this atm
+    //if (!p->readLoweredNames()) return HIPRTC_ERROR_INTERNAL_ERROR;
 
     p->compiled = true;
 

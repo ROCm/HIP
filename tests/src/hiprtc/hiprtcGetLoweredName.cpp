@@ -39,15 +39,15 @@ R"(
 #include <hip/hip_runtime.h>
 
 __device__ int V1; // set from host code
-static __global__ void f1(int *result) { *result = V1 + 10; }
-namespace N1 {
+extern "C" __global__ void f1(int *result) { *result = V1 + 10; }
+/*namespace N1 {
 namespace N2 {
 __constant__ int V2; // set from host code
 __global__ void f2(int *result) { *result = V2 + 20; }
 }
 }
 template<typename T>
-__global__ void f3(int *result) { *result = sizeof(T); }
+__global__ void f3(int *result) { *result = sizeof(T); } */
 )"};
 
 int main()
@@ -64,19 +64,19 @@ int main()
 
     kernel_name_vec.push_back("&f1");
     expected_result.push_back(10 + 100);
-    kernel_name_vec.push_back("N1::N2::f2");
-    expected_result.push_back(20 + 200);
-    kernel_name_vec.push_back("f3<int>");
-    expected_result.push_back(sizeof(int));
-    kernel_name_vec.push_back("f3<double>");
-    expected_result.push_back(sizeof(double));
+    //kernel_name_vec.push_back("N1::N2::f2");
+    //expected_result.push_back(20 + 200);
+    //kernel_name_vec.push_back("f3<int>");
+    //expected_result.push_back(sizeof(int));
+    //kernel_name_vec.push_back("f3<double>");
+    //expected_result.push_back(sizeof(double));
 
     for (auto&& x : kernel_name_vec) hiprtcAddNameExpression(prog, x.c_str());
 
     variable_name_vec.push_back("&V1");
     variable_initial_value.push_back(100);
-    variable_name_vec.push_back("&N1::N2::V2");
-    variable_initial_value.push_back(200);
+    //variable_name_vec.push_back("&N1::N2::V2");
+    //variable_initial_value.push_back(200);
 
     for (auto&& x : variable_name_vec) hiprtcAddNameExpression(prog, x.c_str());
 
