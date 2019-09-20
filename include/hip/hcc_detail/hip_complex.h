@@ -34,6 +34,8 @@ THE SOFTWARE.
 #include "math.h"
 #endif
 
+namespace hip_cmplx{
+
 #if __cplusplus
 #define COMPLEX_NEG_OP_OVERLOAD(type)                                                              \
     __device__ __host__ static inline type operator-(const type& op) {                             \
@@ -317,4 +319,6 @@ __device__ __host__ inline hipDoubleComplex func(const hipDoubleComplex& z) { re
 
 __DEFINE_HIP_COMPLEX_FUN(conj, hipConj)
 
-#endif
+}//hip_cmplx
+
+#endif //HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COMPLEX_H
