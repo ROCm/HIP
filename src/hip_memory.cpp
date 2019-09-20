@@ -1612,6 +1612,7 @@ hipError_t ihipMemset(void* dst, int  value, size_t count, hipStream_t stream, e
     isInbound &= (allocSize >= count);
 
     if (stream && (dst != NULL) && isInbound) {
+        // Char - Short to int optimization
         switch (copyDataType) {
             case ihipMemsetDataTypeChar:
                 if ((count % 4) == 0) {
@@ -1633,10 +1634,11 @@ hipError_t ihipMemset(void* dst, int  value, size_t count, hipStream_t stream, e
                 break;
         }
         try {
-            if (copyDataType == ihipMemsetDataTypeChar) {
+            if (copyDataType == ihipMemsetDataTypeInt) { // 4 bytes value
+                if(!hsa_amd_memory_fill(dst, reinterpret_cast<const std::uint32_t&>(value), count))
+                    ihipMemsetKernel<uint32_t>(stream, static_cast<uint32_t*>(dst), value, count);
+            } else if (copyDataType == ihipMemsetDataTypeInt) {
                 ihipMemsetKernel<char>(stream, static_cast<char*>(dst), value, count);
-            } else if (copyDataType == ihipMemsetDataTypeInt) {  // 4 Bytes value
-                ihipMemsetKernel<uint32_t>(stream, static_cast<uint32_t*>(dst), value, count);
             } else if (copyDataType == ihipMemsetDataTypeShort) {
                 value = value & 0xffff;
                 ihipMemsetKernel<uint16_t>(stream, static_cast<uint16_t*>(dst), value, count);
