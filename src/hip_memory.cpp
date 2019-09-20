@@ -1637,7 +1637,7 @@ hipError_t ihipMemset(void* dst, int  value, size_t count, hipStream_t stream, e
             if (copyDataType == ihipMemsetDataTypeInt) { // 4 bytes value
                 if(!hsa_amd_memory_fill(dst, reinterpret_cast<const std::uint32_t&>(value), count))
                     ihipMemsetKernel<uint32_t>(stream, static_cast<uint32_t*>(dst), value, count);
-            } else if (copyDataType == ihipMemsetDataTypeInt) {
+            } else if (copyDataType == ihipMemsetDataTypeChar) {
                 ihipMemsetKernel<char>(stream, static_cast<char*>(dst), value, count);
             } else if (copyDataType == ihipMemsetDataTypeShort) {
                 value = value & 0xffff;
