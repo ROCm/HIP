@@ -22,6 +22,9 @@ THE SOFTWARE.
 
 #pragma once
 
+extern std::set<std::string> DeviceSymbolFunctions0;
+extern std::set<std::string> DeviceSymbolFunctions1;
+
 namespace perl {
 
   bool generate(bool Generate = true);

@@ -41,6 +41,42 @@ namespace perl {
   const std::string triple_space = double_space + space;
   const std::string sSub = "sub";
   const std::string sReturn_0 = "return 0;\n";
+  const std::string sReturn_m = "return $m;\n";
+  const std::string sForeach = "foreach $func (\n";
+  const std::string sMy = "my $m = 0;\n";
+
+  void generateSymbolFunctions(std::unique_ptr<std::ostream>& perlStreamPtr) {
+    *perlStreamPtr.get() << "\n" << sSub << " transformSymbolFunctions\n" << "{\n" << space << sMy;
+    std::string sCommon = space + sForeach;
+    *perlStreamPtr.get() << sCommon;
+    unsigned int count = 0;
+    for (auto& dsf : DeviceSymbolFunctions0) {
+      const auto found = CUDA_RENAMES_MAP().find(dsf);
+      if (found != CUDA_RENAMES_MAP().end()) {
+        *perlStreamPtr.get() << (count ? ",\n" : "") << double_space << "\"" << found->second.hipName.str() << "\"";
+        count++;
+      }
+    }
+    *perlStreamPtr.get() << "\n" << space << ")\n";
+    *perlStreamPtr.get() << space << "{\n";
+    *perlStreamPtr.get() << double_space << "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,/$func\\(HIP_SYMBOL\\($2\\),/g\n";
+    *perlStreamPtr.get() << space << "}\n";
+    *perlStreamPtr.get() << sCommon;
+    count = 0;
+    for (auto& dsf : DeviceSymbolFunctions1) {
+      const auto found = CUDA_RENAMES_MAP().find(dsf);
+      if (found != CUDA_RENAMES_MAP().end()) {
+        *perlStreamPtr.get() << (count ? ",\n" : "") << double_space << "\"" << found->second.hipName.str() << "\"";
+        count++;
+      }
+    }
+    *perlStreamPtr.get() << "\n" << space << ")\n";
+    *perlStreamPtr.get() << space << "{\n";
+    *perlStreamPtr.get() << double_space << "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,\\s*([^,\\)]+)\\s*(,\\s*|\\))\\s*/$func\\($2, HIP_SYMBOL\\($3\\)$4/g;\n";
+    *perlStreamPtr.get() << space << "}\n";
+    *perlStreamPtr.get() << space << sReturn_m;
+    *perlStreamPtr.get() << "}\n";
+  }
 
   void generateDeviceFunctions(std::unique_ptr<std::ostream>& perlStreamPtr) {
     unsigned int countUnsupported = 0;
@@ -59,7 +95,7 @@ namespace perl {
     std::stringstream subCountSupported;
     std::stringstream subWarnUnsupported;
     std::stringstream subCommon;
-    std::string sCommon = space + "my $m = 0;\n" + space + "foreach $func (\n";
+    std::string sCommon = space + sMy + space + sForeach;
     subCountSupported << "\n" << sSub << " countSupportedDeviceFunctions\n" << "{\n" << (countSupported ? sCommon : space + sReturn_0);
     subWarnUnsupported << "\n" << sSub << " warnUnsupportedDeviceFunctions\n" << "{\n" << (countUnsupported ? space + "my $line_num = shift;\n" + sCommon : space + sReturn_0);
     if (countSupported) {
@@ -85,7 +121,7 @@ namespace perl {
       subWarnUnsupported << triple_space << "print STDERR \"  warning: $fileName:$line_num: unsupported device function \\\"$func\\\": $_\\n\";\n";
     }
     if (countSupported || countUnsupported) {
-      sCommon = double_space + "}\n" + space + "}\n" + space + "return $m;\n";
+      sCommon = double_space + "}\n" + space + "}\n" + space + sReturn_m;
     }
     if (countSupported) {
       subCountSupported << sCommon;
@@ -157,6 +193,7 @@ namespace perl {
         }
       }
     }
+    generateSymbolFunctions(perlStreamPtr);
     generateDeviceFunctions(perlStreamPtr);
     perlStreamPtr.get()->flush();
     bool ret = true;
