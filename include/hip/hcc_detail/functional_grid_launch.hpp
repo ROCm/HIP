@@ -177,4 +177,19 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                                      stream, &config[0]);
 }
 
+template<class T>
+hipError_t hipFreeAll(T ptr)
+{
+    return hipFree((void *) ptr);            
+}
+
+template<class T, class... Args>
+hipError_t hipFreeAll(T first, Args... arg)
+{
+    hipError_t status = hipFree(first);
+    if(status == hipSuccess)
+       status = hipFreeAll(arg...);
+    return status;                            
+}
+
 #pragma GCC visibility pop

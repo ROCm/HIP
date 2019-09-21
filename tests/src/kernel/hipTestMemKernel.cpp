@@ -110,9 +110,7 @@ int main() {
     delete[] A;
     delete[] B;
     delete[] C;
-    hipFree(Ad);
-    hipFree(Bd);
-    hipFree(Cd);
+    hipFreeAll(Ad,Bd,Cd);
 
     A = new uint8_t[LEN9];
     B = new uint8_t[LEN9];
@@ -138,9 +136,7 @@ int main() {
     delete[] A;
     delete[] B;
     delete[] C;
-    hipFree(Ad);
-    hipFree(Bd);
-    hipFree(Cd);
+    hipFreeAll(Ad,Bd,Cd);
 
     A = new uint8_t[LEN10];
     B = new uint8_t[LEN10];
@@ -166,9 +162,7 @@ int main() {
     delete[] A;
     delete[] B;
     delete[] C;
-    hipFree(Ad);
-    hipFree(Bd);
-    hipFree(Cd);
+    hipFreeAll(Ad,Bd,Cd);
 
     A = new uint8_t[LEN11];
     B = new uint8_t[LEN11];
@@ -194,9 +188,7 @@ int main() {
     delete[] A;
     delete[] B;
     delete[] C;
-    hipFree(Ad);
-    hipFree(Bd);
-    hipFree(Cd);
+    hipFreeAll(Ad,Bd,Cd);
 
     A = new uint8_t[LEN12];
     B = new uint8_t[LEN12];
@@ -222,9 +214,7 @@ int main() {
     delete[] A;
     delete[] B;
     delete[] C;
-    hipFree(Ad);
-    hipFree(Bd);
-    hipFree(Cd);
+    hipFreeAll(Ad,Bd,Cd);
 
     passed();
 }
