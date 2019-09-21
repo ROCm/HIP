@@ -43,12 +43,12 @@ const std::string sCudaGetSymbolAddress = "cudaGetSymbolAddress";
 const std::string sCudaMemcpyFromSymbol = "cudaMemcpyFromSymbol";
 const std::string sCudaMemcpyFromSymbolAsync = "cudaMemcpyFromSymbolAsync";
 
-const std::set<std::string> DeviceSymbolFunctions0 {
+std::set<std::string> DeviceSymbolFunctions0 {
   {sCudaMemcpyToSymbol},
   {sCudaMemcpyToSymbolAsync}
 };
 
-const std::set<std::string> DeviceSymbolFunctions1 {
+std::set<std::string> DeviceSymbolFunctions1 {
   {sCudaGetSymbolSize},
   {sCudaGetSymbolAddress},
   {sCudaMemcpyFromSymbol},

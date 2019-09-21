@@ -160,6 +160,8 @@ while (@ARGV) {
     undef $/; # Read whole file at once, so we can match newlines.
     while (<INFILE>)
     {
+        # chomp;
+        # next if /^(\s*(#.*)?)?$/;
         $ft{'error'} += s/\bcudaGetErrorName\b/hipGetErrorName/g;
         $ft{'error'} += s/\bcudaGetErrorString\b/hipGetErrorString/g;
         $ft{'error'} += s/\bcudaGetLastError\b/hipGetLastError/g;
@@ -1761,6 +1763,8 @@ while (@ARGV) {
             $ft{'kernel_func'} += countSupportedDeviceFunctions();
         }
 
+        $ft{'memory'} += transformSymbolFunctions();
+
         # Print it!
         # TODO - would like to move this code outside loop but it uses $_ which contains the whole file.
         unless ($no_output) {
@@ -1813,6 +1817,28 @@ if ($count_conversions) {
     foreach my $key (sort { $convertedTags{$b} <=> $convertedTags{$a} } keys %convertedTags) {
         printf STDERR "  %s %d\n", $key, $convertedTags{$key};
     }
+}
+
+sub transformSymbolFunctions
+{
+    my $m = 0;
+    foreach $func (
+        "hipMemcpyToSymbol",
+        "hipMemcpyToSymbolAsync"
+    )
+    {
+        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,/$func\(HIP_SYMBOL\($2\),/g
+    }
+    foreach $func (
+        "hipGetSymbolAddress",
+        "hipGetSymbolSize",
+        "hipMemcpyFromSymbol",
+        "hipMemcpyFromSymbolAsync"
+    )
+    {
+        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, HIP_SYMBOL\($3\)$4/g;
+    }
+    return $m;
 }
 
 sub countSupportedDeviceFunctions
