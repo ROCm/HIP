@@ -48,32 +48,24 @@ namespace perl {
   void generateSymbolFunctions(std::unique_ptr<std::ostream>& perlStreamPtr) {
     *perlStreamPtr.get() << "\n" << sSub << " transformSymbolFunctions\n" << "{\n" << space << sMy;
     std::string sCommon = space + sForeach;
-    *perlStreamPtr.get() << sCommon;
-    unsigned int count = 0;
-    for (auto& dsf : DeviceSymbolFunctions0) {
-      const auto found = CUDA_RENAMES_MAP().find(dsf);
-      if (found != CUDA_RENAMES_MAP().end()) {
-        *perlStreamPtr.get() << (count ? ",\n" : "") << double_space << "\"" << found->second.hipName.str() << "\"";
-        count++;
+    std::set<std::string> &funcSet = DeviceSymbolFunctions0;
+    for (int i = 0; i < 2; ++i) {
+      *perlStreamPtr.get() << sCommon;
+      if (i == 1) funcSet = DeviceSymbolFunctions1;
+      unsigned int count = 0;
+      for (auto& f : funcSet) {
+        const auto found = CUDA_RUNTIME_FUNCTION_MAP.find(f);
+        if (found != CUDA_RUNTIME_FUNCTION_MAP.end()) {
+          *perlStreamPtr.get() << (count ? ",\n" : "") << double_space << "\"" << found->second.hipName.str() << "\"";
+          count++;
+        }
       }
+      *perlStreamPtr.get() << "\n" << space << ")\n";
+      *perlStreamPtr.get() << space << "{\n" << double_space;
+      if (i ==0) *perlStreamPtr.get() << "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,/$func\\(HIP_SYMBOL\\($2\\),/g\n";
+      else *perlStreamPtr.get() << "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,\\s*([^,\\)]+)\\s*(,\\s*|\\))\\s*/$func\\($2, HIP_SYMBOL\\($3\\)$4/g;\n";
+      *perlStreamPtr.get() << space << "}\n";
     }
-    *perlStreamPtr.get() << "\n" << space << ")\n";
-    *perlStreamPtr.get() << space << "{\n";
-    *perlStreamPtr.get() << double_space << "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,/$func\\(HIP_SYMBOL\\($2\\),/g\n";
-    *perlStreamPtr.get() << space << "}\n";
-    *perlStreamPtr.get() << sCommon;
-    count = 0;
-    for (auto& dsf : DeviceSymbolFunctions1) {
-      const auto found = CUDA_RENAMES_MAP().find(dsf);
-      if (found != CUDA_RENAMES_MAP().end()) {
-        *perlStreamPtr.get() << (count ? ",\n" : "") << double_space << "\"" << found->second.hipName.str() << "\"";
-        count++;
-      }
-    }
-    *perlStreamPtr.get() << "\n" << space << ")\n";
-    *perlStreamPtr.get() << space << "{\n";
-    *perlStreamPtr.get() << double_space << "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,\\s*([^,\\)]+)\\s*(,\\s*|\\))\\s*/$func\\($2, HIP_SYMBOL\\($3\\)$4/g;\n";
-    *perlStreamPtr.get() << space << "}\n";
     *perlStreamPtr.get() << space << sReturn_m;
     *perlStreamPtr.get() << "}\n";
   }
