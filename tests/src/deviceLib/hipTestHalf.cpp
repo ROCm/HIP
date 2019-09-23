@@ -229,7 +229,7 @@ void checkFunctional() {
 
 int main() {
   bool* result{nullptr};
-  hipHostMalloc(&result, sizeof(result));
+  hipMemAllocHost((void**)&result, sizeof(result));
 
   result[0] = false;
   hipLaunchKernelGGL(
