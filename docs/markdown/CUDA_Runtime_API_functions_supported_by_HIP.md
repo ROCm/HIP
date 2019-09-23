@@ -101,7 +101,7 @@
 
 |   **CUDA**                                                |   **HIP**                             |**CUDA version\***|
 |-----------------------------------------------------------|---------------------------------------|:----------------:|
-| `cudaFuncGetAttributes`                                   |                                       |
+| `cudaFuncGetAttributes`                                   |`hipFuncGetAttributes`                 |
 | `cudaFuncSetAttribute`                                    |                                       | 9.0              |
 | `cudaFuncSetCacheConfig`                                  |`hipFuncSetCacheConfig`                |
 | `cudaFuncSetSharedMemConfig`                              |                                       |

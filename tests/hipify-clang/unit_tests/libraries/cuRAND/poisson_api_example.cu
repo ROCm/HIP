@@ -247,7 +247,7 @@ API_TYPE set_API_type()
 void settings()
 {
     add_cachiers(cashiers_load);
-    // CHECK: hipMemcpyToSymbol("cashiers_load", cashiers_load_h,
+    // CHECK: hipMemcpyToSymbol(HIP_SYMBOL("cashiers_load"), cashiers_load_h,
     // CHECK: HOURS * sizeof(int), 0, hipMemcpyHostToDevice);
     cudaMemcpyToSymbol("cashiers_load", cashiers_load_h,
             HOURS * sizeof(int), 0, cudaMemcpyHostToDevice);

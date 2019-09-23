@@ -160,6 +160,8 @@ while (@ARGV) {
     undef $/; # Read whole file at once, so we can match newlines.
     while (<INFILE>)
     {
+        # chomp;
+        # next if /^(\s*(#.*)?)?$/;
         $ft{'error'} += s/\bcudaGetErrorName\b/hipGetErrorName/g;
         $ft{'error'} += s/\bcudaGetErrorString\b/hipGetErrorString/g;
         $ft{'error'} += s/\bcudaGetLastError\b/hipGetLastError/g;
@@ -363,6 +365,7 @@ while (@ARGV) {
         $ft{'execution'} += s/\bcuFuncGetAttribute\b/hipFuncGetAttribute/g;
         $ft{'execution'} += s/\bcuLaunchKernel\b/hipModuleLaunchKernel/g;
         $ft{'execution'} += s/\bcudaConfigureCall\b/hipConfigureCall/g;
+        $ft{'execution'} += s/\bcudaFuncGetAttributes\b/hipFuncGetAttributes/g;
         $ft{'execution'} += s/\bcudaLaunch\b/hipLaunchByPtr/g;
         $ft{'execution'} += s/\bcudaLaunchCooperativeKernel\b/hipLaunchCooperativeKernel/g;
         $ft{'execution'} += s/\bcudaLaunchCooperativeKernelMultiDevice\b/hipLaunchCooperativeKernelMultiDevice/g;
@@ -1294,6 +1297,7 @@ while (@ARGV) {
         $ft{'numeric_literal'} += s/\bCU_CTX_SCHED_MASK\b/hipDeviceScheduleMask/g;
         $ft{'numeric_literal'} += s/\bCU_CTX_SCHED_SPIN\b/hipDeviceScheduleSpin/g;
         $ft{'numeric_literal'} += s/\bCU_CTX_SCHED_YIELD\b/hipDeviceScheduleYield/g;
+        $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY\b/hipDeviceAttributeCanMapHostMemory/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_CLOCK_RATE\b/hipDeviceAttributeClockRate/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR\b/hipDeviceAttributeComputeCapabilityMajor/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR\b/hipDeviceAttributeComputeCapabilityMinor/g;
@@ -1301,8 +1305,10 @@ while (@ARGV) {
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS\b/hipDeviceAttributeConcurrentKernels/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH\b/hipDeviceAttributeCooperativeLaunch/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH\b/hipDeviceAttributeCooperativeMultiDeviceLaunch/g;
+        $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_ECC_ENABLED\b/hipDeviceAttributeEccEnabled/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH\b/hipDeviceAttributeMemoryBusWidth/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_INTEGRATED\b/hipDeviceAttributeIntegrated/g;
+        $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT\b/hipDeviceAttributeKernelExecTimeout/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE\b/hipDeviceAttributeL2CacheSize/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH\b/hipDeviceAttributeMaxTexture1DWidth/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT\b/hipDeviceAttributeMaxTexture2DHeight/g;
@@ -1316,6 +1322,7 @@ while (@ARGV) {
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_X\b/hipDeviceAttributeMaxGridDimX/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Y\b/hipDeviceAttributeMaxGridDimY/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAX_GRID_DIM_Z\b/hipDeviceAttributeMaxGridDimZ/g;
+        $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAX_PITCH\b/hipDeviceAttributeMaxPitch/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK\b/hipDeviceAttributeMaxRegistersPerBlock/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK\b/hipDeviceAttributeMaxSharedMemoryPerBlock/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_MULTIPROCESSOR\b/hipDeviceAttributeMaxSharedMemoryPerMultiprocessor/g;
@@ -1328,6 +1335,7 @@ while (@ARGV) {
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID\b/hipDeviceAttributePciDeviceId/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK\b/hipDeviceAttributeMaxRegistersPerBlock/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK\b/hipDeviceAttributeMaxSharedMemoryPerBlock/g;
+        $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT\b/hipDeviceAttributeTextureAlignment/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY\b/hipDeviceAttributeTotalConstantMemory/g;
         $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_WARP_SIZE\b/hipDeviceAttributeWarpSize/g;
         $ft{'numeric_literal'} += s/\bCU_EVENT_BLOCKING_SYNC\b/hipEventBlockingSync/g;
@@ -1755,6 +1763,8 @@ while (@ARGV) {
             $ft{'kernel_func'} += countSupportedDeviceFunctions();
         }
 
+        $ft{'memory'} += transformSymbolFunctions();
+
         # Print it!
         # TODO - would like to move this code outside loop but it uses $_ which contains the whole file.
         unless ($no_output) {
@@ -1809,18 +1819,323 @@ if ($count_conversions) {
     }
 }
 
+sub transformSymbolFunctions
+{
+    my $m = 0;
+    foreach $func (
+        "hipMemcpyToSymbol",
+        "hipMemcpyToSymbolAsync"
+    )
+    {
+        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,/$func\(HIP_SYMBOL\($2\),/g
+    }
+    foreach $func (
+        "hipGetSymbolAddress",
+        "hipGetSymbolSize",
+        "hipMemcpyFromSymbol",
+        "hipMemcpyFromSymbolAsync"
+    )
+    {
+        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, HIP_SYMBOL\($3\)$4/g;
+    }
+    return $m;
+}
+
 sub countSupportedDeviceFunctions
 {
     my $m = 0;
-    # TODO: list all of the supported functions
-    # TODO: split the list on math, device, and maybe fp16
     foreach $func (
-        # Synchronization:
+        "__brev",
+        "__brevll",
+        "__byte_perm",
+        "__clz",
+        "__clzll",
+        "__cosf",
+        "__double2int_rz",
+        "__double2ll_rz",
+        "__double2uint_rz",
+        "__double2ull_rz",
+        "__exp10f",
+        "__expf",
+        "__fadd_rd",
+        "__fadd_rn",
+        "__fadd_ru",
+        "__fadd_rz",
+        "__fdiv_rd",
+        "__fdiv_rn",
+        "__fdiv_ru",
+        "__fdiv_rz",
+        "__fdividef",
+        "__ffs",
+        "__ffsll",
+        "__float2int_rd",
+        "__float2int_rn",
+        "__float2int_ru",
+        "__float2int_rz",
+        "__float2ll_rd",
+        "__float2ll_rn",
+        "__float2ll_ru",
+        "__float2ll_rz",
+        "__float2uint_rd",
+        "__float2uint_rn",
+        "__float2uint_ru",
+        "__float2uint_rz",
+        "__float2ull_rd",
+        "__float2ull_rn",
+        "__float2ull_ru",
+        "__float2ull_rz",
+        "__float_as_int",
+        "__float_as_uint",
+        "__fmaf_rd",
+        "__fmaf_rn",
+        "__fmaf_ru",
+        "__fmaf_rz",
+        "__fmul_rd",
+        "__fmul_rn",
+        "__fmul_ru",
+        "__fmul_rz",
+        "__frcp_rd",
+        "__frcp_rn",
+        "__frcp_ru",
+        "__frcp_rz",
+        "__frsqrt_rn",
+        "__fsqrt_rd",
+        "__fsqrt_rn",
+        "__fsqrt_ru",
+        "__fsqrt_rz",
+        "__fsub_rd",
+        "__fsub_rn",
+        "__fsub_ru",
+        "__fsub_rz",
+        "__hadd",
+        "__int2float_rd",
+        "__int2float_rn",
+        "__int2float_ru",
+        "__int2float_rz",
+        "__int_as_float",
+        "__ll2float_rd",
+        "__ll2float_rn",
+        "__ll2float_ru",
+        "__ll2float_rz",
+        "__log10f",
+        "__log2f",
+        "__logf",
+        "__mul24",
+        "__mul64hi",
+        "__mulhi",
+        "__popc",
+        "__popcll",
+        "__powf",
+        "__rhadd",
+        "__sad",
+        "__saturatef",
+        "__sincosf",
+        "__sinf",
         "__syncthreads",
+        "__tanf",
+        "__threadfence",
+        "__threadfence_block",
+        "__uhadd",
+        "__uint2float_rd",
+        "__uint2float_rn",
+        "__uint2float_ru",
+        "__uint2float_rz",
+        "__uint_as_float",
+        "__ull2float_rd",
+        "__ull2float_rn",
+        "__ull2float_ru",
+        "__ull2float_rz",
+        "__umul24",
+        "__umul64hi",
+        "__umulhi",
+        "__urhadd",
+        "__usad",
+        "abs",
+        "acos",
+        "acosf",
+        "acosh",
+        "acoshf",
+        "asin",
+        "asinf",
+        "asinh",
+        "asinhf",
+        "atan",
+        "atan2",
+        "atan2f",
+        "atanf",
+        "atanh",
+        "atanhf",
+        "cbrt",
+        "cbrtf",
+        "ceil",
+        "ceilf",
+        "copysign",
+        "copysignf",
+        "cos",
+        "cosf",
+        "cosh",
+        "coshf",
+        "cospi",
+        "cospif",
+        "cyl_bessel_i0",
+        "cyl_bessel_i0f",
+        "cyl_bessel_i1",
+        "cyl_bessel_i1f",
+        "erf",
+        "erfc",
+        "erfcf",
+        "erfcinv",
+        "erfcinvf",
+        "erfcx",
+        "erfcxf",
+        "erff",
+        "erfinv",
+        "erfinvf",
+        "exp",
+        "exp10",
+        "exp10f",
+        "exp2",
+        "exp2f",
+        "expf",
+        "expm1",
+        "expm1f",
+        "fabs",
+        "fabsf",
+        "fdim",
+        "fdimf",
+        "fdivide",
+        "fdividef",
+        "floor",
+        "floorf",
+        "fma",
+        "fmaf",
+        "fmax",
+        "fmaxf",
+        "fmin",
+        "fminf",
+        "fmod",
+        "fmodf",
+        "frexp",
+        "frexpf",
+        "hypot",
+        "hypotf",
+        "ilogb",
+        "ilogbf",
+        "isfinite",
+        "isinf",
+        "isnan",
+        "j0",
+        "j0f",
+        "j1",
+        "j1f",
+        "jn",
+        "jnf",
+        "labs",
+        "ldexp",
+        "ldexpf",
+        "lgamma",
+        "lgammaf",
+        "llabs",
+        "llrint",
+        "llrintf",
+        "llround",
+        "llroundf",
+        "log",
+        "log10",
+        "log10f",
+        "log1p",
+        "log1pf",
+        "log2",
+        "log2f",
+        "logb",
+        "logbf",
+        "logf",
+        "lrint",
+        "lrintf",
+        "lround",
+        "lroundf",
+        "max",
+        "min",
+        "modf",
+        "modff",
+        "nan",
+        "nanf",
+        "nearbyint",
+        "nearbyintf",
+        "nextafter",
+        "nextafterf",
+        "norm",
+        "norm3d",
+        "norm3df",
+        "norm4d",
+        "norm4df",
+        "normcdf",
+        "normcdff",
+        "normcdfinv",
+        "normcdfinvf",
+        "normf",
+        "pow",
+        "powf",
+        "rcbrt",
+        "rcbrtf",
+        "remainder",
+        "remainderf",
+        "remquo",
+        "remquof",
+        "rhypot",
+        "rhypotf",
+        "rint",
+        "rintf",
+        "rnorm",
+        "rnorm3d",
+        "rnorm3df",
+        "rnorm4d",
+        "rnorm4df",
+        "rnormf",
+        "round",
+        "roundf",
+        "rsqrt",
+        "rsqrtf",
+        "scalbln",
+        "scalblnf",
+        "scalbn",
+        "scalbnf",
+        "signbit",
+        "sin",
+        "sincos",
+        "sincosf",
+        "sincospi",
+        "sincospif",
+        "sinf",
+        "sinh",
+        "sinhf",
+        "sinpi",
+        "sinpif",
+        "sqrt",
+        "sqrtf",
+        "tan",
+        "tanf",
+        "tanh",
+        "tanhf",
+        "tgamma",
+        "tgammaf",
+        "trunc",
+        "truncf",
+        "y0",
+        "y0f",
+        "y1",
+        "y1f",
+        "yn",
+        "ynf"
     )
     {
-        # match device func at the beginning of a word, but not if it already has a namespace qualifier ('::') :
-        $m += m/[:]?[:]?\b($func)\b(\w*\()/g;
+        # match device function from the list, except those, which have a namespace prefix (aka somenamespace::umin(...));
+        # function with only global namespace qualifier '::' (aka ::umin(...)) should be treated as a device function (and warned as well as without such qualifier);
+        my $mt_namespace = m/(\w+)::($func)\s*\(\s*.*\s*\)/g;
+        my $mt = m/($func)\s*\(\s*.*\s*\)/g;
+        if ($mt && !$mt_namespace) {
+            $m += $mt;
+        }
     }
     return $m;
 }
@@ -1956,7 +2271,7 @@ sub warnUnsupportedDeviceFunctions
         "umul24"
     )
     {
-        # match device function from the list of unsupported, except those, which have a namespace prefix (aka somenamespace::umin(...));
+        # match device function from the list, except those, which have a namespace prefix (aka somenamespace::umin(...));
         # function with only global namespace qualifier '::' (aka ::umin(...)) should be treated as a device function (and warned as well as without such qualifier);
         my $mt_namespace = m/(\w+)::($func)\s*\(\s*.*\s*\)/g;
         my $mt = m/($func)\s*\(\s*.*\s*\)/g;
