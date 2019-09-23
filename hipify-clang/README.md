@@ -109,7 +109,7 @@ To run it:
         cmake \
          -DCMAKE_INSTALL_PREFIX=../dist \
          -DLLVM_SOURCE_DIR=../llvm \
-         -DLLVM_TARGETS_TO_BUILD="NVPTX" \
+         -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
          -DCMAKE_BUILD_TYPE=Release \
          ../llvm
         make -j install
@@ -121,7 +121,7 @@ To run it:
          -G "Visual Studio 16 2019 Win64" \
          -DCMAKE_INSTALL_PREFIX=../dist \
          -DLLVM_SOURCE_DIR=../llvm \
-         -DLLVM_TARGETS_TO_BUILD="NVPTX" \
+         -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
          -DCMAKE_BUILD_TYPE=Release \
          -Thost=x64 \
          ../llvm
