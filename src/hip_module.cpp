@@ -151,7 +151,8 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY,
                                   uint32_t localWorkSizeZ, size_t sharedMemBytes,
                                   hipStream_t hStream, void** kernelParams, void** extra,
-                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags, bool isStreamLocked = 0) {
+                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags, bool isStreamLocked = 0,
+                                  void** impCoopParams = 0) {
     using namespace hip_impl;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -195,9 +196,16 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
             return hipErrorInvalidValue;
         }
 
-        // Insert 48-bytes at the end for implicit kernel arguments and fill with value zero.
+        // Insert 56-bytes at the end for implicit kernel arguments and fill with value zero.
         size_t padSize = (~kernargs.size() + 1) & (HIP_IMPLICIT_KERNARG_ALIGNMENT - 1);
         kernargs.insert(kernargs.end(), padSize + HIP_IMPLICIT_KERNARG_SIZE, 0);
+
+        if (impCoopParams) {
+            const auto p{static_cast<const char*>(*impCoopParams)};
+            // The sixth index is for multi-grid synchronization
+            kernargs.insert((kernargs.cend() - padSize - HIP_IMPLICIT_KERNARG_SIZE) + 6 * HIP_IMPLICIT_KERNARG_ALIGNMENT,
+                            p, p + HIP_IMPLICIT_KERNARG_ALIGNMENT);
+        }
 
         /*
           Kernel argument preparation.
@@ -463,6 +471,10 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
         return ihipLogStatus(hipErrorLaunchFailure);
     }
 
+    uint impCoopArg = 1;
+    void* impCoopParams[1];
+    impCoopParams[0] = &impCoopArg;
+
     // launch the main kernel
     result = ihipModuleLaunchKernel(tls, kd,
             gridDim.x * blockDimX.x,
@@ -470,7 +482,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
             gridDim.z * blockDimX.z,
             blockDimX.x, blockDimX.y, blockDimX.z,
             sharedMemBytes, stream, kernelParams, nullptr, nullptr,
-            nullptr, 0, true);
+            nullptr, 0, true, impCoopParams);
 
     stream->criticalData().unlock();
 #if (__hcc_workweek__ >= 19213)
@@ -486,7 +498,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
     HIP_INIT_API(hipLaunchCooperativeKernelMultiDevice, launchParamsList, numDevices, flags);
     hipError_t result;
 
-    if (numDevices > g_deviceCnt || launchParamsList == nullptr) {
+    if (numDevices > g_deviceCnt || launchParamsList == nullptr || numDevices > MAX_COOPERATIVE_GPUs) {
         return ihipLogStatus(hipErrorInvalidValue);
     }
 
@@ -537,6 +549,28 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
                 kargs.getHandle());
     }
 
+    mg_sync *mg_sync_ptr;
+    mg_info *mg_info_ptr[MAX_COOPERATIVE_GPUs];
+
+    result = hip_internal::ihipHostMalloc(tls, (void **)&mg_sync_ptr, sizeof(mg_sync), hipHostMallocDefault);
+    if (result != hipSuccess) {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    mg_sync_ptr->w0 = 0;
+    mg_sync_ptr->w1 = 0;
+
+    uint all_sum = 0;
+    for (int i = 0; i < numDevices; ++i) {
+        result = hip_internal::ihipHostMalloc(tls, (void **)&mg_info_ptr[i], sizeof(mg_info), hipHostMallocDefault);
+        if (result != hipSuccess) {
+            return ihipLogStatus(hipErrorInvalidValue);
+        }
+        // calculate the sum of sizes of all grids
+        const hipLaunchParams& lp = launchParamsList[i];
+        all_sum += lp.blockDim.x * lp.blockDim.y * lp.blockDim.z *
+                   lp.gridDim.x  * lp.gridDim.y  * lp.gridDim.z;
+    }
+
     // lock all streams before launching the blit kernels for initializing the GWS and main kernels to each device
     for (int i = 0; i < numDevices; ++i) {
         LockedAccessor_StreamCrit_t streamCrit(launchParamsList[i].stream->criticalData(), false);
@@ -545,6 +579,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 #endif
     }
 
+    void* impCoopParams[1];
     // launch the init_gws kernel to initialize the GWS followed by launching the main kernels for each device
     for (int i = 0; i < numDevices; ++i) {
         const hipLaunchParams& lp = launchParamsList[i];
@@ -565,6 +600,19 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
             }
             return ihipLogStatus(hipErrorLaunchFailure);
         }
+        //initialize and setup the implicit kernel argument for multi-grid sync
+        mg_info_ptr[i]->mgs       = mg_sync_ptr;
+        mg_info_ptr[i]->grid_id   = i;
+        mg_info_ptr[i]->num_grids = numDevices;
+        mg_info_ptr[i]->all_sum   = all_sum;
+        mg_info_ptr[i]->prev_sum  = 0;
+        for (int j = 0; j < i; ++j) {
+            const hipLaunchParams& lp1 = launchParamsList[j];
+            mg_info_ptr[i]->prev_sum += lp1.blockDim.x * lp1.blockDim.y * lp1.blockDim.z *
+                                        lp1.gridDim.x  * lp1.gridDim.y  * lp1.gridDim.z;
+        }
+
+        impCoopParams[0] = &mg_info_ptr[i];
 
         result = ihipModuleLaunchKernel(tls, kds[i],
                 lp.gridDim.x * lp.blockDim.x,
@@ -573,7 +621,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
                 lp.blockDim.x, lp.blockDim.y,
                 lp.blockDim.z, lp.sharedMem,
                 lp.stream, lp.args, nullptr, nullptr, nullptr, 0,
-                true);
+                true, impCoopParams);
     }
 
     // unlock all streams
