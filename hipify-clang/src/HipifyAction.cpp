@@ -20,6 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include <algorithm>
+#include <set>
 #include "HipifyAction.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Frontend/CompilerInstance.h"
@@ -33,6 +35,25 @@ THE SOFTWARE.
 
 namespace ct = clang::tooling;
 namespace mat = clang::ast_matchers;
+
+const std::string sCudaMemcpyToSymbol = "cudaMemcpyToSymbol";
+const std::string sCudaMemcpyToSymbolAsync = "cudaMemcpyToSymbolAsync";
+const std::string sCudaGetSymbolSize = "cudaGetSymbolSize";
+const std::string sCudaGetSymbolAddress = "cudaGetSymbolAddress";
+const std::string sCudaMemcpyFromSymbol = "cudaMemcpyFromSymbol";
+const std::string sCudaMemcpyFromSymbolAsync = "cudaMemcpyFromSymbolAsync";
+
+std::set<std::string> DeviceSymbolFunctions0 {
+  {sCudaMemcpyToSymbol},
+  {sCudaMemcpyToSymbolAsync}
+};
+
+std::set<std::string> DeviceSymbolFunctions1 {
+  {sCudaGetSymbolSize},
+  {sCudaGetSymbolAddress},
+  {sCudaMemcpyFromSymbol},
+  {sCudaMemcpyFromSymbolAsync}
+};
 
 void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
   clang::SourceManager& SM = getCompilerInstance().getSourceManager();
@@ -83,7 +104,7 @@ void HipifyAction::RewriteToken(const clang::Token& t) {
 
 void HipifyAction::FindAndReplace(llvm::StringRef name,
                                   clang::SourceLocation sl,
-                                  const std::map<llvm::StringRef, hipCounter>& repMap) {
+                                  const std::map<llvm::StringRef, hipCounter>& repMap, bool bReplace) {
   const auto found = repMap.find(name);
   if (found == repMap.end()) {
     // So it's an identifier, but not CUDA? Boring.
@@ -98,6 +119,9 @@ void HipifyAction::FindAndReplace(llvm::StringRef name,
     sWarn = "" + sWarn;
     const auto ID = DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "CUDA identifier is unsupported in %0.");
     DE.Report(sl, ID) << sWarn;
+    return;
+  }
+  if (!bReplace) {
     return;
   }
   StringRef repName = Statistics::isToRoc(found->second) ? found->second.rocName : found->second.hipName;
@@ -313,8 +337,12 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
 
   // Next up are the four kernel configuration parameters, the last two of which are optional and default to zero.
   // Copy the two dimensional arguments verbatim.
-  OS << "dim3(" << readSourceText(*SM, config->getArg(0)->getSourceRange()) << "), ";
-  OS << "dim3(" << readSourceText(*SM, config->getArg(1)->getSourceRange()) << "), ";
+  std::string sDim3 = "dim3(";
+  for (unsigned int i = 0; i < 2; ++i) {
+    const std::string sArg = readSourceText(*SM, config->getArg(i)->getSourceRange()).str();
+    bool bDim3 = std::equal(sDim3.begin(), sDim3.end(), sArg.c_str());
+    OS << (bDim3 ? "" : sDim3) << sArg << (bDim3 ? "" : ")") << ", ";
+  }
   // The stream/memory arguments default to zero if omitted.
   OS << stringifyZeroDefaultedArg(*SM, config->getArg(2)) << ", ";
   OS << stringifyZeroDefaultedArg(*SM, config->getArg(3));
@@ -392,7 +420,46 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
 bool HipifyAction::cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
   if (const clang::CallExpr *call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaDeviceFuncCall")) {
     const clang::FunctionDecl *funcDcl = call->getDirectCallee();
-    FindAndReplace(funcDcl->getDeclName().getAsString(), llcompat::getBeginLoc(call), CUDA_DEVICE_FUNC_MAP);
+    if (!funcDcl) {
+      return true;
+    }
+    FindAndReplace(funcDcl->getDeclName().getAsString(), llcompat::getBeginLoc(call), CUDA_DEVICE_FUNC_MAP, false);
+  }
+  return true;
+}
+
+bool HipifyAction::cudaSymbolFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
+  if (const clang::CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaSymbolFuncCall")) {
+    if (!call->getNumArgs()) {
+      return true;
+    }
+    const clang::FunctionDecl* funcDcl = call->getDirectCallee();
+    if (!funcDcl) {
+      return true;
+    }
+    std::string sName = funcDcl->getDeclName().getAsString();
+    unsigned int argNum = 0;
+    if (DeviceSymbolFunctions0.find(sName) != DeviceSymbolFunctions0.end()) {
+      argNum = 0;
+    } else if (call->getNumArgs() > 1 && DeviceSymbolFunctions1.find(sName) != DeviceSymbolFunctions1.end()) {
+      argNum = 1;
+    } else {
+      return true;
+    }
+    clang::SmallString<40> XStr;
+    llvm::raw_svector_ostream OS(XStr);
+    clang::SourceRange sr = call->getArg(argNum)->getSourceRange();
+    clang::SourceManager* SM = Result.SourceManager;
+    const std::string sSymbol = "HIP_SYMBOL";
+    OS << sSymbol << "(" << readSourceText(*SM, sr) << ")";
+    clang::SourceRange replacementRange = getWriteRange(*SM, { sr.getBegin(), sr.getEnd() });
+    clang::SourceLocation s = replacementRange.getBegin();
+    clang::SourceLocation e = replacementRange.getEnd();
+    clang::LangOptions DefaultLangOptions;
+    size_t length = SM->getCharacterData(clang::Lexer::getLocForEndOfToken(e, 0, *SM, DefaultLangOptions)) - SM->getCharacterData(s);
+    ct::Replacement Rep(*SM, s, length, OS.str());
+    clang::FullSourceLoc fullSL(s, *SM);
+    insertReplacement(Rep, fullSL);
   }
   return true;
 }
@@ -418,6 +485,24 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
         mat::hasType(mat::incompleteArrayType())
       )
     ).bind("cudaSharedIncompleteArrayVar"),
+    this
+  );
+  Finder->addMatcher(
+    mat::callExpr(
+      mat::isExpansionInMainFile(),
+      mat::callee(
+        mat::functionDecl(
+          mat::hasAnyName(
+            sCudaGetSymbolAddress,
+            sCudaGetSymbolSize,
+            sCudaMemcpyFromSymbol,
+            sCudaMemcpyFromSymbolAsync,
+            sCudaMemcpyToSymbol,
+            sCudaMemcpyToSymbolAsync
+          )
+        )
+      )
+    ).bind("cudaSymbolFuncCall"),
     this
   );
   Finder->addMatcher(
@@ -557,5 +642,6 @@ void HipifyAction::ExecuteAction() {
 void HipifyAction::run(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
   if (cudaLaunchKernel(Result)) return;
   if (cudaSharedIncompleteArrayVar(Result)) return;
+  if (cudaSymbolFuncCall(Result)) return;
   if (cudaDeviceFuncCall(Result)) return;
 }
