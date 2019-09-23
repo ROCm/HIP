@@ -470,7 +470,7 @@ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInB
     HIP_INIT_SPECIAL_API(hipMemAllocPitch, (TRACE_MEM), dptr, pitch, widthInBytes, height,elementSizeBytes);
     HIP_SET_DEVICE();
     
-    if (widthInBytes == 0 || height == 0) return ihipLogStatus(hipErrorUnknown);
+    if (widthInBytes == 0 || height == 0) return ihipLogStatus(hipErrorInvalidValue);
     
     return ihipLogStatus(ihipMallocPitch(tls, dptr, pitch, widthInBytes, height, 0));
 }
@@ -1795,6 +1795,8 @@ hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy, hipStream_t stream, bool
         case hipMemoryTypeDevice:
             src = pCopy->srcDevice;
             break;
+        default:
+            return hipErrorInvalidValue;
     }
     switch(pCopy->dstMemoryType){
         case hipMemoryTypeHost:
@@ -1808,6 +1810,8 @@ hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy, hipStream_t stream, bool
         case hipMemoryTypeDevice:
             dst = pCopy->dstDevice;
             break;
+        default:
+            return hipErrorInvalidValue;
     }
     if(pCopy->srcPitch < pCopy->WidthInBytes + pCopy->srcXInBytes || pCopy->srcY >= pCopy->Height){
         return hipErrorInvalidValue;
@@ -1931,9 +1935,9 @@ hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t size
 
     stream = ihipSyncAndResolveStream(stream);
     if (stream) {
-        return ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar);
+        return ihipLogStatus(ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar));
     } else {
-        return hipErrorInvalidValue;
+        return ihipLogStatus(hipErrorInvalidValue);
     }
 }
 
@@ -1956,9 +1960,9 @@ hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t si
 
     stream = ihipSyncAndResolveStream(stream);
     if (stream) {
-        return ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeShort);
+        return ihipLogStatus(ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeShort));
     } else {
-        return hipErrorInvalidValue;
+        return ihipLogStatus(hipErrorInvalidValue);
     }
 }
 
