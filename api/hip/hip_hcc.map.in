@@ -183,6 +183,10 @@ global:
     hipTexRefSetArray*;
     hipTexRefSetAddress*;
     hipTexRefSetAddress2D*;
+    hipTexRefGetAddress*;
+    hipTexRefGetAddressMode*;
+    hipTexRefGetArray*;
+    hipTexRefSetArray*;
     hipCreateChannelDesc*;
     ihipBindTextureImpl*;
     ihipBindTextureToArrayImpl*;

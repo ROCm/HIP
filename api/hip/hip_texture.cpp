@@ -561,6 +561,18 @@ hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm
   HIP_RETURN(hipSuccess);
 }
 
+hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim) {
+  HIP_INIT_API(am, &tex, dim);
+
+  if ((am == nullptr) || (dim >= 3)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *am = tex.addressMode[dim];
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am) {
   HIP_INIT_API(tex, dim, am);
 
@@ -573,12 +585,61 @@ hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAdd
   HIP_RETURN(hipSuccess);
 }
 
+hipError_t hipTexRefGetArray(hipArray* array, textureReference tex) {
+  HIP_INIT_API(array, &tex);
+
+  hip::TextureObject* texture = nullptr;
+
+  if (array == nullptr) {
+    HIP_RETURN(hipErrorInvalidImage);
+  }
+
+  texture = reinterpret_cast<hip::TextureObject *>(tex.textureObject);
+  if(hipResourceTypeArray != texture->resDesc.resType){
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  if (texture->resDesc.res.array.array == nullptr) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  *array = *(texture->resDesc.res.array.array);
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsigned int flags) {
   HIP_INIT_API(tex, array, flags);
 
-  assert(0 && "Unimplemented");
+  size_t offset = 0;
 
-  HIP_RETURN(hipErrorUnknown);
+  if ((tex == nullptr) || (array == nullptr)) {
+    HIP_RETURN(hipErrorInvalidImage);
+  }
+
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, &offset, tex, array->data, &array->desc, array->width,
+                             array->height, array->depth));
+}
+
+hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
+  HIP_INIT_API(dev_ptr, &tex);
+
+  hip::TextureObject* texture = nullptr;
+  device::Memory* dev_mem = nullptr;
+
+  texture = reinterpret_cast<hip::TextureObject *>(tex.textureObject);
+  if ((texture == nullptr) || (texture->image == nullptr)) {
+    HIP_RETURN(hipErrorInvalidImage);
+  }
+
+  dev_mem = texture->image->getDeviceMemory(*hip::getCurrentContext()->devices()[0]);
+  if (dev_mem == nullptr) {
+    HIP_RETURN(hipErrorInvalidImage);
+  }
+
+  *dev_ptr = reinterpret_cast<void*>(dev_mem->virtualAddress());
+
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDeviceptr_t devPtr,
