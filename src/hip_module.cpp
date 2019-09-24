@@ -471,7 +471,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
         return ihipLogStatus(hipErrorLaunchFailure);
     }
 
-    uint impCoopArg = 1;
+    size_t impCoopArg = 1;
     void* impCoopParams[1];
     impCoopParams[0] = &impCoopArg;
 
