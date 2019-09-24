@@ -580,6 +580,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
     }
 
     void* impCoopParams[1];
+    ulong prev_sum = 0;
     // launch the init_gws kernel to initialize the GWS followed by launching the main kernels for each device
     for (int i = 0; i < numDevices; ++i) {
         const hipLaunchParams& lp = launchParamsList[i];
@@ -605,12 +606,10 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
         mg_info_ptr[i]->grid_id   = i;
         mg_info_ptr[i]->num_grids = numDevices;
         mg_info_ptr[i]->all_sum   = all_sum;
-        mg_info_ptr[i]->prev_sum  = 0;
-        for (int j = 0; j < i; ++j) {
-            const hipLaunchParams& lp1 = launchParamsList[j];
-            mg_info_ptr[i]->prev_sum += lp1.blockDim.x * lp1.blockDim.y * lp1.blockDim.z *
-                                        lp1.gridDim.x  * lp1.gridDim.y  * lp1.gridDim.z;
-        }
+        mg_info_ptr[i]->prev_sum  = prev_sum;
+        prev_sum += lp.blockDim.x * lp.blockDim.y * lp.blockDim.z *
+                    lp.gridDim.x  * lp.gridDim.y  * lp.gridDim.z;
+
 
         impCoopParams[0] = &mg_info_ptr[i];
 
