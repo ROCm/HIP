@@ -36,6 +36,12 @@ THE SOFTWARE.
 namespace ct = clang::tooling;
 namespace mat = clang::ast_matchers;
 
+const std::string sHIP_DYNAMIC_SHARED = "HIP_DYNAMIC_SHARED";
+const std::string sHIP_SYMBOL = "HIP_SYMBOL";
+const std::string s_reinterpret_cast = "reinterpret_cast<const void*>";
+const std::string sHipLaunchKernelGGL = "hipLaunchKernelGGL(";
+const std::string sDim3 = "dim3(";
+
 const std::string sCudaMemcpyToSymbol = "cudaMemcpyToSymbol";
 const std::string sCudaMemcpyToSymbolAsync = "cudaMemcpyToSymbolAsync";
 const std::string sCudaGetSymbolSize = "cudaGetSymbolSize";
@@ -55,6 +61,11 @@ std::set<std::string> DeviceSymbolFunctions1 {
   {sCudaGetSymbolAddress},
   {sCudaMemcpyFromSymbol},
   {sCudaMemcpyFromSymbolAsync}
+};
+
+std::set<std::string> ReinterpretFunctions{
+  {sCudaFuncSetCacheConfig},
+  {sCudaFuncGetAttributes}
 };
 
 void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
@@ -138,10 +149,8 @@ namespace {
 clang::SourceRange getReadRange(clang::SourceManager& SM, const clang::SourceRange& exprRange) {
   clang::SourceLocation begin = exprRange.getBegin();
   clang::SourceLocation end = exprRange.getEnd();
-
   bool beginSafe = !SM.isMacroBodyExpansion(begin) || clang::Lexer::isAtStartOfMacroExpansion(begin, SM, clang::LangOptions{});
   bool endSafe = !SM.isMacroBodyExpansion(end) || clang::Lexer::isAtEndOfMacroExpansion(end, SM, clang::LangOptions{});
-
   if (beginSafe && endSafe) {
     return {SM.getFileLoc(begin), SM.getFileLoc(end)};
   } else {
@@ -270,7 +279,6 @@ void HipifyAction::InclusionDirective(clang::SourceLocation hash_loc,
     DE.Report(sl, DE.getCustomDiagID(clang::DiagnosticsEngine::Warning, "Unsupported CUDA header."));
     return;
   }
-
   clang::StringRef newInclude;
   // Keep the same include type that the user gave.
   if (!exclude) {
@@ -331,15 +339,13 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
   llvm::raw_svector_ostream OS(XStr);
   clang::LangOptions DefaultLangOptions;
   clang::SourceManager* SM = Result.SourceManager;
-  OS << "hipLaunchKernelGGL(";
+  OS << sHipLaunchKernelGGL;
   if (caleeDecl->isTemplateInstantiation()) OS << "(";
   OS << readSourceText(*SM, calleeExpr->getSourceRange());
   if (caleeDecl->isTemplateInstantiation()) OS << ")";
   OS << ", ";
-
   // Next up are the four kernel configuration parameters, the last two of which are optional and default to zero.
   // Copy the two dimensional arguments verbatim.
-  std::string sDim3 = "dim3(";
   for (unsigned int i = 0; i < 2; ++i) {
     const std::string sArg = readSourceText(*SM, config->getArg(i)->getSourceRange()).str();
     bool bDim3 = std::equal(sDim3.begin(), sDim3.end(), sArg.c_str());
@@ -348,7 +354,6 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
   // The stream/memory arguments default to zero if omitted.
   OS << stringifyZeroDefaultedArg(*SM, config->getArg(2)) << ", ";
   OS << stringifyZeroDefaultedArg(*SM, config->getArg(3));
-
   // If there are ordinary arguments to the kernel, just copy them verbatim into our new call.
   int numArgs = launchKernel->getNumArgs();
   if (numArgs > 0) {
@@ -360,7 +365,6 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
     OS << readSourceText(*SM, {argStart, argEnd});
   }
   OS << ")";
-
   clang::SourceRange replacementRange = getWriteRange(*SM, {llcompat::getBeginLoc(launchKernel), llcompat::getEndLoc(launchKernel)});
   clang::SourceLocation launchStart = replacementRange.getBegin();
   clang::SourceLocation launchEnd = replacementRange.getEnd();
@@ -383,7 +387,6 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
   if (!sharedVar->hasExternalFormalLinkage()) {
     return false;
   }
-
   clang::QualType QT = sharedVar->getType();
   std::string typeName;
   if (QT->isIncompleteArrayType()) {
@@ -402,18 +405,17 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
       typeName = QT.getAsString();
     }
   }
-
   if (!typeName.empty()) {
     clang::SourceLocation slStart = sharedVar->getOuterLocStart();
     clang::SourceLocation slEnd = llcompat::getEndLoc(sharedVar->getTypeSourceInfo()->getTypeLoc());
     clang::SourceManager* SM = Result.SourceManager;
     size_t repLength = SM->getCharacterData(slEnd) - SM->getCharacterData(slStart) + 1;
     std::string varName = sharedVar->getNameAsString();
-    std::string repName = "HIP_DYNAMIC_SHARED(" + typeName + ", " + varName + ")";
+    std::string repName = sHIP_DYNAMIC_SHARED + "(" + typeName + ", " + varName + ")";
     ct::Replacement Rep(*SM, slStart, repLength, repName);
     clang::FullSourceLoc fullSL(slStart, *SM);
     insertReplacement(Rep, fullSL);
-    hipCounter counter = {"HIP_DYNAMIC_SHARED", "", ConvTypes::CONV_MEMORY, ApiTypes::API_RUNTIME};
+    hipCounter counter = {sHIP_DYNAMIC_SHARED, "", ConvTypes::CONV_MEMORY, ApiTypes::API_RUNTIME};
     Statistics::current().incrementCounter(counter, refName.str());
     return true;
   }
@@ -432,8 +434,8 @@ bool HipifyAction::cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::Ma
   return false;
 }
 
-bool HipifyAction::cudaSymbolFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
-  if (const clang::CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaSymbolFuncCall")) {
+bool HipifyAction::cudaHostFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
+  if (const clang::CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaHostFuncCall")) {
     if (!call->getNumArgs()) {
       return false;
     }
@@ -443,9 +445,10 @@ bool HipifyAction::cudaSymbolFuncCall(const clang::ast_matchers::MatchFinder::Ma
     }
     std::string sName = funcDcl->getDeclName().getAsString();
     unsigned int argNum = 0;
-    if (DeviceSymbolFunctions0.find(sName) != DeviceSymbolFunctions0.end()) {
+    bool b_reinterpret = (ReinterpretFunctions.find(sName) != ReinterpretFunctions.end()) ? true : false;
+    if (DeviceSymbolFunctions0.find(sName) != DeviceSymbolFunctions0.end() || sCudaFuncSetCacheConfig == sName) {
       argNum = 0;
-    } else if (call->getNumArgs() > 1 && DeviceSymbolFunctions1.find(sName) != DeviceSymbolFunctions1.end()) {
+    } else if (call->getNumArgs() > 1 && (DeviceSymbolFunctions1.find(sName) != DeviceSymbolFunctions1.end() || sCudaFuncGetAttributes == sName)) {
       argNum = 1;
     } else {
       return false;
@@ -454,45 +457,7 @@ bool HipifyAction::cudaSymbolFuncCall(const clang::ast_matchers::MatchFinder::Ma
     llvm::raw_svector_ostream OS(XStr);
     clang::SourceRange sr = call->getArg(argNum)->getSourceRange();
     clang::SourceManager* SM = Result.SourceManager;
-    const std::string sSymbol = "HIP_SYMBOL";
-    OS << sSymbol << "(" << readSourceText(*SM, sr) << ")";
-    clang::SourceRange replacementRange = getWriteRange(*SM, { sr.getBegin(), sr.getEnd() });
-    clang::SourceLocation s = replacementRange.getBegin();
-    clang::SourceLocation e = replacementRange.getEnd();
-    clang::LangOptions DefaultLangOptions;
-    size_t length = SM->getCharacterData(clang::Lexer::getLocForEndOfToken(e, 0, *SM, DefaultLangOptions)) - SM->getCharacterData(s);
-    ct::Replacement Rep(*SM, s, length, OS.str());
-    clang::FullSourceLoc fullSL(s, *SM);
-    insertReplacement(Rep, fullSL);
-    return true;
-  }
-  return false;
-}
-
-bool HipifyAction::cudaReinterpretCastArgFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
-  if (const clang::CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaReinterpretCastArgFuncCall")) {
-    if (!call->getNumArgs()) {
-      return false;
-    }
-    const clang::FunctionDecl* funcDcl = call->getDirectCallee();
-    if (!funcDcl) {
-      return false;
-    }
-    std::string sName = funcDcl->getDeclName().getAsString();
-    unsigned int argNum = 0;
-    if (sCudaFuncSetCacheConfig == sName) {
-      argNum = 0;
-    } else if (call->getNumArgs() > 1 && sCudaFuncGetAttributes == sName) {
-      argNum = 1;
-    } else {
-      return false;
-    }
-    clang::SmallString<40> XStr;
-    llvm::raw_svector_ostream OS(XStr);
-    clang::SourceRange sr = call->getArg(argNum)->getSourceRange();
-    clang::SourceManager* SM = Result.SourceManager;
-    const std::string sCast = "reinterpret_cast<const void*>";
-    OS << sCast << "(" << readSourceText(*SM, sr) << ")";
+    OS << (b_reinterpret ? s_reinterpret_cast : sHIP_SYMBOL) << "(" << readSourceText(*SM, sr) << ")";
     clang::SourceRange replacementRange = getWriteRange(*SM, { sr.getBegin(), sr.getEnd() });
     clang::SourceLocation s = replacementRange.getBegin();
     clang::SourceLocation e = replacementRange.getEnd();
@@ -540,25 +505,13 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
             sCudaMemcpyFromSymbol,
             sCudaMemcpyFromSymbolAsync,
             sCudaMemcpyToSymbol,
-            sCudaMemcpyToSymbolAsync
-          )
-        )
-      )
-    ).bind("cudaSymbolFuncCall"),
-    this
-  );
-  Finder->addMatcher(
-    mat::callExpr(
-      mat::isExpansionInMainFile(),
-      mat::callee(
-        mat::functionDecl(
-          mat::hasAnyName(
+            sCudaMemcpyToSymbolAsync,
             sCudaFuncSetCacheConfig,
             sCudaFuncGetAttributes
           )
         )
       )
-    ).bind("cudaReinterpretCastArgFuncCall"),
+    ).bind("cudaHostFuncCall"),
     this
   );
   Finder->addMatcher(
@@ -662,7 +615,6 @@ public:
     hipifyAction.Ifndef(Loc, MacroNameTok, MD);
   }
 };
-
 }
 
 bool HipifyAction::BeginInvocation(clang::CompilerInstance &CI) {
@@ -673,12 +625,10 @@ bool HipifyAction::BeginInvocation(clang::CompilerInstance &CI) {
 void HipifyAction::ExecuteAction() {
   clang::Preprocessor& PP = getCompilerInstance().getPreprocessor();
   clang::SourceManager& SM = getCompilerInstance().getSourceManager();
-
   // Start lexing the specified input file.
   const llvm::MemoryBuffer* FromFile = SM.getBuffer(SM.getMainFileID());
   clang::Lexer RawLex(SM.getMainFileID(), FromFile, SM, PP.getLangOpts());
   RawLex.SetKeepWhitespaceMode(true);
-
   // Perform a token-level rewrite of CUDA identifiers to hip ones. The raw-mode lexer gives us enough
   // information to tell the difference between identifiers, string literals, and "other stuff". It also
   // ignores preprocessor directives, so this transformation will operate inside preprocessor-deleted code.
@@ -688,7 +638,6 @@ void HipifyAction::ExecuteAction() {
     RewriteToken(RawTok);
     RawLex.LexFromRawLexer(RawTok);
   }
-
   // Register yourself as the preprocessor callback, by proxy.
   PP.addPPCallbacks(std::unique_ptr<PPCallbackProxy>(new PPCallbackProxy(*this)));
   // Now we're done futzing with the lexer, have the subclass proceeed with Sema and AST matching.
@@ -698,7 +647,6 @@ void HipifyAction::ExecuteAction() {
 void HipifyAction::run(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
   if (cudaLaunchKernel(Result)) return;
   if (cudaSharedIncompleteArrayVar(Result)) return;
-  if (cudaSymbolFuncCall(Result)) return;
-  if (cudaReinterpretCastArgFuncCall(Result)) return;
+  if (cudaHostFuncCall(Result)) return;
   if (cudaDeviceFuncCall(Result)) return;
 }
