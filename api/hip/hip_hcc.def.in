@@ -168,6 +168,10 @@ hipTexRefSetAddressMode
 hipTexRefSetArray
 hipTexRefSetAddress
 hipTexRefSetAddress2D
+hipTexRefGetAddress
+hipTexRefGetAddressMode
+hipTexRefGetArray
+hipTexRefSetArray
 ihipBindTextureImpl
 ihipBindTextureToArrayImpl
 hipCreateChannelDesc
