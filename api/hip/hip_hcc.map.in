@@ -141,6 +141,8 @@ global:
     hipStreamQuery;
     hipStreamSynchronize;
     hipStreamWaitEvent;
+    __hipPopCallConfiguration;
+    __hipPushCallConfiguration;
     __hipRegisterFatBinary;
     __hipRegisterFunction;
     __hipRegisterVar;
@@ -150,6 +152,7 @@ global:
     hipConfigureCall;
     hipSetupArgument;
     hipLaunchByPtr;
+    hipLaunchKernel;
     hipProfilerStart;
     hipProfilerStop;
     hiprtcCompileProgram;

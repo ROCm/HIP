@@ -411,6 +411,35 @@ extern "C" hipError_t hipConfigureCall(
   HIP_RETURN(hipSuccess);
 }
 
+extern "C" hipError_t __hipPushCallConfiguration(
+  dim3 gridDim,
+  dim3 blockDim,
+  size_t sharedMem,
+  hipStream_t stream)
+{
+  HIP_INIT_API(gridDim, blockDim, sharedMem, stream);
+
+  PlatformState::instance().configureCall(gridDim, blockDim, sharedMem, stream);
+
+  HIP_RETURN(hipSuccess);
+}
+
+extern "C" hipError_t __hipPopCallConfiguration(dim3 *gridDim,
+                                                dim3 *blockDim,
+                                                size_t *sharedMem,
+                                                hipStream_t *stream) {
+  HIP_INIT_API(gridDim, blockDim, sharedMem, stream);
+
+  ihipExec_t exec;
+  PlatformState::instance().popExec(exec);
+  *gridDim = exec.gridDim_;
+  *blockDim = exec.blockDim_;
+  *sharedMem = exec.sharedMem_;
+  *stream = exec.hStream_;
+
+  HIP_RETURN(hipSuccess);
+}
+
 extern "C" hipError_t hipSetupArgument(
   const void *arg,
   size_t size,
@@ -448,6 +477,28 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
     exec.blockDim_.x, exec.blockDim_.y, exec.blockDim_.z,
     exec.sharedMem_, exec.hStream_, nullptr, extra));
 }
+
+extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
+                                      dim3 gridDim,
+                                      dim3 blockDim,
+                                      void** args,
+                                      size_t sharedMemBytes,
+                                      hipStream_t stream)
+{
+  HIP_INIT_API(hostFunction, gridDim, blockDim, args, sharedMemBytes,
+               stream);
+
+  int deviceId = ihipGetDevice();
+  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
+  if (func == nullptr) {
+    HIP_RETURN(hipErrorUnknown);
+  }
+
+  HIP_RETURN(hipModuleLaunchKernel(func, gridDim.x, gridDim.y, gridDim.z,
+                                    blockDim.x, blockDim.y, blockDim.z,
+                                    sharedMemBytes, stream, args, nullptr));
+}
+
 
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
   size_t size = 0;

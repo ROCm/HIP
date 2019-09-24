@@ -141,6 +141,8 @@ hipStreamGetFlags
 hipStreamQuery
 hipStreamSynchronize
 hipStreamWaitEvent
+__hipPopCallConfiguration
+__hipPushCallConfiguration
 __hipRegisterFatBinary
 __hipRegisterFunction
 __hipRegisterVar
@@ -148,6 +150,7 @@ __hipUnregisterFatBinary
 hipConfigureCall
 hipSetupArgument
 hipLaunchByPtr
+hipLaunchKernel
 hipCreateTextureObject
 hipDestroyTextureObject
 hipGetTextureObjectResourceDesc
