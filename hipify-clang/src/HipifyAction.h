@@ -72,6 +72,8 @@ public:
   bool cudaSharedIncompleteArrayVar(const clang::ast_matchers::MatchFinder::MatchResult& Result);
   bool cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result);
   bool cudaSymbolFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result);
+  bool cudaReinterpretCastArgFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result);
+
   // Called by the preprocessor for each include directive during the non-raw lexing pass.
   void InclusionDirective(clang::SourceLocation hash_loc,
                           const clang::Token &include_token,

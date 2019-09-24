@@ -42,6 +42,8 @@ const std::string sCudaGetSymbolSize = "cudaGetSymbolSize";
 const std::string sCudaGetSymbolAddress = "cudaGetSymbolAddress";
 const std::string sCudaMemcpyFromSymbol = "cudaMemcpyFromSymbol";
 const std::string sCudaMemcpyFromSymbolAsync = "cudaMemcpyFromSymbolAsync";
+const std::string sCudaFuncSetCacheConfig = "cudaFuncSetCacheConfig";
+const std::string sCudaFuncGetAttributes = "cudaFuncGetAttributes";
 
 std::set<std::string> DeviceSymbolFunctions0 {
   {sCudaMemcpyToSymbol},
@@ -413,29 +415,31 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
     insertReplacement(Rep, fullSL);
     hipCounter counter = {"HIP_DYNAMIC_SHARED", "", ConvTypes::CONV_MEMORY, ApiTypes::API_RUNTIME};
     Statistics::current().incrementCounter(counter, refName.str());
+    return true;
   }
-  return true;
+  return false;
 }
 
 bool HipifyAction::cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
   if (const clang::CallExpr *call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaDeviceFuncCall")) {
     const clang::FunctionDecl *funcDcl = call->getDirectCallee();
     if (!funcDcl) {
-      return true;
+      return false;
     }
     FindAndReplace(funcDcl->getDeclName().getAsString(), llcompat::getBeginLoc(call), CUDA_DEVICE_FUNC_MAP, false);
+    return true;
   }
-  return true;
+  return false;
 }
 
 bool HipifyAction::cudaSymbolFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
   if (const clang::CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaSymbolFuncCall")) {
     if (!call->getNumArgs()) {
-      return true;
+      return false;
     }
     const clang::FunctionDecl* funcDcl = call->getDirectCallee();
     if (!funcDcl) {
-      return true;
+      return false;
     }
     std::string sName = funcDcl->getDeclName().getAsString();
     unsigned int argNum = 0;
@@ -444,7 +448,7 @@ bool HipifyAction::cudaSymbolFuncCall(const clang::ast_matchers::MatchFinder::Ma
     } else if (call->getNumArgs() > 1 && DeviceSymbolFunctions1.find(sName) != DeviceSymbolFunctions1.end()) {
       argNum = 1;
     } else {
-      return true;
+      return false;
     }
     clang::SmallString<40> XStr;
     llvm::raw_svector_ostream OS(XStr);
@@ -460,8 +464,46 @@ bool HipifyAction::cudaSymbolFuncCall(const clang::ast_matchers::MatchFinder::Ma
     ct::Replacement Rep(*SM, s, length, OS.str());
     clang::FullSourceLoc fullSL(s, *SM);
     insertReplacement(Rep, fullSL);
+    return true;
   }
-  return true;
+  return false;
+}
+
+bool HipifyAction::cudaReinterpretCastArgFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
+  if (const clang::CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaReinterpretCastArgFuncCall")) {
+    if (!call->getNumArgs()) {
+      return false;
+    }
+    const clang::FunctionDecl* funcDcl = call->getDirectCallee();
+    if (!funcDcl) {
+      return false;
+    }
+    std::string sName = funcDcl->getDeclName().getAsString();
+    unsigned int argNum = 0;
+    if (sCudaFuncSetCacheConfig == sName) {
+      argNum = 0;
+    } else if (call->getNumArgs() > 1 && sCudaFuncGetAttributes == sName) {
+      argNum = 1;
+    } else {
+      return false;
+    }
+    clang::SmallString<40> XStr;
+    llvm::raw_svector_ostream OS(XStr);
+    clang::SourceRange sr = call->getArg(argNum)->getSourceRange();
+    clang::SourceManager* SM = Result.SourceManager;
+    const std::string sCast = "reinterpret_cast<const void*>";
+    OS << sCast << "(" << readSourceText(*SM, sr) << ")";
+    clang::SourceRange replacementRange = getWriteRange(*SM, { sr.getBegin(), sr.getEnd() });
+    clang::SourceLocation s = replacementRange.getBegin();
+    clang::SourceLocation e = replacementRange.getEnd();
+    clang::LangOptions DefaultLangOptions;
+    size_t length = SM->getCharacterData(clang::Lexer::getLocForEndOfToken(e, 0, *SM, DefaultLangOptions)) - SM->getCharacterData(s);
+    ct::Replacement Rep(*SM, s, length, OS.str());
+    clang::FullSourceLoc fullSL(s, *SM);
+    insertReplacement(Rep, fullSL);
+    return true;
+  }
+  return false;
 }
 
 void HipifyAction::insertReplacement(const ct::Replacement& rep, const clang::FullSourceLoc& fullSL) {
@@ -503,6 +545,20 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
         )
       )
     ).bind("cudaSymbolFuncCall"),
+    this
+  );
+  Finder->addMatcher(
+    mat::callExpr(
+      mat::isExpansionInMainFile(),
+      mat::callee(
+        mat::functionDecl(
+          mat::hasAnyName(
+            sCudaFuncSetCacheConfig,
+            sCudaFuncGetAttributes
+          )
+        )
+      )
+    ).bind("cudaReinterpretCastArgFuncCall"),
     this
   );
   Finder->addMatcher(
@@ -643,5 +699,6 @@ void HipifyAction::run(const clang::ast_matchers::MatchFinder::MatchResult& Resu
   if (cudaLaunchKernel(Result)) return;
   if (cudaSharedIncompleteArrayVar(Result)) return;
   if (cudaSymbolFuncCall(Result)) return;
+  if (cudaReinterpretCastArgFuncCall(Result)) return;
   if (cudaDeviceFuncCall(Result)) return;
 }
