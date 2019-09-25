@@ -24,6 +24,11 @@ THE SOFTWARE.
 
 extern std::set<std::string> DeviceSymbolFunctions0;
 extern std::set<std::string> DeviceSymbolFunctions1;
+extern std::set<std::string> ReinterpretFunctions0;
+extern std::set<std::string> ReinterpretFunctions1;
+
+extern std::string sHIP_SYMBOL;
+extern std::string s_reinterpret_cast;
 
 namespace perl {
 
