@@ -1738,12 +1738,6 @@ while (@ARGV) {
                     if ((/(\bcuda[A-Z]\w+)/) or (/<<<.*>>>/)) {
                         # flag any remaining code that look like cuda API calls, may want to add these to hipify
                         $tag = (defined $1) ? $1 : "Launch";
-                    } elsif (/(\bcublas[A-Z]\w+)/) {
-                        $warningsCublas++;
-                        $tag = $1;
-                    } elsif (/(\bcurand[A-Z]\w+)/) {
-                        $warningsCurand++;
-                        $tag = $1;
                     }
                     if (defined $tag) {
                         $warnings++;
@@ -1763,7 +1757,7 @@ while (@ARGV) {
             $ft{'kernel_func'} += countSupportedDeviceFunctions();
         }
 
-        $ft{'memory'} += transformSymbolFunctions();
+        transformHostFunctions();
 
         # Print it!
         # TODO - would like to move this code outside loop but it uses $_ which contains the whole file.
@@ -1819,7 +1813,7 @@ if ($count_conversions) {
     }
 }
 
-sub transformSymbolFunctions
+sub transformHostFunctions
 {
     my $m = 0;
     foreach $func (
@@ -1837,6 +1831,18 @@ sub transformSymbolFunctions
     )
     {
         $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, HIP_SYMBOL\($3\)$4/g;
+    }
+    foreach $func (
+        "hipFuncSetCacheConfig"
+    )
+    {
+        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,/$func\(reinterpret_cast<const void*>\($2\),/g
+    }
+    foreach $func (
+        "hipFuncGetAttributes"
+    )
+    {
+        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, reinterpret_cast<const void*>\($3\)$4/g;
     }
     return $m;
 }
