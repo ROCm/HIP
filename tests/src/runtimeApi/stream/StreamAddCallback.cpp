@@ -90,19 +90,16 @@ bool test(int count)
     // Add callback - should happen after hipMemsetAsync()
     HIPCHECK(hipStreamAddCallback(stream, myCallback, &arg, 0));
 
-    // This should happen before the callback actually gets called
-    // when the size is large enough
-    if(gData.load() != ExecState::EXEC_STARTED)
-         result = false;
-
     printf("Will wait in main thread until callback completes\n");
 
     //This should synchronize the stream (including the callback)
     HIPCHECK(hipStreamSynchronize(stream));
 
     if(gData.load() != ExecState::EXEC_CB_FINISHED)
-         result = false;
-
+    {
+        std::cout<<"Callback is not finished\n";
+        return false;
+    }
     printf("Callback completed will resume main thread execution\n");
 
     if(host[size/2] != -1)

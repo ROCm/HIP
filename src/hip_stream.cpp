@@ -315,8 +315,11 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
         stream = device->_defaultStream;
     }
 
+    // Lock the stream
+    LockedAccessor_StreamCrit_t crit(stream->criticalData(), true /*unlock at destruction*/);
+
     // 1. Lock the queue
-    hsa_queue_t* lockedQ = static_cast<hsa_queue_t*> (stream->criticalData()._av.acquire_locked_hsa_queue());
+    hsa_queue_t* lockedQ = static_cast<hsa_queue_t*> (crit->_av.acquire_locked_hsa_queue());
 
     if(lockedQ == nullptr)
     {
@@ -330,6 +333,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
     if(status != HSA_STATUS_SUCCESS)
     {
+        crit->_av.release_locked_hsa_queue();
         return ihipLogStatus(hipErrorInvalidValue);
     }
 
@@ -338,13 +342,15 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
     if(status != HSA_STATUS_SUCCESS)
     {
+        crit->_av.release_locked_hsa_queue();
         return ihipLogStatus(hipErrorInvalidValue);
     }
 
-    // 3. Store callback details
+    // 3. Store callback details, will destroy allocation in callback handler
     ihipStreamCallback_t* cb = new ihipStreamCallback_t(stream, callback, userData);
     if(cb == nullptr)
     {
+        crit->_av.release_locked_hsa_queue();
         return ihipLogStatus(hipErrorMemoryAllocation);
     }
     cb->_signal = depSignal;
@@ -375,7 +381,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
     hsa_signal_store_relaxed(lockedQ->doorbell_signal, index+1);
 
     // 7. Release queue
-    stream->criticalData()._av.release_locked_hsa_queue();
+    crit->_av.release_locked_hsa_queue();
 
     // 8. Register signal callback
     hsa_amd_signal_async_handler(signal, HSA_SIGNAL_CONDITION_EQ, 0, ihipStreamCallbackHandler, cb);
