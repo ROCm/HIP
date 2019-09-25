@@ -3256,7 +3256,10 @@ hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc
                                                hipTextureObject_t textureObject);
 hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
                                           hipTextureObject_t textureObject);
+hipError_t hipTexRefGetArray(hipArray* array, textureReference tex);
 hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsigned int flags);
+
+hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim);
 
 hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am);
 
@@ -3265,6 +3268,8 @@ hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm
 hipError_t hipTexRefSetFlags(textureReference* tex, unsigned int flags);
 
 hipError_t hipTexRefSetFormat(textureReference* tex, hipArray_Format fmt, int NumPackedComponents);
+
+hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex);
 
 hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDeviceptr_t devPtr,
                                size_t size);
