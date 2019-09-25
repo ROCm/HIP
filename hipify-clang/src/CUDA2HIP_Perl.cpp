@@ -45,12 +45,19 @@ namespace perl {
   const std::string sForeach = "foreach $func (\n";
   const std::string sMy = "my $m = 0;\n";
 
-  void generateSymbolFunctions(std::unique_ptr<std::ostream>& perlStreamPtr) {
-    *perlStreamPtr.get() << "\n" << sSub << " transformSymbolFunctions\n" << "{\n" << tab << sMy;
+  void generateHostFunctions(std::unique_ptr<std::ostream>& perlStreamPtr) {
+    *perlStreamPtr.get() << "\n" << sSub << " transformHostFunctions\n" << "{\n" << tab << sMy;
     std::set<std::string> &funcSet = DeviceSymbolFunctions0;
-    for (int i = 0; i < 2; ++i) {
+    const std::string s0 = "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,/$func\\(";
+    const std::string s1 = "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,\\s*([^,\\)]+)\\s*(,\\s*|\\))\\s*/$func\\($2, ";
+    for (int i = 0; i < 4; ++i) {
       *perlStreamPtr.get() << tab + sForeach;
-      if (i == 1) funcSet = DeviceSymbolFunctions1;
+      switch (i) {
+        case 1: funcSet = DeviceSymbolFunctions1; break;
+        case 2: funcSet = ReinterpretFunctions0; break;
+        case 3: funcSet = ReinterpretFunctions1; break;
+        default: funcSet = DeviceSymbolFunctions0;
+      }
       unsigned int count = 0;
       for (auto& f : funcSet) {
         const auto found = CUDA_RUNTIME_FUNCTION_MAP.find(f);
@@ -60,8 +67,17 @@ namespace perl {
         }
       }
       *perlStreamPtr.get() << "\n" << tab << ")\n" << tab << "{\n" << double_tab;
-      if (i ==0) *perlStreamPtr.get() << "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,/$func\\(HIP_SYMBOL\\($2\\),/g\n";
-      else *perlStreamPtr.get() << "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,\\s*([^,\\)]+)\\s*(,\\s*|\\))\\s*/$func\\($2, HIP_SYMBOL\\($3\\)$4/g;\n";
+      switch (i) {
+        case 0:
+        default:
+          *perlStreamPtr.get() << s0 << sHIP_SYMBOL << "\\($2\\),/g\n"; break;
+        case 1:
+          *perlStreamPtr.get() << s1 << sHIP_SYMBOL << "\\($3\\)$4/g;\n"; break;
+        case 2:
+          *perlStreamPtr.get() << s0 << s_reinterpret_cast << "\\($2\\),/g\n"; break;
+        case 3:
+          *perlStreamPtr.get() << s1 << s_reinterpret_cast << "\\($3\\)$4/g;\n"; break;
+      }
       *perlStreamPtr.get() << tab << "}\n";
     }
     *perlStreamPtr.get() << tab << sReturn_m << "}\n";
@@ -164,7 +180,7 @@ namespace perl {
         }
       }
     }
-    generateSymbolFunctions(perlStreamPtr);
+    generateHostFunctions(perlStreamPtr);
     generateDeviceFunctions(perlStreamPtr);
     perlStreamPtr.get()->flush();
     bool ret = true;
