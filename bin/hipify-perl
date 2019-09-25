@@ -1738,12 +1738,6 @@ while (@ARGV) {
                     if ((/(\bcuda[A-Z]\w+)/) or (/<<<.*>>>/)) {
                         # flag any remaining code that look like cuda API calls, may want to add these to hipify
                         $tag = (defined $1) ? $1 : "Launch";
-                    } elsif (/(\bcublas[A-Z]\w+)/) {
-                        $warningsCublas++;
-                        $tag = $1;
-                    } elsif (/(\bcurand[A-Z]\w+)/) {
-                        $warningsCurand++;
-                        $tag = $1;
                     }
                     if (defined $tag) {
                         $warnings++;
