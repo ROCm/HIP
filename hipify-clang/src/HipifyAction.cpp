@@ -37,8 +37,8 @@ namespace ct = clang::tooling;
 namespace mat = clang::ast_matchers;
 
 const std::string sHIP_DYNAMIC_SHARED = "HIP_DYNAMIC_SHARED";
-const std::string sHIP_SYMBOL = "HIP_SYMBOL";
-const std::string s_reinterpret_cast = "reinterpret_cast<const void*>";
+std::string sHIP_SYMBOL = "HIP_SYMBOL";
+std::string s_reinterpret_cast = "reinterpret_cast<const void*>";
 const std::string sHipLaunchKernelGGL = "hipLaunchKernelGGL(";
 const std::string sDim3 = "dim3(";
 
@@ -65,6 +65,14 @@ std::set<std::string> DeviceSymbolFunctions1 {
 
 std::set<std::string> ReinterpretFunctions{
   {sCudaFuncSetCacheConfig},
+  {sCudaFuncGetAttributes}
+};
+
+std::set<std::string> ReinterpretFunctions0{
+  {sCudaFuncSetCacheConfig}
+};
+
+std::set<std::string> ReinterpretFunctions1{
   {sCudaFuncGetAttributes}
 };
 

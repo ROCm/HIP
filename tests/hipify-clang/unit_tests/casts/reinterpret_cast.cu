@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <stdio.h>
 // CHECK: #include <hip/hip_runtime.h>
 #include <cuda_runtime.h>
 
@@ -32,7 +31,7 @@ void fn(float* px, float* py) {
   __shared__ double b[69];
   for (auto&& x : b) x = *py++;
   for (auto&& x : a) x = *px++ > 0.0;
-  for (auto&& x : a) if (x)* --py = *--px;
+  for (auto&& x : a) if (x) *--py = *--px;
 }
 
 int main() {
