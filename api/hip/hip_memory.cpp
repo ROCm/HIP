@@ -429,7 +429,7 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent)
 hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
   HIP_INIT_API(array, pAllocateArray);
 
-  if (array[0]->width == 0) {
+  if (pAllocateArray->Width == 0) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -815,14 +815,6 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes,
                    *queue, true));
 }
 
-hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
-  HIP_INIT_API(pCopy);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorUnknown);
-}
-
 hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                         size_t height, hipMemcpyKind kind, amd::HostQueue& queue,
                         bool isAsync = false) {
@@ -887,6 +879,20 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
   command->release();
 
   return hipSuccess;
+}
+
+hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
+  HIP_INIT_API(pCopy);
+  hipError_t e = hipSuccess;
+  if (pCopy == nullptr) {
+    e = hipErrorInvalidValue;
+  } else {
+    hip::syncStreams();
+    amd::HostQueue* queue = hip::getNullStream();
+    e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
+                     pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault, *queue);
+  }
+  HIP_RETURN(e);
 }
 
 hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
