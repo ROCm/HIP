@@ -933,6 +933,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     else
         prop->ECCEnabled = 0; //Device has ECC support disabled
 
+    prop->tccDriver = 0; // valid only for nvcc platform
     return e;
 }
 
