@@ -31,6 +31,7 @@ struct hipTexture {
     hipResourceViewDesc resViewDesc;
     hsa_ext_image_t image;
     hsa_ext_sampler_t sampler;
+    void* devPtr;
 };
 
 #endif
