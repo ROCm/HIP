@@ -56,6 +56,11 @@ typedef struct ihipIpcMemHandle_st {
   }                                                          \
   HIP_INIT();
 
+#define HIP_RETURN(ret)          \
+  hip::g_lastError = ret;  \
+  LogPrintfInfo("[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
+  return hip::g_lastError;
+
 namespace hc {
 class accelerator;
 class accelerator_view;
@@ -178,11 +183,6 @@ extern hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags);
 extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 extern bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
                                     size_t* var_size);
-
-#define HIP_RETURN(ret)          \
-        hip::g_lastError = ret;  \
-        LogPrintfInfo("[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
-        return hip::g_lastError; \
 
 inline std::ostream& operator<<(std::ostream& os, const dim3& s) {
     os << '{';

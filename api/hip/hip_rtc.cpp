@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2018 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,9 +21,73 @@ THE SOFTWARE.
 */
 
 #include <hip/hip_runtime.h>
-#include "cl_common.hpp"
+#include "hiprtc_internal.hpp"
 #include <hip/hiprtc.h>
-#include <boost/core/demangle.hpp>
+#include "platform/program.hpp"
+
+namespace hiprtc {
+thread_local hiprtcResult g_lastRtcError = HIPRTC_SUCCESS;
+}
+
+class ProgramState {
+  amd::Monitor lock_;
+private:
+  static ProgramState* programState_;
+
+  ProgramState() : lock_("Guards program state") {}
+  ~ProgramState() {}
+
+  std::unordered_map<amd::Program*,
+                     std::pair<std::vector<std::string>, std::vector<std::string>>> progHeaders_;
+  std::vector<std::string> nameExpresssion_;
+public:
+  static ProgramState& instance();
+  void createProgramHeaders(amd::Program* program, int numHeaders,
+                            const char** headers, const char** headerNames);
+  void getProgramHeaders(amd::Program* program, int* numHeaders, char** headers, char ** headerNames);
+  uint32_t addNameExpression(const char* name_expression);
+};
+
+ProgramState* ProgramState::programState_ = nullptr;
+
+ProgramState& ProgramState::instance() {
+  if (programState_ == nullptr) {
+    programState_ = new ProgramState;
+  }
+  return *programState_;
+}
+
+void ProgramState::createProgramHeaders(amd::Program* program, int numHeaders,
+                                        const char** headers, const char** headerNames) {
+  amd::ScopedLock lock(lock_);
+  std::vector<std::string> vHeaderNames;
+  std::vector<std::string> vHeaders;
+  for (auto i = 0; i != numHeaders; ++i) {
+    vHeaders.emplace_back(headers[i]);
+    vHeaderNames.emplace_back(headerNames[i]);
+    progHeaders_[program] = std::make_pair(std::move(vHeaders), std::move(vHeaderNames));
+  }
+}
+
+void ProgramState::getProgramHeaders(amd::Program* program, int* numHeaders,
+                                     char** headers, char ** headerNames) {
+  amd::ScopedLock lock(lock_);
+
+  const auto it = progHeaders_.find(program);
+  if (it != progHeaders_.cend()) {
+    *numHeaders = it->second.first.size();
+    *headers  = reinterpret_cast<char*>(it->second.first.data());
+    *headerNames = reinterpret_cast<char*>(it->second.second.data());
+  }
+}
+
+
+uint32_t ProgramState::addNameExpression(const char* name_expression) {
+  amd::ScopedLock lock(lock_);
+  nameExpresssion_.emplace_back(name_expression);
+  return nameExpresssion_.size();
+}
+
 
 const char* hiprtcGetErrorString(hiprtcResult x) {
   switch (x) {
@@ -56,238 +120,151 @@ const char* hiprtcGetErrorString(hiprtcResult x) {
   };
 }
 
-namespace hip_impl {
-inline std::string demangle(const char* x) {
-  if (!x) {
-    return {};
+hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog, const char* src, const char* name,
+                                 int numHeaders, const char** headers, const char** headerNames) {
+  HIPRTC_INIT_API(prog, src, name, numHeaders, headers, headerNames);
+
+  if (prog == nullptr) {
+    HIPRTC_RETURN(HIPRTC_ERROR_INVALID_PROGRAM);
   }
-  return boost::core::demangle(x);
-}
-}  // Namespace hip_impl
-
-struct _hiprtcProgram {
-  static amd::Monitor lock_;
-  static std::vector<std::unique_ptr<_hiprtcProgram>> programs_;
-
-  std::vector<std::pair<std::string, std::string>> headers;
-  std::vector<std::pair<std::string, std::string>> names;
-  std::vector<std::string> loweredNames;
-  std::vector<char> elf;
-  std::string source;
-  std::string name;
-  std::string log;
-  bool compiled;
-
-  static _hiprtcProgram* build(std::string s, std::string n,
-                              std::vector<std::pair<std::string, std::string>> h) {
-    std::unique_ptr<_hiprtcProgram> tmp{
-        new _hiprtcProgram{std::move(h), {}, {}, {}, std::move(s), std::move(n), {}, false}};
-
-    amd::ScopedLock lock(_hiprtcProgram::lock_);
-
-    programs_.push_back(move(tmp));
-
-    return programs_.back().get();
+  if (numHeaders < 0) {
+    HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
+  }
+  if (numHeaders && (headers == nullptr || headerNames == nullptr)) {
+    HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
 
-  static hiprtcResult destroy(_hiprtcProgram* p) {
-    amd::ScopedLock lock(_hiprtcProgram::lock_);
-
-    const auto it{ std::find_if(programs_.cbegin(), programs_.cend(),
-                     [=](const std::unique_ptr<_hiprtcProgram>& x)
-                     { return x.get() == p; }) };
-
-    if (it == programs_.cend()) {
-      return HIPRTC_ERROR_INVALID_PROGRAM;
-    }
-
-    return HIPRTC_SUCCESS;
+  amd::Program* program = new amd::Program(*hip::getCurrentContext(), src, amd::Program::HIP);
+  if (program == NULL) {
+    HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
 
-  static std::string handleMangledName(std::string name) {
-    name = hip_impl::demangle(name.c_str());
-
-    if (name.empty()) {
-      return name;
-    }
-
-    if (name.find("void ") == 0) {
-      name.erase(0, strlen("void "));
-    }
-
-    auto dx {name.find_first_of("(<")};
-
-    if (dx == std::string::npos) {
-      return name;
-    }
-
-    if (name[dx] == '<') {
-      auto cnt{1u};
-      do {
-      ++dx;
-      cnt += (name[dx] == '<') ? 1 : ((name[dx] == '>') ? -1 : 0);
-      } while (cnt);
-
-      name.erase(++dx);
-    } else {
-      name.erase(dx);
-    }
-
-    return name;
+  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0])) {
+    program->release();
+    HIPRTC_RETURN(HIPRTC_ERROR_PROGRAM_CREATION_FAILURE);
   }
 
-  static bool isValid(_hiprtcProgram* p) {
-    return std::find_if(programs_.cbegin(), programs_.cend(),
-                        [=](const std::unique_ptr<_hiprtcProgram>& x) {
-                            return x.get() == p; }) != programs_.cend();
-  }
-};
+  ProgramState::instance().createProgramHeaders(program, numHeaders, headers, headerNames);
 
-// Init
-std::vector<std::unique_ptr<_hiprtcProgram>> _hiprtcProgram::programs_{};
-amd::Monitor _hiprtcProgram::lock_("hiprtcProgram lock");
+  *prog = reinterpret_cast<hiprtcProgram>(as_cl(program));
 
-inline bool isValidProgram(const hiprtcProgram p) {
-  if (p == nullptr) {
-    return false;
-  }
-
-  amd::ScopedLock lock(_hiprtcProgram::lock_);
-
-  return _hiprtcProgram::isValid(p);
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-hiprtcResult hiprtcCreateProgram(hiprtcProgram* p, const char* src, const char* name, int n,
-                                 const char** hdrs, const char** incs) {
-  if (p == nullptr) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
-  if (n < 0) {
-    return HIPRTC_ERROR_INVALID_INPUT;
-  }
-  if (n && (hdrs == nullptr || incs == nullptr)) {
-    return HIPRTC_ERROR_INVALID_INPUT;
+
+hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char** options) {
+
+  // FIXME[skudchad] Add headers to amd::Program::build and device::Program::build,
+  // pass the saved from ProgramState to amd::Program::build
+  HIPRTC_INIT_API(prog, numOptions, options);
+
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
+
+  std::ostringstream ostrstr;
+  std::vector<const char*> oarr(&options[0], &options[numOptions]);
+  std::copy(oarr.begin(), oarr.end(), std::ostream_iterator<std::string>(ostrstr, " "));
+
+  std::vector<amd::Device*> devices{hip::getCurrentContext()->devices()[0]};
+  if (CL_SUCCESS != program->build(devices, ostrstr.str().c_str(), nullptr, nullptr)) {
+    HIPRTC_RETURN(HIPRTC_ERROR_COMPILATION);
   }
 
-  std::vector<std::pair<std::string, std::string>> h;
-
-  for (auto i = 0; i != n; ++i) {
-    h.emplace_back(incs[i], hdrs[i]);
-  }
-  *p = _hiprtcProgram::build(src, name ? name : "default_name", std::move(h));
-
-  return HIPRTC_SUCCESS;
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-hiprtcResult hiprtcAddNameExpression(hiprtcProgram p, const char* n) {
-  return HIPRTC_SUCCESS;
+hiprtcResult hiprtcAddNameExpression(hiprtcProgram prog, const char* name_expression) {
+  HIPRTC_INIT_API(prog, name_expression);
+
+  if (name_expression == nullptr) {
+    HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
+  }
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
+
+  uint32_t id = ProgramState::instance().addNameExpression(name_expression);
+
+  const auto var{"__hiprtc_" + std::to_string(id)};
+  const auto code{"\nextern \"C\" constexpr auto " + var + " = " + name_expression + ';'};
+
+  program->appendToSource(code.c_str());
+
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o) {
-  return HIPRTC_SUCCESS;
+hiprtcResult hiprtcGetLoweredName(hiprtcProgram prog, const char* name_expression,
+                                  const char** loweredNames) {
+  HIPRTC_INIT_API(prog, name_expression, loweredNames);
+
+  if (name_expression == nullptr || loweredNames == nullptr) {
+     HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
+  }
+
+   HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-hiprtcResult hiprtcDestroyProgram(hiprtcProgram* p) {
-  if (p == nullptr) {
-    return HIPRTC_SUCCESS;
+hiprtcResult hiprtcDestroyProgram(hiprtcProgram* prog) {
+  HIPRTC_INIT_API(prog);
+
+  if (prog == NULL) {
+     HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
-  return _hiprtcProgram::destroy(*p);
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
+
+  program->release();
+
+   HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n, const char** loweredNames) {
-  if (n == nullptr || loweredNames == nullptr) {
-    return HIPRTC_ERROR_INVALID_INPUT;
-  }
+hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* binaryMem) {
+ HIPRTC_INIT_API(prog, binaryMem);
 
-  if (!isValidProgram(p)) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
 
-  if (!p->compiled) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
+  const device::Program::binary_t& binary =
+      program->getDeviceProgram(*hip::getCurrentContext()->devices()[0])->binary();
 
-  const auto it{ std::find_if(p->names.cbegin(), p->names.cend(),
-                             [=](const std::pair<std::string, std::string>& x)
-                                { return x.first == n; })};
+  ::memcpy(binaryMem, binary.first, binary.second);
 
-  if (it == p->names.cend()) {
-    return HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID;
-  }
-
-  *loweredNames = p->loweredNames[distance(p->names.cbegin(), it)].c_str();
-
-  return HIPRTC_SUCCESS;
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-hiprtcResult hiprtcGetProgramLog(hiprtcProgram p, char* log) {
-  if (log == nullptr) {
-    return HIPRTC_ERROR_INVALID_INPUT;
-  }
+hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* binarySizeRet) {
 
-  if (!isValidProgram(p)) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
+  HIPRTC_INIT_API(prog, binarySizeRet);
 
-  if (!p->compiled) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
 
-  log = std::copy_n(p->log.data(), p->log.size(), log);
-  *log = '\0';
+  *binarySizeRet =
+      program->getDeviceProgram(*hip::getCurrentContext()->devices()[0])->binary().second;
 
-  return HIPRTC_SUCCESS;
+   HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram p, std::size_t* sz) {
-  if (sz == nullptr) {
-    return HIPRTC_ERROR_INVALID_INPUT;
-  }
+hiprtcResult hiprtcGetProgramLog(hiprtcProgram prog, char* dst) {
 
-  if (!isValidProgram(p)) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
+  HIPRTC_INIT_API(prog, dst);
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
+  const device::Program* devProgram =
+      program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
 
-  if (!p->compiled) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
+  auto log = program->programLog() + devProgram->buildLog().c_str();
 
-  *sz = p->log.empty() ? 0 : p->log.size() + 1;
-  return HIPRTC_SUCCESS;
+  log.copy(dst, log.size());
+  dst[log.size()] = '\0';
+
+   HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-hiprtcResult hiprtcGetCode(hiprtcProgram p, char* c) {
-  if (c == nullptr) {
-    return HIPRTC_ERROR_INVALID_INPUT;
-  }
+hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog, size_t* logSizeRet) {
 
-  if (!isValidProgram(p)) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
+  HIPRTC_INIT_API(prog, logSizeRet);
 
-  if (!p->compiled) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
+  const device::Program* devProgram =
+      program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
 
-  std::copy_n(p->elf.data(), p->elf.size(), c);
+  auto log = program->programLog() + devProgram->buildLog().c_str();
 
-  return HIPRTC_SUCCESS;
-}
+  *logSizeRet = log.size() + 1;
 
-hiprtcResult hiprtcGetCodeSize(hiprtcProgram p, std::size_t* sz) {
-  if (sz == nullptr) {
-    return HIPRTC_ERROR_INVALID_INPUT;
-  }
-
-  if (!isValidProgram(p)) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
-
-  if (!p->compiled) {
-    return HIPRTC_ERROR_INVALID_PROGRAM;
-  }
-
-  *sz = p->elf.size();
-
-  return HIPRTC_SUCCESS;
+   HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
