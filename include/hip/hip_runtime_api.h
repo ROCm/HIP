@@ -126,9 +126,7 @@ typedef struct hipDeviceProp_t {
     size_t textureAlignment;         ///<Alignment requirement for textures
     int kernelExecTimeoutEnabled;    ///<Run time limit for kernels executed on the device
     int ECCEnabled;                  ///<Device has ECC support enabled
-#ifdef __HIP_PLATFORM_NVCC__
-    int tccDriver;                   ///< If device is Tesla device using TCC driver
-#endif
+    int tccDriver;                   ///< 1:If device is Tesla device using TCC driver, else 0
 
 } hipDeviceProp_t;
 
