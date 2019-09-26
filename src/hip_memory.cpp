@@ -1968,36 +1968,27 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
         } else {
             e = hipErrorInvalidValue;
         }
-
+	
         if (free) {
-            hsa_agent_t* agent = static_cast<hsa_agent_t*>(device->_acc.get_hsa_agent());
-            if (!agent){
-		return ihipLogStatus(hipErrorInvalidResourceHandle);
-            } else {
-		uint32_t internal_node_id;
-		hsa_status_t err = hsa_agent_get_info(*agent, (hsa_agent_info_t) HSA_AMD_AGENT_INFO_DRIVER_NODE_ID, &internal_node_id);
-		if (err != HSA_STATUS_SUCCESS) return ihipLogStatus(hipErrorInvalidDevice);
-		
-		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(internal_node_id) + std::string("/mem_banks/0/used_memory");  
-                
+		if (!device->internal_node_id) return ihipLogStatus(hipErrorInvalidDevice);
+			
+		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->internal_node_id) + std::string("/mem_banks/0/used_memory");  
 		std::ifstream file;
 		file.open(fileName);
 		if (!file) return ihipLogStatus(hipErrorFileNotFound);
-	
+		
                 std::string deviceSize;	
 		size_t deviceMemSize;
-
+		
 		file >> deviceSize;
+		file.close();                 
                 if ((deviceMemSize=strtol(deviceSize.c_str(),NULL,10))){
 		    *free = device->_props.totalGlobalMem - deviceMemSize;
+		    // Deduct the amount of memory from the free memory reported from the system
+		    if (HIP_HIDDEN_FREE_MEM) *free -= (size_t)HIP_HIDDEN_FREE_MEM * 1024 * 1024;
 		} else {
-                    file.close();
  		    return ihipLogStatus(hipErrorInvalidValue);
 		}
-		file.close();                 
-            	// Deduct the amount of memory from the free memory reported from the system
-		if (HIP_HIDDEN_FREE_MEM) *free -= (size_t)HIP_HIDDEN_FREE_MEM * 1024 * 1024;
-           }
         } else {
             e = hipErrorInvalidValue;
         }
