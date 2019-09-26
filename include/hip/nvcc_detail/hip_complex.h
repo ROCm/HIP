@@ -25,8 +25,6 @@ THE SOFTWARE.
 
 #include "cuComplex.h"
 
-namespace hip_cmplx{
-
 typedef cuFloatComplex hipFloatComplex;
 
 __device__ __host__ static inline float hipCrealf(hipFloatComplex z) { return cuCrealf(z); }
@@ -118,5 +116,4 @@ __device__ __host__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, h
     return cuCfma(p, q, r);
 }
 
-}//hip_cmplx
 #endif

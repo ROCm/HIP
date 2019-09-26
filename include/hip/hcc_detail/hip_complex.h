@@ -34,8 +34,6 @@ THE SOFTWARE.
 #include "math.h"
 #endif
 
-namespace hip_cmplx{
-
 #if __cplusplus
 #define COMPLEX_NEG_OP_OVERLOAD(type)                                                              \
     __device__ __host__ static inline type operator-(const type& op) {                             \
@@ -302,23 +300,5 @@ __device__ __host__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, h
 
     return make_hipDoubleComplex(real, imag);
 }
-
-// Complex functions returning real numbers.
-#define __DEFINE_HIP_COMPLEX_REAL_FUN(func, hipFun) \
-__device__ __host__ inline float func(const hipFloatComplex& z) { return hipFun##f(z); } \
-__device__ __host__ inline double func(const hipDoubleComplex& z) { return hipFun(z); }
-
-__DEFINE_HIP_COMPLEX_REAL_FUN(abs, hipCabs)
-__DEFINE_HIP_COMPLEX_REAL_FUN(real, hipCreal)
-__DEFINE_HIP_COMPLEX_REAL_FUN(imag, hipCimag)
-
-// Complex functions returning complex numbers.
-#define __DEFINE_HIP_COMPLEX_FUN(func, hipFun) \
-__device__ __host__ inline hipFloatComplex func(const hipFloatComplex& z) { return hipFun##f(z); } \
-__device__ __host__ inline hipDoubleComplex func(const hipDoubleComplex& z) { return hipFun(z); }
-
-__DEFINE_HIP_COMPLEX_FUN(conj, hipConj)
-
-}//hip_cmplx
 
 #endif //HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COMPLEX_H
