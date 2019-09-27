@@ -542,7 +542,7 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
 namespace hip_impl {
 
 hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
-                                                         const void* f,
+                                                         hipFunction_t f,
                                                          int  blockSize,
                                                          size_t dynamicSMemSize)
 {
@@ -585,7 +585,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 
   size_t total_used_lds = wrkGrpInfo->usedLDSSize_ + dynamicSMemSize;
   if (total_used_lds != 0) {
-    // Calculate LDS occupacy per CU. lds_per_cu / (static_lsd + dynamic_lds)
+    // Calculate LDS occupancy per CU. lds_per_cu / (static_lsd + dynamic_lds)
     int lds_occupancy = static_cast<int>(device->info().localMemSize_ / total_used_lds);
     *numBlocks = std::min(*numBlocks, lds_occupancy);
   }
@@ -595,7 +595,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
-                                                        const void* f,
+                                                        hipFunction_t f,
                                                         int  blockSize,
                                                         size_t dynamicSMemSize)
 {
@@ -603,7 +603,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
-                                                                 const void* f,
+                                                                 hipFunction_t f,
                                                                  int  blockSize,
                                                                  size_t dynamicSMemSize,
                                                                  unsigned int flags)
