@@ -585,12 +585,12 @@ hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAdd
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipTexRefGetArray(hipArray* array, textureReference tex) {
+hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex) {
   HIP_INIT_API(array, &tex);
 
   hip::TextureObject* texture = nullptr;
 
-  if (array == nullptr) {
+  if ((array == nullptr) || (*array == nullptr)) {
     HIP_RETURN(hipErrorInvalidImage);
   }
 
@@ -603,7 +603,7 @@ hipError_t hipTexRefGetArray(hipArray* array, textureReference tex) {
     HIP_RETURN(hipErrorUnknown);
   }
 
-  *array = *(texture->resDesc.res.array.array);
+  **array = *(texture->resDesc.res.array.array);
 
   HIP_RETURN(hipSuccess);
 }
