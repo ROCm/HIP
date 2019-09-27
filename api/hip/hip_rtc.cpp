@@ -24,6 +24,14 @@ THE SOFTWARE.
 #include "hiprtc_internal.hpp"
 #include <hip/hiprtc.h>
 #include "platform/program.hpp"
+#include <algorithm>
+#include <iterator>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 namespace hiprtc {
 thread_local hiprtcResult g_lastRtcError = HIPRTC_SUCCESS;
