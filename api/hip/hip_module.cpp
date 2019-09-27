@@ -109,6 +109,34 @@ extern bool __hipExtractCodeObjectFromFatBinary(const void* data,
                                                 const std::vector<const char*>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
 
+bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* module) {
+
+  std::vector<std::string> undef_vars;
+  device::Program* dev_program
+    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+
+  if (!dev_program->getUndefinedVarFromCodeObj(&undef_vars)) {
+    return false;
+  }
+
+  for (auto it = undef_vars.begin(); it != undef_vars.end(); ++it) {
+    auto modules = new std::vector<std::pair<hipModule_t, bool> >{g_devices.size()};
+    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+      modules->at(dev) = std::make_pair(*module, true);
+    }
+
+    texture<float, hipTextureType1D, hipReadModeElementType>* tex_hptr
+      = new texture<float, hipTextureType1D, hipReadModeElementType>();
+    memset(tex_hptr, 0x00, sizeof(texture<float, hipTextureType1D, hipReadModeElementType>));
+
+    PlatformState::DeviceVar dvar{ reinterpret_cast<char*>(tex_hptr), it->c_str(), sizeof(*tex_hptr), modules,
+      std::vector<PlatformState::RegisteredVar>{ g_devices.size()}, true };
+    PlatformState::instance().registerVar(it->c_str(), dvar);
+  }
+
+  return true;
+}
+
 bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
 
   size_t var_size = 0;
@@ -125,11 +153,11 @@ bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
   for (auto it = var_names.begin(); it != var_names.end(); ++it) {
     auto modules = new std::vector<std::pair<hipModule_t, bool> >{g_devices.size()};
     for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-      modules->at(dev) = std::make_pair(*module, false);
+      modules->at(dev) = std::make_pair(*module, true);
     }
 
     PlatformState::DeviceVar dvar{nullptr, it->c_str(), 0, modules,
-      std::vector<PlatformState::RegisteredVar>{ g_devices.size()} };
+      std::vector<PlatformState::RegisteredVar>{ g_devices.size()}, false };
     PlatformState::instance().registerVar(it->c_str(), dvar);
   }
 
@@ -149,8 +177,7 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
 
   program->setVarInfoCallBack(&getSvarInfo);
 
-  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, ElfSize(image)) ||
-    CL_SUCCESS != program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr)) {
+  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, ElfSize(image))) {
       return hipErrorUnknown;
   }
 
@@ -158,6 +185,14 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
 
   if (!ihipModuleRegisterGlobal(program, module)) {
       return hipErrorUnknown;
+  }
+
+  if (!ihipModuleRegisterUndefined(program, module)) {
+    return hipErrorUnknown;
+  }
+
+  if(CL_SUCCESS != program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr)) {
+    return hipErrorUnknown;
   }
 
   return hipSuccess;
@@ -446,21 +481,16 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
   HIP_INIT_API(texRef, hmod, name);
 
-  hipDeviceptr_t dptr = nullptr;
-  size_t bytes = 0;
-
   /* input args check */
   if ((texRef == nullptr) || (name == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
    /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(name, ihipGetDevice(), &dptr,
-                                              &bytes)) {
+  if (!PlatformState::instance().getTexRef(name, texRef)) {
     HIP_RETURN(hipErrorUnknown);
   }
 
-  *texRef = reinterpret_cast<textureReference*>(dptr);
   HIP_RETURN(hipSuccess);
 }
 
