@@ -549,8 +549,8 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
                 kargs.getHandle());
     }
 
-    mg_sync *mg_sync_ptr;
-    mg_info *mg_info_ptr[MAX_COOPERATIVE_GPUs];
+    mg_sync *mg_sync_ptr = 0;
+    mg_info *mg_info_ptr[MAX_COOPERATIVE_GPUs] = {0};
 
     result = hip_internal::ihipHostMalloc(tls, (void **)&mg_sync_ptr, sizeof(mg_sync), hipHostMallocDefault);
     if (result != hipSuccess) {
@@ -563,6 +563,10 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
     for (int i = 0; i < numDevices; ++i) {
         result = hip_internal::ihipHostMalloc(tls, (void **)&mg_info_ptr[i], sizeof(mg_info), hipHostMallocDefault);
         if (result != hipSuccess) {
+            hip_internal::ihipHostFree(tls, mg_sync_ptr);
+            for (int j = 0; j < i; ++j) {
+                hip_internal::ihipHostFree(tls, mg_info_ptr[j]);
+            }
             return ihipLogStatus(hipErrorInvalidValue);
         }
         // calculate the sum of sizes of all grids
@@ -599,6 +603,11 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
                 launchParamsList[j].stream->criticalData()._av.release_locked_hsa_queue();
 #endif
             }
+            hip_internal::ihipHostFree(tls, mg_sync_ptr);
+            for (int j = 0; j < numDevices; ++j) {
+                hip_internal::ihipHostFree(tls, mg_info_ptr[j]);
+            }
+
             return ihipLogStatus(hipErrorLaunchFailure);
         }
         //initialize and setup the implicit kernel argument for multi-grid sync
@@ -621,6 +630,22 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
                 lp.blockDim.z, lp.sharedMem,
                 lp.stream, lp.args, nullptr, nullptr, nullptr, 0,
                 true, impCoopParams);
+
+        if (result != hipSuccess) {
+            for (int j = 0; j < numDevices; ++j) {
+                launchParamsList[j].stream->criticalData().unlock();
+#if (__hcc_workweek__ >= 19213)
+                launchParamsList[j].stream->criticalData()._av.release_locked_hsa_queue();
+#endif
+            }
+            hip_internal::ihipHostFree(tls, mg_sync_ptr);
+            for (int j = 0; j < numDevices; ++j) {
+                hip_internal::ihipHostFree(tls, mg_info_ptr[j]);
+            }
+
+            return ihipLogStatus(hipErrorLaunchFailure);
+        }
+
     }
 
     // unlock all streams
@@ -633,6 +658,11 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 
     free(gwsKds);
     free(kds);
+
+    hip_internal::ihipHostFree(tls, mg_sync_ptr);
+    for (int j = 0; j < numDevices; ++j) {
+        hip_internal::ihipHostFree(tls, mg_info_ptr[j]);
+    }
 
     return ihipLogStatus(result);
 }

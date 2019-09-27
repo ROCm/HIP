@@ -1022,6 +1022,8 @@ hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKi
 
 hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags);
 
+hipError_t ihipHostFree(TlsData *tls, void* ptr);
+
 };
 
 #define MAX_COOPERATIVE_GPUs 255

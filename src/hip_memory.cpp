@@ -208,6 +208,35 @@ hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned i
     return hip_status;
 }
 
+hipError_t ihipHostFree(TlsData *tls, void* ptr) {
+
+    // Synchronize to ensure all work has finished.
+    ihipGetTlsDefaultCtx()->locked_waitAllStreams();  // ignores non-blocking streams, this waits
+                                                      // for all activity to finish.
+
+    hipError_t hipStatus = hipErrorInvalidValue;
+    if (ptr) {
+        hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
+        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
+        if (status == AM_SUCCESS) {
+            if (amPointerInfo._hostPointer == ptr) {
+                hc::am_free(ptr);
+                hipStatus = hipSuccess;
+            }
+        }
+    } else {
+        // free NULL pointer succeeds and is common technique to initialize runtime
+        hipStatus = hipSuccess;
+    }
+
+    return hipStatus;
+}
+
 
 }  // end namespace hip_internal
 
@@ -2051,30 +2080,8 @@ hipError_t hipFree(void* ptr) {
 hipError_t hipHostFree(void* ptr) {
     HIP_INIT_SPECIAL_API(hipHostFree, (TRACE_MEM), ptr);
 
-    // Synchronize to ensure all work has finished.
-    ihipGetTlsDefaultCtx()->locked_waitAllStreams();  // ignores non-blocking streams, this waits
-                                                      // for all activity to finish.
-
-
-    hipError_t hipStatus = hipErrorInvalidValue;
-    if (ptr) {
-        hc::accelerator acc;
-#if (__hcc_workweek__ >= 17332)
-        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
-#else
-        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
-#endif
-        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
-        if (status == AM_SUCCESS) {
-            if (amPointerInfo._hostPointer == ptr) {
-                hc::am_free(ptr);
-                hipStatus = hipSuccess;
-            }
-        }
-    } else {
-        // free NULL pointer succeeds and is common technique to initialize runtime
-        hipStatus = hipSuccess;
-    }
+    hipError_t hipStatus = hipSuccess;
+    hipStatus = hip_internal::ihipHostFree(tls, ptr);
 
     return ihipLogStatus(hipStatus);
 };
