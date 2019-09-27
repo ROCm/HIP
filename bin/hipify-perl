@@ -1738,12 +1738,6 @@ while (@ARGV) {
                     if ((/(\bcuda[A-Z]\w+)/) or (/<<<.*>>>/)) {
                         # flag any remaining code that look like cuda API calls, may want to add these to hipify
                         $tag = (defined $1) ? $1 : "Launch";
-                    } elsif (/(\bcublas[A-Z]\w+)/) {
-                        $warningsCublas++;
-                        $tag = $1;
-                    } elsif (/(\bcurand[A-Z]\w+)/) {
-                        $warningsCurand++;
-                        $tag = $1;
                     }
                     if (defined $tag) {
                         $warnings++;
@@ -1763,7 +1757,7 @@ while (@ARGV) {
             $ft{'kernel_func'} += countSupportedDeviceFunctions();
         }
 
-        $ft{'memory'} += transformSymbolFunctions();
+        transformHostFunctions();
 
         # Print it!
         # TODO - would like to move this code outside loop but it uses $_ which contains the whole file.
@@ -1819,7 +1813,7 @@ if ($count_conversions) {
     }
 }
 
-sub transformSymbolFunctions
+sub transformHostFunctions
 {
     my $m = 0;
     foreach $func (
@@ -1837,6 +1831,18 @@ sub transformSymbolFunctions
     )
     {
         $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, HIP_SYMBOL\($3\)$4/g;
+    }
+    foreach $func (
+        "hipFuncSetCacheConfig"
+    )
+    {
+        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,/$func\(reinterpret_cast<const void*>\($2\),/g
+    }
+    foreach $func (
+        "hipFuncGetAttributes"
+    )
+    {
+        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, reinterpret_cast<const void*>\($3\)$4/g;
     }
     return $m;
 }
@@ -1868,6 +1874,13 @@ sub countSupportedDeviceFunctions
         "__fdividef",
         "__ffs",
         "__ffsll",
+        "__float22half2_rn",
+        "__float2half",
+        "__float2half2_rn",
+        "__float2half_rd",
+        "__float2half_rn",
+        "__float2half_ru",
+        "__float2half_rz",
         "__float2int_rd",
         "__float2int_rn",
         "__float2int_ru",
@@ -1886,6 +1899,7 @@ sub countSupportedDeviceFunctions
         "__float2ull_rz",
         "__float_as_int",
         "__float_as_uint",
+        "__floats2half2_rn",
         "__fmaf_rd",
         "__fmaf_rn",
         "__fmaf_ru",
@@ -1907,19 +1921,127 @@ sub countSupportedDeviceFunctions
         "__fsub_rn",
         "__fsub_ru",
         "__fsub_rz",
+        "__h2div",
         "__hadd",
+        "__hadd2",
+        "__hadd2_sat",
+        "__hadd_sat",
+        "__half22float2",
+        "__half2float",
+        "__half2half2",
+        "__half2int_rd",
+        "__half2int_rn",
+        "__half2int_ru",
+        "__half2int_rz",
+        "__half2ll_rd",
+        "__half2ll_rn",
+        "__half2ll_ru",
+        "__half2ll_rz",
+        "__half2short_rd",
+        "__half2short_rn",
+        "__half2short_ru",
+        "__half2short_rz",
+        "__half2uint_rd",
+        "__half2uint_rn",
+        "__half2uint_ru",
+        "__half2uint_rz",
+        "__half2ull_rd",
+        "__half2ull_rn",
+        "__half2ull_ru",
+        "__half2ull_rz",
+        "__half2ushort_rd",
+        "__half2ushort_rn",
+        "__half2ushort_ru",
+        "__half2ushort_rz",
+        "__half_as_short",
+        "__half_as_ushort",
+        "__halves2half2",
+        "__hbeq2",
+        "__hbequ2",
+        "__hbge2",
+        "__hbgeu2",
+        "__hbgt2",
+        "__hbgtu2",
+        "__hble2",
+        "__hbleu2",
+        "__hblt2",
+        "__hbltu2",
+        "__hbne2",
+        "__hbneu2",
+        "__hdiv",
+        "__heq",
+        "__heq2",
+        "__hequ",
+        "__hequ2",
+        "__hfma",
+        "__hfma2",
+        "__hfma2_sat",
+        "__hfma_sat",
+        "__hge",
+        "__hge2",
+        "__hgeu",
+        "__hgeu2",
+        "__hgt",
+        "__hgt2",
+        "__hgtu",
+        "__hgtu2",
+        "__high2float",
+        "__high2half",
+        "__high2half2",
+        "__highs2half2",
+        "__hisinf",
+        "__hisnan",
+        "__hisnan2",
+        "__hle",
+        "__hle2",
+        "__hleu",
+        "__hleu2",
+        "__hlt",
+        "__hlt2",
+        "__hltu",
+        "__hltu2",
+        "__hmul",
+        "__hmul2",
+        "__hmul2_sat",
+        "__hmul_sat",
+        "__hne",
+        "__hne2",
+        "__hneg",
+        "__hneg2",
+        "__hneu",
+        "__hneu2",
+        "__hsub",
+        "__hsub2",
+        "__hsub2_sat",
+        "__hsub_sat",
         "__int2float_rd",
         "__int2float_rn",
         "__int2float_ru",
         "__int2float_rz",
+        "__int2half_rn",
+        "__int2half_ru",
+        "__int2half_rz",
         "__int_as_float",
+        "__ldca",
+        "__ldcg",
+        "__ldcs",
+        "__ldg",
         "__ll2float_rd",
         "__ll2float_rn",
         "__ll2float_ru",
         "__ll2float_rz",
+        "__ll2half_rd",
+        "__ll2half_rn",
+        "__ll2half_ru",
+        "__ll2half_rz",
         "__log10f",
         "__log2f",
         "__logf",
+        "__low2float",
+        "__low2half",
+        "__low2half2",
+        "__lowhigh2highlow",
+        "__lows2half2",
         "__mul24",
         "__mul64hi",
         "__mulhi",
@@ -1929,6 +2051,11 @@ sub countSupportedDeviceFunctions
         "__rhadd",
         "__sad",
         "__saturatef",
+        "__short2half_rd",
+        "__short2half_rn",
+        "__short2half_ru",
+        "__short2half_rz",
+        "__short_as_half",
         "__sincosf",
         "__sinf",
         "__syncthreads",
@@ -1940,16 +2067,29 @@ sub countSupportedDeviceFunctions
         "__uint2float_rn",
         "__uint2float_ru",
         "__uint2float_rz",
+        "__uint2half_rd",
+        "__uint2half_rn",
+        "__uint2half_ru",
+        "__uint2half_rz",
         "__uint_as_float",
         "__ull2float_rd",
         "__ull2float_rn",
         "__ull2float_ru",
         "__ull2float_rz",
+        "__ull2half_rd",
+        "__ull2half_rn",
+        "__ull2half_ru",
+        "__ull2half_rz",
         "__umul24",
         "__umul64hi",
         "__umulhi",
         "__urhadd",
         "__usad",
+        "__ushort2half_rd",
+        "__ushort2half_rn",
+        "__ushort2half_ru",
+        "__ushort2half_rz",
+        "__ushort_as_half",
         "abs",
         "acos",
         "acosf",
@@ -2017,6 +2157,36 @@ sub countSupportedDeviceFunctions
         "fmodf",
         "frexp",
         "frexpf",
+        "h2ceil",
+        "h2cos",
+        "h2exp",
+        "h2exp10",
+        "h2exp2",
+        "h2floor",
+        "h2log",
+        "h2log10",
+        "h2log2",
+        "h2rcp",
+        "h2rint",
+        "h2rsqrt",
+        "h2sin",
+        "h2sqrt",
+        "h2trunc",
+        "hceil",
+        "hcos",
+        "hexp",
+        "hexp10",
+        "hexp2",
+        "hfloor",
+        "hlog",
+        "hlog10",
+        "hlog2",
+        "hrcp",
+        "hrint",
+        "hrsqrt",
+        "hsin",
+        "hsqrt",
+        "htrunc",
         "hypot",
         "hypotf",
         "ilogb",
@@ -2251,6 +2421,7 @@ sub warnUnsupportedDeviceFunctions
         "__vsubus4",
         "_fdsign",
         "_ldsign",
+        "atomicAdd",
         "float2int",
         "float_as_int",
         "float_as_uint",
