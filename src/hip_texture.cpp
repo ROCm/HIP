@@ -760,7 +760,7 @@ hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex) {
     if (pTexture->devPtr == nullptr)
         return ihipLogStatus(hipErrorUnknown);
 
-    *array = reinterpret_cast<hipArray_t>((pTexture->devPtr);
+    *array = reinterpret_cast<hipArray_t>(pTexture->devPtr);
 
     return ihipLogStatus(hipSuccess);
 }
