@@ -463,10 +463,10 @@ hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureRead
 
   switch (dim) {
     case 1:
-      clType = CL_MEM_OBJECT_IMAGE1D_ARRAY;
+      clType = CL_MEM_OBJECT_IMAGE1D;
       break;
     case 2:
-      clType = CL_MEM_OBJECT_IMAGE2D_ARRAY;
+      clType = CL_MEM_OBJECT_IMAGE2D;
       break;
     default:
       HIP_RETURN(hipErrorInvalidValue);
