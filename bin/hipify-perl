@@ -1,4 +1,5 @@
-#!/usr/bin/perl  -w
+#!/usr/bin/perl -w
+
 ##
 # Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
 #
@@ -20,60 +21,55 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##
-#usage hipify-perl [OPTIONS] INPUT_FILE
-use Getopt::Long;
 
-my $warn_whitelist ="";
+#usage hipify-perl [OPTIONS] INPUT_FILE
+
+use Getopt::Long;
+my $whitelist = "";
+
 GetOptions(
-      "print-stats" => \$print_stats                     # print the command-line, like a header.
-    , "count-conversions" => \$count_conversions         # count conversions.
-    , "quiet-warnings" => \$quiet_warnings               # don't print warnings on unknown CUDA functions.
-    , "warn-whitelist=s"=> \$warn_whitelist
-    , "no-output" => \$no_output                         # don't write any translated output to stdout.
-    , "inplace" => \$inplace                             # modify input file inplace, replacing input with hipified output, save backup in ".prehip" file.
-                                                         # If .prehip file exists, use that as input to hip.
-    , "n" => \$n                                         # combination of print_stats + no-output.
+      "examine" => \$examine                  # Combines -no-output and -print-stats options.
+    , "inplace" => \$inplace                  # Modify input file inplace, replacing input with hipified output, save backup in .prehip file.
+    , "no-output" => \$no_output              # Don't write any translated output to stdout.
+    , "print-stats" => \$print_stats          # Print translation statistics.
+    , "quiet-warnings" => \$quiet_warnings    # Don't print warnings on unknown CUDA functions.
+    , "whitelist=s" => \$whitelist            # TODO: test it beforehand
 );
 
-$print_stats = 1 if $n;
-$no_output   = 1 if $n;
+$print_stats = 1 if $examine;
+$no_output = 1 if $examine;
 
-# These uses of cuda[A-Z] are commonly used in CUDA code but don't actually map to any CUDA API:
-# TODO - use a hash lookup for these.
-@warn_whitelist = (
-         "cudaDevice"
-        ,"cudaDevice_t"
-        ,"cudaIDs"
-        ,"cudaGridDim"
-        ,"cudaDimGrid"
-        ,"cudaDimBlock"
-        ,"cudaDeviceId"
-        ,"cudaDevices",
-        ,"cudaGradOutput",
-        ,"cudaInput",
-        ,"cudaOutput",
-        ,"cudaGradInput",
-        ,"cudaIndices",
-        ,"cudaGaugeField"
-        ,"cudaMom"
-        ,"cudaGauge"
-        ,"cudaInGauge"
-        ,"cudaColorSpinorField"
-        ,"cudaSiteLink"
-        ,"cudaFatLink"
-        ,"cudaStaple"
-        ,"cudaCloverField"
-        ,"cudaParam"
-    );
-#print "WW=@warn_whitelist\n";
+# Whitelist of cuda[A-Z] identifiers, which are commonly used in CUDA sources but don't map to any CUDA API:
+@whitelist = (
+      "cudaCloverField"
+    , "cudaColorSpinorField"
+    , "cudaDevice"
+    , "cudaDeviceId"
+    , "cudaDevice_t"
+    , "cudaDevices"
+    , "cudaDimBlock"
+    , "cudaDimGrid"
+    , "cudaFatLink"
+    , "cudaGauge"
+    , "cudaGaugeField"
+    , "cudaGradInput"
+    , "cudaGradOutput"
+    , "cudaGridDim"
+    , "cudaIDs"
+    , "cudaInGauge"
+    , "cudaIndices"
+    , "cudaInput"
+    , "cudaMom"
+    , "cudaOutput"
+    , "cudaParam"
+    , "cudaSiteLink"
+    , "cudaStaple"
+);
 
-# Allow users to add their own functions.
-push (@warn_whitelist, split(',',$warn_whitelist));
+push(@whitelist, split(',', $whitelist));
 
-#Stats tracking code:
 @statNames = ("error", "init", "version", "device", "context", "module", "memory", "addressing", "stream", "event", "external_resource_interop", "stream_memory", "execution", "graph", "occupancy", "texture", "surface", "peer", "graphics", "profiler", "openGL", "D3D9", "D3D10", "D3D11", "VDPAU", "EGL", "thread", "complex", "library", "device_library", "include", "include_cuda_main_header", "type", "literal", "numeric_literal", "define", "kernel_func", "extern_shared", "kern_launch");
 
-#Compute total of all individual counts:
 sub totalStats {
     my %count = %{ shift() };
     my $total = 0;
@@ -90,11 +86,11 @@ sub printStats {
     my $warnings  = shift();
     my $loc       = shift();
     my $total     = totalStats(\%counts);
-    printf STDERR "%s %d CUDA->HIP refs( ", $label, $total;
+    printf STDERR "%s %d CUDA->HIP refs ( ", $label, $total;
     foreach $stat (@statNames) {
         printf STDERR "%s:%d ", $stat, $counts{$stat};
     }
-    printf STDERR ") warn:%d LOC:%d", $warnings, $loc;
+    printf STDERR ")\n  warn:%d LOC:%d", $warnings, $loc;
 }
 
 # Add adder stats to dest. Used to add stats for current file to a running total for all files:
@@ -160,8 +156,6 @@ while (@ARGV) {
     undef $/; # Read whole file at once, so we can match newlines.
     while (<INFILE>)
     {
-        # chomp;
-        # next if /^(\s*(#.*)?)?$/;
         $ft{'error'} += s/\bcudaGetErrorName\b/hipGetErrorName/g;
         $ft{'error'} += s/\bcudaGetErrorString\b/hipGetErrorString/g;
         $ft{'error'} += s/\bcudaGetLastError\b/hipGetLastError/g;
@@ -1712,7 +1706,7 @@ while (@ARGV) {
                 $Tkernels{$1} ++;
             }
         }
-        if ($count_conversions) {
+        if ($print_stats) {
             while (/(\bhip[A-Z]\w+\b)/g) {
                 $convertedTags{$1}++;
                 #print STDERR "HIP: $1 : ", $translateTags{$1}, "\n";
@@ -1724,14 +1718,14 @@ while (@ARGV) {
         unless ($quiet_warnings) {
             #print STDERR "Check WARNINGs\n";
             # copy into array of lines, process line-by-line to show warnings:
-            if ($hasDeviceCode or (/\bcuda/) or (/<<<.*>>>/) or (/(\bcublas[A-Z]\w+)/) or (/(\bcurand[A-Z]\w+)/) ) {
+            if ($hasDeviceCode or (/\bcuda/) or (/<<<.*>>>/)) {
                 my @lines = split /\n/, $_;
                 my $tmp = $_;  # copies the whole file, could be a little smarter here...
                 my $line_num = 0;
                 foreach (@lines) {
                     $line_num ++;
                     # remove any whitelisted words:
-                    foreach $w (@warn_whitelist) {
+                    foreach $w (@whitelist) {
                         s/\b$w\b/ZAP/
                     }
                     my $tag;
@@ -1780,7 +1774,7 @@ while (@ARGV) {
     my $totalConverted = totalStats(\%ft);
     #printf "TOTAL-CONV=%d\n", $totalConverted;
     if (($totalConverted+$warnings) and $print_stats) {
-        printStats("info: converted", \@statNames, \%ft, $warnings, $lineCount);
+        printStats("  info: converted", \@statNames, \%ft, $warnings, $lineCount);
         print STDERR " in '$fileName'\n";
     }
     # Update totals for all files:
@@ -1794,7 +1788,7 @@ while (@ARGV) {
 #-- Print total stats for all files processed:
 if ($print_stats and ($fileCount > 1)) {
     print STDERR "\n";
-    printStats("info: TOTAL-converted", \@statNames, \%tt, $Twarnings, $TlineCount);
+    printStats("  info: TOTAL-converted", \@statNames, \%tt, $Twarnings, $TlineCount);
     print STDERR "\n";
     foreach my $key (sort { $TwarningTags{$b} <=> $TwarningTags{$a} } keys %TwarningTags) {
         printf STDERR "  warning: unconverted %s : %d\n", $key, $TwarningTags{$key};
@@ -1807,7 +1801,7 @@ if ($print_stats and ($fileCount > 1)) {
     print STDERR "\n";
     print STDERR "\n";
 }
-if ($count_conversions) {
+if ($print_stats) {
     foreach my $key (sort { $convertedTags{$b} <=> $convertedTags{$a} } keys %convertedTags) {
         printf STDERR "  %s %d\n", $key, $convertedTags{$key};
     }
