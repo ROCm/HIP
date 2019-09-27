@@ -149,6 +149,7 @@ public:
     size_t size;
     std::vector< std::pair< hipModule_t, bool > >* modules;
     std::vector<RegisteredVar> rvars;
+    bool dyn_undef;
   };
 private:
   std::unordered_map<const void*, DeviceFunction > functions_;
@@ -172,6 +173,8 @@ public:
   bool getFuncAttr(const void* hostFunction, hipFuncAttributes* func_attr);
   bool getGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                     size_t* size_ptr);
+  bool getTexRef(const char* hostVar, textureReference** texRef);
+
   bool getShadowVarInfo(std::string var_name, void** var_addr, size_t* var_size);
   void setupArgument(const void *arg, size_t size, size_t offset);
   void configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);

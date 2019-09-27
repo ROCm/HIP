@@ -173,6 +173,11 @@ std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipMod
     DeviceVar& dvar = it->second;
     if ((*dvar.modules)[0].first == hmod) {
       rmodules = dvar.modules;
+      if (dvar.dyn_undef) {
+        texture<float, hipTextureType1D, hipReadModeElementType>* tex_hptr
+          = reinterpret_cast<texture<float, hipTextureType1D, hipReadModeElementType> *>(dvar.shadowVptr);
+        delete tex_hptr;
+      }
       vars_.erase(it++);
     } else {
       ++it;
@@ -287,6 +292,22 @@ bool PlatformState::getFuncAttr(const void* hostFunction,
   return true;
 }
 
+bool PlatformState::getTexRef(const char* hostVar, textureReference** texRef) {
+  amd::ScopedLock lock(lock_);
+  const auto it = vars_.find(std::string(reinterpret_cast<const char*>(hostVar)));
+  if (it == vars_.cend()) {
+    return false;
+  }
+
+  DeviceVar& dvar = it->second;
+  if (!dvar.dyn_undef) {
+    return false;
+  }
+
+  *texRef = reinterpret_cast<textureReference *>(dvar.shadowVptr);
+  return true;
+}
+
 bool PlatformState::getGlobalVar(const void* hostVar, int deviceId,
                                  hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
   amd::ScopedLock lock(lock_);
@@ -380,7 +401,7 @@ extern "C" void __hipRegisterVar(
   HIP_INIT();
 
   PlatformState::DeviceVar dvar{var, std::string{ hostVar }, static_cast<size_t>(size), modules,
-    std::vector<PlatformState::RegisteredVar>{ g_devices.size() } };
+    std::vector<PlatformState::RegisteredVar>{ g_devices.size() }, false };
 
   PlatformState::instance().registerVar(hostVar, dvar);
 }
