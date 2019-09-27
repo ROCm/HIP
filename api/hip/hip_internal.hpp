@@ -30,6 +30,9 @@ THE SOFTWARE.
 #include <thread>
 #include <stack>
 #include <mutex>
+#include <iterator>
+
+
 
 /*! IHIP IPC MEMORY Structure */
 #define IHIP_IPC_MEM_HANDLE_SIZE   32
