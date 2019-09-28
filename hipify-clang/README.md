@@ -144,9 +144,9 @@ To run it:
 
     * Path to cuDNN should be specified by the `CUDA_DNN_ROOT_DIR` option:
 
-        - Linux: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.1-v7.6.3.30`
+        - Linux: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.1-v7.6.4.38`
 
-        - Windows: `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-10.1-windows10-x64-v7.6.3.30`
+        - Windows: `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-10.1-windows10-x64-v7.6.4.38`
 
 5. Ensure [`python`](https://www.python.org/downloads) of minimum required version 2.7 is installed.
 
@@ -180,9 +180,9 @@ To run it:
 
 On Linux the following configurations are tested:
 
-Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.6.3.30
+Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.6.4.38
 
-Ubuntu 16-18: LLVM 8.0.0 - 9.0.0, CUDA 8.0 - 10.1, cudnn-5.1.10 - cudnn-7.6.3.30
+Ubuntu 16-18: LLVM 8.0.0 - 9.0.0, CUDA 8.0 - 10.1, cudnn-5.1.10 - cudnn-7.6.4.38
 
 Build system for the above configurations:
 
@@ -197,7 +197,7 @@ cmake
  -DCMAKE_INSTALL_PREFIX=../dist \
  -DCMAKE_PREFIX_PATH=/srv/git/LLVM/9.0.0/dist \
  -DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-10.1 \
- -DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.1-v7.6.3.30 \
+ -DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.1-v7.6.4.38 \
  -DLLVM_EXTERNAL_LIT=/srv/git/LLVM/9.0.0/build/bin/llvm-lit \
  ..
 ```
@@ -325,9 +325,9 @@ On Windows 10 the following configurations are tested:
 
 LLVM 5.0.0 - 5.0.2, CUDA 8.0,  cudnn-5.1.10 - cudnn-7.1.4.18
 
-LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-7.0.5.15 - cudnn-7.6.3.30
+LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn-7.0.5.15 - cudnn-7.6.4.38
 
-LLVM 7.0.0 - 9.0.0, CUDA 7.5 - 10.1, cudnn-7.0.5.15 - cudnn-7.6.3.30
+LLVM 7.0.0 - 9.0.0, CUDA 7.5 - 10.1, cudnn-7.0.5.15 - cudnn-7.6.4.38
 
 Build system for the above configurations:
 
@@ -344,7 +344,7 @@ cmake
  -DCMAKE_PREFIX_PATH=f:/LLVM/9.0.0/dist \
  -DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1" \
  -DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v10.1" \
- -DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-10.1-windows10-x64-v7.6.3.30 \
+ -DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-10.1-windows10-x64-v7.6.4.38 \
  -DLLVM_EXTERNAL_LIT=f:/LLVM/9.0.0/build/Release/bin/llvm-lit.py \
  -Thost=x64
  ..
