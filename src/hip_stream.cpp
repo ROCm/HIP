@@ -316,7 +316,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
     }
 
     // Lock the stream
-    LockedAccessor_StreamCrit_t crit(stream->criticalData(), true /*unlock at destruction*/);
+    LockedAccessor_StreamCrit_t crit(stream->criticalData());
 
     // 1. Lock the queue
     hsa_queue_t* lockedQ = static_cast<hsa_queue_t*> (crit->_av.acquire_locked_hsa_queue());
