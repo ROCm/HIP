@@ -220,8 +220,17 @@ TidInfo::TidInfo() : _apiSeqNum(0) {
         tid_ss_num << std::this_thread::get_id();
         tid_ss << std::hex << std::stoull(tid_ss_num.str());
 
-        tprintf(DB_API, "HIP initialized short_tid#%d (maps to full_tid: 0x%s)\n", _shortTid,
-                tid_ss.str().c_str());
+        // cannot use tprintf here since it will recurse back into TlsData constructor
+#if COMPILE_HIP_DB
+        if (HIP_DB & (1 << DB_API)) {
+            char msgStr[1000];
+            snprintf(msgStr, sizeof(msgStr),
+                    "HIP initialized short_tid#%d (maps to full_tid: 0x%s)\n",
+                    tid(), tid_ss.str().c_str());
+            fprintf(stderr, "  %ship-%s pid:%d tid:%d:%s%s", dbName[DB_API]._color,
+                    dbName[DB_API]._shortName, pid(), tid(), msgStr, KNRM);
+        }
+#endif
     };
 }
 
@@ -725,7 +734,6 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &archName);
 
     prop->gcnArch = atoi(archName + 3);
-
     DeviceErrorCheck(err);
 
     // Get agent node
@@ -903,6 +911,23 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     prop->hdpMemFlushCntl = hdpinfo.HDP_MEM_FLUSH_CNTL;
     prop->hdpRegFlushCntl = hdpinfo.HDP_REG_FLUSH_CNTL;
 
+    prop->memPitch = INT_MAX; //Maximum pitch in bytes allowed by memory copies (hardcoded 128 bytes in hipMallocPitch)
+    prop->textureAlignment = 0; //Alignment requirement for textures
+    prop->kernelExecTimeoutEnabled = 0; //no run time limit for running kernels on device
+
+    hsa_isa_t isa;
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AGENT_INFO_ISA, &isa);
+    DeviceErrorCheck(err);
+    std::size_t isa_sz = 0u;
+    hsa_isa_get_info_alt(isa, HSA_ISA_INFO_NAME_LENGTH, &isa_sz);
+    std::string isa_name(isa_sz, '\0');
+    hsa_isa_get_info_alt(isa, HSA_ISA_INFO_NAME, &isa_name.front());
+    if (isa_name.find("sram-ecc") != std::string::npos)
+        prop->ECCEnabled = 1; //Device has ECC support Enabled
+    else
+        prop->ECCEnabled = 0; //Device has ECC support disabled
+
+    prop->tccDriver = 0; // valid only for nvcc platform
     return e;
 }
 

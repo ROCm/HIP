@@ -57,12 +57,15 @@ const char *counterNames[NUM_CONV_TYPES] = {
   "complex", // CONV_COMPLEX
   "library", // CONV_LIB_FUNC
   "device_library", // CONV_LIB_DEVICE_FUNC
+  "device_function", // CONV_DEVICE_FUNC
   "include", // CONV_INCLUDE
   "include_cuda_main_header", // CONV_INCLUDE_CUDA_MAIN_H
   "type", // CONV_TYPE
   "literal", // CONV_LITERAL
   "numeric_literal", // CONV_NUMERIC_LITERAL
-  "define" // CONV_DEFINE
+  "define", // CONV_DEFINE
+  "extern_shared", // CONV_EXTERN_SHARED
+  "kernel_launch" // CONV_KERNEL_LAUNCH
 };
 
 const char *counterTypes[NUM_CONV_TYPES] = {
@@ -101,7 +104,9 @@ const char *counterTypes[NUM_CONV_TYPES] = {
   "CONV_TYPE",
   "CONV_LITERAL",
   "CONV_NUMERIC_LITERAL",
-  "CONV_DEFINE"
+  "CONV_DEFINE",
+  "CONV_EXTERN_SHARED",
+  "CONV_KERNEL_LAUNCH"
 };
 
 const char *apiNames[NUM_API_TYPES] = {

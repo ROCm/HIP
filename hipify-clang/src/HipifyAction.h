@@ -70,6 +70,8 @@ public:
   bool cudaBuiltin(const clang::ast_matchers::MatchFinder::MatchResult& Result);
   bool cudaLaunchKernel(const clang::ast_matchers::MatchFinder::MatchResult& Result);
   bool cudaSharedIncompleteArrayVar(const clang::ast_matchers::MatchFinder::MatchResult& Result);
+  bool cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result);
+  bool cudaHostFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result);
   // Called by the preprocessor for each include directive during the non-raw lexing pass.
   void InclusionDirective(clang::SourceLocation hash_loc,
                           const clang::Token &include_token,
@@ -99,4 +101,5 @@ protected:
   void run(const clang::ast_matchers::MatchFinder::MatchResult& Result) override;
   std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, llvm::StringRef InFile) override;
   bool Exclude(const hipCounter & hipToken);
+  void FindAndReplace(llvm::StringRef name, clang::SourceLocation sl, const std::map<llvm::StringRef, hipCounter>& repMap, bool bReplace = true);
 };

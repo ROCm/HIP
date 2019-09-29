@@ -842,6 +842,12 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->maxTexture3D[1] = cdprop.maxTexture3D[1];
     p_prop->maxTexture3D[2] = cdprop.maxTexture3D[2];
 
+    p_prop->memPitch                 = cdprop.memPitch;
+    p_prop->textureAlignment         = cdprop.textureAlignment;
+    p_prop->kernelExecTimeoutEnabled = cdprop.kernelExecTimeoutEnabled;
+    p_prop->ECCEnabled               = cdprop.ECCEnabled;
+    p_prop->tccDriver                = cdprop.tccDriver;
+
     return hipCUDAErrorTohipError(cerror);
 }
 
@@ -945,6 +951,21 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeMaxTexture3DDepth:
             cdattr = cudaDevAttrMaxTexture3DDepth;
+            break;
+        case hipDeviceAttributeMaxPitch:
+            cdattr = cudaDevAttrMaxPitch;
+            break;
+        case hipDeviceAttributeTextureAlignment:
+            cdattr = cudaDevAttrTextureAlignment;
+            break;
+        case hipDeviceAttributeKernelExecTimeout:
+            cdattr = cudaDevAttrKernelExecTimeout;
+            break;
+        case hipDeviceAttributeCanMapHostMemory:
+            cdattr = cudaDevAttrCanMapHostMemory;
+            break;
+        case hipDeviceAttributeEccEnabled:
+            cdattr = cudaDevAttrEccEnabled;
             break;
         default:
             cerror = cudaErrorInvalidValue;

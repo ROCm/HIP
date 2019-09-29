@@ -1160,11 +1160,16 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyHtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
+    hipError_t e = hipSuccess;
+    if (sizeBytes == 0) return ihipLogStatus(e);
+
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
+    }
+     
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
-
-    hipError_t e = hipSuccess;
 
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
@@ -1179,11 +1184,16 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyDtoH, (TRACE_MCMD), dst, src, sizeBytes);
 
+    hipError_t e = hipSuccess;
+    if (sizeBytes == 0) return ihipLogStatus(e);
+
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
+    }
+
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
-
-    hipError_t e = hipSuccess;
 
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
@@ -1198,11 +1208,16 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyDtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
+    hipError_t e = hipSuccess;
+    if (sizeBytes == 0) return ihipLogStatus(e);
+
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
+    }
+
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
-
-    hipError_t e = hipSuccess;
 
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
@@ -1216,11 +1231,16 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyHtoH, (TRACE_MCMD), dst, src, sizeBytes);
 
+    hipError_t e = hipSuccess;
+    if (sizeBytes == 0) return ihipLogStatus(e);
+    
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
+    }
+
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
-
-    hipError_t e = hipSuccess;
 
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
@@ -1557,13 +1577,6 @@ hipError_t ihipMemPtrGetInfo(void* ptr, size_t* size) {
 
 template <typename T>
 void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t count) {
-    // Just Use count, instead of dividing by 4, the calling API already does it
-    if (sizeof(T) == sizeof(uint32_t) && (count % sizeof(uint32_t) == 0) &&
-        !hsa_amd_memory_fill(ptr, reinterpret_cast<const std::uint32_t&>(val), count)) {
-        // Only return if the execution completes without error
-        // if error occured, try the normal version
-        return;
-    }
     static constexpr uint32_t block_dim = 256;
 
     const uint32_t grid_dim = clamp_integer<size_t>(count / block_dim, 1, UINT32_MAX);
@@ -1996,7 +2009,8 @@ hipError_t hipFree(void* ptr) {
 #endif
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
         if (status == AM_SUCCESS) {
-            if (amPointerInfo._hostPointer == NULL) {
+            /*if (amPointerInfo._hostPointer == NULL) */ //TODO: Fix it when there is proper managed memory support
+            {
                 if (HIP_SYNC_FREE) {
                     // Synchronize all devices, all streams
                     // to ensure all work has finished on all devices.

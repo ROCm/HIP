@@ -55,6 +55,14 @@ add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
 add_to_config(_versionInfo HIP_VERSION_PATCH)
 
+if(CMAKE_CXX_COMPILER MATCHES ".*hcc")
+    set(HIP_COMPILER "hcc" CACHE STRING "HIP Compiler")
+    set(HIP_PLATFORM "hcc" CACHE STRING "HIP Platform")
+    get_filename_component(CXX_PATH ${CMAKE_CXX_COMPILER} DIRECTORY)
+    get_filename_component(CXX_PATH ${CXX_PATH} DIRECTORY)
+    set(HCC_HOME "${CXX_PATH}" CACHE PATH "Path to which HCC has been installed")
+endif()
+
 # overwrite HIP_VERSION_PATCH for packaging
 if(DEFINED ENV{ROCM_BUILD_ID})
     set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-$ENV{ROCM_BUILD_ID}-${HIP_VERSION_GITHASH})
@@ -477,9 +485,12 @@ if(POLICY CMP0037)
     cmake_policy(PUSH)
     cmake_policy(SET CMP0037 OLD)
 endif()
+file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/fixnames
+        CONTENT "pwd; for i in *.deb; do mv \"\$i\" \"\${i/.deb/-amd64.deb}\" ; done
+for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
+")
 add_custom_target(package
-    COMMAND rename -v "'s/([a-z0-9_.\-]).deb/$1-amd64.deb/'" *.deb
-    COMMAND rename -v "'s/([a-z0-9_.\-]).rpm/$1.x86_64.rpm/'" *.rpm
+    COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
 if(POLICY CMP0037)
