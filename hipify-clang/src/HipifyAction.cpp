@@ -380,7 +380,7 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
   ct::Replacement Rep(*SM, launchStart, length, OS.str());
   clang::FullSourceLoc fullSL(launchStart, *SM);
   insertReplacement(Rep, fullSL);
-  hipCounter counter = {"hipLaunchKernelGGL", "", ConvTypes::CONV_EXECUTION, ApiTypes::API_RUNTIME};
+  hipCounter counter = {"hipLaunchKernelGGL", "", ConvTypes::CONV_KERNEL_LAUNCH, ApiTypes::API_RUNTIME};
   Statistics::current().incrementCounter(counter, refName.str());
   return true;
 }
@@ -423,7 +423,7 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const clang::ast_matchers::Match
     ct::Replacement Rep(*SM, slStart, repLength, repName);
     clang::FullSourceLoc fullSL(slStart, *SM);
     insertReplacement(Rep, fullSL);
-    hipCounter counter = {sHIP_DYNAMIC_SHARED, "", ConvTypes::CONV_MEMORY, ApiTypes::API_RUNTIME};
+    hipCounter counter = {sHIP_DYNAMIC_SHARED, "", ConvTypes::CONV_EXTERN_SHARED, ApiTypes::API_RUNTIME};
     Statistics::current().incrementCounter(counter, refName.str());
     return true;
   }
