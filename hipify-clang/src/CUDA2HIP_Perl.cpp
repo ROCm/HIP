@@ -124,8 +124,36 @@ namespace perl {
     *streamPtr.get() << "push(@whitelist, split(',', $whitelist));" << std::endl << std::endl;
   }
 
+  void generateStatFunctions(std::unique_ptr<std::ostream>& streamPtr) {
+    *streamPtr.get() << std::endl << sSub << " totalStats" << " {" << std::endl;
+    *streamPtr.get() << tab << "my %count = %{ shift() };" << std::endl;
+    *streamPtr.get() << tab << "my $total = 0;" << std::endl;
+    *streamPtr.get() << tab << "foreach $key (keys %count) {" << std::endl;
+    *streamPtr.get() << double_tab << "$total += $count{$key};" << std::endl << tab << "}" << std::endl;
+    *streamPtr.get() << tab << "return $total;" << std::endl << "};" << std::endl;
+    *streamPtr.get() << std::endl << sSub << " printStats" << " {" << std::endl;
+    *streamPtr.get() << tab << "my $label     = shift();" << std::endl;
+    *streamPtr.get() << tab << "my @statNames = @{ shift() };" << std::endl;
+    *streamPtr.get() << tab << "my %counts    = %{ shift() };" << std::endl;
+    *streamPtr.get() << tab << "my $warnings  = shift();" << std::endl;
+    *streamPtr.get() << tab << "my $loc       = shift();" << std::endl;
+    *streamPtr.get() << tab << "my $total     = totalStats(\\%counts);" << std::endl;
+    *streamPtr.get() << tab << "printf STDERR \"%s %d CUDA->HIP refs ( \", $label, $total;" << std::endl;
+    *streamPtr.get() << tab << "foreach $stat (@statNames) {" << std::endl;
+    *streamPtr.get() << double_tab << "printf STDERR \"%s:%d \", $stat, $counts{$stat};" << std::endl;
+    *streamPtr.get() << tab << "}" << std::endl;
+    *streamPtr.get() << tab << "printf STDERR \")\\n  warn:%d LOC:%d\", $warnings, $loc;" << std::endl << "};" << std::endl;
+    for (int i = 0; i < 2; ++i) {
+      *streamPtr.get() << std::endl << sSub << " " << (i ? "clearStats" : "addStats") << " {" << std::endl;
+      *streamPtr.get() << tab << "my $dest_ref  = shift();" << std::endl;
+      *streamPtr.get() << tab << (i ? "my @statNames = @{ shift() };" : "my %adder     = %{ shift() };") << std::endl;
+      *streamPtr.get() << tab << "foreach " << (i ? "$stat(@statNames)" : "$key (keys %adder)") << " {" << std::endl;
+      *streamPtr.get() << double_tab << "$dest_ref->" << (i ? "{$stat} = 0;" : "{$key} += $adder{$key};") << std::endl << tab << "}" << std::endl << "};" << std::endl;
+    }
+  }
+
   void generateHostFunctions(std::unique_ptr<std::ostream>& streamPtr) {
-    *streamPtr.get() << std::endl << sSub << " transformHostFunctions" << std::endl << "{" << std::endl << tab << sMy;
+    *streamPtr.get() << std::endl << sSub << " transformHostFunctions" << "{" << std::endl << tab << sMy;
     std::set<std::string> &funcSet = DeviceSymbolFunctions0;
     const std::string s0 = "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,/$func\\(";
     const std::string s1 = "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,\\s*([^,\\)]+)\\s*(,\\s*|\\))\\s*/$func\\($2, ";
@@ -177,8 +205,8 @@ namespace perl {
     std::stringstream subWarnUnsupported;
     std::stringstream subCommon;
     std::string sCommon = tab + sMy + tab + sForeach;
-    subCountSupported << std::endl << sSub << " countSupportedDeviceFunctions" << std::endl << "{" << std::endl << (countSupported ? sCommon : tab + sReturn_0);
-    subWarnUnsupported << std::endl << sSub << " warnUnsupportedDeviceFunctions" << std::endl << "{" << std::endl << (countUnsupported ? tab + "my $line_num = shift;\n" + sCommon : tab + sReturn_0);
+    subCountSupported << std::endl << sSub << " countSupportedDeviceFunctions" << " {" << std::endl << (countSupported ? sCommon : tab + sReturn_0);
+    subWarnUnsupported << std::endl << sSub << " warnUnsupportedDeviceFunctions" << " {" << std::endl << (countUnsupported ? tab + "my $line_num = shift;\n" + sCommon : tab + sReturn_0);
     if (countSupported) {
       subCountSupported << sSupported.str() << std::endl << tab << ")" << std::endl;
     }
@@ -237,8 +265,9 @@ namespace perl {
       *streamPtr.get() << "\"" << counterNames[i] << "\", ";
       sConv += "$ft{'" + std::string(counterNames[i]) + "'} + ";
     }
-    *streamPtr.get() << "\"" << counterNames[NUM_CONV_TYPES - 1] << "\");" << std::endl << std::endl;
-    *streamPtr.get() << sConv << "$ft{'" << counterNames[NUM_CONV_TYPES - 1] << "'};" << std::endl << std::endl;
+    *streamPtr.get() << "\"" << counterNames[NUM_CONV_TYPES - 1] << "\");" << std::endl;
+    generateStatFunctions(streamPtr);
+    *streamPtr.get() << std::endl << sConv << "$ft{'" << counterNames[NUM_CONV_TYPES - 1] << "'};" << std::endl << std::endl;
     for (int i = 0; i < NUM_CONV_TYPES; ++i) {
       if (i == CONV_INCLUDE_CUDA_MAIN_H || i == CONV_INCLUDE) {
         for (auto& ma : CUDA_INCLUDE_MAP) {
