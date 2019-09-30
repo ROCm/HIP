@@ -751,11 +751,11 @@ hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex) {
     HIP_INIT_API(hipTexRefGetArray, array, &tex);
 
     if (array == nullptr)
-        return ihipLogStatus(hipErrorInvalidImage);
+        return ihipLogStatus(hipErrorInvalidValue);
 
     hipTexture* pTexture = textureHash[tex.textureObject];
     if((pTexture == nullptr) || (hipResourceTypeArray != pTexture->resDesc.resType))
-        return ihipLogStatus(hipErrorInvalidValue);
+        return ihipLogStatus(hipErrorInvalidImage);
 
     if (pTexture->devPtr == nullptr)
         return ihipLogStatus(hipErrorUnknown);
@@ -777,6 +777,10 @@ hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDevicep
 
 hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
     HIP_INIT_API(hipTexRefGetAddress,dev_ptr, &tex);
+
+    if (dev_ptr == nullptr)
+        return ihipLogStatus(hipErrorInvalidValue);
+
     hipTexture* pTexture = textureHash[tex.textureObject];
     if (pTexture == nullptr)
         return ihipLogStatus(hipErrorInvalidImage);
