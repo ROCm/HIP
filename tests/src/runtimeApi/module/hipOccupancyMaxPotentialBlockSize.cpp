@@ -44,8 +44,8 @@ __global__ void f2(T *a) { *a = 1; }
 int main(int argc, char* argv[]) {
 
     // test case for using kernel function pointer 
-    uint32_t gridSize = 0;
-    uint32_t blockSize = 0;
+    int gridSize = 0;
+    int blockSize = 0;
     hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
     assert(gridSize != 0 && blockSize != 0);
 
