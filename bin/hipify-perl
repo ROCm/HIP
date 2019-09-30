@@ -91,7 +91,7 @@ sub printStats {
         printf STDERR "%s:%d ", $stat, $counts{$stat};
     }
     printf STDERR ")\n  warn:%d LOC:%d", $warnings, $loc;
-};
+}
 
 sub addStats {
     my $dest_ref  = shift();
@@ -99,7 +99,7 @@ sub addStats {
     foreach $key (keys %adder) {
         $dest_ref->{$key} += $adder{$key};
     }
-};
+}
 
 sub clearStats {
     my $dest_ref  = shift();
@@ -107,7 +107,7 @@ sub clearStats {
     foreach $stat(@statNames) {
         $dest_ref->{$stat} = 0;
     }
-};
+}
 
 sub simpleSubstitutions {
     $ft{'error'} += s/\bcudaGetErrorName\b/hipGetErrorName/g;
@@ -1594,6 +1594,14 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bcudaTextureTypeCubemapLayered\b/hipTextureTypeCubemapLayered/g;
 }
 
+# CUDA extern __shared__ syntax replace with HIP_DYNAMIC_SHARED() macro
+sub transformExternShared {
+    no warnings qw/uninitialized/;
+    my $k = 0;
+    $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
+    $ft{ 'extern_shared' } += $k;
+}
+
 # Count of transforms in all files
 my %tt;
 clearStats(\%tt, \@statNames);
@@ -1643,27 +1651,8 @@ while (@ARGV) {
         $countKeywords += m/__global__/;
         $countKeywords += m/__shared__/;
 
-        # CUDA extern __shared__ syntax
-        # Note these only work if declaration is on a single line.
-        {
-            # Match uses ? for <.*> which will be unitialized if this is not present in launch syntax
-            no warnings qw/uninitialized/;
-            my $k = 0;
-            # Replace as HIP_DYNAMIC_SHARED() macro
-            # Match patterns for the below regular expression:
-            #'extern __shared__ double foo[];'
-            #'extern __shared__ unsigned int foo[];'
-            #'extern volatile __shared__ double foo[];'
-            #'extern volatile __shared__ unsigned int sdata[];'
-            #'extern __shared__ volatile unsigned int sdata[];'
-            #'extern __shared__ T s[];'
-            #'extern __shared__ T::type s[];'
-            #'extern __shared__ blah<T>::type s[];'
-            #'extern __shared__ typename mapper<Float>::type s_data[];'
-            #'extern __attribute__((used)) __shared__ typename mapper<Float>::type s_data[];'
-            $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
-            $ft{'extern_shared'} += $k;
-        }
+        transformExternShared();
+
         # CUDA Launch Syntax. Note these only work if launch is on a single line.
         {
             # Match uses ? for <.*> which will be unitialized if this is not present in launch syntax

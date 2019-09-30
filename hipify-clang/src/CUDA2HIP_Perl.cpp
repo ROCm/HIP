@@ -143,13 +143,13 @@ namespace perl {
     *streamPtr.get() << tab << "foreach $stat (@statNames) {" << std::endl;
     *streamPtr.get() << double_tab << "printf STDERR \"%s:%d \", $stat, $counts{$stat};" << std::endl;
     *streamPtr.get() << tab << "}" << std::endl;
-    *streamPtr.get() << tab << "printf STDERR \")\\n  warn:%d LOC:%d\", $warnings, $loc;" << std::endl << "};" << std::endl;
+    *streamPtr.get() << tab << "printf STDERR \")\\n  warn:%d LOC:%d\", $warnings, $loc;" << std::endl << "}" << std::endl;
     for (int i = 0; i < 2; ++i) {
       *streamPtr.get() << std::endl << sSub << " " << (i ? "clearStats" : "addStats") << " {" << std::endl;
       *streamPtr.get() << tab << "my $dest_ref  = shift();" << std::endl;
       *streamPtr.get() << tab << (i ? "my @statNames = @{ shift() };" : "my %adder     = %{ shift() };") << std::endl;
       *streamPtr.get() << tab << "foreach " << (i ? "$stat(@statNames)" : "$key (keys %adder)") << " {" << std::endl;
-      *streamPtr.get() << double_tab << "$dest_ref->" << (i ? "{$stat} = 0;" : "{$key} += $adder{$key};") << std::endl << tab << "}" << std::endl << "};" << std::endl;
+      *streamPtr.get() << double_tab << "$dest_ref->" << (i ? "{$stat} = 0;" : "{$key} += $adder{$key};") << std::endl << tab << "}" << std::endl << "}" << std::endl;
     }
   }
 
@@ -177,6 +177,15 @@ namespace perl {
       }
     }
     *streamPtr.get() << "}" << std::endl;
+  }
+
+  void generateExternShared(std::unique_ptr<std::ostream>& streamPtr) {
+    *streamPtr.get() << std::endl << "# CUDA extern __shared__ syntax replace with HIP_DYNAMIC_SHARED() macro" << std::endl;
+    *streamPtr.get() << sSub << " transformExternShared" << " {" << std::endl;
+    *streamPtr.get() << tab << "no warnings qw/uninitialized/;" << std::endl;
+    *streamPtr.get() << tab << "my $k = 0;" << std::endl;
+    *streamPtr.get() << tab << "$k += s/extern\\s+([\\w\\(\\)]+)?\\s*__shared__\\s+([\\w:<>\\s]+)\\s+(\\w+)\\s*\\[\\s*\\]\\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;" << std::endl;
+    *streamPtr.get() << tab << "$ft{ 'extern_shared' } += $k;" << std::endl << "}" << std::endl;
   }
 
   void generateHostFunctions(std::unique_ptr<std::ostream>& streamPtr) {
@@ -295,6 +304,7 @@ namespace perl {
     *streamPtr.get() << "\"" << counterNames[NUM_CONV_TYPES - 1] << "\");" << std::endl;
     generateStatFunctions(streamPtr);
     generateSimpleSubstitutions(streamPtr);
+    generateExternShared(streamPtr);
     generateHostFunctions(streamPtr);
     generateDeviceFunctions(streamPtr);
     streamPtr.get()->flush();
