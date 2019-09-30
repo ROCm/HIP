@@ -223,6 +223,7 @@ THE SOFTWARE.
                     Enable_if_t<
                         std::is_floating_point<T>{} &&
                         !std::is_same<T, double>{}>* = nullptr>
+                __host__ __device__
                 operator T() const { return data; }
             #endif
             __host__ __device__
