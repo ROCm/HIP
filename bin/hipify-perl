@@ -1,4 +1,5 @@
-#!/usr/bin/perl  -w
+#!/usr/bin/perl -w
+
 ##
 # Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
 #
@@ -20,60 +21,55 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 ##
-#usage hipify-perl [OPTIONS] INPUT_FILE
-use Getopt::Long;
 
-my $warn_whitelist ="";
+#usage hipify-perl [OPTIONS] INPUT_FILE
+
+use Getopt::Long;
+my $whitelist = "";
+
 GetOptions(
-      "print-stats" => \$print_stats                     # print the command-line, like a header.
-    , "count-conversions" => \$count_conversions         # count conversions.
-    , "quiet-warnings" => \$quiet_warnings               # don't print warnings on unknown CUDA functions.
-    , "warn-whitelist=s"=> \$warn_whitelist
-    , "no-output" => \$no_output                         # don't write any translated output to stdout.
-    , "inplace" => \$inplace                             # modify input file inplace, replacing input with hipified output, save backup in ".prehip" file.
-                                                         # If .prehip file exists, use that as input to hip.
-    , "n" => \$n                                         # combination of print_stats + no-output.
+      "examine" => \$examine                  # Combines -no-output and -print-stats options.
+    , "inplace" => \$inplace                  # Modify input file inplace, replacing input with hipified output, save backup in .prehip file.
+    , "no-output" => \$no_output              # Don't write any translated output to stdout.
+    , "print-stats" => \$print_stats          # Print translation statistics.
+    , "quiet-warnings" => \$quiet_warnings    # Don't print warnings on unknown CUDA functions.
+    , "whitelist=s" => \$whitelist            # TODO: test it beforehand
 );
 
-$print_stats = 1 if $n;
-$no_output   = 1 if $n;
+$print_stats = 1 if $examine;
+$no_output = 1 if $examine;
 
-# These uses of cuda[A-Z] are commonly used in CUDA code but don't actually map to any CUDA API:
-# TODO - use a hash lookup for these.
-@warn_whitelist = (
-         "cudaDevice"
-        ,"cudaDevice_t"
-        ,"cudaIDs"
-        ,"cudaGridDim"
-        ,"cudaDimGrid"
-        ,"cudaDimBlock"
-        ,"cudaDeviceId"
-        ,"cudaDevices",
-        ,"cudaGradOutput",
-        ,"cudaInput",
-        ,"cudaOutput",
-        ,"cudaGradInput",
-        ,"cudaIndices",
-        ,"cudaGaugeField"
-        ,"cudaMom"
-        ,"cudaGauge"
-        ,"cudaInGauge"
-        ,"cudaColorSpinorField"
-        ,"cudaSiteLink"
-        ,"cudaFatLink"
-        ,"cudaStaple"
-        ,"cudaCloverField"
-        ,"cudaParam"
-    );
-#print "WW=@warn_whitelist\n";
+# Whitelist of cuda[A-Z] identifiers, which are commonly used in CUDA sources but don't map to any CUDA API:
+@whitelist = (
+      "cudaCloverField"
+    , "cudaColorSpinorField"
+    , "cudaDevice"
+    , "cudaDeviceId"
+    , "cudaDevice_t"
+    , "cudaDevices"
+    , "cudaDimBlock"
+    , "cudaDimGrid"
+    , "cudaFatLink"
+    , "cudaGauge"
+    , "cudaGaugeField"
+    , "cudaGradInput"
+    , "cudaGradOutput"
+    , "cudaGridDim"
+    , "cudaIDs"
+    , "cudaInGauge"
+    , "cudaIndices"
+    , "cudaInput"
+    , "cudaMom"
+    , "cudaOutput"
+    , "cudaParam"
+    , "cudaSiteLink"
+    , "cudaStaple"
+);
 
-# Allow users to add their own functions.
-push (@warn_whitelist, split(',',$warn_whitelist));
+push(@whitelist, split(',', $whitelist));
 
-#Stats tracking code:
-@statNames = ("error", "init", "version", "device", "context", "module", "memory", "addressing", "stream", "event", "external_resource_interop", "stream_memory", "execution", "graph", "occupancy", "texture", "surface", "peer", "graphics", "profiler", "openGL", "D3D9", "D3D10", "D3D11", "VDPAU", "EGL", "thread", "complex", "library", "device_library", "include", "include_cuda_main_header", "type", "literal", "numeric_literal", "define", "kernel_func", "extern_shared", "kern_launch");
+@statNames = ("error", "init", "version", "device", "context", "module", "memory", "addressing", "stream", "event", "external_resource_interop", "stream_memory", "execution", "graph", "occupancy", "texture", "surface", "peer", "graphics", "profiler", "openGL", "D3D9", "D3D10", "D3D11", "VDPAU", "EGL", "thread", "complex", "library", "device_library", "device_function", "include", "include_cuda_main_header", "type", "literal", "numeric_literal", "define", "extern_shared", "kernel_launch");
 
-#Compute total of all individual counts:
 sub totalStats {
     my %count = %{ shift() };
     my $total = 0;
@@ -90,32 +86,30 @@ sub printStats {
     my $warnings  = shift();
     my $loc       = shift();
     my $total     = totalStats(\%counts);
-    printf STDERR "%s %d CUDA->HIP refs( ", $label, $total;
+    printf STDERR "%s %d CUDA->HIP refs ( ", $label, $total;
     foreach $stat (@statNames) {
         printf STDERR "%s:%d ", $stat, $counts{$stat};
     }
-    printf STDERR ") warn:%d LOC:%d", $warnings, $loc;
-}
+    printf STDERR ")\n  warn:%d LOC:%d", $warnings, $loc;
+};
 
-# Add adder stats to dest. Used to add stats for current file to a running total for all files:
 sub addStats {
-    my $dest_ref  =  shift();
-    my %adder = %{ shift() };
+    my $dest_ref  = shift();
+    my %adder     = %{ shift() };
     foreach $key (keys %adder) {
         $dest_ref->{$key} += $adder{$key};
-        #printf ("D{$key} += %d => %d\n", $adder{$key}, $dest{$key});
     }
-}
+};
 
 sub clearStats {
-    my $dest_ref  =  shift() ;
+    my $dest_ref  = shift();
     my @statNames = @{ shift() };
-    foreach $stat (@statNames) {
-        $dest_ref->{$stat}  = 0;
+    foreach $stat(@statNames) {
+        $dest_ref->{$stat} = 0;
     }
-}
+};
 
-# count of transforms in all files:
+# Count of transforms in all files
 my %tt;
 clearStats(\%tt, \@statNames);
 $Twarnings = 0;
@@ -146,22 +140,19 @@ while (@ARGV) {
         open(INFILE,"<", $fileName) or die "error: could not open $fileName";
         $OUTFILE = STDOUT;
     }
-    # Note : \b is used in perl to indicate the start of a word - typically that is what we want in this case:
-    # count of transforms in this file, init to 0 here:
+    # Note : \b is used in perl to indicate the start of a word
+    # Count of transforms in this file
     my %ft;
     clearStats(\%ft, \@statNames);
     my $countIncludes = 0;
-    my $countKeywords = 0; # keywords like __global__, __shared__ - not converted by hipify-perl, but counted here.
-    my $warnings = 0;
-    my $warningsCublas = 0;
-    my $warningsCurand = 0;
-    my %warningTags;  # hash with counts of particular unknown keywords.
+    my $countKeywords = 0;
+    my $warnings = 0; 
+    my %warningTags;
     my $lineCount = 0;
-    undef $/; # Read whole file at once, so we can match newlines.
+    undef $/;
+    # Read whole file at once, so we can match newlines
     while (<INFILE>)
     {
-        # chomp;
-        # next if /^(\s*(#.*)?)?$/;
         $ft{'error'} += s/\bcudaGetErrorName\b/hipGetErrorName/g;
         $ft{'error'} += s/\bcudaGetErrorString\b/hipGetErrorString/g;
         $ft{'error'} += s/\bcudaGetLastError\b/hipGetLastError/g;
@@ -1651,13 +1642,11 @@ while (@ARGV) {
         # CUDA extern __shared__ syntax
         # Note these only work if declaration is on a single line.
         {
-            # match uses ? for <.*> which will be unitialized if this is not present in launch syntax.
+            # Match uses ? for <.*> which will be unitialized if this is not present in launch syntax
             no warnings qw/uninitialized/;
             my $k = 0;
-            # Match extern __shared__ type foo[]; syntax
             # Replace as HIP_DYNAMIC_SHARED() macro
-            $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
-            # test patterns for the regular expression above:
+            # Match patterns for the below regular expression:
             #'extern __shared__ double foo[];'
             #'extern __shared__ unsigned int foo[];'
             #'extern volatile __shared__ double foo[];'
@@ -1668,12 +1657,12 @@ while (@ARGV) {
             #'extern __shared__ blah<T>::type s[];'
             #'extern __shared__ typename mapper<Float>::type s_data[];'
             #'extern __attribute__((used)) __shared__ typename mapper<Float>::type s_data[];'
+            $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
             $ft{'extern_shared'} += $k;
         }
-
         # CUDA Launch Syntax. Note these only work if launch is on a single line.
         {
-            # match uses ? for <.*> which will be unitialized if this is not present in launch syntax.
+            # Match uses ? for <.*> which will be unitialized if this is not present in launch syntax
             no warnings qw/uninitialized/;
             my $k = 0;
 
@@ -1708,35 +1697,32 @@ while (@ARGV) {
             $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0, /g;
 
             if ($k) {
-                $ft{'kern_launch'} += $k;
+                $ft{'kernel_launch'} += $k;
                 $Tkernels{$1} ++;
             }
         }
-        if ($count_conversions) {
+        if ($print_stats) {
             while (/(\bhip[A-Z]\w+\b)/g) {
                 $convertedTags{$1}++;
-                #print STDERR "HIP: $1 : ", $translateTags{$1}, "\n";
             }
         }
-        # guess that we are in device code , or at least in a file that calls device code.
-        # will almost certainly call one of the coordiante functions - could be fooled by clever macros but usually works:
-        my $hasDeviceCode = $countKeywords + $ft{'kernel_func'};
+        my $hasDeviceCode = $countKeywords + $ft{'device_function'};
         unless ($quiet_warnings) {
-            #print STDERR "Check WARNINGs\n";
-            # copy into array of lines, process line-by-line to show warnings:
-            if ($hasDeviceCode or (/\bcuda/) or (/<<<.*>>>/) or (/(\bcublas[A-Z]\w+)/) or (/(\bcurand[A-Z]\w+)/) ) {
+            # Copy into array of lines, process line-by-line to show warnings
+            if ($hasDeviceCode or (/\bcu/) or (/\bCU_/) or (/\bCUDA_/) or (/<<<.*>>>/)) {
                 my @lines = split /\n/, $_;
-                my $tmp = $_;  # copies the whole file, could be a little smarter here...
+                # Copy the whole file
+                my $tmp = $_;
                 my $line_num = 0;
                 foreach (@lines) {
                     $line_num ++;
-                    # remove any whitelisted words:
-                    foreach $w (@warn_whitelist) {
+                    # Remove any whitelisted words
+                    foreach $w (@whitelist) {
                         s/\b$w\b/ZAP/
                     }
                     my $tag;
                     if ((/(\bcuda[A-Z]\w+)/) or (/<<<.*>>>/)) {
-                        # flag any remaining code that look like cuda API calls, may want to add these to hipify
+                        # Flag any remaining code that look like cuda API calls: may want to add these to hipify
                         $tag = (defined $1) ? $1 : "Launch";
                     }
                     if (defined $tag) {
@@ -1751,26 +1737,18 @@ while (@ARGV) {
                 $_ = $tmp;
             }
         }
-
-        # To limit bogus translations, try to make sure we are in a kernel:
         if ($hasDeviceCode > 0) {
-            $ft{'kernel_func'} += countSupportedDeviceFunctions();
+            $ft{'device_function'} += countSupportedDeviceFunctions();
         }
-
         transformHostFunctions();
-
-        # Print it!
-        # TODO - would like to move this code outside loop but it uses $_ which contains the whole file.
+        # TODO: would like to move this code outside loop but it uses $_ which contains the whole file
         unless ($no_output) {
             my $apiCalls   = $ft{'error'} + $ft{'init'} + $ft{'version'} + $ft{'device'} + $ft{'context'} + $ft{'module'} + $ft{'memory'} + $ft{'addressing'} + $ft{'stream'} + $ft{'event'} + $ft{'external_resource_interop'} + $ft{'stream_memory'} + $ft{'execution'} + $ft{'graph'} + $ft{'occupancy'} + $ft{'texture'} + $ft{'surface'} + $ft{'peer'} + $ft{'graphics'} + $ft{'profiler'} + $ft{'openGL'} + $ft{'D3D9'} + $ft{'D3D10'} + $ft{'D3D11'} + $ft{'VDPAU'} + $ft{'EGL'} + $ft{'thread'} + $ft{'complex'} + $ft{'library'} + $ft{'device_library'} + $ft{'include'} + $ft{'include_cuda_main_header'} + $ft{'type'} + $ft{'literal'} + $ft{'numeric_literal'} + $ft{'define'};
-            my $kernStuff  = $hasDeviceCode + $ft{'kern_launch'} + $ft{'kernel_func'};
+            my $kernStuff  = $hasDeviceCode + $ft{'kernel_launch'} + $ft{'device_function'};
             my $totalCalls = $apiCalls + $kernStuff;
             $is_dos = m/\r\n$/;
             if ($totalCalls and ($countIncludes == 0) and ($kernStuff != 0)) {
                 # TODO: implement hipify-clang's logic with header files AMAP
-                # If this file makes kernel builtin calls, and does not include the cuda_runtime.h,
-                # then add an #include to match "magic" includes provided by NVCC.
-                # This logic can miss cases where cuda_runtime.h is included by another include file.
                 print $OUTFILE '#include "hip/hip_runtime.h"' . ($is_dos ? "\r\n" : "\n");
             }
             print $OUTFILE  "$_";
@@ -1778,12 +1756,11 @@ while (@ARGV) {
         $lineCount = $_ =~ tr/\n//;
     }
     my $totalConverted = totalStats(\%ft);
-    #printf "TOTAL-CONV=%d\n", $totalConverted;
     if (($totalConverted+$warnings) and $print_stats) {
-        printStats("info: converted", \@statNames, \%ft, $warnings, $lineCount);
+        printStats("  info: converted", \@statNames, \%ft, $warnings, $lineCount);
         print STDERR " in '$fileName'\n";
     }
-    # Update totals for all files:
+    # Update totals for all files
     addStats(\%tt, \%ft);
     $Twarnings += $warnings;
     $TlineCount += $lineCount;
@@ -1791,10 +1768,10 @@ while (@ARGV) {
         $TwarningTags{$key} += $warningTags{$key};
     }
 }
-#-- Print total stats for all files processed:
+# Print total stats for all files processed:
 if ($print_stats and ($fileCount > 1)) {
     print STDERR "\n";
-    printStats("info: TOTAL-converted", \@statNames, \%tt, $Twarnings, $TlineCount);
+    printStats("  info: TOTAL-converted", \@statNames, \%tt, $Twarnings, $TlineCount);
     print STDERR "\n";
     foreach my $key (sort { $TwarningTags{$b} <=> $TwarningTags{$a} } keys %TwarningTags) {
         printf STDERR "  warning: unconverted %s : %d\n", $key, $TwarningTags{$key};
@@ -1807,7 +1784,7 @@ if ($print_stats and ($fileCount > 1)) {
     print STDERR "\n";
     print STDERR "\n";
 }
-if ($count_conversions) {
+if ($print_stats) {
     foreach my $key (sort { $convertedTags{$b} <=> $convertedTags{$a} } keys %convertedTags) {
         printf STDERR "  %s %d\n", $key, $convertedTags{$key};
     }

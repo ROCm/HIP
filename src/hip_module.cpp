@@ -132,20 +132,6 @@ extern hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device);
         return ihipLogStatus(hipStatus);                                                           \
     }
 
-hipError_t hipModuleUnload(hipModule_t hmod) {
-    HIP_INIT_API(hipModuleUnload, hmod);
-
-    // TODO - improve this synchronization so it is thread-safe.
-    // Currently we want for all inflight activity to complete, but don't prevent another
-    // thread from launching new kernels before we finish this operation.
-    ihipSynchronize(tls);
-
-    delete hmod;  // The ihipModule_t dtor will clean everything up.
-    hmod = nullptr;
-
-    return ihipLogStatus(hipSuccess);
-}
-
 hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t globalWorkSizeX,
                                   uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY,
@@ -821,6 +807,18 @@ inline hsa_status_t copy_agent_global_variables(hsa_executable_t, hsa_agent_t ag
     return HSA_STATUS_SUCCESS;
 }
 
+inline hsa_status_t remove_agent_global_variables(hsa_executable_t, hsa_agent_t agent,
+                                                  hsa_executable_symbol_t x, void* unused) {
+    hsa_symbol_kind_t t = {};
+    hsa_executable_symbol_get_info(x, HSA_EXECUTABLE_SYMBOL_INFO_TYPE, &t);
+
+    if (t == HSA_SYMBOL_KIND_VARIABLE) {
+        hc::am_memtracker_remove(hip_impl::address(x));
+    }
+
+    return HSA_STATUS_SUCCESS;
+}
+
 hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname,
                                             hsa_agent_t* agent = nullptr) {
     using namespace hip_impl;
@@ -898,7 +896,27 @@ namespace hip_impl {
 
         return r;
     }
+    void remove_agent_globals_from_tracker(hsa_agent_t agent, hsa_executable_t executable) {
+        hsa_executable_iterate_agent_symbols(executable, agent, remove_agent_global_variables, NULL);
+    }
 } // Namespace hip_impl.
+
+hipError_t hipModuleUnload(hipModule_t hmod) {
+    HIP_INIT_API(hipModuleUnload, hmod);
+
+    // TODO - improve this synchronization so it is thread-safe.
+    // Currently we want for all inflight activity to complete, but don't prevent another
+    // thread from launching new kernels before we finish this operation.
+    ihipSynchronize(tls);
+
+    // deleting ihipModule_t does not remove agent globals from hc_am memtracker
+    hip_impl::remove_agent_globals_from_tracker(hip_impl::this_agent(), hip_impl::executable_for(hmod));
+
+    delete hmod;  // The ihipModule_t dtor will clean everything up.
+    hmod = nullptr;
+
+    return ihipLogStatus(hipSuccess);
+}
 
 hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t hmod, const char* name,
                                  hsa_agent_t *agent = nullptr) {
