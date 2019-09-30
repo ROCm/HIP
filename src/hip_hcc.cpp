@@ -512,9 +512,9 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
             _computeUnits = 1;
         }
         err = hsa_agent_get_info(
-	    *agent, (hsa_agent_info_t) HSA_AMD_AGENT_INFO_DRIVER_NODE_ID, &internal_node_id);
+	    *agent, (hsa_agent_info_t) HSA_AMD_AGENT_INFO_DRIVER_NODE_ID, &_driver_node_id);
 	if (err != HSA_STATUS_SUCCESS){
-	   internal_node_id = 0;
+	   _driver_node_id = 0;
 	}
         
 	_hsaAgent = *agent;

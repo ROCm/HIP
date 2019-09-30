@@ -804,7 +804,7 @@ class ihipDevice_t {
     int _isLargeBar;
    
     // Node id reported by kfd for this device
-    uint32_t internal_node_id;
+    uint32_t _driver_node_id;
 
     ihipCtx_t* _primaryCtx;
 

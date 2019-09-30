@@ -1970,9 +1970,9 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
         }
 	
         if (free) {
-		if (!device->internal_node_id) return ihipLogStatus(hipErrorInvalidDevice);
+		if (!device->_driver_node_id) return ihipLogStatus(hipErrorInvalidDevice);
 			
-		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->internal_node_id) + std::string("/mem_banks/0/used_memory");  
+		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");  
 		std::ifstream file;
 		file.open(fileName);
 		if (!file) return ihipLogStatus(hipErrorFileNotFound);
