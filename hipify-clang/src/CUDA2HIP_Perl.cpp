@@ -67,6 +67,7 @@ namespace perl {
   const std::string sReturn_m = "return $m;\n";
   const std::string sForeach = "foreach $func (\n";
   const std::string sMy = "my $m = 0;\n";
+  
   const std::string sCudaDevice = "cudaDevice";
   const std::string sCudaDeviceId = "cudaDeviceId";
   const std::string sCudaDevices = "cudaDevices";
@@ -152,8 +153,34 @@ namespace perl {
     }
   }
 
+  void generateSimpleSubstitutions(std::unique_ptr<std::ostream>& streamPtr) {
+    *streamPtr.get() << std::endl << sSub << " simpleSubstitutions" << " {" << std::endl;
+    for (int i = 0; i < NUM_CONV_TYPES; ++i) {
+      if (i == CONV_INCLUDE_CUDA_MAIN_H || i == CONV_INCLUDE) {
+        for (auto& ma : CUDA_INCLUDE_MAP) {
+          if (Statistics::isUnsupported(ma.second)) continue;
+          if (i == ma.second.type) {
+            std::string sCUDA = ma.first.str();
+            std::string sHIP = ma.second.hipName.str();
+            sCUDA = std::regex_replace(sCUDA, std::regex("/"), "\\/");
+            sHIP = std::regex_replace(sHIP, std::regex("/"), "\\/");
+            *streamPtr.get() << tab << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << sCUDA << "\\b/" << sHIP << "/g;" << std::endl;
+          }
+        }
+      } else {
+        for (auto& ma : CUDA_RENAMES_MAP()) {
+          if (Statistics::isUnsupported(ma.second)) continue;
+          if (i == ma.second.type) {
+            *streamPtr.get() << tab << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << ma.first.str() << "\\b/" << ma.second.hipName.str() << "/g;" << std::endl;
+          }
+        }
+      }
+    }
+    *streamPtr.get() << "}" << std::endl;
+  }
+
   void generateHostFunctions(std::unique_ptr<std::ostream>& streamPtr) {
-    *streamPtr.get() << std::endl << sSub << " transformHostFunctions" << "{" << std::endl << tab << sMy;
+    *streamPtr.get() << std::endl << sSub << " transformHostFunctions" << " {" << std::endl << tab << sMy;
     std::set<std::string> &funcSet = DeviceSymbolFunctions0;
     const std::string s0 = "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,/$func\\(";
     const std::string s1 = "$m += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,\\s*([^,\\)]+)\\s*(,\\s*|\\))\\s*/$func\\($2, ";
@@ -267,29 +294,7 @@ namespace perl {
     }
     *streamPtr.get() << "\"" << counterNames[NUM_CONV_TYPES - 1] << "\");" << std::endl;
     generateStatFunctions(streamPtr);
-    *streamPtr.get() << std::endl << sConv << "$ft{'" << counterNames[NUM_CONV_TYPES - 1] << "'};" << std::endl << std::endl;
-    for (int i = 0; i < NUM_CONV_TYPES; ++i) {
-      if (i == CONV_INCLUDE_CUDA_MAIN_H || i == CONV_INCLUDE) {
-        for (auto& ma : CUDA_INCLUDE_MAP) {
-          if (Statistics::isUnsupported(ma.second)) continue;
-          if (i == ma.second.type) {
-            std::string sCUDA = ma.first.str();
-            std::string sHIP = ma.second.hipName.str();
-            sCUDA = std::regex_replace(sCUDA, std::regex("/"), "\\/");
-            sHIP = std::regex_replace(sHIP, std::regex("/"), "\\/");
-            *streamPtr.get() << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << sCUDA << "\\b/" << sHIP << "/g;" << std::endl;
-          }
-        }
-      }
-      else {
-        for (auto& ma : CUDA_RENAMES_MAP()) {
-          if (Statistics::isUnsupported(ma.second)) continue;
-          if (i == ma.second.type) {
-            *streamPtr.get() << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << ma.first.str() << "\\b/" << ma.second.hipName.str() << "/g;" << std::endl;
-          }
-        }
-      }
-    }
+    generateSimpleSubstitutions(streamPtr);
     generateHostFunctions(streamPtr);
     generateDeviceFunctions(streamPtr);
     streamPtr.get()->flush();
