@@ -1646,13 +1646,13 @@ sub transformKernelLaunch {
 }
 
 sub transformHostFunctions {
-    my $m = 0;
+    my $k = 0;
     foreach $func (
         "hipMemcpyToSymbol",
         "hipMemcpyToSymbolAsync"
     )
     {
-        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,/$func\(HIP_SYMBOL\($2\),/g
+        $k += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,/$func\(HIP_SYMBOL\($2\),/g
     }
     foreach $func (
         "hipGetSymbolAddress",
@@ -1661,25 +1661,25 @@ sub transformHostFunctions {
         "hipMemcpyFromSymbolAsync"
     )
     {
-        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, HIP_SYMBOL\($3\)$4/g;
+        $k += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, HIP_SYMBOL\($3\)$4/g;
     }
     foreach $func (
         "hipFuncSetCacheConfig"
     )
     {
-        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,/$func\(reinterpret_cast<const void*>\($2\),/g
+        $k += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,/$func\(reinterpret_cast<const void*>\($2\),/g
     }
     foreach $func (
         "hipFuncGetAttributes"
     )
     {
-        $m += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, reinterpret_cast<const void*>\($3\)$4/g;
+        $k += s/(?<!\/\/ CHECK: )($func)\s*\(\s*([^,]+)\s*,\s*([^,\)]+)\s*(,\s*|\))\s*/$func\($2, reinterpret_cast<const void*>\($3\)$4/g;
     }
-    return $m;
+    return $k;
 }
 
 sub countSupportedDeviceFunctions {
-    my $m = 0;
+    my $k = 0;
     foreach $func (
         "__brev",
         "__brevll",
@@ -1935,6 +1935,17 @@ sub countSupportedDeviceFunctions {
         "atanf",
         "atanh",
         "atanhf",
+        "atomicAdd",
+        "atomicAnd",
+        "atomicCAS",
+        "atomicDec",
+        "atomicExch",
+        "atomicInc",
+        "atomicMax",
+        "atomicMin",
+        "atomicOr",
+        "atomicSub",
+        "atomicXor",
         "cbrt",
         "cbrtf",
         "ceil",
@@ -2134,15 +2145,15 @@ sub countSupportedDeviceFunctions {
         my $mt_namespace = m/(\w+)::($func)\s*\(\s*.*\s*\)/g;
         my $mt = m/($func)\s*\(\s*.*\s*\)/g;
         if ($mt && !$mt_namespace) {
-            $m += $mt;
+            $k += $mt;
         }
     }
-    return $m;
+    return $k;
 }
 
 sub warnUnsupportedDeviceFunctions {
     my $line_num = shift;
-    my $m = 0;
+    my $k = 0;
     foreach $func (
         "_Pow_int",
         "__brkpt",
@@ -2250,7 +2261,6 @@ sub warnUnsupportedDeviceFunctions {
         "__vsubus4",
         "_fdsign",
         "_ldsign",
-        "atomicAdd",
         "float2int",
         "float_as_int",
         "float_as_uint",
@@ -2276,11 +2286,11 @@ sub warnUnsupportedDeviceFunctions {
         my $mt_namespace = m/(\w+)::($func)\s*\(\s*.*\s*\)/g;
         my $mt = m/($func)\s*\(\s*.*\s*\)/g;
         if ($mt && !$mt_namespace) {
-            $m += $mt;
+            $k += $mt;
             print STDERR "  warning: $fileName:$line_num: unsupported device function \"$func\": $_\n";
         }
     }
-    return $m;
+    return $k;
 }
 
 # Count of transforms in all files
