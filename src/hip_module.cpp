@@ -932,10 +932,10 @@ hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t 
 
     if (!*func) return hipErrorInvalidValue;
 
-    auto kernel = find_kernel_by_name(hmod->executable, name, agent);
+    std::string name_str(name);
+    auto kernel = find_kernel_by_name(hmod->executable, name_str.c_str(), agent);
 
     if (kernel.handle == 0u) {
-        std::string name_str(name);
         name_str.append(".kd");
         kernel = find_kernel_by_name(hmod->executable, name_str.c_str(), agent);
     }
@@ -945,7 +945,7 @@ hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t 
     // TODO: refactor the whole ihipThisThat, which is a mess and yields the
     //       below, due to hipFunction_t being a pointer to ihipModuleSymbol_t.
     func[0][0] = *static_cast<hipFunction_t>(
-        Kernel_descriptor{kernel_object(kernel), name, hmod->kernargs[name]});
+        Kernel_descriptor{kernel_object(kernel), name_str, hmod->kernargs[name_str]});
 
     return hipSuccess;
 }
