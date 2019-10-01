@@ -521,6 +521,9 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
                             size_t pitch) {
     HIP_INIT_API(hipBindTexture2D, offset, tex, devPtr, desc, width, height, pitch);
     hipError_t hip_status = hipSuccess;
+    //memory pitch is hardcoded to 128.
+    //TODO: Fix when HSA accepts user defined pitch
+    if(pitch %128) pitch =0;
     hip_status = ihipBindTexture2DImpl(tls, hipTextureType2D, hipReadModeElementType, offset, devPtr,
                                        desc, width, height, tex, pitch);
     return ihipLogStatus(hip_status);
@@ -751,6 +754,10 @@ hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPT
     size_t offset;
     hipError_t hip_status = hipSuccess;
     // TODO: hipReadModeElementType is default.
+    //memory pitch is hardcoded to 128.
+    //TODO: Fix when HSA accepts user defined pitch
+    if(pitch %128) pitch =0;
+
     hip_status = ihipBindTexture2DImpl(tls, hipTextureType2D, hipReadModeElementType, &offset, devPtr,
                                        NULL, desc->Width, desc->Height, tex, pitch);
     return ihipLogStatus(hip_status);

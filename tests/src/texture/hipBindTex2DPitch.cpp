@@ -1,16 +1,13 @@
 /*
 Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -26,22 +23,6 @@ THE SOFTWARE.
  * HIT_END
  */
 #include "test_common.h"
-#include<hip/hip_runtime.h>
-#include<hip/hip_runtime_api.h>
-#include<iostream>
-
-template<typename T> // pointer type
-void check(T input, T output, size_t height, size_t width)
-{
-    for(size_t i=0; i<height; i++ ){
-        for(size_t j=0; j<width; j++ ){
-            if( input[i*width + j] !=  output[ i*width + j ] ){
-                std::cout<<"input:"<<input[i*width + j]<<" output:"<<output[ i*width + j ];
-                failed("mistmatch at:%zu %zu",i,j);
-           }
-        }
-    }
-}
 
 #define SIZE_H 8
 #define SIZE_W 12
@@ -92,7 +73,7 @@ int main (void)
     HIPCHECK(hipMemcpy2D(B, SIZE_W*sizeof(TYPE_t), devPtrB, SIZE_W*sizeof(TYPE_t),
             SIZE_W*sizeof(TYPE_t), SIZE_H, hipMemcpyDeviceToHost));
 
-    check(A, B, SIZE_H, SIZE_W);
+    HipTest::checkArray(A, B, SIZE_H, SIZE_W);
     delete []A;
     delete []B;
     hipFree(devPtrA);
