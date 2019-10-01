@@ -60,8 +60,8 @@ int main (void)
     tex.normalized = false;
     #if defined(__HIP_PLATFORM_NVCC__)
 
-    cudaBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
-                                       SIZE_W, SIZE_H, devPitchA);
+    HIPCHECK(cudaBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
+                                       SIZE_W, SIZE_H, devPitchA));
     #else
     HIPCHECK(hipBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
                                        SIZE_W, SIZE_H, devPitchA));
