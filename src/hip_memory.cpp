@@ -19,7 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
 #include <hc_am.hpp>
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_amd.h"
@@ -27,6 +26,8 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
+
+#include <fstream>
 
 __device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
 __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
@@ -1171,11 +1172,16 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyHtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
+    hipError_t e = hipSuccess;
+    if (sizeBytes == 0) return ihipLogStatus(e);
+
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
+    }
+     
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
-
-    hipError_t e = hipSuccess;
 
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
@@ -1190,11 +1196,16 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyDtoH, (TRACE_MCMD), dst, src, sizeBytes);
 
+    hipError_t e = hipSuccess;
+    if (sizeBytes == 0) return ihipLogStatus(e);
+
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
+    }
+
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
-
-    hipError_t e = hipSuccess;
 
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
@@ -1209,11 +1220,16 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyDtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
+    hipError_t e = hipSuccess;
+    if (sizeBytes == 0) return ihipLogStatus(e);
+
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
+    }
+
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
-
-    hipError_t e = hipSuccess;
 
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
@@ -1227,11 +1243,16 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeByte
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyHtoH, (TRACE_MCMD), dst, src, sizeBytes);
 
+    hipError_t e = hipSuccess;
+    if (sizeBytes == 0) return ihipLogStatus(e);
+    
+    if(dst==NULL || src==NULL){
+	return ihipLogStatus(hipErrorInvalidValue);
+    }
+
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
-
-    hipError_t e = hipSuccess;
 
     try {
         stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
@@ -2031,16 +2052,27 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
         } else {
             e = hipErrorInvalidValue;
         }
-
+	
         if (free) {
-            // TODO - replace with kernel-level for reporting free memory:
-            size_t deviceMemSize, hostMemSize, userMemSize;
-            hc::am_memtracker_sizeinfo(device->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
-
-            *free = device->_props.totalGlobalMem - deviceMemSize;
-
-            // Deduct the amount of memory from the free memory reported from the system
-            if (HIP_HIDDEN_FREE_MEM) *free -= (size_t)HIP_HIDDEN_FREE_MEM * 1024 * 1024;
+		if (!device->_driver_node_id) return ihipLogStatus(hipErrorInvalidDevice);
+			
+		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");  
+		std::ifstream file;
+		file.open(fileName);
+		if (!file) return ihipLogStatus(hipErrorFileNotFound);
+		
+                std::string deviceSize;	
+		size_t deviceMemSize;
+		
+		file >> deviceSize;
+		file.close();                 
+                if ((deviceMemSize=strtol(deviceSize.c_str(),NULL,10))){
+		    *free = device->_props.totalGlobalMem - deviceMemSize;
+		    // Deduct the amount of memory from the free memory reported from the system
+		    if (HIP_HIDDEN_FREE_MEM) *free -= (size_t)HIP_HIDDEN_FREE_MEM * 1024 * 1024;
+		} else {
+ 		    return ihipLogStatus(hipErrorInvalidValue);
+		}
         } else {
             e = hipErrorInvalidValue;
         }
@@ -2073,7 +2105,8 @@ hipError_t hipFree(void* ptr) {
 #endif
         am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
         if (status == AM_SUCCESS) {
-            if (amPointerInfo._hostPointer == NULL) {
+            /*if (amPointerInfo._hostPointer == NULL) */ //TODO: Fix it when there is proper managed memory support
+            {
                 if (HIP_SYNC_FREE) {
                     // Synchronize all devices, all streams
                     // to ensure all work has finished on all devices.

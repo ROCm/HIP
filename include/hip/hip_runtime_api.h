@@ -122,6 +122,12 @@ typedef struct hipDeviceProp_t {
     int maxTexture3D[3];       ///< Maximum dimensions (width, height, depth) of 3D images, in image elements
     unsigned int* hdpMemFlushCntl;      ///< Addres of HDP_MEM_COHERENCY_FLUSH_CNTL register
     unsigned int* hdpRegFlushCntl;      ///< Addres of HDP_REG_COHERENCY_FLUSH_CNTL register
+    size_t memPitch;                 ///<Maximum pitch in bytes allowed by memory copies
+    size_t textureAlignment;         ///<Alignment requirement for textures
+    int kernelExecTimeoutEnabled;    ///<Run time limit for kernels executed on the device
+    int ECCEnabled;                  ///<Device has ECC support enabled
+    int tccDriver;                   ///< 1:If device is Tesla device using TCC driver, else 0
+
 } hipDeviceProp_t;
 
 
@@ -311,7 +317,14 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeMaxTexture3DDepth,    ///< Maximum dimensions depth of 3D images in image elements
 
     hipDeviceAttributeHdpMemFlushCntl,      ///< Address of the HDP_MEM_COHERENCY_FLUSH_CNTL register
-    hipDeviceAttributeHdpRegFlushCntl       ///< Address of the HDP_REG_COHERENCY_FLUSH_CNTL register
+    hipDeviceAttributeHdpRegFlushCntl,      ///< Address of the HDP_REG_COHERENCY_FLUSH_CNTL register
+
+    hipDeviceAttributeMaxPitch,             ///< Maximum pitch in bytes allowed by memory copies
+    hipDeviceAttributeTextureAlignment,     ///<Alignment requirement for textures
+    hipDeviceAttributeKernelExecTimeout,    ///<Run time limit for kernels executed on the device
+    hipDeviceAttributeCanMapHostMemory,     ///<Device can map host memory into device address space
+    hipDeviceAttributeEccEnabled            ///<Device has ECC support enabled
+
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {

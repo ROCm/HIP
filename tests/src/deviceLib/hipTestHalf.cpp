@@ -30,6 +30,11 @@ THE SOFTWARE.
 
 #if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__ || __HIP_ARCH_GFX908__
 
+__device__ void test_convert() {
+  __half x;
+  float y = (float)x;
+}
+
 __global__
 void __halfMath(bool* result, __half a) {
   result[0] = __heq(__hadd(a, __half{1}), __half{2});

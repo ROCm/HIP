@@ -22,27 +22,20 @@ THE SOFTWARE.
 
 #pragma once
 
-#include <string>
-#include "llvm/ADT/StringRef.h"
+extern std::set<std::string> DeviceSymbolFunctions0;
+extern std::set<std::string> DeviceSymbolFunctions1;
+extern std::set<std::string> ReinterpretFunctions0;
+extern std::set<std::string> ReinterpretFunctions1;
 
-/**
-  * Remove double-quotes from the start/end of a string, if present.
-  */
-llvm::StringRef unquoteStr(llvm::StringRef s);
+extern std::string sHIP_SYMBOL;
+extern std::string s_reinterpret_cast;
 
-/**
-  * If `s` starts with `prefix`, remove it. Otherwise, does nothing.
-  */
-void removePrefixIfPresent(std::string &s, const std::string& prefix);
+namespace perl {
 
-/**
-  * Returns Absolute File Path based on filename, otherwise - error.
-  */
-std::string getAbsoluteFilePath(const std::string& sFile, std::error_code& EC);
+  bool generate(bool Generate = true);
+}
 
-/**
-  * Returns Absolute Directory Path based on directory name, otherwise - error;
-  * by default the directory is temporary and created.
-  */
-std::string getAbsoluteDirectoryPath(const std::string& sDir, std::error_code& EC,
-  const std::string& sDirType = "temporary", bool bCreateDir = true);
+namespace python {
+
+  bool generate(bool Generate = true);
+}

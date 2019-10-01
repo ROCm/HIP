@@ -40,7 +40,6 @@ THE SOFTWARE.
 #endif
 
 #include <hip/hcc_detail/host_defines.h>
-#include <hip/hip_runtime_api.h>
 #include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
 #include <hip/hcc_detail/hip_surface_types.h>
@@ -1557,34 +1556,6 @@ namespace hip_impl {
 hipError_t hipMemcpyToSymbol(void*, const void*, size_t, size_t, hipMemcpyKind,
                              const char*);
 } // Namespace hip_impl.
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @brief C compliant kernel launch API
- *
- * @param [in] function_address - kernel function pointer.
- * @param [in] numBlocks - number of blocks
- * @param [in] dimBlocks - dimension of a block
- * @param [in] args - kernel arguments
- * @param [in] sharedMemBytes - Amount of dynamic shared memory to allocate for this kernel.  The
- *  Kernel can access this with HIP_DYNAMIC_SHARED.
- * @param [in] stream - Stream where the kernel should be dispatched.  May be 0, in which case th
- *  default stream is used with associated synchronization rules.
- *
- * @returns #hipSuccess, #hipErrorInvalidValue, hipInvalidDevice
- *
- */
-
-hipError_t  hipLaunchKernel(const void* function_address,
-			    dim3 numBlocks, dim3 dimBlocks, void** args,
-				size_t sharedMemBytes, hipStream_t stream);
-
-#ifdef __cplusplus
-}
 #endif
 
 #if defined(__cplusplus)
@@ -3140,6 +3111,65 @@ hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
 hipError_t hipLaunchByPtr(const void* func);
 
 
+/**
+ * @brief Push configuration of a kernel launch.
+ *
+ * @param [in] gridDim   grid dimension specified as multiple of blockDim.
+ * @param [in] blockDim  block dimensions specified in work-items
+ * @param [in] sharedMem Amount of dynamic shared memory to allocate for this kernel.  The
+ * kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
+ * default stream is used with associated synchronization rules.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ *
+ */
+
+hipError_t __hipPushCallConfiguration(dim3 gridDim,
+                                      dim3 blockDim,
+                                      size_t sharedMem __dparm(0),
+                                      hipStream_t stream __dparm(0));
+
+/**
+ * @brief Pop configuration of a kernel launch.
+ *
+ * @param [out] gridDim   grid dimension specified as multiple of blockDim.
+ * @param [out] blockDim  block dimensions specified in work-items
+ * @param [out] sharedMem Amount of dynamic shared memory to allocate for this kernel.  The
+ * kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [out] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
+ * default stream is used with associated synchronization rules.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ *
+ */
+hipError_t __hipPopCallConfiguration(dim3 *gridDim,
+                                     dim3 *blockDim,
+                                     size_t *sharedMem,
+                                     hipStream_t *stream);
+
+/**
+ * @brief C compliant kernel launch API
+ *
+ * @param [in] function_address - kernel stub function pointer.
+ * @param [in] numBlocks - number of blocks
+ * @param [in] dimBlocks - dimension of a block
+ * @param [in] args - kernel arguments
+ * @param [in] sharedMemBytes - Amount of dynamic shared memory to allocate for this kernel.  The
+ *  Kernel can access this with HIP_DYNAMIC_SHARED.
+ * @param [in] stream - Stream where the kernel should be dispatched.  May be 0, in which case th
+ *  default stream is used with associated synchronization rules.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, hipInvalidDevice
+ *
+ */
+
+hipError_t hipLaunchKernel(const void* function_address,
+                           dim3 numBlocks,
+                           dim3 dimBlocks,
+                           void** args,
+                           size_t sharedMemBytes __dparm(0),
+                           hipStream_t stream __dparm(0));
 
 /**
  * @}
@@ -3150,7 +3180,9 @@ hipError_t hipLaunchByPtr(const void* func);
 } /* extern "c" */
 #endif
 
+#if USE_PROF_API
 #include <hip/hcc_detail/hip_prof_str.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {

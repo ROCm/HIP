@@ -1,5 +1,7 @@
+// RUN: %run_test hipify "%s" "%t" %hipify_args %clang_args
+
 /*
-Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,29 +22,31 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
+// CHECK: #include <hip/hip_runtime.h>
+#include <cuda_runtime.h>
 
-#include <string>
-#include "llvm/ADT/StringRef.h"
+__global__
+void fn(float* px, float* py) {
+  bool a[42];
+  __shared__ double b[69];
+  for (auto&& x : b) x = *py++;
+  for (auto&& x : a) x = *px++ > 0.0;
+  for (auto&& x : a) if (x) *--py = *--px;
+}
 
-/**
-  * Remove double-quotes from the start/end of a string, if present.
-  */
-llvm::StringRef unquoteStr(llvm::StringRef s);
-
-/**
-  * If `s` starts with `prefix`, remove it. Otherwise, does nothing.
-  */
-void removePrefixIfPresent(std::string &s, const std::string& prefix);
-
-/**
-  * Returns Absolute File Path based on filename, otherwise - error.
-  */
-std::string getAbsoluteFilePath(const std::string& sFile, std::error_code& EC);
-
-/**
-  * Returns Absolute Directory Path based on directory name, otherwise - error;
-  * by default the directory is temporary and created.
-  */
-std::string getAbsoluteDirectoryPath(const std::string& sDir, std::error_code& EC,
-  const std::string& sDirType = "temporary", bool bCreateDir = true);
+int main() {
+  // CHECK: hipFuncCache_t cacheConfig;
+  cudaFuncCache cacheConfig;
+  void* func;
+  // CHECK: hipFuncSetCacheConfig(reinterpret_cast<const void*>(func), cacheConfig);
+  cudaFuncSetCacheConfig(func, cacheConfig);
+  // CHECK: hipFuncAttributes attr{};
+  cudaFuncAttributes attr{};
+  // CHECK: auto r = hipFuncGetAttributes(&attr, reinterpret_cast<const void*>(&fn));
+  auto r = cudaFuncGetAttributes(&attr, &fn);
+  // CHECK: if (r != hipSuccess || attr.maxThreadsPerBlock == 0) {
+  if (r != cudaSuccess || attr.maxThreadsPerBlock == 0) {
+    return 1;
+  }
+  return 0;
+}
