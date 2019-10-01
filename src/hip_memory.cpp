@@ -1591,7 +1591,12 @@ template <typename T>
 void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t count, bool isAsync) {
     // Just Use count, instead of dividing by 4, the calling API already does it
     if (sizeof(T) == sizeof(uint32_t) && (count % sizeof(uint32_t) == 0) && !isAsync) {
-        stream->locked_wait();
+        // The stream must be locked from all other op insertions to guarantee
+        // that the following HSA call can complete before any other ops.
+        // Flush the stream while locked. Once the stream is empty, we can safely perform
+        // the out-of-band HSA call. Lastly, the stream will unlock via RAII.
+        LockedAccessor_StreamCrit_t crit(stream->criticalData());
+        crit->_av.wait(stream->waitMode());
         if (!hsa_amd_memory_fill(ptr, reinterpret_cast<const std::uint32_t&>(val), count)) {
             // Only return if the execution completes without error
             // if error occured, try the normal version
