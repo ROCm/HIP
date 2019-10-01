@@ -26,6 +26,7 @@
 
 use Getopt::Long;
 my $whitelist = "";
+my $fileName = "";
 
 GetOptions(
       "examine" => \$examine                  # Combines -no-output and -print-stats options.
@@ -1602,184 +1603,45 @@ sub transformExternShared {
     $ft{ 'extern_shared' } += $k;
 }
 
-# Count of transforms in all files
-my %tt;
-clearStats(\%tt, \@statNames);
-$Twarnings = 0;
-$TlineCount = 0;
-my %TwarningTags;
-my %Tkernels;
-my $fileCount = @ARGV;
-my $fileName = "";
+# CUDA Kernel Launch Syntax
+sub transformKernelLaunch {
+    my $TkernRef = @_;
+    no warnings qw/uninitialized/;
+    my $k = 0;
 
-while (@ARGV) {
-    $fileName=shift (@ARGV);
-    if ($inplace) {
-        my $file_prehip = "$fileName" . ".prehip";
-        my $infile;
-        my $outfile;
-        if (-e $file_prehip) {
-            $infile  = $file_prehip;
-            $outfile = $fileName;
-        } else {
-            system ("cp $fileName $file_prehip");
-            $infile = $file_prehip;
-            $outfile = $fileName;
-        }
-        open(INFILE,"<", $infile) or die "error: could not open $infile";
-        open(OUTFILE,">", $outfile) or die "error: could not open $outfile";
-        $OUTFILE = OUTFILE;
-    } else {
-        open(INFILE,"<", $fileName) or die "error: could not open $fileName";
-        $OUTFILE = STDOUT;
-    }
-    # Note : \b is used in perl to indicate the start of a word
-    # Count of transforms in this file
-    my %ft;
-    clearStats(\%ft, \@statNames);
-    my $countIncludes = 0;
-    my $countKeywords = 0;
-    my $warnings = 0; 
-    my %warningTags;
-    my $lineCount = 0;
-    undef $/;
-    # Read whole file at once, so we can match newlines
-    while (<INFILE>)
-    {
-        simpleSubstitutions();
+    # Handle the kern<...><<<Dg, Db, Ns, S>>>() syntax with empty args:
+    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, $6)/g;
+    # Handle the kern<<<Dg, Db, Ns, S>>>() syntax with empty args:
+    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5)/g;
 
-        $countKeywords += m/__global__/;
-        $countKeywords += m/__shared__/;
+    # Handle the kern<...><<<Dg, Db, Ns, S>>>(...) syntax with non-empty args:
+    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, $6, /g;
+    # Handle the kern<<<Dg, Db, Ns, S>>>(...) syntax with non-empty args:
+    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5, /g;
 
-        transformExternShared();
+    # Handle the kern<...><<<Dg, Db, Ns>>>() syntax with empty args:
+    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, 0)/g;
+    # Handle the kern<<<Dg, Db, Ns>>>() syntax with empty args:
+    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0)/g;
 
-        # CUDA Launch Syntax. Note these only work if launch is on a single line.
-        {
-            # Match uses ? for <.*> which will be unitialized if this is not present in launch syntax
-            no warnings qw/uninitialized/;
-            my $k = 0;
+    # Handle the kern<...><<Dg, Db, Ns>>>(...) syntax with non-empty args:
+    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, 0, /g;
+    # Handle the kern<<<Dg, Db, Ns>>>(...) syntax with non-empty args:
+    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0, /g;
 
-            # Handle the kern<...><<<numBlocks, blockDim, sharedSize, stream>>> syntax with empty args:
-            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, $6)/g;
-            # Handle the kern<<<numBlocks, blockDim, sharedSize, stream>>> syntax with empty args:
-            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5)/g;
+    # Handle the kern<...><<<Dg, Db>>>() syntax with empty args:
+    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), 0, 0)/g;
+    # Handle the kern<<<Dg, Db>>>() syntax with empty args:
+    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0)/g;
 
-            # Handle the kern<...><<<numBlocks, blockDim, sharedSize, stream>>> syntax with non-empty args:
-            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, $6, /g;
-            # Handle the kern<<<numBlocks, blockDim, sharedSize, stream>>> syntax with non-empty args:
-            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5, /g;
+    # Handle the kern<...><<<Dg, Db>>>(...) syntax with non-empty args:
+    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), 0, 0, /g;
+    # Handle the kern<<<Dg, Db>>>(...) syntax with non-empty args:
+    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0, /g;
 
-            # Handle the kern<...><<<numBlocks, blockDim, sharedSize>>> syntax with empty args:
-            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, 0)/g;
-            # Handle the kern<<<numBlocks, blockDim, sharedSize>>> syntax with empty args:
-            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0)/g;
-
-            # Handle the kern<...><<<numBlocks, blockDim, sharedSize>>> syntax with non-empty args:
-            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), $5, 0, /g;
-            # Handle the kern<<<numBlocks, blockDim, sharedSize>>> syntax with non-empty args:
-            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0, /g;
-
-            # Handle the kern<...><<<numBlocks, blockDim>>> syntax with empty args:
-            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), 0, 0)/g;
-            # Handle the kern<<<numBlocks, blockDim>>> syntax with empty args:
-            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0)/g;
-
-            # Handle the kern<...><<<numBlocks, blockDim>>> syntax with non-empty args:
-            $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(($1<$2>), dim3($3), dim3($4), 0, 0, /g;
-            # Handle the kern<<<numBlocks, blockDim>>> syntax with non-empty args:
-            $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0, /g;
-
-            if ($k) {
-                $ft{'kernel_launch'} += $k;
-                $Tkernels{$1} ++;
-            }
-        }
-        if ($print_stats) {
-            while (/(\bhip[A-Z]\w+\b)/g) {
-                $convertedTags{$1}++;
-            }
-        }
-        my $hasDeviceCode = $countKeywords + $ft{'device_function'};
-        unless ($quiet_warnings) {
-            # Copy into array of lines, process line-by-line to show warnings
-            if ($hasDeviceCode or (/\bcu/) or (/\bCU_/) or (/\bCUDA_/) or (/<<<.*>>>/)) {
-                my @lines = split /\n/, $_;
-                # Copy the whole file
-                my $tmp = $_;
-                my $line_num = 0;
-                foreach (@lines) {
-                    $line_num ++;
-                    # Remove any whitelisted words
-                    foreach $w (@whitelist) {
-                        s/\b$w\b/ZAP/
-                    }
-                    my $tag;
-                    if ((/(\bcuda[A-Z]\w+)/) or (/<<<.*>>>/)) {
-                        # Flag any remaining code that look like cuda API calls: may want to add these to hipify
-                        $tag = (defined $1) ? $1 : "Launch";
-                    }
-                    if (defined $tag) {
-                        $warnings++;
-                        $warningTags{$tag}++;
-                        print STDERR "  warning: $fileName:#$line_num : $_";
-                        print STDERR "\n";
-                    }
-                    $s = warnUnsupportedDeviceFunctions($line_num);
-                    $warnings += $s;
-                }
-                $_ = $tmp;
-            }
-        }
-        if ($hasDeviceCode > 0) {
-            $ft{'device_function'} += countSupportedDeviceFunctions();
-        }
-        transformHostFunctions();
-        # TODO: would like to move this code outside loop but it uses $_ which contains the whole file
-        unless ($no_output) {
-            my $apiCalls   = $ft{'error'} + $ft{'init'} + $ft{'version'} + $ft{'device'} + $ft{'context'} + $ft{'module'} + $ft{'memory'} + $ft{'addressing'} + $ft{'stream'} + $ft{'event'} + $ft{'external_resource_interop'} + $ft{'stream_memory'} + $ft{'execution'} + $ft{'graph'} + $ft{'occupancy'} + $ft{'texture'} + $ft{'surface'} + $ft{'peer'} + $ft{'graphics'} + $ft{'profiler'} + $ft{'openGL'} + $ft{'D3D9'} + $ft{'D3D10'} + $ft{'D3D11'} + $ft{'VDPAU'} + $ft{'EGL'} + $ft{'thread'} + $ft{'complex'} + $ft{'library'} + $ft{'device_library'} + $ft{'include'} + $ft{'include_cuda_main_header'} + $ft{'type'} + $ft{'literal'} + $ft{'numeric_literal'} + $ft{'define'};
-            my $kernStuff  = $hasDeviceCode + $ft{'kernel_launch'} + $ft{'device_function'};
-            my $totalCalls = $apiCalls + $kernStuff;
-            $is_dos = m/\r\n$/;
-            if ($totalCalls and ($countIncludes == 0) and ($kernStuff != 0)) {
-                # TODO: implement hipify-clang's logic with header files AMAP
-                print $OUTFILE '#include "hip/hip_runtime.h"' . ($is_dos ? "\r\n" : "\n");
-            }
-            print $OUTFILE  "$_";
-        }
-        $lineCount = $_ =~ tr/\n//;
-    }
-    my $totalConverted = totalStats(\%ft);
-    if (($totalConverted+$warnings) and $print_stats) {
-        printStats("  info: converted", \@statNames, \%ft, $warnings, $lineCount);
-        print STDERR " in '$fileName'\n";
-    }
-    # Update totals for all files
-    addStats(\%tt, \%ft);
-    $Twarnings += $warnings;
-    $TlineCount += $lineCount;
-    foreach $key (keys %warningTags) {
-        $TwarningTags{$key} += $warningTags{$key};
-    }
-}
-# Print total stats for all files processed:
-if ($print_stats and ($fileCount > 1)) {
-    print STDERR "\n";
-    printStats("  info: TOTAL-converted", \@statNames, \%tt, $Twarnings, $TlineCount);
-    print STDERR "\n";
-    foreach my $key (sort { $TwarningTags{$b} <=> $TwarningTags{$a} } keys %TwarningTags) {
-        printf STDERR "  warning: unconverted %s : %d\n", $key, $TwarningTags{$key};
-    }
-    my $kernelCnt = keys %Tkernels;
-    printf STDERR "  kernels (%d total) : ", $kernelCnt;
-    foreach my $key (sort { $Tkernels{$b} <=> $Tkernels{$a} } keys %Tkernels) {
-        printf STDERR "  %s(%d)", $key, $Tkernels{$key};
-    }
-    print STDERR "\n";
-    print STDERR "\n";
-}
-if ($print_stats) {
-    foreach my $key (sort { $convertedTags{$b} <=> $convertedTags{$a} } keys %convertedTags) {
-        printf STDERR "  %s %d\n", $key, $convertedTags{$key};
+    if ($k) {
+        $ft{'kernel_launch'} += $k;
+        @$TkernRef{$1} ++;
     }
 }
 
@@ -2419,4 +2281,144 @@ sub warnUnsupportedDeviceFunctions {
         }
     }
     return $m;
+}
+
+# Count of transforms in all files
+my %tt;
+clearStats(\%tt, \@statNames);
+$Twarnings = 0;
+$TlineCount = 0;
+my %TwarningTags;
+my %Tkernels;
+my $fileCount = @ARGV;
+
+while (@ARGV) {
+    $fileName=shift (@ARGV);
+    if ($inplace) {
+        my $file_prehip = "$fileName" . ".prehip";
+        my $infile;
+        my $outfile;
+        if (-e $file_prehip) {
+            $infile  = $file_prehip;
+            $outfile = $fileName;
+        } else {
+            system ("cp $fileName $file_prehip");
+            $infile = $file_prehip;
+            $outfile = $fileName;
+        }
+        open(INFILE,"<", $infile) or die "error: could not open $infile";
+        open(OUTFILE,">", $outfile) or die "error: could not open $outfile";
+        $OUTFILE = OUTFILE;
+    } else {
+        open(INFILE,"<", $fileName) or die "error: could not open $fileName";
+        $OUTFILE = STDOUT;
+    }
+    # Note : \b is used in perl to indicate the start of a word
+    # Count of transforms in this file
+    my %ft;
+    clearStats(\%ft, \@statNames);
+    my $countIncludes = 0;
+    my $countKeywords = 0;
+    my $warnings = 0; 
+    my %warningTags;
+    my $lineCount = 0;
+    undef $/;
+    # Read whole file at once, so we can match newlines
+    while (<INFILE>)
+    {
+        simpleSubstitutions();
+
+        $countKeywords += m/__global__/;
+        $countKeywords += m/__shared__/;
+
+        transformExternShared();
+        transformKernelLaunch(\%Tkernels);
+
+        if ($print_stats) {
+            while (/(\bhip[A-Z]\w+\b)/g) {
+                $convertedTags{$1}++;
+            }
+        }
+        my $hasDeviceCode = $countKeywords + $ft{'device_function'};
+        unless ($quiet_warnings) {
+            # Copy into array of lines, process line-by-line to show warnings
+            if ($hasDeviceCode or (/\bcu/) or (/\bCU_/) or (/\bCUDA_/) or (/<<<.*>>>/)) {
+                my @lines = split /\n/, $_;
+                # Copy the whole file
+                my $tmp = $_;
+                my $line_num = 0;
+                foreach (@lines) {
+                    $line_num ++;
+                    # Remove any whitelisted words
+                    foreach $w (@whitelist) {
+                        s/\b$w\b/ZAP/
+                    }
+                    my $tag;
+                    if ((/(\bcuda[A-Z]\w+)/) or (/<<<.*>>>/)) {
+                        # Flag any remaining code that look like cuda API calls: may want to add these to hipify
+                        $tag = (defined $1) ? $1 : "Launch";
+                    }
+                    if (defined $tag) {
+                        $warnings++;
+                        $warningTags{$tag}++;
+                        print STDERR "  warning: $fileName:#$line_num : $_";
+                        print STDERR "\n";
+                    }
+                    $s = warnUnsupportedDeviceFunctions($line_num);
+                    $warnings += $s;
+                }
+                $_ = $tmp;
+            }
+        }
+        if ($hasDeviceCode > 0) {
+            $ft{'device_function'} += countSupportedDeviceFunctions();
+        }
+        transformHostFunctions();
+        # TODO: would like to move this code outside loop but it uses $_ which contains the whole file
+        unless ($no_output) {
+            my $apiCalls   = $ft{'error'} + $ft{'init'} + $ft{'version'} + $ft{'device'} + $ft{'context'} + $ft{'module'} + $ft{'memory'} + $ft{'addressing'} + $ft{'stream'} + $ft{'event'} + $ft{'external_resource_interop'} + $ft{'stream_memory'} + $ft{'execution'} + $ft{'graph'} + $ft{'occupancy'} + $ft{'texture'} + $ft{'surface'} + $ft{'peer'} + $ft{'graphics'} + $ft{'profiler'} + $ft{'openGL'} + $ft{'D3D9'} + $ft{'D3D10'} + $ft{'D3D11'} + $ft{'VDPAU'} + $ft{'EGL'} + $ft{'thread'} + $ft{'complex'} + $ft{'library'} + $ft{'device_library'} + $ft{'include'} + $ft{'include_cuda_main_header'} + $ft{'type'} + $ft{'literal'} + $ft{'numeric_literal'} + $ft{'define'};
+            my $kernStuff  = $hasDeviceCode + $ft{'kernel_launch'} + $ft{'device_function'};
+            my $totalCalls = $apiCalls + $kernStuff;
+            $is_dos = m/\r\n$/;
+            if ($totalCalls and ($countIncludes == 0) and ($kernStuff != 0)) {
+                # TODO: implement hipify-clang's logic with header files AMAP
+                print $OUTFILE '#include "hip/hip_runtime.h"' . ($is_dos ? "\r\n" : "\n");
+            }
+            print $OUTFILE  "$_";
+        }
+        $lineCount = $_ =~ tr/\n//;
+    }
+    my $totalConverted = totalStats(\%ft);
+    if (($totalConverted+$warnings) and $print_stats) {
+        printStats("  info: converted", \@statNames, \%ft, $warnings, $lineCount);
+        print STDERR " in '$fileName'\n";
+    }
+    # Update totals for all files
+    addStats(\%tt, \%ft);
+    $Twarnings += $warnings;
+    $TlineCount += $lineCount;
+    foreach $key (keys %warningTags) {
+        $TwarningTags{$key} += $warningTags{$key};
+    }
+}
+# Print total stats for all files processed:
+if ($print_stats and ($fileCount > 1)) {
+    print STDERR "\n";
+    printStats("  info: TOTAL-converted", \@statNames, \%tt, $Twarnings, $TlineCount);
+    print STDERR "\n";
+    foreach my $key (sort { $TwarningTags{$b} <=> $TwarningTags{$a} } keys %TwarningTags) {
+        printf STDERR "  warning: unconverted %s : %d\n", $key, $TwarningTags{$key};
+    }
+    my $kernelCnt = keys %Tkernels;
+    printf STDERR "  kernels (%d total) : ", $kernelCnt;
+    foreach my $key (sort { $Tkernels{$b} <=> $Tkernels{$a} } keys %Tkernels) {
+        printf STDERR "  %s(%d)", $key, $Tkernels{$key};
+    }
+    print STDERR "\n";
+    print STDERR "\n";
+}
+if ($print_stats) {
+    foreach my $key (sort { $convertedTags{$b} <=> $convertedTags{$a} } keys %convertedTags) {
+        printf STDERR "  %s %d\n", $key, $convertedTags{$key};
+    }
 }
