@@ -27,7 +27,7 @@
  */
 
 
-#include "../common.h"
+#include "../test_common.h"
 #include <stdio.h>
 #include "LaunchKernel.h"
 
