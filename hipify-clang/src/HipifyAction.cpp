@@ -38,6 +38,7 @@ namespace mat = clang::ast_matchers;
 
 const std::string sHIP_DYNAMIC_SHARED = "HIP_DYNAMIC_SHARED";
 std::string sHIP_SYMBOL = "HIP_SYMBOL";
+std::string sHIP_KERNEL_NAME = "HIP_KERNEL_NAME";
 std::string s_reinterpret_cast = "reinterpret_cast<const void*>";
 const std::string sHipLaunchKernelGGL = "hipLaunchKernelGGL(";
 const std::string sDim3 = "dim3(";
@@ -348,7 +349,7 @@ bool HipifyAction::cudaLaunchKernel(const clang::ast_matchers::MatchFinder::Matc
   clang::LangOptions DefaultLangOptions;
   clang::SourceManager* SM = Result.SourceManager;
   OS << sHipLaunchKernelGGL;
-  if (caleeDecl->isTemplateInstantiation()) OS << "(";
+  if (caleeDecl->isTemplateInstantiation()) OS << sHIP_KERNEL_NAME << "(";
   OS << readSourceText(*SM, calleeExpr->getSourceRange());
   if (caleeDecl->isTemplateInstantiation()) OS << ")";
   OS << ", ";

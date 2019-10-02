@@ -257,7 +257,7 @@ void runTest() {
     // CHECK: hipMemcpy(dOData, hOData, memSize, hipMemcpyHostToDevice);
     cudaMemcpy(dOData, hOData, memSize, cudaMemcpyHostToDevice);
     // Execute the kernel
-    // CHECK: hipLaunchKernelGGL((testKernel), dim3(numBlocks), dim3(numThreads), 0, 0, dOData);
+    // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(testKernel), dim3(numBlocks), dim3(numThreads), 0, 0, dOData);
     testKernel<<<numBlocks, numThreads>>>(dOData);
     // Copy result from device to host
     // CHECK: hipMemcpy(hOData, dOData, memSize, hipMemcpyDeviceToHost);
