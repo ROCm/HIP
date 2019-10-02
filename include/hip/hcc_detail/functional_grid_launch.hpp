@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "helpers.hpp"
 #include "program_state.hpp"
 #include "hip_runtime_api.h"
+#include "hip/hip_hcc.h"
 
 #include <cstdint>
 #include <cstring>
