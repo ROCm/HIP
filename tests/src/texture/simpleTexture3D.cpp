@@ -35,7 +35,6 @@ texture<float, hipTextureType3D, hipReadModeElementType> texf;
 texture<int, hipTextureType3D, hipReadModeElementType> texi;
 texture<char, hipTextureType3D, hipReadModeElementType> texc;
 
-bool testResult = true;
 template <typename T>
 __global__ void simpleKernel3DArray(T* outputData, 
                                     int width,
@@ -129,7 +128,6 @@ int main(int argc, char **argv)
         runTest<int>(i+1,i,i,&texi);
         runTest<char>(i,i+1,i,&texc);
     }
-    printf("%s ...\n", testResult ? "passing" : "failing");
-    exit(testResult ? EXIT_SUCCESS : EXIT_FAILURE);
+    passed();
 }
 
