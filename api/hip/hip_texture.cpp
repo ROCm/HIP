@@ -386,13 +386,17 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
       case CL_MEM_OBJECT_IMAGE1D:
         resDesc.resType = hipResourceTypeLinear;
         resDesc.res.linear.devPtr = const_cast<void*>(devPtr);
-        resDesc.res.linear.desc = *desc;
+        if (nullptr != desc) {
+          resDesc.res.linear.desc = *desc;
+        }
         resDesc.res.linear.sizeInBytes = image->getSize();
         break;
       case CL_MEM_OBJECT_IMAGE2D:
         resDesc.resType = hipResourceTypePitch2D;
         resDesc.res.pitch2D.devPtr = const_cast<void*>(devPtr);
-        resDesc.res.pitch2D.desc = *desc;
+        if (nullptr != desc) {
+          resDesc.res.pitch2D.desc = *desc;
+        }
         resDesc.res.pitch2D.width = width;
         resDesc.res.pitch2D.height = height;
         resDesc.res.pitch2D.pitchInBytes = pitch;
