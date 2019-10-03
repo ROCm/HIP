@@ -27,6 +27,8 @@
 use Getopt::Long;
 my $whitelist = "";
 my $fileName = "";
+my %ft;
+my %Tkernels;
 
 GetOptions(
       "examine" => \$examine                  # Combines -no-output and -print-stats options.
@@ -1600,12 +1602,11 @@ sub transformExternShared {
     no warnings qw/uninitialized/;
     my $k = 0;
     $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
-    $ft{ 'extern_shared' } += $k;
+    $ft{'extern_shared'} += $k;
 }
 
 # CUDA Kernel Launch Syntax
 sub transformKernelLaunch {
-    my $TkernRef = @_;
     no warnings qw/uninitialized/;
     my $k = 0;
 
@@ -1641,7 +1642,7 @@ sub transformKernelLaunch {
 
     if ($k) {
         $ft{'kernel_launch'} += $k;
-        @$TkernRef{$1} ++;
+        $Tkernels{$1}++;
     }
 }
 
@@ -2299,7 +2300,6 @@ clearStats(\%tt, \@statNames);
 $Twarnings = 0;
 $TlineCount = 0;
 my %TwarningTags;
-my %Tkernels;
 my $fileCount = @ARGV;
 
 while (@ARGV) {
@@ -2323,42 +2323,36 @@ while (@ARGV) {
         open(INFILE,"<", $fileName) or die "error: could not open $fileName";
         $OUTFILE = STDOUT;
     }
-    # Note : \b is used in perl to indicate the start of a word
     # Count of transforms in this file
-    my %ft;
     clearStats(\%ft, \@statNames);
     my $countIncludes = 0;
     my $countKeywords = 0;
-    my $warnings = 0; 
+    my $warnings = 0;
     my %warningTags;
     my $lineCount = 0;
     undef $/;
     # Read whole file at once, so we can match newlines
-    while (<INFILE>)
-    {
-        simpleSubstitutions();
-
+    while (<INFILE>) {
         $countKeywords += m/__global__/;
         $countKeywords += m/__shared__/;
-
+        simpleSubstitutions();
         transformExternShared();
-        transformKernelLaunch(\%Tkernels);
-
+        transformKernelLaunch();
         if ($print_stats) {
-            while (/(\bhip[A-Z]\w+\b)/g) {
+            while (/(\b(hip|HIP)([A-Z]|_)\w+\b)/g) {
                 $convertedTags{$1}++;
             }
         }
         my $hasDeviceCode = $countKeywords + $ft{'device_function'};
         unless ($quiet_warnings) {
             # Copy into array of lines, process line-by-line to show warnings
-            if ($hasDeviceCode or (/\bcu/) or (/\bCU_/) or (/\bCUDA_/) or (/<<<.*>>>/)) {
+            if ($hasDeviceCode or (/\bcu|CU/) or (/<<<.*>>>/)) {
                 my @lines = split /\n/, $_;
                 # Copy the whole file
                 my $tmp = $_;
                 my $line_num = 0;
                 foreach (@lines) {
-                    $line_num ++;
+                    $line_num++;
                     # Remove any whitelisted words
                     foreach $w (@whitelist) {
                         s/\b$w\b/ZAP/
@@ -2371,8 +2365,7 @@ while (@ARGV) {
                     if (defined $tag) {
                         $warnings++;
                         $warningTags{$tag}++;
-                        print STDERR "  warning: $fileName:#$line_num : $_";
-                        print STDERR "\n";
+                        print STDERR "  warning: $fileName:#$line_num : $_\n";
                     }
                     $s = warnUnsupportedDeviceFunctions($line_num);
                     $warnings += $s;
@@ -2424,8 +2417,7 @@ if ($print_stats and ($fileCount > 1)) {
     foreach my $key (sort { $Tkernels{$b} <=> $Tkernels{$a} } keys %Tkernels) {
         printf STDERR "  %s(%d)", $key, $Tkernels{$key};
     }
-    print STDERR "\n";
-    print STDERR "\n";
+    print STDERR "\n\n";
 }
 if ($print_stats) {
     foreach my $key (sort { $convertedTags{$b} <=> $convertedTags{$a} } keys %convertedTags) {
