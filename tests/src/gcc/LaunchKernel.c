@@ -27,20 +27,9 @@
  */
 
 
-#include "hip/hip_runtime.h"
+#include "../test_common.h"
 #include <stdio.h>
 #include "LaunchKernel.h"
-
-#define HIPCHECK(error)                                                                            \
-    {                                                                                              \
-        hipError_t localError = error;                                                             \
-        if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
-            printf("%serror: '%s'(%d) from %s at %s:%d%s\n", "\x1B[31m", hipGetErrorString(localError),  \
-                   localError, #error, __FILE__, __LINE__, "\x1B[0m");                             \
-            return false;	                                                                       \
-        }                                                                                          \
-    }
-
 
 bool LaunchKernelArg()
 {

@@ -17,13 +17,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <iostream>
-#include <iomanip>
-#if __CUDACC__
-#include <sys/time.h>
-#else
-#include <chrono>
+/*
+ * File is intended to C and CPP compliant hence any CPP specic changes
+ * should be added into CPP section
+ *
+ */
+
+#ifdef __cplusplus
+    #include <iostream>
+    #include <iomanip>
+    #if __CUDACC__
+        #include <sys/time.h>
+    #else
+        #include <chrono>
+    #endif
 #endif
+
+// ************************ GCC section **************************
 #include <stddef.h>
 
 #include "hip/hip_runtime.h"
@@ -40,14 +50,6 @@ THE SOFTWARE.
 #define KMAG "\x1B[35m"
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
-
-
-#ifdef __HIP_PLATFORM_HCC
-#define TYPENAME(T) typeid(T).name()
-#else
-#define TYPENAME(T) "?"
-#endif
-
 
 #define passed()                                                                                   \
     printf("%sPASSED!%s\n", KGRN, KNRM);                                                           \
@@ -113,6 +115,15 @@ extern unsigned threadsPerBlock;
 extern int p_gpuDevice;
 extern unsigned p_verbose;
 extern int p_tests;
+
+// ********************* CPP section *********************
+#ifdef __cplusplus
+
+#ifdef __HIP_PLATFORM_HCC
+#define TYPENAME(T) typeid(T).name()
+#else
+#define TYPENAME(T) "?"
+#endif
 
 namespace HipTest {
 
@@ -470,3 +481,4 @@ struct MemTraits<MemcpyAsync> {
 };
 
 };  // namespace HipTest
+#endif //__cplusplus
