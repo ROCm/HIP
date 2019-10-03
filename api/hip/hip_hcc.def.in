@@ -75,6 +75,7 @@ hipMalloc
 hipMalloc3D
 hipMalloc3DArray
 hipArrayCreate
+hipArray3DCreate
 hipMallocArray
 hipMallocPitch
 hipMemcpy
