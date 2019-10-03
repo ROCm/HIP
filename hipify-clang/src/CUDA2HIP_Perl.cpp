@@ -327,17 +327,16 @@ namespace perl {
 
   bool generate(bool Generate) {
     if (!Generate) return true;
-    std::string dstPerlMap = OutputPerlMapFilename, dstPerlMapDir = OutputPerlMapDir;
-    if (dstPerlMap.empty()) dstPerlMap = "hipify-perl-map";
+    std::string dstHipifyPerl = "hipify-perl", dstHipifyPerlDir = OutputHipifyPerlDir;
     std::error_code EC;
-    if (!dstPerlMapDir.empty()) {
-      std::string sOutputPerlMapDirAbsPath = getAbsoluteDirectoryPath(OutputPerlMapDir, EC, "output hipify-perl map");
+    if (!dstHipifyPerlDir.empty()) {
+      std::string sOutputHipifyPerlDirAbsPath = getAbsoluteDirectoryPath(OutputHipifyPerlDir, EC, "output hipify-perl");
       if (EC) return false;
-      dstPerlMap = sOutputPerlMapDirAbsPath + "/" + dstPerlMap;
+      dstHipifyPerl = sOutputHipifyPerlDirAbsPath + "/" + dstHipifyPerl;
     }
     SmallString<128> tmpFile;
-    StringRef ext = "hipify-tmp";
-    EC = sys::fs::createTemporaryFile(dstPerlMap, ext, tmpFile);
+    StringRef ext = "hipify-perl-tmp";
+    EC = sys::fs::createTemporaryFile(dstHipifyPerl, ext, tmpFile);
     if (EC) {
       llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << tmpFile << "\n";
       return false;
@@ -490,9 +489,9 @@ namespace perl {
     *streamPtr.get() << tab << "}" << std::endl << "}" << std::endl;
     streamPtr.get()->flush();
     bool ret = true;
-    EC = sys::fs::copy_file(tmpFile, dstPerlMap);
+    EC = sys::fs::copy_file(tmpFile, dstHipifyPerl);
     if (EC) {
-      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << tmpFile << " to " << dstPerlMap << "\n";
+      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << tmpFile << " to " << dstHipifyPerl << "\n";
       ret = false;
     }
     if (!SaveTemps) sys::fs::remove(tmpFile);
