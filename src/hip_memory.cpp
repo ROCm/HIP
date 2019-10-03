@@ -1590,7 +1590,7 @@ hipError_t ihipMemPtrGetInfo(void* ptr, size_t* size) {
 template <typename T>
 void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t count, bool isAsync) {
     // Just Use count, instead of dividing by 4, the calling API already does it
-    if (sizeof(T) == sizeof(uint32_t) && (count % sizeof(uint32_t) == 0) && !isAsync) {
+    if (!isAsync && sizeof(T) == sizeof(uint32_t) && (count % sizeof(uint32_t) == 0)) {
         // The stream must be locked from all other op insertions to guarantee
         // that the following HSA call can complete before any other ops.
         // Flush the stream while locked. Once the stream is empty, we can safely perform
