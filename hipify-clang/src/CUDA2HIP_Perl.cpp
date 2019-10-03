@@ -62,11 +62,15 @@ namespace perl {
   const std::string tab = "    ";
   const std::string double_tab = tab + tab;
   const std::string triple_tab = double_tab + tab;
+  const std::string quad_tab = triple_tab + tab;
+  const std::string tab_5 = quad_tab + tab;
+  const std::string tab_6 = tab_5 + tab;
   const std::string sSub = "sub";
   const std::string sReturn_0 = "return 0;\n";
   const std::string sReturn_k = "return $k;\n";
   const std::string sForeach = "foreach $func (\n";
-  const std::string sMy_k = "my $k = 0;";
+  const std::string sMy = "my ";
+  const std::string sMy_k = sMy + "$k = 0;";
   const std::string sNoWarns = "no warnings qw/uninitialized/;";
 
   const std::string sCudaDevice = "cudaDevice";
@@ -104,7 +108,10 @@ namespace perl {
     *streamPtr.get() << sCopyright << std::endl;
     *streamPtr.get() << "#usage hipify-perl [OPTIONS] INPUT_FILE" << std::endl << std::endl;
     *streamPtr.get() << "use Getopt::Long;" << std::endl;
-    *streamPtr.get() << "my $whitelist = \"\";" << std::endl << std::endl;
+    *streamPtr.get() << sMy << "$whitelist = \"\";" << std::endl;
+    *streamPtr.get() << sMy << "$fileName = \"\";" << std::endl;
+    *streamPtr.get() << sMy << "%ft;" << std::endl;
+    *streamPtr.get() << sMy << "%Tkernels;" << std::endl << std::endl;
     *streamPtr.get() << "GetOptions(" << std::endl;
     *streamPtr.get() << tab << "  \"examine\" => \\$examine                  # Combines -no-output and -print-stats options." << std::endl;
     *streamPtr.get() << tab << ", \"inplace\" => \\$inplace                  # Modify input file inplace, replacing input with hipified output, save backup in .prehip file." << std::endl;
@@ -128,18 +135,18 @@ namespace perl {
 
   void generateStatFunctions(std::unique_ptr<std::ostream>& streamPtr) {
     *streamPtr.get() << std::endl << sSub << " totalStats" << " {" << std::endl;
-    *streamPtr.get() << tab << "my %count = %{ shift() };" << std::endl;
-    *streamPtr.get() << tab << "my $total = 0;" << std::endl;
+    *streamPtr.get() << tab << sMy << "%count = %{ shift() };" << std::endl;
+    *streamPtr.get() << tab << sMy << "$total = 0;" << std::endl;
     *streamPtr.get() << tab << "foreach $key (keys %count) {" << std::endl;
     *streamPtr.get() << double_tab << "$total += $count{$key};" << std::endl << tab << "}" << std::endl;
     *streamPtr.get() << tab << "return $total;" << std::endl << "};" << std::endl;
     *streamPtr.get() << std::endl << sSub << " printStats" << " {" << std::endl;
-    *streamPtr.get() << tab << "my $label     = shift();" << std::endl;
-    *streamPtr.get() << tab << "my @statNames = @{ shift() };" << std::endl;
-    *streamPtr.get() << tab << "my %counts    = %{ shift() };" << std::endl;
-    *streamPtr.get() << tab << "my $warnings  = shift();" << std::endl;
-    *streamPtr.get() << tab << "my $loc       = shift();" << std::endl;
-    *streamPtr.get() << tab << "my $total     = totalStats(\\%counts);" << std::endl;
+    *streamPtr.get() << tab << sMy << "$label     = shift();" << std::endl;
+    *streamPtr.get() << tab << sMy << "@statNames = @{ shift() };" << std::endl;
+    *streamPtr.get() << tab << sMy << "%counts    = %{ shift() };" << std::endl;
+    *streamPtr.get() << tab << sMy << "$warnings  = shift();" << std::endl;
+    *streamPtr.get() << tab << sMy << "$loc       = shift();" << std::endl;
+    *streamPtr.get() << tab << sMy << "$total     = totalStats(\\%counts);" << std::endl;
     *streamPtr.get() << tab << "printf STDERR \"%s %d CUDA->HIP refs ( \", $label, $total;" << std::endl;
     *streamPtr.get() << tab << "foreach $stat (@statNames) {" << std::endl;
     *streamPtr.get() << double_tab << "printf STDERR \"%s:%d \", $stat, $counts{$stat};" << std::endl;
@@ -147,8 +154,8 @@ namespace perl {
     *streamPtr.get() << tab << "printf STDERR \")\\n  warn:%d LOC:%d\", $warnings, $loc;" << std::endl << "}" << std::endl;
     for (int i = 0; i < 2; ++i) {
       *streamPtr.get() << std::endl << sSub << " " << (i ? "clearStats" : "addStats") << " {" << std::endl;
-      *streamPtr.get() << tab << "my $dest_ref  = shift();" << std::endl;
-      *streamPtr.get() << tab << (i ? "my @statNames = @{ shift() };" : "my %adder     = %{ shift() };") << std::endl;
+      *streamPtr.get() << tab << sMy << "$dest_ref  = shift();" << std::endl;
+      *streamPtr.get() << tab << sMy << (i ? "@statNames = @{ shift() };" : "%adder     = %{ shift() };") << std::endl;
       *streamPtr.get() << tab << "foreach " << (i ? "$stat(@statNames)" : "$key (keys %adder)") << " {" << std::endl;
       *streamPtr.get() << double_tab << "$dest_ref->" << (i ? "{$stat} = 0;" : "{$key} += $adder{$key};") << std::endl << tab << "}" << std::endl << "}" << std::endl;
     }
@@ -186,13 +193,12 @@ namespace perl {
     *streamPtr.get() << tab << sNoWarns << std::endl;
     *streamPtr.get() << tab << sMy_k << std::endl;
     *streamPtr.get() << tab << "$k += s/extern\\s+([\\w\\(\\)]+)?\\s*__shared__\\s+([\\w:<>\\s]+)\\s+(\\w+)\\s*\\[\\s*\\]\\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;" << std::endl;
-    *streamPtr.get() << tab << "$ft{ 'extern_shared' } += $k;" << std::endl << "}" << std::endl;
+    *streamPtr.get() << tab << "$ft{'extern_shared'} += $k;" << std::endl << "}" << std::endl;
   }
 
   void generateKernelLaunch(std::unique_ptr<std::ostream>& streamPtr) {
     *streamPtr.get() << std::endl << "# CUDA Kernel Launch Syntax" << std::endl;
     *streamPtr.get() << sSub << " transformKernelLaunch" << " {" << std::endl;
-    *streamPtr.get() << tab << "my $TkernRef = @_;" << std::endl;
     *streamPtr.get() << tab << sNoWarns << std::endl;
     *streamPtr.get() << tab << sMy_k << std::endl << std::endl;
 
@@ -228,7 +234,7 @@ namespace perl {
 
     *streamPtr.get() << tab << "if ($k) {" << std::endl;
     *streamPtr.get() << double_tab << "$ft{'kernel_launch'} += $k;" << std::endl;
-    *streamPtr.get() << double_tab << "@$TkernRef{$1} ++;" << std::endl << tab << "}" << std::endl << "}" << std::endl;
+    *streamPtr.get() << double_tab << "$Tkernels{$1}++;" << std::endl << tab << "}" << std::endl << "}" << std::endl;
   }
 
   void generateHostFunctions(std::unique_ptr<std::ostream>& streamPtr) {
@@ -285,7 +291,7 @@ namespace perl {
     std::stringstream subCommon;
     std::string sCommon = tab + sMy_k + "\n" + tab + sForeach;
     subCountSupported << std::endl << sSub << " countSupportedDeviceFunctions" << " {" << std::endl << (countSupported ? sCommon : tab + sReturn_0);
-    subWarnUnsupported << std::endl << sSub << " warnUnsupportedDeviceFunctions" << " {" << std::endl << (countUnsupported ? tab + "my $line_num = shift;\n" + sCommon : tab + sReturn_0);
+    subWarnUnsupported << std::endl << sSub << " warnUnsupportedDeviceFunctions" << " {" << std::endl << (countUnsupported ? tab + sMy + "$line_num = shift;\n" + sCommon : tab + sReturn_0);
     if (countSupported) {
       subCountSupported << sSupported.str() << std::endl << tab << ")" << std::endl;
     }
@@ -296,8 +302,8 @@ namespace perl {
       subCommon << tab << "{" << std::endl;
       subCommon << double_tab << "# match device function from the list, except those, which have a namespace prefix (aka somenamespace::umin(...));" << std::endl;
       subCommon << double_tab << "# function with only global namespace qualifier '::' (aka ::umin(...)) should be treated as a device function (and warned as well as without such qualifier);" << std::endl;
-      subCommon << double_tab << "my $mt_namespace = m/(\\w+)::($func)\\s*\\(\\s*.*\\s*\\)/g;" << std::endl;
-      subCommon << double_tab << "my $mt = m/($func)\\s*\\(\\s*.*\\s*\\)/g;" << std::endl;
+      subCommon << double_tab << sMy << "$mt_namespace = m/(\\w+)::($func)\\s*\\(\\s*.*\\s*\\)/g;" << std::endl;
+      subCommon << double_tab << sMy << "$mt = m/($func)\\s*\\(\\s*.*\\s*\\)/g;" << std::endl;
       subCommon << double_tab << "if ($mt && !$mt_namespace) {" << std::endl;
       subCommon << triple_tab << "$k += $mt;" << std::endl;
     }
@@ -321,28 +327,32 @@ namespace perl {
 
   bool generate(bool Generate) {
     if (!Generate) return true;
-    std::string dstPerlMap = OutputPerlMapFilename, dstPerlMapDir = OutputPerlMapDir;
-    if (dstPerlMap.empty()) dstPerlMap = "hipify-perl-map";
+    std::string dstHipifyPerl = "hipify-perl", dstHipifyPerlDir = OutputHipifyPerlDir;
     std::error_code EC;
-    if (!dstPerlMapDir.empty()) {
-      std::string sOutputPerlMapDirAbsPath = getAbsoluteDirectoryPath(OutputPerlMapDir, EC, "output hipify-perl map");
+    if (!dstHipifyPerlDir.empty()) {
+      std::string sOutputHipifyPerlDirAbsPath = getAbsoluteDirectoryPath(OutputHipifyPerlDir, EC, "output hipify-perl");
       if (EC) return false;
-      dstPerlMap = sOutputPerlMapDirAbsPath + "/" + dstPerlMap;
+      dstHipifyPerl = sOutputHipifyPerlDirAbsPath + "/" + dstHipifyPerl;
     }
     SmallString<128> tmpFile;
-    StringRef ext = "hipify-tmp";
-    EC = sys::fs::createTemporaryFile(dstPerlMap, ext, tmpFile);
+    StringRef ext = "hipify-perl-tmp";
+    EC = sys::fs::createTemporaryFile(dstHipifyPerl, ext, tmpFile);
     if (EC) {
       llvm::errs() << "\n" << sHipify << sError << EC.message() << ": " << tmpFile << "\n";
       return false;
     }
     std::unique_ptr<std::ostream> streamPtr = std::unique_ptr<std::ostream>(new std::ofstream(tmpFile.c_str(), std::ios_base::trunc));
     generateHeader(streamPtr);
-    std::string sConv = "my $conversions = ";
+    std::string sConv = sMy + "$apiCalls   = ";
+    unsigned int exclude[3] = { CONV_DEVICE_FUNC, CONV_EXTERN_SHARED, CONV_KERNEL_LAUNCH };
     *streamPtr.get() << "@statNames = (";
-    for (int i = 0; i < NUM_CONV_TYPES - 1; ++i) {
+    for (unsigned int i = 0; i < NUM_CONV_TYPES - 1; ++i) {
       *streamPtr.get() << "\"" << counterNames[i] << "\", ";
-      sConv += "$ft{'" + std::string(counterNames[i]) + "'} + ";
+      if (std::any_of(exclude, exclude + 3, [&i](unsigned int x) { return x == i; })) continue;
+      sConv += "$ft{'" + std::string(counterNames[i]) + "'}" + (i < NUM_CONV_TYPES - 2 ? " + " : ";");
+    }
+    if (sConv.back() == ' ') {
+      sConv = sConv.substr(0, sConv.size() - 3) + ";";
     }
     *streamPtr.get() << "\"" << counterNames[NUM_CONV_TYPES - 1] << "\");" << std::endl;
     generateStatFunctions(streamPtr);
@@ -351,11 +361,137 @@ namespace perl {
     generateKernelLaunch(streamPtr);
     generateHostFunctions(streamPtr);
     generateDeviceFunctions(streamPtr);
+    *streamPtr.get() << std::endl << "# Count of transforms in all files" << std::endl;
+    *streamPtr.get() << sMy << "%tt;" << std::endl;
+    *streamPtr.get() << "clearStats(\\%tt, \\@statNames);" << std::endl;
+    *streamPtr.get() << "$Twarnings = 0;" << std::endl;
+    *streamPtr.get() << "$TlineCount = 0;" << std::endl;
+    *streamPtr.get() << sMy << "%TwarningTags;" << std::endl;
+    *streamPtr.get() << sMy << "$fileCount = @ARGV;" << std::endl << std::endl;
+    *streamPtr.get() << "while (@ARGV) {" << std::endl;
+    *streamPtr.get() << tab << "$fileName=shift (@ARGV);" << std::endl;
+    *streamPtr.get() << tab << "if ($inplace) {" << std::endl;
+    *streamPtr.get() << double_tab << sMy << "$file_prehip = \"$fileName\" . \".prehip\";" << std::endl;
+    *streamPtr.get() << double_tab << sMy << "$infile;" << std::endl;
+    *streamPtr.get() << double_tab << sMy << "$outfile;" << std::endl;
+    *streamPtr.get() << double_tab << "if (-e $file_prehip) {" << std::endl;
+    *streamPtr.get() << triple_tab << "$infile  = $file_prehip;" << std::endl;
+    *streamPtr.get() << triple_tab << "$outfile = $fileName;" << std::endl;
+    *streamPtr.get() << double_tab << "} else {" << std::endl;
+    *streamPtr.get() << triple_tab << "system (\"cp $fileName $file_prehip\");" << std::endl;
+    *streamPtr.get() << triple_tab << "$infile = $file_prehip;" << std::endl;
+    *streamPtr.get() << triple_tab << "$outfile = $fileName;" << std::endl << double_tab << "}" << std::endl;
+    *streamPtr.get() << double_tab << "open(INFILE,\"<\", $infile) or die \"error: could not open $infile\";" << std::endl;
+    *streamPtr.get() << double_tab << "open(OUTFILE,\">\", $outfile) or die \"error: could not open $outfile\";" << std::endl;
+    *streamPtr.get() << double_tab << "$OUTFILE = OUTFILE;" << std::endl;
+    *streamPtr.get() << tab << "} else {" << std::endl;
+    *streamPtr.get() << double_tab << "open(INFILE,\"<\", $fileName) or die \"error: could not open $fileName\";" << std::endl;
+    *streamPtr.get() << double_tab << "$OUTFILE = STDOUT;" << std::endl << tab << "}" << std::endl;
+    *streamPtr.get() << tab << "# Count of transforms in this file" << std::endl;
+    *streamPtr.get() << tab << "clearStats(\\%ft, \\@statNames);" << std::endl;
+    *streamPtr.get() << tab << sMy << "$countIncludes = 0;" << std::endl;
+    *streamPtr.get() << tab << sMy << "$countKeywords = 0;" << std::endl;
+    *streamPtr.get() << tab << sMy << "$warnings = 0;" << std::endl;
+    *streamPtr.get() << tab << sMy << "%warningTags;" << std::endl;
+    *streamPtr.get() << tab << sMy << "$lineCount = 0;" << std::endl;
+    *streamPtr.get() << tab << "undef $/;" << std::endl;
+    *streamPtr.get() << tab << "# Read whole file at once, so we can match newlines" << std::endl;
+    *streamPtr.get() << tab << "while (<INFILE>) {" << std::endl;
+    *streamPtr.get() << double_tab << "$countKeywords += m/__global__/;" << std::endl;
+    *streamPtr.get() << double_tab << "$countKeywords += m/__shared__/;" << std::endl;
+    *streamPtr.get() << double_tab << "simpleSubstitutions();" << std::endl;
+    *streamPtr.get() << double_tab << "transformExternShared();" << std::endl;
+    *streamPtr.get() << double_tab << "transformKernelLaunch();" << std::endl;
+    *streamPtr.get() << double_tab << "if ($print_stats) {" << std::endl;
+    *streamPtr.get() << triple_tab << "while (/(\\b(hip|HIP)([A-Z]|_)\\w+\\b)/g) {" << std::endl;
+    *streamPtr.get() << quad_tab << "$convertedTags{$1}++;" << std::endl;
+    *streamPtr.get() << triple_tab << "}" << std::endl;
+    *streamPtr.get() << double_tab << "}" << std::endl;
+    *streamPtr.get() << double_tab << sMy << "$hasDeviceCode = $countKeywords + $ft{'device_function'};" << std::endl;
+    *streamPtr.get() << double_tab << "unless ($quiet_warnings) {" << std::endl;
+    *streamPtr.get() << triple_tab << "# Copy into array of lines, process line-by-line to show warnings" << std::endl;
+    *streamPtr.get() << triple_tab << "if ($hasDeviceCode or (/\\bcu|CU/) or (/<<<.*>>>/)) {" << std::endl;
+    *streamPtr.get() << quad_tab << sMy << "@lines = split /\\n/, $_;" << std::endl;
+    *streamPtr.get() << quad_tab << "# Copy the whole file" << std::endl;
+    *streamPtr.get() << quad_tab << sMy << "$tmp = $_;" << std::endl;
+    *streamPtr.get() << quad_tab << sMy << "$line_num = 0;" << std::endl;
+    *streamPtr.get() << quad_tab << "foreach (@lines) {" << std::endl;
+    *streamPtr.get() << tab_5 << "$line_num++;" << std::endl;
+    *streamPtr.get() << tab_5 << "# Remove any whitelisted words" << std::endl;
+    *streamPtr.get() << tab_5 << "foreach $w (@whitelist) {" << std::endl;
+    *streamPtr.get() << tab_6 << "s/\\b$w\\b/ZAP/" << std::endl;
+    *streamPtr.get() << tab_5 << "}" << std::endl;
+    *streamPtr.get() << tab_5 << sMy << "$tag;" << std::endl;
+    *streamPtr.get() << tab_5 << "if ((/(\\bcuda[A-Z]\\w+)/) or (/<<<.*>>>/)) {" << std::endl;
+    *streamPtr.get() << tab_6 << "# Flag any remaining code that look like cuda API calls: may want to add these to hipify" << std::endl;
+    *streamPtr.get() << tab_6 << "$tag = (defined $1) ? $1 : \"Launch\";" << std::endl;
+    *streamPtr.get() << tab_5 << "}" << std::endl;
+    *streamPtr.get() << tab_5 << "if (defined $tag) {" << std::endl;
+    *streamPtr.get() << tab_6 << "$warnings++;" << std::endl;
+    *streamPtr.get() << tab_6 << "$warningTags{$tag}++;" << std::endl;
+    *streamPtr.get() << tab_6 << "print STDERR \"  warning: $fileName:#$line_num : $_\\n\";" << std::endl;
+    *streamPtr.get() << tab_5 << "}" << std::endl;
+    *streamPtr.get() << tab_5 << "$s = warnUnsupportedDeviceFunctions($line_num);" << std::endl;
+    *streamPtr.get() << tab_5 << "$warnings += $s;" << std::endl;
+    *streamPtr.get() << quad_tab << "}" << std::endl;
+    *streamPtr.get() << quad_tab << "$_ = $tmp;" << std::endl;
+    *streamPtr.get() << triple_tab << "}" << std::endl;
+    *streamPtr.get() << double_tab << "}" << std::endl;
+    *streamPtr.get() << double_tab << "if ($hasDeviceCode > 0) {" << std::endl;
+    *streamPtr.get() << triple_tab << "$ft{'device_function'} += countSupportedDeviceFunctions();" << std::endl;
+    *streamPtr.get() << double_tab << "}" << std::endl;
+    *streamPtr.get() << double_tab << "transformHostFunctions();" << std::endl;
+    *streamPtr.get() << double_tab << "# TODO: would like to move this code outside loop but it uses $_ which contains the whole file" << std::endl;
+    *streamPtr.get() << double_tab << "unless ($no_output) {" << std::endl;
+    *streamPtr.get() << triple_tab << sConv << std::endl;
+    *streamPtr.get() << triple_tab << sMy << "$kernStuff  = $hasDeviceCode + $ft{'" << counterNames[CONV_KERNEL_LAUNCH] << "'} + $ft{'" << counterNames[CONV_DEVICE_FUNC] << "'};" << std::endl;
+    *streamPtr.get() << triple_tab << sMy << "$totalCalls = $apiCalls + $kernStuff;" << std::endl;
+    *streamPtr.get() << triple_tab << "$is_dos = m/\\r\\n$/;" << std::endl;
+    *streamPtr.get() << triple_tab << "if ($totalCalls and ($countIncludes == 0) and ($kernStuff != 0)) {" << std::endl;
+    *streamPtr.get() << quad_tab << "# TODO: implement hipify-clang's logic with header files AMAP" << std::endl;
+    *streamPtr.get() << quad_tab << "print $OUTFILE '#include \"hip/hip_runtime.h\"' . ($is_dos ? \"\\r\\n\" : \"\\n\");" << std::endl;
+    *streamPtr.get() << triple_tab << "}" << std::endl;
+    *streamPtr.get() << triple_tab << "print $OUTFILE  \"$_\";" << std::endl;
+    *streamPtr.get() << double_tab << "}" << std::endl;
+    *streamPtr.get() << double_tab << "$lineCount = $_ =~ tr/\\n//;" << std::endl;
+    *streamPtr.get() << tab << "}" << std::endl;
+    *streamPtr.get() << tab << sMy << "$totalConverted = totalStats(\\%ft);" << std::endl;
+    *streamPtr.get() << tab << "if (($totalConverted+$warnings) and $print_stats) {" << std::endl;
+    *streamPtr.get() << double_tab << "printStats(\"  info: converted\", \\@statNames, \\%ft, $warnings, $lineCount);" << std::endl;
+    *streamPtr.get() << double_tab << "print STDERR \" in '$fileName'\\n\";" << std::endl;
+    *streamPtr.get() << tab << "}" << std::endl;
+    *streamPtr.get() << tab << "# Update totals for all files" << std::endl;
+    *streamPtr.get() << tab << "addStats(\\%tt, \\%ft);" << std::endl;
+    *streamPtr.get() << tab << "$Twarnings += $warnings;" << std::endl;
+    *streamPtr.get() << tab << "$TlineCount += $lineCount;" << std::endl;
+    *streamPtr.get() << tab << "foreach $key (keys %warningTags) {" << std::endl;
+    *streamPtr.get() << double_tab << "$TwarningTags{$key} += $warningTags{$key};" << std::endl;
+    *streamPtr.get() << tab << "}" << std::endl;
+    *streamPtr.get() << "}" << std::endl;
+    *streamPtr.get() << "# Print total stats for all files processed:" << std::endl;
+    *streamPtr.get() << "if ($print_stats and ($fileCount > 1)) {" << std::endl;
+    *streamPtr.get() << tab << "print STDERR \"\\n\";" << std::endl;
+    *streamPtr.get() << tab << "printStats(\"  info: TOTAL-converted\", \\@statNames, \\%tt, $Twarnings, $TlineCount);" << std::endl;
+    *streamPtr.get() << tab << "print STDERR \"\\n\";" << std::endl;
+    *streamPtr.get() << tab << "foreach my $key (sort { $TwarningTags{$b} <=> $TwarningTags{$a} } keys %TwarningTags) {" << std::endl;
+    *streamPtr.get() << double_tab << "printf STDERR \"  warning: unconverted %s : %d\\n\", $key, $TwarningTags{$key};" << std::endl;
+    *streamPtr.get() << tab << "}" << std::endl;
+    *streamPtr.get() << tab << sMy << "$kernelCnt = keys %Tkernels;" << std::endl;
+    *streamPtr.get() << tab << "printf STDERR \"  kernels (%d total) : \", $kernelCnt;" << std::endl;
+    *streamPtr.get() << tab << "foreach my $key (sort { $Tkernels{$b} <=> $Tkernels{$a} } keys %Tkernels) {" << std::endl;
+    *streamPtr.get() << double_tab << "printf STDERR \"  %s(%d)\", $key, $Tkernels{$key};" << std::endl;
+    *streamPtr.get() << tab << "}" << std::endl;
+    *streamPtr.get() << tab << "print STDERR \"\\n\\n\";" << std::endl;
+    *streamPtr.get() << "}" << std::endl;
+    *streamPtr.get() << "if ($print_stats) {" << std::endl;
+    *streamPtr.get() << tab << "foreach my $key (sort { $convertedTags{$b} <=> $convertedTags{$a} } keys %convertedTags) {" << std::endl;
+    *streamPtr.get() << double_tab << "printf STDERR \"  %s %d\\n\", $key, $convertedTags{$key};" << std::endl;
+    *streamPtr.get() << tab << "}" << std::endl << "}" << std::endl;
     streamPtr.get()->flush();
     bool ret = true;
-    EC = sys::fs::copy_file(tmpFile, dstPerlMap);
+    EC = sys::fs::copy_file(tmpFile, dstHipifyPerl);
     if (EC) {
-      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << tmpFile << " to " << dstPerlMap << "\n";
+      llvm::errs() << "\n" << sHipify << sError << EC.message() << ": while copying " << tmpFile << " to " << dstHipifyPerl << "\n";
       ret = false;
     }
     if (!SaveTemps) sys::fs::remove(tmpFile);
