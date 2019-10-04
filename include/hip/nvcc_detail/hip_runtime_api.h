@@ -459,6 +459,10 @@ inline static hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width,
     return hipCUDAErrorTohipError(cudaMallocPitch(ptr, pitch, width, height));
 }
 
+inline static hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr,size_t* pitch,size_t widthInBytes,size_t height,unsigned int elementSizeBytes){
+    return hipCUResultTohipError(cuMemAllocPitch(dptr,pitch,widthInBytes,height,elementSizeBytes));
+}
+
 inline static hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
     return hipCUDAErrorTohipError(cudaMalloc3D(pitchedDevPtr, extent));
 }
@@ -469,6 +473,12 @@ inline static hipError_t hipMallocHost(void** ptr, size_t size)
     __attribute__((deprecated("use hipHostMalloc instead")));
 inline static hipError_t hipMallocHost(void** ptr, size_t size) {
     return hipCUDAErrorTohipError(cudaMallocHost(ptr, size));
+}
+
+inline static hipError_t hipMemAllocHost(void** ptr, size_t size)
+    __attribute__((deprecated("use hipHostMalloc instead")));
+inline static hipError_t hipMemAllocHost(void** ptr, size_t size) {
+    return hipCUResultTohipError(cuMemAllocHost(ptr, size));
 }
 
 inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags)
@@ -761,6 +771,20 @@ inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, s
     return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
 }
 
+inline static hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes,
+                                          hipStream_t stream __dparm(0)) {
+    return hipCUResultTohipError(cuMemsetD8Async(dest, value, sizeBytes, stream));
+}
+
+inline static hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes) {
+    return hipCUResultTohipError(cuMemsetD16(dest, value, sizeBytes));
+}
+
+inline static hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes,
+                                           hipStream_t stream __dparm(0)) {
+    return hipCUResultTohipError(cuMemsetD16Async(dest, value, sizeBytes, stream));
+}
+
 inline static hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
     return hipCUDAErrorTohipError(cudaMemset2D(dst, pitch, value, width, height));
 }
@@ -968,8 +992,7 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             cdattr = cudaDevAttrEccEnabled;
             break;
         default:
-            cerror = cudaErrorInvalidValue;
-            break;
+            return hipCUDAErrorTohipError(cudaErrorInvalidValue);
     }
 
     cerror = cudaDeviceGetAttribute(pi, cdattr, device);
