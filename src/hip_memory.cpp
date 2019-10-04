@@ -391,6 +391,8 @@ hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags) {
 // Deprecated function:
 hipError_t hipMallocHost(void** ptr, size_t sizeBytes) { return hipHostMalloc(ptr, sizeBytes, 0); }
 
+// Deprecated function:
+hipError_t hipMemAllocHost(void** ptr, size_t sizeBytes) { return hipHostMalloc(ptr, sizeBytes, 0); }
 
 // Deprecated function:
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
@@ -463,6 +465,15 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 
     hip_status = ihipMallocPitch(tls, ptr, pitch, width, height, 0);
     return ihipLogStatus(hip_status);
+}
+
+hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes){
+    HIP_INIT_SPECIAL_API(hipMemAllocPitch, (TRACE_MEM), dptr, pitch, widthInBytes, height,elementSizeBytes);
+    HIP_SET_DEVICE();
+    
+    if (widthInBytes == 0 || height == 0) return ihipLogStatus(hipErrorInvalidValue);
+    
+    return ihipLogStatus(ihipMallocPitch(tls, dptr, pitch, widthInBytes, height, 0));
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
@@ -1786,28 +1797,65 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     return ihipLogStatus(e);
 }
 
+hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy, hipStream_t stream, bool isAsync) {
+    if (pCopy == nullptr) {
+        return hipErrorInvalidValue;
+    }
+    void* dst; const void* src;
+    size_t spitch = pCopy->srcPitch;
+    size_t dpitch = pCopy->dstPitch;
+    switch(pCopy->srcMemoryType){
+        case hipMemoryTypeHost:
+            src = pCopy->srcHost;
+            break;
+        case hipMemoryTypeArray:
+            src = pCopy->srcArray->data;
+            spitch = pCopy->WidthInBytes;
+            break;
+        case hipMemoryTypeUnified:
+        case hipMemoryTypeDevice:
+            src = pCopy->srcDevice;
+            break;
+        default:
+            return hipErrorInvalidValue;
+    }
+    switch(pCopy->dstMemoryType){
+        case hipMemoryTypeHost:
+            dst = pCopy->dstHost;
+            break;
+        case hipMemoryTypeArray:
+            dst = pCopy->dstArray->data;
+            dpitch = pCopy->WidthInBytes;
+            break;
+        case hipMemoryTypeUnified:
+        case hipMemoryTypeDevice:
+            dst = pCopy->dstDevice;
+            break;
+        default:
+            return hipErrorInvalidValue;
+    }
+    if(pCopy->srcPitch < pCopy->WidthInBytes + pCopy->srcXInBytes || pCopy->srcY >= pCopy->Height){
+        return hipErrorInvalidValue;
+    } else if(pCopy->dstPitch < pCopy->WidthInBytes + pCopy->dstXInBytes || pCopy->dstY >= pCopy->Height){
+        return hipErrorInvalidValue;
+    }
+    src = (void*)((char*)src+pCopy->srcY*pCopy->srcPitch + pCopy->srcXInBytes);
+    dst = (void*)((char*)dst+pCopy->dstY*pCopy->dstPitch + pCopy->dstXInBytes);
+    if(isAsync){
+        return ihipMemcpy2DAsync(dst, dpitch, src, spitch, pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault, stream);
+    } else{
+        return ihipMemcpy2D(dst, dpitch, src, spitch, pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
+    }
+}
+
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
     HIP_INIT_SPECIAL_API(hipMemcpyParam2D, (TRACE_MCMD), pCopy);
-    hipError_t e = hipSuccess;
-    if (pCopy == nullptr) {
-        e = hipErrorInvalidValue;
-    } else {
-        e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
-                     pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
-    }
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemcpyParam2D(pCopy, hipStreamNull, false));
 }
 
 hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemcpyParam2DAsync, (TRACE_MCMD), pCopy, stream);
-    hipError_t e = hipSuccess;
-    if (pCopy == nullptr) {
-        e = hipErrorInvalidValue;
-    } else {
-        e = ihipMemcpy2DAsync(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
-                     pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault, stream);
-    }
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemcpyParam2D(pCopy, stream, true));
 }
 
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
@@ -1901,6 +1949,42 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes
         e = hipErrorInvalidValue;
     }
     return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes , hipStream_t stream ) {
+    HIP_INIT_SPECIAL_API(hipMemsetD8Async, (TRACE_MCMD), dst, value, sizeBytes, stream);
+
+    stream = ihipSyncAndResolveStream(stream);
+    if (stream) {
+        return ihipLogStatus(ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar));
+    } else {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+}
+
+hipError_t hipMemsetD16(hipDeviceptr_t dst, unsigned short value, size_t sizeBytes){
+    HIP_INIT_SPECIAL_API(hipMemsetD16, (TRACE_MCMD), dst, value, sizeBytes);
+    hipError_t e = hipSuccess;
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+    if (stream) {
+        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeShort);
+        if(hipSuccess == e)
+            stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t sizeBytes, hipStream_t stream ){
+    HIP_INIT_SPECIAL_API(hipMemsetD16Async, (TRACE_MCMD), dst, value, sizeBytes, stream);
+
+    stream = ihipSyncAndResolveStream(stream);
+    if (stream) {
+        return ihipLogStatus(ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeShort));
+    } else {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
 }
 
 hipError_t hipMemsetD32(hipDeviceptr_t dst, int value, size_t count) {

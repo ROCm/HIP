@@ -198,6 +198,8 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuIpcOpenMemHandle\b/hipIpcOpenMemHandle/g;
     $ft{'memory'} += s/\bcuMemAlloc\b/hipMalloc/g;
     $ft{'memory'} += s/\bcuMemAllocManaged\b/hipMemAllocManaged/g;
+    $ft{'memory'} += s/\bcuMemAllocPitch\b/hipMemAllocPitch/g;
+    $ft{'memory'} += s/\bcuMemAllocPitch_v2\b/hipMemAllocPitch/g;
     $ft{'memory'} += s/\bcuMemAlloc_v2\b/hipMalloc/g;
     $ft{'memory'} += s/\bcuMemFree\b/hipFree/g;
     $ft{'memory'} += s/\bcuMemFreeHost\b/hipHostFree/g;
@@ -207,6 +209,8 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuMemGetInfo\b/hipMemGetInfo/g;
     $ft{'memory'} += s/\bcuMemGetInfo_v2\b/hipMemGetInfo/g;
     $ft{'memory'} += s/\bcuMemHostAlloc\b/hipHostMalloc/g;
+    $ft{'memory'} += s/\bcuMemAllocHost\b/hipMemAllocHost/g;
+    $ft{'memory'} += s/\bcuMemAllocHost_v2\b/hipMemAllocHost/g;
     $ft{'memory'} += s/\bcuMemHostGetDevicePointer\b/hipHostGetDevicePointer/g;
     $ft{'memory'} += s/\bcuMemHostGetDevicePointer_v2\b/hipHostGetDevicePointer/g;
     $ft{'memory'} += s/\bcuMemHostGetFlags\b/hipMemHostGetFlags/g;
@@ -238,6 +242,10 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuMemsetD32_v2\b/hipMemsetD32/g;
     $ft{'memory'} += s/\bcuMemsetD8\b/hipMemsetD8/g;
     $ft{'memory'} += s/\bcuMemsetD8_v2\b/hipMemsetD8/g;
+    $ft{'memory'} += s/\bcuMemsetD8Async\b/hipMemsetD8Async/g;
+    $ft{'memory'} += s/\bcuMemsetD16\b/hipMemsetD16/g;
+    $ft{'memory'} += s/\bcuMemsetD16_v2\b/hipMemsetD16/g;
+    $ft{'memory'} += s/\bcuMemsetD16Async\b/hipMemsetD16Async/g;
     $ft{'memory'} += s/\bcudaFree\b/hipFree/g;
     $ft{'memory'} += s/\bcudaFreeArray\b/hipFreeArray/g;
     $ft{'memory'} += s/\bcudaFreeHost\b/hipHostFree/g;
