@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 #include <string>
 //---
 // Helper functions to convert HIP function arguments into strings.
