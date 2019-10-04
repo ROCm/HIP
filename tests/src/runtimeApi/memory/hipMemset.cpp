@@ -26,11 +26,11 @@ THE SOFTWARE.
  * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * //Small copy
- * TEST: %t -N 10    --memsetval 0x42 --memsetD32val 0x101
+ * TEST: %t -N 10    --memsetval 0x42 --memsetD32val 0x101 --memsetD16val 0x10 --memsetD8val 0x1
  * // Oddball size
- * TEST: %t -N 10013 --memsetval 0x5a --memsetD32val 0xDEADBEEF
+ * TEST: %t -N 10013 --memsetval 0x5a --memsetD32val 0xDEADBEEF --memsetD16val 0xDEAD --memsetD8val 0xDE
  * // Big copy
- * TEST: %t -N 256M  --memsetval 0xa6 --memsetD32val 0xCAFEBABE
+ * TEST: %t -N 256M  --memsetval 0xa6 --memsetD32val 0xCAFEBABE --memsetD16val 0xCAFE --memsetD8val 0xCA
  * HIT_END
  */
 
@@ -78,6 +78,54 @@ bool testhipMemsetD32(int memsetD32val,int p_gpuDevice)
     for (int i=0; i<N; i++) {
         if (A_h[i] != memsetD32val) {
             testResult = false;            printf("mismatch at index:%d computed:%08x, memsetD32val:%08x\n", i, A_h[i], memsetD32val);
+            break;
+        }
+    }
+    HIPCHECK(hipFree(A_d));
+    free(A_h);
+    return testResult;
+}
+
+bool testhipMemsetD16(short memsetD16val,int p_gpuDevice)
+{
+    size_t Nbytes = N*sizeof(int);
+    printf ("testhipMemsetD16 N=%zu  memsetD16val=%4x device=%d\n", N, memsetD16val, p_gpuDevice);
+    short *A_d;
+    short *A_h;
+    bool testResult = true;
+
+    HIPCHECK ( hipMalloc(&A_d, Nbytes) );
+    A_h = (short*)malloc(Nbytes);
+    HIPCHECK ( hipMemsetD16((hipDeviceptr_t)A_d, memsetD16val, N) );
+    HIPCHECK ( hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
+
+    for (int i=0; i<N; i++) {
+        if (A_h[i] != memsetD16val) {
+            testResult = false;            printf("mismatch at index:%d computed:%08x, memsetD16val:%08x\n", i, A_h[i], memsetD32val);
+            break;
+        }
+    }
+    HIPCHECK(hipFree(A_d));
+    free(A_h);
+    return testResult;
+}
+
+bool testhipMemsetD8(char memsetD8val,int p_gpuDevice)
+{
+    size_t Nbytes = N*sizeof(int);
+    printf ("testhipMemsetD8 N=%zu  memsetD8val=%4x device=%d\n", N, memsetD8val, p_gpuDevice);
+    char *A_d;
+    char *A_h;
+    bool testResult = true;
+
+    HIPCHECK ( hipMalloc(&A_d, Nbytes) );
+    A_h = (char*)malloc(Nbytes);
+    HIPCHECK ( hipMemsetD8((hipDeviceptr_t)A_d, memsetD8val, N) );
+    HIPCHECK ( hipMemcpy(A_h, A_d, Nbytes, hipMemcpyDeviceToHost));
+
+    for (int i=0; i<N; i++) {
+        if (A_h[i] != memsetD8val) {
+            testResult = false;            printf("mismatch at index:%d computed:%08x, memsetD8val:%08x\n", i, A_h[i], memsetD8val);
             break;
         }
     }
@@ -144,6 +192,64 @@ bool testhipMemsetD32Async(int memsetD32val,int p_gpuDevice)
     return testResult;
 }
 
+bool testhipMemsetD16Async(short memsetD16val,int p_gpuDevice)
+{
+    size_t Nbytes = N*sizeof(int);
+    printf ("testhipMemsetD16Async N=%zu  memsetval=%8x device=%d\n", N, memsetD16val, p_gpuDevice);
+    short *A_d;
+    short *A_h;
+    bool testResult = true;
+
+    HIPCHECK ( hipMalloc((void**)&A_d, Nbytes) );
+    A_h = (short*)malloc(Nbytes);
+    hipStream_t stream;
+    HIPCHECK(hipStreamCreate(&stream));
+    HIPCHECK ( hipMemsetD16Async((hipDeviceptr_t)A_d, memsetD16val, N, stream ));
+    HIPCHECK ( hipStreamSynchronize(stream));
+    HIPCHECK ( hipMemcpy(A_h, (void*)A_d, Nbytes, hipMemcpyDeviceToHost));
+
+    for (int i=0; i<N; i++) {
+        if (A_h[i] != memsetD16val) {
+            testResult = false;
+            printf("mismatch at index:%d computed:%02x, memsetD16val:%02x\n", i, A_h[i], memsetD16val);
+            break;
+        }
+    }
+    HIPCHECK(hipFree((void*)A_d));
+    HIPCHECK(hipStreamDestroy(stream));
+    free(A_h);
+    return testResult;
+}
+
+bool testhipMemsetD8Async(char memsetD8val,int p_gpuDevice)
+{
+    size_t Nbytes = N*sizeof(int);
+    printf ("testhipMemsetD8Async N=%zu  memsetD8val=%2x device=%d\n", N, memsetD8val, p_gpuDevice);
+    char *A_d;
+    char *A_h;
+    bool testResult = true;
+
+    HIPCHECK ( hipMalloc((void**)&A_d, Nbytes) );
+    A_h = (char*)malloc(Nbytes);
+    hipStream_t stream;
+    HIPCHECK(hipStreamCreate(&stream));
+    HIPCHECK ( hipMemsetD8Async((hipDeviceptr_t)A_d, memsetD8val, N, stream ));
+    HIPCHECK ( hipStreamSynchronize(stream));
+    HIPCHECK ( hipMemcpy(A_h, (void*)A_d, Nbytes, hipMemcpyDeviceToHost));
+
+    for (int i=0; i<N; i++) {
+        if (A_h[i] != memsetD8val) {
+            testResult = false;
+            printf("mismatch at index:%d computed:%02x, memsetD8val:%02x\n", i, A_h[i], memsetD8val);
+            break;
+        }
+    }
+    HIPCHECK(hipFree((void*)A_d));
+    HIPCHECK(hipStreamDestroy(stream));
+    free(A_h);
+    return testResult;
+}
+
 int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
@@ -153,6 +259,10 @@ int main(int argc, char *argv[])
     testResult &= testhipMemsetAsync(memsetval, p_gpuDevice);
     testResult &= testhipMemsetD32(memsetD32val, p_gpuDevice);
     testResult &= testhipMemsetD32Async(memsetD32val, p_gpuDevice);
+    testResult &= testhipMemsetD16(memsetD16val, p_gpuDevice);
+    testResult &= testhipMemsetD16Async(memsetD16val, p_gpuDevice);
+    testResult &= testhipMemsetD8(memsetD8val, p_gpuDevice);
+    testResult &= testhipMemsetD8Async(memsetD8val, p_gpuDevice);
     if (testResult) passed();
     failed("Output Mismatch\n"); 
 }

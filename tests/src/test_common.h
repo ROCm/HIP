@@ -109,6 +109,8 @@ THE SOFTWARE.
 extern size_t N;
 extern char memsetval;
 extern int memsetD32val;
+extern short memsetD16val;
+extern char memsetD8val;
 extern int iterations;
 extern unsigned blocksPerCU;
 extern unsigned threadsPerBlock;
