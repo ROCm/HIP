@@ -231,7 +231,13 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, CL_MEM_SVM_FINE_GRAIN_BUFFER | (flags << 16)));
+  unsigned int ihipFlags = CL_MEM_SVM_FINE_GRAIN_BUFFER | (flags << 16);
+  if (flags & hipHostMallocCoherent ||
+     (!(flags & hipHostMallocNonCoherent) && HIP_HOST_COHERENT)) {
+    ihipFlags |= CL_MEM_SVM_ATOMICS;
+  }
+
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, ihipFlags));
 }
 
 hipError_t hipFree(void* ptr) {
