@@ -992,8 +992,7 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             cdattr = cudaDevAttrEccEnabled;
             break;
         default:
-            cerror = cudaErrorInvalidValue;
-            break;
+            return hipCUDAErrorTohipError(cudaErrorInvalidValue);
     }
 
     cerror = cudaDeviceGetAttribute(pi, cdattr, device);
