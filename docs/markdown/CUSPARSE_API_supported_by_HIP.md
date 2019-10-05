@@ -83,6 +83,8 @@
 | typedef      |`bsrilu02Info_t`                                               |                  |                                                            |
 | struct       |`csru2csrInfo`                                                 |                  |                                                            |
 | typedef      |`csru2csrInfo_t`                                               |                  |                                                            |
+| struct       |`csrgemm2Info`                                                 |                  |`csrgemm2Info`                                              |
+| typedef      |`csrgemm2Info_t`                                               |                  |`csrgemm2Info_t`                                            |
 | struct       |`cusparseColorInfo`                                            |                  |                                                            |
 | typedef      |`cusparseColorInfo_t`                                          |                  |                                                            |
 | struct       |`pruneInfo`                                                    | 9.0              |                                                            |
@@ -163,8 +165,8 @@
 |`cusparseDestroyBsric02Info`                               |                                                 |
 |`cusparseCreateBsrilu02Info`                               |                                                 |
 |`cusparseDestroyBsrilu02Info`                              |                                                 |
-|`cusparseCreateCsrgemm2Info`                               |                                                 |
-|`cusparseDestroyCsrgemm2Info`                              |                                                 |
+|`cusparseCreateCsrgemm2Info`                               |`hipsparseCreateCsrgemm2Info`                    |
+|`cusparseDestroyCsrgemm2Info`                              |`hipsparseDestroyCsrgemm2Info`                   |
 |`cusparseCreatePruneInfo`                                  |                                                 | 9.0              |
 |`cusparseDestroyPruneInfo`                                 |                                                 | 9.0              |
 
@@ -361,18 +363,18 @@
 |`cusparseDcsrgeam2_bufferSizeExt`                          |                                                 | 9.2              |
 |`cusparseCcsrgeam2_bufferSizeExt`                          |                                                 | 9.2              |
 |`cusparseZcsrgeam2_bufferSizeExt`                          |                                                 | 9.2              |
-|`cusparseXcsrgemmNnz`                                      |                                                 |
-|`cusparseScsrgemm`                                         |                                                 |
-|`cusparseDcsrgemm`                                         |                                                 |
+|`cusparseXcsrgemmNnz`                                      |`hipsparseXcsrgemmNnz`                           |
+|`cusparseScsrgemm`                                         |`hipsparseScsrgemm`                              |
+|`cusparseDcsrgemm`                                         |`hipsparseDcsrgemm`                              |
 |`cusparseCcsrgemm`                                         |                                                 |
 |`cusparseZcsrgemm`                                         |                                                 |
-|`cusparseXcsrgemm2Nnz`                                     |                                                 |
-|`cusparseScsrgemm2`                                        |                                                 |
-|`cusparseDcsrgemm2`                                        |                                                 |
+|`cusparseXcsrgemm2Nnz`                                     |`hipsparseXcsrgemm2Nnz`                          |
+|`cusparseScsrgemm2`                                        |`hipsparseScsrgemm2`                             |
+|`cusparseDcsrgemm2`                                        |`hipsparseDcsrgemm2`                             |
 |`cusparseCcsrgemm2`                                        |                                                 |
 |`cusparseZcsrgemm2`                                        |                                                 |
-|`cusparseScsrgemm2_bufferSizeExt`                          |                                                 |
-|`cusparseDcsrgemm2_bufferSizeExt`                          |                                                 |
+|`cusparseScsrgemm2_bufferSizeExt`                          |`hipsparseScsrgemm2_bufferSizeExt`               |
+|`cusparseDcsrgemm2_bufferSizeExt`                          |`hipsparseDcsrgemm2_bufferSizeExt`               |
 |`cusparseCcsrgemm2_bufferSizeExt`                          |                                                 |
 |`cusparseZcsrgemm2_bufferSizeExt`                          |                                                 |
 
@@ -670,8 +672,8 @@
 |`cusparseXcoosortByColumn`                                 |`hipsparseXcoosortByColumn`                      |
 |`cusparseXcsrsort_bufferSizeExt`                           |`hipsparseXcsrsort_bufferSizeExt`                |
 |`cusparseXcsrsort`                                         |`hipsparseXcsrsort`                              |
-|`cusparseXcscsort_bufferSizeExt`                           |                                                 |
-|`cusparseXcscsort`                                         |                                                 |
+|`cusparseXcscsort_bufferSizeExt`                           |`hipsparseXcscsort_bufferSizeExt`                |
+|`cusparseXcscsort`                                         |`hipsparseXcscsort`                              |
 |`cusparseCreateCsru2csrInfo`                               |                                                 |
 |`cusparseDestroyCsru2csrInfo`                              |                                                 |
 |`cusparseScsru2csr_bufferSizeExt`                          |                                                 |
