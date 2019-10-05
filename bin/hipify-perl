@@ -197,6 +197,8 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuIpcGetMemHandle\b/hipIpcGetMemHandle/g;
     $ft{'memory'} += s/\bcuIpcOpenMemHandle\b/hipIpcOpenMemHandle/g;
     $ft{'memory'} += s/\bcuMemAlloc\b/hipMalloc/g;
+    $ft{'memory'} += s/\bcuMemAllocHost\b/hipMemAllocHost/g;
+    $ft{'memory'} += s/\bcuMemAllocHost_v2\b/hipMemAllocHost/g;
     $ft{'memory'} += s/\bcuMemAllocManaged\b/hipMemAllocManaged/g;
     $ft{'memory'} += s/\bcuMemAllocPitch\b/hipMemAllocPitch/g;
     $ft{'memory'} += s/\bcuMemAllocPitch_v2\b/hipMemAllocPitch/g;
@@ -209,8 +211,6 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuMemGetInfo\b/hipMemGetInfo/g;
     $ft{'memory'} += s/\bcuMemGetInfo_v2\b/hipMemGetInfo/g;
     $ft{'memory'} += s/\bcuMemHostAlloc\b/hipHostMalloc/g;
-    $ft{'memory'} += s/\bcuMemAllocHost\b/hipMemAllocHost/g;
-    $ft{'memory'} += s/\bcuMemAllocHost_v2\b/hipMemAllocHost/g;
     $ft{'memory'} += s/\bcuMemHostGetDevicePointer\b/hipHostGetDevicePointer/g;
     $ft{'memory'} += s/\bcuMemHostGetDevicePointer_v2\b/hipHostGetDevicePointer/g;
     $ft{'memory'} += s/\bcuMemHostGetFlags\b/hipMemHostGetFlags/g;
@@ -237,15 +237,15 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuMemcpyHtoDAsync\b/hipMemcpyHtoDAsync/g;
     $ft{'memory'} += s/\bcuMemcpyHtoDAsync_v2\b/hipMemcpyHtoDAsync/g;
     $ft{'memory'} += s/\bcuMemcpyHtoD_v2\b/hipMemcpyHtoD/g;
+    $ft{'memory'} += s/\bcuMemsetD16\b/hipMemsetD16/g;
+    $ft{'memory'} += s/\bcuMemsetD16Async\b/hipMemsetD16Async/g;
+    $ft{'memory'} += s/\bcuMemsetD16_v2\b/hipMemsetD16/g;
     $ft{'memory'} += s/\bcuMemsetD32\b/hipMemsetD32/g;
     $ft{'memory'} += s/\bcuMemsetD32Async\b/hipMemsetD32Async/g;
     $ft{'memory'} += s/\bcuMemsetD32_v2\b/hipMemsetD32/g;
     $ft{'memory'} += s/\bcuMemsetD8\b/hipMemsetD8/g;
-    $ft{'memory'} += s/\bcuMemsetD8_v2\b/hipMemsetD8/g;
     $ft{'memory'} += s/\bcuMemsetD8Async\b/hipMemsetD8Async/g;
-    $ft{'memory'} += s/\bcuMemsetD16\b/hipMemsetD16/g;
-    $ft{'memory'} += s/\bcuMemsetD16_v2\b/hipMemsetD16/g;
-    $ft{'memory'} += s/\bcuMemsetD16Async\b/hipMemsetD16Async/g;
+    $ft{'memory'} += s/\bcuMemsetD8_v2\b/hipMemsetD8/g;
     $ft{'memory'} += s/\bcudaFree\b/hipFree/g;
     $ft{'memory'} += s/\bcudaFreeArray\b/hipFreeArray/g;
     $ft{'memory'} += s/\bcudaFreeHost\b/hipHostFree/g;
@@ -625,6 +625,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcurandSetQuasiRandomGeneratorDimensions\b/hiprandSetQuasiRandomGeneratorDimensions/g;
     $ft{'library'} += s/\bcurandSetStream\b/hiprandSetStream/g;
     $ft{'library'} += s/\bcusparseCreate\b/hipsparseCreate/g;
+    $ft{'library'} += s/\bcusparseCreateCsrgemm2Info\b/hipsparseCreateCsrgemm2Info/g;
     $ft{'library'} += s/\bcusparseCreateCsrilu02Info\b/hipsparseCreateCsrilu02Info/g;
     $ft{'library'} += s/\bcusparseCreateCsrsv2Info\b/hipsparseCreateCsrsv2Info/g;
     $ft{'library'} += s/\bcusparseCreateHybMat\b/hipsparseCreateHybMat/g;
@@ -633,6 +634,9 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseDaxpyi\b/hipsparseDaxpyi/g;
     $ft{'library'} += s/\bcusparseDcsr2csc\b/hipsparseDcsr2csc/g;
     $ft{'library'} += s/\bcusparseDcsr2hyb\b/hipsparseDcsr2hyb/g;
+    $ft{'library'} += s/\bcusparseDcsrgemm\b/hipsparseDcsrgemm/g;
+    $ft{'library'} += s/\bcusparseDcsrgemm2\b/hipsparseDcsrgemm2/g;
+    $ft{'library'} += s/\bcusparseDcsrgemm2_bufferSizeExt\b/hipsparseDcsrgemm2_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseDcsrilu02\b/hipsparseDcsrilu02/g;
     $ft{'library'} += s/\bcusparseDcsrilu02_analysis\b/hipsparseDcsrilu02_analysis/g;
     $ft{'library'} += s/\bcusparseDcsrilu02_bufferSize\b/hipsparseDcsrilu02_bufferSize/g;
@@ -646,6 +650,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseDcsrsv2_solve\b/hipsparseDcsrsv2_solve/g;
     $ft{'library'} += s/\bcusparseDdoti\b/hipsparseDdoti/g;
     $ft{'library'} += s/\bcusparseDestroy\b/hipsparseDestroy/g;
+    $ft{'library'} += s/\bcusparseDestroyCsrgemm2Info\b/hipsparseDestroyCsrgemm2Info/g;
     $ft{'library'} += s/\bcusparseDestroyCsrilu02Info\b/hipsparseDestroyCsrilu02Info/g;
     $ft{'library'} += s/\bcusparseDestroyCsrsv2Info\b/hipsparseDestroyCsrsv2Info/g;
     $ft{'library'} += s/\bcusparseDestroyHybMat\b/hipsparseDestroyHybMat/g;
@@ -665,6 +670,9 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseSaxpyi\b/hipsparseSaxpyi/g;
     $ft{'library'} += s/\bcusparseScsr2csc\b/hipsparseScsr2csc/g;
     $ft{'library'} += s/\bcusparseScsr2hyb\b/hipsparseScsr2hyb/g;
+    $ft{'library'} += s/\bcusparseScsrgemm\b/hipsparseScsrgemm/g;
+    $ft{'library'} += s/\bcusparseScsrgemm2\b/hipsparseScsrgemm2/g;
+    $ft{'library'} += s/\bcusparseScsrgemm2_bufferSizeExt\b/hipsparseScsrgemm2_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseScsrilu02\b/hipsparseScsrilu02/g;
     $ft{'library'} += s/\bcusparseScsrilu02_analysis\b/hipsparseScsrilu02_analysis/g;
     $ft{'library'} += s/\bcusparseScsrilu02_bufferSize\b/hipsparseScsrilu02_bufferSize/g;
@@ -693,7 +701,11 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseXcoosortByColumn\b/hipsparseXcoosortByColumn/g;
     $ft{'library'} += s/\bcusparseXcoosortByRow\b/hipsparseXcoosortByRow/g;
     $ft{'library'} += s/\bcusparseXcoosort_bufferSizeExt\b/hipsparseXcoosort_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseXcscsort\b/hipsparseXcscsort/g;
+    $ft{'library'} += s/\bcusparseXcscsort_bufferSizeExt\b/hipsparseXcscsort_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseXcsr2coo\b/hipsparseXcsr2coo/g;
+    $ft{'library'} += s/\bcusparseXcsrgemm2Nnz\b/hipsparseXcsrgemm2Nnz/g;
+    $ft{'library'} += s/\bcusparseXcsrgemmNnz\b/hipsparseXcsrgemmNnz/g;
     $ft{'library'} += s/\bcusparseXcsrilu02_zeroPivot\b/hipsparseXcsrilu02_zeroPivot/g;
     $ft{'library'} += s/\bcusparseXcsrsort\b/hipsparseXcsrsort/g;
     $ft{'library'} += s/\bcusparseXcsrsort_bufferSizeExt\b/hipsparseXcsrsort_bufferSizeExt/g;
@@ -816,6 +828,8 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bCUstream_st\b/ihipStream_t/g;
     $ft{'type'} += s/\bCUtexObject\b/hipTextureObject_t/g;
     $ft{'type'} += s/\bCUtexref_st\b/textureReference/g;
+    $ft{'type'} += s/\bcsrgemm2Info\b/csrgemm2Info/g;
+    $ft{'type'} += s/\bcsrgemm2Info_t\b/csrgemm2Info_t/g;
     $ft{'type'} += s/\bcsrilu02Info_t\b/csrilu02Info_t/g;
     $ft{'type'} += s/\bcsrsv2Info_t\b/csrsv2Info_t/g;
     $ft{'type'} += s/\bcuComplex\b/hipComplex/g;
