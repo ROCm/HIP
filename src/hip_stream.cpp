@@ -254,14 +254,10 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
 
 
 //---
-hipError_t setCallbackPacket(hsa_queue_t* queue,
+void setCallbackPacket(hsa_queue_t* queue,
                              uint64_t& index, uint64_t& nextIndex,
                              hsa_barrier_and_packet_t** barrier1,
                              hsa_barrier_and_packet_t** barrier2){
-
-    if(queue == nullptr ||
-       barrier1 == nullptr || barrier2 == nullptr)
-            return hipErrorInvalidValue;
 
     uint64_t tempIndex = 0;
     uint32_t mask = queue->size - 1;
@@ -299,8 +295,6 @@ hipError_t setCallbackPacket(hsa_queue_t* queue,
     memcpy(*barrier2,tempBarrier,sizeof(hsa_barrier_and_packet_t));
 
     delete tempBarrier;
-
-    return hipSuccess;
 }
 
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
