@@ -581,7 +581,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
 
   {"cusparseScsr2csr_compress",                   {"hipsparseScsr2csr_compress",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseDcsr2csr_compress",                   {"hipsparseDcsr2csr_compress",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseDcsr2csr_compress",                   {"hipsparseDcsr2csr_compress",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseCcsr2csr_compress",                   {"hipsparseCcsr2csr_compress",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZcsr2csr_compress",                   {"hipsparseZcsr2csr_compress",                   "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
   {"cusparseScsr2hyb",                            {"hipsparseScsr2hyb",                            "", CONV_LIB_FUNC, API_SPARSE}},
