@@ -71,7 +71,11 @@ $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 # Defining ROCM_ROOTDIR to be used instead of hardcoded /opt/rocm defaults
 #
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
-$ROCM_ROOTDIR=dirname("$HIP_PATH"); # use parent directory of HIP_PATH
+if (-e "$HIP_PATH/../.info/version") {
+    $ROCM_ROOTDIR=dirname("$HIP_PATH"); # use parent directory of HIP_PATH
+} else {
+    $ROCM_ROOTDIR="/opt/rocm";
+}
 $HIP_VDI_HOME=$ENV{'HIP_VDI_HOME'};
 $HIP_LIB_PATH=$ENV{'HIP_LIB_PATH'};
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
@@ -228,7 +232,7 @@ if ($HIP_PLATFORM eq "clang") {
     }
 
     if ($HIP_RUNTIME eq "HCC" ) {
-      $HSA_PATH=$ENV{'HSA_PATH'} // "$HIP_PATH/../hsa";
+      $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_ROOTDIR/hsa"; # use ROCM_ROOTDIR
       $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
     }
 
@@ -237,9 +241,9 @@ if ($HIP_PLATFORM eq "clang") {
     if (! defined $HIP_LIB_PATH) {
         $HIP_LIB_PATH = "$HIP_PATH/lib";
     }
-    $HSA_PATH=$ENV{'HSA_PATH'} // "$HIP_PATH/../hsa";
+    $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_ROOTDIR/hsa"; # use ROCM_ROOTDIR
 
-    $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "$HIP_PATH/../hcc";
+    $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "$ROCM_ROOTDIR/hcc"; # use ROCM_ROOTDIR
 
     $HCC_VERSION=`${HCC_HOME}/bin/hcc --version`;
     $HCC_VERSION=~/.*based on HCC ([^ ]+).*/;
