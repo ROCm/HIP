@@ -269,6 +269,7 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcudaMemcpy2DAsync\b/hipMemcpy2DAsync/g;
     $ft{'memory'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
     $ft{'memory'} += s/\bcudaMemcpy3D\b/hipMemcpy3D/g;
+    $ft{'memory'} += s/\bcudaMemcpy3DAsync\b/hipMemcpy3DAsync/g;
     $ft{'memory'} += s/\bcudaMemcpyAsync\b/hipMemcpyAsync/g;
     $ft{'memory'} += s/\bcudaMemcpyFromArray\b/hipMemcpyFromArray/g;
     $ft{'memory'} += s/\bcudaMemcpyFromSymbol\b/hipMemcpyFromSymbol/g;
@@ -336,6 +337,10 @@ sub simpleSubstitutions {
     $ft{'occupancy'} += s/\bcudaOccupancyMaxActiveBlocksPerMultiprocessor\b/hipOccupancyMaxActiveBlocksPerMultiprocessor/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags\b/hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxPotentialBlockSize\b/hipOccupancyMaxPotentialBlockSize/g;
+    $ft{'texture'} += s/\bcuTexRefGetAddress\b/hipTexRefGetAddress/g;
+    $ft{'texture'} += s/\bcuTexRefGetAddressMode\b/hipTexRefGetAddressMode/g;
+    $ft{'texture'} += s/\bcuTexRefGetAddress_v2\b/hipTexRefGetAddress/g;
+    $ft{'texture'} += s/\bcuTexRefGetArray\b/hipTexRefGetArray/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress\b/hipTexRefSetAddress/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress2D\b/hipTexRefSetAddress2D/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress2D_v2\b/hipTexRefSetAddress2D/g;
