@@ -440,8 +440,6 @@
 | `cudaMemcpyFromSymbolAsync`                               |                                                       |
 | `cudaMemcpyToSymbol`                                      |                                                       |
 | `cudaMemcpyToSymbolAsync`                                 |                                                       |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           |`hipOccupancyMaxActiveBlocksPerMultiprocessor`         |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
 | `cudaOccupancyMaxPotentialBlockSize`                      |`hipOccupancyMaxPotentialBlockSize`                    |
 | `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                                                       |
 | `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                                                       |
@@ -484,7 +482,6 @@
 | struct       |`cudaTextureDesc`                                    |                  |`hipTextureDesc`                                            |
 | struct       |`textureReference`                                   |                  |`textureReference`                                          |
 | struct       |`surfaceReference`                                   |                  |                                                            |
-| struct       |`CUuuid_st`                                          |                  |                                                            |
 | enum         |***`cudaCGScope`***                                  | 9.0              |                                                            |
 |            0 |*`cudaCGScopeInvalid`*                               | 9.0              |                                                            |
 |            1 |*`cudaCGScopeGrid`*                                  | 9.0              |                                                            |
@@ -974,7 +971,6 @@
 | typedef      |`cudaArray_const_t`                                  |                  |`hipArray_const_t`                                          |
 | typedef      |`cudaEvent_t`                                        |                  |`hipEvent_t`                                                |
 | struct       |`CUevent_st`                                         |                  |`ihipEvent_t`                                               |
-| typedef      |`cudaGraphicsResource_t`                             |                  |                                                            |
 | struct       |`cudaMipmappedArray`                                 |                  |`hipMipmappedArray`                                         |
 | typedef      |`cudaMipmappedArray_t`                               |                  |`hipMipmappedArray_t`                                       |
 | typedef      |`cudaMipmappedArray_const_t`                         |                  |`hipMipmappedArray_const_t`                                 |
