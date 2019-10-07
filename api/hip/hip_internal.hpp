@@ -24,6 +24,7 @@ THE SOFTWARE.
 #define HIP_SRC_HIP_INTERNAL_H
 
 #include "cl_common.hpp"
+#include "hip_prof_api.h"
 #include "trace_helper.h"
 #include "utils/debug.hpp"
 #include <unordered_set>
@@ -51,13 +52,14 @@ typedef struct ihipIpcMemHandle_st {
   }
 
 // This macro should be called at the beginning of every HIP API.
-#define HIP_INIT_API(...)                                    \
+#define HIP_INIT_API(cid, ...)                               \
   LogPrintfInfo("[%zx] %s ( %s )", std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
   amd::Thread* thread = amd::Thread::current();              \
   if (!CL_CHECK_THREAD(thread)) {                            \
     HIP_RETURN(hipErrorOutOfMemory);                         \
   }                                                          \
-  HIP_INIT();
+  HIP_INIT();                                                \
+  HIP_CB_SPAWNER_OBJECT(cid);
 
 #define HIP_RETURN(ret)          \
   hip::g_lastError = ret;  \

@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hip_internal.hpp"
 
 hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t peerCtx) {
-  HIP_INIT_API(canAccessPeer, thisCtx, peerCtx);
+  HIP_INIT_API(NONE, canAccessPeer, thisCtx, peerCtx);
 
   assert(0 && "Unimplemented");
 
@@ -34,7 +34,7 @@ hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, hipCtx_t thisCtx, hipCtx_t
 
 hipError_t hipMemcpyPeer(void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t srcCtx,
                          size_t sizeBytes) {
-  HIP_INIT_API(dst, dstCtx, src, srcCtx, sizeBytes);
+  HIP_INIT_API(NONE, dst, dstCtx, src, srcCtx, sizeBytes);
 
   assert(0 && "Unimplemented");
 
@@ -43,7 +43,7 @@ hipError_t hipMemcpyPeer(void* dst, hipCtx_t dstCtx, const void* src, hipCtx_t s
 
 hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hipCtx_t srcDevice,
                               size_t sizeBytes, hipStream_t stream) {
-  HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
+  HIP_INIT_API(NONE, dst, dstDevice, src, srcDevice, sizeBytes, stream);
 
   assert(0 && "Unimplemented");
 
@@ -51,7 +51,7 @@ hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hi
 }
 
 hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId) {
-  HIP_INIT_API(canAccessPeer, deviceId, peerDeviceId);
+  HIP_INIT_API(hipDeviceCanAccessPeer, canAccessPeer, deviceId, peerDeviceId);
 
   amd::Device* device = nullptr;
   amd::Device* peer_device = nullptr;
@@ -83,39 +83,39 @@ hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDevi
 }
 
 hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
-  HIP_INIT_API(peerDeviceId);
+  HIP_INIT_API(hipDeviceDisablePeerAccess, peerDeviceId);
 
   HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
-  HIP_INIT_API(peerDeviceId, flags);
+  HIP_INIT_API(hipDeviceEnablePeerAccess, peerDeviceId, flags);
 
   HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevice,
                          size_t sizeBytes) {
-  HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes);
+  HIP_INIT_API(hipMemcpyPeer, dst, dstDevice, src, srcDevice, sizeBytes);
 
   HIP_RETURN(hipMemcpy(dst, src, sizeBytes, hipMemcpyDeviceToDevice));
 }
 
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
                               size_t sizeBytes, hipStream_t stream) {
-  HIP_INIT_API(dst, dstDevice, src, srcDevice, sizeBytes, stream);
+  HIP_INIT_API(hipMemcpyPeerAsync, dst, dstDevice, src, srcDevice, sizeBytes, stream);
 
   HIP_RETURN(hipMemcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToDevice, stream));
 }
 
 hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags) {
-  HIP_INIT_API(peerCtx, flags);
+  HIP_INIT_API(hipCtxEnablePeerAccess, peerCtx, flags);
 
   HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx) {
-  HIP_INIT_API(peerCtx);
+  HIP_INIT_API(hipCtxDisablePeerAccess, peerCtx);
 
   HIP_RETURN(hipSuccess);
 }

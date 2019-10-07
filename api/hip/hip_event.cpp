@@ -182,19 +182,19 @@ hipError_t ihipEventQuery(hipEvent_t event) {
 }
 
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
-  HIP_INIT_API(event, flags);
+  HIP_INIT_API(hipEventCreateWithFlags, event, flags);
 
   HIP_RETURN(ihipEventCreateWithFlags(event, flags));
-}  
+}
 
 hipError_t hipEventCreate(hipEvent_t* event) {
-  HIP_INIT_API(event);
+  HIP_INIT_API(hipEventCreate, event);
 
   HIP_RETURN(ihipEventCreateWithFlags(event, 0));
 }
 
 hipError_t hipEventDestroy(hipEvent_t event) {
-  HIP_INIT_API(event);
+  HIP_INIT_API(hipEventDestroy, event);
 
   if (event == nullptr) {
     HIP_RETURN(hipErrorInvalidResourceHandle);
@@ -206,7 +206,7 @@ hipError_t hipEventDestroy(hipEvent_t event) {
 }
 
 hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
-  HIP_INIT_API(ms, start, stop);
+  HIP_INIT_API(hipEventElapsedTime, ms, start, stop);
 
   if (start == nullptr || stop == nullptr) {
     HIP_RETURN(hipErrorInvalidResourceHandle);
@@ -223,7 +223,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
 }
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
-  HIP_INIT_API(event, stream);
+  HIP_INIT_API(hipEventRecord, event, stream);
 
   if (event == nullptr) {
     HIP_RETURN(hipErrorInvalidResourceHandle);
@@ -246,7 +246,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
 }
 
 hipError_t hipEventSynchronize(hipEvent_t event) {
-  HIP_INIT_API(event);
+  HIP_INIT_API(hipEventSynchronize, event);
 
   if (event == nullptr) {
     HIP_RETURN(hipErrorInvalidResourceHandle);
@@ -258,7 +258,7 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
 }
 
 hipError_t hipEventQuery(hipEvent_t event) {
-  HIP_INIT_API(event);
+  HIP_INIT_API(hipEventQuery, event);
 
   HIP_RETURN(ihipEventQuery(event));
 }

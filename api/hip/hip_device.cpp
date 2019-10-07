@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hip_internal.hpp"
 
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
-  HIP_INIT_API(device, deviceId);
+  HIP_INIT_API(hipDeviceGet, device, deviceId);
 
   if (device != nullptr) {
     *device = deviceId;
@@ -38,7 +38,7 @@ hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
 
 hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) {
 
-  HIP_INIT_API(cacheConfig);
+  HIP_INIT_API(hipFuncSetCacheConfig, cacheConfig);
 
   // No way to set cache config yet.
 
@@ -47,7 +47,7 @@ hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) 
 
 hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
 
-  HIP_INIT_API(bytes, device);
+  HIP_INIT_API(hipDeviceTotalMem, bytes, device);
 
   if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
     HIP_RETURN(hipErrorInvalidDevice);
@@ -67,7 +67,7 @@ hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
 
 hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device) {
 
-  HIP_INIT_API(major, minor, device);
+  HIP_INIT_API(hipDeviceComputeCapability, major, minor, device);
 
   if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
     HIP_RETURN(hipErrorInvalidDevice);
@@ -86,7 +86,7 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 }
 
 hipError_t hipDeviceGetCount(int* count) {
-  HIP_INIT_API(count);
+  HIP_INIT_API(NONE, count);
 
   HIP_RETURN(ihipDeviceGetCount(count));
 }
@@ -108,7 +108,7 @@ hipError_t ihipDeviceGetCount(int* count) {
 
 hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
 
-  HIP_INIT_API((void*)name, len, device);
+  HIP_INIT_API(hipDeviceGetName, (void*)name, len, device);
 
   if (device < 0 || static_cast<size_t>(device) >= g_devices.size()) {
     HIP_RETURN(hipErrorInvalidDevice);
@@ -134,7 +134,7 @@ hipError_t hipDeviceGetName(char *name, int len, hipDevice_t device) {
 }
 
 hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device ) {
-  HIP_INIT_API(props, device);
+  HIP_INIT_API(hipGetDeviceProperties, props, device);
 
   if (props == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -218,7 +218,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
 }
 
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
-  HIP_INIT_API(deviceId, acc);
+  HIP_INIT_API(NONE, deviceId, acc);
 
   assert(0 && "Unimplemented");
 
@@ -226,7 +226,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
 }
 
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
-  HIP_INIT_API(stream, av);
+  HIP_INIT_API(NONE, stream, av);
 
   assert(0 && "Unimplemented");
 

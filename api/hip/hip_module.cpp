@@ -30,6 +30,11 @@ THE SOFTWARE.
 
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image);
 
+const std::string& FunctionName(const hipFunction_t f)
+{
+  return hip::Function::asFunction(f)->function_->name();
+}
+
 static uint64_t ElfSize(const void *emi)
 {
   const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
@@ -53,7 +58,7 @@ static uint64_t ElfSize(const void *emi)
 
 hipError_t hipModuleLoad(hipModule_t* module, const char* fname)
 {
-  HIP_INIT_API(module, fname);
+  HIP_INIT_API(hipModuleLoad, module, fname);
 
   if (!fname) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -81,7 +86,7 @@ bool ihipModuleUnregisterGlobal(hipModule_t hmod) {
 
 hipError_t hipModuleUnload(hipModule_t hmod)
 {
-  HIP_INIT_API(hmod);
+  HIP_INIT_API(hipModuleUnload, hmod);
 
   if (hmod == nullptr) {
     HIP_RETURN(hipErrorUnknown);
@@ -100,7 +105,7 @@ hipError_t hipModuleUnload(hipModule_t hmod)
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
-  HIP_INIT_API(module, image);
+  HIP_INIT_API(hipModuleLoadData, module, image);
 
   HIP_RETURN(ihipModuleLoadData(module, image));
 }
@@ -200,7 +205,7 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
 
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const char *name)
 {
-  HIP_INIT_API(hfunc, hmod, name);
+  HIP_INIT_API(hipModuleGetFunction, hfunc, hmod, name);
 
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
 
@@ -222,7 +227,7 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
 
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod, const char* name)
 {
-  HIP_INIT_API(dptr, bytes, hmod, name);
+  HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
 
   /* Get address and size for the global symbol */
   if (!PlatformState::instance().getGlobalVar(name, ihipGetDevice(), dptr,
@@ -235,7 +240,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
 
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
-  HIP_INIT_API(attr, func);
+  HIP_INIT_API(hipFuncGetAttributes, attr, func);
 
   if (!PlatformState::instance().getFuncAttr(func, attr)) {
     HIP_RETURN(hipErrorUnknown);
@@ -253,7 +258,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0,
                                  uint32_t params = 0)
 {
-  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+  HIP_INIT_API(NONE, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
     sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags, params);
 
   hip::Function* function = hip::Function::asFunction(f);
@@ -347,7 +352,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t sharedMemBytes, hipStream_t hStream,
                                  void **kernelParams, void **extra)
 {
-  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
+  HIP_INIT_API(hipModuleLaunchKernel, f, gridDimX, gridDimY, gridDimZ,
                blockDimX, blockDimY, blockDimZ,
                sharedMemBytes, hStream,
                kernelParams, extra);
@@ -364,7 +369,7 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags)
 {
-  HIP_INIT_API(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
+  HIP_INIT_API(NONE, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
                localWorkSizeX, localWorkSizeY, localWorkSizeZ,
                sharedMemBytes, hStream,
                kernelParams, extra, startEvent, stopEvent, flags);
@@ -383,7 +388,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX,
                                     hipEvent_t startEvent,
                                     hipEvent_t stopEvent)
 {
-  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
+  HIP_INIT_API(NONE, f, gridDimX, gridDimY, gridDimZ,
                blockDimX, blockDimY, blockDimZ,
                sharedMemBytes, hStream,
                kernelParams, extra, startEvent, stopEvent);
@@ -400,7 +405,7 @@ hipError_t hipModuleLaunchKernelExt(hipFunction_t f, uint32_t gridDimX,
                                     hipEvent_t startEvent,
                                     hipEvent_t stopEvent)
 {
-  HIP_INIT_API(f, gridDimX, gridDimY, gridDimZ,
+  HIP_INIT_API(NONE, f, gridDimX, gridDimY, gridDimZ,
                blockDimX, blockDimY, blockDimZ,
                sharedMemBytes, hStream,
                kernelParams, extra, startEvent, stopEvent);
@@ -413,7 +418,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f,
                                       dim3 gridDim, dim3 blockDim,
                                       void **kernelParams, uint32_t sharedMemBytes, hipStream_t hStream)
 {
-  HIP_INIT_API(f, gridDim, blockDim, 
+  HIP_INIT_API(hipLaunchCooperativeKernel, f, gridDim, blockDim,
                sharedMemBytes, hStream);
 
   int deviceId = ihipGetDevice();
@@ -464,7 +469,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                  int numDevices, unsigned int flags)
 {
-  HIP_INIT_API(launchParamsList, numDevices, flags);
+  HIP_INIT_API(hipLaunchCooperativeKernelMultiDevice, launchParamsList, numDevices, flags);
 
   return ihipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags,
                                                 (amd::NDRangeKernelCommand::CooperativeGroups |
@@ -473,13 +478,13 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int numDevices, unsigned int flags) {
-  HIP_INIT_API(launchParamsList, numDevices, flags);
+  HIP_INIT_API(hipExtLaunchMultiKernelMultiDevice, launchParamsList, numDevices, flags);
 
   return ihipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags, 0);
 }
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name) {
-  HIP_INIT_API(texRef, hmod, name);
+  HIP_INIT_API(hipModuleGetTexRef, texRef, hmod, name);
 
   /* input args check */
   if ((texRef == nullptr) || (name == nullptr)) {

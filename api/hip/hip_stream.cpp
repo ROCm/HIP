@@ -120,19 +120,19 @@ static hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags, amd:
 }
 
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
-  HIP_INIT_API(stream, flags);
+  HIP_INIT_API(hipStreamCreateWithFlags, stream, flags);
 
   HIP_RETURN(ihipStreamCreate(stream, flags, amd::CommandQueue::Priority::Normal));
 }
 
 hipError_t hipStreamCreate(hipStream_t *stream) {
-  HIP_INIT_API(stream);
+  HIP_INIT_API(hipStreamCreate, stream);
 
   HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, amd::CommandQueue::Priority::Normal));
 }
 
 hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority) {
-  HIP_INIT_API(stream, flags, priority);
+  HIP_INIT_API(hipStreamCreateWithPriority, stream, flags, priority);
 
   if (priority > static_cast<int>(amd::CommandQueue::Priority::High)) {
     priority = static_cast<int>(amd::CommandQueue::Priority::High);
@@ -144,7 +144,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
 }
 
 hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPriority) {
-  HIP_INIT_API(leastPriority, greatestPriority);
+  HIP_INIT_API(hipDeviceGetStreamPriorityRange, leastPriority, greatestPriority);
 
   if (leastPriority != nullptr) {
     *leastPriority = static_cast<int>(amd::CommandQueue::Priority::Normal);
@@ -157,7 +157,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
 }
 
 hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
-  HIP_INIT_API(stream, flags);
+  HIP_INIT_API(hipStreamGetFlags, stream, flags);
 
   hip::Stream* hStream = reinterpret_cast<hip::Stream*>(stream);
 
@@ -171,7 +171,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
 }
 
 hipError_t hipStreamSynchronize(hipStream_t stream) {
-  HIP_INIT_API(stream);
+  HIP_INIT_API(hipStreamSynchronize, stream);
 
   amd::HostQueue* hostQueue = hip::getQueue(stream);
   hostQueue->finish();
@@ -180,7 +180,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
 }
 
 hipError_t hipStreamDestroy(hipStream_t stream) {
-  HIP_INIT_API(stream);
+  HIP_INIT_API(hipStreamDestroy, stream);
 
   if (stream == nullptr) {
     HIP_RETURN(hipErrorInvalidResourceHandle);
@@ -199,7 +199,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 }
 
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
-  HIP_INIT_API(stream, event, flags);
+  HIP_INIT_API(hipStreamWaitEvent, stream, event, flags);
 
   amd::HostQueue* queue;
 
@@ -219,7 +219,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 }
 
 hipError_t hipStreamQuery(hipStream_t stream) {
-  HIP_INIT_API(stream);
+  HIP_INIT_API(hipStreamQuery, stream);
 
   amd::HostQueue* hostQueue;
   if (stream == nullptr) {
@@ -242,7 +242,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
 
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags) {
-  HIP_INIT_API(stream, callback, userData, flags);
+  HIP_INIT_API(hipStreamAddCallback, stream, callback, userData, flags);
 
   amd::HostQueue* hostQueue = reinterpret_cast<hip::Stream*>
                               (stream)->asHostQueue();
