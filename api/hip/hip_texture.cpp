@@ -215,7 +215,7 @@ hip::TextureObject* ihipCreateTextureObject(const hipResourceDesc& resDesc, amd:
 hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResourceDesc* pResDesc,
                                   const hipTextureDesc* pTexDesc,
                                   const hipResourceViewDesc* pResViewDesc) {
-  HIP_INIT_API(pTexObject, pResDesc, pTexDesc, pResViewDesc);
+  HIP_INIT_API(NONE, pTexObject, pResDesc, pTexDesc, pResViewDesc);
 
   amd::Device* device = hip::getCurrentContext()->devices()[0];
 
@@ -307,7 +307,7 @@ void ihipDestroyTextureObject(hip::TextureObject* texture) {
 }
 
 hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject) {
-  HIP_INIT_API(textureObject);
+  HIP_INIT_API(NONE, textureObject);
 
   hip::TextureObject* texture = reinterpret_cast<hip::TextureObject*>(textureObject);
 
@@ -318,7 +318,7 @@ hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject) {
 
 hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
                                            hipTextureObject_t textureObject) {
-  HIP_INIT_API(pResDesc, textureObject);
+  HIP_INIT_API(NONE, pResDesc, textureObject);
 
   hip::TextureObject* texture = reinterpret_cast<hip::TextureObject*>(textureObject);
 
@@ -331,7 +331,7 @@ hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
 
 hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc,
                                                hipTextureObject_t textureObject) {
-  HIP_INIT_API(pResViewDesc, textureObject);
+  HIP_INIT_API(NONE, pResViewDesc, textureObject);
 
   assert(0 && "Unimplemented");
 
@@ -340,7 +340,7 @@ hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc
 
 hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
                                           hipTextureObject_t textureObject) {
-  HIP_INIT_API(pTexDesc, textureObject);
+  HIP_INIT_API(NONE, pTexDesc, textureObject);
 
   assert(0 && "Unimplemented");
 
@@ -416,7 +416,7 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
 
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
                           const hipChannelFormatDesc* desc, size_t size) {
-  HIP_INIT_API(offset, tex, devPtr, desc, size);
+  HIP_INIT_API(NONE, offset, tex, devPtr, desc, size);
 
   if (desc == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -432,14 +432,14 @@ hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* dev
 hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
                             const hipChannelFormatDesc* desc, size_t width, size_t height,
                             size_t pitch) {
-  HIP_INIT_API(offset, tex, devPtr, desc, width, height, pitch);
+  HIP_INIT_API(NONE, offset, tex, devPtr, desc, width, height, pitch);
 
   HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, offset, tex, devPtr, desc, width, height, pitch));
 }
 
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
                                  const hipChannelFormatDesc* desc) {
-  HIP_INIT_API(tex, array, desc);
+  HIP_INIT_API(NONE, tex, array, desc);
 
   assert(0 && "Unimplemented");
 
@@ -449,7 +449,7 @@ hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
 hipError_t ihipBindTextureImpl(TlsData* tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                const void* devPtr, const struct hipChannelFormatDesc* desc,
                                size_t size, textureReference* tex) {
-  HIP_INIT_API(dim, readMode, offset, devPtr, size, tex);
+  HIP_INIT_API(NONE, dim, readMode, offset, devPtr, size, tex);
 
   assert(1 == dim);
 
@@ -460,7 +460,7 @@ hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureRead
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
                                       textureReference* tex) {
-  HIP_INIT_API(dim, readMode, &desc, array, tex);
+  HIP_INIT_API(NONE, dim, readMode, &desc, array, tex);
 
   cl_mem_object_type clType;
   size_t offset = 0;
@@ -483,7 +483,7 @@ hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureRead
 hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
                                           hipMipmappedArray_const_t mipmappedArray,
                                           const hipChannelFormatDesc* desc) {
-  HIP_INIT_API(tex, mipmappedArray, desc);
+  HIP_INIT_API(NONE, tex, mipmappedArray, desc);
 
   assert(0 && "Unimplemented");
 
@@ -491,7 +491,7 @@ hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
 }
 
 hipError_t hipUnbindTexture(const textureReference* tex) {
-  HIP_INIT_API(tex);
+  HIP_INIT_API(NONE, tex);
 
   ihipDestroyTextureObject(reinterpret_cast<hip::TextureObject*>(tex->textureObject));
 
@@ -499,7 +499,7 @@ hipError_t hipUnbindTexture(const textureReference* tex) {
 }
 
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array) {
-  HIP_INIT_API(desc, array);
+  HIP_INIT_API(NONE, desc, array);
 
   if (desc != nullptr) {
     *desc = array->desc;
@@ -509,7 +509,7 @@ hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array)
 }
 
 hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* tex) {
-  HIP_INIT_API(offset, tex);
+  HIP_INIT_API(NONE, offset, tex);
 
   if ((offset == nullptr) || (tex == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -521,7 +521,7 @@ hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* 
 }
 
 hipError_t hipGetTextureReference(const textureReference** tex, const void* symbol) {
-  HIP_INIT_API(tex, symbol);
+  HIP_INIT_API(NONE, tex, symbol);
 
   assert(0 && "Unimplemented");
 
@@ -529,7 +529,7 @@ hipError_t hipGetTextureReference(const textureReference** tex, const void* symb
 }
 
 hipError_t hipTexRefSetFormat(textureReference* tex, hipArray_Format fmt, int NumPackedComponents) {
-  HIP_INIT_API(tex, fmt, NumPackedComponents);
+  HIP_INIT_API(NONE, tex, fmt, NumPackedComponents);
 
   if (tex == nullptr) {
     HIP_RETURN(hipErrorInvalidImage);
@@ -542,7 +542,7 @@ hipError_t hipTexRefSetFormat(textureReference* tex, hipArray_Format fmt, int Nu
 }
 
 hipError_t hipTexRefSetFlags(textureReference* tex, unsigned int flags) {
-  HIP_INIT_API(tex, flags);
+  HIP_INIT_API(NONE, tex, flags);
 
   if (tex == nullptr) {
     HIP_RETURN(hipErrorInvalidImage);
@@ -554,7 +554,7 @@ hipError_t hipTexRefSetFlags(textureReference* tex, unsigned int flags) {
 }
 
 hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm) {
-  HIP_INIT_API(tex, fm);
+  HIP_INIT_API(NONE, tex, fm);
 
   if (tex == nullptr) {
     HIP_RETURN(hipErrorInvalidImage);
@@ -566,7 +566,7 @@ hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm
 }
 
 hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim) {
-  HIP_INIT_API(am, &tex, dim);
+  HIP_INIT_API(NONE, am, &tex, dim);
 
   if ((am == nullptr) || (dim >= 3)) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -578,7 +578,7 @@ hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference t
 }
 
 hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am) {
-  HIP_INIT_API(tex, dim, am);
+  HIP_INIT_API(NONE, tex, dim, am);
 
   if (tex == nullptr) {
     HIP_RETURN(hipErrorInvalidImage);
@@ -590,7 +590,7 @@ hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAdd
 }
 
 hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex) {
-  HIP_INIT_API(array, &tex);
+  HIP_INIT_API(NONE, array, &tex);
 
   hip::TextureObject* texture = nullptr;
 
@@ -613,7 +613,7 @@ hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex) {
 }
 
 hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsigned int flags) {
-  HIP_INIT_API(tex, array, flags);
+  HIP_INIT_API(NONE, tex, array, flags);
 
   size_t offset = 0;
 
@@ -626,7 +626,7 @@ hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsi
 }
 
 hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
-  HIP_INIT_API(dev_ptr, &tex);
+  HIP_INIT_API(NONE, dev_ptr, &tex);
 
   hip::TextureObject* texture = nullptr;
   device::Memory* dev_mem = nullptr;
@@ -648,7 +648,7 @@ hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
 
 hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDeviceptr_t devPtr,
                                size_t size) {
-  HIP_INIT_API(offset, tex, devPtr, size);
+  HIP_INIT_API(NONE, offset, tex, devPtr, size);
 
   if (tex == nullptr) {
     HIP_RETURN(hipErrorInvalidImage);
@@ -664,7 +664,7 @@ hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDevicep
 
 hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,
                                  hipDeviceptr_t devPtr, size_t pitch) {
-  HIP_INIT_API(tex, desc, devPtr, pitch);
+  HIP_INIT_API(NONE, tex, desc, devPtr, pitch);
 
   if (desc == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);

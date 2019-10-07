@@ -47,7 +47,7 @@ using namespace hip;
 
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
                                   const hipResourceDesc* pResDesc) {
-  HIP_INIT_API(pSurfObject, pResDesc);
+  HIP_INIT_API(NONE, pSurfObject, pResDesc);
 
   hipSurface* pSurface = new hipSurface(pResDesc);
   assert(pSurface != nullptr);
@@ -82,7 +82,7 @@ hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
 
 
 hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
-  HIP_INIT_API(surfaceObject);
+  HIP_INIT_API(NONE, surfaceObject);
 
   amd::ScopedLock lock(surfaceLock);
   hipSurface* pSurface = surfaceHash[surfaceObject];

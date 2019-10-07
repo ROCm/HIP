@@ -112,13 +112,13 @@ amd::HostQueue* getNullStream() {
 using namespace hip;
 
 hipError_t hipInit(unsigned int flags) {
-  HIP_INIT_API(flags);
+  HIP_INIT_API(hipInit, flags);
 
   HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device) {
-  HIP_INIT_API(ctx, flags, device);
+  HIP_INIT_API(hipCtxCreate, ctx, flags, device);
 
   if (static_cast<size_t>(device) >= g_devices.size()) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -134,7 +134,7 @@ hipError_t hipCtxCreate(hipCtx_t *ctx, unsigned int flags,  hipDevice_t device) 
 }
 
 hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
-  HIP_INIT_API(ctx);
+  HIP_INIT_API(hipCtxSetCurrent, ctx);
 
   if (ctx == nullptr) {
     if(!g_ctxtStack.empty()) {
@@ -152,7 +152,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
 }
 
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
-  HIP_INIT_API(ctx);
+  HIP_INIT_API(hipCtxGetCurrent, ctx);
 
   *ctx = reinterpret_cast<hipCtx_t>(hip::getCurrentContext());
 
@@ -160,7 +160,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
 }
 
 hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig) {
-  HIP_INIT_API(pConfig);
+  HIP_INIT_API(hipCtxGetSharedMemConfig, pConfig);
 
   *pConfig = hipSharedMemBankSizeFourByte;
 
@@ -168,7 +168,7 @@ hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig) {
 }
 
 hipError_t hipRuntimeGetVersion(int *runtimeVersion) {
-  HIP_INIT_API(runtimeVersion);
+  HIP_INIT_API(hipRuntimeGetVersion, runtimeVersion);
 
   if (!runtimeVersion) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -180,7 +180,7 @@ hipError_t hipRuntimeGetVersion(int *runtimeVersion) {
 }
 
 hipError_t hipCtxDestroy(hipCtx_t ctx) {
-  HIP_INIT_API(ctx);
+  HIP_INIT_API(hipCtxDestroy, ctx);
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
   if (amdContext == nullptr) {
@@ -207,7 +207,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
 }
 
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
-  HIP_INIT_API(ctx);
+  HIP_INIT_API(hipCtxPopCurrent, ctx);
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
   if (amdContext == nullptr) {
@@ -225,7 +225,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
 }
 
 hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
-  HIP_INIT_API(ctx);
+  HIP_INIT_API(hipCtxPushCurrent, ctx);
 
   amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
   if (amdContext == nullptr) {
@@ -239,7 +239,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
 }
 
 hipError_t hipDriverGetVersion(int* driverVersion) {
-  HIP_INIT_API(driverVersion);
+  HIP_INIT_API(hipDriverGetVersion, driverVersion);
 
   auto* deviceHandle = g_devices[0]->devices()[0];
   const auto& info = deviceHandle->info();
@@ -255,7 +255,7 @@ hipError_t hipDriverGetVersion(int* driverVersion) {
 }
 
 hipError_t hipCtxGetDevice(hipDevice_t* device) {
-  HIP_INIT_API(device);
+  HIP_INIT_API(hipCtxGetDevice, device);
 
   if (device != nullptr) {
     for (unsigned int i = 0; i < g_devices.size(); i++) {
@@ -272,7 +272,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device) {
 }
 
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
-  HIP_INIT_API(apiVersion);
+  HIP_INIT_API(hipCtxGetApiVersion, apiVersion);
 
   assert(0 && "Unimplemented");
 
@@ -280,7 +280,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
 }
 
 hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
-  HIP_INIT_API(cacheConfig);
+  HIP_INIT_API(hipCtxGetCacheConfig, cacheConfig);
 
   assert(0 && "Unimplemented");
 
@@ -288,7 +288,7 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
 }
 
 hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
-  HIP_INIT_API(cacheConfig);
+  HIP_INIT_API(hipCtxSetCacheConfig, cacheConfig);
 
   assert(0 && "Unimplemented");
 
@@ -296,7 +296,7 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
 }
 
 hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
-  HIP_INIT_API(config);
+  HIP_INIT_API(hipCtxSetSharedMemConfig, config);
 
   assert(0 && "Unimplemented");
 
@@ -304,7 +304,7 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
 }
 
 hipError_t hipCtxSynchronize(void) {
-  HIP_INIT_API(1);
+  HIP_INIT_API(hipCtxSynchronize, 1);
 
   assert(0 && "Unimplemented");
 
@@ -312,7 +312,7 @@ hipError_t hipCtxSynchronize(void) {
 }
 
 hipError_t hipCtxGetFlags(unsigned int* flags) {
-  HIP_INIT_API(flags);
+  HIP_INIT_API(hipCtxGetFlags, flags);
 
   assert(0 && "Unimplemented");
 
@@ -320,7 +320,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags) {
 }
 
 hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int* active) {
-  HIP_INIT_API(dev, flags, active);
+  HIP_INIT_API(hipDevicePrimaryCtxGetState, dev, flags, active);
 
   if (static_cast<unsigned int>(dev) >= g_devices.size()) {
     HIP_RETURN(hipErrorInvalidDevice);
@@ -338,7 +338,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
 }
 
 hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev) {
-  HIP_INIT_API(dev);
+  HIP_INIT_API(hipDevicePrimaryCtxRelease, dev);
 
   if (static_cast<unsigned int>(dev) >= g_devices.size()) {
     HIP_RETURN(hipErrorInvalidDevice);
@@ -348,7 +348,7 @@ hipError_t hipDevicePrimaryCtxRelease(hipDevice_t dev) {
 }
 
 hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev) {
-  HIP_INIT_API(pctx, dev);
+  HIP_INIT_API(hipDevicePrimaryCtxRetain, pctx, dev);
 
   if (static_cast<unsigned int>(dev) >= g_devices.size()) {
     HIP_RETURN(hipErrorInvalidDevice);
@@ -363,13 +363,13 @@ hipError_t hipDevicePrimaryCtxRetain(hipCtx_t* pctx, hipDevice_t dev) {
 }
 
 hipError_t hipDevicePrimaryCtxReset(hipDevice_t dev) {
-  HIP_INIT_API(dev);
+  HIP_INIT_API(hipDevicePrimaryCtxReset, dev);
 
   HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags) {
-  HIP_INIT_API(dev, flags);
+  HIP_INIT_API(hipDevicePrimaryCtxSetFlags, dev, flags);
 
   if (static_cast<unsigned int>(dev) >= g_devices.size()) {
     HIP_RETURN(hipErrorInvalidDevice);

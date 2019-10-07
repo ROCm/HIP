@@ -26,7 +26,7 @@ THE SOFTWARE.
 
 hipError_t hipGetLastError()
 {
-  HIP_INIT_API();
+  HIP_INIT_API(hipGetLastError);
   hipError_t err = hip::g_lastError;
   hip::g_lastError = hipSuccess;
   return err;
@@ -34,7 +34,7 @@ hipError_t hipGetLastError()
 
 hipError_t hipPeekAtLastError()
 {
-  HIP_INIT_API();
+  HIP_INIT_API(hipPeekAtLastError);
   hipError_t err = hip::g_lastError;
   HIP_RETURN(err);
 }

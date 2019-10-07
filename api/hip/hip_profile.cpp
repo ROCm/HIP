@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include "hip_internal.hpp"
 
 hipError_t hipProfilerStart() {
-  HIP_INIT_API();
+  HIP_INIT_API(hipProfilerStart);
 
   assert(0 && "Unimplemented");
 
@@ -34,7 +34,7 @@ hipError_t hipProfilerStart() {
 
 
 hipError_t hipProfilerStop() {
-  HIP_INIT_API();
+  HIP_INIT_API(hipProfilerStop);
 
   assert(0 && "Unimplemented");
 
