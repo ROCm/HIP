@@ -1797,6 +1797,24 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     return ihipLogStatus(e);
 }
 
+hipError_t ihip2dOffsetMemcpy(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
+                            size_t height, size_t srcXOffsetInBytes, size_t srcYOffset,
+                            size_t dstXOffsetInBytes, size_t dstYOffset,hipMemcpyKind kind,
+                            hipStream_t stream, bool isAsync) {
+    if((spitch < width + srcXOffsetInBytes) || (srcYOffset >= height)){
+        return hipErrorInvalidValue;
+    } else if((dpitch < width + dstXOffsetInBytes) || (dstYOffset >= height)){
+        return hipErrorInvalidValue;
+    }
+    src = (void*)((char*)src+ srcYOffset*spitch + srcXOffsetInBytes);
+    dst = (void*)((char*)dst+ dstYOffset*dpitch + dstXOffsetInBytes);
+    if(isAsync){
+        return ihipMemcpy2DAsync(dst, dpitch, src, spitch, width, height, hipMemcpyDefault, stream);
+    } else{
+        return ihipMemcpy2D(dst, dpitch, src, spitch, width, height, hipMemcpyDefault);
+    }
+}
+
 hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy, hipStream_t stream, bool isAsync) {
     if (pCopy == nullptr) {
         return hipErrorInvalidValue;
@@ -1834,18 +1852,10 @@ hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy, hipStream_t stream, bool
         default:
             return hipErrorInvalidValue;
     }
-    if(pCopy->srcPitch < pCopy->WidthInBytes + pCopy->srcXInBytes || pCopy->srcY >= pCopy->Height){
-        return hipErrorInvalidValue;
-    } else if(pCopy->dstPitch < pCopy->WidthInBytes + pCopy->dstXInBytes || pCopy->dstY >= pCopy->Height){
-        return hipErrorInvalidValue;
-    }
-    src = (void*)((char*)src+pCopy->srcY*pCopy->srcPitch + pCopy->srcXInBytes);
-    dst = (void*)((char*)dst+pCopy->dstY*pCopy->dstPitch + pCopy->dstXInBytes);
-    if(isAsync){
-        return ihipMemcpy2DAsync(dst, dpitch, src, spitch, pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault, stream);
-    } else{
-        return ihipMemcpy2D(dst, dpitch, src, spitch, pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
-    }
+    return ihip2dOffsetMemcpy(dst, dpitch, src, spitch, pCopy->WidthInBytes,
+                            pCopy->Height, pCopy->srcXInBytes, pCopy->srcY,
+                            pCopy->dstXInBytes, pCopy->dstY, hipMemcpyDefault,
+                            stream, isAsync);
 }
 
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
@@ -1856,6 +1866,60 @@ hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
 hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemcpyParam2DAsync, (TRACE_MCMD), pCopy, stream);
     return ihipLogStatus(ihipMemcpyParam2D(pCopy, stream, true));
+}
+
+hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind ){
+    HIP_INIT_SPECIAL_API(hipMemcpyParam2D, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind);
+    size_t byteSize;
+    if(src) {
+        switch (src->desc.f) {
+            case hipChannelFormatKindSigned:
+                byteSize = sizeof(int);
+                break;
+            case hipChannelFormatKindUnsigned:
+                byteSize = sizeof(unsigned int);
+                break;
+            case hipChannelFormatKindFloat:
+                byteSize = sizeof(float);
+                break;
+            case hipChannelFormatKindNone:
+                byteSize = sizeof(size_t);
+                break;
+            default:
+                byteSize = 0;
+                break;
+        }
+    } else {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    return ihipLogStatus(ihip2dOffsetMemcpy(dst, dpitch, src->data, src->width*byteSize, width, height, wOffset, hOffset, 0, 0, kind, hipStreamNull, false));
+}
+
+hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream ){
+    HIP_INIT_SPECIAL_API(hipMemcpyParam2D, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind);
+    size_t byteSize;
+    if(src) {
+        switch (src->desc.f) {
+            case hipChannelFormatKindSigned:
+                byteSize = sizeof(int);
+                break;
+            case hipChannelFormatKindUnsigned:
+                byteSize = sizeof(unsigned int);
+                break;
+            case hipChannelFormatKindFloat:
+                byteSize = sizeof(float);
+                break;
+            case hipChannelFormatKindNone:
+                byteSize = sizeof(size_t);
+                break;
+            default:
+                byteSize = 0;
+                break;
+        }
+    } else {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+    return ihipLogStatus(ihip2dOffsetMemcpy(dst, dpitch, src->data, src->width*byteSize, width, height, wOffset, hOffset, 0, 0, kind, stream, true));
 }
 
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
