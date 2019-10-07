@@ -1053,9 +1053,9 @@
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
-| `cuTexRefGetAddress`                                      |                               |
-| `cuTexRefGetAddressMode`                                  |                               |
-| `cuTexRefGetArray`                                        |                               |
+| `cuTexRefGetAddress`                                      |`hipTexRefGetAddress`          |
+| `cuTexRefGetAddressMode`                                  |`hipTexRefGetAddressMode`      |
+| `cuTexRefGetArray`                                        |`hipTexRefGetArray`            |
 | `cuTexRefGetBorderColor`                                  |                               | 8.0              |
 | `cuTexRefGetFilterMode`                                   |                               |
 | `cuTexRefGetFlags`                                        |                               |

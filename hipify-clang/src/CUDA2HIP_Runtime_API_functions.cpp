@@ -305,7 +305,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaMemcpy3D",                                            {"hipMemcpy3D",                                            "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   // NOTE: Not equal to cuMemcpy3DAsync due to different signatures
-  {"cudaMemcpy3DAsync",                                       {"hipMemcpy3DAsync",                                       "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaMemcpy3DAsync",                                       {"hipMemcpy3DAsync",                                       "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   // NOTE: Not equal to cuMemcpy3DPeer due to different signatures
   {"cudaMemcpy3DPeer",                                        {"hipMemcpy3DPeer",                                        "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
