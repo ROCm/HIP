@@ -583,9 +583,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 #endif
     }
 
-    void* impCoopParams[1];
-    ulong prev_sum = 0;
-    // launch the init_gws kernel to initialize the GWS followed by launching the main kernels for each device
+    // launch the init_gws kernel to initialize the GWS for each device
     for (int i = 0; i < numDevices; ++i) {
         const hipLaunchParams& lp = launchParamsList[i];
 
@@ -610,6 +608,14 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 
             return ihipLogStatus(hipErrorLaunchFailure);
         }
+    }
+
+    void* impCoopParams[1];
+    ulong prev_sum = 0;
+    // launch the main kernels for each device
+    for (int i = 0; i < numDevices; ++i) {
+        const hipLaunchParams& lp = launchParamsList[i];
+
         //initialize and setup the implicit kernel argument for multi-grid sync
         mg_info_ptr[i]->mgs       = mg_sync_ptr;
         mg_info_ptr[i]->grid_id   = i;
