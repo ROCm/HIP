@@ -121,7 +121,8 @@ void hipLaunchKernelGGLImpl(
     const auto& kd = hip_impl::get_program_state().kernel_descriptor(function_address, 
                                                                target_agent(stream));
 
-    hipExtModuleLaunchKernel(kd, numBlocks.x, numBlocks.y, numBlocks.z,
+    hipExtModuleLaunchKernel(kd, (numBlocks.x * dimBlocks.x) , 
+                          (numBlocks.y * dimBlocks.y), (numBlocks.z * dimBlocks.z),
                           dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
                           stream, nullptr, kernarg, startEvent, stopEvent, flags);
 }
