@@ -54,20 +54,6 @@
 | uint         | `curandDirectionVectors64_t`                                  |                  |                                                            |
 | struct       | `curandGenerator_st`                                          |                  | `hiprandGenerator_st`                                      |
 | struct*      | `curandGenerator_t`                                           |                  | `hiprandGenerator_t`                                       |
-| enum         |***`curandOrdering`***                                         |                  |                                                            |
-| enum         |***`curandOrdering_t`***                                       |                  |                                                            |
-|          100 |*`CURAND_ORDERING_PSEUDO_BEST`*                                |                  |                                                            |
-|          101 |*`CURAND_ORDERING_PSEUDO_DEFAULT`*                             |                  |                                                            |
-|          102 |*`CURAND_ORDERING_PSEUDO_SEEDED`*                              |                  |                                                            |
-|          201 |*`CURAND_ORDERING_QUASI_DEFAULT`*                              |                  |                                                            |
-| enum         |***`curandDirectionVectorSet`***                               |                  |                                                            |
-| enum         |***`curandDirectionVectorSet_t`***                             |                  |                                                            |
-|          101 |*`CURAND_DIRECTION_VECTORS_32_JOEKUO6`*                        |                  |                                                            |
-|          102 |*`CURAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6`*              |                  |                                                            |
-|          103 |*`CURAND_DIRECTION_VECTORS_64_JOEKUO6`*                        |                  |                                                            |
-|          104 |*`CURAND_SCRAMBLED_DIRECTION_VECTORS_64_JOEKUO6`*              |                  |                                                            |
-| uint         | `curandDirectionVectors32_t`                                  |                  | `hiprandDirectionVectors32_t`                              |
-| uint         | `curandDirectionVectors64_t`                                  |                  |                                                            |
 | double       | `curandDistribution_st`                                       |                  |                                                            |
 | double       | `curandHistogramM2V_st`                                       |                  |                                                            |
 | double*      | `curandDistribution_t`                                        |                  |                                                            |

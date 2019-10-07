@@ -333,12 +333,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_BLAS_FUNCTION_MAP{
   {"cublasCtrsm",                    {"hipblasCtrsm",                    "",                                         CONV_LIB_FUNC, API_BLAS, UNSUPPORTED}},
   {"cublasZtrsm",                    {"hipblasZtrsm",                    "",                                         CONV_LIB_FUNC, API_BLAS, UNSUPPORTED}},
 
-  // TRSM - Batched Triangular Solver
-  {"cublasStrsmBatched",             {"hipblasStrsmBatched",             "",                                         CONV_LIB_FUNC, API_BLAS, UNSUPPORTED}},
-  {"cublasDtrsmBatched",             {"hipblasDtrsmBatched",             "",                                         CONV_LIB_FUNC, API_BLAS, UNSUPPORTED}},
-  {"cublasCtrsmBatched",             {"hipblasCtrsmBatched",             "",                                         CONV_LIB_FUNC, API_BLAS, UNSUPPORTED}},
-  {"cublasZtrsmBatched",             {"hipblasZtrsmBatched",             "",                                         CONV_LIB_FUNC, API_BLAS, UNSUPPORTED}},
-
   // TRMM
   {"cublasStrmm",                    {"hipblasStrmm",                    "",                                         CONV_LIB_FUNC, API_BLAS, UNSUPPORTED}},
   {"cublasDtrmm",                    {"hipblasDtrmm",                    "",                                         CONV_LIB_FUNC, API_BLAS, UNSUPPORTED}},
