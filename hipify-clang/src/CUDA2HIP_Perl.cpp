@@ -213,35 +213,36 @@ namespace perl {
     *streamPtr.get() << tab << no_warns << endl;
     *streamPtr.get() << tab << my_k << endl_2;
 
+    string s_k = "$k += s/([:|\\w]+)\\s*";
     *streamPtr.get() << tab << "# Handle the kern<...><<<Dg, Db, Ns, S>>>() syntax with empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, $6)/g;" << endl;
+    *streamPtr.get() << tab << s_k << "<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, $6)/g;" << endl;
     *streamPtr.get() << tab << "# Handle the kern<<<Dg, Db, Ns, S>>>() syntax with empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5)/g;" << endl_2;
+    *streamPtr.get() << tab << s_k << "<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5)/g;" << endl_2;
 
     *streamPtr.get() << tab << "# Handle the kern<...><<<Dg, Db, Ns, S>>>(...) syntax with non-empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, $6, /g;" << endl;
+    *streamPtr.get() << tab << s_k << "<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, $6, /g;" << endl;
     *streamPtr.get() << tab << "# Handle the kern<<<Dg, Db, Ns, S>>>(...) syntax with non-empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5, /g;" << endl_2;
+    *streamPtr.get() << tab << s_k << "<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5, /g;" << endl_2;
 
     *streamPtr.get() << tab << "# Handle the kern<...><<<Dg, Db, Ns>>>() syntax with empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, 0)/g;" << endl;
+    *streamPtr.get() << tab << s_k << "<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, 0)/g;" << endl;
     *streamPtr.get() << tab << "# Handle the kern<<<Dg, Db, Ns>>>() syntax with empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0)/g;" << endl_2;
+    *streamPtr.get() << tab << s_k << "<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0)/g;" << endl_2;
 
     *streamPtr.get() << tab << "# Handle the kern<...><<Dg, Db, Ns>>>(...) syntax with non-empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, 0, /g;" << endl;
+    *streamPtr.get() << tab << s_k << "<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, 0, /g;" << endl;
     *streamPtr.get() << tab << "# Handle the kern<<<Dg, Db, Ns>>>(...) syntax with non-empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0, /g;" << endl_2;
+    *streamPtr.get() << tab << s_k << "<<<\\s*(.+)\\s*,\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0, /g;" << endl_2;
 
     *streamPtr.get() << tab << "# Handle the kern<...><<<Dg, Db>>>() syntax with empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), 0, 0)/g;" << endl;
+    *streamPtr.get() << tab << s_k << "<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), 0, 0)/g;" << endl;
     *streamPtr.get() << tab << "# Handle the kern<<<Dg, Db>>>() syntax with empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0)/g;" << endl_2;
+    *streamPtr.get() << tab << s_k << "<<<\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\((\\s*)\\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0)/g;" << endl_2;
 
     *streamPtr.get() << tab << "# Handle the kern<...><<<Dg, Db>>>(...) syntax with non-empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), 0, 0, /g;" << endl;
+    *streamPtr.get() << tab << s_k << "<(.+)>\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), 0, 0, /g;" << endl;
     *streamPtr.get() << tab << "# Handle the kern<<<Dg, Db>>>(...) syntax with non-empty args:" << endl;
-    *streamPtr.get() << tab << "$k += s/(\\w+)\\s*<<<\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0, /g;" << endl_2;
+    *streamPtr.get() << tab << s_k << "<<<\\s*(.+)\\s*,\\s*(.+)\\s*>>>(\\s*)\\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0, /g;" << endl_2;
 
     *streamPtr.get() << tab << "if ($k) {" << endl;
     *streamPtr.get() << tab_2 << "$ft{'kernel_launch'} += $k;" << endl;
