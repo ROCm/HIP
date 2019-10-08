@@ -61,6 +61,7 @@ global:
     hipGetErrorName;
     hipGetErrorString;
     hipGetLastError;
+    hipMemAllocHost;
     hipHostAlloc;
     hipHostFree;
     hipHostGetDevicePointer;
@@ -79,6 +80,7 @@ global:
     hipArray3DCreate;
     hipMallocArray;
     hipMallocPitch;
+    hipMemAllocPitch;
     hipMemcpy;
     hipMemcpyParam2D;
     hipMemcpy2D;
@@ -106,9 +108,12 @@ global:
     hipMemGetInfo;
     hipMemPtrGetInfo;
     hipMemset;
+    hipMemsetD16;
     hipMemsetD32;
     hipMemset2D;
     hipMemsetAsync;
+    hipMemsetD8Async;
+    hipMemsetD16Async;
     hipMemsetD32Async;
     hipMemset2DAsync;
     hipMemsetD8;

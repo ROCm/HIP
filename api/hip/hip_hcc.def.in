@@ -60,6 +60,7 @@ hipGetDeviceProperties
 hipGetErrorName
 hipGetErrorString
 hipGetLastError
+hipMemAllocHost
 hipHostAlloc
 hipHostFree
 hipHostGetDevicePointer
@@ -77,6 +78,7 @@ hipMalloc3DArray
 hipArrayCreate
 hipArray3DCreate
 hipMallocArray
+hipMemAllocPitch
 hipMallocPitch
 hipMemcpy
 hipMemcpyParam2D
@@ -105,9 +107,12 @@ hipGetSymbolSize
 hipMemGetInfo
 hipMemPtrGetInfo
 hipMemset
+hipMemsetD16
 hipMemsetD32
 hipMemset2D
 hipMemsetAsync
+hipMemsetD8Async
+hipMemsetD16Async
 hipMemsetD32Async
 hipMemset2DAsync
 hipMemsetD8
