@@ -27,16 +27,34 @@ THE SOFTWARE.
 #include <iostream>
 #include <mutex>
 
+#if USE_PROF_API
 #include "hip/hcc_detail/hip_prof_str.h"
+#include "prof_protocol.h"
 
-template <typename Record, typename Fun, typename Act>
-class api_callbacks_table_templ {
+// HIP API callbacks spawner object macro
+#define HIP_CB_SPAWNER_OBJECT(CB_ID) \
+  api_callbacks_spawner_t<HIP_API_ID_##CB_ID> __api_tracer; \
+  { \
+    hip_api_data_t* api_data = __api_tracer.get_api_data_ptr(); \
+    if (api_data != NULL) { \
+      hip_api_data_t& api_data_ref = *api_data; \
+      INIT_CB_ARGS_DATA(CB_ID, api_data_ref); \
+      __api_tracer.call(); \
+    } \
+  }
+
+static const uint32_t HIP_DOMAIN_ID = ACTIVITY_DOMAIN_HIP_API;
+typedef activity_record_t hip_api_record_t;
+typedef activity_rtapi_callback_t hip_api_callback_t;
+typedef activity_sync_callback_t hip_act_callback_t;
+
+class api_callbacks_table_t {
  public:
   typedef std::recursive_mutex mutex_t;
 
-  typedef Record record_t;
-  typedef Fun fun_t;
-  typedef Act act_t;
+  typedef hip_api_record_t record_t;
+  typedef hip_api_callback_t fun_t;
+  typedef hip_act_callback_t act_t;
 
   // HIP API callbacks table
   struct hip_cb_table_entry_t {
@@ -52,7 +70,7 @@ class api_callbacks_table_templ {
     hip_cb_table_entry_t arr[HIP_API_ID_NUMBER];
   };
 
-  api_callbacks_table_templ() {
+  api_callbacks_table_t() {
      memset(&callbacks_table_, 0, sizeof(callbacks_table_));
   }
 
@@ -150,36 +168,12 @@ class api_callbacks_table_templ {
   bool enabled_;
 };
 
-
-#if USE_PROF_API
-#include "prof_protocol.h"
-
-static const uint32_t HIP_DOMAIN_ID = ACTIVITY_DOMAIN_HIP_API;
-typedef activity_record_t hip_api_record_t;
-typedef activity_rtapi_callback_t hip_api_callback_t;
-typedef activity_sync_callback_t hip_act_callback_t;
-
-// HIP API callbacks spawner object macro
-#define HIP_CB_SPAWNER_OBJECT(CB_ID) \
-  api_callbacks_spawner_t<HIP_API_ID_##CB_ID> __api_tracer(HIP_API_ID_##CB_ID); \
-  { \
-    hip_api_data_t* api_data = __api_tracer.get_api_data_ptr(); \
-    if (api_data != NULL) { \
-      hip_api_data_t& api_data_ref = *api_data; \
-      INIT_CB_ARGS_DATA(CB_ID, api_data_ref); \
-      __api_tracer.call(); \
-    } \
-  }
-
-typedef api_callbacks_table_templ<hip_api_record_t,
-                                  hip_api_callback_t,
-                                  hip_act_callback_t> api_callbacks_table_t;
 extern api_callbacks_table_t callbacks_table;
 
 template <int cid_>
 class api_callbacks_spawner_t {
  public:
-  api_callbacks_spawner_t(const hip_api_id_t& cid) :
+  api_callbacks_spawner_t() :
     api_data_(NULL)
   {
     if (!is_enabled()) return;
@@ -232,7 +226,7 @@ class api_callbacks_spawner_t {
 template <>
 class api_callbacks_spawner_t<HIP_API_ID_NUMBER> {
  public:
-  api_callbacks_spawner_t(const hip_api_id_t& cid) {}
+  api_callbacks_spawner_t() {}
   void call() {}
   hip_api_data_t* get_api_data_ptr() { return NULL; }
   bool is_enabled() const { return false; }
