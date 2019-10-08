@@ -47,7 +47,7 @@ __global__ void vectorADD2(T* A_d, T* B_d, T* C_d, size_t N) {
     }
 }
 
-int test_gl2(size_t N) {
+int test_gl2(size_t N, bool useExt) {
     size_t Nbytes = N * sizeof(int);
 
     int *A_d, *B_d, *C_d;
@@ -62,8 +62,11 @@ int test_gl2(size_t N) {
     // Full vadd in one large chunk, to get things started:
     HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
     HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
-
-    hipLaunchKernelGGL(vectorADD2, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
+    if(useExt)
+        hipExtLaunchKernelGGL(vectorADD2, dim3(blocks), dim3(threadsPerBlock), 0, 0, nullptr,
+                                                                      nullptr, 0, A_d, B_d, C_d, N);
+    else
+        hipLaunchKernelGGL(vectorADD2, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d, N);
 
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
@@ -106,7 +109,8 @@ int test_triple_chevron(size_t N) {
 int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
-    test_gl2(N);
+    test_gl2(N, false);
+    test_gl2(N, true);
 
 #if __HIP__
     test_triple_chevron(N);
