@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 api_callbacks_table_t callbacks_table;
 
-extern std::string& FunctionName(const hipFunction_t f);
+extern const std::string& FunctionName(const hipFunction_t f);
 const char* hipKernelNameRef(const hipFunction_t f) { return FunctionName(f).c_str(); }
 
 hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg) {
