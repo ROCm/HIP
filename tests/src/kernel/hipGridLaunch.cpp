@@ -110,7 +110,9 @@ int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
     test_gl2(N, false);
+#ifdef __HIP_PLATFORM_HCC__
     test_gl2(N, true);
+#endif
 
 #if __HIP__
     test_triple_chevron(N);
