@@ -34,22 +34,6 @@ void printSep() {
         "======================================================================================\n");
 }
 
-inline void initMemCpyParam2D(hip_Memcpy2D &ins, const size_t dpitch,
-                            const size_t spitch, const size_t width,
-                            const size_t height, hipMemoryType dstType,
-                            enum hipMemoryType srcType) {
-  ins.srcXInBytes=0;
-  ins.srcY=0;
-  ins.srcPitch=spitch;
-  ins.dstXInBytes=0;
-  ins.dstY=0;
-  ins.dstPitch=dpitch;
-  ins.WidthInBytes=width;
-  ins.Height=height;
-  ins.dstMemoryType= dstType;
-  ins.srcMemoryType= srcType;
-}
-
 //---
 // Test copies of a matrix numW by numH
 // The subroutine allocates memory , copies to device, runs a vector add kernel, copies back, and
@@ -80,11 +64,7 @@ void memcpy2Dtest(size_t numW, size_t numH, bool usePinnedHost) {
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numW * numH);
 
     HIPCHECK(hipMemcpy2D(A_d, pitch_A, A_h, width, width, numH, hipMemcpyHostToDevice));
-    hip_Memcpy2D ins;
-    initMemCpyParam2D(ins,pitch_B,width,width,numH,hipMemoryTypeDevice,hipMemoryTypeHost);
-    ins.dstDevice = (hipDeviceptr_t)B_d;
-    ins.srcHost   = B_h;
-    HIPCHECK(hipMemcpyParam2D(&ins));
+    HIPCHECK(hipMemcpy2D(B_d, pitch_B, B_h, width, width, numH, hipMemcpyHostToDevice));
 
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0, A_d, B_d, C_d,
                     (pitch_C / sizeof(T)) * numH);
@@ -134,11 +114,7 @@ void memcpyArraytest(size_t numW, size_t numH, bool usePinnedHost, bool usePitch
         unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numW * numH);
 
         HIPCHECK(hipMemcpyToArray(A_d, 0, 0, (void*)A_h, width, hipMemcpyHostToDevice));
-        hip_Memcpy2D ins;
-        initMemCpyParam2D(ins,width,width,width,numH,hipMemoryTypeArray,hipMemoryTypeHost);
-        ins.dstArray = B_d;
-        ins.srcHost  = B_h;
-        HIPCHECK(hipMemcpyParam2D(&ins));
+        HIPCHECK(hipMemcpyToArray(B_d, 0, 0, (void*)B_h, width, hipMemcpyHostToDevice));
 
         hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         (T*)A_d->data, (T*)B_d->data, (T*)C_d->data, numW);
@@ -175,22 +151,14 @@ void memcpyArraytest(size_t numW, size_t numH, bool usePinnedHost, bool usePitch
         } else {
             HIPCHECK(hipMemcpy2DToArray(A_d, 0, 0, (void*)A_h, width, width, numH,
                                         hipMemcpyHostToDevice));
-            hip_Memcpy2D ins;
-            initMemCpyParam2D(ins,width,width,width,numH,hipMemoryTypeArray,hipMemoryTypeHost);
-            ins.dstArray = B_d;
-            ins.srcHost  = B_h;
-            HIPCHECK(hipMemcpyParam2D(&ins));
+            HIPCHECK(hipMemcpy2DToArray(B_d, 0, 0, (void*)B_h, width, width, numH,
+                                        hipMemcpyHostToDevice));
         }
 
         hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         (T*)A_d->data, (T*)B_d->data, (T*)C_d->data, numW * numH);
-        printf("memcpy srcArray to dstHost\n");
-        hip_Memcpy2D ins;
-        initMemCpyParam2D(ins,width,width,width,numH,hipMemoryTypeHost,hipMemoryTypeArray);
-        ins.srcArray    = C_d;
-        ins.dstHost     = C_h;
-        HIPCHECK(hipMemcpyParam2D(&ins));
-
+        HIPCHECK(hipMemcpy2D((void*)C_h, width, (void*)C_d->data, width, width, numH,
+                             hipMemcpyDeviceToHost));
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, numW * numH);
     }
