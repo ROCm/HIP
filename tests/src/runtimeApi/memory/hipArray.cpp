@@ -132,8 +132,7 @@ void memcpyArraytest(size_t numW, size_t numH, bool usePinnedHost, bool usePitch
         HipTest::initHIPArrays(&A_d, &B_d, &C_d, &desc, numW, 1, 0);
         HipTest::initArraysForHost(&A_h, &B_h, &C_h, numW * numH, usePinnedHost);
         unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, numW * numH);
-        HIPCHECK(hipMemset(A_d->data,0,width));
-        HIPCHECK(hipMemset(B_d->data,0,width));
+
         HIPCHECK(hipMemcpyToArray(A_d, 0, 0, (void*)A_h, width, hipMemcpyHostToDevice));
         hip_Memcpy2D ins;
         initMemCpyParam2D(ins,width,width,width,numH,hipMemoryTypeArray,hipMemoryTypeHost);
