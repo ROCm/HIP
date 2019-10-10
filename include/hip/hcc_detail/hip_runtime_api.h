@@ -41,7 +41,6 @@ THE SOFTWARE.
 
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/driver_types.h>
-#include <hip/hcc_detail/library_types.h>
 #include <hip/hcc_detail/hip_texture_types.h>
 #include <hip/hcc_detail/hip_surface_types.h>
 

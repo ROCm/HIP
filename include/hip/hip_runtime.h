@@ -63,5 +63,6 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_vector_types.h>
+#include <hip/library_types.h>
 
 #endif
