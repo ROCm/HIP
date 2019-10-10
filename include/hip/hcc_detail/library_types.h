@@ -23,6 +23,8 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_LIBRARY_TYPES_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_LIBRARY_TYPES_H
 
+namespace library_types {
+
 typedef enum hipDataType {
   HIP_R_16F = 2,
   HIP_R_32F = 0,
@@ -37,6 +39,8 @@ typedef enum libraryPropertyType {
   MINOR_VERSION,
   PATCH_LEVEL
 } libraryPropertyType;
+
+} // End of namespace library_types
 
 #endif
 
