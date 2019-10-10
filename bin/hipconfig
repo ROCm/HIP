@@ -72,12 +72,16 @@ sub can_run {
 }
 
 # Define HIP_PATH based on location of the script. Same as hipcc.
-# Derive others relative to HIP_PATH. 
+# Derive ROCM_PATH same as hipcc does. Others are relative to ROCM_PATH. 
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
-
+if (-e "$HIP_PATH/../.info/version") {
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH
+} else {
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
+}
 $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
-$HCC_HOME=$ENV{'HCC_HOME'} // "$HIP_PATH/../hcc";
-$HSA_PATH=$ENV{'HSA_PATH'} // "$HIP_PATH/../hsa";
+$HCC_HOME=$ENV{'HCC_HOME'} // "$ROCM_PATH/hcc";
+$HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
