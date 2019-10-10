@@ -1116,6 +1116,21 @@ DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMallocHost(void** ptr, size_t size);
 
 /**
+ *  @brief Allocate pinned host memory [Deprecated]
+ *
+ *  @param[out] ptr Pointer to the allocated host pinned memory
+ *  @param[in]  size Requested memory size
+ *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *
+ *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *
+ *  @deprecated use hipHostMalloc() instead
+ */
+DEPRECATED("use hipHostMalloc instead")
+hipError_t hipMemAllocHost(void** ptr, size_t size);
+
+/**
  *  @brief Allocate device accessible page locked host memory
  *
  *  @param[out] ptr Pointer to the allocated host pinned memory
@@ -1249,6 +1264,30 @@ hipError_t hipHostUnregister(void* hostPtr);
  */
 
 hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height);
+
+/**
+ *  Allocates at least width (in bytes) * height bytes of linear memory
+ *  Padding may occur to ensure alighnment requirements are met for the given row
+ *  The change in width size due to padding will be returned in *pitch.
+ *  Currently the alignment is set to 128 bytes
+ *
+ *  @param[out] dptr Pointer to the allocated device memory
+ *  @param[out] pitch Pitch for allocation (in bytes)
+ *  @param[in]  width Requested pitched allocation width (in bytes)
+ *  @param[in]  height Requested pitched allocation height
+ *
+ *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
+ *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array. 
+ *  Given the row and column of an array element of type T, the address is computed as:
+ *  T* pElement = (T*)((char*)BaseAddress + Row * Pitch) + Column;
+ *
+ *  @return Error code
+ *
+ *  @see hipMalloc, hipFree, hipMallocArray, hipFreeArray, hipHostFree, hipMalloc3D,
+ * hipMalloc3DArray, hipHostMalloc
+ */
+
+hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes);
 
 /**
  *  @brief Free memory allocated by the hcc hip memory allocation API.
@@ -1707,6 +1746,51 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes);
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  */
 hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes);
+
+/**
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
+ * byte value value.
+ *
+ * hipMemsetD8Async() is asynchronous with respect to the host, so the call may return before the
+ * memset is complete. The operation can optionally be associated to a stream by passing a non-zero
+ * stream argument. If stream is non-zero, the operation may overlap with operations in other
+ * streams.
+ *
+ *  @param[out] dst Data ptr to be filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @param[in]  stream - Stream identifier
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
+ * short value value.
+ *
+ *  @param[out] dst Data ptr to be filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes);
+
+/**
+ *  @brief Fills the first sizeBytes bytes of the memory area pointed to by dest with the constant
+ * short value value.
+ *
+ * hipMemsetD16Async() is asynchronous with respect to the host, so the call may return before the
+ * memset is complete. The operation can optionally be associated to a stream by passing a non-zero
+ * stream argument. If stream is non-zero, the operation may overlap with operations in other
+ * streams.
+ *
+ *  @param[out] dst Data ptr to be filled
+ *  @param[in]  constant value to be set
+ *  @param[in]  sizeBytes Data size in bytes
+ *  @param[in]  stream - Stream identifier
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
+ */
+hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes, hipStream_t stream __dparm(0));
 
 /**
  *  @brief Fills the memory area pointed to by dest with the constant integer
@@ -3291,7 +3375,11 @@ hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
                                           hipTextureObject_t textureObject);
 hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsigned int flags);
 
+hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex);
+
 hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am);
+
+hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim);
 
 hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm);
 
@@ -3301,6 +3389,8 @@ hipError_t hipTexRefSetFormat(textureReference* tex, hipArray_Format fmt, int Nu
 
 hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDeviceptr_t devPtr,
                                size_t size);
+
+hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex);
 
 hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,
                                  hipDeviceptr_t devPtr, size_t pitch);
