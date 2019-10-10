@@ -27,6 +27,8 @@
 use Getopt::Long;
 my $whitelist = "";
 my $fileName = "";
+my %ft;
+my %Tkernels;
 
 GetOptions(
       "examine" => \$examine                  # Combines -no-output and -print-stats options.
@@ -195,7 +197,11 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuIpcGetMemHandle\b/hipIpcGetMemHandle/g;
     $ft{'memory'} += s/\bcuIpcOpenMemHandle\b/hipIpcOpenMemHandle/g;
     $ft{'memory'} += s/\bcuMemAlloc\b/hipMalloc/g;
+    $ft{'memory'} += s/\bcuMemAllocHost\b/hipMemAllocHost/g;
+    $ft{'memory'} += s/\bcuMemAllocHost_v2\b/hipMemAllocHost/g;
     $ft{'memory'} += s/\bcuMemAllocManaged\b/hipMemAllocManaged/g;
+    $ft{'memory'} += s/\bcuMemAllocPitch\b/hipMemAllocPitch/g;
+    $ft{'memory'} += s/\bcuMemAllocPitch_v2\b/hipMemAllocPitch/g;
     $ft{'memory'} += s/\bcuMemAlloc_v2\b/hipMalloc/g;
     $ft{'memory'} += s/\bcuMemFree\b/hipFree/g;
     $ft{'memory'} += s/\bcuMemFreeHost\b/hipHostFree/g;
@@ -231,10 +237,14 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuMemcpyHtoDAsync\b/hipMemcpyHtoDAsync/g;
     $ft{'memory'} += s/\bcuMemcpyHtoDAsync_v2\b/hipMemcpyHtoDAsync/g;
     $ft{'memory'} += s/\bcuMemcpyHtoD_v2\b/hipMemcpyHtoD/g;
+    $ft{'memory'} += s/\bcuMemsetD16\b/hipMemsetD16/g;
+    $ft{'memory'} += s/\bcuMemsetD16Async\b/hipMemsetD16Async/g;
+    $ft{'memory'} += s/\bcuMemsetD16_v2\b/hipMemsetD16/g;
     $ft{'memory'} += s/\bcuMemsetD32\b/hipMemsetD32/g;
     $ft{'memory'} += s/\bcuMemsetD32Async\b/hipMemsetD32Async/g;
     $ft{'memory'} += s/\bcuMemsetD32_v2\b/hipMemsetD32/g;
     $ft{'memory'} += s/\bcuMemsetD8\b/hipMemsetD8/g;
+    $ft{'memory'} += s/\bcuMemsetD8Async\b/hipMemsetD8Async/g;
     $ft{'memory'} += s/\bcuMemsetD8_v2\b/hipMemsetD8/g;
     $ft{'memory'} += s/\bcudaFree\b/hipFree/g;
     $ft{'memory'} += s/\bcudaFreeArray\b/hipFreeArray/g;
@@ -259,6 +269,7 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcudaMemcpy2DAsync\b/hipMemcpy2DAsync/g;
     $ft{'memory'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
     $ft{'memory'} += s/\bcudaMemcpy3D\b/hipMemcpy3D/g;
+    $ft{'memory'} += s/\bcudaMemcpy3DAsync\b/hipMemcpy3DAsync/g;
     $ft{'memory'} += s/\bcudaMemcpyAsync\b/hipMemcpyAsync/g;
     $ft{'memory'} += s/\bcudaMemcpyFromArray\b/hipMemcpyFromArray/g;
     $ft{'memory'} += s/\bcudaMemcpyFromSymbol\b/hipMemcpyFromSymbol/g;
@@ -326,6 +337,10 @@ sub simpleSubstitutions {
     $ft{'occupancy'} += s/\bcudaOccupancyMaxActiveBlocksPerMultiprocessor\b/hipOccupancyMaxActiveBlocksPerMultiprocessor/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags\b/hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxPotentialBlockSize\b/hipOccupancyMaxPotentialBlockSize/g;
+    $ft{'texture'} += s/\bcuTexRefGetAddress\b/hipTexRefGetAddress/g;
+    $ft{'texture'} += s/\bcuTexRefGetAddressMode\b/hipTexRefGetAddressMode/g;
+    $ft{'texture'} += s/\bcuTexRefGetAddress_v2\b/hipTexRefGetAddress/g;
+    $ft{'texture'} += s/\bcuTexRefGetArray\b/hipTexRefGetArray/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress\b/hipTexRefSetAddress/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress2D\b/hipTexRefSetAddress2D/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress2D_v2\b/hipTexRefSetAddress2D/g;
@@ -615,6 +630,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcurandSetQuasiRandomGeneratorDimensions\b/hiprandSetQuasiRandomGeneratorDimensions/g;
     $ft{'library'} += s/\bcurandSetStream\b/hiprandSetStream/g;
     $ft{'library'} += s/\bcusparseCreate\b/hipsparseCreate/g;
+    $ft{'library'} += s/\bcusparseCreateCsrgemm2Info\b/hipsparseCreateCsrgemm2Info/g;
     $ft{'library'} += s/\bcusparseCreateCsrilu02Info\b/hipsparseCreateCsrilu02Info/g;
     $ft{'library'} += s/\bcusparseCreateCsrsv2Info\b/hipsparseCreateCsrsv2Info/g;
     $ft{'library'} += s/\bcusparseCreateHybMat\b/hipsparseCreateHybMat/g;
@@ -623,6 +639,9 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseDaxpyi\b/hipsparseDaxpyi/g;
     $ft{'library'} += s/\bcusparseDcsr2csc\b/hipsparseDcsr2csc/g;
     $ft{'library'} += s/\bcusparseDcsr2hyb\b/hipsparseDcsr2hyb/g;
+    $ft{'library'} += s/\bcusparseDcsrgemm\b/hipsparseDcsrgemm/g;
+    $ft{'library'} += s/\bcusparseDcsrgemm2\b/hipsparseDcsrgemm2/g;
+    $ft{'library'} += s/\bcusparseDcsrgemm2_bufferSizeExt\b/hipsparseDcsrgemm2_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseDcsrilu02\b/hipsparseDcsrilu02/g;
     $ft{'library'} += s/\bcusparseDcsrilu02_analysis\b/hipsparseDcsrilu02_analysis/g;
     $ft{'library'} += s/\bcusparseDcsrilu02_bufferSize\b/hipsparseDcsrilu02_bufferSize/g;
@@ -636,6 +655,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseDcsrsv2_solve\b/hipsparseDcsrsv2_solve/g;
     $ft{'library'} += s/\bcusparseDdoti\b/hipsparseDdoti/g;
     $ft{'library'} += s/\bcusparseDestroy\b/hipsparseDestroy/g;
+    $ft{'library'} += s/\bcusparseDestroyCsrgemm2Info\b/hipsparseDestroyCsrgemm2Info/g;
     $ft{'library'} += s/\bcusparseDestroyCsrilu02Info\b/hipsparseDestroyCsrilu02Info/g;
     $ft{'library'} += s/\bcusparseDestroyCsrsv2Info\b/hipsparseDestroyCsrsv2Info/g;
     $ft{'library'} += s/\bcusparseDestroyHybMat\b/hipsparseDestroyHybMat/g;
@@ -655,6 +675,9 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseSaxpyi\b/hipsparseSaxpyi/g;
     $ft{'library'} += s/\bcusparseScsr2csc\b/hipsparseScsr2csc/g;
     $ft{'library'} += s/\bcusparseScsr2hyb\b/hipsparseScsr2hyb/g;
+    $ft{'library'} += s/\bcusparseScsrgemm\b/hipsparseScsrgemm/g;
+    $ft{'library'} += s/\bcusparseScsrgemm2\b/hipsparseScsrgemm2/g;
+    $ft{'library'} += s/\bcusparseScsrgemm2_bufferSizeExt\b/hipsparseScsrgemm2_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseScsrilu02\b/hipsparseScsrilu02/g;
     $ft{'library'} += s/\bcusparseScsrilu02_analysis\b/hipsparseScsrilu02_analysis/g;
     $ft{'library'} += s/\bcusparseScsrilu02_bufferSize\b/hipsparseScsrilu02_bufferSize/g;
@@ -683,7 +706,11 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseXcoosortByColumn\b/hipsparseXcoosortByColumn/g;
     $ft{'library'} += s/\bcusparseXcoosortByRow\b/hipsparseXcoosortByRow/g;
     $ft{'library'} += s/\bcusparseXcoosort_bufferSizeExt\b/hipsparseXcoosort_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseXcscsort\b/hipsparseXcscsort/g;
+    $ft{'library'} += s/\bcusparseXcscsort_bufferSizeExt\b/hipsparseXcscsort_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseXcsr2coo\b/hipsparseXcsr2coo/g;
+    $ft{'library'} += s/\bcusparseXcsrgemm2Nnz\b/hipsparseXcsrgemm2Nnz/g;
+    $ft{'library'} += s/\bcusparseXcsrgemmNnz\b/hipsparseXcsrgemmNnz/g;
     $ft{'library'} += s/\bcusparseXcsrilu02_zeroPivot\b/hipsparseXcsrilu02_zeroPivot/g;
     $ft{'library'} += s/\bcusparseXcsrsort\b/hipsparseXcsrsort/g;
     $ft{'library'} += s/\bcusparseXcsrsort_bufferSizeExt\b/hipsparseXcsrsort_bufferSizeExt/g;
@@ -806,6 +833,8 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bCUstream_st\b/ihipStream_t/g;
     $ft{'type'} += s/\bCUtexObject\b/hipTextureObject_t/g;
     $ft{'type'} += s/\bCUtexref_st\b/textureReference/g;
+    $ft{'type'} += s/\bcsrgemm2Info\b/csrgemm2Info/g;
+    $ft{'type'} += s/\bcsrgemm2Info_t\b/csrgemm2Info_t/g;
     $ft{'type'} += s/\bcsrilu02Info_t\b/csrilu02Info_t/g;
     $ft{'type'} += s/\bcsrsv2Info_t\b/csrsv2Info_t/g;
     $ft{'type'} += s/\bcuComplex\b/hipComplex/g;
@@ -1600,48 +1629,47 @@ sub transformExternShared {
     no warnings qw/uninitialized/;
     my $k = 0;
     $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
-    $ft{ 'extern_shared' } += $k;
+    $ft{'extern_shared'} += $k;
 }
 
 # CUDA Kernel Launch Syntax
 sub transformKernelLaunch {
-    my $TkernRef = @_;
     no warnings qw/uninitialized/;
     my $k = 0;
 
     # Handle the kern<...><<<Dg, Db, Ns, S>>>() syntax with empty args:
-    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, $6)/g;
+    $k += s/([:|\w]+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, $6)/g;
     # Handle the kern<<<Dg, Db, Ns, S>>>() syntax with empty args:
-    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5)/g;
+    $k += s/([:|\w]+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5)/g;
 
     # Handle the kern<...><<<Dg, Db, Ns, S>>>(...) syntax with non-empty args:
-    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, $6, /g;
+    $k += s/([:|\w]+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, $6, /g;
     # Handle the kern<<<Dg, Db, Ns, S>>>(...) syntax with non-empty args:
-    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5, /g;
+    $k += s/([:|\w]+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, $5, /g;
 
     # Handle the kern<...><<<Dg, Db, Ns>>>() syntax with empty args:
-    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, 0)/g;
+    $k += s/([:|\w]+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, 0)/g;
     # Handle the kern<<<Dg, Db, Ns>>>() syntax with empty args:
-    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0)/g;
+    $k += s/([:|\w]+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0)/g;
 
     # Handle the kern<...><<Dg, Db, Ns>>>(...) syntax with non-empty args:
-    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, 0, /g;
+    $k += s/([:|\w]+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), $5, 0, /g;
     # Handle the kern<<<Dg, Db, Ns>>>(...) syntax with non-empty args:
-    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0, /g;
+    $k += s/([:|\w]+)\s*<<<\s*(.+)\s*,\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), $4, 0, /g;
 
     # Handle the kern<...><<<Dg, Db>>>() syntax with empty args:
-    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), 0, 0)/g;
+    $k += s/([:|\w]+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), 0, 0)/g;
     # Handle the kern<<<Dg, Db>>>() syntax with empty args:
-    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0)/g;
+    $k += s/([:|\w]+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\((\s*)\)/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0)/g;
 
     # Handle the kern<...><<<Dg, Db>>>(...) syntax with non-empty args:
-    $k += s/(\w+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), 0, 0, /g;
+    $k += s/([:|\w]+)\s*<(.+)>\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL(HIP_KERNEL_NAME($1<$2>), dim3($3), dim3($4), 0, 0, /g;
     # Handle the kern<<<Dg, Db>>>(...) syntax with non-empty args:
-    $k += s/(\w+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0, /g;
+    $k += s/([:|\w]+)\s*<<<\s*(.+)\s*,\s*(.+)\s*>>>(\s*)\(/hipLaunchKernelGGL($1, dim3($2), dim3($3), 0, 0, /g;
 
     if ($k) {
         $ft{'kernel_launch'} += $k;
-        @$TkernRef{$1} ++;
+        $Tkernels{$1}++;
     }
 }
 
@@ -2299,7 +2327,6 @@ clearStats(\%tt, \@statNames);
 $Twarnings = 0;
 $TlineCount = 0;
 my %TwarningTags;
-my %Tkernels;
 my $fileCount = @ARGV;
 
 while (@ARGV) {
@@ -2323,42 +2350,36 @@ while (@ARGV) {
         open(INFILE,"<", $fileName) or die "error: could not open $fileName";
         $OUTFILE = STDOUT;
     }
-    # Note : \b is used in perl to indicate the start of a word
     # Count of transforms in this file
-    my %ft;
     clearStats(\%ft, \@statNames);
     my $countIncludes = 0;
     my $countKeywords = 0;
-    my $warnings = 0; 
+    my $warnings = 0;
     my %warningTags;
     my $lineCount = 0;
     undef $/;
     # Read whole file at once, so we can match newlines
-    while (<INFILE>)
-    {
-        simpleSubstitutions();
-
+    while (<INFILE>) {
         $countKeywords += m/__global__/;
         $countKeywords += m/__shared__/;
-
+        simpleSubstitutions();
         transformExternShared();
-        transformKernelLaunch(\%Tkernels);
-
+        transformKernelLaunch();
         if ($print_stats) {
-            while (/(\bhip[A-Z]\w+\b)/g) {
+            while (/(\b(hip|HIP)([A-Z]|_)\w+\b)/g) {
                 $convertedTags{$1}++;
             }
         }
         my $hasDeviceCode = $countKeywords + $ft{'device_function'};
         unless ($quiet_warnings) {
             # Copy into array of lines, process line-by-line to show warnings
-            if ($hasDeviceCode or (/\bcu/) or (/\bCU_/) or (/\bCUDA_/) or (/<<<.*>>>/)) {
+            if ($hasDeviceCode or (/\bcu|CU/) or (/<<<.*>>>/)) {
                 my @lines = split /\n/, $_;
                 # Copy the whole file
                 my $tmp = $_;
                 my $line_num = 0;
                 foreach (@lines) {
-                    $line_num ++;
+                    $line_num++;
                     # Remove any whitelisted words
                     foreach $w (@whitelist) {
                         s/\b$w\b/ZAP/
@@ -2371,8 +2392,7 @@ while (@ARGV) {
                     if (defined $tag) {
                         $warnings++;
                         $warningTags{$tag}++;
-                        print STDERR "  warning: $fileName:#$line_num : $_";
-                        print STDERR "\n";
+                        print STDERR "  warning: $fileName:#$line_num : $_\n";
                     }
                     $s = warnUnsupportedDeviceFunctions($line_num);
                     $warnings += $s;
@@ -2424,8 +2444,7 @@ if ($print_stats and ($fileCount > 1)) {
     foreach my $key (sort { $Tkernels{$b} <=> $Tkernels{$a} } keys %Tkernels) {
         printf STDERR "  %s(%d)", $key, $Tkernels{$key};
     }
-    print STDERR "\n";
-    print STDERR "\n";
+    print STDERR "\n\n";
 }
 if ($print_stats) {
     foreach my $key (sort { $convertedTags{$b} <=> $convertedTags{$a} } keys %convertedTags) {
