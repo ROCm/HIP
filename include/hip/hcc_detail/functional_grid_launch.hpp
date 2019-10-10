@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "helpers.hpp"
 #include "program_state.hpp"
 #include "hip_runtime_api.h"
+#include "hip/hip_hcc.h"
 
 #include <cstdint>
 #include <cstring>
@@ -115,14 +116,15 @@ void hipLaunchKernelGGLImpl(
     const dim3& dimBlocks,
     std::uint32_t sharedMemBytes,
     hipStream_t stream,
-    void** kernarg) {
+    void** kernarg, hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags){
 
     const auto& kd = hip_impl::get_program_state().kernel_descriptor(function_address, 
                                                                target_agent(stream));
 
-    hipModuleLaunchKernel(kd, numBlocks.x, numBlocks.y, numBlocks.z,
-                          dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
-                          stream, nullptr, kernarg);
+    hipExtModuleLaunchKernel(kd, (numBlocks.x * dimBlocks.x) ,
+                             (numBlocks.y * dimBlocks.y), (numBlocks.z * dimBlocks.z),
+                             dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
+                             stream, nullptr, kernarg, startEvent, stopEvent, flags);
 }
 } // Namespace hip_impl.
 
@@ -172,9 +174,30 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
         &kernarg_size,
         HIP_LAUNCH_PARAM_END};
 
+        hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
+                                     numBlocks, dimBlocks, sharedMemBytes,
+                                     stream, &config[0], nullptr, nullptr, 0);
+}
+
+template <typename... Args, typename F = void (*)(Args...)>
+inline
+void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                        std::uint32_t sharedMemBytes, hipStream_t stream,
+                        hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags, Args... args) {
+    hip_impl::hip_init();
+    auto kernarg = hip_impl::make_kernarg(kernel, std::tuple<Args...>{std::move(args)...});
+    std::size_t kernarg_size = kernarg.size();
+
+    void* config[]{
+        HIP_LAUNCH_PARAM_BUFFER_POINTER,
+        kernarg.data(),
+        HIP_LAUNCH_PARAM_BUFFER_SIZE,
+        &kernarg_size,
+        HIP_LAUNCH_PARAM_END};
+
     hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
                                      numBlocks, dimBlocks, sharedMemBytes,
-                                     stream, &config[0]);
+                                     stream, &config[0], startEvent , stopEvent, flags);
 }
 
 #pragma GCC visibility pop
