@@ -329,7 +329,6 @@ def generate_prof_header(f, api_map, opts_map):
     f.write('  HIP_API_ID_' + name + ' = ' + str(cb_id) + ',\n')
     cb_id += 1
   f.write('  HIP_API_ID_NUMBER = ' + str(cb_id) + ',\n')
-  f.write('  HIP_API_ID_ANY = ' + str(cb_id + 1) + ',\n')
   f.write('\n')
   f.write('  HIP_API_ID_NONE = HIP_API_ID_NUMBER,\n')
   for name in priv_lst:
