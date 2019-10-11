@@ -1326,7 +1326,8 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
     size_t numWavefronts = (blockSize + wavefrontSize - 1) / wavefrontSize;
 
     size_t availableVGPRs = (prop.regsPerBlock / wavefrontSize / simdPerCU);
-    size_t vgprs_alu_occupancy = simdPerCU * std::min(maxWavesPerSimd, availableVGPRs / usedVGPRS);
+    size_t vgprs_alu_occupancy = simdPerCU * ((usedVGPRS == 0) ? maxWavesPerSimd
+        : std::min(maxWavesPerSimd, availableVGPRs / usedVGPRS));
 
     // Calculate blocks occupancy per CU based on VGPR usage
     *numBlocks = vgprs_alu_occupancy / numWavefronts;
@@ -1336,7 +1337,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
         : std::min(maxWavesPerSimd, availableSGPRs / usedSGPRS));
 
     // Calculate blocks occupancy per CU based on SGPR usage
-    *numBlocks = std::min(*numBlocks, (uint32_t) (sgprs_alu_occupancy / numWavefronts)); 
+    *numBlocks = std::min(*numBlocks, (uint32_t) (sgprs_alu_occupancy / numWavefronts));
 
     size_t total_used_lds = usedLDS + dynSharedMemPerBlk;
     if (total_used_lds != 0) {
