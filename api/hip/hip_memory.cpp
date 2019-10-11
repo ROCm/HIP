@@ -207,7 +207,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_FINE_GRAIN_BUFFER : 0));
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_SVM_ATOMICS: 0));
 }
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
