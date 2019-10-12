@@ -2846,6 +2846,18 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  unsigned int sharedMemBytes, hipStream_t stream,
                                  void** kernelParams, void** extra);
 
+// TODO: add spammy description
+hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+                                    uint32_t globalWorkSizeY,
+                                    uint32_t globalWorkSizeZ,
+                                    uint32_t localWorkSizeX,
+                                    uint32_t localWorkSizeY,
+                                    uint32_t localWorkSizeZ,
+                                    size_t sharedMemBytes,
+                                    hipStream_t hStream, void** kernelParams,
+                                    void** extra, hipEvent_t startEvent,
+                                    hipEvent_t stopEvent, uint32_t flags);
+
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
