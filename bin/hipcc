@@ -526,6 +526,13 @@ foreach $arg (@ARGV)
         $optArg = $arg;
     }
 
+    ## This is a temporary workaround for CMake detection of OpenMP support.
+    ## It should be removed when the OpenMP detection c++ test in CMake is updated
+    ## and corrected CMake version is available.
+    if($arg eq '-fopenmp') {
+        $HIPCXXFLAGS .= " -D_OPENMP "
+    }
+
     ## process linker response file for hip-clang
     ## extract object files from static library and pass them directly to
     ## hip-clang in command line.
