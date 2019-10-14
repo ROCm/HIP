@@ -50,6 +50,7 @@ THE SOFTWARE.
 #else
 #define __HIP_TEXTURE_ATTRIB
 #endif
+typedef textureReference* hipTexRef;
 
 template <class T, int texType = hipTextureType1D,
           enum hipTextureReadMode mode = hipReadModeElementType>

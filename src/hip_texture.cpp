@@ -727,6 +727,20 @@ hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAdd
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipTexRefSetFilterMode(textureReference* tex, hipFilter_mode fm) {
+    HIP_INIT_API(hipTexRefSetFilterMode, tex, fm);
+    hipError_t hip_status = hipSuccess;
+    tex->filterMode = (hipTextureFilterMode)fm;
+    return ihipLogStatus(hip_status);
+}
+
+hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipAddress_mode am) {
+    HIP_INIT_API(hipTexRefSetAddressMode, tex, dim, am);
+    hipError_t hip_status = hipSuccess;
+    tex->addressMode[dim] = (hipTextureAddressMode)am;
+    return ihipLogStatus(hip_status);
+}
+
 hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim) {
     HIP_INIT_API(hipTexRefGetAddressMode,am, &tex, dim);
 

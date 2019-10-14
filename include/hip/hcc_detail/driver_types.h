@@ -333,4 +333,22 @@ typedef enum hipFunction_attribute {
     HIP_FUNC_ATTRIBUTE_MAX
 }hipFunction_attribute;
 
+typedef enum hipAddress_mode_enum {
+    HIP_TR_ADDRESS_MODE_WRAP   = 0, /**< Wrapping address mode */
+    HIP_TR_ADDRESS_MODE_CLAMP  = 1, /**< Clamp to edge address mode */
+    HIP_TR_ADDRESS_MODE_MIRROR = 2, /**< Mirror address mode */
+    HIP_TR_ADDRESS_MODE_BORDER = 3  /**< Border address mode */
+} hipAddress_mode;
+
+typedef enum hipFilter_mode_enum {
+    HIP_TR_FILTER_MODE_POINT  = 0, /**< Point filter mode */
+    HIP_TR_FILTER_MODE_LINEAR = 1  /**< Linear filter mode */
+} hipFilter_mode;
+
+typedef enum hipResourcetype_enum {
+    HIP_RESOURCE_TYPE_ARRAY           = 0x00, /**< Array resoure */
+    HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01, /**< Mipmapped array resource */
+    HIP_RESOURCE_TYPE_LINEAR          = 0x02, /**< Linear resource */
+    HIP_RESOURCE_TYPE_PITCH2D         = 0x03  /**< Pitch 2D resource */
+} hipResourcetype;
 #endif

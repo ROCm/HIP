@@ -3379,9 +3379,13 @@ hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex);
 
 hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am);
 
+hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipAddress_mode am);
+
 hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim);
 
 hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm);
+
+hipError_t hipTexRefSetFilterMode(textureReference* tex, hipFilter_mode fm);
 
 hipError_t hipTexRefSetFlags(textureReference* tex, unsigned int flags);
 
