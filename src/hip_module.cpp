@@ -109,6 +109,7 @@ struct ihipModuleSymbol_t {
     amd_kernel_code_t const* _header{};
     string _name;  // TODO - review for performance cost.  Name is just used for debug.
     vector<pair<size_t, size_t>> _kernarg_layout{};
+    bool _is_code_object_v3{};
 };
 
 template <>
@@ -208,8 +209,7 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
         aql.grid_size_x = globalWorkSizeX;
         aql.grid_size_y = globalWorkSizeY;
         aql.grid_size_z = globalWorkSizeZ;
-        bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
-        if (is_code_object_v3) {
+        if (f->_is_code_object_v3) {
             const auto* header =
                 reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
             aql.group_segment_size =
@@ -977,31 +977,24 @@ hipFuncAttributes make_function_attributes(TlsData *tls, const ihipModuleSymbol_
     //       available per CU, therefore we hardcode it to 64 KiRegisters.
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
-    bool is_code_object_v3 = kd._name.find(".kd") != std::string::npos;
-    if (is_code_object_v3) {
+    if (kd._is_code_object_v3) {
         r.localSizeBytes = header_v3(kd)->private_segment_fixed_size;
         r.sharedSizeBytes = header_v3(kd)->group_segment_fixed_size;
-    } else {
-        r.localSizeBytes = kd._header->workitem_private_segment_byte_size;
-        r.sharedSizeBytes = kd._header->workgroup_group_segment_byte_size;
-    }
-    r.maxDynamicSharedSizeBytes = prop.sharedMemPerBlock - r.sharedSizeBytes;
-    if (is_code_object_v3) {
         r.numRegs = ((header_v3(kd)->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
-    } else {
-        r.numRegs = kd._header->workitem_vgpr_count;
-    }
-    r.maxThreadsPerBlock = r.numRegs ?
-        std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
-        prop.maxThreadsPerBlock;
-    if (is_code_object_v3) {
         r.binaryVersion = 0; // FIXME: should it be the ISA version or code
                              //        object format version?
     } else {
+        r.localSizeBytes = kd._header->workitem_private_segment_byte_size;
+        r.sharedSizeBytes = kd._header->workgroup_group_segment_byte_size;
+        r.numRegs = kd._header->workitem_vgpr_count;
         r.binaryVersion =
             kd._header->amd_machine_version_major * 10 +
             kd._header->amd_machine_version_minor;
     }
+    r.maxDynamicSharedSizeBytes = prop.sharedMemPerBlock - r.sharedSizeBytes;
+    r.maxThreadsPerBlock = r.numRegs ?
+        std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
+        prop.maxThreadsPerBlock;
     r.ptxVersion = prop.major * 10 + prop.minor; // HIP currently presents itself as PTX 3.0.
 
     return r;
@@ -1099,8 +1092,7 @@ hipError_t ihipModuleLoadData(TlsData *tls, hipModule_t* module, const void* ima
                                             content.data(), content.size(), (*module)->executable,
                                             this_agent());
 
-    std::vector<char> blob(content.cbegin(), content.cend());
-    program_state_impl::read_kernarg_metadata(blob, (*module)->kernargs);
+    program_state_impl::read_kernarg_metadata(content, (*module)->kernargs);
 
     // compute the hash of the code object
     (*module)->hash = checksum(content.length(), content.data());
@@ -1152,8 +1144,7 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
 void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size_t* usedLDS)
 {
-    bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
-    if (is_code_object_v3) {
+    if (f->_is_code_object_v3) {
         const auto header = reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
         // GRANULATED_WAVEFRONT_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
         // the granularity for gfx6-gfx9 is max(0, ceil(vgprs_used / 4) - 1)
