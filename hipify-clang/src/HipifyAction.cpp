@@ -443,6 +443,47 @@ bool HipifyAction::cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::Ma
   return false;
 }
 
+bool HipifyAction::cubNamespacePrefix(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
+  if (const clang::TypedefNameDecl *decl = Result.Nodes.getNodeAs<clang::TypedefNameDecl>("cubNamespacePrefix")) {
+     if (!decl) {
+      return false;
+    }
+    clang::QualType QT = decl->getUnderlyingType();
+    const clang::Type* t = QT.getTypePtr();
+    if (!t) {
+      return false;
+    }
+    const clang::ElaboratedType* et = t->getAs<clang::ElaboratedType>();
+    if (!et) {
+      return false;
+    }
+    const clang::NestedNameSpecifier *nns = et->getQualifier();
+    if (!nns) {
+      return false;
+    }
+    const clang::NamespaceDecl *nsd = nns->getAsNamespace();
+    if (!nsd) {
+      return false;
+    }
+    const clang::TypeSourceInfo *si = decl->getTypeSourceInfo();
+    const clang::TypeLoc tloc = si->getTypeLoc();
+    const clang::SourceRange sr = tloc.getSourceRange();
+    clang::SourceLocation sl(sr.getBegin());
+    clang::SourceLocation end(sr.getEnd());
+    clang::SourceManager& SM = getCompilerInstance().getSourceManager();
+    size_t length = SM.getCharacterData(end) - SM.getCharacterData(sl);
+    StringRef sfull = StringRef(SM.getCharacterData(sl), length);
+    std::string name = nsd->getDeclName().getAsString();
+    size_t offset = sfull.find(name);
+    if (offset > 0) {
+      sl = sl.getLocWithOffset(offset);
+    }
+    FindAndReplace(name, sl, CUDA_CUB_TYPE_NAME_MAP);
+    return true;
+  }
+  return false;
+}
+
 bool HipifyAction::cudaHostFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result) {
   if (const clang::CallExpr * call = Result.Nodes.getNodeAs<clang::CallExpr>("cudaHostFuncCall")) {
     if (!call->getNumArgs()) {
@@ -536,6 +577,21 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
         )
       )
     ).bind("cudaDeviceFuncCall"),
+    this
+  );
+  Finder->addMatcher(
+    mat::typedefDecl(
+      mat::isExpansionInMainFile(),
+      mat::hasType(
+        mat::elaboratedType(
+          mat::hasQualifier(
+            mat::specifiesNamespace(
+              mat::hasName("cub")
+            )
+          )
+        )
+       )
+    ).bind("cubNamespacePrefix"),
     this
   );
   // Ownership is transferred to the caller.
@@ -658,4 +714,5 @@ void HipifyAction::run(const clang::ast_matchers::MatchFinder::MatchResult& Resu
   if (cudaSharedIncompleteArrayVar(Result)) return;
   if (cudaHostFuncCall(Result)) return;
   if (cudaDeviceFuncCall(Result)) return;
+  if (cubNamespacePrefix(Result)) return;
 }
