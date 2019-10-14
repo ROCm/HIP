@@ -32,11 +32,10 @@ typedef enum hipDataType {
   HIP_C_64F = 5
 } hipDataType;
 
-typedef enum libraryPropertyType {
-  MAJOR_VERSION,
-  MINOR_VERSION,
-  PATCH_LEVEL
-} libraryPropertyType;
+typedef enum hipLibraryPropertyType {
+  HIP_LIBRARY_MAJOR_VERSION,
+  HIP_LIBRARY_MINOR_VERSION,
+  HIP_LIBRARY_PATCH_LEVEL
+} hipLibraryPropertyType;
 
 #endif
-
