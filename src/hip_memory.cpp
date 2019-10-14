@@ -403,8 +403,6 @@ hipError_t ihipMallocPitch(TlsData* tls, void** ptr, size_t* pitch, size_t width
      {
         return hipErrorInvalidValue;
      }
-    // hardcoded 128 bytes
-    *pitch = ((((int)width - 1) / 128) + 1) * 128;
     auto ctx = ihipGetTlsDefaultCtx();
 
     if (ctx) {
@@ -418,7 +416,7 @@ hipError_t ihipMallocPitch(TlsData* tls, void** ptr, size_t* pitch, size_t width
                                      &allocGranularity);
 
         hsa_ext_image_descriptor_t imageDescriptor;
-        imageDescriptor.width = *pitch;
+        imageDescriptor.width = width;
         imageDescriptor.height = height;
         imageDescriptor.depth = depth;
         imageDescriptor.array_size = 0;
@@ -432,7 +430,11 @@ hipError_t ihipMallocPitch(TlsData* tls, void** ptr, size_t* pitch, size_t width
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
         hsa_ext_image_data_info_t imageInfo;
         hsa_status_t status =
-            hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, *pitch, 0, &imageInfo);
+            hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+        if(HSA_STATUS_SUCCESS != status){
+            return hipErrorRuntimeOther;
+        }
+        *pitch = imageInfo.size/(height == 0 ? 1:height)/(depth == 0 ? 1:depth);
         size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
         const unsigned am_flags = 0;
         *ptr = hip_internal::allocAndSharePtr("device_pitch", imageInfo.size, ctx,
@@ -515,9 +517,12 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height,
     hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
     if (!agent)
         return hipErrorInvalidResourceHandle;
-
     hsa_status_t status =
         hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+    if(HSA_STATUS_SUCCESS != status){
+        return hipErrorRuntimeOther;
+    }
+
     return hipSuccess;
 }
 
@@ -605,7 +610,10 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
             hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
             hsa_ext_image_data_info_t imageInfo;
             hsa_status_t status =
-                hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+               hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+            if(HSA_STATUS_SUCCESS != status){
+               return ihipLogStatus(hipErrorRuntimeOther);
+            }
             size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
             *ptr = hip_internal::allocAndSharePtr("device_array", imageInfo.size, ctx,
                                                   false /*shareWithAll*/, am_flags, 0, alignment);
@@ -678,8 +686,13 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
 
             hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
             hsa_ext_image_data_info_t imageInfo;
+
             hsa_status_t status =
                hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+            if(HSA_STATUS_SUCCESS != status){
+               return ihipLogStatus(hipErrorRuntimeOther);
+            }
+
             size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
 
             *ptr = hip_internal::allocAndSharePtr("device_array", imageInfo.size, ctx,
@@ -794,7 +807,10 @@ hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAll
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
         hsa_ext_image_data_info_t imageInfo;
         hsa_status_t status =
-            hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+           hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+        if(HSA_STATUS_SUCCESS != status){
+           return ihipLogStatus(hipErrorRuntimeOther);
+        }
         size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
 
         *ptr = hip_internal::allocAndSharePtr("device_array", imageInfo.size, ctx, false, am_flags, 0,
@@ -880,8 +896,10 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
         hsa_ext_image_data_info_t imageInfo;
         hsa_status_t status =
             hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+        if(HSA_STATUS_SUCCESS != status){
+            return ihipLogStatus(hipErrorRuntimeOther);
+        }
         size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
-
         *ptr = hip_internal::allocAndSharePtr("device_array", imageInfo.size, ctx, false, am_flags, 0,
                                               alignment);
 

@@ -62,6 +62,11 @@ int main (void)
 
     HIPCHECK(cudaBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
                                        SIZE_W, SIZE_H, devPitchA));
+    if (status != cudaSuccess) {
+        printf("%serror: '%s'(%d) at %s:%d%s\n", KRED, cudaGetErrorString(status),
+           status,__FILE__, __LINE__, KNRM);
+           failed("API returned error code.");
+    }
     #else
     HIPCHECK(hipBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
                                        SIZE_W, SIZE_H, devPitchA));
