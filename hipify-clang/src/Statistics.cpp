@@ -129,6 +129,7 @@ const char *apiTypes[NUM_API_TYPES] = {
   "API_RAND",
   "API_DNN",
   "API_FFT",
+  "API_CUB",
   "API_SPARSE",
   "API_CAFFE2"
 };
