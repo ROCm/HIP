@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp LINK_OPTIONS hiprtc EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s ../test_common.cpp LINK_OPTIONS hiprtc EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -66,7 +66,16 @@ int main()
                         nullptr,    // headers
                         nullptr);   // includeNames
 
-    hiprtcResult compileResult{hiprtcCompileProgram(prog, 0, nullptr)};
+    hipDeviceProp_t props;
+    int device = 0;
+    hipGetDeviceProperties(&props, device);
+    std::string gfxName = "gfx" + std::to_string(props.gcnArch);
+    std::string sarg = "--gpu-architecture=" + gfxName;
+    const char* options[] = {
+        sarg.c_str()
+    };
+
+    hiprtcResult compileResult{hiprtcCompileProgram(prog, 1, options)};
 
     size_t logSize;
     hiprtcGetProgramLogSize(prog, &logSize);

@@ -71,9 +71,17 @@ sub can_run {
     }
 }
 
+# Define HIP_PATH based on location of the script. Same as hipcc.
+# Derive ROCM_PATH same as hipcc does. Others are relative to ROCM_PATH. 
+$HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
+if (-e "$HIP_PATH/../.info/version") {
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH
+} else {
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
+}
 $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
-$HCC_HOME=$ENV{'HCC_HOME'} // '/opt/rocm/hcc';
-$HSA_PATH=$ENV{'HSA_PATH'} // '/opt/rocm/hsa';
+$HCC_HOME=$ENV{'HCC_HOME'} // "$ROCM_PATH/hcc";
+$HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
@@ -88,8 +96,6 @@ if (not defined $HIP_PLATFORM) {
         $HIP_PLATFORM = "hcc";
     }
 }
-
-$HIP_PATH=$ENV{'HIP_PATH'} // Cwd::realpath (dirname (dirname $0)); # use parent directory of this tool
 
 if ($HIP_PLATFORM eq "hcc") {
     $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=   -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
@@ -181,7 +187,8 @@ if ($p_check) {
     print "\nCheck system installation:\n";
 
     printf ("%-70s", "check hipconfig in PATH...");
-    if (system ("hipconfig > /dev/null 2>&1") != 0)  {
+    # Safer to use which hipconfig instead of invoking hipconfig
+    if (system ("which hipconfig > /dev/null 2>&1") != 0)  {
         print "FAIL\n";
     } else {
         printf "good\n";
