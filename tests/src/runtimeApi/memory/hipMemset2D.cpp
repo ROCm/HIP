@@ -45,7 +45,7 @@ bool testhipMemset2D(int memsetval,int p_gpuDevice)
     char *A_d;
     char *A_h;
     bool testResult = true;
-    HIPCHECK ( hipMemAllocPitch((hipDeviceptr_t*)&A_d, &pitch_A, width , numH,16) );
+    HIPCHECK(hipMemAllocPitch((hipDeviceptr_t*)&A_d, &pitch_A, width , numH,16));
     A_h = (char*)malloc(sizeElements);
     HIPASSERT(A_h != NULL);
     for (size_t i=0; i<elements; i++) {
@@ -89,8 +89,9 @@ bool testhipMemset2DAsync(int memsetval,int p_gpuDevice)
     }
     hipStream_t stream;
     HIPCHECK(hipStreamCreate(&stream));
-    HIPCHECK ( hipMemset2DAsync(A_d, pitch_A, memsetval, numW, numH, stream) );
-    HIPCHECK ( hipMemcpy2D(A_h, width, A_d, pitch_A, numW, numH, hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemset2DAsync(A_d, pitch_A, memsetval, numW, numH, stream) );
+    HIPCHECK(hipStreamSynchronize(stream));
+    HIPCHECK(hipMemcpy2D(A_h, width, A_d, pitch_A, numW, numH, hipMemcpyDeviceToHost));
 
     for (int i=0; i<elements; i++) {
         if (A_h[i] != memsetval) {
