@@ -53,7 +53,7 @@ bool testhipMemset3D(int memsetval,int p_gpuDevice)
     for (size_t i=0; i<elements; i++) {
         A_h[i] = 1;
     }
-    HIPCHECK ( hipMemset3D( devPitchedPtr, memsetval, extent) );
+    HIPCHECK(hipMemset3D( devPitchedPtr, memsetval, extent));
     hipMemcpy3DParms myparms = {0};
     myparms.srcPos = make_hipPos(0,0,0);
     myparms.dstPos = make_hipPos(0,0,0);
@@ -103,7 +103,8 @@ bool testhipMemset3DAsync(int memsetval,int p_gpuDevice)
     }
     hipStream_t stream;
     HIPCHECK(hipStreamCreate(&stream));
-    HIPCHECK ( hipMemset3DAsync( devPitchedPtr, memsetval, extent, stream) );
+    HIPCHECK(hipMemset3DAsync(devPitchedPtr, memsetval, extent, stream));
+    HIPCHECK(hipStreamSynchronize(stream));
     hipMemcpy3DParms myparms = {0};
     myparms.srcPos = make_hipPos(0,0,0);
     myparms.dstPos = make_hipPos(0,0,0);
