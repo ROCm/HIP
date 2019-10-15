@@ -76,6 +76,51 @@ void getDrvChannelOrderAndType(const enum hipArray_Format Format, unsigned int N
   }
 }
 
+void setDescFromChannelType(cl_channel_type channelType, hipChannelFormatDesc* desc) {
+
+  memset(desc, 0x00, sizeof(hipChannelFormatDesc));
+
+  switch (channelType) {
+    case CL_SIGNED_INT8:
+    case CL_SIGNED_INT16:
+    case CL_SIGNED_INT32:
+      desc->f = hipChannelFormatKindSigned;
+      break;
+    case CL_UNSIGNED_INT8:
+    case CL_UNSIGNED_INT16:
+    case CL_UNSIGNED_INT32:
+      desc->f = hipChannelFormatKindUnsigned;
+      break;
+    case CL_HALF_FLOAT:
+    case CL_FLOAT:
+      desc->f = hipChannelFormatKindFloat;
+      break;
+    default:
+      desc->f = hipChannelFormatKindNone;
+      break;
+  }
+
+  switch (channelType) {
+    case CL_SIGNED_INT8:
+    case CL_UNSIGNED_INT8:
+      desc->x = 8;
+      break;
+    case CL_SIGNED_INT16:
+    case CL_UNSIGNED_INT16:
+    case CL_HALF_FLOAT:
+      desc->x = 16;
+      break;
+    case CL_SIGNED_INT32:
+    case CL_UNSIGNED_INT32:
+    case CL_FLOAT:
+      desc->x = 32;
+      break;
+    default:
+      desc->x = 0;
+      break;
+  }
+}
+
 void getChannelOrderAndType(const hipChannelFormatDesc& desc, enum hipTextureReadMode readMode,
                             cl_channel_order* channelOrder, cl_channel_type* channelType) {
     if (desc.x != 0 && desc.y != 0 && desc.z != 0 && desc.w != 0) {
@@ -621,8 +666,8 @@ hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsi
     HIP_RETURN(hipErrorInvalidImage);
   }
 
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, &offset, tex, array->data, &array->desc, array->width,
-                             array->height, array->depth));
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, array->data, &array->desc, array->width,
+                             array->height, 0));
 }
 
 hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
