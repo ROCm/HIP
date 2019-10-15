@@ -79,12 +79,63 @@ bool testhipMemset3D(int memsetval,int p_gpuDevice)
     return testResult;
 }
 
+bool testhipMemset3DAsync(int memsetval,int p_gpuDevice)
+{
+    size_t numH = 256;
+    size_t numW = 256;
+    size_t depth = 10;
+    size_t width = numW * sizeof(char);
+    size_t sizeElements = width * numH * depth;
+    size_t elements = numW* numH* depth;
+
+
+	printf ("testhipMemset3D memsetval=%2x device=%d\n", memsetval, p_gpuDevice);
+    char *A_h;
+    bool testResult = true;
+    hipExtent extent = make_hipExtent(width, numH, depth);
+    hipPitchedPtr devPitchedPtr;
+
+    HIPCHECK(hipMalloc3D(&devPitchedPtr, extent));
+	A_h = (char*)malloc(sizeElements);
+	HIPASSERT(A_h != NULL);
+	for (size_t i=0; i<elements; i++) {
+        A_h[i] = 1;
+    }
+    hipStream_t stream;
+    HIPCHECK(hipStreamCreate(&stream));
+	HIPCHECK ( hipMemset3DAsync( devPitchedPtr, memsetval, extent, stream) );
+	hipMemcpy3DParms myparms = {0};
+	myparms.srcPos = make_hipPos(0,0,0);
+	myparms.dstPos = make_hipPos(0,0,0);
+	myparms.dstPtr = make_hipPitchedPtr(A_h, width , numW, numH);
+	myparms.srcPtr = devPitchedPtr;
+	myparms.extent = extent;
+#ifdef __HIP_PLATFORM_NVCC__
+	myparms.kind = hipMemcpyKindToCudaMemcpyKind(hipMemcpyDeviceToHost);
+#else
+    myparms.kind = hipMemcpyDeviceToHost;
+#endif
+    HIPCHECK(hipMemcpy3D(&myparms));
+
+    for (int i=0; i<elements; i++) {
+        if (A_h[i] != memsetval) {
+			testResult = false;
+            printf("mismatch at index:%d computed:%02x, memsetval:%02x\n", i, (int)A_h[i], (int)memsetval);
+            break;
+        }
+    }
+    HIPCHECK(hipFree(devPitchedPtr.ptr));
+    free(A_h);
+    return testResult;
+}
+
 int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
-    bool testResult = false;
     HIPCHECK(hipSetDevice(p_gpuDevice));
-    testResult = testhipMemset3D(memsetval, p_gpuDevice);
+    bool testResult = false;
+    testResult &= testhipMemset3D(memsetval, p_gpuDevice);
+    testResult &= testhipMemset3DAsync(memsetval, p_gpuDevice);
     if (testResult) {
         passed();
     } else {
