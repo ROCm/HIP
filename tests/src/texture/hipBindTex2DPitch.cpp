@@ -60,8 +60,8 @@ int main (void)
     tex.normalized = false;
     #if defined(__HIP_PLATFORM_NVCC__)
 
-    HIPCHECK(cudaBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
-                                       SIZE_W, SIZE_H, devPitchA));
+    cudaError_t status = cudaBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
+                                       SIZE_W, SIZE_H, devPitchA);
     if (status != cudaSuccess) {
         printf("%serror: '%s'(%d) at %s:%d%s\n", KRED, cudaGetErrorString(status),
            status,__FILE__, __LINE__, KNRM);
