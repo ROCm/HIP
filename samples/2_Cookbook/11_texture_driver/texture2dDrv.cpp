@@ -124,6 +124,7 @@ bool runTest(int argc, char** argv) {
             }
         }
     }
+    hipUnbindTexture(tex);
     hipFree(dData);
     hipFreeArray(array);
     return true;
