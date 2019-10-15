@@ -481,7 +481,7 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
 
     static const string hipcc{
         getenv("HIP_PATH") ? (getenv("HIP_PATH") + string{"/bin/hipcc"})
-                           : "/opt/rocm/bin/hipcc"};
+                           : "/opt/rocm/hip/bin/hipcc"};
 
     if (!experimental::filesystem::exists(hipcc)) {
         return HIPRTC_ERROR_INTERNAL_ERROR;
