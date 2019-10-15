@@ -29,7 +29,12 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__ || __HIP_ARCH_GFX908__
+#if __HIP_ARCH_GFX803__  || \
+    __HIP_ARCH_GFX900__  || \
+    __HIP_ARCH_GFX906__  || \
+    __HIP_ARCH_GFX908__  || \
+    __HIP_ARCH_GFX1010__ || \
+    __HIP_ARCH_GFX1012__
 
 __global__ void kernel_abs_int64(long long *input, long long *output) {
     int tx = threadIdx.x;
