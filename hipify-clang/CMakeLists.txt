@@ -1,8 +1,4 @@
-if (CUDA_VERSION VERSION_GREATER "9.2")
-    cmake_minimum_required(VERSION 3.12.3)
-else()
-    cmake_minimum_required(VERSION 3.7.2)
-endif()
+cmake_minimum_required(VERSION 3.5.2)
 
 project(hipify-clang)
 
@@ -58,7 +54,7 @@ target_link_libraries(hipify-clang PRIVATE
     LLVMOption
     LLVMCore)
 
-if (LLVM_PACKAGE_VERSION VERSION_GREATER_EQUAL "7")
+if (LLVM_PACKAGE_VERSION VERSION_GREATER "6.0.1")
     target_link_libraries(hipify-clang PRIVATE clangToolingInclusions)
 endif()
 
@@ -72,7 +68,7 @@ else()
     set(StdCpp "-std=c++")
 endif()
 
-if (LLVM_PACKAGE_VERSION VERSION_GREATER_EQUAL "10.0")
+if (LLVM_PACKAGE_VERSION VERSION_GREATER "9.0")
     string(APPEND StdCpp "14")
 # MSVC starting from 1900 (VS 2015) supports only the following c++ std values: c++14|c++17|c++latest
 elseif (MSVC)
