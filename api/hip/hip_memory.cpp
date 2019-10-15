@@ -36,6 +36,8 @@ extern void getDrvChannelOrderAndType(const enum hipArray_Format Format,
                                       cl_channel_order* channelOrder,
                                       cl_channel_type* channelType);
 
+extern void setDescFromChannelType(cl_channel_type channelType, hipChannelFormatDesc* desc);
+
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
   if (memObj != nullptr) {
@@ -468,6 +470,8 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
                             &channelOrder, &channelType);
 
   const cl_image_format image_format = { channelOrder, channelType };
+  setDescFromChannelType(channelType, &(array[0]->desc));
+
   size_t pitch = 0;
   hipError_t status = ihipMallocPitch(ptr, &pitch, array[0]->width, array[0]->height, 1, CL_MEM_OBJECT_IMAGE2D,
                       &image_format);
