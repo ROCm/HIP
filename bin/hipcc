@@ -529,7 +529,7 @@ foreach $arg (@ARGV)
     ## This is a temporary workaround for CMake detection of OpenMP support.
     ## It should be removed when the OpenMP detection c++ test in CMake is updated
     ## and corrected CMake version is available.
-    if($arg eq '-fopenmp') {
+    if((defined $HIP_COMPILER) and ($HIP_COMPILER eq "clang") and ($arg eq '-fopenmp')) {
         $HIPCXXFLAGS .= " -D_OPENMP "
     }
 
