@@ -111,6 +111,19 @@ void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
   }
 }
 
+clang::SourceLocation HipifyAction::GetSubstrLocation(const std::string &str, const clang::SourceRange &sr) {
+  clang::SourceLocation sl(sr.getBegin());
+  clang::SourceLocation end(sr.getEnd());
+  auto &SM = getCompilerInstance().getSourceManager();
+  size_t length = SM.getCharacterData(end) - SM.getCharacterData(sl);
+  StringRef sfull = StringRef(SM.getCharacterData(sl), length);
+  size_t offset = sfull.find(str);
+  if (offset > 0) {
+    sl = sl.getLocWithOffset(offset);
+  }
+  return sl;
+}
+
 /**
   * Look at, and consider altering, a given token.
   *
@@ -434,17 +447,8 @@ bool HipifyAction::cubNamespacePrefix(const mat::MatchFinder::MatchResult &Resul
     const clang::TypeSourceInfo *si = decl->getTypeSourceInfo();
     const clang::TypeLoc tloc = si->getTypeLoc();
     const clang::SourceRange sr = tloc.getSourceRange();
-    clang::SourceLocation sl(sr.getBegin());
-    clang::SourceLocation end(sr.getEnd());
-    auto &SM = getCompilerInstance().getSourceManager();
-    size_t length = SM.getCharacterData(end) - SM.getCharacterData(sl);
-    StringRef sfull = StringRef(SM.getCharacterData(sl), length);
     std::string name = nsd->getDeclName().getAsString();
-    size_t offset = sfull.find(name);
-    if (offset > 0) {
-      sl = sl.getLocWithOffset(offset);
-    }
-    FindAndReplace(name, sl, CUDA_CUB_TYPE_NAME_MAP);
+    FindAndReplace(name, GetSubstrLocation(name, sr), CUDA_CUB_TYPE_NAME_MAP);
     return true;
   }
   return false;
@@ -467,17 +471,8 @@ bool HipifyAction::cubFunctionTemplateDecl(const mat::MatchFinder::MatchResult &
       const clang::NamespaceDecl *nsd = nns->getAsNamespace();
       if (!nsd) continue;
       const clang::SourceRange sr = valueDecl->getSourceRange();
-      clang::SourceLocation sl(sr.getBegin());
-      clang::SourceLocation end(sr.getEnd());
-      auto &SM = getCompilerInstance().getSourceManager();
-      size_t length = SM.getCharacterData(end) - SM.getCharacterData(sl);
-      StringRef sfull = StringRef(SM.getCharacterData(sl), length);
       std::string name = nsd->getDeclName().getAsString();
-      size_t offset = sfull.find(name);
-      if (offset > 0) {
-        sl = sl.getLocWithOffset(offset);
-      }
-      FindAndReplace(name, sl, CUDA_CUB_TYPE_NAME_MAP);
+      FindAndReplace(name, GetSubstrLocation(name, sr), CUDA_CUB_TYPE_NAME_MAP);
       ret = true;
     }
     return ret;
