@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
     HIPCHECK(hipSetDevice(p_gpuDevice));
-    bool testResult = false;
+    bool testResult = true;
     testResult &= testhipMemset3D(memsetval, p_gpuDevice);
     testResult &= testhipMemset3DAsync(memsetval, p_gpuDevice);
     if (testResult) {

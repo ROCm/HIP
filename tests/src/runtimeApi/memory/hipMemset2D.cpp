@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     hipCtx_t context;
     hipCtxCreate(&context, 0, p_gpuDevice);
 
-    bool testResult = false;
+    bool testResult = true;
     testResult &= testhipMemset2D(memsetval, p_gpuDevice);
     testResult &= testhipMemset2DAsync(memsetval, p_gpuDevice);
     hipCtxDestroy(context);
