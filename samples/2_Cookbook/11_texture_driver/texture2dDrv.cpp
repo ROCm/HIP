@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define fileName "tex2dKernel.code"
 
 texture<float, 2, hipReadModeElementType> tex;
-bool testResult = false;
+bool testResult = true;
 
 #define HIP_CHECK(cmd)                                                                             \
     {                                                                                              \
@@ -126,7 +126,7 @@ bool runTest(int argc, char** argv) {
     }
     hipFree(dData);
     hipFreeArray(array);
-    return true;
+    return testResult;
 }
 
 int main(int argc, char** argv) {
