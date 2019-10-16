@@ -348,7 +348,7 @@ def generate_prof_header(f, api_map, opts_map):
   # Generating the callbacks data structure
   f.write('\n// HIP API callbacks data structure\n')
   f.write(
-  'struct hip_api_data_t {\n' +
+  'typedef struct hip_api_data_t {\n' +
   '  uint64_t correlation_id;\n' +
   '  uint32_t phase;\n' +
   '  union {\n'
@@ -364,7 +364,7 @@ def generate_prof_header(f, api_map, opts_map):
       f.write('    } ' + name + ';\n')
   f.write(
   '  } args;\n' +
-  '};\n'
+  '} hip_api_data_t;\n'
   )
   
   # Generating the callbacks args data filling macros

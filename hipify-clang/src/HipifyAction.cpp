@@ -61,6 +61,7 @@ const StringRef sCudaLaunchKernel = "cudaLaunchKernel";
 const StringRef sCudaHostFuncCall = "cudaHostFuncCall";
 const StringRef sCudaDeviceFuncCall = "cudaDeviceFuncCall";
 const StringRef sCubNamespacePrefix = "cubNamespacePrefix";
+const StringRef sCubFunctionTemplateDecl = "cubFunctionTemplateDecl";
 
 std::set<std::string> DeviceSymbolFunctions0 {
   {sCudaMemcpyToSymbol},
@@ -108,6 +109,19 @@ void HipifyAction::RewriteString(StringRef s, clang::SourceLocation start) {
     if (end == StringRef::npos) break;
     begin = end + 1;
   }
+}
+
+clang::SourceLocation HipifyAction::GetSubstrLocation(const std::string &str, const clang::SourceRange &sr) {
+  clang::SourceLocation sl(sr.getBegin());
+  clang::SourceLocation end(sr.getEnd());
+  auto &SM = getCompilerInstance().getSourceManager();
+  size_t length = SM.getCharacterData(end) - SM.getCharacterData(sl);
+  StringRef sfull = StringRef(SM.getCharacterData(sl), length);
+  size_t offset = sfull.find(str);
+  if (offset > 0) {
+    sl = sl.getLocWithOffset(offset);
+  }
+  return sl;
 }
 
 /**
@@ -433,18 +447,35 @@ bool HipifyAction::cubNamespacePrefix(const mat::MatchFinder::MatchResult &Resul
     const clang::TypeSourceInfo *si = decl->getTypeSourceInfo();
     const clang::TypeLoc tloc = si->getTypeLoc();
     const clang::SourceRange sr = tloc.getSourceRange();
-    clang::SourceLocation sl(sr.getBegin());
-    clang::SourceLocation end(sr.getEnd());
-    auto &SM = getCompilerInstance().getSourceManager();
-    size_t length = SM.getCharacterData(end) - SM.getCharacterData(sl);
-    StringRef sfull = StringRef(SM.getCharacterData(sl), length);
     std::string name = nsd->getDeclName().getAsString();
-    size_t offset = sfull.find(name);
-    if (offset > 0) {
-      sl = sl.getLocWithOffset(offset);
-    }
-    FindAndReplace(name, sl, CUDA_CUB_TYPE_NAME_MAP);
+    FindAndReplace(name, GetSubstrLocation(name, sr), CUDA_CUB_TYPE_NAME_MAP);
     return true;
+  }
+  return false;
+}
+
+bool HipifyAction::cubFunctionTemplateDecl(const mat::MatchFinder::MatchResult &Result) {
+  if (auto *decl = Result.Nodes.getNodeAs<clang::FunctionTemplateDecl>(sCubFunctionTemplateDecl)) {
+    auto *Tparams = decl->getTemplateParameters();
+    bool ret = false;
+    for (size_t I = 0; I < Tparams->size(); ++I) {
+      const clang::ValueDecl *valueDecl = dyn_cast<clang::ValueDecl>(Tparams->getParam(I));
+      if (!valueDecl) continue;
+      clang::QualType QT = valueDecl->getType();
+      auto *t = QT.getTypePtr();
+      if (!t) continue;
+      const clang::ElaboratedType *et = t->getAs<clang::ElaboratedType>();
+      if (!et) continue;
+      const clang::NestedNameSpecifier *nns = et->getQualifier();
+      if (!nns) continue;
+      const clang::NamespaceDecl *nsd = nns->getAsNamespace();
+      if (!nsd) continue;
+      const clang::SourceRange sr = valueDecl->getSourceRange();
+      std::string name = nsd->getDeclName().getAsString();
+      FindAndReplace(name, GetSubstrLocation(name, sr), CUDA_CUB_TYPE_NAME_MAP);
+      ret = true;
+    }
+    return ret;
   }
   return false;
 }
@@ -553,6 +584,13 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
         )
        )
     ).bind(sCubNamespacePrefix),
+    this
+  );
+  // TODO: Maybe worth to make it more concrete based on final cubFunctionTemplateDecl
+  Finder->addMatcher(
+    mat::functionTemplateDecl(
+      mat::isExpansionInMainFile()
+    ).bind(sCubFunctionTemplateDecl),
     this
   );
   // Ownership is transferred to the caller.
@@ -668,4 +706,5 @@ void HipifyAction::run(const mat::MatchFinder::MatchResult &Result) {
   if (cudaHostFuncCall(Result)) return;
   if (cudaDeviceFuncCall(Result)) return;
   if (cubNamespacePrefix(Result)) return;
+  if (cubFunctionTemplateDecl(Result)) return;
 }
