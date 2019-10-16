@@ -36,6 +36,7 @@ THE SOFTWARE.
 const std::string sHIP = "HIP";
 const std::string sROC = "ROC";
 const std::string sCub = "cub";
+const std::string sHipcub = "hipcub";
 const std::string sHIP_DYNAMIC_SHARED = "HIP_DYNAMIC_SHARED";
 const std::string sHIP_KERNEL_NAME = "HIP_KERNEL_NAME";
 std::string sHIP_SYMBOL = "HIP_SYMBOL";
@@ -345,9 +346,26 @@ bool HipifyAction::cudaLaunchKernel(const mat::MatchFinder::MatchResult &Result)
   llvm::raw_svector_ostream OS(XStr);
   clang::LangOptions DefaultLangOptions;
   auto *SM = Result.SourceManager;
+  clang::SourceRange sr = calleeExpr->getSourceRange();
+  std::string kern = readSourceText(*SM, sr).str();
   OS << sHipLaunchKernelGGL << "(";
-  if (caleeDecl->isTemplateInstantiation()) OS << sHIP_KERNEL_NAME << "(";
-  OS << readSourceText(*SM, calleeExpr->getSourceRange());
+  if (caleeDecl->isTemplateInstantiation()) {
+    OS << sHIP_KERNEL_NAME << "(";
+    std::string cub = sCub + "::";
+    std::string hipcub;
+    const auto found = CUDA_CUB_TYPE_NAME_MAP.find(sCub);
+    if (found != CUDA_CUB_TYPE_NAME_MAP.end()) {
+      hipcub = found->second.hipName.str() + "::";
+    } else {
+      hipcub = sHipcub + "::";
+    }
+    size_t pos = kern.find(cub);
+    while (pos != std::string::npos) {
+      kern.replace(pos, cub.size(), hipcub);
+      pos = kern.find(cub, pos + hipcub.size());
+    }
+  }
+  OS << kern;
   if (caleeDecl->isTemplateInstantiation()) OS << ")";
   OS << ", ";
   // Next up are the four kernel configuration parameters, the last two of which are optional and default to zero.

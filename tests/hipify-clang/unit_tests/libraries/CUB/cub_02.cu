@@ -55,10 +55,9 @@ int main() {
     // CHECK: hiprandDestroyGenerator(gen);
     curandDestroyGenerator(gen);
     // Sort data
-    // TODO: Substitution of cub namespace in CUDAKernelCallExpr
-    // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(sort<512, 8, cub::BLOCK_LOAD_TRANSPOSE, cub::BLOCK_STORE_TRANSPOSE>), dim3(1000), dim3(512), 0, 0, d_gpu, result_gpu);
+    // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(sort<512, 8, hipcub::BLOCK_LOAD_TRANSPOSE, hipcub::BLOCK_STORE_TRANSPOSE>), dim3(1000), dim3(512), 0, 0, d_gpu, result_gpu);
     sort<512, 8, cub::BLOCK_LOAD_TRANSPOSE, cub::BLOCK_STORE_TRANSPOSE><<<1000, 512>>>(d_gpu, result_gpu);
-    // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(sort<256, 16, cub::BLOCK_LOAD_DIRECT, cub::BLOCK_STORE_DIRECT>), dim3(1000), dim3(256), 0, 0, d_gpu, result_gpu);
+    // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(sort<256, 16, hipcub::BLOCK_LOAD_DIRECT, hipcub::BLOCK_STORE_DIRECT>), dim3(1000), dim3(256), 0, 0, d_gpu, result_gpu);
     sort<256, 16, cub::BLOCK_LOAD_DIRECT, cub::BLOCK_STORE_DIRECT><<<1000, 256>>>(d_gpu, result_gpu);
     // CHECK: hipMemcpy(data_sorted, result_gpu, 1000*4096*sizeof(double), hipMemcpyDeviceToHost);
     cudaMemcpy(data_sorted, result_gpu, 1000*4096*sizeof(double), cudaMemcpyDeviceToHost);
