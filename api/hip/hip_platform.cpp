@@ -869,6 +869,8 @@ void hipLaunchCooperativeKernelGGLImpl(
 
 }
 
+#endif // defined(ATI_OS_LINUX)
+
 // conversion routines between float and half precision
 static inline std::uint32_t f32_as_u32(float f) { union { float f; std::uint32_t u; } v; v.f = f; return v.u; }
 static inline float u32_as_f32(std::uint32_t u) { union { float f; std::uint32_t u; } v; v.u = u; return v.f; }
@@ -908,5 +910,3 @@ extern "C" float __gnu_h2f_ieee(unsigned short h){
 extern "C" unsigned short __gnu_f2h_ieee(float f){
   return (unsigned short)__convert_float_to_half(f);
 }
-
-#endif // defined(ATI_OS_LINUX)
