@@ -134,6 +134,7 @@ enum ApiTypes {
   API_DNN,
   API_FFT,
   API_SPARSE,
+  API_CUB,
   API_CAFFE2,
   API_LAST
 };
