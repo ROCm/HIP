@@ -73,6 +73,7 @@ public:
   bool cudaDeviceFuncCall(const mat::MatchFinder::MatchResult &Result);
   bool cudaHostFuncCall(const mat::MatchFinder::MatchResult &Result);
   bool cubNamespacePrefix(const mat::MatchFinder::MatchResult &Result);
+  bool cubFunctionTemplateDecl(const mat::MatchFinder::MatchResult &Result);
   // Called by the preprocessor for each include directive during the non-raw lexing pass.
   void InclusionDirective(clang::SourceLocation hash_loc,
                           const clang::Token &include_token,
