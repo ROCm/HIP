@@ -63,6 +63,8 @@ private:
   void RewriteString(StringRef s, clang::SourceLocation start);
   // Replace a CUDA identifier with the corresponding hip identifier, if applicable.
   void RewriteToken(const clang::Token &t);
+  // Calculate str's SourceLocation in SourceRange sr
+  clang::SourceLocation GetSubstrLocation(const std::string &str, const clang::SourceRange &sr);
 
 public:
   explicit HipifyAction(ct::Replacements *replacements): clang::ASTFrontendAction(),
