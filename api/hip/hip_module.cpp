@@ -256,27 +256,27 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t sharedMemBytes, hipStream_t hStream,
                                  void **kernelParams, void **extra,
                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0,
-                                 uint32_t params = 0)
-{
+                                 uint32_t params = 0, uint32_t gridId = 0, uint32_t numGrids = 0,
+                                 uint64_t prevGridSum = 0, uint64_t allGridSum = 0, uint32_t firstDevice = 0) {
   HIP_INIT_API(NONE, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
     sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags, params);
 
   hip::Function* function = hip::Function::asFunction(f);
   amd::Kernel* kernel = function->function_;
-  amd::Device* device = hip::getCurrentContext()->devices()[0];
 
   amd::ScopedLock lock(function->lock_);
 
   hip::Event* eStart = reinterpret_cast<hip::Event*>(startEvent);
   hip::Event* eStop = reinterpret_cast<hip::Event*>(stopEvent);
   amd::HostQueue* queue = hip::getQueue(hStream);
+  const amd::Device& device = queue->vdev()->device();
 
   if ((params & amd::NDRangeKernelCommand::CooperativeGroups) &&
-      !device->info().cooperativeGroups_) {
+      !device.info().cooperativeGroups_) {
     return hipErrorLaunchFailure;
   }
   if ((params & amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups) &&
-      !device->info().cooperativeMultiDeviceGroups_) {
+      !device.info().cooperativeMultiDeviceGroups_) {
     return hipErrorLaunchFailure;
   }
   if (!queue) {
@@ -323,7 +323,8 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   }
 
   amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(
-    *queue, waitList, *kernel, ndrange, sharedMemBytes, params);
+    *queue, waitList, *kernel, ndrange, sharedMemBytes,
+    params, gridId, numGrids, prevGridSum, allGridSum, firstDevice);
   if (!command) {
     return hipErrorOutOfMemory;
   }
@@ -436,33 +437,54 @@ hipError_t hipLaunchCooperativeKernel(const void* f,
 hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                   int numDevices, unsigned int flags, uint32_t extFlags)
 {
-  int currentDevice = ihipGetDevice();
   int numActiveGPUs = 0;
   ihipDeviceGetCount(&numActiveGPUs);
 
   if ((numDevices > numActiveGPUs) || (launchParamsList == nullptr)) {
     return hipErrorInvalidValue;
   }
- 
+
   hipError_t result = hipErrorUnknown;
+  uint64_t allGridSize = 0;
   for (int i = 0; i < numDevices; ++i) {
-    hipSetDevice(i);
+    const hipLaunchParams& launch = launchParamsList[i];
+    allGridSize += launch.gridDim.x * launch.gridDim.y * launch.gridDim.z;
+  }
+  uint64_t prevGridSize = 0;
+  uint32_t firstDevice = 0;
+  for (int i = 0; i < numDevices; ++i) {
     const hipLaunchParams& launch = launchParamsList[i];
     amd::HostQueue* queue = reinterpret_cast<hip::Stream*>(launch.stream)->asHostQueue();
-    hipFunction_t func = PlatformState::instance().getFunc(launch.func, i);
+    hipFunction_t func = nullptr;
+    // The order of devices in the launch may not match the order in the global array
+    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+      // Find the matching device and request the kernel function
+      if (&queue->vdev()->device() == g_devices[dev]->devices()[0]) {
+        func = PlatformState::instance().getFunc(launch.func, dev);
+        // Save VDI index of the first device in the launch
+        if (i == 0) {
+          firstDevice = queue->vdev()->device().index();
+        }
+        break;
+      }
+    }
     if (func == nullptr) {
       HIP_RETURN(result);
     }
+
     result = ihipModuleLaunchKernel(func,
       launch.gridDim.x * launch.blockDim.x,
       launch.gridDim.y * launch.blockDim.y,
       launch.gridDim.z * launch.blockDim.z,
       launch.blockDim.x, launch.blockDim.y, launch.blockDim.z,
-      launch.sharedMem, launch.stream,
-      launch.args, nullptr, nullptr, nullptr, flags, extFlags);
+      launch.sharedMem, launch.stream, launch.args, nullptr, nullptr, nullptr,
+      flags, extFlags, i, numDevices, prevGridSize, allGridSize, firstDevice);
+    if (result != hipSuccess) {
+      break;
+    }
+    prevGridSize += launch.gridDim.x * launch.gridDim.y * launch.gridDim.z;
   }
 
-  hipSetDevice(currentDevice);
   return result;
 }
 
