@@ -43,6 +43,31 @@ inline T round_up_to_next_multiple_nonnegative(T x, T y) {
     return tmp - tmp % y;
 }
 
+//Index & Make Index Sequence Impl
+template <std::size_t ...>
+struct indexSequence{
+};
+
+template <std::size_t N, std::size_t ... Next>
+struct indexSequenceHelper : public indexSequenceHelper<N-1U, N-1U, Next...>{
+ };
+
+template <std::size_t ... Next>
+struct indexSequenceHelper<0U, Next ... >{
+using type = indexSequence<Next ... >;
+};
+
+template <std::size_t N>
+using makeIndexSequence = typename indexSequenceHelper<N>::type;
+//Index Sequence Impl End
+
+template <typename ... Formals, typename ... Actuals, std::size_t ... Is>
+std::tuple <Formals...> copy_formal_impl (void(*kernel)(Formals...), std::tuple<Actuals...> act,
+                 indexSequence<Is...>){
+        std::tuple<Formals...> to_formals{ (Formals)std::get<Is>(act)...};
+        return to_formals;
+}
+
 template <
     std::size_t n,
     typename... Ts,
@@ -92,8 +117,10 @@ inline hip_impl::kernarg make_kernarg(
         "The count of formal arguments must match the count of actuals.");
 
     if (sizeof...(Formals) == 0) return {};
-
-    std::tuple<Formals...> to_formals{std::move(actuals)};
+    
+    std::tuple<Formals...> to_formals;
+    to_formals = copy_formal_impl(kernel, actuals, makeIndexSequence<sizeof...(Actuals)>{});
+    
     hip_impl::kernarg kernarg;
     kernarg.reserve(sizeof(to_formals));
 
