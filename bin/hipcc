@@ -250,6 +250,17 @@ if ($HIP_PLATFORM eq "clang") {
     $HCC_VERSION=$1;
     $HCC_VERSION_MAJOR=$HCC_VERSION;
     $HCC_VERSION_MAJOR=~s/\..*//;
+    $HCC_VERSION_MINOR=$HCC_VERSION;
+    $HVM=$HCC_VERSION_MAJOR . ".";
+    $HCC_VERSION_MINOR=~s/$HVM//;
+    $HCC_VERSION_MINOR=~s/\..*//;
+
+    if ($HCC_VERSION_MAJOR > 2 ||
+        ($HCC_VERSION_MAJOR == 2 && $HCC_VERSION_MINOR >= 10)) {
+        $coFormatv3 = 1;
+    } else {
+        $coFormatv3 = 0;
+    }
 
     $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
@@ -475,17 +486,9 @@ foreach $arg (@ARGV)
     # code object format parsing
     if ($trimarg eq '-mcode-object-v3') {
         $coFormatv3 = 1;
-        # hip-clang already recognizes -mcode-object-v3, so we just pass it on
-        if ($HIP_PLATFORM eq 'hcc') {
-            $swallowArg = 1;
-        }
     }
     if ($trimarg eq '-mno-code-object-v3') {
         $coFormatv3 = 0;
-        # hip-clang already recognizes -mno-code-object-v3, so we just pass it on
-        if ($HIP_PLATFORM eq 'hcc') {
-            $swallowArg = 1;
-        }
     }
 
     if (($arg =~ /--genco/) and $HIP_PLATFORM eq 'clang' ) {
@@ -873,7 +876,8 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
 # hcc defaults to v2, so we need to convert to the appropriate flag
 # hip-clang defaults to v3, so we don't need to do anything
 if ($coFormatv3 and $HIP_PLATFORM eq 'hcc') {
-    $HIPLDFLAGS .= " -Wl,-hcc-cov3 ";
+    $HIPLDFLAGS .= " -mcode-object-v3 ";
+    $HIPCXXFLAGS .= " -mcode-object-v3 ";
 }
 
 if ($hasC and $HIP_PLATFORM eq 'nvcc') {
