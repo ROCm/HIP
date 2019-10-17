@@ -80,7 +80,21 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CFLAGS} ${StdCpp} -DHIPIFY_CLANG_RES=\\\"${LLVM_LIBRARY_DIRS}/clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}\\\"")
 
-install(TARGETS hipify-clang DESTINATION bin)
+install(TARGETS hipify-clang DESTINATION ${CMAKE_INSTALL_PREFIX})
+
+install(
+  DIRECTORY ${LLVM_DIR}/../../clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/
+  DESTINATION  ${CMAKE_INSTALL_PREFIX}
+  COMPONENT clang-resource-headers
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.modulemap"
+  PATTERN "algorithm"
+  PATTERN "complex"
+  PATTERN "new"
+  PATTERN "ppc_wrappers" EXCLUDE
+  PATTERN "openmp_wrappers" EXCLUDE
+  )
 
 if (HIPIFY_CLANG_TESTS)
     find_package(PythonInterp 2.7 REQUIRED)
