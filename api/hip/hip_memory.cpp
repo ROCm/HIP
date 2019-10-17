@@ -160,47 +160,6 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
   return hipSuccess;
 }
 
-hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
-                      hipStream_t stream, bool isAsync = false) {
-  if (sizeBytes == 0) {
-    // Skip if nothing needs filling.
-    return hipSuccess;
-  }
-
-  if (dst == nullptr) {
-    return hipErrorInvalidValue;
-  }
-
-  size_t offset = 0;
-  amd::HostQueue* queue = hip::getQueue(stream);
-  amd::Memory* memory = getMemoryObject(dst, offset);
-
-  if (memory != nullptr) {
-    // Device memory
-    amd::Command::EventWaitList waitList;
-    amd::Coord3D fillOffset(offset, 0, 0);
-    amd::Coord3D fillSize(sizeBytes, 1, 1);
-    amd::FillMemoryCommand* command =
-        new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
-                                   &value, valueSize, fillOffset, fillSize);
-
-    if (command == nullptr) {
-      return hipErrorOutOfMemory;
-    }
-
-    command->enqueue();
-    if (!isAsync) {
-      command->awaitCompletion();
-    }
-    command->release();
-  } else {
-    // Host alloced memory
-    memset(dst, value, sizeBytes);
-  }
-
-  return hipSuccess;
-}
-
 hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(hipExtMallocWithFlags, ptr, sizeBytes, flags);
 
@@ -263,46 +222,6 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
   hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
   HIP_RETURN(ihipMemcpy(dst, src, sizeBytes, kind, *queue));
-}
-
-hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream) {
-  HIP_INIT_API(hipMemsetAsync, dst, value, sizeBytes, stream);
-
-  HIP_RETURN(ihipMemset(dst, value, sizeof(char), sizeBytes, stream, true));
-}
-
-hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t count, hipStream_t stream){
-  HIP_INIT_API(hipMemsetD16Async, dst, value, count, stream);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorUnknown);
-}
-
-hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count, hipStream_t stream) {
-  HIP_INIT_API(hipMemsetD32Async, dst, value, count, stream);
-
-  HIP_RETURN(ihipMemset(dst, value, sizeof(int), count * sizeof(int), stream, true));
-}
-
-hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
-  HIP_INIT_API(hipMemset, dst, value, sizeBytes);
-
-  HIP_RETURN(ihipMemset(dst, value, sizeof(char), sizeBytes, nullptr));
-}
-
-hipError_t hipMemsetD16(hipDeviceptr_t dst, unsigned short value, size_t count){
-  HIP_INIT_API(hipMemsetD16, dst, value, count);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorUnknown);
-}
-
-hipError_t hipMemsetD32(hipDeviceptr_t dst, int value, size_t count) {
-  HIP_INIT_API(hipMemsetD32, dst, value, count);
-
-  HIP_RETURN(ihipMemset(dst, value, sizeof(int), count * sizeof(int), nullptr));
 }
 
 hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
@@ -439,15 +358,6 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
   }
 
   HIP_RETURN(status);
-}
-
-hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent) {
-  HIP_INIT_API(hipMemset3D, pitchedDevPtr, value, &extent);
-
-  void *dst = pitchedDevPtr.ptr;
-  size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
-
-  HIP_RETURN(ihipMemset(dst, value, sizeof(char), sizeBytes, nullptr));
 }
 
 hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocateArray) {
@@ -1304,16 +1214,19 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t ihipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height,
-                        amd::HostQueue& queue, bool isAsync = false) {
+hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
+                      hipStream_t stream, bool isAsync = false) {
+  if (sizeBytes == 0) {
+    // Skip if nothing needs filling.
+    return hipSuccess;
+  }
 
   if (dst == nullptr) {
     return hipErrorInvalidValue;
   }
 
-  size_t sizeBytes = pitch * height;
   size_t offset = 0;
-
+  amd::HostQueue* queue = hip::getQueue(stream);
   amd::Memory* memory = getMemoryObject(dst, offset);
 
   if (memory != nullptr) {
@@ -1321,18 +1234,16 @@ hipError_t ihipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t
     amd::Command::EventWaitList waitList;
     amd::Coord3D fillOffset(offset, 0, 0);
     amd::Coord3D fillSize(sizeBytes, 1, 1);
-
-    // TODO: Byte copies are inefficient. Combine multiple writes inside runtime
     amd::FillMemoryCommand* command =
-        new amd::FillMemoryCommand(queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
-                                   &value, sizeof(char), fillOffset, fillSize);
+        new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                   &value, valueSize, fillOffset, fillSize);
 
     if (command == nullptr) {
       return hipErrorOutOfMemory;
     }
 
     command->enqueue();
-    if(!isAsync) {
+    if (!isAsync) {
       command->awaitCompletion();
     }
     command->release();
@@ -1344,67 +1255,86 @@ hipError_t ihipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t
   return hipSuccess;
 }
 
+hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
+  HIP_INIT_API(hipMemset, dst, value, sizeBytes);
+
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), sizeBytes, nullptr));
+}
+
+hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream) {
+  HIP_INIT_API(hipMemsetAsync, dst, value, sizeBytes, stream);
+
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), sizeBytes, stream, true));
+}
+
+hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t count) {
+  HIP_INIT_API(hipMemsetD8, dst, value, count);
+
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), count * sizeof(int8_t), nullptr));
+}
+
+hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t count,
+                            hipStream_t stream) {
+  HIP_INIT_API(hipMemsetD8Async, dst, value, count, stream);
+
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), count * sizeof(int8_t), stream, true));
+}
+
+hipError_t hipMemsetD16(hipDeviceptr_t dst, unsigned short value, size_t count) {
+  HIP_INIT_API(hipMemsetD16, dst, value, count);
+
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int16_t), count * sizeof(int16_t), nullptr));
+}
+
+hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t count,
+                             hipStream_t stream) {
+  HIP_INIT_API(hipMemsetD16Async, dst, value, count, stream);
+
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int16_t), count * sizeof(int16_t), stream, true));
+}
+
+hipError_t hipMemsetD32(hipDeviceptr_t dst, int value, size_t count) {
+  HIP_INIT_API(hipMemsetD32, dst, value, count);
+
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int32_t), count * sizeof(int32_t), nullptr));
+}
+
+hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count,
+                             hipStream_t stream) {
+  HIP_INIT_API(hipMemsetD32Async, dst, value, count, stream);
+
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int32_t), count * sizeof(int32_t), stream, true));
+}
+
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
   HIP_INIT_API(hipMemset2D, dst, pitch, value, width, height);
 
-  hip::syncStreams();
-  amd::HostQueue* queue = hip::getNullStream();
-  HIP_RETURN(ihipMemset2D(dst, pitch, value, width, height, *queue));
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), pitch * height, nullptr));
 }
 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
                             size_t width, size_t height, hipStream_t stream) {
   HIP_INIT_API(hipMemset2DAsync, dst, pitch, value, width, height, stream);
 
-  amd::HostQueue* queue = hip::getQueue(stream);
-
-  HIP_RETURN(ihipMemset2D(dst, pitch, value, width, height, *queue, true));
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), pitch * height, stream, true));
 }
 
-hipError_t ihipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes, hipStream_t stream) {
+hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent) {
+  HIP_INIT_API(hipMemset3D, pitchedDevPtr, value, &extent);
 
-  if (dst == nullptr) {
-    return hipErrorInvalidValue;
-  }
+  void *dst = pitchedDevPtr.ptr;
+  size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
 
-  size_t offset = 0;
-  amd::HostQueue* queue = hip::getQueue(stream);
-  amd::Command::EventWaitList waitList;
-  amd::Memory* memory = getMemoryObject(dst, offset);
-  if (memory != nullptr) {
-    // Device memory
-    amd::Coord3D fillOffset(offset, 0, 0);
-    amd::Coord3D fillSize(sizeBytes, 1, 1);
-    amd::FillMemoryCommand* command =
-        new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
-                                   &value, sizeof(char), fillOffset, fillSize);
-
-    if (command == nullptr) {
-      HIP_RETURN(hipErrorOutOfMemory);
-    }
-
-    command->enqueue();
-    command->awaitCompletion();
-    command->release();
-  } else {
-    // Host alloced memory
-    memset(dst, value, sizeBytes);
-  }
-
-  return hipSuccess;
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), sizeBytes, nullptr));
 }
 
-hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
-  HIP_INIT_API(hipMemsetD8, dst, value, sizeBytes);
+hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent, hipStream_t stream) {
+  HIP_INIT_API(hipMemset3DAsync, pitchedDevPtr, value, &extent, stream);
 
-  HIP_RETURN(ihipMemsetD8(dst, value, sizeBytes, nullptr));
-}
+  void *dst = pitchedDevPtr.ptr;
+  size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
 
-hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes,
-                            hipStream_t stream) {
-  HIP_INIT_API(hipMemsetD8Async, dst, value, sizeBytes, stream);
-
-  HIP_RETURN(ihipMemsetD8(dst, value, sizeBytes, stream));
+  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), sizeBytes, stream, true));
 }
 
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes,
