@@ -34,14 +34,14 @@ This document starts with some of the general capabilities of CodeXL and then de
 rocm-profiler is a command-line tool for tracing any application that uses ROCr API, including HCC and HIP.
 rocm-profiler's timeline trace will show the beginning and end for all kernel commands, data transfer commands, and HSA Runtime (ROCr) API calls.  The trace results are saved into a file, which by convention uses the "atp" extension.  Here is an example that shows how to run the command-line profiler:
 ```shell
-$ /opt/rocm/bin/rocm-profiler -o <outputATPFileName> -A -T  <applicationName> <applicationArguments>
+$ /opt/rocm/bin/rcprof -o <outputATPFileName> -A -T  <applicationName> <applicationArguments>
 ```
 
 #### Using rocm-profiler performance counter collection:
 rocm-profiler can record performance counter information to provide greater insight inside a kernel, such as the memory bandwidth, ALU busy percentage, and cache statistics.
 Collecting the common set of useful counters requires passing the counter configuration files for two passes:
 ```
-$ /opt/rocm/bin/rocm-profiler -C -O --counterfile /opt/rocm/profiler/counterfiles/counters_HSA_Fiji_pass1 --counterfile /opt/rocm/profiler/counterfiles/counters_HSA_Fiji_pass2  <applicationName> <applicationArguments>
+$ /opt/rocm/bin/rcprof -C -O --counterfile /opt/rocm/profiler/counterfiles/counters_HSA_Fiji_pass1 --counterfile /opt/rocm/profiler/counterfiles/counters_HSA_Fiji_pass2  <applicationName> <applicationArguments>
 ```
 
 
@@ -64,7 +64,7 @@ The trace can be loaded and viewed in the CodeXL visualization tool:
 
 
 #### More information on CodeXL
-rocm-profiler --help will show additional options and usage guidelines.
+rcprof --help will show additional options and usage guidelines.
 
 See this [blog](http://gpuopen.com/getting-up-to-speed-with-the-codexl-gpu-profiler-and-radeon-open-compute/) for more information on profiling ROCm apps (including HIP) with CodeXL.
 
@@ -79,10 +79,10 @@ HIP 1.0 compiles marker support by default, and you can enable it by setting the
 
 # Use profile to generate timeline view:
 export HIP_PROFILE_API=1
-$ /opt/rocm/bin/rocm-profiler -A -T <applicationName> <applicationArguments>
+$ /opt/rocm/bin/rcprof -A -T <applicationName> <applicationArguments>
 
 Or
-$ /opt/rocm/bin/rocm-profiler -e HIP_PROFILE_API=1 -A -T <applicationName> <applicationArguments>
+$ /opt/rocm/bin/rcprof -e HIP_PROFILE_API=1 -A -T <applicationName> <applicationArguments>
 ```
 
 HIP_PROFILE_API supports two levels of information.
@@ -154,7 +154,7 @@ $ hipdemangleatp myfile.atp
 
 The kernel name is also shown in some of the summary htlm files (Top10 kernels).  These can be regenerated from the demangled ATP file by re-running rocm-profiler:
 ```
-$ rocm-profiler -T --atpfile myfile.atp
+$ rcprof -T --atpfile myfile.atp
 ```
 
 A future version of CodeXL may directly integrate demangle functionality.
@@ -177,7 +177,7 @@ HIP/ROCm assigns a monotonically increasing sequence number to the APIs called f
 When using these options, start the profiler with profiling disabled:
 ```
 # ROCm:
-$ rocm-profiler --startdisabled ...
+$ rcprof --startdisabled ...
 
 # CUDA:
 $ nvprof --profile-from-start-off ...
@@ -189,15 +189,14 @@ This feature is under development.
 If the application is already recording the HIP APIs, the HSA APIs are somewhat redundant and the ATP file size can be substantially reduced by not recording these APIs.  HIP includes a text file that lists all of the HSA APIs and can assist in this filtering:
 
 ```
-$ rocm-profiler -F hip/bin/hsa-api-filter-cxl.txt 
+$ rcprof -F hip/bin/hsa-api-filter-cxl.txt 
 ```
 
 This file can be copied and edited to provide more selective HSA event recording.
 
 
 #### How to enable profiling at HIP build time
-Recent pre-built packages of HIP are always built with profiling support enabled.
-For developer builds, you must enable marker support manually when compiling HIP.
+Pre-built packages of HIP are not built with profiling support enabled.You must enable marker support manually when compiling HIP.
 
 1. Build HIP with ATP markers enabled
 HIP pre-built packages are enabled with ATP marker support by default.
