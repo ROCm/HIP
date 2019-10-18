@@ -104,7 +104,6 @@ THE SOFTWARE.
 #define popen(x,y) _popen(x,y)
 #define pclose(x) _pclose(x)
 #define setenv(x,y,z) _putenv_s(x,y)
-#endif
 #else
 #define aligned_free(x) free(x)
 #endif
