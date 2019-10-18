@@ -63,6 +63,7 @@ const StringRef sCudaHostFuncCall = "cudaHostFuncCall";
 const StringRef sCudaDeviceFuncCall = "cudaDeviceFuncCall";
 const StringRef sCubNamespacePrefix = "cubNamespacePrefix";
 const StringRef sCubFunctionTemplateDecl = "cubFunctionTemplateDecl";
+const StringRef sCubUsingNamespaceDecl = "cubUsingNamespaceDecl";
 
 std::set<std::string> DeviceSymbolFunctions0 {
   {sCudaMemcpyToSymbol},
@@ -472,6 +473,16 @@ bool HipifyAction::cubNamespacePrefix(const mat::MatchFinder::MatchResult &Resul
   return false;
 }
 
+bool HipifyAction::cubUsingNamespaceDecl(const mat::MatchFinder::MatchResult &Result) {
+  if (auto *decl = Result.Nodes.getNodeAs<clang::UsingDirectiveDecl>(sCubUsingNamespaceDecl)) {
+    if (auto nsd = decl->getNominatedNamespace()) {
+      FindAndReplace(nsd->getDeclName().getAsString(), decl->getIdentLocation(), CUDA_CUB_TYPE_NAME_MAP);
+      return true;
+    }
+  }
+  return false;
+}
+
 bool HipifyAction::cubFunctionTemplateDecl(const mat::MatchFinder::MatchResult &Result) {
   if (auto *decl = Result.Nodes.getNodeAs<clang::FunctionTemplateDecl>(sCubFunctionTemplateDecl)) {
     auto *Tparams = decl->getTemplateParameters();
@@ -611,6 +622,13 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
     ).bind(sCubFunctionTemplateDecl),
     this
   );
+  // TODO: Maybe worth to make it more concrete
+  Finder->addMatcher(
+    mat::usingDirectiveDecl(
+      mat::isExpansionInMainFile()
+    ).bind(sCubUsingNamespaceDecl),
+    this
+  );
   // Ownership is transferred to the caller.
   return Finder->newASTConsumer();
 }
@@ -725,4 +743,5 @@ void HipifyAction::run(const mat::MatchFinder::MatchResult &Result) {
   if (cudaDeviceFuncCall(Result)) return;
   if (cubNamespacePrefix(Result)) return;
   if (cubFunctionTemplateDecl(Result)) return;
+  if (cubUsingNamespaceDecl(Result)) return;
 }
