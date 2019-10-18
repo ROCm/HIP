@@ -30,15 +30,10 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#define fileName "vcpy_kernel.code"
-#define kernel_name "hello_world"
-
-
 __global__ void f1(float *a) { *a = 1.0; }
 
 template <typename T>
 __global__ void f2(T *a) { *a = 1; }
-
 
 
 int main(int argc, char* argv[]) {
@@ -53,16 +48,6 @@ int main(int argc, char* argv[]) {
     gridSize = 0;
     blockSize = 0;
     hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
-    assert(gridSize != 0 && blockSize != 0);
-
-    // test case for using kernel with hipFunction_t type
-    gridSize = 0;
-    blockSize = 0;
-    hipModule_t Module;
-    hipFunction_t Function;
-    HIPCHECK(hipModuleLoad(&Module, fileName));
-    HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    HIPCHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, Function, 0, 0));
     assert(gridSize != 0 && blockSize != 0);
 
     passed();
