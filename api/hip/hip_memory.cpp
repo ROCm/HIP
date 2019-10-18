@@ -1134,8 +1134,8 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
     }
     region[2] = p->Depth;
     region[1] = p->Height;
-    region[0] = p->WidthInBytes * byteSize;
-    srcOrigin[0] = p->srcXInBytes/byteSize;
+    region[0] = p->WidthInBytes / byteSize;
+    srcOrigin[0] = p->srcXInBytes / byteSize;
     srcOrigin[1] = p->srcY;
     srcOrigin[2] = p->srcZ;
     dstPitchInbytes = p->dstArray->width * byteSize;
