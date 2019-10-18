@@ -6,14 +6,10 @@
 // CHECK: #include <hipcub/hipcub.hpp>
 #include <cub/cub.cuh>
 
-#include <iostream>
-
 // using namespace hipcub;
 using namespace cub;
 
-/**
-* Simple CUDA kernel for computing tiled partial sums
-*/
+// Simple CUDA kernel for computing tiled partial sums
 template <int BLOCK_THREADS, int ITEMS_PER_THREAD,
           BlockLoadAlgorithm LOAD_ALGO,
           BlockScanAlgorithm SCAN_ALGO>
