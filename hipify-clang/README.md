@@ -196,7 +196,7 @@ Ubuntu 16-18: LLVM 8.0.0 - 9.0.0, CUDA 8.0 - 10.1, cudnn-5.1.10 - cudnn-7.6.4.38
 
 Minimum build system requirements for the above configurations:
 
-Python 2.7, cmake 3.5.2, GNU C/C++ 5.4.0.
+Python 2.7, cmake 3.5.1, GNU C/C++ 5.4.0.
 
 Here is an example of building `hipify-clang` with testing support on `Ubuntu 16.04`:
 
@@ -346,7 +346,7 @@ LLVM 7.0.0 - 9.0.0, CUDA 7.5 - 10.1, cudnn 7.0.5.15 - 7.6.4.38
 
 Build system requirements for the latest configuration LLVM 9.0.0/CUDA 10.1 Update 2:
 
-Python 3.6.0 - 3.8.0, cmake 3.5.2 - 3.15.5, Visual Studio 2017 (15.5.2) - 2019 (16.3.5).
+Python 3.6.0 - 3.8.0, cmake 3.5.1 - 3.15.5, Visual Studio 2017 (15.5.2) - 2019 (16.3.5).
 
 Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 16 2019`:
 
