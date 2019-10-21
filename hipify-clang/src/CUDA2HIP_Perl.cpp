@@ -251,6 +251,11 @@ namespace perl {
     *streamPtr.get() << tab_2 << "$Tkernels{$1}++;" << endl_tab << "}" << endl << "}" << endl;
   }
 
+  void generateCubNamespace(unique_ptr<ostream>& streamPtr) {
+    *streamPtr.get() << endl << sub << "transformCubNamespace" << " {" << endl_tab << my_k << endl;
+    *streamPtr.get() << tab << "$k += s/using\\s*namespace\\s*cub/using namespace hipcub/g;" << endl << tab << return_k << "}" << endl;
+  }
+
   void generateHostFunctions(unique_ptr<ostream>& streamPtr) {
     *streamPtr.get() << endl << sub << "transformHostFunctions" << " {" << endl_tab << my_k << endl;
     set<string> &funcSet = DeviceSymbolFunctions0;
@@ -358,6 +363,7 @@ namespace perl {
     generateSimpleSubstitutions(streamPtr);
     generateExternShared(streamPtr);
     generateKernelLaunch(streamPtr);
+    generateCubNamespace(streamPtr);
     generateHostFunctions(streamPtr);
     generateDeviceFunctions(streamPtr);
     *streamPtr.get() << endl << "# Count of transforms in all files" << endl;
@@ -401,6 +407,7 @@ namespace perl {
     *streamPtr.get() << tab_2 << "simpleSubstitutions();" << endl;
     *streamPtr.get() << tab_2 << "transformExternShared();" << endl;
     *streamPtr.get() << tab_2 << "transformKernelLaunch();" << endl;
+    *streamPtr.get() << tab_2 << "transformCubNamespace();" << endl;
     *streamPtr.get() << tab_2 << "if ($print_stats) {" << endl;
     *streamPtr.get() << tab_3 << while_ << "(/(\\b(hip|HIP)([A-Z]|_)\\w+\\b)/g) {" << endl;
     *streamPtr.get() << tab_4 << "$convertedTags{$1}++;" << endl_tab_3 << "}" << endl_tab_2 << "}" << endl;
