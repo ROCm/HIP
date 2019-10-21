@@ -1501,6 +1501,9 @@ bool ihipStreamCallbackHandler(hsa_signal_value_t value, void* cbArgs) {
 
     ihipStreamCallback_t* cb = static_cast<ihipStreamCallback_t*> (cbArgs);
 
+    if(cb->comFuture.valid())
+        cb->comFuture.wait();
+
     // Call registered callback function
     cb->_callback(cb->_stream, e, cb->_userData);
 

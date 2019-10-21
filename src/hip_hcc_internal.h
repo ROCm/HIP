@@ -654,6 +654,7 @@ class ihipStreamCallback_t {
     hipStream_t _stream;
     hsa_signal_t _signal;
     hipStreamCallback_t _callback;
+    hc::completion_future comFuture;
     void* _userData;
 };
 

@@ -309,8 +309,13 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
         stream = device->_defaultStream;
     }
 
+    stream = ihipSyncAndResolveStream(stream);
+
     // Lock the stream
     LockedAccessor_StreamCrit_t crit(stream->criticalData());
+
+    // Device synchronization
+    hc::completion_future marker = crit->_av.create_marker(hc::system_scope);
 
     // 1. Lock the queue
     hsa_queue_t* lockedQ = static_cast<hsa_queue_t*> (crit->_av.acquire_locked_hsa_queue());
@@ -348,6 +353,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
         return ihipLogStatus(hipErrorMemoryAllocation);
     }
     cb->_signal = depSignal;
+    cb->comFuture = marker ;
 
     // 4. Create barrier packets
     uint64_t index ;
