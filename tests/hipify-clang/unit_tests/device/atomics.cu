@@ -276,7 +276,7 @@ int main(int argc, char** argv) {
     runTest<unsigned int>();
     runTest<unsigned long long>();
     runTest<float>();
-#if CUDA_VERSION >= 8000
+#if CUDA_VERSION >= 8000 && defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 600
     runTest<double>();
 #endif
     // CHECK: hipDeviceReset();
