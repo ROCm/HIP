@@ -29,7 +29,7 @@ THE SOFTWARE.
 
 #if USE_PROF_API
 #include "hip/hcc_detail/hip_prof_str.h"
-#include "prof_protocol.h"
+#include "platform/prof_protocol.h"
 
 // HIP API callbacks spawner object macro
 #define HIP_CB_SPAWNER_OBJECT(CB_ID) \
