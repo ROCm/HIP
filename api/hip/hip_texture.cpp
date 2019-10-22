@@ -394,15 +394,21 @@ hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
 
 hipError_t ihipBindTexture(cl_mem_object_type type,
                            size_t* offset, textureReference* tex, const void* devPtr,
-                           const hipChannelFormatDesc& desc, size_t width, size_t height,
+                           const hipChannelFormatDesc* desc, size_t width, size_t height,
                            size_t pitch) {
   if (tex == nullptr) {
     return hipErrorInvalidImage;
   }
   if (hip::getCurrentContext()) {
     cl_image_format image_format;
-    getChannelOrderAndType(desc, hipReadModeElementType,
+
+    if (nullptr == desc) {
+      getDrvChannelOrderAndType(tex->format, tex->numChannels,
         &image_format.image_channel_order, &image_format.image_channel_data_type);
+    } else {
+      getChannelOrderAndType(*desc, hipReadModeElementType,
+        &image_format.image_channel_order, &image_format.image_channel_data_type);
+    }
     const amd::Image::Format imageFormat(image_format);
     amd::Memory* memory = getMemoryObject(devPtr, *offset);
     amd::Image* image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
@@ -425,13 +431,17 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
       case CL_MEM_OBJECT_IMAGE1D:
         resDesc.resType = hipResourceTypeLinear;
         resDesc.res.linear.devPtr = const_cast<void*>(devPtr);
-        resDesc.res.linear.desc = desc;
+        if (nullptr != desc) {
+          resDesc.res.linear.desc = *desc;
+        }
         resDesc.res.linear.sizeInBytes = image->getSize();
         break;
       case CL_MEM_OBJECT_IMAGE2D:
         resDesc.resType = hipResourceTypePitch2D;
         resDesc.res.pitch2D.devPtr = const_cast<void*>(devPtr);
-        resDesc.res.pitch2D.desc = desc;
+        if (nullptr != desc) {
+          resDesc.res.pitch2D.desc = *desc;
+        }
         resDesc.res.pitch2D.width = width;
         resDesc.res.pitch2D.height = height;
         resDesc.res.pitch2D.pitchInBytes = pitch;
@@ -461,7 +471,7 @@ hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* dev
     &image_format.image_channel_order, &image_format.image_channel_data_type);
   const amd::Image::Format imageFormat(image_format);
 
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, *desc, size / imageFormat.getElementSize(), 1, size));
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, desc, size / imageFormat.getElementSize(), 1, size));
 }
 
 hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
@@ -469,7 +479,7 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
                             size_t pitch) {
   HIP_INIT_API(NONE, offset, tex, devPtr, desc, width, height, pitch);
 
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, offset, tex, devPtr, *desc, width, height, pitch));
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, offset, tex, devPtr, desc, width, height, pitch));
 }
 
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
@@ -488,7 +498,7 @@ hipError_t ihipBindTextureImpl(TlsData* tls, int dim, enum hipTextureReadMode re
 
   assert(1 == dim);
 
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, *desc, size, 1, 0));
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, desc, size, 1, 0));
 }
 
 hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureReadMode readMode,
@@ -511,7 +521,7 @@ hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureRead
       HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipBindTexture(clType, &offset, tex, array->data, desc, array->width,
+  HIP_RETURN(ihipBindTexture(clType, &offset, tex, array->data, &desc, array->width,
                              array->height, array->depth));
 }
 
@@ -656,7 +666,7 @@ hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsi
     HIP_RETURN(hipErrorInvalidImage);
   }
 
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, array->data, array->desc, array->width,
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, array->data, &array->desc, array->width,
                              array->height, 0));
 }
 
@@ -693,8 +703,8 @@ hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDevicep
   getDrvChannelOrderAndType(tex->format, tex->numChannels,
     &image_format.image_channel_order, &image_format.image_channel_data_type);
   const amd::Image::Format imageFormat(image_format);
-  hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, channelDesc, size / imageFormat.getElementSize(), 1, size));
+
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, nullptr, size / imageFormat.getElementSize(), 1, size));
 }
 
 hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,
@@ -706,6 +716,5 @@ hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPT
   }
 
   size_t offset;
-  hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, devPtr, channelDesc, desc->Width, desc->Height, pitch));
+  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, devPtr, nullptr, desc->Width, desc->Height, pitch));
 }
