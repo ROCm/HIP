@@ -63,8 +63,11 @@ float atomicAdd(float* address, float val)
 
     do {
         r = old;
-        old = atomicCAS(uaddr, r, __float_as_uint(val + __uint_as_float(r)));
-    } while (r != old);
+        old = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
+
+        if (r != old) continue;
+    } while (
+        atomicCAS(uaddr, r, __float_as_uint(val + __uint_as_float(r))) != r);
 
     return __uint_as_float(r);
 }
@@ -78,9 +81,11 @@ double atomicAdd(double* address, double val)
 
     do {
         r = old;
-        old = atomicCAS(
-            uaddr, r, __double_as_longlong(val + __longlong_as_double(r)));
-    } while (r != old);
+        old = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
+
+        if (r != old) continue;
+    } while (atomicCAS(
+        uaddr, r, __double_as_longlong(val + __longlong_as_double(r))) != r);
 
     return __longlong_as_double(r);
 }
@@ -144,7 +149,13 @@ unsigned long long atomicMin(
     unsigned long long* address, unsigned long long val)
 {
     unsigned long long tmp{__atomic_load_n(address, __ATOMIC_RELAXED)};
-    while (val < tmp) { tmp = atomicCAS(address, tmp, val); }
+    while (val < tmp) {
+        const auto tmp1 = __atomic_load_n(address, __ATOMIC_RELAXED);
+
+        if (tmp1 != tmp) { tmp = tmp1; continue; }
+
+        tmp = atomicCAS(address, tmp, val);
+    }
 
     return tmp;
 }
@@ -167,7 +178,13 @@ unsigned long long atomicMax(
     unsigned long long* address, unsigned long long val)
 {
     unsigned long long tmp{__atomic_load_n(address, __ATOMIC_RELAXED)};
-    while (tmp < val) { tmp = atomicCAS(address, tmp, val); }
+    while (tmp < val) {
+        const auto tmp1 = __atomic_load_n(address, __ATOMIC_RELAXED);
+
+        if (tmp1 != tmp) { tmp = tmp1; continue; }
+
+        tmp = atomicCAS(address, tmp, val);
+    }
 
     return tmp;
 }
@@ -177,7 +194,7 @@ inline
 unsigned int atomicInc(unsigned int* address, unsigned int val)
 {
     __device__
-    extern 
+    extern
     unsigned int __builtin_amdgcn_atomic_inc(
         unsigned int*,
         unsigned int,
@@ -194,7 +211,7 @@ inline
 unsigned int atomicDec(unsigned int* address, unsigned int val)
 {
     __device__
-    extern 
+    extern
     unsigned int __builtin_amdgcn_atomic_dec(
         unsigned int*,
         unsigned int,
