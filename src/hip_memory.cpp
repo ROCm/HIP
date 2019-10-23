@@ -1613,6 +1613,40 @@ typedef enum ihipMemsetDataType {
     ihipMemsetDataTypeInt    = 2
 }ihipMemsetDataType;
 
+hipError_t ihipMemsetAsync(void* dst, int  value, size_t count, hipStream_t stream, enum ihipMemsetDataType copyDataType) {
+    if (count == 0) return hipSuccess;
+    if (!stream) return hipErrorInvalidValue;
+    if (!dst) return hipErrorInvalidValue;
+
+    try {
+        if (copyDataType == ihipMemsetDataTypeChar) {
+            if ((count & 0x3) == 0) {
+                // use a faster dword-per-workitem copy:
+                value = value & 0xff;
+                uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
+                ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, count/sizeof(uint32_t));
+            } else {
+                // use a slow byte-per-workitem copy:
+                ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, count);
+            }
+        } else if (copyDataType == ihipMemsetDataTypeInt) { // 4 Bytes value
+            ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value, count);
+        } else if (copyDataType == ihipMemsetDataTypeShort) {
+            value = value & 0xffff;
+            ihipMemsetKernel<uint16_t> (stream, static_cast<uint16_t*> (dst), value, count);
+        }
+    } catch (...) {
+        return hipErrorInvalidValue;
+    }
+
+    if (HIP_API_BLOCKING) {
+        tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
+        stream->locked_wait();
+    }
+
+    return hipSuccess;
+}
+
 hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t stream, enum ihipMemsetDataType copyDataType) {
     if (count == 0) return hipSuccess;
     if (!stream) return hipErrorInvalidValue;
@@ -1621,6 +1655,7 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
     try {
         size_t n = count;
         size_t n_tail{};
+        int original_value = value;
 
         switch (copyDataType) {
             case ihipMemsetDataTypeChar:
@@ -1656,10 +1691,17 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
         // that the following HSA call can complete before any other ops.
         // Flush the stream while locked. Once the stream is empty, we can safely perform
         // the out-of-band HSA call. Lastly, the stream will unlock via RAII.
-        LockedAccessor_StreamCrit_t crit(stream->criticalData());
-        crit->_av.wait(stream->waitMode());
-        const auto s = hsa_amd_memory_fill(dst, value, n);
-        if (s != HSA_STATUS_SUCCESS) return hipErrorInvalidValue;
+        hsa_status_t status;
+        {
+            LockedAccessor_StreamCrit_t crit(stream->criticalData());
+            crit->_av.wait(stream->waitMode());
+            status = hsa_amd_memory_fill(dst, value, n);
+        }
+        // Fall through to kernel if HSA call failed.
+        // stream is unlocked now, so calling kernel via ihipMemsetAsync won't deadlock.
+        if (status != HSA_STATUS_SUCCESS) {
+            return ihipMemsetAsync(dst, original_value, count, stream, copyDataType);
+        }
     }
     catch (...) {
         return hipErrorInvalidValue;
@@ -1667,40 +1709,6 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
 
     if (HIP_API_BLOCKING) {
         tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetSync.\n", ToString(stream).c_str());
-        stream->locked_wait();
-    }
-
-    return hipSuccess;
-}
-
-hipError_t ihipMemsetAsync(void* dst, int  value, size_t count, hipStream_t stream, enum ihipMemsetDataType copyDataType) {
-    if (count == 0) return hipSuccess;
-    if (!stream) return hipErrorInvalidValue;
-    if (!dst) return hipErrorInvalidValue;
-
-    try {
-        if (copyDataType == ihipMemsetDataTypeChar) {
-            if ((count & 0x3) == 0) {
-                // use a faster dword-per-workitem copy:
-                value = value & 0xff;
-                uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
-                ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, count/sizeof(uint32_t));
-            } else {
-                // use a slow byte-per-workitem copy:
-                ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, count);
-            }
-        } else if (copyDataType == ihipMemsetDataTypeInt) { // 4 Bytes value
-            ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value, count);
-        } else if (copyDataType == ihipMemsetDataTypeShort) {
-            value = value & 0xffff;
-            ihipMemsetKernel<uint16_t> (stream, static_cast<uint16_t*> (dst), value, count);
-        }
-    } catch (...) {
-        return hipErrorInvalidValue;
-    }
-
-    if (HIP_API_BLOCKING) {
-        tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
         stream->locked_wait();
     }
 
