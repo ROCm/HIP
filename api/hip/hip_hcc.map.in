@@ -160,6 +160,12 @@ global:
     hipSetupArgument;
     hipLaunchByPtr;
     hipLaunchKernel;
+    hipRegisterApiCallback;
+    hipRemoveApiCallback;
+    hipRegisterActivityCallback;
+    hipRemoveActivityCallback;
+    hipApiName;
+    hipKernelNameRef;
     hipProfilerStart;
     hipProfilerStop;
     hiprtcCompileProgram;

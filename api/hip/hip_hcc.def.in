@@ -160,6 +160,12 @@ hipConfigureCall
 hipSetupArgument
 hipLaunchByPtr
 hipLaunchKernel
+hipRegisterApiCallback
+hipRemoveApiCallback
+hipRegisterActivityCallback
+hipRemoveActivityCallback
+hipApiName
+hipKernelNameRef
 hipCreateTextureObject
 hipDestroyTextureObject
 hipGetTextureObjectResourceDesc
