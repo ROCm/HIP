@@ -470,9 +470,9 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes){
     HIP_INIT_SPECIAL_API(hipMemAllocPitch, (TRACE_MEM), dptr, pitch, widthInBytes, height,elementSizeBytes);
     HIP_SET_DEVICE();
-    
+
     if (widthInBytes == 0 || height == 0) return ihipLogStatus(hipErrorInvalidValue);
-    
+
     return ihipLogStatus(ihipMallocPitch(tls, dptr, pitch, widthInBytes, height, 0));
 }
 
@@ -1178,7 +1178,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
     if(dst==NULL || src==NULL){
 	return ihipLogStatus(hipErrorInvalidValue);
     }
-     
+
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
     hc::completion_future marker;
@@ -1245,7 +1245,7 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
 
     hipError_t e = hipSuccess;
     if (sizeBytes == 0) return ihipLogStatus(e);
-    
+
     if(dst==NULL || src==NULL){
 	return ihipLogStatus(hipErrorInvalidValue);
     }
@@ -1643,12 +1643,10 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
             void *dst_tail = static_cast<std::uint32_t*>(dst) + n;
             switch (copyDataType) {
                 case ihipMemsetDataTypeChar:
-                    value &= 0xff;
-                    ihipMemsetKernel<char>(stream, static_cast<char*>(dst_tail), value, n_tail);
+                    ihipMemsetKernel<char>(stream, static_cast<char*>(dst_tail), value & 0xff, n_tail);
                     break;
                 case ihipMemsetDataTypeShort:
-                    value &= 0xffff;
-                    ihipMemsetKernel<short>(stream, static_cast<short*>(dst_tail), value, n_tail / sizeof(std::uint16_t));
+                    ihipMemsetKernel<short>(stream, static_cast<short*>(dst_tail), value & 0xffff, n_tail / sizeof(std::uint16_t));
                     break;
                 default: break;
             }
@@ -1987,20 +1985,20 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
         } else {
             e = hipErrorInvalidValue;
         }
-	
+
         if (free) {
 		if (!device->_driver_node_id) return ihipLogStatus(hipErrorInvalidDevice);
-			
-		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");  
+
+		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");
 		std::ifstream file;
 		file.open(fileName);
 		if (!file) return ihipLogStatus(hipErrorFileNotFound);
-		
-                std::string deviceSize;	
+
+                std::string deviceSize;
 		size_t deviceMemSize;
-		
+
 		file >> deviceSize;
-		file.close();                 
+		file.close();
                 if ((deviceMemSize=strtol(deviceSize.c_str(),NULL,10))){
 		    *free = device->_props.totalGlobalMem - deviceMemSize;
 		    // Deduct the amount of memory from the free memory reported from the system
