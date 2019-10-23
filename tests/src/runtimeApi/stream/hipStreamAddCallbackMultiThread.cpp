@@ -18,7 +18,7 @@
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
 */
@@ -84,7 +84,7 @@ void Analyze(hipStream_t event, hipError_t status, void *data)
                 W->success &= (W->copyOf_hData[i] == (W->hData[i]+1));
                 if(!W->success)
                 {
-                std::cout<<"\nhData :"<<W->hData[i]<<" copyOf_hData :"<<W->copyOf_hData[i]<<std::endl;
+                std::cout<<"\nExpected Data :"<<(W->hData[i]+1)<<" Current Data :"<<W->copyOf_hData[i]<<std::endl;
                 break;
                 }
         }
