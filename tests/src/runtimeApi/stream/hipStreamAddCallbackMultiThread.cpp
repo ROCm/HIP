@@ -75,8 +75,6 @@ void Analyze(hipStream_t event, hipError_t status, void *data)
     
     if(W != NULL)
     {
-        HIPCHECK(hipSetDevice(W->_deviceID));
-
         W->success = true;
 
         for (int i=0; i< perWorkloadSize; ++i)
