@@ -64,7 +64,7 @@ float atomicAdd(float* address, float val)
     do {
         r = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
 
-        if (r != old) { r = old; continue; }
+        if (r != old) { old = r; continue; }
 
         old = atomicCAS(uaddr, r, __float_as_uint(val + __uint_as_float(r)));
 
@@ -84,7 +84,7 @@ double atomicAdd(double* address, double val)
     do {
         r = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
 
-        if (r != old) { r = old; continue; }
+        if (r != old) { old = r; continue; }
 
         old = atomicCAS(
             uaddr, r, __double_as_longlong(val + __longlong_as_double(r)));
