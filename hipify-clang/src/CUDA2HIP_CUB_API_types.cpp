@@ -20,22 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_LIBRARY_TYPES_H
-#define HIP_INCLUDE_HIP_HCC_DETAIL_LIBRARY_TYPES_H
+#include "CUDA2HIP.h"
 
-typedef enum hipDataType {
-  HIP_R_16F = 2,
-  HIP_R_32F = 0,
-  HIP_R_64F = 1,
-  HIP_C_16F = 6,
-  HIP_C_32F = 4,
-  HIP_C_64F = 5
-} hipDataType;
-
-typedef enum hipLibraryPropertyType {
-  HIP_LIBRARY_MAJOR_VERSION,
-  HIP_LIBRARY_MINOR_VERSION,
-  HIP_LIBRARY_PATCH_LEVEL
-} hipLibraryPropertyType;
-
-#endif
+// Maps the names of CUDA CUB API types to the corresponding HIP types
+const std::map<llvm::StringRef, hipCounter> CUDA_CUB_TYPE_NAME_MAP{
+  {"cub",  {"hipcub",  "", CONV_TYPE, API_CUB}},
+};
