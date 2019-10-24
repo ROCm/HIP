@@ -58,15 +58,15 @@ inline
 float atomicAdd(float* address, float val)
 {
     unsigned int* uaddr{reinterpret_cast<unsigned int*>(address)};
-    unsigned int old{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
+    unsigned int r{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
 
-    unsigned int r;
+    unsigned int old;
     do {
-        r = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
+        old = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
 
         if (r != old) { r = old; continue; }
 
-        old = atomicCAS(uaddr, r, __float_as_uint(val + __uint_as_float(r)));
+        r = atomicCAS(uaddr, r, __float_as_uint(val + __uint_as_float(r)));
 
         if (r == old) break;
     } while (true);
@@ -78,15 +78,15 @@ inline
 double atomicAdd(double* address, double val)
 {
     unsigned long long* uaddr{reinterpret_cast<unsigned long long*>(address)};
-    unsigned long long old{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
+    unsigned long long r{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
 
-    unsigned long long r;
+    unsigned long long old;
     do {
-        r = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
+        old = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
 
         if (r != old) { r = old; continue; }
 
-        old = atomicCAS(
+        r = atomicCAS(
             uaddr, r, __double_as_longlong(val + __longlong_as_double(r)));
 
         if (r == old) break;
@@ -140,13 +140,13 @@ __device__
 inline
 int atomicMin(int* address, int val)
 {
-    return __sync_fetch_and_min(address, val);
+    return __atomic_fetch_min(address, val, __ATOMIC_RELAXED);
 }
 __device__
 inline
 unsigned int atomicMin(unsigned int* address, unsigned int val)
 {
-    return __sync_fetch_and_umin(address, val);
+    return __atomic_fetch_min(address, val, __ATOMIC_RELAXED);
 }
 __device__
 inline
@@ -169,13 +169,13 @@ __device__
 inline
 int atomicMax(int* address, int val)
 {
-    return __sync_fetch_and_max(address, val);
+    return __atomic_fetch_max(address, val, __ATOMIC_RELAXED);
 }
 __device__
 inline
 unsigned int atomicMax(unsigned int* address, unsigned int val)
 {
-    return __sync_fetch_and_umax(address, val);
+    return __atomic_fetch_max(address, val, __ATOMIC_RELAXED);
 }
 __device__
 inline
