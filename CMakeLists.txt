@@ -504,7 +504,7 @@ endif()
 find_program(CPPCHECK_EXE cppcheck)
 if(CPPCHECK_EXE)
     add_custom_target(cppcheck COMMAND ${CPPCHECK_EXE} --force --quiet --enable=warning,performance,portability,information,missingInclude src include -I /opt/rocm/include/hcc -I /opt/rocm/include --suppress=*:/opt/rocm/include/hcc/hc.hpp
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
 #############################
@@ -543,6 +543,19 @@ if(${RUN_HIT} EQUAL 0)
     add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
 else()
     message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
+endif()
+
+#############################
+# Code analysis
+#############################
+# Target: clang
+if(HIP_HIPCC_EXECUTABLE)
+    add_custom_target(analyze 
+        COMMAND ${HIP_HIPCC_EXECUTABLE} -fvisibility=hidden -fvisibility-inlines-hidden --analyze --analyzer-outputtext  -isystem /opt/rocm/include ${HIP_HCC_BUILD_FLAGS} -Wno-unused-command-line-argument -I/opt/rocm/include -c  src/*.cpp -Iinclude/ -I./
+    WORKING_DIRECTORY ${HIP_SRC_PATH})
+    if(CPPCHECK_EXE)
+        add_dependencies(analyze cppcheck)
+    endif()
 endif()
 
 # vim: ts=4:sw=4:expandtab:smartindent
