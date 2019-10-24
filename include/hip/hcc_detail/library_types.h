@@ -20,18 +20,22 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HCC_DETAIL_HIP_TEXTURE_H
-#define HIP_INCLUDE_HCC_DETAIL_HIP_TEXTURE_H
+#ifndef HIP_INCLUDE_HIP_HCC_DETAIL_LIBRARY_TYPES_H
+#define HIP_INCLUDE_HIP_HCC_DETAIL_LIBRARY_TYPES_H
 
-#include <hip/hcc_detail/texture_types.h>
+typedef enum hipDataType {
+  HIP_R_16F = 2,
+  HIP_R_32F = 0,
+  HIP_R_64F = 1,
+  HIP_C_16F = 6,
+  HIP_C_32F = 4,
+  HIP_C_64F = 5
+} hipDataType;
 
-struct hipTexture {
-    hipResourceDesc resDesc;
-    hipTextureDesc texDesc;
-    hipResourceViewDesc resViewDesc;
-    hsa_ext_image_t image;
-    hsa_ext_sampler_t sampler;
-    void* devPtr;
-};
+typedef enum hipLibraryPropertyType {
+  HIP_LIBRARY_MAJOR_VERSION,
+  HIP_LIBRARY_MINOR_VERSION,
+  HIP_LIBRARY_PATCH_LEVEL
+} hipLibraryPropertyType;
 
 #endif

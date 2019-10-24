@@ -20,18 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HCC_DETAIL_HIP_TEXTURE_H
-#define HIP_INCLUDE_HCC_DETAIL_HIP_TEXTURE_H
+#include "CUDA2HIP.h"
 
-#include <hip/hcc_detail/texture_types.h>
-
-struct hipTexture {
-    hipResourceDesc resDesc;
-    hipTextureDesc texDesc;
-    hipResourceViewDesc resViewDesc;
-    hsa_ext_image_t image;
-    hsa_ext_sampler_t sampler;
-    void* devPtr;
+// Maps the names of CUDA CUB API types to the corresponding HIP types
+const std::map<llvm::StringRef, hipCounter> CUDA_CUB_TYPE_NAME_MAP{
+  {"cub",  {"hipcub",  "", CONV_TYPE, API_CUB}},
 };
-
-#endif

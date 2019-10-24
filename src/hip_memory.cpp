@@ -19,7 +19,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
 #include <hc_am.hpp>
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_amd.h"
@@ -27,6 +26,8 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
+
+#include <fstream>
 
 __device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
 __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
@@ -138,6 +139,103 @@ void* allocAndSharePtr(const char* msg, size_t sizeBytes, ihipCtx_t* ctx, bool s
     }
 
     return ptr;
+}
+
+hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags) {
+    hipError_t hip_status = hipSuccess;
+
+    if (HIP_SYNC_HOST_ALLOC) {
+        hipDeviceSynchronize();
+    }
+
+    auto ctx = ihipGetTlsDefaultCtx();
+    if ((ctx == nullptr) || (ptr == nullptr)) {
+        hip_status = hipErrorInvalidValue;
+    }
+    else if (sizeBytes == 0) {
+        hip_status = hipSuccess;
+        // TODO - should size of 0 return err or be siliently ignored?
+    } else {
+        unsigned trueFlags = flags;
+        if (flags == hipHostMallocDefault) {
+            // HCC/ROCM provide a modern system with unified memory and should set both of these
+            // flags by default:
+            trueFlags = hipHostMallocMapped | hipHostMallocPortable;
+        }
+
+
+        const unsigned supportedFlags = hipHostMallocPortable | hipHostMallocMapped |
+                                        hipHostMallocWriteCombined | hipHostMallocCoherent |
+                                        hipHostMallocNonCoherent;
+
+
+        const unsigned coherencyFlags = hipHostMallocCoherent | hipHostMallocNonCoherent;
+
+        if ((flags & ~supportedFlags) || ((flags & coherencyFlags) == coherencyFlags)) {
+            *ptr = nullptr;
+            // can't specify unsupported flags, can't specify both Coherent + NonCoherent
+            hip_status = hipErrorInvalidValue;
+        } else {
+            auto device = ctx->getWriteableDevice();
+#if (__hcc_workweek__ >= 19115)
+            //Avoid mapping host pinned memory to all devices by HCC
+            unsigned amFlags = amHostUnmapped;
+#else
+            unsigned amFlags = 0;
+#endif
+            if (flags & hipHostMallocCoherent) {
+                amFlags |= amHostCoherent;
+            } else if (flags & hipHostMallocNonCoherent) {
+                amFlags |= amHostNonCoherent;
+            } else {
+                // depends on env variables:
+                amFlags |= HIP_HOST_COHERENT ? amHostCoherent : amHostNonCoherent;
+            }
+
+
+            *ptr = hip_internal::allocAndSharePtr(
+                (amFlags & amHostCoherent) ? "finegrained_host" : "pinned_host", sizeBytes, ctx,
+                true  /*shareWithAll*/, amFlags, flags, 0);
+
+            if (sizeBytes && (*ptr == NULL)) {
+                hip_status = hipErrorMemoryAllocation;
+            }
+        }
+    }
+
+    if (HIP_SYNC_HOST_ALLOC) {
+        hipDeviceSynchronize();
+    }
+    return hip_status;
+}
+
+hipError_t ihipHostFree(TlsData *tls, void* ptr) {
+
+    // Synchronize to ensure all work has finished.
+    ihipGetTlsDefaultCtx()->locked_waitAllStreams();  // ignores non-blocking streams, this waits
+                                                      // for all activity to finish.
+
+    hipError_t hipStatus = hipErrorInvalidValue;
+    if (ptr) {
+        hc::accelerator acc;
+#if (__hcc_workweek__ >= 17332)
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
+#else
+        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
+#endif
+        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
+        if (status == AM_SUCCESS) {
+            if (amPointerInfo._hostPointer == ptr) {
+                hc::am_free(ptr);
+                hipStatus = hipSuccess;
+            }
+        }
+    } else {
+        // free NULL pointer succeeds and is common technique to initialize runtime
+        hipStatus = hipSuccess;
+    }
+
+    return hipStatus;
 }
 
 
@@ -300,79 +398,12 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     return ihipLogStatus(hip_status);
 }
 
-hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags) {
-    hipError_t hip_status = hipSuccess;
-
-    if (HIP_SYNC_HOST_ALLOC) {
-        hipDeviceSynchronize();
-    }
-
-    auto ctx = ihipGetTlsDefaultCtx();
-    if ((ctx == nullptr) || (ptr == nullptr)) {
-        hip_status = hipErrorInvalidValue;
-    }
-    else if (sizeBytes == 0) {
-        hip_status = hipSuccess;
-        // TODO - should size of 0 return err or be siliently ignored?
-    } else {
-        unsigned trueFlags = flags;
-        if (flags == hipHostMallocDefault) {
-            // HCC/ROCM provide a modern system with unified memory and should set both of these
-            // flags by default:
-            trueFlags = hipHostMallocMapped | hipHostMallocPortable;
-        }
-
-
-        const unsigned supportedFlags = hipHostMallocPortable | hipHostMallocMapped |
-                                        hipHostMallocWriteCombined | hipHostMallocCoherent |
-                                        hipHostMallocNonCoherent;
-
-
-        const unsigned coherencyFlags = hipHostMallocCoherent | hipHostMallocNonCoherent;
-
-        if ((flags & ~supportedFlags) || ((flags & coherencyFlags) == coherencyFlags)) {
-            *ptr = nullptr;
-            // can't specify unsupported flags, can't specify both Coherent + NonCoherent
-            hip_status = hipErrorInvalidValue;
-        } else {
-            auto device = ctx->getWriteableDevice();
-#if (__hcc_workweek__ >= 19115)
-            //Avoid mapping host pinned memory to all devices by HCC
-            unsigned amFlags = amHostUnmapped;
-#else
-            unsigned amFlags = 0;
-#endif
-            if (flags & hipHostMallocCoherent) {
-                amFlags |= amHostCoherent;
-            } else if (flags & hipHostMallocNonCoherent) {
-                amFlags |= amHostNonCoherent;
-            } else {
-                // depends on env variables:
-                amFlags |= HIP_HOST_COHERENT ? amHostCoherent : amHostNonCoherent;
-            }
-
-
-            *ptr = hip_internal::allocAndSharePtr(
-                (amFlags & amHostCoherent) ? "finegrained_host" : "pinned_host", sizeBytes, ctx,
-                true  /*shareWithAll*/, amFlags, flags, 0);
-
-            if (sizeBytes && (*ptr == NULL)) {
-                hip_status = hipErrorMemoryAllocation;
-            }
-        }
-    }
-
-    if (HIP_SYNC_HOST_ALLOC) {
-        hipDeviceSynchronize();
-    }
-    return hip_status;
-}
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
-    hip_status = ihipHostMalloc(tls, ptr, sizeBytes, flags);
+    hip_status = hip_internal::ihipHostMalloc(tls, ptr, sizeBytes, flags);
     return ihipLogStatus(hip_status);
 }
 
@@ -383,13 +414,15 @@ hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags) {
     if(flags != hipMemAttachGlobal)
         hip_status = hipErrorInvalidValue;
     else
-        hip_status = ihipHostMalloc(tls, devPtr, size, hipHostMallocDefault);
+        hip_status = hip_internal::ihipHostMalloc(tls, devPtr, size, hipHostMallocDefault);
     return ihipLogStatus(hip_status);
 }
 
 // Deprecated function:
 hipError_t hipMallocHost(void** ptr, size_t sizeBytes) { return hipHostMalloc(ptr, sizeBytes, 0); }
 
+// Deprecated function:
+hipError_t hipMemAllocHost(void** ptr, size_t sizeBytes) { return hipHostMalloc(ptr, sizeBytes, 0); }
 
 // Deprecated function:
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
@@ -462,6 +495,15 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 
     hip_status = ihipMallocPitch(tls, ptr, pitch, width, height, 0);
     return ihipLogStatus(hip_status);
+}
+
+hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes){
+    HIP_INIT_SPECIAL_API(hipMemAllocPitch, (TRACE_MEM), dptr, pitch, widthInBytes, height,elementSizeBytes);
+    HIP_SET_DEVICE();
+    
+    if (widthInBytes == 0 || height == 0) return ihipLogStatus(hipErrorInvalidValue);
+    
+    return ihipLogStatus(ihipMallocPitch(tls, dptr, pitch, widthInBytes, height, 0));
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
@@ -1785,28 +1827,65 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
     return ihipLogStatus(e);
 }
 
+hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy, hipStream_t stream, bool isAsync) {
+    if (pCopy == nullptr) {
+        return hipErrorInvalidValue;
+    }
+    void* dst; const void* src;
+    size_t spitch = pCopy->srcPitch;
+    size_t dpitch = pCopy->dstPitch;
+    switch(pCopy->srcMemoryType){
+        case hipMemoryTypeHost:
+            src = pCopy->srcHost;
+            break;
+        case hipMemoryTypeArray:
+            src = pCopy->srcArray->data;
+            spitch = pCopy->WidthInBytes;
+            break;
+        case hipMemoryTypeUnified:
+        case hipMemoryTypeDevice:
+            src = pCopy->srcDevice;
+            break;
+        default:
+            return hipErrorInvalidValue;
+    }
+    switch(pCopy->dstMemoryType){
+        case hipMemoryTypeHost:
+            dst = pCopy->dstHost;
+            break;
+        case hipMemoryTypeArray:
+            dst = pCopy->dstArray->data;
+            dpitch = pCopy->WidthInBytes;
+            break;
+        case hipMemoryTypeUnified:
+        case hipMemoryTypeDevice:
+            dst = pCopy->dstDevice;
+            break;
+        default:
+            return hipErrorInvalidValue;
+    }
+    if(pCopy->srcPitch < pCopy->WidthInBytes + pCopy->srcXInBytes || pCopy->srcY >= pCopy->Height){
+        return hipErrorInvalidValue;
+    } else if(pCopy->dstPitch < pCopy->WidthInBytes + pCopy->dstXInBytes || pCopy->dstY >= pCopy->Height){
+        return hipErrorInvalidValue;
+    }
+    src = (void*)((char*)src+pCopy->srcY*pCopy->srcPitch + pCopy->srcXInBytes);
+    dst = (void*)((char*)dst+pCopy->dstY*pCopy->dstPitch + pCopy->dstXInBytes);
+    if(isAsync){
+        return ihipMemcpy2DAsync(dst, dpitch, src, spitch, pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault, stream);
+    } else{
+        return ihipMemcpy2D(dst, dpitch, src, spitch, pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
+    }
+}
+
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy) {
     HIP_INIT_SPECIAL_API(hipMemcpyParam2D, (TRACE_MCMD), pCopy);
-    hipError_t e = hipSuccess;
-    if (pCopy == nullptr) {
-        e = hipErrorInvalidValue;
-    } else {
-        e = ihipMemcpy2D(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
-                     pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault);
-    }
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemcpyParam2D(pCopy, hipStreamNull, false));
 }
 
 hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemcpyParam2DAsync, (TRACE_MCMD), pCopy, stream);
-    hipError_t e = hipSuccess;
-    if (pCopy == nullptr) {
-        e = hipErrorInvalidValue;
-    } else {
-        e = ihipMemcpy2DAsync(pCopy->dstArray->data, pCopy->WidthInBytes, pCopy->srcHost, pCopy->srcPitch,
-                     pCopy->WidthInBytes, pCopy->Height, hipMemcpyDefault, stream);
-    }
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemcpyParam2D(pCopy, stream, true));
 }
 
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
@@ -1886,20 +1965,56 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, si
     return ihipLogStatus(e);
 };
 
-hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t sizeBytes) {
-    HIP_INIT_SPECIAL_API(hipMemsetD8, (TRACE_MCMD), dst, value, sizeBytes);
+hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t count) {
+    HIP_INIT_SPECIAL_API(hipMemsetD8, (TRACE_MCMD), dst, value, count);
 
     hipError_t e = hipSuccess;
 
     hipStream_t stream = hipStreamNull;
     stream = ihipSyncAndResolveStream(stream);
     if (stream) {
-        e = ihipMemset(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar);
+        e = ihipMemset(dst, value, count, stream, ihipMemsetDataTypeChar);
         stream->locked_wait();
     } else {
         e = hipErrorInvalidValue;
     }
     return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t count , hipStream_t stream ) {
+    HIP_INIT_SPECIAL_API(hipMemsetD8Async, (TRACE_MCMD), dst, value, count, stream);
+
+    stream = ihipSyncAndResolveStream(stream);
+    if (stream) {
+        return ihipLogStatus(ihipMemset(dst, value, count, stream, ihipMemsetDataTypeChar));
+    } else {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
+}
+
+hipError_t hipMemsetD16(hipDeviceptr_t dst, unsigned short value, size_t count){
+    HIP_INIT_SPECIAL_API(hipMemsetD16, (TRACE_MCMD), dst, value, count);
+    hipError_t e = hipSuccess;
+    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+    if (stream) {
+        e = ihipMemset(dst, value, count, stream, ihipMemsetDataTypeShort);
+        if(hipSuccess == e)
+            stream->locked_wait();
+    } else {
+        e = hipErrorInvalidValue;
+    }
+    return ihipLogStatus(e);
+}
+
+hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t count, hipStream_t stream ){
+    HIP_INIT_SPECIAL_API(hipMemsetD16Async, (TRACE_MCMD), dst, value, count, stream);
+
+    stream = ihipSyncAndResolveStream(stream);
+    if (stream) {
+        return ihipLogStatus(ihipMemset(dst, value, count, stream, ihipMemsetDataTypeShort));
+    } else {
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
 }
 
 hipError_t hipMemsetD32(hipDeviceptr_t dst, int value, size_t count) {
@@ -1967,16 +2082,27 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
         } else {
             e = hipErrorInvalidValue;
         }
-
+	
         if (free) {
-            // TODO - replace with kernel-level for reporting free memory:
-            size_t deviceMemSize, hostMemSize, userMemSize;
-            hc::am_memtracker_sizeinfo(device->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
-
-            *free = device->_props.totalGlobalMem - deviceMemSize;
-
-            // Deduct the amount of memory from the free memory reported from the system
-            if (HIP_HIDDEN_FREE_MEM) *free -= (size_t)HIP_HIDDEN_FREE_MEM * 1024 * 1024;
+		if (!device->_driver_node_id) return ihipLogStatus(hipErrorInvalidDevice);
+			
+		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");  
+		std::ifstream file;
+		file.open(fileName);
+		if (!file) return ihipLogStatus(hipErrorFileNotFound);
+		
+                std::string deviceSize;	
+		size_t deviceMemSize;
+		
+		file >> deviceSize;
+		file.close();                 
+                if ((deviceMemSize=strtol(deviceSize.c_str(),NULL,10))){
+		    *free = device->_props.totalGlobalMem - deviceMemSize;
+		    // Deduct the amount of memory from the free memory reported from the system
+		    if (HIP_HIDDEN_FREE_MEM) *free -= (size_t)HIP_HIDDEN_FREE_MEM * 1024 * 1024;
+		} else {
+ 		    return ihipLogStatus(hipErrorInvalidValue);
+		}
         } else {
             e = hipErrorInvalidValue;
         }
@@ -2050,30 +2176,8 @@ hipError_t hipFree(void* ptr) {
 hipError_t hipHostFree(void* ptr) {
     HIP_INIT_SPECIAL_API(hipHostFree, (TRACE_MEM), ptr);
 
-    // Synchronize to ensure all work has finished.
-    ihipGetTlsDefaultCtx()->locked_waitAllStreams();  // ignores non-blocking streams, this waits
-                                                      // for all activity to finish.
-
-
-    hipError_t hipStatus = hipErrorInvalidValue;
-    if (ptr) {
-        hc::accelerator acc;
-#if (__hcc_workweek__ >= 17332)
-        hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
-#else
-        hc::AmPointerInfo amPointerInfo(NULL, NULL, 0, acc, 0, 0);
-#endif
-        am_status_t status = hc::am_memtracker_getinfo(&amPointerInfo, ptr);
-        if (status == AM_SUCCESS) {
-            if (amPointerInfo._hostPointer == ptr) {
-                hc::am_free(ptr);
-                hipStatus = hipSuccess;
-            }
-        }
-    } else {
-        // free NULL pointer succeeds and is common technique to initialize runtime
-        hipStatus = hipSuccess;
-    }
+    hipError_t hipStatus = hipSuccess;
+    hipStatus = hip_internal::ihipHostFree(tls, ptr);
 
     return ihipLogStatus(hipStatus);
 };

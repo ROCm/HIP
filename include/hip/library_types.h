@@ -20,18 +20,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HCC_DETAIL_HIP_TEXTURE_H
-#define HIP_INCLUDE_HCC_DETAIL_HIP_TEXTURE_H
+#ifndef HIP_INCLUDE_HIP_LIBRARY_TYPES_H
+#define HIP_INCLUDE_HIP_LIBRARY_TYPES_H
 
-#include <hip/hcc_detail/texture_types.h>
+#include <hip/hip_common.h>
 
-struct hipTexture {
-    hipResourceDesc resDesc;
-    hipTextureDesc texDesc;
-    hipResourceViewDesc resViewDesc;
-    hsa_ext_image_t image;
-    hsa_ext_sampler_t sampler;
-    void* devPtr;
-};
+#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
+#include <hip/hcc_detail/library_types.h>
+#elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)
+#include "library_types.h"
+#else
+#error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
+#endif
 
 #endif

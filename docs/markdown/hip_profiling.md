@@ -130,7 +130,7 @@ void FunctionFoo(...)
 
 The HIP marker API is only supported on ROCm platform.  The marker macros are defined on CUDA platforms and will compile, but are silently ignored at runtime.
 
-This [HIP sample](samples/2_Cookbook/2_Profiler/) shows the profiler marker API used in a small application.
+This [HIP sample](https://github.com/ROCm-Developer-Tools/HIP/tree/master/samples/2_Cookbook/2_Profiler) shows the profiler marker API used in a small application.
 
 More information on the marker API can be found in the profiler header file and PDF in a ROCm installation:
 - /opt/rocm/profiler/CXLActivityLogger/include/CXLActivityLogger.h
@@ -196,8 +196,7 @@ This file can be copied and edited to provide more selective HSA event recording
 
 
 #### How to enable profiling at HIP build time
-Recent pre-built packages of HIP are always built with profiling support enabled.
-For developer builds, you must enable marker support manually when compiling HIP.
+Pre-built packages of HIP are not built with profiling support enabled.You must enable marker support manually when compiling HIP.
 
 1. Build HIP with ATP markers enabled
 HIP pre-built packages are enabled with ATP marker support by default.
@@ -236,7 +235,7 @@ Here's an example for one API followed by a description for the sections of the 
 - The second line shows the completion of the API, including the numeric return value (`ret= 0`) as well as an string representation for the error code (`hipSuccess`).  If the returned error code is non-zero, then the csecond line message is shown in red (unless HIP_TRACE_API_COLOR is "none" - see below).
 
 
-Heres a specific example showing the output of the [square](samples/0_Intro/square) program running on HIP:
+Heres a specific example showing the output of the [square](https://github.com/ROCm-Developer-Tools/HIP/tree/master/samples/0_Intro/square) program running on HIP:
 
 ```
 $ HIP_TRACE_API=1  ./square.hip.out 

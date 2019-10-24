@@ -22,7 +22,7 @@ THE SOFTWARE.
 // Simple test for hipLaunchCooperativeKernel API.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM all
  * TEST: %t
  * HIT_END
  */
@@ -116,7 +116,7 @@ int main() {
 
     dimBlock.x = workgroups[i];
     // Calculate the device occupancy to know how many blocks can be run concurrently
-    hipOccupancyMaxActiveBlocksPerMultiprocessor(reinterpret_cast<uint32_t*>(&numBlocks),
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks,
         test_gws, dimBlock.x * dimBlock.y * dimBlock.z, dimBlock.x * sizeof(long));
 
     dimGrid.x = deviceProp.multiProcessorCount * std::min(numBlocks, 32);

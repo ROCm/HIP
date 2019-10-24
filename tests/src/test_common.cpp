@@ -25,6 +25,8 @@ THE SOFTWARE.
 size_t N = 4 * 1024 * 1024;
 char memsetval = 0x42;
 int memsetD32val = 0xDEADBEEF;
+short memsetD16val = 0xDEAD;
+char memsetD8val = 0xDE;
 int iterations = 1;
 unsigned blocksPerCU = 6;  // to hide latency
 unsigned threadsPerBlock = 256;
@@ -106,6 +108,18 @@ int parseStandardArguments(int argc, char* argv[], bool failOnUndefinedArg) {
                 failed("Bad memsetD32val argument");
             }
             memsetD32val = ex;
+        } else if (!strcmp(arg, "--memsetD16val")) {
+            int ex;
+            if (++i >= argc || !HipTest::parseInt(argv[i], &ex)) {
+                failed("Bad memsetD16val argument");
+            }
+            memsetD16val = ex;
+        } else if (!strcmp(arg, "--memsetD8val")) {
+            int ex;
+            if (++i >= argc || !HipTest::parseInt(argv[i], &ex)) {
+                failed("Bad memsetD8val argument");
+            }
+            memsetD8val = ex;
         } else if (!strcmp(arg, "--iterations") || (!strcmp(arg, "-i"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &iterations)) {
                 failed("Bad iterations argument");

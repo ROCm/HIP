@@ -505,13 +505,19 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
     : _deviceId(deviceId), _acc(acc), _state(0), _criticalData(this) {
     hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
     if (agent) {
-        int err = hsa_agent_get_info(
+	int err;
+        err = hsa_agent_get_info(
             *agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_computeUnits);
         if (err != HSA_STATUS_SUCCESS) {
             _computeUnits = 1;
         }
-
-        _hsaAgent = *agent;
+        err = hsa_agent_get_info(
+	    *agent, (hsa_agent_info_t) HSA_AMD_AGENT_INFO_DRIVER_NODE_ID, &_driver_node_id);
+	if (err != HSA_STATUS_SUCCESS){
+	   _driver_node_id = 0;
+	}
+        
+	_hsaAgent = *agent;
     } else {
         _hsaAgent.handle = static_cast<uint64_t>(-1);
     }
@@ -781,10 +787,12 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_BDFID, &bdf_id);
     DeviceErrorCheck(err);
 
-    // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - Function/DomainID]
-    prop->pciDomainID = bdf_id & 0x7;
+    // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - FunctionID]
     prop->pciDeviceID = (bdf_id >> 3) & 0x1F;
     prop->pciBusID = (bdf_id >> 8) & 0xFF;
+
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_DOMAIN, &prop->pciDomainID);
+    DeviceErrorCheck(err);
 
     // Masquerade as a 3.0-level device. This will change as more HW functions are properly
     // supported. Application code should use the arch.has* to do detailed feature detection.

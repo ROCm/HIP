@@ -30,7 +30,7 @@ THE SOFTWARE.
 #define fileName "tex2dKernel.code"
 
 texture<float, 2, hipReadModeElementType> tex;
-bool testResult = false;
+bool testResult = true;
 
 #define HIP_CHECK(cmd)                                                                             \
     {                                                                                              \
@@ -62,7 +62,7 @@ bool runTest(int argc, char** argv) {
     desc.NumChannels = 1;
     desc.Width = width;
     desc.Height = height;
-    hipArrayCreate(&array, &desc);
+    HIP_CHECK(hipArrayCreate(&array, &desc));
 
     hip_Memcpy2D copyParam;
     memset(&copyParam, 0, sizeof(copyParam));
@@ -73,19 +73,19 @@ bool runTest(int argc, char** argv) {
     copyParam.srcPitch = width * sizeof(float);
     copyParam.WidthInBytes = copyParam.srcPitch;
     copyParam.Height = height;
-    hipMemcpyParam2D(&copyParam);
+    HIP_CHECK(hipMemcpyParam2D(&copyParam));
 
     textureReference* texref;
-    hipModuleGetTexRef(&texref, Module, "tex");
-    hipTexRefSetAddressMode(texref, 0, hipAddressModeWrap);
-    hipTexRefSetAddressMode(texref, 1, hipAddressModeWrap);
-    hipTexRefSetFilterMode(texref, hipFilterModePoint);
-    hipTexRefSetFlags(texref, 0);
-    hipTexRefSetFormat(texref, HIP_AD_FORMAT_FLOAT, 1);
-    hipTexRefSetArray(texref, array, HIP_TRSA_OVERRIDE_FORMAT);
+    HIP_CHECK(hipModuleGetTexRef(&texref, Module, "tex"));
+    HIP_CHECK(hipTexRefSetAddressMode(texref, 0, hipAddressModeWrap));
+    HIP_CHECK(hipTexRefSetAddressMode(texref, 1, hipAddressModeWrap));
+    HIP_CHECK(hipTexRefSetFilterMode(texref, hipFilterModePoint));
+    HIP_CHECK(hipTexRefSetFlags(texref, 0));
+    HIP_CHECK(hipTexRefSetFormat(texref, HIP_AD_FORMAT_FLOAT, 1));
+    HIP_CHECK(hipTexRefSetArray(texref, array, HIP_TRSA_OVERRIDE_FORMAT));
 
     float* dData = NULL;
-    hipMalloc((void**)&dData, size);
+    HIP_CHECK(hipMalloc((void**)&dData, size));
 
     struct {
         void* _Ad;
@@ -112,7 +112,7 @@ bool runTest(int argc, char** argv) {
 
     float* hOutputData = (float*)malloc(size);
     memset(hOutputData, 0, size);
-    hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost);
+    HIP_CHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
@@ -124,9 +124,9 @@ bool runTest(int argc, char** argv) {
             }
         }
     }
-    hipFree(dData);
-    hipFreeArray(array);
-    return true;
+    HIP_CHECK(hipFree(dData));
+    HIP_CHECK(hipFreeArray(array));
+    return testResult;
 }
 
 int main(int argc, char** argv) {
