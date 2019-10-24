@@ -17,19 +17,18 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
 #include "platform/activity.hpp"
 
-extern "C" void InitActivityCallback(void* id_callback, void* op_callback, void* arg) {
+extern "C" void hipInitActivityCallback(void* id_callback, void* op_callback, void* arg) {
   activity_prof::CallbacksTable::init(reinterpret_cast<activity_prof::id_callback_fun_t>(id_callback),
                                       reinterpret_cast<activity_prof::callback_fun_t>(op_callback),
                                       arg);
 }
 
-extern "C" bool EnableActivityCallback(unsigned op, bool enable) {
+extern "C" bool hipEnableActivityCallback(unsigned op, bool enable) {
   return activity_prof::CallbacksTable::SetEnabled(op, enable);
 }
 
-extern "C" const char* GetCmdName(unsigned op) {
+extern "C" const char* hipGetCmdName(unsigned op) {
   return getOclCommandKindString(static_cast<uint32_t>(op));
 }
