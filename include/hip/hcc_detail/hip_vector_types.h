@@ -44,12 +44,26 @@ THE SOFTWARE.
         __attribute__((vector_size(__ROUND_UP_TO_NEXT_POT__(n) * sizeof(T))))
 #endif
 
-#if defined(__cplusplus)
+#if defined(__cplusplus) && defined(__clang__)
     #include <type_traits>
 
     namespace hip_impl {
         template<typename T, typename Vector, unsigned int idx>
         struct Scalar_accessor {
+            struct Address {
+                const Scalar_accessor* p;
+
+                __host__ __device__
+                operator const T*() const noexcept {
+                    return &reinterpret_cast<const T*>(p)[idx];
+                }
+                __host__ __device__
+                operator T*() noexcept {
+                    return &reinterpret_cast<T*>(
+                        const_cast<Scalar_accessor*>(p))[idx];
+                }
+            };
+
             // Idea from https://t0rakka.silvrback.com/simd-scalar-accessor
             Vector data;
 
@@ -57,9 +71,35 @@ THE SOFTWARE.
             operator T() const noexcept { return data[idx]; }
 
             __host__ __device__
+            Address operator&() const noexcept { return Address{this}; }
+
+            __host__ __device__
             Scalar_accessor& operator=(T x) noexcept {
                 data[idx] = x;
 
+                return *this;
+            }
+
+            __host__ __device__
+            Scalar_accessor& operator++() noexcept {
+                ++data[idx];
+                return *this;
+            }
+            __host__ __device__
+            T operator++(int) noexcept {
+                auto r{data[idx]};
+                ++data[idx];
+                return *this;
+            }
+            __host__ __device__
+            Scalar_accessor& operator--() noexcept {
+                --data[idx];
+                return *this;
+            }
+            __host__ __device__
+            T operator--(int) noexcept {
+                auto r{data[idx]};
+                --data[idx];
                 return *this;
             }
 
