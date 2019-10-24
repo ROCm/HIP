@@ -196,8 +196,7 @@ This file can be copied and edited to provide more selective HSA event recording
 
 
 #### How to enable profiling at HIP build time
-Recent pre-built packages of HIP are always built with profiling support enabled.
-For developer builds, you must enable marker support manually when compiling HIP.
+Pre-built packages of HIP are not built with profiling support enabled.You must enable marker support manually when compiling HIP.
 
 1. Build HIP with ATP markers enabled
 HIP pre-built packages are enabled with ATP marker support by default.
