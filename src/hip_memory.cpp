@@ -1834,9 +1834,9 @@ hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy, hipStream_t stream, bool
         default:
             return hipErrorInvalidValue;
     }
-    if(pCopy->srcPitch < pCopy->WidthInBytes + pCopy->srcXInBytes || pCopy->srcY >= pCopy->Height){
+    if((spitch < (pCopy->WidthInBytes + pCopy->srcXInBytes)) || (pCopy->srcY >= pCopy->Height)){
         return hipErrorInvalidValue;
-    } else if(pCopy->dstPitch < pCopy->WidthInBytes + pCopy->dstXInBytes || pCopy->dstY >= pCopy->Height){
+    } else if((dpitch < (pCopy->WidthInBytes + pCopy->dstXInBytes)) || (pCopy->dstY >= pCopy->Height)){
         return hipErrorInvalidValue;
     }
     src = (void*)((char*)src+pCopy->srcY*pCopy->srcPitch + pCopy->srcXInBytes);
