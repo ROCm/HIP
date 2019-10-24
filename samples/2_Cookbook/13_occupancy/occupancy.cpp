@@ -56,9 +56,9 @@ void launchKernel(float* C, float* A, float* B, bool manual){
      const unsigned threadsperblock = 32;
      const unsigned blocks = (NUM/threadsperblock)+1;
 
-     uint32_t mingridSize = 0;
-     uint32_t gridSize = 0;
-     uint32_t blockSize = 0;
+     int mingridSize = 0;
+     int gridSize = 0;
+     int blockSize = 0;
      
      if (manual){
 	blockSize = threadsperblock; 
@@ -86,7 +86,7 @@ void launchKernel(float* C, float* A, float* B, bool manual){
      printf("kernel Execution time = %6.3fms\n", eventMs);
 
      //Calculate Occupancy
-     uint32_t numBlock = 0;
+     int numBlock = 0;
      HIP_CHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, multiply, blockSize, 0));
      
      if(devProp.maxThreadsPerMultiProcessor){
