@@ -212,9 +212,9 @@ global:
     hipDestroySurfaceObject*;
     hipHccModuleLaunchKernel*;
     hipExtModuleLaunchKernel*;
-    InitActivityCallback*;
-    EnableActivityCallback*;
-    GetCmdName*;
+    hipInitActivityCallback*;
+    hipEnableActivityCallback*;
+    hipGetCmdName*;
     hiprtcAddNameExpression*;
     hiprtcCompileProgram*;
     hiprtcCreateProgram*;
