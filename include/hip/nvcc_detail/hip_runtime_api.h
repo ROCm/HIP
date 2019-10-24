@@ -66,24 +66,24 @@ typedef enum hipMemcpyKind {
 #define HIP_LIBRARY_PATCH_LEVEL PATCH_LEVEL
 
 // hipTextureAddressMode
-#define hipTextureAddressMode cudaTextureAddressMode
+typedef enum cudaTextureAddressMode hipTextureAddressMode;
 #define hipAddressModeWrap cudaAddressModeWrap
 #define hipAddressModeClamp cudaAddressModeClamp
 #define hipAddressModeMirror cudaAddressModeMirror
 #define hipAddressModeBorder cudaAddressModeBorder
 
 // hipTextureFilterMode
-#define hipTextureFilterMode cudaTextureFilterMode
+typedef enum hipTextureFilterMode cudaTextureFilterMode
 #define hipFilterModePoint cudaFilterModePoint
 #define hipFilterModeLinear cudaFilterModeLinear
 
 // hipTextureReadMode
-#define hipTextureReadMode cudaTextureReadMode
+typedef enum hipTextureReadMode cudaTextureReadMode
 #define hipReadModeElementType cudaReadModeElementType
 #define hipReadModeNormalizedFloat cudaReadModeNormalizedFloat
 
 // hipChannelFormatKind
-#define hipChannelFormatKind            cudaChannelFormatKind
+typedef enum hipChannelFormatKind       cudaChannelFormatKind
 #define hipChannelFormatKindSigned      cudaChannelFormatKindSigned
 #define hipChannelFormatKindUnsigned    cudaChannelFormatKindUnsigned
 #define hipChannelFormatKindFloat       cudaChannelFormatKindFloat
@@ -167,7 +167,7 @@ typedef cudaIpcMemHandle_t hipIpcMemHandle_t;
 typedef enum cudaLimit hipLimit_t;
 typedef enum cudaFuncCache hipFuncCache_t;
 typedef CUcontext hipCtx_t;
-typedef cudaSharedMemConfig hipSharedMemConfig;
+typedef enum cudaSharedMemConfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
 typedef CUjit_option hipJitOption;
 typedef CUdevice hipDevice_t;
@@ -177,8 +177,8 @@ typedef CUdeviceptr hipDeviceptr_t;
 typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_t;
 typedef struct cudaArray* hipArray_const_t;
-typedef cudaFuncAttributes hipFuncAttributes;
-typedef CUfunction_attribute hipFunction_attribute;
+typedef struct cudaFuncAttributes hipFuncAttributes;
+#define hipFunction_attribute CUfunction_attribute
 #define hip_Memcpy2D CUDA_MEMCPY2D
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
@@ -196,8 +196,8 @@ typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipTextureType3D cudaTextureType3D
 #define hipDeviceMapHost cudaDeviceMapHost
 
-#define hipExtent cudaExtent
-#define hipPitchedPtr cudaPitchedPtr
+typedef struct cudaExtent hipExtent;
+typedef struct cudaPitchedPtr hipPitchedPtr;
 #define make_hipExtent make_cudaExtent
 #define make_hipPos make_cudaPos
 #define make_hipPitchedPtr make_cudaPitchedPtr
@@ -394,7 +394,7 @@ inline static enum cudaMemcpyKind hipMemcpyKindToCudaMemcpyKind(hipMemcpyKind ki
     }
 }
 
-inline static cudaTextureAddressMode hipTextureAddressModeToCudaTextureAddressMode(
+inline static enum cudaTextureAddressMode hipTextureAddressModeToCudaTextureAddressMode(
     hipTextureAddressMode kind) {
     switch (kind) {
         case hipAddressModeWrap:
@@ -410,7 +410,7 @@ inline static cudaTextureAddressMode hipTextureAddressModeToCudaTextureAddressMo
     }
 }
 
-inline static cudaTextureFilterMode hipTextureFilterModeToCudaTextureFilterMode(
+inline static enum cudaTextureFilterMode hipTextureFilterModeToCudaTextureFilterMode(
     hipTextureFilterMode kind) {
     switch (kind) {
         case hipFilterModePoint:
@@ -422,7 +422,7 @@ inline static cudaTextureFilterMode hipTextureFilterModeToCudaTextureFilterMode(
     }
 }
 
-inline static cudaTextureReadMode hipTextureReadModeToCudaTextureReadMode(hipTextureReadMode kind) {
+inline static enum cudaTextureReadMode hipTextureReadModeToCudaTextureReadMode(hipTextureReadMode kind) {
     switch (kind) {
         case hipReadModeElementType:
             return cudaReadModeElementType;
@@ -433,7 +433,7 @@ inline static cudaTextureReadMode hipTextureReadModeToCudaTextureReadMode(hipTex
     }
 }
 
-inline static cudaChannelFormatKind hipChannelFormatKindToCudaChannelFormatKind(
+inline static enum cudaChannelFormatKind hipChannelFormatKindToCudaChannelFormatKind(
     hipChannelFormatKind kind) {
     switch (kind) {
         case hipChannelFormatKindSigned:
@@ -517,7 +517,7 @@ inline static hipError_t hipMallocArray(hipArray** array, const struct hipChanne
 }
 
 inline static hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
-                            struct hipExtent extent, unsigned int flags) {
+                            hipExtent extent, unsigned int flags) {
     return hipCUDAErrorTohipError(cudaMalloc3DArray(array, desc, extent, flags));
 }
 
@@ -1380,20 +1380,20 @@ inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int
     return hipCUDAErrorTohipError(cerror);
 }
 
-template <class T, int dim, enum hipTextureReadMode readMode>
+template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex,
                                         const void* devPtr, size_t size = UINT_MAX) {
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, size));
 }
 
-template <class T, int dim, enum hipTextureReadMode readMode>
+template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
                                         const void* devPtr, const struct hipChannelFormatDesc& desc,
                                         size_t size = UINT_MAX) {
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
 
-template <class T, int dim, enum hipTextureReadMode readMode>
+template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
     return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
 }
@@ -1403,21 +1403,21 @@ inline static hipError_t hipBindTexture(size_t* offset, textureReference* tex, c
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
 
-template <class T, int dim, enum hipTextureReadMode readMode>
+template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
                                                hipArray_const_t array,
                                                const struct hipChannelFormatDesc& desc) {
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array, desc));
 }
 
-template <class T, int dim, enum hipTextureReadMode readMode>
+template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
                                                hipArray_const_t array,
                                                const struct hipChannelFormatDesc* desc) {
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array, desc));
 }
 
-template <class T, int dim, enum hipTextureReadMode readMode>
+template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
                                                hipArray_const_t array) {
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array));
