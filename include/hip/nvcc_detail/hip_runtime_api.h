@@ -73,17 +73,17 @@ typedef enum cudaTextureAddressMode hipTextureAddressMode;
 #define hipAddressModeBorder cudaAddressModeBorder
 
 // hipTextureFilterMode
-typedef enum hipTextureFilterMode cudaTextureFilterMode
+typedef enum hipTextureFilterMode cudaTextureFilterMode;
 #define hipFilterModePoint cudaFilterModePoint
 #define hipFilterModeLinear cudaFilterModeLinear
 
 // hipTextureReadMode
-typedef enum hipTextureReadMode cudaTextureReadMode
+typedef enum hipTextureReadMode cudaTextureReadMode;
 #define hipReadModeElementType cudaReadModeElementType
 #define hipReadModeNormalizedFloat cudaReadModeNormalizedFloat
 
 // hipChannelFormatKind
-typedef enum hipChannelFormatKind       cudaChannelFormatKind
+typedef enum hipChannelFormatKind       cudaChannelFormatKind;
 #define hipChannelFormatKindSigned      cudaChannelFormatKindSigned
 #define hipChannelFormatKindUnsigned    cudaChannelFormatKindUnsigned
 #define hipChannelFormatKindFloat       cudaChannelFormatKindFloat
