@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019-Present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 -> Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -34,14 +34,6 @@ using namespace std::chrono;
 #define kernel_name1 "matmulK"
 #define kernel_name2 "WaitKernel"
 
-//hipDeviceReset() call is used to clear all the allocations in case of any api failure.
-#define HIP_CHECK(status)     \
-   if (status != hipSuccess) {   \
-   std::cout << "Got Status: " << hipGetErrorString(status) << " at Line: " << __LINE__ << std::endl; \
-	   hipDeviceReset(); \
-   exit(0);  \
-      }
-
 int main()
 {
 	
@@ -55,32 +47,32 @@ int *C;
 hipDeviceptr_t *Ad,*Bd;
 
 for(int i=0;i<N;i++)
-	for(int j=0;j<N;j++){
-		A[i*N +j]=1;
-		B[i*N +j]=1;
-	}
+for(int j=0;j<N;j++) {
+    A[i*N +j]=1;
+    B[i*N +j]=1; }
+
 hipStream_t stream1,stream2;
-HIP_CHECK(hipStreamCreate(&stream1));
+HIPCHECK(hipStreamCreate(&stream1));
 
-HIP_CHECK(hipMalloc((void**)&Ad, SIZE*sizeof(int)));
-HIP_CHECK(hipMalloc((void**)&Bd, SIZE*sizeof(int)));
-HIP_CHECK(hipHostMalloc((void**)&C, SIZE*sizeof(int)));
+HIPCHECK(hipMalloc((void**)&Ad, SIZE*sizeof(int)));
+HIPCHECK(hipMalloc((void**)&Bd, SIZE*sizeof(int)));
+HIPCHECK(hipHostMalloc((void**)&C, SIZE*sizeof(int)));
 
-HIP_CHECK(hipMemcpy(Ad,A,SIZE*sizeof(int),hipMemcpyHostToDevice));
-HIP_CHECK(hipMemcpy(Bd,B,SIZE*sizeof(int),hipMemcpyHostToDevice));
+HIPCHECK(hipMemcpy(Ad,A,SIZE*sizeof(int),hipMemcpyHostToDevice));
+HIPCHECK(hipMemcpy(Bd,B,SIZE*sizeof(int),hipMemcpyHostToDevice));
 
 hipModule_t Module;
 hipFunction_t Function1,Function2;
-HIP_CHECK(hipModuleLoad(&Module, fileName));
-HIP_CHECK(hipModuleGetFunction(&Function1, Module, kernel_name1))
-HIP_CHECK(hipModuleGetFunction(&Function2, Module, kernel_name2))
+HIPCHECK(hipModuleLoad(&Module, fileName));
+HIPCHECK(hipModuleGetFunction(&Function1, Module, kernel_name1))
+HIPCHECK(hipModuleGetFunction(&Function2, Module, kernel_name2))
 
 struct {
-        void* _Ad;
-        void* _Bd;
-	void* _Cd;
-	int _n;
-       } args1,args2;
+    void* _Ad;
+    void* _Bd;
+    void* _Cd;
+    int _n;
+    } args1,args2;
 
 args1._Ad = Ad;
 args1._Bd = Bd;
@@ -98,42 +90,42 @@ void* config1[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args1, HIP_LAUNCH_PARAM_BUF
 void* config2[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args2, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size2,HIP_LAUNCH_PARAM_END};
 
 auto start=high_resolution_clock::now();
-HIP_CHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,0 ));
-HIP_CHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,0 ));
-HIP_CHECK(hipStreamSynchronize(stream1));
+HIPCHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,0 ));
+HIPCHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,0 ));
+HIPCHECK(hipStreamSynchronize(stream1));
 
 auto stop=high_resolution_clock::now();
 auto duration1=duration_cast<microseconds>(stop-start);
 
 start=high_resolution_clock::now();
-HIP_CHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,1 ));
-HIP_CHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,1 ));
-HIP_CHECK(hipStreamSynchronize(stream1));
+HIPCHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,1 ));
+HIPCHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,1 ));
+HIPCHECK(hipStreamSynchronize(stream1));
 
 stop=high_resolution_clock::now();
 auto duration2=duration_cast<microseconds>(stop-start);
 
 bool TEST_STATUS = true;
 
-if(! (duration2.count() < duration1.count())){
+if(! (duration2.count() < duration1.count())) {
 	std::cout<<"Test failed as there was no time gain observed when two kernels were launched using hipExtModuleLaunchKernel() with flag 1."<<std::endl;
-	TEST_STATUS=false;}
+	TEST_STATUS=false; }
 
 unsigned long int mismatch=0;
-for(int i=0;i<N;i++){
-	for(int j=0;j<N;j++){
-		if(C[i*N + j] != N)
-			mismatch++;
+for(int i=0;i<N;i++) {
+for(int j=0;j<N;j++) {
+    if(C[i*N + j] != N)
+    mismatch++;
 	}}
-if(! (mismatch == 0)){
+if(! (mismatch == 0)) {
 	std::cout<<"Test failed as the result of matrix multiplication was found incorrect."<<std::endl;
-	TEST_STATUS=false;}
+	TEST_STATUS=false; }
 
-free(A);
-free(B);
-HIP_CHECK(hipFree(Ad));
-HIP_CHECK(hipFree(Bd));
-HIP_CHECK(hipHostFree(C));
+delete[] A;
+delete[] B; 
+HIPCHECK(hipFree(Ad));
+HIPCHECK(hipFree(Bd));
+HIPCHECK(hipHostFree(C));
 if(TEST_STATUS == true)
 passed();
 }
