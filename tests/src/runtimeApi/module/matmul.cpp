@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2019 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 -> Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,11 +17,7 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-
-
 #include"hip/hip_runtime.h"
-
-
 
 extern "C" __global__ void matmulK(int* A, int* B, int* C, int N) {
 
