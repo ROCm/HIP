@@ -2067,6 +2067,45 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
  *  @brief Copies data between host and device.
  *
  *  @param[in]   dst       Destination memory address
+ *  @param[in]   dpitch    Pitch of destination memory
+ *  @param[in]   src       Source memory address
+ *  @param[in]   wOffset   Source starting X offset
+ *  @param[in]   hOffset   Source starting Y offset
+ *  @param[in]   width     Width of matrix transfer (columns in bytes)
+ *  @param[in]   height    Height of matrix transfer (rows)
+ *  @param[in]   kind      Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind);
+
+/**
+ *  @brief Copies data between host and device asynchronously.
+ *
+ *  @param[in]   dst       Destination memory address
+ *  @param[in]   dpitch    Pitch of destination memory
+ *  @param[in]   src       Source memory address
+ *  @param[in]   wOffset   Source starting X offset
+ *  @param[in]   hOffset   Source starting Y offset
+ *  @param[in]   width     Width of matrix transfer (columns in bytes)
+ *  @param[in]   height    Height of matrix transfer (rows)
+ *  @param[in]   kind      Type of transfer
+ *  @param[in]   stream    Accelerator view which the copy is being enqueued
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst       Destination memory address
  *  @param[in]   srcArray  Source array
  *  @param[in]   srcoffset Offset in bytes of source array
  *  @param[in]   count     Size of memory copy in bytes
