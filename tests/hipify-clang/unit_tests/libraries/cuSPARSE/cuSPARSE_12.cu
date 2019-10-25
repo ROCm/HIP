@@ -26,8 +26,8 @@ static void CudaCheckCore(cudaError_t code, const char *file, int line) {
 // CHECK: #define CudaCheckAfterCall() { CudaCheckCore((hipGetLastError()), __FILE__, __LINE__); }
 #define CudaCheckAfterCall() { CudaCheckCore((cudaGetLastError()), __FILE__, __LINE__); }
 
-// CHECK: static const char * cusparseGetErrorString(hipsparseStatus_t error) {
-static const char * cusparseGetErrorString(cusparseStatus_t error) {
+// CHECK: static const char * GetErrorString(hipsparseStatus_t error) {
+static const char * GetErrorString(cusparseStatus_t error) {
   switch (error) {
     // CHECK: case HIPSPARSE_STATUS_SUCCESS:
     case CUSPARSE_STATUS_SUCCESS:
@@ -73,7 +73,7 @@ static const char * cusparseGetErrorString(cusparseStatus_t error) {
 static void CudaSparseCheckCore(cusparseStatus_t code, const char *file, int line) {
   // CHECK: if (code != HIPSPARSE_STATUS_SUCCESS) {
   if (code != CUSPARSE_STATUS_SUCCESS) {
-    fprintf(stderr,"Cuda Error %d : %s %s %d\n", code, cusparseGetErrorString(code), file, line);
+    fprintf(stderr,"Cuda Error %d : %s %s %d\n", code, GetErrorString(code), file, line);
     exit(code);
   }
 }
