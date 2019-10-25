@@ -120,8 +120,8 @@ void simpleTest2(size_t numElements, bool usePinnedHost) {
         HIPCHECK(hipHostFree(A_h1));
         HIPCHECK(hipHostFree(A_h2));
     } else {
-        free(A_h1);
-        free(A_h2);
+        aligned_free(A_h1);
+        aligned_free(A_h2);
     }
 }
 
