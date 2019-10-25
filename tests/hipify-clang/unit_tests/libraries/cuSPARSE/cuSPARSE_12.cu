@@ -73,7 +73,7 @@ static const char * GetErrorString(cusparseStatus_t error) {
 static void CudaSparseCheckCore(cusparseStatus_t code, const char *file, int line) {
   // CHECK: if (code != HIPSPARSE_STATUS_SUCCESS) {
   if (code != CUSPARSE_STATUS_SUCCESS) {
-    fprintf(stderr,"Cuda Error %d : %s %s %d\n", code, cusparseGetErrorString(code), file, line);
+    fprintf(stderr,"Cuda Error %d : %s %s %d\n", code, GetErrorString(code), file, line);
     exit(code);
   }
 }
