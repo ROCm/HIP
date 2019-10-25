@@ -1615,7 +1615,6 @@ typedef enum ihipMemsetDataType {
 
 hipError_t ihipMemsetAsync(void* dst, int  value, size_t count, hipStream_t stream, enum ihipMemsetDataType copyDataType) {
     if (count == 0) return hipSuccess;
-    if (!stream) return hipErrorInvalidValue;
     if (!dst) return hipErrorInvalidValue;
 
     try {
@@ -1668,7 +1667,6 @@ namespace {
 
 hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t stream, ihipMemsetDataType copyDataType) {
     if (count == 0) return hipSuccess;
-    if (!stream) return hipErrorInvalidValue;
     if (!dst) return hipErrorInvalidValue;
 
     try {
@@ -1723,6 +1721,9 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
         // that the following HSA call can complete before any other ops.
         // Flush the stream while locked. Once the stream is empty, we can safely perform
         // the out-of-band HSA call. Lastly, the stream will unlock via RAII.
+	if (!stream) stream = ihipSyncAndResolveStream(stream);
+	if (!stream) return hipErrorInvalidValue;
+	
         LockedAccessor_StreamCrit_t crit(stream->criticalData());
         crit->_av.wait(stream->waitMode());
         const auto s = hsa_amd_memory_fill(aligned_dst, value, n);
