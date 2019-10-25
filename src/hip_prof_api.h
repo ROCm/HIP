@@ -38,9 +38,7 @@ class api_callbacks_table_templ {
   bool set_activity(uint32_t id, act_t fun, void* arg) {
     std::lock_guard<mutex_t> lock(mutex_);
     bool ret = true;
-    if (id == HIP_API_ID_ANY) {
-      for (unsigned i = 0; i < HIP_API_ID_NUMBER; ++i) set_activity(i, fun, arg);
-    } else if (id < HIP_API_ID_NUMBER) {
+    if (id < HIP_API_ID_NUMBER) {
       cb_sync(id);
       callbacks_table_.arr[id].act = fun;
       callbacks_table_.arr[id].a_arg = arg;
@@ -54,9 +52,7 @@ class api_callbacks_table_templ {
   bool set_callback(uint32_t id, fun_t fun, void* arg) {
     std::lock_guard<mutex_t> lock(mutex_);
     bool ret = true;
-    if (id == HIP_API_ID_ANY) {
-      for (unsigned i = 0; i < HIP_API_ID_NUMBER; ++i) set_callback(i, fun, arg);
-    } else if (id < HIP_API_ID_NUMBER) {
+    if (id < HIP_API_ID_NUMBER) {
       cb_sync(id);
       callbacks_table_.arr[id].fun = fun;
       callbacks_table_.arr[id].arg = arg;

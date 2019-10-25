@@ -50,6 +50,21 @@ typedef enum hipMemcpyKind {
     hipMemcpyDefault
 } hipMemcpyKind;
 
+// hipDataType
+#define hipDataType cudaDataType
+#define HIP_R_16F CUDA_R_16F
+#define HIP_R_32F CUDA_R_32F
+#define HIP_R_64F CUDA_R_64F
+#define HIP_C_16F CUDA_C_16F
+#define HIP_C_32F CUDA_C_32F
+#define HIP_C_64F CUDA_C_64F
+
+// hipLibraryPropertyType
+#define hipLibraryPropertyType libraryPropertyType
+#define HIP_LIBRARY_MAJOR_VERSION MAJOR_VERSION
+#define HIP_LIBRARY_MINOR_VERSION MINOR_VERSION
+#define HIP_LIBRARY_PATCH_LEVEL PATCH_LEVEL
+
 // hipTextureAddressMode
 #define hipTextureAddressMode cudaTextureAddressMode
 #define hipAddressModeWrap cudaAddressModeWrap
