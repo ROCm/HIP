@@ -67,6 +67,8 @@ extern const std::map<llvm::StringRef, hipCounter> CUDA_CAFFE2_TYPE_NAME_MAP;
 extern const std::map<llvm::StringRef, hipCounter> CUDA_CAFFE2_FUNCTION_MAP;
 // Maps the names of CUDA Device functions to the corresponding HIP functions
 extern const std::map<llvm::StringRef, hipCounter> CUDA_DEVICE_FUNC_MAP;
+// Maps the names of CUDA CUB API types to the corresponding HIP types
+extern const std::map<llvm::StringRef, hipCounter> CUDA_CUB_TYPE_NAME_MAP;
 
 /**
   * The union of all the above maps, except includes.

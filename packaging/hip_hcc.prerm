@@ -16,7 +16,7 @@ HIPLIBDIR=$ROCMDIR/hip/lib
 ([ ! -d $ROCMLIBDIR ] || [ ! -d $HIPLIBDIR ]) && exit 0
 
 # Remove soft-links to libraries
-HIPLIBFILES=$(ls -aF $HIPLIBDIR | grep -v [-/$])
+HIPLIBFILES=$(ls -A $HIPLIBDIR | grep -v [-/$])
 pushd $ROCMLIBDIR
 for f in $HIPLIBFILES; do
     [ -e $f ] || continue
