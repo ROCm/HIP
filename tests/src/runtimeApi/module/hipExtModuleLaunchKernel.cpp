@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2019 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019-Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -19,13 +19,10 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD_CMD: matmul.code %hc --genco %S/matmul.cpp -o matmul.code
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
-
-
-
 
 #include<chrono>
 #include "hip/hip_runtime.h"
@@ -108,12 +105,12 @@ HIP_CHECK(hipStreamSynchronize(stream1));
 auto stop=high_resolution_clock::now();
 auto duration1=duration_cast<microseconds>(stop-start);
 
- start=high_resolution_clock::now();
+start=high_resolution_clock::now();
 HIP_CHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,1 ));
 HIP_CHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,1 ));
 HIP_CHECK(hipStreamSynchronize(stream1));
 
- stop=high_resolution_clock::now();
+stop=high_resolution_clock::now();
 auto duration2=duration_cast<microseconds>(stop-start);
 
 bool TEST_STATUS = true;
@@ -127,8 +124,7 @@ for(int i=0;i<N;i++){
 	for(int j=0;j<N;j++){
 		if(C[i*N + j] != N)
 			mismatch++;
-	}
-}
+	}}
 if(! (mismatch == 0)){
 	std::cout<<"Test failed as the result of matrix multiplication was found incorrect."<<std::endl;
 	TEST_STATUS=false;}
