@@ -55,7 +55,7 @@ void test(size_t N) {
 int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
-    test_gl2(N);
+    test(N);
 
     passed();
 }
