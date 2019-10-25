@@ -18,8 +18,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: matmul.code %hc --genco %S/matmul.cpp -o matmul.code
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD_CMD: matmul.code %hc --genco %S/matmul.cpp -o matmul.code EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -108,18 +108,18 @@ auto duration2=duration_cast<microseconds>(stop-start);
 bool TEST_STATUS = true;
 
 if(! (duration2.count() < duration1.count())) {
-	std::cout<<"Test failed as there was no time gain observed when two kernels were launched using hipExtModuleLaunchKernel() with flag 1."<<std::endl;
-	TEST_STATUS=false; }
+    std::cout<<"Test failed as there was no time gain observed when two kernels were launched using hipExtModuleLaunchKernel() with flag 1."<<std::endl;
+    TEST_STATUS=false; }
 
 unsigned long int mismatch=0;
 for(int i=0;i<N;i++) {
 for(int j=0;j<N;j++) {
     if(C[i*N + j] != N)
     mismatch++;
-	}}
+    }}
 if(! (mismatch == 0)) {
-	std::cout<<"Test failed as the result of matrix multiplication was found incorrect."<<std::endl;
-	TEST_STATUS=false; }
+    std::cout<<"Test failed as the result of matrix multiplication was found incorrect."<<std::endl;
+    TEST_STATUS=false; }
 
 delete[] A;
 delete[] B; 
