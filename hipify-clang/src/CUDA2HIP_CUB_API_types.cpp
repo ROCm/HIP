@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,35 +19,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-// Test the Grid_Launch syntax.
 
-/* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
- * TEST: %t
- * HIT_END
- */
+#include "CUDA2HIP.h"
 
-#include "hip/hip_runtime.h"
-#include "test_common.h"
-
-__global__ void f1(float *a) { *a = 1.0; }
-
-template <typename T>
-__global__ void f2(T *a) { *a = 1; }
-
-int main(int argc, char* argv[]) {
-
-    // test case for using kernel function pointer 
-    int gridSize = 0;
-    int blockSize = 0;
-    hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
-    assert(gridSize != 0 && blockSize != 0);
-
-    // test case for using kernel function pointer with template 
-    gridSize = 0;
-    blockSize = 0;
-    hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
-    assert(gridSize != 0 && blockSize != 0);
-
-    passed();
-}
+// Maps the names of CUDA CUB API types to the corresponding HIP types
+const std::map<llvm::StringRef, hipCounter> CUDA_CUB_TYPE_NAME_MAP{
+  {"cub",  {"hipcub",  "", CONV_TYPE, API_CUB}},
+};

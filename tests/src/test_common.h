@@ -99,10 +99,13 @@ THE SOFTWARE.
 
 #ifdef _WIN64
 #include <tchar.h>
-#define aligned_alloc _aligned_malloc
+#define aligned_alloc(x,y) _aligned_malloc(y,x)
+#define aligned_free(x) _aligned_free(x)
 #define popen(x,y) _popen(x,y)
 #define pclose(x) _pclose(x)
 #define setenv(x,y,z) _putenv_s(x,y)
+#else
+#define aligned_free(x) free(x)
 #endif
 
 // standard command-line variables:

@@ -234,6 +234,8 @@ if ($HIP_PLATFORM eq "clang") {
     if ($HIP_RUNTIME eq "HCC" ) {
       $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
       $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
+    } else {
+      $HIPCXXFLAGS .= " -fhip-new-launch-api";
     }
 
 } elsif ($HIP_PLATFORM eq "hcc") {
@@ -352,7 +354,6 @@ my $runCmd = 1;
 my $buildDeps = 0;
 my $linkType = 1;
 my $setLinkType = 0;
-my $coFormatv3 = 1;
 
 my @options = ();
 my @inputs  = ();
@@ -472,22 +473,6 @@ foreach $arg (@ARGV)
         $swallowArg = 1;
     }
 
-    # code object format parsing
-    if ($trimarg eq '-mcode-object-v3') {
-        $coFormatv3 = 1;
-        # hip-clang already recognizes -mcode-object-v3, so we just pass it on
-        if ($HIP_PLATFORM eq 'hcc') {
-            $swallowArg = 1;
-        }
-    }
-    if ($trimarg eq '-mno-code-object-v3') {
-        $coFormatv3 = 0;
-        # hip-clang already recognizes -mno-code-object-v3, so we just pass it on
-        if ($HIP_PLATFORM eq 'hcc') {
-            $swallowArg = 1;
-        }
-    }
-
     if (($arg =~ /--genco/) and $HIP_PLATFORM eq 'clang' ) {
         $arg = "--cuda-device-only";
     }
@@ -524,6 +509,13 @@ foreach $arg (@ARGV)
     if($arg =~ m/^-O/)
     {
         $optArg = $arg;
+    }
+
+    ## This is a temporary workaround for CMake detection of OpenMP support.
+    ## It should be removed when the OpenMP detection c++ test in CMake is updated
+    ## and corrected CMake version is available.
+    if((defined $HIP_COMPILER) and ($HIP_COMPILER eq "clang") and ($arg eq '-fopenmp')) {
+        $HIPCXXFLAGS .= " -D_OPENMP "
     }
 
     ## process linker response file for hip-clang
@@ -861,12 +853,6 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
         }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX1012__=1 ";
     }
-}
-
-# hcc defaults to v2, so we need to convert to the appropriate flag
-# hip-clang defaults to v3, so we don't need to do anything
-if ($coFormatv3 and $HIP_PLATFORM eq 'hcc') {
-    $HIPLDFLAGS .= " -Wl,-hcc-cov3 ";
 }
 
 if ($hasC and $HIP_PLATFORM eq 'nvcc') {
