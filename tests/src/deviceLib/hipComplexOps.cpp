@@ -18,8 +18,8 @@
  */
  
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
- * TEST: %t
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvcc
  * HIT_END
  */
 
