@@ -41,22 +41,23 @@ hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKi
 
     // Return success if number of bytes to copy is 0
     if (sizeBytes == 0) return e;
+    if (!dst || !src) return hipErrorInvalidValue;
 
-    stream = ihipSyncAndResolveStream(stream);
-
-    if ((dst == NULL) || (src == NULL)) {
-        e = hipErrorInvalidValue;
-    } else if (stream) {
-        try {
-            stream->locked_copyAsync(dst, src, sizeBytes, kind);
-        } catch (ihipException& ex) {
-            e = ex._code;
-        }
-    } else {
-        e = hipErrorInvalidValue;
+    if (!(stream = ihipSyncAndResolveStream(stream))) {
+        return hipErrorInvalidValue;
     }
 
-    return e;
+    try {
+        stream->locked_copyAsync(dst, src, sizeBytes, kind);
+    }
+    catch (ihipException& ex) {
+        e = ex._code;
+    }
+    catch (...) {
+        return hipErrorUnknown;
+    }
+
+    return hipSuccess;
 }
 
 // return 0 on success or -1 on error:
@@ -1246,7 +1247,6 @@ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
     return ihipLogStatus(e);
 }
 
-
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyDtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
@@ -1328,8 +1328,6 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    hc::completion_future marker;
-
     hipError_t e = hipSuccess;
 
     size_t byteSize;
@@ -1380,8 +1378,6 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    hc::completion_future marker;
-
     hipError_t e = hipSuccess;
 
     try {
@@ -1399,8 +1395,6 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    hc::completion_future marker;
-
     hipError_t e = hipSuccess;
 
     try {
@@ -1417,8 +1411,6 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
 
-    hc::completion_future marker;
-
     hipError_t e = hipSuccess;
     try {
         stream->locked_copySync((char*)dstArray->data + dstOffset, srcHost, count,
@@ -1434,8 +1426,6 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
     HIP_INIT_SPECIAL_API(hipMemcpyAtoH, (TRACE_MCMD), dst, srcArray, srcOffset, count);
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    hc::completion_future marker;
 
     hipError_t e = hipSuccess;
 
@@ -1510,7 +1500,6 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             dstPitch = p->dstPtr.pitch;
         }
         stream = ihipSyncAndResolveStream(stream);
-        hc::completion_future marker;
         try {
             if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
                 if(isAsync)
@@ -1556,15 +1545,22 @@ hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream
 }
 
 namespace {
-template <uint32_t block_dim, typename RandomAccessIterator, typename N, typename T>
+template <uint32_t block_dim, uint32_t items_per_lane,
+          typename RandomAccessIterator, typename N, typename T>
 __global__ void hip_fill_n(RandomAccessIterator f, N n, T value) {
-    const uint32_t grid_dim = gridDim.x * blockDim.x;
+    const auto grid_dim = gridDim.x * blockDim.x * items_per_lane;
+    const auto gidx = blockIdx.x * block_dim + threadIdx.x;
 
-    size_t idx = blockIdx.x * block_dim + threadIdx.x;
-    while (idx < n) {
-        __builtin_memcpy(reinterpret_cast<void*>(&f[idx]), reinterpret_cast<const void*>(&value),
-                         sizeof(T));
+    size_t idx = gidx * items_per_lane;
+    while (idx + items_per_lane <= n) {
+        for (auto i = 0u; i != items_per_lane; ++i) {
+            __builtin_nontemporal_store(value, &f[idx + i]);
+        }
         idx += grid_dim;
+    }
+
+    if (gidx < n % grid_dim) {
+        __builtin_nontemporal_store(value, &f[n - gidx - 1]);
     }
 }
 
@@ -1620,11 +1616,14 @@ hipError_t ihipMemPtrGetInfo(void* ptr, size_t* size) {
 template <typename T>
 void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t count) {
     static constexpr uint32_t block_dim = 256;
+    static constexpr uint32_t max_write_width = 4 * sizeof(std::uint32_t); // 4 DWORDs
+    static constexpr uint32_t items_per_lane = max_write_width / sizeof(T);
 
-    const uint32_t grid_dim = clamp_integer<size_t>(count / block_dim, 1, UINT32_MAX);
+    const uint32_t grid_dim = clamp_integer<size_t>(
+        count / (block_dim * items_per_lane), 1, UINT32_MAX);
 
-    hipLaunchKernelGGL(hip_fill_n<block_dim>, dim3(grid_dim), dim3{block_dim}, 0u, stream, ptr,
-                       count, std::move(val));
+    hipLaunchKernelGGL(hip_fill_n<block_dim, items_per_lane>, dim3(grid_dim),
+                       dim3{block_dim}, 0u, stream, ptr, count, std::move(val));
 }
 
 template <typename T>
@@ -1753,7 +1752,7 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
         // the out-of-band HSA call. Lastly, the stream will unlock via RAII.
 	if (!stream) stream = ihipSyncAndResolveStream(stream);
 	if (!stream) return hipErrorInvalidValue;
-	
+
         LockedAccessor_StreamCrit_t crit(stream->criticalData());
         crit->_av.wait(stream->waitMode());
         const auto s = hsa_amd_memory_fill(aligned_dst, value, n);
@@ -2026,40 +2025,34 @@ hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t
 // TODO-sync: function is async unless target is pinned host memory - then these are fully sync.
 hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemsetAsync, (TRACE_MCMD), dst, value, sizeBytes, stream);
-    stream = ihipSyncAndResolveStream(stream);
     return ihipLogStatus(ihipMemsetAsync(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar));
 }
 
 hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemsetD32Async, (TRACE_MCMD), dst, value, count, stream);
-    stream = ihipSyncAndResolveStream(stream);
     return ihipLogStatus(ihipMemsetAsync(dst, value, count, stream, ihipMemsetDataTypeInt));
 }
 
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemset, (TRACE_MCMD), dst, value, sizeBytes);
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-    return ihipLogStatus(ihipMemsetSync(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar));
+    return ihipLogStatus(ihipMemsetSync(dst, value, sizeBytes, nullptr, ihipMemsetDataTypeChar));
 }
 
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
     HIP_INIT_SPECIAL_API(hipMemset2D, (TRACE_MCMD), dst, pitch, value, width, height);
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
     size_t sizeBytes = pitch * height;
-    return ihipLogStatus(ihipMemsetSync(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar));
+    return ihipLogStatus(ihipMemsetSync(dst, value, sizeBytes, nullptr, ihipMemsetDataTypeChar));
 }
 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream ) {
     HIP_INIT_SPECIAL_API(hipMemset2DAsync, (TRACE_MCMD), dst, pitch, value, width, height, stream);
-    stream =  ihipSyncAndResolveStream(stream);
     size_t sizeBytes = pitch * height;
     return ihipLogStatus(ihipMemsetAsync(dst, value, sizeBytes, stream, ihipMemsetDataTypeChar));
 }
 
 hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t count) {
     HIP_INIT_SPECIAL_API(hipMemsetD8, (TRACE_MCMD), dst, value, count);
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-    return ihipLogStatus(ihipMemsetSync(dst, value, count, stream, ihipMemsetDataTypeChar));
+    return ihipLogStatus(ihipMemsetSync(dst, value, count, nullptr, ihipMemsetDataTypeChar));
 }
 
 hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t count , hipStream_t stream ) {
@@ -2070,32 +2063,27 @@ hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t coun
 
 hipError_t hipMemsetD16(hipDeviceptr_t dst, unsigned short value, size_t count){
     HIP_INIT_SPECIAL_API(hipMemsetD16, (TRACE_MCMD), dst, value, count);
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-    return ihipLogStatus(ihipMemsetSync(dst, value, count, stream, ihipMemsetDataTypeShort));
+    return ihipLogStatus(ihipMemsetSync(dst, value, count, nullptr, ihipMemsetDataTypeShort));
 }
 
 hipError_t hipMemsetD16Async(hipDeviceptr_t dst, unsigned short value, size_t count, hipStream_t stream ){
     HIP_INIT_SPECIAL_API(hipMemsetD16Async, (TRACE_MCMD), dst, value, count, stream);
-    stream = ihipSyncAndResolveStream(stream);
     return ihipLogStatus(ihipMemsetAsync(dst, value, count, stream, ihipMemsetDataTypeShort));
 }
 
 hipError_t hipMemsetD32(hipDeviceptr_t dst, int value, size_t count) {
     HIP_INIT_SPECIAL_API(hipMemsetD32, (TRACE_MCMD), dst, value, count);
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-    return ihipLogStatus(ihipMemsetSync(dst, value, count, stream, ihipMemsetDataTypeInt));
+    return ihipLogStatus(ihipMemsetSync(dst, value, count, nullptr, ihipMemsetDataTypeInt));
 }
 
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent) {
     HIP_INIT_SPECIAL_API(hipMemset3D, (TRACE_MCMD), &pitchedDevPtr, value, &extent);
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
     size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
-    return ihipLogStatus(ihipMemsetSync(pitchedDevPtr.ptr, value, sizeBytes, stream, ihipMemsetDataTypeChar));
+    return ihipLogStatus(ihipMemsetSync(pitchedDevPtr.ptr, value, sizeBytes, nullptr, ihipMemsetDataTypeChar));
 }
 
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream ) {
     HIP_INIT_SPECIAL_API(hipMemset3DAsync, (TRACE_MCMD), &pitchedDevPtr, value, &extent);
-    stream =  ihipSyncAndResolveStream(stream);
     size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
     return ihipLogStatus(ihipMemsetAsync(pitchedDevPtr.ptr, value, sizeBytes, stream, ihipMemsetDataTypeChar));
 }
