@@ -983,7 +983,6 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bcusparsePointerMode_t\b/hipsparsePointerMode_t/g;
     $ft{'type'} += s/\bcusparseSolvePolicy_t\b/hipsparseSolvePolicy_t/g;
     $ft{'type'} += s/\bcusparseStatus_t\b/hipsparseStatus_t/g;
-    $ft{'type'} += s/\bwarpSize\b/hipWarpSize/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_DIAG_NON_UNIT\b/HIPBLAS_DIAG_NON_UNIT/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_DIAG_UNIT\b/HIPBLAS_DIAG_UNIT/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_FILL_MODE_FULL\b/HIPBLAS_FILL_MODE_FULL/g;

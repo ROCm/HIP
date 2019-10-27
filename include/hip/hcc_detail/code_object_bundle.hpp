@@ -86,7 +86,7 @@ struct Bundled_code {
         char cbuf[sizeof(offset) + sizeof(bundle_sz) + sizeof(triple_sz)];
     } header;
     std::string triple;
-    std::vector<char> blob;
+    std::string blob;
 };
 
 #define magic_string_  "__CLANG_OFFLOAD_BUNDLE__"

@@ -31,8 +31,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaChannelFormatDesc",                                            {"hipChannelFormatDesc",                                     "", CONV_TYPE, API_RUNTIME}},
   // no analogue
   {"cudaDeviceProp",                                                   {"hipDeviceProp_t",                                          "", CONV_TYPE, API_RUNTIME}},
-  // NOTE: int warpSize is a field of cudaDeviceProp
-  {"warpSize",                                                         {"hipWarpSize",                                              "", CONV_TYPE, API_RUNTIME}},
 
   // no analogue
   {"cudaEglFrame",                                                     {"hipEglFrame",                                              "", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
