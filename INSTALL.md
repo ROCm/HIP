@@ -5,7 +5,7 @@
 - [Installing pre-built packages](#installing-pre-built-packages)
   * [Prerequisites](#prerequisites)
   * [AMD-hcc](#amd-hcc)
-  * [AMD-clang](#amd-clang)
+  * [HIP-clang](#HIP-clang)
   * [NVIDIA-nvcc](#nvidia-nvcc)
   * [Verify your installation](#verify-your-installation)
 - [Building HIP from source](#building-hip-from-source)
