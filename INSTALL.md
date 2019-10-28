@@ -4,9 +4,9 @@
 
 - [Installing pre-built packages](#installing-pre-built-packages)
   * [Prerequisites](#prerequisites)
-  * [AMD-hcc](#amd-hcc)
-  * [AMD-clang](#amd-clang)
-  * [NVIDIA-nvcc](#nvidia-nvcc)
+  * [HIP-hcc](#hip-hcc)
+  * [HIP-clang](#hip-clang)
+  * [HIP-nvcc](#hip-nvcc)
   * [Verify your installation](#verify-your-installation)
 - [Building HIP from source](#building-hip-from-source)
   * [HCC Options](#hcc-options)
@@ -21,7 +21,7 @@ HIP can be easily installed using pre-built binary packages using the package ma
 ## Prerequisites
 HIP code can be developed either on AMD ROCm platform using hcc or clang compiler, or a CUDA platform with nvcc installed:
 
-## AMD-hcc
+## HIP-hcc
 
 * Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
 * Install the "hip_hcc" package. This will install HCC and the HIP porting layer.
@@ -65,7 +65,7 @@ apt-get install hip_hcc
    * Optionally, consider adding /opt/rocm/bin to your PATH to make it easier to use the tools.
    * Optionally, set HIPCC_VERBOSE=7 to output the command line for compilation to make sure clang is used instead of hcc.
 
-## NVIDIA-nvcc
+## HIP-nvcc
 * Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
 * Install the "hip_nvcc" package.  This will install CUDA SDK and the HIP porting layer.
 ```
