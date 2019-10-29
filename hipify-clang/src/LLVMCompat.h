@@ -85,6 +85,8 @@ std::error_code real_path(const Twine &path, SmallVectorImpl<char> &output,
 
 bool pragma_once_outside_header();
 
+bool canCompileHostAndDeviceInOneJob();
+
 void RetainExcludedConditionalBlocks(clang::CompilerInstance &CI);
 
 bool CheckCompatibility();
