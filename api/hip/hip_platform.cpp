@@ -615,21 +615,31 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 }
 }
 
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
+extern "C" {
+// FIXME: Need to replace `uint32_t` with `int` finally.
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks,
                                                         hipFunction_t f,
-                                                        int  blockSize,
+                                                        uint32_t  blockSize,
                                                         size_t dynamicSMemSize)
 {
-  HIP_RETURN(hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynamicSMemSize));
+  int NB;
+  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, f, blockSize, dynamicSMemSize);
+  *numBlocks = NB;
+  HIP_RETURN(Ret);
 }
 
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
+// FIXME: Need to replace `uint32_t` with `int` finally.
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(uint32_t* numBlocks,
                                                                  hipFunction_t f,
-                                                                 int  blockSize,
+                                                                 uint32_t  blockSize,
                                                                  size_t dynamicSMemSize,
                                                                  unsigned int flags)
 {
-  HIP_RETURN(hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynamicSMemSize));
+  int NB;
+  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, f, blockSize, dynamicSMemSize);
+  *numBlocks = NB;
+  HIP_RETURN(Ret);
+}
 }
 
 
