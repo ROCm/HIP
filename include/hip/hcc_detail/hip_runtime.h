@@ -244,6 +244,12 @@ struct Coordinates {
   static constexpr Y y{};
   static constexpr Z z{};
 };
+template<typename F>
+__device__ constexpr typename Coordinates<F>::X Coordinates<F>::x __attribute__((__visibility__("hidden")));
+template<typename F>
+__device__ constexpr typename Coordinates<F>::Y Coordinates<F>::y __attribute__((__visibility__("hidden")));
+template<typename F>
+__device__ constexpr typename Coordinates<F>::Z Coordinates<F>::z __attribute__((__visibility__("hidden")));
 
 inline
 __device__
