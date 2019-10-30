@@ -200,7 +200,7 @@ public:
                         std::function<void(hsa_code_object_reader_t*)>>;
     std::pair<
         std::mutex,
-        std::vector<std::pair<std::unique_ptr<char[]>, RAII_code_reader>>> code_readers;
+        std::vector<std::pair<std::string, RAII_code_reader>>> code_readers;
 
     program_state_impl() {
         // Create placeholder for each agent for the per-agent members.
@@ -390,22 +390,21 @@ public:
         };
 
         RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
-        // The lifetime of the buffer must exceed that of the associated
-        // code object reader. Create a copy of the file, which will be
-        // released at the same time the code object reader is destroyed.
-        std::unique_ptr<char[]> buffer(new char[file.size()]);
-        memcpy(buffer.get(), file.data(), file.size());
+
+        decltype(code_readers.second)::iterator it;
+        {
+          std::lock_guard<std::mutex> lck{code_readers.first};
+          it = code_readers.second.emplace(code_readers.second.end(),
+                                           move(file), move(tmp));
+        }
 
         hsa_code_object_reader_create_from_memory(
-            buffer.get(), file.size(), tmp.get());
+            it->first.data(), it->first.size(), it->second.get());
 
         hsa_executable_load_agent_code_object(
-            executable, agent, *tmp, nullptr, nullptr);
+            executable, agent, *it->second, nullptr, nullptr);
 
         hsa_executable_freeze(executable, nullptr);
-
-        std::lock_guard<std::mutex> lck{code_readers.first};
-        code_readers.second.emplace_back(move(buffer), move(tmp));
     }
 
 
@@ -481,7 +480,7 @@ public:
                                                            code_object_dynsym,
                                                            agent, executable);
 
-        load_code_object_and_freeze_executable(ts, agent, executable);
+        load_code_object_and_freeze_executable(move(ts), agent, executable);
 
         return executable;
     }
