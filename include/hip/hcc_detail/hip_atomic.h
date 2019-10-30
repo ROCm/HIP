@@ -96,9 +96,11 @@ float atomicAdd(float* address, float val)
     using GP = const __attribute__((address_space(0))) void*;
     using LP = __attribute__((address_space(3))) float*;
 
-    if (__builtin_amdgcn_is_shared((GP) address)) {
-        return __builtin_amdgcn_ds_faddf((LP) address, val, 0, 0, false);
-    }
+    #if defined(__HIP_DEVICE_COMPILE__)
+        if (__builtin_amdgcn_is_shared((GP) address)) {
+            return __builtin_amdgcn_ds_faddf((LP) address, val, 0, 0, false);
+        }
+    #endif
 
     return atomicAdd_impl(address, val);
 }
