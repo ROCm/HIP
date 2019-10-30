@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include <memory>
 #include <iostream>
 #include <iterator>
+#include <vector>
 
 static constexpr auto NUM_THREADS{128};
 static constexpr auto NUM_BLOCKS{32};
@@ -83,7 +84,7 @@ int main()
     size_t codeSize;
     hiprtcGetCodeSize(prog, &codeSize);
 
-    vector<char> code(codeSize);
+    std::vector<char> code(codeSize);
     hiprtcGetCode(prog, code.data());
 
     hiprtcDestroyProgram(&prog);
