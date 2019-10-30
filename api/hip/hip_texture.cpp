@@ -334,7 +334,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
 
   if (!image->create()) {
     delete image;
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorMemoryAllocation);
   }
 
   amd::Sampler* sampler = fillSamplerDescriptor(pTexDesc->addressMode[0], pTexDesc->filterMode, pTexDesc->normalizedCoords);
@@ -371,7 +371,7 @@ hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
     memcpy(pResDesc, &(texture->resDesc), sizeof(hipResourceDesc));
   }
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorInvalidValue);
 }
 
 hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc,
@@ -380,7 +380,7 @@ hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
@@ -389,7 +389,7 @@ hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t ihipBindTexture(cl_mem_object_type type,
@@ -416,7 +416,7 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
 
     if (!image->create()) {
       delete image;
-      return hipErrorUnknown;
+      return hipErrorMemoryAllocation;
     }
 
     *offset = 0;
@@ -456,7 +456,7 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
 
     return hipSuccess;
   }
-  return hipErrorUnknown;
+  return hipErrorInvalidValue;
 }
 
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
@@ -488,7 +488,7 @@ hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t ihipBindTextureImpl(TlsData* tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
@@ -532,7 +532,7 @@ hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipUnbindTexture(const textureReference* tex) {
@@ -570,7 +570,7 @@ hipError_t hipGetTextureReference(const textureReference** tex, const void* symb
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipTexRefSetFormat(textureReference* tex, hipArray_Format fmt, int NumPackedComponents) {
@@ -649,7 +649,7 @@ hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex) {
   }
 
   if (texture->resDesc.res.array.array == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   **array = *(texture->resDesc.res.array.array);

@@ -405,7 +405,7 @@ hipError_t hipDeviceSetCacheConfig ( hipFuncCache_t cacheConfig ) {
 }
 
 hipError_t hipDeviceSetLimit ( hipLimit_t limit, size_t value ) {
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config ) {
@@ -461,7 +461,7 @@ hipError_t hipGetDeviceCount ( int* count ) {
 }
 
 hipError_t hipGetDeviceFlags ( unsigned int* flags ) {
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipIpcGetEventHandle ( hipIpcEventHandle_t* handle, hipEvent_t event ) {
@@ -469,7 +469,7 @@ hipError_t hipIpcGetEventHandle ( hipIpcEventHandle_t* handle, hipEvent_t event 
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipIpcOpenEventHandle ( hipEvent_t* event, hipIpcEventHandle_t handle ) {
@@ -477,7 +477,7 @@ hipError_t hipIpcOpenEventHandle ( hipEvent_t* event, hipIpcEventHandle_t handle
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipSetDevice ( int  device ) {
@@ -512,7 +512,7 @@ hipError_t hipSetValidDevices ( int* device_arr, int  len ) {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* linktype, uint32_t* hopcount) {

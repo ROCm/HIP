@@ -480,7 +480,7 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   int deviceId = ihipGetDevice();
   hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
   if (func == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
 
   ihipExec_t exec;
@@ -512,7 +512,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
   int deviceId = ihipGetDevice();
   hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
   if (func == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
 
   HIP_RETURN(hipModuleLaunchKernel(func, gridDim.x, gridDim.y, gridDim.z,
@@ -524,7 +524,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
   size_t size = 0;
   if(!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), devPtr, &size)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidSymbol);
   }
   HIP_RETURN(hipSuccess);
 }
@@ -532,7 +532,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
 hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbolName) {
   hipDeviceptr_t devPtr = nullptr;
   if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &devPtr, sizePtr)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidSymbol);
   }
   HIP_RETURN(hipSuccess);
 }
@@ -549,11 +549,11 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
   dev_program = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
 
   if (dev_program == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
   /* Find the global Symbols */
   if(!dev_program->createGlobalVarObj(amd_mem_obj, dptr, bytes, name)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   HIP_RETURN(hipSuccess);
@@ -571,7 +571,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
   int deviceId = ihipGetDevice();
   hipFunction_t func = PlatformState::instance().getFunc(f, deviceId);
   if (func == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
 
   hip::Function* function = hip::Function::asFunction(func);

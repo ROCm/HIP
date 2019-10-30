@@ -92,5 +92,5 @@ hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
     HIP_RETURN(hipFree(reinterpret_cast<void*>(surfaceObject)));
   }
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorInvalidValue);
 }

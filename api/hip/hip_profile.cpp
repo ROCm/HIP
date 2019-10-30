@@ -29,7 +29,7 @@ hipError_t hipProfilerStart() {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 
@@ -38,5 +38,5 @@ hipError_t hipProfilerStop() {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }

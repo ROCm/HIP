@@ -268,7 +268,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorInvalidContext);
 }
 
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
@@ -276,7 +276,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion) {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
@@ -284,7 +284,7 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig) {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
@@ -292,7 +292,7 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig) {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
@@ -300,7 +300,7 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config) {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipCtxSynchronize(void) {
@@ -308,7 +308,7 @@ hipError_t hipCtxSynchronize(void) {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipCtxGetFlags(unsigned int* flags) {
@@ -316,7 +316,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags) {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int* active) {

@@ -589,12 +589,12 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
   /* Get address and size for the global symbol */
   if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
                                               &sym_size)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   /* Size Check to make sure offset is correct */
   if ((offset + count) != sym_size) {
-    return HIP_RETURN(hipErrorUnknown);
+    return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -613,12 +613,12 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count,
   /* Get address and size for the global symbol */
   if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
                                               &sym_size)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   /* Size Check to make sure offset is correct */
   if ((offset + count) != sym_size) {
-    return HIP_RETURN(hipErrorUnknown);
+    return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -637,12 +637,12 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
   /* Get address and size for the global symbol */
   if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
                                               &sym_size)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   /* Size Check to make sure offset is correct */
   if ((offset + count) != sym_size) {
-    return HIP_RETURN(hipErrorUnknown);
+    return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -661,12 +661,12 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
   /* Get address and size for the global symbol */
   if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
                                               &sym_size)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   /* Size Check to make sure offset is correct */
   if ((offset + count) != sym_size) {
-    return HIP_RETURN(hipErrorUnknown);
+    return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -856,7 +856,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
   HIP_INIT_API(hipMemcpy2DToArray, dst, wOffset, hOffset, src, spitch, width, height, kind);
 
   if (dst->data == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   hip::syncStreams();
@@ -883,7 +883,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
   }
 
   if ((wOffset + width > (dpitch)) || width > spitch) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   // Create buffer rectangle info structure

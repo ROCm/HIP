@@ -222,7 +222,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
@@ -230,5 +230,5 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 
   assert(0 && "Unimplemented");
 
-  HIP_RETURN(hipErrorUnknown);
+  HIP_RETURN(hipErrorNotSupported);
 }
