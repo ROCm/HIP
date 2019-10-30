@@ -89,13 +89,13 @@ hipError_t hipModuleUnload(hipModule_t hmod)
   HIP_INIT_API(hipModuleUnload, hmod);
 
   if (hmod == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
 
   if(!ihipModuleUnregisterGlobal(hmod)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   program->release();
@@ -183,21 +183,21 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
   program->setVarInfoCallBack(&getSvarInfo);
 
   if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, ElfSize(image))) {
-      return hipErrorUnknown;
+    return hipErrorInvalidKernelFile;
   }
 
-      *module = reinterpret_cast<hipModule_t>(as_cl(program));
+  *module = reinterpret_cast<hipModule_t>(as_cl(program));
 
   if (!ihipModuleRegisterGlobal(program, module)) {
-      return hipErrorUnknown;
+    return hipErrorSharedObjectSymbolNotFound;
   }
 
   if (!ihipModuleRegisterUndefined(program, module)) {
-    return hipErrorUnknown;
+    return hipErrorSharedObjectSymbolNotFound;
   }
 
   if(CL_SUCCESS != program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr)) {
-    return hipErrorUnknown;
+    return hipErrorSharedObjectInitFailed;
   }
 
   return hipSuccess;
@@ -232,7 +232,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
   /* Get address and size for the global symbol */
   if (!PlatformState::instance().getGlobalVar(name, ihipGetDevice(), dptr,
                                               bytes)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorNotFound);
   }
 
   HIP_RETURN(hipSuccess);
@@ -243,7 +243,7 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
   HIP_INIT_API(hipFuncGetAttributes, attr, func);
 
   if (!PlatformState::instance().getFuncAttr(func, attr)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
 
   HIP_RETURN(hipSuccess);
@@ -425,7 +425,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f,
   int deviceId = ihipGetDevice();
   hipFunction_t func = PlatformState::instance().getFunc(f, deviceId);
   if (func == nullptr) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
 
   HIP_RETURN(ihipModuleLaunchKernel(func, gridDim.x * blockDim.x, gridDim.y * blockDim.y, gridDim.z * blockDim.z,
@@ -469,6 +469,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
       }
     }
     if (func == nullptr) {
+      result = hipErrorInvalidDeviceFunction;
       HIP_RETURN(result);
     }
 
@@ -515,7 +516,7 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
    /* Get address and size for the global symbol */
   if (!PlatformState::instance().getTexRef(name, texRef)) {
-    HIP_RETURN(hipErrorUnknown);
+    HIP_RETURN(hipErrorNotFound);
   }
 
   HIP_RETURN(hipSuccess);

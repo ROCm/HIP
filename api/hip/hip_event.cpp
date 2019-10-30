@@ -110,7 +110,7 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
   }
 
   if (!event_->notifyCmdQueue()) {
-    return hipErrorUnknown;
+    return hipErrorLaunchOutOfResources;
   }
   amd::Command::EventWaitList eventWaitList;
   eventWaitList.push_back(event_);
