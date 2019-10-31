@@ -1750,8 +1750,8 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
         // that the following HSA call can complete before any other ops.
         // Flush the stream while locked. Once the stream is empty, we can safely perform
         // the out-of-band HSA call. Lastly, the stream will unlock via RAII.
-	if (!stream) stream = ihipSyncAndResolveStream(stream);
-	if (!stream) return hipErrorInvalidValue;
+	    if (!stream) stream = ihipSyncAndResolveStream(stream);
+	    if (!stream) return hipErrorInvalidValue;
 
         LockedAccessor_StreamCrit_t crit(stream->criticalData());
         crit->_av.wait(stream->waitMode());
@@ -2057,7 +2057,6 @@ hipError_t hipMemsetD8(hipDeviceptr_t dst, unsigned char value, size_t count) {
 
 hipError_t hipMemsetD8Async(hipDeviceptr_t dst, unsigned char value, size_t count , hipStream_t stream ) {
     HIP_INIT_SPECIAL_API(hipMemsetD8Async, (TRACE_MCMD), dst, value, count, stream);
-    stream = ihipSyncAndResolveStream(stream);
     return ihipLogStatus(ihipMemsetAsync(dst, value, count, stream, ihipMemsetDataTypeChar));
 }
 
