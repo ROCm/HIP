@@ -173,8 +173,13 @@ int main() {
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
         // test if CUDA_VISIBLE_DEVICES will be accepted by the runtime
-        _putenv("HIP_VISIBLE_DEVICES=");
-        _putenv("CUDA_VISIBLE_DEVICES=");
+        if (PLATFORM_NAME == "windows"){
+            _putenv("HIP_VISIBLE_DEVICES=");
+            _putenv("CUDA_VISIBLE_DEVICES=");
+        } else {
+            unsetenv("HIP_VISIBLE_DEVICES");
+            unsetenv("CUDA_VISIBLE_DEVICES");
+        }
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
     }
