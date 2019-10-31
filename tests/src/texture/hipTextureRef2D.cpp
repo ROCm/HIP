@@ -90,6 +90,7 @@ int runTest(int argc, char** argv) {
             }
         }
     }
+    HIPCHECK(hipUnbindTexture(tex));
     hipFree(dData);
     hipFreeArray(hipArray);
     return testResult;
