@@ -412,7 +412,7 @@ hipError_t allocImage(TlsData* tls,hsa_ext_image_geometry_t geometry, int width,
       imageDescriptor.width = width;
       imageDescriptor.height = height;
       imageDescriptor.depth = depth;
-      imageDescriptor.array_size = 0;
+      imageDescriptor.array_size = array_size;
       imageDescriptor.format.channel_order = channelOrder;
       imageDescriptor.format.channel_type = channelType;
 
@@ -503,14 +503,14 @@ extern void getChannelOrderAndType(const hipChannelFormatDesc& desc,
                                    hsa_ext_image_channel_order_t* channelOrder,
                                    hsa_ext_image_channel_type_t* channelType);
 
-hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height, int depth, hipChannelFormatDesc desc, hsa_ext_image_data_info_t &imageInfo)
+hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height, int depth, hipChannelFormatDesc desc, hsa_ext_image_data_info_t &imageInfo,int array_size __dparm(0))
 {
     hsa_ext_image_descriptor_t imageDescriptor;
     imageDescriptor.geometry = geometry;
     imageDescriptor.width = width;
     imageDescriptor.height = height;
     imageDescriptor.depth = depth;
-    imageDescriptor.array_size = 0;
+    imageDescriptor.array_size = array_size;
     hsa_ext_image_channel_order_t channelOrder;
     hsa_ext_image_channel_type_t channelType;
     getChannelOrderAndType(desc, hipReadModeElementType, &channelOrder, &channelType);
@@ -650,7 +650,6 @@ hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAll
     array[0]->Format = pAllocateArray->Format;
     array[0]->NumChannels = pAllocateArray->NumChannels;
     array[0]->isDrv = true;
-    array[0]->textureType = hipTextureType3D;
     void** ptr = &array[0]->data;
 
     hsa_ext_image_channel_order_t channelOrder;
@@ -669,6 +668,7 @@ hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAll
        case hipArrayLayered:
           hip_status = allocImage(tls,HSA_EXT_IMAGE_GEOMETRY_2DA,pAllocateArray->Width,pAllocateArray->Height,0,
                                   channelOrder,channelType,ptr,imageInfo,pAllocateArray->Depth);
+          array[0]->textureType = hipTextureType2DLayered;
           break;
        case hipArraySurfaceLoadStore:
        case hipArrayTextureGather:
@@ -679,6 +679,7 @@ hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAll
        default:
           hip_status = allocImage(tls,HSA_EXT_IMAGE_GEOMETRY_3D,pAllocateArray->Width,pAllocateArray->Height,
                                   pAllocateArray->Depth,channelOrder,channelType,ptr,imageInfo);
+          array[0]->textureType = hipTextureType3D;
           break;
     }
 
@@ -702,7 +703,6 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
     array[0]->depth = extent.depth;
     array[0]->desc = *desc;
     array[0]->isDrv = false;
-    array[0]->textureType = hipTextureType3D;
     void** ptr = &array[0]->data;
     hsa_ext_image_channel_order_t channelOrder;
     hsa_ext_image_channel_type_t channelType;
@@ -711,6 +711,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
     switch (flags) {
        case hipArrayLayered:
           hip_status = allocImage(tls,HSA_EXT_IMAGE_GEOMETRY_2DA,extent.width,extent.height,0,channelOrder,channelType,ptr,imageInfo,extent.depth);
+          array[0]->textureType = hipTextureType2DLayered;
           break;
        case hipArraySurfaceLoadStore:
        case hipArrayTextureGather:
@@ -720,6 +721,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
        case hipArrayCubemap:
        default:
           hip_status = allocImage(tls,HSA_EXT_IMAGE_GEOMETRY_3D,extent.width,extent.height,extent.depth,channelOrder,channelType,ptr,imageInfo);
+          array[0]->textureType = hipTextureType3D;
           break;
     }
     return ihipLogStatus(hip_status);
@@ -1250,7 +1252,11 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                 dstPtr = p->dstArray->data;
             }
             hsa_ext_image_data_info_t imageInfo;
-            GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, desc, imageInfo);
+            if(hipTextureType2DLayered == p->dstArray->textureType)
+                GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, desc, imageInfo, depth);
+            else
+                GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, desc, imageInfo);
+
             dstPitch = imageInfo.size/(height == 0 ? 1:height)/(depth == 0 ? 1:depth);
 
         } else {
