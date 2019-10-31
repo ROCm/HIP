@@ -44,8 +44,137 @@ THE SOFTWARE.
         __attribute__((vector_size(__ROUND_UP_TO_NEXT_POT__(n) * sizeof(T))))
 #endif
 
-#if defined(__cplusplus)
+#if defined(__cplusplus) && defined(__clang__)
     #include <type_traits>
+
+    namespace hip_impl {
+        template<typename T, typename Vector, unsigned int idx>
+        struct Scalar_accessor {
+            struct Address {
+                const Scalar_accessor* p;
+
+                __host__ __device__
+                operator const T*() const noexcept {
+                    return &reinterpret_cast<const T*>(p)[idx];
+                }
+                __host__ __device__
+                operator T*() noexcept {
+                    return &reinterpret_cast<T*>(
+                        const_cast<Scalar_accessor*>(p))[idx];
+                }
+            };
+
+            // Idea from https://t0rakka.silvrback.com/simd-scalar-accessor
+            Vector data;
+
+            __host__ __device__
+            operator T() const noexcept { return data[idx]; }
+
+            __host__ __device__
+            Address operator&() const noexcept { return Address{this}; }
+
+            __host__ __device__
+            Scalar_accessor& operator=(T x) noexcept {
+                data[idx] = x;
+
+                return *this;
+            }
+
+            __host__ __device__
+            Scalar_accessor& operator++() noexcept {
+                ++data[idx];
+                return *this;
+            }
+            __host__ __device__
+            T operator++(int) noexcept {
+                auto r{data[idx]};
+                ++data[idx];
+                return *this;
+            }
+            __host__ __device__
+            Scalar_accessor& operator--() noexcept {
+                --data[idx];
+                return *this;
+            }
+            __host__ __device__
+            T operator--(int) noexcept {
+                auto r{data[idx]};
+                --data[idx];
+                return *this;
+            }
+
+            __host__ __device__
+            Scalar_accessor& operator+=(T x) noexcept {
+                data[idx] += x;
+                return *this;
+            }
+            __host__ __device__
+            Scalar_accessor& operator-=(T x) noexcept {
+                data[idx] -= x;
+                return *this;
+            }
+
+            __host__ __device__
+            Scalar_accessor& operator*=(T x) noexcept {
+                data[idx] *= x;
+                return *this;
+            }
+            __host__ __device__
+            Scalar_accessor& operator/=(T x) noexcept {
+                data[idx] /= x;
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Scalar_accessor& operator%=(T x) noexcept {
+                data[idx] %= x;
+                return *this;
+            }
+
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Scalar_accessor& operator>>=(T x) noexcept {
+                data[idx] >>= x;
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Scalar_accessor& operator<<=(T x) noexcept {
+                data[idx] <<= x;
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Scalar_accessor& operator&=(T x) noexcept {
+                data[idx] &= x;
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Scalar_accessor& operator|=(T x) noexcept {
+                data[idx] |= x;
+                return *this;
+            }
+            template<
+                typename U = T,
+                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+            __host__ __device__
+            Scalar_accessor& operator^=(T x) noexcept {
+                data[idx] ^= x;
+                return *this;
+            }
+        };
+    } // Namespace hip_impl.
 
     template<typename T, unsigned int n> struct HIP_vector_base;
 
@@ -55,9 +184,7 @@ THE SOFTWARE.
 
         union {
             Native_vec_ data;
-            struct {
-                T x;
-            };
+            hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
         };
     };
 
@@ -67,10 +194,8 @@ THE SOFTWARE.
 
         union {
             Native_vec_ data;
-            struct {
-                T x;
-                T y;
-            };
+            hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
+            hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
         };
     };
 
@@ -238,12 +363,10 @@ THE SOFTWARE.
 
         union {
             Native_vec_ data;
-            struct {
-                T x;
-                T y;
-                T z;
-                T w;
-            };
+            hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
+            hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
+            hip_impl::Scalar_accessor<T, Native_vec_, 2> z;
+            hip_impl::Scalar_accessor<T, Native_vec_, 3> w;
         };
     };
 

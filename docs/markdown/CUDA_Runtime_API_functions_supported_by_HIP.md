@@ -160,8 +160,8 @@
 | `cudaMemcpy2D`                                            | `hipMemcpy2D`                 |
 | `cudaMemcpy2DArrayToArray`                                |                               |
 | `cudaMemcpy2DAsync`                                       | `hipMemcpy2DAsync`            |
-| `cudaMemcpy2DFromArray`                                   |                               |
-| `cudaMemcpy2DFromArrayAsync`                              |                               |
+| `cudaMemcpy2DFromArray`                                   | `hipMemcpy2DFromArray`        |
+| `cudaMemcpy2DFromArrayAsync`                              | `hipMemcpy2DFromArrayAsync`   |
 | `cudaMemcpy2DToArray`                                     | `hipMemcpy2DToArray`          |
 | `cudaMemcpy2DToArrayAsync`                                |                               |
 | `cudaMemcpy3D`                                            | `hipMemcpy3D`                 |

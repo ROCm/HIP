@@ -634,16 +634,15 @@ hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
     return ihipLogStatus(hip_status);
 }
 
-hipError_t ihipUnbindTextureImpl(TlsData *tls, const hipTextureObject_t& textureObject) {
+hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
     hipError_t hip_status = hipSuccess;
-
+    TlsData* tls=tls_get_ptr();
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
         auto device = ctx->getWriteableDevice();
 
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
-
         hipTexture* pTexture = textureHash[textureObject];
         if (pTexture != nullptr) {
             hsa_ext_image_destroy(*agent, pTexture->image);
@@ -659,7 +658,7 @@ hipError_t ihipUnbindTextureImpl(TlsData *tls, const hipTextureObject_t& texture
 hipError_t hipUnbindTexture(const textureReference* tex) {
     HIP_INIT_API(hipUnbindTexture, tex);
     hipError_t hip_status = hipSuccess;
-    hip_status = ihipUnbindTextureImpl(tls, tex->textureObject);
+    hip_status = ihipUnbindTextureImpl(tex->textureObject);
     return ihipLogStatus(hip_status);
 }
 
