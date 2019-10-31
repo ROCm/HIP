@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 -> Present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -20,24 +20,20 @@ THE SOFTWARE.
 #include"hip/hip_runtime.h"
 
 extern "C" __global__ void matmulK(int* A, int* B, int* C, int N) {
-
     int ROW = blockIdx.y*blockDim.y+threadIdx.y;
     int COL = blockIdx.x*blockDim.x+threadIdx.x;
     int tmpSum = 0;
-
-        if (ROW < N && COL < N) {
-   // each thread computes one element of the block sub-matrix
-         for (int i = 0; i < N; i++) {
-             tmpSum += A[ROW * N + i] * B[i * N + COL];
-                           }
-         }
-        C[ROW * N + COL] =tmpSum;
+    if (ROW < N && COL < N) {
+        // each thread computes one element of the block sub-matrix
+        for (int i = 0; i < N; i++) {
+            tmpSum += A[ROW * N + i] * B[i * N + COL];
+        }
+    }
+    C[ROW * N + COL] =tmpSum;
 }
 
 extern "C" __global__ void WaitKernel() {
-
 	unsigned long long int wait_t=32000000000,start=clock64(),cur;
-        do{cur=clock64()-start;}
-        while(cur<wait_t);
+    do{cur=clock64()-start;}
+    while(cur<wait_t);
 }
-
