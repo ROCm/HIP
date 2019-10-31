@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 -> Present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -36,96 +36,97 @@ using namespace std::chrono;
 
 int main()
 {
-	
-int N=16384;
-int SIZE=N*N;
+    int N=16384;
+    int SIZE=N*N;
 
-int *A=new int[N*N*sizeof(int)];
-int *B=new int[N*N*sizeof(int)];
-int *C;
+    int *A=new int[N*N*sizeof(int)];
+    int *B=new int[N*N*sizeof(int)];
+    int *C;
 
-hipDeviceptr_t *Ad,*Bd;
+    hipDeviceptr_t *Ad,*Bd;
 
-for(int i=0;i<N;i++)
-for(int j=0;j<N;j++) {
-    A[i*N +j]=1;
-    B[i*N +j]=1; }
+    for(int i=0;i<N;i++)
+    for(int j=0;j<N;j++) {
+        A[i*N +j]=1;
+        B[i*N +j]=1; 
+    }
 
-hipStream_t stream1,stream2;
-HIPCHECK(hipStreamCreate(&stream1));
+    hipStream_t stream1,stream2;
+    HIPCHECK(hipStreamCreate(&stream1));
+    HIPCHECK(hipMalloc((void**)&Ad, SIZE*sizeof(int)));
+    HIPCHECK(hipMalloc((void**)&Bd, SIZE*sizeof(int)));
+    HIPCHECK(hipHostMalloc((void**)&C, SIZE*sizeof(int)));
+    HIPCHECK(hipMemcpy(Ad,A,SIZE*sizeof(int),hipMemcpyHostToDevice));
+    HIPCHECK(hipMemcpy(Bd,B,SIZE*sizeof(int),hipMemcpyHostToDevice));
 
-HIPCHECK(hipMalloc((void**)&Ad, SIZE*sizeof(int)));
-HIPCHECK(hipMalloc((void**)&Bd, SIZE*sizeof(int)));
-HIPCHECK(hipHostMalloc((void**)&C, SIZE*sizeof(int)));
+    hipModule_t Module;
+    hipFunction_t Function1,Function2;
+    HIPCHECK(hipModuleLoad(&Module, fileName));
+    HIPCHECK(hipModuleGetFunction(&Function1, Module, kernel_name1))
+    HIPCHECK(hipModuleGetFunction(&Function2, Module, kernel_name2))
 
-HIPCHECK(hipMemcpy(Ad,A,SIZE*sizeof(int),hipMemcpyHostToDevice));
-HIPCHECK(hipMemcpy(Bd,B,SIZE*sizeof(int),hipMemcpyHostToDevice));
-
-hipModule_t Module;
-hipFunction_t Function1,Function2;
-HIPCHECK(hipModuleLoad(&Module, fileName));
-HIPCHECK(hipModuleGetFunction(&Function1, Module, kernel_name1))
-HIPCHECK(hipModuleGetFunction(&Function2, Module, kernel_name2))
-
-struct {
-    void* _Ad;
-    void* _Bd;
-    void* _Cd;
-    int _n;
+    struct {
+        void* _Ad;
+        void* _Bd;
+        void* _Cd;
+        int _n;
     } args1,args2;
 
-args1._Ad = Ad;
-args1._Bd = Bd;
-args1._Cd = C;
-args1._n  = N;
+    args1._Ad = Ad;
+    args1._Bd = Bd;
+    args1._Cd = C;
+    args1._n  = N;
 
-args2._Ad = NULL;
-args2._Bd = NULL;
-args2._Cd = NULL;
-args2._n  = 0; 
+    args2._Ad = NULL;
+    args2._Bd = NULL;
+    args2._Cd = NULL;
+    args2._n  = 0; 
 
-size_t size1=sizeof(args1);
-size_t size2=sizeof(args2);
-void* config1[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args1, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size1,HIP_LAUNCH_PARAM_END};
-void* config2[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args2, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size2,HIP_LAUNCH_PARAM_END};
+    size_t size1=sizeof(args1);
+    size_t size2=sizeof(args2);
+    void* config1[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args1, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size1,HIP_LAUNCH_PARAM_END};
+    void* config2[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args2, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size2,HIP_LAUNCH_PARAM_END};
 
-auto start=high_resolution_clock::now();
-HIPCHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,0 ));
-HIPCHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,0 ));
-HIPCHECK(hipStreamSynchronize(stream1));
+    auto start=high_resolution_clock::now();
+    HIPCHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,0 ));
+    HIPCHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,0 ));
+    HIPCHECK(hipStreamSynchronize(stream1));
 
-auto stop=high_resolution_clock::now();
-auto duration1=duration_cast<microseconds>(stop-start);
+    auto stop=high_resolution_clock::now();
+    auto duration1=duration_cast<microseconds>(stop-start);
 
-start=high_resolution_clock::now();
-HIPCHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,1 ));
-HIPCHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,1 ));
-HIPCHECK(hipStreamSynchronize(stream1));
+    start=high_resolution_clock::now();
+    HIPCHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,1 ));
+    HIPCHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,1 ));
+    HIPCHECK(hipStreamSynchronize(stream1));
 
-stop=high_resolution_clock::now();
-auto duration2=duration_cast<microseconds>(stop-start);
+    stop=high_resolution_clock::now();
+    auto duration2=duration_cast<microseconds>(stop-start);
 
-bool TEST_STATUS = true;
+    bool testStatus = true;
 
-if(! (duration2.count() < duration1.count())) {
-    std::cout<<"Test failed as there was no time gain observed when two kernels were launched using hipExtModuleLaunchKernel() with flag 1."<<std::endl;
-    TEST_STATUS=false; }
+    if(! (duration2.count() < duration1.count())) {
+        std::cout<<"Test failed as there was no time gain observed when two kernels were launched using hipExtModuleLaunchKernel() with flag 1."<<std::endl;
+        testStatus = false; 
+    }
 
-unsigned long int mismatch=0;
-for(int i=0;i<N;i++) {
-for(int j=0;j<N;j++) {
-    if(C[i*N + j] != N)
-    mismatch++;
-    }}
-if(! (mismatch == 0)) {
-    std::cout<<"Test failed as the result of matrix multiplication was found incorrect."<<std::endl;
-    TEST_STATUS=false; }
+    unsigned long int mismatch=0;
+    for(int i=0;i<N;i++) {
+        for(int j=0;j<N;j++) {
+            if(C[i*N + j] != N)
+                mismatch++;
+        }
+    }
+    if(mismatch) {
+        std::cout<<"Test failed as the result of matrix multiplication was found incorrect."<<std::endl;
+        testStatus = false; 
+    }
 
-delete[] A;
-delete[] B; 
-HIPCHECK(hipFree(Ad));
-HIPCHECK(hipFree(Bd));
-HIPCHECK(hipHostFree(C));
-if(TEST_STATUS == true)
-passed();
+    delete[] A;
+    delete[] B; 
+    HIPCHECK(hipFree(Ad));
+    HIPCHECK(hipFree(Bd));
+    HIPCHECK(hipHostFree(C));
+    if(testStatus)
+        passed();
 }
