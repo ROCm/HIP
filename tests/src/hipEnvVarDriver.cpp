@@ -45,25 +45,26 @@ using namespace std;
 int getDeviceNumber() {
     FILE* directed_in;
     FILE* in;
-    string directed_test_dir;
+    string directed_dir;
     string dir;
     char buff[512];
 
     if (PLATFORM_NAME == "windows"){
-        directed_test_dir = "directed_tests\\hipEnvVar -c";
+        directed_dir = "directed_tests\\hipEnvVar -c";
         dir = "hipEnvVar -c";
     } else {
-        directed_test_dir = "./directed_tests/hipEnvVar -c";
+        directed_dir = "./directed_tests/hipEnvVar -c";
         dir = "./hipEnvVar -c";
     }
     
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    directed_in = popen(directed_test_dir.c_str(), "r");
+    directed_in = popen(directed_dir.c_str(), "r");
     if(fgets(buff, 512, directed_in) != NULL){
         cout << buff;
         pclose(directed_in);
         return atoi(buff);
     }
+    //Check at same level
     in = popen(dir.c_str(), "r");
     if(fgets(buff, 512, in) != NULL){
         cout << buff;
@@ -81,28 +82,26 @@ void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
     FILE* directed_in;
     FILE* in;
     
-    string directed_test_dir;
+    string directed_dir;
     string dir;
     if (PLATFORM_NAME == "windows"){
-        directed_test_dir = "directed_tests\\hipEnvVar -d";
-        dir = "hipEnvVar.exe -d";
+        directed_dir = "directed_tests\\hipEnvVar -d ";
+        dir = "hipEnvVar.exe -d ";
     } else {
-        directed_test_dir = "./directed_tests/hipEnvVar -d";
-        dir = "./hipEnvVar -d";
+        directed_dir = "./directed_tests/hipEnvVar -d ";
+        dir = "./hipEnvVar -d ";
     }
-    //string str = "./directed_tests/hipEnvVar -d ";
-    //str += std::to_string(deviceID);
-    
-    dir += std::to_string(deviceID);
+
+    directed_dir += std::to_string(deviceID);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     
-    //Apparently popen on windows does not return NULL on invalid command, nor does it set errno.
-    directed_in = popen(directed_test_dir.c_str(), "r");
+    directed_in = popen(directed_dir.c_str(), "r");
     if(fgets(pciBusID, 100, directed_in) != NULL){
         cout << pciBusID;
         pclose(directed_in);
         return;
     }
+    //Check at same level
     in = popen(dir.c_str(), "r");
     if(fgets(pciBusID, 100, in) != NULL){
         cout << pciBusID;
@@ -124,22 +123,13 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 }
 
 int main() {
-    //unsetenv("HIP_VISIBLE_DEVICES");
-    //unsetenv("CUDA_VISIBLE_DEVICES");
-
-    _putenv("HIP_VISIBLE_DEVICES=");
-    _putenv("CUDA_VISIBLE_DEVICES=");
-    
-    /* Test for if the Environmental var is set.
-    char* buffer;
-    _dupenv_s(&buffer, NULL, "HIP_VISIBLE_DEVICES"); //Gets the environmental var
-    if(buffer){
-        printf("This environmental var is set");
-        return 0;
+    if (PLATFORM_NAME == "windows"){
+        _putenv("HIP_VISIBLE_DEVICES=");
+        _putenv("CUDA_VISIBLE_DEVICES=");
     } else {
-        printf("This environemntal var is NOT set");
-        return 0;
-	}*/
+        unsetenv("HIP_VISIBLE_DEVICES");
+        unsetenv("CUDA_VISIBLE_DEVICES");
+    }
 
     std::vector<std::string> devPCINum;
     char pciBusID[100];
