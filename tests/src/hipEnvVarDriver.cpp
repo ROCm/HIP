@@ -20,6 +20,13 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
  * TEST: %t
  * HIT_END
  */
+#ifdef _WIN32
+    #define PLATFORM_NAME "windows"
+#elif __linux__
+    #define PLATFORM_NAME "linux"
+#else
+    #define PLATFORM_NAME "NULL"
+#endif
 
 #include <iostream>
 #include <vector>
@@ -32,43 +39,79 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <thread>
 #include "test_common.h"
 
+
 using namespace std;
 
 int getDeviceNumber() {
+    FILE* directed_in;
     FILE* in;
+    string directed_test_dir;
+    string dir;
     char buff[512];
-    string str;
+
+    if (PLATFORM_NAME == "windows"){
+        directed_test_dir = "directed_tests\\hipEnvVar -c";
+        dir = "hipEnvVar -c";
+    } else {
+        directed_test_dir = "./directed_tests/hipEnvVar -c";
+        dir = "./hipEnvVar -c";
+    }
+    
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    if (!(in = popen("./directed_tests/hipEnvVar -c", "r"))) {
-        // Check at same level
-        if (!(in = popen("./hipEnvVar -c", "r"))) {
-            return 1;
-        }
-    }
-    while (fgets(buff, 512, in) != NULL) {
+    directed_in = popen(directed_test_dir.c_str(), "r");
+    if(fgets(buff, 512, directed_in) != NULL){
         cout << buff;
+        pclose(directed_in);
+        return atoi(buff);
     }
+    in = popen(dir.c_str(), "r");
+    if(fgets(buff, 512, in) != NULL){
+        cout << buff;
+        pclose(in);
+        return atoi(buff);
+    }
+    
+    pclose(directed_in);
     pclose(in);
-    return atoi(buff);
+    return 1;
 }
 
 // Query the current device ID remotely to hipEnvVar
 void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
+    FILE* directed_in;
     FILE* in;
-    string str = "./directed_tests/hipEnvVar -d ";
-    str += std::to_string(deviceID);
+    
+    string directed_test_dir;
+    string dir;
+    if (PLATFORM_NAME == "windows"){
+        directed_test_dir = "directed_tests\\hipEnvVar -d";
+        dir = "hipEnvVar.exe -d";
+    } else {
+        directed_test_dir = "./directed_tests/hipEnvVar -d";
+        dir = "./hipEnvVar -d";
+    }
+    //string str = "./directed_tests/hipEnvVar -d ";
+    //str += std::to_string(deviceID);
+    
+    dir += std::to_string(deviceID);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    if (!(in = popen(str.c_str(), "r"))) {
-        // Check at same level
-        if (!(in = popen("./hipEnvVar -d ", "r"))) {
-            exit(1);
-        }
-
-    }
-    while (fgets(pciBusID, 100, in) != NULL) {
+    
+    //Apparently popen on windows does not return NULL on invalid command, nor does it set errno.
+    directed_in = popen(directed_test_dir.c_str(), "r");
+    if(fgets(pciBusID, 100, directed_in) != NULL){
         cout << pciBusID;
+        pclose(directed_in);
+        return;
     }
+    in = popen(dir.c_str(), "r");
+    if(fgets(pciBusID, 100, in) != NULL){
+        cout << pciBusID;
+        pclose(in);
+        return;
+    }
+    pclose(directed_in);
     pclose(in);
+    return;
 }
 
 // Query the current device ID locally on AMD path
@@ -81,12 +124,26 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 }
 
 int main() {
-    unsetenv("HIP_VISIBLE_DEVICES");
-    unsetenv("CUDA_VISIBLE_DEVICES");
+    //unsetenv("HIP_VISIBLE_DEVICES");
+    //unsetenv("CUDA_VISIBLE_DEVICES");
+
+    _putenv("HIP_VISIBLE_DEVICES=");
+    _putenv("CUDA_VISIBLE_DEVICES=");
+    
+    /* Test for if the Environmental var is set.
+    char* buffer;
+    _dupenv_s(&buffer, NULL, "HIP_VISIBLE_DEVICES"); //Gets the environmental var
+    if(buffer){
+        printf("This environmental var is set");
+        return 0;
+    } else {
+        printf("This environemntal var is NOT set");
+        return 0;
+	}*/
 
     std::vector<std::string> devPCINum;
     char pciBusID[100];
-    // collect the device pci bus ID for all devices
+    // collect the device pci bus ID for all device
     int totalDeviceNum = getDeviceNumber();
     std::cout << "The total number of available devices is " << totalDeviceNum << std::endl
               << "Valid index range is 0 - " << totalDeviceNum - 1 << std::endl;
@@ -126,8 +183,8 @@ int main() {
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
         // test if CUDA_VISIBLE_DEVICES will be accepted by the runtime
-        unsetenv("HIP_VISIBLE_DEVICES");
-        unsetenv("CUDA_VISIBLE_DEVICES");
+        _putenv("HIP_VISIBLE_DEVICES=");
+        _putenv("CUDA_VISIBLE_DEVICES=");
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
     }
