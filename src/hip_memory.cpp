@@ -1899,7 +1899,7 @@ hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream) 
 }
 
 hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind ){
-    HIP_INIT_SPECIAL_API(hipMemcpyParam2D, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpy2DFromArray, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind);
     size_t byteSize;
     if(src) {
         switch (src->desc.f) {
@@ -1926,7 +1926,7 @@ hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src,
 }
 
 hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream ){
-    HIP_INIT_SPECIAL_API(hipMemcpyParam2D, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpy2DFromArrayAsync, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind);
     size_t byteSize;
     if(src) {
         switch (src->desc.f) {
