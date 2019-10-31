@@ -118,6 +118,7 @@ const char *apiNames[NUM_API_TYPES] = {
   "cuDNN API",
   "cuFFT API",
   "cuSPARSE API",
+  "CUB API",
   "CAFFE2 API"
 };
 
