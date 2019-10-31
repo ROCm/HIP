@@ -1926,7 +1926,7 @@ hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src,
 }
 
 hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream ){
-    HIP_INIT_SPECIAL_API(hipMemcpy2DFromArrayAsync, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind);
+    HIP_INIT_SPECIAL_API(hipMemcpy2DFromArrayAsync, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind, stream);
     size_t byteSize;
     if(src) {
         switch (src->desc.f) {
