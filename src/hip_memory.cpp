@@ -532,7 +532,7 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height,
     return hipSuccess;
 }
 
-hipError_t hipArrayToImageFormat(hipArray_Format format,hsa_ext_image_channel_type_t &channelType) {
+hipError_t ihipArrayToImageFormat(hipArray_Format format,hsa_ext_image_channel_type_t &channelType) {
    switch (format) {
        case HIP_AD_FORMAT_UNSIGNED_INT8:
           channelType = HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT8;
@@ -581,7 +581,7 @@ hipError_t hipArrayCreate(hipArray** array, const HIP_ARRAY_DESCRIPTOR* pAllocat
         hsa_ext_image_channel_type_t channelType;
         hsa_ext_image_channel_order_t channelOrder;
 
-        hip_status = hipArrayToImageFormat(pAllocateArray->Format,channelType);
+        hip_status = ihipArrayToImageFormat(pAllocateArray->Format,channelType);
         if(hipSuccess != hip_status)
            return ihipLogStatus(hip_status);
 
@@ -633,7 +633,7 @@ hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, si
                break;
         }
     } else {
-         hip_status = hipErrorInvalidValue;
+        hip_status = hipErrorInvalidValue;
     }
     return ihipLogStatus(hip_status);
 }
@@ -663,7 +663,7 @@ hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAll
     }
 
     hsa_ext_image_channel_type_t channelType;
-    hip_status = hipArrayToImageFormat(pAllocateArray->Format,channelType);
+    hip_status = ihipArrayToImageFormat(pAllocateArray->Format,channelType);
     hsa_ext_image_data_info_t imageInfo;
     switch (pAllocateArray->Flags) {
        case hipArrayLayered:
