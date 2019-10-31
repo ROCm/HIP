@@ -21,7 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: global_kernel.code %hc --genco %S/global_kernel.cpp -o global_kernel.code
+ * BUILD_CMD: dyn_global_kernel1.code %hc --genco %S/dyn_global_kernel1.cpp -o dyn_global_kernel1.code
+ * BUILD_CMD: dyn_global_kernel2.code %hc --genco %S/dyn_global_kernel2.cpp -o dyn_global_kernel2.code
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
