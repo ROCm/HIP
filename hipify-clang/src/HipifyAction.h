@@ -31,17 +31,18 @@ THE SOFTWARE.
 #include "Statistics.h"
 
 namespace ct = clang::tooling;
+namespace mat = clang::ast_matchers;
 using namespace llvm;
 
 /**
   * A FrontendAction that hipifies CUDA programs.
   */
 class HipifyAction : public clang::ASTFrontendAction,
-                     public clang::ast_matchers::MatchFinder::MatchCallback {
+                     public mat::MatchFinder::MatchCallback {
 private:
-  ct::Replacements* replacements;
+  ct::Replacements *replacements;
   std::map<std::string, clang::SourceLocation> Ifndefs;
-  std::unique_ptr<clang::ast_matchers::MatchFinder> Finder;
+  std::unique_ptr<mat::MatchFinder> Finder;
   // CUDA implicitly adds its runtime header. We rewrite explicitly-provided CUDA includes with equivalent
   // ones, and track - using this flag - if the result led to us including the hip runtime header. If it did
   // not, we insert it at the top of the file when we finish processing it.
@@ -62,15 +63,20 @@ private:
   void RewriteString(StringRef s, clang::SourceLocation start);
   // Replace a CUDA identifier with the corresponding hip identifier, if applicable.
   void RewriteToken(const clang::Token &t);
+  // Calculate str's SourceLocation in SourceRange sr
+  clang::SourceLocation GetSubstrLocation(const std::string &str, const clang::SourceRange &sr);
 
 public:
   explicit HipifyAction(ct::Replacements *replacements): clang::ASTFrontendAction(),
     replacements(replacements) {}
   // MatchCallback listeners
-  bool cudaBuiltin(const clang::ast_matchers::MatchFinder::MatchResult& Result);
-  bool cudaLaunchKernel(const clang::ast_matchers::MatchFinder::MatchResult& Result);
-  bool cudaSharedIncompleteArrayVar(const clang::ast_matchers::MatchFinder::MatchResult& Result);
-  bool cudaDeviceFuncCall(const clang::ast_matchers::MatchFinder::MatchResult& Result);
+  bool cudaLaunchKernel(const mat::MatchFinder::MatchResult &Result);
+  bool cudaSharedIncompleteArrayVar(const mat::MatchFinder::MatchResult &Result);
+  bool cudaDeviceFuncCall(const mat::MatchFinder::MatchResult &Result);
+  bool cudaHostFuncCall(const mat::MatchFinder::MatchResult &Result);
+  bool cubNamespacePrefix(const mat::MatchFinder::MatchResult &Result);
+  bool cubFunctionTemplateDecl(const mat::MatchFinder::MatchResult &Result);
+  bool cubUsingNamespaceDecl(const mat::MatchFinder::MatchResult &Result);
   // Called by the preprocessor for each include directive during the non-raw lexing pass.
   void InclusionDirective(clang::SourceLocation hash_loc,
                           const clang::Token &include_token,
@@ -89,7 +95,7 @@ public:
 
 protected:
   // Add a Replacement for the current file. These will all be applied after executing the FrontendAction.
-  void insertReplacement(const ct::Replacement& rep, const clang::FullSourceLoc& fullSL);
+  void insertReplacement(const ct::Replacement &rep, const clang::FullSourceLoc &fullSL);
   // FrontendAction entry point.
   void ExecuteAction() override;
   // Callback before starting processing a single input; used by hipify-clang for setting Preprocessor options.
@@ -97,8 +103,8 @@ protected:
   // Called at the start of each new file to process.
   void EndSourceFileAction() override;
   // MatchCallback API entry point. Called by the AST visitor while searching the AST for things we registered an interest for.
-  void run(const clang::ast_matchers::MatchFinder::MatchResult& Result) override;
-  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, llvm::StringRef InFile) override;
-  bool Exclude(const hipCounter & hipToken);
-  void FindAndReplace(llvm::StringRef name, clang::SourceLocation sl, const std::map<llvm::StringRef, hipCounter>& repMap);
+  void run(const mat::MatchFinder::MatchResult &Result) override;
+  std::unique_ptr<clang::ASTConsumer> CreateASTConsumer(clang::CompilerInstance &CI, StringRef InFile) override;
+  bool Exclude(const hipCounter &hipToken);
+  void FindAndReplace(StringRef name, clang::SourceLocation sl, const std::map<StringRef, hipCounter> &repMap, bool bReplace = true);
 };

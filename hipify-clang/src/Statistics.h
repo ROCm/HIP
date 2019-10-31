@@ -119,6 +119,8 @@ enum ConvTypes {
   CONV_LITERAL,
   CONV_NUMERIC_LITERAL,
   CONV_DEFINE,
+  CONV_EXTERN_SHARED,
+  CONV_KERNEL_LAUNCH,
   CONV_LAST
 };
 constexpr int NUM_CONV_TYPES = (int) ConvTypes::CONV_LAST;
@@ -132,6 +134,7 @@ enum ApiTypes {
   API_DNN,
   API_FFT,
   API_SPARSE,
+  API_CUB,
   API_CAFFE2,
   API_LAST
 };

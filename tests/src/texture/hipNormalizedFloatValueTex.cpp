@@ -82,6 +82,7 @@ bool textureTest(enum hipArray_Format texFormat)
     }
     hipFree(dData);
     hipFree(dOutputData);
+    hipUnbindTexture(textureNormalizedVal_1D);
     delete [] hOutputData;
     return testResult;
 }

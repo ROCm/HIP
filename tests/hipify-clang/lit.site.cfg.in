@@ -8,6 +8,7 @@ config.llvm_tools_dir = "@LLVM_TOOLS_BINARY_DIR@"
 config.obj_root = "@CMAKE_CURRENT_BINARY_DIR@"
 config.cuda_root = "@CUDA_TOOLKIT_ROOT_DIR@"
 config.cuda_dnn_root = "@CUDA_DNN_ROOT_DIR@"
+config.cuda_cub_root = "@CUDA_CUB_ROOT_DIR@"
 config.cuda_version_major = int("@CUDA_VERSION_MAJOR@")
 config.cuda_version_minor = int("@CUDA_VERSION_MINOR@")
 config.cuda_version = "@CUDA_VERSION@"

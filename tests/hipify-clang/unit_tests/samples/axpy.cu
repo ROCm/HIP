@@ -10,7 +10,7 @@
 #define KERNEL_CALL_AS_MACRO axpy<float><<<1, kDataLen>>>
 #define KERNEL_NAME_MACRO axpy<float>
 
-// CHECK: #define COMPLETE_LAUNCH hipLaunchKernelGGL((axpy), dim3(1), dim3(kDataLen), 0, 0, a, device_x, device_y)
+// CHECK: #define COMPLETE_LAUNCH hipLaunchKernelGGL(HIP_KERNEL_NAME(axpy), dim3(1), dim3(kDataLen), 0, 0, a, device_x, device_y)
 #define COMPLETE_LAUNCH axpy<<<1, kDataLen>>>(a, device_x, device_y)
 
 
@@ -48,22 +48,22 @@ int main(int argc, char* argv[]) {
   cudaMemcpy(device_x, host_x, kDataLen * sizeof(float), cudaMemcpyHostToDevice);
 
   // Launch the kernel in numerous different strange ways to exercise the prerocessor.
-  // CHECK: hipLaunchKernelGGL((axpy), dim3(1), dim3(kDataLen), 0, 0, a, device_x, device_y);
+  // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(axpy), dim3(1), dim3(kDataLen), 0, 0, a, device_x, device_y);
   axpy<<<1, kDataLen>>>(a, device_x, device_y);
 
-  // CHECK: hipLaunchKernelGGL((axpy<float>), dim3(1), dim3(kDataLen), 0, 0, a, device_x, device_y);
+  // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(axpy<float>), dim3(1), dim3(kDataLen), 0, 0, a, device_x, device_y);
   axpy<float><<<1, kDataLen>>>(a, device_x, device_y);
 
-  // CHECK: hipLaunchKernelGGL((axpy<float>), dim3(1), dim3(kDataLen), 0, 0, a, TOKEN_PASTE(device, _x), device_y);
+  // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(axpy<float>), dim3(1), dim3(kDataLen), 0, 0, a, TOKEN_PASTE(device, _x), device_y);
   axpy<float><<<1, kDataLen>>>(a, TOKEN_PASTE(device, _x), device_y);
 
-  // CHECK: hipLaunchKernelGGL((axpy<float>), dim3(1), dim3(kDataLen), 0, 0, ARG_LIST_AS_MACRO);
+  // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(axpy<float>), dim3(1), dim3(kDataLen), 0, 0, ARG_LIST_AS_MACRO);
   axpy<float><<<1, kDataLen>>>(ARG_LIST_AS_MACRO);
 
-  // CHECK: hipLaunchKernelGGL((KERNEL_NAME_MACRO), dim3(1), dim3(kDataLen), 0, 0, ARG_LIST_AS_MACRO);
+  // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(KERNEL_NAME_MACRO), dim3(1), dim3(kDataLen), 0, 0, ARG_LIST_AS_MACRO);
   KERNEL_NAME_MACRO<<<1, kDataLen>>>(ARG_LIST_AS_MACRO);
 
-  // CHECK: hipLaunchKernelGGL((axpy<float>), dim3(1), dim3(kDataLen), 0, 0, ARG_LIST_AS_MACRO);
+  // CHECK: hipLaunchKernelGGL(HIP_KERNEL_NAME(axpy<float>), dim3(1), dim3(kDataLen), 0, 0, ARG_LIST_AS_MACRO);
   KERNEL_CALL_AS_MACRO(ARG_LIST_AS_MACRO);
 
   // CHECK: hipLaunchKernelGGL(empty, dim3(1), dim3(kDataLen), 0, 0);

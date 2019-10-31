@@ -505,13 +505,19 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
     : _deviceId(deviceId), _acc(acc), _state(0), _criticalData(this) {
     hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
     if (agent) {
-        int err = hsa_agent_get_info(
+	int err;
+        err = hsa_agent_get_info(
             *agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_computeUnits);
         if (err != HSA_STATUS_SUCCESS) {
             _computeUnits = 1;
         }
-
-        _hsaAgent = *agent;
+        err = hsa_agent_get_info(
+	    *agent, (hsa_agent_info_t) HSA_AMD_AGENT_INFO_DRIVER_NODE_ID, &_driver_node_id);
+	if (err != HSA_STATUS_SUCCESS){
+	   _driver_node_id = 0;
+	}
+        
+	_hsaAgent = *agent;
     } else {
         _hsaAgent.handle = static_cast<uint64_t>(-1);
     }
@@ -734,7 +740,6 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &archName);
 
     prop->gcnArch = atoi(archName + 3);
-
     DeviceErrorCheck(err);
 
     // Get agent node
@@ -782,10 +787,12 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_BDFID, &bdf_id);
     DeviceErrorCheck(err);
 
-    // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - Function/DomainID]
-    prop->pciDomainID = bdf_id & 0x7;
+    // BDFID is 16bit uint: [8bit - BusID | 5bit - Device ID | 3bit - FunctionID]
     prop->pciDeviceID = (bdf_id >> 3) & 0x1F;
     prop->pciBusID = (bdf_id >> 8) & 0xFF;
+
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_DOMAIN, &prop->pciDomainID);
+    DeviceErrorCheck(err);
 
     // Masquerade as a 3.0-level device. This will change as more HW functions are properly
     // supported. Application code should use the arch.has* to do detailed feature detection.
@@ -912,6 +919,23 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     prop->hdpMemFlushCntl = hdpinfo.HDP_MEM_FLUSH_CNTL;
     prop->hdpRegFlushCntl = hdpinfo.HDP_REG_FLUSH_CNTL;
 
+    prop->memPitch = INT_MAX; //Maximum pitch in bytes allowed by memory copies (hardcoded 128 bytes in hipMallocPitch)
+    prop->textureAlignment = 0; //Alignment requirement for textures
+    prop->kernelExecTimeoutEnabled = 0; //no run time limit for running kernels on device
+
+    hsa_isa_t isa;
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AGENT_INFO_ISA, &isa);
+    DeviceErrorCheck(err);
+    std::size_t isa_sz = 0u;
+    hsa_isa_get_info_alt(isa, HSA_ISA_INFO_NAME_LENGTH, &isa_sz);
+    std::string isa_name(isa_sz, '\0');
+    hsa_isa_get_info_alt(isa, HSA_ISA_INFO_NAME, &isa_name.front());
+    if (isa_name.find("sram-ecc") != std::string::npos)
+        prop->ECCEnabled = 1; //Device has ECC support Enabled
+    else
+        prop->ECCEnabled = 0; //Device has ECC support disabled
+
+    prop->tccDriver = 0; // valid only for nvcc platform
     return e;
 }
 

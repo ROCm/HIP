@@ -438,6 +438,7 @@ hipError_t ihipBindTextureImpl(TlsData *tls_, int dim, enum hipTextureReadMode r
             return hipErrorRuntimeOther;
         }
         getHipTextureObject(&textureObject, pTexture->image, pTexture->sampler);
+        pTexture->devPtr = (void*) devPtr;
         textureHash[textureObject] = pTexture;
     }
 
@@ -510,6 +511,7 @@ hipError_t ihipBindTexture2DImpl(TlsData *tls, int dim, enum hipTextureReadMode 
             return hipErrorRuntimeOther;
         }
         getHipTextureObject(&textureObject, pTexture->image, pTexture->sampler);
+        pTexture->devPtr = (void*) devPtr;
         textureHash[textureObject] = pTexture;
     }
 
@@ -612,6 +614,7 @@ hipError_t ihipBindTextureToArrayImpl(TlsData *tls_, int dim, enum hipTextureRea
             return hipErrorRuntimeOther;
         }
         getHipTextureObject(&textureObject, pTexture->image, pTexture->sampler);
+        pTexture->devPtr = (void*) array;
         textureHash[textureObject] = pTexture;
     }
 
@@ -636,16 +639,15 @@ hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
     return ihipLogStatus(hip_status);
 }
 
-hipError_t ihipUnbindTextureImpl(TlsData *tls, const hipTextureObject_t& textureObject) {
+hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
     hipError_t hip_status = hipSuccess;
-
+    TlsData* tls=tls_get_ptr();
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
         auto device = ctx->getWriteableDevice();
 
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
-
         hipTexture* pTexture = textureHash[textureObject];
         if (pTexture != nullptr) {
             hsa_ext_image_destroy(*agent, pTexture->image);
@@ -661,7 +663,7 @@ hipError_t ihipUnbindTextureImpl(TlsData *tls, const hipTextureObject_t& texture
 hipError_t hipUnbindTexture(const textureReference* tex) {
     HIP_INIT_API(hipUnbindTexture, tex);
     hipError_t hip_status = hipSuccess;
-    hip_status = ihipUnbindTextureImpl(tls, tex->textureObject);
+    hip_status = ihipUnbindTextureImpl(tex->textureObject);
     return ihipLogStatus(hip_status);
 }
 
@@ -729,6 +731,17 @@ hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAdd
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim) {
+    HIP_INIT_API(hipTexRefGetAddressMode,am, &tex, dim);
+
+    if ((am == nullptr) || (dim >= 3))
+        return ihipLogStatus(hipErrorInvalidValue);
+
+    *am = tex.addressMode[dim];
+
+    return ihipLogStatus(hipSuccess);
+}
+
 hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsigned int flags) {
     HIP_INIT_API(hipTexRefSetArray, tex, array, flags);
     hipError_t hip_status = hipSuccess;
@@ -738,6 +751,23 @@ hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsi
     return ihipLogStatus(hip_status);
 }
 
+hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex) {
+    HIP_INIT_API(hipTexRefGetArray, array, &tex);
+
+    if (array == nullptr)
+        return ihipLogStatus(hipErrorInvalidValue);
+
+    hipTexture* pTexture = textureHash[tex.textureObject];
+    if((pTexture == nullptr) || (hipResourceTypeArray != pTexture->resDesc.resType))
+        return ihipLogStatus(hipErrorInvalidImage);
+
+    if (pTexture->devPtr == nullptr)
+        return ihipLogStatus(hipErrorUnknown);
+
+    *array = reinterpret_cast<hipArray_t>(pTexture->devPtr);
+
+    return ihipLogStatus(hipSuccess);
+}
 
 hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDeviceptr_t devPtr,
                                size_t size) {
@@ -747,6 +777,23 @@ hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDevicep
     hip_status = ihipBindTextureImpl(tls, hipTextureType1D, hipReadModeElementType, offset, devPtr, NULL,
                                      size, tex);
     return ihipLogStatus(hip_status);
+}
+
+hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
+    HIP_INIT_API(hipTexRefGetAddress,dev_ptr, &tex);
+
+    if (dev_ptr == nullptr)
+        return ihipLogStatus(hipErrorInvalidValue);
+
+    hipTexture* pTexture = textureHash[tex.textureObject];
+    if (pTexture == nullptr)
+        return ihipLogStatus(hipErrorInvalidImage);
+
+    if (pTexture->devPtr == nullptr)
+        return ihipLogStatus(hipErrorUnknown);
+
+    *dev_ptr = reinterpret_cast<hipDeviceptr_t>(pTexture->devPtr);
+    return ihipLogStatus(hipSuccess);
 }
 
 hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,

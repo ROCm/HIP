@@ -1,5 +1,5 @@
 // RUN: %run_test hipify "%s" "%t" %hipify_args %clang_args
-// Test to warn only on device functions umin and umax as unsupported, but not on user defined ones.
+// Synthetic test to warn only on device functions umin and umax as unsupported, but not on user defined ones.
 // ToDo: change lit testing in order to parse the output.
 
 #define LEN 1024
@@ -8,9 +8,11 @@
 #include <algorithm>
 
 namespace my {
+  // user defined function
   unsigned int umin(unsigned int arg1, unsigned int arg2) {
     return (arg1 < arg2) ? arg1 : arg2;
   }
+  // user defined function
   unsigned int umax(unsigned int arg1, unsigned int arg2) {
     return (arg1 > arg2) ? arg1 : arg2;
   }
@@ -18,8 +20,16 @@ namespace my {
 
 __global__ void uint_arithm(float* A, float* B, float* C, unsigned int u1, unsigned int u2)
 {
-  unsigned int _umin = umin(u1, u2);
-  unsigned int _umax = umax(u1, u2);
+  // device function call (warn if unsupported)
+  unsigned int _umin = umin ( u1, u2 );
+  // device function call (warn if unsupported)
+  unsigned int _umax = umax ( u1, u2 );
+  // device function call (warn if unsupported)
+  unsigned int _umin_global = ::umin ( u1, u2 );
+  // device function call (warn if unsupported)
+  unsigned int _umax_global = ::umax(u1, u2);
+  if (_umin != _umin_global) return;
+  if (_umax != _umax_global) return;
   int i = threadIdx.x;
   A[i] = i + _umin;
   B[i] = i + _umax;
@@ -29,7 +39,9 @@ __global__ void uint_arithm(float* A, float* B, float* C, unsigned int u1, unsig
 int main() {
   unsigned int u1 = 33;
   unsigned int u2 = 34;
+  // user defined function call
   unsigned int _min = my::umin(u1, u2);
+  // user defined function call
   unsigned int _max = my::umax(u1, u2);
   float *A, *B, *C;
   // CHECK: hipMalloc((void**)&A, SIZE);

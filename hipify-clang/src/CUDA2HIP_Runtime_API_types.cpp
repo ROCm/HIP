@@ -31,8 +31,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaChannelFormatDesc",                                            {"hipChannelFormatDesc",                                     "", CONV_TYPE, API_RUNTIME}},
   // no analogue
   {"cudaDeviceProp",                                                   {"hipDeviceProp_t",                                          "", CONV_TYPE, API_RUNTIME}},
-  // NOTE: int warpSize is a field of cudaDeviceProp
-  {"warpSize",                                                         {"hipWarpSize",                                              "", CONV_TYPE, API_RUNTIME}},
 
   // no analogue
   {"cudaEglFrame",                                                     {"hipEglFrame",                                              "", CONV_TYPE, API_RUNTIME, HIP_UNSUPPORTED}},
@@ -234,24 +232,24 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_DEVICE_ATTRIBUTE_WARP_SIZE
   {"cudaDevAttrWarpSize",                                              {"hipDeviceAttributeWarpSize",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 10
   // CU_DEVICE_ATTRIBUTE_MAX_PITCH
-  {"cudaDevAttrMaxPitch",                                              {"hipDeviceAttributeMaxPitch",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 11
+  {"cudaDevAttrMaxPitch",                                              {"hipDeviceAttributeMaxPitch",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 11
   // CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK
   {"cudaDevAttrMaxRegistersPerBlock",                                  {"hipDeviceAttributeMaxRegistersPerBlock",                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 12
   // CU_DEVICE_ATTRIBUTE_CLOCK_RATE
   {"cudaDevAttrClockRate",                                             {"hipDeviceAttributeClockRate",                              "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 13
   // CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT
-  {"cudaDevAttrTextureAlignment",                                      {"hipDeviceAttributeTextureAlignment",                       "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 14
+  {"cudaDevAttrTextureAlignment",                                      {"hipDeviceAttributeTextureAlignment",                       "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 14
   // CU_DEVICE_ATTRIBUTE_GPU_OVERLAP
   // NOTE: Is not deprecated as CUDA Driver's API analogue CU_DEVICE_ATTRIBUTE_GPU_OVERLAP
   {"cudaDevAttrGpuOverlap",                                            {"hipDeviceAttributeGpuOverlap",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 15
   // CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT
   {"cudaDevAttrMultiProcessorCount",                                   {"hipDeviceAttributeMultiprocessorCount",                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 16
   // CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT
-  {"cudaDevAttrKernelExecTimeout",                                     {"hipDeviceAttributeKernelExecTimeout",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 17
+  {"cudaDevAttrKernelExecTimeout",                                     {"hipDeviceAttributeKernelExecTimeout",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 17
   // CU_DEVICE_ATTRIBUTE_INTEGRATED
   {"cudaDevAttrIntegrated",                                            {"hipDeviceAttributeIntegrated",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 18
   // CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY
-  {"cudaDevAttrCanMapHostMemory",                                      {"hipDeviceAttributeCanMapHostMemory",                       "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 19
+  {"cudaDevAttrCanMapHostMemory",                                      {"hipDeviceAttributeCanMapHostMemory",                       "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 19
   // CU_DEVICE_ATTRIBUTE_COMPUTE_MODE
   {"cudaDevAttrComputeMode",                                           {"hipDeviceAttributeComputeMode",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 20
   // CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH
@@ -277,7 +275,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS
   {"cudaDevAttrConcurrentKernels",                                     {"hipDeviceAttributeConcurrentKernels",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 31
   // CU_DEVICE_ATTRIBUTE_ECC_ENABLED
-  {"cudaDevAttrEccEnabled",                                            {"hipDeviceAttributeEccEnabled",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 32
+  {"cudaDevAttrEccEnabled",                                            {"hipDeviceAttributeEccEnabled",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 32
   // CU_DEVICE_ATTRIBUTE_PCI_BUS_ID
   {"cudaDevAttrPciBusId",                                              {"hipDeviceAttributePciBusId",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 33
   // CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID

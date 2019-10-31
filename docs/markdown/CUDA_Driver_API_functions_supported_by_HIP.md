@@ -78,16 +78,16 @@
 |            8 |*`CU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK`*                     |*`hipDeviceAttributeMaxSharedMemoryPerBlock`*               |
 |            9 |*`CU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY`*                       |*`hipDeviceAttributeTotalConstantMemory`*                   |
 |           10 |*`CU_DEVICE_ATTRIBUTE_WARP_SIZE`*                                   |*`hipDeviceAttributeWarpSize`*                              |
-|           11 |*`CU_DEVICE_ATTRIBUTE_MAX_PITCH`*                                   |                                                            |
+|           11 |*`CU_DEVICE_ATTRIBUTE_MAX_PITCH`*                                   |*`hipDeviceAttributeMaxPitch`*                              |
 |           12 |*`CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK`*                     |*`hipDeviceAttributeMaxRegistersPerBlock`*                  |
 |           12 |*`CU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK`*                         |*`hipDeviceAttributeMaxRegistersPerBlock`*                  |
 |           13 |*`CU_DEVICE_ATTRIBUTE_CLOCK_RATE`*                                  |*`hipDeviceAttributeClockRate`*                             |
-|           14 |*`CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT`*                           |                                                            |
+|           14 |*`CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT`*                           |*`hipDeviceAttributeTextureAlignment`*                      |
 |           15 |*`CU_DEVICE_ATTRIBUTE_GPU_OVERLAP`*                                 |                                                            |
 |           16 |*`CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT`*                        |*`hipDeviceAttributeMultiprocessorCount`*                   |
-|           17 |*`CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT`*                         |                                                            |
+|           17 |*`CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT`*                         |*`hipDeviceAttributeKernelExecTimeout`*                     |
 |           18 |*`CU_DEVICE_ATTRIBUTE_INTEGRATED`*                                  |*`hipDeviceAttributeIntegrated`*                            |
-|           19 |*`CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY`*                         |                                                            |
+|           19 |*`CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY`*                         |*`hipDeviceAttributeCanMapHostMemory`*                      |
 |           20 |*`CU_DEVICE_ATTRIBUTE_COMPUTE_MODE`*                                |*`hipDeviceAttributeComputeMode`*                           |
 |           21 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH`*                     |                                                            |
 |           22 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH`*                     |                                                            |
@@ -103,7 +103,7 @@
 |           29 |*`CU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_ARRAY_NUMSLICES`*           |                                                            |
 |           30 |*`CU_DEVICE_ATTRIBUTE_SURFACE_ALIGNMENT`*                           |                                                            |
 |           31 |*`CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS`*                          |*`hipDeviceAttributeConcurrentKernels`*                     |
-|           32 |*`CU_DEVICE_ATTRIBUTE_ECC_ENABLED`*                                 |                                                            |
+|           32 |*`CU_DEVICE_ATTRIBUTE_ECC_ENABLED`*                                 |*`hipDeviceAttributeEccEnabled`*                            |
 |           33 |*`CU_DEVICE_ATTRIBUTE_PCI_BUS_ID`*                                  |*`hipDeviceAttributePciBusId`*                              |
 |           34 |*`CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID`*                               |*`hipDeviceAttributePciDeviceId`*                           |
 |           35 |*`CU_DEVICE_ATTRIBUTE_TCC_DRIVER`*                                  |                                                            |
@@ -857,9 +857,9 @@
 | `cuIpcOpenEventHandle`                                    |                               |
 | `cuIpcOpenMemHandle`                                      | `hipIpcOpenMemHandle`         |
 | `cuMemAlloc`                                              | `hipMalloc`                   |
-| `cuMemAllocHost`                                          |                               |
+| `cuMemAllocHost`                                          | `hipMemAllocHost`             |
 | `cuMemAllocManaged`                                       | `hipMemAllocManaged`          |
-| `cuMemAllocPitch`                                         |                               |
+| `cuMemAllocPitch`                                         | `hipMemAllocPitch`            |
 | `cuMemcpy`                                                |                               |
 | `cuMemcpy2D`                                              | `hipMemcpyParam2D`            |
 | `cuMemcpy2DAsync`                                         | `hipMemcpyParam2DAsync`       |
@@ -893,8 +893,8 @@
 | `cuMemHostGetFlags`                                       | `hipHostGetFlags`             |
 | `cuMemHostRegister`                                       | `hipHostRegister`             |
 | `cuMemHostUnregister`                                     | `hipHostUnregister`           |
-| `cuMemsetD16`                                             |                               |
-| `cuMemsetD16Async`                                        |                               |
+| `cuMemsetD16`                                             | `hipMemsetD16`                |
+| `cuMemsetD16Async`                                        | `hipMemsetD16Async`           |
 | `cuMemsetD2D16`                                           |                               |
 | `cuMemsetD2D16Async`                                      |                               |
 | `cuMemsetD2D32`                                           |                               |
@@ -904,7 +904,7 @@
 | `cuMemsetD32`                                             | `hipMemsetD32`                |
 | `cuMemsetD32Async`                                        | `hipMemsetD32Async`           |
 | `cuMemsetD8`                                              | `hipMemsetD8`                 |
-| `cuMemsetD8Async`                                         |                               |
+| `cuMemsetD8Async`                                         | `hipMemsetD8Async`            |
 | `cuMipmappedArrayCreate`                                  |                               |
 | `cuMipmappedArrayDestroy`                                 |                               |
 | `cuMipmappedArrayGetLevel`                                |                               |
@@ -1053,9 +1053,9 @@
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
-| `cuTexRefGetAddress`                                      |                               |
-| `cuTexRefGetAddressMode`                                  |                               |
-| `cuTexRefGetArray`                                        |                               |
+| `cuTexRefGetAddress`                                      |`hipTexRefGetAddress`          |
+| `cuTexRefGetAddressMode`                                  |`hipTexRefGetAddressMode`      |
+| `cuTexRefGetArray`                                        |`hipTexRefGetArray`            |
 | `cuTexRefGetBorderColor`                                  |                               | 8.0              |
 | `cuTexRefGetFilterMode`                                   |                               |
 | `cuTexRefGetFlags`                                        |                               |

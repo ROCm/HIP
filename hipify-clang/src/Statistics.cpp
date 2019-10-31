@@ -63,7 +63,9 @@ const char *counterNames[NUM_CONV_TYPES] = {
   "type", // CONV_TYPE
   "literal", // CONV_LITERAL
   "numeric_literal", // CONV_NUMERIC_LITERAL
-  "define" // CONV_DEFINE
+  "define", // CONV_DEFINE
+  "extern_shared", // CONV_EXTERN_SHARED
+  "kernel_launch" // CONV_KERNEL_LAUNCH
 };
 
 const char *counterTypes[NUM_CONV_TYPES] = {
@@ -102,7 +104,9 @@ const char *counterTypes[NUM_CONV_TYPES] = {
   "CONV_TYPE",
   "CONV_LITERAL",
   "CONV_NUMERIC_LITERAL",
-  "CONV_DEFINE"
+  "CONV_DEFINE",
+  "CONV_EXTERN_SHARED",
+  "CONV_KERNEL_LAUNCH"
 };
 
 const char *apiNames[NUM_API_TYPES] = {
@@ -114,6 +118,7 @@ const char *apiNames[NUM_API_TYPES] = {
   "cuDNN API",
   "cuFFT API",
   "cuSPARSE API",
+  "CUB API",
   "CAFFE2 API"
 };
 
@@ -125,6 +130,7 @@ const char *apiTypes[NUM_API_TYPES] = {
   "API_RAND",
   "API_DNN",
   "API_FFT",
+  "API_CUB",
   "API_SPARSE",
   "API_CAFFE2"
 };

@@ -101,7 +101,7 @@
 
 |   **CUDA**                                                |   **HIP**                             |**CUDA version\***|
 |-----------------------------------------------------------|---------------------------------------|:----------------:|
-| `cudaFuncGetAttributes`                                   |                                       |
+| `cudaFuncGetAttributes`                                   |`hipFuncGetAttributes`                 |
 | `cudaFuncSetAttribute`                                    |                                       | 9.0              |
 | `cudaFuncSetCacheConfig`                                  |`hipFuncSetCacheConfig`                |
 | `cudaFuncSetSharedMemConfig`                              |                                       |
@@ -160,8 +160,8 @@
 | `cudaMemcpy2D`                                            | `hipMemcpy2D`                 |
 | `cudaMemcpy2DArrayToArray`                                |                               |
 | `cudaMemcpy2DAsync`                                       | `hipMemcpy2DAsync`            |
-| `cudaMemcpy2DFromArray`                                   |                               |
-| `cudaMemcpy2DFromArrayAsync`                              |                               |
+| `cudaMemcpy2DFromArray`                                   | `hipMemcpy2DFromArray`        |
+| `cudaMemcpy2DFromArrayAsync`                              | `hipMemcpy2DFromArrayAsync`   |
 | `cudaMemcpy2DToArray`                                     | `hipMemcpy2DToArray`          |
 | `cudaMemcpy2DToArrayAsync`                                |                               |
 | `cudaMemcpy3D`                                            | `hipMemcpy3D`                 |
@@ -440,8 +440,6 @@
 | `cudaMemcpyFromSymbolAsync`                               |                                                       |
 | `cudaMemcpyToSymbol`                                      |                                                       |
 | `cudaMemcpyToSymbolAsync`                                 |                                                       |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           |`hipOccupancyMaxActiveBlocksPerMultiprocessor`         |
-| `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
 | `cudaOccupancyMaxPotentialBlockSize`                      |`hipOccupancyMaxPotentialBlockSize`                    |
 | `cudaOccupancyMaxPotentialBlockSizeWithFlags`             |                                                       |
 | `cudaOccupancyMaxPotentialBlockSizeVariableSMem`          |                                                       |
@@ -484,7 +482,6 @@
 | struct       |`cudaTextureDesc`                                    |                  |`hipTextureDesc`                                            |
 | struct       |`textureReference`                                   |                  |`textureReference`                                          |
 | struct       |`surfaceReference`                                   |                  |                                                            |
-| struct       |`CUuuid_st`                                          |                  |                                                            |
 | enum         |***`cudaCGScope`***                                  | 9.0              |                                                            |
 |            0 |*`cudaCGScopeInvalid`*                               | 9.0              |                                                            |
 |            1 |*`cudaCGScopeGrid`*                                  | 9.0              |                                                            |
@@ -510,15 +507,15 @@
 |            8 |*`cudaDevAttrMaxSharedMemoryPerBlock`*               |                  |*`hipDeviceAttributeMaxSharedMemoryPerBlock`*               |
 |            9 |*`cudaDevAttrTotalConstantMemory`*                   |                  |*`hipDeviceAttributeTotalConstantMemory`*                   |
 |           10 |*`cudaDevAttrWarpSize`*                              |                  |*`hipDeviceAttributeWarpSize`*                              |
-|           11 |*`cudaDevAttrMaxPitch`*                              |                  |                                                            |
+|           11 |*`cudaDevAttrMaxPitch`*                              |                  |*`hipDeviceAttributeMaxPitch`*                              |
 |           12 |*`cudaDevAttrMaxRegistersPerBlock`*                  |                  |*`hipDeviceAttributeMaxRegistersPerBlock`*                  |
 |           13 |*`cudaDevAttrClockRate`*                             |                  |*`hipDeviceAttributeClockRate`*                             |
-|           14 |*`cudaDevAttrTextureAlignment`*                      |                  |                                                            |
+|           14 |*`cudaDevAttrTextureAlignment`*                      |                  |*`hipDeviceAttributeTextureAlignment`*                      |
 |           15 |*`cudaDevAttrGpuOverlap`*                            |                  |                                                            |
 |           16 |*`cudaDevAttrMultiProcessorCount`*                   |                  |*`hipDeviceAttributeMultiprocessorCount`*                   |
-|           17 |*`cudaDevAttrKernelExecTimeout`*                     |                  |                                                            |
+|           17 |*`cudaDevAttrKernelExecTimeout`*                     |                  |*`hipDeviceAttributeKernelExecTimeout`*                     |
 |           18 |*`cudaDevAttrIntegrated`*                            |                  |*`hipDeviceAttributeIntegrated`*                            |
-|           19 |*`cudaDevAttrCanMapHostMemory`*                      |                  |                                                            |
+|           19 |*`cudaDevAttrCanMapHostMemory`*                      |                  |*`hipDeviceAttributeCanMapHostMemory`*                      |
 |           20 |*`cudaDevAttrComputeMode`*                           |                  |*`hipDeviceAttributeComputeMode`*                           |
 |           21 |*`cudaDevAttrMaxTexture1DWidth`*                     |                  |*`hipDeviceAttributeMaxTexture1DWidth`*                     |
 |           22 |*`cudaDevAttrMaxTexture2DWidth`*                     |                  |*`hipDeviceAttributeMaxTexture2DWidth`*                     |
@@ -531,7 +528,7 @@
 |           29 |*`cudaDevAttrMaxTexture2DLayeredLayers`*             |                  |                                                            |
 |           30 |*`cudaDevAttrSurfaceAlignment`*                      |                  |                                                            |
 |           31 |*`cudaDevAttrConcurrentKernels`*                     |                  |*`hipDeviceAttributeConcurrentKernels`*                     |
-|           32 |*`cudaDevAttrEccEnabled`*                            |                  |                                                            |
+|           32 |*`cudaDevAttrEccEnabled`*                            |                  |*`hipDeviceAttributeEccEnabled`*                            |
 |           33 |*`cudaDevAttrPciBusId`*                              |                  |*`hipDeviceAttributePciBusId`*                              |
 |           34 |*`cudaDevAttrPciDeviceId`*                           |                  |*`hipDeviceAttributePciDeviceId`*                           |
 |           35 |*`cudaDevAttrTccDriver`*                             |                  |                                                            |
@@ -974,7 +971,6 @@
 | typedef      |`cudaArray_const_t`                                  |                  |`hipArray_const_t`                                          |
 | typedef      |`cudaEvent_t`                                        |                  |`hipEvent_t`                                                |
 | struct       |`CUevent_st`                                         |                  |`ihipEvent_t`                                               |
-| typedef      |`cudaGraphicsResource_t`                             |                  |                                                            |
 | struct       |`cudaMipmappedArray`                                 |                  |`hipMipmappedArray`                                         |
 | typedef      |`cudaMipmappedArray_t`                               |                  |`hipMipmappedArray_t`                                       |
 | typedef      |`cudaMipmappedArray_const_t`                         |                  |`hipMipmappedArray_const_t`                                 |

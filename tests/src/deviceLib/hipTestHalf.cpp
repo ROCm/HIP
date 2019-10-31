@@ -28,7 +28,17 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-#if __HIP_ARCH_GFX803__ || __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__ || __HIP_ARCH_GFX908__
+#if __HIP_ARCH_GFX803__  || \
+    __HIP_ARCH_GFX900__  || \
+    __HIP_ARCH_GFX906__  || \
+    __HIP_ARCH_GFX908__  || \
+    __HIP_ARCH_GFX1010__ || \
+    __HIP_ARCH_GFX1012__
+
+__device__ void test_convert() {
+  __half x;
+  float y = (float)x;
+}
 
 __global__
 void __halfMath(bool* result, __half a) {
@@ -229,7 +239,7 @@ void checkFunctional() {
 
 int main() {
   bool* result{nullptr};
-  hipHostMalloc(&result, sizeof(result));
+  hipMemAllocHost((void**)&result, sizeof(result));
 
   result[0] = false;
   hipLaunchKernelGGL(

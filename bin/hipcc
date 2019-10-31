@@ -22,8 +22,10 @@ use Cwd 'abs_path';
 # Other environment variable controls:
 # HIP_PATH  : Path to HIP directory, default is one dir level above location of this script
 # CUDA_PATH : Path to CUDA SDK (default /usr/local/cuda). Used on NVIDIA platforms only.
-# HCC_HOME  : Path to HCC SDK (default /opt/rocm/hcc).  Used on AMD platforms only.
-# HSA_PATH  : Path to HSA dir (default /opt/rocm/hsa).  Used on AMD platforms only.
+# HCC_HOME  : Path to HCC SDK (defaults to ../../hcc relative to this
+#             script's abs_path). Used on AMD platforms only.
+# HSA_PATH  : Path to HSA dir (defaults to ../../hsa relative to abs_path
+#             of this script). Used on AMD platforms only.
 # HIP_VDI_HOME : Path to HIP/VDI directory. Used on AMD platforms only.
 
 if(scalar @ARGV == 0){
@@ -58,7 +60,23 @@ $isWindows = $^O eq 'MSWin32';
 $HIPCC_COMPILE_FLAGS_APPEND=$ENV{'HIPCC_COMPILE_FLAGS_APPEND'};
 $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 
-$HIP_PATH=$ENV{'HIP_PATH'} // dirname (dirname $0); # use parent directory of hipcc
+#
+# TODO: Fix rpath LDFLAGS settings
+#
+# Since this hipcc script gets installed at two uneven hierarchical levels,
+# linked by symlink, the absolute path of this script should be used to
+# derive HIP_PATH, as dirname $0 could be /opt/rocm/bin or /opt/rocm/hip/bin
+# depending on how it gets invoked.
+# ROCM_PATH which points to <rocm_install_dir> is determined based on whether
+# we find .info/version in the parent of HIP_PATH or not. If it is found,
+# ROCM_PATH is defined relative to HIP_PATH else it is hardcoded to /opt/rocm.
+#
+$HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
+if (-e "$HIP_PATH/../.info/version") {
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH
+} else {
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
+}
 $HIP_VDI_HOME=$ENV{'HIP_VDI_HOME'};
 $HIP_LIB_PATH=$ENV{'HIP_LIB_PATH'};
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
@@ -68,7 +86,7 @@ $HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibilit
 if (defined $HIP_VDI_HOME) {
     $HIP_INFO_PATH= "$HIP_VDI_HOME/lib/.hipInfo";
 } else {
-    $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo";
+    $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo"; # use actual file
 }
 
 #---
@@ -112,7 +130,7 @@ if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "VDI" and !defined $HIP_VDI_HOME) {
     if (-e "$hipcc_dir/../lib/bitcode") {
         $HIP_VDI_HOME = abs_path($hipcc_dir . "/..");
     } else {
-        $HIP_VDI_HOME = "/opt/rocm/hip";
+        $HIP_VDI_HOME = $HIP_PATH; # use HIP_PATH
     }
 }
 
@@ -136,10 +154,10 @@ if (defined $HIP_VDI_HOME) {
 if (defined $HIP_COMPILER and $HIP_COMPILER eq "clang") {
   $HIP_PLATFORM = "clang";
   if (!defined $HIP_CLANG_PATH) {
-    $HIP_CLANG_PATH = "/opt/rocm/llvm/bin";
+    $HIP_CLANG_PATH = "$ROCM_PATH/llvm/bin";
   }
   if (!defined $DEVICE_LIB_PATH) {
-    $DEVICE_LIB_PATH = "/opt/rocm/lib";
+    $DEVICE_LIB_PATH = "$ROCM_PATH/lib";
   }
 }
 
@@ -163,7 +181,6 @@ $target_gfx1012 = 0;
 $default_amdgpu_target = 1;
 
 if ($HIP_PLATFORM eq "clang") {
-    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
     $HIPCC="$HIP_CLANG_PATH/clang++";
 
     # If $HIPCC clang++ is not compiled, use clang instead
@@ -215,8 +232,10 @@ if ($HIP_PLATFORM eq "clang") {
     }
 
     if ($HIP_RUNTIME eq "HCC" ) {
-      $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
+      $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
       $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
+    } else {
+      $HIPCXXFLAGS .= " -fhip-new-launch-api";
     }
 
 } elsif ($HIP_PLATFORM eq "hcc") {
@@ -224,17 +243,15 @@ if ($HIP_PLATFORM eq "clang") {
     if (! defined $HIP_LIB_PATH) {
         $HIP_LIB_PATH = "$HIP_PATH/lib";
     }
-    $HSA_PATH=$ENV{'HSA_PATH'} // "/opt/rocm/hsa";
+    $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
 
-    $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "/opt/rocm/hcc";
+    $HCC_HOME=$ENV{'HCC_HOME'} // $hipConfig{'HCC_HOME'} // "$ROCM_PATH/hcc";
 
     $HCC_VERSION=`${HCC_HOME}/bin/hcc --version`;
     $HCC_VERSION=~/.*based on HCC ([^ ]+).*/;
     $HCC_VERSION=$1;
     $HCC_VERSION_MAJOR=$HCC_VERSION;
     $HCC_VERSION_MAJOR=~s/\..*//;
-
-    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 
     $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
     $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
@@ -492,6 +509,13 @@ foreach $arg (@ARGV)
     if($arg =~ m/^-O/)
     {
         $optArg = $arg;
+    }
+
+    ## This is a temporary workaround for CMake detection of OpenMP support.
+    ## It should be removed when the OpenMP detection c++ test in CMake is updated
+    ## and corrected CMake version is available.
+    if((defined $HIP_COMPILER) and ($HIP_COMPILER eq "clang") and ($arg eq '-fopenmp')) {
+        $HIPCXXFLAGS .= " -D_OPENMP "
     }
 
     ## process linker response file for hip-clang

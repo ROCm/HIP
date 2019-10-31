@@ -50,6 +50,21 @@ typedef enum hipMemcpyKind {
     hipMemcpyDefault
 } hipMemcpyKind;
 
+// hipDataType
+#define hipDataType cudaDataType
+#define HIP_R_16F CUDA_R_16F
+#define HIP_R_32F CUDA_R_32F
+#define HIP_R_64F CUDA_R_64F
+#define HIP_C_16F CUDA_C_16F
+#define HIP_C_32F CUDA_C_32F
+#define HIP_C_64F CUDA_C_64F
+
+// hipLibraryPropertyType
+#define hipLibraryPropertyType libraryPropertyType
+#define HIP_LIBRARY_MAJOR_VERSION MAJOR_VERSION
+#define HIP_LIBRARY_MINOR_VERSION MINOR_VERSION
+#define HIP_LIBRARY_PATCH_LEVEL PATCH_LEVEL
+
 // hipTextureAddressMode
 #define hipTextureAddressMode cudaTextureAddressMode
 #define hipAddressModeWrap cudaAddressModeWrap
@@ -459,6 +474,10 @@ inline static hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width,
     return hipCUDAErrorTohipError(cudaMallocPitch(ptr, pitch, width, height));
 }
 
+inline static hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr,size_t* pitch,size_t widthInBytes,size_t height,unsigned int elementSizeBytes){
+    return hipCUResultTohipError(cuMemAllocPitch(dptr,pitch,widthInBytes,height,elementSizeBytes));
+}
+
 inline static hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
     return hipCUDAErrorTohipError(cudaMalloc3D(pitchedDevPtr, extent));
 }
@@ -469,6 +488,12 @@ inline static hipError_t hipMallocHost(void** ptr, size_t size)
     __attribute__((deprecated("use hipHostMalloc instead")));
 inline static hipError_t hipMallocHost(void** ptr, size_t size) {
     return hipCUDAErrorTohipError(cudaMallocHost(ptr, size));
+}
+
+inline static hipError_t hipMemAllocHost(void** ptr, size_t size)
+    __attribute__((deprecated("use hipHostMalloc instead")));
+inline static hipError_t hipMemAllocHost(void** ptr, size_t size) {
+    return hipCUResultTohipError(cuMemAllocHost(ptr, size));
 }
 
 inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags)
@@ -761,6 +786,20 @@ inline static hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, s
     return hipCUResultTohipError(cuMemsetD8(dest, value, sizeBytes));
 }
 
+inline static hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes,
+                                          hipStream_t stream __dparm(0)) {
+    return hipCUResultTohipError(cuMemsetD8Async(dest, value, sizeBytes, stream));
+}
+
+inline static hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes) {
+    return hipCUResultTohipError(cuMemsetD16(dest, value, sizeBytes));
+}
+
+inline static hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes,
+                                           hipStream_t stream __dparm(0)) {
+    return hipCUResultTohipError(cuMemsetD16Async(dest, value, sizeBytes, stream));
+}
+
 inline static hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
     return hipCUDAErrorTohipError(cudaMemset2D(dst, pitch, value, width, height));
 }
@@ -841,6 +880,12 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->maxTexture3D[0] = cdprop.maxTexture3D[0];
     p_prop->maxTexture3D[1] = cdprop.maxTexture3D[1];
     p_prop->maxTexture3D[2] = cdprop.maxTexture3D[2];
+
+    p_prop->memPitch                 = cdprop.memPitch;
+    p_prop->textureAlignment         = cdprop.textureAlignment;
+    p_prop->kernelExecTimeoutEnabled = cdprop.kernelExecTimeoutEnabled;
+    p_prop->ECCEnabled               = cdprop.ECCEnabled;
+    p_prop->tccDriver                = cdprop.tccDriver;
 
     return hipCUDAErrorTohipError(cerror);
 }
@@ -946,9 +991,23 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         case hipDeviceAttributeMaxTexture3DDepth:
             cdattr = cudaDevAttrMaxTexture3DDepth;
             break;
-        default:
-            cerror = cudaErrorInvalidValue;
+        case hipDeviceAttributeMaxPitch:
+            cdattr = cudaDevAttrMaxPitch;
             break;
+        case hipDeviceAttributeTextureAlignment:
+            cdattr = cudaDevAttrTextureAlignment;
+            break;
+        case hipDeviceAttributeKernelExecTimeout:
+            cdattr = cudaDevAttrKernelExecTimeout;
+            break;
+        case hipDeviceAttributeCanMapHostMemory:
+            cdattr = cudaDevAttrCanMapHostMemory;
+            break;
+        case hipDeviceAttributeEccEnabled:
+            cdattr = cudaDevAttrEccEnabled;
+            break;
+        default:
+            return hipCUDAErrorTohipError(cudaErrorInvalidValue);
     }
 
     cerror = cudaDeviceGetAttribute(pi, cdattr, device);
@@ -1336,6 +1395,11 @@ inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, r
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
+    return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode> &tex) {
     return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
 }
 

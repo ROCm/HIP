@@ -802,6 +802,9 @@ class ihipDevice_t {
 
     // TODO - report this through device properties, base on HCC API call.
     int _isLargeBar;
+   
+    // Node id reported by kfd for this device
+    uint32_t _driver_node_id;
 
     ihipCtx_t* _primaryCtx;
 
@@ -1019,6 +1022,27 @@ inline std::ostream& operator<<(std::ostream& os, const ihipCtx_t* c) {
 namespace hip_internal {
 hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
                        hipStream_t stream);
+
+hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags);
+
+hipError_t ihipHostFree(TlsData *tls, void* ptr);
+
+};
+
+#define MAX_COOPERATIVE_GPUs 255
+
+// do not change these two structs without changing the device library
+struct mg_sync {
+    uint w0;
+    uint w1;
+};
+
+struct mg_info {
+    struct mg_sync *mgs;
+    uint grid_id;
+    uint num_grids;
+    ulong prev_sum;
+    ulong all_sum;
 };
 
 //---

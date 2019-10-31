@@ -17,9 +17,9 @@ mkdir -p $ROCMBINDIR
 pushd $ROCMBINDIR
 for f in $HIPBINFILES
 do
-    ln -s -f $f $(basename $f)
+    ln -r -s -f $f $(basename $f)
 done
-    ln -s -f $HIPDIR/bin/.hipVersion .hipVersion
+    ln -r -s -f $HIPDIR/bin/.hipVersion .hipVersion
 popd
 
 # Soft-link to headers
@@ -27,5 +27,5 @@ HIPINCDIR=$HIPDIR/include/hip
 ROCMINCDIR=$ROCMDIR/include
 mkdir -p $ROCMINCDIR
 pushd $ROCMINCDIR
-    ln -s -f $HIPINCDIR hip
+    ln -r -s -f $HIPINCDIR hip
 popd

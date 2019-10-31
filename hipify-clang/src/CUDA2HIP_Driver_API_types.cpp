@@ -305,7 +305,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   // cudaDevAttrWarpSize
   {"CU_DEVICE_ATTRIBUTE_WARP_SIZE",                                    {"hipDeviceAttributeWarpSize",                               "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 10
   // cudaDevAttrMaxPitch
-  {"CU_DEVICE_ATTRIBUTE_MAX_PITCH",                                    {"hipDeviceAttributeMaxPitch",                               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 11
+  {"CU_DEVICE_ATTRIBUTE_MAX_PITCH",                                    {"hipDeviceAttributeMaxPitch",                               "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 11
   // cudaDevAttrMaxRegistersPerBlock
   {"CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_BLOCK",                      {"hipDeviceAttributeMaxRegistersPerBlock",                   "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 12
   // no analogue
@@ -313,18 +313,18 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   // cudaDevAttrClockRate
   {"CU_DEVICE_ATTRIBUTE_CLOCK_RATE",                                   {"hipDeviceAttributeClockRate",                              "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 13
   // cudaDevAttrTextureAlignment
-  {"CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT",                            {"hipDeviceAttributeTextureAlignment",                       "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 14
+  {"CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT",                            {"hipDeviceAttributeTextureAlignment",                       "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 14
   // cudaDevAttrGpuOverlap
   // NOTE: Deprecated, use instead CU_DEVICE_ATTRIBUTE_ASYNC_ENGINE_COUNT
   {"CU_DEVICE_ATTRIBUTE_GPU_OVERLAP",                                  {"hipDeviceAttributeAsyncEngineCount",                       "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 15
   // cudaDevAttrMultiProcessorCount
   {"CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT",                         {"hipDeviceAttributeMultiprocessorCount",                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 16
   // cudaDevAttrKernelExecTimeout
-  {"CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT",                          {"hipDeviceAttributeKernelExecTimeout",                      "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 17
+  {"CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT",                          {"hipDeviceAttributeKernelExecTimeout",                      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 17
   // cudaDevAttrIntegrated
   {"CU_DEVICE_ATTRIBUTE_INTEGRATED",                                   {"hipDeviceAttributeIntegrated",                             "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 18
   // cudaDevAttrCanMapHostMemory
-  {"CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY",                          {"hipDeviceAttributeCanMapHostMemory",                       "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 19
+  {"CU_DEVICE_ATTRIBUTE_CAN_MAP_HOST_MEMORY",                          {"hipDeviceAttributeCanMapHostMemory",                       "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 19
   // cudaDevAttrComputeMode
   {"CU_DEVICE_ATTRIBUTE_COMPUTE_MODE",                                 {"hipDeviceAttributeComputeMode",                            "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 20
   // cudaDevAttrMaxTexture1DWidth
@@ -359,7 +359,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   // cudaDevAttrConcurrentKernels
   {"CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS",                           {"hipDeviceAttributeConcurrentKernels",                      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 31
   // cudaDevAttrEccEnabled
-  {"CU_DEVICE_ATTRIBUTE_ECC_ENABLED",                                  {"hipDeviceAttributeEccEnabled",                             "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 32
+  {"CU_DEVICE_ATTRIBUTE_ECC_ENABLED",                                  {"hipDeviceAttributeEccEnabled",                             "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 32
   // cudaDevAttrPciBusId
   {"CU_DEVICE_ATTRIBUTE_PCI_BUS_ID",                                   {"hipDeviceAttributePciBusId",                               "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 33
   // cudaDevAttrPciDeviceId

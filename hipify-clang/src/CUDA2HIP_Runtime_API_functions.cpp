@@ -179,7 +179,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
 
   // 5.7. Execution Control
   // no analogue
-  {"cudaFuncGetAttributes",                                   {"hipFuncGetAttributes",                                   "", CONV_EXECUTION, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaFuncGetAttributes",                                   {"hipFuncGetAttributes",                                   "", CONV_EXECUTION, API_RUNTIME}},
   // no analogue
   {"cudaFuncSetAttribute",                                    {"hipFuncSetAttribute",                                    "", CONV_EXECUTION, API_RUNTIME, HIP_UNSUPPORTED}},
   // no analogue
@@ -293,9 +293,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // NOTE: Not equal to cuMemcpy2DAsync due to different signatures
   {"cudaMemcpy2DAsync",                                       {"hipMemcpy2DAsync",                                       "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
-  {"cudaMemcpy2DFromArray",                                   {"hipMemcpy2DFromArray",                                   "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaMemcpy2DFromArray",                                   {"hipMemcpy2DFromArray",                                   "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
-  {"cudaMemcpy2DFromArrayAsync",                              {"hipMemcpy2DFromArrayAsync",                              "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaMemcpy2DFromArrayAsync",                              {"hipMemcpy2DFromArrayAsync",                              "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   {"cudaMemcpy2DToArray",                                     {"hipMemcpy2DToArray",                                     "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
@@ -305,7 +305,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaMemcpy3D",                                            {"hipMemcpy3D",                                            "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   // NOTE: Not equal to cuMemcpy3DAsync due to different signatures
-  {"cudaMemcpy3DAsync",                                       {"hipMemcpy3DAsync",                                       "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaMemcpy3DAsync",                                       {"hipMemcpy3DAsync",                                       "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   // NOTE: Not equal to cuMemcpy3DPeer due to different signatures
   {"cudaMemcpy3DPeer",                                        {"hipMemcpy3DPeer",                                        "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
