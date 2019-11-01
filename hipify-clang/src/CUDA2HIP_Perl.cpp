@@ -253,7 +253,8 @@ namespace perl {
 
   void generateCubNamespace(unique_ptr<ostream>& streamPtr) {
     *streamPtr.get() << endl << sub << "transformCubNamespace" << " {" << endl_tab << my_k << endl;
-    *streamPtr.get() << tab << "$k += s/using\\s*namespace\\s*cub/using namespace hipcub/g;" << endl << tab << return_k << "}" << endl;
+    *streamPtr.get() << tab << "$k += s/using\\s*namespace\\s*cub/using namespace hipcub/g;" << endl;
+    *streamPtr.get() << tab << "$k += s/\\bcub::\\b/hipcub::/g;" << endl << tab << return_k << "}" << endl;
   }
 
   void generateHostFunctions(unique_ptr<ostream>& streamPtr) {
