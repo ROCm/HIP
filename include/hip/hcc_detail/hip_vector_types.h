@@ -54,11 +54,11 @@ THE SOFTWARE.
                 const Scalar_accessor* p;
 
                 __host__ __device__
-                operator const T*() const noexcept {
+                operator const T*() const volatile noexcept {
                     return &reinterpret_cast<const T*>(p)[idx];
                 }
                 __host__ __device__
-                operator T*() noexcept {
+                operator T*() volatile noexcept {
                     return &reinterpret_cast<T*>(
                         const_cast<Scalar_accessor*>(p))[idx];
                 }
@@ -68,7 +68,7 @@ THE SOFTWARE.
             Vector data;
 
             __host__ __device__
-            operator T() const noexcept { return data[idx]; }
+            operator T() const volatile noexcept { return data[idx]; }
 
             __host__ __device__
             Address operator&() const noexcept { return Address{this}; }
