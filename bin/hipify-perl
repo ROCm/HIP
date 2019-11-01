@@ -1680,6 +1680,7 @@ sub transformKernelLaunch {
 sub transformCubNamespace {
     my $k = 0;
     $k += s/using\s*namespace\s*cub/using namespace hipcub/g;
+    $k += s/\bcub::\b/hipcub::/g;
     return $k;
 }
 
