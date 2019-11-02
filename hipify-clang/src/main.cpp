@@ -225,6 +225,10 @@ int main(int argc, const char **argv) {
     if (llcompat::pragma_once_outside_header()) {
       Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-Wno-pragma-once-outside-header", ct::ArgumentInsertPosition::BEGIN));
     }
+    if (!CudaGpuArch.empty()) {
+      std::string sCudaGpuArch = "--cuda-gpu-arch=" + CudaGpuArch;
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaGpuArch.c_str(), ct::ArgumentInsertPosition::BEGIN));
+    }
     if (!MacroNames.empty()) {
       for (std::string s : MacroNames) {
         Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::END));
