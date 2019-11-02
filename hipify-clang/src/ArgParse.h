@@ -52,3 +52,4 @@ extern cl::extrahelp CommonHelp;
 extern cl::opt<bool> TranslateToRoc;
 extern cl::opt<bool> DashDash;
 extern cl::opt<bool> SkipExcludedPPConditionalBlocks;
+extern cl::opt<std::string> CudaGpuArch;
