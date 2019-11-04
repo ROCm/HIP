@@ -53,7 +53,7 @@ typedef struct ihipIpcMemHandle_st {
 
 // This macro should be called at the beginning of every HIP API.
 #define HIP_INIT_API(cid, ...)                               \
-  LogPrintfInfo("[%zx] %s ( %s )", std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "[%zx] %s ( %s )", std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
   amd::Thread* thread = amd::Thread::current();              \
   if (!CL_CHECK_THREAD(thread)) {                            \
     HIP_RETURN(hipErrorOutOfMemory);                         \
@@ -63,7 +63,7 @@ typedef struct ihipIpcMemHandle_st {
 
 #define HIP_RETURN(ret)          \
   hip::g_lastError = ret;  \
-  LogPrintfInfo("[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
   return hip::g_lastError;
 
 namespace hc {

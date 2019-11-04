@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 // This macro should be called at the beginning of every HIP RTC API.
 #define HIPRTC_INIT_API(...)                                 \
-  LogPrintfInfo("[%zx] %s ( %s )", std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "[%zx] %s ( %s )", std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
   amd::Thread* thread = amd::Thread::current();              \
   if (!CL_CHECK_THREAD(thread)) {                            \
     HIPRTC_RETURN(HIPRTC_ERROR_INTERNAL_ERROR);               \
@@ -36,8 +36,8 @@ THE SOFTWARE.
 
 #define HIPRTC_RETURN(ret)             \
   hiprtc::g_lastRtcError = ret;        \
-  LogPrintfInfo("[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, \
-                hiprtcGetErrorString(hiprtc::g_lastRtcError));                 \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, \
+          hiprtcGetErrorString(hiprtc::g_lastRtcError));                 \
   return hiprtc::g_lastRtcError;
 
 

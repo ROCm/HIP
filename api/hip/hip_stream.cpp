@@ -114,7 +114,7 @@ static hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags, amd:
 
   *stream = reinterpret_cast<hipStream_t>(hStream);
 
-  LogPrintfInfo("ihipStreamCreate: %zx", hStream);
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "ihipStreamCreate: %zx", hStream);
 
   return hipSuccess;
 }
