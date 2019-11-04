@@ -183,25 +183,13 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
   program->setVarInfoCallBack(&getSvarInfo);
 
   if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, ElfSize(image))) {
->>>> ORIGINAL //depot/stg/opencl/drivers/opencl/api/hip/hip_module.cpp#44
-      return hipErrorUnknown;
-==== THEIRS //depot/stg/opencl/drivers/opencl/api/hip/hip_module.cpp#45
     return hipErrorInvalidKernelFile;
-==== YOURS //0_HIPWS_LNX1_ROCM/main/drivers/opencl/api/hip/hip_module.cpp
-    return hipErrorUnknown;
-<<<<
   }
 
   *module = reinterpret_cast<hipModule_t>(as_cl(program));
 
   if (!ihipModuleRegisterGlobal(program, module)) {
->>>> ORIGINAL //depot/stg/opencl/drivers/opencl/api/hip/hip_module.cpp#44
-      return hipErrorUnknown;
-==== THEIRS //depot/stg/opencl/drivers/opencl/api/hip/hip_module.cpp#45
     return hipErrorSharedObjectSymbolNotFound;
-==== YOURS //0_HIPWS_LNX1_ROCM/main/drivers/opencl/api/hip/hip_module.cpp
-    return hipErrorUnknown;
-<<<<
   }
 
   if (!ihipModuleRegisterUndefined(program, module)) {
