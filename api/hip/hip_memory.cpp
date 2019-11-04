@@ -168,6 +168,11 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     HIP_RETURN(hipErrorInvalidValue);
   }
 
+  // XXX Till we have fine grained VRAM support...
+  if ((flags & hipDeviceMallocFinegrained) != 0) {
+    HIP_RETURN(hipErrorMemoryAllocation);
+  }
+
   HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_SVM_ATOMICS: 0));
 }
 
