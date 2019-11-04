@@ -587,8 +587,8 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
   hipDeviceptr_t device_ptr = nullptr;
 
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
-                                              &sym_size)) {
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+                                              &device_ptr, &sym_size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
@@ -611,8 +611,8 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count,
   hipDeviceptr_t device_ptr = nullptr;
 
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
-                                              &sym_size)) {
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+                                              &device_ptr, &sym_size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
@@ -635,8 +635,8 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
   hipDeviceptr_t device_ptr = nullptr;
 
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
-                                              &sym_size)) {
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+                                              &device_ptr, &sym_size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
@@ -659,8 +659,8 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t co
   hipDeviceptr_t device_ptr = nullptr;
 
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), &device_ptr,
-                                              &sym_size)) {
+  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+                                              &device_ptr, &sym_size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 

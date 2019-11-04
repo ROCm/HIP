@@ -155,7 +155,7 @@ public:
   };
 private:
   std::unordered_map<const void*, DeviceFunction > functions_;
-  std::unordered_map<std::string, DeviceVar > vars_;
+  std::unordered_multimap<std::string, DeviceVar > vars_;
 
   static PlatformState* platform_;
 
@@ -168,16 +168,19 @@ public:
 
   std::vector< std::pair<hipModule_t, bool> >* unregisterVar(hipModule_t hmod);
 
+
+  PlatformState::DeviceVar* findVar(std::string hostVar, int deviceId, hipModule_t hmod);
   void registerVar(const void* hostvar, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
 
   hipFunction_t getFunc(const void* hostFunction, int deviceId);
   bool getFuncAttr(const void* hostFunction, hipFuncAttributes* func_attr);
-  bool getGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
-                    size_t* size_ptr);
+  bool getGlobalVar(const void* hostVar, int deviceId, hipModule_t hmod,
+                    hipDeviceptr_t* dev_ptr, size_t* size_ptr);
   bool getTexRef(const char* hostVar, textureReference** texRef);
 
-  bool getShadowVarInfo(std::string var_name, void** var_addr, size_t* var_size);
+  bool getShadowVarInfo(std::string var_name, hipModule_t hmod,
+                        void** var_addr, size_t* var_size);
   void setupArgument(const void *arg, size_t size, size_t offset);
   void configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
 
