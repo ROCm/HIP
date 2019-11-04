@@ -339,7 +339,7 @@ hipError_t hipDeviceGetLimit ( size_t* pValue, hipLimit_t limit ) {
   }
   if(limit == hipLimitMallocHeapSize) {
     hipDeviceProp_t prop;
-    hipGetDeviceProperties(&prop, 0);
+    hipGetDeviceProperties(&prop, ihipGetDevice());
 
     *pValue = prop.totalGlobalMem;
     HIP_RETURN(hipSuccess);
