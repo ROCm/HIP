@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD_CMD: global_kernel.code %hc --genco %S/global_kernel.cpp -o global_kernel.code
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
  */
