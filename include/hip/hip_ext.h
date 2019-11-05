@@ -20,8 +20,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HIP_HIP_HCC_H
-#define HIP_INCLUDE_HIP_HIP_HCC_H
+#ifndef HIP_INCLUDE_HIP_HIP_EXT_H
+#define HIP_INCLUDE_HIP_HIP_EXT_H
 #include "hip/hip_runtime_api.h"
 #ifdef __HCC__
 
@@ -111,8 +111,8 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr)
                                     __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
 
-// doxygen end HCC-specific features
+// doxygen end AMD-specific features
 /**
  * @}
  */
-#endif  // #ifdef HIP_INCLUDE_HIP_HIP_HCC_H
+#endif  // #ifdef HIP_INCLUDE_HIP_HIP_EXT_H
