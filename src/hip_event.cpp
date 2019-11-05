@@ -172,14 +172,14 @@ hipError_t hipEventDestroy(hipEvent_t event) {
 hipError_t hipEventSynchronize(hipEvent_t event) {
     HIP_INIT_SPECIAL_API(hipEventSynchronize, TRACE_SYNC, event);
 
-    if (!(event->_flags & hipEventReleaseToSystem)) {
-        tprintf(DB_WARN,
+    if(event){
+        if (!(event->_flags & hipEventReleaseToSystem)) {
+            tprintf(DB_WARN,
                 "hipEventSynchronize on event without system-scope fence ; consider creating with "
                 "hipEventReleaseToSystem\n");
-    }
-    auto ecd = event->locked_copyCrit();
+        }
+        auto ecd = event->locked_copyCrit();
 
-    if (event) {
         if (ecd._state == hipEventStatusUnitialized) {
             return ihipLogStatus(hipErrorInvalidResourceHandle);
         } else if (ecd._state == hipEventStatusCreated) {
