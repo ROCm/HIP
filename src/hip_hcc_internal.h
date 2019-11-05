@@ -724,8 +724,6 @@ class ihipEvent_t {
     explicit ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future* cf, hipStream_t stream,
                                   ihipEventType_t eventType);
-    std::pair<hipEventStatus_t, uint64_t> refreshEventStatus();  // returns pair <state, timestamp>
-
 
     // Return a copy of the critical state. The critical data is locked during the copy.
     ihipEventData_t locked_copyCrit() {
