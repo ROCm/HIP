@@ -30,10 +30,6 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#define fileName "vcpy_kernel.code"
-#define kernel_name "hello_world"
-
-
 __global__ void f1(float *a) { *a = 1.0; }
 
 template <typename T>
@@ -49,10 +45,9 @@ int main(int argc, char* argv[]) {
     hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
     assert(gridSize != 0 && blockSize != 0);
 
-    uint32_t numBlock = 0;
-    hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, f1, blockSize, 0);
+    int numBlock = 0;
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, f1, (int)blockSize, 0);
     assert(numBlock != 0);
-
 
     // test case for using kernel function pointer with template
     gridSize = 0;
@@ -61,17 +56,7 @@ int main(int argc, char* argv[]) {
     assert(gridSize != 0 && blockSize != 0);
 
     numBlock = 0;
-    hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(&numBlock, f2, blockSize, 0);
-    assert(numBlock != 0);
-
-
-    // test case for using kernel with hipFunction_t type
-    numBlock = 0;
-    hipModule_t Module;
-    hipFunction_t Function;
-    HIPCHECK(hipModuleLoad(&Module, fileName));
-    HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, Function, blockSize, 0));
+    hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(&numBlock, f2, (int)blockSize, 0);
     assert(numBlock != 0);
 
     passed();
