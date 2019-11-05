@@ -2994,7 +2994,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStart API is under development.
  */
-hipError_t hipProfilerStart();
+hipError_t hipProfilerStart() __attribute__((deprecated("use roctracer/rocTX instead")));
 
 
 /**
@@ -3002,7 +3002,7 @@ hipError_t hipProfilerStart();
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStop API is under development.
  */
-hipError_t hipProfilerStop();
+hipError_t hipProfilerStop() __attribute__((deprecated("use roctracer/rocTX instead")));
 
 
 /**
