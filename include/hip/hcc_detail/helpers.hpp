@@ -48,7 +48,24 @@ namespace hip_impl {
 template <typename...>
 using void_t_ = void;
 
-#if (__cplusplus < 201402L)
+#if ((__cplusplus >= 201703L) && defined(__cpp_lib_is_invocable))
+// C++17
+template <typename, typename = void>
+struct is_callable_impl : std::false_type {};
+
+template <FunctionalProcedure F, typename... Ts>
+struct is_callable_impl<F(Ts...), void_t_<std::invoke_result<F(Ts...)> > > : std::true_type {};
+
+#elif ((__cplusplus >= 201210L) && defined(__cpp_lib_result_of_sfinae))
+
+template <typename, typename = void>
+struct is_callable_impl : std::false_type {};
+
+template <FunctionalProcedure F, typename... Ts>
+struct is_callable_impl<F(Ts...), void_t_<typename std::result_of<F(Ts...)>::type > > : std::true_type {};
+
+#else
+
 template <FunctionalProcedure F, unsigned int n = 0u, typename = void>
 struct is_callable_impl : is_callable_impl<F, n + 1u> {};
 
@@ -84,22 +101,9 @@ struct is_callable_impl<F(Ts...), 4u, void_t_<decltype(std::declval<F>()(std::de
 // Not callable.
 template <FunctionalProcedure F>
 struct is_callable_impl<F, 5u> : std::false_type {};
-#elif  (__cplusplus < 201703L)
-template <typename, typename = void>
-struct is_callable_impl : std::false_type {};
 
-template <FunctionalProcedure F, typename... Ts>
-struct is_callable_impl<F(Ts...), void_t_<typename std::result_of<F(Ts...)>::type > > : std::true_type {};
-#else
-
-// C++17
-
-template <typename, typename = void>
-struct is_callable_impl : std::false_type {};
-
-template <FunctionalProcedure F, typename... Ts>
-struct is_callable_impl<F(Ts...), void_t_<std::invoke_result<F(Ts...)> > > : std::true_type {};
 #endif
+
 template <typename Call>
 struct is_callable : is_callable_impl<Call> {};
 
@@ -117,3 +121,4 @@ struct is_callable : is_callable_impl<Call> {};
 #define overload_macro_hip_(macro, ...)                                                            \
     overload_macro_impl_hip_(macro, count_macro_args_hip_(__VA_ARGS__))(__VA_ARGS__)
 }  // namespace hip_impl
+
