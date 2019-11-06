@@ -128,7 +128,7 @@ bool pragma_once_outside_header() {
 }
 
 bool canCompileHostAndDeviceInOneJob() {
-#if LLVM_VERSION_MAJOR >= 9 && defined(_WIN32)
+#if LLVM_VERSION_MAJOR > 9 && defined(_WIN32)
   return true;
 #else
   return false;
