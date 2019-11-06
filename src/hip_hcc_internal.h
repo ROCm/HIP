@@ -583,8 +583,6 @@ class ihipStream_t {
     void locked_streamWaitEvent(ihipEventData_t& event);
     hc::completion_future locked_recordEvent(hipEvent_t event);
 
-    bool locked_eventIsReady(hipEvent_t event);
-
     ihipStreamCritical_t& criticalData() { return _criticalData; };
 
     //---

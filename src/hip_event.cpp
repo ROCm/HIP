@@ -222,25 +222,19 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
 hipError_t hipEventQuery(hipEvent_t event) {
     HIP_INIT_SPECIAL_API(hipEventQuery, TRACE_QUERY, event);
  
-    hipError_t status = hipSuccess;
+    if (!event) return ihipLogStatus(hipErrorInvalidResourceHandle);
 
-    if ( NULL == event)
-    {
-        status = hipErrorInvalidResourceHandle;
-    } else {
-        if (!(event->_flags & hipEventReleaseToSystem)) {
-            tprintf(DB_WARN,
-                    "hipEventQuery on event without system-scope fence ; consider creating with "
-                    "hipEventReleaseToSystem\n");
-        }
-
-        auto ecd = event->locked_copyCrit();
-
-        if ((ecd._state == hipEventStatusRecording) && !ecd._stream->locked_eventIsReady(event)) {
-            status = hipErrorNotReady;
-        } else {
-            status = hipSuccess;
-        }
+    if (!(event->_flags & hipEventReleaseToSystem)) {
+        tprintf(DB_WARN,
+                "hipEventQuery on event without system-scope fence ; consider creating with "
+                "hipEventReleaseToSystem\n");
     }
-    return ihipLogStatus(status);
+
+    auto ecd = event->locked_copyCrit();
+
+    if (ecd._state == hipEventStatusRecording && !ecd.marker().is_ready()) {
+        return ihipLogStatus(hipErrorNotReady);
+    }
+
+    return ihipLogStatus(hipSuccess);
 }
