@@ -1126,7 +1126,7 @@ THE SOFTWARE.
             {
                 auto r = static_cast<__half2_raw>(x).data ==
                     static_cast<__half2_raw>(y).data;
-                return __half2_raw{__builtin_convertvector(-r, _Float16_2)};
+                return __builtin_convertvector(-r, _Float16_2);
             }
             inline
             __device__
