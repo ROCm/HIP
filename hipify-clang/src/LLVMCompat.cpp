@@ -151,4 +151,12 @@ bool CheckCompatibility() {
   return true;
 }
 
+clang::SourceLocation getEndOfExpansionRangeForLoc(const clang::SourceManager& SM, const clang::SourceLocation& loc) {
+#if LLVM_VERSION_MAJOR > 6
+  return SM.getExpansionRange(loc).getEnd();
+#else
+  return SM.getExpansionRange(loc).second;
+#endif
+}
+
 } // namespace llcompat
