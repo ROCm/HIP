@@ -391,7 +391,7 @@ bool HipifyAction::cudaLaunchKernel(const mat::MatchFinder::MatchResult &Result)
   }
   OS << ")";
   clang::SourceLocation launchKernelExprLocBeg = launchKernel->getExprLoc();
-  clang::SourceLocation launchKernelExprLocEnd = launchKernelExprLocBeg.isMacroID() ? SM->getExpansionRange(launchKernelExprLocBeg).getEnd() : llcompat::getEndLoc(launchKernel);
+  clang::SourceLocation launchKernelExprLocEnd = launchKernelExprLocBeg.isMacroID() ? llcompat::getEndOfExpansionRangeForLoc(*SM, launchKernelExprLocBeg) : llcompat::getEndLoc(launchKernel);
   clang::SourceLocation launchKernelEnd = llcompat::getEndLoc(launchKernel);
   clang::BeforeThanCompare<clang::SourceLocation> isBefore(*SM);
   launchKernelExprLocEnd = isBefore(launchKernelEnd, launchKernelExprLocEnd) ? launchKernelExprLocEnd : launchKernelEnd;
