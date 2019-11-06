@@ -91,4 +91,6 @@ void RetainExcludedConditionalBlocks(clang::CompilerInstance &CI);
 
 bool CheckCompatibility();
 
+clang::SourceLocation getEndOfExpansionRangeForLoc(const clang::SourceManager& SM, const clang::SourceLocation& loc);
+
 } // namespace llcompat
