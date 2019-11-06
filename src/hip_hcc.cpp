@@ -325,14 +325,6 @@ void ihipStream_t::locked_streamWaitEvent(ihipEventData_t& ecd) {
 }
 
 
-// Causes current stream to wait for specified event to complete:
-// Note this does not provide any kind of host serialization.
-bool ihipStream_t::locked_eventIsReady(hipEvent_t event) {
-    LockedAccessor_EventCrit_t ecrit(event->criticalData());
-
-    return (ecrit->_eventData.marker().is_ready());
-}
-
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
 hc::completion_future ihipStream_t::locked_recordEvent(hipEvent_t event) {
