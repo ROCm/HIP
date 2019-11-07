@@ -189,18 +189,23 @@ class api_callbacks_spawner_t {
   void call() {
     hip_api_callback_t fun = entry(cid_).fun;
     void* arg = entry(cid_).arg;
-    if (fun != NULL) fun(HIP_DOMAIN_ID, cid_, api_data_, arg);
+    if (fun != NULL) {
+      fun(HIP_DOMAIN_ID, cid_, api_data_, arg);
+      api_data_->phase = ACTIVITY_API_PHASE_EXIT;
+    }
   }
 
   ~api_callbacks_spawner_t() {
-    if (api_data_ == NULL) return;
+    if (!is_enabled()) return;
 
-    hip_act_callback_t act = entry(cid_).act;
-    void* a_arg = entry(cid_).a_arg;
-    hip_api_callback_t fun = entry(cid_).fun;
-    void* arg = entry(cid_).arg;
-    if (act != NULL) act(cid_, NULL, api_data_, a_arg);
-    if (fun != NULL) fun(HIP_DOMAIN_ID, cid_, api_data_, arg);
+    if (api_data_ != NULL) {
+      hip_api_callback_t fun = entry(cid_).fun;
+      void* arg = entry(cid_).arg;
+      hip_act_callback_t act = entry(cid_).act;
+      void* a_arg = entry(cid_).a_arg;
+      if (fun != NULL) fun(HIP_DOMAIN_ID, cid_, api_data_, arg);
+      if (act != NULL) act(cid_, NULL, NULL, a_arg);
+    }
 
     callbacks_table.sem_release(cid_);
   }
