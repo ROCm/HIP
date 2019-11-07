@@ -37,11 +37,6 @@ THE SOFTWARE.
 #if !defined(_MSC_VER) || __clang__
 #if defined(__clang__)
     #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
-#elif defined(__GNUC__) // N.B.: GCC does not support .xyzw syntax.
-    #define __ROUND_UP_TO_NEXT_POT__(x) \
-        (1 << (31 - __builtin_clz(x) + (x > (1 << (31 - __builtin_clz(x))))))
-    #define __NATIVE_VECTOR__(n, T) \
-        __attribute__((vector_size(__ROUND_UP_TO_NEXT_POT__(n) * sizeof(T))))
 #endif
 
 #if defined(__cplusplus) && defined(__clang__)
@@ -932,47 +927,23 @@ THE SOFTWARE.
         using CUDA_name##4 = HIP_vector_type<T, 4>;
 #else
     #define __MAKE_VECTOR_TYPE__(CUDA_name, T) \
-        typedef T CUDA_name##_impl1 __NATIVE_VECTOR__(1, T);\
-        typedef T CUDA_name##_impl2 __NATIVE_VECTOR__(2, T);\
-        typedef T CUDA_name##_impl3 __NATIVE_VECTOR__(3, T);\
-        typedef T CUDA_name##_impl4 __NATIVE_VECTOR__(4, T);\
         typedef struct {\
-            union {\
-                CUDA_name##_impl1 data;\
-                struct {\
-                    T x;\
-                };\
-            };\
+            T x;\
         } CUDA_name##1;\
         typedef struct {\
-            union {\
-                CUDA_name##_impl2 data;\
-                struct {\
-                    T x;\
-                    T y;\
-                };\
-            };\
+            T x;\
+            T y;\
         } CUDA_name##2;\
         typedef struct {\
-            union {\
-                T data[3];\
-                struct {\
-                    T x;\
-                    T y;\
-                    T z;\
-                };\
-            };\
+            T x;\
+            T y;\
+            T z;\
         } CUDA_name##3;\
         typedef struct {\
-            union {\
-                CUDA_name##_impl4 data;\
-                struct {\
-                    T x;\
-                    T y;\
-                    T z;\
-                    T w;\
-                };\
-            };\
+            T x;\
+            T y;\
+            T z;\
+            T w;\
         } CUDA_name##4;
 #endif
 

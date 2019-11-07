@@ -33,14 +33,14 @@ llvm::StringRef unquoteStr(llvm::StringRef s) {
   return s;
 }
 
-void removePrefixIfPresent(std::string &s, const std::string& prefix) {
+void removePrefixIfPresent(std::string &s, const std::string &prefix) {
   if (s.find(prefix) != 0) {
     return;
   }
   s.erase(0, prefix.size());
 }
 
-std::string getAbsoluteFilePath(const std::string& sFile, std::error_code& EC) {
+std::string getAbsoluteFilePath(const std::string &sFile, std::error_code &EC) {
   if (sFile.empty()) {
     return sFile;
   }
@@ -59,8 +59,8 @@ std::string getAbsoluteFilePath(const std::string& sFile, std::error_code& EC) {
   return fileAbsPath.c_str();
 }
 
-std::string getAbsoluteDirectoryPath(const std::string& sDir, std::error_code& EC,
-  const std::string& sDirType, bool bCreateDir) {
+std::string getAbsoluteDirectoryPath(const std::string &sDir, std::error_code &EC,
+  const std::string &sDirType, bool bCreateDir) {
   if (sDir.empty()) {
     return sDir;
   }

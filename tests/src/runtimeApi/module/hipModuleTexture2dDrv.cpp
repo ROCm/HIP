@@ -27,11 +27,9 @@ THE SOFTWARE.
  */
 
 #include "hip/hip_runtime.h"
-//#include "hip/hip_runtime_api.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
-//#include <hip/hip_hcc.h>
 
 #define fileName "tex2d_kernel.code"
 
