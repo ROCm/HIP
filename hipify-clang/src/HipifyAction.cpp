@@ -150,7 +150,7 @@ void HipifyAction::RewriteToken(const clang::Token &t) {
 
 void HipifyAction::FindAndReplace(StringRef name,
                                   clang::SourceLocation sl,
-                                  const std::map<StringRef, hipCounter> &repMap, 
+                                  const std::map<StringRef, hipCounter> &repMap,
                                   bool bReplace) {
   const auto found = repMap.find(name);
   if (found == repMap.end()) {
