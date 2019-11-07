@@ -226,12 +226,7 @@ int main(int argc, const char **argv) {
     if (llcompat::pragma_once_outside_header()) {
       Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-Wno-pragma-once-outside-header", ct::ArgumentInsertPosition::BEGIN));
     }
-    if (llcompat::canCompileHostAndDeviceInOneJob()) {
-      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-compile-host-device", ct::ArgumentInsertPosition::BEGIN));
-    }
-    else {
-      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
-    }
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
     if (!CudaGpuArch.empty()) {
       std::string sCudaGpuArch = "--cuda-gpu-arch=" + CudaGpuArch;
       Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaGpuArch.c_str(), ct::ArgumentInsertPosition::BEGIN));

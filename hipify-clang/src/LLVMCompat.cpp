@@ -127,14 +127,6 @@ bool pragma_once_outside_header() {
 #endif
 }
 
-bool canCompileHostAndDeviceInOneJob() {
-#if LLVM_VERSION_MAJOR > 9 && defined(_WIN32)
-  return true;
-#else
-  return false;
-#endif
-}
-
 void RetainExcludedConditionalBlocks(clang::CompilerInstance &CI) {
 #if LLVM_VERSION_MAJOR > 9
   clang::PreprocessorOptions &PPOpts = CI.getPreprocessorOpts();
