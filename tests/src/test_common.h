@@ -104,8 +104,15 @@ THE SOFTWARE.
 #define popen(x,y) _popen(x,y)
 #define pclose(x) _pclose(x)
 #define setenv(x,y,z) _putenv_s(x,y)
+#define unsetenv _putenv
+#define PLATFORM_NAME "WINDOWS"
+#define HIP_VISIBLE_DEVICES "HIP_VISIBLE_DEVICES="
+#define CUDA_VISIBLE_DEVICES "CUDA_VISIBLE_DEVICES="
 #else
 #define aligned_free(x) free(x)
+#define PLATFORM_NAME "OTHER"
+#define HIP_VISIBLE_DEVICES "HIP_VISIBLE_DEVICES"
+#define CUDA_VISIBLE_DEVICES "CUDA_VISIBLE_DEVICES"
 #endif
 
 // standard command-line variables:
