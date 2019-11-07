@@ -60,9 +60,9 @@ namespace python {
     *pythonStreamPtr.get() << "from pyHIPIFY.constants import *\n\n";
     *pythonStreamPtr.get() << "CUDA_RENAMES_MAP = collections.OrderedDict([\n";
     const std::string sHIP_UNS = ", HIP_UNSUPPORTED";
-    for (int i = 0; i < NUM_CONV_TYPES; i++) {
+    for (int i = 0; i < NUM_CONV_TYPES; ++i) {
       if (i == CONV_INCLUDE_CUDA_MAIN_H || i == CONV_INCLUDE) {
-        for (auto& ma : CUDA_INCLUDE_MAP) {
+        for (auto &ma : CUDA_INCLUDE_MAP) {
           if (i == ma.second.type) {
             std::string sUnsupported;
             if (Statistics::isUnsupported(ma.second)) {
@@ -74,7 +74,7 @@ namespace python {
         }
       }
       else {
-        for (auto& ma : CUDA_RENAMES_MAP()) {
+        for (auto &ma : CUDA_RENAMES_MAP()) {
           if (i == ma.second.type) {
             std::string sUnsupported;
             if (Statistics::isUnsupported(ma.second)) {
