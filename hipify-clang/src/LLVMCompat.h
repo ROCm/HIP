@@ -49,11 +49,11 @@ namespace llcompat {
   #define LLVM_DEBUG(X) DEBUG(X)
 #endif
 
-clang::SourceLocation getBeginLoc(const clang::Stmt* stmt);
-clang::SourceLocation getBeginLoc(const clang::TypeLoc& typeLoc);
+clang::SourceLocation getBeginLoc(const clang::Stmt *stmt);
+clang::SourceLocation getBeginLoc(const clang::TypeLoc &typeLoc);
 
-clang::SourceLocation getEndLoc(const clang::Stmt* stmt);
-clang::SourceLocation getEndLoc(const clang::TypeLoc& typeLoc);
+clang::SourceLocation getEndLoc(const clang::Stmt *stmt);
+clang::SourceLocation getEndLoc(const clang::TypeLoc &typeLoc);
 
 void PrintStackTraceOnErrorSignal();
 
@@ -65,17 +65,17 @@ using namespace llvm;
   * Older LLVM versions don't actually support multiple filenames, so everything all gets
   * smushed together. It is the caller's responsibility to cope with this.
   */
-ct::Replacements& getReplacements(ct::RefactoringTool& Tool, StringRef file);
+ct::Replacements &getReplacements(ct::RefactoringTool &Tool, StringRef file);
 
 /**
   * Add a Replacement to a Replacements.
   */
-void insertReplacement(ct::Replacements& replacements, const ct::Replacement& rep);
+void insertReplacement(ct::Replacements &replacements, const ct::Replacement &rep);
 
 /**
   * Version-agnostic version of Preprocessor::EnterTokenStream().
   */
-void EnterPreprocessorTokenStream(clang::Preprocessor& _pp,
+void EnterPreprocessorTokenStream(clang::Preprocessor &_pp,
                                   const clang::Token *start,
                                   size_t len,
                                   bool DisableMacroExpansion);
@@ -85,10 +85,10 @@ std::error_code real_path(const Twine &path, SmallVectorImpl<char> &output,
 
 bool pragma_once_outside_header();
 
-bool canCompileHostAndDeviceInOneJob();
-
 void RetainExcludedConditionalBlocks(clang::CompilerInstance &CI);
 
 bool CheckCompatibility();
+
+clang::SourceLocation getEndOfExpansionRangeForLoc(const clang::SourceManager &SM, const clang::SourceLocation &loc);
 
 } // namespace llcompat

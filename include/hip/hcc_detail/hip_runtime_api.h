@@ -2994,6 +2994,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStart API is under development.
  */
+DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStart();
 
 
@@ -3002,6 +3003,7 @@ hipError_t hipProfilerStart();
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStop API is under development.
  */
+DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStop();
 
 
@@ -3313,7 +3315,7 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
 
 hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
                                  const void* devPtr, const struct hipChannelFormatDesc* desc,
-                                 size_t width, size_t height, textureReference* tex);
+                                 size_t width, size_t height, textureReference* tex, size_t pitch);
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,

@@ -23,11 +23,14 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_PROFILE_H
 #define HIP_INCLUDE_HIP_HIP_PROFILE_H
 
+#warning "HIP Profiling through markers is deprecated, please check roctrace/rocTX support."
+
 #if not defined(ENABLE_HIP_PROFILE)
 #define ENABLE_HIP_PROFILE 1
 #endif
 
 #if defined(__HIP_PLATFORM_HCC__) and (ENABLE_HIP_PROFILE == 1)
+#warning "HIP Markers are deprecated and would be removed soon."
 #include <CXLActivityLogger.h>
 #define HIP_SCOPED_MARKER(markerName, group)                                                       \
     amdtScopedMarker __scopedMarker(markerName, group, nullptr);
