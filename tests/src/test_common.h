@@ -99,10 +99,13 @@ THE SOFTWARE.
 
 #ifdef _WIN64
 #include <tchar.h>
-#define aligned_alloc _aligned_malloc
+#define aligned_alloc(x,y) _aligned_malloc(y,x)
+#define aligned_free(x) _aligned_free(x)
 #define popen(x,y) _popen(x,y)
 #define pclose(x) _pclose(x)
 #define setenv(x,y,z) _putenv_s(x,y)
+#else
+#define aligned_free(x) free(x)
 #endif
 
 // standard command-line variables:
@@ -149,6 +152,36 @@ int parseInt(const char* str, int* output);
 int parseStandardArguments(int argc, char* argv[], bool failOnUndefinedArg);
 
 unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N);
+
+template<typename T> // pointer type
+void checkArray(T hData, T hOutputData, size_t width, size_t height,size_t depth)
+{
+   for (int i = 0; i < depth; i++) {
+      for (int j = 0; j < height; j++) {
+          for (int k = 0; k < width; k++) {
+              int offset = i*width*height + j*width + k;
+              if (hData[offset] != hOutputData[offset]) {
+                  std::cerr << '[' << i << ',' << j << ',' << k << "]:" << hData[offset] << "----" << hOutputData[offset]<<"  ";
+                  failed("mistmatch at:%d %d %d",i,j,k);
+              }
+          }
+       }
+   }
+}
+
+template<typename T> 
+void checkArray(T input, T output, size_t height, size_t width)
+{
+    for(int i=0; i<height; i++ ){
+        for(int j=0; j<width; j++ ){
+            int offset = i*width + j;
+            if( input[offset] !=  output[offset] ){
+                 std::cerr << '[' << i << ',' << j << ',' << "]:" << input[offset] << "----" << output[offset]<<"  ";
+                 failed("mistmatch at:%d %d",i,j);
+            }
+        }
+    }
+}
 
 
 template <typename T>

@@ -2067,6 +2067,45 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
  *  @brief Copies data between host and device.
  *
  *  @param[in]   dst       Destination memory address
+ *  @param[in]   dpitch    Pitch of destination memory
+ *  @param[in]   src       Source memory address
+ *  @param[in]   wOffset   Source starting X offset
+ *  @param[in]   hOffset   Source starting Y offset
+ *  @param[in]   width     Width of matrix transfer (columns in bytes)
+ *  @param[in]   height    Height of matrix transfer (rows)
+ *  @param[in]   kind      Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind);
+
+/**
+ *  @brief Copies data between host and device asynchronously.
+ *
+ *  @param[in]   dst       Destination memory address
+ *  @param[in]   dpitch    Pitch of destination memory
+ *  @param[in]   src       Source memory address
+ *  @param[in]   wOffset   Source starting X offset
+ *  @param[in]   hOffset   Source starting Y offset
+ *  @param[in]   width     Width of matrix transfer (columns in bytes)
+ *  @param[in]   height    Height of matrix transfer (rows)
+ *  @param[in]   kind      Type of transfer
+ *  @param[in]   stream    Accelerator view which the copy is being enqueued
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst       Destination memory address
  *  @param[in]   srcArray  Source array
  *  @param[in]   srcoffset Offset in bytes of source array
  *  @param[in]   count     Size of memory copy in bytes
@@ -2955,6 +2994,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStart API is under development.
  */
+DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStart();
 
 
@@ -2963,6 +3003,7 @@ hipError_t hipProfilerStart();
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStop API is under development.
  */
+DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStop();
 
 
@@ -3180,6 +3221,21 @@ hipError_t hipLaunchKernel(const void* function_address,
 } /* extern "c" */
 #endif
 
+#if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+template <typename F>
+static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk) {
+    return ::hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, (hipFunction_t)func, blockSize,
+                                                          dynSharedMemPerBlk);
+}
+template <typename F>
+static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
+    return ::hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        numBlocks, (hipFunction_t)func, blockSize, dynSharedMemPerBlk, flags);
+}
+#endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+
 #if USE_PROF_API
 #include <hip/hcc_detail/hip_prof_str.h>
 #endif
@@ -3259,7 +3315,7 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
 
 hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
                                  const void* devPtr, const struct hipChannelFormatDesc* desc,
-                                 size_t width, size_t height, textureReference* tex);
+                                 size_t width, size_t height, textureReference* tex, size_t pitch);
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,

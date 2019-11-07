@@ -63,6 +63,7 @@ const StringRef sCudaHostFuncCall = "cudaHostFuncCall";
 const StringRef sCudaDeviceFuncCall = "cudaDeviceFuncCall";
 const StringRef sCubNamespacePrefix = "cubNamespacePrefix";
 const StringRef sCubFunctionTemplateDecl = "cubFunctionTemplateDecl";
+const StringRef sCubUsingNamespaceDecl = "cubUsingNamespaceDecl";
 
 std::set<std::string> DeviceSymbolFunctions0 {
   {sCudaMemcpyToSymbol},
@@ -149,7 +150,7 @@ void HipifyAction::RewriteToken(const clang::Token &t) {
 
 void HipifyAction::FindAndReplace(StringRef name,
                                   clang::SourceLocation sl,
-                                  const std::map<StringRef, hipCounter> &repMap, 
+                                  const std::map<StringRef, hipCounter> &repMap,
                                   bool bReplace) {
   const auto found = repMap.find(name);
   if (found == repMap.end()) {
@@ -197,7 +198,7 @@ clang::SourceRange getWriteRange(clang::SourceManager &SM, const clang::SourceRa
   // If the range is contained within a macro, update the macro definition.
   // Otherwise, use the file location and hope for the best.
   if (!SM.isMacroBodyExpansion(begin) || !SM.isMacroBodyExpansion(end)) {
-    return {SM.getFileLoc(begin), SM.getFileLoc(end)};
+    return {SM.getExpansionLoc(begin), SM.getExpansionLoc(end)};
   }
   return {SM.getSpellingLoc(begin), SM.getSpellingLoc(end)};
 }
@@ -389,16 +390,24 @@ bool HipifyAction::cudaLaunchKernel(const mat::MatchFinder::MatchResult &Result)
     OS << readSourceText(*SM, {argStart, argEnd});
   }
   OS << ")";
-  clang::SourceRange replacementRange = getWriteRange(*SM, {llcompat::getBeginLoc(launchKernel), llcompat::getEndLoc(launchKernel)});
-  clang::SourceLocation launchStart = replacementRange.getBegin();
+  clang::SourceLocation launchKernelExprLocBeg = launchKernel->getExprLoc();
+  clang::SourceLocation launchKernelExprLocEnd = launchKernelExprLocBeg.isMacroID() ? llcompat::getEndOfExpansionRangeForLoc(*SM, launchKernelExprLocBeg) : llcompat::getEndLoc(launchKernel);
+  clang::SourceLocation launchKernelEnd = llcompat::getEndLoc(launchKernel);
+  clang::BeforeThanCompare<clang::SourceLocation> isBefore(*SM);
+  launchKernelExprLocEnd = isBefore(launchKernelEnd, launchKernelExprLocEnd) ? launchKernelExprLocEnd : launchKernelEnd;
+  clang::SourceRange replacementRange = getWriteRange(*SM, {launchKernelExprLocBeg, launchKernelExprLocEnd});
+  clang::SourceLocation launchBeg = replacementRange.getBegin();
   clang::SourceLocation launchEnd = replacementRange.getEnd();
-  size_t length = SM->getCharacterData(clang::Lexer::getLocForEndOfToken(launchEnd, 0, *SM, DefaultLangOptions)) - SM->getCharacterData(launchStart);
-  ct::Replacement Rep(*SM, launchStart, length, OS.str());
-  clang::FullSourceLoc fullSL(launchStart, *SM);
-  insertReplacement(Rep, fullSL);
-  hipCounter counter = {sHipLaunchKernelGGL, "", ConvTypes::CONV_KERNEL_LAUNCH, ApiTypes::API_RUNTIME};
-  Statistics::current().incrementCounter(counter, sCudaLaunchKernel.str());
-  return true;
+  if (isBefore(launchBeg, launchEnd)) {
+    size_t length = SM->getCharacterData(clang::Lexer::getLocForEndOfToken(launchEnd, 0, *SM, DefaultLangOptions)) - SM->getCharacterData(launchBeg);
+    ct::Replacement Rep(*SM, launchBeg, length, OS.str());
+    clang::FullSourceLoc fullSL(launchBeg, *SM);
+    insertReplacement(Rep, fullSL);
+    hipCounter counter = {sHipLaunchKernelGGL, "", ConvTypes::CONV_KERNEL_LAUNCH, ApiTypes::API_RUNTIME};
+    Statistics::current().incrementCounter(counter, sCudaLaunchKernel.str());
+    return true;
+  }
+  return false;
 }
 
 bool HipifyAction::cudaSharedIncompleteArrayVar(const mat::MatchFinder::MatchResult &Result) {
@@ -468,6 +477,16 @@ bool HipifyAction::cubNamespacePrefix(const mat::MatchFinder::MatchResult &Resul
     std::string name = nsd->getDeclName().getAsString();
     FindAndReplace(name, GetSubstrLocation(name, sr), CUDA_CUB_TYPE_NAME_MAP);
     return true;
+  }
+  return false;
+}
+
+bool HipifyAction::cubUsingNamespaceDecl(const mat::MatchFinder::MatchResult &Result) {
+  if (auto *decl = Result.Nodes.getNodeAs<clang::UsingDirectiveDecl>(sCubUsingNamespaceDecl)) {
+    if (auto nsd = decl->getNominatedNamespace()) {
+      FindAndReplace(nsd->getDeclName().getAsString(), decl->getIdentLocation(), CUDA_CUB_TYPE_NAME_MAP);
+      return true;
+    }
   }
   return false;
 }
@@ -611,6 +630,13 @@ std::unique_ptr<clang::ASTConsumer> HipifyAction::CreateASTConsumer(clang::Compi
     ).bind(sCubFunctionTemplateDecl),
     this
   );
+  // TODO: Maybe worth to make it more concrete
+  Finder->addMatcher(
+    mat::usingDirectiveDecl(
+      mat::isExpansionInMainFile()
+    ).bind(sCubUsingNamespaceDecl),
+    this
+  );
   // Ownership is transferred to the caller.
   return Finder->newASTConsumer();
 }
@@ -725,4 +751,5 @@ void HipifyAction::run(const mat::MatchFinder::MatchResult &Result) {
   if (cudaDeviceFuncCall(Result)) return;
   if (cubNamespacePrefix(Result)) return;
   if (cubFunctionTemplateDecl(Result)) return;
+  if (cubUsingNamespaceDecl(Result)) return;
 }

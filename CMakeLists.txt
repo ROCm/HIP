@@ -163,11 +163,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Determine HIP install path
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND CMAKE_INSTALL_PREFIX MATCHES "/usr/local")
+if (UNIX)
+    set(HIP_DEFAULT_INSTALL_PREFIX "/opt/rocm/hip")
+endif()
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Installation path for HIP" FORCE)
     elseif(CMAKE_BUILD_TYPE MATCHES Release)
-        set(CMAKE_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Installation path for HIP" FORCE)
+        set(CMAKE_INSTALL_PREFIX ${HIP_DEFAULT_INSTALL_PREFIX} CACHE PATH "Installation path for HIP" FORCE)
     else()
         message(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE specified. Valid values are Debug and Release")
     endif()
@@ -184,7 +187,10 @@ if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
         set(COMPILE_HIP_ATP_MARKER 0)
     else()
         set(COMPILE_HIP_ATP_MARKER $ENV{COMPILE_HIP_ATP_MARKER})
+        message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
     endif()
+else()
+    message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
 endif()
 add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 
@@ -224,6 +230,11 @@ endif()
 #############################
 # Build steps
 #############################
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
+set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
+
 # Build clang hipify if enabled
 if (BUILD_HIPIFY_CLANG)
     add_subdirectory(hipify-clang)
@@ -370,11 +381,6 @@ endif()
 #############################
 # hip-config
 #############################
-set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
-set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
-
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
     install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
@@ -504,7 +510,7 @@ endif()
 find_program(CPPCHECK_EXE cppcheck)
 if(CPPCHECK_EXE)
     add_custom_target(cppcheck COMMAND ${CPPCHECK_EXE} --force --quiet --enable=warning,performance,portability,information,missingInclude src include -I /opt/rocm/include/hcc -I /opt/rocm/include --suppress=*:/opt/rocm/include/hcc/hc.hpp
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
 #############################
@@ -543,6 +549,19 @@ if(${RUN_HIT} EQUAL 0)
     add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
 else()
     message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
+endif()
+
+#############################
+# Code analysis
+#############################
+# Target: clang
+if(HIP_HIPCC_EXECUTABLE)
+    add_custom_target(analyze 
+        COMMAND ${HIP_HIPCC_EXECUTABLE} -fvisibility=hidden -fvisibility-inlines-hidden --analyze --analyzer-outputtext  -isystem /opt/rocm/include ${HIP_HCC_BUILD_FLAGS} -Wno-unused-command-line-argument -I/opt/rocm/include -c  src/*.cpp -Iinclude/ -I./
+    WORKING_DIRECTORY ${HIP_SRC_PATH})
+    if(CPPCHECK_EXE)
+        add_dependencies(analyze cppcheck)
+    endif()
 endif()
 
 # vim: ts=4:sw=4:expandtab:smartindent
