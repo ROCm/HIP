@@ -46,7 +46,7 @@ THE SOFTWARE.
 #include "hsa/hsa_ext_image.h"
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
-#include "hip/hip_hcc.h"
+#include "hip/hip_ext.h"
 #include "trace_helper.h"
 #include "env.h"
 
