@@ -1497,18 +1497,21 @@ hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream) {
     return e;
 }
 
-void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
+bool ihipStreamCallbackHandler(hsa_signal_value_t value, void* cbArgs) {
     hipError_t e = hipSuccess;
 
-    // Synchronize stream
-    tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n",
-            ToString(cb->_stream).c_str());
-    GET_TLS();
-    e = ihipStreamSynchronize(tls, cb->_stream);
+    ihipStreamCallback_t* cb = static_cast<ihipStreamCallback_t*> (cbArgs);
+
+    if(cb->comFuture.valid())
+        cb->comFuture.wait();
 
     // Call registered callback function
     cb->_callback(cb->_stream, e, cb->_userData);
+
+    hsa_signal_store_screlease(cb->_signal,0);
+
     delete cb;
+    return false;
 }
 
 //---
