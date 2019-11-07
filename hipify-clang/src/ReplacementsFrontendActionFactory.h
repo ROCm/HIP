@@ -36,15 +36,15 @@ namespace ct = clang::tooling;
   */
 template <typename T>
 class ReplacementsFrontendActionFactory : public ct::FrontendActionFactory {
-  ct::Replacements* replacements;
+  ct::Replacements *replacements;
 
 public:
-  explicit ReplacementsFrontendActionFactory(ct::Replacements* r):
+  explicit ReplacementsFrontendActionFactory(ct::Replacements *r):
     ct::FrontendActionFactory(),
     replacements(r) {}
 
 #if LLVM_VERSION_MAJOR < 10
-  clang::FrontendAction* create() override {
+  clang::FrontendAction *create() override {
     return new T(replacements);
   }
 #else
