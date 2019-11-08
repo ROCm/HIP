@@ -50,11 +50,8 @@ using void_t_ = void;
 
 #if ((__cplusplus >= 201703L) && defined(__cpp_lib_is_invocable))
 // C++17
-template <typename, typename = void>
-struct is_callable_impl : std::false_type {};
-
 template <FunctionalProcedure F, typename... Ts>
-struct is_callable_impl<F(Ts...), void_t_<std::invoke_result<F(Ts...)> > > : std::true_type {};
+using is_callable_impl = std::is_invocable<F, Ts...>;
 
 #elif ((__cplusplus >= 201210L) && defined(__cpp_lib_result_of_sfinae))
 
