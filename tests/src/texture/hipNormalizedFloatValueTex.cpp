@@ -29,6 +29,9 @@ THE SOFTWARE.
 #include "test_common.h"
 
 #define SIZE 10
+#if __HIP__
+__hip_pinned_shadow__
+#endif
 texture<float, hipTextureType1D, hipReadModeElementType> textureNormalizedVal_1D;
 
 __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
@@ -73,11 +76,31 @@ bool textureTest(enum hipArray_Format texFormat)
     
     for(int i = 0; i < SIZE; i++)
     {
-    	if((float)hData[i]/texFormatToSize[texFormat] != hOutputData[i])
-        {
-	    printf("mismatch at index:%d for texType:%d output:%f\n",i,texFormat,hOutputData[i]);
+        int size;
+        switch(texFormat){
+            case HIP_AD_FORMAT_UNSIGNED_INT8:
+               size = UCHAR_MAX;
+            break;
+            case HIP_AD_FORMAT_UNSIGNED_INT16:
+               size = USHRT_MAX;
+            break;
+            case HIP_AD_FORMAT_SIGNED_INT8:
+               size = SCHAR_MAX;
+            break;
+            case HIP_AD_FORMAT_SIGNED_INT16:
+               size = SHRT_MAX;
+            break;
+            case HIP_AD_FORMAT_FLOAT:
+            case HIP_AD_FORMAT_SIGNED_INT32:
+            case HIP_AD_FORMAT_HALF:
+            case HIP_AD_FORMAT_UNSIGNED_INT32:
+               size = 1;
+            break;
+        }
+        if((float)hData[i]/size != hOutputData[i]){
+            printf("mismatch at index:%d for texType:%d input:%d output:%f\n",i,texFormat,texFormatToSize[texFormat],hOutputData[i]);
             testResult = false;
-	    break;
+            break;
         }
     }
     hipFree(dData);
