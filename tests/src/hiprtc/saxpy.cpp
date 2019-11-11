@@ -84,7 +84,7 @@ int main()
     size_t codeSize;
     hiprtcGetCodeSize(prog, &codeSize);
 
-    std::vector<char> code(codeSize);
+    vector<char> code(codeSize);
     hiprtcGetCode(prog, code.data());
 
     hiprtcDestroyProgram(&prog);
