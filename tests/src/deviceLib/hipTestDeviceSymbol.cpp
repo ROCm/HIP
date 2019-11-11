@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s
+ * BUILD: %t %s EXCLUDE_HIP_PLATFORM clang
  * TEST: %t
  * HIT_END
  */

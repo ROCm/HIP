@@ -27,7 +27,6 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 
 #include "test_common.h"
-
 #if __HIP_ARCH_GFX803__  || \
     __HIP_ARCH_GFX900__  || \
     __HIP_ARCH_GFX906__  || \
@@ -127,7 +126,7 @@ void check_hisnan(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
       if (outputCPU[i] == 0) {
 	      failed(
           "__hisnan() returned false for %f (input idx = %d)\n",
-          static_cast<float>(inputCPU[i]),
+          inputCPU[i],
           i);
       }
     }
@@ -135,7 +134,7 @@ void check_hisnan(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
       if (outputCPU[i] != 0) {
 	      failed(
           "__hisnan() returned true for %f (input idx = %d)\n",
-          static_cast<float>(inputCPU[i]),
+          inputCPU[i],
           i);
       }
     }
@@ -170,7 +169,7 @@ void check_hisinf(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
       if (outputCPU[i] == 0) {
 	      failed(
           "__hisinf() returned false for %f (input idx = %d)\n",
-          static_cast<float>(inputCPU[i]),
+          inputCPU[i],
           i);
       }
     }
@@ -178,7 +177,7 @@ void check_hisinf(int NUM_INPUTS, __half* inputCPU, __half* inputGPU) {
       if (outputCPU[i] != 0) {
 	      failed(
           "__hisinf() returned true for %f (input idx = %d)\n",
-          static_cast<float>(inputCPU[i]),
+          inputCPU[i],
           i);
       }
     }
