@@ -28,7 +28,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #if __HIP__
 __hip_pinned_shadow__
-#elif
+#else
 extern
 #endif
 texture<float, 2, hipReadModeElementType> tex;
