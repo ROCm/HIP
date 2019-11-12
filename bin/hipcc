@@ -401,11 +401,20 @@ if($HIP_PLATFORM eq "nvcc"){
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 my $optArg = ""; # -O args
 
+my $ignore_nextarg = 0;
+
 foreach $arg (@ARGV)
 {
     $trimarg = $arg;
     $trimarg =~ s/^\s+|\s+$//g;  # Remive whitespace
-    my $swallowArg = 0;
+    my $swallowArg = $ignore_nextarg;
+    $ignore_nextarg = 0;
+
+    if ($arg eq '-x') {
+        $swallowArg = 1;
+        $ignore_nextarg = 1;
+        }
+
     if ($arg eq '-c' or $arg eq '--genco') {
         $compileOnly = 1;
         $needCXXFLAGS = 1;
