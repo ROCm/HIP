@@ -433,18 +433,6 @@ if (BUILD_HIPIFY_CLANG)
     add_dependencies(pkg_hip_base hipify-clang)
 endif()
 
-# Package: hipify-clang
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hipify-clang)
-configure_file(packaging/hipify-clang.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-add_custom_target(pkg_hipify-clang  COMMAND ${CMAKE_COMMAND} .
-    COMMAND rm -rf *.deb *.rpm *.tar.gz
-    COMMAND make package
-    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-    WORKING_DIRECTORY ${BUILD_DIR}
-
-
 # Package: hip_hcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
 configure_file(packaging/hip_hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
