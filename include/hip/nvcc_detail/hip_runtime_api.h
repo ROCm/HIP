@@ -59,6 +59,12 @@ typedef enum hipMemcpyKind {
 #define HIP_C_32F CUDA_C_32F
 #define HIP_C_64F CUDA_C_64F
 
+// hipLibraryPropertyType
+#define hipLibraryPropertyType libraryPropertyType
+#define HIP_LIBRARY_MAJOR_VERSION MAJOR_VERSION
+#define HIP_LIBRARY_MINOR_VERSION MINOR_VERSION
+#define HIP_LIBRARY_PATCH_LEVEL PATCH_LEVEL
+
 // hipTextureAddressMode
 #define hipTextureAddressMode cudaTextureAddressMode
 #define hipAddressModeWrap cudaAddressModeWrap
@@ -1389,6 +1395,11 @@ inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, r
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
+    return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
+}
+
+template <class T, int dim, enum hipTextureReadMode readMode>
+inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode> &tex) {
     return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
 }
 

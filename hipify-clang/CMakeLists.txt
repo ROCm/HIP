@@ -1,8 +1,4 @@
-if (CUDA_VERSION VERSION_GREATER "9.2")
-    cmake_minimum_required(VERSION 3.12.3)
-else()
-    cmake_minimum_required(VERSION 3.7.2)
-endif()
+cmake_minimum_required(VERSION 3.5.1)
 
 project(hipify-clang)
 
@@ -58,7 +54,7 @@ target_link_libraries(hipify-clang PRIVATE
     LLVMOption
     LLVMCore)
 
-if (LLVM_PACKAGE_VERSION VERSION_GREATER_EQUAL "7")
+if (LLVM_PACKAGE_VERSION VERSION_GREATER "6.0.1")
     target_link_libraries(hipify-clang PRIVATE clangToolingInclusions)
 endif()
 
@@ -72,7 +68,7 @@ else()
     set(StdCpp "-std=c++")
 endif()
 
-if (LLVM_PACKAGE_VERSION VERSION_GREATER_EQUAL "10.0")
+if (LLVM_PACKAGE_VERSION VERSION_GREATER "9.0")
     string(APPEND StdCpp "14")
 # MSVC starting from 1900 (VS 2015) supports only the following c++ std values: c++14|c++17|c++latest
 elseif (MSVC)
@@ -84,7 +80,39 @@ endif()
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_CFLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_CFLAGS} ${StdCpp} -DHIPIFY_CLANG_RES=\\\"${LLVM_LIBRARY_DIRS}/clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}\\\"")
 
-install(TARGETS hipify-clang DESTINATION bin)
+set(INSTALL_PATH_DOC_STRING "Installation path for hipify-clang")
+set(HIPIFY_INSTALL_PATH ${CMAKE_INSTALL_PREFIX})
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    if(CMAKE_BUILD_TYPE MATCHES Debug)
+        set(HIPIFY_INSTALL_PATH "${CMAKE_CURRENT_SOURCE_DIR}/bin" CACHE PATH ${INSTALL_PATH_DOC_STRING} FORCE)
+    elseif(CMAKE_BUILD_TYPE MATCHES Release)
+        if (BIN_INSTALL_DIR)
+            set(HIPIFY_INSTALL_PATH "${BIN_INSTALL_DIR}" CACHE PATH ${INSTALL_PATH_DOC_STRING} FORCE)
+        else()
+            set(HIPIFY_INSTALL_PATH "${PROJECT_BINARY_DIR}/bin" CACHE PATH ${INSTALL_PATH_DOC_STRING} FORCE)
+        endif()
+    else()
+        message(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE specified. Valid values are Debug and Release")
+    endif()
+elseif(BIN_INSTALL_DIR)
+    set(HIPIFY_INSTALL_PATH "${BIN_INSTALL_DIR}" CACHE PATH ${INSTALL_PATH_DOC_STRING} FORCE)
+endif()
+
+install(TARGETS hipify-clang DESTINATION ${HIPIFY_INSTALL_PATH})
+
+install(
+  DIRECTORY ${LLVM_DIR}/../../clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/
+  DESTINATION ${HIPIFY_INSTALL_PATH}
+  COMPONENT clang-resource-headers
+  FILES_MATCHING
+  PATTERN "*.h"
+  PATTERN "*.modulemap"
+  PATTERN "algorithm"
+  PATTERN "complex"
+  PATTERN "new"
+  PATTERN "ppc_wrappers" EXCLUDE
+  PATTERN "openmp_wrappers" EXCLUDE
+  )
 
 if (HIPIFY_CLANG_TESTS)
     find_package(PythonInterp 2.7 REQUIRED)

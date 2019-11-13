@@ -134,6 +134,7 @@ enum ApiTypes {
   API_DNN,
   API_FFT,
   API_SPARSE,
+  API_CUB,
   API_CAFFE2,
   API_LAST
 };
@@ -171,11 +172,11 @@ private:
   int convTypeCounters[NUM_CONV_TYPES] = {};
 
 public:
-  void incrementCounter(const hipCounter& counter, const std::string& name);
+  void incrementCounter(const hipCounter &counter, const std::string &name);
   // Add the counters from `other` onto the counters of this object.
-  void add(const StatCounter& other);
+  void add(const StatCounter &other);
   int getConvSum();
-  void print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string& prefix);
+  void print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string &prefix);
 };
 
 /**
@@ -194,8 +195,8 @@ class Statistics {
   chr::steady_clock::time_point completionTime;
 
 public:
-  Statistics(const std::string& name);
-  void incrementCounter(const hipCounter &counter, const std::string& name);
+  Statistics(const std::string &name);
+  void incrementCounter(const hipCounter &counter, const std::string &name);
   // Add the counters from `other` onto the counters of this object.
   void add(const Statistics &other);
   void lineTouched(int lineNumber);
@@ -225,12 +226,12 @@ public:
     * processing one file at a time, this allows us to simply expose the stats for the current file globally,
     * simplifying things.
     */
-  static Statistics& current();
+  static Statistics &current();
   /**
     * Set the active Statistics object to the named one, creating it if necessary, and write the completion
     * timestamp into the currently active one.
     */
-  static void setActive(const std::string& name);
+  static void setActive(const std::string &name);
   // Check the counter and option TranslateToRoc whether it should be translated to Roc or not.
   static bool isToRoc(const hipCounter &counter);
   // Check whether the counter is HIP_UNSUPPORTED or not.

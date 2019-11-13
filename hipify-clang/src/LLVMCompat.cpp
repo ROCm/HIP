@@ -40,7 +40,7 @@ void PrintStackTraceOnErrorSignal() {
 #endif
 }
 
-ct::Replacements& getReplacements(ct::RefactoringTool& Tool, StringRef file) {
+ct::Replacements &getReplacements(ct::RefactoringTool &Tool, StringRef file) {
 #if LLVM_VERSION_MAJOR > 3
   // getReplacements() now returns a map from filename to Replacements - so create an entry
   // for this source file and return a reference to it.
@@ -50,7 +50,7 @@ ct::Replacements& getReplacements(ct::RefactoringTool& Tool, StringRef file) {
 #endif
 }
 
-void insertReplacement(ct::Replacements& replacements, const ct::Replacement& rep) {
+void insertReplacement(ct::Replacements &replacements, const ct::Replacement &rep) {
 #if LLVM_VERSION_MAJOR > 3
   // New clang added error checking to Replacements, and *insists* that you explicitly check it.
   llvm::consumeError(replacements.add(rep));
@@ -60,7 +60,7 @@ void insertReplacement(ct::Replacements& replacements, const ct::Replacement& re
 #endif
 }
 
-void EnterPreprocessorTokenStream(clang::Preprocessor& _pp, const clang::Token *start, size_t len, bool DisableMacroExpansion) {
+void EnterPreprocessorTokenStream(clang::Preprocessor &_pp, const clang::Token *start, size_t len, bool DisableMacroExpansion) {
 #if (LLVM_VERSION_MAJOR == 3) && (LLVM_VERSION_MINOR == 8)
   _pp.EnterTokenStream(start, len, false, DisableMacroExpansion);
 #else
@@ -72,7 +72,7 @@ void EnterPreprocessorTokenStream(clang::Preprocessor& _pp, const clang::Token *
 #endif
 }
 
-clang::SourceLocation getBeginLoc(const clang::Stmt* stmt) {
+clang::SourceLocation getBeginLoc(const clang::Stmt *stmt) {
 #if LLVM_VERSION_MAJOR < 8
   return stmt->getLocStart();
 #else
@@ -80,7 +80,7 @@ clang::SourceLocation getBeginLoc(const clang::Stmt* stmt) {
 #endif
 }
 
-clang::SourceLocation getBeginLoc(const clang::TypeLoc& typeLoc) {
+clang::SourceLocation getBeginLoc(const clang::TypeLoc &typeLoc) {
 #if LLVM_VERSION_MAJOR < 8
   return typeLoc.getLocStart();
 #else
@@ -88,7 +88,7 @@ clang::SourceLocation getBeginLoc(const clang::TypeLoc& typeLoc) {
 #endif
 }
 
-clang::SourceLocation getEndLoc(const clang::Stmt* stmt) {
+clang::SourceLocation getEndLoc(const clang::Stmt *stmt) {
 #if LLVM_VERSION_MAJOR < 8
   return stmt->getLocEnd();
 #else
@@ -96,7 +96,7 @@ clang::SourceLocation getEndLoc(const clang::Stmt* stmt) {
 #endif
 }
 
-clang::SourceLocation getEndLoc(const clang::TypeLoc& typeLoc) {
+clang::SourceLocation getEndLoc(const clang::TypeLoc &typeLoc) {
 #if LLVM_VERSION_MAJOR < 8
   return typeLoc.getLocEnd();
 #else
@@ -141,6 +141,14 @@ bool CheckCompatibility() {
   }
 #endif
   return true;
+}
+
+clang::SourceLocation getEndOfExpansionRangeForLoc(const clang::SourceManager &SM, const clang::SourceLocation &loc) {
+#if LLVM_VERSION_MAJOR > 6
+  return SM.getExpansionRange(loc).getEnd();
+#else
+  return SM.getExpansionRange(loc).second;
+#endif
 }
 
 } // namespace llcompat

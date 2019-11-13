@@ -269,6 +269,8 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcudaMemcpy\b/hipMemcpy/g;
     $ft{'memory'} += s/\bcudaMemcpy2D\b/hipMemcpy2D/g;
     $ft{'memory'} += s/\bcudaMemcpy2DAsync\b/hipMemcpy2DAsync/g;
+    $ft{'memory'} += s/\bcudaMemcpy2DFromArray\b/hipMemcpy2DFromArray/g;
+    $ft{'memory'} += s/\bcudaMemcpy2DFromArrayAsync\b/hipMemcpy2DFromArrayAsync/g;
     $ft{'memory'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
     $ft{'memory'} += s/\bcudaMemcpy3D\b/hipMemcpy3D/g;
     $ft{'memory'} += s/\bcudaMemcpy3DAsync\b/hipMemcpy3DAsync/g;
@@ -769,6 +771,7 @@ sub simpleSubstitutions {
     $ft{'include'} += s/\btexture_fetch_functions.h\b//g;
     $ft{'include'} += s/\bvector_types.h\b/hip\/hip_vector_types.h/g;
     $ft{'include_cuda_main_header'} += s/\bcuComplex.h\b/hip\/hip_complex.h/g;
+    $ft{'include_cuda_main_header'} += s/\bcub\/cub.cuh\b/hipcub\/hipcub.hpp/g;
     $ft{'include_cuda_main_header'} += s/\bcublas.h\b/hipblas.h/g;
     $ft{'include_cuda_main_header'} += s/\bcublas_v2.h\b/hipblas.h/g;
     $ft{'include_cuda_main_header'} += s/\bcuda.h\b/hip\/hip_runtime.h/g;
@@ -982,7 +985,6 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bcusparsePointerMode_t\b/hipsparsePointerMode_t/g;
     $ft{'type'} += s/\bcusparseSolvePolicy_t\b/hipsparseSolvePolicy_t/g;
     $ft{'type'} += s/\bcusparseStatus_t\b/hipsparseStatus_t/g;
-    $ft{'type'} += s/\bwarpSize\b/hipWarpSize/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_DIAG_NON_UNIT\b/HIPBLAS_DIAG_NON_UNIT/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_DIAG_UNIT\b/HIPBLAS_DIAG_UNIT/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_FILL_MODE_FULL\b/HIPBLAS_FILL_MODE_FULL/g;
@@ -1673,6 +1675,13 @@ sub transformKernelLaunch {
         $ft{'kernel_launch'} += $k;
         $Tkernels{$1}++;
     }
+}
+
+sub transformCubNamespace {
+    my $k = 0;
+    $k += s/using\s*namespace\s*cub/using namespace hipcub/g;
+    $k += s/\bcub::\b/hipcub::/g;
+    return $k;
 }
 
 sub transformHostFunctions {
@@ -2367,6 +2376,7 @@ while (@ARGV) {
         simpleSubstitutions();
         transformExternShared();
         transformKernelLaunch();
+        transformCubNamespace();
         if ($print_stats) {
             while (/(\b(hip|HIP)([A-Z]|_)\w+\b)/g) {
                 $convertedTags{$1}++;
