@@ -39,22 +39,25 @@ unset(_expectedTargets)
 
 
 # The installation prefix configured by this project.
-set(_IMPORT_PREFIX "/opt/rocm/hip")
-
+if( DEFINED ENV{ROCM_PATH} )
+     set(_IMPORT_PREFIX "$ENV{ROCM_PATH}/hip")
+else()
+     set(_IMPORT_PREFIX "/opt/rocm/hip")
+endif()
 # Create imported target hip::hip_hcc_static
 add_library(hip::hip_hcc_static STATIC IMPORTED)
 
 set_target_properties(hip::hip_hcc_static PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;$ENV{ROCM_PATH}/hsa/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;$ENV{ROCM_PATH}/hsa/include"
 )
 
 # Create imported target hip::hip_hcc
 add_library(hip::hip_hcc SHARED IMPORTED)
 
 set_target_properties(hip::hip_hcc PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;$ENV{ROCM_PATH}/hsa/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;$ENV{ROCM_PATH}/hsa/include"
 )
 
 # Create imported target hip::host
@@ -70,10 +73,14 @@ add_library(hip::device INTERFACE IMPORTED)
 if(HIP_COMPILER STREQUAL "hcc")
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host;hcc::hccrt;hcc::hc_am"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 )
 else()
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 )
 endif()
 

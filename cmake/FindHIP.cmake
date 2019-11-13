@@ -56,6 +56,7 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
             HIP_ROOT_DIR
             NAMES hipconfig
             PATHS
+            $ENV{ROCM_PATH}/hip
             ENV ROCM_PATH
             ENV HIP_PATH
             PATH_SUFFIXES bin
@@ -67,6 +68,7 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
             HIP_ROOT_DIR
             NAMES hipconfig
             PATHS
+            $ENV{ROCM_PATH}/hip
             /opt/rocm
             /opt/rocm/hip
             PATH_SUFFIXES bin
@@ -94,6 +96,7 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         HIP_HIPCC_EXECUTABLE
         NAMES hipcc
         PATHS
+        $ENV{ROCM_PATH}/hip
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
@@ -113,6 +116,7 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         HIP_HIPCONFIG_EXECUTABLE
         NAMES hipconfig
         PATHS
+        $ENV{ROCM_PATH}/hip
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
@@ -132,6 +136,7 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         HIP_HIPCC_CMAKE_LINKER_HELPER
         NAMES hipcc_cmake_linker_helper
         PATHS
+        $ENV{ROCM_PATH}/hip
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
@@ -555,7 +560,11 @@ macro(HIP_ADD_EXECUTABLE hip_target)
         list(REMOVE_ITEM _sources ${_source_files})
     endif()
     if("x${HCC_HOME}" STREQUAL "x")
-        set(HCC_HOME "/opt/rocm/hcc")
+        if (DEFINED $ENV{ROCM_PATH})
+            set(HCC_HOME "$ENV{ROCM_PATH}/hcc")
+        else()
+            set(HCC_HOME "/opt/rocm/hcc")
+        endif()
     endif()
     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
     add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
