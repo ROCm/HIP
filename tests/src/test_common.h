@@ -109,11 +109,6 @@ THE SOFTWARE.
 #define aligned_free(x) free(x)
 #endif
 
-//const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES=";
-//const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES=";
-//const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES";
-//const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES";
-
 // standard command-line variables:
 extern size_t N;
 extern char memsetval;

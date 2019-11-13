@@ -112,8 +112,6 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 }
 
 int main() {
-    //extern const char* HIP_VISIBLE_DEVICES_STR;
-    //extern const char* CUDA_VISIBLE_DEVICES_STR;
     unsetenv(HIP_VISIBLE_DEVICES_STR);
     unsetenv(CUDA_VISIBLE_DEVICES_STR);
     
