@@ -41,7 +41,7 @@ int getDeviceNumber() {
     const char* directed_dir;
     const char* dir;
     
-    if (PLATFORM_NAME == "WINDOWS"){
+    if (_WIN64 == 1){
         directed_dir = "directed_tests\\hipEnvVar -c";
         dir = "hipEnvVar -c";
     } else {
@@ -74,7 +74,7 @@ void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
     
     string directed_dir;
     string dir;
-    if (PLATFORM_NAME == "WINDOWS"){
+    if (_WIN64 == 1){
         directed_dir = "directed_tests\\hipEnvVar -d ";
         dir = "hipEnvVar.exe -d ";
     } else {
@@ -112,8 +112,10 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 }
 
 int main() {
-    unsetenv(HIP_VISIBLE_DEVICES);
-    unsetenv(CUDA_VISIBLE_DEVICES);
+    //extern const char* HIP_VISIBLE_DEVICES_STR;
+    //extern const char* CUDA_VISIBLE_DEVICES_STR;
+    unsetenv(HIP_VISIBLE_DEVICES_STR);
+    unsetenv(CUDA_VISIBLE_DEVICES_STR);
     
     std::vector<std::string> devPCINum;
     char pciBusID[100];
@@ -157,8 +159,8 @@ int main() {
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
         // test if CUDA_VISIBLE_DEVICES will be accepted by the runtime
-        unsetenv(HIP_VISIBLE_DEVICES);
-        unsetenv(CUDA_VISIBLE_DEVICES);
+        unsetenv(HIP_VISIBLE_DEVICES_STR);
+        unsetenv(CUDA_VISIBLE_DEVICES_STR);
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
     }

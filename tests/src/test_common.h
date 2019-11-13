@@ -105,15 +105,14 @@ THE SOFTWARE.
 #define pclose(x) _pclose(x)
 #define setenv(x,y,z) _putenv_s(x,y)
 #define unsetenv _putenv
-#define PLATFORM_NAME "WINDOWS"
-#define HIP_VISIBLE_DEVICES "HIP_VISIBLE_DEVICES="
-#define CUDA_VISIBLE_DEVICES "CUDA_VISIBLE_DEVICES="
 #else
 #define aligned_free(x) free(x)
-#define PLATFORM_NAME "OTHER"
-#define HIP_VISIBLE_DEVICES "HIP_VISIBLE_DEVICES"
-#define CUDA_VISIBLE_DEVICES "CUDA_VISIBLE_DEVICES"
 #endif
+
+//const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES=";
+//const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES=";
+//const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES";
+//const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES";
 
 // standard command-line variables:
 extern size_t N;
@@ -127,6 +126,8 @@ extern unsigned threadsPerBlock;
 extern int p_gpuDevice;
 extern unsigned p_verbose;
 extern int p_tests;
+extern const char* HIP_VISIBLE_DEVICES_STR;
+extern const char* CUDA_VISIBLE_DEVICES_STR;
 
 // ********************* CPP section *********************
 #ifdef __cplusplus

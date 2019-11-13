@@ -33,7 +33,13 @@ unsigned threadsPerBlock = 256;
 int p_gpuDevice = 0;
 unsigned p_verbose = 0;
 int p_tests = -1; /*which tests to run. Interpretation is left to each test.  default:all*/
-
+#ifdef _WIN64
+const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES=";
+const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES=";
+#else
+const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES";
+const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES";
+#endif
 
 namespace HipTest {
 
