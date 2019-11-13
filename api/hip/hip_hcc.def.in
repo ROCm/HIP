@@ -176,6 +176,7 @@ hipBindTexture2D
 hipBindTextureToArray
 hipBindTextureToMipmappedArray
 hipUnbindTexture
+ihipUnbindTextureImpl
 hipGetChannelDesc
 hipGetTextureAlignmentOffset
 hipGetTextureReference

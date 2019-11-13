@@ -189,6 +189,7 @@ global:
     hipBindTextureToArray*;
     hipBindTextureToMipmappedArray*;
     hipUnbindTexture*;
+    ihipUnbindTextureImpl*;
     hipGetChannelDesc*;
     hipGetTextureAlignmentOffset*;
     hipGetTextureReference*;
