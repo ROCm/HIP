@@ -391,7 +391,7 @@ rocm_clang:
   node('hip-rocm')
   {
     String hcc_ver = 'rocm-head'
-    String from_image = 'hcswap-blr.amd.com:5000/ci_test_nodes/rocm-hipclang_test/ubuntu-16.04'
+    String from_image = 'hcswap-blr.amd.com:5000/agodavar/rocm-hipclang_test/ubuntu-16.04'
     String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
 
     // Checkout source code, dependencies and version files
