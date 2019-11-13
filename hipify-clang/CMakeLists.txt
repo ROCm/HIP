@@ -114,6 +114,34 @@ install(
   PATTERN "openmp_wrappers" EXCLUDE
   )
 
+# Package: hipify-clang
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hipify-clang)
+configure_file(packaging/hipify-clang.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hipify-clang  COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
+
+# Package: all
+if(POLICY CMP0037)
+    cmake_policy(PUSH)
+    cmake_policy(SET CMP0037 OLD)
+endif()
+file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/fixnames
+        CONTENT "pwd; for i in *.deb; do mv \"\$i\" \"\${i/.deb/-amd64.deb}\" ; done
+for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
+")
+add_custom_target(package
+    COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    DEPENDS pkg_hipify-clang)
+if(POLICY CMP0037)
+    cmake_policy(POP)
+endif()
+
 if (HIPIFY_CLANG_TESTS)
     find_package(PythonInterp 2.7 REQUIRED)
 
