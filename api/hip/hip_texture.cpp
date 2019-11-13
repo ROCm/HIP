@@ -526,6 +526,13 @@ hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
   HIP_RETURN(hipErrorNotSupported);
 }
 
+hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
+
+  ihipDestroyTextureObject(reinterpret_cast<hip::TextureObject*>(textureObject));
+
+  return hipSuccess;
+}
+
 hipError_t hipUnbindTexture(const textureReference* tex) {
   HIP_INIT_API(NONE, tex);
 
