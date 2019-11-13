@@ -25,6 +25,7 @@ THE SOFTWARE.
  */
 
 #include "hip/hip_runtime.h"
+#include "hip/hip_ext.h"
 #include "test_common.h"
 
 void test(size_t N) {
@@ -43,7 +44,7 @@ void test(size_t N) {
 
     hipExtLaunchKernelGGL(HipTest::vectorADD, dim3(blocks),
                           dim3(threadsPerBlock), 0, 0, nullptr, nullptr, 0,
-                          A_d, B_d, C_d, N);
+                          static_cast<const int*>(A_d), static_cast<const int*>(B_d), C_d, N);
 
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
