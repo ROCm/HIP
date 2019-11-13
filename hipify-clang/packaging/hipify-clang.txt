@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hipify-clang)
 
-install(PROGRAMS @PROJECT_BINARY_DIR@/hipify-clang/hipify-clang DESTINATION bin)
+install(PROGRAMS @PROJECT_BINARY_DIR@/hipify-clang DESTINATION bin)
 
 #############################
 # Packaging steps
