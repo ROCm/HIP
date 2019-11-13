@@ -136,9 +136,9 @@ To run it:
 
     * Having multiple CUDA installations to choose a particular version the `DCUDA_TOOLKIT_ROOT_DIR` option should be specified:
 
-        - Linux: `-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-10.1`
+        - ***Linux***: `-DCUDA_TOOLKIT_ROOT_DIR=/usr/local/cuda-10.1`
 
-        - Windows: `-DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1"`
+        - ***Windows***: `-DCUDA_TOOLKIT_ROOT_DIR="c:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1"`
 
           `-DCUDA_SDK_ROOT_DIR="c:/ProgramData/NVIDIA Corporation/CUDA Samples/v10.1"`
 
@@ -146,17 +146,17 @@ To run it:
 
     * Path to cuDNN should be specified by the `CUDA_DNN_ROOT_DIR` option:
 
-        - Linux: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.1-v7.6.5.32`
+        - ***Linux***: `-DCUDA_DNN_ROOT_DIR=/srv/CUDNN/cudnn-10.1-v7.6.5.32`
 
-        - Windows: `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-10.1-windows10-x64-v7.6.5.32`
+        - ***Windows***: `-DCUDA_DNN_ROOT_DIR=f:/CUDNN/cudnn-10.1-windows10-x64-v7.6.5.32`
 
 5. Ensure [`CUB`](https://github.com/NVlabs/cub) of the version corresponding to CUDA's version is installed.
 
     * Path to CUB should be specified by the `CUDA_CUB_ROOT_DIR` option:
 
-        - Linux: `-DCUDA_CUB_ROOT_DIR=/srv/git/CUB`
+        - ***Linux***: `-DCUDA_CUB_ROOT_DIR=/srv/git/CUB`
 
-        - Windows: `-DCUDA_CUB_ROOT_DIR=f:/GIT/cub`
+        - ***Windows***: `-DCUDA_CUB_ROOT_DIR=f:/GIT/cub`
 
 5. Ensure [`python`](https://www.python.org/downloads) of minimum required version 2.7 is installed.
 
@@ -164,27 +164,35 @@ To run it:
 
     * Install `lit` into `python`:
 
-        - Linux: `python /srv/git/LLVM/9.0.0/llvm/utils/lit/setup.py install`
+        - ***Linux***: `python /srv/git/LLVM/9.0.0/llvm/utils/lit/setup.py install`
 
-        - Windows: `python f:/LLVM/9.0.0/llvm/utils/lit/setup.py install`
+        - ***Windows***: `python f:/LLVM/9.0.0/llvm/utils/lit/setup.py install`
 
     * Starting with LLVM 6.0.1 path to `llvm-lit` python script should be specified by the `LLVM_EXTERNAL_LIT` option:
 
-        - Linux: `-DLLVM_EXTERNAL_LIT=/srv/git/LLVM/9.0.0/build/bin/llvm-lit`
+        - ***Linux***: `-DLLVM_EXTERNAL_LIT=/srv/git/LLVM/9.0.0/build/bin/llvm-lit`
 
-        - Windows: `-DLLVM_EXTERNAL_LIT=f:/LLVM/9.0.0/build/Release/bin/llvm-lit.py`
+        - ***Windows***: `-DLLVM_EXTERNAL_LIT=f:/LLVM/9.0.0/build/Release/bin/llvm-lit.py`
+
+    * `FileCheck`:
+
+        - ***Linux***: copy from `/srv/git/LLVM/9.0.0/build/bin/` to `CMAKE_INSTALL_PREFIX/dist/bin`
+
+        - ***Windows***: copy from `f:/LLVM/9.0.0/build/Release/bin` to `CMAKE_INSTALL_PREFIX/dist/bin`
+
+        - Or specify the path to `FileCheck` in `CMAKE_INSTALL_PREFIX` option
 
 7. Set `HIPIFY_CLANG_TESTS` option turned on: `-DHIPIFY_CLANG_TESTS=1`.
 
 8. Run `cmake`:
-     * [Linux](#linux)
-     * [Windows](#windows)
+     * [***Linux***](#linux)
+     * [***Windows***](#windows)
 
 9. Run tests:
 
-     - Linux: `make test-hipify`.
+     - ***Linux***: `make test-hipify`.
 
-     - Windows: run `Visual Studio 16 2019`, open the generated `hipify-clang.sln`, build project `test-hipify`.
+     - ***Windows***: run `Visual Studio 16 2019`, open the generated `hipify-clang.sln`, build project `test-hipify`.
 
 ### <a name="linux"></a >Linux
 
