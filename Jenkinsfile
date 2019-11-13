@@ -175,6 +175,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
         sh  """#!/usr/bin/env bash
             set -x
             cd ${build_dir_rel}
+            export LD_LIBRARY_PATH=.:$LD_LIBRARY_PATH
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
             ctest -E "(hipMultiThreadDevice-pyramid|hipMemoryAllocateCoherentDriver)"
