@@ -24,9 +24,9 @@ HIP code can be developed either on AMD ROCm platform using hcc or clang compile
 ## HIP-hcc
 
 * Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
-* Install the "hip_hcc" package. This will install HCC and the HIP porting layer.
+* Install the "hip-hcc" package. This will install HCC and the HIP porting layer.
 ```
-apt-get install hip_hcc
+apt-get install hip-hcc
 ```
 
 * Default paths and environment variables:
@@ -67,9 +67,9 @@ apt-get install hip_hcc
 
 ## HIP-nvcc
 * Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
-* Install the "hip_nvcc" package.  This will install CUDA SDK and the HIP porting layer.
+* Install the "hip-nvcc" package.  This will install CUDA SDK and the HIP porting layer.
 ```
-apt-get install hip_nvcc
+apt-get install hip-nvcc
 ```
 
 * Default paths and environment variables:
