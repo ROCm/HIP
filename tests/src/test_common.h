@@ -123,6 +123,7 @@ extern unsigned p_verbose;
 extern int p_tests;
 extern const char* HIP_VISIBLE_DEVICES_STR;
 extern const char* CUDA_VISIBLE_DEVICES_STR;
+extern const char* PATH_SEPERATOR_STR;
 
 // ********************* CPP section *********************
 #ifdef __cplusplus

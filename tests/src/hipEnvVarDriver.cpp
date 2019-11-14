@@ -38,26 +38,18 @@ using namespace std;
 int getDeviceNumber() {
     FILE* in;
     char buff[512];
-    const char* directed_dir;
-    const char* dir;
-    
-    if (_WIN64 == 1){
-        directed_dir = "directed_tests\\hipEnvVar -c";
-        dir = "hipEnvVar -c";
-    } else {
-        directed_dir = "./directed_tests/hipEnvVar -c";
-        dir = "./hipEnvVar -c";
-    }
+    string directed_dir = "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar -c";
+    string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar -c";
     
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    in = popen(directed_dir, "r");
+    in = popen(directed_dir.c_str(), "r");
     if(fgets(buff, 512, in) != NULL){
         cout << buff;
         pclose(in);
         return atoi(buff);
     }
     //Check at same level
-    in = popen(dir, "r");
+    in = popen(dir.c_str(), "r");
     if(fgets(buff, 512, in) != NULL){
         cout << buff;
         pclose(in);
@@ -72,15 +64,8 @@ int getDeviceNumber() {
 void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
     FILE* in;
     
-    string directed_dir;
-    string dir;
-    if (_WIN64 == 1){
-        directed_dir = "directed_tests\\hipEnvVar -d ";
-        dir = "hipEnvVar.exe -d ";
-    } else {
-        directed_dir = "./directed_tests/hipEnvVar -d ";
-        dir = "./hipEnvVar -d ";
-    }
+    string directed_dir = "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar -d ";
+    string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar -d";
 
     directed_dir += std::to_string(deviceID);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
@@ -117,7 +102,7 @@ int main() {
     
     std::vector<std::string> devPCINum;
     char pciBusID[100];
-    // collect the device pci bus ID for all device
+    // collect the device pci bus ID for all devices
     int totalDeviceNum = getDeviceNumber();
     std::cout << "The total number of available devices is " << totalDeviceNum << std::endl
               << "Valid index range is 0 - " << totalDeviceNum - 1 << std::endl;

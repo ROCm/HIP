@@ -36,9 +36,11 @@ int p_tests = -1; /*which tests to run. Interpretation is left to each test.  de
 #ifdef _WIN64
 const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES=";
 const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES=";
+const char* PATH_SEPERATOR_STR = "\\";
 #else
 const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES";
 const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES";
+const char* PATH_SEPERATOR_STR = "/";
 #endif
 
 namespace HipTest {
