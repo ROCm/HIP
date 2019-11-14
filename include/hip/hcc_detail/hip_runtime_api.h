@@ -1361,6 +1361,9 @@ hipError_t hipHostFree(void* ptr);
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
 
+hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                     hipStream_t stream __dparm(0));
+
 /**
  *  @brief Copy data from Host to Device
  *

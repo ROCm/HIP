@@ -991,33 +991,37 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* src, size_t count,
 }
 } // Namespace hip_impl.
 
-//---
-hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
-    HIP_INIT_SPECIAL_API(hipMemcpy, (TRACE_MCMD), dst, src, sizeBytes, kind);
-
+hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                      hipStream_t inStream) {
     hipError_t e = hipSuccess;
 
     // Return success if number of bytes to copy is 0
-    if (sizeBytes == 0) return ihipLogStatus(e);
-
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    hc::completion_future marker;
+    if (sizeBytes == 0) return e;
 
     if(dst==NULL || src==NULL)
-	{
-	e=hipErrorInvalidValue;
-	return ihipLogStatus(e);
-	}
+    {
+        return hipErrorInvalidValue;
+    }
     try {
+        hipStream_t stream = ihipSyncAndResolveStream(inStream);
         stream->locked_copySync(dst, src, sizeBytes, kind);
     } catch (ihipException& ex) {
         e = ex._code;
     }
 
-    return ihipLogStatus(e);
+    return e;
 }
 
+hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
+    HIP_INIT_SPECIAL_API(hipMemcpy, (TRACE_MCMD), dst, src, sizeBytes, kind);
+    return ihipLogStatus(ihipMemcpy(dst, src, sizeBytes, kind, hipStreamNull));
+}
+
+hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                               hipStream_t inStream) {
+    HIP_INIT_SPECIAL_API(hipMemcpyWithStream, (TRACE_MCMD), dst, src, sizeBytes, kind, inStream);
+    return ihipLogStatus(ihipMemcpy(dst, src, sizeBytes, kind, inStream));
+}
 
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyHtoD, (TRACE_MCMD), dst, src, sizeBytes);
