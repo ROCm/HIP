@@ -175,8 +175,8 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
         sh  """#!/usr/bin/env bash
             set -x
             cd ${build_dir_rel}
-            echo `pwd` > /etc/ld.so.conf.d/hip_clang_lib.conf
-            ldconfig
+            sudo echo `pwd` > /etc/ld.so.conf.d/hip_clang_lib.conf
+            sudo ldconfig
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
             ctest -E "(hipMultiThreadDevice-pyramid|hipMemoryAllocateCoherentDriver)"
