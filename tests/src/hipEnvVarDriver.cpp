@@ -32,57 +32,43 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 #include <thread>
 #include "test_common.h"
 
-
 using namespace std;
 
+const string directed_dir = "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar";
+const string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar";
+
 int getDeviceNumber() {
-    FILE* in;
     char buff[512];
-    string directed_dir = "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar -c";
-    string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar -c";
-    
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    in = popen(directed_dir.c_str(), "r");
-    if(fgets(buff, 512, in) != NULL){
-        cout << buff;
+    FILE* in = popen((directed_dir + " -c").c_str(), "r");
+    if(fgets(buff, 512, in) == NULL){
         pclose(in);
-        return atoi(buff);
+        //Check at same level
+        in = popen((dir + " -c").c_str(), "r");
+        if(fgets(buff, 512, in) == NULL){
+            pclose(in);
+            return 1;
+        }
     }
-    //Check at same level
-    in = popen(dir.c_str(), "r");
-    if(fgets(buff, 512, in) != NULL){
-        cout << buff;
-        pclose(in);
-        return atoi(buff);
-    }
-    
+    cout << buff;
     pclose(in);
-    return 1;
+    return atoi(buff);
 }
 
 // Query the current device ID remotely to hipEnvVar
-void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
-    FILE* in;
-    
-    string directed_dir = "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar -d ";
-    string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar -d";
-
-    directed_dir += std::to_string(deviceID);
+void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {    
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    
-    in = popen(directed_dir.c_str(), "r");
-    if(fgets(pciBusID, 100, in) != NULL){
-        cout << pciBusID;
+    FILE* in = popen((directed_dir + " -d " + std::to_string(deviceID)).c_str(), "r");
+    if(fgets(pciBusID, 100, in) == NULL){
         pclose(in);
-        return;
+        //Check at same level
+        in = popen((dir + " -d").c_str(), "r");
+        if(fgets(pciBusID, 100, in) == NULL){
+            pclose(in);
+            return;
+        }
     }
-    //Check at same level
-    in = popen(dir.c_str(), "r");
-    if(fgets(pciBusID, 100, in) != NULL){
-        cout << pciBusID;
-        pclose(in);
-        return;
-    }
+    cout << pciBusID;
     pclose(in);
     return;
 }
@@ -99,7 +85,6 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 int main() {
     unsetenv(HIP_VISIBLE_DEVICES_STR);
     unsetenv(CUDA_VISIBLE_DEVICES_STR);
-    
     std::vector<std::string> devPCINum;
     char pciBusID[100];
     // collect the device pci bus ID for all devices
