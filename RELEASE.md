@@ -184,7 +184,7 @@ Date: 2016.03.07
 - Bump minimum required ROCK-Kernel-Driver and ROCR-Runtime to Developer Preview 2.
 - Enable multi-GPU support.
   * Use hipSetDevice to select a device for subsequent kernel calls and memory allocations.
-  * CUDA_VISIBLE_DEVICES / HIP_VISIBLE_DEVICE environment variable selects devices visible to the runtime.
+  * HIP_VISIBLE_DEVICE environment variable selects devices visible to the runtime.
 - Support hipStreams – send sequences of copy and kernel commands to a device.
   * Asynchronous copies supported.
 - Optimize memory copy operations.

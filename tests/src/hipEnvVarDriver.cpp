@@ -82,7 +82,6 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 
 int main() {
     unsetenv("HIP_VISIBLE_DEVICES");
-    unsetenv("CUDA_VISIBLE_DEVICES");
 
     std::vector<std::string> devPCINum;
     char pciBusID[100];
@@ -101,7 +100,6 @@ int main() {
     // query the returned device pci bus number, check if match the database
     for (int i = 0; i < totalDeviceNum; i++) {
         setenv("HIP_VISIBLE_DEVICES", (char*)std::to_string(i).c_str(), 1);
-        setenv("CUDA_VISIBLE_DEVICES", (char*)std::to_string(i).c_str(), 1);
         getDevicePCIBusNumRemote(0, pciBusID);
         if (devPCINum[i] == pciBusID) {
             std::cout << "The returned PciBusID is not correct" << std::endl;
@@ -114,26 +112,17 @@ int main() {
 
     // check when set an invalid device number
     setenv("HIP_VISIBLE_DEVICES", "1000,0,1", 1);
-    setenv("CUDA_VISIBLE_DEVICES", "1000,0,1", 1);
     assert(getDeviceNumber() == 0);
 
     if (totalDeviceNum > 2) {
         setenv("HIP_VISIBLE_DEVICES", "0,1,1000,2", 1);
-        setenv("CUDA_VISIBLE_DEVICES", "0,1,1000,2", 1);
         assert(getDeviceNumber() == 2);
 
         setenv("HIP_VISIBLE_DEVICES", "0,1,2", 1);
-        setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
-        assert(getDeviceNumber() == 3);
-        // test if CUDA_VISIBLE_DEVICES will be accepted by the runtime
-        unsetenv("HIP_VISIBLE_DEVICES");
-        unsetenv("CUDA_VISIBLE_DEVICES");
-        setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
     }
 
     setenv("HIP_VISIBLE_DEVICES", "-100,0,1", 1);
-    setenv("CUDA_VISIBLE_DEVICES", "-100,0,1", 1);
     assert(getDeviceNumber() == 0);
 
     std::cout << "PASSED" << std::endl;
