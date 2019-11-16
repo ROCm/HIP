@@ -1270,7 +1270,7 @@ void HipReadEnv() {
     READ_ENV_S(release, HIP_DB_STOP_API, 0,
                "Comma-separated list of tid.api_seq_num for when to stop debug and profiling.");
 
-    READ_ENV_C(release, HIP_VISIBLE_DEVICES,
+    READ_ENV_C(release, HIP_VISIBLE_DEVICES, 0,
                "Only devices whose index is present in the sequence are visible to HIP "
                "applications and they are enumerated in the order of sequence.",
                HIP_VISIBLE_DEVICES_callback);
