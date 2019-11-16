@@ -209,7 +209,9 @@ hipError_t hipFree(void* ptr) {
   }
   if (amd::SvmBuffer::malloced(ptr)) {
     hip::syncStreams();
-    hip::getNullStream()->finish();
+    for (size_t i=0; i<g_devices.size(); ++i) {
+      hip::getNullStream(*g_devices[i])->finish();
+    }
     amd::SvmBuffer::free(*hip::getCurrentContext(), ptr);
     HIP_RETURN(hipSuccess);
   }
