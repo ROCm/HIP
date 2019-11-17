@@ -60,12 +60,11 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 
 #endif  // #ifdef __HCC__
 
-
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  to kernelparams or extra
  *
- * @param [in[ f	 Kernel to launch.
+ * @param [in[ f     Kernel to launch.
  * @param [in] gridDimX  X grid dimension specified in work-items
  * @param [in] gridDimY  Y grid dimension specified in work-items
  * @param [in] gridDimZ  Z grid dimension specified in work-items
@@ -88,7 +87,6 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
  *
  * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please
  refer to hip_porting_driver_api.md for sample usage.
-
  * HIP/ROCm actually updates the start event when the associated kernel completes.
  */
 HIP_PUBLIC_API
@@ -111,8 +109,62 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr)
                                     __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
 
+#ifdef __cplusplus
+
+namespace hip_impl {
+inline
+__attribute__((visibility("hidden")))
+void hipExtLaunchKernelGGLImpl(
+    std::uintptr_t function_address,
+    const dim3& numBlocks,
+    const dim3& dimBlocks,
+    std::uint32_t sharedMemBytes,
+    hipStream_t stream,
+    hipEvent_t startEvent,
+    hipEvent_t stopEvent,
+    std::uint32_t flags,
+    void** kernarg) {
+
+    const auto& kd = hip_impl::get_program_state()
+        .kernel_descriptor(function_address, target_agent(stream));
+
+    hipExtModuleLaunchKernel(kd, numBlocks.x * dimBlocks.x,
+                             numBlocks.y * dimBlocks.y,
+                             numBlocks.z * dimBlocks.z,
+                             dimBlocks.x, dimBlocks.y, dimBlocks.z,
+                             sharedMemBytes, stream, nullptr, kernarg,
+                             startEvent, stopEvent, flags);
+}
+}  // namespace hip_impl
+
+template <typename... Args, typename F = void (*)(Args...)>
+inline
+void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks,
+                           const dim3& dimBlocks, std::uint32_t sharedMemBytes,
+                           hipStream_t stream, hipEvent_t startEvent,
+                           hipEvent_t stopEvent, std::uint32_t flags,
+                           Args... args) {
+    hip_impl::hip_init();
+    auto kernarg =
+        hip_impl::make_kernarg(kernel, std::tuple<Args...>{std::move(args)...});
+    std::size_t kernarg_size = kernarg.size();
+
+    void* config[]{
+        HIP_LAUNCH_PARAM_BUFFER_POINTER,
+        kernarg.data(),
+        HIP_LAUNCH_PARAM_BUFFER_SIZE,
+        &kernarg_size,
+        HIP_LAUNCH_PARAM_END};
+
+    hip_impl::hipExtLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
+                                        numBlocks, dimBlocks, sharedMemBytes,
+                                        stream, startEvent, stopEvent, flags,
+                                        &config[0]);
+}
+#endif
+
 // doxygen end AMD-specific features
 /**
  * @}
  */
-#endif  // #ifdef HIP_INCLUDE_HIP_HIP_EXT_H
+#endif  // #iidef HIP_INCLUDE_HIP_HIP_EXT_H
