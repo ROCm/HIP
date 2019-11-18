@@ -18,8 +18,10 @@
  * */
 
 /* HIT_START
- * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_HCC__ -I%hip-path/include %S/%s -Wl,--rpath=%hip-path/lib %hip-path/lib/libhip_hcc.so -o %T/%t EXCLUDE_HIP_PLATFORM nvcc
- * TEST: %t EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_NVCC__ -I%hip-path/include -I/usr/local/cuda/include %S/%s -o %T/hipMalloc_nv -L/usr/local/cuda/lib64 -lcudart EXCLUDE_HIP_PLATFORM hcc
+ * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_HCC__ -I%hip-path/include %S/%s -Wl,--rpath=%hip-path/lib %hip-path/lib/libhip_hcc.so -o %T/hipMalloc_hcc EXCLUDE_HIP_PLATFORM nvcc
+ * TEST: hipMalloc_nv EXCLUDE_HIP_PLATFORM hcc
+ * TEST: hipMalloc_hcc EXCLUDE_HIP_PLATFORM nvcc
  * HIT_END
  */
 

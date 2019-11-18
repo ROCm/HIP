@@ -53,13 +53,13 @@ int runTest(int argc, char** argv) {
 
     hipMemcpyToArray(hipArray, 0, 0, hData, size, hipMemcpyHostToDevice);
 
-    struct hipResourceDesc resDesc;
+    hipResourceDesc resDesc;
     memset(&resDesc, 0, sizeof(resDesc));
     resDesc.resType = hipResourceTypeArray;
     resDesc.res.array.array = hipArray;
 
     // Specify texture object parameters
-    struct hipTextureDesc texDesc;
+    hipTextureDesc texDesc;
     memset(&texDesc, 0, sizeof(texDesc));
     texDesc.addressMode[0] = hipAddressModeWrap;
     texDesc.addressMode[1] = hipAddressModeWrap;
