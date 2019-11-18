@@ -883,7 +883,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
  * #hipEventDefault : Default flag.  The event will use active synchronization and will support
  timing.  Blocking synchronization provides lowest possible latency at the expense of dedicating a
- CPU to poll on the eevent.
+ CPU to poll on the event.
  * #hipEventBlockingSync : The event will use blocking synchronization : if hipEventSynchronize is
  called on this event, the thread will block until the event completes.  This can increase latency
  for the synchroniation but can result in lower power and more resources for other CPU threads.
@@ -935,7 +935,7 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * If hipEventRecord() has been previously called on this event, then this call will overwrite any
  * existing state in event.
  *
- * If this function is called on a an event that is currently being recorded, results are undefined
+ * If this function is called on an event that is currently being recorded, results are undefined
  * - either outstanding recording may save state into the event, and the order is not guaranteed.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize,
