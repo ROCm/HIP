@@ -34,41 +34,43 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 using namespace std;
 
+const string directed_dir = "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar";
+const string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar";
+
 int getDeviceNumber() {
-    FILE* in;
     char buff[512];
-    string str;
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    if (!(in = popen("./directed_tests/hipEnvVar -c", "r"))) {
-        // Check at same level
-        if (!(in = popen("./hipEnvVar -c", "r"))) {
+    FILE* in = popen((directed_dir + " -c").c_str(), "r");
+    if(fgets(buff, 512, in) == NULL){
+        pclose(in);
+        //Check at same level
+        in = popen((dir + " -c").c_str(), "r");
+        if(fgets(buff, 512, in) == NULL){
+            pclose(in);
             return 1;
         }
     }
-    while (fgets(buff, 512, in) != NULL) {
-        cout << buff;
-    }
+    cout << buff;
     pclose(in);
     return atoi(buff);
 }
 
 // Query the current device ID remotely to hipEnvVar
-void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
-    FILE* in;
-    string str = "./directed_tests/hipEnvVar -d ";
-    str += std::to_string(deviceID);
+void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {    
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    if (!(in = popen(str.c_str(), "r"))) {
-        // Check at same level
-        if (!(in = popen("./hipEnvVar -d ", "r"))) {
-            exit(1);
+    FILE* in = popen((directed_dir + " -d " + std::to_string(deviceID)).c_str(), "r");
+    if(fgets(pciBusID, 100, in) == NULL){
+        pclose(in);
+        //Check at same level
+        in = popen((dir + " -d").c_str(), "r");
+        if(fgets(pciBusID, 100, in) == NULL){
+            pclose(in);
+            return;
         }
-
     }
-    while (fgets(pciBusID, 100, in) != NULL) {
-        cout << pciBusID;
-    }
+    cout << pciBusID;
     pclose(in);
+    return;
 }
 
 // Query the current device ID locally on AMD path
@@ -81,9 +83,8 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 }
 
 int main() {
-    unsetenv("HIP_VISIBLE_DEVICES");
-    unsetenv("CUDA_VISIBLE_DEVICES");
-
+    unsetenv(HIP_VISIBLE_DEVICES_STR);
+    unsetenv(CUDA_VISIBLE_DEVICES_STR);
     std::vector<std::string> devPCINum;
     char pciBusID[100];
     // collect the device pci bus ID for all devices
@@ -126,8 +127,8 @@ int main() {
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
         // test if CUDA_VISIBLE_DEVICES will be accepted by the runtime
-        unsetenv("HIP_VISIBLE_DEVICES");
-        unsetenv("CUDA_VISIBLE_DEVICES");
+        unsetenv(HIP_VISIBLE_DEVICES_STR);
+        unsetenv(CUDA_VISIBLE_DEVICES_STR);
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
         assert(getDeviceNumber() == 3);
     }
