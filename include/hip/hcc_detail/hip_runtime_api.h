@@ -391,7 +391,7 @@ hipError_t hipSetDevice(int deviceId);
  * This device is used implicitly for HIP runtime APIs called by this thread.
  * hipGetDevice returns in * @p device the default device for the calling host thread.
  *
- * @returns #hipSuccess
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  * @see hipSetDevice, hipGetDevicesizeBytes
  */
