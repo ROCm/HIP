@@ -109,7 +109,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr)
                                     __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
 
-#ifdef __cplusplus
+#if !__HIP_VDI__ && defined(__cplusplus)
 
 namespace hip_impl {
 inline
@@ -161,7 +161,7 @@ void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks,
                                         stream, startEvent, stopEvent, flags,
                                         &config[0]);
 }
-#endif
+#endif // !__HIP_VDI__ && defined(__cplusplus)
 
 // doxygen end AMD-specific features
 /**
