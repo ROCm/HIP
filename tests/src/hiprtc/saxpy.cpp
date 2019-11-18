@@ -35,6 +35,7 @@ THE SOFTWARE.
 #include <memory>
 #include <iostream>
 #include <iterator>
+#include <vector>
 
 static constexpr auto NUM_THREADS{128};
 static constexpr auto NUM_BLOCKS{32};
