@@ -1,16 +1,13 @@
 /*
-Copyright (c) 2019 Advanced Micro Devices, Inc. All rights reserved.
-
+Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -22,48 +19,44 @@ THE SOFTWARE.
 // Test the Grid_Launch syntax.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
 
 #include "hip/hip_runtime.h"
+#include "hip/hip_ext.h"
 #include "test_common.h"
 
-#define fileName "vcpy_kernel.code"
-#define kernel_name "hello_world"
+void test(size_t N) {
+    size_t Nbytes = N * sizeof(int);
+
+    int *A_d, *B_d, *C_d;
+    int *A_h, *B_h, *C_h;
+
+    HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N);
 
 
-__global__ void f1(float *a) { *a = 1.0; }
+    unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
 
-template <typename T>
-__global__ void f2(T *a) { *a = 1; }
+    HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
+    HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
+    hipExtLaunchKernelGGL(HipTest::vectorADD, dim3(blocks),
+                          dim3(threadsPerBlock), 0, 0, nullptr, nullptr, 0,
+                          static_cast<const int*>(A_d), static_cast<const int*>(B_d), C_d, N);
 
+    HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
+
+    HIPCHECK(hipDeviceSynchronize());
+
+    HipTest::checkVectorADD(A_h, B_h, C_h, N);
+}
 
 int main(int argc, char* argv[]) {
+    HipTest::parseStandardArguments(argc, argv, true);
 
-    // test case for using kernel function pointer 
-    uint32_t gridSize = 0;
-    uint32_t blockSize = 0;
-    hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
-    assert(gridSize != 0 && blockSize != 0);
-
-    // test case for using kernel function pointer with template 
-    gridSize = 0;
-    blockSize = 0;
-    hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
-    assert(gridSize != 0 && blockSize != 0);
-
-    // test case for using kernel with hipFunction_t type
-    gridSize = 0;
-    blockSize = 0;
-    hipModule_t Module;
-    hipFunction_t Function;
-    HIPCHECK(hipModuleLoad(&Module, fileName));
-    HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    HIPCHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, Function, 0, 0));
-    assert(gridSize != 0 && blockSize != 0);
+    test(N);
 
     passed();
 }

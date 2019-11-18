@@ -194,15 +194,17 @@ int main(int argc, const char **argv) {
     ct::RefactoringTool Tool(OptionsParser.getCompilations(), std::string(tmpFile.c_str()));
     ct::Replacements& replacementsToUse = llcompat::getReplacements(Tool, tmpFile.c_str());
     ReplacementsFrontendActionFactory<HipifyAction> actionFactory(&replacementsToUse);
-    std::string sInclude = "-I" + sys::path::parent_path(sSourceAbsPath).str();
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("cuda", ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-x", ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-fno-delayed-template-parsing", ct::ArgumentInsertPosition::BEGIN));
-    if (!CudaPath.empty()) {
-      std::string sCudaPath = "--cuda-path=" + CudaPath;
-      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaPath.c_str(), ct::ArgumentInsertPosition::BEGIN));
+    if (!IncludeDirs.empty()) {
+      for (std::string s : IncludeDirs) {
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::BEGIN));
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-I", ct::ArgumentInsertPosition::BEGIN));
+      }
+    }
+    if (!MacroNames.empty()) {
+      for (std::string s : MacroNames) {
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::BEGIN));
+        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::BEGIN));
+      }
     }
     // Includes for clang's CUDA wrappers for using by packaged hipify-clang
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include", ct::ArgumentInsertPosition::BEGIN));
@@ -215,24 +217,26 @@ int main(int argc, const char **argv) {
     stdCpp = "-std=c++14";
 #endif
     Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(stdCpp.c_str(), ct::ArgumentInsertPosition::BEGIN));
+    std::string sInclude = "-I" + sys::path::parent_path(sSourceAbsPath).str();
 #if defined(HIPIFY_CLANG_RES)
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES, ct::ArgumentInsertPosition::BEGIN));
 #endif
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-fno-delayed-template-parsing", ct::ArgumentInsertPosition::BEGIN));
     if (llcompat::pragma_once_outside_header()) {
       Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-Wno-pragma-once-outside-header", ct::ArgumentInsertPosition::BEGIN));
     }
-    if (!MacroNames.empty()) {
-      for (std::string s : MacroNames) {
-        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::END));
-        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
-      }
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
+    if (!CudaGpuArch.empty()) {
+      std::string sCudaGpuArch = "--cuda-gpu-arch=" + CudaGpuArch;
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaGpuArch.c_str(), ct::ArgumentInsertPosition::BEGIN));
     }
-    if (!IncludeDirs.empty()) {
-      for (std::string s : IncludeDirs) {
-        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-I", ct::ArgumentInsertPosition::END));
-        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::END));
-      }
+    if (!CudaPath.empty()) {
+      std::string sCudaPath = "--cuda-path=" + CudaPath;
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaPath.c_str(), ct::ArgumentInsertPosition::BEGIN));
     }
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("cuda", ct::ArgumentInsertPosition::BEGIN));
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-x", ct::ArgumentInsertPosition::BEGIN));
     if (Verbose) {
       Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-v", ct::ArgumentInsertPosition::END));
     }

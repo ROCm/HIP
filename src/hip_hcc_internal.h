@@ -583,8 +583,6 @@ class ihipStream_t {
     void locked_streamWaitEvent(ihipEventData_t& event);
     hc::completion_future locked_recordEvent(hipEvent_t event);
 
-    bool locked_eventIsReady(hipEvent_t event);
-
     ihipStreamCritical_t& criticalData() { return _criticalData; };
 
     //---
@@ -652,7 +650,9 @@ class ihipStreamCallback_t {
         : _stream(stream), _callback(callback), _userData(userData) {
     };
     hipStream_t _stream;
+    hsa_signal_t _signal;
     hipStreamCallback_t _callback;
+    hc::completion_future comFuture;
     void* _userData;
 };
 
@@ -724,8 +724,6 @@ class ihipEvent_t {
     explicit ihipEvent_t(unsigned flags);
     void attachToCompletionFuture(const hc::completion_future* cf, hipStream_t stream,
                                   ihipEventType_t eventType);
-    std::pair<hipEventStatus_t, uint64_t> refreshEventStatus();  // returns pair <state, timestamp>
-
 
     // Return a copy of the critical state. The critical data is locked during the copy.
     ihipEventData_t locked_copyCrit() {
@@ -972,7 +970,7 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t, bool lockAcquired = 0);
 hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream);
-void ihipStreamCallbackHandler(ihipStreamCallback_t* cb);
+bool ihipStreamCallbackHandler(hsa_signal_value_t value, void* cbArgs);
 
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s) {

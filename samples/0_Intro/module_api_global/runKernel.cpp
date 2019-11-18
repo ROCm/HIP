@@ -25,7 +25,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <hip/hip_hcc.h>
+#include <hip/hip_ext.h>
 
 #define LEN 64
 #define SIZE LEN * sizeof(float)

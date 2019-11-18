@@ -21,11 +21,9 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
-//#include "hip/hip_runtime_api.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
-//#include <hip/hip_hcc.h>
 
 #define fileName "tex2dKernel.code"
 
@@ -124,6 +122,7 @@ bool runTest(int argc, char** argv) {
             }
         }
     }
+    HIP_CHECK(hipUnbindTexture(tex));
     HIP_CHECK(hipFree(dData));
     HIP_CHECK(hipFreeArray(array));
     return testResult;

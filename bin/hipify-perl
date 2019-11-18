@@ -269,6 +269,8 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcudaMemcpy\b/hipMemcpy/g;
     $ft{'memory'} += s/\bcudaMemcpy2D\b/hipMemcpy2D/g;
     $ft{'memory'} += s/\bcudaMemcpy2DAsync\b/hipMemcpy2DAsync/g;
+    $ft{'memory'} += s/\bcudaMemcpy2DFromArray\b/hipMemcpy2DFromArray/g;
+    $ft{'memory'} += s/\bcudaMemcpy2DFromArrayAsync\b/hipMemcpy2DFromArrayAsync/g;
     $ft{'memory'} += s/\bcudaMemcpy2DToArray\b/hipMemcpy2DToArray/g;
     $ft{'memory'} += s/\bcudaMemcpy3D\b/hipMemcpy3D/g;
     $ft{'memory'} += s/\bcudaMemcpy3DAsync\b/hipMemcpy3DAsync/g;
@@ -1678,6 +1680,7 @@ sub transformKernelLaunch {
 sub transformCubNamespace {
     my $k = 0;
     $k += s/using\s*namespace\s*cub/using namespace hipcub/g;
+    $k += s/\bcub::\b/hipcub::/g;
     return $k;
 }
 
