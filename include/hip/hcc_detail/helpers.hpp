@@ -69,6 +69,9 @@ template <typename...>
 using void_t_ = void;
 
 #if HIP_HAS_INVOCABLE
+template <typename, typename = void>
+struct is_callable_impl;
+
 template <FunctionalProcedure F, typename... Ts>
 struct is_callable_impl<F(Ts...)> : std::is_invocable<F, Ts...> {};
 #elif HIP_HAS_RESULT_OF_SFINAE
