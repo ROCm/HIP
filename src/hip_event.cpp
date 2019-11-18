@@ -44,28 +44,22 @@ void ihipEvent_t::attachToCompletionFuture(const hc::completion_future* cf, hipS
 }
 
 
-std::pair<hipEventStatus_t, uint64_t> ihipEvent_t::refreshEventStatus() {
-    auto ecd = locked_copyCrit();
-    if (ecd._state == hipEventStatusRecording) {
-        bool isReady1 = ecd._stream->locked_eventIsReady(this);
-        if (isReady1) {
-            LockedAccessor_EventCrit_t eCrit(_criticalData);
-
-            if ((eCrit->_eventData._type == hipEventTypeIndependent) ||
-                (eCrit->_eventData._type == hipEventTypeStopCommand)) {
-                eCrit->_eventData._timestamp = eCrit->_eventData.marker().get_end_tick();
-            } else if (eCrit->_eventData._type == hipEventTypeStartCommand) {
-                eCrit->_eventData._timestamp = eCrit->_eventData.marker().get_begin_tick();
-            } else {
-                eCrit->_eventData._timestamp = 0;
-                assert(0);  // TODO - move to debug assert
-            }
-
-            eCrit->_eventData._state = hipEventStatusComplete;
-
-            return std::pair<hipEventStatus_t, uint64_t>(eCrit->_eventData._state,
-                                                         eCrit->_eventData._timestamp);
+static std::pair<hipEventStatus_t, uint64_t> refreshEventStatus(ihipEventData_t &ecd) {
+    if (ecd._state == hipEventStatusRecording && ecd.marker().is_ready()) {
+        if ((ecd._type == hipEventTypeIndependent) ||
+            (ecd._type == hipEventTypeStopCommand)) {
+            ecd._timestamp = ecd.marker().get_end_tick();
+        } else if (ecd._type == hipEventTypeStartCommand) {
+            ecd._timestamp = ecd.marker().get_begin_tick();
+        } else {
+            ecd._timestamp = 0;
+            assert(0);  // TODO - move to debug assert
         }
+
+        ecd._state = hipEventStatusComplete;
+
+        return std::pair<hipEventStatus_t, uint64_t>(ecd._state,
+                                                     ecd._timestamp);
     }
 
     // Not complete path here:
@@ -109,51 +103,28 @@ hipError_t hipEventCreate(hipEvent_t* event) {
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipEventRecord, TRACE_SYNC, event, stream);
- 
-    hipError_t status;
-    if (event){
-        auto ecd = event->locked_copyCrit();
-        if( ecd._state != hipEventStatusUnitialized) {
-            stream = ihipSyncAndResolveStream(stream);
-
-            if (HIP_SYNC_NULL_STREAM && stream->isDefaultStream()) {
-                // TODO-HIP_SYNC_NULL_STREAM : can remove this code when HIP_SYNC_NULL_STREAM = 0
-                //
-                // If default stream , then wait on all queues.
-                ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
-                ctx->locked_syncDefaultStream(true, true);
-
-                { 
-                    LockedAccessor_EventCrit_t eCrit(event->criticalData());
-                    eCrit->_eventData.marker(hc::completion_future());  // reset event
-                    eCrit->_eventData._stream = stream;
-                    eCrit->_eventData._timestamp = hc::get_system_ticks();
-                    eCrit->_eventData._state = hipEventStatusComplete;
-                }
-                status = hipSuccess;
-            } else {
-                // Record the event in the stream:
-                // Keep a copy outside the critical section so we lock stream first, then event - to
-                // avoid deadlock
-                hc::completion_future cf = stream->locked_recordEvent(event);
-
-                {
-                    LockedAccessor_EventCrit_t eCrit(event->criticalData());
-                    eCrit->_eventData.marker(cf);
-                    eCrit->_eventData._stream = stream;
-                    eCrit->_eventData._timestamp = 0;
-                    eCrit->_eventData._state = hipEventStatusRecording;
-                }
-
-                status = hipSuccess;
-            }
-        } else {
-            status = hipErrorInvalidResourceHandle;
-        }
-    } else {
-            status = hipErrorInvalidResourceHandle;
+    if (!event) return ihipLogStatus(hipErrorInvalidResourceHandle);
+    stream = ihipSyncAndResolveStream(stream);
+    LockedAccessor_EventCrit_t eCrit(event->criticalData());
+    if (eCrit->_eventData._state == hipEventStatusUnitialized) return ihipLogStatus(hipErrorInvalidResourceHandle);
+    if (HIP_SYNC_NULL_STREAM && stream->isDefaultStream()) {
+        // TODO-HIP_SYNC_NULL_STREAM : can remove this code when HIP_SYNC_NULL_STREAM = 0
+        // If default stream , then wait on all queues.
+        ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
+        ctx->locked_syncDefaultStream(true, true);
+        eCrit->_eventData.marker(hc::completion_future());  // reset event
+        eCrit->_eventData._stream = stream;
+        eCrit->_eventData._timestamp = hc::get_system_ticks();
+        eCrit->_eventData._state = hipEventStatusComplete;
     }
-    return ihipLogStatus(status);
+    else {
+        // Record the event in the stream:
+        eCrit->_eventData.marker(stream->locked_recordEvent(event));
+        eCrit->_eventData._stream = stream;
+        eCrit->_eventData._timestamp = 0;
+        eCrit->_eventData._state = hipEventStatusRecording;
+    }
+    return ihipLogStatus(hipSuccess);
 }
 
 
@@ -172,14 +143,14 @@ hipError_t hipEventDestroy(hipEvent_t event) {
 hipError_t hipEventSynchronize(hipEvent_t event) {
     HIP_INIT_SPECIAL_API(hipEventSynchronize, TRACE_SYNC, event);
 
-    if (!(event->_flags & hipEventReleaseToSystem)) {
-        tprintf(DB_WARN,
+    if (event){
+        if (!(event->_flags & hipEventReleaseToSystem)) {
+            tprintf(DB_WARN,
                 "hipEventSynchronize on event without system-scope fence ; consider creating with "
                 "hipEventReleaseToSystem\n");
-    }
-    auto ecd = event->locked_copyCrit();
+        }
+        auto ecd = event->locked_copyCrit();
 
-    if (event) {
         if (ecd._state == hipEventStatusUnitialized) {
             return ihipLogStatus(hipErrorInvalidResourceHandle);
         } else if (ecd._state == hipEventStatusCreated) {
@@ -203,84 +174,67 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
 hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
     HIP_INIT_API(hipEventElapsedTime, ms, start, stop);
 
-    hipError_t status = hipSuccess;
+    if (ms == nullptr) return ihipLogStatus(hipErrorInvalidValue);
+    if ((start == nullptr) || (stop == nullptr)) return ihipLogStatus(hipErrorInvalidResourceHandle);
 
-    if (ms == nullptr) {
-        status = hipErrorInvalidValue;
+    *ms = 0.0f;
+    auto startEcd = start->locked_copyCrit();
+    auto stopEcd = stop->locked_copyCrit();
+
+    if ((start->_flags & hipEventDisableTiming) ||
+        (startEcd._state == hipEventStatusUnitialized) ||
+        (startEcd._state == hipEventStatusCreated) ||
+        (stop->_flags & hipEventDisableTiming) ||
+        (stopEcd._state == hipEventStatusUnitialized) ||
+        (stopEcd._state == hipEventStatusCreated)) {
+        // Both events must be at least recorded else return hipErrorInvalidResourceHandle
+        return ihipLogStatus(hipErrorInvalidResourceHandle);
     }
-    else if ((start == nullptr) || (stop == nullptr)) {
-        status = hipErrorInvalidResourceHandle;
-    } else {
-        *ms = 0.0f;
-        auto startEcd = start->locked_copyCrit();
-        auto stopEcd = stop->locked_copyCrit();
 
-        if ((start->_flags & hipEventDisableTiming) ||
-            (startEcd._state == hipEventStatusUnitialized) ||
-            (startEcd._state == hipEventStatusCreated) || (stop->_flags & hipEventDisableTiming) ||
-            (stopEcd._state == hipEventStatusUnitialized) ||
-            (stopEcd._state == hipEventStatusCreated)) {
-            // Both events must be at least recorded else return hipErrorInvalidResourceHandle
+    // Refresh status, if still recording...
 
-            status = hipErrorInvalidResourceHandle;
+    auto startStatus = refreshEventStatus(startEcd);  // pair < state, timestamp >
+    auto stopStatus = refreshEventStatus(stopEcd);    // pair < state, timestamp >
 
+    if ((startStatus.first == hipEventStatusComplete) &&
+        (stopStatus.first == hipEventStatusComplete)) {
+        // Common case, we have good information for both events.  'second' is the timestamp:
+        int64_t tickDiff = (stopStatus.second - startStatus.second);
+        uint64_t freqHz;
+        hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
+        if (freqHz) {
+            *ms = ((double)(tickDiff) / (double)(freqHz)) * 1000.0f;
+            return ihipLogStatus(hipSuccess);
         } else {
-            // Refresh status, if still recording...
-
-            auto startStatus = start->refreshEventStatus();  // pair < state, timestamp >
-            auto stopStatus = stop->refreshEventStatus();    // pair < state, timestamp >
-
-            if ((startStatus.first == hipEventStatusComplete) &&
-                (stopStatus.first == hipEventStatusComplete)) {
-                // Common case, we have good information for both events.  'second" is the
-                // timestamp:
-                int64_t tickDiff = (stopStatus.second - startStatus.second);
-
-                uint64_t freqHz;
-                hsa_system_get_info(HSA_SYSTEM_INFO_TIMESTAMP_FREQUENCY, &freqHz);
-                if (freqHz) {
-                    *ms = ((double)(tickDiff) / (double)(freqHz)) * 1000.0f;
-                    status = hipSuccess;
-                } else {
-                    *ms = 0.0f;
-                    status = hipErrorInvalidValue;
-                }
-
-
-            } else if ((startStatus.first == hipEventStatusRecording) ||
-                       (stopStatus.first == hipEventStatusRecording)) {
-                status = hipErrorNotReady;
-            } else {
-                assert(0);
-            }
+            *ms = 0.0f;
+            return ihipLogStatus(hipErrorInvalidValue);
         }
+    } else if ((startStatus.first == hipEventStatusRecording) ||
+               (stopStatus.first == hipEventStatusRecording)) {
+        return ihipLogStatus(hipErrorNotReady);
+    } else {
+        assert(0); // TODO should we return hipErrorUnknown ?
     }
 
-    return ihipLogStatus(status);
+    return ihipLogStatus(hipSuccess);
 }
 
 hipError_t hipEventQuery(hipEvent_t event) {
     HIP_INIT_SPECIAL_API(hipEventQuery, TRACE_QUERY, event);
  
-    hipError_t status = hipSuccess;
+    if (!event) return ihipLogStatus(hipErrorInvalidResourceHandle);
 
-    if ( NULL == event)
-    {
-        status = hipErrorInvalidResourceHandle;
-    } else {
-        if (!(event->_flags & hipEventReleaseToSystem)) {
-            tprintf(DB_WARN,
-                    "hipEventQuery on event without system-scope fence ; consider creating with "
-                    "hipEventReleaseToSystem\n");
-        }
-
-        auto ecd = event->locked_copyCrit();
-
-        if ((ecd._state == hipEventStatusRecording) && !ecd._stream->locked_eventIsReady(event)) {
-            status = hipErrorNotReady;
-        } else {
-            status = hipSuccess;
-        }
+    if (!(event->_flags & hipEventReleaseToSystem)) {
+        tprintf(DB_WARN,
+                "hipEventQuery on event without system-scope fence ; consider creating with "
+                "hipEventReleaseToSystem\n");
     }
-    return ihipLogStatus(status);
+
+    auto ecd = event->locked_copyCrit();
+
+    if (ecd._state == hipEventStatusRecording && !ecd.marker().is_ready()) {
+        return ihipLogStatus(hipErrorNotReady);
+    }
+
+    return ihipLogStatus(hipSuccess);
 }

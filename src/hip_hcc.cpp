@@ -46,7 +46,7 @@ THE SOFTWARE.
 #include "hsa/hsa_ext_image.h"
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
-#include "hip/hip_hcc.h"
+#include "hip/hip_ext.h"
 #include "trace_helper.h"
 #include "env.h"
 
@@ -324,14 +324,6 @@ void ihipStream_t::locked_streamWaitEvent(ihipEventData_t& ecd) {
     crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
 }
 
-
-// Causes current stream to wait for specified event to complete:
-// Note this does not provide any kind of host serialization.
-bool ihipStream_t::locked_eventIsReady(hipEvent_t event) {
-    LockedAccessor_EventCrit_t ecrit(event->criticalData());
-
-    return (ecrit->_eventData.marker().is_ready());
-}
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
@@ -1505,18 +1497,21 @@ hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream) {
     return e;
 }
 
-void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
+bool ihipStreamCallbackHandler(hsa_signal_value_t value, void* cbArgs) {
     hipError_t e = hipSuccess;
 
-    // Synchronize stream
-    tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n",
-            ToString(cb->_stream).c_str());
-    GET_TLS();
-    e = ihipStreamSynchronize(tls, cb->_stream);
+    ihipStreamCallback_t* cb = static_cast<ihipStreamCallback_t*> (cbArgs);
+
+    if(cb->comFuture.valid())
+        cb->comFuture.wait();
 
     // Call registered callback function
     cb->_callback(cb->_stream, e, cb->_userData);
+
+    hsa_signal_store_screlease(cb->_signal,0);
+
     delete cb;
+    return false;
 }
 
 //---

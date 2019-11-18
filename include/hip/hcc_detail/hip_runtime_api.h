@@ -883,7 +883,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
  * #hipEventDefault : Default flag.  The event will use active synchronization and will support
  timing.  Blocking synchronization provides lowest possible latency at the expense of dedicating a
- CPU to poll on the eevent.
+ CPU to poll on the event.
  * #hipEventBlockingSync : The event will use blocking synchronization : if hipEventSynchronize is
  called on this event, the thread will block until the event completes.  This can increase latency
  for the synchroniation but can result in lower power and more resources for other CPU threads.
@@ -935,7 +935,7 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * If hipEventRecord() has been previously called on this event, then this call will overwrite any
  * existing state in event.
  *
- * If this function is called on a an event that is currently being recorded, results are undefined
+ * If this function is called on an event that is currently being recorded, results are undefined
  * - either outstanding recording may save state into the event, and the order is not guaranteed.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize,
@@ -2067,6 +2067,45 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
  *  @brief Copies data between host and device.
  *
  *  @param[in]   dst       Destination memory address
+ *  @param[in]   dpitch    Pitch of destination memory
+ *  @param[in]   src       Source memory address
+ *  @param[in]   wOffset   Source starting X offset
+ *  @param[in]   hOffset   Source starting Y offset
+ *  @param[in]   width     Width of matrix transfer (columns in bytes)
+ *  @param[in]   height    Height of matrix transfer (rows)
+ *  @param[in]   kind      Type of transfer
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind);
+
+/**
+ *  @brief Copies data between host and device asynchronously.
+ *
+ *  @param[in]   dst       Destination memory address
+ *  @param[in]   dpitch    Pitch of destination memory
+ *  @param[in]   src       Source memory address
+ *  @param[in]   wOffset   Source starting X offset
+ *  @param[in]   hOffset   Source starting Y offset
+ *  @param[in]   width     Width of matrix transfer (columns in bytes)
+ *  @param[in]   height    Height of matrix transfer (rows)
+ *  @param[in]   kind      Type of transfer
+ *  @param[in]   stream    Accelerator view which the copy is being enqueued
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst       Destination memory address
  *  @param[in]   srcArray  Source array
  *  @param[in]   srcoffset Offset in bytes of source array
  *  @param[in]   count     Size of memory copy in bytes
@@ -2846,6 +2885,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  unsigned int sharedMemBytes, hipStream_t stream,
                                  void** kernelParams, void** extra);
 
+
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
@@ -2884,14 +2924,14 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  * @param [out] gridSize           minimum grid size for maximum potential occupancy
  * @param [out] blockSize          block size for maximum potential occupancy
  * @param [in]  f                  kernel function for which occupancy is calulated
- * @param [in]  dynamicSMemSize    Per - block dynamic shared memory usage intended, in bytes
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
-hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
-                                             const void* f, size_t dynamicSMemSize,
-                                             int blockSizeLimit);
+hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             uint32_t blockSizeLimit);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2899,10 +2939,10 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
  * @param [out] numBlocks        Returned occupancy
  * @param [in]  func             Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
- * @param [in]  dynamicSMemSize  Per - block dynamic shared memory usage intended, in bytes
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   int* numBlocks, const void* f, int blockSize, size_t dynamicSMemSize);
+   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2910,11 +2950,11 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [out] numBlocks        Returned occupancy
  * @param [in]  func             Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
- * @param [in]  dynamicSMemSize  Per - block dynamic shared memory usage intended, in bytes
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   int* numBlocks, const void* f, int blockSize, size_t dynamicSMemSize, unsigned int flags);
+   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
@@ -2955,6 +2995,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStart API is under development.
  */
+DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStart();
 
 
@@ -2963,6 +3004,7 @@ hipError_t hipProfilerStart();
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStop API is under development.
  */
+DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStop();
 
 
@@ -3180,6 +3222,21 @@ hipError_t hipLaunchKernel(const void* function_address,
 } /* extern "c" */
 #endif
 
+#if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+template <typename F>
+static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk) {
+    return ::hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, (hipFunction_t)func, blockSize,
+                                                          dynSharedMemPerBlk);
+}
+template <typename F>
+static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
+    return ::hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        numBlocks, (hipFunction_t)func, blockSize, dynSharedMemPerBlk, flags);
+}
+#endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+
 #if USE_PROF_API
 #include <hip/hcc_detail/hip_prof_str.h>
 #endif
@@ -3259,7 +3316,7 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
 
 hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
                                  const void* devPtr, const struct hipChannelFormatDesc* desc,
-                                 size_t width, size_t height, textureReference* tex);
+                                 size_t width, size_t height, textureReference* tex, size_t pitch);
 
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
@@ -3320,27 +3377,7 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
     return hipSuccess;
 }
 
-template <class T>
-inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-    int* numBlocks, T f, int blockSize, size_t dynamicSMemSize) {
-    return hipOccupancyMaxActiveBlocksPerMultiprocessor(
-        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynamicSMemSize);
-}
 
-template <class T>
-inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-    int* numBlocks, T f, int blockSize, size_t dynamicSMemSize, unsigned int flags) {
-    return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynamicSMemSize, flags);
-}
-
-template <class T>
-inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
-    T f, size_t dynamicSMemSize, int blockSizeLimit) {
-    return hipOccupancyMaxPotentialBlockSize(
-    gridSize, blockSize, reinterpret_cast<const void*>(f), dynamicSMemSize, blockSizeLimit);
-}
- 
 template <class T>
 inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
                                              void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {

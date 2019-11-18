@@ -117,7 +117,7 @@ namespace perl {
     {sCudaInGauge}, {sCudaColorSpinorField}, {sCudaSiteLink}, {sCudaFatLink}, {sCudaStaple}, {sCudaCloverField}, {sCudaParam}
   };
 
-  void generateHeader(unique_ptr<ostream>& streamPtr) {
+  void generateHeader(unique_ptr<ostream> &streamPtr) {
     *streamPtr.get() << "#!/usr/bin/perl -w" << endl_2;
     *streamPtr.get() << sCopyright << endl;
     *streamPtr.get() << sImportant << endl_2;
@@ -148,7 +148,7 @@ namespace perl {
     *streamPtr.get() << "push(@whitelist, split(',', $whitelist));" << endl_2;
   }
 
-  void generateStatFunctions(unique_ptr<ostream>& streamPtr) {
+  void generateStatFunctions(unique_ptr<ostream> &streamPtr) {
     *streamPtr.get() << endl << sub << "totalStats" << " {" << endl;
     *streamPtr.get() << tab << my << "%count = %{ shift() };" << endl;
     *streamPtr.get() << tab << my << "$total = 0;" << endl;
@@ -175,11 +175,11 @@ namespace perl {
     }
   }
 
-  void generateSimpleSubstitutions(unique_ptr<ostream>& streamPtr) {
+  void generateSimpleSubstitutions(unique_ptr<ostream> &streamPtr) {
     *streamPtr.get() << endl << sub << "simpleSubstitutions" << " {" << endl;
     for (int i = 0; i < NUM_CONV_TYPES; ++i) {
       if (i == CONV_INCLUDE_CUDA_MAIN_H || i == CONV_INCLUDE) {
-        for (auto& ma : CUDA_INCLUDE_MAP) {
+        for (auto &ma : CUDA_INCLUDE_MAP) {
           if (Statistics::isUnsupported(ma.second)) continue;
           if (i == ma.second.type) {
             string sCUDA = ma.first.str();
@@ -190,7 +190,7 @@ namespace perl {
           }
         }
       } else {
-        for (auto& ma : CUDA_RENAMES_MAP()) {
+        for (auto &ma : CUDA_RENAMES_MAP()) {
           if (Statistics::isUnsupported(ma.second)) continue;
           if (i == ma.second.type) {
             *streamPtr.get() << tab << "$ft{'" << counterNames[ma.second.type] << "'} += s/\\b" << ma.first.str() << "\\b/" << ma.second.hipName.str() << "/g;" << endl;
@@ -201,7 +201,7 @@ namespace perl {
     *streamPtr.get() << "}" << endl;
   }
 
-  void generateExternShared(unique_ptr<ostream>& streamPtr) {
+  void generateExternShared(unique_ptr<ostream> &streamPtr) {
     *streamPtr.get() << endl << "# CUDA extern __shared__ syntax replace with HIP_DYNAMIC_SHARED() macro" << endl;
     *streamPtr.get() << sub << "transformExternShared" << " {" << endl;
     *streamPtr.get() << tab << no_warns << endl;
@@ -210,7 +210,7 @@ namespace perl {
     *streamPtr.get() << tab << "$ft{'extern_shared'} += $k;" << endl << "}" << endl;
   }
 
-  void generateKernelLaunch(unique_ptr<ostream>& streamPtr) {
+  void generateKernelLaunch(unique_ptr<ostream> &streamPtr) {
     *streamPtr.get() << endl << "# CUDA Kernel Launch Syntax" << endl << sub << "transformKernelLaunch" << " {" << endl;
     *streamPtr.get() << tab << no_warns << endl;
     *streamPtr.get() << tab << my_k << endl_2;
@@ -251,12 +251,13 @@ namespace perl {
     *streamPtr.get() << tab_2 << "$Tkernels{$1}++;" << endl_tab << "}" << endl << "}" << endl;
   }
 
-  void generateCubNamespace(unique_ptr<ostream>& streamPtr) {
+  void generateCubNamespace(unique_ptr<ostream> &streamPtr) {
     *streamPtr.get() << endl << sub << "transformCubNamespace" << " {" << endl_tab << my_k << endl;
-    *streamPtr.get() << tab << "$k += s/using\\s*namespace\\s*cub/using namespace hipcub/g;" << endl << tab << return_k << "}" << endl;
+    *streamPtr.get() << tab << "$k += s/using\\s*namespace\\s*cub/using namespace hipcub/g;" << endl;
+    *streamPtr.get() << tab << "$k += s/\\bcub::\\b/hipcub::/g;" << endl << tab << return_k << "}" << endl;
   }
 
-  void generateHostFunctions(unique_ptr<ostream>& streamPtr) {
+  void generateHostFunctions(unique_ptr<ostream> &streamPtr) {
     *streamPtr.get() << endl << sub << "transformHostFunctions" << " {" << endl_tab << my_k << endl;
     set<string> &funcSet = DeviceSymbolFunctions0;
     const string s0 = "$k += s/(?<!\\/\\/ CHECK: )($func)\\s*\\(\\s*([^,]+)\\s*,/$func\\(";
@@ -270,7 +271,7 @@ namespace perl {
       default: funcSet = DeviceSymbolFunctions0;
       }
       unsigned int count = 0;
-      for (auto& f : funcSet) {
+      for (auto &f : funcSet) {
         const auto found = CUDA_RUNTIME_FUNCTION_MAP.find(f);
         if (found != CUDA_RUNTIME_FUNCTION_MAP.end()) {
           *streamPtr.get() << (count ? ",\n" : "") << tab_2 << "\"" << found->second.hipName.str() << "\"";
@@ -290,12 +291,12 @@ namespace perl {
     *streamPtr.get() << tab << return_k << "}" << endl;
   }
 
-  void generateDeviceFunctions(unique_ptr<ostream>& streamPtr) {
+  void generateDeviceFunctions(unique_ptr<ostream> &streamPtr) {
     unsigned int countUnsupported = 0;
     unsigned int countSupported = 0;
     stringstream sSupported;
     stringstream sUnsupported;
-    for (auto& ma : CUDA_DEVICE_FUNC_MAP) {
+    for (auto &ma : CUDA_DEVICE_FUNC_MAP) {
       bool isUnsupported = Statistics::isUnsupported(ma.second);
       (isUnsupported ? sUnsupported : sSupported) << ((isUnsupported && countUnsupported) || (!isUnsupported && countSupported) ? ",\n" : "") << tab_2 << "\"" << ma.first.str() << "\"";
       if (isUnsupported) countUnsupported++;
