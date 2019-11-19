@@ -31,4 +31,4 @@ THE SOFTWARE.
 #include "is_callable_test.hpp"
 #include <test_common.h>
 
-int main() {}
+int main() { passed(); }
