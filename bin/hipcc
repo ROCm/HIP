@@ -220,7 +220,11 @@ if ($HIP_PLATFORM eq "clang") {
     }
     $HIPCXXFLAGS .= " -isystem $HIP_CLANG_INCLUDE_PATH";
     $HIPLDFLAGS .= " -L$HIP_LIB_PATH";
-    if (not $isWindows) {
+
+    if($HIP_RUNTIME eq "HCC"){
+      $HIPLDFLAGS .= " -Wl,--rpath=$HIP_LIB_PATH $HIP_LIB_PATH/libhip_hcc.so";
+    }
+    elsif (not $isWindows) {
       $HIPLDFLAGS .= " -Wl,--rpath-link=$HIP_LIB_PATH";
       $HIPLDFLAGS .= " -lhip_hcc";
     } else {
