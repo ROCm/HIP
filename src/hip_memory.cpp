@@ -1619,15 +1619,6 @@ hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream
     return ihipLogStatus(e);
 }
 
-hipError_t hipExtMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
-                                  hipMemcpyKind kind, hipStream_t stream) {
-    HIP_INIT_SPECIAL_API(hipExtMemcpyWithStream, (TRACE_MCMD), dst, src,
-                         sizeBytes, kind, stream);
-
-    return ihipLogStatus(hip_internal::memcpySync(dst, src, sizeBytes, kind,
-                                                  stream));
-}
-
 namespace {
 template <uint32_t block_dim, uint32_t items_per_lane,
           typename RandomAccessIterator, typename N, typename T>
