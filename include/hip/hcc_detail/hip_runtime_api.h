@@ -1277,7 +1277,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @param[in]  height Requested pitched allocation height
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
- *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array. 
+ *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array.
  *  Given the row and column of an array element of type T, the address is computed as:
  *  T* pElement = (T*)((char*)BaseAddress + Row * Pitch) + Column;
  *
@@ -1360,6 +1360,10 @@ hipError_t hipHostFree(void* ptr);
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
+
+// TODO: Add description
+hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
+                               hipMemcpyKind kind, hipStream_t stream);
 
 /**
  *  @brief Copy data from Host to Device
@@ -1498,7 +1502,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 #else
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
-#ifdef __cplusplus //Start : Not supported in gcc 
+#ifdef __cplusplus //Start : Not supported in gcc
 namespace hip_impl {
 inline
 __attribute__((visibility("hidden")))

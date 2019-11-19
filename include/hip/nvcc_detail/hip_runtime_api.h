@@ -610,6 +610,16 @@ inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes,
         cudaMemcpy(dst, src, sizeBytes, hipMemcpyKindToCudaMemcpyKind(copyKind)));
 }
 
+inline hipError_t hipMemcpyWithStream(void* dst, const void* src,
+                                      size_t sizeBytes, hipMemcpyKind copyKind,
+                                      hipStream_t stream) {
+    cudaError_t error = cudaMemcpyAsync(dst, src, sizeBytes,
+                                        hipMemcpyKindToCudaMemcpyKind(copyKind),
+                                        stream);
+    if (error != cudaSuccess) return hipCUDAErrorTohipError(error);
+
+    return hipCUDAErrorTohipError(cudaStreamSynchronize(stream));
+}
 
 inline static hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
                                         hipMemcpyKind copyKind, hipStream_t stream __dparm(0)) {
