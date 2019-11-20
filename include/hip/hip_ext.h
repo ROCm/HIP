@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef HIP_INCLUDE_HIP_HIP_EXT_H
 #define HIP_INCLUDE_HIP_HIP_EXT_H
-#include "hip/hip_runtime.h"
+#include "hip/hcc_detail/functional_grid_launch.hpp"
 #include "hip/hip_runtime_api.h"
 #ifdef __HCC__
 
