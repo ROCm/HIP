@@ -150,7 +150,7 @@ extern "C" std::vector< std::pair<hipModule_t, bool> >* __hipRegisterFatBinary(c
     return nullptr;
   }
 
-  auto programs = new std::vector< std::pair<hipModule_t, bool> >{g_devices.size()};
+  auto programs = new std::vector< std::pair<hipModule_t, bool> >(g_devices.size());
   for (size_t dev = 0; dev < g_devices.size(); ++dev) {
     amd::Context* ctx = g_devices[dev];
     amd::Program* program = new amd::Program(*ctx);
@@ -231,7 +231,7 @@ void PlatformState::registerVar(const void* hostvar,
 void PlatformState::registerFunction(const void* hostFunction,
                                      const DeviceFunction& func) {
   amd::ScopedLock lock(lock_);
-  functions_.insert(std::make_pair(hostFunction, func));
+  functions_.insert(std::make_pair(std::string(reinterpret_cast<const char*>(hostFunction)), func));
 }
 
 bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFuncAttributes* func_attr) {
@@ -272,7 +272,7 @@ bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** va
 
 hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
   amd::ScopedLock lock(lock_);
-  const auto it = functions_.find(hostFunction);
+  const auto it = functions_.find(std::string(reinterpret_cast<const char*>(hostFunction)));
   if (it != functions_.cend()) {
     PlatformState::DeviceFunction& devFunc = it->second;
     if (devFunc.functions[deviceId] == 0) {
@@ -302,12 +302,12 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
 
 bool PlatformState::getFuncAttr(const void* hostFunction,
                                 hipFuncAttributes* func_attr) {
-
+  amd::ScopedLock lock(lock_);
   if (func_attr == nullptr) {
     return false;
   }
 
-  const auto it = functions_.find(hostFunction);
+  const auto it = functions_.find(std::string(reinterpret_cast<const char*>(hostFunction)));
   if (it == functions_.cend()) {
     return false;
   }
