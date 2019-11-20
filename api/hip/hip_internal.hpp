@@ -154,12 +154,13 @@ public:
     bool dyn_undef;
   };
 private:
-  std::unordered_map<const void*, DeviceFunction > functions_;
+  std::unordered_map<std::string, DeviceFunction > functions_;
   std::unordered_multimap<std::string, DeviceVar > vars_;
 
   static PlatformState* platform_;
 
-  PlatformState() : lock_("Guards global function map") {}
+  // the lock_ is recursive
+  PlatformState() : lock_("Guards global function map", true) {}
   ~PlatformState() {}
 public:
   static PlatformState& instance() {
