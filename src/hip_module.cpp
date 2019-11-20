@@ -1056,7 +1056,7 @@ void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size
     bool is_code_object_v3 = f->_name.find(".kd") != std::string::npos;
     if (is_code_object_v3) {
         const auto header = reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
-        // GRANULATED_WAVEFRONT_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
+        // GRANULATED_WORKITEM_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
         // the granularity for gfx6-gfx9 is max(0, ceil(vgprs_used / 4) - 1)
         *usedVGPRS = ((header->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
         // GRANULATED_WAVEFRONT_SGPR_COUNT is specified in 6:9 bits of COMPUTE_PGM_RSRC1
@@ -1205,14 +1205,40 @@ hipFuncAttributes make_function_attributes(TlsData *tls, ihipModuleSymbol_t& kd)
     }
     r.maxDynamicSharedSizeBytes = prop.sharedMemPerBlock - r.sharedSizeBytes;
 
-    uint32_t gridSize = 0;
-    uint32_t blockSize = 0;
-    size_t dynSharedMemPerBlk = 0; // we are asking for the static properties of the kernel
-    uint32_t blockSizeLimit = 0;
+    prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
-    ihipOccupancyMaxPotentialBlockSize(tls, &gridSize, &blockSize, &kd, dynSharedMemPerBlk, blockSizeLimit);
+    size_t usedVGPRS = 0;
+    size_t usedSGPRS = 0;
+    size_t usedLDS = 0;
+    getGprsLdsUsage(&kd, &usedVGPRS, &usedSGPRS, &usedLDS);
 
-    r.maxThreadsPerBlock = blockSize;
+    size_t wavefrontSize = prop.warpSize;
+    size_t maxWavefrontsPerBlock = prop.maxThreadsPerBlock / wavefrontSize;
+    size_t maxWavefrontsPerCU = min(prop.maxThreadsPerMultiProcessor / wavefrontSize, 32);
+
+    const size_t numSIMD = 4;
+    size_t maxWaves = 0;
+    for (int i = 0; i < maxWavefrontsPerBlock; i++) {
+        size_t wavefronts = i + 1;
+
+        if (usedVGPRS > 0) {
+            size_t reqNumVGPRsPerSIMD = ((wavefronts + numSIMD-1)/numSIMD)*wavefrontSize*usedVGPRS;
+
+            if (reqNumVGPRsPerSIMD > prop.regsPerBlock/numSIMD)
+                break;
+        }
+
+        if (usedSGPRS > 0) {
+            const size_t numSGPRsPerSIMD = (prop.gcnArch < 800) ? 512 : 800;
+            size_t reqNumSGPRsPerSIMD = usedSGPRS * wavefronts;
+            if (reqNumSGPRsPerSIMD > numSGPRsPerSIMD)
+                break;
+        }
+
+        maxWaves = wavefronts;
+    }
+
+    r.maxThreadsPerBlock = maxWaves * wavefrontSize;
 
     if (is_code_object_v3) {
         r.binaryVersion = 0; // FIXME: should it be the ISA version or code
