@@ -31,7 +31,7 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // Stream
 //
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
 enum queue_priority
 {
     priority_high = 0,
@@ -73,7 +73,7 @@ hipError_t ihipStreamCreate(TlsData *tls, hipStream_t* stream, unsigned int flag
                 // Obtain mutex access to the device critical data, release by destructor
                 LockedAccessor_CtxCrit_t ctxCrit(ctx->criticalData());
 
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
                 auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
 #else
                 auto istream = new ihipStream_t(ctx, acc.create_view(Kalmar::execute_any_order, Kalmar::queuing_mode_automatic, (Kalmar::queue_priority)priority), flags);
@@ -242,7 +242,7 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
     } else if (stream == hipStreamNull) {
         return ihipLogStatus(hipErrorInvalidResourceHandle);
     } else {
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
         *priority = 0;
 #else
         LockedAccessor_StreamCrit_t crit(stream->criticalData());
