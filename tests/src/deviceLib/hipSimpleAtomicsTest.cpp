@@ -271,23 +271,25 @@ __global__ void testKernel(T* g_odata, T* g_sdata) {
     testKernelIntegral(g_odata);
     testKernelExch(g_odata);
 
-    // Shared Atomic addition.
-    __shared__ T s_odata[numData];
+    #if !#if defined(HIP_PLATFORM_NVCC)
+        // Shared Atomic addition.
+        __shared__ T s_odata[numData];
 
-    if (threadIdx.x == 0) { s_odata[8] = s_odata[10] = 0xff; }
+        if (threadIdx.x == 0) { s_odata[8] = s_odata[10] = 0xff; }
 
-    __syncthreads();
+        __syncthreads();
 
-    atomicAdd(&s_odata[0], 10);
+        atomicAdd(&s_odata[0], 10);
 
-    testKernelIntegral(s_odata);
-    testKernelExch(s_odata);
+        testKernelIntegral(s_odata);
+        testKernelExch(s_odata);
 
-    __syncthreads();
+        __syncthreads();
 
-    if (threadIdx.x == 0) {
-        __builtin_memcpy(g_sdata, s_odata, sizeof(T) * numData);
-    }
+        if (threadIdx.x == 0) {
+            __builtin_memcpy(g_sdata, s_odata, sizeof(T) * numData);
+        }
+    #endif
 }
 
 template<typename T>
