@@ -29,6 +29,7 @@ THE SOFTWARE.
 
 // includes, system
 #include <algorithm>
+#include <cstring>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
