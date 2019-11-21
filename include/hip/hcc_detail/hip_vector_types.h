@@ -37,14 +37,10 @@ THE SOFTWARE.
 #if !defined(_MSC_VER) || __clang__
 #if defined(__clang__)
     #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
-#elif defined(__GNUC__) // N.B.: GCC does not support .xyzw syntax.
-    #define __ROUND_UP_TO_NEXT_POT__(x) \
-        (1 << (31 - __builtin_clz(x) + (x > (1 << (31 - __builtin_clz(x))))))
-    #define __NATIVE_VECTOR__(n, T) \
-        __attribute__((vector_size(__ROUND_UP_TO_NEXT_POT__(n) * sizeof(T))))
 #endif
 
 #if defined(__cplusplus) && defined(__clang__)
+    #include <iosfwd>
     #include <type_traits>
 
     namespace hip_impl {
@@ -58,17 +54,59 @@ THE SOFTWARE.
                     return &reinterpret_cast<const T*>(p)[idx];
                 }
                 __host__ __device__
+                operator const T*() const volatile noexcept {
+                    return &reinterpret_cast<const T*>(p)[idx];
+                }
+                __host__ __device__
                 operator T*() noexcept {
                     return &reinterpret_cast<T*>(
                         const_cast<Scalar_accessor*>(p))[idx];
                 }
+                __host__ __device__
+                operator T*() volatile noexcept {
+                    return &reinterpret_cast<T*>(
+                        const_cast<Scalar_accessor*>(p))[idx];
+                }
             };
+
+            friend
+            inline
+            std::ostream& operator<<(std::ostream& os,
+                                     const Scalar_accessor& x) noexcept {
+                return os << x.data[idx];
+            }
+            friend
+            inline
+            std::istream& operator>>(std::istream& is,
+                                     Scalar_accessor& x) noexcept {
+                T tmp;
+                is >> tmp;
+                x.data[idx] = tmp;
+
+                return is;
+            }
 
             // Idea from https://t0rakka.silvrback.com/simd-scalar-accessor
             Vector data;
 
             __host__ __device__
             operator T() const noexcept { return data[idx]; }
+            __host__ __device__
+            operator T() const volatile noexcept { return data[idx]; }
+
+            __host__ __device__
+            operator T&() noexcept {
+                return reinterpret_cast<
+                    T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
+            }
+            __host__ __device__
+            operator volatile T&() volatile noexcept {
+                return reinterpret_cast<
+                    volatile T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
+            }
+
+            __host__ __device__
+            Address operator&() const noexcept { return Address{this}; }
 
             __host__ __device__
             Address operator&() const noexcept { return Address{this}; }
@@ -77,6 +115,35 @@ THE SOFTWARE.
             Scalar_accessor& operator=(T x) noexcept {
                 data[idx] = x;
 
+                return *this;
+            }
+            __host__ __device__
+            volatile Scalar_accessor& operator=(T x) volatile noexcept {
+                data[idx] = x;
+
+                return *this;
+            }
+
+            __host__ __device__
+            Scalar_accessor& operator++() noexcept {
+                ++data[idx];
+                return *this;
+            }
+            __host__ __device__
+            T operator++(int) noexcept {
+                auto r{data[idx]};
+                ++data[idx];
+                return *this;
+            }
+            __host__ __device__
+            Scalar_accessor& operator--() noexcept {
+                --data[idx];
+                return *this;
+            }
+            __host__ __device__
+            T operator--(int) noexcept {
+                auto r{data[idx]};
+                --data[idx];
                 return *this;
             }
 
@@ -186,6 +253,8 @@ THE SOFTWARE.
             Native_vec_ data;
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
         };
+
+        using value_type = T;
     };
 
     template<typename T>
@@ -197,6 +266,8 @@ THE SOFTWARE.
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
             hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
         };
+
+        using value_type = T;
     };
 
     template<typename T>
@@ -355,6 +426,8 @@ THE SOFTWARE.
                 T z;
             };
         };
+
+        using value_type = T;
     };
 
     template<typename T>
@@ -368,6 +441,8 @@ THE SOFTWARE.
             hip_impl::Scalar_accessor<T, Native_vec_, 2> z;
             hip_impl::Scalar_accessor<T, Native_vec_, 3> w;
         };
+
+        using value_type = T;
     };
 
     template<typename T, unsigned int rank>
@@ -915,47 +990,23 @@ THE SOFTWARE.
         using CUDA_name##4 = HIP_vector_type<T, 4>;
 #else
     #define __MAKE_VECTOR_TYPE__(CUDA_name, T) \
-        typedef T CUDA_name##_impl1 __NATIVE_VECTOR__(1, T);\
-        typedef T CUDA_name##_impl2 __NATIVE_VECTOR__(2, T);\
-        typedef T CUDA_name##_impl3 __NATIVE_VECTOR__(3, T);\
-        typedef T CUDA_name##_impl4 __NATIVE_VECTOR__(4, T);\
         typedef struct {\
-            union {\
-                CUDA_name##_impl1 data;\
-                struct {\
-                    T x;\
-                };\
-            };\
+            T x;\
         } CUDA_name##1;\
         typedef struct {\
-            union {\
-                CUDA_name##_impl2 data;\
-                struct {\
-                    T x;\
-                    T y;\
-                };\
-            };\
+            T x;\
+            T y;\
         } CUDA_name##2;\
         typedef struct {\
-            union {\
-                T data[3];\
-                struct {\
-                    T x;\
-                    T y;\
-                    T z;\
-                };\
-            };\
+            T x;\
+            T y;\
+            T z;\
         } CUDA_name##3;\
         typedef struct {\
-            union {\
-                CUDA_name##_impl4 data;\
-                struct {\
-                    T x;\
-                    T y;\
-                    T z;\
-                    T w;\
-                };\
-            };\
+            T x;\
+            T y;\
+            T z;\
+            T w;\
         } CUDA_name##4;
 #endif
 

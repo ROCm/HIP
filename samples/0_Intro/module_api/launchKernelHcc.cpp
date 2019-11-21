@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include <vector>
 
 #ifdef __HIP_PLATFORM_HCC__
-#include <hip/hip_hcc.h>
+#include <hip/hip_ext.h>
 #endif
 
 #define LEN 64

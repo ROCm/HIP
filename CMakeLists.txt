@@ -163,11 +163,14 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Determine HIP install path
-if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT AND CMAKE_INSTALL_PREFIX MATCHES "/usr/local")
+if (UNIX)
+    set(HIP_DEFAULT_INSTALL_PREFIX "/opt/rocm/hip")
+endif()
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         set(CMAKE_INSTALL_PREFIX ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "Installation path for HIP" FORCE)
     elseif(CMAKE_BUILD_TYPE MATCHES Release)
-        set(CMAKE_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Installation path for HIP" FORCE)
+        set(CMAKE_INSTALL_PREFIX ${HIP_DEFAULT_INSTALL_PREFIX} CACHE PATH "Installation path for HIP" FORCE)
     else()
         message(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE specified. Valid values are Debug and Release")
     endif()
@@ -184,7 +187,10 @@ if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
         set(COMPILE_HIP_ATP_MARKER 0)
     else()
         set(COMPILE_HIP_ATP_MARKER $ENV{COMPILE_HIP_ATP_MARKER})
+        message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
     endif()
+else()
+    message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
 endif()
 add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
 
@@ -224,6 +230,11 @@ endif()
 #############################
 # Build steps
 #############################
+set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
+set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
+set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
+
 # Build clang hipify if enabled
 if (BUILD_HIPIFY_CLANG)
     add_subdirectory(hipify-clang)
@@ -370,11 +381,6 @@ endif()
 #############################
 # hip-config
 #############################
-set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
-set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
-set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
-
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
     install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
@@ -415,9 +421,9 @@ endif()
 #############################
 # Package: hip_base
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_base)
-configure_file(packaging/hip_base.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-configure_file(packaging/hip_base.postinst ${BUILD_DIR}/postinst @ONLY)
-configure_file(packaging/hip_base.prerm ${BUILD_DIR}/prerm @ONLY)
+configure_file(packaging/hip-base.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+configure_file(packaging/hip-base.postinst ${BUILD_DIR}/postinst @ONLY)
+configure_file(packaging/hip-base.prerm ${BUILD_DIR}/prerm @ONLY)
 
 add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
@@ -435,9 +441,9 @@ endif()
 
 # Package: hip_hcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
-configure_file(packaging/hip_hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-configure_file(packaging/hip_hcc.postinst ${BUILD_DIR}/postinst @ONLY)
-configure_file(packaging/hip_hcc.prerm ${BUILD_DIR}/prerm @ONLY)
+configure_file(packaging/hip-hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+configure_file(packaging/hip-hcc.postinst ${BUILD_DIR}/postinst @ONLY)
+configure_file(packaging/hip-hcc.prerm ${BUILD_DIR}/prerm @ONLY)
 add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
@@ -449,7 +455,7 @@ add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
 
 # Package: hip_nvcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc)
-configure_file(packaging/hip_nvcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+configure_file(packaging/hip-nvcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 add_custom_target(pkg_hip_nvcc COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
@@ -460,7 +466,7 @@ add_custom_target(pkg_hip_nvcc COMMAND ${CMAKE_COMMAND} .
 
 # Package: hip_doc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_doc)
-configure_file(packaging/hip_doc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+configure_file(packaging/hip-doc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 add_custom_target(pkg_hip_doc  COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
@@ -471,8 +477,19 @@ add_custom_target(pkg_hip_doc  COMMAND ${CMAKE_COMMAND} .
 
 # Package: hip_samples
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_samples)
-configure_file(packaging/hip_samples.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+configure_file(packaging/hip-samples.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
+
+# Package: hip_hcc_legacy
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc_legacy)
+configure_file(packaging/hip_hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hip_hcc_legacy COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
     COMMAND cp *.deb ${PROJECT_BINARY_DIR}
@@ -492,7 +509,7 @@ for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
 add_custom_target(package
     COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-    DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
+    DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples pkg_hip_hcc_legacy)
 if(POLICY CMP0037)
     cmake_policy(POP)
 endif()

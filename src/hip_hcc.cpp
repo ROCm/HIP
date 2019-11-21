@@ -46,7 +46,7 @@ THE SOFTWARE.
 #include "hsa/hsa_ext_image.h"
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
-#include "hip/hip_hcc.h"
+#include "hip/hip_ext.h"
 #include "trace_helper.h"
 #include "env.h"
 
@@ -310,6 +310,8 @@ void ihipStream_t::locked_wait() {
     hc::completion_future marker;
     {
         LockedAccessor_StreamCrit_t crit(_criticalData);
+        // skipping marker since stream is empty
+        if (crit->_av.get_is_empty()) return;
         marker = crit->_av.create_marker(hc::no_scope);
     }
 
@@ -324,14 +326,6 @@ void ihipStream_t::locked_streamWaitEvent(ihipEventData_t& ecd) {
     crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
 }
 
-
-// Causes current stream to wait for specified event to complete:
-// Note this does not provide any kind of host serialization.
-bool ihipStream_t::locked_eventIsReady(hipEvent_t event) {
-    LockedAccessor_EventCrit_t ecrit(event->criticalData());
-
-    return (ecrit->_eventData.marker().is_ready());
-}
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
