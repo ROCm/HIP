@@ -69,7 +69,7 @@ apt-get install hip-hcc
 * Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
 * Install the "hip-nvcc" package.  This will install CUDA SDK and the HIP porting layer.
 ```
-apt-get install hip-nvcc
+apt-get install hip_nvcc
 ```
 
 * Default paths and environment variables:
