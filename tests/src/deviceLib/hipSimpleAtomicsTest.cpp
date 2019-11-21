@@ -271,7 +271,7 @@ __global__ void testKernel(T* g_odata, T* g_sdata) {
     testKernelIntegral(g_odata);
     testKernelExch(g_odata);
 
-    #if !#if defined(HIP_PLATFORM_NVCC)
+    #if !defined(HIP_PLATFORM_NVCC)
         // Shared Atomic addition.
         __shared__ T s_odata[numData];
 
