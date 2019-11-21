@@ -109,9 +109,6 @@ THE SOFTWARE.
             Address operator&() const noexcept { return Address{this}; }
 
             __host__ __device__
-            Address operator&() const noexcept { return Address{this}; }
-
-            __host__ __device__
             Scalar_accessor& operator=(T x) noexcept {
                 data[idx] = x;
 
@@ -147,45 +144,40 @@ THE SOFTWARE.
                 return *this;
             }
 
+            // TODO: convertibility is too restrictive, constraint should be on
+            //       the operator being invocable with a value of type U.
+            template<
+                typename U,
+                typename std::enable_if<
+                    std::is_convertible<U, T>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator++() noexcept {
-                ++data[idx];
-                return *this;
-            }
-            __host__ __device__
-            T operator++(int) noexcept {
-                auto r{data[idx]};
-                ++data[idx];
-                return *this;
-            }
-            __host__ __device__
-            Scalar_accessor& operator--() noexcept {
-                --data[idx];
-                return *this;
-            }
-            __host__ __device__
-            T operator--(int) noexcept {
-                auto r{data[idx]};
-                --data[idx];
-                return *this;
-            }
-
-            __host__ __device__
-            Scalar_accessor& operator+=(T x) noexcept {
+            Scalar_accessor& operator+=(U x) noexcept {
                 data[idx] += x;
                 return *this;
             }
+            template<
+                typename U,
+                typename std::enable_if<
+                    std::is_convertible<U, T>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator-=(T x) noexcept {
+            Scalar_accessor& operator-=(U x) noexcept {
                 data[idx] -= x;
                 return *this;
             }
 
+            template<
+                typename U,
+                typename std::enable_if<
+                    std::is_convertible<U, T>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator*=(T x) noexcept {
+            Scalar_accessor& operator*=(U x) noexcept {
                 data[idx] *= x;
                 return *this;
             }
+            template<
+                typename U,
+                typename std::enable_if<
+                    std::is_convertible<U, T>{}>::type* = nullptr>
             __host__ __device__
             Scalar_accessor& operator/=(T x) noexcept {
                 data[idx] /= x;
@@ -193,50 +185,56 @@ THE SOFTWARE.
             }
             template<
                 typename U = T,
-                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+                typename std::enable_if<std::is_convertible<U, T>{} &&
+                                        std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator%=(T x) noexcept {
+            Scalar_accessor& operator%=(U x) noexcept {
                 data[idx] %= x;
                 return *this;
             }
 
             template<
                 typename U = T,
-                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+                typename std::enable_if<std::is_convertible<U, T>{} &&
+                                        std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator>>=(T x) noexcept {
+            Scalar_accessor& operator>>=(U x) noexcept {
                 data[idx] >>= x;
                 return *this;
             }
             template<
                 typename U = T,
-                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+                typename std::enable_if<std::is_convertible<U, T>{} &&
+                                        std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator<<=(T x) noexcept {
+            Scalar_accessor& operator<<=(U x) noexcept {
                 data[idx] <<= x;
                 return *this;
             }
             template<
                 typename U = T,
-                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+                typename std::enable_if<std::is_convertible<U, T>{} &&
+                                        std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator&=(T x) noexcept {
+            Scalar_accessor& operator&=(U x) noexcept {
                 data[idx] &= x;
                 return *this;
             }
             template<
                 typename U = T,
-                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+                typename std::enable_if<std::is_convertible<U, T>{} &&
+                                        std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator|=(T x) noexcept {
+            Scalar_accessor& operator|=(U x) noexcept {
                 data[idx] |= x;
                 return *this;
             }
             template<
                 typename U = T,
-                typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+                typename std::enable_if<std::is_convertible<U, T>{} &&
+                                        std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator^=(T x) noexcept {
+            Scalar_accessor& operator^=(U x) noexcept {
                 data[idx] ^= x;
                 return *this;
             }
