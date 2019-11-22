@@ -73,7 +73,14 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 
   *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_);
   if (*ptr == nullptr) {
-    return hipErrorOutOfMemory;
+
+    hip::syncStreams();
+    hip::getNullStream()->finish();
+
+    *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_);
+    if (*ptr == nullptr) {
+      return hipErrorOutOfMemory;
+    }
   }
   ClPrint(amd::LOG_INFO, amd::LOG_API, "ihipMalloc ptr=0x%zx", *ptr);
   return hipSuccess;
