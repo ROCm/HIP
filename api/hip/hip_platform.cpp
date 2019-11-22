@@ -416,9 +416,6 @@ extern "C" void __hipRegisterFunction(
   HIP_INIT();
   PlatformState::DeviceFunction func{ std::string{deviceName}, modules, std::vector<hipFunction_t>{ g_devices.size() }};
   PlatformState::instance().registerFunction(hostFunction, func);
-  for (size_t i = 0; i < g_devices.size(); ++i) {
-    PlatformState::instance().getFunc(hostFunction, i);
-  }
 }
 
 // Registers a device-side global variable.
