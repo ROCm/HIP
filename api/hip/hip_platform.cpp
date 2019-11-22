@@ -231,7 +231,7 @@ void PlatformState::registerVar(const void* hostvar,
 void PlatformState::registerFunction(const void* hostFunction,
                                      const DeviceFunction& func) {
   amd::ScopedLock lock(lock_);
-  functions_.insert(std::make_pair(std::string(reinterpret_cast<const char*>(hostFunction)), func));
+  functions_.insert(std::make_pair(hostFunction, func));
 }
 
 bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFuncAttributes* func_attr) {
@@ -272,7 +272,7 @@ bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** va
 
 hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
   amd::ScopedLock lock(lock_);
-  const auto it = functions_.find(std::string(reinterpret_cast<const char*>(hostFunction)));
+  const auto it = functions_.find(hostFunction);
   if (it != functions_.cend()) {
     PlatformState::DeviceFunction& devFunc = it->second;
     if (devFunc.functions[deviceId] == 0) {
@@ -302,12 +302,12 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
 
 bool PlatformState::getFuncAttr(const void* hostFunction,
                                 hipFuncAttributes* func_attr) {
-  amd::ScopedLock lock(lock_);
+
   if (func_attr == nullptr) {
     return false;
   }
 
-  const auto it = functions_.find(std::string(reinterpret_cast<const char*>(hostFunction)));
+  const auto it = functions_.find(hostFunction);
   if (it == functions_.cend()) {
     return false;
   }

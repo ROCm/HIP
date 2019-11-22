@@ -114,28 +114,6 @@ extern bool __hipExtractCodeObjectFromFatBinary(const void* data,
                                                 const std::vector<const char*>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
 
-bool ihipModuleRegisterFunc(amd::Program* program, hipModule_t* module) {
-  std::vector<std::string> func_names;
-  device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
-
-  if (!dev_program->getFuncsFromCodeObj(&func_names)) {
-    return false;
-  }
-
-  for (auto it = func_names.begin(); it != func_names.end(); ++it) {
-    auto modules = new std::vector<std::pair<hipModule_t, bool>>(g_devices.size());
-    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-      modules->at(dev) = std::make_pair(*module, true);
-    }
-
-    PlatformState::DeviceFunction dfunc{std::string{it->c_str()}, modules,
-                                        std::vector<hipFunction_t>(g_devices.size())};
-    PlatformState::instance().registerFunction(it->c_str(), dfunc);
-  }
-
-  return true;
-}
 bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* module) {
 
   std::vector<std::string> undef_vars;
@@ -215,10 +193,6 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
   }
 
   if (!ihipModuleRegisterUndefined(program, module)) {
-    return hipErrorSharedObjectSymbolNotFound;
-  }
-
-  if (!ihipModuleRegisterFunc(program, module)) {
     return hipErrorSharedObjectSymbolNotFound;
   }
 
