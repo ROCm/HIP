@@ -27,6 +27,26 @@ THE SOFTWARE.
                         // std::false_type, std result_of and std::true_type.
 #include <utility>      // For std::declval.
 
+#ifdef __has_include                      // Check if __has_include is present
+#  if __has_include(<version>)            // Check for version header
+#    include <version>
+#    if defined(__cpp_lib_is_invocable) && !defined(HIP_HAS_INVOCABLE)
+#       define HIP_HAS_INVOCABLE __cpp_lib_is_invocable
+#    endif
+#    if defined(__cpp_lib_result_of_sfinae) && !defined(HIP_HAS_RESULT_OF_SFINAE)
+#       define HIP_HAS_RESULT_OF_SFINAE __cpp_lib_result_of_sfinae
+#    endif
+#  endif
+#endif
+
+#ifndef HIP_HAS_INVOCABLE
+#define HIP_HAS_INVOCABLE 0
+#endif
+
+#ifndef HIP_HAS_RESULT_OF_SFINAE
+#define HIP_HAS_RESULT_OF_SFINAE 0
+#endif
+
 namespace std {  // TODO: these should be removed as soon as possible.
 #if (__cplusplus < 201406L)
 #if (__cplusplus < 201402L)
@@ -48,58 +68,56 @@ namespace hip_impl {
 template <typename...>
 using void_t_ = void;
 
-#if (__cplusplus < 201402L)
-template <FunctionalProcedure F, unsigned int n = 0u, typename = void>
-struct is_callable_impl : is_callable_impl<F, n + 1u> {};
+#if HIP_HAS_INVOCABLE
+template <typename, typename = void>
+struct is_callable_impl;
 
-// Pointer to member function, call through non-pointer.
-template <FunctionalProcedure F, typename C, typename... Ts>
-struct is_callable_impl<
-    F(C, Ts...), 0u,
-    void_t_<decltype((std::declval<C>().*std::declval<F>())(std::declval<Ts>()...))> >
-    : std::true_type {};
-
-// Pointer to member function, call through pointer.
-template <FunctionalProcedure F, typename C, typename... Ts>
-struct is_callable_impl<
-    F(C, Ts...), 1u,
-    void_t_<decltype(((*std::declval<C>()).*std::declval<F>())(std::declval<Ts>()...))> >
-    : std::true_type {};
-
-// Pointer to member data, call through non-pointer, no args.
-template <FunctionalProcedure F, typename C>
-struct is_callable_impl<F(C), 2u, void_t_<decltype(std::declval<C>().*std::declval<F>())> >
-    : std::true_type {};
-
-// Pointer to member data, call through pointer, no args.
-template <FunctionalProcedure F, typename C>
-struct is_callable_impl<F(C), 3u, void_t_<decltype(*std::declval<C>().*std::declval<F>())> >
-    : std::true_type {};
-
-// General call, n args.
 template <FunctionalProcedure F, typename... Ts>
-struct is_callable_impl<F(Ts...), 4u, void_t_<decltype(std::declval<F>()(std::declval<Ts>()...))> >
-    : std::true_type {};
-
-// Not callable.
-template <FunctionalProcedure F>
-struct is_callable_impl<F, 5u> : std::false_type {};
-#elif  (__cplusplus < 201703L)
+struct is_callable_impl<F(Ts...)> : std::is_invocable<F, Ts...> {};
+#elif HIP_HAS_RESULT_OF_SFINAE
 template <typename, typename = void>
 struct is_callable_impl : std::false_type {};
 
 template <FunctionalProcedure F, typename... Ts>
 struct is_callable_impl<F(Ts...), void_t_<typename std::result_of<F(Ts...)>::type > > : std::true_type {};
 #else
+template <class Base, class T, class Derived>
+auto simple_invoke(T Base::*pmd, Derived&& ref)
+-> decltype(static_cast<Derived&&>(ref).*pmd);
+ 
+template <class PMD, class Pointer>
+auto simple_invoke(PMD&& pmd, Pointer&& ptr)
+-> decltype((*static_cast<Pointer&&>(ptr)).*static_cast<PMD&&>(pmd));
 
-// C++17
+template <class Base, class T, class Derived>
+auto simple_invoke(T Base::*pmd, const std::reference_wrapper<Derived>& ref)
+-> decltype(ref.get().*pmd);
+ 
+template <class Base, class T, class Derived, class... Args>
+auto simple_invoke(T Base::*pmf, Derived&& ref, Args&&... args)
+-> decltype((static_cast<Derived&&>(ref).*pmf)(static_cast<Args&&>(args)...));
+ 
+template <class PMF, class Pointer, class... Args>
+auto simple_invoke(PMF&& pmf, Pointer&& ptr, Args&&... args)
+-> decltype(((*static_cast<Pointer&&>(ptr)).*static_cast<PMF&&>(pmf))(static_cast<Args&&>(args)...));
+
+template <class Base, class T, class Derived, class... Args>
+auto simple_invoke(T Base::*pmf, const std::reference_wrapper<Derived>& ref, Args&&... args)
+-> decltype((ref.get().*pmf)(static_cast<Args&&>(args)...));
+
+template<class F, class... Ts>
+auto simple_invoke(F&& f, Ts&&... xs) 
+-> decltype(f(static_cast<Ts&&>(xs)...));
 
 template <typename, typename = void>
 struct is_callable_impl : std::false_type {};
 
 template <FunctionalProcedure F, typename... Ts>
-struct is_callable_impl<F(Ts...), void_t_<std::invoke_result<F(Ts...)> > > : std::true_type {};
+struct is_callable_impl<F(Ts...), void_t_<decltype(simple_invoke(std::declval<F>(), std::declval<Ts>()...))> >
+    : std::true_type {};
+
 #endif
+
 template <typename Call>
 struct is_callable : is_callable_impl<Call> {};
 

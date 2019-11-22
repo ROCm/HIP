@@ -27,6 +27,7 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
+#include <functional>
 #include <fstream>
 
 __device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
@@ -35,23 +36,369 @@ __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
 // Internal HIP APIS:
 namespace hip_internal {
 
-hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                       hipStream_t stream) {
-    hipError_t e = hipSuccess;
+namespace {
+    inline
+    const char* hsa_to_string(hsa_status_t err) noexcept
+    {
+        const char* r{};
 
-    // Return success if number of bytes to copy is 0
-    if (sizeBytes == 0) return e;
-    if (!dst || !src) return hipErrorInvalidValue;
+        if (hsa_status_string(err, &r) != HSA_STATUS_SUCCESS) return r;
 
-    if (!(stream = ihipSyncAndResolveStream(stream))) {
-        return hipErrorInvalidValue;
+        return "Unknown.";
     }
+
+    template<std::size_t m, std::size_t n>
+    inline
+    void throwing_result_check(hsa_status_t res, const char (&file)[m],
+                               const char (&function)[n], int line) {
+        if (res == HSA_STATUS_SUCCESS) return;
+        if (res == HSA_STATUS_INFO_BREAK) return;
+
+        throw std::runtime_error{"Failed in file " + (file +
+                                 (", in function \"" + (function +
+                                 ("\", on line " + std::to_string(line))))) +
+                                 ", with error: " + hsa_to_string(res)};
+    }
+
+    inline
+    hsa_agent_t cpu_agent() noexcept {
+        static hsa_agent_t cpu{[]() {
+            hsa_agent_t r{};
+            throwing_result_check(
+                hsa_iterate_agents([](hsa_agent_t x, void* pr) {
+                    hsa_device_type_t t{};
+                    hsa_agent_get_info(x, HSA_AGENT_INFO_DEVICE, &t);
+
+                    if (t != HSA_DEVICE_TYPE_CPU) return HSA_STATUS_SUCCESS;
+
+                    *static_cast<hsa_agent_t *>(pr) = x;
+
+                    return HSA_STATUS_INFO_BREAK;
+                }, &r), __FILE__, __func__, __LINE__);
+
+            return r;
+        }()};
+
+        return cpu;
+    }
+
+    inline
+    hsa_device_type_t type(hsa_agent_t x) noexcept
+    {
+        hsa_device_type_t r{};
+        throwing_result_check(hsa_agent_get_info(x, HSA_AGENT_INFO_DEVICE, &r),
+                              __FILE__, __func__, __LINE__);
+
+        return r;
+    }
+
+    const auto is_large_BAR{[](){
+        std::unique_ptr<void, void (*)(void*)> hsa{
+            (throwing_result_check(hsa_init(), __FILE__, __func__, __LINE__),
+             nullptr),
+            [](void*) { hsa_shut_down(); }};
+        bool r{true};
+
+        throwing_result_check(hsa_iterate_agents([](hsa_agent_t x, void* pr) {
+            if (x.handle == cpu_agent().handle) return HSA_STATUS_SUCCESS;
+
+            throwing_result_check(
+                hsa_agent_iterate_regions(x, [](hsa_region_t y, void* p) {
+                    hsa_region_segment_t seg{};
+                    throwing_result_check(
+                        hsa_region_get_info(y, HSA_REGION_INFO_SEGMENT, &seg),
+                        __FILE__, __func__, __LINE__);
+
+                    if (seg != HSA_REGION_SEGMENT_GLOBAL) {
+                        return HSA_STATUS_SUCCESS;
+                    }
+
+                    uint32_t flags{};
+                    throwing_result_check(hsa_region_get_info(
+                        y, HSA_REGION_INFO_GLOBAL_FLAGS, &flags),
+                        __FILE__, __func__, __LINE__);
+
+                    if (flags & HSA_REGION_GLOBAL_FLAG_COARSE_GRAINED) {
+                        hsa_amd_memory_pool_access_t tmp{};
+                        throwing_result_check(
+                            hsa_amd_agent_memory_pool_get_info(
+                                cpu_agent(),
+                                hsa_amd_memory_pool_t{y.handle},
+                                HSA_AMD_AGENT_MEMORY_POOL_INFO_ACCESS,
+                                &tmp),
+                            __FILE__, __func__, __LINE__);
+
+                        *static_cast<bool*>(p) &=
+                            tmp != HSA_AMD_MEMORY_POOL_ACCESS_NEVER_ALLOWED;
+                    }
+
+                    return HSA_STATUS_SUCCESS;
+                }, pr), __FILE__, __func__, __LINE__);
+
+            return HSA_STATUS_SUCCESS;
+        }, &r), __FILE__, __func__, __LINE__);
+
+        return r;
+    }()};
+
+    inline
+    hsa_amd_pointer_info_t info(const void* p) noexcept
+    {
+        hsa_amd_pointer_info_t r{sizeof(hsa_amd_pointer_info_t)};
+        throwing_result_check(
+            hsa_amd_pointer_info(
+                const_cast<void*>(p), &r, nullptr, nullptr, nullptr),
+            __FILE__, __func__, __LINE__);
+
+        r.size = is_large_BAR || (type(r.agentOwner) == HSA_DEVICE_TYPE_CPU) ?
+            UINT32_MAX : sizeof(hsa_amd_pointer_info_t);
+
+        return r;
+    }
+
+    constexpr size_t staging_sz{4 * 1024 * 1024}; // 2 Pages.
+
+    thread_local const std::unique_ptr<void, void (*)(void *)> staging_buffer{
+        []() {
+            hsa_region_t r{};
+            throwing_result_check(hsa_agent_iterate_regions(
+                cpu_agent(), [](hsa_region_t x, void *p) {
+                hsa_region_segment_t seg{};
+                throwing_result_check(
+                    hsa_region_get_info(x, HSA_REGION_INFO_SEGMENT, &seg),
+                    __FILE__, __func__, __LINE__);
+
+                if (seg != HSA_REGION_SEGMENT_GLOBAL) return HSA_STATUS_SUCCESS;
+
+                uint32_t flags{};
+                throwing_result_check(hsa_region_get_info(
+                    x, HSA_REGION_INFO_GLOBAL_FLAGS, &flags),
+                    __FILE__, __func__, __LINE__);
+
+                if (flags & HSA_REGION_GLOBAL_FLAG_COARSE_GRAINED) {
+                    *static_cast<hsa_region_t *>(p) = x;
+
+                    return HSA_STATUS_INFO_BREAK;
+                }
+
+                return HSA_STATUS_SUCCESS;
+            }, &r), __FILE__, __func__, __LINE__);
+
+            void *tp{};
+            throwing_result_check(hsa_memory_allocate(r, staging_sz, &tp),
+                                  __FILE__, __func__, __LINE__);
+
+            return tp;
+        }(),
+        [](void *ptr) { hsa_memory_free(ptr); }};
+
+    thread_local hsa_signal_t copy_signal{[]() {
+        hsa_agent_t cpu{cpu_agent()};
+        hsa_signal_t sgn{};
+        throwing_result_check(hsa_signal_create(1, 1, &cpu, &sgn),
+                              __FILE__, __func__, __LINE__);
+
+        return sgn;
+    }()};
+} // Unnamed namespace.
+
+inline
+void do_copy(void* __restrict dst, const void* __restrict src, std::size_t n,
+             hsa_agent_t da, hsa_agent_t sa) {
+    hsa_signal_silent_store_relaxed(copy_signal, 1);
+    throwing_result_check(
+        hsa_amd_memory_async_copy(dst, da, src, sa, n, 0, nullptr, copy_signal),
+        __FILE__, __func__, __LINE__);
+
+    while (hsa_signal_wait_relaxed(copy_signal, HSA_SIGNAL_CONDITION_EQ, 0,
+                                   UINT64_MAX, HSA_WAIT_STATE_ACTIVE));
+}
+
+inline
+void do_std_memcpy(
+    void* __restrict dst, const void* __restrict src, std::size_t n) {
+    std::memcpy(dst, src, n);
+
+    return std::atomic_thread_fence(std::memory_order_seq_cst);
+}
+
+inline
+void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
+              hsa_amd_pointer_info_t si) {
+    if (si.size == UINT32_MAX) return do_std_memcpy(dst, src, n);
+
+    const auto di{info(dst)};
+
+    if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+        dst = static_cast<char*>(di.agentBaseAddress) +
+              (static_cast<char*>(dst) -
+               static_cast<char*>(di.hostBaseAddress));
+        do_copy(dst, src, n, si.agentOwner, si.agentOwner);
+    }
+    else if (n <= staging_sz) {
+        do_copy(staging_buffer.get(), src, n, si.agentOwner, si.agentOwner);
+        std::memcpy(dst, staging_buffer.get(), n);
+    }
+    else {
+        std::unique_ptr<void, void (*)(void*)> lck{
+            dst, [](void* p) { hsa_amd_memory_unlock(p); }};
+
+        throwing_result_check(hsa_amd_memory_lock(dst, n, &si.agentOwner, 1,
+                                                  const_cast<void**>(&dst)),
+            __FILE__, __func__, __LINE__);
+
+        do_copy(dst, src, n, si.agentOwner, si.agentOwner);
+    }
+}
+
+inline
+void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
+              hsa_amd_pointer_info_t di) {
+    if (di.size == UINT32_MAX) return do_std_memcpy(dst, src, n);
+
+    const auto si{info(const_cast<void*>(src))};
+
+    if (si.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+        src = static_cast<char*>(si.agentBaseAddress) +
+             (static_cast<const char*>(src) -
+              static_cast<char*>(si.hostBaseAddress));
+        do_copy(dst, src, n, di.agentOwner, di.agentOwner);
+    }
+    else if (n <= staging_sz) {
+        std::memcpy(staging_buffer.get(), src, n);
+        do_copy(dst, staging_buffer.get(), n, di.agentOwner, di.agentOwner);
+    }
+    else {
+        std::unique_ptr<void, void (*)(void*)> lck{
+            const_cast<void*>(src), [](void* p) { hsa_amd_memory_unlock(p); }};
+
+        throwing_result_check(hsa_amd_memory_lock(const_cast<void*>(src), n,
+                                                  &di.agentOwner, 1,
+                                                  const_cast<void**>(&src)),
+            __FILE__, __func__, __LINE__);
+
+        do_copy(dst, src, n, di.agentOwner, di.agentOwner);
+    }
+}
+
+inline
+void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
+                  hsa_amd_pointer_info_t di, hsa_amd_pointer_info_t si) {
+    if (di.size == UINT32_MAX && si.size == UINT32_MAX) {
+        return do_std_memcpy(dst, src, n);
+    }
+
+    std::unique_ptr<void, void (*)(void*)> lck0{
+        nullptr, [](void* p) { hsa_amd_memory_unlock(p); }};
+    std::unique_ptr<void, void (*)(void*)> lck1{nullptr, lck0.get_deleter()};
+
+    switch (si.type) {
+    case HSA_EXT_POINTER_TYPE_HSA:
+        if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
+            hsa_memory_copy(dst, src, n);
+            return; // TODO: do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+        }
+
+        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN ||
+            di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+            return d2h_copy(dst, src, n, si);
+        }
+        break;
+    case HSA_EXT_POINTER_TYPE_LOCKED:
+        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN) {
+            std::memcpy(dst, si.hostBaseAddress, n);
+
+            return;
+        }
+        if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+            std::memcpy(di.hostBaseAddress, si.hostBaseAddress, n);
+
+            return;
+        }
+        src = si.agentBaseAddress;
+        si.agentOwner = di.agentOwner;
+        break;
+    case HSA_EXT_POINTER_TYPE_UNKNOWN:
+        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN) {
+            std::memcpy(dst, src, n);
+
+            return;
+        }
+        if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+            std::memcpy(di.hostBaseAddress, src, n);
+
+            return;
+        }
+        return h2d_copy(dst, src, n, di);
+    default: do_copy(dst, src, n, di.agentOwner, si.agentOwner); break;
+    }
+}
+
+inline
+void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
+                 hipMemcpyKind k) noexcept {
+    switch (k) {
+    case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
+    case hipMemcpyHostToDevice:
+        return is_large_BAR ? do_std_memcpy(dst, src, n)
+                            : h2d_copy(dst, src, n, info(dst));
+    case hipMemcpyDeviceToHost:
+        return is_large_BAR ? do_std_memcpy(dst, src, n)
+                            : d2h_copy(dst, src, n, info(src));
+    case hipMemcpyDeviceToDevice:
+        return do_copy(dst, src, n, info(dst).agentOwner,
+                       info(const_cast<void*>(src)).agentOwner);
+    default: return generic_copy(dst, src, n, info(dst), info(src));
+    }
+}
+
+hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes,
+                       hipMemcpyKind kind, hipStream_t stream) {
+    if (!dst || !src) return hipErrorInvalidValue;
+    if (sizeBytes == 0) return hipSuccess;
 
     try {
+        stream = ihipSyncAndResolveStream(stream);
+
+        if (!stream) return hipErrorInvalidValue;
+
         stream->locked_copyAsync(dst, src, sizeBytes, kind);
     }
-    catch (ihipException& ex) {
-        e = ex._code;
+    catch (const ihipException& ex) {
+        return ex._code;
+    }
+    catch (const std::exception& ex) {
+        std::cerr << ex.what() << std::endl;
+        throw;
+    }
+    catch (...) {
+        return hipErrorUnknown;
+    }
+
+    return hipSuccess;
+}
+
+hipError_t memcpySync(void* dst, const void* src, size_t sizeBytes,
+                      hipMemcpyKind kind, hipStream_t stream) {
+    if (!dst || !src) return hipErrorInvalidValue;
+    if (sizeBytes == 0) return hipSuccess;
+
+    try {
+        stream = ihipSyncAndResolveStream(stream);
+
+        if (!stream) return hipErrorInvalidValue;
+
+        LockedAccessor_StreamCrit_t cs{stream->criticalData()};
+        cs->_av.wait();
+
+        memcpy_impl(dst, src, sizeBytes, kind);
+    }
+    catch (const ihipException& ex) {
+        return ex._code;
+    }
+    catch (const std::exception& ex) {
+        std::cerr << ex.what() << std::endl;
+        throw;
     }
     catch (...) {
         return hipErrorUnknown;
@@ -896,20 +1243,8 @@ hipError_t hipMemcpyToSymbol(void* dst, const void* src, size_t count,
 
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
-    if (dst == nullptr) {
-        return ihipLogStatus(hipErrorInvalidSymbol);
-    }
-
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    if (kind == hipMemcpyHostToDevice || kind == hipMemcpyDefault ||
-        kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost) {
-        stream->locked_copySync((char*)dst+offset, (void*)src, count, kind, false);
-    } else {
-        return ihipLogStatus(hipErrorInvalidValue);
-    }
-
-    return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(
+        hipMemcpy(static_cast<char*>(dst) + offset, src, count, kind));
 }
 
 hipError_t hipMemcpyFromSymbol(void* dst, const void* src, size_t count,
@@ -920,20 +1255,8 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* src, size_t count,
 
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
-    if (dst == nullptr) {
-        return ihipLogStatus(hipErrorInvalidSymbol);
-    }
-
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    if (kind == hipMemcpyDefault || kind == hipMemcpyDeviceToHost ||
-        kind == hipMemcpyDeviceToDevice || kind == hipMemcpyHostToHost) {
-        stream->locked_copySync((void*)dst, (char*)src+offset, count, kind, false);
-    } else {
-        return ihipLogStatus(hipErrorInvalidValue);
-    }
-
-    return ihipLogStatus(hipSuccess);
+    return ihipLogStatus(
+        hipMemcpy(dst, static_cast<const char*>(src) + offset, count, kind));
 }
 
 
@@ -995,120 +1318,49 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* src, size_t count,
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
     HIP_INIT_SPECIAL_API(hipMemcpy, (TRACE_MCMD), dst, src, sizeBytes, kind);
 
-    hipError_t e = hipSuccess;
-
-    // Return success if number of bytes to copy is 0
-    if (sizeBytes == 0) return ihipLogStatus(e);
-
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    hc::completion_future marker;
-
-    if(dst==NULL || src==NULL)
-	{
-	e=hipErrorInvalidValue;
-	return ihipLogStatus(e);
-	}
-    try {
-        stream->locked_copySync(dst, src, sizeBytes, kind);
-    } catch (ihipException& ex) {
-        e = ex._code;
-    }
-
-    return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpySync(dst, src, sizeBytes, kind,
+                                                  hipStreamNull));
 }
-
 
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyHtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
-    hipError_t e = hipSuccess;
-    if (sizeBytes == 0) return ihipLogStatus(e);
-
-    if(dst==NULL || src==NULL){
-	return ihipLogStatus(hipErrorInvalidValue);
-    }
-
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    hc::completion_future marker;
-
-    try {
-        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
-    } catch (ihipException& ex) {
-        e = ex._code;
-    }
-
-    return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpySync(dst, src, sizeBytes,
+                                                  hipMemcpyHostToDevice,
+                                                  hipStreamNull));
 }
-
 
 hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyDtoH, (TRACE_MCMD), dst, src, sizeBytes);
 
-    hipError_t e = hipSuccess;
-    if (sizeBytes == 0) return ihipLogStatus(e);
-
-    if(dst==NULL || src==NULL){
-	return ihipLogStatus(hipErrorInvalidValue);
-    }
-
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    hc::completion_future marker;
-
-    try {
-        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
-    } catch (ihipException& ex) {
-        e = ex._code;
-    }
-
-    return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpySync(dst, src, sizeBytes,
+                                                  hipMemcpyDeviceToHost,
+                                                  hipStreamNull));
 }
 
 hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyDtoD, (TRACE_MCMD), dst, src, sizeBytes);
 
-    hipError_t e = hipSuccess;
-    if (sizeBytes == 0) return ihipLogStatus(e);
-
-    if(dst==NULL || src==NULL){
-	return ihipLogStatus(hipErrorInvalidValue);
-    }
-
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    hc::completion_future marker;
-
-    try {
-        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
-    } catch (ihipException& ex) {
-        e = ex._code;
-    }
-
-    return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpySync(dst, src, sizeBytes,
+                                                  hipMemcpyDeviceToDevice,
+                                                  hipStreamNull));
 }
 
 hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
     HIP_INIT_SPECIAL_API(hipMemcpyHtoH, (TRACE_MCMD), dst, src, sizeBytes);
 
-    hipError_t e = hipSuccess;
-    if (sizeBytes == 0) return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpySync(dst, src, sizeBytes,
+                                                  hipMemcpyHostToHost,
+                                                  hipStreamNull));
+}
 
-    if(dst==NULL || src==NULL){
-	return ihipLogStatus(hipErrorInvalidValue);
-    }
+hipError_t hipMemcpyWithStream(void* dst, void* src, size_t sizeBytes,
+                               hipMemcpyKind kind, hipStream_t stream) {
+    HIP_INIT_SPECIAL_API(hipMemcpyWithStream, (TRACE_MCMD), dst, src, sizeBytes,
+                         kind, stream);
 
-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
-
-    hc::completion_future marker;
-    try {
-        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
-    } catch (ihipException& ex) {
-        e = ex._code;
-    }
-
-    return ihipLogStatus(e);
+    return ihipLogStatus(hip_internal::memcpySync(dst, src, sizeBytes, kind,
+                                                  stream));
 }
 
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
