@@ -29,6 +29,7 @@ THE SOFTWARE.
 
 // includes, system
 #include <algorithm>
+#include <cstring>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -212,7 +213,7 @@ __device__
 void testKernelSub(...) {}
 
 template<
-    typename T, 
+    typename T,
     typename enable_if<
         is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
 __device__
@@ -259,13 +260,37 @@ void testKernelIntegral(T* g_odata) {
     testKernelSub(g_odata);
 }
 
+namespace {
+    constexpr unsigned int numData = 11;
+}
+
 template<typename T>
-__global__ void testKernel(T* g_odata) {
+__global__ void testKernel(T* g_odata, T* g_sdata) {
     // Atomic addition
     atomicAdd(&g_odata[0], 10);
 
     testKernelIntegral(g_odata);
     testKernelExch(g_odata);
+
+    #if !defined(HIP_PLATFORM_NVCC)
+        // Shared Atomic addition.
+        __shared__ T s_odata[numData];
+
+        if (threadIdx.x == 0) { s_odata[8] = s_odata[10] = 0xff; }
+
+        __syncthreads();
+
+        atomicAdd(&s_odata[0], 10);
+
+        testKernelIntegral(s_odata);
+        testKernelExch(s_odata);
+
+        __syncthreads();
+
+        if (threadIdx.x == 0) {
+            __builtin_memcpy(g_sdata, s_odata, sizeof(T) * numData);
+        }
+    #endif
 }
 
 template<typename T>
@@ -286,33 +311,38 @@ void runTest() {
 
     unsigned int numThreads = 256;
     unsigned int numBlocks = 64;
-    unsigned int numData = 11;
     unsigned int memSize = sizeof(T) * numData;
 
     // allocate mem for the result on host side
     T* hOData = (T*)malloc(memSize);
+    T* hSData = (T*)malloc(memSize);
 
     // initialize the memory
-    for (unsigned int i = 0; i < numData; i++) hOData[i] = 0;
+    std::memset(hOData, 0, memSize);
+    std::memset(hSData, 0, memSize);
 
     // To make the AND and XOR tests generate something other than 0...
     hOData[8] = hOData[10] = 0xff;
 
     // allocate device memory for result
     T* dOData;
+    T* dSData;
     hipMalloc((void**)&dOData, memSize);
+    hipMalloc((void**)&dSData, memSize);
     // copy host memory to device to initialize to zero
     hipMemcpy(dOData, hOData, memSize, hipMemcpyHostToDevice);
 
     // execute the kernel
     hipLaunchKernelGGL(
-        testKernel, dim3(numBlocks), dim3(numThreads), 0, 0, dOData);
+        testKernel, dim3(numBlocks), dim3(numThreads), 0, 0, dOData, dSData);
 
     // Copy result from device to host
     hipMemcpy(hOData, dOData, memSize, hipMemcpyDeviceToHost);
+    hipMemcpy(hSData, dSData, memSize, hipMemcpyDeviceToHost);
 
     // Compute reference solution
-    testResult = computeGold(hOData, numThreads * numBlocks);
+    testResult = std::equal(hOData, hOData + numData, hSData) &&
+                 computeGold(hOData, numThreads * numBlocks);
 
     // Cleanup memory
     free(hOData);
