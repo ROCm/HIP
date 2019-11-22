@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 #ifndef HIP_INCLUDE_HIP_HIP_EXT_H
 #define HIP_INCLUDE_HIP_HIP_EXT_H
-#include "hip/hip_runtime_api.h"
+#include "hip/hip_runtime.h"
 #ifdef __HCC__
 
 // Forward declarations:
