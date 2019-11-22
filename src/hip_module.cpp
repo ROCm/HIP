@@ -155,9 +155,10 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
 
         std::vector<char> kernargs{};
         if (kernelParams) {
-            if (extra || (*kernelParams == nullptr)) return hipErrorInvalidValue;
+            if (extra) return hipErrorInvalidValue;
 
             for (auto&& x : f->_kernarg_layout) {
+                if (*kernelParams == nullptr) return hipErrorInvalidValue;
                 const auto p{static_cast<const char*>(*kernelParams)};
 
                 kernargs.insert(
