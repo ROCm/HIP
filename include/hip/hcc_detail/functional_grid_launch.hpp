@@ -43,27 +43,15 @@ inline T round_up_to_next_multiple_nonnegative(T x, T y) {
     return tmp - tmp % y;
 }
 
-template <
-    std::size_t n,
-    typename... Ts,
-    typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
-inline hip_impl::kernarg make_kernarg(
-    const std::tuple<Ts...>&,
-    const kernargs_size_align&,
-    hip_impl::kernarg kernarg) {
-    return kernarg;
+template <std::size_t n>
+inline std::size_t make_kernarg(const kernargs_size_align&, char*,
+                                std::size_t sz) {
+    return sz;
 }
 
-template <
-    std::size_t n,
-    typename... Ts,
-    typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
-inline hip_impl::kernarg make_kernarg(
-    const std::tuple<Ts...>& formals,
-    const kernargs_size_align& size_align,
-    hip_impl::kernarg kernarg) {
-    using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
-
+template <unsigned int n, typename T, typename... Ts>
+inline std::size_t make_kernarg(const kernargs_size_align& size_align,
+                                char* kernarg, std::size_t sz, T x, Ts... xs) {
     static_assert(
         !std::is_reference<T>{},
         "A __global__ function cannot have a reference as one of its "
@@ -75,35 +63,33 @@ inline hip_impl::kernarg make_kernarg(
                 "function");
     #endif
 
-    kernarg.resize(round_up_to_next_multiple_nonnegative(
-        kernarg.size(), size_align.alignment(n)) + size_align.size(n));
+    sz = round_up_to_next_multiple_nonnegative(sz, size_align.alignment(n)) +
+         size_align.size(n);
 
-    std::memcpy(
-        kernarg.data() + kernarg.size() - size_align.size(n),
-        &std::get<n>(formals),
-        size_align.size(n));
-    return make_kernarg<n + 1>(formals, size_align, std::move(kernarg));
+    std::memcpy(kernarg + sz - size_align.size(n), &x, size_align.size(n));
+
+    return make_kernarg<n + 1>(size_align, kernarg, sz, std::move(xs)...);
 }
 
 template <typename... Formals, typename... Actuals>
-inline hip_impl::kernarg make_kernarg(
-    void (*kernel)(Formals...), std::tuple<Actuals...> actuals) {
+inline std::pair<char*, std::size_t> make_kernarg(void (*kernel)(Formals...),
+                                                  Actuals... actuals) {
     static_assert(sizeof...(Formals) == sizeof...(Actuals),
         "The count of formal arguments must match the count of actuals.");
 
     if (sizeof...(Formals) == 0) return {};
 
-    std::tuple<Formals...> to_formals{std::move(actuals)};
-    hip_impl::kernarg kernarg;
-    kernarg.reserve(sizeof(to_formals));
+    static thread_local char kernarg[sizeof(std::tuple<Formals...>)];
 
     auto& ps = hip_impl::get_program_state();
-    return make_kernarg<0>(to_formals, 
-                           ps.get_kernargs_size_align(
-                               reinterpret_cast<std::uintptr_t>(kernel)),
-                           std::move(kernarg));
+    return {
+        kernarg,
+        make_kernarg<0u>(
+            ps.get_kernargs_size_align(reinterpret_cast<std::uintptr_t>(kernel)),
+            kernarg,
+            0u,
+            (Formals)actuals...)};
 }
-
 
 HIP_INTERNAL_EXPORTED_API hsa_agent_t target_agent(hipStream_t stream);
 
@@ -117,8 +103,8 @@ void hipLaunchKernelGGLImpl(
     hipStream_t stream,
     void** kernarg) {
 
-    const auto& kd = hip_impl::get_program_state().kernel_descriptor(function_address, 
-                                                               target_agent(stream));
+    const auto& kd = get_program_state()
+        .kernel_descriptor(function_address, target_agent(stream));
 
     hipModuleLaunchKernel(kd, numBlocks.x, numBlocks.y, numBlocks.z,
                           dimBlocks.x, dimBlocks.y, dimBlocks.z, sharedMemBytes,
@@ -135,8 +121,8 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
     using namespace hip_impl;
 
     hip_impl::hip_init();
-    auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
-                                                   target_agent(0));
+    auto f = get_program_state().kernel_descriptor(
+        reinterpret_cast<std::uintptr_t>(kernel), target_agent(nullptr));
 
     return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
                                       dynSharedMemPerBlk, blockSizeLimit);
@@ -150,8 +136,8 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks, F k
     using namespace hip_impl;
 
     hip_impl::hip_init();
-    auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
-                                                   target_agent(0));
+    auto f = get_program_state().kernel_descriptor(
+        reinterpret_cast<std::uintptr_t>(kernel), target_agent(nullptr));
 
     return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynSharedMemPerBlk);
 }
@@ -162,14 +148,13 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                         std::uint32_t sharedMemBytes, hipStream_t stream,
                         Args... args) {
     hip_impl::hip_init();
-    auto kernarg = hip_impl::make_kernarg(kernel, std::tuple<Args...>{std::move(args)...});
-    std::size_t kernarg_size = kernarg.size();
+    auto kernarg = hip_impl::make_kernarg(kernel, std::move(args)...);
 
     void* config[]{
         HIP_LAUNCH_PARAM_BUFFER_POINTER,
-        kernarg.data(),
+        kernarg.first,
         HIP_LAUNCH_PARAM_BUFFER_SIZE,
-        &kernarg_size,
+        &kernarg.second,
         HIP_LAUNCH_PARAM_END};
 
     hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),

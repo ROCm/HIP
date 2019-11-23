@@ -62,15 +62,12 @@ std::string isa_name(std::string triple)
 
 inline
 hsa_isa_t triple_to_hsa_isa(const std::string& triple) {
-    const std::string isa{isa_name(std::move(triple))};
+    const std::string isa{isa_name(triple)};
 
-    if (isa.empty()) return hsa_isa_t({});
+    if (isa.empty()) return hsa_isa_t{};
 
     hsa_isa_t r{};
-
-    if(HSA_STATUS_SUCCESS != hsa_isa_from_name(isa.c_str(), &r)) {
-        r.handle = 0;
-    }
+    hsa_isa_from_name(isa.c_str(), &r);
 
     return r;
 }
@@ -117,28 +114,27 @@ class Bundled_code_header {
 
         std::copy_n(f, sizeof(x.header_.cbuf_), x.header_.cbuf_);
 
-        if (valid(x)) {
-            x.bundles_.resize(x.header_.bundle_cnt_);
+        if (!valid(x)) return false;
 
-            auto it = f + sizeof(x.header_.cbuf_);
-            for (auto&& y : x.bundles_) {
-                std::copy_n(it, sizeof(y.header.cbuf), y.header.cbuf);
-                it += sizeof(y.header.cbuf);
+        x.bundles_.resize(x.header_.bundle_cnt_);
 
-                y.triple.assign(it, it + y.header.triple_sz);
+        auto it = f + sizeof(x.header_.cbuf_);
+        for (auto&& y : x.bundles_) {
+            std::copy_n(it, sizeof(y.header.cbuf), y.header.cbuf);
+            it += sizeof(y.header.cbuf);
 
-                std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
+            y.triple.assign(it, it + y.header.triple_sz);
 
-                it += y.header.triple_sz;
+            y.blob.assign(f + y.header.offset,
+                          f + y.header.offset + y.header.bundle_sz);
 
-                x.bundled_code_size = std::max(x.bundled_code_size, 
-                                               y.header.offset + y.header.bundle_sz);
-            }
+            it += y.header.triple_sz;
 
-            return true;
+            x.bundled_code_size = std::max(x.bundled_code_size,
+                                           y.header.offset + y.header.bundle_sz);
         }
 
-        return false;
+        return true;
     }
     friend inline bool read(const std::vector<char>& blob, Bundled_code_header& x) {
         return read(blob.cbegin(), blob.cend(), x);

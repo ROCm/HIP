@@ -143,135 +143,116 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
     using namespace hip_impl;
 
     auto ctx = ihipGetTlsDefaultCtx();
-    hipError_t ret = hipSuccess;
 
-    if (ctx == nullptr) {
-        ret = hipErrorInvalidDevice;
+    if (!ctx) return hipErrorInvalidDevice;
 
-    } else {
-        int deviceId = ctx->getDevice()->_deviceId;
-        ihipDevice_t* currentDevice = ihipGetDevice(deviceId);
-        hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
+    int deviceId = ctx->getDevice()->_deviceId;
+    ihipDevice_t* currentDevice = ihipGetDevice(deviceId);
+    hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
 
-        std::vector<char> kernargs{};
-        if (kernelParams) {
-            if (extra) return hipErrorInvalidValue;
+    std::vector<char> kernargs{};
+    if (kernelParams && *kernelParams) {
+        if (extra) return hipErrorInvalidValue;
 
-            for (auto&& x : f->_kernarg_layout) {
-                const auto p{static_cast<const char*>(*kernelParams)};
+        for (auto&& x : f->_kernarg_layout) {
+            const auto p{static_cast<const char*>(*kernelParams)};
 
-                kernargs.insert(
-                    kernargs.cend(),
-                    round_up_to_next_multiple_nonnegative(
-                        kernargs.size(), x.second) - kernargs.size(),
-                    '\0');
-                kernargs.insert(kernargs.cend(), p, p + x.first);
+            kernargs.insert(
+                kernargs.cend(),
+                round_up_to_next_multiple_nonnegative(
+                    kernargs.size(), x.second) - kernargs.size(),
+                '\0');
+            kernargs.insert(kernargs.cend(), p, p + x.first);
 
-                ++kernelParams;
-            }
-        } else if (extra) {
-            if (extra[0] == HIP_LAUNCH_PARAM_BUFFER_POINTER &&
-                extra[2] == HIP_LAUNCH_PARAM_BUFFER_SIZE && extra[4] == HIP_LAUNCH_PARAM_END) {
-                auto args = (char*)extra[1];
-                size_t argSize = *(size_t*)(extra[3]);
-                kernargs.insert(kernargs.end(), args, args+argSize);
-            } else {
-                return hipErrorNotInitialized;
-            }
-
-        } else {
-            return hipErrorInvalidValue;
+            ++kernelParams;
         }
+    } else if (extra) {
+        if (extra[0] != HIP_LAUNCH_PARAM_BUFFER_POINTER ||
+            extra[2] != HIP_LAUNCH_PARAM_BUFFER_SIZE ||
+            extra[4] != HIP_LAUNCH_PARAM_END) return hipErrorInvalidValue;
+    } else return hipErrorNotInitialized;
 
+    if (impCoopParams) {
         // Insert 56-bytes at the end for implicit kernel arguments and fill with value zero.
         size_t padSize = (~kernargs.size() + 1) & (HIP_IMPLICIT_KERNARG_ALIGNMENT - 1);
         kernargs.insert(kernargs.end(), padSize + HIP_IMPLICIT_KERNARG_SIZE, 0);
 
-        if (impCoopParams) {
-            const auto p{static_cast<const char*>(*impCoopParams)};
-            // The sixth index is for multi-grid synchronization
-            kernargs.insert((kernargs.cend() - padSize - HIP_IMPLICIT_KERNARG_SIZE) + 6 * HIP_IMPLICIT_KERNARG_ALIGNMENT,
-                            p, p + HIP_IMPLICIT_KERNARG_ALIGNMENT);
-        }
-
-        /*
-          Kernel argument preparation.
-        */
-        grid_launch_parm lp;
-        lp.dynamic_group_mem_bytes =
-            sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
-        hStream = ihipPreLaunchKernel(
-            hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
-            dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str(), isStreamLocked);
-
-        hsa_kernel_dispatch_packet_t aql;
-
-        memset(&aql, 0, sizeof(aql));
-
-        // aql.completion_signal._handle = 0;
-        // aql.kernarg_address = 0;
-
-        aql.workgroup_size_x = localWorkSizeX;
-        aql.workgroup_size_y = localWorkSizeY;
-        aql.workgroup_size_z = localWorkSizeZ;
-        aql.grid_size_x = globalWorkSizeX;
-        aql.grid_size_y = globalWorkSizeY;
-        aql.grid_size_z = globalWorkSizeZ;
-        if (f->_is_code_object_v3) {
-            const auto* header =
-                reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
-            aql.group_segment_size =
-                header->group_segment_fixed_size + sharedMemBytes;
-            aql.private_segment_size =
-                header->private_segment_fixed_size;
-        } else {
-            aql.group_segment_size =
-                f->_header->workgroup_group_segment_byte_size + sharedMemBytes;
-            aql.private_segment_size =
-                f->_header->workitem_private_segment_byte_size;
-        }
-        aql.kernel_object = f->_object;
-        aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
-        aql.header =
-            (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE);
-        if((flags & 0x1)== 0 ) {
-            //in_order
-            aql.header |= (1 << HSA_PACKET_HEADER_BARRIER);
-        }
-
-        if (HCC_OPT_FLUSH) {
-            aql.header |= (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
-                          (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
-        } else {
-            aql.header |= (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
-                          (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
-        };
-
-
-        hc::completion_future cf;
-
-        lp.av->dispatch_hsa_kernel(&aql, kernargs.data(), kernargs.size(),
-                                   (startEvent || stopEvent) ? &cf : nullptr
-#if (__hcc_workweek__ > 17312)
-                                   ,
-                                   f->_name.c_str()
-#endif
-        );
-
-
-        if (startEvent) {
-            startEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStartCommand);
-        }
-        if (stopEvent) {
-            stopEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStopCommand);
-        }
-
-        ihipPostLaunchKernel(f->_name.c_str(), hStream, lp, isStreamLocked);
-
-
+        const auto p{static_cast<const char*>(*impCoopParams)};
+        // The sixth index is for multi-grid synchronization
+        kernargs.insert((kernargs.cend() - padSize - HIP_IMPLICIT_KERNARG_SIZE) + 6 * HIP_IMPLICIT_KERNARG_ALIGNMENT,
+                        p, p + HIP_IMPLICIT_KERNARG_ALIGNMENT);
     }
 
-    return ret;
+    /*
+      Kernel argument preparation.
+    */
+    grid_launch_parm lp;
+    lp.dynamic_group_mem_bytes =
+        sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
+    hStream = ihipPreLaunchKernel(
+        hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
+        dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str(), isStreamLocked);
+
+    hsa_kernel_dispatch_packet_t aql{};
+
+    // aql.completion_signal._handle = 0;
+    // aql.kernarg_address = 0;
+
+    aql.workgroup_size_x = localWorkSizeX;
+    aql.workgroup_size_y = localWorkSizeY;
+    aql.workgroup_size_z = localWorkSizeZ;
+    aql.grid_size_x = globalWorkSizeX;
+    aql.grid_size_y = globalWorkSizeY;
+    aql.grid_size_z = globalWorkSizeZ;
+    if (f->_is_code_object_v3) {
+        const auto* header =
+            reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
+        aql.group_segment_size =
+            header->group_segment_fixed_size + sharedMemBytes;
+        aql.private_segment_size =
+            header->private_segment_fixed_size;
+    } else {
+        aql.group_segment_size =
+            f->_header->workgroup_group_segment_byte_size + sharedMemBytes;
+        aql.private_segment_size =
+            f->_header->workitem_private_segment_byte_size;
+    }
+    aql.kernel_object = f->_object;
+    aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
+    aql.header = (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE);
+    if (!(flags & 0x1)) aql.header |= (1 << HSA_PACKET_HEADER_BARRIER);
+
+    if (HCC_OPT_FLUSH) {
+        aql.header |= (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
+                      (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+    } else {
+        aql.header |= (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
+                      (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
+    }
+
+    hc::completion_future cf;
+
+    lp.av->dispatch_hsa_kernel(
+        &aql, kernelParams ? kernargs.data() : extra[1],
+        kernelParams ? kernargs.size() : *static_cast<std::size_t*>(extra[3]),
+        (startEvent || stopEvent) ? &cf : nullptr
+        #if (__hcc_workweek__ > 17312)
+            ,
+            f->_name.c_str()
+        #endif
+    );
+
+
+    if (startEvent) {
+        startEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStartCommand);
+    }
+    if (stopEvent) {
+        stopEvent->attachToCompletionFuture(&cf, hStream, hipEventTypeStopCommand);
+    }
+
+    ihipPostLaunchKernel(f->_name.c_str(), hStream, lp, isStreamLocked);
+
+    return hipSuccess;
 }
 
 hipError_t hipModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX, uint32_t gridDimY,
@@ -687,7 +668,7 @@ namespace hip_impl {
 
     struct Agent_global {
         Agent_global() : name(nullptr), address(nullptr), byte_cnt(0) {}
-        Agent_global(const char* name, hipDeviceptr_t address, uint32_t byte_cnt) 
+        Agent_global(const char* name, hipDeviceptr_t address, uint32_t byte_cnt)
             : name(nullptr), address(address), byte_cnt(byte_cnt) {
                 if (name)
                     this->name = strdup(name);
@@ -708,7 +689,7 @@ namespace hip_impl {
             return *this;
         }
 
-        Agent_global(Agent_global&& t) 
+        Agent_global(Agent_global&& t)
             : name(nullptr), address(nullptr), byte_cnt(0) {
                 *this = std::move(t);
         }
@@ -788,7 +769,7 @@ namespace hip_impl {
                 // address SWDEV-173477 and SWDEV-190701
 
                 //return *dptr ? hipSuccess : hipErrorNotFound;
-                return hipSuccess;                
+                return hipSuccess;
             }
 
             hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
@@ -818,8 +799,8 @@ namespace hip_impl {
 
     };
 
-    agent_globals::agent_globals() : impl(new agent_globals_impl()) { 
-        if (!impl) 
+    agent_globals::agent_globals() : impl(new agent_globals_impl()) {
+        if (!impl)
             hip_throw(
                 std::runtime_error{"Error when constructing agent global data structures."});
     }
@@ -1106,7 +1087,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
 {
     HIP_INIT_API(hipFuncGetAttribute, value, attrib, hfunc);
     using namespace hip_impl;
-    
+
     hipError_t retVal = hipSuccess;
     if (!value) return ihipLogStatus(hipErrorInvalidValue);
     hipFuncAttributes attr{};
@@ -1217,7 +1198,7 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     if (!texRef) return ihipLogStatus(hipErrorInvalidValue);
 
     if (!hmod || !name) return ihipLogStatus(hipErrorNotInitialized);
-    
+
     auto addr = get_program_state().global_addr_by_name(name);
     if (addr == nullptr) return ihipLogStatus(hipErrorInvalidValue);
 
