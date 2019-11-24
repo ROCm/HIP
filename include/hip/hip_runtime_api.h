@@ -259,8 +259,8 @@ typedef enum __HIP_NODISCARD hipError_t {
         1071,    ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorAssert =
         1081,    ///< Produced when the kernel calls assert.
-    hipErrorNotSupported = 
-        1082,    ///< Produced when the hip API is not supported/implemented 
+    hipErrorNotSupported =
+        1082,    ///< Produced when the hip API is not supported/implemented
     hipErrorTbd  ///< Marker that more error codes are needed.
 } hipError_t;
 
@@ -360,21 +360,21 @@ enum hipComputeMode {
  */
 #if defined(__cplusplus) && !defined(__HIP_DISABLE_CPP_FUNCTIONS__)
 template <class T>
-static inline hipError_t hipMalloc(T** devPtr, size_t size) {
+inline hipError_t hipMalloc(T** devPtr, size_t size) {
     return hipMalloc((void**)devPtr, size);
 }
 
 // Provide an override to automatically typecast the pointer type from void**, and also provide a
 // default for the flags.
 template <class T>
-static inline hipError_t hipHostMalloc(T** ptr, size_t size,
-                                       unsigned int flags = hipHostMallocDefault) {
+inline hipError_t hipHostMalloc(T** ptr, size_t size,
+                                unsigned int flags = hipHostMallocDefault) {
     return hipHostMalloc((void**)ptr, size, flags);
 }
 
 template <class T>
-static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
-                                       unsigned int flags = hipMemAttachGlobal) {
+inline hipError_t hipMallocManaged(T** devPtr, size_t size,
+                                   unsigned int flags = hipMemAttachGlobal) {
     return hipMallocManaged((void**)devPtr, size, flags);
 }
 #endif
