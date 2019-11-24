@@ -53,22 +53,6 @@ unsigned long long atomicAdd(
 {
     return __atomic_fetch_add(address, val, __ATOMIC_RELAXED);
 }
-
-#if defined(__HIP_ARCH_GFX908__)
-    __device__
-    void atomicAddNoRet_impl(__attribute__((address_space(1))) float*, float)
-        asm("llvm.amdgcn.global.atomic.fadd.p1f32.f32");
-
-    __device__
-    inline
-    void atomicAddNoRet(float* address, float val) noexcept
-    {
-        using GP = __attribute__((address_space(1))) float*;
-
-        atomicAddNoRet_impl((GP)address, val);
-    }
-#endif
-
 __device__
 inline
 float atomicAdd_impl(float* address, float val)
