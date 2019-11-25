@@ -34,19 +34,15 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
-#if __has_attribute(ext_vector_type) || __has_attribute(vector_size)
-#if __has_attribute(ext_vector_type)
-    #define __NATIVE_VECTOR__(n, T, n_power_of_two) __attribute__((ext_vector_type(n_power_of_two),aligned(n_power_of_two*sizeof(T))))
-#elif __has_attribute(vector_size)
-    #define __NATIVE_VECTOR__(n, T, n_power_of_two) __attribute__((vector_size(n_power_of_two*sizeof(T)),aligned(n_power_of_two*sizeof(T))))
-#endif
+#if __has_attribute(vector_size)
+    #define __NATIVE_VECTOR__(n, T) __attribute__((vector_size(n*sizeof(T))))
 
 #if defined(__cplusplus)
     #include <iosfwd>
     #include <type_traits>
 
     namespace hip_impl {
-        template<typename T, unsigned int n, unsigned int n_power_of_two, unsigned int idx>
+        template<typename T, unsigned int n, unsigned int idx>
         struct Scalar_accessor {
             struct Address {
                 const Scalar_accessor* p;
@@ -90,15 +86,31 @@ THE SOFTWARE.
             }
 
             // Idea from https://t0rakka.silvrback.com/simd-scalar-accessor
-            typedef T Vector __NATIVE_VECTOR__(n, T, n_power_of_two);
+            typedef T Vector __NATIVE_VECTOR__(n, T);
             Vector data;
 
+             __host__ __device__
+            operator T&() noexcept {
+                return reinterpret_cast<
+                    T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
+            }
             __host__ __device__
-            operator T() const noexcept { return data[idx]; }
+            operator volatile T&() volatile noexcept {
+                return reinterpret_cast<
+                    volatile T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
+            }
 
+             __host__ __device__
+            operator const T&() const noexcept {
+                return reinterpret_cast<
+                    const T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
+            }
             __host__ __device__
-            operator T() const volatile noexcept { return data[idx]; }
-
+            operator const volatile T&() const volatile noexcept {
+                return reinterpret_cast<
+                    const volatile T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
+            }
+ 
             __host__ __device__
             Address operator&() const noexcept { return Address{this}; }
 
@@ -169,6 +181,7 @@ THE SOFTWARE.
                 data[idx] *= x;
                 return *this;
             }
+
             template<
                 typename U,
                 typename std::enable_if<
@@ -178,6 +191,7 @@ THE SOFTWARE.
                 data[idx] /= x;
                 return *this;
             }
+
             template<
                 typename U = T,
                 typename std::enable_if<std::is_convertible<U, T>{} &&
@@ -240,14 +254,11 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 1> {
-        enum { n = 1,
-               n_power_of_two = 1
-        };
-        typedef T Native_vec_ __NATIVE_VECTOR__(n, T, n_power_of_two);
+        typedef T Native_vec_ __NATIVE_VECTOR__(1, T);
 
         union {
             Native_vec_ data;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 0> x;
+            hip_impl::Scalar_accessor<T, 1, 0> x;
         };
 
         using value_type = T;
@@ -255,51 +266,195 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 2> {
-        enum { n = 2,
-               n_power_of_two = 2
-        };
-        typedef T Native_vec_ __NATIVE_VECTOR__(2, T, n_power_of_two);
+        typedef T Native_vec_ __NATIVE_VECTOR__(2, T);
 
         union {
             Native_vec_ data;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 0> x;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 1> y;
+            hip_impl::Scalar_accessor<T, 2, 0> x;
+            hip_impl::Scalar_accessor<T, 2, 1> y;
         };
 
         using value_type = T;
+    };
+
+    template<typename T>
+    struct Native_vec_3_ {
+        T d[3];
+
+        __host__ __device__
+        constexpr
+        Native_vec_3_() = default;
+        __host__ __device__
+        explicit
+        constexpr
+        Native_vec_3_(T x) noexcept : d{x, x, x} {}
+        __host__ __device__
+        constexpr
+        Native_vec_3_(T x, T y, T z) noexcept : d{x, y, z} {}
+        __host__ __device__
+        constexpr
+        Native_vec_3_(const Native_vec_3_&) = default;
+        __host__ __device__
+        constexpr
+        Native_vec_3_(Native_vec_3_&&) = default;
+        __host__ __device__
+        ~Native_vec_3_() = default;
+
+        __host__ __device__
+        Native_vec_3_& operator=(const Native_vec_3_&) = default;
+        __host__ __device__
+        Native_vec_3_& operator=(Native_vec_3_&&) = default;
+
+        __host__ __device__
+        T& operator[](unsigned int idx) noexcept { return d[idx]; }
+        __host__ __device__
+        T operator[](unsigned int idx) const noexcept { return d[idx]; }
+
+        __host__ __device__
+        Native_vec_3_& operator+=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] += x.d[i];
+            return *this;
+        }
+        __host__ __device__
+        Native_vec_3_& operator-=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] -= x.d[i];
+            return *this;
+        }
+
+        __host__ __device__
+        Native_vec_3_& operator*=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] *= x.d[i];
+            return *this;
+        }
+        __host__ __device__
+        Native_vec_3_& operator/=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] /= x.d[i];
+            return *this;
+        }
+
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_signed<U>{}>::type* = nullptr>
+        __host__ __device__
+        Native_vec_3_ operator-() const noexcept
+        {
+            auto r{*this};
+            for (auto&& x : r.d) x = -x;
+            return r;
+        }
+
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        Native_vec_3_ operator~() const noexcept
+        {
+            auto r{*this};
+            for (auto&& x : r.d) x = ~x;
+            return r;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        Native_vec_3_& operator%=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] %= x.d[i];
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        Native_vec_3_& operator^=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] ^= x.d[i];
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        Native_vec_3_& operator|=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] |= x.d[i];
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        Native_vec_3_& operator&=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] &= x.d[i];
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        Native_vec_3_& operator>>=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] >>= x.d[i];
+            return *this;
+        }
+        template<
+            typename U = T,
+            typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
+        __host__ __device__
+        Native_vec_3_& operator<<=(const Native_vec_3_& x) noexcept
+        {
+            for (auto i = 0u; i != 3u; ++i) d[i] <<= x.d[i];
+            return *this;
+        }
     };
 
     template<typename T>
     struct HIP_vector_base<T, 3> {
-        enum Enum { n = 3,
-                    n_power_of_two = 4
-        };
-        typedef T Native_vec_ __NATIVE_VECTOR__(n, T, n_power_of_two);
+
+        typedef Native_vec_3_<T> Native_vec_;
 
         union {
             Native_vec_ data;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 0> x;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 1> y;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 2> z;
+            struct {
+                T x;
+                T y;
+                T z;
+            };
         };
 
         using value_type = T;
     };
 
+    typedef Native_vec_3_<int> vec3_cmp;
+
+    template<typename T>
+    __host__ __device__
+    vec3_cmp operator==(const Native_vec_3_<T>& x,
+        const Native_vec_3_<T>& y) noexcept
+    {
+        vec3_cmp r;
+        r[0] = x.d[0] == y.d[0];
+        r[1] = x.d[1] == y.d[1];
+        r[2] = x.d[2] == y.d[2];
+        return r;
+    }
+
 
     template<typename T>
     struct HIP_vector_base<T, 4> {
-        enum Enum { n = 4,
-                    n_power_of_two = 4
-        };
-        typedef T Native_vec_ __NATIVE_VECTOR__(4, T, 4);
+        typedef T Native_vec_ __NATIVE_VECTOR__(4, T);
 
         union {
             Native_vec_ data;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 0> x;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 1> y;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 2> z;
-            hip_impl::Scalar_accessor<T, n, n_power_of_two, 3> w;
+            hip_impl::Scalar_accessor<T, 4, 0> x;
+            hip_impl::Scalar_accessor<T, 4, 1> y;
+            hip_impl::Scalar_accessor<T, 4, 2> z;
+            hip_impl::Scalar_accessor<T, 4, 3> w;
         };
 
         using value_type = T;
@@ -420,6 +575,7 @@ THE SOFTWARE.
             data /= x.data;
             return *this;
         }
+
         template<
             typename U,
             typename std::enable_if<
@@ -512,7 +668,6 @@ THE SOFTWARE.
             return *this;
         }
     };
-
 
     template<typename T, unsigned int n>
     inline __host__ __device__
