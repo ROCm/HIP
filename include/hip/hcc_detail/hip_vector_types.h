@@ -34,8 +34,12 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
-#if __has_attribute(vector_size)
+#if __has_attribute(ext_vector_type) || __has_attribute(vector_size)
+#if __has_attribute(ext_vector_type)
+    #define __NATIVE_VECTOR__(n, T) __attribute__((ext_vector_type(n)))
+#elif __has_attribute(vector_size)
     #define __NATIVE_VECTOR__(n, T) __attribute__((vector_size(n*sizeof(T))))
+#endif
 
 #if defined(__cplusplus)
     #include <iosfwd>
@@ -89,6 +93,11 @@ THE SOFTWARE.
             typedef T Vector __NATIVE_VECTOR__(n, T);
             Vector data;
 
+            __host__ __device__
+            operator T() const noexcept { return data[idx]; }
+            __host__ __device__
+            operator T() const volatile noexcept { return data[idx]; }
+
              __host__ __device__
             operator T&() noexcept {
                 return reinterpret_cast<
@@ -100,17 +109,6 @@ THE SOFTWARE.
                     volatile T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
             }
 
-             __host__ __device__
-            operator const T&() const noexcept {
-                return reinterpret_cast<
-                    const T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
-            }
-            __host__ __device__
-            operator const volatile T&() const volatile noexcept {
-                return reinterpret_cast<
-                    const volatile T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
-            }
- 
             __host__ __device__
             Address operator&() const noexcept { return Address{this}; }
 
