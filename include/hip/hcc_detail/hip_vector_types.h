@@ -44,6 +44,7 @@ THE SOFTWARE.
 #if defined(__cplusplus)
     #include <iosfwd>
     #include <type_traits>
+    #include <utility>
 
     namespace hip_impl {
         template<typename T, unsigned int n, unsigned int idx>
@@ -94,6 +95,17 @@ THE SOFTWARE.
             Vector data;
 
             __host__ __device__
+            Scalar_accessor() = default;
+
+            __host__ __device__
+            Scalar_accessor(const Scalar_accessor& other) {
+                data[idx] = other.data[idx];
+            }
+
+            __host__ __device__
+            ~Scalar_accessor() {}
+
+            __host__ __device__
             operator T() const noexcept { return data[idx]; }
             __host__ __device__
             operator T() const volatile noexcept { return data[idx]; }
@@ -125,6 +137,13 @@ THE SOFTWARE.
 
                 return *this;
             }
+
+            __host__ __device__
+            Scalar_accessor& operator=(const Scalar_accessor& other) noexcept {
+                data[idx] = other.data[idx];
+
+                return *this;
+                }
 
             __host__ __device__
             Scalar_accessor& operator++() noexcept {
@@ -252,6 +271,13 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 1> {
+        HIP_vector_base() {}
+        HIP_vector_base(const HIP_vector_base& other) : data(other.data) {}
+        HIP_vector_base(const HIP_vector_base&& other) : data(std::move(other.data)) {}
+        HIP_vector_base& operator=(const HIP_vector_base& other) { data = other.data; return *this; }
+        HIP_vector_base& operator=(const HIP_vector_base&& other) { data = std::move(other.data); return *this; }
+        ~HIP_vector_base() {}
+
         typedef T Native_vec_ __NATIVE_VECTOR__(1, T);
 
         union {
@@ -265,6 +291,12 @@ THE SOFTWARE.
     template<typename T>
     struct HIP_vector_base<T, 2> {
         typedef T Native_vec_ __NATIVE_VECTOR__(2, T);
+        HIP_vector_base() {}
+        HIP_vector_base(const HIP_vector_base& other) : data(other.data) {}
+        HIP_vector_base(const HIP_vector_base&& other) : data(std::move(other.data)) {}
+        HIP_vector_base& operator=(const HIP_vector_base& other) { data = other.data; return *this; }
+        HIP_vector_base& operator=(const HIP_vector_base&& other) { data = std::move(other.data); return *this; }
+        ~HIP_vector_base() {}
 
         union {
             Native_vec_ data;
@@ -413,6 +445,12 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 3> {
+        HIP_vector_base() {}
+        HIP_vector_base(const HIP_vector_base& other) : data(other.data) {}
+        HIP_vector_base(const HIP_vector_base&& other) : data(std::move(other.data)) {}
+        HIP_vector_base& operator=(const HIP_vector_base& other) { data = other.data; return *this; }
+        HIP_vector_base& operator=(const HIP_vector_base&& other) { data = std::move(other.data); return *this; }
+        ~HIP_vector_base() {}
 
         typedef Native_vec_3_<T> Native_vec_;
 
@@ -445,6 +483,13 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 4> {
+        HIP_vector_base() {}
+        HIP_vector_base(const HIP_vector_base& other) : data(other.data) {}
+        HIP_vector_base(const HIP_vector_base&& other) : data(std::move(other.data)) {}
+        HIP_vector_base& operator=(const HIP_vector_base& other) { data = other.data; return *this; }
+        HIP_vector_base& operator=(const HIP_vector_base&& other) { data = std::move(other.data); return *this; }
+        ~HIP_vector_base() {}
+
         typedef T Native_vec_ __NATIVE_VECTOR__(4, T);
 
         union {
@@ -481,16 +526,24 @@ THE SOFTWARE.
         inline __host__ __device__
         HIP_vector_type(Us... xs) noexcept { data = Native_vec_{static_cast<T>(xs)...}; }
         inline __host__ __device__
-        HIP_vector_type(const HIP_vector_type&) = default;
+        HIP_vector_type(const HIP_vector_type& other) noexcept
+            : HIP_vector_base<T, rank>(other)
+            { }
         inline __host__ __device__
-        HIP_vector_type(HIP_vector_type&&) = default;
+        HIP_vector_type(HIP_vector_type&& other) noexcept
+            : HIP_vector_base<T, rank>(std::move(other))
+            { }
+            
         inline __host__ __device__
-        ~HIP_vector_type() = default;
+        ~HIP_vector_type() {}
 
         inline __host__ __device__
-        HIP_vector_type& operator=(const HIP_vector_type&) = default;
+        HIP_vector_type& operator=(const HIP_vector_type& other) noexcept
+            { data = other.data; return *this; }
+
         inline __host__ __device__
-        HIP_vector_type& operator=(HIP_vector_type&&) = default;
+        HIP_vector_type& operator=(HIP_vector_type&& other) noexcept
+            { data = std::move(other.data); return *this; }
 
         // Operators
         inline __host__ __device__
