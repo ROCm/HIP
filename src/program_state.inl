@@ -943,7 +943,6 @@ public:
             auto n = kernels_md.substr(m+21, kernels_md.find_first_of("'\n", m) - m - 21);
             size_t block_size = std::stoul(n);
             kernattrib[fn] = block_size;
-            gBlockSize[fn] = block_size;
 
         } while (true);
     }
