@@ -354,8 +354,8 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
 
 hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes,
                        hipMemcpyKind kind, hipStream_t stream) {
-    if (!dst || !src) return hipErrorInvalidValue;
     if (sizeBytes == 0) return hipSuccess;
+    if (!dst || !src) return hipErrorInvalidValue;
 
     try {
         stream = ihipSyncAndResolveStream(stream);
@@ -380,8 +380,8 @@ hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes,
 
 hipError_t memcpySync(void* dst, const void* src, size_t sizeBytes,
                       hipMemcpyKind kind, hipStream_t stream) {
-    if (!dst || !src) return hipErrorInvalidValue;
     if (sizeBytes == 0) return hipSuccess;
+    if (!dst || !src) return hipErrorInvalidValue;
 
     try {
         stream = ihipSyncAndResolveStream(stream);
