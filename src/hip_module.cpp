@@ -156,14 +156,6 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
 
     } else {
 
-        // Kernel launch may fail for (no. of VGPRs X blocksize >= 65536)
-        if(f != nullptr && f->_header != nullptr){
-            uint32_t usedVGPRCount = f->_header->workitem_vgpr_count;
-            if((localWorkSizeX * localWorkSizeY * localWorkSizeZ * usedVGPRCount) >= 65536){
-                return hipErrorInvalidValue;
-            }
-        }
-
         int deviceId = ctx->getDevice()->_deviceId;
         ihipDevice_t* currentDevice = ihipGetDevice(deviceId);
         hsa_agent_t gpuAgent = (hsa_agent_t)currentDevice->_hsaAgent;
