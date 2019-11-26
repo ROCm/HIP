@@ -141,6 +141,7 @@ public:
     }
 };
 
+
 class program_state_impl {
 
 public:
@@ -172,6 +173,10 @@ public:
             std::unordered_map<
                 std::string,
                 std::vector<hsa_executable_symbol_t>>>> kernels;
+
+    std::pair<
+        std::once_flag,
+        std::unordered_map<std::string, std::size_t>> kernattrib;
 
     std::pair<
         std::once_flag,
@@ -844,6 +849,164 @@ public:
         }
     }
 
+    static
+    void read_kernattribute_metadata_v3(
+            const std::string& blob,
+            std::unordered_map<std::string,std::size_t>& kernattribute) {
+        amd_comgr_data_t dataIn;
+        amd_comgr_status_t status;
+
+        if (amd_comgr_create_data(AMD_COMGR_DATA_KIND_RELOCATABLE, &dataIn)
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
+
+        if (amd_comgr_set_data(dataIn, blob.size(), blob.data())
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
+
+        amd_comgr_metadata_node_t metadata;
+        if (amd_comgr_get_data_metadata(dataIn, &metadata)
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
+
+        amd_comgr_metadata_node_t kernels_md;
+        if (amd_comgr_metadata_lookup(metadata, "Kernels", &kernels_md)
+            != AMD_COMGR_STATUS_SUCCESS) {
+            if (amd_comgr_metadata_lookup(metadata,
+                                          "amdhsa.kernels",
+                                          &kernels_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
+        }
+
+        size_t kernel_count = 0;
+        if (amd_comgr_get_metadata_list_size(kernels_md, &kernel_count)
+            != AMD_COMGR_STATUS_SUCCESS)
+            return;
+
+        for (size_t i = 0; i < kernel_count; i++) {
+            amd_comgr_metadata_node_t kernel_md;
+
+            if (amd_comgr_index_list_metadata(kernels_md, i, &kernel_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+
+            amd_comgr_metadata_node_t name_md;
+            if (amd_comgr_metadata_lookup(kernel_md, ".name", &name_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+
+            std::string kernel_name_str = metadata_to_string(name_md);
+
+            if (amd_comgr_destroy_metadata(name_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+
+            amd_comgr_metadata_node_t max_flat_workgroup_size;
+            if(amd_comgr_metadata_lookup(kernel_md,".max_flat_workgroup_size", &max_flat_workgroup_size)
+                != AMD_COMGR_STATUS_SUCCESS)
+               continue;
+
+            kernattribute[kernel_name_str] = std::stoul(metadata_to_string(max_flat_workgroup_size));
+
+			if (amd_comgr_destroy_metadata(max_flat_workgroup_size)
+                != AMD_COMGR_STATUS_SUCCESS)
+                continue;
+        }
+
+        if (amd_comgr_destroy_metadata(kernels_md) != AMD_COMGR_STATUS_SUCCESS
+            || amd_comgr_destroy_metadata(metadata) != AMD_COMGR_STATUS_SUCCESS)
+            return;
+
+        amd_comgr_release_data(dataIn);
+    }
+
+    static
+    void read_kernattribute_metadata_v2(
+        const std::string& kernels_md,
+        std::size_t dx,
+        std::unordered_map<
+            std::string,std::size_t>& kernattrib) {
+        do {
+            dx = kernels_md.find("Name:", dx);
+
+            if (dx == std::string::npos) break;
+
+            static constexpr decltype(kernels_md.size()) name_sz{5};
+            dx = kernels_md.find_first_not_of(" '", dx + name_sz);
+
+            auto fn =
+                kernels_md.substr(dx, kernels_md.find_first_of("'\n", dx) - dx);
+            dx += fn.size();
+
+            std::size_t m = kernels_md.find("MaxFlatWorkGroupSize:",dx);
+            auto n = kernels_md.substr(m+21, kernels_md.find_first_of("'\n", m) - m - 21);
+            size_t block_size = std::stoul(n);
+            kernattrib[fn] = block_size;
+            gBlockSize[fn] = block_size;
+
+        } while (true);
+    }
+    static
+    void read_kernattribute_metadata(
+        const std::string& blob,
+        std::unordered_map<
+            std::string,
+            std::size_t>& kernattrib)
+    {
+        std::istringstream istr{blob};
+        ELFIO::elfio reader;
+
+        if (!reader.load(istr)) return;
+
+        // TODO: this is inefficient.
+        auto it = find_section_if(reader, [](const ELFIO::section* x) {
+            return x->get_type() == SHT_NOTE;
+        });
+
+        if (!it) return;
+
+        const ELFIO::note_section_accessor acc{reader, it};
+        auto n{acc.get_notes_num()};
+        while (n--) {
+            ELFIO::Elf_Word type{};
+            std::string name{};
+            void* desc{};
+            ELFIO::Elf_Word desc_size{};
+
+            acc.get_note(n, type, name, desc, desc_size);
+
+            if (name == "AMDGPU") {
+                return read_kernattribute_metadata_v3(blob, kernattrib);
+            }
+            if (name != "AMD") continue; // TODO: switch to using NT_AMD_AMDGPU_HSA_METADATA.
+
+            std::string tmp{
+                static_cast<char*>(desc), static_cast<char*>(desc) + desc_size};
+
+            auto dx = tmp.find("Kernels:");
+
+            if (dx == std::string::npos) continue;
+
+            return read_kernattribute_metadata_v2(tmp, dx + 8u, kernattrib); // Skip "Kernels:".
+        }
+    }
+
+    const std::unordered_map<std::string, std::size_t>& get_kernattribute() {
+
+        std::call_once(kernattrib.first, [this]() {
+            for (auto&& name_and_isa_blobs : get_code_object_blobs()) {
+                for (auto&& isa_blobs : name_and_isa_blobs.second) {
+                    for (auto&& blob : isa_blobs.second) {
+                        read_kernattribute_metadata(blob, kernattrib.second);
+                    }
+                }
+            }
+        });
+
+        return kernattrib.second;
+    }
+
     const std::unordered_map<std::string,
         std::vector<std::pair<std::size_t, std::size_t>>>& get_kernargs() {
 
@@ -893,6 +1056,16 @@ public:
         }
 
         return it0->second;
+    }
+
+    const std::size_t getKernattribute(std::string kernelName) {
+
+        auto it = get_kernattribute().find(kernelName);
+	if(it == get_kernattribute().end())
+	{
+	    hip_throw(std::runtime_error{"Undefined __global__ function."});
+	}
+	return it->second;
     }
 
     const std::vector<std::pair<std::size_t, std::size_t>>& 

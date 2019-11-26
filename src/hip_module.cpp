@@ -145,6 +145,12 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
     auto ctx = ihipGetTlsDefaultCtx();
     hipError_t ret = hipSuccess;
 
+    std::size_t blockSize = hip_impl::get_program_state().get_kernattribute(f->_name);
+    if (blockSize < (localWorkSizeX * localWorkSizeY * localWorkSizeZ))
+    {
+        return hipErrorLaunchFailure;
+    }
+
     if (ctx == nullptr) {
         ret = hipErrorInvalidDevice;
 

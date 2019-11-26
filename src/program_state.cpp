@@ -77,6 +77,11 @@ namespace hip_impl {
         return kd;
     }
 
+    std::size_t program_state::get_kernattribute(std::string kernelName)
+    {
+        return impl->getKernattribute(kernelName);
+    }
+
     kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t kernel) {
         kernargs_size_align t;
         t.handle = reinterpret_cast<const void*>(&impl->kernargs_size_align(kernel));

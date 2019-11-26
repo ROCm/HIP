@@ -30,6 +30,7 @@ THE SOFTWARE.
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <string>
 
 #include <hip/hip_common.h>
 
@@ -68,6 +69,8 @@ public:
 
     hipFunction_t kernel_descriptor(std::uintptr_t,
                                     hsa_agent_t);
+
+    std::size_t get_kernattribute(std::string);
 
     kernargs_size_align get_kernargs_size_align(std::uintptr_t);
     hsa_executable_t load_executable(const char*, const size_t,
