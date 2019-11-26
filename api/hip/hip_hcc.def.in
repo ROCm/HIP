@@ -81,6 +81,7 @@ hipMallocArray
 hipMemAllocPitch
 hipMallocPitch
 hipMemcpy
+hipMemcpyWithStream
 hipMemcpyParam2D
 hipMemcpy2D
 hipMemcpy2DAsync

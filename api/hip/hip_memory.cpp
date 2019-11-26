@@ -233,6 +233,15 @@ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind
   HIP_RETURN(ihipMemcpy(dst, src, sizeBytes, kind, *queue));
 }
 
+hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
+                               hipMemcpyKind kind, hipStream_t stream) {
+  HIP_INIT_API(hipMemcpyWithStream, dst, src, sizeBytes, kind, stream);
+
+  amd::HostQueue* queue = hip::getQueue(stream);
+
+  HIP_RETURN(ihipMemcpy(dst, src, sizeBytes, kind, *queue, true));
+}
+
 hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
   HIP_INIT_API(hipMemPtrGetInfo, ptr, size);
 
