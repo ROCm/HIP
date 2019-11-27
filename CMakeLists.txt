@@ -340,6 +340,18 @@ if(HIP_PLATFORM STREQUAL "hcc")
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 endif()
 
+if(HIP_PLATFORM STREQUAL "nvcc")
+    if(NOT DEFINED ENV{CUDA_PATH})
+        set(CUDA_PATH "/usr/local/cuda")
+    else()
+        set(CUDA_PATH $ENV{CUDA_PATH})
+    endif()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D__HIP_PLATFORM_NVCC__")
+    include_directories(${PROJECT_SOURCE_DIR}/include)
+    include_directories(${CUDA_PATH}/include)
+    add_library(hip_nvcc SHARED src/nvcc_functions.cpp)
+endif()
+
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
 
@@ -363,6 +375,11 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     # Install .hipInfo
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
+endif()
+
+# Install hip_nvcc lib
+if(HIP_PLATFORM STREQUAL "nvcc")
+    install(TARGETS hip_nvcc DESTINATION lib)
 endif()
 
 # Install .hipVersion
