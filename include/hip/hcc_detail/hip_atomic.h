@@ -77,14 +77,17 @@ __device__
 inline
 bool __hip_is_shared(const __attribute__((address_space(0))) void* ptr) noexcept
 {   // TODO: this is ersatz for __builtin_amdgcn_is_shared.
-    #if defined(__HIP_DEVICE_COMPILE__)
-        const unsigned int gp = reinterpret_cast<unsigned long long>(ptr);
+#if defined(__HIP_DEVICE_COMPILE__)
+#if !defined(__HCC__) && __has_builtin(__builtin_amdgcn_is_shared)
+    return __builtin_amdgcn_is_shared(ptr);
+#else
+    const unsigned int gp = reinterpret_cast<unsigned long long>(ptr);
 
-        return
-            gp ==(__builtin_amdgcn_s_getreg((15 << 11) | (16 << 6) | 15) << 16);
-    #else
-        return false;
-    #endif
+    return gp == (__builtin_amdgcn_s_getreg((15 << 11) | (16 << 6) | 15) << 16);
+#endif // __has_builtin(__builtin_amdgcn_is_shared)
+#else
+    return false;
+#endif
 }
 __device__
 inline
