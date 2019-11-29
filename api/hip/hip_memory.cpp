@@ -500,11 +500,11 @@ hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc
  // Dummy flags check
   switch (flags) {
     case hipArrayLayered:
-    case hipArrayCubemap:
     case hipArraySurfaceLoadStore:
     case hipArrayTextureGather:
         assert(0 && "Unspported");
         break;
+    case hipArrayCubemap:
     case hipArrayDefault:
     default:
         break;
@@ -1150,19 +1150,19 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
         byteSize = 1;
         break;
     }
-    region[2] = p->Depth;
-    region[1] = p->Height;
-    region[0] = p->WidthInBytes / byteSize;
-    srcOrigin[0] = p->srcXInBytes / byteSize;
-    srcOrigin[1] = p->srcY;
-    srcOrigin[2] = p->srcZ;
+    region[2] = p->extent.depth;
+    region[1] = p->extent.height;
+    region[0] = p->extent.width;
+    srcOrigin[0] = p->srcPos.x;
+    srcOrigin[1] = p->srcPos.y;
+    srcOrigin[2] = p->srcPos.z;
     dstPitchInbytes = p->dstArray->width * byteSize;
-    srcPitchInBytes = p->srcPitch;
-    srcPtr = (void*)p->srcHost;
+    srcPitchInBytes = p->srcPtr.pitch;
+    srcPtr = (void*)p->srcPtr.ptr;
     dstPtr = p->dstArray->data;
-    dstOrigin[0] = p->dstXInBytes/byteSize;
-    dstOrigin[1] = p->dstY;
-    dstOrigin[2] = p->dstZ;
+    dstOrigin[0] = p->dstPos.x;
+    dstOrigin[1] = p->dstPos.y;
+    dstOrigin[2] = p->dstPos.z;
   } else {
     region[2] = p->extent.depth;
     region[1] = p->extent.height;
@@ -1188,8 +1188,8 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   amd::Memory* dstMemory = getMemoryObject(dstPtr, offset);
   assert(offset == 0);
 
-  size_t src_slice_pitch = srcPitchInBytes * p->srcHeight;
-  size_t dst_slice_pitch = dstPitchInbytes * p->dstHeight;
+  size_t src_slice_pitch = srcPitchInBytes * p->extent.height;
+  size_t dst_slice_pitch = dstPitchInbytes * p->extent.height;
 
   if (!srcRect.create(srcOrigin, region, srcPitchInBytes, src_slice_pitch) ||
       !dstRect.create(dstOrigin, region, dstPitchInbytes, dst_slice_pitch)) {
