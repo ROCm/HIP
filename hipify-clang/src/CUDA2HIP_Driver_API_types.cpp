@@ -1105,161 +1105,195 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CUresult",                                                         {"hipError_t",                                               "", CONV_TYPE, API_DRIVER}},
   {"cudaError_enum",                                                   {"hipError_t",                                               "", CONV_TYPE, API_DRIVER}},
   // CUresult enum values
-  // cudaSuccess = 0
+  // cudaSuccess
   {"CUDA_SUCCESS",                                                     {"hipSuccess",                                               "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 0
-  // cudaErrorInvalidValue = 11
+  // cudaErrorInvalidValue = 1, CUDA_ERROR_INVALID_VALUE = 1, hipErrorInvalidValue = 1011
+  // TODO [HIP]: make hipErrorInvalidValue = 1
+  // cudaErrorInvalidValue
   {"CUDA_ERROR_INVALID_VALUE",                                         {"hipErrorInvalidValue",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 1
-  // cudaErrorMemoryAllocation = 2
-  {"CUDA_ERROR_OUT_OF_MEMORY",                                         {"hipErrorMemoryAllocation",                                 "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 2
-  // cudaErrorInitializationError = 3; hipErrorInitializationError = 1003
-  // TODO: the same error code should be merged into 1
+  // cudaErrorMemoryAllocation = 2, CUDA_ERROR_OUT_OF_MEMORY = 2, hipErrorOutOfMemory = 2, hipErrorMemoryAllocation = 1002
+  // TODO [HIP]: remove hipErrorMemoryAllocation
+  // cudaErrorMemoryAllocation
+  {"CUDA_ERROR_OUT_OF_MEMORY",                                         {"hipErrorOutOfMemory",                                      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 2
+  // cudaErrorInitializationError = 3, CUDA_ERROR_NOT_INITIALIZED = 3, hipErrorNotInitialized = 3, hipErrorInitializationError = 1003
+  // TODO [HIP]: remove hipErrorInitializationError
+  // cudaErrorInitializationError
   {"CUDA_ERROR_NOT_INITIALIZED",                                       {"hipErrorNotInitialized",                                   "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 3
-  // cudaErrorCudartUnloading = 29
-  // TODO: double check, that these errors match
+  // cudaErrorCudartUnloading
   {"CUDA_ERROR_DEINITIALIZED",                                         {"hipErrorDeinitialized",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 4
-  // cudaErrorProfilerDisabled = 55
+  // cudaErrorProfilerDisabled
   {"CUDA_ERROR_PROFILER_DISABLED",                                     {"hipErrorProfilerDisabled",                                 "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 5
-  // cudaErrorProfilerNotInitialized = 56
+  // cudaErrorProfilerNotInitialized
   // NOTE: Deprecated since CUDA 5.0
   {"CUDA_ERROR_PROFILER_NOT_INITIALIZED",                              {"hipErrorProfilerNotInitialized",                           "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 6
   // NOTE: Deprecated since CUDA 5.0
-  // cudaErrorProfilerAlreadyStarted = 57
+  // cudaErrorProfilerAlreadyStarted
   {"CUDA_ERROR_PROFILER_ALREADY_STARTED",                              {"hipErrorProfilerAlreadyStarted",                           "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 7
-  // cudaErrorProfilerAlreadyStopped = 58
+  // cudaErrorProfilerAlreadyStopped
   // NOTE: Deprecated since CUDA 5.0
   {"CUDA_ERROR_PROFILER_ALREADY_STOPPED",                              {"hipErrorProfilerAlreadyStopped",                           "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 8
-  // cudaErrorNoDevice = 38
+  // cudaErrorNoDevice = 100, CUDA_ERROR_NO_DEVICE = 100, hipErrorNoDevice = 1038
+  // TODO [HIP]: make hipErrorNoDevice = 100
+  // cudaErrorNoDevice
   {"CUDA_ERROR_NO_DEVICE",                                             {"hipErrorNoDevice",                                         "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 100
-  // cudaErrorInvalidDevice = 10
+  // cudaErrorInvalidDevice = 101, CUDA_ERROR_INVALID_DEVICE = 101, hipErrorInvalidDevice = 1010
+  // TODO [HIP]: make hipErrorInvalidDevice = 101
+  // cudaErrorInvalidDevice
   {"CUDA_ERROR_INVALID_DEVICE",                                        {"hipErrorInvalidDevice",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 101
-  // cudaErrorInvalidKernelImage = 47
-  // TODO: double check the matching
+  // cudaErrorInvalidKernelImage
   {"CUDA_ERROR_INVALID_IMAGE",                                         {"hipErrorInvalidImage",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 200
-  // no analogue
+  // cudaErrorDeviceUninitilialized
   {"CUDA_ERROR_INVALID_CONTEXT",                                       {"hipErrorInvalidContext",                                   "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 201
   // no analogue
   // NOTE: Deprecated since CUDA 3.2
   {"CUDA_ERROR_CONTEXT_ALREADY_CURRENT",                               {"hipErrorContextAlreadyCurrent",                            "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 202
-  // cudaErrorMapBufferObjectFailed = 14
-  // TODO: double check the matching
+  // cudaErrorMapBufferObjectFailed = 205, CUDA_ERROR_MAP_FAILED = 205, hipErrorMapFailed = 205, hipErrorMapBufferObjectFailed = 1071
+  // TODO [HIP]: remove hipErrorMapBufferObjectFailed
+  // TODO [HIPIFY]: rename hipErrorMapBufferObjectFailed to hipErrorMapFailed
+  // cudaErrorMapBufferObjectFailed
   {"CUDA_ERROR_MAP_FAILED",                                            {"hipErrorMapFailed",                                        "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 205
-  // cudaErrorUnmapBufferObjectFailed = 15
-  // TODO: double check the matching
+  // cudaErrorUnmapBufferObjectFailed
   {"CUDA_ERROR_UNMAP_FAILED",                                          {"hipErrorUnmapFailed",                                      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 206
-  // no analogue
+  // cudaErrorArrayIsMapped
   {"CUDA_ERROR_ARRAY_IS_MAPPED",                                       {"hipErrorArrayIsMapped",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 207
-  // no analogue
+  // cudaErrorAlreadyMapped
   {"CUDA_ERROR_ALREADY_MAPPED",                                        {"hipErrorAlreadyMapped",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 208
-  // cudaErrorNoKernelImageForDevice = 48
-  // TODO: double check the matching
+  // cudaErrorNoKernelImageForDevice
   {"CUDA_ERROR_NO_BINARY_FOR_GPU",                                     {"hipErrorNoBinaryForGpu",                                   "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 209
-  // no analogue
+  // cudaErrorAlreadyAcquired
   {"CUDA_ERROR_ALREADY_ACQUIRED",                                      {"hipErrorAlreadyAcquired",                                  "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 210
-  // no analogue
+  // cudaErrorNotMapped
   {"CUDA_ERROR_NOT_MAPPED",                                            {"hipErrorNotMapped",                                        "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 211
-  // no analogue
+  // cudaErrorNotMappedAsArray
   {"CUDA_ERROR_NOT_MAPPED_AS_ARRAY",                                   {"hipErrorNotMappedAsArray",                                 "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 212
-  // no analogue
+  // cudaErrorNotMappedAsPointer
   {"CUDA_ERROR_NOT_MAPPED_AS_POINTER",                                 {"hipErrorNotMappedAsPointer",                               "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 213
-  // cudaErrorECCUncorrectable = 39
+  // cudaErrorECCUncorrectable
   {"CUDA_ERROR_ECC_UNCORRECTABLE",                                     {"hipErrorECCNotCorrectable",                                "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 214
-  // cudaErrorUnsupportedLimit = 42
+  // cudaErrorUnsupportedLimit
   {"CUDA_ERROR_UNSUPPORTED_LIMIT",                                     {"hipErrorUnsupportedLimit",                                 "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 215
-  // no analogue
+  // cudaErrorDeviceAlreadyInUse
   {"CUDA_ERROR_CONTEXT_ALREADY_IN_USE",                                {"hipErrorContextAlreadyInUse",                              "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 216
-  // cudaErrorPeerAccessUnsupported = 64
+  // cudaErrorPeerAccessUnsupported
   {"CUDA_ERROR_PEER_ACCESS_UNSUPPORTED",                               {"hipErrorPeerAccessUnsupported",                            "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 217
-  // cudaErrorInvalidPtx = 78
+  // cudaErrorInvalidPtx
   {"CUDA_ERROR_INVALID_PTX",                                           {"hipErrorInvalidKernelFile",                                "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 218
-  // cudaErrorInvalidGraphicsContext = 79
+  // cudaErrorInvalidGraphicsContext
   {"CUDA_ERROR_INVALID_GRAPHICS_CONTEXT",                              {"hipErrorInvalidGraphicsContext",                           "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 219
-  // cudaErrorNvlinkUncorrectable = 80
+  // cudaErrorNvlinkUncorrectable
   {"CUDA_ERROR_NVLINK_UNCORRECTABLE",                                  {"hipErrorNvlinkUncorrectable",                              "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 220
-  // cudaErrorJitCompilerNotFound = 81
+  // cudaErrorJitCompilerNotFound
   {"CUDA_ERROR_JIT_COMPILER_NOT_FOUND",                                {"hipErrorJitCompilerNotFound",                              "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 221
-  // no analogue
+  // cudaErrorInvalidSource
   {"CUDA_ERROR_INVALID_SOURCE",                                        {"hipErrorInvalidSource",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 300
-  // no analogue
+  // cudaErrorFileNotFound
   {"CUDA_ERROR_FILE_NOT_FOUND",                                        {"hipErrorFileNotFound",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 301
-  // cudaErrorSharedObjectSymbolNotFound = 40
+  // cudaErrorSharedObjectSymbolNotFound
   {"CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND",                        {"hipErrorSharedObjectSymbolNotFound",                       "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 302
-  // cudaErrorSharedObjectInitFailed = 41
+  // cudaErrorSharedObjectInitFailed
   {"CUDA_ERROR_SHARED_OBJECT_INIT_FAILED",                             {"hipErrorSharedObjectInitFailed",                           "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 303
-  // cudaErrorOperatingSystem = 63
+  // cudaErrorOperatingSystem
   {"CUDA_ERROR_OPERATING_SYSTEM",                                      {"hipErrorOperatingSystem",                                  "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 304
-  // cudaErrorInvalidResourceHandle = 33
-  {"CUDA_ERROR_INVALID_HANDLE",                                        {"hipErrorInvalidResourceHandle",                            "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 400
-  // cudaErrorIllegalState = 84
+  // cudaErrorInvalidResourceHandle = 400, CUDA_ERROR_INVALID_HANDLE = 400, hipErrorInvalidHandle = 400, hipErrorInvalidResourceHandle = 1033
+  // TODO [HIP]: remove hipErrorInvalidResourceHandle
+  // TODO [HIPIFY]: rename hipErrorInvalidResourceHandle to hipErrorInvalidHandle
+  // cudaErrorInvalidResourceHandle
+  {"CUDA_ERROR_INVALID_HANDLE",                                        {"hipErrorInvalidHandle",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 400
+  // cudaErrorIllegalState
   {"CUDA_ERROR_ILLEGAL_STATE",                                         {"hipErrorIllegalState",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 401
-  // no analogue
+  // cudaErrorSymbolNotFound
   {"CUDA_ERROR_NOT_FOUND",                                             {"hipErrorNotFound",                                         "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 500
-  // cudaErrorNotReady = 34
+  // cudaErrorNotReady = 600, CUDA_ERROR_NOT_READY = 600, hipErrorNotReady = 1034
+  // TODO [HIP]: make hipErrorNotReady = 600
+  // cudaErrorNotReady
   {"CUDA_ERROR_NOT_READY",                                             {"hipErrorNotReady",                                         "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 600
-  // cudaErrorIllegalAddress = 77
+  // cudaErrorIllegalAddress
   {"CUDA_ERROR_ILLEGAL_ADDRESS",                                       {"hipErrorIllegalAddress",                                   "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 700
-  // cudaErrorLaunchOutOfResources = 7
+  // cudaErrorLaunchOutOfResources = 701, CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES = 701, hipErrorLaunchOutOfResources = 1007
+  // TODO [HIP]: make hipErrorLaunchOutOfResources = 701
+  // cudaErrorLaunchOutOfResources
   {"CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES",                               {"hipErrorLaunchOutOfResources",                             "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 701
-  // cudaErrorLaunchTimeout = 6
+  // cudaErrorLaunchTimeout = 702, CUDA_ERROR_LAUNCH_TIMEOUT = 702, hipErrorLaunchTimeOut = 1006
+  // TODO [HIP]: make hipErrorLaunchTimeOut = 702
+  // cudaErrorLaunchTimeout
   {"CUDA_ERROR_LAUNCH_TIMEOUT",                                        {"hipErrorLaunchTimeOut",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 702
-  // no analogue
+  // cudaErrorLaunchIncompatibleTexturing
   {"CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING",                         {"hipErrorLaunchIncompatibleTexturing",                      "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 703
-  // cudaErrorPeerAccessAlreadyEnabled = 50
+  // cudaErrorPeerAccessAlreadyEnabled = 704, CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED = 704, hipErrorPeerAccessAlreadyEnabled = 1050
+  // TODO [HIP]: make hipErrorPeerAccessAlreadyEnabled = 704
+  // cudaErrorPeerAccessAlreadyEnabled
   {"CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED",                           {"hipErrorPeerAccessAlreadyEnabled",                         "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 704
-  // cudaErrorPeerAccessNotEnabled = 51
+  // cudaErrorPeerAccessNotEnabled = 705, CUDA_ERROR_PEER_ACCESS_NOT_ENABLED = 705, hipErrorPeerAccessNotEnabled = 1051
+  // TODO [HIP]: make hipErrorPeerAccessNotEnabled = 705
+  // cudaErrorPeerAccessNotEnabled
   {"CUDA_ERROR_PEER_ACCESS_NOT_ENABLED",                               {"hipErrorPeerAccessNotEnabled",                             "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 705
-  // no analogue
-  {"CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE",                                {"hipErrorPrimaryContextActive",                             "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 708
-  // no analogue
+  // cudaErrorSetOnActiveProcess = 708, CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE = 708, hipErrorSetOnActiveProcess = 305
+  // TODO [HIP]: make hipErrorSetOnActiveProcess = 708
+  // cudaErrorSetOnActiveProcess
+  {"CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE",                                {"hipErrorSetOnActiveProcess",                               "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 708
+  // cudaErrorContextIsDestroyed
   {"CUDA_ERROR_CONTEXT_IS_DESTROYED",                                  {"hipErrorContextIsDestroyed",                               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 709
-  // cudaErrorAssert = 59
+  // cudaErrorAssert = 710, CUDA_ERROR_ASSERT = 710, hipErrorAssert = 1081
+  // TODO [HIP]: make hipErrorAssert = 710
+  // cudaErrorAssert
   {"CUDA_ERROR_ASSERT",                                                {"hipErrorAssert",                                           "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 710
-  // cudaErrorTooManyPeers = 60
+  // cudaErrorTooManyPeers
   {"CUDA_ERROR_TOO_MANY_PEERS",                                        {"hipErrorTooManyPeers",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 711
-  // = cudaErrorHostMemoryAlreadyRegistered = 61
+  // cudaErrorHostMemoryAlreadyRegistered = 712, CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED = 712, hipErrorHostMemoryAlreadyRegistered = 1061
+  // TODO [HIP]: make hipErrorHostMemoryAlreadyRegistered = 712
+  // cudaErrorHostMemoryAlreadyRegistered
   {"CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED",                        {"hipErrorHostMemoryAlreadyRegistered",                      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 712
-  // cudaErrorHostMemoryNotRegistered = 62
+  // cudaErrorHostMemoryNotRegistered = 713, CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED = 713, hipErrorHostMemoryNotRegistered = 1062
+  // TODO [HIP]: make hipErrorHostMemoryNotRegistered = 713
+  // cudaErrorHostMemoryNotRegistered
   {"CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED",                            {"hipErrorHostMemoryNotRegistered",                          "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 713
-  // cudaErrorHardwareStackError= 72
+  // cudaErrorHardwareStackError
   {"CUDA_ERROR_HARDWARE_STACK_ERROR",                                  {"hipErrorHardwareStackError",                               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 714
-  // cudaErrorIllegalInstruction = 73
+  // cudaErrorIllegalInstruction
   {"CUDA_ERROR_ILLEGAL_INSTRUCTION",                                   {"hipErrorIllegalInstruction",                               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 715
-  // cudaErrorMisalignedAddress= 74
+  // cudaErrorMisalignedAddress
   {"CUDA_ERROR_MISALIGNED_ADDRESS",                                    {"hipErrorMisalignedAddress",                                "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 716
-  // cudaErrorInvalidAddressSpace= 75
+  // cudaErrorInvalidAddressSpace
   {"CUDA_ERROR_INVALID_ADDRESS_SPACE",                                 {"hipErrorInvalidAddressSpace",                              "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 717
-  // cudaErrorInvalidPc = 76
+  // cudaErrorInvalidPc
   {"CUDA_ERROR_INVALID_PC",                                            {"hipErrorInvalidPc",                                        "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 718
-  // cudaErrorLaunchFailure = 4
+  // cudaErrorLaunchFailure = 719, CUDA_ERROR_LAUNCH_FAILED = 719, hipErrorLaunchFailure = 1004
+  // TODO [HIP]: make hipErrorSetOnActiveProcess = 719
+  // cudaErrorLaunchFailure
   {"CUDA_ERROR_LAUNCH_FAILED",                                         {"hipErrorLaunchFailure",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 719
-  // cudaErrorNotPermitted = 70
+  // cudaErrorNotPermitted
   {"CUDA_ERROR_NOT_PERMITTED",                                         {"hipErrorNotPermitted",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 800
-  // cudaErrorNotSupported = 71
-  {"CUDA_ERROR_NOT_SUPPORTED",                                         {"hipErrorNotSupported",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 801
-  // cudaErrorSystemNotReady = 83
+  // cudaErrorNotSupported = 801, CUDA_ERROR_NOT_SUPPORTED = 801, hipErrorNotSupported = 1082
+  // TODO [HIP]: make hipErrorNotSupported = 801
+  // cudaErrorNotSupported
+  {"CUDA_ERROR_NOT_SUPPORTED",                                         {"hipErrorNotSupported",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 801
+  // cudaErrorSystemNotReady
   {"CUDA_ERROR_SYSTEM_NOT_READY",                                      {"hipErrorSystemNotReady",                                   "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 802
-  // cudaErrorSystemDriverMismatch = 803
+  // cudaErrorSystemDriverMismatch
   {"CUDA_ERROR_SYSTEM_DRIVER_MISMATCH",                                {"hipErrorSystemDriverMismatch",                             "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 803
-  // cudaErrorCompatNotSupportedOnDevice = 804
+  // cudaErrorCompatNotSupportedOnDevice
   {"CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE",                        {"hipErrorCompatNotSupportedOnDevice",                       "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 804
-  // cudaErrorStreamCaptureUnsupported = 900
+  // cudaErrorStreamCaptureUnsupported
   {"CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED",                            {"hipErrorStreamCaptureUnsupported",                         "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 900
-  // cudaErrorStreamCaptureInvalidated = 901
+  // cudaErrorStreamCaptureInvalidated
   {"CUDA_ERROR_STREAM_CAPTURE_INVALIDATED",                            {"hipErrorStreamCaptureInvalidated",                         "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 901
-  // cudaErrorStreamCaptureMerge = 902
+  // cudaErrorStreamCaptureMerge
   {"CUDA_ERROR_STREAM_CAPTURE_MERGE",                                  {"hipErrorStreamCaptureMerge",                               "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 902
-  // cudaErrorStreamCaptureUnmatched = 903
+  // cudaErrorStreamCaptureUnmatched
   {"CUDA_ERROR_STREAM_CAPTURE_UNMATCHED",                              {"hipErrorStreamCaptureUnmatched",                           "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 903
-  // cudaErrorStreamCaptureUnjoined = 904
+  // cudaErrorStreamCaptureUnjoined
   {"CUDA_ERROR_STREAM_CAPTURE_UNJOINED",                               {"hipErrorStreamCaptureUnjoined",                            "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 904
-  // cudaErrorStreamCaptureIsolation = 905
+  // cudaErrorStreamCaptureIsolation
   {"CUDA_ERROR_STREAM_CAPTURE_ISOLATION",                              {"hipErrorStreamCaptureIsolation",                           "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 905
-  // cudaErrorStreamCaptureImplicit = 906
+  // cudaErrorStreamCaptureImplicit
   {"CUDA_ERROR_STREAM_CAPTURE_IMPLICIT",                               {"hipErrorStreamCaptureImplicit",                            "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 906
-  // cudaErrorCapturedEvent = 907
+  // cudaErrorCapturedEvent
   {"CUDA_ERROR_CAPTURED_EVENT",                                        {"hipErrorCapturedEvent",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 907
-  // cudaErrorStreamCaptureWrongThread = 908
+  // cudaErrorStreamCaptureWrongThread
   {"CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD",                           {"hipErrorStreamCaptureWrongThread",                         "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 908
-  // cudaErrorUnknown = 30
+  // cudaErrorUnknown = 999, CUDA_ERROR_UNKNOWN = 999, hipErrorUnknown = 1030
+  // TODO [HIP]: make hipErrorUnknown = 999
+  // cudaErrorUnknown
   {"CUDA_ERROR_UNKNOWN",                                               {"hipErrorUnknown",                                          "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 999
 
   // cudaSharedMemConfig
