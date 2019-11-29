@@ -382,7 +382,7 @@
 | typedef      |`cudaError_enum`                                                    |***`hipError_t`***                                          |
 |            0 |*`CUDA_SUCCESS`*                                                    |*`hipSuccess`*                                              |
 |            1 |*`CUDA_ERROR_INVALID_VALUE`*                                        |*`hipErrorInvalidValue`*                                    |
-|            2 |*`CUDA_ERROR_OUT_OF_MEMORY`*                                        |*`hipErrorMemoryAllocation`*                                |
+|            2 |*`CUDA_ERROR_OUT_OF_MEMORY`*                                        |*`hipErrorOutOfMemory`*                                     |
 |            3 |*`CUDA_ERROR_NOT_INITIALIZED`*                                      |*`hipErrorNotInitialized`*                                  |
 |            4 |*`CUDA_ERROR_DEINITIALIZED`*                                        |*`hipErrorDeinitialized`*                                   |
 |            5 |*`CUDA_ERROR_PROFILER_DISABLED`*                                    |*`hipErrorProfilerDisabled`*                                |
@@ -416,7 +416,7 @@
 |          302 |*`CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND`*                       |*`hipErrorSharedObjectSymbolNotFound`*                      |
 |          303 |*`CUDA_ERROR_SHARED_OBJECT_INIT_FAILED`*                            |*`hipErrorSharedObjectInitFailed`*                          |
 |          304 |*`CUDA_ERROR_OPERATING_SYSTEM`*                                     |*`hipErrorOperatingSystem`*                                 |
-|          400 |*`CUDA_ERROR_INVALID_HANDLE`*                                       |*`hipErrorInvalidResourceHandle`*                           |
+|          400 |*`CUDA_ERROR_INVALID_HANDLE`*                                       |*`hipErrorInvalidHandle`*                                   |
 |          401 |*`CUDA_ERROR_ILLEGAL_STATE`*                                        |                                                            | 10.0             |
 |          500 |*`CUDA_ERROR_NOT_FOUND`*                                            |*`hipErrorNotFound`*                                        |
 |          600 |*`CUDA_ERROR_NOT_READY`*                                            |*`hipErrorNotReady`*                                        |
@@ -426,7 +426,7 @@
 |          703 |*`CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING`*                        |                                                            |
 |          704 |*`CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED`*                          |*`hipErrorPeerAccessAlreadyEnabled`*                        |
 |          705 |*`CUDA_ERROR_PEER_ACCESS_NOT_ENABLED`*                              |*`hipErrorPeerAccessNotEnabled`*                            |
-|          708 |*`CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE`*                               |                                                            |
+|          708 |*`CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE`*                               |*`hipErrorSetOnActiveProcess`*                              |
 |          709 |*`CUDA_ERROR_CONTEXT_IS_DESTROYED`*                                 |                                                            |
 |          710 |*`CUDA_ERROR_ASSERT`*                                               |*`hipErrorAssert`*                                          |
 |          711 |*`CUDA_ERROR_TOO_MANY_PEERS`*                                       |                                                            |
@@ -439,7 +439,7 @@
 |          718 |*`CUDA_ERROR_INVALID_PC`*                                           |                                                            |
 |          719 |*`CUDA_ERROR_LAUNCH_FAILED`*                                        |*`hipErrorLaunchFailure`*                                   |
 |          800 |*`CUDA_ERROR_NOT_PERMITTED`*                                        |                                                            |
-|          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                        |                                                            |
+|          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                        |*`hipErrorNotSupported`*                                    |
 |          802 |*`CUDA_ERROR_SYSTEM_NOT_READY`*                                     |                                                            | 10.0             |
 |          803 |*`CUDA_ERROR_SYSTEM_DRIVER_MISMATCH`*                               |                                                            | 10.1             |
 |          804 |*`CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE`*                       |                                                            | 10.1             |
@@ -452,7 +452,7 @@
 |          906 |*`CUDA_ERROR_STREAM_CAPTURE_IMPLICIT`*                              |                                                            | 10.0             |
 |          907 |*`CUDA_ERROR_CAPTURED_EVENT`*                                       |                                                            | 10.0             |
 |          908 |*`CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD`*                          |                                                            | 10.1             |
-|          999 |*`CUDA_ERROR_UNKNOWN`*                                              |                                                            |
+|          999 |*`CUDA_ERROR_UNKNOWN`*                                              |*`hipErrorUnknown`*                                         |
 | enum         |***`CUsharedconfig`***                                              |***`hipSharedMemConfig`***                                  |
 | typedef      |***`CUsharedconfig_enum`***                                         |***`hipSharedMemConfig`***                                  |
 |         0x00 |*`CU_SHARED_MEM_CONFIG_DEFAULT_BANK_SIZE`*                          |*`hipSharedMemBankSizeDefault`*                             |
