@@ -74,21 +74,10 @@ float atomicAdd_impl(float* address, float val)
     return __uint_as_float(r);
 }
 __device__
+__attribute__((const))
 inline
-bool __hip_is_shared(const __attribute__((address_space(0))) void* ptr) noexcept
-{   // TODO: this is ersatz for __builtin_amdgcn_is_shared.
-#if defined(__HIP_DEVICE_COMPILE__)
-#if !defined(__HCC__) && __has_builtin(__builtin_amdgcn_is_shared)
-    return __builtin_amdgcn_is_shared(ptr);
-#else
-    const unsigned int gp = reinterpret_cast<unsigned long long>(ptr);
-
-    return gp == (__builtin_amdgcn_s_getreg((15 << 11) | (16 << 6) | 15) << 16);
-#endif // __has_builtin(__builtin_amdgcn_is_shared)
-#else
-    return false;
-#endif
-}
+bool __hip_is_shared(const __attribute__((address_space(0))) void*) noexcept
+    asm("llvm.amdgcn.is.shared");
 __device__
 inline
 float atomicAdd(float* address, float val)
@@ -98,7 +87,7 @@ float atomicAdd(float* address, float val)
 
     #if __HIP_ARCH_GFX900__ || __HIP_ARCH_GFX906__ || __HIP_ARCH_GFX908__
         if (__hip_is_shared((GP) address)) {
-            return __builtin_amdgcn_ds_faddf((LP) address, val, 0, 0, false);
+            return __builtin_amdgcn_ds_faddf((LP)(GP) address, val, 0, 0, false);
         }
     #endif
 
