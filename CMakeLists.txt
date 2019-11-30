@@ -486,10 +486,54 @@ add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR})
 
+# Package: hip_base_legacy
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_base_legacy)
+configure_file(packaging/hip_base.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hip_base_legacy COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
+
 # Package: hip_hcc_legacy
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc_legacy)
 configure_file(packaging/hip_hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 add_custom_target(pkg_hip_hcc_legacy COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
+
+# Package: hip_nvcc_legacy
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc_legacy)
+configure_file(packaging/hip_nvcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hip_nvcc_legacy COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
+
+# Package: hip_doc_legacy
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_doc_legacy)
+configure_file(packaging/hip_doc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hip_doc_legacy COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR})
+
+# Package: hip_samples_legacy
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_samples_legacy)
+configure_file(packaging/hip_samples.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+add_custom_target(pkg_hip_samples_legacy COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
     COMMAND cp *.deb ${PROJECT_BINARY_DIR}
@@ -509,7 +553,7 @@ for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
 add_custom_target(package
     COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-    DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples pkg_hip_hcc_legacy)
+    DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples pkg_hip_base_legacy pkg_hip_hcc_legacy pkg_hip_nvcc_legacy pkg_hip_doc_legacy pkg_hip_samples_legacy)
 if(POLICY CMP0037)
     cmake_policy(POP)
 endif()
