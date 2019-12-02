@@ -53,7 +53,7 @@ int runTest(int argc, char** argv) {
 
     hipMemcpyToArray(hipArray, 0, 0, hData, size, hipMemcpyHostToDevice);
 
-    struct hipResourceDesc resDesc;
+    hipResourceDesc resDesc;
     memset(&resDesc, 0, sizeof(resDesc));
     resDesc.resType = hipResourceTypeArray;
     resDesc.res.array.array = hipArray;
@@ -62,7 +62,7 @@ int runTest(int argc, char** argv) {
     hipCreateSurfaceObject(&surfaceObject, &resDesc);
 
     hipMallocArray(&hipOutArray, &channelDesc, width, height);
-    struct hipResourceDesc resOutDesc;
+    hipResourceDesc resOutDesc;
     memset(&resOutDesc, 0, sizeof(resOutDesc));
     resOutDesc.resType = hipResourceTypeArray;
     resOutDesc.res.array.array = hipOutArray;

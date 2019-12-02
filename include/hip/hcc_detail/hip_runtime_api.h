@@ -391,7 +391,7 @@ hipError_t hipSetDevice(int deviceId);
  * This device is used implicitly for HIP runtime APIs called by this thread.
  * hipGetDevice returns in * @p device the default device for the calling host thread.
  *
- * @returns #hipSuccess
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
  * @see hipSetDevice, hipGetDevicesizeBytes
  */
@@ -883,7 +883,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
  * #hipEventDefault : Default flag.  The event will use active synchronization and will support
  timing.  Blocking synchronization provides lowest possible latency at the expense of dedicating a
- CPU to poll on the eevent.
+ CPU to poll on the event.
  * #hipEventBlockingSync : The event will use blocking synchronization : if hipEventSynchronize is
  called on this event, the thread will block until the event completes.  This can increase latency
  for the synchroniation but can result in lower power and more resources for other CPU threads.
@@ -935,7 +935,7 @@ hipError_t hipEventCreate(hipEvent_t* event);
  * If hipEventRecord() has been previously called on this event, then this call will overwrite any
  * existing state in event.
  *
- * If this function is called on a an event that is currently being recorded, results are undefined
+ * If this function is called on an event that is currently being recorded, results are undefined
  * - either outstanding recording may save state into the event, and the order is not guaranteed.
  *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventSynchronize,
@@ -1277,7 +1277,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @param[in]  height Requested pitched allocation height
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
- *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array. 
+ *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array.
  *  Given the row and column of an array element of type T, the address is computed as:
  *  T* pElement = (T*)((char*)BaseAddress + Row * Pitch) + Column;
  *
@@ -1360,6 +1360,10 @@ hipError_t hipHostFree(void* ptr);
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
+
+// TODO: Add description
+hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
+                               hipMemcpyKind kind, hipStream_t stream);
 
 /**
  *  @brief Copy data from Host to Device
@@ -1498,7 +1502,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 #else
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
-#ifdef __cplusplus //Start : Not supported in gcc 
+#ifdef __cplusplus //Start : Not supported in gcc
 namespace hip_impl {
 inline
 __attribute__((visibility("hidden")))
@@ -2884,6 +2888,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  unsigned int blockDimY, unsigned int blockDimZ,
                                  unsigned int sharedMemBytes, hipStream_t stream,
                                  void** kernelParams, void** extra);
+
 
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed

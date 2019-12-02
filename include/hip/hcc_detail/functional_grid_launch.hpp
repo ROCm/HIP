@@ -176,5 +176,4 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                                      numBlocks, dimBlocks, sharedMemBytes,
                                      stream, &config[0]);
 }
-
 #pragma GCC visibility pop

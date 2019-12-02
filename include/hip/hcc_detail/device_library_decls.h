@@ -80,7 +80,7 @@ extern "C" __device__ __attribute__((convergent)) void __ockl_multi_grid_sync(vo
 __device__ inline static __local void* __to_local(unsigned x) { return (__local void*)x; }
 #endif //__HIP_DEVICE_COMPILE__
 
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
 // __llvm_fence* functions from device-libs/irif/src/fence.ll
 extern "C" __device__ void __llvm_fence_acq_sg(void);
 extern "C" __device__ void __llvm_fence_acq_wg(void);

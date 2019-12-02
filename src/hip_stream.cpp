@@ -31,7 +31,7 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // Stream
 //
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
 enum queue_priority
 {
     priority_high = 0,
@@ -73,7 +73,7 @@ hipError_t ihipStreamCreate(TlsData *tls, hipStream_t* stream, unsigned int flag
                 // Obtain mutex access to the device critical data, release by destructor
                 LockedAccessor_CtxCrit_t ctxCrit(ctx->criticalData());
 
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
                 auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
 #else
                 auto istream = new ihipStream_t(ctx, acc.create_view(Kalmar::execute_any_order, Kalmar::queuing_mode_automatic, (Kalmar::queue_priority)priority), flags);
@@ -242,7 +242,7 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
     } else if (stream == hipStreamNull) {
         return ihipLogStatus(hipErrorInvalidResourceHandle);
     } else {
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
         *priority = 0;
 #else
         LockedAccessor_StreamCrit_t crit(stream->criticalData());
@@ -254,137 +254,14 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
 
 
 //---
-void setCallbackPacket(hsa_queue_t* queue,
-                             uint64_t& index, uint64_t& nextIndex,
-                             hsa_barrier_and_packet_t** barrier1,
-                             hsa_barrier_and_packet_t** barrier2){
-
-    uint64_t tempIndex = 0;
-    uint32_t mask = queue->size - 1;
-    hsa_barrier_and_packet_t* tempBarrier;
-
-    // Check for empty packets
-    do{
-        tempIndex = hsa_queue_load_write_index_scacquire(queue);
-        tempBarrier = &(((hsa_barrier_and_packet_t*)(queue->base_address))[tempIndex & mask]);
-    }while(!(tempBarrier->header & HSA_PACKET_TYPE_INVALID));
-
-    // Reserve two packets for two barriers
-    index = hsa_queue_add_write_index_scacquire(queue, 2);
-
-    if(index > mask)
-    {
-        index = 0;
-        nextIndex = 1;
-    }
-    else if(index == mask)
-        nextIndex = 0;
-    else
-        nextIndex = index + 1;
-
-    tempBarrier = new hsa_barrier_and_packet_t;
-    memset(tempBarrier, 0, sizeof(hsa_barrier_and_packet_t));
-    tempBarrier->header = HSA_PACKET_TYPE_INVALID;
-
-    // Barrier 1
-    *barrier1 = &(((hsa_barrier_and_packet_t*)(queue->base_address))[index & mask]);
-    memcpy(*barrier1,tempBarrier,sizeof(hsa_barrier_and_packet_t));
-
-    // Barrier 2
-    *barrier2 = &(((hsa_barrier_and_packet_t*)(queue->base_address))[nextIndex & mask]);
-    memcpy(*barrier2,tempBarrier,sizeof(hsa_barrier_and_packet_t));
-
-    delete tempBarrier;
-}
-
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags) {
-
     HIP_INIT_API(hipStreamAddCallback, stream, callback, userData, flags);
     hipError_t e = hipSuccess;
 
-    if(stream == hipStreamNull)
-    {
-        ihipCtx_t* device = ihipGetTlsDefaultCtx();
-        stream = device->_defaultStream;
-    }
-
-    stream = ihipSyncAndResolveStream(stream);
-
-    // Lock the stream
-    LockedAccessor_StreamCrit_t crit(stream->criticalData());
-
-    // Device synchronization
-    hc::completion_future marker = crit->_av.create_marker(hc::system_scope);
-
-    // 1. Lock the queue
-    hsa_queue_t* lockedQ = static_cast<hsa_queue_t*> (crit->_av.acquire_locked_hsa_queue());
-
-    if(lockedQ == nullptr)
-    {
-        // No queue attached to stream hence exiting early
-        return ihipLogStatus(hipErrorMissingConfiguration);
-    }
-
-    // 2. Allocate a singals
-    hsa_signal_t signal;
-    hsa_status_t status = hsa_signal_create(1, 0, NULL, &signal);
-
-    if(status != HSA_STATUS_SUCCESS)
-    {
-        crit->_av.release_locked_hsa_queue();
-        return ihipLogStatus(hipErrorInvalidValue);
-    }
-
-    hsa_signal_t depSignal;
-    status = hsa_signal_create(1, 0, NULL, &depSignal);
-
-    if(status != HSA_STATUS_SUCCESS)
-    {
-        crit->_av.release_locked_hsa_queue();
-        return ihipLogStatus(hipErrorInvalidValue);
-    }
-
-    // 3. Store callback details, will destroy allocation in callback handler
+    // Create a thread in detached mode to handle callback
     ihipStreamCallback_t* cb = new ihipStreamCallback_t(stream, callback, userData);
-    if(cb == nullptr)
-    {
-        crit->_av.release_locked_hsa_queue();
-        return ihipLogStatus(hipErrorMemoryAllocation);
-    }
-    cb->_signal = depSignal;
-    cb->comFuture = marker ;
-
-    // 4. Create barrier packets
-    uint64_t index ;
-    uint64_t nextIndex;
-
-    hsa_barrier_and_packet_t* barrier;
-    hsa_barrier_and_packet_t* depBarrier;
-
-    setCallbackPacket(lockedQ, index, nextIndex, &barrier, &depBarrier);
-
-    barrier->completion_signal = signal;
-
-    depBarrier->dep_signal[0] = depSignal;
-
-    uint16_t header = (HSA_PACKET_TYPE_BARRIER_AND << HSA_PACKET_HEADER_TYPE)| 1 << HSA_PACKET_HEADER_BARRIER;
-
-    // 5. Update packet header,
-    // Intentionally updated second barrier header before first in order to avoid race
-    depBarrier->header = header;
-    barrier->header = header;
-
-    // 6. Trigger the doorbell
-    nextIndex = nextIndex + 1;
-    hsa_queue_store_write_index_screlease(lockedQ, nextIndex);
-    hsa_signal_store_relaxed(lockedQ->doorbell_signal, index+1);
-
-    // 7. Release queue
-    crit->_av.release_locked_hsa_queue();
-
-    // 8. Register signal callback
-    hsa_amd_signal_async_handler(signal, HSA_SIGNAL_CONDITION_EQ, 0, ihipStreamCallbackHandler, cb);
+    std::thread(ihipStreamCallbackHandler, cb).detach();
 
     return ihipLogStatus(e);
 }

@@ -310,6 +310,8 @@ void ihipStream_t::locked_wait() {
     hc::completion_future marker;
     {
         LockedAccessor_StreamCrit_t crit(_criticalData);
+        // skipping marker since stream is empty
+        if (crit->_av.get_is_empty()) return;
         marker = crit->_av.create_marker(hc::no_scope);
     }
 
@@ -1497,21 +1499,18 @@ hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream) {
     return e;
 }
 
-bool ihipStreamCallbackHandler(hsa_signal_value_t value, void* cbArgs) {
+void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
     hipError_t e = hipSuccess;
 
-    ihipStreamCallback_t* cb = static_cast<ihipStreamCallback_t*> (cbArgs);
-
-    if(cb->comFuture.valid())
-        cb->comFuture.wait();
+    // Synchronize stream
+    tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n",
+            ToString(cb->_stream).c_str());
+    GET_TLS();
+    e = ihipStreamSynchronize(tls, cb->_stream);
 
     // Call registered callback function
     cb->_callback(cb->_stream, e, cb->_userData);
-
-    hsa_signal_store_screlease(cb->_signal,0);
-
     delete cb;
-    return false;
 }
 
 //---
