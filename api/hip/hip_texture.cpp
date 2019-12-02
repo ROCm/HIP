@@ -193,6 +193,27 @@ void getChannelOrderAndType(const hipChannelFormatDesc& desc, enum hipTextureRea
     }
 }
 
+void getByteSizeFromChannelFormatKind(enum hipChannelFormatKind channelFormatKind, size_t* byteSize) {
+    switch (channelFormatKind)
+    {
+      case hipChannelFormatKindSigned:
+        *byteSize = sizeof(int);
+        break;
+      case hipChannelFormatKindUnsigned:
+        *byteSize = sizeof(unsigned int);
+        break;
+      case hipChannelFormatKindFloat:
+        *byteSize = sizeof(float);
+        break;
+      case hipChannelFormatKindNone:
+        *byteSize = sizeof(size_t);
+        break;
+      default:
+        *byteSize = 1;
+        break;
+    }
+}
+
 amd::Sampler* fillSamplerDescriptor(enum hipTextureAddressMode addressMode,
                            enum hipTextureFilterMode filterMode, int normalizedCoords) {
 #ifndef CL_FILTER_NONE
@@ -401,14 +422,33 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
   }
   if (hip::getCurrentContext()) {
     cl_image_format image_format;
+    size_t byteSize;
+    size_t rowPitch = 0;
+    size_t depth = 0;
+    size_t slicePitch = 0;
 
     getChannelOrderAndType(*desc, hipReadModeElementType,
       &image_format.image_channel_order, &image_format.image_channel_data_type);
+    getByteSizeFromChannelFormatKind(desc->f, &byteSize);
     const amd::Image::Format imageFormat(image_format);
     amd::Memory* memory = getMemoryObject(devPtr, *offset);
-    amd::Image* image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
-      type, memory->getMemFlags(), imageFormat, width, height, 1, pitch, 0);
 
+    switch (type) {
+       case CL_MEM_OBJECT_IMAGE3D:
+         rowPitch = width * byteSize;
+         depth = pitch;
+         slicePitch = rowPitch * height;
+         break;
+       case CL_MEM_OBJECT_IMAGE2D:
+       default:
+         rowPitch = pitch;
+         depth = 1;
+         slicePitch = 0;
+         break;
+    }
+
+    amd::Image* image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+                type, memory->getMemFlags(), imageFormat, width, height, depth, rowPitch, slicePitch);
     if (!image->create()) {
       delete image;
       return hipErrorMemoryAllocation;
@@ -437,6 +477,19 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
         resDesc.res.pitch2D.height = height;
         resDesc.res.pitch2D.pitchInBytes = pitch;
         break;
+      case CL_MEM_OBJECT_IMAGE3D:
+        resDesc.resType = hipResourceTypeArray;
+        resDesc.res.array.array = (hipArray*)malloc(sizeof(hipArray));
+        resDesc.res.array.array->desc = *desc;
+        resDesc.res.array.array->width = width;
+        resDesc.res.array.array->height = height;
+        resDesc.res.array.array->depth = depth;
+        resDesc.res.array.array->Format = tex->format;
+        resDesc.res.array.array->NumChannels = tex->numChannels;
+        resDesc.res.array.array->isDrv = false;
+        resDesc.res.array.array->textureType = hipTextureType3D;
+        resDesc.res.array.array->data = const_cast<void*>(devPtr);
+        break;
       default:
         resDesc.resType = hipResourceTypeArray;
         resDesc.res.array.array = nullptr;
@@ -444,7 +497,10 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
     }
 
     tex->textureObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(resDesc, *image, *sampler));
-
+    if(type == CL_MEM_OBJECT_IMAGE3D) {
+      free(resDesc.res.array.array);
+    }
+    memset(&resDesc, 0, sizeof(hipResourceDesc));
     return hipSuccess;
   }
   return hipErrorInvalidValue;
@@ -507,6 +563,9 @@ hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureRead
       break;
     case 2:
       clType = CL_MEM_OBJECT_IMAGE2D;
+      break;
+    case 3:
+      clType = CL_MEM_OBJECT_IMAGE3D;
       break;
     default:
       HIP_RETURN(hipErrorInvalidValue);

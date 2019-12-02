@@ -38,6 +38,8 @@ extern void getDrvChannelOrderAndType(const enum hipArray_Format Format,
 
 extern void setDescFromChannelType(cl_channel_type channelType, hipChannelFormatDesc* desc);
 
+extern void getByteSizeFromChannelFormatKind(enum hipChannelFormatKind channelFormatKind, size_t* byteSize);
+
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
   if (memObj != nullptr) {
@@ -881,24 +883,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
   amd::HostQueue* queue = hip::getNullStream();
 
   size_t dpitch = dst->width;
-
-  switch (dst[0].desc.f) {
-    case hipChannelFormatKindSigned:
-      dpitch *= sizeof(int);
-      break;
-    case hipChannelFormatKindUnsigned:
-      dpitch *= sizeof(unsigned int);
-      break;
-    case hipChannelFormatKindFloat:
-      dpitch *= sizeof(float);
-      break;
-    case hipChannelFormatKindNone:
-      dpitch *= sizeof(size_t);
-      break;
-    default:
-      dpitch *= 1;
-      break;
-  }
+  getByteSizeFromChannelFormatKind(dst[0].desc.f, &dpitch);
 
   if ((wOffset + width > (dpitch)) || width > spitch) {
     HIP_RETURN(hipErrorInvalidDevicePointer);
@@ -1133,23 +1118,7 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   size_t dstOrigin[3];
   size_t region[3];
   if (p->dstArray != nullptr) {
-    switch (p->dstArray->desc.f) {
-      case hipChannelFormatKindSigned:
-        byteSize = sizeof(int);
-        break;
-      case hipChannelFormatKindUnsigned:
-        byteSize = sizeof(unsigned int);
-        break;
-      case hipChannelFormatKindFloat:
-        byteSize = sizeof(float);
-        break;
-      case hipChannelFormatKindNone:
-        byteSize = sizeof(size_t);
-        break;
-      default:
-        byteSize = 1;
-        break;
-    }
+    getByteSizeFromChannelFormatKind(p->dstArray->desc.f, &byteSize);
     region[2] = p->extent.depth;
     region[1] = p->extent.height;
     region[0] = p->extent.width;
