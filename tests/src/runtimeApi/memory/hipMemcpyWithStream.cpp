@@ -34,14 +34,11 @@ THE SOFTWARE.
 int main() {
     size_t Nbytes = N * sizeof(int);
     int numDevices = 0;
-    int *A_d, *B_d, *C_d, *X_d, *Y_d, *Z_d;
+    int *A_d, *B_d, *C_d;
     int *A_h, *B_h, *C_h;
 
     unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
     HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, false);
-    HIPCHECK(hipMalloc(&X_d, Nbytes));
-    HIPCHECK(hipMalloc(&Y_d, Nbytes));
-    HIPCHECK(hipMalloc(&Z_d, Nbytes));
 
     hipStream_t stream;
     HIPCHECK(hipStreamCreate(&stream));
@@ -54,7 +51,6 @@ int main() {
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
     HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
-    HIPCHECK(hipFree(Z_d));
     HIPCHECK(hipStreamDestroy(stream));
     passed();
 }
