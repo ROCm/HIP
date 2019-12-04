@@ -94,9 +94,9 @@ namespace {
 
     const auto is_large_BAR{[](){
         std::unique_ptr<void, void (*)(void*)> hsa{
-            (throwing_result_check(hsa_init(), __FILE__, __func__, __LINE__),
-             nullptr),
-            [](void*) { hsa_shut_down(); }};
+            hsa_init() == HSA_STATUS_SUCCESS ? reinterpret_cast<void*>(UINT32_MAX) : nullptr,
+            [](void* p) { if (p) hsa_shut_down(); }};
+        if (!hsa) return false;
         bool r{true};
 
         throwing_result_check(hsa_iterate_agents([](hsa_agent_t x, void* pr) {
