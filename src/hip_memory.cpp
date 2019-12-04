@@ -1354,7 +1354,7 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
                                                   hipStreamNull));
 }
 
-hipError_t hipMemcpyWithStream(void* dst, void* src, size_t sizeBytes,
+hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
                                hipMemcpyKind kind, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemcpyWithStream, (TRACE_MCMD), dst, src, sizeBytes,
                          kind, stream);
