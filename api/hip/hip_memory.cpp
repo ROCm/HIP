@@ -1117,35 +1117,28 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
   size_t srcOrigin[3];
   size_t dstOrigin[3];
   size_t region[3];
+
+  region[2] = p->extent.depth;
+  region[1] = p->extent.height;
+  region[0] = p->extent.width;
+  srcOrigin[0] = p->srcPos.x;
+  srcOrigin[1] = p->srcPos.y;
+  srcOrigin[2] = p->srcPos.z;
+  dstOrigin[0] = p->dstPos.x;
+  dstOrigin[1] = p->dstPos.y;
+  dstOrigin[2] = p->dstPos.z;
+
   if (p->dstArray != nullptr) {
     getByteSizeFromChannelFormatKind(p->dstArray->desc.f, &byteSize);
-    region[2] = p->extent.depth;
-    region[1] = p->extent.height;
-    region[0] = p->extent.width;
-    srcOrigin[0] = p->srcPos.x;
-    srcOrigin[1] = p->srcPos.y;
-    srcOrigin[2] = p->srcPos.z;
     dstPitchInbytes = p->dstArray->width * byteSize;
     srcPitchInBytes = p->srcPtr.pitch;
     srcPtr = (void*)p->srcPtr.ptr;
     dstPtr = p->dstArray->data;
-    dstOrigin[0] = p->dstPos.x;
-    dstOrigin[1] = p->dstPos.y;
-    dstOrigin[2] = p->dstPos.z;
   } else {
-    region[2] = p->extent.depth;
-    region[1] = p->extent.height;
-    region[0] = p->extent.width;
-    srcOrigin[0] = p->srcXInBytes;
-    srcOrigin[1] = p->srcY;
-    srcOrigin[2] = p->srcZ;
     srcPitchInBytes = p->srcPtr.pitch;
     dstPitchInbytes = p->dstPtr.pitch;
     srcPtr = p->srcPtr.ptr;
     dstPtr = p->dstPtr.ptr;
-    dstOrigin[0] = p->dstXInBytes;
-    dstOrigin[1] = p->dstY;
-    dstOrigin[2] = p->dstZ;
   }
 
   // Create buffer rectangle info structure
