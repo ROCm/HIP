@@ -134,7 +134,7 @@ if (UNIX)
         CONTENT "pwd; for i in *.deb; do mv \"\$i\" \"\${i/.deb/-amd64.deb}\" ; done
         for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
         ")
-    add_custom_target(package
+    add_custom_target(package_hipify-clang
         COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
         DEPENDS pkg_hipify-clang)
