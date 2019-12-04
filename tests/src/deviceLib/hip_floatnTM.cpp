@@ -31,6 +31,9 @@ THE SOFTWARE.
 #include <random>
 #include "test_common.h"
 
+// Pointer Jitter
+void pJitter(float2* a) { a->x += a->y; }
+
 template <typename T>
 void cpuJitter(T& b) {}
 
@@ -39,6 +42,7 @@ void cpuJitter<float2>(float2& b) {
     b.x++;
     b.y++;
     b.x += b.y;
+    pJitter(&b);
 }
 
 template <>
