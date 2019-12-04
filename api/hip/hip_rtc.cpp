@@ -24,7 +24,10 @@ THE SOFTWARE.
 #include "hiprtc_internal.hpp"
 #include <hip/hiprtc.h>
 #include "platform/program.hpp"
-#include <algorithm>
+
+extern "C" char * __cxa_demangle(const char *mangled_name, char *output_buffer,
+                                size_t *length, int *status);
+
 
 namespace hiprtc {
 thread_local hiprtcResult g_lastRtcError = HIPRTC_SUCCESS;
@@ -37,16 +40,18 @@ private:
 
   ProgramState() : lock_("Guards program state") {}
   ~ProgramState() {}
-
+public:
   std::unordered_map<amd::Program*,
                      std::pair<std::vector<std::string>, std::vector<std::string>>> progHeaders_;
-  std::vector<std::string> nameExpresssion_;
-public:
+
+  std::map<std::string, std::pair<std::string, std::string>> nameExpresssion_;
+
   static ProgramState& instance();
   void createProgramHeaders(amd::Program* program, int numHeaders,
                             const char** headers, const char** headerNames);
   void getProgramHeaders(amd::Program* program, int* numHeaders, char** headers, char ** headerNames);
   uint32_t addNameExpression(const char* name_expression);
+  char* getLoweredName(const char* name_expression);
 };
 
 ProgramState* ProgramState::programState_ = nullptr;
@@ -82,11 +87,84 @@ void ProgramState::getProgramHeaders(amd::Program* program, int* numHeaders,
   }
 }
 
-
 uint32_t ProgramState::addNameExpression(const char* name_expression) {
   amd::ScopedLock lock(lock_);
-  nameExpresssion_.emplace_back(name_expression);
+
+  // Strip clean of any '(' or ')' or '&'
+  std::string strippedName(name_expression);
+  if (strippedName.back() == ')') {
+      strippedName.pop_back();
+      strippedName.erase(0, strippedName.find('('));
+  }
+  if (strippedName.front() == '&') {
+      strippedName.erase(0, 1);
+  }
+  auto it = nameExpresssion_.find(name_expression);
+  if (it == nameExpresssion_.end()) {
+    nameExpresssion_.insert(std::pair<std::string, std::pair<std::string, std::string>>
+                            (name_expression, std::make_pair(strippedName,"")));
+  }
   return nameExpresssion_.size();
+}
+
+namespace hip_impl {
+
+inline std::string demangle(const char* x) {
+#ifdef ATI_OS_LINUX
+  if (!x) {
+    return {};
+  }
+
+  int s = 0;
+  std::unique_ptr<char, decltype(std::free)*> tmp{
+                        __cxa_demangle(x, nullptr, nullptr, &s),
+                        std::free};
+  if (s != 0) {
+    return {};
+  }
+
+  return tmp.get();
+#else
+  return {};
+#endif
+}
+} // hip_impl
+
+std::string handleMangledName(std::string name) {
+  std::string demangled;
+  demangled = hip_impl::demangle(name.c_str());
+
+  if (demangled.empty()) {
+    return name;
+  }
+
+  if (demangled.find(".kd") != std::string::npos) {
+    return {};
+  }
+
+  if (demangled.find("void ") == 0) {
+    demangled.erase(0, strlen("void "));
+  }
+
+  auto dx{demangled.find_first_of("(<")};
+
+  if (dx == std::string::npos) {
+    return demangled;
+  }
+
+  if (demangled[dx] == '<') {
+    auto cnt{1u};
+    do {
+        ++dx;
+        cnt += (demangled[dx] == '<') ? 1 : ((demangled[dx] == '>') ? -1 : 0);
+    } while (cnt);
+
+    demangled.erase(++dx);
+  } else {
+    demangled.erase(dx);
+  }
+
+  return demangled;
 }
 
 
@@ -192,12 +270,38 @@ hiprtcResult hiprtcAddNameExpression(hiprtcProgram prog, const char* name_expres
 }
 
 hiprtcResult hiprtcGetLoweredName(hiprtcProgram prog, const char* name_expression,
-                                  const char** loweredNames) {
-  HIPRTC_INIT_API(prog, name_expression, loweredNames);
+                                  const char** loweredName) {
+  HIPRTC_INIT_API(prog, name_expression, loweredName);
 
-  if (name_expression == nullptr || loweredNames == nullptr) {
+  if (name_expression == nullptr || loweredName == nullptr) {
      HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
+
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
+
+  device::Program* dev_program
+    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+
+  auto it = ProgramState::instance().nameExpresssion_.find(name_expression);
+  if (it == ProgramState::instance().nameExpresssion_.end()) {
+    return HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID;
+  }
+
+  std::string strippedName = it->second.first;
+  std::vector<std::string> mangledNames;
+
+  if (!dev_program->getLoweredNames(&mangledNames)) {
+    HIPRTC_RETURN(HIPRTC_ERROR_COMPILATION);
+  }
+
+  for (auto &name : mangledNames) {
+    std::string demangledName = handleMangledName(name);
+    if (demangledName == strippedName) {
+      it->second.second.assign(name);
+    }
+  }
+
+  *loweredName = it->second.second.c_str();
 
    HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
