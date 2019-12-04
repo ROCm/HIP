@@ -34,6 +34,9 @@ THE SOFTWARE.
 #include <type_traits>
 #include <utility>
 
+hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList, int numDevices,
+                                               unsigned int flags, hip_impl::program_state& ps);
+
 #pragma GCC visibility push(hidden)
 
 namespace hip_impl {
@@ -176,4 +179,15 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                                      numBlocks, dimBlocks, sharedMemBytes,
                                      stream, &config[0]);
 }
+
+inline
+__attribute__((visibility("hidden")))
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags) {
+    hip_impl::hip_init();
+    auto& ps = hip_impl::get_program_state();
+    return ihipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags, ps);
+
+}
+
 #pragma GCC visibility pop
