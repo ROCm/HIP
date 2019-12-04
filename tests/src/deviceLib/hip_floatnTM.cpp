@@ -1,6 +1,5 @@
-
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-2019 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -130,7 +129,6 @@ void fillMatrix<float4>(float4* a, int size) {
         float4 t;
         t.x = getRandomFloat();
         t.y = getRandomFloat();
-        t.z = getRandomFloat();
         t.z = getRandomFloat();
         t.w = getRandomFloat();
         a[i] = t;
