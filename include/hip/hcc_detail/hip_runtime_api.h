@@ -2960,6 +2960,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
+#if defined(__clang__) && defined(__HIP__)
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
  * on respective streams before enqueuing any other work on the specified streams from any other threads
@@ -2974,6 +2975,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags);
 
+#endif
 
 // doxygen end Version Management
 /**
@@ -3395,12 +3397,14 @@ inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchP
     return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
+#if defined(__clang__) && defined(__HIP__)
 template <class T>
 inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                      unsigned int  numDevices, unsigned int  flags = 0) {
     return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
+#endif
 
 /*
  * @brief Unbinds the textuer bound to @p tex
