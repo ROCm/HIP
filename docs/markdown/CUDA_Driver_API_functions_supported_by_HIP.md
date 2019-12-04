@@ -829,6 +829,7 @@
 | `cuDeviceGetAttribute`                                    | `hipDeviceGetAttribute`       |
 | `cuDeviceGetCount`                                        | `hipGetDeviceCount`           |
 | `cuDeviceGetName`                                         | `hipDeviceGetName`            |
+| `cuDeviceGetNvSciSyncAttributes`                          |                               | 10.2             |
 | `cuDeviceTotalMem`                                        | `hipDeviceTotalMem`           |
 | `cuDeviceGetLuid`                                         |                               | 10.0             |
 | `cuDeviceGetUuid`                                         |                               | 9.2              |
@@ -967,7 +968,25 @@
 | `cuMipmappedArrayDestroy`                                 |                               |
 | `cuMipmappedArrayGetLevel`                                |                               |
 
-## **12. Unified Addressing**
+## **12. Virtual Memory Management**
+
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------|:----------------:|
+| `cuMemAddressFree`                                        |                               | 10.2             |
+| `cuMemAddressReserve`                                     |                               | 10.2             |
+| `cuMemCreate`                                             |                               | 10.2             |
+| `cuMemExportToShareableHandle`                            |                               | 10.2             |
+
+| `cuMemGetAccess`                                          |                               | 10.2             |
+| `cuMemGetAllocationGranularity`                           |                               | 10.2             |
+| `cuMemGetAllocationPropertiesFromHandle`                  |                               | 10.2             |
+| `cuMemImportFromShareableHandle`                          |                               | 10.2             |
+| `cuMemMap`                                                |                               | 10.2             |
+| `cuMemRelease`                                            |                               | 10.2             |
+| `cuMemSetAccess`                                          |                               | 10.2             |
+| `cuMemUnmap`                                              |                               | 10.2             |
+
+## **13. Unified Addressing**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -979,7 +998,7 @@
 | `cuPointerGetAttributes`                                  |                               |
 | `cuPointerSetAttribute`                                   |                               |
 
-## **13. Stream Management**
+## **14. Stream Management**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -1000,7 +1019,7 @@
 | `cuStreamIsCapturing`                                     |                               | 10.0             |
 | `cuThreadExchangeStreamCaptureMode`                       |                               | 10.1             |
 
-## **14. Event Management**
+## **15. Event Management**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
@@ -1011,7 +1030,7 @@
 | `cuEventRecord`                                           | `hipEventRecord`              |
 | `cuEventSynchronize`                                      | `hipEventSynchronize`         |
 
-## **15. External Resource Interoperability**
+## **16. External Resource Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -1024,7 +1043,7 @@
 | `cuImportExternalSemaphore`                               |                               | 10.0             |
 | `cuDestroyExternalSemaphore`                              |                               | 10.0             |
 
-## **16. Stream Memory Operations**
+## **17. Stream Memory Operations**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -1034,7 +1053,7 @@
 | `cuStreamWriteValue32`                                    |                               | 8.0              |
 | `cuStreamWriteValue64`                                    |                               | 9.0              |
 
-## **17. Execution Control**
+## **18. Execution Control**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -1047,7 +1066,7 @@
 | `cuLaunchCooperativeKernel`                               |                               | 9.0              |
 | `cuLaunchCooperativeKernelMultiDevice`                    |                               | 9.0              |
 
-## **18. Execution Control [DEPRECATED]**
+## **19. Execution Control [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
@@ -1061,7 +1080,7 @@
 | `cuParamSetTexRef`                                        |                               |
 | `cuParamSetv`                                             |                               |
 
-## **19. Graph Management**
+## **20. Graph Management**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -1096,9 +1115,13 @@
 | `cuGraphInstantiate`                                      |                               | 10.0             |
 | `cuGraphExecDestroy`                                      |                               | 10.0             |
 | `cuGraphExecKernelNodeSetParams`                          |                               | 10.1             |
+| `cuGraphExecMemcpyNodeSetParams`                          |                               | 10.2             |
+| `cuGraphExecMemsetNodeSetParams`                          |                               | 10.2             |
+| `cuGraphExecHostNodeSetParams`                            |                               | 10.2             |
+| `cuGraphExecUpdate`                                       |                               | 10.2             |
 | `cuGraphDestroy`                                          |                               | 10.0             |
 
-## **20. Occupancy**
+## **21. Occupancy**
 
 |   **CUDA**                                                |   **HIP**                                               |**CUDA version\***|
 |-----------------------------------------------------------|---------------------------------------------------------|------------------|
@@ -1107,7 +1130,7 @@
 | `cuOccupancyMaxPotentialBlockSize`                        |`hipOccupancyMaxPotentialBlockSize`                      |
 | `cuOccupancyMaxPotentialBlockSizeWithFlags`               |                                                         |
 
-## **21. Texture Reference Management**
+## **22. Texture Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -1136,15 +1159,10 @@
 | `cuTexRefSetMipmapLevelBias`                              |                               |
 | `cuTexRefSetMipmapLevelClamp`                             |                               |
 | `cuTexRefSetMipmappedArray`                               |                               |
-
-## **22. Texture Reference Management [DEPRECATED]**
-
-|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
-|-----------------------------------------------------------|-------------------------------|------------------|
 | `cuTexRefCreate`                                          |                               |
 | `cuTexRefDestroy`                                         |                               |
 
-## **23. Surface Reference Management**
+## **23. Surface Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|

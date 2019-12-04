@@ -35,6 +35,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaDeviceGetCacheConfig",                                {"hipDeviceGetCacheConfig",                                "", CONV_DEVICE, API_RUNTIME}},
   // cuCtxGetLimit
   {"cudaDeviceGetLimit",                                      {"hipDeviceGetLimit",                                      "", CONV_DEVICE, API_RUNTIME}},
+  // cuDeviceGetNvSciSyncAttributes
+  {"cudaDeviceGetNvSciSyncAttributes",                        {"hipDeviceGetNvSciSyncAttributes",                        "", CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuDeviceGetP2PAttribute
   {"cudaDeviceGetP2PAttribute",                               {"hipDeviceGetP2PAttribute",                               "", CONV_DEVICE, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuDeviceGetPCIBusId
@@ -209,7 +211,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaSetDoubleForHost",                                    {"hipSetDoubleForHost",                                    "", CONV_EXECUTION, API_RUNTIME, HIP_UNSUPPORTED}},
 
   // 5.8. Occupancy
-  // 
+  // cuOccupancyMaxActiveBlocksPerMultiprocessor
   {"cudaOccupancyMaxActiveBlocksPerMultiprocessor",           {"hipOccupancyMaxActiveBlocksPerMultiprocessor",           "", CONV_OCCUPANCY, API_RUNTIME}},
   // cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
   {"cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",  {"hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags",  "", CONV_OCCUPANCY, API_RUNTIME}},
@@ -222,7 +224,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // no analogue
   {"cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags", {"hipOccupancyMaxPotentialBlockSizeVariableSMemWithFlags", "", CONV_OCCUPANCY, API_RUNTIME, HIP_UNSUPPORTED}},
 
-  // 5.9. Execution Control [DEPRECATED]
+  // Former 5.9. Execution Control [DEPRECATED]
+  // NOTE: Removed in CUDA 10.1
   // no analogue
   {"cudaConfigureCall",                                       {"hipConfigureCall",                                       "", CONV_EXECUTION, API_RUNTIME}},
   // no analogue
@@ -231,7 +234,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // no analogue
   {"cudaSetupArgument",                                       {"hipSetupArgument",                                       "", CONV_EXECUTION, API_RUNTIME}},
 
-  // 5.10. Memory Management
+  // 5.9. Memory Management
   // no analogue
   {"cudaArrayGetInfo",                                        {"hipArrayGetInfo",                                        "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuMemFree
@@ -313,15 +316,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // NOTE: Not equal to cuMemcpy3DPeerAsync due to different signatures
   {"cudaMemcpy3DPeerAsync",                                   {"hipMemcpy3DPeerAsync",                                   "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   // no analogue
-  // NOTE: Not equal to cuMemcpyAtoA due to different signatures
-  {"cudaMemcpyArrayToArray",                                  {"hipMemcpyArrayToArray",                                  "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
-  // no analogue
   // NOTE: Not equal to cuMemcpyAsync due to different signatures
   {"cudaMemcpyAsync",                                         {"hipMemcpyAsync",                                         "", CONV_MEMORY, API_RUNTIME}},
-  // no analogue
-  {"cudaMemcpyFromArray",                                     {"hipMemcpyFromArray",                                     "", CONV_MEMORY, API_RUNTIME}},
-  // no analogue
-  {"cudaMemcpyFromArrayAsync",                                {"hipMemcpyFromArrayAsync",                                "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   // no analogue
   {"cudaMemcpyFromSymbol",                                    {"hipMemcpyFromSymbol",                                    "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
@@ -332,10 +328,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // no analogue
   // NOTE: Not equal to cuMemcpyPeerAsync due to different signatures
   {"cudaMemcpyPeerAsync",                                     {"hipMemcpyPeerAsync",                                     "", CONV_MEMORY, API_RUNTIME}},
-  // no analogue
-  {"cudaMemcpyToArray",                                       {"hipMemcpyToArray",                                       "", CONV_MEMORY, API_RUNTIME}},
-  // no analogue
-  {"cudaMemcpyToArrayAsync",                                  {"hipMemcpyToArrayAsync",                                  "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   {"cudaMemcpyToSymbol",                                      {"hipMemcpyToSymbol",                                      "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
@@ -366,6 +358,19 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"make_cudaPitchedPtr",                                     {"make_hipPitchedPtr",                                     "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   {"make_cudaPos",                                            {"make_hipPos",                                            "", CONV_MEMORY, API_RUNTIME}},
+
+  // 5.10. Memory Management [DEPRECATED]
+  // no analogue
+  // NOTE: Not equal to cuMemcpyAtoA due to different signatures
+  {"cudaMemcpyArrayToArray",                                  {"hipMemcpyArrayToArray",                                  "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // no analogue
+  {"cudaMemcpyFromArray",                                     {"hipMemcpyFromArray",                                     "", CONV_MEMORY, API_RUNTIME}},
+  // no analogue
+  {"cudaMemcpyFromArrayAsync",                                {"hipMemcpyFromArrayAsync",                                "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  // no analogue
+  {"cudaMemcpyToArray",                                       {"hipMemcpyToArray",                                       "", CONV_MEMORY, API_RUNTIME}},
+  // no analogue
+  {"cudaMemcpyToArrayAsync",                                  {"hipMemcpyToArrayAsync",                                  "", CONV_MEMORY, API_RUNTIME}},
 
   // 5.11.Unified Addressing
   // no analogue
@@ -546,7 +551,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // cuGraphicsUnregisterResource
   {"cudaGraphicsUnregisterResource",                          {"hipGraphicsUnregisterResource",                          "", CONV_GRAPHICS, API_RUNTIME, HIP_UNSUPPORTED}},
 
-  // 5.24. Texture Reference Management
+  // 5.24. Texture Reference Management [DEPRECATED]
   // no analogue
   {"cudaBindTexture",                                         {"hipBindTexture",                                         "", CONV_TEXTURE, API_RUNTIME}},
   // no analogue
@@ -568,7 +573,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // no analogue
   {"cudaUnbindTexture",                                       {"hipUnbindTexture",                                       "", CONV_TEXTURE, API_RUNTIME}},
 
-  // 5.25. Surface Reference Management
+  // 5.25. Surface Reference Management [DEPRECATED]
   // no analogue
   {"cudaBindSurfaceToArray",                                  {"hipBindSurfaceToArray",                                  "", CONV_SURFACE, API_RUNTIME, HIP_UNSUPPORTED}},
   // TODO: double check cuModuleGetSurfRef
@@ -646,6 +651,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaGraphInstantiate",                                    {"hipGraphInstantiate",                                    "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuGraphExecKernelNodeSetParams
   {"cudaGraphExecKernelNodeSetParams",                        {"hipGraphExecKernelNodeSetParams",                        "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuGraphExecMemcpyNodeSetParams
+  {"cudaGraphExecMemcpyNodeSetParams",                        {"hipGraphExecMemcpyNodeSetParams",                        "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuGraphExecMemsetNodeSetParams
+  {"cudaGraphExecMemsetNodeSetParams",                        {"hipGraphExecMemsetNodeSetParams",                        "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuGraphExecHostNodeSetParams
+  {"cudaGraphExecHostNodeSetParams",                          {"hipGraphExecHostNodeSetParams",                          "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
+  // cuGraphExecUpdate
+  {"cudaGraphExecUpdate",                                     {"hipGraphExecUpdate",                                     "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuGraphKernelNodeGetParams
   {"cudaGraphKernelNodeGetParams",                            {"hipGraphKernelNodeGetParams",                            "", CONV_GRAPH, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuGraphKernelNodeSetParams
