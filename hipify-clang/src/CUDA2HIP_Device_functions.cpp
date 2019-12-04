@@ -548,6 +548,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DEVICE_FUNC_MAP{
   {"__hfma",            {"", "", CONV_DEVICE_FUNC, API_RUNTIME}},
   {"__hfma_sat",        {"", "", CONV_DEVICE_FUNC, API_RUNTIME}},
   {"__hneg",            {"", "", CONV_DEVICE_FUNC, API_RUNTIME}},
+  {"__habs2",           {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
+  {"__habs",            {"", "", CONV_DEVICE_FUNC, API_RUNTIME, UNSUPPORTED}},
   {"__hbeq2",           {"", "", CONV_DEVICE_FUNC, API_RUNTIME}},
   {"__hbne2",           {"", "", CONV_DEVICE_FUNC, API_RUNTIME}},
   {"__hble2",           {"", "", CONV_DEVICE_FUNC, API_RUNTIME}},
