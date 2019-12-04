@@ -1480,6 +1480,7 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bcudaErrorAssert\b/hipErrorAssert/g;
     $ft{'numeric_literal'} += s/\bcudaErrorCudartUnloading\b/hipErrorDeinitialized/g;
     $ft{'numeric_literal'} += s/\bcudaErrorDeviceAlreadyInUse\b/hipErrorContextAlreadyInUse/g;
+    $ft{'numeric_literal'} += s/\bcudaErrorDeviceUninitialized\b/hipErrorInvalidContext/g;
     $ft{'numeric_literal'} += s/\bcudaErrorDeviceUninitilialized\b/hipErrorInvalidContext/g;
     $ft{'numeric_literal'} += s/\bcudaErrorECCUncorrectable\b/hipErrorECCNotCorrectable/g;
     $ft{'numeric_literal'} += s/\bcudaErrorFileNotFound\b/hipErrorFileNotFound/g;
@@ -2215,6 +2216,8 @@ sub warnUnsupportedDeviceFunctions {
         "__finite",
         "__finitef",
         "__finitel",
+        "__habs",
+        "__habs2",
         "__isinf",
         "__isinff",
         "__isinfl",
