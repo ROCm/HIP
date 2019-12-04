@@ -129,6 +129,7 @@ global:
     hipLaunchCooperativeKernelMultiDevice;
     hipModuleLoad;
     hipModuleLoadData;
+    hipModuleLoadDataEx;
     hipModuleUnload;
     hipOccupancyMaxActiveBlocksPerMultiprocessor;
     hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags;
@@ -180,6 +181,7 @@ global:
     hiprtcGetErrorString;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
+    hip_impl::demangle*;
     hipCreateTextureObject*;
     hipDestroyTextureObject*;
     hipGetTextureObjectResourceDesc*;

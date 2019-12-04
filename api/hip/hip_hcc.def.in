@@ -129,6 +129,7 @@ hipLaunchCooperativeKernelMultiDevice
 hipHccModuleLaunchKernel
 hipModuleLoad
 hipModuleLoadData
+hipModuleLoadDataEx
 hipModuleUnload
 hipOccupancyMaxActiveBlocksPerMultiprocessor
 hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags

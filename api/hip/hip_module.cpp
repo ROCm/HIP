@@ -110,6 +110,16 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
   HIP_RETURN(ihipModuleLoadData(module, image));
 }
 
+hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image,
+                               unsigned int numOptions, hipJitOption* options,
+                               void** optionsValues)
+{
+  /* TODO: Pass options to Program */
+  HIP_INIT_API(hipModuleLoadData, module, image);
+
+  HIP_RETURN(ihipModuleLoadData(module, image));
+}
+
 extern bool __hipExtractCodeObjectFromFatBinary(const void* data,
                                                 const std::vector<const char*>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
