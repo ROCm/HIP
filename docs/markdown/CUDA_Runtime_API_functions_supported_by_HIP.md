@@ -9,6 +9,7 @@
 | `cudaDeviceGetByPCIBusId`                                 | `hipDeviceGetByPCIBusId`          |
 | `cudaDeviceGetCacheConfig`                                | `hipDeviceGetCacheConfig`         |
 | `cudaDeviceGetLimit`                                      | `hipDeviceGetLimit`               |
+| `cudaDeviceGetNvSciSyncAttributes`                        |                                   | 10.2             |
 | `cudaDeviceGetPCIBusId`                                   | `hipDeviceGetPCIBusId`            |
 | `cudaDeviceGetSharedMemConfig`                            | `hipDeviceGetSharedMemConfig`     |
 | `cudaDeviceGetStreamPriorityRange`                        | `hipDeviceGetStreamPriorityRange` |
@@ -121,15 +122,15 @@
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           |`hipOccupancyMaxActiveBlocksPerMultiprocessor`         |
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
 
-## **9. Execution Control [DEPRECATED since 7.0]**
+## **Former 9. Execution Control [DEPRECATED since 7.0, REMOVED since 10.1]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cudaConfigureCall`                                       | `hipConfigureCall`            |
 | `cudaLaunch`                                              | `hipLaunchByPtr`              |
-| `cudaSetupArgument`                                       | `hipSetupArgument`            | 7.0 - 10.0       |
+| `cudaSetupArgument`                                       | `hipSetupArgument`            |
 
-## **10. Memory Management**
+## **9. Memory Management**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -168,16 +169,11 @@
 | `cudaMemcpy3DAsync`                                       |                               |
 | `cudaMemcpy3DPeer`                                        |                               |
 | `cudaMemcpy3DPeerAsync`                                   |                               |
-| `cudaMemcpyArrayToArray`                                  |                               |
 | `cudaMemcpyAsync`                                         | `hipMemcpyAsync`              |
-| `cudaMemcpyFromArray`                                     | `hipMemcpyFromArray`          |
-| `cudaMemcpyFromArrayAsync`                                |                               |
 | `cudaMemcpyFromSymbol`                                    | `hipMemcpyFromSymbol`         |
 | `cudaMemcpyFromSymbolAsync`                               | `hipMemcpyFromSymbolAsync`    |
 | `cudaMemcpyPeer`                                          | `hipMemcpyPeer`               |
 | `cudaMemcpyPeerAsync`                                     | `hipMemcpyPeerAsync`          |
-| `cudaMemcpyToArray`                                       | `hipMemcpyToArray`            |
-| `cudaMemcpyToArrayAsync`                                  |                               |
 | `cudaMemcpyToSymbol`                                      | `hipMemcpyToSymbol`           |
 | `cudaMemcpyToSymbolAsync`                                 | `hipMemcpyToSymbolAsync`      |
 | `cudaMemset`                                              | `hipMemset`                   |
@@ -189,6 +185,16 @@
 | `make_cudaExtent`                                         | `make_hipExtent`              |
 | `make_cudaPitchedPtr`                                     | `make_hipPitchedPtr`          |
 | `make_cudaPos`                                            | `make_hipPos`                 |
+
+## **10. Memory Management [DEPRECATED since 10.1]**
+
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------|:----------------:|
+| `cudaMemcpyArrayToArray`                                  |                               |
+| `cudaMemcpyFromArray`                                     | `hipMemcpyFromArray`          |
+| `cudaMemcpyFromArrayAsync`                                |                               |
+| `cudaMemcpyToArray`                                       | `hipMemcpyToArray`            |
+| `cudaMemcpyToArrayAsync`                                  |                               |
 
 ## **11. Unified Addressing**
 
@@ -329,7 +335,7 @@
 | `cudaGraphicsUnmapResources`                              |                               |
 | `cudaGraphicsUnregisterResource`                          |                               |
 
-## **24. Texture Reference Management**
+## **24. Texture Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                        |**CUDA version\***|
 |-----------------------------------------------------------|----------------------------------|:----------------:|
@@ -343,7 +349,7 @@
 | `cudaGetTextureReference`                                 | `hipGetTextureReference`         |
 | `cudaUnbindTexture`                                       | `hipUnbindTexture`               |
 
-## **25. Surface Reference Management**
+## **25. Surface Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -399,6 +405,10 @@
 | `cudaGraphHostNodeSetParams`                              |                               | 10.0             |
 | `cudaGraphInstantiate`                                    |                               | 10.0             |
 | `cudaGraphExecKernelNodeSetParams`                        |                               | 10.1             |
+| `cudaGraphExecMemcpyNodeSetParams`                        |                               | 10.2             |
+| `cudaGraphExecMemsetNodeSetParams`                        |                               | 10.2             |
+| `cudaGraphExecHostNodeSetParams`                          |                               | 10.2             |
+| `cudaGraphExecUpdate`                                     |                               | 10.2             |
 | `cudaGraphKernelNodeGetParams`                            |                               | 10.0             |
 | `cudaGraphKernelNodeSetParams`                            |                               | 10.0             |
 | `cudaGraphLaunch`                                         |                               | 10.0             |
@@ -412,8 +422,7 @@
 | `cudaGraphNodeGetType`                                    |                               | 10.0             |
 | `cudaGraphRemoveDependencies`                             |                               | 10.0             |
 
-## **30. C++ API Routines**
-*(7.0 contains, 7.5 doesn't)*
+## **30. C++ API Routines [DEPRECATED since 7.5]**
 
 |   **CUDA**                                                |   **HIP**                                             |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------------------------------|:----------------:|
