@@ -31,12 +31,11 @@ function setupENV()
 function buildHIP()
 {
     pushd $BUILD_ROOT
-    cmake $SRC_ROOT -DCMAKE_BUILD_TYPE=Release -DCOMPILE_HIP_ATP_MARKER=1
+    cmake $SRC_ROOT -DCMAKE_BUILD_TYPE=Release
     make $DASH_JAY
     make package
-    rename -v 's/([a-z0-9_.\-]).deb/$1-amd64.deb/' *.deb;rename -v 's/([a-z0-9_.\-]).rpm/$1.x86_64.rpm/' *.rpm
-    cp hip_*.deb $WORKING_DIR
-    sudo dpkg -i hip_base*.deb hip_hcc*.deb hip_sample*.deb hip_doc*.deb
+    cp hip-*.deb $WORKING_DIR
+    sudo dpkg -i -B hip-base*.deb hip-hcc*.deb hip-sample*.deb hip-doc*.deb
     popd
     rm -rf $BUILD_ROOT
 }
