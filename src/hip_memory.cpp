@@ -61,29 +61,24 @@ namespace {
     }
 
     inline
-    hsa_agent_t cpu_agent() noexcept {
-        static hsa_agent_t cpu{[]() {
-            hsa_agent_t r{};
-            throwing_result_check(
-                hsa_iterate_agents([](hsa_agent_t x, void* pr) {
-                    hsa_device_type_t t{};
-                    hsa_agent_get_info(x, HSA_AGENT_INFO_DEVICE, &t);
+    hsa_agent_t cpu_agent() {
+        hsa_agent_t r{};
+        throwing_result_check(
+            hsa_iterate_agents([](hsa_agent_t x, void* pr) {
+                hsa_device_type_t t{};
+                hsa_agent_get_info(x, HSA_AGENT_INFO_DEVICE, &t);
 
-                    if (t != HSA_DEVICE_TYPE_CPU) return HSA_STATUS_SUCCESS;
+                if (t != HSA_DEVICE_TYPE_CPU) return HSA_STATUS_SUCCESS;
 
-                    *static_cast<hsa_agent_t *>(pr) = x;
+                *static_cast<hsa_agent_t *>(pr) = x;
 
-                    return HSA_STATUS_INFO_BREAK;
-                }, &r), __FILE__, __func__, __LINE__);
-
-            return r;
-        }()};
-
-        return cpu;
+                return HSA_STATUS_INFO_BREAK;
+            }, &r), __FILE__, __func__, __LINE__);
+        return r;
     }
 
     inline
-    hsa_device_type_t type(hsa_agent_t x) noexcept
+    hsa_device_type_t type(hsa_agent_t x)
     {
         hsa_device_type_t r{};
         throwing_result_check(hsa_agent_get_info(x, HSA_AGENT_INFO_DEVICE, &r),
@@ -93,17 +88,20 @@ namespace {
     }
 
     const auto is_large_BAR{[](){
+        return false;
         std::unique_ptr<void, void (*)(void*)> hsa{
             hsa_init() == HSA_STATUS_SUCCESS ? reinterpret_cast<void*>(UINT32_MAX) : nullptr,
             [](void* p) { if (p) hsa_shut_down(); }};
         if (!hsa) return false;
-        bool r{true};
+        struct Data { bool r{true}; hsa_agent_t cpu{cpu_agent()}; } data;
 
         throwing_result_check(hsa_iterate_agents([](hsa_agent_t x, void* pr) {
-            if (x.handle == cpu_agent().handle) return HSA_STATUS_SUCCESS;
+            auto *pdata = static_cast<struct Data*>(pr);
+            if (x.handle == pdata->cpu.handle) return HSA_STATUS_SUCCESS;
 
             throwing_result_check(
                 hsa_agent_iterate_regions(x, [](hsa_region_t y, void* p) {
+                    auto *ppdata = static_cast<struct Data*>(p);
                     hsa_region_segment_t seg{};
                     throwing_result_check(
                         hsa_region_get_info(y, HSA_REGION_INFO_SEGMENT, &seg),
@@ -122,27 +120,26 @@ namespace {
                         hsa_amd_memory_pool_access_t tmp{};
                         throwing_result_check(
                             hsa_amd_agent_memory_pool_get_info(
-                                cpu_agent(),
+                                ppdata->cpu,
                                 hsa_amd_memory_pool_t{y.handle},
                                 HSA_AMD_AGENT_MEMORY_POOL_INFO_ACCESS,
                                 &tmp),
                             __FILE__, __func__, __LINE__);
 
-                        *static_cast<bool*>(p) &=
-                            tmp != HSA_AMD_MEMORY_POOL_ACCESS_NEVER_ALLOWED;
+                        ppdata->r &= (tmp != HSA_AMD_MEMORY_POOL_ACCESS_NEVER_ALLOWED);
                     }
 
                     return HSA_STATUS_SUCCESS;
-                }, pr), __FILE__, __func__, __LINE__);
+                }, pdata), __FILE__, __func__, __LINE__);
 
             return HSA_STATUS_SUCCESS;
-        }, &r), __FILE__, __func__, __LINE__);
+        }, &data), __FILE__, __func__, __LINE__);
 
-        return r;
+        return data.r;
     }()};
 
     inline
-    hsa_amd_pointer_info_t info(const void* p) noexcept
+    hsa_amd_pointer_info_t info(const void* p)
     {
         hsa_amd_pointer_info_t r{sizeof(hsa_amd_pointer_info_t)};
         throwing_result_check(
@@ -187,6 +184,9 @@ namespace {
             void *tp{};
             throwing_result_check(hsa_memory_allocate(r, staging_sz, &tp),
                                   __FILE__, __func__, __LINE__);
+
+            throwing_result_check(hsa_amd_agents_allow_access(
+                g_deviceCnt + 1, g_allAgents, NULL, tp), __FILE__, __func__, __LINE__);
 
             return tp;
         }(),
@@ -336,7 +336,7 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
 
 inline
 void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
-                 hipMemcpyKind k) noexcept {
+                 hipMemcpyKind k) {
     switch (k) {
     case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
     case hipMemcpyHostToDevice:
