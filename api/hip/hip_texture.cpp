@@ -718,13 +718,27 @@ hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsi
   HIP_INIT_API(NONE, tex, array, flags);
 
   size_t offset = 0;
+  cl_mem_object_type clType;
 
   if ((tex == nullptr) || (array == nullptr)) {
     HIP_RETURN(hipErrorInvalidImage);
   }
 
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, array->data, &array->desc, array->width,
-                             array->height, 0));
+  switch(array->textureType) {
+    case hipTextureType3D:
+      clType = CL_MEM_OBJECT_IMAGE3D;
+      break;
+    case hipTextureType2D:
+      clType = CL_MEM_OBJECT_IMAGE2D;
+      break;
+    case hipTextureType1D:
+      clType = CL_MEM_OBJECT_IMAGE1D;
+      break;
+    default:
+      HIP_RETURN(hipErrorInvalidValue);
+  }
+  HIP_RETURN(ihipBindTexture(clType, &offset, tex, array->data, &array->desc, array->width,
+                             array->height, array->depth));
 }
 
 hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
