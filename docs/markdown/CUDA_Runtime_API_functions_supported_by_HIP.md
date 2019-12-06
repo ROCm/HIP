@@ -9,6 +9,7 @@
 | `cudaDeviceGetByPCIBusId`                                 | `hipDeviceGetByPCIBusId`          |
 | `cudaDeviceGetCacheConfig`                                | `hipDeviceGetCacheConfig`         |
 | `cudaDeviceGetLimit`                                      | `hipDeviceGetLimit`               |
+| `cudaDeviceGetNvSciSyncAttributes`                        |                                   | 10.2             |
 | `cudaDeviceGetPCIBusId`                                   | `hipDeviceGetPCIBusId`            |
 | `cudaDeviceGetSharedMemConfig`                            | `hipDeviceGetSharedMemConfig`     |
 | `cudaDeviceGetStreamPriorityRange`                        | `hipDeviceGetStreamPriorityRange` |
@@ -121,15 +122,15 @@
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           |`hipOccupancyMaxActiveBlocksPerMultiprocessor`         |
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
 
-## **9. Execution Control [DEPRECATED since 7.0]**
+## **Former 9. Execution Control [DEPRECATED since 7.0, REMOVED since 10.1]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cudaConfigureCall`                                       | `hipConfigureCall`            |
 | `cudaLaunch`                                              | `hipLaunchByPtr`              |
-| `cudaSetupArgument`                                       | `hipSetupArgument`            | 7.0 - 10.0       |
+| `cudaSetupArgument`                                       | `hipSetupArgument`            |
 
-## **10. Memory Management**
+## **9. Memory Management**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -168,16 +169,11 @@
 | `cudaMemcpy3DAsync`                                       |                               |
 | `cudaMemcpy3DPeer`                                        |                               |
 | `cudaMemcpy3DPeerAsync`                                   |                               |
-| `cudaMemcpyArrayToArray`                                  |                               |
 | `cudaMemcpyAsync`                                         | `hipMemcpyAsync`              |
-| `cudaMemcpyFromArray`                                     | `hipMemcpyFromArray`          |
-| `cudaMemcpyFromArrayAsync`                                |                               |
 | `cudaMemcpyFromSymbol`                                    | `hipMemcpyFromSymbol`         |
 | `cudaMemcpyFromSymbolAsync`                               | `hipMemcpyFromSymbolAsync`    |
 | `cudaMemcpyPeer`                                          | `hipMemcpyPeer`               |
 | `cudaMemcpyPeerAsync`                                     | `hipMemcpyPeerAsync`          |
-| `cudaMemcpyToArray`                                       | `hipMemcpyToArray`            |
-| `cudaMemcpyToArrayAsync`                                  |                               |
 | `cudaMemcpyToSymbol`                                      | `hipMemcpyToSymbol`           |
 | `cudaMemcpyToSymbolAsync`                                 | `hipMemcpyToSymbolAsync`      |
 | `cudaMemset`                                              | `hipMemset`                   |
@@ -189,6 +185,16 @@
 | `make_cudaExtent`                                         | `make_hipExtent`              |
 | `make_cudaPitchedPtr`                                     | `make_hipPitchedPtr`          |
 | `make_cudaPos`                                            | `make_hipPos`                 |
+
+## **10. Memory Management [DEPRECATED since 10.1]**
+
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------|:----------------:|
+| `cudaMemcpyArrayToArray`                                  |                               |
+| `cudaMemcpyFromArray`                                     | `hipMemcpyFromArray`          |
+| `cudaMemcpyFromArrayAsync`                                |                               |
+| `cudaMemcpyToArray`                                       | `hipMemcpyToArray`            |
+| `cudaMemcpyToArrayAsync`                                  |                               |
 
 ## **11. Unified Addressing**
 
@@ -329,7 +335,7 @@
 | `cudaGraphicsUnmapResources`                              |                               |
 | `cudaGraphicsUnregisterResource`                          |                               |
 
-## **24. Texture Reference Management**
+## **24. Texture Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                        |**CUDA version\***|
 |-----------------------------------------------------------|----------------------------------|:----------------:|
@@ -343,7 +349,7 @@
 | `cudaGetTextureReference`                                 | `hipGetTextureReference`         |
 | `cudaUnbindTexture`                                       | `hipUnbindTexture`               |
 
-## **25. Surface Reference Management**
+## **25. Surface Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -399,6 +405,10 @@
 | `cudaGraphHostNodeSetParams`                              |                               | 10.0             |
 | `cudaGraphInstantiate`                                    |                               | 10.0             |
 | `cudaGraphExecKernelNodeSetParams`                        |                               | 10.1             |
+| `cudaGraphExecMemcpyNodeSetParams`                        |                               | 10.2             |
+| `cudaGraphExecMemsetNodeSetParams`                        |                               | 10.2             |
+| `cudaGraphExecHostNodeSetParams`                          |                               | 10.2             |
+| `cudaGraphExecUpdate`                                     |                               | 10.2             |
 | `cudaGraphKernelNodeGetParams`                            |                               | 10.0             |
 | `cudaGraphKernelNodeSetParams`                            |                               | 10.0             |
 | `cudaGraphLaunch`                                         |                               | 10.0             |
@@ -412,8 +422,7 @@
 | `cudaGraphNodeGetType`                                    |                               | 10.0             |
 | `cudaGraphRemoveDependencies`                             |                               | 10.0             |
 
-## **30. C++ API Routines**
-*(7.0 contains, 7.5 doesn't)*
+## **30. C++ API Routines [DEPRECATED since 7.5]**
 
 |   **CUDA**                                                |   **HIP**                                             |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------------------------------|:----------------:|
@@ -685,11 +694,18 @@
 |            3 |*`cudaExternalMemoryHandleTypeOpaqueWin32Kmt`*       | 10.0             |                                                            |
 |            4 |*`cudaExternalMemoryHandleTypeD3D12Heap`*            | 10.0             |                                                            |
 |            5 |*`cudaExternalMemoryHandleTypeD3D12Resource`*        | 10.0             |                                                            |
+|            6 |*`cudaExternalMemoryHandleTypeD3D11Resource`*        | 10.2             |                                                            |
+|            7 |*`cudaExternalMemoryHandleTypeD3D11ResourceKmt`*     | 10.2             |                                                            |
+|            8 |*`cudaExternalMemoryHandleTypeNvSciBuf`*             | 10.2             |                                                            |
 | enum         |***`cudaExternalSemaphoreHandleType`***              | 10.0             |                                                            |
 |            1 |*`cudaExternalSemaphoreHandleTypeOpaqueFd`*          | 10.0             |                                                            |
 |            2 |*`cudaExternalSemaphoreHandleTypeOpaqueWin32`*       | 10.0             |                                                            |
 |            3 |*`cudaExternalSemaphoreHandleTypeOpaqueWin32Kmt`*    | 10.0             |                                                            |
 |            4 |*`cudaExternalSemaphoreHandleTypeD3D12Fence`*        | 10.0             |                                                            |
+|            5 |*`cudaExternalSemaphoreHandleTypeD3D11Fence`*        | 10.2             |                                                            |
+|            6 |*`cudaExternalSemaphoreHandleTypeNvSciSync`*         | 10.2             |                                                            |
+|            7 |*`cudaExternalSemaphoreHandleTypeKeyedMutex`*        | 10.2             |                                                            |
+|            8 |*`cudaExternalSemaphoreHandleTypeKeyedMutexKmt`*     | 10.2             |                                                            |
 | enum         |***`cudaFuncAttribute`***                            | 9.0              |                                                            |
 |            8 |*`cudaFuncAttributeMaxDynamicSharedMemorySize`*      | 9.0              |                                                            |
 |            9 |*`cudaFuncAttributePreferredSharedMemoryCarveout`*   | 9.0              |                                                            |
@@ -799,6 +815,8 @@
 |          906 |*`cudaErrorStreamCaptureImplicit`*                   | 10.0             |                                                            |
 |          907 |*`cudaErrorCapturedEvent`*                           | 10.0             |                                                            |
 |          908 |*`cudaErrorStreamCaptureWrongThread`*                | 10.1             |                                                            |
+|          909 |*`cudaErrorTimeout`*                                 | 10.2             |                                                            |
+|          910 |*`cudaErrorGraphExecUpdateFailure`*                  | 10.2             |                                                            |
 |          999 |*`cudaErrorUnknown`*                                 |                  |*`hipErrorUnknown`*                                         | 1030                      |
 |        10000 |*`cudaErrorApiFailureBase`*                          |                  |                                                            |
 | enum         |***`cudaFuncCache`***                                |                  |***`hipFuncCache_t`***                                      |
@@ -1069,6 +1087,10 @@
 | struct       |`CUeglStreamConnection_st`                           | 9.1              |                                                            |
 | typedef      |`cudaEglStreamConnection`                            | 9.1              |                                                            |
 | define       |`cudaExternalMemoryDedicated`                        | 10.0             |                                                            |
+| define       |`cudaExternalSemaphoreSignalSkipNvSciBufMemSync`     | 10.2             |                                                            |
+| define       |`cudaExternalSemaphoreWaitSkipNvSciBufMemSync`       | 10.2             |                                                            |
+| define       |`cudaNvSciSyncAttrSignal`                            | 10.2             |                                                            |
+| define       |`cudaNvSciSyncAttrWait`                              | 10.2             |                                                            |
 | typedef      |`cudaExternalMemory_t`                               | 10.0             |                                                            |
 | struct       |`CUexternalMemory_st`                                | 10.0             |                                                            |
 | typedef      |`cudaExternalSemaphore_t`                            | 10.0             |                                                            |
@@ -1087,5 +1109,13 @@
 |            0 |*`MAJOR_VERSION`*                                    | 8.0              |                                                            |
 |            1 |*`MINOR_VERSION`*                                    | 8.0              |                                                            |
 |            2 |*`PATCH_LEVEL`*                                      | 8.0              |                                                            |
+| enum         |***`cudaGraphExecUpdateResult`***                    | 10.2             |                                                            |
+|          0x0 |*`cudaGraphExecUpdateSuccess`*                       | 10.2             |                                                            |
+|          0x1 |*`cudaGraphExecUpdateError`*                         | 10.2             |                                                            |
+|          0x2 |*`cudaGraphExecUpdateErrorTopologyChanged`*          | 10.2             |                                                            |
+|          0x3 |*`cudaGraphExecUpdateErrorNodeTypeChanged`*          | 10.2             |                                                            |
+|          0x4 |*`cudaGraphExecUpdateErrorFunctionChanged`*          | 10.2             |                                                            |
+|          0x5 |*`cudaGraphExecUpdateErrorParametersChanged`*        | 10.2             |                                                            |
+|          0x6 |*`cudaGraphExecUpdateErrorNotSupported`*             | 10.2             |                                                            |
 
 \* CUDA version, in which API has appeared and (optional) last version before abandoning it; no value in case of earlier versions < 7.5.

@@ -1277,7 +1277,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @param[in]  height Requested pitched allocation height
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
- *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array.
+ *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array. 
  *  Given the row and column of an array element of type T, the address is computed as:
  *  T* pElement = (T*)((char*)BaseAddress + Row * Pitch) + Column;
  *
@@ -1360,10 +1360,6 @@ hipError_t hipHostFree(void* ptr);
  * hipMemHostAlloc, hipMemHostGetDevicePointer
  */
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind);
-
-// TODO: Add description
-hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes,
-                               hipMemcpyKind kind, hipStream_t stream);
 
 /**
  *  @brief Copy data from Host to Device
@@ -1502,7 +1498,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 #else
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
-#ifdef __cplusplus //Start : Not supported in gcc
+#ifdef __cplusplus //Start : Not supported in gcc 
 namespace hip_impl {
 inline
 __attribute__((visibility("hidden")))
@@ -2960,6 +2956,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
+#if defined(__clang__) && defined(__HIP__)
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
  * on respective streams before enqueuing any other work on the specified streams from any other threads
@@ -2974,6 +2971,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags);
 
+#endif
 
 // doxygen end Version Management
 /**
@@ -3395,12 +3393,14 @@ inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchP
     return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
+#if defined(__clang__) && defined(__HIP__)
 template <class T>
 inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                      unsigned int  numDevices, unsigned int  flags = 0) {
     return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
+#endif
 
 /*
  * @brief Unbinds the textuer bound to @p tex
