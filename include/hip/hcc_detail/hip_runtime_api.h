@@ -2956,7 +2956,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
-#if defined(__clang__) && defined(__HIP__)
+#if __HIP_VDI__
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
  * on respective streams before enqueuing any other work on the specified streams from any other threads
