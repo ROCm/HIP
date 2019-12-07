@@ -465,7 +465,7 @@ THE SOFTWARE.
         inline __host__ __device__
         HIP_vector_type(Us... xs) noexcept
         {
-            #if __has_extension(ext_vector_type)
+            #if __has_attribute(ext_vector_type)
                 new (&data) Native_vec_{static_cast<T>(xs)...};
             #else
                 new (&data) std::array<T, rank>{static_cast<T>(xs)...};
