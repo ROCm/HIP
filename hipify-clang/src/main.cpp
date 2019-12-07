@@ -34,6 +34,14 @@ THE SOFTWARE.
 #include "ArgParse.h"
 #include "StringUtils.h"
 #include "llvm/Support/Debug.h"
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/DiagnosticIDs.h"
+#include "clang/Basic/DiagnosticOptions.h"
+#include "clang/Driver/Driver.h"
+#include "clang/Driver/Compilation.h"
+#include "clang/Driver/Tool.h"
+#include "clang/Frontend/TextDiagnosticPrinter.h"
+
 #if LLVM_VERSION_MAJOR < 8
 #include "llvm/Support/Path.h"
 #endif
@@ -138,6 +146,30 @@ int main(int argc, const char **argv) {
   }
   if (PrintStats) {
     statPrint = &llvm::errs();
+  }
+  if (fileSources.size() > 1) {
+    IntrusiveRefCntPtr<clang::DiagnosticOptions> diagOpts(new clang::DiagnosticOptions());
+    clang::TextDiagnosticPrinter diagClient(llvm::errs(), &*diagOpts);
+    clang::DiagnosticsEngine Diagnostics(IntrusiveRefCntPtr<clang::DiagnosticIDs>(new clang::DiagnosticIDs()), &*diagOpts, &diagClient, false);
+    std::unique_ptr<clang::driver::Driver> driver(new clang::driver::Driver("", "nvptx64-nvidia-cuda", Diagnostics));
+    SmallVector<const char*, 16> Args(argv, argv + argc);
+    std::unique_ptr<clang::driver::Compilation> C(driver->BuildCompilation(Args));
+    std::vector<std::string> fileSourcesOrdered;
+    for (const auto &J : C->getJobs()) {
+      if (std::string(J.getCreator().getName()) != "clang") continue;
+      const auto &JA = J.getArguments();
+      for (size_t i = 0; i < JA.size(); ++i) {
+        const auto &A = std::string(JA[i]);
+        if (std::find(fileSources.begin(), fileSources.end(), A) != fileSources.end() &&
+            i > 0 && std::string(JA[i-1]) == "-main-file-name") {
+          fileSourcesOrdered.push_back(A);
+        }
+      }
+    }
+    if (!fileSourcesOrdered.empty()) {
+      std::reverse(fileSourcesOrdered.begin(), fileSourcesOrdered.end());
+      fileSources = fileSourcesOrdered;
+    }
   }
   for (const auto & src : fileSources) {
     // Create a copy of the file to work on. When we're done, we'll move this onto the
