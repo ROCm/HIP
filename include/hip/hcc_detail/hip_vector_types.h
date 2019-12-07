@@ -42,6 +42,7 @@ THE SOFTWARE.
 #endif
 
 #if defined(__cplusplus)
+    #include <array>
     #include <iosfwd>
     #include <type_traits>
 
@@ -464,7 +465,11 @@ THE SOFTWARE.
         inline __host__ __device__
         HIP_vector_type(Us... xs) noexcept
         {
-            new (&data) Native_vec_{static_cast<T>(xs)...};
+            #if __has_extension(ext_vector_type)
+                new (&data) Native_vec_{static_cast<T>(xs)...};
+            #else
+                new (&data) std::array<T, rank>{static_cast<T>(xs)...};
+            #endif
         }
         inline __host__ __device__
         HIP_vector_type(const HIP_vector_type&) = default;
