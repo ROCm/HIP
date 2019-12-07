@@ -142,7 +142,13 @@ THE SOFTWARE.
 
             __host__ __device__
             Address operator&() const noexcept { return Address{this}; }
+            
+            __host__ __device__
+            Scalar_accessor& operator=(const Scalar_accessor& x) noexcept {
+                data[idx] = x.data[idx];
 
+                return *this;
+            }
             __host__ __device__
             Scalar_accessor& operator=(T x) noexcept {
                 data[idx] = x;
@@ -288,6 +294,17 @@ THE SOFTWARE.
         };
 
         using value_type = T;
+        
+        __host__ __device__
+        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+            #if __has_attribute(ext_vector_type)
+                data = x.data;
+            #else
+                data[0] = x.data[0];
+            #endif
+
+            return *this;
+        }
     };
 
     template<typename T>
@@ -301,6 +318,18 @@ THE SOFTWARE.
         };
 
         using value_type = T;
+        
+        __host__ __device__
+        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+            #if __has_attribute(ext_vector_type)
+                data = x.data;
+            #else
+                data[0] = x.data[0];
+                data[1] = x.data[1];
+            #endif
+
+            return *this;
+        }
     };
 
     template<typename T>
@@ -472,6 +501,20 @@ THE SOFTWARE.
         };
 
         using value_type = T;
+        
+        __host__ __device__
+        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+            #if __has_attribute(ext_vector_type)
+                data = x.data;
+            #else
+                data[0] = x.data[0];
+                data[1] = x.data[1];
+                data[2] = x.data[2];
+                data[3] = x.data[3];
+            #endif
+
+            return *this;
+        }
     };
 
     template<typename T, unsigned int rank>
