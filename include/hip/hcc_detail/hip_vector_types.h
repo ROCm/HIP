@@ -47,6 +47,17 @@ THE SOFTWARE.
     #include <type_traits>
 
     namespace hip_impl {
+        template<typename, typename, unsigned int> struct Scalar_accessor;
+    } // Namespace hip_impl.
+    
+    namespace std {
+        template<typename T, typename U, unsigned int n>
+        struct is_integral<Scalar_accessor<T, U, n>> : is_integral<T> {};
+        template<typename T, typename U, unsigned int n>
+        struct is_floating_point<Scalar_accessor<T, U, n>> : is_floating_point<T> {};
+    } // Namespace std.
+    
+    namespace hip_impl {
         template<typename T, typename Vector, unsigned int idx>
         struct Scalar_accessor {
             struct Address {
@@ -96,6 +107,27 @@ THE SOFTWARE.
             operator T() const noexcept { return data[idx]; }
             __host__ __device__
             operator T() const volatile noexcept { return data[idx]; }
+            
+            // The conversions to enum are fairly ghastly, but unfortunately used in
+            // some pre-existing, difficult to modify, code.
+            template<
+                typename U,
+                typename std::enable_if<
+                    !std::is_same<U, T>{} &&
+                    std::is_enum<U>{} &&
+                    std::is_convertible<
+                        T, typename std::underlying_type<U>::type>{}>::type* = nullptr>
+            __host__ __device__
+            operator U() const noexcept { return static_cast<U>(data[idx]); }
+            template<
+                typename U,
+                typename std::enable_if<
+                    !std::is_same<U, T>{} &&
+                    std::is_enum<U>{} &&
+                    std::is_convertible<
+                        T, typename std::underlying_type<U>::type>{}>::type* = nullptr>
+            __host__ __device__
+            operator U() const volatile noexcept { return static_cast<U>(data[idx]); }
 
             __host__ __device__
             operator T&() noexcept {
