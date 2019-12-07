@@ -52,9 +52,11 @@ THE SOFTWARE.
     
     namespace std {
         template<typename T, typename U, unsigned int n>
-        struct is_integral<Scalar_accessor<T, U, n>> : is_integral<T> {};
+        struct is_integral<hip_impl::Scalar_accessor<T, U, n>>
+            : is_integral<T> {};
         template<typename T, typename U, unsigned int n>
-        struct is_floating_point<Scalar_accessor<T, U, n>> : is_floating_point<T> {};
+        struct is_floating_point<hip_impl::Scalar_accessor<T, U, n>> 
+            : is_floating_point<T> {};
     } // Namespace std.
     
     namespace hip_impl {
