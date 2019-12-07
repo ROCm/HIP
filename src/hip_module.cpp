@@ -239,14 +239,12 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
             aql.header |= (1 << HSA_PACKET_HEADER_BARRIER);
         }
 
-        if (HCC_OPT_FLUSH) {
-            aql.header |= (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
-                          (HSA_FENCE_SCOPE_AGENT << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
-        } else {
-            aql.header |= (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE) |
-                          (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE);
-        };
-
+        auto acq = (HCC_OPT_FLUSH && lp.barrier_bit != barrier_bit_wait) ?
+            HSA_FENCE_SCOPE_AGENT : HSA_FENCE_SCOPE_SYSTEM;
+        auto rel =
+            HCC_OPT_FLUSH ? HSA_FENCE_SCOPE_AGENT : HSA_FENCE_SCOPE_SYSTEM;
+        aql.header |= (acq << HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE) |
+                      (rel << HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE);
 
         hc::completion_future cf;
 

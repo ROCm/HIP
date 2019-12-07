@@ -1624,9 +1624,14 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     if (!lockAcquired) {
         auto crit = stream->lockopen_preKernelCommand();
         lp->av = &(crit->_av);
+        if (crit->_last_op_was_a_copy) lp->barrier_bit = barrier_bit_wait;
+        crit->_last_op_was_a_copy = false;
     } else {
         // this stream is already locked (e.g., call from hipExtLaunchMultiKernelMultiDevice)
-        lp->av = &(stream->criticalData()._av);
+        auto& crit{stream->criticalData()};
+        lp->av = &crit._av;
+        if (crit._last_op_was_a_copy) lp->barrier_bit = barrier_bit_wait;
+        crit._last_op_was_a_copy = false;
     }
     lp->cf = nullptr;
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
