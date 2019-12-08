@@ -50,13 +50,46 @@ constexpr auto DEBUG_TYPE = "cuda2hip";
 
 namespace ct = clang::tooling;
 
+void cleanupHipifyOptions(std::vector<const char*> &args) {
+  std::vector<std::string> hipifyOptions = {"-perl", "-python", "-roc", "-inplace",
+                                            "-no-backup", "-no-output", "-print-stats",
+                                            "-print-stats-csv", "-examine", "-save-temps",
+                                            "-skip-excluded-preprocessor-conditional-blocks"};
+  for (const auto &a : hipifyOptions) {
+    args.erase(std::remove(args.begin(), args.end(), a), args.end());
+    args.erase(std::remove(args.begin(), args.end(), "-" + a), args.end());
+  }
+  std::vector<std::string> hipifyDirOptions = {"-o-dir", "-o-hipify-perl-dir", "-o-stats",
+                                               "-o-python-map-dir", "-temp-dir"};
+  for (const auto &a : hipifyDirOptions) {
+    // remove all pairs of arguments "-option value"
+    auto it = args.erase(std::remove(args.begin(), args.end(), a), args.end());
+    if (it != args.end()) {
+      args.erase(it);
+    }
+    // remove all pairs of arguments "--option value"
+    it = args.erase(std::remove(args.begin(), args.end(), "-" + a), args.end());
+    if (it != args.end()) {
+      args.erase(it);
+    }
+    // remove all "-option=value" and "--option=value"
+    args.erase(
+      std::remove_if(args.begin(), args.end(),
+        [a](const std::string &s) { return s.find(a + "=") == 0 || s.find("-" + a + "=") == 0; }
+      ),
+      args.end()
+    );
+  }
+}
+
 void sortInputFiles(int argc, const char **argv, std::vector<std::string> &files) {
   if (files.size() < 2) return;
   IntrusiveRefCntPtr<clang::DiagnosticOptions> diagOpts(new clang::DiagnosticOptions());
   clang::TextDiagnosticPrinter diagClient(llvm::errs(), &*diagOpts);
   clang::DiagnosticsEngine Diagnostics(IntrusiveRefCntPtr<clang::DiagnosticIDs>(new clang::DiagnosticIDs()), &*diagOpts, &diagClient, false);
   std::unique_ptr<clang::driver::Driver> driver(new clang::driver::Driver("", "nvptx64-nvidia-cuda", Diagnostics));
-  SmallVector<const char*, 16> Args(argv, argv + argc);
+  std::vector<const char*> Args(argv, argv + argc);
+  cleanupHipifyOptions(Args);
   std::unique_ptr<clang::driver::Compilation> C(driver->BuildCompilation(Args));
   std::vector<std::string> sortedFiles;
   for (const auto &J : C->getJobs()) {
