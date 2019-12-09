@@ -31,9 +31,8 @@ THE SOFTWARE.
 #include <random>
 #include "test_common.h"
 
-
 template <typename T, typename M>
-int count() {
+inline constexpr int count() {
     return sizeof(T) / sizeof(M);
 }
 
@@ -71,7 +70,7 @@ void cpuRotate3(M& a, M& b) {
     cpuRotate2<N>(*reinterpret_cast<N*>(&a), *reinterpret_cast<N*>(&b));
     b.y = a.z;
     b.z = a.x;
-    cpuJitter3<N>(b);
+    cpuJitter3<M, N>(b);
 }
 
 template <typename T, typename M, typename N>
@@ -80,7 +79,7 @@ void cpuRotate4(T& a, T& b) {
     b.y = a.z;
     b.z = a.w;
     b.w = a.x;
-    cpuJitter4<M, N>(b);
+    cpuJitter4<T, M, N>(b);
 }
 
 template <typename T>
@@ -93,7 +92,7 @@ void cpuRotate2(T* a, T* b, int size) {
 template <typename T, typename M>
 void cpuRotate3(T* a, T* b, int size) {
     for (int i = 0; i < size; i++) {
-        cpuRotate<T, M>(a[i], b[i]);
+        cpuRotate3<T, M>(a[i], b[i]);
     }
 }
 
@@ -179,8 +178,14 @@ __global__ void gMatAcc(T* a, T* b, int size) {
     a[i] += (a[i] * b[i]);
 }
 
+// Main function that tests type
+// T = what you want to test
+// S = its primitive i.e. if T = float2 S = Float
+// A = pack of 4 i.e. float4 int4
+// B = pack of 3 i.e. float3 int3
+// C = pack of 2 i.e. float2 int2
 template <typename T, typename S, typename A, typename B, typename C>
-bool testType(int msize) {
+void testType(int msize) {
     T *fa, *fb, *fc;
     fa = new T[msize];
     fb = new T[msize];
@@ -188,20 +193,20 @@ bool testType(int msize) {
 
     T *d_fa, *d_fb;
 
-    int c = count<T, S>();
-    if (c == 4) {
+    constexpr int c = count<T, S>();
+
+    if constexpr (c == 4) {
         fillMatrix4<T>(fa, msize);
         cpuRotate4<A, B, C>(fa, fb, msize);
-    } else if (c == 3) {
+    } else if constexpr (c == 3) {
         fillMatrix3<T>(fa, msize);
         cpuRotate3<B, C>(fa, fb, msize);
-    } else if (c == 2) {
+    } else if constexpr (c == 2) {
         fillMatrix2<T>(fa, msize);
         cpuRotate2<C>(fa, fb, msize);
     } else {
         failed("Invalid Size\n");
     }
-
     hipMalloc(&d_fa, sizeof(T) * msize);
     hipMalloc(&d_fb, sizeof(T) * msize);
 
@@ -214,21 +219,40 @@ bool testType(int msize) {
 
     hipMemcpy(fc, d_fa, sizeof(T) * msize, hipMemcpyDeviceToHost);
 
+    bool pass = true;
+    if (!isEqual<T>(fa, fc, msize)) {
+        pass = false;
+    }
+
     delete[] fa;
     delete[] fb;
     delete[] fc;
     hipFree(d_fa);
     hipFree(d_fb);
 
-    if (!isEqual<T>(fa, fc, msize)) {
-        failed("Failed for:: ");
-        failed(typeid(T).name().c_str());
+    if (!pass) {
+        failed("Failed");
     }
-    return true;
 }
 
 int main() {
-    const int msize = 500;
-    testType<float2, float, float4, float3, float2>();
+    const int msize = 100;
+    // Floats
+    testType<float2, float, float4, float3, float2>(msize);
+    testType<float3, float, float4, float3, float2>(msize);
+    testType<float4, float, float4, float3, float2>(msize);
+    // ints
+    testType<int2, int, int4, int3, int2>(msize);
+    testType<int3, int, int4, int3, int2>(msize);
+    testType<int4, int, int4, int3, int2>(msize);
+    //chars
+    testType<char2, char, char4, char3, char2>(msize);
+    testType<char3, char, char4, char3, char2>(msize);
+    testType<char4, char, char4, char3, char2>(msize);
+    //double
+    testType<double2, double, double4, double3, double2>(msize);
+    testType<double3, double, double4, double3, double2>(msize);
+    testType<double4, double, double4, double3, double2>(msize);
+    
     passed();
 }
