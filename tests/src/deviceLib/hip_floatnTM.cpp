@@ -37,21 +37,21 @@ int count() {
     return sizeof(T) / sizeof(M);
 }
 
-template <template N>
+template <typename N>
 void cpuJitter2(N& b) {
     b.x++;
     b.y++;
     b.x += b.y;
 }
 
-template <template M, template N>
+template <typename M, typename N>
 void cpuJitter3(M& b) {
     cpuJitter2<N>(*reinterpret_cast<N*>(&b));
     b.z++;
     b.x = b.y + b.z;
 }
 
-template <typename T, template M, template N>
+template <typename T, typename M, typename N>
 void cpuJitter4(T& b) {
     cpuJitter3<M, N>(*reinterpret_cast<M*>(&b));
     b.w++;
@@ -59,14 +59,14 @@ void cpuJitter4(T& b) {
 }
 
 // Rotate x,y,z,w by 1
-template <template N>
+template <typename N>
 void cpuRotate2(N& a, N& b) {
     b.x = a.y;
     b.y = a.x;
     cpuJitter2<N>(b);
 }
 
-template <template M, template N>
+template <typename M, typename N>
 void cpuRotate3(M& a, M& b) {
     cpuRotate2<N>(*reinterpret_cast<N*>(&a), *reinterpret_cast<N*>(&b));
     b.y = a.z;
@@ -74,7 +74,7 @@ void cpuRotate3(M& a, M& b) {
     cpuJitter3<N>(b);
 }
 
-template <typename T, template M, template N>
+template <typename T, typename M, typename N>
 void cpuRotate4(T& a, T& b) {
     cpuRotate3<M, N>(*reinterpret_cast<M*>(&a), *reinterpret_cast<M*>(&b));
     b.y = a.z;
@@ -97,7 +97,7 @@ void cpuRotate3(T* a, T* b, int size) {
     }
 }
 
-template <typename T, template M, template N>
+template <typename T, typename M, typename N>
 void cpuRotate4(T* a, T* b, int size) {
     for (int i = 0; i < size; i++) {
         cpuRotate4<T, M, N>(a[i], b[i]);
