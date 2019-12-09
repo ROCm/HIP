@@ -51,6 +51,7 @@ int main() {
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
     HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
+    HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
     HIPCHECK(hipStreamDestroy(stream));
     passed();
 }
