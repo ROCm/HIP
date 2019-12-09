@@ -118,7 +118,7 @@ THE SOFTWARE.
                     !std::is_same<U, T>{} &&
                     std::is_enum<U>{} &&
                     std::is_convertible<
-                        T, typename std::underlying_type<U>::type>{}>::type* = nullptr>
+                        T, typename std::enable_if<std::is_enum<U>::value, std::underlying_type<U>>::type::type>{}>::type* = nullptr>
             __host__ __device__
             operator U() const noexcept { return static_cast<U>(data[idx]); }
             template<
@@ -127,7 +127,7 @@ THE SOFTWARE.
                     !std::is_same<U, T>{} &&
                     std::is_enum<U>{} &&
                     std::is_convertible<
-                        T, typename std::underlying_type<U>::type>{}>::type* = nullptr>
+                        T, typename std::enable_if<std::is_enum<U>::value, std::underlying_type<U>>::type::type>{}>::type* = nullptr>
             __host__ __device__
             operator U() const volatile noexcept { return static_cast<U>(data[idx]); }
 
