@@ -50,7 +50,7 @@ typedef activity_sync_callback_t hip_act_callback_t;
 
 class api_callbacks_table_t {
  public:
-  typedef std::recursive_mutex mutex_t;
+  typedef std::mutex mutex_t;
 
   typedef hip_api_record_t record_t;
   typedef hip_api_callback_t fun_t;
