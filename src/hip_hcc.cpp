@@ -1619,21 +1619,18 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     lp->group_dim.y = block.y;
     lp->group_dim.z = block.z;
     lp->barrier_bit = barrier_bit_queue_default;
-    lp->launch_fence = -1;
 
-    if (!lockAcquired) {
-        auto crit = stream->lockopen_preKernelCommand();
-        lp->av = &(crit->_av);
-        if (crit->_last_op_was_a_copy) lp->barrier_bit = barrier_bit_wait;
-        crit->_last_op_was_a_copy = false;
-    } else {
-        // this stream is already locked (e.g., call from hipExtLaunchMultiKernelMultiDevice)
-        auto& crit{stream->criticalData()};
-        lp->av = &crit._av;
-        if (crit._last_op_was_a_copy) lp->barrier_bit = barrier_bit_wait;
-        crit._last_op_was_a_copy = false;
-    }
+    if (!lockAcquired) stream->lockopen_preKernelCommand();
+    auto &crit = stream->criticalData();
+    lp->av = &(crit._av);
     lp->cf = nullptr;
+    auto acq = (HCC_OPT_FLUSH && !crit._last_op_was_a_copy) ?
+        HSA_FENCE_SCOPE_AGENT : HSA_FENCE_SCOPE_SYSTEM;
+    auto rel = HCC_OPT_FLUSH ?
+        HSA_FENCE_SCOPE_AGENT : HSA_FENCE_SCOPE_SYSTEM;
+    lp->launch_fence = (acq << HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE) |
+        (rel << HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE);
+    crit._last_op_was_a_copy = false;
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
 
     return (stream);
