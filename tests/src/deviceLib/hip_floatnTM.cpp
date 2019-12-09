@@ -31,26 +31,54 @@ THE SOFTWARE.
 #include <random>
 #include "test_common.h"
 
+
+template <typename T, typename M>
+int count(T& a) {
+    return sizeof(a) / sizeof(T);
+}
+/*
 template <typename T>
 void cpuJitter(T& b) {}
 
 template <>
 void cpuJitter<float2>(float2& b) {
+   b.x++;
+   b.y++;
+   b.x += b.y;
+}
+
+template <>
+void cpuJitter<float3>(float3& b) {
+   cpuJitter<float2>(*reinterpret_cast<float2*>(&b));
+   b.z++;
+   b.x = b.y + b.z;
+}
+
+template <>
+void cpuJitter<float4>(float4& b) {
+   cpuJitter<float2>(*reinterpret_cast<float2*>(&b));
+   b.w++;
+   b.x = b.w + b.y + b.z;
+}
+*/
+
+template <typename T, size_t N = 2>
+void cpuJitter(T& b) {
     b.x++;
     b.y++;
     b.x += b.y;
 }
 
-template <>
-void cpuJitter<float3>(float3& b) {
-    cpuJitter<float2>(*reinterpret_cast<float2*>(&b));
+template <typename T, size_t N = 3>
+void cpuJitter(T& b) {
+    cpuJitter<T, N - 1>(*reinterpret_cast<T*>(&b));
     b.z++;
     b.x = b.y + b.z;
 }
 
-template <>
-void cpuJitter<float4>(float4& b) {
-    cpuJitter<float2>(*reinterpret_cast<float2*>(&b));
+template <typename T, size_t N = 4>
+void cpuJitter(T& b) {
+    cpuJitter<T, N - 1>(*reinterpret_cast<T*>(&b));
     b.w++;
     b.x = b.w + b.y + b.z;
 }
@@ -63,7 +91,7 @@ template <>
 void cpuRotate<float2>(float2& a, float2& b) {
     b.x = a.y;
     b.y = a.x;
-    cpuJitter<float2>(b);
+    cpuJitter<float2, 2>(b);
 }
 
 template <>
@@ -71,7 +99,7 @@ void cpuRotate<float3>(float3& a, float3& b) {
     cpuRotate<float2>(*reinterpret_cast<float2*>(&a), *reinterpret_cast<float2*>(&b));
     b.y = a.z;
     b.z = a.x;
-    cpuJitter<float3>(b);
+    cpuJitter<float3, 3>(b);
 }
 
 template <>
@@ -80,7 +108,7 @@ void cpuRotate<float4>(float4& a, float4& b) {
     b.y = a.z;
     b.z = a.w;
     b.w = a.x;
-    cpuJitter<float4>(b);
+    cpuJitter<float4, 4>(b);
 }
 
 template <typename T>
