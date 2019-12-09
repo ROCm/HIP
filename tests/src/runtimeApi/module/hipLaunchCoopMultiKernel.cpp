@@ -17,7 +17,7 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Simple test for hipLaunchCoopMultiKernel API.
+// Simple test for hipLaunchCooperativeKernelMultiDevice API.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM all
