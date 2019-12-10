@@ -152,7 +152,7 @@ int main() {
 
   for (uint set = 0; set < 3; ++set) {
     void* args[MaxGPUs * NumKernelArgs];
-    std::cout << "---------- Test#1 ---------------\n";
+    std::cout << "---------- Test#" << set << "---------------\n";
     for (int i = 0; i < nGpu; i++) {
       HIPCHECK(hipSetDevice(i));
       dimBlock.x = workgroups[set];
@@ -182,7 +182,8 @@ int main() {
     HIPCHECK(hipMemcpy(init, dC, sizeof(long), hipMemcpyDeviceToHost));
 
     if (*dC != (((long)(BufferSizeInDwords) * (BufferSizeInDwords - 1)) / 2)) {
-      assert(false);
+      std::cout << "Data validation failed for grid size = " << dimGrid.x << " and block size = " << dimBlock.x << "\n";
+      std::cout << "Test failed! \n";
     }
     for (int i = 0; i < nGpu; i++) {
       hipFree(dB[i]);
