@@ -34,15 +34,31 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
-#if !defined(_MSC_VER) || __clang__
-#if defined(__clang__)
-    #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
+#if !defined(_MSC_VER)
+    #if __has_attribute(ext_vector_type)
+        #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
+    #else
+        #define __NATIVE_VECTOR__(n, ...) [n]
 #endif
 
-#if defined(__cplusplus) && defined(__clang__)
+#if defined(__cplusplus)
+    #include <array>
     #include <iosfwd>
     #include <type_traits>
 
+    namespace hip_impl {
+        template<typename, typename, unsigned int> struct Scalar_accessor;
+    } // Namespace hip_impl.
+    
+    namespace std {
+        template<typename T, typename U, unsigned int n>
+        struct is_integral<hip_impl::Scalar_accessor<T, U, n>>
+            : is_integral<T> {};
+        template<typename T, typename U, unsigned int n>
+        struct is_floating_point<hip_impl::Scalar_accessor<T, U, n>> 
+            : is_floating_point<T> {};
+    } // Namespace std.
+    
     namespace hip_impl {
         template<typename T, typename Vector, unsigned int idx>
         struct Scalar_accessor {
@@ -93,6 +109,27 @@ THE SOFTWARE.
             operator T() const noexcept { return data[idx]; }
             __host__ __device__
             operator T() const volatile noexcept { return data[idx]; }
+            
+            // The conversions to enum are fairly ghastly, but unfortunately used in
+            // some pre-existing, difficult to modify, code.
+            template<
+                typename U,
+                typename std::enable_if<
+                    !std::is_same<U, T>{} &&
+                    std::is_enum<U>{} &&
+                    std::is_convertible<
+                        T, typename std::enable_if<std::is_enum<U>::value, std::underlying_type<U>>::type::type>{}>::type* = nullptr>
+            __host__ __device__
+            operator U() const noexcept { return static_cast<U>(data[idx]); }
+            template<
+                typename U,
+                typename std::enable_if<
+                    !std::is_same<U, T>{} &&
+                    std::is_enum<U>{} &&
+                    std::is_convertible<
+                        T, typename std::enable_if<std::is_enum<U>::value, std::underlying_type<U>>::type::type>{}>::type* = nullptr>
+            __host__ __device__
+            operator U() const volatile noexcept { return static_cast<U>(data[idx]); }
 
             __host__ __device__
             operator T&() noexcept {
@@ -107,7 +144,13 @@ THE SOFTWARE.
 
             __host__ __device__
             Address operator&() const noexcept { return Address{this}; }
+            
+            __host__ __device__
+            Scalar_accessor& operator=(const Scalar_accessor& x) noexcept {
+                data[idx] = x.data[idx];
 
+                return *this;
+            }
             __host__ __device__
             Scalar_accessor& operator=(T x) noexcept {
                 data[idx] = x;
@@ -179,7 +222,7 @@ THE SOFTWARE.
                 typename std::enable_if<
                     std::is_convertible<U, T>{}>::type* = nullptr>
             __host__ __device__
-            Scalar_accessor& operator/=(T x) noexcept {
+            Scalar_accessor& operator/=(U x) noexcept {
                 data[idx] /= x;
                 return *this;
             }
@@ -245,7 +288,7 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 1> {
-        typedef T Native_vec_ __NATIVE_VECTOR__(1, T);
+        using Native_vec_ = T __NATIVE_VECTOR__(1, T);
 
         union {
             Native_vec_ data;
@@ -253,11 +296,22 @@ THE SOFTWARE.
         };
 
         using value_type = T;
+        
+        __host__ __device__
+        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+            #if __has_attribute(ext_vector_type)
+                data = x.data;
+            #else
+                data[0] = x.data[0];
+            #endif
+
+            return *this;
+        }
     };
 
     template<typename T>
     struct HIP_vector_base<T, 2> {
-        typedef T Native_vec_ __NATIVE_VECTOR__(2, T);
+        using Native_vec_ = T __NATIVE_VECTOR__(2, T);
 
         union {
             Native_vec_ data;
@@ -266,6 +320,18 @@ THE SOFTWARE.
         };
 
         using value_type = T;
+        
+        __host__ __device__
+        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+            #if __has_attribute(ext_vector_type)
+                data = x.data;
+            #else
+                data[0] = x.data[0];
+                data[1] = x.data[1];
+            #endif
+
+            return *this;
+        }
     };
 
     template<typename T>
@@ -404,15 +470,11 @@ THE SOFTWARE.
                 return *this;
             }
 
-            using Vec3_cmp = int __NATIVE_VECTOR__(3, int);
+            using Vec3_cmp = int __attribute__((vector_size(4 * sizeof(int))));
             __host__ __device__
             Vec3_cmp operator==(const Native_vec_& x) const noexcept
             {
-                Vec3_cmp r;
-                r[0] = d[0] == x.d[0];
-                r[1] = d[1] == x.d[1];
-                r[2] = d[2] == x.d[2];
-                return r;
+                return Vec3_cmp{d[0] == x.d[0], d[1] == x.d[1], d[2] == x.d[2]};
             }
         };
 
@@ -430,7 +492,7 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 4> {
-        typedef T Native_vec_ __NATIVE_VECTOR__(4, T);
+        using Native_vec_ = T __NATIVE_VECTOR__(4, T);
 
         union {
             Native_vec_ data;
@@ -441,6 +503,20 @@ THE SOFTWARE.
         };
 
         using value_type = T;
+        
+        __host__ __device__
+        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+            #if __has_attribute(ext_vector_type)
+                data = x.data;
+            #else
+                data[0] = x.data[0];
+                data[1] = x.data[1];
+                data[2] = x.data[2];
+                data[3] = x.data[3];
+            #endif
+
+            return *this;
+        }
     };
 
     template<typename T, unsigned int rank>
@@ -464,7 +540,14 @@ THE SOFTWARE.
             typename std::enable_if<
                 (rank > 1) && sizeof...(Us) == rank>::type* = nullptr>
         inline __host__ __device__
-        HIP_vector_type(Us... xs) noexcept { data = Native_vec_{static_cast<T>(xs)...}; }
+        HIP_vector_type(Us... xs) noexcept
+        {
+            #if __has_attribute(ext_vector_type)
+                new (&data) Native_vec_{static_cast<T>(xs)...};
+            #else
+                new (&data) std::array<T, rank>{static_cast<T>(xs)...};
+            #endif
+        }
         inline __host__ __device__
         HIP_vector_type(const HIP_vector_type&) = default;
         inline __host__ __device__
@@ -650,7 +733,6 @@ THE SOFTWARE.
             return *this;
         }
     };
-
 
     template<typename T, unsigned int n>
     inline __host__ __device__
