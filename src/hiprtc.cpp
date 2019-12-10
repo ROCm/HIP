@@ -143,7 +143,9 @@ struct _hiprtcProgram {
     {
         using namespace std;
 
-        name = hip_impl::demangle(name.c_str());
+        char* demangled = hip_impl::demangle(name.c_str());
+        name.assign(demangled == nullptr ? "" : demangled);
+        std::free(demangled);
 
         if (name.empty()) return name;
 
@@ -393,17 +395,16 @@ namespace
 namespace hip_impl
 {
     inline
-    std::string demangle(const char* x)
+    char* demangle(const char* x)
     {
-        if (!x) return {};
+        if (!x) return nullptr;
 
         int s{};
-        std::unique_ptr<char, decltype(std::free)*> tmp{
-            abi::__cxa_demangle(x, nullptr, nullptr, &s), std::free};
+        char* tmp = abi::__cxa_demangle(x, nullptr, nullptr, &s);
 
-        if (s != 0) return {};
+        if (s != 0) return nullptr;
 
-        return tmp.get();
+        return tmp;
     }
 } // Namespace hip_impl.
 
