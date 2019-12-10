@@ -39,7 +39,6 @@ int main() {
             flag = 1 << i;
             printf("Flag=%x\n", flag);
             HIPCHECK(hipSetDeviceFlags(flag));
-            // HIPCHECK_API(hipSetDeviceFlags(flag), hipErrorInvalidValue);
         }
 
         flag = 0;

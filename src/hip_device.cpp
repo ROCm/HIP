@@ -382,28 +382,15 @@ hipError_t hipSetDeviceFlags(unsigned int flags) {
     if (ctx) {
         auto* deviceHandle = ctx->getDevice();
         if (deviceHandle->_state == 0) {
-            ctx->_ctxFlags = ctx->_ctxFlags | flags;
-            if (flags & hipDeviceScheduleMask) {
-                switch (hipDeviceScheduleMask) {
-                    case hipDeviceScheduleAuto:
-                    case hipDeviceScheduleSpin:
-                    case hipDeviceScheduleYield:
-                    case hipDeviceScheduleBlockingSync:
-                        e = hipSuccess;
-                        break;
-                    default:
-                        e = hipSuccess;  // TODO - should this be error?  Map to Auto?
-                        // e = hipErrorInvalidValue;
-                        break;
-                }
-            }
-
             unsigned supportedFlags =
                 hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
 
             if (flags & (~supportedFlags)) {
                 e = hipErrorInvalidValue;
+            }else{
+                ctx->_ctxFlags = ctx->_ctxFlags | flags;
             }
+
         } else {
             e = hipErrorSetOnActiveProcess;
         }
