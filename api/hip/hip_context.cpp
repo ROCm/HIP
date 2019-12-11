@@ -65,6 +65,8 @@ void init() {
   if (host_context && CL_SUCCESS != host_context->create(nullptr)) {
     host_context->release();
   }
+
+  PlatformState::instance().init();
 }
 
 amd::Context* getCurrentContext() {
