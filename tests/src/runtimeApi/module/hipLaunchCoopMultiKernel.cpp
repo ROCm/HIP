@@ -119,7 +119,7 @@ int main() {
 
     // Calculate the device occupancy to know how many blocks can be run concurrently
     hipGetDeviceProperties(&deviceProp[i], 0);
-    if (!deviceProp[i].cooperativeLaunch) {
+    if (!deviceProp[i].cooperativeMultiDeviceLaunch) {
       printf("Device doesn't support cooperative launch!");
       passed();
       return 0;
