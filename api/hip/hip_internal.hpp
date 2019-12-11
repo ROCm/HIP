@@ -58,7 +58,7 @@ typedef struct ihipIpcMemHandle_st {
   if (!CL_CHECK_THREAD(thread)) {                            \
     HIP_RETURN(hipErrorOutOfMemory);                         \
   }                                                          \
-  HIP_INIT();                                                \
+  HIP_INIT()                                                 \
   HIP_CB_SPAWNER_OBJECT(cid);
 
 #define HIP_RETURN(ret)          \
@@ -126,7 +126,29 @@ struct ihipExec_t {
 class PlatformState {
   amd::Monitor lock_;
 
+  std::unordered_map<const void*, std::vector<std::pair<hipModule_t, bool>>> modules_;
+  bool initialized_;
+
+  void digestFatBinary(const void* data, std::vector<std::pair<hipModule_t, bool>>& programs);
 public:
+  void init();
+  std::vector<std::pair<hipModule_t, bool>>* addFatBinary(const void*data)
+  {
+    if (initialized_) {
+      digestFatBinary(data, modules_[data]);
+    }
+    return &modules_[data];
+  }
+  void removeFatBinary(std::vector<std::pair<hipModule_t, bool>>* module)
+  {
+    for (auto& mod : modules_) {
+      if (&mod.second == module) {
+        modules_.erase(&mod);
+        return;
+      }
+    }
+  }
+
   struct RegisteredVar {
   public:
     RegisteredVar(): size_(0), devicePtr_(nullptr), amd_mem_obj_(nullptr) {}
@@ -159,7 +181,7 @@ private:
 
   static PlatformState* platform_;
 
-  PlatformState() : lock_("Guards global function map") {}
+  PlatformState() : lock_("Guards global function map"), initialized_(false) {}
   ~PlatformState() {}
 public:
   static PlatformState& instance() {

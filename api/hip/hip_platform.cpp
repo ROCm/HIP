@@ -85,8 +85,6 @@ bool __hipExtractCodeObjectFromFatBinary(const void* data,
                                          const std::vector<const char*>& devices,
                                          std::vector<std::pair<const void*, size_t>>& code_objs)
 {
-  HIP_INIT();
-
   std::string magic((const char*)data, sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
   if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR)) {
     return false;
@@ -127,42 +125,59 @@ bool __hipExtractCodeObjectFromFatBinary(const void* data,
     return false;
 }
 
-extern "C" std::vector< std::pair<hipModule_t, bool> >* __hipRegisterFatBinary(const void* data)
+extern "C" std::vector<std::pair<hipModule_t, bool>>* __hipRegisterFatBinary(const void* data)
 {
-  HIP_INIT();
-
-  if(g_devices.empty()) {
-    return nullptr;
-  }
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
   if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
     return nullptr;
   }
 
-  std::vector<const char*> devices;
+  return PlatformState::instance().addFatBinary(fbwrapper->binary);
+}
+
+void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipModule_t, bool>>& programs)
+{
   std::vector<std::pair<const void*, size_t>> code_objs;
+  std::vector<const char*> devices;
   for (size_t dev = 0; dev < g_devices.size(); ++dev) {
     amd::Context* ctx = g_devices[dev];
     devices.push_back(ctx->devices()[0]->info().name_);
-}
-
-  if (!__hipExtractCodeObjectFromFatBinary((char*)fbwrapper->binary, devices, code_objs)) {
-    return nullptr;
   }
 
-  auto programs = new std::vector< std::pair<hipModule_t, bool> >(g_devices.size());
+  if (!__hipExtractCodeObjectFromFatBinary((char*)data, devices, code_objs)) {
+    return;
+  }
+
+  programs.resize(g_devices.size());
+
   for (size_t dev = 0; dev < g_devices.size(); ++dev) {
     amd::Context* ctx = g_devices[dev];
     amd::Program* program = new amd::Program(*ctx);
     if (program == nullptr) {
-      return nullptr;
+      return;
     }
     if (CL_SUCCESS == program->addDeviceProgram(*ctx->devices()[0], code_objs[dev].first, code_objs[dev].second)) {
-      programs->at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)) , false);
+      programs.at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)) , false);
     }
   }
+}
 
-  return programs;
+void PlatformState::init()
+{
+  if(initialized_ || g_devices.empty()) {
+    return;
+  }
+  initialized_ = true;
+
+  for (auto& it : modules_) {
+    digestFatBinary(it.first, it.second);
+  }
+  for (auto& it : functions_) {
+    it.second.functions.resize(g_devices.size());
+  }
+  for (auto& it : vars_) {
+    it.second.rvars.resize(g_devices.size());
+  }
 }
 
 std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipModule_t hmod) {
@@ -188,7 +203,6 @@ std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipMod
 
 PlatformState::DeviceVar* PlatformState::findVar(std::string hostVar, int deviceId, hipModule_t hmod) {
   DeviceVar* dvar = nullptr;
-
   if (hmod != nullptr) {
     // If module is provided, then get the var only from that module
     auto var_range = vars_.equal_range(hostVar);
@@ -302,7 +316,6 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
 
 bool PlatformState::getFuncAttr(const void* hostFunction,
                                 hipFuncAttributes* func_attr) {
-
   if (func_attr == nullptr) {
     return false;
   }
@@ -413,8 +426,7 @@ extern "C" void __hipRegisterFunction(
   dim3*        gridDim,
   int*         wSize)
 {
-  HIP_INIT();
-  PlatformState::DeviceFunction func{ std::string{deviceName}, modules, std::vector<hipFunction_t>{ g_devices.size() }};
+  PlatformState::DeviceFunction func{ std::string{deviceName}, modules, std::vector<hipFunction_t>{g_devices.size()}};
   PlatformState::instance().registerFunction(hostFunction, func);
 //  for (size_t i = 0; i < g_devices.size(); ++i) {
 //    PlatformState::instance().getFunc(hostFunction, i);
@@ -436,10 +448,8 @@ extern "C" void __hipRegisterVar(
   int         constant,  // Whether this variable is constant
   int         global)    // Unknown, always 0
 {
-  HIP_INIT();
-
   PlatformState::DeviceVar dvar{var, std::string{ hostVar }, static_cast<size_t>(size), modules,
-    std::vector<PlatformState::RegisteredVar>{ g_devices.size() }, false };
+    std::vector<PlatformState::RegisteredVar>{g_devices.size()}, false };
 
   PlatformState::instance().registerVar(hostVar, dvar);
 }
@@ -454,7 +464,7 @@ extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, boo
     }
   });
   PlatformState::instance().unregisterVar((*modules)[0].first);
-  delete modules;
+  PlatformState::instance().removeFatBinary(modules);
 }
 
 extern "C" hipError_t hipConfigureCall(
