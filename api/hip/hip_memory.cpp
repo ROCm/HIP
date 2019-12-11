@@ -500,13 +500,13 @@ hipError_t hipMalloc3DArray(hipArray_t* array, const struct hipChannelFormatDesc
   const cl_image_format image_format = { channelOrder, channelType };
 
  // Dummy flags check
-  switch (flags) {
+   switch (flags) {
     case hipArrayLayered:
+    case hipArrayCubemap:
     case hipArraySurfaceLoadStore:
     case hipArrayTextureGather:
         assert(0 && "Unspported");
         break;
-    case hipArrayCubemap:
     case hipArrayDefault:
     default:
         break;

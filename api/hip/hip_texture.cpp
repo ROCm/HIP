@@ -299,6 +299,8 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
 
   amd::Memory* memory = nullptr;
   size_t offset = 0;
+  cl_mem_object_type clType;
+
   switch (pResDesc->resType) {
     case hipResourceTypeArray:
       {
@@ -316,9 +318,23 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
           case hipArrayTextureGather:
           case hipArrayDefault:
           default:
-            image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
-              CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
-              pResDesc->res.array.array->width, pResDesc->res.array.array->height, 1, 0, 0);
+            switch(pResDesc->res.array.array->textureType) {
+              case hipTextureType3D:
+                clType = CL_MEM_OBJECT_IMAGE3D;
+                image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+                  clType, memory->getMemFlags(), imageFormat,
+                  pResDesc->res.array.array->width, pResDesc->res.array.array->height,
+                  pResDesc->res.array.array->depth, 0, 0);
+                break;
+              case hipTextureType2D:
+                clType = CL_MEM_OBJECT_IMAGE2D;
+                image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+                  clType, memory->getMemFlags(), imageFormat,
+                  pResDesc->res.array.array->width, pResDesc->res.array.array->height, 1, 0, 0);
+                break;
+              default:
+                break;
+            }
             break;
         }
       }
