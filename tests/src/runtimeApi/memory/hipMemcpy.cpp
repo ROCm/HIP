@@ -292,8 +292,8 @@ void memcpytest2_get_host_memory(size_t& free, size_t& total) {
     MEMORYSTATUSEX status;
     status.dwLength = sizeof(status);
     GlobalMemoryStatusEx(&status);
-    free = status.ullAvailPhys;
-    total = status.ullTotalPhys;
+    free = (0.4 * status.ullAvailPhys);
+    total = (0.4 * status.ullTotalPhys);
 }
 #else
 struct sysinfo memInfo;
