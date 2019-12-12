@@ -113,6 +113,27 @@ inline std::string ToHexString(T v) {
     return ss.str();
 };
 
+template <typename T>
+inline std::string ToString(T* v) {
+    std::ostringstream ss;
+    if (v == NULL) {
+        ss << "char array:<null>";
+    } else {
+        ss << v;
+    }
+    return ss.str();
+};
+
+template <typename T>
+inline std::string ToString(T** v) {
+    std::ostringstream ss;
+    if (v == NULL) {
+        ss << "char array:<null>";
+    } else {
+        ss << v;
+    }
+    return ss.str();
+};
 
 //---
 // Template overloads for ToString to handle specific types
@@ -123,11 +144,6 @@ inline std::string ToString(T v) {
     std::ostringstream ss;
     ss << v;
     return ss.str();
-};
-
-template <>
-inline std::string ToString(const char* v) {
-    return ToHexString<const void*>(v);
 };
 
 template <>
