@@ -124,10 +124,10 @@ struct ihipExec_t {
 };
 
 class PlatformState {
-  amd::Monitor lock_;
+  amd::Monitor lock_{"Guards global function map"};
 
   std::unordered_map<const void*, std::vector<std::pair<hipModule_t, bool>>> modules_;
-  bool initialized_;
+  bool initialized_{false};
 
   void digestFatBinary(const void* data, std::vector<std::pair<hipModule_t, bool>>& programs);
 public:
@@ -181,7 +181,7 @@ private:
 
   static PlatformState* platform_;
 
-  PlatformState() : lock_("Guards global function map"), initialized_(false) {}
+  PlatformState() {}
   ~PlatformState() {}
 public:
   static PlatformState& instance() {

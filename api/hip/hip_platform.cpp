@@ -137,6 +137,10 @@ extern "C" std::vector<std::pair<hipModule_t, bool>>* __hipRegisterFatBinary(con
 
 void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipModule_t, bool>>& programs)
 {
+  if (programs.size() > 0) {
+    return;
+  }
+
   std::vector<std::pair<const void*, size_t>> code_objs;
   std::vector<const char*> devices;
   for (size_t dev = 0; dev < g_devices.size(); ++dev) {
@@ -164,6 +168,8 @@ void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipM
 
 void PlatformState::init()
 {
+  amd::ScopedLock lock(lock_);
+
   if(initialized_ || g_devices.empty()) {
     return;
   }
