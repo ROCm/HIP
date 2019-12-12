@@ -143,14 +143,14 @@ const std::map<llvm::StringRef, hipCounter> CUDA_BLAS_TYPE_NAME_MAP{
   {"CUDA_C_32F",                     {"HIPBLAS_C_32F",                   "rocblas_datatype_f32_c",                CONV_NUMERIC_LITERAL, API_RUNTIME}}, //  4 // 154
   {"CUDA_R_64F",                     {"HIPBLAS_R_64F",                   "rocblas_datatype_f64_r",                CONV_NUMERIC_LITERAL, API_RUNTIME}}, //  1 // 152
   {"CUDA_C_64F",                     {"HIPBLAS_C_64F",                   "rocblas_datatype_f64_c",                CONV_NUMERIC_LITERAL, API_RUNTIME}}, //  5 // 155
-  {"CUDA_R_8I",                      {"HIPBLAS_R_8I",                    "rocblas_datatype_i8_r",                 CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, //  3 // 160
-  {"CUDA_C_8I",                      {"HIPBLAS_C_8I",                    "rocblas_datatype_i8_c",                 CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, //  7 // 164
-  {"CUDA_R_8U",                      {"HIPBLAS_R_8U",                    "rocblas_datatype_u8_r",                 CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, //  8 // 161
-  {"CUDA_C_8U",                      {"HIPBLAS_C_8U",                    "rocblas_datatype_u8_c",                 CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, //  9 // 165
-  {"CUDA_R_32I",                     {"HIPBLAS_R_32I",                   "rocblas_datatype_i32_r",                CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 10 // 162
-  {"CUDA_C_32I",                     {"HIPBLAS_C_32I",                   "rocblas_datatype_i32_c",                CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 11 // 166
-  {"CUDA_R_32U",                     {"HIPBLAS_R_32U",                   "rocblas_datatype_u32_r",                CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 12 // 163
-  {"CUDA_C_32U",                     {"HIPBLAS_C_32U",                   "rocblas_datatype_u32_c",                CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 13 // 167
+  {"CUDA_R_8I",                      {"HIPBLAS_R_8I",                    "rocblas_datatype_i8_r",                 CONV_NUMERIC_LITERAL, API_RUNTIME}}, //  3 // 160
+  {"CUDA_C_8I",                      {"HIPBLAS_C_8I",                    "rocblas_datatype_i8_c",                 CONV_NUMERIC_LITERAL, API_RUNTIME}}, //  7 // 164
+  {"CUDA_R_8U",                      {"HIPBLAS_R_8U",                    "rocblas_datatype_u8_r",                 CONV_NUMERIC_LITERAL, API_RUNTIME}}, //  8 // 161
+  {"CUDA_C_8U",                      {"HIPBLAS_C_8U",                    "rocblas_datatype_u8_c",                 CONV_NUMERIC_LITERAL, API_RUNTIME}}, //  9 // 165
+  {"CUDA_R_32I",                     {"HIPBLAS_R_32I",                   "rocblas_datatype_i32_r",                CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 10 // 162
+  {"CUDA_C_32I",                     {"HIPBLAS_C_32I",                   "rocblas_datatype_i32_c",                CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 11 // 166
+  {"CUDA_R_32U",                     {"HIPBLAS_R_32U",                   "rocblas_datatype_u32_r",                CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 12 // 163
+  {"CUDA_C_32U",                     {"HIPBLAS_C_32U",                   "rocblas_datatype_u32_c",                CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 13 // 167
 
   {"cublasHandle_t",                 {"hipblasHandle_t",                 "rocblas_handle",                        CONV_TYPE, API_BLAS}},
   // TODO: dereferencing: typedef struct cublasContext *cublasHandle_t;
