@@ -137,128 +137,131 @@
 |`cublasSnrm2_v2`                                           |`hipblasSnrm2`                                   |
 |`cublasDnrm2`                                              |`hipblasDnrm2`                                   |
 |`cublasDnrm2_v2`                                           |`hipblasDnrm2`                                   |
-|`cublasScnrm2`                                             |                                                 |
-|`cublasScnrm2_v2`                                          |                                                 |
-|`cublasDznrm2`                                             |                                                 |
-|`cublasDznrm2_v2`                                          |                                                 |
+|`cublasScnrm2`                                             |`hipblasScnrm2`                                  |
+|`cublasScnrm2_v2`                                          |`hipblasScnrm2`                                  |
+|`cublasDznrm2`                                             |`hipblasDznrm2`                                  |
+|`cublasDznrm2_v2`                                          |`hipblasDznrm2`                                  |
 |`cublasDotEx`                                              |                                                 | 8.0              |
 |`cublasDotcEx`                                             |                                                 | 8.0              |
 |`cublasSdot`                                               |`hipblasSdot`                                    |
 |`cublasSdot_v2`                                            |`hipblasSdot`                                    |
 |`cublasDdot`                                               |`hipblasDdot`                                    |
 |`cublasDdot_v2`                                            |`hipblasDdot`                                    |
-|`cublasCdotu`                                              |                                                 |
-|`cublasCdotu_v2`                                           |                                                 |
-|`cublasCdotc`                                              |                                                 |
-|`cublasCdotc_v2`                                           |                                                 |
-|`cublasZdotu`                                              |                                                 |
-|`cublasZdotu_v2`                                           |                                                 |
-|`cublasZdotc`                                              |                                                 |
-|`cublasZdotc_v2`                                           |                                                 |
+|`cublasCdotu`                                              |`hipblasCdotu`                                   |
+|`cublasCdotu_v2`                                           |`hipblasCdotu`                                   |
+|`cublasCdotc`                                              |`hipblasCdotc`                                   |
+|`cublasCdotc_v2`                                           |`hipblasCdotc`                                   |
+|`cublasZdotu`                                              |`hipblasZdotu`                                   |
+|`cublasZdotu_v2`                                           |`hipblasZdotu`                                   |
+|`cublasZdotc`                                              |`hipblasZdotc`                                   |
+|`cublasZdotc_v2`                                           |`hipblasZdotc`                                   |
 |`cublasScalEx`                                             |                                                 | 8.0              |
 |`cublasSscal`                                              |`hipblasSscal`                                   |
 |`cublasSscal_v2`                                           |`hipblasSscal`                                   |
 |`cublasDscal`                                              |`hipblasDscal`                                   |
 |`cublasDscal_v2`                                           |`hipblasDscal`                                   |
-|`cublasCscal`                                              |                                                 |
-|`cublasCscal_v2`                                           |                                                 |
-|`cublasCsscal`                                             |                                                 |
-|`cublasCsscal_v2`                                          |                                                 |
-|`cublasZscal`                                              |                                                 |
-|`cublasZscal_v2`                                           |                                                 |
-|`cublasZdscal`                                             |                                                 |
-|`cublasZdscal_v2`                                          |                                                 |
+|`cublasCscal`                                              |`hipblasCscal`                                   |
+|`cublasCscal_v2`                                           |`hipblasCscal`                                   |
+|`cublasCsscal`                                             |`hipblasCsscal`                                  |
+|`cublasCsscal_v2`                                          |`hipblasCsscal`                                  |
+|`cublasZscal`                                              |`hipblasZscal`                                   |
+|`cublasZscal_v2`                                           |`hipblasZscal`                                   |
+|`cublasZdscal`                                             |`hipblasZdscal`                                  |
+|`cublasZdscal_v2`                                          |`hipblasZdscal`                                  |
 |`cublasAxpyEx`                                             |                                                 | 8.0              |
 |`cublasSaxpy`                                              |`hipblasSaxpy`                                   |
 |`cublasSaxpy_v2`                                           |`hipblasSaxpy`                                   |
 |`cublasDaxpy`                                              |`hipblasDaxpy`                                   |
 |`cublasDaxpy_v2`                                           |`hipblasDaxpy`                                   |
-|`cublasCaxpy`                                              |                                                 |
-|`cublasCaxpy_v2`                                           |                                                 |
-|`cublasZaxpy`                                              |                                                 |
-|`cublasZaxpy_v2`                                           |                                                 |
+|`cublasCaxpy`                                              |`hipblasCaxpy`                                   |
+|`cublasCaxpy_v2`                                           |`hipblasCaxpy`                                   |
+|`cublasZaxpy`                                              |`hipblasZaxpy`                                   |
+|`cublasZaxpy_v2`                                           |`hipblasZaxpy`                                   |
 |`cublasScopy`                                              |`hipblasScopy`                                   |
 |`cublasScopy_v2`                                           |`hipblasScopy`                                   |
 |`cublasDcopy`                                              |`hipblasDcopy`                                   |
 |`cublasDcopy_v2`                                           |`hipblasDcopy`                                   |
-|`cublasCcopy`                                              |                                                 |
+|`cublasCcopy`                                              |`hipblasCcopy`                                   |
 |`cublasCopyEx`                                             |                                                 | 10.1             |
-|`cublasCcopy_v2`                                           |                                                 |
-|`cublasZcopy`                                              |                                                 |
-|`cublasZcopy_v2`                                           |                                                 |
-|`cublasSswap`                                              |                                                 |
-|`cublasSswap_v2`                                           |                                                 |
-|`cublasDswap`                                              |                                                 |
-|`cublasDswap_v2`                                           |                                                 |
-|`cublasCswap`                                              |                                                 |
-|`cublasCswap_v2`                                           |                                                 |
-|`cublasZswap`                                              |                                                 |
-|`cublasZswap_v2`                                           |                                                 |
+|`cublasCcopy_v2`                                           |`hipblasCcopy`                                   |
+|`cublasZcopy`                                              |`hipblasZcopy`                                   |
+|`cublasZcopy_v2`                                           |`hipblasZcopy`                                   |
+|`cublasSswap`                                              |`hipblasSswap`                                   |
+|`cublasSswap_v2`                                           |`hipblasSswap`                                   |
+|`cublasDswap`                                              |`hipblasDswap`                                   |
+|`cublasDswap_v2`                                           |`hipblasDswap`                                   |
+|`cublasCswap`                                              |`hipblasCswap`                                   |
+|`cublasCswap_v2`                                           |`hipblasCswap`                                   |
+|`cublasZswap`                                              |`hipblasZswap`                                   |
+|`cublasZswap_v2`                                           |`hipblasZswap`                                   |
 |`cublasIamaxEx`                                            |                                                 | 10.1             |
 |`cublasIsamax`                                             |`hipblasIsamax`                                  |
 |`cublasIsamax_v2`                                          |`hipblasIsamax`                                  |
 |`cublasIdamax`                                             |`hipblasIdamax`                                  |
 |`cublasIdamax_v2`                                          |`hipblasIdamax`                                  |
-|`cublasIcamax`                                             |                                                 |
-|`cublasIcamax_v2`                                          |                                                 |
-|`cublasIzamax`                                             |                                                 |
-|`cublasIzamax_v2`                                          |                                                 |
+|`cublasIcamax`                                             |`hipblasIcamax`                                  |
+|`cublasIcamax_v2`                                          |`hipblasIcamax`                                  |
+|`cublasIzamax`                                             |`hipblasIzamax`                                  |
+|`cublasIzamax_v2`                                          |`hipblasIzamax`                                  |
 |`cublasIaminEx`                                            |                                                 | 10.1             |
-|`cublasIsamin`                                             |                                                 |
-|`cublasIsamin_v2`                                          |                                                 |
-|`cublasIdamin`                                             |                                                 |
-|`cublasIdamin_v2`                                          |                                                 |
-|`cublasIcamin`                                             |                                                 |
-|`cublasIcamin_v2`                                          |                                                 |
-|`cublasIzamin`                                             |                                                 |
-|`cublasIzamin_v2`                                          |                                                 |
+|`cublasIsamin`                                             |`hipblasIsamin`                                  |
+|`cublasIsamin_v2`                                          |`hipblasIsamin`                                  |
+|`cublasIdamin`                                             |`hipblasIdamin`                                  |
+|`cublasIdamin_v2`                                          |`hipblasIdamin`                                  |
+|`cublasIcamin`                                             |`hipblasIcamin`                                  |
+|`cublasIcamin_v2`                                          |`hipblasIcamin`                                  |
+|`cublasIzamin`                                             |`hipblasIzamin`                                  |
+|`cublasIzamin_v2`                                          |`hipblasIzamin`                                  |
 |`cublasAsumEx`                                             |                                                 | 10.1             |
 |`cublasSasum`                                              |`hipblasSasum`                                   |
 |`cublasSasum_v2`                                           |`hipblasSasum`                                   |
 |`cublasDasum`                                              |`hipblasDasum`                                   |
 |`cublasDasum_v2`                                           |`hipblasDasum`                                   |
-|`cublasScasum`                                             |                                                 |
-|`cublasScasum_v2`                                          |                                                 |
-|`cublasDzasum`                                             |                                                 |
-|`cublasDzasum_v2`                                          |                                                 |
+|`cublasScasum`                                             |`hipblasScasum`                                  |
+|`cublasScasum_v2`                                          |`hipblasScasum`                                  |
+|`cublasDzasum`                                             |`hipblasDzasum`                                  |
+|`cublasDzasum_v2`                                          |`hipblasDzasum`                                  |
 |`cublasRotEx`                                              |                                                 | 10.1             |
-|`cublasSrot`                                               |                                                 |
-|`cublasSrot_v2`                                            |                                                 |
-|`cublasDrot`                                               |                                                 |
-|`cublasDrot_v2`                                            |                                                 |
-|`cublasCrot`                                               |                                                 |
-|`cublasCrot_v2`                                            |                                                 |
-|`cublasZrot`                                               |                                                 |
-|`cublasZrot_v2`                                            |                                                 |
+|`cublasSrot`                                               |`hipblasSrot`                                    |
+|`cublasSrot_v2`                                            |`hipblasSrot`                                    |
+|`cublasDrot`                                               |`hipblasDrot`                                    |
+|`cublasDrot_v2`                                            |`hipblasDrot`                                    |
+|`cublasCrot`                                               |`hipblasCrot`                                    |
+|`cublasCrot_v2`                                            |`hipblasCrot`                                    |
+|`cublasCsrot`                                              |`hipblasCsrot`                                   |
+|`cublasCsrot_v2`                                           |`hipblasCsrot`                                   |
+|`cublasZrot`                                               |`hipblasZrot`                                    |
+|`cublasZrot_v2`                                            |`hipblasZrot`                                    |
 |`cublasRotgEx`                                             |                                                 | 10.1             |
-|`cublasZdrot`                                              |                                                 |
-|`cublasZdrot_v2`                                           |                                                 |
-|`cublasSrotg`                                              |                                                 |
-|`cublasSrotg_v2`                                           |                                                 |
-|`cublasDrotg`                                              |                                                 |
-|`cublasDrotg_v2`                                           |                                                 |
-|`cublasCrotg`                                              |                                                 |
-|`cublasCrotg_v2`                                           |                                                 |
-|`cublasZrotg`                                              |                                                 |
-|`cublasZrotg_v2`                                           |                                                 |
+|`cublasZdrot`                                              |`hipblasZdrot`                                   |
+|`cublasZdrot_v2`                                           |`hipblasZdrot`                                   |
+|`cublasSrotg`                                              |`hipblasSrotg`                                   |
+|`cublasSrotg_v2`                                           |`hipblasSrotg`                                   |
+|`cublasDrotg`                                              |`hipblasDrotg`                                   |
+|`cublasDrotg_v2`                                           |`hipblasDrotg`                                   |
+|`cublasCrotg`                                              |`hipblasCrotg`                                   |
+|`cublasCrotg_v2`                                           |`hipblasCrotg`                                   |
+|`cublasZrotg`                                              |`hipblasZrotg`                                   |
+|`cublasZrotg_v2`                                           |`hipblasZrotg`                                   |
 |`cublasRotmEx`                                             |                                                 | 10.1             |
-|`cublasSrotm`                                              |                                                 |
-|`cublasSrotm_v2`                                           |                                                 |
-|`cublasDrotm`                                              |                                                 |
-|`cublasDrotm_v2`                                           |                                                 |
+|`cublasSrotm`                                              |`hipblasSrotm`                                   |
+|`cublasSrotm_v2`                                           |`hipblasSrotm`                                   |
+|`cublasDrotm`                                              |`hipblasDrotm`                                   |
+|`cublasDrotm_v2`                                           |`hipblasDrotm`                                   |
 |`cublasRotmgEx`                                            |                                                 | 10.1             |
-|`cublasSrotmg`                                             |                                                 |
-|`cublasSrotmg_v2`                                          |                                                 |
-|`cublasDrotmg`                                             |                                                 |
-|`cublasDrotmg_v2`                                          |                                                 |
+|`cublasSrotmg`                                             |`hipblasSrotmg`                                  |
+|`cublasSrotmg_v2`                                          |`hipblasSrotmg`                                  |
+|`cublasDrotmg`                                             |`hipblasDrotmg`                                  |
+|`cublasDrotmg_v2`                                          |`hipblasDrotmg`                                  |
 |`cublasSgemv`                                              |`hipblasSgemv`                                   |
 |`cublasSgemv_v2`                                           |`hipblasSgemv`                                   |
+|`cublasSgemvBatched`                                       |`hipblasSgemvBatched`                            |
 |`cublasDgemv`                                              |`hipblasDgemv`                                   |
 |`cublasDgemv_v2`                                           |`hipblasDgemv`                                   |
-|`cublasCgemv`                                              |                                                 |
-|`cublasCgemv_v2`                                           |                                                 |
-|`cublasZgemv`                                              |                                                 |
-|`cublasZgemv_v2`                                           |                                                 |
+|`cublasCgemv`                                              |`hipblasCgemv`                                   |
+|`cublasCgemv_v2`                                           |`hipblasCgemv`                                   |
+|`cublasZgemv`                                              |`hipblasZgemv`                                   |
+|`cublasZgemv_v2`                                           |`hipblasZgemv`                                   |
 |`cublasSgbmv`                                              |                                                 |
 |`cublasSgbmv_v2`                                           |                                                 |
 |`cublasDgbmv`                                              |                                                 |
@@ -291,10 +294,10 @@
 |`cublasCtpmv_v2`                                           |                                                 |
 |`cublasZtpmv`                                              |                                                 |
 |`cublasZtpmv_v2`                                           |                                                 |
-|`cublasStrsv`                                              |                                                 |
-|`cublasStrsv_v2`                                           |                                                 |
-|`cublasDtrsv`                                              |                                                 |
-|`cublasDtrsv_v2`                                           |                                                 |
+|`cublasStrsv`                                              |`hipblasStrsv`                                   |
+|`cublasStrsv_v2`                                           |`hipblasStrsv`                                   |
+|`cublasDtrsv`                                              |`hipblasDtrsv`                                   |
+|`cublasDtrsv_v2`                                           |`hipblasDtrsv`                                   |
 |`cublasCtrsv`                                              |                                                 |
 |`cublasCtrsv_v2`                                           |                                                 |
 |`cublasZtrsv`                                              |                                                 |
@@ -355,10 +358,10 @@
 |`cublasZgeru_v2`                                           |                                                 |
 |`cublasZgerc`                                              |                                                 |
 |`cublasZgerc_v2`                                           |                                                 |
-|`cublasSsyr`                                               |                                                 |
-|`cublasSsyr_v2`                                            |                                                 |
-|`cublasDsyr`                                               |                                                 |
-|`cublasDsyr_v2`                                            |                                                 |
+|`cublasSsyr`                                               |`hipblasSsyr`                                    |
+|`cublasSsyr_v2`                                            |`hipblasSsyr`                                    |
+|`cublasDsyr`                                               |`hipblasDsyr`                                    |
+|`cublasDsyr_v2`                                            |`hipblasDsyr`                                    |
 |`cublasCsyr`                                               |                                                 |
 |`cublasCsyr_v2`                                            |                                                 |
 |`cublasZsyr`                                               |                                                 |
@@ -403,8 +406,8 @@
 |`cublasCgemm_v2`                                           |                                                 |
 |`cublasCgemm3m`                                            |                                                 | 8.0              |
 |`cublasCgemm3mEx`                                          |                                                 | 8.0              |
-|`cublasZgemm`                                              |                                                 |
-|`cublasZgemm_v2`                                           |                                                 |
+|`cublasZgemm`                                              |`hipblasZgemm`                                   |
+|`cublasZgemm_v2`                                           |`hipblasZgemm`                                   |
 |`cublasZgemm3m`                                            |                                                 | 8.0              |
 |`cublasHgemm`                                              |`hipblasHgemm`                                   | 7.5              |
 |`cublasSgemmEx`                                            |                                                 | 7.5              |
@@ -473,20 +476,20 @@
 |`cublasCtrmm_v2`                                           |                                                 |
 |`cublasZtrmm`                                              |                                                 |
 |`cublasZtrmm_v2`                                           |                                                 |
-|`cublasHgemmBatched`                                       |                                                 | 9.0              |
+|`cublasHgemmBatched`                                       |`hipblasHgemmBatched`                            | 9.0              |
 |`cublasSgemmBatched`                                       |`hipblasSgemmBatched`                            |
 |`cublasDgemmBatched`                                       |`hipblasDgemmBatched`                            |
-|`cublasCgemmBatched`                                       |                                                 |
+|`cublasCgemmBatched`                                       |`hipblasCgemmBatched`                            |
 |`cublasCgemm3mBatched`                                     |                                                 | 8.0              |
-|`cublasZgemmBatched`                                       |                                                 |
+|`cublasZgemmBatched`                                       |`hipblasZgemmBatched`                            |
 |`cublasGemmBatchedEx`                                      |                                                 | 9.1              |
 |`cublasGemmStridedBatchedEx`                               |                                                 | 9.1              |
 |`cublasSgemmStridedBatched`                                |`hipblasSgemmStridedBatched`                     | 8.0              |
 |`cublasDgemmStridedBatched`                                |`hipblasDgemmStridedBatched`                     | 8.0              |
-|`cublasCgemmStridedBatched`                                |                                                 | 8.0              |
+|`cublasCgemmStridedBatched`                                |`hipblasCgemmStridedBatched`                     | 8.0              |
 |`cublasCgemm3mStridedBatched`                              |                                                 | 8.0              |
-|`cublasZgemmStridedBatched`                                |                                                 | 8.0              |
-|`cublasHgemmStridedBatched`                                |                                                 | 8.0              |
+|`cublasZgemmStridedBatched`                                |`hipblasZgemmStridedBatched`                     | 8.0              |
+|`cublasHgemmStridedBatched`                                |`hipblasHgemmStridedBatched`                     | 8.0              |
 |`cublasSgeam`                                              |`hipblasSgeam`                                   |
 |`cublasDgeam`                                              |`hipblasDgeam`                                   |
 |`cublasCgeam`                                              |                                                 |

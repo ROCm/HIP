@@ -1067,14 +1067,14 @@
 |            4 |*`CUDA_C_32F`*                                       | 8.0              |*`HIPBLAS_C_32F`*                                           | 154                       |
 |            1 |*`CUDA_R_64F`*                                       | 8.0              |*`HIPBLAS_R_64F`*                                           | 152                       |
 |            5 |*`CUDA_C_64F`*                                       | 8.0              |*`HIPBLAS_C_64F`*                                           | 155                       |
-|            3 |*`CUDA_R_8I`*                                        | 8.0              |                                                            |
-|            7 |*`CUDA_C_8I`*                                        | 8.0              |                                                            |
-|            8 |*`CUDA_R_8U`*                                        | 8.0              |                                                            |
-|            9 |*`CUDA_C_8U`*                                        | 8.0              |                                                            |
-|           10 |*`CUDA_R_32I`*                                       | 8.0              |                                                            |
-|           11 |*`CUDA_C_32I`*                                       | 8.0              |                                                            |
-|           12 |*`CUDA_R_32U`*                                       | 8.0              |                                                            |
-|           13 |*`CUDA_C_32U`*                                       | 8.0              |                                                            |
+|            3 |*`CUDA_R_8I`*                                        | 8.0              |*`HIPBLAS_R_8I`*                                            | 160                       |
+|            7 |*`CUDA_C_8I`*                                        | 8.0              |*`HIPBLAS_C_8I`*                                            | 164                       |
+|            8 |*`CUDA_R_8U`*                                        | 8.0              |*`HIPBLAS_R_8U`*                                            | 161                       |
+|            9 |*`CUDA_C_8U`*                                        | 8.0              |*`HIPBLAS_C_8U`*                                            | 165                       |
+|           10 |*`CUDA_R_32I`*                                       | 8.0              |*`HIPBLAS_R_32I`*                                           | 162                       |
+|           11 |*`CUDA_C_32I`*                                       | 8.0              |*`HIPBLAS_C_32I`*                                           | 166                       |
+|           12 |*`CUDA_R_32U`*                                       | 8.0              |*`HIPBLAS_R_32U`*                                           | 163                       |
+|           13 |*`CUDA_C_32U`*                                       | 8.0              |*`HIPBLAS_C_32U`*                                           | 167                       |
 | struct       |`cudaExternalMemoryBufferDesc`                       | 10.0             |                                                            |
 | struct       |`cudaExternalMemoryHandleDesc`                       | 10.0             |                                                            |
 | struct       |`cudaExternalMemoryMipmappedArrayDesc`               | 10.0             |                                                            |
