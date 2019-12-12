@@ -126,6 +126,11 @@ inline std::string ToString(T v) {
 };
 
 template <>
+inline std::string ToString(const char* v) {
+    return ToHexString<const void*>(v);
+};
+
+template <>
 inline std::string ToString(hipFunction_t v) {
     std::ostringstream ss;
     ss << "0x" << std::hex << static_cast<void*>(v);
