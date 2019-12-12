@@ -24,8 +24,6 @@ THE SOFTWARE.
  */
 
 #include "test_common.h"
-#include <iostream>
-#include <hip/hip_runtime.h>
 
 int main(){
    hipError_t e;
@@ -33,7 +31,7 @@ int main(){
 
    e = hipMemGetInfo(NULL,NULL);
   
-   HIPASSERT(e!=hipSuccess);
+   HIPASSERT(e==hipErrorInvalidValue);
 
    passed();
 }

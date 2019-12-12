@@ -24,23 +24,23 @@ THE SOFTWARE.
  */
 
 #include "test_common.h"
-#include <iostream>
-#include <hip/hip_runtime.h>
+#define SIZE 1024
 
 int main(){
 
     void *Sd;
     hipError_t e;
-    char S[100]="This is not a device symbol";
+    char S[SIZE]="This is not a device symbol";
+
+    HIPCHECK(hipMalloc(&Sd,SIZE));
+
+    e = hipMemcpyToSymbol(HIP_SYMBOL(Sd), S, SIZE, 0, hipMemcpyHostToDevice);
+    HIPASSERT(e==hipErrorInvalidSymbol);
     
-    HIPCHECK(hipSetDevice(0));
-
-    HIPCHECK(hipMalloc(&Sd,100));
-
-    e = hipMemcpyToSymbol(HIP_SYMBOL(Sd),S,100,0, hipMemcpyHostToDevice);
+    e = hipMemcpyToSymbol(NULL, S, SIZE, 0, hipMemcpyHostToDevice);
+    HIPASSERT(e==hipErrorInvalidSymbol);
 
     HIPCHECK(hipFree(Sd)); 
-    HIPASSERT(e!=hipSuccess);
     
     passed();
 }

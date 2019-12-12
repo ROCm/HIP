@@ -24,21 +24,20 @@ THE SOFTWARE.
  */
 
 #include "test_common.h"
-#include <iostream>
-#include <hip/hip_runtime.h>
+#define SIZE 100
 
 int main(){
    hipError_t e;
-   char str[100]="Hi, I am Ellesemere. What is ur name?";
+   char str[SIZE]="Hi, I am Ellesemere. What is ur name?";
 
-   e = hipMemcpy(0, str, 100, hipMemcpyHostToDevice);
-   HIPASSERT(e!=hipSuccess);
+   e = hipMemcpy(0, str, SIZE, hipMemcpyHostToDevice);
+   HIPASSERT(e==hipErrorInvalidValue);
    
-   e = hipMemcpy(NULL, str, 100, hipMemcpyHostToDevice);
-   HIPASSERT(e!=hipSuccess);
+   e = hipMemcpy(NULL, str, SIZE, hipMemcpyHostToDevice);
+   HIPASSERT(e==hipErrorInvalidValue);
 
    e = hipMemset(0,99,80);
-   HIPASSERT(e!=hipSuccess);
+   HIPASSERT(e==hipErrorInvalidValue);
 
    passed();
 }

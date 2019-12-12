@@ -24,8 +24,6 @@ THE SOFTWARE.
  */
 
 #include "test_common.h"
-#include <iostream>
-#include <hip/hip_runtime.h>
 
 int main(){
 
@@ -33,10 +31,10 @@ int main(){
    hipStream_t stream;
 
    e = hipStreamCreateWithFlags(&stream, -1);
-   HIPASSERT(e!=hipSuccess);
+   HIPASSERT(e==hipErrorInvalidValue);
 
    e = hipStreamCreateWithFlags(&stream, 2);
-   HIPASSERT(e!=hipSuccess);
+   HIPASSERT(e==hipErrorInvalidValue);
 
    passed();
 }
