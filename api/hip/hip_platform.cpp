@@ -626,12 +626,17 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 {
   HIP_INIT_API(NONE, f, blockSize, dynamicSMemSize);
   int deviceId = ihipGetDevice();
+  // FIXME: Function may not be a device function and may have been obtaiend via
+  //        hipModuleGetFunction and thus not in the functions_ map. Check the map
+  //        else interpret as a hip::Function for now.
   hipFunction_t func = PlatformState::instance().getFunc(f, deviceId);
   if (func == nullptr) {
+    func = f;
+  }
+  hip::Function* function = hip::Function::asFunction(func);
+  if (function == nullptr) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
-
-  hip::Function* function = hip::Function::asFunction(func);
   amd::Kernel* kernel = function->function_;
   if (!kernel) {
     HIP_RETURN(hipErrorOutOfMemory);
@@ -890,8 +895,9 @@ const std::unordered_map<uintptr_t, hipFunction_t>& functions()
     for (auto&& function : function_names()) {
       for (auto&& module : modules()) {
         hipFunction_t f;
-        if (hipSuccess == hipModuleGetFunction(&f, module, function.second.c_str()))
+        if (hipSuccess == hipModuleGetFunction(&f, module, function.second.c_str())) {
           r[function.first] = f;
+        }
       }
     }
   });
