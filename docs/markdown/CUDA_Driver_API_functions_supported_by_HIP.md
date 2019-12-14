@@ -173,7 +173,11 @@
 |           99 |*`CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED`*                     |                                                            | 9.2              |
 |          100 |*`CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES`*|                                                            | 9.2              |
 |          101 |*`CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST`*         |                                                            | 9.2              |
-|          102 |*`CU_DEVICE_ATTRIBUTE_MAX`*                                         |                                                            |
+|          102 |*`CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED`*        |                                                            | 10.2             |
+|          103 |*`CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED`* |                                                            | 10.2             |
+|          104 |*`CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED`*          |                                                            | 10.2             |
+|          105 |*`CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED`*      |                                                            | 10.2             |
+|          106 |*`CU_DEVICE_ATTRIBUTE_MAX`*                                         |                                                            |
 | enum         |***`CUevent_flags`***                                               |                                                            |
 | typedef      |***`CUevent_flags_enum`***                                          |                                                            |
 |         0x00 |*`CU_EVENT_DEFAULT`*                                                |*`hipEventDefault`*                                         |
@@ -335,6 +339,11 @@
 |            7 |*`CU_POINTER_ATTRIBUTE_BUFFER_ID`*                                  |                                                            |
 |            8 |*`CU_POINTER_ATTRIBUTE_IS_MANAGED`*                                 |                                                            |
 |            9 |*`CU_POINTER_ATTRIBUTE_DEVICE_ORDINAL`*                             |                                                            | 9.2              |
+|           10 |*`CU_POINTER_ATTRIBUTE_IS_LEGACY_CUDA_IPC_CAPABLE`*                 |                                                            | 10.2             |
+|           11 |*`CU_POINTER_ATTRIBUTE_RANGE_START_ADDR`*                           |                                                            | 10.2             |
+|           12 |*`CU_POINTER_ATTRIBUTE_RANGE_SIZE`*                                 |                                                            | 10.2             |
+|           13 |*`CU_POINTER_ATTRIBUTE_MAPPED`*                                     |                                                            | 10.2             |
+|           14 |*`CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES`*                       |                                                            | 10.2             |
 | enum         |***`CUresourcetype`***                                              |                                                            |
 | typedef      |***`CUresourcetype_enum`***                                         |                                                            |
 |         0x00 |*`CU_RESOURCE_TYPE_ARRAY`*                                          |                                                            |
@@ -382,7 +391,7 @@
 | typedef      |`cudaError_enum`                                                    |***`hipError_t`***                                          |
 |            0 |*`CUDA_SUCCESS`*                                                    |*`hipSuccess`*                                              |
 |            1 |*`CUDA_ERROR_INVALID_VALUE`*                                        |*`hipErrorInvalidValue`*                                    |
-|            2 |*`CUDA_ERROR_OUT_OF_MEMORY`*                                        |*`hipErrorMemoryAllocation`*                                |
+|            2 |*`CUDA_ERROR_OUT_OF_MEMORY`*                                        |*`hipErrorOutOfMemory`*                                     |
 |            3 |*`CUDA_ERROR_NOT_INITIALIZED`*                                      |*`hipErrorNotInitialized`*                                  |
 |            4 |*`CUDA_ERROR_DEINITIALIZED`*                                        |*`hipErrorDeinitialized`*                                   |
 |            5 |*`CUDA_ERROR_PROFILER_DISABLED`*                                    |*`hipErrorProfilerDisabled`*                                |
@@ -416,7 +425,7 @@
 |          302 |*`CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND`*                       |*`hipErrorSharedObjectSymbolNotFound`*                      |
 |          303 |*`CUDA_ERROR_SHARED_OBJECT_INIT_FAILED`*                            |*`hipErrorSharedObjectInitFailed`*                          |
 |          304 |*`CUDA_ERROR_OPERATING_SYSTEM`*                                     |*`hipErrorOperatingSystem`*                                 |
-|          400 |*`CUDA_ERROR_INVALID_HANDLE`*                                       |*`hipErrorInvalidResourceHandle`*                           |
+|          400 |*`CUDA_ERROR_INVALID_HANDLE`*                                       |*`hipErrorInvalidHandle`*                                   |
 |          401 |*`CUDA_ERROR_ILLEGAL_STATE`*                                        |                                                            | 10.0             |
 |          500 |*`CUDA_ERROR_NOT_FOUND`*                                            |*`hipErrorNotFound`*                                        |
 |          600 |*`CUDA_ERROR_NOT_READY`*                                            |*`hipErrorNotReady`*                                        |
@@ -426,7 +435,7 @@
 |          703 |*`CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING`*                        |                                                            |
 |          704 |*`CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED`*                          |*`hipErrorPeerAccessAlreadyEnabled`*                        |
 |          705 |*`CUDA_ERROR_PEER_ACCESS_NOT_ENABLED`*                              |*`hipErrorPeerAccessNotEnabled`*                            |
-|          708 |*`CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE`*                               |                                                            |
+|          708 |*`CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE`*                               |*`hipErrorSetOnActiveProcess`*                              |
 |          709 |*`CUDA_ERROR_CONTEXT_IS_DESTROYED`*                                 |                                                            |
 |          710 |*`CUDA_ERROR_ASSERT`*                                               |*`hipErrorAssert`*                                          |
 |          711 |*`CUDA_ERROR_TOO_MANY_PEERS`*                                       |                                                            |
@@ -439,7 +448,7 @@
 |          718 |*`CUDA_ERROR_INVALID_PC`*                                           |                                                            |
 |          719 |*`CUDA_ERROR_LAUNCH_FAILED`*                                        |*`hipErrorLaunchFailure`*                                   |
 |          800 |*`CUDA_ERROR_NOT_PERMITTED`*                                        |                                                            |
-|          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                        |                                                            |
+|          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                        |*`hipErrorNotSupported`*                                    |
 |          802 |*`CUDA_ERROR_SYSTEM_NOT_READY`*                                     |                                                            | 10.0             |
 |          803 |*`CUDA_ERROR_SYSTEM_DRIVER_MISMATCH`*                               |                                                            | 10.1             |
 |          804 |*`CUDA_ERROR_COMPAT_NOT_SUPPORTED_ON_DEVICE`*                       |                                                            | 10.1             |
@@ -452,7 +461,9 @@
 |          906 |*`CUDA_ERROR_STREAM_CAPTURE_IMPLICIT`*                              |                                                            | 10.0             |
 |          907 |*`CUDA_ERROR_CAPTURED_EVENT`*                                       |                                                            | 10.0             |
 |          908 |*`CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD`*                          |                                                            | 10.1             |
-|          999 |*`CUDA_ERROR_UNKNOWN`*                                              |                                                            |
+|          909 |*`CUDA_ERROR_TIMEOUT`*                                              |                                                            | 10.2             |
+|          910 |*`CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE`*                            |                                                            | 10.2             |
+|          999 |*`CUDA_ERROR_UNKNOWN`*                                              |*`hipErrorUnknown`*                                         |
 | enum         |***`CUsharedconfig`***                                              |***`hipSharedMemConfig`***                                  |
 | typedef      |***`CUsharedconfig_enum`***                                         |***`hipSharedMemConfig`***                                  |
 |         0x00 |*`CU_SHARED_MEM_CONFIG_DEFAULT_BANK_SIZE`*                          |*`hipSharedMemBankSizeDefault`*                             |
@@ -716,7 +727,14 @@
 |            3 |*`CU_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT`*                 |                                                            | 10.0             |
 |            4 |*`CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP`*                       |                                                            | 10.0             |
 |            5 |*`CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE`*                   |                                                            | 10.0             |
+|            6 |*`CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_RESOURCE`*                   |                                                            | 10.2             |
+|            7 |*`CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_RESOURCE_KMT`*               |                                                            | 10.2             |
+|            8 |*`CU_EXTERNAL_MEMORY_HANDLE_TYPE_NVSCIBUF`*                         |                                                            | 10.2             |
 | define       |`CUDA_EXTERNAL_MEMORY_DEDICATED`                                    |                                                            | 10.0             |
+| define       |`CUDA_EXTERNAL_SEMAPHORE_SIGNAL_SKIP_NVSCIBUF_MEMSYNC`              |                                                            | 10.2             |
+| define       |`CUDA_EXTERNAL_SEMAPHORE_WAIT_SKIP_NVSCIBUF_MEMSYNC`                |                                                            | 10.2             |
+| define       |`CUDA_NVSCISYNC_ATTR_SIGNAL`                                        |                                                            | 10.2             |
+| define       |`CUDA_NVSCISYNC_ATTR_WAIT`                                          |                                                            | 10.2             |
 | struct       |`CUDA_EXTERNAL_MEMORY_HANDLE_DESC`                                  |                                                            | 10.0             |
 | typedef      |`CUDA_EXTERNAL_MEMORY_HANDLE_DESC_st`                               |                                                            | 10.0             |
 | struct       |`CUDA_EXTERNAL_MEMORY_BUFFER_DESC`                                  |                                                            | 10.0             |
@@ -729,6 +747,10 @@
 |            2 |*`CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32`*                  |                                                            | 10.0             |
 |            3 |*`CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_OPAQUE_WIN32_KMT`*              |                                                            | 10.0             |
 |            4 |*`CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D12_FENCE`*                   |                                                            | 10.0             |
+|            5 |*`CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D11_FENCE`*                   |                                                            | 10.2             |
+|            6 |*`CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_NVSCISYNC`*                     |                                                            | 10.2             |
+|            7 |*`CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D11_KEYED_MUTEX`*             |                                                            | 10.2             |
+|            8 |*`CU_EXTERNAL_SEMAPHORE_HANDLE_TYPE_D3D11_KEYED_MUTEX_KMT`*         |                                                            | 10.2             |
 | struct       |`CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC`                               |                                                            | 10.0             |
 | typedef      |`CUDA_EXTERNAL_SEMAPHORE_HANDLE_DESC_st`                            |                                                            | 10.0             |
 | struct       |`CUDA_EXTERNAL_SEMAPHORE_SIGNAL_PARAMS`                             |                                                            | 10.0             |
@@ -743,6 +765,42 @@
 | define       |`CU_DEVICE_INVALID`                                                 |                                                            | 8.0              |
 | struct       |`CUuuid`                                                            |                                                            |
 | typedef      |`CUuuid_st`                                                         |                                                            |
+| enum         |***`CUmemAllocationHandleType`***                                   |                                                            | 10.2             |
+| typedef      |***`CUmemAllocationHandleType_enum`***                              |                                                            | 10.2             |
+|          0x1 |*`CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR`*                        |                                                            | 10.2             |
+|          0x2 |*`CU_MEM_HANDLE_TYPE_WIN32`*                                        |                                                            | 10.2             |
+|          0x4 |*`CU_MEM_HANDLE_TYPE_WIN32_KMT`*                                    |                                                            | 10.2             |
+|   0xFFFFFFFF |*`CU_MEM_HANDLE_TYPE_MAX`*                                          |                                                            | 10.2             |
+| enum         |***`CUmemAccess_flags`***                                           |                                                            | 10.2             |
+| typedef      |***`CUmemAccess_flags_enum`***                                      |                                                            | 10.2             |
+|          0x1 |*`CU_MEM_ACCESS_FLAGS_PROT_NONE`*                                   |                                                            | 10.2             |
+|          0x2 |*`CU_MEM_ACCESS_FLAGS_PROT_READ`*                                   |                                                            | 10.2             |
+|          0x3 |*`CU_MEM_ACCESS_FLAGS_PROT_READWRITE`*                              |                                                            | 10.2             |
+|   0xFFFFFFFF |*`CU_MEM_ACCESS_FLAGS_PROT_MAX`*                                    |                                                            | 10.2             |
+| enum         |***`CUmemLocationType`***                                           |                                                            | 10.2             |
+| typedef      |***`CUmemLocationType_enum`***                                      |                                                            | 10.2             |
+|          0x0 |*`CU_MEM_LOCATION_TYPE_INVALID`*                                    |                                                            | 10.2             |
+|          0x1 |*`CU_MEM_LOCATION_TYPE_DEVICE`*                                     |                                                            | 10.2             |
+|   0xFFFFFFFF |*`CU_MEM_LOCATION_TYPE_MAX`*                                        |                                                            | 10.2             |
+| enum         |***`CUmemAllocationGranularity_flags`***                            |                                                            | 10.2             |
+| typedef      |***`CUmemAllocationGranularity_flags_enum`***                       |                                                            | 10.2             |
+|          0x0 |*`CU_MEM_ALLOC_GRANULARITY_MINIMUM`*                                |                                                            | 10.2             |
+|          0x1 |*`CU_MEM_ALLOC_GRANULARITY_RECOMMENDED`*                            |                                                            | 10.2             |
+| struct       |`CUmemLocation`                                                     |                                                            | 10.2             |
+| typedef      |`CUmemLocation_st`                                                  |                                                            | 10.2             |
+| struct       |`CUmemAllocationProp`                                               |                                                            | 10.2             |
+| typedef      |`CUmemAllocationProp_st`                                            |                                                            | 10.2             |
+| struct       |`CUmemAccessDesc`                                                   |                                                            | 10.2             |
+| typedef      |`CUmemAccessDesc_st`                                                |                                                            | 10.2             |
+| enum         |***`CUgraphExecUpdateResult`***                                     |                                                            | 10.2             |
+| typedef      |***`CUgraphExecUpdateResult_enum`***                                |                                                            | 10.2             |
+|          0x0 |*`CU_GRAPH_EXEC_UPDATE_SUCCESS`*                                    |                                                            | 10.2             |
+|          0x1 |*`CU_GRAPH_EXEC_UPDATE_ERROR`*                                      |                                                            | 10.2             |
+|          0x2 |*`CU_GRAPH_EXEC_UPDATE_ERROR_TOPOLOGY_CHANGED`*                     |                                                            | 10.2             |
+|          0x3 |*`CU_GRAPH_EXEC_UPDATE_ERROR_NODE_TYPE_CHANGED`*                    |                                                            | 10.2             |
+|          0x4 |*`CU_GRAPH_EXEC_UPDATE_ERROR_FUNCTION_CHANGED`*                     |                                                            | 10.2             |
+|          0x5 |*`CU_GRAPH_EXEC_UPDATE_ERROR_PARAMETERS_CHANGED`*                   |                                                            | 10.2             |
+|          0x6 |*`CU_GRAPH_EXEC_UPDATE_ERROR_NOT_SUPPORTED`*                        |                                                            | 10.2             |
 
 ## **2. Error Handling**
 
@@ -771,6 +829,7 @@
 | `cuDeviceGetAttribute`                                    | `hipDeviceGetAttribute`       |
 | `cuDeviceGetCount`                                        | `hipGetDeviceCount`           |
 | `cuDeviceGetName`                                         | `hipDeviceGetName`            |
+| `cuDeviceGetNvSciSyncAttributes`                          |                               | 10.2             |
 | `cuDeviceTotalMem`                                        | `hipDeviceTotalMem`           |
 | `cuDeviceGetLuid`                                         |                               | 10.0             |
 | `cuDeviceGetUuid`                                         |                               | 9.2              |
@@ -909,7 +968,25 @@
 | `cuMipmappedArrayDestroy`                                 |                               |
 | `cuMipmappedArrayGetLevel`                                |                               |
 
-## **12. Unified Addressing**
+## **12. Virtual Memory Management**
+
+|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
+|-----------------------------------------------------------|-------------------------------|:----------------:|
+| `cuMemAddressFree`                                        |                               | 10.2             |
+| `cuMemAddressReserve`                                     |                               | 10.2             |
+| `cuMemCreate`                                             |                               | 10.2             |
+| `cuMemExportToShareableHandle`                            |                               | 10.2             |
+
+| `cuMemGetAccess`                                          |                               | 10.2             |
+| `cuMemGetAllocationGranularity`                           |                               | 10.2             |
+| `cuMemGetAllocationPropertiesFromHandle`                  |                               | 10.2             |
+| `cuMemImportFromShareableHandle`                          |                               | 10.2             |
+| `cuMemMap`                                                |                               | 10.2             |
+| `cuMemRelease`                                            |                               | 10.2             |
+| `cuMemSetAccess`                                          |                               | 10.2             |
+| `cuMemUnmap`                                              |                               | 10.2             |
+
+## **13. Unified Addressing**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -921,7 +998,7 @@
 | `cuPointerGetAttributes`                                  |                               |
 | `cuPointerSetAttribute`                                   |                               |
 
-## **13. Stream Management**
+## **14. Stream Management**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -942,7 +1019,7 @@
 | `cuStreamIsCapturing`                                     |                               | 10.0             |
 | `cuThreadExchangeStreamCaptureMode`                       |                               | 10.1             |
 
-## **14. Event Management**
+## **15. Event Management**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
@@ -953,7 +1030,7 @@
 | `cuEventRecord`                                           | `hipEventRecord`              |
 | `cuEventSynchronize`                                      | `hipEventSynchronize`         |
 
-## **15. External Resource Interoperability**
+## **16. External Resource Interoperability**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -966,7 +1043,7 @@
 | `cuImportExternalSemaphore`                               |                               | 10.0             |
 | `cuDestroyExternalSemaphore`                              |                               | 10.0             |
 
-## **16. Stream Memory Operations**
+## **17. Stream Memory Operations**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -976,7 +1053,7 @@
 | `cuStreamWriteValue32`                                    |                               | 8.0              |
 | `cuStreamWriteValue64`                                    |                               | 9.0              |
 
-## **17. Execution Control**
+## **18. Execution Control**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -989,7 +1066,7 @@
 | `cuLaunchCooperativeKernel`                               |                               | 9.0              |
 | `cuLaunchCooperativeKernelMultiDevice`                    |                               | 9.0              |
 
-## **18. Execution Control [DEPRECATED]**
+## **19. Execution Control [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
@@ -1003,7 +1080,7 @@
 | `cuParamSetTexRef`                                        |                               |
 | `cuParamSetv`                                             |                               |
 
-## **19. Graph Management**
+## **20. Graph Management**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -1038,9 +1115,13 @@
 | `cuGraphInstantiate`                                      |                               | 10.0             |
 | `cuGraphExecDestroy`                                      |                               | 10.0             |
 | `cuGraphExecKernelNodeSetParams`                          |                               | 10.1             |
+| `cuGraphExecMemcpyNodeSetParams`                          |                               | 10.2             |
+| `cuGraphExecMemsetNodeSetParams`                          |                               | 10.2             |
+| `cuGraphExecHostNodeSetParams`                            |                               | 10.2             |
+| `cuGraphExecUpdate`                                       |                               | 10.2             |
 | `cuGraphDestroy`                                          |                               | 10.0             |
 
-## **20. Occupancy**
+## **21. Occupancy**
 
 |   **CUDA**                                                |   **HIP**                                               |**CUDA version\***|
 |-----------------------------------------------------------|---------------------------------------------------------|------------------|
@@ -1049,7 +1130,7 @@
 | `cuOccupancyMaxPotentialBlockSize`                        |`hipOccupancyMaxPotentialBlockSize`                      |
 | `cuOccupancyMaxPotentialBlockSizeWithFlags`               |                                                         |
 
-## **21. Texture Reference Management**
+## **22. Texture Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
@@ -1078,15 +1159,10 @@
 | `cuTexRefSetMipmapLevelBias`                              |                               |
 | `cuTexRefSetMipmapLevelClamp`                             |                               |
 | `cuTexRefSetMipmappedArray`                               |                               |
-
-## **22. Texture Reference Management [DEPRECATED]**
-
-|   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
-|-----------------------------------------------------------|-------------------------------|------------------|
 | `cuTexRefCreate`                                          |                               |
 | `cuTexRefDestroy`                                         |                               |
 
-## **23. Surface Reference Management**
+## **23. Surface Reference Management [DEPRECATED]**
 
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|------------------|
