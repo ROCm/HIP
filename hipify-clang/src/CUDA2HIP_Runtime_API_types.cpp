@@ -1436,7 +1436,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_MEMHOSTALLOC_DEVICEMAP
   {"cudaHostAllocMapped",                                              {"hipHostMallocMapped",                                      "", CONV_DEFINE, API_RUNTIME}}, // 0x02
   // CU_MEMHOSTALLOC_WRITECOMBINED
-  {"cudaHostAllocWriteCombined",                                       {"hipHostAllocWriteCombined",                                "", CONV_DEFINE, API_RUNTIME}}, // 0x04
+  {"cudaHostAllocWriteCombined",                                       {"hipHostMallocWriteCombined",                               "", CONV_DEFINE, API_RUNTIME}}, // 0x04
   // no analogue
   {"cudaHostRegisterDefault",                                          {"hipHostRegisterDefault",                                   "", CONV_DEFINE, API_RUNTIME}}, // 0x00
   // CU_MEMHOSTREGISTER_PORTABLE

@@ -254,7 +254,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   // no analogue
   {"cudaGetSymbolSize",                                       {"hipGetSymbolSize",                                       "", CONV_MEMORY, API_RUNTIME}},
   // cuMemHostAlloc
-  // NOTE: hipHostAlloc deprecated - use hipHostMalloc instead
   {"cudaHostAlloc",                                           {"hipHostMalloc",                                          "", CONV_MEMORY, API_RUNTIME}},
   // cuMemHostGetDevicePointer
   {"cudaHostGetDevicePointer",                                {"hipHostGetDevicePointer",                                "", CONV_MEMORY, API_RUNTIME}},
@@ -340,16 +339,16 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_FUNCTION_MAP{
   {"cudaMemRangeGetAttribute",                                {"hipMemRangeGetAttribute",                                "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
   // cuMemRangeGetAttributes
   {"cudaMemRangeGetAttributes",                               {"hipMemRangeGetAttributes",                               "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
-  // cuMemsetD32
+  // cuMemsetD32 - hipMemsetD32
   {"cudaMemset",                                              {"hipMemset",                                              "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   {"cudaMemset2D",                                            {"hipMemset2D",                                            "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
   {"cudaMemset2DAsync",                                       {"hipMemset2DAsync",                                       "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
-  {"cudaMemset3D",                                            {"hipMemset3D",                                            "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaMemset3D",                                            {"hipMemset3D",                                            "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
-  {"cudaMemset3DAsync",                                       {"hipMemset3DAsync",                                       "", CONV_MEMORY, API_RUNTIME, HIP_UNSUPPORTED}},
+  {"cudaMemset3DAsync",                                       {"hipMemset3DAsync",                                       "", CONV_MEMORY, API_RUNTIME}},
   // cuMemsetD32Async
   {"cudaMemsetAsync",                                         {"hipMemsetAsync",                                         "", CONV_MEMORY, API_RUNTIME}},
   // no analogue
