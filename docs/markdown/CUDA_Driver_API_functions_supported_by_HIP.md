@@ -561,7 +561,7 @@
 | define       |`CU_LAUNCH_PARAM_END`                                               |`HIP_LAUNCH_PARAM_END`                                      |
 | define       |`CU_MEMHOSTALLOC_DEVICEMAP`                                         |`hipHostMallocMapped`                                       |
 | define       |`CU_MEMHOSTALLOC_PORTABLE`                                          |`hipHostMallocPortable`                                     |
-| define       |`CU_MEMHOSTALLOC_WRITECOMBINED`                                     |`hipHostAllocWriteCombined`                                 |
+| define       |`CU_MEMHOSTALLOC_WRITECOMBINED`                                     |`hipHostMallocWriteCombined`                                |
 | define       |`CU_MEMHOSTREGISTER_DEVICEMAP`                                      |`hipHostRegisterMapped`                                     |
 | define       |`CU_MEMHOSTREGISTER_IOMEMORY`                                       |`hipHostRegisterIoMemory`                                   | 7.5              |
 | define       |`CU_MEMHOSTREGISTER_PORTABLE`                                       |`hipHostRegisterPortable`                                   |
@@ -916,8 +916,8 @@
 | `cuIpcOpenEventHandle`                                    |                               |
 | `cuIpcOpenMemHandle`                                      | `hipIpcOpenMemHandle`         |
 | `cuMemAlloc`                                              | `hipMalloc`                   |
-| `cuMemAllocHost`                                          | `hipMemAllocHost`             |
-| `cuMemAllocManaged`                                       | `hipMemAllocManaged`          |
+| `cuMemAllocHost`                                          | `hipHostMalloc`               |
+| `cuMemAllocManaged`                                       | `hipMallocManaged`            |
 | `cuMemAllocPitch`                                         | `hipMemAllocPitch`            |
 | `cuMemcpy`                                                |                               |
 | `cuMemcpy2D`                                              | `hipMemcpyParam2D`            |
@@ -944,7 +944,7 @@
 | `cuMemcpyPeer`                                            |                               |
 | `cuMemcpyPeerAsync`                                       |                               |
 | `cuMemFree`                                               | `hipFree`                     |
-| `cuMemFreeHost`                                           | `hipFreeHost`                 |
+| `cuMemFreeHost`                                           | `hipHostFree`                 |
 | `cuMemGetAddressRange`                                    | `hipMemGetAddressRange`       |
 | `cuMemGetInfo`                                            | `hipMemGetInfo`               |
 | `cuMemHostAlloc`                                          | `hipHostMalloc`               |
