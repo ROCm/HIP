@@ -1606,7 +1606,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   // cudaHostAllocMapped
   {"CU_MEMHOSTALLOC_DEVICEMAP",                                        {"hipHostMallocMapped",                                      "", CONV_DEFINE, API_DRIVER}}, // 0x02
   // cudaHostAllocWriteCombined
-  {"CU_MEMHOSTALLOC_WRITECOMBINED",                                    {"hipHostAllocWriteCombined",                                "", CONV_DEFINE, API_DRIVER}}, // 0x04
+  {"CU_MEMHOSTALLOC_WRITECOMBINED",                                    {"hipHostMallocWriteCombined",                               "", CONV_DEFINE, API_DRIVER}}, // 0x04
   // cudaHostRegisterPortable
   {"CU_MEMHOSTREGISTER_PORTABLE",                                      {"hipHostRegisterPortable",                                  "", CONV_DEFINE, API_DRIVER}}, // 0x01
   // cudaHostRegisterMapped

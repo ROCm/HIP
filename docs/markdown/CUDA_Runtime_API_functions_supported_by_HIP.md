@@ -166,7 +166,7 @@
 | `cudaMemcpy2DToArray`                                     | `hipMemcpy2DToArray`          |
 | `cudaMemcpy2DToArrayAsync`                                |                               |
 | `cudaMemcpy3D`                                            | `hipMemcpy3D`                 |
-| `cudaMemcpy3DAsync`                                       |                               |
+| `cudaMemcpy3DAsync`                                       | `hipMemcpy3DAsync`            |
 | `cudaMemcpy3DPeer`                                        |                               |
 | `cudaMemcpy3DPeerAsync`                                   |                               |
 | `cudaMemcpyAsync`                                         | `hipMemcpyAsync`              |
@@ -179,8 +179,8 @@
 | `cudaMemset`                                              | `hipMemset`                   |
 | `cudaMemset2D`                                            | `hipMemset2D`                 |
 | `cudaMemset2DAsync`                                       | `hipMemset2DAsync`            |
-| `cudaMemset3D`                                            |                               |
-| `cudaMemset3DAsync`                                       |                               |
+| `cudaMemset3D`                                            | `hipMemset3D`                 |
+| `cudaMemset3DAsync`                                       | `hipMemset3DAsync`            |
 | `cudaMemsetAsync`                                         | `hipMemsetAsync`              |
 | `make_cudaExtent`                                         | `make_hipExtent`              |
 | `make_cudaPitchedPtr`                                     | `make_hipPitchedPtr`          |
