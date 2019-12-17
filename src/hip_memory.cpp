@@ -575,6 +575,31 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height,
     return hipSuccess;
 }
 
+hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height, int depth, hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType, hsa_ext_image_data_info_t &imageInfo,int array_size __dparm(0))
+{
+    hsa_ext_image_descriptor_t imageDescriptor;
+    imageDescriptor.geometry = geometry;
+    imageDescriptor.width = width;
+    imageDescriptor.height = height;
+    imageDescriptor.depth = depth;
+    imageDescriptor.array_size = array_size;
+    imageDescriptor.format.channel_order = channelOrder;
+    imageDescriptor.format.channel_type = channelType;
+
+    hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
+    // Get the current device agent.
+    hc::accelerator acc;
+    hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
+    if (!agent)
+        return hipErrorInvalidResourceHandle;
+    hsa_status_t status =
+        hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
+    if(HSA_STATUS_SUCCESS != status){
+        return hipErrorRuntimeOther;
+    }
+    return hipSuccess;
+}
+
 hipError_t ihipArrayToImageFormat(hipArray_Format format,hsa_ext_image_channel_type_t &channelType) {
    switch (format) {
        case HIP_AD_FORMAT_UNSIGNED_INT8:
@@ -1291,25 +1316,38 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                 ySize = p->srcPtr.ysize;
                 desc = p->dstArray->desc;
                 dstPtr = p->dstArray->data;
+                hsa_ext_image_data_info_t imageInfo;
+                if(hipTextureType2DLayered == p->dstArray->textureType)
+                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, desc, imageInfo, depth);
+                else
+                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, desc, imageInfo);
+                dstPitch = imageInfo.size/(height == 0 ? 1:height)/(depth == 0 ? 1:depth);
             } else {
                 depth = p->Depth;
                 height = p->Height;
                 widthInBytes = p->WidthInBytes;
                 width =  p->dstArray->width;
-                desc = hipCreateChannelDesc(32, 0, 0, 0, hipChannelFormatKindSigned);
+                hsa_ext_image_channel_order_t channelOrder;
+                if (p->dstArray->NumChannels == 4) {
+                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA;
+                } else if (p->dstArray->NumChannels == 2) {
+                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RG;
+                } else if (p->dstArray->NumChannels == 1) {
+                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
+                }
+                hsa_ext_image_channel_type_t channelType;
+                e = ihipArrayToImageFormat(p->dstArray->Format,channelType);
                 srcPitch = p->srcPitch;
                 srcPtr = (void*)p->srcHost;
                 ySize = p->srcHeight;
                 dstPtr = p->dstArray->data;
+                hsa_ext_image_data_info_t imageInfo;
+                if(hipTextureType2DLayered == p->dstArray->textureType)
+                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, channelOrder, channelType, imageInfo, depth);
+                else
+                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, channelOrder, channelType, imageInfo);
+                dstPitch = imageInfo.size/(height == 0 ? 1:height)/(depth == 0 ? 1:depth);
             }
-            hsa_ext_image_data_info_t imageInfo;
-            if(hipTextureType2DLayered == p->dstArray->textureType)
-                GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, desc, imageInfo, depth);
-            else
-                GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, desc, imageInfo);
-
-            dstPitch = imageInfo.size/(height == 0 ? 1:height)/(depth == 0 ? 1:depth);
-
         } else {
             // Non array destination
             depth = p->extent.depth;
