@@ -41,7 +41,7 @@ THE SOFTWARE.
         #define __NATIVE_VECTOR__(n, ...) [n]
 #endif
 
-#if defined(__cplusplus)
+#if defined(__cplusplus) && defined(__clang__)
     #include <array>
     #include <iosfwd>
     #include <type_traits>
