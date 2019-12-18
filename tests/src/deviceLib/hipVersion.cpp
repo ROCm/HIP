@@ -37,5 +37,6 @@ THE SOFTWARE.
      std::cout<<"Hip major version : "<<HIP_VERSION_MAJOR<<std::endl;
      std::cout<<"Hip minor version : "<<HIP_VERSION_MINOR<<std::endl;
      std::cout<<"Hip patch version : "<<HIP_VERSION_PATCH<<std::endl;
+     std::cout<<"Hip patch version : "<<HIP_VERSION<<std::endl;
      passed();
  }

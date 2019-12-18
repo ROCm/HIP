@@ -350,7 +350,8 @@ set(_versionInfoHeader
 #define HIP_VERSION_H\n
 #define HIP_VERSION_MAJOR ${HIP_VERSION_MAJOR}
 #define HIP_VERSION_MINOR ${HIP_VERSION_MINOR}
-#define HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}\n
+#define HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}
+#define HIP_VERSION       (HIP_VERSION_MAJOR * 100 + HIP_VERSION_MINOR)\n
 #endif\n
 ")
 file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hipVersion.h" ${_versionInfoHeader})
