@@ -106,7 +106,8 @@ amd::HostQueue* getNullStream(amd::Context& context) {
 }
 
 amd::HostQueue* getNullStream() {
-  return getNullStream(*getCurrentContext());
+  amd::Context* context = getCurrentContext();
+  return context ? getNullStream(*context) : nullptr;
 }
 
 };

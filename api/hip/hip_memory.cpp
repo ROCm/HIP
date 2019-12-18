@@ -69,6 +69,10 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   amd::Context* amdContext = ((flags & CL_MEM_SVM_FINE_GRAIN_BUFFER) != 0)?
     hip::host_context : hip::getCurrentContext();
 
+  if (amdContext == nullptr) {
+    return hipErrorMemoryAllocation;
+  }
+
   if (amdContext->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
     return hipErrorMemoryAllocation;
   }
