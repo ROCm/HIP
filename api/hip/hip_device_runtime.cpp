@@ -437,7 +437,6 @@ int ihipGetDevice() {
       return i;
     }
   }
-  assert(0 && "Current device not found?!");
   return -1;
 }
 
@@ -446,7 +445,9 @@ hipError_t hipGetDevice ( int* deviceId ) {
 
   if (deviceId != nullptr) {
     int dev = ihipGetDevice();
-    assert(dev != -1);
+    if (dev == -1) {
+      HIP_RETURN(hipErrorNoDevice);
+    }
     *deviceId = dev;
     HIP_RETURN(hipSuccess);
   } else {

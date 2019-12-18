@@ -469,7 +469,9 @@ extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, boo
       as_amd(reinterpret_cast<cl_program>(module.first))->release();
     }
   });
-  PlatformState::instance().unregisterVar((*modules)[0].first);
+  if (modules->size() > 0) {
+    PlatformState::instance().unregisterVar((*modules)[0].first);
+  }
   PlatformState::instance().removeFatBinary(modules);
 }
 
@@ -532,6 +534,9 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   HIP_INIT_API(NONE, hostFunction);
 
   int deviceId = ihipGetDevice();
+  if (deviceId == -1) {
+    HIP_RETURN(hipErrorNoDevice);
+  }
   hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
   if (func == nullptr) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);
