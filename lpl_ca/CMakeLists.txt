@@ -26,7 +26,7 @@ target_include_directories(ca PUBLIC ${PROJECT_SOURCE_DIR}/src)
 find_library(
     hsart NAMES libhsa-runtime64.so libhsa-runtime64.so.1 HINTS ${HSA_PATH}/lib)
 target_link_libraries(ca PUBLIC ${hsart})
-target_compile_options(ca PUBLIC -Wall)
+target_compile_options(ca PUBLIC -DLPL_CA -Wall)
 
 install(TARGETS ca RUNTIME DESTINATION bin)
 #-------------------------------------CA---------------------------------------#

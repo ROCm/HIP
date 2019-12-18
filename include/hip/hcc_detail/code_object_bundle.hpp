@@ -31,9 +31,11 @@ THE SOFTWARE.
 #include <string>
 #include <utility>
 #include <vector>
-
+#include <unordered_set>
 namespace hip_impl {
-
+#if !defined(LPL_CA)
+std::unordered_set<std::string> get_all_gpuarch();
+#endif
 inline
 std::string transmogrify_triple(const std::string& triple)
 {
@@ -43,7 +45,6 @@ std::string transmogrify_triple(const std::string& triple)
     if (triple.find(old_prefix) == 0) {
         return new_prefix + triple.substr(sizeof(old_prefix) - 1);
     }
-
     return (triple.find(new_prefix) == 0) ? triple : "";
 }
 
@@ -114,9 +115,7 @@ class Bundled_code_header {
     friend inline bool read(RandomAccessIterator f, RandomAccessIterator l,
                             Bundled_code_header& x) {
         if (f == l) return false;
-
         std::copy_n(f, sizeof(x.header_.cbuf_), x.header_.cbuf_);
-
         if (valid(x)) {
             x.bundles_.resize(x.header_.bundle_cnt_);
 
@@ -126,11 +125,16 @@ class Bundled_code_header {
                 it += sizeof(y.header.cbuf);
 
                 y.triple.assign(it, it + y.header.triple_sz);
-
+                #ifdef LPL_CA
                 std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
-
+                #else
+                auto gpuArch = get_all_gpuarch();
+                auto itgpuArch =std::find(gpuArch.begin(),gpuArch.end(),y.triple);
+                if (itgpuArch != gpuArch.end()){
+                    std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
+                }
+                #endif
                 it += y.header.triple_sz;
-
                 x.bundled_code_size = std::max(x.bundled_code_size, 
                                                y.header.offset + y.header.bundle_sz);
             }

@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include <algorithm>
 #include <atomic>
 #include <mutex>
+#include <unordered_set>
 
 #include <hc.hpp>
 #include <hc_am.hpp>
@@ -2514,6 +2515,14 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 // TODO - add a contect sequence number for debug. Print operator<< ctx:0.1 (device.ctx)
 
 namespace hip_impl {
+    std::unordered_set<std::string> get_all_gpuarch() {
+        std::unordered_set<std::string> r{};
+        for (int i=0; i < g_deviceCnt; i++){
+            r.insert("hcc-amdgcn-amd-amdhsa--gfx"+std::to_string(g_deviceArray[i]->_props.gcnArch));
+        }
+        return r;
+    }
+
     std::vector<hsa_agent_t> all_hsa_agents() {
         std::vector<hsa_agent_t> r{};
         std::vector<hc::accelerator> visible_accelerators;
