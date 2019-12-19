@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include <vector>
 #include <unordered_set>
 namespace hip_impl {
-#if !defined(LPL_CA)
+#if !defined(DISABLE_REDUCED_GPU_BLOB_COPY)
 std::unordered_set<std::string> get_all_gpuarch();
 #endif
 inline
@@ -125,7 +125,7 @@ class Bundled_code_header {
                 it += sizeof(y.header.cbuf);
 
                 y.triple.assign(it, it + y.header.triple_sz);
-                #ifdef LPL_CA
+                #ifdef DISABLE_REDUCED_GPU_BLOB_COPY
                 std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
                 #else
                 auto gpuArch = get_all_gpuarch();
