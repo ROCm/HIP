@@ -109,7 +109,8 @@ THE SOFTWARE.
             operator T() const noexcept { return data[idx]; }
             __host__ __device__
             operator T() const volatile noexcept { return data[idx]; }
-            
+
+#ifdef __HIP_ENABLE_VECTOR_SCALAR_ACCESSORY_ENUM_CONVERSION__
             // The conversions to enum are fairly ghastly, but unfortunately used in
             // some pre-existing, difficult to modify, code.
             template<
@@ -130,6 +131,7 @@ THE SOFTWARE.
                         T, typename std::enable_if<std::is_enum<U>::value, std::underlying_type<U>>::type::type>{}>::type* = nullptr>
             __host__ __device__
             operator U() const volatile noexcept { return static_cast<U>(data[idx]); }
+#endif
 
             __host__ __device__
             operator T&() noexcept {
