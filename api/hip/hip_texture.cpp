@@ -581,6 +581,7 @@ hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureRead
       clType = CL_MEM_OBJECT_IMAGE2D;
       break;
     case 3:
+    case hipTextureType2DLayered:
       clType = CL_MEM_OBJECT_IMAGE3D;
       break;
     default:
