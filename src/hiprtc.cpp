@@ -48,12 +48,7 @@ THE SOFTWARE.
 #include <vector>
 
 #include <iostream>
-
 #include <sys/stat.h>
-
-#if defined(_WIN32)
-#include <direct.h>
-#endif
 
 const char* hiprtcGetErrorString(hiprtcResult x)
 {
@@ -88,28 +83,16 @@ const char* hiprtcGetErrorString(hiprtcResult x)
 
 namespace hip_impl {
 bool exists(const std::string& path) {
-#if defined(_WIN32)
-    struct _stat info;
-    if (_stat(path.c_str(), &info) != 0) {
-        return false;
-    }
-    return (info.st_mode & _S_IFDIR) != 0;
-#else
     struct stat info;
     if (stat(path.c_str(), &info) != 0) {
         return false;
     }
     return (info.st_mode & S_IFDIR) != 0;
-#endif
 }
 
 bool create_directory(const std::string& path) {
-#if defined(_WIN32)
-    int ret = _mkdir(path.c_str());
-#else
     mode_t mode = 0755;
     int ret = mkdir(path.c_str(), mode);
-#endif
     if (ret == 0) return true;
     return false;
 }
@@ -408,12 +391,8 @@ namespace
 
         ~Unique_temporary_path() noexcept
         {
-#if defined(_WIN32)
-            _rmdir(path_.c_str());
-#else
             std::string s("rm -r " + path_);
             system(s.c_str());
-#endif
         }
 
         // MANIPULATORS
