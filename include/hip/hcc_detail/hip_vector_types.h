@@ -34,12 +34,12 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER)|| __clang__
     #if __has_attribute(ext_vector_type)
         #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
     #else
         #define __NATIVE_VECTOR__(n, ...) [n]
-#endif
+    #endif
 
 #if defined(__cplusplus)
     #include <array>
