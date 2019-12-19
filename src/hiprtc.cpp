@@ -307,6 +307,17 @@ struct _hiprtcProgram {
         return true;
     }
 
+    void replaceExtension(std::string& fileName, std::string ext) const {
+        auto res = std::find(fileName.begin(), fileName.end(), '.');
+        if(res == std::end(fileName)) {
+            fileName += ext;
+        } else {
+            std::string s(fileName.begin(), res);
+            s += ext;
+            fileName = s;
+        }
+    }
+
     // ACCESSORS
     std::string writeTemporaryFiles(
         const std::string& programFolder) const
@@ -323,7 +334,7 @@ struct _hiprtcProgram {
         });
 
         auto tmp{(programFolder + '/' + name)};
-        tmp += ".cpp"; // Just add extension for now.
+        replaceExtension(tmp, ".cpp");
         ofstream{tmp}.write(source.data(), source.size());
 
         return tmp;
