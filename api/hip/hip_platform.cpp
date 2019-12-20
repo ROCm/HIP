@@ -569,6 +569,9 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
                stream);
 
   int deviceId = ihipGetDevice();
+  if (deviceId == -1) {
+    HIP_RETURN(hipErrorNoDevice);
+  }
   hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
   if (func == nullptr) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);
