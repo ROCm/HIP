@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 $HIP_BASE_VERSION_MAJOR = "3";
-$HIP_BASE_VERSION_MINOR = "0";
+$HIP_BASE_VERSION_MINOR = "1";
 
 # Need perl > 5.10 to use logic-defined or
 use 5.006; use v5.10.1;
