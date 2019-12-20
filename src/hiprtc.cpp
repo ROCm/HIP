@@ -403,7 +403,9 @@ namespace
         ~Unique_temporary_path() noexcept
         {
             std::string s("rm -r " + path_);
-            system(s.c_str());
+            if (path_.substr(0, 5) == "/tmp/") {
+                system(s.c_str());
+            }
         }
 
         // MANIPULATORS
