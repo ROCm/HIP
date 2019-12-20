@@ -200,7 +200,7 @@ On Linux the following configurations are tested:
 
 Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.6.5.32
 
-Ubuntu 16-18: LLVM 8.0.0 - 9.0.0, CUDA 8.0 - 10.1, cudnn-5.1.10 - cudnn-7.6.5.32
+Ubuntu 16-18: LLVM 8.0.0 - 9.0.0, CUDA 8.0 - 10.1 Update 2, cudnn-5.1.10 - cudnn-7.6.5.32
 
 Minimum build system requirements for the above configurations:
 
@@ -352,11 +352,11 @@ LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn 5.1.10 - 7.1.4.18
 
 LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn 7.0.5.15 - 7.6.5.32
 
-LLVM 7.0.0 - 9.0.0, CUDA 7.5 - 10.1, cudnn 7.0.5.15 - 7.6.5.32
+LLVM 7.0.0 - 9.0.0, CUDA 7.5 - 10.1 Update 2, cudnn 7.0.5.15 - 7.6.5.32
 
 Build system requirements for the latest configuration LLVM 9.0.0/CUDA 10.1 Update 2:
 
-Python 3.6.0 - 3.8.0, cmake 3.5.1 - 3.16.0, Visual Studio 2017 (15.5.2) - 2019 (16.3.8).
+Python 3.6.0 - 3.8.1, cmake 3.5.1 - 3.16.2, Visual Studio 2017 (15.5.2) - 2019 (16.4.2).
 
 Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 16 2019`:
 
