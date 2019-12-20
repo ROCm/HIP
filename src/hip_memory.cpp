@@ -575,17 +575,10 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height,
     return hipSuccess;
 }
 
-hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height, int depth, hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType, hsa_ext_image_data_info_t &imageInfo,int array_size __dparm(0))
+hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,size_t width, size_t height, size_t depth, hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType, hsa_ext_image_data_info_t &imageInfo,size_t array_size __dparm(0))
 {
-    hsa_ext_image_descriptor_t imageDescriptor;
-    imageDescriptor.geometry = geometry;
-    imageDescriptor.width = width;
-    imageDescriptor.height = height;
-    imageDescriptor.depth = depth;
-    imageDescriptor.array_size = array_size;
-    imageDescriptor.format.channel_order = channelOrder;
-    imageDescriptor.format.channel_type = channelType;
-
+    hsa_ext_image_descriptor_t imageDescriptor = {.geometry = geometry, .width = width, .height= height, .depth = depth,
+        .array_size = array_size, .format.channel_order = channelOrder, .format.channel_type = channelType};
     hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
     // Get the current device agent.
     hc::accelerator acc;
@@ -1330,12 +1323,22 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                 widthInBytes = p->WidthInBytes;
                 width =  p->dstArray->width;
                 hsa_ext_image_channel_order_t channelOrder;
-                if (p->dstArray->NumChannels == 4) {
-                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA;
-                } else if (p->dstArray->NumChannels == 2) {
-                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RG;
-                } else if (p->dstArray->NumChannels == 1) {
-                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
+                switch(p->dstArray->NumChannels) {
+                    case 1:
+	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
+	                    break;
+	                case 2:
+	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RG;
+	                    break;
+	                case 3:
+	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGB;
+	                    break;
+	                case 4:
+	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA;
+	                    break;
+	                default:
+	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
+	                    break;
                 }
                 hsa_ext_image_channel_type_t channelType;
                 e = ihipArrayToImageFormat(p->dstArray->Format,channelType);
