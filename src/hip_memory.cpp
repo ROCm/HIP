@@ -745,6 +745,7 @@ hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAll
        case hipArrayDefault:
        case hipArrayCubemap:
        default:
+          array[0]->type = hipArrayCubemap;
           hip_status = allocImage(tls,HSA_EXT_IMAGE_GEOMETRY_3D,pAllocateArray->Width,pAllocateArray->Height,
                                   pAllocateArray->Depth,channelOrder,channelType,ptr,imageInfo);
           array[0]->textureType = hipTextureType3D;
@@ -788,6 +789,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
        case hipArrayDefault:
        case hipArrayCubemap:
        default:
+          array[0]->type = hipArrayCubemap;
           hip_status = allocImage(tls,HSA_EXT_IMAGE_GEOMETRY_3D,extent.width,extent.height,extent.depth,channelOrder,channelType,ptr,imageInfo);
           array[0]->textureType = hipTextureType3D;
           break;
