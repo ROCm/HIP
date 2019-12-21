@@ -292,8 +292,12 @@ void memcpytest2_get_host_memory(size_t& free, size_t& total) {
     MEMORYSTATUSEX status;
     status.dwLength = sizeof(status);
     GlobalMemoryStatusEx(&status);
-    free = status.ullAvailPhys;
-    total = status.ullTotalPhys;
+    // Windows doesn't allow allocating more than half of system memory to the gpu.
+    // Since the runtime also needs space for its internal allocations,
+    // we should not try to allocate more than 40% of reported system memory,
+    // otherwise we can run into OOM issues.
+    free = static_cast<size_t>(0.4 * status.ullAvailPhys);
+    total = static_cast<size_t>(0.4 * status.ullTotalPhys);
 }
 #else
 struct sysinfo memInfo;
