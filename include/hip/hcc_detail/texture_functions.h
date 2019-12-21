@@ -168,7 +168,20 @@ union TData {
 extern "C" {
 
 // this is really a sparse array with only valid values being the ones indexed by the enum hipArray_Format(e.g. texFormatToSize[HIP_AD_FORMAT_UNSIGNED_INT8] = UCHAR_MAX)
-__device__ __constant__ static int texFormatToSize[] = {1,UCHAR_MAX,USHRT_MAX,1,1,1,1,1,SCHAR_MAX,SHRT_MAX,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1};
+__device__ __constant__ static int texFormatToSize[] = {
+    1, /* HIP_AD_FORMAT_NOT_INITIALIZED */
+    UCHAR_MAX, /* HIP_AD_FORMAT_UNSIGNED_INT8 */
+    USHRT_MAX, /* HIP_AD_FORMAT_UNSIGNED_INT16 */
+    1, /* HIP_AD_FORMAT_UNSIGNED_INT32 */
+    1,1,1,1, /* Invalid values */
+    SCHAR_MAX, /* HIP_AD_FORMAT_SIGNED_INT8 */
+    SHRT_MAX, /* HIP_AD_FORMAT_SIGNED_INT16 */
+    1, /* HIP_AD_FORMAT_SIGNED_INT32 */
+    1,1,1,1,1, /* Invalid values */
+    1, /* HIP_AD_FORMAT_HALF */
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* Invalid values */
+    1 /* HIP_AD_FORMAT_FLOAT */
+};
 
 __device__
 __hip_float4_vector_value_type __ockl_image_sample_1D(
