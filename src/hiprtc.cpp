@@ -82,20 +82,13 @@ const char* hiprtcGetErrorString(hiprtcResult x)
 }
 
 namespace hip_impl {
-bool exists(const std::string& path) {
-    struct stat info;
-    if (stat(path.c_str(), &info) != 0) {
-        return false;
-    }
-    return (info.st_mode & S_IFDIR) != 0;
-}
-
-bool create_directory(const std::string& path) {
+inline bool create_directory(const std::string& path) {
     mode_t mode = 0755;
     int ret = mkdir(path.c_str(), mode);
     if (ret == 0) return true;
     return false;
 }
+
 inline bool fileExists (const std::string& name) {
   struct stat buffer;   
   return (stat (name.c_str(), &buffer) == 0); 
@@ -307,14 +300,13 @@ struct _hiprtcProgram {
         return true;
     }
 
-    void replaceExtension(std::string& fileName, std::string ext) const {
-        auto res = std::find(fileName.begin(), fileName.end(), '.');
-        if(res == std::end(fileName)) {
+    void replaceExtension(std::string& fileName, const std::string &ext) const {
+        auto res = std::find(fileName.rbegin(), fileName.rend(), '.');
+        auto sloc = std::find(fileName.rbegin(), fileName.rend(), '/');
+        if(res == fileName.rend() || res > sloc) {
             fileName += ext;
         } else {
-            std::string s(fileName.begin(), res);
-            s += ext;
-            fileName = s;
+            fileName.replace(res.base(), fileName.end(), ext);
         }
     }
 
@@ -334,7 +326,7 @@ struct _hiprtcProgram {
         });
 
         auto tmp{(programFolder + '/' + name)};
-        replaceExtension(tmp, ".cpp");
+        replaceExtension(tmp, "cpp");
         ofstream{tmp}.write(source.data(), source.size());
 
         return tmp;
@@ -392,7 +384,7 @@ namespace
         // CREATORS
         Unique_temporary_path() : path_{std::tmpnam(nullptr)}
         {
-            while (hip_impl::exists(path_)) {
+            while (hip_impl::fileExists(path_)) {
                 path_ = std::tmpnam(nullptr);
             }
         }
@@ -403,9 +395,7 @@ namespace
         ~Unique_temporary_path() noexcept
         {
             std::string s("rm -r " + path_);
-            if (path_.substr(0, 5) == "/tmp/") {
-                system(s.c_str());
-            }
+            system(s.c_str());
         }
 
         // MANIPULATORS
