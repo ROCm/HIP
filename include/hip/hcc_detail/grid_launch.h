@@ -48,8 +48,6 @@ typedef struct grid_launch_parm
   //! Value of packet fences to apply to launch.
   //! The correspond to the value of bits 9:14 in the AQL packet,
   //! see HSA_PACKET_HEADER_ACQUIRE_FENCE_SCOPE and hsa_fence_scope_t.
-  //! Set to -1 for conservative defaults.
-  //! Placeholder, is not used to control packet dispatch yet
   unsigned int  launch_fence;
 
   //! Pointer to the accelerator_view where the kernel should execute.
