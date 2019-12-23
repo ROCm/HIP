@@ -201,7 +201,7 @@ void runTests(int64_t numElements) {
 
 int main(int argc, char* argv[]) {
     // Can' destroy the default stream:// TODO - move to another test
-    HIPCHECK_API(hipStreamDestroy(0), hipErrorInvalidResourceHandle);
+    HIPCHECK_API(hipStreamDestroy(0), hipErrorInvalidHandle);
 
     HipTest::parseStandardArguments(argc, argv, true /*failOnUndefinedArg*/);
 

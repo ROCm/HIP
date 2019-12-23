@@ -67,9 +67,9 @@ int main(int argc, char *argv[])
 
     printf ("info: allocate host mem (%6.2f MB)\n", 2*Nbytes/1024.0/1024.0);
     A_h = (float*)malloc(Nbytes);
-    HIPCHECK(A_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
+    HIPCHECK(A_h == 0 ? hipErrorOutOfMemory : hipSuccess );
     C_h = (float*)malloc(Nbytes);
-    HIPCHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
+    HIPCHECK(C_h == 0 ? hipErrorOutOfMemory : hipSuccess );
     // Fill with Phi + i
     for (size_t i = 0; i < N; i++)
     {
