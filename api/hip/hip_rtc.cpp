@@ -109,62 +109,62 @@ uint32_t ProgramState::addNameExpression(const char* name_expression) {
 
 namespace hip_impl {
 
-inline std::string demangle(const char* x) {
+char* demangle(const char* loweredName) {
 #ifdef ATI_OS_LINUX
-  if (!x) {
-    return {};
+  if (!loweredName) {
+    return nullptr;
   }
 
-  int s = 0;
-  std::unique_ptr<char, decltype(std::free)*> tmp{
-                        __cxa_demangle(x, nullptr, nullptr, &s),
-                        std::free};
-  if (s != 0) {
-    return {};
+  int status = 0;
+  char* demangledName = __cxa_demangle(loweredName, nullptr, nullptr, &status);
+  if (status != 0) {
+    return nullptr;
   }
 
-  return tmp.get();
+  return demangledName;
 #else
-  return {};
+  return nullptr;
 #endif
 }
 } // hip_impl
 
-std::string handleMangledName(std::string name) {
-  std::string demangled;
-  demangled = hip_impl::demangle(name.c_str());
+static std::string handleMangledName(std::string name) {
+  std::string loweredName;
+  char* demangled = hip_impl::demangle(name.c_str());
+  loweredName.assign(demangled == nullptr ? std::string() : demangled);
+  free(demangled);
 
-  if (demangled.empty()) {
+  if (loweredName.empty()) {
     return name;
   }
 
-  if (demangled.find(".kd") != std::string::npos) {
+  if (loweredName.find(".kd") != std::string::npos) {
     return {};
   }
 
-  if (demangled.find("void ") == 0) {
-    demangled.erase(0, strlen("void "));
+  if (loweredName.find("void ") == 0) {
+    loweredName.erase(0, strlen("void "));
   }
 
-  auto dx{demangled.find_first_of("(<")};
+  auto dx{loweredName.find_first_of("(<")};
 
   if (dx == std::string::npos) {
-    return demangled;
+    return loweredName;
   }
 
-  if (demangled[dx] == '<') {
-    auto cnt{1u};
+  if (loweredName[dx] == '<') {
+    uint32_t count = 1;
     do {
         ++dx;
-        cnt += (demangled[dx] == '<') ? 1 : ((demangled[dx] == '>') ? -1 : 0);
-    } while (cnt);
+        count += (loweredName[dx] == '<') ? 1 : ((loweredName[dx] == '>') ? -1 : 0);
+    } while (count);
 
-    demangled.erase(++dx);
+    loweredName.erase(++dx);
   } else {
-    demangled.erase(dx);
+    loweredName.erase(dx);
   }
 
-  return demangled;
+  return loweredName;
 }
 
 
