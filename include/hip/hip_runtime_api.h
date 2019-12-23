@@ -211,7 +211,7 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorContextAlreadyCurrent = 202,
     hipErrorMapFailed = 205,
     // Deprecated
-    hipErrorMapBufferObjectFailed = 205  ///< Produced when the IPC memory attach failed from ROCr.
+    hipErrorMapBufferObjectFailed = 205,  ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorUnmapFailed = 206,
     hipErrorArrayIsMapped = 207,
     hipErrorAlreadyMapped = 208,
