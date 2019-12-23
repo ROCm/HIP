@@ -38,69 +38,69 @@ Integer Intrinsics
 */
 
 // integer intrinsic function __poc __clz __ffs __brev
-__device__ static inline unsigned int __popc(unsigned int input) {
+__device__ inline unsigned int __popc(unsigned int input) {
     return __builtin_popcount(input);
 }
-__device__ static inline unsigned int __popcll(unsigned long long int input) {
+__device__ inline unsigned int __popcll(unsigned long long int input) {
     return __builtin_popcountll(input);
 }
 
-__device__ static inline int __clz(int input) {
+__device__ inline int __clz(int input) {
     return __ockl_clz_u32((uint)input);
 }
 
-__device__ static inline int __clzll(long long int input) {
+__device__ inline int __clzll(long long int input) {
     return __ockl_clz_u64((ullong)input);
 }
 
-__device__ static inline unsigned int __ffs(unsigned int input) {
+__device__ inline unsigned int __ffs(unsigned int input) {
     return ( input == 0 ? -1 : __builtin_ctz(input) ) + 1;
 }
 
-__device__ static inline unsigned int __ffsll(unsigned long long int input) {
+__device__ inline unsigned int __ffsll(unsigned long long int input) {
     return ( input == 0 ? -1 : __builtin_ctzll(input) ) + 1;
 }
 
-__device__ static inline unsigned int __ffs(int input) {
+__device__ inline unsigned int __ffs(int input) {
     return ( input == 0 ? -1 : __builtin_ctz(input) ) + 1;
 }
 
-__device__ static inline unsigned int __ffsll(long long int input) {
+__device__ inline unsigned int __ffsll(long long int input) {
     return ( input == 0 ? -1 : __builtin_ctzll(input) ) + 1;
 }
 
-__device__ static inline unsigned int __brev(unsigned int input) {
+__device__ inline unsigned int __brev(unsigned int input) {
     return __llvm_bitrev_b32(input);
 }
 
-__device__ static inline unsigned long long int __brevll(unsigned long long int input) {
+__device__ inline unsigned long long int __brevll(unsigned long long int input) {
     return __llvm_bitrev_b64(input);
 }
 
-__device__ static inline unsigned int __lastbit_u32_u64(uint64_t input) {
+__device__ inline unsigned int __lastbit_u32_u64(uint64_t input) {
     return input == 0 ? -1 : __builtin_ctzl(input);
 }
 
-__device__ static inline unsigned int __bitextract_u32(unsigned int src0, unsigned int src1, unsigned int src2) {
+__device__ inline unsigned int __bitextract_u32(unsigned int src0, unsigned int src1, unsigned int src2) {
     uint32_t offset = src1 & 31;
     uint32_t width = src2 & 31;
     return width == 0 ? 0 : (src0 << (32 - offset - width)) >> (32 - width);
 }
 
-__device__ static inline uint64_t __bitextract_u64(uint64_t src0, unsigned int src1, unsigned int src2) {
+__device__ inline uint64_t __bitextract_u64(uint64_t src0, unsigned int src1, unsigned int src2) {
     uint64_t offset = src1 & 63;
     uint64_t width = src2 & 63;
     return width == 0 ? 0 : (src0 << (64 - offset - width)) >> (64 - width);
 }
 
-__device__ static inline unsigned int __bitinsert_u32(unsigned int src0, unsigned int src1, unsigned int src2, unsigned int src3) {
+__device__ inline unsigned int __bitinsert_u32(unsigned int src0, unsigned int src1, unsigned int src2, unsigned int src3) {
     uint32_t offset = src2 & 31;
     uint32_t width = src3 & 31;
     uint32_t mask = (1 << width) - 1;
     return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
 }
 
-__device__ static inline uint64_t __bitinsert_u64(uint64_t src0, uint64_t src1, unsigned int src2, unsigned int src3) {
+__device__ inline uint64_t __bitinsert_u64(uint64_t src0, uint64_t src1, unsigned int src2, unsigned int src3) {
     uint64_t offset = src2 & 63;
     uint64_t width = src3 & 63;
     uint64_t mask = (1ULL << width) - 1;
@@ -136,7 +136,7 @@ struct uchar2Holder {
 } __attribute__((aligned(8)));
 
 __device__
-static inline unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s) {
+inline unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s) {
     struct uchar2Holder cHoldVal;
     struct ucharHolder cHoldKey;
     struct ucharHolder cHoldOut;
@@ -150,18 +150,18 @@ static inline unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned 
     return cHoldOut.ui;
 }
 
-__device__ static inline unsigned int __hadd(int x, int y) {
+__device__ inline unsigned int __hadd(int x, int y) {
     int z = x + y;
     int sign = z & 0x8000000;
     int value = z & 0x7FFFFFFF;
     return ((value) >> 1 || sign);
 }
 
-__device__ static inline int __mul24(int x, int y) {
+__device__ inline int __mul24(int x, int y) {
     return __ockl_mul24_i32(x, y);
 }
 
-__device__ static inline long long __mul64hi(long long int x, long long int y) {
+__device__ inline long long __mul64hi(long long int x, long long int y) {
     ulong x0 = (ulong)x & 0xffffffffUL;
     long x1 = x >> 32;
     ulong y0 = (ulong)y & 0xffffffffUL;
@@ -174,28 +174,28 @@ __device__ static inline long long __mul64hi(long long int x, long long int y) {
     return x1*y1 + z2 + (z1 >> 32);
 }
 
-__device__ static inline int __mulhi(int x, int y) {
+__device__ inline int __mulhi(int x, int y) {
     return __ockl_mul_hi_i32(x, y);
 }
 
-__device__ static inline int __rhadd(int x, int y) {
+__device__ inline int __rhadd(int x, int y) {
     int z = x + y + 1;
     int sign = z & 0x8000000;
     int value = z & 0x7FFFFFFF;
     return ((value) >> 1 || sign);
 }
-__device__ static inline unsigned int __sad(int x, int y, int z) {
+__device__ inline unsigned int __sad(int x, int y, int z) {
     return x > y ? x - y + z : y - x + z;
 }
-__device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y) {
+__device__ inline unsigned int __uhadd(unsigned int x, unsigned int y) {
     return (x + y) >> 1;
 }
-__device__ static inline int __umul24(unsigned int x, unsigned int y) {
+__device__ inline int __umul24(unsigned int x, unsigned int y) {
     return __ockl_mul24_u32(x, y);
 }
 
 __device__
-static inline unsigned long long __umul64hi(unsigned long long int x, unsigned long long int y) {
+inline unsigned long long __umul64hi(unsigned long long int x, unsigned long long int y) {
     ulong x0 = x & 0xffffffffUL;
     ulong x1 = x >> 32;
     ulong y0 = y & 0xffffffffUL;
@@ -208,41 +208,41 @@ static inline unsigned long long __umul64hi(unsigned long long int x, unsigned l
     return x1*y1 + z2 + (z1 >> 32);
 }
 
-__device__ static inline unsigned int __umulhi(unsigned int x, unsigned int y) {
+__device__ inline unsigned int __umulhi(unsigned int x, unsigned int y) {
     return __ockl_mul_hi_u32(x, y);
 }
-__device__ static inline unsigned int __urhadd(unsigned int x, unsigned int y) {
+__device__ inline unsigned int __urhadd(unsigned int x, unsigned int y) {
     return (x + y + 1) >> 1;
 }
-__device__ static inline unsigned int __usad(unsigned int x, unsigned int y, unsigned int z) {
+__device__ inline unsigned int __usad(unsigned int x, unsigned int y, unsigned int z) {
     return __ockl_sad_u32(x, y, z);
 }
 
-__device__ static inline unsigned int __lane_id() { return  __mbcnt_hi(-1, __mbcnt_lo(-1, 0)); }
+__device__ inline unsigned int __lane_id() { return  __mbcnt_hi(-1, __mbcnt_lo(-1, 0)); }
 
 /*
 HIP specific device functions
 */
 
-__device__ static inline unsigned __hip_ds_bpermute(int index, unsigned src) {
+__device__ inline unsigned __hip_ds_bpermute(int index, unsigned src) {
     union { int i; unsigned u; float f; } tmp; tmp.u = src;
     tmp.i = __llvm_amdgcn_ds_bpermute(index, tmp.i);
     return tmp.u;
 }
 
-__device__ static inline float __hip_ds_bpermutef(int index, float src) {
+__device__ inline float __hip_ds_bpermutef(int index, float src) {
     union { int i; unsigned u; float f; } tmp; tmp.f = src;
     tmp.i = __llvm_amdgcn_ds_bpermute(index, tmp.i);
     return tmp.f;
 }
 
-__device__ static inline unsigned __hip_ds_permute(int index, unsigned src) {
+__device__ inline unsigned __hip_ds_permute(int index, unsigned src) {
     union { int i; unsigned u; float f; } tmp; tmp.u = src;
     tmp.i = __llvm_amdgcn_ds_permute(index, tmp.i);
     return tmp.u;
 }
 
-__device__ static inline float __hip_ds_permutef(int index, float src) {
+__device__ inline float __hip_ds_permutef(int index, float src) {
     union { int i; unsigned u; float f; } tmp; tmp.u = src;
     tmp.i = __llvm_amdgcn_ds_permute(index, tmp.i);
     return tmp.u;
@@ -252,7 +252,7 @@ __device__ static inline float __hip_ds_permutef(int index, float src) {
 #define __hip_ds_swizzlef(src, pattern) __hip_ds_swizzlef_N<(pattern)>((src))
 
 template <int pattern>
-__device__ static inline unsigned __hip_ds_swizzle_N(unsigned int src) {
+__device__ inline unsigned __hip_ds_swizzle_N(unsigned int src) {
     union { int i; unsigned u; float f; } tmp; tmp.u = src;
 #if defined(__HCC__)
     tmp.i = __llvm_amdgcn_ds_swizzle(tmp.i, pattern);
@@ -263,7 +263,7 @@ __device__ static inline unsigned __hip_ds_swizzle_N(unsigned int src) {
 }
 
 template <int pattern>
-__device__ static inline float __hip_ds_swizzlef_N(float src) {
+__device__ inline float __hip_ds_swizzlef_N(float src) {
     union { int i; unsigned u; float f; } tmp; tmp.f = src;
 #if defined(__HCC__)
     tmp.i = __llvm_amdgcn_ds_swizzle(tmp.i, pattern);
@@ -277,7 +277,7 @@ __device__ static inline float __hip_ds_swizzlef_N(float src) {
   __hip_move_dpp_N<(dpp_ctrl), (row_mask), (bank_mask), (bound_ctrl)>((src))
 
 template <int dpp_ctrl, int row_mask, int bank_mask, bool bound_ctrl>
-__device__ static inline int __hip_move_dpp_N(int src) {
+__device__ inline int __hip_move_dpp_N(int src) {
     return __llvm_amdgcn_move_dpp(src, dpp_ctrl, row_mask, bank_mask,
                                   bound_ctrl);
 }
@@ -434,7 +434,7 @@ double __shfl_xor(double var, int lane_mask, int width = warpSize) {
 #define MASK1 0x00ff00ff
 #define MASK2 0xff00ff00
 
-__device__ static inline char4 __hip_hc_add8pk(char4 in1, char4 in2) {
+__device__ inline char4 __hip_hc_add8pk(char4 in1, char4 in2) {
     char4 out;
     unsigned one1 = in1.w & MASK1;
     unsigned one2 = in2.w & MASK1;
@@ -445,7 +445,7 @@ __device__ static inline char4 __hip_hc_add8pk(char4 in1, char4 in2) {
     return out;
 }
 
-__device__ static inline char4 __hip_hc_sub8pk(char4 in1, char4 in2) {
+__device__ inline char4 __hip_hc_sub8pk(char4 in1, char4 in2) {
     char4 out;
     unsigned one1 = in1.w & MASK1;
     unsigned one2 = in2.w & MASK1;
@@ -456,7 +456,7 @@ __device__ static inline char4 __hip_hc_sub8pk(char4 in1, char4 in2) {
     return out;
 }
 
-__device__ static inline char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
+__device__ inline char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
     char4 out;
     unsigned one1 = in1.w & MASK1;
     unsigned one2 = in2.w & MASK1;
@@ -472,12 +472,12 @@ __device__ static inline char4 __hip_hc_mul8pk(char4 in1, char4 in2) {
  * TODO: Conversion functions are not correct, need to fix when BE is ready
 */
 
-__device__ static inline float __double2float_rd(double x) { return (double)x; }
-__device__ static inline float __double2float_rn(double x) { return (double)x; }
-__device__ static inline float __double2float_ru(double x) { return (double)x; }
-__device__ static inline float __double2float_rz(double x) { return (double)x; }
+__device__ inline float __double2float_rd(double x) { return (double)x; }
+__device__ inline float __double2float_rn(double x) { return (double)x; }
+__device__ inline float __double2float_ru(double x) { return (double)x; }
+__device__ inline float __double2float_rz(double x) { return (double)x; }
 
-__device__ static inline int __double2hiint(double x) {
+__device__ inline int __double2hiint(double x) {
     static_assert(sizeof(double) == 2 * sizeof(int), "");
 
     int tmp[2];
@@ -485,7 +485,7 @@ __device__ static inline int __double2hiint(double x) {
 
     return tmp[1];
 }
-__device__ static inline int __double2loint(double x) {
+__device__ inline int __double2loint(double x) {
     static_assert(sizeof(double) == 2 * sizeof(int), "");
 
     int tmp[2];
@@ -494,35 +494,35 @@ __device__ static inline int __double2loint(double x) {
     return tmp[0];
 }
 
-__device__ static inline int __double2int_rd(double x) { return (int)x; }
-__device__ static inline int __double2int_rn(double x) { return (int)x; }
-__device__ static inline int __double2int_ru(double x) { return (int)x; }
-__device__ static inline int __double2int_rz(double x) { return (int)x; }
+__device__ inline int __double2int_rd(double x) { return (int)x; }
+__device__ inline int __double2int_rn(double x) { return (int)x; }
+__device__ inline int __double2int_ru(double x) { return (int)x; }
+__device__ inline int __double2int_rz(double x) { return (int)x; }
 
-__device__ static inline long long int __double2ll_rd(double x) { return (long long int)x; }
-__device__ static inline long long int __double2ll_rn(double x) { return (long long int)x; }
-__device__ static inline long long int __double2ll_ru(double x) { return (long long int)x; }
-__device__ static inline long long int __double2ll_rz(double x) { return (long long int)x; }
+__device__ inline long long int __double2ll_rd(double x) { return (long long int)x; }
+__device__ inline long long int __double2ll_rn(double x) { return (long long int)x; }
+__device__ inline long long int __double2ll_ru(double x) { return (long long int)x; }
+__device__ inline long long int __double2ll_rz(double x) { return (long long int)x; }
 
-__device__ static inline unsigned int __double2uint_rd(double x) { return (unsigned int)x; }
-__device__ static inline unsigned int __double2uint_rn(double x) { return (unsigned int)x; }
-__device__ static inline unsigned int __double2uint_ru(double x) { return (unsigned int)x; }
-__device__ static inline unsigned int __double2uint_rz(double x) { return (unsigned int)x; }
+__device__ inline unsigned int __double2uint_rd(double x) { return (unsigned int)x; }
+__device__ inline unsigned int __double2uint_rn(double x) { return (unsigned int)x; }
+__device__ inline unsigned int __double2uint_ru(double x) { return (unsigned int)x; }
+__device__ inline unsigned int __double2uint_rz(double x) { return (unsigned int)x; }
 
-__device__ static inline unsigned long long int __double2ull_rd(double x) {
+__device__ inline unsigned long long int __double2ull_rd(double x) {
     return (unsigned long long int)x;
 }
-__device__ static inline unsigned long long int __double2ull_rn(double x) {
+__device__ inline unsigned long long int __double2ull_rn(double x) {
     return (unsigned long long int)x;
 }
-__device__ static inline unsigned long long int __double2ull_ru(double x) {
+__device__ inline unsigned long long int __double2ull_ru(double x) {
     return (unsigned long long int)x;
 }
-__device__ static inline unsigned long long int __double2ull_rz(double x) {
+__device__ inline unsigned long long int __double2ull_rz(double x) {
     return (unsigned long long int)x;
 }
 
-__device__ static inline long long int __double_as_longlong(double x) {
+__device__ inline long long int __double_as_longlong(double x) {
     static_assert(sizeof(long long) == sizeof(double), "");
 
     long long tmp;
@@ -545,35 +545,35 @@ CUDA implements half as unsigned short whereas, HIP doesn't.
 
 */
 
-__device__ static inline int __float2int_rd(float x) { return (int)__ocml_floor_f32(x); }
-__device__ static inline int __float2int_rn(float x) { return (int)__ocml_rint_f32(x); }
-__device__ static inline int __float2int_ru(float x) { return (int)__ocml_ceil_f32(x); }
-__device__ static inline int __float2int_rz(float x) { return (int)__ocml_trunc_f32(x); }
+__device__ inline int __float2int_rd(float x) { return (int)__ocml_floor_f32(x); }
+__device__ inline int __float2int_rn(float x) { return (int)__ocml_rint_f32(x); }
+__device__ inline int __float2int_ru(float x) { return (int)__ocml_ceil_f32(x); }
+__device__ inline int __float2int_rz(float x) { return (int)__ocml_trunc_f32(x); }
 
-__device__ static inline long long int __float2ll_rd(float x) { return (long long int)x; }
-__device__ static inline long long int __float2ll_rn(float x) { return (long long int)x; }
-__device__ static inline long long int __float2ll_ru(float x) { return (long long int)x; }
-__device__ static inline long long int __float2ll_rz(float x) { return (long long int)x; }
+__device__ inline long long int __float2ll_rd(float x) { return (long long int)x; }
+__device__ inline long long int __float2ll_rn(float x) { return (long long int)x; }
+__device__ inline long long int __float2ll_ru(float x) { return (long long int)x; }
+__device__ inline long long int __float2ll_rz(float x) { return (long long int)x; }
 
-__device__ static inline unsigned int __float2uint_rd(float x) { return (unsigned int)x; }
-__device__ static inline unsigned int __float2uint_rn(float x) { return (unsigned int)x; }
-__device__ static inline unsigned int __float2uint_ru(float x) { return (unsigned int)x; }
-__device__ static inline unsigned int __float2uint_rz(float x) { return (unsigned int)x; }
+__device__ inline unsigned int __float2uint_rd(float x) { return (unsigned int)x; }
+__device__ inline unsigned int __float2uint_rn(float x) { return (unsigned int)x; }
+__device__ inline unsigned int __float2uint_ru(float x) { return (unsigned int)x; }
+__device__ inline unsigned int __float2uint_rz(float x) { return (unsigned int)x; }
 
-__device__ static inline unsigned long long int __float2ull_rd(float x) {
+__device__ inline unsigned long long int __float2ull_rd(float x) {
     return (unsigned long long int)x;
 }
-__device__ static inline unsigned long long int __float2ull_rn(float x) {
+__device__ inline unsigned long long int __float2ull_rn(float x) {
     return (unsigned long long int)x;
 }
-__device__ static inline unsigned long long int __float2ull_ru(float x) {
+__device__ inline unsigned long long int __float2ull_ru(float x) {
     return (unsigned long long int)x;
 }
-__device__ static inline unsigned long long int __float2ull_rz(float x) {
+__device__ inline unsigned long long int __float2ull_rz(float x) {
     return (unsigned long long int)x;
 }
 
-__device__ static inline int __float_as_int(float x) {
+__device__ inline int __float_as_int(float x) {
     static_assert(sizeof(int) == sizeof(float), "");
 
     int tmp;
@@ -582,7 +582,7 @@ __device__ static inline int __float_as_int(float x) {
     return tmp;
 }
 
-__device__ static inline unsigned int __float_as_uint(float x) {
+__device__ inline unsigned int __float_as_uint(float x) {
     static_assert(sizeof(unsigned int) == sizeof(float), "");
 
     unsigned int tmp;
@@ -591,7 +591,7 @@ __device__ static inline unsigned int __float_as_uint(float x) {
     return tmp;
 }
 
-__device__ static inline double __hiloint2double(int hi, int lo) {
+__device__ inline double __hiloint2double(int hi, int lo) {
     static_assert(sizeof(double) == sizeof(uint64_t), "");
 
     uint64_t tmp0 = (static_cast<uint64_t>(hi) << 32ull) | static_cast<uint32_t>(lo);
@@ -601,14 +601,14 @@ __device__ static inline double __hiloint2double(int hi, int lo) {
     return tmp1;
 }
 
-__device__ static inline double __int2double_rn(int x) { return (double)x; }
+__device__ inline double __int2double_rn(int x) { return (double)x; }
 
-__device__ static inline float __int2float_rd(int x) { return (float)x; }
-__device__ static inline float __int2float_rn(int x) { return (float)x; }
-__device__ static inline float __int2float_ru(int x) { return (float)x; }
-__device__ static inline float __int2float_rz(int x) { return (float)x; }
+__device__ inline float __int2float_rd(int x) { return (float)x; }
+__device__ inline float __int2float_rn(int x) { return (float)x; }
+__device__ inline float __int2float_ru(int x) { return (float)x; }
+__device__ inline float __int2float_rz(int x) { return (float)x; }
 
-__device__ static inline float __int_as_float(int x) {
+__device__ inline float __int_as_float(int x) {
     static_assert(sizeof(float) == sizeof(int), "");
 
     float tmp;
@@ -617,17 +617,17 @@ __device__ static inline float __int_as_float(int x) {
     return tmp;
 }
 
-__device__ static inline double __ll2double_rd(long long int x) { return (double)x; }
-__device__ static inline double __ll2double_rn(long long int x) { return (double)x; }
-__device__ static inline double __ll2double_ru(long long int x) { return (double)x; }
-__device__ static inline double __ll2double_rz(long long int x) { return (double)x; }
+__device__ inline double __ll2double_rd(long long int x) { return (double)x; }
+__device__ inline double __ll2double_rn(long long int x) { return (double)x; }
+__device__ inline double __ll2double_ru(long long int x) { return (double)x; }
+__device__ inline double __ll2double_rz(long long int x) { return (double)x; }
 
-__device__ static inline float __ll2float_rd(long long int x) { return (float)x; }
-__device__ static inline float __ll2float_rn(long long int x) { return (float)x; }
-__device__ static inline float __ll2float_ru(long long int x) { return (float)x; }
-__device__ static inline float __ll2float_rz(long long int x) { return (float)x; }
+__device__ inline float __ll2float_rd(long long int x) { return (float)x; }
+__device__ inline float __ll2float_rn(long long int x) { return (float)x; }
+__device__ inline float __ll2float_ru(long long int x) { return (float)x; }
+__device__ inline float __ll2float_rz(long long int x) { return (float)x; }
 
-__device__ static inline double __longlong_as_double(long long int x) {
+__device__ inline double __longlong_as_double(long long int x) {
     static_assert(sizeof(double) == sizeof(long long), "");
 
     double tmp;
@@ -636,14 +636,14 @@ __device__ static inline double __longlong_as_double(long long int x) {
     return tmp;
 }
 
-__device__ static inline double __uint2double_rn(int x) { return (double)x; }
+__device__ inline double __uint2double_rn(int x) { return (double)x; }
 
-__device__ static inline float __uint2float_rd(unsigned int x) { return (float)x; }
-__device__ static inline float __uint2float_rn(unsigned int x) { return (float)x; }
-__device__ static inline float __uint2float_ru(unsigned int x) { return (float)x; }
-__device__ static inline float __uint2float_rz(unsigned int x) { return (float)x; }
+__device__ inline float __uint2float_rd(unsigned int x) { return (float)x; }
+__device__ inline float __uint2float_rn(unsigned int x) { return (float)x; }
+__device__ inline float __uint2float_ru(unsigned int x) { return (float)x; }
+__device__ inline float __uint2float_rz(unsigned int x) { return (float)x; }
 
-__device__ static inline float __uint_as_float(unsigned int x) {
+__device__ inline float __uint_as_float(unsigned int x) {
    static_assert(sizeof(float) == sizeof(unsigned int), "");
 
     float tmp;
@@ -652,15 +652,15 @@ __device__ static inline float __uint_as_float(unsigned int x) {
     return tmp;
 }
 
-__device__ static inline double __ull2double_rd(unsigned long long int x) { return (double)x; }
-__device__ static inline double __ull2double_rn(unsigned long long int x) { return (double)x; }
-__device__ static inline double __ull2double_ru(unsigned long long int x) { return (double)x; }
-__device__ static inline double __ull2double_rz(unsigned long long int x) { return (double)x; }
+__device__ inline double __ull2double_rd(unsigned long long int x) { return (double)x; }
+__device__ inline double __ull2double_rn(unsigned long long int x) { return (double)x; }
+__device__ inline double __ull2double_ru(unsigned long long int x) { return (double)x; }
+__device__ inline double __ull2double_rz(unsigned long long int x) { return (double)x; }
 
-__device__ static inline float __ull2float_rd(unsigned long long int x) { return (float)x; }
-__device__ static inline float __ull2float_rn(unsigned long long int x) { return (float)x; }
-__device__ static inline float __ull2float_ru(unsigned long long int x) { return (float)x; }
-__device__ static inline float __ull2float_rz(unsigned long long int x) { return (float)x; }
+__device__ inline float __ull2float_rd(unsigned long long int x) { return (float)x; }
+__device__ inline float __ull2float_rn(unsigned long long int x) { return (float)x; }
+__device__ inline float __ull2float_ru(unsigned long long int x) { return (float)x; }
+__device__ inline float __ull2float_rz(unsigned long long int x) { return (float)x; }
 
 #if defined(__HCC__)
 #define __HCC_OR_HIP_CLANG__ 1
@@ -819,7 +819,7 @@ typedef enum __memory_order
 
 __device__
 inline
-static void
+void
 __atomic_work_item_fence(__cl_mem_fence_flags flags, __memory_order order, __memory_scope scope)
 {
     // We're tying global-happens-before and local-happens-before together as does HSA
@@ -871,21 +871,21 @@ __atomic_work_item_fence(__cl_mem_fence_flags flags, __memory_order order, __mem
 // Memory Fence Functions
 __device__
 inline
-static void __threadfence()
+void __threadfence()
 {
   __atomic_work_item_fence(0, __memory_order_seq_cst, __memory_scope_device);
 }
 
 __device__
 inline
-static void __threadfence_block()
+void __threadfence_block()
 {
   __atomic_work_item_fence(0, __memory_order_seq_cst, __memory_scope_work_group);
 }
 
 __device__
 inline
-static void __threadfence_system()
+void __threadfence_system()
 {
   __atomic_work_item_fence(0, __memory_order_seq_cst, __memory_scope_all_svm_devices);
 }
@@ -945,7 +945,7 @@ void __assertfail(const char * __assertion,
 
 __device__
 inline
-static void __work_group_barrier(__cl_mem_fence_flags flags, __memory_scope scope)
+void __work_group_barrier(__cl_mem_fence_flags flags, __memory_scope scope)
 {
     if (flags) {
         __atomic_work_item_fence(flags, __memory_order_release, scope);
@@ -958,7 +958,7 @@ static void __work_group_barrier(__cl_mem_fence_flags flags, __memory_scope scop
 
 __device__
 inline
-static void __barrier(int n)
+void __barrier(int n)
 {
   __work_group_barrier((__cl_mem_fence_flags)n, __memory_scope_work_group);
 }
@@ -1037,7 +1037,7 @@ unsigned __smid(void)
 
 
 // loop unrolling
-static inline __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size) {
+inline __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_t size) {
     auto dstPtr = static_cast<unsigned char*>(dst);
     auto srcPtr = static_cast<const unsigned char*>(src);
 
@@ -1063,7 +1063,7 @@ static inline __device__ void* __hip_hc_memcpy(void* dst, const void* src, size_
     return dst;
 }
 
-static inline __device__ void* __hip_hc_memset(void* dst, unsigned char val, size_t size) {
+inline __device__ void* __hip_hc_memset(void* dst, unsigned char val, size_t size) {
     auto dstPtr = static_cast<unsigned char*>(dst);
 
     while (size >= 4u) {
@@ -1086,11 +1086,11 @@ static inline __device__ void* __hip_hc_memset(void* dst, unsigned char val, siz
 
     return dst;
 }
-static inline __device__ void* memcpy(void* dst, const void* src, size_t size) {
+inline __device__ void* memcpy(void* dst, const void* src, size_t size) {
     return __hip_hc_memcpy(dst, src, size);
 }
 
-static inline __device__ void* memset(void* ptr, int val, size_t size) {
+inline __device__ void* memset(void* ptr, int val, size_t size) {
     unsigned char val8 = static_cast<unsigned char>(val);
     return __hip_hc_memset(ptr, val8, size);
 }
