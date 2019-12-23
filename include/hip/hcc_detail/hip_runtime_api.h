@@ -444,7 +444,7 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  *
  * @param [in] cacheConfig
  *
- * @returns #hipSuccess, #hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
  * on those architectures.
  *
@@ -457,7 +457,7 @@ hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
  *
  * @param [in] cacheConfig
  *
- * @returns #hipSuccess, #hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
  * on those architectures.
  *
@@ -482,7 +482,7 @@ hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
  *
  * @param [in] config;
  *
- * @returns #hipSuccess, #hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
  * on those architectures.
  *
@@ -494,7 +494,7 @@ hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t config);
  *
  * @param [out] pConfig
  *
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
  * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is
  * ignored on those architectures.
@@ -508,7 +508,7 @@ hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig);
  *
  * @param [in] config
  *
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
  * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is
  * ignored on those architectures.
@@ -727,7 +727,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
  *
  * @param[in, out] stream Valid pointer to hipStream_t.  This function writes the memory with the
  * newly created stream.
- * @return #hipSuccess #hipErrorInvalidResourceHandle
+ * @return #hipSuccess #hipErrorInvalidHandle
  *
  * Destroys the specified stream.
  *
@@ -749,7 +749,7 @@ hipError_t hipStreamDestroy(hipStream_t stream);
  *
  * @param[in] stream stream to query
  *
- * @return #hipSuccess, #hipErrorNotReady, #hipErrorInvalidResourceHandle
+ * @return #hipSuccess, #hipErrorNotReady, #hipErrorInvalidHandle
  *
  * This is thread-safe and returns a snapshot of the current state of the queue.  However, if other
  * host threads are sending work to the stream, the status may change immediately after the function
@@ -766,7 +766,7 @@ hipError_t hipStreamQuery(hipStream_t stream);
  *
  * @param[in] stream stream identifier.
  *
- * @return #hipSuccess, #hipErrorInvalidResourceHandle
+ * @return #hipSuccess, #hipErrorInvalidHandle
  *
  * This command is host-synchronous : the host will block until the specified stream is empty.
  *
@@ -790,7 +790,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream);
  * @param[in] event event to wait on
  * @param[in] flags control operation [must be 0]
  *
- * @return #hipSuccess, #hipErrorInvalidResourceHandle
+ * @return #hipSuccess, #hipErrorInvalidHandle
  *
  * This function inserts a wait operation into the specified stream.
  * All future work submitted to @p stream will wait until @p event reports completion before
@@ -810,9 +810,9 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
  *
  * @param[in] stream stream to be queried
  * @param[in,out] flags Pointer to an unsigned integer in which the stream's flags are returned
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
  *
- * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidResourceHandle
+ * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidHandle
  *
  * Return flags associated with this stream in *@p flags.
  *
@@ -826,9 +826,9 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags);
  *
  * @param[in] stream stream to be queried
  * @param[in,out] priority Pointer to an unsigned integer in which the stream's priority is returned
- * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidResourceHandle
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidHandle
  *
- * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidResourceHandle
+ * @returns #hipSuccess #hipErrorInvalidValue #hipErrorInvalidHandle
  *
  * Query the priority of a stream. The priority is returned in in priority.
  *
@@ -851,7 +851,7 @@ typedef void (*hipStreamCallback_t)(hipStream_t stream, hipError_t status, void*
  * @param[in] callback - The function to call once preceding stream operations are complete
  * @param[in] userData - User specified data to be passed to the callback function
  * @param[in] flags    - Reserved for future use, must be 0
- * @return #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorNotSupported
+ * @return #hipSuccess, #hipErrorInvalidHandle, #hipErrorNotSupported
  *
  * @see hipStreamCreate, hipStreamCreateWithFlags, hipStreamQuery, hipStreamSynchronize,
  * hipStreamWaitEvent, hipStreamDestroy, hipStreamCreateWithPriority
@@ -893,8 +893,8 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @warning On HCC platform, hipEventInterprocess support is under development.  Use of this flag
  will return an error.
  *
- * @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue,
- #hipErrorLaunchFailure, #hipErrorMemoryAllocation
+ * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
+ #hipErrorLaunchFailure, #hipErrorOutOfMemory
  *
  * @see hipEventCreate, hipEventSynchronize, hipEventDestroy, hipEventElapsedTime
  */
@@ -906,8 +906,8 @@ hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags);
  *
  * @param[in,out] event Returns the newly created event.
  *
- * @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue,
- * #hipErrorLaunchFailure, #hipErrorMemoryAllocation
+ * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
+ * #hipErrorLaunchFailure, #hipErrorOutOfMemory
  *
  * @see hipEventCreateWithFlags, hipEventRecord, hipEventQuery, hipEventSynchronize,
  * hipEventDestroy, hipEventElapsedTime
@@ -920,8 +920,8 @@ hipError_t hipEventCreate(hipEvent_t* event);
  *
  * @param[in] event event to record.
  * @param[in] stream stream in which to record event.
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError,
- * #hipErrorInvalidResourceHandle, #hipErrorLaunchFailure
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized,
+ * #hipErrorInvalidHandle, #hipErrorLaunchFailure
  *
  * hipEventQuery() or hipEventSynchronize() must be used to determine when the event
  * transitions from "recording" (after hipEventRecord() is called) to "recorded"
@@ -952,7 +952,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
  *  @brief Destroy the specified event.
  *
  *  @param[in] event Event to destroy.
- *  @returns #hipSuccess, #hipErrorInitializationError, #hipErrorInvalidValue,
+ *  @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
  * #hipErrorLaunchFailure
  *
  *  Releases memory associated with the event.  If the event is recording but has not completed
@@ -978,8 +978,8 @@ hipError_t hipEventDestroy(hipEvent_t event);
  *  TODO-hcc - This function needs to support hipEventBlockingSync parameter.
  *
  *  @param[in] event Event on which to wait.
- *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError,
- * #hipErrorInvalidResourceHandle, #hipErrorLaunchFailure
+ *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized,
+ * #hipErrorInvalidHandle, #hipErrorLaunchFailure
  *
  *  @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventDestroy, hipEventRecord,
  * hipEventElapsedTime
@@ -993,8 +993,8 @@ hipError_t hipEventSynchronize(hipEvent_t event);
  * @param[out] ms : Return time between start and stop in ms.
  * @param[in]   start : Start event.
  * @param[in]   stop  : Stop event.
- * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotReady, #hipErrorInvalidResourceHandle,
- * #hipErrorInitializationError, #hipErrorLaunchFailure
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotReady, #hipErrorInvalidHandle,
+ * #hipErrorNotInitialized, #hipErrorLaunchFailure
  *
  * Computes the elapsed time between two events. Time is computed in ms, with
  * a resolution of approximately 1 us.
@@ -1007,7 +1007,7 @@ hipError_t hipEventSynchronize(hipEvent_t event);
  * commands in that stream have completed executing.  Thus the time that
  * the event recorded may be significantly after the host calls hipEventRecord().
  *
- * If hipEventRecord() has not been called on either event, then #hipErrorInvalidResourceHandle is
+ * If hipEventRecord() has not been called on either event, then #hipErrorInvalidHandle is
  * returned. If hipEventRecord() has been called on both events, but the timestamp has not yet been
  * recorded on one or both events (that is, hipEventQuery() would return #hipErrorNotReady on at
  * least one of the events), then #hipErrorNotReady is returned.
@@ -1022,8 +1022,8 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop);
  * @brief Query event status
  *
  * @param[in] event Event to query.
- * @returns #hipSuccess, #hipErrorNotReady, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
- * #hipErrorInitializationError, #hipErrorLaunchFailure
+ * @returns #hipSuccess, #hipErrorNotReady, #hipErrorInvalidHandle, #hipErrorInvalidValue,
+ * #hipErrorNotInitialized, #hipErrorLaunchFailure
  *
  * Query the status of the specified event.  This function will return #hipErrorNotReady if all
  * commands in the appropriate stream (specified to hipEventRecord()) have completed.  If that work
@@ -1077,7 +1077,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorMemoryAllocation, #hipErrorInvalidValue (bad context, null *ptr)
+ *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
  *
  *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray,
  * hipHostFree, hipHostMalloc
@@ -1093,7 +1093,7 @@ hipError_t hipMalloc(void** ptr, size_t size);
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorMemoryAllocation, #hipErrorInvalidValue (bad context, null *ptr)
+ *  @return #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidValue (bad context, null *ptr)
  *
  *  @see hipMallocPitch, hipFree, hipMallocArray, hipFreeArray, hipMalloc3D, hipMalloc3DArray,
  * hipHostFree, hipHostMalloc
@@ -1108,7 +1108,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *  @return #hipSuccess, #hipErrorOutOfMemory
  *
  *  @deprecated use hipHostMalloc() instead
  */
@@ -1123,7 +1123,7 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *  @return #hipSuccess, #hipErrorOutOfMemory
  *
  *  @deprecated use hipHostMalloc() instead
  */
@@ -1139,7 +1139,7 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *  @return #hipSuccess, #hipErrorOutOfMemory
  *
  *  @see hipSetDeviceFlags, hipHostFree
  */
@@ -1152,7 +1152,7 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
  *  @param[in]  size Requested memory size
  *  @param[in]  flags must be either hipMemAttachGlobal/hipMemAttachHost
  *
- *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *  @return #hipSuccess, #hipErrorOutOfMemory
  */
 hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags __dparm(0));
 
@@ -1165,7 +1165,7 @@ hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags __dpa
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
  *
- *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *  @return #hipSuccess, #hipErrorOutOfMemory
  *
  *  @deprecated use hipHostMalloc() instead
  */
@@ -1179,7 +1179,7 @@ hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags);
  *  @param[in]  hstPtr Host Pointer allocated through hipHostMalloc
  *  @param[in]  flags Flags to be passed for extension
  *
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorOutOfMemory
  *
  *  @see hipSetDeviceFlags, hipHostMalloc
  */
@@ -1228,7 +1228,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr);
  * typically one of the writes will "win" and overwrite data from the other registered memory
  * region.
  *
- *  @return #hipSuccess, #hipErrorMemoryAllocation
+ *  @return #hipSuccess, #hipErrorOutOfMemory
  *
  *  @see hipHostUnregister, hipHostGetFlags, hipHostGetDevicePointer
  */
@@ -1909,7 +1909,7 @@ hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
  *  @param[in]   width  Requested array allocation width
  *  @param[in]   height Requested array allocation height
  *  @param[in]   flags  Requested properties of allocated array
- *  @return      #hipSuccess, #hipErrorMemoryAllocation
+ *  @return      #hipSuccess, #hipErrorOutOfMemory
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
  */
@@ -1925,7 +1925,7 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
  *  @brief Frees an array on the device.
  *
  *  @param[in]  array  Pointer to array to free
- *  @return     #hipSuccess, #hipErrorInvalidValue, #hipErrorInitializationError
+ *  @return     #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipMallocArray, hipHostMalloc, hipHostFree
  */
@@ -1938,7 +1938,7 @@ hipError_t hipFreeArray(hipArray* array);
  *  @param[in]   desc   Requested channel format
  *  @param[in]   extent Requested array allocation width, height and depth
  *  @param[in]   flags  Requested properties of allocated array
- *  @return      #hipSuccess, #hipErrorMemoryAllocation
+ *  @return      #hipSuccess, #hipErrorOutOfMemory
  *
  *  @see hipMalloc, hipMallocPitch, hipFree, hipFreeArray, hipHostMalloc, hipHostFree
  */
@@ -3036,9 +3036,9 @@ hipError_t hipProfilerStop();
  *
  * @returns
  * hipSuccess,
- * hipErrorInvalidResourceHandle,
- * hipErrorMemoryAllocation,
- * hipErrorMapBufferObjectFailed,
+ * hipErrorInvalidHandle,
+ * hipErrorOutOfMemory,
+ * hipErrorMapFailed,
  *
  */
 hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
@@ -3071,8 +3071,8 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
  *
  * @returns
  * hipSuccess,
- * hipErrorMapBufferObjectFailed,
- * hipErrorInvalidResourceHandle,
+ * hipErrorMapFailed,
+ * hipErrorInvalidHandle,
  * hipErrorTooManyPeers
  *
  * @note No guarantees are made about the address returned in @p *devPtr.
@@ -3095,8 +3095,8 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
  *
  * @returns
  * hipSuccess,
- * hipErrorMapBufferObjectFailed,
- * hipErrorInvalidResourceHandle,
+ * hipErrorMapFailed,
+ * hipErrorInvalidHandle,
  *
  */
 hipError_t hipIpcCloseMemHandle(void* devPtr);

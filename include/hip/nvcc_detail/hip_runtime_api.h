@@ -262,9 +262,9 @@ inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
         case cudaErrorMissingConfiguration:
             return hipErrorMissingConfiguration;
         case cudaErrorMemoryAllocation:
-            return hipErrorMemoryAllocation;
+            return hipErrorOutOfMemory;
         case cudaErrorInitializationError:
-            return hipErrorInitializationError;
+            return hipErrorNotInitialized;
         case cudaErrorLaunchFailure:
             return hipErrorLaunchFailure;
         case cudaErrorPriorLaunchFailure:
@@ -286,7 +286,7 @@ inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
         case cudaErrorUnknown:
             return hipErrorUnknown;
         case cudaErrorInvalidResourceHandle:
-            return hipErrorInvalidResourceHandle;
+            return hipErrorInvalidHandle;
         case cudaErrorNotReady:
             return hipErrorNotReady;
         case cudaErrorNoDevice:
@@ -300,7 +300,7 @@ inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
         case cudaErrorHostMemoryNotRegistered:
             return hipErrorHostMemoryNotRegistered;
         case cudaErrorMapBufferObjectFailed:
-            return hipErrorMapBufferObjectFailed;
+            return hipErrorMapFailed;
         case cudaErrorAssert:
             return hipErrorAssert;
         case cudaErrorNotSupported:
@@ -315,7 +315,7 @@ inline static hipError_t hipCUResultTohipError(CUresult cuError) {  // TODO Popu
         case CUDA_SUCCESS:
             return hipSuccess;
         case CUDA_ERROR_OUT_OF_MEMORY:
-            return hipErrorMemoryAllocation;
+            return hipErrorOutOfMemory;
         case CUDA_ERROR_INVALID_VALUE:
             return hipErrorInvalidValue;
         case CUDA_ERROR_INVALID_DEVICE:
@@ -328,6 +328,10 @@ inline static hipError_t hipCUResultTohipError(CUresult cuError) {  // TODO Popu
             return hipErrorInvalidContext;
         case CUDA_ERROR_NOT_INITIALIZED:
             return hipErrorNotInitialized;
+        case CUDA_ERROR_INVALID_HANDLE:
+          return hipErrorInvalidHandle;
+        case CUDA_ERROR_MAP_FAILED:
+          return hipErrorMapFailed;
         default:
             return hipErrorUnknown;  // Note - translated error.
     }
@@ -338,13 +342,13 @@ inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
     switch (hError) {
         case hipSuccess:
             return cudaSuccess;
-        case hipErrorMemoryAllocation:
+        case hipErrorOutOfMemory:
             return cudaErrorMemoryAllocation;
         case hipErrorLaunchOutOfResources:
             return cudaErrorLaunchOutOfResources;
         case hipErrorInvalidValue:
             return cudaErrorInvalidValue;
-        case hipErrorInvalidResourceHandle:
+        case hipErrorInvalidHandle:
             return cudaErrorInvalidResourceHandle;
         case hipErrorInvalidDevice:
             return cudaErrorInvalidDevice;
@@ -352,7 +356,7 @@ inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
             return cudaErrorInvalidMemcpyDirection;
         case hipErrorInvalidDevicePointer:
             return cudaErrorInvalidDevicePointer;
-        case hipErrorInitializationError:
+        case hipErrorNotInitialized:
             return cudaErrorInitializationError;
         case hipErrorNoDevice:
             return cudaErrorNoDevice;
