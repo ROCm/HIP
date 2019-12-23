@@ -97,13 +97,13 @@ class TidInfo {
     TidInfo();
 
     int tid() const { return _shortTid; };
-    pid_t pid() const { return _pid; }; 
+    pid_t pid() const { return _pid; };
     uint64_t incApiSeqNum() { return ++_apiSeqNum; };
     uint64_t apiSeqNum() const { return _apiSeqNum; };
 
    private:
     int _shortTid;
-    pid_t _pid; 
+    pid_t _pid;
 
     // monotonically increasing API sequence number for this threa.
     uint64_t _apiSeqNum;
@@ -280,7 +280,7 @@ static const DbName dbName[] = {
 #endif
 
 
-static inline uint64_t getTicks() { return hc::get_system_ticks(); }
+inline uint64_t getTicks() { return hc::get_system_ticks(); }
 
 //---
 extern uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::string& apiStr);
@@ -495,9 +495,10 @@ struct LockedBase {
 
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
-   public:
+public:
     ihipStreamCriticalBase_t(ihipStream_t* parentStream, hc::accelerator_view av)
-        : _av(av), _parent(parentStream){};
+        :  _parent{parentStream}, _av{av}, _last_op_was_a_copy{false}
+    {}
 
     ~ihipStreamCriticalBase_t() {}
 
@@ -519,12 +520,9 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
         return gotLock ? this : nullptr;
     };
 
-   public:
     ihipStream_t* _parent;
-
     hc::accelerator_view _av;
-
-   private:
+    bool _last_op_was_a_copy;
 };
 
 
@@ -798,7 +796,7 @@ class ihipDevice_t {
 
     // TODO - report this through device properties, base on HCC API call.
     int _isLargeBar;
-   
+
     // Node id reported by kfd for this device
     uint32_t _driver_node_id;
 
@@ -1047,7 +1045,7 @@ struct mg_info {
 //  setDevice first.
 //  - hipDeviceReset destroys the primary context for device?
 //  - Then context is created again for next usage.
-static inline ihipCtx_t* iihipGetTlsDefaultCtx(TlsData* tls) {
+inline ihipCtx_t* iihipGetTlsDefaultCtx(TlsData* tls) {
     // Per-thread initialization of the TLS:
     if ((tls->defaultCtx == nullptr) && (g_deviceCnt > 0)) {
         tls->defaultCtx = ihipGetPrimaryCtx(0);
