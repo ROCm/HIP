@@ -32,23 +32,23 @@ THE SOFTWARE.
 HIP_PUBLIC_API
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f);
 
-static inline hipChannelFormatDesc hipCreateChannelDescHalf() {
+inline hipChannelFormatDesc hipCreateChannelDescHalf() {
     int e = (int)sizeof(unsigned short) * 8;
     return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindFloat);
 }
 
-static inline hipChannelFormatDesc hipCreateChannelDescHalf1() {
+inline hipChannelFormatDesc hipCreateChannelDescHalf1() {
     int e = (int)sizeof(unsigned short) * 8;
     return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindFloat);
 }
 
-static inline hipChannelFormatDesc hipCreateChannelDescHalf2() {
+inline hipChannelFormatDesc hipCreateChannelDescHalf2() {
     int e = (int)sizeof(unsigned short) * 8;
     return hipCreateChannelDesc(e, 0, 0, 0, hipChannelFormatKindFloat);
 }
 
 template <typename T>
-static inline hipChannelFormatDesc hipCreateChannelDesc() {
+inline hipChannelFormatDesc hipCreateChannelDesc() {
     return hipCreateChannelDesc(0, 0, 0, 0, hipChannelFormatKindNone);
 }
 
