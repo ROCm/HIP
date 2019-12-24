@@ -485,7 +485,7 @@ hipError_t ihipMallocPitch(TlsData* tls, void** ptr, size_t* pitch, size_t width
                                HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT32,ptr,imageInfo);
 
     if(hip_status == hipSuccess)
-        *pitch = imageInfo.size/(height == 0 ? 1:height)/(depth == 0 ? 1:depth);
+        *pitch = imageInfo.size/(height == 0 ? 1 : height)/(depth == 0 ? 1 : depth);
 
     return hip_status;
 }
@@ -579,12 +579,12 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,size_t width, size_t h
 {
     hsa_ext_image_descriptor_t imageDescriptor = {.geometry = geometry, .width = width, .height= height, .depth = depth,
         .array_size = array_size, .format.channel_order = channelOrder, .format.channel_type = channelType};
-    hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
     // Get the current device agent.
     hc::accelerator acc;
     hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
     if (!agent)
         return hipErrorInvalidResourceHandle;
+    hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
     hsa_status_t status =
         hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
     if(HSA_STATUS_SUCCESS != status){
@@ -1316,7 +1316,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                     GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, desc, imageInfo, depth);
                 else
                     GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, desc, imageInfo);
-                dstPitch = imageInfo.size/(height == 0 ? 1:height)/(depth == 0 ? 1:depth);
+                dstPitch = imageInfo.size/(height == 0 ? 1 : height)/(depth == 0 ? 1 : depth);
             } else {
                 depth = p->Depth;
                 height = p->Height;
@@ -1324,21 +1324,19 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                 width =  p->dstArray->width;
                 hsa_ext_image_channel_order_t channelOrder;
                 switch(p->dstArray->NumChannels) {
+                    case 2:
+                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RG;
+                       break;
+                    case 3:
+                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGB;
+                       break;
+                    case 4:
+                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA;
+                       break;
                     case 1:
-	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
-	                    break;
-	                case 2:
-	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RG;
-	                    break;
-	                case 3:
-	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGB;
-	                    break;
-	                case 4:
-	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA;
-	                    break;
-	                default:
-	                    channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
-	                    break;
+                    default:
+                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
+                       break;
                 }
                 hsa_ext_image_channel_type_t channelType;
                 e = ihipArrayToImageFormat(p->dstArray->Format,channelType);
@@ -1351,7 +1349,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                     GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, channelOrder, channelType, imageInfo, depth);
                 else
                     GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, channelOrder, channelType, imageInfo);
-                dstPitch = imageInfo.size/(height == 0 ? 1:height)/(depth == 0 ? 1:depth);
+                dstPitch = imageInfo.size/(height == 0 ? 1 : height)/(depth == 0 ? 1 : depth);
             }
         } else {
             // Non array destination
