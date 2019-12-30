@@ -114,10 +114,6 @@ const char *hipGetErrorName(hipError_t hip_error)
         return "hipErrorIllegalAddress";
     case hipErrorMissingConfiguration:
         return "hipErrorMissingConfiguration";
-    case hipErrorMemoryAllocation:
-        return "hipErrorMemoryAllocation";
-    case hipErrorInitializationError:
-        return "hipErrorInitializationError";
     case hipErrorLaunchFailure:
         return "hipErrorLaunchFailure";
     case hipErrorPriorLaunchFailure:
@@ -140,8 +136,6 @@ const char *hipGetErrorName(hipError_t hip_error)
         return "hipErrorInvalidMemcpyDirection";
     case hipErrorUnknown:
         return "hipErrorUnknown";
-    case hipErrorInvalidResourceHandle:
-        return "hipErrorInvalidResourceHandle";
     case hipErrorNotReady:
         return "hipErrorNotReady";
     case hipErrorNoDevice:

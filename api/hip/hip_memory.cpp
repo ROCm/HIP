@@ -70,11 +70,11 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     hip::host_context : hip::getCurrentContext();
 
   if (amdContext == nullptr) {
-    return hipErrorMemoryAllocation;
+    return hipErrorOutOfMemory;
   }
 
   if (amdContext->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
-    return hipErrorMemoryAllocation;
+    return hipErrorOutOfMemory;
   }
 
   *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_);
@@ -347,7 +347,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
                                 device->info().memBaseAddrAlign_);
 
   if (*ptr == nullptr) {
-    return hipErrorMemoryAllocation;
+    return hipErrorOutOfMemory;
   }
 
   return hipSuccess;
@@ -552,7 +552,7 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
     constexpr bool forceAlloc = true;
     if (!mem->create(hostPtr, sysMemAlloc, skipAlloc, forceAlloc)) {
       mem->release();
-      HIP_RETURN(hipErrorMemoryAllocation);
+      HIP_RETURN(hipErrorOutOfMemory);
     }
 
     for (const auto& device: hip::getCurrentContext()->devices()) {

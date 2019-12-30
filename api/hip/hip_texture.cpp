@@ -371,7 +371,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
 
   if (!image->create()) {
     delete image;
-    HIP_RETURN(hipErrorMemoryAllocation);
+    HIP_RETURN(hipErrorOutOfMemory);
   }
 
   amd::Sampler* sampler = fillSamplerDescriptor(pTexDesc->addressMode[0], pTexDesc->filterMode, pTexDesc->normalizedCoords);
@@ -467,7 +467,7 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
                 type, memory->getMemFlags(), imageFormat, width, height, depth, rowPitch, slicePitch);
     if (!image->create()) {
       delete image;
-      return hipErrorMemoryAllocation;
+      return hipErrorOutOfMemory;
     }
 
     *offset = 0;

@@ -535,7 +535,7 @@ hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* link
   amd_dev_obj2 = g_devices[device2]->devices()[0];
 
   if (!amd_dev_obj1->findLinkTypeAndHopCount(amd_dev_obj2, linktype, hopcount)) {
-    HIP_RETURN(hipErrorInvalidResourceHandle);
+    HIP_RETURN(hipErrorInvalidHandle);
   }
 
   HIP_RETURN(hipSuccess);

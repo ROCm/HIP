@@ -342,7 +342,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   // Capture the kernel arguments
   if (CL_SUCCESS != command->captureAndValidate()) {
     delete command;
-    return hipErrorMemoryAllocation;
+    return hipErrorOutOfMemory;
   }
 
   command->enqueue();
