@@ -77,8 +77,6 @@ inline const char* ihipErrorString(hipError_t hip_error) {
         CASE_STR(hipErrorNotFound);
         CASE_STR(hipErrorIllegalAddress);
         CASE_STR(hipErrorMissingConfiguration);
-        CASE_STR(hipErrorMemoryAllocation);
-        CASE_STR(hipErrorInitializationError);
         CASE_STR(hipErrorLaunchFailure);
         CASE_STR(hipErrorPriorLaunchFailure);
         CASE_STR(hipErrorLaunchTimeOut);
@@ -90,7 +88,6 @@ inline const char* ihipErrorString(hipError_t hip_error) {
         CASE_STR(hipErrorInvalidDevicePointer);
         CASE_STR(hipErrorInvalidMemcpyDirection);
         CASE_STR(hipErrorUnknown);
-        CASE_STR(hipErrorInvalidResourceHandle);
         CASE_STR(hipErrorNotReady);
         CASE_STR(hipErrorNoDevice);
         CASE_STR(hipErrorPeerAccessAlreadyEnabled);

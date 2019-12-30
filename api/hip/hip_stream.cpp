@@ -183,7 +183,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
   HIP_INIT_API(hipStreamDestroy, stream);
 
   if (stream == nullptr) {
-    HIP_RETURN(hipErrorInvalidResourceHandle);
+    HIP_RETURN(hipErrorInvalidHandle);
   }
 
   amd::ScopedLock lock(streamSetLock);
@@ -210,7 +210,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
   }
 
   if (event == nullptr) {
-    HIP_RETURN(hipErrorInvalidResourceHandle);
+    HIP_RETURN(hipErrorInvalidHandle);
   }
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
@@ -252,7 +252,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
   if(!event.setCallback(CL_COMPLETE, ihipStreamCallback, reinterpret_cast<void*>(cbo))) {
     command->release();
-    return hipErrorInvalidResourceHandle;
+    return hipErrorInvalidHandle;
   }
 
   event.notifyCmdQueue();
