@@ -1758,13 +1758,8 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorIllegalAddress";
         case hipErrorInvalidSymbol:
             return "hipErrorInvalidSymbol";
-
         case hipErrorMissingConfiguration:
             return "hipErrorMissingConfiguration";
-        case hipErrorMemoryAllocation:
-            return "hipErrorMemoryAllocation";
-        case hipErrorInitializationError:
-            return "hipErrorInitializationError";
         case hipErrorLaunchFailure:
             return "hipErrorLaunchFailure";
         case hipErrorPriorLaunchFailure:
@@ -1787,15 +1782,12 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorInvalidMemcpyDirection";
         case hipErrorUnknown:
             return "hipErrorUnknown";
-        case hipErrorInvalidResourceHandle:
-            return "hipErrorInvalidResourceHandle";
         case hipErrorNotReady:
             return "hipErrorNotReady";
         case hipErrorNoDevice:
             return "hipErrorNoDevice";
         case hipErrorPeerAccessAlreadyEnabled:
             return "hipErrorPeerAccessAlreadyEnabled";
-
         case hipErrorPeerAccessNotEnabled:
             return "hipErrorPeerAccessNotEnabled";
         case hipErrorRuntimeMemory:
@@ -1806,8 +1798,6 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorHostMemoryAlreadyRegistered";
         case hipErrorHostMemoryNotRegistered:
             return "hipErrorHostMemoryNotRegistered";
-        case hipErrorMapBufferObjectFailed:
-            return "hipErrorMapBufferObjectFailed";
         case hipErrorAssert:
             return "hipErrorAssert";
         case hipErrorNotSupported:

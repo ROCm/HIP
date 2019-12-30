@@ -549,7 +549,7 @@ hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned i
                 true  /*shareWithAll*/, amFlags, flags, 0);
 
             if (sizeBytes && (*ptr == NULL)) {
-                hip_status = hipErrorMemoryAllocation;
+                hip_status = hipErrorOutOfMemory;
             }
         }
     }
@@ -678,7 +678,7 @@ hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsi
             tprintf(DB_MEM, " host_ptr=%p returned device_pointer=%p\n", hostPointer,
                     *devicePointer);
         } else {
-            e = hipErrorMemoryAllocation;
+            e = hipErrorOutOfMemory;
         }
     }
     return ihipLogStatus(e);
@@ -704,7 +704,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
                                               0 /*amFlags*/, 0 /*hipFlags*/, 0);
 
         if (sizeBytes && (*ptr == NULL)) {
-            hip_status = hipErrorMemoryAllocation;
+            hip_status = hipErrorOutOfMemory;
         }
     }
 
@@ -739,11 +739,11 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
                                               amFlags /*amFlags*/, 0 /*hipFlags*/, 0);
 
         if (sizeBytes && (*ptr == NULL)) {
-            hip_status = hipErrorMemoryAllocation;
+            hip_status = hipErrorOutOfMemory;
         }
     }
 #else
-    hipError_t hip_status = hipErrorMemoryAllocation;
+    hipError_t hip_status = hipErrorOutOfMemory;
 #endif
 
     return ihipLogStatus(hip_status);
@@ -786,7 +786,7 @@ hipError_t allocImage(TlsData* tls,hsa_ext_image_geometry_t geometry, int width,
       hc::accelerator acc = ctx->getDevice()->_acc;
       hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
       if (!agent)
-         return hipErrorInvalidResourceHandle;
+         return hipErrorInvalidHandle;
       size_t allocGranularity = 0;
       hsa_amd_memory_pool_t* allocRegion = static_cast<hsa_amd_memory_pool_t*>(acc.get_hsa_am_region());
       hsa_amd_memory_pool_get_info(*allocRegion, HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_GRANULE, &allocGranularity);
@@ -811,12 +811,12 @@ hipError_t allocImage(TlsData* tls,hsa_ext_image_geometry_t geometry, int width,
       *ptr = hip_internal::allocAndSharePtr("device_array", imageInfo.size, ctx,
                                                                           false /*shareWithAll*/, am_flags, 0, alignment);
       if (*ptr == NULL) {
-         return hipErrorMemoryAllocation;
+         return hipErrorOutOfMemory;
       }
       return hipSuccess;
    }
    else {
-      return hipErrorMemoryAllocation;
+      return hipErrorOutOfMemory;
    }
 }
 
@@ -915,7 +915,7 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height,
     hc::accelerator acc;
     hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
     if (!agent)
-        return hipErrorInvalidResourceHandle;
+        return hipErrorInvalidHandle;
     hsa_status_t status =
         hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
     if(HSA_STATUS_SUCCESS != status){
@@ -1230,7 +1230,7 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
                 if (am_status == AM_SUCCESS) {
                     hip_status = hipSuccess;
                 } else {
-                    hip_status = hipErrorMemoryAllocation;
+                    hip_status = hipErrorOutOfMemory;
                 }
             } else {
                 hip_status = hipErrorInvalidValue;
@@ -2379,7 +2379,7 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
     size_t psize = 0u;
     hc::accelerator acc;
     if ((handle == NULL) || (devPtr == NULL)) {
-        hipStatus = hipErrorInvalidResourceHandle;
+        hipStatus = hipErrorInvalidHandle;
     } else {
 #if (__hcc_workweek__ >= 17332)
         hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);
@@ -2390,7 +2390,7 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
         if (status == AM_SUCCESS) {
             psize = (size_t)amPointerInfo._sizeBytes;
         } else {
-            hipStatus = hipErrorInvalidResourceHandle;
+            hipStatus = hipErrorInvalidHandle;
         }
         ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*)handle;
         // Save the size of the pointer to hipIpcMemHandle
@@ -2400,7 +2400,7 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
         // Create HSA ipc memory
         hsa_status_t hsa_status =
             hsa_amd_ipc_memory_create(devPtr, psize, (hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle));
-        if (hsa_status != HSA_STATUS_SUCCESS) hipStatus = hipErrorMemoryAllocation;
+        if (hsa_status != HSA_STATUS_SUCCESS) hipStatus = hipErrorOutOfMemory;
 #else
         hipStatus = hipErrorRuntimeOther;
 #endif
@@ -2419,7 +2419,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
     hc::accelerator acc;
     hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
     if (!agent)
-        return ihipLogStatus(hipErrorInvalidResourceHandle);
+        return ihipLogStatus(hipErrorInvalidHandle);
 
     ihipIpcMemHandle_t* iHandle = (ihipIpcMemHandle_t*)&handle;
     // Attach ipc memory
@@ -2436,7 +2436,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
         hc::AmPointerInfo ampi(NULL, *devPtr, *devPtr, sizeof(*devPtr), acc, true, true);
         am_status_t am_status = hc::am_memtracker_add(*devPtr,ampi);
         if (am_status != AM_SUCCESS)
-            return ihipLogStatus(hipErrorMapBufferObjectFailed);
+            return ihipLogStatus(hipErrorMapFailed);
 
 #if USE_APP_PTR_FOR_CTX
         am_status = hc::am_memtracker_update(*devPtr, device->_deviceId, 0, ctx);
@@ -2444,7 +2444,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
         am_status = hc::am_memtracker_update(*devPtr, device->_deviceId, 0);
 #endif
         if(am_status != AM_SUCCESS)
-            return ihipLogStatus(hipErrorMapBufferObjectFailed);
+            return ihipLogStatus(hipErrorMapFailed);
     }
 #else
     hipStatus = hipErrorRuntimeOther;
@@ -2464,7 +2464,7 @@ hipError_t hipIpcCloseMemHandle(void* devPtr) {
         return ihipLogStatus(hipErrorInvalidValue);
 
     if (hsa_amd_ipc_memory_detach(devPtr) != HSA_STATUS_SUCCESS)
-        return ihipLogStatus(hipErrorInvalidResourceHandle);
+        return ihipLogStatus(hipErrorInvalidHandle);
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
