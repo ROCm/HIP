@@ -49,7 +49,7 @@ THE SOFTWARE.
 #include <thread>
 #endif
 
-
+#include <hip/hipVersion.h>
 #include <hip/hip_common.h>
 
 #if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
