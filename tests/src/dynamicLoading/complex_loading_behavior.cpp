@@ -62,11 +62,11 @@ int launch_local_kernel() {
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, device /*deviceID*/));
     A_h = (float*)malloc(Nbytes);
-    CHECK(A_h == 0 ? hipErrorMemoryAllocation : hipSuccess);
+    CHECK(A_h == 0 ? hipErrorOutOfMemory : hipSuccess);
     B_h = (float*)malloc(Nbytes);
-    CHECK(B_h == 0 ? hipErrorMemoryAllocation : hipSuccess);
+    CHECK(B_h == 0 ? hipErrorOutOfMemory : hipSuccess);
     C_h = (float*)malloc(Nbytes);
-    CHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess);
+    CHECK(C_h == 0 ? hipErrorOutOfMemory : hipSuccess);
     // Fill with Phi + i
     for (size_t i = 0; i < N; i++) {
         A_h[i] = 1.618f + i;
@@ -174,11 +174,11 @@ extern "C" int foo() {
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, device /*deviceID*/));
     A_h = (float*)malloc(Nbytes);
-    CHECK(A_h == 0 ? hipErrorMemoryAllocation : hipSuccess);
+    CHECK(A_h == 0 ? hipErrorOutOfMemory : hipSuccess);
     B_h = (float*)malloc(Nbytes);
-    CHECK(B_h == 0 ? hipErrorMemoryAllocation : hipSuccess);
+    CHECK(B_h == 0 ? hipErrorOutOfMemory : hipSuccess);
     C_h = (float*)malloc(Nbytes);
-    CHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess);
+    CHECK(C_h == 0 ? hipErrorOutOfMemory : hipSuccess);
     // Fill with Phi + i
     for (size_t i = 0; i < N; i++) {
         A_h[i] = 1.618f + i;

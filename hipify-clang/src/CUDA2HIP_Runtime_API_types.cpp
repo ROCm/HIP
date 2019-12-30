@@ -599,16 +599,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaSuccess",                                                      {"hipSuccess",                                               "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 0
   // CUDA_ERROR_INVALID_VALUE
   {"cudaErrorInvalidValue",                                            {"hipErrorInvalidValue",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 1
-  // cudaErrorMemoryAllocation = 2, CUDA_ERROR_OUT_OF_MEMORY = 2, hipErrorOutOfMemory = 2, hipErrorMemoryAllocation = 1002
-  // TODO [HIP]: remove hipErrorMemoryAllocation
-  // TODO [HIPIFY]: rename hipErrorMemoryAllocation to hipErrorOutOfMemory
   // CUDA_ERROR_OUT_OF_MEMORY
-  {"cudaErrorMemoryAllocation",                                        {"hipErrorMemoryAllocation",                                 "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 2
-  // cudaErrorInitializationError = 3, CUDA_ERROR_NOT_INITIALIZED = 3, hipErrorNotInitialized = 3, hipErrorInitializationError = 1003
-  // TODO [HIP]: remove hipErrorInitializationError
-  // TODO [HIPIFY]: rename hipErrorInitializationError to hipErrorNotInitialized
+  {"cudaErrorMemoryAllocation",                                        {"hipErrorOutOfMemory",                                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 2
   // CUDA_ERROR_NOT_INITIALIZED
-  {"cudaErrorInitializationError",                                     {"hipErrorInitializationError",                              "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 3
+  {"cudaErrorInitializationError",                                     {"hipErrorNotInitialized",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 3
   // CUDA_ERROR_DEINITIALIZED
   {"cudaErrorCudartUnloading",                                         {"hipErrorDeinitialized",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 4
   // CUDA_ERROR_PROFILER_DISABLED
@@ -705,11 +699,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorDeviceUninitialized",                                     {"hipErrorInvalidContext",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 201
   // CUDA_ERROR_INVALID_CONTEXT
   {"cudaErrorDeviceUninitilialized",                                   {"hipErrorInvalidContext",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 201
-  // cudaErrorMapBufferObjectFailed = 205, CUDA_ERROR_MAP_FAILED = 205, hipErrorMapFailed = 205, hipErrorMapBufferObjectFailed = 1071
-  // TODO [HIP]: remove hipErrorMapBufferObjectFailed
-  // TODO [HIPIFY]: rename hipErrorMapBufferObjectFailed to hipErrorMapFailed
   // CUDA_ERROR_MAP_FAILED
-  {"cudaErrorMapBufferObjectFailed",                                   {"hipErrorMapBufferObjectFailed",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 205
+  {"cudaErrorMapBufferObjectFailed",                                   {"hipErrorMapFailed",                                        "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 205
   // CUDA_ERROR_UNMAP_FAILED
   {"cudaErrorUnmapBufferObjectFailed",                                 {"hipErrorUnmapFailed",                                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 206
   // CUDA_ERROR_ARRAY_IS_MAPPED
@@ -752,11 +743,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorSharedObjectInitFailed",                                  {"hipErrorSharedObjectInitFailed",                           "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 303
   // CUDA_ERROR_OPERATING_SYSTEM
   {"cudaErrorOperatingSystem",                                         {"hipErrorOperatingSystem",                                  "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 304
-  // cudaErrorInvalidResourceHandle = 400, CUDA_ERROR_INVALID_HANDLE = 400, hipErrorInvalidHandle = 400, hipErrorInvalidResourceHandle = 1033
-  // TODO [HIP]: remove hipErrorInvalidResourceHandle
-  // TODO [HIPIFY]: rename hipErrorInvalidResourceHandle to hipErrorInvalidHandle
   // CUDA_ERROR_INVALID_HANDLE
-  {"cudaErrorInvalidResourceHandle",                                   {"hipErrorInvalidResourceHandle",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 400
+  {"cudaErrorInvalidResourceHandle",                                   {"hipErrorInvalidHandle",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 400
   // CUDA_ERROR_ILLEGAL_STATE
   {"cudaErrorIllegalState",                                            {"hipErrorIllegalState",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 401
   // CUDA_ERROR_NOT_FOUND

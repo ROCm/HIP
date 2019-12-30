@@ -186,7 +186,11 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorInvalidValue = 1,  ///< One or more of the parameters passed to the API call is NULL
                                ///< or not in an acceptable range.
     hipErrorOutOfMemory = 2,
+    // Deprecated
+    hipErrorMemoryAllocation = 2,  ///< Memory allocation error.
     hipErrorNotInitialized = 3,
+    // Deprecated
+    hipErrorInitializationError = 3,
     hipErrorDeinitialized = 4,
     hipErrorProfilerDisabled = 5,
     hipErrorProfilerNotInitialized = 6,
@@ -206,6 +210,8 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorInvalidContext = 201,  ///< Produced when input context is invalid.
     hipErrorContextAlreadyCurrent = 202,
     hipErrorMapFailed = 205,
+    // Deprecated
+    hipErrorMapBufferObjectFailed = 205,  ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorUnmapFailed = 206,
     hipErrorArrayIsMapped = 207,
     hipErrorAlreadyMapped = 208,
@@ -226,6 +232,8 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorSharedObjectInitFailed = 303,
     hipErrorOperatingSystem = 304,
     hipErrorInvalidHandle = 400,
+    // Deprecated
+    hipErrorInvalidResourceHandle = 400,  ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     hipErrorNotFound = 500,
     hipErrorNotReady = 600,  ///< Indicates that asynchronous operations enqueued earlier are not
                              ///< ready.  This is not actually an error, but is used to distinguish
@@ -248,17 +256,11 @@ typedef enum __HIP_NODISCARD hipError_t {
         719,  ///< An exception occurred on the device while executing a kernel.
     hipErrorNotSupported = 801,  ///< Produced when the hip API is not supported/implemented
     hipErrorUnknown = 999,  //< Unknown error.
-
-    // Runtime Error Codes start here.
-    hipErrorMemoryAllocation = 1002,  ///< Memory allocation error.
-    hipErrorInitializationError = 1003,  ///< TODO comment from hipErrorInitializationError
-    hipErrorInvalidResourceHandle = 1033,  ///< Resource handle (hipEvent_t or hipStream_t) invalid.
+    // HSA Runtime Error Codes start here.
     hipErrorRuntimeMemory = 1052,  ///< HSA runtime memory call returned error.  Typically not seen
                                    ///< in production systems.
     hipErrorRuntimeOther = 1053,  ///< HSA runtime call other than memory returned error.  Typically
                                   ///< not seen in production systems.
-    hipErrorMapBufferObjectFailed =
-        1071,  ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorTbd  ///< Marker that more error codes are needed.
 } hipError_t;
 

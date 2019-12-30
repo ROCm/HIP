@@ -133,14 +133,14 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
 
     {
         // Check some error conditions for incomplete events:
-        HIPCHECK_API(hipEventElapsedTime(&t, timingDisabled, stop), hipErrorInvalidResourceHandle);
-        HIPCHECK_API(hipEventElapsedTime(&t, start, timingDisabled), hipErrorInvalidResourceHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, timingDisabled, stop), hipErrorInvalidHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, start, timingDisabled), hipErrorInvalidHandle);
 
-        HIPCHECK_API(hipEventElapsedTime(&t, neverCreated, stop), hipErrorInvalidResourceHandle);
-        HIPCHECK_API(hipEventElapsedTime(&t, start, neverCreated), hipErrorInvalidResourceHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, neverCreated, stop), hipErrorInvalidHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, start, neverCreated), hipErrorInvalidHandle);
 
-        HIPCHECK_API(hipEventElapsedTime(&t, neverRecorded, stop), hipErrorInvalidResourceHandle);
-        HIPCHECK_API(hipEventElapsedTime(&t, start, neverRecorded), hipErrorInvalidResourceHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, neverRecorded, stop), hipErrorInvalidHandle);
+        HIPCHECK_API(hipEventElapsedTime(&t, start, neverRecorded), hipErrorInvalidHandle);
     }
 
     HIPCHECK(hipEventDestroy(start));
