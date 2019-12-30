@@ -2889,6 +2889,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  void** kernelParams, void** extra);
 
 
+#if __HIP_VDI__ && !defined(__HCC__)
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
@@ -2920,6 +2921,8 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDim
  */
 hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                  int  numDevices, unsigned int  flags);
+
+#endif
 
 /**
  * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
@@ -3382,7 +3385,7 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
     return hipSuccess;
 }
 
-
+#if __HIP_VDI__ && !defined(__HCC__)
 template <class T>
 inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
                                              void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {
@@ -3396,7 +3399,7 @@ inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchP
     return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
-#if defined(__clang__) && defined(__HIP__)
+
 template <class T>
 inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                      unsigned int  numDevices, unsigned int  flags = 0) {
