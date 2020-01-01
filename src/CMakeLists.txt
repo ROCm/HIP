@@ -1,32 +1,3 @@
-# Determine HCC_HOME
-if(NOT DEFINED HCC_HOME)
-    if(NOT DEFINED ENV{HCC_HOME})
-        set(HCC_HOME "/opt/rocm/hcc" CACHE PATH "Path to which HCC has been installed")
-    else()
-        set(HCC_HOME $ENV{HCC_HOME} CACHE PATH "Path to which HCC has been installed")
-    endif()
-endif()
-
-if(DEFINED ENV{HIP_DEVELOPER})
-    add_to_config(_buildInfo HCC_HOME)
-endif()
-if(IS_ABSOLUTE ${HCC_HOME} AND EXISTS ${HCC_HOME} AND IS_DIRECTORY ${HCC_HOME})
-    execute_process(COMMAND ${HCC_HOME}/bin/hcc --version
-        OUTPUT_VARIABLE HCC_VERSION
-        OUTPUT_STRIP_TRAILING_WHITESPACE)
-    string(REGEX REPLACE ".*based on HCC " "" HCC_VERSION ${HCC_VERSION})
-    string(REGEX REPLACE " .*" "" HCC_VERSION ${HCC_VERSION})
-    message(STATUS "Looking for HCC in: " ${HCC_HOME} ". Found version: " ${HCC_VERSION})
-else()
-    message(FATAL_ERROR "Don't know where to find HCC. Please specify abolute path using -DHCC_HOME")
-endif()
-add_to_config(_buildInfo HCC_VERSION)
-string(REPLACE "-" ";" HCC_VERSION_LIST ${HCC_VERSION})
-list(GET HCC_VERSION_LIST 0 HCC_PACKAGE_VERSION)
-string(REPLACE "." ";" HCC_VERSION_LIST ${HCC_PACKAGE_VERSION})
-list(GET HCC_VERSION_LIST 0 HCC_VERSION_MAJOR)
-list(GET HCC_VERSION_LIST 1 HCC_VERSION_MINOR)
-
 include_directories(${PROJECT_SOURCE_DIR}/include)
 set(HIP_HCC_BUILD_FLAGS)
 if(COMPILE_HIP_ATP_MARKER)
