@@ -119,7 +119,7 @@ sub delete_temp_dirs {
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform` // "hcc";
 $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
-($HIP_VERSION_MAJOR, $HIP_VERSION_MINOR, $HIP_VERSION_PATCH) = split(/\./, $HIP_VERSION);
+$HIP_VERSION_PATCH = (split(/\./, $HIP_VERSION))[-1];
 my ($HIP_VERSION_GITDATE, $HIP_VERSION_GITHASH) = split(/-/, $HIP_VERSION_PATCH);
 $HIP_COMPILER= $hipConfig{'HIP_COMPILER'};
 $HIP_RUNTIME= $hipConfig{'HIP_RUNTIME'};
