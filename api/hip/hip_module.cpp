@@ -354,11 +354,6 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
 
   command->release();
 
-  // FIXME: SWDEV-213000 - Force notifyCmdQueue to indicate immediate dispatch to HW
-  //        This offsets the commandqueue timing and solves 213000. Investigation pending
-
-  command->notifyCmdQueue();
-
   return hipSuccess;
 }
 
