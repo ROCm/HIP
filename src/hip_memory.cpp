@@ -1266,8 +1266,12 @@ hipError_t hipMemcpyToSymbol(void* dst, const void* src, size_t count,
 
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
-    return ihipLogStatus(
-        hipMemcpy(static_cast<char*>(dst) + offset, src, count, kind));
+    if (dst == nullptr) {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    return ihipLogStatus(hip_internal::memcpySync((char*)dst+offset, src, count, kind,
+                                                  hipStreamNull));
 }
 
 hipError_t hipMemcpyFromSymbol(void* dst, const void* src, size_t count,
@@ -1278,8 +1282,12 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* src, size_t count,
 
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
-    return ihipLogStatus(
-        hipMemcpy(dst, static_cast<const char*>(src) + offset, count, kind));
+    if (src == nullptr || dst == nullptr) {
+        return ihipLogStatus(hipErrorInvalidSymbol);
+    }
+
+    return ihipLogStatus(hip_internal::memcpySync(dst, (char*)src+offset, count, kind,
+                                                  hipStreamNull));
 }
 
 
