@@ -1383,7 +1383,7 @@ inline static hipError_t hipBindTexture(size_t* offset, struct textureReference*
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
 
-inline static hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
+inline static hipError_t hipBindTexture2D(size_t* offset, struct textureReference* tex, const void* devPtr,
                             const hipChannelFormatDesc* desc, size_t width, size_t height,
                             size_t pitch) {
     return hipCUDAErrorTohipError(cudaBindTexture2D(offset, tex, devPtr, desc, width, height, pitch));
