@@ -115,4 +115,15 @@ allocated.
 
 In HCC and HIP-Clang, long double type is 80-bit extended precision format for x86_64, which is not supported by AMDGPU. HCC and HIP-Clang treat long double type as IEEE double type for AMDGPU. Using long double type in HIP source code will not cause issue as long as data of long double type is not transferred between host and device. However, long double type should not be used as kernel argument type.
 
+## FMA and contractions
+
+By default HIP-Clang assumes -ffp-contract=fast and HCC assumes -ffp-contract=off.
+For x86_64, FMA is off by default since the generic x86_64 target does not
+support FMA by default. To turn on FMA on x86_64, either use -mfma or -march=native
+on CPU's supporting FMA.
+
+When contractions are enabled and the CPU has not enabled FMA instructions, the
+GPU can produce different numerical results than the CPU for expressions that
+can be contracted. Tolerance should be used for floating point comparsions.
+
 ## [Supported Clang Options](clang_options.md)
