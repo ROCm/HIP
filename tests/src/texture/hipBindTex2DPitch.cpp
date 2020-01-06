@@ -58,19 +58,8 @@ int main (void)
             SIZE_W*sizeof(TYPE_t), SIZE_H, hipMemcpyHostToDevice));
 
     tex.normalized = false;
-    #if defined(__HIP_PLATFORM_NVCC__)
-
-    cudaError_t status = cudaBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
-                                       SIZE_W, SIZE_H, devPitchA);
-    if (status != cudaSuccess) {
-        printf("%serror: '%s'(%d) at %s:%d%s\n", KRED, cudaGetErrorString(status),
-           status,__FILE__, __LINE__, KNRM);
-           failed("API returned error code.");
-    }
-    #else
     HIPCHECK(hipBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
                                        SIZE_W, SIZE_H, devPitchA));
-    #endif
     HIPCHECK(hipMalloc((void**)&devPtrB, SIZE_W*sizeof(TYPE_t)*SIZE_H)) ;
 
     hipLaunchKernelGGL(texture2dCopyKernel, dim3(4,4,1), dim3(32,32,1), 0, 0, devPtrB);
