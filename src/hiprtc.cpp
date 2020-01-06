@@ -301,12 +301,12 @@ struct _hiprtcProgram {
     }
 
     void replaceExtension(std::string& fileName, const std::string &ext) const {
-        auto res = std::find(fileName.rbegin(), fileName.rend(), '.');
-        auto sloc = std::find(fileName.rbegin(), fileName.rend(), '/');
-        if(res == fileName.rend() || res > sloc) {
-            fileName += ext;
+        auto res = fileName.rfind('.');
+        auto sloc = fileName.rfind('/');
+        if (res != std::string::npos && res > sloc) {
+            fileName.replace(fileName.begin() + res, fileName.end(), ext);
         } else {
-            fileName.replace(res.base(), fileName.end(), ext);
+            fileName += ext;
         }
     }
 
@@ -326,7 +326,7 @@ struct _hiprtcProgram {
         });
 
         auto tmp{(programFolder + '/' + name)};
-        replaceExtension(tmp, "cpp");
+        replaceExtension(tmp, ".cpp");
         ofstream{tmp}.write(source.data(), source.size());
 
         return tmp;
