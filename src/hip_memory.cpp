@@ -927,8 +927,15 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height,
 
 hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,size_t width, size_t height, size_t depth, hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType, hsa_ext_image_data_info_t &imageInfo,size_t array_size __dparm(0))
 {
-    hsa_ext_image_descriptor_t imageDescriptor = {.geometry = geometry, .width = width, .height= height, .depth = depth,
-        .array_size = array_size, .format.channel_order = channelOrder, .format.channel_type = channelType};
+    hsa_ext_image_descriptor_t imageDescriptor;
+    imageDescriptor.geometry = geometry;
+    imageDescriptor.width = width;
+    imageDescriptor.height = height;
+    imageDescriptor.depth = depth;
+    imageDescriptor.array_size = array_size;
+    imageDescriptor.format.channel_order = channelOrder;
+    imageDescriptor.format.channel_type = channelType;
+
     // Get the current device agent.
     hc::accelerator acc;
     hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
