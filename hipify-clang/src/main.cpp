@@ -158,7 +158,7 @@ void appendArgumentsAdjusters(ct::RefactoringTool &Tool, const std::string &sSou
   Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
 }
 
-int main(int argc, const char **argv) {
+void addSeparatorIfNeeded(int& argc, const char** argv) {
   std::vector<const char*> new_argv(argv, argv + argc);
   if (std::find(new_argv.begin(), new_argv.end(), std::string("--")) == new_argv.end()) {
     new_argv.push_back("--");
@@ -166,6 +166,18 @@ int main(int argc, const char **argv) {
     argv = new_argv.data();
     argc++;
   }
+}
+
+bool generatePython() {
+  bool bToRoc = TranslateToRoc;
+  TranslateToRoc = true;
+  bool bToPython = python::generate(GeneratePython);
+  TranslateToRoc = bToRoc;
+  return bToPython;
+}
+
+int main(int argc, const char **argv) {
+  addSeparatorIfNeeded(argc, argv);
   llcompat::PrintStackTraceOnErrorSignal();
   ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::ZeroOrMore);
   if (!llcompat::CheckCompatibility()) {
@@ -180,11 +192,7 @@ int main(int argc, const char **argv) {
     llvm::errs() << "\n" << sHipify << sError << "hipify-perl generating failed" << "\n";
     return 1;
   }
-  bool bToRoc = TranslateToRoc;
-  TranslateToRoc = true;
-  bool bToPython = python::generate(GeneratePython);
-  TranslateToRoc = bToRoc;
-  if (!bToPython) {
+  if (!generatePython()) {
     llvm::errs() << "\n" << sHipify << sError << "hipify-python generating failed" << "\n";
     return 1;
   }
