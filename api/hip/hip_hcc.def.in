@@ -87,6 +87,7 @@ hipMemcpy2D
 hipMemcpy2DAsync
 hipMemcpy2DToArray
 hipMemcpy3D
+hipMemcpy3DAsync
 hipMemcpyAsync
 hipMemcpyDtoD
 hipMemcpyDtoDAsync

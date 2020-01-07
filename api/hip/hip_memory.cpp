@@ -1107,95 +1107,315 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
-  HIP_INIT_API(hipMemcpy3D, p);
-
-  hip::syncStreams();
-  amd::HostQueue* queue = hip::getNullStream();
-
-  size_t byteSize;
-  size_t srcPitchInBytes;
-  size_t dstPitchInbytes;
-  void* srcPtr;
-  void* dstPtr;
-  size_t srcOrigin[3];
-  size_t dstOrigin[3];
-  size_t region[3];
-
-  region[2] = p->extent.depth;
-  region[1] = p->extent.height;
-  region[0] = p->extent.width;
-  srcOrigin[0] = p->srcPos.x;
-  srcOrigin[1] = p->srcPos.y;
-  srcOrigin[2] = p->srcPos.z;
-  dstOrigin[0] = p->dstPos.x;
-  dstOrigin[1] = p->dstPos.y;
-  dstOrigin[2] = p->dstPos.z;
-
-  if (p->dstArray != nullptr) {
-    getByteSizeFromChannelFormatKind(p->dstArray->desc.f, &byteSize);
-    dstPitchInbytes = p->dstArray->width * byteSize;
-    srcPitchInBytes = p->srcPtr.pitch;
-    srcPtr = (void*)p->srcPtr.ptr;
-    dstPtr = p->dstArray->data;
+hipError_t ihipMemcpy3D_V1(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync = false) {
+  const void* srcPtr = nullptr;
+  size_t srcElementSizeInBytes = sizeof(unsigned char);
+  size_t srcRowPitchInBytes = 0;
+  size_t srcSlicePitchInBytes = 0;
+  if (p->srcMemoryType == hipMemoryTypeHost) {
+    srcPtr = p->srcHost;
+    srcRowPitchInBytes = p->srcPitch;
+    srcSlicePitchInBytes = srcRowPitchInBytes * p->srcHeight;
+  } else if ((p->srcMemoryType == hipMemoryTypeDevice) ||
+             (p->srcMemoryType == hipMemoryTypeUnified)) {
+    srcPtr = p->srcDevice;
+    srcRowPitchInBytes = p->srcPitch;
+    srcSlicePitchInBytes = srcRowPitchInBytes * p->srcHeight;
+  } else if (p->srcMemoryType == hipMemoryTypeArray) {
+    srcPtr = p->srcArray->data;
+    getByteSizeFromChannelFormatKind(p->srcArray->desc.f, &srcElementSizeInBytes);
+    srcElementSizeInBytes *= p->srcArray->NumChannels;
+    srcRowPitchInBytes = srcElementSizeInBytes * p->srcArray->width;
+    srcSlicePitchInBytes = srcRowPitchInBytes * p->srcArray->height;
   } else {
-    srcPitchInBytes = p->srcPtr.pitch;
-    dstPitchInbytes = p->dstPtr.pitch;
-    srcPtr = p->srcPtr.ptr;
-    dstPtr = p->dstPtr.ptr;
+    ShouldNotReachHere();
   }
 
-  // Create buffer rectangle info structure
+  void* dstPtr = nullptr;
+  size_t dstElementSizeInBytes = sizeof(unsigned char);
+  size_t dstRowPitchInBytes = 0;
+  size_t dstSlicePitchInBytes = 0;
+  if (p->dstMemoryType == hipMemoryTypeHost) {
+    dstPtr = p->dstHost;
+    dstRowPitchInBytes = p->dstPitch;
+    dstSlicePitchInBytes = dstRowPitchInBytes * p->dstHeight;
+  } else if ((p->dstMemoryType == hipMemoryTypeDevice) ||
+             (p->dstMemoryType == hipMemoryTypeUnified)) {
+    dstPtr = p->dstDevice;
+    dstRowPitchInBytes = p->dstPitch;
+    dstSlicePitchInBytes = dstRowPitchInBytes * p->dstHeight;
+  } else if (p->dstMemoryType == hipMemoryTypeArray) {
+    dstPtr = p->dstArray->data;
+    getByteSizeFromChannelFormatKind(p->dstArray->desc.f, &dstElementSizeInBytes);
+    dstElementSizeInBytes *= p->dstArray->NumChannels;
+    dstRowPitchInBytes = dstElementSizeInBytes * p->dstArray->width;
+    dstSlicePitchInBytes = dstRowPitchInBytes * p->dstArray->height;
+  } else {
+    ShouldNotReachHere();
+  }
+
+  // For HIP arrays, srcXInBytes must be evenly divisible by the array element size.
+  if ((p->srcMemoryType == hipMemoryTypeArray) &&
+      ((p->srcXInBytes % srcElementSizeInBytes) != 0)) {
+    return hipErrorInvalidValue;
+  }
+
+  // If specified, srcPitch must be greater than or equal to WidthInBytes + srcXInBytes
+  if ((p->srcMemoryType != hipMemoryTypeArray) &&
+      (p->srcPitch < (p->WidthInBytes + p->srcXInBytes))) {
+    return hipErrorInvalidValue;
+  }
+
+  // If specified, srcHeight must be greater than or equal to Height + srcY
+  if ((p->srcMemoryType != hipMemoryTypeArray) &&
+      (p->srcHeight < (p->Height + p->srcY))) {
+    return hipErrorInvalidValue;
+  }
+
+  // For HIP arrays, dstXInBytes must be evenly divisible by the array element size.
+  if ((p->dstMemoryType == hipMemoryTypeArray) &&
+      ((p->dstXInBytes % dstElementSizeInBytes) != 0)) {
+    return hipErrorInvalidValue;
+  }
+
+  // If specified, srcPitch must be greater than or equal to WidthInBytes + srcXInBytes
+  if ((p->dstMemoryType != hipMemoryTypeArray) &&
+      (p->dstPitch < (p->WidthInBytes + p->dstXInBytes))) {
+    return hipErrorInvalidValue;
+  }
+
+  // If specified, srcHeight must be greater than or equal to Height + srcY
+  if ((p->dstMemoryType != hipMemoryTypeArray) &&
+      (p->dstHeight < (p->Height + p->dstY))) {
+    return hipErrorInvalidValue;
+  }
+
+  // The srcLOD and dstLOD members of the CUDA_MEMCPY3D structure must be set to 0.
+  if ((p->srcLOD != 0) || (p->dstLOD != 0)) {
+    return hipErrorInvalidValue;
+  }
+
+  size_t region[3];
+  region[0] = p->WidthInBytes;
+  region[1] = p->Height;
+  region[2] = p->Depth;
+
+  size_t srcOrigin[3];
+  srcOrigin[0] = p->srcXInBytes;
+  srcOrigin[1] = p->srcY;
+  srcOrigin[2] = p->srcZ;
+
+  size_t dstOrigin[3];
+  dstOrigin[0] = p->dstXInBytes;
+  dstOrigin[1] = p->dstY;
+  dstOrigin[2] = p->dstZ;
+
   amd::BufferRect srcRect;
-  amd::BufferRect dstRect;
-  size_t offset = 0;
-  amd::Memory* srcMemory = getMemoryObject(srcPtr, offset);
-  assert(offset == 0);
-  amd::Memory* dstMemory = getMemoryObject(dstPtr, offset);
-  assert(offset == 0);
-
-  size_t src_slice_pitch = srcPitchInBytes * p->extent.height;
-  size_t dst_slice_pitch = dstPitchInbytes * p->extent.height;
-
-  if (!srcRect.create(srcOrigin, region, srcPitchInBytes, src_slice_pitch) ||
-      !dstRect.create(dstOrigin, region, dstPitchInbytes, dst_slice_pitch)) {
-    HIP_RETURN(hipErrorInvalidValue);
+  if (!srcRect.create(srcOrigin, region, srcRowPitchInBytes, srcSlicePitchInBytes)) {
+    return hipErrorInvalidValue;
   }
 
-  hipMemcpyKind kind = p->kind;
+  size_t srcMemoryOffset = 0;
+  amd::Memory* srcMemory = getMemoryObject(srcPtr, srcMemoryOffset);
+  amd::Coord3D srcStart(srcRect.start_ + srcMemoryOffset, 0, 0);
+
+  amd::BufferRect dstRect;
+  if (!dstRect.create(dstOrigin, region, dstRowPitchInBytes, dstSlicePitchInBytes)) {
+    return hipErrorInvalidValue;
+  }
+
+  size_t dstMemoryOffset = 0;
+  amd::Memory* dstMemory = getMemoryObject(dstPtr, dstMemoryOffset);
+  amd::Coord3D dstStart(dstRect.start_ + dstMemoryOffset, 0, 0);
 
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
-
-  amd::Coord3D srcStart(srcRect.start_, 0, 0);
-  amd::Coord3D dstStart(dstRect.start_, 0, 0);
-  amd::Coord3D size(region[0], region[1], region[2]);
+  amd::HostQueue* queue = hip::getQueue(stream);
+  amd::Coord3D regionSize(region[0], region[1], region[2]);
 
   if (((srcMemory == nullptr) && (dstMemory == nullptr)) ||
-      (kind == hipMemcpyHostToHost)) {
+      (p->kind == hipMemcpyHostToHost)) {
     memcpy(dstPtr, srcPtr, region[0] * region[1] * region[2]);
-    HIP_RETURN(hipSuccess);
+    return hipSuccess;
   } else if ((srcMemory == nullptr) && (dstMemory != nullptr)) {
     command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER_RECT, waitList,
-              *dstMemory->asBuffer(), srcStart, size, srcPtr, srcRect, dstRect);
+              *dstMemory->asBuffer(), srcStart, regionSize, srcPtr, srcRect, dstRect);
   } else if ((srcMemory != nullptr) && (dstMemory == nullptr)) {
     command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER_RECT, waitList,
-              *srcMemory->asBuffer(), srcStart, size, dstPtr, srcRect, dstRect);
+              *srcMemory->asBuffer(), srcStart, regionSize, dstPtr, srcRect, dstRect);
   } else if ((srcMemory != nullptr) &&  (dstMemory != nullptr)) {
     command = new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList,
-              *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcStart, dstStart, size,
+              *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcStart, dstStart, regionSize,
               srcRect, dstRect);
   }
 
   if (command == nullptr) {
-    HIP_RETURN(hipErrorOutOfMemory);
+    return hipErrorOutOfMemory;
   }
 
   command->enqueue();
-  command->awaitCompletion();
+  if (!isAsync) {
+    command->awaitCompletion();
+  }
   command->release();
 
-  HIP_RETURN(hipSuccess);
+  return hipSuccess;
+}
+
+hipError_t ihipMemcpy3D_V2(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync = false) {
+  void* srcPtr = nullptr;
+  size_t srcElementSizeInBytes = sizeof(unsigned char);
+  size_t srcRowPitchInBytes = 0;
+  size_t srcSlicePitchInBytes = 0;
+  if ((p->srcArray != nullptr) && (p->srcPtr.ptr == nullptr)) {
+    srcPtr = p->srcArray->data;
+    getByteSizeFromChannelFormatKind(p->srcArray->desc.f, &srcElementSizeInBytes);
+    srcElementSizeInBytes *= p->srcArray->NumChannels;
+    srcRowPitchInBytes = srcElementSizeInBytes * p->srcArray->width;
+    srcSlicePitchInBytes = srcRowPitchInBytes * p->srcArray->height;
+  } else if ((p->srcArray == nullptr) && (p->srcPtr.ptr != nullptr)) {
+    srcPtr = p->srcPtr.ptr;
+    srcRowPitchInBytes = p->srcPtr.pitch;
+    srcSlicePitchInBytes = srcRowPitchInBytes * p->srcPtr.ysize;
+  } else {
+    ShouldNotReachHere();
+  }
+
+  void* dstPtr = nullptr;
+  size_t dstElementSizeInBytes = sizeof(unsigned char);
+  size_t dstRowPitchInBytes = 0;
+  size_t dstSlicePitchInBytes = 0;
+  if ((p->dstArray != nullptr) && (p->dstPtr.ptr == nullptr)) {
+    dstPtr = p->dstArray->data;
+    getByteSizeFromChannelFormatKind(p->dstArray->desc.f, &dstElementSizeInBytes);
+    dstElementSizeInBytes *= p->dstArray->NumChannels;
+    dstRowPitchInBytes = dstElementSizeInBytes * p->dstArray->width;
+    dstSlicePitchInBytes = dstRowPitchInBytes * p->dstArray->height;
+  } else if ((p->dstArray == nullptr) && (p->dstPtr.ptr != nullptr)) {
+    dstPtr = p->dstPtr.ptr;
+    dstRowPitchInBytes = p->srcPtr.pitch;
+    dstSlicePitchInBytes = dstRowPitchInBytes * p->dstPtr.ysize;
+  } else {
+    ShouldNotReachHere();
+  }
+
+  // If the source and destination are both arrays, they must have the same element size.
+  if (((p->srcArray != nullptr) && (p->dstArray != nullptr)) &&
+      (srcElementSizeInBytes != dstElementSizeInBytes)) {
+    return hipErrorInvalidValue;
+  }
+
+  // If a HIP array is participating in the copy, the extent is defined in terms of that array's elements.
+  // If no HIP array is participating in the copy, the extent is defined in elements of unsigned char.
+  size_t region[3];
+  if (p->srcArray != nullptr) {
+    region[0] = srcRowPitchInBytes;
+  } else if (p->dstArray != nullptr) {
+    region[0] = dstRowPitchInBytes;
+  } else {
+    region[0] = sizeof(unsigned char) * p->extent.width;
+  }
+  region[1] = p->extent.height;
+  region[2] = p->extent.depth;
+
+  // The offset into the object is defined in units of the object's elements.
+  size_t srcOrigin[3];
+  srcOrigin[0] = srcElementSizeInBytes * p->srcPos.x;
+  srcOrigin[1] = p->srcPos.y;
+  srcOrigin[2] = p->srcPos.z;
+
+  amd::BufferRect srcRect;
+  if (!srcRect.create(srcOrigin, region, srcRowPitchInBytes, srcSlicePitchInBytes)) {
+    return hipErrorInvalidValue;
+  }
+
+  size_t srcMemoryOffset = 0;
+  amd::Memory* srcMemory = getMemoryObject(srcPtr, srcMemoryOffset);
+  amd::Coord3D srcStart(srcRect.start_ + srcMemoryOffset, 0, 0);
+
+  size_t dstOrigin[3];
+  dstOrigin[0] = dstElementSizeInBytes * p->dstPos.x;
+  dstOrigin[1] = p->dstPos.y;
+  dstOrigin[2] = p->dstPos.z;
+
+  amd::BufferRect dstRect;
+  if (!dstRect.create(dstOrigin, region, dstRowPitchInBytes, dstSlicePitchInBytes)) {
+    return hipErrorInvalidValue;
+  }
+
+  size_t dstMemoryOffset = 0;
+  amd::Memory* dstMemory = getMemoryObject(dstPtr, dstMemoryOffset);
+  amd::Coord3D dstStart(dstRect.start_ + dstMemoryOffset, 0, 0);
+
+  amd::Command* command = nullptr;
+  amd::Command::EventWaitList waitList;
+  amd::HostQueue* queue = hip::getQueue(stream);
+  amd::Coord3D regionSize(region[0], region[1], region[2]);
+
+  if (((srcMemory == nullptr) && (dstMemory == nullptr)) ||
+      (p->kind == hipMemcpyHostToHost)) {
+    memcpy(dstPtr, srcPtr, region[0] * region[1] * region[2]);
+    return hipSuccess;
+  } else if ((srcMemory == nullptr) && (dstMemory != nullptr)) {
+    command = new amd::WriteMemoryCommand(*queue, CL_COMMAND_WRITE_BUFFER_RECT, waitList,
+              *dstMemory->asBuffer(), srcStart, regionSize, srcPtr, srcRect, dstRect);
+  } else if ((srcMemory != nullptr) && (dstMemory == nullptr)) {
+    command = new amd::ReadMemoryCommand(*queue, CL_COMMAND_READ_BUFFER_RECT, waitList,
+              *srcMemory->asBuffer(), srcStart, regionSize, dstPtr, srcRect, dstRect);
+  } else if ((srcMemory != nullptr) &&  (dstMemory != nullptr)) {
+    command = new amd::CopyMemoryCommand(*queue, CL_COMMAND_COPY_BUFFER_RECT, waitList,
+              *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcStart, dstStart, regionSize,
+              srcRect, dstRect);
+  }
+
+  if (command == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+
+  command->enqueue();
+  if (!isAsync) {
+    command->awaitCompletion();
+  }
+  command->release();
+
+  return hipSuccess;
+}
+
+hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync = false) {
+  // Having src and dst be an array is ambigous, since we can't tell if the user intended to call hipMemcpy3D_V1() or hipMemcpy3D_V2().
+  // For now hope that we never encounter this case.
+  assert((p->srcArray == nullptr) || (p->dstArray == nullptr));
+
+  // When calling hipMemcpy3D_V1(), the user must specify
+  // one of srcHost, srcDevice or srcArray and
+  // one of dstHost, dstDevice or dstArray.
+  if (((p->srcHost != nullptr) || (p->srcDevice != nullptr) || (p->srcArray != nullptr)) &&
+      ((p->dstHost != nullptr) || (p->dstDevice != nullptr) || (p->dstArray != nullptr))) {
+    return ihipMemcpy3D_V1(p, stream, isAsync);
+  }
+
+  // When calling hipMemcpy3D_V2(), the user must specify
+  // one of srcArray or srcPtr and
+  // one of dstArray or dstPtr.
+  if (((p->srcArray != nullptr) || (p->srcPtr.ptr != nullptr)) &&
+      ((p->dstArray != nullptr) || (p->dstPtr.ptr != nullptr))) {
+    return ihipMemcpy3D_V2(p, stream, isAsync);
+  }
+
+  // If we got here, then the user specified an invalid combination of src/dst parameters.
+  return hipErrorInvalidValue;
+}
+
+hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
+  HIP_INIT_API(hipMemcpy3D, p);
+
+  HIP_RETURN(ihipMemcpy3D(p, nullptr));
+}
+
+hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream) {
+  HIP_INIT_API(hipMemcpy3DAsync, p, stream);
+
+  HIP_RETURN(ihipMemcpy3D(p, stream, true));
 }
 
 hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
