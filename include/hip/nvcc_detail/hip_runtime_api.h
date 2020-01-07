@@ -307,38 +307,42 @@ inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
             return hipErrorDeinitialized;
         case cudaErrorInvalidKernelImage:
             return hipErrorInvalidImage;
-        case cudaErrorDeviceUninitialized:
-            return hipErrorInvalidContext;
         case cudaErrorUnmapBufferObjectFailed:
             return hipErrorUnmapFailed;
-        case cudaErrorArrayIsMapped:
-            return hipErrorArrayIsMapped;
-        case cudaErrorAlreadyMapped:
-            return hipErrorAlreadyMapped;
         case cudaErrorNoKernelImageForDevice:
             return hipErrorNoBinaryForGpu;
-        case cudaErrorAlreadyAcquired:
-            return hipErrorAlreadyAcquired;
-        case cudaErrorNotMapped:
-            return hipErrorNotMapped;
-        case cudaErrorNotMappedAsArray:
-            return hipErrorNotMappedAsArray;
-        case cudaErrorNotMappedAsPointer:
-            return hipErrorNotMappedAsPointer;
         case cudaErrorECCUncorrectable:
             return hipErrorECCNotCorrectable;
         case cudaErrorDeviceAlreadyInUse:
             return hipErrorContextAlreadyInUse;
         case cudaErrorInvalidPtx:
             return hipErrorInvalidKernelFile;
+        case cudaErrorLaunchTimeout:
+            return hipErrorLaunchTimeOut;
+#if CUDA_VERSION >= 10010
         case cudaErrorInvalidSource:
             return hipErrorInvalidSource;
         case cudaErrorFileNotFound:
             return hipErrorFileNotFound;
         case cudaErrorSymbolNotFound:
             return hipErrorNotFound;
-        case cudaErrorLaunchTimeout:
-            return hipErrorLaunchTimeOut;
+        case cudaErrorArrayIsMapped:
+            return hipErrorArrayIsMapped;
+        case cudaErrorNotMappedAsPointer:
+            return hipErrorNotMappedAsPointer;
+        case cudaErrorNotMappedAsArray:
+            return hipErrorNotMappedAsArray;
+        case cudaErrorNotMapped:
+            return hipErrorNotMapped;
+        case cudaErrorAlreadyAcquired:
+            return hipErrorAlreadyAcquired;
+        case cudaErrorAlreadyMapped:
+            return hipErrorAlreadyMapped;
+#endif
+#if CUDA_VERSION >= 10020
+        case cudaErrorDeviceUninitialized:
+            return hipErrorInvalidContext;
+#endif
         case cudaErrorUnknown:
         default:
             return hipErrorUnknown;  // Note - translated error.
@@ -506,25 +510,53 @@ inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
         case hipErrorInvalidImage:
             return cudaErrorInvalidKernelImage;
         case hipErrorInvalidContext:
+#if CUDA_VERSION >= 10020
             return cudaErrorDeviceUninitialized;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorMapFailed:
             return cudaErrorMapBufferObjectFailed;
         case hipErrorUnmapFailed:
             return cudaErrorUnmapBufferObjectFailed;
         case hipErrorArrayIsMapped:
+#if CUDA_VERSION >= 10010
             return cudaErrorArrayIsMapped;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorAlreadyMapped:
+#if CUDA_VERSION >= 10010
             return cudaErrorAlreadyMapped;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorNoBinaryForGpu:
             return cudaErrorNoKernelImageForDevice;
         case hipErrorAlreadyAcquired:
+#if CUDA_VERSION >= 10010
             return cudaErrorAlreadyAcquired;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorNotMapped:
+#if CUDA_VERSION >= 10010
             return cudaErrorNotMapped;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorNotMappedAsArray:
+#if CUDA_VERSION >= 10010
             return cudaErrorNotMappedAsArray;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorNotMappedAsPointer:
+#if CUDA_VERSION >= 10010
             return cudaErrorNotMappedAsPointer;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorECCNotCorrectable:
             return cudaErrorECCUncorrectable;
         case hipErrorUnsupportedLimit:
@@ -538,9 +570,17 @@ inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
         case hipErrorInvalidGraphicsContext:
             return cudaErrorInvalidGraphicsContext;
         case hipErrorInvalidSource:
+#if CUDA_VERSION >= 10010
             return cudaErrorInvalidSource;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorFileNotFound:
+#if CUDA_VERSION >= 10010
             return cudaErrorFileNotFound;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorSharedObjectSymbolNotFound:
             return cudaErrorSharedObjectSymbolNotFound;
         case hipErrorSharedObjectInitFailed:
@@ -548,7 +588,11 @@ inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
         case hipErrorOperatingSystem:
             return cudaErrorOperatingSystem;
         case hipErrorNotFound:
+#if CUDA_VERSION >= 10010
             return cudaErrorSymbolNotFound;
+#else
+            return cudaErrorUnknown;
+#endif
         case hipErrorIllegalAddress:
             return cudaErrorIllegalAddress;
         case hipErrorLaunchTimeOut:
