@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "hip/hip_ext.h"
 #include "program_state.inl"
 #include "trace_helper.h"
+#include "hc_am.hpp"
 
 #include <hsa/amd_hsa_kernel_code.h>
 #include <hsa/hsa.h>
