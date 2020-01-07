@@ -24,6 +24,7 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_COMPLEX_H
 
 #include "hip/hcc_detail/hip_vector_types.h"
+#include "hip/math_functions.h"
 
 // TODO: Clang has a bug which allows device functions to call std functions
 // when std functions are introduced into default namespace by using statement.
