@@ -304,18 +304,28 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t& crit) {
 
 //---
 // Wait for all kernel and data copy commands in this stream to complete.
-void ihipStream_t::locked_wait() {
+inline void ihipStream_t::locked_wait(bool& waited) {
     // create a marker while holding stream lock,
     // but release lock prior to waiting on the marker
     hc::completion_future marker;
     {
         LockedAccessor_StreamCrit_t crit(_criticalData);
         // skipping marker since stream is empty
-        if (crit->_av.get_is_empty()) return;
+        if (crit->_av.get_is_empty()) {
+            waited = false;
+            return;
+        }
         marker = crit->_av.create_marker(hc::no_scope);
     }
 
     marker.wait(waitMode());
+    waited = true;
+    return;
+};
+
+void ihipStream_t::locked_wait() {
+    bool waited;
+    locked_wait(waited);
 };
 
 // Causes current stream to wait for specified event to complete:
@@ -1040,6 +1050,7 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
     // Vector of ops sent to each stream that will complete before ops sent to null stream:
     std::vector<hc::completion_future> depOps;
 
+    bool last_stream_waited = false;
     for (auto streamI = crit->const_streams().begin(); streamI != crit->const_streams().end();
          streamI++) {
         ihipStream_t* stream = *streamI;
@@ -1051,7 +1062,8 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
 
         if (HIP_SYNC_NULL_STREAM) {
             if (waitThisStream) {
-                stream->locked_wait();
+                last_stream_waited = false;
+                stream->locked_wait(last_stream_waited);
             }
         } else {
             if (waitThisStream) {
@@ -1082,6 +1094,14 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
             defaultCf.wait();  // TODO - account for active or blocking here.
         }
     }
+    else if ( (HIP_SYNC_NULL_STREAM && !last_stream_waited) ||
+              (!HIP_SYNC_NULL_STREAM && depOps.empty()) ) {
+        // This catches all the conditions where the printf buffer
+        // need to be explicitly flushed
+        if (syncHost) {
+            Kalmar::getContext()->flushPrintfBuffer();
+        }
+    }
 
     tprintf(DB_SYNC, "  syncDefaultStream depOps=%zu\n", depOps.size());
 }
@@ -1101,9 +1121,18 @@ void ihipCtx_t::locked_waitAllStreams() {
     LockedAccessor_CtxCrit_t crit(_criticalData);
 
     tprintf(DB_SYNC, "waitAllStream\n");
+    bool need_printf_flush = false;
     for (auto streamI = crit->const_streams().begin(); streamI != crit->const_streams().end();
          streamI++) {
-        (*streamI)->locked_wait();
+        bool waited;
+        (*streamI)->locked_wait(waited);
+        need_printf_flush = !waited;
+    }
+
+    // When synchronizing with the last stream, if we didn't do an explicit wait,
+    // then we need to an extra flush to the printf buffer
+    if (need_printf_flush) {
+        Kalmar::getContext()->flushPrintfBuffer();
     }
 }
 
@@ -1492,7 +1521,11 @@ hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream) {
         ctx->locked_syncDefaultStream(true /*waitOnSelf*/, true /*syncToHost*/);
     } else {
         // note this does not synchornize with the NULL stream:
-        stream->locked_wait();
+        bool waited;
+        stream->locked_wait(waited);
+        if (!waited) {
+            Kalmar::getContext()->flushPrintfBuffer();
+        }
         e = hipSuccess;
     }
 
