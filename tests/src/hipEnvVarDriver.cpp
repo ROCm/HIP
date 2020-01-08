@@ -83,8 +83,12 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
 }
 
 int main() {
+#ifdef __HIP_PLATFORM_HCC__
     unsetenv(HIP_VISIBLE_DEVICES_STR);
+#else
     unsetenv(CUDA_VISIBLE_DEVICES_STR);
+#endif
+    
     std::vector<std::string> devPCINum;
     char pciBusID[100];
     // collect the device pci bus ID for all devices

@@ -66,7 +66,11 @@ int main(int argc, char** argv) {
         cout << cmd << endl;
 
     if (!env.empty()) {
+#ifdef __HIP_PLATFORM_HCC__
         setenv("HIP_VISIBLE_DEVICES", env.c_str(), 1);
+#else
+        setenv("CUDA_VISIBLE_DEVICES", env.c_str(), 1);
+#endif
         cout << "set env HIP_VISIBLE_DEVICES = " << env.c_str() << endl;
 
         // verify if the environment variable is set
