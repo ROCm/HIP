@@ -302,8 +302,8 @@ struct _hiprtcProgram {
 
     void replaceExtension(std::string& fileName, const std::string &ext) const {
         auto res = fileName.rfind('.');
-        auto sloc = fileName.rfind('/');
-        if (res != std::string::npos && res > sloc) {
+        auto sloc = fileName.rfind('/'); // slash location
+        if (res != std::string::npos && (res > sloc || sloc == std::string::npos)) {
             fileName.replace(fileName.begin() + res, fileName.end(), ext);
         } else {
             fileName += ext;
