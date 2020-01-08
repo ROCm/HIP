@@ -46,7 +46,7 @@ union TData {
     __hip_uint4_vector_value_type u;
 };
 
-#define __TEXTURE_FUNCTIONS_DECL__ inline __device__
+#define __TEXTURE_FUNCTIONS_DECL__ static inline __device__
 
 
 #if (__hcc_workweek__ >= 18114) || __clang__

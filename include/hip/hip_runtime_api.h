@@ -360,21 +360,21 @@ enum hipComputeMode {
  */
 #if defined(__cplusplus) && !defined(__HIP_DISABLE_CPP_FUNCTIONS__)
 template <class T>
-inline hipError_t hipMalloc(T** devPtr, size_t size) {
+static inline hipError_t hipMalloc(T** devPtr, size_t size) {
     return hipMalloc((void**)devPtr, size);
 }
 
 // Provide an override to automatically typecast the pointer type from void**, and also provide a
 // default for the flags.
 template <class T>
-inline hipError_t hipHostMalloc(T** ptr, size_t size,
-                                unsigned int flags = hipHostMallocDefault) {
+static inline hipError_t hipHostMalloc(T** ptr, size_t size,
+                                       unsigned int flags = hipHostMallocDefault) {
     return hipHostMalloc((void**)ptr, size, flags);
 }
 
 template <class T>
-inline hipError_t hipMallocManaged(T** devPtr, size_t size,
-                                   unsigned int flags = hipMemAttachGlobal) {
+static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
+                                       unsigned int flags = hipMemAttachGlobal) {
     return hipMallocManaged((void**)devPtr, size, flags);
 }
 #endif
