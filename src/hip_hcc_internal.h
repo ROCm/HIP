@@ -495,9 +495,10 @@ struct LockedBase {
 
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
-   public:
+public:
     ihipStreamCriticalBase_t(ihipStream_t* parentStream, hc::accelerator_view av)
-        : _av(av), _parent(parentStream){};
+        :  _parent{parentStream}, _av{av}, _last_op_was_a_copy{false}
+    {}
 
     ~ihipStreamCriticalBase_t() {}
 
@@ -519,12 +520,9 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
         return gotLock ? this : nullptr;
     };
 
-   public:
     ihipStream_t* _parent;
-
     hc::accelerator_view _av;
-
-   private:
+    bool _last_op_was_a_copy;
 };
 
 
@@ -572,7 +570,7 @@ class ihipStream_t {
     LockedAccessor_StreamCrit_t lockopen_preKernelCommand();
     void lockclose_postKernelCommand(const char* kernelName, hc::accelerator_view* av, bool unlockNotNeeded = 0);
 
-
+    void locked_wait(bool& waited);
     void locked_wait();
 
     hc::accelerator_view* locked_getAv() {
@@ -650,9 +648,7 @@ class ihipStreamCallback_t {
         : _stream(stream), _callback(callback), _userData(userData) {
     };
     hipStream_t _stream;
-    hsa_signal_t _signal;
     hipStreamCallback_t _callback;
-    hc::completion_future comFuture;
     void* _userData;
 };
 
@@ -970,7 +966,7 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t, bool lockAcquired = 0);
 hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream);
-bool ihipStreamCallbackHandler(hsa_signal_value_t value, void* cbArgs);
+void ihipStreamCallbackHandler(ihipStreamCallback_t* cb);
 
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s) {
