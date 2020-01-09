@@ -58,6 +58,10 @@ if (LLVM_PACKAGE_VERSION VERSION_GREATER "6.0.1")
     target_link_libraries(hipify-clang PRIVATE clangToolingInclusions)
 endif()
 
+if (LLVM_PACKAGE_VERSION VERSION_GREATER "9.0.1")
+    target_link_libraries(hipify-clang PRIVATE LLVMFrontendOpenMP)
+endif()
+
 if (MSVC)
     target_link_libraries(hipify-clang PRIVATE version)
     target_compile_options(hipify-clang PRIVATE "/Od /GR- /EHs- /EHc-")

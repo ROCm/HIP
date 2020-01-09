@@ -119,7 +119,7 @@ __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
 ...
 }
 
-MyKernel<<<dim3(gridDim), dim3(gridDim), 0, 0>>> (a,b,c,n);
+MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
 // Alternatively, kernel can be launched by 
 // hipLaunchKernel(MyKernel, dim3(gridDim), dim3(groupDim), 0/*dynamicShared*/, 0/*stream), a, b, c, n);
 
@@ -153,7 +153,7 @@ void callMyKernel()
     unsigned N = 1000000;
     const unsigned blockSize = 256;
 
-    MyKernel<<<dim3(gridDim), dim3(gridDim), 0, 0>>> (a,b,c,n);
+    MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
     // Alternatively, kernel can be launched by
     // hipLaunchKernel(MyKernel, dim3(N/blockSize), dim3(blockSize), 0, 0,  a,b,c,N);
 }

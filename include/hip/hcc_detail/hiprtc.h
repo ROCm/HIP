@@ -84,7 +84,7 @@ hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, std::size_t* codeSizeRet);
 
 namespace hip_impl
 {
-    std::string demangle(const char* mangled_expression);
+    char* demangle(const char* mangled_expression);
 }
 
 #if defined(HIPRTC_GET_TYPE_NAME)
@@ -102,8 +102,9 @@ namespace hip_impl
         {
             if (!result) return HIPRTC_ERROR_INVALID_INPUT;
 
-            *result = hip_impl::demangle(typeid(T).name());
-
+            char * res= hip_impl::demangle(typeid(T).name());
+            result->assign(res == nullptr ? "" : res);
+            std::free(res);
             return (result->empty()) ? HIPRTC_ERROR_INTERNAL_ERROR :
                                        HIPRTC_SUCCESS;
         }

@@ -164,10 +164,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuMemAlloc",                                           {"hipMalloc",                                               "", CONV_MEMORY, API_DRIVER}},
   {"cuMemAlloc_v2",                                        {"hipMalloc",                                               "", CONV_MEMORY, API_DRIVER}},
   // cudaHostAlloc
-  {"cuMemAllocHost",                                       {"hipMemAllocHost",                                         "", CONV_MEMORY, API_DRIVER}},
-  {"cuMemAllocHost_v2",                                    {"hipMemAllocHost",                                         "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemAllocHost",                                       {"hipHostMalloc",                                           "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemAllocHost_v2",                                    {"hipHostMalloc",                                           "", CONV_MEMORY, API_DRIVER}},
   // cudaMallocManaged
-  {"cuMemAllocManaged",                                    {"hipMemAllocManaged",                                      "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemAllocManaged",                                    {"hipMallocManaged",                                        "", CONV_MEMORY, API_DRIVER}},
   // no analogue
   // NOTE: Not equal to cudaMallocPitch due to different signatures
   {"cuMemAllocPitch",                                      {"hipMemAllocPitch",                                        "", CONV_MEMORY, API_DRIVER}},
@@ -266,7 +266,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuMemHostGetDevicePointer",                            {"hipHostGetDevicePointer",                                 "", CONV_MEMORY, API_DRIVER}},
   {"cuMemHostGetDevicePointer_v2",                         {"hipHostGetDevicePointer",                                 "", CONV_MEMORY, API_DRIVER}},
   // cudaHostGetFlags
-  {"cuMemHostGetFlags",                                    {"hipMemHostGetFlags",                                      "", CONV_MEMORY, API_DRIVER}},
+  {"cuMemHostGetFlags",                                    {"hipHostGetFlags",                                         "", CONV_MEMORY, API_DRIVER}},
   // cudaHostRegister
   {"cuMemHostRegister",                                    {"hipHostRegister",                                         "", CONV_MEMORY, API_DRIVER}},
   {"cuMemHostRegister_v2",                                 {"hipHostRegister",                                         "", CONV_MEMORY, API_DRIVER}},
@@ -340,7 +340,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_FUNCTION_MAP{
   {"cuPointerGetAttribute",                                {"hipPointerGetAttribute",                                  "", CONV_ADDRESSING, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
   // NOTE: Not equal to cudaPointerGetAttributes due to different signatures
-  {"cuPointerGetAttributes",                               {"hipPointerGetAttributes",                                 "", CONV_ADDRESSING, API_DRIVER, HIP_UNSUPPORTED}},
+  {"cuPointerGetAttributes",                               {"hipPointerGetAttributes_",                                "", CONV_ADDRESSING, API_DRIVER, HIP_UNSUPPORTED}},
   // no analogue
   {"cuPointerSetAttribute",                                {"hipPointerSetAttribute",                                  "", CONV_ADDRESSING, API_DRIVER, HIP_UNSUPPORTED}},
 

@@ -103,10 +103,10 @@ hipError_t hipEventCreate(hipEvent_t* event) {
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipEventRecord, TRACE_SYNC, event, stream);
-    if (!event) return ihipLogStatus(hipErrorInvalidResourceHandle);
+    if (!event) return ihipLogStatus(hipErrorInvalidHandle);
     stream = ihipSyncAndResolveStream(stream);
     LockedAccessor_EventCrit_t eCrit(event->criticalData());
-    if (eCrit->_eventData._state == hipEventStatusUnitialized) return ihipLogStatus(hipErrorInvalidResourceHandle);
+    if (eCrit->_eventData._state == hipEventStatusUnitialized) return ihipLogStatus(hipErrorInvalidHandle);
     if (HIP_SYNC_NULL_STREAM && stream->isDefaultStream()) {
         // TODO-HIP_SYNC_NULL_STREAM : can remove this code when HIP_SYNC_NULL_STREAM = 0
         // If default stream , then wait on all queues.
@@ -136,7 +136,7 @@ hipError_t hipEventDestroy(hipEvent_t event) {
 
         return ihipLogStatus(hipSuccess);
     } else {
-        return ihipLogStatus(hipErrorInvalidResourceHandle);
+        return ihipLogStatus(hipErrorInvalidHandle);
     }
 }
 
@@ -152,7 +152,7 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
         auto ecd = event->locked_copyCrit();
 
         if (ecd._state == hipEventStatusUnitialized) {
-            return ihipLogStatus(hipErrorInvalidResourceHandle);
+            return ihipLogStatus(hipErrorInvalidHandle);
         } else if (ecd._state == hipEventStatusCreated) {
             // Created but not actually recorded on any device:
             return ihipLogStatus(hipSuccess);
@@ -167,7 +167,7 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
             return ihipLogStatus(hipSuccess);
         }
     } else {
-        return ihipLogStatus(hipErrorInvalidResourceHandle);
+        return ihipLogStatus(hipErrorInvalidHandle);
     }
 }
 
@@ -175,7 +175,7 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
     HIP_INIT_API(hipEventElapsedTime, ms, start, stop);
 
     if (ms == nullptr) return ihipLogStatus(hipErrorInvalidValue);
-    if ((start == nullptr) || (stop == nullptr)) return ihipLogStatus(hipErrorInvalidResourceHandle);
+    if ((start == nullptr) || (stop == nullptr)) return ihipLogStatus(hipErrorInvalidHandle);
 
     *ms = 0.0f;
     auto startEcd = start->locked_copyCrit();
@@ -187,8 +187,8 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
         (stop->_flags & hipEventDisableTiming) ||
         (stopEcd._state == hipEventStatusUnitialized) ||
         (stopEcd._state == hipEventStatusCreated)) {
-        // Both events must be at least recorded else return hipErrorInvalidResourceHandle
-        return ihipLogStatus(hipErrorInvalidResourceHandle);
+        // Both events must be at least recorded else return hipErrorInvalidHandle
+        return ihipLogStatus(hipErrorInvalidHandle);
     }
 
     // Refresh status, if still recording...
@@ -222,7 +222,7 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
 hipError_t hipEventQuery(hipEvent_t event) {
     HIP_INIT_SPECIAL_API(hipEventQuery, TRACE_QUERY, event);
  
-    if (!event) return ihipLogStatus(hipErrorInvalidResourceHandle);
+    if (!event) return ihipLogStatus(hipErrorInvalidHandle);
 
     if (!(event->_flags & hipEventReleaseToSystem)) {
         tprintf(DB_WARN,
