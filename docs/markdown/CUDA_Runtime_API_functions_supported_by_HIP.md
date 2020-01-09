@@ -166,7 +166,7 @@
 | `cudaMemcpy2DToArray`                                     | `hipMemcpy2DToArray`          |
 | `cudaMemcpy2DToArrayAsync`                                |                               |
 | `cudaMemcpy3D`                                            | `hipMemcpy3D`                 |
-| `cudaMemcpy3DAsync`                                       |                               |
+| `cudaMemcpy3DAsync`                                       | `hipMemcpy3DAsync`            |
 | `cudaMemcpy3DPeer`                                        |                               |
 | `cudaMemcpy3DPeerAsync`                                   |                               |
 | `cudaMemcpyAsync`                                         | `hipMemcpyAsync`              |
@@ -179,8 +179,8 @@
 | `cudaMemset`                                              | `hipMemset`                   |
 | `cudaMemset2D`                                            | `hipMemset2D`                 |
 | `cudaMemset2DAsync`                                       | `hipMemset2DAsync`            |
-| `cudaMemset3D`                                            |                               |
-| `cudaMemset3DAsync`                                       |                               |
+| `cudaMemset3D`                                            | `hipMemset3D`                 |
+| `cudaMemset3DAsync`                                       | `hipMemset3DAsync`            |
 | `cudaMemsetAsync`                                         | `hipMemsetAsync`              |
 | `make_cudaExtent`                                         | `make_hipExtent`              |
 | `make_cudaPitchedPtr`                                     | `make_hipPitchedPtr`          |
@@ -716,23 +716,23 @@
 | enum         |***`cudaError`***                                    |                  |***`hipError_t`***                                          |
 | typedef      |***`cudaError_t`***                                  |                  |***`hipError_t`***                                          |
 |            0 |*`cudaSuccess`*                                      |                  |*`hipSuccess`*                                              |
-|            1 |*`cudaErrorInvalidValue`*                            |                  |*`hipErrorInvalidValue`*                                    | 1011                      |
-|            2 |*`cudaErrorMemoryAllocation`*                        |                  |*`hipErrorMemoryAllocation`*                                | 1002                      |
-|            3 |*`cudaErrorInitializationError`*                     |                  |*`hipErrorInitializationError`*                             | 1003                      |
+|            1 |*`cudaErrorInvalidValue`*                            |                  |*`hipErrorInvalidValue`*                                    |
+|            2 |*`cudaErrorMemoryAllocation`*                        |                  |*`hipErrorOutOfMemory`*                                     |
+|            3 |*`cudaErrorInitializationError`*                     |                  |*`hipErrorNotInitialized`*                                  |
 |            4 |*`cudaErrorCudartUnloading`*                         |                  |*`hipErrorDeinitialized`*                                   |
 |            5 |*`cudaErrorProfilerDisabled`*                        |                  |*`hipErrorProfilerDisabled`*                                |
 |            6 |*`cudaErrorProfilerNotInitialized`*                  |                  |*`hipErrorProfilerNotInitialized`*                          |
 |            7 |*`cudaErrorProfilerAlreadyStarted`*                  |                  |*`hipErrorProfilerAlreadyStarted`*                          |
 |            8 |*`cudaErrorProfilerAlreadyStopped`*                  |                  |*`hipErrorProfilerAlreadyStopped`*                          |
-|            9 |*`cudaErrorInvalidConfiguration`*                    |                  |*`hipErrorInvalidConfiguration`*                            | 1009                      |
+|            9 |*`cudaErrorInvalidConfiguration`*                    |                  |*`hipErrorInvalidConfiguration`*                            |
 |           12 |*`cudaErrorInvalidPitchValue`*                       |                  |                                                            |
-|           13 |*`cudaErrorInvalidSymbol`*                           |                  |*`hipErrorInvalidSymbol`*                                   | 701                       |
+|           13 |*`cudaErrorInvalidSymbol`*                           |                  |*`hipErrorInvalidSymbol`*                                   |
 |           16 |*`cudaErrorInvalidHostPointer`*                      |                  |                                                            |
-|           17 |*`cudaErrorInvalidDevicePointer`*                    |                  |*`hipErrorInvalidDevicePointer`*                            | 1017                      |
+|           17 |*`cudaErrorInvalidDevicePointer`*                    |                  |*`hipErrorInvalidDevicePointer`*                            |
 |           18 |*`cudaErrorInvalidTexture`*                          |                  |                                                            |
 |           19 |*`cudaErrorInvalidTextureBinding`*                   |                  |                                                            |
 |           20 |*`cudaErrorInvalidChannelDescriptor`*                |                  |                                                            |
-|           21 |*`cudaErrorInvalidMemcpyDirection`*                  |                  |*`hipErrorInvalidMemcpyDirection`*                          | 1021                      |
+|           21 |*`cudaErrorInvalidMemcpyDirection`*                  |                  |*`hipErrorInvalidMemcpyDirection`*                          |
 |           22 |*`cudaErrorAddressOfConstant`*                       |                  |                                                            |
 |           23 |*`cudaErrorTextureFetchFailed`*                      |                  |                                                            |
 |           24 |*`cudaErrorTextureNotBound`*                         |                  |                                                            |
@@ -749,20 +749,20 @@
 |           45 |*`cudaErrorDuplicateSurfaceName`*                    |                  |                                                            |
 |           46 |*`cudaErrorDevicesUnavailable`*                      |                  |                                                            |
 |           49 |*`cudaErrorIncompatibleDriverContext`*               |                  |                                                            |
-|           52 |*`cudaErrorMissingConfiguration`*                    |                  |*`hipErrorMissingConfiguration`*                            | 1001                      |
-|           53 |*`cudaErrorPriorLaunchFailure`*                      |                  |*`hipErrorPriorLaunchFailure`*                              | 1005                      |
+|           52 |*`cudaErrorMissingConfiguration`*                    |                  |*`hipErrorMissingConfiguration`*                            |
+|           53 |*`cudaErrorPriorLaunchFailure`*                      |                  |*`hipErrorPriorLaunchFailure`*                              |
 |           65 |*`cudaErrorLaunchMaxDepthExceeded`*                  |                  |                                                            |
 |           66 |*`cudaErrorLaunchFileScopedTex`*                     |                  |                                                            |
 |           67 |*`cudaErrorLaunchFileScopedSurf`*                    |                  |                                                            |
 |           68 |*`cudaErrorSyncDepthExceeded`*                       |                  |                                                            |
 |           69 |*`cudaErrorLaunchPendingCountExceeded`*              |                  |                                                            |
-|           98 |*`cudaErrorInvalidDeviceFunction`*                   |                  |*`hipErrorInvalidDeviceFunction`*                           | 1008                      |
-|          100 |*`cudaErrorNoDevice`*                                |                  |*`hipErrorNoDevice`*                                        | 1038                      |
-|          101 |*`cudaErrorInvalidDevice`*                           |                  |*`hipErrorInvalidDevice`*                                   | 1010                      |
+|           98 |*`cudaErrorInvalidDeviceFunction`*                   |                  |*`hipErrorInvalidDeviceFunction`*                           |
+|          100 |*`cudaErrorNoDevice`*                                |                  |*`hipErrorNoDevice`*                                        |
+|          101 |*`cudaErrorInvalidDevice`*                           |                  |*`hipErrorInvalidDevice`*                                   |
 |          127 |*`cudaErrorStartupFailure`*                          | 10.0             |                                                            |
 |          200 |*`cudaErrorInvalidKernelImage`*                      |                  |*`hipErrorInvalidImage`*                                    |
 |          201 |*`cudaErrorDeviceUninitilialized`*                   |                  |*`hipErrorInvalidContext`*                                  |
-|          205 |*`cudaErrorMapBufferObjectFailed`*                   |                  |*`hipErrorMapBufferObjectFailed`*                           | 1071                      |
+|          205 |*`cudaErrorMapBufferObjectFailed`*                   |                  |*`hipErrorMapFailed`*                                       |
 |          206 |*`cudaErrorUnmapBufferObjectFailed`*                 |                  |*`hipErrorUnmapFailed`*                                     |
 |          209 |*`cudaErrorNoKernelImageForDevice`*                  |                  |*`hipErrorNoBinaryForGpu`*                                  |
 |          214 |*`cudaErrorECCUncorrectable`*                        |                  |*`hipErrorECCNotCorrectable`*                               |
@@ -778,31 +778,31 @@
 |          302 |*`cudaErrorSharedObjectSymbolNotFound`*              |                  |*`hipErrorSharedObjectSymbolNotFound`*                      |
 |          303 |*`cudaErrorSharedObjectInitFailed`*                  |                  |*`hipErrorSharedObjectInitFailed`*                          |
 |          304 |*`cudaErrorOperatingSystem`*                         |                  |*`hipErrorOperatingSystem`*                                 |
-|          400 |*`cudaErrorInvalidResourceHandle`*                   |                  |*`hipErrorInvalidResourceHandle`*                           | 1033                      |
+|          400 |*`cudaErrorInvalidResourceHandle`*                   |                  |*`hipErrorInvalidHandle`*                                   |
 |          401 |*`cudaErrorIllegalState`*                            | 10.0             |                                                            |
 |          500 |*`cudaErrorSymbolNotFound`*                          | 10.1             |*`hipErrorNotFound`*                                        |
-|          600 |*`cudaErrorNotReady`*                                |                  |*`hipErrorNotReady`*                                        | 1034                      |
+|          600 |*`cudaErrorNotReady`*                                |                  |*`hipErrorNotReady`*                                        |
 |          700 |*`cudaErrorIllegalAddress`*                          |                  |*`hipErrorIllegalAddress`*                                  |
-|          701 |*`cudaErrorLaunchOutOfResources`*                    |                  |*`hipErrorLaunchOutOfResources`*                            | 1007                      |
-|          702 |*`cudaErrorLaunchTimeout`*                           |                  |*`hipErrorLaunchTimeOut`*                                   | 1006                      |
+|          701 |*`cudaErrorLaunchOutOfResources`*                    |                  |*`hipErrorLaunchOutOfResources`*                            |
+|          702 |*`cudaErrorLaunchTimeout`*                           |                  |*`hipErrorLaunchTimeOut`*                                   |
 |          703 |*`cudaErrorLaunchIncompatibleTexturing`*             |                  |                                                            |
-|          704 |*`cudaErrorPeerAccessAlreadyEnabled`*                |                  |*`hipErrorPeerAccessAlreadyEnabled`*                        | 1050                      |
-|          705 |*`cudaErrorPeerAccessNotEnabled`*                    |                  |*`hipErrorPeerAccessNotEnabled`*                            | 1051                      |
-|          708 |*`cudaErrorSetOnActiveProcess`*                      |                  |*`hipErrorSetOnActiveProcess`*                              | 305                       |
+|          704 |*`cudaErrorPeerAccessAlreadyEnabled`*                |                  |*`hipErrorPeerAccessAlreadyEnabled`*                        |
+|          705 |*`cudaErrorPeerAccessNotEnabled`*                    |                  |*`hipErrorPeerAccessNotEnabled`*                            |
+|          708 |*`cudaErrorSetOnActiveProcess`*                      |                  |*`hipErrorSetOnActiveProcess`*                              |
 |          709 |*`cudaErrorContextIsDestroyed`*                      |                  |                                                            |
-|          710 |*`cudaErrorAssert`*                                  |                  |*`hipErrorAssert`*                                          | 1081                      |
+|          710 |*`cudaErrorAssert`*                                  |                  |*`hipErrorAssert`*                                          |
 |          711 |*`cudaErrorTooManyPeers`*                            |                  |                                                            |
-|          712 |*`cudaErrorHostMemoryAlreadyRegistered`*             |                  |*`hipErrorHostMemoryAlreadyRegistered`*                     | 1061                      |
-|          713 |*`cudaErrorHostMemoryNotRegistered`*                 |                  |*`hipErrorHostMemoryNotRegistered`*                         | 1062                      |
+|          712 |*`cudaErrorHostMemoryAlreadyRegistered`*             |                  |*`hipErrorHostMemoryAlreadyRegistered`*                     |
+|          713 |*`cudaErrorHostMemoryNotRegistered`*                 |                  |*`hipErrorHostMemoryNotRegistered`*                         |
 |          714 |*`cudaErrorHardwareStackError`*                      |                  |                                                            |
 |          715 |*`cudaErrorIllegalInstruction`*                      |                  |                                                            |
 |          716 |*`cudaErrorMisalignedAddress`*                       |                  |                                                            |
 |          717 |*`cudaErrorInvalidAddressSpace`*                     |                  |                                                            |
 |          718 |*`cudaErrorInvalidPc`*                               |                  |                                                            |
-|          719 |*`cudaErrorLaunchFailure`*                           |                  |*`hipErrorLaunchFailure`*                                   | 1004                      |
+|          719 |*`cudaErrorLaunchFailure`*                           |                  |*`hipErrorLaunchFailure`*                                   |
 |          720 |*`cudaErrorCooperativeLaunchTooLarge`*               | 9.0              |                                                            |
 |          800 |*`cudaErrorNotPermitted`*                            |                  |                                                            |
-|          801 |*`cudaErrorNotSupported`*                            |                  |*`hipErrorNotSupported`*                                    | 1082                      |
+|          801 |*`cudaErrorNotSupported`*                            |                  |*`hipErrorNotSupported`*                                    |
 |          802 |*`cudaErrorSystemNotReady`*                          | 10.0             |                                                            |
 |          803 |*`cudaErrorSystemDriverMismatch`*                    | 10.0             |                                                            |
 |          804 |*`cudaErrorCompatNotSupportedOnDevice`*              | 10.0             |                                                            |
@@ -817,7 +817,7 @@
 |          908 |*`cudaErrorStreamCaptureWrongThread`*                | 10.1             |                                                            |
 |          909 |*`cudaErrorTimeout`*                                 | 10.2             |                                                            |
 |          910 |*`cudaErrorGraphExecUpdateFailure`*                  | 10.2             |                                                            |
-|          999 |*`cudaErrorUnknown`*                                 |                  |*`hipErrorUnknown`*                                         | 1030                      |
+|          999 |*`cudaErrorUnknown`*                                 |                  |*`hipErrorUnknown`*                                         |
 |        10000 |*`cudaErrorApiFailureBase`*                          |                  |                                                            |
 | enum         |***`cudaFuncCache`***                                |                  |***`hipFuncCache_t`***                                      |
 |            0 |*`cudaFuncCachePreferNone`*                          |                  |*`hipFuncCachePreferNone`*                                  |
@@ -1067,14 +1067,14 @@
 |            4 |*`CUDA_C_32F`*                                       | 8.0              |*`HIPBLAS_C_32F`*                                           | 154                       |
 |            1 |*`CUDA_R_64F`*                                       | 8.0              |*`HIPBLAS_R_64F`*                                           | 152                       |
 |            5 |*`CUDA_C_64F`*                                       | 8.0              |*`HIPBLAS_C_64F`*                                           | 155                       |
-|            3 |*`CUDA_R_8I`*                                        | 8.0              |                                                            |
-|            7 |*`CUDA_C_8I`*                                        | 8.0              |                                                            |
-|            8 |*`CUDA_R_8U`*                                        | 8.0              |                                                            |
-|            9 |*`CUDA_C_8U`*                                        | 8.0              |                                                            |
-|           10 |*`CUDA_R_32I`*                                       | 8.0              |                                                            |
-|           11 |*`CUDA_C_32I`*                                       | 8.0              |                                                            |
-|           12 |*`CUDA_R_32U`*                                       | 8.0              |                                                            |
-|           13 |*`CUDA_C_32U`*                                       | 8.0              |                                                            |
+|            3 |*`CUDA_R_8I`*                                        | 8.0              |*`HIPBLAS_R_8I`*                                            | 160                       |
+|            7 |*`CUDA_C_8I`*                                        | 8.0              |*`HIPBLAS_C_8I`*                                            | 164                       |
+|            8 |*`CUDA_R_8U`*                                        | 8.0              |*`HIPBLAS_R_8U`*                                            | 161                       |
+|            9 |*`CUDA_C_8U`*                                        | 8.0              |*`HIPBLAS_C_8U`*                                            | 165                       |
+|           10 |*`CUDA_R_32I`*                                       | 8.0              |*`HIPBLAS_R_32I`*                                           | 162                       |
+|           11 |*`CUDA_C_32I`*                                       | 8.0              |*`HIPBLAS_C_32I`*                                           | 166                       |
+|           12 |*`CUDA_R_32U`*                                       | 8.0              |*`HIPBLAS_R_32U`*                                           | 163                       |
+|           13 |*`CUDA_C_32U`*                                       | 8.0              |*`HIPBLAS_C_32U`*                                           | 167                       |
 | struct       |`cudaExternalMemoryBufferDesc`                       | 10.0             |                                                            |
 | struct       |`cudaExternalMemoryHandleDesc`                       | 10.0             |                                                            |
 | struct       |`cudaExternalMemoryMipmappedArrayDesc`               | 10.0             |                                                            |
