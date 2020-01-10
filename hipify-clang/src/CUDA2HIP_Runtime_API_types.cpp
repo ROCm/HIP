@@ -694,9 +694,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorStartupFailure",                                          {"hipErrorStartupFailure",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 127
   // CUDA_ERROR_INVALID_IMAGE
   {"cudaErrorInvalidKernelImage",                                      {"hipErrorInvalidImage",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 200
-  // Typo fixed in 10.2
   // CUDA_ERROR_INVALID_CONTEXT
   {"cudaErrorDeviceUninitialized",                                     {"hipErrorInvalidContext",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 201
+  // Typo fixed in 10.2
   // CUDA_ERROR_INVALID_CONTEXT
   {"cudaErrorDeviceUninitilialized",                                   {"hipErrorInvalidContext",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 201
   // CUDA_ERROR_MAP_FAILED
