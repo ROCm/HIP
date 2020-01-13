@@ -33,6 +33,7 @@ THE SOFTWARE.
     __HIP_ARCH_GFX900__  || \
     __HIP_ARCH_GFX906__  || \
     __HIP_ARCH_GFX908__  || \
+    __HIP_ARCH_GFX90A__  || \
     __HIP_ARCH_GFX1010__ || \
     __HIP_ARCH_GFX1012__
 
