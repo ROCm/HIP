@@ -1,11 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
 
-if ($ENV{ROCM_PATH})
-    set(opt_rocm_install_path $ENV{ROCM_PATH})
-else()
-    set(opt_rocm_install_path "/opt/rocm")
-endif()
-
 if(NOT DEFINED HIP_PATH)
     if(NOT DEFINED ENV{HIP_PATH})
         set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")

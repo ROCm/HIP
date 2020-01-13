@@ -8,7 +8,9 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 # Set ROCM PATH from envinorment and default to /opt/rocm if not provided.
 if( DEFINED ENV{ROCM_PATH} )
      set(ROCM_PATH $ENV{ROCM_PATH})
-else()
+elseif(DEFINED ENV{HIP_PATH})
+     set(ROCM_PATH "$ENV{HIP_PATH}/..")
+else ()
      set(ROCM_PATH "/opt/rocm")
 endif()
 

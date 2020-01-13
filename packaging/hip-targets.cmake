@@ -41,23 +41,35 @@ unset(_expectedTargets)
 # The installation prefix configured by this project.
 if( DEFINED ENV{ROCM_PATH} )
      set(_IMPORT_PREFIX "$ENV{ROCM_PATH}/hip")
+elseif(DEFINED ENV{HIP_PATH})
+     set(_IMPORT_PREFIX "$ENV{HIP_PATH}")
 else()
      set(_IMPORT_PREFIX "/opt/rocm/hip")
 endif()
 # Create imported target hip::hip_hcc_static
 add_library(hip::hip_hcc_static STATIC IMPORTED)
 
+find_path(HSA_HEADER hsa/hsa.h
+  PATHS
+    "${_IMPORT_PREFIX}/../include"
+    /opt/rocm/include
+)
+
+if (NOT HSA_FOUND)
+  message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
+endif()
+
 set_target_properties(hip::hip_hcc_static PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;$ENV{ROCM_PATH}/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;$ENV{ROCM_PATH}/hsa/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
 )
 
 # Create imported target hip::hip_hcc
 add_library(hip::hip_hcc SHARED IMPORTED)
 
 set_target_properties(hip::hip_hcc PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;$ENV{ROCM_PATH}/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;$ENV{ROCM_PATH}/hsa/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
 )
 
 # Create imported target hip::host
