@@ -33,62 +33,10 @@ THE SOFTWARE.
 __device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
 __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
 
-#define IMAGE_PITCH_ALIGNMENT 256
-
 // Internal HIP APIS:
 namespace hip_internal {
 
 namespace {
-
-    template <typename T> inline T alignDown(T value, size_t alignment) {
-      return (T)(value & ~(alignment - 1));
-    }
-
-    template <typename T> inline T* alignDown(T* value, size_t alignment) {
-      return (T*)alignDown((intptr_t)value, alignment);
-    }
-
-    template <typename T> inline T alignUp(T value, size_t alignment) {
-      return alignDown((T)(value + alignment - 1), alignment);
-    }
-
-    template <typename T> inline T* alignUp(T* value, size_t alignment) {
-      return (T*)alignDown((intptr_t)(value + alignment - 1), alignment);
-    }
-
-    size_t getNumChannels(hsa_ext_image_channel_order_t channelOrder) {
-      switch (channelOrder) {
-        case HSA_EXT_IMAGE_CHANNEL_ORDER_RG:
-          return 2;
-        case HSA_EXT_IMAGE_CHANNEL_ORDER_RGB:
-          return 3;
-        case HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA:
-          return 4;
-        case HSA_EXT_IMAGE_CHANNEL_ORDER_R:
-        default:
-          return 1;
-      }
-    }
-
-    size_t getElementSize(hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType) {
-      size_t bytesPerPixel = getNumChannels(channelOrder);
-      switch (channelType) {
-        case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT8:
-        case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT8:
-          break;
-
-        case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT32:
-        case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT32:
-        case HSA_EXT_IMAGE_CHANNEL_TYPE_FLOAT:
-          bytesPerPixel *= 4;
-          break;
-
-        default:
-          bytesPerPixel *= 2;
-          break;
-      }
-      return bytesPerPixel;
-    }
 
     inline
     const char* hsa_to_string(hsa_status_t err) noexcept
@@ -844,7 +792,7 @@ hipError_t allocImage(TlsData* tls,hsa_ext_image_geometry_t geometry, int width,
       hsa_amd_memory_pool_t* allocRegion = static_cast<hsa_amd_memory_pool_t*>(acc.get_hsa_am_region());
       hsa_amd_memory_pool_get_info(*allocRegion, HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_GRANULE, &allocGranularity);
 
-      size_t rowPitch = hip_internal::getElementSize(channelOrder, channelType) * hip_internal::alignUp(width, IMAGE_PITCH_ALIGNMENT);
+      size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(width, IMAGE_PITCH_ALIGNMENT);
       if(HSA_EXT_IMAGE_GEOMETRY_2DA == geometry)
           imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (array_size == 0 ? 1 : array_size) ;
       else
@@ -947,7 +895,7 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height,
     hsa_ext_image_channel_type_t channelType;
     getChannelOrderAndType(desc, hipReadModeElementType, &channelOrder, &channelType);
 
-    size_t rowPitch = hip_internal::getElementSize(channelOrder, channelType) * hip_internal::alignUp(width, IMAGE_PITCH_ALIGNMENT);
+    size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(width, IMAGE_PITCH_ALIGNMENT);
     if(HSA_EXT_IMAGE_GEOMETRY_2DA == geometry)
        imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (array_size == 0 ? 1 : array_size);
     else
@@ -959,7 +907,7 @@ hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height,
 hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,size_t width, size_t height, size_t depth, hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType, hsa_ext_image_data_info_t &imageInfo,size_t array_size __dparm(0))
 {
 
-    size_t rowPitch = hip_internal::getElementSize(channelOrder, channelType) * hip_internal::alignUp(width, IMAGE_PITCH_ALIGNMENT);
+    size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(width, IMAGE_PITCH_ALIGNMENT);
 
     if(HSA_EXT_IMAGE_GEOMETRY_2DA == geometry)
        imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (array_size == 0 ? 1 : array_size);

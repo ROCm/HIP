@@ -11,24 +11,8 @@
 #include "trace_helper.h"
 
 #include "hip_texture.h"
-#define IMAGE_PITCH_ALIGNMENT 256
 
 static std::map<hipTextureObject_t, hipTexture*> textureHash;
-template <typename T> inline T alignDown(T value, size_t alignment) {
-  return (T)(value & ~(alignment - 1));
-}
-
-template <typename T> inline T* alignDown(T* value, size_t alignment) {
-  return (T*)alignDown((intptr_t)value, alignment);
-}
-
-template <typename T> inline T alignUp(T value, size_t alignment) {
-  return alignDown((T)(value + alignment - 1), alignment);
-}
-
-template <typename T> inline T* alignUp(T* value, size_t alignment) {
-  return (T*)alignDown((intptr_t)(value + alignment - 1), alignment);
-}
 
 void saveTextureInfo(const hipTexture* pTexture, const hipResourceDesc* pResDesc,
                      const hipTextureDesc* pTexDesc, const hipResourceViewDesc* pResViewDesc) {
@@ -43,40 +27,6 @@ void saveTextureInfo(const hipTexture* pTexture, const hipResourceDesc* pResDesc
     if (pResViewDesc != nullptr) {
         memcpy((void*)&(pTexture->resViewDesc), (void*)pResViewDesc, sizeof(hipResourceViewDesc));
     }
-}
-
-size_t getNumChannels(hsa_ext_image_channel_order_t channelOrder) {
-  switch (channelOrder) {
-    case HSA_EXT_IMAGE_CHANNEL_ORDER_RG:
-      return 2;
-    case HSA_EXT_IMAGE_CHANNEL_ORDER_RGB:
-      return 3;
-    case HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA:
-      return 4;
-    case HSA_EXT_IMAGE_CHANNEL_ORDER_R:
-    default:
-      return 1;
-  }
-}
-
-size_t getElementSize(hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType) {
-  size_t bytesPerPixel = getNumChannels(channelOrder);
-  switch (channelType) {
-    case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT8:
-    case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT8:
-      break;
-
-    case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT32:
-    case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT32:
-    case HSA_EXT_IMAGE_CHANNEL_TYPE_FLOAT:
-      bytesPerPixel *= 4;
-      break;
-
-    default:
-      bytesPerPixel *= 2;
-      break;
-  }
-  return bytesPerPixel;
 }
 
 void getDrvChannelOrderAndType(const enum hipArray_Format Format, unsigned int NumChannels,
