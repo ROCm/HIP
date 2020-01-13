@@ -89,9 +89,10 @@ struct Symbol {
 
 class Kernel_descriptor {
     std::uint64_t kernel_object_{};
-    amd_kernel_code_t const* kernel_header_{nullptr};
-    std::string name_{};
+    amd_kernel_code_t const* header_{};
+    std::string name_;
     std::vector<std::pair<std::size_t, std::size_t>> kernarg_layout_{};
+    bool is_code_object_v3_{};
 public:
     Kernel_descriptor() = default;
     Kernel_descriptor(
@@ -101,7 +102,8 @@ public:
         :
         kernel_object_{kernel_object},
         name_{name},
-        kernarg_layout_{std::move(kernarg_layout)}
+        kernarg_layout_{std::move(kernarg_layout)},
+        is_code_object_v3_{name.find(".kd") != std::string::npos}
     {
         bool supported{false};
         std::uint16_t min_v{UINT16_MAX};
@@ -123,7 +125,7 @@ public:
 
         r = tbl.hsa_ven_amd_loader_query_host_address(
             reinterpret_cast<void*>(kernel_object_),
-            reinterpret_cast<const void**>(&kernel_header_));
+            reinterpret_cast<const void**>(&header_));
 
         if (r != HSA_STATUS_SUCCESS) return;
     }
@@ -149,7 +151,7 @@ public:
             std::string,
                 std::unordered_map<
                     hsa_isa_t,
-                    std::vector<std::vector<char>>>>> code_object_blobs;
+                    std::vector<std::string>>>> code_object_blobs;
 
     std::pair<
         std::once_flag,
@@ -198,7 +200,7 @@ public:
                         std::function<void(hsa_code_object_reader_t*)>>;
     std::pair<
         std::mutex,
-        std::vector<RAII_code_reader>> code_readers;
+        std::vector<std::pair<std::string, RAII_code_reader>>> code_readers;
 
     program_state_impl() {
         // Create placeholder for each agent for the per-agent members.
@@ -213,7 +215,7 @@ public:
         std::string,
             std::unordered_map<
                 hsa_isa_t,
-                std::vector<std::vector<char>>>>& get_code_object_blobs() {
+                std::vector<std::string>>>& get_code_object_blobs() {
 
         std::call_once(code_object_blobs.first, [this]() {
             dl_iterate_phdr([](dl_phdr_info* info, std::size_t, void* p) {
@@ -388,16 +390,21 @@ public:
         };
 
         RAII_code_reader tmp{new hsa_code_object_reader_t, cor_deleter};
+
+        decltype(code_readers.second)::iterator it;
+        {
+          std::lock_guard<std::mutex> lck{code_readers.first};
+          it = code_readers.second.emplace(code_readers.second.end(),
+                                           move(file), move(tmp));
+        }
+
         hsa_code_object_reader_create_from_memory(
-            file.data(), file.size(), tmp.get());
+            it->first.data(), it->first.size(), it->second.get());
 
         hsa_executable_load_agent_code_object(
-            executable, agent, *tmp, nullptr, nullptr);
+            executable, agent, *it->second, nullptr, nullptr);
 
         hsa_executable_freeze(executable, nullptr);
-
-        std::lock_guard<std::mutex> lck{code_readers.first};
-        code_readers.second.push_back(move(tmp));
     }
 
 
@@ -473,7 +480,7 @@ public:
                                                            code_object_dynsym,
                                                            agent, executable);
 
-        load_code_object_and_freeze_executable(ts, agent, executable);
+        load_code_object_and_freeze_executable(move(ts), agent, executable);
 
         return executable;
     }
@@ -585,6 +592,68 @@ public:
     }
 
     static
+    std::size_t parse_args_v2(
+            const std::string& metadata,
+            std::size_t f,
+            std::size_t l,
+            std::vector<std::pair<std::size_t, std::size_t>>& size_align) {
+        if (f == l) return f;
+        if (!size_align.empty()) return l;
+
+        do {
+            static constexpr size_t size_sz{5};
+            f = metadata.find("Size:", f) + size_sz;
+
+            if (l <= f) return f;
+
+            auto size = std::strtoul(&metadata[f], nullptr, 10);
+
+            static constexpr size_t align_sz{6};
+            f = metadata.find("Align:", f) + align_sz;
+
+            char* l{};
+            auto align = std::strtoul(&metadata[f], &l, 10);
+
+            f += (l - &metadata[f]) + 1;
+
+            size_align.emplace_back(size, align);
+        } while (true);
+    }
+
+    static
+    void read_kernarg_metadata_v2(
+        const std::string& kernels_md,
+        std::size_t dx,
+        std::unordered_map<
+            std::string,
+            std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
+        do {
+            dx = kernels_md.find("Name:", dx);
+
+            if (dx == std::string::npos) break;
+
+            static constexpr decltype(kernels_md.size()) name_sz{5};
+            dx = kernels_md.find_first_not_of(" '", dx + name_sz);
+
+            auto fn =
+                kernels_md.substr(dx, kernels_md.find_first_of("'\n", dx) - dx);
+            dx += fn.size();
+
+            auto dx1 = kernels_md.find("CodeProps", dx);
+            dx = kernels_md.find("Args:", dx);
+
+            if (dx1 < dx) {
+                dx = dx1;
+                continue;
+            }
+            if (dx == std::string::npos) break;
+
+            static constexpr decltype(kernels_md.size()) args_sz{5};
+            dx = parse_args_v2(kernels_md, dx + args_sz, dx1, kernargs[fn]);
+        } while (true);
+    }
+
+    static
     std::string metadata_to_string(const amd_comgr_metadata_node_t& md) {
         std::string str;
         size_t size;
@@ -598,9 +667,8 @@ public:
     }
 
     static
-    void parse_args(
+    void parse_args_v3(
             const amd_comgr_metadata_node_t& args_md,
-            bool is_code_object_v3,
             std::vector<std::pair<std::size_t, std::size_t>>& size_align) {
         size_t arg_count = 0;
         if (amd_comgr_get_metadata_list_size(args_md, &arg_count)
@@ -615,9 +683,7 @@ public:
                 return;
 
             amd_comgr_metadata_node_t arg_size_md;
-            if (amd_comgr_metadata_lookup(arg_md,
-                                          is_code_object_v3 ? ".size" : "Size",
-                                          &arg_size_md)
+            if (amd_comgr_metadata_lookup(arg_md, ".size", &arg_size_md)
                 != AMD_COMGR_STATUS_SUCCESS)
                 return;
 
@@ -629,35 +695,21 @@ public:
 
             size_t arg_align;
 
-            if (is_code_object_v3) {
-                amd_comgr_metadata_node_t arg_offset_md;
-                if (amd_comgr_metadata_lookup(arg_md, ".offset", &arg_offset_md)
-                    != AMD_COMGR_STATUS_SUCCESS)
-                    return;
+            amd_comgr_metadata_node_t arg_offset_md;
+            if (amd_comgr_metadata_lookup(arg_md, ".offset", &arg_offset_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
 
-                size_t arg_offset
-                    = std::stoul(metadata_to_string(arg_offset_md));
+            size_t arg_offset = std::stoul(metadata_to_string(arg_offset_md));
 
-                if (amd_comgr_destroy_metadata(arg_offset_md)
-                    != AMD_COMGR_STATUS_SUCCESS)
-                    return;
+            if (amd_comgr_destroy_metadata(arg_offset_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
 
-                arg_align = 1;
-                while (arg_offset && (arg_offset & 1) == 0) {
-                    arg_offset >>= 1;
-                    arg_align <<= 1;
-                }
-            } else {
-                amd_comgr_metadata_node_t arg_align_md;
-                if (amd_comgr_metadata_lookup(arg_md, "Align", &arg_align_md)
-                    != AMD_COMGR_STATUS_SUCCESS)
-                    return;
-
-                arg_align = std::stoul(metadata_to_string(arg_align_md));
-
-                if (amd_comgr_destroy_metadata(arg_align_md)
-                    != AMD_COMGR_STATUS_SUCCESS)
-                    return;
+            arg_align = 1;
+            while (arg_offset && (arg_offset & 1) == 0) {
+                arg_offset >>= 1;
+                arg_align <<= 1;
             }
 
             size_align.emplace_back(arg_size, arg_align);
@@ -669,11 +721,11 @@ public:
     }
 
     static
-    void read_kernarg_metadata(
-            const std::vector<char>& blob,
+    void read_kernarg_metadata_v3(
+            const std::string& blob,
             std::unordered_map<
-            std::string,
-            std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
+                std::string,
+                std::vector<std::pair<std::size_t, std::size_t>>>& kernargs) {
         amd_comgr_data_t dataIn;
         amd_comgr_status_t status;
 
@@ -690,7 +742,6 @@ public:
             != AMD_COMGR_STATUS_SUCCESS)
             return;
 
-        bool is_code_object_v3 = false;
         amd_comgr_metadata_node_t kernels_md;
         if (amd_comgr_metadata_lookup(metadata, "Kernels", &kernels_md)
             != AMD_COMGR_STATUS_SUCCESS) {
@@ -699,7 +750,6 @@ public:
                                           &kernels_md)
                 != AMD_COMGR_STATUS_SUCCESS)
                 return;
-            is_code_object_v3 = true;
         }
 
         size_t kernel_count = 0;
@@ -715,9 +765,7 @@ public:
                 continue;
 
             amd_comgr_metadata_node_t name_md;
-            if (amd_comgr_metadata_lookup(kernel_md,
-                                          is_code_object_v3 ? ".name" : "Name",
-                                          &name_md)
+            if (amd_comgr_metadata_lookup(kernel_md, ".name", &name_md)
                 != AMD_COMGR_STATUS_SUCCESS)
                 continue;
 
@@ -727,21 +775,15 @@ public:
                 != AMD_COMGR_STATUS_SUCCESS)
                 continue;
 
-            if (is_code_object_v3)
-                kernel_name_str.append(".kd");
-
-
             amd_comgr_metadata_node_t args_md;
-            if (amd_comgr_metadata_lookup(kernel_md,
-                                          is_code_object_v3 ? ".args" : "Args",
-                                          &args_md)
+            if (amd_comgr_metadata_lookup(kernel_md, ".args", &args_md)
                 != AMD_COMGR_STATUS_SUCCESS)
                 continue;
 
             auto foundKernel = kernargs.find(kernel_name_str);
             // parse arguments for a given kernel only once
             if (foundKernel == kernargs.end()) {
-                parse_args(args_md, is_code_object_v3, kernargs[kernel_name_str]);
+                parse_args_v3(args_md, kernargs[kernel_name_str]);
             }
 
             if (amd_comgr_destroy_metadata(args_md) != AMD_COMGR_STATUS_SUCCESS
@@ -757,7 +799,52 @@ public:
         amd_comgr_release_data(dataIn);
     }
 
-    const std::unordered_map<std::string, 
+    static
+    void read_kernarg_metadata(
+        const std::string& blob,
+        std::unordered_map<
+            std::string,
+            std::vector<std::pair<std::size_t, std::size_t>>>& kernargs)
+    {
+        std::istringstream istr{blob};
+        ELFIO::elfio reader;
+
+        if (!reader.load(istr)) return;
+
+        // TODO: this is inefficient.
+        auto it = find_section_if(reader, [](const ELFIO::section* x) {
+            return x->get_type() == SHT_NOTE;
+        });
+
+        if (!it) return;
+
+        const ELFIO::note_section_accessor acc{reader, it};
+        auto n{acc.get_notes_num()};
+        while (n--) {
+            ELFIO::Elf_Word type{};
+            std::string name{};
+            void* desc{};
+            ELFIO::Elf_Word desc_size{};
+
+            acc.get_note(n, type, name, desc, desc_size);
+
+            if (name == "AMDGPU") {
+                return read_kernarg_metadata_v3(blob, kernargs);
+            }
+            if (name != "AMD") continue; // TODO: switch to using NT_AMD_AMDGPU_HSA_METADATA.
+
+            std::string tmp{
+                static_cast<char*>(desc), static_cast<char*>(desc) + desc_size};
+
+            auto dx = tmp.find("Kernels:");
+
+            if (dx == std::string::npos) continue;
+
+            return read_kernarg_metadata_v2(tmp, dx + 8u, kernargs); // Skip "Kernels:".
+        }
+    }
+
+    const std::unordered_map<std::string,
         std::vector<std::pair<std::size_t, std::size_t>>>& get_kernargs() {
 
         std::call_once(kernargs.first, [this]() {

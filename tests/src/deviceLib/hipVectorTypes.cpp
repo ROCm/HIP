@@ -34,6 +34,7 @@ THE SOFTWARE.
 #include <assert.h>
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <type_traits>
 
 using namespace std;
@@ -156,6 +157,24 @@ bool TestVectorType() {
     f3 = V{3};
     if (f1 == f2) return false;
     if (!(f1 != f2)) return false;
+
+    using T = typename V::value_type;
+
+    const T& x = f1.x;
+    T& y = f2.x;
+    const volatile T& z = f3.x;
+    volatile T& w = f2.x;
+
+    if (x != T{3}) return false;
+    if (y != T{4}) return false;
+    if (z != T{3}) return false;
+    if (w != T{4}) return false;
+
+    stringstream str;
+    str << f1.x;
+    str >> f2.x;
+
+    if (f1.x != f2.x) return false;
 
     return true;
 }

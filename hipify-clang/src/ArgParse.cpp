@@ -30,7 +30,7 @@ cl::opt<std::string> OutputFilename("o",
   cl::cat(ToolTemplateCategory));
 
 cl::opt<std::string> OutputDir("o-dir",
-  cl::desc("Output direcory"),
+  cl::desc("Output directory"),
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
@@ -45,17 +45,17 @@ cl::opt<bool> GeneratePython("python",
   cl::cat(ToolTemplateCategory));
 
 cl::opt<std::string> OutputHipifyPerlDir("o-hipify-perl-dir",
-  cl::desc("Output direcory for hipify-perl script"),
+  cl::desc("Output directory for hipify-perl script"),
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
 cl::opt<std::string> OutputPythonMapDir("o-python-map-dir",
-  cl::desc("Output direcory for Python map"),
+  cl::desc("Output directory for Python map"),
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
 cl::opt<std::string> TemporaryDir("temp-dir",
-  cl::desc("Temporary direcory"),
+  cl::desc("Temporary directory"),
   cl::value_desc("directory"),
   cl::cat(ToolTemplateCategory));
 
@@ -137,5 +137,13 @@ cl::opt<bool> SkipExcludedPPConditionalBlocks("skip-excluded-preprocessor-condit
   cl::desc("Enable default preprocessor behaviour by skipping undefined conditional blocks"),
   cl::value_desc("skip-excluded-preprocessor-conditional-blocks"),
   cl::cat(ToolTemplateCategory));
+
+cl::opt<std::string> CudaGpuArch("cuda-gpu-arch",
+  cl::desc("CUDA GPU architecture (e.g. sm_35);\nmay be specified more than once"),
+  cl::value_desc("value"),
+  cl::ZeroOrMore,
+  cl::Prefix,
+  cl::cat(ToolTemplateCategory));
+
 
 cl::extrahelp CommonHelp(ct::CommonOptionsParser::HelpMessage);

@@ -67,7 +67,6 @@ int devcheck(int  gpudevice, int rank)
   cudaError_t cudareturn;
   cudaDeviceProp deviceProp;
   cudaGetDeviceProperties(&deviceProp, gpudevice);
-  // CHECK: if (deviceProp.hipWarpSize <= 1)
   if (deviceProp.warpSize <= 1)
   {
     printf("rank %d: warning, CUDA Device Emulation (CPU) detected, exiting\n", rank);

@@ -4,9 +4,9 @@
 
 - [Installing pre-built packages](#installing-pre-built-packages)
   * [Prerequisites](#prerequisites)
-  * [AMD-hcc](#amd-hcc)
-  * [AMD-clang](#amd-clang)
-  * [NVIDIA-nvcc](#nvidia-nvcc)
+  * [HIP-hcc](#hip-hcc)
+  * [HIP-clang](#hip-clang)
+  * [HIP-nvcc](#hip-nvcc)
   * [Verify your installation](#verify-your-installation)
 - [Building HIP from source](#building-hip-from-source)
   * [HCC Options](#hcc-options)
@@ -21,12 +21,12 @@ HIP can be easily installed using pre-built binary packages using the package ma
 ## Prerequisites
 HIP code can be developed either on AMD ROCm platform using hcc or clang compiler, or a CUDA platform with nvcc installed:
 
-## AMD-hcc
+## HIP-hcc
 
 * Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
-* Install the "hip_hcc" package. This will install HCC and the HIP porting layer.
+* Install the "hip-hcc" package. This will install HCC and the HIP porting layer.
 ```
-apt-get install hip_hcc
+apt-get install hip-hcc
 ```
 
 * Default paths and environment variables:
@@ -42,20 +42,43 @@ apt-get install hip_hcc
 
 * Install the [rocm](http://gpuopen.com/getting-started-with-boltzmann-components-platforms-installation/) packages.  ROCm will install some of the necessary components, including the kernel driver, HSA runtime, etc.
 
-* Build LLVM/clang/lld by using the following repository and branch and following the general LLVM/clang build procedure. It is recommended to use -DCMAKE_INSTALL_PREFIX=/opt/rocm/llvm with cmake so that LLVM/clang/lld are installed to the default path expected by hipcc.
+* Build HIP-Clang
 
-   * LLVM: https://github.com/RadeonOpenCompute/llvm.git amd-common branch
-   * clang: https://github.com/RadeonOpenCompute/clang amd-common branch
-   * lld: https://github.com/RadeonOpenCompute/lld amd-common branch
-   
+```
+git clone https://github.com/llvm/llvm-project.git
+cd llvm-project/llvm/tools
+ln -s clang ../../clang
+ln -s lld ../../lld
+cd ../..
+mkdir -p build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=/opt/rocm/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=1 -DLLVM_TARGETS_TO_BUILD="AMDGPU;X86" ../llvm
+make -j
+sudo make install
+```
+
 * Build Rocm device library
 
-   * Checkout https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git master branch and build it with clang built from the last step.
-   
+```
+export PATH=/opt/rocm/llvm/bin:$PATH
+git clone -b master https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git
+cd ROCm-Device-Libs
+mkdir -p build && cd build
+CC=clang CXX=clang++ cmake -DLLVM_DIR=/opt/rocm/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_WERROR=1 -DLLVM_ENABLE_ASSERTIONS=1 ..
+make -j
+sudo make install
+```
+
 * Build HIP
 
-   * Checkout https://github.com/ROCm-Developer-Tools/HIP.git master branch and build it with HCC installed with ROCm packages. Please use -DHIP_COMPILER=clang with cmake to enable hip-clang.
-   
+```
+git clone -b master https://github.com/ROCm-Developer-Tools/HIP.git
+cd HIP
+mkdir -p build && cd build
+cmake -DCMAKE_INSTALL_PREFIX=/opt/rocm/hip -DHIP_COMPILER=clang -DCMAKE_BUILD_TYPE=Release ..
+make -j
+sudo make install
+```
+
 * Default paths and environment variables:
 
    * By default HIP looks for HSA in /opt/rocm/hsa (can be overridden by setting HSA_PATH environment variable) 
@@ -65,11 +88,11 @@ apt-get install hip_hcc
    * Optionally, consider adding /opt/rocm/bin to your PATH to make it easier to use the tools.
    * Optionally, set HIPCC_VERBOSE=7 to output the command line for compilation to make sure clang is used instead of hcc.
 
-## NVIDIA-nvcc
+## HIP-nvcc
 * Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
-* Install the "hip_nvcc" package.  This will install CUDA SDK and the HIP porting layer.
+* Install the "hip-nvcc" package.  This will install CUDA SDK and the HIP porting layer.
 ```
-apt-get install hip_nvcc
+apt-get install hip-nvcc
 ```
 
 * Default paths and environment variables:

@@ -26,15 +26,6 @@ THE SOFTWARE.
  * HIT_END
  */
 
-#define CHECK(cmd) \
-{\
-    hipError_t error = cmd;\
-    if(error != hipSuccess) {\
-        fprintf(stderr, "error: '%s' (%d) at %s:%d\n", hipGetErrorString(error), error, __FILE__, __LINE__);\
-        exit(EXIT_FAILURE);\
-    }\
-}
-#include "hip/hip_runtime.h"
 #include "test_common.h"
 
 #define SIZE 10
@@ -54,31 +45,31 @@ bool textureTest(enum hipArray_Format texFormat)
 {
     T hData[] = {65, 66, 67, 68, 69, 70, 71, 72,73,74};
     T *dData = NULL;
-    CHECK(hipMalloc((void **) &dData, sizeof(T)*SIZE));
-    CHECK(hipMemcpyHtoD((hipDeviceptr_t)dData, hData, sizeof(T)*SIZE));
+    HIPCHECK(hipMalloc((void **) &dData, sizeof(T)*SIZE));
+    HIPCHECK(hipMemcpyHtoD((hipDeviceptr_t)dData, hData, sizeof(T)*SIZE));
     
     textureReference* texRef = &textureNormalizedVal_1D;
-    CHECK(hipTexRefSetAddressMode(texRef, 0, hipAddressModeClamp));
-    CHECK(hipTexRefSetAddressMode(texRef, 1, hipAddressModeClamp));
-    CHECK(hipTexRefSetFilterMode(texRef, hipFilterModePoint));
-    CHECK(hipTexRefSetFlags(texRef, HIP_TRSF_NORMALIZED_COORDINATES)); 
-    CHECK(hipTexRefSetFormat(texRef, texFormat, 1));
+    HIPCHECK(hipTexRefSetAddressMode(texRef, 0, hipAddressModeClamp));
+    HIPCHECK(hipTexRefSetAddressMode(texRef, 1, hipAddressModeClamp));
+    HIPCHECK(hipTexRefSetFilterMode(texRef, hipFilterModePoint));
+    HIPCHECK(hipTexRefSetFlags(texRef, HIP_TRSF_NORMALIZED_COORDINATES)); 
+    HIPCHECK(hipTexRefSetFormat(texRef, texFormat, 1));
     
     HIP_ARRAY_DESCRIPTOR desc;
     desc.Width = SIZE;
     desc.Height = 1;
     desc.Format = texFormat;
     desc.NumChannels = 1;
-    CHECK(hipTexRefSetAddress2D(texRef, &desc, (hipDeviceptr_t)dData, sizeof(T)*SIZE));
+    HIPCHECK(hipTexRefSetAddress2D(texRef, &desc, (hipDeviceptr_t)dData, sizeof(T)*SIZE));
     
     bool testResult = true;
     float *dOutputData = NULL;
-    CHECK(hipMalloc((void **) &dOutputData, sizeof(float)*SIZE));
+    HIPCHECK(hipMalloc((void **) &dOutputData, sizeof(float)*SIZE));
  
     hipLaunchKernelGGL(HIP_KERNEL_NAME(normalizedValTextureTest), dim3(1,1,1), dim3(SIZE,1,1), 0, 0, SIZE, dOutputData);
 
     float *hOutputData = new float[SIZE];
-    CHECK(hipMemcpyDtoH(hOutputData, (hipDeviceptr_t)dOutputData, (sizeof(float)*SIZE)));
+    HIPCHECK(hipMemcpyDtoH(hOutputData, (hipDeviceptr_t)dOutputData, (sizeof(float)*SIZE)));
     
     for(int i = 0; i < SIZE; i++)
     {
@@ -91,6 +82,7 @@ bool textureTest(enum hipArray_Format texFormat)
     }
     hipFree(dData);
     hipFree(dOutputData);
+    hipUnbindTexture(textureNormalizedVal_1D);
     delete [] hOutputData;
     return testResult;
 }
@@ -99,9 +91,9 @@ int main(int argc, char** argv)
 {
     int device = 0;
     bool status = true;
-    CHECK(hipSetDevice(device));
+    HIPCHECK(hipSetDevice(device));
     hipDeviceProp_t props;
-    CHECK(hipGetDeviceProperties(&props, device));
+    HIPCHECK(hipGetDeviceProperties(&props, device));
     std::cout << "Device :: " << props.name << std::endl;
     #ifdef __HIP_PLATFORM_HCC__
     std::cout << "Arch - AMD GPU :: " << props.gcnArch << std::endl;
