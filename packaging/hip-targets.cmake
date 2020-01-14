@@ -66,7 +66,7 @@ add_library(hip::hip_hcc_static STATIC IMPORTED)
 
 find_path(HSA_HEADER hsa/hsa.h
   PATHS
-    "${HIP_ROOT_DIR}/../include"
+    "${HIP_ROOT_DIR}/../../include"
     "${ROCM_PATH}/include"
     /opt/rocm/include
 )
@@ -76,16 +76,16 @@ if (HSA_HEADER-NOTFOUND)
 endif()
 
 set_target_properties(hip::hip_hcc_static PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include;${HSA_HEADER}"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include;${HSA_HEADER}"
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/../include;${HSA_HEADER}"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/../include;${HSA_HEADER}"
 )
 
 # Create imported target hip::hip_hcc
 add_library(hip::hip_hcc SHARED IMPORTED)
 
 set_target_properties(hip::hip_hcc PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include;${HSA_HEADER}"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include;${HSA_HEADER}"
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/../include;${HSA_HEADER}"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/../include;${HSA_HEADER}"
 )
 
 # Create imported target hip::host
@@ -101,14 +101,14 @@ add_library(hip::device INTERFACE IMPORTED)
 if(HIP_COMPILER STREQUAL "hcc")
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host;hcc::hccrt;hcc::hc_am"
-  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/../include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/../include"
 )
 else()
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host"
-  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/../include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/../include"
 )
 endif()
 
