@@ -38,38 +38,54 @@ unset(_targetsNotDefined)
 unset(_expectedTargets)
 
 
-# The installation prefix configured by this project.
 if( DEFINED ENV{ROCM_PATH} )
-     set(_IMPORT_PREFIX "$ENV{ROCM_PATH}/hip")
-elseif(DEFINED ENV{HIP_PATH})
-     set(_IMPORT_PREFIX "$ENV{HIP_PATH}")
-else()
-     set(_IMPORT_PREFIX "/opt/rocm/hip")
+     set(ROCM_PATH "$ENV{ROCM_PATH}")
+endif()
+
+get_filename_component(_DIR "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
+
+# Set ROCM PATH from envinorment and default to /opt/rocm if not provided.
+set (HIP_ROOT_DIR)
+find_path(
+          HIP_ROOT_DIR
+          NAMES hipconfig
+          PATHS
+          ENV HIP_PATH
+          "${ROCM_PATH}/hip"
+          "${_DIR}/../../"
+          "/opt/rocm/hip"
+          PATH_SUFFIXES bin
+          DOC "HIP installed location"
+          )
+
+if (HIP_ROOT_DIR-NOTFOUND)
+  message (FATAL_ERROR "HIP not found! ROCM_PATH/HIP_PATH environment not set")
 endif()
 # Create imported target hip::hip_hcc_static
 add_library(hip::hip_hcc_static STATIC IMPORTED)
 
 find_path(HSA_HEADER hsa/hsa.h
   PATHS
-    "${_IMPORT_PREFIX}/../include"
+    "${HIP_ROOT_DIR}/../include"
+    "${ROCM_PATH}/include"
     /opt/rocm/include
 )
 
-if (NOT HSA_FOUND)
+if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
 set_target_properties(hip::hip_hcc_static PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include;${HSA_HEADER}"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include;${HSA_HEADER}"
 )
 
 # Create imported target hip::hip_hcc
 add_library(hip::hip_hcc SHARED IMPORTED)
 
 set_target_properties(hip::hip_hcc PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include;${HSA_HEADER}"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include;${HSA_HEADER}"
 )
 
 # Create imported target hip::host
@@ -85,14 +101,14 @@ add_library(hip::device INTERFACE IMPORTED)
 if(HIP_COMPILER STREQUAL "hcc")
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host;hcc::hccrt;hcc::hc_am"
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include"
 )
 else()
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host"
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_ROOT_DIR}/include"
 )
 endif()
 
@@ -108,7 +124,7 @@ foreach(f ${CONFIG_FILES})
 endforeach()
 
 # Cleanup temporary variables.
-set(_IMPORT_PREFIX)
+set(HIP_ROOT_DIR)
 
 # Loop over all imported files and verify that they actually exist
 foreach(target ${_IMPORT_CHECK_TARGETS} )

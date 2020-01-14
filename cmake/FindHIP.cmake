@@ -57,7 +57,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
             NAMES hipconfig
             PATHS
             $ENV{ROCM_PATH}/hip
-            ENV ROCM_PATH
             ENV HIP_PATH
             PATH_SUFFIXES bin
             DOC "HIP installed location"
@@ -96,7 +95,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         HIP_HIPCC_EXECUTABLE
         NAMES hipcc
         PATHS
-        $ENV{ROCM_PATH}/hip
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
@@ -116,7 +114,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         HIP_HIPCONFIG_EXECUTABLE
         NAMES hipconfig
         PATHS
-        $ENV{ROCM_PATH}/hip
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
@@ -136,7 +133,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         HIP_HIPCC_CMAKE_LINKER_HELPER
         NAMES hipcc_cmake_linker_helper
         PATHS
-        $ENV{ROCM_PATH}/hip
         "${HIP_ROOT_DIR}"
         ENV ROCM_PATH
         ENV HIP_PATH
