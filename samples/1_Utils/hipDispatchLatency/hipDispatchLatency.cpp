@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
+#include "hip/hip_ext.h"
 #include <iostream>
 #include <time.h>
 #include "ResultDatabase.h"
@@ -46,14 +47,7 @@ THE SOFTWARE.
 
 const unsigned p_tests = 0xfffffff;
 
-
-// HCC optimizes away fully NULL kernel calls, so run one that is nearly null:
-__global__ void NearlyNull(float* Ad) {
-    if (Ad) {
-        Ad[0] = 42;
-    }
-}
-
+__global__ void EmptyKernel() { }
 
 ResultDatabase resultDB;
 
@@ -61,7 +55,7 @@ ResultDatabase resultDB;
 void stopTest(hipEvent_t start, hipEvent_t stop, const char* msg, int iters) {
     float mS = 0;
     check(hipEventRecord(stop));
-    check(hipDeviceSynchronize());
+    check(hipEventSynchronize(stop));
     check(hipEventElapsedTime(&mS, start, stop));
     resultDB.AddResult(std::string(msg), "", "uS", mS * 1000 / iters);
     if (PRINT_PROGRESS & 0x1) {
@@ -75,69 +69,33 @@ void stopTest(hipEvent_t start, hipEvent_t stop, const char* msg, int iters) {
 
 int main() {
     hipError_t err;
-    float* Ad;
-    check(hipMalloc(&Ad, 4));
-
 
     hipStream_t stream;
     check(hipStreamCreate(&stream));
 
-
-    hipEvent_t start, sync, stop;
+    hipEvent_t start, stop;
     check(hipEventCreate(&start));
-    check(hipEventCreateWithFlags(&sync, hipEventBlockingSync));
     check(hipEventCreate(&stop));
-
 
     hipStream_t stream0 = 0;
 
-
     if (p_tests & 0x1) {
         hipEventRecord(start);
-        hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+        hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, start, stop, 0);
         stopTest(start, stop, "FirstKernelLaunch", 1);
     }
 
-
     if (p_tests & 0x2) {
         hipEventRecord(start);
-        hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+        hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, start, stop, 0);
         stopTest(start, stop, "SecondKernelLaunch", 1);
     }
-
-
-    if (p_tests & 0x4) {
-        for (int t = 0; t < TEST_ITERS; t++) {
-            hipEventRecord(start);
-            for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
-                hipEventRecord(sync);
-                hipEventSynchronize(sync);
-            }
-            stopTest(start, stop, "NullStreamASyncDispatchWait", DISPATCHES_PER_TEST);
-        }
-    }
-
-
-    if (p_tests & 0x10) {
-        for (int t = 0; t < TEST_ITERS; t++) {
-            hipEventRecord(start);
-            for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
-                hipEventRecord(sync);
-                hipEventSynchronize(sync);
-            }
-            stopTest(start, stop, "StreamASyncDispatchWait", DISPATCHES_PER_TEST);
-        }
-    }
-
-#if 1
 
     if (p_tests & 0x40) {
         for (int t = 0; t < TEST_ITERS; t++) {
             hipEventRecord(start);
             for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
+                hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, start, stop, 0);
             }
             stopTest(start, stop, "NullStreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
         }
@@ -147,7 +105,7 @@ int main() {
         for (int t = 0; t < TEST_ITERS; t++) {
             hipEventRecord(start);
             for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
+                hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, start, stop, 0);
             }
             stopTest(start, stop, "StreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
         }
@@ -155,8 +113,7 @@ int main() {
 #endif
     resultDB.DumpSummary(std::cout);
 
-
     check(hipEventDestroy(start));
-    check(hipEventDestroy(sync));
     check(hipEventDestroy(stop));
+    check(hipStreamDestroy(stream));
 }
