@@ -106,14 +106,6 @@ THE SOFTWARE.
             Vector data;
 
             __host__ __device__
-            Scalar_accessor() = default;
-
-            __host__ __device__
-            Scalar_accessor(T x) {
-                data[idx] = x;
-            }
-
-            __host__ __device__
             operator T() const noexcept { return data[idx]; }
             __host__ __device__
             operator T() const volatile noexcept { return data[idx]; }
