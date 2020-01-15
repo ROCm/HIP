@@ -312,7 +312,9 @@ hiprtcResult hiprtcDestroyProgram(hiprtcProgram* prog) {
   if (prog == NULL) {
      HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
+
+  // Release program. hiprtcProgram is a double pointer so free *prog
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(*prog));
 
   program->release();
 
