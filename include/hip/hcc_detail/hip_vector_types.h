@@ -323,7 +323,7 @@ THE SOFTWARE.
         using Native_vec_ = __NATIVE_VECTOR__(2, T);
 
         union
-        #if __has_attribute(ext_vector_type)
+        #if !__has_attribute(ext_vector_type)
             alignas(hip_impl::next_pot(2 * sizeof(T)))
         #endif
         {
@@ -508,7 +508,7 @@ THE SOFTWARE.
         using Native_vec_ = __NATIVE_VECTOR__(4, T);
 
         union
-        #if __has_attribute(ext_vector_type)
+        #if !__has_attribute(ext_vector_type)
             alignas(hip_impl::next_pot(4 * sizeof(T)))
         #endif
         {
