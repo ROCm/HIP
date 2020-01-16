@@ -47,6 +47,9 @@ set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_PATH} <FLA
 ###############################################################################
 # FIND: HIP and associated helper binaries
 ###############################################################################
+
+get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
+
 # HIP is supported on Linux only
 if(UNIX AND NOT APPLE AND NOT CYGWIN)
     # Search for HIP installation
@@ -54,33 +57,15 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         # Search in user specified path first
         find_path(
             HIP_ROOT_DIR
-            NAMES hipconfig
+            NAMES bin/hipconfig
             PATHS
-            $ENV{ROCM_PATH}/hip
+            "$ENV{ROCM_PATH}/hip"
             ENV HIP_PATH
-            PATH_SUFFIXES bin
+            ${_IMPORT_PREFIX}
+            /opt/rocm/hip
             DOC "HIP installed location"
             NO_DEFAULT_PATH
             )
-        # Now search in default path
-        find_path(
-            HIP_ROOT_DIR
-            NAMES hipconfig
-            PATHS
-            $ENV{ROCM_PATH}/hip
-            /opt/rocm
-            /opt/rocm/hip
-            PATH_SUFFIXES bin
-            DOC "HIP installed location"
-            )
-
-        # Check if we found HIP installation
-        if(HIP_ROOT_DIR)
-            # If so, fix the path
-            string(REGEX REPLACE "[/\\\\]?bin[64]*[/\\\\]?$" "" HIP_ROOT_DIR ${HIP_ROOT_DIR})
-            # And push it back to the cache
-            set(HIP_ROOT_DIR ${HIP_ROOT_DIR} CACHE PATH "HIP installed location" FORCE)
-        endif()
         if(NOT EXISTS ${HIP_ROOT_DIR})
             if(HIP_FIND_REQUIRED)
                 message(FATAL_ERROR "Specify HIP_ROOT_DIR")
@@ -88,6 +73,9 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
                 message("HIP_ROOT_DIR not found or specified")
             endif()
         endif()
+        # And push it back to the cache
+        set(HIP_ROOT_DIR ${HIP_ROOT_DIR} CACHE PATH "HIP installed location" FORCE)
+        message("Found HIP at ${HIP_ROOT_DIR}")
     endif()
 
     # Find HIPCC executable
