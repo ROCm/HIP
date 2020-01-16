@@ -37,6 +37,7 @@ __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
 namespace hip_internal {
 
 namespace {
+
     inline
     const char* hsa_to_string(hsa_status_t err) noexcept
     {
@@ -791,21 +792,13 @@ hipError_t allocImage(TlsData* tls,hsa_ext_image_geometry_t geometry, int width,
       hsa_amd_memory_pool_t* allocRegion = static_cast<hsa_amd_memory_pool_t*>(acc.get_hsa_am_region());
       hsa_amd_memory_pool_get_info(*allocRegion, HSA_AMD_MEMORY_POOL_INFO_RUNTIME_ALLOC_GRANULE, &allocGranularity);
 
-      hsa_ext_image_descriptor_t imageDescriptor;
-      imageDescriptor.geometry = geometry;
-      imageDescriptor.width = width;
-      imageDescriptor.height = height;
-      imageDescriptor.depth = depth;
-      imageDescriptor.array_size = array_size;
-      imageDescriptor.format.channel_order = channelOrder;
-      imageDescriptor.format.channel_type = channelType;
+      size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(width, IMAGE_PITCH_ALIGNMENT);
+      if(HSA_EXT_IMAGE_GEOMETRY_2DA == geometry)
+          imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (array_size == 0 ? 1 : array_size) ;
+      else
+          imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (depth == 0 ? 1 : depth) ;
 
-      hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
-      hsa_status_t status =
-         hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
-      if(imageInfo.size == 0 || HSA_STATUS_SUCCESS != status){
-         return hipErrorRuntimeOther;
-      }
+      imageInfo.alignment = IMAGE_PITCH_ALIGNMENT;
       size_t alignment = imageInfo.alignment <= allocGranularity ? 0 : imageInfo.alignment;
       const unsigned am_flags = 0;
       *ptr = hip_internal::allocAndSharePtr("device_array", imageInfo.size, ctx,
@@ -898,55 +891,31 @@ extern void getChannelOrderAndType(const hipChannelFormatDesc& desc,
 
 hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,int width, int height, int depth, hipChannelFormatDesc desc, hsa_ext_image_data_info_t &imageInfo,int array_size __dparm(0))
 {
-    hsa_ext_image_descriptor_t imageDescriptor;
-    imageDescriptor.geometry = geometry;
-    imageDescriptor.width = width;
-    imageDescriptor.height = height;
-    imageDescriptor.depth = depth;
-    imageDescriptor.array_size = array_size;
     hsa_ext_image_channel_order_t channelOrder;
     hsa_ext_image_channel_type_t channelType;
     getChannelOrderAndType(desc, hipReadModeElementType, &channelOrder, &channelType);
-    imageDescriptor.format.channel_order = channelOrder;
-    imageDescriptor.format.channel_type = channelType;
 
-    hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
-    // Get the current device agent.
-    hc::accelerator acc;
-    hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
-    if (!agent)
-        return hipErrorInvalidHandle;
-    hsa_status_t status =
-        hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
-    if(HSA_STATUS_SUCCESS != status){
-        return hipErrorRuntimeOther;
-    }
-
+    size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(width, IMAGE_PITCH_ALIGNMENT);
+    if(HSA_EXT_IMAGE_GEOMETRY_2DA == geometry)
+       imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (array_size == 0 ? 1 : array_size);
+    else
+       imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (depth == 0 ? 1 : depth);
+    imageInfo.alignment = IMAGE_PITCH_ALIGNMENT;
     return hipSuccess;
 }
 
 hipError_t GetImageInfo(hsa_ext_image_geometry_t geometry,size_t width, size_t height, size_t depth, hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType, hsa_ext_image_data_info_t &imageInfo,size_t array_size __dparm(0))
 {
-    hsa_ext_image_descriptor_t imageDescriptor;
-    imageDescriptor.geometry = geometry;
-    imageDescriptor.width = width;
-    imageDescriptor.height = height;
-    imageDescriptor.depth = depth;
-    imageDescriptor.array_size = array_size;
-    imageDescriptor.format.channel_order = channelOrder;
-    imageDescriptor.format.channel_type = channelType;
 
-    // Get the current device agent.
-    hc::accelerator acc;
-    hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
-    if (!agent)
-        return hipErrorInvalidResourceHandle;
-    hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
-    hsa_status_t status =
-        hsa_ext_image_data_get_info_with_layout(*agent, &imageDescriptor, permission, HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &imageInfo);
-    if(HSA_STATUS_SUCCESS != status){
-        return hipErrorRuntimeOther;
-    }
+    size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(width, IMAGE_PITCH_ALIGNMENT);
+
+    if(HSA_EXT_IMAGE_GEOMETRY_2DA == geometry)
+       imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (array_size == 0 ? 1 : array_size);
+    else
+       imageInfo.size = rowPitch * (height == 0 ? 1 : height) * (depth == 0 ? 1 : depth);
+
+    imageInfo.alignment = IMAGE_PITCH_ALIGNMENT;
+
     return hipSuccess;
 }
 
