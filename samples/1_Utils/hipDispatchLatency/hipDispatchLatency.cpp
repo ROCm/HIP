@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
+#ifdef __HIP_PLATFORM_HCC__
 #include "hip/hip_ext.h"
+#endif
 #include <iostream>
 #include <time.h>
 #include "ResultDatabase.h"
@@ -81,13 +83,21 @@ int main() {
 
     if (p_tests & 0x1) {
         hipEventRecord(start);
+#ifdef __HIP_PLATFORM_HCC__
         hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, start, stop, 0);
+#else
+        hipLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0);
+#endif
         stopTest(start, stop, "FirstKernelLaunch", 1);
     }
 
     if (p_tests & 0x2) {
         hipEventRecord(start);
+#ifdef __HIP_PLATFORM_HCC__
         hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, start, stop, 0);
+#else
+        hipLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0);
+#endif
         stopTest(start, stop, "SecondKernelLaunch", 1);
     }
 
@@ -95,7 +105,11 @@ int main() {
         for (int t = 0; t < TEST_ITERS; t++) {
             hipEventRecord(start);
             for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
+#ifdef __HIP_PLATFORM_HCC__
                 hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, start, stop, 0);
+#else
+                hipLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0);
+#endif
             }
             stopTest(start, stop, "NullStreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
         }
@@ -105,12 +119,15 @@ int main() {
         for (int t = 0; t < TEST_ITERS; t++) {
             hipEventRecord(start);
             for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
+#ifdef __HIP_PLATFORM_HCC__
                 hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, start, stop, 0);
+#else
+                hipLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream);
+#endif
             }
             stopTest(start, stop, "StreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
         }
     }
-#endif
     resultDB.DumpSummary(std::cout);
 
     check(hipEventDestroy(start));
