@@ -295,6 +295,10 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                               pTexDesc->normalizedCoords);
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
+
+        if(hipResourceTypePitch2D != pResDesc->resType)
+            pitch = getElementSize(channelOrder, channelType) * alignUp(imageDescriptor.width, IMAGE_PITCH_ALIGNMENT);
+
         if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(
                                       *agent, &imageDescriptor, devPtr, permission,
                                       HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, pitch, 0, &(pTexture->image)) ||
@@ -430,9 +434,11 @@ hipError_t ihipBindTextureImpl(TlsData *tls_, int dim, enum hipTextureReadMode r
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
+        size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(size, IMAGE_PITCH_ALIGNMENT);
+
         if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(
                                       *agent, &imageDescriptor, devPtr, permission,
-                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
+                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, rowPitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return hipErrorRuntimeOther;
@@ -502,6 +508,9 @@ hipError_t ihipBindTexture2DImpl(TlsData *tls, int dim, enum hipTextureReadMode 
         fillSamplerDescriptor(samplerDescriptor, addressMode, filterMode, normalizedCoords);
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
+
+        if( 0 == pitch)
+            pitch = getElementSize(channelOrder, channelType) * alignUp(width, IMAGE_PITCH_ALIGNMENT);
 
         if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(
                                       *agent, &imageDescriptor, devPtr, permission,
@@ -606,9 +615,11 @@ hipError_t ihipBindTextureToArrayImpl(TlsData *tls_, int dim, enum hipTextureRea
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
+        size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(imageDescriptor.width, IMAGE_PITCH_ALIGNMENT);
+
         if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(
                                       *agent, &imageDescriptor, array->data, permission,
-                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
+                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, rowPitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return hipErrorRuntimeOther;

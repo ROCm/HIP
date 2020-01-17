@@ -301,7 +301,13 @@ THE SOFTWARE.
 
         union {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
+#endif
         };
 
         using value_type = T;
@@ -328,8 +334,15 @@ THE SOFTWARE.
         #endif
         {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+                T y;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
             hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
+#endif
         };
 
         using value_type = T;
@@ -513,10 +526,19 @@ THE SOFTWARE.
         #endif
         {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+                T y;
+                T z;
+                T w;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
             hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
             hip_impl::Scalar_accessor<T, Native_vec_, 2> z;
             hip_impl::Scalar_accessor<T, Native_vec_, 3> w;
+#endif            
         };
 
         using value_type = T;
