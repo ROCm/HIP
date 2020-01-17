@@ -1543,7 +1543,8 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
 hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync) {
     hipError_t e = hipSuccess;
     if(p) {
-        size_t byteSize, width, height, depth, widthInBytes, srcPitch, dstPitch, ySize;
+        size_t byteSize, width, height, depth, widthInBytes, srcPitch, dstPitch, srcYsize, dstYsize;
+        size_t srcXoffset, srcYoffset, srcZoffset, dstXoffset, dstYoffset, dstZoffset;
         hipChannelFormatDesc desc;
         void* srcPtr;void* dstPtr;
         if (p->dstArray != nullptr) {
@@ -1571,9 +1572,16 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                 widthInBytes = p->extent.width * byteSize;
                 srcPitch = p->srcPtr.pitch;
                 srcPtr = p->srcPtr.ptr;
-                ySize = p->srcPtr.ysize;
+                srcYsize = p->srcPtr.ysize;
+                dstYsize = p->dstPtr.ysize;
                 desc = p->dstArray->desc;
                 dstPtr = p->dstArray->data;
+                dstXoffset = p->dstPos.x;
+                dstYoffset = p->dstPos.y;
+                dstZoffset = p->dstPos.z;
+                srcXoffset = p->srcPos.x;
+                srcYoffset = p->srcPos.y;
+                srcZoffset = p->srcPos.z;
                 hsa_ext_image_data_info_t imageInfo;
                 if(hipTextureType2DLayered == p->dstArray->textureType)
                     GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, desc, imageInfo, depth);
@@ -1585,6 +1593,12 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                 height = p->Height;
                 widthInBytes = p->WidthInBytes;
                 width =  p->dstArray->width;
+                dstXoffset = p->dstXInBytes;
+                dstYoffset = p->dstY;
+                dstZoffset = p->dstZ;
+                srcXoffset = p->srcXInBytes;
+                srcYoffset = p->srcY;
+                srcZoffset = p->srcZ;
                 hsa_ext_image_channel_order_t channelOrder;
                 switch(p->dstArray->NumChannels) {
                     case 2:
@@ -1605,7 +1619,8 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
                 e = ihipArrayToImageFormat(p->dstArray->Format,channelType);
                 srcPitch = p->srcPitch;
                 srcPtr = (void*)p->srcHost;
-                ySize = p->srcHeight;
+                srcYsize = p->srcHeight;
+                dstYsize = p->dstHeight;
                 dstPtr = p->dstArray->data;
                 hsa_ext_image_data_info_t imageInfo;
                 if(hipTextureType2DLayered == p->dstArray->textureType)
@@ -1622,8 +1637,15 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             srcPitch = p->srcPtr.pitch;
             srcPtr = p->srcPtr.ptr;
             dstPtr = p->dstPtr.ptr;
-            ySize = p->srcPtr.ysize;
+            srcYsize = p->srcPtr.ysize;
+            dstYsize = p->dstPtr.ysize;
             dstPitch = p->dstPtr.pitch;
+            dstXoffset = p->dstPos.x;
+            dstYoffset = p->dstPos.y;
+            dstZoffset = p->dstPos.z;
+            srcXoffset = p->srcPos.x;
+            srcYoffset = p->srcPos.y;
+            srcZoffset = p->srcPos.z;
         }
 
         stream = ihipSyncAndResolveStream(stream);
@@ -1636,11 +1658,10 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             } else {
                 for (int i = 0; i < depth; i++) {
                     for (int j = 0; j < height; j++) {
-                        // TODO: p->srcPos or p->dstPos are not 0.
                         unsigned char* src =
-                             (unsigned char*)srcPtr + i * ySize * srcPitch + j * srcPitch;
+                             (unsigned char*)srcPtr + (i + srcZoffset) * srcYsize * srcPitch + (j + srcYoffset) * srcPitch + srcXoffset;
                         unsigned char* dst =
-                             (unsigned char*)dstPtr + i * height * dstPitch + j * dstPitch;
+                             (unsigned char*)dstPtr + (i + dstZoffset) * dstYsize * dstPitch + (j + dstYoffset) * dstPitch + dstXoffset;
                         if(isAsync)
                             stream->locked_copyAsync(dst, src, widthInBytes, p->kind);
                         else
