@@ -91,6 +91,57 @@ extern int HIP_DUMP_CODE_OBJECT;
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
 
+#define IMAGE_PITCH_ALIGNMENT 256
+template <typename T> inline T alignDown(T value, size_t alignment) {
+    return (T)(value & ~(alignment - 1));
+}
+
+template <typename T> inline T* alignDown(T* value, size_t alignment) {
+    return (T*)alignDown((intptr_t)value, alignment);
+}
+
+template <typename T> inline T alignUp(T value, size_t alignment) {
+    return alignDown((T)(value + alignment - 1), alignment);
+}
+
+template <typename T> inline T* alignUp(T* value, size_t alignment) {
+    return (T*)alignDown((intptr_t)(value + alignment - 1), alignment);
+}
+
+size_t getNumChannels(hsa_ext_image_channel_order_t channelOrder) {
+    switch (channelOrder) {
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RG:
+        return 2;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RGB:
+        return 3;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA:
+        return 4;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_R:
+      default:
+        return 1;
+  }
+}
+
+size_t getElementSize(hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType) {
+    size_t bytesPerPixel = getNumChannels(channelOrder);
+    switch (channelType) {
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT8:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT8:
+        break;
+
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT32:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT32:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_FLOAT:
+        bytesPerPixel *= 4;
+        break;
+
+      default:
+        bytesPerPixel *= 2;
+        break;
+    }
+    return bytesPerPixel;
+}
+
 // Class to assign a short TID to each new thread, for HIP debugging purposes.
 class TidInfo {
    public:
@@ -495,9 +546,10 @@ struct LockedBase {
 
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
-   public:
+public:
     ihipStreamCriticalBase_t(ihipStream_t* parentStream, hc::accelerator_view av)
-        : _av(av), _parent(parentStream){};
+        :  _parent{parentStream}, _av{av}, _last_op_was_a_copy{false}
+    {}
 
     ~ihipStreamCriticalBase_t() {}
 
@@ -519,12 +571,9 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
         return gotLock ? this : nullptr;
     };
 
-   public:
     ihipStream_t* _parent;
-
     hc::accelerator_view _av;
-
-   private:
+    bool _last_op_was_a_copy;
 };
 
 
@@ -572,7 +621,7 @@ class ihipStream_t {
     LockedAccessor_StreamCrit_t lockopen_preKernelCommand();
     void lockclose_postKernelCommand(const char* kernelName, hc::accelerator_view* av, bool unlockNotNeeded = 0);
 
-
+    void locked_wait(bool& waited);
     void locked_wait();
 
     hc::accelerator_view* locked_getAv() {

@@ -34,6 +34,14 @@ THE SOFTWARE.
 #include "ArgParse.h"
 #include "StringUtils.h"
 #include "llvm/Support/Debug.h"
+#include "clang/Basic/Diagnostic.h"
+#include "clang/Basic/DiagnosticIDs.h"
+#include "clang/Basic/DiagnosticOptions.h"
+#include "clang/Driver/Driver.h"
+#include "clang/Driver/Compilation.h"
+#include "clang/Driver/Tool.h"
+#include "clang/Frontend/TextDiagnosticPrinter.h"
+
 #if LLVM_VERSION_MAJOR < 8
 #include "llvm/Support/Path.h"
 #endif
@@ -41,6 +49,122 @@ THE SOFTWARE.
 constexpr auto DEBUG_TYPE = "cuda2hip";
 
 namespace ct = clang::tooling;
+
+void cleanupHipifyOptions(std::vector<const char*> &args) {
+  std::vector<std::string> hipifyOptions = {"-perl", "-python", "-roc", "-inplace",
+                                            "-no-backup", "-no-output", "-print-stats",
+                                            "-print-stats-csv", "-examine", "-save-temps",
+                                            "-skip-excluded-preprocessor-conditional-blocks"};
+  for (const auto &a : hipifyOptions) {
+    args.erase(std::remove(args.begin(), args.end(), a), args.end());
+    args.erase(std::remove(args.begin(), args.end(), "-" + a), args.end());
+  }
+  std::vector<std::string> hipifyDirOptions = {"-o-dir", "-o-hipify-perl-dir", "-o-stats",
+                                               "-o-python-map-dir", "-temp-dir"};
+  for (const auto &a : hipifyDirOptions) {
+    // remove all pairs of arguments "-option value"
+    auto it = args.erase(std::remove(args.begin(), args.end(), a), args.end());
+    if (it != args.end()) {
+      args.erase(it);
+    }
+    // remove all pairs of arguments "--option value"
+    it = args.erase(std::remove(args.begin(), args.end(), "-" + a), args.end());
+    if (it != args.end()) {
+      args.erase(it);
+    }
+    // remove all "-option=value" and "--option=value"
+    args.erase(
+      std::remove_if(args.begin(), args.end(),
+        [a](const std::string &s) { return s.find(a + "=") == 0 || s.find("-" + a + "=") == 0; }
+      ),
+      args.end()
+    );
+  }
+}
+
+void sortInputFiles(int argc, const char **argv, std::vector<std::string> &files) {
+  if (files.size() < 2) return;
+  IntrusiveRefCntPtr<clang::DiagnosticOptions> diagOpts(new clang::DiagnosticOptions());
+  clang::TextDiagnosticPrinter diagClient(llvm::errs(), &*diagOpts);
+  clang::DiagnosticsEngine Diagnostics(IntrusiveRefCntPtr<clang::DiagnosticIDs>(new clang::DiagnosticIDs()), &*diagOpts, &diagClient, false);
+  std::unique_ptr<clang::driver::Driver> driver(new clang::driver::Driver("", "nvptx64-nvidia-cuda", Diagnostics));
+  std::vector<const char*> Args(argv, argv + argc);
+  cleanupHipifyOptions(Args);
+  std::unique_ptr<clang::driver::Compilation> C(driver->BuildCompilation(Args));
+  std::vector<std::string> sortedFiles;
+  for (const auto &J : C->getJobs()) {
+    if (std::string(J.getCreator().getName()) != "clang") continue;
+    const auto &JA = J.getArguments();
+    for (size_t i = 0; i < JA.size(); ++i) {
+      const auto &A = std::string(JA[i]);
+      if (std::find(files.begin(), files.end(), A) != files.end() &&
+        i > 0 && std::string(JA[i - 1]) == "-main-file-name") {
+        sortedFiles.push_back(A);
+      }
+    }
+  }
+  if (sortedFiles.empty()) return;
+  std::reverse(sortedFiles.begin(), sortedFiles.end());
+  files.assign(sortedFiles.begin(), sortedFiles.end());
+}
+
+void appendArgumentsAdjusters(ct::RefactoringTool &Tool, const std::string &sSourceAbsPath) {
+  if (!IncludeDirs.empty()) {
+    for (std::string s : IncludeDirs) {
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::BEGIN));
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-I", ct::ArgumentInsertPosition::BEGIN));
+    }
+  }
+  if (!MacroNames.empty()) {
+    for (std::string s : MacroNames) {
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::BEGIN));
+      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::BEGIN));
+    }
+  }
+  // Includes for clang's CUDA wrappers for using by packaged hipify-clang
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include", ct::ArgumentInsertPosition::BEGIN));
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include/cuda_wrappers", ct::ArgumentInsertPosition::BEGIN));
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));
+  // Ensure at least c++11 is used.
+  std::string stdCpp = "-std=c++11";
+#if defined(_MSC_VER)
+  stdCpp = "-std=c++14";
+#endif
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(stdCpp.c_str(), ct::ArgumentInsertPosition::BEGIN));
+  std::string sInclude = "-I" + sys::path::parent_path(sSourceAbsPath).str();
+#if defined(HIPIFY_CLANG_RES)
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES, ct::ArgumentInsertPosition::BEGIN));
+#endif
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-fno-delayed-template-parsing", ct::ArgumentInsertPosition::BEGIN));
+  if (llcompat::pragma_once_outside_header()) {
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-Wno-pragma-once-outside-header", ct::ArgumentInsertPosition::BEGIN));
+  }
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
+  if (!CudaGpuArch.empty()) {
+    std::string sCudaGpuArch = "--cuda-gpu-arch=" + CudaGpuArch;
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaGpuArch.c_str(), ct::ArgumentInsertPosition::BEGIN));
+  }
+  if (!CudaPath.empty()) {
+    std::string sCudaPath = "--cuda-path=" + CudaPath;
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaPath.c_str(), ct::ArgumentInsertPosition::BEGIN));
+  }
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("cuda", ct::ArgumentInsertPosition::BEGIN));
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-x", ct::ArgumentInsertPosition::BEGIN));
+  if (Verbose) {
+    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-v", ct::ArgumentInsertPosition::END));
+  }
+  Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
+}
+
+bool generatePython() {
+  bool bToRoc = TranslateToRoc;
+  TranslateToRoc = true;
+  bool bToPython = python::generate(GeneratePython);
+  TranslateToRoc = bToRoc;
+  return bToPython;
+}
 
 int main(int argc, const char **argv) {
   std::vector<const char*> new_argv(argv, argv + argc);
@@ -64,11 +188,7 @@ int main(int argc, const char **argv) {
     llvm::errs() << "\n" << sHipify << sError << "hipify-perl generating failed" << "\n";
     return 1;
   }
-  bool bToRoc = TranslateToRoc;
-  TranslateToRoc = true;
-  bool bToPython = python::generate(GeneratePython);
-  TranslateToRoc = bToRoc;
-  if (!bToPython) {
+  if (!generatePython()) {
     llvm::errs() << "\n" << sHipify << sError << "hipify-python generating failed" << "\n";
     return 1;
   }
@@ -119,7 +239,7 @@ int main(int argc, const char **argv) {
   }
   // Arguments for the Statistics print routines.
   std::unique_ptr<std::ostream> csv = nullptr;
-  llvm::raw_ostream* statPrint = nullptr;
+  llvm::raw_ostream *statPrint = nullptr;
   bool create_csv = false;
   if (!OutputStatsFilename.empty()) {
     PrintStatsCSV = true;
@@ -139,7 +259,8 @@ int main(int argc, const char **argv) {
   if (PrintStats) {
     statPrint = &llvm::errs();
   }
-  for (const auto & src : fileSources) {
+  sortInputFiles(argc, argv, fileSources);
+  for (const auto &src : fileSources) {
     // Create a copy of the file to work on. When we're done, we'll move this onto the
     // output (which may mean overwriting the input, if we're in-place).
     // Should we fail for some reason, we'll just leak this file and not corrupt the input.
@@ -192,56 +313,10 @@ int main(int argc, const char **argv) {
     // because that'll break relative includes, and we don't want to overwrite the input file.
     // So what we do is operate on a copy, which we then move to the output.
     ct::RefactoringTool Tool(OptionsParser.getCompilations(), std::string(tmpFile.c_str()));
-    ct::Replacements& replacementsToUse = llcompat::getReplacements(Tool, tmpFile.c_str());
+    ct::Replacements &replacementsToUse = llcompat::getReplacements(Tool, tmpFile.c_str());
     ReplacementsFrontendActionFactory<HipifyAction> actionFactory(&replacementsToUse);
-    if (!IncludeDirs.empty()) {
-      for (std::string s : IncludeDirs) {
-        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::BEGIN));
-        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-I", ct::ArgumentInsertPosition::BEGIN));
-      }
-    }
-    if (!MacroNames.empty()) {
-      for (std::string s : MacroNames) {
-        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::BEGIN));
-        Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-D", ct::ArgumentInsertPosition::BEGIN));
-      }
-    }
-    // Includes for clang's CUDA wrappers for using by packaged hipify-clang
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include", ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include/cuda_wrappers", ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));
-    // Ensure at least c++11 is used.
-    std::string stdCpp = "-std=c++11";
-#if defined(_MSC_VER)
-    stdCpp = "-std=c++14";
-#endif
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(stdCpp.c_str(), ct::ArgumentInsertPosition::BEGIN));
-    std::string sInclude = "-I" + sys::path::parent_path(sSourceAbsPath).str();
-#if defined(HIPIFY_CLANG_RES)
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-resource-dir=" HIPIFY_CLANG_RES, ct::ArgumentInsertPosition::BEGIN));
-#endif
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sInclude.c_str(), ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-fno-delayed-template-parsing", ct::ArgumentInsertPosition::BEGIN));
-    if (llcompat::pragma_once_outside_header()) {
-      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-Wno-pragma-once-outside-header", ct::ArgumentInsertPosition::BEGIN));
-    }
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("--cuda-host-only", ct::ArgumentInsertPosition::BEGIN));
-    if (!CudaGpuArch.empty()) {
-      std::string sCudaGpuArch = "--cuda-gpu-arch=" + CudaGpuArch;
-      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaGpuArch.c_str(), ct::ArgumentInsertPosition::BEGIN));
-    }
-    if (!CudaPath.empty()) {
-      std::string sCudaPath = "--cuda-path=" + CudaPath;
-      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(sCudaPath.c_str(), ct::ArgumentInsertPosition::BEGIN));
-    }
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("cuda", ct::ArgumentInsertPosition::BEGIN));
-    Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-x", ct::ArgumentInsertPosition::BEGIN));
-    if (Verbose) {
-      Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-v", ct::ArgumentInsertPosition::END));
-    }
-    Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
-    Statistics& currentStat = Statistics::current();
+    appendArgumentsAdjusters(Tool, sSourceAbsPath);
+    Statistics &currentStat = Statistics::current();
     // Hipify _all_ the things!
     if (Tool.runAndSave(&actionFactory)) {
       currentStat.hasErrors = true;

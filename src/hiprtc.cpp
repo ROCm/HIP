@@ -35,7 +35,6 @@ THE SOFTWARE.
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
-#include <experimental/filesystem>
 #include <fstream>
 #include <future>
 #include <iterator>
@@ -43,11 +42,13 @@ THE SOFTWARE.
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <iostream>
+#include <sys/stat.h>
 
 const char* hiprtcGetErrorString(hiprtcResult x)
 {
@@ -79,6 +80,20 @@ const char* hiprtcGetErrorString(hiprtcResult x)
     default: throw std::logic_error{"Invalid HIPRTC result."};
     };
 }
+
+namespace hip_impl {
+inline bool create_directory(const std::string& path) {
+    mode_t mode = 0755;
+    int ret = mkdir(path.c_str(), mode);
+    if (ret == 0) return true;
+    return false;
+}
+
+inline bool fileExists (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+}  // namespace hip_impl
 
 namespace
 {
@@ -143,7 +158,9 @@ struct _hiprtcProgram {
     {
         using namespace std;
 
-        name = hip_impl::demangle(name.c_str());
+        char* demangled = hip_impl::demangle(name.c_str());
+        name.assign(demangled == nullptr ? "" : demangled);
+        free(demangled);
 
         if (name.empty()) return name;
 
@@ -194,8 +211,7 @@ struct _hiprtcProgram {
     }
 
     // MANIPULATORS
-    bool compile(const std::vector<std::string>& args,
-                 const std::experimental::filesystem::path& program_folder)
+    bool compile(const std::vector<std::string>& args)
     {
         using namespace ELFIO;
         using namespace redi;
@@ -286,9 +302,19 @@ struct _hiprtcProgram {
         return true;
     }
 
+    void replaceExtension(std::string& fileName, const std::string &ext) const {
+        auto res = fileName.rfind('.');
+        auto sloc = fileName.rfind('/'); // slash location
+        if (res != std::string::npos && (res > sloc || sloc == std::string::npos)) {
+            fileName.replace(fileName.begin() + res, fileName.end(), ext);
+        } else {
+            fileName += ext;
+        }
+    }
+
     // ACCESSORS
-    std::experimental::filesystem::path writeTemporaryFiles(
-        const std::experimental::filesystem::path& programFolder) const
+    std::string writeTemporaryFiles(
+        const std::string& programFolder) const
     {
         using namespace std;
 
@@ -296,12 +322,13 @@ struct _hiprtcProgram {
         transform(headers.cbegin(), headers.cend(), begin(fut),
                   [&](const pair<string, string>& x) {
             return async([&]() {
-                ofstream h{programFolder / x.first};
+                ofstream h{programFolder + '/' + x.first};
                 h.write(x.second.data(), x.second.size());
             });
         });
 
-        auto tmp{(programFolder / name).replace_extension(".cpp")};
+        auto tmp{(programFolder + '/' + name)};
+        replaceExtension(tmp, ".cpp");
         ofstream{tmp}.write(source.data(), source.size());
 
         return tmp;
@@ -354,19 +381,14 @@ namespace
 {
     class Unique_temporary_path {
         // DATA
-        std::experimental::filesystem::path path_{};
+        std::string path_{};
     public:
         // CREATORS
         Unique_temporary_path() : path_{std::tmpnam(nullptr)}
         {
-            while (std::experimental::filesystem::exists(path_)) {
+            while (hip_impl::fileExists(path_)) {
                 path_ = std::tmpnam(nullptr);
             }
-        }
-        Unique_temporary_path(const std::string& extension)
-            : Unique_temporary_path{}
-        {
-            path_.replace_extension(extension);
         }
 
         Unique_temporary_path(const Unique_temporary_path&) = default;
@@ -374,7 +396,8 @@ namespace
 
         ~Unique_temporary_path() noexcept
         {
-            std::experimental::filesystem::remove_all(path_);
+            std::string s("rm -r " + path_);
+            system(s.c_str());
         }
 
         // MANIPULATORS
@@ -383,7 +406,7 @@ namespace
         Unique_temporary_path& operator=(Unique_temporary_path&&) = default;
 
         // ACCESSORS
-        const std::experimental::filesystem::path& path() const noexcept
+        const std::string& path() const noexcept
         {
             return path_;
         }
@@ -392,18 +415,16 @@ namespace
 
 namespace hip_impl
 {
-    inline
-    std::string demangle(const char* x)
+    char* demangle(const char* x)
     {
-        if (!x) return {};
+        if (!x) return nullptr;
 
         int s{};
-        std::unique_ptr<char, decltype(std::free)*> tmp{
-            abi::__cxa_demangle(x, nullptr, nullptr, &s), std::free};
+        char* tmp = abi::__cxa_demangle(x, nullptr, nullptr, &s);
 
-        if (s != 0) return {};
+        if (s != 0) return nullptr;
 
-        return tmp.get();
+        return tmp;
     }
 } // Namespace hip_impl.
 
@@ -483,12 +504,12 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
         getenv("HIP_PATH") ? (getenv("HIP_PATH") + string{"/bin/hipcc"})
                            : "/opt/rocm/bin/hipcc"};
 
-    if (!experimental::filesystem::exists(hipcc)) {
+    if (!hip_impl::fileExists(hipcc)) {
         return HIPRTC_ERROR_INTERNAL_ERROR;
     }
 
     Unique_temporary_path tmp{};
-    experimental::filesystem::create_directory(tmp.path());
+    hip_impl::create_directory(tmp.path());
 
     const auto src{p->writeTemporaryFiles(tmp.path())};
 
@@ -499,9 +520,9 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
 
     args.emplace_back(src);
     args.emplace_back("-o");
-    args.emplace_back(tmp.path() / "hiprtc.out");
+    args.emplace_back(tmp.path() + '/' + "hiprtc.out");
 
-    if (!p->compile(args, tmp.path())) return HIPRTC_ERROR_INTERNAL_ERROR;
+    if (!p->compile(args)) return HIPRTC_ERROR_INTERNAL_ERROR;
     if (!p->readLoweredNames()) return HIPRTC_ERROR_INTERNAL_ERROR;
 
     p->compiled = true;

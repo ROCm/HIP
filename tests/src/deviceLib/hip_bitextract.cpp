@@ -123,6 +123,8 @@ int main() {
         hostSrc032[i] = uint32_src0_dist(rd);
         hostSrc132[i] = uint32_src12_dist(rd);
         hostSrc232[i] = uint32_src12_dist(rd);
+        if (hostSrc132[i] + hostSrc232[i] > 32)
+          hostSrc232[i] = 32 - hostSrc132[i];
         hostOut64[i] = 0;
         hostSrc064[i] = uint64_src0_dist(rd);
         hostSrc164[i] = uint64_src12_dist(rd);
