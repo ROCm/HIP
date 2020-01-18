@@ -178,69 +178,11 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
         size_t padSize = (~kernargs.size() + 1) & (HIP_IMPLICIT_KERNARG_ALIGNMENT - 1);
         kernargs.insert(kernargs.end(), padSize + HIP_IMPLICIT_KERNARG_SIZE, 0);
 
-        if (impCoopParams) {
-            const auto p{static_cast<const char*>(*impCoopParams)};
-            // The sixth index is for multi-grid synchronization
-            kernargs.insert((kernargs.cend() - padSize - HIP_IMPLICIT_KERNARG_SIZE) + 6 * HIP_IMPLICIT_KERNARG_ALIGNMENT,
-                            p, p + HIP_IMPLICIT_KERNARG_ALIGNMENT);
-        }
-
-        /*
-          Kernel argument preparation.
-        */
-        grid_launch_parm lp;
-        lp.dynamic_group_mem_bytes =
-            sharedMemBytes;  // TODO - this should be part of preLaunchKernel.
-        hStream = ihipPreLaunchKernel(
-            hStream, dim3(globalWorkSizeX/localWorkSizeX, globalWorkSizeY/localWorkSizeY, globalWorkSizeZ/localWorkSizeZ),
-            dim3(localWorkSizeX, localWorkSizeY, localWorkSizeZ), &lp, f->_name.c_str(), isStreamLocked);
-
-        hsa_kernel_dispatch_packet_t aql;
-
-        memset(&aql, 0, sizeof(aql));
-
-        // aql.completion_signal._handle = 0;
-        // aql.kernarg_address = 0;
-
-        aql.workgroup_size_x = localWorkSizeX;
-        aql.workgroup_size_y = localWorkSizeY;
-        aql.workgroup_size_z = localWorkSizeZ;
-        aql.grid_size_x = globalWorkSizeX;
-        aql.grid_size_y = globalWorkSizeY;
-        aql.grid_size_z = globalWorkSizeZ;
-        if (f->_is_code_object_v3) {
-            const auto* header =
-                reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
-            aql.group_segment_size =
-                header->group_segment_fixed_size + sharedMemBytes;
-            aql.private_segment_size =
-                header->private_segment_fixed_size;
-        } else {
-            aql.group_segment_size =
-                f->_header->workgroup_group_segment_byte_size + sharedMemBytes;
-            aql.private_segment_size =
-                f->_header->workitem_private_segment_byte_size;
-        }
-        aql.kernel_object = f->_object;
-        aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
-        aql.header =
-            (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE);
-        if((flags & 0x1)== 0 ) {
-            //in_order
-            aql.header |= (1 << HSA_PACKET_HEADER_BARRIER);
-        }
-
-        aql.header |= lp.launch_fence;
-
-        hc::completion_future cf;
-
-        lp.av->dispatch_hsa_kernel(&aql, kernargs.data(), kernargs.size(),
-                                   (startEvent || stopEvent) ? &cf : nullptr
-#if (__hcc_workweek__ > 17312)
-                                   ,
-                                   f->_name.c_str()
-#endif
-        );
+        const auto p{static_cast<const char*>(*impCoopParams)};
+        // The sixth index is for multi-grid synchronization
+        kernargs.insert((kernargs.cend() - padSize - HIP_IMPLICIT_KERNARG_SIZE) + 6 * HIP_IMPLICIT_KERNARG_ALIGNMENT,
+                        p, p + HIP_IMPLICIT_KERNARG_ALIGNMENT);
+    }
 
     /*
       Kernel argument preparation.
