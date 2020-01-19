@@ -158,16 +158,6 @@ void appendArgumentsAdjusters(ct::RefactoringTool &Tool, const std::string &sSou
   Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
 }
 
-void addSeparatorIfNeeded(int& argc, const char** argv) {
-  std::vector<const char*> new_argv(argv, argv + argc);
-  if (std::find(new_argv.begin(), new_argv.end(), std::string("--")) == new_argv.end()) {
-    new_argv.push_back("--");
-    new_argv.push_back(nullptr);
-    argv = new_argv.data();
-    argc++;
-  }
-}
-
 bool generatePython() {
   bool bToRoc = TranslateToRoc;
   TranslateToRoc = true;
@@ -177,7 +167,13 @@ bool generatePython() {
 }
 
 int main(int argc, const char **argv) {
-  addSeparatorIfNeeded(argc, argv);
+  std::vector<const char*> new_argv(argv, argv + argc);
+  if (std::find(new_argv.begin(), new_argv.end(), std::string("--")) == new_argv.end()) {
+    new_argv.push_back("--");
+    new_argv.push_back(nullptr);
+    argv = new_argv.data();
+    argc++;
+  }
   llcompat::PrintStackTraceOnErrorSignal();
   ct::CommonOptionsParser OptionsParser(argc, argv, ToolTemplateCategory, llvm::cl::ZeroOrMore);
   if (!llcompat::CheckCompatibility()) {
