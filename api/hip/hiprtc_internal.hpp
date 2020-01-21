@@ -29,8 +29,8 @@ THE SOFTWARE.
 #define HIPRTC_INIT_API(...)                                 \
   ClPrint(amd::LOG_INFO, amd::LOG_API, "[%zx] %s ( %s )", std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
   amd::Thread* thread = amd::Thread::current();              \
-  if (!CL_CHECK_THREAD(thread)) {                            \
-    HIPRTC_RETURN(HIPRTC_ERROR_INTERNAL_ERROR);               \
+  if (!VDI_CHECK_THREAD(thread)) {                           \
+    HIPRTC_RETURN(HIPRTC_ERROR_INTERNAL_ERROR);              \
   }                                                          \
   HIP_INIT();
 
