@@ -194,7 +194,8 @@ public:
     std::tuple<
         std::once_flag,
         std::mutex,
-        std::unordered_map<std::string, void*>> globals;
+        // map from string to pair<global_addr, pinned_addr>
+        std::unordered_map<std::string, std::pair<void*, void*>>> globals;
 
     using RAII_code_reader =
         std::unique_ptr<hsa_code_object_reader_t, 
@@ -309,7 +310,7 @@ public:
         return symbol_addresses.second;
     }
 
-    std::unordered_map<std::string, void*>& get_globals() {
+    std::unordered_map<std::string, std::pair<void*, void*>>& get_globals() {
         std::call_once(std::get<0>(globals), [this]() { 
             std::get<2>(globals).reserve(get_symbol_addresses().size()); 
         });
@@ -366,9 +367,9 @@ public:
             };
 
             auto retrieve_pinned_address_from_cache = [](decltype(g) g, decltype(x) x) {
-                const auto& pinned_global = g.find(x);
-                if (pinned_global != g.cend()) {
-                    return std::get<1>(*pinned_global);
+                const auto& global_addr = g.find(x);
+                if (global_addr != g.cend()) {
+                    return global_addr->second.second;
                 }
                 return (void*)nullptr;
             };
@@ -389,8 +390,8 @@ public:
                                                      0, &p);
                         check_hsa_global_var_define_error(status);
                     }
-                    // cache the pinned address
-                    g.emplace(x, p);
+                    // cache the global address and its pinned address
+                    g.emplace(x, std::make_pair(reinterpret_cast<void*>(it1->second.first), p));
                 }
             }
             status = hsa_executable_agent_global_variable_define(
