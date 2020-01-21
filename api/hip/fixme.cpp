@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "cl_common.hpp"
+#include "vdi_common.hpp"
 #include <icd/loader/icd_dispatch.h>
 
 KHRicdVendorDispatch amd::ICDDispatchedObject::icdVendorDispatch_[] = {0};

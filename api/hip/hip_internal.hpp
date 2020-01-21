@@ -23,7 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_SRC_HIP_INTERNAL_H
 #define HIP_SRC_HIP_INTERNAL_H
 
-#include "cl_common.hpp"
+#include "vdi_common.hpp"
 #include "hip_prof_api.h"
 #include "trace_helper.h"
 #include "utils/debug.hpp"
@@ -32,7 +32,6 @@ THE SOFTWARE.
 #include <stack>
 #include <mutex>
 #include <iterator>
-
 
 
 /*! IHIP IPC MEMORY Structure */
@@ -55,7 +54,7 @@ typedef struct ihipIpcMemHandle_st {
 #define HIP_INIT_API(cid, ...)                               \
   ClPrint(amd::LOG_INFO, amd::LOG_API, "[%zx] %s ( %s )", std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
   amd::Thread* thread = amd::Thread::current();              \
-  if (!CL_CHECK_THREAD(thread)) {                            \
+  if (!VDI_CHECK_THREAD(thread)) {                           \
     HIP_RETURN(hipErrorOutOfMemory);                         \
   }                                                          \
   HIP_INIT()                                                 \
