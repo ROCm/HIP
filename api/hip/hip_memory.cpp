@@ -340,7 +340,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
 
   const amd::Image::Format imageFormat(*image_format);
 
-  *pitch = width * imageFormat.getElementSize();
+  *pitch = amd::alignUp(width * imageFormat.getElementSize(), device->info().imagePitchAlignment_);
 
   size_t sizeBytes = *pitch * height * depth;
   *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), 0, sizeBytes,
