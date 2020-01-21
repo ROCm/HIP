@@ -91,19 +91,70 @@ extern int HIP_DUMP_CODE_OBJECT;
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
 
+#define IMAGE_PITCH_ALIGNMENT 256
+template <typename T> inline T alignDown(T value, size_t alignment) {
+    return (T)(value & ~(alignment - 1));
+}
+
+template <typename T> inline T* alignDown(T* value, size_t alignment) {
+    return (T*)alignDown((intptr_t)value, alignment);
+}
+
+template <typename T> inline T alignUp(T value, size_t alignment) {
+    return alignDown((T)(value + alignment - 1), alignment);
+}
+
+template <typename T> inline T* alignUp(T* value, size_t alignment) {
+    return (T*)alignDown((intptr_t)(value + alignment - 1), alignment);
+}
+
+size_t getNumChannels(hsa_ext_image_channel_order_t channelOrder) {
+    switch (channelOrder) {
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RG:
+        return 2;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RGB:
+        return 3;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA:
+        return 4;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_R:
+      default:
+        return 1;
+  }
+}
+
+size_t getElementSize(hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType) {
+    size_t bytesPerPixel = getNumChannels(channelOrder);
+    switch (channelType) {
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT8:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT8:
+        break;
+
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT32:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT32:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_FLOAT:
+        bytesPerPixel *= 4;
+        break;
+
+      default:
+        bytesPerPixel *= 2;
+        break;
+    }
+    return bytesPerPixel;
+}
+
 // Class to assign a short TID to each new thread, for HIP debugging purposes.
 class TidInfo {
    public:
     TidInfo();
 
     int tid() const { return _shortTid; };
-    pid_t pid() const { return _pid; };
+    pid_t pid() const { return _pid; }; 
     uint64_t incApiSeqNum() { return ++_apiSeqNum; };
     uint64_t apiSeqNum() const { return _apiSeqNum; };
 
    private:
     int _shortTid;
-    pid_t _pid;
+    pid_t _pid; 
 
     // monotonically increasing API sequence number for this threa.
     uint64_t _apiSeqNum;
@@ -280,7 +331,7 @@ static const DbName dbName[] = {
 #endif
 
 
-inline uint64_t getTicks() { return hc::get_system_ticks(); }
+static inline uint64_t getTicks() { return hc::get_system_ticks(); }
 
 //---
 extern uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::string& apiStr);
@@ -570,7 +621,7 @@ class ihipStream_t {
     LockedAccessor_StreamCrit_t lockopen_preKernelCommand();
     void lockclose_postKernelCommand(const char* kernelName, hc::accelerator_view* av, bool unlockNotNeeded = 0);
 
-
+    void locked_wait(bool& waited);
     void locked_wait();
 
     hc::accelerator_view* locked_getAv() {
@@ -796,7 +847,7 @@ class ihipDevice_t {
 
     // TODO - report this through device properties, base on HCC API call.
     int _isLargeBar;
-
+   
     // Node id reported by kfd for this device
     uint32_t _driver_node_id;
 
@@ -1045,7 +1096,7 @@ struct mg_info {
 //  setDevice first.
 //  - hipDeviceReset destroys the primary context for device?
 //  - Then context is created again for next usage.
-inline ihipCtx_t* iihipGetTlsDefaultCtx(TlsData* tls) {
+static inline ihipCtx_t* iihipGetTlsDefaultCtx(TlsData* tls) {
     // Per-thread initialization of the TLS:
     if ((tls->defaultCtx == nullptr) && (g_deviceCnt > 0)) {
         tls->defaultCtx = ihipGetPrimaryCtx(0);

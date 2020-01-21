@@ -1,0 +1,58 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(hipify-clang)
+
+install(PROGRAMS @HIPIFY_INSTALL_PATH@/hipify-clang DESTINATION bin)
+install(DIRECTORY @HIPIFY_INSTALL_PATH@/include DESTINATION bin)
+
+# Check if .hipversion exists(only exists when hipify-clang is built with HIP)
+if(EXISTS "@HIPIFY_INSTALL_PATH@/.hipVersion")
+    set(HIP_BUILD "TRUE")
+else()
+    set(HIP_BUILD "FALSE")
+endif()
+
+if(${HIP_BUILD})
+    file(STRINGS @HIPIFY_INSTALL_PATH@/.hipVersion HipVersion)
+    foreach(NameAndValue ${HipVersion})
+        # Get variable name
+        string(REGEX MATCH "^[^=]+" Name ${NameAndValue})
+        # Get the value
+        string(REPLACE "${Name}=" "" Value ${NameAndValue})
+        # Assign the vale to the variable
+        set(${Name} "${Value}")
+    endforeach()
+endif()
+
+#############################
+# Packaging steps
+#############################
+set(CPACK_SET_DESTDIR TRUE)
+set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
+set(CPACK_PACKAGE_NAME "hipify-clang")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "hipify-clang: a clang-based tool to translate CUDA source code into portable HIP C++ automatically")
+set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
+set(CPACK_PACKAGE_CONTACT "Mankov Evgeny <Evgeniy.Mankov@amd.com>")
+
+if(${HIP_BUILD})
+    set(CPACK_PACKAGE_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
+    set(CPACK_PACKAGE_VERSION_MAJOR ${HIP_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${HIP_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${HIP_VERSION_PATCH})
+else()
+    set(CPACK_PACKAGE_VERSION @LLVM_VERSION_MAJOR@.@LLVM_VERSION_MINOR@.@LLVM_VERSION_PATCH@)
+    set(CPACK_PACKAGE_VERSION_MAJOR @LLVM_VERSION_MAJOR@)
+    set(CPACK_PACKAGE_VERSION_MINOR @LLVM_VERSION_MINOR@)
+    set(CPACK_PACKAGE_VERSION_PATCH @LLVM_VERSION_PATCH@)
+endif()
+
+set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH})
+set(CPACK_GENERATOR "TGZ;DEB;RPM")
+set(CPACK_BINARY_DEB "ON")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "cuda >= 7.0")
+set(CPACK_BINARY_RPM "ON")
+set(CPACK_RPM_PACKAGE_ARCHITECTURE "${CMAKE_SYSTEM_PROCESSOR}")
+set(CPACK_RPM_PACKAGE_AUTOREQPROV "NO")
+set(CPACK_RPM_PACKAGE_REQUIRES "cuda >= 7.0")
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/opt")
+set(CPACK_SOURCE_GENERATOR "TGZ")
+include(CPack)

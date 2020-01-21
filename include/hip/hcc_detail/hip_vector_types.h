@@ -294,7 +294,13 @@ THE SOFTWARE.
 
         union {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
+#endif
         };
 
         using value_type = T;
@@ -317,8 +323,15 @@ THE SOFTWARE.
 
         union {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+                T y;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
             hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
+#endif
         };
 
         using value_type = T;
@@ -498,10 +511,19 @@ THE SOFTWARE.
 
         union {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+                T y;
+                T z;
+                T w;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
             hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
             hip_impl::Scalar_accessor<T, Native_vec_, 2> z;
             hip_impl::Scalar_accessor<T, Native_vec_, 3> w;
+#endif            
         };
 
         using value_type = T;
@@ -1107,38 +1129,38 @@ __MAKE_VECTOR_TYPE__(double, double);
 
 #ifdef __cplusplus
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
-    inline __device__ __host__ \
+    static inline __device__ __host__ \
     type make_##type(comp x) { type r{x}; return r; }
 
 #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
-    inline __device__ __host__ \
+    static inline __device__ __host__ \
     type make_##type(comp x, comp y) { type r{x, y}; return r; }
 
 #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
-    inline __device__ __host__ \
+    static inline __device__ __host__ \
     type make_##type(comp x, comp y, comp z) { type r{x, y, z}; return r; }
 
 #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
-    inline __device__ __host__ \
+    static inline __device__ __host__ \
     type make_##type(comp x, comp y, comp z, comp w) { \
         type r{x, y, z, w}; \
         return r; \
     }
 #else
  #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
-     inline __device__ __host__ \
+     static inline __device__ __host__ \
      type make_##type(comp x) { type r; r.x =x; return r; }
 
  #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
-     inline __device__ __host__ \
+     static inline __device__ __host__ \
      type make_##type(comp x, comp y) { type r; r.x=x; r.y=y; return r; }
 
  #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
-     inline __device__ __host__ \
+     static inline __device__ __host__ \
      type make_##type(comp x, comp y, comp z) { type r; r.x=x; r.y=y; r.z=z; return r; }
 
  #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
-     inline __device__ __host__ \
+     static inline __device__ __host__ \
      type make_##type(comp x, comp y, comp z, comp w) { \
          type r; r.x=x; r.y=y; r.z=z; r.w=w; \
          return r; \
