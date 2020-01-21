@@ -43,9 +43,10 @@ typedef struct hipChannelFormatDesc {
     enum hipChannelFormatKind f;
 }hipChannelFormatDesc;
 
-#define HIP_TRSF_NORMALIZED_COORDINATES 0x01
-#define HIP_TRSF_READ_AS_INTEGER 0x00
 #define HIP_TRSA_OVERRIDE_FORMAT 0x01
+#define HIP_TRSF_READ_AS_INTEGER 0x01
+#define HIP_TRSF_NORMALIZED_COORDINATES 0x02
+#define HIP_TRSF_SRGB 0x10
 
 typedef enum hipArray_Format {
     HIP_AD_FORMAT_UNSIGNED_INT8 = 0x01,
