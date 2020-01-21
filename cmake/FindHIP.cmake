@@ -47,6 +47,9 @@ set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_PATH} <FLA
 ###############################################################################
 # FIND: HIP and associated helper binaries
 ###############################################################################
+
+get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
+
 # HIP is supported on Linux only
 if(UNIX AND NOT APPLE AND NOT CYGWIN)
     # Search for HIP installation
@@ -54,32 +57,15 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         # Search in user specified path first
         find_path(
             HIP_ROOT_DIR
-            NAMES hipconfig
+            NAMES bin/hipconfig
             PATHS
-            ENV ROCM_PATH
+            "$ENV{ROCM_PATH}/hip"
             ENV HIP_PATH
-            PATH_SUFFIXES bin
+            ${_IMPORT_PREFIX}
+            /opt/rocm/hip
             DOC "HIP installed location"
             NO_DEFAULT_PATH
             )
-        # Now search in default path
-        find_path(
-            HIP_ROOT_DIR
-            NAMES hipconfig
-            PATHS
-            /opt/rocm
-            /opt/rocm/hip
-            PATH_SUFFIXES bin
-            DOC "HIP installed location"
-            )
-
-        # Check if we found HIP installation
-        if(HIP_ROOT_DIR)
-            # If so, fix the path
-            string(REGEX REPLACE "[/\\\\]?bin[64]*[/\\\\]?$" "" HIP_ROOT_DIR ${HIP_ROOT_DIR})
-            # And push it back to the cache
-            set(HIP_ROOT_DIR ${HIP_ROOT_DIR} CACHE PATH "HIP installed location" FORCE)
-        endif()
         if(NOT EXISTS ${HIP_ROOT_DIR})
             if(HIP_FIND_REQUIRED)
                 message(FATAL_ERROR "Specify HIP_ROOT_DIR")
@@ -87,6 +73,9 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
                 message("HIP_ROOT_DIR not found or specified")
             endif()
         endif()
+        # And push it back to the cache
+        set(HIP_ROOT_DIR ${HIP_ROOT_DIR} CACHE PATH "HIP installed location" FORCE)
+        message("Found HIP at ${HIP_ROOT_DIR}")
     endif()
 
     # Find HIPCC executable
@@ -555,7 +544,13 @@ macro(HIP_ADD_EXECUTABLE hip_target)
         list(REMOVE_ITEM _sources ${_source_files})
     endif()
     if("x${HCC_HOME}" STREQUAL "x")
-        set(HCC_HOME "/opt/rocm/hcc")
+        if (DEFINED $ENV{ROCM_PATH})
+            set(HCC_HOME "$ENV{ROCM_PATH}/hcc")
+        elseif( DEFINED $ENV{HIP_PATH})
+            set(HCC_HOME "$ENV{HIP_PATH}/../hcc")
+        else()
+            set(HCC_HOME "/opt/rocm/hcc")
+        endif()
     endif()
     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HCC_HOME} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
     add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
