@@ -8,7 +8,7 @@ popd () {
     command popd "$@" > /dev/null
 }
 
-ROCMDIR=/opt/rocm
+ROCMDIR=@ROCM_PATH@
 HIPDIR=$ROCMDIR/hip
 ([ ! -d $ROCMDIR ] || [ ! -d $HIPDIR ]) && exit 0
 

@@ -12,7 +12,7 @@ install(DIRECTORY @hip_SOURCE_DIR@/cmake DESTINATION .)
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
-set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
+set(CPACK_INSTALL_PREFIX @CPACK_INSTALL_PREFIX@ )
 set(CPACK_PACKAGE_NAME "hip-base")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [BASE]")
 set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
