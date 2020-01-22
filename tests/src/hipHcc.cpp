@@ -30,7 +30,9 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
+#ifdef __HCC__
 #include "hip/hip_ext.h"
+#endif
 #include "test_common.h"
 
 #define CHECK(error)                                                                               \
