@@ -2515,11 +2515,13 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 // TODO - add a contect sequence number for debug. Print operator<< ctx:0.1 (device.ctx)
 
 namespace hip_impl {
-    std::unordered_set<std::string> get_all_gpuarch() {
-        std::unordered_set<std::string> r{};
-        for (int i=0; i < g_deviceCnt; i++){
-            r.insert("hcc-amdgcn-amd-amdhsa--gfx"+std::to_string(g_deviceArray[i]->_props.gcnArch));
-        }
+    std::unordered_set<std::string>& get_all_gpuarch() {
+        static std::unordered_set<std::string> r{};
+        static std::once_flag init;
+        std::call_once(init, []() {
+            for (int i=0; i < g_deviceCnt; i++){
+                r.insert("hcc-amdgcn-amd-amdhsa--gfx"+std::to_string(g_deviceArray[i]->_props.gcnArch));
+        }});
         return r;
     }
 

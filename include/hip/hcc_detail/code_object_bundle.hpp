@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include <unordered_set>
 namespace hip_impl {
 #if !defined(DISABLE_REDUCED_GPU_BLOB_COPY)
-std::unordered_set<std::string> get_all_gpuarch();
+std::unordered_set<std::string>& get_all_gpuarch();
 #endif
 inline
 std::string transmogrify_triple(const std::string& triple)
@@ -129,7 +129,7 @@ class Bundled_code_header {
                 std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
                 #else
                 auto gpuArch = get_all_gpuarch();
-                auto itgpuArch =std::find(gpuArch.begin(),gpuArch.end(),y.triple);
+                auto itgpuArch = std::find(gpuArch.begin(),gpuArch.end(),y.triple);
                 if (itgpuArch != gpuArch.end()){
                     std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
                 }
