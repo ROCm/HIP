@@ -19,7 +19,7 @@ endif()
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
-set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
+set(CPACK_INSTALL_PREFIX @CPACK_INSTALL_PREFIX@ )
 set(CPACK_PACKAGE_NAME "hip-doc")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [DOCUMENTATION]")
 set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")

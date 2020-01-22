@@ -2,9 +2,13 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hip_hcc)
 
 install(FILES @PROJECT_BINARY_DIR@/libhip_hcc.so DESTINATION lib)
+install(FILES @PROJECT_BINARY_DIR@/libhip_hcc.so.@HIP_LIB_VERSION_MAJOR@ DESTINATION lib)
+install(FILES @PROJECT_BINARY_DIR@/libhip_hcc.so.@HIP_LIB_VERSION_STRING@ DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/libhip_hcc_static.a DESTINATION lib)
 if(NOT @HIP_COMPILER@ STREQUAL "clang")
     install(FILES @PROJECT_BINARY_DIR@/libhiprtc.so DESTINATION lib)
+    install(FILES @PROJECT_BINARY_DIR@/libhiprtc.so.@HIP_LIB_VERSION_MAJOR@ DESTINATION lib)
+    install(FILES @PROJECT_BINARY_DIR@/libhiprtc.so.@HIP_LIB_VERSION_STRING@ DESTINATION lib)
 endif()
 install(FILES @PROJECT_BINARY_DIR@/.hipInfo DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/hip-config.cmake @PROJECT_BINARY_DIR@/hip-config-version.cmake DESTINATION lib/cmake/hip)
@@ -14,7 +18,7 @@ install(FILES @hip_SOURCE_DIR@/packaging/hip-targets.cmake @hip_SOURCE_DIR@/pack
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
-set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
+set(CPACK_INSTALL_PREFIX @CPACK_INSTALL_PREFIX@ )
 set(CPACK_PACKAGE_NAME "hip-hcc")
 if(@HCC_VERSION_MAJOR@ EQUAL 0)
     set(HCC_PACKAGE_NAME "hcc_lc")

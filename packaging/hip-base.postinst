@@ -6,8 +6,7 @@ pushd () {
 popd () {
     command popd "$@" > /dev/null
 }
-
-ROCMDIR=/opt/rocm
+ROCMDIR=@ROCM_PATH@
 HIPDIR=$ROCMDIR/hip
 
 # Soft-link to bin files
