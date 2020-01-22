@@ -27,8 +27,13 @@ THE SOFTWARE.
  */
 #include "test_common.h"
 typedef float T;
+
 // Texture reference for 2D Layered texture
+#if __HIP__
+__hip_pinned_shadow__
+#endif
 texture<float, hipTextureType2DLayered> tex2DL;
+
 __global__ void simpleKernelLayeredArray(T* outputData,int width,int height,int layer)
 {
     unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
