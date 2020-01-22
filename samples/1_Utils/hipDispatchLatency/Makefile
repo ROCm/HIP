@@ -8,13 +8,12 @@ EXE=hipDispatchLatency
 
 CXXFLAGS = -O3
 
-all: ${EXE}
+all: test_kernel.code ${EXE}
 
 $(EXE): hipDispatchLatency.cpp ResultDatabase.cpp
 	$(HIPCC) $(CXXFLAGS) hipDispatchLatency.cpp ResultDatabase.cpp -o $@
 
-install: $(EXE)
-	cp $(EXE) $(HIP_PATH)/bin
-
+test_kernel.code: test_kernel.cpp
+	$(HIP_PATH)/bin/hipcc --genco  $(GENCO_FLAGS) $^ -o $@
 clean:
 	rm -f *.o $(EXE)
