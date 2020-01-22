@@ -86,12 +86,9 @@ int runTest() {
     hipLaunchKernelGGL(kernel, dim3(dimGrid), dim3(dimBlock), 0, 0, devBuf);
     HIPCHECK(hipDeviceSynchronize());
     HIPCHECK(hipMemcpy(output, devBuf, N * sizeof(float), hipMemcpyDeviceToHost));
-    for (int i = 0; i < N; i++) {
-        if (output[i] != val[i]) {
-            testResult = 0;
-            break;
-        }
-    }
+
+    HipTest::checkArray(val, output, N);
+
     HIPCHECK(hipUnbindTexture(&tex));
     HIPCHECK(hipFree(texBuf));
     HIPCHECK(hipFree(devBuf));

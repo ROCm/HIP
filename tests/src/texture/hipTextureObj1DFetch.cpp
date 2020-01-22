@@ -86,11 +86,7 @@ int runTest() {
 
     HIPCHECK(hipMemcpy(output, texBufOut, N * sizeof(float), hipMemcpyDeviceToHost));
 
-    for(int i = 0; i < N; i++)
-        if (output[i] != val[i]) {
-            testResult = 0;
-            break;
-        }
+    HipTest::checkArray(val, output, N);
 
     HIPCHECK(hipDestroyTextureObject(texObj));
     HIPCHECK(hipFree(texBuf));
