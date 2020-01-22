@@ -23,6 +23,7 @@ THE SOFTWARE.
 #endif
 #include <iostream>
 #include <chrono>
+#include <algorithm>
 
 #define NUM_GROUPS 1
 #define GROUP_SIZE 1
@@ -33,16 +34,6 @@ THE SOFTWARE.
 
 #define FILE_NAME "test_kernel.code"
 #define KERNEL_NAME "test"
-
-#define check(cmd)                                                                             \
-{                                                                                              \
-    hipError_t status = cmd;                                                                   \
-    if (status != hipSuccess) {                                                                \
-        printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(status), status, #cmd,  \
-               __FILE__, __LINE__);                                                            \
-        abort();                                                                               \
-    }                                                                                          \
-}
 
 __global__ void EmptyKernel() { }
 
@@ -80,8 +71,8 @@ int main() {
     hipCtxCreate(&context, 0, device); 
     hipModule_t module;
     hipFunction_t function;
-    check(hipModuleLoad(&module, FILE_NAME));
-    check(hipModuleGetFunction(&function, module, KERNEL_NAME));
+    hipModuleLoad(&module, FILE_NAME);
+    hipModuleGetFunction(&function, module, KERNEL_NAME);
     void* params = nullptr;
     
     std::array<float, TOTAL_RUN_COUNT> results;
@@ -143,8 +134,8 @@ int main() {
     /*********************************************************************************/
 
     for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
-         hipEventRecord(start);
-         for (int i = 0; i < BATCH_SIZE; i++) {
+         hipEventRecord(start, 0);
+         for (int j = 0; j < BATCH_SIZE; j++) {
              hipLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0);
          }
          hipEventRecord(stop, 0);
@@ -153,8 +144,8 @@ int main() {
     }
     print_timing("Batch dispatch latency", results, BATCH_SIZE);
 
-    check(hipEventDestroy(start));
-    check(hipEventDestroy(stop));
-    check(hipCtxDestroy(context));
+    hipEventDestroy(start);
+    hipEventDestroy(stop);
+    hipCtxDestroy(context);
 }
 
