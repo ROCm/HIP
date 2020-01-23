@@ -621,14 +621,13 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
     if($default_amdgpu_target eq 1) {
         if (defined $ENV{HCC_AMDGPU_TARGET}) {
             $targetsStr = $ENV{HCC_AMDGPU_TARGET};
-            $default_amdgpu_target = 0;
         } else {
             # Else try using rocm_agent_enumerator
             $ROCM_AGENT_ENUM = "${ROCM_PATH}/bin/rocm_agent_enumerator";
             $targetsStr = `${ROCM_AGENT_ENUM} -t GPU`;
             $targetsStr =~ s/\n/,/g;
-            $default_amdgpu_target = 0;
         }
+        $default_amdgpu_target = 0;
     }
 
     my @targets = split(',', $targetsStr);
@@ -653,7 +652,6 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
         elsif($val eq 'gfx1011') { $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX1011__=1 "; }
         elsif($val eq 'gfx1012') { $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX1012__=1 "; }
         elsif($val eq 'gfx000')  { $ignore = 1; } # Ignore gfx000 reported by rocm_agent_enumirator.
-        else { print "Unknown AMD GPU target specified: $val\n" and die(); }
 
         if (!$ignore) {
             $GPU_ARCH_ARG = $GPU_ARCH_OPT . $val;
