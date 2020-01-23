@@ -109,7 +109,7 @@ __CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
   // Compute global id of the workgroup to which the current thread belongs to
   uint32_t blkIdx =
            (uint32_t)((hipBlockIdx_z * hipGridDim_y * hipGridDim_x) +
-                      (hipBlockIdx_x * hipGridDim_y) +
+                      (hipBlockIdx_y * hipGridDim_x) +
                       (hipBlockIdx_x));
 
   // Compute total number of threads being passed to reach current workgroup
@@ -120,7 +120,7 @@ __CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
   // Compute thread local rank within current workgroup
   uint32_t local_thread_rank =
            (uint32_t)((hipThreadIdx_z * hipBlockDim_y * hipBlockDim_x) +
-                      (hipThreadIdx_x * hipBlockDim_y) +
+                      (hipThreadIdx_y * hipBlockDim_x) +
                       (hipThreadIdx_x));
 
   return (num_threads_till_current_workgroup + local_thread_rank);
