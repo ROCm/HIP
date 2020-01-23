@@ -214,6 +214,17 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
   HIP_RETURN(ihipMalloc(ptr, sizeBytes, ihipFlags));
 }
 
+hipError_t hipMallocManaged(void** devPtr, size_t size,
+                            unsigned int flags) {
+  HIP_INIT_API(hipMallocManaged, devPtr, size, flags);
+
+  if (flags != hipMemAttachGlobal) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  HIP_RETURN(ihipMalloc(devPtr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER));
+}
+
 hipError_t hipFree(void* ptr) {
   HIP_INIT_API(hipFree, ptr);
 

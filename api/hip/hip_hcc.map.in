@@ -76,6 +76,7 @@ global:
     hipMalloc;
     hipMalloc3D;
     hipMalloc3DArray;
+    hipMallocManaged;
     hipArrayCreate;
     hipArray3DCreate;
     hipMallocArray;
