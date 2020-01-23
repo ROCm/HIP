@@ -154,8 +154,9 @@ namespace {
         return r;
     }
 
-    constexpr size_t staging_sz{4 * 1024 * 1024}; // 2 Pages.
-    constexpr size_t max_std_memcpy_sz{8 * 1024}; // 8 KiB.
+    constexpr size_t staging_sz{4 * 1024 * 1024};      // 2 Pages.
+    constexpr size_t max_std_memcpy_sz{8 * 1024};      // 8 KiB.
+    constexpr size_t max_hsa_memory_copy_sz{4 * 1024}; // 4 KiB.
 
     thread_local const std::unique_ptr<void, void (*)(void *)> staging_buffer{
         []() {
@@ -202,8 +203,13 @@ namespace {
 } // Unnamed namespace.
 
 inline
-void do_copy(void* __restrict dst, const void* __restrict src, std::size_t n,
+void do_copy(void* __restrict dst, const void* __restrict src, size_t n,
              hsa_agent_t da, hsa_agent_t sa) {
+    if (da.handle != sa.handle) {
+        throwing_result_check(
+            hsa_amd_agents_allow_access(1u, &sa, nullptr, src),
+            __FILE__, __func__, __LINE__);
+    }
     hsa_signal_silent_store_relaxed(copy_signal, 1);
     throwing_result_check(
         hsa_amd_memory_async_copy(dst, da, src, sa, n, 0, nullptr, copy_signal),
@@ -299,8 +305,12 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
     switch (si.type) {
     case HSA_EXT_POINTER_TYPE_HSA:
         if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
-            hsa_memory_copy(dst, src, n);
-            return; // TODO: do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+            if (n <= max_hsa_memory_copy_sz) {
+                throwing_result_check(
+                    hsa_memory_copy(dst, src, n), __FILE__, __func__, __LINE__);
+                return;
+            }
+            return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
         }
 
         if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN ||
@@ -350,7 +360,14 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
         // TODO: characterise direct largeBAR reads from agent-allocated memory.
         return /*is_large_BAR && n <= max_std_memcpy_sz ?
             do_std_memcpy(dst, src, n) : */d2h_copy(dst, src, n, info(src));
-    case hipMemcpyDeviceToDevice: hsa_memory_copy(dst, src, n); break;
+    case hipMemcpyDeviceToDevice:
+        if (n <= max_hsa_memory_copy_sz) {
+            throwing_result_check(
+                hsa_memory_copy(dst, src, n), __FILE__, __func__, __LINE__);
+
+            return;
+        }
+        return do_copy(dst, src, n, info(dst).agentOwner, info(src).agentOwner);
     default: return generic_copy(dst, src, n, info(dst), info(src));
     }
 }
