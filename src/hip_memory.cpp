@@ -156,6 +156,7 @@ namespace {
     }
 
     constexpr size_t staging_sz{4 * 1024 * 1024}; // 2 Pages.
+    constexpr size_t max_std_memcpy_sz{8 * 1024}; // 8 KiB.
 
     thread_local const std::unique_ptr<void, void (*)(void *)> staging_buffer{
         []() {
@@ -225,7 +226,7 @@ inline
 void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t si) {
     // TODO: characterise direct largeBAR reads from agent-allocated memory.
-    // if (si.size == UINT32_MAX) {
+    // if (si.size == UINT32_MAX && n <= max_std_memcpy_sz) {
     //     return do_std_memcpy(dst, src, n);
     // }
 
@@ -256,7 +257,7 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t di) {
-    if (di.size == UINT32_MAX) {
+    if (di.size == UINT32_MAX && n <= max_std_memcpy_sz) {
         return do_std_memcpy(dst, src, n);
     }
 
@@ -344,12 +345,12 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
     switch (k) {
     case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
     case hipMemcpyHostToDevice:
-        return is_large_BAR ? do_std_memcpy(dst, src, n)
-                            : h2d_copy(dst, src, n, info(dst));
+        return is_large_BAR && n <= max_std_memcpy_sz ?
+            do_std_memcpy(dst, src, n) : h2d_copy(dst, src, n, info(dst));
     case hipMemcpyDeviceToHost:
         // TODO: characterise direct largeBAR reads from agent-allocated memory.
-        return /*is_large_BAR ? do_std_memcpy(dst, src, n)
-                            : */d2h_copy(dst, src, n, info(src));
+        return /*is_large_BAR && n <= max_std_memcpy_sz ?
+            do_std_memcpy(dst, src, n) : */d2h_copy(dst, src, n, info(src));
     case hipMemcpyDeviceToDevice: hsa_memory_copy(dst, src, n); break;
     default: return generic_copy(dst, src, n, info(dst), info(src));
     }
