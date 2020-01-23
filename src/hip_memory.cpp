@@ -206,7 +206,7 @@ void do_copy(void* __restrict dst, const void* __restrict src, size_t n,
              hsa_agent_t da, hsa_agent_t sa) {
     if (da.handle != sa.handle) {
         throwing_result_check(
-            hsa_amd_agents_allow_access(1u, &sa, nullptr, src),
+            hsa_amd_agents_allow_access(1u, &sa, nullptr, dst),
             __FILE__, __func__, __LINE__);
     }
     hsa_signal_silent_store_relaxed(copy_signal, 1);
