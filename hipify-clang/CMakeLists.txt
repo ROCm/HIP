@@ -115,10 +115,8 @@ install(
   PATTERN "complex"
   PATTERN "new"
   PATTERN "ppc_wrappers" EXCLUDE
-  PATTERN "openmp_wrappers" EXCLUDE
-  )
+  PATTERN "openmp_wrappers" EXCLUDE)
 
-# Package: hipify-clang
 if (UNIX)
     set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hipify-clang)
     configure_file(packaging/hipify-clang.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
@@ -132,8 +130,8 @@ if (UNIX)
 
     file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/fixnames
         CONTENT "pwd; for i in *.deb; do mv \"\$i\" \"\${i/.deb/-amd64.deb}\" ; done
-        for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
-        ")
+        for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done")
+
     add_custom_target(package_hipify-clang
         COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
@@ -186,15 +184,13 @@ if (HIPIFY_CLANG_TESTS)
     configure_file(
         ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.site.cfg.in
         ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
-        @ONLY
-    )
+        @ONLY)
 
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
         ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang
         PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         ARGS -v
-        DEPENDS hipify-clang
-    )
+        DEPENDS hipify-clang)
 
     add_custom_target(test-hipify-clang)
     add_dependencies(test-hipify-clang test-hipify)
