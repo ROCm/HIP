@@ -1,0 +1,51 @@
+diff --git a/src/hip_memory.cpp b/src/hip_memory.cpp
+index 43399bfd..ae2bfad8 100644
+--- a/src/hip_memory.cpp
++++ b/src/hip_memory.cpp
+@@ -155,6 +155,7 @@ namespace {
+     }
+
+     constexpr size_t staging_sz{4 * 1024 * 1024}; // 2 Pages.
++    constexpr size_t max_std_memcpy_sz{4 * 1024}; // 4 KiB.
+
+     thread_local const std::unique_ptr<void, void (*)(void *)> staging_buffer{
+         []() {
+@@ -224,9 +225,9 @@ inline
+ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
+               hsa_amd_pointer_info_t si) {
+     // TODO: characterise direct largeBAR reads from agent-allocated memory.
+-    // if (si.size == UINT32_MAX) {
+-    //     return do_std_memcpy(dst, src, n);
+-    // }
++    if (si.size == UINT32_MAX && n <= max_std_memcpy_sz) {
++        return do_std_memcpy(dst, src, n);
++    }
+
+     const auto di{info(dst)};
+
+@@ -255,7 +256,7 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
+ inline
+ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
+               hsa_amd_pointer_info_t di) {
+-    if (di.size == UINT32_MAX) {
++    if (di.size == UINT32_MAX && n <= max_std_memcpy_sz) {
+         return do_std_memcpy(dst, src, n);
+     }
+
+@@ -343,12 +344,12 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
+     switch (k) {
+     case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
+     case hipMemcpyHostToDevice:
+-        return is_large_BAR ? do_std_memcpy(dst, src, n)
+-                            : h2d_copy(dst, src, n, info(dst));
++        return is_large_BAR && n <= max_std_memcpy_sz ?
++            do_std_memcpy(dst, src, n) : h2d_copy(dst, src, n, info(dst));
+     case hipMemcpyDeviceToHost:
+         // TODO: characterise direct largeBAR reads from agent-allocated memory.
+-        return /*is_large_BAR ? do_std_memcpy(dst, src, n)
+-                            : */d2h_copy(dst, src, n, info(src));
++        return is_large_BAR && n <= max_std_memcpy_sz ?
++            do_std_memcpy(dst, src, n) : d2h_copy(dst, src, n, info(src));
+     case hipMemcpyDeviceToDevice: hsa_memory_copy(dst, src, n); break;
+     default: return generic_copy(dst, src, n, info(dst), info(src));
+     }

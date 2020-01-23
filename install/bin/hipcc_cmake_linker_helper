@@ -1,0 +1,5 @@
+#!/bin/bash
+
+SOURCE="${BASH_SOURCE[0]}"
+HIP_PATH="$( command cd -P "$( dirname "$SOURCE" )/.." && pwd )"
+HCC_HOME=$1 $HIP_PATH/bin/hipcc "${@:2}"

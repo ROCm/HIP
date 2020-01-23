@@ -1,0 +1,279 @@
+#!/usr/bin/perl  -w
+##
+# Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+##
+#usage hipify-cmakefile [OPTIONS] INPUT_FILE
+use Getopt::Long;
+
+GetOptions(
+    "print-stats" => \$print_stats    # print the command-line, like a header.
+  , "quiet-warnings" => \$quiet_warnings    # don't print warnings on unknown CUDA functions.
+  , "no-output" => \$no_output  # don't write any translated output to stdout.
+  , "inplace" => \$inplace    # modify input file inplace, save backup in ".prehip" file.
+  , "n" => \$n   # combination of print_stats + no-output.
+);
+
+$print_stats = 1 if $n;
+$no_output   = 1 if $n;
+
+@warn_whitelist = ();
+
+#---
+#Stats tracking code:
+@statNames = ( "macro", "include", "option", "other" );
+
+#---
+#Compute total of all individual counts:
+sub totalStats {
+    my %count = %{ shift() };
+
+    my $total = 0;
+    foreach $key ( keys %count ) {
+        $total += $count{$key};
+    }
+
+    return $total;
+}
+
+#---
+sub printStats {
+    my $label     = shift();
+    my @statNames = @{ shift() };
+    my %counts    = %{ shift() };
+    my $warnings  = shift();
+    my $loc       = shift();
+
+    my $total = totalStats( \%counts );
+
+    printf STDERR "%s %d CUDA->HIP refs( ", $label, $total;
+
+    foreach $stat (@statNames) {
+        printf STDERR "%s:%d ", $stat, $counts{$stat};
+    }
+
+    printf STDERR ") warn:%d LOC:%d", $warnings, $loc;
+}
+
+#---
+# Add adder stats to dest.  Used to add stats for current file to a running total for all files:
+sub addStats {
+    my $dest_ref = shift();
+    my %adder    = %{ shift() };
+
+    foreach $key ( keys %adder ) {
+        $dest_ref->{$key} += $adder{$key};
+    }
+}
+
+#---
+sub clearStats {
+    my $dest_ref  = shift();
+    my @statNames = @{ shift() };
+
+    foreach $stat (@statNames) {
+        $dest_ref->{$stat} = 0;
+    }
+}
+
+# count of transforms in all files:
+my %tt;
+clearStats( \%tt, \@statNames );
+
+my $fileCount = @ARGV;
+my $fileName  = "";
+
+while (@ARGV) {
+    $fileName = shift(@ARGV);
+    if ($inplace) {
+        my $file_prehip = "$fileName" . ".prehip";
+        my $infile;
+        my $outfile;
+        if ( -e $file_prehip ) {
+            $infile  = $file_prehip;
+            $outfile = $fileName;
+        }
+        else {
+            system("cp $fileName $file_prehip");
+            $infile  = $file_prehip;
+            $outfile = $fileName;
+        }
+        open( INFILE,  "<", $infile )  or die "error: could not open $infile";
+        open( OUTFILE, ">", $outfile ) or die "error: could not open $outfile";
+        $OUTFILE = OUTFILE;
+    }
+    else {
+        open( INFILE, "<", $fileName ) or die "error: could not open $fileName";
+        $OUTFILE = STDOUT;
+    }
+
+    # count of transforms in this file, init to 0 here:
+    my %ft;
+    clearStats( \%ft, \@statNames );
+
+    my $lineCount = 0;
+
+    undef $/;    # Read whole file at once, so we can match newlines.
+    while (<INFILE>) {
+
+        # Replace find_package(CUDA) with find_package(HIP)
+        $ft{'include'} += s/\bfind_package[ ]*\([ ]*CUDA[ ]*[0-9.]*/find_package(HIP/ig;
+
+        # Replace macros
+        $ft{'macro'} += s/\bCUDA_ADD_EXECUTABLE/HIP_ADD_EXECUTABLE/ig;
+        $ft{'macro'} += s/\bCUDA_ADD_LIBRARY/HIP_ADD_LIBRARY/ig;
+        $ft{'macro'} += s/\bCUDA_INCLUDE_DIRECTORIES/HIP_INCLUDE_DIRECTORIES/ig;
+
+        # Replace options
+        $ft{'option'} += s/\bCUDA_NVCC_FLAGS/HIP_NVCC_FLAGS/ig;
+        $ft{'option'} += s/\bCUDA_HOST_COMPILATION_CPP/HIP_HOST_COMPILATION_CPP/ig;
+        $ft{'option'} += s/\bCUDA_SOURCE_PROPERTY_FORMAT/HIP_SOURCE_PROPERTY_FORMAT/ig;
+
+        # Replace variables
+        $ft{'other'} += s/\bCUDA_FOUND/HIP_FOUND/ig;
+        $ft{'other'} += s/\bCUDA_VERSION/HIP_VERSION/ig;
+        $ft{'other'} += s/\bCUDA_TOOLKIT_ROOT_DIR/HIP_ROOT_DIR/ig;
+
+        unless ($quiet_warnings) {
+
+            #print STDERR "Check WARNINGs\n";
+            # copy into array of lines, process line-by-line to show warnings:
+            my @lines = split /\n/, $_;
+            my $tmp = $_;    # copies the whole file, could be a little smarter here...
+            my $line_num = 0;
+
+            foreach (@lines) {
+                $line_num++;
+
+                # remove any whitelisted words:
+                foreach $w (@warn_whitelist) {
+                    s/\b$w\b/ZAP/;
+                }
+
+                $s = warnUnsupportedSpecialFunctions($line_num);
+                $warnings += $s;
+            }
+
+            $_ = $tmp;
+        }
+
+        #--------
+        # Print it!
+        unless ($no_output) {
+            print $OUTFILE "$_";
+        }
+        $lineCount = $_ =~ tr/\n//;
+    }
+
+    my $totalConverted = totalStats( \%ft );
+
+    if ( ( $totalConverted + $warnings ) and $print_stats ) {
+        printStats( "info: converted", \@statNames, \%ft, $warnings, $lineCount );
+        print STDERR " in '$fileName'\n";
+        print STDERR "You may need to hand-edit '$fileName' to add steps to build correctly on HCC path\n";
+    }
+
+    # Update totals for all files:
+    addStats( \%tt, \%ft );
+    $Twarnings  += $warnings;
+    $TlineCount += $lineCount;
+}
+
+#-- Print total stats for all files processed:
+if ( $print_stats and ( $fileCount > 1 ) ) {
+    print STDERR "\n";
+    printStats( "info: TOTAL-converted", \@statNames, \%tt, $Twarnings, $TlineCount );
+    print STDERR "\n";
+}
+
+#---
+sub warnUnsupportedSpecialFunctions {
+    my $line_num = shift;
+    my $m        = 0;
+
+    foreach $func (
+        # macros:
+        "CUDA_ADD_CUFFT_TO_TARGET",
+        "CUDA_ADD_CUBLAS_TO_TARGET",
+        #"CUDA_ADD_EXECUTABLE",
+        #"CUDA_ADD_LIBRARY",
+        "CUDA_BUILD_CLEAN_TARGET",
+        "CUDA_COMPILE",
+        "CUDA_COMPILE_PTX",
+        "CUDA_COMPILE_FATBIN",
+        "CUDA_COMPILE_CUBIN",
+        "CUDA_COMPUTE_SEPARABLE_COMPILATION_OBJECT_FILE_NAME",
+        #"CUDA_INCLUDE_DIRECTORIES",
+        "CUDA_LINK_SEPARABLE_COMPILATION_OBJECTS",
+        "CUDA_SELECT_NVCC_ARCH_FLAGS",
+        "CUDA_WRAP_SRCS",
+
+        # options:
+        "CUDA_64_BIT_DEVICE_CODE",
+        "CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE",
+        "CUDA_BUILD_CUBIN",
+        "CUDA_BUILD_EMULATION",
+        "CUDA_LINK_LIBRARIES_KEYWORD",
+        "CUDA_GENERATED_OUTPUT_DIR",
+        #"CUDA_HOST_COMPILATION_CPP",
+        "CUDA_HOST_COMPILER",
+        #"CUDA_NVCC_FLAGS",
+        #"CUDA_NVCC_FLAGS_<CONFIG>",
+        "CUDA_PROPAGATE_HOST_FLAGS",
+        "CUDA_SEPARABLE_COMPILATION",
+        #"CUDA_SOURCE_PROPERTY_FORMAT",
+        "CUDA_USE_STATIC_CUDA_RUNTIME",
+        "CUDA_VERBOSE_BUILD",
+
+        # others:
+        #"CUDA_VERSION_MAJOR",
+        #"CUDA_VERSION_MINOR",
+        #"CUDA_VERSION",
+        #"CUDA_VERSION_STRING",
+        "CUDA_HAS_FP16",
+        #"CUDA_TOOLKIT_ROOT_DIR",
+        "CUDA_SDK_ROOT_DIR",
+        "CUDA_INCLUDE_DIRS",
+        "CUDA_LIBRARIES",
+        "CUDA_CUFFT_LIBRARIES",
+        "CUDA_CUBLAS_LIBRARIES",
+        "CUDA_cudart_static_LIBRARY",
+        "CUDA_cudadevrt_LIBRARY",
+        "CUDA_cupti_LIBRARY",
+        "CUDA_curand_LIBRARY",
+        "CUDA_cusolver_LIBRARY",
+        "CUDA_cusparse_LIBRARY",
+        "CUDA_npp_LIBRARY",
+        "CUDA_nppc_LIBRARY",
+        "CUDA_nppi_LIBRARY",
+        "CUDA_npps_LIBRARY",
+        "CUDA_nvcuvenc_LIBRARY",
+        "CUDA_nvcuvid_LIBRARY"
+      )
+    {
+        my $mt = m/\b($func)/g;
+        if ($mt) {
+            $m += $mt;
+            print STDERR " warning: $fileName:#$line_num : unsupported macro/option : $_\n";
+        }
+    }
+
+    return $m;
+}

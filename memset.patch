@@ -1,0 +1,164 @@
+diff --git a/src/hip_memory.cpp b/src/hip_memory.cpp
+index ed1422fc..a04f324a 100644
+--- a/src/hip_memory.cpp
++++ b/src/hip_memory.cpp
+@@ -1178,7 +1178,7 @@ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
+     if(dst==NULL || src==NULL){
+ 	return ihipLogStatus(hipErrorInvalidValue);
+     }
+-
++
+     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+     hc::completion_future marker;
+@@ -1245,7 +1245,7 @@ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
+
+     hipError_t e = hipSuccess;
+     if (sizeBytes == 0) return ihipLogStatus(e);
+-
++
+     if(dst==NULL || src==NULL){
+ 	return ihipLogStatus(hipErrorInvalidValue);
+     }
+@@ -1613,61 +1613,63 @@ typedef enum ihipMemsetDataType {
+     ihipMemsetDataTypeInt    = 2
+ }ihipMemsetDataType;
+
+-hipError_t ihipMemset(void* dst, int  value, size_t count, hipStream_t stream, enum ihipMemsetDataType copyDataType)
+-{
+-    hipError_t e = hipSuccess;
++hipError_t ihipMemset(void* dst, int value, size_t count, hipStream_t stream,
++                      ihipMemsetDataType copyDataType) {
++    if (count == 0) return hipSuccess;
++    if (!stream) return hipErrorInvalidValue;
++    if (!dst) return hipErrorInvalidValue;
+
+-    if (count == 0) return e;
++    try {
++        size_t n = count;
++        size_t tail{};
++
++        switch (copyDataType) {
++        case ihipMemsetDataTypeChar:
++            value &= 0xff;
++            value = (value << 24) | (value << 16) | (value << 8) | value;
++            n /= sizeof(std::uint32_t);
++            tail = count % sizeof(std::uint32_t);
++            break;
++        case ihipMemsetDataTypeShort:
++            value &= 0xffff;
++            value = (value << 16) | value;
++            n = count * sizeof(std::uint16_t) / sizeof(std::uint32_t);
++            tail = (count * sizeof(std::uint16_t)) % sizeof(std::uint32_t);
++            break;
++        default: break;
++        }
+
+-    size_t allocSize = 0;
+-    bool isInbound = (ihipMemPtrGetInfo(dst, &allocSize) == hipSuccess);
+-    isInbound &= (allocSize >= count);
++        const auto s = hsa_amd_memory_fill(dst, value, n);
+
+-    if (stream && (dst != NULL) && isInbound) {
+-        if(copyDataType == ihipMemsetDataTypeChar){
+-            if ((count & 0x3) == 0) {
+-                // use a faster dword-per-workitem copy:
+-                try {
+-                    value = value & 0xff;
+-                    uint32_t value32 = (value << 24) | (value << 16) | (value << 8) | (value) ;
+-                    ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value32, count/sizeof(uint32_t));
+-                }
+-                catch (std::exception &ex) {
+-                    e = hipErrorInvalidValue;
+-                }
+-             } else {
+-                // use a slow byte-per-workitem copy:
+-                try {
+-                    ihipMemsetKernel<char> (stream, static_cast<char*> (dst), value, count);
+-                }
+-                catch (std::exception &ex) {
+-                    e = hipErrorInvalidValue;
+-                }
+-            }
+-        } else {
+-           if(copyDataType == ihipMemsetDataTypeInt) { // 4 Bytes value
+-               try {
+-                   ihipMemsetKernel<uint32_t> (stream, static_cast<uint32_t*> (dst), value, count);
+-               } catch (std::exception &ex) {
+-                   e = hipErrorInvalidValue;
+-               }
+-            } else if(copyDataType == ihipMemsetDataTypeShort) {
+-               try {
+-                   value = value & 0xffff;
+-                   ihipMemsetKernel<uint16_t> (stream, static_cast<uint16_t*> (dst), value, count);
+-               } catch (std::exception &ex) {
+-                   e = hipErrorInvalidValue;
+-               }
+-            }
+-        }
+-        if (HIP_API_BLOCKING) {
+-            tprintf (DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
+-            stream->locked_wait();
++        if (s != HSA_STATUS_SUCCESS) return hipErrorInvalidValue;
++        if (copyDataType == ihipMemsetDataTypeInt) return hipSuccess;
++        if (tail == 0) return hipSuccess;
++
++        dst = static_cast<std::uint32_t*>(dst) + n;
++
++        switch (copyDataType) {
++        case ihipMemsetDataTypeChar:
++            value &= 0xff;
++            ihipMemsetKernel<char>(stream, static_cast<char*>(dst), value, tail);
++            break;
++        case ihipMemsetDataTypeShort:
++            value &= 0xffff;
++            ihipMemsetKernel<short>(stream, static_cast<short*>(dst), value,
++                                    tail / sizeof(std::uint16_t));
++            break;
++        default: break;
+         }
+-    } else {
+-        e = hipErrorInvalidValue;
+     }
+-    return e;
++    catch (...) {
++        return hipErrorInvalidValue;
++    }
++
++    if (HIP_API_BLOCKING) {
++        tprintf(DB_SYNC, "%s LAUNCH_BLOCKING wait for hipMemsetAsync.\n", ToString(stream).c_str());
++        stream->locked_wait();
++    }
++
++    return hipSuccess;
+ };
+
+ hipError_t getLockedPointer(void *hostPtr, size_t dataLen, void **devicePtrPtr)
+@@ -2052,20 +2054,20 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
+         } else {
+             e = hipErrorInvalidValue;
+         }
+-
++
+         if (free) {
+ 		if (!device->_driver_node_id) return ihipLogStatus(hipErrorInvalidDevice);
+-
+-		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");
++
++		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");
+ 		std::ifstream file;
+ 		file.open(fileName);
+ 		if (!file) return ihipLogStatus(hipErrorFileNotFound);
+-
+-                std::string deviceSize;
++
++                std::string deviceSize;
+ 		size_t deviceMemSize;
+-
++
+ 		file >> deviceSize;
+-		file.close();
++		file.close();
+                 if ((deviceMemSize=strtol(deviceSize.c_str(),NULL,10))){
+ 		    *free = device->_props.totalGlobalMem - deviceMemSize;
+ 		    // Deduct the amount of memory from the free memory reported from the system

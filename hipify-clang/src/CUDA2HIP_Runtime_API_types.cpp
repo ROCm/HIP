@@ -597,20 +597,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // cudaError enum values
   // CUDA_SUCCESS
   {"cudaSuccess",                                                      {"hipSuccess",                                               "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 0
-  // cudaErrorInvalidValue = 1, CUDA_ERROR_INVALID_VALUE = 1, hipErrorInvalidValue = 1011
-  // TODO [HIP]: make hipErrorInvalidValue = 1
   // CUDA_ERROR_INVALID_VALUE
   {"cudaErrorInvalidValue",                                            {"hipErrorInvalidValue",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 1
-  // cudaErrorMemoryAllocation = 2, CUDA_ERROR_OUT_OF_MEMORY = 2, hipErrorOutOfMemory = 2, hipErrorMemoryAllocation = 1002
-  // TODO [HIP]: remove hipErrorMemoryAllocation
-  // TODO [HIPIFY]: rename hipErrorMemoryAllocation to hipErrorOutOfMemory
   // CUDA_ERROR_OUT_OF_MEMORY
-  {"cudaErrorMemoryAllocation",                                        {"hipErrorMemoryAllocation",                                 "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 2
-  // cudaErrorInitializationError = 3, CUDA_ERROR_NOT_INITIALIZED = 3, hipErrorNotInitialized = 3, hipErrorInitializationError = 1003
-  // TODO [HIP]: remove hipErrorInitializationError
-  // TODO [HIPIFY]: rename hipErrorInitializationError to hipErrorNotInitialized
+  {"cudaErrorMemoryAllocation",                                        {"hipErrorOutOfMemory",                                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 2
   // CUDA_ERROR_NOT_INITIALIZED
-  {"cudaErrorInitializationError",                                     {"hipErrorInitializationError",                              "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 3
+  {"cudaErrorInitializationError",                                     {"hipErrorNotInitialized",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 3
   // CUDA_ERROR_DEINITIALIZED
   {"cudaErrorCudartUnloading",                                         {"hipErrorDeinitialized",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 4
   // CUDA_ERROR_PROFILER_DISABLED
@@ -624,21 +616,15 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // Deprecated since CUDA 5.0
   // CUDA_ERROR_PROFILER_ALREADY_STOPPED
   {"cudaErrorProfilerAlreadyStopped",                                  {"hipErrorProfilerAlreadyStopped",                           "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 8
-  // cudaErrorInvalidConfiguration = 9, hipErrorInvalidConfiguration = 1009
-  // TODO [HIP]: make hipErrorInvalidConfiguration = 9
   // no analogue
   {"cudaErrorInvalidConfiguration",                                    {"hipErrorInvalidConfiguration",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 9
   // no analogue
   {"cudaErrorInvalidPitchValue",                                       {"hipErrorInvalidPitchValue",                                "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 12
-  // cudaErrorInvalidSymbol = 13, hipErrorInvalidSymbol = 701, but also cudaErrorLaunchOutOfResources = CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES = 701
-  // TODO [HIP]: make hipErrorInvalidSymbol = 13
   // no analogue
   {"cudaErrorInvalidSymbol",                                           {"hipErrorInvalidSymbol",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 13
   // Deprecated since CUDA 10.1
   // no analogue
   {"cudaErrorInvalidHostPointer",                                      {"hipErrorInvalidHostPointer",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 16
-  // cudaErrorInvalidDevicePointer = 17, hipErrorInvalidDevicePointer = 1017
-  // TODO [HIP]: make hipErrorInvalidDevicePointer = 17
   // Deprecated since CUDA 10.1
   // no analogue
   {"cudaErrorInvalidDevicePointer",                                    {"hipErrorInvalidDevicePointer",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 17
@@ -648,8 +634,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorInvalidTextureBinding",                                   {"hipErrorInvalidTextureBinding",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 19
   // no analogue
   {"cudaErrorInvalidChannelDescriptor",                                {"hipErrorInvalidChannelDescriptor",                         "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 20
-  // cudaErrorInvalidMemcpyDirection = 21, hipErrorInvalidMemcpyDirection = 1021
-  // TODO [HIP]: make hipErrorInvalidMemcpyDirection = 21
   // no analogue
   {"cudaErrorInvalidMemcpyDirection",                                  {"hipErrorInvalidMemcpyDirection",                           "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 21
   // no analogue
@@ -686,12 +670,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorDevicesUnavailable",                                      {"hipErrorDevicesUnavailable",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 46
   // no analogue
   {"cudaErrorIncompatibleDriverContext",                               {"hipErrorIncompatibleDriverContext",                        "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 49
-  // cudaErrorMissingConfiguration = 52, hipErrorMissingConfiguration = 1001
-  // TODO [HIP]: make hipErrorMissingConfiguration = 52
   // no analogue
   {"cudaErrorMissingConfiguration",                                    {"hipErrorMissingConfiguration",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 52
-  // cudaErrorPriorLaunchFailure = 53, hipErrorPriorLaunchFailure = 1005
-  // TODO [HIP]: make hipErrorPriorLaunchFailure = 53
   // no analogue
   {"cudaErrorPriorLaunchFailure",                                      {"hipErrorPriorLaunchFailure",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 53
   // no analogue
@@ -704,32 +684,23 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorSyncDepthExceeded",                                       {"hipErrorSyncDepthExceeded",                                "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 68
   // no analogue
   {"cudaErrorLaunchPendingCountExceeded",                              {"hipErrorLaunchPendingCountExceeded",                       "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 69
-  // cudaErrorInvalidDeviceFunction = 98, hipErrorInvalidDeviceFunction = 1008
-  // TODO [HIP]: make hipErrorInvalidDeviceFunction = 98
   // no analogue
   {"cudaErrorInvalidDeviceFunction",                                   {"hipErrorInvalidDeviceFunction",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 98
-  // cudaErrorNoDevice = 100, CUDA_ERROR_NO_DEVICE = 100, hipErrorNoDevice = 1038
-  // TODO [HIP]: make hipErrorNoDevice = 100
   // CUDA_ERROR_NO_DEVICE
   {"cudaErrorNoDevice",                                                {"hipErrorNoDevice",                                         "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 100
-  // cudaErrorInvalidDevice = 101, CUDA_ERROR_INVALID_DEVICE = 101, hipErrorInvalidDevice = 1010
-  // TODO [HIP]: make hipErrorInvalidDevice = 101
   // CUDA_ERROR_INVALID_DEVICE
   {"cudaErrorInvalidDevice",                                           {"hipErrorInvalidDevice",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 101
   // no analogue
   {"cudaErrorStartupFailure",                                          {"hipErrorStartupFailure",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 127
   // CUDA_ERROR_INVALID_IMAGE
   {"cudaErrorInvalidKernelImage",                                      {"hipErrorInvalidImage",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 200
-  // Typo fixed in 10.2
   // CUDA_ERROR_INVALID_CONTEXT
   {"cudaErrorDeviceUninitialized",                                     {"hipErrorInvalidContext",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 201
+  // Typo fixed in 10.2
   // CUDA_ERROR_INVALID_CONTEXT
   {"cudaErrorDeviceUninitilialized",                                   {"hipErrorInvalidContext",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 201
-  // cudaErrorMapBufferObjectFailed = 205, CUDA_ERROR_MAP_FAILED = 205, hipErrorMapFailed = 205, hipErrorMapBufferObjectFailed = 1071
-  // TODO [HIP]: remove hipErrorMapBufferObjectFailed
-  // TODO [HIPIFY]: rename hipErrorMapBufferObjectFailed to hipErrorMapFailed
   // CUDA_ERROR_MAP_FAILED
-  {"cudaErrorMapBufferObjectFailed",                                   {"hipErrorMapBufferObjectFailed",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 205
+  {"cudaErrorMapBufferObjectFailed",                                   {"hipErrorMapFailed",                                        "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 205
   // CUDA_ERROR_UNMAP_FAILED
   {"cudaErrorUnmapBufferObjectFailed",                                 {"hipErrorUnmapFailed",                                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 206
   // CUDA_ERROR_ARRAY_IS_MAPPED
@@ -772,57 +743,36 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorSharedObjectInitFailed",                                  {"hipErrorSharedObjectInitFailed",                           "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 303
   // CUDA_ERROR_OPERATING_SYSTEM
   {"cudaErrorOperatingSystem",                                         {"hipErrorOperatingSystem",                                  "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 304
-  // cudaErrorInvalidResourceHandle = 400, CUDA_ERROR_INVALID_HANDLE = 400, hipErrorInvalidHandle = 400, hipErrorInvalidResourceHandle = 1033
-  // TODO [HIP]: remove hipErrorInvalidResourceHandle
-  // TODO [HIPIFY]: rename hipErrorInvalidResourceHandle to hipErrorInvalidHandle
   // CUDA_ERROR_INVALID_HANDLE
-  {"cudaErrorInvalidResourceHandle",                                   {"hipErrorInvalidResourceHandle",                            "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 400
+  {"cudaErrorInvalidResourceHandle",                                   {"hipErrorInvalidHandle",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 400
   // CUDA_ERROR_ILLEGAL_STATE
   {"cudaErrorIllegalState",                                            {"hipErrorIllegalState",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 401
   // CUDA_ERROR_NOT_FOUND
   {"cudaErrorSymbolNotFound",                                          {"hipErrorNotFound",                                         "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 500
-  // cudaErrorNotReady = 600, CUDA_ERROR_NOT_READY = 600, hipErrorNotReady = 1034
-  // TODO [HIP]: make hipErrorNotReady = 600
   // CUDA_ERROR_NOT_READY
   {"cudaErrorNotReady",                                                {"hipErrorNotReady",                                         "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 600
  // CUDA_ERROR_ILLEGAL_ADDRESS
   {"cudaErrorIllegalAddress",                                          {"hipErrorIllegalAddress",                                   "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 700
-  // cudaErrorLaunchOutOfResources = 701, CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES = 701, hipErrorLaunchOutOfResources = 1007
-  // TODO [HIP]: make hipErrorLaunchOutOfResources = 701
   // CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES
   {"cudaErrorLaunchOutOfResources",                                    {"hipErrorLaunchOutOfResources",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 701
-  // cudaErrorLaunchTimeout = 702, CUDA_ERROR_LAUNCH_TIMEOUT = 702, hipErrorLaunchTimeOut = 1006
-  // TODO [HIP]: make hipErrorLaunchTimeOut = 702
   // CUDA_ERROR_LAUNCH_TIMEOUT
   {"cudaErrorLaunchTimeout",                                           {"hipErrorLaunchTimeOut",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 702
   // CUDA_ERROR_LAUNCH_INCOMPATIBLE_TEXTURING
   {"cudaErrorLaunchIncompatibleTexturing",                             {"hipErrorLaunchIncompatibleTexturing",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 703
-  // cudaErrorPeerAccessAlreadyEnabled = 704, CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED = 704, hipErrorPeerAccessAlreadyEnabled = 1050
-  // TODO [HIP]: make hipErrorPeerAccessAlreadyEnabled = 704
   // CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED
   {"cudaErrorPeerAccessAlreadyEnabled",                                {"hipErrorPeerAccessAlreadyEnabled",                         "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 704
-  // cudaErrorPeerAccessNotEnabled = 705, CUDA_ERROR_PEER_ACCESS_NOT_ENABLED = 705, hipErrorPeerAccessNotEnabled = 1051
-  // TODO [HIP]: make hipErrorPeerAccessNotEnabled = 705
   // CUDA_ERROR_PEER_ACCESS_NOT_ENABLED
   {"cudaErrorPeerAccessNotEnabled",                                    {"hipErrorPeerAccessNotEnabled",                             "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 705
-  // cudaErrorSetOnActiveProcess = 708, CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE = 708, hipErrorSetOnActiveProcess = 305
-  // TODO [HIP]: make hipErrorSetOnActiveProcess = 708
   // CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE
   {"cudaErrorSetOnActiveProcess",                                      {"hipErrorSetOnActiveProcess",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 708
   // CUDA_ERROR_CONTEXT_IS_DESTROYED
   {"cudaErrorContextIsDestroyed",                                      {"hipErrorContextIsDestroyed",                               "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 709
-  // cudaErrorAssert = 710, CUDA_ERROR_ASSERT = 710, hipErrorAssert = 1081
-  // TODO [HIP]: make hipErrorAssert = 710
   // CUDA_ERROR_ASSERT
   {"cudaErrorAssert",                                                  {"hipErrorAssert",                                           "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 710
   // CUDA_ERROR_TOO_MANY_PEERS
   {"cudaErrorTooManyPeers",                                            {"hipErrorTooManyPeers",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 711
-  // cudaErrorHostMemoryAlreadyRegistered = 712, CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED = 712, hipErrorHostMemoryAlreadyRegistered = 1061
-  // TODO [HIP]: make hipErrorHostMemoryAlreadyRegistered = 712
   // CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED
   {"cudaErrorHostMemoryAlreadyRegistered",                             {"hipErrorHostMemoryAlreadyRegistered",                      "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 712
-  // cudaErrorHostMemoryNotRegistered = 713, CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED = 713, hipErrorHostMemoryNotRegistered = 1062
-  // TODO [HIP]: make hipErrorHostMemoryNotRegistered = 713
   // CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED
   {"cudaErrorHostMemoryNotRegistered",                                 {"hipErrorHostMemoryNotRegistered",                          "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 713
   // CUDA_ERROR_HARDWARE_STACK_ERROR
@@ -835,16 +785,12 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorInvalidAddressSpace",                                     {"hipErrorInvalidAddressSpace",                              "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 717
   // CUDA_ERROR_INVALID_PC
   {"cudaErrorInvalidPc",                                               {"hipErrorInvalidPc",                                        "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 718
-  // cudaErrorLaunchFailure = 719, CUDA_ERROR_LAUNCH_FAILED = 719, hipErrorLaunchFailure = 1004
-  // TODO [HIP]: make hipErrorSetOnActiveProcess = 719
   // CUDA_ERROR_LAUNCH_FAILED
   {"cudaErrorLaunchFailure",                                           {"hipErrorLaunchFailure",                                    "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 719
   // no analogue
   {"cudaErrorCooperativeLaunchTooLarge",                               {"hipErrorCooperativeLaunchTooLarge",                        "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 720
   // CUDA_ERROR_NOT_PERMITTED
   {"cudaErrorNotPermitted",                                            {"hipErrorNotPermitted",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 800
-  // cudaErrorNotSupported = 801, CUDA_ERROR_NOT_SUPPORTED = 801, hipErrorNotSupported = 1082
-  // TODO [HIP]: make hipErrorNotSupported = 801
   // CUDA_ERROR_NOT_SUPPORTED
   {"cudaErrorNotSupported",                                            {"hipErrorNotSupported",                                     "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 801
   // CUDA_ERROR_SYSTEM_NOT_READY
@@ -875,8 +821,6 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   {"cudaErrorTimeout",                                                 {"hipErrorTimeout",                                          "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 909
   // CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE
   {"cudaErrorGraphExecUpdateFailure",                                  {"hipErrorGraphExecUpdateFailure",                           "", CONV_NUMERIC_LITERAL, API_RUNTIME, HIP_UNSUPPORTED}}, // 910
-  // cudaErrorUnknown = 999, CUDA_ERROR_UNKNOWN = 999, hipErrorUnknown = 1030
-  // TODO [HIP]: make hipErrorUnknown = 999
   // CUDA_ERROR_UNKNOWN
   {"cudaErrorUnknown",                                                 {"hipErrorUnknown",                                          "", CONV_NUMERIC_LITERAL, API_RUNTIME}}, // 999
   // Deprecated since CUDA 4.1
@@ -1436,7 +1380,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_RUNTIME_TYPE_NAME_MAP {
   // CU_MEMHOSTALLOC_DEVICEMAP
   {"cudaHostAllocMapped",                                              {"hipHostMallocMapped",                                      "", CONV_DEFINE, API_RUNTIME}}, // 0x02
   // CU_MEMHOSTALLOC_WRITECOMBINED
-  {"cudaHostAllocWriteCombined",                                       {"hipHostAllocWriteCombined",                                "", CONV_DEFINE, API_RUNTIME}}, // 0x04
+  {"cudaHostAllocWriteCombined",                                       {"hipHostMallocWriteCombined",                               "", CONV_DEFINE, API_RUNTIME}}, // 0x04
   // no analogue
   {"cudaHostRegisterDefault",                                          {"hipHostRegisterDefault",                                   "", CONV_DEFINE, API_RUNTIME}}, // 0x00
   // CU_MEMHOSTREGISTER_PORTABLE

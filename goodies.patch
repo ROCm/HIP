@@ -1,0 +1,510 @@
+diff --git a/include/hip/hcc_detail/hip_runtime.h b/include/hip/hcc_detail/hip_runtime.h
+index 0b705703..b3c1aac5 100644
+--- a/include/hip/hcc_detail/hip_runtime.h
++++ b/include/hip/hcc_detail/hip_runtime.h
+@@ -219,7 +219,32 @@ namespace hip_impl {
+
+     __device__
+     R operator()(std::uint32_t x) const noexcept {
+-      return hc_get_num_groups(x);
++      //return hc_get_num_groups(x);
++      using P = __attribute__((address_space(4))) hsa_kernel_dispatch_packet_t;
++
++      #if defined(__HIP_DEVICE_COMPILE__)
++        auto p = static_cast<const P*>(__builtin_amdgcn_dispatch_ptr());
++      #else
++        const P* p = nullptr;
++      #endif
++
++      // TODO: technically not in spec.
++      union {
++        std::uint64_t d;
++        struct {
++          std::uint16_t num_groups_x;
++          std::uint16_t num_groups_y;
++          std::uint16_t num_groups_z;
++          std::uint16_t pad;
++        };
++      } tmp{p->reserved2};
++
++      switch (x) {
++      case 0: return tmp.num_groups_x;
++      case 1: return tmp.num_groups_y;
++      case 2: return tmp.num_groups_z;
++      default: return 0;
++      }
+     }
+   };
+   struct WorkitemId {
+@@ -287,21 +312,21 @@ static constexpr Coordinates<hip_impl::GroupId> blockIdx{};
+ static constexpr Coordinates<hip_impl::NumGroups> gridDim{};
+ static constexpr Coordinates<hip_impl::WorkitemId> threadIdx{};
+
+-#define hipThreadIdx_x (hc_get_workitem_id(0))
+-#define hipThreadIdx_y (hc_get_workitem_id(1))
+-#define hipThreadIdx_z (hc_get_workitem_id(2))
++#define hipThreadIdx_x (threadIdx.x)
++#define hipThreadIdx_y (threadIdx.y)
++#define hipThreadIdx_z (threadIdx.z)
+
+-#define hipBlockIdx_x (hc_get_group_id(0))
+-#define hipBlockIdx_y (hc_get_group_id(1))
+-#define hipBlockIdx_z (hc_get_group_id(2))
++#define hipBlockIdx_x (blockIdx.x)
++#define hipBlockIdx_y (blockIdx.y)
++#define hipBlockIdx_z (blockIdx.z)
+
+-#define hipBlockDim_x (hc_get_group_size(0))
+-#define hipBlockDim_y (hc_get_group_size(1))
+-#define hipBlockDim_z (hc_get_group_size(2))
++#define hipBlockDim_x (blockDim.x)
++#define hipBlockDim_y (blockDim.y)
++#define hipBlockDim_z (blockDim.z)
+
+-#define hipGridDim_x (hc_get_num_groups(0))
+-#define hipGridDim_y (hc_get_num_groups(1))
+-#define hipGridDim_z (hc_get_num_groups(2))
++#define hipGridDim_x (gridDim.x)
++#define hipGridDim_y (gridDim.y)
++#define hipGridDim_z (gridDim.z)
+
+ #endif // defined __HCC__
+ #if __HCC_OR_HIP_CLANG__
+diff --git a/src/hip_memory.cpp b/src/hip_memory.cpp
+index 140e5bb3..c30546de 100644
+--- a/src/hip_memory.cpp
++++ b/src/hip_memory.cpp
+@@ -35,28 +35,104 @@ __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
+ // Internal HIP APIS:
+ namespace hip_internal {
+
++namespace {
++    hsa_amd_pointer_info_t info(const void* ptr) {
++        hsa_amd_pointer_info_t r{sizeof(hsa_amd_pointer_info_t)};
++
++        const auto s{hsa_amd_pointer_info(const_cast<void*>(ptr), &r, nullptr,
++                                          nullptr, nullptr)};
++
++        if (s != HSA_STATUS_SUCCESS) {
++            throw std::runtime_error{"hsa_amd_pointer_info call failed."};
++        }
++
++        return r;
++    }
++} // Anonymous namespace.
++
+ hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                        hipStream_t stream) {
+-    hipError_t e = hipSuccess;
+-
+     // Return success if number of bytes to copy is 0
+-    if (sizeBytes == 0) return e;
++    if (sizeBytes == 0) return hipSuccess;
++    if (!dst || !src) return hipErrorInvalidValue;
+
+-    stream = ihipSyncAndResolveStream(stream);
++    try {
++        struct { hsa_amd_pointer_info_t dst, src; } pi{info(dst), info(src)};
+
+-    if ((dst == NULL) || (src == NULL)) {
+-        e = hipErrorInvalidValue;
+-    } else if (stream) {
+-        try {
+-            stream->locked_copyAsync(dst, src, sizeBytes, kind);
+-        } catch (ihipException& ex) {
+-            e = ex._code;
++        if (pi.src.type == HSA_EXT_POINTER_TYPE_UNKNOWN) {
++            hsa_amd_memory_lock(const_cast<void*>(src), sizeBytes, &pi.dst.agentOwner, 1, const_cast<void**>(&src));
+         }
+-    } else {
+-        e = hipErrorInvalidValue;
++        if (pi.dst.type == HSA_EXT_POINTER_TYPE_UNKNOWN) {
++            hsa_amd_memory_lock(dst, sizeBytes, &pi.src.agentOwner, 1, &dst);
++        }
++        LockedAccessor_StreamCrit_t cs{
++            ihipSyncAndResolveStream(stream)->criticalData()};
++
++        auto d{[&](hsa_queue_t*) { cs->_av.release_locked_hsa_queue(); }};
++        std::unique_ptr<hsa_queue_t, decltype(d)> q{
++            static_cast<hsa_queue_t*>(cs->_av.acquire_locked_hsa_queue()),
++            std::move(d)};
++
++        auto b0{static_cast<hsa_barrier_or_packet_t*>(
++            q->base_address) + hsa_queue_add_write_index_relaxed(q.get(), 1)};
++        hsa_signal_create(1, 1, &pi.dst.agentOwner, &b0->completion_signal);
++
++        __atomic_store_n(
++            &b0->header,
++            (HSA_PACKET_TYPE_BARRIER_OR << HSA_PACKET_HEADER_TYPE) |
++            (1 << HSA_PACKET_HEADER_BARRIER) |
++            (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE) |
++            (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_RELEASE_FENCE_SCOPE),
++            __ATOMIC_RELAXED);
++
++        hsa_signal_t post{};
++        hsa_signal_create(1, 1, &pi.dst.agentOwner, &post);
++
++        auto b1{static_cast<hsa_barrier_or_packet_t*>(
++            q->base_address) + hsa_queue_add_write_index_relaxed(q.get(), 1)};
++        b1->dep_signal[0] = post;
++        __atomic_store_n(
++            &b1->header,
++            (HSA_PACKET_TYPE_BARRIER_OR << HSA_PACKET_HEADER_TYPE) |
++            (1 << HSA_PACKET_HEADER_BARRIER) |
++            (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE) |
++            (HSA_FENCE_SCOPE_SYSTEM << HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE),
++            __ATOMIC_RELAXED);
++
++        const auto s = hsa_amd_memory_async_copy(
++            dst, pi.dst.agentOwner, src, pi.src.agentOwner, sizeBytes, 1,
++            &b0->completion_signal,
++            post);
++
++        if (s != HSA_STATUS_SUCCESS) return hipErrorUnknown;
++
++        hsa_signal_store_relaxed(
++            q->doorbell_signal, hsa_queue_load_write_index_relaxed(q.get()) + 1);
++
++        std::thread{[=](hc::completion_future cf, hsa_signal_t s) {
++            cf.wait();
++            hsa_signal_destroy(s);
++            hsa_signal_destroy(post);
++        }, cs->_av.create_marker(), b0->completion_signal}.detach();
++//    }
++
++
++        // struct Foo { static __global__ void foo() noexcept {} };
++        // hipLaunchKernelGGL(Foo::foo, 1, 1, 0, stream);
++    }
++    catch (const ihipException& ex) {
++        return ex._code;
+     }
++    catch (const std::exception& ex) {
++        std::cerr << ex.what() << std::endl;
+
+-    return e;
++        throw;
++    }
++    catch (...) {
++        return hipErrorUnknown;
++    }
++
++    return hipSuccess;
+ }
+
+ // return 0 on success or -1 on error:
+@@ -500,9 +576,9 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
+ hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes, size_t height, unsigned int elementSizeBytes){
+     HIP_INIT_SPECIAL_API(hipMemAllocPitch, (TRACE_MEM), dptr, pitch, widthInBytes, height,elementSizeBytes);
+     HIP_SET_DEVICE();
+-
++
+     if (widthInBytes == 0 || height == 0) return ihipLogStatus(hipErrorInvalidValue);
+-
++
+     return ihipLogStatus(ihipMallocPitch(tls, dptr, pitch, widthInBytes, height, 0));
+ }
+
+@@ -1175,122 +1251,59 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* src, size_t count,
+ hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
+     HIP_INIT_SPECIAL_API(hipMemcpy, (TRACE_MCMD), dst, src, sizeBytes, kind);
+
+-    hipError_t e = hipSuccess;
+-
+     // Return success if number of bytes to copy is 0
+-    if (sizeBytes == 0) return ihipLogStatus(e);
++    if (sizeBytes == 0) return ihipLogStatus(hipSuccess);
++    if (!dst || !src) return ihipLogStatus(hipErrorInvalidValue);
+
+-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
++    try {
++        auto stream{ihipSyncAndResolveStream(hipStreamNull)};
++        LockedAccessor_StreamCrit_t cs{stream->criticalData()};
++        cs->_av.wait(stream->waitMode());
+
+-    hc::completion_future marker;
++        if (hsa_memory_copy(dst, src, sizeBytes) != HSA_STATUS_SUCCESS) {
++            return ihipLogStatus(hipErrorUnknown);
++        }
++    }
++    catch (const ihipException& ex) {
++        return ihipLogStatus(ex._code);
++    }
++    catch (const std::exception& ex) {
++        std::cerr << ex.what() << std::endl;
+
+-    if(dst==NULL || src==NULL)
+-	{
+-	e=hipErrorInvalidValue;
+-	return ihipLogStatus(e);
+-	}
+-    try {
+-        stream->locked_copySync(dst, src, sizeBytes, kind);
+-    } catch (ihipException& ex) {
+-        e = ex._code;
++        throw;
++    }
++    catch (...) {
++        return ihipLogStatus(hipErrorUnknown);
+     }
+
+-    return ihipLogStatus(e);
++    return ihipLogStatus(hipSuccess);
+ }
+
+
+ hipError_t hipMemcpyHtoD(hipDeviceptr_t dst, void* src, size_t sizeBytes) {
+     HIP_INIT_SPECIAL_API(hipMemcpyHtoD, (TRACE_MCMD), dst, src, sizeBytes);
+
+-    hipError_t e = hipSuccess;
+-    if (sizeBytes == 0) return ihipLogStatus(e);
+-
+-    if(dst==NULL || src==NULL){
+-	return ihipLogStatus(hipErrorInvalidValue);
+-    }
+-
+-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+-
+-    hc::completion_future marker;
+-
+-    try {
+-        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToDevice, false);
+-    } catch (ihipException& ex) {
+-        e = ex._code;
+-    }
+-
+-    return ihipLogStatus(e);
++    return hipMemcpy(dst, src, sizeBytes, hipMemcpyHostToDevice);
+ }
+
+
+ hipError_t hipMemcpyDtoH(void* dst, hipDeviceptr_t src, size_t sizeBytes) {
+     HIP_INIT_SPECIAL_API(hipMemcpyDtoH, (TRACE_MCMD), dst, src, sizeBytes);
+
+-    hipError_t e = hipSuccess;
+-    if (sizeBytes == 0) return ihipLogStatus(e);
+-
+-    if(dst==NULL || src==NULL){
+-	return ihipLogStatus(hipErrorInvalidValue);
+-    }
+-
+-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+-
+-    hc::completion_future marker;
+-
+-    try {
+-        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToHost, false);
+-    } catch (ihipException& ex) {
+-        e = ex._code;
+-    }
+-
+-    return ihipLogStatus(e);
++    return hipMemcpy(dst, src, sizeBytes, hipMemcpyDeviceToHost);
+ }
+
+
+ hipError_t hipMemcpyDtoD(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes) {
+     HIP_INIT_SPECIAL_API(hipMemcpyDtoD, (TRACE_MCMD), dst, src, sizeBytes);
+
+-    hipError_t e = hipSuccess;
+-    if (sizeBytes == 0) return ihipLogStatus(e);
+-
+-    if(dst==NULL || src==NULL){
+-	return ihipLogStatus(hipErrorInvalidValue);
+-    }
+-
+-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+-
+-    hc::completion_future marker;
+-
+-    try {
+-        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyDeviceToDevice, false);
+-    } catch (ihipException& ex) {
+-        e = ex._code;
+-    }
+-
+-    return ihipLogStatus(e);
++    return hipMemcpy(dst, src, sizeBytes, hipMemcpyDeviceToDevice);
+ }
+
+ hipError_t hipMemcpyHtoH(void* dst, void* src, size_t sizeBytes) {
+     HIP_INIT_SPECIAL_API(hipMemcpyHtoH, (TRACE_MCMD), dst, src, sizeBytes);
+
+-    hipError_t e = hipSuccess;
+-    if (sizeBytes == 0) return ihipLogStatus(e);
+-
+-    if(dst==NULL || src==NULL){
+-	return ihipLogStatus(hipErrorInvalidValue);
+-    }
+-
+-    hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+-
+-    hc::completion_future marker;
+-
+-    try {
+-        stream->locked_copySync((void*)dst, (void*)src, sizeBytes, hipMemcpyHostToHost, false);
+-    } catch (ihipException& ex) {
+-        e = ex._code;
+-    }
+-
+-    return ihipLogStatus(e);
++    return hipMemcpy(dst, src, sizeBytes, hipMemcpyHostToHost);
+ }
+
+ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+@@ -1328,8 +1341,6 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
+
+     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+-    hc::completion_future marker;
+-
+     hipError_t e = hipSuccess;
+
+     size_t byteSize;
+@@ -1380,8 +1391,6 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
+
+     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+-    hc::completion_future marker;
+-
+     hipError_t e = hipSuccess;
+
+     try {
+@@ -1399,8 +1408,6 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffs
+
+     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+-    hc::completion_future marker;
+-
+     hipError_t e = hipSuccess;
+
+     try {
+@@ -1417,8 +1424,6 @@ hipError_t hipMemcpyHtoA(hipArray* dstArray, size_t dstOffset, const void* srcHo
+
+     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+-    hc::completion_future marker;
+-
+     hipError_t e = hipSuccess;
+     try {
+         stream->locked_copySync((char*)dstArray->data + dstOffset, srcHost, count,
+@@ -1435,8 +1440,6 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
+
+     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
+
+-    hc::completion_future marker;
+-
+     hipError_t e = hipSuccess;
+
+     try {
+@@ -1510,7 +1513,6 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
+             dstPitch = p->dstPtr.pitch;
+         }
+         stream = ihipSyncAndResolveStream(stream);
+-        hc::completion_future marker;
+         try {
+             if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
+                 if(isAsync)
+@@ -1556,16 +1558,23 @@ hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream
+ }
+
+ namespace {
+-template <uint32_t block_dim, typename RandomAccessIterator, typename N, typename T>
++template <uint32_t block_dim, uint32_t items_per_lane,
++          typename RandomAccessIterator, typename N, typename T>
+ __global__ void hip_fill_n(RandomAccessIterator f, N n, T value) {
+-    const uint32_t grid_dim = gridDim.x * blockDim.x;
++    const auto grid_dim = gridDim.x * blockDim.x * items_per_lane;
++    const auto gidx = blockIdx.x * block_dim + threadIdx.x;
+
+-    size_t idx = blockIdx.x * block_dim + threadIdx.x;
+-    while (idx < n) {
+-        __builtin_memcpy(reinterpret_cast<void*>(&f[idx]), reinterpret_cast<const void*>(&value),
+-                         sizeof(T));
++    size_t idx = gidx * items_per_lane;
++    while (idx + items_per_lane <= n) {
++        for (auto i = 0u; i != items_per_lane; ++i) {
++            __builtin_nontemporal_store(value, &f[idx + i]);
++        }
+         idx += grid_dim;
+     }
++
++    if (gidx < n % grid_dim) {
++        __builtin_nontemporal_store(value, &f[n - gidx - 1]);
++    }
+ }
+
+ template <typename T, typename std::enable_if<std::is_integral<T>{}>::type* = nullptr>
+@@ -1620,11 +1629,14 @@ hipError_t ihipMemPtrGetInfo(void* ptr, size_t* size) {
+ template <typename T>
+ void ihipMemsetKernel(hipStream_t stream, T* ptr, T val, size_t count) {
+     static constexpr uint32_t block_dim = 256;
++    static constexpr uint32_t max_write_width = 4 * sizeof(std::uint32_t); // 4 DWORDs
++    static constexpr uint32_t items_per_lane = max_write_width / sizeof(T);
+
+-    const uint32_t grid_dim = clamp_integer<size_t>(count / block_dim, 1, UINT32_MAX);
++    const uint32_t grid_dim = clamp_integer<size_t>(
++        count / (block_dim * items_per_lane), 1, UINT32_MAX);
+
+-    hipLaunchKernelGGL(hip_fill_n<block_dim>, dim3(grid_dim), dim3{block_dim}, 0u, stream, ptr,
+-                       count, std::move(val));
++    hipLaunchKernelGGL(hip_fill_n<block_dim, items_per_lane>, dim3(grid_dim),
++                       dim3{block_dim}, 0u, stream, ptr, count, std::move(val));
+ }
+
+ template <typename T>
+@@ -2146,20 +2158,20 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
+         } else {
+             e = hipErrorInvalidValue;
+         }
+-
++
+         if (free) {
+ 		if (!device->_driver_node_id) return ihipLogStatus(hipErrorInvalidDevice);
+-
+-		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");
++
++		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");
+ 		std::ifstream file;
+ 		file.open(fileName);
+ 		if (!file) return ihipLogStatus(hipErrorFileNotFound);
+-
+-                std::string deviceSize;
++
++                std::string deviceSize;
+ 		size_t deviceMemSize;
+-
++
+ 		file >> deviceSize;
+-		file.close();
++		file.close();
+                 if ((deviceMemSize=strtol(deviceSize.c_str(),NULL,10))){
+ 		    *free = device->_props.totalGlobalMem - deviceMemSize;
+ 		    // Deduct the amount of memory from the free memory reported from the system
+diff --git a/src/hip_module.cpp b/src/hip_module.cpp
+index 2afbabf0..2795d9e0 100644
+--- a/src/hip_module.cpp
++++ b/src/hip_module.cpp
+@@ -217,6 +217,21 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
+         aql.grid_size_x = globalWorkSizeX;
+         aql.grid_size_y = globalWorkSizeY;
+         aql.grid_size_z = globalWorkSizeZ;
++
++         // TODO: technically not in spec.
++        union {
++            std::uint64_t d;
++            struct {
++                std::uint16_t num_groups_x;
++                std::uint16_t num_groups_y;
++                std::uint16_t num_groups_z;
++                std::uint16_t pad;
++            };
++        }& tmp(reinterpret_cast<decltype(tmp)&>(aql.reserved2));
++        tmp.num_groups_x = globalWorkSizeX / localWorkSizeX;
++        tmp.num_groups_y = globalWorkSizeY / localWorkSizeY;
++        tmp.num_groups_z = globalWorkSizeZ / localWorkSizeZ;
++
+         if (f->_is_code_object_v3) {
+             const auto* header =
+                 reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
+

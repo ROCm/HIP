@@ -67,11 +67,11 @@ int main(int argc, char *argv[])
     printf ("info: allocate host mem (%6.2f MB)\n", 2*Nbytes/1024.0/1024.0);
     A_h = (float*)malloc(Nbytes);
 
-    // CHECK: CHECK(A_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
+    // CHECK: CHECK(A_h == 0 ? hipErrorOutOfMemory : hipSuccess );
     CHECK(A_h == 0 ? cudaErrorMemoryAllocation : cudaSuccess );
     C_h = (float*)malloc(Nbytes);
 
-    // CHECK: CHECK(C_h == 0 ? hipErrorMemoryAllocation : hipSuccess );
+    // CHECK: CHECK(C_h == 0 ? hipErrorOutOfMemory : hipSuccess );
     CHECK(C_h == 0 ? cudaErrorMemoryAllocation : cudaSuccess );
     // Fill with Phi + i
     for (size_t i=0; i<N; i++)
