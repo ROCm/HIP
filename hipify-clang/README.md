@@ -357,7 +357,7 @@ LLVM 7.0.0 - 9.0.1, CUDA 7.5 - 10.1 Update 2, cudnn 7.0.5.15 - 7.6.5.32
 
 Build system requirements for the latest configuration LLVM 9.0.1/CUDA 10.1 Update 2:
 
-Python 3.6.0 - 3.8.1, cmake 3.5.1 - 3.16.2, Visual Studio 2017 (15.5.2) - 2019 (16.4.2).
+Python 3.6.0 - 3.8.1, cmake 3.5.1 - 3.16.3, Visual Studio 2017 (15.5.2) - 2019 (16.4.3).
 
 Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 16 2019`:
 
@@ -438,5 +438,5 @@ The information contained herein is for informational purposes only, and is subj
 
 AMD, the AMD Arrow logo, and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
 
-Copyright (c) 2014-2019 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2014-2020 Advanced Micro Devices, Inc. All rights reserved.
 
