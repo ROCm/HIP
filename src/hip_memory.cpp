@@ -156,7 +156,6 @@ namespace {
 
     constexpr size_t staging_sz{4 * 1024 * 1024};      // 2 Pages.
     constexpr size_t max_std_memcpy_sz{8 * 1024};      // 8 KiB.
-    constexpr size_t max_hsa_memory_copy_sz{4 * 1024}; // 4 KiB.
 
     thread_local const std::unique_ptr<void, void (*)(void *)> staging_buffer{
         []() {
@@ -305,11 +304,6 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
     switch (si.type) {
     case HSA_EXT_POINTER_TYPE_HSA:
         if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
-            if (n <= max_hsa_memory_copy_sz) {
-                throwing_result_check(
-                    hsa_memory_copy(dst, src, n), __FILE__, __func__, __LINE__);
-                return;
-            }
             return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
         }
 
@@ -361,12 +355,6 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
         return /*is_large_BAR && n <= max_std_memcpy_sz ?
             do_std_memcpy(dst, src, n) : */d2h_copy(dst, src, n, info(src));
     case hipMemcpyDeviceToDevice:
-        if (n <= max_hsa_memory_copy_sz) {
-            throwing_result_check(
-                hsa_memory_copy(dst, src, n), __FILE__, __func__, __LINE__);
-
-            return;
-        }
         return do_copy(dst, src, n, info(dst).agentOwner, info(src).agentOwner);
     default: return generic_copy(dst, src, n, info(dst), info(src));
     }
