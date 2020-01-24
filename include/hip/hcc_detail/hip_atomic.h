@@ -59,17 +59,16 @@ float atomicAdd(float* address, float val)
 {
     unsigned int* uaddr{reinterpret_cast<unsigned int*>(address)};
     unsigned int r{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
-
-    unsigned int old;
-    do {
-        old = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
-
-        if (r != old) { r = old; continue; }
-
-        r = atomicCAS(uaddr, r, __float_as_uint(val + __uint_as_float(r)));
-
-        if (r == old) break;
-    } while (true);
+    unsigned  int assumed;
+    do
+    {
+        assumed = r;
+        r = atomicCAS(
+            uaddr,
+            r,
+            __float_as_uint(val + __uint_as_float(r)));
+    }
+    while(assumed != r);
 
     return __uint_as_float(r);
 }
@@ -79,18 +78,16 @@ double atomicAdd(double* address, double val)
 {
     unsigned long long* uaddr{reinterpret_cast<unsigned long long*>(address)};
     unsigned long long r{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
-
-    unsigned long long old;
-    do {
-        old = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
-
-        if (r != old) { r = old; continue; }
-
+    unsigned long long assumed;
+    do
+    {
+        assumed = r;
         r = atomicCAS(
-            uaddr, r, __double_as_longlong(val + __longlong_as_double(r)));
-
-        if (r == old) break;
-    } while (true);
+            uaddr,
+            r,
+            __double_as_longlong(val + __longlong_as_double(r)));
+    }
+    while(assumed != r);
 
     return __longlong_as_double(r);
 }
