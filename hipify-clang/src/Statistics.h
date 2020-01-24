@@ -49,36 +49,38 @@ enum ConvTypes {
   // Driver API : 5.10. Module Management
   CONV_MODULE,
   // Driver API : 5.11. Memory Management
-  // Runtime API: 5.10. Memory Management
+  // Runtime API: 5.9. Memory Management, 5.10. Memory Management [DEPRECATED]
   CONV_MEMORY,
-  // Driver API : 5.12. Unified Addressing
+  // Driver API : 5.12. Virtual Memory Management
+  CONV_VIRTUAL_MEMORY,
+  // Driver API : 5.13. Unified Addressing
   // Runtime API: 5.11. Unified Addressing
   CONV_ADDRESSING,
-  // Driver API : 5.13. Stream Management
+  // Driver API : 5.14. Stream Management
   // Runtime API: 5.4. Stream Management
   CONV_STREAM,
-  // Driver API : 5.14. Event Management
+  // Driver API : 5.15. Event Management
   // Runtime API: 5.5. Event Management
   CONV_EVENT,
-  // Driver API : 5.15. External Resource Interoperability
+  // Driver API : 5.16. External Resource Interoperability
   // Runtime API: 5.6.External Resource Interoperability
   CONV_EXT_RES,
-  // Driver API : 5.16. Stream memory operations
+  // Driver API : 5.17. Stream memory operations
   CONV_STREAM_MEMORY,
-  // Driver API : 5.17. Execution Control, 5.18. Execution Control [DEPRECATED]
-  // Runtime API: 5.7.Execution Control, 5.9. Execution Control [DEPRECATED]
+  // Driver API : 5.18. Execution Control, 5.19. Execution Control [DEPRECATED]
+  // Runtime API: 5.7.Execution Control, Former 5.9. Execution Control [DEPRECATED]
   CONV_EXECUTION,
-  // Driver API : 5.19. Graph Management
+  // Driver API : 5.20. Graph Management
   // Runtime API: 5.29. Graph Management
   CONV_GRAPH,
-  // Driver API : 5.20. Occupancy
+  // Driver API : 5.21. Occupancy
   // Runtime API: 5.8. Occupancy
   CONV_OCCUPANCY,
-  // Driver API : 5.21. Texture Reference Management, 5.22. Texture Reference Management [DEPRECATED], 5.24. Texture Object Management
-  // Runtime API: 5.24. Texture Reference Management, 5.26. Texture Object Management
+  // Driver API : 5.22. Texture Reference Management [DEPRECATED], 5.24. Texture Object Management
+  // Runtime API: 5.24. Texture Reference Management [DEPRECATED], 5.26. Texture Object Management
   CONV_TEXTURE,
-  // Driver API : 5.23. Surface Reference Management, 5.25. Surface Object Management
-  // Runtime API: 5.25. Surface Reference Management, 5.27. Surface Object Management
+  // Driver API : 5.23. Surface Reference Management [DEPRECATED], 5.25. Surface Object Management
+  // Runtime API: 5.25. Surface Reference Management [DEPRECATED], 5.27. Surface Object Management
   CONV_SURFACE,
   // Driver API : 5.26. Peer Context Memory Access
   // Runtime API: 5.12. Peer Device Memory Access
@@ -172,11 +174,11 @@ private:
   int convTypeCounters[NUM_CONV_TYPES] = {};
 
 public:
-  void incrementCounter(const hipCounter& counter, const std::string& name);
+  void incrementCounter(const hipCounter &counter, const std::string &name);
   // Add the counters from `other` onto the counters of this object.
-  void add(const StatCounter& other);
+  void add(const StatCounter &other);
   int getConvSum();
-  void print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string& prefix);
+  void print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string &prefix);
 };
 
 /**
@@ -195,8 +197,8 @@ class Statistics {
   chr::steady_clock::time_point completionTime;
 
 public:
-  Statistics(const std::string& name);
-  void incrementCounter(const hipCounter &counter, const std::string& name);
+  Statistics(const std::string &name);
+  void incrementCounter(const hipCounter &counter, const std::string &name);
   // Add the counters from `other` onto the counters of this object.
   void add(const Statistics &other);
   void lineTouched(int lineNumber);
@@ -226,12 +228,12 @@ public:
     * processing one file at a time, this allows us to simply expose the stats for the current file globally,
     * simplifying things.
     */
-  static Statistics& current();
+  static Statistics &current();
   /**
     * Set the active Statistics object to the named one, creating it if necessary, and write the completion
     * timestamp into the currently active one.
     */
-  static void setActive(const std::string& name);
+  static void setActive(const std::string &name);
   // Check the counter and option TranslateToRoc whether it should be translated to Roc or not.
   static bool isToRoc(const hipCounter &counter);
   // Check whether the counter is HIP_UNSUPPORTED or not.

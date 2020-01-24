@@ -46,7 +46,7 @@ THE SOFTWARE.
 #include "hsa/hsa_ext_image.h"
 #include "hip/hip_runtime.h"
 #include "hip_hcc_internal.h"
-#include "hip/hip_hcc.h"
+#include "hip/hip_ext.h"
 #include "trace_helper.h"
 #include "env.h"
 
@@ -304,16 +304,28 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t& crit) {
 
 //---
 // Wait for all kernel and data copy commands in this stream to complete.
-void ihipStream_t::locked_wait() {
+inline void ihipStream_t::locked_wait(bool& waited) {
     // create a marker while holding stream lock,
     // but release lock prior to waiting on the marker
     hc::completion_future marker;
     {
         LockedAccessor_StreamCrit_t crit(_criticalData);
+        // skipping marker since stream is empty
+        if (crit->_av.get_is_empty()) {
+            waited = false;
+            return;
+        }
         marker = crit->_av.create_marker(hc::no_scope);
     }
 
     marker.wait(waitMode());
+    waited = true;
+    return;
+};
+
+void ihipStream_t::locked_wait() {
+    bool waited;
+    locked_wait(waited);
 };
 
 // Causes current stream to wait for specified event to complete:
@@ -324,14 +336,6 @@ void ihipStream_t::locked_streamWaitEvent(ihipEventData_t& ecd) {
     crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
 }
 
-
-// Causes current stream to wait for specified event to complete:
-// Note this does not provide any kind of host serialization.
-bool ihipStream_t::locked_eventIsReady(hipEvent_t event) {
-    LockedAccessor_EventCrit_t ecrit(event->criticalData());
-
-    return (ecrit->_eventData.marker().is_ready());
-}
 
 // Create a marker in this stream.
 // Save state in the event so it can track the status of the event.
@@ -1046,6 +1050,7 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
     // Vector of ops sent to each stream that will complete before ops sent to null stream:
     std::vector<hc::completion_future> depOps;
 
+    bool last_stream_waited = false;
     for (auto streamI = crit->const_streams().begin(); streamI != crit->const_streams().end();
          streamI++) {
         ihipStream_t* stream = *streamI;
@@ -1057,7 +1062,8 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
 
         if (HIP_SYNC_NULL_STREAM) {
             if (waitThisStream) {
-                stream->locked_wait();
+                last_stream_waited = false;
+                stream->locked_wait(last_stream_waited);
             }
         } else {
             if (waitThisStream) {
@@ -1088,6 +1094,14 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
             defaultCf.wait();  // TODO - account for active or blocking here.
         }
     }
+    else if ( (HIP_SYNC_NULL_STREAM && !last_stream_waited) ||
+              (!HIP_SYNC_NULL_STREAM && depOps.empty()) ) {
+        // This catches all the conditions where the printf buffer
+        // need to be explicitly flushed
+        if (syncHost) {
+            Kalmar::getContext()->flushPrintfBuffer();
+        }
+    }
 
     tprintf(DB_SYNC, "  syncDefaultStream depOps=%zu\n", depOps.size());
 }
@@ -1107,9 +1121,18 @@ void ihipCtx_t::locked_waitAllStreams() {
     LockedAccessor_CtxCrit_t crit(_criticalData);
 
     tprintf(DB_SYNC, "waitAllStream\n");
+    bool need_printf_flush = false;
     for (auto streamI = crit->const_streams().begin(); streamI != crit->const_streams().end();
          streamI++) {
-        (*streamI)->locked_wait();
+        bool waited;
+        (*streamI)->locked_wait(waited);
+        need_printf_flush = !waited;
+    }
+
+    // When synchronizing with the last stream, if we didn't do an explicit wait,
+    // then we need to an extra flush to the printf buffer
+    if (need_printf_flush) {
+        Kalmar::getContext()->flushPrintfBuffer();
     }
 }
 
@@ -1498,7 +1521,11 @@ hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream) {
         ctx->locked_syncDefaultStream(true /*waitOnSelf*/, true /*syncToHost*/);
     } else {
         // note this does not synchornize with the NULL stream:
-        stream->locked_wait();
+        bool waited;
+        stream->locked_wait(waited);
+        if (!waited) {
+            Kalmar::getContext()->flushPrintfBuffer();
+        }
         e = hipSuccess;
     }
 
@@ -1625,16 +1652,18 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     lp->group_dim.y = block.y;
     lp->group_dim.z = block.z;
     lp->barrier_bit = barrier_bit_queue_default;
-    lp->launch_fence = -1;
 
-    if (!lockAcquired) {
-        auto crit = stream->lockopen_preKernelCommand();
-        lp->av = &(crit->_av);
-    } else {
-        // this stream is already locked (e.g., call from hipExtLaunchMultiKernelMultiDevice)
-        lp->av = &(stream->criticalData()._av);
-    }
+    if (!lockAcquired) stream->lockopen_preKernelCommand();
+    auto &crit = stream->criticalData();
+    lp->av = &(crit._av);
     lp->cf = nullptr;
+    auto acq = (HCC_OPT_FLUSH && !crit._last_op_was_a_copy) ?
+        HSA_FENCE_SCOPE_AGENT : HSA_FENCE_SCOPE_SYSTEM;
+    auto rel = HCC_OPT_FLUSH ?
+        HSA_FENCE_SCOPE_AGENT : HSA_FENCE_SCOPE_SYSTEM;
+    lp->launch_fence = (acq << HSA_PACKET_HEADER_SCACQUIRE_FENCE_SCOPE) |
+        (rel << HSA_PACKET_HEADER_SCRELEASE_FENCE_SCOPE);
+    crit._last_op_was_a_copy = false;
     ihipPrintKernelLaunch(kernelNameStr, lp, stream);
 
     return (stream);
@@ -1762,13 +1791,8 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorIllegalAddress";
         case hipErrorInvalidSymbol:
             return "hipErrorInvalidSymbol";
-
         case hipErrorMissingConfiguration:
             return "hipErrorMissingConfiguration";
-        case hipErrorMemoryAllocation:
-            return "hipErrorMemoryAllocation";
-        case hipErrorInitializationError:
-            return "hipErrorInitializationError";
         case hipErrorLaunchFailure:
             return "hipErrorLaunchFailure";
         case hipErrorPriorLaunchFailure:
@@ -1791,15 +1815,12 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorInvalidMemcpyDirection";
         case hipErrorUnknown:
             return "hipErrorUnknown";
-        case hipErrorInvalidResourceHandle:
-            return "hipErrorInvalidResourceHandle";
         case hipErrorNotReady:
             return "hipErrorNotReady";
         case hipErrorNoDevice:
             return "hipErrorNoDevice";
         case hipErrorPeerAccessAlreadyEnabled:
             return "hipErrorPeerAccessAlreadyEnabled";
-
         case hipErrorPeerAccessNotEnabled:
             return "hipErrorPeerAccessNotEnabled";
         case hipErrorRuntimeMemory:
@@ -1810,8 +1831,6 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorHostMemoryAlreadyRegistered";
         case hipErrorHostMemoryNotRegistered:
             return "hipErrorHostMemoryNotRegistered";
-        case hipErrorMapBufferObjectFailed:
-            return "hipErrorMapBufferObjectFailed";
         case hipErrorAssert:
             return "hipErrorAssert";
         case hipErrorNotSupported:

@@ -222,7 +222,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
         hsa_ext_image_channel_order_t channelOrder;
         hsa_ext_image_channel_type_t channelType;
         void* devPtr = nullptr;
-
+        size_t pitch = 0;
         switch (pResDesc->resType) {
             case hipResourceTypeArray:
                 devPtr = pResDesc->res.array.array->data;
@@ -279,6 +279,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                 imageDescriptor.depth = 0;
                 imageDescriptor.array_size = 0;
                 imageDescriptor.geometry = HSA_EXT_IMAGE_GEOMETRY_2D;
+                pitch = pResDesc->res.pitch2D.pitchInBytes;
                 getChannelOrderAndType(pResDesc->res.pitch2D.desc, pTexDesc->readMode,
                                        &channelOrder, &channelType);
                 break;
@@ -294,9 +295,13 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                               pTexDesc->normalizedCoords);
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
+
+        if(hipResourceTypePitch2D != pResDesc->resType)
+            pitch = getElementSize(channelOrder, channelType) * alignUp(imageDescriptor.width, IMAGE_PITCH_ALIGNMENT);
+
         if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(
                                       *agent, &imageDescriptor, devPtr, permission,
-                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
+                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, pitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return ihipLogStatus(hipErrorRuntimeOther);
@@ -429,9 +434,11 @@ hipError_t ihipBindTextureImpl(TlsData *tls_, int dim, enum hipTextureReadMode r
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
+        size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(size, IMAGE_PITCH_ALIGNMENT);
+
         if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(
                                       *agent, &imageDescriptor, devPtr, permission,
-                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
+                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, rowPitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return hipErrorRuntimeOther;
@@ -456,7 +463,7 @@ hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* dev
 
 hipError_t ihipBindTexture2DImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                  const void* devPtr, const struct hipChannelFormatDesc* desc,
-                                 size_t width, size_t height, textureReference* tex) {
+                                 size_t width, size_t height, textureReference* tex, size_t pitch) {
     hipError_t hip_status = hipSuccess;
     enum hipTextureAddressMode addressMode = tex->addressMode[0];
     enum hipTextureFilterMode filterMode = tex->filterMode;
@@ -502,9 +509,12 @@ hipError_t ihipBindTexture2DImpl(TlsData *tls, int dim, enum hipTextureReadMode 
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
+        if( 0 == pitch)
+            pitch = getElementSize(channelOrder, channelType) * alignUp(width, IMAGE_PITCH_ALIGNMENT);
+
         if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(
                                       *agent, &imageDescriptor, devPtr, permission,
-                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
+                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, pitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return hipErrorRuntimeOther;
@@ -522,8 +532,12 @@ hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* d
                             size_t pitch) {
     HIP_INIT_API(hipBindTexture2D, offset, tex, devPtr, desc, width, height, pitch);
     hipError_t hip_status = hipSuccess;
+ 
+    //TODO: Fix when HSA accepts user defined pitch
+    if(pitch % 64) pitch =0;
+
     hip_status = ihipBindTexture2DImpl(tls, hipTextureType2D, hipReadModeElementType, offset, devPtr,
-                                       desc, width, height, tex);
+                                       desc, width, height, tex, pitch);
     return ihipLogStatus(hip_status);
 }
 
@@ -601,9 +615,11 @@ hipError_t ihipBindTextureToArrayImpl(TlsData *tls_, int dim, enum hipTextureRea
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
+        size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(imageDescriptor.width, IMAGE_PITCH_ALIGNMENT);
+
         if (HSA_STATUS_SUCCESS != hsa_ext_image_create_with_layout(
                                       *agent, &imageDescriptor, array->data, permission,
-                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, 0, 0, &(pTexture->image)) ||
+                                      HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, rowPitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
             return hipErrorRuntimeOther;
@@ -797,7 +813,10 @@ hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPT
     size_t offset;
     hipError_t hip_status = hipSuccess;
     // TODO: hipReadModeElementType is default.
+    //TODO: Fix when HSA accepts user defined pitch
+    if(pitch % 64) pitch =0;
+
     hip_status = ihipBindTexture2DImpl(tls, hipTextureType2D, hipReadModeElementType, &offset, devPtr,
-                                       NULL, desc->Width, desc->Height, tex);
+                                       NULL, desc->Width, desc->Height, tex, pitch);
     return ihipLogStatus(hip_status);
 }

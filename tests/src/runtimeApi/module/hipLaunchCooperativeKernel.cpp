@@ -108,11 +108,11 @@ int main() {
   dim3 dimBlock = dim3(1);
   dim3 dimGrid  = dim3(1);
   int numBlocks = 0;
-  uint workgroups[2] = {32, 64};
+  uint workgroups[4] = {32, 64, 128, 256};
 
   system_clock::time_point start = system_clock::now();
 
-  for (uint i = 0; i < 2; ++i) {
+  for (uint i = 0; i < 4; ++i) {
 
     dimBlock.x = workgroups[i];
     // Calculate the device occupancy to know how many blocks can be run concurrently

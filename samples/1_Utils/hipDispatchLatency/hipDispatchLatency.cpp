@@ -1,16 +1,13 @@
 /*
 Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -21,142 +18,134 @@ THE SOFTWARE.
 */
 
 #include "hip/hip_runtime.h"
+#ifdef __HIP_PLATFORM_HCC__
+#include "hip/hip_ext.h"
+#endif
 #include <iostream>
-#include <time.h>
-#include "ResultDatabase.h"
-
-#define PRINT_PROGRESS 0
-
-#define check(cmd)                                                                                 \
-    {                                                                                              \
-        hipError_t status = cmd;                                                                   \
-        if (status != hipSuccess) {                                                                \
-            printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(status), status, #cmd,  \
-                   __FILE__, __LINE__);                                                            \
-            abort();                                                                               \
-        }                                                                                          \
-    }
-
-#define LEN 1024 * 1024
+#include <chrono>
+#include <algorithm>
 
 #define NUM_GROUPS 1
-#define GROUP_SIZE 64
-#define TEST_ITERS 20
-#define DISPATCHES_PER_TEST 100
+#define GROUP_SIZE 1
+#define WARMUP_RUN_COUNT 10
+#define TIMING_RUN_COUNT 100
+#define TOTAL_RUN_COUNT WARMUP_RUN_COUNT + TIMING_RUN_COUNT
+#define BATCH_SIZE 1000
 
-const unsigned p_tests = 0xfffffff;
+#define FILE_NAME "test_kernel.code"
+#define KERNEL_NAME "test"
 
+__global__ void EmptyKernel() { }
 
-// HCC optimizes away fully NULL kernel calls, so run one that is nearly null:
-__global__ void NearlyNull(float* Ad) {
-    if (Ad) {
-        Ad[0] = 42;
-    }
+void print_timing(std::string test, const std::array<float, TOTAL_RUN_COUNT> &results, int batch = 1) {
+    
+    float total_us = 0.0f, mean_us = 0.0f, stddev_us = 0.0f;
+    
+    // skip warm-up runs
+    auto start_iter = std::next(results.begin(), WARMUP_RUN_COUNT);
+    auto end_iter = results.end();
+
+    // mean
+    std::for_each(start_iter, end_iter, [&](const float &run_ms) {
+        total_us += (run_ms * 1000) / batch;
+    });   
+    mean_us = total_us  / TIMING_RUN_COUNT;
+
+   // stddev
+    total_us = 0;
+    std::for_each(start_iter, end_iter, [&](const float &run_ms) {
+        float dev_us = ((run_ms * 1000) / batch) - mean_us;
+        total_us += dev_us * dev_us;
+    });
+    stddev_us = sqrt(total_us / TIMING_RUN_COUNT);
+
+    // display
+    printf("\n %s: %.1f us, std: %.1f us\n", test.c_str(), mean_us, stddev_us);
 }
 
-
-ResultDatabase resultDB;
-
-
-void stopTest(hipEvent_t start, hipEvent_t stop, const char* msg, int iters) {
-    float mS = 0;
-    check(hipEventRecord(stop));
-    check(hipDeviceSynchronize());
-    check(hipEventElapsedTime(&mS, start, stop));
-    resultDB.AddResult(std::string(msg), "", "uS", mS * 1000 / iters);
-    if (PRINT_PROGRESS & 0x1) {
-        std::cout << msg << "\t\t" << mS * 1000 / iters << " uS" << std::endl;
-    }
-    if (PRINT_PROGRESS & 0x2) {
-        resultDB.DumpSummary(std::cout);
-    }
-}
-
-
-int main() {
-    hipError_t err;
-    float* Ad;
-    check(hipMalloc(&Ad, 4));
-
-
-    hipStream_t stream;
-    check(hipStreamCreate(&stream));
-
-
-    hipEvent_t start, sync, stop;
-    check(hipEventCreate(&start));
-    check(hipEventCreateWithFlags(&sync, hipEventBlockingSync));
-    check(hipEventCreate(&stop));
-
-
+int main() {   
     hipStream_t stream0 = 0;
+    hipDevice_t device;
+    hipDeviceGet(&device, 0);
+    hipCtx_t context;     
+    hipCtxCreate(&context, 0, device); 
+    hipModule_t module;
+    hipFunction_t function;
+    hipModuleLoad(&module, FILE_NAME);
+    hipModuleGetFunction(&function, module, KERNEL_NAME);
+    void* params = nullptr;
+    
+    std::array<float, TOTAL_RUN_COUNT> results;
+    hipEvent_t start, stop;
+    hipEventCreate(&start);
+    hipEventCreate(&stop);
 
+    /************************************************************************************/
+    /* HIP kernel launch enqueue rate:                                                  */
+    /* Measure time taken to enqueue a kernel on the GPU                                */
+    /************************************************************************************/ 
 
-    if (p_tests & 0x1) {
-        hipEventRecord(start);
-        hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
-        stopTest(start, stop, "FirstKernelLaunch", 1);
+    // Timing hipModuleLaunchKernel
+    for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+        hipModuleLaunchKernel(function, 1, 1, 1, 1, 1, 1, 0, 0, &params, nullptr);
+        auto stop = std::chrono::high_resolution_clock::now();
+        results[i] = std::chrono::duration<float, std::milli>(stop - start).count();
     }
+    print_timing("hipModuleLaunchKernel enqueue rate", results);
 
-
-    if (p_tests & 0x2) {
-        hipEventRecord(start);
-        hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
-        stopTest(start, stop, "SecondKernelLaunch", 1);
+    // Timing hipLaunchKernelGGL
+    for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
+        auto start = std::chrono::high_resolution_clock::now();
+        hipLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0);
+        auto stop = std::chrono::high_resolution_clock::now();
+        results[i] = std::chrono::duration<float, std::milli>(stop - start).count();
     }
+    print_timing("hipLaunchKernelGGL enqueue rate", results);
 
+    /***********************************************************************************/
+    /* Single dispatch execution latency using HIP events:                             */   
+    /* Measures latency to start & finish executing a kernel with GPU-scope visibility    */ 
+    /***********************************************************************************/
 
-    if (p_tests & 0x4) {
-        for (int t = 0; t < TEST_ITERS; t++) {
-            hipEventRecord(start);
-            for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
-                hipEventRecord(sync);
-                hipEventSynchronize(sync);
-            }
-            stopTest(start, stop, "NullStreamASyncDispatchWait", DISPATCHES_PER_TEST);
-        }
+    //Timing directly the dispatch
+#ifdef __HIP_PLATFORM_HCC__
+    for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
+        hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, start, stop, 0);
+        hipEventSynchronize(stop);
+        hipEventElapsedTime(&results[i], start, stop);
     }
-
-
-    if (p_tests & 0x10) {
-        for (int t = 0; t < TEST_ITERS; t++) {
-            hipEventRecord(start);
-            for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
-                hipEventRecord(sync);
-                hipEventSynchronize(sync);
-            }
-            stopTest(start, stop, "StreamASyncDispatchWait", DISPATCHES_PER_TEST);
-        }
-    }
-
-#if 1
-
-    if (p_tests & 0x40) {
-        for (int t = 0; t < TEST_ITERS; t++) {
-            hipEventRecord(start);
-            for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, Ad);
-            }
-            stopTest(start, stop, "NullStreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
-        }
-    }
-
-    if (p_tests & 0x80) {
-        for (int t = 0; t < TEST_ITERS; t++) {
-            hipEventRecord(start);
-            for (int i = 0; i < DISPATCHES_PER_TEST; i++) {
-                hipLaunchKernelGGL(NearlyNull, dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream, Ad);
-            }
-            stopTest(start, stop, "StreamASyncDispatchNoWait", DISPATCHES_PER_TEST);
-        }
-    }
+    print_timing("Timing directly single dispatch latency", results);
 #endif
-    resultDB.DumpSummary(std::cout);
 
+    //Timing around the dispatch
+    for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
+        hipEventRecord(start, 0);
+        hipLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0);
+        hipEventRecord(stop, 0);
+        hipEventSynchronize(stop);
+        hipEventElapsedTime(&results[i], start, stop);
+    }
+    print_timing("Timing around single dispatch latency", results);
 
-    check(hipEventDestroy(start));
-    check(hipEventDestroy(sync));
-    check(hipEventDestroy(stop));
+    /*********************************************************************************/
+    /* Batch dispatch execution latency using HIP events:                            */
+    /* Measures latency to start & finish executing each dispatch in a batch    */ 
+    /*********************************************************************************/
+
+    for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
+         hipEventRecord(start, 0);
+         for (int j = 0; j < BATCH_SIZE; j++) {
+             hipLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0);
+         }
+         hipEventRecord(stop, 0);
+         hipEventSynchronize(stop);
+         hipEventElapsedTime(&results[i], start, stop);
+    }
+    print_timing("Batch dispatch latency", results, BATCH_SIZE);
+
+    hipEventDestroy(start);
+    hipEventDestroy(stop);
+    hipCtxDestroy(context);
 }
+

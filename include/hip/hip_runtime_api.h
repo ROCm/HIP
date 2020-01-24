@@ -183,18 +183,35 @@ typedef struct hipPointerAttribute_t {
 
 typedef enum __HIP_NODISCARD hipError_t {
     hipSuccess = 0,  ///< Successful completion.
+    hipErrorInvalidValue = 1,  ///< One or more of the parameters passed to the API call is NULL
+                               ///< or not in an acceptable range.
     hipErrorOutOfMemory = 2,
+    // Deprecated
+    hipErrorMemoryAllocation = 2,  ///< Memory allocation error.
     hipErrorNotInitialized = 3,
+    // Deprecated
+    hipErrorInitializationError = 3,
     hipErrorDeinitialized = 4,
     hipErrorProfilerDisabled = 5,
     hipErrorProfilerNotInitialized = 6,
     hipErrorProfilerAlreadyStarted = 7,
     hipErrorProfilerAlreadyStopped = 8,
+    hipErrorInvalidConfiguration = 9,
+    hipErrorInvalidSymbol = 13,
+    hipErrorInvalidDevicePointer = 17,  ///< Invalid Device Pointer
+    hipErrorInvalidMemcpyDirection = 21,  ///< Invalid memory copy direction
     hipErrorInsufficientDriver = 35,
+    hipErrorMissingConfiguration = 52,
+    hipErrorPriorLaunchFailure = 53,
+    hipErrorInvalidDeviceFunction = 98,
+    hipErrorNoDevice = 100,  ///< Call to hipGetDeviceCount returned 0 devices
+    hipErrorInvalidDevice = 101,  ///< DeviceID must be in range 0...#compute-devices.
     hipErrorInvalidImage = 200,
     hipErrorInvalidContext = 201,  ///< Produced when input context is invalid.
     hipErrorContextAlreadyCurrent = 202,
     hipErrorMapFailed = 205,
+    // Deprecated
+    hipErrorMapBufferObjectFailed = 205,  ///< Produced when the IPC memory attach failed from ROCr.
     hipErrorUnmapFailed = 206,
     hipErrorArrayIsMapped = 207,
     hipErrorAlreadyMapped = 208,
@@ -214,53 +231,36 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorSharedObjectSymbolNotFound = 302,
     hipErrorSharedObjectInitFailed = 303,
     hipErrorOperatingSystem = 304,
-    hipErrorSetOnActiveProcess = 305,
     hipErrorInvalidHandle = 400,
+    // Deprecated
+    hipErrorInvalidResourceHandle = 400,  ///< Resource handle (hipEvent_t or hipStream_t) invalid.
     hipErrorNotFound = 500,
+    hipErrorNotReady = 600,  ///< Indicates that asynchronous operations enqueued earlier are not
+                             ///< ready.  This is not actually an error, but is used to distinguish
+                             ///< from hipSuccess (which indicates completion).  APIs that return
+                             ///< this error include hipEventQuery and hipStreamQuery.
     hipErrorIllegalAddress = 700,
-    hipErrorInvalidSymbol = 701,
-    // Runtime Error Codes start here.
-    hipErrorMissingConfiguration = 1001,
-    hipErrorMemoryAllocation = 1002,     ///< Memory allocation error.
-    hipErrorInitializationError = 1003,  ///< TODO comment from hipErrorInitializationError
-    hipErrorLaunchFailure =
-        1004,  ///< An exception occurred on the device while executing a kernel.
-    hipErrorPriorLaunchFailure = 1005,
-    hipErrorLaunchTimeOut = 1006,
-    hipErrorLaunchOutOfResources = 1007,  ///< Out of resources error.
-    hipErrorInvalidDeviceFunction = 1008,
-    hipErrorInvalidConfiguration = 1009,
-    hipErrorInvalidDevice = 1010,  ///< DeviceID must be in range 0...#compute-devices.
-    hipErrorInvalidValue = 1011,   ///< One or more of the parameters passed to the API call is NULL
-                                   ///< or not in an acceptable range.
-    hipErrorInvalidDevicePointer = 1017,    ///< Invalid Device Pointer
-    hipErrorInvalidMemcpyDirection = 1021,  ///< Invalid memory copy direction
-    hipErrorUnknown = 1030,                 ///< Unknown error.
-    hipErrorInvalidResourceHandle = 1033,  ///< Resource handle (hipEvent_t or hipStream_t) invalid.
-    hipErrorNotReady = 1034,  ///< Indicates that asynchronous operations enqueued earlier are not
-                              ///< ready.  This is not actually an error, but is used to distinguish
-                              ///< from hipSuccess (which indicates completion).  APIs that return
-                              ///< this error include hipEventQuery and hipStreamQuery.
-    hipErrorNoDevice = 1038,  ///< Call to hipGetDeviceCount returned 0 devices
+    hipErrorLaunchOutOfResources = 701,  ///< Out of resources error.
+    hipErrorLaunchTimeOut = 702,
     hipErrorPeerAccessAlreadyEnabled =
-        1050,  ///< Peer access was already enabled from the current device.
-
+        704,  ///< Peer access was already enabled from the current device.
     hipErrorPeerAccessNotEnabled =
-        1051,                      ///< Peer access was never enabled from the current device.
+        705,  ///< Peer access was never enabled from the current device.
+    hipErrorSetOnActiveProcess = 708,
+    hipErrorAssert = 710,  ///< Produced when the kernel calls assert.
+    hipErrorHostMemoryAlreadyRegistered =
+        712,  ///< Produced when trying to lock a page-locked memory.
+    hipErrorHostMemoryNotRegistered =
+        713,  ///< Produced when trying to unlock a non-page-locked memory.
+    hipErrorLaunchFailure =
+        719,  ///< An exception occurred on the device while executing a kernel.
+    hipErrorNotSupported = 801,  ///< Produced when the hip API is not supported/implemented
+    hipErrorUnknown = 999,  //< Unknown error.
+    // HSA Runtime Error Codes start here.
     hipErrorRuntimeMemory = 1052,  ///< HSA runtime memory call returned error.  Typically not seen
                                    ///< in production systems.
     hipErrorRuntimeOther = 1053,  ///< HSA runtime call other than memory returned error.  Typically
                                   ///< not seen in production systems.
-    hipErrorHostMemoryAlreadyRegistered =
-        1061,  ///< Produced when trying to lock a page-locked memory.
-    hipErrorHostMemoryNotRegistered =
-        1062,  ///< Produced when trying to unlock a non-page-locked memory.
-    hipErrorMapBufferObjectFailed =
-        1071,    ///< Produced when the IPC memory attach failed from ROCr.
-    hipErrorAssert =
-        1081,    ///< Produced when the kernel calls assert.
-    hipErrorNotSupported = 
-        1082,    ///< Produced when the hip API is not supported/implemented 
     hipErrorTbd  ///< Marker that more error codes are needed.
 } hipError_t;
 
