@@ -3373,6 +3373,7 @@ inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
         numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
 }
 
+#if __HIP_VDI__ && !defined(__HCC__)
 template <class T>
 inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
                                              void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {
@@ -3392,6 +3393,7 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
     return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
+#endif
 
 /*
  * @brief Unbinds the textuer bound to @p tex
