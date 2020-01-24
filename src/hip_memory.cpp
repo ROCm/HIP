@@ -205,10 +205,15 @@ inline
 void do_copy(void* __restrict dst, const void* __restrict src, size_t n,
              hsa_agent_t da, hsa_agent_t sa) {
     if (da.handle != sa.handle) {
-        throwing_result_check(
-            hsa_amd_agents_allow_access(1u, &sa, nullptr, dst),
-            __FILE__, __func__, __LINE__);
+        if (type(sa) == HSA_DEVICE_TYPE_CPU) sa = da;
+        else if (type(da) == HSA_DEVICE_TYPE_CPU) da = sa;
+        else {
+            throwing_result_check(
+                hsa_amd_agents_allow_access(1u, &sa, nullptr, dst),
+                __FILE__, __func__, __LINE__);
+        }
     }
+
     hsa_signal_silent_store_relaxed(copy_signal, 1);
     throwing_result_check(
         hsa_amd_memory_async_copy(dst, da, src, sa, n, 0, nullptr, copy_signal),
