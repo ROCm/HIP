@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "helpers.hpp"
 
 #include "hc.hpp"
-#include "hip/hip_hcc.h"
+#include "hip/hip_ext.h"
 #include "hip_runtime.h"
 
 #include <functional>

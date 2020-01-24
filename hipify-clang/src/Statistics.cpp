@@ -34,6 +34,7 @@ const char *counterNames[NUM_CONV_TYPES] = {
   "context", // CONV_CONTEXT
   "module", // CONV_MODULE
   "memory", // CONV_MEMORY
+  "virtual_memory", // CONV_VIRTUAL_MEMORY
   "addressing", // CONV_ADDRESSING
   "stream", // CONV_STREAM
   "event", // CONV_EVENT
@@ -76,6 +77,7 @@ const char *counterTypes[NUM_CONV_TYPES] = {
   "CONV_CONTEXT",
   "CONV_MODULE",
   "CONV_MEMORY",
+  "CONV_VIRTUAL_MEMORY",
   "CONV_ADDRESSING",
   "CONV_STREAM",
   "CONV_EVENT",
@@ -163,51 +165,51 @@ void printStat(std::ostream *csv, llvm::raw_ostream* printOut, const std::string
 
 } // Anonymous namespace
 
-void StatCounter::incrementCounter(const hipCounter& counter, const std::string& name) {
+void StatCounter::incrementCounter(const hipCounter &counter, const std::string &name) {
   counters[name]++;
   apiCounters[(int) counter.apiType]++;
   convTypeCounters[(int) counter.type]++;
 }
 
-void StatCounter::add(const StatCounter& other) {
-  for (const auto& p : other.counters) {
+void StatCounter::add(const StatCounter &other) {
+  for (const auto &p : other.counters) {
     counters[p.first] += p.second;
   }
-  for (int i = 0; i < NUM_API_TYPES; i++) {
+  for (int i = 0; i < NUM_API_TYPES; ++i) {
     apiCounters[i] += other.apiCounters[i];
   }
-  for (int i = 0; i < NUM_CONV_TYPES; i++) {
+  for (int i = 0; i < NUM_CONV_TYPES; ++i) {
     convTypeCounters[i] += other.convTypeCounters[i];
   }
 }
 
 int StatCounter::getConvSum() {
   int acc = 0;
-  for (const int& i : convTypeCounters) {
+  for (const int &i : convTypeCounters) {
     acc += i;
   }
   return acc;
 }
 
-void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string& prefix) {
-  for (int i = 0; i < NUM_CONV_TYPES; i++) {
+void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, const std::string &prefix) {
+  for (int i = 0; i < NUM_CONV_TYPES; ++i) {
     if (convTypeCounters[i] > 0) {
       conditionalPrint(csv, printOut, "\nCUDA ref type;Count\n", "[HIPIFY] info: " + prefix + " refs by type:\n");
       break;
     }
   }
-  for (int i = 0; i < NUM_CONV_TYPES; i++) {
+  for (int i = 0; i < NUM_CONV_TYPES; ++i) {
     if (convTypeCounters[i] > 0) {
       printStat(csv, printOut, counterNames[i], convTypeCounters[i]);
     }
   }
-  for (int i = 0; i < NUM_API_TYPES; i++) {
+  for (int i = 0; i < NUM_API_TYPES; ++i) {
     if (apiCounters[i] > 0) {
       conditionalPrint(csv, printOut, "\nCUDA API;Count\n", "[HIPIFY] info: " + prefix + " refs by API:\n");
       break;
     }
   }
-  for (int i = 0; i < NUM_API_TYPES; i++) {
+  for (int i = 0; i < NUM_API_TYPES; ++i) {
     if (apiCounters[i] > 0) {
       printStat(csv, printOut, apiNames[i], apiCounters[i]);
     }
@@ -220,7 +222,7 @@ void StatCounter::print(std::ostream* csv, llvm::raw_ostream* printOut, const st
   }
 }
 
-Statistics::Statistics(const std::string& name): fileName(name) {
+Statistics::Statistics(const std::string &name): fileName(name) {
   // Compute the total bytes/lines in the input file.
   std::ifstream src_file(name, std::ios::binary | std::ios::ate);
   src_file.clear();
@@ -235,7 +237,7 @@ Statistics::Statistics(const std::string& name): fileName(name) {
 
 ///////// Counter update routines //////////
 
-void Statistics::incrementCounter(const hipCounter &counter, const std::string& name) {
+void Statistics::incrementCounter(const hipCounter &counter, const std::string &name) {
   if (Statistics::isUnsupported(counter)) {
     unsupported.incrementCounter(counter, name);
   } else {
@@ -308,7 +310,7 @@ void Statistics::printAggregate(std::ostream *csv, llvm::raw_ostream* printOut) 
   Statistics globalStats = getAggregate();
   // A file is considered "converted" if we made any changes to it.
   int convertedFiles = 0;
-  for (const auto& p : stats) {
+  for (const auto &p : stats) {
     if (p.second.touchedLines && p.second.totalBytes &&
         p.second.totalLines && !p.second.hasErrors) {
       convertedFiles++;
@@ -326,18 +328,18 @@ void Statistics::printAggregate(std::ostream *csv, llvm::raw_ostream* printOut) 
 
 Statistics Statistics::getAggregate() {
   Statistics globalStats("GLOBAL");
-  for (const auto& p : stats) {
+  for (const auto &p : stats) {
     globalStats.add(p.second);
   }
   return globalStats;
 }
 
-Statistics& Statistics::current() {
+Statistics &Statistics::current() {
   assert(Statistics::currentStatistics);
   return *Statistics::currentStatistics;
 }
 
-void Statistics::setActive(const std::string& name) {
+void Statistics::setActive(const std::string &name) {
   stats.emplace(std::make_pair(name, Statistics{name}));
   Statistics::currentStatistics = &stats.at(name);
 }

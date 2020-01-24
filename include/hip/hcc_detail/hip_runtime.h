@@ -506,7 +506,7 @@ hc_get_workitem_absolute_id(int dim)
 #endif
 
 // Support std::complex.
-#ifndef _OPENMP
+#if !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 #pragma push_macro("__CUDA__")
 #define __CUDA__
 #include <__clang_cuda_math_forward_declares.h>
@@ -516,27 +516,8 @@ hc_get_workitem_absolute_id(int dim)
 #include <cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
-#endif // ndef _OPENMP
+#endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 
-#if __HIP_VDI__
-hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
-                                    uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
-                                    uint32_t localWorkSizeX, uint32_t localWorkSizeY,
-                                    uint32_t localWorkSizeZ, size_t sharedMemBytes,
-                                    hipStream_t hStream, void** kernelParams, void** extra,
-                                    hipEvent_t startEvent = nullptr,
-                                    hipEvent_t stopEvent = nullptr,
-                                    uint32_t flags = 0);
-
-hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
-                                    uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
-                                    uint32_t localWorkSizeX, uint32_t localWorkSizeY,
-                                    uint32_t localWorkSizeZ, size_t sharedMemBytes,
-                                    hipStream_t hStream, void** kernelParams, void** extra,
-                                    hipEvent_t startEvent = nullptr,
-                                    hipEvent_t stopEvent = nullptr)
-                                    __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
-#endif // __HIP_VDI__
 #endif // defined(__clang__) && defined(__HIP__)
 
 #include <hip/hcc_detail/hip_memory.h>

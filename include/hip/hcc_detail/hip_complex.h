@@ -186,7 +186,7 @@ __device__ __host__ static inline hipDoubleComplex make_hipDoubleComplex(double 
 __device__ __host__ static inline hipDoubleComplex hipConj(hipDoubleComplex z) {
     hipDoubleComplex ret;
     ret.x = z.x;
-    ret.y = z.y;
+    ret.y = -z.y;
     return ret;
 }
 

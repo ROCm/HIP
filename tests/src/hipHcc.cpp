@@ -22,7 +22,7 @@ THE SOFTWARE.
 // Test the HCC-specific API extensions for HIP:
 
 /* HIT_START
- * BUILD: %t %s
+ * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t EXCLUDE_HIP_PLATFORM all
  * HIT_END
  */
@@ -30,7 +30,7 @@ THE SOFTWARE.
 #include <stdio.h>
 #include <iostream>
 #include "hip/hip_runtime.h"
-#include "hip/hip_hcc.h"
+#include "hip/hip_ext.h"
 #include "test_common.h"
 
 #define CHECK(error)                                                                               \

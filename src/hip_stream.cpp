@@ -31,7 +31,7 @@ THE SOFTWARE.
 //-------------------------------------------------------------------------------------------------
 // Stream
 //
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
 enum queue_priority
 {
     priority_high = 0,
@@ -73,7 +73,7 @@ hipError_t ihipStreamCreate(TlsData *tls, hipStream_t* stream, unsigned int flag
                 // Obtain mutex access to the device critical data, release by destructor
                 LockedAccessor_CtxCrit_t ctxCrit(ctx->criticalData());
 
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
                 auto istream = new ihipStream_t(ctx, acc.create_view(), flags);
 #else
                 auto istream = new ihipStream_t(ctx, acc.create_view(Kalmar::execute_any_order, Kalmar::queuing_mode_automatic, (Kalmar::queue_priority)priority), flags);
@@ -133,7 +133,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
     hipError_t e = hipSuccess;
 
     if (event == nullptr) {
-        e = hipErrorInvalidResourceHandle;
+        e = hipErrorInvalidHandle;
 
     } else {
         auto ecd = event->locked_copyCrit(); 
@@ -189,7 +189,7 @@ hipError_t hipStreamSynchronize(hipStream_t stream) {
 
 //---
 /**
- * @return #hipSuccess, #hipErrorInvalidResourceHandle
+ * @return #hipSuccess, #hipErrorInvalidHandle
  */
 hipError_t hipStreamDestroy(hipStream_t stream) {
     HIP_INIT_API(hipStreamDestroy, stream);
@@ -199,7 +199,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
     //--- Drain the stream:
     if (stream == NULL) {
         if (!HIP_FORCE_NULL_STREAM) {
-            e = hipErrorInvalidResourceHandle;
+            e = hipErrorInvalidHandle;
         }
     } else {
         stream->locked_wait();
@@ -210,7 +210,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
             ctx->locked_removeStream(stream);
             delete stream;
         } else {
-            e = hipErrorInvalidResourceHandle;
+            e = hipErrorInvalidHandle;
         }
     }
 
@@ -225,7 +225,7 @@ hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
     if (flags == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
     } else if (stream == hipStreamNull) {
-        return ihipLogStatus(hipErrorInvalidResourceHandle);
+        return ihipLogStatus(hipErrorInvalidHandle);
     } else {
         *flags = stream->_flags;
         return ihipLogStatus(hipSuccess);
@@ -240,9 +240,9 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
     if (priority == NULL) {
         return ihipLogStatus(hipErrorInvalidValue);
     } else if (stream == hipStreamNull) {
-        return ihipLogStatus(hipErrorInvalidResourceHandle);
+        return ihipLogStatus(hipErrorInvalidHandle);
     } else {
-#if defined(__HCC__) && (__hcc_minor__ < 3)
+#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
         *priority = 0;
 #else
         LockedAccessor_StreamCrit_t crit(stream->criticalData());

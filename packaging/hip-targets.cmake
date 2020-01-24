@@ -37,24 +37,43 @@ unset(_targetsDefined)
 unset(_targetsNotDefined)
 unset(_expectedTargets)
 
+#If HIP isnot installed under ROCm, need this to find HSA assuming HSA is under ROCm
+if( DEFINED ENV{ROCM_PATH} )
+     set(ROCM_PATH "$ENV{ROCM_PATH}")
+endif()
 
-# The installation prefix configured by this project.
-set(_IMPORT_PREFIX "/opt/rocm/hip")
+#get_filename_component cannot resolve the symlinks if called from /opt/rocm/lib/hip
+#and do three level up again
+get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
+get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
 # Create imported target hip::hip_hcc_static
 add_library(hip::hip_hcc_static STATIC IMPORTED)
 
+#if HSA is not under ROCm then provide CMAKE_PREFIX_PATH=<HSA_PATH>
+find_path(HSA_HEADER hsa/hsa.h
+  PATHS
+    "${ROCM_PATH}/include"
+    #Assuming HIP is installed under ROCm
+    "${_IMPORT_PREFIX}/../include"
+    /opt/rocm/include
+)
+
+if (HSA_HEADER-NOTFOUND)
+  message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
+endif()
+
 set_target_properties(hip::hip_hcc_static PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
 )
 
 # Create imported target hip::hip_hcc
 add_library(hip::hip_hcc SHARED IMPORTED)
 
 set_target_properties(hip::hip_hcc PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;/opt/rocm/hsa/include"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
 )
 
 # Create imported target hip::host
@@ -70,10 +89,14 @@ add_library(hip::device INTERFACE IMPORTED)
 if(HIP_COMPILER STREQUAL "hcc")
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host;hcc::hccrt;hcc::hc_am"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
 )
 else()
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host"
+  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 )
 endif()
 
