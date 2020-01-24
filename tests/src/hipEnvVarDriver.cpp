@@ -140,16 +140,16 @@ int main() {
     if (totalDeviceNum > 2) {
         setenv("HIP_VISIBLE_DEVICES", "0,1,1000,2", 1);
         setenv("CUDA_VISIBLE_DEVICES", "0,1,1000,2", 1);
-        assert(getDeviceNumber(false) == 2);
+        assert(getDeviceNumber() == 2);
 
         setenv("HIP_VISIBLE_DEVICES", "0,1,2", 1);
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
-        assert(getDeviceNumber(false) == 3);
+        assert(getDeviceNumber() == 3);
         // test if CUDA_VISIBLE_DEVICES will be accepted by the runtime
         unsetenv(HIP_VISIBLE_DEVICES_STR);
         unsetenv(CUDA_VISIBLE_DEVICES_STR);
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
-        assert(getDeviceNumber(false) == 3);
+        assert(getDeviceNumber() == 3);
     }
 
     setenv("HIP_VISIBLE_DEVICES", "-100,0,1", 1);
