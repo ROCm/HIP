@@ -37,10 +37,18 @@ int p_tests = -1; /*which tests to run. Interpretation is left to each test.  de
 const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES=";
 const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES=";
 const char* PATH_SEPERATOR_STR = "\\";
+<<<<<<< HEAD
+const char* NULL_DEVICE = "NUL:";
+=======
+>>>>>>> 9cfada0f9d5a842889a14584cc3b63000fbc6ecd
 #else
 const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES";
 const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES";
 const char* PATH_SEPERATOR_STR = "/";
+<<<<<<< HEAD
+const char* NULL_DEVICE = "/dev/null";
+=======
+>>>>>>> 9cfada0f9d5a842889a14584cc3b63000fbc6ecd
 #endif
 
 namespace HipTest {

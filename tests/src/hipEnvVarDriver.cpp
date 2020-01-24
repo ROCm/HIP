@@ -21,6 +21,7 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
  * HIT_END
  */
 
+#include <io.h>
 #include <iostream>
 #include <vector>
 #include <stdio.h>
@@ -34,6 +35,24 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 using namespace std;
 
+<<<<<<< HEAD
+const string directed_dir = "." + string(PATH_SEPERATOR_STR) + "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar";
+const string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar";
+
+int getDeviceNumber(bool print_cout=true) {
+    char buff[512];
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+	//Don't print error if missing directed_dir file
+    int fd = dup(fileno(stderr));
+    freopen(NULL_DEVICE, "w", stderr);
+    FILE* in = popen((directed_dir + " -c").c_str(), "r");
+    if(fgets(buff, 512, in) == NULL){
+        dup2(fd, fileno(stderr));
+        close(fd);
+        pclose(in);
+        //Check at same level, and print error if missing both files
+=======
 const string directed_dir = "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar";
 const string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar";
 
@@ -44,13 +63,24 @@ int getDeviceNumber() {
     if(fgets(buff, 512, in) == NULL){
         pclose(in);
         //Check at same level
+>>>>>>> 9cfada0f9d5a842889a14584cc3b63000fbc6ecd
         in = popen((dir + " -c").c_str(), "r");
         if(fgets(buff, 512, in) == NULL){
             pclose(in);
             return 1;
         }
+<<<<<<< HEAD
+    } else {
+		dup2(fd, fileno(stderr));
+		close(fd);
+	}
+    if (print_cout) {
+		cout << buff;
+    }
+=======
     }
     cout << buff;
+>>>>>>> 9cfada0f9d5a842889a14584cc3b63000fbc6ecd
     pclose(in);
     return atoi(buff);
 }
@@ -58,16 +88,35 @@ int getDeviceNumber() {
 // Query the current device ID remotely to hipEnvVar
 void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {    
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+<<<<<<< HEAD
+	int fd = dup(fileno(stderr));
+	freopen(NULL_DEVICE, "w", stderr);
+    FILE* in = popen((directed_dir + " -d " + std::to_string(deviceID)).c_str(), "r");
+    if(fgets(pciBusID, 100, in) == NULL){
+		dup2(fd, fileno(stderr));
+		close(fd);
+        pclose(in);
+        //Check at same level
+        in = popen((dir + " -d " + std::to_string(deviceID)).c_str(), "r");
+=======
     FILE* in = popen((directed_dir + " -d " + std::to_string(deviceID)).c_str(), "r");
     if(fgets(pciBusID, 100, in) == NULL){
         pclose(in);
         //Check at same level
         in = popen((dir + " -d").c_str(), "r");
+>>>>>>> 9cfada0f9d5a842889a14584cc3b63000fbc6ecd
         if(fgets(pciBusID, 100, in) == NULL){
             pclose(in);
             return;
         }
+<<<<<<< HEAD
+    } else {
+		dup2(fd, fileno(stderr));
+		close(fd);
+	}
+=======
     }
+>>>>>>> 9cfada0f9d5a842889a14584cc3b63000fbc6ecd
     cout << pciBusID;
     pclose(in);
     return;
@@ -116,7 +165,7 @@ int main() {
     // check when set an invalid device number
     setenv("HIP_VISIBLE_DEVICES", "1000,0,1", 1);
     setenv("CUDA_VISIBLE_DEVICES", "1000,0,1", 1);
-    assert(getDeviceNumber() == 0);
+    assert(getDeviceNumber(false) == 0);
 
     if (totalDeviceNum > 2) {
         setenv("HIP_VISIBLE_DEVICES", "0,1,1000,2", 1);
@@ -135,7 +184,7 @@ int main() {
 
     setenv("HIP_VISIBLE_DEVICES", "-100,0,1", 1);
     setenv("CUDA_VISIBLE_DEVICES", "-100,0,1", 1);
-    assert(getDeviceNumber() == 0);
+    assert(getDeviceNumber(false) == 0);
 
     std::cout << "PASSED" << std::endl;
     return 0;
