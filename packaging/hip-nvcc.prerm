@@ -1,5 +1,5 @@
 #!/bin/bash
 
-if [ -L "/opt/rocm" ]
+if [ -L "/opt/rocm" ] ; then
    unlink /opt/rocm
 fi
