@@ -35,60 +35,53 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 using namespace std;
 
-const string directed_dir = "." + string(PATH_SEPERATOR_STR) + "directed_tests" + string(PATH_SEPERATOR_STR) + "hipEnvVar";
-const string dir = "." + string(PATH_SEPERATOR_STR) + "hipEnvVar";
+const string directed_dir = string(".") + PATH_SEPERATOR_STR + "directed_tests" + PATH_SEPERATOR_STR + "hipEnvVar";
+const string dir = string(".") + PATH_SEPERATOR_STR + "hipEnvVar";
 
-int getDeviceNumber(bool print_cout=true) {
-    char buff[512];
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
-	//Don't print error if missing directed_dir file
+int readHipEnvVar(string flags, char* buff){
+    //Don't print errors if popen is missing file
     int fd = dup(fileno(stderr));
     freopen(NULL_DEVICE, "w", stderr);
-    FILE* in = popen((directed_dir + " -c").c_str(), "r");
-    if(fgets(buff, 512, in) == NULL){
-        dup2(fd, fileno(stderr));
-        close(fd);
-        pclose(in);
-        //Check at same level, and print error if missing both files
-        in = popen((dir + " -c").c_str(), "r");
+    FILE* directed_in = popen((directed_dir + flags).c_str(), "r");
+    FILE* in = popen((dir + flags).c_str(), "r");
+    dup2(fd, fileno(stderr));
+    close(fd);
+    
+    if(fgets(buff, 512, directed_in) == NULL){
         if(fgets(buff, 512, in) == NULL){
+            pclose(directed_in);
             pclose(in);
             return 1;
         }
-    } else {
-		dup2(fd, fileno(stderr));
-		close(fd);
-	}
-    if (print_cout) {
-		cout << buff;
     }
+    pclose(directed_in);
     pclose(in);
+    return 0;
+}
+
+int getDeviceNumber(bool print_err=true) {
+    char buff[512];
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
+    if (readHipEnvVar(string(" -c"), buff)){
+        strncpy(buff, "1", 512);
+        if (print_err){
+            std::cerr << "The system cannot find hipEnvVar, using 1 as number of devices\n";
+        }
+    }
+    if (print_err) {
+		std::cout << buff;
+    }
     return atoi(buff);
 }
 
 // Query the current device ID remotely to hipEnvVar
 void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {    
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
-	int fd = dup(fileno(stderr));
-	freopen(NULL_DEVICE, "w", stderr);
-    FILE* in = popen((directed_dir + " -d " + std::to_string(deviceID)).c_str(), "r");
-    if(fgets(pciBusID, 100, in) == NULL){
-		dup2(fd, fileno(stderr));
-		close(fd);
-        pclose(in);
-        //Check at same level
-        in = popen((dir + " -d " + std::to_string(deviceID)).c_str(), "r");
-        if(fgets(pciBusID, 100, in) == NULL){
-            pclose(in);
-            return;
-        }
-    } else {
-		dup2(fd, fileno(stderr));
-		close(fd);
-	}
+    if (readHipEnvVar((" -d " + std::to_string(deviceID)), pciBusID)){
+        std::cerr << "The system cannot find hipEnvVar\n";
+    }
     cout << pciBusID;
-    pclose(in);
     return;
 }
 
@@ -97,15 +90,15 @@ void getDevicePCIBusNum(int deviceID, char* pciBusID) {
     hipDevice_t deviceT;
     hipDeviceGet(&deviceT, deviceID);
 
-    memset(pciBusID, 0, 100);
-    hipDeviceGetPCIBusId(pciBusID, 100, deviceT);
+    memset(pciBusID, 0, 512);
+    hipDeviceGetPCIBusId(pciBusID, 512, deviceT);
 }
 
 int main() {
     unsetenv(HIP_VISIBLE_DEVICES_STR);
     unsetenv(CUDA_VISIBLE_DEVICES_STR);
     std::vector<std::string> devPCINum;
-    char pciBusID[100];
+    char pciBusID[512];
     // collect the device pci bus ID for all devices
     int totalDeviceNum = getDeviceNumber();
     std::cout << "The total number of available devices is " << totalDeviceNum << std::endl
@@ -140,16 +133,16 @@ int main() {
     if (totalDeviceNum > 2) {
         setenv("HIP_VISIBLE_DEVICES", "0,1,1000,2", 1);
         setenv("CUDA_VISIBLE_DEVICES", "0,1,1000,2", 1);
-        assert(getDeviceNumber() == 2);
+        assert(getDeviceNumber(false) == 2);
 
         setenv("HIP_VISIBLE_DEVICES", "0,1,2", 1);
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
-        assert(getDeviceNumber() == 3);
+        assert(getDeviceNumber(false) == 3);
         // test if CUDA_VISIBLE_DEVICES will be accepted by the runtime
         unsetenv(HIP_VISIBLE_DEVICES_STR);
         unsetenv(CUDA_VISIBLE_DEVICES_STR);
         setenv("CUDA_VISIBLE_DEVICES", "0,1,2", 1);
-        assert(getDeviceNumber() == 3);
+        assert(getDeviceNumber(false) == 3);
     }
 
     setenv("HIP_VISIBLE_DEVICES", "-100,0,1", 1);
