@@ -47,7 +47,7 @@ make
 - [HIP Kernel Language](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_kernel_language.md)
 - [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
 - [HIP Porting Guide](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_porting_guide.md)
-- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/blob/msater/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
+- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
 - [HIPIFY](https://github.com/ROCm-Developer-Tools/HIP/blob/master/hipify-clang/README.md)
 - [Developer/CONTRIBUTING Info](https://github.com/ROCm-Developer-Tools/HIP/blob/master/CONTRIBUTING.md)
 - [Release Notes](https://github.com/ROCm-Developer-Tools/HIP/blob/master/RELEASE.md)
