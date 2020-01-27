@@ -70,7 +70,7 @@ int getDeviceNumber(bool print_err=true) {
         }
     }
     if (print_err) {
-		std::cout << buff;
+        std::cout << buff;
     }
     return atoi(buff);
 }
