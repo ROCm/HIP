@@ -1130,6 +1130,7 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
 
     p_prop->memPitch                 = cdprop.memPitch;
     p_prop->textureAlignment         = cdprop.textureAlignment;
+    p_prop->texturePitchAlignment    = cdprop.texturePitchAlignment;
     p_prop->kernelExecTimeoutEnabled = cdprop.kernelExecTimeoutEnabled;
     p_prop->ECCEnabled               = cdprop.ECCEnabled;
     p_prop->tccDriver                = cdprop.tccDriver;
@@ -1243,6 +1244,9 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeTextureAlignment:
             cdattr = cudaDevAttrTextureAlignment;
+            break;
+        case hipDeviceAttributeTexturePitchAlignment:
+            cdattr = cudaDevAttrTexturePitchAlignment;
             break;
         case hipDeviceAttributeKernelExecTimeout:
             cdattr = cudaDevAttrKernelExecTimeout;
