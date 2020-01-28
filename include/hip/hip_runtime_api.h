@@ -124,6 +124,7 @@ typedef struct hipDeviceProp_t {
     unsigned int* hdpRegFlushCntl;      ///< Addres of HDP_REG_COHERENCY_FLUSH_CNTL register
     size_t memPitch;                 ///<Maximum pitch in bytes allowed by memory copies
     size_t textureAlignment;         ///<Alignment requirement for textures
+    size_t texturePitchAlignment;    ///<Pitch alignment requirement for texture references bound to pitched memory
     int kernelExecTimeoutEnabled;    ///<Run time limit for kernels executed on the device
     int ECCEnabled;                  ///<Device has ECC support enabled
     int tccDriver;                   ///< 1:If device is Tesla device using TCC driver, else 0
@@ -321,6 +322,7 @@ typedef enum hipDeviceAttribute_t {
 
     hipDeviceAttributeMaxPitch,             ///< Maximum pitch in bytes allowed by memory copies
     hipDeviceAttributeTextureAlignment,     ///<Alignment requirement for textures
+    hipDeviceAttributeTexturePitchAlignment, ///<Pitch alignment requirement for 2D texture references bound to pitched memory;
     hipDeviceAttributeKernelExecTimeout,    ///<Run time limit for kernels executed on the device
     hipDeviceAttributeCanMapHostMemory,     ///<Device can map host memory into device address space
     hipDeviceAttributeEccEnabled            ///<Device has ECC support enabled
