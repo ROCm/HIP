@@ -39,33 +39,43 @@ __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
 {
     unsigned int elementID = hipThreadIdx_x;
     if(elementID >= numElements)
-	    return;
-    float coord =(float) elementID/(numElements-1);
+        return;
+    float coord = float(elementID) / numElements;
     pDst[elementID] = tex1D(textureNormalizedVal_1D, coord);
+}
+
+static float getNormalizedValue(const float value,
+                                const enum hipArray_Format texFormat) {
+    switch (texFormat) {
+        case HIP_AD_FORMAT_SIGNED_INT8:
+            return (value / SCHAR_MAX);
+        case HIP_AD_FORMAT_UNSIGNED_INT8:
+            return (value / UCHAR_MAX);
+        case HIP_AD_FORMAT_SIGNED_INT16:
+            return (value / SHRT_MAX);
+        case HIP_AD_FORMAT_UNSIGNED_INT16:
+            return (value / USHRT_MAX);
+        default:
+            return value;
+    }
 }
 
 template<typename T>
 bool textureTest(enum hipArray_Format texFormat)
 {
-    T hData[] = {65, 66, 67, 68, 69, 70, 71, 72,73,74};
+    T hData[] = {65, 66, 67, 68, 69, 70, 71, 72, 73, 74};
     T *dData = NULL;
     HIPCHECK(hipMalloc((void **) &dData, sizeof(T)*SIZE));
     HIPCHECK(hipMemcpyHtoD((hipDeviceptr_t)dData, hData, sizeof(T)*SIZE));
-    
+
     textureReference* texRef = &textureNormalizedVal_1D;
     HIPCHECK(hipTexRefSetAddressMode(texRef, 0, hipAddressModeClamp));
-    HIPCHECK(hipTexRefSetAddressMode(texRef, 1, hipAddressModeClamp));
     HIPCHECK(hipTexRefSetFilterMode(texRef, hipFilterModePoint));
-    HIPCHECK(hipTexRefSetFlags(texRef, HIP_TRSF_NORMALIZED_COORDINATES)); 
+    HIPCHECK(hipTexRefSetFlags(texRef, HIP_TRSF_NORMALIZED_COORDINATES));
     HIPCHECK(hipTexRefSetFormat(texRef, texFormat, 1));
-    
-    HIP_ARRAY_DESCRIPTOR desc;
-    desc.Width = SIZE;
-    desc.Height = 1;
-    desc.Format = texFormat;
-    desc.NumChannels = 1;
-    HIPCHECK(hipTexRefSetAddress2D(texRef, &desc, (hipDeviceptr_t)dData, sizeof(T)*SIZE));
-    
+
+    HIPCHECK(hipTexRefSetAddress(NULL, texRef, (hipDeviceptr_t)dData, sizeof(T)*SIZE));
+
     bool testResult = true;
     float *dOutputData = NULL;
     HIPCHECK(hipMalloc((void **) &dOutputData, sizeof(float)*SIZE));
@@ -77,16 +87,18 @@ bool textureTest(enum hipArray_Format texFormat)
     
     for(int i = 0; i < SIZE; i++)
     {
-    	if((float)hData[i]/texFormatToSize[texFormat] != hOutputData[i])
+        float expected = getNormalizedValue(float(hData[i]), texFormat);
+        if(expected != hOutputData[i])
         {
-	    printf("mismatch at index:%d for texType:%d output:%f\n",i,texFormat,hOutputData[i]);
+            printf("mismatch at index:%d for texType:%d expected:%f output:%f\n",i,texFormat,expected,hOutputData[i]);
             testResult = false;
-	    break;
+            break;
         }
     }
     hipFree(dData);
     hipFree(dOutputData);
-    hipUnbindTexture(textureNormalizedVal_1D);
+    // Currently not available with HIP.
+    // hipTexRefDestroy(texRef)
     delete [] hOutputData;
     return testResult;
 }
@@ -102,13 +114,13 @@ int main(int argc, char** argv)
     #ifdef __HIP_PLATFORM_HCC__
     std::cout << "Arch - AMD GPU :: " << props.gcnArch << std::endl;
     #endif
-    
+
     status &= textureTest<char>          (HIP_AD_FORMAT_SIGNED_INT8);
     status &= textureTest<unsigned char> (HIP_AD_FORMAT_UNSIGNED_INT8);
     status &= textureTest<short>         (HIP_AD_FORMAT_SIGNED_INT16);
     status &= textureTest<unsigned short>(HIP_AD_FORMAT_UNSIGNED_INT16);
     status &= textureTest<float>         (HIP_AD_FORMAT_FLOAT);
-	
+
     if(status){
         passed();
     }
