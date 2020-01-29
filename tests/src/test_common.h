@@ -181,7 +181,7 @@ void checkArray(T input, T output, size_t height, size_t width)
             int offset = i*width + j;
             if( input[offset] !=  output[offset] ){
                 std::cerr << '[' << i << ',' << j << "]:" << input[offset] << "----" << output[offset] << "  ";
-                 failed("mistmatch at:%d %d",i,j);
+                failed("mistmatch at:%d %d",i,j);
             }
         }
     }
