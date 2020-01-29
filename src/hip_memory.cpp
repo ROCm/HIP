@@ -298,7 +298,8 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
                   hsa_amd_pointer_info_t di, hsa_amd_pointer_info_t si) {
-    if (di.size == UINT32_MAX && si.size == UINT32_MAX) {
+    if (di.size == UINT32_MAX && si.size == UINT32_MAX &&
+        n <= max_std_memcpy_sz) {
         return do_std_memcpy(dst, src, n);
     }
 
