@@ -302,10 +302,6 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
         return do_std_memcpy(dst, src, n);
     }
 
-    std::unique_ptr<void, void (*)(void*)> lck0{
-        nullptr, [](void* p) { hsa_amd_memory_unlock(p); }};
-    std::unique_ptr<void, void (*)(void*)> lck1{nullptr, lck0.get_deleter()};
-
     switch (si.type) {
     case HSA_EXT_POINTER_TYPE_HSA:
         if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
