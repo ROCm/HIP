@@ -422,13 +422,19 @@ public:
                                            move(file), move(tmp));
         }
 
-        hsa_code_object_reader_create_from_memory(
-            it->first.data(), it->first.size(), it->second.get());
+        auto check_hsa_error = [](hsa_status_t s) {
+            if (s != HSA_STATUS_SUCCESS) {
+                hip_throw(std::runtime_error{"error when loading code object"});
+            }
+        };
 
-        hsa_executable_load_agent_code_object(
-            executable, agent, *it->second, nullptr, nullptr);
+        check_hsa_error(hsa_code_object_reader_create_from_memory(
+            it->first.data(), it->first.size(), it->second.get()));
 
-        hsa_executable_freeze(executable, nullptr);
+        check_hsa_error(hsa_executable_load_agent_code_object(
+            executable, agent, *it->second, nullptr, nullptr));
+
+        check_hsa_error(hsa_executable_freeze(executable, nullptr));
     }
 
 
