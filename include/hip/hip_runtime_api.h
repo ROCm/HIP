@@ -255,6 +255,10 @@ typedef enum __HIP_NODISCARD hipError_t {
         713,  ///< Produced when trying to unlock a non-page-locked memory.
     hipErrorLaunchFailure =
         719,  ///< An exception occurred on the device while executing a kernel.
+    hipErrorCooperativeLaunchTooLarge =
+        720,  ///< This error indicates that the number of blocks launched per grid for a kernel
+              ///< that was launched via cooperative launch APIs exceeds the maximum number of
+              ///< allowed blocks for the current device
     hipErrorNotSupported = 801,  ///< Produced when the hip API is not supported/implemented
     hipErrorUnknown = 999,  //< Unknown error.
     // HSA Runtime Error Codes start here.

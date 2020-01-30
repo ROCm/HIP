@@ -447,6 +447,7 @@
 |          717 |*`CUDA_ERROR_INVALID_ADDRESS_SPACE`*                                |                                                            |
 |          718 |*`CUDA_ERROR_INVALID_PC`*                                           |                                                            |
 |          719 |*`CUDA_ERROR_LAUNCH_FAILED`*                                        |*`hipErrorLaunchFailure`*                                   |
+|          720 |*`CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE`*                         |*`hipErrorCooperativeLaunchTooLarge`*                       |
 |          800 |*`CUDA_ERROR_NOT_PERMITTED`*                                        |                                                            |
 |          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                        |*`hipErrorNotSupported`*                                    |
 |          802 |*`CUDA_ERROR_SYSTEM_NOT_READY`*                                     |                                                            | 10.0             |
@@ -1063,8 +1064,8 @@
 | `cuFuncSetSharedMemConfig`                                |                               |
 | `cuLaunchKernel`                                          | `hipModuleLaunchKernel`       |
 | `cuLaunchHostFunc`                                        |                               | 10.0             |
-| `cuLaunchCooperativeKernel`                               |                               | 9.0              |
-| `cuLaunchCooperativeKernelMultiDevice`                    |                               | 9.0              |
+| `cuLaunchCooperativeKernel`                                | `hipLaunchCooperativeKernel` | 9.0              |
+| `cuLaunchCooperativeKernelMultiDevice`                    | `hipLaunchCooperativeKernelMultiDevice` | 9.0 |
 
 ## **19. Execution Control [DEPRECATED]**
 
