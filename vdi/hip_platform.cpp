@@ -626,7 +626,7 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
 namespace hip_impl {
 
 hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
-                                                         hipFunction_t f,
+                                                         const void* f,
                                                          int  blockSize,
                                                          size_t dynamicSMemSize)
 {
@@ -637,7 +637,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
   //        else interpret as a hip::Function for now.
   hipFunction_t func = PlatformState::instance().getFunc(f, deviceId);
   if (func == nullptr) {
-    func = f;
+    func = (hipFunction_t)f;
   }
   hip::Function* function = hip::Function::asFunction(func);
   if (function == nullptr) {
@@ -685,9 +685,9 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 
 extern "C" {
 // FIXME: Need to replace `uint32_t` with `int` finally.
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks,
-                                                        hipFunction_t f,
-                                                        uint32_t  blockSize,
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
+                                                        const void* f,
+                                                        int  blockSize,
                                                         size_t dynamicSMemSize)
 {
   int NB;
@@ -697,9 +697,9 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks,
 }
 
 // FIXME: Need to replace `uint32_t` with `int` finally.
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(uint32_t* numBlocks,
-                                                                 hipFunction_t f,
-                                                                 uint32_t  blockSize,
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
+                                                                 const void* f,
+                                                                 int  blockSize,
                                                                  size_t dynamicSMemSize,
                                                                  unsigned int flags)
 {
