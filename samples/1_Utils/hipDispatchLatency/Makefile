@@ -12,7 +12,7 @@ hipDispatchLatency.out: hipDispatchLatency.cpp
 	$(HIPCC) $(CXXFLAGS) hipDispatchLatency.cpp -o $@
 singleThreadMultiStream.out: singleThreadMultiStream.cpp
 	$(HIPCC) $(CXXFLAGS) singleThreadMultiStream.cpp -o $@
-singleThreadMultiStream.out: multiThreadMultiStream.cpp
+multiThreadMultiStream.out: multiThreadMultiStream.cpp
 	$(HIPCC) $(CXXFLAGS) multiThreadMultiStream.cpp -o $@
 
 test_kernel.code: test_kernel.cpp
