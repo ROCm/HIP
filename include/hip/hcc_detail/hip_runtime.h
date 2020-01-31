@@ -506,7 +506,7 @@ hc_get_workitem_absolute_id(int dim)
 #endif
 
 // Support std::complex.
-#ifndef _OPENMP
+#if !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 #pragma push_macro("__CUDA__")
 #define __CUDA__
 #include <__clang_cuda_math_forward_declares.h>
@@ -516,7 +516,7 @@ hc_get_workitem_absolute_id(int dim)
 #include <cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
-#endif // ndef _OPENMP
+#endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 
 #endif // defined(__clang__) && defined(__HIP__)
 
