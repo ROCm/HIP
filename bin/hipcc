@@ -352,6 +352,7 @@ my $runCmd = 1;
 my $buildDeps = 0;
 my $linkType = 1;
 my $setLinkType = 0;
+my $coFormatv3 = 1;
 
 my @options = ();
 my @inputs  = ();
@@ -469,6 +470,14 @@ foreach $arg (@ARGV)
     # hip-clang does not accept --amdgpu-target= options.
     if (($arg =~ /--amdgpu-target=/) and $HIP_PLATFORM eq 'clang' ) {
         $swallowArg = 1;
+    }
+
+    # code object format parsing
+    if ($trimarg eq '-mcode-object-v3') {
+        $coFormatv3 = 1;
+    }
+    if ($trimarg eq '-mno-code-object-v3') {
+        $coFormatv3 = 0;
     }
 
     if (($arg =~ /--genco/) and $HIP_PLATFORM eq 'clang' ) {
@@ -851,6 +860,13 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
         }
         $HIPCXXFLAGS .= " -D__HIP_ARCH_GFX1012__=1 ";
     }
+}
+
+# hcc defaults to v2, so we need to convert to the appropriate flag
+# hip-clang defaults to v3, so we don't need to do anything
+if ($coFormatv3 and $HIP_PLATFORM eq 'hcc') {
+    $HIPLDFLAGS .= " -mcode-object-v3";
+    $HIPCXXFLAGS .= " -mcode-object-v3";
 }
 
 if ($hasC and $HIP_PLATFORM eq 'nvcc') {
