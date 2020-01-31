@@ -1186,7 +1186,6 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_INVALID_PTX\b/hipErrorInvalidKernelFile/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_INVALID_SOURCE\b/hipErrorInvalidSource/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_INVALID_VALUE\b/hipErrorInvalidValue/g;
-    $ft{'numeric_literal'} += s/\bCUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE\b/hipErrorCooperativeLaunchTooLarge/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_LAUNCH_FAILED\b/hipErrorLaunchFailure/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_LAUNCH_OUT_OF_RESOURCES\b/hipErrorLaunchOutOfResources/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_LAUNCH_TIMEOUT\b/hipErrorLaunchTimeOut/g;
@@ -1660,7 +1659,6 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bcudaErrorInvalidSource\b/hipErrorInvalidSource/g;
     $ft{'numeric_literal'} += s/\bcudaErrorInvalidSymbol\b/hipErrorInvalidSymbol/g;
     $ft{'numeric_literal'} += s/\bcudaErrorInvalidValue\b/hipErrorInvalidValue/g;
-    $ft{'numeric_literal'} += s/\bcudaErrorCooperativeLaunchTooLarge\b/hipErrorCooperativeLaunchTooLarge/g;
     $ft{'numeric_literal'} += s/\bcudaErrorLaunchFailure\b/hipErrorLaunchFailure/g;
     $ft{'numeric_literal'} += s/\bcudaErrorLaunchOutOfResources\b/hipErrorLaunchOutOfResources/g;
     $ft{'numeric_literal'} += s/\bcudaErrorLaunchTimeout\b/hipErrorLaunchTimeOut/g;
@@ -1803,9 +1801,6 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bcudaTextureType3D\b/hipTextureType3D/g;
     $ft{'define'} += s/\bcudaTextureTypeCubemap\b/hipTextureTypeCubemap/g;
     $ft{'define'} += s/\bcudaTextureTypeCubemapLayered\b/hipTextureTypeCubemapLayered/g;
-    $ft{'define'} += s/\bcudaOccupancyDefault\b/hipOccupancyDefault/g;
-    $ft{'define'} += s/\bcudaCooperativeLaunchMultiDeviceNoPreSync\b/hipCooperativeLaunchMultiDeviceNoPreSync/g;
-    $ft{'define'} += s/\bcudaCooperativeLaunchMultiDeviceNoPostSync\b/hipCooperativeLaunchMultiDeviceNoPostSync/g;
 }
 
 # CUDA extern __shared__ syntax replace with HIP_DYNAMIC_SHARED() macro

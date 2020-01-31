@@ -1064,8 +1064,8 @@
 | `cuFuncSetSharedMemConfig`                                |                               |
 | `cuLaunchKernel`                                          | `hipModuleLaunchKernel`       |
 | `cuLaunchHostFunc`                                        |                               | 10.0             |
-| `cuLaunchCooperativeKernel`                                | `hipLaunchCooperativeKernel` | 9.0              |
-| `cuLaunchCooperativeKernelMultiDevice`                    | `hipLaunchCooperativeKernelMultiDevice` | 9.0 |
+| `cuLaunchCooperativeKernel`                               |                               | 9.0              |
+| `cuLaunchCooperativeKernelMultiDevice`                    |                               | 9.0              |
 
 ## **19. Execution Control [DEPRECATED]**
 
