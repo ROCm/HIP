@@ -36,7 +36,7 @@ bool LaunchKernelArg()
   dim3 blocks 	    = {1,1,1};
   dim3 threads      = {1,1,1};
 
-  HIPCHECK(hipLaunchKernel(kernel, blocks, threads,NULL, 0, 0));
+  HIPCHECK(hipLaunchKernel(kernel, blocks, threads, NULL, 0, 0));
 
   return true;
 }
@@ -51,8 +51,8 @@ bool LaunchKernelArg1()
   // Allocate Device memory
   HIPCHECK(hipMalloc((void**)&A_d, sizeof(int)));
 
-  void* Args[]={A_d};
-  HIPCHECK(hipLaunchKernel(kernel1, blocks, threads, Args,0,0));
+  void* Args[]={&A_d};
+  HIPCHECK(hipLaunchKernel(kernel1, blocks, threads, Args, 0, 0));
 
   // Get the result back to host memory
   HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
@@ -81,9 +81,9 @@ bool LaunchKernelArg2()
   HIPCHECK(hipMalloc((void**)&B_d, sizeof(int)));
 
   // Copy data from host memory to device memory
-  HIPCHECK(hipMemcpy(B_d,&B, sizeof(int), hipMemcpyHostToDevice));
+  HIPCHECK(hipMemcpy(B_d, &B, sizeof(int), hipMemcpyHostToDevice));
 
-  void* Args[]={A_d,B_d};
+  void* Args[]={&A_d, &B_d};
   HIPCHECK(hipLaunchKernel(kernel2, blocks, threads, Args,0,0));
 
   // Get the result back to host memory
@@ -118,11 +118,11 @@ bool LaunchKernelArg3()
   HIPCHECK(hipMalloc((void**)&C_d, sizeof(int)));
 
   // Copy data from host memory to device memory
-  HIPCHECK(hipMemcpy(A_d,&A, sizeof(int), hipMemcpyHostToDevice));
+  HIPCHECK(hipMemcpy(A_d, &A, sizeof(int), hipMemcpyHostToDevice));
 
-  HIPCHECK(hipMemcpy(B_d,&B, sizeof(int), hipMemcpyHostToDevice));
+  HIPCHECK(hipMemcpy(B_d, &B, sizeof(int), hipMemcpyHostToDevice));
 
-  void* Args[]={A_d,B_d,C_d};
+  void* Args[]={&A_d, &B_d, &C_d};
   HIPCHECK(hipLaunchKernel(kernel3, blocks, threads, Args,0,0));
 
   // Get the result back to host memory
