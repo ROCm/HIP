@@ -50,7 +50,7 @@ bool LaunchKernelArg1()
 
   // Allocate Device memory
   HIPCHECK(hipMalloc((void**)&A_d, sizeof(int)));
-
+ 
   void* Args[]={&A_d};
   HIPCHECK(hipLaunchKernel(kernel1, blocks, threads, Args, 0, 0));
 
@@ -60,7 +60,7 @@ bool LaunchKernelArg1()
   HIPCHECK(hipFree(A_d));
 
   if(A != 333)
-	return false;
+	  return false;
 
   return true;
 }
@@ -138,14 +138,43 @@ bool LaunchKernelArg3()
   return true;
 }
 
+bool LaunchKernelArg4()
+{
+  int A = 0;
+  int *A_d = NULL;
+  dim3 blocks       = {1,1,1};
+  dim3 threads      = {1,1,1};
+
+  // Allocate Device memory
+  HIPCHECK(hipMalloc((void**)&A_d, sizeof(int)));
+
+  char c = 1;
+  short s = 10;
+  int i = 100;
+  struct things t = {2,20,200};
+  
+  void* Args[]={&A_d, &c, &s, &i, &t};
+  HIPCHECK(hipLaunchKernel(kernel4, blocks, threads, Args, 0, 0));
+
+  // Get the result back to host memory
+  HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
+
+  HIPCHECK(hipFree(A_d));
+
+  if (A != (c + s + i + t.c + t.s + t.i))
+	  return false;
+
+  return true;
+}
+
 
 int main()
 {
-
   if( LaunchKernelArg()  &&
       LaunchKernelArg1() &&
       LaunchKernelArg2() &&
-      LaunchKernelArg3())
+      LaunchKernelArg3() &&
+      LaunchKernelArg4())
     {
       printf("PASSED!\n");
     }
