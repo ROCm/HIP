@@ -146,6 +146,7 @@ int main() {
 
     hipEventDestroy(start);
     hipEventDestroy(stop);
+    hipModuleUnload(module);
     hipCtxDestroy(context);
 }
 

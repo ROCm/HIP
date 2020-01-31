@@ -6,10 +6,10 @@ HIPCC=$(HIP_PATH)/bin/hipcc -std=c++11
 
 CXXFLAGS = -O3
 
-all: test_kernel.code hipDispatchLatency.out singleThreadMultiStream.out multiThreadMultiStream.out
+all: test_kernel.code singleThreadNullStream.out singleThreadMultiStream.out multiThreadMultiStream.out
 
-hipDispatchLatency.out: hipDispatchLatency.cpp
-	$(HIPCC) $(CXXFLAGS) hipDispatchLatency.cpp -o $@
+singleThreadNullStream.out: singleThreadNullStream.cpp
+	$(HIPCC) $(CXXFLAGS) singleThreadNullStream.cpp -o $@
 singleThreadMultiStream.out: singleThreadMultiStream.cpp
 	$(HIPCC) $(CXXFLAGS) singleThreadMultiStream.cpp -o $@
 multiThreadMultiStream.out: multiThreadMultiStream.cpp
