@@ -124,7 +124,7 @@ void appendArgumentsAdjusters(ct::RefactoringTool &Tool, const std::string &sSou
   // Includes for clang's CUDA wrappers for using by packaged hipify-clang
   static int Dummy;
   std::string hipify = llvm::sys::fs::getMainExecutable(hipify_exe, (void *)&Dummy);
-  std::string clang_inc_path = llvm::sys::path::parent_path(hipify);
+  std::string clang_inc_path = std::string(llvm::sys::path::parent_path(hipify));
   clang_inc_path.append("/include");
   Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(clang_inc_path.c_str(), ct::ArgumentInsertPosition::BEGIN));
   Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));

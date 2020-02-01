@@ -44,7 +44,7 @@ ct::Replacements &getReplacements(ct::RefactoringTool &Tool, StringRef file) {
 #if LLVM_VERSION_MAJOR > 3
   // getReplacements() now returns a map from filename to Replacements - so create an entry
   // for this source file and return a reference to it.
-  return Tool.getReplacements()[file];
+  return Tool.getReplacements()[std::string(file)];
 #else
   return Tool.getReplacements();
 #endif
