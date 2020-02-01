@@ -28,14 +28,14 @@ After applying all the matchers, the output HIP source is produced.
 **Advantages:**
 
 1. It is a translator; thus, any even very complicated constructs will be parsed successfully, or an error will be reported.
-2. It supports clang options like -I, -D, --cuda-path, etc.
+2. It supports clang options like [`-I`](https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-i-dir), [`-D`](https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-d-macro), [`--cuda-path`](https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-cuda-path), etc.
 3. Seamless support of new CUDA versions as it is clang's responsibility.
 4. Ease in support.
 
 **Disadvantages:**
 
 1. The main advantage is also the main disadvantage: the input CUDA code should be correct; incorrect code wouldn't be translated to HIP.
-2. CUDA should be installed and provided in case of multiple installations by --cuda-path option.
+2. CUDA should be installed and provided in case of multiple installations by `--cuda-path` option.
 3. All the includes and defines should be provided to transform code successfully.
 
 ### <a name="dependencies"></a> hipify-clang: dependencies
@@ -45,7 +45,7 @@ After applying all the matchers, the output HIP source is produced.
 1. [**LLVM+CLANG**](http://releases.llvm.org) of at least version [3.8.0](http://releases.llvm.org/download.html#3.8.0); the latest stable and recommended release: [**9.0.1**](http://releases.llvm.org/download.html#9.0.1), the latest release candidate: [10.0.0-rc1](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc1).
 
 2. [**CUDA**](https://developer.nvidia.com/cuda-downloads) of at least version [7.0](https://developer.nvidia.com/cuda-toolkit-70), the latest supported version is [**10.1 Update 2**](https://developer.nvidia.com/cuda-10.1-download-archive-base).
-To use the latest CUDA version [10.2](https://developer.nvidia.com/cuda-downloads) please use the latest LLVM release candidate: [10.0.0-rc1](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc1).
+To use the latest CUDA version [10.2](https://developer.nvidia.com/cuda-downloads) please use the latest `LLVM` release candidate: [10.0.0-rc1](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc1).
 
 | **LLVM release version**                                   | **CUDA latest supported version**                                        | **Windows** | **Linux** |
 |:----------------------------------------------------------:|:------------------------------------------------------------------------:|:-----------:|:---------:|
@@ -69,11 +69,11 @@ To use the latest CUDA version [10.2](https://developer.nvidia.com/cuda-download
 | [**9.0.1**](http://releases.llvm.org/download.html#9.0.1)  | [**10.1**](https://developer.nvidia.com/cuda-10.1-download-archive-base) | + <br/> **LATEST STABLE RELEASE** | + <br/> **LATEST STABLE RELEASE** |
 | [10.0.0-rc1](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc1) | [10.2](https://developer.nvidia.com/cuda-downloads)             | +           | +         |
 
-`*` Download the patch and unpack it into your LLVM distributive directory; a few header files will be overwritten; rebuilding of LLVM is not needed.
+`*` Download the patch and unpack it into your `LLVM` distributive directory; a few header files will be overwritten; rebuilding of `LLVM` is not needed.
 
-In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
+In most cases, you can get a suitable version of `LLVM+CLANG` with your package manager.
 
-Failing that or having multiple versions of LLVM, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
+Failing that or having multiple versions of `LLVM`, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
 [CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.5/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\9.0.1\dist`
 
 ### <a name="hipify-clang-usage"></a> hipify-clang: usage
@@ -86,10 +86,10 @@ For example:
 ./hipify-clang square.cu --cuda-path=/usr/local/cuda-10.1 -I /usr/local/cuda-10.1/samples/common/inc
 ```
 
-`hipify-clang` arguments are given first, followed by a separator '--', and then the arguments you'd pass to `clang` if you
+`hipify-clang` arguments are given first, followed by a separator `'--'`, and then the arguments you'd pass to `clang` if you
 were compiling the input file. For example:
 
-```shell
+```bash
 ./hipify-clang cpp17.cu --cuda-path=/usr/local/cuda-10.1 -- -std=c++17
 ```
 
@@ -101,7 +101,7 @@ For a list of `hipify-clang` options, run `hipify-clang --help`.
 
 Assuming this repository is at `./HIP`:
 
-```shell
+```bash
 cd hipify-clang
 mkdir build dist
 cd build
@@ -123,9 +123,9 @@ The binary can then be found at `./dist/bin/hipify-clang`.
 
 ### <a name="testing"></a> hipify-clang: testing
 
-`hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
+`hipify-clang` has unit tests using `LLVM` [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
-LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive for testing.
+`LLVM+CLANG` should be built from sources, pre-built binaries are not exhaustive for testing.
 
 **LLVM 9.0.1 or older:**
 
@@ -133,7 +133,7 @@ LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive f
 2. build [`LLVM+CLANG`](http://releases.llvm.org/9.0.0/docs/CMake.html):
 
  **Linux**:
-   ```shell
+   ```bash
         cmake \
          -DCMAKE_INSTALL_PREFIX=../dist \
          -DLLVM_SOURCE_DIR=../llvm \
@@ -154,7 +154,7 @@ LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive f
          -Thost=x64 \
          ../llvm
    ```
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
+Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
 
 **LLVM 10.0.0 or newer:**
 
@@ -162,7 +162,7 @@ LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive f
 2. build [`LLVM project`](http://llvm.org/docs/CMake.html):
 
  **Linux**:
-   ```shell
+   ```bash
         cmake \
          -DCMAKE_INSTALL_PREFIX=../dist \
          -DLLVM_SOURCE_DIR=../llvm-project \
@@ -185,9 +185,7 @@ LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive f
          -Thost=x64 \
          ../llvm-project/llvm
    ```
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
-
-
+Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
 
 3. Ensure [`CUDA`](https://developer.nvidia.com/cuda-toolkit-archive) of minimum version 7.0 is installed.
 
@@ -217,7 +215,7 @@ LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive f
 
 5. Ensure [`python`](https://www.python.org/downloads) of minimum required version 2.7 is installed.
 
-6. Ensure `lit` and `FileCheck` are installed - these are distributed with LLVM.
+6. Ensure `lit` and `FileCheck` are installed - these are distributed with `LLVM`.
 
     * Install `lit` into `python`:
 
@@ -241,23 +239,15 @@ LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive f
 
 7. Set `HIPIFY_CLANG_TESTS` option turned on: `-DHIPIFY_CLANG_TESTS=1`.
 
-8. Run `cmake`:
-     * [***Linux***](#linux)
-     * [***Windows***](#windows)
+8. Build and run tests:
 
-9. Run tests:
-
-     - ***Linux***: `make test-hipify`.
-
-     - ***Windows***: run `Visual Studio 16 2019`, open the generated `hipify-clang.sln`, build project `test-hipify`.
-
-### <a name="linux"></a > hipify-clang: Linux
+### <a name="Linux"></a > hipify-clang: Linux
 
 On Linux the following configurations are tested:
 
 Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.6.5.32
 
-Ubuntu 16-18: LLVM 8.0.0 - 9.0.1, CUDA 8.0 - 10.1 Update 2, cudnn-5.1.10 - cudnn-7.6.5.32
+Ubuntu 16-18: LLVM 8.0.0 - 10.0.0-rc1, CUDA 8.0 - 10.2, cudnn-5.1.10 - cudnn-7.6.5.32
 
 Minimum build system requirements for the above configurations:
 
@@ -265,7 +255,7 @@ Python 2.7, cmake 3.5.1, GNU C/C++ 5.4.0.
 
 Here is an example of building `hipify-clang` with testing support on `Ubuntu 16.04`:
 
-```shell
+```bash
 cmake
  -DHIPIFY_CLANG_TESTS=1 \
  -DCMAKE_BUILD_TYPE=Release \
@@ -409,9 +399,9 @@ LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn 5.1.10 - 7.1.4.18
 
 LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn 7.0.5.15 - 7.6.5.32
 
-LLVM 7.0.0 - 9.0.1, CUDA 7.5 - 10.1 Update 2, cudnn 7.0.5.15 - 7.6.5.32
+LLVM 7.0.0 - 10.0.0-rc1, CUDA 7.5 - 10.2, cudnn 7.0.5.15 - 7.6.5.32
 
-Build system requirements for the latest configuration LLVM 9.0.1/CUDA 10.1 Update 2:
+Build system requirements for the latest stable configuration LLVM 9.0.1/CUDA 10.1 Update 2:
 
 Python 3.6.0 - 3.8.1, cmake 3.5.1 - 3.16.3, Visual Studio 2017 (15.5.2) - 2019 (16.4.4).
 
@@ -447,6 +437,8 @@ cmake
 -- Generating done
 -- Build files have been written to: f:/HIP/hipify-clang/build
 ```
+
+Run `Visual Studio 16 2019`, open the generated `hipify-clang.sln`, build project `test-hipify`.
 
 ## <a name="perl"></a> hipify-perl
 
