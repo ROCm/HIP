@@ -189,6 +189,44 @@ hipError_t hipConfigureCall(
   return hipSuccess;
 }
 
+
+extern "C" hipError_t __hipPushCallConfiguration(
+  dim3 gridDim,
+  dim3 blockDim,
+  size_t sharedMem,
+  hipStream_t stream)
+{
+  GET_TLS();
+  auto ctx = ihipGetTlsDefaultCtx();
+  LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+
+  crit->_execStack.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
+  return hipSuccess;
+}
+
+extern "C" hipError_t __hipPopCallConfiguration(
+  dim3 *gridDim,
+  dim3 *blockDim,
+  size_t *sharedMem,
+  hipStream_t *stream)
+{
+  GET_TLS();
+  auto ctx = ihipGetTlsDefaultCtx();
+  LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+
+  ihipExec_t exec;
+  exec = std::move(crit->_execStack.top());
+  crit->_execStack.pop();
+
+  *gridDim = exec._gridDim;
+  *blockDim = exec._blockDim;
+  *sharedMem = exec._sharedMem;
+  *stream = exec._hStream;
+
+  return hipSuccess;
+}
+
+
 hipError_t hipSetupArgument(
   const void *arg,
   size_t size,
