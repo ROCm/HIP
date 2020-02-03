@@ -1415,12 +1415,12 @@ hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcp
     bool isLocked = true;
     void *pinnedPtr= nullptr;
     if(kind == hipMemcpyHostToDevice ) {
-        if(hip_internal::getLockedPointer((void*)src, sizeBytes, &pinnedPtr) == hipSuccess ){
-            isLocked = true;
+        if(hip_internal::getLockedPointer((void*)src, sizeBytes, &pinnedPtr) != hipSuccess ){
+            isLocked = false;
         }
     } else if(kind == hipMemcpyDeviceToHost) {
-        if(hip_internal::getLockedPointer((void*)dst, sizeBytes, &pinnedPtr) == hipSuccess ){
-            isLocked = true;
+        if(hip_internal::getLockedPointer((void*)dst, sizeBytes, &pinnedPtr) != hipSuccess ){
+            isLocked = false;
         }
     }
 
