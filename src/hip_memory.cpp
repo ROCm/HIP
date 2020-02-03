@@ -350,7 +350,13 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
         // TODO: characterise direct largeBAR reads from agent-allocated memory.
         return /*is_large_BAR ? do_std_memcpy(dst, src, n)
                             : */d2h_copy(dst, src, n, info(src));
-    case hipMemcpyDeviceToDevice: hsa_memory_copy(dst, src, n); break;
+    case hipMemcpyDeviceToDevice: {
+        const auto di{info(dst)};
+        const auto si{info(src)};
+        throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner, nullptr, di.agentBaseAddress),
+                                                          __FILE__, __func__, __LINE__);
+        return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+        }
     default: return generic_copy(dst, src, n, info(dst), info(src));
     }
 }
