@@ -50,8 +50,6 @@ endif()
 get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
-# The installation prefix configured by this project.
-set(_IMPORT_PREFIX "${CMAKE_INSTALL_PREFIX}")
 
 # Create imported target hip::hip_hcc_static
 add_library(hip::hip_hcc_static STATIC IMPORTED)
