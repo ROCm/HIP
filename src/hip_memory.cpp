@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 #include <hc_am.hpp>
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_amd.h"
@@ -2229,25 +2230,14 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
         }
 
         if (free) {
-		if (!device->_driver_node_id) return ihipLogStatus(hipErrorInvalidDevice);
+            // TODO - replace with kernel-level for reporting free memory:
+            size_t deviceMemSize, hostMemSize, userMemSize;
+            hc::am_memtracker_sizeinfo(device->_acc, &deviceMemSize, &hostMemSize, &userMemSize);
 
-		std::string fileName = std::string("/sys/class/kfd/kfd/topology/nodes/") + std::to_string(device->_driver_node_id) + std::string("/mem_banks/0/used_memory");
-		std::ifstream file;
-		file.open(fileName);
-		if (!file) return ihipLogStatus(hipErrorFileNotFound);
+            *free = device->_props.totalGlobalMem - deviceMemSize;
 
-                std::string deviceSize;
-		size_t deviceMemSize;
-
-		file >> deviceSize;
-		file.close();
-                if ((deviceMemSize=strtol(deviceSize.c_str(),NULL,10))){
-		    *free = device->_props.totalGlobalMem - deviceMemSize;
-		    // Deduct the amount of memory from the free memory reported from the system
-		    if (HIP_HIDDEN_FREE_MEM) *free -= (size_t)HIP_HIDDEN_FREE_MEM * 1024 * 1024;
-		} else {
- 		    return ihipLogStatus(hipErrorInvalidValue);
-		}
+            // Deduct the amount of memory from the free memory reported from the system
+            if (HIP_HIDDEN_FREE_MEM) *free -= (size_t)HIP_HIDDEN_FREE_MEM * 1024 * 1024;
         } else {
             e = hipErrorInvalidValue;
         }
