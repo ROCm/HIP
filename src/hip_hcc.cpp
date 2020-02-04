@@ -509,19 +509,13 @@ ihipDevice_t::ihipDevice_t(unsigned deviceId, unsigned deviceCnt, hc::accelerato
     : _deviceId(deviceId), _acc(acc), _state(0), _criticalData(this) {
     hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
     if (agent) {
-	int err;
-        err = hsa_agent_get_info(
+        int err = hsa_agent_get_info(
             *agent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COMPUTE_UNIT_COUNT, &_computeUnits);
         if (err != HSA_STATUS_SUCCESS) {
             _computeUnits = 1;
         }
-        err = hsa_agent_get_info(
-	    *agent, (hsa_agent_info_t) HSA_AMD_AGENT_INFO_DRIVER_NODE_ID, &_driver_node_id);
-	if (err != HSA_STATUS_SUCCESS){
-	   _driver_node_id = 0;
-	}
-        
-	_hsaAgent = *agent;
+
+        _hsaAgent = *agent;
     } else {
         _hsaAgent.handle = static_cast<uint64_t>(-1);
     }
