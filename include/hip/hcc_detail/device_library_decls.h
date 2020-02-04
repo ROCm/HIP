@@ -72,6 +72,7 @@ extern "C" __device__ __attribute__((const)) uint __ockl_multi_grid_thread_rank(
 extern "C" __device__ __attribute__((const)) int __ockl_multi_grid_is_valid(void);
 extern "C" __device__ __attribute__((convergent)) void __ockl_multi_grid_sync(void);
 
+extern "C" __device__ void __ockl_global_atomic_add_f32(float*, float);
 
 // Introduce local address space
 #define __local __attribute__((address_space(3)))
