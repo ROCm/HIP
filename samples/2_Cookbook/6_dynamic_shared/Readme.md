@@ -7,7 +7,7 @@ Earlier we learned how to use static shared memory. In this tutorial, we'll expl
 As we mentioned earlier  that Memory bottlenecks is the main problem why we are not able to get the highest performance, therefore minimizing the latency for memory access plays prominent role in application optimization. In this tutorial, we'll learn how to use dynamic shared memory.
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md)
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/blob/master/INSTALL.md)
 
 ## prerequiste knowledge:
 
@@ -39,11 +39,11 @@ Use the make command and execute it using ./exe
 Use hipcc to build the application, which is using hcc on AMD and nvcc on nvidia.
 
 ## More Info:
-- [HIP FAQ](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_faq.md)
-- [HIP Kernel Language](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_kernel_language.md)
+- [HIP FAQ](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_faq.md)
+- [HIP Kernel Language](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_kernel_language.md)
 - [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
-- [HIP Porting Guide](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_porting_guide.md)
-- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
-- [clang-hipify](https://github.com/ROCm-Developer-Tools/HIP/clang-hipify/README.md)
-- [Developer/CONTRIBUTING Info](https://github.com/ROCm-Developer-Tools/HIP/CONTRIBUTING.md)
-- [Release Notes](https://github.com/ROCm-Developer-Tools/HIP/RELEASE.md)
+- [HIP Porting Guide](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_porting_guide.md)
+- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
+- [HIPIFY](https://github.com/ROCm-Developer-Tools/HIP/blob/master/hipify-clang/README.md)
+- [Developer/CONTRIBUTING Info](https://github.com/ROCm-Developer-Tools/HIP/blob/master/CONTRIBUTING.md)
+- [Release Notes](https://github.com/ROCm-Developer-Tools/HIP/blob/master/RELEASE.md)

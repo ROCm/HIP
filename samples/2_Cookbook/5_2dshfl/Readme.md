@@ -17,7 +17,7 @@ Let's talk about Warp first. The kernel code is executed in groups of fixed numb
 ```
 
 ## Requirement:
-For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/INSTALL.md)
+For hardware requirement and software installation [Installation](https://github.com/ROCm-Developer-Tools/HIP/blob/master/INSTALL.md)
 
 ## prerequiste knowledge:
 
@@ -45,11 +45,11 @@ Use hipcc to build the application, which is using hcc on AMD and nvcc on nvidia
 please make sure you have a 3.0 or higher compute capable device in order to use warp shfl operations and add `-gencode arch=compute=30, code=sm_30` nvcc flag in the Makefile while using this application.
 
 ## More Info:
-- [HIP FAQ](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_faq.md)
-- [HIP Kernel Language](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_kernel_language.md)
+- [HIP FAQ](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_faq.md)
+- [HIP Kernel Language](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_kernel_language.md)
 - [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
-- [HIP Porting Guide](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_porting_guide.md)
-- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
-- [clang-hipify](https://github.com/ROCm-Developer-Tools/HIP/clang-hipify/README.md)
-- [Developer/CONTRIBUTING Info](https://github.com/ROCm-Developer-Tools/HIP/CONTRIBUTING.md)
-- [Release Notes](https://github.com/ROCm-Developer-Tools/HIP/RELEASE.md)
+- [HIP Porting Guide](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_porting_guide.md)
+- [HIP Terminology](https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenL)
+- [HIPIFY](https://github.com/ROCm-Developer-Tools/HIP/blob/master/hipify-clang/README.md)
+- [Developer/CONTRIBUTING Info](https://github.com/ROCm-Developer-Tools/HIP/blob/master/CONTRIBUTING.md)
+- [Release Notes](https://github.com/ROCm-Developer-Tools/HIP/blob/master/RELEASE.md)
