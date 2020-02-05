@@ -145,13 +145,15 @@ void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks,
                            hipEvent_t stopEvent, std::uint32_t flags,
                            Args... args) {
     hip_impl::hip_init();
-    auto kernarg = hip_impl::make_kernarg(kernel, std::move(args)...);
+
+    char kernarg[sizeof(std::tuple<Args...>)];
+    auto n = hip_impl::make_kernarg(kernel, kernarg, std::move(args)...);
 
     void* config[]{
         HIP_LAUNCH_PARAM_BUFFER_POINTER,
-        kernarg.first,
+        kernarg,
         HIP_LAUNCH_PARAM_BUFFER_SIZE,
-        &kernarg.second,
+        &n,
         HIP_LAUNCH_PARAM_END};
 
     hip_impl::hipExtLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),

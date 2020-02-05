@@ -83,24 +83,21 @@ inline std::size_t make_kernarg(const kernargs_size_align& size_align,
     return make_kernarg<n + 1>(size_align, kernarg, sz, std::move(xs)...);
 }
 
-template <typename... Formals, typename... Actuals>
-inline std::pair<char*, std::size_t> make_kernarg(void (*kernel)(Formals...),
-                                                  Actuals... actuals) {
+template <size_t n, typename... Formals, typename... Actuals>
+inline
+std::size_t make_kernarg(void (*kernel)(Formals...), char (&kernarg)[n],
+                         Actuals... actuals) {
     static_assert(sizeof...(Formals) == sizeof...(Actuals),
         "The count of formal arguments must match the count of actuals.");
 
     if (sizeof...(Formals) == 0) return {};
 
-    static thread_local char kernarg[sizeof(std::tuple<Formals...>)];
-
     auto& ps = hip_impl::get_program_state();
-    return {
+    return make_kernarg<0u>(
+        ps.get_kernargs_size_align(reinterpret_cast<std::uintptr_t>(kernel)),
         kernarg,
-        make_kernarg<0u>(
-            ps.get_kernargs_size_align(reinterpret_cast<std::uintptr_t>(kernel)),
-            kernarg,
-            0u,
-            (Formals)actuals...)};
+        0u,
+        (Formals)actuals...);
 }
 
 HIP_INTERNAL_EXPORTED_API hsa_agent_t target_agent(hipStream_t stream);
@@ -160,13 +157,15 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
                         std::uint32_t sharedMemBytes, hipStream_t stream,
                         Args... args) {
     hip_impl::hip_init();
-    auto kernarg = hip_impl::make_kernarg(kernel, std::move(args)...);
+
+    char kernarg[sizeof(std::tuple<Args...>)];
+    auto n = hip_impl::make_kernarg(kernel, kernarg, std::move(args)...);
 
     void* config[]{
         HIP_LAUNCH_PARAM_BUFFER_POINTER,
-        kernarg.first,
+        kernarg,
         HIP_LAUNCH_PARAM_BUFFER_SIZE,
-        &kernarg.second,
+        &n,
         HIP_LAUNCH_PARAM_END};
 
     hip_impl::hipLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
