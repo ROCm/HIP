@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2017 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,25 +17,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* HIT_START
- * BUILD: %t %s ../test_common.cpp
- * TEST: %t
- * HIT_END
- */
+#include "hip/hip_runtime.h"
 
-#define HIP_ENABLE_PRINTF
-
-#include "test_common.h"
-
-__global__ void run_printf() { printf("Hello World\n"); }
-
-int main() {
-    int device_count = 0;
-    hipGetDeviceCount(&device_count);
-    for (int i = 0; i < device_count; ++i) {
-        hipSetDevice(i);
-        hipLaunchKernelGGL(HIP_KERNEL_NAME(run_printf), dim3(1), dim3(1), 0, 0);
-        hipDeviceSynchronize();
-    }
-    passed();
+extern "C" __global__ void test() {
 }
+

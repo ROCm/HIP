@@ -157,31 +157,15 @@ union TData {
 
 #define TEXTURE_RETURN_UINT_XYZW return make_uint4(texel.u.x, texel.u.y, texel.u.z, texel.u.w);
 
-#define TEXTURE_RETURN_FLOAT return (texFormatToSize[texRef.format] == 1)? texel.f.x : (float)texel.u.x/texFormatToSize[texRef.format];
+#define TEXTURE_RETURN_FLOAT return texel.f.x;
 
-#define TEXTURE_RETURN_FLOAT_X return (texFormatToSize[texRef.format] == 1)? make_float1(texel.f.x) : make_float1((float)texel.u.x/texFormatToSize[texRef.format]);
+#define TEXTURE_RETURN_FLOAT_X return make_float1(texel.f.x);
 
-#define TEXTURE_RETURN_FLOAT_XY return (texFormatToSize[texRef.format] == 1)? make_float2(texel.f.x, texel.f.y) : make_float2((float)texel.u.x/texFormatToSize[texRef.format], (float)texel.u.y/texFormatToSize[texRef.format]);
+#define TEXTURE_RETURN_FLOAT_XY return make_float2(texel.f.x, texel.f.y);
 
-#define TEXTURE_RETURN_FLOAT_XYZW return (texFormatToSize[texRef.format] == 1)? make_float4(texel.f.x, texel.f.y, texel.f.z, texel.f.w) : make_float4((float)texel.u.x/texFormatToSize[texRef.format], (float)texel.u.y/texFormatToSize[texRef.format], (float)texel.u.z/texFormatToSize[texRef.format], (float)texel.u.w/texFormatToSize[texRef.format]) ;
+#define TEXTURE_RETURN_FLOAT_XYZW return make_float4(texel.f.x, texel.f.y, texel.f.z, texel.f.w);
 
 extern "C" {
-
-// this is really a sparse array with only valid values being the ones indexed by the enum hipArray_Format(e.g. texFormatToSize[HIP_AD_FORMAT_UNSIGNED_INT8] = UCHAR_MAX)
-__device__ __constant__ static int texFormatToSize[] = {
-    1, /* HIP_AD_FORMAT_NOT_INITIALIZED */
-    UCHAR_MAX, /* HIP_AD_FORMAT_UNSIGNED_INT8 */
-    USHRT_MAX, /* HIP_AD_FORMAT_UNSIGNED_INT16 */
-    1, /* HIP_AD_FORMAT_UNSIGNED_INT32 */
-    1,1,1,1, /* Invalid values */
-    SCHAR_MAX, /* HIP_AD_FORMAT_SIGNED_INT8 */
-    SHRT_MAX, /* HIP_AD_FORMAT_SIGNED_INT16 */
-    1, /* HIP_AD_FORMAT_SIGNED_INT32 */
-    1,1,1,1,1, /* Invalid values */
-    1, /* HIP_AD_FORMAT_HALF */
-    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, /* Invalid values */
-    1 /* HIP_AD_FORMAT_FLOAT */
-};
 
 __device__
 __hip_float4_vector_value_type __ockl_image_sample_1D(

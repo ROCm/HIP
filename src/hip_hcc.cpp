@@ -925,6 +925,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
 
     prop->memPitch = INT_MAX; //Maximum pitch in bytes allowed by memory copies (hardcoded 128 bytes in hipMallocPitch)
     prop->textureAlignment = 0; //Alignment requirement for textures
+    prop->texturePitchAlignment = IMAGE_PITCH_ALIGNMENT; //Alignment requirment for texture pitch
     prop->kernelExecTimeoutEnabled = 0; //no run time limit for running kernels on device
 
     hsa_isa_t isa;

@@ -1,0 +1,8 @@
+#!/bin/bash
+
+ROCMDIR=@ROCM_PATH@
+HIPDIR=$ROCMDIR/hip
+
+if [ -d $ROCMDIR] ; then
+    ln -s -f $ROCMDIR /opt/rocm
+fi

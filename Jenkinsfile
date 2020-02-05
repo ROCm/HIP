@@ -394,7 +394,7 @@ cuda_10_x:
     // Block of string constants customizing behavior for cuda
     String nvcc_ver = 'cuda-10.x'
     String from_image = 'ci_test_nodes/cuda-10.x/ubuntu-16.04:latest'
-    String inside_args = '--runtime=nvidia';
+    String inside_args = '--gpus all';
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( nvcc_ver )
