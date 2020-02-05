@@ -1,4 +1,4 @@
-HIP_1.0 {
+{
 global:
     hipChooseDevice;
     hipCtxCreate;
