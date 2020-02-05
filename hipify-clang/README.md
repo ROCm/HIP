@@ -1,42 +1,51 @@
-# hipify-clang
-
-`hipify-clang` is a clang-based tool to translate CUDA source code into portable HIP C++ automatically.
-
+# HIPIFY
+### Tools to translate CUDA source code into portable HIP C++ automatically
 ## Table of Contents
 
 <!-- toc -->
 
-- [Supported CUDA APIs](#cuda-apis)
-- [Dependencies](#dependencies)
-- [Build and install](#build-and-install)
+- [hipify-clang](#clang)
+     * [Dependencies](#dependencies)
+     * [Usage](#hipify-clang-usage)
      * [Building](#building)
      * [Testing](#testing)
      * [Linux](#linux)
      * [Windows](#windows)
-- [Running and using hipify-clang](#running-and-using-hipify-clang)
-     * [hipify-perl](#perl)
+- [hipify-perl](#perl)
+     * [Usage](#hipify-perl-usage)
+     * [Building](#hipify-perl-building)
+- [Supported CUDA APIs](#cuda-apis)
 - [Disclaimer](#disclaimer)
 
 <!-- tocstop -->
 
-## <a name="cuda-apis"></a> Supported CUDA APIs
+## <a name="clang"></a> hipify-clang
 
-- [Runtime API](../docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
-- [Driver API](../docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
-- [cuComplex API](../docs/markdown/cuComplex_API_supported_by_HIP.md)
-- [cuBLAS](../docs/markdown/CUBLAS_API_supported_by_HIP.md)
-- [cuRAND](../docs/markdown/CURAND_API_supported_by_HIP.md)
-- [cuDNN](../docs/markdown/CUDNN_API_supported_by_HIP.md)
-- [cuFFT](../docs/markdown/CUFFT_API_supported_by_HIP.md)
-- [cuSPARSE](../docs/markdown/CUSPARSE_API_supported_by_HIP.md)
+`hipify-clang` is a clang-based tool for translation CUDA sources into HIP sources.
+It translates CUDA source into an abstract syntax tree, which is being traversed by transformation matchers.
+After applying all the matchers, the output HIP source is produced.
 
-## <a name="dependencies"></a> Dependencies
+**Advantages:**
+
+1. It is a translator; thus, any even very complicated constructs will be parsed successfully, or an error will be reported.
+2. It supports clang options like [`-I`](https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-i-dir), [`-D`](https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-d-macro), [`--cuda-path`](https://clang.llvm.org/docs/ClangCommandLineReference.html#cmdoption-clang-cuda-path), etc.
+3. Seamless support of new CUDA versions as it is clang's responsibility.
+4. Ease in support.
+
+**Disadvantages:**
+
+1. The main advantage is also the main disadvantage: the input CUDA code should be correct; incorrect code wouldn't be translated to HIP.
+2. CUDA should be installed and provided in case of multiple installations by `--cuda-path` option.
+3. All the includes and defines should be provided to transform code successfully.
+
+### <a name="dependencies"></a> hipify-clang: dependencies
 
 `hipify-clang` requires:
 
-1. [**LLVM+CLANG**](http://releases.llvm.org) of at least version [3.8.0](http://releases.llvm.org/download.html#3.8.0); the latest stable and recommended release: [**9.0.1**](http://releases.llvm.org/download.html#9.0.1).
+1. [**LLVM+CLANG**](http://releases.llvm.org) of at least version [3.8.0](http://releases.llvm.org/download.html#3.8.0); the latest stable and recommended release: [**9.0.1**](http://releases.llvm.org/download.html#9.0.1), the latest release candidate: [10.0.0-rc1](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc1).
 
 2. [**CUDA**](https://developer.nvidia.com/cuda-downloads) of at least version [7.0](https://developer.nvidia.com/cuda-toolkit-70), the latest supported version is [**10.1 Update 2**](https://developer.nvidia.com/cuda-10.1-download-archive-base).
+To use the latest CUDA version [10.2](https://developer.nvidia.com/cuda-downloads) please use the latest `LLVM` release candidate: [10.0.0-rc1](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc1).
 
 | **LLVM release version**                                   | **CUDA latest supported version**                                        | **Windows** | **Linux** |
 |:----------------------------------------------------------:|:------------------------------------------------------------------------:|:-----------:|:---------:|
@@ -58,21 +67,41 @@
 | [8.0.1](http://releases.llvm.org/download.html#8.0.1)      | [10.0](https://developer.nvidia.com/cuda-10.0-download-archive)          | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_8.0.1_bug_38811.zip)*</br> | + |
 | [9.0.0](http://releases.llvm.org/download.html#9.0.0)      | [10.1](https://developer.nvidia.com/cuda-10.1-download-archive-base)     | +           | +         |
 | [**9.0.1**](http://releases.llvm.org/download.html#9.0.1)  | [**10.1**](https://developer.nvidia.com/cuda-10.1-download-archive-base) | + <br/> **LATEST STABLE RELEASE** | + <br/> **LATEST STABLE RELEASE** |
+| [10.0.0-rc1](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc1) | [10.2](https://developer.nvidia.com/cuda-downloads)             | +           | +         |
 
-`*` Download the patch and unpack it into your LLVM distributive directory; a few header files will be overwritten; rebuilding of LLVM is not needed.
+`*` Download the patch and unpack it into your `LLVM` distributive directory; a few header files will be overwritten; rebuilding of `LLVM` is not needed.
 
-In most cases, you can get a suitable version of LLVM+CLANG with your package manager.
+In most cases, you can get a suitable version of `LLVM+CLANG` with your package manager.
 
-Failing that or having multiple versions of LLVM, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
+Failing that or having multiple versions of `LLVM`, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
 [CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.5/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\9.0.1\dist`
 
-## <a name="build-and-install"></a> Build and install
+### <a name="hipify-clang-usage"></a> hipify-clang: usage
 
-### <a name="building"></a> Build
+To process a file, `hipify-clang` needs access to the same headers that would be required to compile it with clang.
+
+For example:
+
+```shell
+./hipify-clang square.cu --cuda-path=/usr/local/cuda-10.1 -I /usr/local/cuda-10.1/samples/common/inc
+```
+
+`hipify-clang` arguments are given first, followed by a separator `'--'`, and then the arguments you'd pass to `clang` if you
+were compiling the input file. For example:
+
+```bash
+./hipify-clang cpp17.cu --cuda-path=/usr/local/cuda-10.1 -- -std=c++17
+```
+
+The [Clang manual for compiling CUDA](https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code) may be useful.
+
+For a list of `hipify-clang` options, run `hipify-clang --help`.
+
+### <a name="building"></a> hipify-clang: building
 
 Assuming this repository is at `./HIP`:
 
-```shell
+```bash
 cd hipify-clang
 mkdir build dist
 cd build
@@ -84,30 +113,27 @@ cmake \
 
 make -j install
 ```
-On Windows, the following option should be specified for `cmake` at first place: `-G "Visual Studio 16 2019 Win64"`; the generated `hipify-clang.sln` should be built by `Visual Studio 15 2017` instead of `make.`
+On Windows, the following option should be specified for `cmake` at first place: `-G "Visual Studio 16 2019 Win64"`; the generated `hipify-clang.sln` should be built by `Visual Studio 16 2019` instead of `make.`
+Please, see [hipify-clang: Windows](#windows) for the supported tools for building.
 
 Debug build type `-DCMAKE_BUILD_TYPE=Debug` is also supported and tested; `LLVM+CLANG` should be built in `Debug` mode as well.
 64-bit build mode (`-Thost=x64` on Windows) is also supported; `LLVM+CLANG` should be built in 64-bit mode as well.
 
 The binary can then be found at `./dist/bin/hipify-clang`.
 
-### <a name="testing"></a> Testing
+### <a name="testing"></a> hipify-clang: testing
 
-`hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
+`hipify-clang` has unit tests using `LLVM` [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
-**LLVM+CLANG should be built from sources, pre-built binaries are not exhaustive for testing.**
+`LLVM+CLANG` should be built from sources, pre-built binaries are not exhaustive for testing.
 
-To run it:
+**LLVM 9.0.1 or older:**
+
 1. download [`LLVM`](http://releases.llvm.org/9.0.1/llvm-9.0.1.src.tar.xz)+[`CLANG`](http://releases.llvm.org/9.0.1/cfe-9.0.1.src.tar.xz) sources; 
-2. build [`LLVM+CLANG`](http://llvm.org/docs/CMake.html):
-   ```shell
-   cd llvm
-   mkdir build dist
-   cd build
-   ```
+2. build [`LLVM+CLANG`](http://releases.llvm.org/9.0.0/docs/CMake.html):
 
-     - **Linux**:
-   ```shell
+ **Linux**:
+   ```bash
         cmake \
          -DCMAKE_INSTALL_PREFIX=../dist \
          -DLLVM_SOURCE_DIR=../llvm \
@@ -116,8 +142,7 @@ To run it:
          ../llvm
         make -j install
    ```
-
-     - **Windows**:
+ **Windows**:
    ```shell
         cmake \
          -G "Visual Studio 16 2019" \
@@ -129,9 +154,38 @@ To run it:
          -Thost=x64 \
          ../llvm
    ```
+Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
+**LLVM 10.0.0 or newer:**
 
+1. download [`LLVM project`](https://github.com/llvm/llvm-project/archive/llvmorg-10.0.0-rc1.tar.gz) sources;
+2. build [`LLVM project`](http://llvm.org/docs/CMake.html):
+
+ **Linux**:
+   ```bash
+        cmake \
+         -DCMAKE_INSTALL_PREFIX=../dist \
+         -DLLVM_SOURCE_DIR=../llvm-project \
+         -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
+         -DLLVM_ENABLE_PROJECTS="clang" \
+         -DCMAKE_BUILD_TYPE=Release \
+         ../llvm-project/llvm
+        make -j install
+   ```
+ **Windows**:
+   ```shell
+        cmake \
+         -G "Visual Studio 16 2019" \
+         -A x64 \
+         -DCMAKE_INSTALL_PREFIX=../dist \
+         -DLLVM_SOURCE_DIR=../llvm-project \
+         -DLLVM_TARGETS_TO_BUILD="NVPTX" \
+         -DLLVM_ENABLE_PROJECTS="clang" \
+         -DCMAKE_BUILD_TYPE=Release \
+         -Thost=x64 \
+         ../llvm-project/llvm
+   ```
+Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build project `INSTALL`.
 
 3. Ensure [`CUDA`](https://developer.nvidia.com/cuda-toolkit-archive) of minimum version 7.0 is installed.
 
@@ -161,7 +215,7 @@ To run it:
 
 5. Ensure [`python`](https://www.python.org/downloads) of minimum required version 2.7 is installed.
 
-6. Ensure `lit` and `FileCheck` are installed - these are distributed with LLVM.
+6. Ensure `lit` and `FileCheck` are installed - these are distributed with `LLVM`.
 
     * Install `lit` into `python`:
 
@@ -185,23 +239,15 @@ To run it:
 
 7. Set `HIPIFY_CLANG_TESTS` option turned on: `-DHIPIFY_CLANG_TESTS=1`.
 
-8. Run `cmake`:
-     * [***Linux***](#linux)
-     * [***Windows***](#windows)
+8. Build and run tests:
 
-9. Run tests:
-
-     - ***Linux***: `make test-hipify`.
-
-     - ***Windows***: run `Visual Studio 16 2019`, open the generated `hipify-clang.sln`, build project `test-hipify`.
-
-### <a name="linux"></a >Linux
+### <a name="Linux"></a > hipify-clang: Linux
 
 On Linux the following configurations are tested:
 
 Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.6.5.32
 
-Ubuntu 16-18: LLVM 8.0.0 - 9.0.1, CUDA 8.0 - 10.1 Update 2, cudnn-5.1.10 - cudnn-7.6.5.32
+Ubuntu 16-18: LLVM 8.0.0 - 10.0.0-rc1, CUDA 8.0 - 10.2, cudnn-5.1.10 - cudnn-7.6.5.32
 
 Minimum build system requirements for the above configurations:
 
@@ -209,7 +255,7 @@ Python 2.7, cmake 3.5.1, GNU C/C++ 5.4.0.
 
 Here is an example of building `hipify-clang` with testing support on `Ubuntu 16.04`:
 
-```shell
+```bash
 cmake
  -DHIPIFY_CLANG_TESTS=1 \
  -DCMAKE_BUILD_TYPE=Release \
@@ -345,7 +391,7 @@ Testing Time: 3.07s
   Expected Passes    : 67
 [100%] Built target test-hipify
 ```
-### <a name="windows"></a >Windows
+### <a name="windows"></a > hipify-clang: Windows
 
 On Windows 10 the following configurations are tested:
 
@@ -353,11 +399,11 @@ LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn 5.1.10 - 7.1.4.18
 
 LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn 7.0.5.15 - 7.6.5.32
 
-LLVM 7.0.0 - 9.0.1, CUDA 7.5 - 10.1 Update 2, cudnn 7.0.5.15 - 7.6.5.32
+LLVM 7.0.0 - 10.0.0-rc1, CUDA 7.5 - 10.2, cudnn 7.0.5.15 - 7.6.5.32
 
-Build system requirements for the latest configuration LLVM 9.0.1/CUDA 10.1 Update 2:
+Build system requirements for the latest stable configuration LLVM 9.0.1/CUDA 10.1 Update 2:
 
-Python 3.6.0 - 3.8.1, cmake 3.5.1 - 3.16.2, Visual Studio 2017 (15.5.2) - 2019 (16.4.2).
+Python 3.6.0 - 3.8.1, cmake 3.5.1 - 3.16.3, Visual Studio 2017 (15.5.2) - 2019 (16.4.4).
 
 Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 16 2019`:
 
@@ -392,45 +438,62 @@ cmake
 -- Build files have been written to: f:/HIP/hipify-clang/build
 ```
 
-## <a name="running-and-using-hipify-clang"></a> Running and using hipify-clang
+Run `Visual Studio 16 2019`, open the generated `hipify-clang.sln`, build project `test-hipify`.
 
-To process a file, `hipify-clang` needs access to the same headers that would be needed to compile it with clang.
+## <a name="perl"></a> hipify-perl
 
-For example:
+`hipify-perl` is autogenerated perl-based script which heavily uses regular expressions.
+
+**Advantages:**
+
+1. Ease in use.
+
+2. It doesn't check the input source CUDA code for correctness.
+
+3. It doesn't have dependencies on 3rd party tools, including CUDA.
+
+**Disadvantages:**
+
+1. Current disability (and difficulty in implementing) of transforming the following constructs:
+
+    * macros expansion;
+
+    * namespaces:
+
+        - redefines of CUDA entities in user namespaces;
+
+        - using directive;
+
+    * templates (some cases);
+
+    * device/host function calls distinguishing;
+
+    * header files correct injection;
+
+    * complicated argument lists parsing.
+
+2. Difficulties in supporting.
+
+### <a name="hipify-perl-usage"></a> hipify-perl: usage
 
 ```shell
-./hipify-clang square.cu --cuda-path=/usr/local/cuda-10.1 -I /usr/local/cuda-10.1/samples/common/inc
+perl hipify-perl square.cu > square.cu.hip
 ```
 
-`hipify-clang` arguments are given first, followed by a separator, and then the arguments you'd pass to `clang` if you
-were compiling the input file. The [Clang manual for compiling CUDA](https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code)
-may be useful.
+### <a name="hipify-perl-building"></a> hipify-perl: building
 
-For a list of `hipify-clang` options, run `hipify-clang --help`.
+To generate `hipify-perl`, run `hipify-clang --perl`. Output directory for the generated `hipify-perl` file might be specified by `--o-hipify-perl-dir` option.
 
-### <a name="perl"></a> hipify-perl
+## <a name="cuda-apis"></a> Supported CUDA APIs
 
-To produce a Perl-based script `hipify-perl`, run `hipify-clang --perl`.
-
-The `hipify-perl` script, unlike the `hipify-clang`, being based on regular expressions, and not on an abstract syntax tree, has several gaps:
-
-1. macros expansion;
-
-2. namespaces:
-
-    - redefines of CUDA entities in user namespaces;
-
-    - using directive;
-
-3. templates (some cases);
-
-4. device/host function calls distinguishing;
-
-5. header files correct injection;
-
-6. complicated argument lists parsing.
-
-Nonetheless, `hipify-perl` is easy in use and doesn't check the input source CUDA code for correctness.
+- [Runtime API](../docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
+- [Driver API](../docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
+- [cuComplex API](../docs/markdown/cuComplex_API_supported_by_HIP.md)
+- [cuBLAS](../docs/markdown/CUBLAS_API_supported_by_HIP.md)
+- [cuRAND](../docs/markdown/CURAND_API_supported_by_HIP.md)
+- [cuDNN](../docs/markdown/CUDNN_API_supported_by_HIP.md)
+- [cuFFT](../docs/markdown/CUFFT_API_supported_by_HIP.md)
+- [cuSPARSE](../docs/markdown/CUSPARSE_API_supported_by_HIP.md)
 
 ## <a name="disclaimer"></a> Disclaimer
 
@@ -438,5 +501,4 @@ The information contained herein is for informational purposes only, and is subj
 
 AMD, the AMD Arrow logo, and combinations thereof are trademarks of Advanced Micro Devices, Inc. Other product names used in this publication are for identification purposes only and may be trademarks of their respective companies.
 
-Copyright (c) 2014-2019 Advanced Micro Devices, Inc. All rights reserved.
-
+Copyright (c) 2014-2020 Advanced Micro Devices, Inc. All rights reserved.

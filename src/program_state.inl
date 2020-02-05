@@ -18,6 +18,7 @@
 #include <hsa/hsa_ext_amd.h>
 #include <hsa/hsa_ven_amd_loader.h>
 #include <amd_comgr.h>
+#include "hc.hpp"
 
 #include <link.h>
 
@@ -193,7 +194,8 @@ public:
     std::tuple<
         std::once_flag,
         std::mutex,
-        std::unordered_map<std::string, void*>> globals;
+        // map from string to pair<global_addr, pinned_addr>
+        std::unordered_map<std::string, std::pair<void*, void*>>> globals;
 
     using RAII_code_reader =
         std::unique_ptr<hsa_code_object_reader_t, 
@@ -308,7 +310,7 @@ public:
         return symbol_addresses.second;
     }
 
-    std::unordered_map<std::string, void*>& get_globals() {
+    std::unordered_map<std::string, std::pair<void*, void*>>& get_globals() {
         std::call_once(std::get<0>(globals), [this]() { 
             std::get<2>(globals).reserve(get_symbol_addresses().size()); 
         });
@@ -349,30 +351,52 @@ public:
         auto& g_mutex = get_globals_mutex();
         for (auto&& x : undefined_symbols) {
 
-            if (g.find(x) != g.cend()) return;
-
             const auto it1 = get_symbol_addresses().find(x);
-
             if (it1 == get_symbol_addresses().cend()) {
                 hip_throw(std::runtime_error{
                     "Global symbol: " + x + " is undefined."});
             }
 
-            std::lock_guard<std::mutex> lck{g_mutex};
+            hsa_status_t status;
+            auto check_hsa_global_var_define_error = [&x](hsa_status_t s) {
+                if (s != HSA_STATUS_SUCCESS) {
+                    const char* es;
+                    hsa_status_string(s, &es);
+                    hip_throw(std::runtime_error{ "Error when defining symbol " + x + " : " + es});
+                }
+            };
 
-            if (g.find(x) != g.cend()) return;
+            auto retrieve_pinned_address_from_cache = [](decltype(g) g, decltype(x) x) {
+                const auto& global_addr = g.find(x);
+                if (global_addr != g.cend()) {
+                    return global_addr->second.second;
+                }
+                return (void*)nullptr;
+            };
 
-            g.emplace(x, (void*)(it1->second.first));
-            void* p = nullptr;
-            hsa_amd_memory_lock(
-                reinterpret_cast<void*>(it1->second.first),
-                it1->second.second,
-                nullptr,  // All agents.
-                0,
-                &p);
-
-            hsa_executable_agent_global_variable_define(
-                executable, agent, x.c_str(), p);
+            void* p = retrieve_pinned_address_from_cache(g, x);
+            if (p == nullptr) {
+                std::lock_guard<std::mutex> lck{g_mutex};
+                p = retrieve_pinned_address_from_cache(g, x);
+                if (p == nullptr) {
+                    if (x == "_ZN2hc13printf_bufferE") {
+                        // This is the printf buffer, get the pinned address from HCC
+                        p = Kalmar::getContext()->getPrintfBufferPointerVA();
+                    } 
+                    else {
+                        status = hsa_amd_memory_lock(reinterpret_cast<void*>(it1->second.first),
+                                                     it1->second.second,
+                                                     nullptr,  // All agents.
+                                                     0, &p);
+                        check_hsa_global_var_define_error(status);
+                    }
+                    // cache the global address and its pinned address
+                    g.emplace(x, std::make_pair(reinterpret_cast<void*>(it1->second.first), p));
+                }
+            }
+            status = hsa_executable_agent_global_variable_define(
+                         executable, agent, x.c_str(), p);
+            check_hsa_global_var_define_error(status);
         }
     }
 
@@ -398,13 +422,19 @@ public:
                                            move(file), move(tmp));
         }
 
-        hsa_code_object_reader_create_from_memory(
-            it->first.data(), it->first.size(), it->second.get());
+        auto check_hsa_error = [](hsa_status_t s) {
+            if (s != HSA_STATUS_SUCCESS) {
+                hip_throw(std::runtime_error{"error when loading code object"});
+            }
+        };
 
-        hsa_executable_load_agent_code_object(
-            executable, agent, *it->second, nullptr, nullptr);
+        check_hsa_error(hsa_code_object_reader_create_from_memory(
+            it->first.data(), it->first.size(), it->second.get()));
 
-        hsa_executable_freeze(executable, nullptr);
+        check_hsa_error(hsa_executable_load_agent_code_object(
+            executable, agent, *it->second, nullptr, nullptr));
+
+        check_hsa_error(hsa_executable_freeze(executable, nullptr));
     }
 
 

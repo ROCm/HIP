@@ -61,7 +61,7 @@ namespace hip_impl {
         if (it == impl->get_globals().end())
             return nullptr;
         else
-            return it->second;
+            return it->second.first;
     }
 
     hsa_executable_t program_state::load_executable(const char* data,

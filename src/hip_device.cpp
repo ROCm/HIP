@@ -312,9 +312,12 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
             case hipDeviceAttributeMaxPitch:
                 *pi = prop->memPitch;
                 break;
-	    case hipDeviceAttributeTextureAlignment:
+            case hipDeviceAttributeTextureAlignment:
                 *pi = prop->textureAlignment;
                 break;
+            case hipDeviceAttributeTexturePitchAlignment:
+                *pi = prop->texturePitchAlignment;
+                 break;
             case hipDeviceAttributeKernelExecTimeout:
                 *pi = prop->kernelExecTimeoutEnabled;
                 break;
