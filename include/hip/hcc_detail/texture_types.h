@@ -73,6 +73,7 @@ enum hipTextureReadMode { hipReadModeElementType = 0, hipReadModeNormalizedFloat
  */
 typedef struct textureReference {
     int normalized;
+    enum hipTextureReadMode readMode;// used only for driver API's
     enum hipTextureFilterMode filterMode;
     enum hipTextureAddressMode addressMode[3];  // Texture address mode for up to 3 dimensions
     struct hipChannelFormatDesc channelDesc;
