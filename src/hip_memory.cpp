@@ -203,13 +203,7 @@ namespace {
 
 inline
 void do_copy(void* __restrict dst, const void* __restrict src, size_t n,
-             hsa_agent_t da, hsa_agent_t sa) {
-    if (da.handle == 0 || sa.handle == 0) { // Handle degenerate case.
-        throwing_result_check(hsa_memory_copy(dst, src, n),
-                              __FILE__, __func__, __LINE__);        
-        return;
-    }
-    
+             hsa_agent_t da, hsa_agent_t sa) {  
     hsa_signal_silent_store_relaxed(copy_signal, 1);
     throwing_result_check(
         hsa_amd_memory_async_copy(dst, da, src, sa, n, 0, nullptr, copy_signal),
