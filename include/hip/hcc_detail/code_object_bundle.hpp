@@ -128,7 +128,7 @@ class Bundled_code_header {
                 #ifdef DISABLE_REDUCED_GPU_BLOB_COPY
                 std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
                 #else
-                auto gpuArch = get_all_gpuarch();
+                auto& gpuArch = get_all_gpuarch();
                 auto itgpuArch = std::find(gpuArch.begin(),gpuArch.end(),y.triple);
                 if (itgpuArch != gpuArch.end()){
                     std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
