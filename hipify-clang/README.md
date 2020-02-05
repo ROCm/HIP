@@ -1,36 +1,44 @@
-# hipify-clang
-
-`hipify-clang` is a clang-based tool to translate CUDA source code into portable HIP C++ automatically.
-
+# HIPIFY
+### Tools to translate CUDA source code into portable HIP C++ automatically
 ## Table of Contents
 
 <!-- toc -->
 
-- [Supported CUDA APIs](#cuda-apis)
-- [Dependencies](#dependencies)
-- [Build and install](#build-and-install)
+- [hipify-clang](#clang)
+     * [Dependencies](#dependencies)
+     * [Usage](#hipify-clang-usage)
      * [Building](#building)
      * [Testing](#testing)
      * [Linux](#linux)
      * [Windows](#windows)
-- [Running and using hipify-clang](#running-and-using-hipify-clang)
-     * [hipify-perl](#perl)
+- [hipify-perl](#perl)
+     * [Usage](#hipify-perl-usage)
+     * [Building](#hipify-perl-building)
+- [Supported CUDA APIs](#cuda-apis)
 - [Disclaimer](#disclaimer)
 
 <!-- tocstop -->
 
-## <a name="cuda-apis"></a> Supported CUDA APIs
+## <a name="clang"></a> hipify-clang
 
-- [Runtime API](../docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
-- [Driver API](../docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
-- [cuComplex API](../docs/markdown/cuComplex_API_supported_by_HIP.md)
-- [cuBLAS](../docs/markdown/CUBLAS_API_supported_by_HIP.md)
-- [cuRAND](../docs/markdown/CURAND_API_supported_by_HIP.md)
-- [cuDNN](../docs/markdown/CUDNN_API_supported_by_HIP.md)
-- [cuFFT](../docs/markdown/CUFFT_API_supported_by_HIP.md)
-- [cuSPARSE](../docs/markdown/CUSPARSE_API_supported_by_HIP.md)
+`hipify-clang` is a clang-based tool for translation CUDA sources into HIP sources.
+It translates CUDA source into an abstract syntax tree, which is being traversed by transformation matchers.
+After applying all the matchers, the output HIP source is produced.
 
-## <a name="dependencies"></a> Dependencies
+**Advantages:**
+
+1. It is a translator; thus, any even very complicated constructs will be parsed successfully, or an error will be reported.
+2. It supports clang options like -I, -D, --cuda-path, etc.
+3. Seamless support of new CUDA versions as it is clang's responsibility.
+4. Ease in support.
+
+**Disadvantages:**
+
+1. The main advantage is also the main disadvantage: the input CUDA code should be correct; incorrect code wouldn't be translated to HIP.
+2. CUDA should be installed and provided in case of multiple installations by --cuda-path option.
+3. All the includes and defines should be provided to transform code successfully.
+
+### <a name="dependencies"></a> hipify-clang: dependencies
 
 `hipify-clang` requires:
 
@@ -66,9 +74,28 @@ In most cases, you can get a suitable version of LLVM+CLANG with your package ma
 Failing that or having multiple versions of LLVM, you can [download a release archive](http://releases.llvm.org/), build or install it, and set
 [CMAKE_PREFIX_PATH](https://cmake.org/cmake/help/v3.5/variable/CMAKE_PREFIX_PATH.html) so `cmake` can find it; for instance: `-DCMAKE_PREFIX_PATH=f:\LLVM\9.0.1\dist`
 
-## <a name="build-and-install"></a> Build and install
+### <a name="hipify-clang-usage"></a> hipify-clang: usage
 
-### <a name="building"></a> Build
+To process a file, `hipify-clang` needs access to the same headers that would be required to compile it with clang.
+
+For example:
+
+```shell
+./hipify-clang square.cu --cuda-path=/usr/local/cuda-10.1 -I /usr/local/cuda-10.1/samples/common/inc
+```
+
+`hipify-clang` arguments are given first, followed by a separator '--', and then the arguments you'd pass to `clang` if you
+were compiling the input file. For example:
+
+```shell
+./hipify-clang cpp17.cu --cuda-path=/usr/local/cuda-10.1 -- -std=c++17
+```
+
+The [Clang manual for compiling CUDA](https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code) may be useful.
+
+For a list of `hipify-clang` options, run `hipify-clang --help`.
+
+### <a name="building"></a> hipify-clang: building
 
 Assuming this repository is at `./HIP`:
 
@@ -91,7 +118,7 @@ Debug build type `-DCMAKE_BUILD_TYPE=Debug` is also supported and tested; `LLVM+
 
 The binary can then be found at `./dist/bin/hipify-clang`.
 
-### <a name="testing"></a> Testing
+### <a name="testing"></a> hipify-clang: testing
 
 `hipify-clang` has unit tests using LLVM [`lit`](https://llvm.org/docs/CommandGuide/lit.html)/[`FileCheck`](https://llvm.org/docs/CommandGuide/FileCheck.html).
 
@@ -195,7 +222,7 @@ To run it:
 
      - ***Windows***: run `Visual Studio 16 2019`, open the generated `hipify-clang.sln`, build project `test-hipify`.
 
-### <a name="linux"></a >Linux
+### <a name="linux"></a > hipify-clang: Linux
 
 On Linux the following configurations are tested:
 
@@ -345,7 +372,7 @@ Testing Time: 3.07s
   Expected Passes    : 67
 [100%] Built target test-hipify
 ```
-### <a name="windows"></a >Windows
+### <a name="windows"></a > hipify-clang: Windows
 
 On Windows 10 the following configurations are tested:
 
@@ -392,45 +419,60 @@ cmake
 -- Build files have been written to: f:/HIP/hipify-clang/build
 ```
 
-## <a name="running-and-using-hipify-clang"></a> Running and using hipify-clang
+## <a name="perl"></a> hipify-perl
 
-To process a file, `hipify-clang` needs access to the same headers that would be needed to compile it with clang.
+`hipify-perl` is autogenerated perl-based script which heavily uses regular expressions.
 
-For example:
+**Advantages:**
+
+1. Ease in use.
+
+2. It doesn't check the input source CUDA code for correctness.
+
+3. It doesn't have dependencies on 3rd party tools, including CUDA.
+
+**Disadvantages:**
+
+1. Current disability (and difficulty in implementing) of transforming the following constructs:
+
+    * macros expansion;
+
+    * namespaces:
+
+        - redefines of CUDA entities in user namespaces;
+
+        - using directive;
+
+    * templates (some cases);
+
+    * device/host function calls distinguishing;
+
+    * header files correct injection;
+
+    * complicated argument lists parsing.
+
+2. Difficulties in supporting.
+
+### <a name="hipify-perl-usage"></a> hipify-perl: usage
 
 ```shell
-./hipify-clang square.cu --cuda-path=/usr/local/cuda-10.1 -I /usr/local/cuda-10.1/samples/common/inc
+perl hipify-perl square.cu > square.cu.hip
 ```
 
-`hipify-clang` arguments are given first, followed by a separator, and then the arguments you'd pass to `clang` if you
-were compiling the input file. The [Clang manual for compiling CUDA](https://llvm.org/docs/CompileCudaWithLLVM.html#compiling-cuda-code)
-may be useful.
+### <a name="hipify-perl-building"></a> hipify-perl: building
 
-For a list of `hipify-clang` options, run `hipify-clang --help`.
+To generate `hipify-perl`, run `hipify-clang --perl`. Output directory for the generated `hipify-perl` file might be specified by `--o-hipify-perl-dir` option.
 
-### <a name="perl"></a> hipify-perl
+## <a name="cuda-apis"></a> Supported CUDA APIs
 
-To produce a Perl-based script `hipify-perl`, run `hipify-clang --perl`.
-
-The `hipify-perl` script, unlike the `hipify-clang`, being based on regular expressions, and not on an abstract syntax tree, has several gaps:
-
-1. macros expansion;
-
-2. namespaces:
-
-    - redefines of CUDA entities in user namespaces;
-
-    - using directive;
-
-3. templates (some cases);
-
-4. device/host function calls distinguishing;
-
-5. header files correct injection;
-
-6. complicated argument lists parsing.
-
-Nonetheless, `hipify-perl` is easy in use and doesn't check the input source CUDA code for correctness.
+- [Runtime API](../docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
+- [Driver API](../docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
+- [cuComplex API](../docs/markdown/cuComplex_API_supported_by_HIP.md)
+- [cuBLAS](../docs/markdown/CUBLAS_API_supported_by_HIP.md)
+- [cuRAND](../docs/markdown/CURAND_API_supported_by_HIP.md)
+- [cuDNN](../docs/markdown/CUDNN_API_supported_by_HIP.md)
+- [cuFFT](../docs/markdown/CUFFT_API_supported_by_HIP.md)
+- [cuSPARSE](../docs/markdown/CUSPARSE_API_supported_by_HIP.md)
 
 ## <a name="disclaimer"></a> Disclaimer
 
