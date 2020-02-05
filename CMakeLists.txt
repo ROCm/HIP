@@ -25,6 +25,7 @@ endmacro()
 # Setup version information
 #############################
 # Determine HIP_BASE_VERSION
+set(ENV{HIP_PATH} "")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --version
     OUTPUT_VARIABLE HIP_BASE_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE)
