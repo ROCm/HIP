@@ -226,7 +226,7 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t si) {
     if (si.size == INT32_MAX) return do_std_memcpy(dst, src, n);
     if (si.size == UINT32_MAX && n <= max_std_memcpy_sz) {
-        return do_str_memcpy(dst, src, n);
+        return do_std_memcpy(dst, src, n);
     }
 
     const auto di{info(dst)};
