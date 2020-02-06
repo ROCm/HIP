@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -202,7 +203,7 @@ public:
                         std::function<void(hsa_code_object_reader_t*)>>;
     std::pair<
         std::mutex,
-        std::vector<std::pair<std::string, RAII_code_reader>>> code_readers;
+        std::deque<std::pair<std::string, RAII_code_reader>>> code_readers;
 
     program_state_impl() {
         // Create placeholder for each agent for the per-agent members.
@@ -418,7 +419,7 @@ public:
         decltype(code_readers.second)::iterator it;
         {
           std::lock_guard<std::mutex> lck{code_readers.first};
-          it = code_readers.second.emplace(code_readers.second.end(),
+          it = code_readers.second.emplace_back(code_readers.second.end(),
                                            move(file), move(tmp));
         }
 
