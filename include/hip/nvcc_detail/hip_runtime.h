@@ -102,15 +102,12 @@ typedef int hipLaunchParm;
 #define HIP_DYNAMIC_SHARED_ATTRIBUTE
 
 #ifdef __HIP_DEVICE_COMPILE__
-#define abort()                                                                                    \
-    { asm("trap;"); }
+inline void __device__ abort() { asm("trap;"); }
 #undef assert
-#define assert(COND)                                                                               \
-    {                                                                                              \
-        if (!COND) {                                                                               \
-            abort();                                                                               \
-        }                                                                                          \
-    }
+inline void __device__ assert(int COND) {
+    if (!COND)
+        abort();
+}
 #endif
 
 #define __clock() clock()
