@@ -664,11 +664,11 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
             if ($HIP_PLATFORM eq 'clang') {
                 $HIPCXXFLAGS .= $GPU_ARCH_ARG;
             }
-        }
 
-        # If the specified target is not in the list of known target names, emit a warning.
-        if (grep(/$val/, @knownTargets) eq 0) {
-            print "Warning: The specified HIP target: $val is unknown. Correct compilation is not guaranteed.\n";
+            # If the specified target is not in the list of known target names, emit a warning.
+            if (grep(/$val/, @knownTargets) eq 0) {
+                print "Warning: The specified HIP target: $val is unknown. Correct compilation is not guaranteed.\n";
+            }
         }
     }
 
