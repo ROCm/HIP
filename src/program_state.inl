@@ -419,7 +419,8 @@ public:
         decltype(code_readers.second)::iterator it;
         {
           std::lock_guard<std::mutex> lck{code_readers.first};
-          it = code_readers.second.emplace_back(move(file), move(tmp));
+          code_readers.second.emplace_back(move(file), move(tmp));
+          it = std::prev(code_readers.second.end());
         }
 
         auto check_hsa_error = [](hsa_status_t s) {
