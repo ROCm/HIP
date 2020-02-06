@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --Wno-deprecated-declarations
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --Wno-deprecated-declarations EXCLUDE_HIP_PLATFORM vdi
  * TEST: %t
  * HIT_END
  */

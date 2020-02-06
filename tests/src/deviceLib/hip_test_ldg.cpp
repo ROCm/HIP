@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --gpu-architecture=sm_35
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --gpu-architecture=sm_35 EXCLUDE_HIP_PLATFORM vdi
  * TEST: %t
  * HIT_END
  */
