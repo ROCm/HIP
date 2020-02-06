@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 #define LEN 64
 #define SIZE LEN << 2
-#define THREADS 64
+#define THREADS 4
 
 #define FILENAME "vcpy_kernel.code"
 #define kernel_name "hello_world"
@@ -138,7 +138,7 @@ void run_multi_threads(uint32_t n) {
 int main() {
 
     HIPCHECK(hipInit(0));
-    run_multi_threads(THREADS);
+    run_multi_threads(THREADS * std::thread::hardware_concurrency());
 
     passed();
 }
