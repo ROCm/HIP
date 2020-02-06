@@ -115,10 +115,8 @@ install(
   PATTERN "complex"
   PATTERN "new"
   PATTERN "ppc_wrappers" EXCLUDE
-  PATTERN "openmp_wrappers" EXCLUDE
-  )
+  PATTERN "openmp_wrappers" EXCLUDE)
 
-# Package: hipify-clang
 if (UNIX)
     set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hipify-clang)
     configure_file(packaging/hipify-clang.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
@@ -132,8 +130,8 @@ if (UNIX)
 
     file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/fixnames
         CONTENT "pwd; for i in *.deb; do mv \"\$i\" \"\${i/.deb/-amd64.deb}\" ; done
-        for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
-        ")
+        for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done")
+
     add_custom_target(package_hipify-clang
         COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
         WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
@@ -155,45 +153,44 @@ if (HIPIFY_CLANG_TESTS)
     require_program(lit)
     require_program(FileCheck)
 
-    # Populates CUDA_TOOLKIT_ROOT_DIR, which is then applied to the lit config to give the
-    # value of --cuda-path for the test runs.
     find_package(CUDA REQUIRED)
     if ((CUDA_VERSION VERSION_LESS "7.0") OR (LLVM_PACKAGE_VERSION VERSION_LESS "3.8") OR
         (CUDA_VERSION VERSION_GREATER "7.5" AND LLVM_PACKAGE_VERSION VERSION_LESS "4.0") OR
         (CUDA_VERSION VERSION_GREATER "8.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "6.0") OR
         (CUDA_VERSION VERSION_GREATER "9.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "7.0") OR
         (CUDA_VERSION VERSION_GREATER "9.2" AND LLVM_PACKAGE_VERSION VERSION_LESS "8.0") OR
-        (CUDA_VERSION VERSION_GREATER "10.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "9.0"))
-        message(SEND_ERROR "CUDA ${CUDA_VERSION} is not supported by clang ${LLVM_PACKAGE_VERSION}.")
+        (CUDA_VERSION VERSION_GREATER "10.0" AND LLVM_PACKAGE_VERSION VERSION_LESS "9.0") OR
+        (CUDA_VERSION VERSION_GREATER "10.1" AND LLVM_PACKAGE_VERSION VERSION_LESS "10.0"))
+        message(SEND_ERROR "CUDA ${CUDA_VERSION} is not supported by LLVM ${LLVM_PACKAGE_VERSION}.")
         if (CUDA_VERSION_MAJOR VERSION_LESS "7")
             message(STATUS "Please install CUDA 7.0 or higher.")
         elseif (CUDA_VERSION_MAJOR VERSION_LESS "8")
-            message(STATUS "Please install clang 3.8 or higher.")
+            message(STATUS "Please install LLVM + clang 3.8 or higher.")
         elseif (CUDA_VERSION_MAJOR VERSION_LESS "9")
-            message(STATUS "Please install clang 4.0 or higher.")
+            message(STATUS "Please install LLVM + clang 4.0 or higher.")
         elseif (CUDA_VERSION VERSION_EQUAL "9.0")
-            message(STATUS "Please install clang 6.0 or higher.")
+            message(STATUS "Please install LLVM + clang 6.0 or higher.")
         elseif (CUDA_VERSION_MAJOR VERSION_LESS "10")
-            message(STATUS "Please install clang 7.0 or higher.")
+            message(STATUS "Please install LLVM + clang 7.0 or higher.")
         elseif (CUDA_VERSION VERSION_EQUAL "10.0")
-            message(STATUS "Please install clang 8.0 or higher.")
+            message(STATUS "Please install LLVM + clang 8.0 or higher.")
         elseif (CUDA_VERSION VERSION_EQUAL "10.1")
-            message(STATUS "Please install clang 9.0 or higher.")
+            message(STATUS "Please install LLVM + clang 9.0 or higher.")
+        elseif (CUDA_VERSION VERSION_EQUAL "10.2")
+            message(STATUS "Please install LLVM + clang 10.0 or higher.")
         endif()
     endif()
 
     configure_file(
         ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang/lit.site.cfg.in
         ${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
-        @ONLY
-    )
+        @ONLY)
 
     add_lit_testsuite(test-hipify "Running HIPify regression tests"
         ${CMAKE_CURRENT_LIST_DIR}/../tests/hipify-clang
         PARAMS site_config=${CMAKE_CURRENT_BINARY_DIR}/tests/hipify-clang/lit.site.cfg
         ARGS -v
-        DEPENDS hipify-clang
-    )
+        DEPENDS hipify-clang)
 
     add_custom_target(test-hipify-clang)
     add_dependencies(test-hipify-clang test-hipify)

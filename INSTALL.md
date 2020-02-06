@@ -46,12 +46,8 @@ apt-get install hip-hcc
 
 ```
 git clone https://github.com/llvm/llvm-project.git
-cd llvm-project/llvm/tools
-ln -s clang ../../clang
-ln -s lld ../../lld
-cd ../..
 mkdir -p build && cd build
-cmake -DCMAKE_INSTALL_PREFIX=/opt/rocm/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=1 -DLLVM_TARGETS_TO_BUILD="AMDGPU;X86" ../llvm
+cmake -DCMAKE_INSTALL_PREFIX=/opt/rocm/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=1 -DLLVM_TARGETS_TO_BUILD="AMDGPU;X86" -DLLVM_EXTERNAL_LLD_SOURCE_DIR=../lld -DLLVM_EXTERNAL_CLANG_SOURCE_DIR=../clang ../llvm
 make -j
 sudo make install
 ```
@@ -60,7 +56,7 @@ sudo make install
 
 ```
 export PATH=/opt/rocm/llvm/bin:$PATH
-git clone -b master https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git
+git clone -b amd-stg-open https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git
 cd ROCm-Device-Libs
 mkdir -p build && cd build
 CC=clang CXX=clang++ cmake -DLLVM_DIR=/opt/rocm/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_WERROR=1 -DLLVM_ENABLE_ASSERTIONS=1 ..
