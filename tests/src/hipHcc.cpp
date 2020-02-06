@@ -22,7 +22,7 @@ THE SOFTWARE.
 // Test the HCC-specific API extensions for HIP:
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvcc vdi
  * TEST: %t EXCLUDE_HIP_PLATFORM all
  * HIT_END
  */
