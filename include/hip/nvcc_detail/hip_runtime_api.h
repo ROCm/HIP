@@ -630,36 +630,64 @@ hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array)
 #ifdef __CUDACC__
 
 template <class T>
-hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
-                                             size_t dynamicSMemSize = 0, int blockSizeLimit = 0);
+HIP_NVCC_INLINE hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize,
+                                                             T func, size_t dynamicSMemSize,
+                                                             int blockSizeLimit) {
+    cudaError_t cerror;
+    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize,
+                                                blockSizeLimit);
+    return hipCUDAErrorTohipError(cerror);
+}
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-hipError_t hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex,
-                          const void* devPtr, size_t size = UINT_MAX);
+HIP_NVCC_INLINE hipError_t hipBindTexture(size_t* offset,
+                                          const struct texture<T, dim, readMode>& tex,
+                                          const void* devPtr, size_t size) {
+    return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, size));
+}
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
-                          const hipChannelFormatDesc& desc, size_t size = UINT_MAX);
+HIP_NVCC_INLINE hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
+                                          const void* devPtr, const hipChannelFormatDesc& desc,
+                                          size_t size) {
+    return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
+}
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex);
+HIP_NVCC_INLINE hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
+    return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
+}
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex);
+HIP_NVCC_INLINE hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex) {
+    return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
+}
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array,
-                                 const hipChannelFormatDesc& desc);
+HIP_NVCC_INLINE hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
+                                                 hipArray_const_t array,
+                                                 const hipChannelFormatDesc& desc) {
+    return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array, desc));
+}
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>* tex, hipArray_const_t array,
-                                 const hipChannelFormatDesc* desc);
+HIP_NVCC_INLINE hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>* tex,
+                                                 hipArray_const_t array,
+                                                 const hipChannelFormatDesc* desc) {
+    return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array, desc));
+}
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array);
+HIP_NVCC_INLINE hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
+                                                 hipArray_const_t array) {
+    return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array));
+}
 
 template <class T>
-hipChannelFormatDesc hipCreateChannelDesc();
+HIP_NVCC_INLINE hipChannelFormatDesc hipCreateChannelDesc() {
+    return cudaCreateChannelDesc<T>();
+}
+
 #endif  //__CUDACC__
 
 #else
