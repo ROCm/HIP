@@ -553,7 +553,7 @@ HIP_NVCC_INLINE hipError_t hipMallocManaged(void** ptr, size_t size, unsigned in
 
 HIP_NVCC_INLINE hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
                                           size_t width, size_t height,
-                                          unsigned int flags __dparm(hipArrayDefault)) {
+                                          unsigned int flags) {
     return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
 }
 

@@ -289,7 +289,7 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 hipError_t hipMallocManaged(void** ptr, size_t size, unsigned int flags);
 
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width,
-                          size_t height, unsigned int flags);
+                          size_t height, unsigned int flags __dparm(hipArrayDefault));
 
 hipError_t hipMalloc3DArray(hipArray** array, const hipChannelFormatDesc* desc, hipExtent extent,
                             unsigned int flags);
