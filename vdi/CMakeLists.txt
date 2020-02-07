@@ -157,15 +157,14 @@ target_link_libraries(amdhip64 amdvdi_static pthread dl ${ROCT_LIBRARIES} ${ROCR
 #target_link_libraries(amdhip64 amdvdi_static amdocl64_static pthread dl ${ROCT_LIBRARIES} ${ROCR_LIBRARIES})
 
 #install(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so)"   )
-install(TARGETS amdhip64 LIBRARY DESTINATION lib/x86_64 COMPONENT applications)
 
-install(PROGRAMS $<TARGET_FILE:amdhip64>
-	        DESTINATION lib
-		        COMPONENT MAIN)
+INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
 INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so  )" DESTINATION lib COMPONENT MAIN)
 
+INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhiprtc.so  )" DESTINATION lib COMPONENT MAIN)
 INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhip_hcc.so DESTINATION lib COMPONENT MAIN)
 
+INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAIN)
 
 if(0)
 set(CPACK_GENERATOR "DEB;RPM" CACHE STRING "Default packaging generators")
