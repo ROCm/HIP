@@ -317,6 +317,7 @@ if ($HIP_PLATFORM eq "clang") {
 
 } elsif ($HIP_PLATFORM eq "nvcc") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
+    $HIP_NVCC_INLINE_DISABLED=$ENV{'HIP_NVCC_INLINE_DISABLED'};
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
     if ($verbose & 0x2) {
         print ("CUDA_PATH=$CUDA_PATH\n");
@@ -327,6 +328,11 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPCXXFLAGS .= " -isystem $CUDA_PATH/include";
 
     $HIPLDFLAGS = " -Wno-deprecated-gpu-targets -lcuda -lcudart -L$CUDA_PATH/lib64";
+
+    if($HIP_NVCC_INLINE_DISABLED) {
+        $HIPCXXFLAGS .= " -DNVCC_INLINE_DISABLED ";
+        $HIPLDFLAGS .= " -Xlinker=-rpath,$HIP_PATH/lib -L$HIP_PATH/lib -lhip_nvcc ";
+    }
 } else {
     printf ("error: unknown HIP_PLATFORM = '$HIP_PLATFORM'");
     exit (-1);
