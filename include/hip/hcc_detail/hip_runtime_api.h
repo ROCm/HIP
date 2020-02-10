@@ -2964,6 +2964,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
 
 #if __HIP_VDI__ && !defined(__HCC__)
