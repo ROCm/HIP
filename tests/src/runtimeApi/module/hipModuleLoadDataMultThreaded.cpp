@@ -134,27 +134,27 @@ hipCtx_t create_context() {
 }
 
 void run_multi_threads(uint32_t n) {
+    auto ctx = create_context();
     std::vector<ModuleFunction> mf(n);
     {
         auto buffer = load_file();
         std::vector<joinable_thread> threads;
         for (uint32_t i = 0; i < n; i++) {
             threads.emplace_back(std::thread{[&, i, buffer] {
+                HIPCHECK(hipCtxSetCurrent(ctx));
                 mf[i] = load(buffer);
             }});
         }
     }
     for(auto&& x:mf)
         run(x);
-
+    hipCtxDestroy(ctx);
 }
 
 int main() {
 
     HIPCHECK(hipInit(0));
-    auto ctx = create_context();
     run_multi_threads(THREADS * std::thread::hardware_concurrency());
-    hipCtxDestroy(ctx);
 
     passed();
 }
