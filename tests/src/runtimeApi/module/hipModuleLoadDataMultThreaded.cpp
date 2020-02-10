@@ -35,28 +35,31 @@ THE SOFTWARE.
 
 #define LEN 64
 #define SIZE LEN << 2
-#define THREADS 4
+#define THREADS 8
 
 #define FILENAME "vcpy_kernel.code"
 #define kernel_name "hello_world"
 
 using ModuleFunction = std::pair<hipModule_t, hipFunction_t>;
 
-ModuleFunction load() {
-    hipModule_t Module;
-    hipFunction_t Function;
+std::vector<char> load_file()
+{
     std::ifstream file(FILENAME, std::ios::binary | std::ios::ate);
     std::streamsize fsize = file.tellg();
     file.seekg(0, std::ios::beg);
 
     std::vector<char> buffer(fsize);
-    if (file.read(buffer.data(), fsize)) {
-        HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
-        HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    }
-    else {
+    if (!file.read(buffer.data(), fsize)) {
         failed("could not open code object '%s'\n", FILENAME);
     }
+    return buffer;
+}
+
+ModuleFunction load(const std::vector<char>& buffer) {
+    hipModule_t Module;
+    hipFunction_t Function;
+    HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
+    HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
     return {Module, Function};
 }
 
@@ -121,25 +124,37 @@ struct joinable_thread : std::thread
     }
 };
 
+hipCtx_t create_context() {
+    hipDevice_t device;
+    HIPCHECK(hipDeviceGet(&device, 0));
+
+    hipCtx_t ctx;
+    HIPCHECK(hipCtxCreate(&ctx, 0, device));
+    return ctx;
+}
+
 void run_multi_threads(uint32_t n) {
     std::vector<ModuleFunction> mf(n);
     {
+        auto buffer = load_file();
         std::vector<joinable_thread> threads;
         for (uint32_t i = 0; i < n; i++) {
-            threads.emplace_back(std::thread{[=, &mf] {
-                hipSetDevice(0);
-                mf[i] = load();
+            threads.emplace_back(std::thread{[&, i, buffer] {
+                mf[i] = load(buffer);
             }});
         }
     }
     for(auto&& x:mf)
         run(x);
+
 }
 
 int main() {
 
     HIPCHECK(hipInit(0));
+    auto ctx = create_context();
     run_multi_threads(THREADS * std::thread::hardware_concurrency());
+    hipCtxDestroy(ctx);
 
     passed();
 }
