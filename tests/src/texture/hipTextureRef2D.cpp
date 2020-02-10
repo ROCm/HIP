@@ -44,11 +44,6 @@ int runTest(int argc, char** argv) {
             hData[i * width + j] = i * width + j;
         }
     }
-    printf("hData: ");
-    for (int i = 0; i < 64; i++) {
-        printf("%f  ", hData[i]);
-    }
-    printf("\n");
 
     hipChannelFormatDesc channelDesc = hipCreateChannelDesc(32, 0, 0, 0, hipChannelFormatKindFloat);
     hipArray* hipArray;
@@ -75,21 +70,8 @@ int runTest(int argc, char** argv) {
     memset(hOutputData, 0, size);
     hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost);
 
-    printf("dData: ");
-    for (int i = 0; i < 64; i++) {
-        printf("%f  ", hOutputData[i]);
-    }
-    printf("\n");
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            if (hData[i * width + j] != hOutputData[i * width + j]) {
-                printf("Difference [ %d %d ]:%f ----%f\n", i, j, hData[i * width + j],
-                       hOutputData[i * width + j]);
-                testResult = 0;
-                break;
-            }
-        }
-    }
+    HipTest::checkArray(hData, hOutputData, height, width);
+
     HIPCHECK(hipUnbindTexture(tex));
     hipFree(dData);
     hipFreeArray(hipArray);
