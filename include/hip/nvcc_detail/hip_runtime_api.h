@@ -331,19 +331,23 @@ hipError_t hipMemcpyWithStream(void* dst, const void* src, size_t sizeBytes, hip
                                hipStream_t stream);
 
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind copyKind,
-                          hipStream_t stream);
+                          hipStream_t stream __dparm(0));
 
-hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeBytes, size_t offset,
-                             hipMemcpyKind copyType);
+hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeBytes,
+                             size_t offset __dparm(0),
+                             hipMemcpyKind copyType __dparm(hipMemcpyHostToDevice));
 
 hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t sizeBytes,
-                                  size_t offset, hipMemcpyKind copyType, hipStream_t stream);
+                                  size_t offset, hipMemcpyKind copyType,
+                                  hipStream_t stream __dparm(0));
 
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t sizeBytes, size_t offset,
-                               hipMemcpyKind kind);
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t sizeBytes,
+                               size_t offset __dparm(0),
+                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
 
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t sizeBytes,
-                                    size_t offset, hipMemcpyKind kind, hipStream_t stream);
+                                    size_t offset, hipMemcpyKind kind,
+                                    hipStream_t stream __dparm(0));
 
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName);
 
@@ -354,7 +358,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
 
 hipError_t hipMemcpyParam2D(const hip_Memcpy2D* pCopy);
 
-hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream);
+hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStream_t stream __dparm(0));
 
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p);
 
@@ -404,29 +408,30 @@ hipError_t hipMemset(void* devPtr, int value, size_t count);
 
 hipError_t hipMemsetD32(hipDeviceptr_t devPtr, int value, size_t count);
 
-hipError_t hipMemsetAsync(void* devPtr, int value, size_t count, hipStream_t stream);
+hipError_t hipMemsetAsync(void* devPtr, int value, size_t count, hipStream_t stream __dparm(0));
 
-hipError_t hipMemsetD32Async(hipDeviceptr_t devPtr, int value, size_t count, hipStream_t stream);
+hipError_t hipMemsetD32Async(hipDeviceptr_t devPtr, int value, size_t count,
+                             hipStream_t stream __dparm(0));
 
 hipError_t hipMemsetD8(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes);
 
 hipError_t hipMemsetD8Async(hipDeviceptr_t dest, unsigned char value, size_t sizeBytes,
-                            hipStream_t stream);
+                            hipStream_t stream __dparm(0));
 
 hipError_t hipMemsetD16(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes);
 
 hipError_t hipMemsetD16Async(hipDeviceptr_t dest, unsigned short value, size_t sizeBytes,
-                             hipStream_t stream);
+                             hipStream_t stream __dparm(0));
 
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height);
 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height,
-                            hipStream_t stream);
+                            hipStream_t stream __dparm(0));
 
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent);
 
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent,
-                            hipStream_t stream);
+                            hipStream_t stream __dparm(0));
 
 hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int device);
 
@@ -441,7 +446,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total);
 
 hipError_t hipEventCreate(hipEvent_t* event);
 
-hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream);
+hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream __dparm(NULL));
 
 hipError_t hipEventSynchronize(hipEvent_t event);
 
@@ -501,7 +506,7 @@ hipError_t hipMemGetAddressRange(hipDeviceptr_t* pbase, size_t* psize, hipDevice
 hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevice, size_t count);
 
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
-                              size_t count, hipStream_t stream);
+                              size_t count, hipStream_t stream __dparm(0));
 
 // Profile APIs:
 hipError_t hipProfilerStart();
@@ -592,7 +597,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
 hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t cacheConfig);
 
 hipError_t hipBindTexture(size_t* offset, struct textureReference* tex, const void* devPtr,
-                          const hipChannelFormatDesc* desc, size_t size);
+                          const hipChannelFormatDesc* desc, size_t size __dparm(UINT_MAX));
 
 hipError_t hipBindTexture2D(size_t* offset, struct textureReference* tex, const void* devPtr,
                             const hipChannelFormatDesc* desc, size_t width, size_t height,
@@ -617,6 +622,8 @@ hipError_t hipGetTextureAlignmentOffset(size_t* offset, const struct textureRefe
 
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
 
+#define __dparm(x)
+
 #endif
 
 #ifdef __cplusplus
@@ -626,6 +633,14 @@ hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array)
 #ifdef NVCC_INLINE_DISABLED
 
 #define HIP_NVCC_INLINE
+
+#else
+
+#define HIP_NVCC_INLINE static inline
+
+#include "hip/nvcc_detail/hip_runtime_api.inl"
+
+#endif
 
 #ifdef __CUDACC__
 
@@ -689,14 +704,6 @@ HIP_NVCC_INLINE hipChannelFormatDesc hipCreateChannelDesc() {
 }
 
 #endif  //__CUDACC__
-
-#else
-
-#define HIP_NVCC_INLINE static inline
-
-#include "hip/nvcc_detail/hip_runtime_api.inl"
-
-#endif
 
 
 #endif  // HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H

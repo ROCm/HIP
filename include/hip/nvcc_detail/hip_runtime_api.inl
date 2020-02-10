@@ -29,7 +29,11 @@ extern "C" {
 #endif
 
 #ifdef __cplusplus
+#ifdef NVCC_INLINE_DISABLED
+#define __dparm(x)
+#else
 #define __dparm(x) = x
+#endif
 #else
 #define __dparm(x)
 #endif
@@ -552,8 +556,7 @@ HIP_NVCC_INLINE hipError_t hipMallocManaged(void** ptr, size_t size, unsigned in
 }
 
 HIP_NVCC_INLINE hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc,
-                                          size_t width, size_t height,
-                                          unsigned int flags) {
+                                          size_t width, size_t height, unsigned int flags) {
     return hipCUDAErrorTohipError(cudaMallocArray(array, desc, width, height, flags));
 }
 
