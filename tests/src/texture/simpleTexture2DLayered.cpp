@@ -59,7 +59,7 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
     myparms.dstPos = make_hipPos(0,0,0);
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
-    myparms.extent = make_hipExtent(width, height, num_layers);
+    myparms.extent = make_hipExtent(width * sizeof(T), height, num_layers);
     //myparms.kind = hipMemcpyHostToDevice;
     HIPCHECK(hipMemcpy3D(&myparms));
 
