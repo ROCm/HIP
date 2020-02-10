@@ -84,7 +84,7 @@ int HIP_FORCE_P2P_HOST = 0;
 int HIP_FAIL_SOC = 0;
 int HIP_DENY_PEER_ACCESS = 0;
 
-int HIP_HIDDEN_FREE_MEM = 256;
+int HIP_HIDDEN_FREE_MEM = 0;
 // Force async copies to actually use the synchronous copy interface.
 int HIP_FORCE_SYNC_COPY = 0;
 
