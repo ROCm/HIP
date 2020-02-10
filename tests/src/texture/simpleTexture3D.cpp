@@ -76,7 +76,7 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(T)*8, 0, 0, 0, hipChannelFormatKindSigned);
     hipArray *arr;
 
-    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayCubemap));
+    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width* sizeof(T), height, depth), hipArrayCubemap));
     hipMemcpy3DParms myparms = {0};
     myparms.srcPos = make_hipPos(0,0,0);
     myparms.dstPos = make_hipPos(0,0,0);
