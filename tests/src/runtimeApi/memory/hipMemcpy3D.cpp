@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -54,9 +54,15 @@ void runTest(int width,int height,int depth)
     myparms.kind = hipMemcpyHostToDevice;
     HIPCHECK(hipMemcpy3D(&myparms));
     HIPCHECK(hipDeviceSynchronize());
-    HipTest::checkArray(hData,(T*)arr->data,width,height,depth);
+    T *hOutputData = (T*) malloc(size);
+    memset(hOutputData, 0,  size);
+
+    // copy result from device to host
+    HIPCHECK(hipMemcpyFromArray(hOutputData, arr, 0, 0, size, hipMemcpyDeviceToHost));
+    HipTest::checkArray(hData,hOutputData,width,height,depth);
     hipFreeArray(arr);
     free(hData);
+    free(hOutputData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
