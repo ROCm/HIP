@@ -213,7 +213,7 @@ StringRef readSourceText(clang::SourceManager &SM, const clang::SourceRange &exp
   */
 std::string stringifyZeroDefaultedArg(clang::SourceManager &SM, const clang::Expr *arg) {
   if (clang::isa<clang::CXXDefaultArgExpr>(arg)) return "0";
-  else return readSourceText(SM, arg->getSourceRange());
+  else return std::string(readSourceText(SM, arg->getSourceRange()));
 }
 
 } // anonymous namespace
@@ -427,7 +427,7 @@ bool HipifyAction::cudaSharedIncompleteArrayVar(const mat::MatchFinder::MatchRes
         clang::LangOptions LO;
         LO.CUDA = true;
         clang::PrintingPolicy policy(LO);
-        typeName = BT->getName(policy);
+        typeName = std::string(BT->getName(policy));
       }
     } else {
       typeName = QT.getAsString();

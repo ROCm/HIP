@@ -76,8 +76,7 @@ void texture2Dtest()
     texDescr.readMode = hipReadModeElementType;
 
     hipTextureObject_t texObj;
-    hipResourceViewDesc resDesc;
-    HIPCHECK( hipCreateTextureObject(&texObj, &texRes, &texDescr, &resDesc));
+    HIPCHECK( hipCreateTextureObject(&texObj, &texRes, &texDescr, NULL));
 
     HIPCHECK(hipMalloc((void**)&devPtrB, SIZE_W*sizeof(TYPE_t)*SIZE_H)) ;
 
