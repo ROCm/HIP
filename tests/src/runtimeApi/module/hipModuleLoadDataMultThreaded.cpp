@@ -127,6 +127,7 @@ void run_multi_threads(uint32_t n) {
         std::vector<joinable_thread> threads;
         for (uint32_t i = 0; i < n; i++) {
             threads.emplace_back(std::thread{[=, &mf] {
+                hipSetDevice(0);
                 mf[i] = load();
             }});
         }
