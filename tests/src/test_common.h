@@ -180,9 +180,20 @@ void checkArray(T input, T output, size_t height, size_t width)
         for(int j=0; j<width; j++ ){
             int offset = i*width + j;
             if( input[offset] !=  output[offset] ){
-                 std::cerr << '[' << i << ',' << j << ',' << "]:" << input[offset] << "----" << output[offset]<<"  ";
-                 failed("mistmatch at:%d %d",i,j);
+                std::cerr << '[' << i << ',' << j << "]:" << input[offset] << "----" << output[offset]<<"  ";
+                failed("mistmatch at:%d %d",i,j);
             }
+        }
+    }
+}
+
+template <typename T>
+void checkArray(T input, T output, size_t width) {
+    for (int i = 0; i < width; i++) {
+        int offset = i;
+        if (input[offset] != output[offset]) {
+            std::cerr << '[' << i << "]:" << input[offset] << "----" << output[offset] << "  ";
+            failed("mistmatch at:%d", i);
         }
     }
 }
