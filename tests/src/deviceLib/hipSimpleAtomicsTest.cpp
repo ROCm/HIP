@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11 --gpu-architecture=sm_60
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11 --gpu-architecture=sm_60 EXCLUDE_HIP_PLATFORM vdi
  * TEST: %t
  * HIT_END
  */

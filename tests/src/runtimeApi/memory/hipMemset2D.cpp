@@ -23,7 +23,7 @@ THE SOFTWARE.
 // Also serves as a template for other tests.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM vdi
  * TEST: %t
  * HIT_END
  */
