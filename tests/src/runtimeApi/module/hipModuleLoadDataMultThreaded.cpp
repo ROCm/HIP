@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -35,11 +35,7 @@ THE SOFTWARE.
 
 #define LEN 64
 #define SIZE LEN << 2
-#ifdef __CUDACC__
-#define THREADS 1
-#else
 #define THREADS 8
-#endif
 
 #define FILENAME "vcpy_kernel.code"
 #define kernel_name "hello_world"
@@ -128,31 +124,19 @@ struct joinable_thread : std::thread
     }
 };
 
-hipCtx_t create_context() {
-    hipDevice_t device;
-    HIPCHECK(hipDeviceGet(&device, 0));
-
-    hipCtx_t ctx;
-    HIPCHECK(hipCtxCreate(&ctx, 0, device));
-    return ctx;
-}
-
 void run_multi_threads(uint32_t n) {
-    auto ctx = create_context();
     std::vector<ModuleFunction> mf(n);
     {
         auto buffer = load_file();
         std::vector<joinable_thread> threads;
         for (uint32_t i = 0; i < n; i++) {
             threads.emplace_back(std::thread{[&, i, buffer] {
-                HIPCHECK(hipCtxSetCurrent(ctx));
                 mf[i] = load(buffer);
             }});
         }
     }
     for(auto&& x:mf)
         run(x);
-    hipCtxDestroy(ctx);
 }
 
 int main() {
