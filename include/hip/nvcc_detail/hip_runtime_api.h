@@ -622,7 +622,7 @@ hipError_t hipGetTextureAlignmentOffset(size_t* offset, const struct textureRefe
 
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
 
-#define __dparm(x)
+#undef __dparm
 
 #endif
 
