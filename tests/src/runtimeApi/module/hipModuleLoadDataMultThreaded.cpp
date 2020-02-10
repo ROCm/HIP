@@ -35,7 +35,11 @@ THE SOFTWARE.
 
 #define LEN 64
 #define SIZE LEN << 2
+#ifdef __CUDACC__
+#define THREADS 1
+#else
 #define THREADS 8
+#endif
 
 #define FILENAME "vcpy_kernel.code"
 #define kernel_name "hello_world"
