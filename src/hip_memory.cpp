@@ -1602,7 +1602,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
         void* srcPtr;void* dstPtr;
         copyDepth = p->extent.depth;
         copyHeight = p->extent.height;
-        copyWidth =  p->extent.width; // in bytes
+        copyWidth =  p->extent.width; // in bytes ?
         dstXoffset = p->dstPos.x;
         dstYoffset = p->dstPos.y;
         dstZoffset = p->dstPos.z;
@@ -1622,6 +1622,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             dstHeight = p->dstArray->height;
             dstDepth = p->dstArray->depth;
             dstPitch = dstWidth * dstByteSize;
+            copyWidth = copyWidth * dstByteSize; //TODO check ?
         } else {
             //Non Array destination
             dstPtr = p->dstPtr.ptr;
