@@ -136,7 +136,7 @@ void run_multi_threads(uint32_t n) {
             threads.emplace_back(std::thread{[&, i, buffer] {
                 hipCtx_t ctx;
                 HIPCHECK(hipDevicePrimaryCtxRetain(&ctx, device));
-                
+                HIPCHECK(hipCtxPushCurrent(ctx));
                 mf[i] = load(buffer);
             }});
         }
