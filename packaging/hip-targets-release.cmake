@@ -20,6 +20,7 @@ set_target_properties(hip::hip_hcc_static PROPERTIES
 else()
 set_target_properties(hip::hip_hcc_static PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
+  IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE "hc_am"
   IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libhip_hcc_static.a"
   )
 endif()
@@ -36,6 +37,7 @@ set_target_properties(hip::hip_hcc PROPERTIES
   )
 else()
 set_target_properties(hip::hip_hcc PROPERTIES
+  IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE "hcc::hccrt;hcc::hc_am"
   IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libhip_hcc.so"
   IMPORTED_SONAME_RELEASE "libhip_hcc.so"
   )
