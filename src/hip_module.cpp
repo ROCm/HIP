@@ -1470,7 +1470,6 @@ hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    unsigned int flags)
 {
     HIP_INIT_API(hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
-
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
         tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
