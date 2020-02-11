@@ -1385,7 +1385,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
 }
 
 hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-   TlsData *tls, int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk)
+   TlsData *tls, uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
 {
     using namespace hip_impl;
 
@@ -1425,28 +1425,25 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
         : std::min(maxWavesPerSimd, availableSGPRs / usedSGPRS));
 
     // Calculate blocks occupancy per CU based on SGPR usage
-    *numBlocks = std::min(*numBlocks, (int) (sgprs_alu_occupancy / numWavefronts));
+    *numBlocks = std::min(*numBlocks, (uint32_t) (sgprs_alu_occupancy / numWavefronts));
 
     size_t total_used_lds = usedLDS + dynSharedMemPerBlk;
     if (total_used_lds != 0) {
       // Calculate LDS occupacy per CU. lds_per_cu / (static_lsd + dynamic_lds)
       size_t lds_occupancy = prop.maxSharedMemoryPerMultiProcessor / total_used_lds;
-      *numBlocks = std::min(*numBlocks, (int) lds_occupancy);
+      *numBlocks = std::min(*numBlocks, (uint32_t) lds_occupancy);
     }
 
     return hipSuccess;
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk)
+   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
 {
     HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
-   
-    auto F = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)(f),
-                                                   hip_impl::target_agent(0));
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, numBlocks, F, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -1459,16 +1456,13 @@ hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk,
+   uint32_t* numBlocks, hipFunction_t f, uint32_t  blockSize, size_t dynSharedMemPerBlk,
    unsigned int flags)
 {
     HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
 
-    auto F = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)(f),
-                                                   hip_impl::target_agent(0));
-
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, numBlocks, F, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
