@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "test_common.h"
 
 template <typename T>
-void runTest(int width,int height,int depth)
+void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
 {
     unsigned int size = width * height * depth * sizeof(T);
     T* hData = (T*) malloc(size);
@@ -40,41 +40,59 @@ void runTest(int width,int height,int depth)
         }
     }
     printf("test- sizeof(T) =%d\n", sizeof(T));
-    // Allocate array and copy image data
-    hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(T)*8, 0, 0, 0, hipChannelFormatKindSigned);
-    hipArray *arr;
+    hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(T)*8, 0, 0, 0, formatKind);
+    hipArray *arr,*arr1;
 
-    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayCubemap));
+    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayDefault));
+    HIPCHECK(hipMalloc3DArray(&arr1, &channelDesc, make_hipExtent(width, height, depth), hipArrayDefault));
     hipMemcpy3DParms myparms = {0};
     myparms.srcPos = make_hipPos(0,0,0);
     myparms.dstPos = make_hipPos(0,0,0);
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
-    myparms.extent = make_hipExtent(width * sizeof(T), height, depth);
+    myparms.extent = make_hipExtent(width , height, depth);
     myparms.kind = hipMemcpyHostToDevice;
     HIPCHECK(hipMemcpy3D(&myparms));
     HIPCHECK(hipDeviceSynchronize());
+    //Array to Array
+    memset(&myparms,0x0, sizeof(hipMemcpy3DParms));
+    myparms.srcPos = make_hipPos(0,0,0);
+    myparms.dstPos = make_hipPos(0,0,0);
+    myparms.srcArray = arr;
+    myparms.dstArray = arr1;
+    myparms.extent = make_hipExtent(width, height, depth);
+    myparms.kind = hipMemcpyDeviceToDevice;
+    HIPCHECK(hipMemcpy3D(&myparms));
+    HIPCHECK(hipDeviceSynchronize());
+
     T *hOutputData = (T*) malloc(size);
     memset(hOutputData, 0,  size);
+    //Device to host
+    memset(&myparms,0x0, sizeof(hipMemcpy3DParms));
+    myparms.srcPos = make_hipPos(0,0,0);
+    myparms.dstPos = make_hipPos(0,0,0);
+    myparms.dstPtr = make_hipPitchedPtr(hOutputData, width * sizeof(T), width, height);
+    myparms.srcArray = arr1;
+    myparms.extent = make_hipExtent(width, height, depth);
+    myparms.kind = hipMemcpyDeviceToHost;
+    HIPCHECK(hipMemcpy3D(&myparms));
+    HIPCHECK(hipDeviceSynchronize());
 
-    // copy result from device to host
-    HIPCHECK(hipMemcpyFromArray(hOutputData, arr, 0, 0, size, hipMemcpyDeviceToHost));
+    // Check result
     HipTest::checkArray(hData,hOutputData,width,height,depth);
     hipFreeArray(arr);
+    hipFreeArray(arr1);
     free(hData);
     free(hOutputData);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// Program main
-////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
     for(int i=1;i<25;i++)
     {
-        runTest<float>(i,i,i);
-        runTest<int>(i+1,i,i);
-        runTest<char>(i,i+1,i);
+        runTest<float>(i,i,i, hipChannelFormatKindFloat);
+        runTest<int>(i+1,i,i, hipChannelFormatKindSigned);
+        runTest<char>(i,i+1,i, hipChannelFormatKindSigned);
     }
     passed();
 }
