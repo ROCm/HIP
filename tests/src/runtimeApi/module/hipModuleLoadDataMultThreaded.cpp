@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
  */
@@ -127,10 +127,16 @@ struct joinable_thread : std::thread
 void run_multi_threads(uint32_t n) {
     std::vector<ModuleFunction> mf(n);
     {
+        hipDevice_t device;
+        HIPCHECK(hipDeviceGet(&device, 0));
+
         auto buffer = load_file();
         std::vector<joinable_thread> threads;
         for (uint32_t i = 0; i < n; i++) {
             threads.emplace_back(std::thread{[&, i, buffer] {
+                hipCtx_t ctx;
+                HIPCHECK(hipDevicePrimaryCtxRetain(&ctx, device));
+                
                 mf[i] = load(buffer);
             }});
         }
