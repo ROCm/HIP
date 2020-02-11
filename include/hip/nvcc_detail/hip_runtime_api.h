@@ -142,9 +142,9 @@ typedef enum cudaChannelFormatKind hipChannelFormatKind;
 
 #define hipOccupancyDefault cudaOccupancyDefault
 
-#define hipCooperativeLaunchMultiDeviceNoPreSync
+#define hipCooperativeLaunchMultiDeviceNoPreSync    \
         cudaCooperativeLaunchMultiDeviceNoPreSync
-#define hipCooperativeLaunchMultiDeviceNoPostSync
+#define hipCooperativeLaunchMultiDeviceNoPostSync   \
         cudaCooperativeLaunchMultiDeviceNoPostSync
 
 
