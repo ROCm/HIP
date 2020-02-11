@@ -51,7 +51,11 @@ void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
     myparms.extent = make_hipExtent(width , height, depth);
+#ifdef __HIP_PLATFORM_NVCC__
+    myparms.kind = cudaMemcpyHostToDevice;
+#else
     myparms.kind = hipMemcpyHostToDevice;
+#endif
     HIPCHECK(hipMemcpy3D(&myparms));
     HIPCHECK(hipDeviceSynchronize());
     //Array to Array
@@ -61,7 +65,11 @@ void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
     myparms.srcArray = arr;
     myparms.dstArray = arr1;
     myparms.extent = make_hipExtent(width, height, depth);
+#ifdef __HIP_PLATFORM_NVCC__
+    myparms.kind = cudaMemcpyDeviceToDevice;
+#else
     myparms.kind = hipMemcpyDeviceToDevice;
+#endif
     HIPCHECK(hipMemcpy3D(&myparms));
     HIPCHECK(hipDeviceSynchronize());
 
@@ -74,7 +82,11 @@ void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
     myparms.dstPtr = make_hipPitchedPtr(hOutputData, width * sizeof(T), width, height);
     myparms.srcArray = arr1;
     myparms.extent = make_hipExtent(width, height, depth);
+#ifdef __HIP_PLATFORM_NVCC__
+    myparms.kind = cudaMemcpyDeviceToHost;
+#else
     myparms.kind = hipMemcpyDeviceToHost;
+#endif
     HIPCHECK(hipMemcpy3D(&myparms));
     HIPCHECK(hipDeviceSynchronize());
 
