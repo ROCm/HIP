@@ -1599,7 +1599,8 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
         size_t srcXoffset, srcYoffset, srcZoffset, dstXoffset, dstYoffset, dstZoffset;
         size_t srcWidth, srcHeight, srcDepth, dstWidth, dstHeight, dstDepth;
 
-        void* srcPtr;void* dstPtr;
+        void* srcPtr, *dstPtr;
+        bool copyWidthUpdate= false;
         copyDepth = p->extent.depth;
         copyHeight = p->extent.height;
         copyWidth =  p->extent.width; // in bytes ?
@@ -1622,7 +1623,10 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             dstHeight = p->dstArray->height;
             dstDepth = p->dstArray->depth;
             dstPitch = dstWidth * dstByteSize;
-            copyWidth = copyWidth * dstByteSize; //TODO check ?
+            if(!copyWidthUpdate) {
+                copyWidth = copyWidth * dstByteSize;
+                copyWidthUpdate = true;
+            }
         } else {
             //Non Array destination
             dstPtr = p->dstPtr.ptr;
@@ -1644,6 +1648,10 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             srcHeight = p->srcArray->height;
             srcDepth = p->srcArray->depth;
             srcPitch = srcWidth * srcByteSize;
+            if(!copyWidthUpdate) {
+                copyWidth = copyWidth * srcByteSize;
+                copyWidthUpdate = true;
+            }
         } else {
             //Non Array source
             srcPtr = p->srcPtr.ptr;
