@@ -116,7 +116,7 @@ int main() {
 
     dimBlock.x = workgroups[i];
     // Calculate the device occupancy to know how many blocks can be run concurrently
-    hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks,
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(reinterpret_cast<uint32_t*>(&numBlocks),
         test_gws, dimBlock.x * dimBlock.y * dimBlock.z, dimBlock.x * sizeof(long));
 
     dimGrid.x = deviceProp.multiProcessorCount * std::min(numBlocks, 32);
