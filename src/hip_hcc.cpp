@@ -2444,10 +2444,6 @@ bool ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, 
              } else {
                  const auto& future = crit->_av.copy2d_async_ext(src, dst, width, height, srcPitch, dstPitch, hcCopyDir, srcPtrInfo, dstPtrInfo,
                                           &copyDevice->getDevice()->_acc);
-                 if(!future.valid()) {
-                     tprintf(DB_COPY, "locked_copy2DAsync failed to use SDMA\n");
-                     retStatus = false;
-                 }
              }
          } catch (Kalmar::runtime_exception) {
                 throw ihipException(hipErrorRuntimeOther);
