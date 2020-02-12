@@ -1452,7 +1452,7 @@ hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
     HIP_INIT_API(hipDrvOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, (uint32_t*) numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
@@ -1471,7 +1471,7 @@ hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
 {
     HIP_INIT_API(hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, (uint32_t*) numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipLaunchKernel(
