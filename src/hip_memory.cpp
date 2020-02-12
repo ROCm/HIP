@@ -421,10 +421,14 @@ int sharePtr(void* ptr, ihipCtx_t* ctx, bool shareWithAll, unsigned hipFlags) {
         // shareWithAll memory is not mapped to any device
         hc::am_memtracker_update(ptr, -1, hipFlags);
         hsa_status_t s = hsa_amd_agents_allow_access(g_deviceCnt + 1, g_allAgents, NULL, ptr);
-        tprintf(DB_MEM, "    allow access to CPU + all %d GPUs (shareWithAll)\n", g_deviceCnt);
+
         if (s != HSA_STATUS_SUCCESS) {
+            tprintf(DB_MEM, "    access is not allowed, hsa error : 0x%x\n",s);
             ret = -1;
+        } else {
+            tprintf(DB_MEM, "    allow access to CPU + all %d GPUs (shareWithAll)\n", g_deviceCnt);
         }
+
     } else {
 #if USE_APP_PTR_FOR_CTX
         hc::am_memtracker_update(ptr, device->_deviceId, hipFlags, ctx);
@@ -436,20 +440,20 @@ int sharePtr(void* ptr, ihipCtx_t* ctx, bool shareWithAll, unsigned hipFlags) {
             LockedAccessor_CtxCrit_t crit(ctx->criticalData());
             // the peerCnt always stores self so make sure the trace actually
             peerCnt = crit->peerCnt();
-            tprintf(DB_MEM, "  allow access to %d other peer(s)\n", peerCnt - 1);
-            if (peerCnt > 1) {
-                // printf ("peer self access\n");
 
-                // TODOD - remove me:
-                for (auto iter = crit->_peers.begin(); iter != crit->_peers.end(); iter++) {
-                    tprintf(DB_MEM, "    allow access to peer: %s%s\n", (*iter)->toString().c_str(),
-                            (iter == crit->_peers.begin()) ? " (self)" : "");
-                };
+            if (peerCnt > 1) {
+                tprintf(DB_MEM, "  allow access to %d other peer(s)\n", peerCnt - 1);
 
                 hsa_status_t s =
                     hsa_amd_agents_allow_access(crit->peerCnt(), crit->peerAgents(), NULL, ptr);
                 if (s != HSA_STATUS_SUCCESS) {
+                    tprintf(DB_MEM, "    peer(s) access is not allowed, hsa error : 0x%x\n", s);
                     ret = -1;
+                } else {
+                    for (auto iter = crit->_peers.begin(); iter != crit->_peers.end(); iter++) {
+                        tprintf(DB_MEM, "    allowed access to peer: %s%s\n", (*iter)->toString().c_str(),
+                                (iter == crit->_peers.begin()) ? " (self)" : "");
+                    };
                 }
             }
         }

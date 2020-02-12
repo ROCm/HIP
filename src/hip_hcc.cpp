@@ -1621,7 +1621,7 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
         (COMPILE_HIP_DB & HIP_TRACE_API)) {
         GET_TLS();
         std::stringstream os;
-        os << tls->tidInfo.pid() << " " << tls->tidInfo.tid() << "." << tls->tidInfo.apiSeqNum() << " hipLaunchKernel '"
+        os << tls->tidInfo.pid() << " " << tls->tidInfo.tid() << "." << tls->tidInfo.apiSeqNum() << " KernelLaunch Info '"
            << kernelName << "'"
            << " gridDim:" << lp->grid_dim << " groupDim:" << lp->group_dim << " sharedMem:+"
            << lp->dynamic_group_mem_bytes << " " << *stream;
@@ -1632,7 +1632,7 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
         }
 
         if (HIP_PROFILE_API == 0x1) {
-            std::string shortAtpString("hipLaunchKernel:");
+            std::string shortAtpString("KernelLaunch Info:");
             shortAtpString += kernelName;
             MARKER_BEGIN(shortAtpString.c_str(), "HIP");
         } else if (HIP_PROFILE_API == 0x2) {
@@ -1654,6 +1654,7 @@ hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_
     lp->group_dim.z = block.z;
     lp->barrier_bit = barrier_bit_queue_default;
 
+    tprintf(DB_SYNC, "ihipPreLaunchKernel, locking stream\n");
     if (!lockAcquired) stream->lockopen_preKernelCommand();
     auto &crit = stream->criticalData();
     lp->av = &(crit._av);
