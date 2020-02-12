@@ -137,8 +137,8 @@ add_library(amdhip64 SHARED
  hip_intercept.cpp
  hip_rtc.cpp
  cl_gl.cpp
- cl_icd.cpp
  cl_lqdflash_amd.cpp
+ fixme.cpp
  )
 add_library(amdvdi_static STATIC IMPORTED)
 set_target_properties(amdvdi_static PROPERTIES IMPORTED_LOCATION "${LIBVDI_STATIC_DIR}/libamdvdi_static.a")
