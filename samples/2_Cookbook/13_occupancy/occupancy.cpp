@@ -86,8 +86,8 @@ void launchKernel(float* C, float* A, float* B, bool manual){
      printf("kernel Execution time = %6.3fms\n", eventMs);
 
      //Calculate Occupancy
-     int numBlock = 0;
-     HIP_CHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, multiply,(int)blockSize, 0));
+     uint32_t numBlock = 0;
+     HIP_CHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, multiply, blockSize, 0));
      
      if(devProp.maxThreadsPerMultiProcessor){
 	std::cout << "Theoretical Occupancy is " << (double)numBlock* blockSize/devProp.maxThreadsPerMultiProcessor * 100 << "%" << std::endl;

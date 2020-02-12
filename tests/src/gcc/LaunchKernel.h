@@ -17,7 +17,23 @@
  * THE SOFTWARE.
  */
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 extern __global__ void kernel();
 extern __global__ void kernel1(int*);
 extern __global__ void kernel2(int*,int*);
 extern __global__ void kernel3(int*,int*,int*);
+
+struct things {
+    char c;
+    short s;
+    int i;
+};
+extern __global__ void kernel4(int*, char, short, int, struct things);
+
+#ifdef __cplusplus
+}
+#endif
