@@ -800,7 +800,7 @@
 |          717 |*`cudaErrorInvalidAddressSpace`*                     |                  |                                                            |
 |          718 |*`cudaErrorInvalidPc`*                               |                  |                                                            |
 |          719 |*`cudaErrorLaunchFailure`*                           |                  |*`hipErrorLaunchFailure`*                                   |
-|          720 |*`cudaErrorCooperativeLaunchTooLarge`*               | 9.0              |                                                            |
+|          720 |*`cudaErrorCooperativeLaunchTooLarge`*               | 9.0              |*`hipErrorCooperativeLaunchTooLarge`*                       |
 |          800 |*`cudaErrorNotPermitted`*                            |                  |                                                            |
 |          801 |*`cudaErrorNotSupported`*                            |                  |*`hipErrorNotSupported`*                                    |
 |          802 |*`cudaErrorSystemNotReady`*                          | 10.0             |                                                            |
@@ -1045,7 +1045,7 @@
 | define       |`cudaMemAttachGlobal`                                |                  |`hipMemAttachGlobal`                                        |
 | define       |`cudaMemAttachHost`                                  |                  |`hipMemAttachHost`                                          |
 | define       |`cudaMemAttachSingle`                                |                  |                                                            |
-| define       |`cudaOccupancyDefault`                               |                  |                                                            |
+| define       |`cudaOccupancyDefault`                               |                  |`hipOccupancyDefault`                                    |
 | define       |`cudaOccupancyDisableCachingOverride`                |                  |                                                            |
 | define       |`cudaPeerAccessDefault`                              |                  |                                                            |
 | define       |`cudaStreamDefault`                                  |                  |`hipStreamDefault`                                          |
