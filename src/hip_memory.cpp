@@ -1622,7 +1622,11 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             dstWidth = p->dstArray->width;
             dstHeight = p->dstArray->height;
             dstDepth = p->dstArray->depth;
-            dstPitch = dstWidth * dstByteSize;
+            if(hipMemcpyHostToDevice == p->kind || hipMemcpyDeviceToDevice == p->kind){
+                dstPitch = dstByteSize * alignUp(dstWidth, IMAGE_PITCH_ALIGNMENT);
+            }else {
+                dstPitch = dstByteSize * dstWidth;
+            }
             if(!copyWidthUpdate) {
                 copyWidth = copyWidth * dstByteSize;
                 copyWidthUpdate = true;
@@ -1647,7 +1651,11 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             srcWidth = p->srcArray->width;
             srcHeight = p->srcArray->height;
             srcDepth = p->srcArray->depth;
-            srcPitch = srcWidth * srcByteSize;
+            if(hipMemcpyDeviceToHost == p->kind || hipMemcpyDeviceToDevice == p->kind){
+                srcPitch = alignUp(srcWidth, IMAGE_PITCH_ALIGNMENT) * srcByteSize;
+            }else {
+                srcPitch = srcWidth * srcByteSize;
+            }
             if(!copyWidthUpdate) {
                 copyWidth = copyWidth * srcByteSize;
                 copyWidthUpdate = true;
