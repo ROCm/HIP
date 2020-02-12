@@ -1796,6 +1796,8 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorMissingConfiguration";
         case hipErrorLaunchFailure:
             return "hipErrorLaunchFailure";
+        case hipErrorCooperativeLaunchTooLarge:
+            return "hipErrorCooperativeLaunchTooLarge";
         case hipErrorPriorLaunchFailure:
             return "hipErrorPriorLaunchFailure";
         case hipErrorLaunchTimeOut:
