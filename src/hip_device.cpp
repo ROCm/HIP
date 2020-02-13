@@ -291,6 +291,7 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
                 break;
             case hipDeviceAttributeMaxTexture3DDepth:
                 *pi = prop->maxTexture3D[2];
+                break;
             case hipDeviceAttributeHdpMemFlushCntl:
                 {
                     uint32_t** hdp = reinterpret_cast<uint32_t**>(pi);
