@@ -102,8 +102,9 @@ namespace hip {
     amd::Context* context;
     amd::CommandQueue::Priority priority;
     unsigned int flags;
+    int deviceId;
 
-    Stream(amd::Device* dev, amd::Context* ctx, amd::CommandQueue::Priority p, unsigned int f);
+    Stream(amd::Device* dev, amd::Context* ctx, amd::CommandQueue::Priority p, unsigned int f, int d);
     void create();
     amd::HostQueue* asHostQueue();
     void destroy();
