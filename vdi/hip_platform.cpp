@@ -536,7 +536,11 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 {
   HIP_INIT_API(NONE, hostFunction);
 
-  int deviceId = ihipGetDevice();
+  ihipExec_t exec;
+  PlatformState::instance().popExec(exec);
+
+  hip::Stream* stream = reinterpret_cast<hip::Stream*>(exec.hStream_);
+  int deviceId = (stream != nullptr)? stream->deviceId : ihipGetDevice();
   if (deviceId == -1) {
     HIP_RETURN(hipErrorNoDevice);
   }
@@ -544,9 +548,6 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   if (func == nullptr) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
-
-  ihipExec_t exec;
-  PlatformState::instance().popExec(exec);
 
   size_t size = exec.arguments_.size();
   void *extra[] = {
@@ -940,7 +941,8 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
   HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes,
                stream);
 
-  int deviceId = ihipGetDevice();
+  hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
+  int deviceId = (s != nullptr)? s->deviceId : ihipGetDevice();
   if (deviceId == -1) {
     HIP_RETURN(hipErrorNoDevice);
   }
