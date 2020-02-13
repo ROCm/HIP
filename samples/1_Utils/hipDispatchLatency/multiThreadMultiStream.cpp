@@ -66,15 +66,12 @@ void print_timing(std::string test, const std::array<float, TOTAL_RUN_COUNT> &re
     printf("\n %s: %.1f us, std: %.1f us\n", test.c_str(), mean_us, stddev_us);
 }
 
-void *testEmptyKernelLaunchInStream(void *tid)
+void testEmptyKernelLaunchInStream(size_t id, hipStream_t stream)
 {
-    int *threadId = (int *)tid;
     std::array<float, TOTAL_RUN_COUNT> results;
     hipEvent_t start, stop;
     hipEventCreate(&start);
     hipEventCreate(&stop);
-    hipStream_t stream;
-    hipStreamCreate(&stream);
     hipModule_t module;
     hipFunction_t function;
     hipModuleLoad(&module, FILE_NAME);
@@ -92,7 +89,7 @@ void *testEmptyKernelLaunchInStream(void *tid)
         auto stop = std::chrono::high_resolution_clock::now();
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
-    print_timing("hipModuleLaunchKernel enqueue rate Non-Null Stream Thread-"+ std::to_string(*threadId), results);
+    print_timing("hipModuleLaunchKernel enqueue rate Non-Null Stream Thread-"+ std::to_string(id), results);
 
     // Timing hipLaunchKernelGGL
     for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
@@ -101,7 +98,7 @@ void *testEmptyKernelLaunchInStream(void *tid)
         auto stop = std::chrono::high_resolution_clock::now();
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
-    print_timing("hipLaunchKernelGGL enqueue rate Non-Null Stream Thread-"+ std::to_string(*threadId), results);
+    print_timing("hipLaunchKernelGGL enqueue rate Non-Null Stream Thread-"+ std::to_string(id), results);
 
     /***********************************************************************************/
     /* Single dispatch execution latency using HIP events:                             */
@@ -115,7 +112,7 @@ void *testEmptyKernelLaunchInStream(void *tid)
         hipEventSynchronize(stop);
         hipEventElapsedTime(&results[i], start, stop);
     }
-    print_timing("Timing directly single dispatch latency Non-Null Stream Thread-" + std::to_string(*threadId), results);
+    print_timing("Timing directly single dispatch latency Non-Null Stream Thread-" + std::to_string(id), results);
 #endif
 
     //Timing around the dispatch
@@ -126,7 +123,7 @@ void *testEmptyKernelLaunchInStream(void *tid)
         hipEventSynchronize(stop);
         hipEventElapsedTime(&results[i], start, stop);
     }
-    print_timing("Timing around single dispatch latency Non-Null Stream Thread- " + std::to_string(*threadId), results);
+    print_timing("Timing around single dispatch latency Non-Null Stream Thread- " + std::to_string(id), results);
 
     /*********************************************************************************/
     /* Batch dispatch execution latency using HIP events:                            */
@@ -142,18 +139,17 @@ void *testEmptyKernelLaunchInStream(void *tid)
         hipEventSynchronize(stop);
         hipEventElapsedTime(&results[i], start, stop);
     }
-    print_timing("Batch dispatch latency Non-Null Stream Thread-"+ std::to_string(*threadId), results, BATCH_SIZE);
+    print_timing("Batch dispatch latency Non-Null Stream Thread-"+ std::to_string(id), results, BATCH_SIZE);
 
     hipEventDestroy(start);
     hipEventDestroy(stop);
     hipModuleUnload(module);
-    hipStreamDestroy(stream);
-    return NULL;
+    return;
 }
 
-void *testEmptyKernelLaunchInNullStream(void *tid)
+void testEmptyKernelLaunchInNullStream(size_t id)
 {
-    int *threadId = (int *)tid;
+    //int *threadId = (int *)tid;
     std::array<float, TOTAL_RUN_COUNT> results;
     hipEvent_t start, stop;
     hipEventCreate(&start);
@@ -175,7 +171,7 @@ void *testEmptyKernelLaunchInNullStream(void *tid)
         auto stop = std::chrono::high_resolution_clock::now();
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
-    print_timing("hipModuleLaunchKernel enqueue rate Null Stream Thread-"+ std::to_string(*threadId), results);
+    print_timing("hipModuleLaunchKernel enqueue rate Null Stream Thread-"+ std::to_string(id), results);
 
     // Timing hipLaunchKernelGGL
     for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
@@ -184,7 +180,7 @@ void *testEmptyKernelLaunchInNullStream(void *tid)
         auto stop = std::chrono::high_resolution_clock::now();
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
-    print_timing("hipLaunchKernelGGL enqueue rate Null Stream Thread-"+ std::to_string(*threadId), results);
+    print_timing("hipLaunchKernelGGL enqueue rate Null Stream Thread-"+ std::to_string(id), results);
 
     /***********************************************************************************/
     /* Single dispatch execution latency using HIP events:                             */   
@@ -198,7 +194,7 @@ void *testEmptyKernelLaunchInNullStream(void *tid)
         hipEventSynchronize(stop);
         hipEventElapsedTime(&results[i], start, stop);
     }
-    print_timing("Timing directly single dispatch latency Null Stream Thread-" + std::to_string(*threadId), results);
+    print_timing("Timing directly single dispatch latency Null Stream Thread-"+ std::to_string(id), results);
 #endif
 
     //Timing around the dispatch
@@ -209,7 +205,7 @@ void *testEmptyKernelLaunchInNullStream(void *tid)
         hipEventSynchronize(stop);
         hipEventElapsedTime(&results[i], start, stop);
     }
-    print_timing("Timing around single dispatch latency Null Stream Thread-"+std::to_string(*threadId), results);
+    print_timing("Timing around single dispatch latency Null Stream Thread-"+ std::to_string(id), results);
 
     /*********************************************************************************/
     /* Batch dispatch execution latency using HIP events:                            */
@@ -225,46 +221,41 @@ void *testEmptyKernelLaunchInNullStream(void *tid)
         hipEventSynchronize(stop);
         hipEventElapsedTime(&results[i], start, stop);
     }
-    print_timing("Batch dispatch latency Null Stream Thread-"+ std::to_string(*threadId), results, BATCH_SIZE);
+    print_timing("Batch dispatch latency Null Stream Thread-"+ std::to_string(id), results, BATCH_SIZE);
 
     hipEventDestroy(start);
     hipEventDestroy(stop);
     hipModuleUnload(module);
-    return NULL;
+    return;
 }
 
 int main()
 {
-    const int num_threads = NUM_THREADS;
-
-    pthread_t threads[num_threads];
-    int index[]= {1,2,3,4,5,6,7,8};
-    for (int i = 0; i < num_threads; i++) {
-        if (pthread_create(&threads[i], NULL, testEmptyKernelLaunchInNullStream,(void *)&index[i])) {
-            printf("Error creating threads \n");
-            return 1;
-        }        
+    hipStream_t streams[NUM_THREADS];
+    for (int i = 0; i < NUM_THREADS; i++){
+        int err = hipStreamCreate(&streams[i]);
+    }
+    std::vector<std::thread> threads(NUM_THREADS);
+    int index = 0;
+    for(auto it = std::begin(threads); it != std::end(threads); ++it) {
+        index = std::distance(begin(threads), it);
+        *it = std::thread(testEmptyKernelLaunchInStream,index, streams[index]);
     }
 
-    for (int i = 0; i < num_threads; i++) {
-        if(pthread_join(threads[i], NULL)) {
-            printf("Error joining thread \n");
-            return 2;
-        }
-    }
-    hipDeviceReset();
-    for (int i = 0; i < num_threads; i++) {
-        if (pthread_create(&threads[i], NULL, testEmptyKernelLaunchInStream,(void *)&index[i])) {
-            printf("Error creating threads \n");
-            return 1;
-        }
+    for(auto&& i : threads) {
+        i.join();
     }
 
-    for (int i = 0; i < num_threads; i++) {
-        if(pthread_join(threads[i], NULL)) {
-            printf("Error joining thread \n");
-            return 2;
-        }
+    hipDeviceSynchronize();
+    for(auto it = std::begin(threads); it != std::end(threads); ++it) {
+        index = std::distance(begin(threads), it);
+        *it = std::thread(testEmptyKernelLaunchInNullStream,index);
+    }
+    for(auto&& i : threads) {
+        i.join();
+    }
+    for (int i = 0; i < NUM_THREADS; i++){
+        hipStreamDestroy(streams[i]);
     }
     return 0;
 }
