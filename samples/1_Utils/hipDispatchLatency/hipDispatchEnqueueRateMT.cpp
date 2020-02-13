@@ -90,9 +90,6 @@ void hipModuleLaunchKernel_enqueue_rate(std::atomic_int* shared, int max_threads
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
     print_timing("Thread ID : " + std::to_string(tid) + " , " + "hipModuleLaunchKernel enqueue rate", results);
-    hipStreamSynchronize(stream);
-    hipModuleUnload(module);
-    hipStreamDestroy(stream);
 }
 
 // Measure time taken to enqueue a kernel on the GPU using hipLaunchKernelGGL
@@ -114,8 +111,6 @@ void hipLaunchKernelGGL_enqueue_rate(std::atomic_int* shared, int max_threads)
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
     print_timing("Thread ID : " + std::to_string(tid) + " , " + "hipLaunchKernelGGL enqueue rate", results);
-    hipStreamSynchronize(stream);
-    hipStreamDestroy(stream);
 }
 
 // Simple thread pool
@@ -146,25 +141,23 @@ private:
 int main(int argc, char* argv[])
 {
     if (argc != 3) {
-        std::cerr << "Run test as 'hipDispatchEnqueueRateMT <num_threads> <0-module_launch /1-ggl_launch /2-both>'\n";
+        std::cerr << "Run test as 'hipDispatchEnqueueRateMT <num_threads> <0-hipModuleLaunchKernel /1-hipLaunchKernelGGL>'\n";
         return -1;
     }
 
     int max_threads = atoi(argv[1]);
     int run_module_test = atoi(argv[2]);
-    if(max_threads < 1 || run_module_test < 0 || run_module_test > 2) {
+    if(max_threads < 1 || run_module_test < 0 || run_module_test > 1) {
         std::cerr << "Invalid Input.\n";
-        std::cerr << "Run test as 'hipDispatchEnqueueRateMT <num_threads> <0-module_launch /1-ggl_launch /2-both>'\n";
+        std::cerr << "Run test as 'hipDispatchEnqueueRateMT <num_threads> <0-hipModuleLaunchKernel /1-hipLaunchKernelGGL>'\n";
         return -1;
     }
     thread_pool task(max_threads);
 
-    if(run_module_test == 0 || run_module_test == 2) {
+    if(run_module_test == 0) {
         task.start(hipModuleLaunchKernel_enqueue_rate);
         task.finish();
-    }
-
-    if(run_module_test == 1 || run_module_test == 2) {
+    } else {
         task.start(hipLaunchKernelGGL_enqueue_rate);
         task.finish();
     }
