@@ -336,9 +336,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
         target_link_libraries(hip_hcc_static PRIVATE hc_am)
 
         add_library(hiprtc SHARED src/hiprtc.cpp src/code_object_bundle.cpp)
+        target_compile_options(hiprtc PRIVATE -DDISABLE_REDUCED_GPU_BLOB_COPY)
         set_property ( TARGET hiprtc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
         set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
-
         target_include_directories(
             hiprtc SYSTEM
                 PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
