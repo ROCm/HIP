@@ -96,12 +96,17 @@ bool __hipExtractCodeObjectFromFatBinary(const void* data,
        desc = reinterpret_cast<const __ClangOffloadBundleDesc*>(
            reinterpret_cast<uintptr_t>(&desc->triple[0]) + desc->tripleSize)) {
 
-    std::string triple(desc->triple, sizeof(HIP_AMDGCN_AMDHSA_TRIPLE) - 1);
-    if (triple.compare(HIP_AMDGCN_AMDHSA_TRIPLE))
+    std:size_t offset = 0;
+    if (!std::strncmp(desc->triple, HIP_AMDGCN_AMDHSA_TRIPLE,
+        sizeof(HIP_AMDGCN_AMDHSA_TRIPLE) - 1)) {
+      offset = sizeof(HIP_AMDGCN_AMDHSA_TRIPLE); //For code objects created by CLang
+    } else if (!std::strncmp(desc->triple, HCC_AMDGCN_AMDHSA_TRIPLE,
+               sizeof(HCC_AMDGCN_AMDHSA_TRIPLE) - 1)) {
+      offset = sizeof(HCC_AMDGCN_AMDHSA_TRIPLE); //For code objects created by Hcc
+    } else {
       continue;
-
-    std::string target(desc->triple + sizeof(HIP_AMDGCN_AMDHSA_TRIPLE),
-                       desc->tripleSize - sizeof(HIP_AMDGCN_AMDHSA_TRIPLE));
+    }
+    std::string target(desc->triple + offset, desc->tripleSize - offset);
 
     const void *image = reinterpret_cast<const void*>(
         reinterpret_cast<uintptr_t>(obheader) + desc->offset);
@@ -556,31 +561,6 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
     exec.sharedMem_, exec.hStream_, nullptr, extra));
 }
 
-extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
-                                      dim3 gridDim,
-                                      dim3 blockDim,
-                                      void** args,
-                                      size_t sharedMemBytes,
-                                      hipStream_t stream)
-{
-  HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes,
-               stream);
-
-  int deviceId = ihipGetDevice();
-  if (deviceId == -1) {
-    HIP_RETURN(hipErrorNoDevice);
-  }
-  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
-  if (func == nullptr) {
-    HIP_RETURN(hipErrorInvalidDeviceFunction);
-  }
-
-  HIP_RETURN(hipModuleLaunchKernel(func, gridDim.x, gridDim.y, gridDim.z,
-                                    blockDim.x, blockDim.y, blockDim.z,
-                                    sharedMemBytes, stream, args, nullptr));
-}
-
-
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
   size_t size = 0;
   if(!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
@@ -949,6 +929,38 @@ void hipLaunchCooperativeKernelGGLImpl(
 }
 
 #endif // defined(ATI_OS_LINUX)
+
+extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
+                                      dim3 gridDim,
+                                      dim3 blockDim,
+                                      void** args,
+                                      size_t sharedMemBytes,
+                                      hipStream_t stream)
+{
+  HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes,
+               stream);
+
+  int deviceId = ihipGetDevice();
+  if (deviceId == -1) {
+    HIP_RETURN(hipErrorNoDevice);
+  }
+  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
+  if (func == nullptr) {
+#ifdef ATI_OS_LINUX
+    const auto it = hip_impl::functions().find(reinterpret_cast<uintptr_t>(hostFunction));
+    if (it == hip_impl::functions().cend()) {
+      HIP_RETURN(hipErrorInvalidDeviceFunction);
+    }
+    func = it->second;
+#else
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
+#endif
+  }
+
+  HIP_RETURN(hipModuleLaunchKernel(func, gridDim.x, gridDim.y, gridDim.z,
+                                    blockDim.x, blockDim.y, blockDim.z,
+                                    sharedMemBytes, stream, args, nullptr));
+}
 
 // conversion routines between float and half precision
 static inline std::uint32_t f32_as_u32(float f) { union { float f; std::uint32_t u; } v; v.f = f; return v.u; }
