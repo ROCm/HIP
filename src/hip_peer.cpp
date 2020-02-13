@@ -128,17 +128,24 @@ hipError_t ihipEnablePeerAccess(TlsData* tls, hipCtx_t peerCtx, unsigned int fla
         if (thisCtx == peerCtx) {
             err = hipErrorInvalidDevice;  // Can't enable peer access to self.
         } else if ((thisCtx != NULL) && (peerCtx != NULL)) {
-            LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
-            // Add thisCtx to peerCtx's access list so that new allocations on peer will be made
-            // visible to this device:
-            bool isNewPeer = peerCrit->addPeerWatcher(peerCtx, thisCtx);
-            if (isNewPeer) {
-                tprintf(DB_MEM, "device=%s can now see all memory allocated on peer=%s\n",
-                        thisCtx->toString().c_str(), peerCtx->toString().c_str());
-                am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(),
-                                           peerCrit->peerAgents());
+
+            int canAccess = 0;
+            if ((hipSuccess != ihipDeviceCanAccessPeer(&canAccess,thisCtx,peerCtx)) || (canAccess == 0)){
+                 tprintf(DB_MEM, "device=%s can't access peer=%s\n",thisCtx->toString().c_str(), peerCtx->toString().c_str());
+                 err =  hipErrorInvalidDevice;
             } else {
-                err = hipErrorPeerAccessAlreadyEnabled;
+                 LockedAccessor_CtxCrit_t peerCrit(peerCtx->criticalData());
+                 // Add thisCtx to peerCtx's access list so that new allocations on peer will be made
+                 // visible to this device:
+                 bool isNewPeer = peerCrit->addPeerWatcher(peerCtx, thisCtx);
+                 if (isNewPeer) {
+                    tprintf(DB_MEM, "device=%s can now see all memory allocated on peer=%s\n",
+                        thisCtx->toString().c_str(), peerCtx->toString().c_str());
+                    am_memtracker_update_peers(peerCtx->getDevice()->_acc, peerCrit->peerCnt(),
+                                           peerCrit->peerAgents());
+                 } else {
+                    err = hipErrorPeerAccessAlreadyEnabled;
+                 }
             }
         } else {
             err = hipErrorInvalidDevice;
