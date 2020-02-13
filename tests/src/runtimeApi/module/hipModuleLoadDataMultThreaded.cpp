@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -35,12 +35,10 @@ THE SOFTWARE.
 
 #define LEN 64
 #define SIZE LEN << 2
-#define THREADS 8
+#define THREADS 2
 
 #define FILENAME "vcpy_kernel.code"
 #define kernel_name "hello_world"
-
-using ModuleFunction = std::pair<hipModule_t, hipFunction_t>;
 
 std::vector<char> load_file()
 {
@@ -55,18 +53,18 @@ std::vector<char> load_file()
     return buffer;
 }
 
-ModuleFunction load(const std::vector<char>& buffer) {
+void run(const std::vector<char>& buffer) {
+    hipDevice_t device;
+    HIPCHECK(hipDeviceGet(&device, 0));
+    hipCtx_t context;
+    HIPCHECK(hipCtxCreate(&context, 0, device));
+
     hipModule_t Module;
     hipFunction_t Function;
     HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
     HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    return {Module, Function};
-}
-
-void run(ModuleFunction mf) {
-    hipModule_t Module = mf.first;
-    hipFunction_t Function = mf.second;
-        float *A, *B, *Ad, *Bd;
+    
+    float *A, *B, *Ad, *Bd;
     A = new float[LEN];
     B = new float[LEN];
 
@@ -105,6 +103,13 @@ void run(ModuleFunction mf) {
     for (uint32_t i = 0; i < LEN; i++) {
         assert(A[i] == B[i]);
     }
+   
+    hipFree(Ad); 
+    hipFree(Bd); 
+    delete A;
+    delete B;
+    hipCtxDestroy(context);
+    
 }
 
 struct joinable_thread : std::thread
@@ -124,25 +129,23 @@ struct joinable_thread : std::thread
     }
 };
 
-void run_multi_threads(uint32_t n) {
-    std::vector<ModuleFunction> mf(n);
-    {
-        auto buffer = load_file();
-        std::vector<joinable_thread> threads;
-        for (uint32_t i = 0; i < n; i++) {
-            threads.emplace_back(std::thread{[&, i, buffer] {
-                mf[i] = load(buffer);
-            }});
-        }
+void run_multi_threads(uint32_t n, const std::vector<char>& buffer) {
+    
+    std::vector<joinable_thread> threads;
+    
+    for (uint32_t i = 0; i < n; i++) {
+        threads.emplace_back(std::thread{[&, buffer] {
+        run(buffer);
+        }});
     }
-    for(auto&& x:mf)
-        run(x);
+    
 }
 
 int main() {
 
     HIPCHECK(hipInit(0));
-    run_multi_threads(THREADS * std::thread::hardware_concurrency());
+    auto buffer = load_file();
+    run_multi_threads(THREADS * std::thread::hardware_concurrency(), buffer);
 
     passed();
 }
