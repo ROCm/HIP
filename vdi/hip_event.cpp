@@ -133,6 +133,8 @@ void Event::addMarker(amd::HostQueue* queue, amd::Command* command) {
 
   stream_ = queue;
 
+  if (event_ == &command->event()) return;
+
   if (event_ != nullptr) {
     event_->release();
   }
@@ -229,9 +231,11 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
 
+  hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
   amd::HostQueue* queue = hip::getQueue(stream);
 
-  amd::Command* command = queue->getLastQueuedCommand(true);
+  amd::Command* command = (s != nullptr && (s->flags & hipStreamNonBlocking)) ?
+    queue->getLastQueuedCommand(true) : nullptr;
 
   if (command == nullptr) {
     command = new amd::Marker(*queue, false);
