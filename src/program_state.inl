@@ -244,7 +244,8 @@ public:
                     if (!valid(tmp)) break;
 
                     for (auto&& bundle : bundles(tmp)) {
-                        impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
+                        if(bundle.blob.size())
+                            impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
                     }
 
                     blob_it += tmp.bundled_code_size;
