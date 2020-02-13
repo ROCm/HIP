@@ -393,19 +393,19 @@ Testing Time: 3.07s
 ```
 ### <a name="windows"></a > hipify-clang: Windows
 
-On Windows 10 the following configurations are tested:
+*Tested configurations:*
 
-LLVM 5.0.0 - 5.0.2, CUDA 8.0, cudnn 5.1.10 - 7.1.4.18
+|    **LLVM**    | **CUDA** |      **cuDNN**      |     **Visual Studio**     | **cmake** | **Python** |
+|:--------------:|---------:|--------------------:|--------------------------:|----------:|-----------:|
+| 5.0.0 - 5.0.2  | 8.0      | 5.1.10 - 7.1.4.18   | 2017.15.5.2               | 3.5.1     | 3.6.4      |
+| 6.0.0 - 6.0.1  | 9.0      | 7.0.5.15 - 7.6.5.32 | 2017.15.5.5               | 3.6.0     | 3.7.2      |
+| 7.0.0 - 7.1.0  | 9.2      | 7.6.5.32            | 2017.15.9.11              | 3.13.3    | 3.7.3      |
+| 8.0.0 - 8.0.1  | 10.0     | 7.6.5.32            | 2017.15.9.15              | 3.14.2    | 3.7.4      |
+| 9.0.0 - 9.0.1  | 10.1     | 7.6.5.32            | 2017.15.9.20, 2019.16.4.5 | 3.16.4    | 3.8.0      |
+| 10.0.0-rc1     | 10.2     | 7.6.5.32            | 2017.15.9.20, 2019.16.4.5 | 3.16.4    | 3.8.1      |
+| 11.0.0git      | 10.2     | 7.6.5.32            | 2017.15.9.20, 2019.16.4.5 | 3.16.4    | 3.8.1      |
 
-LLVM 6.0.0 - 6.0.1, CUDA 9.0, cudnn 7.0.5.15 - 7.6.5.32
-
-LLVM 7.0.0 - 10.0.0-rc1, CUDA 7.5 - 10.2, cudnn 7.0.5.15 - 7.6.5.32
-
-Build system requirements for the latest stable configuration LLVM 9.0.1/CUDA 10.1 Update 2:
-
-Python 3.6.0 - 3.8.1, cmake 3.5.1 - 3.16.3, Visual Studio 2017 (15.5.2) - 2019 (16.4.4).
-
-Here is an example of building `hipify-clang` with testing support on `Windows 10` by `Visual Studio 16 2019`:
+*Building with testing support on `Windows 10` by `Visual Studio 16 2019`:*
 
 ```shell
 cmake
