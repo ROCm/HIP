@@ -1040,11 +1040,15 @@ hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t 
 
     if (kernel.handle == 0u) return hipErrorNotFound;
 
+    //For hipModuleLoad(), hmod->kernargs must contain a args with key
+    //name_str or namekd_str.
+    //For hipLaunchKernelGGL(), hmod->kernargs is empty, thus we need
+    //insert hmod->kernargs[name_str]
     auto it = hmod->kernargs.find(name_str); //Look up args from the original name
     if (it == hmod->kernargs.end()) {
         it = hmod->kernargs.find(namekd_str); //Look up args from .kd name
-        if (it == hmod->kernargs.end()) {
-            return hipErrorNotFound;
+        if (it != hmod->kernargs.end()) {
+            name_str = namekd_str;
         }
     }
 
@@ -1052,7 +1056,8 @@ hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t 
     //       below, due to hipFunction_t being a pointer to ihipModuleSymbol_t.
 
     func[0][0] = *static_cast<hipFunction_t>(
-        Kernel_descriptor{kernel_object(kernel), name_str, it->second});
+        Kernel_descriptor{kernel_object(kernel), name_str,
+        it != hmod->kernargs.end() ? it->second : hmod->kernargs[name_str]});
 
     return hipSuccess;
 }
