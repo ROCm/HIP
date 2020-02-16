@@ -205,7 +205,7 @@ message (STATUS "ROCM Installation path(ROCM_PATH): ${ROCM_PATH}")
 set(CPACK_SET_DESTDIR ON CACHE BOOL "Installer package will install hip to CMAKE_INSTALL_PREFIX instead of CPACK_PACKAGING_INSTALL_PREFIX")
 if (NOT CPACK_SET_DESTDIR)
   set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Default installation path of hcc installer package")
-endif (CPACK_SET_DESTDIR)
+endif (NOT CPACK_SET_DESTDIR)
 
 # Check if we need to enable ATP marker
 if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
@@ -536,13 +536,13 @@ if (BUILD_HIPIFY_CLANG)
 endif()
 
 if(HIP_PLATFORM STREQUAL "hcc")
-message("HCC Package\n")
-# Package: hip_hcc
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
-configure_file(packaging/hip-hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-configure_file(packaging/hip-hcc.postinst ${BUILD_DIR}/postinst @ONLY)
-configure_file(packaging/hip-hcc.prerm ${BUILD_DIR}/prerm @ONLY)
-add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
+  message("HCC Package\n")
+  # Package: hip_hcc
+  set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
+  configure_file(packaging/hip-hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+  configure_file(packaging/hip-hcc.postinst ${BUILD_DIR}/postinst @ONLY)
+  configure_file(packaging/hip-hcc.prerm ${BUILD_DIR}/prerm @ONLY)
+  add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
     COMMAND cp *.deb ${PROJECT_BINARY_DIR}
@@ -550,6 +550,18 @@ add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR}
     DEPENDS hip_hcc hip_hcc_static hiprtc)
+else()
+  set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/vdi)
+  configure_file(packaging/hip-vdi.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+  configure_file(packaging/hip-vdi.postinst ${BUILD_DIR}/postinst @ONLY)
+  configure_file(packaging/hip-vdi.prerm ${BUILD_DIR}/prerm @ONLY)
+  add_custom_target(hip_on_vdi COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR} )
 endif()
 
 # Package: hip_nvcc
@@ -585,15 +597,6 @@ add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR})
 
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/vdi)
-configure_file(packaging/hip-vdi.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-add_custom_target(hip_on_vdi COMMAND ${CMAKE_COMMAND} .
-    COMMAND rm -rf *.deb *.rpm *.tar.gz
-    COMMAND make package
-    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
-    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
-    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-    WORKING_DIRECTORY ${BUILD_DIR} )
 
 # Package: all
 if(POLICY CMP0037)
