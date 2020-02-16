@@ -203,7 +203,7 @@ namespace {
 
 inline
 void do_copy(void* __restrict dst, const void* __restrict src, size_t n,
-             hsa_agent_t da, hsa_agent_t sa) {
+             hsa_agent_t da, hsa_agent_t sa) {  
     hsa_signal_silent_store_relaxed(copy_signal, 1);
     throwing_result_check(
         hsa_amd_memory_async_copy(dst, da, src, sa, n, 0, nullptr, copy_signal),
@@ -225,6 +225,9 @@ inline
 void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t si) {
     if (si.size == INT32_MAX) return do_std_memcpy(dst, src, n);
+    if (si.size == UINT32_MAX && n <= max_std_memcpy_sz) {
+        return do_std_memcpy(dst, src, n);
+    }
 
     const auto di{info(dst)};
 
