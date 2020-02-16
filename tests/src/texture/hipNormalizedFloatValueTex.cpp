@@ -27,8 +27,27 @@ THE SOFTWARE.
  */
 
 #include "test_common.h"
-
 #define SIZE 10
+
+static float getNormalizedValue(const float value,
+                                const enum hipArray_Format texFormat) {
+    switch (texFormat) {
+        case HIP_AD_FORMAT_SIGNED_INT8:
+            return (value / SCHAR_MAX);
+        case HIP_AD_FORMAT_UNSIGNED_INT8:
+            return (value / UCHAR_MAX);
+        case HIP_AD_FORMAT_SIGNED_INT16:
+            return (value / SHRT_MAX);
+        case HIP_AD_FORMAT_UNSIGNED_INT16:
+            return (value / USHRT_MAX);
+        default:
+            return value;
+    }
+}
+
+#if __HIP__
+__hip_pinned_shadow__
+#endif
 texture<float, hipTextureType1D, hipReadModeElementType> textureNormalizedVal_1D;
 
 __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
@@ -47,7 +66,6 @@ bool textureTest(enum hipArray_Format texFormat)
     T *dData = NULL;
     HIPCHECK(hipMalloc((void **) &dData, sizeof(T)*SIZE));
     HIPCHECK(hipMemcpyHtoD((hipDeviceptr_t)dData, hData, sizeof(T)*SIZE));
-    
     textureReference* texRef = &textureNormalizedVal_1D;
     HIPCHECK(hipTexRefSetAddressMode(texRef, 0, hipAddressModeClamp));
     HIPCHECK(hipTexRefSetAddressMode(texRef, 1, hipAddressModeClamp));
@@ -73,7 +91,8 @@ bool textureTest(enum hipArray_Format texFormat)
     
     for(int i = 0; i < SIZE; i++)
     {
-    	if((float)hData[i]/texFormatToSize[texFormat] != hOutputData[i])
+        float expected = getNormalizedValue(float(hData[i]), texFormat);
+        if(expected != hOutputData[i])
         {
 	    printf("mismatch at index:%d for texType:%d output:%f\n",i,texFormat,hOutputData[i]);
             testResult = false;

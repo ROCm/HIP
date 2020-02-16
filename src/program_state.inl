@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -202,7 +203,7 @@ public:
                         std::function<void(hsa_code_object_reader_t*)>>;
     std::pair<
         std::mutex,
-        std::vector<std::pair<std::string, RAII_code_reader>>> code_readers;
+        std::deque<std::pair<std::string, RAII_code_reader>>> code_readers;
 
     program_state_impl() {
         // Create placeholder for each agent for the per-agent members.
@@ -244,7 +245,8 @@ public:
                     if (!valid(tmp)) break;
 
                     for (auto&& bundle : bundles(tmp)) {
-                        impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
+                        if(bundle.blob.size())
+                            impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
                     }
 
                     blob_it += tmp.bundled_code_size;
@@ -418,8 +420,8 @@ public:
         decltype(code_readers.second)::iterator it;
         {
           std::lock_guard<std::mutex> lck{code_readers.first};
-          it = code_readers.second.emplace(code_readers.second.end(),
-                                           move(file), move(tmp));
+          code_readers.second.emplace_back(move(file), move(tmp));
+          it = std::prev(code_readers.second.end());
         }
 
         auto check_hsa_error = [](hsa_status_t s) {
@@ -613,7 +615,8 @@ public:
                 for (auto&& kernel_symbol : it->second) {
                     functions[aa].second.emplace(
                         function.first,
-                        Kernel_descriptor{kernel_object(kernel_symbol), it->first});
+                        Kernel_descriptor{kernel_object(kernel_symbol), it->first,
+                                          kernargs_size_align(function.first)});
                 }
             }
         }, agent);
@@ -672,11 +675,12 @@ public:
             auto dx1 = kernels_md.find("CodeProps", dx);
             dx = kernels_md.find("Args:", dx);
 
-            if (dx1 < dx) {
+            if (dx1 < dx || dx == std::string::npos) {
                 dx = dx1;
+                // create an empty kernarg laybout vector for kernels without any arg 
+                kernargs[fn];
                 continue;
             }
-            if (dx == std::string::npos) break;
 
             static constexpr decltype(kernels_md.size()) args_sz{5};
             dx = parse_args_v2(kernels_md, dx + args_sz, dx1, kernargs[fn]);

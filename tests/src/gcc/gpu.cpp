@@ -19,6 +19,7 @@
 
 
 #include<hip/hip_runtime.h>
+#include "LaunchKernel.h"
 
 extern "C"
 {
@@ -41,6 +42,11 @@ __global__ void kernel2(int *a, int*b)
 __global__ void kernel3(int *a, int*b, int* c)
 {
   *c = *a+*b;
+}
+
+__global__ void kernel4(int *a, char c, short s, int i, struct things t)
+{
+   *a = c + s + i + t.c + t.s + t.i;
 }
 
 }//extern "C"

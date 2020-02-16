@@ -237,3 +237,6 @@ To disable it and use the legancy grid launch method, please either change the d
 $HIP/include/hip/hcc_detail/hip_runtime_api.h 
 $HIP/include/hip/hcc_detail/host_defines.h
 Or pass "-DGENERIC_GRID_LAUNCH=0" to hipcc at application compilation time.
+
+### What is maximum limit of Generic Grid Launch parameters (grid and block)?
+Product of (grid.x and block.x), (grid.y and block.y) or (grid.z and block.z) should always be less than UINT_MAX.
