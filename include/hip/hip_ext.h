@@ -109,7 +109,9 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr)
                                     __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
 
-#if !__HIP_VDI__ && defined(__cplusplus)
+//#if !__HIP_VDI__ && defined(__cplusplus)
+#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
+//kernel_descriptor and hip_impl::make_kernarg are in "grid_launch_GGL.hpp"
 
 namespace hip_impl {
 inline
