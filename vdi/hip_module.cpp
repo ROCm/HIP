@@ -324,12 +324,6 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
     }
   }
 
-  if(startEvent != nullptr) {
-    amd::Command* startCommand = new hip::TimerMarker(*queue);
-    startCommand->enqueue();
-    eStart->addMarker(queue, startCommand);
-  }
-
   amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(
     *queue, waitList, *kernel, ndrange, sharedMemBytes,
     params, gridId, numGrids, prevGridSum, allGridSum, firstDevice);
@@ -345,11 +339,14 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
 
   command->enqueue();
 
+  if(startEvent != nullptr) {
+    eStart->addMarker(queue, command);
+    command->retain();
+  }
   if(stopEvent != nullptr) {
     eStop->addMarker(queue, command);
     command->retain();
   }
-
   command->release();
 
   return hipSuccess;
