@@ -727,6 +727,10 @@ if ($HIP_PLATFORM eq "clang") {
         $HIPCXXFLAGS .= " -O3";
         $HIPLDFLAGS .= " -O3";
     }
+    if ($optArg ne "-O0") {
+        $HIPCXXFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
+        $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
+    }
     $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
     $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
     if (not $isWindows) {
