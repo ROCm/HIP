@@ -219,10 +219,9 @@ if ($HIP_PLATFORM eq "clang") {
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
     }
 
-    if ($HIP_RUNTIME eq "HCC" ) {
-      $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
-      $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
-    } else {
+    $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
+    $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
+    if (! $HIP_RUNTIME eq "HCC" ) {
       $HIPCXXFLAGS .= " -fhip-new-launch-api";
     }
 
