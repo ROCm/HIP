@@ -1540,111 +1540,144 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
     return ihipLogStatus(e);
 }
 
+int getByteSizeFromFormat(const hipChannelFormatDesc& desc){
+    int byteSize =0;
+    switch (desc.f) {
+        case hipChannelFormatKindUnsigned:
+            switch (desc.x) {
+                case 32:
+                    byteSize = sizeof(uint32_t);
+                    break;
+                case 16:
+                    byteSize = sizeof(uint16_t);
+                    break;
+                case 8:
+                    byteSize = sizeof(uint8_t);
+                    break;
+                default:
+                    byteSize = sizeof(uint32_t);
+            }
+            break;
+        case hipChannelFormatKindSigned:
+            switch (desc.x) {
+                case 32:
+                    byteSize = sizeof(int32_t);
+                    break;
+                case 16:
+                    byteSize = sizeof(int16_t);
+                    break;
+                case 8:
+                    byteSize = sizeof(int8_t);
+                    break;
+                default:
+                    byteSize = sizeof(int32_t);
+            }
+            break;
+        case hipChannelFormatKindFloat:
+            switch (desc.x) {
+                case 32:
+                    byteSize = sizeof(float);
+                    break;
+                case 16:
+                    byteSize = sizeof(_Float16);
+                    break;
+                default:
+                    byteSize = sizeof(float);
+            }
+            break;
+        case hipChannelFormatKindNone:
+        default:
+            break;
+    }
+    return byteSize;
+}
+
 hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync) {
     hipError_t e = hipSuccess;
     if(p) {
-        size_t byteSize, width, height, depth, widthInBytes, srcPitch, dstPitch, ySize;
-        hipChannelFormatDesc desc;
-        void* srcPtr;void* dstPtr;
+        size_t dstByteSize, srcByteSize, copyWidth, copyHeight, copyDepth, widthInBytes, srcPitch, dstPitch, srcYsize, dstYsize;
+        size_t srcXoffset, srcYoffset, srcZoffset, dstXoffset, dstYoffset, dstZoffset;
+        size_t srcWidth, srcHeight, srcDepth, dstWidth, dstHeight, dstDepth;
+
+        void* srcPtr, *dstPtr;
+        bool copyWidthUpdate= false;
+        copyDepth = p->extent.depth;
+        copyHeight = p->extent.height;
+        copyWidth =  p->extent.width; // in bytes ?
+        dstXoffset = p->dstPos.x;
+        dstYoffset = p->dstPos.y;
+        dstZoffset = p->dstPos.z;
+        srcXoffset = p->srcPos.x;
+        srcYoffset = p->srcPos.y;
+        srcZoffset = p->srcPos.z;
         if (p->dstArray != nullptr) {
-            if (p->dstArray->isDrv == false) {
-                switch (p->dstArray->desc.f) {
-                    case hipChannelFormatKindSigned:
-                        byteSize = sizeof(int);
-                        break;
-                    case hipChannelFormatKindUnsigned:
-                        byteSize = sizeof(unsigned int);
-                        break;
-                    case hipChannelFormatKindFloat:
-                        byteSize = sizeof(float);
-                        break;
-                    case hipChannelFormatKindNone:
-                        byteSize = sizeof(size_t);
-                        break;
-                    default:
-                        byteSize = 0;
-                        break;
-                }
-                depth = p->extent.depth;
-                height = p->extent.height;
-                width =  p->extent.width;
-                widthInBytes = p->extent.width * byteSize;
-                srcPitch = p->srcPtr.pitch;
-                srcPtr = p->srcPtr.ptr;
-                ySize = p->srcPtr.ysize;
-                desc = p->dstArray->desc;
-                dstPtr = p->dstArray->data;
-                hsa_ext_image_data_info_t imageInfo;
-                if(hipTextureType2DLayered == p->dstArray->textureType)
-                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, desc, imageInfo, depth);
-                else
-                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, desc, imageInfo);
-                dstPitch = imageInfo.size/(height == 0 ? 1 : height)/(depth == 0 ? 1 : depth);
-            } else {
-                depth = p->Depth;
-                height = p->Height;
-                widthInBytes = p->WidthInBytes;
-                width =  p->dstArray->width;
-                hsa_ext_image_channel_order_t channelOrder;
-                switch(p->dstArray->NumChannels) {
-                    case 2:
-                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RG;
-                       break;
-                    case 3:
-                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGB;
-                       break;
-                    case 4:
-                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA;
-                       break;
-                    case 1:
-                    default:
-                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
-                       break;
-                }
-                hsa_ext_image_channel_type_t channelType;
-                e = ihipArrayToImageFormat(p->dstArray->Format,channelType);
-                srcPitch = p->srcPitch;
-                srcPtr = (void*)p->srcHost;
-                ySize = p->srcHeight;
-                dstPtr = p->dstArray->data;
-                hsa_ext_image_data_info_t imageInfo;
-                if(hipTextureType2DLayered == p->dstArray->textureType)
-                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, channelOrder, channelType, imageInfo, depth);
-                else
-                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, channelOrder, channelType, imageInfo);
-                dstPitch = imageInfo.size/(height == 0 ? 1 : height)/(depth == 0 ? 1 : depth);
+            if ((p->dstArray->isDrv == true) ||( p->dstPtr.ptr!= nullptr)){
+                return hipErrorInvalidValue;
+            }
+            // Array destination
+            dstByteSize = getByteSizeFromFormat(p->dstArray->desc);
+            hipChannelFormatDesc desc;
+            desc = p->dstArray->desc;
+            dstPtr = p->dstArray->data;
+            dstWidth = p->dstArray->width;
+            dstHeight = p->dstArray->height;
+            dstDepth = p->dstArray->depth;
+            dstPitch = dstByteSize * alignUp(dstWidth, IMAGE_PITCH_ALIGNMENT);
+            if(!copyWidthUpdate) {
+                copyWidth = copyWidth * dstByteSize;
+                copyWidthUpdate = true;
             }
         } else {
-            // Non array destination
-            depth = p->extent.depth;
-            height = p->extent.height;
-            widthInBytes = p->extent.width;
-            srcPitch = p->srcPtr.pitch;
-            srcPtr = p->srcPtr.ptr;
+            //Non Array destination
             dstPtr = p->dstPtr.ptr;
-            ySize = p->srcPtr.ysize;
+            dstWidth = p->dstPtr.xsize;
+            dstHeight = p->dstPtr.ysize;
             dstPitch = p->dstPtr.pitch;
+        }
+
+        if (p->srcArray != nullptr) {
+            if ((p->srcArray->isDrv == true) ||( p->srcPtr.ptr!= nullptr)){
+                return hipErrorInvalidValue;
+            }
+            // Array source
+            srcByteSize = getByteSizeFromFormat(p->srcArray->desc);
+            hipChannelFormatDesc desc;
+            desc = p->srcArray->desc;
+            srcPtr = p->srcArray->data;
+            srcWidth = p->srcArray->width;
+            srcHeight = p->srcArray->height;
+            srcDepth = p->srcArray->depth;
+            srcPitch = srcByteSize * alignUp(srcWidth, IMAGE_PITCH_ALIGNMENT);
+            if(!copyWidthUpdate) {
+                copyWidth = copyWidth * srcByteSize;
+                copyWidthUpdate = true;
+            }
+        } else {
+            //Non Array source
+            srcPtr = p->srcPtr.ptr;
+            srcWidth = p->srcPtr.xsize;
+            srcHeight = p->srcPtr.ysize;
+            srcPitch = p->srcPtr.pitch;
         }
 
         stream = ihipSyncAndResolveStream(stream);
         try {
-            if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
+            if((copyWidth == dstPitch) && (copyWidth == srcPitch)&& (copyHeight == dstHeight) &&(copyHeight == srcHeight)) {
                 if(isAsync)
-                    stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind);
+                    stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind);
                 else
-                    stream->locked_copySync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind, false);
+                    stream->locked_copySync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind, false);
             } else {
-                for (int i = 0; i < depth; i++) {
-                    for (int j = 0; j < height; j++) {
-                        // TODO: p->srcPos or p->dstPos are not 0.
+                for (int i = 0; i < copyDepth; i++) {
+                    for (int j = 0; j < copyHeight; j++) {
                         unsigned char* src =
-                             (unsigned char*)srcPtr + i * ySize * srcPitch + j * srcPitch;
+                             (unsigned char*)srcPtr + (i + srcZoffset) * srcHeight * srcPitch + (j + srcYoffset) * srcPitch + srcXoffset;
                         unsigned char* dst =
-                             (unsigned char*)dstPtr + i * height * dstPitch + j * dstPitch;
+                             (unsigned char*)dstPtr + (i + dstZoffset) * dstHeight * dstPitch + (j + dstYoffset) * dstPitch + dstXoffset;
                         if(isAsync)
-                            stream->locked_copyAsync(dst, src, widthInBytes, p->kind);
+                            stream->locked_copyAsync(dst, src, copyWidth, p->kind);
                         else
-                            stream->locked_copySync(dst, src, widthInBytes, p->kind);
+                            stream->locked_copySync(dst, src, copyWidth, p->kind);
                      }
                 }
            }
