@@ -46,8 +46,10 @@ int main(int argc, char* argv[]) {
     // test case for using kernel function pointer 
     uint32_t gridSize = 0;
     uint32_t blockSize = 0;
+#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
     hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
     assert(gridSize != 0 && blockSize != 0);
+#endif
 
     // test case for using kernel function pointer with template 
     gridSize = 0;

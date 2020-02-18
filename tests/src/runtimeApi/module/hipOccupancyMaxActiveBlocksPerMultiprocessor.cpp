@@ -46,8 +46,10 @@ int main(int argc, char* argv[]) {
     // test case for using kernel function pointer
     uint32_t gridSize = 0;
     uint32_t blockSize = 0;
+#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
     hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
     assert(gridSize != 0 && blockSize != 0);
+#endif
 
     uint32_t numBlock = 0;
     hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, f1, blockSize, 0);
@@ -57,8 +59,10 @@ int main(int argc, char* argv[]) {
     // test case for using kernel function pointer with template
     gridSize = 0;
     blockSize = 0;
+#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
     hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
     assert(gridSize != 0 && blockSize != 0);
+#endif
 
     numBlock = 0;
     hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(&numBlock, f2, blockSize, 0);
