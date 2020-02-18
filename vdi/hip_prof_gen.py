@@ -572,6 +572,8 @@ api_map = {
   'hipModuleLoadDataEx': '',
   'hipGetDeviceProperties': '',
   'hipConfigureCall': '',
+  'hipHccModuleLaunchKernel': '',
+  'hipExtModuleLaunchKernel': '',
 }
 # API options map
 opts_map = {}
