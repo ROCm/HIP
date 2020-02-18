@@ -37,7 +37,6 @@ __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
 namespace hip_internal {
 
 namespace {
-
     inline
     const char* hsa_to_string(hsa_status_t err) noexcept
     {
@@ -149,13 +148,14 @@ namespace {
                 const_cast<void*>(p), &r, nullptr, nullptr, nullptr),
             __FILE__, __func__, __LINE__);
 
-        r.size = is_large_BAR || (type(r.agentOwner) == HSA_DEVICE_TYPE_CPU) ?
-            UINT32_MAX : sizeof(hsa_amd_pointer_info_t);
+        if (is_large_BAR) r.size = UINT32_MAX;
+        else if (type(r.agentOwner) == HSA_DEVICE_TYPE_CPU) r.size = INT32_MAX;
 
         return r;
     }
 
-    constexpr size_t staging_sz{4 * 1024 * 1024}; // 2 Pages.
+    constexpr size_t staging_sz{4 * 1024 * 1024};      // 2 Pages.
+    constexpr size_t max_std_memcpy_sz{8 * 1024};      // 8 KiB.
 
     thread_local const std::unique_ptr<void, void (*)(void *)> staging_buffer{
         []() {
@@ -202,8 +202,8 @@ namespace {
 } // Unnamed namespace.
 
 inline
-void do_copy(void* __restrict dst, const void* __restrict src, std::size_t n,
-             hsa_agent_t da, hsa_agent_t sa) {
+void do_copy(void* __restrict dst, const void* __restrict src, size_t n,
+             hsa_agent_t da, hsa_agent_t sa) {  
     hsa_signal_silent_store_relaxed(copy_signal, 1);
     throwing_result_check(
         hsa_amd_memory_async_copy(dst, da, src, sa, n, 0, nullptr, copy_signal),
@@ -224,10 +224,10 @@ void do_std_memcpy(
 inline
 void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t si) {
-    // TODO: characterise direct largeBAR reads from agent-allocated memory.
-    // if (si.size == UINT32_MAX) {
-    //     return do_std_memcpy(dst, src, n);
-    // }
+    if (si.size == INT32_MAX) return do_std_memcpy(dst, src, n);
+    if (si.size == UINT32_MAX && n <= max_std_memcpy_sz) {
+        return do_std_memcpy(dst, src, n);
+    }
 
     const auto di{info(dst)};
 
@@ -256,7 +256,8 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t di) {
-    if (di.size == UINT32_MAX) {
+    if (di.size == INT32_MAX) return do_std_memcpy(dst, src, n);
+    if (di.size == UINT32_MAX && n <= max_std_memcpy_sz) {
         return do_std_memcpy(dst, src, n);
     }
 
@@ -264,8 +265,8 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
 
     if (si.type == HSA_EXT_POINTER_TYPE_LOCKED) {
         src = static_cast<char*>(si.agentBaseAddress) +
-             (static_cast<const char*>(src) -
-              static_cast<char*>(si.hostBaseAddress));
+            (static_cast<const char*>(src) -
+            static_cast<char*>(si.hostBaseAddress));
         do_copy(dst, src, n, di.agentOwner, di.agentOwner);
     }
     else if (n <= staging_sz) {
@@ -288,53 +289,30 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
                   hsa_amd_pointer_info_t di, hsa_amd_pointer_info_t si) {
-    if (di.size == UINT32_MAX && si.size == UINT32_MAX) {
+    if (di.size == INT32_MAX && si.size == INT32_MAX) {
+        return do_std_memcpy(dst, src, n);
+    }
+    if (di.size == UINT32_MAX && si.size == UINT32_MAX &&
+        n <= max_std_memcpy_sz) {
         return do_std_memcpy(dst, src, n);
     }
 
-    std::unique_ptr<void, void (*)(void*)> lck0{
-        nullptr, [](void* p) { hsa_amd_memory_unlock(p); }};
-    std::unique_ptr<void, void (*)(void*)> lck1{nullptr, lck0.get_deleter()};
-
-    switch (si.type) {
-    case HSA_EXT_POINTER_TYPE_HSA:
-        if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
-            hsa_memory_copy(dst, src, n);
-            return; // TODO: do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+    switch (type(si.agentOwner)) {
+    case HSA_DEVICE_TYPE_GPU:
+        if (type(di.agentOwner) == HSA_DEVICE_TYPE_GPU) {
+            throwing_result_check(
+                hsa_amd_agents_allow_access(
+                    1u, &si.agentOwner, nullptr, di.agentBaseAddress),
+                __FILE__, __func__, __LINE__);
+            return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
         }
-
-        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN ||
-            di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
-            return d2h_copy(dst, src, n, si);
-        }
-        break;
-    case HSA_EXT_POINTER_TYPE_LOCKED:
-        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN) {
-            std::memcpy(dst, si.hostBaseAddress, n);
-
-            return;
-        }
-        if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
-            std::memcpy(di.hostBaseAddress, si.hostBaseAddress, n);
-
-            return;
-        }
-        src = si.agentBaseAddress;
-        si.agentOwner = di.agentOwner;
-        break;
-    case HSA_EXT_POINTER_TYPE_UNKNOWN:
-        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN) {
-            std::memcpy(dst, src, n);
-
-            return;
-        }
-        if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
-            std::memcpy(di.hostBaseAddress, src, n);
-
-            return;
+        return d2h_copy(dst, src, n, si);
+    case HSA_DEVICE_TYPE_CPU:
+        if (type(di.agentOwner) == HSA_DEVICE_TYPE_CPU) {
+            return do_std_memcpy(dst, src, n);
         }
         return h2d_copy(dst, src, n, di);
-    default: do_copy(dst, src, n, di.agentOwner, si.agentOwner); break;
+    default: throw std::runtime_error{"Unsupported copy type."};
     }
 }
 
@@ -343,14 +321,17 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
                  hipMemcpyKind k) noexcept {
     switch (k) {
     case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
-    case hipMemcpyHostToDevice:
-        return is_large_BAR ? do_std_memcpy(dst, src, n)
-                            : h2d_copy(dst, src, n, info(dst));
-    case hipMemcpyDeviceToHost:
-        // TODO: characterise direct largeBAR reads from agent-allocated memory.
-        return /*is_large_BAR ? do_std_memcpy(dst, src, n)
-                            : */d2h_copy(dst, src, n, info(src));
-    case hipMemcpyDeviceToDevice: hsa_memory_copy(dst, src, n); break;
+    case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, info(dst));
+    case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, info(src));
+    case hipMemcpyDeviceToDevice: {
+        const auto di{info(dst)};
+        const auto si{info(src)};
+        throwing_result_check(
+            hsa_amd_agents_allow_access(
+                1u, &si.agentOwner, nullptr, di.agentBaseAddress),
+            __FILE__, __func__, __LINE__);
+        return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+    }
     default: return generic_copy(dst, src, n, info(dst), info(src));
     }
 }
