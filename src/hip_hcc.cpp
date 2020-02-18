@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include <algorithm>
 #include <atomic>
 #include <mutex>
+#include <unordered_set>
 
 #include <hc.hpp>
 #include <hc_am.hpp>
@@ -925,6 +926,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
 
     prop->memPitch = INT_MAX; //Maximum pitch in bytes allowed by memory copies (hardcoded 128 bytes in hipMallocPitch)
     prop->textureAlignment = 0; //Alignment requirement for textures
+    prop->texturePitchAlignment = IMAGE_PITCH_ALIGNMENT; //Alignment requirment for texture pitch
     prop->kernelExecTimeoutEnabled = 0; //no run time limit for running kernels on device
 
     hsa_isa_t isa;
@@ -1795,6 +1797,8 @@ const char* ihipErrorString(hipError_t hip_error) {
             return "hipErrorMissingConfiguration";
         case hipErrorLaunchFailure:
             return "hipErrorLaunchFailure";
+        case hipErrorCooperativeLaunchTooLarge:
+            return "hipErrorCooperativeLaunchTooLarge";
         case hipErrorPriorLaunchFailure:
             return "hipErrorPriorLaunchFailure";
         case hipErrorLaunchTimeOut:
@@ -2539,6 +2543,16 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 // TODO - add a contect sequence number for debug. Print operator<< ctx:0.1 (device.ctx)
 
 namespace hip_impl {
+    std::unordered_set<std::string>& get_all_gpuarch() {
+        static std::unordered_set<std::string> r{};
+        static std::once_flag init;
+        std::call_once(init, []() {
+            for (int i=0; i < g_deviceCnt; i++){
+                r.insert("hcc-amdgcn-amd-amdhsa--gfx"+std::to_string(g_deviceArray[i]->_props.gcnArch));
+        }});
+        return r;
+    }
+
     std::vector<hsa_agent_t> all_hsa_agents() {
         std::vector<hsa_agent_t> r{};
         std::vector<hc::accelerator> visible_accelerators;
