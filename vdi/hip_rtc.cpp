@@ -211,12 +211,12 @@ hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog, const char* src, const cha
     HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
 
-  amd::Program* program = new amd::Program(*hip::getCurrentContext(), src, amd::Program::HIP);
+  amd::Program* program = new amd::Program(*hip::getCurrentDevice()->asContext(), src, amd::Program::HIP);
   if (program == NULL) {
     HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
 
-  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0])) {
+  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentDevice()->devices()[0])) {
     program->release();
     HIPRTC_RETURN(HIPRTC_ERROR_PROGRAM_CREATION_FAILURE);
   }
@@ -241,7 +241,7 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char
   std::vector<const char*> oarr(&options[0], &options[numOptions]);
   std::copy(oarr.begin(), oarr.end(), std::ostream_iterator<std::string>(ostrstr, " "));
 
-  std::vector<amd::Device*> devices{hip::getCurrentContext()->devices()[0]};
+  std::vector<amd::Device*> devices{hip::getCurrentDevice()->devices()[0]};
   if (CL_SUCCESS != program->build(devices, ostrstr.str().c_str(), nullptr, nullptr)) {
     HIPRTC_RETURN(HIPRTC_ERROR_COMPILATION);
   }
@@ -278,7 +278,7 @@ hiprtcResult hiprtcGetLoweredName(hiprtcProgram prog, const char* name_expressio
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
 
   device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   auto it = ProgramState::instance().nameExpresssion_.find(name_expression);
   if (it == ProgramState::instance().nameExpresssion_.end()) {
@@ -325,7 +325,7 @@ hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* binaryMem) {
 
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
   const device::Program::binary_t& binary =
-      program->getDeviceProgram(*hip::getCurrentContext()->devices()[0])->binary();
+      program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0])->binary();
 
   ::memcpy(binaryMem, binary.first, binary.second);
 
@@ -339,7 +339,7 @@ hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* binarySizeRet) {
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
 
   *binarySizeRet =
-      program->getDeviceProgram(*hip::getCurrentContext()->devices()[0])->binary().second;
+      program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0])->binary().second;
 
    HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
@@ -349,7 +349,7 @@ hiprtcResult hiprtcGetProgramLog(hiprtcProgram prog, char* dst) {
   HIPRTC_INIT_API(prog, dst);
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
   const device::Program* devProgram =
-      program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+      program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   auto log = program->programLog() + devProgram->buildLog().c_str();
 
@@ -365,7 +365,7 @@ hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog, size_t* logSizeRet) {
 
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
   const device::Program* devProgram =
-      program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+      program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   auto log = program->programLog() + devProgram->buildLog().c_str();
 

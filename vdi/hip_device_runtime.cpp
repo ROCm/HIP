@@ -430,12 +430,7 @@ hipError_t hipDeviceSynchronize ( void ) {
 }
 
 int ihipGetDevice() {
-  for (unsigned int i = 0; i < g_devices.size(); i++) {
-    if (g_devices[i] == hip::getCurrentContext()) {
-      return i;
-    }
-  }
-  return -1;
+  return hip::getCurrentDevice()->deviceId();
 }
 
 hipError_t hipGetDevice ( int* deviceId ) {
@@ -483,7 +478,7 @@ hipError_t hipSetDevice ( int  device ) {
   HIP_INIT_API(hipSetDevice, device);
 
   if (static_cast<unsigned int>(device) < g_devices.size()) {
-    hip::setCurrentContext(device);
+    hip::setCurrentDevice(device);
 
     HIP_RETURN(hipSuccess);
   }

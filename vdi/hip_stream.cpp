@@ -50,12 +50,12 @@ void syncStreams() {
   }
 }
 
-Stream::Stream(amd::Device* dev, amd::Context* ctx, amd::CommandQueue::Priority p, unsigned int f, int d) :
-  queue(nullptr), device(dev), context(ctx), priority(p), flags(f), deviceId(d) {}
+Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p, unsigned int f) :
+  queue(nullptr), device(dev), priority(p), flags(f) {}
 
 void Stream::create() {
   cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-  queue = new amd::HostQueue(*context, *device, properties,
+  queue = new amd::HostQueue(*device->asContext(), *device->devices()[0], properties,
                              amd::CommandQueue::RealTimeDisabled, priority);
   assert(queue != nullptr);
   queue->create();
@@ -93,9 +93,7 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
 }
 
 static hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags, amd::CommandQueue::Priority priority) {
-  amd::Device* device = hip::getCurrentContext()->devices()[0];
-
-  hip::Stream* hStream = new hip::Stream(device, hip::getCurrentContext(), priority, flags, ihipGetDevice());
+  hip::Stream* hStream = new hip::Stream(hip::getCurrentDevice(), priority, flags);
 
   if (hStream == nullptr) {
     return hipErrorOutOfMemory;

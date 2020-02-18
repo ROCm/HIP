@@ -147,8 +147,7 @@ void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipM
   std::vector<std::pair<const void*, size_t>> code_objs;
   std::vector<const char*> devices;
   for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-    amd::Context* ctx = g_devices[dev];
-    devices.push_back(ctx->devices()[0]->info().name_);
+    devices.push_back(g_devices[dev]->devices()[0]->info().name_);
   }
 
   if (!__hipExtractCodeObjectFromFatBinary((char*)data, devices, code_objs)) {
@@ -158,7 +157,7 @@ void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipM
   programs.resize(g_devices.size());
 
   for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-    amd::Context* ctx = g_devices[dev];
+    amd::Context* ctx = g_devices[dev]->asContext();
     amd::Program* program = new amd::Program(*ctx);
     if (program == nullptr) {
       return;
@@ -259,7 +258,7 @@ void PlatformState::registerFunction(const void* hostFunction,
 
 bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFuncAttributes* func_attr) {
   device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   const auto it = dev_program->kernels().find(std::string(func_name));
   if (it == dev_program->kernels().cend()) {
@@ -540,7 +539,7 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   PlatformState::instance().popExec(exec);
 
   hip::Stream* stream = reinterpret_cast<hip::Stream*>(exec.hStream_);
-  int deviceId = (stream != nullptr)? stream->deviceId : ihipGetDevice();
+  int deviceId = (stream != nullptr)? stream->device->deviceId() : ihipGetDevice();
   if (deviceId == -1) {
     HIP_RETURN(hipErrorNoDevice);
   }
@@ -590,7 +589,7 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
 
   /* Get Device Program pointer*/
   program = as_amd(reinterpret_cast<cl_program>(hmod));
-  dev_program = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+  dev_program = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (dev_program == nullptr) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);
@@ -631,7 +630,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
   if (blockSize == 0) {
     HIP_RETURN(hipErrorInvalidValue);
   }
-  amd::Device* device = hip::getCurrentContext()->devices()[0];
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
   const device::Kernel::WorkGroupInfo* wrkGrpInfo = kernel->getDeviceKernel(*device)->workGroupInfo();
 
   // Find threads accupancy per CU => simd_per_cu * GPR usage
@@ -859,7 +858,7 @@ const std::vector<hipModule_t>& modules() {
           std::string target(desc->triple + sizeof(HCC_AMDGCN_AMDHSA_TRIPLE),
                              desc->tripleSize - sizeof(HCC_AMDGCN_AMDHSA_TRIPLE));
 
-          if (isCompatibleCodeObject(target, hip::getCurrentContext()->devices()[0]->info().name_)) {
+          if (isCompatibleCodeObject(target, hip::getCurrentDevice()->devices()[0]->info().name_)) {
             hipModule_t module;
             if (hipSuccess == hipModuleLoadData(&module, reinterpret_cast<const void*>(
                 reinterpret_cast<uintptr_t>(obheader) + desc->offset)))
@@ -942,7 +941,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
                stream);
 
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
-  int deviceId = (s != nullptr)? s->deviceId : ihipGetDevice();
+  int deviceId = (s != nullptr)? s->device->deviceId() : ihipGetDevice();
   if (deviceId == -1) {
     HIP_RETURN(hipErrorNoDevice);
   }

@@ -24,17 +24,17 @@
 #include "utils/flags.hpp"
 #include "utils/versions.hpp"
 
-std::vector<amd::Context*> g_devices;
+std::vector<hip::Device*> g_devices;
 
 namespace hip {
 
-thread_local amd::Context* g_context = nullptr;
-thread_local std::stack<amd::Context*> g_ctxtStack;
+thread_local Device* g_device = nullptr;
+thread_local std::stack<Device*> g_ctxtStack;
 thread_local hipError_t g_lastError = hipSuccess;
 std::once_flag g_ihipInitialized;
-amd::Context* host_context = nullptr;
+Device* host_device = nullptr;
 
-std::map<amd::Context*, amd::HostQueue*> g_nullStreams;
+std::map<Device*, amd::HostQueue*> g_nullStreams;
 
 void init() {
   if (!amd::Runtime::initialized()) {
@@ -53,27 +53,28 @@ void init() {
     if (context && CL_SUCCESS != context->create(nullptr)) {
       context->release();
     } else {
-      g_devices.push_back(context);
+      g_devices.push_back(new Device(context, i));
     }
   }
 
-  host_context = new amd::Context(devices, amd::Context::Info());
-  if (!host_context) return;
+  amd::Context* hContext = new amd::Context(devices, amd::Context::Info());
+  if (!hContext) return;
 
-  if (host_context && CL_SUCCESS != host_context->create(nullptr)) {
-    host_context->release();
+  if (CL_SUCCESS != hContext->create(nullptr)) {
+    hContext->release();
   }
+  host_device = new Device(hContext, -1);
 
   PlatformState::instance().init();
 }
 
-amd::Context* getCurrentContext() {
-  return g_context;
+Device* getCurrentDevice() {
+  return g_device;
 }
 
-void setCurrentContext(unsigned int index) {
+void setCurrentDevice(unsigned int index) {
   assert(index<g_devices.size());
-  g_context = g_devices[index];
+  g_device = g_devices[index];
 }
 
 amd::HostQueue* getQueue(hipStream_t stream) {
@@ -89,23 +90,31 @@ amd::HostQueue* getQueue(hipStream_t stream) {
   }
 }
 
-amd::HostQueue* getNullStream(amd::Context& context) {
-  auto stream = g_nullStreams.find(&context);
+amd::HostQueue* getNullStream(Device& dev) {
+  auto stream = g_nullStreams.find(&dev);
   if (stream == g_nullStreams.end()) {
-    amd::Device* device = context.devices()[0];
+    amd::Device* device = dev.devices()[0];
     cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-    amd::HostQueue* queue = new amd::HostQueue(context, *device, properties,
+    amd::HostQueue* queue = new amd::HostQueue(*dev.asContext(), *device, properties,
                                                amd::CommandQueue::RealTimeDisabled,
                                                amd::CommandQueue::Priority::Normal);
-    g_nullStreams[&context] = queue;
+    g_nullStreams[&dev] = queue;
     return queue;
   }
   return stream->second;
 }
+amd::HostQueue* getNullStream(amd::Context& ctx) {
+ for (auto& it : g_nullStreams) {
+   if (it.first->asContext() == &ctx) {
+     return it.second;
+   }
+ }
+ return nullptr;
+}
 
 amd::HostQueue* getNullStream() {
-  amd::Context* context = getCurrentContext();
-  return context ? getNullStream(*context) : nullptr;
+  Device* device = getCurrentDevice();
+  return device ? getNullStream(*device) : nullptr;
 }
 
 };
@@ -142,11 +151,11 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
       g_ctxtStack.pop();
     }
   } else {
-    hip::g_context = reinterpret_cast<amd::Context*>(as_amd(ctx));
+    hip::g_device = reinterpret_cast<hip::Device*>(ctx);
     if(!g_ctxtStack.empty()) {
       g_ctxtStack.pop();
     }
-    g_ctxtStack.push(hip::getCurrentContext());
+    g_ctxtStack.push(hip::getCurrentDevice());
   }
 
   HIP_RETURN(hipSuccess);
@@ -155,7 +164,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx) {
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx) {
   HIP_INIT_API(hipCtxGetCurrent, ctx);
 
-  *ctx = reinterpret_cast<hipCtx_t>(hip::getCurrentContext());
+  *ctx = reinterpret_cast<hipCtx_t>(hip::getCurrentDevice());
 
   HIP_RETURN(hipSuccess);
 }
@@ -183,8 +192,8 @@ hipError_t hipRuntimeGetVersion(int *runtimeVersion) {
 hipError_t hipCtxDestroy(hipCtx_t ctx) {
   HIP_INIT_API(hipCtxDestroy, ctx);
 
-  amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
-  if (amdContext == nullptr) {
+  hip::Device* dev = reinterpret_cast<hip::Device*>(ctx);
+  if (dev == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -192,15 +201,15 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
   hip::getNullStream()->setLastQueuedCommand(nullptr);
 
   // Need to remove the ctx of calling thread if its the top one
-  if (!g_ctxtStack.empty() && g_ctxtStack.top() == amdContext) {
+  if (!g_ctxtStack.empty() && g_ctxtStack.top() == dev) {
     g_ctxtStack.pop();
   }
 
   // Remove context from global context list
   for (unsigned int i = 0; i < g_devices.size(); i++) {
-    if (g_devices[i] == amdContext) {
+    if (g_devices[i] == dev) {
       // Decrement ref count for device primary context
-      amdContext->release();
+      dev->release();
     }
   }
 
@@ -210,13 +219,13 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
   HIP_INIT_API(hipCtxPopCurrent, ctx);
 
-  amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
-  if (amdContext == nullptr) {
+  hip::Device** dev = reinterpret_cast<hip::Device**>(ctx);
+  if (dev == nullptr) {
     HIP_RETURN(hipErrorInvalidContext);
   }
 
   if (!g_ctxtStack.empty()) {
-    amdContext = g_ctxtStack.top();
+    *dev = g_ctxtStack.top();
     g_ctxtStack.pop();
   } else {
     HIP_RETURN(hipErrorInvalidContext);
@@ -228,13 +237,13 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
 hipError_t hipCtxPushCurrent(hipCtx_t ctx) {
   HIP_INIT_API(hipCtxPushCurrent, ctx);
 
-  amd::Context* amdContext = reinterpret_cast<amd::Context*>(as_amd(ctx));
-  if (amdContext == nullptr) {
+  hip::Device* dev = reinterpret_cast<hip::Device*>(ctx);
+  if (dev == nullptr) {
     HIP_RETURN(hipErrorInvalidContext);
   }
 
-  hip::g_context = amdContext;
-  g_ctxtStack.push(hip::getCurrentContext());
+  hip::g_device = dev;
+  g_ctxtStack.push(hip::getCurrentDevice());
 
   HIP_RETURN(hipSuccess);
 }
@@ -259,12 +268,8 @@ hipError_t hipCtxGetDevice(hipDevice_t* device) {
   HIP_INIT_API(hipCtxGetDevice, device);
 
   if (device != nullptr) {
-    for (unsigned int i = 0; i < g_devices.size(); i++) {
-      if (g_devices[i] == hip::getCurrentContext()) {
-        *device = static_cast<hipDevice_t>(i);
-        HIP_RETURN(hipSuccess);
-      }
-    }
+    *device = hip::getCurrentDevice()->deviceId();
+    HIP_RETURN(hipSuccess);
   } else {
     HIP_RETURN(hipErrorInvalidValue);
   }
@@ -332,7 +337,7 @@ hipError_t hipDevicePrimaryCtxGetState(hipDevice_t dev, unsigned int* flags, int
   }
 
   if (active != nullptr) {
-    *active = (g_devices[dev] == hip::getCurrentContext())? 1 : 0;
+    *active = (g_devices[dev] == hip::getCurrentDevice())? 1 : 0;
   }
 
   HIP_RETURN(hipSuccess);
