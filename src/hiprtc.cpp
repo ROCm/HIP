@@ -620,3 +620,15 @@ extern "C" hiprtcResult hiprtcGetCodeSize(hiprtcProgram p, std::size_t* sz)
 
     return HIPRTC_SUCCESS;
 }
+
+extern "C" hiprtcResult hiprtcVersion(int* major, int* minor)
+{
+  if (major == nullptr || minor == nullptr) {
+    return HIPRTC_ERROR_INVALID_INPUT;
+  }
+
+  *major = HIP_VERSION_MAJOR;
+  *minor = HIP_VERSION_MINOR;
+
+  return HIPRTC_SUCCESS;
+}
