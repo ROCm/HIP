@@ -520,7 +520,7 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
   }
 
    /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getTexRef(name, texRef)) {
+  if (!PlatformState::instance().getTexRef(name, hmod, texRef)) {
     HIP_RETURN(hipErrorNotFound);
   }
 

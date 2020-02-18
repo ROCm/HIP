@@ -197,7 +197,7 @@ public:
   bool getFuncAttr(const void* hostFunction, hipFuncAttributes* func_attr);
   bool getGlobalVar(const void* hostVar, int deviceId, hipModule_t hmod,
                     hipDeviceptr_t* dev_ptr, size_t* size_ptr);
-  bool getTexRef(const char* hostVar, textureReference** texRef);
+  bool getTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef);
 
   bool getShadowVarInfo(std::string var_name, hipModule_t hmod,
                         void** var_addr, size_t* var_size);
