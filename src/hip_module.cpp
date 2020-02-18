@@ -1031,32 +1031,32 @@ hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t 
 
     std::string name_str(name);
     std::string namekd_str(name_str + ".kd");
+    bool kernel_by_namekd = false;
 
     auto kernel = find_kernel_by_name(hmod->executable, name_str.c_str(), agent);
 
     if (kernel.handle == 0u) {
+        kernel_by_namekd = true; //Find kernel by namekd_str
         kernel = find_kernel_by_name(hmod->executable, namekd_str.c_str(), agent);
     }
 
     if (kernel.handle == 0u) return hipErrorNotFound;
 
-    //For hipModuleLoad(), hmod->kernargs must contain a args with key
+    //For hipModuleLoad(), hmod->kernargs must contain an args with key
     //name_str or namekd_str.
     //For hipLaunchKernelGGL(), hmod->kernargs is empty, thus we need
     //insert hmod->kernargs[name_str]
     auto it = hmod->kernargs.find(name_str); //Look up args from the original name
     if (it == hmod->kernargs.end()) {
         it = hmod->kernargs.find(namekd_str); //Look up args from .kd name
-        if (it != hmod->kernargs.end()) {
-            name_str = namekd_str;
-        }
     }
 
     // TODO: refactor the whole ihipThisThat, which is a mess and yields the
     //       below, due to hipFunction_t being a pointer to ihipModuleSymbol_t.
 
     func[0][0] = *static_cast<hipFunction_t>(
-        Kernel_descriptor{kernel_object(kernel), name_str,
+        Kernel_descriptor{kernel_object(kernel),
+        kernel_by_namekd ? namekd_str : name_str,
         it != hmod->kernargs.end() ? it->second : hmod->kernargs[name_str]});
 
     return hipSuccess;
