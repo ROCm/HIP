@@ -21,7 +21,6 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
  * HIT_END
  */
 
-#include <io.h>
 #include <iostream>
 #include <vector>
 #include <stdio.h>
