@@ -43,9 +43,9 @@ typedef struct ihipIpcMemHandle_st {
 } ihipIpcMemHandle_t;
 
 #define HIP_INIT() \
-  std::call_once(hip::g_ihipInitialized, hip::init);        \
-  if (hip::g_context == nullptr && g_devices.size() > 0) {  \
-    hip::g_context = g_devices[0];                          \
+  std::call_once(hip::g_ihipInitialized, hip::init);       \
+  if (hip::g_device == nullptr && g_devices.size() > 0) {  \
+    hip::g_device = g_devices[0];                          \
   }
 
 // This macro should be called at the beginning of every HIP API.
@@ -69,19 +69,49 @@ class accelerator_view;
 };
 
 namespace hip {
+
+  /// HIP Device class
+  class Device {
+    /// VDI context
+    amd::Context* context_;
+    /// Device's ID
+    /// Store it here so we don't have to loop through the device list every time
+    int deviceId_;
+  public:
+    Device(amd::Context* ctx, int devId): context_(ctx), deviceId_(devId) { assert(ctx != nullptr); }
+    ~Device() {}
+
+    amd::Context* asContext() const { return context_; }
+    int deviceId() const { return deviceId_; }
+    void retain() const { context_->retain(); }
+    void release() const { context_->release(); }
+    const std::vector<amd::Device*>& devices() const { return context_->devices(); }
+  };
+
   extern std::once_flag g_ihipInitialized;
-  extern thread_local amd::Context* g_context;
+  /// Current thread's device
+  extern thread_local Device* g_device;
   extern thread_local hipError_t g_lastError;
-  extern amd::Context* host_context;
+  /// Device representing the host - for pinned memory
+  extern Device* host_device;
 
   extern void init();
 
-  extern amd::Context* getCurrentContext();
-  extern void setCurrentContext(unsigned int index);
+  extern Device* getCurrentDevice();
+  extern void setCurrentDevice(unsigned int index);
 
+  /// Get VDI queue associated with hipStream
+  /// Note: This follows the CUDA spec to sync with default streams
+  ///       and Blocking streams
   extern amd::HostQueue* getQueue(hipStream_t s);
+  /// Get default stream of the device
+  extern amd::HostQueue* getNullStream(Device&);
+  /// Get default stream associated with the VDI context
   extern amd::HostQueue* getNullStream(amd::Context&);
+  /// Get default stream of the thread
   extern amd::HostQueue* getNullStream();
+  /// Sync Blocking streams on the current device
+  /// TODO: It currently syncs all Blocking streams on all devices
   extern void syncStreams();
 
 
@@ -98,13 +128,11 @@ namespace hip {
   struct Stream {
     amd::HostQueue* queue;
 
-    amd::Device* device;
-    amd::Context* context;
+    Device* device;
     amd::CommandQueue::Priority priority;
     unsigned int flags;
-    int deviceId;
 
-    Stream(amd::Device* dev, amd::Context* ctx, amd::CommandQueue::Priority p, unsigned int f, int d);
+    Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f);
     void create();
     amd::HostQueue* asHostQueue();
     void destroy();
@@ -207,7 +235,7 @@ public:
   void popExec(ihipExec_t& exec);
 };
 
-extern std::vector<amd::Context*> g_devices;
+extern std::vector<hip::Device*> g_devices;
 extern hipError_t ihipDeviceGetCount(int* count);
 extern int ihipGetDevice();
 extern hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags);

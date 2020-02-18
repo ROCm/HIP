@@ -242,7 +242,7 @@ amd::Sampler* fillSamplerDescriptor(enum hipTextureAddressMode addressMode,
       address_mode = CL_ADDRESS_CLAMP_TO_EDGE;
       break;
   }
-  amd::Sampler* sampler =  new amd::Sampler(*hip::getCurrentContext(),
+  amd::Sampler* sampler =  new amd::Sampler(*hip::getCurrentDevice()->asContext(),
                           normalizedCoords == CL_TRUE,
                           address_mode, filter_mode, CL_FILTER_NONE, 0.f, CL_MAXFLOAT);
   if (sampler == nullptr) {
@@ -263,11 +263,11 @@ hip::TextureObject* ihipCreateTextureObject(const hipResourceDesc& resDesc, amd:
     return nullptr;
   }
 
-  device::Memory* imageMem = image.getDeviceMemory(*hip::getCurrentContext()->devices()[0]);
+  device::Memory* imageMem = image.getDeviceMemory(*hip::getCurrentDevice()->devices()[0]);
   memcpy(texture->imageSRD, imageMem->cpuSrd(), sizeof(uint32_t)*HIP_IMAGE_OBJECT_SIZE_DWORD);
   texture->image = &image;
 
-  device::Sampler* devSampler = sampler.getDeviceSampler(*hip::getCurrentContext()->devices()[0]);
+  device::Sampler* devSampler = sampler.getDeviceSampler(*hip::getCurrentDevice()->devices()[0]);
   memcpy(texture->samplerSRD, devSampler->hwState(), sizeof(uint32_t)*HIP_SAMPLER_OBJECT_SIZE_DWORD);
   texture->sampler = &sampler;
 
@@ -281,7 +281,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                                   const hipResourceViewDesc* pResViewDesc) {
   HIP_INIT_API(NONE, pTexObject, pResDesc, pTexDesc, pResViewDesc);
 
-  amd::Device* device = hip::getCurrentContext()->devices()[0];
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
 
   if (!device->info().imageSupport_) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -319,14 +319,14 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
             switch(pResDesc->res.array.array->textureType) {
               case hipTextureType3D:
                 clType = CL_MEM_OBJECT_IMAGE3D;
-                image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+                image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
                   clType, memory->getMemFlags(), imageFormat,
                   pResDesc->res.array.array->width, pResDesc->res.array.array->height,
                   pResDesc->res.array.array->depth, 0, 0);
                 break;
               case hipTextureType2D:
                 clType = CL_MEM_OBJECT_IMAGE2D;
-                image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+                image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
                   clType, memory->getMemFlags(), imageFormat,
                   pResDesc->res.array.array->width, pResDesc->res.array.array->height, 1, 0, 0);
                 break;
@@ -349,7 +349,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                              &image_format.image_channel_order, &image_format.image_channel_data_type);
         const amd::Image::Format imageFormat(image_format);
 
-        image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+        image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
           CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
           pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize(), 1, 1,
           pResDesc->res.linear.sizeInBytes, 0);
@@ -359,7 +359,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
       assert(pResViewDesc == nullptr);
       memory = getMemoryObject(pResDesc->res.pitch2D.devPtr, offset);
 
-      image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+      image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
         CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
         pResDesc->res.pitch2D.width, pResDesc->res.pitch2D.height, 1,
         pResDesc->res.pitch2D.pitchInBytes, 0);
@@ -434,7 +434,7 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
   if (tex == nullptr) {
     return hipErrorInvalidImage;
   }
-  if (hip::getCurrentContext()) {
+  if (hip::getCurrentDevice()) {
     cl_image_format image_format;
     size_t byteSize;
     size_t rowPitch = 0;
@@ -461,7 +461,7 @@ hipError_t ihipBindTexture(cl_mem_object_type type,
          break;
     }
 
-    amd::Image* image = new (*hip::getCurrentContext()) amd::Image(*memory->asBuffer(),
+    amd::Image* image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
                 type, memory->getMemFlags(), imageFormat, width, height, depth, rowPitch, slicePitch);
     if (!image->create()) {
       delete image;
@@ -767,7 +767,7 @@ hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
     HIP_RETURN(hipErrorInvalidImage);
   }
 
-  dev_mem = texture->image->getDeviceMemory(*hip::getCurrentContext()->devices()[0]);
+  dev_mem = texture->image->getDeviceMemory(*hip::getCurrentDevice()->devices()[0]);
   if (dev_mem == nullptr) {
     HIP_RETURN(hipErrorInvalidImage);
   }

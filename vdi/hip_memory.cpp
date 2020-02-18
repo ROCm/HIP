@@ -65,7 +65,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   }
 
   amd::Context* amdContext = ((flags & CL_MEM_SVM_FINE_GRAIN_BUFFER) != 0)?
-    hip::host_context : hip::getCurrentContext();
+    hip::host_device->asContext() : hip::getCurrentDevice()->asContext();
 
   if (amdContext == nullptr) {
     return hipErrorOutOfMemory;
@@ -234,7 +234,7 @@ hipError_t hipFree(void* ptr) {
     for (size_t i=0; i<g_devices.size(); ++i) {
       hip::getNullStream(*g_devices[i])->finish();
     }
-    amd::SvmBuffer::free(*hip::getCurrentContext(), ptr);
+    amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
     HIP_RETURN(hipSuccess);
   }
   HIP_RETURN(hipErrorInvalidValue);
@@ -276,7 +276,7 @@ hipError_t hipHostFree(void* ptr) {
   HIP_INIT_API(hipHostFree, ptr);
 
   if (amd::SvmBuffer::malloced(ptr)) {
-    amd::SvmBuffer::free(*hip::getCurrentContext(), ptr);
+    amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
     HIP_RETURN(hipSuccess);
   }
   HIP_RETURN(hipErrorInvalidValue);
@@ -286,7 +286,7 @@ hipError_t hipFreeArray(hipArray* array) {
   HIP_INIT_API(hipFreeArray, array);
 
   if (amd::SvmBuffer::malloced(array->data)) {
-    amd::SvmBuffer::free(*hip::getCurrentContext(), array->data);
+    amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), array->data);
     HIP_RETURN(hipSuccess);
   }
   HIP_RETURN(hipErrorInvalidValue);
@@ -314,7 +314,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
   HIP_INIT_API(hipMemGetInfo, free, total);
 
   size_t freeMemory[2];
-  amd::Device* device = hip::getCurrentContext()->devices()[0];
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
   if(device == nullptr) {
     HIP_RETURN(hipErrorInvalidDevice);
   }
@@ -332,7 +332,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
 hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height, size_t depth,
                            cl_mem_object_type imageType, const cl_image_format* image_format) {
 
-  amd::Device* device = hip::getCurrentContext()->devices()[0];
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
 
   if ((width == 0) || (height == 0)) {
     *ptr = nullptr;
@@ -352,7 +352,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
   *pitch = amd::alignUp(width * imageFormat.getElementSize(), device->info().imagePitchAlignment_);
 
   size_t sizeBytes = *pitch * height * depth;
-  *ptr = amd::SvmBuffer::malloc(*hip::getCurrentContext(), 0, sizeBytes,
+  *ptr = amd::SvmBuffer::malloc(*hip::getCurrentDevice()->asContext(), 0, sizeBytes,
                                 device->info().memBaseAddrAlign_);
 
   if (*ptr == nullptr) {
@@ -554,7 +554,7 @@ hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
 hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(hipHostRegister, hostPtr, sizeBytes, flags);
   if(hostPtr != nullptr) {
-    amd::Memory* mem = new (*hip::host_context) amd::Buffer(*hip::host_context, CL_MEM_USE_HOST_PTR | CL_MEM_SVM_ATOMICS, sizeBytes);
+    amd::Memory* mem = new (*hip::host_device->asContext()) amd::Buffer(*hip::host_device->asContext(), CL_MEM_USE_HOST_PTR | CL_MEM_SVM_ATOMICS, sizeBytes);
 
     constexpr bool sysMemAlloc = false;
     constexpr bool skipAlloc = false;
@@ -564,7 +564,7 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
       HIP_RETURN(hipErrorOutOfMemory);
     }
 
-    for (const auto& device: hip::getCurrentContext()->devices()) {
+    for (const auto& device: hip::getCurrentDevice()->devices()) {
       // Since the amd::Memory object is shared between all devices
       // it's fine to have multiple addresses mapped to it
       const device::Memory* devMem = mem->getDeviceMemory(*device);
@@ -584,7 +584,7 @@ hipError_t hipHostUnregister(void* hostPtr) {
   if (amd::SvmBuffer::malloced(hostPtr)) {
     hip::syncStreams();
     hip::getNullStream()->finish();
-    amd::SvmBuffer::free(*hip::host_context, hostPtr);
+    amd::SvmBuffer::free(*hip::host_device->asContext(), hostPtr);
     HIP_RETURN(hipSuccess);
   } else {
     size_t offset = 0;
@@ -593,7 +593,7 @@ hipError_t hipHostUnregister(void* hostPtr) {
     if(mem) {
       hip::syncStreams();
       hip::getNullStream()->finish();
-      for (const auto& device: hip::getCurrentContext()->devices()) {
+      for (const auto& device: hip::getCurrentDevice()->devices()) {
         const device::Memory* devMem = mem->getDeviceMemory(*device);
         amd::MemObjMap::RemoveMemObj(reinterpret_cast<void*>(devMem->virtualAddress()));
       }
@@ -1582,7 +1582,7 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* dev_ptr) {
   }
 
   /* Get Device::Memory object pointer */
-  dev_mem_obj = amd_mem_obj->getDeviceMemory(*hip::getCurrentContext()->devices()[0],false);
+  dev_mem_obj = amd_mem_obj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0],false);
   if (dev_mem_obj == nullptr) {
     HIP_RETURN(hipErrorInvalidDevicePointer);
   }
@@ -1606,7 +1606,7 @@ hipError_t hipIpcOpenMemHandle(void** dev_ptr, hipIpcMemHandle_t handle, unsigne
   }
 
   /* Call the IPC Attach from Device class */
-  device = hip::getCurrentContext()->devices()[0];
+  device = hip::getCurrentDevice()->devices()[0];
   ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(&handle);
 
   amd_mem_obj = device->IpcAttach(&(ihandle->ipc_handle), ihandle->psize, flags, dev_ptr);
@@ -1641,7 +1641,7 @@ hipError_t hipIpcCloseMemHandle(void* dev_ptr) {
   }
 
   /* Call IPC Detach from Device class */
-  device = hip::getCurrentContext()->devices()[0];
+  device = hip::getCurrentDevice()->devices()[0];
   if (device == nullptr) {
     HIP_RETURN(hipErrorNoDevice);
   }
@@ -1674,7 +1674,7 @@ hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsi
   if (!memObj) {
     HIP_RETURN(hipErrorInvalidValue);
   }
-  *devicePointer = reinterpret_cast<void*>(memObj->getDeviceMemory(*hip::getCurrentContext()->devices()[0])->virtualAddress() + offset);
+  *devicePointer = reinterpret_cast<void*>(memObj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0])->virtualAddress() + offset);
 
   HIP_RETURN(hipSuccess);
 }
@@ -1693,13 +1693,13 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
     attributes->isManaged = 0;
     attributes->allocationFlags = memObj->getMemFlags() >> 16;
 
-    amd::Context &memObjCtx = memObj->getContext();
-    if (*hip::host_context == memObjCtx) {
+    amd::Context* memObjCtx = &memObj->getContext();
+    if (hip::host_device->asContext() == memObjCtx) {
         attributes->device = ihipGetDevice();
         HIP_RETURN(hipSuccess);
     }
     for (auto& ctx : g_devices) {
-      if (*ctx == memObjCtx) {
+      if (ctx->asContext() == memObjCtx) {
         attributes->device = device;
         HIP_RETURN(hipSuccess);
       }

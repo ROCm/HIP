@@ -126,7 +126,7 @@ bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* module) {
 
   std::vector<std::string> undef_vars;
   device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getUndefinedVarFromCodeObj(&undef_vars)) {
     return false;
@@ -157,7 +157,7 @@ bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
   std::vector<std::string> var_names;
 
   device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentContext()->devices()[0]);
+    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
     return false;
@@ -180,17 +180,17 @@ bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
 {
   std::vector<std::pair<const void*, size_t>> code_objs;
-  if (__hipExtractCodeObjectFromFatBinary(image, {hip::getCurrentContext()->devices()[0]->info().name_}, code_objs))
+  if (__hipExtractCodeObjectFromFatBinary(image, {hip::getCurrentDevice()->devices()[0]->info().name_}, code_objs))
     image = code_objs[0].first;
 
-  amd::Program* program = new amd::Program(*hip::getCurrentContext());
+  amd::Program* program = new amd::Program(*hip::getCurrentDevice()->asContext());
   if (program == NULL) {
     return hipErrorOutOfMemory;
   }
 
   program->setVarInfoCallBack(&getSvarInfo);
 
-  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentContext()->devices()[0], image, ElfSize(image))) {
+  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentDevice()->devices()[0], image, ElfSize(image))) {
     return hipErrorInvalidKernelFile;
   }
 
@@ -204,7 +204,7 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
     return hipErrorSharedObjectSymbolNotFound;
   }
 
-  if(CL_SUCCESS != program->build(hip::getCurrentContext()->devices(), nullptr, nullptr, nullptr)) {
+  if(CL_SUCCESS != program->build(hip::getCurrentDevice()->devices(), nullptr, nullptr, nullptr)) {
     return hipErrorSharedObjectInitFailed;
   }
 
