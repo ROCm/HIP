@@ -351,9 +351,9 @@ bool PlatformState::getFuncAttr(const void* hostFunction,
   return true;
 }
 
-bool PlatformState::getTexRef(const char* hostVar, textureReference** texRef) {
+bool PlatformState::getTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef) {
   amd::ScopedLock lock(lock_);
-  DeviceVar* dvar = findVar(std::string(hostVar), ihipGetDevice(), nullptr);
+  DeviceVar* dvar = findVar(std::string(hostVar), ihipGetDevice(), hmod);
   if (dvar == nullptr) {
     return false;
   }
