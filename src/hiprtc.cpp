@@ -627,8 +627,8 @@ extern "C" hiprtcResult hiprtcVersion(int* major, int* minor)
     return HIPRTC_ERROR_INVALID_INPUT;
   }
 
-  *major = HIP_VERSION_MAJOR;
-  *minor = HIP_VERSION_MINOR;
+  *major = 9;
+  *minor = 0;
 
   return HIPRTC_SUCCESS;
 }
