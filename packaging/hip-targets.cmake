@@ -52,7 +52,7 @@ get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
 # Create imported target hip::hip_hcc_static
-if( ! HIP_RUNTIME STREQUAL "vdi")
+if( NOT HIP_RUNTIME STREQUAL "vdi")
    add_library(hip::hip_hcc_static STATIC IMPORTED)
 endif()
 
@@ -68,11 +68,11 @@ find_path(HSA_HEADER hsa/hsa.h
 if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
-if(!HIP_RUNTIME STREQUAL "vdi")
+if(NOT HIP_RUNTIME STREQUAL "vdi")
   set_target_properties(hip::hip_hcc_static PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}")
-endif()    
+endif()
 
 # Create imported target hip::hip_hcc
 add_library(hip::hip_hcc SHARED IMPORTED)
