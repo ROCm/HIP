@@ -26,9 +26,15 @@ THE SOFTWARE.
  * HIT_END
  */
 #include "test_common.h"
+
 typedef float T;
+
 // Texture reference for 2D Layered texture
+#if __HIP__
+__hip_pinned_shadow__
+#endif
 texture<float, hipTextureType2DLayered> tex2DL;
+
 __global__ void simpleKernelLayeredArray(T* outputData,int width,int height,int layer)
 {
     unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
@@ -59,7 +65,7 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
     myparms.dstPos = make_hipPos(0,0,0);
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
-    myparms.extent = make_hipExtent(width, height, num_layers);
+    myparms.extent = make_hipExtent(width , height, num_layers);
     //myparms.kind = hipMemcpyHostToDevice;
     HIPCHECK(hipMemcpy3D(&myparms));
 
