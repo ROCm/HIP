@@ -38,23 +38,22 @@ const string directed_dir = string(".") + PATH_SEPERATOR_STR + "directed_tests" 
 const string dir = string(".") + PATH_SEPERATOR_STR + "hipEnvVar";
 
 int readHipEnvVar(string flags, char* buff){
-    //Don't print errors if popen is missing file
-    int fd = dup(fileno(stderr));
-    freopen(NULL_DEVICE, "w", stderr);
+
+    std::cout << "\nFinding hipEnvVar in " << directed_dir << "...\n";
     FILE* directed_in = popen((directed_dir + flags).c_str(), "r");
-    FILE* in = popen((dir + flags).c_str(), "r");
-    dup2(fd, fileno(stderr));
-    close(fd);
     
     if(fgets(buff, 512, directed_in) == NULL){
+        std::cout << "Finding hipEnvVar in " << dir << "...\n";
+        FILE* in = popen((dir + flags).c_str(), "r");
         if(fgets(buff, 512, in) == NULL){
             pclose(directed_in);
             pclose(in);
             return 1;
         }
+        pclose(in);
     }
+    std::cout << "hipEnvVar Found!\n";
     pclose(directed_in);
-    pclose(in);
     return 0;
 }
 

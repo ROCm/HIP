@@ -99,7 +99,6 @@ THE SOFTWARE.
 
 #ifdef _WIN64
 #include <tchar.h>
-#include <io.h>
 #define aligned_alloc(x,y) _aligned_malloc(y,x)
 #define aligned_free(x) _aligned_free(x)
 #define popen(x,y) _popen(x,y)
