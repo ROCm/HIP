@@ -10,7 +10,7 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
-if(HIP_PLATFORM STREQUAL "hcc")
+if(! HIP_RUNTIME STREQUAL "vdi")
 # Import target "hip::hip_hcc_static" for configuration "Release"
     set_property(TARGET hip::hip_hcc_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
   if(HIP_COMPILER STREQUAL "clang")
