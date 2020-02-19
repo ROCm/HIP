@@ -45,6 +45,9 @@ static float getNormalizedValue(const float value,
     }
 }
 
+#if __HIP__
+__hip_pinned_shadow__
+#endif
 texture<float, hipTextureType1D, hipReadModeElementType> textureNormalizedVal_1D;
 
 __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
