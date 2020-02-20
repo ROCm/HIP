@@ -79,13 +79,13 @@ static bool isCompatibleCodeObject(const std::string& codeobj_target_id,
 
 // Extracts code objects from fat binary in data for device names given in devices.
 // Returns true if code objects are extracted successfully.
-bool __hipExtractCodeObjectFromFatBinary(const void* data,
+hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
                                          const std::vector<const char*>& devices,
                                          std::vector<std::pair<const void*, size_t>>& code_objs)
 {
   std::string magic((const char*)data, sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
   if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR)) {
-    return false;
+    return hipErrorInvalidKernelFile;
   }
 
   code_objs.resize(devices.size());
@@ -123,9 +123,9 @@ bool __hipExtractCodeObjectFromFatBinary(const void* data,
     }
   }
   if (num_code_objs == devices.size())
-    return true;
+    return hipSuccess;
   else
-    return false;
+    return hipErrorNoBinaryForGpu;
 }
 
 extern "C" std::vector<std::pair<hipModule_t, bool>>* __hipRegisterFatBinary(const void* data)
@@ -150,7 +150,7 @@ void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipM
     devices.push_back(g_devices[dev]->devices()[0]->info().name_);
   }
 
-  if (!__hipExtractCodeObjectFromFatBinary((char*)data, devices, code_objs)) {
+  if (hipSuccess != __hipExtractCodeObjectFromFatBinary((char*)data, devices, code_objs)) {
     return;
   }
 
