@@ -207,7 +207,8 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.hdpRegFlushCntl = nullptr;
 
   deviceProps.memPitch = info.maxMemAllocSize_;
-  deviceProps.textureAlignment = std::max(info.imageBaseAddressAlignment_, info.imagePitchAlignment_);
+  deviceProps.textureAlignment = info.imageBaseAddressAlignment_;
+  deviceProps.texturePitchAlignment = info.imagePitchAlignment_;
   deviceProps.kernelExecTimeoutEnabled = 0;
   deviceProps.ECCEnabled = info.errorCorrectionSupport_? 1:0;
 
