@@ -2160,6 +2160,31 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p);
  */
 hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream __dparm(0));
 
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   pCopy   3D memory copy parameters
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpyParam3D(const HIP_MEMCPY3D* pCopy);
+
+/**
+ *  @brief Copies data between host and device asynchronously.
+ *
+ *  @param[in]   pCopy    3D memory copy parameters
+ *  @param[in]   stream   Stream to use
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpyParam3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream);
+
 // doxygen end Memory
 /**
  * @}
