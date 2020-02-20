@@ -57,12 +57,14 @@ static inline std::uint32_t __convert_float_to_half(float a) noexcept {
 
 // On machines without fp16 instructions, clang lowers llvm.convert.from.fp16
 // to call of this function.
-extern "C" float __gnu_h2f_ieee(unsigned short h){
+extern "C" __attribute__((visibility("default")))
+float __gnu_h2f_ieee(unsigned short h){
   return __convert_half_to_float((std::uint32_t) h);
 }
 
 // On machines without fp16 instructions, clang lowers llvm.convert.to.fp16
 // to call of this function.
-extern "C" unsigned short __gnu_f2h_ieee(float f){
+extern "C" __attribute__((visibility("default")))
+unsigned short __gnu_f2h_ieee(float f){
   return (unsigned short)__convert_float_to_half(f);
 }
