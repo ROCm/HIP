@@ -118,7 +118,7 @@ hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image,
   HIP_RETURN(ihipModuleLoadData(module, image));
 }
 
-extern bool __hipExtractCodeObjectFromFatBinary(const void* data,
+extern hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
                                                 const std::vector<const char*>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
 
@@ -180,8 +180,12 @@ bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
 {
   std::vector<std::pair<const void*, size_t>> code_objs;
-  if (__hipExtractCodeObjectFromFatBinary(image, {hip::getCurrentDevice()->devices()[0]->info().name_}, code_objs))
+  hipError_t code_obj_err = __hipExtractCodeObjectFromFatBinary(image, {hip::getCurrentDevice()->devices()[0]->info().name_}, code_objs);
+  if (code_obj_err == hipSuccess) {
     image = code_objs[0].first;
+  } else if(code_obj_err == hipErrorNoBinaryForGpu) {
+     return code_obj_err;
+  }
 
   amd::Program* program = new amd::Program(*hip::getCurrentDevice()->asContext());
   if (program == NULL) {
