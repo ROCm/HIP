@@ -23,72 +23,15 @@
 #include "hip_internal.hpp"
 #include <hip/hcc_detail/hip_surface_types.h>
 
-namespace hip {
-
-static amd::Monitor surfaceLock("Guards surface objects");
-
-struct hipSurface {
-  hipSurface(const hipResourceDesc* pResDesc): array(nullptr)
-  {
-    memcpy(&resDesc, pResDesc, sizeof(hipResourceDesc));
-  }
-
-  hipArray* array;
-  hipResourceDesc resDesc;
-};
-
-static std::unordered_map<hipSurfaceObject_t, hipSurface*> surfaceHash;
-
-};
-
-using namespace hip;
-
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
                                   const hipResourceDesc* pResDesc) {
-  HIP_INIT_API(NONE, pSurfObject, pResDesc);
+  HIP_INIT_API(hipCreateSurfaceObject, pSurfObject, pResDesc);
 
-  hipSurface* pSurface = new hipSurface(pResDesc);
-  assert(pSurface != nullptr);
-
-  switch (pResDesc->resType) {
-  case hipResourceTypeArray:
-    pSurface->array = pResDesc->res.array.array;
-    break;
-  default:
-    break;
-  }
-  hipSurfaceObject_t surfObj;
-  hipError_t err = hipMalloc(reinterpret_cast<void**>(&surfObj), sizeof(hipArray));
-  if (err != hipSuccess) {
-    delete pSurface;
-    HIP_RETURN(hipErrorOutOfMemory);
-  }
-  err = hipMemcpy(reinterpret_cast<void*>(surfObj), reinterpret_cast<void*>(pResDesc->res.array.array), sizeof(hipArray),
-            hipMemcpyHostToDevice);
-  if (err != hipSuccess) {
-    delete pSurface;
-    hipFree(reinterpret_cast<void*>(surfObj));
-    HIP_RETURN(err);
-  }
-  *pSurfObject = surfObj;
-
-  amd::ScopedLock lock(surfaceLock);
-  surfaceHash[*pSurfObject] = pSurface;
-
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipErrorNotSupported);
 }
 
-
 hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject) {
-  HIP_INIT_API(NONE, surfaceObject);
+  HIP_INIT_API(hipDestroySurfaceObject, surfaceObject);
 
-  amd::ScopedLock lock(surfaceLock);
-  hipSurface* pSurface = surfaceHash[surfaceObject];
-  if (pSurface != nullptr) {
-    delete pSurface;
-    surfaceHash.erase(surfaceObject);
-    HIP_RETURN(hipFree(reinterpret_cast<void*>(surfaceObject)));
-  }
-
-  HIP_RETURN(hipErrorInvalidValue);
+  HIP_RETURN(hipErrorNotSupported);
 }
