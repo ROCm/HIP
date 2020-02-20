@@ -269,6 +269,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   case hipDeviceAttributeTextureAlignment:
     *pi = prop.textureAlignment;
     break;
+  case hipDeviceAttributeTexturePitchAlignment:
+    *pi = prop.texturePitchAlignment;
+    break;
   case hipDeviceAttributeKernelExecTimeout:
     *pi = prop.kernelExecTimeoutEnabled;
     break;
