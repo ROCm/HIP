@@ -96,7 +96,7 @@ hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
        desc = reinterpret_cast<const __ClangOffloadBundleDesc*>(
            reinterpret_cast<uintptr_t>(&desc->triple[0]) + desc->tripleSize)) {
 
-    std:size_t offset = 0;
+    std::size_t offset = 0;
     if (!std::strncmp(desc->triple, HIP_AMDGCN_AMDHSA_TRIPLE,
         sizeof(HIP_AMDGCN_AMDHSA_TRIPLE) - 1)) {
       offset = sizeof(HIP_AMDGCN_AMDHSA_TRIPLE); //For code objects created by CLang
