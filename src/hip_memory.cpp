@@ -1573,15 +1573,60 @@ int getByteSizeFromFormat(const hipChannelFormatDesc& desc){
     return byteSize;
 }
 
-hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync) {
-    hipError_t e = hipSuccess;
-    if(p) {
-        size_t dstByteSize, srcByteSize, copyWidth, copyHeight, copyDepth, widthInBytes, srcPitch, dstPitch, srcYsize, dstYsize;
-        size_t srcXoffset, srcYoffset, srcZoffset, dstXoffset, dstYoffset, dstZoffset;
-        size_t srcWidth, srcHeight, srcDepth, dstWidth, dstHeight, dstDepth;
+int getByteSizeFromArrayFormat(const hipArray_Format format){
+   int byteSize =0;
+   switch (format) {
+       case HIP_AD_FORMAT_UNSIGNED_INT8:
+          byteSize = sizeof(uint8_t);
+          break;
+       case HIP_AD_FORMAT_UNSIGNED_INT16:
+          byteSize = sizeof(uint16_t);
+          break;
+       case HIP_AD_FORMAT_UNSIGNED_INT32:
+          byteSize = sizeof(uint32_t);
+          break;
+       case HIP_AD_FORMAT_SIGNED_INT8:
+          byteSize = sizeof(int8_t);
+          break;
+       case HIP_AD_FORMAT_SIGNED_INT16:
+          byteSize = sizeof(int16_t);
+          break;
+       case HIP_AD_FORMAT_SIGNED_INT32:
+          byteSize = sizeof(int32_t);
+          break;
+       case HIP_AD_FORMAT_HALF:
+          byteSize = sizeof(_Float16);
+          break;
+       case HIP_AD_FORMAT_FLOAT:
+          byteSize = sizeof(float);
+          break;
+       default:
+          break;
+   }
+   return byteSize;
+}
 
-        void* srcPtr, *dstPtr;
-        bool copyWidthUpdate= false;
+hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pCopy, hipStream_t stream, bool isAsync, bool isDrv) {
+    hipError_t e = hipSuccess;
+    size_t dstByteSize, srcByteSize, copyWidth, copyHeight, copyDepth, widthInBytes, srcPitch, dstPitch, srcYsize, dstYsize;
+    size_t srcXoffset, srcYoffset, srcZoffset, dstXoffset, dstYoffset, dstZoffset;
+    size_t srcWidth, srcHeight, srcDepth, dstWidth, dstHeight, dstDepth;
+
+    void* srcPtr, *dstPtr;
+    bool copyWidthUpdate= false;
+    if(isDrv) {
+        if(pCopy == nullptr) return hipErrorInvalidValue;
+        copyDepth = pCopy->Depth;
+        copyHeight = pCopy->Height;
+        copyWidth = pCopy->WidthInBytes;
+        dstXoffset = pCopy->dstXInBytes;
+        dstYoffset = pCopy->dstY;
+        dstZoffset = pCopy->dstZ;
+        srcXoffset = pCopy->srcXInBytes;
+        srcYoffset = pCopy->srcY;
+        srcZoffset = pCopy->srcZ;
+    } else {
+        if(p == nullptr) return hipErrorInvalidValue;
         copyDepth = p->extent.depth;
         copyHeight = p->extent.height;
         copyWidth =  p->extent.width; // in bytes ?
@@ -1591,9 +1636,32 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
         srcXoffset = p->srcPos.x;
         srcYoffset = p->srcPos.y;
         srcZoffset = p->srcPos.z;
+    }
+    if(isDrv) {
+        if(pCopy->dstMemoryType == hipMemoryTypeArray) {
+            if ((pCopy->dstArray == nullptr) || (!pCopy->dstArray->isDrv))return hipErrorInvalidValue;
+            dstByteSize = getByteSizeFromArrayFormat(pCopy->dstArray->Format);
+            dstPtr = pCopy->dstArray->data;
+            dstWidth = pCopy->dstArray->width;
+            dstHeight = pCopy->dstArray->height;
+            dstDepth = pCopy->dstArray->depth;
+            dstPitch = dstByteSize * alignUp(dstWidth, IMAGE_PITCH_ALIGNMENT);
+        } else if((pCopy->dstMemoryType == hipMemoryTypeDevice)||(pCopy->dstMemoryType == hipMemoryTypeUnified)){
+            //Non Array destination
+            dstPtr = pCopy->dstDevice;
+            dstHeight = pCopy->dstHeight;
+            dstPitch = pCopy->dstPitch;
+        } else if(pCopy->dstMemoryType == hipMemoryTypeHost) {
+            dstPtr = pCopy->dstHost;
+            dstHeight = pCopy->dstHeight;
+            dstPitch = pCopy->dstPitch;
+        } else {
+            return hipErrorInvalidValue;
+        }
+    } else {
         if (p->dstArray != nullptr) {
             if ((p->dstArray->isDrv == true) ||( p->dstPtr.ptr!= nullptr)){
-                return hipErrorInvalidValue;
+               return hipErrorInvalidValue;
             }
             // Array destination
             dstByteSize = getByteSizeFromFormat(p->dstArray->desc);
@@ -1615,7 +1683,29 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             dstHeight = p->dstPtr.ysize;
             dstPitch = p->dstPtr.pitch;
         }
-
+    }
+    if(isDrv) {
+        if(pCopy->srcMemoryType == hipMemoryTypeArray) {
+            if ((pCopy->srcArray == nullptr) || (!pCopy->srcArray->isDrv))return hipErrorInvalidValue;
+            srcByteSize = getByteSizeFromArrayFormat(pCopy->srcArray->Format);
+            srcPtr = pCopy->srcArray->data;
+            srcWidth = pCopy->srcArray->width;
+            srcHeight = pCopy->srcArray->height;
+            srcDepth = pCopy->srcArray->depth;
+            srcPitch = srcByteSize * alignUp(srcWidth, IMAGE_PITCH_ALIGNMENT);
+        } else if((pCopy->srcMemoryType == hipMemoryTypeDevice)||(pCopy->srcMemoryType == hipMemoryTypeUnified)){
+            //Non Array destination
+            srcPtr = pCopy->srcDevice;
+            srcHeight = pCopy->srcHeight;
+            srcPitch = pCopy->srcPitch;
+        } else if(pCopy->srcMemoryType == hipMemoryTypeHost) {
+            srcPtr = (void*) pCopy->srcHost;
+            srcHeight = pCopy->srcHeight;
+            srcPitch = pCopy->srcPitch;
+        } else {
+            return hipErrorInvalidValue;
+        }
+    } else {
         if (p->srcArray != nullptr) {
             if ((p->srcArray->isDrv == true) ||( p->srcPtr.ptr!= nullptr)){
                 return hipErrorInvalidValue;
@@ -1640,33 +1730,30 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
             srcHeight = p->srcPtr.ysize;
             srcPitch = p->srcPtr.pitch;
         }
-
-        stream = ihipSyncAndResolveStream(stream);
-        try {
-            if((copyWidth == dstPitch) && (copyWidth == srcPitch)&& (copyHeight == dstHeight) &&(copyHeight == srcHeight)) {
-                if(isAsync)
-                    stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind);
-                else
-                    stream->locked_copySync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind, false);
-            } else {
-                for (int i = 0; i < copyDepth; i++) {
-                    for (int j = 0; j < copyHeight; j++) {
-                        unsigned char* src =
-                             (unsigned char*)srcPtr + (i + srcZoffset) * srcHeight * srcPitch + (j + srcYoffset) * srcPitch + srcXoffset;
-                        unsigned char* dst =
-                             (unsigned char*)dstPtr + (i + dstZoffset) * dstHeight * dstPitch + (j + dstYoffset) * dstPitch + dstXoffset;
-                        if(isAsync)
-                            stream->locked_copyAsync(dst, src, copyWidth, p->kind);
-                        else
-                            stream->locked_copySync(dst, src, copyWidth, p->kind);
-                     }
+    }
+    stream = ihipSyncAndResolveStream(stream);
+    try {
+        if((copyWidth == dstPitch) && (copyWidth == srcPitch)&& (copyHeight == dstHeight) &&(copyHeight == srcHeight)) {
+            if(isAsync)
+                stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind);
+            else
+                stream->locked_copySync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind, false);
+        } else {
+            for (int i = 0; i < copyDepth; i++) {
+                for (int j = 0; j < copyHeight; j++) {
+                    unsigned char* src =
+                         (unsigned char*)srcPtr + (i + srcZoffset) * srcHeight * srcPitch + (j + srcYoffset) * srcPitch + srcXoffset;
+                    unsigned char* dst =
+                         (unsigned char*)dstPtr + (i + dstZoffset) * dstHeight * dstPitch + (j + dstYoffset) * dstPitch + dstXoffset;
+                    if(isAsync)
+                         stream->locked_copyAsync(dst, src, copyWidth, p->kind);
+                    else
+                         stream->locked_copySync(dst, src, copyWidth, p->kind);
                 }
-           }
-        } catch (ihipException ex) {
-            e = ex._code;
-        }
-    } else {
-        e = hipErrorInvalidValue;
+            }
+       }
+    } catch (ihipException ex) {
+        e = ex._code;
     }
     return e;
 }
@@ -1674,14 +1761,28 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bo
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
     HIP_INIT_SPECIAL_API(hipMemcpy3D, (TRACE_MCMD), p);
     hipError_t e = hipSuccess;
-    e = ihipMemcpy3D(p, hipStreamNull, false);
+    e = ihipMemcpy3D(p, nullptr, hipStreamNull, false, false);
     return ihipLogStatus(e);
 }
 
 hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemcpy3DAsync, (TRACE_MCMD), p, stream);
     hipError_t e = hipSuccess;
-    e = ihipMemcpy3D(p, stream, true);
+    e = ihipMemcpy3D(p, nullptr,stream, true, false);
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDrvMemcpy3D(const HIP_MEMCPY3D* pCopy) {
+    HIP_INIT_SPECIAL_API(hipDrvMemcpy3D, (TRACE_MCMD), pCopy);
+    hipError_t e = hipSuccess;
+    e = ihipMemcpy3D(nullptr,pCopy, hipStreamNull, false, false);
+    return ihipLogStatus(e);
+}
+
+hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream) {
+    HIP_INIT_SPECIAL_API(hipDrvMemcpy3DAsync, (TRACE_MCMD), pCopy, stream);
+    hipError_t e = hipSuccess;
+    e = ihipMemcpy3D(nullptr,pCopy, stream, true, false);
     return ihipLogStatus(e);
 }
 
