@@ -42,6 +42,8 @@ const char *hipGetErrorName(hipError_t hip_error)
   switch (hip_error) {
     case hipSuccess:
         return "hipSuccess";
+    case hipErrorInvalidValue:
+        return "hipErrorInvalidValue";
     case hipErrorOutOfMemory:
         return "hipErrorOutOfMemory";
     case hipErrorNotInitialized:
@@ -56,6 +58,26 @@ const char *hipGetErrorName(hipError_t hip_error)
         return "hipErrorProfilerAlreadyStarted";
     case hipErrorProfilerAlreadyStopped:
         return "hipErrorProfilerAlreadyStopped";
+    case hipErrorInvalidConfiguration:
+        return "hipErrorInvalidConfiguration";
+    case hipErrorInvalidSymbol:
+        return "hipErrorInvalidSymbol";
+    case hipErrorInvalidDevicePointer:
+        return "hipErrorInvalidDevicePointer";
+    case hipErrorInvalidMemcpyDirection:
+        return "hipErrorInvalidMemcpyDirection";
+    case hipErrorInsufficientDriver:
+        return "hipErrorInsufficientDriver";
+    case hipErrorMissingConfiguration:
+        return "hipErrorMissingConfiguration";
+    case hipErrorPriorLaunchFailure:
+        return "hipErrorPriorLaunchFailure";
+    case hipErrorInvalidDeviceFunction:
+        return "hipErrorInvalidDeviceFunction";
+    case hipErrorNoDevice:
+        return "hipErrorNoDevice";
+    case hipErrorInvalidDevice:
+        return "hipErrorInvalidDevice";
     case hipErrorInvalidImage:
         return "hipErrorInvalidImage";
     case hipErrorInvalidContext:
@@ -102,54 +124,40 @@ const char *hipGetErrorName(hipError_t hip_error)
         return "hipErrorSharedObjectInitFailed";
     case hipErrorOperatingSystem:
         return "hipErrorOperatingSystem";
-    case hipErrorSetOnActiveProcess:
-        return "hipErrorSetOnActiveProcess";
     case hipErrorInvalidHandle:
         return "hipErrorInvalidHandle";
     case hipErrorNotFound:
         return "hipErrorNotFound";
-    case hipErrorIllegalAddress:
-        return "hipErrorIllegalAddress";
-    case hipErrorMissingConfiguration:
-        return "hipErrorMissingConfiguration";
-    case hipErrorLaunchFailure:
-        return "hipErrorLaunchFailure";
-    case hipErrorPriorLaunchFailure:
-        return "hipErrorPriorLaunchFailure";
-    case hipErrorLaunchTimeOut:
-        return "hipErrorLaunchTimeOut";
-    case hipErrorLaunchOutOfResources:
-        return "hipErrorLaunchOutOfResources";
-    case hipErrorInvalidDeviceFunction:
-        return "hipErrorInvalidDeviceFunction";
-    case hipErrorInvalidConfiguration:
-        return "hipErrorInvalidConfiguration";
-    case hipErrorInvalidDevice:
-        return "hipErrorInvalidDevice";
-    case hipErrorInvalidValue:
-        return "hipErrorInvalidValue";
-    case hipErrorInvalidDevicePointer:
-        return "hipErrorInvalidDevicePointer";
-    case hipErrorInvalidMemcpyDirection:
-        return "hipErrorInvalidMemcpyDirection";
-    case hipErrorUnknown:
-        return "hipErrorUnknown";
     case hipErrorNotReady:
         return "hipErrorNotReady";
-    case hipErrorNoDevice:
-        return "hipErrorNoDevice";
+    case hipErrorIllegalAddress:
+        return "hipErrorIllegalAddress";
+    case hipErrorLaunchOutOfResources:
+        return "hipErrorLaunchOutOfResources";
+    case hipErrorLaunchTimeOut:
+        return "hipErrorLaunchTimeOut";
     case hipErrorPeerAccessAlreadyEnabled:
         return "hipErrorPeerAccessAlreadyEnabled";
     case hipErrorPeerAccessNotEnabled:
         return "hipErrorPeerAccessNotEnabled";
-    case hipErrorRuntimeMemory:
-        return "hipErrorRuntimeMemory";
-    case hipErrorRuntimeOther:
-        return "hipErrorRuntimeOther";
+    case hipErrorSetOnActiveProcess:
+        return "hipErrorSetOnActiveProcess";
+    case hipErrorAssert:
+        return "hipErrorAssert";
     case hipErrorHostMemoryAlreadyRegistered:
         return "hipErrorHostMemoryAlreadyRegistered";
     case hipErrorHostMemoryNotRegistered:
         return "hipErrorHostMemoryNotRegistered";
+    case hipErrorLaunchFailure:
+        return "hipErrorLaunchFailure";
+    case hipErrorNotSupported:
+        return "hipErrorNotSupported";
+    case hipErrorUnknown:
+        return "hipErrorUnknown";
+    case hipErrorRuntimeMemory:
+        return "hipErrorRuntimeMemory";
+    case hipErrorRuntimeOther:
+        return "hipErrorRuntimeOther";
     case hipErrorTbd:
         return "hipErrorTbd";
     default:
