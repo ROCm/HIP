@@ -212,6 +212,11 @@ enum hipLimit_t {
 #define hipArrayCubemap 0x04
 #define hipArrayTextureGather 0x08
 
+#define hipOccupancyDefault 0x00
+
+#define hipCooperativeLaunchMultiDeviceNoPreSync 0x01
+#define hipCooperativeLaunchMultiDeviceNoPostSync 0x02
+
 /*
  * @brief hipJitOption
  * @enum
@@ -2903,7 +2908,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th
  * default stream is used with associated synchronization rules.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
  */
 hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDimX,
                                       void** kernelParams, unsigned int sharedMemBytes,
@@ -2917,7 +2922,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDim
  * @param [in] numDevices               Size of the launchParamsList array.
  * @param [in] flags                    Flags to control launch behavior.
  *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
  */
 hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                  int  numDevices, unsigned int  flags);
@@ -2948,7 +2953,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk);
+   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2960,7 +2965,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
+   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
 
 #if __HIP_VDI__ && !defined(__HCC__)
 /**
@@ -3230,6 +3235,21 @@ hipError_t hipLaunchKernel(const void* function_address,
 } /* extern "c" */
 #endif
 
+#if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+template <typename F>
+static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk) {
+    return ::hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, (hipFunction_t)func, blockSize,
+                                                          dynSharedMemPerBlk);
+}
+template <typename F>
+static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
+    return ::hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        numBlocks, (hipFunction_t)func, blockSize, dynSharedMemPerBlk, flags);
+}
+#endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+
 #if USE_PROF_API
 #include <hip/hcc_detail/hip_prof_str.h>
 #endif
@@ -3368,20 +3388,6 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
                                           hipMipmappedArray_const_t mipmappedArray,
                                           const hipChannelFormatDesc& desc) {
     return hipSuccess;
-}
-
-template <class T>
-inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk) {
-    return hipOccupancyMaxActiveBlocksPerMultiprocessor(
-        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk);
-}
-
-template <class T>
-inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
-    return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
 }
 
 #if __HIP_VDI__ && !defined(__HCC__)

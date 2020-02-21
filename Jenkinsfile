@@ -177,7 +177,7 @@ def docker_build_inside_image( def build_image, String inside_args, String platf
             cd ${build_dir_rel}
             make install -j\$(nproc)
             make build_tests -i -j\$(nproc)
-            ctest -E "(hipMultiThreadDevice-pyramid|hipMemoryAllocateCoherentDriver)"
+            ctest --output-on-failure -E "(hipMultiThreadDevice-pyramid|hipMemoryAllocateCoherentDriver)"
           """
         // If unit tests output a junit or xunit file in the future, jenkins can parse that file
         // to display test results on the dashboard
@@ -394,7 +394,7 @@ cuda_10_x:
     // Block of string constants customizing behavior for cuda
     String nvcc_ver = 'cuda-10.x'
     String from_image = 'ci_test_nodes/cuda-10.x/ubuntu-16.04:latest'
-    String inside_args = '--runtime=nvidia';
+    String inside_args = '--gpus all';
 
     // Checkout source code, dependencies and version files
     String source_hip_rel = checkout_and_version( nvcc_ver )
