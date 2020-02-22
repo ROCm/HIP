@@ -1932,6 +1932,7 @@ hipError_t getLockedPointer(void *hostPtr, size_t dataLen, void **devicePtrPtr)
 // TODO - review and optimize
 hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                         size_t height, hipMemcpyKind kind) {
+    if (height == 0 || width == 0) return hipSuccess;
     if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return hipErrorInvalidValue;
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
@@ -1988,6 +1989,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
 
 hipError_t ihipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                             size_t height, hipMemcpyKind kind, hipStream_t stream) {
+    if (height == 0 || width == 0) return hipSuccess;
     if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return hipErrorInvalidValue;
     hipError_t e = hipSuccess;
     int isLockedOrD2D = 0;
