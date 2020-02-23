@@ -21,6 +21,7 @@
 #include <hip/hip_runtime.h>
 #include <hip/hcc_detail/texture_types.h>
 #include "hip_internal.hpp"
+#include "hip_conversions.hpp"
 #include "platform/sampler.hpp"
 
 namespace hip {
@@ -30,777 +31,1153 @@ namespace hip {
     amd::Image* image;
     amd::Sampler* sampler;
     hipResourceDesc resDesc;
+    hipTextureDesc texDesc;
+    hipResourceViewDesc resViewDesc;
+
+    TextureObject(amd::Image* image_,
+                  amd::Sampler* sampler_,
+                  const hipResourceDesc& resDesc_,
+                  const hipTextureDesc& texDesc_,
+                  const hipResourceViewDesc& resViewDesc_) :
+      image(image_),
+      sampler(sampler_),
+      resDesc(resDesc_),
+      texDesc(texDesc_),
+      resViewDesc(resViewDesc_) {
+      amd::Context& context = *hip::getCurrentDevice()->asContext();
+      amd::Device& device = *context.devices()[0];
+
+      device::Memory* imageMem = image->getDeviceMemory(device);
+      std::memcpy(imageSRD, imageMem->cpuSrd(), sizeof(imageSRD));
+
+      device::Sampler* samplerMem = sampler->getDeviceSampler(device);
+      std::memcpy(samplerSRD, samplerMem->hwState(), sizeof(samplerSRD));
+    }
   };
 };
 
-void getDrvChannelOrderAndType(const enum hipArray_Format Format, unsigned int NumChannels,
-                               cl_channel_order* channelOrder,
-                               cl_channel_type* channelType) {
-  switch (Format) {
-    case HIP_AD_FORMAT_UNSIGNED_INT8:
-      *channelType = CL_UNSIGNED_INT8;
-      break;
-    case HIP_AD_FORMAT_UNSIGNED_INT16:
-      *channelType = CL_UNSIGNED_INT16;
-      break;
-    case HIP_AD_FORMAT_UNSIGNED_INT32:
-      *channelType = CL_UNSIGNED_INT32;
-      break;
-    case HIP_AD_FORMAT_SIGNED_INT8:
-      *channelType = CL_SIGNED_INT8;
-      break;
-    case HIP_AD_FORMAT_SIGNED_INT16:
-      *channelType = CL_SIGNED_INT16;
-      break;
-    case HIP_AD_FORMAT_SIGNED_INT32:
-      *channelType = CL_SIGNED_INT32;
-      break;
-    case HIP_AD_FORMAT_HALF:
-      *channelType = CL_HALF_FLOAT;
-      break;
-    case HIP_AD_FORMAT_FLOAT:
-      *channelType = CL_FLOAT;
-      break;
-    default:
-      break;
+amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
+                            const cl_channel_type channelType,
+                            const cl_mem_object_type imageType,
+                            const size_t imageWidth,
+                            const size_t imageHeight,
+                            const size_t imageDepth,
+                            const size_t imageArraySize,
+                            const size_t imageRowPitch,
+                            const size_t imageSlicePitch,
+                            const uint32_t numMipLevels,
+                            amd::Memory* buffer);
+
+hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
+                                   const hipResourceDesc* pResDesc,
+                                   const hipTextureDesc* pTexDesc,
+                                   const hipResourceViewDesc* pResViewDesc) {
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
+  const device::Info& info = device->info();
+
+  // pResViewDesc can only be specified if the type of resource is a HIP array or a HIP mipmapped array.
+  if ((pResViewDesc != nullptr) &&
+      ((pResDesc->resType != hipResourceTypeArray) && (pResDesc->resType != hipResourceTypeMipmappedArray))) {
+    return hipErrorInvalidValue;
   }
 
-  if (NumChannels == 4) {
-    *channelOrder = CL_RGBA;
-  } else if (NumChannels == 2) {
-    *channelOrder = CL_RG;
-  } else if (NumChannels == 1) {
-    *channelOrder = CL_R;
-  }
-}
-
-void setDescFromChannelType(cl_channel_type channelType, hipChannelFormatDesc* desc) {
-
-  memset(desc, 0x00, sizeof(hipChannelFormatDesc));
-
-  switch (channelType) {
-    case CL_SIGNED_INT8:
-    case CL_SIGNED_INT16:
-    case CL_SIGNED_INT32:
-      desc->f = hipChannelFormatKindSigned;
-      break;
-    case CL_UNSIGNED_INT8:
-    case CL_UNSIGNED_INT16:
-    case CL_UNSIGNED_INT32:
-      desc->f = hipChannelFormatKindUnsigned;
-      break;
-    case CL_HALF_FLOAT:
-    case CL_FLOAT:
-      desc->f = hipChannelFormatKindFloat;
-      break;
-    default:
-      desc->f = hipChannelFormatKindNone;
-      break;
+  // If hipResourceDesc::resType is set to hipResourceTypeArray,
+  // hipResourceDesc::res::array::array must be set to a valid HIP array handle.
+  if ((pResDesc->resType == hipResourceTypeArray) &&
+      (pResDesc->res.array.array == nullptr)) {
+    return hipErrorInvalidValue;
   }
 
-  switch (channelType) {
-    case CL_SIGNED_INT8:
-    case CL_UNSIGNED_INT8:
-      desc->x = 8;
-      break;
-    case CL_SIGNED_INT16:
-    case CL_UNSIGNED_INT16:
-    case CL_HALF_FLOAT:
-      desc->x = 16;
-      break;
-    case CL_SIGNED_INT32:
-    case CL_UNSIGNED_INT32:
-    case CL_FLOAT:
-      desc->x = 32;
-      break;
-    default:
-      desc->x = 0;
-      break;
+  // If hipResourceDesc::resType is set to hipResourceTypeMipmappedArray,
+  // hipResourceDesc::res::mipmap::mipmap must be set to a valid HIP mipmapped array handle
+  // and hipTextureDesc::normalizedCoords must be set to true.
+  if ((pResDesc->resType == hipResourceTypeMipmappedArray) &&
+      ((pResDesc->res.mipmap.mipmap == nullptr) || (pTexDesc->normalizedCoords == 0))) {
+    return hipErrorInvalidValue;
   }
-}
 
-void getChannelOrderAndType(const hipChannelFormatDesc& desc, enum hipTextureReadMode readMode,
-                            cl_channel_order* channelOrder, cl_channel_type* channelType) {
-    if (desc.x != 0 && desc.y != 0 && desc.z != 0 && desc.w != 0) {
-        *channelOrder = CL_RGBA;
-    } else if (desc.x != 0 && desc.y != 0 && desc.z != 0 && desc.w == 0) {
-        *channelOrder = CL_RGB;
-    } else if (desc.x != 0 && desc.y != 0 && desc.z == 0 && desc.w == 0) {
-        *channelOrder = CL_RG;
-    } else if (desc.x != 0 && desc.y == 0 && desc.z == 0 && desc.w == 0) {
-        *channelOrder = CL_R;
-    } else {
-    }
+  // If hipResourceDesc::resType is set to hipResourceTypeLinear,
+  // hipResourceDesc::res::linear::devPtr must be set to a valid device pointer, that is aligned to hipDeviceProp::textureAlignment.
+  // The total number of elements in the linear address range cannot exceed hipDeviceProp::maxTexture1DLinear.
+  if ((pResDesc->resType == hipResourceTypeLinear) &&
+      ((pResDesc->res.linear.devPtr == nullptr) ||
+       (!amd::isMultipleOf(pResDesc->res.linear.devPtr, info.imageBaseAddressAlignment_)) ||
+       (pResDesc->res.linear.sizeInBytes >= info.imageMaxBufferSize_))) {
+    return hipErrorInvalidValue;
+  }
 
-    switch (desc.f) {
-        case hipChannelFormatKindUnsigned:
-            switch (desc.x) {
-                case 32:
-                    *channelType = CL_UNSIGNED_INT32;
-                    break;
-                case 16:
-                    *channelType = readMode == hipReadModeNormalizedFloat
-                                       ? CL_UNORM_INT16
-                                       : CL_UNSIGNED_INT16;
-                    break;
-                case 8:
-                    *channelType = readMode == hipReadModeNormalizedFloat
-                                       ? CL_UNORM_INT8
-                                       : CL_UNSIGNED_INT8;
-                    break;
-                default:
-                    *channelType = CL_UNSIGNED_INT32;
-            }
-            break;
-        case hipChannelFormatKindSigned:
-            switch (desc.x) {
-                case 32:
-                    *channelType = CL_SIGNED_INT32;
-                    break;
-                case 16:
-                    *channelType = readMode == hipReadModeNormalizedFloat
-                                       ? CL_SNORM_INT16
-                                       : CL_SIGNED_INT16;
-                    break;
-                case 8:
-                    *channelType = readMode == hipReadModeNormalizedFloat
-                                       ? CL_SNORM_INT8
-                                       : CL_SIGNED_INT8;
-                    break;
-                default:
-                    *channelType = CL_SIGNED_INT32;
-            }
-            break;
-        case hipChannelFormatKindFloat:
-            switch (desc.x) {
-                case 32:
-                    *channelType = CL_FLOAT;
-                    break;
-                case 16:
-                    *channelType = CL_HALF_FLOAT;
-                    break;
-                case 8:
-                    break;
-                default:
-                    *channelType = CL_FLOAT;
-            }
-            break;
-        case hipChannelFormatKindNone:
-        default:
-            break;
-    }
-}
+  // If hipResourceDesc::resType is set to hipResourceTypePitch2D,
+  // hipResourceDesc::res::pitch2D::devPtr must be set to a valid device pointer, that is aligned to hipDeviceProp::textureAlignment.
+  // hipResourceDesc::res::pitch2D::width and hipResourceDesc::res::pitch2D::height specify the width and height of the array in elements,
+  // and cannot exceed hipDeviceProp::maxTexture2DLinear[0] and hipDeviceProp::maxTexture2DLinear[1] respectively.
+  // hipResourceDesc::res::pitch2D::pitchInBytes specifies the pitch between two rows in bytes and has to be aligned to hipDeviceProp::texturePitchAlignment.
+  // Pitch cannot exceed hipDeviceProp::maxTexture2DLinear[2].
+  if ((pResDesc->resType == hipResourceTypePitch2D) &&
+      ((pResDesc->res.pitch2D.devPtr == nullptr) ||
+       (!amd::isMultipleOf(pResDesc->res.pitch2D.devPtr, info.imageBaseAddressAlignment_)) ||
+       (pResDesc->res.pitch2D.width >= info.image2DMaxWidth_) ||
+       (pResDesc->res.pitch2D.height >= info.image2DMaxHeight_) ||
+       (!amd::isMultipleOf(pResDesc->res.pitch2D.pitchInBytes, info.imagePitchAlignment_)))) {
+    // TODO check pitch limits.
+    return hipErrorInvalidValue;
+  }
 
-void getByteSizeFromChannelFormatKind(enum hipChannelFormatKind channelFormatKind, size_t* byteSize) {
-    switch (channelFormatKind)
-    {
-      case hipChannelFormatKindSigned:
-        *byteSize = sizeof(int);
-        break;
-      case hipChannelFormatKindUnsigned:
-        *byteSize = sizeof(unsigned int);
-        break;
-      case hipChannelFormatKindFloat:
-        *byteSize = sizeof(float);
-        break;
-      case hipChannelFormatKindNone:
-        *byteSize = sizeof(size_t);
-        break;
-      default:
-        *byteSize = 1;
-        break;
-    }
-}
+  // Mipmaps are currently not supported.
+  if (pResDesc->resType == hipResourceTypeMipmappedArray) {
+    return hipErrorNotSupported;
+  }
+  // We don't program the border_color_ptr field in the HW sampler SRD.
+  if (pTexDesc->addressMode[0] == hipAddressModeBorder) {
+    return hipErrorNotSupported;
+  }
+  // We don't program the force_degamma/skip_degamma fields in the HW sampler SRD.
+  if (pTexDesc->sRGB == 1) {
+    return hipErrorNotSupported;
+  }
+  // We don't program the max_ansio_ratio field in the the HW sampler SRD.
+  if (pTexDesc->maxAnisotropy != 0) {
+    return hipErrorNotSupported;
+  }
+  // We don't program the lod_bias field in the HW sampler SRD.
+  if (pTexDesc->mipmapLevelBias != 0) {
+    return hipErrorNotSupported;
+  }
+  // We don't program the min_lod field in the HW sampler SRD.
+  if (pTexDesc->minMipmapLevelClamp != 0) {
+    return hipErrorNotSupported;
+  }
+  // We don't program the max_lod field in the HW sampler SRD.
+  if (pTexDesc->maxMipmapLevelClamp != 0) {
+    return hipErrorNotSupported;
+  }
 
-amd::Sampler* fillSamplerDescriptor(enum hipTextureAddressMode addressMode,
-                           enum hipTextureFilterMode filterMode, int normalizedCoords) {
+  // TODO VDI assumes all dimensions have the same addressing mode.
+  cl_addressing_mode addressMode = CL_ADDRESS_NONE;
+  // If hipTextureDesc::normalizedCoords is set to zero,
+  // hipAddressModeWrap and hipAddressModeMirror won't be supported
+  // and will be switched to hipAddressModeClamp.
+  if ((pTexDesc->normalizedCoords == 0) &&
+      ((pTexDesc->addressMode[0] == hipAddressModeWrap) || (pTexDesc->addressMode[0] == hipAddressModeMirror))) {
+    addressMode = hip::getCLAddressingMode(hipAddressModeClamp);
+  }
+  // hipTextureDesc::addressMode is ignored if hipResourceDesc::resType is hipResourceTypeLinear
+  else if (pResDesc->resType != hipResourceTypeLinear) {
+    addressMode = hip::getCLAddressingMode(pTexDesc->addressMode[0]);
+  }
+
 #ifndef CL_FILTER_NONE
 #define CL_FILTER_NONE 0x1142
 #endif
-  uint32_t filter_mode = CL_FILTER_NONE;
-  switch (filterMode) {
-    case hipFilterModePoint:
-      filter_mode = CL_FILTER_NEAREST;
-      break;
-    case hipFilterModeLinear:
-      filter_mode = CL_FILTER_LINEAR;
-      break;
+  cl_filter_mode filterMode = CL_FILTER_NONE;
+#undef CL_FILTER_NONE
+  // hipTextureDesc::filterMode is ignored if hipResourceDesc::resType is hipResourceTypeLinear.
+  if (pResDesc->resType != hipResourceTypeLinear) {
+    filterMode = hip::getCLFilterMode(pTexDesc->filterMode);
   }
 
-  uint32_t address_mode = CL_ADDRESS_NONE;
-  switch (addressMode) {
-    case hipAddressModeWrap:
-      address_mode = CL_ADDRESS_REPEAT;
-      break;
-    case hipAddressModeClamp:
-      address_mode = CL_ADDRESS_CLAMP;
-      break;
-    case hipAddressModeMirror:
-      address_mode = CL_ADDRESS_MIRRORED_REPEAT;
-      break;
-    case hipAddressModeBorder:
-      address_mode = CL_ADDRESS_CLAMP_TO_EDGE;
-      break;
+#ifndef CL_FILTER_NONE
+#define CL_FILTER_NONE 0x1142
+#endif
+  cl_filter_mode mipFilterMode = CL_FILTER_NONE;
+#undef CL_FILTER_NONE
+  if (pResDesc->resType == hipResourceTypeMipmappedArray) {
+    mipFilterMode = hip::getCLFilterMode(pTexDesc->mipmapFilterMode);
   }
-  amd::Sampler* sampler =  new amd::Sampler(*hip::getCurrentDevice()->asContext(),
-                          normalizedCoords == CL_TRUE,
-                          address_mode, filter_mode, CL_FILTER_NONE, 0.f, CL_MAXFLOAT);
+
+  amd::Sampler* sampler = new amd::Sampler(*hip::getCurrentDevice()->asContext(),
+                                           pTexDesc->normalizedCoords,
+                                           addressMode,
+                                           filterMode,
+                                           mipFilterMode,
+                                           pTexDesc->minMipmapLevelClamp,
+                                           pTexDesc->maxMipmapLevelClamp);
+
   if (sampler == nullptr) {
-    return nullptr;
+    return hipErrorOutOfMemory;
   }
+
   if (!sampler->create()) {
     delete sampler;
-    return nullptr;
-  }
-  return sampler;
-}
-
-hip::TextureObject* ihipCreateTextureObject(const hipResourceDesc& resDesc, amd::Image& image, amd::Sampler& sampler) {
-  hip::TextureObject* texture;
-  ihipMalloc(reinterpret_cast<void**>(&texture), sizeof(hip::TextureObject), CL_MEM_SVM_FINE_GRAIN_BUFFER);
-
-  if (texture == nullptr) {
-    return nullptr;
-  }
-
-  device::Memory* imageMem = image.getDeviceMemory(*hip::getCurrentDevice()->devices()[0]);
-  memcpy(texture->imageSRD, imageMem->cpuSrd(), sizeof(uint32_t)*HIP_IMAGE_OBJECT_SIZE_DWORD);
-  texture->image = &image;
-
-  device::Sampler* devSampler = sampler.getDeviceSampler(*hip::getCurrentDevice()->devices()[0]);
-  memcpy(texture->samplerSRD, devSampler->hwState(), sizeof(uint32_t)*HIP_SAMPLER_OBJECT_SIZE_DWORD);
-  texture->sampler = &sampler;
-
-  memcpy(&texture->resDesc, &resDesc, sizeof(hipResourceDesc));
-
-  return texture;
-}
-
-hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResourceDesc* pResDesc,
-                                  const hipTextureDesc* pTexDesc,
-                                  const hipResourceViewDesc* pResViewDesc) {
-  HIP_INIT_API(NONE, pTexObject, pResDesc, pTexDesc, pResViewDesc);
-
-  amd::Device* device = hip::getCurrentDevice()->devices()[0];
-
-  if (!device->info().imageSupport_) {
-    HIP_RETURN(hipErrorInvalidValue);
+    return hipErrorOutOfMemory;
   }
 
   amd::Image* image = nullptr;
-
-  cl_image_format image_format;
-  getChannelOrderAndType(pResDesc->res.pitch2D.desc, pTexDesc->readMode,
-    &image_format.image_channel_order, &image_format.image_channel_data_type);
-
-  const amd::Image::Format imageFormat(image_format);
-
-  amd::Memory* memory = nullptr;
-  size_t offset = 0;
-  cl_mem_object_type clType;
-
   switch (pResDesc->resType) {
-    case hipResourceTypeArray:
-      {
-        memory = getMemoryObject(pResDesc->res.array.array->data, offset);
+  case hipResourceTypeArray: {
+    cl_mem memObj = reinterpret_cast<cl_mem>(pResDesc->res.array.array->data);
+    if (!is_valid(memObj)) {
+      return hipErrorInvalidValue;
+    }
+    image = as_amd(memObj)->asImage();
 
-        getChannelOrderAndType(pResDesc->res.array.array->desc, pTexDesc->readMode,
-                             &image_format.image_channel_order, &image_format.image_channel_data_type);
-        const amd::Image::Format imageFormat(image_format);
-        switch (pResDesc->res.array.array->type) {
-          case hipArrayLayered:
-          case hipArrayCubemap:
-            assert(0);
-            break;
-          case hipArraySurfaceLoadStore:
-          case hipArrayTextureGather:
-          case hipArrayDefault:
-          default:
-            switch(pResDesc->res.array.array->textureType) {
-              case hipTextureType3D:
-                clType = CL_MEM_OBJECT_IMAGE3D;
-                image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
-                  clType, memory->getMemFlags(), imageFormat,
-                  pResDesc->res.array.array->width, pResDesc->res.array.array->height,
-                  pResDesc->res.array.array->depth, 0, 0);
-                break;
-              case hipTextureType2D:
-                clType = CL_MEM_OBJECT_IMAGE2D;
-                image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
-                  clType, memory->getMemFlags(), imageFormat,
-                  pResDesc->res.array.array->width, pResDesc->res.array.array->height, 1, 0, 0);
-                break;
-              default:
-                break;
-            }
-            break;
-        }
+    hipTextureReadMode readMode = pTexDesc->readMode;
+    // 32-bit integer format will not be promoted, regardless of whether or not
+    // this hipTextureDesc::readMode is set hipReadModeNormalizedFloat is specified.
+    if ((hip::getElementSize(pResDesc->res.array.array->Format) == 4) &&
+        (pResDesc->res.array.array->Format != HIP_AD_FORMAT_FLOAT)) {
+      readMode = hipReadModeElementType;
+    }
+
+    // We need to create an image view if the user requested to use normalized pixel values,
+    // due to already having the image created with a different format.
+    if ((pResViewDesc != nullptr) ||
+        (readMode == hipReadModeNormalizedFloat)) {
+      // TODO VDI currently right now can only change the format of the image.
+      const cl_channel_order channelOrder = (pResViewDesc != nullptr) ? hip::getCLChannelOrder(hip::getNumChannels(pResViewDesc->format)) :
+                                                                        hip::getCLChannelOrder(pResDesc->res.array.array->NumChannels);
+      const cl_channel_type channelType = (pResViewDesc != nullptr) ? hip::getCLChannelType(hip::getArrayFormat(pResViewDesc->format), readMode) :
+                                                                      hip::getCLChannelType(pResDesc->res.array.array->Format, readMode);
+      const amd::Image::Format imageFormat(cl_image_format{channelOrder, channelType});
+      if (!imageFormat.isValid()) {
+        return hipErrorInvalidValue;
       }
-      break;
-    case hipResourceTypeMipmappedArray:
-      assert(0);
-      break;
-    case hipResourceTypeLinear:
-      {
-        assert(pResViewDesc == nullptr);
-        memory = getMemoryObject(pResDesc->res.linear.devPtr, offset);
 
-        getChannelOrderAndType(pResDesc->res.linear.desc, pTexDesc->readMode,
-                             &image_format.image_channel_order, &image_format.image_channel_data_type);
-        const amd::Image::Format imageFormat(image_format);
-
-        image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
-          CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
-          pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize(), 1, 1,
-          pResDesc->res.linear.sizeInBytes, 0);
+      image = image->createView(*hip::getCurrentDevice()->asContext(), imageFormat, nullptr);
+      if (image == nullptr) {
+        return hipErrorInvalidValue;
       }
-      break;
-    case hipResourceTypePitch2D:
-      assert(pResViewDesc == nullptr);
-      memory = getMemoryObject(pResDesc->res.pitch2D.devPtr, offset);
-
-      image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
-        CL_MEM_OBJECT_IMAGE2D, memory->getMemFlags(), imageFormat,
-        pResDesc->res.pitch2D.width, pResDesc->res.pitch2D.height, 1,
-        pResDesc->res.pitch2D.pitchInBytes, 0);
-      break;
-    default: HIP_RETURN(hipErrorInvalidValue);
-  }
-
-  if (!image->create()) {
-    delete image;
-    HIP_RETURN(hipErrorOutOfMemory);
-  }
-
-  amd::Sampler* sampler = fillSamplerDescriptor(pTexDesc->addressMode[0], pTexDesc->filterMode, pTexDesc->normalizedCoords);
-
-  *pTexObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(*pResDesc, *image, *sampler));
-
-  HIP_RETURN(hipSuccess);
-}
-
-void ihipDestroyTextureObject(hip::TextureObject* texture) {
-  texture->image->release();
-  texture->sampler->release();
-
-  hipFree(texture);
-}
-
-hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject) {
-  HIP_INIT_API(NONE, textureObject);
-
-  hip::TextureObject* texture = reinterpret_cast<hip::TextureObject*>(textureObject);
-
-  ihipDestroyTextureObject(texture);
-
-  HIP_RETURN(hipSuccess);
-}
-
-hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
-                                           hipTextureObject_t textureObject) {
-  HIP_INIT_API(NONE, pResDesc, textureObject);
-
-  hip::TextureObject* texture = reinterpret_cast<hip::TextureObject*>(textureObject);
-
-  if (pResDesc != nullptr && texture != nullptr) {
-    memcpy(pResDesc, &(texture->resDesc), sizeof(hipResourceDesc));
-  }
-
-  HIP_RETURN(hipErrorInvalidValue);
-}
-
-hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc,
-                                               hipTextureObject_t textureObject) {
-  HIP_INIT_API(NONE, pResViewDesc, textureObject);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
-                                          hipTextureObject_t textureObject) {
-  HIP_INIT_API(NONE, pTexDesc, textureObject);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t ihipBindTexture(cl_mem_object_type type,
-                           size_t* offset, textureReference* tex, const void* devPtr,
-                           const hipChannelFormatDesc& desc, size_t width, size_t height,
-                           size_t pitch) {
-  if (tex == nullptr) {
-    return hipErrorInvalidImage;
-  }
-  if (hip::getCurrentDevice()) {
-    cl_image_format image_format;
-    size_t byteSize;
-    size_t rowPitch = 0;
-    size_t depth = 0;
-    size_t slicePitch = 0;
-
-    getChannelOrderAndType(desc, hipReadModeElementType,
-      &image_format.image_channel_order, &image_format.image_channel_data_type);
-    getByteSizeFromChannelFormatKind(desc.f, &byteSize);
-    const amd::Image::Format imageFormat(image_format);
-    amd::Memory* memory = getMemoryObject(devPtr, *offset);
-
-    switch (type) {
-       case CL_MEM_OBJECT_IMAGE3D:
-         rowPitch = width * byteSize;
-         depth = pitch;
-         slicePitch = rowPitch * height;
-         break;
-       case CL_MEM_OBJECT_IMAGE2D:
-       default:
-         rowPitch = pitch;
-         depth = 1;
-         slicePitch = 0;
-         break;
     }
-
-    amd::Image* image = new (*hip::getCurrentDevice()->asContext()) amd::Image(*memory->asBuffer(),
-                type, memory->getMemFlags(), imageFormat, width, height, depth, rowPitch, slicePitch);
-    if (!image->create()) {
-      delete image;
-      return hipErrorOutOfMemory;
-    }
-
-    *offset = 0;
-    if (tex->textureObject) {
-      ihipDestroyTextureObject(reinterpret_cast<hip::TextureObject*>(tex->textureObject));
-    }
-    amd::Sampler* sampler = fillSamplerDescriptor(tex->addressMode[0], tex->filterMode, tex->normalized);
-
-    hipResourceDesc resDesc;
-    memset(&resDesc, 0, sizeof(hipResourceDesc));
-    switch (type) {
-      case CL_MEM_OBJECT_IMAGE1D:
-        resDesc.resType = hipResourceTypeLinear;
-        resDesc.res.linear.devPtr = const_cast<void*>(devPtr);
-        resDesc.res.linear.desc = desc;
-        resDesc.res.linear.sizeInBytes = image->getSize();
-        break;
-      case CL_MEM_OBJECT_IMAGE2D:
-        resDesc.resType = hipResourceTypePitch2D;
-        resDesc.res.pitch2D.devPtr = const_cast<void*>(devPtr);
-        resDesc.res.pitch2D.desc = desc;
-        resDesc.res.pitch2D.width = width;
-        resDesc.res.pitch2D.height = height;
-        resDesc.res.pitch2D.pitchInBytes = pitch;
-        break;
-      case CL_MEM_OBJECT_IMAGE3D:
-        resDesc.resType = hipResourceTypeArray;
-        resDesc.res.array.array = (hipArray*)malloc(sizeof(hipArray));
-        resDesc.res.array.array->desc = desc;
-        resDesc.res.array.array->width = width;
-        resDesc.res.array.array->height = height;
-        resDesc.res.array.array->depth = depth;
-        resDesc.res.array.array->Format = tex->format;
-        resDesc.res.array.array->NumChannels = tex->numChannels;
-        resDesc.res.array.array->isDrv = false;
-        resDesc.res.array.array->textureType = hipTextureType3D;
-        resDesc.res.array.array->data = const_cast<void*>(devPtr);
-        break;
-      default:
-        resDesc.resType = hipResourceTypeArray;
-        resDesc.res.array.array = nullptr;
-        break;
-    }
-
-    tex->textureObject = reinterpret_cast<hipTextureObject_t>(ihipCreateTextureObject(resDesc, *image, *sampler));
-    if(type == CL_MEM_OBJECT_IMAGE3D) {
-      free(resDesc.res.array.array);
-    }
-    memset(&resDesc, 0, sizeof(hipResourceDesc));
-    return hipSuccess;
+    break;
   }
-  return hipErrorInvalidValue;
-}
-
-hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
-                          const hipChannelFormatDesc* desc, size_t size) {
-  HIP_INIT_API(NONE, offset, tex, devPtr, desc, size);
-
-  if (desc == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
+  case hipResourceTypeMipmappedArray: {
+    ShouldNotReachHere();
+    break;
   }
-  cl_image_format image_format;
-  getChannelOrderAndType(*desc, hipReadModeElementType,
-    &image_format.image_channel_order, &image_format.image_channel_data_type);
-  const amd::Image::Format imageFormat(image_format);
-
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, *desc, size / imageFormat.getElementSize(), 1, size));
-}
-
-hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
-                            const hipChannelFormatDesc* desc, size_t width, size_t height,
-                            size_t pitch) {
-  HIP_INIT_API(NONE, offset, tex, devPtr, desc, width, height, pitch);
-
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, offset, tex, devPtr, *desc, width, height, pitch));
-}
-
-hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
-                                 const hipChannelFormatDesc* desc) {
-  HIP_INIT_API(NONE, tex, array, desc);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t ihipBindTextureImpl(TlsData* tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
-                               const void* devPtr, const struct hipChannelFormatDesc* desc,
-                               size_t size, textureReference* tex) {
-  HIP_INIT_API(NONE, dim, readMode, offset, devPtr, size, tex);
-
-  assert(1 == dim);
-
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, *desc, size, 1, 0));
-}
-
-hipError_t ihipBindTextureToArrayImpl(TlsData* tls, int dim, enum hipTextureReadMode readMode,
-                                      hipArray_const_t array,
-                                      const struct hipChannelFormatDesc& desc,
-                                      textureReference* tex) {
-  HIP_INIT_API(NONE, dim, readMode, &desc, array, tex);
-
-  cl_mem_object_type clType;
-  size_t offset = 0;
-
-  switch (dim) {
-    case 1:
-      clType = CL_MEM_OBJECT_IMAGE1D;
-      break;
-    case 2:
-      clType = CL_MEM_OBJECT_IMAGE2D;
-      break;
-    case 3:
-    case hipTextureType2DLayered:
-      clType = CL_MEM_OBJECT_IMAGE3D;
-      break;
-    default:
-      HIP_RETURN(hipErrorInvalidValue);
+  case hipResourceTypeLinear: {
+    const cl_channel_order channelOrder = hip::getCLChannelOrder(hip::getNumChannels(pResDesc->res.linear.desc));
+    const cl_channel_type channelType = hip::getCLChannelType(hip::getArrayFormat(pResDesc->res.linear.desc), pTexDesc->readMode);
+    const amd::Image::Format imageFormat({channelOrder, channelType});
+    const cl_mem_object_type imageType = hip::getCLMemObjectType(pResDesc->resType);
+    size_t offset = 0;
+    image = ihipImageCreate(channelOrder,
+                            channelType,
+                            imageType,
+                            (pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize()), /* imageWidth */
+                            0, /* imageHeight */
+                            0, /* imageDepth */
+                            0, /* imageArraySize */
+                            0, /* imageRowPitch */
+                            0, /* imageSlicePitch */
+                            0, /* numMipLevels */
+                            getMemoryObject(pResDesc->res.linear.devPtr, offset));
+    // TODO take care of non-zero offset.
+    assert(offset == 0);
+    if (image == nullptr) {
+      return hipErrorInvalidValue;
+    }
+    break;
+  }
+  case hipResourceTypePitch2D: {
+    const cl_channel_order channelOrder = hip::getCLChannelOrder(hip::getNumChannels(pResDesc->res.pitch2D.desc));
+    const cl_channel_type channelType = hip::getCLChannelType(hip::getArrayFormat(pResDesc->res.pitch2D.desc), pTexDesc->readMode);
+    const cl_mem_object_type imageType = hip::getCLMemObjectType(pResDesc->resType);
+    size_t offset = 0;
+    image = ihipImageCreate(channelOrder,
+                            channelType,
+                            imageType,
+                            pResDesc->res.pitch2D.width, /* imageWidth */
+                            pResDesc->res.pitch2D.height, /* imageHeight */
+                            0, /* imageDepth */
+                            0, /* imageArraySize */
+                            pResDesc->res.pitch2D.pitchInBytes, /* imageRowPitch */
+                            0, /* imageSlicePitch */
+                            0, /* numMipLevels */
+                            getMemoryObject(pResDesc->res.pitch2D.devPtr, offset));
+    // TODO take care of non-zero offset.
+    assert(offset == 0);
+    if (image == nullptr) {
+      return hipErrorInvalidValue;
+    }
+    break;
+  }
   }
 
-  HIP_RETURN(ihipBindTexture(clType, &offset, tex, array->data, desc, array->width,
-                             array->height, array->depth));
-}
-
-hipError_t hipBindTextureToMipmappedArray(textureReference* tex,
-                                          hipMipmappedArray_const_t mipmappedArray,
-                                          const hipChannelFormatDesc* desc) {
-  HIP_INIT_API(NONE, tex, mipmappedArray, desc);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
-
-  ihipDestroyTextureObject(reinterpret_cast<hip::TextureObject*>(textureObject));
+  void *texObjectBuffer = nullptr;
+  ihipMalloc(&texObjectBuffer, sizeof(hip::TextureObject), CL_MEM_SVM_FINE_GRAIN_BUFFER);
+  if (texObjectBuffer == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+  *pTexObject = reinterpret_cast<hipTextureObject_t>(new (texObjectBuffer) hip::TextureObject{image, sampler, *pResDesc, *pTexDesc, (pResViewDesc != nullptr) ? *pResViewDesc : hipResourceViewDesc{}});
 
   return hipSuccess;
 }
 
-hipError_t hipUnbindTexture(const textureReference* tex) {
-  HIP_INIT_API(NONE, tex);
+hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject,
+                                  const hipResourceDesc* pResDesc,
+                                  const hipTextureDesc* pTexDesc,
+                                  const hipResourceViewDesc* pResViewDesc) {
+  HIP_INIT_API(hipCreateTextureObject, pTexObject, pResDesc, pTexDesc, pResViewDesc);
 
-  ihipDestroyTextureObject(reinterpret_cast<hip::TextureObject*>(tex->textureObject));
-
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(ihipCreateTextureObject(pTexObject, pResDesc, pTexDesc, pResViewDesc));
 }
 
-hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array) {
-  HIP_INIT_API(NONE, desc, array);
 
-  if (desc != nullptr) {
-    *desc = array->desc;
+hipError_t ihipDestroyTextureObject(hipTextureObject_t texObject) {
+  if (texObject == nullptr) {
+    return hipErrorInvalidValue;
   }
 
-  HIP_RETURN(hipSuccess);
+  hip::TextureObject* hipTexObject = reinterpret_cast<hip::TextureObject*>(texObject);
+  const hipResourceType type = hipTexObject->resDesc.resType;
+  const bool isImageFromBuffer = (type == hipResourceTypeLinear) || (type == hipResourceTypePitch2D);
+  const bool isImageView = ((type == hipResourceTypeArray) || (type == hipResourceTypeMipmappedArray)) &&
+                           !hipTexObject->image->isParent();
+  if (isImageFromBuffer || isImageView) {
+    hipTexObject->image->release();
+  }
+
+  // TODO Should call ihipFree() to not polute the api trace.
+  return hipFree(hipTexObject);
 }
 
-hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* tex) {
-  HIP_INIT_API(NONE, offset, tex);
+hipError_t hipDestroyTextureObject(hipTextureObject_t texObject) {
+  HIP_INIT_API(hipDestroyTextureObject, texObject);
 
-  if ((offset == nullptr) || (tex == nullptr)) {
+  HIP_RETURN(ihipDestroyTextureObject(texObject));
+}
+
+
+hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
+                                           hipTextureObject_t texObject) {
+  HIP_INIT_API(hipGetTextureObjectResourceDesc, pResDesc, texObject);
+
+  if ((pResDesc == nullptr) ||
+      (texObject == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
+  hip::TextureObject* hipTexObject = reinterpret_cast<hip::TextureObject*>(texObject);
+  *pResDesc = hipTexObject->resDesc;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc,
+                                               hipTextureObject_t texObject) {
+  HIP_INIT_API(hipGetTextureObjectResourceViewDesc, pResViewDesc, texObject);
+
+  if ((pResViewDesc == nullptr) ||
+      (texObject == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  hip::TextureObject* hipTexObject = reinterpret_cast<hip::TextureObject*>(texObject);
+  *pResViewDesc = hipTexObject->resViewDesc;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
+                                          hipTextureObject_t texObject) {
+  HIP_INIT_API(hipGetTextureObjectTextureDesc, pTexDesc, texObject);
+
+  if ((pTexDesc == nullptr) ||
+      (texObject == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  hip::TextureObject* hipTexObject = reinterpret_cast<hip::TextureObject*>(texObject);
+  *pTexDesc = hipTexObject->texDesc;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t ihipBindTexture(size_t* offset,
+                           const textureReference* texref,
+                           const void* devPtr,
+                           const hipChannelFormatDesc* desc,
+                           size_t size,
+                           hipTextureReadMode readMode) {
+  if ((offset == nullptr) ||
+      (texref == nullptr) ||
+      (devPtr == nullptr) ||
+      (desc == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
+  // Any previous address or HIP array state associated with the texture reference is superseded by this function.
+  // Any memory previously bound to hTexRef is unbound.
+  // No need to check for errors.
+  ihipDestroyTextureObject(texref->textureObject);
+
+  // If the device memory pointer was returned from hipMalloc(),
+  // the offset is guaranteed to be 0 and NULL may be passed as the offset parameter.
+  // TODO enforce alignment on devPtr.
+  if (offset != nullptr) {
+    *offset = 0;
+  }
+
+  hipResourceDesc resDesc = {};
+  resDesc.resType = hipResourceTypeLinear;
+  resDesc.res.linear.devPtr = const_cast<void*>(devPtr);
+  resDesc.res.linear.desc = *desc;
+  resDesc.res.linear.sizeInBytes = size;
+
+  hipTextureDesc texDesc = hip::getTextureDesc(texref, readMode);
+
+  return ihipCreateTextureObject(const_cast<hipTextureObject_t*>(&texref->textureObject), &resDesc, &texDesc, nullptr);
+}
+
+hipError_t ihipBindTexture2D(size_t* offset,
+                             const textureReference* texref,
+                             const void* devPtr,
+                             const hipChannelFormatDesc* desc,
+                             size_t width,
+                             size_t height,
+                             size_t pitch,
+                             hipTextureReadMode readMode) {
+  if ((offset == nullptr) ||
+      (texref == nullptr) ||
+      (devPtr == nullptr) ||
+      (desc == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
+  // Any previous address or HIP array state associated with the texture reference is superseded by this function.
+  // Any memory previously bound to hTexRef is unbound.
+  // No need to check for errors.
+  ihipDestroyTextureObject(texref->textureObject);
+
+  // If the device memory pointer was returned from hipMalloc(),
+  // the offset is guaranteed to be 0 and NULL may be passed as the offset parameter.
+  // TODO enforce alignment on devPtr.
+  if (offset != nullptr) {
+    *offset = 0;
+  }
+
+  hipResourceDesc resDesc = {};
+  resDesc.resType = hipResourceTypePitch2D;
+  resDesc.res.pitch2D.devPtr = const_cast<void*>(devPtr);
+  resDesc.res.pitch2D.desc = *desc;
+  resDesc.res.pitch2D.width = width;
+  resDesc.res.pitch2D.height = height;
+  resDesc.res.pitch2D.pitchInBytes = pitch;
+
+  hipTextureDesc texDesc = hip::getTextureDesc(texref, readMode);
+
+  return ihipCreateTextureObject(const_cast<hipTextureObject_t*>(&texref->textureObject), &resDesc, &texDesc, nullptr);
+}
+
+hipError_t hipBindTexture2D(size_t* offset,
+                            textureReference* texref,
+                            const void* devPtr,
+                            const hipChannelFormatDesc* desc,
+                            size_t width,
+                            size_t height,
+                            size_t pitch) {
+  HIP_INIT_API(hipBindTexture2D, offset, texref, devPtr, desc, width, height, pitch);
+
+  // TODO need compiler support to extract the read mode from textureReference.
+  HIP_RETURN(ihipBindTexture2D(offset, texref, devPtr, desc, width, height, pitch, hipReadModeElementType));
+}
+
+hipError_t ihipBindTextureToArray(const textureReference* texref,
+                                  hipArray_const_t array,
+                                  const hipChannelFormatDesc* desc,
+                                  hipTextureReadMode readMode) {
+  if ((texref == nullptr) ||
+      (array == nullptr) ||
+      (desc == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
+  // Any previous address or HIP array state associated with the texture reference is superseded by this function.
+  // Any memory previously bound to hTexRef is unbound.
+  // No need to check for errors.
+  ihipDestroyTextureObject(texref->textureObject);
+
+  hipResourceDesc resDesc = {};
+  resDesc.resType = hipResourceTypeArray;
+  resDesc.res.array.array = const_cast<hipArray_t>(array);
+
+  hipTextureDesc texDesc = hip::getTextureDesc(texref, readMode);
+
+  hipResourceViewFormat format = hip::getResourceViewFormat(*desc);
+  hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(array, format);
+
+  return ihipCreateTextureObject(const_cast<hipTextureObject_t*>(&texref->textureObject), &resDesc, &texDesc, &resViewDesc);
+}
+
+hipError_t hipBindTextureToArray(textureReference* texref,
+                                 hipArray_const_t array,
+                                 const hipChannelFormatDesc* desc) {
+  HIP_INIT_API(hipBindTextureToArray, texref, array, desc);
+
+  // TODO need compiler support to extract the read mode from textureReference.
+  HIP_RETURN(ihipBindTextureToArray(texref, array, desc, hipReadModeElementType));
+}
+
+hipError_t ihipBindTextureImpl(TlsData *tls,
+                               int dim,
+                               hipTextureReadMode readMode,
+                               size_t* offset,
+                               const void* devPtr,
+                               const hipChannelFormatDesc* desc,
+                               size_t size,
+                               textureReference* texref) {
+  HIP_INIT_API(ihipBindTextureImpl, tls, dim, readMode, offset, devPtr, desc, size, texref);
+
+  (void)dim; // Silence compiler warnings.
+
+  HIP_RETURN(ihipBindTexture(offset, texref, devPtr, desc, size, readMode));
+}
+
+hipError_t ihipBindTextureToArrayImpl(TlsData *tls,
+                                      int dim,
+                                      hipTextureReadMode readMode,
+                                      hipArray_const_t array,
+                                      const hipChannelFormatDesc& desc,
+                                      textureReference* texref) {
+  // TODO overload operator<<(ostream&, hipChannelFormatDesc&).
+  HIP_INIT_API(ihipBindTextureToArrayImpl, tls, dim, readMode, array, &desc, texref);
+
+  (void)dim; // Silence compiler warnings.
+
+  HIP_RETURN(ihipBindTextureToArray(texref, array, &desc, readMode));
+}
+
+hipError_t ihipBindTextureToMipmappedArray(textureReference* texref,
+                                           hipMipmappedArray_const_t mipmappedArray,
+                                           const hipChannelFormatDesc* desc,
+                                           hipTextureReadMode readMode) {
+  if ((texref == nullptr) ||
+      (mipmappedArray == nullptr) ||
+      (desc == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
+  // Any previous address or HIP array state associated with the texture reference is superseded by this function.
+  // Any memory previously bound to hTexRef is unbound.
+  // No need to check for errors.
+  ihipDestroyTextureObject(texref->textureObject);
+
+  hipResourceDesc resDesc = {};
+  resDesc.resType = hipResourceTypeMipmappedArray;
+  resDesc.res.mipmap.mipmap = const_cast<hipMipmappedArray_t>(mipmappedArray);
+
+  hipTextureDesc texDesc = hip::getTextureDesc(texref, readMode);
+
+  hipResourceViewFormat format = hip::getResourceViewFormat(*desc);
+  hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(mipmappedArray, format);
+
+  return ihipCreateTextureObject(const_cast<hipTextureObject_t*>(&texref->textureObject), &resDesc, &texDesc, &resViewDesc);
+}
+
+hipError_t hipBindTextureToMipmappedArray(textureReference* texref,
+                                          hipMipmappedArray_const_t mipmappedArray,
+                                          const hipChannelFormatDesc* desc) {
+  HIP_INIT_API(hipBindTextureToMipmappedArray, texref, mipmappedArray, desc);
+
+  // TODO need compiler support to extract the read mode from textureReference.
+  HIP_RETURN(ihipBindTextureToMipmappedArray(texref, mipmappedArray, desc, hipReadModeElementType));
+}
+
+hipError_t ihipBindTexture2DImpl(int dim,
+                                 hipTextureReadMode readMode,
+                                 size_t* offset,
+                                 const void* devPtr,
+                                 const hipChannelFormatDesc* desc,
+                                 size_t width,
+                                 size_t height,
+                                 textureReference* texref,
+                                 size_t pitch) {
+  HIP_INIT_API(ihipBindTexture2DImpl, dim, readMode, offset, devPtr, desc, width, height, texref, pitch);
+
+  (void)dim; // Silence compiler warnings.
+
+  HIP_RETURN(ihipBindTexture2D(offset, texref, devPtr, desc, width, height, pitch, readMode));
+}
+
+hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
+  // TODO overload operator<<(ostream&, hipTextureObject_t&).
+  HIP_INIT_API(ihipUnbindTextureImpl, &textureObject);
+
+  HIP_RETURN(ihipDestroyTextureObject(textureObject));
+}
+
+hipError_t hipUnbindTexture(const textureReference* texref) {
+  HIP_INIT_API(hipUnbindTexture, texref);
+
+  if (texref == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  HIP_RETURN(ihipDestroyTextureObject(texref->textureObject));
+}
+
+hipError_t hipBindTexture(size_t* offset,
+                          textureReference* texref,
+                          const void* devPtr,
+                          const hipChannelFormatDesc* desc,
+                          size_t size) {
+  HIP_INIT_API(hipBindTexture, offset, texref, devPtr, desc, size);
+
+  // TODO need compiler support to extract the read mode from textureReference.
+  HIP_RETURN(ihipBindTexture(offset, texref, devPtr, desc, size, hipReadModeElementType));
+}
+
+hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc,
+                             hipArray_const_t array) {
+  HIP_INIT_API(hipGetChannelDesc, desc, array);
+
+  if ((desc == nullptr) ||
+      (array == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // It is UB to call hipGetChannelDesc() on an array created via hipArrayCreate()/hipArray3DCreate().
+  // This is due to hip not differentiating between runtime and driver types.
+  *desc = array->desc;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipGetTextureAlignmentOffset(size_t* offset,
+                                        const textureReference* texref) {
+  HIP_INIT_API(hipGetTextureAlignmentOffset, offset, texref);
+
+  if ((offset == nullptr) ||
+      (texref == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // TODO enforce alignment on devPtr.
   *offset = 0;
 
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipGetTextureReference(const textureReference** tex, const void* symbol) {
-  HIP_INIT_API(NONE, tex, symbol);
+hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol) {
+  HIP_INIT_API(hipGetTextureReference, texref, symbol);
 
   assert(0 && "Unimplemented");
 
   HIP_RETURN(hipErrorNotSupported);
 }
 
-hipError_t hipTexRefSetFormat(textureReference* tex, hipArray_Format fmt, int NumPackedComponents) {
-  HIP_INIT_API(NONE, tex, fmt, NumPackedComponents);
+hipError_t hipTexRefSetFormat(textureReference* texRef,
+                              hipArray_Format fmt,
+                              int NumPackedComponents) {
+  HIP_INIT_API(hipTexRefSetFormat, texRef, fmt, NumPackedComponents);
 
-  if (tex == nullptr) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  tex->format = fmt;
-  tex->numChannels = NumPackedComponents;
-
-  HIP_RETURN(hipSuccess);
-}
-
-hipError_t hipTexRefSetFlags(textureReference* tex, unsigned int flags) {
-  HIP_INIT_API(NONE, tex, flags);
-
-  if (tex == nullptr) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  tex->normalized = flags;
-
-  HIP_RETURN(hipSuccess);
-}
-
-hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm) {
-  HIP_INIT_API(NONE, tex, fm);
-
-  if (tex == nullptr) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  tex->filterMode = fm;
-
-  HIP_RETURN(hipSuccess);
-}
-
-hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim) {
-  HIP_INIT_API(NONE, am, &tex, dim);
-
-  if ((am == nullptr) || (dim >= 3)) {
+  if (texRef == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *am = tex.addressMode[dim];
+  texRef->format = fmt;
+  texRef->numChannels = NumPackedComponents;
 
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am) {
-  HIP_INIT_API(NONE, tex, dim, am);
+hipError_t hipTexRefSetFlags(textureReference* texRef,
+                             unsigned int Flags) {
+  HIP_INIT_API(hipTexRefSetFlags, texRef, Flags);
 
-  if (tex == nullptr) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  tex->addressMode[dim] = am;
-
-  HIP_RETURN(hipSuccess);
-}
-
-hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex) {
-  HIP_INIT_API(NONE, array, &tex);
-
-  hip::TextureObject* texture = nullptr;
-
-  if ((array == nullptr) || (*array == nullptr)) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  texture = reinterpret_cast<hip::TextureObject *>(tex.textureObject);
-  if(hipResourceTypeArray != texture->resDesc.resType){
+  if (texRef == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  if (texture->resDesc.res.array.array == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
-
-  **array = *(texture->resDesc.res.array.array);
-
-  HIP_RETURN(hipSuccess);
-}
-
-hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsigned int flags) {
-  HIP_INIT_API(NONE, tex, array, flags);
-
-  size_t offset = 0;
-  cl_mem_object_type clType;
-
-  if ((tex == nullptr) || (array == nullptr)) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  switch(array->textureType) {
-    case hipTextureType3D:
-      clType = CL_MEM_OBJECT_IMAGE3D;
-      break;
-    case hipTextureType2D:
-      clType = CL_MEM_OBJECT_IMAGE2D;
-      break;
-    case hipTextureType1D:
-      clType = CL_MEM_OBJECT_IMAGE1D;
-      break;
-    default:
-      HIP_RETURN(hipErrorInvalidValue);
-  }
-  HIP_RETURN(ihipBindTexture(clType, &offset, tex, array->data, array->desc, array->width,
-                             array->height, array->depth));
-}
-
-hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex) {
-  HIP_INIT_API(NONE, dev_ptr, &tex);
-
-  hip::TextureObject* texture = nullptr;
-  device::Memory* dev_mem = nullptr;
-
-  texture = reinterpret_cast<hip::TextureObject *>(tex.textureObject);
-  if ((texture == nullptr) || (texture->image == nullptr)) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  dev_mem = texture->image->getDeviceMemory(*hip::getCurrentDevice()->devices()[0]);
-  if (dev_mem == nullptr) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  *dev_ptr = reinterpret_cast<void*>(dev_mem->virtualAddress());
+  // TODO add textureReference::flags.
+  // Using textureReference::normalized for this purpose is OK for now,
+  // because calling hipTexRefGetFlags() on a textureRefence after hipBindTexture() is UB
+  // due to HIP not differentiating between runtime and driver api.
+  texRef->normalized = Flags;
 
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDeviceptr_t devPtr,
-                               size_t size) {
-  HIP_INIT_API(NONE, offset, tex, devPtr, size);
+hipError_t hipTexRefSetFilterMode(textureReference* texRef,
+                                  hipTextureFilterMode fm) {
+  HIP_INIT_API(hipTexRefSetFilterMode, texRef, fm);
 
-  if (tex == nullptr) {
-    HIP_RETURN(hipErrorInvalidImage);
-  }
-
-  cl_image_format image_format;
-  getDrvChannelOrderAndType(tex->format, tex->numChannels,
-    &image_format.image_channel_order, &image_format.image_channel_data_type);
-  const amd::Image::Format imageFormat(image_format);
-
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE1D, offset, tex, devPtr, tex->channelDesc, size / imageFormat.getElementSize(), 1, size));
-}
-
-hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,
-                                 hipDeviceptr_t devPtr, size_t pitch) {
-  HIP_INIT_API(NONE, tex, desc, devPtr, pitch);
-
-  if (desc == nullptr) {
+  if (texRef == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  size_t offset;
-  HIP_RETURN(ihipBindTexture(CL_MEM_OBJECT_IMAGE2D, &offset, tex, devPtr, tex->channelDesc, desc->Width, desc->Height, pitch));
+  texRef->filterMode = fm;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* pam,
+                                   textureReference texRef,
+                                   int dim) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetAddressMode, pam, &texRef, dim);
+
+  if (pam == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // Currently, the only valid value for dim are 0 and 1.
+  if ((dim != 0) || (dim != 1)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pam = texRef.addressMode[dim];
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetAddressMode(textureReference* texRef,
+                                   int dim,
+                                   hipTextureAddressMode am) {
+  HIP_INIT_API(hipTexRefSetAddressMode, texRef, dim, am);
+
+  if (texRef == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  if ((dim < 0) || (dim > 2)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  texRef->addressMode[dim] = am;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefGetArray(hipArray_t* pArray,
+                             textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetArray, pArray, &texRef);
+
+  if (pArray == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  hipResourceDesc resDesc = {};
+  // TODO use ihipGetTextureObjectResourceDesc() to not pollute the API trace.
+  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef.textureObject);
+  if (error != hipSuccess) {
+    return HIP_RETURN(error);
+  }
+
+  switch (resDesc.resType) {
+  case hipResourceTypeLinear:
+  case hipResourceTypePitch2D:
+  case hipResourceTypeMipmappedArray:
+    HIP_RETURN(hipErrorInvalidValue);
+  case hipResourceTypeArray:
+    *pArray = resDesc.res.array.array;
+    break;
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetArray(textureReference* texRef,
+                             hipArray_const_t array,
+                             unsigned int flags) {
+  HIP_INIT_API(hipTexRefSetArray, texRef, array, flags);
+
+  if ((texRef == nullptr) ||
+      (array == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  if (flags != HIP_TRSA_OVERRIDE_FORMAT) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // Any previous address or HIP array state associated with the texture reference is superseded by this function.
+  // Any memory previously bound to hTexRef is unbound.
+  // No need to check for errors.
+  ihipDestroyTextureObject(texRef->textureObject);
+
+  hipResourceDesc resDesc = {};
+  resDesc.resType = hipResourceTypeArray;
+  resDesc.res.array.array = const_cast<hipArray_t>(array);
+
+  // TODO need compiler support to extract the read mode from textureReference.
+  hipTextureDesc texDesc = hip::getTextureDesc(texRef, hipReadModeElementType);
+
+  hipResourceViewFormat format = hip::getResourceViewFormat(hip::getChannelFormatDesc(texRef->numChannels, texRef->format));
+  hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(array, format);
+
+  HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, &resViewDesc));
+}
+
+hipError_t hipTexRefGetAddress(hipDeviceptr_t* dptr,
+                               textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetAddress, dptr, &texRef);
+
+  if (dptr == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  hipResourceDesc resDesc = {};
+  // TODO use ihipGetTextureObjectResourceDesc() to not pollute the API trace.
+  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef.textureObject);
+  if (error != hipSuccess) {
+    return HIP_RETURN(error);
+  }
+
+  switch (resDesc.resType) {
+  // Need to verify.
+  // If the texture reference is not bound to any device memory range,
+  // return hipErroInvalidValue.
+  case hipResourceTypeArray:
+  case hipResourceTypeMipmappedArray:
+    HIP_RETURN(hipErrorInvalidValue);
+  case hipResourceTypeLinear:
+    *dptr = resDesc.res.linear.devPtr;
+    break;
+  case hipResourceTypePitch2D:
+    *dptr = resDesc.res.pitch2D.devPtr;
+    break;
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetAddress(size_t* ByteOffset,
+                               textureReference* texRef,
+                               hipDeviceptr_t dptr,
+                               size_t bytes) {
+  HIP_INIT_API(hipTexRefSetAddress, ByteOffset, texRef, dptr, bytes);
+
+  if (texRef == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // Any previous address or HIP array state associated with the texture reference is superseded by this function.
+  // Any memory previously bound to hTexRef is unbound.
+  // No need to check for errors.
+  ihipDestroyTextureObject(texRef->textureObject);
+
+  // If the device memory pointer was returned from hipMemAlloc(),
+  // the offset is guaranteed to be 0 and NULL may be passed as the ByteOffset parameter.
+  // TODO enforce alignment on devPtr.
+  if (ByteOffset != nullptr) {
+    *ByteOffset = 0;
+  }
+
+  hipResourceDesc resDesc = {};
+  resDesc.resType = hipResourceTypeLinear;
+  resDesc.res.linear.devPtr = dptr;
+  resDesc.res.linear.desc = hip::getChannelFormatDesc(texRef->numChannels, texRef->format);
+  resDesc.res.linear.sizeInBytes = bytes;
+
+  // TODO add textureReference::flags.
+  // Using textureReference::normalized for this purpose is OK for now,
+  // because calling hipTexRefGetFlags() on a textureRefence after hipBindTexture()
+  // due to HIP not differentiating between runtime and driver api.
+  hipTextureReadMode readMode = hip::getReadMode(texRef->normalized);
+  texRef->sRGB = hip::getSRGB(texRef->normalized);
+  texRef->normalized = hip::getNormalizedCoords(texRef->normalized);
+  hipTextureDesc texDesc = hip::getTextureDesc(texRef, readMode);
+
+  HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, nullptr));
+}
+
+hipError_t hipTexRefSetAddress2D(textureReference* texRef,
+                                 const HIP_ARRAY_DESCRIPTOR* desc,
+                                 hipDeviceptr_t dptr,
+                                 size_t Pitch) {
+  HIP_INIT_API(hipTexRefSetAddress2D, texRef, desc, dptr, Pitch);
+
+  if ((texRef == nullptr) ||
+      (desc == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // Any previous address or HIP array state associated with the texture reference is superseded by this function.
+  // Any memory previously bound to hTexRef is unbound.
+  // No need to check for errors.
+  ihipDestroyTextureObject(texRef->textureObject);
+
+  hipResourceDesc resDesc = {};
+  resDesc.resType = hipResourceTypePitch2D;
+  resDesc.res.linear.devPtr = dptr;
+  resDesc.res.linear.desc = hip::getChannelFormatDesc(desc->NumChannels, desc->Format); // Need to verify.
+  resDesc.res.pitch2D.width = desc->Width;
+  resDesc.res.pitch2D.height = desc->Height;
+  resDesc.res.pitch2D.pitchInBytes = Pitch;
+
+  // TODO add textureReference::flags.
+  // Using textureReference::normalized for this purpose is OK for now,
+  // because calling hipTexRefGetFlags() on a textureRefence after hipBindTexture()
+  // due to HIP not differentiating between runtime and driver api.
+  hipTextureReadMode readMode = hip::getReadMode(texRef->normalized);
+  texRef->sRGB = hip::getSRGB(texRef->normalized);
+  texRef->normalized = hip::getNormalizedCoords(texRef->normalized);
+  hipTextureDesc texDesc = hip::getTextureDesc(texRef, readMode);
+
+  HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, nullptr));
+}
+
+hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) {
+  return {x, y, z, w, f};
+}
+
+hipError_t ihipBindTextureToMipmappedArrayImpl(TlsData *tls,
+                                               int dim,
+                                               hipTextureReadMode readMode,
+                                               hipMipmappedArray_const_t mipmappedArray,
+                                               const struct hipChannelFormatDesc& desc,
+                                               textureReference* texref) {
+  // TODO overload operator<<(ostream&, hipChannelFormatDesc&).
+  HIP_INIT_API(ihipBindTextureToMipmappedArrayImpl, tls, dim, readMode, mipmappedArray, &desc, texref);
+
+  (void)dim; // Silence compiler warnings.
+
+  HIP_RETURN(ihipBindTextureToMipmappedArray(texref, mipmappedArray, &desc, readMode));
+}
+
+hipError_t hipTexRefGetBorderColor(float* pBorderColor,
+                                   textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetBorderColor, pBorderColor, &texRef);
+
+  if (pBorderColor == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // TODO add textureReference::borderColor.
+  assert(false && "textureReference::borderColor is missing in header");
+  // std::memcpy(pBorderColor, texRef.borderColor, sizeof(texRef.borderColor));
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefGetFilterMode(hipTextureFilterMode* pfm,
+                                  textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetFilterMode, pfm, &texRef);
+
+  if (pfm == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pfm = texRef.filterMode;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefGetFlags(unsigned int* pFlags,
+                             textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetFlags, pFlags, &texRef);
+
+  if (pFlags == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // TODO add textureReference::flags.
+  // Using textureReference::normalized for this purpose is OK for now,
+  // because calling hipTexRefGetFlags() on a textureRefence after hipBindTexture()
+  // due to HIP not differentiating between runtime and driver api.
+  *pFlags = texRef.normalized;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefGetFormat(hipArray_Format* pFormat,
+                              int* pNumChannels,
+                              textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetFormat, pFormat, pNumChannels, &texRef);
+
+  if ((pFormat == nullptr) ||
+      (pNumChannels == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pFormat = texRef.format;
+  *pNumChannels = texRef.numChannels;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefGetMaxAnisotropy(int* pmaxAnsio,
+                                     textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetMaxAnisotropy, pmaxAnsio, &texRef);
+
+  if (pmaxAnsio == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pmaxAnsio = texRef.maxAnisotropy;
+
+  HIP_RETURN(hipErrorInvalidValue);
+}
+
+hipError_t hipTexRefGetMipmapFilterMode(hipTextureFilterMode* pfm,
+                                        textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetMipmapFilterMode, pfm, &texRef);
+
+  if (pfm == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pfm = texRef.mipmapFilterMode;
+
+  HIP_RETURN(hipErrorInvalidValue);
+}
+
+hipError_t hipTexRefGetMipmapLevelBias(float* pbias,
+                                       textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetMipmapLevelBias, pbias, &texRef);
+
+  if (pbias == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pbias = texRef.mipmapLevelBias;
+
+  HIP_RETURN(hipErrorInvalidValue);
+}
+
+hipError_t hipTexRefGetMipmapLevelClamp(float* pminMipmapLevelClamp,
+                                        float* pmaxMipmapLevelClamp,
+                                        textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetMipmapLevelClamp, pminMipmapLevelClamp, pmaxMipmapLevelClamp, &texRef);
+
+  if ((pminMipmapLevelClamp == nullptr) ||
+      (pmaxMipmapLevelClamp == nullptr)){
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pminMipmapLevelClamp = texRef.minMipmapLevelClamp;
+  *pmaxMipmapLevelClamp = texRef.maxMipmapLevelClamp;
+
+  HIP_RETURN(hipErrorInvalidValue);
+}
+
+hipError_t hipTexRefGetMipMappedArray(hipMipmappedArray_t* pArray,
+                                      textureReference texRef) {
+  // TODO overload operator<<(ostream&, textureReference&).
+  HIP_INIT_API(hipTexRefGetMipMappedArray, pArray, &texRef);
+
+  if (pArray == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  hipResourceDesc resDesc = {};
+  // TODO use ihipGetTextureObjectResourceDesc() to not pollute the API trace.
+  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef.textureObject);
+  if (error != hipSuccess) {
+    return HIP_RETURN(error);
+  }
+
+  switch (resDesc.resType) {
+  case hipResourceTypeLinear:
+  case hipResourceTypePitch2D:
+  case hipResourceTypeArray:
+    HIP_RETURN(hipErrorInvalidValue);
+  case hipResourceTypeMipmappedArray:
+    *pArray = resDesc.res.mipmap.mipmap;
+    break;
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetBorderColor(textureReference* texRef,
+                                   float* pBorderColor) {
+  HIP_INIT_API(hipTexRefSetBorderColor, texRef, pBorderColor);
+
+  if ((texRef == nullptr) ||
+      (pBorderColor == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // TODO add textureReference::borderColor.
+  assert(false && "textureReference::borderColor is missing in header");
+  // std::memcpy(texRef.borderColor, pBorderColor, sizeof(texRef.borderColor));
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetMaxAnisotropy(textureReference* texRef,
+                                     unsigned int maxAniso) {
+  HIP_INIT_API(hipTexRefSetMaxAnisotropy, texRef, maxAniso);
+
+  if (texRef == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  texRef->maxAnisotropy = maxAniso;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetMipmapFilterMode(textureReference* texRef,
+                                        hipTextureFilterMode fm) {
+  HIP_INIT_API(hipTexRefSetMipmapFilterMode, texRef, fm);
+
+  if (texRef == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  texRef->mipmapFilterMode = fm;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetMipmapLevelBias(textureReference* texRef,
+                                       float bias) {
+  HIP_INIT_API(hipTexRefSetMipmapLevelBias, texRef, bias);
+
+  if (texRef == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  texRef->mipmapLevelBias = bias;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetMipmapLevelClamp(textureReference* texRef,
+                                        float minMipMapLevelClamp,
+                                        float maxMipMapLevelClamp) {
+  HIP_INIT_API(hipTexRefSetMipmapLevelClamp, minMipMapLevelClamp, maxMipMapLevelClamp);
+
+  if (texRef == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  texRef->minMipmapLevelClamp = minMipMapLevelClamp;
+  texRef->maxMipmapLevelClamp = maxMipMapLevelClamp;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexRefSetMipmappedArray(textureReference* texRef,
+                                      hipMipmappedArray* mipmappedArray,
+                                      unsigned int Flags) {
+  HIP_INIT_API(hipTexRefSetMipmappedArray, texRef, mipmappedArray, Flags);
+
+  if ((texRef == nullptr) ||
+      (mipmappedArray == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  if (Flags != HIP_TRSA_OVERRIDE_FORMAT) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // Any previous address or HIP array state associated with the texture reference is superseded by this function.
+  // Any memory previously bound to hTexRef is unbound.
+  // No need to check for errors.
+  ihipDestroyTextureObject(texRef->textureObject);
+
+  hipResourceDesc resDesc = {};
+  resDesc.resType = hipResourceTypeMipmappedArray;
+  resDesc.res.mipmap.mipmap = mipmappedArray;
+
+  // TODO need compiler support to extract the read mode from textureReference.
+  hipTextureDesc texDesc = hip::getTextureDesc(texRef, hipReadModeElementType);
+
+  hipResourceViewFormat format = hip::getResourceViewFormat(hip::getChannelFormatDesc(texRef->numChannels, texRef->format));
+  hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(mipmappedArray, format);
+
+  HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, &resViewDesc));
 }
