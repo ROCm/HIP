@@ -139,6 +139,8 @@ namespace {
         return r;
     }()};
 
+    constexpr auto is_cpu_owned{UINT32_MAX};
+
     inline
     hsa_amd_pointer_info_t info(const void* p)
     {
@@ -148,14 +150,14 @@ namespace {
                 const_cast<void*>(p), &r, nullptr, nullptr, nullptr),
             __FILE__, __func__, __LINE__);
 
-        if (is_large_BAR) r.size = UINT32_MAX;
-        else if (type(r.agentOwner) == HSA_DEVICE_TYPE_CPU) r.size = INT32_MAX;
+        if (type(r.agentOwner) == HSA_DEVICE_TYPE_CPU) r.size = is_cpu_owned;
 
         return r;
     }
 
-    constexpr size_t staging_sz{4 * 1024 * 1024};      // 2 Pages.
-    constexpr size_t max_std_memcpy_sz{8 * 1024};      // 8 KiB.
+    constexpr size_t staging_sz{4 * 1024 * 1024};     // 2 Pages.
+    constexpr size_t max_h2d_std_memcpy_sz{8 * 1024}; // 8 KiB.
+    constexpr size_t max_d2h_std_memcpy_sz{64};       // 1 cacheline.
 
     thread_local const std::unique_ptr<void, void (*)(void *)> staging_buffer{
         []() {
@@ -203,7 +205,7 @@ namespace {
 
 inline
 void do_copy(void* __restrict dst, const void* __restrict src, size_t n,
-             hsa_agent_t da, hsa_agent_t sa) {  
+             hsa_agent_t da, hsa_agent_t sa) {
     hsa_signal_silent_store_relaxed(copy_signal, 1);
     throwing_result_check(
         hsa_amd_memory_async_copy(dst, da, src, sa, n, 0, nullptr, copy_signal),
@@ -224,14 +226,17 @@ void do_std_memcpy(
 inline
 void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t si) {
-    if (si.size == INT32_MAX) return do_std_memcpy(dst, src, n);
-    if (si.size == UINT32_MAX && n <= max_std_memcpy_sz) {
-        return do_std_memcpy(dst, src, n);
-    }
-
     const auto di{info(dst)};
+    const bool is_locked{di.type == HSA_EXT_POINTER_TYPE_LOCKED};
 
-    if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+    if (!is_locked && si.size == is_cpu_owned) return do_std_memcpy(dst, src, n);
+    // TODO: an issue appears to manifest on certain configurations when reads
+    //       via BAR are used, therefore disable them for now.
+    // if (!is_locked && is_large_BAR && n <= max_d2h_std_memcpy_sz) {
+    //     return do_std_memcpy(dst, src, n);
+    // }
+
+    if (is_locked) {
         dst = static_cast<char*>(di.agentBaseAddress) +
               (static_cast<char*>(dst) -
                static_cast<char*>(di.hostBaseAddress));
@@ -247,7 +252,7 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
 
         throwing_result_check(hsa_amd_memory_lock(dst, n, &si.agentOwner, 1,
                                                   const_cast<void**>(&dst)),
-            __FILE__, __func__, __LINE__);
+                              __FILE__, __func__, __LINE__);
 
         do_copy(dst, src, n, si.agentOwner, si.agentOwner);
     }
@@ -256,14 +261,15 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t di) {
-    if (di.size == INT32_MAX) return do_std_memcpy(dst, src, n);
-    if (di.size == UINT32_MAX && n <= max_std_memcpy_sz) {
+    const auto si{info(const_cast<void*>(src))};
+    const auto is_locked{si.type == HSA_EXT_POINTER_TYPE_LOCKED};
+
+    if (!is_locked && di.size == is_cpu_owned) return do_std_memcpy(dst, src, n);
+    if (!is_locked && is_large_BAR && n <= max_h2d_std_memcpy_sz) {
         return do_std_memcpy(dst, src, n);
     }
 
-    const auto si{info(const_cast<void*>(src))};
-
-    if (si.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+    if (is_locked) {
         src = static_cast<char*>(si.agentBaseAddress) +
             (static_cast<const char*>(src) -
             static_cast<char*>(si.hostBaseAddress));
@@ -280,7 +286,7 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
         throwing_result_check(hsa_amd_memory_lock(const_cast<void*>(src), n,
                                                   &di.agentOwner, 1,
                                                   const_cast<void**>(&src)),
-            __FILE__, __func__, __LINE__);
+                              __FILE__, __func__, __LINE__);
 
         do_copy(dst, src, n, di.agentOwner, di.agentOwner);
     }
@@ -289,36 +295,23 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
                   hsa_amd_pointer_info_t di, hsa_amd_pointer_info_t si) {
-    if (di.size == INT32_MAX && si.size == INT32_MAX) {
+    if (di.size == is_cpu_owned && si.size == is_cpu_owned) {
         return do_std_memcpy(dst, src, n);
     }
-    if (di.size == UINT32_MAX && si.size == UINT32_MAX &&
-        n <= max_std_memcpy_sz) {
-        return do_std_memcpy(dst, src, n);
-    }
+    if (di.size == is_cpu_owned) return d2h_copy(dst, src, n, si);
+    if (si.size == is_cpu_owned) return h2d_copy(dst, src, n, di);
 
-    switch (type(si.agentOwner)) {
-    case HSA_DEVICE_TYPE_GPU:
-        if (type(di.agentOwner) == HSA_DEVICE_TYPE_GPU) {
-            throwing_result_check(
-                hsa_amd_agents_allow_access(
-                    1u, &si.agentOwner, nullptr, di.agentBaseAddress),
-                __FILE__, __func__, __LINE__);
-            return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
-        }
-        return d2h_copy(dst, src, n, si);
-    case HSA_DEVICE_TYPE_CPU:
-        if (type(di.agentOwner) == HSA_DEVICE_TYPE_CPU) {
-            return do_std_memcpy(dst, src, n);
-        }
-        return h2d_copy(dst, src, n, di);
-    default: throw std::runtime_error{"Unsupported copy type."};
-    }
+    throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                      nullptr,
+                                                      di.agentBaseAddress),
+                          __FILE__, __func__, __LINE__);
+
+    return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
 }
 
 inline
 void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
-                 hipMemcpyKind k) noexcept {
+                 hipMemcpyKind k) {
     switch (k) {
     case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
     case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, info(dst));
@@ -326,10 +319,10 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
     case hipMemcpyDeviceToDevice: {
         const auto di{info(dst)};
         const auto si{info(src)};
-        throwing_result_check(
-            hsa_amd_agents_allow_access(
-                1u, &si.agentOwner, nullptr, di.agentBaseAddress),
-            __FILE__, __func__, __LINE__);
+        throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                          nullptr,
+                                                          di.agentBaseAddress),
+                              __FILE__, __func__, __LINE__);
         return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
     }
     default: return generic_copy(dst, src, n, info(dst), info(src));
@@ -1271,7 +1264,7 @@ hipError_t hipMemcpyToSymbolAsync(void* dst, const void* src, size_t count,
     if (dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
-    
+
     if (kind == hipMemcpyDeviceToHost || kind == hipMemcpyHostToHost) {
      	return ihipLogStatus(hipErrorInvalidMemcpyDirection);
     } else if (kind == hipMemcpyDeviceToDevice) {
@@ -1303,7 +1296,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* src, size_t count,
     if (src == nullptr || dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
-    
+
     if (kind == hipMemcpyHostToDevice || kind == hipMemcpyHostToHost) {
      	return ihipLogStatus(hipErrorInvalidMemcpyDirection);
     } else if (kind == hipMemcpyDeviceToDevice) {
