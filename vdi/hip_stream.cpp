@@ -224,7 +224,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
     hostQueue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
   }
 
-  amd::Command* command = hostQueue->getLastQueuedCommand(false);
+  amd::Command* command = hostQueue->getLastQueuedCommand(true);
   if (command == nullptr) {
     HIP_RETURN(hipSuccess);
   }
@@ -233,7 +233,9 @@ hipError_t hipStreamQuery(hipStream_t stream) {
   if (command->type() != 0) {
     event.notifyCmdQueue();
   }
-  HIP_RETURN((command->status() == CL_COMPLETE) ? hipSuccess : hipErrorNotReady);
+  hipError_t status = (command->status() == CL_COMPLETE) ? hipSuccess : hipErrorNotReady;
+  command->release();
+  HIP_RETURN(status);
 }
 
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
