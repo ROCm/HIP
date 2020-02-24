@@ -102,6 +102,7 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
     amd::HostQueue* pQueue = &queue;
     if (queueDevice != dstMemory->getContext().devices()[0]) {
       pQueue = hip::getNullStream(dstMemory->getContext());
+      waitList.push_back(queue.getLastQueuedCommand(true));
     }
     command = new amd::WriteMemoryCommand(*pQueue, CL_COMMAND_WRITE_BUFFER, waitList,
               *dstMemory->asBuffer(), dOffset, sizeBytes, src);
@@ -110,6 +111,7 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
     amd::HostQueue* pQueue = &queue;
     if (queueDevice != srcMemory->getContext().devices()[0]) {
       pQueue = hip::getNullStream(srcMemory->getContext());
+      waitList.push_back(queue.getLastQueuedCommand(true));
     }
     command = new amd::ReadMemoryCommand(*pQueue, CL_COMMAND_READ_BUFFER, waitList,
               *srcMemory->asBuffer(), sOffset, sizeBytes, dst);
@@ -154,6 +156,10 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
     command->awaitCompletion();
   }
   command->release();
+
+  if (waitList.size() > 0) {
+    waitList[0]->release();
+  }
 
   return hipSuccess;
 }
