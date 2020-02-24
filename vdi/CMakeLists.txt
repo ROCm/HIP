@@ -19,13 +19,7 @@ if(CMAKE_BUILD_TYPE MATCHES "^Debug$")
   add_definitions(-DDEBUG)
 endif()
 
-#command example:
-#cmake -DVDI_DIR=/home/pghafari/vdi/vdi -DLIBOCL_STATIC_DIR=/home/pghafari/git-ocl/build/amdocl -DLIBVDI_STATIC_DIR=/home/pghafari/vdi/vdi/build -DUSE_COMGR_LIBRARY=yes -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="/home/pghafari/rocmgitvdi/hsa-runtime/opensrc/hsa-runtime/build;/home/pghafari/rocmgitvdi/hsa-runtime/opensrc;/home/pghafari/rocmgitvdi/support/lib/comgr;/home/pghafari/rocmgitvdi/support/lib/comgr/build;" -DCMAKE_MODULE_PATH=/home/pghafari/rocmgit/opencl/cmake/modules -DLLVM_INCLUDES=/home/pghafari/rocmgit/llvm-project/llvm/include ..
-
 set(USE_PROF_API "1")
-
-find_package(ROCT REQUIRED)
-find_package(ROCR REQUIRED)
 
 if(NOT DEFINED LIBVDI_STATIC_DIR)
    find_path(LIBVDI_STATIC_DIR
@@ -42,7 +36,7 @@ if(NOT DEFINED VDI_DIR)
         PATHS /opt/rocm/vdi
    )
 endif()
-message("vdilib:${LIBVDI_STATIC_DIR} ,found vdi includes ${VDI_DIR}")
+message("Found Static vdi lib:${LIBVDI_STATIC_DIR} and vdi includes: ${VDI_DIR}")
 set(PROF_API_HEADER_PATH ${VDI_DIR}/platform)
 #############################
 # Profiling API support
@@ -56,7 +50,7 @@ set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
 set(PROF_API_CMD "${PROF_API_GEN} -v -t --priv ${OPT_PROF_API} ${PROF_API_HDR} ${PROF_API_SRC} ${PROF_API_STR} >${PROF_API_LOG}")
 MESSAGE(STATUS "Generating profiling promitives: ${PROF_API_STR}")
 execute_process(COMMAND sh -c "rm -f ${PROF_API_STR}; ${PROF_API_CMD}")
-MESSAGE(COMMAND sh -c "rm -f ${PROF_API_STR}; ${PROF_API_CMD}")
+#MESSAGE(COMMAND sh -c "rm -f ${PROF_API_STR}; ${PROF_API_CMD}")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${PROF_API_GEN} ${PROF_API_HDR} ${PROF_API_STR})
 
 # Enable profiling API
@@ -92,7 +86,6 @@ if (DEFINED LLVM_INCLUDES AND NOT ${LLVM_INCLUDES} STREQUAL "")
    include_directories(${LLVM_INCLUDES})
 endif() # if (DEFINED LLVM_INCLUDES AND NOT ${LLVM_INCLUDES} STREQUAL "")
 
-#find_package(hsa-runtime REQUIRED CONFIG PATHS ${HSA_RUNTIME} NO_DEFAULT_PATH)
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/elfio)
@@ -102,9 +95,8 @@ include_directories(${VDI_DIR})
 include_directories(${VDI_DIR}/include)
 include_directories(${VDI_DIR}/compiler/lib)
 include_directories(${VDI_DIR}/compiler/lib/include)
-include_directories(${VDI_DIR}/compiler/lib/loaders)
-include_directories(${VDI_DIR}/compiler/lib/loaders/elf/utils/common)
-include_directories(${VDI_DIR}/compiler/lib/loaders/elf/utils/libelf)
+include_directories(${VDI_DIR}/elf/utils/common)
+include_directories(${VDI_DIR}/elf/utils/libelf)
 add_definitions(-DUSE_COMGR_LIBRARY -DCOMGR_DYN_DLL)
     find_package(amd_comgr REQUIRED CONFIG
             PATHS
@@ -115,12 +107,9 @@ add_definitions(-DUSE_COMGR_LIBRARY -DCOMGR_DYN_DLL)
     )
     MESSAGE(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 
-#find_package(amd_comgr REQUIRED CONFIG)
 include_directories("$<TARGET_PROPERTY:amd_comgr,INTERFACE_INCLUDE_DIRECTORIES>")
 
 add_definitions(-DBSD_LIBELF)
-#find_package( Threads REQUIRED CONFIG)
-#find_package( LibElf REQUIRED CONFIG)
 
 add_library(amdhip64 SHARED
  hip_context.cpp
@@ -143,21 +132,17 @@ add_library(amdhip64 SHARED
  cl_lqdflash_amd.cpp
  fixme.cpp
  )
-add_library(amdvdi_static STATIC IMPORTED)
-set_target_properties(amdvdi_static PROPERTIES IMPORTED_LOCATION "${LIBVDI_STATIC_DIR}/libamdvdi_static.a")
-#add_library(amdocl64 SHARED IMPORTED)
-#set_target_properties(amdocl64 PROPERTIES IMPORTED_LOCATION "/opt/rocm/opencl/lib/x86_64/libamdocl64.so")
-#add_library(oclelf STATIC IMPORTED)
-#set_target_properties(oclelf PROPERTIES IMPORTED_LOCATION "${LIBOCLELF_STATIC_DIR}/liboclelf.a")
 
-    add_library(host INTERFACE)
-    target_link_libraries(host INTERFACE amdhip64)
-    add_library(device INTERFACE)
-    target_link_libraries(device INTERFACE host)
-    #target_link_libraries(amdhip64 PRIVATE amd_comgr)
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+include(${LIBVDI_STATIC_DIR}/amdvdi_staticTargets.cmake)
 
-target_link_libraries(amdhip64 amdvdi_static pthread dl ${ROCT_LIBRARIES} ${ROCR_LIBRARIES})
-#target_link_libraries(amdhip64 amdvdi_static amdocl64_static pthread dl ${ROCT_LIBRARIES} ${ROCR_LIBRARIES})
+add_library(host INTERFACE)
+target_link_libraries(host INTERFACE amdhip64)
+add_library(device INTERFACE)
+target_link_libraries(device INTERFACE host)
+
+target_link_libraries(amdhip64 amdvdi_static pthread dl)
 
 #install(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so)"   )
 
@@ -172,32 +157,3 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAI
 INSTALL(TARGETS amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 
-if(0)
-set(CPACK_GENERATOR "DEB;RPM" CACHE STRING "Default packaging generators")
-
-set(CPACK_PACKAGE_CONTACT "Advanced Micro Devices Inc.")
-set(CPACK_PACKAGE_VENDOR "AMD")
-set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/rocm/hip-on-vdi")
-
-set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
-
-# Debian CPACK variables
-set(CPACK_DEB_COMPONENT_INSTALL ON)
-
-set(CPACK_DEBIAN_MAIN_FILE_NAME "hip-on-vdi-1.0.0.deb")
-set(CPACK_DEBIAN_MAIN_PACKAGE_NAME "hip-on-vdi")
-#set(CPACK_DEBIAN_MAIN_PACKAGE_CONTROL_EXTRA "${CMAKE_CURRENT_SOURCE_DIR}/DEB/postinst;${CMAKE_CURRENT_SOURCE_DIR}/DEB/prerm")
-
-# RPM CPACK variables
-set(CPACK_RPM_COMPONENT_INSTALL ON)
-
-set(CPACK_RPM_MAIN_FILE_NAME "hip-on-vdi-1.0.0.rpm")
-set(CPACK_RPM_MAIN_PACKAGE_NAME "hip-on-vdi")
-#set(CPACK_RPM_MAIN_POST_INSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/RPM/rpm_post")
-#set(CPACK_RPM_MAIN_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/RPM/rpm_postun")
-
-set(CPACK_COMPONENTS_ALL MAIN)
-include(CPack)
-endif()
