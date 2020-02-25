@@ -1,6 +1,5 @@
 #project("hip")
 cmake_minimum_required(VERSION 3.5.1)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-keep-memory -Wl,-Bsymbolic -Wl,--unresolved-symbols=report-all -Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
 
@@ -132,6 +131,13 @@ add_library(amdhip64 SHARED
  cl_lqdflash_amd.cpp
  fixme.cpp
  )
+
+set_target_properties(
+    amdhip64 PROPERTIES
+        CXX_STANDARD 14
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
