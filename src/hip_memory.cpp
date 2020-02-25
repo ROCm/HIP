@@ -232,12 +232,13 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
     if (!is_locked && si.size == is_cpu_owned) {
         return do_std_memcpy(dst, src, n);
     }
-    // TODO: an issue appears to manifest on certain configurations when reads
-    //       via BAR are used, therefore disable them for now.
-    // if (!is_locked && is_large_BAR && n <= max_d2h_std_memcpy_sz) {
-    //     return do_std_memcpy(dst, src, n);
-    // }
-
+    if (!is_locked && is_large_BAR && n <= max_d2h_std_memcpy_sz) {
+        return do_std_memcpy(dst, src, n);
+    }
+    if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
+        return do_copy(dst, src, n, si.agentOwner, si.agentOwner);
+    }
+    
     if (is_locked) {
         dst = static_cast<char*>(di.agentBaseAddress) +
               (static_cast<char*>(dst) -
@@ -271,6 +272,9 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
     }
     if (!is_locked && is_large_BAR && n <= max_h2d_std_memcpy_sz) {
         return do_std_memcpy(dst, src, n);
+    }
+    if (si.type == HSA_EXT_POINTER_TYPE_HSA) {
+        return do_copy(dst, src, n, di.agentOwner, di.agentOwner);
     }
 
     if (is_locked) {
