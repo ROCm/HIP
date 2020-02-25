@@ -103,6 +103,7 @@ amd::HostQueue* getNullStream(Device& dev) {
   }
   return stream->second;
 }
+
 amd::HostQueue* getNullStream(amd::Context& ctx) {
  for (auto& it : g_nullStreams) {
    if (it.first->asContext() == &ctx) {
