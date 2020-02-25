@@ -224,8 +224,11 @@ hipError_t hipFree(void* ptr) {
   }
   if (amd::SvmBuffer::malloced(ptr)) {
     hip::syncStreams();
-    for (size_t i=0; i<g_devices.size(); ++i) {
-      hip::getNullStream(*g_devices[i])->finish();
+    for (auto& dev : g_devices) {
+      amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
+      if (queue != nullptr) {
+        queue->finish();
+      }
     }
     amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
     HIP_RETURN(hipSuccess);
