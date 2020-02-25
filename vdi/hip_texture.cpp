@@ -388,8 +388,7 @@ hipError_t ihipBindTexture(size_t* offset,
                            const hipChannelFormatDesc* desc,
                            size_t size,
                            hipTextureReadMode readMode) {
-  if ((offset == nullptr) ||
-      (texref == nullptr) ||
+  if ((texref == nullptr) ||
       (devPtr == nullptr) ||
       (desc == nullptr)) {
     return hipErrorInvalidValue;
@@ -426,8 +425,7 @@ hipError_t ihipBindTexture2D(size_t* offset,
                              size_t height,
                              size_t pitch,
                              hipTextureReadMode readMode) {
-  if ((offset == nullptr) ||
-      (texref == nullptr) ||
+  if ((texref == nullptr) ||
       (devPtr == nullptr) ||
       (desc == nullptr)) {
     return hipErrorInvalidValue;
