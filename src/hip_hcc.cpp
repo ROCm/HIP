@@ -2451,6 +2451,17 @@ bool ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, 
     return retStatus;
 }
 
+hipError_t hipProfilerStart() {
+    HIP_INIT_API(hipProfilerStart);
+    return ihipLogStatus(hipSuccess);
+};
+
+
+hipError_t hipProfilerStop() {
+    HIP_INIT_API(hipProfilerStop);
+    return ihipLogStatus(hipSuccess);
+};
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 // HCC-specific accessor functions:
