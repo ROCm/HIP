@@ -1824,7 +1824,7 @@ namespace {
             static
             __global__
             void clean(T* p, std::size_t nh, std::size_t nb, int x) noexcept {
-                p[(threadIdx.x < nh) ? threadIdx.x : (threadIdx.x - nh + nb)] = x;
+                p[(threadIdx.x < nh) ? threadIdx.x : (threadIdx.x + nb)] = x;
             }
         };
 
@@ -1857,7 +1857,7 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
                     static_cast<std::uint8_t*>(dst);
                 n -= n_head;
                 n /= sizeof(std::uint32_t);
-                n_tail = count % sizeof(std::uint32_t);
+                n_tail = (count - n_head) % sizeof(std::uint32_t);
                 break;
             case ihipMemsetDataTypeShort:
                 value &= 0xffff;
