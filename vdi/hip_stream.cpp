@@ -42,12 +42,18 @@ class StreamCallback {
 
 namespace hip {
 
-void syncStreams() {
+void syncStreams(int devId) {
   amd::ScopedLock lock(streamSetLock);
 
   for (const auto& it : streamSet) {
-    it->finish();
+    if (it->device->deviceId() == devId) {
+      it->finish();
+    }
   }
+}
+
+void syncStreams() {
+  syncStreams(getCurrentDevice()->deviceId());
 }
 
 Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p, unsigned int f) :

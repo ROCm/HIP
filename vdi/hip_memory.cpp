@@ -65,8 +65,10 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_);
   if (*ptr == nullptr) {
 
-    hip::syncStreams();
-    hip::getNullStream()->finish();
+    for (auto& dev : g_devices) {
+      hip::getNullStream(*dev->asContext())->finish();
+      hip::syncStreams(dev->deviceId());
+    }
 
     *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_);
     if (*ptr == nullptr) {
@@ -223,12 +225,12 @@ hipError_t hipFree(void* ptr) {
     HIP_RETURN(hipSuccess);
   }
   if (amd::SvmBuffer::malloced(ptr)) {
-    hip::syncStreams();
     for (auto& dev : g_devices) {
       amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
       if (queue != nullptr) {
         queue->finish();
       }
+      hip::syncStreams(dev->deviceId());
     }
     amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
     HIP_RETURN(hipSuccess);
@@ -676,9 +678,15 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
 hipError_t hipHostUnregister(void* hostPtr) {
   HIP_INIT_API(hipHostUnregister, hostPtr);
 
+  for (auto& dev : g_devices) {
+    amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
+    if (queue != nullptr) {
+      queue->finish();
+    }
+    hip::syncStreams(dev->deviceId());
+  }
+
   if (amd::SvmBuffer::malloced(hostPtr)) {
-    hip::syncStreams();
-    hip::getNullStream()->finish();
     amd::SvmBuffer::free(*hip::host_device->asContext(), hostPtr);
     HIP_RETURN(hipSuccess);
   } else {
@@ -686,8 +694,6 @@ hipError_t hipHostUnregister(void* hostPtr) {
     amd::Memory* mem = getMemoryObject(hostPtr, offset);
 
     if(mem) {
-      hip::syncStreams();
-      hip::getNullStream()->finish();
       for (const auto& device: hip::getCurrentDevice()->devices()) {
         const device::Memory* devMem = mem->getDeviceMemory(*device);
         amd::MemObjMap::RemoveMemObj(reinterpret_cast<void*>(devMem->virtualAddress()));

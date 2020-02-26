@@ -111,8 +111,9 @@ namespace hip {
   /// Get default stream of the thread
   extern amd::HostQueue* getNullStream();
   /// Sync Blocking streams on the current device
-  /// TODO: It currently syncs all Blocking streams on all devices
   extern void syncStreams();
+  /// Sync blocking streams on the given device
+  extern void syncStreams(int devId);
 
 
   struct Function {
