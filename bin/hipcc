@@ -342,7 +342,7 @@ my $runCmd = 1;
 my $buildDeps = 0;
 my $linkType = 1;
 my $setLinkType = 0;
-my $coFormatv3 = 0;
+my $coFormatv3 = 1;
 
 my @options = ();
 my @inputs  = ();
