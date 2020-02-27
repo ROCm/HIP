@@ -18,6 +18,10 @@ if(CMAKE_BUILD_TYPE MATCHES "^Debug$")
   add_definitions(-DDEBUG)
 endif()
 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options("-Wno-ignored-attributes")
+endif()
+
 set(USE_PROF_API "1")
 
 if(NOT DEFINED LIBVDI_STATIC_DIR)
