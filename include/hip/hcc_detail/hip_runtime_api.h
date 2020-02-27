@@ -2962,7 +2962,6 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
-#if __HIP_VDI__ && !defined(__HCC__)
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
  * on respective streams before enqueuing any other work on the specified streams from any other threads
@@ -2977,7 +2976,6 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags);
 
-#endif
 
 // doxygen end Version Management
 /**
