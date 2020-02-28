@@ -197,19 +197,6 @@ if (NOT CPACK_SET_DESTDIR)
   set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Default installation path of hcc installer package")
 endif (CPACK_SET_DESTDIR)
 
-# Check if we need to enable ATP marker
-if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
-    if(NOT DEFINED ENV{COMPILE_HIP_ATP_MARKER})
-        set(COMPILE_HIP_ATP_MARKER 0)
-    else()
-        set(COMPILE_HIP_ATP_MARKER $ENV{COMPILE_HIP_ATP_MARKER})
-        message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
-    endif()
-else()
-    message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
-endif()
-add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
-
 #############################
 # Profiling API support
 #############################
@@ -267,10 +254,6 @@ endif ()
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
     set(HIP_HCC_BUILD_FLAGS)
-    if(COMPILE_HIP_ATP_MARKER)
-        include_directories(/opt/rocm/profiler/CXLActivityLogger/include)
-        set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DCOMPILE_HIP_ATP_MARKER=1")
-    endif()
 
     # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_GITDATE}")
@@ -321,9 +304,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
         set (CMAKE_BUILD_WITH_INSTALL_RPATH TRUE )
         set (CMAKE_SKIP_BUILD_RPATH TRUE )
     endif ()
-    if(COMPILE_HIP_ATP_MARKER)
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
-    endif()
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
 
