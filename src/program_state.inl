@@ -426,7 +426,11 @@ public:
 
         auto check_hsa_error = [](hsa_status_t s) {
             if (s != HSA_STATUS_SUCCESS) {
-                hip_throw(std::runtime_error{"error when loading code object"});
+                const char* hsa_err_msg;
+                hsa_status_string(s, &hsa_err_msg);
+                hip_throw(std::runtime_error{
+                              std::string("error when loading code object: ") +
+                              hsa_err_msg});
             }
         };
 
