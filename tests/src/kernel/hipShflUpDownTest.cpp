@@ -59,7 +59,7 @@ void runTestShflUp() {
     T* d_a;
     hipMalloc(&d_a, sizeof(T) * size);
     hipMemcpy(d_a, &a, sizeof(T) * size, hipMemcpyDefault);
-    hipLaunchKernelGGL(shflUpSum, 1, size, 0, 0, d_a, size);
+    hipLaunchKernelGGL(shflUpSum<T>, 1, size, 0, 0, d_a, size);
     hipMemcpy(&a, d_a, sizeof(T) * size, hipMemcpyDefault);
     if (a[size - 1] != cpuSum) {
         hipFree(d_a);
@@ -80,7 +80,7 @@ void runTestShflDown() {
     T* d_a;
     hipMalloc(&d_a, sizeof(T) * size);
     hipMemcpy(d_a, &a, sizeof(T) * size, hipMemcpyDefault);
-    hipLaunchKernelGGL(shflDownSum, 1, size, 0, 0, d_a, size);
+    hipLaunchKernelGGL(shflDownSum<T>, 1, size, 0, 0, d_a, size);
     hipMemcpy(&a, d_a, sizeof(T) * size, hipMemcpyDefault);
     if (a[0] != cpuSum) {
         hipFree(d_a);
@@ -89,8 +89,13 @@ void runTestShflDown() {
     hipFree(d_a);
 }
 int main() {
+    runTestShflUp<int>();
+    runTestShflUp<float>();
     runTestShflUp<long>();
     runTestShflUp<long long>();
+
+    runTestShflDown<int>();
+    runTestShflDown<float>();
     runTestShflDown<long>();
     runTestShflDown<long long>();
     passed();
