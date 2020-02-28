@@ -181,6 +181,8 @@ global:
     hiprtcGetCode;
     hiprtcGetCodeSize;
     hiprtcGetErrorString;
+    hiprtcAddNameExpression;
+    hiprtcVersion;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;
@@ -221,18 +223,6 @@ global:
     hipInitActivityCallback*;
     hipEnableActivityCallback*;
     hipGetCmdName*;
-    hiprtcAddNameExpression*;
-    hiprtcCompileProgram*;
-    hiprtcCreateProgram*;
-    hiprtcDestroyProgram*;
-    hiprtcGetLoweredName*;
-    hiprtcGetProgramLog*;
-    hiprtcGetProgramLogSize*;
-    hiprtcGetCode*;
-    hiprtcGetCodeSize*;
-    hiprtcGetErrorString*;
-    hiprtcVersion*;
-    hiprtcGetTypeName*;
     };
 local:
     *;
