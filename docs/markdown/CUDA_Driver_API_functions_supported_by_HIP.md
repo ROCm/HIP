@@ -1126,10 +1126,10 @@
 
 |   **CUDA**                                                |   **HIP**                                               |**CUDA version\***|
 |-----------------------------------------------------------|---------------------------------------------------------|------------------|
-| `cuOccupancyMaxActiveBlocksPerMultiprocessor`             |`hipOccupancyMaxActiveBlocksPerMultiprocessor`           |
-| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |
-| `cuOccupancyMaxPotentialBlockSize`                        |`hipOccupancyMaxPotentialBlockSize`                      |
-| `cuOccupancyMaxPotentialBlockSizeWithFlags`               |                                                         |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessor`             |`hipDrvOccupancyMaxActiveBlocksPerMultiprocessor`           |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |`hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |
+| `cuOccupancyMaxPotentialBlockSize`                        |`hipOccupancyMaxPotentialBlockSize`                         |
+| `cuOccupancyMaxPotentialBlockSizeWithFlags`               |                                                            |
 
 ## **22. Texture Reference Management [DEPRECATED]**
 
