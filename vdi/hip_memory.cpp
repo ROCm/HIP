@@ -1324,7 +1324,7 @@ hipError_t ihipMemcpyAtoH(hipArray* srcArray,
   return hipSuccess;
 }
 
-hipError_t ihipMemcpyParam3D(const hipMemcpy3DParms* pCopy,
+hipError_t ihipMemcpyParam3D(const _HIP_MEMCPY3D* pCopy,
                              hipStream_t stream,
                              bool isAsync = false) {
   // If {src/dst}MemoryType is hipMemoryTypeUnified, {src/dst}Device and {src/dst}Pitch specify the (unified virtual address space)
@@ -1379,13 +1379,13 @@ hipError_t ihipMemcpyParam3D(const hipMemcpy3DParms* pCopy,
 hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy,
                              hipStream_t stream,
                              bool isAsync = false) {
-  hipMemcpy3DParms desc = hip::getMemcpy3DParms(*pCopy);
+  _HIP_MEMCPY3D desc = hip::getMemcpy3DParms(*pCopy);
 
   return ihipMemcpyParam3D(&desc, stream, isAsync);
 }
 
 hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
-                       size_t height, hipMemcpyKind kind, hipStream_t stream, bool isAsync = false) {
+                        size_t height, hipMemcpyKind kind, hipStream_t stream, bool isAsync = false) {
   hip_Memcpy2D desc = {};
 
   desc.srcXInBytes = 0;
@@ -1537,55 +1537,70 @@ hipError_t hipMemcpyAtoH(void* dstHost,
 hipError_t ihipMemcpy3D(const hipMemcpy3DParms* p,
                         hipStream_t stream,
                         bool isAsync = false) {
-  // Having src and dst be an array is ambigous, since we can't tell
-  // if the user intended to call runtime or driver version of hipMemcpy3D().
-  // For now hope that we never encounter this case.
-  assert((p->srcArray == nullptr) || (p->dstArray == nullptr));
+  // The struct passed to hipMemcpy3D() must specify one of srcArray or srcPtr and one of dstArray or dstPtr.
+  // Passing more than one non-zero source or destination will cause hipMemcpy3D() to return an error.
+  if (((p->srcArray != nullptr) && (p->srcPtr.ptr != nullptr)) ||
+      ((p->dstArray != nullptr) && (p->dstPtr.ptr != nullptr))) {
+    return hipErrorInvalidValue;
+  }
 
-  // Now we need to patch the user provided struct if they intended on calling the runtime version.
-  hipMemcpy3DParms pCopy = {};
-  std::memcpy(&pCopy, p, sizeof(hipMemcpy3DParms));
+  // If the source and destination are both arrays, hipMemcpy3D() will return an error if they do not have the same element size.
+  if (((p->srcArray != nullptr) && (p->dstArray != nullptr)) &&
+      (hip::getElementSize(p->dstArray->Format) != hip::getElementSize(p->dstArray->Format))) {
+    return hipErrorInvalidValue;
+  }
 
-  if ((p->srcPtr.ptr != nullptr) || (p->dstPtr.ptr != nullptr)) {
-    pCopy.WidthInBytes = p->extent.width;
-    pCopy.Height = p->extent.height;
-    pCopy.Depth = p->extent.depth;
+  _HIP_MEMCPY3D pCopy = {};
+
+  pCopy.WidthInBytes = p->extent.width;
+  pCopy.Height = p->extent.height;
+  pCopy.Depth = p->extent.depth;
+
+  pCopy.srcXInBytes = p->srcPos.x;
+  pCopy.srcY = p->srcPos.y;
+  pCopy.srcZ = p->srcPos.z;
+  pCopy.srcLOD = 0;
+
+  pCopy.dstXInBytes = p->dstPos.x;
+  pCopy.dstY = p->dstPos.y;
+  pCopy.dstZ = p->dstPos.z;
+  pCopy.dstLOD = 0;
+
+  if (p->srcArray != nullptr) {
+    pCopy.srcMemoryType = hipMemoryTypeArray;
+    // When reffering to array memory, hipPos::x is in elements.
+    pCopy.srcXInBytes *= hip::getElementSize(p->dstArray->Format);
   }
 
   if (p->srcPtr.ptr != nullptr) {
-    pCopy.srcXInBytes = p->srcPos.x;
-    pCopy.srcY = p->srcPos.y;
-    pCopy.srcZ = p->srcPos.z;
-    pCopy.srcLOD = 0;
     pCopy.srcMemoryType = std::get<0>(hip::getMemoryType(p->kind));
     pCopy.srcHost = p->srcPtr.ptr;
     pCopy.srcDevice = p->srcPtr.ptr;
     pCopy.srcPitch = p->srcPtr.pitch;
     pCopy.srcHeight = p->srcPtr.ysize;
+  }
 
-    if (p->dstArray != nullptr) {
-      pCopy.dstMemoryType = hipMemoryTypeArray;
-      // When reffering to array memory, hipExtent::width is in elements.
-      pCopy.WidthInBytes *= hip::getElementSize(p->dstArray->Format);
-    }
+  if (p->dstArray != nullptr) {
+    pCopy.dstMemoryType = hipMemoryTypeArray;
+    // When reffering to array memory, hipPos::x is in elements.
+    pCopy.srcXInBytes *= hip::getElementSize(p->dstArray->Format);
   }
 
   if (p->dstPtr.ptr != nullptr) {
-    pCopy.dstXInBytes = p->dstPos.x;
-    pCopy.dstY = p->dstPos.y;
-    pCopy.dstZ = p->dstPos.z;
-    pCopy.dstLOD = 0;
     pCopy.dstMemoryType = std::get<1>(hip::getMemoryType(p->kind));
     pCopy.dstHost = p->dstPtr.ptr;
     pCopy.dstDevice = p->dstPtr.ptr;
     pCopy.dstPitch = p->dstPtr.pitch;
     pCopy.dstHeight = p->dstPtr.ysize;
+  }
 
-    if (p->srcArray != nullptr) {
-      pCopy.srcMemoryType = hipMemoryTypeArray;
-      // When reffering to array memory, hipExtent::width is in elements.
-      pCopy.WidthInBytes *= hip::getElementSize(p->srcArray->Format);
-    }
+  // If a HIP array is participating in the copy, the extent is defined in terms of that array's elements.
+  if ((p->srcArray != nullptr) && (p->dstArray == nullptr)) {
+    pCopy.WidthInBytes *= hip::getElementSize(p->srcArray->Format);
+  } else if ((p->srcArray == nullptr) && (p->dstArray != nullptr)) {
+    pCopy.WidthInBytes *= hip::getElementSize(p->dstArray->Format);
+  } else if ((p->srcArray != nullptr) && (p->dstArray != nullptr)) {
+    pCopy.WidthInBytes *= hip::getElementSize(p->dstArray->Format);
   }
 
   return ihipMemcpyParam3D(&pCopy, stream, isAsync);
@@ -1601,6 +1616,18 @@ hipError_t hipMemcpy3DAsync(const hipMemcpy3DParms* p, hipStream_t stream) {
   HIP_INIT_API(hipMemcpy3DAsync, p, stream);
 
   HIP_RETURN(ihipMemcpy3D(p, stream, true));
+}
+
+hipError_t hipDrvMemcpy3D(const _HIP_MEMCPY3D* pCopy) {
+  HIP_INIT_API(hipDrvMemcpy3D, pCopy);
+
+  HIP_RETURN(ihipMemcpyParam3D(pCopy, nullptr));
+}
+
+hipError_t hipDrvMemcpy3DAsync(const _HIP_MEMCPY3D* pCopy, hipStream_t stream) {
+  HIP_INIT_API(hipDrvMemcpy3DAsync, pCopy, stream);
+
+  HIP_RETURN(ihipMemcpyParam3D(pCopy, stream, true));
 }
 
 hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
