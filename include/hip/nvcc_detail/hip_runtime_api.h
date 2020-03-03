@@ -1134,6 +1134,10 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->integrated = cdprop.integrated;
     p_prop->cooperativeLaunch = cdprop.cooperativeLaunch;
     p_prop->cooperativeMultiDeviceLaunch = cdprop.cooperativeMultiDeviceLaunch;
+    p_prop->cooperativeMultiDeviceUnmatchedFunc = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedGridDim = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedBlockDim = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedSharedMem = 0;
 
     p_prop->maxTexture1D    = cdprop.maxTexture1D;
     p_prop->maxTexture2D[0] = cdprop.maxTexture2D[0];

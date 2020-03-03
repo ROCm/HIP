@@ -117,6 +117,14 @@ typedef struct hipDeviceProp_t {
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
     int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices
+    int cooperativeMultiDeviceUnmatchedFunc; ///< HIP device supports cooperative launch on multiple
+                                             ///devices with unmatched functions
+    int cooperativeMultiDeviceUnmatchedGridDim; ///< HIP device supports cooperative launch on multiple
+                                                ///devices with unmatched grid dimensions
+    int cooperativeMultiDeviceUnmatchedBlockDim;///< HIP device supports cooperative launch on multiple
+                                                ///devices with unmatched block dimensions
+    int cooperativeMultiDeviceUnmatchedSharedMem;///< HIP device supports cooperative launch on multiple
+                                                 ///devices with unmatched shared memories
     int maxTexture1D;          ///< Maximum number of elements in 1D images
     int maxTexture2D[2];       ///< Maximum dimensions (width, height) of 2D images, in image elements
     int maxTexture3D[3];       ///< Maximum dimensions (width, height, depth) of 3D images, in image elements
@@ -313,6 +321,14 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIntegrated,                        ///< iGPU
     hipDeviceAttributeCooperativeLaunch,                 ///< Support cooperative launch
     hipDeviceAttributeCooperativeMultiDeviceLaunch,      ///< Support cooperative launch on multiple devices
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc, ///< Supports cooperative launch on multiple
+                                                           ///devices with unmatched functions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim, ///< Supports cooperative launch on multiple
+                                                              ///devices with unmatched grid dimensions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim,///< Supports cooperative launch on multiple
+                                                              ///devices with unmatched block dimensions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem,///< Supports cooperative launch on multiple
+                                                               ///devices with unmatched shared memories
 
     hipDeviceAttributeMaxTexture1DWidth,    ///< Maximum number of elements in 1D images
     hipDeviceAttributeMaxTexture2DWidth,    ///< Maximum dimension width of 2D images in image elements
