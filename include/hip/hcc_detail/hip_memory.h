@@ -49,7 +49,7 @@ __attribute__((weak)) __device__
 extern __device__ char __hip_device_heap[];
 extern __device__ uint32_t __hip_device_page_flag[];
 #endif
-
+/*
 extern "C" inline __device__ void* __hip_malloc(size_t size) {
     char* heap = (char*)__hip_device_heap;
     if (size > __HIP_SIZE_OF_HEAP) {
@@ -108,7 +108,7 @@ extern "C" inline __device__ void* __hip_free(void* ptr) {
 
     return nullptr;
 }
-
+*/
 #endif
 
 #endif // HIP_INCLUDE_HIP_HCC_DETAIL_HIP_MEMORY_H
