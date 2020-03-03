@@ -101,6 +101,8 @@ cl_channel_type getCLChannelType(const hipArray_Format hipFormat,
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -115,6 +117,8 @@ cl_channel_order getCLChannelOrder(const unsigned int hipNumChannels) {
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -139,6 +143,8 @@ cl_mem_object_type getCLMemObjectType(const unsigned int hipWidth,
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -155,6 +161,8 @@ cl_addressing_mode getCLAddressingMode(const hipTextureAddressMode hipAddressMod
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -167,6 +175,8 @@ cl_filter_mode getCLFilterMode(const hipTextureFilterMode hipFilterMode) {
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -179,6 +189,8 @@ cl_mem_object_type getCLMemObjectType(const hipResourceType hipResType) {
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -198,6 +210,8 @@ size_t getElementSize(const hipArray_Format arrayFormat) {
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -279,6 +293,8 @@ hipChannelFormatDesc getChannelFormatDesc(int numChannels,
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -317,6 +333,8 @@ hipArray_Format getArrayFormat(const hipChannelFormatDesc& desc) {
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -349,6 +367,8 @@ int getNumChannels(const hipResourceViewFormat hipFormat) {
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -389,6 +409,8 @@ hipArray_Format getArrayFormat(const hipResourceViewFormat hipFormat) {
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -481,6 +503,8 @@ hipResourceViewFormat getResourceViewFormat(const hipChannelFormatDesc& desc) {
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
@@ -576,6 +600,8 @@ std::pair<hipMemoryType, hipMemoryType> getMemoryType(const hipMemcpyKind kind) 
   }
 
   ShouldNotReachHere();
+
+  return {};
 }
 
 inline
