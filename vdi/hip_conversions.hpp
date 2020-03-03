@@ -186,6 +186,8 @@ cl_mem_object_type getCLMemObjectType(const hipResourceType hipResType) {
       return CL_MEM_OBJECT_IMAGE1D;
     case hipResourceTypePitch2D:
       return CL_MEM_OBJECT_IMAGE2D;
+    default:
+      break;
   }
 
   ShouldNotReachHere();
@@ -330,6 +332,8 @@ hipArray_Format getArrayFormat(const hipChannelFormatDesc& desc) {
         case 32:
           return HIP_AD_FORMAT_FLOAT;
       }
+    default:
+      break;
   }
 
   ShouldNotReachHere();
@@ -364,6 +368,8 @@ int getNumChannels(const hipResourceViewFormat hipFormat) {
     case hipResViewFormatHalf4:
     case hipResViewFormatFloat4:
       return 4;
+    default:
+      break;
   }
 
   ShouldNotReachHere();
@@ -406,6 +412,8 @@ hipArray_Format getArrayFormat(const hipResourceViewFormat hipFormat) {
     case hipResViewFormatFloat2:
     case hipResViewFormatFloat4:
       return HIP_AD_FORMAT_FLOAT;
+    default:
+      break;
   }
 
   ShouldNotReachHere();
@@ -500,6 +508,8 @@ hipResourceViewFormat getResourceViewFormat(const hipChannelFormatDesc& desc) {
               return hipResViewFormatFloat4;
           }
       }
+    default:
+      break;
   }
 
   ShouldNotReachHere();
