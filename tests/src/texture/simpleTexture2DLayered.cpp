@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM vdi
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -66,7 +66,7 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
     myparms.extent = make_hipExtent(width , height, num_layers);
-    //myparms.kind = hipMemcpyHostToDevice;
+    myparms.kind = hipMemcpyHostToDevice;
     HIPCHECK(hipMemcpy3D(&myparms));
 
     // set texture parameters
