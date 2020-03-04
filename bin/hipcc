@@ -221,8 +221,8 @@ if ($HIP_PLATFORM eq "clang") {
 
     $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
     $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
-    if (! $HIP_RUNTIME eq "HCC" ) {
-      $HIPCXXFLAGS .= " -fhip-new-launch-api";
+    if (!($HIP_RUNTIME eq "HCC")) {
+      $HIPCXXFLAGS .= " -D__HIP_VDI__ -fhip-new-launch-api";
     }
 
 } elsif ($HIP_PLATFORM eq "hcc") {
