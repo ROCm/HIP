@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <cxxabi.h>
 #include <fstream>
 #include <map>
 #include <memory>
@@ -767,9 +768,17 @@ namespace hip_impl {
     std::pair<hipDeviceptr_t, std::size_t> read_global_description(
         ForwardIterator f, ForwardIterator l, const char* name) {
         const auto it = std::find_if(f, l, [=](const Agent_global& x) {
-            return strcmp(x.name, name) == 0;
+            if (strcmp(x.name, name) == 0)
+                return true;
+            int status;
+            char* demangled_name = abi::__cxa_demangle(x.name, nullptr, nullptr, &status);
+            int r = -1;
+            if (demangled_name) {
+                r = strcmp(demangled_name, name);
+                free(demangled_name);
+            }
+            return r == 0;
         });
-
         return it == l ?
             std::make_pair(nullptr, 0u) : std::make_pair(it->address, it->byte_cnt);
     }
