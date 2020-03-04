@@ -674,6 +674,7 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
     hipError_t hip_status = hipSuccess;
 
     if (sizeBytes == 0) {
+        if (ptr) *ptr = NULL;
         return ihipLogStatus(hipSuccess);
     }
 
@@ -701,6 +702,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
 
 #if (__hcc_workweek__ >= 19115)
     if (sizeBytes == 0) {
+        if (ptr) *ptr = NULL;
         return ihipLogStatus(hipSuccess);
     }
 
