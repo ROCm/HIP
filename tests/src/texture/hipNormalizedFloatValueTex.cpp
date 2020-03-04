@@ -29,22 +29,6 @@ THE SOFTWARE.
 #include "test_common.h"
 #define SIZE 10
 
-static float getNormalizedValue(const float value,
-                                const enum hipArray_Format texFormat) {
-    switch (texFormat) {
-        case HIP_AD_FORMAT_SIGNED_INT8:
-            return (value / SCHAR_MAX);
-        case HIP_AD_FORMAT_UNSIGNED_INT8:
-            return (value / UCHAR_MAX);
-        case HIP_AD_FORMAT_SIGNED_INT16:
-            return (value / SHRT_MAX);
-        case HIP_AD_FORMAT_UNSIGNED_INT16:
-            return (value / USHRT_MAX);
-        default:
-            return value;
-    }
-}
-
 #if __HIP__
 __hip_pinned_shadow__
 #endif
@@ -55,14 +39,29 @@ __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
     unsigned int elementID = hipThreadIdx_x;
     if(elementID >= numElements)
 	    return;
-    float coord =(float) elementID/(numElements-1);
+    float coord =(float) elementID/(numElements);
     pDst[elementID] = tex1D(textureNormalizedVal_1D, coord);
+}
+
+static float getNormalizedValue(const float value, const enum hipArray_Format texFormat) {
+  switch (texFormat) {
+    case HIP_AD_FORMAT_SIGNED_INT8:
+      return (value / SCHAR_MAX);
+    case HIP_AD_FORMAT_UNSIGNED_INT8:
+      return (value / UCHAR_MAX);
+    case HIP_AD_FORMAT_SIGNED_INT16:
+      return (value / SHRT_MAX);
+    case HIP_AD_FORMAT_UNSIGNED_INT16:
+      return (value / USHRT_MAX);
+    default:
+      return value;
+  }
 }
 
 template<typename T>
 bool textureTest(enum hipArray_Format texFormat)
 {
-    T hData[] = {65, 66, 67, 68, 69, 70, 71, 72,73,74};
+    T hData[] = {65, 66, 67, 68, 69, 70, 71, 72, 73, 74};
     T *dData = NULL;
     HIPCHECK(hipMalloc((void **) &dData, sizeof(T)*SIZE));
     HIPCHECK(hipMemcpyHtoD((hipDeviceptr_t)dData, hData, sizeof(T)*SIZE));
@@ -101,7 +100,7 @@ bool textureTest(enum hipArray_Format texFormat)
     }
     hipFree(dData);
     hipFree(dOutputData);
-    hipUnbindTexture(textureNormalizedVal_1D);
+    hipUnbindTexture(texRef);
     delete [] hOutputData;
     return testResult;
 }
