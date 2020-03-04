@@ -237,6 +237,8 @@ private:
 
   std::unordered_map<const void*, DeviceFunction > functions_;
   std::unordered_multimap<std::string, DeviceVar > vars_;
+  // Map from the host shadow symbol to its device name.
+  std::unordered_map<const void*, std::string> symbols_;
 
   static PlatformState* platform_;
 
@@ -251,8 +253,10 @@ public:
   std::vector< std::pair<hipModule_t, bool> >* unregisterVar(hipModule_t hmod);
 
 
+  bool findSymbol(const void *hostVar, std::string &devName);
   PlatformState::DeviceVar* findVar(std::string hostVar, int deviceId, hipModule_t hmod);
-  void registerVar(const void* hostvar, const DeviceVar& var);
+  void registerVarSym(const void *hostVar, const char *symbolName);
+  void registerVar(const char* symbolName, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
 
   bool registerModFuncs(std::vector<std::string>& func_names, hipModule_t* module);
@@ -260,7 +264,7 @@ public:
   bool createFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
   hipFunction_t getFunc(const void* hostFunction, int deviceId);
   bool getFuncAttr(const void* hostFunction, hipFuncAttributes* func_attr);
-  bool getGlobalVar(const void* hostVar, int deviceId, hipModule_t hmod,
+  bool getGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
                     hipDeviceptr_t* dev_ptr, size_t* size_ptr);
   bool getTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef);
 
