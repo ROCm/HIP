@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: tex2d_kernel.code %hc --genco %S/tex2d_kernel.cpp -o directed_tests/runtimeApi/module/tex2d_kernel.code
+ * BUILD_CMD: tex2d_kernel.code %hc --genco %S/tex2d_kernel.cpp -o tex2d_kernel.code
  * HIT_END
  */
 
