@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.4.3)
 project(hip)
 
 #############################
-# Options
-#############################
-option(BUILD_HIPIFY_CLANG "Enable building the CUDA->HIP converter" OFF)
-
-#############################
 # Setup config generation
 #############################
 string(TIMESTAMP _timestamp UTC)
@@ -197,19 +192,6 @@ if (NOT CPACK_SET_DESTDIR)
   set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Default installation path of hcc installer package")
 endif (CPACK_SET_DESTDIR)
 
-# Check if we need to enable ATP marker
-if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
-    if(NOT DEFINED ENV{COMPILE_HIP_ATP_MARKER})
-        set(COMPILE_HIP_ATP_MARKER 0)
-    else()
-        set(COMPILE_HIP_ATP_MARKER $ENV{COMPILE_HIP_ATP_MARKER})
-        message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
-    endif()
-else()
-    message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
-endif()
-add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
-
 #############################
 # Profiling API support
 #############################
@@ -251,11 +233,6 @@ set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
-# Build clang hipify if enabled
-if (BUILD_HIPIFY_CLANG)
-    add_subdirectory(hipify-clang)
-endif()
-
 # Build LPL an CA (fat binary generation / fat binary decomposition tools) if
 # platform is hcc; do this before the ugly hijacking of the compiler, since no
 # HC code is involved.
@@ -267,10 +244,6 @@ endif ()
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
     set(HIP_HCC_BUILD_FLAGS)
-    if(COMPILE_HIP_ATP_MARKER)
-        include_directories(/opt/rocm/profiler/CXLActivityLogger/include)
-        set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DCOMPILE_HIP_ATP_MARKER=1")
-    endif()
 
     # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_GITDATE}")
@@ -321,9 +294,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
         set (CMAKE_BUILD_WITH_INSTALL_RPATH TRUE )
         set (CMAKE_SKIP_BUILD_RPATH TRUE )
     endif ()
-    if(COMPILE_HIP_ATP_MARKER)
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
-    endif()
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
 
@@ -483,11 +453,6 @@ add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR}
     DEPENDS lpl ca)
-
-# Packaging needs to wait for hipify-clang to build if it's enabled...
-if (BUILD_HIPIFY_CLANG)
-    add_dependencies(pkg_hip_base hipify-clang)
-endif()
 
 # Package: hip_hcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)

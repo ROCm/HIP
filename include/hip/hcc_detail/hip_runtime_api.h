@@ -2959,13 +2959,36 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
- * @param [in]  func             Kernel function for which occupancy is calulated
+ * @param [in]  func             Kernel function (hipFunction) for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ */
+hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
+   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  f                Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
+ */
+hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
 #if __HIP_VDI__ && !defined(__HCC__)
 /**
