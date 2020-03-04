@@ -266,7 +266,21 @@ PlatformState::DeviceVar* PlatformState::findVar(std::string hostVar, int device
   return dvar;
 }
 
-void PlatformState::registerVar(const void* hostvar,
+bool PlatformState::findSymbol(const void *hostVar, std::string &symbolName) {
+  auto it = symbols_.find(hostVar);
+  if (it != symbols_.end()) {
+    symbolName = it->second;
+    return true;
+  }
+  return false;
+}
+
+void PlatformState::registerVarSym(const void *hostVar, const char *symbolName) {
+  amd::ScopedLock lock(lock_);
+  symbols_.insert(std::make_pair(hostVar, std::string(symbolName)));
+}
+
+void PlatformState::registerVar(const char* hostvar,
                                 const DeviceVar& rvar) {
   amd::ScopedLock lock(lock_);
   vars_.insert(std::make_pair(std::string(reinterpret_cast<const char*>(hostvar)), rvar));
@@ -447,7 +461,7 @@ bool PlatformState::getTexRef(const char* hostVar, hipModule_t hmod, textureRefe
   return true;
 }
 
-bool PlatformState::getGlobalVar(const void* hostVar, int deviceId, hipModule_t hmod,
+bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
                                  hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
   amd::ScopedLock lock(lock_);
   DeviceVar* dvar = findVar(std::string(reinterpret_cast<const char*>(hostVar)), deviceId, hmod);
@@ -542,6 +556,7 @@ extern "C" void __hipRegisterVar(
     std::vector<PlatformState::RegisteredVar>{g_devices.size()}, false };
 
   PlatformState::instance().registerVar(hostVar, dvar);
+  PlatformState::instance().registerVarSym(var, deviceVar);
 }
 
 extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, bool> >* modules)
@@ -643,18 +658,30 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
     exec.sharedMem_, exec.hStream_, nullptr, extra));
 }
 
-hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol) {
+  HIP_INIT_API(hipGetSymbolAddress, devPtr, symbol);
+
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
   size_t size = 0;
-  if(!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+  if(!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                              devPtr, &size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbolName) {
+hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbol) {
+  HIP_INIT_API(hipGetSymbolSize, sizePtr, symbol);
+
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
   hipDeviceptr_t devPtr = nullptr;
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                               &devPtr, sizePtr)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }

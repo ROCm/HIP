@@ -379,7 +379,7 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 #elif defined(__clang__) && defined(__HIP__)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
-#define HIP_SYMBOL(X) #X
+#define HIP_SYMBOL(X) X
 
 typedef int hipLaunchParm;
 
