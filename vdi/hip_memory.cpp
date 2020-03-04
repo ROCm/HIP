@@ -705,15 +705,19 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 };
 
 
-hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t count,
+hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t count,
                              size_t offset, hipMemcpyKind kind) {
-  HIP_INIT_API(hipMemcpyToSymbol, symbolName, src, count, offset, kind);
+  HIP_INIT_API(hipMemcpyToSymbol, symbol, src, count, offset, kind);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                               &device_ptr, &sym_size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
@@ -729,15 +733,19 @@ hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src, size_t cou
   HIP_RETURN(hipMemcpy(device_ptr, src, count, kind));
 }
 
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count,
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t count,
                                size_t offset, hipMemcpyKind kind) {
-  HIP_INIT_API(hipMemcpyFromSymbol, symbolName, dst, count, offset, kind);
+  HIP_INIT_API(hipMemcpyFromSymbol, symbol, dst, count, offset, kind);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                               &device_ptr, &sym_size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
@@ -753,15 +761,19 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName, size_t count,
   HIP_RETURN(hipMemcpy(dst, device_ptr, count, kind));
 }
 
-hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_t count,
+hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t count,
                                   size_t offset, hipMemcpyKind kind, hipStream_t stream) {
-  HIP_INIT_API(hipMemcpyToSymbolAsync, symbolName, src, count, offset, kind, stream);
+  HIP_INIT_API(hipMemcpyToSymbolAsync, symbol, src, count, offset, kind, stream);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                               &device_ptr, &sym_size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
@@ -777,15 +789,19 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src, size_
   HIP_RETURN(hipMemcpyAsync(device_ptr, src, count, kind, stream));
 }
 
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName, size_t count,
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t count,
                                     size_t offset, hipMemcpyKind kind, hipStream_t stream) {
-  HIP_INIT_API(hipMemcpyFromSymbolAsync, symbolName, dst, count, offset, kind, stream);
+  HIP_INIT_API(hipMemcpyFromSymbolAsync, symbol, dst, count, offset, kind, stream);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                               &device_ptr, &sym_size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }

@@ -1488,18 +1488,18 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
 
-hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName);
-hipError_t hipGetSymbolSize(size_t* size, const void* symbolName);
-hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
+hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
+hipError_t hipMemcpyToSymbol(const void* symbol, const void* src,
                              size_t sizeBytes, size_t offset __dparm(0),
                              hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
-hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
+hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src,
                                   size_t sizeBytes, size_t offset,
                                   hipMemcpyKind kind, hipStream_t stream __dparm(0));
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol,
                                size_t sizeBytes, size_t offset __dparm(0),
                                hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
                                     hipStream_t stream __dparm(0));
@@ -3270,6 +3270,46 @@ static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessorWi
         numBlocks, (hipFunction_t)func, blockSize, dynSharedMemPerBlk, flags);
 }
 #endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+
+#if defined(__cplusplus) && !defined(__HCC__)
+
+template <typename T>
+hipError_t hipGetSymbolAddress(void** devPtr, const T &symbol) {
+  return ::hipGetSymbolAddress(devPtr, (const void *)&symbol);
+}
+
+template <typename T>
+hipError_t hipGetSymbolSize(size_t* size, const T &symbol) {
+  return ::hipGetSymbolSize(size, (const void *)&symbol);
+}
+
+template <typename T>
+hipError_t hipMemcpyToSymbol(const T& symbol, const void* src, size_t sizeBytes,
+                             size_t offset __dparm(0),
+                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice)) {
+  return ::hipMemcpyToSymbol((const void*)&symbol, src, sizeBytes, offset, kind);
+}
+
+template <typename T>
+hipError_t hipMemcpyToSymbolAsync(const T& symbol, const void* src, size_t sizeBytes, size_t offset,
+                                  hipMemcpyKind kind, hipStream_t stream __dparm(0)) {
+  return ::hipMemcpyToSymbolAsync((const void*)&symbol, src, sizeBytes, offset, kind, stream);
+}
+
+template <typename T>
+hipError_t hipMemcpyFromSymbol(void* dst, const T &symbol,
+                               size_t sizeBytes, size_t offset __dparm(0),
+                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost)) {
+  return ::hipMemcpyFromSymbol(dst, (const void*)&symbol, sizeBytes, offset, kind);
+}
+
+template <typename T>
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const T& symbol, size_t sizeBytes, size_t offset,
+                                    hipMemcpyKind kind, hipStream_t stream __dparm(0)) {
+  return ::hipMemcpyFromSymbolAsync(dst, (const void*)&symbol, sizeBytes, offset, kind, stream);
+}
+
+#endif
 
 #if USE_PROF_API
 #include <hip/hcc_detail/hip_prof_str.h>
