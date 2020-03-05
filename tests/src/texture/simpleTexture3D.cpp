@@ -84,10 +84,10 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     }
 
     // Allocate array and copy image data
-    hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(T)*8, 0, 0, 0, hipChannelFormatKindSigned);
+    hipChannelFormatDesc channelDesc = tex->channelDesc;
     hipArray *arr;
 
-    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayCubemap));
+    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayDefault));
     hipMemcpy3DParms myparms = {0};
     myparms.srcPos = make_hipPos(0,0,0);
     myparms.dstPos = make_hipPos(0,0,0);
@@ -100,6 +100,7 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     // set texture parameters
     tex->addressMode[0] = hipAddressModeWrap;
     tex->addressMode[1] = hipAddressModeWrap;
+    tex->addressMode[2] = hipAddressModeWrap;
     tex->filterMode = hipFilterModePoint;
     tex->normalized = false;
 
