@@ -1171,7 +1171,7 @@ hipError_t ihipMemcpyAtoA(hipArray* srcArray,
                           hipArray* dstArray,
                           amd::Coord3D srcOrigin,
                           amd::Coord3D dstOrigin,
-                          amd::Coord3D region,
+                          amd::Coord3D copyRegion,
                           hipStream_t stream,
                           bool isAsync = false) {
   cl_mem srcMemObj = reinterpret_cast<cl_mem>(srcArray->data);
@@ -1183,8 +1183,16 @@ hipError_t ihipMemcpyAtoA(hipArray* srcArray,
   amd::Image* srcImage = as_amd(srcMemObj)->asImage();
   amd::Image* dstImage = as_amd(dstMemObj)->asImage();
 
-  if (!srcImage->validateRegion(srcOrigin, region) ||
-      !dstImage->validateRegion(dstOrigin, region)) {
+  // HIP assumes the width is in bytes, but OCL assumes it's in pixels.
+  // Note that src and dst should have the same element size.
+  assert(srcImage->getImageFormat().getElementSize() == dstImage->getImageFormat().getElementSize());
+  const size_t elementSize = srcImage->getImageFormat().getElementSize();
+  static_cast<size_t*>(srcOrigin)[0] /= elementSize;
+  static_cast<size_t*>(dstOrigin)[0] /= elementSize;
+  static_cast<size_t*>(copyRegion)[0] /= elementSize;
+
+  if (!srcImage->validateRegion(srcOrigin, copyRegion) ||
+      !dstImage->validateRegion(dstOrigin, copyRegion)) {
     return hipErrorInvalidValue;
   }
 
@@ -1195,7 +1203,7 @@ hipError_t ihipMemcpyAtoA(hipArray* srcArray,
                                                                *dstImage,
                                                                srcOrigin,
                                                                dstOrigin,
-                                                               region);
+                                                               copyRegion);
 
   if (command == nullptr) {
     return hipErrorOutOfMemory;
