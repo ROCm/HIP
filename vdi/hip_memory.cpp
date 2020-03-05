@@ -1570,7 +1570,7 @@ hipError_t ihipMemcpy3D(const hipMemcpy3DParms* p,
     pCopy.srcMemoryType = hipMemoryTypeArray;
     pCopy.srcArray = p->srcArray;
     // When reffering to array memory, hipPos::x is in elements.
-    pCopy.srcXInBytes *= hip::getElementSize(p->dstArray->Format);
+    pCopy.srcXInBytes *= hip::getElementSize(p->srcArray->Format);
   }
 
   if (p->srcPtr.ptr != nullptr) {
@@ -1585,7 +1585,7 @@ hipError_t ihipMemcpy3D(const hipMemcpy3DParms* p,
     pCopy.dstMemoryType = hipMemoryTypeArray;
     pCopy.dstArray = p->dstArray;
     // When reffering to array memory, hipPos::x is in elements.
-    pCopy.srcXInBytes *= hip::getElementSize(p->dstArray->Format);
+    pCopy.dstXInBytes *= hip::getElementSize(p->dstArray->Format);
   }
 
   if (p->dstPtr.ptr != nullptr) {
