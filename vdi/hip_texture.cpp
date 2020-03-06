@@ -597,10 +597,13 @@ hipError_t hipUnbindTexture(const textureReference* texref) {
   HIP_INIT_API(hipUnbindTexture, texref);
 
   if (texref == nullptr) {
-    return hipErrorInvalidValue;
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipDestroyTextureObject(texref->textureObject));
+  const hipTextureObject_t textureObject = texref->textureObject;
+  const_cast<textureReference*>(texref)->textureObject = nullptr;
+
+  HIP_RETURN(ihipDestroyTextureObject(textureObject));
 }
 
 hipError_t hipBindTexture(size_t* offset,
