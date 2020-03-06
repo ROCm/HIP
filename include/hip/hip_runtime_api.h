@@ -117,14 +117,6 @@ typedef struct hipDeviceProp_t {
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
     int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices
-    int cooperativeMultiDeviceUnmatchedFunc; ///< HIP device supports cooperative launch on multiple
-                                             ///devices with unmatched functions
-    int cooperativeMultiDeviceUnmatchedGridDim; ///< HIP device supports cooperative launch on multiple
-                                                ///devices with unmatched grid dimensions
-    int cooperativeMultiDeviceUnmatchedBlockDim;///< HIP device supports cooperative launch on multiple
-                                                ///devices with unmatched block dimensions
-    int cooperativeMultiDeviceUnmatchedSharedMem;///< HIP device supports cooperative launch on multiple
-                                                 ///devices with unmatched shared memories
     int maxTexture1D;          ///< Maximum number of elements in 1D images
     int maxTexture2D[2];       ///< Maximum dimensions (width, height) of 2D images, in image elements
     int maxTexture3D[3];       ///< Maximum dimensions (width, height, depth) of 3D images, in image elements
@@ -136,6 +128,14 @@ typedef struct hipDeviceProp_t {
     int kernelExecTimeoutEnabled;    ///<Run time limit for kernels executed on the device
     int ECCEnabled;                  ///<Device has ECC support enabled
     int tccDriver;                   ///< 1:If device is Tesla device using TCC driver, else 0
+    int cooperativeMultiDeviceUnmatchedFunc;        ///< HIP device supports cooperative launch on multiple
+                                                    ///devices with unmatched functions
+    int cooperativeMultiDeviceUnmatchedGridDim;     ///< HIP device supports cooperative launch on multiple
+                                                    ///devices with unmatched grid dimensions
+    int cooperativeMultiDeviceUnmatchedBlockDim;    ///< HIP device supports cooperative launch on multiple
+                                                    ///devices with unmatched block dimensions
+    int cooperativeMultiDeviceUnmatchedSharedMem;   ///< HIP device supports cooperative launch on multiple
+                                                    ///devices with unmatched shared memories
 
 } hipDeviceProp_t;
 
@@ -321,15 +321,6 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIntegrated,                        ///< iGPU
     hipDeviceAttributeCooperativeLaunch,                 ///< Support cooperative launch
     hipDeviceAttributeCooperativeMultiDeviceLaunch,      ///< Support cooperative launch on multiple devices
-    hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc, ///< Supports cooperative launch on multiple
-                                                           ///devices with unmatched functions
-    hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim, ///< Supports cooperative launch on multiple
-                                                              ///devices with unmatched grid dimensions
-    hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim,///< Supports cooperative launch on multiple
-                                                              ///devices with unmatched block dimensions
-    hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem,///< Supports cooperative launch on multiple
-                                                               ///devices with unmatched shared memories
-
     hipDeviceAttributeMaxTexture1DWidth,    ///< Maximum number of elements in 1D images
     hipDeviceAttributeMaxTexture2DWidth,    ///< Maximum dimension width of 2D images in image elements
     hipDeviceAttributeMaxTexture2DHeight,   ///< Maximum dimension height of 2D images in image elements
@@ -345,7 +336,16 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeTexturePitchAlignment, ///<Pitch alignment requirement for 2D texture references bound to pitched memory;
     hipDeviceAttributeKernelExecTimeout,    ///<Run time limit for kernels executed on the device
     hipDeviceAttributeCanMapHostMemory,     ///<Device can map host memory into device address space
-    hipDeviceAttributeEccEnabled            ///<Device has ECC support enabled
+    hipDeviceAttributeEccEnabled,            ///<Device has ECC support enabled
+
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc,        ///< Supports cooperative launch on multiple
+                                                                  ///devices with unmatched functions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim,     ///< Supports cooperative launch on multiple
+                                                                  ///devices with unmatched grid dimensions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim,    ///< Supports cooperative launch on multiple
+                                                                  ///devices with unmatched block dimensions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem,   ///< Supports cooperative launch on multiple
+                                                                  ///devices with unmatched shared memories
 
 } hipDeviceAttribute_t;
 
