@@ -374,7 +374,7 @@ hipError_t memcpySync(void* dst, const void* src, size_t sizeBytes,
         if (!stream) return hipErrorInvalidValue;
 
         LockedAccessor_StreamCrit_t cs{stream->criticalData()};
-        cs->_av.wait();
+        stream->wait(cs);
 
         memcpy_impl(dst, src, sizeBytes, kind);
         cs->_last_op_was_a_copy = true;
@@ -1896,7 +1896,7 @@ hipError_t ihipMemsetSync(void* dst, int  value, size_t count, hipStream_t strea
 	    if (!stream) return hipErrorInvalidValue;
 
         LockedAccessor_StreamCrit_t crit(stream->criticalData());
-        crit->_av.wait(stream->waitMode());
+        stream->wait(crit);
         const auto s = hsa_amd_memory_fill(aligned_dst, value, n);
         if (s != HSA_STATUS_SUCCESS) return hipErrorInvalidValue;
     }

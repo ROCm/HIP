@@ -298,6 +298,18 @@ void ihipStream_t::wait(LockedAccessor_StreamCrit_t& crit) {
     tprintf(DB_SYNC, "%s wait for queue-empty..\n", ToString(this).c_str());
 
     crit->_av.wait(waitMode());
+    if (!crit->_pending_callbacks.empty()) {
+        std::for_each(crit->_pending_callbacks.begin(), crit->_pending_callbacks.end(),
+                [](hsa_signal_t sgn) { hsa_signal_destroy(sgn); });
+        crit->_pending_callbacks.clear();
+    }
+}
+
+// Return if the stream is truly empty. This works around an incomplete/buggy hcc
+// accelerator_view::get_is_empty() that does not consider packets that HIP inserts.
+// This signature should be used in routines that already have locked the stream mutex
+bool ihipStream_t::is_empty(LockedAccessor_StreamCrit_t& crit) {
+    return (crit->_av.get_is_empty() && crit->_pending_callbacks.empty());
 }
 
 //---
@@ -306,17 +318,21 @@ inline void ihipStream_t::locked_wait(bool& waited) {
     // create a marker while holding stream lock,
     // but release lock prior to waiting on the marker
     hc::completion_future marker;
+    std::vector<hsa_signal_t> pending_callbacks;
     {
         LockedAccessor_StreamCrit_t crit(_criticalData);
         // skipping marker since stream is empty
-        if (crit->_av.get_is_empty()) {
+        if (this->is_empty(crit)) {
             waited = false;
             return;
         }
+        pending_callbacks.swap(crit->_pending_callbacks);
         marker = crit->_av.create_marker(hc::no_scope);
     }
 
     marker.wait(waitMode());
+    std::for_each(pending_callbacks.begin(), pending_callbacks.end(),
+            [](hsa_signal_t sgn) { hsa_signal_destroy(sgn); });
     waited = true;
     return;
 };
@@ -1069,7 +1085,7 @@ void ihipCtx_t::locked_syncDefaultStream(bool waitOnSelf, bool syncHost) {
                 LockedAccessor_StreamCrit_t streamCrit(stream->criticalData());
 
                 // The last marker will provide appropriate visibility:
-                if (!streamCrit->_av.get_is_empty()) {
+                if (!stream->is_empty(streamCrit)) {
                     depOps.push_back(streamCrit->_av.create_marker(hc::accelerator_scope));
                     tprintf(DB_SYNC, "  push marker to wait for stream=%s\n",
                             ToString(stream).c_str());
@@ -1562,7 +1578,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream, bool lockAcquired) {
                 {
                     LockedAccessor_StreamCrit_t defaultStreamCrit(defaultStream->criticalData());
                     // TODO - could call create_blocking_marker(queue) or uses existing marker.
-                    if (!defaultStreamCrit->_av.get_is_empty()) {
+                    if (!stream->is_empty(defaultStreamCrit)) {
                         needGatherMarker = true;
 
                         tprintf(DB_SYNC, "  %s adding marker to default %s for dependency\n",
