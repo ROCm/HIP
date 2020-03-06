@@ -105,6 +105,10 @@ THE SOFTWARE.
 #define pclose(x) _pclose(x)
 #define setenv(x,y,z) _putenv_s(x,y)
 #define unsetenv _putenv
+#define fileno(x) _fileno(x)
+#define dup(x) _dup(x)
+#define dup2(x,y) _dup2(x,y)
+#define close(x) _close(x)
 #else
 #define aligned_free(x) free(x)
 #endif
@@ -124,6 +128,7 @@ extern int p_tests;
 extern const char* HIP_VISIBLE_DEVICES_STR;
 extern const char* CUDA_VISIBLE_DEVICES_STR;
 extern const char* PATH_SEPERATOR_STR;
+extern const char* NULL_DEVICE;
 
 // ********************* CPP section *********************
 #ifdef __cplusplus
