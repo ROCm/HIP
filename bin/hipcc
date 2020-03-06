@@ -133,6 +133,7 @@ if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "VDI" and !defined $HIP_VDI_HOME) {
     } else {
         $HIP_VDI_HOME = $HIP_PATH; # use HIP_PATH
     }
+    $HIPCXXFLAGS .= "-D__HIP_VDI__";
 }
 
 if (defined $HIP_VDI_HOME) {
