@@ -1387,7 +1387,7 @@ hipError_t ihipMemcpyParam3D(const _HIP_MEMCPY3D* pCopy,
 hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy,
                              hipStream_t stream,
                              bool isAsync = false) {
-  _HIP_MEMCPY3D desc = hip::getMemcpy3DParms(*pCopy);
+  _HIP_MEMCPY3D desc = hip::getDrvMemcpy3DDesc(*pCopy);
 
   return ihipMemcpyParam3D(&desc, stream, isAsync);
 }
@@ -1558,62 +1558,9 @@ hipError_t ihipMemcpy3D(const hipMemcpy3DParms* p,
     return hipErrorInvalidValue;
   }
 
-  _HIP_MEMCPY3D pCopy = {};
+  const _HIP_MEMCPY3D desc = hip::getDrvMemcpy3DDesc(*p);
 
-  pCopy.WidthInBytes = p->extent.width;
-  pCopy.Height = p->extent.height;
-  pCopy.Depth = p->extent.depth;
-
-  pCopy.srcXInBytes = p->srcPos.x;
-  pCopy.srcY = p->srcPos.y;
-  pCopy.srcZ = p->srcPos.z;
-  pCopy.srcLOD = 0;
-
-  pCopy.dstXInBytes = p->dstPos.x;
-  pCopy.dstY = p->dstPos.y;
-  pCopy.dstZ = p->dstPos.z;
-  pCopy.dstLOD = 0;
-
-  if (p->srcArray != nullptr) {
-    pCopy.srcMemoryType = hipMemoryTypeArray;
-    pCopy.srcArray = p->srcArray;
-    // When reffering to array memory, hipPos::x is in elements.
-    pCopy.srcXInBytes *= hip::getElementSize(p->srcArray->Format);
-  }
-
-  if (p->srcPtr.ptr != nullptr) {
-    pCopy.srcMemoryType = std::get<0>(hip::getMemoryType(p->kind));
-    pCopy.srcHost = p->srcPtr.ptr;
-    pCopy.srcDevice = p->srcPtr.ptr;
-    pCopy.srcPitch = p->srcPtr.pitch;
-    pCopy.srcHeight = p->srcPtr.ysize;
-  }
-
-  if (p->dstArray != nullptr) {
-    pCopy.dstMemoryType = hipMemoryTypeArray;
-    pCopy.dstArray = p->dstArray;
-    // When reffering to array memory, hipPos::x is in elements.
-    pCopy.dstXInBytes *= hip::getElementSize(p->dstArray->Format);
-  }
-
-  if (p->dstPtr.ptr != nullptr) {
-    pCopy.dstMemoryType = std::get<1>(hip::getMemoryType(p->kind));
-    pCopy.dstHost = p->dstPtr.ptr;
-    pCopy.dstDevice = p->dstPtr.ptr;
-    pCopy.dstPitch = p->dstPtr.pitch;
-    pCopy.dstHeight = p->dstPtr.ysize;
-  }
-
-  // If a HIP array is participating in the copy, the extent is defined in terms of that array's elements.
-  if ((p->srcArray != nullptr) && (p->dstArray == nullptr)) {
-    pCopy.WidthInBytes *= hip::getElementSize(p->srcArray->Format);
-  } else if ((p->srcArray == nullptr) && (p->dstArray != nullptr)) {
-    pCopy.WidthInBytes *= hip::getElementSize(p->dstArray->Format);
-  } else if ((p->srcArray != nullptr) && (p->dstArray != nullptr)) {
-    pCopy.WidthInBytes *= hip::getElementSize(p->dstArray->Format);
-  }
-
-  return ihipMemcpyParam3D(&pCopy, stream, isAsync);
+  return ihipMemcpyParam3D(&desc, stream, isAsync);
 }
 
 hipError_t hipMemcpy3D(const hipMemcpy3DParms* p) {

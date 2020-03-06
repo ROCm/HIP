@@ -618,7 +618,7 @@ std::pair<hipMemoryType, hipMemoryType> getMemoryType(const hipMemcpyKind kind) 
 }
 
 inline
-_HIP_MEMCPY3D getMemcpy3DParms(const hip_Memcpy2D& desc2D) {
+_HIP_MEMCPY3D getDrvMemcpy3DDesc(const hip_Memcpy2D& desc2D) {
   _HIP_MEMCPY3D desc3D = {};
 
   desc3D.srcXInBytes = desc2D.srcXInBytes;
@@ -648,5 +648,65 @@ _HIP_MEMCPY3D getMemcpy3DParms(const hip_Memcpy2D& desc2D) {
   desc3D.Depth = 0;
 
   return desc3D;
+}
+
+inline
+_HIP_MEMCPY3D getDrvMemcpy3DDesc(const hipMemcpy3DParms& desc) {
+  _HIP_MEMCPY3D descDrv = {};
+
+  descDrv.WidthInBytes = desc.extent.width;
+  descDrv.Height = desc.extent.height;
+  descDrv.Depth = desc.extent.depth;
+
+  descDrv.srcXInBytes = desc.srcPos.x;
+  descDrv.srcY = desc.srcPos.y;
+  descDrv.srcZ = desc.srcPos.z;
+  descDrv.srcLOD = 0;
+
+  descDrv.dstXInBytes = desc.dstPos.x;
+  descDrv.dstY = desc.dstPos.y;
+  descDrv.dstZ = desc.dstPos.z;
+  descDrv.dstLOD = 0;
+
+  if (desc.srcArray != nullptr) {
+    descDrv.srcMemoryType = hipMemoryTypeArray;
+    descDrv.srcArray = desc.srcArray;
+    // When reffering to array memory, hipPos::x is in elements.
+    descDrv.srcXInBytes *= getElementSize(desc.srcArray->Format);
+  }
+
+  if (desc.srcPtr.ptr != nullptr) {
+    descDrv.srcMemoryType = std::get<0>(hip::getMemoryType(desc.kind));
+    descDrv.srcHost = desc.srcPtr.ptr;
+    descDrv.srcDevice = desc.srcPtr.ptr;
+    descDrv.srcPitch = desc.srcPtr.pitch;
+    descDrv.srcHeight = desc.srcPtr.ysize;
+  }
+
+  if (desc.dstArray != nullptr) {
+    descDrv.dstMemoryType = hipMemoryTypeArray;
+    descDrv.dstArray = desc.dstArray;
+    // When reffering to array memory, hipPos::x is in elements.
+    descDrv.dstXInBytes *= getElementSize(desc.dstArray->Format);
+  }
+
+  if (desc.dstPtr.ptr != nullptr) {
+    descDrv.dstMemoryType = std::get<1>(getMemoryType(desc.kind));
+    descDrv.dstHost = desc.dstPtr.ptr;
+    descDrv.dstDevice = desc.dstPtr.ptr;
+    descDrv.dstPitch = desc.dstPtr.pitch;
+    descDrv.dstHeight = desc.dstPtr.ysize;
+  }
+
+  // If a HIP array is participating in the copy, the extent is defined in terms of that array's elements.
+  if ((desc.srcArray != nullptr) && (desc.dstArray == nullptr)) {
+    descDrv.WidthInBytes *= getElementSize(desc.srcArray->Format);
+  } else if ((desc.srcArray == nullptr) && (desc.dstArray != nullptr)) {
+    descDrv.WidthInBytes *= getElementSize(desc.dstArray->Format);
+  } else if ((desc.srcArray != nullptr) && (desc.dstArray != nullptr)) {
+    descDrv.WidthInBytes *= getElementSize(desc.dstArray->Format);
+  }
+
+  return descDrv;
 }
 };
