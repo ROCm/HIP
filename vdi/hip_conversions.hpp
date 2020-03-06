@@ -349,6 +349,7 @@ int getNumChannels(const hipResourceViewFormat hipFormat) {
     case hipResViewFormatUnsignedShort1:
     case hipResViewFormatSignedShort1:
     case hipResViewFormatUnsignedInt1:
+    case hipResViewFormatSignedInt1:
     case hipResViewFormatHalf1:
     case hipResViewFormatFloat1:
       return 1;
@@ -357,6 +358,7 @@ int getNumChannels(const hipResourceViewFormat hipFormat) {
     case hipResViewFormatUnsignedShort2:
     case hipResViewFormatSignedShort2:
     case hipResViewFormatUnsignedInt2:
+    case hipResViewFormatSignedInt2:
     case hipResViewFormatHalf2:
     case hipResViewFormatFloat2:
       return 2;
@@ -365,6 +367,7 @@ int getNumChannels(const hipResourceViewFormat hipFormat) {
     case hipResViewFormatUnsignedShort4:
     case hipResViewFormatSignedShort4:
     case hipResViewFormatUnsignedInt4:
+    case hipResViewFormatSignedInt4:
     case hipResViewFormatHalf4:
     case hipResViewFormatFloat4:
       return 4;
