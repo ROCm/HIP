@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.4.3)
 project(hip)
 
 #############################
-# Options
-#############################
-option(BUILD_HIPIFY_CLANG "Enable building the CUDA->HIP converter" OFF)
-
-#############################
 # Setup config generation
 #############################
 string(TIMESTAMP _timestamp UTC)
@@ -238,11 +233,6 @@ set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
-# Build clang hipify if enabled
-if (BUILD_HIPIFY_CLANG)
-    add_subdirectory(hipify-clang)
-endif()
-
 # Build LPL an CA (fat binary generation / fat binary decomposition tools) if
 # platform is hcc; do this before the ugly hijacking of the compiler, since no
 # HC code is involved.
@@ -463,11 +453,6 @@ add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR}
     DEPENDS lpl ca)
-
-# Packaging needs to wait for hipify-clang to build if it's enabled...
-if (BUILD_HIPIFY_CLANG)
-    add_dependencies(pkg_hip_base hipify-clang)
-endif()
 
 # Package: hip_hcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
