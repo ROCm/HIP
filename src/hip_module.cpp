@@ -392,6 +392,14 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
     return result;
 }
 
+__attribute__((visibility("default")))
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags) {
+    HIP_INIT_API(hipExtLaunchMultiKernelMultiDevice, launchParamsList, numDevices, flags);
+    auto& ps = hip_impl::get_program_state();
+    return ihipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags, ps);
+}
+
 namespace {
 // kernel for initializing GWS
 // nwm1 is the total number of work groups minus 1
