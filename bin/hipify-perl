@@ -1172,6 +1172,7 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_ASSERT\b/hipErrorAssert/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_CONTEXT_ALREADY_CURRENT\b/hipErrorContextAlreadyCurrent/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_CONTEXT_ALREADY_IN_USE\b/hipErrorContextAlreadyInUse/g;
+    $ft{'numeric_literal'} += s/\bCUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE\b/hipErrorCooperativeLaunchTooLarge/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_DEINITIALIZED\b/hipErrorDeinitialized/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_ECC_UNCORRECTABLE\b/hipErrorECCNotCorrectable/g;
     $ft{'numeric_literal'} += s/\bCUDA_ERROR_FILE_NOT_FOUND\b/hipErrorFileNotFound/g;
@@ -1528,6 +1529,7 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCU_MEMORYTYPE_UNIFIED\b/hipMemoryTypeUnified/g;
     $ft{'numeric_literal'} += s/\bCU_MEM_ATTACH_GLOBAL\b/hipMemAttachGlobal/g;
     $ft{'numeric_literal'} += s/\bCU_MEM_ATTACH_HOST\b/hipMemAttachHost/g;
+    $ft{'numeric_literal'} += s/\bCU_OCCUPANCY_DEFAULT\b/hipOccupancyDefault/g;
     $ft{'numeric_literal'} += s/\bCU_RESOURCE_TYPE_ARRAY\b/hipResourceTypeArray/g;
     $ft{'numeric_literal'} += s/\bCU_RESOURCE_TYPE_LINEAR\b/hipResourceTypeLinear/g;
     $ft{'numeric_literal'} += s/\bCU_RESOURCE_TYPE_MIPMAPPED_ARRAY\b/hipResourceTypeMipmappedArray/g;
@@ -1636,6 +1638,7 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bcudaErrorAlreadyMapped\b/hipErrorAlreadyMapped/g;
     $ft{'numeric_literal'} += s/\bcudaErrorArrayIsMapped\b/hipErrorArrayIsMapped/g;
     $ft{'numeric_literal'} += s/\bcudaErrorAssert\b/hipErrorAssert/g;
+    $ft{'numeric_literal'} += s/\bcudaErrorCooperativeLaunchTooLarge\b/hipErrorCooperativeLaunchTooLarge/g;
     $ft{'numeric_literal'} += s/\bcudaErrorCudartUnloading\b/hipErrorDeinitialized/g;
     $ft{'numeric_literal'} += s/\bcudaErrorDeviceAlreadyInUse\b/hipErrorContextAlreadyInUse/g;
     $ft{'numeric_literal'} += s/\bcudaErrorDeviceUninitialized\b/hipErrorInvalidContext/g;
@@ -1749,6 +1752,8 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bCUDA_ARRAY3D_LAYERED\b/hipArrayLayered/g;
     $ft{'define'} += s/\bCUDA_ARRAY3D_SURFACE_LDST\b/hipArraySurfaceLoadStore/g;
     $ft{'define'} += s/\bCUDA_ARRAY3D_TEXTURE_GATHER\b/hipArrayTextureGather/g;
+    $ft{'define'} += s/\bCUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC\b/hipCooperativeLaunchMultiDeviceNoPostSync/g;
+    $ft{'define'} += s/\bCUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC\b/hipCooperativeLaunchMultiDeviceNoPreSync/g;
     $ft{'define'} += s/\bCU_LAUNCH_PARAM_BUFFER_POINTER\b/HIP_LAUNCH_PARAM_BUFFER_POINTER/g;
     $ft{'define'} += s/\bCU_LAUNCH_PARAM_BUFFER_SIZE\b/HIP_LAUNCH_PARAM_BUFFER_SIZE/g;
     $ft{'define'} += s/\bCU_LAUNCH_PARAM_END\b/HIP_LAUNCH_PARAM_END/g;
@@ -1769,6 +1774,8 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bcudaArrayLayered\b/hipArrayLayered/g;
     $ft{'define'} += s/\bcudaArraySurfaceLoadStore\b/hipArraySurfaceLoadStore/g;
     $ft{'define'} += s/\bcudaArrayTextureGather\b/hipArrayTextureGather/g;
+    $ft{'define'} += s/\bcudaCooperativeLaunchMultiDeviceNoPostSync\b/hipCooperativeLaunchMultiDeviceNoPostSync/g;
+    $ft{'define'} += s/\bcudaCooperativeLaunchMultiDeviceNoPreSync\b/hipCooperativeLaunchMultiDeviceNoPreSync/g;
     $ft{'define'} += s/\bcudaDeviceBlockingSync\b/hipDeviceScheduleBlockingSync/g;
     $ft{'define'} += s/\bcudaDeviceLmemResizeToMax\b/hipDeviceLmemResizeToMax/g;
     $ft{'define'} += s/\bcudaDeviceMapHost\b/hipDeviceMapHost/g;
@@ -1792,6 +1799,7 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bcudaIpcMemLazyEnablePeerAccess\b/hipIpcMemLazyEnablePeerAccess/g;
     $ft{'define'} += s/\bcudaMemAttachGlobal\b/hipMemAttachGlobal/g;
     $ft{'define'} += s/\bcudaMemAttachHost\b/hipMemAttachHost/g;
+    $ft{'define'} += s/\bcudaOccupancyDefault\b/hipOccupancyDefault/g;
     $ft{'define'} += s/\bcudaStreamDefault\b/hipStreamDefault/g;
     $ft{'define'} += s/\bcudaStreamNonBlocking\b/hipStreamNonBlocking/g;
     $ft{'define'} += s/\bcudaTextureType1D\b/hipTextureType1D/g;

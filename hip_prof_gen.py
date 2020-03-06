@@ -447,7 +447,8 @@ if len(sys.argv) > 3: OUTPUT = sys.argv[3]
 
 # API declaration map
 api_map = {
-  'hipHccModuleLaunchKernel': ''
+  'hipHccModuleLaunchKernel': '',
+  'hipExtModuleLaunchKernel': ''
 }
 # API options map
 opts_map = {}

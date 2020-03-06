@@ -1047,7 +1047,7 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CUoccupancy_flags_enum",                                           {"hipOccupancyFlags",                                        "", CONV_TYPE, API_DRIVER, HIP_UNSUPPORTED}},
   // CUoccupancy_flags enum values
   // cudaOccupancyDefault
-  {"CU_OCCUPANCY_DEFAULT",                                             {"hipOccupancyDefault",                                      "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x00
+  {"CU_OCCUPANCY_DEFAULT",                                             {"hipOccupancyDefault",                                      "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 0x00
   // cudaOccupancyDisableCachingOverride
   {"CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE",                            {"hipOccupancyDisableCachingOverride",                       "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
 
@@ -1284,6 +1284,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   {"CUDA_ERROR_INVALID_PC",                                            {"hipErrorInvalidPc",                                        "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 718
   // cudaErrorLaunchFailure
   {"CUDA_ERROR_LAUNCH_FAILED",                                         {"hipErrorLaunchFailure",                                    "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 719
+  // cudaErrorCooperativeLaunchTooLarge
+  {"CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE",                          {"hipErrorCooperativeLaunchTooLarge",                        "", CONV_NUMERIC_LITERAL, API_DRIVER}}, // 720
   // cudaErrorNotPermitted
   {"CUDA_ERROR_NOT_PERMITTED",                                         {"hipErrorNotPermitted",                                     "", CONV_NUMERIC_LITERAL, API_DRIVER, HIP_UNSUPPORTED}}, // 800
   // cudaErrorNotSupported
@@ -1598,9 +1600,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_DRIVER_TYPE_NAME_MAP{
   // cudaArrayColorAttachment
   {"CUDA_ARRAY3D_COLOR_ATTACHMENT",                                    {"hipArrayColorAttachment",                                  "", CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x20
   // cudaCooperativeLaunchMultiDeviceNoPreSync
-  {"CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC",          {"hipCooperativeLaunchMultiDeviceNoPreSync",                 "", CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x01
+  {"CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC",          {"hipCooperativeLaunchMultiDeviceNoPreSync",                 "", CONV_DEFINE, API_DRIVER}}, // 0x01
   // cudaCooperativeLaunchMultiDeviceNoPostSync
-  {"CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC",         {"hipCooperativeLaunchMultiDeviceNoPostSync",                "", CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x02
+  {"CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC",         {"hipCooperativeLaunchMultiDeviceNoPostSync",                "", CONV_DEFINE, API_DRIVER}}, // 0x02
   // cudaExternalMemoryDedicated
   {"CUDA_EXTERNAL_MEMORY_DEDICATED",                                   {"hipExternalMemoryDedicated",                               "", CONV_DEFINE, API_DRIVER, HIP_UNSUPPORTED}}, // 0x1
   // cudaExternalSemaphoreSignalSkipNvSciBufMemSync
