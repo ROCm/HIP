@@ -1619,7 +1619,9 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr, bool lockAcquired) {
-    stream = ihipSyncAndResolveStream(stream, lockAcquired);
+    if (stream == nullptr || stream != stream->getCtx()->_defaultStream){
+        stream = ihipSyncAndResolveStream(stream, lockAcquired);
+    }
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
