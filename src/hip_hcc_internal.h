@@ -63,7 +63,6 @@ extern int HIP_LAUNCH_BLOCKING;
 extern int HIP_API_BLOCKING;
 
 extern int HIP_PRINT_ENV;
-extern int HIP_PROFILE_API;
 // extern int HIP_TRACE_API;
 extern int HIP_ATP;
 extern int HIP_DB;
@@ -250,34 +249,6 @@ extern const char* API_COLOR_END;
 // Must be enabled at runtime with HIP_TRACE_API
 #define COMPILE_HIP_TRACE_API 0x3
 
-
-// Compile code that generates trace markers for CodeXL ATP at HIP function begin/end.
-// ATP is standard CodeXL format that includes timestamps for kernels, HSA RT APIs, and HIP APIs.
-#ifndef COMPILE_HIP_ATP_MARKER
-#define COMPILE_HIP_ATP_MARKER 0
-#endif
-
-
-// Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function
-// boundary.
-// TODO - currently we print the trace message at the beginning. if we waited, we could also
-// tls->tidInfo return codes, and any values returned through ptr-to-args (ie the pointers allocated
-// by hipMalloc).
-#if COMPILE_HIP_ATP_MARKER
-#include "CXLActivityLogger.h"
-#define MARKER_BEGIN(markerName, group) amdtBeginMarker(markerName, group, nullptr);
-#define MARKER_END() amdtEndMarker();
-#define RESUME_PROFILING amdtResumeProfiling(AMDT_ALL_PROFILING);
-#define STOP_PROFILING amdtStopProfiling(AMDT_ALL_PROFILING);
-#else
-// Swallow scoped markers:
-#define MARKER_BEGIN(markerName, group)
-#define MARKER_END()
-#define RESUME_PROFILING
-#define STOP_PROFILING
-#endif
-
-
 //---
 // HIP Trace modes - use with HIP_TRACE_API=...
 #define TRACE_ALL 0    // 0x01
@@ -336,22 +307,17 @@ static inline uint64_t getTicks() { return hc::get_system_ticks(); }
 //---
 extern uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::string& apiStr);
 
-#if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
+#if (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(forceTrace, ...)                                                                 \
     GET_TLS();                                                                                     \
     uint64_t hipApiStartTick = 0;                                                                  \
     {                                                                                              \
         tls->tidInfo.incApiSeqNum();                                                               \
         if (forceTrace ||                                                                          \
-            (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1 << TRACE_ALL))))) {         \
+            (COMPILE_HIP_DB && (HIP_TRACE_API & (1 << TRACE_ALL)))) {         \
             std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';       \
             std::string fullStr;                                                                   \
             hipApiStartTick = recordApiTrace(tls, &fullStr, apiStr);                               \
-            if (HIP_PROFILE_API == 0x1) {                                                          \
-                MARKER_BEGIN(__func__, "HIP")                                                      \
-            } else if (HIP_PROFILE_API == 0x2) {                                                   \
-                MARKER_BEGIN(fullStr.c_str(), "HIP");                                              \
-            }                                                                                      \
         }                                                                                          \
     }
 
@@ -397,9 +363,6 @@ extern uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::st
                     (localHipStatus == 0) ? API_COLOR : KRED, tls->tidInfo.pid(), tls->tidInfo.tid(), \
                     tls->tidInfo.apiSeqNum(), __func__, localHipStatus,                               \
                     ihipErrorString(localHipStatus), ticks, API_COLOR_END);                           \
-        }                                                                                             \
-        if (HIP_PROFILE_API) {                                                                        \
-            MARKER_END();                                                                             \
         }                                                                                             \
         localHipStatus;                                                                               \
     })

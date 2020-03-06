@@ -140,6 +140,14 @@ typedef enum cudaChannelFormatKind hipChannelFormatKind;
 #define hipLimitMallocHeapSize cudaLimitMallocHeapSize
 #define hipIpcMemLazyEnablePeerAccess cudaIpcMemLazyEnablePeerAccess
 
+#define hipOccupancyDefault cudaOccupancyDefault
+
+#define hipCooperativeLaunchMultiDeviceNoPreSync    \
+        cudaCooperativeLaunchMultiDeviceNoPreSync
+#define hipCooperativeLaunchMultiDeviceNoPostSync   \
+        cudaCooperativeLaunchMultiDeviceNoPostSync
+
+
 // enum CUjit_option redefines
 #define hipJitOptionMaxRegisters CU_JIT_MAX_REGISTERS
 #define hipJitOptionThreadsPerBlock CU_JIT_THREADS_PER_BLOCK
@@ -267,6 +275,8 @@ inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
             return hipErrorNotInitialized;
         case cudaErrorLaunchFailure:
             return hipErrorLaunchFailure;
+        case cudaErrorCooperativeLaunchTooLarge:
+            return hipErrorCooperativeLaunchTooLarge;
         case cudaErrorPriorLaunchFailure:
             return hipErrorPriorLaunchFailure;
         case cudaErrorLaunchOutOfResources:
@@ -445,6 +455,8 @@ inline static hipError_t hipCUResultTohipError(CUresult cuError) {
             return hipErrorHostMemoryNotRegistered;
         case CUDA_ERROR_LAUNCH_FAILED:
             return hipErrorLaunchFailure;
+        case CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE:
+            return hipErrorCooperativeLaunchTooLarge;
         case CUDA_ERROR_NOT_SUPPORTED:
             return hipErrorNotSupported;
         case CUDA_ERROR_UNKNOWN:
@@ -601,6 +613,8 @@ inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
             return cudaErrorSetOnActiveProcess;
         case hipErrorLaunchFailure:
             return cudaErrorLaunchFailure;
+        case hipErrorCooperativeLaunchTooLarge:
+            return cudaErrorCooperativeLaunchTooLarge;
         case hipErrorNotSupported:
             return cudaErrorNotSupported;
         // HSA: does not exist in CUDA
