@@ -515,9 +515,14 @@ hc_get_workitem_absolute_id(int dim)
 #define __CUDA__
 #include <__clang_cuda_math_forward_declares.h>
 #include <__clang_cuda_complex_builtins.h>
-#include <cuda_wrappers/algorithm>
-#include <cuda_wrappers/complex>
-#include <cuda_wrappers/new>
+// Workaround for using libc++ with HIP-Clang.
+// The following headers requires clang include path before standard C++ include path.
+// However libc++ include path requires to be before clang include path.
+// To workaround this, we pass -isystem with the parent directory of clang include
+// path instead of the clang include path itself.
+#include <include/cuda_wrappers/algorithm>
+#include <include/cuda_wrappers/complex>
+#include <include/cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 #endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
