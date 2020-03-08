@@ -42,10 +42,10 @@ After applying all the matchers, the output HIP source is produced.
 
 `hipify-clang` requires:
 
-1. [**LLVM+CLANG**](http://releases.llvm.org) of at least version [3.8.0](http://releases.llvm.org/download.html#3.8.0); the latest stable and recommended release: [**9.0.1**](http://releases.llvm.org/download.html#9.0.1), the latest release candidate: [10.0.0-rc2](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc2).
+1. [**LLVM+CLANG**](http://releases.llvm.org) of at least version [3.8.0](http://releases.llvm.org/download.html#3.8.0); the latest stable and recommended release: [**9.0.1**](http://releases.llvm.org/download.html#9.0.1), the latest release candidate: [10.0.0-rc3](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc3).
 
 2. [**CUDA**](https://developer.nvidia.com/cuda-downloads) of at least version [7.0](https://developer.nvidia.com/cuda-toolkit-70), the latest supported version is [**10.1 Update 2**](https://developer.nvidia.com/cuda-10.1-download-archive-base).
-To use the latest CUDA version [10.2](https://developer.nvidia.com/cuda-downloads) please use the latest `LLVM` release candidate: [10.0.0-rc2](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc2).
+To use the latest CUDA version [10.2](https://developer.nvidia.com/cuda-downloads) please use the latest `LLVM` release candidate: [10.0.0-rc3](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc3).
 
 | **LLVM release version**                                   | **CUDA latest supported version**                                        | **Windows** | **Linux** |
 |:----------------------------------------------------------:|:------------------------------------------------------------------------:|:-----------:|:---------:|
@@ -67,7 +67,7 @@ To use the latest CUDA version [10.2](https://developer.nvidia.com/cuda-download
 | [8.0.1](http://releases.llvm.org/download.html#8.0.1)      | [10.0](https://developer.nvidia.com/cuda-10.0-download-archive)          | - <br/> not working due to <br/> the clang's bug [38811](https://bugs.llvm.org/show_bug.cgi?id=38811) <br/>+<br/>[patch](patches/patch_for_clang_8.0.1_bug_38811.zip)*</br> | + |
 | [9.0.0](http://releases.llvm.org/download.html#9.0.0)      | [10.1](https://developer.nvidia.com/cuda-10.1-download-archive-base)     | +           | +         |
 | [**9.0.1**](http://releases.llvm.org/download.html#9.0.1)  | [**10.1**](https://developer.nvidia.com/cuda-10.1-download-archive-base) | + <br/> **LATEST STABLE RELEASE** | + <br/> **LATEST STABLE RELEASE** |
-| [10.0.0-rc2](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc2) | [10.2](https://developer.nvidia.com/cuda-downloads)             | +           | +         |
+| [10.0.0-rc3](https://github.com/llvm/llvm-project/releases/tag/llvmorg-10.0.0-rc3) | [10.2](https://developer.nvidia.com/cuda-downloads)             | +           | +         |
 
 `*` Download the patch and unpack it into your `LLVM` distributive directory; a few header files will be overwritten; rebuilding of `LLVM` is not needed.
 
@@ -158,7 +158,7 @@ Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build pro
 
 **LLVM 10.0.0 or newer:**
 
-1. download [`LLVM project`](https://github.com/llvm/llvm-project/archive/llvmorg-10.0.0-rc2.tar.gz) sources;
+1. download [`LLVM project`](https://github.com/llvm/llvm-project/archive/llvmorg-10.0.0-rc3.tar.gz) sources;
 2. build [`LLVM project`](http://llvm.org/docs/CMake.html):
 
  **Linux**:
@@ -168,6 +168,7 @@ Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build pro
          -DLLVM_SOURCE_DIR=../llvm-project \
          -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
          -DLLVM_ENABLE_PROJECTS="clang" \
+         -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
          -DCMAKE_BUILD_TYPE=Release \
          ../llvm-project/llvm
         make -j install
@@ -181,6 +182,7 @@ Run `Visual Studio 16 2019`, open the generated `LLVM.sln`, build all, build pro
          -DLLVM_SOURCE_DIR=../llvm-project \
          -DLLVM_TARGETS_TO_BUILD="NVPTX" \
          -DLLVM_ENABLE_PROJECTS="clang" \
+         -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
          -DCMAKE_BUILD_TYPE=Release \
          -Thost=x64 \
          ../llvm-project/llvm
@@ -247,7 +249,7 @@ On Linux the following configurations are tested:
 
 Ubuntu 14: LLVM 5.0.0 - 6.0.1, CUDA 7.0 - 9.0, cudnn-5.0.5 - cudnn-7.6.5.32
 
-Ubuntu 16-18: LLVM 8.0.0 - 10.0.0-rc2, CUDA 8.0 - 10.2, cudnn-5.1.10 - cudnn-7.6.5.32
+Ubuntu 16-18: LLVM 8.0.0 - 10.0.0-rc3, CUDA 8.0 - 10.2, cudnn-5.1.10 - cudnn-7.6.5.32
 
 Minimum build system requirements for the above configurations:
 
@@ -402,8 +404,8 @@ Testing Time: 3.07s
 | 7.0.0 - 7.1.0  | 9.2      | 7.6.5.32            | 2017.15.9.11              | 3.13.3    | 3.7.3      |
 | 8.0.0 - 8.0.1  | 10.0     | 7.6.5.32            | 2017.15.9.15              | 3.14.2    | 3.7.4      |
 | 9.0.0 - 9.0.1  | 10.1     | 7.6.5.32            | 2017.15.9.20, 2019.16.4.5 | 3.16.4    | 3.8.0      |
-| 10.0.0-rc1,rc2 | 10.2     | 7.6.5.32            | 2017.15.9.20, 2019.16.4.5 | 3.16.4    | 3.8.1      |
-| 11.0.0git      | 10.2     | 7.6.5.32            | 2017.15.9.20, 2019.16.4.5 | 3.16.4    | 3.8.1      |
+| 10.0.0-rc1-rc3 | 10.2     | 7.6.5.32            | 2017.15.9.20, 2019.16.4.5 | 3.16.4    | 3.8.1      |
+| 11.0.0git      | 10.2     | 7.6.5.32            | 2017.15.9.20, 2019.16.4.5 | 3.16.5    | 3.8.2      |
 
 *Building with testing support on `Windows 10` by `Visual Studio 16 2019`:*
 
@@ -429,7 +431,7 @@ cmake
 --    - CMake module path: F:/LLVM/9.0.1/dist/lib/cmake/llvm
 --    - Include path     : F:/LLVM/9.0.1/dist/include
 --    - Binary path      : F:/LLVM/9.0.1/dist/bin
--- Found PythonInterp: C:/Program Files/Python38/python.exe (found suitable version "3.8.1", minimum required is "3.6")
+-- Found PythonInterp: C:/Program Files/Python38/python.exe (found suitable version "3.8.2", minimum required is "3.6")
 -- Found lit: C:/Program Files/Python38/Scripts/lit.exe
 -- Found FileCheck: F:/LLVM/9.0.1/dist/bin/FileCheck.exe
 -- Found CUDA: C:/Program Files/NVIDIA GPU Computing Toolkit/CUDA/v10.1 (found version "10.1")
