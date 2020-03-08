@@ -95,8 +95,6 @@ set_target_properties(hip::device PROPERTIES
 else()
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host"
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 )
 endif()
 
