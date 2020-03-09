@@ -1332,7 +1332,7 @@ hipError_t ihipMemcpyAtoH(hipArray* srcArray,
   return hipSuccess;
 }
 
-hipError_t ihipMemcpyParam3D(const _HIP_MEMCPY3D* pCopy,
+hipError_t ihipMemcpyParam3D(const HIP_MEMCPY3D* pCopy,
                              hipStream_t stream,
                              bool isAsync = false) {
   // If {src/dst}MemoryType is hipMemoryTypeUnified, {src/dst}Device and {src/dst}Pitch specify the (unified virtual address space)
@@ -1387,7 +1387,7 @@ hipError_t ihipMemcpyParam3D(const _HIP_MEMCPY3D* pCopy,
 hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy,
                              hipStream_t stream,
                              bool isAsync = false) {
-  _HIP_MEMCPY3D desc = hip::getDrvMemcpy3DDesc(*pCopy);
+  HIP_MEMCPY3D desc = hip::getDrvMemcpy3DDesc(*pCopy);
 
   return ihipMemcpyParam3D(&desc, stream, isAsync);
 }
@@ -1558,7 +1558,7 @@ hipError_t ihipMemcpy3D(const hipMemcpy3DParms* p,
     return hipErrorInvalidValue;
   }
 
-  const _HIP_MEMCPY3D desc = hip::getDrvMemcpy3DDesc(*p);
+  const HIP_MEMCPY3D desc = hip::getDrvMemcpy3DDesc(*p);
 
   return ihipMemcpyParam3D(&desc, stream, isAsync);
 }
@@ -1575,13 +1575,13 @@ hipError_t hipMemcpy3DAsync(const hipMemcpy3DParms* p, hipStream_t stream) {
   HIP_RETURN(ihipMemcpy3D(p, stream, true));
 }
 
-hipError_t hipDrvMemcpy3D(const _HIP_MEMCPY3D* pCopy) {
+hipError_t hipDrvMemcpy3D(const HIP_MEMCPY3D* pCopy) {
   HIP_INIT_API(hipDrvMemcpy3D, pCopy);
 
   HIP_RETURN(ihipMemcpyParam3D(pCopy, nullptr));
 }
 
-hipError_t hipDrvMemcpy3DAsync(const _HIP_MEMCPY3D* pCopy, hipStream_t stream) {
+hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream) {
   HIP_INIT_API(hipDrvMemcpy3DAsync, pCopy, stream);
 
   HIP_RETURN(ihipMemcpyParam3D(pCopy, stream, true));
