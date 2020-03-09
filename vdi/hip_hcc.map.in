@@ -90,6 +90,8 @@ global:
     hipMemcpy2DToArray;
     hipMemcpy3D;
     hipMemcpy3DAsync;
+    hipDrvMemcpy3D;
+    hipDrvMemcpy3DAsync;
     hipMemcpyAsync;
     hipMemcpyDtoD;
     hipMemcpyDtoDAsync;
