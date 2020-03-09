@@ -192,8 +192,8 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
         if (impCoopParams) {
             const auto p{static_cast<const char*>(*impCoopParams)};
             // The sixth index is for multi-grid synchronization
-            kernargs.insert((kernargs.cend() - HIP_IMPLICIT_KERNARG_SIZE) + 6 * HIP_IMPLICIT_KERNARG_ALIGNMENT,
-                            p, p + HIP_IMPLICIT_KERNARG_ALIGNMENT);
+            copy(p, p + HIP_IMPLICIT_KERNARG_ALIGNMENT,
+                    (kernargs.end() - HIP_IMPLICIT_KERNARG_SIZE) + 6 * HIP_IMPLICIT_KERNARG_ALIGNMENT);
         }
 
         /*
@@ -543,16 +543,16 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
             std::pair<std::size_t, std::size_t>>*>(kargs.getHandle());
 
     GET_TLS();
-    uint32_t numBlocksPerSm;
+    uint32_t numBlocksPerSm = 0;
     result = ihipOccupancyMaxActiveBlocksPerMultiprocessor(tls, &numBlocksPerSm, kd,
-                    stream->getDevice()->_props.warpSize, sharedMemBytes);
+                    blockDimX.x * blockDimX.y * blockDimX.z, sharedMemBytes);
     if (result != hipSuccess) {
         return hipErrorLaunchFailure;
     }
     int maxActiveBlocks = numBlocksPerSm * stream->getDevice()->_props.multiProcessorCount;
 
     //check to see if the workload fits on the GPU
-    if (gridDim.x * gridDim.y * gridDim.z > maxActiveBlocks){
+    if (gridDim.x * gridDim.y * gridDim.z > maxActiveBlocks) {
         return hipErrorCooperativeLaunchTooLarge;
     }
 
@@ -603,7 +603,6 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     // wait on the dispatch on the dedicated cooperative queue to finish
     coopAV.wait(hc::hcWaitModeActive);
 
-
     return result;
 #else
     return hipErrorInvalidConfiguration;
@@ -633,16 +632,14 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
             return hipErrorInvalidResourceHandle;
         }
 
-        auto it = find(streams.begin(), streams.end(), lp.stream);
-        if (it == streams.end()){
+        if (find(streams.begin(), streams.end(), lp.stream) == streams.end()) {
             streams.push_back(lp.stream);
-        } else{
+        } else {
             return hipErrorInvalidDevice;
         }
 
         const ihipDevice_t* currentDevice = lp.stream->getDevice();
-        auto it1 = find(deviceIDs.begin(), deviceIDs.end(), currentDevice->_deviceId);
-        if (it1 == deviceIDs.end()){
+        if (find(deviceIDs.begin(), deviceIDs.end(), currentDevice->_deviceId) == deviceIDs.end()) {
             deviceIDs.push_back(currentDevice->_deviceId);
         } else {
             return hipErrorInvalidDevice;
@@ -687,16 +684,16 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
         kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
                 kargs.getHandle());
 
-        uint32_t numBlocksPerSm;
+        uint32_t numBlocksPerSm = 0;
         result = ihipOccupancyMaxActiveBlocksPerMultiprocessor(tls, &numBlocksPerSm, kds[i],
-                        lp.stream->getDevice()->_props.warpSize, lp.sharedMem);
+                        lp.blockDim.x * lp.blockDim.y * lp.blockDim.z, lp.sharedMem);
         if (result != hipSuccess) {
             return hipErrorLaunchFailure;
         }
         int maxActiveBlocks = numBlocksPerSm * lp.stream->getDevice()->_props.multiProcessorCount;
 
         //check to see if the workload fits on the GPU
-        if (lp.gridDim.x * lp.gridDim.y * lp.gridDim.z > maxActiveBlocks){
+        if (lp.gridDim.x * lp.gridDim.y * lp.gridDim.z > maxActiveBlocks) {
             return hipErrorCooperativeLaunchTooLarge;
         }
     }
@@ -722,7 +719,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
     uint all_sum = 0;
     for (int i = 0; i < numDevices; ++i) {
-        mg_info *mg_info_temp;
+        mg_info *mg_info_temp = nullptr;
         result = hip_internal::ihipHostMalloc(tls, (void **)&mg_info_temp, sizeof(mg_info), hipHostMallocDefault);
         if (result != hipSuccess) {
             hip_internal::ihipHostFree(tls, mg_sync_ptr);
