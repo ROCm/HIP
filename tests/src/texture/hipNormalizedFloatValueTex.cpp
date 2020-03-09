@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc vdi
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -55,14 +55,14 @@ __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
     unsigned int elementID = hipThreadIdx_x;
     if(elementID >= numElements)
 	    return;
-    float coord =(float) elementID/(numElements-1);
+    float coord =(float) elementID/numElements;
     pDst[elementID] = tex1D(textureNormalizedVal_1D, coord);
 }
 
 template<typename T>
 bool textureTest(enum hipArray_Format texFormat)
 {
-    T hData[] = {65, 66, 67, 68, 69, 70, 71, 72,73,74};
+    T hData[] = {65, 66, 67, 68, 69, 70, 71, 72, 73, 74};
     T *dData = NULL;
     HIPCHECK(hipMalloc((void **) &dData, sizeof(T)*SIZE));
     HIPCHECK(hipMemcpyHtoD((hipDeviceptr_t)dData, hData, sizeof(T)*SIZE));
@@ -73,12 +73,8 @@ bool textureTest(enum hipArray_Format texFormat)
     HIPCHECK(hipTexRefSetFlags(texRef, HIP_TRSF_NORMALIZED_COORDINATES)); 
     HIPCHECK(hipTexRefSetFormat(texRef, texFormat, 1));
     
-    HIP_ARRAY_DESCRIPTOR desc;
-    desc.Width = SIZE;
-    desc.Height = 1;
-    desc.Format = texFormat;
-    desc.NumChannels = 1;
-    HIPCHECK(hipTexRefSetAddress2D(texRef, &desc, (hipDeviceptr_t)dData, sizeof(T)*SIZE));
+    size_t offSet = 0;
+    HIPCHECK(hipTexRefSetAddress(&offSet, texRef, (hipDeviceptr_t)dData, sizeof(T)*SIZE));
     
     bool testResult = true;
     float *dOutputData = NULL;
@@ -101,7 +97,6 @@ bool textureTest(enum hipArray_Format texFormat)
     }
     hipFree(dData);
     hipFree(dOutputData);
-    hipUnbindTexture(textureNormalizedVal_1D);
     delete [] hOutputData;
     return testResult;
 }
