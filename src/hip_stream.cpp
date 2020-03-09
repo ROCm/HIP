@@ -257,11 +257,41 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags) {
     HIP_INIT_API(hipStreamAddCallback, stream, callback, userData, flags);
-    hipError_t e = hipSuccess;
 
-    // Create a thread in detached mode to handle callback
-    ihipStreamCallback_t* cb = new ihipStreamCallback_t(stream, callback, userData);
-    std::thread(ihipStreamCallbackHandler, cb).detach();
+    auto stream_original{stream};
+    stream = ihipSyncAndResolveStream(stream);
 
-    return ihipLogStatus(e);
+    if (!stream) return hipErrorInvalidValue;
+
+    LockedAccessor_StreamCrit_t cs{stream->criticalData()};
+
+    // create packet
+    hsa_barrier_and_packet_t aql{};
+
+    // create signal in packet, initialized to 2
+    hsa_signal_create(2, 0, nullptr, static_cast<hsa_signal_t*>(&aql.completion_signal));
+
+    // create callback that can be passed to hsa_amd_signal_async_handler
+    // this function will call the user's callback, then sets first packet's signal to 0 to indicate completion
+    auto sgn{aql.completion_signal};
+    auto t{new std::function<void()>{[=]() {
+        callback(stream_original, hipSuccess, userData);
+        hsa_signal_store_relaxed(sgn, 0);
+    }}};
+
+    // register above callback with HSA runtime to be called when first packet's signal
+    // is decremented from 2 to 1 by CP
+    hsa_amd_signal_async_handler(aql.completion_signal, HSA_SIGNAL_CONDITION_EQ, 1,
+        [](hsa_signal_value_t x, void* p) {
+            (*static_cast<decltype(t)>(p))();
+            delete static_cast<decltype(t)>(p);
+            return false;
+        }, t);
+
+    // insert packet into HCC queue
+    auto cf = cs->_av.create_marker(&aql);
+    // create additional marker that blocks the custom one
+    cs->_av.create_blocking_marker(cf, hc::no_scope);
+
+    return ihipLogStatus(hipSuccess);
 }
