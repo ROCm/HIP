@@ -193,8 +193,12 @@ const char* hiprtcGetErrorString(hiprtcResult x) {
     case HIPRTC_ERROR_INTERNAL_ERROR:
       return "HIPRTC_ERROR_INTERNAL_ERROR";
     default:
-      throw std::logic_error{"Invalid HIPRTC result."};
+      return nullptr;
   };
+
+  ShouldNotReachHere();
+
+  return nullptr;
 }
 
 hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog, const char* src, const char* name,
