@@ -242,8 +242,9 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char
   std::ostringstream ostrstr;
   std::vector<const char*> oarr(&options[0], &options[numOptions]);
   std::copy(oarr.begin(), oarr.end(), std::ostream_iterator<std::string>(ostrstr, " "));
-  ostrstr.str().append(" -DHIP_VERSION_MAJOR=").append(std::to_string(HIP_VERSION_MAJOR));
-  ostrstr.str().append(" -DHIP_VERSION_MINOR=").append(std::to_string(HIP_VERSION_MINOR));
+
+  ostrstr.str().append(" -DHIP_VERSION_MAJOR=9");
+  ostrstr.str().append(" -DHIP_VERSION_MINOR=0");
 
   std::vector<amd::Device*> devices{hip::getCurrentDevice()->devices()[0]};
   if (CL_SUCCESS != program->build(devices, ostrstr.str().c_str(), nullptr, nullptr)) {
