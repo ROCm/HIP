@@ -263,26 +263,29 @@ typedef struct hipMemcpy3DParms {
 } hipMemcpy3DParms;
 
 typedef struct HIP_MEMCPY3D {
-    size_t Depth;
-    size_t Height;
-    size_t WidthInBytes;
-    hipDeviceptr_t dstDevice;
-    size_t dstHeight;
-    void* dstHost;
-    size_t dstLOD;
-    hipMemoryType dstMemoryType;
-    size_t dstPitch;
-    size_t dstXInBytes;
-    size_t dstY;
-    size_t dstZ;
-    void* reserved0;
-    void* reserved1;
-    hipDeviceptr_t srcDevice;
-    size_t srcHeight;
-    const void* srcHost;
-    size_t srcLOD;
-    hipMemoryType srcMemoryType;
-    size_t srcPitch;
+  unsigned int srcXInBytes;
+  unsigned int srcY;
+  unsigned int srcZ;
+  unsigned int srcLOD;
+  hipMemoryType srcMemoryType;
+  const void* srcHost;
+  hipDeviceptr_t srcDevice;
+  hipArray_t srcArray;
+  unsigned int srcPitch;
+  unsigned int srcHeight;
+  unsigned int dstXInBytes;
+  unsigned int dstY;
+  unsigned int dstZ;
+  unsigned int dstLOD;
+  hipMemoryType dstMemoryType;
+  void* dstHost;
+  hipDeviceptr_t dstDevice;
+  hipArray_t dstArray;
+  unsigned int dstPitch;
+  unsigned int dstHeight;
+  unsigned int WidthInBytes;
+  unsigned int Height;
+  unsigned int Depth;
 } HIP_MEMCPY3D;
 
 static inline struct hipPitchedPtr make_hipPitchedPtr(void* d, size_t p, size_t xsz,

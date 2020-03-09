@@ -25,36 +25,6 @@ THE SOFTWARE.
 #include <hip/hcc_detail/driver_types.h>
 #include <hip/hcc_detail/texture_types.h>
 
-// HIP_MEMCPY3D is currently broken.
-// TODO remove this struct once the headers will be fixed.
-struct _HIP_MEMCPY3D {
-  unsigned int srcXInBytes;
-  unsigned int srcY;
-  unsigned int srcZ;
-  unsigned int srcLOD;
-  hipMemoryType srcMemoryType;
-  const void* srcHost;
-  hipDeviceptr_t srcDevice;
-  hipArray_t srcArray;
-  unsigned int srcPitch;
-  unsigned int srcHeight;
-
-  unsigned int dstXInBytes;
-  unsigned int dstY;
-  unsigned int dstZ;
-  unsigned int dstLOD;
-  hipMemoryType dstMemoryType;
-  void* dstHost;
-  hipDeviceptr_t dstDevice;
-  hipArray_t dstArray;
-  unsigned int dstPitch;
-  unsigned int dstHeight;
-
-  unsigned int WidthInBytes;
-  unsigned int Height;
-  unsigned int Depth;
-};
-
 namespace hip
 {
 inline
@@ -618,8 +588,8 @@ std::pair<hipMemoryType, hipMemoryType> getMemoryType(const hipMemcpyKind kind) 
 }
 
 inline
-_HIP_MEMCPY3D getDrvMemcpy3DDesc(const hip_Memcpy2D& desc2D) {
-  _HIP_MEMCPY3D desc3D = {};
+HIP_MEMCPY3D getDrvMemcpy3DDesc(const hip_Memcpy2D& desc2D) {
+  HIP_MEMCPY3D desc3D = {};
 
   desc3D.srcXInBytes = desc2D.srcXInBytes;
   desc3D.srcY = desc2D.srcY;
@@ -651,8 +621,8 @@ _HIP_MEMCPY3D getDrvMemcpy3DDesc(const hip_Memcpy2D& desc2D) {
 }
 
 inline
-_HIP_MEMCPY3D getDrvMemcpy3DDesc(const hipMemcpy3DParms& desc) {
-  _HIP_MEMCPY3D descDrv = {};
+HIP_MEMCPY3D getDrvMemcpy3DDesc(const hipMemcpy3DParms& desc) {
+  HIP_MEMCPY3D descDrv = {};
 
   descDrv.WidthInBytes = desc.extent.width;
   descDrv.Height = desc.extent.height;
