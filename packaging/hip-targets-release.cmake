@@ -36,6 +36,7 @@ set_target_properties(hip::hip_hcc PROPERTIES
   )
 else()
 set_target_properties(hip::hip_hcc PROPERTIES
+  IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE "hcc::hccrt"
   IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libhip_hcc.so"
   IMPORTED_SONAME_RELEASE "libhip_hcc.so"
   )
