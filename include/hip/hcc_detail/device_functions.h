@@ -557,7 +557,7 @@ long __shfl_xor(long var, int lane_mask, int width = warpSize)
     return tmp1;
     #else
     static_assert(sizeof(long) == sizeof(int), "");
-    return static_cast<long>(__shfl_down(static_cast<int>(var), lane_delta, width));
+    return static_cast<long>(__shfl_xor(static_cast<int>(var), lane_mask, width));
     #endif
 }
 __device__
