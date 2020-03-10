@@ -502,7 +502,8 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
 
     stream = ihipSyncAndResolveStream(stream);
 
-    if (!stream->getDevice()->_props.cooperativeLaunch) {
+    if (!stream->getDevice()->_props.cooperativeLaunch ||
+        blockDimX.x * blockDimX.y * blockDimX.z > stream->getDevice()->_props.maxThreadsPerBlock) {
         return hipErrorInvalidConfiguration;
     }
 
@@ -650,7 +651,8 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
         }
 
         if (lp.gridDim.x == 0 || lp.gridDim.y == 0 || lp.gridDim.z == 0 ||
-            lp.blockDim.x == 0 || lp.blockDim.y == 0 || lp.blockDim.z == 0){
+            lp.blockDim.x == 0 || lp.blockDim.y == 0 || lp.blockDim.z == 0 ||
+            lp.blockDim.x * lp.blockDim.y * lp.blockDim.z > currentDevice->_props.maxThreadsPerBlock){
             return hipErrorInvalidConfiguration;
         }
     }
