@@ -105,9 +105,9 @@ char* demangle(const char* loweredName) {
   if (!loweredName) {
     return nullptr;
   }
-#if HIPRTC_USE_CXXABI || __linux__
+#if __linux__
   int status = 0;
-  char* demangledName = abi::__cxa_demangle(loweredName, nullptr, nullptr, &status);
+  char* demangledName = DEMANGLE(loweredName, nullptr, nullptr, &status);
   if (status != 0) {
     return nullptr;
   }
@@ -122,7 +122,7 @@ char* demangle(const char* loweredName) {
   }
 #else
 #error "Only Linux and Windows are supported"
-#endif // HIPRTC_USE_CXXABI || __linux__
+#endif // __linux__
   return demangledName;
 }
 
