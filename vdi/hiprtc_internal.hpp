@@ -23,9 +23,20 @@
 
 #include "hip_internal.hpp"
 
-#if HIPRTC_USE_CXXABI || __linux__
-#include <cxxabi.h>
+#if __linux__
 #include <cstdlib>
+
+#if HIPRTC_USE_CXXABI
+#include <cxxabi.h>
+
+#define DEMANGLE abi::__cxa_demangle
+
+#else
+extern "C" char * __cxa_demangle(const char *mangled_name, char *output_buffer,
+                                size_t *length, int *status);
+
+#define DEMANGLE __cxa_demangle
+#endif //HIPRTC_USE_CXXABI
 
 #elif defined(_WIN32)
 #include <Windows.h>
@@ -33,7 +44,7 @@
 
 #define UNDECORATED_SIZE 4096
 
-#endif // HIPRTC_USE_CXXABI || __linux__
+#endif // __linux__
 
 // This macro should be called at the beginning of every HIP RTC API.
 #define HIPRTC_INIT_API(...)                                 \
