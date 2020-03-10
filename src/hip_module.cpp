@@ -1418,9 +1418,17 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
     if (ctx == nullptr) {
         return hipErrorInvalidDevice;
     }
+    if (numBlocks == nullptr) {
+        return hipErrorInvalidValue;
+    }
 
     hipDeviceProp_t prop{};
     ihipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+
+    if (blockSize > prop.maxThreadsPerBlock) {
+        *numBlocks = 0;
+        return hipSuccess;
+    }
 
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
