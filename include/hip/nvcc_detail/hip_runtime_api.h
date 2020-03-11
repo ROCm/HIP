@@ -147,6 +147,7 @@ typedef enum cudaChannelFormatKind hipChannelFormatKind;
 #define hipCooperativeLaunchMultiDeviceNoPostSync   \
         cudaCooperativeLaunchMultiDeviceNoPostSync
 
+#define hipLaunchParams cudaLaunchParams
 
 // enum CUjit_option redefines
 #define hipJitOptionMaxRegisters CU_JIT_MAX_REGISTERS
@@ -1270,6 +1271,12 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeEccEnabled:
             cdattr = cudaDevAttrEccEnabled;
+            break;
+        case hipDeviceAttributeCooperativeLaunch:
+            cdattr = cudaDevAttrCooperativeLaunch;
+            break;
+        case hipDeviceAttributeCooperativeMultiDeviceLaunch:
+            cdattr = cudaDevAttrCooperativeMultiDeviceLaunch;
             break;
         default:
             return hipCUDAErrorTohipError(cudaErrorInvalidValue);
