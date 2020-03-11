@@ -1574,36 +1574,26 @@ int getByteSizeFromFormat(const hipChannelFormatDesc& desc){
 }
 
 int getByteSizeFromArrayFormat(const hipArray_Format format){
-   int byteSize =0;
    switch (format) {
        case HIP_AD_FORMAT_UNSIGNED_INT8:
-          byteSize = sizeof(uint8_t);
-          break;
+          return sizeof(uint8_t);
        case HIP_AD_FORMAT_UNSIGNED_INT16:
-          byteSize = sizeof(uint16_t);
-          break;
+          return sizeof(uint16_t);
        case HIP_AD_FORMAT_UNSIGNED_INT32:
-          byteSize = sizeof(uint32_t);
-          break;
+          return sizeof(uint32_t);
        case HIP_AD_FORMAT_SIGNED_INT8:
-          byteSize = sizeof(int8_t);
-          break;
+          return sizeof(int8_t);
        case HIP_AD_FORMAT_SIGNED_INT16:
-          byteSize = sizeof(int16_t);
-          break;
+          return sizeof(int16_t);
        case HIP_AD_FORMAT_SIGNED_INT32:
-          byteSize = sizeof(int32_t);
-          break;
+          return sizeof(int32_t);
        case HIP_AD_FORMAT_HALF:
-          byteSize = sizeof(_Float16);
-          break;
+          return sizeof(_Float16);
        case HIP_AD_FORMAT_FLOAT:
-          byteSize = sizeof(float);
-          break;
+          return sizeof(float);
        default:
-          break;
+          return 0;
    }
-   return byteSize;
 }
 
 hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pCopy, hipStream_t stream, bool isAsync, bool isDrv) {
@@ -1639,14 +1629,14 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
     }
     if(isDrv) {
         if(pCopy->dstMemoryType == hipMemoryTypeArray) {
-            if ((pCopy->dstArray == nullptr) || (!pCopy->dstArray->isDrv))return hipErrorInvalidValue;
+            if (pCopy->dstArray == nullptr || !pCopy->dstArray->isDrv)return hipErrorInvalidValue;
             dstByteSize = getByteSizeFromArrayFormat(pCopy->dstArray->Format);
             dstPtr = pCopy->dstArray->data;
             dstWidth = pCopy->dstArray->width;
             dstHeight = pCopy->dstArray->height;
             dstDepth = pCopy->dstArray->depth;
             dstPitch = dstByteSize * alignUp(dstWidth, IMAGE_PITCH_ALIGNMENT);
-        } else if((pCopy->dstMemoryType == hipMemoryTypeDevice)||(pCopy->dstMemoryType == hipMemoryTypeUnified)){
+        } else if(pCopy->dstMemoryType == hipMemoryTypeDevice|| pCopy->dstMemoryType == hipMemoryTypeUnified){
             //Non Array destination
             dstPtr = pCopy->dstDevice;
             dstHeight = pCopy->dstHeight;
@@ -1660,7 +1650,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
         }
     } else {
         if (p->dstArray != nullptr) {
-            if ((p->dstArray->isDrv == true) ||( p->dstPtr.ptr!= nullptr)){
+            if (p->dstArray->isDrv == true || p->dstPtr.ptr!= nullptr){
                return hipErrorInvalidValue;
             }
             // Array destination
@@ -1686,14 +1676,14 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
     }
     if(isDrv) {
         if(pCopy->srcMemoryType == hipMemoryTypeArray) {
-            if ((pCopy->srcArray == nullptr) || (!pCopy->srcArray->isDrv))return hipErrorInvalidValue;
+            if (pCopy->srcArray == nullptr || !pCopy->srcArray->isDrv)return hipErrorInvalidValue;
             srcByteSize = getByteSizeFromArrayFormat(pCopy->srcArray->Format);
             srcPtr = pCopy->srcArray->data;
             srcWidth = pCopy->srcArray->width;
             srcHeight = pCopy->srcArray->height;
             srcDepth = pCopy->srcArray->depth;
             srcPitch = srcByteSize * alignUp(srcWidth, IMAGE_PITCH_ALIGNMENT);
-        } else if((pCopy->srcMemoryType == hipMemoryTypeDevice)||(pCopy->srcMemoryType == hipMemoryTypeUnified)){
+        } else if(pCopy->srcMemoryType == hipMemoryTypeDevice || pCopy->srcMemoryType == hipMemoryTypeUnified){
             //Non Array destination
             srcPtr = pCopy->srcDevice;
             srcHeight = pCopy->srcHeight;
@@ -1733,7 +1723,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
     }
     stream = ihipSyncAndResolveStream(stream);
     try {
-        if((copyWidth == dstPitch) && (copyWidth == srcPitch)&& (copyHeight == dstHeight) &&(copyHeight == srcHeight)) {
+        if(copyWidth == dstPitch && copyWidth == srcPitch && copyHeight == dstHeight && copyHeight == srcHeight) {
             if(isAsync)
                 stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind);
             else
@@ -1760,30 +1750,22 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
 
 hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p) {
     HIP_INIT_SPECIAL_API(hipMemcpy3D, (TRACE_MCMD), p);
-    hipError_t e = hipSuccess;
-    e = ihipMemcpy3D(p, nullptr, hipStreamNull, false, false);
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemcpy3D(p, nullptr, hipStreamNull, false, false));
 }
 
 hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipMemcpy3DAsync, (TRACE_MCMD), p, stream);
-    hipError_t e = hipSuccess;
-    e = ihipMemcpy3D(p, nullptr,stream, true, false);
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemcpy3D(p, nullptr,stream, true, false));
 }
 
 hipError_t hipDrvMemcpy3D(const HIP_MEMCPY3D* pCopy) {
     HIP_INIT_SPECIAL_API(hipDrvMemcpy3D, (TRACE_MCMD), pCopy);
-    hipError_t e = hipSuccess;
-    e = ihipMemcpy3D(nullptr,pCopy, hipStreamNull, false, false);
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemcpy3D(nullptr,pCopy, hipStreamNull, false, true));
 }
 
 hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipDrvMemcpy3DAsync, (TRACE_MCMD), pCopy, stream);
-    hipError_t e = hipSuccess;
-    e = ihipMemcpy3D(nullptr,pCopy, stream, true, false);
-    return ihipLogStatus(e);
+    return ihipLogStatus(ihipMemcpy3D(nullptr,pCopy, stream, true, true));
 }
 
 namespace {
