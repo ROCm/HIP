@@ -733,11 +733,11 @@ if ($HIPCC_LINK_FLAGS_APPEND) {
 }
 
 my $CMD="$HIPCC";
-if ($needCXXFLAGS) {
-    $CMD .= " $HIPCXXFLAGS";
-}
 if ($needLDFLAGS and not $compileOnly) {
     $CMD .= " $HIPLDFLAGS";
+}
+if ($needCXXFLAGS) {
+    $CMD .= " $HIPCXXFLAGS";
 }
 $CMD .= " $toolArgs";
 
