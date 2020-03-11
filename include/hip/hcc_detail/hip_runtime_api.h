@@ -3452,6 +3452,13 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
 }
 
 #if __HIP_VDI__ && !defined(__HCC__)
+
+template <typename F>
+inline hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                                    F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
+return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize,(hipFunction_t)kernel, dynSharedMemPerBlk, blockSizeLimit);
+}
+
 template <class T>
 inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
                                              void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {

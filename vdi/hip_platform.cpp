@@ -631,13 +631,12 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
 
 
 namespace hip_impl {
-
-hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
-                                                         hipFunction_t f,
-                                                         int  blockSize,
-                                                         size_t dynamicSMemSize)
+hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, int* numGrids,
+                                                         hipFunction_t f, int  blockSize,
+                                                         size_t dynamicSMemSize, bool bCalcPotentialBlkSz)
 {
-  HIP_INIT_API(NONE, f, blockSize, dynamicSMemSize);
+  HIP_INIT_API(NONE, f, blockSize, dynamicSMemSize, bCalcPotentialBlkSz);
+  if(numBlocks == nullptr){HIP_RETURN(hipErrorInvalidValue);}
   int deviceId = ihipGetDevice();
   // FIXME: Function may not be a device function and may have been obtaiend via
   //        hipModuleGetFunction and thus not in the functions_ map. Check the map
@@ -654,12 +653,16 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
   if (!kernel) {
     HIP_RETURN(hipErrorOutOfMemory);
   }
-  if (blockSize == 0) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
   amd::Device* device = hip::getCurrentDevice()->devices()[0];
   const device::Kernel::WorkGroupInfo* wrkGrpInfo = kernel->getDeviceKernel(*device)->workGroupInfo();
-
+  if (blockSize == 0) {
+    if (bCalcPotentialBlkSz == false){
+      HIP_RETURN(hipErrorInvalidValue);
+    }
+    else {
+      blockSize = device->info().maxWorkGroupSize_; // maxwavefrontperblock
+    }
+  }
   // Find threads accupancy per CU => simd_per_cu * GPR usage
   constexpr size_t MaxWavesPerSimd = 8;  // Limited by SPI 32 per CU, hence 8 per SIMD
   size_t VgprWaves = MaxWavesPerSimd;
@@ -684,6 +687,12 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
     int lds_occupancy = static_cast<int>(device->info().localMemSize_ / total_used_lds);
     *numBlocks = std::min(*numBlocks, lds_occupancy);
   }
+  if (bCalcPotentialBlkSz){
+    if (numGrids == nullptr){
+      HIP_RETURN(hipErrorInvalidValue);
+    }
+    *numGrids = *numBlocks * device->info().numRTCUs_;
+  }
 
   HIP_RETURN(hipSuccess);
 }
@@ -691,13 +700,28 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 
 extern "C" {
 // FIXME: Need to replace `uint32_t` with `int` finally.
+hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             uint32_t blockSizeLimit)
+{
+  int numGrids = 0;
+  int numBlocks = 0;
+  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, &numGrids, f, 0, dynSharedMemPerBlk,true);
+  if (Ret == hipSuccess){
+    *blockSize = numBlocks;
+    *gridSize = numGrids;
+  }
+  HIP_RETURN(Ret);
+}
+
+// FIXME: Need to replace `uint32_t` with `int` finally.
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks,
                                                         hipFunction_t f,
                                                         uint32_t  blockSize,
                                                         size_t dynamicSMemSize)
 {
   int NB;
-  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, f, blockSize, dynamicSMemSize);
+  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, nullptr, f, blockSize, dynamicSMemSize, false);
   *numBlocks = NB;
   HIP_RETURN(Ret);
 }
@@ -710,7 +734,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(uint32_t* numBl
                                                                  unsigned int flags)
 {
   int NB;
-  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, f, blockSize, dynamicSMemSize);
+  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, nullptr, f, blockSize, dynamicSMemSize, false);
   *numBlocks = NB;
   HIP_RETURN(Ret);
 }
