@@ -1290,6 +1290,15 @@ inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBl
     return hipCUDAErrorTohipError(cerror);
 }
 
+inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize,
+                                                           void* func,
+                                                           size_t dynamicSMemSize = 0,
+                                                           int blockSizeLimit = 0) {
+    cudaError_t cerror;
+    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize, blockSizeLimit);
+    return hipCUDAErrorTohipError(cerror);
+}
+
 inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
     struct cudaPointerAttributes cPA;
     hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));
@@ -1685,6 +1694,17 @@ inline static hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_
 #endif
 
 #ifdef __CUDACC__
+
+template<class T>
+inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
+                                                                      T func,
+                                                                      int blockSize,
+                                                                      size_t dynamicSMemSize) {
+    cudaError_t cerror;
+    cerror =
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func, blockSize, dynamicSMemSize);
+    return hipCUDAErrorTohipError(cerror);
+}
 
 template <class T>
 inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
