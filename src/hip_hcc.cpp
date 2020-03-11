@@ -1515,20 +1515,6 @@ hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream) {
     return e;
 }
 
-void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
-    hipError_t e = hipSuccess;
-
-    // Synchronize stream
-    tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n",
-            ToString(cb->_stream).c_str());
-    GET_TLS();
-    e = ihipStreamSynchronize(tls, cb->_stream);
-
-    // Call registered callback function
-    cb->_callback(cb->_stream, e, cb->_userData);
-    delete cb;
-}
-
 //---
 // Get the stream to use for a command submission.
 //
