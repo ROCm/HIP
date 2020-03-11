@@ -1679,6 +1679,17 @@ inline static hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_
     return hipCUDAErrorTohipError(cudaGetChannelDesc(desc,array));
 }
 
+inline static hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDimX,
+                                      void** kernelParams, unsigned int sharedMemBytes,
+                                      hipStream_t stream) {
+    return hipCUDAErrorTohipError(
+            cudaLaunchCooperativeKernel(f, gridDim, blockDimX, kernelParams, sharedMemBytes, stream));
+}
+
+inline static hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                 int  numDevices, unsigned int  flags) {
+    return hipCUDAErrorTohipError(cudaLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags));
+}
 
 #ifdef __cplusplus
 }
@@ -1742,6 +1753,14 @@ template <class T>
 inline static hipChannelFormatDesc hipCreateChannelDesc() {
     return cudaCreateChannelDesc<T>();
 }
+
+template <class T>
+inline static hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
+                                             void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {
+    return hipCUDAErrorTohipError(
+            cudaLaunchCooperativeKernel(f, gridDim, blockDim, kernelParams, sharedMemBytes, stream));
+}
+
 #endif  //__CUDACC__
 
 #endif  // HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
