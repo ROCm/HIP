@@ -1280,8 +1280,9 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
     return hipCUDAErrorTohipError(cerror);
 }
 
+template<class T>
 inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
-                                                                      const void* func,
+                                                                      T func,
                                                                       int blockSize,
                                                                       size_t dynamicSMemSize) {
     cudaError_t cerror;
