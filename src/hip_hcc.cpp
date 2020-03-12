@@ -901,6 +901,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     prop->cooperativeLaunch = (prop->gcnArch < 900) ? 0 : 1;
     prop->cooperativeMultiDeviceLaunch = (prop->gcnArch < 900) ? 0 : 1;
 
+    prop->cooperativeMultiDeviceUnmatchedFunc = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedGridDim = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedBlockDim = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedSharedMem = prop->cooperativeMultiDeviceLaunch;
+
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_1D_MAX_ELEMENTS,
           &prop->maxTexture1D);
     DeviceErrorCheck(err);
@@ -1619,7 +1624,9 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr, bool lockAcquired) {
-    stream = ihipSyncAndResolveStream(stream, lockAcquired);
+    if (stream == nullptr || stream != stream->getCtx()->_defaultStream) {
+        stream = ihipSyncAndResolveStream(stream, lockAcquired);
+    }
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
