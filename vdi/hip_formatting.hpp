@@ -17,8 +17,8 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE. */
-#include "hip/hcc_detail/hiprtc.h"
-#include "hip/hcc_detail/hip_runtime_prof.h"
+#include <hip/hiprtc.h>
+#include <hip/hip_runtime_api.h>
 
 inline std::ostream& operator<<(std::ostream& os, const hipTextureFilterMode& s) {
   switch (s) {
@@ -338,58 +338,6 @@ inline std::ostream& operator<<(std::ostream& os, const hiprtcResult& s) {
       break;
     default:
       os << "HIPRTC_ERROR_INTERNAL_ERROR";
-  };
-  return os;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const HipVdiOpId& s) {
-  switch (s) {
-    case kHipVdiOpIdDispatch:
-      os << "kHipVdiOpIdDispatch";
-      break;
-    case kHipVdiOpIdCopy:
-      os << "kHipVdiOpIdCopy";
-      break;
-    case kHipVdiOpIdBarrier:
-      os << "kHipVdiOpIdBarrier";
-      break;
-    case kHipVdiOpIdNumber:
-      os << "kHipVdiOpIdNumber";
-      break;
-    default:
-      os << "kHipVdiOpIdDispatch";
-  };
-  return os;
-}
-
-inline std::ostream& operator<<(std::ostream& os, const HipVdiCommandKind& s) {
-  switch (s) {
-    case kHipVdiCommandKernel:
-      os << "kHipVdiCommandKernel";
-      break;
-    case kHipVdiMemcpyDeviceToHost:
-      os << "kHipVdiMemcpyDeviceToHost";
-      break;
-    case kHipHipVdiMemcpyHostToDevice:
-      os << "kHipHipVdiMemcpyHostToDevice";
-      break;
-    case kHipVdiMemcpyDeviceToDevice:
-      os << "kHipVdiMemcpyDeviceToDevice";
-      break;
-    case kHipVidMemcpyDeviceToHostRect:
-      os << "kHipVidMemcpyDeviceToHostRect";
-      break;
-    case kHipVdiMemcpyHostToDeviceRect:
-      os << "kHipVdiMemcpyHostToDeviceRect";
-      break;
-    case kHipVdiMemcpyDeviceToDeviceRect:
-      os << "kHipVdiMemcpyDeviceToDeviceRect";
-      break;
-    case kHipVdiFillMemory:
-      os << "kHipVdiFillMemory";
-      break;
-    default:
-      os << "kHipVdiCommandKernel";
   };
   return os;
 }
