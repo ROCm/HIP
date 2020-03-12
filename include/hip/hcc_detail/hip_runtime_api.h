@@ -2940,9 +2940,9 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
-hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
-                                             uint32_t blockSizeLimit);
+                                             int blockSizeLimit);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2963,7 +2963,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
-hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
 
 /**
@@ -2987,7 +2987,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
-hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
 #if __HIP_VDI__ && !defined(__HCC__)
