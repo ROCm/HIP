@@ -310,6 +310,18 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
             case hipDeviceAttributeCooperativeMultiDeviceLaunch:
                 *pi = prop->cooperativeMultiDeviceLaunch;
                 break;
+            case hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc:
+                *pi = prop->cooperativeMultiDeviceUnmatchedFunc;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim:
+                *pi = prop->cooperativeMultiDeviceUnmatchedGridDim;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim:
+                *pi = prop->cooperativeMultiDeviceUnmatchedBlockDim;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem:
+                *pi = prop->cooperativeMultiDeviceUnmatchedSharedMem;
+                break;
             case hipDeviceAttributeMaxPitch:
                 *pi = prop->memPitch;
                 break;
