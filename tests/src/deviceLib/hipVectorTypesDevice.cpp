@@ -105,6 +105,11 @@ bool integer_binary_tests(V& f1, V& f2, V& f3) {
 template<typename V>
 __device__
 bool TestVectorType() {
+    constexpr V v1{1};
+    constexpr V v2{2};
+    constexpr V v3{3};
+    constexpr V v4{4};
+
     V f1{1};
     V f2{1};
     V f3 = f1 + f2;
@@ -117,41 +122,41 @@ bool TestVectorType() {
     if (f2 != V{1}) return false;
     if (!integer_binary_tests(f1, f2, f3)) return false;
 
-    f1 = V{2};
-    f2 = V{1};
+    f1 = v2;
+    f2 = v1;
     f1 += f2;
-    if (f1 != V{3}) return false;
+    if (f1 != v3) return false;
     f1 -= f2;
-    if (f1 != V{2}) return false;
+    if (f1 != v2) return false;
     f1 *= f2;
-    if (f1 != V{2}) return false;
+    if (f1 != v2) return false;
     f1 /= f2;
-    if (f1 != V{2}) return false;
+    if (f1 != v2) return false;
     if (!integer_unary_tests(f1, f2)) return false;
 
-    f1 = V{2};
+    f1 = v2;
     f2 = f1++;
-    if (f1 != V{3}) return false;
-    if (f2 != V{2}) return false;
+    if (f1 != v3) return false;
+    if (f2 != v2) return false;
     f2 = f1--;
-    if (f2 != V{3}) return false;
-    if (f1 != V{2}) return false;
+    if (f2 != v3) return false;
+    if (f1 != v2) return false;
     f2 = ++f1;
-    if (f1 != V{3}) return false;
-    if (f2 != V{3}) return false;
+    if (f1 != v3) return false;
+    if (f2 != v3) return false;
     f2 = --f1;
-    if (f1 != V{2}) return false;
-    if (f2 != V{2}) return false;
+    if (f1 != v2) return false;
+    if (f2 != v2) return false;
 
-    f1 = V{3};
-    f2 = V{4};
-    f3 = V{3};
+    f1 = v3;
+    f2 = v4;
+    f3 = v3;
     if (f1 == f2) return false;
     if (!(f1 != f2)) return false;
 
     #if 0 // TODO: investigate on GFX8
         using T = typename V::value_type;
-    
+
         const T& x = f1.x;
         T& y = f2.x;
         const volatile T& z = f3.x;
