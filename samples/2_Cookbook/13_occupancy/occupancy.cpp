@@ -60,16 +60,15 @@ void launchKernel(float* C, float* A, float* B, bool manual){
      uint32_t gridSize = 0;
      uint32_t blockSize = 0;
      
-     if (manual){
-	blockSize = threadsperblock; 
-	gridSize  = blocks;
-	std::cout << std::endl << "Manual Configuration with block size " << blockSize << std::endl;
-     }
-     else{
-	HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&mingridSize, &blockSize, multiply, 0, 0));
-	std::cout << std::endl << "Automatic Configuation based on hipOccupancyMaxPotentialBlockSize " << std::endl;
-	std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << mingridSize << std::endl;
-	gridSize = (NUM/blockSize)+1; 
+     if (manual) {
+        blockSize = threadsperblock;
+        gridSize  = blocks;
+        std::cout << std::endl << "Manual Configuration with block size " << blockSize << std::endl;
+     } else {
+        HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&mingridSize, &blockSize, multiply, 0, 0));
+        std::cout << std::endl << "Automatic Configuation based on hipOccupancyMaxPotentialBlockSize " << std::endl;
+        std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << mingridSize << std::endl;
+        gridSize = (NUM/blockSize)+1;
      }
 
      // Record the start event
@@ -90,7 +89,7 @@ void launchKernel(float* C, float* A, float* B, bool manual){
      HIP_CHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, multiply, blockSize, 0));
      
      if(devProp.maxThreadsPerMultiProcessor){
-	std::cout << "Theoretical Occupancy is " << (double)numBlock* blockSize/devProp.maxThreadsPerMultiProcessor * 100 << "%" << std::endl;
+       std::cout << "Theoretical Occupancy is " << (double)numBlock* blockSize/devProp.maxThreadsPerMultiProcessor * 100 << "%" << std::endl;
      }
 }
 
@@ -173,4 +172,6 @@ int main() {
      free(C0);
      free(C1);
      free(cpuC);
+
+     return 0;
 }

@@ -2934,61 +2934,61 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  *
  * @param [out] gridSize           minimum grid size for maximum potential occupancy
  * @param [out] blockSize          block size for maximum potential occupancy
- * @param [in]  f                  kernel function for which occupancy is calulated
+ * @param [in]  hipFunc            kernel function for which occupancy is calulated
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
 hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
-                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             hipFunction_t hipFunc, size_t dynSharedMemPerBlk,
                                              uint32_t blockSizeLimit);
 
 /**
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
- * @param [in]  func             Kernel function for which occupancy is calulated
+ * @param [in]  hipFunc          Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk);
+   uint32_t* numBlocks, hipFunction_t hipFunc, uint32_t blockSize, size_t dynSharedMemPerBlk);
 
 /**
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
- * @param [in]  func             Kernel function (hipFunction) for which occupancy is calulated
+ * @param [in]  hipFunc          Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
-   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
+   int* numBlocks, hipFunction_t hipFunc, int blockSize, size_t dynSharedMemPerBlk);
 
 /**
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
- * @param [in]  f                Kernel function for which occupancy is calulated
+ * @param [in]  hipFunc          Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
+   uint32_t* numBlocks, hipFunction_t hipFunc, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
 
 /**
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
- * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
+ * @param [in]  hipFunc          Kernel function for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
+   int* numBlocks, hipFunction_t hipFunc, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
 #if __HIP_VDI__ && !defined(__HCC__)
 /**
@@ -3258,20 +3258,71 @@ hipError_t hipLaunchKernel(const void* function_address,
 } /* extern "c" */
 #endif
 
-#if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+#if defined(__cplusplus) && (defined(__HCC__) || defined(__clang__))
+
+/**
+ * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
+ *
+ * @param [out] gridSize           minimum grid size for maximum potential occupancy
+ * @param [out] blockSize          block size for maximum potential occupancy
+ * @param [in]  func               kernel function address for which occupancy is calculated
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ */
+hipError_t hipOccupancyMaxPotentialBlockSize(
+    uint32_t* gridSize, uint32_t* blockSize, const void* func, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  func             Kernel function address for which occupancy is calculated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ */
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    uint32_t* numBlocks, const void* func, uint32_t blockSize, size_t dynSharedMemPerBlk);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  func             Kernel function for which occupancy is calculated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ */
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    uint32_t* numBlocks, const void* func, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
+
+template <typename F>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+    F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
+    return ::hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void *>(kernel),
+                                               dynSharedMemPerBlk, blockSizeLimit);
+}
+
 template <typename F>
 static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessor(
     uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk) {
-    return ::hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, (hipFunction_t)func, blockSize,
+    return ::hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, reinterpret_cast<const void *>(func), blockSize,
                                                           dynSharedMemPerBlk);
 }
+
 template <typename F>
 static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
     uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
     return ::hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-        numBlocks, (hipFunction_t)func, blockSize, dynSharedMemPerBlk, flags);
+        numBlocks, reinterpret_cast<const void *>(func), blockSize, dynSharedMemPerBlk, flags);
 }
-#endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+
+#endif // defined(__cplusplus) && (defined(__HCC__) || defined(__clang__))
 
 #if USE_PROF_API
 #include <hip/hcc_detail/hip_prof_str.h>

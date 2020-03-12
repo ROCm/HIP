@@ -43,16 +43,26 @@ __global__ void f2(T *a) { *a = 1; }
 
 int main(int argc, char* argv[]) {
 
-    // test case for using kernel function pointer 
     uint32_t gridSize = 0;
     uint32_t blockSize = 0;
-    hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
+
+    hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0); // function template
+    assert(gridSize != 0 && blockSize != 0);
+
+    gridSize = 0;
+    blockSize = 0;
+    hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, reinterpret_cast<const void *>(f1), 0, 0); // function address
     assert(gridSize != 0 && blockSize != 0);
 
     // test case for using kernel function pointer with template 
     gridSize = 0;
     blockSize = 0;
-    hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
+    hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, reinterpret_cast<const void *>(f2<int>), 0, 0); // templated function address
+    assert(gridSize != 0 && blockSize != 0);
+
+    gridSize = 0;
+    blockSize = 0;
+    hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0); //function template
     assert(gridSize != 0 && blockSize != 0);
 
     // test case for using kernel with hipFunction_t type

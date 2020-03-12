@@ -1525,23 +1525,51 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(TlsData *tls, uint32_t* gridSize, 
     return hipSuccess;
 }
 
-hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
-                                             hipFunction_t f, size_t dynSharedMemPerBlk,
-                                             uint32_t blockSizeLimit)
+hipError_t hipOccupancyMaxPotentialBlockSize(
+   uint32_t* gridSize, uint32_t* blockSize, hipFunction_t hipFunc, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit)
 {
-    HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit);
+    HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, gridSize, blockSize, hipFunc, dynSharedMemPerBlk, blockSizeLimit);
 
     return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(tls,
-        gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit));
+        gridSize, blockSize, hipFunc, dynSharedMemPerBlk, blockSizeLimit));
+}
+
+hipError_t hipOccupancyMaxPotentialBlockSize(
+   uint32_t* gridSize, uint32_t* blockSize, const void* func, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit)
+{
+    HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, gridSize, blockSize, func, dynSharedMemPerBlk, blockSizeLimit);
+
+    hipFunction_t hipFunc = hip_impl::get_program_state().
+                            kernel_descriptor(reinterpret_cast<std::uintptr_t>(func), hip_impl::target_agent(0));
+    if(hipFunc == nullptr) {
+        return hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(tls,
+        gridSize, blockSize, hipFunc, dynSharedMemPerBlk, blockSizeLimit));
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+   uint32_t* numBlocks, hipFunction_t hipFunc, uint32_t blockSize, size_t dynSharedMemPerBlk)
 {
-    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
+    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, hipFunc, blockSize, dynSharedMemPerBlk);
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, hipFunc, blockSize, dynSharedMemPerBlk));
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+   uint32_t* numBlocks, const void* func, uint32_t blockSize, size_t dynSharedMemPerBlk)
+{
+    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, func, blockSize, dynSharedMemPerBlk);
+
+    hipFunction_t hipFunc = hip_impl::get_program_state().
+                            kernel_descriptor(reinterpret_cast<std::uintptr_t>(func), hip_impl::target_agent(0));
+    if(hipFunc == nullptr) {
+        return hipErrorInvalidValue;
+    }
+    return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+        tls, numBlocks, hipFunc, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -1554,13 +1582,28 @@ hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t  blockSize, size_t dynSharedMemPerBlk,
+   uint32_t* numBlocks, hipFunction_t hipFunc, uint32_t  blockSize, size_t dynSharedMemPerBlk,
    unsigned int flags)
 {
-    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
+    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, hipFunc, blockSize, dynSharedMemPerBlk, flags);
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, hipFunc, blockSize, dynSharedMemPerBlk));
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+   uint32_t* numBlocks, const void* func, uint32_t  blockSize, size_t dynSharedMemPerBlk, unsigned int flags)
+{
+    HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, func, blockSize, dynSharedMemPerBlk, flags);
+
+    hipFunction_t hipFunc = hip_impl::get_program_state().
+                            kernel_descriptor(reinterpret_cast<std::uintptr_t>(func), hip_impl::target_agent(0));
+    if(hipFunc == nullptr) {
+        return hipErrorInvalidValue;
+    }
+
+    return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+        tls, numBlocks, hipFunc, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(

@@ -157,7 +157,7 @@ int main() {
       HIPCHECK(hipSetDevice(i));
       dimBlock.x = workgroups[set];
       HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(reinterpret_cast<uint32_t*>(&numBlocks),
-      (hipFunction_t)test_gws, dimBlock.x * dimBlock.y * dimBlock.z, dimBlock.x * sizeof(long)));
+      test_gws, dimBlock.x * dimBlock.y * dimBlock.z, dimBlock.x * sizeof(long)));
       
       std::cout << "GPU(" << i << ") Block size: " << dimBlock.x << " Num blocks per CU: " << numBlocks << "\n";
 

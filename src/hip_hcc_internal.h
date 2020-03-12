@@ -1067,4 +1067,14 @@ static inline ihipCtx_t* iihipGetTlsDefaultCtx(TlsData* tls) {
     return tls->defaultCtx;
 }
 
+/**
+ *  Converts host pointer to modulesymbol pointer
+ *  Needed only for clang + HIP-HCC RT
+ *
+ *  [in] hostFunction kernel function pointer
+ *
+ *  hipFuntion_t, nullptr
+ */
+hipFunction_t ihipConvertHostFuncPtr2Symbol(const void *hostFunction);
+
 #endif

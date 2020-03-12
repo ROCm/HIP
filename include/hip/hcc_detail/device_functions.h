@@ -38,6 +38,7 @@ THE SOFTWARE.
 #if __HIP_VDI__
 extern "C" __device__ int printf(const char *fmt, ...);
 #else
+template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
 #endif
 #endif
