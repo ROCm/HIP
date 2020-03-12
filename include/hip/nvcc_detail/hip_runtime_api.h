@@ -147,7 +147,6 @@ typedef enum cudaChannelFormatKind hipChannelFormatKind;
 #define hipCooperativeLaunchMultiDeviceNoPostSync   \
         cudaCooperativeLaunchMultiDeviceNoPostSync
 
-#define hipLaunchParams cudaLaunchParams
 
 // enum CUjit_option redefines
 #define hipJitOptionMaxRegisters CU_JIT_MAX_REGISTERS
@@ -187,6 +186,7 @@ typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_t;
 typedef struct cudaArray* hipArray_const_t;
 typedef struct cudaFuncAttributes hipFuncAttributes;
+typedef struct cudaLaunchParams hipLaunchParams;
 #define hipFunction_attribute CUfunction_attribute
 #define hip_Memcpy2D CUDA_MEMCPY2D
 #define hipMemcpy3DParms cudaMemcpy3DParms
