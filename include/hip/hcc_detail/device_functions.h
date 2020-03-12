@@ -33,6 +33,15 @@ THE SOFTWARE.
 #include <hip/hip_vector_types.h>
 #include <hip/hcc_detail/device_library_decls.h>
 #include <hip/hcc_detail/llvm_intrinsics.h>
+
+#if __HIP_CLANG_ONLY__
+#if __HIP_VDI__
+extern "C" __device__ int printf(const char *fmt, ...);
+#else
+static inline __device__ void printf(const char* format, All... all) {}
+#endif
+#endif
+
 /*
 Integer Intrinsics
 */
@@ -548,7 +557,7 @@ long __shfl_xor(long var, int lane_mask, int width = warpSize)
     return tmp1;
     #else
     static_assert(sizeof(long) == sizeof(int), "");
-    return static_cast<long>(__shfl_down(static_cast<int>(var), lane_delta, width));
+    return static_cast<long>(__shfl_xor(static_cast<int>(var), lane_mask, width));
     #endif
 }
 __device__
