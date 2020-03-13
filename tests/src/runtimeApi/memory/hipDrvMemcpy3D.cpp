@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include "test_common.h"
 
 template <typename T>
-void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
+void runTest(int width,int height,int depth)
 {
     unsigned int size = width * height * depth * sizeof(T);
     T* hData = (T*) malloc(size);
@@ -39,31 +39,48 @@ void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
             }
         }
     }
-    hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(T)*8, 0, 0, 0, formatKind);
-    hipArray *arr,*arr1;
+    
+    hipArray *arr=NULL,*arr1=NULL;
+   
+    HIP_ARRAY3D_DESCRIPTOR desc = {0};
+    desc.Format = HIP_AD_FORMAT_FLOAT;
+    desc.Depth = 1;
+    desc.Flags = hipArrayDefault;
+    desc.NumChannels = 4;
+    desc.Width = 1;
+    desc.Height = 1;
 
-    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayDefault));
-    HIPCHECK(hipMalloc3DArray(&arr1, &channelDesc, make_hipExtent(width, height, depth), hipArrayDefault));
+    HIPCHECK(hipArray3DCreate(&arr, &desc)); 
+    HIPCHECK(hipArray3DCreate(&arr1, &desc)); 
+
     HIP_MEMCPY3D myparms = {0};
     myparms.srcXInBytes = myparms.srcY = myparms.srcZ = 0;
-    myparms.dstXInBytes = myparms.dstY = myparms.dstZ = 0;
+    myparms.srcMemoryType = hipMemoryTypeHost;
     myparms.srcHost = (void *)hData;
     myparms.srcPitch = width * sizeof(T);
     myparms.srcHeight = height;   
 
+    myparms.dstXInBytes = myparms.dstY = myparms.dstZ = 0;
+    myparms.dstMemoryType = hipMemoryTypeArray;
     myparms.dstArray = arr;
+    myparms.dstArray->isDrv = true;
     myparms.WidthInBytes = width;
     myparms.Height = height;
     myparms.Depth = depth;
 
     HIPCHECK(hipDrvMemcpy3D(&myparms));
     HIPCHECK(hipDeviceSynchronize());
+     
     //Array to Array
     memset(&myparms,0x0, sizeof(myparms));
     myparms.srcXInBytes = myparms.srcY = myparms.srcZ = 0;
-    myparms.dstXInBytes = myparms.dstY = myparms.dstZ = 0;
+    myparms.srcMemoryType = hipMemoryTypeArray;
     myparms.srcArray = arr;
+    myparms.srcArray->isDrv = true;
+    myparms.dstXInBytes = myparms.dstY = myparms.dstZ = 0;
+    myparms.dstMemoryType = hipMemoryTypeArray;
     myparms.dstArray = arr1;
+    myparms.dstArray->isDrv = true;
     myparms.WidthInBytes = width;
     myparms.Height = height;
     myparms.Depth = depth;
@@ -72,19 +89,23 @@ void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
     HIPCHECK(hipDeviceSynchronize());
 
     T *hOutputData = (T*) malloc(size);
-    memset(hOutputData, 0,  size);
+    memset(hOutputData, 0, size);
     //Device to host
     memset(&myparms,0x0, sizeof(myparms));
     myparms.srcXInBytes = myparms.srcY = myparms.srcZ = 0;
+    myparms.srcMemoryType = hipMemoryTypeArray;
+    myparms.srcArray = arr1;
+    myparms.srcArray->isDrv = true;
+    
     myparms.dstXInBytes = myparms.dstY = myparms.dstZ = 0;
+    myparms.dstMemoryType = hipMemoryTypeHost;
     myparms.dstHost = (void *)hOutputData;
     myparms.dstPitch = width * sizeof(T);
     myparms.dstHeight = height;  
- 
-    myparms.srcArray = arr1;
     myparms.WidthInBytes = width;
     myparms.Height = height;
     myparms.Depth = depth;
+    
     HIPCHECK(hipDrvMemcpy3D(&myparms));
     HIPCHECK(hipDeviceSynchronize());
 
@@ -98,11 +119,11 @@ void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
 
 int main(int argc, char **argv)
 {
-    for(int i=1;i<25;i++)
+    for(int i=1;i<25;++i)
     {
-        runTest<float>(i,i,i, hipChannelFormatKindFloat);
-        runTest<int>(i+1,i,i, hipChannelFormatKindSigned);
-        runTest<char>(i,i+1,i, hipChannelFormatKindSigned);
+        runTest<float>(i,i,i);
+        runTest<int>(i+1,i,i);
+        runTest<char>(i,i+1,i);
     }
     passed();
 }

@@ -1615,7 +1615,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
     size_t srcXoffset, srcYoffset, srcZoffset, dstXoffset, dstYoffset, dstZoffset;
     size_t srcWidth, srcHeight, srcDepth, dstWidth, dstHeight, dstDepth;
 
-    void* srcPtr, *dstPtr;
+    void* srcPtr=NULL, *dstPtr=NULL;
     bool copyWidthUpdate= false;
     if(isDrv) {
         if(pCopy == nullptr) return hipErrorInvalidValue;
@@ -1642,7 +1642,9 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
     }
     if(isDrv) {
         if(pCopy->dstMemoryType == hipMemoryTypeArray) {
-            if (pCopy->dstArray == nullptr || !pCopy->dstArray->isDrv)return hipErrorInvalidValue;
+            if(pCopy->dstArray == nullptr || !pCopy->dstArray->isDrv){ 
+               return hipErrorInvalidValue;
+            }
             dstByteSize = getByteSizeFromArrayFormat(pCopy->dstArray->Format);
             dstPtr = pCopy->dstArray->data;
             dstWidth = pCopy->dstArray->width;
@@ -1689,7 +1691,9 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
     }
     if(isDrv) {
         if(pCopy->srcMemoryType == hipMemoryTypeArray) {
-            if (pCopy->srcArray == nullptr || !pCopy->srcArray->isDrv)return hipErrorInvalidValue;
+            if(pCopy->srcArray == nullptr || !pCopy->srcArray->isDrv){ 
+               return hipErrorInvalidValue;
+            }
             srcByteSize = getByteSizeFromArrayFormat(pCopy->srcArray->Format);
             srcPtr = pCopy->srcArray->data;
             srcWidth = pCopy->srcArray->width;
@@ -1710,7 +1714,7 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
         }
     } else {
         if (p->srcArray != nullptr) {
-            if ((p->srcArray->isDrv == true) ||( p->srcPtr.ptr!= nullptr)){
+            if ((p->srcArray->isDrv == true) || (p->srcPtr.ptr!= nullptr)){
                 return hipErrorInvalidValue;
             }
             // Array source
@@ -1738,20 +1742,32 @@ hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, const HIP_MEMCPY3D* pC
     try {
         if(copyWidth == dstPitch && copyWidth == srcPitch && copyHeight == dstHeight && copyHeight == srcHeight) {
             if(isAsync)
-                stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind);
+                if(isDrv)
+                    stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, hipMemcpyDefault);
+                else    
+                    stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind);
             else
-                stream->locked_copySync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind, false);
+                if(isDrv)
+                    stream->locked_copySync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, hipMemcpyDefault, false);
+                else
+                    stream->locked_copySync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind, false);
         } else {
-            for (int i = 0; i < copyDepth; i++) {
-                for (int j = 0; j < copyHeight; j++) {
+            for (int i = 0; i < copyDepth; ++i) {
+                for (int j = 0; j < copyHeight; ++j) {
                     unsigned char* src =
                          (unsigned char*)srcPtr + (i + srcZoffset) * srcHeight * srcPitch + (j + srcYoffset) * srcPitch + srcXoffset;
                     unsigned char* dst =
                          (unsigned char*)dstPtr + (i + dstZoffset) * dstHeight * dstPitch + (j + dstYoffset) * dstPitch + dstXoffset;
                     if(isAsync)
-                         stream->locked_copyAsync(dst, src, copyWidth, p->kind);
+                       if(isDrv)
+                           stream->locked_copyAsync(dst, src, copyWidth, hipMemcpyDefault);
+                       else
+                           stream->locked_copyAsync(dst, src, copyWidth, p->kind);
                     else
-                         stream->locked_copySync(dst, src, copyWidth, p->kind);
+                       if(isDrv)
+                           stream->locked_copySync(dst, src, copyWidth, hipMemcpyDefault);
+                       else
+                           stream->locked_copySync(dst, src, copyWidth, p->kind);
                 }
             }
        }
