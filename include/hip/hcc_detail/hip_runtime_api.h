@@ -266,7 +266,6 @@ typedef enum hipSharedMemConfig {
                                    ///< when adjacent threads access data 4 bytes apart.
 } hipSharedMemConfig;
 
-
 /**
  * Struct for data in 3D
  *
@@ -2945,6 +2944,22 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize
                                              int blockSizeLimit);
 
 /**
+ * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
+ *
+ * @param [out] gridSize           minimum grid size for maximum potential occupancy
+ * @param [out] blockSize          block size for maximum potential occupancy
+ * @param [in]  f                  kernel function for which occupancy is calulated
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
+ * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ */
+hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit, unsigned int  flags);
+
+/**
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
@@ -2985,7 +3000,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
- * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
+ * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
  */
 hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
