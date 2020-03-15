@@ -22,7 +22,7 @@ THE SOFTWARE.
 // Test the Grid_Launch syntax.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -53,15 +53,6 @@ int main(int argc, char* argv[]) {
     gridSize = 0;
     blockSize = 0;
     hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
-    assert(gridSize != 0 && blockSize != 0);
-    // test case for using kernel with hipFunction_t type
-    gridSize = 0;
-    blockSize = 0;
-    hipModule_t Module;
-    hipFunction_t Function;
-    HIPCHECK(hipModuleLoad(&Module, fileName));
-    HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    HIPCHECK(hipModuleOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, Function, 0, 0));
     assert(gridSize != 0 && blockSize != 0);
     passed();
 }
