@@ -2968,7 +2968,7 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* 
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk);
+   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2991,7 +2991,7 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
+   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
 
 /**
  * @brief Returns occupancy for a device function.
