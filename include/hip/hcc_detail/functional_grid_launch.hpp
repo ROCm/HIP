@@ -150,7 +150,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
     auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
                                                    target_agent(0));
 
-    return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
+    return hipModuleOccupancyMaxPotentialBlockSize((int*)gridSize, (int*)blockSize, f,
                                       dynSharedMemPerBlk, blockSizeLimit);
 }
 

@@ -54,7 +54,6 @@ int main(int argc, char* argv[]) {
     blockSize = 0;
     hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
     assert(gridSize != 0 && blockSize != 0);
-
     // test case for using kernel with hipFunction_t type
     gridSize = 0;
     blockSize = 0;
@@ -62,8 +61,7 @@ int main(int argc, char* argv[]) {
     hipFunction_t Function;
     HIPCHECK(hipModuleLoad(&Module, fileName));
     HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    HIPCHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, Function, 0, 0));
+    HIPCHECK(hipModuleOccupancyMaxPotentialBlockSize((int*)&gridSize, (int*)&blockSize, Function, 0, 0));
     assert(gridSize != 0 && blockSize != 0);
-
     passed();
 }
