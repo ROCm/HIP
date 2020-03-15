@@ -30,10 +30,6 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#define fileName "vcpy_kernel.code"
-#define kernel_name "hello_world"
-
-
 __global__ void f1(float *a) { *a = 1.0; }
 
 template <typename T>
