@@ -1699,6 +1699,13 @@ inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int
     return hipCUDAErrorTohipError(cerror);
 }
 
+template <class T>
+inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor ( int* numBlocks, T func,
+                                                        int  blockSize, size_t dynamicSMemSize ) {
+    return hipCUDAErrorTohipError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func,
+                                                                 blockSize, dynamicSMemSize));
+}
+
 template <class T, int dim, enum cudaTextureReadMode readMode>
 inline static hipError_t hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex,
                                         const void* devPtr, size_t size = UINT_MAX) {
