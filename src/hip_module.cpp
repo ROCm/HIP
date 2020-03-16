@@ -719,7 +719,7 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 
     // Skipping passing in ps, because the logging function does not like it
     HIP_INIT_API(hipLaunchCooperativeKernelMultiDevice, launchParamsList,
-                 numDevices);
+                 numDevices, flags);
 
     return ihipLogStatus(ihipLaunchCooperativeKernelMultiDevice(launchParamsList,
                                                                 numDevices,
