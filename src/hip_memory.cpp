@@ -317,52 +317,34 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
     return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
 }
 
-inline void validateCpyRequest(const void* dst, const void* src, const hipMemcpyKind k)
-{
-    if(is_large_BAR) return;
-
-    const auto di{info(dst)};
-    const auto si{info(src)};
-    switch(k){
-    case hipMemcpyHostToHost:
-         if (si.size != is_cpu_owned || di.size != is_cpu_owned)
-            throw ihipException(hipErrorInvalidValue);
-         break;
-    case hipMemcpyHostToDevice:
-         if (si.size != is_cpu_owned)
-            throw ihipException(hipErrorInvalidValue);
-         break;
-    case hipMemcpyDeviceToHost:
-         if (di.size != is_cpu_owned)
-            throw ihipException(hipErrorInvalidValue);
-         break;
-    case hipMemcpyDeviceToDevice:
-         if (si.size == is_cpu_owned || di.size == is_cpu_owned)
-            throw ihipException(hipErrorInvalidValue);
-         break;
-    default:
-         throw ihipException(hipErrorInvalidValue);
-    }
-}
-
 inline
 void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
                  hipMemcpyKind k) {
-    validateCpyRequest(dst,src,k);
+    auto si{info(src)};
+    auto di{info(dst)};
+
+    if (!is_large_BAR){
+       if (di.size == is_cpu_owned && si.size == is_cpu_owned)
+          k = hipMemcpyHostToHost;
+       else if (si.size == is_cpu_owned && di.size != is_cpu_owned)
+          k = hipMemcpyHostToDevice;
+       else if (di.size == is_cpu_owned && si.size != is_cpu_owned)
+          k = hipMemcpyDeviceToHost;
+       else
+          k = hipMemcpyDeviceToDevice;
+    }
     switch (k) {
     case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
-    case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, info(dst));
-    case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, info(src));
+    case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, di);
+    case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, si);
     case hipMemcpyDeviceToDevice: {
-        const auto di{info(dst)};
-        const auto si{info(src)};
         throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
                                                           nullptr,
                                                           di.agentBaseAddress),
                               __FILE__, __func__, __LINE__);
         return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
     }
-    default: return generic_copy(dst, src, n, info(dst), info(src));
+    default: return generic_copy(dst, src, n, di, si);
     }
 }
 

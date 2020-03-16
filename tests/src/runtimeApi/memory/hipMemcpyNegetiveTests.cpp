@@ -36,18 +36,15 @@ int main() {
     HIPCHECK(hipMalloc((void**)&Bd, sizeof(int)));
     HIPCHECK(hipHostMalloc((void**)&A,sizeof(int)));
 
-    // Incorrect kind is passed for below hipMemcpy calls
-    HIPASSERT(hipSuccess != hipMemcpy(Ad, A, sizeof(int), hipMemcpyDeviceToHost));
-    HIPASSERT(hipSuccess != hipMemcpy(A,  Ad, sizeof(int), hipMemcpyHostToDevice));
-    HIPASSERT(hipSuccess != hipMemcpy(Ad, Bd, sizeof(int), hipMemcpyHostToHost));
-    HIPASSERT(hipSuccess != hipMemcpy(A,  A, sizeof(int), hipMemcpyDeviceToDevice));
+    // Kind should be ignored and test should pass even for incorrect kind
+    HIPCHECK(hipMemcpy(Ad, A, sizeof(int), hipMemcpyDeviceToHost));
+    HIPCHECK(hipMemcpy(A,  Ad, sizeof(int), hipMemcpyHostToDevice));
+    HIPCHECK(hipMemcpy(Ad, Bd, sizeof(int), hipMemcpyHostToHost));
+    HIPCHECK(hipMemcpy(A,  A, sizeof(int), hipMemcpyDeviceToDevice));
     
     // nullptr passed as source or destination pointer
     HIPASSERT(hipSuccess != hipMemcpy(nullptr, A, sizeof(int), hipMemcpyHostToDevice));
     HIPASSERT(hipSuccess != hipMemcpy(Ad, nullptr, sizeof(int), hipMemcpyHostToDevice));
-
-    // Unknown kind (131313 just a number, real intension is to use any unknown kind)
-    HIPASSERT(hipSuccess != hipMemcpy(Ad, A, sizeof(int),(hipMemcpyKind)131313));
     
     HIPCHECK(hipFree(Ad));
     HIPCHECK(hipFree(Bd));
