@@ -447,6 +447,7 @@
 |          717 |*`CUDA_ERROR_INVALID_ADDRESS_SPACE`*                                |                                                            |
 |          718 |*`CUDA_ERROR_INVALID_PC`*                                           |                                                            |
 |          719 |*`CUDA_ERROR_LAUNCH_FAILED`*                                        |*`hipErrorLaunchFailure`*                                   |
+|          720 |*`CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE`*                         |*`hipErrorCooperativeLaunchTooLarge`*                       |
 |          800 |*`CUDA_ERROR_NOT_PERMITTED`*                                        |                                                            |
 |          801 |*`CUDA_ERROR_NOT_SUPPORTED`*                                        |*`hipErrorNotSupported`*                                    |
 |          802 |*`CUDA_ERROR_SYSTEM_NOT_READY`*                                     |                                                            | 10.0             |
@@ -561,7 +562,7 @@
 | define       |`CU_LAUNCH_PARAM_END`                                               |`HIP_LAUNCH_PARAM_END`                                      |
 | define       |`CU_MEMHOSTALLOC_DEVICEMAP`                                         |`hipHostMallocMapped`                                       |
 | define       |`CU_MEMHOSTALLOC_PORTABLE`                                          |`hipHostMallocPortable`                                     |
-| define       |`CU_MEMHOSTALLOC_WRITECOMBINED`                                     |`hipHostAllocWriteCombined`                                 |
+| define       |`CU_MEMHOSTALLOC_WRITECOMBINED`                                     |`hipHostMallocWriteCombined`                                |
 | define       |`CU_MEMHOSTREGISTER_DEVICEMAP`                                      |`hipHostRegisterMapped`                                     |
 | define       |`CU_MEMHOSTREGISTER_IOMEMORY`                                       |`hipHostRegisterIoMemory`                                   | 7.5              |
 | define       |`CU_MEMHOSTREGISTER_PORTABLE`                                       |`hipHostRegisterPortable`                                   |
@@ -916,8 +917,8 @@
 | `cuIpcOpenEventHandle`                                    |                               |
 | `cuIpcOpenMemHandle`                                      | `hipIpcOpenMemHandle`         |
 | `cuMemAlloc`                                              | `hipMalloc`                   |
-| `cuMemAllocHost`                                          | `hipMemAllocHost`             |
-| `cuMemAllocManaged`                                       | `hipMemAllocManaged`          |
+| `cuMemAllocHost`                                          | `hipHostMalloc`               |
+| `cuMemAllocManaged`                                       | `hipMallocManaged`            |
 | `cuMemAllocPitch`                                         | `hipMemAllocPitch`            |
 | `cuMemcpy`                                                |                               |
 | `cuMemcpy2D`                                              | `hipMemcpyParam2D`            |
@@ -944,7 +945,7 @@
 | `cuMemcpyPeer`                                            |                               |
 | `cuMemcpyPeerAsync`                                       |                               |
 | `cuMemFree`                                               | `hipFree`                     |
-| `cuMemFreeHost`                                           | `hipFreeHost`                 |
+| `cuMemFreeHost`                                           | `hipHostFree`                 |
 | `cuMemGetAddressRange`                                    | `hipMemGetAddressRange`       |
 | `cuMemGetInfo`                                            | `hipMemGetInfo`               |
 | `cuMemHostAlloc`                                          | `hipHostMalloc`               |
@@ -1125,10 +1126,10 @@
 
 |   **CUDA**                                                |   **HIP**                                               |**CUDA version\***|
 |-----------------------------------------------------------|---------------------------------------------------------|------------------|
-| `cuOccupancyMaxActiveBlocksPerMultiprocessor`             |`hipOccupancyMaxActiveBlocksPerMultiprocessor`           |
-| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |
-| `cuOccupancyMaxPotentialBlockSize`                        |`hipOccupancyMaxPotentialBlockSize`                      |
-| `cuOccupancyMaxPotentialBlockSizeWithFlags`               |                                                         |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessor`             |`hipDrvOccupancyMaxActiveBlocksPerMultiprocessor`           |
+| `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |`hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |
+| `cuOccupancyMaxPotentialBlockSize`                        |`hipOccupancyMaxPotentialBlockSize`                         |
+| `cuOccupancyMaxPotentialBlockSizeWithFlags`               |                                                            |
 
 ## **22. Texture Reference Management [DEPRECATED]**
 

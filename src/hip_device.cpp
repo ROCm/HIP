@@ -291,6 +291,7 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
                 break;
             case hipDeviceAttributeMaxTexture3DDepth:
                 *pi = prop->maxTexture3D[2];
+                break;
             case hipDeviceAttributeHdpMemFlushCntl:
                 {
                     uint32_t** hdp = reinterpret_cast<uint32_t**>(pi);
@@ -309,12 +310,27 @@ hipError_t ihipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device
             case hipDeviceAttributeCooperativeMultiDeviceLaunch:
                 *pi = prop->cooperativeMultiDeviceLaunch;
                 break;
+            case hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc:
+                *pi = prop->cooperativeMultiDeviceUnmatchedFunc;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim:
+                *pi = prop->cooperativeMultiDeviceUnmatchedGridDim;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim:
+                *pi = prop->cooperativeMultiDeviceUnmatchedBlockDim;
+                break;
+            case hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem:
+                *pi = prop->cooperativeMultiDeviceUnmatchedSharedMem;
+                break;
             case hipDeviceAttributeMaxPitch:
                 *pi = prop->memPitch;
                 break;
-	    case hipDeviceAttributeTextureAlignment:
+            case hipDeviceAttributeTextureAlignment:
                 *pi = prop->textureAlignment;
                 break;
+            case hipDeviceAttributeTexturePitchAlignment:
+                *pi = prop->texturePitchAlignment;
+                 break;
             case hipDeviceAttributeKernelExecTimeout:
                 *pi = prop->kernelExecTimeoutEnabled;
                 break;

@@ -3,9 +3,6 @@
 *.o
 *.exe
 *.swp
-*.Po
-hip-amdinternal
-HIP-Examples
 lib
 packages
 build
@@ -14,5 +11,8 @@ bin/hipBusBandwidth
 bin/hipDispatchLatency
 bin/hipify-clang
 include/hip/hcc_detail/hip_prof_str.h
+include/hip/hip_version.h
 tags
 samples/1_Utils/hipInfo/hipInfo
+samples/1_Utils/hipBusBandwidth/hipBusBandwidth
+samples/1_Utils/hipDispatchLatency/hipDispatchLatency

@@ -2,19 +2,19 @@ HIP_PATH?= $(wildcard /opt/rocm/hip)
 ifeq (,$(HIP_PATH))
 	HIP_PATH=../../..
 endif
-HIPCC=$(HIP_PATH)/bin/hipcc
-
-EXE=hipDispatchLatency
+HIPCC=$(HIP_PATH)/bin/hipcc -std=c++11
 
 CXXFLAGS = -O3
 
-all: ${EXE}
+all: test_kernel.code hipDispatchLatency.out hipDispatchEnqueueRateMT.out
 
-$(EXE): hipDispatchLatency.cpp ResultDatabase.cpp
-	$(HIPCC) $(CXXFLAGS) hipDispatchLatency.cpp ResultDatabase.cpp -o $@
+hipDispatchLatency.out: hipDispatchLatency.cpp
+	$(HIPCC) $(CXXFLAGS) hipDispatchLatency.cpp -o $@
 
-install: $(EXE)
-	cp $(EXE) $(HIP_PATH)/bin
+hipDispatchEnqueueRateMT.out: hipDispatchEnqueueRateMT.cpp
+	$(HIPCC) $(CXXFLAGS) hipDispatchEnqueueRateMT.cpp -o $@
 
+test_kernel.code: test_kernel.cpp
+	$(HIP_PATH)/bin/hipcc --genco  $(GENCO_FLAGS) $^ -o $@
 clean:
-	rm -f *.o $(EXE)
+	rm -f *.o *.out

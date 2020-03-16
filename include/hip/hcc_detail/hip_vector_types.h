@@ -34,12 +34,12 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
-#if !defined(_MSC_VER)
+#if !defined(_MSC_VER) || __clang__
     #if __has_attribute(ext_vector_type)
-        #define __NATIVE_VECTOR__(n, ...) __attribute__((ext_vector_type(n)))
+        #define __NATIVE_VECTOR__(n, T) T __attribute__((ext_vector_type(n)))
     #else
-        #define __NATIVE_VECTOR__(n, ...) [n]
-#endif
+        #define __NATIVE_VECTOR__(n, T) T[n]
+    #endif
 
 #if defined(__cplusplus)
     #include <array>
@@ -49,16 +49,16 @@ THE SOFTWARE.
     namespace hip_impl {
         template<typename, typename, unsigned int> struct Scalar_accessor;
     } // Namespace hip_impl.
-    
+
     namespace std {
         template<typename T, typename U, unsigned int n>
         struct is_integral<hip_impl::Scalar_accessor<T, U, n>>
             : is_integral<T> {};
         template<typename T, typename U, unsigned int n>
-        struct is_floating_point<hip_impl::Scalar_accessor<T, U, n>> 
+        struct is_floating_point<hip_impl::Scalar_accessor<T, U, n>>
             : is_floating_point<T> {};
     } // Namespace std.
-    
+
     namespace hip_impl {
         template<typename T, typename Vector, unsigned int idx>
         struct Scalar_accessor {
@@ -109,7 +109,8 @@ THE SOFTWARE.
             operator T() const noexcept { return data[idx]; }
             __host__ __device__
             operator T() const volatile noexcept { return data[idx]; }
-            
+
+#ifdef __HIP_ENABLE_VECTOR_SCALAR_ACCESSORY_ENUM_CONVERSION__
             // The conversions to enum are fairly ghastly, but unfortunately used in
             // some pre-existing, difficult to modify, code.
             template<
@@ -130,6 +131,7 @@ THE SOFTWARE.
                         T, typename std::enable_if<std::is_enum<U>::value, std::underlying_type<U>>::type::type>{}>::type* = nullptr>
             __host__ __device__
             operator U() const volatile noexcept { return static_cast<U>(data[idx]); }
+#endif
 
             __host__ __device__
             operator T&() noexcept {
@@ -144,7 +146,7 @@ THE SOFTWARE.
 
             __host__ __device__
             Address operator&() const noexcept { return Address{this}; }
-            
+
             __host__ __device__
             Scalar_accessor& operator=(const Scalar_accessor& x) noexcept {
                 data[idx] = x.data[idx];
@@ -282,21 +284,34 @@ THE SOFTWARE.
                 return *this;
             }
         };
+
+        inline
+        constexpr
+        unsigned int next_pot(unsigned int x) {
+            // Precondition: x > 1.
+	        return 1u << (32u - __builtin_clz(x - 1u));
+        }
     } // Namespace hip_impl.
 
     template<typename T, unsigned int n> struct HIP_vector_base;
 
     template<typename T>
     struct HIP_vector_base<T, 1> {
-        using Native_vec_ = T __NATIVE_VECTOR__(1, T);
+        using Native_vec_ = __NATIVE_VECTOR__(1, T);
 
         union {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
+#endif
         };
 
         using value_type = T;
-        
+
         __host__ __device__
         HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
             #if __has_attribute(ext_vector_type)
@@ -311,16 +326,27 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 2> {
-        using Native_vec_ = T __NATIVE_VECTOR__(2, T);
+        using Native_vec_ = __NATIVE_VECTOR__(2, T);
 
-        union {
+        union
+        #if !__has_attribute(ext_vector_type)
+            alignas(hip_impl::next_pot(2 * sizeof(T)))
+        #endif
+        {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+                T y;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
             hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
+#endif
         };
 
         using value_type = T;
-        
+
         __host__ __device__
         HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
             #if __has_attribute(ext_vector_type)
@@ -492,18 +518,31 @@ THE SOFTWARE.
 
     template<typename T>
     struct HIP_vector_base<T, 4> {
-        using Native_vec_ = T __NATIVE_VECTOR__(4, T);
+        using Native_vec_ = __NATIVE_VECTOR__(4, T);
 
-        union {
+        union
+        #if !__has_attribute(ext_vector_type)
+            alignas(hip_impl::next_pot(4 * sizeof(T)))
+        #endif
+        {
             Native_vec_ data;
+#if __HIP_CLANG_ONLY__
+            struct {
+                T x;
+                T y;
+                T z;
+                T w;
+            };
+#else
             hip_impl::Scalar_accessor<T, Native_vec_, 0> x;
             hip_impl::Scalar_accessor<T, Native_vec_, 1> y;
             hip_impl::Scalar_accessor<T, Native_vec_, 2> z;
             hip_impl::Scalar_accessor<T, Native_vec_, 3> w;
+#endif            
         };
 
         using value_type = T;
-        
+
         __host__ __device__
         HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
             #if __has_attribute(ext_vector_type)

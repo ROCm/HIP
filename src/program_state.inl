@@ -18,6 +18,7 @@
 #include <hsa/hsa_ext_amd.h>
 #include <hsa/hsa_ven_amd_loader.h>
 #include <amd_comgr.h>
+#include "hc.hpp"
 
 #include <link.h>
 
@@ -25,6 +26,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -193,14 +195,15 @@ public:
     std::tuple<
         std::once_flag,
         std::mutex,
-        std::unordered_map<std::string, void*>> globals;
+        // map from string to pair<global_addr, pinned_addr>
+        std::unordered_map<std::string, std::pair<void*, void*>>> globals;
 
     using RAII_code_reader =
         std::unique_ptr<hsa_code_object_reader_t, 
                         std::function<void(hsa_code_object_reader_t*)>>;
     std::pair<
         std::mutex,
-        std::vector<std::pair<std::string, RAII_code_reader>>> code_readers;
+        std::deque<std::pair<std::string, RAII_code_reader>>> code_readers;
 
     program_state_impl() {
         // Create placeholder for each agent for the per-agent members.
@@ -242,7 +245,8 @@ public:
                     if (!valid(tmp)) break;
 
                     for (auto&& bundle : bundles(tmp)) {
-                        impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
+                        if(bundle.blob.size())
+                            impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
                     }
 
                     blob_it += tmp.bundled_code_size;
@@ -308,7 +312,7 @@ public:
         return symbol_addresses.second;
     }
 
-    std::unordered_map<std::string, void*>& get_globals() {
+    std::unordered_map<std::string, std::pair<void*, void*>>& get_globals() {
         std::call_once(std::get<0>(globals), [this]() { 
             std::get<2>(globals).reserve(get_symbol_addresses().size()); 
         });
@@ -349,30 +353,52 @@ public:
         auto& g_mutex = get_globals_mutex();
         for (auto&& x : undefined_symbols) {
 
-            if (g.find(x) != g.cend()) return;
-
             const auto it1 = get_symbol_addresses().find(x);
-
             if (it1 == get_symbol_addresses().cend()) {
                 hip_throw(std::runtime_error{
                     "Global symbol: " + x + " is undefined."});
             }
 
-            std::lock_guard<std::mutex> lck{g_mutex};
+            hsa_status_t status;
+            auto check_hsa_global_var_define_error = [&x](hsa_status_t s) {
+                if (s != HSA_STATUS_SUCCESS) {
+                    const char* es;
+                    hsa_status_string(s, &es);
+                    hip_throw(std::runtime_error{ "Error when defining symbol " + x + " : " + es});
+                }
+            };
 
-            if (g.find(x) != g.cend()) return;
+            auto retrieve_pinned_address_from_cache = [](decltype(g) g, decltype(x) x) {
+                const auto& global_addr = g.find(x);
+                if (global_addr != g.cend()) {
+                    return global_addr->second.second;
+                }
+                return (void*)nullptr;
+            };
 
-            g.emplace(x, (void*)(it1->second.first));
-            void* p = nullptr;
-            hsa_amd_memory_lock(
-                reinterpret_cast<void*>(it1->second.first),
-                it1->second.second,
-                nullptr,  // All agents.
-                0,
-                &p);
-
-            hsa_executable_agent_global_variable_define(
-                executable, agent, x.c_str(), p);
+            void* p = retrieve_pinned_address_from_cache(g, x);
+            if (p == nullptr) {
+                std::lock_guard<std::mutex> lck{g_mutex};
+                p = retrieve_pinned_address_from_cache(g, x);
+                if (p == nullptr) {
+                    if (x == "_ZN2hc13printf_bufferE") {
+                        // This is the printf buffer, get the pinned address from HCC
+                        p = Kalmar::getContext()->getPrintfBufferPointerVA();
+                    } 
+                    else {
+                        status = hsa_amd_memory_lock(reinterpret_cast<void*>(it1->second.first),
+                                                     it1->second.second,
+                                                     nullptr,  // All agents.
+                                                     0, &p);
+                        check_hsa_global_var_define_error(status);
+                    }
+                    // cache the global address and its pinned address
+                    g.emplace(x, std::make_pair(reinterpret_cast<void*>(it1->second.first), p));
+                }
+            }
+            status = hsa_executable_agent_global_variable_define(
+                         executable, agent, x.c_str(), p);
+            check_hsa_global_var_define_error(status);
         }
     }
 
@@ -394,17 +420,27 @@ public:
         decltype(code_readers.second)::iterator it;
         {
           std::lock_guard<std::mutex> lck{code_readers.first};
-          it = code_readers.second.emplace(code_readers.second.end(),
-                                           move(file), move(tmp));
+          code_readers.second.emplace_back(move(file), move(tmp));
+          it = std::prev(code_readers.second.end());
         }
 
-        hsa_code_object_reader_create_from_memory(
-            it->first.data(), it->first.size(), it->second.get());
+        auto check_hsa_error = [](hsa_status_t s) {
+            if (s != HSA_STATUS_SUCCESS) {
+                const char* hsa_err_msg;
+                hsa_status_string(s, &hsa_err_msg);
+                hip_throw(std::runtime_error{
+                              std::string("error when loading code object: ") +
+                              hsa_err_msg});
+            }
+        };
 
-        hsa_executable_load_agent_code_object(
-            executable, agent, *it->second, nullptr, nullptr);
+        check_hsa_error(hsa_code_object_reader_create_from_memory(
+            it->first.data(), it->first.size(), it->second.get()));
 
-        hsa_executable_freeze(executable, nullptr);
+        check_hsa_error(hsa_executable_load_agent_code_object(
+            executable, agent, *it->second, nullptr, nullptr));
+
+        check_hsa_error(hsa_executable_freeze(executable, nullptr));
     }
 
 
@@ -583,7 +619,8 @@ public:
                 for (auto&& kernel_symbol : it->second) {
                     functions[aa].second.emplace(
                         function.first,
-                        Kernel_descriptor{kernel_object(kernel_symbol), it->first});
+                        Kernel_descriptor{kernel_object(kernel_symbol), it->first,
+                                          kernargs_size_align(function.first)});
                 }
             }
         }, agent);
@@ -642,11 +679,12 @@ public:
             auto dx1 = kernels_md.find("CodeProps", dx);
             dx = kernels_md.find("Args:", dx);
 
-            if (dx1 < dx) {
+            if (dx1 < dx || dx == std::string::npos) {
                 dx = dx1;
+                // create an empty kernarg laybout vector for kernels without any arg 
+                kernargs[fn];
                 continue;
             }
-            if (dx == std::string::npos) break;
 
             static constexpr decltype(kernels_md.size()) args_sz{5};
             dx = parse_args_v2(kernels_md, dx + args_sz, dx1, kernargs[fn]);

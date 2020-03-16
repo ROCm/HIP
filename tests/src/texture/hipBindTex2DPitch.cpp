@@ -27,6 +27,10 @@ THE SOFTWARE.
 #define SIZE_H 8
 #define SIZE_W 12
 #define TYPE_t float
+
+#if __HIP__
+__hip_pinned_shadow__
+#endif
 texture<TYPE_t, 2, hipReadModeElementType> tex;
 
 // texture object is a kernel argument
@@ -58,19 +62,8 @@ int main (void)
             SIZE_W*sizeof(TYPE_t), SIZE_H, hipMemcpyHostToDevice));
 
     tex.normalized = false;
-    #if defined(__HIP_PLATFORM_NVCC__)
-
-    cudaError_t status = cudaBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
-                                       SIZE_W, SIZE_H, devPitchA);
-    if (status != cudaSuccess) {
-        printf("%serror: '%s'(%d) at %s:%d%s\n", KRED, cudaGetErrorString(status),
-           status,__FILE__, __LINE__, KNRM);
-           failed("API returned error code.");
-    }
-    #else
     HIPCHECK(hipBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
                                        SIZE_W, SIZE_H, devPitchA));
-    #endif
     HIPCHECK(hipMalloc((void**)&devPtrB, SIZE_W*sizeof(TYPE_t)*SIZE_H)) ;
 
     hipLaunchKernelGGL(texture2dCopyKernel, dim3(4,4,1), dim3(32,32,1), 0, 0, devPtrB);

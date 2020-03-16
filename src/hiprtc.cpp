@@ -35,7 +35,6 @@ THE SOFTWARE.
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
-#include <experimental/filesystem>
 #include <fstream>
 #include <future>
 #include <iterator>
@@ -43,13 +42,15 @@ THE SOFTWARE.
 #include <mutex>
 #include <stdexcept>
 #include <string>
+#include <sstream>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 #include <iostream>
+#include <sys/stat.h>
 
-const char* hiprtcGetErrorString(hiprtcResult x)
+extern "C" const char* hiprtcGetErrorString(hiprtcResult x)
 {
     switch (x) {
     case HIPRTC_SUCCESS:
@@ -79,6 +80,35 @@ const char* hiprtcGetErrorString(hiprtcResult x)
     default: throw std::logic_error{"Invalid HIPRTC result."};
     };
 }
+
+namespace hip_impl {
+inline bool create_directory(const std::string& path) {
+    mode_t mode = 0755;
+    int ret = mkdir(path.c_str(), mode);
+    if (ret == 0) return true;
+    return false;
+}
+
+inline bool fileExists (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
+}  // namespace hip_impl
+
+namespace
+{
+    char* demangle(const char* x)
+    {
+        if (!x) return nullptr;
+
+        int s{};
+        char* tmp = abi::__cxa_demangle(x, nullptr, nullptr, &s);
+
+        if (s != 0) return nullptr;
+
+        return tmp;
+    }
+} // Unnamed namespace.
 
 namespace
 {
@@ -143,7 +173,9 @@ struct _hiprtcProgram {
     {
         using namespace std;
 
-        name = hip_impl::demangle(name.c_str());
+        char* demangled = demangle(name.c_str());
+        name.assign(demangled == nullptr ? "" : demangled);
+        free(demangled);
 
         if (name.empty()) return name;
 
@@ -194,8 +226,7 @@ struct _hiprtcProgram {
     }
 
     // MANIPULATORS
-    bool compile(const std::vector<std::string>& args,
-                 const std::experimental::filesystem::path& program_folder)
+    bool compile(const std::vector<std::string>& args)
     {
         using namespace ELFIO;
         using namespace redi;
@@ -286,9 +317,19 @@ struct _hiprtcProgram {
         return true;
     }
 
+    void replaceExtension(std::string& fileName, const std::string &ext) const {
+        auto res = fileName.rfind('.');
+        auto sloc = fileName.rfind('/'); // slash location
+        if (res != std::string::npos && (res > sloc || sloc == std::string::npos)) {
+            fileName.replace(fileName.begin() + res, fileName.end(), ext);
+        } else {
+            fileName += ext;
+        }
+    }
+
     // ACCESSORS
-    std::experimental::filesystem::path writeTemporaryFiles(
-        const std::experimental::filesystem::path& programFolder) const
+    std::string writeTemporaryFiles(
+        const std::string& programFolder) const
     {
         using namespace std;
 
@@ -296,12 +337,13 @@ struct _hiprtcProgram {
         transform(headers.cbegin(), headers.cend(), begin(fut),
                   [&](const pair<string, string>& x) {
             return async([&]() {
-                ofstream h{programFolder / x.first};
+                ofstream h{programFolder + '/' + x.first};
                 h.write(x.second.data(), x.second.size());
             });
         });
 
-        auto tmp{(programFolder / name).replace_extension(".cpp")};
+        auto tmp{(programFolder + '/' + name)};
+        replaceExtension(tmp, ".cpp");
         ofstream{tmp}.write(source.data(), source.size());
 
         return tmp;
@@ -325,7 +367,7 @@ namespace
     }
 } // Unnamed namespace.
 
-hiprtcResult hiprtcAddNameExpression(hiprtcProgram p, const char* n)
+extern "C" hiprtcResult hiprtcAddNameExpression(hiprtcProgram p, const char* n)
 {
     if (!n) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -354,19 +396,14 @@ namespace
 {
     class Unique_temporary_path {
         // DATA
-        std::experimental::filesystem::path path_{};
+        std::string path_{};
     public:
         // CREATORS
         Unique_temporary_path() : path_{std::tmpnam(nullptr)}
         {
-            while (std::experimental::filesystem::exists(path_)) {
+            while (hip_impl::fileExists(path_)) {
                 path_ = std::tmpnam(nullptr);
             }
-        }
-        Unique_temporary_path(const std::string& extension)
-            : Unique_temporary_path{}
-        {
-            path_.replace_extension(extension);
         }
 
         Unique_temporary_path(const Unique_temporary_path&) = default;
@@ -374,7 +411,8 @@ namespace
 
         ~Unique_temporary_path() noexcept
         {
-            std::experimental::filesystem::remove_all(path_);
+            std::string s("rm -r " + path_);
+            system(s.c_str());
         }
 
         // MANIPULATORS
@@ -383,29 +421,12 @@ namespace
         Unique_temporary_path& operator=(Unique_temporary_path&&) = default;
 
         // ACCESSORS
-        const std::experimental::filesystem::path& path() const noexcept
+        const std::string& path() const noexcept
         {
             return path_;
         }
     };
 } // Unnamed namespace.
-
-namespace hip_impl
-{
-    inline
-    std::string demangle(const char* x)
-    {
-        if (!x) return {};
-
-        int s{};
-        std::unique_ptr<char, decltype(std::free)*> tmp{
-            abi::__cxa_demangle(x, nullptr, nullptr, &s), std::free};
-
-        if (s != 0) return {};
-
-        return tmp.get();
-    }
-} // Namespace hip_impl.
 
 namespace
 {
@@ -471,7 +492,7 @@ namespace
     }
 } // Unnamed namespace.
 
-hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
+extern "C" hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
 {
     using namespace std;
 
@@ -483,12 +504,12 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
         getenv("HIP_PATH") ? (getenv("HIP_PATH") + string{"/bin/hipcc"})
                            : "/opt/rocm/bin/hipcc"};
 
-    if (!experimental::filesystem::exists(hipcc)) {
+    if (!hip_impl::fileExists(hipcc)) {
         return HIPRTC_ERROR_INTERNAL_ERROR;
     }
 
     Unique_temporary_path tmp{};
-    experimental::filesystem::create_directory(tmp.path());
+    hip_impl::create_directory(tmp.path());
 
     const auto src{p->writeTemporaryFiles(tmp.path())};
 
@@ -499,9 +520,9 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
 
     args.emplace_back(src);
     args.emplace_back("-o");
-    args.emplace_back(tmp.path() / "hiprtc.out");
+    args.emplace_back(tmp.path() + '/' + "hiprtc.out");
 
-    if (!p->compile(args, tmp.path())) return HIPRTC_ERROR_INTERNAL_ERROR;
+    if (!p->compile(args)) return HIPRTC_ERROR_INTERNAL_ERROR;
     if (!p->readLoweredNames()) return HIPRTC_ERROR_INTERNAL_ERROR;
 
     p->compiled = true;
@@ -509,7 +530,7 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcCreateProgram(hiprtcProgram* p, const char* src,
+extern "C" hiprtcResult hiprtcCreateProgram(hiprtcProgram* p, const char* src,
                                  const char* name, int n, const char** hdrs,
                                  const char** incs)
 {
@@ -527,14 +548,14 @@ hiprtcResult hiprtcCreateProgram(hiprtcProgram* p, const char* src,
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcDestroyProgram(hiprtcProgram* p)
+extern "C" hiprtcResult hiprtcDestroyProgram(hiprtcProgram* p)
 {
     if (!p) return HIPRTC_SUCCESS;
 
     return _hiprtcProgram::destroy(*p);
 }
 
-hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n,
+extern "C" hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n,
                                   const char** ln)
 {
     using namespace std;
@@ -555,7 +576,7 @@ hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n,
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcGetProgramLog(hiprtcProgram p, char* l)
+extern "C" hiprtcResult hiprtcGetProgramLog(hiprtcProgram p, char* l)
 {
     if (!l) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -567,7 +588,7 @@ hiprtcResult hiprtcGetProgramLog(hiprtcProgram p, char* l)
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram p, std::size_t* sz)
+extern "C" hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram p, std::size_t* sz)
 {
     if (!sz) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -578,7 +599,7 @@ hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram p, std::size_t* sz)
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcGetCode(hiprtcProgram p, char* c)
+extern "C" hiprtcResult hiprtcGetCode(hiprtcProgram p, char* c)
 {
     if (!c) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -589,7 +610,7 @@ hiprtcResult hiprtcGetCode(hiprtcProgram p, char* c)
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcGetCodeSize(hiprtcProgram p, std::size_t* sz)
+extern "C" hiprtcResult hiprtcGetCodeSize(hiprtcProgram p, std::size_t* sz)
 {
     if (!sz) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -598,4 +619,16 @@ hiprtcResult hiprtcGetCodeSize(hiprtcProgram p, std::size_t* sz)
     *sz = p->elf.size();
 
     return HIPRTC_SUCCESS;
+}
+
+extern "C" hiprtcResult hiprtcVersion(int* major, int* minor)
+{
+  if (major == nullptr || minor == nullptr) {
+    return HIPRTC_ERROR_INVALID_INPUT;
+  }
+
+  *major = 9;
+  *minor = 0;
+
+  return HIPRTC_SUCCESS;
 }

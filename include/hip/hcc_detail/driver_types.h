@@ -43,9 +43,10 @@ typedef struct hipChannelFormatDesc {
     enum hipChannelFormatKind f;
 }hipChannelFormatDesc;
 
-#define HIP_TRSF_NORMALIZED_COORDINATES 0x01
-#define HIP_TRSF_READ_AS_INTEGER 0x00
 #define HIP_TRSA_OVERRIDE_FORMAT 0x01
+#define HIP_TRSF_READ_AS_INTEGER 0x01
+#define HIP_TRSF_NORMALIZED_COORDINATES 0x02
+#define HIP_TRSF_SRGB 0x10
 
 typedef enum hipArray_Format {
     HIP_AD_FORMAT_UNSIGNED_INT8 = 0x01,
@@ -254,14 +255,14 @@ typedef struct hipMemcpy3DParms {
     hipArray_t srcArray;
     struct hipPos srcPos;
     struct hipPitchedPtr srcPtr;
-
     hipArray_t dstArray;
     struct hipPos dstPos;
     struct hipPitchedPtr dstPtr;
-
     struct hipExtent extent;
     enum hipMemcpyKind kind;
+} hipMemcpy3DParms;
 
+typedef struct HIP_MEMCPY3D {
     size_t Depth;
     size_t Height;
     size_t WidthInBytes;
@@ -282,10 +283,7 @@ typedef struct hipMemcpy3DParms {
     size_t srcLOD;
     hipMemoryType srcMemoryType;
     size_t srcPitch;
-    size_t srcXInBytes;
-    size_t srcY;
-    size_t srcZ;
-}hipMemcpy3DParms;
+} HIP_MEMCPY3D;
 
 static inline struct hipPitchedPtr make_hipPitchedPtr(void* d, size_t p, size_t xsz,
                                                           size_t ysz) {

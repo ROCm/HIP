@@ -63,7 +63,6 @@ extern int HIP_LAUNCH_BLOCKING;
 extern int HIP_API_BLOCKING;
 
 extern int HIP_PRINT_ENV;
-extern int HIP_PROFILE_API;
 // extern int HIP_TRACE_API;
 extern int HIP_ATP;
 extern int HIP_DB;
@@ -90,6 +89,57 @@ extern int HIP_DUMP_CODE_OBJECT;
 
 // TODO - remove when this is standard behavior.
 extern int HCC_OPT_FLUSH;
+
+#define IMAGE_PITCH_ALIGNMENT 256
+template <typename T> inline T alignDown(T value, size_t alignment) {
+    return (T)(value & ~(alignment - 1));
+}
+
+template <typename T> inline T* alignDown(T* value, size_t alignment) {
+    return (T*)alignDown((intptr_t)value, alignment);
+}
+
+template <typename T> inline T alignUp(T value, size_t alignment) {
+    return alignDown((T)(value + alignment - 1), alignment);
+}
+
+template <typename T> inline T* alignUp(T* value, size_t alignment) {
+    return (T*)alignDown((intptr_t)(value + alignment - 1), alignment);
+}
+
+size_t getNumChannels(hsa_ext_image_channel_order_t channelOrder) {
+    switch (channelOrder) {
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RG:
+        return 2;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RGB:
+        return 3;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA:
+        return 4;
+      case HSA_EXT_IMAGE_CHANNEL_ORDER_R:
+      default:
+        return 1;
+  }
+}
+
+size_t getElementSize(hsa_ext_image_channel_order_t channelOrder, hsa_ext_image_channel_type_t channelType) {
+    size_t bytesPerPixel = getNumChannels(channelOrder);
+    switch (channelType) {
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT8:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT8:
+        break;
+
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_SIGNED_INT32:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_UNSIGNED_INT32:
+      case HSA_EXT_IMAGE_CHANNEL_TYPE_FLOAT:
+        bytesPerPixel *= 4;
+        break;
+
+      default:
+        bytesPerPixel *= 2;
+        break;
+    }
+    return bytesPerPixel;
+}
 
 // Class to assign a short TID to each new thread, for HIP debugging purposes.
 class TidInfo {
@@ -199,34 +249,6 @@ extern const char* API_COLOR_END;
 // Must be enabled at runtime with HIP_TRACE_API
 #define COMPILE_HIP_TRACE_API 0x3
 
-
-// Compile code that generates trace markers for CodeXL ATP at HIP function begin/end.
-// ATP is standard CodeXL format that includes timestamps for kernels, HSA RT APIs, and HIP APIs.
-#ifndef COMPILE_HIP_ATP_MARKER
-#define COMPILE_HIP_ATP_MARKER 0
-#endif
-
-
-// Compile support for trace markers that are displayed on CodeXL GUI at start/stop of each function
-// boundary.
-// TODO - currently we print the trace message at the beginning. if we waited, we could also
-// tls->tidInfo return codes, and any values returned through ptr-to-args (ie the pointers allocated
-// by hipMalloc).
-#if COMPILE_HIP_ATP_MARKER
-#include "CXLActivityLogger.h"
-#define MARKER_BEGIN(markerName, group) amdtBeginMarker(markerName, group, nullptr);
-#define MARKER_END() amdtEndMarker();
-#define RESUME_PROFILING amdtResumeProfiling(AMDT_ALL_PROFILING);
-#define STOP_PROFILING amdtStopProfiling(AMDT_ALL_PROFILING);
-#else
-// Swallow scoped markers:
-#define MARKER_BEGIN(markerName, group)
-#define MARKER_END()
-#define RESUME_PROFILING
-#define STOP_PROFILING
-#endif
-
-
 //---
 // HIP Trace modes - use with HIP_TRACE_API=...
 #define TRACE_ALL 0    // 0x01
@@ -285,22 +307,17 @@ static inline uint64_t getTicks() { return hc::get_system_ticks(); }
 //---
 extern uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::string& apiStr);
 
-#if COMPILE_HIP_ATP_MARKER || (COMPILE_HIP_TRACE_API & 0x1)
+#if (COMPILE_HIP_TRACE_API & 0x1)
 #define API_TRACE(forceTrace, ...)                                                                 \
     GET_TLS();                                                                                     \
     uint64_t hipApiStartTick = 0;                                                                  \
     {                                                                                              \
         tls->tidInfo.incApiSeqNum();                                                               \
         if (forceTrace ||                                                                          \
-            (HIP_PROFILE_API || (COMPILE_HIP_DB && (HIP_TRACE_API & (1 << TRACE_ALL))))) {         \
+            (COMPILE_HIP_DB && (HIP_TRACE_API & (1 << TRACE_ALL)))) {         \
             std::string apiStr = std::string(__func__) + " (" + ToString(__VA_ARGS__) + ')';       \
             std::string fullStr;                                                                   \
             hipApiStartTick = recordApiTrace(tls, &fullStr, apiStr);                               \
-            if (HIP_PROFILE_API == 0x1) {                                                          \
-                MARKER_BEGIN(__func__, "HIP")                                                      \
-            } else if (HIP_PROFILE_API == 0x2) {                                                   \
-                MARKER_BEGIN(fullStr.c_str(), "HIP");                                              \
-            }                                                                                      \
         }                                                                                          \
     }
 
@@ -346,9 +363,6 @@ extern uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::st
                     (localHipStatus == 0) ? API_COLOR : KRED, tls->tidInfo.pid(), tls->tidInfo.tid(), \
                     tls->tidInfo.apiSeqNum(), __func__, localHipStatus,                               \
                     ihipErrorString(localHipStatus), ticks, API_COLOR_END);                           \
-        }                                                                                             \
-        if (HIP_PROFILE_API) {                                                                        \
-            MARKER_END();                                                                             \
         }                                                                                             \
         localHipStatus;                                                                               \
     })
@@ -495,9 +509,10 @@ struct LockedBase {
 
 template <typename MUTEX_TYPE>
 class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
-   public:
+public:
     ihipStreamCriticalBase_t(ihipStream_t* parentStream, hc::accelerator_view av)
-        : _av(av), _parent(parentStream){};
+        :  _parent{parentStream}, _av{av}, _last_op_was_a_copy{false}
+    {}
 
     ~ihipStreamCriticalBase_t() {}
 
@@ -519,12 +534,9 @@ class ihipStreamCriticalBase_t : public LockedBase<MUTEX_TYPE> {
         return gotLock ? this : nullptr;
     };
 
-   public:
     ihipStream_t* _parent;
-
     hc::accelerator_view _av;
-
-   private:
+    bool _last_op_was_a_copy;
 };
 
 
@@ -572,7 +584,7 @@ class ihipStream_t {
     LockedAccessor_StreamCrit_t lockopen_preKernelCommand();
     void lockclose_postKernelCommand(const char* kernelName, hc::accelerator_view* av, bool unlockNotNeeded = 0);
 
-
+    void locked_wait(bool& waited);
     void locked_wait();
 
     hc::accelerator_view* locked_getAv() {

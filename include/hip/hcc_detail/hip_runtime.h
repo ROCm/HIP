@@ -311,15 +311,19 @@ extern "C" __device__ void* __hip_free(void* ptr);
 static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
 
-#if defined(__HCC_ACCELERATOR__) && defined(HC_FEATURE_PRINTF)
+// Declare printf only for the HCC compiler. hip-clang is handled in
+// device_functions.h
+#if __HCC_ACCELERATOR__
+#if HC_FEATURE_PRINTF
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {
     hc::printf(format, all...);
 }
-#elif defined(__HCC_ACCELERATOR__) || __HIP__
+#else
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
-#endif
+#endif // HC_FEATURE_PRINTF
+#endif // __HCC_ACCELERATOR__
 
 #endif //__HCC_OR_HIP_CLANG__
 
@@ -506,7 +510,7 @@ hc_get_workitem_absolute_id(int dim)
 #endif
 
 // Support std::complex.
-#ifndef _OPENMP
+#if !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 #pragma push_macro("__CUDA__")
 #define __CUDA__
 #include <__clang_cuda_math_forward_declares.h>
@@ -516,7 +520,7 @@ hc_get_workitem_absolute_id(int dim)
 #include <cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
-#endif // ndef _OPENMP
+#endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 
 #endif // defined(__clang__) && defined(__HIP__)
 

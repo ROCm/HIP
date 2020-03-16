@@ -108,7 +108,7 @@ void sortInputFiles(int argc, const char **argv, std::vector<std::string> &files
   files.assign(sortedFiles.begin(), sortedFiles.end());
 }
 
-void appendArgumentsAdjusters(ct::RefactoringTool &Tool, const std::string &sSourceAbsPath) {
+void appendArgumentsAdjusters(ct::RefactoringTool &Tool, const std::string &sSourceAbsPath, const char *hipify_exe) {
   if (!IncludeDirs.empty()) {
     for (std::string s : IncludeDirs) {
       Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(s.c_str(), ct::ArgumentInsertPosition::BEGIN));
@@ -122,9 +122,14 @@ void appendArgumentsAdjusters(ct::RefactoringTool &Tool, const std::string &sSou
     }
   }
   // Includes for clang's CUDA wrappers for using by packaged hipify-clang
-  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include", ct::ArgumentInsertPosition::BEGIN));
+  static int Dummy;
+  std::string hipify = llvm::sys::fs::getMainExecutable(hipify_exe, (void *)&Dummy);
+  std::string clang_inc_path = std::string(llvm::sys::path::parent_path(hipify));
+  clang_inc_path.append("/include");
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(clang_inc_path.c_str(), ct::ArgumentInsertPosition::BEGIN));
   Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));
-  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("./include/cuda_wrappers", ct::ArgumentInsertPosition::BEGIN));
+  clang_inc_path.append("/cuda_wrappers");
+  Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster(clang_inc_path.c_str(), ct::ArgumentInsertPosition::BEGIN));
   Tool.appendArgumentsAdjuster(ct::getInsertArgumentAdjuster("-isystem", ct::ArgumentInsertPosition::BEGIN));
   // Ensure at least c++11 is used.
   std::string stdCpp = "-std=c++11";
@@ -158,6 +163,14 @@ void appendArgumentsAdjusters(ct::RefactoringTool &Tool, const std::string &sSou
   Tool.appendArgumentsAdjuster(ct::getClangSyntaxOnlyAdjuster());
 }
 
+bool generatePython() {
+  bool bToRoc = TranslateToRoc;
+  TranslateToRoc = true;
+  bool bToPython = python::generate(GeneratePython);
+  TranslateToRoc = bToRoc;
+  return bToPython;
+}
+
 int main(int argc, const char **argv) {
   std::vector<const char*> new_argv(argv, argv + argc);
   if (std::find(new_argv.begin(), new_argv.end(), std::string("--")) == new_argv.end()) {
@@ -180,11 +193,7 @@ int main(int argc, const char **argv) {
     llvm::errs() << "\n" << sHipify << sError << "hipify-perl generating failed" << "\n";
     return 1;
   }
-  bool bToRoc = TranslateToRoc;
-  TranslateToRoc = true;
-  bool bToPython = python::generate(GeneratePython);
-  TranslateToRoc = bToRoc;
-  if (!bToPython) {
+  if (!generatePython()) {
     llvm::errs() << "\n" << sHipify << sError << "hipify-python generating failed" << "\n";
     return 1;
   }
@@ -311,7 +320,7 @@ int main(int argc, const char **argv) {
     ct::RefactoringTool Tool(OptionsParser.getCompilations(), std::string(tmpFile.c_str()));
     ct::Replacements &replacementsToUse = llcompat::getReplacements(Tool, tmpFile.c_str());
     ReplacementsFrontendActionFactory<HipifyAction> actionFactory(&replacementsToUse);
-    appendArgumentsAdjusters(Tool, sSourceAbsPath);
+    appendArgumentsAdjusters(Tool, sSourceAbsPath, argv[0]);
     Statistics &currentStat = Statistics::current();
     // Hipify _all_ the things!
     if (Tool.runAndSave(&actionFactory)) {

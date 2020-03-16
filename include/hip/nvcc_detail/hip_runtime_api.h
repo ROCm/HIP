@@ -140,6 +140,14 @@ typedef enum cudaChannelFormatKind hipChannelFormatKind;
 #define hipLimitMallocHeapSize cudaLimitMallocHeapSize
 #define hipIpcMemLazyEnablePeerAccess cudaIpcMemLazyEnablePeerAccess
 
+#define hipOccupancyDefault cudaOccupancyDefault
+
+#define hipCooperativeLaunchMultiDeviceNoPreSync    \
+        cudaCooperativeLaunchMultiDeviceNoPreSync
+#define hipCooperativeLaunchMultiDeviceNoPostSync   \
+        cudaCooperativeLaunchMultiDeviceNoPostSync
+
+
 // enum CUjit_option redefines
 #define hipJitOptionMaxRegisters CU_JIT_MAX_REGISTERS
 #define hipJitOptionThreadsPerBlock CU_JIT_THREADS_PER_BLOCK
@@ -262,11 +270,13 @@ inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
         case cudaErrorMissingConfiguration:
             return hipErrorMissingConfiguration;
         case cudaErrorMemoryAllocation:
-            return hipErrorMemoryAllocation;
+            return hipErrorOutOfMemory;
         case cudaErrorInitializationError:
-            return hipErrorInitializationError;
+            return hipErrorNotInitialized;
         case cudaErrorLaunchFailure:
             return hipErrorLaunchFailure;
+        case cudaErrorCooperativeLaunchTooLarge:
+            return hipErrorCooperativeLaunchTooLarge;
         case cudaErrorPriorLaunchFailure:
             return hipErrorPriorLaunchFailure;
         case cudaErrorLaunchOutOfResources:
@@ -283,10 +293,8 @@ inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
             return hipErrorInvalidDevicePointer;
         case cudaErrorInvalidMemcpyDirection:
             return hipErrorInvalidMemcpyDirection;
-        case cudaErrorUnknown:
-            return hipErrorUnknown;
         case cudaErrorInvalidResourceHandle:
-            return hipErrorInvalidResourceHandle;
+            return hipErrorInvalidHandle;
         case cudaErrorNotReady:
             return hipErrorNotReady;
         case cudaErrorNoDevice:
@@ -300,22 +308,63 @@ inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
         case cudaErrorHostMemoryNotRegistered:
             return hipErrorHostMemoryNotRegistered;
         case cudaErrorMapBufferObjectFailed:
-            return hipErrorMapBufferObjectFailed;
+            return hipErrorMapFailed;
         case cudaErrorAssert:
             return hipErrorAssert;
         case cudaErrorNotSupported:
             return hipErrorNotSupported;
+        case cudaErrorCudartUnloading:
+            return hipErrorDeinitialized;
+        case cudaErrorInvalidKernelImage:
+            return hipErrorInvalidImage;
+        case cudaErrorUnmapBufferObjectFailed:
+            return hipErrorUnmapFailed;
+        case cudaErrorNoKernelImageForDevice:
+            return hipErrorNoBinaryForGpu;
+        case cudaErrorECCUncorrectable:
+            return hipErrorECCNotCorrectable;
+        case cudaErrorDeviceAlreadyInUse:
+            return hipErrorContextAlreadyInUse;
+        case cudaErrorInvalidPtx:
+            return hipErrorInvalidKernelFile;
+        case cudaErrorLaunchTimeout:
+            return hipErrorLaunchTimeOut;
+#if CUDA_VERSION >= 10010
+        case cudaErrorInvalidSource:
+            return hipErrorInvalidSource;
+        case cudaErrorFileNotFound:
+            return hipErrorFileNotFound;
+        case cudaErrorSymbolNotFound:
+            return hipErrorNotFound;
+        case cudaErrorArrayIsMapped:
+            return hipErrorArrayIsMapped;
+        case cudaErrorNotMappedAsPointer:
+            return hipErrorNotMappedAsPointer;
+        case cudaErrorNotMappedAsArray:
+            return hipErrorNotMappedAsArray;
+        case cudaErrorNotMapped:
+            return hipErrorNotMapped;
+        case cudaErrorAlreadyAcquired:
+            return hipErrorAlreadyAcquired;
+        case cudaErrorAlreadyMapped:
+            return hipErrorAlreadyMapped;
+#endif
+#if CUDA_VERSION >= 10020
+        case cudaErrorDeviceUninitialized:
+            return hipErrorInvalidContext;
+#endif
+        case cudaErrorUnknown:
         default:
             return hipErrorUnknown;  // Note - translated error.
     }
 }
 
-inline static hipError_t hipCUResultTohipError(CUresult cuError) {  // TODO Populate further
+inline static hipError_t hipCUResultTohipError(CUresult cuError) {
     switch (cuError) {
         case CUDA_SUCCESS:
             return hipSuccess;
         case CUDA_ERROR_OUT_OF_MEMORY:
-            return hipErrorMemoryAllocation;
+            return hipErrorOutOfMemory;
         case CUDA_ERROR_INVALID_VALUE:
             return hipErrorInvalidValue;
         case CUDA_ERROR_INVALID_DEVICE:
@@ -328,23 +377,115 @@ inline static hipError_t hipCUResultTohipError(CUresult cuError) {  // TODO Popu
             return hipErrorInvalidContext;
         case CUDA_ERROR_NOT_INITIALIZED:
             return hipErrorNotInitialized;
+        case CUDA_ERROR_INVALID_HANDLE:
+            return hipErrorInvalidHandle;
+        case CUDA_ERROR_MAP_FAILED:
+            return hipErrorMapFailed;
+        case CUDA_ERROR_PROFILER_DISABLED:
+            return hipErrorProfilerDisabled;
+        case CUDA_ERROR_PROFILER_NOT_INITIALIZED:
+            return hipErrorProfilerNotInitialized;
+        case CUDA_ERROR_PROFILER_ALREADY_STARTED:
+            return hipErrorProfilerAlreadyStarted;
+        case CUDA_ERROR_PROFILER_ALREADY_STOPPED:
+            return hipErrorProfilerAlreadyStopped;
+        case CUDA_ERROR_INVALID_IMAGE:
+            return hipErrorInvalidImage;
+        case CUDA_ERROR_CONTEXT_ALREADY_CURRENT:
+            return hipErrorContextAlreadyCurrent;
+        case CUDA_ERROR_UNMAP_FAILED:
+            return hipErrorUnmapFailed;
+        case CUDA_ERROR_ARRAY_IS_MAPPED:
+            return hipErrorArrayIsMapped;
+        case CUDA_ERROR_ALREADY_MAPPED:
+            return hipErrorAlreadyMapped;
+        case CUDA_ERROR_NO_BINARY_FOR_GPU:
+            return hipErrorNoBinaryForGpu;
+        case CUDA_ERROR_ALREADY_ACQUIRED:
+            return hipErrorAlreadyAcquired;
+        case CUDA_ERROR_NOT_MAPPED:
+            return hipErrorNotMapped;
+        case CUDA_ERROR_NOT_MAPPED_AS_ARRAY:
+            return hipErrorNotMappedAsArray;
+        case CUDA_ERROR_NOT_MAPPED_AS_POINTER:
+            return hipErrorNotMappedAsPointer;
+        case CUDA_ERROR_ECC_UNCORRECTABLE:
+            return hipErrorECCNotCorrectable;
+        case CUDA_ERROR_UNSUPPORTED_LIMIT:
+            return hipErrorUnsupportedLimit;
+        case CUDA_ERROR_CONTEXT_ALREADY_IN_USE:
+            return hipErrorContextAlreadyInUse;
+        case CUDA_ERROR_PEER_ACCESS_UNSUPPORTED:
+            return hipErrorPeerAccessUnsupported;
+        case CUDA_ERROR_INVALID_PTX:
+            return hipErrorInvalidKernelFile;
+        case CUDA_ERROR_INVALID_GRAPHICS_CONTEXT:
+            return hipErrorInvalidGraphicsContext;
+        case CUDA_ERROR_INVALID_SOURCE:
+            return hipErrorInvalidSource;
+        case CUDA_ERROR_FILE_NOT_FOUND:
+            return hipErrorFileNotFound;
+        case CUDA_ERROR_SHARED_OBJECT_SYMBOL_NOT_FOUND:
+            return hipErrorSharedObjectSymbolNotFound;
+        case CUDA_ERROR_SHARED_OBJECT_INIT_FAILED:
+            return hipErrorSharedObjectInitFailed;
+        case CUDA_ERROR_OPERATING_SYSTEM:
+            return hipErrorOperatingSystem;
+        case CUDA_ERROR_NOT_FOUND:
+            return hipErrorNotFound;
+        case CUDA_ERROR_NOT_READY:
+            return hipErrorNotReady;
+        case CUDA_ERROR_ILLEGAL_ADDRESS:
+            return hipErrorIllegalAddress;
+        case CUDA_ERROR_LAUNCH_OUT_OF_RESOURCES:
+            return hipErrorLaunchOutOfResources;
+        case CUDA_ERROR_LAUNCH_TIMEOUT:
+            return hipErrorLaunchTimeOut;
+        case CUDA_ERROR_PEER_ACCESS_ALREADY_ENABLED:
+            return hipErrorPeerAccessAlreadyEnabled;
+        case CUDA_ERROR_PEER_ACCESS_NOT_ENABLED:
+            return hipErrorPeerAccessNotEnabled;
+        case CUDA_ERROR_PRIMARY_CONTEXT_ACTIVE:
+            return hipErrorSetOnActiveProcess;
+        case CUDA_ERROR_ASSERT:
+            return hipErrorAssert;
+        case CUDA_ERROR_HOST_MEMORY_ALREADY_REGISTERED:
+            return hipErrorHostMemoryAlreadyRegistered;
+        case CUDA_ERROR_HOST_MEMORY_NOT_REGISTERED:
+            return hipErrorHostMemoryNotRegistered;
+        case CUDA_ERROR_LAUNCH_FAILED:
+            return hipErrorLaunchFailure;
+        case CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE:
+            return hipErrorCooperativeLaunchTooLarge;
+        case CUDA_ERROR_NOT_SUPPORTED:
+            return hipErrorNotSupported;
+        case CUDA_ERROR_UNKNOWN:
         default:
             return hipErrorUnknown;  // Note - translated error.
     }
 }
 
-// TODO   match the error enum names of hip and cuda
 inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
     switch (hError) {
         case hipSuccess:
             return cudaSuccess;
-        case hipErrorMemoryAllocation:
+        case hipErrorOutOfMemory:
             return cudaErrorMemoryAllocation;
+        case hipErrorProfilerDisabled:
+          return cudaErrorProfilerDisabled;
+        case hipErrorProfilerNotInitialized:
+            return cudaErrorProfilerNotInitialized;
+        case hipErrorProfilerAlreadyStarted:
+            return cudaErrorProfilerAlreadyStarted;
+        case hipErrorProfilerAlreadyStopped:
+            return cudaErrorProfilerAlreadyStopped;
+        case hipErrorInvalidConfiguration:
+            return cudaErrorInvalidConfiguration;
         case hipErrorLaunchOutOfResources:
             return cudaErrorLaunchOutOfResources;
         case hipErrorInvalidValue:
             return cudaErrorInvalidValue;
-        case hipErrorInvalidResourceHandle:
+        case hipErrorInvalidHandle:
             return cudaErrorInvalidResourceHandle;
         case hipErrorInvalidDevice:
             return cudaErrorInvalidDevice;
@@ -352,28 +493,136 @@ inline static cudaError_t hipErrorToCudaError(hipError_t hError) {
             return cudaErrorInvalidMemcpyDirection;
         case hipErrorInvalidDevicePointer:
             return cudaErrorInvalidDevicePointer;
-        case hipErrorInitializationError:
+        case hipErrorNotInitialized:
             return cudaErrorInitializationError;
         case hipErrorNoDevice:
             return cudaErrorNoDevice;
         case hipErrorNotReady:
             return cudaErrorNotReady;
-        case hipErrorUnknown:
-            return cudaErrorUnknown;
         case hipErrorPeerAccessNotEnabled:
             return cudaErrorPeerAccessNotEnabled;
         case hipErrorPeerAccessAlreadyEnabled:
             return cudaErrorPeerAccessAlreadyEnabled;
-        case hipErrorRuntimeMemory:
-            return cudaErrorUnknown;  // Does not exist in CUDA
-        case hipErrorRuntimeOther:
-            return cudaErrorUnknown;  // Does not exist in CUDA
         case hipErrorHostMemoryAlreadyRegistered:
             return cudaErrorHostMemoryAlreadyRegistered;
         case hipErrorHostMemoryNotRegistered:
             return cudaErrorHostMemoryNotRegistered;
+        case hipErrorDeinitialized:
+            return cudaErrorCudartUnloading;
+        case hipErrorInvalidSymbol:
+            return cudaErrorInvalidSymbol;
+        case hipErrorInsufficientDriver:
+            return cudaErrorInsufficientDriver;
+        case hipErrorMissingConfiguration:
+            return cudaErrorMissingConfiguration;
+        case hipErrorPriorLaunchFailure:
+            return cudaErrorPriorLaunchFailure;
+        case hipErrorInvalidDeviceFunction:
+            return cudaErrorInvalidDeviceFunction;
+        case hipErrorInvalidImage:
+            return cudaErrorInvalidKernelImage;
+        case hipErrorInvalidContext:
+#if CUDA_VERSION >= 10020
+            return cudaErrorDeviceUninitialized;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorMapFailed:
+            return cudaErrorMapBufferObjectFailed;
+        case hipErrorUnmapFailed:
+            return cudaErrorUnmapBufferObjectFailed;
+        case hipErrorArrayIsMapped:
+#if CUDA_VERSION >= 10010
+            return cudaErrorArrayIsMapped;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorAlreadyMapped:
+#if CUDA_VERSION >= 10010
+            return cudaErrorAlreadyMapped;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorNoBinaryForGpu:
+            return cudaErrorNoKernelImageForDevice;
+        case hipErrorAlreadyAcquired:
+#if CUDA_VERSION >= 10010
+            return cudaErrorAlreadyAcquired;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorNotMapped:
+#if CUDA_VERSION >= 10010
+            return cudaErrorNotMapped;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorNotMappedAsArray:
+#if CUDA_VERSION >= 10010
+            return cudaErrorNotMappedAsArray;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorNotMappedAsPointer:
+#if CUDA_VERSION >= 10010
+            return cudaErrorNotMappedAsPointer;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorECCNotCorrectable:
+            return cudaErrorECCUncorrectable;
+        case hipErrorUnsupportedLimit:
+            return cudaErrorUnsupportedLimit;
+        case hipErrorContextAlreadyInUse:
+            return cudaErrorDeviceAlreadyInUse;
+        case hipErrorPeerAccessUnsupported:
+            return cudaErrorPeerAccessUnsupported;
+        case hipErrorInvalidKernelFile:
+            return cudaErrorInvalidPtx;
+        case hipErrorInvalidGraphicsContext:
+            return cudaErrorInvalidGraphicsContext;
+        case hipErrorInvalidSource:
+#if CUDA_VERSION >= 10010
+            return cudaErrorInvalidSource;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorFileNotFound:
+#if CUDA_VERSION >= 10010
+            return cudaErrorFileNotFound;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorSharedObjectSymbolNotFound:
+            return cudaErrorSharedObjectSymbolNotFound;
+        case hipErrorSharedObjectInitFailed:
+            return cudaErrorSharedObjectInitFailed;
+        case hipErrorOperatingSystem:
+            return cudaErrorOperatingSystem;
+        case hipErrorNotFound:
+#if CUDA_VERSION >= 10010
+            return cudaErrorSymbolNotFound;
+#else
+            return cudaErrorUnknown;
+#endif
+        case hipErrorIllegalAddress:
+            return cudaErrorIllegalAddress;
+        case hipErrorLaunchTimeOut:
+            return cudaErrorLaunchTimeout;
+        case hipErrorSetOnActiveProcess:
+            return cudaErrorSetOnActiveProcess;
+        case hipErrorLaunchFailure:
+            return cudaErrorLaunchFailure;
+        case hipErrorCooperativeLaunchTooLarge:
+            return cudaErrorCooperativeLaunchTooLarge;
+        case hipErrorNotSupported:
+            return cudaErrorNotSupported;
+        // HSA: does not exist in CUDA
+        case hipErrorRuntimeMemory:
+        // HSA: does not exist in CUDA
+        case hipErrorRuntimeOther:
+        case hipErrorUnknown:
         case hipErrorTbd:
-            return cudaErrorUnknown;  // Note - translated error.
         default:
             return cudaErrorUnknown;  // Note - translated error.
     }
@@ -610,6 +859,18 @@ inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes,
         cudaMemcpy(dst, src, sizeBytes, hipMemcpyKindToCudaMemcpyKind(copyKind)));
 }
 
+
+inline hipError_t hipMemcpyWithStream(void* dst, const void* src,
+				      size_t sizeBytes, hipMemcpyKind copyKind,
+				      hipStream_t stream) {
+	cudaError_t error = cudaMemcpyAsync(dst, src, sizeBytes, 
+										hipMemcpyKindToCudaMemcpyKind(copyKind),
+										stream);
+	
+	if (error != cudaSuccess) return hipCUDAErrorTohipError(error);
+	
+	return hipCUDAErrorTohipError(cudaStreamSynchronize(stream));
+}
 
 inline static hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
                                         hipMemcpyKind copyKind, hipStream_t stream __dparm(0)) {
@@ -873,6 +1134,10 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->integrated = cdprop.integrated;
     p_prop->cooperativeLaunch = cdprop.cooperativeLaunch;
     p_prop->cooperativeMultiDeviceLaunch = cdprop.cooperativeMultiDeviceLaunch;
+    p_prop->cooperativeMultiDeviceUnmatchedFunc = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedGridDim = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedBlockDim = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedSharedMem = 0;
 
     p_prop->maxTexture1D    = cdprop.maxTexture1D;
     p_prop->maxTexture2D[0] = cdprop.maxTexture2D[0];
@@ -883,6 +1148,7 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
 
     p_prop->memPitch                 = cdprop.memPitch;
     p_prop->textureAlignment         = cdprop.textureAlignment;
+    p_prop->texturePitchAlignment    = cdprop.texturePitchAlignment;
     p_prop->kernelExecTimeoutEnabled = cdprop.kernelExecTimeoutEnabled;
     p_prop->ECCEnabled               = cdprop.ECCEnabled;
     p_prop->tccDriver                = cdprop.tccDriver;
@@ -996,6 +1262,9 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeTextureAlignment:
             cdattr = cudaDevAttrTextureAlignment;
+            break;
+        case hipDeviceAttributeTexturePitchAlignment:
+            cdattr = cudaDevAttrTexturePitchAlignment;
             break;
         case hipDeviceAttributeKernelExecTimeout:
             cdattr = cudaDevAttrKernelExecTimeout;
@@ -1365,6 +1634,12 @@ inline static hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t 
 inline static hipError_t hipBindTexture(size_t* offset, struct textureReference* tex, const void* devPtr,
                                         const hipChannelFormatDesc* desc, size_t size __dparm(UINT_MAX)){
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
+}
+
+inline static hipError_t hipBindTexture2D(size_t* offset, struct textureReference* tex, const void* devPtr,
+                            const hipChannelFormatDesc* desc, size_t width, size_t height,
+                            size_t pitch) {
+    return hipCUDAErrorTohipError(cudaBindTexture2D(offset, tex, devPtr, desc, width, height, pitch));
 }
 
 inline static hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w,

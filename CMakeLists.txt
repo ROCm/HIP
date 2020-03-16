@@ -2,11 +2,6 @@ cmake_minimum_required(VERSION 3.4.3)
 project(hip)
 
 #############################
-# Options
-#############################
-option(BUILD_HIPIFY_CLANG "Enable building the CUDA->HIP converter" OFF)
-
-#############################
 # Setup config generation
 #############################
 string(TIMESTAMP _timestamp UTC)
@@ -20,6 +15,7 @@ endmacro()
 # Setup version information
 #############################
 # Determine HIP_BASE_VERSION
+set(ENV{HIP_PATH} "")
 execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --version
     OUTPUT_VARIABLE HIP_BASE_VERSION
     OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -175,24 +171,26 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
         message(FATAL_ERROR "Invalid CMAKE_BUILD_TYPE specified. Valid values are Debug and Release")
     endif()
 endif()
+
+# Set default install path as "/opt/rocm/hip", can override the path from cmake build.
+set(CPACK_INSTALL_PREFIX ${HIP_DEFAULT_INSTALL_PREFIX} CACHE PATH "Package Installation path for HIP")
+
 if(IS_ABSOLUTE ${CMAKE_INSTALL_PREFIX})
     message(STATUS "HIP will be installed in: " ${CMAKE_INSTALL_PREFIX})
 else()
     message(FATAL_ERROR "Don't know where to install HIP. Please specify absolute path using -DCMAKE_INSTALL_PREFIX")
 endif()
 
-# Check if we need to enable ATP marker
-if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
-    if(NOT DEFINED ENV{COMPILE_HIP_ATP_MARKER})
-        set(COMPILE_HIP_ATP_MARKER 0)
-    else()
-        set(COMPILE_HIP_ATP_MARKER $ENV{COMPILE_HIP_ATP_MARKER})
-        message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
-    endif()
-else()
-    message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
-endif()
-add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
+if (NOT DEFINED ROCM_PATH )
+     set ( ROCM_PATH "/opt/rocm"  CACHE STRING "Default ROCM installation directory." )
+endif ()
+message (STATUS "ROCM Installation path(ROCM_PATH): ${ROCM_PATH}")
+
+# set the installation path for the installer package
+set(CPACK_SET_DESTDIR ON CACHE BOOL "Installer package will install hip to CMAKE_INSTALL_PREFIX instead of CPACK_PACKAGING_INSTALL_PREFIX")
+if (NOT CPACK_SET_DESTDIR)
+  set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Default installation path of hcc installer package")
+endif (CPACK_SET_DESTDIR)
 
 #############################
 # Profiling API support
@@ -235,11 +233,6 @@ set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
-# Build clang hipify if enabled
-if (BUILD_HIPIFY_CLANG)
-    add_subdirectory(hipify-clang)
-endif()
-
 # Build LPL an CA (fat binary generation / fat binary decomposition tools) if
 # platform is hcc; do this before the ugly hijacking of the compiler, since no
 # HC code is involved.
@@ -251,16 +244,12 @@ endif ()
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
     set(HIP_HCC_BUILD_FLAGS)
-    if(COMPILE_HIP_ATP_MARKER)
-        include_directories(/opt/rocm/profiler/CXLActivityLogger/include)
-        set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DCOMPILE_HIP_ATP_MARKER=1")
-    endif()
 
     # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_GITDATE}")
 
     # Add remaining flags
-    set(HCC_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
+    set(HCC_CXX_FLAGS  "-Xlinker --enable-new-dtags -hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include")
 
     # Set compiler and compiler flags
@@ -291,20 +280,38 @@ if(HIP_PLATFORM STREQUAL "hcc")
         src/env.cpp
         src/h2f.cpp)
 
-    if(COMPILE_HIP_ATP_MARKER)
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
-    endif()
+    set ( HIP_LIB_VERSION_MAJOR ${HIP_VERSION_MAJOR} )
+    set ( HIP_LIB_VERSION_MINOR ${HIP_VERSION_MINOR} )
+    if ( ${ROCM_PATCH_VERSION} )
+        set ( HIP_LIB_VERSION_PATCH ${ROCM_PATCH_VERSION})
+    else ()
+        set ( HIP_LIB_VERSION_PATCH ${HIP_VERSION_PATCH} )
+    endif ()
+    set ( HIP_LIB_VERSION_STRING "${HIP_LIB_VERSION_MAJOR}.${HIP_LIB_VERSION_MINOR}.${HIP_LIB_VERSION_PATCH}" )
+
+    if ( DEFINED ENV{ROCM_RPATH} )
+        set (CMAKE_INSTALL_RPATH "$ENV{ROCM_RPATH}" )
+        set (CMAKE_BUILD_WITH_INSTALL_RPATH TRUE )
+        set (CMAKE_SKIP_BUILD_RPATH TRUE )
+    endif ()
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
+
+    ## Set the VERSION and SOVERSION values
+    set_property ( TARGET hip_hcc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
+    set_property ( TARGET hip_hcc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
+
     if(HIP_COMPILER STREQUAL "hcc")
         target_link_libraries(hip_hcc PRIVATE hc_am)
         target_link_libraries(hip_hcc_static PRIVATE hc_am)
 
         add_library(hiprtc SHARED src/hiprtc.cpp src/code_object_bundle.cpp)
+        target_compile_options(hiprtc PRIVATE -DDISABLE_REDUCED_GPU_BLOB_COPY)
+        set_property ( TARGET hiprtc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
+        set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
         target_include_directories(
             hiprtc SYSTEM
                 PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
-        target_link_libraries(hiprtc PUBLIC stdc++fs)
     endif()
     set_target_properties(hip_hcc PROPERTIES CXX_VISIBILITY_PRESET hidden)
     set_target_properties(hip_hcc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
@@ -342,6 +349,19 @@ endif()
 
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
+
+# Generate hip_version.h
+set(_versionInfoHeader
+"// Auto-generated by cmake\n
+#ifndef HIP_VERSION_H
+#define HIP_VERSION_H\n
+#define HIP_VERSION_MAJOR ${HIP_VERSION_MAJOR}
+#define HIP_VERSION_MINOR ${HIP_VERSION_MINOR}
+#define HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}
+#define HIP_VERSION       (HIP_VERSION_MAJOR * 100 + HIP_VERSION_MINOR)\n
+#endif\n
+")
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
 
 # Build doxygen documentation
 find_program(DOXYGEN_EXE doxygen)
@@ -434,11 +454,6 @@ add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
     WORKING_DIRECTORY ${BUILD_DIR}
     DEPENDS lpl ca)
 
-# Packaging needs to wait for hipify-clang to build if it's enabled...
-if (BUILD_HIPIFY_CLANG)
-    add_dependencies(pkg_hip_base hipify-clang)
-endif()
-
 # Package: hip_hcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
 configure_file(packaging/hip-hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
@@ -456,6 +471,8 @@ add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
 # Package: hip_nvcc
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc)
 configure_file(packaging/hip-nvcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+configure_file(packaging/hip-nvcc.postinst ${BUILD_DIR}/postinst @ONLY)
+configure_file(packaging/hip-nvcc.prerm ${BUILD_DIR}/prerm @ONLY)
 add_custom_target(pkg_hip_nvcc COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
