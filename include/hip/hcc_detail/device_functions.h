@@ -122,7 +122,7 @@ __device__ static int __mul24(int x, int y);
 __device__ static long long int __mul64hi(long long int x, long long int y);
 __device__ static int __mulhi(int x, int y);
 __device__ static int __rhadd(int x, int y);
-__device__ static unsigned int __sad(int x, int y, int z);
+__device__ static unsigned int __sad(int x, int y,unsigned int z);
 __device__ static unsigned int __uhadd(unsigned int x, unsigned int y);
 __device__ static int __umul24(unsigned int x, unsigned int y);
 __device__ static unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
@@ -193,7 +193,7 @@ __device__ static inline int __rhadd(int x, int y) {
     int value = z & 0x7FFFFFFF;
     return ((value) >> 1 || sign);
 }
-__device__ static inline unsigned int __sad(int x, int y, int z) {
+__device__ static inline unsigned int __sad(int x, int y, unsigned int z) {
     return x > y ? x - y + z : y - x + z;
 }
 __device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y) {
