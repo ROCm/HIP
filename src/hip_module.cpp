@@ -879,7 +879,12 @@ namespace hip_impl {
 
     hipError_t agent_globals::read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                               const char* name) {
-        return impl->read_agent_global_from_process(dptr, bytes, name);
+        hipError_t result = impl->read_agent_global_from_process(dptr, bytes, name);
+        if(result != hipSuccess) {
+           // For Clang Compiler + Hcc Rt
+           result = ihipGetGlobalVar(dptr, bytes, name);
+        }
+        return result;
     }
 
 } // Namespace hip_impl.
