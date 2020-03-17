@@ -314,20 +314,6 @@ extern "C" __device__ void* __hip_free(void* ptr);
 static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
 
-// Declare printf only for the HCC compiler. hip-clang is handled in
-// device_functions.h
-#if __HCC_ACCELERATOR__
-#if HC_FEATURE_PRINTF
-template <typename... All>
-static inline __device__ void printf(const char* format, All... all) {
-    hc::printf(format, all...);
-}
-#else
-template <typename... All>
-static inline __device__ void printf(const char* format, All... all) {}
-#endif // HC_FEATURE_PRINTF
-#endif // __HCC_ACCELERATOR__
-
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
