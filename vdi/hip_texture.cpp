@@ -457,7 +457,7 @@ hipError_t ihipBindTexture2D(size_t* offset,
 }
 
 hipError_t hipBindTexture2D(size_t* offset,
-                            textureReference* texref,
+                            const textureReference* texref,
                             const void* devPtr,
                             const hipChannelFormatDesc* desc,
                             size_t width,
