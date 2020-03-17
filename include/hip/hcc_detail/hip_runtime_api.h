@@ -1940,6 +1940,15 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
 hipError_t hipFreeArray(hipArray* array);
 
 /**
+ * @brief Frees a mipmapped array on the device
+ * 
+ * @param[in] mipmappedArray - Pointer to mipmapped array to free
+ * 
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
+
+/**
  *  @brief Allocate an array on the device.
  *
  *  @param[out]  array  Pointer to allocated array in device memory
@@ -1953,6 +1962,39 @@ hipError_t hipFreeArray(hipArray* array);
 
 hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags);
+
+/**
+ * @brief Allocate a mipmapped array on the device
+ *
+ * @param[out] mipmappedArray  - Pointer to allocated mipmapped array in device memory
+ * @param[in]  desc            - Requested channel format
+ * @param[in]  extent          - Requested allocation size (width field in elements)
+ * @param[in]  numLevels       - Number of mipmap levels to allocate
+ * @param[in]  flags           - Flags for extensions
+ * 
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
+ */
+hipError_t hipMallocMipmappedArray(
+    hipMipmappedArray_t *mipmappedArray,
+    const struct hipChannelFormatDesc* desc,
+    struct hipExtent extent,
+    unsigned int numLevels,
+    unsigned int flags __dparm(0));
+
+/**
+ * @brief Gets a mipmap level of a HIP mipmapped array
+ *
+ * @param[out] levelArray     - Returned mipmap level HIP array
+ * @param[in]  mipmappedArray - HIP mipmapped array
+ * @param[in]  level          - Mipmap level
+ * 
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipGetMipmappedArrayLevel(
+    hipArray_t *levelArray,
+    hipMipmappedArray_const_t mipmappedArray,
+    unsigned int level);
+
 /**
  *  @brief Copies data between host and device.
  *
