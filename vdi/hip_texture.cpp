@@ -500,39 +500,6 @@ hipError_t hipBindTextureToArray(const textureReference* texref,
   HIP_RETURN(ihipBindTextureToArray(texref, array, desc));
 }
 
-hipError_t ihipBindTextureImpl(TlsData *tls,
-                               int dim,
-                               hipTextureReadMode readMode,
-                               size_t* offset,
-                               const void* devPtr,
-                               const hipChannelFormatDesc* desc,
-                               size_t size,
-                               textureReference* texref) {
-  HIP_INIT_API(ihipBindTextureImpl, tls, dim, readMode, offset, devPtr, desc, size, texref);
-
-   // Silence compiler warnings.
-  (void)dim;
-  (void)readMode;
-
-  HIP_RETURN(ihipBindTexture(offset, texref, devPtr, desc, size));
-}
-
-hipError_t ihipBindTextureToArrayImpl(TlsData *tls,
-                                      int dim,
-                                      hipTextureReadMode readMode,
-                                      hipArray_const_t array,
-                                      const hipChannelFormatDesc& desc,
-                                      textureReference* texref) {
-  // TODO overload operator<<(ostream&, hipChannelFormatDesc&).
-  HIP_INIT_API(ihipBindTextureToArrayImpl, tls, dim, readMode, array, &desc, texref);
-
-  // Silence compiler warnings.
-  (void)dim;
-  (void)readMode;
-
-  HIP_RETURN(ihipBindTextureToArray(texref, array, &desc));
-}
-
 hipError_t ihipBindTextureToMipmappedArray(const textureReference* texref,
                                            hipMipmappedArray_const_t mipmappedArray,
                                            const hipChannelFormatDesc* desc) {
@@ -565,31 +532,6 @@ hipError_t hipBindTextureToMipmappedArray(const textureReference* texref,
   HIP_INIT_API(hipBindTextureToMipmappedArray, texref, mipmappedArray, desc);
 
   HIP_RETURN(ihipBindTextureToMipmappedArray(texref, mipmappedArray, desc));
-}
-
-hipError_t ihipBindTexture2DImpl(int dim,
-                                 hipTextureReadMode readMode,
-                                 size_t* offset,
-                                 const void* devPtr,
-                                 const hipChannelFormatDesc* desc,
-                                 size_t width,
-                                 size_t height,
-                                 textureReference* texref,
-                                 size_t pitch) {
-  HIP_INIT_API(ihipBindTexture2DImpl, dim, readMode, offset, devPtr, desc, width, height, texref, pitch);
-
-  // Silence compiler warnings.
-  (void)dim;
-  (void)readMode;
-
-  HIP_RETURN(ihipBindTexture2D(offset, texref, devPtr, desc, width, height, pitch));
-}
-
-hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
-  // TODO overload operator<<(ostream&, hipTextureObject_t&).
-  HIP_INIT_API(ihipUnbindTextureImpl, &textureObject);
-
-  HIP_RETURN(ihipDestroyTextureObject(textureObject));
 }
 
 hipError_t hipUnbindTexture(const textureReference* texref) {
@@ -909,22 +851,6 @@ hipError_t hipTexRefSetAddress2D(textureReference* texRef,
 
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) {
   return {x, y, z, w, f};
-}
-
-hipError_t ihipBindTextureToMipmappedArrayImpl(TlsData *tls,
-                                               int dim,
-                                               hipTextureReadMode readMode,
-                                               hipMipmappedArray_const_t mipmappedArray,
-                                               const struct hipChannelFormatDesc& desc,
-                                               textureReference* texref) {
-  // TODO overload operator<<(ostream&, hipChannelFormatDesc&).
-  HIP_INIT_API(ihipBindTextureToMipmappedArrayImpl, tls, dim, readMode, mipmappedArray, &desc, texref);
-
-  // Silence compiler warnings.
-  (void)dim;
-  (void)readMode;
-
-  HIP_RETURN(ihipBindTextureToMipmappedArray(texref, mipmappedArray, &desc));
 }
 
 hipError_t hipTexRefGetBorderColor(float* pBorderColor,

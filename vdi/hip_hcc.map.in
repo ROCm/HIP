@@ -199,7 +199,6 @@ global:
     hipBindTextureToArray*;
     hipBindTextureToMipmappedArray*;
     hipUnbindTexture*;
-    ihipUnbindTextureImpl*;
     hipGetChannelDesc*;
     hipGetTextureAlignmentOffset*;
     hipGetTextureReference*;
@@ -215,8 +214,6 @@ global:
     hipTexRefGetArray*;
     hipTexRefSetArray*;
     hipCreateChannelDesc*;
-    ihipBindTextureImpl*;
-    ihipBindTextureToArrayImpl*;
     hipHccGetAccelerator*;
     hipHccGetAcceleratorView*;
     hipCreateSurfaceObject*;
