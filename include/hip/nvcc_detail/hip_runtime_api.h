@@ -1708,6 +1708,17 @@ inline static hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* 
 
 #ifdef __CUDACC__
 
+template<class T>
+inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
+                                                                      T func,
+                                                                      int blockSize,
+                                                                      size_t dynamicSMemSize) {
+    cudaError_t cerror;
+    cerror =
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func, blockSize, dynamicSMemSize);
+    return hipCUDAErrorTohipError(cerror);
+}
+
 template <class T>
 inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
                                                            size_t dynamicSMemSize = 0,
