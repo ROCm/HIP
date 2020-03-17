@@ -1234,8 +1234,6 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
     return ihipLogStatus(ihipModuleGetFunction(tls, hfunc, hmod, name, agent));
 }
 
-void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size_t* usedLDS);
-
 namespace {
 const amd_kernel_code_v3_t *header_v3(const ihipModuleSymbol_t& kd) {
   return reinterpret_cast<const amd_kernel_code_v3_t*>(kd._header);
@@ -1447,29 +1445,6 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
     *texRef = reinterpret_cast<textureReference*>(addr);
     return ihipLogStatus(hipSuccess);
-}
-
-void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size_t* usedLDS)
-{
-    if (f->_is_code_object_v3) {
-        const auto header = reinterpret_cast<const amd_kernel_code_v3_t*>(f->_header);
-        // GRANULATED_WORKITEM_VGPR_COUNT is specified in 0:5 bits of COMPUTE_PGM_RSRC1
-        // the granularity for gfx6-gfx9 is max(0, ceil(vgprs_used / 4) - 1)
-        *usedVGPRS = ((header->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
-        // GRANULATED_WAVEFRONT_SGPR_COUNT is specified in 6:9 bits of COMPUTE_PGM_RSRC1
-        // the granularity for gfx9+ is 2 * max(0, ceil(sgprs_used / 16) - 1)
-        *usedSGPRS = ((((header->compute_pgm_rsrc1 & 0x3C0) >> 6) >> 1) + 1) << 4;
-        *usedLDS = header->group_segment_fixed_size;
-    }
-    else {
-        const auto header = f->_header;
-        // VGPRs granularity is 4
-        *usedVGPRS = ((header->workitem_vgpr_count + 3) >> 2) << 2;
-        // adding 2 to take into account the 2 VCC registers & handle the granularity of 16
-        *usedSGPRS = header->wavefront_sgpr_count + 2;
-        *usedSGPRS = ((*usedSGPRS + 15) >> 4) << 4;
-        *usedLDS = header->workgroup_group_segment_byte_size;
-    }
 }
 
 hipError_t ihipOccupancyMaxPotentialBlockSize(TlsData *tls, uint32_t* gridSize, uint32_t* blockSize,
