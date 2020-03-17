@@ -534,7 +534,7 @@ hipError_t ihipBindTextureToArrayImpl(TlsData *tls,
   HIP_RETURN(ihipBindTextureToArray(texref, array, &desc, readMode));
 }
 
-hipError_t ihipBindTextureToMipmappedArray(textureReference* texref,
+hipError_t ihipBindTextureToMipmappedArray(const textureReference* texref,
                                            hipMipmappedArray_const_t mipmappedArray,
                                            const hipChannelFormatDesc* desc,
                                            hipTextureReadMode readMode) {
@@ -561,7 +561,7 @@ hipError_t ihipBindTextureToMipmappedArray(textureReference* texref,
   return ihipCreateTextureObject(const_cast<hipTextureObject_t*>(&texref->textureObject), &resDesc, &texDesc, &resViewDesc);
 }
 
-hipError_t hipBindTextureToMipmappedArray(textureReference* texref,
+hipError_t hipBindTextureToMipmappedArray(const textureReference* texref,
                                           hipMipmappedArray_const_t mipmappedArray,
                                           const hipChannelFormatDesc* desc) {
   HIP_INIT_API(hipBindTextureToMipmappedArray, texref, mipmappedArray, desc);
