@@ -607,7 +607,7 @@ hipError_t hipUnbindTexture(const textureReference* texref) {
 }
 
 hipError_t hipBindTexture(size_t* offset,
-                          textureReference* texref,
+                          const textureReference* texref,
                           const void* devPtr,
                           const hipChannelFormatDesc* desc,
                           size_t size) {
