@@ -3362,8 +3362,17 @@ const char* hipKernelNameRef(const hipFunction_t f);
 
 class TlsData;
 
+#if __HIP_VDI__
+hipError_t hipBindTexture(
+    size_t* offset,
+    const textureReference* tex,
+    const void* devPtr,
+    const hipChannelFormatDesc* desc,
+    size_t size = UINT_MAX);
+#else
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
                           const hipChannelFormatDesc* desc, size_t size = UINT_MAX);
+#endif
 
 hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                const void* devPtr, const struct hipChannelFormatDesc* desc,
