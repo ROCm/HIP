@@ -50,7 +50,7 @@ __hipRegisterFatBinary(const void* data)
     return nullptr;
   }
 
-  auto modules = new std::vector<hipModule_t>{g_deviceCnt};
+  auto modules = new std::vector<hipModule_t>(g_deviceCnt);
   if (!modules) {
     return nullptr;
   }
