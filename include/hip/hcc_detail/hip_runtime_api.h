@@ -3443,8 +3443,15 @@ hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& te
 }
 
 // C API
+#if __HIP_VDI__
+hipError_t hipBindTextureToArray(
+    const textureReference* tex,
+    hipArray_const_t array,
+    const hipChannelFormatDesc* desc);
+#else
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
                                  const hipChannelFormatDesc* desc);
+#endif
 
 hipError_t ihipBindTextureToArrayImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
