@@ -982,6 +982,18 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t, bool lockAcquired = 0);
 hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream);
 void ihipStreamCallbackHandler(ihipStreamCallback_t* cb);
 
+/**
+ * @brief Copies the memory address and size of symbol @p symbolName
+ *
+ * @param[in]  symbolName - Symbol on device
+ * @param[out] devPtr - Pointer to a pointer to the memory referred to by the symbol
+ * @param[out] size - Pointer to the size of the symbol
+ * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound, #hipErrorInvalidValue
+ *
+ */
+hipError_t ihipGetGlobalVar(hipDeviceptr_t* dev_ptr, size_t* size_ptr, const char* hostVar,
+                            hipModule_t hmod = nullptr);
+
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s) {
     os << "stream:";
