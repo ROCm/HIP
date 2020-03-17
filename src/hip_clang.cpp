@@ -133,7 +133,7 @@ extern "C" void __hipRegisterFunction(
   int*         wSize)
 {
   HIP_INIT_API(NONE, modules, hostFunction, deviceFunction, deviceName);
-  std::vector<hipFunction_t> functions{g_deviceCnt};
+  std::vector<hipFunction_t> functions(g_deviceCnt);
 
   assert(modules && modules->size() >= g_deviceCnt);
   for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {
