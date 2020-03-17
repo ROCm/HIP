@@ -895,9 +895,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
         prop->integrated = 1;
     }
 
-    // Enable the cooperative group for gfx9+
-    prop->cooperativeLaunch = (prop->gcnArch < 900) ? 0 : 1;
-    prop->cooperativeMultiDeviceLaunch = (prop->gcnArch < 900) ? 0 : 1;
+    // Enable the cooperative group for GPUs that support all the required features
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COOPERATIVE_QUEUES,
+          &prop->cooperativeLaunch);
+    DeviceErrorCheck(err);
+    prop->cooperativeMultiDeviceLaunch = prop->cooperativeLaunch;
 
     prop->cooperativeMultiDeviceUnmatchedFunc = prop->cooperativeMultiDeviceLaunch;
     prop->cooperativeMultiDeviceUnmatchedGridDim = prop->cooperativeMultiDeviceLaunch;
