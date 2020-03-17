@@ -35,7 +35,7 @@ THE SOFTWARE.
     unsigned int ADDRESS_SPACE_CONSTANT* s = i + HIP_SAMPLER_OBJECT_OFFSET_DWORD;
 
 template<typename T>
-struct __hip_is_channel_type
+struct __hip_is_tex_channel_type
 {
     static constexpr bool value =
         std::is_same<T, char>::value ||
@@ -50,17 +50,17 @@ struct __hip_is_channel_type
 template<
     typename T,
     unsigned int rank>
-struct __hip_is_channel_type<HIP_vector_type<T, rank>>
+struct __hip_is_tex_channel_type<HIP_vector_type<T, rank>>
 {
     static constexpr bool value =
-        __hip_is_channel_type<T>::value &&
+        __hip_is_tex_channel_type<T>::value &&
         ((rank == 1) ||
          (rank == 2) ||
          (rank == 4));
 };
 
 template<typename T>
-struct __hip_is_normalized_channel_type
+struct __hip_is_tex_normalized_channel_type
 {
     static constexpr bool value =
         std::is_same<T, char>::value ||
@@ -72,10 +72,10 @@ struct __hip_is_normalized_channel_type
 template<
     typename T,
     unsigned int rank>
-struct __hip_is_normalized_channel_type<HIP_vector_type<T, rank>>
+struct __hip_is_tex_normalized_channel_type<HIP_vector_type<T, rank>>
 {
     static constexpr bool value =
-        __hip_is_normalized_channel_type<T>::value &&
+        __hip_is_tex_normalized_channel_type<T>::value &&
         ((rank == 1) ||
          (rank == 2) ||
          (rank == 4));
@@ -99,7 +99,7 @@ template <typename T>
 struct __hip_tex_ret<
     T,
     hipReadModeElementType,
-    typename std::enable_if<__hip_is_channel_type<T>::value, bool>::type>
+    typename std::enable_if<__hip_is_tex_channel_type<T>::value, bool>::type>
 {
     using type = T;
 };
@@ -110,7 +110,7 @@ template<
 struct __hip_tex_ret<
     HIP_vector_type<T, rank>,
     hipReadModeElementType,
-    typename std::enable_if<__hip_is_channel_type<HIP_vector_type<T, rank>>::value, bool>::type>
+    typename std::enable_if<__hip_is_tex_channel_type<HIP_vector_type<T, rank>>::value, bool>::type>
 {
     using type = HIP_vector_type<__hip_tex_ret_t<T, hipReadModeElementType>, rank>;
 };
@@ -119,7 +119,7 @@ template<typename T>
 struct __hip_tex_ret<
     T,
     hipReadModeNormalizedFloat,
-    typename std::enable_if<__hip_is_normalized_channel_type<T>::value, bool>::type>
+    typename std::enable_if<__hip_is_tex_normalized_channel_type<T>::value, bool>::type>
 {
     using type = float;
 };
@@ -130,7 +130,7 @@ template<
 struct __hip_tex_ret<
     HIP_vector_type<T, rank>,
     hipReadModeNormalizedFloat,
-    typename std::enable_if<__hip_is_normalized_channel_type<HIP_vector_type<T, rank>>::value, bool>::type>
+    typename std::enable_if<__hip_is_tex_normalized_channel_type<HIP_vector_type<T, rank>>::value, bool>::type>
 {
     using type = HIP_vector_type<__hip_tex_ret_t<T, hipReadModeNormalizedFloat>, rank>;
 };
@@ -333,7 +333,7 @@ template <typename T>
 struct __hip_tex2dgather_ret<
     T,
     hipReadModeElementType,
-    typename std::enable_if<__hip_is_channel_type<T>::value, bool>::type>
+    typename std::enable_if<__hip_is_tex_channel_type<T>::value, bool>::type>
 {
     using type = HIP_vector_type<T, 4>;
 };
@@ -344,7 +344,7 @@ template<
 struct __hip_tex2dgather_ret<
     HIP_vector_type<T, rank>,
     hipReadModeElementType,
-    typename std::enable_if<__hip_is_channel_type<HIP_vector_type<T, rank>>::value, bool>::type>
+    typename std::enable_if<__hip_is_tex_channel_type<HIP_vector_type<T, rank>>::value, bool>::type>
 {
     using type = HIP_vector_type<T, 4>;
 };
@@ -353,7 +353,7 @@ template <typename T>
 struct __hip_tex2dgather_ret<
     T,
     hipReadModeNormalizedFloat,
-    typename std::enable_if<__hip_is_normalized_channel_type<T>::value, bool>::type>
+    typename std::enable_if<__hip_is_tex_normalized_channel_type<T>::value, bool>::type>
 {
     using type = float4;
 };
