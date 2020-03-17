@@ -3420,9 +3420,20 @@ hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
 }
 
 // C API
+#if __HIP_VDI__
+hipError_t hipBindTexture2D(
+    size_t* offset,
+    const textureReference* tex,
+    const void* devPtr,
+    const hipChannelFormatDesc* desc,
+    size_t width,
+    size_t height,
+    size_t pitch);
+#else
 hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
                             const hipChannelFormatDesc* desc, size_t width, size_t height,
                             size_t pitch);
+#endif
 
 hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
                                  const void* devPtr, const struct hipChannelFormatDesc* desc,
