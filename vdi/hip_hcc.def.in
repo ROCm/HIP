@@ -183,7 +183,6 @@ hipBindTexture2D
 hipBindTextureToArray
 hipBindTextureToMipmappedArray
 hipUnbindTexture
-ihipUnbindTextureImpl
 hipGetChannelDesc
 hipGetTextureAlignmentOffset
 hipGetTextureReference
@@ -198,8 +197,6 @@ hipTexRefGetAddress
 hipTexRefGetAddressMode
 hipTexRefGetArray
 hipTexRefSetArray
-ihipBindTextureImpl
-ihipBindTextureToArrayImpl
 hipCreateChannelDesc
 hipProfilerStart
 hipProfilerStop
