@@ -861,7 +861,7 @@ inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes,
 }
 
 
-inline hipError_t hipMemcpyWithStream(void* dst, const void* src,
+inline static hipError_t hipMemcpyWithStream(void* dst, const void* src,
 				      size_t sizeBytes, hipMemcpyKind copyKind,
 				      hipStream_t stream) {
 	cudaError_t error = cudaMemcpyAsync(dst, src, sizeBytes, 
