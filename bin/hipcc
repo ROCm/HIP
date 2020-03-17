@@ -391,6 +391,7 @@ my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 my $optArg = ""; # -O args
 my $targetOpt = '--amdgpu-target=';
 my $targetsStr = "";
+my $skipOutputFile = 0; # file followed by -o should not contibute in picking compiler flags
 
 foreach $arg (@ARGV)
 {
@@ -402,8 +403,16 @@ foreach $arg (@ARGV)
         $needCXXFLAGS = 1;
         $needLDFLAGS  = 0;
     }
+
+    if ($skipOutputFile) {
+        $toolArgs .= " $arg";
+        $skipOutputFile = 0;
+        next;
+    }
+
     if ($arg eq '-o') {
         $needLDFLAGS = 1;
+        $skipOutputFile = 1;
     }
 
     if(($trimarg eq '-stdlib=libc++') and ($setStdLib eq 0))
