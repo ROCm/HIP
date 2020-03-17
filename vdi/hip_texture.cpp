@@ -496,7 +496,7 @@ hipError_t ihipBindTextureToArray(const textureReference* texref,
   return ihipCreateTextureObject(const_cast<hipTextureObject_t*>(&texref->textureObject), &resDesc, &texDesc, &resViewDesc);
 }
 
-hipError_t hipBindTextureToArray(textureReference* texref,
+hipError_t hipBindTextureToArray(const textureReference* texref,
                                  hipArray_const_t array,
                                  const hipChannelFormatDesc* desc) {
   HIP_INIT_API(hipBindTextureToArray, texref, array, desc);
