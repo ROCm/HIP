@@ -57,7 +57,7 @@ struct __HIP_TEXTURE_ATTRIB texture : public textureReference {
     texture(int norm = 0, enum hipTextureFilterMode fMode = hipFilterModePoint,
             enum hipTextureAddressMode aMode = hipAddressModeClamp) {
         normalized = norm;
-        readMode = hipReadModeNormalizedFloat;
+        readMode = mode;
         filterMode = fMode;
         addressMode[0] = aMode;
         addressMode[1] = aMode;
@@ -69,7 +69,7 @@ struct __HIP_TEXTURE_ATTRIB texture : public textureReference {
     texture(int norm, enum hipTextureFilterMode fMode, enum hipTextureAddressMode aMode,
             struct hipChannelFormatDesc desc) {
         normalized = norm;
-        readMode = hipReadModeNormalizedFloat;
+        readMode = mode;
         filterMode = fMode;
         addressMode[0] = aMode;
         addressMode[1] = aMode;
