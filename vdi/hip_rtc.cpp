@@ -23,10 +23,6 @@
 #include <hip/hiprtc.h>
 #include "platform/program.hpp"
 
-extern "C" char * __cxa_demangle(const char *mangled_name, char *output_buffer,
-                                size_t *length, int *status);
-
-
 namespace hiprtc {
 thread_local hiprtcResult g_lastRtcError = HIPRTC_SUCCESS;
 }
@@ -105,30 +101,34 @@ uint32_t ProgramState::addNameExpression(const char* name_expression) {
   return nameExpresssion_.size();
 }
 
-namespace hip_impl {
-
 char* demangle(const char* loweredName) {
-#ifdef ATI_OS_LINUX
   if (!loweredName) {
     return nullptr;
   }
-
+#if HIPRTC_USE_CXXABI || __linux__
   int status = 0;
-  char* demangledName = __cxa_demangle(loweredName, nullptr, nullptr, &status);
+  char* demangledName = abi::__cxa_demangle(loweredName, nullptr, nullptr, &status);
   if (status != 0) {
     return nullptr;
   }
+#elif defined(_WIN32)
+  char* demangledName = (char*)malloc(UNDECORATED_SIZE);
 
-  return demangledName;
+  if (!UnDecorateSymbolName(loweredName, demangledName,
+                            UNDECORATED_SIZE/ sizeof(*demangledName), UNDNAME_COMPLETE))
+  {
+    free(demangledName);
+    return nullptr;
+  }
 #else
-  return nullptr;
-#endif
+#error "Only Linux and Windows are supported"
+#endif // HIPRTC_USE_CXXABI || __linux__
+  return demangledName;
 }
-} // hip_impl
 
 static std::string handleMangledName(std::string name) {
   std::string loweredName;
-  char* demangled = hip_impl::demangle(name.c_str());
+  char* demangled = demangle(name.c_str());
   loweredName.assign(demangled == nullptr ? std::string() : demangled);
   free(demangled);
 
@@ -164,7 +164,6 @@ static std::string handleMangledName(std::string name) {
 
   return loweredName;
 }
-
 
 const char* hiprtcGetErrorString(hiprtcResult x) {
   switch (x) {
@@ -228,7 +227,6 @@ hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog, const char* src, const cha
   HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
-
 hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char** options) {
 
   // FIXME[skudchad] Add headers to amd::Program::build and device::Program::build,
@@ -240,6 +238,8 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char
   std::ostringstream ostrstr;
   std::vector<const char*> oarr(&options[0], &options[numOptions]);
   std::copy(oarr.begin(), oarr.end(), std::ostream_iterator<std::string>(ostrstr, " "));
+  ostrstr.str().append(" -DHIP_VERSION_MAJOR=").append(std::to_string(HIP_VERSION_MAJOR));
+  ostrstr.str().append(" -DHIP_VERSION_MINOR=").append(std::to_string(HIP_VERSION_MINOR));
 
   std::vector<amd::Device*> devices{hip::getCurrentDevice()->devices()[0]};
   if (CL_SUCCESS != program->build(devices, ostrstr.str().c_str(), nullptr, nullptr)) {
@@ -301,7 +301,7 @@ hiprtcResult hiprtcGetLoweredName(hiprtcProgram prog, const char* name_expressio
 
   *loweredName = it->second.second.c_str();
 
-   HIPRTC_RETURN(HIPRTC_SUCCESS);
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
 hiprtcResult hiprtcDestroyProgram(hiprtcProgram* prog) {
@@ -316,7 +316,7 @@ hiprtcResult hiprtcDestroyProgram(hiprtcProgram* prog) {
 
   program->release();
 
-   HIPRTC_RETURN(HIPRTC_SUCCESS);
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
 hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* binaryMem) {
@@ -341,7 +341,7 @@ hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* binarySizeRet) {
   *binarySizeRet =
       program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0])->binary().second;
 
-   HIPRTC_RETURN(HIPRTC_SUCCESS);
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
 hiprtcResult hiprtcGetProgramLog(hiprtcProgram prog, char* dst) {
@@ -356,7 +356,7 @@ hiprtcResult hiprtcGetProgramLog(hiprtcProgram prog, char* dst) {
   log.copy(dst, log.size());
   dst[log.size()] = '\0';
 
-   HIPRTC_RETURN(HIPRTC_SUCCESS);
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
 
 hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog, size_t* logSizeRet) {
@@ -371,5 +371,18 @@ hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog, size_t* logSizeRet) {
 
   *logSizeRet = log.size() + 1;
 
-   HIPRTC_RETURN(HIPRTC_SUCCESS);
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
+}
+
+hiprtcResult hiprtcVersion(int* major, int* minor) {
+  HIPRTC_INIT_API(major, minor);
+
+  if (major == nullptr || minor == nullptr) {
+    HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
+  }
+
+  *major = 9;
+  *minor = 0;
+
+  HIPRTC_RETURN(HIPRTC_SUCCESS);
 }
