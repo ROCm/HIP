@@ -574,10 +574,15 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     // create a cooperative accelerated view for launching gws and main kernels
     hc::accelerator_view coopAV = acc.create_cooperative_view();
 
-    // wait for this stream to finish operations
-    stream->locked_wait();
-
     LockedAccessor_StreamCrit_t streamCrit(stream->criticalData(), false);
+
+    // the cooperative queue will wait until this stream completes its operations
+    hc::completion_future streamCF;
+    if (!streamCrit->_av.get_is_empty()) {
+        streamCF = streamCrit->_av.create_marker(hc::accelerator_scope);
+        coopAV.create_blocking_marker(streamCF, hc::accelerator_scope);
+    }
+
     streamCrit->_av.acquire_locked_hsa_queue();
     coopAV.acquire_locked_hsa_queue();
 
@@ -605,12 +610,18 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
             sharedMemBytes, stream, kernelParams, nullptr, nullptr,
             nullptr, 0, true, impCoopParams, &coopAV);
 
-    stream->criticalData().unlock();
-    stream->criticalData()._av.release_locked_hsa_queue();
-    coopAV.release_locked_hsa_queue();
 
-    // wait on the dispatch on the dedicated cooperative queue to finish
-    coopAV.wait(hc::hcWaitModeActive);
+    coopAV.release_locked_hsa_queue();
+    stream->criticalData()._av.release_locked_hsa_queue();
+
+    // this stream will wait until the cooperative queue completes its operations
+    hc::completion_future cooperativeCF;
+    if (!coopAV.get_is_empty()) {
+        cooperativeCF = coopAV.create_marker(hc::accelerator_scope);
+        streamCrit->_av.create_blocking_marker(cooperativeCF, hc::accelerator_scope);
+    }
+
+    stream->criticalData().unlock();
 
     return result;
 #else
@@ -747,8 +758,14 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
     // lock all streams before launching the blit kernels for initializing the GWS and main kernels to each device
     for (int i = 0; i < numDevices; ++i) {
-        launchParamsList[i].stream->locked_wait();
         LockedAccessor_StreamCrit_t streamCrit(launchParamsList[i].stream->criticalData(), false);
+
+        hc::completion_future streamCF;
+        if (!streamCrit->_av.get_is_empty()) {
+            streamCF = streamCrit->_av.create_marker(hc::accelerator_scope);
+            coopAVs[i].create_blocking_marker(streamCF, hc::accelerator_scope);
+        }
+
         streamCrit->_av.acquire_locked_hsa_queue();
         coopAVs[i].acquire_locked_hsa_queue();
     }
@@ -834,14 +851,17 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
     // unlock all streams
     for (int i = 0; i < numDevices; ++i) {
-        launchParamsList[i].stream->criticalData().unlock();
-        launchParamsList[i].stream->criticalData()._av.release_locked_hsa_queue();
         coopAVs[i].release_locked_hsa_queue();
-    }
+        launchParamsList[i].stream->criticalData()._av.release_locked_hsa_queue();
 
-    // wait on the dispatch on cooperative queues on each device to finish
-    for (int i = 0; i < numDevices; ++i) {
-        coopAVs[i].wait(hc::hcWaitModeActive);
+        hc::completion_future cooperativeCF;
+        if (!coopAVs[i].get_is_empty()) {
+            cooperativeCF = coopAVs[i].create_marker(hc::accelerator_scope);
+            launchParamsList[i].stream->criticalData()._av.create_blocking_marker(
+                    cooperativeCF, hc::accelerator_scope);
+        }
+
+        launchParamsList[i].stream->criticalData().unlock();
     }
 
     hip_internal::ihipHostFree(tls, mg_sync_ptr);
