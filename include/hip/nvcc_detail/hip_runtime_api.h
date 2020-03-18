@@ -1295,10 +1295,17 @@ inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBl
                                                                       const void* func,
                                                                       int blockSize,
                                                                       size_t dynamicSMemSize) {
-    cudaError_t cerror;
-    cerror =
-        cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func, blockSize, dynamicSMemSize);
-    return hipCUDAErrorTohipError(cerror);
+    return hipCUDAErrorTohipError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func,
+                                                              blockSize, dynamicSMemSize));
+}
+
+inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
+                                                                      const void* func,
+                                                                      int blockSize,
+                                                                      size_t dynamicSMemSize
+                                                                      unsigned int flags) {
+    return hipCUDAErrorTohipError(cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(numBlocks, func,
+                                                      blockSize, dynamicSMemSize, flags));
 }
 
 inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
@@ -1713,26 +1720,31 @@ inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBl
                                                                       T func,
                                                                       int blockSize,
                                                                       size_t dynamicSMemSize) {
-    cudaError_t cerror;
-    cerror =
-        cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func, blockSize, dynamicSMemSize);
-    return hipCUDAErrorTohipError(cerror);
+    return hipCUDAErrorTohipError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func,
+                                                            blockSize, dynamicSMemSize));
 }
 
 template <class T>
 inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
                                                            size_t dynamicSMemSize = 0,
                                                            int blockSizeLimit = 0) {
-    cudaError_t cerror;
-    cerror = cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func, dynamicSMemSize, blockSizeLimit);
-    return hipCUDAErrorTohipError(cerror);
+    return hipCUDAErrorTohipError(cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func,
+                                                           dynamicSMemSize, blockSizeLimit));
 }
 
 template <class T>
-inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor ( int* numBlocks, T func,
-                                                        int  blockSize, size_t dynamicSMemSize ) {
-    return hipCUDAErrorTohipError(cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func,
-                                                                 blockSize, dynamicSMemSize));
+inline static hipError_t hipOccupancyMaxPotentialBlockSizeWithFlags(int* minGridSize, int* blockSize, T func,
+                                                           size_t dynamicSMemSize = 0,
+                                                           int blockSizeLimit = 0, unsigned int  flags = 0) {
+    return hipCUDAErrorTohipError(cudaOccupancyMaxPotentialBlockSize(minGridSize, blockSize, func,
+                                                           dynamicSMemSize, blockSizeLimit, flags));
+}
+
+template <class T>
+inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags( int* numBlocks, T func,
+                                              int  blockSize, size_t dynamicSMemSize,unsigned int flags) {
+    return hipCUDAErrorTohipError(cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(numBlocks, func,
+                                                                 blockSize, dynamicSMemSize, flags));
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
