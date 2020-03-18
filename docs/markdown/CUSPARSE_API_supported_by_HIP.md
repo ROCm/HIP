@@ -69,8 +69,8 @@
 | typedef      |`cusparseSolveAnalysisInfo_t`                                  |                  |                                                            |
 | struct       |`csrsv2Info`                                                   |                  |                                                            |
 | typedef      |`csrsv2Info_t`                                                 |                  |`csrsv2Info_t`                                              |
-| struct       |`csrsm2Info`                                                   | 9.2              |                                                            |
-| typedef      |`csrsm2Info_t`                                                 |                  |                                                            |
+| struct       |`csrsm2Info`                                                   | 9.2              |`csrsm2Info`                                                |
+| typedef      |`csrsm2Info_t`                                                 |                  |`csrsm2Info_t`                                              |
 | struct       |`bsrsv2Info`                                                   |                  |                                                            |
 | typedef      |`bsrsv2Info_t`                                                 |                  |                                                            |
 | struct       |`bsrsm2Info`                                                   |                  |                                                            |
@@ -151,8 +151,8 @@
 |`cusparseGetStream`                                        |`hipsparseGetStream`                             | 8.0              |
 |`cusparseCreateCsrsv2Info`                                 |`hipsparseCreateCsrsv2Info`                      |
 |`cusparseDestroyCsrsv2Info`                                |`hipsparseDestroyCsrsv2Info`                     |
-|`cusparseCreateCsrsm2Info`                                 |                                                 | 9.2              |
-|`cusparseDestroyCsrsm2Info`                                |                                                 | 9.2              |
+|`cusparseCreateCsrsm2Info`                                 |`hipsparseCreateCsrsm2Info`                      | 9.2              |
+|`cusparseDestroyCsrsm2Info`                                |`hipsparseDestroyCsrsm2Info`                     | 9.2              |
 |`cusparseCreateCsric02Info`                                |                                                 |
 |`cusparseDestroyCsric02Info`                               |                                                 |
 |`cusparseCreateCsrilu02Info`                               |`hipsparseCreateCsrilu02Info`                    |
@@ -306,19 +306,19 @@
 |`cusparseDcsrsm_solve`                                     |                                                 |
 |`cusparseCcsrsm_solve`                                     |                                                 |
 |`cusparseZcsrsm_solve`                                     |                                                 |
-|`cusparseScsrsm2_bufferSizeExt`                            |                                                 | 9.2              |
-|`cusparseDcsrsm2_bufferSizeExt`                            |                                                 | 9.2              |
-|`cusparseCcsrsm2_bufferSizeExt`                            |                                                 | 9.2              |
-|`cusparseZcsrsm2_bufferSizeExt`                            |                                                 | 9.2              |
-|`cusparseScsrsm2_analysis`                                 |                                                 | 9.2              |
-|`cusparseDcsrsm2_analysis`                                 |                                                 | 9.2              |
-|`cusparseCcsrsm2_analysis`                                 |                                                 | 9.2              |
-|`cusparseZcsrsm2_analysis`                                 |                                                 | 9.2              |
-|`cusparseScsrsm2_solve`                                    |                                                 | 9.2              |
-|`cusparseDcsrsm2_solve`                                    |                                                 | 9.2              |
-|`cusparseCcsrsm2_solve`                                    |                                                 | 9.2              |
-|`cusparseZcsrsm2_solve`                                    |                                                 | 9.2              |
-|`cusparseXcsrsm2_zeroPivot`                                |                                                 | 9.2              |
+|`cusparseScsrsm2_bufferSizeExt`                            |`hipsparseScsrsm2_bufferSizeExt`                 | 9.2              |
+|`cusparseDcsrsm2_bufferSizeExt`                            |`hipsparseDcsrsm2_bufferSizeExt`                 | 9.2              |
+|`cusparseCcsrsm2_bufferSizeExt`                            |`hipsparseCcsrsm2_bufferSizeExt`                 | 9.2              |
+|`cusparseZcsrsm2_bufferSizeExt`                            |`hipsparseZcsrsm2_bufferSizeExt`                 | 9.2              |
+|`cusparseScsrsm2_analysis`                                 |`hipsparseScsrsm2_analysis`                      | 9.2              |
+|`cusparseDcsrsm2_analysis`                                 |`hipsparseDcsrsm2_analysis`                      | 9.2              |
+|`cusparseCcsrsm2_analysis`                                 |`hipsparseCcsrsm2_analysis`                      | 9.2              |
+|`cusparseZcsrsm2_analysis`                                 |`hipsparseZcsrsm2_analysis`                      | 9.2              |
+|`cusparseScsrsm2_solve`                                    |`hipsparseScsrsm2_solve`                         | 9.2              |
+|`cusparseDcsrsm2_solve`                                    |`hipsparseDcsrsm2_solve`                         | 9.2              |
+|`cusparseCcsrsm2_solve`                                    |`hipsparseCcsrsm2_solve`                         | 9.2              |
+|`cusparseZcsrsm2_solve`                                    |`hipsparseZcsrsm2_solve`                         | 9.2              |
+|`cusparseXcsrsm2_zeroPivot`                                |`hipsparseXcsrsm2_zeroPivot`                     | 9.2              |
 |`cusparseSbsrmm`                                           |                                                 |
 |`cusparseDbsrmm`                                           |                                                 |
 |`cusparseCbsrmm`                                           |                                                 |
