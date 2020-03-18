@@ -1302,7 +1302,7 @@ inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBl
 inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
                                                                       const void* func,
                                                                       int blockSize,
-                                                                      size_t dynamicSMemSize
+                                                                      size_t dynamicSMemSize,
                                                                       unsigned int flags) {
     return hipCUDAErrorTohipError(cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(numBlocks, func,
                                                       blockSize, dynamicSMemSize, flags));
