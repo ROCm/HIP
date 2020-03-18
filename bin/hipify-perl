@@ -337,8 +337,8 @@ sub simpleSubstitutions {
     $ft{'execution'} += s/\bcudaLaunchCooperativeKernelMultiDevice\b/hipLaunchCooperativeKernelMultiDevice/g;
     $ft{'execution'} += s/\bcudaLaunchKernel\b/hipLaunchKernel/g;
     $ft{'execution'} += s/\bcudaSetupArgument\b/hipSetupArgument/g;
-    $ft{'occupancy'} += s/\bcuOccupancyMaxActiveBlocksPerMultiprocessor\b/hipOccupancyMaxActiveBlocksPerMultiprocessor/g;
-    $ft{'occupancy'} += s/\bcuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags\b/hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags/g;
+    $ft{'occupancy'} += s/\bcuOccupancyMaxActiveBlocksPerMultiprocessor\b/hipDrvOccupancyMaxActiveBlocksPerMultiprocessor/g;
+    $ft{'occupancy'} += s/\bcuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags\b/hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags/g;
     $ft{'occupancy'} += s/\bcuOccupancyMaxPotentialBlockSize\b/hipOccupancyMaxPotentialBlockSize/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxActiveBlocksPerMultiprocessor\b/hipOccupancyMaxActiveBlocksPerMultiprocessor/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags\b/hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags/g;
