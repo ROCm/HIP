@@ -361,7 +361,8 @@ bool PlatformState::getTexRef(const char* hostVar, hipModule_t hmod, textureRefe
     return false;
   }
 
-  *texRef = reinterpret_cast<textureReference *>(dvar->shadowVptr);
+  *texRef = new (dvar->shadowVptr) texture<char>{};
+
   return true;
 }
 
