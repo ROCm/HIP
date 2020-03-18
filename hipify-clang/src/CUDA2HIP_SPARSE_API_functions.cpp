@@ -619,10 +619,10 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_FUNCTION_MAP{
   {"cusparseChyb2dense",                          {"hipsparseChyb2dense",                          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
   {"cusparseZhyb2dense",                          {"hipsparseZhyb2dense",                          "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
 
-  {"cusparseSnnz",                                {"hipsparseSnnz",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseDnnz",                                {"hipsparseDnnz",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseCnnz",                                {"hipsparseCnnz",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
-  {"cusparseZnnz",                                {"hipsparseZnnz",                                "", CONV_LIB_FUNC, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseSnnz",                                {"hipsparseSnnz",                                "", CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseDnnz",                                {"hipsparseDnnz",                                "", CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseCnnz",                                {"hipsparseCnnz",                                "", CONV_LIB_FUNC, API_SPARSE}},
+  {"cusparseZnnz",                                {"hipsparseZnnz",                                "", CONV_LIB_FUNC, API_SPARSE}},
 
   {"cusparseCreateIdentityPermutation",           {"hipsparseCreateIdentityPermutation",           "", CONV_LIB_FUNC, API_SPARSE}},
 
