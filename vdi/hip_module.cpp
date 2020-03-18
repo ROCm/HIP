@@ -528,6 +528,10 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     HIP_RETURN(hipErrorNotFound);
   }
 
+  // Texture references created by HIP driver API
+  // have the default read mode set to normalized float.
+  (*texRef)->readMode = hipReadModeNormalizedFloat;
+
   HIP_RETURN(hipSuccess);
 }
 
