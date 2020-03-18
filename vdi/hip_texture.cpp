@@ -411,7 +411,7 @@ hipError_t ihipBindTexture(size_t* offset,
   resDesc.res.linear.desc = *desc;
   resDesc.res.linear.sizeInBytes = size;
 
-  hipTextureDesc texDesc = hip::getTextureDesc(texref, texref->readMode);
+  hipTextureDesc texDesc = hip::getTextureDesc(texref);
 
   return ihipCreateTextureObject(const_cast<hipTextureObject_t*>(&texref->textureObject), &resDesc, &texDesc, nullptr);
 }
@@ -449,7 +449,7 @@ hipError_t ihipBindTexture2D(size_t* offset,
   resDesc.res.pitch2D.height = height;
   resDesc.res.pitch2D.pitchInBytes = pitch;
 
-  hipTextureDesc texDesc = hip::getTextureDesc(texref, texref->readMode);
+  hipTextureDesc texDesc = hip::getTextureDesc(texref);
 
   return ihipCreateTextureObject(const_cast<hipTextureObject_t*>(&texref->textureObject), &resDesc, &texDesc, nullptr);
 }
@@ -484,7 +484,7 @@ hipError_t ihipBindTextureToArray(const textureReference* texref,
   resDesc.resType = hipResourceTypeArray;
   resDesc.res.array.array = const_cast<hipArray_t>(array);
 
-  hipTextureDesc texDesc = hip::getTextureDesc(texref, texref->readMode);
+  hipTextureDesc texDesc = hip::getTextureDesc(texref);
 
   hipResourceViewFormat format = hip::getResourceViewFormat(*desc);
   hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(array, format);
@@ -518,7 +518,7 @@ hipError_t ihipBindTextureToMipmappedArray(const textureReference* texref,
   resDesc.resType = hipResourceTypeMipmappedArray;
   resDesc.res.mipmap.mipmap = const_cast<hipMipmappedArray_t>(mipmappedArray);
 
-  hipTextureDesc texDesc = hip::getTextureDesc(texref, texref->readMode);
+  hipTextureDesc texDesc = hip::getTextureDesc(texref);
 
   hipResourceViewFormat format = hip::getResourceViewFormat(*desc);
   hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(mipmappedArray, format);
@@ -619,11 +619,21 @@ hipError_t hipTexRefSetFlags(textureReference* texRef,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  // TODO add textureReference::flags.
-  // Using textureReference::normalized for this purpose is OK for now,
-  // because calling hipTexRefGetFlags() on a textureRefence after hipBindTexture() is UB
-  // due to HIP not differentiating between runtime and driver api.
-  texRef->normalized = Flags;
+  texRef->readMode = hipReadModeNormalizedFloat;
+  texRef->normalized = 0;
+  texRef->sRGB = 0;
+
+  if (Flags & HIP_TRSF_READ_AS_INTEGER) {
+    texRef->readMode = hipReadModeElementType;
+  }
+
+  if (Flags & HIP_TRSF_NORMALIZED_COORDINATES) {
+    texRef->normalized = 1;
+  }
+
+  if (Flags & HIP_TRSF_SRGB) {
+    texRef->sRGB = 1;
+  }
 
   HIP_RETURN(hipSuccess);
 }
@@ -731,7 +741,7 @@ hipError_t hipTexRefSetArray(textureReference* texRef,
   resDesc.resType = hipResourceTypeArray;
   resDesc.res.array.array = const_cast<hipArray_t>(array);
 
-  hipTextureDesc texDesc = hip::getTextureDesc(texRef, texRef->readMode);
+  hipTextureDesc texDesc = hip::getTextureDesc(texRef);
 
   hipResourceViewFormat format = hip::getResourceViewFormat(hip::getChannelFormatDesc(texRef->numChannels, texRef->format));
   hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(array, format);
@@ -801,14 +811,7 @@ hipError_t hipTexRefSetAddress(size_t* ByteOffset,
   resDesc.res.linear.desc = hip::getChannelFormatDesc(texRef->numChannels, texRef->format);
   resDesc.res.linear.sizeInBytes = bytes;
 
-  // TODO add textureReference::flags.
-  // Using textureReference::normalized for this purpose is OK for now,
-  // because calling hipTexRefGetFlags() on a textureRefence after hipBindTexture()
-  // due to HIP not differentiating between runtime and driver api.
-  hipTextureReadMode readMode = hip::getReadMode(texRef->normalized);
-  texRef->sRGB = hip::getSRGB(texRef->normalized);
-  texRef->normalized = hip::getNormalizedCoords(texRef->normalized);
-  hipTextureDesc texDesc = hip::getTextureDesc(texRef, readMode);
+  hipTextureDesc texDesc = hip::getTextureDesc(texRef);
 
   HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, nullptr));
 }
@@ -837,14 +840,7 @@ hipError_t hipTexRefSetAddress2D(textureReference* texRef,
   resDesc.res.pitch2D.height = desc->Height;
   resDesc.res.pitch2D.pitchInBytes = Pitch;
 
-  // TODO add textureReference::flags.
-  // Using textureReference::normalized for this purpose is OK for now,
-  // because calling hipTexRefGetFlags() on a textureRefence after hipBindTexture()
-  // due to HIP not differentiating between runtime and driver api.
-  hipTextureReadMode readMode = hip::getReadMode(texRef->normalized);
-  texRef->sRGB = hip::getSRGB(texRef->normalized);
-  texRef->normalized = hip::getNormalizedCoords(texRef->normalized);
-  hipTextureDesc texDesc = hip::getTextureDesc(texRef, readMode);
+  hipTextureDesc texDesc = hip::getTextureDesc(texRef);
 
   HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, nullptr));
 }
@@ -892,11 +888,19 @@ hipError_t hipTexRefGetFlags(unsigned int* pFlags,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  // TODO add textureReference::flags.
-  // Using textureReference::normalized for this purpose is OK for now,
-  // because calling hipTexRefGetFlags() on a textureRefence after hipBindTexture()
-  // due to HIP not differentiating between runtime and driver api.
-  *pFlags = texRef.normalized;
+  *pFlags = 0;
+
+  if (texRef.readMode == hipReadModeElementType) {
+    *pFlags |= HIP_TRSF_READ_AS_INTEGER;
+  }
+
+  if (texRef.normalized == 1) {
+    *pFlags |= HIP_TRSF_NORMALIZED_COORDINATES;
+  }
+
+  if (texRef.sRGB == 1) {
+    *pFlags |= HIP_TRSF_SRGB;
+  }
 
   HIP_RETURN(hipSuccess);
 }
@@ -1099,8 +1103,7 @@ hipError_t hipTexRefSetMipmappedArray(textureReference* texRef,
   resDesc.resType = hipResourceTypeMipmappedArray;
   resDesc.res.mipmap.mipmap = mipmappedArray;
 
-  // TODO need compiler support to extract the read mode from textureReference.
-  hipTextureDesc texDesc = hip::getTextureDesc(texRef, hipReadModeElementType);
+  hipTextureDesc texDesc = hip::getTextureDesc(texRef);
 
   hipResourceViewFormat format = hip::getResourceViewFormat(hip::getChannelFormatDesc(texRef->numChannels, texRef->format));
   hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(mipmappedArray, format);

@@ -491,39 +491,11 @@ hipResourceViewFormat getResourceViewFormat(const hipChannelFormatDesc& desc) {
 }
 
 inline
-hipTextureReadMode getReadMode(unsigned int flags) {
-  if (flags & HIP_TRSF_READ_AS_INTEGER) {
-    return hipReadModeElementType;
-  } else {
-    return hipReadModeNormalizedFloat;
-  }
-}
-
-inline
-int getNormalizedCoords(unsigned int flags) {
-  if (flags & HIP_TRSF_NORMALIZED_COORDINATES) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-inline
-int getSRGB(unsigned int flags) {
-  if (flags & HIP_TRSF_SRGB) {
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-inline
-hipTextureDesc getTextureDesc(const textureReference* texRef,
-                              const hipTextureReadMode readMode) {
+hipTextureDesc getTextureDesc(const textureReference* texRef) {
   hipTextureDesc texDesc = {};
   std::memcpy(texDesc.addressMode, texRef->addressMode, sizeof(texDesc.addressMode));
   texDesc.filterMode = texRef->filterMode;
-  texDesc.readMode = readMode;
+  texDesc.readMode = texRef->readMode;
   texDesc.sRGB = texRef->sRGB;
   texDesc.normalizedCoords = texRef->normalized;
   texDesc.maxAnisotropy = texRef->maxAnisotropy;
