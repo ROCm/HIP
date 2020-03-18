@@ -207,7 +207,7 @@ if ($HIP_PLATFORM eq "clang") {
     } else {
       $HIPCXXFLAGS .= " -std=c++11";
     }
-    $HIPCXXFLAGS .= " -isystem $HIP_CLANG_INCLUDE_PATH";
+    $HIPCXXFLAGS .= " -isystem $HIP_CLANG_INCLUDE_PATH/..";
     $HIPLDFLAGS .= " -L$HIP_LIB_PATH";
     if (not $isWindows) {
       $HIPLDFLAGS .= " -Wl,--rpath-link=$HIP_LIB_PATH";
