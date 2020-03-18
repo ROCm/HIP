@@ -1247,7 +1247,7 @@ const amd_kernel_code_v3_t *header_v3(const ihipModuleSymbol_t& kd) {
   return reinterpret_cast<const amd_kernel_code_v3_t*>(kd._header);
 }
 
-hipFuncAttributes make_function_attributes(TlsData *tls, const ihipModuleSymbol_t& kd) {
+hipFuncAttributes make_function_attributes(TlsData *tls, ihipModuleSymbol_t& kd) {
     hipFuncAttributes r{};
 
     hipDeviceProp_t prop{};
@@ -1257,23 +1257,57 @@ hipFuncAttributes make_function_attributes(TlsData *tls, const ihipModuleSymbol_
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
     if (kd._is_code_object_v3) {
-        r.localSizeBytes = header_v3(kd)->private_segment_fixed_size;
-        r.sharedSizeBytes = header_v3(kd)->group_segment_fixed_size;
-        r.numRegs = ((header_v3(kd)->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
         r.binaryVersion = 0; // FIXME: should it be the ISA version or code
                              //        object format version?
+        r.localSizeBytes = header_v3(kd)->private_segment_fixed_size;
+        r.sharedSizeBytes = header_v3(kd)->group_segment_fixed_size;
     } else {
         r.localSizeBytes = kd._header->workitem_private_segment_byte_size;
         r.sharedSizeBytes = kd._header->workgroup_group_segment_byte_size;
-        r.numRegs = kd._header->workitem_vgpr_count;
         r.binaryVersion =
             kd._header->amd_machine_version_major * 10 +
             kd._header->amd_machine_version_minor;
     }
     r.maxDynamicSharedSizeBytes = prop.sharedMemPerBlock - r.sharedSizeBytes;
-    r.maxThreadsPerBlock = r.numRegs ?
-        std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
-        prop.maxThreadsPerBlock;
+
+    size_t usedVGPRS = 0;
+    size_t usedSGPRS = 0;
+    size_t usedLDS = 0;
+    getGprsLdsUsage(&kd, &usedVGPRS, &usedSGPRS, &usedLDS);
+
+    r.numRegs = usedVGPRS;
+
+    size_t wavefrontSize = prop.warpSize;
+    size_t maxWavefrontsPerBlock = prop.maxThreadsPerBlock / wavefrontSize;
+    size_t maxWavefrontsPerCU = min(prop.maxThreadsPerMultiProcessor / wavefrontSize, 32);
+    const size_t numSIMD = 4;
+    const size_t maxWavesPerSimd = maxWavefrontsPerCU / numSIMD;
+    size_t maxWaves = 0;
+    for (int i = 0; i < maxWavefrontsPerBlock; i++) {
+        size_t wavefronts = i + 1;
+
+        if (usedVGPRS > 0) {
+            size_t availableVGPRs = (prop.regsPerBlock / wavefrontSize / numSIMD);
+            size_t vgprs_alu_occupancy = numSIMD * std::min(maxWavesPerSimd, availableVGPRs / usedVGPRS);
+
+            // Calculate blocks occupancy per CU based on VGPR usage
+            if (vgprs_alu_occupancy < wavefronts)
+                break;
+        }
+
+        if (usedSGPRS > 0) {
+            const size_t availableSGPRs = (prop.gcnArch < 800) ? 512 : 800;
+            size_t sgprs_alu_occupancy = numSIMD * ((usedSGPRS == 0) ? maxWavesPerSimd
+                : std::min(maxWavesPerSimd, availableSGPRs / usedSGPRS));
+
+            // Calculate blocks occupancy per CU based on SGPR usage
+            if (sgprs_alu_occupancy < wavefronts)
+                break;
+        }
+        maxWaves = wavefronts;
+    }
+
+    r.maxThreadsPerBlock = maxWaves * wavefrontSize;
     r.ptxVersion = prop.major * 10 + prop.minor; // HIP currently presents itself as PTX 3.0.
 
     return r;
