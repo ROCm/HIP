@@ -139,7 +139,7 @@ template <typename T, hipTextureReadMode readMode>
 static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> tex1Dfetch(texture<T, hipTextureType1D, readMode> t, int x)
 {
     TEXTURE_PARAMETERS_INIT;
-    auto tmp = __ockl_image_sample_1D(i, s, x);
+    auto tmp = __ockl_image_load_1Db(i, x);
     return *reinterpret_cast<__hip_tex_ret_t<T, readMode>*>(&tmp);
 }
 
