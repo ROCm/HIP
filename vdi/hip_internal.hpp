@@ -194,6 +194,7 @@ public:
     std::string deviceName;
     std::vector< std::pair< hipModule_t, bool > >* modules;
     std::vector<hipFunction_t> functions;
+    bool dyn_mod;
   };
   struct DeviceVar {
     void* shadowVptr;
@@ -216,6 +217,7 @@ public:
     return *platform_;
   }
 
+  bool unregisterFunc(hipModule_t hmod);
   std::vector< std::pair<hipModule_t, bool> >* unregisterVar(hipModule_t hmod);
 
 
@@ -223,6 +225,8 @@ public:
   void registerVar(const void* hostvar, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
 
+  bool findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
+  bool createFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
   hipFunction_t getFunc(const void* hostFunction, int deviceId);
   bool getFuncAttr(const void* hostFunction, hipFuncAttributes* func_attr);
   bool getGlobalVar(const void* hostVar, int deviceId, hipModule_t hmod,
