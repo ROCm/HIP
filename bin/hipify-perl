@@ -759,6 +759,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseCgthr\b/hipsparseCgthr/g;
     $ft{'library'} += s/\bcusparseCgthrz\b/hipsparseCgthrz/g;
     $ft{'library'} += s/\bcusparseChybmv\b/hipsparseChybmv/g;
+    $ft{'library'} += s/\bcusparseCnnz\b/hipsparseCnnz/g;
     $ft{'library'} += s/\bcusparseCreate\b/hipsparseCreate/g;
     $ft{'library'} += s/\bcusparseCreateCsrgemm2Info\b/hipsparseCreateCsrgemm2Info/g;
     $ft{'library'} += s/\bcusparseCreateCsrilu02Info\b/hipsparseCreateCsrilu02Info/g;
@@ -794,6 +795,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseDgthr\b/hipsparseDgthr/g;
     $ft{'library'} += s/\bcusparseDgthrz\b/hipsparseDgthrz/g;
     $ft{'library'} += s/\bcusparseDhybmv\b/hipsparseDhybmv/g;
+    $ft{'library'} += s/\bcusparseDnnz\b/hipsparseDnnz/g;
     $ft{'library'} += s/\bcusparseDroti\b/hipsparseDroti/g;
     $ft{'library'} += s/\bcusparseDsctr\b/hipsparseDsctr/g;
     $ft{'library'} += s/\bcusparseGetMatDiagType\b/hipsparseGetMatDiagType/g;
@@ -830,6 +832,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseSgthr\b/hipsparseSgthr/g;
     $ft{'library'} += s/\bcusparseSgthrz\b/hipsparseSgthrz/g;
     $ft{'library'} += s/\bcusparseShybmv\b/hipsparseShybmv/g;
+    $ft{'library'} += s/\bcusparseSnnz\b/hipsparseSnnz/g;
     $ft{'library'} += s/\bcusparseSroti\b/hipsparseSroti/g;
     $ft{'library'} += s/\bcusparseSsctr\b/hipsparseSsctr/g;
     $ft{'library'} += s/\bcusparseXbsrilu02_zeroPivot\b/hipsparseXbsrilu02_zeroPivot/g;
@@ -868,6 +871,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseZgthr\b/hipsparseZgthr/g;
     $ft{'library'} += s/\bcusparseZgthrz\b/hipsparseZgthrz/g;
     $ft{'library'} += s/\bcusparseZhybmv\b/hipsparseZhybmv/g;
+    $ft{'library'} += s/\bcusparseZnnz\b/hipsparseZnnz/g;
     $ft{'library'} += s/\bcusparseZsctr\b/hipsparseZsctr/g;
     $ft{'device_library'} += s/\bcurand\b/hiprand/g;
     $ft{'device_library'} += s/\bcurand_discrete\b/hiprand_discrete/g;
@@ -1124,6 +1128,7 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bcurandStatus_t\b/hiprandStatus_t/g;
     $ft{'type'} += s/\bcusparseAction_t\b/hipsparseAction_t/g;
     $ft{'type'} += s/\bcusparseDiagType_t\b/hipsparseDiagType_t/g;
+    $ft{'type'} += s/\bcusparseDirection_t\b/hipsparseDirection_t/g;
     $ft{'type'} += s/\bcusparseFillMode_t\b/hipsparseFillMode_t/g;
     $ft{'type'} += s/\bcusparseHandle_t\b/hipsparseHandle_t/g;
     $ft{'type'} += s/\bcusparseHybMat_t\b/hipsparseHybMat_t/g;
@@ -1392,6 +1397,8 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCUSPARSE_ACTION_SYMBOLIC\b/HIPSPARSE_ACTION_SYMBOLIC/g;
     $ft{'numeric_literal'} += s/\bCUSPARSE_DIAG_TYPE_NON_UNIT\b/HIPSPARSE_DIAG_TYPE_NON_UNIT/g;
     $ft{'numeric_literal'} += s/\bCUSPARSE_DIAG_TYPE_UNIT\b/HIPSPARSE_DIAG_TYPE_UNIT/g;
+    $ft{'numeric_literal'} += s/\bCUSPARSE_DIRECTION_COLUMN\b/HIPSPARSE_DIRECTION_COLUMN/g;
+    $ft{'numeric_literal'} += s/\bCUSPARSE_DIRECTION_ROW\b/HIPSPARSE_DIRECTION_ROW/g;
     $ft{'numeric_literal'} += s/\bCUSPARSE_FILL_MODE_LOWER\b/HIPSPARSE_FILL_MODE_LOWER/g;
     $ft{'numeric_literal'} += s/\bCUSPARSE_FILL_MODE_UPPER\b/HIPSPARSE_FILL_MODE_UPPER/g;
     $ft{'numeric_literal'} += s/\bCUSPARSE_HYB_PARTITION_AUTO\b/HIPSPARSE_HYB_PARTITION_AUTO/g;
