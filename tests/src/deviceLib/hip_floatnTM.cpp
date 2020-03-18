@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc HIPCC_OPTIONS -std=c++17
  * TEST: %t
  * HIT_END
  */
@@ -31,23 +31,27 @@ THE SOFTWARE.
 #include <random>
 #include "test_common.h"
 
+static std::random_device dev;
+static std::mt19937 rng(dev());
+
 template <typename T, typename M>
 inline constexpr int count() {
     return sizeof(T) / sizeof(M);
 }
 
+template <typename T, typename M>
+__device__ constexpr int countGPU() {
+    return sizeof(T) / sizeof(M);
+}
+
 inline int getRandomNumber(int min = 10, int max = 100) {
-    static std::random_device dev;
-    static std::mt19937 rng(dev());
-    static std::uniform_int_distribution<std::mt19937::result_type> gen(min, max);
+    std::uniform_int_distribution<std::mt19937::result_type> gen(min, max);
     return gen(rng);
 }
 
-inline float getRandomFloat() {
-    float a = getRandomNumber();
-    int b = getRandomNumber();
-    if (b) return a / b;
-    return a;
+inline float getRandomFloat(float min = 10, float max = 100) {
+    std::uniform_real_distribution<float> gen(min, max);
+    return gen(rng);
 }
 
 template <typename T, typename B>
@@ -84,13 +88,30 @@ void testOperations(T& a, T& b) {
     }
 }
 
-// a[i][j] += (a[i][j] * b[j][i]);
-template <typename T>
-void matAcc(T* a, T* b, int size) {
-    for (int i = 0; i < size; i++) {
-        a[i] += (a[i] * b[i]);
+template <typename T, typename B>
+__global__ void testOperationsGPU(T* d_a, T* d_b, int size) {
+    int id = threadIdx.x;
+    if (id > size) return;
+    T &a = d_a[id];
+    T &b = d_b[id];
+    a.x += b.x;
+    a.x++;
+    b.x++;
+    if constexpr (countGPU<T, B>() >= 2) {
+        a.y = b.x;
+        a.x = b.y;
+    }
+    if constexpr (countGPU<T, B>() >= 3) {
+        if (a.x > 0) b.x /= a.x;
+        a.x *= b.z;
+        a.y--;
+    }
+    if constexpr (countGPU<T, B>() >= 4) {
+        b.w = a.x;
+        a.w += (-b.y);
     }
 }
+
 
 template <typename T>
 void dcopy(T* a, T* b, int size) {
@@ -109,23 +130,17 @@ bool isEqual(T* a, T* b, int size) {
     return true;
 }
 
-template <typename T>
-__global__ void gMatAcc(T* a, T* b, int size) {
-    int i = threadIdx.x;
-
-    if (i >= size) return;
-    a[i] += (a[i] * b[i]);
-}
-
 // Main function that tests type
 // T = what you want to test
 // D = pack of 1 i.e. float1 int1
 template <typename T, typename D>
 void testType(int msize) {
-    T *fa, *fb, *fc;
+    T *fa, *fb, *fc, *h_fa, *h_fb;
     fa = new T[msize];
     fb = new T[msize];
     fc = new T[msize];
+    h_fa = new T[msize];
+    h_fb = new T[msize];
 
     T *d_fa, *d_fb;
 
@@ -137,7 +152,9 @@ void testType(int msize) {
 
     fillMatrix<T, D>(fa, msize);
     dcopy(fb, fa, msize);
-    for (int i = 0; i < msize; i++) testOperations<T, D>(fa[i], fb[i]);
+    dcopy(h_fa, fa, msize);
+    dcopy(h_fb, fa, msize);
+    for (int i = 0; i < msize; i++) testOperations<T, D>(h_fa[i], h_fb[i]);
 
     hipMalloc(&d_fa, sizeof(T) * msize);
     hipMalloc(&d_fb, sizeof(T) * msize);
@@ -145,20 +162,20 @@ void testType(int msize) {
     hipMemcpy(d_fa, fa, sizeof(T) * msize, hipMemcpyHostToDevice);
     hipMemcpy(d_fb, fb, sizeof(T) * msize, hipMemcpyHostToDevice);
 
-    matAcc<T>(fa, fb, msize);
-
-    hipLaunchKernelGGL(gMatAcc, 1, msize, 0, 0, d_fa, d_fb, msize);
+    hipLaunchKernelGGL(testOperationsGPU<T, D>, 1, msize, 0, 0, d_fa, d_fb, msize);
 
     hipMemcpy(fc, d_fa, sizeof(T) * msize, hipMemcpyDeviceToHost);
 
     bool pass = true;
-    if (!isEqual<T>(fa, fc, msize)) {
+    if (!isEqual<T>(h_fa, fc, msize)) {
         pass = false;
     }
 
     delete[] fa;
     delete[] fb;
     delete[] fc;
+    delete[] h_fa;
+    delete[] h_fb;
     hipFree(d_fa);
     hipFree(d_fb);
 
