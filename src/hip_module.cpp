@@ -426,7 +426,7 @@ void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size
     }
 }
 
-hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+static hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
    TlsData *tls, int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk)
 {
     using namespace hip_impl;
@@ -435,9 +435,17 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
     if (ctx == nullptr) {
         return hipErrorInvalidDevice;
     }
+    if (numBlocks == nullptr) {
+        return hipErrorInvalidValue;
+    }
 
     hipDeviceProp_t prop{};
     ihipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+
+    if (blockSize > prop.maxThreadsPerBlock) {
+        *numBlocks = 0;
+        return hipSuccess;
+    }
 
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
@@ -566,10 +574,15 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     // create a cooperative accelerated view for launching gws and main kernels
     hc::accelerator_view coopAV = acc.create_cooperative_view();
 
-    // wait for this stream to finish operations
-    stream->locked_wait();
-
     LockedAccessor_StreamCrit_t streamCrit(stream->criticalData(), false);
+
+    // the cooperative queue will wait until this stream completes its operations
+    hc::completion_future streamCF;
+    if (!streamCrit->_av.get_is_empty()) {
+        streamCF = streamCrit->_av.create_marker(hc::accelerator_scope);
+        coopAV.create_blocking_marker(streamCF, hc::accelerator_scope);
+    }
+
     streamCrit->_av.acquire_locked_hsa_queue();
     coopAV.acquire_locked_hsa_queue();
 
@@ -597,12 +610,18 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
             sharedMemBytes, stream, kernelParams, nullptr, nullptr,
             nullptr, 0, true, impCoopParams, &coopAV);
 
-    stream->criticalData().unlock();
-    stream->criticalData()._av.release_locked_hsa_queue();
-    coopAV.release_locked_hsa_queue();
 
-    // wait on the dispatch on the dedicated cooperative queue to finish
-    coopAV.wait(hc::hcWaitModeActive);
+    coopAV.release_locked_hsa_queue();
+    stream->criticalData()._av.release_locked_hsa_queue();
+
+    // this stream will wait until the cooperative queue completes its operations
+    hc::completion_future cooperativeCF;
+    if (!coopAV.get_is_empty()) {
+        cooperativeCF = coopAV.create_marker(hc::accelerator_scope);
+        streamCrit->_av.create_blocking_marker(cooperativeCF, hc::accelerator_scope);
+    }
+
+    stream->criticalData().unlock();
 
     return result;
 #else
@@ -739,8 +758,14 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
     // lock all streams before launching the blit kernels for initializing the GWS and main kernels to each device
     for (int i = 0; i < numDevices; ++i) {
-        launchParamsList[i].stream->locked_wait();
         LockedAccessor_StreamCrit_t streamCrit(launchParamsList[i].stream->criticalData(), false);
+
+        hc::completion_future streamCF;
+        if (!streamCrit->_av.get_is_empty()) {
+            streamCF = streamCrit->_av.create_marker(hc::accelerator_scope);
+            coopAVs[i].create_blocking_marker(streamCF, hc::accelerator_scope);
+        }
+
         streamCrit->_av.acquire_locked_hsa_queue();
         coopAVs[i].acquire_locked_hsa_queue();
     }
@@ -826,14 +851,17 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
     // unlock all streams
     for (int i = 0; i < numDevices; ++i) {
-        launchParamsList[i].stream->criticalData().unlock();
-        launchParamsList[i].stream->criticalData()._av.release_locked_hsa_queue();
         coopAVs[i].release_locked_hsa_queue();
-    }
+        launchParamsList[i].stream->criticalData()._av.release_locked_hsa_queue();
 
-    // wait on the dispatch on cooperative queues on each device to finish
-    for (int i = 0; i < numDevices; ++i) {
-        coopAVs[i].wait(hc::hcWaitModeActive);
+        hc::completion_future cooperativeCF;
+        if (!coopAVs[i].get_is_empty()) {
+            cooperativeCF = coopAVs[i].create_marker(hc::accelerator_scope);
+            launchParamsList[i].stream->criticalData()._av.create_blocking_marker(
+                    cooperativeCF, hc::accelerator_scope);
+        }
+
+        launchParamsList[i].stream->criticalData().unlock();
     }
 
     hip_internal::ihipHostFree(tls, mg_sync_ptr);
@@ -1239,7 +1267,7 @@ const amd_kernel_code_v3_t *header_v3(const ihipModuleSymbol_t& kd) {
   return reinterpret_cast<const amd_kernel_code_v3_t*>(kd._header);
 }
 
-hipFuncAttributes make_function_attributes(TlsData *tls, const ihipModuleSymbol_t& kd) {
+hipFuncAttributes make_function_attributes(TlsData *tls, ihipModuleSymbol_t& kd) {
     hipFuncAttributes r{};
 
     hipDeviceProp_t prop{};
@@ -1249,23 +1277,57 @@ hipFuncAttributes make_function_attributes(TlsData *tls, const ihipModuleSymbol_
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
     if (kd._is_code_object_v3) {
-        r.localSizeBytes = header_v3(kd)->private_segment_fixed_size;
-        r.sharedSizeBytes = header_v3(kd)->group_segment_fixed_size;
-        r.numRegs = ((header_v3(kd)->compute_pgm_rsrc1 & 0x3F) + 1) << 2;
         r.binaryVersion = 0; // FIXME: should it be the ISA version or code
                              //        object format version?
+        r.localSizeBytes = header_v3(kd)->private_segment_fixed_size;
+        r.sharedSizeBytes = header_v3(kd)->group_segment_fixed_size;
     } else {
         r.localSizeBytes = kd._header->workitem_private_segment_byte_size;
         r.sharedSizeBytes = kd._header->workgroup_group_segment_byte_size;
-        r.numRegs = kd._header->workitem_vgpr_count;
         r.binaryVersion =
             kd._header->amd_machine_version_major * 10 +
             kd._header->amd_machine_version_minor;
     }
     r.maxDynamicSharedSizeBytes = prop.sharedMemPerBlock - r.sharedSizeBytes;
-    r.maxThreadsPerBlock = r.numRegs ?
-        std::min(prop.maxThreadsPerBlock, prop.regsPerBlock / r.numRegs) :
-        prop.maxThreadsPerBlock;
+
+    size_t usedVGPRS = 0;
+    size_t usedSGPRS = 0;
+    size_t usedLDS = 0;
+    getGprsLdsUsage(&kd, &usedVGPRS, &usedSGPRS, &usedLDS);
+
+    r.numRegs = usedVGPRS;
+
+    size_t wavefrontSize = prop.warpSize;
+    size_t maxWavefrontsPerBlock = prop.maxThreadsPerBlock / wavefrontSize;
+    size_t maxWavefrontsPerCU = min(prop.maxThreadsPerMultiProcessor / wavefrontSize, 32);
+    const size_t numSIMD = 4;
+    const size_t maxWavesPerSimd = maxWavefrontsPerCU / numSIMD;
+    size_t maxWaves = 0;
+    for (int i = 0; i < maxWavefrontsPerBlock; i++) {
+        size_t wavefronts = i + 1;
+
+        if (usedVGPRS > 0) {
+            size_t availableVGPRs = (prop.regsPerBlock / wavefrontSize / numSIMD);
+            size_t vgprs_alu_occupancy = numSIMD * std::min(maxWavesPerSimd, availableVGPRs / usedVGPRS);
+
+            // Calculate blocks occupancy per CU based on VGPR usage
+            if (vgprs_alu_occupancy < wavefronts)
+                break;
+        }
+
+        if (usedSGPRS > 0) {
+            const size_t availableSGPRs = (prop.gcnArch < 800) ? 512 : 800;
+            size_t sgprs_alu_occupancy = numSIMD * ((usedSGPRS == 0) ? maxWavesPerSimd
+                : std::min(maxWavesPerSimd, availableSGPRs / usedSGPRS));
+
+            // Calculate blocks occupancy per CU based on SGPR usage
+            if (sgprs_alu_occupancy < wavefronts)
+                break;
+        }
+        maxWaves = wavefronts;
+    }
+
+    r.maxThreadsPerBlock = maxWaves * wavefrontSize;
     r.ptxVersion = prop.major * 10 + prop.minor; // HIP currently presents itself as PTX 3.0.
 
     return r;

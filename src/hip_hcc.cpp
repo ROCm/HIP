@@ -677,7 +677,7 @@ hsa_status_t get_pool_info(hsa_amd_memory_pool_t pool, void* data) {
             break;
         case HSA_REGION_SEGMENT_GROUP:
             err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE,
-                                               &(p_prop->sharedMemPerBlock));
+                                               &(p_prop->maxSharedMemoryPerMultiProcessor));
             break;
         default:
             break;
@@ -835,10 +835,8 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     hsa_region_t* am_region = static_cast<hsa_region_t*>(_acc.get_hsa_am_region());
     err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &prop->totalGlobalMem);
     DeviceErrorCheck(err);
-    // maxSharedMemoryPerMultiProcessor should be as the same as group memory size.
-    // Group memory will not be paged out, so, the physical memory size is the total shared memory
-    // size, and also equal to the group pool size.
-    prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
+    // Current GPUs allow a workgroup to use all of LDS in a CU, so these two are equal.
+    prop->sharedMemPerBlock = prop->maxSharedMemoryPerMultiProcessor;
 
     // Get Max memory clock frequency
     err =
@@ -897,9 +895,11 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
         prop->integrated = 1;
     }
 
-    // Enable the cooperative group for gfx9+
-    prop->cooperativeLaunch = (prop->gcnArch < 900) ? 0 : 1;
-    prop->cooperativeMultiDeviceLaunch = (prop->gcnArch < 900) ? 0 : 1;
+    // Enable the cooperative group for GPUs that support all the required features
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COOPERATIVE_QUEUES,
+          &prop->cooperativeLaunch);
+    DeviceErrorCheck(err);
+    prop->cooperativeMultiDeviceLaunch = prop->cooperativeLaunch;
 
     prop->cooperativeMultiDeviceUnmatchedFunc = prop->cooperativeMultiDeviceLaunch;
     prop->cooperativeMultiDeviceUnmatchedGridDim = prop->cooperativeMultiDeviceLaunch;
