@@ -1920,8 +1920,6 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
         auto device = ctx->getWriteableDevice();
         if (total) {
             *total = device->_props.totalGlobalMem;
-        } else {
-            e = hipErrorInvalidValue;
         }
 
         if (free) {
@@ -1944,8 +1942,6 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
 		} else {
  		    return ihipLogStatus(hipErrorInvalidValue);
 		}
-        } else {
-            e = hipErrorInvalidValue;
         }
 
     } else {
