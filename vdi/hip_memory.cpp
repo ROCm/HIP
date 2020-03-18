@@ -444,7 +444,7 @@ amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
   amd::Image* image = nullptr;
   if (buffer != nullptr) {
     switch (imageType) {
-    case CL_MEM_OBJECT_IMAGE1D:
+    case CL_MEM_OBJECT_IMAGE1D_BUFFER:
     case CL_MEM_OBJECT_IMAGE2D:
       image = new (context) amd::Image(*buffer->asBuffer(),
                                        imageType,

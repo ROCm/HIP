@@ -153,7 +153,7 @@ inline
 cl_mem_object_type getCLMemObjectType(const hipResourceType hipResType) {
   switch (hipResType) {
     case hipResourceTypeLinear:
-      return CL_MEM_OBJECT_IMAGE1D;
+      return CL_MEM_OBJECT_IMAGE1D_BUFFER;
     case hipResourceTypePitch2D:
       return CL_MEM_OBJECT_IMAGE2D;
     default:

@@ -30,6 +30,8 @@ extern "C" {
 
 __device__ float4::Native_vec_ __ockl_image_load_1D(unsigned int ADDRESS_SPACE_CONSTANT*i, int c);
 
+__device__ float4::Native_vec_ __ockl_image_load_1Db(unsigned int ADDRESS_SPACE_CONSTANT*i, int c);
+
 __device__ float4::Native_vec_ __ockl_image_load_1Da(unsigned int ADDRESS_SPACE_CONSTANT*i, int2::Native_vec_ c);
 
 __device__ float4::Native_vec_ __ockl_image_load_2D(unsigned int ADDRESS_SPACE_CONSTANT*i, int2::Native_vec_ c);
