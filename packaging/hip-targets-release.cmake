@@ -12,12 +12,7 @@ get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
 # Import target "hip::hip_hcc_static" for configuration "Release"
 set_property(TARGET hip::hip_hcc_static APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-if(HIP_COMPILER STREQUAL "clang")
-set_target_properties(hip::hip_hcc_static PROPERTIES
-  IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libhip_hcc_static.a"
-  )
-elseif(HIP_COMPILER STREQUAL "hcc")
+if(HIP_COMPILER STREQUAL "hcc" OR HIP_COMPILER STREQUAL "clang"))
 set_target_properties(hip::hip_hcc_static PROPERTIES
   IMPORTED_LINK_INTERFACE_LANGUAGES_RELEASE "CXX"
   IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE "hc_am"
@@ -35,12 +30,7 @@ list(APPEND _IMPORT_CHECK_FILES_FOR_hip::hip_hcc_static "${_IMPORT_PREFIX}/lib/l
 
 # Import target "hip::hip_hcc" for configuration "Release"
 set_property(TARGET hip::hip_hcc APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
-if(HIP_COMPILER STREQUAL "clang")
-set_target_properties(hip::hip_hcc PROPERTIES
-  IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libhip_hcc.so"
-  IMPORTED_SONAME_RELEASE "libhip_hcc.so"
-  )
-elseif(HIP_COMPILER STREQUAL "hcc")
+if(HIP_COMPILER STREQUAL "hcc" OR HIP_COMPILER STREQUAL "clang"))
 set_target_properties(hip::hip_hcc PROPERTIES
   IMPORTED_LINK_INTERFACE_LIBRARIES_RELEASE "hcc::hccrt;hcc::hc_am"
   IMPORTED_LOCATION_RELEASE "${_IMPORT_PREFIX}/lib/libhip_hcc.so"
