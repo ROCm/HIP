@@ -92,6 +92,10 @@ hipError_t hipModuleUnload(hipModule_t hmod)
 
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
 
+  if(!PlatformState::instance().unregisterFunc(hmod)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
+
   if(!ihipModuleUnregisterGlobal(hmod)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
@@ -122,7 +126,7 @@ extern hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
                                                 const std::vector<const char*>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
 
-bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* module) {
+inline bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* module) {
 
   std::vector<std::string> undef_vars;
   device::Program* dev_program
@@ -150,7 +154,34 @@ bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* module) {
   return true;
 }
 
-bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
+inline bool ihipModuleRegisterFunc(amd::Program* program, hipModule_t* module) {
+
+  std::vector<std::string> func_names;
+  device::Program* dev_program
+    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
+
+
+  // Get all the global func names from COMGR
+  if (!dev_program->getGlobalFuncFromCodeObj(&func_names)) {
+    return false;
+  }
+
+  for (auto it = func_names.begin(); it != func_names.end(); ++it) {
+    auto modules = new std::vector<std::pair<hipModule_t, bool> >(g_devices.size());
+    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+      modules->at(dev) = std::make_pair(*module, true);
+    }
+
+    // Create a new pointer, since the hostFunction* wont be available
+    // if device code not in the same file as host code.
+    PlatformState::DeviceFunction dfunc{*it, modules, std::vector<hipFunction_t>{ g_devices.size() }, true};
+    PlatformState::instance().registerFunction(new std::string(it->c_str()), dfunc);
+  }
+
+  return true;
+}
+
+inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
 
   size_t var_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
@@ -212,6 +243,10 @@ hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
     return hipErrorSharedObjectInitFailed;
   }
 
+  if (!ihipModuleRegisterFunc(program, module)) {
+    return hipErrorSharedObjectSymbolNotFound;
+  }
+
   return hipSuccess;
 }
 
@@ -219,21 +254,9 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
 {
   HIP_INIT_API(hipModuleGetFunction, hfunc, hmod, name);
 
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
-
-  const amd::Symbol* symbol = program->findSymbol(name);
-  if (!symbol) {
+  if (!PlatformState::instance().findModFunc(hfunc, hmod, name)) {
     HIP_RETURN(hipErrorNotFound);
   }
-
-  amd::Kernel* kernel = new amd::Kernel(*program, *symbol, name);
-  if (!kernel) {
-    HIP_RETURN(hipErrorOutOfMemory);
-  }
-
-  hip::Function* f = new hip::Function(kernel);
-  *hfunc = f->asHipFunction();
-
   HIP_RETURN(hipSuccess);
 }
 

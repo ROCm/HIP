@@ -188,6 +188,30 @@ void PlatformState::init()
   }
 }
 
+bool PlatformState::unregisterFunc(hipModule_t hmod) {
+  amd::ScopedLock lock(lock_);
+  auto it = functions_.begin();
+  while (it  != functions_.end()) {
+    DeviceFunction& dfunc = it->second;
+    if ((*dfunc.modules)[0].first == hmod) {
+      if (dfunc.dyn_mod) {
+        std::string *s = reinterpret_cast<std::string*>(const_cast<void*>(it->first));
+        delete s;
+      }
+      for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+        if (dfunc.functions[dev] != 0) {
+          hip::Function* f = reinterpret_cast<hip::Function*>(dfunc.functions[dev]);
+          delete f;
+        }
+      }
+      functions_.erase(it++);
+    } else {
+      ++it;
+    }
+  }
+  return true;
+}
+
 std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipModule_t hmod) {
   amd::ScopedLock lock(lock_);
   std::vector< std::pair<hipModule_t, bool> >* rmodules = nullptr;
@@ -292,6 +316,43 @@ bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** va
                                                     var_addr, var_size);
 }
 
+bool PlatformState::findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
+  amd::ScopedLock lock(lock_);
+  for (auto it = functions_.begin(); it != functions_.end(); ++it) {
+    PlatformState::DeviceFunction& devFunc = it->second;
+    if ((devFunc.deviceName == name) && (hmod == (*devFunc.modules)[ihipGetDevice()].first)) {
+      if (devFunc.functions[ihipGetDevice()] == 0) {
+        if(!createFunc(&devFunc.functions[ihipGetDevice()], hmod, name)) {
+          return false;
+        }
+      }
+      *hfunc = devFunc.functions[ihipGetDevice()];
+      return true;
+    }
+  }
+  return false;
+}
+
+bool PlatformState::createFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
+
+  const amd::Symbol* symbol = program->findSymbol(name);
+  if (!symbol) {
+    return false;
+  }
+
+  amd::Kernel* kernel = new amd::Kernel(*program, *symbol, name);
+  if (!kernel) {
+    return false;
+  }
+
+  hip::Function* f = new hip::Function(kernel);
+  *hfunc = f->asHipFunction();
+
+  return true;
+}
+
+
 hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
   amd::ScopedLock lock(lock_);
   const auto it = functions_.find(hostFunction);
@@ -308,7 +369,7 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
         (*devFunc.modules)[deviceId].second = true;
       }
       hipFunction_t function = nullptr;
-      if (hipSuccess == hipModuleGetFunction(&function, module, devFunc.deviceName.c_str()) &&
+      if (createFunc(&function, module, devFunc.deviceName.c_str()) &&
           function != nullptr) {
         devFunc.functions[deviceId] = function;
       }
@@ -435,7 +496,7 @@ extern "C" void __hipRegisterFunction(
   dim3*        gridDim,
   int*         wSize)
 {
-  PlatformState::DeviceFunction func{ std::string{deviceName}, modules, std::vector<hipFunction_t>{g_devices.size()}};
+  PlatformState::DeviceFunction func{ std::string{deviceName}, modules, std::vector<hipFunction_t>{g_devices.size()}, false};
   PlatformState::instance().registerFunction(hostFunction, func);
 //  for (size_t i = 0; i < g_devices.size(); ++i) {
 //    PlatformState::instance().getFunc(hostFunction, i);
