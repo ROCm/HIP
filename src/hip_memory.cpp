@@ -324,6 +324,9 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
     auto di{info(dst)};
 
     if (!is_large_BAR){
+       // Pointer info takes presidence over hipMemcpyKind
+       // if there is mismatch b/w Memcpy kind and dst/src pointer
+       // E.g. dst(host pointer),src(device pointer) and hipMemcpyKind set as hipMemcpyHostToDevice
        if (di.size == is_cpu_owned && si.size == is_cpu_owned)
           k = hipMemcpyHostToHost;
        else if (si.size == is_cpu_owned && di.size != is_cpu_owned)
