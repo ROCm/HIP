@@ -426,7 +426,7 @@ void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size
     }
 }
 
-hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+static hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
    TlsData *tls, uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
 {
     using namespace hip_impl;
@@ -435,9 +435,17 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
     if (ctx == nullptr) {
         return hipErrorInvalidDevice;
     }
+    if (numBlocks == nullptr) {
+        return hipErrorInvalidValue;
+    }
 
     hipDeviceProp_t prop{};
     ihipGetDeviceProperties(&prop, ihipGetTlsDefaultCtx()->getDevice()->_deviceId);
+
+    if (blockSize > prop.maxThreadsPerBlock) {
+        *numBlocks = 0;
+        return hipSuccess;
+    }
 
     prop.regsPerBlock = prop.regsPerBlock ? prop.regsPerBlock : 64 * 1024;
 
