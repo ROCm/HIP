@@ -50,8 +50,45 @@ set_and_check( hip_BIN_INSTALL_DIR "@PACKAGE_BIN_INSTALL_DIR@" )
 set_and_check(hip_HIPCC_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipcc")
 set_and_check(hip_HIPCONFIG_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipconfig")
 
+get_filename_component(HIP_CLANG_ROOT "${CMAKE_CXX_COMPILER}" PATH)
+get_filename_component(HIP_CLANG_ROOT "${HIP_CLANG_ROOT}" PATH)
+file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS ${HIP_CLANG_ROOT}/lib/clang/*/include)
+find_path(HIP_CLANG_INCLUDE_PATH stddef.h
+    HINTS
+        ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
+    NO_DEFAULT_PATH)
+
 find_dependency(amd_comgr)
+find_dependency(AMDDeviceLibs)
+set(AMDGPU_TARGETS "gfx900;gfx906" CACHE STRING "AMD GPU targets to compile for")
+set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU targets to compile for")
+
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
+
+set_property(TARGET hip::device APPEND PROPERTY
+  INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
+)
+
+set_property(TARGET hip::device APPEND PROPERTY
+  INTERFACE_LINK_LIBRARIES --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib --hip-link
+)
+
+set_property(TARGET hip::device APPEND PROPERTY
+  INTERFACE_INCLUDE_DIRECTORIES "${HIP_CLANG_INCLUDE_PATH}"
+)
+
+set_property(TARGET hip::device APPEND PROPERTY
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_CLANG_INCLUDE_PATH}"
+)
+
+foreach(GPU_TARGET ${GPU_TARGETS})
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_COMPILE_OPTIONS "--cuda-gpu-arch=${GPU_TARGET}"
+    )
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES "--cuda-gpu-arch=${GPU_TARGET}"
+    )
+endforeach()
 
 set( hip_LIBRARIES hip::host hip::device)
 set( hip_LIBRARY ${hip_LIBRARIES})
