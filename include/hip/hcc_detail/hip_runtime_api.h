@@ -3273,20 +3273,19 @@ hipError_t hipLaunchKernel(const void* function_address,
 } /* extern "c" */
 #endif
 
-#if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
-template <typename F>
-static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessor(
-    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk) {
-    return ::hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, (hipFunction_t)func, blockSize,
-                                                          dynSharedMemPerBlk);
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessor(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk);
 }
-template <typename F>
-static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
-    return ::hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-        numBlocks, (hipFunction_t)func, blockSize, dynSharedMemPerBlk, flags);
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
 }
-#endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
 
 #if USE_PROF_API
 #include <hip/hcc_detail/hip_prof_str.h>

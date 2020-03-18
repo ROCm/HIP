@@ -139,10 +139,10 @@ void hipLaunchKernelGGLImpl(
 } // Namespace hip_impl.
 
 
-template <typename F>
+template <class T>
 inline
 hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
-    F kernel, size_t dynSharedMemPerBlk, int blockSizeLimit) {
+    T kernel, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0) {
 
     using namespace hip_impl;
 
@@ -154,18 +154,20 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                       dynSharedMemPerBlk, blockSizeLimit);
 }
 
-template <typename F>
+template <class T>
 inline
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, F kernel,
-    int blockSize, size_t dynSharedMemPerBlk) {
+hipError_t hipOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+    T kernel, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0, unsigned int  flags = 0 ) {
 
     using namespace hip_impl;
 
     hip_impl::hip_init();
+    if(flags != hipOccupancyDefault) return hipErrorNotSupported;
     auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
                                                    target_agent(0));
 
-    return hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynSharedMemPerBlk);
+    return hipModuleOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
+                                      dynSharedMemPerBlk, blockSizeLimit);
 }
 
 template <typename... Args, typename F = void (*)(Args...)>
