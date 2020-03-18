@@ -12,9 +12,9 @@
 | enum         |***`cusparseAction_t`***                                       |                  |***`hipsparseAction_t`***                                   |
 |            0 |*`CUSPARSE_ACTION_SYMBOLIC`*                                   |                  |*`HIPSPARSE_ACTION_SYMBOLIC`*                               |
 |            1 |*`CUSPARSE_ACTION_NUMERIC`*                                    |                  |*`HIPSPARSE_ACTION_NUMERIC`*                                |
-| enum         |***`cusparseDirection_t`***                                    |                  |                                                            |
-|            0 |*`CUSPARSE_DIRECTION_ROW`*                                     |                  |                                                            |
-|            1 |*`CUSPARSE_DIRECTION_COLUMN`*                                  |                  |                                                            |
+| enum         |***`cusparseDirection_t`***                                    |                  |***`hipsparseDirection_t`***                                |
+|            0 |*`CUSPARSE_DIRECTION_ROW`*                                     |                  |*`HIPSPARSE_DIRECTION_ROW`*                                 |
+|            1 |*`CUSPARSE_DIRECTION_COLUMN`*                                  |                  |*`HIPSPARSE_DIRECTION_COLUMN`*                              |
 | enum         |***`cusparseHybPartition_t`***                                 |                  |***`hipsparseHybPartition_t`***                             |
 |            0 |*`CUSPARSE_HYB_PARTITION_AUTO`*                                |                  |*`HIPSPARSE_HYB_PARTITION_AUTO`*                            |
 |            1 |*`CUSPARSE_HYB_PARTITION_USER`*                                |                  |*`HIPSPARSE_HYB_PARTITION_USER`*                            |
@@ -662,10 +662,10 @@
 |`cusparseDhyb2dense`                                       |                                                 |
 |`cusparseChyb2dense`                                       |                                                 |
 |`cusparseZhyb2dense`                                       |                                                 |
-|`cusparseSnnz`                                             |                                                 |
-|`cusparseDnnz`                                             |                                                 |
-|`cusparseCnnz`                                             |                                                 |
-|`cusparseZnnz`                                             |                                                 |
+|`cusparseSnnz`                                             |`cusparseSnnz`                                   |
+|`cusparseDnnz`                                             |`cusparseDnnz`                                   |
+|`cusparseCnnz`                                             |`cusparseCnnz`                                   |
+|`cusparseZnnz`                                             |`cusparseZnnz`                                   |
 |`cusparseCreateIdentityPermutation`                        |`hipsparseCreateIdentityPermutation`             |
 |`cusparseXcoosort_bufferSizeExt`                           |`hipsparseXcoosort_bufferSizeExt`                |
 |`cusparseXcoosortByRow`                                    |`hipsparseXcoosortByRow`                         |
