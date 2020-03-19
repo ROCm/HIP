@@ -161,8 +161,9 @@ void testType(int msize) {
 
     hipMemcpy(d_fa, fa, sizeof(T) * msize, hipMemcpyHostToDevice);
     hipMemcpy(d_fb, fb, sizeof(T) * msize, hipMemcpyHostToDevice);
+    auto kernel = testOperationsGPU<T, D>;
 
-    hipLaunchKernelGGL(testOperationsGPU<T, D>, 1, msize, 0, 0, d_fa, d_fb, msize);
+    hipLaunchKernelGGL(kernel, 1, msize, 0, 0, d_fa, d_fb, msize);
 
     hipMemcpy(fc, d_fa, sizeof(T) * msize, hipMemcpyDeviceToHost);
 
