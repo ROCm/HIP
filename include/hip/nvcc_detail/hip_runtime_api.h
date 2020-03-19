@@ -1337,7 +1337,7 @@ inline static hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, 
 inline static hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
                                              int blockSizeLimit, unsigned int  flags){
-    return hipCUResultTohipError(cuOccupancyMaxPotentialBlockSize(gridSize, blockSize, f, NULL,
+    return hipCUResultTohipError(cuOccupancyMaxPotentialBlockSizeWithFlags(gridSize, blockSize, f, NULL,
                                  dynSharedMemPerBlk, blockSizeLimit, flags));
 }
 
