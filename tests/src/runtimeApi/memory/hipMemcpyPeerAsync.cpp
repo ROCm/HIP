@@ -60,16 +60,16 @@ int main() {
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
-        HIPCHECK(hipStreamCreate(&s));
         HIPCHECK(hipSetDevice(1));
+        HIPCHECK(hipStreamCreate(&s));
         HIPCHECK(hipMemcpyPeerAsync(X_d, 1, A_d, 0, Nbytes, s));
         HIPCHECK(hipMemcpyPeerAsync(Y_d, 1, B_d, 0, Nbytes, s));
 
         hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                         static_cast<const int*>(X_d), static_cast<const int*>(Y_d), Z_d, N);
         HIPCHECK(hipMemcpy(C_h, Z_d, Nbytes, hipMemcpyDeviceToHost));
-        HIPCHECK(hipDeviceSynchronize());
         HIPCHECK(hipStreamSynchronize(s));
+        HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
 
         HIPCHECK(hipStreamDestroy(s));
