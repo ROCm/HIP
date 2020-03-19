@@ -251,6 +251,11 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
   amd::HostQueue* hostQueue = reinterpret_cast<hip::Stream*>
                               (stream)->asHostQueue();
   amd::Command* command = hostQueue->getLastQueuedCommand(true);
+  if (command == nullptr) {
+    amd::Command::EventWaitList eventWaitList;
+    command = new amd::Marker(*hostQueue, false, eventWaitList);
+    command->enqueue();
+  }
   amd::Event& event = command->event();
   StreamCallback* cbo = new StreamCallback(stream, callback, userData, command);
 
