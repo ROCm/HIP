@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc HIPCC_OPTIONS -std=c++17
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc HIPCC_OPTIONS -std=c++14
  * TEST: %t
  * HIT_END
  */
@@ -42,11 +42,6 @@ inline constexpr int count() {
 template <typename T, typename M>
 __device__ constexpr int countGPU() {
     return sizeof(T) / sizeof(M);
-}
-
-inline int getRandomNumber(int min = 10, int max = 100) {
-    std::uniform_int_distribution<std::mt19937::result_type> gen(min, max);
-    return gen(rng);
 }
 
 inline float getRandomFloat(float min = 10, float max = 100) {
@@ -161,8 +156,8 @@ void testType(int msize) {
 
     hipMemcpy(d_fa, fa, sizeof(T) * msize, hipMemcpyHostToDevice);
     hipMemcpy(d_fb, fb, sizeof(T) * msize, hipMemcpyHostToDevice);
-    auto kernel = testOperationsGPU<T, D>;
 
+    auto kernel = testOperationsGPU<T, D>;
     hipLaunchKernelGGL(kernel, 1, msize, 0, 0, d_fa, d_fb, msize);
 
     hipMemcpy(fc, d_fa, sizeof(T) * msize, hipMemcpyDeviceToHost);
