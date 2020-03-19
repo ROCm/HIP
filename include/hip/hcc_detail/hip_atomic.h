@@ -73,6 +73,14 @@ float atomicAdd(float* address, float val)
 
     return __uint_as_float(r);
 }
+
+__device__
+inline
+void atomicAddNoRet(float* address, float val)
+{
+    __ockl_global_atomic_add_f32(address, val);
+}
+
 __device__
 inline
 double atomicAdd(double* address, double val)
