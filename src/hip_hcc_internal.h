@@ -655,19 +655,6 @@ class ihipStream_t {
 
 
 //----
-// Internal structure for stream callback handler
-class ihipStreamCallback_t {
-   public:
-    ihipStreamCallback_t(hipStream_t stream, hipStreamCallback_t callback, void* userData)
-        : _stream(stream), _callback(callback), _userData(userData) {
-    };
-    hipStream_t _stream;
-    hipStreamCallback_t _callback;
-    void* _userData;
-};
-
-
-//----
 // Internal event structure:
 enum hipEventStatus_t {
     hipEventStatusUnitialized = 0,  // event is uninitialized, must be "Created" before use.
@@ -980,7 +967,6 @@ hipError_t hipModuleGetFunctionEx(hipFunction_t* hfunc, hipModule_t hmod,
 
 hipStream_t ihipSyncAndResolveStream(hipStream_t, bool lockAcquired = 0);
 hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream);
-void ihipStreamCallbackHandler(ihipStreamCallback_t* cb);
 
 // Stream printf functions:
 inline std::ostream& operator<<(std::ostream& os, const ihipStream_t& s) {
