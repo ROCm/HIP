@@ -34,13 +34,19 @@ THE SOFTWARE.
 #include <hip/hcc_detail/device_library_decls.h>
 #include <hip/hcc_detail/llvm_intrinsics.h>
 
-#if __HIP_CLANG_ONLY__
-#if __HIP_VDI__
+#if __HIP_CLANG_ONLY__ && __HIP_VDI__
 extern "C" __device__ int printf(const char *fmt, ...);
 #else
+#if HC_FEATURE_PRINTF
+template <typename... All>
+static inline __device__ void printf(const char* format, All... all) {
+    hc::printf(format, all...);
+}
+#else
+template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
-#endif
-#endif
+#endif // HC_FEATURE_PRINTF
+#endif // __HIP_CLANG_ONLY__ && __HIP_VDI__
 
 /*
 Integer Intrinsics
@@ -122,7 +128,7 @@ __device__ static int __mul24(int x, int y);
 __device__ static long long int __mul64hi(long long int x, long long int y);
 __device__ static int __mulhi(int x, int y);
 __device__ static int __rhadd(int x, int y);
-__device__ static unsigned int __sad(int x, int y, int z);
+__device__ static unsigned int __sad(int x, int y,unsigned int z);
 __device__ static unsigned int __uhadd(unsigned int x, unsigned int y);
 __device__ static int __umul24(unsigned int x, unsigned int y);
 __device__ static unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
@@ -193,7 +199,7 @@ __device__ static inline int __rhadd(int x, int y) {
     int value = z & 0x7FFFFFFF;
     return ((value) >> 1 || sign);
 }
-__device__ static inline unsigned int __sad(int x, int y, int z) {
+__device__ static inline unsigned int __sad(int x, int y, unsigned int z) {
     return x > y ? x - y + z : y - x + z;
 }
 __device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y) {
@@ -557,7 +563,7 @@ long __shfl_xor(long var, int lane_mask, int width = warpSize)
     return tmp1;
     #else
     static_assert(sizeof(long) == sizeof(int), "");
-    return static_cast<long>(__shfl_down(static_cast<int>(var), lane_delta, width));
+    return static_cast<long>(__shfl_xor(static_cast<int>(var), lane_mask, width));
     #endif
 }
 __device__

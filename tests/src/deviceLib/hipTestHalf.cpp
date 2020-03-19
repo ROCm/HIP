@@ -96,6 +96,18 @@ void kernel_hisinf(__half* input, int* output) {
   output[tx] = __hisinf(input[tx]);
 }
 
+__global__ void testHalfAbs(float* p) {
+    auto a = __float2half(*p);
+    a = __habs(a);
+    *p = __half2float(a);
+}
+
+__global__ void testHalf2Abs(float2* p) {
+    auto a = __float22half2_rn(*p);
+    a = __habs2(a);
+    *p = __half22float2(a);
+}
+
 #endif
 
 
@@ -237,6 +249,31 @@ void checkFunctional() {
   return;
 }
 
+void checkHalfAbs() {
+    {
+        float *p;
+        hipMalloc(&p, sizeof(float));
+        float pp = -2.1f;
+        hipMemcpy(p, &pp, sizeof(float), hipMemcpyDefault);
+        hipLaunchKernelGGL(testHalfAbs, 1, 1, 0, 0, p);
+        hipMemcpy(&pp, p, sizeof(float), hipMemcpyDefault);
+        hipFree(p);
+        if(pp < 0.0f) { failed("Half Abs failed"); }
+    }
+    {
+        float2 *p;
+        hipMalloc(&p, sizeof(float2));
+        float2 pp;
+        pp.x = -2.1f;
+        pp.y = -1.1f;
+        hipMemcpy(p, &pp, sizeof(float2), hipMemcpyDefault);
+        hipLaunchKernelGGL(testHalf2Abs, 1, 1, 0, 0, p);
+        hipMemcpy(&pp, p, sizeof(float2), hipMemcpyDefault);
+        hipFree(p);
+        if(pp.x < 0.0f || pp.y < 0.0f) { failed("Half2 Abs Test Failed"); }
+    }
+}
+
 int main() {
   bool* result{nullptr};
   hipMemAllocHost((void**)&result, sizeof(result));
@@ -259,6 +296,8 @@ int main() {
 
   // run some functional checks
   checkFunctional();
+
+  checkHalfAbs();
 
   passed();
 }
