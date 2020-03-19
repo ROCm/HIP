@@ -382,6 +382,28 @@ hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
   HIP_RETURN(hipSuccess);
 }
 
+inline bool ihipGetTextureAlignmentOffset(size_t* offset,
+                                          const void* devPtr) {
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
+  const device::Info& info = device->info();
+
+  const char* alignedDevPtr = amd::alignUp(static_cast<const char*>(devPtr), info.imageBaseAddressAlignment_);
+  const size_t alignedOffset = alignedDevPtr - static_cast<const char*>(devPtr);
+
+  // If the device memory pointer was returned from hipMalloc(),
+  // the offset is guaranteed to be 0 and NULL may be passed as the offset parameter.
+  if ((alignedOffset != 0) &&
+      (offset == nullptr)) {
+    return false;
+  }
+
+  if (offset != nullptr) {
+    *offset = alignedOffset;
+  }
+
+  return true;
+}
+
 hipError_t ihipBindTexture(size_t* offset,
                            const textureReference* texref,
                            const void* devPtr,
@@ -398,18 +420,18 @@ hipError_t ihipBindTexture(size_t* offset,
   // No need to check for errors.
   ihipDestroyTextureObject(texref->textureObject);
 
-  // If the device memory pointer was returned from hipMalloc(),
-  // the offset is guaranteed to be 0 and NULL may be passed as the offset parameter.
-  // TODO enforce alignment on devPtr.
-  if (offset != nullptr) {
-    *offset = 0;
-  }
-
   hipResourceDesc resDesc = {};
   resDesc.resType = hipResourceTypeLinear;
   resDesc.res.linear.devPtr = const_cast<void*>(devPtr);
   resDesc.res.linear.desc = *desc;
   resDesc.res.linear.sizeInBytes = size;
+
+  if (ihipGetTextureAlignmentOffset(offset, devPtr)) {
+    // Align the user ptr to HW requirments.
+    resDesc.res.linear.devPtr = static_cast<char*>(const_cast<void*>(devPtr)) - *offset;
+  } else {
+    return hipErrorInvalidValue;
+  }
 
   hipTextureDesc texDesc = hip::getTextureDesc(texref);
 
@@ -434,13 +456,6 @@ hipError_t ihipBindTexture2D(size_t* offset,
   // No need to check for errors.
   ihipDestroyTextureObject(texref->textureObject);
 
-  // If the device memory pointer was returned from hipMalloc(),
-  // the offset is guaranteed to be 0 and NULL may be passed as the offset parameter.
-  // TODO enforce alignment on devPtr.
-  if (offset != nullptr) {
-    *offset = 0;
-  }
-
   hipResourceDesc resDesc = {};
   resDesc.resType = hipResourceTypePitch2D;
   resDesc.res.pitch2D.devPtr = const_cast<void*>(devPtr);
@@ -448,6 +463,13 @@ hipError_t ihipBindTexture2D(size_t* offset,
   resDesc.res.pitch2D.width = width;
   resDesc.res.pitch2D.height = height;
   resDesc.res.pitch2D.pitchInBytes = pitch;
+
+  if (ihipGetTextureAlignmentOffset(offset, devPtr)) {
+    // Align the user ptr to HW requirments.
+    resDesc.res.pitch2D.devPtr = static_cast<char*>(const_cast<void*>(devPtr)) - *offset;
+  } else {
+    return hipErrorInvalidValue;
+  }
 
   hipTextureDesc texDesc = hip::getTextureDesc(texref);
 
@@ -798,18 +820,18 @@ hipError_t hipTexRefSetAddress(size_t* ByteOffset,
   // No need to check for errors.
   ihipDestroyTextureObject(texRef->textureObject);
 
-  // If the device memory pointer was returned from hipMemAlloc(),
-  // the offset is guaranteed to be 0 and NULL may be passed as the ByteOffset parameter.
-  // TODO enforce alignment on devPtr.
-  if (ByteOffset != nullptr) {
-    *ByteOffset = 0;
-  }
-
   hipResourceDesc resDesc = {};
   resDesc.resType = hipResourceTypeLinear;
   resDesc.res.linear.devPtr = dptr;
   resDesc.res.linear.desc = hip::getChannelFormatDesc(texRef->numChannels, texRef->format);
   resDesc.res.linear.sizeInBytes = bytes;
+
+  if (ihipGetTextureAlignmentOffset(ByteOffset, dptr)) {
+    // Align the user ptr to HW requirments.
+    resDesc.res.linear.devPtr = static_cast<char*>(dptr) - *ByteOffset;
+  } else {
+    return HIP_RETURN(hipErrorInvalidValue);
+  }
 
   hipTextureDesc texDesc = hip::getTextureDesc(texRef);
 
