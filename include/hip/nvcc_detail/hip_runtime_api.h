@@ -1308,6 +1308,39 @@ inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(i
                                                       blockSize, dynamicSMemSize, flags));
 }
 
+inline static hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, 
+                                                                 hipFunction_t f,
+                                                                 int  blockSize,
+                                                                 size_t dynamicSMemSize ){
+    return hipCUResultTohipError(cuOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f,
+                                                                   blockSize, dynamicSMemSize));
+}
+
+inline static hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
+                                                                          hipFunction_t f,
+                                                                          int  blockSize,
+                                                                          size_t dynamicSMemSize,
+                                                                          unsigned int  flags ) {
+    return hipCUResultTohipError(cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(numBlocks,f,
+                                                                blockSize, dynamicSMemSize, flags));
+}
+
+//TODO - Match CUoccupancyB2DSize
+inline static hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit){
+    return hipCUResultTohipError(cuOccupancyMaxPotentialBlockSize(gridSize, blockSize, f, NULL,
+                                 dynSharedMemPerBlk, blockSizeLimit));
+}
+
+//TODO - Match CUoccupancyB2DSize
+inline static hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit, unsigned int  flags){
+    return hipCUResultTohipError(cuOccupancyMaxPotentialBlockSize(gridSize, blockSize, f, NULL,
+                                 dynSharedMemPerBlk, blockSizeLimit, flags));
+}
+
 inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
     struct cudaPointerAttributes cPA;
     hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));

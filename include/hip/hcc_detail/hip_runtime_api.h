@@ -2939,6 +2939,8 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
+
+//TODO - Match CUoccupancyB2DSize
 hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
                                              int blockSizeLimit);
@@ -2955,6 +2957,7 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
+//TODO - Match CUoccupancyB2DSize
 hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
                                              int blockSizeLimit, unsigned int  flags);
