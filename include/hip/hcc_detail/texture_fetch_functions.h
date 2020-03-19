@@ -200,7 +200,7 @@ static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> tex1DLod(texture<
 }
 
 template <typename T, hipTextureReadMode readMode>
-static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> tex2DLod(texture<T, hipTextureType1D, readMode> t, float x, float y, float level)
+static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> tex2DLod(texture<T, hipTextureType2D, readMode> t, float x, float y, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     auto tmp = __ockl_image_sample_lod_2D(i, s, float2(x, y).data, level);
@@ -240,7 +240,7 @@ static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> texCubemapLod(tex
 }
 
 template <typename T, hipTextureReadMode readMode>
-static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> texCubemapLayered(texture<T, hipTextureTypeCubemap, readMode> t, float x, float y, float z, int layer)
+static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> texCubemapLayered(texture<T, hipTextureTypeCubemapLayered, readMode> t, float x, float y, float z, int layer)
 {
     TEXTURE_PARAMETERS_INIT;
     auto tmp = __ockl_image_sample_CMa(i, s, float4(x, y, z, layer).data);
@@ -248,7 +248,7 @@ static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> texCubemapLayered
 }
 
 template <typename T, hipTextureReadMode readMode>
-static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> texCubemapLayeredLod(texture<T, hipTextureTypeCubemap, readMode> t, float x, float y, float z, int layer, float level)
+static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> texCubemapLayeredLod(texture<T, hipTextureTypeCubemapLayered, readMode> t, float x, float y, float z, int layer, float level)
 {
     TEXTURE_PARAMETERS_INIT;
     auto tmp = __ockl_image_sample_lod_CMa(i, s, float4(x, y, z, layer).data, level);
@@ -300,7 +300,7 @@ static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> tex1DLayeredGrad(
 }
 
 template <typename T, hipTextureReadMode readMode>
-static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> tex2DLayeredGrad(texture<T, hipTextureType2DLayered, hipReadModeElementType> t, float x, float y, int layer, float2 dPdx, float2 dPdy)
+static __forceinline__ __device__ __hip_tex_ret_t<T, readMode> tex2DLayeredGrad(texture<T, hipTextureType2DLayered, readMode> t, float x, float y, int layer, float2 dPdx, float2 dPdy)
 {
     TEXTURE_PARAMETERS_INIT;
     auto tmp = __ockl_image_sample_grad_2Da(i, s, float4(x, y, layer, 0.0f).data, float2(dPdx.x, dPdx.y).data, float2(dPdy.x, dPdy.y).data);
