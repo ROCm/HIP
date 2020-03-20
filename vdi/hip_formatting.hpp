@@ -614,26 +614,39 @@ inline std::ostream& operator<<(std::ostream& os, const hipResourceDesc& s) {
   os << '{'
   << s.resType
   << ','
-  << s.res.array.array
-  << ','
-  << s.res.mipmap.mipmap
-  << ','
-  << s.res.linear.devPtr
-  << ','
-  << s.res.linear.desc
-  << ','
-  << s.res.linear.sizeInBytes
-  << ','
-  << s.res.pitch2D.devPtr
-  << ','
-  << s.res.pitch2D.desc
-  << ','
-  << s.res.pitch2D.width
-  << ','
-  << s.res.pitch2D.height
-  << ','
-  << s.res.pitch2D.pitchInBytes
-  << '}';
+  << '{';
+
+  switch (s.resType) {
+  case hipResourceTypeLinear:
+    os << s.res.linear.devPtr
+    << ','
+    << s.res.linear.desc
+    << ','
+    << s.res.linear.sizeInBytes;
+    break;
+  case hipResourceTypePitch2D:
+    os << s.res.pitch2D.devPtr
+    << ','
+    << s.res.pitch2D.desc
+    << ','
+    << s.res.pitch2D.width
+    << ','
+    << s.res.pitch2D.height
+    << ','
+    << s.res.pitch2D.pitchInBytes;
+    break;
+  case hipResourceTypeArray:
+    os << s.res.array.array;
+    break;
+  case hipResourceTypeMipmappedArray:
+    os <<s.res.mipmap.mipmap;
+    break;
+  default:
+    break;
+  }
+
+  os << '}';
+
   return os;
 }
 
