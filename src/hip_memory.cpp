@@ -309,10 +309,11 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
     if (di.size == is_cpu_owned) return d2h_copy(dst, src, n, si);
     if (si.size == is_cpu_owned) return h2d_copy(dst, src, n, di);
 
-    throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
-                                                      nullptr,
-                                                      di.agentBaseAddress),
-                          __FILE__, __func__, __LINE__);
+    hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                   nullptr, di.agentBaseAddress);
+    if (res != HSA_STATUS_SUCCESS){
+        throw ihipException(hipErrorPeerAccessUnsupported);
+    }
 
     return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
 }
@@ -327,10 +328,11 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
     case hipMemcpyDeviceToDevice: {
         const auto di{info(dst)};
         const auto si{info(src)};
-        throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
-                                                          nullptr,
-                                                          di.agentBaseAddress),
-                              __FILE__, __func__, __LINE__);
+        hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                       nullptr, di.agentBaseAddress);
+        if (res != HSA_STATUS_SUCCESS){
+           throw ihipException(hipErrorPeerAccessUnsupported);
+        }
         return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
     }
     default: return generic_copy(dst, src, n, info(dst), info(src));
@@ -350,6 +352,12 @@ hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes,
         stream->locked_copyAsync(dst, src, sizeBytes, kind);
     }
     catch (const ihipException& ex) {
+        // If devices do not have access then fallback mechanism will be used
+        // copy will be slower
+        if (ex._code == hipErrorPeerAccessUnsupported){
+            stream->locked_copySync(dst, src, sizeBytes, kind);
+            return hipSuccess;
+        }
         return ex._code;
     }
     catch (const std::exception& ex) {
