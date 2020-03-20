@@ -57,7 +57,7 @@ void syncStreams() {
 }
 
 Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p, unsigned int f) :
-  queue(nullptr), device(dev), priority(p), flags(f) {}
+  queue(nullptr), lock("Stream Callback lock"), device(dev), priority(p), flags(f) {}
 
 void Stream::create() {
   cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
@@ -90,10 +90,12 @@ void Stream::finish() {
 };
 
 void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data) {
-
   hipError_t status = hipSuccess;
   StreamCallback* cbo = reinterpret_cast<StreamCallback*>(user_data);
-  cbo->callBack_(cbo->stream_, status, cbo->userData_);
+  {
+    amd::ScopedLock lock(reinterpret_cast<hip::Stream*>(cbo->stream_)->lock);
+    cbo->callBack_(cbo->stream_, status, cbo->userData_);
+  }
   cbo->command_->release();
   delete cbo;
 }
