@@ -355,8 +355,17 @@ public:
 
             const auto it1 = get_symbol_addresses().find(x);
             if (it1 == get_symbol_addresses().cend()) {
-                hip_throw(std::runtime_error{
-                    "Global symbol: " + x + " is undefined."});
+                // Ignore undefined symbols due to Coordinates<hip_impl::*>
+                if (x.find("_ZN11CoordinatesIN8hip_impl") == 0) {
+                    hsa_executable_agent_global_variable_define(
+                        executable, agent, x.c_str(), 
+                        reinterpret_cast<void*>((uint64_t) 0 - 1));
+                    continue;
+                }
+                else {
+                    hip_throw(std::runtime_error{
+                        "Global symbol: " + x + " is undefined."});
+                }
             }
 
             hsa_status_t status;
