@@ -64,6 +64,7 @@ struct __HIP_TEXTURE_ATTRIB texture : public textureReference {
         addressMode[2] = aMode;
         channelDesc = hipCreateChannelDesc<T>();
         sRGB = 0;
+        textureObject = nullptr;
     }
 
     texture(int norm, enum hipTextureFilterMode fMode, enum hipTextureAddressMode aMode,
@@ -76,6 +77,7 @@ struct __HIP_TEXTURE_ATTRIB texture : public textureReference {
         addressMode[2] = aMode;
         channelDesc = desc;
         sRGB = 0;
+        textureObject = nullptr;
     }
 };
 
