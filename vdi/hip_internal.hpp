@@ -129,7 +129,7 @@ namespace hip {
 
   struct Stream {
     amd::HostQueue* queue;
-
+    amd::Monitor lock;
     Device* device;
     amd::CommandQueue::Priority priority;
     unsigned int flags;
