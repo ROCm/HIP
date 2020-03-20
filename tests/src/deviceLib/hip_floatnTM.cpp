@@ -35,12 +35,7 @@ static std::random_device dev;
 static std::mt19937 rng(dev());
 
 template <typename T, typename M>
-inline constexpr int count() {
-    return sizeof(T) / sizeof(M);
-}
-
-template <typename T, typename M>
-__device__ constexpr int countGPU() {
+__host__ __device__ inline constexpr int count() {
     return sizeof(T) / sizeof(M);
 }
 
@@ -64,7 +59,7 @@ void fillMatrix(T* a, int size) {
 
 // Test operations
 template <typename T, typename B>
-void testOperations(T& a, T& b) {
+__host__ __device__ void testOperations(T& a, T& b) {
     a.x += b.x;
     a.x++;
     b.x++;
@@ -89,22 +84,8 @@ __global__ void testOperationsGPU(T* d_a, T* d_b, int size) {
     if (id > size) return;
     T &a = d_a[id];
     T &b = d_b[id];
-    a.x += b.x;
-    a.x++;
-    b.x++;
-    if constexpr (countGPU<T, B>() >= 2) {
-        a.y = b.x;
-        a.x = b.y;
-    }
-    if constexpr (countGPU<T, B>() >= 3) {
-        if (a.x > 0) b.x /= a.x;
-        a.x *= b.z;
-        a.y--;
-    }
-    if constexpr (countGPU<T, B>() >= 4) {
-        b.w = a.x;
-        a.w += (-b.y);
-    }
+
+    testOperations<T, B>(a, b);
 }
 
 
