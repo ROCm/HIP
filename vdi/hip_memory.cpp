@@ -886,15 +886,11 @@ hipError_t ihipMemcpyAtoD(hipArray* srcArray,
                           void* dstDevice,
                           amd::Coord3D srcOrigin,
                           amd::Coord3D dstOrigin,
-                          amd::Coord3D region,
+                          amd::Coord3D copyRegion,
                           size_t dstRowPitch,
                           size_t dstSlicePitch,
                           hipStream_t stream,
                           bool isAsync = false) {
-  // TODO VDI doesn't support 2D/3D image to buffer copy.
-  (void)dstRowPitch;
-  (void)dstSlicePitch;
-
   cl_mem srcMemObj = reinterpret_cast<cl_mem>(srcArray->data);
   if (is_valid(srcMemObj) == false) {
     return hipErrorInvalidValue;
@@ -905,7 +901,19 @@ hipError_t ihipMemcpyAtoD(hipArray* srcArray,
   amd::Memory* dstMemory = getMemoryObject(dstDevice, offset);
   assert(offset != 0);
 
-  if (!srcImage->validateRegion(srcOrigin, region)) {
+  amd::BufferRect srcRect;
+  if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcImage->getRowPitch(), srcImage->getSlicePitch())) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::BufferRect dstRect;
+  if (!dstRect.create(static_cast<size_t*>(dstOrigin), static_cast<size_t*>(copyRegion), dstRowPitch, dstSlicePitch)) {
+    return hipErrorInvalidValue;
+  }
+
+  const size_t copySizeInBytes = copyRegion[0] * copyRegion[1] * copyRegion[2] * srcImage->getImageFormat().getElementSize();
+  if (!srcImage->validateRegion(srcOrigin, copyRegion) ||
+      !dstMemory->validateRegion(dstOrigin, {copySizeInBytes, 0, 0})) {
     return hipErrorInvalidValue;
   }
 
@@ -916,7 +924,9 @@ hipError_t ihipMemcpyAtoD(hipArray* srcArray,
                                                                *dstMemory,
                                                                srcOrigin,
                                                                dstOrigin,
-                                                               region);
+                                                               copyRegion,
+                                                               srcRect,
+                                                               dstRect);
 
   if (command == nullptr) {
     return hipErrorOutOfMemory;
@@ -935,15 +945,11 @@ hipError_t ihipMemcpyDtoA(void* srcDevice,
                           hipArray* dstArray,
                           amd::Coord3D srcOrigin,
                           amd::Coord3D dstOrigin,
-                          amd::Coord3D region,
+                          amd::Coord3D copyRegion,
                           size_t srcRowPitch,
                           size_t srcSlicePitch,
                           hipStream_t stream,
                           bool isAsync = false) {
-  // TODO VDI doesn't support 2D/3D buffer to image copy.
-  (void)srcRowPitch;
-  (void)srcSlicePitch;
-
   cl_mem dstMemObj = reinterpret_cast<cl_mem>(dstArray->data);
   if (is_valid(dstMemObj) == false) {
     return hipErrorInvalidValue;
@@ -954,9 +960,19 @@ hipError_t ihipMemcpyDtoA(void* srcDevice,
   assert(offset != 0);
   amd::Image* dstImage = as_amd(dstMemObj)->asImage();
 
-  const size_t copySizeInBytes = region[0] * region[1] * region[2] * dstImage->getImageFormat().getElementSize();
+  amd::BufferRect srcRect;
+  if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::BufferRect dstRect;
+  if (!dstRect.create(static_cast<size_t*>(dstOrigin), static_cast<size_t*>(copyRegion), dstImage->getRowPitch(), dstImage->getSlicePitch())) {
+    return hipErrorInvalidValue;
+  }
+
+  const size_t copySizeInBytes = copyRegion[0] * copyRegion[1] * copyRegion[2] * dstImage->getImageFormat().getElementSize();
   if (!srcMemory->validateRegion(srcOrigin, {copySizeInBytes, 0, 0}) ||
-      !dstImage->validateRegion(dstOrigin, region)) {
+      !dstImage->validateRegion(dstOrigin, copyRegion)) {
     return hipErrorInvalidValue;
   }
 
@@ -967,7 +983,9 @@ hipError_t ihipMemcpyDtoA(void* srcDevice,
                                                                *dstImage,
                                                                srcOrigin,
                                                                dstOrigin,
-                                                               region);
+                                                               copyRegion,
+                                                               srcRect,
+                                                               dstRect);
 
   if (command == nullptr) {
     return hipErrorOutOfMemory;
