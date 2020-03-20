@@ -712,10 +712,6 @@ inline std::ostream& operator<<(std::ostream& os, const textureReference& s) {
   << s.maxMipmapLevelClamp
   << ','
   << s.textureObject
-  << ','
-  << s.numChannels
-  << ','
-  << s.format
   << '}';
   return os;
 }
