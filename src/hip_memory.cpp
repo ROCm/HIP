@@ -2501,11 +2501,11 @@ hipError_t hipIpcCloseMemHandle(void* devPtr) {
         return ihipLogStatus(hipErrorInvalidValue);
 
 #if USE_IPC
-    if(hc::am_memtracker_remove(devPtr) != AM_SUCCESS)
-        return ihipLogStatus(hipErrorInvalidValue);
-
     if (hsa_amd_ipc_memory_detach(devPtr) != HSA_STATUS_SUCCESS)
         return ihipLogStatus(hipErrorInvalidHandle);
+
+    if(hc::am_memtracker_remove(devPtr) != AM_SUCCESS)
+        return ihipLogStatus(hipErrorInvalidValue);
 #else
     hipStatus = hipErrorRuntimeOther;
 #endif
