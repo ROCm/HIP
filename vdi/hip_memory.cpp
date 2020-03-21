@@ -274,6 +274,13 @@ hipError_t hipHostFree(void* ptr) {
   HIP_INIT_API(hipHostFree, ptr);
 
   if (amd::SvmBuffer::malloced(ptr)) {
+    for (auto& dev : g_devices) {
+      amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
+      if (queue != nullptr) {
+        queue->finish();
+      }
+      hip::syncStreams(dev->deviceId());
+    }
     amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
     HIP_RETURN(hipSuccess);
   }
@@ -289,7 +296,13 @@ hipError_t ihipArrayDestroy(hipArray* array) {
   if (is_valid(memObj) == false) {
     return hipErrorInvalidValue;
   }
-
+  for (auto& dev : g_devices) {
+    amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
+    if (queue != nullptr) {
+      queue->finish();
+    }
+    hip::syncStreams(dev->deviceId());
+  }
   as_amd(memObj)->release();
 
   delete array;
