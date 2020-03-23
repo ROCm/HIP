@@ -395,7 +395,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
-  HIP_INIT_API(hipMalloc3D, pitchedDevPtr, &extent);
+  HIP_INIT_API(hipMalloc3D, pitchedDevPtr, extent);
 
   size_t pitch = 0;
 
@@ -628,8 +628,7 @@ hipError_t hipMalloc3DArray(hipArray_t* array,
                             const hipChannelFormatDesc* desc,
                             hipExtent extent,
                             unsigned int flags) {
-  // TODO overload operator<<(ostream&, hipExtent&).
-  HIP_INIT_API(hipMalloc3DArray, array, desc, &extent, flags);
+  HIP_INIT_API(hipMalloc3DArray, array, desc, extent, flags);
 
   HIP_ARRAY3D_DESCRIPTOR allocateArray = {extent.width,
                                           extent.height,
@@ -1724,7 +1723,7 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
 }
 
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent) {
-  HIP_INIT_API(hipMemset3D, pitchedDevPtr, value, &extent);
+  HIP_INIT_API(hipMemset3D, pitchedDevPtr, value, extent);
 
   void *dst = pitchedDevPtr.ptr;
   size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
@@ -1733,7 +1732,7 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent)
 }
 
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent, hipStream_t stream) {
-  HIP_INIT_API(hipMemset3DAsync, pitchedDevPtr, value, &extent, stream);
+  HIP_INIT_API(hipMemset3DAsync, pitchedDevPtr, value, extent, stream);
 
   void *dst = pitchedDevPtr.ptr;
   size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
@@ -2069,7 +2068,7 @@ hipError_t hipMallocMipmappedArray(hipMipmappedArray_t *mipmappedArray,
                                    hipExtent extent,
                                    unsigned int numLevels,
                                    unsigned int flags) {
-  HIP_INIT_API(hipMallocMipmappedArray, mipmappedArray, desc, &extent, numLevels, flags);
+  HIP_INIT_API(hipMallocMipmappedArray, mipmappedArray, desc, extent, numLevels, flags);
 
   HIP_RETURN(hipErrorNotSupported);
 }
