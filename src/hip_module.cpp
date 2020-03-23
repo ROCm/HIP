@@ -376,6 +376,7 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
 
         if(globalWorkSizeX > UINT32_MAX || globalWorkSizeY > UINT32_MAX || globalWorkSizeZ > UINT32_MAX)
         {
+            free(kds);
             return hipErrorInvalidConfiguration;
         }
 
