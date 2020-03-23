@@ -225,6 +225,12 @@ global:
     hipTexRefSetMipmapLevelBias;
     hipTexRefSetMipmapLevelClamp;
     hipTexRefSetMipmappedArray;
+    hipMipmappedArrayCreate;
+    hipMallocMipmappedArray;
+    hipMipmappedArrayDestroy;
+    hipFreeMipmappedArray;
+    hipMipmappedArrayGetLevel;
+    hipGetMipmappedArrayLevel;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;
