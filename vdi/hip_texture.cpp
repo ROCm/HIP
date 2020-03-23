@@ -671,12 +671,13 @@ hipError_t hipTexRefSetFilterMode(textureReference* texRef,
 }
 
 hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* pam,
-                                   textureReference texRef,
+                                   const textureReference* texRef,
                                    int dim) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetAddressMode, pam, &texRef, dim);
+  HIP_INIT_API(hipTexRefGetAddressMode, pam, texRef, dim);
 
-  if (pam == nullptr) {
+  if ((pam == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -685,7 +686,7 @@ hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* pam,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *pam = texRef.addressMode[dim];
+  *pam = texRef->addressMode[dim];
 
   HIP_RETURN(hipSuccess);
 }
@@ -709,17 +710,18 @@ hipError_t hipTexRefSetAddressMode(textureReference* texRef,
 }
 
 hipError_t hipTexRefGetArray(hipArray_t* pArray,
-                             textureReference texRef) {
+                             const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetArray, pArray, &texRef);
+  HIP_INIT_API(hipTexRefGetArray, pArray, texRef);
 
-  if (pArray == nullptr) {
+  if ((pArray == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
   hipResourceDesc resDesc = {};
   // TODO use ihipGetTextureObjectResourceDesc() to not pollute the API trace.
-  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef.textureObject);
+  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef->textureObject);
   if (error != hipSuccess) {
     return HIP_RETURN(error);
   }
@@ -769,17 +771,18 @@ hipError_t hipTexRefSetArray(textureReference* texRef,
 }
 
 hipError_t hipTexRefGetAddress(hipDeviceptr_t* dptr,
-                               textureReference texRef) {
+                               const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetAddress, dptr, &texRef);
+  HIP_INIT_API(hipTexRefGetAddress, dptr, texRef);
 
-  if (dptr == nullptr) {
+  if ((dptr == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
   hipResourceDesc resDesc = {};
   // TODO use ihipGetTextureObjectResourceDesc() to not pollute the API trace.
-  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef.textureObject);
+  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef->textureObject);
   if (error != hipSuccess) {
     return HIP_RETURN(error);
   }
@@ -869,11 +872,12 @@ hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannel
 }
 
 hipError_t hipTexRefGetBorderColor(float* pBorderColor,
-                                   textureReference texRef) {
+                                   const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetBorderColor, pBorderColor, &texRef);
+  HIP_INIT_API(hipTexRefGetBorderColor, pBorderColor, texRef);
 
-  if (pBorderColor == nullptr) {
+  if ((pBorderColor == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -885,39 +889,41 @@ hipError_t hipTexRefGetBorderColor(float* pBorderColor,
 }
 
 hipError_t hipTexRefGetFilterMode(hipTextureFilterMode* pfm,
-                                  textureReference texRef) {
+                                  const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetFilterMode, pfm, &texRef);
+  HIP_INIT_API(hipTexRefGetFilterMode, pfm, texRef);
 
-  if (pfm == nullptr) {
+  if ((pfm == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *pfm = texRef.filterMode;
+  *pfm = texRef->filterMode;
 
   HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipTexRefGetFlags(unsigned int* pFlags,
-                             textureReference texRef) {
+                             const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetFlags, pFlags, &texRef);
+  HIP_INIT_API(hipTexRefGetFlags, pFlags, texRef);
 
-  if (pFlags == nullptr) {
+  if ((pFlags == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
   *pFlags = 0;
 
-  if (texRef.readMode == hipReadModeElementType) {
+  if (texRef->readMode == hipReadModeElementType) {
     *pFlags |= HIP_TRSF_READ_AS_INTEGER;
   }
 
-  if (texRef.normalized == 1) {
+  if (texRef->normalized == 1) {
     *pFlags |= HIP_TRSF_NORMALIZED_COORDINATES;
   }
 
-  if (texRef.sRGB == 1) {
+  if (texRef->sRGB == 1) {
     *pFlags |= HIP_TRSF_SRGB;
   }
 
@@ -926,92 +932,98 @@ hipError_t hipTexRefGetFlags(unsigned int* pFlags,
 
 hipError_t hipTexRefGetFormat(hipArray_Format* pFormat,
                               int* pNumChannels,
-                              textureReference texRef) {
+                              const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetFormat, pFormat, pNumChannels, &texRef);
+  HIP_INIT_API(hipTexRefGetFormat, pFormat, pNumChannels, texRef);
 
   if ((pFormat == nullptr) ||
-      (pNumChannels == nullptr)) {
+      (pNumChannels == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *pFormat = texRef.format;
-  *pNumChannels = texRef.numChannels;
+  *pFormat = texRef->format;
+  *pNumChannels = texRef->numChannels;
 
   HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipTexRefGetMaxAnisotropy(int* pmaxAnsio,
-                                     textureReference texRef) {
+                                     const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetMaxAnisotropy, pmaxAnsio, &texRef);
+  HIP_INIT_API(hipTexRefGetMaxAnisotropy, pmaxAnsio, texRef);
 
-  if (pmaxAnsio == nullptr) {
+  if ((pmaxAnsio == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *pmaxAnsio = texRef.maxAnisotropy;
+  *pmaxAnsio = texRef->maxAnisotropy;
 
   HIP_RETURN(hipErrorInvalidValue);
 }
 
 hipError_t hipTexRefGetMipmapFilterMode(hipTextureFilterMode* pfm,
-                                        textureReference texRef) {
+                                        const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetMipmapFilterMode, pfm, &texRef);
+  HIP_INIT_API(hipTexRefGetMipmapFilterMode, pfm, texRef);
 
-  if (pfm == nullptr) {
+  if ((pfm == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *pfm = texRef.mipmapFilterMode;
+  *pfm = texRef->mipmapFilterMode;
 
   HIP_RETURN(hipErrorInvalidValue);
 }
 
 hipError_t hipTexRefGetMipmapLevelBias(float* pbias,
-                                       textureReference texRef) {
+                                       const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetMipmapLevelBias, pbias, &texRef);
+  HIP_INIT_API(hipTexRefGetMipmapLevelBias, pbias, texRef);
 
-  if (pbias == nullptr) {
+  if ((pbias == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *pbias = texRef.mipmapLevelBias;
+  *pbias = texRef->mipmapLevelBias;
 
   HIP_RETURN(hipErrorInvalidValue);
 }
 
 hipError_t hipTexRefGetMipmapLevelClamp(float* pminMipmapLevelClamp,
                                         float* pmaxMipmapLevelClamp,
-                                        textureReference texRef) {
+                                        const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetMipmapLevelClamp, pminMipmapLevelClamp, pmaxMipmapLevelClamp, &texRef);
+  HIP_INIT_API(hipTexRefGetMipmapLevelClamp, pminMipmapLevelClamp, pmaxMipmapLevelClamp, texRef);
 
   if ((pminMipmapLevelClamp == nullptr) ||
-      (pmaxMipmapLevelClamp == nullptr)){
+      (pmaxMipmapLevelClamp == nullptr) ||
+      (texRef == nullptr)){
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *pminMipmapLevelClamp = texRef.minMipmapLevelClamp;
-  *pmaxMipmapLevelClamp = texRef.maxMipmapLevelClamp;
+  *pminMipmapLevelClamp = texRef->minMipmapLevelClamp;
+  *pmaxMipmapLevelClamp = texRef->maxMipmapLevelClamp;
 
   HIP_RETURN(hipErrorInvalidValue);
 }
 
-hipError_t hipTexRefGetMipMappedArray(hipMipmappedArray_t* pArray,
-                                      textureReference texRef) {
+hipError_t hipTexRefGetMipmappedArray(hipMipmappedArray_t* pArray,
+                                      const textureReference* texRef) {
   // TODO overload operator<<(ostream&, textureReference&).
-  HIP_INIT_API(hipTexRefGetMipMappedArray, pArray, &texRef);
+  HIP_INIT_API(hipTexRefGetMipmappedArray, pArray, &texRef);
 
-  if (pArray == nullptr) {
+  if ((pArray == nullptr) ||
+      (texRef == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
   hipResourceDesc resDesc = {};
   // TODO use ihipGetTextureObjectResourceDesc() to not pollute the API trace.
-  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef.textureObject);
+  hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef->textureObject);
   if (error != hipSuccess) {
     return HIP_RETURN(error);
   }
