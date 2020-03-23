@@ -2055,3 +2055,49 @@ hipError_t hipMemcpyHtoAAsync(hipArray* dstArray,
 
   HIP_RETURN(ihipMemcpyHtoA(srcHost, dstArray, {0, 0, 0}, {dstOffset, 0, 0}, {ByteCount, 1, 1}, 0, 0, stream, true));
 }
+
+hipError_t hipMipmappedArrayCreate(hipMipmappedArray_t* pHandle,
+                                   HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
+                                   unsigned int numMipmapLevels) {
+  HIP_INIT_API(hipMipmappedArrayCreate, pHandle, pMipmappedArrayDesc, numMipmapLevels);
+
+  HIP_RETURN(hipErrorNotSupported);
+}
+
+hipError_t hipMallocMipmappedArray(hipMipmappedArray_t *mipmappedArray,
+                                   const hipChannelFormatDesc* desc,
+                                   hipExtent extent,
+                                   unsigned int numLevels,
+                                   unsigned int flags) {
+  HIP_INIT_API(hipMallocMipmappedArray, mipmappedArray, desc, &extent, numLevels, flags);
+
+  HIP_RETURN(hipErrorNotSupported);
+}
+
+hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray) {
+  HIP_INIT_API(hipMipmappedArrayDestroy, hMipmappedArray);
+
+  HIP_RETURN(hipErrorNotSupported);
+}
+
+hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray) {
+  HIP_INIT_API(hipFreeMipmappedArray, mipmappedArray);
+
+  HIP_RETURN(hipErrorNotSupported);
+}
+
+hipError_t hipMipmappedArrayGetLevel(hipArray_t* pLevelArray,
+                                     hipMipmappedArray_t hMipMappedArray,
+                                     unsigned int level) {
+  HIP_INIT_API(hipMipmappedArrayGetLevel, pLevelArray, hMipMappedArray, level);
+
+  HIP_RETURN(hipErrorNotSupported);
+}
+
+hipError_t hipGetMipmappedArrayLevel(hipArray_t *levelArray,
+                                     hipMipmappedArray_const_t mipmappedArray,
+                                     unsigned int level) {
+  HIP_INIT_API(hipGetMipmappedArrayLevel, levelArray, mipmappedArray, level);
+
+  HIP_RETURN(hipErrorNotSupported);
+}

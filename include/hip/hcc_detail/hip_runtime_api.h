@@ -3478,6 +3478,19 @@ hipError_t hipTexRefSetMipmappedArray(
     textureReference* texRef,
     hipMipmappedArray* mipmappedArray,
     unsigned int Flags);
+
+hipError_t hipMipmappedArrayCreate(
+    hipMipmappedArray_t* pHandle,
+    HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
+    unsigned int numMipmapLevels);
+
+hipError_t hipMipmappedArrayDestroy(
+    hipMipmappedArray_t hMipmappedArray);
+
+hipError_t hipMipmappedArrayGetLevel(
+    hipArray_t* pLevelArray,
+    hipMipmappedArray_t hMipMappedArray,
+    unsigned int level);
 #endif
 
 /**
