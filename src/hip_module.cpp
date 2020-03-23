@@ -50,7 +50,7 @@ THE SOFTWARE.
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "code_object_bundle.inl"
 #include "hip_fatbin.h"
 // TODO Use Pool APIs from HCC to get memory regions.
 
