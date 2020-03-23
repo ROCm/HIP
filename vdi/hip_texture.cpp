@@ -24,36 +24,34 @@
 #include "hip_conversions.hpp"
 #include "platform/sampler.hpp"
 
-namespace hip {
-  struct TextureObject {
-    uint32_t imageSRD[HIP_IMAGE_OBJECT_SIZE_DWORD];
-    uint32_t samplerSRD[HIP_SAMPLER_OBJECT_SIZE_DWORD];
-    amd::Image* image;
-    amd::Sampler* sampler;
-    hipResourceDesc resDesc;
-    hipTextureDesc texDesc;
-    hipResourceViewDesc resViewDesc;
+struct __hip_texture {
+  uint32_t imageSRD[HIP_IMAGE_OBJECT_SIZE_DWORD];
+  uint32_t samplerSRD[HIP_SAMPLER_OBJECT_SIZE_DWORD];
+  amd::Image* image;
+  amd::Sampler* sampler;
+  hipResourceDesc resDesc;
+  hipTextureDesc texDesc;
+  hipResourceViewDesc resViewDesc;
 
-    TextureObject(amd::Image* image_,
-                  amd::Sampler* sampler_,
-                  const hipResourceDesc& resDesc_,
-                  const hipTextureDesc& texDesc_,
-                  const hipResourceViewDesc& resViewDesc_) :
-      image(image_),
-      sampler(sampler_),
-      resDesc(resDesc_),
-      texDesc(texDesc_),
-      resViewDesc(resViewDesc_) {
-      amd::Context& context = *hip::getCurrentDevice()->asContext();
-      amd::Device& device = *context.devices()[0];
+  __hip_texture(amd::Image* image_,
+                amd::Sampler* sampler_,
+                const hipResourceDesc& resDesc_,
+                const hipTextureDesc& texDesc_,
+                const hipResourceViewDesc& resViewDesc_) :
+    image(image_),
+    sampler(sampler_),
+    resDesc(resDesc_),
+    texDesc(texDesc_),
+    resViewDesc(resViewDesc_) {
+    amd::Context& context = *hip::getCurrentDevice()->asContext();
+    amd::Device& device = *context.devices()[0];
 
-      device::Memory* imageMem = image->getDeviceMemory(device);
-      std::memcpy(imageSRD, imageMem->cpuSrd(), sizeof(imageSRD));
+    device::Memory* imageMem = image->getDeviceMemory(device);
+    std::memcpy(imageSRD, imageMem->cpuSrd(), sizeof(imageSRD));
 
-      device::Sampler* samplerMem = sampler->getDeviceSampler(device);
-      std::memcpy(samplerSRD, samplerMem->hwState(), sizeof(samplerSRD));
-    }
-  };
+    device::Sampler* samplerMem = sampler->getDeviceSampler(device);
+    std::memcpy(samplerSRD, samplerMem->hwState(), sizeof(samplerSRD));
+  }
 };
 
 amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
@@ -290,11 +288,11 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
   }
 
   void *texObjectBuffer = nullptr;
-  ihipMalloc(&texObjectBuffer, sizeof(hip::TextureObject), CL_MEM_SVM_FINE_GRAIN_BUFFER);
+  ihipMalloc(&texObjectBuffer, sizeof(__hip_texture), CL_MEM_SVM_FINE_GRAIN_BUFFER);
   if (texObjectBuffer == nullptr) {
     return hipErrorOutOfMemory;
   }
-  *pTexObject = reinterpret_cast<hipTextureObject_t>(new (texObjectBuffer) hip::TextureObject{image, sampler, *pResDesc, *pTexDesc, (pResViewDesc != nullptr) ? *pResViewDesc : hipResourceViewDesc{}});
+  *pTexObject = new (texObjectBuffer) __hip_texture{image, sampler, *pResDesc, *pTexDesc, (pResViewDesc != nullptr) ? *pResViewDesc : hipResourceViewDesc{}};
 
   return hipSuccess;
 }
@@ -314,17 +312,16 @@ hipError_t ihipDestroyTextureObject(hipTextureObject_t texObject) {
     return hipErrorInvalidValue;
   }
 
-  hip::TextureObject* hipTexObject = reinterpret_cast<hip::TextureObject*>(texObject);
-  const hipResourceType type = hipTexObject->resDesc.resType;
+  const hipResourceType type = texObject->resDesc.resType;
   const bool isImageFromBuffer = (type == hipResourceTypeLinear) || (type == hipResourceTypePitch2D);
   const bool isImageView = ((type == hipResourceTypeArray) || (type == hipResourceTypeMipmappedArray)) &&
-                           !hipTexObject->image->isParent();
+                           !texObject->image->isParent();
   if (isImageFromBuffer || isImageView) {
-    hipTexObject->image->release();
+    texObject->image->release();
   }
 
   // TODO Should call ihipFree() to not polute the api trace.
-  return hipFree(hipTexObject);
+  return hipFree(texObject);
 }
 
 hipError_t hipDestroyTextureObject(hipTextureObject_t texObject) {
@@ -343,8 +340,7 @@ hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  hip::TextureObject* hipTexObject = reinterpret_cast<hip::TextureObject*>(texObject);
-  *pResDesc = hipTexObject->resDesc;
+  *pResDesc = texObject->resDesc;
 
   HIP_RETURN(hipSuccess);
 }
@@ -358,8 +354,7 @@ hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  hip::TextureObject* hipTexObject = reinterpret_cast<hip::TextureObject*>(texObject);
-  *pResViewDesc = hipTexObject->resViewDesc;
+  *pResViewDesc = texObject->resViewDesc;
 
   HIP_RETURN(hipSuccess);
 }
@@ -373,8 +368,7 @@ hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  hip::TextureObject* hipTexObject = reinterpret_cast<hip::TextureObject*>(texObject);
-  *pTexDesc = hipTexObject->texDesc;
+  *pTexDesc = texObject->texDesc;
 
   HIP_RETURN(hipSuccess);
 }
