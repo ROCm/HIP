@@ -3314,6 +3314,172 @@ hipError_t hipLaunchKernel(const void* function_address,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
 
+#if __HIP_VDI__
+hipError_t hipBindTexture(
+    size_t* offset,
+    const textureReference* tex,
+    const void* devPtr,
+    const hipChannelFormatDesc* desc,
+    size_t size = UINT_MAX);
+
+hipError_t hipBindTexture2D(
+    size_t* offset,
+    const textureReference* tex,
+    const void* devPtr,
+    const hipChannelFormatDesc* desc,
+    size_t width,
+    size_t height,
+    size_t pitch);
+
+hipError_t hipBindTextureToArray(
+    const textureReference* tex,
+    hipArray_const_t array,
+    const hipChannelFormatDesc* desc);
+
+hipError_t hipBindTextureToMipmappedArray(
+    const textureReference* tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const hipChannelFormatDesc* desc);
+
+hipError_t hipGetTextureAlignmentOffset(
+    size_t* offset,
+    const textureReference* texref);
+
+hipError_t hipGetTextureReference(
+    const textureReference** texref,
+    const void* symbol);
+
+hipError_t hipUnbindTexture(const textureReference* tex);
+
+hipError_t hipCreateTextureObject(
+    hipTextureObject_t* pTexObject,
+    const hipResourceDesc* pResDesc,
+    const hipTextureDesc* pTexDesc,
+    const hipResourceViewDesc* pResViewDesc);
+
+hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
+
+hipError_t hipGetChannelDesc(
+    hipChannelFormatDesc* desc,
+    hipArray_const_t array);
+
+hipError_t hipGetTextureObjectResourceDesc(
+    hipResourceDesc* pResDesc,
+    hipTextureObject_t textureObject);
+
+hipError_t hipGetTextureObjectResourceViewDesc(
+    hipResourceViewDesc* pResViewDesc,
+    hipTextureObject_t textureObject);
+
+hipError_t hipGetTextureObjectTextureDesc(
+    hipTextureDesc* pTexDesc,
+    hipTextureObject_t textureObject);
+
+hipError_t hipTexRefGetAddress(
+    hipDeviceptr_t* dev_ptr,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetAddressMode(
+    hipTextureAddressMode* pam,
+    const textureReference* texRef,
+    int dim);
+
+hipError_t hipTexRefGetFilterMode(
+    hipTextureFilterMode* pfm,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetFlags(
+    unsigned int* pFlags,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetFormat(
+    hipArray_Format* pFormat,
+    int* pNumChannels,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMaxAnisotropy(
+    int* pmaxAnsio,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMipmapFilterMode(
+    hipTextureFilterMode* pfm,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMipmapLevelBias(
+    float* pbias,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMipmapLevelClamp(
+    float* pminMipmapLevelClamp,
+    float* pmaxMipmapLevelClamp,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMipMappedArray(
+    hipMipmappedArray_t* pArray,
+    const textureReference* texRef);
+
+hipError_t hipTexRefSetAddress(
+    size_t* ByteOffset,
+    textureReference* texRef,
+    hipDeviceptr_t dptr,
+    size_t bytes);
+
+hipError_t hipTexRefSetAddress2D(
+    textureReference* texRef,
+    const HIP_ARRAY_DESCRIPTOR* desc,
+    hipDeviceptr_t dptr,
+    size_t Pitch);
+
+hipError_t hipTexRefSetAddressMode(
+    textureReference* texRef,
+    int dim,
+    hipTextureAddressMode am);
+
+hipError_t hipTexRefSetArray(
+    textureReference* tex,
+    hipArray_const_t array,
+    unsigned int flags);
+
+hipError_t hipTexRefSetBorderColor(
+    textureReference* texRef,
+    float* pBorderColor);
+
+hipError_t hipTexRefSetFilterMode(
+    textureReference* texRef,
+    hipTextureFilterMode fm);
+
+hipError_t hipTexRefSetFlags(
+    textureReference* texRef,
+    unsigned int Flags);
+
+hipError_t hipTexRefSetFormat(
+    textureReference* texRef,
+    hipArray_Format fmt,
+    int NumPackedComponents);
+
+hipError_t hipTexRefSetMaxAnisotropy(
+    textureReference* texRef,
+    unsigned int maxAniso);
+
+hipError_t hipTexRefSetMipmapFilterMode(
+    textureReference* texRef,
+    hipTextureFilterMode fm);
+
+hipError_t hipTexRefSetMipmapLevelBias(
+    textureReference* texRef,
+    float bias);
+
+hipError_t hipTexRefSetMipmapLevelClamp(
+    textureReference* texRef,
+    float minMipMapLevelClamp,
+    float maxMipMapLevelClamp);
+
+hipError_t hipTexRefSetMipmappedArray(
+    textureReference* texRef,
+    hipMipmappedArray* mipmappedArray,
+    unsigned int Flags);
+#endif
+
 /**
  * @}
  */
@@ -3362,14 +3528,7 @@ const char* hipKernelNameRef(const hipFunction_t f);
 
 class TlsData;
 
-#if __HIP_VDI__
-hipError_t hipBindTexture(
-    size_t* offset,
-    const textureReference* tex,
-    const void* devPtr,
-    const hipChannelFormatDesc* desc,
-    size_t size = UINT_MAX);
-#else
+#if !__HIP_VDI__
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
                           const hipChannelFormatDesc* desc, size_t size = UINT_MAX);
 #endif
@@ -3426,16 +3585,7 @@ hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
 #endif
 
 // C API
-#if __HIP_VDI__
-hipError_t hipBindTexture2D(
-    size_t* offset,
-    const textureReference* tex,
-    const void* devPtr,
-    const hipChannelFormatDesc* desc,
-    size_t width,
-    size_t height,
-    size_t pitch);
-#else
+#if !__HIP_VDI__
 hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
                             const hipChannelFormatDesc* desc, size_t width, size_t height,
                             size_t pitch);
@@ -3466,12 +3616,7 @@ hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& te
 #endif
 
 // C API
-#if __HIP_VDI__
-hipError_t hipBindTextureToArray(
-    const textureReference* tex,
-    hipArray_const_t array,
-    const hipChannelFormatDesc* desc);
-#else
+#if !__HIP_VDI__
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
                                  const hipChannelFormatDesc* desc);
 #endif
@@ -3508,9 +3653,11 @@ inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> 
 #endif
 
 // C API
+#if !__HIP_VDI__
 hipError_t hipBindTextureToMipmappedArray(const textureReference* tex,
                                           hipMipmappedArray_const_t mipmappedArray,
                                           const hipChannelFormatDesc* desc);
+#endif
 
 #if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
@@ -3566,7 +3713,9 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
  *
  *  @return #hipSuccess
  **/
+#if !__HIP_VDI__
 hipError_t hipUnbindTexture(const textureReference* tex);
+#endif
 
 #if !__HIP_VDI__
 extern hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject);
@@ -3579,6 +3728,7 @@ hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex) {
 }
 #endif
 
+#if !__HIP_VDI__
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
 hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* texref);
 hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol);
@@ -3616,6 +3766,7 @@ hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex);
 
 hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,
                                  hipDeviceptr_t devPtr, size_t pitch);
+#endif
 
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
 
