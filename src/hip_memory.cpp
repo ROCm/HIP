@@ -312,7 +312,10 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
     hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
                                                    nullptr, di.agentBaseAddress);
     if (res != HSA_STATUS_SUCCESS){
-        throw ihipException(hipErrorPeerAccessUnsupported);
+        // If devices do not have access then fallback mechanism will be used
+        // copy will be slower
+        throwing_result_check(hsa_memory_copy(dst,src,n), __FILE__, __func__, __LINE__);
+        return;
     }
 
     return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
@@ -331,7 +334,10 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
         hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
                                                        nullptr, di.agentBaseAddress);
         if (res != HSA_STATUS_SUCCESS){
-           throw ihipException(hipErrorPeerAccessUnsupported);
+            // If devices do not have access then fallback mechanism will be used
+            // copy will be slower
+            throwing_result_check(hsa_memory_copy(dst,src,n), __FILE__, __func__, __LINE__);
+            return;
         }
         return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
     }
@@ -352,12 +358,6 @@ hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes,
         stream->locked_copyAsync(dst, src, sizeBytes, kind);
     }
     catch (const ihipException& ex) {
-        // If devices do not have access then fallback mechanism will be used
-        // copy will be slower
-        if (ex._code == hipErrorPeerAccessUnsupported){
-            stream->locked_copySync(dst, src, sizeBytes, kind);
-            return hipSuccess;
-        }
         return ex._code;
     }
     catch (const std::exception& ex) {
