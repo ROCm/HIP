@@ -162,10 +162,9 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
                 const auto p{static_cast<const char*>(*kernelParams)};
 
                 kernargs.insert(
-                    kernargs.cend(),
-                    round_up_to_next_multiple_nonnegative(
-                        kernargs.size(), x.second) - kernargs.size(),
-                    '\0');
+                                 kernargs.cend(),
+                                 x.second - kernargs.size(),
+                                 '\0');
                 kernargs.insert(kernargs.cend(), p, p + x.first);
 
                 ++kernelParams;
@@ -344,7 +343,7 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
             free(kds);
             return hipErrorInvalidValue;
         }
-        hip_impl::kernargs_size_align kargs = ps.get_kernargs_size_align(
+        hip_impl::kernargs_size_offset kargs = ps.get_kernargs_size_offset(
                 reinterpret_cast<std::uintptr_t>(lp.func));
         kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
                 kargs.getHandle());
@@ -439,7 +438,7 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     if (gwsKD == nullptr) {
         return hipErrorInvalidValue;
     }
-    hip_impl::kernargs_size_align gwsKargs = ps.get_kernargs_size_align(
+    hip_impl::kernargs_size_offset gwsKargs = ps.get_kernargs_size_offset(
                     reinterpret_cast<std::uintptr_t>(&init_gws));
 
     gwsKD->_kernarg_layout = *reinterpret_cast<const std::vector<
@@ -452,8 +451,8 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     if (kd == nullptr) {
         return hipErrorInvalidValue;
     }
-    hip_impl::kernargs_size_align kargs =
-            ps.get_kernargs_size_align(
+    hip_impl::kernargs_size_offset kargs =
+            ps.get_kernargs_size_offset(
                     reinterpret_cast<std::uintptr_t>(f));
 
     kd->_kernarg_layout = *reinterpret_cast<const std::vector<
@@ -544,7 +543,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
             free(kds);
             return hipErrorInvalidValue;
         }
-        hip_impl::kernargs_size_align gwsKargs = ps.get_kernargs_size_align(
+        hip_impl::kernargs_size_offset gwsKargs = ps.get_kernargs_size_offset(
                 reinterpret_cast<std::uintptr_t>(&init_gws));
         gwsKds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
                 gwsKargs.getHandle());
@@ -557,7 +556,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
             free(kds);
             return hipErrorInvalidValue;
         }
-        hip_impl::kernargs_size_align kargs = ps.get_kernargs_size_align(
+        hip_impl::kernargs_size_offset kargs = ps.get_kernargs_size_offset(
                 reinterpret_cast<std::uintptr_t>(lp.func));
         kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
                 kargs.getHandle());

@@ -39,11 +39,11 @@ namespace hip_impl {
         impl->v.resize(c);
     }
 
-    std::size_t kernargs_size_align::kernargs_size_align::size(std::size_t n) const{
+    std::size_t kernargs_size_offset::kernargs_size_offset::size(std::size_t n) const{
         return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].first;
     }
 
-    std::size_t kernargs_size_align::alignment(std::size_t n) const{
+    std::size_t kernargs_size_offset::offset(std::size_t n) const{
         return (*reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(handle))[n].second;
     }
 
@@ -77,9 +77,9 @@ namespace hip_impl {
         return kd;
     }
 
-    kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t kernel) {
-        kernargs_size_align t;
-        t.handle = reinterpret_cast<const void*>(&impl->kernargs_size_align(kernel));
+    kernargs_size_offset program_state::get_kernargs_size_offset(std::uintptr_t kernel) {
+        kernargs_size_offset t;
+        t.handle = reinterpret_cast<const void*>(&impl->kernargs_size_offset(kernel));
         return t;
     }
 

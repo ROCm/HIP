@@ -61,7 +61,7 @@ template <
     typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
 inline hip_impl::kernarg make_kernarg(
     const std::tuple<Ts...>&,
-    const kernargs_size_align&,
+    const kernargs_size_offset&,
     hip_impl::kernarg kernarg) {
     return kernarg;
 }
@@ -72,7 +72,7 @@ template <
     typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
 inline hip_impl::kernarg make_kernarg(
     const std::tuple<Ts...>& formals,
-    const kernargs_size_align& size_align,
+    const kernargs_size_offset& size_offset,
     hip_impl::kernarg kernarg) {
     using T = typename std::tuple_element<n, std::tuple<Ts...>>::type;
 
@@ -87,14 +87,13 @@ inline hip_impl::kernarg make_kernarg(
                 "function");
     #endif
 
-    kernarg.resize(round_up_to_next_multiple_nonnegative(
-        kernarg.size(), size_align.alignment(n)) + size_align.size(n));
+    kernarg.resize(size_offset.offset(n) + size_offset.size(n));
 
     std::memcpy(
-        kernarg.data() + kernarg.size() - size_align.size(n),
+        kernarg.data() + size_offset.offset(n),
         &std::get<n>(formals),
-        size_align.size(n));
-    return make_kernarg<n + 1>(formals, size_align, std::move(kernarg));
+        size_offset.size(n));
+    return make_kernarg<n + 1>(formals, size_offset, std::move(kernarg));
 }
 
 template <typename... Formals, typename... Actuals>
@@ -111,7 +110,7 @@ inline hip_impl::kernarg make_kernarg(
 
     auto& ps = hip_impl::get_program_state();
     return make_kernarg<0>(to_formals, 
-                           ps.get_kernargs_size_align(
+                           ps.get_kernargs_size_offset(
                                reinterpret_cast<std::uintptr_t>(kernel)),
                            std::move(kernarg));
 }

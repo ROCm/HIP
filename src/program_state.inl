@@ -2,6 +2,7 @@
 
 #include "../include/hip/hcc_detail/code_object_bundle.hpp"
 #include "../include/hip/hcc_detail/hsa_helpers.hpp"
+#include "hip/hip_runtime.h"
 
 #if !defined(__cpp_exceptions)
     #define try if (true)
@@ -616,7 +617,7 @@ public:
                     functions[aa].second.emplace(
                         function.first,
                         Kernel_descriptor{kernel_object(kernel_symbol), it->first,
-                                          kernargs_size_align(function.first)});
+                                          kernargs_size_offset(function.first)});
                 }
             }
         }, agent);
@@ -629,9 +630,12 @@ public:
             const std::string& metadata,
             std::size_t f,
             std::size_t l,
-            std::vector<std::pair<std::size_t, std::size_t>>& size_align) {
+            std::vector<std::pair<std::size_t, std::size_t>>& size_offset) {
+
+        std::size_t current_offset = 0;
+
         if (f == l) return f;
-        if (!size_align.empty()) return l;
+        if (!size_offset.empty()) return l;
 
         do {
             static constexpr size_t size_sz{5};
@@ -647,9 +651,12 @@ public:
             char* l{};
             auto align = std::strtoul(&metadata[f], &l, 10);
 
+            auto offset = hip_impl::round_up_to_next_multiple_nonnegative(current_offset,align);
+            current_offset = offset + size;
+
             f += (l - &metadata[f]) + 1;
 
-            size_align.emplace_back(size, align);
+            size_offset.emplace_back(size, offset);
         } while (true);
     }
 
@@ -703,7 +710,7 @@ public:
     static
     void parse_args_v3(
             const amd_comgr_metadata_node_t& args_md,
-            std::vector<std::pair<std::size_t, std::size_t>>& size_align) {
+            std::vector<std::pair<std::size_t, std::size_t>>& size_offset) {
         size_t arg_count = 0;
         if (amd_comgr_get_metadata_list_size(args_md, &arg_count)
             != AMD_COMGR_STATUS_SUCCESS)
@@ -727,8 +734,6 @@ public:
                 != AMD_COMGR_STATUS_SUCCESS)
                 return;
 
-            size_t arg_align;
-
             amd_comgr_metadata_node_t arg_offset_md;
             if (amd_comgr_metadata_lookup(arg_md, ".offset", &arg_offset_md)
                 != AMD_COMGR_STATUS_SUCCESS)
@@ -740,13 +745,7 @@ public:
                 != AMD_COMGR_STATUS_SUCCESS)
                 return;
 
-            arg_align = 1;
-            while (arg_offset && (arg_offset & 1) == 0) {
-                arg_offset >>= 1;
-                arg_align <<= 1;
-            }
-
-            size_align.emplace_back(arg_size, arg_align);
+            size_offset.emplace_back(arg_size, arg_offset);
 
             if (amd_comgr_destroy_metadata(arg_md)
                 != AMD_COMGR_STATUS_SUCCESS)
@@ -930,7 +929,7 @@ public:
     }
 
     const std::vector<std::pair<std::size_t, std::size_t>>& 
-        kernargs_size_align(std::uintptr_t kernel) {
+        kernargs_size_offset(std::uintptr_t kernel) {
 
         auto it = get_function_names().find(kernel);
         if (it == get_function_names().cend()) {
