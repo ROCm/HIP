@@ -830,3 +830,14 @@ inline std::ostream& operator<<(std::ostream& os, const HIP_ARRAY3D_DESCRIPTOR* 
   }
   return os;
 }
+
+inline std::ostream& operator<<(std::ostream& os, const hipExtent& s) {
+  os << '{'
+  << s.width
+  << ','
+  << s.height
+  << ','
+  << s.depth
+  << '}';
+  return os;
+}
