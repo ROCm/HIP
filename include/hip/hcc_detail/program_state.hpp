@@ -58,7 +58,7 @@ private:
     kernarg_impl* impl;
 };
 
-class kernargs_size_align;
+class kernargs_size_offset;
 class program_state_impl;
 class program_state {
 public:
@@ -69,7 +69,7 @@ public:
     hipFunction_t kernel_descriptor(std::uintptr_t,
                                     hsa_agent_t);
 
-    kernargs_size_align get_kernargs_size_align(std::uintptr_t);
+    kernargs_size_offset get_kernargs_size_offset(std::uintptr_t);
     hsa_executable_t load_executable(const char*, const size_t,
                                      hsa_executable_t,
                                      hsa_agent_t);
@@ -81,14 +81,14 @@ private:
     program_state_impl* impl;
 };
 
-class kernargs_size_align {
+class kernargs_size_offset {
 public:
     std::size_t size(std::size_t n) const;
-    std::size_t alignment(std::size_t n) const;
+    std::size_t offset(std::size_t n) const;
     const void* getHandle() const {return handle;};
 private:
     const void* handle;
-    friend kernargs_size_align program_state::get_kernargs_size_align(std::uintptr_t);
+    friend kernargs_size_offset program_state::get_kernargs_size_offset(std::uintptr_t);
 };
 
 #ifdef __GNUC__

@@ -247,6 +247,7 @@ hipError_t hipSetupArgument(
 
 hipError_t hipLaunchByPtr(const void *hostFunction)
 {
+
   HIP_INIT_API(hipLaunchByPtr, hostFunction);
   ihipExec_t exec;
   {

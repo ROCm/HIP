@@ -141,6 +141,7 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
                                   hipStream_t hStream, void** kernelParams, void** extra,
                                   hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags, bool isStreamLocked = 0,
                                   void** impCoopParams = 0) {
+
     using namespace hip_impl;
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -156,16 +157,15 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
 
         std::vector<char> kernargs{};
         if (kernelParams) {
+
             if (extra) return hipErrorInvalidValue;
 
             for (auto&& x : f->_kernarg_layout) {
                 const auto p{static_cast<const char*>(*kernelParams)};
-
                 kernargs.insert(
-                    kernargs.cend(),
-                    round_up_to_next_multiple_nonnegative(
-                        kernargs.size(), x.second) - kernargs.size(),
-                    '\0');
+                                 kernargs.cend(),
+                                 x.second - kernargs.size(),
+                                 '\0');
                 kernargs.insert(kernargs.cend(), p, p + x.first);
 
                 ++kernelParams;
@@ -273,8 +273,11 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX, uint32_t gr
                                  uint32_t gridDimZ, uint32_t blockDimX, uint32_t blockDimY,
                                  uint32_t blockDimZ, uint32_t sharedMemBytes, hipStream_t hStream,
                                  void** kernelParams, void** extra) {
+
     HIP_INIT_API(hipModuleLaunchKernel, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ, sharedMemBytes,
                  hStream, kernelParams, extra);
+
+
 
     size_t globalWorkSizeX = (size_t)gridDimX * (size_t)blockDimX;
     size_t globalWorkSizeY = (size_t)gridDimY * (size_t)blockDimY;
@@ -344,7 +347,8 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
             free(kds);
             return hipErrorInvalidValue;
         }
-        hip_impl::kernargs_size_align kargs = ps.get_kernargs_size_align(
+
+        hip_impl::kernargs_size_offset kargs = ps.get_kernargs_size_offset(
                 reinterpret_cast<std::uintptr_t>(lp.func));
         kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
                 kargs.getHandle());
@@ -414,7 +418,6 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
 
     hipError_t result;
 
-
     if ((f == nullptr) || (stream == nullptr) || (kernelParams == nullptr)) {
         return hipErrorNotInitialized;
     }
@@ -439,7 +442,8 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     if (gwsKD == nullptr) {
         return hipErrorInvalidValue;
     }
-    hip_impl::kernargs_size_align gwsKargs = ps.get_kernargs_size_align(
+
+    hip_impl::kernargs_size_offset gwsKargs = ps.get_kernargs_size_offset(
                     reinterpret_cast<std::uintptr_t>(&init_gws));
 
     gwsKD->_kernarg_layout = *reinterpret_cast<const std::vector<
@@ -452,8 +456,9 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     if (kd == nullptr) {
         return hipErrorInvalidValue;
     }
-    hip_impl::kernargs_size_align kargs =
-            ps.get_kernargs_size_align(
+
+    hip_impl::kernargs_size_offset kargs =
+            ps.get_kernargs_size_offset(
                     reinterpret_cast<std::uintptr_t>(f));
 
     kd->_kernarg_layout = *reinterpret_cast<const std::vector<
@@ -544,7 +549,8 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
             free(kds);
             return hipErrorInvalidValue;
         }
-        hip_impl::kernargs_size_align gwsKargs = ps.get_kernargs_size_align(
+
+        hip_impl::kernargs_size_offset gwsKargs = ps.get_kernargs_size_offset(
                 reinterpret_cast<std::uintptr_t>(&init_gws));
         gwsKds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
                 gwsKargs.getHandle());
@@ -557,7 +563,8 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
             free(kds);
             return hipErrorInvalidValue;
         }
-        hip_impl::kernargs_size_align kargs = ps.get_kernargs_size_align(
+
+        hip_impl::kernargs_size_offset kargs = ps.get_kernargs_size_offset(
                 reinterpret_cast<std::uintptr_t>(lp.func));
         kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
                 kargs.getHandle());
@@ -1485,6 +1492,7 @@ hipError_t hipLaunchKernel(
     const void* func_addr, dim3 numBlocks, dim3 dimBlocks, void** args,
     size_t sharedMemBytes, hipStream_t stream)
 {
+
    HIP_INIT_API(hipLaunchKernel,func_addr,numBlocks,dimBlocks,args,sharedMemBytes,stream);
 
    hipFunction_t kd = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)func_addr,
