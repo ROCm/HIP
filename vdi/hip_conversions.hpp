@@ -76,14 +76,17 @@ cl_channel_type getCLChannelType(const hipArray_Format hipFormat,
 }
 
 inline
-cl_channel_order getCLChannelOrder(const unsigned int hipNumChannels) {
+cl_channel_order getCLChannelOrder(const unsigned int hipNumChannels,
+                                   const int sRGB) {
   switch (hipNumChannels) {
     case 1:
       return CL_R;
     case 2:
       return CL_RG;
     case 4:
-      return CL_RGBA;
+      return (sRGB == 1) ? CL_sRGBA : CL_RGBA;
+    default:
+      break;
   }
 
   ShouldNotReachHere();

@@ -130,10 +130,6 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
   if (pTexDesc->addressMode[0] == hipAddressModeBorder) {
     return hipErrorNotSupported;
   }
-  // We don't program the force_degamma/skip_degamma fields in the HW sampler SRD.
-  if (pTexDesc->sRGB == 1) {
-    return hipErrorNotSupported;
-  }
   // We don't program the max_ansio_ratio field in the the HW sampler SRD.
   if (pTexDesc->maxAnisotropy != 0) {
     return hipErrorNotSupported;
@@ -221,10 +217,11 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
     // We need to create an image view if the user requested to use normalized pixel values,
     // due to already having the image created with a different format.
     if ((pResViewDesc != nullptr) ||
-        (readMode == hipReadModeNormalizedFloat)) {
+        (readMode == hipReadModeNormalizedFloat) ||
+        (pTexDesc->sRGB == 1)) {
       // TODO VDI currently right now can only change the format of the image.
-      const cl_channel_order channelOrder = (pResViewDesc != nullptr) ? hip::getCLChannelOrder(hip::getNumChannels(pResViewDesc->format)) :
-                                                                        hip::getCLChannelOrder(pResDesc->res.array.array->NumChannels);
+      const cl_channel_order channelOrder = (pResViewDesc != nullptr) ? hip::getCLChannelOrder(hip::getNumChannels(pResViewDesc->format), pTexDesc->sRGB) :
+                                                                        hip::getCLChannelOrder(pResDesc->res.array.array->NumChannels, pTexDesc->sRGB);
       const cl_channel_type channelType = (pResViewDesc != nullptr) ? hip::getCLChannelType(hip::getArrayFormat(pResViewDesc->format), readMode) :
                                                                       hip::getCLChannelType(pResDesc->res.array.array->Format, readMode);
       const amd::Image::Format imageFormat(cl_image_format{channelOrder, channelType});
@@ -244,7 +241,7 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
     break;
   }
   case hipResourceTypeLinear: {
-    const cl_channel_order channelOrder = hip::getCLChannelOrder(hip::getNumChannels(pResDesc->res.linear.desc));
+    const cl_channel_order channelOrder = hip::getCLChannelOrder(hip::getNumChannels(pResDesc->res.linear.desc), pTexDesc->sRGB);
     const cl_channel_type channelType = hip::getCLChannelType(hip::getArrayFormat(pResDesc->res.linear.desc), pTexDesc->readMode);
     const amd::Image::Format imageFormat({channelOrder, channelType});
     const cl_mem_object_type imageType = hip::getCLMemObjectType(pResDesc->resType);
@@ -268,7 +265,7 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
     break;
   }
   case hipResourceTypePitch2D: {
-    const cl_channel_order channelOrder = hip::getCLChannelOrder(hip::getNumChannels(pResDesc->res.pitch2D.desc));
+    const cl_channel_order channelOrder = hip::getCLChannelOrder(hip::getNumChannels(pResDesc->res.pitch2D.desc), pTexDesc->sRGB);
     const cl_channel_type channelType = hip::getCLChannelType(hip::getArrayFormat(pResDesc->res.pitch2D.desc), pTexDesc->readMode);
     const cl_mem_object_type imageType = hip::getCLMemObjectType(pResDesc->resType);
     size_t offset = 0;

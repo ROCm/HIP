@@ -545,7 +545,7 @@ hipError_t ihipArrayCreate(hipArray** array,
     return hipErrorNotSupported;
   }
 
-  const cl_channel_order channelOrder = hip::getCLChannelOrder(pAllocateArray->NumChannels);
+  const cl_channel_order channelOrder = hip::getCLChannelOrder(pAllocateArray->NumChannels, 0);
   const cl_channel_type channelType = hip::getCLChannelType(pAllocateArray->Format, hipReadModeElementType);
   const cl_mem_object_type imageType = hip::getCLMemObjectType(pAllocateArray->Width,
                                                                pAllocateArray->Height,
