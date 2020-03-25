@@ -495,9 +495,8 @@ __global__ void init_gws(uint nwm1) {
 }
 }
 
-__attribute__((visibility("default")))
 hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
-        dim3 blockDimX, void** kernelParams, unsigned int sharedMemBytes,
+        dim3 blockDim, void** kernelParams, unsigned int sharedMemBytes,
         hipStream_t stream, hip_impl::program_state& ps) {
 
 #if (__hcc_workweek__ >= 20093)
@@ -515,9 +514,9 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
         return hipErrorInvalidConfiguration;
     }
 
-    size_t globalWorkSizeX = (size_t)gridDim.x * (size_t)blockDimX.x;
-    size_t globalWorkSizeY = (size_t)gridDim.y * (size_t)blockDimX.y;
-    size_t globalWorkSizeZ = (size_t)gridDim.z * (size_t)blockDimX.z;
+    size_t globalWorkSizeX = (size_t)gridDim.x * (size_t)blockDim.x;
+    size_t globalWorkSizeY = (size_t)gridDim.y * (size_t)blockDim.y;
+    size_t globalWorkSizeZ = (size_t)gridDim.z * (size_t)blockDim.z;
     if(globalWorkSizeX > UINT32_MAX || globalWorkSizeY > UINT32_MAX || globalWorkSizeZ > UINT32_MAX)
     {
         return hipErrorInvalidConfiguration;
@@ -603,10 +602,10 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
 
     // launch the main kernel in the cooperative queue
     result = ihipModuleLaunchKernel(tls, kd,
-            gridDim.x * blockDimX.x,
-            gridDim.y * blockDimX.y,
-            gridDim.z * blockDimX.z,
-            blockDimX.x, blockDimX.y, blockDimX.z,
+            gridDim.x * blockDim.x,
+            gridDim.y * blockDim.y,
+            gridDim.z * blockDim.z,
+            blockDim.x, blockDim.y, blockDim.z,
             sharedMemBytes, stream, kernelParams, nullptr, nullptr,
             nullptr, 0, true, impCoopParams, &coopAV);
 
@@ -631,6 +630,20 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
 }
 
 __attribute__((visibility("default")))
+hipError_t hipLaunchCooperativeKernel(const void* func, dim3 gridDim,
+                                    dim3 blockDim, void** args,
+                                    size_t sharedMem, hipStream_t stream,
+                                    hip_impl::program_state& ps) {
+
+    // Skipping passing in ps, because the logging function does not like it
+    HIP_INIT_API(hipLaunchCooperativeKernel, func, gridDim, blockDim, args,
+                 sharedMem, stream);
+
+    return ihipLogStatus(ihipLaunchCooperativeKernel(func, gridDim, blockDim,
+                         args, sharedMem, stream, ps));
+}
+
+
 hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
         int  numDevices, unsigned int  flags, hip_impl::program_state& ps) {
 
@@ -873,6 +886,21 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 #else
     return hipErrorInvalidConfiguration;
 #endif
+}
+
+__attribute__((visibility("default")))
+hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                 int  numDevices,
+                                                 unsigned int flags,
+                                                 hip_impl::program_state& ps) {
+
+    // Skipping passing in ps, because the logging function does not like it
+    HIP_INIT_API(hipLaunchCooperativeKernelMultiDevice, launchParamsList,
+                 numDevices, flags);
+
+    return ihipLogStatus(ihipLaunchCooperativeKernelMultiDevice(launchParamsList,
+                                                                numDevices,
+                                                                flags, ps));
 }
 
 namespace hip_impl {
