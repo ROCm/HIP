@@ -337,6 +337,7 @@ my $buildDeps = 0;
 my $linkType = 1;
 my $setLinkType = 0;
 my $coFormatv3 = 0;
+my $funcSupp = 0;      # enable function support
 
 my @options = ();
 my @inputs  = ();
@@ -600,6 +601,11 @@ foreach $arg (@ARGV)
             #if $arg eq "--hipcc_profile") {  # Example argument here, hipcc
             #
             #}
+            if ($arg eq "--hipcc-func-supp") {
+              $funcSupp = 1;
+            } elsif ($arg eq "--hipcc-no-func-supp") {
+              $funcSupp = 0;
+            }
         } else {
             push (@options, $arg);
         }
@@ -743,7 +749,7 @@ if ($HIP_PLATFORM eq "clang") {
     }
     # Do not pass -mllvm on Windows since there is a clang bug causing duplicate -mllvm options in clang -cc1 on Windows.
     # ToDo : remove restriction for Windows after clang bug is fixed.
-    if ($optArg ne "-O0" and not $isWindows) {
+    if (!$funcSupp and $optArg ne "-O0" and not $isWindows) {
         $HIPCXXFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         if ($needLDFLAGS and not $needCXXFLAGS) {
             $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
