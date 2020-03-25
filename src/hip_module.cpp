@@ -344,6 +344,8 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
             free(kds);
             return hipErrorInvalidValue;
         }
+        if (!kds[i]->_kernarg_layout.empty()) continue;
+
         hip_impl::kernargs_size_align kargs = ps.get_kernargs_size_align(
                 reinterpret_cast<std::uintptr_t>(lp.func));
         kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(

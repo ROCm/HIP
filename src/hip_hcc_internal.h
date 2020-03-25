@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include "hip_prof_api.h"
 #include "hip_util.h"
 #include "env.h"
-
+#include <unordered_map>
 
 #if (__hcc_workweek__ < 16354)
 #error("This version of HIP requires a newer version of HCC.");
@@ -1078,5 +1078,15 @@ static inline ihipCtx_t* iihipGetTlsDefaultCtx(TlsData* tls) {
     }
     return tls->defaultCtx;
 }
+
+/**
+ *  @brief Get device function from host kernel function pointer
+ *  Needed only for clang + HIP-HCC RT
+ *
+ *  @param [in] hostFunction host kernel function pointer
+ *
+ *  @returns hipFuntion_t, nullptr
+ */
+hipFunction_t ihipGetDeviceFunction(const void *hostFunction);
 
 #endif
