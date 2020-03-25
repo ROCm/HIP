@@ -3491,6 +3491,27 @@ hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
+
+hipError_t hipTexObjectCreate(
+    hipTextureObject_t* pTexObject,
+    const HIP_RESOURCE_DESC* pResDesc,
+    const HIP_TEXTURE_DESC* pTexDesc,
+    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+
+hipError_t hipTexObjectDestroy(
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetResourceDesc(
+    HIP_RESOURCE_DESC* pResDesc,
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetResourceViewDesc(
+    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetTextureDesc(
+    HIP_TEXTURE_DESC* pTexDesc,
+    hipTextureObject_t texObject);
 #endif
 
 /**

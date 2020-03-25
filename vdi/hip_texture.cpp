@@ -1135,3 +1135,73 @@ hipError_t hipTexRefSetMipmappedArray(textureReference* texRef,
 
   HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, &resViewDesc));
 }
+
+hipError_t hipTexObjectCreate(hipTextureObject_t* pTexObject,
+                              const HIP_RESOURCE_DESC* pResDesc,
+                              const HIP_TEXTURE_DESC* pTexDesc,
+                              const HIP_RESOURCE_VIEW_DESC* pResViewDesc) {
+  HIP_INIT_API(hipTexObjectCreate, pTexObject, pResDesc, pTexDesc, pResViewDesc);
+
+  if ((pTexObject == nullptr) ||
+      (pResDesc == nullptr) || (pTexDesc == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  hipResourceDesc resDesc = hip::getResourceDesc(*pResDesc);
+  hipTextureDesc texDesc = hip::getTextureDesc(*pTexDesc);
+
+  if (pResViewDesc != nullptr) {
+    hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(*pResViewDesc);
+    HIP_RETURN(ihipCreateTextureObject(pTexObject, &resDesc, &texDesc, &resViewDesc));
+  } else {
+    HIP_RETURN(ihipCreateTextureObject(pTexObject, &resDesc, &texDesc, nullptr));
+  }
+}
+
+hipError_t hipTexObjectDestroy(hipTextureObject_t texObject) {
+  HIP_INIT_API(hipTexObjectDestroy, texObject);
+
+  HIP_RETURN(ihipDestroyTextureObject(texObject));
+}
+
+hipError_t hipTexObjectGetResourceDesc(HIP_RESOURCE_DESC* pResDesc,
+                                       hipTextureObject_t texObject) {
+  HIP_INIT_API(hipTexObjectGetResourceDesc, pResDesc, texObject);
+
+  if ((pResDesc == nullptr) ||
+      (texObject == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pResDesc = hip::getResourceDesc(texObject->resDesc);
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexObjectGetResourceViewDesc(HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+                                           hipTextureObject_t texObject) {
+  HIP_INIT_API(hipTexObjectGetResourceViewDesc, pResViewDesc, texObject);
+
+  if ((pResViewDesc == nullptr) ||
+      (texObject == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pResViewDesc = hip::getResourceViewDesc(texObject->resViewDesc);
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipTexObjectGetTextureDesc(HIP_TEXTURE_DESC* pTexDesc,
+                                      hipTextureObject_t texObject) {
+  HIP_INIT_API(hipTexObjectGetTextureDesc, pTexDesc, texObject);
+
+  if ((pTexDesc == nullptr) ||
+      (texObject == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  *pTexDesc = hip::getTextureDesc(texObject->texDesc);
+
+  HIP_RETURN(hipSuccess);
+}

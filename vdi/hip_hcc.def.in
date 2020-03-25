@@ -238,3 +238,8 @@ hipFreeMipmappedArray
 hipMipmappedArrayGetLevel
 hipGetMipmappedArrayLevel
 hipMallocHost
+hipTexObjectCreate
+hipTexObjectDestroy
+hipTexObjectGetResourceDesc
+hipTexObjectGetResourceViewDesc
+hipTexObjectGetTextureDesc

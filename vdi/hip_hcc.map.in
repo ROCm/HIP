@@ -232,6 +232,11 @@ global:
     hipMipmappedArrayGetLevel;
     hipGetMipmappedArrayLevel;
     hipMallocHost;
+    hipTexObjectCreate;
+    hipTexObjectDestroy;
+    hipTexObjectGetResourceDesc;
+    hipTexObjectGetResourceViewDesc;
+    hipTexObjectGetTextureDesc;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;
