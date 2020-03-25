@@ -654,4 +654,245 @@ HIP_MEMCPY3D getDrvMemcpy3DDesc(const hipMemcpy3DParms& desc) {
 
   return descDrv;
 }
+
+inline
+hipResourceType getResourceType(const HIPresourcetype resType) {
+  // These two enums should be isomorphic.
+  return static_cast<hipResourceType>(resType);
+}
+
+inline
+HIPresourcetype getResourceType(const hipResourceType resType) {
+  // These two enums should be isomorphic.
+  return static_cast<HIPresourcetype>(resType);
+}
+
+inline
+hipResourceDesc getResourceDesc(const HIP_RESOURCE_DESC& resDesc) {
+  hipResourceDesc desc;
+
+  desc.resType = getResourceType(resDesc.resType);
+  switch (resDesc.resType) {
+  case hipResourceTypeArray:
+    desc.res.array.array = resDesc.res.array.hArray;
+    break;
+  case hipResourceTypeMipmappedArray:
+    desc.res.mipmap.mipmap = resDesc.res.mipmap.hMipmappedArray;
+    break;
+  case hipResourceTypeLinear:
+    desc.res.linear.devPtr = resDesc.res.linear.devPtr;
+    desc.res.linear.desc = getChannelFormatDesc(resDesc.res.linear.numChannels, resDesc.res.linear.format);
+    desc.res.linear.sizeInBytes = resDesc.res.linear.sizeInBytes;
+    break;
+  case hipResourceTypePitch2D:
+    desc.res.pitch2D.devPtr = resDesc.res.pitch2D.devPtr;
+    desc.res.pitch2D.desc = getChannelFormatDesc(resDesc.res.pitch2D.numChannels, resDesc.res.pitch2D.format);
+    desc.res.pitch2D.width = resDesc.res.pitch2D.width;
+    desc.res.pitch2D.height = resDesc.res.pitch2D.height;
+    desc.res.pitch2D.pitchInBytes = resDesc.res.pitch2D.pitchInBytes;
+    break;
+  default:
+    break;
+  }
+
+  return desc;
+}
+
+inline
+HIP_RESOURCE_DESC getResourceDesc(const hipResourceDesc& resDesc) {
+  HIP_RESOURCE_DESC desc;
+
+  desc.resType = getResourceType(resDesc.resType);
+  switch (resDesc.resType) {
+  case HIP_RESOURCE_TYPE_ARRAY:
+    desc.res.array.hArray = resDesc.res.array.array;
+    break;
+  case HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY:
+    desc.res.mipmap.hMipmappedArray = resDesc.res.mipmap.mipmap;
+    break;
+  case HIP_RESOURCE_TYPE_LINEAR:
+    desc.res.linear.devPtr = resDesc.res.linear.devPtr;
+    desc.res.linear.numChannels = getNumChannels(resDesc.res.linear.desc);
+    desc.res.linear.format = getArrayFormat(resDesc.res.linear.desc);
+    desc.res.linear.sizeInBytes = resDesc.res.linear.sizeInBytes;
+    break;
+  case HIP_RESOURCE_TYPE_PITCH2D:
+    desc.res.pitch2D.devPtr = resDesc.res.pitch2D.devPtr;
+    desc.res.pitch2D.numChannels = getNumChannels(resDesc.res.pitch2D.desc);
+    desc.res.pitch2D.format = getArrayFormat(resDesc.res.pitch2D.desc);
+    desc.res.pitch2D.width = resDesc.res.pitch2D.width;
+    desc.res.pitch2D.height = resDesc.res.pitch2D.height;
+    desc.res.pitch2D.pitchInBytes = resDesc.res.pitch2D.pitchInBytes;
+    break;
+  default:
+    break;
+  }
+
+  return desc;
+}
+
+inline
+hipTextureAddressMode getAddressMode(const HIPaddress_mode mode) {
+  // These two enums should be isomorphic.
+  return static_cast<hipTextureAddressMode>(mode);
+}
+
+inline
+HIPaddress_mode getAddressMode(const hipTextureAddressMode mode) {
+  // These two enums should be isomorphic.
+  return static_cast<HIPaddress_mode>(mode);
+}
+
+inline
+hipTextureFilterMode getFilterMode(const HIPfilter_mode mode) {
+  // These two enums should be isomorphic.
+  return static_cast<hipTextureFilterMode>(mode);
+}
+
+inline
+HIPfilter_mode getFilterMode(const hipTextureFilterMode mode) {
+  // These two enums should be isomorphic.
+  return static_cast<HIPfilter_mode>(mode);
+}
+
+inline
+hipTextureReadMode getReadMode(const unsigned int flags) {
+  if (flags & HIP_TRSF_READ_AS_INTEGER) {
+    return hipReadModeElementType;
+  } else {
+    return hipReadModeNormalizedFloat;
+  }
+}
+
+inline
+unsigned int getReadMode(const hipTextureReadMode mode) {
+  if (mode ==  hipReadModeElementType) {
+    return HIP_TRSF_READ_AS_INTEGER;
+  } else {
+    return 0;
+  }
+}
+
+inline
+int getsRGB(const unsigned int flags) {
+  if (flags & HIP_TRSF_SRGB) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+inline
+unsigned int getsRGB(const int sRGB) {
+  if (sRGB == 1) {
+    return HIP_TRSF_SRGB;
+  } else {
+    return 0;
+  }
+}
+
+inline
+int getNormalizedCoords(const unsigned int flags) {
+  if (flags & HIP_TRSF_NORMALIZED_COORDINATES) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+inline
+unsigned int getNormalizedCoords(const int normalizedCoords) {
+  if (normalizedCoords == 1) {
+    return HIP_TRSF_NORMALIZED_COORDINATES;
+  } else {
+    return 0;
+  }
+}
+
+inline
+hipTextureDesc getTextureDesc(const HIP_TEXTURE_DESC& texDesc) {
+  hipTextureDesc desc;
+
+  desc.addressMode[0] = getAddressMode(texDesc.addressMode[0]);
+  desc.addressMode[1] = getAddressMode(texDesc.addressMode[1]);
+  desc.addressMode[2] = getAddressMode(texDesc.addressMode[2]);
+  desc.filterMode = getFilterMode(texDesc.filterMode);
+  desc.readMode = getReadMode(texDesc.flags);
+  desc.sRGB = getsRGB(texDesc.flags);
+  std::memcpy(desc.borderColor, texDesc.borderColor, sizeof(desc.borderColor));
+  desc.normalizedCoords = getNormalizedCoords(texDesc.flags);
+  desc.maxAnisotropy = texDesc.maxAnisotropy;
+  desc.mipmapFilterMode = getFilterMode(texDesc.mipmapFilterMode);
+  desc.mipmapLevelBias = texDesc.mipmapLevelBias;
+  desc.minMipmapLevelClamp = texDesc.minMipmapLevelClamp;
+  desc.maxMipmapLevelClamp = texDesc.maxMipmapLevelClamp;
+
+  return desc;
+}
+
+inline
+HIP_TEXTURE_DESC getTextureDesc(const hipTextureDesc& texDesc) {
+  HIP_TEXTURE_DESC desc;
+
+  desc.addressMode[0] = getAddressMode(texDesc.addressMode[0]);
+  desc.addressMode[1] = getAddressMode(texDesc.addressMode[1]);
+  desc.addressMode[2] = getAddressMode(texDesc.addressMode[2]);
+  desc.filterMode = getFilterMode(texDesc.filterMode);
+  desc.flags = 0;
+  desc.flags |= getReadMode(texDesc.readMode);
+  desc.flags |= getsRGB(texDesc.sRGB);
+  desc.flags |= getNormalizedCoords(texDesc.normalizedCoords);
+  desc.maxAnisotropy = texDesc.maxAnisotropy;
+  desc.mipmapFilterMode = getFilterMode(texDesc.mipmapFilterMode);
+  desc.mipmapLevelBias = texDesc.mipmapLevelBias;
+  desc.minMipmapLevelClamp = texDesc.minMipmapLevelClamp;
+  desc.maxMipmapLevelClamp = texDesc.maxMipmapLevelClamp;
+  std::memcpy(desc.borderColor, texDesc.borderColor, sizeof(desc.borderColor));
+
+  return desc;
+}
+
+inline
+hipResourceViewFormat getResourceViewFormat(const HIPresourceViewFormat format) {
+  // These two enums should be isomorphic.
+  return static_cast<hipResourceViewFormat>(format);
+}
+
+inline
+HIPresourceViewFormat getResourceViewFormat(const hipResourceViewFormat format) {
+  // These two enums should be isomorphic.
+  return static_cast<HIPresourceViewFormat>(format);
+}
+
+inline
+hipResourceViewDesc getResourceViewDesc(const HIP_RESOURCE_VIEW_DESC& resViewDesc) {
+  hipResourceViewDesc desc;
+
+  desc.format = getResourceViewFormat(resViewDesc.format);
+  desc.width = resViewDesc.width;
+  desc.height = resViewDesc.height;
+  desc.depth = resViewDesc.depth;
+  desc.firstMipmapLevel = resViewDesc.firstMipmapLevel;
+  desc.lastMipmapLevel = resViewDesc.lastMipmapLevel;
+  desc.firstLayer = resViewDesc.firstLayer;
+  desc.lastLayer = resViewDesc.lastLayer;
+
+  return desc;
+}
+
+inline
+HIP_RESOURCE_VIEW_DESC getResourceViewDesc(const hipResourceViewDesc& resViewDesc) {
+  HIP_RESOURCE_VIEW_DESC desc;
+
+  desc.format = getResourceViewFormat(resViewDesc.format);
+  desc.width = resViewDesc.width;
+  desc.height = resViewDesc.height;
+  desc.depth = resViewDesc.depth;
+  desc.firstMipmapLevel = resViewDesc.firstMipmapLevel;
+  desc.lastMipmapLevel = resViewDesc.lastMipmapLevel;
+  desc.firstLayer = resViewDesc.firstLayer;
+  desc.lastLayer = resViewDesc.lastLayer;
+
+  return desc;
+}
 };
