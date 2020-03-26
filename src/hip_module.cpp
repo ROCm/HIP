@@ -330,22 +330,18 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
         return hipErrorInvalidValue;
     }
 
-    hipFunction_t* kds = reinterpret_cast<hipFunction_t*>(malloc(sizeof(hipFunction_t) * numDevices));
-    if (kds == nullptr) {
-        return hipErrorNotInitialized;
-    }
+    std::vector<hipFunction_t> kds(numDevices,0);
 
     // prepare all kernel descriptors for each device as all streams will be locked in the next loop
     for (int i = 0; i < numDevices; ++i) {
         const hipLaunchParams& lp = launchParamsList[i];
         if (lp.stream == nullptr) {
-            free(kds);
             return hipErrorNotInitialized;
         }
         kds[i] = ps.kernel_descriptor(reinterpret_cast<std::uintptr_t>(lp.func),
                 hip_impl::target_agent(lp.stream));
+
         if (kds[i] == nullptr) {
-            free(kds);
             return hipErrorInvalidValue;
         }
         hip_impl::kernargs_size_align kargs = ps.get_kernargs_size_align(
@@ -376,7 +372,6 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
 
         if(globalWorkSizeX > UINT32_MAX || globalWorkSizeY > UINT32_MAX || globalWorkSizeZ > UINT32_MAX)
         {
-            free(kds);
             return hipErrorInvalidConfiguration;
         }
 
@@ -398,8 +393,6 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
         launchParamsList[i].stream->criticalData()._av.release_locked_hsa_queue();
  #endif
      }
-
-    free(kds);
 
     return result;
 }
