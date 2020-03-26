@@ -358,17 +358,13 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
 
   amd::Device* device = hip::getCurrentDevice()->devices()[0];
 
-  if ((width == 0) || (height == 0)) {
-    *ptr = nullptr;
-    return hipSuccess;
-  }
-  else if (!(device->info().image2DMaxWidth_ >= width &&
-           device->info().image2DMaxHeight_ >= height ) || (ptr == nullptr)) {
+  if (ptr == nullptr) {
     return hipErrorInvalidValue;
   }
 
-  if (device->info().maxMemAllocSize_ < (width * height)) {
-    return hipErrorOutOfMemory;
+  if ((width == 0) || (height == 0)) {
+    *ptr = nullptr;
+    return hipSuccess;
   }
 
   const amd::Image::Format imageFormat(*image_format);
@@ -376,6 +372,11 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
   *pitch = amd::alignUp(width * imageFormat.getElementSize(), device->info().imagePitchAlignment_);
 
   size_t sizeBytes = *pitch * height * depth;
+
+  if (device->info().maxMemAllocSize_ < sizeBytes) {
+    return hipErrorOutOfMemory;
+  }
+
   *ptr = amd::SvmBuffer::malloc(*hip::getCurrentDevice()->asContext(), 0, sizeBytes,
                                 device->info().memBaseAddrAlign_);
 
