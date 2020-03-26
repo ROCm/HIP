@@ -95,15 +95,12 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
 }
 
 hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
-  if (stream_ == hostQueue) return hipSuccess;
+  if ((event_ == nullptr) || (event_->command().queue() == hostQueue)) {
+    return hipSuccess;
+  }
 
   amd::ScopedLock lock(lock_);
   bool retain = false;
-
-  if (event_ == nullptr) {
-    event_ = stream_->getLastQueuedCommand(true);
-    retain = true;
-  }
 
   if (!event_->notifyCmdQueue()) {
     return hipErrorLaunchOutOfResources;
@@ -118,18 +115,11 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
   command->enqueue();
   command->release();
 
-  if (retain) {
-    event_->release();
-    event_ = nullptr;
-  }
-
   return hipSuccess;
 }
 
 void Event::addMarker(amd::HostQueue* queue, amd::Command* command) {
   amd::ScopedLock lock(lock_);
-
-  stream_ = queue;
 
   if (event_ == &command->event()) return;
 
