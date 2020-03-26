@@ -324,13 +324,27 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
                  hipMemcpyKind k) {
+    auto si{info(src)};
+    auto di{info(dst)};
+
+    if (!is_large_BAR){
+       // Pointer info takes presidence over hipMemcpyKind
+       // if there is mismatch b/w Memcpy kind and dst/src pointer
+       // E.g. dst(host pointer),src(device pointer) and hipMemcpyKind set as hipMemcpyHostToDevice
+       if (di.size == is_cpu_owned && si.size == is_cpu_owned)
+          k = hipMemcpyHostToHost;
+       else if (si.size == is_cpu_owned && di.size != is_cpu_owned)
+          k = hipMemcpyHostToDevice;
+       else if (di.size == is_cpu_owned && si.size != is_cpu_owned)
+          k = hipMemcpyDeviceToHost;
+       else
+          k = hipMemcpyDeviceToDevice;
+    }
     switch (k) {
     case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
-    case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, info(dst));
-    case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, info(src));
+    case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, di);
+    case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, si);
     case hipMemcpyDeviceToDevice: {
-        const auto di{info(dst)};
-        const auto si{info(src)};
         hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
                                                        nullptr, di.agentBaseAddress);
         if (res != HSA_STATUS_SUCCESS){
@@ -339,9 +353,13 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
             throwing_result_check(hsa_memory_copy(dst,src,n), __FILE__, __func__, __LINE__);
             return;
         }
+        throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                          nullptr,
+                                                          di.agentBaseAddress),
+                              __FILE__, __func__, __LINE__);
         return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
     }
-    default: return generic_copy(dst, src, n, info(dst), info(src));
+    default: return generic_copy(dst, src, n, di, si);
     }
 }
 
