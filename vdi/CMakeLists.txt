@@ -8,6 +8,7 @@ if(CMAKE_CXX_FLAGS MATCHES "fsanitize=address")
 endif()
 
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib)
 
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
@@ -114,7 +115,7 @@ include_directories("$<TARGET_PROPERTY:amd_comgr,INTERFACE_INCLUDE_DIRECTORIES>"
 
 add_definitions(-DBSD_LIBELF)
 
-add_library(amdhip64 SHARED
+add_library(hip64 OBJECT 
  hip_context.cpp
  hip_device.cpp
  hip_device_runtime.cpp
@@ -135,9 +136,9 @@ add_library(amdhip64 SHARED
  cl_lqdflash_amd.cpp
  fixme.cpp
  )
-
+set_target_properties(hip64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 set_target_properties(
-    amdhip64 PROPERTIES
+    hip64 PROPERTIES
         CXX_STANDARD 14
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
@@ -147,15 +148,25 @@ set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 include(${LIBVDI_STATIC_DIR}/amdvdi_staticTargets.cmake)
 
+add_library(amdhip64 SHARED
+    $<TARGET_OBJECTS:hip64>
+    )
+
+add_library(amdhip64_static STATIC
+    $<TARGET_OBJECTS:hip64>
+    )
+
 add_library(host INTERFACE)
 target_link_libraries(host INTERFACE amdhip64)
+target_link_libraries(host INTERFACE amdhip64_static)
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
+target_link_libraries(amdhip64_static amdvdi_static pthread dl)
 target_link_libraries(amdhip64 amdvdi_static pthread dl)
 
-#install(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so)"   )
 
+INSTALL(PROGRAMS $<TARGET_FILE:amdhip64_static> DESTINATION lib COMPONENT MAIN)
 INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
 INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so  )" DESTINATION lib COMPONENT MAIN)
 
@@ -164,6 +175,6 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhip_hcc.so DESTINATION lib COMPONENT MA
 
 INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAIN)
 
-INSTALL(TARGETS amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+INSTALL(TARGETS amdhip64_static amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 
