@@ -229,6 +229,9 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
     const auto di{info(dst)};
     const auto is_locked{di.type == HSA_EXT_POINTER_TYPE_LOCKED};
 
+    if (di.size != is_cpu_owned || si.size == is_cpu_owned) {
+        throw ihipException(hipErrorInvalidMemcpyDirection);
+    }
     if (!is_locked && si.size == is_cpu_owned) {
         return do_std_memcpy(dst, src, n);
     }
@@ -238,7 +241,7 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
     if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
         return do_copy(dst, src, n, si.agentOwner, si.agentOwner);
     }
-    
+
     if (is_locked) {
         dst = static_cast<char*>(di.agentBaseAddress) +
               (static_cast<char*>(dst) -
@@ -262,11 +265,24 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
 }
 
 inline
+void h2h_copy(void* __restrict dst, const void* __restrict src, size_t n) {
+    const auto si{info(const_cast<void*>(src))};
+    const auto di{info(const_cast<void*>(dst))};
+    if (si.size != is_cpu_owned || di.size != is_cpu_owned) {
+        throw ihipException(hipErrorInvalidMemcpyDirection);
+    }
+    std::memcpy(dst, src, n);
+}
+
+inline
 void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
-              hsa_amd_pointer_info_t di) {
+                    hsa_amd_pointer_info_t di) {
     const auto si{info(const_cast<void*>(src))};
     const auto is_locked{si.type == HSA_EXT_POINTER_TYPE_LOCKED};
 
+    if (si.size != is_cpu_owned || di.size == is_cpu_owned) {
+        throw ihipException(hipErrorInvalidMemcpyDirection);
+    }
     if (!is_locked && di.size == is_cpu_owned) {
         return do_std_memcpy(dst, src, n);
     }
@@ -301,8 +317,26 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
 }
 
 inline
+void d2d_copy(void* __restrict dst, const void* __restrict src, size_t n) {
+    const auto di{info(dst)};
+    auto si{info(src)};
+    const auto is_locked{di.type == HSA_EXT_POINTER_TYPE_LOCKED};
+
+    if (di.size == is_cpu_owned || si.size == is_cpu_owned){
+        throw ihipException(hipErrorInvalidMemcpyDirection);
+    }
+
+    throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                          nullptr,
+                                                          di.agentBaseAddress),
+                              __FILE__, __func__, __LINE__);
+    do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+}
+
+inline
 void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
                   hsa_amd_pointer_info_t di, hsa_amd_pointer_info_t si) {
+
     if (di.size == is_cpu_owned && si.size == is_cpu_owned) {
         return do_std_memcpy(dst, src, n);
     }
@@ -321,40 +355,14 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
 
 inline
 void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
-                 hipMemcpyKind k) {
-    auto si{info(src)};
-    auto di{info(dst)};
+                       hipMemcpyKind k) {
 
-    if (!is_large_BAR){
-       // Pointer info takes presidence over hipMemcpyKind
-       // if there is mismatch b/w Memcpy kind and dst/src pointer
-       // E.g. dst(host pointer),src(device pointer) and hipMemcpyKind set as hipMemcpyHostToDevice
-       if (di.size == is_cpu_owned && si.size == is_cpu_owned)
-          k = hipMemcpyHostToHost;
-       else if (si.size == is_cpu_owned && di.size != is_cpu_owned)
-          k = hipMemcpyHostToDevice;
-       else if (di.size == is_cpu_owned && si.size != is_cpu_owned)
-          k = hipMemcpyDeviceToHost;
-       else
-          k = hipMemcpyDeviceToDevice;
-    }
     switch (k) {
-    case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
-    case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, di);
-    case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, si);
-    case hipMemcpyDeviceToDevice: {
-        hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
-                                                       nullptr, di.agentBaseAddress);
-        if (res == HSA_STATUS_SUCCESS){
-	   return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
-        }
-
-        // If devices do not have access then fallback mechanism will be used
-        // copy will be slower
-        throwing_result_check(hsa_memory_copy(dst,src,n), __FILE__, __func__, __LINE__);
-        break;
-    }
-    default: return generic_copy(dst, src, n, di, si);
+    case hipMemcpyHostToHost: return h2h_copy(dst, src, n);
+    case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, info(dst));
+    case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, info(src));
+    case hipMemcpyDeviceToDevice: return d2d_copy(dst, src, n);
+    default: return generic_copy(dst, src, n, info(dst), info(src));
     }
 }
 

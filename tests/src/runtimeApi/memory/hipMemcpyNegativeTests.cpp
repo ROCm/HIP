@@ -30,24 +30,27 @@ int main() {
     int* A;
     int* Ad;
     int* Bd;
-    
+
     // Allocation
     HIPCHECK(hipMalloc((void**)&Ad, sizeof(int)));
     HIPCHECK(hipMalloc((void**)&Bd, sizeof(int)));
     HIPCHECK(hipHostMalloc((void**)&A,sizeof(int)));
 
-    // Kind should be ignored and test should pass even for incorrect kind
-    HIPCHECK(hipMemcpy(Ad, A, sizeof(int), hipMemcpyDeviceToHost));
-    HIPCHECK(hipMemcpy(A,  Ad, sizeof(int), hipMemcpyHostToDevice));
-    HIPCHECK(hipMemcpy(Ad, Bd, sizeof(int), hipMemcpyHostToHost));
-    HIPCHECK(hipMemcpy(A,  A, sizeof(int), hipMemcpyDeviceToDevice));
-    
+    // If the passed pointers do not match the kind, we should return a
+    // hipErrorInvalidMemcpyDirection error
+    HIPASSERT(hipMemcpy(Ad, A, sizeof(int), hipMemcpyDeviceToHost) == hipErrorInvalidMemcpyDirection);
+    HIPASSERT(hipMemcpy(A,  Ad, sizeof(int), hipMemcpyHostToDevice) == hipErrorInvalidMemcpyDirection);
+    HIPASSERT(hipMemcpy(Ad, Bd, sizeof(int), hipMemcpyHostToHost) == hipErrorInvalidMemcpyDirection);
+#ifndef __HIP_PLATFORM_NVCC__
+    HIPASSERT(hipMemcpy(A,  A, sizeof(int), hipMemcpyDeviceToDevice) == hipErrorInvalidMemcpyDirection);
+#endif
+
     // nullptr passed as source or destination pointer
     HIPASSERT(hipSuccess != hipMemcpy(nullptr, A, sizeof(int), hipMemcpyHostToDevice));
     HIPASSERT(hipSuccess != hipMemcpy(Ad, nullptr, sizeof(int), hipMemcpyHostToDevice));
-    
+
     HIPCHECK(hipFree(Ad));
     HIPCHECK(hipFree(Bd));
     HIPCHECK(hipFree(A));
-    passed();   
+    passed();
 }
