@@ -1,13 +1,13 @@
 Table of Contents
 =================
 
-  * [Profiling HIP Code](#profiling-hip-code" aria-hidden="true"><span aria-hidden="true)
-      * [Using HIP_DB](#using-hip_db" aria-hidden="true"><span aria-hidden="true)
-      * [Using ltrace](#using-ltrace" aria-hidden="true"><span aria-hidden="true)
-      * [Chicken bits](#chicken-bits" aria-hidden="true"><span aria-hidden="true)
-      * [Debugging HIP Applications](#debugging-hip-applications" aria-hidden="true"><span aria-hidden="true)
-      * [General Debugging Tips](#general-debugging-tips" aria-hidden="true"><span aria-hidden="true)
-        * [Print env var state](#print-env-var-state" aria-hidden="true"><span aria-hidden="true)
+  * [Profiling HIP Code](#profiling-hip-code)
+      * [Using HIP_DB](#using-hip_db)
+      * [Using ltrace](#using-ltrace)
+      * [Chicken bits](#chicken-bits)
+      * [Debugging HIP Applications](#debugging-hip-applications)
+      * [General Debugging Tips](#general-debugging-tips)
+        * [Print env var state](#print-env-var-state)
 
 ### Using HIP_DB
 
