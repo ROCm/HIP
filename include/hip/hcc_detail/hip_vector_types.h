@@ -694,7 +694,7 @@ THE SOFTWARE.
             typename U = T,
             typename std::enable_if<std::is_signed<U>{}>::type* = nullptr>
         inline __host__ __device__
-        HIP_vector_type operator-() noexcept
+        HIP_vector_type operator-() const noexcept
         {
             auto tmp(*this);
             tmp.data = -tmp.data;
@@ -705,7 +705,7 @@ THE SOFTWARE.
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
         inline __host__ __device__
-        HIP_vector_type operator~() noexcept
+        HIP_vector_type operator~() const noexcept
         {
             HIP_vector_type r{*this};
             r.data = ~r.data;
