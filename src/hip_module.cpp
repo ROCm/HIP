@@ -510,7 +510,7 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     stream = ihipSyncAndResolveStream(stream);
 
     if (!stream->getDevice()->_props.cooperativeLaunch ||
-        blockDimX.x * blockDimX.y * blockDimX.z > stream->getDevice()->_props.maxThreadsPerBlock) {
+        blockDim.x * blockDim.y * blockDim.z > stream->getDevice()->_props.maxThreadsPerBlock) {
         return hipErrorInvalidConfiguration;
     }
 
@@ -553,7 +553,7 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     GET_TLS();
     uint32_t numBlocksPerSm = 0;
     result = ihipOccupancyMaxActiveBlocksPerMultiprocessor(tls, &numBlocksPerSm, kd,
-                    blockDimX.x * blockDimX.y * blockDimX.z, sharedMemBytes);
+                    blockDim.x * blockDim.y * blockDim.z, sharedMemBytes);
     if (result != hipSuccess) {
         return hipErrorLaunchFailure;
     }
