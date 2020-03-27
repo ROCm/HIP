@@ -312,6 +312,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
                                       HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, pitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
+            free(pTexture);
             return ihipLogStatus(hipErrorRuntimeOther);
         }
 
@@ -449,6 +450,7 @@ hipError_t ihipBindTextureImpl(TlsData *tls_, int dim, enum hipTextureReadMode r
                                       HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, rowPitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
+            free(pTexture);
             return hipErrorRuntimeOther;
         }
         getHipTextureObject(&textureObject, pTexture->image, pTexture->sampler);
@@ -525,6 +527,7 @@ hipError_t ihipBindTexture2DImpl(TlsData *tls, int dim, enum hipTextureReadMode 
                                       HSA_EXT_IMAGE_DATA_LAYOUT_LINEAR, pitch, 0, &(pTexture->image)) ||
             HSA_STATUS_SUCCESS !=
                 hsa_ext_sampler_create(*agent, &samplerDescriptor, &(pTexture->sampler))) {
+            free(pTexture);
             return hipErrorRuntimeOther;
         }
         getHipTextureObject(&textureObject, pTexture->image, pTexture->sampler);
