@@ -237,3 +237,4 @@ hipMipmappedArrayDestroy
 hipFreeMipmappedArray
 hipMipmappedArrayGetLevel
 hipGetMipmappedArrayLevel
+hipMallocHost
