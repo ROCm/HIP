@@ -2,7 +2,7 @@
 
 #include "common.hpp"
 
-#include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "../src/code_object_bundle.inl"
 
 #include "clara/clara.hpp"
 
