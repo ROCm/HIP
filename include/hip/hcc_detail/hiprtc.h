@@ -28,6 +28,8 @@ extern "C" {
 
 #include <stdlib.h>
 
+#pragma GCC visibility push (default)
+
 enum hiprtcResult {
     HIPRTC_SUCCESS = 0,
     HIPRTC_ERROR_OUT_OF_MEMORY = 1,
@@ -78,6 +80,8 @@ hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog,
 hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* code);
 
 hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* codeSizeRet);
+
+#pragma GCC visibility pop
 
 #ifdef __cplusplus
 }

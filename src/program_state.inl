@@ -1,6 +1,6 @@
 #include "../include/hip/hcc_detail/program_state.hpp"
 
-#include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "code_object_bundle.inl"
 #include "../include/hip/hcc_detail/hsa_helpers.hpp"
 
 #if !defined(__cpp_exceptions)

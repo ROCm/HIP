@@ -259,7 +259,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
 
     set(SOURCE_FILES_RUNTIME
-        src/code_object_bundle.cpp
         src/program_state.cpp
         src/hip_clang.cpp
         src/hip_hcc.cpp
@@ -305,7 +304,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
         target_link_libraries(hip_hcc PRIVATE hc_am)
         target_link_libraries(hip_hcc_static PRIVATE hc_am)
 
-        add_library(hiprtc SHARED src/hiprtc.cpp src/code_object_bundle.cpp)
+        add_library(hiprtc SHARED src/hiprtc.cpp)
         target_compile_options(hiprtc PRIVATE -DDISABLE_REDUCED_GPU_BLOB_COPY)
         set_property ( TARGET hiprtc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
         set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
@@ -315,6 +314,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
     endif()
     set_target_properties(hip_hcc PROPERTIES CXX_VISIBILITY_PRESET hidden)
     set_target_properties(hip_hcc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+    set_target_properties(hiprtc PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(hiprtc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+
 
     if(HIP_PLATFORM STREQUAL "hcc")
         find_package(amd_comgr REQUIRED CONFIG

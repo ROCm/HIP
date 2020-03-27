@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include "../include/hip/hiprtc.h"
-#include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "code_object_bundle.inl"
 #include "../include/hip/hcc_detail/elfio/elfio.hpp"
 #include "../include/hip/hcc_detail/program_state.hpp"
 
