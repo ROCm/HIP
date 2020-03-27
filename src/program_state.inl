@@ -19,6 +19,8 @@
 #include <hsa/hsa_ven_amd_loader.h>
 #include <amd_comgr.h>
 #include "hc.hpp"
+#include "hip_hcc_internal.h"
+#include "trace_helper.h"
 
 #include <link.h>
 
@@ -944,14 +946,16 @@ public:
 
         auto it0 = get_functions(agent).find(function_address);
 
-        if (it0 == get_functions(agent).cend()) {
-            hip_throw(std::runtime_error{
+        if (it0 != get_functions(agent).cend()) return it0->second;
+
+        // For hip-clang compiler + Hcc RT
+        hipFunction_t f = ihipGetDeviceFunction((const void*)function_address);
+        if (f) return reinterpret_cast<Kernel_descriptor&>(*f);
+
+        hip_throw(std::runtime_error{
                     "No device code available for function: " +
                     std::string(name(function_address)) +
                     ", for agent: " + name(agent)});
-        }
-
-        return it0->second;
     }
 
     const std::vector<std::pair<std::size_t, std::size_t>>& 
