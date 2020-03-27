@@ -44,7 +44,7 @@ extern "C" __device__ __attribute__((const)) uint __ockl_mul24_u32(uint, uint);
 extern "C" __device__ __attribute__((const)) int __ockl_mul24_i32(int, int);
 extern "C" __device__ __attribute__((const)) uint __ockl_mul_hi_u32(uint, uint);
 extern "C" __device__ __attribute__((const)) int __ockl_mul_hi_i32(int, int);
-extern "C" __device__ __attribute__((const)) uint __ockl_sad_u32(uint, uint, uint);
+extern "C" __device__ __attribute__((const)) uint __ockl_sadd_u32(uint, uint, uint);
 
 extern "C" __device__ __attribute__((const)) uchar __ockl_clz_u8(uchar);
 extern "C" __device__ __attribute__((const)) ushort __ockl_clz_u16(ushort);

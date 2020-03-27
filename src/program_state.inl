@@ -1,6 +1,6 @@
 #include "../include/hip/hcc_detail/program_state.hpp"
 
-#include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "code_object_bundle.inl"
 #include "../include/hip/hcc_detail/hsa_helpers.hpp"
 
 #if !defined(__cpp_exceptions)
@@ -357,8 +357,11 @@ public:
 
             const auto it1 = get_symbol_addresses().find(x);
             if (it1 == get_symbol_addresses().cend()) {
-                hip_throw(std::runtime_error{
-                    "Global symbol: " + x + " is undefined."});
+                // For a unknown symbol, initialize it with a magic poison
+                hsa_executable_agent_global_variable_define(
+                    executable, agent, x.c_str(), 
+                    reinterpret_cast<void*>(0xDEADBEEFDEADBEEFull));
+                continue;
             }
 
             hsa_status_t status;

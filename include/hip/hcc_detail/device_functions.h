@@ -230,7 +230,7 @@ __device__ static inline unsigned int __urhadd(unsigned int x, unsigned int y) {
     return (x + y + 1) >> 1;
 }
 __device__ static inline unsigned int __usad(unsigned int x, unsigned int y, unsigned int z) {
-    return __ockl_sad_u32(x, y, z);
+    return __ockl_sadd_u32(x, y, z);
 }
 
 __device__ static inline unsigned int __lane_id() { return  __mbcnt_hi(-1, __mbcnt_lo(-1, 0)); }
