@@ -75,12 +75,17 @@ set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU targets to compile for")
 
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
 
+set(HIP_CLANG_INTERNAL_FLAGS)
+if(NOT CMAKE_CXX_COMPILER MATCHES ".*hipcc")
+set(HIP_CLANG_INTERNAL_FLAGS -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false)
+endif()
+
 set_property(TARGET hip::device APPEND PROPERTY 
-  INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
+  INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib ${HIP_CLANG_INTERNAL_FLAGS}
 )
 
 set_property(TARGET hip::device APPEND PROPERTY 
-  INTERFACE_LINK_LIBRARIES --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib --hip-link
+  INTERFACE_LINK_LIBRARIES --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib --hip-link ${HIP_CLANG_INTERNAL_FLAGS}
 )
 
 set_property(TARGET hip::device APPEND PROPERTY 
