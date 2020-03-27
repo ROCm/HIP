@@ -2101,3 +2101,14 @@ hipError_t hipGetMipmappedArrayLevel(hipArray_t *levelArray,
 
   HIP_RETURN(hipErrorNotSupported);
 }
+
+hipError_t hipMallocHost(void** ptr,
+                         size_t size) {
+  HIP_INIT_API(hipMallocHost, ptr, size);
+
+  if (ptr == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  HIP_RETURN(ihipMalloc(ptr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER));
+}
