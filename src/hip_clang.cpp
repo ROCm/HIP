@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "hip_fatbin.h"
 #include "trace_helper.h"
+#include "program_state.inl"
 
 #ifdef __GNUC__
 #pragma GCC visibility push (default)
@@ -94,8 +95,10 @@ __hipRegisterFatBinary(const void* data)
                                                                          agent);
 
       if (module->executable.handle) {
-        modules->at(deviceId) = module;
-        tprintf(DB_FB, "Loaded code object for %s\n", name);
+         hip_impl::program_state_impl::read_kernarg_metadata(image, module->kernargs);
+         modules->at(deviceId) = module;
+
+         tprintf(DB_FB, "Loaded code object for %s, args size=%ld\n", name, module->kernargs.size());
       } else {
         fprintf(stderr, "Failed to load code object for %s\n", name);
         abort();
@@ -232,7 +235,7 @@ static DeviceVar* findVar(std::string hostVar, int deviceId, hipModule_t hmod) {
 }
 
 hipError_t ihipGetGlobalVar(hipDeviceptr_t* dev_ptr, size_t* size_ptr,
-		              const char* hostVar, hipModule_t hmod) {
+                             const char* hostVar, hipModule_t hmod) {
   GET_TLS();
   auto ctx = ihipGetTlsDefaultCtx();
 
@@ -425,6 +428,41 @@ extern "C" hipError_t __hipPopCallConfiguration(
   return hipSuccess;
 }
 
+int getCurrentDeviceId()
+{
+  GET_TLS();
+
+  int deviceId = 0;
+  auto ctx = ihipGetTlsDefaultCtx();
+
+  if(!ctx) return deviceId;
+
+  LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+
+  if(crit->_execStack.size() != 0)
+  {
+    auto &exec = crit->_execStack.top();
+
+    if (exec._hStream) {
+      deviceId = exec._hStream->getDevice()->_deviceId;
+    } else if (ctx->getDevice()) {
+      deviceId = ctx->getDevice()->_deviceId;
+    }
+  } else if (ctx->getDevice()) {
+    deviceId = ctx->getDevice()->_deviceId;
+  }
+  return deviceId;
+}
+
+hipFunction_t ihipGetDeviceFunction(const void *hostFunction)
+{
+  int deviceId = getCurrentDeviceId();
+  auto it = g_functions.find(hostFunction);
+  if (it == g_functions.end() || !it->second[deviceId]) {
+    return nullptr;
+  }
+  return it->second[deviceId];
+}
 
 hipError_t hipSetupArgument(
   const void *arg,
