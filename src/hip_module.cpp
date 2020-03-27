@@ -1143,7 +1143,7 @@ inline hsa_status_t remove_agent_global_variables(hsa_executable_t, hsa_agent_t 
 hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const char* kname,
                                             hsa_agent_t* agent = nullptr) {
     using namespace hip_impl;
-
+#if 0
     pair<const char*, hsa_executable_symbol_t> r{kname, {}};
 
     hsa_executable_iterate_agent_symbols(
@@ -1163,6 +1163,12 @@ hsa_executable_symbol_t find_kernel_by_name(hsa_executable_t executable, const c
         &r);
 
     return r.second;
+#endif
+    hsa_executable_symbol_t symbol = { 0 };
+    hsa_agent_t thisagent = agent ? *agent : this_agent(); 
+    hsa_status_t err = hsa_executable_get_symbol_by_name(executable, kname, &thisagent ,&symbol);
+    //TODO check err ?
+    return symbol;
 }
 
 
