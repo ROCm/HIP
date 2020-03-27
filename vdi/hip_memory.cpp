@@ -1534,7 +1534,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
   const size_t arrayHeight = (dst->height != 0) ? dst->height : 1;
   const size_t witdthInBytes = count / arrayHeight;
 
-  const size_t height = (count / dst->width) / (hip::getElementSize(dst->Format) * dst->NumChannels);
+  const size_t height = (count / dst->width) / hip::getElementSize(dst);
 
   HIP_RETURN(ihipMemcpy2DToArray(dst, wOffset, hOffset, src, 0 /* spitch */, witdthInBytes, height, kind, nullptr));
 }
@@ -1574,7 +1574,7 @@ hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t src, size_t wOffsetSrc
   const size_t arrayHeight = (src->height != 0) ? src->height : 1;
   const size_t witdthInBytes = count / arrayHeight;
 
-  const size_t height = (count / src->width) / (hip::getElementSize(src->Format) * src->NumChannels);
+  const size_t height = (count / src->width) / hip::getElementSize(src);
 
   HIP_RETURN(ihipMemcpy2DFromArray(dst, 0 /* dpitch */, src, wOffsetSrc, hOffset, witdthInBytes, height, kind, nullptr));
 }
@@ -1609,7 +1609,7 @@ hipError_t ihipMemcpy3D(const hipMemcpy3DParms* p,
 
   // If the source and destination are both arrays, hipMemcpy3D() will return an error if they do not have the same element size.
   if (((p->srcArray != nullptr) && (p->dstArray != nullptr)) &&
-      (hip::getElementSize(p->dstArray->Format) != hip::getElementSize(p->dstArray->Format))) {
+      (hip::getElementSize(p->dstArray) != hip::getElementSize(p->dstArray))) {
     return hipErrorInvalidValue;
   }
 
@@ -2062,7 +2062,7 @@ hipError_t hipMemcpyFromArrayAsync(void* dst, hipArray_const_t src, size_t wOffs
   const size_t arrayHeight = (src->height != 0) ? src->height : 1;
   const size_t widthInBytes = count / arrayHeight;
 
-  const size_t height = (count / src->width) / (hip::getElementSize(src->Format) * src->NumChannels);
+  const size_t height = (count / src->width) / hip::getElementSize(src);
 
   HIP_RETURN(ihipMemcpy2DFromArray(dst, 0 /* dpitch */, src, wOffsetSrc, hOffsetSrc, widthInBytes, height, kind, stream, true));
 }
@@ -2083,7 +2083,7 @@ hipError_t hipMemcpyToArrayAsync(hipArray_t dst, size_t wOffset, size_t hOffset,
   const size_t arrayHeight = (dst->height != 0) ? dst->height : 1;
   const size_t widthInBytes = count / arrayHeight;
 
-  const size_t height = (count / dst->width) / (hip::getElementSize(dst->Format) * dst->NumChannels);
+  const size_t height = (count / dst->width) / hip::getElementSize(dst);
 
   HIP_RETURN(ihipMemcpy2DToArray(dst, wOffset, hOffset, src, 0 /* spitch */, widthInBytes, height, kind, stream, true));
 }
