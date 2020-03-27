@@ -183,6 +183,7 @@ global:
     hiprtcGetErrorString;
     hiprtcAddNameExpression;
     hiprtcVersion;
+    hipMallocHost;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;
