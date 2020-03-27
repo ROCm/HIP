@@ -882,6 +882,19 @@ hipError_t hipMemcpyDtoHAsync(void* dstHost,
   HIP_RETURN(ihipMemcpy(dstHost, srcDevice, ByteCount, hipMemcpyDeviceToHost, *hip::getQueue(stream), true));
 }
 
+inline void adjustOrigin(amd::Coord3D &origin,
+                         size_t offset,
+                         size_t rowPitch,
+                         size_t slicePitch) {
+  size_t zOffset = offset / (slicePitch ? slicePitch : 1);
+  size_t yOffset = (offset - slicePitch * zOffset) / (rowPitch ? rowPitch : 1);
+  size_t xOffset = (offset - slicePitch * zOffset - rowPitch * yOffset);
+
+  static_cast<size_t*>(origin)[0] += xOffset;
+  static_cast<size_t*>(origin)[1] += yOffset;
+  static_cast<size_t*>(origin)[2] += zOffset;
+}
+
 hipError_t ihipMemcpyAtoD(hipArray* srcArray,
                           void* dstDevice,
                           amd::Coord3D srcOrigin,
@@ -897,9 +910,9 @@ hipError_t ihipMemcpyAtoD(hipArray* srcArray,
   }
 
   amd::Image* srcImage = as_amd(srcMemObj)->asImage();
-  size_t offset = 0;
-  amd::Memory* dstMemory = getMemoryObject(dstDevice, offset);
-  assert(offset != 0);
+  size_t dstOffset = 0;
+  amd::Memory* dstMemory = getMemoryObject(dstDevice, dstOffset);
+  adjustOrigin(dstOrigin, dstOffset, dstRowPitch, dstSlicePitch);
 
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcImage->getRowPitch(), srcImage->getSlicePitch())) {
@@ -955,9 +968,9 @@ hipError_t ihipMemcpyDtoA(void* srcDevice,
     return hipErrorInvalidValue;
   }
 
-  size_t offset = 0;
-  amd::Memory* srcMemory = getMemoryObject(srcDevice, offset);
-  assert(offset != 0);
+  size_t srcOffset = 0;
+  amd::Memory* srcMemory = getMemoryObject(srcDevice, srcOffset);
+  adjustOrigin(srcOrigin, srcOffset, srcRowPitch, srcSlicePitch);
   amd::Image* dstImage = as_amd(dstMemObj)->asImage();
 
   amd::BufferRect srcRect;
@@ -1013,16 +1026,18 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
                           bool isAsync = false) {
   size_t srcOffset = 0;
   amd::Memory *srcMemory = getMemoryObject(srcDevice, srcOffset);
+  adjustOrigin(srcOrigin, srcOffset, srcRowPitch, srcSlicePitch);
   size_t dstOffset = 0;
   amd::Memory *dstMemory = getMemoryObject(dstDevice, dstOffset);
+  adjustOrigin(dstOrigin, dstOffset, dstRowPitch, dstSlicePitch);
 
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
     return hipErrorInvalidValue;
   }
 
-  amd::Coord3D srcStart(srcRect.start_ + srcOffset, 0, 0);
-  amd::Coord3D srcEnd(srcRect.end_ + srcOffset, 1, 1);
+  amd::Coord3D srcStart(srcRect.start_, 0, 0);
+  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
   if (!srcMemory->validateRegion(srcStart, srcEnd)) {
     return hipErrorInvalidValue;
   }
@@ -1032,8 +1047,8 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
     return hipErrorInvalidValue;
   }
 
-  amd::Coord3D dstStart(dstRect.start_ + dstOffset, 0, 0);
-  amd::Coord3D dstEnd(dstRect.end_ + dstOffset, 1, 1);
+  amd::Coord3D dstStart(dstRect.start_, 0, 0);
+  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
   if (!dstMemory->validateRegion(dstStart, dstEnd)) {
     return hipErrorInvalidValue;
   }
@@ -1075,14 +1090,15 @@ hipError_t ihipMemcpyDtoH(void* srcDevice,
                           bool isAsync = false) {
   size_t srcOffset = 0;
   amd::Memory *srcMemory = getMemoryObject(srcDevice, srcOffset);
+  adjustOrigin(srcOrigin, srcOffset, srcRowPitch, srcSlicePitch);
 
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
     return hipErrorInvalidValue;
   }
 
-  amd::Coord3D srcStart(srcRect.start_ + srcOffset, 0, 0);
-  amd::Coord3D srcEnd(srcRect.end_ + srcOffset, 1, 1);
+  amd::Coord3D srcStart(srcRect.start_, 0, 0);
+  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
   if (!srcMemory->validateRegion(srcStart, srcEnd)) {
     return hipErrorInvalidValue;
   }
@@ -1128,6 +1144,7 @@ hipError_t ihipMemcpyHtoD(const void* srcHost,
                           bool isAsync = false) {
   size_t dstOffset = 0;
   amd::Memory *dstMemory = getMemoryObject(dstDevice, dstOffset);
+  adjustOrigin(dstOrigin, dstOffset, dstRowPitch, dstSlicePitch);
 
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
@@ -1139,8 +1156,8 @@ hipError_t ihipMemcpyHtoD(const void* srcHost,
     return hipErrorInvalidValue;
   }
 
-  amd::Coord3D dstStart(dstRect.start_ + dstOffset, 0, 0);
-  amd::Coord3D dstEnd(dstRect.end_ + dstOffset, 1, 1);
+  amd::Coord3D dstStart(dstRect.start_, 0, 0);
+  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
   if (!dstMemory->validateRegion(dstStart, dstEnd)) {
     return hipErrorInvalidValue;
   }
