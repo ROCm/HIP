@@ -389,16 +389,28 @@ const hipStream_t hipStreamNull = 0x0;
 
 
 /**
- * HIP IPC Handle Size
+ * HIP IPC Mem Handle Size
  */
-#define HIP_IPC_RESERVED_SIZE 24
+#define HIP_IPC_MEM_RESERVED_SIZE 24
 class ihipIpcMemHandle_t {
    public:
 #if USE_IPC
     hsa_amd_ipc_memory_t ipc_handle;  ///< ipc memory handle on ROCr
 #endif
     size_t psize;
-    char reserved[HIP_IPC_RESERVED_SIZE];
+    char reserved[HIP_IPC_MEM_RESERVED_SIZE];
+};
+
+/**
+ * HIP IPC Event Handle Size
+ */
+#define HIP_IPC_EVENT_RESERVED_SIZE 32
+class ihipIpcEventHandle_t {
+   public:
+#if USE_IPC
+    hsa_amd_ipc_signal_t ipc_handle;  ///< ipc signal handle on ROCr
+#endif
+    char reserved[HIP_IPC_EVENT_RESERVED_SIZE];
 };
 
 
@@ -677,18 +689,20 @@ struct ihipEventData_t {
         _stream = NULL;
         _timestamp = 0;
         _type = hipEventTypeIndependent;
+        _ipc_signal.handle = 0;
     };
 
-    void marker(const hc::completion_future& marker) { _marker = marker; };
+    void marker(const hc::completion_future& marker) { _marker = marker; }
     hc::completion_future& marker() { return _marker; }
-    uint64_t timestamp() const { return _timestamp; };
-    ihipEventType_t type() const { return _type; };
+    uint64_t timestamp() const { return _timestamp; }
+    ihipEventType_t type() const { return _type; }
 
     ihipEventType_t _type;
     hipEventStatus_t _state;
     hipStream_t _stream;  // Stream where the event is recorded.  Null stream is resolved to actual
                           // stream when recorded
     uint64_t _timestamp;  // store timestamp, may be set on host or by marker.
+    hsa_signal_t _ipc_signal;
    private:
     hc::completion_future _marker;
 };
@@ -700,7 +714,11 @@ template <typename MUTEX_TYPE>
 class ihipEventCriticalBase_t : LockedBase<MUTEX_TYPE> {
    public:
     explicit ihipEventCriticalBase_t(const ihipEvent_t* parentEvent) : _parent(parentEvent) {}
-    ~ihipEventCriticalBase_t(){};
+    ~ihipEventCriticalBase_t() {
+        if (_eventData._ipc_signal.handle) {
+            hsa_signal_destroy(_eventData._ipc_signal);
+        }
+    }
 
     // Keep data in structure so it can be easily copied into snapshots
     // (used to reduce lock contention and preserve correct lock order)

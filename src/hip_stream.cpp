@@ -139,11 +139,16 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
         auto ecd = event->locked_copyCrit(); 
         if ((ecd._state != hipEventStatusUnitialized) && (ecd._state != hipEventStatusCreated)) {
             if (HIP_SYNC_STREAM_WAIT || (HIP_SYNC_NULL_STREAM && (stream == 0))) {
-                // conservative wait on host for the specified event to complete:
-                // return _stream->locked_eventWaitComplete(this, waitMode);
-                //
-                ecd.marker().wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
-                                                                         : hc::hcWaitModeActive);
+                // if event is an IPC event, it doesn't have a marker, just an IPC signal
+                if (ecd._ipc_signal.handle) {
+                    auto waitMode = (event->_flags & hipEventBlockingSync) ? HSA_WAIT_STATE_BLOCKED
+                                                                           : HSA_WAIT_STATE_ACTIVE;
+                    hsa_signal_wait_scacquire(ecd._ipc_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, waitMode);
+                }
+                else {
+                    ecd.marker().wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
+                                                                             : hc::hcWaitModeActive);
+                }
             } else {
                 stream = ihipSyncAndResolveStream(stream);
                 // This will use create_blocking_marker to wait on the specified queue.

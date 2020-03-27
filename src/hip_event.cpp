@@ -24,6 +24,32 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "trace_helper.h"
 
+namespace {
+
+    inline
+    const char* hsa_to_string(hsa_status_t err) noexcept
+    {
+        const char* r{};
+
+        if (hsa_status_string(err, &r) == HSA_STATUS_SUCCESS) return r;
+
+        return "Unknown.";
+    }
+
+    template<std::size_t m, std::size_t n>
+    inline
+    void throwing_result_check(hsa_status_t res, const char (&file)[m],
+                               const char (&function)[n], int line) {
+        if (res == HSA_STATUS_SUCCESS) return;
+
+        throw std::runtime_error{"Failed in file " + (file +
+                                 (", in function \"" + (function +
+                                 ("\", on line " + std::to_string(line))))) +
+                                 ", with error: " + hsa_to_string(res)};
+    }
+
+} // Unnamed namespace.
+
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
 // Events
@@ -72,7 +98,8 @@ hipError_t ihipEventCreate(hipEvent_t* event, unsigned flags) {
 
     // TODO-IPC - support hipEventInterprocess.
     unsigned supportedFlags = hipEventDefault | hipEventBlockingSync | hipEventDisableTiming |
-                              hipEventReleaseToDevice | hipEventReleaseToSystem;
+                              hipEventReleaseToDevice | hipEventReleaseToSystem |
+                              hipEventInterprocess;
     const unsigned releaseFlags = (hipEventReleaseToDevice | hipEventReleaseToSystem);
 
     const bool illegalFlags =
@@ -100,7 +127,6 @@ hipError_t hipEventCreate(hipEvent_t* event) {
     return ihipLogStatus(ihipEventCreate(event, 0));
 }
 
-
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     HIP_INIT_SPECIAL_API(hipEventRecord, TRACE_SYNC, event, stream);
     if (!event) return ihipLogStatus(hipErrorInvalidHandle);
@@ -116,6 +142,18 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
         eCrit->_eventData._stream = stream;
         eCrit->_eventData._timestamp = hc::get_system_ticks();
         eCrit->_eventData._state = hipEventStatusComplete;
+        if (event->_flags & hipEventInterprocess) {
+            // remove previous IPC signal, if any
+            if (eCrit->_eventData._ipc_signal.handle) {
+                throwing_result_check(
+                        hsa_signal_destroy(eCrit->_eventData._ipc_signal),
+                        __FILE__, __func__, __LINE__);
+            }
+            // create new IPC signal, but it is already complete, so initialize to 0
+            throwing_result_check(
+                    hsa_amd_signal_create(0, 0, NULL, HSA_AMD_SIGNAL_IPC, &eCrit->_eventData._ipc_signal),
+                    __FILE__, __func__, __LINE__);
+        }
     }
     else {
         // Record the event in the stream:
@@ -123,6 +161,34 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
         eCrit->_eventData._stream = stream;
         eCrit->_eventData._timestamp = 0;
         eCrit->_eventData._state = hipEventStatusRecording;
+        if (event->_flags & hipEventInterprocess) {
+            // remove previous IPC signal, if any
+            if (eCrit->_eventData._ipc_signal.handle) {
+                throwing_result_check(
+                        hsa_signal_destroy(eCrit->_eventData._ipc_signal),
+                        __FILE__, __func__, __LINE__);
+            }
+            // create new IPC signal
+            throwing_result_check(
+                    hsa_amd_signal_create(1, 0, NULL, HSA_AMD_SIGNAL_IPC, &eCrit->_eventData._ipc_signal),
+                    __FILE__, __func__, __LINE__);
+            // forward signal state from local signal to IPC signal via host callback
+            // create callback that can be passed to hsa_amd_signal_async_handler
+            // this function sets the ipc signal to 0 to indicate completion
+            auto signal{eCrit->_eventData._ipc_signal};
+            auto t{new std::function<void()>{[=]() {
+                hsa_signal_store_relaxed(signal, 0);
+            }}};
+            // register above callback with HSA runtime to be called when local signal
+            // is decremented from 1 to 0 by CP
+            auto local_signal = *reinterpret_cast<hsa_signal_t*>(eCrit->_eventData.marker().get_native_handle());
+            hsa_amd_signal_async_handler(local_signal, HSA_SIGNAL_CONDITION_LT, 1,
+                [](hsa_signal_value_t x, void* p) {
+                    (*static_cast<decltype(t)>(p))();
+                    delete static_cast<decltype(t)>(p);
+                    return false;
+                }, t);
+        }
     }
     return ihipLogStatus(hipSuccess);
 }
@@ -150,6 +216,14 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
                 "hipEventReleaseToSystem\n");
         }
         auto ecd = event->locked_copyCrit();
+
+        // this event is either from an ipc handle, or the owner of a local ipc event
+        if (ecd._ipc_signal.handle) {
+            auto waitMode = (event->_flags & hipEventBlockingSync) ? HSA_WAIT_STATE_BLOCKED
+                                                                   : HSA_WAIT_STATE_ACTIVE;
+            hsa_signal_wait_scacquire(ecd._ipc_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, waitMode);
+            return ihipLogStatus(hipSuccess);
+        }
 
         if (ecd._state == hipEventStatusUnitialized) {
             return ihipLogStatus(hipErrorInvalidHandle);
@@ -232,9 +306,72 @@ hipError_t hipEventQuery(hipEvent_t event) {
 
     auto ecd = event->locked_copyCrit();
 
+    // this event is either from an ipc handle, or the owner of a local ipc event
+    if (ecd._ipc_signal.handle) {
+        if (hsa_signal_load_scacquire(ecd._ipc_signal) == 0) {
+            return ihipLogStatus(hipSuccess);
+        }
+        else {
+            return ihipLogStatus(hipErrorNotReady);
+        }
+    }
+
     if (ecd._state == hipEventStatusRecording && !ecd.marker().is_ready()) {
         return ihipLogStatus(hipErrorNotReady);
     }
 
     return ihipLogStatus(hipSuccess);
+}
+
+hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event)
+{
+    HIP_INIT_API(hipIpcGetEventHandle, handle, event);
+
+#if USE_IPC
+    if (!handle) return ihipLogStatus(hipErrorInvalidHandle);
+    if (!event) return ihipLogStatus(hipErrorInvalidHandle);
+    if (!(event->_flags & hipEventInterprocess)) return ihipLogStatus(hipErrorInvalidHandle);
+    if (!(event->_flags & hipEventDisableTiming)) return ihipLogStatus(hipErrorInvalidHandle);
+
+    auto ecd = event->locked_copyCrit();
+
+    // cannot create handle unless this event was recorded locally
+    if (ecd._ipc_signal.handle == 0) return ihipLogStatus(hipErrorInvalidHandle);
+
+    // Create HSA ipc signal
+    ihipIpcEventHandle_t* iHandle = (ihipIpcEventHandle_t*)handle;
+    auto hsa_status = hsa_amd_ipc_signal_create(ecd._ipc_signal, &(iHandle->ipc_handle));
+    if (hsa_status == HSA_STATUS_ERROR_OUT_OF_RESOURCES) return ihipLogStatus(hipErrorRuntimeMemory);
+    if (hsa_status != HSA_STATUS_SUCCESS) return ihipLogStatus(hipErrorRuntimeOther);
+    return ihipLogStatus(hipSuccess);
+#else
+    return ihipLogStatus(hipErrorNotSupported);
+#endif
+}
+
+hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle)
+{
+    HIP_INIT_API(hipIpcOpenEventHandle, event, &handle);
+
+#if USE_IPC
+    if (!event) return ihipLogStatus(hipErrorInvalidHandle);
+
+    // create a new event with timing disabled, per spec
+    auto hip_status = ihipEventCreate(event, hipEventDisableTiming);
+    if (hip_status != hipSuccess) return ihipLogStatus(hip_status);
+
+    ihipIpcEventHandle_t* iHandle = (ihipIpcEventHandle_t*)&handle;
+    LockedAccessor_EventCrit_t crit((*event)->criticalData());
+    // this event is either recording or complete,
+    // doesn't matter, so long as it isn't in an uninitialized or created state
+    crit->_eventData._state = hipEventStatusRecording;
+    // attach to the ipc signal
+    auto hsa_status = hsa_amd_ipc_signal_attach(&(iHandle->ipc_handle), &(crit->_eventData._ipc_signal));
+    if (hsa_status == HSA_STATUS_ERROR_OUT_OF_RESOURCES) return ihipLogStatus(hipErrorRuntimeMemory);
+    if (hsa_status != HSA_STATUS_SUCCESS) return ihipLogStatus(hipErrorRuntimeOther);
+
+    return ihipLogStatus(hipSuccess);
+#else
+    return ihipLogStatus(hipErrorNotSupported);
+#endif
 }

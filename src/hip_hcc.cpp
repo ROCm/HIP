@@ -331,7 +331,39 @@ void ihipStream_t::locked_wait() {
 void ihipStream_t::locked_streamWaitEvent(ihipEventData_t& ecd) {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
+    // if event is an IPC event, it doesn't have a marker, just an IPC signal
+    // we use a host callback to block stream with a signal wait
+    if (ecd._ipc_signal.handle) {
+        // create first marker
+        auto cf = crit->_av.create_marker(hc::no_scope);
+        // get its signal
+        auto signal = *reinterpret_cast<hsa_signal_t*>(cf.get_native_handle());
+        // increment its signal value
+        hsa_signal_add_relaxed(signal, 1);
+
+        // create callback that can be passed to hsa_amd_signal_async_handler
+        // this function will host wait on IPC signal, then sets first packet's signal to 0 to indicate completion
+        auto ipc_signal{ecd._ipc_signal};
+        auto t{new std::function<void()>{[=]() {
+            hsa_signal_wait_scacquire(ipc_signal, HSA_SIGNAL_CONDITION_LT, 1, UINT64_MAX, HSA_WAIT_STATE_ACTIVE);
+            hsa_signal_store_relaxed(signal, 0);
+        }}};
+
+        // register above callback with HSA runtime to be called when first packet's signal
+        // is decremented from 2 to 1 by CP (or it is already at 1)
+        hsa_amd_signal_async_handler(signal, HSA_SIGNAL_CONDITION_EQ, 1,
+            [](hsa_signal_value_t x, void* p) {
+                (*static_cast<decltype(t)>(p))();
+                delete static_cast<decltype(t)>(p);
+                return false;
+            }, t);
+
+        // create additional marker that blocks on the first one
+        crit->_av.create_blocking_marker(cf, hc::no_scope);
+    }
+    else {
+        crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
+    }
 }
 
 
