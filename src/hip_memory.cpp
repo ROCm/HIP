@@ -309,12 +309,14 @@ void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
     if (di.size == is_cpu_owned) return d2h_copy(dst, src, n, si);
     if (si.size == is_cpu_owned) return h2d_copy(dst, src, n, di);
 
-    throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
-                                                      nullptr,
-                                                      di.agentBaseAddress),
-                          __FILE__, __func__, __LINE__);
-
-    return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+    hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                   nullptr, di.agentBaseAddress);
+    if (res == HSA_STATUS_SUCCESS){
+        return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+    }
+    // If devices do not have access then fallback mechanism will be used
+    // copy will be slower
+    throwing_result_check(hsa_memory_copy(dst,src,n), __FILE__, __func__, __LINE__);
 }
 
 inline
@@ -341,11 +343,16 @@ void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
     case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, di);
     case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, si);
     case hipMemcpyDeviceToDevice: {
-        throwing_result_check(hsa_amd_agents_allow_access(1u, &si.agentOwner,
-                                                          nullptr,
-                                                          di.agentBaseAddress),
-                              __FILE__, __func__, __LINE__);
-        return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+        hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                       nullptr, di.agentBaseAddress);
+        if (res == HSA_STATUS_SUCCESS){
+	   return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+        }
+
+        // If devices do not have access then fallback mechanism will be used
+        // copy will be slower
+        throwing_result_check(hsa_memory_copy(dst,src,n), __FILE__, __func__, __LINE__);
+        break;
     }
     default: return generic_copy(dst, src, n, di, si);
     }
