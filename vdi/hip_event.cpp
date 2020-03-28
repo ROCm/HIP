@@ -25,7 +25,9 @@
 namespace hip {
 
 bool Event::ready() {
-  event_->notifyCmdQueue();
+  if (event_->status() != CL_COMPLETE) {
+    event_->notifyCmdQueue();
+  }
 
   return (event_->status() == CL_COMPLETE);
 }
