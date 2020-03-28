@@ -78,7 +78,7 @@ __device__
 inline
 void atomicAddNoRet(float* address, float val)
 {
-    __ockl_global_atomic_add_f32(address, val);
+    __ockl_atomic_add_noret_f32(address, val);
 }
 
 __device__
