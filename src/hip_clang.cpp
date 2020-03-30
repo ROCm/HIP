@@ -226,40 +226,6 @@ extern "C" hipError_t __hipPopCallConfiguration(
   return hipSuccess;
 }
 
-hipFunction_t ihipConvertHostFuncPtr2Symbol(const void *hostFunction)
-{
-  ihipExec_t exec;
-  int deviceId = 0;
-
-  GET_TLS();
-  auto ctx = ihipGetTlsDefaultCtx();
-  LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-
-  if(crit->_execStack.size() != 0)
-  {
-    exec = std::move(crit->_execStack.top());
-    crit->_execStack.pop();
-
-    if (exec._hStream) {
-      deviceId = exec._hStream->getDevice()->_deviceId;
-    }
-    else if (ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()) {
-      deviceId = ihipGetTlsDefaultCtx()->getDevice()->_deviceId;
-    }
-  }
-  else if(ihipGetTlsDefaultCtx() && ihipGetTlsDefaultCtx()->getDevice()){
-    deviceId = ihipGetTlsDefaultCtx()->getDevice()->_deviceId;
-  }
-
-  hipError_t e = hipSuccess;
-  decltype(g_functions)::iterator it;
-  if ((it = g_functions.find(hostFunction)) == g_functions.end() ||
-      !it->second[deviceId]) {
-    return nullptr;
-  }
-  return it->second[deviceId];
-}
-
 hipError_t hipSetupArgument(
   const void *arg,
   size_t size,

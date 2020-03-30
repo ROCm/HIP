@@ -929,11 +929,6 @@ public:
         auto it0 = get_functions(agent).find(function_address);
 
         if (it0 == get_functions(agent).cend()) {
-            // For Clang compiler + Hcc RT
-            hipFunction_t hipFunc = ihipConvertHostFuncPtr2Symbol(reinterpret_cast<const void*>(function_address));
-            if (hipFunc) {
-                return reinterpret_cast<Kernel_descriptor&>(*hipFunc);
-            }
             hip_throw(std::runtime_error{
                     "No device code available for function: " +
                     std::string(name(function_address)) +
