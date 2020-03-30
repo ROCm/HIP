@@ -34,13 +34,19 @@ THE SOFTWARE.
 #include <hip/hcc_detail/device_library_decls.h>
 #include <hip/hcc_detail/llvm_intrinsics.h>
 
-#if __HIP_CLANG_ONLY__
-#if __HIP_VDI__
+#if __HIP_CLANG_ONLY__ && __HIP_VDI__
 extern "C" __device__ int printf(const char *fmt, ...);
 #else
+#if HC_FEATURE_PRINTF
+template <typename... All>
+static inline __device__ void printf(const char* format, All... all) {
+    hc::printf(format, all...);
+}
+#else
+template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
-#endif
-#endif
+#endif // HC_FEATURE_PRINTF
+#endif // __HIP_CLANG_ONLY__ && __HIP_VDI__
 
 /*
 Integer Intrinsics
