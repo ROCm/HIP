@@ -2221,8 +2221,19 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
 
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
     HIP_INIT_SPECIAL_API(hipMemset2D, (TRACE_MCMD), dst, pitch, value, width, height);
-    size_t sizeBytes = pitch * height;
-    return ihipLogStatus(ihipMemsetSync(dst, value, sizeBytes, nullptr, ihipMemsetDataTypeChar));
+    if (pitch == width) {
+        size_t sizeBytes = pitch * height;
+        return ihipLogStatus(ihipMemsetSync(dst, value, sizeBytes, nullptr, ihipMemsetDataTypeChar));
+    }
+    hipError_t hipStatus = hipSuccess;
+    for (size_t i = 0; i < height; ++i) {
+        hipStatus = ihipLogStatus(ihipMemsetSync(dst + pitch * i, value, width,
+            nullptr, ihipMemsetDataTypeChar));
+        if (hipStatus != hipSuccess) {
+            return (hipStatus);
+        }
+    }
+    return (hipStatus);
 }
 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value, size_t width, size_t height, hipStream_t stream ) {
@@ -2258,8 +2269,15 @@ hipError_t hipMemsetD32(hipDeviceptr_t dst, int value, size_t count) {
 
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent) {
     HIP_INIT_SPECIAL_API(hipMemset3D, (TRACE_MCMD), &pitchedDevPtr, value, &extent);
-    size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
-    return ihipLogStatus(ihipMemsetSync(pitchedDevPtr.ptr, value, sizeBytes, nullptr, ihipMemsetDataTypeChar));
+    hipError_t hipStatus = hipSuccess;
+    // use Memset2D
+    for (size_t i = 0; i < extent.depth; ++i) {
+        hipStatus = hipMemset2D(pitchedDevPtr.ptr + i * pitchedDevPtr.pitch * pitchedDevPtr.ysize,
+            pitchedDevPtr.pitch, value, extent.width, extent.height);
+        if (hipStatus != hipSuccess)
+            return (hipStatus);
+    }
+    return (hipStatus);
 }
 
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int  value, hipExtent extent ,hipStream_t stream ) {
