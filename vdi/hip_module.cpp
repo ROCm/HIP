@@ -160,26 +160,14 @@ inline bool ihipModuleRegisterFunc(amd::Program* program, hipModule_t* module) {
   device::Program* dev_program
     = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
-
   // Get all the global func names from COMGR
   if (!dev_program->getGlobalFuncFromCodeObj(&func_names)) {
     return false;
   }
 
-  for (auto it = func_names.begin(); it != func_names.end(); ++it) {
-    auto modules = new std::vector<std::pair<hipModule_t, bool> >(g_devices.size());
-    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-      modules->at(dev) = std::make_pair(*module, true);
-    }
-
-    // Create a new pointer, since the hostFunction* wont be available
-    // if device code not in the same file as host code.
-    PlatformState::DeviceFunction dfunc{*it, modules, std::vector<hipFunction_t>{ g_devices.size() }, true};
-    PlatformState::instance().registerFunction(new std::string(it->c_str()), dfunc);
-  }
-
-  return true;
+  return PlatformState::instance().registerModFuncs(func_names, module);
 }
+
 
 inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
 

@@ -216,7 +216,6 @@ public:
     std::string deviceName;
     std::vector< std::pair< hipModule_t, bool > >* modules;
     std::vector<hipFunction_t> functions;
-    bool dyn_mod;
   };
   struct DeviceVar {
     void* shadowVptr;
@@ -227,6 +226,15 @@ public:
     bool dyn_undef;
   };
 private:
+  class Module {
+  public:
+    Module(hipModule_t hip_module_) : hip_module(hip_module_) {}
+    std::unordered_map<std::string, DeviceFunction > functions_;
+  private:
+    hipModule_t hip_module;
+  };
+  std::unordered_map<hipModule_t, Module*> module_map_;
+
   std::unordered_map<const void*, DeviceFunction > functions_;
   std::unordered_multimap<std::string, DeviceVar > vars_;
 
@@ -247,6 +255,7 @@ public:
   void registerVar(const void* hostvar, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
 
+  bool registerModFuncs(std::vector<std::string>& func_names, hipModule_t* module);
   bool findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
   bool createFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
   hipFunction_t getFunc(const void* hostFunction, int deviceId);
