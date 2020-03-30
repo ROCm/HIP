@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -27,20 +27,20 @@ THE SOFTWARE.
 #include <hip/hip_bfloat16.h>
 #include <type_traits>
 #include <random>
+#include <climits>
 
-#define PI 3.14
 #define SIZE 100
 using namespace std;
 
-static std::random_device dev;
-static std::mt19937 rng(dev());
+static random_device dev;
+static mt19937 rng(dev());
 
-inline float getRandomFloat(float min = 10, float max = 230) {
-    std::uniform_real_distribution<float> gen(min, max);
+inline float getRandomFloat(long min = 10, long max = LONG_MAX) {
+    uniform_real_distribution<float> gen(min, max);
     return gen(rng);
 }
 
-__host__ __device__ bool testConversion(float a, hip_bfloat16 b) {
+__host__ __device__ bool testRelativeAccuracy(float a, hip_bfloat16 b) {
   float c = float(b);
   // float relative error should be less than 1/(2^7) since bfloat16
   // has 7 bits mantissa.
@@ -57,14 +57,14 @@ __host__ __device__ void testOperations(float &fa, float &fb) {
   float fc = float(bf_a);
   float fd = float(bf_b); 
 
-  assert(testConversion(fa, bf_a));
-  assert(testConversion(fb, bf_b));
+  assert(testRelativeAccuracy(fa, bf_a));
+  assert(testRelativeAccuracy(fb, bf_b));
 
-  assert(testConversion(fc + fd, bf_a + bf_b));
+  assert(testRelativeAccuracy(fc + fd, bf_a + bf_b));
   //when checked as above for add, operation sub fails on GPU 
   assert(hip_bfloat16(fc - fd) == (bf_a - bf_b));
-  assert(testConversion(fc * fd, bf_a * bf_b));
-  assert(testConversion(fc / fd, bf_a / bf_b));
+  assert(testRelativeAccuracy(fc * fd, bf_a * bf_b));
+  assert(testRelativeAccuracy(fc / fd, bf_a / bf_b));
  
   hip_bfloat16 bf_opNegate = -bf_a;
   assert(bf_opNegate == -bf_a);
@@ -76,7 +76,7 @@ __host__ __device__ void testOperations(float &fa, float &fb) {
   ++bf_x;
   --bf_x;
   //hip_bfloat16 is converted to float and then inc/decremented, hence check with reduced precision 
-  assert(testConversion(bf_x,bf_a));
+  assert(testRelativeAccuracy(bf_x,bf_a));
 
   bf_x = bf_a;
   bf_x += bf_b;
@@ -92,21 +92,10 @@ __host__ __device__ void testOperations(float &fa, float &fb) {
   assert(bf_x == (bf_a / bf_b));
 
   hip_bfloat16 bf_rounded = hip_bfloat16::round_to_bfloat16(fa);
-  if (std::isnan(fa)) {
-    assert(std::isnan(float(bf_rounded)) || std::isinf(float(bf_rounded)));
+  if (isnan(fa)) {
+    assert(isnan(float(bf_rounded)) || isinf(float(bf_rounded)));
   }
-  
-  hip_bfloat16 bf_expected(0.5);
-  float foutput;
-  float fparam = 30.0*PI/180;
-  //ToDo:: when assiging the value to bfloat16, it is getting truncated
-  foutput = sin(hip_bfloat16(fparam));
-
-  assert(hip_bfloat16(foutput) == bf_expected);
-  fparam = 60.0*PI/180;
-  foutput = cos(hip_bfloat16(fparam));
-  assert(hip_bfloat16(foutput) == bf_expected);
-}
+}  
 
 __global__ void testOperationsGPU(float* d_a, float* d_b)
 {
