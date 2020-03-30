@@ -700,16 +700,15 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, int* nu
   }
   // Find threads accupancy per CU => simd_per_cu * GPR usage
   constexpr size_t MaxWavesPerSimd = 8;  // Limited by SPI 32 per CU, hence 8 per SIMD
-  size_t VgprWaves = wrkGrpInfo->availableVGPRs_ / amd::alignUp(wrkGrpInfo->usedVGPRs_, 4);
-
-  size_t GprWaves;
+  size_t VgprWaves = MaxWavesPerSimd;
+  if (wrkGrpInfo->usedVGPRs_ > 0) {
+    VgprWaves = wrkGrpInfo->availableVGPRs_ / amd::alignUp(wrkGrpInfo->usedVGPRs_, 4);
+  }
+  size_t GprWaves = VgprWaves;
   if (wrkGrpInfo->usedSGPRs_ > 0) {
     const size_t maxSGPRs = (device->info().gfxipVersion_ < 800) ? 512 : 800;
     size_t SgprWaves = maxSGPRs / amd::alignUp(wrkGrpInfo->usedSGPRs_, 16);
     GprWaves = std::min(VgprWaves, SgprWaves);
-  }
-  else {
-    GprWaves = VgprWaves;
   }
 
   size_t alu_accupancy = device->info().simdPerCU_ * std::min(MaxWavesPerSimd, GprWaves);
