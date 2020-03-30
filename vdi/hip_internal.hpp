@@ -73,11 +73,14 @@ namespace hip {
 
   /// HIP Device class
   class Device {
+    amd::Monitor lock_{"Device lock"};
     /// VDI context
     amd::Context* context_;
     /// Device's ID
     /// Store it here so we don't have to loop through the device list every time
     int deviceId_;
+    //Maintain list of user enabled peers
+    std::list<int> userEnabledPeers;
   public:
     Device(amd::Context* ctx, int devId): context_(ctx), deviceId_(devId) { assert(ctx != nullptr); }
     ~Device() {}
@@ -87,6 +90,25 @@ namespace hip {
     void retain() const { context_->retain(); }
     void release() const { context_->release(); }
     const std::vector<amd::Device*>& devices() const { return context_->devices(); }
+    hipError_t EnablePeerAccess(int peerDeviceId){
+      amd::ScopedLock lock(lock_);
+      bool found = (std::find(userEnabledPeers.begin(), userEnabledPeers.end(), peerDeviceId) != userEnabledPeers.end());
+      if (found) {
+        return hipErrorPeerAccessAlreadyEnabled;
+      }
+      userEnabledPeers.push_back(peerDeviceId);
+      return hipSuccess;
+    }
+    hipError_t DisablePeerAccess(int peerDeviceId) {
+      amd::ScopedLock lock(lock_);
+      bool found = (std::find(userEnabledPeers.begin(), userEnabledPeers.end(), peerDeviceId) != userEnabledPeers.end());
+      if (found) {
+        userEnabledPeers.remove(peerDeviceId);
+        return hipSuccess;
+      } else {
+        return hipErrorPeerAccessNotEnabled;
+      }
+    }
   };
 
   extern std::once_flag g_ihipInitialized;
