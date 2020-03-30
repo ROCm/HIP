@@ -226,6 +226,7 @@ extern "C" hipError_t __hipPopCallConfiguration(
   return hipSuccess;
 }
 
+
 hipError_t hipSetupArgument(
   const void *arg,
   size_t size,

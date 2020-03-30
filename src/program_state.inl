@@ -19,8 +19,6 @@
 #include <hsa/hsa_ven_amd_loader.h>
 #include <amd_comgr.h>
 #include "hc.hpp"
-#include "hip_hcc_internal.h"
-#include "trace_helper.h"
 
 #include <link.h>
 
