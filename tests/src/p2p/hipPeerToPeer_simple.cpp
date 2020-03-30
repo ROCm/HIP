@@ -23,7 +23,7 @@ THE SOFTWARE.
 // Also serves as a template for other tests.
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp  EXCLUDE_HIP_PLATFORM vdi
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t EXCLUDE_HIP_PLATFORM hcc vdi
  * TEST: %t --memcpyWithPeer EXCLUDE_HIP_PLATFORM hcc vdi
  * TEST: %t --mirrorPeers EXCLUDE_HIP_PLATFORM hcc vdi

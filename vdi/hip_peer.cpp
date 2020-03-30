@@ -48,48 +48,56 @@ hipError_t hipMemcpyPeerAsync(void* dst, hipCtx_t dstDevice, const void* src, hi
   HIP_RETURN(hipErrorNotSupported);
 }
 
-hipError_t hipDeviceCanAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId) {
-  HIP_INIT_API(hipDeviceCanAccessPeer, canAccessPeer, deviceId, peerDeviceId);
-
+hipError_t canAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId){
   amd::Device* device = nullptr;
   amd::Device* peer_device = nullptr;
-
   if (canAccessPeer == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
-
   /* Peer cannot be self */
   if (deviceId == peerDeviceId) {
     *canAccessPeer = 0;
-    return HIP_RETURN(hipSuccess);
+    HIP_RETURN(hipSuccess);
   }
-
   /* Cannot exceed the max number of devices */
   if (static_cast<size_t>(deviceId) >= g_devices.size()
        || static_cast<size_t>(peerDeviceId) >= g_devices.size()) {
-    return HIP_RETURN(hipErrorInvalidValue);
+    HIP_RETURN(hipErrorInvalidDevice);
   }
-
   device = g_devices[deviceId]->devices()[0];
   peer_device = g_devices[peerDeviceId]->devices()[0];
-
   *canAccessPeer = static_cast<int>(std::find(device->p2pDevices_.begin(),
                                               device->p2pDevices_.end(), as_cl(peer_device))
                                               != device->p2pDevices_.end());
+  HIP_RETURN(hipSuccess);
+}
 
-  return HIP_RETURN(hipSuccess);
+hipError_t hipDeviceCanAccessPeer(int* canAccess, int deviceId, int peerDeviceId) {
+  HIP_INIT_API(hipDeviceCanAccessPeer, canAccess, deviceId, peerDeviceId);
+  HIP_RETURN(canAccessPeer(canAccess, deviceId, peerDeviceId));
 }
 
 hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
   HIP_INIT_API(hipDeviceDisablePeerAccess, peerDeviceId);
-
-  HIP_RETURN(hipSuccess);
+  int deviceId = hip::getCurrentDevice()->deviceId();
+  int canAccess = 0;
+  if ((hipSuccess != canAccessPeer(&canAccess, deviceId, peerDeviceId)) || (canAccess == 0)) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
+  HIP_RETURN(hip::getCurrentDevice()->DisablePeerAccess(peerDeviceId));
 }
 
 hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
   HIP_INIT_API(hipDeviceEnablePeerAccess, peerDeviceId, flags);
-
-  HIP_RETURN(hipSuccess);
+  int deviceId = hip::getCurrentDevice()->deviceId();
+  int canAccess = 0;
+  if (flags != 0) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  if ((hipSuccess != canAccessPeer(&canAccess, deviceId, peerDeviceId)) || (canAccess == 0)) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
+  HIP_RETURN(hip::getCurrentDevice()->EnablePeerAccess(peerDeviceId));
 }
 
 hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevice,
