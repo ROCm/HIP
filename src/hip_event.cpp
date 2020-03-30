@@ -137,22 +137,16 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
         // TODO-HIP_SYNC_NULL_STREAM : can remove this code when HIP_SYNC_NULL_STREAM = 0
         // If default stream , then wait on all queues.
         ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
+        if (event->_flags & hipEventInterprocess && eCrit->_eventData._ipc_signal.handle) {
+            hsa_signal_add_relaxed(eCrit->_eventData._ipc_signal, 1);
+        }
         ctx->locked_syncDefaultStream(true, true);
         eCrit->_eventData.marker(hc::completion_future());  // reset event
         eCrit->_eventData._stream = stream;
         eCrit->_eventData._timestamp = hc::get_system_ticks();
         eCrit->_eventData._state = hipEventStatusComplete;
-        if (event->_flags & hipEventInterprocess) {
-            // remove previous IPC signal, if any
-            if (eCrit->_eventData._ipc_signal.handle) {
-                throwing_result_check(
-                        hsa_signal_destroy(eCrit->_eventData._ipc_signal),
-                        __FILE__, __func__, __LINE__);
-            }
-            // create new IPC signal, but it is already complete, so initialize to 0
-            throwing_result_check(
-                    hsa_amd_signal_create(0, 0, NULL, HSA_AMD_SIGNAL_IPC, &eCrit->_eventData._ipc_signal),
-                    __FILE__, __func__, __LINE__);
+        if (event->_flags & hipEventInterprocess && eCrit->_eventData._ipc_signal.handle) {
+            hsa_signal_subtract_relaxed(eCrit->_eventData._ipc_signal, 1);
         }
     }
     else {
@@ -161,23 +155,15 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
         eCrit->_eventData._stream = stream;
         eCrit->_eventData._timestamp = 0;
         eCrit->_eventData._state = hipEventStatusRecording;
-        if (event->_flags & hipEventInterprocess) {
-            // remove previous IPC signal, if any
-            if (eCrit->_eventData._ipc_signal.handle) {
-                throwing_result_check(
-                        hsa_signal_destroy(eCrit->_eventData._ipc_signal),
-                        __FILE__, __func__, __LINE__);
-            }
-            // create new IPC signal
-            throwing_result_check(
-                    hsa_amd_signal_create(1, 0, NULL, HSA_AMD_SIGNAL_IPC, &eCrit->_eventData._ipc_signal),
-                    __FILE__, __func__, __LINE__);
+        if (event->_flags & hipEventInterprocess && eCrit->_eventData._ipc_signal.handle) {
             // forward signal state from local signal to IPC signal via host callback
-            // create callback that can be passed to hsa_amd_signal_async_handler
-            // this function sets the ipc signal to 0 to indicate completion
             auto signal{eCrit->_eventData._ipc_signal};
+            // increment IPC signal by 1
+            hsa_signal_add_relaxed(signal, 1);
+            // create callback that can be passed to hsa_amd_signal_async_handler
+            // this function decrements the IPC signal by 1 to indicate completion
             auto t{new std::function<void()>{[=]() {
-                hsa_signal_store_relaxed(signal, 0);
+                hsa_signal_subtract_relaxed(signal, 1);
             }}};
             // register above callback with HSA runtime to be called when local signal
             // is decremented from 1 to 0 by CP
@@ -333,14 +319,18 @@ hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event)
     if (!(event->_flags & hipEventInterprocess)) return ihipLogStatus(hipErrorInvalidHandle);
     if (!(event->_flags & hipEventDisableTiming)) return ihipLogStatus(hipErrorInvalidHandle);
 
-    auto ecd = event->locked_copyCrit();
+    LockedAccessor_EventCrit_t crit(event->criticalData());
 
-    // cannot create handle unless this event was recorded locally
-    if (ecd._ipc_signal.handle == 0) return ihipLogStatus(hipErrorInvalidHandle);
+    if (crit->_eventData._ipc_signal.handle == 0) {
+        // create new HSA IPC signal
+        throwing_result_check(
+            hsa_amd_signal_create(0, 0, NULL, HSA_AMD_SIGNAL_IPC, &crit->_eventData._ipc_signal),
+            __FILE__, __func__, __LINE__);
+    }
 
-    // Create HSA ipc signal
+    // Create HSA IPC handle
     ihipIpcEventHandle_t* iHandle = (ihipIpcEventHandle_t*)handle;
-    auto hsa_status = hsa_amd_ipc_signal_create(ecd._ipc_signal, &(iHandle->ipc_handle));
+    auto hsa_status = hsa_amd_ipc_signal_create(crit->_eventData._ipc_signal, &(iHandle->ipc_handle));
     if (hsa_status == HSA_STATUS_ERROR_OUT_OF_RESOURCES) return ihipLogStatus(hipErrorRuntimeMemory);
     if (hsa_status != HSA_STATUS_SUCCESS) return ihipLogStatus(hipErrorRuntimeOther);
     return ihipLogStatus(hipSuccess);
