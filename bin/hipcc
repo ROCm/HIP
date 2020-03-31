@@ -85,6 +85,7 @@ $HIP_LIB_PATH=$ENV{'HIP_LIB_PATH'};
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
 $DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
 $HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibility mode
+$HIP_COMPILE_CXX_AS_HIP=$ENV{'HIP_COMPILE_CXX_AS_HIP'} // "1";
 
 if (defined $HIP_VDI_HOME) {
     $HIP_INFO_PATH= "$HIP_VDI_HOME/lib/.hipInfo";
@@ -222,9 +223,9 @@ if ($HIP_PLATFORM eq "clang") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
     $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
     $HIPCFLAGS .= " -isystem $HSA_PATH/include";
-    if (!($HIP_RUNTIME eq "HCC")) {
-      $HIPCXXFLAGS .= " -D__HIP_VDI__ -fhip-new-launch-api";
-      $HIPCFLAGS .= " -D__HIP_VDI__ -fhip-new-launch-api";
+    if ($HIP_RUNTIME ne "HCC" ) {
+      $HIPCXXFLAGS .= " -D__HIP_VDI__";
+      $HIPCFLAGS .= " -D__HIP_VDI__";
     }
 
 } elsif ($HIP_PLATFORM eq "hcc") {
@@ -344,6 +345,7 @@ my $needLDFLAGS = 1;   # need to add LDFLAGS to compile step.
 my $hasC = 0;          # options contain a c-style file
 my $hasCXX = 0;        # options contain a cpp-style file (NVCC must force recognition as GPU file)
 my $hasCU = 0;         # options contain a cu-style file (HCC must force recognition as GPU file)
+my $hasHIP = 0;        # options contain a hip-style file (HIP-Clang must pass offloading options)
 my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc.o from src tree. (some builds, ie cmake, provide their own)
 my $printHipVersion = 0;    # print HIP version
 my $runCmd = 1;
@@ -355,6 +357,7 @@ if(defined $HIP_COMPILER and $HIP_COMPILER eq "hcc") {
     $coFormatv3 = 0;
 }
 my $funcSupp = 0;      # enable function support
+my $rdc = 0;           # whether -fgpu-rdc is on
 
 my @options = ();
 my @inputs  = ();
@@ -404,6 +407,7 @@ my $optArg = ""; # -O args
 my $targetOpt = '--amdgpu-target=';
 my $targetsStr = "";
 my $skipOutputFile = 0; # file followed by -o should not contibute in picking compiler flags
+my $prevArg = ""; # previous argument
 
 foreach $arg (@ARGV)
 {
@@ -417,6 +421,7 @@ foreach $arg (@ARGV)
 
     if ($skipOutputFile) {
         $toolArgs .= " $arg";
+        $prevArg = $arg;
         $skipOutputFile = 0;
         next;
     }
@@ -603,8 +608,15 @@ foreach $arg (@ARGV)
             $toolArgs = substr $toolArgs, 0, -8;
             chomp $toolArgs;
         }
+    } elsif ($arg eq 'hip' and $prevArg eq '-x') {
+        $hasHIP = 1;
     } elsif ($arg =~ m/^-/) {
         # options start with -
+        if  ($arg eq '-fgpu-rdc') {
+            $rdc = 1;
+        } elsif ($arg eq '-fno-gpu-rdc') {
+            $rdc = 0;
+        }
 
         # Process HIPCC options here:
         if ($arg =~ m/^--hipcc/) {
@@ -621,7 +633,7 @@ foreach $arg (@ARGV)
             push (@options, $arg);
         }
         #print "O: <$arg>\n";
-    } else {
+    } elsif ($prevArg ne '-o') {
         # input files and libraries
         if ($arg =~ /\.c$/) {
             $hasC = 1;
@@ -629,24 +641,28 @@ foreach $arg (@ARGV)
             $toolArgs .= " -x c"
         }
         elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) ) {
-            $hasCXX = 1;
             $needCXXFLAGS = 1;
-            if ($HIP_PLATFORM eq 'clang' and not $arg =~ /\.c$/) {
-                $toolArgs .= " -x hip"
+            if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_COMPILER ne "clang") {
+                $hasCXX = 1;
+            } else {
+                $hasHIP = 1;
+                $toolArgs .= " -x hip";
             }
         }
-        elsif (($arg =~ /\.cu$/) or ($arg =~ /\.cuh$/) or ($arg =~ /\.hip$/)) {
-            $hasCU = 1;
+        elsif ((($arg =~ /\.cu$/ or $arg =~ /\.cuh$/) and $HIP_COMPILE_CXX_AS_HIP ne '0') or ($arg =~ /\.hip$/)) {
             $needCXXFLAGS = 1;
-            if ($HIP_PLATFORM eq 'clang') {
-                $toolArgs .= " -x hip"
+            if ($HIP_COMPILER eq "clang") {
+                $hasHIP = 1;
+                $toolArgs .= " -x hip";
+            } else {
+                $hasCU = 1;
             }
         }
-
         push (@inputs, $arg);
         #print "I: <$arg>\n";
     }
     $toolArgs .= " $arg" unless $swallowArg;
+    $prevArg = $arg;
 }
 
 if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
@@ -682,7 +698,7 @@ if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
             $GPU_ARCH_ARG = $GPU_ARCH_OPT . $val;
             $HIPLDARCHFLAGS .= $GPU_ARCH_ARG;
             $HIPCXXFLAGS .= $archMacro;
-            if ($HIP_PLATFORM eq 'clang') {
+            if ($HIP_PLATFORM eq 'clang' and $hasHIP) {
                 $HIPCXXFLAGS .= $GPU_ARCH_ARG;
             }
 
@@ -724,12 +740,9 @@ if ($buildDeps and $HIP_PLATFORM eq 'clang') {
     $HIPCXXFLAGS .= " --cuda-host-only";
 }
 
-# Add --hip-link only if there are no source files.
-if (!$needCXXFLAGS and !$needCFLAGS and $HIP_PLATFORM eq 'clang') {
+# Add --hip-link only if it is compile only and -fgpu-rdc is on.
+if ($rdc and !$compileOnly and $HIP_PLATFORM eq 'clang') {
     $HIPLDFLAGS .= " --hip-link";
-}
-
-if (!$needCFLAGS and $HIP_PLATFORM eq 'clang') {
     $HIPLDFLAGS .= $HIPLDARCHFLAGS;
 }
 
@@ -760,14 +773,19 @@ if ($HIP_PLATFORM eq "clang") {
     }
     # Do not pass -mllvm on Windows since there is a clang bug causing duplicate -mllvm options in clang -cc1 on Windows.
     # ToDo : remove restriction for Windows after clang bug is fixed.
-    if (!$funcSupp and $optArg ne "-O0" and not $isWindows) {
+    if (!$funcSupp and $optArg ne "-O0" and not $isWindows and $hasHIP) {
         $HIPCXXFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         if ($needLDFLAGS and not $needCXXFLAGS) {
             $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         }
     }
     $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
-    $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
+    if ($hasHIP) {
+        $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
+        if ($HIP_RUNTIME ne "HCC") {
+            $HIPCXXFLAGS .= " -fhip-new-launch-api";
+        }
+    }
     if (not $isWindows) {
         $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
     }
@@ -781,7 +799,6 @@ if ($HIP_PLATFORM eq "clang") {
     }
 }
 
-
 if ($HIPCC_COMPILE_FLAGS_APPEND) {
     $HIPCXXFLAGS .= " $HIPCC_COMPILE_FLAGS_APPEND";
     $HIPCFLAGS .= " $HIPCC_COMPILE_FLAGS_APPEND";
@@ -791,14 +808,17 @@ if ($HIPCC_LINK_FLAGS_APPEND) {
 }
 
 my $CMD="$HIPCC";
-if ($needLDFLAGS and not $compileOnly) {
-    $CMD .= " $HIPLDFLAGS";
-}
+
 if ($needCFLAGS) {
     $CMD .= " $HIPCFLAGS";
 }
+
 if ($needCXXFLAGS) {
     $CMD .= " $HIPCXXFLAGS";
+}
+
+if ($needLDFLAGS and not $compileOnly) {
+    $CMD .= " $HIPLDFLAGS";
 }
 $CMD .= " $toolArgs";
 
