@@ -1734,35 +1734,91 @@ hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count,
   HIP_RETURN(ihipMemset(dst, value, sizeof(int32_t), count * sizeof(int32_t), stream, true));
 }
 
+hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr,
+                        int value,
+                        hipExtent extent,
+                        hipStream_t stream,
+                        bool isAsync = false) {
+  if (pitchedDevPtr.pitch == extent.width) {
+    return ihipMemset(pitchedDevPtr.ptr, value, sizeof(int8_t), extent.width * extent.height * extent.depth, stream, isAsync);
+  }
+
+  // Workaround for cases when pitch > row untill fill kernel will be updated to support pitch.
+  // Fallback to filling one row at a time.
+
+  amd::HostQueue* queue = hip::getQueue(stream);
+
+  size_t offset = 0;
+  amd::Memory* memory = getMemoryObject(pitchedDevPtr.ptr, offset);
+
+  amd::Coord3D origin(offset);
+  amd::Coord3D region(pitchedDevPtr.xsize, pitchedDevPtr.ysize, extent.depth);
+  amd::BufferRect rect;
+  if (!rect.create(static_cast<size_t*>(origin), static_cast<size_t*>(region), pitchedDevPtr.pitch, 0)) {
+    return hipErrorInvalidValue;
+  }
+
+  if (memory != nullptr) {
+    std::vector<amd::FillMemoryCommand*> commands;
+
+    for (size_t slice = 0; slice < extent.depth; slice++) {
+      for (size_t row = 0; row < extent.height; row++) {
+        const size_t rowOffset = rect.offset(0, row, slice);
+        amd::FillMemoryCommand* command = new amd::FillMemoryCommand(*queue,
+                                                                     CL_COMMAND_FILL_BUFFER,
+                                                                     amd::Command::EventWaitList{},
+                                                                     *memory->asBuffer(),
+                                                                     &value,
+                                                                     sizeof(int8_t),
+                                                                     amd::Coord3D{rowOffset, 0, 0},
+                                                                     amd::Coord3D{extent.width, 1, 1});
+
+        command->enqueue();
+        commands.push_back(command);
+      }
+    }
+
+    for (auto &command: commands) {
+      if (!isAsync) {
+        command->awaitCompletion();
+      }
+      command->release();
+    }
+  } else {
+    for (size_t slice = 0; slice < extent.depth; slice++) {
+      for (size_t row = 0; row < extent.height; row++) {
+        const size_t rowOffset = rect.offset(0, row, slice);
+        std::memset(pitchedDevPtr.ptr, value, extent.width);
+      }
+    }
+  }
+
+  return hipSuccess;
+}
+
 hipError_t hipMemset2D(void* dst, size_t pitch, int value, size_t width, size_t height) {
   HIP_INIT_API(hipMemset2D, dst, pitch, value, width, height);
 
-  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), pitch * height, nullptr));
+  HIP_RETURN(ihipMemset3D({dst, pitch, width, height}, value, {width, height, 1}, nullptr));
 }
 
 hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
                             size_t width, size_t height, hipStream_t stream) {
   HIP_INIT_API(hipMemset2DAsync, dst, pitch, value, width, height, stream);
 
-  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), pitch * height, stream, true));
+  HIP_RETURN(ihipMemset3D({dst, pitch, width, height}, value, {width, height, 1}, stream, true));
 }
 
 hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent) {
   HIP_INIT_API(hipMemset3D, pitchedDevPtr, value, extent);
 
-  void *dst = pitchedDevPtr.ptr;
-  size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
-
-  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), sizeBytes, nullptr));
+  HIP_RETURN(ihipMemset3D(pitchedDevPtr, value, extent, nullptr));
 }
 
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent, hipStream_t stream) {
   HIP_INIT_API(hipMemset3DAsync, pitchedDevPtr, value, extent, stream);
 
-  void *dst = pitchedDevPtr.ptr;
-  size_t sizeBytes = pitchedDevPtr.pitch * extent.height * extent.depth;
-
-  HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), sizeBytes, stream, true));
+  HIP_RETURN(ihipMemset3D(pitchedDevPtr, value, extent, stream, false));
 }
 
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes,
