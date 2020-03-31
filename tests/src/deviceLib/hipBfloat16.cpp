@@ -92,8 +92,8 @@ __host__ __device__ void testOperations(float &fa, float &fb) {
   assert(bf_x == (bf_a / bf_b));
 
   hip_bfloat16 bf_rounded = hip_bfloat16::round_to_bfloat16(fa);
-  if (isnan(fa)) {
-    assert(isnan(float(bf_rounded)) || isinf(float(bf_rounded)));
+  if (isnan(bf_rounded)) {
+    assert(isnan(bf_rounded) || isinf(bf_rounded));
   }
 }  
 
