@@ -511,8 +511,7 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     size_t globalWorkSizeX = (size_t)gridDim.x * (size_t)blockDim.x;
     size_t globalWorkSizeY = (size_t)gridDim.y * (size_t)blockDim.y;
     size_t globalWorkSizeZ = (size_t)gridDim.z * (size_t)blockDim.z;
-    if(globalWorkSizeX > UINT32_MAX || globalWorkSizeY > UINT32_MAX || globalWorkSizeZ > UINT32_MAX)
-    {
+    if(globalWorkSizeX > UINT32_MAX || globalWorkSizeY > UINT32_MAX || globalWorkSizeZ > UINT32_MAX) {
         return hipErrorInvalidConfiguration;
     }
 
@@ -738,7 +737,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
     vector<mg_info *> mg_info_ptr;
 
 
-    result = hip_internal::ihipHostMalloc(tls, (void **)&mg_sync_ptr, sizeof(mg_sync), hipHostMallocDefault);
+    result = hip_internal::ihipHostMalloc(tls, (void **)&mg_sync_ptr, sizeof(mg_sync), hipHostMallocDefault, true);
     if (result != hipSuccess) {
         return hipErrorInvalidValue;
     }
@@ -748,7 +747,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
     uint all_sum = 0;
     for (int i = 0; i < numDevices; ++i) {
         mg_info *mg_info_temp = nullptr;
-        result = hip_internal::ihipHostMalloc(tls, (void **)&mg_info_temp, sizeof(mg_info), hipHostMallocDefault);
+        result = hip_internal::ihipHostMalloc(tls, (void **)&mg_info_temp, sizeof(mg_info), hipHostMallocDefault, true);
         if (result != hipSuccess) {
             hip_internal::ihipHostFree(tls, mg_sync_ptr);
             for (int j = 0; j < i; ++j) {
@@ -770,11 +769,22 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
         hc::completion_future streamCF;
         if (!streamCrit->_av.get_is_empty()) {
             streamCF = streamCrit->_av.create_marker(hc::accelerator_scope);
-            coopAVs[i].create_blocking_marker(streamCF, hc::accelerator_scope);
+            if (flags & hipCooperativeLaunchMultiDeviceNoPreSync) {
+                coopAVs[i].create_blocking_marker(streamCF, hc::accelerator_scope);
+                streamCrit->_av.acquire_locked_hsa_queue();
+                coopAVs[i].acquire_locked_hsa_queue();
+            } else {
+                for (int j = 0; j < numDevices; ++j) {
+                    coopAVs[j].create_blocking_marker(streamCF, hc::accelerator_scope);
+                }
+            }
         }
-
-        streamCrit->_av.acquire_locked_hsa_queue();
-        coopAVs[i].acquire_locked_hsa_queue();
+    }
+    if ((flags & hipCooperativeLaunchMultiDeviceNoPreSync) == 0) {
+        for (int i = 0; i < numDevices; ++i) {
+            launchParamsList[i].stream->criticalData()._av.acquire_locked_hsa_queue();
+            coopAVs[i].acquire_locked_hsa_queue();
+        }
     }
 
     // launch the init_gws kernel to initialize the GWS for each device
@@ -820,14 +830,14 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
         prev_sum += lp.blockDim.x * lp.blockDim.y * lp.blockDim.z *
                     lp.gridDim.x  * lp.gridDim.y  * lp.gridDim.z;
 
+        lp.stream->coopMemsTracker.push_back(mg_info_ptr[i]);
 
         impCoopParams[0] = &mg_info_ptr[i];
 
         globalWorkSizeX = (size_t)lp.gridDim.x * (size_t)lp.blockDim.x;
         globalWorkSizeY = (size_t)lp.gridDim.y * (size_t)lp.blockDim.y;
         globalWorkSizeZ = (size_t)lp.gridDim.z * (size_t)lp.blockDim.z;
-        if(globalWorkSizeX > UINT32_MAX || globalWorkSizeY > UINT32_MAX || globalWorkSizeZ > UINT32_MAX)
-        {
+        if(globalWorkSizeX > UINT32_MAX || globalWorkSizeY > UINT32_MAX || globalWorkSizeZ > UINT32_MAX) {
             return hipErrorInvalidConfiguration;
         }
 
@@ -849,6 +859,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
             hip_internal::ihipHostFree(tls, mg_sync_ptr);
             for (int j = 0; j < numDevices; ++j) {
                 hip_internal::ihipHostFree(tls, mg_info_ptr[j]);
+                launchParamsList[j].stream->coopMemsTracker.pop_back();
             }
 
             return hipErrorLaunchFailure;
@@ -856,24 +867,34 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
     }
 
-    // unlock all streams
+    // unlock streams and create blocking markers on them based on the workload
+    // on cooperative queues on each device
     for (int i = 0; i < numDevices; ++i) {
         coopAVs[i].release_locked_hsa_queue();
         launchParamsList[i].stream->criticalData()._av.release_locked_hsa_queue();
+    }
 
+    for (int i = 0; i < numDevices; ++i) {
         hc::completion_future cooperativeCF;
         if (!coopAVs[i].get_is_empty()) {
             cooperativeCF = coopAVs[i].create_marker(hc::accelerator_scope);
-            launchParamsList[i].stream->criticalData()._av.create_blocking_marker(
-                    cooperativeCF, hc::accelerator_scope);
+            if (flags & hipCooperativeLaunchMultiDeviceNoPostSync) {
+                launchParamsList[i].stream->criticalData()._av.create_blocking_marker(
+                        cooperativeCF, hc::accelerator_scope);
+                launchParamsList[i].stream->criticalData().unlock();
+            } else {
+                for (int j = 0; j < numDevices; ++j) {
+                    launchParamsList[j].stream->criticalData()._av.create_blocking_marker(
+                            cooperativeCF, hc::accelerator_scope);
+                }
+            }
         }
-
-        launchParamsList[i].stream->criticalData().unlock();
     }
 
-    hip_internal::ihipHostFree(tls, mg_sync_ptr);
-    for (int j = 0; j < numDevices; ++j) {
-        hip_internal::ihipHostFree(tls, mg_info_ptr[j]);
+    if ((flags & hipCooperativeLaunchMultiDeviceNoPostSync) == 0) {
+        for (int i = 0; i < numDevices; ++i) {
+            launchParamsList[i].stream->criticalData().unlock();
+        }
     }
 
     return result;
