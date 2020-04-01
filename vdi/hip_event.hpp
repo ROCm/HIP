@@ -37,7 +37,10 @@ public:
 
 class Event {
 public:
-  Event(unsigned int flags) : flags(flags), lock_("hipEvent_t"), stream_(getNullStream()), event_(nullptr) {}
+  Event(unsigned int flags) : flags(flags), lock_("hipEvent_t"), event_(nullptr) {
+    // No need to init event_ here as addMarker does that
+  }
+
   ~Event() {
     if (event_ != nullptr) {
       event_->release();
