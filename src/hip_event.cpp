@@ -30,7 +30,12 @@ THE SOFTWARE.
 //---
 
 
-ihipEvent_t::ihipEvent_t(unsigned flags) : _criticalData(this) { _flags = flags; };
+ihipEvent_t::ihipEvent_t(unsigned flags) : _criticalData(this) {
+        _flags = flags;
+        GET_TLS();
+        auto ctx = ihipGetTlsDefaultCtx();
+        _deviceId = ctx == nullptr ? -1 : ctx->getDevice()->_deviceId;
+};
 
 
 // Attach to an existing completion future:
@@ -175,7 +180,9 @@ hipError_t hipEventElapsedTime(float* ms, hipEvent_t start, hipEvent_t stop) {
     HIP_INIT_API(hipEventElapsedTime, ms, start, stop);
 
     if (ms == nullptr) return ihipLogStatus(hipErrorInvalidValue);
-    if ((start == nullptr) || (stop == nullptr)) return ihipLogStatus(hipErrorInvalidHandle);
+    if ((start == nullptr) || (stop == nullptr) ||
+        (start->_deviceId != stop->_deviceId)) 
+            return ihipLogStatus(hipErrorInvalidHandle);
 
     *ms = 0.0f;
     auto startEcd = start->locked_copyCrit();
