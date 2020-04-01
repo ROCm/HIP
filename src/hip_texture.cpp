@@ -301,7 +301,12 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
         hsa_ext_sampler_descriptor_t samplerDescriptor;
         fillSamplerDescriptor(samplerDescriptor, pTexDesc->addressMode[0], pTexDesc->filterMode,
                               pTexDesc->normalizedCoords);
-
+        if(hipResourceTypeLinear == pResDesc->resType) {
+           samplerDescriptor.filter_mode = HSA_EXT_SAMPLER_FILTER_MODE_NEAREST;
+           samplerDescriptor.address_mode = HSA_EXT_SAMPLER_ADDRESSING_MODE_CLAMP_TO_BORDER;
+        } else if(!pTexDesc->normalizedCoords) {
+            samplerDescriptor.address_mode = HSA_EXT_SAMPLER_ADDRESSING_MODE_CLAMP_TO_EDGE;
+        }
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
         if(hipResourceTypePitch2D != pResDesc->resType)
@@ -439,7 +444,13 @@ hipError_t ihipBindTextureImpl(TlsData *tls_, int dim, enum hipTextureReadMode r
         imageDescriptor.format.channel_type = channelType;
 
         hsa_ext_sampler_descriptor_t samplerDescriptor;
-        fillSamplerDescriptor(samplerDescriptor, addressMode, filterMode, normalizedCoords);
+        samplerDescriptor.filter_mode = HSA_EXT_SAMPLER_FILTER_MODE_NEAREST;
+        samplerDescriptor.address_mode = HSA_EXT_SAMPLER_ADDRESSING_MODE_CLAMP_TO_BORDER;
+        if (normalizedCoords) {
+            samplerDescriptor.coordinate_mode = HSA_EXT_SAMPLER_COORDINATE_MODE_NORMALIZED;
+        } else {
+            samplerDescriptor.coordinate_mode = HSA_EXT_SAMPLER_COORDINATE_MODE_UNNORMALIZED;
+        }
 
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
@@ -516,7 +527,9 @@ hipError_t ihipBindTexture2DImpl(TlsData *tls, int dim, enum hipTextureReadMode 
 
         hsa_ext_sampler_descriptor_t samplerDescriptor;
         fillSamplerDescriptor(samplerDescriptor, addressMode, filterMode, normalizedCoords);
-
+        if(!normalizedCoords) {
+            samplerDescriptor.address_mode = HSA_EXT_SAMPLER_ADDRESSING_MODE_CLAMP_TO_EDGE;
+        }
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
         if( 0 == pitch)
@@ -623,7 +636,9 @@ hipError_t ihipBindTextureToArrayImpl(TlsData *tls_, int dim, enum hipTextureRea
 
         hsa_ext_sampler_descriptor_t samplerDescriptor;
         fillSamplerDescriptor(samplerDescriptor, addressMode, filterMode, normalizedCoords);
-
+        if(!normalizedCoords) {
+            samplerDescriptor.address_mode = HSA_EXT_SAMPLER_ADDRESSING_MODE_CLAMP_TO_EDGE;
+        }
         hsa_access_permission_t permission = HSA_ACCESS_PERMISSION_RW;
 
         size_t rowPitch = getElementSize(channelOrder, channelType) * alignUp(imageDescriptor.width, IMAGE_PITCH_ALIGNMENT);
