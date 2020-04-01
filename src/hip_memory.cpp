@@ -2232,7 +2232,7 @@ hipError_t ihipMemsetND(void* dst, size_t pitch, int value, size_t width, size_t
     } else {
         for(size_t i = 0; i < depth; ++i) {
             for(size_t j = 0; j < setHeight; ++j) {
-                int* dstPtr = (int*) ((unsigned char*) dst + i * height * pitch + j * pitch);
+                void* dstPtr = ((unsigned char*) dst + i * height * pitch + j * pitch);
                 if(async)
                     hipStatus = ihipMemsetAsync(dstPtr, value, width, stream, copyDataType);
                 else
