@@ -232,9 +232,6 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
     if (di.size != is_cpu_owned || si.size == is_cpu_owned) {
         throw ihipException(hipErrorInvalidMemcpyDirection);
     }
-    if (!is_locked && si.size == is_cpu_owned) {
-        return do_std_memcpy(dst, src, n);
-    }
     if (!is_locked && is_large_BAR && n <= max_d2h_std_memcpy_sz) {
         return do_std_memcpy(dst, src, n);
     }
@@ -282,9 +279,6 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
 
     if (si.size != is_cpu_owned || di.size == is_cpu_owned) {
         throw ihipException(hipErrorInvalidMemcpyDirection);
-    }
-    if (!is_locked && di.size == is_cpu_owned) {
-        return do_std_memcpy(dst, src, n);
     }
     if (!is_locked && is_large_BAR && n <= max_h2d_std_memcpy_sz) {
         return do_std_memcpy(dst, src, n);
