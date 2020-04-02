@@ -21,7 +21,7 @@
 #include "vdi_common.hpp"
 #include <icd/loader/icd_dispatch.h>
 
-KHRicdVendorDispatch amd::ICDDispatchedObject::icdVendorDispatch_[] = {0};
+cl_icd_dispatch amd::ICDDispatchedObject::icdVendorDispatch_[] = {0};
 amd::PlatformIDS amd::PlatformID::Platform = {amd::ICDDispatchedObject::icdVendorDispatch_};
 
 RUNTIME_ENTRY(cl_int, clGetDeviceIDs,
