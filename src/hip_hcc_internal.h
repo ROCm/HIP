@@ -389,18 +389,28 @@ const hipStream_t hipStreamNull = 0x0;
 
 
 /**
- * HIP IPC Handle Size
+ * HIP IPC Mem Handle Size
  */
-#define HIP_IPC_RESERVED_SIZE 24
+#define HIP_IPC_MEM_RESERVED_SIZE 24
 class ihipIpcMemHandle_t {
    public:
 #if USE_IPC
     hsa_amd_ipc_memory_t ipc_handle;  ///< ipc memory handle on ROCr
 #endif
     size_t psize;
-    char reserved[HIP_IPC_RESERVED_SIZE];
+    char reserved[HIP_IPC_MEM_RESERVED_SIZE];
 };
 
+/**
+ * HIP IPC Event Handle Size
+ */
+#define HIP_IPC_EVENT_RESERVED_SIZE 32
+class ihipIpcEventHandle_t {
+   public:
+#if USE_IPC
+    char shmem_name[HIP_IPC_HANDLE_SIZE];
+#endif
+};
 
 struct ihipModule_t {
     std::string fileName;
@@ -670,6 +680,14 @@ enum ihipEventType_t {
     hipEventTypeStopCommand,
 };
 
+#define IPC_SIGNALS_PER_EVENT 32
+typedef struct ihipIpcEventShmem_s {
+    std::atomic<int> owners;
+    std::atomic<int> read_index;
+    std::atomic<int> write_index;
+    std::atomic<int> signal[IPC_SIGNALS_PER_EVENT];
+} ihipIpcEventShmem_t;
+
 
 struct ihipEventData_t {
     ihipEventData_t() {
@@ -677,18 +695,24 @@ struct ihipEventData_t {
         _stream = NULL;
         _timestamp = 0;
         _type = hipEventTypeIndependent;
+        _ipc_name = "";
+        _ipc_fd = 0;
+        _ipc_shmem = NULL;
     };
 
-    void marker(const hc::completion_future& marker) { _marker = marker; };
+    void marker(const hc::completion_future& marker) { _marker = marker; }
     hc::completion_future& marker() { return _marker; }
-    uint64_t timestamp() const { return _timestamp; };
-    ihipEventType_t type() const { return _type; };
+    uint64_t timestamp() const { return _timestamp; }
+    ihipEventType_t type() const { return _type; }
 
     ihipEventType_t _type;
     hipEventStatus_t _state;
     hipStream_t _stream;  // Stream where the event is recorded.  Null stream is resolved to actual
                           // stream when recorded
     uint64_t _timestamp;  // store timestamp, may be set on host or by marker.
+    std::string _ipc_name;
+    int _ipc_fd;
+    ihipIpcEventShmem_t *_ipc_shmem;
    private:
     hc::completion_future _marker;
 };
@@ -700,7 +724,7 @@ template <typename MUTEX_TYPE>
 class ihipEventCriticalBase_t : LockedBase<MUTEX_TYPE> {
    public:
     explicit ihipEventCriticalBase_t(const ihipEvent_t* parentEvent) : _parent(parentEvent) {}
-    ~ihipEventCriticalBase_t(){};
+    ~ihipEventCriticalBase_t() {}
 
     // Keep data in structure so it can be easily copied into snapshots
     // (used to reduce lock contention and preserve correct lock order)
