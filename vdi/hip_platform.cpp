@@ -283,7 +283,7 @@ void PlatformState::registerVarSym(const void *hostVar, const char *symbolName) 
 void PlatformState::registerVar(const char* hostvar,
                                 const DeviceVar& rvar) {
   amd::ScopedLock lock(lock_);
-  vars_.insert(std::make_pair(std::string(reinterpret_cast<const char*>(hostvar)), rvar));
+  vars_.insert(std::make_pair(std::string(hostvar), rvar));
 }
 
 void PlatformState::registerFunction(const void* hostFunction,
@@ -464,7 +464,7 @@ bool PlatformState::getTexRef(const char* hostVar, hipModule_t hmod, textureRefe
 bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
                                  hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
   amd::ScopedLock lock(lock_);
-  DeviceVar* dvar = findVar(std::string(reinterpret_cast<const char*>(hostVar)), deviceId, hmod);
+  DeviceVar* dvar = findVar(std::string(hostVar), deviceId, hmod);
   if (dvar != nullptr) {
     if (dvar->rvars[deviceId].getdeviceptr() == nullptr) {
       size_t sym_size = 0;
