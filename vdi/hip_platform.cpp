@@ -188,6 +188,28 @@ void PlatformState::init()
   }
 }
 
+bool PlatformState::unregisterFunc(hipModule_t hmod) {
+  amd::ScopedLock lock(lock_);
+  auto mod_it = module_map_.find(hmod);
+  if (mod_it != module_map_.cend()) {
+    PlatformState::Module* mod_ptr = mod_it->second;
+    if(mod_ptr != nullptr) {
+      for (auto func_it = mod_ptr->functions_.begin(); func_it != mod_ptr->functions_.end(); ++func_it) {
+        PlatformState::DeviceFunction &devFunc = func_it->second;
+        for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+          if (devFunc.functions[dev] != 0) {
+            hip::Function* f = reinterpret_cast<hip::Function*>(devFunc.functions[dev]);
+            delete f;
+          }
+        }
+        delete devFunc.modules;
+      }
+      delete mod_ptr;
+    }
+  }
+  return true;
+}
+
 std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipModule_t hmod) {
   amd::ScopedLock lock(lock_);
   std::vector< std::pair<hipModule_t, bool> >* rmodules = nullptr;
@@ -244,10 +266,24 @@ PlatformState::DeviceVar* PlatformState::findVar(std::string hostVar, int device
   return dvar;
 }
 
-void PlatformState::registerVar(const void* hostvar,
+bool PlatformState::findSymbol(const void *hostVar, std::string &symbolName) {
+  auto it = symbols_.find(hostVar);
+  if (it != symbols_.end()) {
+    symbolName = it->second;
+    return true;
+  }
+  return false;
+}
+
+void PlatformState::registerVarSym(const void *hostVar, const char *symbolName) {
+  amd::ScopedLock lock(lock_);
+  symbols_.insert(std::make_pair(hostVar, std::string(symbolName)));
+}
+
+void PlatformState::registerVar(const char* hostvar,
                                 const DeviceVar& rvar) {
   amd::ScopedLock lock(lock_);
-  vars_.insert(std::make_pair(std::string(reinterpret_cast<const char*>(hostvar)), rvar));
+  vars_.insert(std::make_pair(std::string(hostvar), rvar));
 }
 
 void PlatformState::registerFunction(const void* hostFunction,
@@ -292,6 +328,65 @@ bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** va
                                                     var_addr, var_size);
 }
 
+bool PlatformState::registerModFuncs(std::vector<std::string>& func_names, hipModule_t* module) {
+  amd::ScopedLock lock(lock_);
+  PlatformState::Module* mod_ptr = new PlatformState::Module(*module);
+
+  for (auto it = func_names.begin(); it != func_names.end(); ++it) {
+    auto modules = new std::vector<std::pair<hipModule_t, bool> >(g_devices.size());
+    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+      modules->at(dev) = std::make_pair(*module, true);
+    }
+
+    PlatformState::DeviceFunction dfunc{*it, modules,
+      std::vector<hipFunction_t>(g_devices.size(), 0)};
+    mod_ptr->functions_.insert(std::make_pair(*it, dfunc));
+  }
+
+  module_map_.insert(std::make_pair(*module, mod_ptr));
+  return true;
+}
+
+bool PlatformState::findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
+  amd::ScopedLock lock(lock_);
+
+  auto mod_it = module_map_.find(hmod);
+  if (mod_it != module_map_.cend()) {
+    auto func_it = mod_it->second->functions_.find(name);
+    if (func_it != mod_it->second->functions_.cend()) {
+      PlatformState::DeviceFunction& devFunc = func_it->second;
+      if (devFunc.functions[ihipGetDevice()] == 0) {
+        if(!createFunc(&devFunc.functions[ihipGetDevice()], hmod, name)) {
+          return false;
+        }
+      }
+      *hfunc = devFunc.functions[ihipGetDevice()];
+      return true;
+    }
+  }
+  return false;
+}
+
+bool PlatformState::createFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
+  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
+
+  const amd::Symbol* symbol = program->findSymbol(name);
+  if (!symbol) {
+    return false;
+  }
+
+  amd::Kernel* kernel = new amd::Kernel(*program, *symbol, name);
+  if (!kernel) {
+    return false;
+  }
+
+  hip::Function* f = new hip::Function(kernel);
+  *hfunc = f->asHipFunction();
+
+  return true;
+}
+
+
 hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
   amd::ScopedLock lock(lock_);
   const auto it = functions_.find(hostFunction);
@@ -308,7 +403,7 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
         (*devFunc.modules)[deviceId].second = true;
       }
       hipFunction_t function = nullptr;
-      if (hipSuccess == hipModuleGetFunction(&function, module, devFunc.deviceName.c_str()) &&
+      if (createFunc(&function, module, devFunc.deviceName.c_str()) &&
           function != nullptr) {
         devFunc.functions[deviceId] = function;
       }
@@ -361,14 +456,15 @@ bool PlatformState::getTexRef(const char* hostVar, hipModule_t hmod, textureRefe
     return false;
   }
 
-  *texRef = reinterpret_cast<textureReference *>(dvar->shadowVptr);
+  *texRef = new (dvar->shadowVptr) texture<char>{};
+
   return true;
 }
 
-bool PlatformState::getGlobalVar(const void* hostVar, int deviceId, hipModule_t hmod,
+bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
                                  hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
   amd::ScopedLock lock(lock_);
-  DeviceVar* dvar = findVar(std::string(reinterpret_cast<const char*>(hostVar)), deviceId, hmod);
+  DeviceVar* dvar = findVar(std::string(hostVar), deviceId, hmod);
   if (dvar != nullptr) {
     if (dvar->rvars[deviceId].getdeviceptr() == nullptr) {
       size_t sym_size = 0;
@@ -460,6 +556,7 @@ extern "C" void __hipRegisterVar(
     std::vector<PlatformState::RegisteredVar>{g_devices.size()}, false };
 
   PlatformState::instance().registerVar(hostVar, dvar);
+  PlatformState::instance().registerVarSym(var, deviceVar);
 }
 
 extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, bool> >* modules)
@@ -561,18 +658,30 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
     exec.sharedMem_, exec.hStream_, nullptr, extra));
 }
 
-hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol) {
+  HIP_INIT_API(hipGetSymbolAddress, devPtr, symbol);
+
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
   size_t size = 0;
-  if(!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+  if(!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                              devPtr, &size)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbolName) {
+hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbol) {
+  HIP_INIT_API(hipGetSymbolSize, sizePtr, symbol);
+
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    HIP_RETURN(hipErrorInvalidSymbol);
+  }
   hipDeviceptr_t devPtr = nullptr;
-  if (!PlatformState::instance().getGlobalVar(symbolName, ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                               &devPtr, sizePtr)) {
     HIP_RETURN(hipErrorInvalidSymbol);
   }
@@ -604,13 +713,12 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
 
 
 namespace hip_impl {
-
-hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
-                                                         hipFunction_t f,
-                                                         int  blockSize,
-                                                         size_t dynamicSMemSize)
+hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, int* numGrids,
+                                                         hipFunction_t f, int  blockSize,
+                                                         size_t dynamicSMemSize, bool bCalcPotentialBlkSz)
 {
-  HIP_INIT_API(NONE, f, blockSize, dynamicSMemSize);
+  HIP_INIT_API(NONE, f, blockSize, dynamicSMemSize, bCalcPotentialBlkSz);
+  if(numBlocks == nullptr){HIP_RETURN(hipErrorInvalidValue);}
   int deviceId = ihipGetDevice();
   // FIXME: Function may not be a device function and may have been obtaiend via
   //        hipModuleGetFunction and thus not in the functions_ map. Check the map
@@ -627,24 +735,27 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
   if (!kernel) {
     HIP_RETURN(hipErrorOutOfMemory);
   }
-  if (blockSize == 0) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
   amd::Device* device = hip::getCurrentDevice()->devices()[0];
   const device::Kernel::WorkGroupInfo* wrkGrpInfo = kernel->getDeviceKernel(*device)->workGroupInfo();
-
+  if (blockSize == 0) {
+    if (bCalcPotentialBlkSz == false){
+      HIP_RETURN(hipErrorInvalidValue);
+    }
+    else {
+      blockSize = device->info().maxWorkGroupSize_; // maxwavefrontperblock
+    }
+  }
   // Find threads accupancy per CU => simd_per_cu * GPR usage
   constexpr size_t MaxWavesPerSimd = 8;  // Limited by SPI 32 per CU, hence 8 per SIMD
-  size_t VgprWaves = wrkGrpInfo->availableVGPRs_ / amd::alignUp(wrkGrpInfo->usedVGPRs_, 4);
-
-  size_t GprWaves;
+  size_t VgprWaves = MaxWavesPerSimd;
+  if (wrkGrpInfo->usedVGPRs_ > 0) {
+    VgprWaves = wrkGrpInfo->availableVGPRs_ / amd::alignUp(wrkGrpInfo->usedVGPRs_, 4);
+  }
+  size_t GprWaves = VgprWaves;
   if (wrkGrpInfo->usedSGPRs_ > 0) {
     const size_t maxSGPRs = (device->info().gfxipVersion_ < 800) ? 512 : 800;
     size_t SgprWaves = maxSGPRs / amd::alignUp(wrkGrpInfo->usedSGPRs_, 16);
     GprWaves = std::min(VgprWaves, SgprWaves);
-  }
-  else {
-    GprWaves = VgprWaves;
   }
 
   size_t alu_accupancy = device->info().simdPerCU_ * std::min(MaxWavesPerSimd, GprWaves);
@@ -658,6 +769,12 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
     int lds_occupancy = static_cast<int>(device->info().localMemSize_ / total_used_lds);
     *numBlocks = std::min(*numBlocks, lds_occupancy);
   }
+  if (bCalcPotentialBlkSz){
+    if (numGrids == nullptr){
+      HIP_RETURN(hipErrorInvalidValue);
+    }
+    *numGrids = *numBlocks * device->info().numRTCUs_;
+  }
 
   HIP_RETURN(hipSuccess);
 }
@@ -665,13 +782,28 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 
 extern "C" {
 // FIXME: Need to replace `uint32_t` with `int` finally.
+hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             uint32_t blockSizeLimit)
+{
+  int numGrids = 0;
+  int numBlocks = 0;
+  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks, &numGrids, f, 0, dynSharedMemPerBlk,true);
+  if (Ret == hipSuccess){
+    *blockSize = numBlocks;
+    *gridSize = numGrids;
+  }
+  HIP_RETURN(Ret);
+}
+
+// FIXME: Need to replace `uint32_t` with `int` finally.
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks,
                                                         hipFunction_t f,
                                                         uint32_t  blockSize,
                                                         size_t dynamicSMemSize)
 {
   int NB;
-  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, f, blockSize, dynamicSMemSize);
+  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, nullptr, f, blockSize, dynamicSMemSize, false);
   *numBlocks = NB;
   HIP_RETURN(Ret);
 }
@@ -684,7 +816,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(uint32_t* numBl
                                                                  unsigned int flags)
 {
   int NB;
-  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, f, blockSize, dynamicSMemSize);
+  hipError_t Ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&NB, nullptr, f, blockSize, dynamicSMemSize, false);
   *numBlocks = NB;
   HIP_RETURN(Ret);
 }

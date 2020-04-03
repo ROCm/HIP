@@ -19,6 +19,8 @@
 #include <hsa/hsa_ven_amd_loader.h>
 #include <amd_comgr.h>
 #include "hc.hpp"
+#include "hip_hcc_internal.h"
+#include "trace_helper.h"
 
 #include <link.h>
 
@@ -26,6 +28,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <deque>
 #include <memory>
 #include <mutex>
 #include <stdexcept>
@@ -202,7 +205,7 @@ public:
                         std::function<void(hsa_code_object_reader_t*)>>;
     std::pair<
         std::mutex,
-        std::vector<std::pair<std::string, RAII_code_reader>>> code_readers;
+        std::deque<std::pair<std::string, RAII_code_reader>>> code_readers;
 
     program_state_impl() {
         // Create placeholder for each agent for the per-agent members.
@@ -244,7 +247,8 @@ public:
                     if (!valid(tmp)) break;
 
                     for (auto&& bundle : bundles(tmp)) {
-                        impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
+                        if(bundle.blob.size())
+                            impl.code_object_blobs.second[elf][triple_to_hsa_isa(bundle.triple)].push_back(bundle.blob);
                     }
 
                     blob_it += tmp.bundled_code_size;
@@ -418,13 +422,17 @@ public:
         decltype(code_readers.second)::iterator it;
         {
           std::lock_guard<std::mutex> lck{code_readers.first};
-          it = code_readers.second.emplace(code_readers.second.end(),
-                                           move(file), move(tmp));
+          code_readers.second.emplace_back(move(file), move(tmp));
+          it = std::prev(code_readers.second.end());
         }
 
         auto check_hsa_error = [](hsa_status_t s) {
             if (s != HSA_STATUS_SUCCESS) {
-                hip_throw(std::runtime_error{"error when loading code object"});
+                const char* hsa_err_msg;
+                hsa_status_string(s, &hsa_err_msg);
+                hip_throw(std::runtime_error{
+                              std::string("error when loading code object: ") +
+                              hsa_err_msg});
             }
         };
 
@@ -938,14 +946,16 @@ public:
 
         auto it0 = get_functions(agent).find(function_address);
 
-        if (it0 == get_functions(agent).cend()) {
-            hip_throw(std::runtime_error{
+        if (it0 != get_functions(agent).cend()) return it0->second;
+
+        // For hip-clang compiler + Hcc RT
+        hipFunction_t f = ihipGetDeviceFunction((const void*)function_address);
+        if (f) return reinterpret_cast<Kernel_descriptor&>(*f);
+
+        hip_throw(std::runtime_error{
                     "No device code available for function: " +
                     std::string(name(function_address)) +
                     ", for agent: " + name(agent)});
-        }
-
-        return it0->second;
     }
 
     const std::vector<std::pair<std::size_t, std::size_t>>& 

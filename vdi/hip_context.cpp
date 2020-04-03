@@ -50,6 +50,9 @@ void init() {
     amd::Context* context = new amd::Context(device, amd::Context::Info());
     if (!context) return;
 
+    // Enable active wait on the device by default
+    devices[i]->SetActiveWait(true);
+
     if (context && CL_SUCCESS != context->create(nullptr)) {
       context->release();
     } else {
@@ -103,6 +106,7 @@ amd::HostQueue* getNullStream(Device& dev) {
   }
   return stream->second;
 }
+
 amd::HostQueue* getNullStream(amd::Context& ctx) {
  for (auto& it : g_nullStreams) {
    if (it.first->asContext() == &ctx) {

@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: matmul.code %hc --genco %S/matmul.cpp -o matmul.code EXCLUDE_HIP_PLATFORM nvcc vdi
+ * BUILD_CMD: matmul.code %hc --genco %S/matmul.cpp -o matmul.code EXCLUDE_HIP_PLATFORM nvcc
  * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc vdi
  * TEST: %t
  * HIT_END

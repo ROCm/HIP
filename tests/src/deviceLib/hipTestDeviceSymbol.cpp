@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM vdi
+ * BUILD: %t %s
  * TEST: %t
  * HIT_END
  */

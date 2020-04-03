@@ -103,9 +103,12 @@ extern int HIP_TRACE_API;
 #include <hip/hcc_detail/host_defines.h>
 #include <hip/hcc_detail/device_functions.h>
 #include <hip/hcc_detail/surface_functions.h>
-#include <hip/hcc_detail/texture_functions.h>
 #if __HCC__
     #include <hip/hcc_detail/math_functions.h>
+    #include <hip/hcc_detail/texture_functions.h>
+#else
+    #include <hip/hcc_detail/texture_fetch_functions.h>
+    #include <hip/hcc_detail/texture_indirect_functions.h>
 #endif
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined(__KALMAR_ACCELERATOR__) && !defined(__HCC_ACCELERATOR__)
@@ -311,16 +314,6 @@ extern "C" __device__ void* __hip_free(void* ptr);
 static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
 
-#if defined(__HCC_ACCELERATOR__) && defined(HC_FEATURE_PRINTF)
-template <typename... All>
-static inline __device__ void printf(const char* format, All... all) {
-    hc::printf(format, all...);
-}
-#elif defined(__HCC_ACCELERATOR__) || __HIP__
-template <typename... All>
-static inline __device__ void printf(const char* format, All... all) {}
-#endif
-
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
@@ -386,7 +379,7 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 #elif defined(__clang__) && defined(__HIP__)
 
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
-#define HIP_SYMBOL(X) #X
+#define HIP_SYMBOL(X) X
 
 typedef int hipLaunchParm;
 

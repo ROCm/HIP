@@ -491,16 +491,34 @@ hipError_t hipSetDevice ( int  device ) {
 hipError_t hipSetDeviceFlags ( unsigned int  flags ) {
   HIP_INIT_API(hipSetDeviceFlags, flags);
 
-  /* FIXME */
-  /* Not all of Ctx may be implemented */
-
-  unsigned supportedFlags =
+  constexpr uint32_t supportedFlags =
       hipDeviceScheduleMask | hipDeviceMapHost | hipDeviceLmemResizeToMax;
 
-  if (flags & (~supportedFlags)) {
+  if (flags & ~supportedFlags) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
+  switch (flags & hipDeviceScheduleMask) {
+    case hipDeviceScheduleAuto:
+      // Current behavior is different from the spec, due to MT usage in runtime
+      if (hip::host_device->devices().size() >= std::thread::hardware_concurrency()) {
+        device->SetActiveWait(false);
+        break;
+      }
+      // Fall through for active wait...
+    case hipDeviceScheduleSpin:
+    case hipDeviceScheduleYield:
+      // The both options falls into yield, because MT usage in runtime
+      device->SetActiveWait(true);
+      break;
+    case hipDeviceScheduleBlockingSync:
+      device->SetActiveWait(false);
+      break;
+    default:
+      break;
+  }
+ 
   HIP_RETURN(hipSuccess);
 }
 

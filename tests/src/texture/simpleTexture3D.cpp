@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc vdi
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -52,16 +52,16 @@ __global__ void simpleKernel3DArray(T* outputData,
                                     int height,int depth)
 {
     for (int i = 0; i < depth; i++) {
-       for (int j = 0; j < height; j++) {
-           for (int k = 0; k < width; k++) {
-               if(std::is_same<T, float>::value)
-                   outputData[i*width*height + j*width + k] = tex3D(texf, texf.textureObject, k, j, i);
-               else if(std::is_same<T, int>::value)
-                   outputData[i*width*height + j*width + k] = tex3D(texi, texi.textureObject, k, j, i);
-               else if(std::is_same<T, char>::value)
-                   outputData[i*width*height + j*width + k] = tex3D(texc, texc.textureObject, k, j, i);
-           }
-       }
+        for (int j = 0; j < height; j++) {
+            for (int k = 0; k < width; k++) {
+                if(std::is_same<T, float>::value)
+                    outputData[i*width*height + j*width + k] = tex3D(texf, k, j, i);
+                else if(std::is_same<T, int>::value)
+                    outputData[i*width*height + j*width + k] = tex3D(texi, k, j, i);
+                else if(std::is_same<T, char>::value)
+                    outputData[i*width*height + j*width + k] = tex3D(texc, k, j, i);
+            }
+        }
     }
 }
 
@@ -84,10 +84,10 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     }
 
     // Allocate array and copy image data
-    hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(T)*8, 0, 0, 0, hipChannelFormatKindSigned);
+    hipChannelFormatDesc channelDesc = hipCreateChannelDesc<T>();
     hipArray *arr;
 
-    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayCubemap));
+    HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayDefault));
     hipMemcpy3DParms myparms = {0};
     myparms.srcPos = make_hipPos(0,0,0);
     myparms.dstPos = make_hipPos(0,0,0);

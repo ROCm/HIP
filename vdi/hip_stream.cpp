@@ -42,16 +42,22 @@ class StreamCallback {
 
 namespace hip {
 
-void syncStreams() {
+void syncStreams(int devId) {
   amd::ScopedLock lock(streamSetLock);
 
   for (const auto& it : streamSet) {
-    it->finish();
+    if (it->device->deviceId() == devId) {
+      it->finish();
+    }
   }
 }
 
+void syncStreams() {
+  syncStreams(getCurrentDevice()->deviceId());
+}
+
 Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p, unsigned int f) :
-  queue(nullptr), device(dev), priority(p), flags(f) {}
+  queue(nullptr), lock("Stream Callback lock"), device(dev), priority(p), flags(f) {}
 
 void Stream::create() {
   cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
@@ -84,10 +90,12 @@ void Stream::finish() {
 };
 
 void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data) {
-
   hipError_t status = hipSuccess;
   StreamCallback* cbo = reinterpret_cast<StreamCallback*>(user_data);
-  cbo->callBack_(cbo->stream_, status, cbo->userData_);
+  {
+    amd::ScopedLock lock(reinterpret_cast<hip::Stream*>(cbo->stream_)->lock);
+    cbo->callBack_(cbo->stream_, status, cbo->userData_);
+  }
   cbo->command_->release();
   delete cbo;
 }
@@ -224,7 +232,7 @@ hipError_t hipStreamQuery(hipStream_t stream) {
     hostQueue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
   }
 
-  amd::Command* command = hostQueue->getLastQueuedCommand(false);
+  amd::Command* command = hostQueue->getLastQueuedCommand(true);
   if (command == nullptr) {
     HIP_RETURN(hipSuccess);
   }
@@ -233,7 +241,9 @@ hipError_t hipStreamQuery(hipStream_t stream) {
   if (command->type() != 0) {
     event.notifyCmdQueue();
   }
-  HIP_RETURN((command->status() == CL_COMPLETE) ? hipSuccess : hipErrorNotReady);
+  hipError_t status = (command->status() == CL_COMPLETE) ? hipSuccess : hipErrorNotReady;
+  command->release();
+  HIP_RETURN(status);
 }
 
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
@@ -243,6 +253,11 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
   amd::HostQueue* hostQueue = reinterpret_cast<hip::Stream*>
                               (stream)->asHostQueue();
   amd::Command* command = hostQueue->getLastQueuedCommand(true);
+  if (command == nullptr) {
+    amd::Command::EventWaitList eventWaitList;
+    command = new amd::Marker(*hostQueue, false, eventWaitList);
+    command->enqueue();
+  }
   amd::Event& event = command->event();
   StreamCallback* cbo = new StreamCallback(stream, callback, userData, command);
 
