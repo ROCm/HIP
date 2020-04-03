@@ -544,15 +544,15 @@ extern "C" void __hipRegisterFunction(
 // executions.
 extern "C" void __hipRegisterVar(
   std::vector<std::pair<hipModule_t,bool> >* modules,   // The device modules containing code object
-  char*       var,       // The shadow variable in host code
+  void*       var,       // The shadow variable in host code
   char*       hostVar,   // Variable name in host code
   char*       deviceVar, // Variable name in device code
   int         ext,       // Whether this variable is external
-  int         size,      // Size of the variable
+  size_t      size,      // Size of the variable
   int         constant,  // Whether this variable is constant
   int         global)    // Unknown, always 0
 {
-  PlatformState::DeviceVar dvar{var, std::string{ hostVar }, static_cast<size_t>(size), modules,
+  PlatformState::DeviceVar dvar{var, std::string{ hostVar }, size, modules,
     std::vector<PlatformState::RegisteredVar>{g_devices.size()}, false };
 
   PlatformState::instance().registerVar(hostVar, dvar);
