@@ -25,6 +25,7 @@
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
 #include "hip_event.hpp"
+#include "hip_platform.hpp"
 
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image);
 
@@ -294,9 +295,23 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   amd::HostQueue* queue = hip::getQueue(hStream);
   const amd::Device& device = queue->vdev()->device();
 
-  if ((params & amd::NDRangeKernelCommand::CooperativeGroups) &&
-      !device.info().cooperativeGroups_) {
-    return hipErrorLaunchFailure;
+  // Make sure dispatch doesn't exceed max workgroup size limit
+  if (blockDimX * blockDimY * blockDimZ > device.info().maxWorkGroupSize_) {
+    return hipErrorInvalidConfiguration;
+  }
+
+  if (params & amd::NDRangeKernelCommand::CooperativeGroups) {
+    if (!device.info().cooperativeGroups_) {
+      return hipErrorLaunchFailure;
+    }
+    int num_blocks = 0;
+    int num_grids = 0;
+    int block_size = blockDimX * blockDimY * blockDimZ;
+    hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+      &num_blocks, &num_grids, device, f, block_size, sharedMemBytes, true);
+    if (((gridDimX * gridDimY * gridDimZ) / block_size) > num_grids) {
+      return hipErrorCooperativeLaunchTooLarge;
+    }
   }
   if ((params & amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups) &&
       !device.info().cooperativeMultiDeviceGroups_) {
