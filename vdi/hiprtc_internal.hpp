@@ -1,4 +1,4 @@
-/* Copyright (c) 2019-present Advanced Micro Devices, Inc.
+/* Copyright (c) 2015-present Advanced Micro Devices, Inc.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -22,6 +22,29 @@
 #define HIPRTC_SRC_HIP_INTERNAL_H
 
 #include "hip_internal.hpp"
+
+#if __linux__
+#include <cstdlib>
+
+#if HIPRTC_USE_CXXABI
+#include <cxxabi.h>
+
+#define DEMANGLE abi::__cxa_demangle
+
+#else
+extern "C" char * __cxa_demangle(const char *mangled_name, char *output_buffer,
+                                size_t *length, int *status);
+
+#define DEMANGLE __cxa_demangle
+#endif //HIPRTC_USE_CXXABI
+
+#elif defined(_WIN32)
+#include <Windows.h>
+#include <DbgHelp.h>
+
+#define UNDECORATED_SIZE 4096
+
+#endif // __linux__
 
 // This macro should be called at the beginning of every HIP RTC API.
 #define HIPRTC_INIT_API(...)                                 \

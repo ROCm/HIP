@@ -143,7 +143,7 @@ int main()
     hipMemcpyDtoH(hOut.get(), dOut, bufferSize);
 
     for (size_t i = 0; i < n; ++i) {
-       if (a * hX[i] + hY[i] != hOut[i]) { failed("Validation failed."); }
+        if (fabs(a * hX[i] + hY[i] - hOut[i]) > fabs(hOut[i])* 1e-6) { failed("Validation failed."); }
     }
 
     hipFree(dX);

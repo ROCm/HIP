@@ -373,18 +373,18 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set_property ( TARGET hip_hcc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
     set_property ( TARGET hip_hcc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
 
-    if(HIP_COMPILER STREQUAL "hcc")
-        target_link_libraries(hip_hcc PRIVATE hc_am)
-        target_link_libraries(hip_hcc_static PRIVATE hc_am)
+    target_link_libraries(hip_hcc PRIVATE hc_am)
+    target_link_libraries(hip_hcc_static PRIVATE hc_am)
 
-        add_library(hiprtc SHARED src/hiprtc.cpp src/code_object_bundle.cpp)
-        set_property ( TARGET hiprtc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
-        set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
+    add_library(hiprtc SHARED src/hiprtc.cpp src/code_object_bundle.cpp)
+    target_compile_options(hiprtc PRIVATE -DDISABLE_REDUCED_GPU_BLOB_COPY)
+    set_property ( TARGET hiprtc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
+    set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
 
-        target_include_directories(
-            hiprtc SYSTEM
-                PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
-endif()
+    target_include_directories(
+        hiprtc SYSTEM
+            PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
+
     set_target_properties(hip_hcc PROPERTIES CXX_VISIBILITY_PRESET hidden)
     set_target_properties(hip_hcc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
 
@@ -448,12 +448,7 @@ endif()
 #############################
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-    if(HIP_COMPILER STREQUAL "hcc")
       install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
-    else()
-      install(TARGETS hip_hcc_static hip_hcc DESTINATION lib)
-    endif()
-
 endif()
 
 # Install .hipInfo

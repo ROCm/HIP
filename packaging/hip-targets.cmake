@@ -16,8 +16,8 @@ set(CMAKE_IMPORT_FILE_VERSION 1)
 set(_targetsDefined)
 set(_targetsNotDefined)
 set(_expectedTargets)
-if(HIP_RUNTIME STREQUAL "vdi")
-   foreach(_expectedTarget hip::hip_hcc hip::host hip::device)
+if(HIP_RUNTIME MATCHES "VDI")
+   foreach(_expectedTarget hip::amdhip64 hip::host hip::device)
 else()
    foreach(_expectedTarget hip:hip_hcc_static hip::hip_hcc hip::host hip::device)
 endif()
@@ -52,7 +52,7 @@ get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
 # Create imported target hip::hip_hcc_static
-if( NOT HIP_RUNTIME STREQUAL "vdi")
+if( NOT HIP_RUNTIME MATCHES "VDI")
    add_library(hip::hip_hcc_static STATIC IMPORTED)
 endif()
 
@@ -68,26 +68,39 @@ find_path(HSA_HEADER hsa/hsa.h
 if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
-if(NOT HIP_RUNTIME STREQUAL "vdi")
+if(HIP_RUNTIME MATCHES "VDI")
+  # Create imported target hip::amdhip64
+  add_library(hip::amdhip64 SHARED IMPORTED)
+
+  set_target_properties(hip::amdhip64 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  )
+else()
   set_target_properties(hip::hip_hcc_static PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}")
+
+  # Create imported target hip::hip_hcc
+  add_library(hip::hip_hcc SHARED IMPORTED)
+
+  set_target_properties(hip::hip_hcc PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  )
 endif()
-
-# Create imported target hip::hip_hcc
-add_library(hip::hip_hcc SHARED IMPORTED)
-
-set_target_properties(hip::hip_hcc PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
-)
 
 # Create imported target hip::host
 add_library(hip::host INTERFACE IMPORTED)
 
-set_target_properties(hip::host PROPERTIES
-  INTERFACE_LINK_LIBRARIES "hip::hip_hcc"
-)
+if(HIP_RUNTIME MATCHES "VDI")
+  set_target_properties(hip::host PROPERTIES
+    INTERFACE_LINK_LIBRARIES "hip::amdhip64")
+else()
+  set_target_properties(hip::host PROPERTIES
+    INTERFACE_LINK_LIBRARIES "hip::hip_hcc")
+endif()
+  
 
 # Create imported target hip::device
 add_library(hip::device INTERFACE IMPORTED)

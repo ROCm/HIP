@@ -29,8 +29,14 @@ THE SOFTWARE.
 
 #ifdef __cplusplus
 
+#if __HIP_VDI__
+extern "C" {
+#endif
 HIP_PUBLIC_API
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f);
+#if __HIP_VDI__
+}
+#endif
 
 static inline hipChannelFormatDesc hipCreateChannelDescHalf() {
     int e = (int)sizeof(unsigned short) * 8;

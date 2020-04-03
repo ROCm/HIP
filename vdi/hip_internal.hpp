@@ -25,6 +25,7 @@
 #include "hip_prof_api.h"
 #include "trace_helper.h"
 #include "utils/debug.hpp"
+#include "hip_formatting.hpp"
 #include <unordered_set>
 #include <thread>
 #include <stack>
@@ -72,11 +73,14 @@ namespace hip {
 
   /// HIP Device class
   class Device {
+    amd::Monitor lock_{"Device lock"};
     /// VDI context
     amd::Context* context_;
     /// Device's ID
     /// Store it here so we don't have to loop through the device list every time
     int deviceId_;
+    //Maintain list of user enabled peers
+    std::list<int> userEnabledPeers;
   public:
     Device(amd::Context* ctx, int devId): context_(ctx), deviceId_(devId) { assert(ctx != nullptr); }
     ~Device() {}
@@ -86,6 +90,25 @@ namespace hip {
     void retain() const { context_->retain(); }
     void release() const { context_->release(); }
     const std::vector<amd::Device*>& devices() const { return context_->devices(); }
+    hipError_t EnablePeerAccess(int peerDeviceId){
+      amd::ScopedLock lock(lock_);
+      bool found = (std::find(userEnabledPeers.begin(), userEnabledPeers.end(), peerDeviceId) != userEnabledPeers.end());
+      if (found) {
+        return hipErrorPeerAccessAlreadyEnabled;
+      }
+      userEnabledPeers.push_back(peerDeviceId);
+      return hipSuccess;
+    }
+    hipError_t DisablePeerAccess(int peerDeviceId) {
+      amd::ScopedLock lock(lock_);
+      bool found = (std::find(userEnabledPeers.begin(), userEnabledPeers.end(), peerDeviceId) != userEnabledPeers.end());
+      if (found) {
+        userEnabledPeers.remove(peerDeviceId);
+        return hipSuccess;
+      } else {
+        return hipErrorPeerAccessNotEnabled;
+      }
+    }
   };
 
   extern std::once_flag g_ihipInitialized;
@@ -111,8 +134,9 @@ namespace hip {
   /// Get default stream of the thread
   extern amd::HostQueue* getNullStream();
   /// Sync Blocking streams on the current device
-  /// TODO: It currently syncs all Blocking streams on all devices
   extern void syncStreams();
+  /// Sync blocking streams on the given device
+  extern void syncStreams(int devId);
 
 
   struct Function {
@@ -127,7 +151,7 @@ namespace hip {
 
   struct Stream {
     amd::HostQueue* queue;
-
+    amd::Monitor lock;
     Device* device;
     amd::CommandQueue::Priority priority;
     unsigned int flags;
@@ -202,8 +226,19 @@ public:
     bool dyn_undef;
   };
 private:
+  class Module {
+  public:
+    Module(hipModule_t hip_module_) : hip_module(hip_module_) {}
+    std::unordered_map<std::string, DeviceFunction > functions_;
+  private:
+    hipModule_t hip_module;
+  };
+  std::unordered_map<hipModule_t, Module*> module_map_;
+
   std::unordered_map<const void*, DeviceFunction > functions_;
   std::unordered_multimap<std::string, DeviceVar > vars_;
+  // Map from the host shadow symbol to its device name.
+  std::unordered_map<const void*, std::string> symbols_;
 
   static PlatformState* platform_;
 
@@ -214,16 +249,22 @@ public:
     return *platform_;
   }
 
+  bool unregisterFunc(hipModule_t hmod);
   std::vector< std::pair<hipModule_t, bool> >* unregisterVar(hipModule_t hmod);
 
 
+  bool findSymbol(const void *hostVar, std::string &devName);
   PlatformState::DeviceVar* findVar(std::string hostVar, int deviceId, hipModule_t hmod);
-  void registerVar(const void* hostvar, const DeviceVar& var);
+  void registerVarSym(const void *hostVar, const char *symbolName);
+  void registerVar(const char* symbolName, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
 
+  bool registerModFuncs(std::vector<std::string>& func_names, hipModule_t* module);
+  bool findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
+  bool createFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
   hipFunction_t getFunc(const void* hostFunction, int deviceId);
   bool getFuncAttr(const void* hostFunction, hipFuncAttributes* func_attr);
-  bool getGlobalVar(const void* hostVar, int deviceId, hipModule_t hmod,
+  bool getGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
                     hipDeviceptr_t* dev_ptr, size_t* size_ptr);
   bool getTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef);
 
@@ -242,16 +283,5 @@ extern hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags);
 extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 extern bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
                                     size_t* var_size);
-
-inline std::ostream& operator<<(std::ostream& os, const dim3& s) {
-    os << '{';
-    os << s.x;
-    os << ',';
-    os << s.y;
-    os << ',';
-    os << s.z;
-    os << '}';
-    return os;
-}
 
 #endif // HIP_SRC_HIP_INTERNAL_H
