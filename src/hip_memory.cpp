@@ -2491,7 +2491,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
              crit->peerAgents(), devPtr) != HSA_STATUS_SUCCESS)
             return ihipLogStatus(hipErrorRuntimeOther);
 
-        hc::AmPointerInfo ampi(NULL, *devPtr, *devPtr, sizeof(*devPtr), acc, true, true);
+        hc::AmPointerInfo ampi(NULL, *devPtr, *devPtr, iHandle->psize, acc, true, true);
         am_status_t am_status = hc::am_memtracker_add(*devPtr,ampi);
         if (am_status != AM_SUCCESS)
             return ihipLogStatus(hipErrorMapFailed);
