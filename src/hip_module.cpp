@@ -493,7 +493,7 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
         dim3 blockDim, void** kernelParams, unsigned int sharedMemBytes,
         hipStream_t stream, hip_impl::program_state& ps) {
 
-#if (__hcc_workweek__ >= 20093)
+#if (__hcc_workweek__ >= 20115)
     hipError_t result;
 
 
