@@ -50,14 +50,24 @@ set_and_check( hip_BIN_INSTALL_DIR "@PACKAGE_BIN_INSTALL_DIR@" )
 set_and_check(hip_HIPCC_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipcc")
 set_and_check(hip_HIPCONFIG_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipconfig")
 
-get_filename_component(HIP_CLANG_ROOT "${CMAKE_CXX_COMPILER}" PATH)
-get_filename_component(HIP_CLANG_ROOT "${HIP_CLANG_ROOT}" PATH)
+if(CMAKE_CXX_COMPILER MATCHES ".*hipcc")
+  execute_process(COMMAND ${CMAKE_CXX_COMPILER} --version
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  OUTPUT_VARIABLE HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT)
+  if(HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[\t\r\n][\t\r\n]*([^\t\r\n])")
+    set(HIP_CLANG_ROOT ${CMAKE_MATCH_1})
+  else()
+    set(HIP_CLANG_ROOT /opt/rocm/llvm)
+  endif()
+else()
+  get_filename_component(HIP_CLANG_ROOT "${CMAKE_CXX_COMPILER}" PATH)
+  get_filename_component(HIP_CLANG_ROOT "${HIP_CLANG_ROOT}" PATH)
+endif()
 file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS ${HIP_CLANG_ROOT}/lib/clang/*/include)
 find_path(HIP_CLANG_INCLUDE_PATH stddef.h
     HINTS
         ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
     NO_DEFAULT_PATH)
-
 find_dependency(amd_comgr)
 find_dependency(AMDDeviceLibs)
 set(AMDGPU_TARGETS "gfx900;gfx906" CACHE STRING "AMD GPU targets to compile for")
