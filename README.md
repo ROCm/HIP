@@ -1,6 +1,7 @@
 ## What is this repository for? ###
 
-HIP allows developers to convert CUDA code to portable C++.  The same source code can be compiled to run on NVIDIA or AMD GPUs. 
+**HIP is a C++ Runtime API and Kernel Language that allows developers to create portable applications for AMD and NVIDIA GPUs from single source code.**
+
 Key features include:
 
 * HIP is very thin and has little or no performance impact over coding directly in CUDA or hcc "HC" mode.

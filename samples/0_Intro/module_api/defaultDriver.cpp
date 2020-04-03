@@ -80,8 +80,8 @@ int main() {
 
     hipFree(Ad);
     hipFree(Bd);
-    delete A;
-    delete B;
+    delete[] A;
+    delete[] B;
     hipCtxDestroy(context);
     return 0;
 }

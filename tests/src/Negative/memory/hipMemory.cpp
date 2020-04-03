@@ -1,5 +1,5 @@
-/*
-Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+/* 
+Copyright (c) 2015-Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,11 +17,27 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HIP_HIP_PROFILE_H
-#define HIP_INCLUDE_HIP_HIP_PROFILE_H
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * TEST: %t
+ * HIT_END
+ */
 
-#define HIP_SCOPED_MARKER(markerName, group)
-#define HIP_BEGIN_MARKER(markerName, group)
-#define HIP_END_MARKER()
+#include "test_common.h"
+#define SIZE 100
 
-#endif
+int main(){
+   hipError_t e;
+   char str[SIZE]="Hi, I am Ellesemere. What is ur name?";
+
+   e = hipMemcpy(0, str, SIZE, hipMemcpyHostToDevice);
+   HIPASSERT(e==hipErrorInvalidValue);
+   
+   e = hipMemcpy(NULL, str, SIZE, hipMemcpyHostToDevice);
+   HIPASSERT(e==hipErrorInvalidValue);
+
+   e = hipMemset(0,99,80);
+   HIPASSERT(e==hipErrorInvalidValue);
+
+   passed();
+}

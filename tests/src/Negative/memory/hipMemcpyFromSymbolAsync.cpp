@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,11 +17,33 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#ifndef HIP_INCLUDE_HIP_HIP_PROFILE_H
-#define HIP_INCLUDE_HIP_HIP_PROFILE_H
+/* HIT_START
+ * BUILD: %t %s ../../test_common.cpp
+ * TEST: %t
+ * HIT_END
+ */
 
-#define HIP_SCOPED_MARKER(markerName, group)
-#define HIP_BEGIN_MARKER(markerName, group)
-#define HIP_END_MARKER()
+#include "test_common.h"
+#define SIZE 1024
 
-#endif
+int main(){
+
+    void *Sd;
+    hipError_t e;
+    char S[SIZE]="This is not a device symbol";
+
+    HIPCHECK(hipMalloc(&Sd,SIZE));
+
+    hipStream_t stream;
+    HIPCHECK(hipStreamCreate(&stream));
+
+    e = hipMemcpyFromSymbolAsync(S, HIP_SYMBOL(Sd), SIZE, 0, hipMemcpyDeviceToHost, stream);
+    HIPASSERT(e==hipErrorInvalidSymbol);
+    
+    e = hipMemcpyFromSymbolAsync(S, NULL, SIZE, 0, hipMemcpyDeviceToHost, stream);
+    HIPASSERT(e==hipErrorInvalidSymbol);
+
+    HIPCHECK(hipFree(Sd)); 
+    
+    passed();
+}

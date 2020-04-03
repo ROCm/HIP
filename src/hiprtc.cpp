@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 #include "../include/hip/hiprtc.h"
-#include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "code_object_bundle.inl"
 #include "../include/hip/hcc_detail/elfio/elfio.hpp"
 #include "../include/hip/hcc_detail/program_state.hpp"
 
@@ -50,7 +50,7 @@ THE SOFTWARE.
 #include <iostream>
 #include <sys/stat.h>
 
-const char* hiprtcGetErrorString(hiprtcResult x)
+extern "C" const char* hiprtcGetErrorString(hiprtcResult x)
 {
     switch (x) {
     case HIPRTC_SUCCESS:
@@ -94,6 +94,21 @@ inline bool fileExists (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0); 
 }
 }  // namespace hip_impl
+
+namespace
+{
+    char* demangle(const char* x)
+    {
+        if (!x) return nullptr;
+
+        int s{};
+        char* tmp = abi::__cxa_demangle(x, nullptr, nullptr, &s);
+
+        if (s != 0) return nullptr;
+
+        return tmp;
+    }
+} // Unnamed namespace.
 
 namespace
 {
@@ -158,7 +173,7 @@ struct _hiprtcProgram {
     {
         using namespace std;
 
-        char* demangled = hip_impl::demangle(name.c_str());
+        char* demangled = demangle(name.c_str());
         name.assign(demangled == nullptr ? "" : demangled);
         free(demangled);
 
@@ -352,7 +367,7 @@ namespace
     }
 } // Unnamed namespace.
 
-hiprtcResult hiprtcAddNameExpression(hiprtcProgram p, const char* n)
+extern "C" hiprtcResult hiprtcAddNameExpression(hiprtcProgram p, const char* n)
 {
     if (!n) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -412,21 +427,6 @@ namespace
         }
     };
 } // Unnamed namespace.
-
-namespace hip_impl
-{
-    char* demangle(const char* x)
-    {
-        if (!x) return nullptr;
-
-        int s{};
-        char* tmp = abi::__cxa_demangle(x, nullptr, nullptr, &s);
-
-        if (s != 0) return nullptr;
-
-        return tmp;
-    }
-} // Namespace hip_impl.
 
 namespace
 {
@@ -492,7 +492,7 @@ namespace
     }
 } // Unnamed namespace.
 
-hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
+extern "C" hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
 {
     using namespace std;
 
@@ -530,7 +530,7 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char** o)
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcCreateProgram(hiprtcProgram* p, const char* src,
+extern "C" hiprtcResult hiprtcCreateProgram(hiprtcProgram* p, const char* src,
                                  const char* name, int n, const char** hdrs,
                                  const char** incs)
 {
@@ -548,14 +548,14 @@ hiprtcResult hiprtcCreateProgram(hiprtcProgram* p, const char* src,
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcDestroyProgram(hiprtcProgram* p)
+extern "C" hiprtcResult hiprtcDestroyProgram(hiprtcProgram* p)
 {
     if (!p) return HIPRTC_SUCCESS;
 
     return _hiprtcProgram::destroy(*p);
 }
 
-hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n,
+extern "C" hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n,
                                   const char** ln)
 {
     using namespace std;
@@ -576,7 +576,7 @@ hiprtcResult hiprtcGetLoweredName(hiprtcProgram p, const char* n,
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcGetProgramLog(hiprtcProgram p, char* l)
+extern "C" hiprtcResult hiprtcGetProgramLog(hiprtcProgram p, char* l)
 {
     if (!l) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -588,7 +588,7 @@ hiprtcResult hiprtcGetProgramLog(hiprtcProgram p, char* l)
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram p, std::size_t* sz)
+extern "C" hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram p, std::size_t* sz)
 {
     if (!sz) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -599,7 +599,7 @@ hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram p, std::size_t* sz)
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcGetCode(hiprtcProgram p, char* c)
+extern "C" hiprtcResult hiprtcGetCode(hiprtcProgram p, char* c)
 {
     if (!c) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -610,7 +610,7 @@ hiprtcResult hiprtcGetCode(hiprtcProgram p, char* c)
     return HIPRTC_SUCCESS;
 }
 
-hiprtcResult hiprtcGetCodeSize(hiprtcProgram p, std::size_t* sz)
+extern "C" hiprtcResult hiprtcGetCodeSize(hiprtcProgram p, std::size_t* sz)
 {
     if (!sz) return HIPRTC_ERROR_INVALID_INPUT;
     if (!isValidProgram(p)) return HIPRTC_ERROR_INVALID_PROGRAM;
@@ -619,4 +619,16 @@ hiprtcResult hiprtcGetCodeSize(hiprtcProgram p, std::size_t* sz)
     *sz = p->elf.size();
 
     return HIPRTC_SUCCESS;
+}
+
+extern "C" hiprtcResult hiprtcVersion(int* major, int* minor)
+{
+  if (major == nullptr || minor == nullptr) {
+    return HIPRTC_ERROR_INVALID_INPUT;
+  }
+
+  *major = 9;
+  *minor = 0;
+
+  return HIPRTC_SUCCESS;
 }
