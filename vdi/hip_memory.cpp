@@ -190,7 +190,8 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
   }
 
   unsigned int ihipFlags = CL_MEM_SVM_FINE_GRAIN_BUFFER | (flags << 16);
-  if (flags & (hipHostMallocCoherent | hipHostMallocMapped) ||
+  if (flags == 0 ||
+      flags & (hipHostMallocCoherent | hipHostMallocMapped) ||
      (!(flags & hipHostMallocNonCoherent) && HIP_HOST_COHERENT)) {
     ihipFlags |= CL_MEM_SVM_ATOMICS;
   }
