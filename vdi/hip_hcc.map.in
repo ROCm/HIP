@@ -232,6 +232,7 @@ global:
     hipMipmappedArrayGetLevel;
     hipGetMipmappedArrayLevel;
     hipMallocHost;
+    hipFreeHost;
     hipTexObjectCreate;
     hipTexObjectDestroy;
     hipTexObjectGetResourceDesc;
