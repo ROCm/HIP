@@ -311,16 +311,6 @@ extern "C" __device__ void* __hip_free(void* ptr);
 static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
 
-#if defined(__HCC_ACCELERATOR__) && defined(HC_FEATURE_PRINTF)
-template <typename... All>
-static inline __device__ void printf(const char* format, All... all) {
-    hc::printf(format, all...);
-}
-#elif defined(__HCC_ACCELERATOR__) || __HIP__
-template <typename... All>
-static inline __device__ void printf(const char* format, All... all) {}
-#endif
-
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
@@ -511,9 +501,14 @@ hc_get_workitem_absolute_id(int dim)
 #define __CUDA__
 #include <__clang_cuda_math_forward_declares.h>
 #include <__clang_cuda_complex_builtins.h>
-#include <cuda_wrappers/algorithm>
-#include <cuda_wrappers/complex>
-#include <cuda_wrappers/new>
+// Workaround for using libc++ with HIP-Clang.
+// The following headers requires clang include path before standard C++ include path.
+// However libc++ include path requires to be before clang include path.
+// To workaround this, we pass -isystem with the parent directory of clang include
+// path instead of the clang include path itself.
+#include <include/cuda_wrappers/algorithm>
+#include <include/cuda_wrappers/complex>
+#include <include/cuda_wrappers/new>
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 #endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__

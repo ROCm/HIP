@@ -19,10 +19,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#pragma once
+#ifndef HIPRTC_H
+#define HIPRTC_H
 
-#include <cstddef>
-#include <string>
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+#include <stdlib.h>
+
+#pragma GCC visibility push (default)
 
 enum hiprtcResult {
     HIPRTC_SUCCESS = 0,
@@ -41,29 +47,22 @@ enum hiprtcResult {
 
 const char* hiprtcGetErrorString(hiprtcResult result);
 
-inline
-hiprtcResult hiprtcVersion(int* major, int* minor) noexcept
-{   // TODO: NVRTC versioning is somewhat unclear.
-    if (!major || !minor) return HIPRTC_ERROR_INVALID_INPUT;
 
-    // TODO: this should be generic / set by the build infrastructure.
-    *major = 9;
-    *minor = 0;
+hiprtcResult hiprtcVersion(int* major, int* minor);
 
-    return HIPRTC_SUCCESS;
-}
-
-struct _hiprtcProgram;
-using hiprtcProgram = _hiprtcProgram*;
+typedef struct _hiprtcProgram* hiprtcProgram;
 
 hiprtcResult hiprtcAddNameExpression(hiprtcProgram prog,
                                      const char* name_expression);
 
-hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions,
+hiprtcResult hiprtcCompileProgram(hiprtcProgram prog,
+                                  int numOptions,
                                   const char** options);
 
-hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog, const char* src,
-                                 const char* name, int numHeaders,
+hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog,
+                                 const char* src,
+                                 const char* name,
+                                 int numHeaders,
                                  const char** headers,
                                  const char** includeNames);
 
@@ -76,37 +75,16 @@ hiprtcResult hiprtcGetLoweredName(hiprtcProgram prog,
 hiprtcResult hiprtcGetProgramLog(hiprtcProgram prog, char* log);
 
 hiprtcResult hiprtcGetProgramLogSize(hiprtcProgram prog,
-                                     std::size_t* logSizeRet);
+                                     size_t* logSizeRet);
 
 hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* code);
 
-hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, std::size_t* codeSizeRet);
+hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* codeSizeRet);
 
-namespace hip_impl
-{
-    char* demangle(const char* mangled_expression);
+#pragma GCC visibility pop
+
+#ifdef __cplusplus
 }
+#endif /* __cplusplus */
 
-#if defined(HIPRTC_GET_TYPE_NAME)
-    #include <typeinfo>
-
-    #if defined(_WIN32)
-        #include <dbghelp.h>
-
-        template<typename>
-        hiprtcResult hiprtcGetTypeName(std::string*) = delete;
-    #else
-        template<typename T>
-        inline
-        hiprtcResult hiprtcGetTypeName(std::string* result)
-        {
-            if (!result) return HIPRTC_ERROR_INVALID_INPUT;
-
-            char * res= hip_impl::demangle(typeid(T).name());
-            result->assign(res == nullptr ? "" : res);
-            std::free(res);
-            return (result->empty()) ? HIPRTC_ERROR_INTERNAL_ERROR :
-                                       HIPRTC_SUCCESS;
-        }
-    #endif
-#endif
+#endif //HIPRTC_H

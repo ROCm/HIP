@@ -37,7 +37,6 @@ __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
 namespace hip_internal {
 
 namespace {
-
     inline
     const char* hsa_to_string(hsa_status_t err) noexcept
     {
@@ -140,6 +139,8 @@ namespace {
         return r;
     }()};
 
+    constexpr std::uint32_t is_cpu_owned{UINT32_MAX};
+
     inline
     hsa_amd_pointer_info_t info(const void* p)
     {
@@ -149,13 +150,14 @@ namespace {
                 const_cast<void*>(p), &r, nullptr, nullptr, nullptr),
             __FILE__, __func__, __LINE__);
 
-        r.size = is_large_BAR || (type(r.agentOwner) == HSA_DEVICE_TYPE_CPU) ?
-            UINT32_MAX : sizeof(hsa_amd_pointer_info_t);
+        if (type(r.agentOwner) == HSA_DEVICE_TYPE_CPU) r.size = is_cpu_owned;
 
         return r;
     }
 
-    constexpr size_t staging_sz{4 * 1024 * 1024}; // 2 Pages.
+    constexpr size_t staging_sz{4 * 1024 * 1024};     // 2 Pages.
+    constexpr size_t max_h2d_std_memcpy_sz{8 * 1024}; // 8 KiB.
+    constexpr size_t max_d2h_std_memcpy_sz{64};       // 1 cacheline.
 
     thread_local const std::unique_ptr<void, void (*)(void *)> staging_buffer{
         []() {
@@ -202,7 +204,7 @@ namespace {
 } // Unnamed namespace.
 
 inline
-void do_copy(void* __restrict dst, const void* __restrict src, std::size_t n,
+void do_copy(void* __restrict dst, const void* __restrict src, size_t n,
              hsa_agent_t da, hsa_agent_t sa) {
     hsa_signal_silent_store_relaxed(copy_signal, 1);
     throwing_result_check(
@@ -224,14 +226,20 @@ void do_std_memcpy(
 inline
 void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t si) {
-    // TODO: characterise direct largeBAR reads from agent-allocated memory.
-    // if (si.size == UINT32_MAX) {
-    //     return do_std_memcpy(dst, src, n);
-    // }
-
     const auto di{info(dst)};
+    const auto is_locked{di.type == HSA_EXT_POINTER_TYPE_LOCKED};
 
-    if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+    if (!is_locked && si.size == is_cpu_owned) {
+        return do_std_memcpy(dst, src, n);
+    }
+    if (!is_locked && is_large_BAR && n <= max_d2h_std_memcpy_sz) {
+        return do_std_memcpy(dst, src, n);
+    }
+    if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
+        return do_copy(dst, src, n, si.agentOwner, si.agentOwner);
+    }
+    
+    if (is_locked) {
         dst = static_cast<char*>(di.agentBaseAddress) +
               (static_cast<char*>(dst) -
                static_cast<char*>(di.hostBaseAddress));
@@ -247,7 +255,7 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
 
         throwing_result_check(hsa_amd_memory_lock(dst, n, &si.agentOwner, 1,
                                                   const_cast<void**>(&dst)),
-            __FILE__, __func__, __LINE__);
+                              __FILE__, __func__, __LINE__);
 
         do_copy(dst, src, n, si.agentOwner, si.agentOwner);
     }
@@ -256,16 +264,23 @@ void d2h_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
               hsa_amd_pointer_info_t di) {
-    if (di.size == UINT32_MAX) {
+    const auto si{info(const_cast<void*>(src))};
+    const auto is_locked{si.type == HSA_EXT_POINTER_TYPE_LOCKED};
+
+    if (!is_locked && di.size == is_cpu_owned) {
         return do_std_memcpy(dst, src, n);
     }
+    if (!is_locked && is_large_BAR && n <= max_h2d_std_memcpy_sz) {
+        return do_std_memcpy(dst, src, n);
+    }
+    if (si.type == HSA_EXT_POINTER_TYPE_HSA) {
+        return do_copy(dst, src, n, di.agentOwner, di.agentOwner);
+    }
 
-    const auto si{info(const_cast<void*>(src))};
-
-    if (si.type == HSA_EXT_POINTER_TYPE_LOCKED) {
+    if (is_locked) {
         src = static_cast<char*>(si.agentBaseAddress) +
-             (static_cast<const char*>(src) -
-              static_cast<char*>(si.hostBaseAddress));
+            (static_cast<const char*>(src) -
+            static_cast<char*>(si.hostBaseAddress));
         do_copy(dst, src, n, di.agentOwner, di.agentOwner);
     }
     else if (n <= staging_sz) {
@@ -279,7 +294,7 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
         throwing_result_check(hsa_amd_memory_lock(const_cast<void*>(src), n,
                                                   &di.agentOwner, 1,
                                                   const_cast<void**>(&src)),
-            __FILE__, __func__, __LINE__);
+                              __FILE__, __func__, __LINE__);
 
         do_copy(dst, src, n, di.agentOwner, di.agentOwner);
     }
@@ -288,70 +303,58 @@ void h2d_copy(void* __restrict dst, const void* __restrict src, size_t n,
 inline
 void generic_copy(void* __restrict dst, const void* __restrict src, size_t n,
                   hsa_amd_pointer_info_t di, hsa_amd_pointer_info_t si) {
-    if (di.size == UINT32_MAX && si.size == UINT32_MAX) {
+    if (di.size == is_cpu_owned && si.size == is_cpu_owned) {
         return do_std_memcpy(dst, src, n);
     }
+    if (di.size == is_cpu_owned) return d2h_copy(dst, src, n, si);
+    if (si.size == is_cpu_owned) return h2d_copy(dst, src, n, di);
 
-    std::unique_ptr<void, void (*)(void*)> lck0{
-        nullptr, [](void* p) { hsa_amd_memory_unlock(p); }};
-    std::unique_ptr<void, void (*)(void*)> lck1{nullptr, lck0.get_deleter()};
-
-    switch (si.type) {
-    case HSA_EXT_POINTER_TYPE_HSA:
-        if (di.type == HSA_EXT_POINTER_TYPE_HSA) {
-            hsa_memory_copy(dst, src, n);
-            return; // TODO: do_copy(dst, src, n, di.agentOwner, si.agentOwner);
-        }
-
-        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN ||
-            di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
-            return d2h_copy(dst, src, n, si);
-        }
-        break;
-    case HSA_EXT_POINTER_TYPE_LOCKED:
-        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN) {
-            std::memcpy(dst, si.hostBaseAddress, n);
-
-            return;
-        }
-        if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
-            std::memcpy(di.hostBaseAddress, si.hostBaseAddress, n);
-
-            return;
-        }
-        src = si.agentBaseAddress;
-        si.agentOwner = di.agentOwner;
-        break;
-    case HSA_EXT_POINTER_TYPE_UNKNOWN:
-        if (di.type == HSA_EXT_POINTER_TYPE_UNKNOWN) {
-            std::memcpy(dst, src, n);
-
-            return;
-        }
-        if (di.type == HSA_EXT_POINTER_TYPE_LOCKED) {
-            std::memcpy(di.hostBaseAddress, src, n);
-
-            return;
-        }
-        return h2d_copy(dst, src, n, di);
-    default: do_copy(dst, src, n, di.agentOwner, si.agentOwner); break;
+    hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                   nullptr, di.agentBaseAddress);
+    if (res == HSA_STATUS_SUCCESS){
+        return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
     }
+    // If devices do not have access then fallback mechanism will be used
+    // copy will be slower
+    throwing_result_check(hsa_memory_copy(dst,src,n), __FILE__, __func__, __LINE__);
 }
 
 inline
 void memcpy_impl(void* __restrict dst, const void* __restrict src, size_t n,
-                 hipMemcpyKind k) noexcept {
+                 hipMemcpyKind k) {
+    auto si{info(src)};
+    auto di{info(dst)};
+
+    if (!is_large_BAR){
+       // Pointer info takes presidence over hipMemcpyKind
+       // if there is mismatch b/w Memcpy kind and dst/src pointer
+       // E.g. dst(host pointer),src(device pointer) and hipMemcpyKind set as hipMemcpyHostToDevice
+       if (di.size == is_cpu_owned && si.size == is_cpu_owned)
+          k = hipMemcpyHostToHost;
+       else if (si.size == is_cpu_owned && di.size != is_cpu_owned)
+          k = hipMemcpyHostToDevice;
+       else if (di.size == is_cpu_owned && si.size != is_cpu_owned)
+          k = hipMemcpyDeviceToHost;
+       else
+          k = hipMemcpyDeviceToDevice;
+    }
     switch (k) {
     case hipMemcpyHostToHost: std::memcpy(dst, src, n); break;
-    case hipMemcpyHostToDevice:
-        return is_large_BAR ? do_std_memcpy(dst, src, n)
-                            : h2d_copy(dst, src, n, info(dst));
-    case hipMemcpyDeviceToHost:
-        // TODO: characterise direct largeBAR reads from agent-allocated memory.
-        return /*is_large_BAR ? do_std_memcpy(dst, src, n)
-                            : */d2h_copy(dst, src, n, info(src));
-    case hipMemcpyDeviceToDevice: hsa_memory_copy(dst, src, n); break;
-    default: return generic_copy(dst, src, n, info(dst), info(src));
+    case hipMemcpyHostToDevice: return h2d_copy(dst, src, n, di);
+    case hipMemcpyDeviceToHost: return d2h_copy(dst, src, n, si);
+    case hipMemcpyDeviceToDevice: {
+        hsa_status_t res = hsa_amd_agents_allow_access(1u, &si.agentOwner,
+                                                       nullptr, di.agentBaseAddress);
+        if (res == HSA_STATUS_SUCCESS){
+	   return do_copy(dst, src, n, di.agentOwner, si.agentOwner);
+        }
+
+        // If devices do not have access then fallback mechanism will be used
+        // copy will be slower
+        throwing_result_check(hsa_memory_copy(dst,src,n), __FILE__, __func__, __LINE__);
+        break;
+    }
+    default: return generic_copy(dst, src, n, di, si);
     }
 }
 
@@ -496,6 +499,10 @@ void* allocAndSharePtr(const char* msg, size_t sizeBytes, ihipCtx_t* ctx, bool s
 hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags) {
     hipError_t hip_status = hipSuccess;
 
+    if (sizeBytes == 0) {
+        return hipSuccess;
+    }
+
     if (HIP_SYNC_HOST_ALLOC) {
         hipDeviceSynchronize();
     }
@@ -503,10 +510,6 @@ hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned i
     auto ctx = ihipGetTlsDefaultCtx();
     if ((ctx == nullptr) || (ptr == nullptr)) {
         hip_status = hipErrorInvalidValue;
-    }
-    else if (sizeBytes == 0) {
-        hip_status = hipSuccess;
-        // TODO - should size of 0 return err or be siliently ignored?
     } else {
         unsigned trueFlags = flags;
         if (flags == hipHostMallocDefault) {
@@ -691,14 +694,15 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
     HIP_SET_DEVICE();
     hipError_t hip_status = hipSuccess;
 
+    if (sizeBytes == 0) {
+        if (ptr) *ptr = NULL;
+        return ihipLogStatus(hipSuccess);
+    }
+
     auto ctx = ihipGetTlsDefaultCtx();
     // return NULL pointer when malloc size is 0
     if ( nullptr == ctx || nullptr == ptr)  {
         hip_status = hipErrorInvalidValue;
-    }
-    else if (sizeBytes == 0) {
-        *ptr = NULL;
-        hip_status = hipSuccess;
     } else {
         auto device = ctx->getWriteableDevice();
         *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx, false /*shareWithAll*/,
@@ -718,14 +722,15 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     HIP_SET_DEVICE();
 
 #if (__hcc_workweek__ >= 19115)
+    if (sizeBytes == 0) {
+        if (ptr) *ptr = NULL;
+        return ihipLogStatus(hipSuccess);
+    }
+
     hipError_t hip_status = hipSuccess;
 
     auto ctx = ihipGetTlsDefaultCtx();
-    // return NULL pointer when malloc size is 0
-    if (sizeBytes == 0) {
-        *ptr = NULL;
-        hip_status = hipSuccess;
-    } else if ((ctx == nullptr) || (ptr == nullptr)) {
+    if ((ctx == nullptr) || (ptr == nullptr)) {
         hip_status = hipErrorInvalidValue;
     } else {
         unsigned amFlags = 0;
@@ -754,6 +759,9 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     HIP_INIT_SPECIAL_API(hipHostMalloc, (TRACE_MEM), ptr, sizeBytes, flags);
     HIP_SET_DEVICE();
+    if (sizeBytes == 0) {
+        return ihipLogStatus(hipSuccess);
+    }
     hipError_t hip_status = hipSuccess;
     hip_status = hip_internal::ihipHostMalloc(tls, ptr, sizeBytes, flags);
     return ihipLogStatus(hip_status);
@@ -762,6 +770,9 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags) {
     HIP_INIT_SPECIAL_API(hipMallocManaged, (TRACE_MEM), devPtr, size, flags);
     HIP_SET_DEVICE();
+    if (size == 0) {
+        return ihipLogStatus(hipSuccess);
+    }
     hipError_t hip_status = hipSuccess;
     if(flags != hipMemAttachGlobal)
         hip_status = hipErrorInvalidValue;
@@ -1242,6 +1253,7 @@ hipError_t hipMemcpyToSymbol(void* dst, const void* src, size_t count,
 
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
+    if (count == 0) return ihipLogStatus(hipSuccess);
     if (dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
@@ -1264,6 +1276,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* src, size_t count,
 
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
+    if (count == 0) return ihipLogStatus(hipSuccess);
     if (src == nullptr || dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
@@ -1287,10 +1300,11 @@ hipError_t hipMemcpyToSymbolAsync(void* dst, const void* src, size_t count,
 
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, dst);
 
+    if (count == 0) return ihipLogStatus(hipSuccess);
     if (dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
-    
+
     if (kind == hipMemcpyDeviceToHost || kind == hipMemcpyHostToHost) {
      	return ihipLogStatus(hipErrorInvalidMemcpyDirection);
     } else if (kind == hipMemcpyDeviceToDevice) {
@@ -1319,10 +1333,11 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* src, size_t count,
 
     tprintf(DB_MEM, " symbol '%s' resolved to address:%p\n", symbol_name, src);
 
+    if (count == 0) return ihipLogStatus(hipSuccess);
     if (src == nullptr || dst == nullptr) {
         return ihipLogStatus(hipErrorInvalidSymbol);
     }
-    
+
     if (kind == hipMemcpyHostToDevice || kind == hipMemcpyHostToHost) {
      	return ihipLogStatus(hipErrorInvalidMemcpyDirection);
     } else if (kind == hipMemcpyDeviceToDevice) {
@@ -1540,111 +1555,145 @@ hipError_t hipMemcpyAtoH(void* dst, hipArray* srcArray, size_t srcOffset, size_t
     return ihipLogStatus(e);
 }
 
+int getByteSizeFromFormat(const hipChannelFormatDesc& desc){
+    int byteSize =0;
+    switch (desc.f) {
+        case hipChannelFormatKindUnsigned:
+            switch (desc.x) {
+                case 32:
+                    byteSize = sizeof(uint32_t);
+                    break;
+                case 16:
+                    byteSize = sizeof(uint16_t);
+                    break;
+                case 8:
+                    byteSize = sizeof(uint8_t);
+                    break;
+                default:
+                    byteSize = sizeof(uint32_t);
+            }
+            break;
+        case hipChannelFormatKindSigned:
+            switch (desc.x) {
+                case 32:
+                    byteSize = sizeof(int32_t);
+                    break;
+                case 16:
+                    byteSize = sizeof(int16_t);
+                    break;
+                case 8:
+                    byteSize = sizeof(int8_t);
+                    break;
+                default:
+                    byteSize = sizeof(int32_t);
+            }
+            break;
+        case hipChannelFormatKindFloat:
+            switch (desc.x) {
+                case 32:
+                    byteSize = sizeof(float);
+                    break;
+                case 16:
+                    byteSize = sizeof(_Float16);
+                    break;
+                default:
+                    byteSize = sizeof(float);
+            }
+            break;
+        case hipChannelFormatKindNone:
+        default:
+            break;
+    }
+    return byteSize;
+}
+
 hipError_t ihipMemcpy3D(const struct hipMemcpy3DParms* p, hipStream_t stream, bool isAsync) {
     hipError_t e = hipSuccess;
     if(p) {
-        size_t byteSize, width, height, depth, widthInBytes, srcPitch, dstPitch, ySize;
-        hipChannelFormatDesc desc;
-        void* srcPtr;void* dstPtr;
+        size_t dstByteSize, srcByteSize, copyWidth, copyHeight, copyDepth, widthInBytes, srcPitch, dstPitch, srcYsize, dstYsize;
+        size_t srcXoffset, srcYoffset, srcZoffset, dstXoffset, dstYoffset, dstZoffset;
+        size_t srcWidth, srcHeight, srcDepth, dstWidth, dstHeight, dstDepth;
+
+        void* srcPtr, *dstPtr;
+        bool copyWidthUpdate= false;
+        copyDepth = p->extent.depth;
+        copyHeight = p->extent.height;
+        copyWidth =  p->extent.width; // in bytes ?
+        dstXoffset = p->dstPos.x;
+        dstYoffset = p->dstPos.y;
+        dstZoffset = p->dstPos.z;
+        srcXoffset = p->srcPos.x;
+        srcYoffset = p->srcPos.y;
+        srcZoffset = p->srcPos.z;
+        if (copyWidth == 0) return hipSuccess;
         if (p->dstArray != nullptr) {
-            if (p->dstArray->isDrv == false) {
-                switch (p->dstArray->desc.f) {
-                    case hipChannelFormatKindSigned:
-                        byteSize = sizeof(int);
-                        break;
-                    case hipChannelFormatKindUnsigned:
-                        byteSize = sizeof(unsigned int);
-                        break;
-                    case hipChannelFormatKindFloat:
-                        byteSize = sizeof(float);
-                        break;
-                    case hipChannelFormatKindNone:
-                        byteSize = sizeof(size_t);
-                        break;
-                    default:
-                        byteSize = 0;
-                        break;
-                }
-                depth = p->extent.depth;
-                height = p->extent.height;
-                width =  p->extent.width;
-                widthInBytes = p->extent.width * byteSize;
-                srcPitch = p->srcPtr.pitch;
-                srcPtr = p->srcPtr.ptr;
-                ySize = p->srcPtr.ysize;
-                desc = p->dstArray->desc;
-                dstPtr = p->dstArray->data;
-                hsa_ext_image_data_info_t imageInfo;
-                if(hipTextureType2DLayered == p->dstArray->textureType)
-                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, desc, imageInfo, depth);
-                else
-                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, desc, imageInfo);
-                dstPitch = imageInfo.size/(height == 0 ? 1 : height)/(depth == 0 ? 1 : depth);
-            } else {
-                depth = p->Depth;
-                height = p->Height;
-                widthInBytes = p->WidthInBytes;
-                width =  p->dstArray->width;
-                hsa_ext_image_channel_order_t channelOrder;
-                switch(p->dstArray->NumChannels) {
-                    case 2:
-                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RG;
-                       break;
-                    case 3:
-                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGB;
-                       break;
-                    case 4:
-                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_RGBA;
-                       break;
-                    case 1:
-                    default:
-                       channelOrder = HSA_EXT_IMAGE_CHANNEL_ORDER_R;
-                       break;
-                }
-                hsa_ext_image_channel_type_t channelType;
-                e = ihipArrayToImageFormat(p->dstArray->Format,channelType);
-                srcPitch = p->srcPitch;
-                srcPtr = (void*)p->srcHost;
-                ySize = p->srcHeight;
-                dstPtr = p->dstArray->data;
-                hsa_ext_image_data_info_t imageInfo;
-                if(hipTextureType2DLayered == p->dstArray->textureType)
-                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_2DA, width, height, 0, channelOrder, channelType, imageInfo, depth);
-                else
-                    GetImageInfo(HSA_EXT_IMAGE_GEOMETRY_3D, width, height, depth, channelOrder, channelType, imageInfo);
-                dstPitch = imageInfo.size/(height == 0 ? 1 : height)/(depth == 0 ? 1 : depth);
+            if ((p->dstArray->isDrv == true) ||( p->dstPtr.ptr!= nullptr)){
+                return hipErrorInvalidValue;
+            }
+            // Array destination
+            dstByteSize = getByteSizeFromFormat(p->dstArray->desc);
+            hipChannelFormatDesc desc;
+            desc = p->dstArray->desc;
+            dstPtr = p->dstArray->data;
+            dstWidth = p->dstArray->width;
+            dstHeight = p->dstArray->height;
+            dstDepth = p->dstArray->depth;
+            dstPitch = dstByteSize * alignUp(dstWidth, IMAGE_PITCH_ALIGNMENT);
+            if(!copyWidthUpdate) {
+                copyWidth = copyWidth * dstByteSize;
+                copyWidthUpdate = true;
             }
         } else {
-            // Non array destination
-            depth = p->extent.depth;
-            height = p->extent.height;
-            widthInBytes = p->extent.width;
-            srcPitch = p->srcPtr.pitch;
-            srcPtr = p->srcPtr.ptr;
+            //Non Array destination
             dstPtr = p->dstPtr.ptr;
-            ySize = p->srcPtr.ysize;
+            dstWidth = p->dstPtr.xsize;
+            dstHeight = p->dstPtr.ysize;
             dstPitch = p->dstPtr.pitch;
+        }
+
+        if (p->srcArray != nullptr) {
+            if ((p->srcArray->isDrv == true) ||( p->srcPtr.ptr!= nullptr)){
+                return hipErrorInvalidValue;
+            }
+            // Array source
+            srcByteSize = getByteSizeFromFormat(p->srcArray->desc);
+            hipChannelFormatDesc desc;
+            desc = p->srcArray->desc;
+            srcPtr = p->srcArray->data;
+            srcWidth = p->srcArray->width;
+            srcHeight = p->srcArray->height;
+            srcDepth = p->srcArray->depth;
+            srcPitch = srcByteSize * alignUp(srcWidth, IMAGE_PITCH_ALIGNMENT);
+            if(!copyWidthUpdate) {
+                copyWidth = copyWidth * srcByteSize;
+                copyWidthUpdate = true;
+            }
+        } else {
+            //Non Array source
+            srcPtr = p->srcPtr.ptr;
+            srcWidth = p->srcPtr.xsize;
+            srcHeight = p->srcPtr.ysize;
+            srcPitch = p->srcPtr.pitch;
         }
 
         stream = ihipSyncAndResolveStream(stream);
         try {
-            if((widthInBytes == dstPitch) && (widthInBytes == srcPitch)) {
+            if((copyWidth == dstPitch) && (copyWidth == srcPitch)&& (copyHeight == dstHeight) &&(copyHeight == srcHeight)) {
                 if(isAsync)
-                    stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind);
+                    stream->locked_copyAsync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind);
                 else
-                    stream->locked_copySync((void*)dstPtr, (void*)srcPtr, widthInBytes*height*depth, p->kind, false);
+                    stream->locked_copySync((void*)dstPtr, (void*)srcPtr, copyWidth*copyHeight*copyDepth, p->kind, false);
             } else {
-                for (int i = 0; i < depth; i++) {
-                    for (int j = 0; j < height; j++) {
-                        // TODO: p->srcPos or p->dstPos are not 0.
+                for (int i = 0; i < copyDepth; i++) {
+                    for (int j = 0; j < copyHeight; j++) {
                         unsigned char* src =
-                             (unsigned char*)srcPtr + i * ySize * srcPitch + j * srcPitch;
+                             (unsigned char*)srcPtr + (i + srcZoffset) * srcHeight * srcPitch + (j + srcYoffset) * srcPitch + srcXoffset;
                         unsigned char* dst =
-                             (unsigned char*)dstPtr + i * height * dstPitch + j * dstPitch;
+                             (unsigned char*)dstPtr + (i + dstZoffset) * dstHeight * dstPitch + (j + dstYoffset) * dstPitch + dstXoffset;
                         if(isAsync)
-                            stream->locked_copyAsync(dst, src, widthInBytes, p->kind);
+                            stream->locked_copyAsync(dst, src, copyWidth, p->kind);
                         else
-                            stream->locked_copySync(dst, src, widthInBytes, p->kind);
+                            stream->locked_copySync(dst, src, copyWidth, p->kind);
                      }
                 }
            }
@@ -1918,6 +1967,7 @@ hipError_t getLockedPointer(void *hostPtr, size_t dataLen, void **devicePtrPtr)
 // TODO - review and optimize
 hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                         size_t height, hipMemcpyKind kind) {
+    if (height == 0 || width == 0) return hipSuccess;
     if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return hipErrorInvalidValue;
 
     hipStream_t stream = ihipSyncAndResolveStream(hipStreamNull);
@@ -1974,6 +2024,7 @@ hipError_t hipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch,
 
 hipError_t ihipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                             size_t height, hipMemcpyKind kind, hipStream_t stream) {
+    if (height == 0 || width == 0) return hipSuccess;
     if (dst == nullptr || src == nullptr || width > dpitch || width > spitch) return hipErrorInvalidValue;
     hipError_t e = hipSuccess;
     int isLockedOrD2D = 0;
@@ -2028,6 +2079,7 @@ hipError_t ihip2dOffsetMemcpy(void* dst, size_t dpitch, const void* src, size_t 
                             size_t height, size_t srcXOffsetInBytes, size_t srcYOffset,
                             size_t dstXOffsetInBytes, size_t dstYOffset,hipMemcpyKind kind,
                             hipStream_t stream, bool isAsync) {
+    if (height == 0 || width == 0) return hipSuccess;
     if((spitch < width + srcXOffsetInBytes) || (srcYOffset >= height)){
         return hipErrorInvalidValue;
     } else if((dpitch < width + dstXOffsetInBytes) || (dstYOffset >= height)){
@@ -2046,6 +2098,7 @@ hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy, hipStream_t stream, bool
     if (pCopy == nullptr) {
         return hipErrorInvalidValue;
     }
+    if (pCopy->Height == 0 || pCopy->WidthInBytes == 0) return hipSuccess;
     void* dst; const void* src;
     size_t spitch = pCopy->srcPitch;
     size_t dpitch = pCopy->dstPitch;
@@ -2125,6 +2178,7 @@ hipError_t hipMemcpy2DFromArray( void* dst, size_t dpitch, hipArray_const_t src,
 hipError_t hipMemcpy2DFromArrayAsync( void* dst, size_t dpitch, hipArray_const_t src, size_t wOffset, size_t hOffset, size_t width, size_t height, hipMemcpyKind kind, hipStream_t stream ){
     HIP_INIT_SPECIAL_API(hipMemcpy2DFromArrayAsync, (TRACE_MCMD), dst, dpitch, src, wOffset, hOffset, width, height, kind, stream);
     size_t byteSize;
+    if (height == 0 || width == 0) return ihipLogStatus(hipSuccess);
     if(src) {
         switch (src->desc.f) {
             case hipChannelFormatKindSigned:
@@ -2224,8 +2278,6 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
         auto device = ctx->getWriteableDevice();
         if (total) {
             *total = device->_props.totalGlobalMem;
-        } else {
-            e = hipErrorInvalidValue;
         }
 
         if (free) {
@@ -2248,8 +2300,6 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
 		} else {
  		    return ihipLogStatus(hipErrorInvalidValue);
 		}
-        } else {
-            e = hipErrorInvalidValue;
         }
 
     } else {

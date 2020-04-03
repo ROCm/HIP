@@ -72,7 +72,6 @@ int HIP_API_BLOCKING = 0;
 int HIP_PRINT_ENV = 0;
 int HIP_TRACE_API = 0;
 std::string HIP_TRACE_API_COLOR("green");
-int HIP_PROFILE_API = 0;
 
 // TODO - DB_START/STOP need more testing.
 std::string HIP_DB_START_API;
@@ -150,12 +149,10 @@ uint64_t recordApiTrace(TlsData *tls, std::string* fullStr, const std::string& a
 
     if ((tid < g_dbStartTriggers.size()) && (apiSeqNum >= g_dbStartTriggers[tid].nextTrigger())) {
         printf("info: resume profiling at %lu\n", apiSeqNum);
-        RESUME_PROFILING;
         g_dbStartTriggers.pop_back();
     };
     if ((tid < g_dbStopTriggers.size()) && (apiSeqNum >= g_dbStopTriggers[tid].nextTrigger())) {
         printf("info: stop profiling at %lu\n", apiSeqNum);
-        STOP_PROFILING;
         g_dbStopTriggers.pop_back();
     };
 
@@ -680,7 +677,7 @@ hsa_status_t get_pool_info(hsa_amd_memory_pool_t pool, void* data) {
             break;
         case HSA_REGION_SEGMENT_GROUP:
             err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE,
-                                               &(p_prop->sharedMemPerBlock));
+                                               &(p_prop->maxSharedMemoryPerMultiProcessor));
             break;
         default:
             break;
@@ -838,10 +835,8 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     hsa_region_t* am_region = static_cast<hsa_region_t*>(_acc.get_hsa_am_region());
     err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &prop->totalGlobalMem);
     DeviceErrorCheck(err);
-    // maxSharedMemoryPerMultiProcessor should be as the same as group memory size.
-    // Group memory will not be paged out, so, the physical memory size is the total shared memory
-    // size, and also equal to the group pool size.
-    prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
+    // Current GPUs allow a workgroup to use all of LDS in a CU, so these two are equal.
+    prop->sharedMemPerBlock = prop->maxSharedMemoryPerMultiProcessor;
 
     // Get Max memory clock frequency
     err =
@@ -900,9 +895,16 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
         prop->integrated = 1;
     }
 
-    // Enable the cooperative group for gfx9+
-    prop->cooperativeLaunch = (prop->gcnArch < 900) ? 0 : 1;
-    prop->cooperativeMultiDeviceLaunch = (prop->gcnArch < 900) ? 0 : 1;
+    // Enable the cooperative group for GPUs that support all the required features
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COOPERATIVE_QUEUES,
+          &prop->cooperativeLaunch);
+    DeviceErrorCheck(err);
+    prop->cooperativeMultiDeviceLaunch = prop->cooperativeLaunch;
+
+    prop->cooperativeMultiDeviceUnmatchedFunc = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedGridDim = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedBlockDim = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedSharedMem = prop->cooperativeMultiDeviceLaunch;
 
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_1D_MAX_ELEMENTS,
           &prop->maxTexture1D);
@@ -1295,9 +1297,6 @@ void HipReadEnv() {
                "executes.");
     READ_ENV_S(release, HIP_TRACE_API_COLOR, 0,
                "Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White");
-    READ_ENV_I(release, HIP_PROFILE_API, 0,
-               "Add HIP API markers to ATP file generated with CodeXL. 0x1=short API name, "
-               "0x2=full API name including args.");
     READ_ENV_S(release, HIP_DB_START_API, 0,
                "Comma-separated list of tid.api_seq_num for when to start debug and profiling.");
     READ_ENV_S(release, HIP_DB_STOP_API, 0,
@@ -1373,14 +1372,6 @@ void HipReadEnv() {
         HIP_DB |= 0x1;
     }
 
-    if (HIP_PROFILE_API && !COMPILE_HIP_ATP_MARKER) {
-        fprintf(stderr,
-                "warning: env var HIP_PROFILE_API=0x%x but COMPILE_HIP_ATP_MARKER=0.  (perhaps "
-                "enable COMPILE_HIP_ATP_MARKER in src code before compiling?)\n",
-                HIP_PROFILE_API);
-        HIP_PROFILE_API = 0;
-    }
-
     if (HIP_DB) {
         fprintf(stderr, "HIP_DB=0x%x [%s]\n", HIP_DB, HIP_DB_string(HIP_DB).c_str());
     }
@@ -1424,11 +1415,6 @@ void HipReadEnv() {
 // This function creates a vector with only the GPU accelerators.
 // It is called with C++11 call_once, which provided thread-safety.
 void ihipInit() {
-#if COMPILE_HIP_ATP_MARKER
-    amdtInitializeActivityLogger();
-    amdtScopedMarker("ihipInit", "HIP", NULL);
-#endif
-
 
     HipReadEnv();
 
@@ -1534,20 +1520,6 @@ hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream) {
     return e;
 }
 
-void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
-    hipError_t e = hipSuccess;
-
-    // Synchronize stream
-    tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n",
-            ToString(cb->_stream).c_str());
-    GET_TLS();
-    e = ihipStreamSynchronize(tls, cb->_stream);
-
-    // Call registered callback function
-    cb->_callback(cb->_stream, e, cb->_userData);
-    delete cb;
-}
-
 //---
 // Get the stream to use for a command submission.
 //
@@ -1618,7 +1590,7 @@ hipStream_t ihipSyncAndResolveStream(hipStream_t stream, bool lockAcquired) {
 
 void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
                            const hipStream_t stream) {
-    if ((HIP_TRACE_API & (1 << TRACE_KCMD)) || HIP_PROFILE_API ||
+    if ((HIP_TRACE_API & (1 << TRACE_KCMD)) ||
         (COMPILE_HIP_DB & HIP_TRACE_API)) {
         GET_TLS();
         std::stringstream os;
@@ -1631,14 +1603,6 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
             std::string fullStr;
             recordApiTrace(tls, &fullStr, os.str());
         }
-
-        if (HIP_PROFILE_API == 0x1) {
-            std::string shortAtpString("hipLaunchKernel:");
-            shortAtpString += kernelName;
-            MARKER_BEGIN(shortAtpString.c_str(), "HIP");
-        } else if (HIP_PROFILE_API == 0x2) {
-            MARKER_BEGIN(os.str().c_str(), "HIP");
-        }
     }
 }
 
@@ -1646,7 +1610,9 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr, bool lockAcquired) {
-    stream = ihipSyncAndResolveStream(stream, lockAcquired);
+    if (stream == nullptr || stream != stream->getCtx()->_defaultStream) {
+        stream = ihipSyncAndResolveStream(stream, lockAcquired);
+    }
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;
@@ -1697,9 +1663,6 @@ void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launc
     tprintf(DB_SYNC, "ihipPostLaunchKernel, unlocking stream\n");
 
     stream->lockclose_postKernelCommand(kernelName, lp.av, unlockPostponed);
-    if (HIP_PROFILE_API) {
-        MARKER_END();
-    }
 }
 
 //=================================================================================================
@@ -2481,28 +2444,16 @@ bool ihipStream_t::locked_copy2DAsync(void* dst, const void* src, size_t width, 
     return retStatus;
 }
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-// Profiler, really these should live elsewhere:
 hipError_t hipProfilerStart() {
     HIP_INIT_API(hipProfilerStart);
-#if COMPILE_HIP_ATP_MARKER
-    amdtResumeProfiling(AMDT_ALL_PROFILING);
-#endif
-
     return ihipLogStatus(hipSuccess);
 };
 
 
 hipError_t hipProfilerStop() {
     HIP_INIT_API(hipProfilerStop);
-#if COMPILE_HIP_ATP_MARKER
-    amdtStopProfiling(AMDT_ALL_PROFILING);
-#endif
-
     return ihipLogStatus(hipSuccess);
 };
-
 
 //-------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------
