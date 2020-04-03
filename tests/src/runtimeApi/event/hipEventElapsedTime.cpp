@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
  */
@@ -36,6 +36,7 @@ void NegativeTests(){
         float tms = 1.0f;
         HIPASSERT(hipEventElapsedTime(nullptr,start,end) == hipErrorInvalidValue);
 #ifndef __HIP_PLATFORM_NVCC__
+        // On NVCC platform API throws seg fault hence skipping
         HIPASSERT(hipEventElapsedTime(&tms,nullptr,end) == hipErrorInvalidHandle);
         HIPASSERT(hipEventElapsedTime(&tms,start,nullptr) == hipErrorInvalidHandle);
 #endif
@@ -52,7 +53,7 @@ void NegativeTests(){
 
     // events created different devices
     {
-        int devCount = 0 ;
+        int devCount = 0;
         HIPCHECK(hipGetDeviceCount(&devCount));
         if (devCount > 1){
             // create event on dev=0
@@ -65,10 +66,10 @@ void NegativeTests(){
             hipEvent_t stop;
             HIPCHECK(hipEventCreate(&stop));
 
-            HIPCHECK(hipEventRecord(start, NULL));
+            HIPCHECK(hipEventRecord(start, nullptr));
             HIPCHECK(hipEventSynchronize(start));
 
-            HIPCHECK(hipEventRecord(stop, NULL));
+            HIPCHECK(hipEventRecord(stop, nullptr));
             HIPCHECK(hipEventSynchronize(stop));
 
             float tElapsed = 1.0f;
@@ -84,10 +85,10 @@ void PositiveTest(){
     hipEvent_t stop;
     HIPCHECK(hipEventCreate(&stop));
 
-    HIPCHECK(hipEventRecord(start, NULL));
+    HIPCHECK(hipEventRecord(start, nullptr));
     HIPCHECK(hipEventSynchronize(start));
 
-    HIPCHECK(hipEventRecord(stop, NULL));
+    HIPCHECK(hipEventRecord(stop, nullptr));
     HIPCHECK(hipEventSynchronize(stop));
 
     float tElapsed = 1.0f;
