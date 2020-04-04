@@ -306,6 +306,7 @@ def generate_prof_header(f, api_map, opts_map):
   f.write('// automatically generated sources\n')
   f.write('#ifndef _HIP_PROF_STR_H\n');
   f.write('#define _HIP_PROF_STR_H\n');
+  f.write('#define HIP_PROF_VER 1\n')
   
   # Generating dummy macro for non-public API
   f.write('\n// Dummy API primitives\n')
@@ -389,7 +390,7 @@ def generate_prof_header(f, api_map, opts_map):
   
   # Generating the method for the API string, name and parameters
   f.write('\n')
-  f.write('#if ENABLE_HIP_API_STRING\n')
+  f.write('#if HIP_PROF_HIP_API_STRING\n')
   f.write('#include <sstream>\n');
   f.write('#include <string>\n');
   f.write('// HIP API string method, method name and parameters\n')
@@ -410,7 +411,7 @@ def generate_prof_header(f, api_map, opts_map):
   f.write('  };\n')
   f.write('  return strdup(oss.str().c_str());\n')
   f.write('};\n')
-  f.write('#endif  // ENABLE_HIP_API_STRING\n')
+  f.write('#endif  // HIP_PROF_HIP_API_STRING\n')
   
   f.write('#endif  // _HIP_PROF_STR_H\n');
 
