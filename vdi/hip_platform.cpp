@@ -19,7 +19,7 @@
  THE SOFTWARE. */
 
 #include <hip/hip_runtime.h>
-
+#include <hip/hcc_detail/texture_types.h>
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
 #include "platform/runtime.hpp"
@@ -220,7 +220,7 @@ std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipMod
     DeviceVar& dvar = it->second;
     if ((*dvar.modules)[0].first == hmod) {
       rmodules = dvar.modules;
-      if (dvar.dyn_undef) {
+      if (dvar.shadowAllocated) {
         texture<float, hipTextureType1D, hipReadModeElementType>* tex_hptr
           = reinterpret_cast<texture<float, hipTextureType1D, hipReadModeElementType> *>(dvar.shadowVptr);
         delete tex_hptr;
@@ -474,12 +474,27 @@ bool PlatformState::getTexRef(const char* hostVar, hipModule_t hmod, textureRefe
     return false;
   }
 
-  if (!dvar->dyn_undef) {
-    DevLogPrintfError("HostVar: %s is not created through hipModuleLoad \n", hostVar);
+  switch (dvar->kind) {
+  case PlatformState::DVK_Variable:
+    // TODO: Need to define a target-specific symbol info to indicate the device
+    // variable kind, i.e. regular variable, texture or surface.
+    // Before that, have to assume the specified variable is a texture or
+    // surface reference variable.
+    dvar->kind = DVK_Texture;
+    // FALL THROUGH
+  case PlatformState::DVK_Texture:
+    break;
+  default:
+    // If it's already used as non-texture variable, bail out.
     return false;
   }
 
-  *texRef = new (dvar->shadowVptr) texture<char>{};
+  if (!dvar->shadowVptr) {
+    dvar->shadowVptr = new texture<char>{};
+    dvar->shadowAllocated = true;
+  }
+  *texRef = reinterpret_cast<textureReference *>(dvar->shadowVptr);
+  registerVarSym(dvar->shadowVptr, hostVar);
 
   return true;
 }
@@ -521,6 +536,18 @@ bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t 
     DevLogPrintfError("Could not find global var: %s at module:0x%x \n", hostVar, hmod);
     return false;
   }
+}
+
+bool PlatformState::getGlobalVarFromSymbol(const void* hostVar, int deviceId,
+                                           hipDeviceptr_t* dev_ptr,
+                                           size_t* size_ptr) {
+  std::string symbolName;
+  if (!PlatformState::instance().findSymbol(hostVar, symbolName)) {
+    return false;
+  }
+  return PlatformState::instance().getGlobalVar(symbolName.c_str(),
+                                                ihipGetDevice(), nullptr,
+                                                dev_ptr, size_ptr);
 }
 
 void PlatformState::setupArgument(const void *arg, size_t size, size_t offset) {
@@ -577,11 +604,56 @@ extern "C" void __hipRegisterVar(
   int         constant,  // Whether this variable is constant
   int         global)    // Unknown, always 0
 {
-  PlatformState::DeviceVar dvar{var, std::string{ hostVar }, size, modules,
-    std::vector<PlatformState::RegisteredVar>{g_devices.size()}, false };
+    PlatformState::DeviceVar dvar{PlatformState::DVK_Variable,
+                                  var,
+                                  std::string{hostVar},
+                                  size,
+                                  modules,
+                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
+                                  false,
+                                  /*type*/ 0,
+                                  /*norm*/ 0};
 
-  PlatformState::instance().registerVar(hostVar, dvar);
-  PlatformState::instance().registerVarSym(var, deviceVar);
+    PlatformState::instance().registerVar(hostVar, dvar);
+    PlatformState::instance().registerVarSym(var, deviceVar);
+}
+
+extern "C" void __hipRegisterSurface(std::vector<std::pair<hipModule_t, bool>>*
+                                         modules,      // The device modules containing code object
+                                     void* var,        // The shadow variable in host code
+                                     char* hostVar,    // Variable name in host code
+                                     char* deviceVar,  // Variable name in device code
+                                     int type, int ext) {
+    PlatformState::DeviceVar dvar{PlatformState::DVK_Surface,
+                                  var,
+                                  std::string{hostVar},
+                                  sizeof(surfaceReference),  // Copy whole surfaceReference
+                                  modules,
+                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
+                                  false,
+                                  type,
+                                  /*norm*/ 0};
+    PlatformState::instance().registerVar(hostVar, dvar);
+    PlatformState::instance().registerVarSym(var, deviceVar);
+}
+
+extern "C" void __hipRegisterTexture(std::vector<std::pair<hipModule_t, bool>>*
+                                         modules,      // The device modules containing code object
+                                     void* var,        // The shadow variable in host code
+                                     char* hostVar,    // Variable name in host code
+                                     char* deviceVar,  // Variable name in device code
+                                     int type, int norm, int ext) {
+    PlatformState::DeviceVar dvar{PlatformState::DVK_Texture,
+                                  var,
+                                  std::string{hostVar},
+                                  sizeof(textureReference),  // Copy whole textureReference so far.
+                                  modules,
+                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
+                                  false,
+                                  type,
+                                  norm};
+    PlatformState::instance().registerVar(hostVar, dvar);
+    PlatformState::instance().registerVarSym(var, deviceVar);
 }
 
 extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, bool> >* modules)

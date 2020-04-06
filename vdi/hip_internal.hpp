@@ -222,13 +222,22 @@ public:
     std::vector< std::pair< hipModule_t, bool > >* modules;
     std::vector<hipFunction_t> functions;
   };
+  enum DeviceVarKind {
+    DVK_Variable,
+    DVK_Surface,
+    DVK_Texture
+  };
   struct DeviceVar {
+    DeviceVarKind kind;
     void* shadowVptr;
     std::string hostVar;
     size_t size;
     std::vector< std::pair< hipModule_t, bool > >* modules;
     std::vector<RegisteredVar> rvars;
     bool dyn_undef;
+    int type; // surface/texture type
+    int norm; // texture has normalized output
+    bool shadowAllocated = false; // shadow ptr is allocated on-demand and needs freeing.
   };
 private:
   class Module {
@@ -277,6 +286,9 @@ public:
   bool getGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
                     hipDeviceptr_t* dev_ptr, size_t* size_ptr);
   bool getTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef);
+
+  bool getGlobalVarFromSymbol(const void* hostVar, int deviceId,
+                              hipDeviceptr_t* dev_ptr, size_t* size_ptr);
 
   bool getShadowVarInfo(std::string var_name, hipModule_t hmod,
                         void** var_addr, size_t* var_size);

@@ -150,8 +150,15 @@ inline bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* modu
       = new texture<float, hipTextureType1D, hipReadModeElementType>();
     memset(tex_hptr, 0x00, sizeof(texture<float, hipTextureType1D, hipReadModeElementType>));
 
-    PlatformState::DeviceVar dvar{ reinterpret_cast<char*>(tex_hptr), it->c_str(), sizeof(*tex_hptr), modules,
-      std::vector<PlatformState::RegisteredVar>{ g_devices.size()}, true };
+    PlatformState::DeviceVar dvar{PlatformState::DVK_Variable,
+                                  reinterpret_cast<char*>(tex_hptr),
+                                  it->c_str(),
+                                  sizeof(*tex_hptr),
+                                  modules,
+                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
+                                  true,
+                                  /*type*/ 0,
+                                  /*norm*/ 0};
     PlatformState::instance().registerVar(it->c_str(), dvar);
   }
 
@@ -194,8 +201,15 @@ inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module)
       modules->at(dev) = std::make_pair(*module, true);
     }
 
-    PlatformState::DeviceVar dvar{nullptr, it->c_str(), 0, modules,
-      std::vector<PlatformState::RegisteredVar>{ g_devices.size()}, false };
+    PlatformState::DeviceVar dvar{PlatformState::DVK_Variable,
+                                  nullptr,
+                                  it->c_str(),
+                                  0,
+                                  modules,
+                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
+                                  false,
+                                  /*type*/ 0,
+                                  /*norm*/ 0};
     PlatformState::instance().registerVar(it->c_str(), dvar);
   }
 
@@ -673,4 +687,3 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
   HIP_RETURN(hipSuccess);
 }
-

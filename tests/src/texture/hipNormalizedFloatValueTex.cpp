@@ -42,24 +42,12 @@ static float getNormalizedValue(const float value,
     return value;
 }
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<char, hipTextureType1D, hipReadModeNormalizedFloat> texc;
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<unsigned char, hipTextureType1D, hipReadModeNormalizedFloat> texuc;
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<short, hipTextureType1D, hipReadModeNormalizedFloat> texs;
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<unsigned short, hipTextureType1D, hipReadModeNormalizedFloat> texus;
 
 

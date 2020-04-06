@@ -24,6 +24,9 @@
 #include "hip_conversions.hpp"
 #include "platform/sampler.hpp"
 
+hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                      amd::HostQueue& queue, bool isAsync = false);
+
 struct __hip_texture {
   uint32_t imageSRD[HIP_IMAGE_OBJECT_SIZE_DWORD];
   uint32_t samplerSRD[HIP_SAMPLER_OBJECT_SIZE_DWORD];
@@ -473,7 +476,20 @@ hipError_t hipBindTexture2D(size_t* offset,
                             size_t pitch) {
   HIP_INIT_API(hipBindTexture2D, offset, texref, devPtr, desc, width, height, pitch);
 
-  HIP_RETURN(ihipBindTexture2D(offset, texref, devPtr, desc, width, height, pitch));
+  hipDeviceptr_t refDevPtr = nullptr;
+  size_t refDevSize = 0;
+  if (!PlatformState::instance().getGlobalVarFromSymbol(texref, ihipGetDevice(), &refDevPtr,
+                                                        &refDevSize)) {
+      HIP_RETURN(hipErrorInvalidSymbol);
+  }
+  assert(refDevSize == sizeof(textureReference));
+  hipError_t err = ihipBindTexture2D(offset, texref, devPtr, desc, width, height, pitch);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
+  // Copy to device.
+  amd::HostQueue* queue = hip::getNullStream();
+  HIP_RETURN(ihipMemcpy(refDevPtr, texref, refDevSize, hipMemcpyHostToDevice, *queue));
 }
 
 hipError_t ihipBindTextureToArray(const textureReference* texref,
@@ -507,7 +523,20 @@ hipError_t hipBindTextureToArray(const textureReference* texref,
                                  const hipChannelFormatDesc* desc) {
   HIP_INIT_API(hipBindTextureToArray, texref, array, desc);
 
-  HIP_RETURN(ihipBindTextureToArray(texref, array, desc));
+  hipDeviceptr_t refDevPtr = nullptr;
+  size_t refDevSize = 0;
+  if (!PlatformState::instance().getGlobalVarFromSymbol(texref, ihipGetDevice(), &refDevPtr,
+                                                        &refDevSize)) {
+      HIP_RETURN(hipErrorInvalidSymbol);
+  }
+  assert(refDevSize == sizeof(textureReference));
+  hipError_t err = ihipBindTextureToArray(texref, array, desc);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
+  // Copy to device.
+  amd::HostQueue* queue = hip::getNullStream();
+  HIP_RETURN(ihipMemcpy(refDevPtr, texref, refDevSize, hipMemcpyHostToDevice, *queue));
 }
 
 hipError_t ihipBindTextureToMipmappedArray(const textureReference* texref,
@@ -541,7 +570,20 @@ hipError_t hipBindTextureToMipmappedArray(const textureReference* texref,
                                           const hipChannelFormatDesc* desc) {
   HIP_INIT_API(hipBindTextureToMipmappedArray, texref, mipmappedArray, desc);
 
-  HIP_RETURN(ihipBindTextureToMipmappedArray(texref, mipmappedArray, desc));
+  hipDeviceptr_t refDevPtr = nullptr;
+  size_t refDevSize = 0;
+  if (!PlatformState::instance().getGlobalVarFromSymbol(texref, ihipGetDevice(), &refDevPtr,
+                                                        &refDevSize)) {
+      HIP_RETURN(hipErrorInvalidSymbol);
+  }
+  assert(refDevSize == sizeof(textureReference));
+  hipError_t err = ihipBindTextureToMipmappedArray(texref, mipmappedArray, desc);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
+  // Copy to device.
+  amd::HostQueue* queue = hip::getNullStream();
+  HIP_RETURN(ihipMemcpy(refDevPtr, texref, refDevSize, hipMemcpyHostToDevice, *queue));
 }
 
 hipError_t hipUnbindTexture(const textureReference* texref) {
@@ -564,7 +606,20 @@ hipError_t hipBindTexture(size_t* offset,
                           size_t size) {
   HIP_INIT_API(hipBindTexture, offset, texref, devPtr, desc, size);
 
-  HIP_RETURN(ihipBindTexture(offset, texref, devPtr, desc, size));
+  hipDeviceptr_t refDevPtr = nullptr;
+  size_t refDevSize = 0;
+  if (!PlatformState::instance().getGlobalVarFromSymbol(texref, ihipGetDevice(), &refDevPtr,
+                                                        &refDevSize)) {
+      HIP_RETURN(hipErrorInvalidSymbol);
+  }
+  assert(refDevSize == sizeof(textureReference));
+  hipError_t err = ihipBindTexture(offset, texref, devPtr, desc, size);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
+  // Copy to device.
+  amd::HostQueue* queue = hip::getNullStream();
+  HIP_RETURN(ihipMemcpy(refDevPtr, texref, refDevSize, hipMemcpyHostToDevice, *queue));
 }
 
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc,
@@ -599,9 +654,12 @@ hipError_t hipGetTextureAlignmentOffset(size_t* offset,
 hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol) {
   HIP_INIT_API(hipGetTextureReference, texref, symbol);
 
-  assert(0 && "Unimplemented");
+  if (texref == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  *texref = reinterpret_cast<const textureReference *>(symbol);
 
-  HIP_RETURN(hipErrorNotSupported);
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipTexRefSetFormat(textureReference* texRef,
@@ -744,6 +802,14 @@ hipError_t hipTexRefSetArray(textureReference* texRef,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
+  hipDeviceptr_t refDevPtr = nullptr;
+  size_t refDevSize = 0;
+  if (!PlatformState::instance().getGlobalVarFromSymbol(texRef, ihipGetDevice(), &refDevPtr,
+                                                        &refDevSize)) {
+      HIP_RETURN(hipErrorInvalidSymbol);
+  }
+  assert(refDevSize == sizeof(textureReference));
+
   // Any previous address or HIP array state associated with the texture reference is superseded by this function.
   // Any memory previously bound to hTexRef is unbound.
   // No need to check for errors.
@@ -758,7 +824,13 @@ hipError_t hipTexRefSetArray(textureReference* texRef,
   hipResourceViewFormat format = hip::getResourceViewFormat(hip::getChannelFormatDesc(texRef->numChannels, texRef->format));
   hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(array, format);
 
-  HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, &resViewDesc));
+  hipError_t err = ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, &resViewDesc);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
+  // Copy to device.
+  amd::HostQueue* queue = hip::getNullStream();
+  HIP_RETURN(ihipMemcpy(refDevPtr, texRef, refDevSize, hipMemcpyHostToDevice, *queue));
 }
 
 hipError_t hipTexRefGetAddress(hipDeviceptr_t* dptr,
@@ -808,6 +880,14 @@ hipError_t hipTexRefSetAddress(size_t* ByteOffset,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
+  hipDeviceptr_t refDevPtr = nullptr;
+  size_t refDevSize = 0;
+  if (!PlatformState::instance().getGlobalVarFromSymbol(texRef, ihipGetDevice(), &refDevPtr,
+                                                        &refDevSize)) {
+      HIP_RETURN(hipErrorInvalidSymbol);
+  }
+  assert(refDevSize == sizeof(textureReference));
+
   // Any previous address or HIP array state associated with the texture reference is superseded by this function.
   // Any memory previously bound to hTexRef is unbound.
   // No need to check for errors.
@@ -828,7 +908,13 @@ hipError_t hipTexRefSetAddress(size_t* ByteOffset,
 
   hipTextureDesc texDesc = hip::getTextureDesc(texRef);
 
-  HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, nullptr));
+  hipError_t err = ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, nullptr);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
+  // Copy to device.
+  amd::HostQueue* queue = hip::getNullStream();
+  HIP_RETURN(ihipMemcpy(refDevPtr, texRef, refDevSize, hipMemcpyHostToDevice, *queue));
 }
 
 hipError_t hipTexRefSetAddress2D(textureReference* texRef,
@@ -840,6 +926,14 @@ hipError_t hipTexRefSetAddress2D(textureReference* texRef,
   if ((texRef == nullptr) || (desc == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
+
+  hipDeviceptr_t refDevPtr = nullptr;
+  size_t refDevSize = 0;
+  if (!PlatformState::instance().getGlobalVarFromSymbol(texRef, ihipGetDevice(), &refDevPtr,
+                                                        &refDevSize)) {
+      HIP_RETURN(hipErrorInvalidSymbol);
+  }
+  assert(refDevSize == sizeof(textureReference));
 
   // Any previous address or HIP array state associated with the texture reference is superseded by this function.
   // Any memory previously bound to hTexRef is unbound.
@@ -856,7 +950,13 @@ hipError_t hipTexRefSetAddress2D(textureReference* texRef,
 
   hipTextureDesc texDesc = hip::getTextureDesc(texRef);
 
-  HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, nullptr));
+  hipError_t err = ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, nullptr);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
+  // Copy to device.
+  amd::HostQueue* queue = hip::getNullStream();
+  HIP_RETURN(ihipMemcpy(refDevPtr, texRef, refDevSize, hipMemcpyHostToDevice, *queue));
 }
 
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f) {
@@ -1107,6 +1207,14 @@ hipError_t hipTexRefSetMipmappedArray(textureReference* texRef,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
+  hipDeviceptr_t refDevPtr = nullptr;
+  size_t refDevSize = 0;
+  if (!PlatformState::instance().getGlobalVarFromSymbol(texRef, ihipGetDevice(), &refDevPtr,
+                                                        &refDevSize)) {
+      HIP_RETURN(hipErrorInvalidSymbol);
+  }
+  assert(refDevSize == sizeof(textureReference));
+
   // Any previous address or HIP array state associated with the texture reference is superseded by this function.
   // Any memory previously bound to hTexRef is unbound.
   // No need to check for errors.
@@ -1121,7 +1229,13 @@ hipError_t hipTexRefSetMipmappedArray(textureReference* texRef,
   hipResourceViewFormat format = hip::getResourceViewFormat(hip::getChannelFormatDesc(texRef->numChannels, texRef->format));
   hipResourceViewDesc resViewDesc = hip::getResourceViewDesc(mipmappedArray, format);
 
-  HIP_RETURN(ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, &resViewDesc));
+  hipError_t err = ihipCreateTextureObject(&texRef->textureObject, &resDesc, &texDesc, &resViewDesc);
+  if (err != hipSuccess) {
+    HIP_RETURN(err);
+  }
+  // Copy to device.
+  amd::HostQueue* queue = hip::getNullStream();
+  HIP_RETURN(ihipMemcpy(refDevPtr, texRef, refDevSize, hipMemcpyHostToDevice, *queue));
 }
 
 hipError_t hipTexObjectCreate(hipTextureObject_t* pTexObject,

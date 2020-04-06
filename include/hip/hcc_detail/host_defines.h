@@ -72,7 +72,6 @@ THE SOFTWARE.
 
 #define __noinline__ __attribute__((noinline))
 #define __forceinline__ inline __attribute__((always_inline))
-#define __hip_pinned_shadow__ __attribute__((hip_pinned_shadow))
 
 #else
 
