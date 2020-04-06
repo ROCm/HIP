@@ -309,7 +309,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
     int block_size = blockDimX * blockDimY * blockDimZ;
     hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
       &num_blocks, &num_grids, device, f, block_size, sharedMemBytes, true);
-    if (((gridDimX * gridDimY * gridDimZ) / block_size) > num_grids) {
+    if (((gridDimX * gridDimY * gridDimZ) / block_size) > unsigned(num_grids)) {
       return hipErrorCooperativeLaunchTooLarge;
     }
   }

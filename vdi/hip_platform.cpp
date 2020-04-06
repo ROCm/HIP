@@ -732,7 +732,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
   }
 
   // Make sure the requested block size is smaller than max supported
-  if (blockSize > device.info().maxWorkGroupSize_) {
+  if (blockSize > int(device.info().maxWorkGroupSize_)) {
     numBlocks = 0;
     numGrids = 0;
     return hipSuccess;
