@@ -132,6 +132,7 @@ namespace hip {
   extern void init();
 
   extern Device* getCurrentDevice();
+
   extern void setCurrentDevice(unsigned int index);
 
   /// Get VDI queue associated with hipStream
@@ -255,6 +256,11 @@ private:
   ~PlatformState() {}
 public:
   static PlatformState& instance() {
+    if (platform_ == nullptr) {
+       // __hipRegisterFatBinary() will call this when app starts, thus
+       // there is no multiple entry issue here.
+       platform_ =  new PlatformState();
+    }
     return *platform_;
   }
 

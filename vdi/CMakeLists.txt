@@ -152,21 +152,33 @@ add_library(amdhip64 SHARED
     $<TARGET_OBJECTS:hip64>
     )
 
-add_library(amdhip64_static STATIC
+add_library(amdhip64_static_base STATIC
     $<TARGET_OBJECTS:hip64>
     )
 
 add_library(host INTERFACE)
 target_link_libraries(host INTERFACE amdhip64)
+target_link_libraries(host INTERFACE amdhip64_static_base)
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
-target_link_libraries(amdhip64_static PRIVATE amdvdi_static pthread dl)
+target_link_libraries(amdhip64_static_base PRIVATE amdvdi_static pthread dl)
 target_link_libraries(amdhip64 PRIVATE amdvdi_static pthread dl)
 
+set(STATICLIBNAME "${hip_BINARY_DIR}/lib/libamdhip64_static.a")
 
-INSTALL(PROGRAMS $<TARGET_FILE:amdhip64_static> DESTINATION lib COMPONENT MAIN)
-INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
+add_custom_command(
+    OUTPUT ${STATICLIBNAME}
+    COMMAND rm -f ${STATICLIBNAME}
+    COMMAND ${CMAKE_AR} -rcsT ${STATICLIBNAME} $<TARGET_FILE:amdhip64_static_base> $<TARGET_FILE:amdvdi_static>
+    DEPENDS amdhip64_static_base amdvdi_static
+    COMMENT "Combining static libs into ${STATICLIBNAME} "
+)
+
+add_custom_target(amdhip64_static ALL
+    DEPENDS ${STATICLIBNAME}
+)
+
 INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so  )" DESTINATION lib COMPONENT MAIN)
 
 INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhiprtc.so  )" DESTINATION lib COMPONENT MAIN)
@@ -174,6 +186,7 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhip_hcc.so DESTINATION lib COMPONENT MA
 
 INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAIN)
 
-INSTALL(TARGETS amdhip64_static amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+INSTALL(PROGRAMS ${STATICLIBNAME} DESTINATION ${LIB_INSTALL_DIR})
+INSTALL(TARGETS amdhip64_static_base amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 
