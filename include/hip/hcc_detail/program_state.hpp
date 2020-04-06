@@ -73,6 +73,9 @@ public:
     hsa_executable_t load_executable(const char*, const size_t,
                                      hsa_executable_t,
                                      hsa_agent_t);
+    hsa_executable_t load_executable_no_copy(const char*, const size_t,
+                                             hsa_executable_t,
+                                             hsa_agent_t);
 
     void* global_addr_by_name(const char* name);
 
