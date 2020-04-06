@@ -11,7 +11,7 @@ else
 	SOURCES=square.cpp
 endif
 
-all: square.out
+all: square.out square.out.static
 
 # Step
 square.cpp: square.cu
@@ -20,5 +20,8 @@ square.cpp: square.cu
 square.out: $(SOURCES)
 	$(HIPCC) $(CXXFLAGS) $(SOURCES) -o $@
 
+square.out.static: $(SOURCES)
+	$(HIPCC) -use-staticlib $(CXXFLAGS) $(SOURCES) -o $@
+
 clean:
-	rm -f *.o *.out square.cpp
+	rm -f *.o *.out *.out.static square.cpp
