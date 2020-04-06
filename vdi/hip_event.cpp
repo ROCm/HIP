@@ -95,20 +95,12 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
 }
 
 hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
-  // Effective no-op if event is NULL
-  if (event_ == nullptr) {
+  if ((event_ == nullptr) || (event_->command().queue() == hostQueue)) {
     return hipSuccess;
   }
 
   amd::ScopedLock lock(lock_);
-
-  if (event_->command().queue() == hostQueue) {
-    // Wake up commandQueue thread
-    if (!event_->notifyCmdQueue()) {
-      return hipErrorLaunchOutOfResources;
-    }
-    return hipSuccess;
-  }
+  bool retain = false;
 
   if (!event_->notifyCmdQueue()) {
     return hipErrorLaunchOutOfResources;
