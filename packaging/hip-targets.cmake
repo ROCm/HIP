@@ -86,7 +86,7 @@ set_target_properties(hip::host PROPERTIES
 # Create imported target hip::device
 add_library(hip::device INTERFACE IMPORTED)
 
-if(HIP_COMPILER STREQUAL "hcc")
+if(CMAKE_CXX_COMPILER MATCHES "(.*)hcc")
 set_target_properties(hip::device PROPERTIES
   INTERFACE_LINK_LIBRARIES "hip::host;hcc::hccrt;hcc::hc_am"
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
