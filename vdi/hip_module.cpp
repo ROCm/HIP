@@ -273,7 +273,6 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
   HIP_RETURN(hipSuccess);
 }
 
-
 hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
@@ -313,9 +312,10 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
       return hipErrorCooperativeLaunchTooLarge;
     }
   }
-  if ((params & amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups) &&
-      !device.info().cooperativeMultiDeviceGroups_) {
-    return hipErrorLaunchFailure;
+  if (params & amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups) {
+    if (!device.info().cooperativeMultiDeviceGroups_) {
+      return hipErrorLaunchFailure;
+    }
   }
   if (!queue) {
     return hipErrorOutOfMemory;
@@ -487,6 +487,16 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
   }
   uint64_t prevGridSize = 0;
   uint32_t firstDevice = 0;
+
+  // Sync the execution streams on all devices 
+  if ((flags & hipCooperativeLaunchMultiDeviceNoPreSync) == 0) {
+    for (int i = 0; i < numDevices; ++i) {
+      amd::HostQueue* queue =
+        reinterpret_cast<hip::Stream*>(launchParamsList[i].stream)->asHostQueue();
+      queue->finish();
+    }
+  }
+
   for (int i = 0; i < numDevices; ++i) {
     const hipLaunchParams& launch = launchParamsList[i];
     amd::HostQueue* queue = reinterpret_cast<hip::Stream*>(launch.stream)->asHostQueue();
@@ -519,6 +529,15 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
       break;
     }
     prevGridSize += launch.gridDim.x * launch.gridDim.y * launch.gridDim.z;
+  }
+
+  // Sync the execution streams on all devices 
+  if ((flags & hipCooperativeLaunchMultiDeviceNoPostSync) == 0) {
+    for (int i = 0; i < numDevices; ++i) {
+      amd::HostQueue* queue =
+        reinterpret_cast<hip::Stream*>(launchParamsList[i].stream)->asHostQueue();
+      queue->finish();
+    }
   }
 
   return result;
