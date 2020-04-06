@@ -391,7 +391,11 @@ const hipStream_t hipStreamNull = 0x0;
 /**
  * HIP IPC Handle Size
  */
-#define HIP_IPC_RESERVED_SIZE 24
+#if USE_IPC
+#define HIP_IPC_RESERVED_SIZE (HIP_IPC_HANDLE_SIZE - sizeof(hsa_amd_ipc_memory_t) - sizeof(size_t))
+#else
+#define HIP_IPC_RESERVED_SIZE (HIP_IPC_HANDLE_SIZE - sizeof(size_t))
+#endif
 class ihipIpcMemHandle_t {
    public:
 #if USE_IPC
