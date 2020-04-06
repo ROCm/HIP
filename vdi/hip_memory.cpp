@@ -85,7 +85,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   if (*ptr == nullptr) {
     return hipErrorOutOfMemory;
   }
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "ihipMalloc ptr=0x%zx", *ptr);
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] ihipMalloc ptr=0x%zx",  getpid(),std::this_thread::get_id(), *ptr);
   return hipSuccess;
 }
 

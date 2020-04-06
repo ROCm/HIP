@@ -31,7 +31,11 @@
 #include <stack>
 #include <mutex>
 #include <iterator>
-
+#ifdef _WIN32
+#include <process.h>
+#else
+#include <unistd.h>
+#endif
 
 /*! IHIP IPC MEMORY Structure */
 #define IHIP_IPC_MEM_HANDLE_SIZE   32
@@ -43,6 +47,10 @@ typedef struct ihipIpcMemHandle_st {
   char reserved[IHIP_IPC_MEM_RESERVED_SIZE];
 } ihipIpcMemHandle_t;
 
+#ifdef _WIN32
+  int getpid() { return _getpid();}
+#endif
+
 #define HIP_INIT() \
   std::call_once(hip::g_ihipInitialized, hip::init);       \
   if (hip::g_device == nullptr && g_devices.size() > 0) {  \
@@ -51,7 +59,7 @@ typedef struct ihipIpcMemHandle_st {
 
 // This macro should be called at the beginning of every HIP API.
 #define HIP_INIT_API(cid, ...)                               \
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "[%zx] %s ( %s )", std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s ( %s )", getpid(), std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
   amd::Thread* thread = amd::Thread::current();              \
   if (!VDI_CHECK_THREAD(thread)) {                           \
     HIP_RETURN(hipErrorOutOfMemory);                         \
@@ -61,7 +69,7 @@ typedef struct ihipIpcMemHandle_st {
 
 #define HIP_RETURN(ret)          \
   hip::g_lastError = ret;  \
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "[%zx] %s: Returned %s", std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s: Returned %s", getpid(), std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
   return hip::g_lastError;
 
 namespace hc {
@@ -274,6 +282,7 @@ public:
   void configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
 
   void popExec(ihipExec_t& exec);
+
 };
 
 extern std::vector<hip::Device*> g_devices;
