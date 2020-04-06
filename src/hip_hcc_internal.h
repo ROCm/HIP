@@ -732,6 +732,7 @@ class ihipEvent_t {
 
    public:
     unsigned _flags;
+    int _deviceId;
 
    private:
     ihipEventCritical_t _criticalData;
