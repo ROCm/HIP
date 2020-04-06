@@ -481,9 +481,29 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
   hipError_t result = hipErrorUnknown;
   uint64_t allGridSize = 0;
+  std::vector<const amd::Device*> mgpu_list(numDevices);
+
   for (int i = 0; i < numDevices; ++i) {
     const hipLaunchParams& launch = launchParamsList[i];
     allGridSize += launch.gridDim.x * launch.gridDim.y * launch.gridDim.z;
+
+    // Make sure block dimensions are valid
+    if (0 == launch.blockDim.x * launch.blockDim.y * launch.blockDim.z) {
+      return hipErrorInvalidConfiguration;
+    }
+    if (launch.stream != nullptr) {
+      // Validate devices to make sure it dosn't have duplicates
+      amd::HostQueue* queue = reinterpret_cast<hip::Stream*>(launch.stream)->asHostQueue();
+      auto device = &queue->vdev()->device();
+      for (int j = 0; j < numDevices; ++j) {
+        if (mgpu_list[j] == device) {
+          return hipErrorInvalidDevice;
+        }
+      }
+      mgpu_list[i] = device;
+    } else {
+      return hipErrorInvalidResourceHandle;
+    }
   }
   uint64_t prevGridSize = 0;
   uint32_t firstDevice = 0;
