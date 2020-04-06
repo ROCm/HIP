@@ -30,7 +30,7 @@
 constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
 
 thread_local std::stack<ihipExec_t> execStack_;
-PlatformState* PlatformState::platform_ = new PlatformState();
+PlatformState* PlatformState::platform_; // Initiaized as nullptr by default
 
 struct __CudaFatBinaryWrapper {
   unsigned int magic;
