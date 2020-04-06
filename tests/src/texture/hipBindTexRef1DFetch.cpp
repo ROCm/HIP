@@ -32,9 +32,6 @@ THE SOFTWARE.
 
 #define N 512
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<float, 1, hipReadModeElementType> tex;
 
 __global__ void kernel(float *out) {

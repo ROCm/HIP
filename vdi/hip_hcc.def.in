@@ -161,6 +161,8 @@ __hipPushCallConfiguration
 __hipRegisterFatBinary
 __hipRegisterFunction
 __hipRegisterVar
+__hipRegisterSurface
+__hipRegisterTexture
 __hipUnregisterFatBinary
 __gnu_h2f_ieee
 __gnu_f2h_ieee

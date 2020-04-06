@@ -27,9 +27,6 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 extern texture<float, 2, hipReadModeElementType> tex;
 
 extern "C" __global__ void tex2dKernel(float* outputData, int width, int height) {
