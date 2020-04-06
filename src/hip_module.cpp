@@ -1179,8 +1179,7 @@ string read_elf_file_as_string(const void* file) {
     auto h = static_cast<const ELFIO::Elf64_Ehdr*>(file);
     auto s = static_cast<const char*>(file);
     // This assumes the common case of SHT being the last part of the ELF.
-    auto sz =
-        sizeof(ELFIO::Elf64_Ehdr) + h->e_shoff + h->e_shentsize * h->e_shnum;
+    auto sz = h->e_shoff + h->e_shentsize * h->e_shnum;
 
     return string{s, s + sz};
 }
