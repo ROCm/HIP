@@ -385,8 +385,7 @@ double compute_BSR(BCRSArrays& bcsr, double *x , double *y){
     cudaEventCreate(&startTime);
     cudaEventCreate(&stopTime);
     cudaEventRecord(startTime, bcsr.streamId);
-    // NOTE: cusparseDbsrmv and CUSPARSE_DIRECTION_COLUMN (of type cusparseDirection_t) are yet unsupported by HIP
-    // CHECK: cusparseDbsrmv(bcsr.cusparseHandle, CUSPARSE_DIRECTION_COLUMN, HIPSPARSE_OPERATION_NON_TRANSPOSE,
+    // CHECK: cusparseDbsrmv(bcsr.cusparseHandle, HIPSPARSE_DIRECTION_COLUMN, HIPSPARSE_OPERATION_NON_TRANSPOSE,
     cusparseDbsrmv(bcsr.cusparseHandle, CUSPARSE_DIRECTION_COLUMN, CUSPARSE_OPERATION_NON_TRANSPOSE,
                    bcsr.nbBlockRow, bcsr.m, bcsr.nbBlocks, &alpha, descr,
                    bcsr.cu_bsrValC, bcsr.cu_bsrRowPtrC, bcsr.cu_bsrColIndC, bcsr.blockSize,

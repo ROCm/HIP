@@ -92,10 +92,6 @@ struct Bundled_code {
 
 #define magic_string_  "__CLANG_OFFLOAD_BUNDLE__"
 
-#ifdef __GNUC__
-#pragma GCC visibility push (default)
-#endif
-
 class Bundled_code_header {
     // DATA - STATICS
     static constexpr auto magic_string_sz_ = sizeof(magic_string_) - 1;
@@ -167,8 +163,26 @@ class Bundled_code_header {
     Bundled_code_header() = default;
     template <typename RandomAccessIterator>
     Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l);
-    explicit Bundled_code_header(const std::vector<char>& blob);
-    explicit Bundled_code_header(const void* maybe_blob);
+    explicit Bundled_code_header(const std::vector<char>& blob)
+        : Bundled_code_header{blob.cbegin(), blob.cend()} {}
+    explicit Bundled_code_header(const void* maybe_blob) {
+        // This is a pretty terrible interface, useful only because
+        // hipLoadModuleData is so poorly specified (for no fault of its own).
+        if (!maybe_blob) return;
+
+        if (!valid(*static_cast<const Bundled_code_header*>(maybe_blob))) return;
+        auto ph = static_cast<const Header_*>(maybe_blob);
+
+        size_t sz = sizeof(Header_) + ph->bundle_cnt_ * sizeof(Bundled_code::Header);
+        auto pb = static_cast<const char*>(maybe_blob) + sizeof(Header_);
+        auto n = ph->bundle_cnt_;
+        while (n--) {
+            sz += reinterpret_cast<const Bundled_code::Header*>(pb)->bundle_sz;
+            pb += sizeof(Bundled_code::Header);
+        }
+
+        read(static_cast<const char*>(maybe_blob), static_cast<const char*>(maybe_blob) + sz, *this);      
+    }
     Bundled_code_header(const Bundled_code_header&) = default;
     Bundled_code_header(Bundled_code_header&&) = default;
     ~Bundled_code_header() = default;
@@ -179,10 +193,6 @@ class Bundled_code_header {
 
     size_t bundled_code_size = 0;
 };
-
-#ifdef __GNUC__
-#pragma GCC visibility pop
-#endif
 
 // CREATORS
 template <typename RandomAccessIterator>

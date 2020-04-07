@@ -14,7 +14,7 @@ install(TARGETS lpl RUNTIME DESTINATION bin)
 #-------------------------------------LPL--------------------------------------#
 
 #-------------------------------------CA---------------------------------------#
-add_executable(ca ca.cpp ${PROJECT_SOURCE_DIR}/src/code_object_bundle.cpp)
+add_executable(ca ca.cpp)
 set_target_properties(
     ca PROPERTIES
         CXX_STANDARD 11
