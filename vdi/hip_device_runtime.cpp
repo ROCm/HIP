@@ -281,6 +281,18 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   case hipDeviceAttributeEccEnabled:
     *pi = prop.ECCEnabled;
     break;
+  case hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc:
+    *pi = prop.cooperativeMultiDeviceUnmatchedFunc;
+    break;
+  case hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim:
+    *pi = prop.cooperativeMultiDeviceUnmatchedGridDim;
+    break;
+  case hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim:
+    *pi = prop.cooperativeMultiDeviceUnmatchedBlockDim;
+    break;
+  case hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem:
+    *pi = prop.cooperativeMultiDeviceUnmatchedSharedMem;
+    break;
   default:
     HIP_RETURN(hipErrorInvalidValue);
   }

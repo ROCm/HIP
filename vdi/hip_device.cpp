@@ -197,6 +197,11 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.cooperativeLaunch = info.cooperativeGroups_;
   deviceProps.cooperativeMultiDeviceLaunch = info.cooperativeMultiDeviceGroups_;
 
+  deviceProps.cooperativeMultiDeviceUnmatchedFunc = info.cooperativeMultiDeviceGroups_;
+  deviceProps.cooperativeMultiDeviceUnmatchedGridDim = info.cooperativeMultiDeviceGroups_;
+  deviceProps.cooperativeMultiDeviceUnmatchedBlockDim = info.cooperativeMultiDeviceGroups_;
+  deviceProps.cooperativeMultiDeviceUnmatchedSharedMem = info.cooperativeMultiDeviceGroups_;
+
   deviceProps.maxTexture1D = info.imageMaxBufferSize_;
   deviceProps.maxTexture2D[0] = info.image2DMaxWidth_;
   deviceProps.maxTexture2D[1] = info.image2DMaxHeight_;

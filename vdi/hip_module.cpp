@@ -25,6 +25,7 @@
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
 #include "hip_event.hpp"
+#include "hip_platform.hpp"
 
 hipError_t ihipModuleLoadData(hipModule_t *module, const void *image);
 
@@ -272,7 +273,6 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
   HIP_RETURN(hipSuccess);
 }
 
-
 hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
@@ -294,13 +294,28 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   amd::HostQueue* queue = hip::getQueue(hStream);
   const amd::Device& device = queue->vdev()->device();
 
-  if ((params & amd::NDRangeKernelCommand::CooperativeGroups) &&
-      !device.info().cooperativeGroups_) {
-    return hipErrorLaunchFailure;
+  // Make sure dispatch doesn't exceed max workgroup size limit
+  if (blockDimX * blockDimY * blockDimZ > device.info().maxWorkGroupSize_) {
+    return hipErrorInvalidConfiguration;
   }
-  if ((params & amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups) &&
-      !device.info().cooperativeMultiDeviceGroups_) {
-    return hipErrorLaunchFailure;
+
+  if (params & amd::NDRangeKernelCommand::CooperativeGroups) {
+    if (!device.info().cooperativeGroups_) {
+      return hipErrorLaunchFailure;
+    }
+    int num_blocks = 0;
+    int num_grids = 0;
+    int block_size = blockDimX * blockDimY * blockDimZ;
+    hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+      &num_blocks, &num_grids, device, f, block_size, sharedMemBytes, true);
+    if (((gridDimX * gridDimY * gridDimZ) / block_size) > unsigned(num_grids)) {
+      return hipErrorCooperativeLaunchTooLarge;
+    }
+  }
+  if (params & amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups) {
+    if (!device.info().cooperativeMultiDeviceGroups_) {
+      return hipErrorLaunchFailure;
+    }
   }
   if (!queue) {
     return hipErrorOutOfMemory;
@@ -466,12 +481,42 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
   hipError_t result = hipErrorUnknown;
   uint64_t allGridSize = 0;
+  std::vector<const amd::Device*> mgpu_list(numDevices);
+
   for (int i = 0; i < numDevices; ++i) {
     const hipLaunchParams& launch = launchParamsList[i];
     allGridSize += launch.gridDim.x * launch.gridDim.y * launch.gridDim.z;
+
+    // Make sure block dimensions are valid
+    if (0 == launch.blockDim.x * launch.blockDim.y * launch.blockDim.z) {
+      return hipErrorInvalidConfiguration;
+    }
+    if (launch.stream != nullptr) {
+      // Validate devices to make sure it dosn't have duplicates
+      amd::HostQueue* queue = reinterpret_cast<hip::Stream*>(launch.stream)->asHostQueue();
+      auto device = &queue->vdev()->device();
+      for (int j = 0; j < numDevices; ++j) {
+        if (mgpu_list[j] == device) {
+          return hipErrorInvalidDevice;
+        }
+      }
+      mgpu_list[i] = device;
+    } else {
+      return hipErrorInvalidResourceHandle;
+    }
   }
   uint64_t prevGridSize = 0;
   uint32_t firstDevice = 0;
+
+  // Sync the execution streams on all devices 
+  if ((flags & hipCooperativeLaunchMultiDeviceNoPreSync) == 0) {
+    for (int i = 0; i < numDevices; ++i) {
+      amd::HostQueue* queue =
+        reinterpret_cast<hip::Stream*>(launchParamsList[i].stream)->asHostQueue();
+      queue->finish();
+    }
+  }
+
   for (int i = 0; i < numDevices; ++i) {
     const hipLaunchParams& launch = launchParamsList[i];
     amd::HostQueue* queue = reinterpret_cast<hip::Stream*>(launch.stream)->asHostQueue();
@@ -504,6 +549,15 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
       break;
     }
     prevGridSize += launch.gridDim.x * launch.gridDim.y * launch.gridDim.z;
+  }
+
+  // Sync the execution streams on all devices 
+  if ((flags & hipCooperativeLaunchMultiDeviceNoPostSync) == 0) {
+    for (int i = 0; i < numDevices; ++i) {
+      amd::HostQueue* queue =
+        reinterpret_cast<hip::Stream*>(launchParamsList[i].stream)->asHostQueue();
+      queue->finish();
+    }
   }
 
   return result;
