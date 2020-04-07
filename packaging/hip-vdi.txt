@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hip_vdi)
 
 install(FILES @PROJECT_BINARY_DIR@/lib/libamdhip64.so DESTINATION lib)
+install(FILES @PROJECT_BINARY_DIR@/lib/libamdhip64.so.@HIP_LIB_VERSION_MAJOR@ DESTINATION lib)
+install(FILES @PROJECT_BINARY_DIR@/lib/libamdhip64.so.@HIP_LIB_VERSION_STRING@ DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/lib/libamdhip64_static.a DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/lib/libhip_hcc.so DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/lib/libhiprtc.so DESTINATION lib)
@@ -13,7 +15,7 @@ install(FILES @PROJECT_BINARY_DIR@/hip-config.cmake @PROJECT_BINARY_DIR@/hip-con
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
-set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
+set(CPACK_INSTALL_PREFIX @CPACK_INSTALL_PREFIX@)
 
 ## cmake generated target files contains IMPORTED_LOCATION_RELEASE etc. which
 ## is installation path when building the project, which may be different from
