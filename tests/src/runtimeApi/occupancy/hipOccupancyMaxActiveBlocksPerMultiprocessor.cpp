@@ -22,17 +22,13 @@ THE SOFTWARE.
 // Test the Grid_Launch syntax.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
 
 #include "hip/hip_runtime.h"
 #include "test_common.h"
-
-#define fileName "vcpy_kernel.code"
-#define kernel_name "hello_world"
-
 
 __global__ void f1(float *a) { *a = 1.0; }
 
@@ -43,27 +39,26 @@ __global__ void f2(T *a) { *a = 1; }
 
 int main(int argc, char* argv[]) {
 
-    // test case for using kernel function pointer 
-    uint32_t gridSize = 0;
-    uint32_t blockSize = 0;
+    // test case for using kernel function pointer
+    int gridSize = 0;
+    int blockSize = 0;
     hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
     assert(gridSize != 0 && blockSize != 0);
 
-    // test case for using kernel function pointer with template 
+    int numBlock = 0;
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, f1, blockSize, 0);
+    assert(numBlock != 0);
+
+
+    // test case for using kernel function pointer with template
     gridSize = 0;
     blockSize = 0;
     hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
     assert(gridSize != 0 && blockSize != 0);
 
-    // test case for using kernel with hipFunction_t type
-    gridSize = 0;
-    blockSize = 0;
-    hipModule_t Module;
-    hipFunction_t Function;
-    HIPCHECK(hipModuleLoad(&Module, fileName));
-    HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
-    HIPCHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, Function, 0, 0));
-    assert(gridSize != 0 && blockSize != 0);
+    numBlock = 0;
+    hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(&numBlock, f2, blockSize, 0);
+    assert(numBlock != 0);
 
     passed();
 }

@@ -266,7 +266,6 @@ typedef enum hipSharedMemConfig {
                                    ///< when adjacent threads access data 4 bytes apart.
 } hipSharedMemConfig;
 
-
 /**
  * Struct for data in 3D
  *
@@ -2940,9 +2939,28 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
-hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+
+//TODO - Match CUoccupancyB2DSize
+hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
-                                             uint32_t blockSizeLimit);
+                                             int blockSizeLimit);
+
+/**
+ * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
+ *
+ * @param [out] gridSize           minimum grid size for maximum potential occupancy
+ * @param [out] blockSize          block size for maximum potential occupancy
+ * @param [in]  f                  kernel function for which occupancy is calulated
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
+ * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ */
+//TODO - Match CUoccupancyB2DSize
+hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit, unsigned int  flags);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2953,7 +2971,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk);
+   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2963,7 +2981,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
-hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
 
 /**
@@ -2976,7 +2994,7 @@ hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
+   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2985,9 +3003,9 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
- * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
+ * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
  */
-hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
 #if __HIP_VDI__ && !defined(__HCC__)
@@ -3258,21 +3276,6 @@ hipError_t hipLaunchKernel(const void* function_address,
 } /* extern "c" */
 #endif
 
-#if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
-template <typename F>
-static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessor(
-    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk) {
-    return ::hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, (hipFunction_t)func, blockSize,
-                                                          dynSharedMemPerBlk);
-}
-template <typename F>
-static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
-    return ::hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-        numBlocks, (hipFunction_t)func, blockSize, dynSharedMemPerBlk, flags);
-}
-#endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
-
 #if USE_PROF_API
 #include <hip/hcc_detail/hip_prof_str.h>
 #endif
@@ -3294,6 +3297,20 @@ const char* hipKernelNameRef(const hipFunction_t f);
 #endif
 
 #ifdef __cplusplus
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessor(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk);
+}
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
+}
 
 class TlsData;
 

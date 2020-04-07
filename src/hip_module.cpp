@@ -421,7 +421,7 @@ void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size
 }
 
 static hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-   TlsData *tls, uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+   TlsData *tls, int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk)
 {
     using namespace hip_impl;
 
@@ -469,13 +469,13 @@ static hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
         : std::min(maxWavesPerSimd, availableSGPRs / usedSGPRS));
 
     // Calculate blocks occupancy per CU based on SGPR usage
-    *numBlocks = std::min(*numBlocks, (uint32_t) (sgprs_alu_occupancy / numWavefronts));
+    *numBlocks = std::min(*numBlocks, (int) (sgprs_alu_occupancy / numWavefronts));
 
     size_t total_used_lds = usedLDS + dynSharedMemPerBlk;
     if (total_used_lds != 0) {
       // Calculate LDS occupacy per CU. lds_per_cu / (static_lsd + dynamic_lds)
       size_t lds_occupancy = prop.maxSharedMemoryPerMultiProcessor / total_used_lds;
-      *numBlocks = std::min(*numBlocks, (uint32_t) lds_occupancy);
+      *numBlocks = std::min(*numBlocks, (int) lds_occupancy);
     }
 
     return hipSuccess;
@@ -545,7 +545,7 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
             std::pair<std::size_t, std::size_t>>*>(kargs.getHandle());
 
     GET_TLS();
-    uint32_t numBlocksPerSm = 0;
+    int numBlocksPerSm = 0;
     result = ihipOccupancyMaxActiveBlocksPerMultiprocessor(tls, &numBlocksPerSm, kd,
                     blockDim.x * blockDim.y * blockDim.z, sharedMemBytes);
     if (result != hipSuccess) {
@@ -712,7 +712,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
         kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
                 kargs.getHandle());
 
-        uint32_t numBlocksPerSm = 0;
+        int numBlocksPerSm = 0;
         result = ihipOccupancyMaxActiveBlocksPerMultiprocessor(tls, &numBlocksPerSm, kds[i],
                         lp.blockDim.x * lp.blockDim.y * lp.blockDim.z, lp.sharedMem);
         if (result != hipSuccess) {
@@ -1481,9 +1481,9 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
     return ihipLogStatus(hipSuccess);
 }
 
-hipError_t ihipOccupancyMaxPotentialBlockSize(TlsData *tls, uint32_t* gridSize, uint32_t* blockSize,
+hipError_t ihipOccupancyMaxPotentialBlockSize(TlsData *tls, int* gridSize, int* blockSize,
                                               hipFunction_t f, size_t dynSharedMemPerBlk,
-                                              uint32_t blockSizeLimit)
+                                              int blockSizeLimit)
 {
     using namespace hip_impl;
 
@@ -1593,51 +1593,66 @@ hipError_t ihipOccupancyMaxPotentialBlockSize(TlsData *tls, uint32_t* gridSize, 
     return hipSuccess;
 }
 
-hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
-                                             uint32_t blockSizeLimit)
+                                             int blockSizeLimit)
 {
-    HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit);
+    HIP_INIT_API(hipModuleOccupancyMaxPotentialBlockSize, gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit);
 
+    return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(tls,
+       gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit));
+}
+
+hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit, unsigned int  flags)
+{
+    HIP_INIT_API(hipModuleOccupancyMaxPotentialBlockSizeWithFlags, gridSize, blockSize, f, dynSharedMemPerBlk,
+                 blockSizeLimit, flags);
+    if(flags != hipOccupancyDefault) return ihipLogStatus(hipErrorNotSupported);
     return ihipLogStatus(ihipOccupancyMaxPotentialBlockSize(tls,
         gridSize, blockSize, f, dynSharedMemPerBlk, blockSizeLimit));
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk)
+   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk)
 {
     HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
+    auto F = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)(f),
+                                               hip_impl::target_agent(0));
+    return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+        tls, numBlocks, F, blockSize, dynSharedMemPerBlk));
+}
+
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
+   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk)
+{
+    HIP_INIT_API(hipModuleOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
 
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
         tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
-}
-
-hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
-   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk)
-{
-    HIP_INIT_API(hipDrvOccupancyMaxActiveBlocksPerMultiprocessor, numBlocks, f, blockSize, dynSharedMemPerBlk);
-
-    return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, (uint32_t*) numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t  blockSize, size_t dynSharedMemPerBlk,
+   int* numBlocks, const void* f, int  blockSize, size_t dynSharedMemPerBlk,
    unsigned int flags)
 {
     HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
-
+    if(flags != hipOccupancyDefault) return ihipLogStatus(hipErrorNotSupported);
+    auto F = hip_impl::get_program_state().kernel_descriptor((std::uintptr_t)(f),
+                                               hip_impl::target_agent(0));
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, F, blockSize, dynSharedMemPerBlk));
 }
 
-hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk,
    unsigned int flags)
 {
-    HIP_INIT_API(hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
+    HIP_INIT_API(hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, numBlocks, f, blockSize, dynSharedMemPerBlk, flags);
+    if(flags != hipOccupancyDefault) return ihipLogStatus(hipErrorNotSupported);
     return ihipLogStatus(ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-        tls, (uint32_t*) numBlocks, f, blockSize, dynSharedMemPerBlk));
+        tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
 hipError_t hipLaunchKernel(
