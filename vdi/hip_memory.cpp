@@ -41,6 +41,25 @@ amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   return memObj;
 }
 
+hipError_t ihipFree(void *ptr)
+{
+  if (ptr == nullptr) {
+    return hipSuccess;
+  }
+  if (amd::SvmBuffer::malloced(ptr)) {
+    for (auto& dev : g_devices) {
+      amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
+      if (queue != nullptr) {
+        queue->finish();
+      }
+      hip::syncStreams(dev->deviceId());
+    }
+    amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
+    return hipSuccess;
+  }
+  return hipErrorInvalidValue;
+}
+
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
   if (sizeBytes == 0) {
@@ -213,21 +232,7 @@ hipError_t hipMallocManaged(void** devPtr, size_t size,
 hipError_t hipFree(void* ptr) {
   HIP_INIT_API(hipFree, ptr);
 
-  if (ptr == nullptr) {
-    HIP_RETURN(hipSuccess);
-  }
-  if (amd::SvmBuffer::malloced(ptr)) {
-    for (auto& dev : g_devices) {
-      amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
-      if (queue != nullptr) {
-        queue->finish();
-      }
-      hip::syncStreams(dev->deviceId());
-    }
-    amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
-    HIP_RETURN(hipSuccess);
-  }
-  HIP_RETURN(hipErrorInvalidValue);
+  HIP_RETURN(ihipFree(ptr));
 }
 
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
@@ -265,18 +270,7 @@ hipError_t hipMemPtrGetInfo(void *ptr, size_t *size) {
 hipError_t hipHostFree(void* ptr) {
   HIP_INIT_API(hipHostFree, ptr);
 
-  if (amd::SvmBuffer::malloced(ptr)) {
-    for (auto& dev : g_devices) {
-      amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
-      if (queue != nullptr) {
-        queue->finish();
-      }
-      hip::syncStreams(dev->deviceId());
-    }
-    amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
-    HIP_RETURN(hipSuccess);
-  }
-  HIP_RETURN(hipErrorInvalidValue);
+  HIP_RETURN(ihipFree(ptr));
 }
 
 hipError_t ihipArrayDestroy(hipArray* array) {
@@ -2073,4 +2067,10 @@ hipError_t hipMallocHost(void** ptr,
   }
 
   HIP_RETURN(ihipMalloc(ptr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER));
+}
+
+hipError_t hipFreeHost(void *ptr) {
+  HIP_INIT_API(hipFreeHost, ptr);
+
+  HIP_RETURN(ihipFree(ptr));
 }

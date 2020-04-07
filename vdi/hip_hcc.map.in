@@ -185,6 +185,7 @@ global:
     hiprtcAddNameExpression;
     hiprtcVersion;
     hipMallocHost;
+    hipFreeHost;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;
