@@ -1,7 +1,7 @@
 #project("hip")
 cmake_minimum_required(VERSION 3.5.1)
 
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-keep-memory -Wl,-Bsymbolic -Wl,--unresolved-symbols=report-all -Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-keep-memory -Wl,-Bsymbolic -Wl,--unresolved-symbols=report-all -Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
 
 if(CMAKE_CXX_FLAGS MATCHES "fsanitize=address")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -shared-libasan")
@@ -156,6 +156,11 @@ add_library(amdhip64_static STATIC
     $<TARGET_OBJECTS:hip64>
     )
 
+set_target_properties(
+    amdhip64 PROPERTIES
+        VERSION ${HIP_LIB_VERSION_STRING}
+        SOVERSION ${HIP_LIB_VERSION_MAJOR}
+)
 # We expect amdhip64_static to contain objects of vdi and hip. But linker
 # let amdhip64_static contain objects of hip only. So we will use a
 # a custom amdhip64_static_combiner to combine objects of vid and hip into
