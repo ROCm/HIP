@@ -123,6 +123,9 @@ hipError_t hipDeviceSetSharedMemConfig(hipSharedMemConfig config) {
 hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig) {
     HIP_INIT_API(hipDeviceGetSharedMemConfig, pConfig);
 
+    if (pConfig == nullptr){
+        return ihipLogStatus(hipErrorInvalidValue);
+    }
     *pConfig = hipSharedMemBankSizeFourByte;
 
     return ihipLogStatus(hipSuccess);
