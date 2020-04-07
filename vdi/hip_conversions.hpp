@@ -169,19 +169,19 @@ cl_mem_object_type getCLMemObjectType(const hipResourceType hipResType) {
 }
 
 inline
-size_t getElementSize(const hipArray_Format arrayFormat) {
-  switch (arrayFormat) {
+size_t getElementSize(const hipArray_const_t array) {
+  switch (array->Format) {
     case HIP_AD_FORMAT_UNSIGNED_INT8:
     case HIP_AD_FORMAT_SIGNED_INT8:
-      return 1;
+      return 1 * array->NumChannels;
     case HIP_AD_FORMAT_UNSIGNED_INT16:
     case HIP_AD_FORMAT_SIGNED_INT16:
     case HIP_AD_FORMAT_HALF:
-      return 2;
+      return 2 * array->NumChannels;
     case HIP_AD_FORMAT_UNSIGNED_INT32:
     case HIP_AD_FORMAT_SIGNED_INT32:
     case HIP_AD_FORMAT_FLOAT:
-      return 4;
+      return 4 * array->NumChannels;
   }
 
   ShouldNotReachHere();
@@ -617,7 +617,7 @@ HIP_MEMCPY3D getDrvMemcpy3DDesc(const hipMemcpy3DParms& desc) {
     descDrv.srcMemoryType = hipMemoryTypeArray;
     descDrv.srcArray = desc.srcArray;
     // When reffering to array memory, hipPos::x is in elements.
-    descDrv.srcXInBytes *= getElementSize(desc.srcArray->Format);
+    descDrv.srcXInBytes *= getElementSize(desc.srcArray);
   }
 
   if (desc.srcPtr.ptr != nullptr) {
@@ -632,7 +632,7 @@ HIP_MEMCPY3D getDrvMemcpy3DDesc(const hipMemcpy3DParms& desc) {
     descDrv.dstMemoryType = hipMemoryTypeArray;
     descDrv.dstArray = desc.dstArray;
     // When reffering to array memory, hipPos::x is in elements.
-    descDrv.dstXInBytes *= getElementSize(desc.dstArray->Format);
+    descDrv.dstXInBytes *= getElementSize(desc.dstArray);
   }
 
   if (desc.dstPtr.ptr != nullptr) {
@@ -645,11 +645,11 @@ HIP_MEMCPY3D getDrvMemcpy3DDesc(const hipMemcpy3DParms& desc) {
 
   // If a HIP array is participating in the copy, the extent is defined in terms of that array's elements.
   if ((desc.srcArray != nullptr) && (desc.dstArray == nullptr)) {
-    descDrv.WidthInBytes *= getElementSize(desc.srcArray->Format);
+    descDrv.WidthInBytes *= getElementSize(desc.srcArray);
   } else if ((desc.srcArray == nullptr) && (desc.dstArray != nullptr)) {
-    descDrv.WidthInBytes *= getElementSize(desc.dstArray->Format);
+    descDrv.WidthInBytes *= getElementSize(desc.dstArray);
   } else if ((desc.srcArray != nullptr) && (desc.dstArray != nullptr)) {
-    descDrv.WidthInBytes *= getElementSize(desc.dstArray->Format);
+    descDrv.WidthInBytes *= getElementSize(desc.dstArray);
   }
 
   return descDrv;

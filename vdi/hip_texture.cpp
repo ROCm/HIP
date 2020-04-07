@@ -207,8 +207,8 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
     hipTextureReadMode readMode = pTexDesc->readMode;
     // 32-bit integer format will not be promoted, regardless of whether or not
     // this hipTextureDesc::readMode is set hipReadModeNormalizedFloat is specified.
-    if ((hip::getElementSize(pResDesc->res.array.array->Format) == 4) &&
-        (pResDesc->res.array.array->Format != HIP_AD_FORMAT_FLOAT)) {
+    if ((pResDesc->res.array.array->Format == HIP_AD_FORMAT_SIGNED_INT32) ||
+        (pResDesc->res.array.array->Format == HIP_AD_FORMAT_UNSIGNED_INT32)) {
       readMode = hipReadModeElementType;
     }
 

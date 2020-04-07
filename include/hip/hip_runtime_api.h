@@ -128,6 +128,14 @@ typedef struct hipDeviceProp_t {
     int kernelExecTimeoutEnabled;    ///<Run time limit for kernels executed on the device
     int ECCEnabled;                  ///<Device has ECC support enabled
     int tccDriver;                   ///< 1:If device is Tesla device using TCC driver, else 0
+    int cooperativeMultiDeviceUnmatchedFunc;        ///< HIP device supports cooperative launch on multiple
+                                                    ///devices with unmatched functions
+    int cooperativeMultiDeviceUnmatchedGridDim;     ///< HIP device supports cooperative launch on multiple
+                                                    ///devices with unmatched grid dimensions
+    int cooperativeMultiDeviceUnmatchedBlockDim;    ///< HIP device supports cooperative launch on multiple
+                                                    ///devices with unmatched block dimensions
+    int cooperativeMultiDeviceUnmatchedSharedMem;   ///< HIP device supports cooperative launch on multiple
+                                                    ///devices with unmatched shared memories
 
 } hipDeviceProp_t;
 
@@ -329,8 +337,16 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeTexturePitchAlignment, ///<Pitch alignment requirement for 2D texture references bound to pitched memory;
     hipDeviceAttributeKernelExecTimeout,    ///<Run time limit for kernels executed on the device
     hipDeviceAttributeCanMapHostMemory,     ///<Device can map host memory into device address space
-    hipDeviceAttributeEccEnabled            ///<Device has ECC support enabled
+    hipDeviceAttributeEccEnabled,           ///<Device has ECC support enabled
 
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc,        ///< Supports cooperative launch on multiple
+                                                                  ///devices with unmatched functions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedGridDim,     ///< Supports cooperative launch on multiple
+                                                                  ///devices with unmatched grid dimensions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim,    ///< Supports cooperative launch on multiple
+                                                                  ///devices with unmatched block dimensions
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem    ///< Supports cooperative launch on multiple
+                                                                  ///devices with unmatched shared memories
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {
