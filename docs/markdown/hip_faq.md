@@ -12,7 +12,7 @@
 - [How does HIP compare with OpenCL?](#how-does-hip-compare-with-opencl)
 - [How does porting CUDA to HIP compare to porting CUDA to OpenCL?](#how-does-porting-cuda-to-hip-compare-to-porting-cuda-to-opencl)
 - [What hardware does HIP support?](#what-hardware-does-hip-support)
-- [Does Hipify automatically convert all source code?](#does-hipify-automatically-convert-all-source-code)
+- [Do HIPIFY tools automatically convert all source code?](#do-hipify-tools-automatically-convert-all-source-code)
 - [What is NVCC?](#what-is-nvcc)
 - [What is HCC?](#what-is-hcc)
 - [Why use HIP rather than supporting CUDA directly?](#why-use-hip-rather-than-supporting-cuda-directly)
@@ -79,23 +79,23 @@ scan code to identify any unsupported CUDA functions - this is useful for identi
 
 However, we can provide a rough summary of the features included in each CUDA SDK and the support level in HIP. Each bullet below lists the major new language features in each CUDA release and then indicate which are supported/not supported in HIP:
 
-- CUDA 4.0 and earlier :  
+- CUDA 4.0 and earlier :
     - HIP supports CUDA 4.0 except for the limitations described above.
-- CUDA 5.0 : 
+- CUDA 5.0 :
     - Dynamic Parallelism (not supported) 
     - cuIpc functions (under development).
-- CUDA 5.5 : 
+- CUDA 5.5 :
     - CUPTI (not directly supported, [AMD GPUPerfAPI](http://developer.amd.com/tools-and-sdks/graphics-development/gpuperfapi/) can be used as an alternative in some cases)
-- CUDA 6.0
+- CUDA 6.0 :
     - Managed memory (under development)
-- CUDA 6.5
+- CUDA 6.5 :
     - __shfl intriniscs (supported)
-- CUDA 7.0
+- CUDA 7.0 :
     - Per-thread-streams (under development)
     - C++11 (HCC supports all of C++11, all of C++14 and some C++17 features)
-- CUDA 7.5
+- CUDA 7.5 :
     - float16 (supported)
-- CUDA 8.0
+- CUDA 8.0 :
     - Page Migration including cudaMemAdvise, cudaMemPrefetch, other cudaMem* APIs(not supported)
 
 
@@ -108,8 +108,8 @@ The hip interfaces support both ROCm and CUDA paths, with familiar library inter
 - [hipfft](https://github.com/ROCmSoftwarePlatform/hcFFT)
 - [hipsparse](https://github.com/ROCmSoftwarePlatform/hcSPARSE)
 - [hiprng](https://github.com/ROCmSoftwarePlatform/hcrng)
-   
-Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the hipify-clang tool.  These APIs use cublas or hcblas depending on the platform and replace the need
+
+Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cublas or hcblas depending on the platform and replace the need
 to use conditional compilation. 
 
 ### How does HIP compare with OpenCL?
@@ -126,7 +126,7 @@ HIP offers several benefits over OpenCL:
 ### How does porting CUDA to HIP compare to porting CUDA to OpenCL?
 Both HIP and CUDA are dialects of C++, and thus porting between them is relatively straightforward.
 Both dialects support templates, classes, lambdas, and other C++ constructs.
-As one example, the hipify tool was originally a Perl script that used simple text conversions from CUDA to HIP.
+As one example, the hipify-perl tool was originally a Perl script that used simple text conversions from CUDA to HIP.
 HIP and CUDA provide similar math library calls as well.  In summary, the HIP philosophy was to make the HIP language close enough to CUDA that the porting effort is relatively simple.
 This reduces the potential for error, and also makes it easy to automate the translation.  HIP's goal is to quickly get the ported program running on both platforms with little manual intervention,
 so that the programmer can focus on performance optimizations.
@@ -140,11 +140,11 @@ The tools also struggle with more complex CUDA applications, in particular, thos
 - For AMD platforms, HIP runs on the same hardware that the HCC "hc" mode supports.  See the ROCm documentation for the list of supported platforms.
 - For Nvidia platforms, HIP requires Unified Memory and should run on any device supporting CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and Tesla K40.
 
-### Does Hipify automatically convert all source code?
-Typically, hipify can automatically convert almost all run-time code, and the coordinate indexing device code ( threadIdx.x -> hipThreadIdx_x ).  
+### Do HIPIFY tools automatically convert all source code?
+Typically, HIPIFY tools can automatically convert almost all run-time code, and the coordinate indexing device code ( threadIdx.x -> hipThreadIdx_x ).
 Most device code needs no additional conversion since HIP and CUDA have similar names for math and built-in functions.
 The hipify-clang tool will automatically modify the kernel signature as needed (automating a step that used to be done manually).
-Additional porting may be required to deal with architecture feature queries or with CUDA capabilities that HIP doesn't support. 
+Additional porting may be required to deal with architecture feature queries or with CUDA capabilities that HIP doesn't support.
 In general, developers should always expect to perform some platform-specific tuning and optimization.
 
 ### What is NVCC?

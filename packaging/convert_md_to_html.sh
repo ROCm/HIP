@@ -21,24 +21,22 @@ trap cleanup EXIT
 export GRIPURL=$hip_srcdir
 export GRIPHOME=$workdir
 echo "CACHE_DIRECTORY = '$html_destdir/asset'" > $workdir/settings.py
-mkdir -p $html_destdir $html_destdir/hipify-clang $html_destdir/docs/markdown
+mkdir -p $html_destdir $html_destdir/docs/markdown
 
 # convert all md files to html
 pushd $hip_srcdir
-for f in *.md hipify-clang/*.md docs/markdown/*.md; do grip --export --no-inline $f $html_destdir/${f%.*}.html; done
+for f in *.md docs/markdown/*.md; do grip --export --no-inline $f $html_destdir/${f%.*}.html; done
 popd
 
 # convert absolute links to relative links
 pushd $html_destdir
 for f in *.html; do sed -i "s?$GRIPURL/??g" $f; done
-for f in hipify-clang/*.html; do sed -i "s?$GRIPURL/?../?g" $f; done
 for f in docs/markdown/*.html; do sed -i "s?$GRIPURL/?../../?g" $f; done
 popd
 
 # update document titles
 pushd $html_destdir
 for f in *.html; do sed -i "s?.md - Grip??g" $f; done
-for f in hipify-clang/*.html; do sed -i "s?.md - Grip??g" $f; done
 for f in docs/markdown/*.html; do sed -i "s?.md - Grip??g" $f; done
 popd
 
@@ -46,8 +44,6 @@ popd
 pushd $html_destdir
 for f in *.html; do sed -i "s?.md\"?.html\"?g" $f; done
 for f in *.html; do sed -i "s?.md#?.html#?g" $f; done
-for f in hipify-clang/*.html; do sed -i "s?.md\"?.html\"?g" $f; done
-for f in hipify-clang/*.html; do sed -i "s?.md#?.html#?g" $f; done
 for f in docs/markdown/*.html; do sed -i "s?.md\"?.html\"?g" $f; done
 for f in docs/markdown/*.html; do sed -i "s?.md#?.html#?g" $f; done
 popd
