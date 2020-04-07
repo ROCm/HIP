@@ -107,8 +107,8 @@ void run(const std::vector<char>& buffer) {
    
     hipFree(Ad); 
     hipFree(Bd); 
-    delete A;
-    delete B;
+    delete[] A;
+    delete[] B;
     hipCtxDestroy(context);
     
 }

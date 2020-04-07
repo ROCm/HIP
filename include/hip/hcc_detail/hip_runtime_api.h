@@ -55,7 +55,7 @@ THE SOFTWARE.
 #define DEPRECATED(msg) __attribute__ ((deprecated(msg)))
 #endif // !defined(_MSC_VER)
 
-#define DEPRECATED_MSG "This API is marked as deprecated and may not be supported in future releases.For more details please refer https://github.com/ROCm-Developer-Tools/HIP/tree/master/docs/markdown/hip_deprecated_api_list"
+#define DEPRECATED_MSG "This API is marked as deprecated and may not be supported in future releases. For more details please refer https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_deprecated_api_list.md"
 
 #if defined(__HCC__) && (__hcc_workweek__ < 16155)
 #error("This version of HIP requires a newer version of HCC.");

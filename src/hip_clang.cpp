@@ -51,7 +51,7 @@ __hipRegisterFatBinary(const void* data)
     return nullptr;
   }
 
-  auto modules = new std::vector<hipModule_t>{g_deviceCnt};
+  auto modules = new std::vector<hipModule_t>(g_deviceCnt);
   if (!modules) {
     return nullptr;
   }
@@ -136,7 +136,7 @@ extern "C" void __hipRegisterFunction(
   int*         wSize)
 {
   HIP_INIT_API(NONE, modules, hostFunction, deviceFunction, deviceName);
-  std::vector<hipFunction_t> functions{g_deviceCnt};
+  std::vector<hipFunction_t> functions(g_deviceCnt);
 
   assert(modules && modules->size() >= g_deviceCnt);
   for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {

@@ -186,6 +186,7 @@ typedef struct cudaArray hipArray;
 typedef struct cudaArray* hipArray_t;
 typedef struct cudaArray* hipArray_const_t;
 typedef struct cudaFuncAttributes hipFuncAttributes;
+typedef struct cudaLaunchParams hipLaunchParams;
 #define hipFunction_attribute CUfunction_attribute
 #define hip_Memcpy2D CUDA_MEMCPY2D
 #define hipMemcpy3DParms cudaMemcpy3DParms
@@ -860,7 +861,7 @@ inline static hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes,
 }
 
 
-inline hipError_t hipMemcpyWithStream(void* dst, const void* src,
+inline static hipError_t hipMemcpyWithStream(void* dst, const void* src,
 				      size_t sizeBytes, hipMemcpyKind copyKind,
 				      hipStream_t stream) {
 	cudaError_t error = cudaMemcpyAsync(dst, src, sizeBytes, 
@@ -1134,6 +1135,10 @@ inline static hipError_t hipGetDeviceProperties(hipDeviceProp_t* p_prop, int dev
     p_prop->integrated = cdprop.integrated;
     p_prop->cooperativeLaunch = cdprop.cooperativeLaunch;
     p_prop->cooperativeMultiDeviceLaunch = cdprop.cooperativeMultiDeviceLaunch;
+    p_prop->cooperativeMultiDeviceUnmatchedFunc = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedGridDim = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedBlockDim = 0;
+    p_prop->cooperativeMultiDeviceUnmatchedSharedMem = 0;
 
     p_prop->maxTexture1D    = cdprop.maxTexture1D;
     p_prop->maxTexture2D[0] = cdprop.maxTexture2D[0];
@@ -1270,6 +1275,12 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeEccEnabled:
             cdattr = cudaDevAttrEccEnabled;
+            break;
+        case hipDeviceAttributeCooperativeLaunch:
+            cdattr = cudaDevAttrCooperativeLaunch;
+            break;
+        case hipDeviceAttributeCooperativeMultiDeviceLaunch:
+            cdattr = cudaDevAttrCooperativeMultiDeviceLaunch;
             break;
         default:
             return hipCUDAErrorTohipError(cudaErrorInvalidValue);
@@ -1679,12 +1690,34 @@ inline static hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_
     return hipCUDAErrorTohipError(cudaGetChannelDesc(desc,array));
 }
 
+inline static hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDim,
+                                      void** kernelParams, unsigned int sharedMemBytes,
+                                      hipStream_t stream) {
+    return hipCUDAErrorTohipError(
+            cudaLaunchCooperativeKernel(f, gridDim, blockDim, kernelParams, sharedMemBytes, stream));
+}
+
+inline static hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                 int  numDevices, unsigned int  flags) {
+    return hipCUDAErrorTohipError(cudaLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags));
+}
 
 #ifdef __cplusplus
 }
 #endif
 
 #ifdef __CUDACC__
+
+template<class T>
+inline static hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
+                                                                      T func,
+                                                                      int blockSize,
+                                                                      size_t dynamicSMemSize) {
+    cudaError_t cerror;
+    cerror =
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, func, blockSize, dynamicSMemSize);
+    return hipCUDAErrorTohipError(cerror);
+}
 
 template <class T>
 inline static hipError_t hipOccupancyMaxPotentialBlockSize(int* minGridSize, int* blockSize, T func,
@@ -1742,6 +1775,14 @@ template <class T>
 inline static hipChannelFormatDesc hipCreateChannelDesc() {
     return cudaCreateChannelDesc<T>();
 }
+
+template <class T>
+inline static hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
+                                             void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {
+    return hipCUDAErrorTohipError(
+            cudaLaunchCooperativeKernel(f, gridDim, blockDim, kernelParams, sharedMemBytes, stream));
+}
+
 #endif  //__CUDACC__
 
 #endif  // HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_API_H
