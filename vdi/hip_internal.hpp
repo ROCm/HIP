@@ -48,7 +48,7 @@ typedef struct ihipIpcMemHandle_st {
 } ihipIpcMemHandle_t;
 
 #ifdef _WIN32
-  int getpid() { return _getpid();}
+  inline int getpid() { return _getpid(); }
 #endif
 
 #define HIP_INIT() \
