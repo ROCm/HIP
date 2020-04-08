@@ -73,6 +73,7 @@ if(HIP_RUNTIME MATCHES "VDI")
   add_library(hip::amdhip64 SHARED IMPORTED)
 
   set_target_properties(hip::amdhip64 PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "__HIP_VDI__=1"
     INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
   )
@@ -95,12 +96,12 @@ add_library(hip::host INTERFACE IMPORTED)
 
 if(HIP_RUNTIME MATCHES "VDI")
   set_target_properties(hip::host PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "__HIP_VDI__=1"
     INTERFACE_LINK_LIBRARIES "hip::amdhip64")
 else()
   set_target_properties(hip::host PROPERTIES
     INTERFACE_LINK_LIBRARIES "hip::hip_hcc")
 endif()
-  
 
 # Create imported target hip::device
 add_library(hip::device INTERFACE IMPORTED)
@@ -117,6 +118,10 @@ set_target_properties(hip::device PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
   INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"
 )
+endif()
+if(HIP_RUNTIME MATCHES "VDI")
+  set_target_properties(hip::device PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "__HIP_VDI__=1")
 endif()
 
 if(CMAKE_VERSION VERSION_LESS 3.0.0)
