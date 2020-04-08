@@ -515,6 +515,7 @@ hc_get_workitem_absolute_id(int dim)
 
 #endif // defined(__clang__) && defined(__HIP__)
 
-#include <hip/hcc_detail/hip_memory.h>
+// ToDo: Re-enable this after device side malloc is working.
+//#include <hip/hcc_detail/hip_memory.h>
 
 #endif  // HIP_HCC_DETAIL_RUNTIME_H
