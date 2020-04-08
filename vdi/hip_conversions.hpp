@@ -895,4 +895,9 @@ HIP_RESOURCE_VIEW_DESC getResourceViewDesc(const hipResourceViewDesc& resViewDes
 
   return desc;
 }
+
+inline
+size_t getElementSize(const hipChannelFormatDesc &desc) {
+  return (desc.x / 4) * getNumChannels(desc);
+}
 };
