@@ -44,6 +44,11 @@ THE SOFTWARE.
 #include <stddef.h>
 #endif  //__cplusplus
 
+// __hip_malloc is not working. Disable it by default.
+#ifndef __HIP_ENABLE_MALLOC__
+#define __HIP_ENABLE_MALLOC__ 0
+#endif
+
 #if __HCC_OR_HIP_CLANG__
 
 #if __HIP__
@@ -305,11 +310,12 @@ static constexpr Coordinates<hip_impl::WorkitemId> threadIdx{};
 
 #endif // defined __HCC__
 #if __HCC_OR_HIP_CLANG__
+#if __HIP_ENABLE_MALLOC__
 extern "C" __device__ void* __hip_malloc(size_t);
 extern "C" __device__ void* __hip_free(void* ptr);
-
 static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
+#endif
 
 // Declare printf only for the HCC compiler. hip-clang is handled in
 // device_functions.h
