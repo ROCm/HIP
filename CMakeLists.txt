@@ -454,27 +454,20 @@ endif()
 #############################
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
-    install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
+    # ToDo: The cmake generated target files are not working. We have to install manually created ones
+    # for now. Should fix this and remove target files under packaging.
+    #install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 elseif( HIP_PLATFORM STREQUAL "vdi")
 #    install(TARGETS hip_on_vdi host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 endif()
     include(CMakePackageConfigHelpers)
 
-    if(HIP_COMPILER STREQUAL "hcc")
-        configure_package_config_file(
-            hip-config-hcc.cmake.in
-            ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
-            INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
-            PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
-            )
-    elseif(HIP_COMPILER STREQUAL "clang")
-        configure_package_config_file(
-            hip-config-clang.cmake.in
-            ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
-            INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
-            PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
-            )
-    endif()
+    configure_package_config_file(
+        hip-config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+        INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
+        PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
+        )
 
     write_basic_package_version_file(
         ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake

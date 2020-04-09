@@ -27,7 +27,7 @@ THE SOFTWARE.
 // HIP heap is implemented as a global array with fixed size. Users may define
 // __HIP_SIZE_OF_PAGE and __HIP_NUM_PAGES to have a larger heap.
 
-#if __HCC__ || __HIP__
+#if (__HCC__ || __HIP__) && __HIP_ENABLE_MALLOC__
 
 // Size of page in bytes.
 #ifndef __HIP_SIZE_OF_PAGE
