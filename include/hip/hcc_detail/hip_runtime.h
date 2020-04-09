@@ -315,6 +315,9 @@ extern "C" __device__ void* __hip_malloc(size_t);
 extern "C" __device__ void* __hip_free(void* ptr);
 static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
+#else
+static inline __device__ void* malloc(size_t size) { __builtin_trap(); return nullptr; }
+static inline __device__ void* free(void* ptr) { __builtin_trap(); return nullptr; }
 #endif
 
 // Declare printf only for the HCC compiler. hip-clang is handled in
