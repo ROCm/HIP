@@ -310,12 +310,13 @@ if(HIP_PLATFORM STREQUAL "hcc")
         set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
         target_include_directories(
             hiprtc SYSTEM
-                PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
+            PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
+	  set_target_properties(hiprtc PROPERTIES CXX_VISIBILITY_PRESET hidden)
+	  set_target_properties(hiprtc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+
     endif()
     set_target_properties(hip_hcc PROPERTIES CXX_VISIBILITY_PRESET hidden)
     set_target_properties(hip_hcc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
-    set_target_properties(hiprtc PROPERTIES CXX_VISIBILITY_PRESET hidden)
-    set_target_properties(hiprtc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
 
 
     if(HIP_PLATFORM STREQUAL "hcc")
