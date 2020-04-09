@@ -7,7 +7,8 @@ install(FILES @PROJECT_BINARY_DIR@/lib/libhiprtc.so DESTINATION lib)
 
 install(FILES @PROJECT_BINARY_DIR@/.hipInfo DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/hip-config.cmake @PROJECT_BINARY_DIR@/hip-config-version.cmake DESTINATION lib/cmake/hip)
-install(FILES @hip_SOURCE_DIR@/packaging/hip-targets.cmake @hip_SOURCE_DIR@/packaging/hip-targets-release.cmake DESTINATION lib/cmake/hip)
+file(GLOB target_files @CONFIG_PACKAGE_INSTALL_DIR@/hip-targets-*.cmake)
+install(FILES @CONFIG_PACKAGE_INSTALL_DIR@/hip-targets.cmake ${target_files} DESTINATION lib/cmake/hip)
 
 #############################
 # Packaging steps

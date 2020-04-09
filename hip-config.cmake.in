@@ -1,0 +1,168 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro OPTIONAL RESULT_VARIABLE _CMakeFindDependencyMacro_FOUND)
+if (NOT _CMakeFindDependencyMacro_FOUND)
+  macro(find_dependency dep)
+    if (NOT ${dep}_FOUND)
+      set(cmake_fd_version)
+      if (${ARGC} GREATER 1)
+        set(cmake_fd_version ${ARGV1})
+      endif()
+      set(cmake_fd_exact_arg)
+      if(${CMAKE_FIND_PACKAGE_NAME}_FIND_VERSION_EXACT)
+        set(cmake_fd_exact_arg EXACT)
+      endif()
+      set(cmake_fd_quiet_arg)
+      if(${CMAKE_FIND_PACKAGE_NAME}_FIND_QUIETLY)
+        set(cmake_fd_quiet_arg QUIET)
+      endif()
+      set(cmake_fd_required_arg)
+      if(${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED)
+        set(cmake_fd_required_arg REQUIRED)
+      endif()
+      find_package(${dep} ${cmake_fd_version}
+          ${cmake_fd_exact_arg}
+          ${cmake_fd_quiet_arg}
+          ${cmake_fd_required_arg}
+      )
+      string(TOUPPER ${dep} cmake_dep_upper)
+      if (NOT ${dep}_FOUND AND NOT ${cmake_dep_upper}_FOUND)
+        set(${CMAKE_FIND_PACKAGE_NAME}_NOT_FOUND_MESSAGE "${CMAKE_FIND_PACKAGE_NAME} could not be found because dependency ${dep} could not be found.")
+        set(${CMAKE_FIND_PACKAGE_NAME}_FOUND False)
+        return()
+      endif()
+      set(cmake_fd_version)
+      set(cmake_fd_required_arg)
+      set(cmake_fd_quiet_arg)
+      set(cmake_fd_exact_arg)
+    endif()
+  endmacro()
+endif()
+
+set(HIP_COMPILER "@HIP_COMPILER@")
+set(HIP_RUNTIME "@HIP_RUNTIME@")
+
+set_and_check( hip_INCLUDE_DIR "@PACKAGE_INCLUDE_INSTALL_DIR@" )
+set_and_check( hip_INCLUDE_DIRS "${hip_INCLUDE_DIR}" )
+set_and_check( hip_LIB_INSTALL_DIR "@PACKAGE_LIB_INSTALL_DIR@" )
+set_and_check( hip_BIN_INSTALL_DIR "@PACKAGE_BIN_INSTALL_DIR@" )
+
+set_and_check(hip_HIPCC_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipcc")
+set_and_check(hip_HIPCONFIG_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipconfig")
+
+if(HIP_COMPILER STREQUAL "clang")
+  if(CMAKE_CXX_COMPILER MATCHES ".*hipcc")
+    execute_process(COMMAND ${CMAKE_CXX_COMPILER} --version
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    OUTPUT_VARIABLE HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT)
+    if(HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[\t\r\n][\t\r\n]*([^\t\r\n])")
+      set(HIP_CLANG_ROOT ${CMAKE_MATCH_1})
+    else()
+      set(HIP_CLANG_ROOT /opt/rocm/llvm)
+    endif()
+  else()
+    get_filename_component(HIP_CLANG_ROOT "${CMAKE_CXX_COMPILER}" PATH)
+    get_filename_component(HIP_CLANG_ROOT "${HIP_CLANG_ROOT}" PATH)
+  endif()
+  file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS ${HIP_CLANG_ROOT}/lib/clang/*/include)
+  find_path(HIP_CLANG_INCLUDE_PATH stddef.h
+      HINTS
+          ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
+      NO_DEFAULT_PATH)
+  find_dependency(AMDDeviceLibs)
+  set(AMDGPU_TARGETS "gfx900;gfx906" CACHE STRING "AMD GPU targets to compile for")
+  set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU targets to compile for")
+else()
+  find_dependency(hcc)
+endif()
+
+find_dependency(amd_comgr)
+
+include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
+
+#If HIP isnot installed under ROCm, need this to find HSA assuming HSA is under ROCm
+if( DEFINED ENV{ROCM_PATH} )
+     set(ROCM_PATH "$ENV{ROCM_PATH}")
+endif()
+
+#get_filename_component cannot resolve the symlinks if called from /opt/rocm/lib/hip
+#and do three level up again
+get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
+get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
+
+#if HSA is not under ROCm then provide CMAKE_PREFIX_PATH=<HSA_PATH>
+find_path(HSA_HEADER hsa/hsa.h
+  PATHS
+    "${_IMPORT_PREFIX}/../include"
+    /opt/rocm/include
+)
+
+if (HSA_HEADER-NOTFOUND)
+  message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
+endif()
+
+if(HIP_RUNTIME MATCHES "VDI")
+  set_target_properties(hip::amdhip64 PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "__HIP_VDI__=1"
+    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  )
+  set_target_properties(hip::device PROPERTIES
+    INTERFACE_COMPILE_DEFINITIONS "__HIP_VDI__=1"
+    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
+  )
+else()
+  set_target_properties(hip::hip_hcc_static PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}")
+
+  set_target_properties(hip::hip_hcc PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
+  )
+  set_target_properties(hip::device PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
+  )
+endif()
+
+if(HIP_COMPILER STREQUAL "clang")
+  set_property(TARGET hip::device APPEND PROPERTY
+    INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
+  )
+
+  set_property(TARGET hip::device APPEND PROPERTY
+    INTERFACE_LINK_LIBRARIES --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib --hip-link
+  )
+
+  set_property(TARGET hip::device APPEND PROPERTY
+    INTERFACE_INCLUDE_DIRECTORIES "${HIP_CLANG_INCLUDE_PATH}/.."
+  )
+
+  set_property(TARGET hip::device APPEND PROPERTY
+    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${HIP_CLANG_INCLUDE_PATH}/.."
+  )
+
+  foreach(GPU_TARGET ${GPU_TARGETS})
+      set_property(TARGET hip::device APPEND PROPERTY
+        INTERFACE_COMPILE_OPTIONS "--cuda-gpu-arch=${GPU_TARGET}"
+      )
+      set_property(TARGET hip::device APPEND PROPERTY
+        INTERFACE_LINK_LIBRARIES "--cuda-gpu-arch=${GPU_TARGET}"
+      )
+  endforeach()
+endif()
+
+set( hip_LIBRARIES hip::host hip::device)
+set( hip_LIBRARY ${hip_LIBRARIES})
+
+set(HIP_INCLUDE_DIR ${hip_INCLUDE_DIR})
+set(HIP_INCLUDE_DIRS ${hip_INCLUDE_DIRS})
+set(HIP_LIB_INSTALL_DIR ${hip_LIB_INSTALL_DIR})
+set(HIP_BIN_INSTALL_DIR ${hip_BIN_INSTALL_DIR})
+set(HIP_LIBRARIES ${hip_LIBRARIES})
+set(HIP_LIBRARY ${hip_LIBRARY})
+set(HIP_HIPCC_EXECUTABLE ${hip_HIPCC_EXECUTABLE})
+set(HIP_HIPCONFIG_EXECUTABLE ${hip_HIPCONFIG_EXECUTABLE})
+
