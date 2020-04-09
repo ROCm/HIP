@@ -46,7 +46,7 @@ int main() {
 
   bool status = true;
   status &= NegativeTests();
-  sttaus &= PositiveTests();
+  status &= PositiveTests();
 
   if(status){
       passed();

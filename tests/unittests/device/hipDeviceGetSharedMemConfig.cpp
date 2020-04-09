@@ -40,7 +40,7 @@ bool PositiveTest(){
 int main(){
   bool status = true;
   status &= NegativeTest();
-  sttaus &= PositiveTest();
+  status &= PositiveTest();
 
   if(status)
     passed();
