@@ -22,6 +22,20 @@
 
 #include "hip_internal.hpp"
 
+namespace hip {
+
+amd::HostQueue* Device::defaultStream() {
+  if (defaultStream_ == nullptr) {
+    const cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
+    defaultStream_ = new amd::HostQueue(*asContext(), *devices()[0], properties,
+                                        amd::CommandQueue::RealTimeDisabled,
+                                        amd::CommandQueue::Priority::Normal);
+  }
+  return defaultStream_;
+}
+
+};
+
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
   HIP_INIT_API(hipDeviceGet, device, deviceId);
 
