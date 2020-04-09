@@ -34,8 +34,6 @@ thread_local hipError_t g_lastError = hipSuccess;
 std::once_flag g_ihipInitialized;
 Device* host_device = nullptr;
 
-std::map<Device*, amd::HostQueue*> g_nullStreams;
-
 void init() {
   if (!amd::Runtime::initialized()) {
     amd::IS_HIP = true;
@@ -93,24 +91,10 @@ amd::HostQueue* getQueue(hipStream_t stream) {
   }
 }
 
-amd::HostQueue* getNullStream(Device& dev) {
-  auto stream = g_nullStreams.find(&dev);
-  if (stream == g_nullStreams.end()) {
-    amd::Device* device = dev.devices()[0];
-    cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-    amd::HostQueue* queue = new amd::HostQueue(*dev.asContext(), *device, properties,
-                                               amd::CommandQueue::RealTimeDisabled,
-                                               amd::CommandQueue::Priority::Normal);
-    g_nullStreams[&dev] = queue;
-    return queue;
-  }
-  return stream->second;
-}
-
 amd::HostQueue* getNullStream(amd::Context& ctx) {
- for (auto& it : g_nullStreams) {
-   if (it.first->asContext() == &ctx) {
-     return it.second;
+ for (auto& it : g_devices) {
+   if (it->asContext() == &ctx) {
+     return it->defaultStream();
    }
  }
  return nullptr;
@@ -118,7 +102,7 @@ amd::HostQueue* getNullStream(amd::Context& ctx) {
 
 amd::HostQueue* getNullStream() {
   Device* device = getCurrentDevice();
-  return device ? getNullStream(*device) : nullptr;
+  return device ? device->defaultStream() : nullptr;
 }
 
 };
