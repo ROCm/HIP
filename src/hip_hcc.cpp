@@ -734,6 +734,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &archName);
 
     prop->gcnArch = atoi(archName + 3);
+    strcpy(prop->gcnArchChar, archName+3);
     DeviceErrorCheck(err);
 
     // Get agent node
