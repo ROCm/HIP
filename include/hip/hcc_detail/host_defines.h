@@ -60,7 +60,7 @@ THE SOFTWARE.
  */
 // _restrict is supported by the compiler
 #define __shared__ tile_static
-#define __constant__ __attribute__((hc))
+#define __constant__ __attribute__((hc, annotate("__HIP_constant__")))
 
 #elif defined(__clang__) && defined(__HIP__)
 

@@ -38,6 +38,7 @@ extern "C"
     __device__ __attribute__((const)) _Float16 __ocml_floor_f16(_Float16);
     __device__ __attribute__((const))
     _Float16 __ocml_fma_f16(_Float16, _Float16, _Float16);
+    __device__ __attribute__((const)) _Float16 __ocml_fabs_f16(_Float16);
     __device__ __attribute__((const)) int __ocml_isinf_f16(_Float16);
     __device__ __attribute__((const)) int __ocml_isnan_f16(_Float16);
     __device__ __attribute__((pure)) _Float16 __ocml_log_f16(_Float16);
@@ -58,6 +59,7 @@ extern "C"
     #endif
 
     __device__ __attribute__((const)) __2f16 __ocml_ceil_2f16(__2f16);
+    __device__ __attribute__((const)) __2f16 __ocml_fabs_2f16(__2f16);
     __device__ __2f16 __ocml_cos_2f16(__2f16);
     __device__ __attribute__((pure)) __2f16 __ocml_exp_2f16(__2f16);
     __device__ __attribute__((pure)) __2f16 __ocml_exp10_2f16(__2f16);

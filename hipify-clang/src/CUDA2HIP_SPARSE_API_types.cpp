@@ -41,8 +41,8 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP{
   {"csrsv2Info",                                {"csrsv2Info",                                 "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
   {"csrsv2Info_t",                              {"csrsv2Info_t",                               "", CONV_TYPE, API_SPARSE}},
 
-  {"csrsm2Info",                                {"csrsm2Info",                                 "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
-  {"csrsm2Info_t",                              {"csrsm2Info_t",                               "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
+  {"csrsm2Info",                                {"csrsm2Info",                                 "", CONV_TYPE, API_SPARSE}},
+  {"csrsm2Info_t",                              {"csrsm2Info_t",                               "", CONV_TYPE, API_SPARSE}},
 
   {"bsrsv2Info",                                {"bsrsv2Info",                                 "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
   {"bsrsv2Info_t",                              {"bsrsv2Info_t",                               "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
@@ -88,9 +88,9 @@ const std::map<llvm::StringRef, hipCounter> CUDA_SPARSE_TYPE_NAME_MAP{
   {"CUSPARSE_ACTION_SYMBOLIC",                  {"HIPSPARSE_ACTION_SYMBOLIC",                  "", CONV_NUMERIC_LITERAL, API_SPARSE}},
   {"CUSPARSE_ACTION_NUMERIC",                   {"HIPSPARSE_ACTION_NUMERIC",                   "", CONV_NUMERIC_LITERAL, API_SPARSE}},
 
-  {"cusparseDirection_t",                       {"hipsparseDirection_t",                       "", CONV_TYPE, API_SPARSE, HIP_UNSUPPORTED}},
-  {"CUSPARSE_DIRECTION_ROW",                    {"HIPSPARSE_DIRECTION_ROW",                    "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
-  {"CUSPARSE_DIRECTION_COLUMN",                 {"HIPSPARSE_DIRECTION_COLUMN",                 "", CONV_NUMERIC_LITERAL, API_SPARSE, HIP_UNSUPPORTED}},
+  {"cusparseDirection_t",                       {"hipsparseDirection_t",                       "", CONV_TYPE, API_SPARSE}},
+  {"CUSPARSE_DIRECTION_ROW",                    {"HIPSPARSE_DIRECTION_ROW",                    "", CONV_NUMERIC_LITERAL, API_SPARSE}},
+  {"CUSPARSE_DIRECTION_COLUMN",                 {"HIPSPARSE_DIRECTION_COLUMN",                 "", CONV_NUMERIC_LITERAL, API_SPARSE}},
 
   {"cusparseHybPartition_t",                    {"hipsparseHybPartition_t",                    "", CONV_TYPE, API_SPARSE}},
   {"CUSPARSE_HYB_PARTITION_AUTO",               {"HIPSPARSE_HYB_PARTITION_AUTO",               "", CONV_NUMERIC_LITERAL, API_SPARSE}},

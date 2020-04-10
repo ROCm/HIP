@@ -34,7 +34,7 @@ THE SOFTWARE.
 
 #include "hip/hcc_detail/host_defines.h"
 
-#if !defined(_MSC_VER) || __clang__
+#if defined(__has_attribute)
     #if __has_attribute(ext_vector_type)
         #define __NATIVE_VECTOR__(n, T) T __attribute__((ext_vector_type(n)))
     #else
@@ -694,7 +694,7 @@ THE SOFTWARE.
             typename U = T,
             typename std::enable_if<std::is_signed<U>{}>::type* = nullptr>
         inline __host__ __device__
-        HIP_vector_type operator-() noexcept
+        HIP_vector_type operator-() const noexcept
         {
             auto tmp(*this);
             tmp.data = -tmp.data;
@@ -705,7 +705,7 @@ THE SOFTWARE.
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
         inline __host__ __device__
-        HIP_vector_type operator~() noexcept
+        HIP_vector_type operator~() const noexcept
         {
             HIP_vector_type r{*this};
             r.data = ~r.data;
@@ -1241,7 +1241,9 @@ DECLOP_MAKE_ONE_COMPONENT(signed long long, longlong1);
 DECLOP_MAKE_TWO_COMPONENT(signed long long, longlong2);
 DECLOP_MAKE_THREE_COMPONENT(signed long long, longlong3);
 DECLOP_MAKE_FOUR_COMPONENT(signed long long, longlong4);
-#else // defined(_MSC_VER)
+#else // !defined(__has_attribute)
+
+#if defined(_MSC_VER)
 #include <mmintrin.h>
 #include <xmmintrin.h>
 #include <emmintrin.h>
@@ -1347,5 +1349,92 @@ typedef union { double4 data; } double3;
 typedef union { __m256d data[2]; } double8;
 typedef union { __m256d data[4]; } double16;
 
+#else // !defined(_MSC_VER)
+
+typedef union { char data; } char1;
+typedef union { char data[2]; } char2;
+typedef union { char data[4]; } char4;
+typedef union { char data[8]; } char8;
+typedef union { char data[16]; } char16;
+typedef union { char4 data; } char3;
+
+typedef union { unsigned char data; } uchar1;
+typedef union { unsigned char data[2]; } uchar2;
+typedef union { unsigned char data[4]; } uchar4;
+typedef union { unsigned char data[8]; } uchar8;
+typedef union { unsigned char data[16]; } uchar16;
+typedef union { uchar4 data; } uchar3;
+
+typedef union { short data; } short1;
+typedef union { short data[2]; } short2;
+typedef union { short data[4]; } short4;
+typedef union { short data[8]; } short8;
+typedef union { short data[16]; } short16;
+typedef union { short4 data; } short3;
+
+typedef union { unsigned short data; } ushort1;
+typedef union { unsigned short data[2]; } ushort2;
+typedef union { unsigned short data[4]; } ushort4;
+typedef union { unsigned short data[8]; } ushort8;
+typedef union { unsigned short data[16]; } ushort16;
+typedef union { ushort4 data; } ushort3;
+
+typedef union { int data; } int1;
+typedef union { int data[2]; } int2;
+typedef union { int data[4]; } int4;
+typedef union { int data[8]; } int8;
+typedef union { int data[16]; } int16;
+typedef union { int4 data; } int3;
+
+typedef union { unsigned int data; } uint1;
+typedef union { unsigned int data[2]; } uint2;
+typedef union { unsigned int data[4]; } uint4;
+typedef union { unsigned int data[8]; } uint8;
+typedef union { unsigned int data[16]; } uint16;
+typedef union { uint4 data; } uint3;
+
+typedef union { long data; } long1;
+typedef union { long data[2]; } long2;
+typedef union { long data[4]; } long4;
+typedef union { long data[8]; } long8;
+typedef union { long data[16]; } long16;
+typedef union { long4 data; } long3;
+
+typedef union { unsigned long data; } ulong1;
+typedef union { unsigned long data[2]; } ulong2;
+typedef union { unsigned long data[4]; } ulong4;
+typedef union { unsigned long data[8]; } ulong8;
+typedef union { unsigned long data[16]; } ulong16;
+typedef union { ulong4 data; } ulong3;
+
+typedef union { long long data; } longlong1;
+typedef union { long long data[2]; } longlong2;
+typedef union { long long data[4]; } longlong4;
+typedef union { long long data[8]; } longlong8;
+typedef union { long long data[16]; } longlong16;
+typedef union { longlong4 data; } longlong3;
+
+typedef union { unsigned long long data; } ulonglong1;
+typedef union { unsigned long long data[2]; } ulonglong2;
+typedef union { unsigned long long data[4]; } ulonglong4;
+typedef union { unsigned long long data[8]; } ulonglong8;
+typedef union { unsigned long long data[16]; } ulonglong16;
+typedef union { ulonglong4 data; } ulonglong3;
+
+typedef union { float data; } float1;
+typedef union { float data[2]; } float2;
+typedef union { float data[4]; } float4;
+typedef union { float data[8]; } float8;
+typedef union { float data[16]; } float16;
+typedef union { float4 data; } float3;
+
+typedef union { double data; } double1;
+typedef union { double data[2]; } double2;
+typedef union { double data[4]; } double4;
+typedef union { double data[8]; } double8;
+typedef union { double data[16]; } double16;
+typedef union { double4 data; } double3;
+
 #endif // defined(_MSC_VER)
+#endif // defined(__has_attribute)
 #endif

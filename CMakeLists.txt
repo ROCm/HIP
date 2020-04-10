@@ -207,19 +207,6 @@ if (NOT CPACK_SET_DESTDIR)
   set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Default installation path of hcc installer package")
 endif (NOT CPACK_SET_DESTDIR)
 
-# Check if we need to enable ATP marker
-if(NOT DEFINED COMPILE_HIP_ATP_MARKER)
-    if(NOT DEFINED ENV{COMPILE_HIP_ATP_MARKER})
-        set(COMPILE_HIP_ATP_MARKER 0)
-    else()
-        set(COMPILE_HIP_ATP_MARKER $ENV{COMPILE_HIP_ATP_MARKER})
-        message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
-    endif()
-else()
-    message(WARNING "HIP Markers are deprecated, please use roctracer/rocTX marker APIs.")
-endif()
-add_to_config(_buildInfo COMPILE_HIP_ATP_MARKER)
-
 #############################
 # Profiling API support
 #############################
@@ -309,10 +296,6 @@ message(STATUS "\nHSA runtime in: " ${HSA_PATH})
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
     set(HIP_HCC_BUILD_FLAGS)
-    if(COMPILE_HIP_ATP_MARKER)
-        include_directories(/opt/rocm/profiler/CXLActivityLogger/include)
-        set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DCOMPILE_HIP_ATP_MARKER=1")
-    endif()
 
     # Add HIP_VERSION to CMAKE_<LANG>_FLAGS
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -DHIP_VERSION_MAJOR=${HIP_VERSION_MAJOR} -DHIP_VERSION_MINOR=${HIP_VERSION_MINOR} -DHIP_VERSION_PATCH=${HIP_VERSION_GITDATE}")
@@ -328,7 +311,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_HCC_BUILD_FLAGS}")
 
     set(SOURCE_FILES_RUNTIME
-        src/code_object_bundle.cpp
         src/program_state.cpp
         src/hip_clang.cpp
         src/hip_hcc.cpp
@@ -363,9 +345,6 @@ if(HIP_PLATFORM STREQUAL "hcc")
         set (CMAKE_BUILD_WITH_INSTALL_RPATH TRUE )
         set (CMAKE_SKIP_BUILD_RPATH TRUE )
     endif ()
-    if(COMPILE_HIP_ATP_MARKER)
-        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -L/opt/rocm/profiler/CXLActivityLogger/bin/x86_64 -lCXLActivityLogger")
-    endif()
     add_library(hip_hcc SHARED ${SOURCE_FILES_RUNTIME})
     add_library(hip_hcc_static STATIC ${SOURCE_FILES_RUNTIME})
 
@@ -376,7 +355,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     target_link_libraries(hip_hcc PRIVATE hc_am)
     target_link_libraries(hip_hcc_static PRIVATE hc_am)
 
-    add_library(hiprtc SHARED src/hiprtc.cpp src/code_object_bundle.cpp)
+    add_library(hiprtc SHARED src/hiprtc.cpp)
     target_compile_options(hiprtc PRIVATE -DDISABLE_REDUCED_GPU_BLOB_COPY)
     set_property ( TARGET hiprtc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
     set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
@@ -387,6 +366,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
 
     set_target_properties(hip_hcc PROPERTIES CXX_VISIBILITY_PRESET hidden)
     set_target_properties(hip_hcc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+    set_target_properties(hiprtc PROPERTIES CXX_VISIBILITY_PRESET hidden)
+    set_target_properties(hiprtc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
+
 
     if(HIP_PLATFORM STREQUAL "hcc")
         find_package(amd_comgr REQUIRED CONFIG
