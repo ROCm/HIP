@@ -28,7 +28,9 @@ extern "C" {
 
 #include <stdlib.h>
 
+#if !defined(_WIN32)
 #pragma GCC visibility push (default)
+#endif
 
 enum hiprtcResult {
     HIPRTC_SUCCESS = 0,
@@ -81,7 +83,9 @@ hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* code);
 
 hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* codeSizeRet);
 
+#if !defined(_WIN32)
 #pragma GCC visibility pop
+#endif
 
 #ifdef __cplusplus
 }
