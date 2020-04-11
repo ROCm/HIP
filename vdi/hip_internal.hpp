@@ -85,7 +85,7 @@ namespace hip {
     /// VDI context
     amd::Context* context_;
     /// VDI host queue for default streams
-    amd::HostQueue* defaultStream_;
+    amd::HostQueue* defaultStream_ = nullptr;
     /// Device's ID
     /// Store it here so we don't have to loop through the device list every time
     int deviceId_;

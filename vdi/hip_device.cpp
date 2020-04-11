@@ -30,6 +30,10 @@ amd::HostQueue* Device::defaultStream() {
     defaultStream_ = new amd::HostQueue(*asContext(), *devices()[0], properties,
                                         amd::CommandQueue::RealTimeDisabled,
                                         amd::CommandQueue::Priority::Normal);
+    if ((defaultStream_ == nullptr) ||
+        !defaultStream_->create()) {
+      return nullptr;
+    }
   }
   return defaultStream_;
 }
