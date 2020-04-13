@@ -551,6 +551,20 @@ public:
 typedef ihipStreamCriticalBase_t<StreamMutex> ihipStreamCritical_t;
 typedef LockedAccessor<ihipStreamCritical_t> LockedAccessor_StreamCrit_t;
 
+// do not change these two structs without changing the device library
+struct mg_sync {
+    uint w0;
+    uint w1;
+};
+
+struct mg_info {
+    struct mg_sync *mgs;
+    uint grid_id;
+    uint num_grids;
+    ulong prev_sum;
+    ulong all_sum;
+};
+
 //---
 // Internal stream structure.
 class ihipStream_t {
@@ -618,6 +632,8 @@ class ihipStream_t {
 
     // Before calling this function, stream must be resolved from "0" to the actual stream:
     bool isDefaultStream() const { return _id == 0; };
+
+    std::vector<mg_info*>  coopMemsTracker;
 
    public:
     //---
@@ -1018,27 +1034,13 @@ namespace hip_internal {
 hipError_t memcpyAsync(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
                        hipStream_t stream);
 
-hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags);
+hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags, bool noSync = 0);
 
 hipError_t ihipHostFree(TlsData *tls, void* ptr);
 
 };
 
 #define MAX_COOPERATIVE_GPUs 255
-
-// do not change these two structs without changing the device library
-struct mg_sync {
-    uint w0;
-    uint w1;
-};
-
-struct mg_info {
-    struct mg_sync *mgs;
-    uint grid_id;
-    uint num_grids;
-    ulong prev_sum;
-    ulong all_sum;
-};
 
 //---
 // TODO - review the context creation strategy here.  Really should be:

@@ -263,7 +263,13 @@ ihipStream_t::ihipStream_t(ihipCtx_t* ctx, hc::accelerator_view av, unsigned int
 
 
 //---
-ihipStream_t::~ihipStream_t() {}
+ihipStream_t::~ihipStream_t() {
+    GET_TLS();
+    for (auto mem : coopMemsTracker) {
+        hip_internal::ihipHostFree(tls, mem->mgs);
+        hip_internal::ihipHostFree(tls, mem);
+    }
+}
 
 
 hc::hcWaitMode ihipStream_t::waitMode() const {
