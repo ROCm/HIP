@@ -496,14 +496,14 @@ void* allocAndSharePtr(const char* msg, size_t sizeBytes, ihipCtx_t* ctx, bool s
     return ptr;
 }
 
-hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags) {
+hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned int flags, bool noSync) {
     hipError_t hip_status = hipSuccess;
 
     if (sizeBytes == 0) {
         return hipSuccess;
     }
 
-    if (HIP_SYNC_HOST_ALLOC) {
+    if (HIP_SYNC_HOST_ALLOC && !noSync) {
         hipDeviceSynchronize();
     }
 
@@ -558,7 +558,7 @@ hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned i
         }
     }
 
-    if (HIP_SYNC_HOST_ALLOC) {
+    if (HIP_SYNC_HOST_ALLOC && !noSync) {
         hipDeviceSynchronize();
     }
     return hip_status;
