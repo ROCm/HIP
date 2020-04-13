@@ -262,6 +262,69 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
   HIP_RETURN(hipSuccess);
 }
 
+hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc) {
+  HIP_INIT_API(hipFuncGetAttribute, value, attrib, hfunc);
+
+  if ((value == nullptr) || (hfunc == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  hip::Function* function = hip::Function::asFunction(hfunc);
+  if (function == nullptr) {
+    HIP_RETURN(hipErrorInvalidHandle);
+  }
+
+  amd::Kernel* kernel = function->function_;
+  if (kernel == nullptr) {
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
+  }
+
+  const device::Kernel::WorkGroupInfo* wrkGrpInfo
+    = kernel->getDeviceKernel(*(hip::getCurrentDevice()->devices()[0]))->workGroupInfo();
+  if (wrkGrpInfo == nullptr) {
+    HIP_RETURN(hipErrorMissingConfiguration);
+  }
+
+  switch(attrib) {
+    case HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES:
+      *value = static_cast<int>(wrkGrpInfo->localMemSize_
+                      - wrkGrpInfo->privateMemSize_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK:
+      *value = static_cast<int>(wrkGrpInfo->wavefrontPerSIMD_
+                * wrkGrpInfo->wavefrontSize_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES:
+      *value = 0;
+      break;
+    case HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES:
+      *value = static_cast<int>(wrkGrpInfo->localMemSize_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_NUM_REGS:
+      *value = static_cast<int>(wrkGrpInfo->availableGPRs_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_PTX_VERSION:
+      *value = 30; // Defaults to 3.0 as HCC
+      break;
+    case HIP_FUNC_ATTRIBUTE_BINARY_VERSION:
+      *value = static_cast<int>(kernel->signature().version());
+      break;
+    case HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA:
+      *value = 0;
+      break;
+    case HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES:
+      *value = static_cast<int>(wrkGrpInfo->availableLDSSize_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT:
+      *value = 0;
+      break;
+     default:
+       HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
   HIP_INIT_API(hipFuncGetAttributes, attr, func);
