@@ -1028,8 +1028,8 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
   srcRect.end_ += srcOffset;
 
   amd::Coord3D srcStart(srcRect.start_, 0, 0);
-  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
-  if (!srcMemory->validateRegion(srcStart, srcEnd)) {
+  amd::Coord3D srcSize(srcRect.end_ - srcRect.start_, 1, 1);
+  if (!srcMemory->validateRegion(srcStart, srcSize)) {
     return hipErrorInvalidValue;
   }
 
@@ -1041,8 +1041,8 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
   dstRect.end_ += dstOffset;
 
   amd::Coord3D dstStart(dstRect.start_, 0, 0);
-  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
-  if (!dstMemory->validateRegion(dstStart, dstEnd)) {
+  amd::Coord3D dstSize(dstRect.end_ - dstRect.start_, 1, 1);
+  if (!dstMemory->validateRegion(dstStart, dstSize)) {
     return hipErrorInvalidValue;
   }
 
@@ -1092,8 +1092,8 @@ hipError_t ihipMemcpyDtoH(void* srcDevice,
   srcRect.end_ += srcOffset;
 
   amd::Coord3D srcStart(srcRect.start_, 0, 0);
-  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
-  if (!srcMemory->validateRegion(srcStart, srcEnd)) {
+  amd::Coord3D srcSize(srcRect.end_ - srcRect.start_, 1, 1);
+  if (!srcMemory->validateRegion(srcStart, srcSize)) {
     return hipErrorInvalidValue;
   }
 
@@ -1152,8 +1152,8 @@ hipError_t ihipMemcpyHtoD(const void* srcHost,
   dstRect.end_ += dstOffset;
 
   amd::Coord3D dstStart(dstRect.start_, 0, 0);
-  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
-  if (!dstMemory->validateRegion(dstStart, dstEnd)) {
+  amd::Coord3D dstSize(dstRect.end_ - dstRect.start_, 1, 1);
+  if (!dstMemory->validateRegion(dstStart, dstSize)) {
     return hipErrorInvalidValue;
   }
 
