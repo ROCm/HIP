@@ -408,21 +408,12 @@ if(HIP_PLATFORM STREQUAL "hcc")
     install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
     include(CMakePackageConfigHelpers)
 
-    if(HIP_COMPILER STREQUAL "hcc")
-        configure_package_config_file(
-            hip-config-hcc.cmake.in
-            ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
-            INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
-            PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
-            )
-    elseif(HIP_COMPILER STREQUAL "clang")
-        configure_package_config_file(
-            hip-config-clang.cmake.in
-            ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
-            INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
-            PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
-            )
-    endif()
+    configure_package_config_file(
+        hip-config.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/hip-config.cmake
+        INSTALL_DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR}
+        PATH_VARS LIB_INSTALL_DIR INCLUDE_INSTALL_DIR BIN_INSTALL_DIR
+        )
 
     write_basic_package_version_file(
         ${CMAKE_CURRENT_BINARY_DIR}/hip-config-version.cmake
