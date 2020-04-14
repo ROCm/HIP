@@ -2,19 +2,29 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hip_vdi)
 
 install(FILES @PROJECT_BINARY_DIR@/lib/libamdhip64.so DESTINATION lib)
+install(FILES @PROJECT_BINARY_DIR@/lib/libamdhip64_static.a DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/lib/libhip_hcc.so DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/lib/libhiprtc.so DESTINATION lib)
 
 install(FILES @PROJECT_BINARY_DIR@/.hipInfo DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/hip-config.cmake @PROJECT_BINARY_DIR@/hip-config-version.cmake DESTINATION lib/cmake/hip)
-file(GLOB target_files @CONFIG_PACKAGE_INSTALL_DIR@/hip-targets-*.cmake)
-install(FILES @CONFIG_PACKAGE_INSTALL_DIR@/hip-targets.cmake ${target_files} DESTINATION lib/cmake/hip)
 
 #############################
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
 set(CPACK_INSTALL_PREFIX "/opt/rocm/hip")
+
+## cmake generated target files contains IMPORTED_LOCATION_RELEASE etc. which
+## is installation path when building the project, which may be different from
+## the intallation path for packaging. These paths have to be replaced by
+## the package installation path, otherwise apps using pkg-config will fail.
+file(GLOB _target_files @CONFIG_PACKAGE_INSTALL_DIR@/hip-targets*.cmake)
+foreach(_target_file ${_target_files})
+  execute_process(COMMAND sed -i s:@CMAKE_INSTALL_PREFIX@:${CPACK_INSTALL_PREFIX}:g ${_target_file})
+endforeach()
+install(FILES ${_target_files} DESTINATION lib/cmake/hip)
+
 set(CPACK_PACKAGE_NAME "hip-vdi")
 set(HCC_PACKAGE_NAME "vdi")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [VDI]")
