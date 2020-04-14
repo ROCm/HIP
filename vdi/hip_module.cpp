@@ -94,10 +94,12 @@ hipError_t hipModuleUnload(hipModule_t hmod)
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
 
   if(!PlatformState::instance().unregisterFunc(hmod)) {
+    DevLogPrintfError("Cannot unregister module: 0x%x \n", hmod);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   if(!ihipModuleUnregisterGlobal(hmod)) {
+    DevLogPrintfError("Cannot unregister Global vars for module: 0x%x \n", hmod);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
@@ -134,6 +136,7 @@ inline bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* modu
     = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getUndefinedVarFromCodeObj(&undef_vars)) {
+    DevLogPrintfError("Could not get undefined Variables for Module: 0x%x \n", *module);
     return false;
   }
 
@@ -163,6 +166,7 @@ inline bool ihipModuleRegisterFunc(amd::Program* program, hipModule_t* module) {
 
   // Get all the global func names from COMGR
   if (!dev_program->getGlobalFuncFromCodeObj(&func_names)) {
+    DevLogPrintfError("Could not get Global Funcs from Code Obj for Module: 0x%x \n", *module);
     return false;
   }
 
@@ -180,6 +184,7 @@ inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module)
     = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
+    DevLogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", *module);
     return false;
   }
 
@@ -244,6 +249,8 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
   HIP_INIT_API(hipModuleGetFunction, hfunc, hmod, name);
 
   if (!PlatformState::instance().findModFunc(hfunc, hmod, name)) {
+    DevLogPrintfError("Cannot find the function: %s for module: 0x%x \n",
+                      name, hmod);
     HIP_RETURN(hipErrorNotFound);
   }
   HIP_RETURN(hipSuccess);
@@ -256,6 +263,8 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
   /* Get address and size for the global symbol */
   if (!PlatformState::instance().getGlobalVar(name, ihipGetDevice(), hmod,
                                               dptr, bytes)) {
+    DevLogPrintfError("Cannot find global Var: %s for module: 0x%x at device: %d \n",
+                       name, hmod, ihipGetDevice());
     HIP_RETURN(hipErrorNotFound);
   }
 
@@ -653,6 +662,8 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
    /* Get address and size for the global symbol */
   if (!PlatformState::instance().getTexRef(name, hmod, texRef)) {
+    DevLogPrintfError("Cannot get texRef for name: %s at module:0x%x \n",
+                      name, hmod);
     HIP_RETURN(hipErrorNotFound);
   }
 
