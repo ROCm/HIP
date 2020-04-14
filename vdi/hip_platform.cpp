@@ -132,6 +132,8 @@ extern "C" std::vector<std::pair<hipModule_t, bool>>* __hipRegisterFatBinary(con
 {
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
   if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
+    DevLogPrintfError("Cannot Register fat binary. FatMagic: %u version: %u ",
+                      fbwrapper->magic, fbwrapper->version);
     return nullptr;
   }
 
@@ -272,6 +274,7 @@ bool PlatformState::findSymbol(const void *hostVar, std::string &symbolName) {
     symbolName = it->second;
     return true;
   }
+  DevLogPrintfError("Could not find the Symbol: %s \n", symbolName.c_str());
   return false;
 }
 
@@ -298,6 +301,7 @@ bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFunc
 
   const auto it = dev_program->kernels().find(std::string(func_name));
   if (it == dev_program->kernels().cend()) {
+    DevLogPrintfError("Could not find the function %s \n", func_name);
     return false;
   }
 
@@ -318,6 +322,7 @@ bool PlatformState::getShadowVarInfo(std::string var_name, hipModule_t hmod,
     *var_size = dvar->size;
     return true;
   } else {
+    DevLogPrintfError("Cannot find Var name: %s in module: 0x%x \n", var_name.c_str(), hmod);
     return false;
   }
 }
@@ -357,6 +362,7 @@ bool PlatformState::findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const ch
       PlatformState::DeviceFunction& devFunc = func_it->second;
       if (devFunc.functions[ihipGetDevice()] == 0) {
         if(!createFunc(&devFunc.functions[ihipGetDevice()], hmod, name)) {
+          DevLogPrintfError("Could not create a function: %s at module: 0x%x \n", name, hmod);
           return false;
         }
       }
@@ -364,6 +370,7 @@ bool PlatformState::findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const ch
       return true;
     }
   }
+  DevLogPrintfError("Cannot find module: 0x%x in PlatformState Module Map \n", hmod);
   return false;
 }
 
@@ -372,15 +379,22 @@ bool PlatformState::createFunc(hipFunction_t* hfunc, hipModule_t hmod, const cha
 
   const amd::Symbol* symbol = program->findSymbol(name);
   if (!symbol) {
+    DevLogPrintfError("Cannot find Symbol with name: %s \n", name);
     return false;
   }
 
   amd::Kernel* kernel = new amd::Kernel(*program, *symbol, name);
   if (!kernel) {
+    DevLogPrintfError("Could not create a new kernel with name: %s \n", name);
     return false;
   }
 
   hip::Function* f = new hip::Function(kernel);
+  if (!f) {
+    DevLogPrintfError("Could not create a new function with name: %s \n", name);
+    return false;
+  }
+
   *hfunc = f->asHipFunction();
 
   return true;
@@ -398,6 +412,7 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
         amd::Program* program = as_amd(reinterpret_cast<cl_program>(module));
         program->setVarInfoCallBack(&getSvarInfo);
         if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr)) {
+          DevLogPrintfError("Build error for module: 0x%x at device: %u \n", module, deviceId);
           return nullptr;
         }
         (*devFunc.modules)[deviceId].second = true;
@@ -414,6 +429,7 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
     }
     return devFunc.functions[deviceId];
   }
+  DevLogPrintfError("Cannot find function: 0x%x in PlatformState \n", hostFunction);
   return nullptr;
 }
 
@@ -425,6 +441,7 @@ bool PlatformState::getFuncAttr(const void* hostFunction,
 
   const auto it = functions_.find(hostFunction);
   if (it == functions_.cend()) {
+    DevLogPrintfError("Cannot find hostFunction 0x%x \n", hostFunction);
     return false;
   }
 
@@ -434,12 +451,15 @@ bool PlatformState::getFuncAttr(const void* hostFunction,
   /* If module has not been initialized yet, build the kernel now*/
   if (!(*devFunc.modules)[deviceId].second) {
     if (nullptr == PlatformState::instance().getFunc(hostFunction, deviceId)) {
+      DevLogPrintfError("Cannot get hostFunction: 0x%x for deviceId:%d \n", hostFunction, deviceId);
       return false;
     }
   }
 
   amd::Program* program = as_amd(reinterpret_cast<cl_program>((*devFunc.modules)[deviceId].first));
   if (!ihipGetFuncAttributes(devFunc.deviceName.c_str(), program, func_attr)) {
+    DevLogPrintfError("Cannot get Func attributes for function: %s \n",
+                      devFunc.deviceName.c_str());
     return false;
   }
   return true;
@@ -449,10 +469,13 @@ bool PlatformState::getTexRef(const char* hostVar, hipModule_t hmod, textureRefe
   amd::ScopedLock lock(lock_);
   DeviceVar* dvar = findVar(std::string(hostVar), ihipGetDevice(), hmod);
   if (dvar == nullptr) {
+    DevLogPrintfError("Cannot find var:%s for creating texture reference at module: 0x%x \n",
+                      hostVar, hmod);
     return false;
   }
 
   if (!dvar->dyn_undef) {
+    DevLogPrintfError("HostVar: %s is not created through hipModuleLoad \n", hostVar);
     return false;
   }
 
@@ -475,6 +498,7 @@ bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t 
         amd::Program* program = as_amd(reinterpret_cast<cl_program>((*dvar->modules)[deviceId].first));
         program->setVarInfoCallBack(&getSvarInfo);
         if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr)) {
+          DevLogPrintfError("Build Failure for module: 0x%x \n", hmod);
           return false;
         }
         (*dvar->modules)[deviceId].second = true;
@@ -487,13 +511,14 @@ bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t 
         dvar->rvars[deviceId].amd_mem_obj_ = amd_mem_obj;
         amd::MemObjMap::AddMemObj(device_ptr, amd_mem_obj);
       } else {
-        LogError("[HIP] __hipRegisterVar cannot find kernel for device \n");
+        LogError("__hipRegisterVar cannot find kernel for device \n");
       }
     }
     *size_ptr = dvar->rvars[deviceId].getvarsize();
     *dev_ptr = dvar->rvars[deviceId].getdeviceptr();
     return true;
   } else {
+    DevLogPrintfError("Could not find global var: %s at module:0x%x \n", hostVar, hmod);
     return false;
   }
 }
@@ -638,10 +663,12 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   hip::Stream* stream = reinterpret_cast<hip::Stream*>(exec.hStream_);
   int deviceId = (stream != nullptr)? stream->device->deviceId() : ihipGetDevice();
   if (deviceId == -1) {
+    DevLogPrintfError("Wrong DeviceId: %d \n", deviceId);
     HIP_RETURN(hipErrorNoDevice);
   }
   hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
   if (func == nullptr) {
+    DevLogPrintfError("Could not retrieve hostFunction: 0x%x \n", hostFunction);
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
 
@@ -663,11 +690,14 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol) {
 
   std::string symbolName;
   if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    DevLogPrintfError("Cannot find symbol: %s \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   size_t size = 0;
   if(!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                              devPtr, &size)) {
+    DevLogPrintfError("Cannot find global variable device ptr for symbol: %s at device: %d \n",
+                      symbolName.c_str(), ihipGetDevice());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   HIP_RETURN(hipSuccess);
@@ -678,11 +708,14 @@ hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbol) {
 
   std::string symbolName;
   if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+    DevLogPrintfError("Cannot find symbol: %s \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   hipDeviceptr_t devPtr = nullptr;
   if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
                                               &devPtr, sizePtr)) {
+    DevLogPrintfError("Cannot find global variable device ptr for symbol: %s at device: %d \n",
+                      symbolName.c_str(), ihipGetDevice());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   HIP_RETURN(hipSuccess);
@@ -701,10 +734,12 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
   dev_program = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (dev_program == nullptr) {
+    DevLogPrintfError("Cannot get Device Function for module: 0x%x \n", hmod);
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
   /* Find the global Symbols */
   if (!dev_program->createGlobalVarObj(amd_mem_obj, dptr, bytes, name)) {
+    DevLogPrintfError("Cannot create Global Var obj for symbol: %s \n", name);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
@@ -1107,6 +1142,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
   int deviceId = (s != nullptr)? s->device->deviceId() : ihipGetDevice();
   if (deviceId == -1) {
+    DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
     HIP_RETURN(hipErrorNoDevice);
   }
   hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
@@ -1114,6 +1150,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
 #ifdef ATI_OS_LINUX
     const auto it = hip_impl::functions().find(reinterpret_cast<uintptr_t>(hostFunction));
     if (it == hip_impl::functions().cend()) {
+      DevLogPrintfError("Cannot find function: 0x%x \n", hostFunction);
       HIP_RETURN(hipErrorInvalidDeviceFunction);
     }
     func = it->second;

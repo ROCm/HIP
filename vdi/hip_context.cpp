@@ -216,6 +216,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
     *dev = g_ctxtStack.top();
     g_ctxtStack.pop();
   } else {
+    DevLogError("Context Stack empty \n");
     HIP_RETURN(hipErrorInvalidContext);
   }
 
