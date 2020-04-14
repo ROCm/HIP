@@ -96,12 +96,13 @@ hipError_t hipDeviceGetLimit(size_t* pValue, hipLimit_t limit) {
     if (pValue == nullptr) {
         return ihipLogStatus(hipErrorInvalidValue);
     }
+#if __HIP_ENABLE_DEVICE_MALLOC__
     if (limit == hipLimitMallocHeapSize) {
         *pValue = (size_t)__HIP_SIZE_OF_HEAP;
         return ihipLogStatus(hipSuccess);
-    } else {
-        return ihipLogStatus(hipErrorUnsupportedLimit);
     }
+#endif
+    return ihipLogStatus(hipErrorUnsupportedLimit);
 }
 
 hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t cacheConfig) {

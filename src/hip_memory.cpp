@@ -19,6 +19,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+
 #include <hc_am.hpp>
 #include "hsa/hsa.h"
 #include "hsa/hsa_ext_amd.h"
@@ -30,8 +31,10 @@ THE SOFTWARE.
 #include <functional>
 #include <fstream>
 
+#if __HIP_ENABLE_DEVICE_MALLOC__
 __device__ char __hip_device_heap[__HIP_SIZE_OF_HEAP];
 __device__ uint32_t __hip_device_page_flag[__HIP_NUM_PAGES];
+#endif
 
 // Internal HIP APIS:
 namespace hip_internal {
