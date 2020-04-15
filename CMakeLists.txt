@@ -562,8 +562,8 @@ if(${RUN_HIT} EQUAL 0)
     hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
 
     # Add unit tests
-    include_directories(${HIP_SRC_PATH}/tests/unittests)
-    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/unittests "unit_tests")
+    include_directories(${HIP_SRC_PATH}/tests/unit)
+    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/unit "unit_tests")
 
     # Add top-level tests to build_tests
     add_custom_target(build_tests DEPENDS directed_tests unit_tests)

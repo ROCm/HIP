@@ -53,7 +53,6 @@ THE SOFTWARE.
 
 #define passed()                                                                                   \
     printf("%sPASSED!%s\n", KGRN, KNRM);                                                           \
-    exit(0);
 
 #define failed(...)                                                                                \
     printf("%serror: ", KRED);                                                                     \
@@ -73,15 +72,14 @@ THE SOFTWARE.
     {                                                                                              \
         hipError_t localError = error;                                                             \
         if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
-            printf("%serror: '%s'(%d) from %s at %s:%d%s\n", KRED, hipGetErrorString(localError),  \
-                   localError, #error, __FUNCTION__, __LINE__, KNRM);                                  \
-            failed("API returned error code.");                                                    \
+           failed("%serror: '%s'(%d) from %s at %s:%d%s\n", KRED, hipGetErrorString(localError),   \
+                   localError, #error, __FUNCTION__, __LINE__, KNRM);                              \
         }                                                                                          \
     }
 
 #define HIPASSERT(condition)                                                                       \
     if (!(condition)) {                                                                            \
-        failed("%sassertion %s at %s:%d%s \n", KRED, #condition, __FUNCTION__, __LINE__, KNRM);        \
+        failed("%sassertion %s at %s:%d%s \n", KRED, #condition, __FUNCTION__, __LINE__, KNRM);    \
     }
 
 
