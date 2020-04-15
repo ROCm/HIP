@@ -138,6 +138,7 @@ hipModuleUnload
 hipOccupancyMaxPotentialBlockSize
 hipOccupancyMaxActiveBlocksPerMultiprocessor
 hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags
+hipFuncGetAttribute
 hipFuncGetAttributes
 hipPeekAtLastError
 hipPointerGetAttributes
