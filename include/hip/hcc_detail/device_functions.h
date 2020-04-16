@@ -1076,6 +1076,8 @@ void __assert_fail(const char * __assertion,
                                      unsigned int __line,
                                      const char *__function)
 {
+    printf("%s:%u: %s: Device-side assertion `%s' failed.\n", __file, __line,
+           __function, __assertion);
     // Ignore all the args for now.
     __builtin_trap();
 }
