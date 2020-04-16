@@ -606,6 +606,9 @@ foreach $arg (@ARGV)
             } elsif ($arg eq "--hipcc-no-func-supp") {
               $funcSupp = 0;
             }
+        } elsif ( ($HIP_PLATFORM eq "nvcc") and ($arg eq "-fPIC") ) {
+            $arg = "-Xcompiler=-fPIC";
+            push (@options, "-Xcompiler=-fPIC");
         } else {
             push (@options, $arg);
         }
