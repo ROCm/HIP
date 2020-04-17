@@ -33,6 +33,7 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
 - [HIP Porting Guide](docs/markdown/hip_porting_guide.md)
 - [HIP Porting Driver Guide](docs/markdown/hip_porting_driver_api.md)
+- [HIP/HCC to HIP-Clang Porting Guide](docs/markdown/HCCToHIPClangPortingGuide.md)
 - [HIP Programming Guide](docs/markdown/hip_programming_guide.md)
 - [HIP Profiling ](docs/markdown/hip_profiling.md)
 - [HIP Debugging](docs/markdown/hip_debugging.md)
