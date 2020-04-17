@@ -35,6 +35,8 @@ amd::HostQueue* Device::defaultStream() {
       return nullptr;
     }
   }
+  // Wait for all active streams before executing commands on the default
+  iHipWaitActiveStreams(defaultStream_);
   return defaultStream_;
 }
 

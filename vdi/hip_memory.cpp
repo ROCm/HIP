@@ -52,7 +52,6 @@ hipError_t ihipFree(void *ptr)
       if (queue != nullptr) {
         queue->finish();
       }
-      hip::syncStreams(dev->deviceId());
     }
     amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
     return hipSuccess;
@@ -240,7 +239,6 @@ hipError_t hipFree(void* ptr) {
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
   HIP_INIT_API(hipMemcpy, dst, src, sizeBytes, kind);
 
-  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
   HIP_RETURN(ihipMemcpy(dst, src, sizeBytes, kind, *queue));
 }
@@ -289,7 +287,6 @@ hipError_t ihipArrayDestroy(hipArray* array) {
     if (queue != nullptr) {
       queue->finish();
     }
-    hip::syncStreams(dev->deviceId());
   }
   as_amd(memObj)->release();
 
@@ -691,7 +688,6 @@ hipError_t hipHostUnregister(void* hostPtr) {
     if (queue != nullptr) {
       queue->finish();
     }
-    hip::syncStreams(dev->deviceId());
   }
 
   if (amd::SvmBuffer::malloced(hostPtr)) {
@@ -1917,7 +1913,6 @@ hipError_t hipIpcCloseMemHandle(void* dev_ptr) {
   amd::Device* device = nullptr;
   amd::Memory* amd_mem_obj = nullptr;
 
-  hip::syncStreams();
   hip::getNullStream()->finish();
 
   if (dev_ptr == nullptr) {

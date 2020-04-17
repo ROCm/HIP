@@ -222,8 +222,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
   amd::HostQueue* queue = hip::getQueue(stream);
 
-  amd::Command* command = (s != nullptr && (s->flags & hipStreamNonBlocking)) ?
-    queue->getLastQueuedCommand(true) : nullptr;
+  amd::Command* command = queue->getLastQueuedCommand(true);
 
   if (command == nullptr) {
     command = new amd::Marker(*queue, false);
