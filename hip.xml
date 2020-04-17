@@ -3,5 +3,5 @@
   <remote name="ROCm-Developer-Tools" fetch="https://github.com/ROCm-Developer-Tools/"/>
 
   <project path="hip" name="HIP" remote="ROCm-Developer-Tools" revision="refs/tags/hipclang-3.2.1" sync-c="true" sync-j="4"/>
-  <project path="vdi" name="ROCclr" remote="ROCm-Developer-Tools" revision="f7c7f8c4ba68c2ba489a92cd9b1b8cae0ae70f89" sync-c="true" sync-j="4"/>
+  <project path="vdi" name="ROCclr" remote="ROCm-Developer-Tools" revision="ca35d38e98c3bf91da23707820060d1f68dd6e95" sync-c="true" sync-j="4"/>
 </manifest>
