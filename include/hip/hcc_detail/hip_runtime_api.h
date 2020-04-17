@@ -97,8 +97,6 @@ typedef int hipDevice_t;
 
 typedef struct ihipStream_t* hipStream_t;
 
-// TODO: IPC implementation
-
 #define hipIpcMemLazyEnablePeerAccess 0
 
 #define HIP_IPC_HANDLE_SIZE 64
@@ -107,12 +105,9 @@ typedef struct hipIpcMemHandle_st {
     char reserved[HIP_IPC_HANDLE_SIZE];
 } hipIpcMemHandle_t;
 
-// TODO: IPC event handle currently unsupported
-struct ihipIpcEventHandle_t;
-typedef struct ihipIpcEventHandle_t* hipIpcEventHandle_t;
-
-
-// END TODO
+typedef struct hipIpcEventHandle_st {
+    char reserved[HIP_IPC_HANDLE_SIZE];
+} hipIpcEventHandle_t;
 
 typedef struct ihipModule_t* hipModule_t;
 
@@ -3154,10 +3149,8 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
 hipError_t hipIpcCloseMemHandle(void* devPtr);
 
 
-// hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
-// hipError_t hipIpcCloseMemHandle(void *devPtr);
-// // hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
-// hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
+hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event);
+hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
 
 
 /**
