@@ -211,7 +211,10 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPCXXFLAGS .= " -isystem $HIP_CLANG_INCLUDE_PATH/..";
     $HIPCFLAGS .= " -isystem $HIP_CLANG_INCLUDE_PATH/..";
     $HIPLDFLAGS .= " -L$HIP_LIB_PATH";
-    if ($isWindows) {
+    if (not $isWindows) {
+      $HIPLDFLAGS .= " -Wl,--rpath-link=$HIP_LIB_PATH";
+      $HIPLDFLAGS .= " -lhip_hcc";
+    } else {
       $HIPLDFLAGS .= " -lamdhip64";
     }
     if ($HIP_CLANG_HCC_COMPAT_MODE) {
@@ -477,7 +480,6 @@ foreach $arg (@ARGV)
     {
         $linkType = 0;
         $setLinkType = 1;
-        $swallowArg = 1;
     }
     if(($trimarg eq '-use-sharedlib') and ($setLinkType eq 0))
     {
@@ -767,14 +769,6 @@ if ($HIP_PLATFORM eq "clang") {
     $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
     if (not $isWindows) {
         $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
-    }
-
-    if (not $isWindows  and not $compileOnly) {
-      if ($linkType eq 0) {
-        $toolArgs .= " -L$HIP_LIB_PATH -lamdhip64_static -L$ROCM_PATH/lib -lhsa-runtime64 -ldl ";
-      } else {
-        $toolArgs .= " -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lhip_hcc ";
-      }
     }
 }
 
