@@ -96,8 +96,8 @@ int main()
     auto duration1=duration_cast<microseconds>(stop-start);
 
     start=high_resolution_clock::now();
-    HIPCHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL,1 ));
-    HIPCHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL,1 ));
+    HIPCHECK(hipExtModuleLaunchKernel(Function2, 1,1, 1, 1,1 ,1 , 0, stream1, NULL, (void**)&config2, NULL, NULL, hipExtEnableOutOfOrderLaunch));
+    HIPCHECK(hipExtModuleLaunchKernel(Function1, N,N, 1, 32,32 ,1 , 0, stream1, NULL, (void**)&config1, NULL, NULL, hipExtEnableOutOfOrderLaunch));
     HIPCHECK(hipStreamSynchronize(stream1));
 
     stop=high_resolution_clock::now();

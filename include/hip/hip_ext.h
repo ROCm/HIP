@@ -60,6 +60,8 @@ hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** a
 
 #endif  // #ifdef __HCC__
 
+#define hipExtInOrderLaunch 0
+#define hipExtEnableOutOfOrderLaunch 1
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  to kernelparams or extra
@@ -97,7 +99,7 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent = nullptr,
                                     hipEvent_t stopEvent = nullptr,
-                                    uint32_t flags = 0);
+                                    uint32_t flags = hipExtInOrderLaunch);
 
 HIP_PUBLIC_API
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
@@ -142,7 +144,7 @@ inline
 void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks,
                            const dim3& dimBlocks, std::uint32_t sharedMemBytes,
                            hipStream_t stream, hipEvent_t startEvent,
-                           hipEvent_t stopEvent, std::uint32_t flags,
+                           hipEvent_t stopEvent, std::uint32_t flags = hipExtInOrderLaunch,
                            Args... args) {
     hip_impl::hip_init();
     auto kernarg =

@@ -236,7 +236,7 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
         aql.setup = 3 << HSA_KERNEL_DISPATCH_PACKET_SETUP_DIMENSIONS;
         aql.header =
             (HSA_PACKET_TYPE_KERNEL_DISPATCH << HSA_PACKET_HEADER_TYPE);
-        if((flags & 0x1)== 0 ) {
+        if((flags & hipExtEnableOutOfOrderLaunch)== 0 ) {
             //in_order
             aql.header |= (1 << HSA_PACKET_HEADER_BARRIER);
         }
