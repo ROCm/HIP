@@ -143,11 +143,6 @@ namespace hip {
   extern amd::HostQueue* getNullStream(amd::Context&);
   /// Get default stream of the thread
   extern amd::HostQueue* getNullStream();
-  /// Sync Blocking streams on the current device
-  extern void syncStreams();
-  /// Sync blocking streams on the given device
-  extern void syncStreams(int devId);
-
 
   struct Function {
     amd::Kernel* function_;
@@ -289,8 +284,11 @@ public:
   void configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
 
   void popExec(ihipExec_t& exec);
-
 };
+
+/// Wait all active streams on the blocking queue. The method enqueues a wait command and
+/// doesn't stall the current thread
+extern void iHipWaitActiveStreams(amd::HostQueue* blocking_queue);
 
 extern std::vector<hip::Device*> g_devices;
 extern hipError_t ihipDeviceGetCount(int* count);

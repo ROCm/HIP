@@ -42,18 +42,14 @@ class StreamCallback {
 
 namespace hip {
 
-void syncStreams(int devId) {
+void syncStreams() {
   amd::ScopedLock lock(streamSetLock);
 
   for (const auto& it : streamSet) {
-    if (it->device->deviceId() == devId) {
+    if (it->device->deviceId() == getCurrentDevice()->deviceId()) {
       it->finish();
     }
   }
-}
-
-void syncStreams() {
-  syncStreams(getCurrentDevice()->deviceId());
 }
 
 Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p, unsigned int f) :
@@ -88,6 +84,44 @@ void Stream::finish() {
 }
 
 };
+
+void iHipWaitActiveStreams(amd::HostQueue* blocking_queue) {
+  amd::Command::EventWaitList eventWaitList;
+  {
+    amd::ScopedLock lock(streamSetLock);
+
+    for (const auto& it : streamSet) {
+      // If it's the current device
+      if ((it->queue != nullptr) && (&it->queue->device() == &blocking_queue->device()) &&
+          // and it's a blocking streamclan
+          ((it->flags & hipStreamNonBlocking) == 0) &&
+          // and it's not the current stream
+          (it->asHostQueue() != blocking_queue)) {
+        // Get the last valid so command
+        amd::Command* command = it->asHostQueue()->getLastQueuedCommand(true);
+        if ((command != nullptr) &&
+          // Check the current active status
+            (command->status() != CL_COMPLETE)) {
+          eventWaitList.push_back(command);
+        }
+      }
+    }
+  }
+
+  // Check if we have to wait anything
+  if (eventWaitList.size() > 0) {
+    amd::Command* command = new amd::Marker(*blocking_queue, false, eventWaitList);
+    if (command != nullptr) {
+      command->enqueue();
+      command->release();
+    }
+  }
+
+  // Release all active commands. It's safe after the marker was enqueued
+  for (const auto& it : eventWaitList) {
+    it->release();
+  }
+}
 
 void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data) {
   hipError_t status = hipSuccess;
@@ -270,5 +304,3 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
   HIP_RETURN(hipSuccess);
 }
-
-

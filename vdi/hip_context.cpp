@@ -80,13 +80,36 @@ void setCurrentDevice(unsigned int index) {
 
 amd::HostQueue* getQueue(hipStream_t stream) {
  if (stream == nullptr) {
-    syncStreams();
     return getNullStream();
   } else {
     hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
+    // Wait for null stream
     if ((s->flags & hipStreamNonBlocking) == 0) {
-      getNullStream()->finish();
+      amd::HostQueue* nullStream = getNullStream();
+      amd::Command::EventWaitList eventWaitList;
+
+      amd::Command* command = nullStream->getLastQueuedCommand(true);
+      if ((command != nullptr) &&
+        // Check the current active status
+          (command->status() != CL_COMPLETE)) {
+        eventWaitList.push_back(command);
+      }
+
+      // Check if we have to wait anything
+      if (eventWaitList.size() > 0) {
+        amd::Command* command = new amd::Marker(*s->asHostQueue(), false, eventWaitList);
+        if (command != nullptr) {
+          command->enqueue();
+          command->release();
+        }
+      }
+
+      // Release all active commands. It's safe after the marker was enqueued
+      for (const auto& it : eventWaitList) {
+        it->release();
+      }
     }
+
     return s->asHostQueue();
   }
 }
