@@ -2494,7 +2494,7 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
 hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags) {
     HIP_INIT_API(hipIpcOpenMemHandle, devPtr, &handle, flags);
     hipError_t hipStatus = hipSuccess;
-    if (devPtr == NULL)
+    if (devPtr == NULL || !strcmp(handle.reserved, ""))
         return ihipLogStatus(hipErrorInvalidValue);
 
 #if USE_IPC
