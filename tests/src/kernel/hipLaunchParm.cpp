@@ -58,12 +58,10 @@ static const int  BLOCK_DIM_SIZE = 512;
 
 // allocate memory on device and host for result validation
 static bool *result_d, *result_h;
-static hipError_t hipMallocError = hipMalloc((void**)&result_d,
-                                              BLOCK_DIM_SIZE*sizeof(bool));
-static hipError_t hipHostMallocError = hipHostMalloc((void**)&result_h,
-                                              BLOCK_DIM_SIZE*sizeof(bool));
-static hipError_t hipMemsetError = hipMemset(result_d,
-                                              false, BLOCK_DIM_SIZE);
+
+static hipError_t hipMallocError = hipErrorUnknown;
+static hipError_t hipHostMallocError = hipErrorUnknown;
+static hipError_t hipMemsetError = hipErrorUnknown;
 
 static void ResultValidation() {
     hipMemcpy(result_h, result_d, BLOCK_DIM_SIZE*sizeof(bool),
@@ -600,6 +598,10 @@ __global__ void vAdd(float* a) {}
 
 
 int main() {
+    hipMallocError = hipMalloc((void**)&result_d, BLOCK_DIM_SIZE*sizeof(bool));
+    hipHostMallocError = hipHostMalloc((void**)&result_h, BLOCK_DIM_SIZE*sizeof(bool));
+    hipMemsetError = hipMemset(result_d, false, BLOCK_DIM_SIZE);
+
     // Validating memory & initial value, for result_d, result_h
     HIPASSERT(hipMallocError == hipSuccess);
     HIPASSERT(hipHostMallocError == hipSuccess);
