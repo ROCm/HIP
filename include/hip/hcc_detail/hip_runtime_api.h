@@ -1482,18 +1482,18 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
 
-hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName);
-hipError_t hipGetSymbolSize(size_t* size, const void* symbolName);
-hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
+hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
+hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
+hipError_t hipMemcpyToSymbol(const void* symbol, const void* src,
                              size_t sizeBytes, size_t offset __dparm(0),
                              hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
-hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
+hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src,
                                   size_t sizeBytes, size_t offset,
                                   hipMemcpyKind kind, hipStream_t stream __dparm(0));
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol,
                                size_t sizeBytes, size_t offset __dparm(0),
                                hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
                                     hipStream_t stream __dparm(0));
@@ -1934,6 +1934,15 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent);
 hipError_t hipFreeArray(hipArray* array);
 
 /**
+ * @brief Frees a mipmapped array on the device
+ * 
+ * @param[in] mipmappedArray - Pointer to mipmapped array to free
+ * 
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
+
+/**
  *  @brief Allocate an array on the device.
  *
  *  @param[out]  array  Pointer to allocated array in device memory
@@ -1947,6 +1956,39 @@ hipError_t hipFreeArray(hipArray* array);
 
 hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc* desc,
                             struct hipExtent extent, unsigned int flags);
+
+/**
+ * @brief Allocate a mipmapped array on the device
+ *
+ * @param[out] mipmappedArray  - Pointer to allocated mipmapped array in device memory
+ * @param[in]  desc            - Requested channel format
+ * @param[in]  extent          - Requested allocation size (width field in elements)
+ * @param[in]  numLevels       - Number of mipmap levels to allocate
+ * @param[in]  flags           - Flags for extensions
+ * 
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
+ */
+hipError_t hipMallocMipmappedArray(
+    hipMipmappedArray_t *mipmappedArray,
+    const struct hipChannelFormatDesc* desc,
+    struct hipExtent extent,
+    unsigned int numLevels,
+    unsigned int flags __dparm(0));
+
+/**
+ * @brief Gets a mipmap level of a HIP mipmapped array
+ *
+ * @param[out] levelArray     - Returned mipmap level HIP array
+ * @param[in]  mipmappedArray - HIP mipmapped array
+ * @param[in]  level          - Mipmap level
+ * 
+ * @return #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipGetMipmappedArrayLevel(
+    hipArray_t *levelArray,
+    hipMipmappedArray_const_t mipmappedArray,
+    unsigned int level);
+
 /**
  *  @brief Copies data between host and device.
  *
@@ -2158,6 +2200,31 @@ hipError_t hipMemcpy3D(const struct hipMemcpy3DParms* p);
  * hipMemcpyAsync
  */
 hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms* p, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   pCopy   3D memory copy parameters
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipDrvMemcpy3D(const HIP_MEMCPY3D* pCopy);
+
+/**
+ *  @brief Copies data between host and device asynchronously.
+ *
+ *  @param[in]   pCopy    3D memory copy parameters
+ *  @param[in]   stream   Stream to use
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ *  #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream);
 
 // doxygen end Memory
 /**
@@ -2961,23 +3028,35 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* 
  * @brief Returns occupancy for a device function.
  *
  * @param [out] numBlocks        Returned occupancy
- * @param [in]  func             Kernel function for which occupancy is calulated
- * @param [in]  blockSize        Block size the kernel is intended to be launched with
- * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
- */
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk);
-
-/**
- * @brief Returns occupancy for a device function.
- *
- * @param [out] numBlocks        Returned occupancy
  * @param [in]  func             Kernel function (hipFunction) for which occupancy is calulated
  * @param [in]  blockSize        Block size the kernel is intended to be launched with
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
    int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ */
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  func             Kernel function for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ */
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -2992,18 +3071,20 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
    int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
 
 /**
- * @brief Returns occupancy for a device function.
+ * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
  *
- * @param [out] numBlocks        Returned occupancy
- * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
- * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [out] gridSize           minimum grid size for maximum potential occupancy
+ * @param [out] blockSize          block size for maximum potential occupancy
+ * @param [in]  f                  kernel function for which occupancy is calulated
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
- * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
-hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
+hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+                                             const void* f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit);
 
-#if __HIP_VDI__ && !defined(__HCC__)
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
  * on respective streams before enqueuing any other work on the specified streams from any other threads
@@ -3018,7 +3099,6 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
 hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                               int  numDevices, unsigned int  flags);
 
-#endif
 
 // doxygen end Version Management
 /**
@@ -3260,6 +3340,206 @@ hipError_t hipLaunchKernel(const void* function_address,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
 
+#if __HIP_VDI__
+hipError_t hipBindTexture(
+    size_t* offset,
+    const textureReference* tex,
+    const void* devPtr,
+    const hipChannelFormatDesc* desc,
+    size_t size = UINT_MAX);
+
+hipError_t hipBindTexture2D(
+    size_t* offset,
+    const textureReference* tex,
+    const void* devPtr,
+    const hipChannelFormatDesc* desc,
+    size_t width,
+    size_t height,
+    size_t pitch);
+
+hipError_t hipBindTextureToArray(
+    const textureReference* tex,
+    hipArray_const_t array,
+    const hipChannelFormatDesc* desc);
+
+hipError_t hipBindTextureToMipmappedArray(
+    const textureReference* tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const hipChannelFormatDesc* desc);
+
+hipError_t hipGetTextureAlignmentOffset(
+    size_t* offset,
+    const textureReference* texref);
+
+hipError_t hipGetTextureReference(
+    const textureReference** texref,
+    const void* symbol);
+
+hipError_t hipUnbindTexture(const textureReference* tex);
+
+hipError_t hipCreateTextureObject(
+    hipTextureObject_t* pTexObject,
+    const hipResourceDesc* pResDesc,
+    const hipTextureDesc* pTexDesc,
+    const hipResourceViewDesc* pResViewDesc);
+
+hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
+
+hipError_t hipGetChannelDesc(
+    hipChannelFormatDesc* desc,
+    hipArray_const_t array);
+
+hipError_t hipGetTextureObjectResourceDesc(
+    hipResourceDesc* pResDesc,
+    hipTextureObject_t textureObject);
+
+hipError_t hipGetTextureObjectResourceViewDesc(
+    hipResourceViewDesc* pResViewDesc,
+    hipTextureObject_t textureObject);
+
+hipError_t hipGetTextureObjectTextureDesc(
+    hipTextureDesc* pTexDesc,
+    hipTextureObject_t textureObject);
+
+hipError_t hipTexRefGetAddress(
+    hipDeviceptr_t* dev_ptr,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetAddressMode(
+    hipTextureAddressMode* pam,
+    const textureReference* texRef,
+    int dim);
+
+hipError_t hipTexRefGetFilterMode(
+    hipTextureFilterMode* pfm,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetFlags(
+    unsigned int* pFlags,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetFormat(
+    hipArray_Format* pFormat,
+    int* pNumChannels,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMaxAnisotropy(
+    int* pmaxAnsio,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMipmapFilterMode(
+    hipTextureFilterMode* pfm,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMipmapLevelBias(
+    float* pbias,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMipmapLevelClamp(
+    float* pminMipmapLevelClamp,
+    float* pmaxMipmapLevelClamp,
+    const textureReference* texRef);
+
+hipError_t hipTexRefGetMipMappedArray(
+    hipMipmappedArray_t* pArray,
+    const textureReference* texRef);
+
+hipError_t hipTexRefSetAddress(
+    size_t* ByteOffset,
+    textureReference* texRef,
+    hipDeviceptr_t dptr,
+    size_t bytes);
+
+hipError_t hipTexRefSetAddress2D(
+    textureReference* texRef,
+    const HIP_ARRAY_DESCRIPTOR* desc,
+    hipDeviceptr_t dptr,
+    size_t Pitch);
+
+hipError_t hipTexRefSetAddressMode(
+    textureReference* texRef,
+    int dim,
+    hipTextureAddressMode am);
+
+hipError_t hipTexRefSetArray(
+    textureReference* tex,
+    hipArray_const_t array,
+    unsigned int flags);
+
+hipError_t hipTexRefSetBorderColor(
+    textureReference* texRef,
+    float* pBorderColor);
+
+hipError_t hipTexRefSetFilterMode(
+    textureReference* texRef,
+    hipTextureFilterMode fm);
+
+hipError_t hipTexRefSetFlags(
+    textureReference* texRef,
+    unsigned int Flags);
+
+hipError_t hipTexRefSetFormat(
+    textureReference* texRef,
+    hipArray_Format fmt,
+    int NumPackedComponents);
+
+hipError_t hipTexRefSetMaxAnisotropy(
+    textureReference* texRef,
+    unsigned int maxAniso);
+
+hipError_t hipTexRefSetMipmapFilterMode(
+    textureReference* texRef,
+    hipTextureFilterMode fm);
+
+hipError_t hipTexRefSetMipmapLevelBias(
+    textureReference* texRef,
+    float bias);
+
+hipError_t hipTexRefSetMipmapLevelClamp(
+    textureReference* texRef,
+    float minMipMapLevelClamp,
+    float maxMipMapLevelClamp);
+
+hipError_t hipTexRefSetMipmappedArray(
+    textureReference* texRef,
+    hipMipmappedArray* mipmappedArray,
+    unsigned int Flags);
+
+hipError_t hipMipmappedArrayCreate(
+    hipMipmappedArray_t* pHandle,
+    HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
+    unsigned int numMipmapLevels);
+
+hipError_t hipMipmappedArrayDestroy(
+    hipMipmappedArray_t hMipmappedArray);
+
+hipError_t hipMipmappedArrayGetLevel(
+    hipArray_t* pLevelArray,
+    hipMipmappedArray_t hMipMappedArray,
+    unsigned int level);
+
+hipError_t hipTexObjectCreate(
+    hipTextureObject_t* pTexObject,
+    const HIP_RESOURCE_DESC* pResDesc,
+    const HIP_TEXTURE_DESC* pTexDesc,
+    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+
+hipError_t hipTexObjectDestroy(
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetResourceDesc(
+    HIP_RESOURCE_DESC* pResDesc,
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetResourceViewDesc(
+    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetTextureDesc(
+    HIP_TEXTURE_DESC* pTexDesc,
+    hipTextureObject_t texObject);
+#endif
+
 /**
  * @}
  */
@@ -3267,6 +3547,60 @@ hipError_t hipLaunchKernel(const void* function_address,
 
 #ifdef __cplusplus
 } /* extern "c" */
+#endif
+
+#if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+template <typename T>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+    T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0) {
+    return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),dynSharedMemPerBlk,blockSizeLimit);
+}
+
+template <typename T>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+    T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0, unsigned int  flags = 0 ) {
+    return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),dynSharedMemPerBlk,blockSizeLimit);
+}
+#endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+
+#if defined(__cplusplus) && !defined(__HCC__)
+
+template <typename T>
+hipError_t hipGetSymbolAddress(void** devPtr, const T &symbol) {
+  return ::hipGetSymbolAddress(devPtr, (const void *)&symbol);
+}
+
+template <typename T>
+hipError_t hipGetSymbolSize(size_t* size, const T &symbol) {
+  return ::hipGetSymbolSize(size, (const void *)&symbol);
+}
+
+template <typename T>
+hipError_t hipMemcpyToSymbol(const T& symbol, const void* src, size_t sizeBytes,
+                             size_t offset __dparm(0),
+                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice)) {
+  return ::hipMemcpyToSymbol((const void*)&symbol, src, sizeBytes, offset, kind);
+}
+
+template <typename T>
+hipError_t hipMemcpyToSymbolAsync(const T& symbol, const void* src, size_t sizeBytes, size_t offset,
+                                  hipMemcpyKind kind, hipStream_t stream __dparm(0)) {
+  return ::hipMemcpyToSymbolAsync((const void*)&symbol, src, sizeBytes, offset, kind, stream);
+}
+
+template <typename T>
+hipError_t hipMemcpyFromSymbol(void* dst, const T &symbol,
+                               size_t sizeBytes, size_t offset __dparm(0),
+                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost)) {
+  return ::hipMemcpyFromSymbol(dst, (const void*)&symbol, sizeBytes, offset, kind);
+}
+
+template <typename T>
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const T& symbol, size_t sizeBytes, size_t offset,
+                                    hipMemcpyKind kind, hipStream_t stream __dparm(0)) {
+  return ::hipMemcpyFromSymbolAsync(dst, (const void*)&symbol, sizeBytes, offset, kind, stream);
+}
+
 #endif
 
 #if USE_PROF_API
@@ -3307,12 +3641,16 @@ inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
 
 class TlsData;
 
+#if !__HIP_VDI__
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
                           const hipChannelFormatDesc* desc, size_t size = UINT_MAX);
+#endif
 
+#if !__HIP_VDI__
 hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                const void* devPtr, const struct hipChannelFormatDesc* desc,
                                size_t size, textureReference* tex);
+#endif
 
 /*
  * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture
@@ -3329,11 +3667,13 @@ hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode re
  *  @param[in]  size - Size of the memory area pointed to by devPtr
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
                           const struct hipChannelFormatDesc& desc, size_t size = UINT_MAX) {
     return ihipBindTextureImpl(nullptr, dim, readMode, offset, devPtr, &desc, size, &tex);
 }
+#endif
 
 /*
  * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture
@@ -3349,81 +3689,114 @@ hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
  *  @param[in]  size - Size of the memory area pointed to by devPtr
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
                           size_t size = UINT_MAX) {
     return ihipBindTextureImpl(nullptr, dim, readMode, offset, devPtr, &(tex.channelDesc), size, &tex);
 }
+#endif
 
 // C API
+#if !__HIP_VDI__
 hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
                             const hipChannelFormatDesc* desc, size_t width, size_t height,
                             size_t pitch);
+#endif
 
+#if !__HIP_VDI__
 hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
                                  const void* devPtr, const struct hipChannelFormatDesc* desc,
                                  size_t width, size_t height, textureReference* tex, size_t pitch);
+#endif
 
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
                             const void* devPtr, size_t width, size_t height, size_t pitch) {
     return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &(tex.channelDesc), width, height,
                                  &tex);
 }
+#endif
 
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
                             const void* devPtr, const struct hipChannelFormatDesc& desc,
                             size_t width, size_t height, size_t pitch) {
     return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &desc, width, height, &tex);
 }
+#endif
 
 // C API
+#if !__HIP_VDI__
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
                                  const hipChannelFormatDesc* desc);
+#endif
 
+#if !__HIP_VDI__
 hipError_t ihipBindTextureToArrayImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
                                       textureReference* tex);
+#endif
 
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array) {
     return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, tex.channelDesc, &tex);
 }
+#endif
 
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array,
                                  const struct hipChannelFormatDesc& desc) {
     return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, desc, &tex);
 }
+#endif
 
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
                                                hipArray_const_t array,
                                                const struct hipChannelFormatDesc* desc) {
     return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, *desc, tex);
 }
+#endif
 
 // C API
+#if !__HIP_VDI__
 hipError_t hipBindTextureToMipmappedArray(const textureReference* tex,
                                           hipMipmappedArray_const_t mipmappedArray,
                                           const hipChannelFormatDesc* desc);
+#endif
 
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
                                           hipMipmappedArray_const_t mipmappedArray) {
     return hipSuccess;
 }
+#endif
 
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
                                           hipMipmappedArray_const_t mipmappedArray,
                                           const hipChannelFormatDesc& desc) {
     return hipSuccess;
 }
+#endif
 
 #if __HIP_VDI__ && !defined(__HCC__)
+
+template <typename F>
+inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+                                                    F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
+return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize,(hipFunction_t)kernel, dynSharedMemPerBlk, blockSizeLimit);
+}
+
 template <class T>
 inline hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 blockDim,
                                              void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {
@@ -3453,15 +3826,22 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
  *
  *  @return #hipSuccess
  **/
+#if !__HIP_VDI__
 hipError_t hipUnbindTexture(const textureReference* tex);
+#endif
 
+#if !__HIP_VDI__
 extern hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject);
+#endif
 
+#if !__HIP_VDI__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex) {
     return ihipUnbindTextureImpl(tex.textureObject);
 }
+#endif
 
+#if !__HIP_VDI__
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
 hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* texref);
 hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol);
@@ -3499,10 +3879,109 @@ hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex);
 
 hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,
                                  hipDeviceptr_t devPtr, size_t pitch);
+#endif
 
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
 
 hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
+
+#if __HIP_VDI__
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipBindTexture(
+    size_t *offset,
+    const struct texture<T, dim, readMode> &tex,
+    const void *devPtr,
+    size_t size = UINT_MAX)
+{
+    return hipBindTexture(offset, tex, devPtr, tex.channelDesc, size);
+}
+
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipBindTexture(
+    size_t *offset,
+    const struct texture<T, dim, readMode> &tex,
+    const void *devPtr,
+    const struct hipChannelFormatDesc &desc,
+    size_t size = UINT_MAX)
+{
+    return hipBindTexture(offset, &tex, devPtr, &desc, size);
+}
+
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipBindTexture2D(
+    size_t *offset,
+    const struct texture<T, dim, readMode> &tex,
+    const void *devPtr,
+    size_t width,
+    size_t height,
+    size_t pitch)
+{
+    return hipBindTexture2D(offset, &tex, devPtr, &tex.channelDesc, width, height, pitch);
+}
+
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipBindTexture2D(
+  size_t *offset,
+  const struct texture<T, dim, readMode> &tex,
+  const void *devPtr,
+  const struct hipChannelFormatDesc &desc,
+  size_t width,
+  size_t height,
+  size_t pitch)
+{
+  return hipBindTexture2D(offset, &tex, devPtr, &desc, width, height, pitch);
+}
+
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipBindTextureToArray(
+    const struct texture<T, dim, readMode> &tex,
+    hipArray_const_t array)
+{
+    struct cudaChannelFormatDesc desc;
+    hipError_t err = hipGetChannelDesc(&desc, array);
+    return (err == hipSuccess) ? hipBindTextureToArray(tex, array, desc) : err;
+}
+
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipBindTextureToArray(
+    const struct texture<T, dim, readMode> &tex,
+    hipArray_const_t array,
+    const struct hipChannelFormatDesc &desc)
+{
+    return hipBindTextureToArray(&tex, array, &desc);
+}
+
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipBindTextureToMipmappedArray(
+    const struct texture<T, dim, readMode> &tex,
+    hipMipmappedArray_const_t mipmappedArray)
+{
+    struct hipChannelFormatDesc desc;
+    hipArray_t levelArray;
+    hipError_t err = hipGetMipmappedArrayLevel(&levelArray, mipmappedArray, 0);
+    if (err != hipSuccess) {
+        return err;
+    }
+    err = hipGetChannelDesc(&desc, levelArray);
+    return (err == hipSuccess) ? hipBindTextureToMipmappedArray(tex, mipmappedArray, desc) : err;
+}
+
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipBindTextureToMipmappedArray(
+    const struct texture<T, dim, readMode> &tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const struct cudaChannelFormatDesc &desc)
+{
+    return hipBindTextureToMipmappedArray(&tex, mipmappedArray, &desc);
+}
+
+template<class T, int dim, enum hipTextureReadMode readMode>
+static inline hipError_t hipUnbindTexture(
+    const struct texture<T, dim, readMode> &tex)
+{
+    return hipUnbindTexture(&tex);
+}
+#endif
 
 // doxygen end Texture
 /**

@@ -30,7 +30,7 @@ THE SOFTWARE.
 
 void test(size_t N) {
     size_t Nbytes = N * sizeof(int);
-
+#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
     int *A_d, *B_d, *C_d;
     int *A_h, *B_h, *C_h;
 
@@ -51,6 +51,7 @@ void test(size_t N) {
     HIPCHECK(hipDeviceSynchronize());
 
     HipTest::checkVectorADD(A_h, B_h, C_h, N);
+#endif
 }
 
 int main(int argc, char* argv[]) {

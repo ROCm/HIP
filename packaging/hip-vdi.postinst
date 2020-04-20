@@ -1,0 +1,29 @@
+#!/bin/bash
+pushd () {
+    command pushd "$@" > /dev/null
+}
+
+popd () {
+    command popd "$@" > /dev/null
+}
+
+
+ROCMDIR=@ROCM_PATH@
+ROCMLIBDIR=$ROCMDIR/lib
+HIPDIR=$ROCMDIR/hip
+HIPLIBDIR=$ROCMDIR/hip/lib
+
+# Soft-link to library files
+HIPLIBFILES=$(ls -A $HIPLIBDIR | grep -v [-/$])
+mkdir -p $ROCMLIBDIR
+mkdir -p $ROCMLIBDIR/cmake
+pushd $ROCMLIBDIR
+for f in $HIPLIBFILES
+do
+    ln -s -r -f $HIPLIBDIR/$f $(basename $f)
+done
+# Make the hip cmake directory link.
+pushd cmake
+ln -s -r -f $HIPLIBDIR/cmake/hip hip
+popd
+popd

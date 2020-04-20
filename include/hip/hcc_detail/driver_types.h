@@ -135,6 +135,47 @@ typedef enum hipResourceType {
     hipResourceTypePitch2D = 0x03
 }hipResourceType;
 
+typedef enum HIPresourcetype_enum {
+    HIP_RESOURCE_TYPE_ARRAY           = 0x00, /**< Array resoure */
+    HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY = 0x01, /**< Mipmapped array resource */
+    HIP_RESOURCE_TYPE_LINEAR          = 0x02, /**< Linear resource */
+    HIP_RESOURCE_TYPE_PITCH2D         = 0x03  /**< Pitch 2D resource */
+} HIPresourcetype;
+
+/**
+ * hip address modes
+ */
+typedef enum HIPaddress_mode_enum {
+    HIP_TR_ADDRESS_MODE_WRAP   = 0,
+    HIP_TR_ADDRESS_MODE_CLAMP  = 1,
+    HIP_TR_ADDRESS_MODE_MIRROR = 2,
+    HIP_TR_ADDRESS_MODE_BORDER = 3
+} HIPaddress_mode;
+
+/**
+ * hip filter modes
+ */
+typedef enum HIPfilter_mode_enum {
+    HIP_TR_FILTER_MODE_POINT  = 0,
+    HIP_TR_FILTER_MODE_LINEAR = 1
+} HIPfilter_mode;
+
+/**
+ * Texture descriptor
+ */
+typedef struct HIP_TEXTURE_DESC_st {
+    HIPaddress_mode addressMode[3];  /**< Address modes */
+    HIPfilter_mode filterMode;       /**< Filter mode */
+    unsigned int flags;              /**< Flags */
+    unsigned int maxAnisotropy;      /**< Maximum anisotropy ratio */
+    HIPfilter_mode mipmapFilterMode; /**< Mipmap filter mode */
+    float mipmapLevelBias;           /**< Mipmap level bias */
+    float minMipmapLevelClamp;       /**< Mipmap minimum level clamp */
+    float maxMipmapLevelClamp;       /**< Mipmap maximum level clamp */
+    float borderColor[4];            /**< Border Color */
+    int reserved[12];
+} HIP_TEXTURE_DESC;
+
 /**
  * hip texture resource view formats
  */
@@ -176,6 +217,45 @@ typedef enum hipResourceViewFormat {
     hipResViewFormatUnsignedBlockCompressed7 = 0x22
 }hipResourceViewFormat;
 
+typedef enum HIPresourceViewFormat_enum
+{
+    HIP_RES_VIEW_FORMAT_NONE          = 0x00, /**< No resource view format (use underlying resource format) */
+    HIP_RES_VIEW_FORMAT_UINT_1X8      = 0x01, /**< 1 channel unsigned 8-bit integers */
+    HIP_RES_VIEW_FORMAT_UINT_2X8      = 0x02, /**< 2 channel unsigned 8-bit integers */
+    HIP_RES_VIEW_FORMAT_UINT_4X8      = 0x03, /**< 4 channel unsigned 8-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_1X8      = 0x04, /**< 1 channel signed 8-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_2X8      = 0x05, /**< 2 channel signed 8-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_4X8      = 0x06, /**< 4 channel signed 8-bit integers */
+    HIP_RES_VIEW_FORMAT_UINT_1X16     = 0x07, /**< 1 channel unsigned 16-bit integers */
+    HIP_RES_VIEW_FORMAT_UINT_2X16     = 0x08, /**< 2 channel unsigned 16-bit integers */
+    HIP_RES_VIEW_FORMAT_UINT_4X16     = 0x09, /**< 4 channel unsigned 16-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_1X16     = 0x0a, /**< 1 channel signed 16-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_2X16     = 0x0b, /**< 2 channel signed 16-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_4X16     = 0x0c, /**< 4 channel signed 16-bit integers */
+    HIP_RES_VIEW_FORMAT_UINT_1X32     = 0x0d, /**< 1 channel unsigned 32-bit integers */
+    HIP_RES_VIEW_FORMAT_UINT_2X32     = 0x0e, /**< 2 channel unsigned 32-bit integers */
+    HIP_RES_VIEW_FORMAT_UINT_4X32     = 0x0f, /**< 4 channel unsigned 32-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_1X32     = 0x10, /**< 1 channel signed 32-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_2X32     = 0x11, /**< 2 channel signed 32-bit integers */
+    HIP_RES_VIEW_FORMAT_SINT_4X32     = 0x12, /**< 4 channel signed 32-bit integers */
+    HIP_RES_VIEW_FORMAT_FLOAT_1X16    = 0x13, /**< 1 channel 16-bit floating point */
+    HIP_RES_VIEW_FORMAT_FLOAT_2X16    = 0x14, /**< 2 channel 16-bit floating point */
+    HIP_RES_VIEW_FORMAT_FLOAT_4X16    = 0x15, /**< 4 channel 16-bit floating point */
+    HIP_RES_VIEW_FORMAT_FLOAT_1X32    = 0x16, /**< 1 channel 32-bit floating point */
+    HIP_RES_VIEW_FORMAT_FLOAT_2X32    = 0x17, /**< 2 channel 32-bit floating point */
+    HIP_RES_VIEW_FORMAT_FLOAT_4X32    = 0x18, /**< 4 channel 32-bit floating point */
+    HIP_RES_VIEW_FORMAT_UNSIGNED_BC1  = 0x19, /**< Block compressed 1 */
+    HIP_RES_VIEW_FORMAT_UNSIGNED_BC2  = 0x1a, /**< Block compressed 2 */
+    HIP_RES_VIEW_FORMAT_UNSIGNED_BC3  = 0x1b, /**< Block compressed 3 */
+    HIP_RES_VIEW_FORMAT_UNSIGNED_BC4  = 0x1c, /**< Block compressed 4 unsigned */
+    HIP_RES_VIEW_FORMAT_SIGNED_BC4    = 0x1d, /**< Block compressed 4 signed */
+    HIP_RES_VIEW_FORMAT_UNSIGNED_BC5  = 0x1e, /**< Block compressed 5 unsigned */
+    HIP_RES_VIEW_FORMAT_SIGNED_BC5    = 0x1f, /**< Block compressed 5 signed */
+    HIP_RES_VIEW_FORMAT_UNSIGNED_BC6H = 0x20, /**< Block compressed 6 unsigned half-float */
+    HIP_RES_VIEW_FORMAT_SIGNED_BC6H   = 0x21, /**< Block compressed 6 signed half-float */
+    HIP_RES_VIEW_FORMAT_UNSIGNED_BC7  = 0x22  /**< Block compressed 7 */
+} HIPresourceViewFormat;
+
 /**
  * HIP resource descriptor
  */
@@ -204,6 +284,39 @@ typedef struct hipResourceDesc {
     } res;
 }hipResourceDesc;
 
+typedef struct HIP_RESOURCE_DESC_st
+{
+    HIPresourcetype resType;                     /**< Resource type */
+
+    union {
+        struct {
+            hipArray_t hArray;                   /**< HIP array */
+        } array;
+        struct {
+            hipMipmappedArray_t hMipmappedArray; /**< HIP mipmapped array */
+        } mipmap;
+        struct {
+            hipDeviceptr_t devPtr;               /**< Device pointer */
+            hipArray_Format format;              /**< Array format */
+            unsigned int numChannels;            /**< Channels per array element */
+            size_t sizeInBytes;                  /**< Size in bytes */
+        } linear;
+        struct {
+            hipDeviceptr_t devPtr;               /**< Device pointer */
+            hipArray_Format format;              /**< Array format */
+            unsigned int numChannels;            /**< Channels per array element */
+            size_t width;                        /**< Width of the array in elements */
+            size_t height;                       /**< Height of the array in elements */
+            size_t pitchInBytes;                 /**< Pitch between two rows in bytes */
+        } pitch2D;
+        struct {
+            int reserved[32];
+        } reserved;
+    } res;
+
+    unsigned int flags;                          /**< Flags (must be zero) */
+} HIP_RESOURCE_DESC;
+
 /**
  * hip resource view descriptor
  */
@@ -217,6 +330,22 @@ struct hipResourceViewDesc {
     unsigned int firstLayer;
     unsigned int lastLayer;
 };
+
+/**
+ * Resource view descriptor
+ */
+typedef struct HIP_RESOURCE_VIEW_DESC_st
+{
+    HIPresourceViewFormat format;   /**< Resource view format */
+    size_t width;                   /**< Width of the resource view */
+    size_t height;                  /**< Height of the resource view */
+    size_t depth;                   /**< Depth of the resource view */
+    unsigned int firstMipmapLevel;  /**< First defined mipmap level */
+    unsigned int lastMipmapLevel;   /**< Last defined mipmap level */
+    unsigned int firstLayer;        /**< First layer index */
+    unsigned int lastLayer;         /**< Last layer index */
+    unsigned int reserved[16];
+} HIP_RESOURCE_VIEW_DESC;
 
 /**
  * Memory copy types
@@ -263,26 +392,29 @@ typedef struct hipMemcpy3DParms {
 } hipMemcpy3DParms;
 
 typedef struct HIP_MEMCPY3D {
-    size_t Depth;
-    size_t Height;
-    size_t WidthInBytes;
-    hipDeviceptr_t dstDevice;
-    size_t dstHeight;
-    void* dstHost;
-    size_t dstLOD;
-    hipMemoryType dstMemoryType;
-    size_t dstPitch;
-    size_t dstXInBytes;
-    size_t dstY;
-    size_t dstZ;
-    void* reserved0;
-    void* reserved1;
-    hipDeviceptr_t srcDevice;
-    size_t srcHeight;
-    const void* srcHost;
-    size_t srcLOD;
-    hipMemoryType srcMemoryType;
-    size_t srcPitch;
+  unsigned int srcXInBytes;
+  unsigned int srcY;
+  unsigned int srcZ;
+  unsigned int srcLOD;
+  hipMemoryType srcMemoryType;
+  const void* srcHost;
+  hipDeviceptr_t srcDevice;
+  hipArray_t srcArray;
+  unsigned int srcPitch;
+  unsigned int srcHeight;
+  unsigned int dstXInBytes;
+  unsigned int dstY;
+  unsigned int dstZ;
+  unsigned int dstLOD;
+  hipMemoryType dstMemoryType;
+  void* dstHost;
+  hipDeviceptr_t dstDevice;
+  hipArray_t dstArray;
+  unsigned int dstPitch;
+  unsigned int dstHeight;
+  unsigned int WidthInBytes;
+  unsigned int Height;
+  unsigned int Depth;
 } HIP_MEMCPY3D;
 
 static inline struct hipPitchedPtr make_hipPitchedPtr(void* d, size_t p, size_t xsz,

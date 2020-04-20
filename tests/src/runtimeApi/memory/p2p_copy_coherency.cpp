@@ -26,17 +26,19 @@ THE SOFTWARE.
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
  * TEST: %t EXCLUDE_HIP_PLATFORM all
  * HIT_END
+
  */
 
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#ifdef __HIP_PLATFORM_HCC__
-#include <hc_am.hpp>
-#endif
-
 #define USE_HCC_MEMTRACKER 0 /* Debug flag to show the memtracker periodically */
 
+#ifndef __HIP_VDI__
+#include <hc_am.hpp>
+#else
+#define USE_HCC_MEMTRACKER 0
+#endif
 
 int elementSizes[] = {1, 16, 1024, 524288, 16 * 1000 * 1000};
 int nSizes = sizeof(elementSizes) / sizeof(int);
@@ -201,7 +203,8 @@ int main(int argc, char* argv[]) {
     };
 
     for (int index = 0; index < nSizes; index++) {
-        testMultiGpu(dev0, dev1, elementSizes[index], false /*GPU Synchronization*/);
+        //ToDo: Enable when verified on all platforms
+        //testMultiGpu(dev0, dev1, elementSizes[index], false /*GPU Synchronization*/);
         testMultiGpu(dev0, dev1, elementSizes[index], true /*Host Synchronization*/);
     }
 

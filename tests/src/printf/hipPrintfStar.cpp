@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2020 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,4 +20,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD: %t %s EXCLUDE_HIP_PLATFORM NVCC EXCLUDE_HIP_RUNTIME HCC EXCLUDE_HIP_COMPILER hcc
+ * TEST: %t EXCLUDE_HIP_PLATFORM NVCC EXCLUDE_HIP_RUNTIME HCC EXCLUDE_HIP_COMPILER hcc
+ * HIT_END
+ */
 
+#include "test_common.h"
+#include "printf_common.h"
+
+__global__ void test_kernel() {
+  printf("%*d\n", 16, 42);
+  printf("%.*d\n", 8, 42);
+  printf("%*.*d\n", -16, 8, 42);
+  printf("%*.*f %s * %.*s\n", 16, 8, 123.456, "hello", 5, "worldxyz");
+}
+
+int main(int argc, char **argv) {
+  std::string reference(R"here(              42
+00000042
+00000042        
+    123.45600000 hello * world
+)here");
+
+  CaptureStream captured(stdout);
+  hipLaunchKernelGGL(test_kernel, dim3(1), dim3(1), 0, 0);
+  hipStreamSynchronize(0);
+  auto CapturedData = captured.getCapturedData();
+  std::string device_output = gulp(CapturedData);
+
+  HIPASSERT(device_output == reference);
+  passed();
+}
