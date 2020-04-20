@@ -210,7 +210,7 @@ int main() {
     Unique_temporary_path utp{};
     std::experimental::filesystem::create_directory(utp.path());
 
-    auto tf{(utp.path() / "compiledcode").replace_extension(".tmp")};
+    auto tf{(utp.path() / "compiledCode").replace_extension(".tmp")};
     std::ofstream{tf}.write(compiledCode.data(), compiledCode.size());
 
     HIPCHECK(hipInit(0));
