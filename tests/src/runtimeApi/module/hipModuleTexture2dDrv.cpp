@@ -34,7 +34,6 @@ THE SOFTWARE.
 #define fileName "tex2d_kernel.code"
 
 texture<float, 2, hipReadModeElementType> tex;
-bool testResult = false;
 
 #define HIP_CHECK(cmd)                                                                             \
     {                                                                                              \
@@ -123,8 +122,7 @@ bool runTest(int argc, char** argv) {
             if (hData[i * width + j] != hOutputData[i * width + j]) {
                 printf("Difference [ %d %d ]:%f ----%f\n", i, j, hData[i * width + j],
                        hOutputData[i * width + j]);
-                testResult = false;
-                break;
+                return false;
             }
         }
     }
@@ -135,6 +133,7 @@ bool runTest(int argc, char** argv) {
 
 int main(int argc, char** argv) {
     hipInit(0);
+    bool testResult = false;
     testResult = runTest(argc, argv);
     printf("%s ...\n", testResult ? "PASSED" : "FAILED");
     exit(testResult ? EXIT_SUCCESS : EXIT_FAILURE);
