@@ -65,13 +65,16 @@ bool runipcNegativeTest()
     if(pid != 0) {
     
         A_d = NULL; 
-        HIPASSERT(hipIpcGetMemHandle(&shrd_mem->memHandle, (void *) A_d)==hipErrorInvalidHandle);
+        HIPASSERT(hipIpcGetMemHandle(&shrd_mem->memHandle, (void *) A_d)==hipErrorInvalidValue);
         
         HIPCHECK(hipMalloc((void **) &A_d, Nbytes));
-        shrd_mem = NULL;
 
-        HIPASSERT(hipIpcGetMemHandle(&shrd_mem->memHandle, (void *) A_d)==hipErrorInvalidHandle);
-        
+        // CUDA crashes hence skipping this
+        #ifndef __HIP_PLATFORM_NVCC__
+        shrd_mem = NULL;
+        HIPASSERT(hipIpcGetMemHandle(&shrd_mem->memHandle, (void *) A_d)==hipErrorInvalidValue);
+        #endif
+
         if(sem_post(sem_ob1) == -1) {
             perror ("sem_post error!"); 
             exit (1);

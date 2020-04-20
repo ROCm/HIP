@@ -2462,7 +2462,7 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr) {
     size_t psize = 0u;
     hc::accelerator acc;
     if ((handle == NULL) || (devPtr == NULL)) {
-        hipStatus = hipErrorInvalidHandle;
+        hipStatus = hipErrorInvalidValue;
     } else {
 #if (__hcc_workweek__ >= 17332)
         hc::AmPointerInfo amPointerInfo(NULL, NULL, NULL, 0, acc, 0, 0);

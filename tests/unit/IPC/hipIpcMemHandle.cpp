@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME=HCC NVCC_OPTIONS -std=c++11
- * TEST: %t
+ * TEST: %t EXCLUDE_HIP_RUNTIME=HCC
  * HIT_END
  */
 
