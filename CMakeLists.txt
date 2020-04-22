@@ -460,9 +460,7 @@ endif()
 #############################
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
-    # ToDo: The cmake generated target files are not working. We have to install manually created ones
-    # for now. Should fix this and remove target files under packaging.
-    #install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
+    install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 elseif( HIP_PLATFORM STREQUAL "vdi")
 #    install(TARGETS hip_on_vdi host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 endif()
