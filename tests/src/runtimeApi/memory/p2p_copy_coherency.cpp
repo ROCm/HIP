@@ -34,7 +34,7 @@ THE SOFTWARE.
 
 #define USE_HCC_MEMTRACKER 0 /* Debug flag to show the memtracker periodically */
 
-#ifndef __HIP_VDI__
+#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_VDI__)
 #include <hc_am.hpp>
 #else
 #define USE_HCC_MEMTRACKER 0
