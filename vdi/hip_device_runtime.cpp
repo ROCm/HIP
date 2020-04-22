@@ -239,6 +239,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   case hipDeviceAttributeCooperativeMultiDeviceLaunch:
     *pi = prop.cooperativeMultiDeviceLaunch;
     break;
+  case hipDeviceAttributeIntegrated:
+    *pi = prop.integrated;
+    break;
   case hipDeviceAttributeMaxTexture1DWidth:
     *pi = prop.maxTexture1D;
     break;
