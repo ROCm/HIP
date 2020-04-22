@@ -56,17 +56,13 @@ def norm_api_types(type_str):
 # Creating a list of arguments [(type, name), ...]
 def list_api_args(args_str):
   args_str = filtr_api_args(args_str)
-  print("ARG1> " + args_str)
   args_list = []
   if args_str != '':
     for arg_pair in args_str.split(','):
       if arg_pair == 'void': continue
-      print("ARG2> " + arg_pair)
       arg_pair = re.sub(r'\s*=\s*\S+$','', arg_pair);
-      print("ARG3> " + arg_pair)
       m = re.match("^(.*)\s(\S+)$", arg_pair);
       if m:
-        print("ARG4> (" + m.group(1) + ", " + m.group(2) + ")")
         arg_type = norm_api_types(m.group(1))
         arg_name = m.group(2)
         args_list.append((arg_type, arg_name))
@@ -476,10 +472,8 @@ not_found = 0
 if len(opts_map) != 0:
   for name in api_map.keys():
     args_str = api_map[name];
-    print("STR>>> " + name + " : ", args_str);
     args_list = list_api_args(args_str)
     api_map[name] = args_list
-    print("LIST>>> " + name + " : ", args_list);
     if not name in opts_map:
       error("implementation not found: " + name)
       not_found += 1
