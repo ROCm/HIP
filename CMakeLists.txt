@@ -114,6 +114,8 @@ if(NOT DEFINED ENV{HIP_RUNTIME})
     set(HIP_RUNTIME "HCC" CACHE STRING "HIP Runtime")
   elseif (HIP_PLATFORM STREQUAL "vdi")
     set(HIP_RUNTIME "VDI" CACHE STRING "HIP Runtime")
+  elseif (HIP_PLATFORM STREQUAL "nvcc")
+    set(HIP_RUNTIME "CUDA" CACHE STRING "HIP Runtime")
   endif()
 endif()
 add_to_config(_buildInfo HIP_RUNTIME)
@@ -401,7 +403,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 endif()
 
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
+endif()
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
 
@@ -430,11 +434,13 @@ endif()
 #############################
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-      install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
+    install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
 endif()
 
 # Install .hipInfo
-install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
+    install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
+endif()
 
 # Install .hipVersion
 install(FILES ${PROJECT_BINARY_DIR}/.hipVersion DESTINATION bin)
