@@ -457,8 +457,7 @@ hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle)
     HIP_INIT_API(hipIpcOpenEventHandle, event, &handle);
 
 #if USE_IPC && ATOMIC_INT_LOCK_FREE == 2
-    if (!event) return ihipLogStatus(hipErrorInvalidHandle);
-
+    if (!event || !strcmp(handle.reserved, "")) return ihipLogStatus(hipErrorInvalidValue);
     // create a new event with timing disabled, per spec
     auto hip_status = ihipEventCreate(event, hipEventDisableTiming | hipEventInterprocess);
     if (hip_status != hipSuccess) return ihipLogStatus(hip_status);
