@@ -23,6 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_NVCC_DETAIL_HIP_RUNTIME_H
 
+#include <cstdint>
 #include <cuda_runtime.h>
 
 #include <hip/hip_runtime_api.h>
@@ -31,10 +32,24 @@ THE SOFTWARE.
 
 typedef int hipLaunchParm;
 
+#ifdef HIP_MACRO_BASED_GGL
+
 #define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
     do {                                                                                           \
         kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
     } while (0)
+
+#else
+
+template <typename... Args, typename F = void (*)(Args...)>
+inline
+void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                        std::uint32_t sharedMemBytes, hipStream_t stream,
+                        Args... args) {
+  kernel<<<numBlocks, dimBlocks, sharedMemBytes, stream>>>(args...);
+}
+
+#endif // HIP_MACRO_BASED_GGL
 
 #define hipReadModeElementType cudaReadModeElementType
 
