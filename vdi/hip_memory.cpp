@@ -1652,6 +1652,32 @@ hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream) {
   HIP_RETURN(ihipMemcpyParam3D(pCopy, stream, true));
 }
 
+hipError_t packFillMemoryCommand(amd::Memory* memory, size_t offset, int value, size_t valueSize,
+                                size_t sizeBytes, amd::HostQueue* queue, bool isAsync = false) {
+
+  if ((memory == nullptr) || (queue == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Command::EventWaitList waitList;
+  amd::Coord3D fillOffset(offset, 0, 0);
+  amd::Coord3D fillSize(sizeBytes, 1, 1);
+  amd::FillMemoryCommand* command =
+      new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                 &value, valueSize, fillOffset, fillSize);
+  if (command == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+  command->enqueue();
+
+  if (!isAsync) {
+    command->awaitCompletion();
+  }
+
+  command->release();
+  return hipSuccess;
+}
+
 hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
                       hipStream_t stream, bool isAsync = false) {
   if (sizeBytes == 0) {
@@ -1664,33 +1690,51 @@ hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
   }
 
   size_t offset = 0;
-  amd::HostQueue* queue = hip::getQueue(stream);
   amd::Memory* memory = getMemoryObject(dst, offset);
-
-  if (memory != nullptr) {
-    // Device memory
-    amd::Command::EventWaitList waitList;
-    amd::Coord3D fillOffset(offset, 0, 0);
-    amd::Coord3D fillSize(sizeBytes, 1, 1);
-    amd::FillMemoryCommand* command =
-        new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
-                                   &value, valueSize, fillOffset, fillSize);
-
-    if (command == nullptr) {
-      return hipErrorOutOfMemory;
-    }
-
-    command->enqueue();
-    if (!isAsync) {
-      command->awaitCompletion();
-    }
-    command->release();
-  } else {
+  if (memory == nullptr) {
     // Host alloced memory
     memset(dst, value, sizeBytes);
+    return hipSuccess;
   }
 
-  return hipSuccess;
+  hipError_t hip_error = hipSuccess;
+  amd::HostQueue* queue = hip::getQueue(stream);
+
+  int32_t value32 = 0;
+  const size_t dwordModSize = (sizeBytes % sizeof(int32_t));
+
+  if (sizeBytes/sizeof(int32_t) > 0) {
+    if (valueSize == sizeof(int8_t)) {
+      value = value & 0xff;
+      value32 = ((value << 24) | (value << 16) | (value << 8) | (value));
+    } else if (valueSize == sizeof(int16_t)) {
+      value = value & 0xffff;
+      value32 = ((value<<16) | (value));
+    } else if(valueSize == sizeof(int32_t)) {
+      value32 = value;
+    } else {
+      LogPrintfError("Unsupported Pattern size: %u \n", valueSize);
+      return hipErrorInvalidValue;
+    }
+    // If dwordModSize is != 0 then we will do a second fillBuffer Command
+    // on the same stream below, dont wait, do the first call async.
+    hip_error = packFillMemoryCommand(memory, offset, value32, sizeof(int32_t),
+                                      sizeBytes - dwordModSize, queue,
+                                      ((dwordModSize != 0) || isAsync));
+    if(hip_error != hipSuccess) {
+      return hip_error;
+    }
+  }
+
+  if (dwordModSize != 0) {
+    void* new_dst = reinterpret_cast<void*>((reinterpret_cast<address>(dst)
+                                             + sizeBytes) - dwordModSize);
+    memory = getMemoryObject(new_dst, offset);
+    hip_error = packFillMemoryCommand(memory, offset, value, valueSize,
+                                      dwordModSize, queue, isAsync);
+  }
+
+  return hip_error;
 }
 
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
