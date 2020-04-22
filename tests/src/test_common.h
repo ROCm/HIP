@@ -63,7 +63,7 @@ THE SOFTWARE.
     printf(__VA_ARGS__);                                                                           \
     printf("\n");                                                                                  \
     printf("error: TEST FAILED\n%s", KNRM);                                                        \
-    fflush(nullptr);                                                                               \
+    fflush(NULL);                                                                               \
     abort();
 
 #define warn(...)                                                                                  \
