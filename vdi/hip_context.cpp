@@ -82,42 +82,17 @@ amd::HostQueue* getQueue(hipStream_t stream) {
  if (stream == nullptr) {
     return getNullStream();
   } else {
-    hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
-    // Wait for null stream
-    if ((s->flags & hipStreamNonBlocking) == 0) {
-      amd::HostQueue* nullStream = getNullStream();
-      amd::Command::EventWaitList eventWaitList;
-
-      amd::Command* command = nullStream->getLastQueuedCommand(true);
-      if ((command != nullptr) &&
-        // Check the current active status
-          (command->status() != CL_COMPLETE)) {
-        eventWaitList.push_back(command);
-      }
-
-      // Check if we have to wait anything
-      if (eventWaitList.size() > 0) {
-        amd::Command* command = new amd::Marker(*s->asHostQueue(), false, eventWaitList);
-        if (command != nullptr) {
-          command->enqueue();
-          command->release();
-        }
-      }
-
-      // Release all active commands. It's safe after the marker was enqueued
-      for (const auto& it : eventWaitList) {
-        it->release();
-      }
-    }
-
-    return s->asHostQueue();
+    constexpr bool WaitNullStreamOnly = true;
+    amd::HostQueue* queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
+    iHipWaitActiveStreams(queue, WaitNullStreamOnly);
+    return queue;
   }
 }
 
 amd::HostQueue* getNullStream(amd::Context& ctx) {
  for (auto& it : g_devices) {
    if (it->asContext() == &ctx) {
-     return it->defaultStream();
+     return it->NullStream();
    }
  }
  return nullptr;
@@ -125,7 +100,7 @@ amd::HostQueue* getNullStream(amd::Context& ctx) {
 
 amd::HostQueue* getNullStream() {
   Device* device = getCurrentDevice();
-  return device ? device->defaultStream() : nullptr;
+  return device ? device->NullStream() : nullptr;
 }
 
 };

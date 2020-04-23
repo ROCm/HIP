@@ -733,7 +733,7 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   PlatformState::instance().popExec(exec);
 
   hip::Stream* stream = reinterpret_cast<hip::Stream*>(exec.hStream_);
-  int deviceId = (stream != nullptr)? stream->device->deviceId() : ihipGetDevice();
+  int deviceId = (stream != nullptr)? stream->DeviceId() : ihipGetDevice();
   if (deviceId == -1) {
     DevLogPrintfError("Wrong DeviceId: %d \n", deviceId);
     HIP_RETURN(hipErrorNoDevice);
@@ -1212,7 +1212,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
                stream);
 
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
-  int deviceId = (s != nullptr)? s->device->deviceId() : ihipGetDevice();
+  int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
   if (deviceId == -1) {
     DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
     HIP_RETURN(hipErrorNoDevice);

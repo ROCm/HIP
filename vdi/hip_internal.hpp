@@ -78,6 +78,31 @@ class accelerator_view;
 };
 
 namespace hip {
+  class Device;
+
+  class Stream {
+    amd::HostQueue* queue_;
+    mutable amd::Monitor lock_;
+    Device* device_;
+    amd::CommandQueue::Priority priority_;
+    unsigned int flags_;
+    bool null_;
+
+  public:
+    Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f = 0, bool null_stream = false);
+    bool create();
+    amd::HostQueue* asHostQueue();
+    void destroy();
+    void finish() const;
+    /// Get device ID associated with the current stream;
+    int DeviceId() const;
+    /// Returns if stream is null stream
+    bool Null() const { return null_; }
+    /// Returns the lock object for the current stream
+    amd::Monitor& Lock() const { return lock_; }
+    /// Returns the creation flags for the current stream
+    unsigned int Flags() const { return flags_; }
+  };
 
   /// HIP Device class
   class Device {
@@ -85,14 +110,17 @@ namespace hip {
     /// VDI context
     amd::Context* context_;
     /// VDI host queue for default streams
-    amd::HostQueue* defaultStream_ = nullptr;
+    Stream null_stream_;
     /// Device's ID
     /// Store it here so we don't have to loop through the device list every time
     int deviceId_;
     //Maintain list of user enabled peers
     std::list<int> userEnabledPeers;
+
   public:
-    Device(amd::Context* ctx, int devId): context_(ctx), deviceId_(devId) { assert(ctx != nullptr); }
+    Device(amd::Context* ctx, int devId):
+      context_(ctx), deviceId_(devId), null_stream_(this, amd::CommandQueue::Priority::Normal, 0, true)
+        { assert(ctx != nullptr); }
     ~Device() {}
 
     amd::Context* asContext() const { return context_; }
@@ -119,7 +147,7 @@ namespace hip {
         return hipErrorPeerAccessNotEnabled;
       }
     }
-    amd::HostQueue* defaultStream();
+    amd::HostQueue* NullStream();
   };
 
   extern std::once_flag g_ihipInitialized;
@@ -152,20 +180,6 @@ namespace hip {
     hipFunction_t asHipFunction() { return reinterpret_cast<hipFunction_t>(this); }
 
     static Function* asFunction(hipFunction_t f) { return reinterpret_cast<Function*>(f); }
-  };
-
-  struct Stream {
-    amd::HostQueue* queue;
-    amd::Monitor lock;
-    Device* device;
-    amd::CommandQueue::Priority priority;
-    unsigned int flags;
-
-    Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f);
-    void create();
-    amd::HostQueue* asHostQueue();
-    void destroy();
-    void finish();
   };
 
 };
@@ -300,7 +314,7 @@ public:
 
 /// Wait all active streams on the blocking queue. The method enqueues a wait command and
 /// doesn't stall the current thread
-extern void iHipWaitActiveStreams(amd::HostQueue* blocking_queue);
+extern void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream = false);
 
 extern std::vector<hip::Device*> g_devices;
 extern hipError_t ihipDeviceGetCount(int* count);
