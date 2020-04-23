@@ -65,6 +65,10 @@ struct __HIP_TEXTURE_ATTRIB texture : public textureReference {
         channelDesc = hipCreateChannelDesc<T>();
         sRGB = 0;
         textureObject = nullptr;
+        maxAnisotropy = 0;
+        mipmapLevelBias = 0;
+        minMipmapLevelClamp = 0;
+        maxMipmapLevelClamp = 0;
     }
 
     texture(int norm, enum hipTextureFilterMode fMode, enum hipTextureAddressMode aMode,
@@ -78,6 +82,10 @@ struct __HIP_TEXTURE_ATTRIB texture : public textureReference {
         channelDesc = desc;
         sRGB = 0;
         textureObject = nullptr;
+        maxAnisotropy = 0;
+        mipmapLevelBias = 0;
+        minMipmapLevelClamp = 0;
+        maxMipmapLevelClamp = 0;
     }
 };
 
