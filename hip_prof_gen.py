@@ -43,7 +43,7 @@ def filtr_api_args(args_str):
   args_str = re.sub(r'\s*$', r'', args_str);
   args_str = re.sub(r'\s*,\s*', r',', args_str);
   args_str = re.sub(r'\s+', r' ', args_str);
-  args_str = re.sub(r'void \*', r'void* ', args_str);
+  args_str = re.sub(r'\s*(\*+)\s*', r'\1 ', args_str);
   args_str = re.sub(r'(enum|struct) ', '', args_str);
   return args_str
 
@@ -472,7 +472,8 @@ not_found = 0
 if len(opts_map) != 0:
   for name in api_map.keys():
     args_str = api_map[name];
-    api_map[name] = list_api_args(args_str)
+    args_list = list_api_args(args_str)
+    api_map[name] = args_list
     if not name in opts_map:
       error("implementation not found: " + name)
       not_found += 1
