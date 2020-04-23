@@ -20,7 +20,7 @@ THE SOFTWARE.
 // Simple test for hipLaunchCooperativeKernelMultiDevice API.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -177,8 +177,6 @@ int main() {
     }
  
     hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0);
-
-    HIPCHECK(hipMemcpy(init, dC, sizeof(long), hipMemcpyDeviceToHost));
 
     if (*dC != (((long)(BufferSizeInDwords) * (BufferSizeInDwords - 1)) / 2)) {
       std::cout << "Data validation failed for grid size = " << dimGrid.x << " and block size = " << dimBlock.x << "\n";

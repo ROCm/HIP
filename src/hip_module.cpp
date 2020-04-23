@@ -344,6 +344,8 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
         if (kds[i] == nullptr) {
             return hipErrorInvalidValue;
         }
+        if (!kds[i]->_kernarg_layout.empty()) continue;
+
         hip_impl::kernargs_size_align kargs = ps.get_kernargs_size_align(
                 reinterpret_cast<std::uintptr_t>(lp.func));
         kds[i]->_kernarg_layout = *reinterpret_cast<const std::vector<std::pair<std::size_t, std::size_t>>*>(
@@ -395,6 +397,14 @@ hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList
      }
 
     return result;
+}
+
+__attribute__((visibility("default")))
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags) {
+    HIP_INIT_API(hipExtLaunchMultiKernelMultiDevice, launchParamsList, numDevices, flags);
+    auto& ps = hip_impl::get_program_state();
+    return ihipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags, ps);
 }
 
 void getGprsLdsUsage(hipFunction_t f, size_t* usedVGPRS, size_t* usedSGPRS, size_t* usedLDS)
@@ -735,7 +745,6 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
 
     mg_sync *mg_sync_ptr = 0;
     vector<mg_info *> mg_info_ptr;
-
 
     result = hip_internal::ihipHostMalloc(tls, (void **)&mg_sync_ptr, sizeof(mg_sync), hipHostMallocDefault, true);
     if (result != hipSuccess) {
@@ -1091,7 +1100,12 @@ namespace hip_impl {
 
     hipError_t agent_globals::read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
                                               const char* name) {
-        return impl->read_agent_global_from_process(dptr, bytes, name);
+        hipError_t result = impl->read_agent_global_from_process(dptr, bytes, name);
+        if(result != hipSuccess) {
+           // For Clang Compiler + Hcc Rt
+           result = ihipGetGlobalVar(dptr, bytes, name);
+        }
+        return result;
     }
 
 } // Namespace hip_impl.
@@ -1259,19 +1273,34 @@ hipError_t ihipModuleGetFunction(TlsData *tls, hipFunction_t* func, hipModule_t 
     if (!*func) return hipErrorInvalidValue;
 
     std::string name_str(name);
+    std::string namekd_str(name_str + ".kd");
+    bool kernel_by_namekd = false;
+
     auto kernel = find_kernel_by_name(hmod->executable, name_str.c_str(), agent);
 
     if (kernel.handle == 0u) {
-        name_str.append(".kd");
-        kernel = find_kernel_by_name(hmod->executable, name_str.c_str(), agent);
+        kernel_by_namekd = true; //Find kernel by namekd_str
+        kernel = find_kernel_by_name(hmod->executable, namekd_str.c_str(), agent);
     }
 
     if (kernel.handle == 0u) return hipErrorNotFound;
 
+    //For hipModuleLoad(), hmod->kernargs must contain an args with key
+    //name_str or namekd_str.
+    //For hipLaunchKernelGGL(), hmod->kernargs is empty, thus we need
+    //insert hmod->kernargs[name_str]
+    auto it = hmod->kernargs.find(name_str); //Look up args from the original name
+    if (it == hmod->kernargs.end()) {
+        it = hmod->kernargs.find(namekd_str); //Look up args from .kd name
+    }
+
     // TODO: refactor the whole ihipThisThat, which is a mess and yields the
     //       below, due to hipFunction_t being a pointer to ihipModuleSymbol_t.
+
     func[0][0] = *static_cast<hipFunction_t>(
-        Kernel_descriptor{kernel_object(kernel), name_str, hmod->kernargs[name_str]});
+        Kernel_descriptor{kernel_object(kernel),
+        kernel_by_namekd ? namekd_str : name_str,
+        it != hmod->kernargs.end() ? it->second : hmod->kernargs[name_str]});
 
     return hipSuccess;
 }

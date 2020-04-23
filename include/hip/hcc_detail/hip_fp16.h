@@ -229,7 +229,7 @@ THE SOFTWARE.
             __host__ __device__
             operator __half_raw() const { return __half_raw{data}; }
             __host__ __device__
-            operator volatile __half_raw() const volatile
+            operator __half_raw() const volatile
             {
                 return __half_raw{data};
             }

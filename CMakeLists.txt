@@ -1,5 +1,15 @@
 cmake_minimum_required(VERSION 3.4.3)
 project(hip)
+# sample command for hip-vdi, you'll need to have vdi installed
+#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=vdi ..
+#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=vdi -DVDI_DIR=/extra/lmoriche/hip-vdi/vdi -DOPENCL_DIR=/extra/lmoriche/clients/lmoriche_opencl_dev2/drivers/opencl/api/opencl -DLIBVDI_STATIC_DIR=/extra/lmoriche/hip-vdi/build/vdi ..
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+#############################
+# Options
+#############################
+option(BUILD_HIPIFY_CLANG "Enable building the CUDA->HIP converter" OFF)
 
 #############################
 # Setup config generation
@@ -100,12 +110,19 @@ add_to_config(_buildInfo HIP_COMPILER)
 # Determine HIP_RUNTIME
 # Either HCC or VDI; default is HCC
 if(NOT DEFINED ENV{HIP_RUNTIME})
+  if(HIP_PLATFORM STREQUAL "hcc")
     set(HIP_RUNTIME "HCC" CACHE STRING "HIP Runtime")
-else()
-    set(HIP_RUNTIME $ENV{HIP_RUNTIME} CACHE STRING "HIP Runtime")
+  elseif (HIP_PLATFORM STREQUAL "vdi")
+    set(HIP_RUNTIME "VDI" CACHE STRING "HIP Runtime")
+  elseif (HIP_PLATFORM STREQUAL "nvcc")
+    set(HIP_RUNTIME "CUDA" CACHE STRING "HIP Runtime")
+  endif()
 endif()
 add_to_config(_buildInfo HIP_RUNTIME)
 
+if(HIP_PLATFORM STREQUAL "vdi")
+   set(USE_PROF_API "1")
+endif()
 
 # If HIP_PLATFORM is hcc, we need HCC_HOME and HSA_PATH to be defined
 if(HIP_PLATFORM STREQUAL "hcc")
@@ -190,12 +207,14 @@ message (STATUS "ROCM Installation path(ROCM_PATH): ${ROCM_PATH}")
 set(CPACK_SET_DESTDIR ON CACHE BOOL "Installer package will install hip to CMAKE_INSTALL_PREFIX instead of CPACK_PACKAGING_INSTALL_PREFIX")
 if (NOT CPACK_SET_DESTDIR)
   set(CPACK_PACKAGING_INSTALL_PREFIX "/opt/rocm/hip" CACHE PATH "Default installation path of hcc installer package")
-endif (CPACK_SET_DESTDIR)
+endif (NOT CPACK_SET_DESTDIR)
 
 #############################
 # Profiling API support
 #############################
 # Generate profiling API macros/structures header
+if(HIP_PLATFORM STREQUAL "hcc")
+if(USE_PROF_API EQUAL 1)
 set(PROF_API_STR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_prof_str.h")
 set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
@@ -207,7 +226,6 @@ execute_process(COMMAND sh -c "rm -f ${PROF_API_STR}; ${PROF_API_CMD}")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${PROF_API_GEN} ${PROF_API_HDR} ${PROF_API_STR})
 
 # Enable profiling API
-if(USE_PROF_API EQUAL 1)
     find_path(PROF_API_HEADER_DIR prof_protocol.h
         HINTS
             ${PROF_API_HEADER_PATH}
@@ -224,6 +242,7 @@ if(USE_PROF_API EQUAL 1)
         MESSAGE(STATUS "Profiling API: ${PROF_API_HEADER_DIR}")
     endif()
 endif()
+endif()
 
 #############################
 # Build steps
@@ -233,13 +252,48 @@ set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
+# Build clang hipify if enabled
+if (BUILD_HIPIFY_CLANG)
+    add_subdirectory(hipify-clang)
+endif()
+
 # Build LPL an CA (fat binary generation / fat binary decomposition tools) if
 # platform is hcc; do this before the ugly hijacking of the compiler, since no
 # HC code is involved.
-if (HIP_PLATFORM STREQUAL "hcc")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
-endif ()
+#if (HIP_PLATFORM STREQUAL "hcc")
+#    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
+#endif ()
 
+if(HIP_PLATFORM STREQUAL "vdi")
+    # Determine HSA_PATH
+    if(NOT DEFINED HSA_PATH)
+        if(NOT DEFINED ENV{HSA_PATH})
+            set(HSA_PATH "/opt/rocm/hsa" CACHE PATH "Path to which HSA runtime has been installed")
+        else()
+            set(HSA_PATH $ENV{HSA_PATH} CACHE PATH "Path to which HSA runtime has been installed")
+        endif()
+    endif()
+    if(IS_ABSOLUTE ${HSA_PATH} AND EXISTS ${HSA_PATH} AND IS_DIRECTORY ${HSA_PATH})
+        message(STATUS "Looking for HSA runtime in: " ${HSA_PATH})
+    else()
+        message(FATAL_ERROR "Don't know where to find HSA runtime. Please specify absolute path using -DHSA_PATH")
+    endif()
+
+    include_directories(${PROJECT_SOURCE_DIR}/include)
+    add_subdirectory(vdi)
+    file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
+
+
+# set(VDI_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
+    set(HIP_VDI_BUILD_FLAGS "${HIP_VDI_BUILD_FLAGS} -fPIC ${VDI_CXX_FLAGS} -I${HSA_PATH}/include")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_VDI_BUILD_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_VDI_BUILD_FLAGS}")
+    set(HCC_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
+    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include")
+
+endif()
+
+message(STATUS "\nHSA runtime in: " ${HSA_PATH})
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
     include_directories(${PROJECT_SOURCE_DIR}/include)
@@ -300,18 +354,18 @@ if(HIP_PLATFORM STREQUAL "hcc")
     set_property ( TARGET hip_hcc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
     set_property ( TARGET hip_hcc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
 
-    if(HIP_COMPILER STREQUAL "hcc")
-        target_link_libraries(hip_hcc PRIVATE hc_am)
-        target_link_libraries(hip_hcc_static PRIVATE hc_am)
+    target_link_libraries(hip_hcc PRIVATE hc_am)
+    target_link_libraries(hip_hcc_static PRIVATE hc_am)
 
-        add_library(hiprtc SHARED src/hiprtc.cpp)
-        target_compile_options(hiprtc PRIVATE -DDISABLE_REDUCED_GPU_BLOB_COPY)
-        set_property ( TARGET hiprtc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
-        set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
-        target_include_directories(
-            hiprtc SYSTEM
-                PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
-    endif()
+    add_library(hiprtc SHARED src/hiprtc.cpp)
+    target_compile_options(hiprtc PRIVATE -DDISABLE_REDUCED_GPU_BLOB_COPY)
+    set_property ( TARGET hiprtc PROPERTY VERSION "${HIP_LIB_VERSION_STRING}" )
+    set_property ( TARGET hiprtc PROPERTY SOVERSION "${HIP_LIB_VERSION_MAJOR}" )
+
+    target_include_directories(
+        hiprtc SYSTEM
+            PRIVATE ${PROJECT_SOURCE_DIR}/include ${HSA_PATH}/include)
+
     set_target_properties(hip_hcc PROPERTIES CXX_VISIBILITY_PRESET hidden)
     set_target_properties(hip_hcc PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
     set_target_properties(hiprtc PROPERTIES CXX_VISIBILITY_PRESET hidden)
@@ -349,6 +403,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 endif()
 
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
+endif()
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
 
@@ -377,13 +434,11 @@ endif()
 #############################
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-    if(HIP_COMPILER STREQUAL "hcc")
-      install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
-    else()
-      install(TARGETS hip_hcc_static hip_hcc DESTINATION lib)
-    endif()
+    install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
+endif()
 
-    # Install .hipInfo
+# Install .hipInfo
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
 endif()
 
@@ -406,6 +461,9 @@ endif()
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
     install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
+elseif( HIP_PLATFORM STREQUAL "vdi")
+#    install(TARGETS hip_on_vdi host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+endif()
     include(CMakePackageConfigHelpers)
 
     configure_package_config_file(
@@ -427,13 +485,12 @@ if(HIP_PLATFORM STREQUAL "hcc")
         DESTINATION
         ${CONFIG_PACKAGE_INSTALL_DIR}
         )
-endif()
 
 #############################
 # Packaging steps
 #############################
 # Package: hip_base
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_base)
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip-base)
 configure_file(packaging/hip-base.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 configure_file(packaging/hip-base.postinst ${BUILD_DIR}/postinst @ONLY)
 configure_file(packaging/hip-base.prerm ${BUILD_DIR}/prerm @ONLY)
@@ -447,12 +504,19 @@ add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
     WORKING_DIRECTORY ${BUILD_DIR}
     DEPENDS lpl ca)
 
-# Package: hip_hcc
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
-configure_file(packaging/hip-hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-configure_file(packaging/hip-hcc.postinst ${BUILD_DIR}/postinst @ONLY)
-configure_file(packaging/hip-hcc.prerm ${BUILD_DIR}/prerm @ONLY)
-add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
+# Packaging needs to wait for hipify-clang to build if it's enabled...
+if (BUILD_HIPIFY_CLANG)
+    add_dependencies(pkg_hip_base hipify-clang)
+endif()
+
+if(HIP_PLATFORM STREQUAL "hcc")
+  message("HCC Package\n")
+  # Package: hip_hcc
+  set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_hcc)
+  configure_file(packaging/hip-hcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+  configure_file(packaging/hip-hcc.postinst ${BUILD_DIR}/postinst @ONLY)
+  configure_file(packaging/hip-hcc.prerm ${BUILD_DIR}/prerm @ONLY)
+  add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
     COMMAND cp *.deb ${PROJECT_BINARY_DIR}
@@ -460,12 +524,23 @@ add_custom_target(pkg_hip_hcc  COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR}
     DEPENDS hip_hcc hip_hcc_static hiprtc)
+else()
+  set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/vdi)
+  configure_file(packaging/hip-vdi.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+  configure_file(packaging/hip-vdi.postinst ${BUILD_DIR}/postinst @ONLY)
+  configure_file(packaging/hip-vdi.prerm ${BUILD_DIR}/prerm @ONLY)
+  add_custom_target(hip_on_vdi COMMAND ${CMAKE_COMMAND} .
+    COMMAND rm -rf *.deb *.rpm *.tar.gz
+    COMMAND make package
+    COMMAND cp *.deb ${PROJECT_BINARY_DIR}
+    COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
+    COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
+    WORKING_DIRECTORY ${BUILD_DIR} )
+endif()
 
 # Package: hip_nvcc
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_nvcc)
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip-nvcc)
 configure_file(packaging/hip-nvcc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-configure_file(packaging/hip-nvcc.postinst ${BUILD_DIR}/postinst @ONLY)
-configure_file(packaging/hip-nvcc.prerm ${BUILD_DIR}/prerm @ONLY)
 add_custom_target(pkg_hip_nvcc COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
@@ -475,7 +550,7 @@ add_custom_target(pkg_hip_nvcc COMMAND ${CMAKE_COMMAND} .
     WORKING_DIRECTORY ${BUILD_DIR})
 
 # Package: hip_doc
-set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip_doc)
+set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/packages/hip-doc)
 configure_file(packaging/hip-doc.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
 add_custom_target(pkg_hip_doc  COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
@@ -496,6 +571,7 @@ add_custom_target(pkg_hip_samples COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR})
 
+
 # Package: all
 if(POLICY CMP0037)
     cmake_policy(PUSH)
@@ -505,10 +581,18 @@ file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/fixnames
         CONTENT "pwd; for i in *.deb; do mv \"\$i\" \"\${i/.deb/-amd64.deb}\" ; done
 for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
 ")
-add_custom_target(package
+if(HIP_PLATFORM STREQUAL "hcc")
+    add_custom_target(package
     COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
+elseif(HIP_PLATFORM STREQUAL "vdi")
+    add_custom_target(package
+    COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+    DEPENDS pkg_hip_base hip_on_vdi pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
+endif()
+
 if(POLICY CMP0037)
     cmake_policy(POP)
 endif()

@@ -19,6 +19,8 @@
 #include <hsa/hsa_ven_amd_loader.h>
 #include <amd_comgr.h>
 #include "hc.hpp"
+#include "hip_hcc_internal.h"
+#include "trace_helper.h"
 
 #include <link.h>
 
@@ -734,6 +736,27 @@ public:
                 != AMD_COMGR_STATUS_SUCCESS)
                 return;
 
+            //Look up “.value_kind” to decide whether to ignore it
+            //See http://llvm.org/docs/AMDGPUUsage.html#code-object-v3-metadata-mattr-code-object-v3
+            amd_comgr_metadata_node_t arg_value_kind_md;
+            if (amd_comgr_metadata_lookup(arg_md, ".value_kind", &arg_value_kind_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
+
+            std::string arg_value_kind{ metadata_to_string(arg_value_kind_md) };
+
+            if (amd_comgr_destroy_metadata(arg_value_kind_md)
+                != AMD_COMGR_STATUS_SUCCESS)
+                return;
+
+            if (arg_value_kind.find("hidden_") == 0) {
+                if (amd_comgr_destroy_metadata(arg_md)
+                    != AMD_COMGR_STATUS_SUCCESS)
+                    return;
+
+                continue; //Ignore hidden arg
+            }
+
             amd_comgr_metadata_node_t arg_size_md;
             if (amd_comgr_metadata_lookup(arg_md, ".size", &arg_size_md)
                 != AMD_COMGR_STATUS_SUCCESS)
@@ -937,14 +960,16 @@ public:
 
         auto it0 = get_functions(agent).find(function_address);
 
-        if (it0 == get_functions(agent).cend()) {
-            hip_throw(std::runtime_error{
+        if (it0 != get_functions(agent).cend()) return it0->second;
+
+        // For hip-clang compiler + Hcc RT
+        hipFunction_t f = ihipGetDeviceFunction((const void*)function_address);
+        if (f) return reinterpret_cast<Kernel_descriptor&>(*f);
+
+        hip_throw(std::runtime_error{
                     "No device code available for function: " +
                     std::string(name(function_address)) +
                     ", for agent: " + name(agent)});
-        }
-
-        return it0->second;
     }
 
     const std::vector<std::pair<std::size_t, std::size_t>>& 

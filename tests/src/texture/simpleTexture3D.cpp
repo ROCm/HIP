@@ -21,11 +21,14 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc vdi
  * TEST: %t
  * HIT_END
  */
 #include "test_common.h"
+
+//typedef char T;
+const char *sampleName = "simpleTexture3D";
 
 // Texture reference for 3D texture
 #if __HIP__
@@ -44,26 +47,29 @@ __hip_pinned_shadow__
 texture<char, hipTextureType3D, hipReadModeElementType> texc;
 
 template <typename T>
-__global__ void simpleKernel3DArray(T* outputData,
+__global__ void simpleKernel3DArray(T* outputData, 
                                     int width,
                                     int height,int depth)
 {
     for (int i = 0; i < depth; i++) {
-       for (int j = 0; j < height; j++) {
-           for (int k = 0; k < width; k++) {
-               if(std::is_same<T, float>::value)
-                   outputData[i*width*height + j*width + k] = tex3D(texf, k, j, i);
-               else if(std::is_same<T, int>::value)
-                   outputData[i*width*height + j*width + k] = tex3D(texi, k, j, i);
-               else if(std::is_same<T, char>::value)
-                   outputData[i*width*height + j*width + k] = tex3D(texc, k, j, i);
-           }
-       }
+        for (int j = 0; j < height; j++) {
+            for (int k = 0; k < width; k++) {
+                if(std::is_same<T, float>::value)
+                    outputData[i*width*height + j*width + k] = tex3D(texf, k, j, i);
+                else if(std::is_same<T, int>::value)
+                    outputData[i*width*height + j*width + k] = tex3D(texi, k, j, i);
+                else if(std::is_same<T, char>::value)
+                    outputData[i*width*height + j*width + k] = tex3D(texc, k, j, i);
+            }
+        }
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//! Run a simple test for tex3D
+////////////////////////////////////////////////////////////////////////////////
 template <typename T>
-void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipReadModeElementType> *tex, hipChannelFormatKind formatKind)
+void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipReadModeElementType> *tex)
 {
     unsigned int size = width * height * depth * sizeof(T);
     T* hData = (T*) malloc(size);
@@ -78,7 +84,7 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     }
 
     // Allocate array and copy image data
-    hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(T)*8, 0, 0, 0, formatKind);
+    hipChannelFormatDesc channelDesc = hipCreateChannelDesc<T>();
     hipArray *arr;
 
     HIPCHECK(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), hipArrayDefault));
@@ -88,11 +94,7 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
     myparms.extent = make_hipExtent(width, height, depth);
-#ifdef __HIP_PLATFORM_NVCC__
-    myparms.kind = cudaMemcpyHostToDevice;
-#else
     myparms.kind = hipMemcpyHostToDevice;
-#endif
     HIPCHECK(hipMemcpy3D(&myparms));
 
     // set texture parameters
@@ -117,7 +119,7 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
 
     // copy result from device to host
     HIPCHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
-    HipTest::checkArray(hData,hOutputData,width,height,depth);
+    HipTest::checkArray(hData,hOutputData,width,height,depth); 
 
     hipFree(dData);
     hipFreeArray(arr);
@@ -125,13 +127,18 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     free(hOutputData);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// Program main
+////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+    printf("%s starting...\n", sampleName);
     for(int i=1;i<25;i++)
     {
-        runTest<float>(i,i,i,&texf, hipChannelFormatKindFloat);
-        runTest<int>(i+1,i,i,&texi, hipChannelFormatKindSigned);
-        runTest<char>(i,i+1,i,&texc, hipChannelFormatKindSigned);
+        runTest<float>(i,i,i,&texf);
+        runTest<int>(i+1,i,i,&texi);
+        runTest<char>(i,i+1,i,&texc);
     }
     passed();
 }
+

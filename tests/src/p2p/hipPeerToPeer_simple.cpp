@@ -24,9 +24,9 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp
- * TEST: %t EXCLUDE_HIP_PLATFORM hcc
- * TEST: %t --memcpyWithPeer EXCLUDE_HIP_PLATFORM hcc
- * TEST: %t --mirrorPeers EXCLUDE_HIP_PLATFORM hcc
+ * TEST: %t EXCLUDE_HIP_PLATFORM hcc vdi
+ * TEST: %t --memcpyWithPeer EXCLUDE_HIP_PLATFORM hcc vdi
+ * TEST: %t --mirrorPeers EXCLUDE_HIP_PLATFORM hcc vdi
  * HIT_END
  */
 

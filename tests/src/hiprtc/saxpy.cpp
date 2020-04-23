@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp LINK_OPTIONS hiprtc EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp LINK_OPTIONS hiprtc EXCLUDE_HIP_PLATFORM nvcc vdi
  * TEST: %t
  * HIT_END
  */
@@ -143,7 +143,7 @@ int main()
     hipMemcpyDtoH(hOut.get(), dOut, bufferSize);
 
     for (size_t i = 0; i < n; ++i) {
-       if (a * hX[i] + hY[i] != hOut[i]) { failed("Validation failed."); }
+        if (fabs(a * hX[i] + hY[i] - hOut[i]) > fabs(hOut[i])* 1e-6) { failed("Validation failed."); }
     }
 
     hipFree(dX);

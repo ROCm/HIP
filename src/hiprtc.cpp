@@ -250,7 +250,7 @@ struct _hiprtcProgram {
 
         const auto it{find_if(reader.sections.begin(), reader.sections.end(),
                               [](const section* x) {
-            return x->get_name() == ".kernel";
+            return (x->get_name() == ".hip_fatbin") || (x->get_name() == ".kernel");
         })};
 
         if (it == reader.sections.end()) return false;
@@ -513,7 +513,7 @@ extern "C" hiprtcResult hiprtcCompileProgram(hiprtcProgram p, int n, const char*
 
     const auto src{p->writeTemporaryFiles(tmp.path())};
 
-    vector<string> args{hipcc, "-shared"};
+    vector<string> args{hipcc, "-fPIC -shared"};
     if (n) args.insert(args.cend(), o, o + n);
 
     handleTarget(args);

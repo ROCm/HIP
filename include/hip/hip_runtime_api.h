@@ -336,7 +336,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeTexturePitchAlignment, ///<Pitch alignment requirement for 2D texture references bound to pitched memory;
     hipDeviceAttributeKernelExecTimeout,    ///<Run time limit for kernels executed on the device
     hipDeviceAttributeCanMapHostMemory,     ///<Device can map host memory into device address space
-    hipDeviceAttributeEccEnabled,            ///<Device has ECC support enabled
+    hipDeviceAttributeEccEnabled,           ///<Device has ECC support enabled
 
     hipDeviceAttributeCooperativeMultiDeviceUnmatchedFunc,        ///< Supports cooperative launch on multiple
                                                                   ///devices with unmatched functions
@@ -344,9 +344,8 @@ typedef enum hipDeviceAttribute_t {
                                                                   ///devices with unmatched grid dimensions
     hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim,    ///< Supports cooperative launch on multiple
                                                                   ///devices with unmatched block dimensions
-    hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem,   ///< Supports cooperative launch on multiple
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem    ///< Supports cooperative launch on multiple
                                                                   ///devices with unmatched shared memories
-
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {
