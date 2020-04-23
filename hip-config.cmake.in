@@ -51,8 +51,11 @@ set_and_check(hip_HIPCC_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipcc")
 set_and_check(hip_HIPCONFIG_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipconfig")
 
 if(HIP_COMPILER STREQUAL "clang")
-  if(CMAKE_CXX_COMPILER MATCHES ".*hipcc")
-    execute_process(COMMAND ${CMAKE_CXX_COMPILER} --version
+  if(NOT HIP_CXX_COMPILER)
+    set(HIP_CXX_COMPILER ${CMAKE_CXX_COMPILER})
+  endif()
+  if(HIP_CXX_COMPILER MATCHES ".*hipcc")
+    execute_process(COMMAND ${HIP_CXX_COMPILER} --version
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     OUTPUT_VARIABLE HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT)
     if(HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[\t\r\n][\t\r\n]*([^\t\r\n])")
@@ -60,9 +63,11 @@ if(HIP_COMPILER STREQUAL "clang")
     else()
       set(HIP_CLANG_ROOT /opt/rocm/llvm)
     endif()
-  else()
-    get_filename_component(HIP_CLANG_ROOT "${CMAKE_CXX_COMPILER}" PATH)
+  elseif (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
+    get_filename_component(HIP_CLANG_ROOT "${HIP_CXX_COMPILER}" PATH)
     get_filename_component(HIP_CLANG_ROOT "${HIP_CLANG_ROOT}" PATH)
+  else()
+    set(HIP_CLANG_ROOT /opt/rocm/llvm)
   endif()
   file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS ${HIP_CLANG_ROOT}/lib/clang/*/include)
   find_path(HIP_CLANG_INCLUDE_PATH stddef.h
@@ -101,6 +106,11 @@ if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
+# Right now this is only supported for amd platforms
+set_target_properties(hip::host PROPERTIES
+  INTERFACE_COMPILE_DEFINITIONS "__HIP_PLATFORM_HCC__=1"
+)
+
 if(HIP_RUNTIME MATCHES "VDI")
   set_target_properties(hip::amdhip64 PROPERTIES
     INTERFACE_COMPILE_DEFINITIONS "__HIP_VDI__=1"
@@ -131,6 +141,12 @@ if(HIP_COMPILER STREQUAL "clang")
   set_property(TARGET hip::device APPEND PROPERTY
     INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
   )
+
+  if (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_COMPILE_OPTIONS -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false
+    )
+  endif()
 
   set_property(TARGET hip::device APPEND PROPERTY
     INTERFACE_LINK_LIBRARIES --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib --hip-link
