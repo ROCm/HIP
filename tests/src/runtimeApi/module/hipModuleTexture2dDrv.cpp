@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc vdi
  * TEST: %t
  * HIT_END
  */
@@ -33,6 +33,9 @@ THE SOFTWARE.
 
 #define fileName "tex2d_kernel.code"
 
+#if __HIP__
+__hip_pinned_shadow__
+#endif
 texture<float, 2, hipReadModeElementType> tex;
 bool testResult = false;
 

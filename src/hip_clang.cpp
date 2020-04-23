@@ -28,6 +28,7 @@ THE SOFTWARE.
 #include "hip_hcc_internal.h"
 #include "hip_fatbin.h"
 #include "trace_helper.h"
+#include "program_state.inl"
 
 #ifdef __GNUC__
 #pragma GCC visibility push (default)
@@ -94,8 +95,10 @@ __hipRegisterFatBinary(const void* data)
         module->executable, agent);
 
       if (module->executable.handle) {
-        modules->at(deviceId) = module;
-        tprintf(DB_FB, "Loaded code object for %s\n", name);
+         hip_impl::program_state_impl::read_kernarg_metadata(image, module->kernargs);
+         modules->at(deviceId) = module;
+
+         tprintf(DB_FB, "Loaded code object for %s, args size=%ld\n", name, module->kernargs.size());
       } else {
         fprintf(stderr, "Failed to load code object for %s\n", name);
         abort();
@@ -157,16 +160,215 @@ extern "C" void __hipRegisterFunction(
   g_functions.insert(std::make_pair(hostFunction, std::move(functions)));
 }
 
+static inline const char* hsa_strerror(hsa_status_t status) {
+  const char* str = nullptr;
+  if (hsa_status_string(status, &str) == HSA_STATUS_SUCCESS) {
+    return str;
+  }
+  return "Unknown error";
+}
+
+struct RegisteredVar {
+public:
+  RegisteredVar(): size_(0), devicePtr_(nullptr) {}
+  ~RegisteredVar() {}
+
+  static inline const char* hsa_strerror(hsa_status_t status) {
+  const char* str = nullptr;
+  if (hsa_status_string(status, &str) == HSA_STATUS_SUCCESS) {
+    return str;
+  }
+  return "Unknown error";
+}
+
+hipDeviceptr_t getdeviceptr() const { return devicePtr_; };
+  size_t getvarsize() const { return size_; };
+
+  size_t size_;               // Size of the variable
+  hipDeviceptr_t devicePtr_;  //Device Memory Address of the variable.
+};
+
+struct DeviceVar {
+  void* shadowVptr;
+  std::string hostVar;
+  size_t size;
+  std::vector<hipModule_t>* modules;
+  std::vector<RegisteredVar> rvars;
+  bool dyn_undef;
+};
+
+std::unordered_multimap<std::string, DeviceVar > g_vars;
+
+//The logic follows PlatformState::getGlobalVar in VDI RT
+static DeviceVar* findVar(std::string hostVar, int deviceId, hipModule_t hmod) {
+  DeviceVar* dvar = nullptr;
+  if (hmod != nullptr) {
+    // If module is provided, then get the var only from that module
+    auto var_range = g_vars.equal_range(hostVar);
+    for (auto it = var_range.first; it != var_range.second; ++it) {
+      if ((*it->second.modules)[deviceId] == hmod) {
+        dvar = &(it->second);
+        break;
+      }
+    }
+  } else {
+    // If var count is < 2, return the var
+    if (g_vars.count(hostVar) < 2) {
+      auto it = g_vars.find(hostVar);
+      dvar = ((it == g_vars.end()) ? nullptr : &(it->second));
+    } else {
+      // If var count is > 2, return the original var,
+      // if original var count != 1, return g_vars.end()/Invalid
+      size_t orig_global_count = 0;
+      auto var_range = g_vars.equal_range(hostVar);
+      for (auto it = var_range.first; it != var_range.second; ++it) {
+        // when dyn_undef is set, it is a shadow var
+        if (it->second.dyn_undef == false) {
+          ++orig_global_count;
+          dvar = &(it->second);
+        }
+      }
+      dvar = ((orig_global_count == 1) ? dvar : nullptr);
+    }
+  }
+  return dvar;
+}
+
+hipError_t ihipGetGlobalVar(hipDeviceptr_t* dev_ptr, size_t* size_ptr,
+                             const char* hostVar, hipModule_t hmod) {
+  GET_TLS();
+  auto ctx = ihipGetTlsDefaultCtx();
+
+  if (!ctx) return hipErrorInvalidValue;
+
+  auto device = ctx->getDevice();
+
+  if (!device) return hipErrorInvalidValue;
+
+  ihipDevice_t* currentDevice = ihipGetDevice(device->_deviceId);
+
+  if (!currentDevice) return hipErrorInvalidValue;
+
+  int deviceId = device->_deviceId;
+
+  DeviceVar* dvar = findVar(std::string(hostVar), deviceId, hmod);
+  if (dvar == nullptr) return hipErrorInvalidValue;
+
+  if (dvar->rvars[deviceId].getdeviceptr() == nullptr) return hipErrorInvalidValue;
+
+  *size_ptr = dvar->rvars[deviceId].getvarsize();
+  *dev_ptr = dvar->rvars[deviceId].getdeviceptr();
+  return hipSuccess;
+}
+
+static bool createGlobalVarObj(const hsa_executable_t& hsaExecutable, const hsa_agent_t& hasAgent,
+                               const char* global_name, void** device_pptr, size_t* bytes) {
+  hsa_status_t status = HSA_STATUS_SUCCESS;
+  hsa_symbol_kind_t sym_type;
+  hsa_executable_symbol_t global_symbol;
+  std::string buildLog;
+
+  /* Find HSA Symbol by name */
+  status = hsa_executable_get_symbol_by_name(hsaExecutable, global_name, &hasAgent,
+                                             &global_symbol);
+  if (status != HSA_STATUS_SUCCESS) {
+    buildLog += "Error: Failed to find the Symbol by Name: ";
+    buildLog += hsa_strerror(status);
+    tprintf(DB_FB, "createGlobalVarObj: %s\n", buildLog.c_str());
+    return false;
+  }
+
+  /* Find HSA Symbol Type */
+  status = hsa_executable_symbol_get_info(global_symbol, HSA_EXECUTABLE_SYMBOL_INFO_TYPE,
+                                          &sym_type);
+  if (status != HSA_STATUS_SUCCESS) {
+    buildLog += "Error: Failed to find the Symbol Type : ";
+    buildLog += hsa_strerror(status);
+    tprintf(DB_FB, "createGlobalVarObj: %s\n", buildLog.c_str());
+    return false;
+  }
+
+  /* Make sure symbol type is VARIABLE */
+  if (sym_type != HSA_SYMBOL_KIND_VARIABLE) {
+    buildLog += "Error: Symbol is not of type VARIABLE : ";
+    buildLog += hsa_strerror(status);
+    tprintf(DB_FB, "createGlobalVarObj: %s\n", buildLog.c_str());
+    return false;
+  }
+
+  /* Retrieve the size of the variable */
+  status = hsa_executable_symbol_get_info(global_symbol, HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_SIZE, bytes);
+
+  if (status != HSA_STATUS_SUCCESS) {
+    buildLog += "Error: Failed to retrieve the Symbol Size : ";
+    buildLog += hsa_strerror(status);
+    tprintf(DB_FB, "createGlobalVarObj: %s\n", buildLog.c_str());
+    return false;
+  }
+
+  /* Find HSA Symbol Address */
+  status = hsa_executable_symbol_get_info(global_symbol,
+                                          HSA_EXECUTABLE_SYMBOL_INFO_VARIABLE_ADDRESS, device_pptr);
+  if (status != HSA_STATUS_SUCCESS) {
+    buildLog += "Error: Failed to find the Symbol Address : ";
+    buildLog += hsa_strerror(status);
+    tprintf(DB_FB, "createGlobalVarObj: %s\n", buildLog.c_str());
+    return false;
+  } else {
+    tprintf(DB_FB, "createGlobalVarObj: var %s : device=%p, size=%zu\n", global_name, *device_pptr, *bytes);
+  }
+
+  return true;
+}
+
+// Registers a device-side global variable.
+// For each global variable in device code, there is a corresponding shadow
+// global variable in host code. The shadow host variable is used to keep
+// track of the value of the device side global variable between kernel
+// executions.
+// The basic logic is taken from VDI RT, but there is much difference.
 extern "C" void __hipRegisterVar(
-  std::vector<hipModule_t>* modules,
-  char*       hostVar,
-  char*       deviceVar,
-  const char* deviceName,
-  int         ext,
-  int         size,
-  int         constant,
-  int         global)
+  std::vector<hipModule_t>* modules,   // The device modules containing code object
+  char*       var,       // The shadow variable in host code
+  char*       hostVar,   // Variable name in host code
+  const char* deviceVar, // Variable name in device code
+  int         ext,       // Whether this variable is external
+  int         size,      // Size of the variable
+  int         constant,  // Whether this variable is constant
+  int         global)    // Unknown, always 0
 {
+    HIP_INIT_API(__hipRegisterVar, modules, var, hostVar, deviceVar, ext, size, constant, global);
+
+    DeviceVar dvar{var, std::string{ hostVar }, static_cast<size_t>(size), modules,
+           std::vector<RegisteredVar>{ g_deviceCnt }, false };
+
+    for (int deviceId = 0; deviceId < g_deviceCnt; deviceId++) {
+        auto device = ihipGetDevice(deviceId);
+        if(!device) {
+           continue;
+        }
+        hsa_executable_t& executable = (*modules)[deviceId]->executable;
+        hsa_agent_t& agent = g_allAgents[deviceId + 1];
+        size_t bytes = 0;
+        hipDeviceptr_t devicePtr = nullptr;
+
+        bool success = createGlobalVarObj(executable, agent, hostVar, &devicePtr, &bytes);
+        if(!success) {
+           return;
+        }
+        dvar.rvars[deviceId].devicePtr_ = devicePtr;
+        dvar.rvars[deviceId].size_ = bytes;
+
+        hc::AmPointerInfo ptrInfo(nullptr, devicePtr, devicePtr, bytes, device->_acc, true, false);
+        hc::am_memtracker_add(devicePtr, ptrInfo);
+
+    #if USE_APP_PTR_FOR_CTX
+        hc::am_memtracker_update(devicePtr, device->_deviceId, 0u, ihipGetTlsDefaultCtx());
+    #else
+        hc::am_memtracker_update(devicePtr, device->_deviceId, 0u);
+    #endif
+    }
+    g_vars.insert(std::make_pair(std::string(hostVar), dvar));
 }
 
 extern "C" void __hipUnregisterFatBinary(std::vector<hipModule_t>* modules)
@@ -226,6 +428,41 @@ extern "C" hipError_t __hipPopCallConfiguration(
   return hipSuccess;
 }
 
+int getCurrentDeviceId()
+{
+  GET_TLS();
+
+  int deviceId = 0;
+  auto ctx = ihipGetTlsDefaultCtx();
+
+  if(!ctx) return deviceId;
+
+  LockedAccessor_CtxCrit_t crit(ctx->criticalData());
+
+  if(crit->_execStack.size() != 0)
+  {
+    auto &exec = crit->_execStack.top();
+
+    if (exec._hStream) {
+      deviceId = exec._hStream->getDevice()->_deviceId;
+    } else if (ctx->getDevice()) {
+      deviceId = ctx->getDevice()->_deviceId;
+    }
+  } else if (ctx->getDevice()) {
+    deviceId = ctx->getDevice()->_deviceId;
+  }
+  return deviceId;
+}
+
+hipFunction_t ihipGetDeviceFunction(const void *hostFunction)
+{
+  int deviceId = getCurrentDeviceId();
+  auto it = g_functions.find(hostFunction);
+  if (it == g_functions.end() || !it->second[deviceId]) {
+    return nullptr;
+  }
+  return it->second[deviceId];
+}
 
 hipError_t hipSetupArgument(
   const void *arg,
