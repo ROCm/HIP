@@ -101,6 +101,11 @@ if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
+# Right now this is only supported for amd platforms
+set_target_properties(hip::host PROPERTIES
+  INTERFACE_COMPILE_DEFINITIONS "__HIP_PLATFORM_HCC__=1"
+)
+
 if(HIP_RUNTIME MATCHES "VDI")
   set_target_properties(hip::amdhip64 PROPERTIES
     INTERFACE_COMPILE_DEFINITIONS "__HIP_VDI__=1"
