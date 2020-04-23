@@ -78,7 +78,6 @@ def filtr_api_args(args_str):
   args_str = re.sub(r'\s*$', r'', args_str);
   args_str = re.sub(r'\s*,\s*', r',', args_str);
   args_str = re.sub(r'\s+', r' ', args_str);
-  #args_str = re.sub(r'void \*', r'void* ', args_str);
   args_str = re.sub(r'\s*(\*+)\s*', r'\1 ', args_str);
   args_str = re.sub(r'(enum|struct) ', '', args_str);
   return args_str
