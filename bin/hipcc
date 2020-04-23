@@ -327,7 +327,7 @@ my $buildDeps = 0;
 my $linkType = 1;
 my $setLinkType = 0;
 my $coFormatv3 = 0;
-
+my $noinline = 0;
 my @options = ();
 my @inputs  = ();
 
@@ -461,6 +461,13 @@ foreach $arg (@ARGV)
     if($arg =~ m/^-O/)
     {
         $optArg = $arg;
+    }
+
+    ## Adding no inling for NVCC
+    if($trimarg eq '--no-inline')
+    {
+        $noinline = 1;
+        $swallowArg = 1;
     }
 
     ## This is a temporary workaround for CMake detection of OpenMP support.
@@ -615,6 +622,12 @@ foreach $arg (@ARGV)
         #print "I: <$arg>\n";
     }
     $toolArgs .= " $arg" unless $swallowArg;
+}
+
+if($HIP_PLATFORM eq 'nvcc') {
+    if($noinline == 1) {
+        $HIPCXXFLAGS .= " -Xcompiler -fno-inline-functions";
+    }
 }
 
 if($HIP_PLATFORM eq "hcc" or $HIP_PLATFORM eq "clang"){
