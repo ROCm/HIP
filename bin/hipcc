@@ -342,6 +342,7 @@ my $buildDeps = 0;
 my $linkType = 1;
 my $setLinkType = 0;
 my $coFormatv3 = 1;
+my $useLdLld = 0;    # set to 1 if fuse-ld=lld option specified
 
 my @options = ();
 my @inputs  = ();
@@ -597,6 +598,10 @@ foreach $arg (@ARGV)
             #
             #}
         } else {
+            # Check for fuse-ld=lld option
+            if ($arg =~ m/^-fuse-ld=.*lld/) {
+                $useLdLld = 1;
+            }
             push (@options, $arg);
         }
         #print "O: <$arg>\n";
@@ -729,9 +734,15 @@ if ($HIP_PLATFORM eq "clang") {
     # Do not pass -mllvm on Windows since there is a clang bug causing duplicate -mllvm options in clang -cc1 on Windows.
     # ToDo : remove restriction for Windows after clang bug is fixed.
     if ($optArg ne "-O0" and not $isWindows) {
-        $HIPCXXFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
-        if ($needLDFLAGS and not $needCXXFLAGS) {
-            $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
+        if ($needCXXFLAGS) {
+            # add only when source files are provided on command line
+            $HIPCXXFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
+        }
+        if ($needLDFLAGS and not $notCompileOnly) {
+            # GNU ld does not understand these options, set only for lld
+            if ($useLdLld) {
+                $HIPLDFLAGS .= " -Wl,-mllvm,-amdgpu-early-inline-all=true -Wl,-mllvm,-amdgpu-function-calls=false";
+            }
         }
     }
     $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
