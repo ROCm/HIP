@@ -42,65 +42,68 @@ class StreamCallback {
 
 namespace hip {
 
-void syncStreams() {
-  amd::ScopedLock lock(streamSetLock);
+Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p,
+    unsigned int f, bool null_stream)
+  : queue_(nullptr), lock_("Stream Callback lock"), device_(dev),
+    priority_(p), flags_(f), null_(null_stream) {}
 
-  for (const auto& it : streamSet) {
-    if (it->device->deviceId() == getCurrentDevice()->deviceId()) {
-      it->finish();
-    }
-  }
-}
-
-Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p, unsigned int f) :
-  queue(nullptr), lock("Stream Callback lock"), device(dev), priority(p), flags(f) {}
-
-void Stream::create() {
+bool Stream::create() {
   cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-  queue = new amd::HostQueue(*device->asContext(), *device->devices()[0], properties,
-                             amd::CommandQueue::RealTimeDisabled, priority);
-  assert(queue != nullptr);
-  queue->create();
+  queue_ = new amd::HostQueue(*device_->asContext(), *device_->devices()[0], properties,
+                             amd::CommandQueue::RealTimeDisabled, priority_);
+  assert(queue_ != nullptr);
+  return queue_->create();
 }
 
 amd::HostQueue* Stream::asHostQueue() {
-  if (queue == nullptr) {
-    create();
+  if (queue_ == nullptr) {
+    if (!create()) {
+      return nullptr;
+    } else if (Null()) {
+      // Make sure the null stream is inserted into the list of default/blocking streams
+      amd::ScopedLock lock(streamSetLock);
+      streamSet.insert(this);
+    }
   }
-  return queue;
+  return queue_;
 }
 
 void Stream::destroy() {
-  if (queue != nullptr) {
-    queue->release();
-    queue = nullptr;
+  if (queue_ != nullptr) {
+    queue_->release();
+    queue_ = nullptr;
   }
 }
 
-void Stream::finish() {
-  if (queue != nullptr) {
-    queue->finish();
+void Stream::finish() const {
+  if (queue_ != nullptr) {
+    queue_->finish();
   }
+}
+
+int Stream::DeviceId() const {
+  return device_->deviceId();
 }
 
 };
 
-void iHipWaitActiveStreams(amd::HostQueue* blocking_queue) {
+void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream) {
   amd::Command::EventWaitList eventWaitList;
   {
     amd::ScopedLock lock(streamSetLock);
 
-    for (const auto& it : streamSet) {
+    for (const auto& stream : streamSet) {
+      amd::HostQueue* active_queue = stream->asHostQueue();
       // If it's the current device
-      if ((it->queue != nullptr) && (&it->queue->device() == &blocking_queue->device()) &&
-          // and it's a blocking streamclan
-          ((it->flags & hipStreamNonBlocking) == 0) &&
+      if ((active_queue != nullptr) && (&active_queue->device() == &blocking_queue->device()) &&
           // and it's not the current stream
-          (it->asHostQueue() != blocking_queue)) {
+          (active_queue != blocking_queue) &&
+          // check for a wait on the null stream
+          (stream->Null() == wait_null_stream)) {
         // Get the last valid so command
-        amd::Command* command = it->asHostQueue()->getLastQueuedCommand(true);
+        amd::Command* command = active_queue->getLastQueuedCommand(true);
         if ((command != nullptr) &&
-          // Check the current active status
+            // Check the current active status
             (command->status() != CL_COMPLETE)) {
           eventWaitList.push_back(command);
         }
@@ -127,7 +130,7 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
   hipError_t status = hipSuccess;
   StreamCallback* cbo = reinterpret_cast<StreamCallback*>(user_data);
   {
-    amd::ScopedLock lock(reinterpret_cast<hip::Stream*>(cbo->stream_)->lock);
+    amd::ScopedLock lock(reinterpret_cast<hip::Stream*>(cbo->stream_)->Lock());
     cbo->callBack_(cbo->stream_, status, cbo->userData_);
   }
   cbo->command_->release();
@@ -142,12 +145,8 @@ static hipError_t ihipStreamCreate(hipStream_t *stream, unsigned int flags, amd:
   }
 
   if (!(flags & hipStreamNonBlocking)) {
-    hip::syncStreams();
-
-    {
-      amd::ScopedLock lock(streamSetLock);
-      streamSet.insert(hStream);
-    }
+    amd::ScopedLock lock(streamSetLock);
+    streamSet.insert(hStream);
   }
 
   *stream = reinterpret_cast<hipStream_t>(hStream);
@@ -194,13 +193,13 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
   return HIP_RETURN(hipSuccess);
 }
 
-hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int *flags) {
+hipError_t hipStreamGetFlags(hipStream_t stream, unsigned int* flags) {
   HIP_INIT_API(hipStreamGetFlags, stream, flags);
 
   hip::Stream* hStream = reinterpret_cast<hip::Stream*>(stream);
 
-  if(flags != nullptr && hStream != nullptr) {
-    *flags = hStream->flags;
+  if (flags != nullptr && hStream != nullptr) {
+    *flags = hStream->Flags();
   } else {
     HIP_RETURN(hipErrorInvalidValue);
   }
@@ -239,13 +238,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
   HIP_INIT_API(hipStreamWaitEvent, stream, event, flags);
 
-  amd::HostQueue* queue;
-
-  if (stream == nullptr) {
-    queue = hip::getNullStream();
-  } else {
-    queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
+  amd::HostQueue* queue = hip::getQueue(stream);
 
   if (event == nullptr) {
     HIP_RETURN(hipErrorInvalidHandle);
@@ -259,12 +252,7 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 hipError_t hipStreamQuery(hipStream_t stream) {
   HIP_INIT_API(hipStreamQuery, stream);
 
-  amd::HostQueue* hostQueue;
-  if (stream == nullptr) {
-    hostQueue = hip::getNullStream();
-  } else {
-    hostQueue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-  }
+  amd::HostQueue* hostQueue = hip::getQueue(stream);
 
   amd::Command* command = hostQueue->getLastQueuedCommand(true);
   if (command == nullptr) {
@@ -284,8 +272,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
                                 unsigned int flags) {
   HIP_INIT_API(hipStreamAddCallback, stream, callback, userData, flags);
 
-  amd::HostQueue* hostQueue = reinterpret_cast<hip::Stream*>
-                              (stream)->asHostQueue();
+  amd::HostQueue* hostQueue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
   amd::Command* command = hostQueue->getLastQueuedCommand(true);
   if (command == nullptr) {
     amd::Command::EventWaitList eventWaitList;

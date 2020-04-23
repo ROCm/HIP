@@ -24,20 +24,14 @@
 
 namespace hip {
 
-amd::HostQueue* Device::defaultStream() {
-  if (defaultStream_ == nullptr) {
-    const cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-    defaultStream_ = new amd::HostQueue(*asContext(), *devices()[0], properties,
-                                        amd::CommandQueue::RealTimeDisabled,
-                                        amd::CommandQueue::Priority::Normal);
-    if ((defaultStream_ == nullptr) ||
-        !defaultStream_->create()) {
-      return nullptr;
-    }
+amd::HostQueue* Device::NullStream() {
+  amd::HostQueue* null_queue = null_stream_.asHostQueue();
+  if (null_queue == nullptr) {
+    return nullptr;
   }
   // Wait for all active streams before executing commands on the default
-  iHipWaitActiveStreams(defaultStream_);
-  return defaultStream_;
+  iHipWaitActiveStreams(null_queue);
+  return null_queue;
 }
 
 };
