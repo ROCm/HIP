@@ -2549,7 +2549,7 @@ namespace hip_impl {
         static std::once_flag init;
         std::call_once(init, []() {
             for (int i=0; i < g_deviceCnt; i++){
-                r.insert("hcc-amdgcn-amd-amdhsa--gfx"+std::to_string(g_deviceArray[i]->_props.gcnArch));
+                r.insert("hcc-amdgcn-amd-amdhsa--gfx"+std::string(g_deviceArray[i]->_props.gcnArchName));
         }});
         return r;
     }
