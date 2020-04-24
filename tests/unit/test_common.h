@@ -252,7 +252,6 @@ __global__ void memsetReverse(T* C_d, T val, int64_t NELEM) {
     }
 }
 
-
 template <typename T>
 void setDefaultData(size_t numElements, T* A_h, T* B_h, T* C_h) {
     // Initialize the host data:
@@ -263,6 +262,50 @@ void setDefaultData(size_t numElements, T* A_h, T* B_h, T* C_h) {
     }
 }
 
+template <typename T>
+bool initArraysForHost(T** A_h, size_t N, bool usePinnedHost = false) {
+    size_t Nbytes = N * sizeof(T);
+
+    if (usePinnedHost) {
+        if (A_h) {
+            HIPCHECK(hipHostMalloc((void**)A_h, Nbytes));
+        }
+    } else {
+        if (A_h) {
+            *A_h = (T*)malloc(Nbytes);
+            HIPASSERT(*A_h != NULL);
+        }
+    }
+
+    setDefaultData(N, A_h ? *A_h : NULL, (T*)NULL, (T*)NULL);
+    return true;
+}
+
+template <typename T>
+bool initArraysForHost(T** A_h, T** B_h, size_t N, bool usePinnedHost = false) {
+    size_t Nbytes = N * sizeof(T);
+
+    if (usePinnedHost) {
+        if (A_h) {
+            HIPCHECK(hipHostMalloc((void**)A_h, Nbytes));
+        }
+        if (B_h) {
+            HIPCHECK(hipHostMalloc((void**)B_h, Nbytes));
+        }
+    } else {
+        if (A_h) {
+            *A_h = (T*)malloc(Nbytes);
+            HIPASSERT(*A_h != NULL);
+        }
+        if (B_h) {
+            *B_h = (T*)malloc(Nbytes);
+            HIPASSERT(*B_h != NULL);
+        }
+    }
+
+    setDefaultData(N, A_h ? *A_h : NULL, B_h ? *B_h : NULL, (T*)NULL);
+    return true;
+}
 
 template <typename T>
 bool initArraysForHost(T** A_h, T** B_h, T** C_h, size_t N, bool usePinnedHost = false) {
@@ -299,6 +342,28 @@ bool initArraysForHost(T** A_h, T** B_h, T** C_h, size_t N, bool usePinnedHost =
     return true;
 }
 
+template <typename T>
+bool initArrays(T** A_d, T** B_d, T** C_d, size_t N) {
+    size_t Nbytes = N * sizeof(T);
+
+    if (A_d) {
+        HIPCHECK(hipMalloc(A_d, Nbytes));
+    }
+    if (B_d) {
+        HIPCHECK(hipMalloc(B_d, Nbytes));
+    }
+    if (C_d) {
+        HIPCHECK(hipMalloc(C_d, Nbytes));
+    }
+
+    return true;
+}
+
+template <typename T>
+bool initArrays(T** A_d, T** B_d, size_t N) {
+
+    return initArrays(A_d, B_d, (T**)nullptr, N);
+}
 
 template <typename T>
 bool initArrays(T** A_d, T** B_d, T** C_d, T** A_h, T** B_h, T** C_h, size_t N,
@@ -317,7 +382,6 @@ bool initArrays(T** A_d, T** B_d, T** C_d, T** A_h, T** B_h, T** C_h, size_t N,
 
     return initArraysForHost(A_h, B_h, C_h, N, usePinnedHost);
 }
-
 
 template <typename T>
 bool freeArraysForHost(T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
@@ -343,6 +407,40 @@ bool freeArraysForHost(T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
         }
     }
     return true;
+}
+
+template <typename T>
+bool freeArraysForHost(T* A_h, bool usePinnedHost) {
+  return freeArraysForHost(A_h, (T*)nullptr, (T*)nullptr, usePinnedHost);
+}
+
+template <typename T>
+bool freeArraysForHost(T* A_h, T* B_h, bool usePinnedHost) {
+  return freeArraysForHost(A_h, B_h, (T*)nullptr, usePinnedHost);
+}
+
+template <typename T>
+bool freeArrays(T* A_d, T* B_d, T* C_d) {
+    if (A_d) {
+        HIPCHECK(hipFree(A_d));
+    }
+    if (B_d) {
+        HIPCHECK(hipFree(B_d));
+    }
+    if (C_d) {
+        HIPCHECK(hipFree(C_d));
+    }
+    return true;
+}
+
+template <typename T>
+bool freeArrays(T* A_d) {
+  return freeArrays(A_d, (T*)nullptr, (T*)nullptr);
+}
+
+template <typename T>
+bool freeArrays(T* A_d, T* B_d) {
+  return freeArrays(A_d, B_d, (T*)nullptr);
 }
 
 template <typename T>
