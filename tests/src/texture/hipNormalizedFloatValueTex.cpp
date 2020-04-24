@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     HIPCHECK(hipGetDeviceProperties(&props, device));
     std::cout << "Device :: " << props.name << std::endl;
     #ifdef __HIP_PLATFORM_HCC__
-    std::cout << "Arch - AMD GPU :: " << props.gcnArch << std::endl;
+    std::cout << "Arch - AMD GPU :: " << props.gcnArchName << std::endl;
     #endif
     
     status &= textureTest<char>          (&texc);
