@@ -709,9 +709,9 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 };
 
 
-hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t count,
+hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeBytes,
                              size_t offset, hipMemcpyKind kind) {
-  HIP_INIT_API(hipMemcpyToSymbol, symbol, src, count, offset, kind);
+  HIP_INIT_API(hipMemcpyToSymbol, symbol, src, sizeBytes, offset, kind);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
@@ -730,21 +730,21 @@ hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t count,
   }
 
   /* Size Check to make sure offset is correct */
-  if ((offset + count) != sym_size) {
-    DevLogPrintfError("Size does not match, offset: %u count: %u sym_size: %u \n",
-                   offset, count, sym_size);
+  if ((offset + sizeBytes) > sym_size) {
+    DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
+                   offset, sizeBytes, sym_size);
     return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
 
   /* Copy memory from source to destination address */
-  HIP_RETURN(hipMemcpy(device_ptr, src, count, kind));
+  HIP_RETURN(hipMemcpy(device_ptr, src, sizeBytes, kind));
 }
 
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t count,
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t sizeBytes,
                                size_t offset, hipMemcpyKind kind) {
-  HIP_INIT_API(hipMemcpyFromSymbol, symbol, dst, count, offset, kind);
+  HIP_INIT_API(hipMemcpyFromSymbol, symbol, dst, sizeBytes, offset, kind);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
@@ -763,21 +763,21 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t count,
   }
 
   /* Size Check to make sure offset is correct */
-  if ((offset + count) != sym_size) {
-    DevLogPrintfError("Size does not match, offset: %u count: %u sym_size: %u \n",
-                      offset, count, sym_size);
+  if ((offset + sizeBytes) > sym_size) {
+    DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
+                      offset, sizeBytes, sym_size);
     return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
 
   /* Copy memory from source to destination address */
-  HIP_RETURN(hipMemcpy(dst, device_ptr, count, kind));
+  HIP_RETURN(hipMemcpy(dst, device_ptr, sizeBytes, kind));
 }
 
-hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t count,
+hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t sizeBytes,
                                   size_t offset, hipMemcpyKind kind, hipStream_t stream) {
-  HIP_INIT_API(hipMemcpyToSymbolAsync, symbol, src, count, offset, kind, stream);
+  HIP_INIT_API(hipMemcpyToSymbolAsync, symbol, src, sizeBytes, offset, kind, stream);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
@@ -796,21 +796,21 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t co
   }
 
   /* Size Check to make sure offset is correct */
-  if ((offset + count) != sym_size) {
-    DevLogPrintfError("Size does not match, offset: %u count: %u sym_size: %u \n",
-                      offset, count, sym_size);
+  if ((offset + sizeBytes) > sym_size) {
+    DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
+                      offset, sizeBytes, sym_size);
     return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
 
   /* Copy memory from source to destination address */
-  HIP_RETURN(hipMemcpyAsync(device_ptr, src, count, kind, stream));
+  HIP_RETURN(hipMemcpyAsync(device_ptr, src, sizeBytes, kind, stream));
 }
 
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t count,
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t sizeBytes,
                                     size_t offset, hipMemcpyKind kind, hipStream_t stream) {
-  HIP_INIT_API(hipMemcpyFromSymbolAsync, symbol, dst, count, offset, kind, stream);
+  HIP_INIT_API(hipMemcpyFromSymbolAsync, symbol, dst, sizeBytes, offset, kind, stream);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
@@ -829,16 +829,16 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t count,
   }
 
   /* Size Check to make sure offset is correct */
-  if ((offset + count) != sym_size) {
-    DevLogPrintfError("Size does not match, offset: %u count: %u sym_size: %u \n",
-                      offset, count, sym_size);
+  if ((offset + sizeBytes) > sym_size) {
+    DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
+                      offset, sizeBytes, sym_size);
     return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
 
   /* Copy memory from source to destination address */
-  HIP_RETURN(hipMemcpyAsync(dst, device_ptr, count, kind, stream));
+  HIP_RETURN(hipMemcpyAsync(dst, device_ptr, sizeBytes, kind, stream));
 }
 
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dstDevice,
