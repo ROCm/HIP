@@ -349,6 +349,8 @@ my $hasCXX = 0;        # options contain a cpp-style file (NVCC must force recog
 my $hasCU = 0;         # options contain a cu-style file (HCC must force recognition as GPU file)
 my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc.o from src tree. (some builds, ie cmake, provide their own)
 my $printHipVersion = 0;    # print HIP version
+my $printCXXFlags = 0;      # print HIPCXXFLAGS
+my $printLDFlags = 0;       # print HIPLDFLAGS
 my $runCmd = 1;
 my $buildDeps = 0;
 my $linkType = 1;
@@ -469,6 +471,14 @@ foreach $arg (@ARGV)
     }
     if($trimarg eq '--short-version') {
         $printHipVersion = 1;
+        $runCmd = 0;
+    }
+    if($trimarg eq '--cxxflags') {
+        $printCXXFlags = 1;
+        $runCmd = 0;
+    }
+    if($trimarg eq '--ldflags') {
+        $printLDFlags = 1;
         $runCmd = 0;
     }
     if($trimarg eq '-M') {
@@ -805,6 +815,12 @@ if ($printHipVersion) {
         print "HIP version: "
     }
     print $HIP_VERSION, "\n";
+}
+if ($printCXXFlags) {
+    print $HIPCXXFLAGS;
+}
+if ($printLDFlags) {
+    print $HIPLDFLAGS;
 }
 if ($runCmd) {
     if ($HIP_PLATFORM eq "hcc" and exists($hipConfig{'HCC_VERSION'}) and $HCC_VERSION ne $hipConfig{'HCC_VERSION'}) {
