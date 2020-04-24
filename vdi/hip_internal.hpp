@@ -179,7 +179,7 @@ struct ihipExec_t {
 };
 
 class PlatformState {
-  amd::Monitor lock_{"Guards global function map"};
+  amd::Monitor lock_{"Guards global function map", true};
 
   std::unordered_map<const void*, std::vector<std::pair<hipModule_t, bool>>> modules_;
   bool initialized_{false};
