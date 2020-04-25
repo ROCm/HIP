@@ -265,8 +265,11 @@ private:
 
   std::unordered_map<const void*, DeviceFunction > functions_;
   std::unordered_multimap<std::string, DeviceVar > vars_;
-  // Map from the host shadow symbol to its device name.
-  std::unordered_map<const void*, std::string> symbols_;
+  // Map from the host shadow symbol to its device name. As different modules
+  // may have the same name, each symbol is uniquely identified by a pair of
+  // module handle and its name.
+  std::unordered_map<const void*,
+                     std::pair<hipModule_t, std::string>> symbols_;
 
   static PlatformState* platform_;
 
@@ -286,9 +289,9 @@ public:
   std::vector< std::pair<hipModule_t, bool> >* unregisterVar(hipModule_t hmod);
 
 
-  bool findSymbol(const void *hostVar, std::string &devName);
+  bool findSymbol(const void *hostVar, hipModule_t &hmod, std::string &devName);
   PlatformState::DeviceVar* findVar(std::string hostVar, int deviceId, hipModule_t hmod);
-  void registerVarSym(const void *hostVar, const char *symbolName);
+  void registerVarSym(const void *hostVar, hipModule_t hmod, const char *symbolName);
   void registerVar(const char* symbolName, const DeviceVar& var);
   void registerFunction(const void* hostFunction, const DeviceFunction& func);
 

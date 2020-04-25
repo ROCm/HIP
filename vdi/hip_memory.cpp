@@ -716,13 +716,14 @@ hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t count,
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  hipModule_t hmod;
   std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
     DevLogPrintfError("cannot find symbol 0x%x \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
                                               &device_ptr, &sym_size)) {
     DevLogPrintfError("Cannot get global var: %s at device: %d \n", symbolName.c_str(), ihipGetDevice());
     HIP_RETURN(hipErrorInvalidSymbol);
@@ -748,13 +749,14 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t count,
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  hipModule_t hmod;
   std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
     DevLogPrintfError("cannot find symbol: 0x%x \n", symbol);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
                                               &device_ptr, &sym_size)) {
     DevLogPrintfError("Cannot find symbol Name: %s \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
@@ -780,13 +782,14 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t co
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  hipModule_t hmod;
   std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
     DevLogPrintfError("cannot find symbol: 0x%x \n", symbol);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
                                               &device_ptr, &sym_size)) {
     DevLogPrintfError("Cannot find symbol Name: %s \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
@@ -812,13 +815,14 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t count,
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  hipModule_t hmod;
   std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
     DevLogPrintfError("cannot find symbol: 0x%x \n", symbol);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
                                               &device_ptr, &sym_size)) {
     DevLogPrintfError("Cannot find symbol Name: %s \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
