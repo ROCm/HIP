@@ -90,9 +90,9 @@ __hipRegisterFatBinary(const void* data)
           reinterpret_cast<uintptr_t>(header) + desc->offset), desc->size};
       if (HIP_DUMP_CODE_OBJECT)
         __hipDumpCodeObject(image);
-      module->executable = hip_impl::get_program_state().load_executable(image.data(), image.size(),
-                                                                         module->executable,
-                                                                         agent);
+      module->executable = hip_impl::get_program_state().load_executable_no_copy(
+        reinterpret_cast<const char*>(header) + desc->offset, desc->size,
+        module->executable, agent);
 
       if (module->executable.handle) {
          hip_impl::program_state_impl::read_kernarg_metadata(image, module->kernargs);

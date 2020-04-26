@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2020-Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -53,18 +53,12 @@ THE SOFTWARE.
 
 #define passed()                                                                                   \
     printf("%sPASSED!%s\n", KGRN, KNRM);                                                           \
-    exit(0);
 
-// The real "assert" would have written to stderr. But it is
-// sufficient to just fflush here without getting pedantic. This also
-// ensures that we don't lose any earlier writes to stdout.
 #define failed(...)                                                                                \
     printf("%serror: ", KRED);                                                                     \
     printf(__VA_ARGS__);                                                                           \
-    printf("\n");                                                                                  \
-    printf("error: TEST FAILED\n%s", KNRM);                                                        \
-    fflush(NULL);                                                                               \
-    abort();
+    printf("%s\n",KNRM);                                                                                  \
+    return false;
 
 #define warn(...)                                                                                  \
     printf("%swarn: ", KYEL);                                                                      \
@@ -72,22 +66,20 @@ THE SOFTWARE.
     printf("\n");                                                                                  \
     printf("warn: TEST WARNING\n%s", KNRM);
 
-#define HIP_PRINT_STATUS(status)                                                                   \
-    std::cout << hipGetErrorName(status) << " at line: " << __LINE__ << std::endl;
+#define skipped() printf("%sSkipped subtest %s%s\n",KYEL,__FUNCTION__,KNRM);
 
 #define HIPCHECK(error)                                                                            \
     {                                                                                              \
         hipError_t localError = error;                                                             \
         if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
-            printf("%serror: '%s'(%d) from %s at %s:%d%s\n", KRED, hipGetErrorString(localError),  \
-                   localError, #error, __FILE__, __LINE__, KNRM);                                  \
-            failed("API returned error code.");                                                    \
+           failed("%serror: '%s'(%d) from %s at %s:%d%s\n", KRED, hipGetErrorString(localError),   \
+                   localError, #error, __FUNCTION__, __LINE__, KNRM);                              \
         }                                                                                          \
     }
 
 #define HIPASSERT(condition)                                                                       \
     if (!(condition)) {                                                                            \
-        failed("%sassertion %s at %s:%d%s \n", KRED, #condition, __FILE__, __LINE__, KNRM);        \
+        failed("%sassertion %s at %s:%d%s \n", KRED, #condition, __FUNCTION__, __LINE__, KNRM);    \
     }
 
 
@@ -167,7 +159,7 @@ int parseStandardArguments(int argc, char* argv[], bool failOnUndefinedArg);
 unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N);
 
 template<typename T> // pointer type
-void checkArray(T hData, T hOutputData, size_t width, size_t height,size_t depth)
+bool checkArray(T hData, T hOutputData, size_t width, size_t height,size_t depth)
 {
    for (int i = 0; i < depth; i++) {
       for (int j = 0; j < height; j++) {
@@ -180,10 +172,11 @@ void checkArray(T hData, T hOutputData, size_t width, size_t height,size_t depth
           }
        }
    }
+   return true;
 }
 
-template<typename T> 
-void checkArray(T input, T output, size_t height, size_t width)
+template<typename T>
+bool checkArray(T input, T output, size_t height, size_t width)
 {
     for(int i=0; i<height; i++ ){
         for(int j=0; j<width; j++ ){
@@ -194,6 +187,7 @@ void checkArray(T input, T output, size_t height, size_t width)
             }
         }
     }
+    return true;
 }
 
 
@@ -271,7 +265,7 @@ void setDefaultData(size_t numElements, T* A_h, T* B_h, T* C_h) {
 
 
 template <typename T>
-void initArraysForHost(T** A_h, T** B_h, T** C_h, size_t N, bool usePinnedHost = false) {
+bool initArraysForHost(T** A_h, T** B_h, T** C_h, size_t N, bool usePinnedHost = false) {
     size_t Nbytes = N * sizeof(T);
 
     if (usePinnedHost) {
@@ -302,11 +296,12 @@ void initArraysForHost(T** A_h, T** B_h, T** C_h, size_t N, bool usePinnedHost =
     }
 
     setDefaultData(N, A_h ? *A_h : NULL, B_h ? *B_h : NULL, C_h ? *C_h : NULL);
+    return true;
 }
 
 
 template <typename T>
-void initArrays(T** A_d, T** B_d, T** C_d, T** A_h, T** B_h, T** C_h, size_t N,
+bool initArrays(T** A_d, T** B_d, T** C_d, T** A_h, T** B_h, T** C_h, size_t N,
                 bool usePinnedHost = false) {
     size_t Nbytes = N * sizeof(T);
 
@@ -320,12 +315,12 @@ void initArrays(T** A_d, T** B_d, T** C_d, T** A_h, T** B_h, T** C_h, size_t N,
         HIPCHECK(hipMalloc(C_d, Nbytes));
     }
 
-    initArraysForHost(A_h, B_h, C_h, N, usePinnedHost);
+    return initArraysForHost(A_h, B_h, C_h, N, usePinnedHost);
 }
 
 
 template <typename T>
-void freeArraysForHost(T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
+bool freeArraysForHost(T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
     if (usePinnedHost) {
         if (A_h) {
             HIPCHECK(hipHostFree(A_h));
@@ -347,10 +342,11 @@ void freeArraysForHost(T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
             free(C_h);
         }
     }
+    return true;
 }
 
 template <typename T>
-void freeArrays(T* A_d, T* B_d, T* C_d, T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
+bool freeArrays(T* A_d, T* B_d, T* C_d, T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
     if (A_d) {
         HIPCHECK(hipFree(A_d));
     }
@@ -361,12 +357,12 @@ void freeArrays(T* A_d, T* B_d, T* C_d, T* A_h, T* B_h, T* C_h, bool usePinnedHo
         HIPCHECK(hipFree(C_d));
     }
 
-    freeArraysForHost(A_h, B_h, C_h, usePinnedHost);
+    return freeArraysForHost(A_h, B_h, C_h, usePinnedHost);
 }
 
 #if defined(__HIP_PLATFORM_HCC__)
 template <typename T>
-void initArrays2DPitch(T** A_d, T** B_d, T** C_d, size_t* pitch_A, size_t* pitch_B, size_t* pitch_C,
+bool initArrays2DPitch(T** A_d, T** B_d, T** C_d, size_t* pitch_A, size_t* pitch_B, size_t* pitch_C,
                        size_t numW, size_t numH) {
     if (A_d) {
         HIPCHECK(hipMallocPitch((void**)A_d, pitch_A, numW * sizeof(T), numH));
@@ -380,9 +376,10 @@ void initArrays2DPitch(T** A_d, T** B_d, T** C_d, size_t* pitch_A, size_t* pitch
 
     HIPASSERT(*pitch_A == *pitch_B);
     HIPASSERT(*pitch_A == *pitch_C)
+    return true;
 }
 
-inline void initHIPArrays(hipArray** A_d, hipArray** B_d, hipArray** C_d,
+inline bool initHIPArrays(hipArray** A_d, hipArray** B_d, hipArray** C_d,
                           const hipChannelFormatDesc* desc, const size_t numW, const size_t numH,
                           const unsigned int flags) {
     if (A_d) {
@@ -394,6 +391,7 @@ inline void initHIPArrays(hipArray** A_d, hipArray** B_d, hipArray** C_d,
     if (C_d) {
         HIPCHECK(hipMallocArray(C_d, desc, numW, numH, flags));
     }
+    return true;
 }
 #endif
 
@@ -440,7 +438,7 @@ size_t checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch = 
 // Assumes C_h contains vector add of A_h + B_h
 // Calls the test "failed" macro if a mismatch is detected.
 template <typename T>
-void checkTest(T* expected_H, T* result_H, size_t N, bool expectMatch = true) {
+bool checkTest(T* expected_H, T* result_H, size_t N, bool expectMatch = true) {
     size_t mismatchCount = 0;
     size_t firstMismatch = 0;
     size_t mismatchesToPrint = 10;
@@ -469,64 +467,8 @@ void checkTest(T* expected_H, T* result_H, size_t N, bool expectMatch = true) {
             failed("expected mismatches but did not detect any!");
         }
     }
+    return true;
 }
-
-
-//---
-struct Pinned {
-    static const bool isPinned = true;
-    static const char* str() { return "Pinned"; };
-
-    static void* Alloc(size_t sizeBytes) {
-        void* p;
-        HIPCHECK(hipHostMalloc((void**)&p, sizeBytes));
-        return p;
-    };
-};
-
-
-//---
-struct Unpinned {
-    static const bool isPinned = false;
-    static const char* str() { return "Unpinned"; };
-
-    static void* Alloc(size_t sizeBytes) {
-        void* p = malloc(sizeBytes);
-        HIPASSERT(p);
-        return p;
-    };
-};
-
-
-struct Memcpy {
-    static const char* str() { return "Memcpy"; };
-};
-
-struct MemcpyAsync {
-    static const char* str() { return "MemcpyAsync"; };
-};
-
-
-template <typename C>
-struct MemTraits;
-
-
-template <>
-struct MemTraits<Memcpy> {
-    static void Copy(void* dest, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                     hipStream_t stream) {
-        HIPCHECK(hipMemcpy(dest, src, sizeBytes, kind));
-    }
-};
-
-
-template <>
-struct MemTraits<MemcpyAsync> {
-    static void Copy(void* dest, const void* src, size_t sizeBytes, hipMemcpyKind kind,
-                     hipStream_t stream) {
-        HIPCHECK(hipMemcpyAsync(dest, src, sizeBytes, kind, stream));
-    }
-};
 
 };  // namespace HipTest
 #endif //__cplusplus

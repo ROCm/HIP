@@ -146,17 +146,17 @@ void check_abs_int64() {
   CHECK_ABS_INT64(inputCPU[5], outputCPU[5], outputCPU[5]);
   CHECK_ABS_INT64(inputCPU[6], outputCPU[6], outputCPU[7]);
   CHECK_ABS_INT64(inputCPU[7], outputCPU[7], outputCPU[7]);
-
+  
   // free memories
   hipFree(inputGPU);
   hipFree(outputGPU);
   free(inputCPU);
   free(outputCPU);
-
+  
   // done
   return;
 }
-
+  
 
 template<class T, class F>
 __global__ void kernel_simple(F f, T *out) {
@@ -192,7 +192,7 @@ int main(int argc, char* argv[]) {
     check_abs_int64();
 
     // check_lgamma_double();
-
+    
     test_fp16();
 
     passed();

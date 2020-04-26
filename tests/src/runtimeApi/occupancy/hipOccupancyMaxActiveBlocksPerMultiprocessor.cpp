@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,36 +19,46 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+// Test the Grid_Launch syntax.
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvcc EXCLUDE_HIP_RUNTIME HCC EXCLUDE_HIP_COMPILER hcc
- * TEST: %t EXCLUDE_HIP_PLATFORM nvcc EXCLUDE_HIP_RUNTIME HCC EXCLUDE_HIP_COMPILER hcc
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM vdi
+ * TEST: %t
  * HIT_END
  */
 
+#include "hip/hip_runtime.h"
 #include "test_common.h"
-#include "printf_common.h"
 
-__global__ void test_kernel() {
-  printf("%*d\n", 16, 42);
-  printf("%.*d\n", 8, 42);
-  printf("%*.*d\n", -16, 8, 42);
-  printf("%*.*f %s * %.*s\n", 16, 8, 123.456, "hello", 5, "worldxyz");
-}
+__global__ void f1(float *a) { *a = 1.0; }
 
-int main(int argc, char **argv) {
-  std::string reference(R"here(              42
-00000042
-00000042        
-    123.45600000 hello * world
-)here");
+template <typename T>
+__global__ void f2(T *a) { *a = 1; }
 
-  CaptureStream captured(stdout);
-  hipLaunchKernelGGL(test_kernel, dim3(1), dim3(1), 0, 0);
-  hipStreamSynchronize(0);
-  auto CapturedData = captured.getCapturedData();
-  std::string device_output = gulp(CapturedData);
 
-  HIPASSERT(device_output == reference);
-  passed();
+
+int main(int argc, char* argv[]) {
+
+    // test case for using kernel function pointer
+    int gridSize = 0;
+    int blockSize = 0;
+    hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0);
+    assert(gridSize != 0 && blockSize != 0);
+
+    int numBlock = 0;
+    hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, f1, blockSize, 0);
+    assert(numBlock != 0);
+
+
+    // test case for using kernel function pointer with template
+    gridSize = 0;
+    blockSize = 0;
+    hipOccupancyMaxPotentialBlockSize<void(*)(int *)>(&gridSize, &blockSize, f2, 0, 0);
+    assert(gridSize != 0 && blockSize != 0);
+
+    numBlock = 0;
+    hipOccupancyMaxActiveBlocksPerMultiprocessor<void(*)(int *)>(&numBlock, f2, blockSize, 0);
+    assert(numBlock != 0);
+
+    passed();
 }
