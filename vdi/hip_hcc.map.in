@@ -135,6 +135,10 @@ global:
     hipModuleLoadData;
     hipModuleLoadDataEx;
     hipModuleUnload;
+    hipModuleOccupancyMaxPotentialBlockSize;
+    hipModuleOccupancyMaxPotentialBlockSizeWithFlags;
+    hipModuleOccupancyMaxActiveBlocksPerMultiprocessor;
+    hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags;
     hipOccupancyMaxPotentialBlockSize;
     hipOccupancyMaxActiveBlocksPerMultiprocessor;
     hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags;

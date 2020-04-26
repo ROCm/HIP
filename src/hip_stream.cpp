@@ -63,11 +63,11 @@ hipError_t ihipStreamCreate(TlsData *tls, hipStream_t* stream, unsigned int flag
 
             // TODO - se try-catch loop to detect memory exception?
             //
-            // Note this is an execute_any_order queue, 
+            // Note this is an execute_any_order queue,
             // CUDA stream behavior is that all kernels submitted will automatically
-            // wait for prev to complete, this behaviour will be mainatined by 
-            // hipModuleLaunchKernel. execute_any_order will help 
-	    // hipExtModuleLaunchKernel , which uses a special flag
+            // wait for prev to complete, this behaviour will be mainatined by
+            // hipModuleLaunchKernel. execute_any_order will help
+            // hipExtModuleLaunchKernel , which uses a special flag
 
             {
                 // Obtain mutex access to the device critical data, release by destructor
@@ -130,18 +130,19 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
     HIP_INIT_SPECIAL_API(hipStreamWaitEvent, TRACE_SYNC, stream, event, flags);
 
-    hipError_t e = hipSuccess;
+    if (!event) return ihipLogStatus(hipErrorInvalidHandle);
 
-    if (event == nullptr) {
-        e = hipErrorInvalidHandle;
-
-    } else {
-        auto ecd = event->locked_copyCrit(); 
+    auto ecd = event->locked_copyCrit();
+    if (event->_flags & hipEventInterprocess) {
+        // this is an IPC event
+        if (ecd._ipc_shmem->read_index >= 0) {
+            // we have at least one recorded event, so proceed
+            stream->locked_streamWaitEvent(ecd);
+        }
+    }
+    else {
         if ((ecd._state != hipEventStatusUnitialized) && (ecd._state != hipEventStatusCreated)) {
             if (HIP_SYNC_STREAM_WAIT || (HIP_SYNC_NULL_STREAM && (stream == 0))) {
-                // conservative wait on host for the specified event to complete:
-                // return _stream->locked_eventWaitComplete(this, waitMode);
-                //
                 ecd.marker().wait((event->_flags & hipEventBlockingSync) ? hc::hcWaitModeBlocked
                                                                          : hc::hcWaitModeActive);
             } else {
@@ -150,9 +151,9 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
                 stream->locked_streamWaitEvent(ecd);
             }
         }
-    }  // else event not recorded, return immediately and don't create marker.
+    }
 
-    return ihipLogStatus(e);
+    return ihipLogStatus(hipSuccess);
 };
 
 

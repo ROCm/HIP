@@ -33,6 +33,9 @@ THE SOFTWARE.
 
 #define fileName "tex2d_kernel.code"
 
+#if __HIP__
+__hip_pinned_shadow__
+#endif
 texture<float, 2, hipReadModeElementType> tex;
 bool testResult = false;
 

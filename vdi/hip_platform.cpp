@@ -885,24 +885,19 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
 }
 
 extern "C" {
-// FIXME: Need to replace `uint32_t` with `int` finally.
-hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
-                                             hipFunction_t f, size_t dynSharedMemPerBlk,
-                                             uint32_t blockSizeLimit)
+hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+                                             const void* f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit)
 {
   HIP_INIT_API(hipOccupancyMaxPotentialBlockSize, f, dynSharedMemPerBlk, blockSizeLimit);
-
   if ((gridSize == nullptr) || (blockSize == nullptr)) {
     return HIP_RETURN(hipErrorInvalidValue);
   }
-
   hipFunction_t func = PlatformState::instance().getFunc(f, ihipGetDevice());
   if (func == nullptr) {
-    func = f;
+    return HIP_RETURN(hipErrorInvalidValue);
   }
-
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
-
   int num_grids = 0;
   int num_blocks = 0;
   hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
@@ -914,11 +909,81 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
   HIP_RETURN(ret);
 }
 
-// FIXME: Need to replace `uint32_t` with `int` finally.
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks,
-                                                        hipFunction_t f,
-                                                        uint32_t  blockSize,
-                                                        size_t dynamicSMemSize)
+hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit)
+{
+  HIP_INIT_API(hipModuleOccupancyMaxPotentialBlockSize, f, dynSharedMemPerBlk, blockSizeLimit);
+  if ((gridSize == nullptr) || (blockSize == nullptr)) {
+    return HIP_RETURN(hipErrorInvalidValue);
+  }
+  const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
+  int num_grids = 0;
+  int num_blocks = 0;
+  hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+    &num_blocks, &num_grids, device, f, 0, dynSharedMemPerBlk,true);
+  if (ret == hipSuccess) {
+    *blockSize = num_blocks;
+    *gridSize = num_grids;
+  }
+  HIP_RETURN(ret);
+}
+
+hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit, unsigned int flags)
+{
+  HIP_INIT_API(hipModuleOccupancyMaxPotentialBlockSizeWithFlags, f, dynSharedMemPerBlk, blockSizeLimit, flags);
+  if ((gridSize == nullptr) || (blockSize == nullptr)) {
+    return HIP_RETURN(hipErrorInvalidValue);
+  }
+  const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
+  int num_grids = 0;
+  int num_blocks = 0;
+  hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+    &num_blocks, &num_grids, device, f, 0, dynSharedMemPerBlk,true);
+  if (ret == hipSuccess) {
+    *blockSize = num_blocks;
+    *gridSize = num_grids;
+  }
+  HIP_RETURN(ret);
+}
+
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, 
+                                             hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk)
+{
+  HIP_INIT_API(hipModuleOccupancyMaxActiveBlocksPerMultiprocessor, f, blockSize, dynSharedMemPerBlk);
+  if (numBlocks == nullptr) {
+    return HIP_RETURN(hipErrorInvalidValue);
+  }
+  const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
+
+  int num_blocks = 0;
+  hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+    &num_blocks, nullptr, device, f, blockSize, dynSharedMemPerBlk, false);
+  *numBlocks = num_blocks;
+  HIP_RETURN(ret);
+}
+
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
+                                                              hipFunction_t f, int blockSize, 
+                                                              size_t dynSharedMemPerBlk, unsigned int flags)
+{
+  HIP_INIT_API(hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, f, blockSize, dynSharedMemPerBlk, flags);
+  if (numBlocks == nullptr) {
+    return HIP_RETURN(hipErrorInvalidValue);
+  }
+  const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
+
+  int num_blocks = 0;
+  hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
+    &num_blocks, nullptr, device, f, blockSize, dynSharedMemPerBlk, false);
+  *numBlocks = num_blocks;
+  HIP_RETURN(ret);
+}
+
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
+                                                        const void* f, int blockSize, size_t dynamicSMemSize)
 {
   HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessor, f, blockSize, dynamicSMemSize);
   if (numBlocks == nullptr) {
@@ -927,7 +992,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks,
 
   hipFunction_t func = PlatformState::instance().getFunc(f, ihipGetDevice());
   if (func == nullptr) {
-    func = f;
+    return HIP_RETURN(hipErrorInvalidValue);
   }
 
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
@@ -939,12 +1004,9 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks,
   HIP_RETURN(ret);
 }
 
-// FIXME: Need to replace `uint32_t` with `int` finally.
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(uint32_t* numBlocks,
-                                                                 hipFunction_t f,
-                                                                 uint32_t  blockSize,
-                                                                 size_t dynamicSMemSize,
-                                                                 unsigned int flags)
+hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
+                                                                 const void* f,
+                                                                 int  blockSize, size_t dynamicSMemSize, unsigned int flags)
 {
   HIP_INIT_API(hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, f, blockSize, dynamicSMemSize, flags);
   if (numBlocks == nullptr) {
@@ -953,7 +1015,7 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(uint32_t* numBl
 
   hipFunction_t func = PlatformState::instance().getFunc(f, ihipGetDevice());
   if (func == nullptr) {
-    func = f;
+    return HIP_RETURN(hipErrorInvalidValue);
   }
 
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];

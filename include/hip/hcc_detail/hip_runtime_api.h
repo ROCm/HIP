@@ -97,8 +97,6 @@ typedef int hipDevice_t;
 
 typedef struct ihipStream_t* hipStream_t;
 
-// TODO: IPC implementation
-
 #define hipIpcMemLazyEnablePeerAccess 0
 
 #define HIP_IPC_HANDLE_SIZE 64
@@ -107,13 +105,15 @@ typedef struct hipIpcMemHandle_st {
     char reserved[HIP_IPC_HANDLE_SIZE];
 } hipIpcMemHandle_t;
 
+#if __HIP_VDI__
 // TODO: IPC event handle currently unsupported
 struct ihipIpcEventHandle_t;
 typedef struct ihipIpcEventHandle_t* hipIpcEventHandle_t;
-
-
-// END TODO
-
+#else
+typedef struct hipIpcEventHandle_st {
+    char reserved[HIP_IPC_HANDLE_SIZE];
+} hipIpcEventHandle_t;
+#endif
 typedef struct ihipModule_t* hipModule_t;
 
 typedef struct ihipModuleSymbol_t* hipFunction_t;
@@ -265,7 +265,6 @@ typedef enum hipSharedMemConfig {
     hipSharedMemBankSizeEightByte  ///< Shared mem is banked at 8-byte intervals and performs best
                                    ///< when adjacent threads access data 4 bytes apart.
 } hipSharedMemConfig;
-
 
 /**
  * Struct for data in 3D
@@ -3007,9 +3006,51 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
-hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+
+//TODO - Match CUoccupancyB2DSize
+hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                              hipFunction_t f, size_t dynSharedMemPerBlk,
-                                             uint32_t blockSizeLimit);
+                                             int blockSizeLimit);
+
+/**
+ * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
+ *
+ * @param [out] gridSize           minimum grid size for maximum potential occupancy
+ * @param [out] blockSize          block size for maximum potential occupancy
+ * @param [in]  f                  kernel function for which occupancy is calulated
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
+ * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
+ */
+//TODO - Match CUoccupancyB2DSize
+hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+                                             hipFunction_t f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit, unsigned int  flags);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  func             Kernel function (hipFunction) for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ */
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(
+   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
+
+/**
+ * @brief Returns occupancy for a device function.
+ *
+ * @param [out] numBlocks        Returned occupancy
+ * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
+ * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
+ * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ */
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -3020,18 +3061,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk);
-
-/**
- * @brief Returns occupancy for a device function.
- *
- * @param [out] numBlocks        Returned occupancy
- * @param [in]  func             Kernel function (hipFunction) for which occupancy is calulated
- * @param [in]  blockSize        Block size the kernel is intended to be launched with
- * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
- */
-hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
-   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk);
+   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk);
 
 /**
  * @brief Returns occupancy for a device function.
@@ -3043,19 +3073,22 @@ hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessor(
  * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
  */
 hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   uint32_t* numBlocks, hipFunction_t f, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
+   int* numBlocks, const void* f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags __dparm(hipOccupancyDefault));
 
 /**
- * @brief Returns occupancy for a device function.
+ * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
  *
- * @param [out] numBlocks        Returned occupancy
- * @param [in]  f                Kernel function(hipFunction_t) for which occupancy is calulated
- * @param [in]  blockSize        Block size the kernel is intended to be launched with
+ * @param [out] gridSize           minimum grid size for maximum potential occupancy
+ * @param [out] blockSize          block size for maximum potential occupancy
+ * @param [in]  f                  kernel function for which occupancy is calulated
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
- * @param [in]  flags            Extra flags for occupancy calculation (currently ignored)
+ * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
-hipError_t hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-   int* numBlocks, hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags);
+hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+                                             const void* f, size_t dynSharedMemPerBlk,
+                                             int blockSizeLimit);
 
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
@@ -3201,10 +3234,8 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
 hipError_t hipIpcCloseMemHandle(void* devPtr);
 
 
-// hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
-// hipError_t hipIpcCloseMemHandle(void *devPtr);
-// // hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
-// hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
+hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event);
+hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
 
 
 /**
@@ -3524,17 +3555,16 @@ hipError_t hipTexObjectGetTextureDesc(
 #endif
 
 #if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
-template <typename F>
-static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessor(
-    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk) {
-    return ::hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, (hipFunction_t)func, blockSize,
-                                                          dynSharedMemPerBlk);
+template <typename T>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+    T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0) {
+    return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),dynSharedMemPerBlk,blockSizeLimit);
 }
-template <typename F>
-static hipError_t __host__ inline hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-    uint32_t* numBlocks, F func, uint32_t blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
-    return ::hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
-        numBlocks, (hipFunction_t)func, blockSize, dynSharedMemPerBlk, flags);
+
+template <typename T>
+static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+    T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0, unsigned int  flags = 0 ) {
+    return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),dynSharedMemPerBlk,blockSizeLimit);
 }
 #endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
 
@@ -3599,6 +3629,20 @@ const char* hipKernelNameRef(const hipFunction_t f);
 #endif
 
 #ifdef __cplusplus
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
+    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessor(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk);
+}
+
+template <class T>
+inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+    int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk, unsigned int flags) {
+    return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
+        numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
+}
 
 class TlsData;
 
@@ -3753,7 +3797,7 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
 #if __HIP_VDI__ && !defined(__HCC__)
 
 template <typename F>
-inline hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
+inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                                     F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
 return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize,(hipFunction_t)kernel, dynSharedMemPerBlk, blockSizeLimit);
 }

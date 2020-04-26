@@ -351,6 +351,9 @@ my $buildDeps = 0;
 my $linkType = 1;
 my $setLinkType = 0;
 my $coFormatv3 = 1;
+if(defined $HIP_COMPILER and $HIP_COMPILER eq "hcc") {
+    $coFormatv3 = 0;
+}
 my $funcSupp = 0;      # enable function support
 
 my @options = ();

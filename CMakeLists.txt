@@ -114,6 +114,8 @@ if(NOT DEFINED ENV{HIP_RUNTIME})
     set(HIP_RUNTIME "HCC" CACHE STRING "HIP Runtime")
   elseif (HIP_PLATFORM STREQUAL "vdi")
     set(HIP_RUNTIME "VDI" CACHE STRING "HIP Runtime")
+  elseif (HIP_PLATFORM STREQUAL "nvcc")
+    set(HIP_RUNTIME "CUDA" CACHE STRING "HIP Runtime")
   endif()
 endif()
 add_to_config(_buildInfo HIP_RUNTIME)
@@ -401,7 +403,9 @@ if(HIP_PLATFORM STREQUAL "hcc")
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 endif()
 
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
+endif()
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
 
@@ -430,7 +434,12 @@ endif()
 #############################
 # Install hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
-      install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
+    install(TARGETS hip_hcc_static hip_hcc hiprtc DESTINATION lib)
+endif()
+
+# Install .hipInfo
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
+    install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
 endif()
 
 # Install .hipInfo
@@ -454,9 +463,7 @@ endif()
 #############################
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
-    # ToDo: The cmake generated target files are not working. We have to install manually created ones
-    # for now. Should fix this and remove target files under packaging.
-    #install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
+    install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 elseif( HIP_PLATFORM STREQUAL "vdi")
 #    install(TARGETS hip_on_vdi host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 endif()
@@ -632,8 +639,12 @@ if(${RUN_HIT} EQUAL 0)
     include_directories(${HIP_SRC_PATH}/tests/src)
     hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
 
+    # Add unit tests
+    include_directories(${HIP_SRC_PATH}/tests/unit)
+    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/unit "unit_tests")
+
     # Add top-level tests to build_tests
-    add_custom_target(build_tests DEPENDS directed_tests)
+    add_custom_target(build_tests DEPENDS directed_tests unit_tests)
 
     # Add custom target: check
     add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)

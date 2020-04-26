@@ -203,10 +203,10 @@
 
 |   **CUDA**                                                |   **HIP**                                       |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------------------------|:----------------:|
-|`cusparseSbsrmv`                                           |                                                 |
-|`cusparseDbsrmv`                                           |                                                 |
-|`cusparseCbsrmv`                                           |                                                 |
-|`cusparseZbsrmv`                                           |                                                 |
+|`cusparseSbsrmv`                                           |`hipsparseSbsrmv`                                |
+|`cusparseDbsrmv`                                           |`hipsparseDbsrmv`                                |
+|`cusparseCbsrmv`                                           |`hipsparseCbsrmv`                                |
+|`cusparseZbsrmv`                                           |`hipsparseZbsrmv`                                |
 |`cusparseSbsrxmv`                                          |                                                 |
 |`cusparseDbsrxmv`                                          |                                                 |
 |`cusparseCbsrxmv`                                          |                                                 |
@@ -349,20 +349,20 @@
 
 |   **CUDA**                                                |   **HIP**                                       |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------------------------|:----------------:|
-|`cusparseXcsrgeamNnz`                                      |                                                 |
-|`cusparseScsrgeam`                                         |                                                 |
-|`cusparseDcsrgeam`                                         |                                                 |
-|`cusparseCcsrgeam`                                         |                                                 |
-|`cusparseZcsrgeam`                                         |                                                 |
-|`cusparseXcsrgeam2Nnz`                                     |                                                 | 9.2              |
-|`cusparseScsrgeam2`                                        |                                                 | 9.2              |
-|`cusparseDcsrgeam2`                                        |                                                 | 9.2              |
-|`cusparseCcsrgeam2`                                        |                                                 | 9.2              |
-|`cusparseZcsrgeam2`                                        |                                                 | 9.2              |
-|`cusparseScsrgeam2_bufferSizeExt`                          |                                                 | 9.2              |
-|`cusparseDcsrgeam2_bufferSizeExt`                          |                                                 | 9.2              |
-|`cusparseCcsrgeam2_bufferSizeExt`                          |                                                 | 9.2              |
-|`cusparseZcsrgeam2_bufferSizeExt`                          |                                                 | 9.2              |
+|`cusparseXcsrgeamNnz`                                      |`hipsparseXcsrgeamNnz`                           |
+|`cusparseScsrgeam`                                         |`hipsparseScsrgeam`                              |
+|`cusparseDcsrgeam`                                         |`hipsparseDcsrgeam`                              |
+|`cusparseCcsrgeam`                                         |`hipsparseCcsrgeam`                              |
+|`cusparseZcsrgeam`                                         |`hipsparseZcsrgeam`                              |
+|`cusparseXcsrgeam2Nnz`                                     |`hipsparseXcsrgeam2Nnz`                          | 9.2              |
+|`cusparseScsrgeam2`                                        |`hipsparseScsrgeam2`                             | 9.2              |
+|`cusparseDcsrgeam2`                                        |`hipsparseDcsrgeam2`                             | 9.2              |
+|`cusparseCcsrgeam2`                                        |`hipsparseCcsrgeam2`                             | 9.2              |
+|`cusparseZcsrgeam2`                                        |`hipsparseZcsrgeam2`                             | 9.2              |
+|`cusparseScsrgeam2_bufferSizeExt`                          |`hipsparseScsrgeam2_bufferSizeExt`               | 9.2              |
+|`cusparseDcsrgeam2_bufferSizeExt`                          |`hipsparseDcsrgeam2_bufferSizeExt`               | 9.2              |
+|`cusparseCcsrgeam2_bufferSizeExt`                          |`hipsparseCcsrgeam2_bufferSizeExt`               | 9.2              |
+|`cusparseZcsrgeam2_bufferSizeExt`                          |`hipsparseZcsrgeam2_bufferSizeExt`               | 9.2              |
 |`cusparseXcsrgemmNnz`                                      |`hipsparseXcsrgemmNnz`                           |
 |`cusparseScsrgemm`                                         |`hipsparseScsrgemm`                              |
 |`cusparseDcsrgemm`                                         |`hipsparseDcsrgemm`                              |
@@ -377,7 +377,6 @@
 |`cusparseDcsrgemm2_bufferSizeExt`                          |`hipsparseDcsrgemm2_bufferSizeExt`               |
 |`cusparseCcsrgemm2_bufferSizeExt`                          |`hipsparseCcsrgemm2_bufferSizeExt`               |
 |`cusparseZcsrgemm2_bufferSizeExt`                          |`hipsparseZcsrgemm2_bufferSizeExt`               |
-
 
 ## **7. cuSPARSE Preconditioners Reference**
 
@@ -724,10 +723,10 @@
 |`cusparseHpruneCsr2csrNnzByPercentage`                     |                                                 | 9.0              |
 |`cusparseSpruneCsr2csrNnzByPercentage`                     |                                                 | 9.0              |
 |`cusparseDpruneCsr2csrNnzByPercentage`                     |                                                 | 9.0              |
-|`cusparseSnnz_compress`                                    |                                                 | 8.0              |
-|`cusparseDnnz_compress`                                    |                                                 | 8.0              |
-|`cusparseCnnz_compress`                                    |                                                 | 8.0              |
-|`cusparseZnnz_compress`                                    |                                                 | 8.0              |
+|`cusparseSnnz_compress`                                    |`hipsparseSnnz_compress`                         | 8.0              |
+|`cusparseDnnz_compress`                                    |`hipsparseDnnz_compress`                         | 8.0              |
+|`cusparseCnnz_compress`                                    |`hipsparseCnnz_compress`                         | 8.0              |
+|`cusparseZnnz_compress`                                    |`hipsparseZnnz_compress`                         | 8.0              |
 
 ## **10. cuSPARSE Generic API Reference**
 
