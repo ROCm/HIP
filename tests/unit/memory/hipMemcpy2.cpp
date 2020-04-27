@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../utest_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * TEST_NAMED: %t hipMemcpyDtoDAsync-simple --async
  * HIT_END
@@ -36,7 +36,7 @@ THE SOFTWARE.
  * -------------------------------------------------------------------------------------------------------------------------------------------------------|
  */
  
-#include "test_common.h"
+#include "utest_common.h"
 #include <vector>
 
 // Globals
@@ -161,6 +161,8 @@ hipError_t memcopyHtoD(void* dst, void* src, size_t sizeBytes, hipStream_t strea
   HIPASSERT(A2_h1[arrSize-1] == A2_h0[arrSize-1]);   
  
   // free memory
+  hipStreamDestroy(stream0);
+  hipStreamDestroy(stream1);
   HipTest::freeArrays(A1_d0, A2_d0);
   HipTest::freeArrays(A1_d1, A2_d1);
   HipTest::freeArraysForHost(A1_h0, A2_h0, pinnedHostMemeory);
@@ -236,6 +238,7 @@ bool simpleMemcpyTest(size_t arrSize, bool pinnedHostMemeory, int gpu, T initDat
   HIPASSERT(++A1_h[arrSize-1] == A2_h[arrSize-1]); 
   
   // free memory
+  hipStreamDestroy(stream);
   HipTest::freeArrays(A1_d, A2_d);
   HipTest::freeArraysForHost(A1_h, A2_h, pinnedHostMemeory);  
   return true;

@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../utest_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * TEST_NAMED: %t hipMemcpyWithStream-simple --syncWithStream
  * TEST_NAMED: %t hipMemcpyAsync-simple --async
@@ -45,7 +45,7 @@ THE SOFTWARE.
  * ------------------------------------------------------------------------------------------------------------------------------------------ 
  */
 
-#include "test_common.h"
+#include "utest_common.h"
 #include <vector>
 
 bool isMultiDevice(){
@@ -250,6 +250,7 @@ bool SimpleMemcopy(int arrSize, T initData){
   HIPCHECK(memcopy(A1_pin_h, A2_d,     numBytes, hipMemcpyDeviceToHost, stream));
   HIPASSERT(A1_h[arrSize-1] == A1_pin_h[arrSize-1]); 
 
+  hipStreamDestroy(stream);
   HipTest::freeArrays(A1_d, A2_d);
   HipTest::freeArraysForHost(A1_h, A2_h, false);
   HipTest::freeArraysForHost(A1_pin_h, A2_pin_h, true);
@@ -288,6 +289,7 @@ bool SimpleMemcopy2(size_t arrSize) {
 
   HipTest::checkVectorADD(A_h, B_h, C_h, arrSize);
 
+  hipStreamDestroy(stream);
   HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
   return true;
 }
@@ -346,7 +348,8 @@ bool SimpleMemcopyWithDefaultKind(int arrSize, T initData){
   HIPCHECK(memcopy(A2_d,     A1_d,     numBytes, hipMemcpyDefault, stream));  
   HIPCHECK(memcopy(A1_pin_h, A2_d,     numBytes, hipMemcpyDefault, stream));
   HIPASSERT(A1_h[arrSize-1] == A1_pin_h[arrSize-1]); 
-  
+
+  hipStreamDestroy(stream);  
   HipTest::freeArrays(A1_d, A2_d);
   HipTest::freeArraysForHost(A1_h, A2_h, false);
   HipTest::freeArraysForHost(A1_pin_h, A2_pin_h, true);
@@ -434,7 +437,8 @@ bool MultiDeviceInterLeavedCopy(size_t arrSize, T initData, int gpu0, int gpu1){
   HIPCHECK(memcopy(A2_d0,     A1_d1,     numBytes, hipMemcpyDeviceToDevice, stream));  
   HIPCHECK(memcopy(A1_pin_h1, A2_d0,     numBytes, hipMemcpyDeviceToHost, stream));
   HIPASSERT(A1_pin_h1[arrSize-1] == A1_pin_h0[arrSize-1]); 
-  
+
+  hipStreamDestroy(stream); 
   HipTest::freeArrays(A1_d0, A2_d0);
   HipTest::freeArrays(A1_d1, A2_d1);
   HipTest::freeArraysForHost(A1_pin_h1, A2_pin_h1, true);
@@ -536,7 +540,9 @@ bool MultiDeviceCopy(size_t arrSize, T initData, int gpu0, int gpu1){
   HIPCHECK(memcopy(A2_d1,     A1_d1,     numBytes, hipMemcpyDeviceToDevice, stream1));  
   HIPCHECK(memcopy(A2_pin_h1, A2_d1,     numBytes, hipMemcpyDeviceToHost, stream1));
   HIPASSERT(A2_pin_h1[arrSize-1] == A1_pin_h1[arrSize-1]); 
-    
+
+  hipStreamDestroy(stream0);
+  hipStreamDestroy(stream1);    
   HipTest::freeArrays(A1_d0, A2_d0);
   HipTest::freeArrays(A1_d1, A2_d1);
   HipTest::freeArraysForHost(A1_pin_h1, A2_pin_h1, true);
