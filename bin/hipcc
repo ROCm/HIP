@@ -214,6 +214,7 @@ if ($HIP_PLATFORM eq "clang") {
     if (not $isWindows) {
       $HIPLDFLAGS .= " -Wl,--rpath-link=$HIP_LIB_PATH";
       $HIPLDFLAGS .= " -lhip_hcc";
+      $HIPLDFLAGS .= " -Wl,--enable-new-dtags -Wl,--rpath=$ROCM_PATH/lib:$ROCM_PATH/lib64:$ROCM_PATH/hip/lib ";
     } else {
       $HIPLDFLAGS .= " -lamdhip64";
     }
