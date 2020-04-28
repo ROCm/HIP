@@ -18,9 +18,15 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
- * TEST: %t
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME VDI NVCC_OPTIONS -std=c++11
+ * TEST: %t EXCLUDE_HIP_RUNTIME VDI
  * HIT_END
+ */
+
+/* 
+ * Unit test for hipIpcGetEventHandle, hipIpcOpenEventHandle
+ * This covers positive test cases and only verifies if the ipc event received through event handle in the child process is valid and whether this ipc event can be used with various event APIs successfully 
+ * This also covers opening event handle on another device and tests the above cases on multi gpu setup
  */
 
 #include "test_common.h"
@@ -33,26 +39,34 @@ THE SOFTWARE.
 #define N 10000
 #define Nbytes N*sizeof(int)
 
-int enablePeers(int dev0, int dev1) {
-    int canAccessPeer01, canAccessPeer10;
-    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer01, dev0, dev1));
-    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer10, dev1, dev0));
-    if (!canAccessPeer01 || !canAccessPeer10) {
-        return -1;
-    }
+bool enablePeers(int *gpu0, int *gpu1, int devCount) {
 
-    HIPCHECK(hipSetDevice(dev0));
-    HIPCHECK(hipDeviceEnablePeerAccess(dev1, 0 /*flags*/));
-    HIPCHECK(hipSetDevice(dev1));
-    HIPCHECK(hipDeviceEnablePeerAccess(dev0, 0 /*flags*/));
-    HIPCHECK(hipSetDevice(dev0));
+   for(int dev0 = 0; dev0 < devCount; ++dev0){
+     for(int dev1 = 1; dev1 < devCount; ++dev1){
 
-    return 0;
-};
+        int canAccessPeer01, canAccessPeer10;
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer01, dev0, dev1));
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer10, dev1, dev0));
+        if (!canAccessPeer01 || !canAccessPeer10) {
+           break;
+        }
+
+        HIPCHECK(hipSetDevice(dev0));
+        HIPCHECK(hipDeviceEnablePeerAccess(dev1, 0 /*flags*/));
+        HIPCHECK(hipSetDevice(dev1));
+        HIPCHECK(hipDeviceEnablePeerAccess(dev0, 0 /*flags*/));
+
+        *gpu0 = dev0; *gpu1 = dev1;
+        return true;
+     }
+   }
+   return false;
+}
 
 typedef struct mem_handle {
     hipIpcEventHandle_t eventHandle;
-    int devCount;
+    int device0;
+    int device1;
 } hip_ipc_t;
 
 bool runipcTest()
@@ -79,20 +93,22 @@ bool runipcTest()
     pid = fork();
     
     if(pid != 0) {
-    
-        int dev0 = 0;
-        int dev1 = 1;
-        HIPCHECK(hipGetDeviceCount(&shrd_mem->devCount));
-        if (shrd_mem->devCount > 1) {
-           if (enablePeers(dev0, dev1) == -1) {
+        int dev0 = 0, dev1 = 0, devCount;
+        HIPCHECK(hipGetDeviceCount(&devCount));
+        if (devCount > 1) {
+           if (enablePeers(&dev0, &dev1, devCount) == false) {
               printf("warning : could not find peer gpus, only single device test is run\n");
-              shrd_mem->devCount = 1;
+           }
+           else {
+              shrd_mem->device1 = dev1;
            }
         } 
 
+        shrd_mem->device0 = dev0;
+        HIPCHECK(hipSetDevice(shrd_mem->device0));
         hipEvent_t start;
         HIPCHECK(hipEventCreateWithFlags(&start, hipEventDisableTiming|hipEventInterprocess));
-
+        // hipIpcGetEventHandle is used to get an interprocess handle for an existing event
         HIPCHECK(hipIpcGetEventHandle(&shrd_mem->eventHandle, start));
 
         HIPCHECK(hipDeviceSynchronize());
@@ -108,13 +124,16 @@ bool runipcTest()
             perror ("sem_wait error!"); 
             exit (1);
 	}
-         
+        
+        HIPCHECK(hipSetDevice(shrd_mem->device0)); 
         hipEvent_t ipc_event;
         hipStream_t stream;
         HIPCHECK(hipStreamCreate(&stream));
-  
+   
+        // verifies hipIpcOpenEventHandle on the same device in the child process
         HIPCHECK(hipIpcOpenEventHandle(&ipc_event, shrd_mem->eventHandle));
         
+        // Below operations are to test the validity of the ipc_event received thru ipc open event handle and ensure it works with the event APIs
         HIPCHECK(hipEventRecord(ipc_event, NULL));
 
         HIPCHECK(hipEventRecord(ipc_event, stream))
@@ -125,20 +144,22 @@ bool runipcTest()
         HIPCHECK(hipEventQuery(ipc_event));
      
         HIPCHECK(hipStreamDestroy(stream));
+        // Destroys the ipc event receieved thru ipc open event handle
         HIPCHECK(hipEventDestroy(ipc_event));
         
         // Multi Gpu Setup 
-        if (shrd_mem->devCount > 1){
+        if (shrd_mem->device1){
             
-            HIPCHECK(hipSetDevice(1));
+            HIPCHECK(hipSetDevice(shrd_mem->device1));
 
             hipStream_t stream1;
             hipEvent_t ipc_event1;
    
             HIPCHECK(hipStreamCreate(&stream1));
-
+            // verifies hipIpcOpenEventHandle on the different device in the child process
             HIPCHECK(hipIpcOpenEventHandle(&ipc_event1, shrd_mem->eventHandle));
         
+            // Below operations are to test the validity of the ipc_event received thru ipc open event handle and ensure it works with the event APIs
             HIPCHECK(hipEventRecord(ipc_event1, NULL));
 
             HIPCHECK(hipEventRecord(ipc_event1, stream1))
@@ -150,6 +171,7 @@ bool runipcTest()
             HIPCHECK(hipEventQuery(ipc_event1));
         
             HIPCHECK(hipStreamDestroy(stream1));
+            // Destroys the ipc event receieved thru ipc open event handle
             HIPCHECK(hipEventDestroy(ipc_event1));
         } 
          

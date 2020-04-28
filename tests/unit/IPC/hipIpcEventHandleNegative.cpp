@@ -18,9 +18,14 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
- * TEST: %t
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME VDI NVCC_OPTIONS -std=c++11
+ * TEST: %t EXCLUDE_HIP_RUNTIME VDI
  * HIT_END
+ */
+
+/* 
+ * Unit test for hipIpcGetEventHandle, hipIpcOpenEventHandle
+ * This covers negative test cases. It tests scenarios when the event or handle is NULL/invalid
  */
 
 #include "test_common.h"
@@ -32,23 +37,6 @@ THE SOFTWARE.
 
 #define N 10000
 #define Nbytes N*sizeof(int)
-
-int enablePeers(int dev0, int dev1) {
-    int canAccessPeer01, canAccessPeer10;
-    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer01, dev0, dev1));
-    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer10, dev1, dev0));
-    if (!canAccessPeer01 || !canAccessPeer10) {
-        return -1;
-    }
-
-    HIPCHECK(hipSetDevice(dev0));
-    HIPCHECK(hipDeviceEnablePeerAccess(dev1, 0 /*flags*/));
-    HIPCHECK(hipSetDevice(dev1));
-    HIPCHECK(hipDeviceEnablePeerAccess(dev0, 0 /*flags*/));
-    HIPCHECK(hipSetDevice(dev0));
-
-    return 0;
-};
 
 typedef struct mem_handle {
     hipIpcEventHandle_t eventHandle;
@@ -80,28 +68,21 @@ bool runipcNegativeTest()
     
     if(pid != 0) {
     
-        int dev0 = 0;
-        int dev1 = 1;
-        HIPCHECK(hipGetDeviceCount(&shrd_mem->devCount));
-        if (shrd_mem->devCount > 1) {
-           if (enablePeers(dev0, dev1) == -1) {
-              printf("warning : could not find peer gpus, only single device test is run\n");
-              shrd_mem->devCount = 1;
-           }
-        } 
-
         hipEvent_t start;
         HIPCHECK(hipEventCreateWithFlags(&start, hipEventDisableTiming));
+        // hipIpcGetEventHandle should fail as the event is created without flag hipEventInterprocess 
         HIPASSERT(hipIpcGetEventHandle(&shrd_mem->eventHandle, start)==hipErrorInvalidHandle);
         
-        //CUDA crashes, hence skipping this
+        // hipIpcGetEventHandle should fail as the event is NULL or created without flag hipEventDisableTiming
+        // CUDA crashes, hence skipping this
         #ifndef __HIP_PLATFORM_NVCC__
         HIPCHECK(hipEventCreateWithFlags(&start, hipEventInterprocess));
         
+        HIPASSERT(hipIpcGetEventHandle(&shrd_mem->eventHandle, start)==hipErrorInvalidHandle);
         HIPASSERT(hipIpcGetEventHandle(&shrd_mem->eventHandle, NULL)==hipErrorInvalidHandle);
         #endif
-        HIPASSERT(hipIpcGetEventHandle(&shrd_mem->eventHandle, start)==hipErrorInvalidHandle);
         
+        // hipIpcGetEventHandle should fail as handle is NULL
         shrd_mem = NULL;
         HIPASSERT(hipIpcGetEventHandle(&shrd_mem->eventHandle, start)==hipErrorInvalidHandle);
 
@@ -121,10 +102,13 @@ bool runipcNegativeTest()
          
         hipEvent_t ipc_event;
 
-        //CUDA crashes, hence skipping this 
+        // hipIpcOpenEventHandle should fail as hipIpcGetEventHandle didnt succeed or not used
+        // CUDA crashes, hence skipping this 
         #ifndef __HIP_PLATFORM_NVCC__
         HIPASSERT(hipIpcOpenEventHandle(&ipc_event, shrd_mem->eventHandle)==hipErrorInvalidValue);
         #endif
+
+        // hipIpcOpenEventHandle should fail as the event object passed is NULL
         HIPASSERT(hipIpcOpenEventHandle(NULL, shrd_mem->eventHandle)==hipErrorInvalidValue);
         
         if(sem_post(sem_ob2) == -1) {
