@@ -109,11 +109,11 @@ namespace hip {
     amd::Monitor lock_{"Device lock"};
     /// VDI context
     amd::Context* context_;
-    /// VDI host queue for default streams
-    Stream null_stream_;
     /// Device's ID
     /// Store it here so we don't have to loop through the device list every time
     int deviceId_;
+    /// VDI host queue for default streams
+    Stream null_stream_;
     //Maintain list of user enabled peers
     std::list<int> userEnabledPeers;
 
