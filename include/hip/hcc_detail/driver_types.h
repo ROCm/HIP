@@ -400,6 +400,7 @@ typedef struct HIP_MEMCPY3D {
   const void* srcHost;
   hipDeviceptr_t srcDevice;
   hipArray_t srcArray;
+  void* reserved0;
   unsigned int srcPitch;
   unsigned int srcHeight;
   unsigned int dstXInBytes;
@@ -410,6 +411,7 @@ typedef struct HIP_MEMCPY3D {
   void* dstHost;
   hipDeviceptr_t dstDevice;
   hipArray_t dstArray;
+  void* reserved1;
   unsigned int dstPitch;
   unsigned int dstHeight;
   unsigned int WidthInBytes;
