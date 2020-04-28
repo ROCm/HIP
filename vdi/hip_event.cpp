@@ -35,8 +35,9 @@ bool Event::ready() {
 hipError_t Event::query() {
   amd::ScopedLock lock(lock_);
 
+  // If event is not recorded, event_ is null, hence return hipSuccess
   if (event_ == nullptr) {
-    return hipErrorInvalidHandle;
+    return hipSuccess;
   }
 
   return ready() ? hipSuccess : hipErrorNotReady;
@@ -45,8 +46,9 @@ hipError_t Event::query() {
 hipError_t Event::synchronize() {
   amd::ScopedLock lock(lock_);
 
+  // If event is not recorded, event_ is null, hence return hipSuccess
   if (event_ == nullptr) {
-    return hipErrorInvalidHandle;
+    return hipSuccess;
   }
 
   event_->awaitCompletion();
