@@ -10,8 +10,8 @@
 | typedef      |`CUDA_ARRAY_DESCRIPTOR_st`                                          |`HIP_ARRAY_DESCRIPTOR`                                      |
 | struct       |`CUDA_MEMCPY2D`                                                     |`hip_Memcpy2D`                                              |
 | typedef      |`CUDA_MEMCPY2D_st`                                                  |`hip_Memcpy2D`                                              |
-| struct       |`CUDA_MEMCPY3D`                                                     |                                                            |
-| typedef      |`CUDA_MEMCPY3D_st`                                                  |                                                            |
+| struct       |`CUDA_MEMCPY3D`                                                     |`HIP_MEMCPY3D`                                              |
+| typedef      |`CUDA_MEMCPY3D_st`                                                  |`HIP_MEMCPY3D`                                              |
 | struct       |`CUDA_MEMCPY3D_PEER`                                                |                                                            |
 | typedef      |`CUDA_MEMCPY3D_PEER_st`                                             |                                                            |
 | struct       |`CUDA_POINTER_ATTRIBUTE_P2P_TOKENS`                                 |                                                            |
@@ -924,8 +924,8 @@
 | `cuMemcpy2D`                                              | `hipMemcpyParam2D`            |
 | `cuMemcpy2DAsync`                                         | `hipMemcpyParam2DAsync`       |
 | `cuMemcpy2DUnaligned`                                     |                               |
-| `cuMemcpy3D`                                              |                               |
-| `cuMemcpy3DAsync`                                         |                               |
+| `cuMemcpy3D`                                              | `hipDrvMemcpy3D`              |
+| `cuMemcpy3DAsync`                                         | `hipDrvMemcpy3DAsync`         |
 | `cuMemcpy3DPeer`                                          |                               |
 | `cuMemcpy3DPeerAsync`                                     |                               |
 | `cuMemcpyAsync`                                           |                               |

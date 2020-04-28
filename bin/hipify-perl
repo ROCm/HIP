@@ -223,6 +223,10 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuMemcpy2DAsync\b/hipMemcpyParam2DAsync/g;
     $ft{'memory'} += s/\bcuMemcpy2DAsync_v2\b/hipMemcpyParam2DAsync/g;
     $ft{'memory'} += s/\bcuMemcpy2D_v2\b/hipMemcpyParam2D/g;
+    $ft{'memory'} += s/\bcuMemcpy3D\b/hipDrvMemcpy3D/g;
+    $ft{'memory'} += s/\bcuMemcpy3DAsync\b/hipDrvMemcpy3DAsync/g;
+    $ft{'memory'} += s/\bcuMemcpy3DAsync_v2\b/hipDrvMemcpy3DAsync/g;
+    $ft{'memory'} += s/\bcuMemcpy3D_v2\b/hipDrvMemcpy3D/g;
     $ft{'memory'} += s/\bcuMemcpyAtoH\b/hipMemcpyAtoH/g;
     $ft{'memory'} += s/\bcuMemcpyAtoH_v2\b/hipMemcpyAtoH/g;
     $ft{'memory'} += s/\bcuMemcpyDtoD\b/hipMemcpyDtoD/g;
@@ -1013,6 +1017,8 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bCUDA_ARRAY_DESCRIPTOR_st\b/HIP_ARRAY_DESCRIPTOR/g;
     $ft{'type'} += s/\bCUDA_MEMCPY2D\b/hip_Memcpy2D/g;
     $ft{'type'} += s/\bCUDA_MEMCPY2D_st\b/hip_Memcpy2D/g;
+    $ft{'type'} += s/\bCUDA_MEMCPY3D\b/HIP_MEMCPY3D/g;
+    $ft{'type'} += s/\bCUDA_MEMCPY3D_st\b/HIP_MEMCPY3D/g;
     $ft{'type'} += s/\bCUaddress_mode\b/hipTextureAddressMode/g;
     $ft{'type'} += s/\bCUaddress_mode_enum\b/hipTextureAddressMode/g;
     $ft{'type'} += s/\bCUarray\b/hipArray */g;
