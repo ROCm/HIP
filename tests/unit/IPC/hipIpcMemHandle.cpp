@@ -18,9 +18,15 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME=HCC NVCC_OPTIONS -std=c++11
- * TEST: %t EXCLUDE_HIP_RUNTIME=HCC
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME HCC NVCC_OPTIONS -std=c++11
+ * TEST: %t EXCLUDE_HIP_RUNTIME HCC
  * HIT_END
+ */
+
+/* 
+ * Unit test for hipIpcGetMemHandle, hipIpcOpenMemHandle, hipIpcCloseMemHandle
+ * This covers positive test cases. It includes kernel operations and memory copies on the IPC device pointer received through hipIpcOpenMemHandle in the child process
+ * This also covers opening mem handle on another device and tests the above cases on multi gpu setup
  */
 
 #include "test_common.h"
@@ -33,22 +39,29 @@ THE SOFTWARE.
 #define N 10000
 #define Nbytes N*sizeof(int)
 
-int enablePeers(int dev0, int dev1) {
-    int canAccessPeer01, canAccessPeer10;
-    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer01, dev0, dev1));
-    HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer10, dev1, dev0));
-    if (!canAccessPeer01 || !canAccessPeer10) {
-        return -1;
-    }
+bool enablePeers(int *gpu0, int *gpu1, int devCount) {
+ 
+   for(int dev0 = 0; dev0 < devCount; ++dev0){
+     for(int dev1 = 1; dev1 < devCount; ++dev1){
+  
+        int canAccessPeer01, canAccessPeer10;
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer01, dev0, dev1));
+        HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer10, dev1, dev0));
+        if (!canAccessPeer01 || !canAccessPeer10) {
+           break;
+        }
 
-    HIPCHECK(hipSetDevice(dev0));
-    HIPCHECK(hipDeviceEnablePeerAccess(dev1, 0 /*flags*/));
-    HIPCHECK(hipSetDevice(dev1));
-    HIPCHECK(hipDeviceEnablePeerAccess(dev0, 0 /*flags*/));
-    HIPCHECK(hipSetDevice(dev0));
-
-    return 0;
-};
+        HIPCHECK(hipSetDevice(dev0));
+        HIPCHECK(hipDeviceEnablePeerAccess(dev1, 0 /*flags*/));
+        HIPCHECK(hipSetDevice(dev1));
+        HIPCHECK(hipDeviceEnablePeerAccess(dev0, 0 /*flags*/));
+    
+        *gpu0 = dev0; *gpu1 = dev1;
+        return true;
+     }
+   }
+   return false;
+}
 
 //Kernel
 __global__ void simple_kernel(int* A, int size) {
@@ -102,7 +115,8 @@ bool Synccopy(int* S_d, int* A_h, int* B_h, int* C_h, int* D_h)
 
 typedef struct mem_handle {
     hipIpcMemHandle_t memHandle;
-    int devCount;
+    int device0;
+    int device1;
 } hip_ipc_t;
 
 bool runipcTest()
@@ -136,22 +150,23 @@ bool runipcTest()
     for (int i = 0; i < N; i++) {
         A_h[i] = i;
     }
-    
+     
     pid = fork();
     
     if(pid != 0) {
-    
-        int dev0 = 0;
-        int dev1 = 1;
-        int numDevices;
-        HIPCHECK(hipGetDeviceCount(&shrd_mem->devCount));
-        if (shrd_mem->devCount > 1) {
-           if (enablePeers(dev0, dev1) == -1) {
+        int dev0 = 0, dev1 = 0, devCount;
+        HIPCHECK(hipGetDeviceCount(&devCount));
+        if (devCount > 1) {
+           if (enablePeers(&dev0, &dev1, devCount) == false) {
               printf("warning : could not find peer gpus, only single device test is run\n");
-              shrd_mem->devCount = 1;
+           }
+           else {
+              shrd_mem->device1 = dev1;
            }
         } 
-
+        
+        shrd_mem->device0 = dev0;  
+        HIPCHECK(hipSetDevice(shrd_mem->device0));
         HIPCHECK(hipMalloc((void **) &A_d, Nbytes));
    
         HIPCHECK(hipIpcGetMemHandle(&shrd_mem->memHandle, (void *) A_d));
@@ -172,8 +187,9 @@ bool runipcTest()
             exit (1);
 	}
          
+        HIPCHECK(hipSetDevice(shrd_mem->device0));
         int *S_d = NULL;
-        
+        // verifies hipIpcOpenMemHandle on the same device in the child process 
         HIPCHECK(hipIpcOpenMemHandle((void **) &S_d, shrd_mem->memHandle, hipIpcMemLazyEnablePeerAccess));
         if (S_d == NULL) {
             std::cout << "hipIpcOpenMemHandle failed" << std::endl;
@@ -199,11 +215,11 @@ bool runipcTest()
            assert(B_h[i] == A_h[i]+1);
         }
         // Multi Gpu Setup 
-        if (shrd_mem->devCount > 1){
-            
-            HIPCHECK(hipSetDevice(1));
+        if (shrd_mem->device1){
+            HIPCHECK(hipSetDevice(shrd_mem->device1));
             int *X_d = NULL;  
         
+            //verifies hipIpcOpenMemHandle on the different device in the child process 
             HIPCHECK(hipIpcOpenMemHandle((void **) &X_d, shrd_mem->memHandle, hipIpcMemLazyEnablePeerAccess));
             if (X_d == NULL) {
                std::cout<< "hipIpcOpenMemHandle failed" << std::endl;

@@ -23,6 +23,11 @@ THE SOFTWARE.
  * HIT_END
  */
 
+/* 
+ * Unit test for hipIpcGetMemHandle, hipIpcOpenMemHandle, hipIpcCloseMemHandle
+ * This covers negative test cases. It tests scenarios when device pointer or handle is NULL/invalid
+ */
+
 #include "test_common.h"
 #include <sys/mman.h>
 #include <unistd.h>
@@ -64,11 +69,13 @@ bool runipcNegativeTest()
     
     if(pid != 0) {
     
+        // hipIpcGetMemHandle should return invalid as the dev ptr is NULL
         A_d = NULL; 
         HIPASSERT(hipIpcGetMemHandle(&shrd_mem->memHandle, (void *) A_d)==hipErrorInvalidValue);
         
         HIPCHECK(hipMalloc((void **) &A_d, Nbytes));
 
+        // hipIpcGetMemHandle should return invalid as the handle is NULL
         // CUDA crashes hence skipping this
         #ifndef __HIP_PLATFORM_NVCC__
         shrd_mem = NULL;
@@ -89,10 +96,13 @@ bool runipcNegativeTest()
          
         int *S_d;
         
+        // hipIpcOpenMemHandle should fail as either hipIpcGetMemHandle didnt succeed or is not used
         HIPASSERT(hipIpcOpenMemHandle((void **) &S_d, shrd_mem->memHandle, hipIpcMemLazyEnablePeerAccess)==hipErrorInvalidValue);
        
+        // hipIpcClosememHandle should return invalid as OpenMemHandle didnt succeed
         HIPASSERT(hipIpcCloseMemHandle((void*)S_d)==hipErrorInvalidValue);
         
+        // hipIpcCloseMemHandle should return invalid as the dev ptr is NULL
         S_d = NULL;
         HIPASSERT(hipIpcCloseMemHandle((void*)S_d)==hipErrorInvalidValue);
  
