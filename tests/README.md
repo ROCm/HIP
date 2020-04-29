@@ -47,12 +47,13 @@ In the above, BUILD commands provide instructions on how to build the test case 
 
 The supported syntax for the BUILD command is:
 ```
-BUILD: %t %s HIPCC_OPTIONS <hipcc_specific_options> HCC_OPTIONS <hcc_specific_options> NVCC_OPTIONS <nvcc_specific_options> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|VDI> EXCLUDE_HIP_COMPILER <hcc|clang> DEPENDS <dependencies>
+BUILD: %t %s HIPCC_OPTIONS <hipcc_specific_options> HCC_OPTIONS <hcc_specific_options> CLANG_OPTIONS <clang_specific_options> NVCC_OPTIONS <nvcc_specific_options> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|VDI> EXCLUDE_HIP_COMPILER <hcc|clang> DEPENDS <dependencies>
 ```
 %s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
 HIPCC_OPTIONS: All options specified after this delimiter are passed to hipcc on both HCC and NVCC platforms.
-HCC_OPTIONS: All options specified after this delimiter are passed to hipcc on HCC platform only.
+HCC_OPTIONS: All options specified after this delimiter are passed to hipcc on HCC compiler only.
+CLANG_OPTIONS: All options specified after this delimiter are passed to hipcc on HIP-Clang compiler only.
 NVCC_OPTIONS: All options specified after this delimiter are passed to hipcc on NVCC platform only.
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms.
 EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from HCC or VDI runtime.
