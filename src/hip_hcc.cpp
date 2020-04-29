@@ -789,11 +789,14 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
 
     char archName[256];
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NAME, &archName);
-
-    prop->gcnArch = atoi(archName + 3);
-    strcpy(prop->gcnArchName, archName + 3);
+ 
+    std::string name = archName + 3; 
+    name = name.erase(name.size() - 2);
+    prop->gcnArch = stoi(name) * 100; 
+     
+    strcpy(prop->gcnArchName, archName);
     DeviceErrorCheck(err);
-
+    
     // Get agent node
     uint32_t node;
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NODE, &node);
@@ -2549,7 +2552,7 @@ namespace hip_impl {
         static std::once_flag init;
         std::call_once(init, []() {
             for (int i=0; i < g_deviceCnt; i++){
-                r.insert("hcc-amdgcn-amd-amdhsa--gfx"+std::string(g_deviceArray[i]->_props.gcnArchName));
+                r.insert("hcc-amdgcn-amd-amdhsa--"+std::string(g_deviceArray[i]->_props.gcnArchName));
         }});
         return r;
     }

@@ -138,7 +138,7 @@ void printDeviceProp(int deviceId) {
     cout << setw(w1) << "arch.hasSurfaceFuncs: " << props.arch.hasSurfaceFuncs << endl;
     cout << setw(w1) << "arch.has3dGrid: " << props.arch.has3dGrid << endl;
     cout << setw(w1) << "arch.hasDynamicParallelism: " << props.arch.hasDynamicParallelism << endl;
-    cout << setw(w1) << "gcnArch: " << props.gcnArchName << endl;
+    cout << setw(w1) << "gcnArchName: " << props.gcnArchName << endl;
     cout << setw(w1) << "isIntegrated: " << props.integrated << endl;
     cout << setw(w1) << "maxTexture1D: " << props.maxTexture1D << endl;
     cout << setw(w1) << "maxTexture2D.width: " << props.maxTexture2D[0] << endl;

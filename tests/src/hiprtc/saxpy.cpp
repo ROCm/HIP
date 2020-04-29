@@ -70,7 +70,7 @@ int main()
     hipDeviceProp_t props;
     int device = 0;
     hipGetDeviceProperties(&props, device);
-    std::string gfxName = "gfx" + std::string(props.gcnArchName);
+    std::string gfxName = std::string(props.gcnArchName);
     std::string sarg = "--gpu-architecture=" + gfxName;
     const char* options[] = {
         sarg.c_str()

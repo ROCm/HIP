@@ -114,7 +114,7 @@ typedef struct hipDeviceProp_t {
     int isMultiGpuBoard;                      ///< 1 if device is on a multi-GPU board, 0 if not.
     int canMapHostMemory;                     ///< Check whether HIP can map host memory
     int gcnArch;                              ///< AMD GCN Arch Value. Eg: 803, 701
-    char gcnArchName[256];                    ///< AMD GCN Arch Name (Arch Value as String).
+    char gcnArchName[16];                     ///< AMD GCN Arch Name (Arch Value as String).
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
     int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices
