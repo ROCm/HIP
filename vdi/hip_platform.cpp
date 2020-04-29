@@ -164,7 +164,8 @@ void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipM
     if (program == nullptr) {
       return;
     }
-    if (CL_SUCCESS == program->addDeviceProgram(*ctx->devices()[0], code_objs[dev].first, code_objs[dev].second)) {
+    if (CL_SUCCESS == program->addDeviceProgram(
+            *ctx->devices()[0], code_objs[dev].first, code_objs[dev].second, false)) {
       programs.at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)) , false);
     }
   }
