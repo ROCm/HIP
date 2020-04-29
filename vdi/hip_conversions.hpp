@@ -672,7 +672,7 @@ hipResourceDesc getResourceDesc(const HIP_RESOURCE_DESC& resDesc) {
   hipResourceDesc desc;
 
   desc.resType = getResourceType(resDesc.resType);
-  switch (resDesc.resType) {
+  switch (desc.resType) {
   case hipResourceTypeArray:
     desc.res.array.array = resDesc.res.array.hArray;
     break;
@@ -703,7 +703,7 @@ HIP_RESOURCE_DESC getResourceDesc(const hipResourceDesc& resDesc) {
   HIP_RESOURCE_DESC desc;
 
   desc.resType = getResourceType(resDesc.resType);
-  switch (resDesc.resType) {
+  switch (desc.resType) {
   case HIP_RESOURCE_TYPE_ARRAY:
     desc.res.array.hArray = resDesc.res.array.array;
     break;
@@ -894,5 +894,10 @@ HIP_RESOURCE_VIEW_DESC getResourceViewDesc(const hipResourceViewDesc& resViewDes
   desc.lastLayer = resViewDesc.lastLayer;
 
   return desc;
+}
+
+inline
+size_t getElementSize(const hipChannelFormatDesc &desc) {
+  return (desc.x / 4) * getNumChannels(desc);
 }
 };

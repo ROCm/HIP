@@ -47,6 +47,19 @@ THE SOFTWARE.
 #include "kalmar_math.h"
 #endif
 
+#if _LIBCPP_VERSION && __HIP__
+namespace std {
+template <>
+struct __numeric_type<_Float16>
+{
+   static _Float16 __test(_Float16);
+
+   typedef _Float16 type;
+   static const bool value = true;
+};
+}
+#endif // _LIBCPP_VERSION
+
 #pragma push_macro("__DEVICE__")
 #pragma push_macro("__RETURN_TYPE")
 
@@ -1397,11 +1410,17 @@ float func(float x, int y) \
 }
 __DEF_FLOAT_FUN2I(scalbn)
 
-#if __HCC__
 template<class T>
 __DEVICE__ inline static T min(T arg1, T arg2) {
   return (arg1 < arg2) ? arg1 : arg2;
 }
+
+template<class T>
+__DEVICE__ inline static T max(T arg1, T arg2) {
+  return (arg1 > arg2) ? arg1 : arg2;
+}
+
+#if __HCC__
 
 __DEVICE__ inline static uint32_t min(uint32_t arg1, int32_t arg2) {
   return min(arg1, (uint32_t) arg2);
@@ -1423,11 +1442,6 @@ __DEVICE__ inline static unsigned long long min(unsigned long long arg1, long lo
 __DEVICE__ inline static unsigned long long min(long long arg1, unsigned long long arg2) {
   return min((unsigned long long) arg1, arg2);
 }*/
-
-template<class T>
-__DEVICE__ inline static T max(T arg1, T arg2) {
-  return (arg1 > arg2) ? arg1 : arg2;
-}
 
 __DEVICE__ inline static uint32_t max(uint32_t arg1, int32_t arg2) {
   return max(arg1, (uint32_t) arg2);

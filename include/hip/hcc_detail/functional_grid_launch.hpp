@@ -37,14 +37,15 @@ THE SOFTWARE.
 hipError_t ihipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList, int numDevices,
                                                unsigned int flags, hip_impl::program_state& ps);
 
-hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDimX, void** kernelParams,
-                unsigned int sharedMemBytes, hipStream_t stream, hip_impl::program_state& ps);
+hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim,
+                                    dim3 blockDim, void** args,
+                                    size_t sharedMem, hipStream_t stream,
+                                    hip_impl::program_state& ps);
 
-hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList, int  numDevices,
-                unsigned int  flags, hip_impl::program_state& ps);
-
-
-
+hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                 int  numDevices,
+                                                 unsigned int flags,
+                                                 hip_impl::program_state& ps);
 
 #pragma GCC visibility push(hidden)
 
@@ -139,10 +140,10 @@ void hipLaunchKernelGGLImpl(
 } // Namespace hip_impl.
 
 
-template <typename F>
+template <class T>
 inline
-hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* blockSize,
-    F kernel, size_t dynSharedMemPerBlk, uint32_t blockSizeLimit) {
+hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
+    T kernel, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0) {
 
     using namespace hip_impl;
 
@@ -150,22 +151,24 @@ hipError_t hipOccupancyMaxPotentialBlockSize(uint32_t* gridSize, uint32_t* block
     auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
                                                    target_agent(0));
 
-    return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
+    return hipModuleOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
                                       dynSharedMemPerBlk, blockSizeLimit);
 }
 
-template <typename F>
+template <class T>
 inline
-hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(uint32_t* numBlocks, F kernel,
-    uint32_t blockSize, size_t dynSharedMemPerBlk) {
+hipError_t hipOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* blockSize,
+    T kernel, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0, unsigned int  flags = 0 ) {
 
     using namespace hip_impl;
 
     hip_impl::hip_init();
+    if(flags != hipOccupancyDefault) return hipErrorNotSupported;
     auto f = get_program_state().kernel_descriptor(reinterpret_cast<std::uintptr_t>(kernel),
                                                    target_agent(0));
 
-    return hipOccupancyMaxActiveBlocksPerMultiprocessor(numBlocks, f, blockSize, dynSharedMemPerBlk);
+    return hipModuleOccupancyMaxPotentialBlockSize(gridSize, blockSize, f,
+                                      dynSharedMemPerBlk, blockSizeLimit);
 }
 
 template <typename... Args, typename F = void (*)(Args...)>
@@ -192,22 +195,24 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
 template <typename F>
 inline
 __attribute__((visibility("hidden")))
-hipError_t hipLaunchCooperativeKernel(F f, dim3 gridDim, dim3 blockDimX, void** kernelParams,
-                unsigned int sharedMemBytes, hipStream_t stream) {
-
+hipError_t hipLaunchCooperativeKernel(F f, dim3 gridDim, dim3 blockDim,
+                                      void** args, size_t sharedMem,
+                                      hipStream_t stream) {
     hip_impl::hip_init();
     auto& ps = hip_impl::get_program_state();
-    return ihipLaunchCooperativeKernel(reinterpret_cast<void*>(f), gridDim, blockDimX, kernelParams, sharedMemBytes, stream, ps);
+    return hipLaunchCooperativeKernel(reinterpret_cast<void*>(f), gridDim,
+                                      blockDim, args, sharedMem, stream, ps);
 }
 
 inline
 __attribute__((visibility("hidden")))
-hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList, int  numDevices,
-                unsigned int  flags) {
+hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                                 int  numDevices,
+                                                 unsigned int  flags) {
 
     hip_impl::hip_init();
     auto& ps = hip_impl::get_program_state();
-    return ihipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags, ps);
+    return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags, ps);
 }
 
 #pragma GCC visibility pop

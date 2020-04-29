@@ -1,6 +1,6 @@
 # Square.md
 
-Simple test which shows how to use hipify to port CUDA code to HIP.  
+Simple test which shows how to use hipify-perl to port CUDA code to HIP.  
 See related [blog](http://gpuopen.com/hip-to-be-squared-an-introductory-hip-tutorial) that explains the example. 
 Now it is even simpler and requires no manual modification to the hipified source code - just hipify and compile:
 

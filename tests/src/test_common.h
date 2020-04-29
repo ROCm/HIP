@@ -55,11 +55,15 @@ THE SOFTWARE.
     printf("%sPASSED!%s\n", KGRN, KNRM);                                                           \
     exit(0);
 
+// The real "assert" would have written to stderr. But it is
+// sufficient to just fflush here without getting pedantic. This also
+// ensures that we don't lose any earlier writes to stdout.
 #define failed(...)                                                                                \
     printf("%serror: ", KRED);                                                                     \
     printf(__VA_ARGS__);                                                                           \
     printf("\n");                                                                                  \
     printf("error: TEST FAILED\n%s", KNRM);                                                        \
+    fflush(NULL);                                                                               \
     abort();
 
 #define warn(...)                                                                                  \

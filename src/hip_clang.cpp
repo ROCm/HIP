@@ -51,7 +51,7 @@ __hipRegisterFatBinary(const void* data)
     return nullptr;
   }
 
-  auto modules = new std::vector<hipModule_t>{g_deviceCnt};
+  auto modules = new std::vector<hipModule_t>(g_deviceCnt);
   if (!modules) {
     return nullptr;
   }
@@ -90,9 +90,9 @@ __hipRegisterFatBinary(const void* data)
           reinterpret_cast<uintptr_t>(header) + desc->offset), desc->size};
       if (HIP_DUMP_CODE_OBJECT)
         __hipDumpCodeObject(image);
-      module->executable = hip_impl::get_program_state().load_executable(image.data(), image.size(),
-                                                                         module->executable,
-                                                                         agent);
+      module->executable = hip_impl::get_program_state().load_executable_no_copy(
+        reinterpret_cast<const char*>(header) + desc->offset, desc->size,
+        module->executable, agent);
 
       if (module->executable.handle) {
          hip_impl::program_state_impl::read_kernarg_metadata(image, module->kernargs);
@@ -136,7 +136,7 @@ extern "C" void __hipRegisterFunction(
   int*         wSize)
 {
   HIP_INIT_API(NONE, modules, hostFunction, deviceFunction, deviceName);
-  std::vector<hipFunction_t> functions{g_deviceCnt};
+  std::vector<hipFunction_t> functions(g_deviceCnt);
 
   assert(modules && modules->size() >= g_deviceCnt);
   for (int deviceId = 0; deviceId < g_deviceCnt; ++deviceId) {

@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /*HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM vdi
  * TEST: %t
  * HIT_END
  */
@@ -28,9 +28,6 @@ THE SOFTWARE.
 #define SIZE_W 12
 #define TYPE_t float
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<TYPE_t, 2, hipReadModeElementType> tex;
 
 // texture object is a kernel argument

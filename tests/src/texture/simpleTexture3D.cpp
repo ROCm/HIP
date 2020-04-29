@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc vdi
  * TEST: %t
  * HIT_END
  */
@@ -31,19 +31,10 @@ THE SOFTWARE.
 const char *sampleName = "simpleTexture3D";
 
 // Texture reference for 3D texture
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<float, hipTextureType3D, hipReadModeElementType> texf;
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<int, hipTextureType3D, hipReadModeElementType> texi;
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<char, hipTextureType3D, hipReadModeElementType> texc;
 
 template <typename T>

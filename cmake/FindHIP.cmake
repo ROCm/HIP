@@ -75,7 +75,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         endif()
         # And push it back to the cache
         set(HIP_ROOT_DIR ${HIP_ROOT_DIR} CACHE PATH "HIP installed location" FORCE)
-        message("Found HIP at ${HIP_ROOT_DIR}")
     endif()
 
     # Find HIPCC executable

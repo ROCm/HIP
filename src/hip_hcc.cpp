@@ -263,7 +263,13 @@ ihipStream_t::ihipStream_t(ihipCtx_t* ctx, hc::accelerator_view av, unsigned int
 
 
 //---
-ihipStream_t::~ihipStream_t() {}
+ihipStream_t::~ihipStream_t() {
+    GET_TLS();
+    for (auto mem : coopMemsTracker) {
+        hip_internal::ihipHostFree(tls, mem->mgs);
+        hip_internal::ihipHostFree(tls, mem);
+    }
+}
 
 
 hc::hcWaitMode ihipStream_t::waitMode() const {
@@ -326,12 +332,55 @@ void ihipStream_t::locked_wait() {
     locked_wait(waited);
 };
 
+typedef struct {
+    int previous_read_index;
+    ihipIpcEventShmem_t *shmem;
+    hsa_signal_t signal;
+} callback_data_t;
+
+static void WaitThenDecrementSignal(callback_data_t *data) {
+    int offset = data->previous_read_index % IPC_SIGNALS_PER_EVENT;
+    // While event valid and locked, spin.
+    while (data->shmem->read_index < data->previous_read_index+IPC_SIGNALS_PER_EVENT && data->shmem->signal[offset] != 0) {
+    }
+    hsa_signal_store_relaxed(data->signal, 0);
+    delete data;
+}
+
 // Causes current stream to wait for specified event to complete:
 // Note this does not provide any kind of host serialization.
 void ihipStream_t::locked_streamWaitEvent(ihipEventData_t& ecd) {
     LockedAccessor_StreamCrit_t crit(_criticalData);
 
-    crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
+    // if event is an IPC event, it doesn't have a marker
+    // we use a host callback to block stream with a signal wait
+    if (ecd._ipc_shmem) {
+        // create first marker
+        auto cf = crit->_av.create_marker(hc::no_scope);
+        // get its signal
+        auto signal = *reinterpret_cast<hsa_signal_t*>(cf.get_native_handle());
+        // increment its signal value
+        hsa_signal_add_relaxed(signal, 1);
+
+        // create callback that can be passed to hsa_amd_signal_async_handler
+        // this function will host wait on IPC signal, then sets first packet's signal to 0 to indicate completion
+        auto t{new callback_data_t{ecd._ipc_shmem->read_index, ecd._ipc_shmem, signal}};
+
+        // register above callback with HSA runtime to be called when first packet's signal
+        // is decremented from 2 to 1 by CP (or it is already at 1)
+        // the HSA async handler is single threaded, so we can't block, therefore use a detached thread
+        hsa_amd_signal_async_handler(signal, HSA_SIGNAL_CONDITION_EQ, 1,
+            [](hsa_signal_value_t x, void* p) {
+                std::thread(WaitThenDecrementSignal, static_cast<decltype(t)>(p)).detach();
+                return false;
+            }, t);
+
+        // create additional marker that blocks on the first one
+        crit->_av.create_blocking_marker(cf, hc::accelerator_scope);
+    }
+    else {
+        crit->_av.create_blocking_marker(ecd.marker(), hc::accelerator_scope);
+    }
 }
 
 
@@ -677,7 +726,7 @@ hsa_status_t get_pool_info(hsa_amd_memory_pool_t pool, void* data) {
             break;
         case HSA_REGION_SEGMENT_GROUP:
             err = hsa_amd_memory_pool_get_info(pool, HSA_AMD_MEMORY_POOL_INFO_SIZE,
-                                               &(p_prop->sharedMemPerBlock));
+                                               &(p_prop->maxSharedMemoryPerMultiProcessor));
             break;
         default:
             break;
@@ -835,10 +884,8 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     hsa_region_t* am_region = static_cast<hsa_region_t*>(_acc.get_hsa_am_region());
     err = hsa_region_get_info(*am_region, HSA_REGION_INFO_SIZE, &prop->totalGlobalMem);
     DeviceErrorCheck(err);
-    // maxSharedMemoryPerMultiProcessor should be as the same as group memory size.
-    // Group memory will not be paged out, so, the physical memory size is the total shared memory
-    // size, and also equal to the group pool size.
-    prop->maxSharedMemoryPerMultiProcessor = prop->totalGlobalMem;
+    // Current GPUs allow a workgroup to use all of LDS in a CU, so these two are equal.
+    prop->sharedMemPerBlock = prop->maxSharedMemoryPerMultiProcessor;
 
     // Get Max memory clock frequency
     err =
@@ -897,9 +944,16 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
         prop->integrated = 1;
     }
 
-    // Enable the cooperative group for gfx9+
-    prop->cooperativeLaunch = (prop->gcnArch < 900) ? 0 : 1;
-    prop->cooperativeMultiDeviceLaunch = (prop->gcnArch < 900) ? 0 : 1;
+    // Enable the cooperative group for GPUs that support all the required features
+    err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_AMD_AGENT_INFO_COOPERATIVE_QUEUES,
+          &prop->cooperativeLaunch);
+    DeviceErrorCheck(err);
+    prop->cooperativeMultiDeviceLaunch = prop->cooperativeLaunch;
+
+    prop->cooperativeMultiDeviceUnmatchedFunc = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedGridDim = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedBlockDim = prop->cooperativeMultiDeviceLaunch;
+    prop->cooperativeMultiDeviceUnmatchedSharedMem = prop->cooperativeMultiDeviceLaunch;
 
     err = hsa_agent_get_info(_hsaAgent, (hsa_agent_info_t)HSA_EXT_AGENT_INFO_IMAGE_1D_MAX_ELEMENTS,
           &prop->maxTexture1D);
@@ -1515,20 +1569,6 @@ hipError_t ihipStreamSynchronize(TlsData *tls, hipStream_t stream) {
     return e;
 }
 
-void ihipStreamCallbackHandler(ihipStreamCallback_t* cb) {
-    hipError_t e = hipSuccess;
-
-    // Synchronize stream
-    tprintf(DB_SYNC, "ihipStreamCallbackHandler wait on stream %s\n",
-            ToString(cb->_stream).c_str());
-    GET_TLS();
-    e = ihipStreamSynchronize(tls, cb->_stream);
-
-    // Call registered callback function
-    cb->_callback(cb->_stream, e, cb->_userData);
-    delete cb;
-}
-
 //---
 // Get the stream to use for a command submission.
 //
@@ -1619,7 +1659,9 @@ void ihipPrintKernelLaunch(const char* kernelName, const grid_launch_parm* lp,
 // Allows runtime to track some information about the stream.
 hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block, grid_launch_parm* lp,
                                 const char* kernelNameStr, bool lockAcquired) {
-    stream = ihipSyncAndResolveStream(stream, lockAcquired);
+    if (stream == nullptr || stream != stream->getCtx()->_defaultStream) {
+        stream = ihipSyncAndResolveStream(stream, lockAcquired);
+    }
     lp->grid_dim.x = grid.x;
     lp->grid_dim.y = grid.y;
     lp->grid_dim.z = grid.z;

@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM vdi
  * TEST: %t
  * HIT_END
  */
@@ -32,9 +32,6 @@ THE SOFTWARE.
 
 #define N 512
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<float, 1, hipReadModeElementType> tex;
 
 __global__ void kernel(float *out) {

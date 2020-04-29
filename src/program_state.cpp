@@ -68,7 +68,14 @@ namespace hip_impl {
         const size_t data_size,
         hsa_executable_t executable,
         hsa_agent_t agent) {
-        return impl->load_executable(data, data_size, executable, agent);
+        return impl->load_executable(data, data_size, true, executable, agent);
+    }
+
+    hsa_executable_t program_state::load_executable_no_copy(const char* data,
+        const size_t data_size,
+        hsa_executable_t executable,
+        hsa_agent_t agent) {
+        return impl->load_executable(data, data_size, false, executable, agent);
     }
 
     hipFunction_t program_state::kernel_descriptor(std::uintptr_t function_address,

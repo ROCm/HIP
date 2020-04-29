@@ -35,8 +35,9 @@ bool Event::ready() {
 hipError_t Event::query() {
   amd::ScopedLock lock(lock_);
 
+  // If event is not recorded, event_ is null, hence return hipSuccess
   if (event_ == nullptr) {
-    return hipErrorInvalidHandle;
+    return hipSuccess;
   }
 
   return ready() ? hipSuccess : hipErrorNotReady;
@@ -45,8 +46,9 @@ hipError_t Event::query() {
 hipError_t Event::synchronize() {
   amd::ScopedLock lock(lock_);
 
+  // If event is not recorded, event_ is null, hence return hipSuccess
   if (event_ == nullptr) {
-    return hipErrorInvalidHandle;
+    return hipSuccess;
   }
 
   event_->awaitCompletion();
@@ -217,19 +219,14 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     HIP_RETURN(hipErrorInvalidHandle);
   }
 
-  hip::Event* e = reinterpret_cast<hip::Event*>(event);
-
-  hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
   amd::HostQueue* queue = hip::getQueue(stream);
-
-  amd::Command* command = (s != nullptr && (s->flags & hipStreamNonBlocking)) ?
-    queue->getLastQueuedCommand(true) : nullptr;
-
+  amd::Command* command = queue->getLastQueuedCommand(true);
   if (command == nullptr) {
     command = new amd::Marker(*queue, false);
     command->enqueue();
   }
 
+  hip::Event* e = reinterpret_cast<hip::Event*>(event);
   e->addMarker(queue, command);
 
   HIP_RETURN(hipSuccess);

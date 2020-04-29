@@ -22,6 +22,20 @@
 
 #include "hip_internal.hpp"
 
+namespace hip {
+
+amd::HostQueue* Device::NullStream() {
+  amd::HostQueue* null_queue = null_stream_.asHostQueue();
+  if (null_queue == nullptr) {
+    return nullptr;
+  }
+  // Wait for all active streams before executing commands on the default
+  iHipWaitActiveStreams(null_queue);
+  return null_queue;
+}
+
+};
+
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
   HIP_INIT_API(hipDeviceGet, device, deviceId);
 

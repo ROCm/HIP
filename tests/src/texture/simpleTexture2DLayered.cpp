@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM vdi
  * TEST: %t
  * HIT_END
  */
@@ -30,9 +30,6 @@ THE SOFTWARE.
 typedef float T;
 
 // Texture reference for 2D Layered texture
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<float, hipTextureType2DLayered> tex2DL;
 
 __global__ void simpleKernelLayeredArray(T* outputData,int width,int height,int layer)
