@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.4.3)
 project(hip)
-# sample command for hip-vdi, you'll need to have vdi installed
+# sample command for hip-rocclr, you'll need to have rocclr installed
 #  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=vdi ..
-#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=vdi -DVDI_DIR=/extra/lmoriche/hip-vdi/vdi -DOPENCL_DIR=/extra/lmoriche/clients/lmoriche_opencl_dev2/drivers/opencl/api/opencl -DLIBVDI_STATIC_DIR=/extra/lmoriche/hip-vdi/build/vdi ..
+#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=vdi -DVDI_DIR=/extra/lmoriche/hip-rocclr/rocclr -DOPENCL_DIR=/extra/lmoriche/clients/lmoriche_opencl_dev2/drivers/opencl/api/opencl -DLIBVDI_STATIC_DIR=/extra/lmoriche/hip-rocclr/build/rocclr ..
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -530,10 +530,10 @@ if(HIP_PLATFORM STREQUAL "hcc")
     DEPENDS hip_hcc hip_hcc_static hiprtc)
 else()
   set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/vdi)
-  configure_file(packaging/hip-vdi.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
-  configure_file(packaging/hip-vdi.postinst ${BUILD_DIR}/postinst @ONLY)
-  configure_file(packaging/hip-vdi.prerm ${BUILD_DIR}/prerm @ONLY)
-  add_custom_target(hip_on_vdi COMMAND ${CMAKE_COMMAND} .
+  configure_file(packaging/hip-rocclr.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
+  configure_file(packaging/hip-rocclr.postinst ${BUILD_DIR}/postinst @ONLY)
+  configure_file(packaging/hip-rocclr.prerm ${BUILD_DIR}/prerm @ONLY)
+  add_custom_target(hip_on_rocclr COMMAND ${CMAKE_COMMAND} .
     COMMAND rm -rf *.deb *.rpm *.tar.gz
     COMMAND make package
     COMMAND cp *.deb ${PROJECT_BINARY_DIR}
@@ -594,7 +594,7 @@ elseif(HIP_PLATFORM STREQUAL "vdi")
     add_custom_target(package
     COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
-    DEPENDS pkg_hip_base hip_on_vdi pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
+    DEPENDS pkg_hip_base hip_on_rocclr pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
 endif()
 
 if(POLICY CMP0037)
