@@ -507,7 +507,7 @@ hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned i
     }
 
     if (HIP_SYNC_HOST_ALLOC && !noSync) {
-        hipDeviceSynchronize();
+        ihipSynchronize(tls);
     }
 
     auto ctx = ihipGetTlsDefaultCtx();
@@ -562,7 +562,7 @@ hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned i
     }
 
     if (HIP_SYNC_HOST_ALLOC && !noSync) {
-        hipDeviceSynchronize();
+        ihipSynchronize(tls);
     }
     return hip_status;
 }
