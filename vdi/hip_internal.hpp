@@ -90,10 +90,10 @@ namespace hip {
 
   public:
     Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f = 0, bool null_stream = false);
-    bool create();
+    bool Create();
     amd::HostQueue* asHostQueue();
-    void destroy();
-    void finish() const;
+    void Destroy();
+    void Finish() const;
     /// Get device ID associated with the current stream;
     int DeviceId() const;
     /// Returns if stream is null stream
