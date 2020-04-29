@@ -28,7 +28,7 @@ set(USE_PROF_API "1")
 if(NOT DEFINED LIBVDI_STATIC_DIR)
    find_path(LIBVDI_STATIC_DIR
         NAMES libamdvdi_static.a
-        PATHS /opt/rocm/vdi
+        PATHS /opt/rocm/rocclr
         PATH_SUFFIXES lib
    )
 endif()
@@ -37,10 +37,10 @@ if(NOT DEFINED VDI_DIR)
    find_path(VDI_DIR
         NAMES top.hpp
         PATH_SUFFIXES include
-        PATHS /opt/rocm/vdi
+        PATHS /opt/rocm/rocclr
    )
 endif()
-message("Found Static vdi lib:${LIBVDI_STATIC_DIR} and vdi includes: ${VDI_DIR}")
+message("Found Static rocclr lib:${LIBVDI_STATIC_DIR} and rocclr includes: ${VDI_DIR}")
 set(PROF_API_HEADER_PATH ${VDI_DIR}/platform)
 #############################
 # Profiling API support
@@ -161,7 +161,7 @@ set_target_properties(
         VERSION ${HIP_LIB_VERSION_STRING}
         SOVERSION ${HIP_LIB_VERSION_MAJOR}
 )
-# We expect amdhip64_static to contain objects of vdi and hip. But linker
+# We expect amdhip64_static to contain objects of rocclr and hip. But linker
 # let amdhip64_static contain objects of hip only. So we will use a
 # a custom amdhip64_static_combiner to combine objects of vid and hip into
 # amdhip64_static. To avoid amdhip64_static contains itself,
