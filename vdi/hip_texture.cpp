@@ -312,7 +312,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject,
 
 hipError_t ihipDestroyTextureObject(hipTextureObject_t texObject) {
   if (texObject == nullptr) {
-    return hipErrorInvalidValue;
+    return hipSuccess;
   }
 
   const hipResourceType type = texObject->resDesc.resType;
