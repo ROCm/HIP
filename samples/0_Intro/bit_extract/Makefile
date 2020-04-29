@@ -13,10 +13,15 @@ ifeq (${HIP_PLATFORM}, nvcc)
 endif
 
 EXE=bit_extract
+EXE_STATIC=bit_extract_static
 
 $(EXE): bit_extract.cpp
 	$(HIPCC) $(HIPCC_FLAGS) $< -o $@
 
+$(EXE_STATIC): bit_extract.cpp
+	$(HIPCC) -use-staticlib  $(HIPCC_FLAGS) $< -o $@
+
+all: $(EXE) $(EXE_STATIC)
 
 clean:
-	rm -f *.o $(EXE)
+	rm -f *.o $(EXE) $(EXE_STATIC)

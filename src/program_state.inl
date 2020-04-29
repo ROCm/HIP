@@ -1,6 +1,6 @@
 #include "../include/hip/hcc_detail/program_state.hpp"
 
-#include "../include/hip/hcc_detail/code_object_bundle.hpp"
+#include "code_object_bundle.inl"
 #include "../include/hip/hcc_detail/hsa_helpers.hpp"
 
 #if !defined(__cpp_exceptions)
@@ -357,8 +357,11 @@ public:
 
             const auto it1 = get_symbol_addresses().find(x);
             if (it1 == get_symbol_addresses().cend()) {
-                hip_throw(std::runtime_error{
-                    "Global symbol: " + x + " is undefined."});
+                // For a unknown symbol, initialize it with a magic poison
+                hsa_executable_agent_global_variable_define(
+                    executable, agent, x.c_str(), 
+                    reinterpret_cast<void*>(0xDEADBEEFDEADBEEFull));
+                continue;
             }
 
             hsa_status_t status;
@@ -405,11 +408,13 @@ public:
     }
 
     void load_code_object_and_freeze_executable(
-        const std::string& file, hsa_agent_t agent, hsa_executable_t executable) {
+        const char* data,
+        const size_t data_size, bool make_copy,
+        hsa_agent_t agent, hsa_executable_t executable) {
         // TODO: the following sequence is inefficient, should be refactored
         //       into a single load of the file and subsequent ELFIO
         //       processing.
-        if (file.empty()) return;
+        if (!data_size) return;
 
         static const auto cor_deleter = [] (hsa_code_object_reader_t* p) {
             if (!p) return;
@@ -422,8 +427,16 @@ public:
         decltype(code_readers.second)::iterator it;
         {
           std::lock_guard<std::mutex> lck{code_readers.first};
+
+          std::string file;
+          if (make_copy)
+            file = std::string(data, data_size);
+
           code_readers.second.emplace_back(move(file), move(tmp));
           it = std::prev(code_readers.second.end());
+
+          if (make_copy)
+            data = it->first.data();
         }
 
         auto check_hsa_error = [](hsa_status_t s) {
@@ -437,7 +450,7 @@ public:
         };
 
         check_hsa_error(hsa_code_object_reader_create_from_memory(
-            it->first.data(), it->first.size(), it->second.get()));
+            data, data_size, it->second.get()));
 
         check_hsa_error(hsa_executable_load_agent_code_object(
             executable, agent, *it->second, nullptr, nullptr));
@@ -484,7 +497,7 @@ public:
 
                             // TODO: this is massively inefficient and only meant for
                             // illustration.
-                            tmp = impl.load_executable(blob.data(), blob.size(), tmp, a);
+                            tmp = impl.load_executable(blob.data(), blob.size(), true, tmp, a);
 
                             if (tmp.handle) current_exes.push_back(tmp);
                         }
@@ -502,6 +515,7 @@ public:
     
     hsa_executable_t load_executable(const char* data,
                                      const size_t data_size,
+                                     bool make_copy,
                                      hsa_executable_t executable,
                                      hsa_agent_t agent) {
         ELFIO::elfio reader;
@@ -518,7 +532,7 @@ public:
                                                            code_object_dynsym,
                                                            agent, executable);
 
-        load_code_object_and_freeze_executable(move(ts), agent, executable);
+        load_code_object_and_freeze_executable(data, data_size, make_copy, agent, executable);
 
         return executable;
     }

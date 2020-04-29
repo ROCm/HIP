@@ -43,7 +43,7 @@ def filtr_api_args(args_str):
   args_str = re.sub(r'\s*$', r'', args_str);
   args_str = re.sub(r'\s*,\s*', r',', args_str);
   args_str = re.sub(r'\s+', r' ', args_str);
-  args_str = re.sub(r'void \*', r'void* ', args_str);
+  args_str = re.sub(r'\s*(\*+)\s*', r'\1 ', args_str);
   args_str = re.sub(r'(enum|struct) ', '', args_str);
   return args_str
 
@@ -306,6 +306,7 @@ def generate_prof_header(f, api_map, opts_map):
   f.write('// automatically generated sources\n')
   f.write('#ifndef _HIP_PROF_STR_H\n');
   f.write('#define _HIP_PROF_STR_H\n');
+  f.write('#define HIP_PROF_VER 1\n')
   
   # Generating dummy macro for non-public API
   f.write('\n// Dummy API primitives\n')
@@ -388,30 +389,29 @@ def generate_prof_header(f, api_map, opts_map):
   f.write('#define INIT_CB_ARGS_DATA(cb_id, cb_data) INIT_##cb_id##_CB_ARGS_DATA(cb_data)\n')
   
   # Generating the method for the API string, name and parameters
-  if False:
-    f.write('\n')
-    f.write('#if 0\n')
-    f.write('#include <sstream>\n');
-    f.write('#include <string>\n');
-    f.write('// HIP API string method, method name and parameters\n')
-    f.write('const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {\n')
-    f.write('  std::ostringstream oss;\n')
-    f.write('  switch (id) {\n')
-    for name, args in api_map.items():
-      f.write('    case HIP_API_ID_' + name + ':\n')
-      f.write('      oss << "' + name + '("')
-      for ind in range(0, len(args)):
-        arg_tuple = args[ind]
-        arg_name = arg_tuple[1]
-        if ind != 0: f.write(' << ","')
-        f.write('\n          << " ' + arg_name  + '=" << data->args.' + name + '.' + arg_name)
-      f.write('\n          << ")";\n')
-      f.write('    break;\n')
-    f.write('    default: oss << "unknown";\n')
-    f.write('  };\n')
-    f.write('  return strdup(oss.str().c_str());\n')
-    f.write('};\n')
-    f.write('#endif\n')
+  f.write('\n')
+  f.write('#if HIP_PROF_HIP_API_STRING\n')
+  f.write('#include <sstream>\n');
+  f.write('#include <string>\n');
+  f.write('// HIP API string method, method name and parameters\n')
+  f.write('const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {\n')
+  f.write('  std::ostringstream oss;\n')
+  f.write('  switch (id) {\n')
+  for name, args in api_map.items():
+    f.write('    case HIP_API_ID_' + name + ':\n')
+    f.write('      oss << "' + name + '("')
+    for ind in range(0, len(args)):
+      arg_tuple = args[ind]
+      arg_name = arg_tuple[1]
+      if ind != 0: f.write(' << ","')
+      f.write('\n          << " ' + arg_name  + '=" << data->args.' + name + '.' + arg_name)
+    f.write('\n          << ")";\n')
+    f.write('    break;\n')
+  f.write('    default: oss << "unknown";\n')
+  f.write('  };\n')
+  f.write('  return strdup(oss.str().c_str());\n')
+  f.write('};\n')
+  f.write('#endif  // HIP_PROF_HIP_API_STRING\n')
   
   f.write('#endif  // _HIP_PROF_STR_H\n');
 
@@ -472,7 +472,8 @@ not_found = 0
 if len(opts_map) != 0:
   for name in api_map.keys():
     args_str = api_map[name];
-    api_map[name] = list_api_args(args_str)
+    args_list = list_api_args(args_str)
+    api_map[name] = args_list
     if not name in opts_map:
       error("implementation not found: " + name)
       not_found += 1

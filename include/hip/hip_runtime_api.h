@@ -321,7 +321,6 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIntegrated,                        ///< iGPU
     hipDeviceAttributeCooperativeLaunch,                 ///< Support cooperative launch
     hipDeviceAttributeCooperativeMultiDeviceLaunch,      ///< Support cooperative launch on multiple devices
-
     hipDeviceAttributeMaxTexture1DWidth,    ///< Maximum number of elements in 1D images
     hipDeviceAttributeMaxTexture2DWidth,    ///< Maximum dimension width of 2D images in image elements
     hipDeviceAttributeMaxTexture2DHeight,   ///< Maximum dimension height of 2D images in image elements

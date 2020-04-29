@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM NVCC EXCLUDE_HIP_RUNTIME HCC EXCLUDE_HIP_COMPILER hcc
- * TEST: %t EXCLUDE_HIP_PLATFORM NVCC EXCLUDE_HIP_RUNTIME HCC EXCLUDE_HIP_COMPILER hcc
+ * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvcc EXCLUDE_HIP_RUNTIME HCC EXCLUDE_HIP_COMPILER hcc
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvcc EXCLUDE_HIP_RUNTIME HCC EXCLUDE_HIP_COMPILER hcc
  * HIT_END
  */
 
@@ -219,6 +219,42 @@ static void test_series(int *retval, uint num_blocks, uint threads_per_block) {
   HIPASSERT(linecount[msg_short] == num_threads);
 }
 
+__global__ void kernel_divergent_loop() {
+  DECLARE_DATA();
+
+  const uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  int result = 0;
+
+  for (int i = 0; i <= tid; ++i) {
+    printf("%d\n", i);
+  }
+}
+
+static void test_divergent_loop(uint num_blocks, uint threads_per_block) {
+  CaptureStream captured(stdout);
+
+  uint num_threads = num_blocks * threads_per_block;
+
+  hipLaunchKernelGGL(kernel_divergent_loop, dim3(num_blocks), dim3(threads_per_block),
+                     0, 0);
+  hipStreamSynchronize(0);
+  auto CapturedData = captured.getCapturedData();
+
+  std::map<int, int> count;
+  while (true) {
+    int i;
+    CapturedData >> i;
+    if (CapturedData.fail())
+      break;
+    count[i]++;
+  }
+
+  HIPASSERT(count.size() == num_threads);
+  for (int i = 0; i != num_threads; ++i) {
+    HIPASSERT(count[i] == num_threads - i);
+  }
+}
+
 int main() {
   uint num_blocks = 1;
   uint threads_per_block = 64;
@@ -233,6 +269,7 @@ int main() {
   test_divergent0(retval, num_blocks, threads_per_block);
   test_divergent1(retval, num_blocks, threads_per_block);
   test_series(retval, num_blocks, threads_per_block);
+  test_divergent_loop(num_blocks, threads_per_block);
 
   passed();
 }

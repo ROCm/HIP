@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp HCC_OPTIONS -Xclang -fallow-half-arguments-and-returns EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -158,6 +158,34 @@ void check_abs_int64() {
 }
   
 
+template<class T, class F>
+__global__ void kernel_simple(F f, T *out) {
+  *out = f();
+}
+
+template<class T, class F>
+void check_simple(F f, T expected, const char* file, unsigned line) {
+  auto memsize = sizeof(T);
+  T *outputCPU = (T *) malloc(memsize);
+  T *outputGPU = nullptr;
+  hipMalloc((void**)&outputGPU, memsize);
+  hipLaunchKernelGGL(kernel_simple, 1, 1, 0, 0, f, outputGPU);
+  hipMemcpy(outputCPU, outputGPU, memsize, hipMemcpyDeviceToHost);
+  if (*outputCPU != expected)  {
+    failed("%s line %u : check failed (output = %lf, expected = %lf)\n",
+        file, line, (double)(*outputCPU), (double)expected);
+  }
+  hipFree(outputGPU);
+  free(outputCPU);
+}
+#define CHECK_SIMPLE(lambda, expected) \
+    check_simple(lambda, expected, __FILE__, __LINE__);
+
+void test_fp16() {
+  CHECK_SIMPLE([]__device__(){ return max<__fp16>(1.0f, 2.0f); }, 2.0f);
+  CHECK_SIMPLE([]__device__(){ return min<__fp16>(1.0f, 2.0f); }, 1.0f);
+}
+
 int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
@@ -165,5 +193,7 @@ int main(int argc, char* argv[]) {
 
     // check_lgamma_double();
     
+    test_fp16();
+
     passed();
 }

@@ -1,0 +1,203 @@
+/*
+Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
+#pragma once
+
+#include <hsa/hsa.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <istream>
+#include <iterator>
+#include <string>
+#include <utility>
+#include <vector>
+#include <unordered_set>
+namespace hip_impl {
+#if !defined(DISABLE_REDUCED_GPU_BLOB_COPY)
+std::unordered_set<std::string>& get_all_gpuarch();
+#endif
+inline
+std::string transmogrify_triple(const std::string& triple)
+{
+    static constexpr const char old_prefix[]{"hcc-amdgcn--amdhsa-gfx"};
+    static constexpr const char new_prefix[]{"hcc-amdgcn-amd-amdhsa--gfx"};
+
+    if (triple.find(old_prefix) == 0) {
+        return new_prefix + triple.substr(sizeof(old_prefix) - 1);
+    }
+    return (triple.find(new_prefix) == 0) ? triple : "";
+}
+
+inline
+std::string isa_name(std::string triple)
+{
+    static constexpr const char offload_prefix[]{"hcc-"};
+
+    triple = transmogrify_triple(triple);
+    if (triple.empty()) return {};
+
+    triple.erase(0, sizeof(offload_prefix) - 1);
+
+    return triple;
+}
+
+inline
+hsa_isa_t triple_to_hsa_isa(const std::string& triple) {
+    const std::string isa{isa_name(std::move(triple))};
+
+    if (isa.empty()) return hsa_isa_t({});
+
+    hsa_isa_t r{};
+
+    if(HSA_STATUS_SUCCESS != hsa_isa_from_name(isa.c_str(), &r)) {
+        r.handle = 0;
+    }
+
+    return r;
+}
+
+
+struct Bundled_code {
+    union Header {
+        struct {
+            std::uint64_t offset;
+            std::uint64_t bundle_sz;
+            std::uint64_t triple_sz;
+        };
+        char cbuf[sizeof(offset) + sizeof(bundle_sz) + sizeof(triple_sz)];
+    } header;
+    std::string triple;
+    std::string blob;
+};
+
+#define magic_string_  "__CLANG_OFFLOAD_BUNDLE__"
+
+class Bundled_code_header {
+    // DATA - STATICS
+    static constexpr auto magic_string_sz_ = sizeof(magic_string_) - 1;
+
+    // DATA
+    union Header_ {
+        struct {
+            char bundler_magic_string_[magic_string_sz_];
+            std::uint64_t bundle_cnt_;
+        };
+        char cbuf_[sizeof(bundler_magic_string_) + sizeof(bundle_cnt_)];
+    } header_;
+    std::vector<Bundled_code> bundles_;
+
+    // FRIENDS - MANIPULATORS
+    template <typename RandomAccessIterator>
+    friend inline bool read(RandomAccessIterator f, RandomAccessIterator l,
+                            Bundled_code_header& x) {
+        if (f == l) return false;
+        std::copy_n(f, sizeof(x.header_.cbuf_), x.header_.cbuf_);
+        if (valid(x)) {
+            x.bundles_.resize(x.header_.bundle_cnt_);
+
+            auto it = f + sizeof(x.header_.cbuf_);
+            for (auto&& y : x.bundles_) {
+                std::copy_n(it, sizeof(y.header.cbuf), y.header.cbuf);
+                it += sizeof(y.header.cbuf);
+
+                y.triple.assign(it, it + y.header.triple_sz);
+                #ifdef DISABLE_REDUCED_GPU_BLOB_COPY
+                std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
+                #else
+                auto& gpuArch = get_all_gpuarch();
+                auto itgpuArch = std::find(gpuArch.begin(),gpuArch.end(),y.triple);
+                if (itgpuArch != gpuArch.end()){
+                    std::copy_n(f + y.header.offset, y.header.bundle_sz, std::back_inserter(y.blob));
+                }
+                #endif
+                it += y.header.triple_sz;
+                x.bundled_code_size = std::max(x.bundled_code_size, 
+                                               y.header.offset + y.header.bundle_sz);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+    friend inline bool read(const std::vector<char>& blob, Bundled_code_header& x) {
+        return read(blob.cbegin(), blob.cend(), x);
+    }
+    friend inline bool read(std::istream& is, Bundled_code_header& x) {
+        return read(
+            std::vector<char>{std::istreambuf_iterator<char>{is}, std::istreambuf_iterator<char>{}},
+            x);
+    }
+    // FRIENDS - ACCESSORS
+    friend inline bool valid(const Bundled_code_header& x) {
+        const std::string ms = {magic_string_};
+        return std::equal(ms.begin(), ms.end(), x.header_.bundler_magic_string_);
+    }
+
+    friend inline const std::vector<Bundled_code>& bundles(const Bundled_code_header& x) {
+        return x.bundles_;
+    }
+
+   public:
+    // CREATORS
+    Bundled_code_header() = default;
+    template <typename RandomAccessIterator>
+    Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l);
+    explicit Bundled_code_header(const std::vector<char>& blob)
+        : Bundled_code_header{blob.cbegin(), blob.cend()} {}
+    explicit Bundled_code_header(const void* maybe_blob) {
+        // This is a pretty terrible interface, useful only because
+        // hipLoadModuleData is so poorly specified (for no fault of its own).
+        if (!maybe_blob) return;
+
+        if (!valid(*static_cast<const Bundled_code_header*>(maybe_blob))) return;
+        auto ph = static_cast<const Header_*>(maybe_blob);
+
+        size_t sz = sizeof(Header_) + ph->bundle_cnt_ * sizeof(Bundled_code::Header);
+        auto pb = static_cast<const char*>(maybe_blob) + sizeof(Header_);
+        auto n = ph->bundle_cnt_;
+        while (n--) {
+            sz += reinterpret_cast<const Bundled_code::Header*>(pb)->bundle_sz;
+            pb += sizeof(Bundled_code::Header);
+        }
+
+        read(static_cast<const char*>(maybe_blob), static_cast<const char*>(maybe_blob) + sz, *this);      
+    }
+    Bundled_code_header(const Bundled_code_header&) = default;
+    Bundled_code_header(Bundled_code_header&&) = default;
+    ~Bundled_code_header() = default;
+
+    // MANIPULATORS
+    Bundled_code_header& operator=(const Bundled_code_header&) = default;
+    Bundled_code_header& operator=(Bundled_code_header&&) = default;
+
+    size_t bundled_code_size = 0;
+};
+
+// CREATORS
+template <typename RandomAccessIterator>
+Bundled_code_header::Bundled_code_header(RandomAccessIterator f, RandomAccessIterator l)
+    : Bundled_code_header{} {
+    read(f, l, *this);
+}
+}  // Namespace hip_impl.

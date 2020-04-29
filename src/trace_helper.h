@@ -71,6 +71,11 @@ inline std::string ToString(hipEvent_t v) {
     ss << v;
     return ss.str();
 };
+//  hipIpcEventHandle_t specialization. TODO
+template <>
+inline std::string ToString(hipIpcEventHandle_t v) {
+    return std::string{};
+};
 //  hipStream_t
 template <>
 inline std::string ToString(hipStream_t v) {

@@ -1,7 +1,7 @@
 #project("hip")
 cmake_minimum_required(VERSION 3.5.1)
 
-set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--no-keep-memory -Wl,-Bsymbolic -Wl,--unresolved-symbols=report-all -Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-keep-memory -Wl,-Bsymbolic -Wl,--unresolved-symbols=report-all -Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
 
 if(CMAKE_CXX_FLAGS MATCHES "fsanitize=address")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -shared-libasan")
@@ -156,14 +156,40 @@ add_library(amdhip64_static STATIC
     $<TARGET_OBJECTS:hip64>
     )
 
+set_target_properties(
+    amdhip64 PROPERTIES
+        VERSION ${HIP_LIB_VERSION_STRING}
+        SOVERSION ${HIP_LIB_VERSION_MAJOR}
+)
+# We expect amdhip64_static to contain objects of vdi and hip. But linker
+# let amdhip64_static contain objects of hip only. So we will use a
+# a custom amdhip64_static_combiner to combine objects of vid and hip into
+# amdhip64_static. To avoid amdhip64_static contains itself,
+# amdhip64_static_temp is created internally.
+add_library(amdhip64_static_temp STATIC
+    $<TARGET_OBJECTS:hip64>
+    )
+
 add_library(host INTERFACE)
 target_link_libraries(host INTERFACE amdhip64)
-target_link_libraries(host INTERFACE amdhip64_static)
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
+# TODO: we may create host_static and device_static to let app
+# link amdhip64_static
 
-target_link_libraries(amdhip64_static amdvdi_static pthread dl)
-target_link_libraries(amdhip64 amdvdi_static pthread dl)
+target_link_libraries(amdhip64 PRIVATE amdvdi_static pthread dl)
+target_link_libraries(amdhip64_static PRIVATE pthread dl)
+target_link_libraries(amdhip64_static_temp PRIVATE pthread dl)
+
+# combine objects of vid and hip into amdhip64_static
+add_custom_target(
+    amdhip64_static_combiner
+    ALL
+    COMMAND rm -f $<TARGET_FILE:amdhip64_static>  # Must remove old one, otherwise the new one will contain obsolete stuff
+    COMMAND ${CMAKE_AR} -rcsT $<TARGET_FILE:amdhip64_static> $<TARGET_FILE:amdhip64_static_temp> $<TARGET_FILE:amdvdi_static>
+    DEPENDS amdhip64_static amdhip64_static_temp amdvdi_static # To make sure this is the last step
+    COMMENT "Combining static libs into amdhip64_static"
+)
 
 
 INSTALL(PROGRAMS $<TARGET_FILE:amdhip64_static> DESTINATION lib COMPONENT MAIN)
@@ -175,6 +201,6 @@ INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhip_hcc.so DESTINATION lib COMPONENT MA
 
 INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAIN)
 
-INSTALL(TARGETS amdhip64_static amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+INSTALL(TARGETS amdhip64 amdhip64_static host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 

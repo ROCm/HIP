@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include <hip/hcc_detail/device_library_decls.h>
 #include <hip/hcc_detail/llvm_intrinsics.h>
 
-#if __HIP_CLANG_ONLY__ && __HIP_VDI__
+#if __HIP_CLANG_ONLY__ && __HIP_VDI__ && !_WIN32
 extern "C" __device__ int printf(const char *fmt, ...);
 #else
 #if HC_FEATURE_PRINTF
@@ -128,7 +128,7 @@ __device__ static int __mul24(int x, int y);
 __device__ static long long int __mul64hi(long long int x, long long int y);
 __device__ static int __mulhi(int x, int y);
 __device__ static int __rhadd(int x, int y);
-__device__ static unsigned int __sad(int x, int y, int z);
+__device__ static unsigned int __sad(int x, int y,unsigned int z);
 __device__ static unsigned int __uhadd(unsigned int x, unsigned int y);
 __device__ static int __umul24(unsigned int x, unsigned int y);
 __device__ static unsigned long long int __umul64hi(unsigned long long int x, unsigned long long int y);
@@ -199,7 +199,7 @@ __device__ static inline int __rhadd(int x, int y) {
     int value = z & 0x7FFFFFFF;
     return ((value) >> 1 || sign);
 }
-__device__ static inline unsigned int __sad(int x, int y, int z) {
+__device__ static inline unsigned int __sad(int x, int y, unsigned int z) {
     return x > y ? x - y + z : y - x + z;
 }
 __device__ static inline unsigned int __uhadd(unsigned int x, unsigned int y) {
@@ -230,7 +230,7 @@ __device__ static inline unsigned int __urhadd(unsigned int x, unsigned int y) {
     return (x + y + 1) >> 1;
 }
 __device__ static inline unsigned int __usad(unsigned int x, unsigned int y, unsigned int z) {
-    return __ockl_sad_u32(x, y, z);
+    return __ockl_sadd_u32(x, y, z);
 }
 
 __device__ static inline unsigned int __lane_id() { return  __mbcnt_hi(-1, __mbcnt_lo(-1, 0)); }
@@ -563,7 +563,7 @@ long __shfl_xor(long var, int lane_mask, int width = warpSize)
     return tmp1;
     #else
     static_assert(sizeof(long) == sizeof(int), "");
-    return static_cast<long>(__shfl_down(static_cast<int>(var), lane_mask, width));
+    return static_cast<long>(__shfl_xor(static_cast<int>(var), lane_mask, width));
     #endif
 }
 __device__
@@ -1076,6 +1076,8 @@ void __assert_fail(const char * __assertion,
                                      unsigned int __line,
                                      const char *__function)
 {
+    printf("%s:%u: %s: Device-side assertion `%s' failed.\n", __file, __line,
+           __function, __assertion);
     // Ignore all the args for now.
     __builtin_trap();
 }

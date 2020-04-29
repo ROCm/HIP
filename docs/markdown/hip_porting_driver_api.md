@@ -68,8 +68,8 @@ HIP provides a `Ctx` API as a thin layer over the existing Device functions. Thi
 The current context is implicitly used by other APIs such as `hipStreamCreate`.
 
 ### hipify translation of CUDA Driver API
-The hipify tool converts CUDA Driver APIs for streams, events, modules, devices, memory management, context, profiler to the equivalent HIP driver calls. For example, `cuEventCreate` will be translated to `hipEventCreate`.
-Hipify also converts error code from the Driver namespace and coding convention to the equivalent HIP error code. Thus, HIP unifies the APIs for these common functions.
+The HIPIFY tools convert CUDA Driver APIs for streams, events, modules, devices, memory management, context, profiler to the equivalent HIP driver calls. For example, `cuEventCreate` will be translated to `hipEventCreate`.
+HIPIFY tools also convert error codes from the Driver namespace and coding convention to the equivalent HIP error code. Thus, HIP unifies the APIs for these common functions.
 
 The memory copy API requires additional explanation. The CUDA driver includes the memory direction in the name of the API (ie `cuMemcpyH2D`) while the CUDA driver API provides a single memory copy API with a parameter that specifies the direction and additionally supports a "default" direction where the runtime determines the direction automatically.
 HIP provides APIs with both styles: for example, `hipMemcpyH2D` as well as `hipMemcpy`.

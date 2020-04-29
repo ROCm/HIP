@@ -239,6 +239,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   case hipDeviceAttributeCooperativeMultiDeviceLaunch:
     *pi = prop.cooperativeMultiDeviceLaunch;
     break;
+  case hipDeviceAttributeIntegrated:
+    *pi = prop.integrated;
+    break;
   case hipDeviceAttributeMaxTexture1DWidth:
     *pi = prop.maxTexture1D;
     break;
@@ -431,8 +434,6 @@ hipError_t hipDeviceSetSharedMemConfig ( hipSharedMemConfig config ) {
 
 hipError_t hipDeviceSynchronize ( void ) {
   HIP_INIT_API(hipDeviceSynchronize);
-
-  hip::syncStreams();
 
   amd::HostQueue* queue = hip::getNullStream();
 

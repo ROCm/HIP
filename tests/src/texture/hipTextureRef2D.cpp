@@ -1,5 +1,5 @@
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM vdi
  * TEST: %t
  * HIT_END
  */
@@ -9,9 +9,7 @@
 
 #include <hip/hip_runtime.h>
 #include "test_common.h"
-#if __HIP__
-__hip_pinned_shadow__
-#endif
+
 texture<float, 2, hipReadModeElementType> tex;
 
 __global__ void tex2DKernel(float* outputData,

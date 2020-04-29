@@ -94,10 +94,12 @@ hipError_t hipModuleUnload(hipModule_t hmod)
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
 
   if(!PlatformState::instance().unregisterFunc(hmod)) {
+    DevLogPrintfError("Cannot unregister module: 0x%x \n", hmod);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   if(!ihipModuleUnregisterGlobal(hmod)) {
+    DevLogPrintfError("Cannot unregister Global vars for module: 0x%x \n", hmod);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
@@ -134,6 +136,7 @@ inline bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* modu
     = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getUndefinedVarFromCodeObj(&undef_vars)) {
+    DevLogPrintfError("Could not get undefined Variables for Module: 0x%x \n", *module);
     return false;
   }
 
@@ -147,8 +150,15 @@ inline bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* modu
       = new texture<float, hipTextureType1D, hipReadModeElementType>();
     memset(tex_hptr, 0x00, sizeof(texture<float, hipTextureType1D, hipReadModeElementType>));
 
-    PlatformState::DeviceVar dvar{ reinterpret_cast<char*>(tex_hptr), it->c_str(), sizeof(*tex_hptr), modules,
-      std::vector<PlatformState::RegisteredVar>{ g_devices.size()}, true };
+    PlatformState::DeviceVar dvar{PlatformState::DVK_Variable,
+                                  reinterpret_cast<char*>(tex_hptr),
+                                  it->c_str(),
+                                  sizeof(*tex_hptr),
+                                  modules,
+                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
+                                  true,
+                                  /*type*/ 0,
+                                  /*norm*/ 0};
     PlatformState::instance().registerVar(it->c_str(), dvar);
   }
 
@@ -163,6 +173,7 @@ inline bool ihipModuleRegisterFunc(amd::Program* program, hipModule_t* module) {
 
   // Get all the global func names from COMGR
   if (!dev_program->getGlobalFuncFromCodeObj(&func_names)) {
+    DevLogPrintfError("Could not get Global Funcs from Code Obj for Module: 0x%x \n", *module);
     return false;
   }
 
@@ -180,6 +191,7 @@ inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module)
     = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
+    DevLogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", *module);
     return false;
   }
 
@@ -189,8 +201,15 @@ inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module)
       modules->at(dev) = std::make_pair(*module, true);
     }
 
-    PlatformState::DeviceVar dvar{nullptr, it->c_str(), 0, modules,
-      std::vector<PlatformState::RegisteredVar>{ g_devices.size()}, false };
+    PlatformState::DeviceVar dvar{PlatformState::DVK_Variable,
+                                  nullptr,
+                                  it->c_str(),
+                                  0,
+                                  modules,
+                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
+                                  false,
+                                  /*type*/ 0,
+                                  /*norm*/ 0};
     PlatformState::instance().registerVar(it->c_str(), dvar);
   }
 
@@ -244,6 +263,8 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
   HIP_INIT_API(hipModuleGetFunction, hfunc, hmod, name);
 
   if (!PlatformState::instance().findModFunc(hfunc, hmod, name)) {
+    DevLogPrintfError("Cannot find the function: %s for module: 0x%x \n",
+                      name, hmod);
     HIP_RETURN(hipErrorNotFound);
   }
   HIP_RETURN(hipSuccess);
@@ -256,7 +277,72 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
   /* Get address and size for the global symbol */
   if (!PlatformState::instance().getGlobalVar(name, ihipGetDevice(), hmod,
                                               dptr, bytes)) {
+    DevLogPrintfError("Cannot find global Var: %s for module: 0x%x at device: %d \n",
+                       name, hmod, ihipGetDevice());
     HIP_RETURN(hipErrorNotFound);
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc) {
+  HIP_INIT_API(hipFuncGetAttribute, value, attrib, hfunc);
+
+  if ((value == nullptr) || (hfunc == nullptr)) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  hip::Function* function = hip::Function::asFunction(hfunc);
+  if (function == nullptr) {
+    HIP_RETURN(hipErrorInvalidHandle);
+  }
+
+  amd::Kernel* kernel = function->function_;
+  if (kernel == nullptr) {
+    HIP_RETURN(hipErrorInvalidDeviceFunction);
+  }
+
+  const device::Kernel::WorkGroupInfo* wrkGrpInfo
+    = kernel->getDeviceKernel(*(hip::getCurrentDevice()->devices()[0]))->workGroupInfo();
+  if (wrkGrpInfo == nullptr) {
+    HIP_RETURN(hipErrorMissingConfiguration);
+  }
+
+  switch(attrib) {
+    case HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES:
+      *value = static_cast<int>(wrkGrpInfo->localMemSize_
+                      - wrkGrpInfo->privateMemSize_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK:
+      *value = static_cast<int>(wrkGrpInfo->wavefrontPerSIMD_
+                * wrkGrpInfo->wavefrontSize_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES:
+      *value = 0;
+      break;
+    case HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES:
+      *value = static_cast<int>(wrkGrpInfo->localMemSize_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_NUM_REGS:
+      *value = static_cast<int>(wrkGrpInfo->availableGPRs_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_PTX_VERSION:
+      *value = 30; // Defaults to 3.0 as HCC
+      break;
+    case HIP_FUNC_ATTRIBUTE_BINARY_VERSION:
+      *value = static_cast<int>(kernel->signature().version());
+      break;
+    case HIP_FUNC_ATTRIBUTE_CACHE_MODE_CA:
+      *value = 0;
+      break;
+    case HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES:
+      *value = static_cast<int>(wrkGrpInfo->availableLDSSize_);
+      break;
+    case HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT:
+      *value = 0;
+      break;
+     default:
+       HIP_RETURN(hipErrorInvalidValue);
   }
 
   HIP_RETURN(hipSuccess);
@@ -590,6 +676,8 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
    /* Get address and size for the global symbol */
   if (!PlatformState::instance().getTexRef(name, hmod, texRef)) {
+    DevLogPrintfError("Cannot get texRef for name: %s at module:0x%x \n",
+                      name, hmod);
     HIP_RETURN(hipErrorNotFound);
   }
 
@@ -599,4 +687,3 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
   HIP_RETURN(hipSuccess);
 }
-

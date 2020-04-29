@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 $HIP_BASE_VERSION_MAJOR = "3";
-$HIP_BASE_VERSION_MINOR = "2";
+$HIP_BASE_VERSION_MINOR = "5";
 
 # Need perl > 5.10 to use logic-defined or
 use 5.006; use v5.10.1;
@@ -19,6 +19,7 @@ GetOptions(
     ,"path|p" => \$p_path
     ,"compiler|c" => \$p_compiler
     ,"platform|P" => \$p_platform
+    ,"runtime|r" => \$p_runtime
     ,"cpp_config|cxx_config|C" => \$p_cpp_config
     ,"full|f|info" => \$p_full,
     ,"version|v" => \$p_version,
@@ -30,8 +31,9 @@ if ($p_help) {
     print "usage: hipconfig [OPTIONS]\n";
     print "  --path,  -p        : print HIP_PATH (use env var if set, else determine from hipconfig path)\n";
     print "  --cpp_config, -C   : print C++ compiler options\n";
-    print "  --compiler, -c     : print compiler (hcc or nvcc)\n";
+    print "  --compiler, -c     : print compiler (hcc or clang or nvcc)\n";
     print "  --platform, -P     : print platform (hcc or nvcc)\n";
+    print "  --runtime, -r      : print runtime (HCC or VDI)\n";
     print "  --full, -f         : print full config\n";
     print "  --version, -v      : print hip version\n";
     print "  --check            : check configuration\n";
@@ -82,12 +84,21 @@ if (-e "$HIP_PATH/../.info/version") {
 $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
 $HCC_HOME=$ENV{'HCC_HOME'} // "$ROCM_PATH/hcc";
 $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
+$HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
+# Read .hipInfo
+my %hipInfo = ();
+parse_config_file("$HIP_PATH/lib/.hipInfo", \%hipInfo);
+$HIP_COMPILER = $hipInfo{'HIP_COMPILER'} // "hcc";
+$HIP_RUNTIME = $hipInfo{'HIP_RUNTIME'} // "HCC";
+
 if (not defined $HIP_PLATFORM) {
     if (can_run("$HCC_HOME/bin/hcc") or can_run("hcc")) {
+        $HIP_PLATFORM = "hcc";
+    } elsif (can_run("$HIP_CLANG_PATH/clang++") or can_run("clang++")) {
         $HIP_PLATFORM = "hcc";
     } elsif (can_run("$CUDA_PATH/bin/nvcc") or can_run("nvcc")) {
         $HIP_PLATFORM = "nvcc";
@@ -97,8 +108,15 @@ if (not defined $HIP_PLATFORM) {
     }
 }
 
-if ($HIP_PLATFORM eq "hcc") {
-    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=   -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
+if ($HIP_COMPILER eq "hcc") {
+    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
+}
+if ($HIP_COMPILER eq "clang") {
+    $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
+    $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
+    $HIP_CLANG_VERSION=$1;
+
+    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
 }
 if ($HIP_PLATFORM eq "nvcc") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
@@ -118,15 +136,23 @@ if ($p_path) {
     $printed = 1;
 }
 
-
 if ($p_cpp_config) {
     print $CPP_CONFIG;
     $printed = 1;
 }
 
+if ($p_compiler) {
+    print $HIP_COMPILER;
+    $printed = 1;
+}
 
-if ($p_compiler or $p_platform) {
+if ($p_platform) {
     print $HIP_PLATFORM;
+    $printed = 1;
+}
+
+if ($p_runtime) {
+    print $HIP_RUNTIME;
     $printed = 1;
 }
 
@@ -139,21 +165,41 @@ if (!$printed or $p_full) {
     print "HIP version  : ", $HIP_VERSION, "\n\n";
     print "== hipconfig\n";
     print "HIP_PATH     : ", $HIP_PATH, "\n";
+    print "HIP_COMPILER : ", $HIP_COMPILER, "\n";
     print "HIP_PLATFORM : ", $HIP_PLATFORM, "\n";
+    print "HIP_RUNTIME  : ", $HIP_RUNTIME, "\n";
     print "CPP_CONFIG   : ", $CPP_CONFIG, "\n";
     if ($HIP_PLATFORM eq "hcc")
     {
         print "\n" ;
-        print "== hcc\n";
-        print ("HSA_PATH     : $HSA_PATH\n");
-        print ("HCC_HOME     : $HCC_HOME\n");
-        system("$HCC_HOME/bin/hcc --version");
-        system("$HCC_HOME/bin/llc --version");
-        print ("HCC-cxxflags : ");
-        system("$HCC_HOME/bin/hcc-config --cxxflags");
-        print ("HCC-ldflags  : ");
-        system("$HCC_HOME/bin/hcc-config --ldflags");
-        printf("\n");
+        if ($HIP_COMPILER eq "hcc")
+        {
+            print "== hcc\n";
+            print ("HSA_PATH     : $HSA_PATH\n");
+            print ("HCC_HOME     : $HCC_HOME\n");
+            system("$HCC_HOME/bin/hcc --version");
+            system("$HCC_HOME/bin/llc --version");
+            print ("HCC-cxxflags : ");
+            system("$HCC_HOME/bin/hcc-config --cxxflags");
+            printf("\n");
+            print ("HCC-ldflags  : ");
+            system("$HCC_HOME/bin/hcc-config --ldflags");
+            printf("\n");
+        }
+        if ($HIP_COMPILER eq "clang")
+        {
+            print "== hip-clang\n";
+            print ("HSA_PATH         : $HSA_PATH\n");
+            print ("HIP_CLANG_PATH   : $HIP_CLANG_PATH\n");
+            system("$HIP_CLANG_PATH/clang++ --version");
+            system("$HIP_CLANG_PATH/llc --version");
+            print ("hip-clang-cxxflags : ");
+            system("$HIP_PATH/bin/hipcc --cxxflags");
+            printf("\n");
+            print ("hip-clang-ldflags  : ");
+            system("$HIP_PATH/bin/hipcc --ldflags");
+            printf("\n");
+        }
     }
     if ($HIP_PLATFORM eq "nvcc")  {
         print "\n" ;

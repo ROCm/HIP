@@ -27,7 +27,6 @@ THE SOFTWARE.
 
 #define fileName "tex2dKernel.code"
 
-texture<float, 2, hipReadModeElementType> tex;
 bool testResult = true;
 
 #define HIP_CHECK(cmd)                                                                             \
@@ -122,7 +121,7 @@ bool runTest(int argc, char** argv) {
             }
         }
     }
-    HIP_CHECK(hipUnbindTexture(tex));
+    HIP_CHECK(hipUnbindTexture(texref));
     HIP_CHECK(hipFree(dData));
     HIP_CHECK(hipFreeArray(array));
     return testResult;

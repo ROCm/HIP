@@ -1,12 +1,13 @@
 ## What is this repository for? ###
 
-HIP allows developers to convert CUDA code to portable C++.  The same source code can be compiled to run on NVIDIA or AMD GPUs. 
+**HIP is a C++ Runtime API and Kernel Language that allows developers to create portable applications for AMD and NVIDIA GPUs from single source code.**
+
 Key features include:
 
 * HIP is very thin and has little or no performance impact over coding directly in CUDA or hcc "HC" mode.
 * HIP allows coding in a single-source C++ programming language including features such as templates, C++11 lambdas, classes, namespaces, and more.
 * HIP allows developers to use the "best" development environment and tools on each target platform.
-* The [HIPIFY](hipify-clang/README.md) tools automatically convert source from CUDA to HIP.
+* The [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md) tools automatically convert source from CUDA to HIP.
 * Developers can specialize for the platform (CUDA or hcc) to tune for performance or handle tricky cases 
 
 New projects can be developed directly in the portable HIP C++ language and can run on either NVIDIA or AMD platforms.  Additionally, HIP provides porting tools which make it easy to port existing CUDA codes to the HIP layer, with no loss of performance as compared to the original CUDA application.  HIP is not intended to be a drop-in replacement for CUDA, and developers should expect to do some manual coding and performance tuning work to complete the port.
@@ -36,7 +37,7 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [HIP Profiling ](docs/markdown/hip_profiling.md)
 - [HIP Debugging](docs/markdown/hip_debugging.md)
 - [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenCL)
-- [HIPIFY](hipify-clang/README.md)
+- [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md)
 - Supported CUDA APIs:
   * [Runtime API](docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
   * [Driver API](docs/markdown/CUDA_Driver_API_functions_supported_by_HIP.md)
@@ -114,7 +115,7 @@ provides source portability to either platform.   HIP provides the _hipcc_ compi
 
 ## Examples and Getting Started:
 
-* A sample and [blog](http://gpuopen.com/hip-to-be-squared-an-introductory-hip-tutorial) that uses any of [HIPIFY](hipify-clang/README.md) tools to convert a simple app from CUDA to HIP:
+* A sample and [blog](http://gpuopen.com/hip-to-be-squared-an-introductory-hip-tutorial) that uses any of [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md) tools to convert a simple app from CUDA to HIP:
 
  
 ```shell

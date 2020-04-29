@@ -56,6 +56,7 @@ void printCompilerInfo() {
 #endif
 }
 
+double bytesToKB(size_t s) { return (double)s / (1024.0); }
 double bytesToGB(size_t s) { return (double)s / (1024.0 * 1024.0 * 1024.0); }
 
 #define printLimit(w1, limit, units)                                                               \
@@ -97,7 +98,7 @@ void printDeviceProp(int deviceId) {
     cout << setw(w1) << "totalGlobalMem: " << fixed << setprecision(2)
          << bytesToGB(props.totalGlobalMem) << " GB" << endl;
     cout << setw(w1) << "maxSharedMemoryPerMultiProcessor: " << fixed << setprecision(2)
-         << bytesToGB(props.maxSharedMemoryPerMultiProcessor) << " GB" << endl;
+         << bytesToKB(props.maxSharedMemoryPerMultiProcessor) << " KB" << endl;
     cout << setw(w1) << "totalConstMem: " << props.totalConstMem << endl;
     cout << setw(w1) << "sharedMemPerBlock: " << (float)props.sharedMemPerBlock / 1024.0 << " KB"
          << endl;

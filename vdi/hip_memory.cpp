@@ -48,11 +48,7 @@ hipError_t ihipFree(void *ptr)
   }
   if (amd::SvmBuffer::malloced(ptr)) {
     for (auto& dev : g_devices) {
-      amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
-      if (queue != nullptr) {
-        queue->finish();
-      }
-      hip::syncStreams(dev->deviceId());
+      dev->NullStream()->finish();
     }
     amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
     return hipSuccess;
@@ -179,8 +175,7 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
 hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(hipExtMallocWithFlags, ptr, sizeBytes, flags);
 
-  if (flags != hipDeviceMallocDefault &&
-      flags != hipDeviceMallocFinegrained) {
+  if (flags != hipDeviceMallocDefault && flags != hipDeviceMallocFinegrained) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -205,6 +200,9 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 
   // can't have both Coherent and NonCoherent flags set at the same time
   if ((flags & coherentFlags) == coherentFlags) {
+    DevLogPrintfError("Cannot have both coherent and non-coherent flags "
+                      "at the same time, flags: %u coherent flags: %u \n",
+                      flags, coherentFlags);
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -238,7 +236,6 @@ hipError_t hipFree(void* ptr) {
 hipError_t hipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
   HIP_INIT_API(hipMemcpy, dst, src, sizeBytes, kind);
 
-  hip::syncStreams();
   amd::HostQueue* queue = hip::getNullStream();
   HIP_RETURN(ihipMemcpy(dst, src, sizeBytes, kind, *queue));
 }
@@ -283,11 +280,7 @@ hipError_t ihipArrayDestroy(hipArray* array) {
     return hipErrorInvalidValue;
   }
   for (auto& dev : g_devices) {
-    amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
-    if (queue != nullptr) {
-      queue->finish();
-    }
-    hip::syncStreams(dev->deviceId());
+    dev->NullStream()->finish();
   }
   as_amd(memObj)->release();
 
@@ -417,16 +410,20 @@ amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
                             amd::Memory* buffer) {
   const amd::Image::Format imageFormat({channelOrder, channelType});
   if (!imageFormat.isValid()) {
+    DevLogPrintfError("Invalid Image format for channel Order:%u Type:%u \n",
+                      channelOrder, channelType);
     return nullptr;
   }
 
   amd::Context& context = *hip::getCurrentDevice()->asContext();
   if (!imageFormat.isSupported(context, imageType)) {
+    DevLogPrintfError("Image type: %u not supported \n", imageType);
     return nullptr;
   }
 
   const std::vector<amd::Device*>& devices = context.devices();
   if (!devices[0]->info().imageSupport_) {
+    DevLogPrintfError("Device: 0x%x does not support image \n", devices[0]);
     return nullptr;
   }
 
@@ -436,6 +433,7 @@ amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
                                       imageHeight,
                                       imageDepth,
                                       imageArraySize)) {
+    DevLogError("Image does not have valid dimensions \n");
     return nullptr;
   }
 
@@ -509,6 +507,7 @@ amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
   }
 
   if (!image->create(nullptr)) {
+    DevLogPrintfError("Cannot create image: 0x%x \n", image);
     delete image;
     return nullptr;
   }
@@ -630,8 +629,7 @@ hipError_t hipMalloc3DArray(hipArray_t* array,
 hipError_t hipHostGetFlags(unsigned int* flagsPtr, void* hostPtr) {
   HIP_INIT_API(hipHostGetFlags, flagsPtr, hostPtr);
 
-  if (flagsPtr == nullptr ||
-      hostPtr == nullptr) {
+  if (flagsPtr == nullptr || hostPtr == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -657,6 +655,8 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
     constexpr bool forceAlloc = true;
     if (!mem->create(hostPtr, sysMemAlloc, skipAlloc, forceAlloc)) {
       mem->release();
+      DevLogPrintfError("Cannot create memory for size: %u with flags: %d \n",
+                        sizeBytes, flags);
       HIP_RETURN(hipErrorOutOfMemory);
     }
 
@@ -678,11 +678,7 @@ hipError_t hipHostUnregister(void* hostPtr) {
   HIP_INIT_API(hipHostUnregister, hostPtr);
 
   for (auto& dev : g_devices) {
-    amd::HostQueue* queue = hip::getNullStream(*dev->asContext());
-    if (queue != nullptr) {
-      queue->finish();
-    }
-    hip::syncStreams(dev->deviceId());
+    dev->NullStream()->finish();
   }
 
   if (amd::SvmBuffer::malloced(hostPtr)) {
@@ -703,6 +699,7 @@ hipError_t hipHostUnregister(void* hostPtr) {
     }
   }
 
+  DevLogPrintfError("Cannot unregister host_ptr: 0x%x \n", hostPtr);
   HIP_RETURN(hipErrorInvalidValue);
 }
 
@@ -712,116 +709,136 @@ hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
 };
 
 
-hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t count,
+hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeBytes,
                              size_t offset, hipMemcpyKind kind) {
-  HIP_INIT_API(hipMemcpyToSymbol, symbol, src, count, offset, kind);
+  HIP_INIT_API(hipMemcpyToSymbol, symbol, src, sizeBytes, offset, kind);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  hipModule_t hmod;
   std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
+    DevLogPrintfError("cannot find symbol 0x%x \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
                                               &device_ptr, &sym_size)) {
+    DevLogPrintfError("Cannot get global var: %s at device: %d \n", symbolName.c_str(), ihipGetDevice());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   /* Size Check to make sure offset is correct */
-  if ((offset + count) != sym_size) {
+  if ((offset + sizeBytes) > sym_size) {
+    DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
+                   offset, sizeBytes, sym_size);
     return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
 
   /* Copy memory from source to destination address */
-  HIP_RETURN(hipMemcpy(device_ptr, src, count, kind));
+  HIP_RETURN(hipMemcpy(device_ptr, src, sizeBytes, kind));
 }
 
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t count,
+hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t sizeBytes,
                                size_t offset, hipMemcpyKind kind) {
-  HIP_INIT_API(hipMemcpyFromSymbol, symbol, dst, count, offset, kind);
+  HIP_INIT_API(hipMemcpyFromSymbol, symbol, dst, sizeBytes, offset, kind);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  hipModule_t hmod;
   std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
+    DevLogPrintfError("cannot find symbol: 0x%x \n", symbol);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
                                               &device_ptr, &sym_size)) {
+    DevLogPrintfError("Cannot find symbol Name: %s \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   /* Size Check to make sure offset is correct */
-  if ((offset + count) != sym_size) {
+  if ((offset + sizeBytes) > sym_size) {
+    DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
+                      offset, sizeBytes, sym_size);
     return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
 
   /* Copy memory from source to destination address */
-  HIP_RETURN(hipMemcpy(dst, device_ptr, count, kind));
+  HIP_RETURN(hipMemcpy(dst, device_ptr, sizeBytes, kind));
 }
 
-hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t count,
+hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t sizeBytes,
                                   size_t offset, hipMemcpyKind kind, hipStream_t stream) {
-  HIP_INIT_API(hipMemcpyToSymbolAsync, symbol, src, count, offset, kind, stream);
+  HIP_INIT_API(hipMemcpyToSymbolAsync, symbol, src, sizeBytes, offset, kind, stream);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  hipModule_t hmod;
   std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
+    DevLogPrintfError("cannot find symbol: 0x%x \n", symbol);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
                                               &device_ptr, &sym_size)) {
+    DevLogPrintfError("Cannot find symbol Name: %s \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   /* Size Check to make sure offset is correct */
-  if ((offset + count) != sym_size) {
+  if ((offset + sizeBytes) > sym_size) {
+    DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
+                      offset, sizeBytes, sym_size);
     return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
 
   /* Copy memory from source to destination address */
-  HIP_RETURN(hipMemcpyAsync(device_ptr, src, count, kind, stream));
+  HIP_RETURN(hipMemcpyAsync(device_ptr, src, sizeBytes, kind, stream));
 }
 
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t count,
+hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t sizeBytes,
                                     size_t offset, hipMemcpyKind kind, hipStream_t stream) {
-  HIP_INIT_API(hipMemcpyFromSymbolAsync, symbol, dst, count, offset, kind, stream);
+  HIP_INIT_API(hipMemcpyFromSymbolAsync, symbol, dst, sizeBytes, offset, kind, stream);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
+  hipModule_t hmod;
   std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, symbolName)) {
+  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
+    DevLogPrintfError("cannot find symbol: 0x%x \n", symbol);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), nullptr,
+  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
                                               &device_ptr, &sym_size)) {
+    DevLogPrintfError("Cannot find symbol Name: %s \n", symbolName.c_str());
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
   /* Size Check to make sure offset is correct */
-  if ((offset + count) != sym_size) {
+  if ((offset + sizeBytes) > sym_size) {
+    DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
+                      offset, sizeBytes, sym_size);
     return HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
 
   /* Copy memory from source to destination address */
-  HIP_RETURN(hipMemcpyAsync(dst, device_ptr, count, kind, stream));
+  HIP_RETURN(hipMemcpyAsync(dst, device_ptr, sizeBytes, kind, stream));
 }
 
 hipError_t hipMemcpyHtoD(hipDeviceptr_t dstDevice,
@@ -894,13 +911,13 @@ hipError_t ihipMemcpyAtoD(hipArray* srcArray,
                           hipStream_t stream,
                           bool isAsync = false) {
   cl_mem srcMemObj = reinterpret_cast<cl_mem>(srcArray->data);
-  if (is_valid(srcMemObj) == false) {
+  size_t dstOffset = 0;
+  amd::Memory* dstMemory = getMemoryObject(dstDevice, dstOffset);
+  if (!is_valid(srcMemObj) || (dstMemory == nullptr)) {
     return hipErrorInvalidValue;
   }
 
   amd::Image* srcImage = as_amd(srcMemObj)->asImage();
-  size_t dstOffset = 0;
-  amd::Memory* dstMemory = getMemoryObject(dstDevice, dstOffset);
 
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcImage->getRowPitch(), srcImage->getSlicePitch())) {
@@ -953,13 +970,13 @@ hipError_t ihipMemcpyDtoA(void* srcDevice,
                           size_t srcSlicePitch,
                           hipStream_t stream,
                           bool isAsync = false) {
+  size_t srcOffset = 0;
+  amd::Memory* srcMemory = getMemoryObject(srcDevice, srcOffset);
   cl_mem dstMemObj = reinterpret_cast<cl_mem>(dstArray->data);
-  if (is_valid(dstMemObj) == false) {
+  if ((srcMemory == nullptr) || !is_valid(dstMemObj)) {
     return hipErrorInvalidValue;
   }
 
-  size_t srcOffset = 0;
-  amd::Memory* srcMemory = getMemoryObject(srcDevice, srcOffset);
   amd::Image* dstImage = as_amd(dstMemObj)->asImage();
 
   amd::BufferRect srcRect;
@@ -1020,6 +1037,10 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
   size_t dstOffset = 0;
   amd::Memory *dstMemory = getMemoryObject(dstDevice, dstOffset);
 
+  if ((srcMemory == nullptr) || (dstMemory == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
     return hipErrorInvalidValue;
@@ -1028,8 +1049,8 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
   srcRect.end_ += srcOffset;
 
   amd::Coord3D srcStart(srcRect.start_, 0, 0);
-  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
-  if (!srcMemory->validateRegion(srcStart, srcEnd)) {
+  amd::Coord3D srcSize(srcRect.end_ - srcRect.start_, 1, 1);
+  if (!srcMemory->validateRegion(srcStart, srcSize)) {
     return hipErrorInvalidValue;
   }
 
@@ -1041,8 +1062,8 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
   dstRect.end_ += dstOffset;
 
   amd::Coord3D dstStart(dstRect.start_, 0, 0);
-  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
-  if (!dstMemory->validateRegion(dstStart, dstEnd)) {
+  amd::Coord3D dstSize(dstRect.end_ - dstRect.start_, 1, 1);
+  if (!dstMemory->validateRegion(dstStart, dstSize)) {
     return hipErrorInvalidValue;
   }
 
@@ -1084,6 +1105,10 @@ hipError_t ihipMemcpyDtoH(void* srcDevice,
   size_t srcOffset = 0;
   amd::Memory *srcMemory = getMemoryObject(srcDevice, srcOffset);
 
+  if ((srcMemory == nullptr) || (dstHost == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
     return hipErrorInvalidValue;
@@ -1092,8 +1117,8 @@ hipError_t ihipMemcpyDtoH(void* srcDevice,
   srcRect.end_ += srcOffset;
 
   amd::Coord3D srcStart(srcRect.start_, 0, 0);
-  amd::Coord3D srcEnd(srcRect.end_, 1, 1);
-  if (!srcMemory->validateRegion(srcStart, srcEnd)) {
+  amd::Coord3D srcSize(srcRect.end_ - srcRect.start_, 1, 1);
+  if (!srcMemory->validateRegion(srcStart, srcSize)) {
     return hipErrorInvalidValue;
   }
 
@@ -1139,6 +1164,10 @@ hipError_t ihipMemcpyHtoD(const void* srcHost,
   size_t dstOffset = 0;
   amd::Memory *dstMemory = getMemoryObject(dstDevice, dstOffset);
 
+  if ((srcHost == nullptr) || (dstMemory == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
     return hipErrorInvalidValue;
@@ -1152,8 +1181,8 @@ hipError_t ihipMemcpyHtoD(const void* srcHost,
   dstRect.end_ += dstOffset;
 
   amd::Coord3D dstStart(dstRect.start_, 0, 0);
-  amd::Coord3D dstEnd(dstRect.end_, 1, 1);
-  if (!dstMemory->validateRegion(dstStart, dstEnd)) {
+  amd::Coord3D dstSize(dstRect.end_ - dstRect.start_, 1, 1);
+  if (!dstMemory->validateRegion(dstStart, dstSize)) {
     return hipErrorInvalidValue;
   }
 
@@ -1189,6 +1218,10 @@ hipError_t ihipMemcpyHtoH(const void* srcHost,
                           size_t srcSlicePitch,
                           size_t dstRowPitch,
                           size_t dstSlicePitch) {
+  if ((srcHost == nullptr) || (dstHost == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
     return hipErrorInvalidValue;
@@ -1270,12 +1303,8 @@ hipError_t ihipMemcpyHtoA(const void* srcHost,
                           size_t srcSlicePitch,
                           hipStream_t stream,
                           bool isAsync = false) {
-  if (srcHost == nullptr) {
-    return hipErrorInvalidValue;
-  }
-
   cl_mem dstMemObj = reinterpret_cast<cl_mem>(dstArray->data);
-  if (is_valid(dstMemObj) == false) {
+  if ((srcHost == nullptr) || !is_valid(dstMemObj)) {
     return hipErrorInvalidValue;
   }
 
@@ -1327,11 +1356,7 @@ hipError_t ihipMemcpyAtoH(hipArray* srcArray,
                           hipStream_t stream,
                           bool isAsync = false) {
   cl_mem srcMemObj = reinterpret_cast<cl_mem>(srcArray->data);
-  if (!is_valid(srcMemObj)) {
-    return hipErrorInvalidValue;
-  }
-
-  if (dstHost == nullptr) {
+  if (!is_valid(srcMemObj) || (dstHost == nullptr)) {
     return hipErrorInvalidValue;
   }
 
@@ -1339,7 +1364,6 @@ hipError_t ihipMemcpyAtoH(hipArray* srcArray,
   if (!dstRect.create(static_cast<size_t*>(dstOrigin), static_cast<size_t*>(copyRegion), dstRowPitch, dstSlicePitch)) {
     return hipErrorInvalidValue;
   }
-
 
   amd::Image* srcImage = as_amd(srcMemObj)->asImage();
   // HIP assumes the width is in bytes, but OCL assumes it's in pixels.
@@ -1630,6 +1654,32 @@ hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream) {
   HIP_RETURN(ihipMemcpyParam3D(pCopy, stream, true));
 }
 
+hipError_t packFillMemoryCommand(amd::Memory* memory, size_t offset, int value, size_t valueSize,
+                                size_t sizeBytes, amd::HostQueue* queue, bool isAsync = false) {
+
+  if ((memory == nullptr) || (queue == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Command::EventWaitList waitList;
+  amd::Coord3D fillOffset(offset, 0, 0);
+  amd::Coord3D fillSize(sizeBytes, 1, 1);
+  amd::FillMemoryCommand* command =
+      new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
+                                 &value, valueSize, fillOffset, fillSize);
+  if (command == nullptr) {
+    return hipErrorOutOfMemory;
+  }
+  command->enqueue();
+
+  if (!isAsync) {
+    command->awaitCompletion();
+  }
+
+  command->release();
+  return hipSuccess;
+}
+
 hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
                       hipStream_t stream, bool isAsync = false) {
   if (sizeBytes == 0) {
@@ -1642,33 +1692,51 @@ hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
   }
 
   size_t offset = 0;
-  amd::HostQueue* queue = hip::getQueue(stream);
   amd::Memory* memory = getMemoryObject(dst, offset);
-
-  if (memory != nullptr) {
-    // Device memory
-    amd::Command::EventWaitList waitList;
-    amd::Coord3D fillOffset(offset, 0, 0);
-    amd::Coord3D fillSize(sizeBytes, 1, 1);
-    amd::FillMemoryCommand* command =
-        new amd::FillMemoryCommand(*queue, CL_COMMAND_FILL_BUFFER, waitList, *memory->asBuffer(),
-                                   &value, valueSize, fillOffset, fillSize);
-
-    if (command == nullptr) {
-      return hipErrorOutOfMemory;
-    }
-
-    command->enqueue();
-    if (!isAsync) {
-      command->awaitCompletion();
-    }
-    command->release();
-  } else {
+  if (memory == nullptr) {
     // Host alloced memory
     memset(dst, value, sizeBytes);
+    return hipSuccess;
   }
 
-  return hipSuccess;
+  hipError_t hip_error = hipSuccess;
+  amd::HostQueue* queue = hip::getQueue(stream);
+
+  int32_t value32 = 0;
+  const size_t dwordModSize = (sizeBytes % sizeof(int32_t));
+
+  if (sizeBytes/sizeof(int32_t) > 0) {
+    if (valueSize == sizeof(int8_t)) {
+      value = value & 0xff;
+      value32 = ((value << 24) | (value << 16) | (value << 8) | (value));
+    } else if (valueSize == sizeof(int16_t)) {
+      value = value & 0xffff;
+      value32 = ((value<<16) | (value));
+    } else if(valueSize == sizeof(int32_t)) {
+      value32 = value;
+    } else {
+      LogPrintfError("Unsupported Pattern size: %u \n", valueSize);
+      return hipErrorInvalidValue;
+    }
+    // If dwordModSize is != 0 then we will do a second fillBuffer Command
+    // on the same stream below, dont wait, do the first call async.
+    hip_error = packFillMemoryCommand(memory, offset, value32, sizeof(int32_t),
+                                      sizeBytes - dwordModSize, queue,
+                                      ((dwordModSize != 0) || isAsync));
+    if(hip_error != hipSuccess) {
+      return hip_error;
+    }
+  }
+
+  if (dwordModSize != 0) {
+    void* new_dst = reinterpret_cast<void*>((reinterpret_cast<address>(dst)
+                                             + sizeBytes) - dwordModSize);
+    memory = getMemoryObject(new_dst, offset);
+    hip_error = packFillMemoryCommand(memory, offset, value, valueSize,
+                                      dwordModSize, queue, isAsync);
+  }
+
+  return hip_error;
 }
 
 hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
@@ -1837,12 +1905,16 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* dev_ptr) {
   /* Get AMD::Memory object corresponding to this pointer */
   amd_mem_obj = getMemoryObject(dev_ptr, offset);
   if (amd_mem_obj == nullptr) {
+    DevLogPrintfError("Cannot retrieve amd_mem_obj for dev_ptr: 0x%x with offset: %u \n",
+                      dev_ptr, offset);
     HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   /* Get Device::Memory object pointer */
   dev_mem_obj = amd_mem_obj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0],false);
   if (dev_mem_obj == nullptr) {
+    DevLogPrintfError("Cannot get Device memory for amd_mem_obj: 0x%x dev_ptr: 0x%x offset: %u \n",
+                      amd_mem_obj, dev_ptr, offset);
     HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
@@ -1870,6 +1942,7 @@ hipError_t hipIpcOpenMemHandle(void** dev_ptr, hipIpcMemHandle_t handle, unsigne
 
   amd_mem_obj = device->IpcAttach(&(ihandle->ipc_handle), ihandle->psize, flags, dev_ptr);
   if (amd_mem_obj == nullptr) {
+    DevLogPrintfError("cannot attach ipc_handle: with ipc_size: %u flags: %u", ihandle->psize, flags);
     HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
@@ -1886,7 +1959,6 @@ hipError_t hipIpcCloseMemHandle(void* dev_ptr) {
   amd::Device* device = nullptr;
   amd::Memory* amd_mem_obj = nullptr;
 
-  hip::syncStreams();
   hip::getNullStream()->finish();
 
   if (dev_ptr == nullptr) {
@@ -1954,9 +2026,12 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
       }
       ++device;
     }
+    DevLogPrintfError("Cannot find memory object context, memObjCtx: 0x%x \n",
+                      memObjCtx);
     HIP_RETURN(hipErrorInvalidDevice);
   }
 
+  DevLogPrintfError("Cannot get amd_mem_obj for ptr: 0x%x \n", ptr);
   HIP_RETURN(hipErrorInvalidValue);
 }
 
