@@ -707,7 +707,6 @@ hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
     if ( nullptr == ctx || nullptr == ptr)  {
         hip_status = hipErrorInvalidValue;
     } else {
-        auto device = ctx->getWriteableDevice();
         *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx, false /*shareWithAll*/,
                                               0 /*amFlags*/, 0 /*hipFlags*/, 0);
 
