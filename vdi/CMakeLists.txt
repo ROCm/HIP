@@ -49,19 +49,21 @@ set(PROF_API_HEADER_PATH ${VDI_DIR}/platform)
 #############################
 # Generate profiling API macros/structures header
 # FIXME: This should not be writing to the source directory
-set(PROF_API_STR "${CMAKE_CURRENT_SOURCE_DIR}/../include/hip/hcc_detail/hip_prof_str.h")
+set(PROF_API_STR "${PROJECT_BINARY_DIR}/include/hip/hcc_detail/hip_prof_str.h")
 set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/../include/hip/hcc_detail/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
 set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
-message(STATUS "Generating profiling primitives: ${PROF_API_STR}")
 
-# FIXME: Do we really need to remove this file first?
-execute_process(
-  COMMAND ${CMAKE_COMMAND} -E remove -f ${PROF_API_STR}
+add_custom_command(OUTPUT ${PROF_API_STR}
   COMMAND ${PYTHON_EXECUTABLE} ${PROF_API_GEN} -v -t --priv ${OPT_PROF_API} ${PROF_API_HDR} ${PROF_API_SRC} ${PROF_API_STR}
-  OUTPUT_FILE ${PROF_API_LOG})
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${PROF_API_GEN} ${PROF_API_HDR} ${PROF_API_STR})
+  OUTPUT_FILE ${PROF_API_LOG}
+  DEPENDS ${PROF_API_HDR} ${PROF_API_GEN}
+  COMMENT "Generating profiling primitives: ${PROF_API_STR}")
+
+add_custom_target(gen-prof-api-str-header ALL
+  DEPENDS ${PROF_API_STR}
+  SOURCES ${PROF_API_HDR})
 
 # Enable profiling API
 if(USE_PROF_API EQUAL 1)
@@ -98,6 +100,7 @@ endif() # if (DEFINED LLVM_INCLUDES AND NOT ${LLVM_INCLUDES} STREQUAL "")
 
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${PROJECT_BINARY_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/elfio)
 include_directories(${CMAKE_SOURCE_DIR}/amdocl)
 include_directories(${CMAKE_SOURCE_DIR}/include/hip/hcc_detail/elfio)
@@ -121,7 +124,7 @@ include_directories("$<TARGET_PROPERTY:amd_comgr,INTERFACE_INCLUDE_DIRECTORIES>"
 
 add_definitions(-DBSD_LIBELF)
 
-add_library(hip64 OBJECT 
+add_library(hip64 OBJECT
  hip_context.cpp
  hip_device.cpp
  hip_device_runtime.cpp
@@ -143,12 +146,14 @@ add_library(hip64 OBJECT
  fixme.cpp
  )
 set_target_properties(hip64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 set_target_properties(
     hip64 PROPERTIES
         CXX_STANDARD 14
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
-)
+        )
+add_dependencies(hip64 gen-prof-api-str-header)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -166,7 +171,14 @@ set_target_properties(
     amdhip64 PROPERTIES
         VERSION ${HIP_LIB_VERSION_STRING}
         SOVERSION ${HIP_LIB_VERSION_MAJOR}
-)
+        )
+
+set_target_properties(hip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
+set_target_properties(amdhip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
+set_target_properties(amdhip64_static PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
+
+
+
 # We expect amdhip64_static to contain objects of rocclr and hip. But linker
 # let amdhip64_static contain objects of hip only. So we will use a
 # a custom amdhip64_static_combiner to combine objects of vid and hip into

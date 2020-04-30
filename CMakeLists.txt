@@ -459,6 +459,12 @@ if(NOT ${INSTALL_SOURCE} EQUAL 0)
     install(DIRECTORY cmake DESTINATION .)
 endif()
 
+# Install generated headers
+# FIXME: Associate with individual targets.
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h*")
+
 #############################
 # hip-config
 #############################
