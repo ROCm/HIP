@@ -728,7 +728,7 @@ hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* pam,
   }
 
   // Currently, the only valid value for dim are 0 and 1.
-  if ((dim != 0) || (dim != 1)) {
+  if ((dim != 0) && (dim != 1)) {
     DevLogPrintfError("Currently only 2 dimensions (0,1) are valid,"
                       "dim : %d \n", dim);
     HIP_RETURN(hipErrorInvalidValue);
