@@ -10,7 +10,6 @@ bin/hipInfo
 bin/hipBusBandwidth
 bin/hipDispatchLatency
 bin/hipify-clang
-include/hip/hip_version.h
 tags
 samples/1_Utils/hipInfo/hipInfo
 samples/1_Utils/hipBusBandwidth/hipBusBandwidth

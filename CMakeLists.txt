@@ -425,7 +425,8 @@ set(_versionInfoHeader
 #define HIP_VERSION       (HIP_VERSION_MAJOR * 100 + HIP_VERSION_MINOR)\n
 #endif\n
 ")
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
+file(WRITE "${PROJECT_BINARY_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
+include_directories(${PROJECT_BINARY_DIR}/include)
 
 # Build doxygen documentation
 find_program(DOXYGEN_EXE doxygen)
@@ -468,7 +469,9 @@ endif()
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/hip/hcc_detail
         DESTINATION include/hip
         FILES_MATCHING PATTERN "*.h*")
-
+install(DIRECTORY ${PROJECT_BINARY_DIR}/include/hip
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h*")
 
 #############################
 # hip-config
