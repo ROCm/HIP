@@ -603,6 +603,12 @@ if len(opts_map) != 0:
 if not_found != 0:
   error(str(not_found) + " API calls missing in interception layer")
 
+# The output subdirectory seems to exist or not depending on the
+# version of cmake.
+output_dir = os.path.dirname(OUTPUT)
+if not os.path.exists(output_dir):
+  os.makedirs(output_dir)
+
 # Generating output header file
 with open(OUTPUT, 'w') as f:
   generate_prof_header(f, api_map, opts_map)
