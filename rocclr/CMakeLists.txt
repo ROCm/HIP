@@ -27,22 +27,37 @@ endif()
 
 set(USE_PROF_API "1")
 
-if(NOT DEFINED LIBROCclr_STATIC_DIR)
-   find_path(LIBROCclr_STATIC_DIR
-        NAMES libamdrocclr_static.a
-        PATHS /opt/rocm/rocclr
-        PATH_SUFFIXES lib
-   )
+# FIXME: Make this required and remove the legacy handling below
+set(save_rocclr_dir ${ROCclr_DIR})
+set(save_rocclr_static_dir ${LIBROCclr_STATIC_DIR})
+
+find_package(ROCclr CONFIG
+  PATHS
+    /opt/rocm
+    /opt/rocm/rocclr)
+
+if (NOT ROCclr_FOUND)
+  if(NOT DEFINED LIBROCclr_STATIC_DIR)
+    find_path(LIBROCclr_STATIC_DIR
+      NAMES libamdrocclr_static.a
+      PATHS /opt/rocm/rocclr
+      PATH_SUFFIXES lib)
+  else()
+    set(LIBROCclr_STATIC_DIR ${save_rocclr_static_dir})
+  endif()
+
+  if(NOT DEFINED ROCclr_DIR)
+    find_path(ROCclr_DIR
+      NAMES top.hpp
+      PATH_SUFFIXES include
+      PATHS /opt/rocm/rocclr)
+  else()
+    set(ROCclr_DIR ${save_rocclr_dir})
+  endif()
+  message("Found Static rocclr lib:${LIBROCclr_STATIC_DIR} and rocclr includes: ${ROCclr_DIR}")
+  include(${LIBROCclr_STATIC_DIR}/amdrocclr_staticTargets.cmake)
 endif()
 
-if(NOT DEFINED ROCclr_DIR)
-   find_path(ROCclr_DIR
-        NAMES top.hpp
-        PATH_SUFFIXES include
-        PATHS /opt/rocm/rocclr
-   )
-endif()
-message("Found Static rocclr lib:${LIBROCclr_STATIC_DIR} and rocclr includes: ${ROCclr_DIR}")
 set(PROF_API_HEADER_PATH ${ROCclr_DIR}/platform)
 #############################
 # Profiling API support
@@ -82,8 +97,6 @@ find_package(amd_comgr REQUIRED CONFIG
     lib/cmake/amd_comgr)
 
 message(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
-
-include(${LIBROCclr_STATIC_DIR}/amdrocclr_staticTargets.cmake)
 
 add_definitions(-DBSD_LIBELF)
 
@@ -131,6 +144,14 @@ target_compile_definitions(hip64
   PRIVATE
    $<TARGET_PROPERTY:amd_comgr,INTERFACE_COMPILE_DEFINITIONS>)
 
+if(ROCclr_FOUND)
+  target_include_directories(hip64
+    PRIVATE
+      $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_INCLUDE_DIRECTORIES>)
+  target_compile_definitions(hip64
+    PRIVATE
+      $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_COMPILE_DEFINITIONS>)
+endif()
 
  # Enable profiling API
 if(USE_PROF_API EQUAL 1)
