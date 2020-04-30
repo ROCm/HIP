@@ -33,7 +33,7 @@ if ($p_help) {
     print "  --cpp_config, -C   : print C++ compiler options\n";
     print "  --compiler, -c     : print compiler (hcc or clang or nvcc)\n";
     print "  --platform, -P     : print platform (hcc or nvcc)\n";
-    print "  --runtime, -r      : print runtime (HCC or VDI)\n";
+    print "  --runtime, -r      : print runtime (HCC or ROCclr)\n";
     print "  --full, -f         : print full config\n";
     print "  --version, -v      : print hip version\n";
     print "  --check            : check configuration\n";

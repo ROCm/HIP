@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM vdi
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM rocclr
  * TEST: %t
  * HIT_END
  */

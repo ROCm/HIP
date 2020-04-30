@@ -35,8 +35,8 @@ THE SOFTWARE.
 #define GENERIC_GRID_LAUNCH 1
 #endif
 
-#ifndef __HIP_VDI__
-#define __HIP_VDI__ 0
+#ifndef __HIP_ROCclr__
+#define __HIP_ROCclr__ 0
 #endif
 
 #include <hip/hcc_detail/host_defines.h>
@@ -44,7 +44,7 @@ THE SOFTWARE.
 #include <hip/hcc_detail/hip_texture_types.h>
 #include <hip/hcc_detail/hip_surface_types.h>
 
-#if !__HIP_VDI__ && defined(__cplusplus)
+#if !__HIP_ROCclr__ && defined(__cplusplus)
 #include <hsa/hsa.h>
 #include <hip/hcc_detail/program_state.hpp>
 #endif
@@ -105,7 +105,7 @@ typedef struct hipIpcMemHandle_st {
     char reserved[HIP_IPC_HANDLE_SIZE];
 } hipIpcMemHandle_t;
 
-#if __HIP_VDI__
+#if __HIP_ROCclr__
 // TODO: IPC event handle currently unsupported
 struct ihipIpcEventHandle_t;
 typedef struct ihipIpcEventHandle_t* hipIpcEventHandle_t;
@@ -1483,7 +1483,7 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
 
-#if __HIP_VDI__
+#if __HIP_ROCclr__
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
 
@@ -1700,7 +1700,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
 }
 #endif // End : Not supported in gcc
 
-#endif // __HIP_VDI__
+#endif // __HIP_ROCclr__
 /**
  *  @brief Copy data from src to dst asynchronously.
  *
@@ -2844,7 +2844,7 @@ hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func
  */
 hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 #if defined(__cplusplus)
 } // extern "C"
 #endif
@@ -2899,7 +2899,7 @@ extern "C" {
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
                               hipModule_t hmod, const char* name);
-#endif // __HIP_VDI__
+#endif // __HIP_ROCclr__
 
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 
@@ -2960,7 +2960,7 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  void** kernelParams, void** extra);
 
 
-#if __HIP_VDI__ && !defined(__HCC__)
+#if __HIP_ROCclr__ && !defined(__HCC__)
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
@@ -3345,7 +3345,7 @@ hipError_t hipLaunchKernel(const void* function_address,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
 
-#if __HIP_VDI__
+#if __HIP_ROCclr__
 hipError_t hipBindTexture(
     size_t* offset,
     const textureReference* tex,
@@ -3646,12 +3646,12 @@ inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
 
 class TlsData;
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
                           const hipChannelFormatDesc* desc, size_t size = UINT_MAX);
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
                                const void* devPtr, const struct hipChannelFormatDesc* desc,
                                size_t size, textureReference* tex);
@@ -3672,7 +3672,7 @@ hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode re
  *  @param[in]  size - Size of the memory area pointed to by devPtr
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
                           const struct hipChannelFormatDesc& desc, size_t size = UINT_MAX) {
@@ -3694,7 +3694,7 @@ hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
  *  @param[in]  size - Size of the memory area pointed to by devPtr
  *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
  **/
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
                           size_t size = UINT_MAX) {
@@ -3703,19 +3703,19 @@ hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
 #endif
 
 // C API
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
                             const hipChannelFormatDesc* desc, size_t width, size_t height,
                             size_t pitch);
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
                                  const void* devPtr, const struct hipChannelFormatDesc* desc,
                                  size_t width, size_t height, textureReference* tex, size_t pitch);
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
                             const void* devPtr, size_t width, size_t height, size_t pitch) {
@@ -3724,7 +3724,7 @@ hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& te
 }
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
                             const void* devPtr, const struct hipChannelFormatDesc& desc,
@@ -3734,26 +3734,26 @@ hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& te
 #endif
 
 // C API
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
                                  const hipChannelFormatDesc* desc);
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t ihipBindTextureToArrayImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode,
                                       hipArray_const_t array,
                                       const struct hipChannelFormatDesc& desc,
                                       textureReference* tex);
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array) {
     return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, tex.channelDesc, &tex);
 }
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array,
                                  const struct hipChannelFormatDesc& desc) {
@@ -3761,7 +3761,7 @@ hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray
 }
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
                                                hipArray_const_t array,
@@ -3771,13 +3771,13 @@ inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> 
 #endif
 
 // C API
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t hipBindTextureToMipmappedArray(const textureReference* tex,
                                           hipMipmappedArray_const_t mipmappedArray,
                                           const hipChannelFormatDesc* desc);
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
                                           hipMipmappedArray_const_t mipmappedArray) {
@@ -3785,7 +3785,7 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
 }
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
                                           hipMipmappedArray_const_t mipmappedArray,
@@ -3794,7 +3794,7 @@ hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
 }
 #endif
 
-#if __HIP_VDI__ && !defined(__HCC__)
+#if __HIP_ROCclr__ && !defined(__HCC__)
 
 template <typename F>
 inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
@@ -3831,22 +3831,22 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
  *
  *  @return #hipSuccess
  **/
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t hipUnbindTexture(const textureReference* tex);
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 extern hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject);
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex) {
     return ihipUnbindTextureImpl(tex.textureObject);
 }
 #endif
 
-#if !__HIP_VDI__
+#if !__HIP_ROCclr__
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
 hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* texref);
 hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol);
@@ -3890,7 +3890,7 @@ hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipReso
 
 hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
 
-#if __HIP_VDI__
+#if __HIP_ROCclr__
 template<class T, int dim, enum hipTextureReadMode readMode>
 static inline hipError_t hipBindTexture(
     size_t *offset,

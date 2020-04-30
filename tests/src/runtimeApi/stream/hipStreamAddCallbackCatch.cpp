@@ -11,7 +11,7 @@
 #include "test_common.h"
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM vdi
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM rocclr
  * TEST: %t
  * HIT_END
  */
