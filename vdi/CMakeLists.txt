@@ -13,6 +13,8 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib)
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
+find_package(PythonInterp REQUIRED)
+
 add_definitions(-D__HIP_VDI__ -D__HIP_PLATFORM_HCC__ -DLINUX -D__x86_64__ -D__AMD64__ -DUNIX_OS -DqLittleEndian -DOPENCL_MAJOR=2 -DOPENCL_MINOR=0 -DCL_TARGET_OPENCL_VERSION=220 -DWITH_AQL -DWITH_ONLINE_COMPILER -DATI_OS_LINUX -DATI_ARCH_X86 -DLITTLEENDIAN_CPU -DATI_BITS_64 -DATI_COMP_GCC -DWITH_HSA_DEVICE -DWITH_TARGET_AMDGCN -DOPENCL_EXPORTS -DCL_USE_DEPRECATED_OPENCL_1_0_APIS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS -DCL_USE_DEPRECATED_OPENCL_1_2_APIS -DCL_USE_DEPRECATED_OPENCL_2_0_APIS -DVEGA10_ONLY=false -DWITH_LIGHTNING_COMPILER -DUSE_PROF_API)
 
 if(CMAKE_BUILD_TYPE MATCHES "^Debug$")
@@ -46,15 +48,19 @@ set(PROF_API_HEADER_PATH ${VDI_DIR}/platform)
 # Profiling API support
 #############################
 # Generate profiling API macros/structures header
+# FIXME: This should not be writing to the source directory
 set(PROF_API_STR "${CMAKE_CURRENT_SOURCE_DIR}/../include/hip/hcc_detail/hip_prof_str.h")
 set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/../include/hip/hcc_detail/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
 set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
-set(PROF_API_CMD "${PROF_API_GEN} -v -t --priv ${OPT_PROF_API} ${PROF_API_HDR} ${PROF_API_SRC} ${PROF_API_STR} >${PROF_API_LOG}")
-MESSAGE(STATUS "Generating profiling promitives: ${PROF_API_STR}")
-execute_process(COMMAND sh -c "rm -f ${PROF_API_STR}; ${PROF_API_CMD}")
-#MESSAGE(COMMAND sh -c "rm -f ${PROF_API_STR}; ${PROF_API_CMD}")
+message(STATUS "Generating profiling primitives: ${PROF_API_STR}")
+
+# FIXME: Do we really need to remove this file first?
+execute_process(
+  COMMAND ${CMAKE_COMMAND} -E remove -f ${PROF_API_STR}
+  COMMAND ${PYTHON_EXECUTABLE} ${PROF_API_GEN} -v -t --priv ${OPT_PROF_API} ${PROF_API_HDR} ${PROF_API_SRC} ${PROF_API_STR}
+  OUTPUT_FILE ${PROF_API_LOG})
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${PROF_API_GEN} ${PROF_API_HDR} ${PROF_API_STR})
 
 # Enable profiling API
