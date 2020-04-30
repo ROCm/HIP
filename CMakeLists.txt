@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.4.3)
 project(hip)
 # sample command for hip-rocclr, you'll need to have rocclr installed
-#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=vdi ..
-#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=vdi -DVDI_DIR=/extra/lmoriche/hip-rocclr/rocclr -DOPENCL_DIR=/extra/lmoriche/clients/lmoriche_opencl_dev2/drivers/opencl/api/opencl -DLIBVDI_STATIC_DIR=/extra/lmoriche/hip-rocclr/build/rocclr ..
+#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr ..
+#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr -DROCclr_DIR=/extra/lmoriche/hip-rocclr/rocclr -DOPENCL_DIR=/extra/lmoriche/clients/lmoriche_opencl_dev2/drivers/opencl/api/opencl -DLIBROCclr_STATIC_DIR=/extra/lmoriche/hip-rocclr/build/rocclr ..
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
@@ -123,19 +123,19 @@ message(STATUS "HIP Compiler: " ${HIP_COMPILER})
 add_to_config(_buildInfo HIP_COMPILER)
 
 # Determine HIP_RUNTIME
-# Either HCC or VDI; default is HCC
+# Either HCC or ROCclr; default is HCC
 if(NOT DEFINED ENV{HIP_RUNTIME})
   if(HIP_PLATFORM STREQUAL "hcc")
     set(HIP_RUNTIME "HCC" CACHE STRING "HIP Runtime")
-  elseif (HIP_PLATFORM STREQUAL "vdi")
-    set(HIP_RUNTIME "VDI" CACHE STRING "HIP Runtime")
+  elseif (HIP_PLATFORM STREQUAL "rocclr")
+    set(HIP_RUNTIME "ROCclr" CACHE STRING "HIP Runtime")
   elseif (HIP_PLATFORM STREQUAL "nvcc")
     set(HIP_RUNTIME "CUDA" CACHE STRING "HIP Runtime")
   endif()
 endif()
 add_to_config(_buildInfo HIP_RUNTIME)
 
-if(HIP_PLATFORM STREQUAL "vdi")
+if(HIP_PLATFORM STREQUAL "rocclr")
    set(USE_PROF_API "1")
 endif()
 
@@ -283,7 +283,7 @@ endif()
 #    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
 #endif ()
 
-if(HIP_PLATFORM STREQUAL "vdi")
+if(HIP_PLATFORM STREQUAL "rocclr")
     # Determine HSA_PATH
     if(NOT DEFINED HSA_PATH)
         if(NOT DEFINED ENV{HSA_PATH})
@@ -299,14 +299,14 @@ if(HIP_PLATFORM STREQUAL "vdi")
     endif()
 
     include_directories(${PROJECT_SOURCE_DIR}/include)
-    add_subdirectory(vdi)
+    add_subdirectory(rocclr)
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 
 
-# set(VDI_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
-    set(HIP_VDI_BUILD_FLAGS "${HIP_VDI_BUILD_FLAGS} -fPIC ${VDI_CXX_FLAGS} -I${HSA_PATH}/include")
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_VDI_BUILD_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_VDI_BUILD_FLAGS}")
+# set(ROCclr_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
+    set(HIP_ROCclr_BUILD_FLAGS "${HIP_ROCclr_BUILD_FLAGS} -fPIC ${ROCclr_CXX_FLAGS} -I${HSA_PATH}/include")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
     set(HCC_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
     set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include")
 
@@ -408,7 +408,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 endif()
 
-if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "rocclr")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
 endif()
 # Generate .hipVersion
@@ -443,7 +443,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 endif()
 
 # Install .hipInfo
-if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
+if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "rocclr")
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
 endif()
 
@@ -475,8 +475,8 @@ install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/hip
 if(HIP_PLATFORM STREQUAL "hcc")
     install(TARGETS hip_hcc_static hip_hcc host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
     install(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
-elseif( HIP_PLATFORM STREQUAL "vdi")
-#    install(TARGETS hip_on_vdi host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+elseif( HIP_PLATFORM STREQUAL "rocclr")
+#    install(TARGETS hip_on_rocclr host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 endif()
     include(CMakePackageConfigHelpers)
 
@@ -539,7 +539,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     WORKING_DIRECTORY ${BUILD_DIR}
     DEPENDS hip_hcc hip_hcc_static hiprtc)
 else()
-  set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/vdi)
+  set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/rocclr)
   configure_file(packaging/hip-rocclr.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
   configure_file(packaging/hip-rocclr.postinst ${BUILD_DIR}/postinst @ONLY)
   configure_file(packaging/hip-rocclr.prerm ${BUILD_DIR}/prerm @ONLY)
@@ -600,7 +600,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
     COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
-elseif(HIP_PLATFORM STREQUAL "vdi")
+elseif(HIP_PLATFORM STREQUAL "rocclr")
     add_custom_target(package
     COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}

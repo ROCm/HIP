@@ -15,7 +15,7 @@ set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
 
 find_package(PythonInterp REQUIRED)
 
-add_definitions(-D__HIP_VDI__ -D__HIP_PLATFORM_HCC__ -DLINUX -D__x86_64__ -D__AMD64__ -DUNIX_OS -DqLittleEndian -DOPENCL_MAJOR=2 -DOPENCL_MINOR=0 -DCL_TARGET_OPENCL_VERSION=220 -DWITH_AQL -DWITH_ONLINE_COMPILER -DATI_OS_LINUX -DATI_ARCH_X86 -DLITTLEENDIAN_CPU -DATI_BITS_64 -DATI_COMP_GCC -DWITH_HSA_DEVICE -DWITH_TARGET_AMDGCN -DOPENCL_EXPORTS -DCL_USE_DEPRECATED_OPENCL_1_0_APIS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS -DCL_USE_DEPRECATED_OPENCL_1_2_APIS -DCL_USE_DEPRECATED_OPENCL_2_0_APIS -DVEGA10_ONLY=false -DWITH_LIGHTNING_COMPILER -DUSE_PROF_API)
+add_definitions(-D__HIP_ROCclr__ -D__HIP_PLATFORM_HCC__ -DLINUX -D__x86_64__ -D__AMD64__ -DUNIX_OS -DqLittleEndian -DOPENCL_MAJOR=2 -DOPENCL_MINOR=0 -DCL_TARGET_OPENCL_VERSION=220 -DWITH_AQL -DWITH_ONLINE_COMPILER -DATI_OS_LINUX -DATI_ARCH_X86 -DLITTLEENDIAN_CPU -DATI_BITS_64 -DATI_COMP_GCC -DWITH_HSA_DEVICE -DWITH_TARGET_AMDGCN -DOPENCL_EXPORTS -DCL_USE_DEPRECATED_OPENCL_1_0_APIS -DCL_USE_DEPRECATED_OPENCL_1_1_APIS -DCL_USE_DEPRECATED_OPENCL_1_2_APIS -DCL_USE_DEPRECATED_OPENCL_2_0_APIS -DVEGA10_ONLY=false -DWITH_LIGHTNING_COMPILER -DUSE_PROF_API)
 
 if(CMAKE_BUILD_TYPE MATCHES "^Debug$")
   add_definitions(-DDEBUG)
@@ -27,23 +27,23 @@ endif()
 
 set(USE_PROF_API "1")
 
-if(NOT DEFINED LIBVDI_STATIC_DIR)
-   find_path(LIBVDI_STATIC_DIR
-        NAMES libamdvdi_static.a
+if(NOT DEFINED LIBROCclr_STATIC_DIR)
+   find_path(LIBROCclr_STATIC_DIR
+        NAMES libamdrocclr_static.a
         PATHS /opt/rocm/rocclr
         PATH_SUFFIXES lib
    )
 endif()
 
-if(NOT DEFINED VDI_DIR)
-   find_path(VDI_DIR
+if(NOT DEFINED ROCclr_DIR)
+   find_path(ROCclr_DIR
         NAMES top.hpp
         PATH_SUFFIXES include
         PATHS /opt/rocm/rocclr
    )
 endif()
-message("Found Static rocclr lib:${LIBVDI_STATIC_DIR} and rocclr includes: ${VDI_DIR}")
-set(PROF_API_HEADER_PATH ${VDI_DIR}/platform)
+message("Found Static rocclr lib:${LIBROCclr_STATIC_DIR} and rocclr includes: ${ROCclr_DIR}")
+set(PROF_API_HEADER_PATH ${ROCclr_DIR}/platform)
 #############################
 # Profiling API support
 #############################
@@ -85,8 +85,8 @@ if(USE_PROF_API EQUAL 1)
 endif()
 
 
-if(NOT DEFINED VDI_DIR OR NOT DEFINED LIBOCL_STATIC_DIR OR NOT DEFINED LIBVDI_STATIC_DIR )
-	#	message(FATAL_ERROR "define VDI_DIR, LIBOCL_STATIC_DIR\n")
+if(NOT DEFINED ROCclr_DIR OR NOT DEFINED LIBOCL_STATIC_DIR OR NOT DEFINED LIBROCclr_STATIC_DIR )
+	#	message(FATAL_ERROR "define ROCclr_DIR, LIBOCL_STATIC_DIR\n")
 
 endif()
 list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" )
@@ -104,12 +104,12 @@ include_directories(${PROJECT_BINARY_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/elfio)
 include_directories(${CMAKE_SOURCE_DIR}/amdocl)
 include_directories(${CMAKE_SOURCE_DIR}/include/hip/hcc_detail/elfio)
-include_directories(${VDI_DIR})
-include_directories(${VDI_DIR}/include)
-include_directories(${VDI_DIR}/compiler/lib)
-include_directories(${VDI_DIR}/compiler/lib/include)
-include_directories(${VDI_DIR}/elf/utils/common)
-include_directories(${VDI_DIR}/elf/utils/libelf)
+include_directories(${ROCclr_DIR})
+include_directories(${ROCclr_DIR}/include)
+include_directories(${ROCclr_DIR}/compiler/lib)
+include_directories(${ROCclr_DIR}/compiler/lib/include)
+include_directories(${ROCclr_DIR}/elf/utils/common)
+include_directories(${ROCclr_DIR}/elf/utils/libelf)
 add_definitions(-DUSE_COMGR_LIBRARY -DCOMGR_DYN_DLL)
     find_package(amd_comgr REQUIRED CONFIG
             PATHS
@@ -157,7 +157,7 @@ add_dependencies(hip64 gen-prof-api-str-header)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-include(${LIBVDI_STATIC_DIR}/amdvdi_staticTargets.cmake)
+include(${LIBROCclr_STATIC_DIR}/amdrocclr_staticTargets.cmake)
 
 add_library(amdhip64 SHARED
     $<TARGET_OBJECTS:hip64>
@@ -195,19 +195,25 @@ target_link_libraries(device INTERFACE host)
 # TODO: we may create host_static and device_static to let app
 # link amdhip64_static
 
+<<<<<<< HEAD:vdi/CMakeLists.txt
 # FIXME: Linux convention is to create static library with same base
 # filename.
 target_link_libraries(amdhip64 PRIVATE amdvdi_static Threads::Threads dl)
 target_link_libraries(amdhip64_static PRIVATE Threads::Threads dl)
 target_link_libraries(amdhip64_static_temp PRIVATE Threads::Threads dl)
+=======
+target_link_libraries(amdhip64 PRIVATE amdrocclr_static pthread dl)
+target_link_libraries(amdhip64_static PRIVATE pthread dl)
+target_link_libraries(amdhip64_static_temp PRIVATE pthread dl)
+>>>>>>> bf7c645f... name change vdi to rocclr:rocclr/CMakeLists.txt
 
 # combine objects of vid and hip into amdhip64_static
 add_custom_target(
     amdhip64_static_combiner
     ALL
     COMMAND rm -f $<TARGET_FILE:amdhip64_static>  # Must remove old one, otherwise the new one will contain obsolete stuff
-    COMMAND ${CMAKE_AR} -rcsT $<TARGET_FILE:amdhip64_static> $<TARGET_FILE:amdhip64_static_temp> $<TARGET_FILE:amdvdi_static>
-    DEPENDS amdhip64_static amdhip64_static_temp amdvdi_static # To make sure this is the last step
+    COMMAND ${CMAKE_AR} -rcsT $<TARGET_FILE:amdhip64_static> $<TARGET_FILE:amdhip64_static_temp> $<TARGET_FILE:amdrocclr_static>
+    DEPENDS amdhip64_static amdhip64_static_temp amdrocclr_static # To make sure this is the last step
     COMMENT "Combining static libs into amdhip64_static"
 )
 

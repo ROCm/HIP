@@ -615,7 +615,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
       // Find the matching device and request the kernel function
       if (&queue->vdev()->device() == g_devices[dev]->devices()[0]) {
         func = PlatformState::instance().getFunc(launch.func, dev);
-        // Save VDI index of the first device in the launch
+        // Save ROCclr index of the first device in the launch
         if (i == 0) {
           firstDevice = queue->vdev()->device().index();
         }

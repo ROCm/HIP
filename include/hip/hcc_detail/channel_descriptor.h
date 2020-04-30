@@ -29,12 +29,12 @@ THE SOFTWARE.
 
 #ifdef __cplusplus
 
-#if __HIP_VDI__
+#if __HIP_ROCclr__
 extern "C" {
 #endif
 HIP_PUBLIC_API
 hipChannelFormatDesc hipCreateChannelDesc(int x, int y, int z, int w, hipChannelFormatKind f);
-#if __HIP_VDI__
+#if __HIP_ROCclr__
 }
 #endif
 
