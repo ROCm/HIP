@@ -33,30 +33,57 @@ string(REPLACE "." ";" VERSION_LIST ${HIP_BASE_VERSION})
 list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)
 list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
 
-# get date information based on UTC
-# use the last two digits of year + week number + day in the week as HIP_VERSION_GITDATE
-# use the commit date, instead of build date
-# add xargs to remove strange trailing newline character
-execute_process(COMMAND git show -s --format=@%ct
+find_package(Git)
+
+# FIXME: Two different version strings used.
+if(GIT_FOUND)
+  # get date information based on UTC
+  # use the last two digits of year + week number + day in the week as HIP_VERSION_GITDATE
+  # use the commit date, instead of build date
+  # add xargs to remove strange trailing newline character
+  execute_process(COMMAND ${GIT_EXECUTABLE} show -s --format=@%ct
     COMMAND xargs
     COMMAND date -f - --utc +%y%U%w
+    RESULT_VARIABLE git_result
+    OUTPUT_VARIABLE git_output
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE HIP_VERSION_GITDATE
     OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(git_result EQUAL 0)
+    set(HIP_VERSION_GITDATE ${git_output})
+  endif()
 
-# get commit short hash
-execute_process(COMMAND git rev-parse --short HEAD
+  # get commit short hash
+  execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE HIP_VERSION_GITHASH
+    RESULT_VARIABLE git_result
+    OUTPUT_VARIABLE git_output
     OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(git_result EQUAL 0)
+    set(HIP_VERSION_GITHASH ${git_output})
+  endif()
 
-# get commit count
-execute_process(COMMAND git rev-list --count HEAD
+  # get commit count
+  execute_process(COMMAND ${GIT_EXECUTABLE} rev-list --count HEAD
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE HIP_VERSION_GITCOUNT
+    RESULT_VARIABLE git_result
+    OUTPUT_VARIABLE git_output
     OUTPUT_STRIP_TRAILING_WHITESPACE)
+  if(git_result EQUAL 0)
+    set(HIP_VERSION_GITCOUNT ${git_output})
+  endif()
 
-set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}-${HIP_VERSION_GITHASH})
+  set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}-${HIP_VERSION_GITHASH})
+
+  if(DEFINED ENV{ROCM_BUILD_ID})
+    set(HIP_PACKAGING_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-$ENV{ROCM_BUILD_ID}-${HIP_VERSION_GITHASH})
+  else()
+    set(HIP_PACKAGING_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-${HIP_VERSION_GITHASH})
+  endif()
+else()
+  # FIXME: Some parts depend on this being set.
+  set(HIP_PACKAGING_VERSION_PATCH "0")
+endif()
+
 add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
 add_to_config(_versionInfo HIP_VERSION_PATCH)
@@ -85,12 +112,7 @@ if(CMAKE_CXX_COMPILER MATCHES ".*hcc")
 endif()
 
 # overwrite HIP_VERSION_PATCH for packaging
-if(DEFINED ENV{ROCM_BUILD_ID})
-    set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-$ENV{ROCM_BUILD_ID}-${HIP_VERSION_GITHASH})
-else()
-    set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-${HIP_VERSION_GITHASH})
-endif()
-set(HIP_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_VERSION_PATCH})
+set(HIP_VERSION ${HIP_VERSION_MAJOR}.${HIP_VERSION_MINOR}.${HIP_PACKAGING_VERSION_PATCH})
 
 #############################
 # Configure variables
@@ -414,6 +436,10 @@ if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "rocclr")
 endif()
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
+
+if(NOT DEFINED HIP_VERSION_GITDATE)
+  set(HIP_VERSION_GITDATE 0)
+endif()
 
 # Generate hip_version.h
 set(_versionInfoHeader
