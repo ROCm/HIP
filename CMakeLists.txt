@@ -461,7 +461,7 @@ endif()
 
 # Install generated headers
 # FIXME: Associate with individual targets.
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/hip
   DESTINATION include
   FILES_MATCHING PATTERN "*.h*")
 
