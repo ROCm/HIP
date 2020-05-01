@@ -2054,13 +2054,14 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
 /**
  *  @brief Copies data between host and device.
  *
- *  @param[in]   dst    Destination memory address
- *  @param[in]   dpitch Pitch of destination memory
- *  @param[in]   src    Source memory address
- *  @param[in]   spitch Pitch of source memory
- *  @param[in]   width  Width of matrix transfer (columns in bytes)
- *  @param[in]   height Height of matrix transfer (rows)
- *  @param[in]   kind   Type of transfer
+ *  @param[in]   dst     Destination memory address
+ *  @param[in]   wOffset Destination starting X offset
+ *  @param[in]   hOffset Destination starting Y offset
+ *  @param[in]   src     Source memory address
+ *  @param[in]   spitch  Pitch of source memory
+ *  @param[in]   width   Width of 2D transfer (columns in bytes)
+ *  @param[in]   height  Height of 2D transfer (rows)
+ *  @param[in]   kind    Copy kind of transfer
  *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
@@ -2073,13 +2074,12 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
 /**
  *  @brief Copies data between host and device.
  *
- *  @param[in]   dst    Destination memory address
- *  @param[in]   dpitch Pitch of destination memory
- *  @param[in]   src    Source memory address
- *  @param[in]   spitch Pitch of source memory
- *  @param[in]   width  Width of matrix transfer (columns in bytes)
- *  @param[in]   height Height of matrix transfer (rows)
- *  @param[in]   kind   Type of transfer
+ *  @param[in]   dst     Destination memory address
+ *  @param[in]   wOffset Destination starting X offset
+ *  @param[in]   hOffset Destination starting Y offset
+ *  @param[in]   src     Source memory address
+ *  @param[in]   count   Size in bytes to copy
+ *  @param[in]   kind    Type of transfer
  *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
