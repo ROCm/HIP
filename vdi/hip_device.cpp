@@ -230,6 +230,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.texturePitchAlignment = info.imagePitchAlignment_;
   deviceProps.kernelExecTimeoutEnabled = 0;
   deviceProps.ECCEnabled = info.errorCorrectionSupport_? 1:0;
+  deviceProps.isLargeBar = info.largeBar_ ? 1 : 0;
 
   *props = deviceProps;
   HIP_RETURN(hipSuccess);
