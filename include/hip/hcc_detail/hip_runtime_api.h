@@ -3944,7 +3944,7 @@ static inline hipError_t hipBindTextureToArray(
 {
     struct hipChannelFormatDesc desc;
     hipError_t err = hipGetChannelDesc(&desc, array);
-    return (err == hipSuccess) ? hipBindTextureToArray(&tex, array, desc) : err;
+    return (err == hipSuccess) ? hipBindTextureToArray(&tex, array, &desc) : err;
 }
 
 template<class T, int dim, enum hipTextureReadMode readMode>
@@ -3968,7 +3968,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(
         return err;
     }
     err = hipGetChannelDesc(&desc, levelArray);
-    return (err == hipSuccess) ? hipBindTextureToMipmappedArray(&tex, mipmappedArray, desc) : err;
+    return (err == hipSuccess) ? hipBindTextureToMipmappedArray(&tex, mipmappedArray, &desc) : err;
 }
 
 template<class T, int dim, enum hipTextureReadMode readMode>
