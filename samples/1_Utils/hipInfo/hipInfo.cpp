@@ -146,7 +146,8 @@ void printDeviceProp(int deviceId) {
     cout << setw(w1) << "maxTexture3D.width: " << props.maxTexture3D[0] << endl;
     cout << setw(w1) << "maxTexture3D.height: " << props.maxTexture3D[1] << endl;
     cout << setw(w1) << "maxTexture3D.depth: " << props.maxTexture3D[2] << endl;
-    
+    cout << setw(w1) << "isLargeBar: " << props.isLargeBar << endl;
+
     int deviceCnt;
     hipGetDeviceCount(&deviceCnt);
     cout << setw(w1) << "peers: ";

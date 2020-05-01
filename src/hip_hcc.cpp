@@ -864,7 +864,7 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     /* Computemode for HSA Devices is always : cudaComputeModeDefault */
     prop->computeMode = 0;
 
-    _isLargeBar = _acc.has_cpu_accessible_am();
+    prop->isLargeBar = _acc.has_cpu_accessible_am() ? 1 : 0;
 
     // Get Max Threads Per Multiprocessor
     uint32_t max_waves_per_cu;
