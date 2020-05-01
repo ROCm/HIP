@@ -24,8 +24,9 @@
 
 namespace hip {
 
-amd::HostQueue* Device::NullStream() {
-  amd::HostQueue* null_queue = null_stream_.asHostQueue();
+// ================================================================================================
+amd::HostQueue* Device::NullStream(bool skip_alloc) {
+  amd::HostQueue* null_queue = null_stream_.asHostQueue(skip_alloc);
   if (null_queue == nullptr) {
     return nullptr;
   }
@@ -34,7 +35,7 @@ amd::HostQueue* Device::NullStream() {
   return null_queue;
 }
 
-};
+}
 
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
   HIP_INIT_API(hipDeviceGet, device, deviceId);
