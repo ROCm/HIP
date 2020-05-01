@@ -136,7 +136,7 @@ typedef struct hipDeviceProp_t {
                                                     ///devices with unmatched block dimensions
     int cooperativeMultiDeviceUnmatchedSharedMem;   ///< HIP device supports cooperative launch on multiple
                                                     ///devices with unmatched shared memories
-
+    int isLargeBar;                  ///< 1: if it is a large PCI bar device, else 0
 } hipDeviceProp_t;
 
 
