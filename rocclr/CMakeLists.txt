@@ -48,9 +48,8 @@ set(PROF_API_HEADER_PATH ${ROCclr_DIR}/platform)
 # Profiling API support
 #############################
 # Generate profiling API macros/structures header
-# FIXME: This should not be writing to the source directory
 set(PROF_API_STR "${PROJECT_BINARY_DIR}/include/hip/hcc_detail/hip_prof_str.h")
-set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/../include/hip/hcc_detail/hip_runtime_api.h")
+set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/include/hip/hcc_detail/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
 set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
