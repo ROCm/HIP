@@ -3351,7 +3351,7 @@ hipError_t hipBindTexture(
     const textureReference* tex,
     const void* devPtr,
     const hipChannelFormatDesc* desc,
-    size_t size = UINT_MAX);
+    size_t size __dparm(UINT_MAX));
 
 hipError_t hipBindTexture2D(
     size_t* offset,
@@ -3386,7 +3386,7 @@ hipError_t hipCreateTextureObject(
     hipTextureObject_t* pTexObject,
     const hipResourceDesc* pResDesc,
     const hipTextureDesc* pTexDesc,
-    const hipResourceViewDesc* pResViewDesc);
+    const struct hipResourceViewDesc* pResViewDesc);
 
 hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
 
@@ -3399,7 +3399,7 @@ hipError_t hipGetTextureObjectResourceDesc(
     hipTextureObject_t textureObject);
 
 hipError_t hipGetTextureObjectResourceViewDesc(
-    hipResourceViewDesc* pResViewDesc,
+    struct hipResourceViewDesc* pResViewDesc,
     hipTextureObject_t textureObject);
 
 hipError_t hipGetTextureObjectTextureDesc(
@@ -3411,12 +3411,12 @@ hipError_t hipTexRefGetAddress(
     const textureReference* texRef);
 
 hipError_t hipTexRefGetAddressMode(
-    hipTextureAddressMode* pam,
+    enum hipTextureAddressMode* pam,
     const textureReference* texRef,
     int dim);
 
 hipError_t hipTexRefGetFilterMode(
-    hipTextureFilterMode* pfm,
+    enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 
 hipError_t hipTexRefGetFlags(
@@ -3433,7 +3433,7 @@ hipError_t hipTexRefGetMaxAnisotropy(
     const textureReference* texRef);
 
 hipError_t hipTexRefGetMipmapFilterMode(
-    hipTextureFilterMode* pfm,
+    enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 
 hipError_t hipTexRefGetMipmapLevelBias(
@@ -3464,7 +3464,7 @@ hipError_t hipTexRefSetAddress2D(
 hipError_t hipTexRefSetAddressMode(
     textureReference* texRef,
     int dim,
-    hipTextureAddressMode am);
+    enum hipTextureAddressMode am);
 
 hipError_t hipTexRefSetArray(
     textureReference* tex,
@@ -3477,7 +3477,7 @@ hipError_t hipTexRefSetBorderColor(
 
 hipError_t hipTexRefSetFilterMode(
     textureReference* texRef,
-    hipTextureFilterMode fm);
+    enum hipTextureFilterMode fm);
 
 hipError_t hipTexRefSetFlags(
     textureReference* texRef,
@@ -3494,7 +3494,7 @@ hipError_t hipTexRefSetMaxAnisotropy(
 
 hipError_t hipTexRefSetMipmapFilterMode(
     textureReference* texRef,
-    hipTextureFilterMode fm);
+    enum hipTextureFilterMode fm);
 
 hipError_t hipTexRefSetMipmapLevelBias(
     textureReference* texRef,
@@ -3507,7 +3507,7 @@ hipError_t hipTexRefSetMipmapLevelClamp(
 
 hipError_t hipTexRefSetMipmappedArray(
     textureReference* texRef,
-    hipMipmappedArray* mipmappedArray,
+    struct hipMipmappedArray* mipmappedArray,
     unsigned int Flags);
 
 hipError_t hipMipmappedArrayCreate(
