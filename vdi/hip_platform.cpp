@@ -209,6 +209,7 @@ bool PlatformState::unregisterFunc(hipModule_t hmod) {
       }
       delete mod_ptr;
     }
+    module_map_.erase(mod_it);
   }
   return true;
 }
@@ -360,6 +361,7 @@ bool PlatformState::findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const ch
 
   auto mod_it = module_map_.find(hmod);
   if (mod_it != module_map_.cend()) {
+    assert(mod_it->second != nullptr);
     auto func_it = mod_it->second->functions_.find(name);
     if (func_it != mod_it->second->functions_.cend()) {
       PlatformState::DeviceFunction& devFunc = func_it->second;
