@@ -109,14 +109,17 @@ if (not defined $HIP_PLATFORM) {
 }
 
 if ($HIP_COMPILER eq "hcc") {
-    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
+    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
 }
 if ($HIP_COMPILER eq "clang") {
     $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
     $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
     $HIP_CLANG_VERSION=$1;
 
-    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
+    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
+}
+if ($HIP_RUNTIME eq "VDI") {
+    $CPP_CONFIG .= " -D__HIP_VDI__";
 }
 if ($HIP_PLATFORM eq "nvcc") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
