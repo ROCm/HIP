@@ -177,6 +177,7 @@ namespace hip {
     amd::Monitor lock_;
 
     Function(amd::Kernel* f) : function_(f), lock_("function lock") {}
+    ~Function() { function_->release(); }
     hipFunction_t asHipFunction() { return reinterpret_cast<hipFunction_t>(this); }
 
     static Function* asFunction(hipFunction_t f) { return reinterpret_cast<Function*>(f); }
