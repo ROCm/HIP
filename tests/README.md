@@ -121,6 +121,28 @@ ctest -R Memcpy
 ctest -R memory
 ```
 
+### Performance tests:
+```
+Above tests are direct tests which are majorly used for function verification.
+We also provide performance tests under tests/performance folder.
+
+# Build all performance tests after running "make install" under build folder:
+make build_perf
+
+Then all performance test applications will be built into ./performance_tests folder.
+
+# Run all performance tests:
+make perf
+
+# Run individual performance test:
+For example,
+performance_tests/memory/hipPerfMemMallocCpyFree
+
+# Run a specific test set:
+For example,
+/usr/bin/ctest -C performance -R performance_tests/perfDispatch --verbose
+Here "-C performance" indicate the "performance" configuration of ctest.
+```
 
 ### If a test fails - how to debug a test
 
