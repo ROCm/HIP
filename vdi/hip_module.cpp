@@ -27,7 +27,7 @@
 #include "hip_event.hpp"
 #include "hip_platform.hpp"
 
-hipError_t ihipModuleLoadData(hipModule_t *module, const void *image);
+hipError_t ihipModuleLoadData(hipModule_t* module, const void* mmap_ptr, size_t mmap_size);
 
 const std::string& FunctionName(const hipFunction_t f)
 {
@@ -59,19 +59,18 @@ hipError_t hipModuleLoad(hipModule_t* module, const char* fname)
 {
   HIP_INIT_API(hipModuleLoad, module, fname);
 
+  const void* mmap_ptr = nullptr;
+  size_t mmap_size = 0;
+
   if (!fname) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  std::ifstream file(fname, std::ios::binary);
-
-  if (!file.is_open()) {
+  if (!amd::Os::MemoryMapFile(fname, &mmap_ptr, &mmap_size)) {
     HIP_RETURN(hipErrorFileNotFound);
   }
 
-  std::vector<char> tmp{std::istreambuf_iterator<char>{file}, std::istreambuf_iterator<char>{}};
-
-  HIP_RETURN(ihipModuleLoadData(module, tmp.data()));
+  HIP_RETURN(ihipModuleLoadData(module, mmap_ptr, mmap_size));
 }
 
 bool ihipModuleUnregisterGlobal(hipModule_t hmod) {
@@ -112,7 +111,7 @@ hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
   HIP_INIT_API(hipModuleLoadData, module, image);
 
-  HIP_RETURN(ihipModuleLoadData(module, image));
+  HIP_RETURN(ihipModuleLoadData(module, image, 0));
 }
 
 hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image,
@@ -122,7 +121,7 @@ hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image,
   /* TODO: Pass options to Program */
   HIP_INIT_API(hipModuleLoadData, module, image);
 
-  HIP_RETURN(ihipModuleLoadData(module, image));
+  HIP_RETURN(ihipModuleLoadData(module, image, 0));
 }
 
 extern hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
@@ -216,24 +215,28 @@ inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module)
   return true;
 }
 
-hipError_t ihipModuleLoadData(hipModule_t *module, const void *image)
+hipError_t ihipModuleLoadData(hipModule_t* module, const void* mmap_ptr, size_t mmap_size)
 {
+  const void* image = nullptr;
   std::vector<std::pair<const void*, size_t>> code_objs;
-  hipError_t code_obj_err = __hipExtractCodeObjectFromFatBinary(image, {hip::getCurrentDevice()->devices()[0]->info().name_}, code_objs);
+  hipError_t code_obj_err = __hipExtractCodeObjectFromFatBinary(mmap_ptr,
+                              {hip::getCurrentDevice()->devices()[0]->info().name_}, code_objs);
   if (code_obj_err == hipSuccess) {
     image = code_objs[0].first;
   } else if(code_obj_err == hipErrorNoBinaryForGpu) {
      return code_obj_err;
   }
 
-  amd::Program* program = new amd::Program(*hip::getCurrentDevice()->asContext());
+  amd::Program* program = new amd::Program(*hip::getCurrentDevice()->asContext(),
+                                           amd::Program::Language::Binary, mmap_ptr, mmap_size);
   if (program == NULL) {
     return hipErrorOutOfMemory;
   }
 
   program->setVarInfoCallBack(&getSvarInfo);
 
-  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentDevice()->devices()[0], image, ElfSize(image))) {
+  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentDevice()->devices()[0], image,
+                                              ElfSize(image), false)) {
     return hipErrorInvalidKernelFile;
   }
 
