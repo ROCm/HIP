@@ -3898,7 +3898,7 @@ static inline hipError_t hipBindTexture(
     const void *devPtr,
     size_t size = UINT_MAX)
 {
-    return hipBindTexture(offset, &tex, devPtr, tex.channelDesc, size);
+    return hipBindTexture(offset, &tex, devPtr, &tex.channelDesc, size);
 }
 
 template<class T, int dim, enum hipTextureReadMode readMode>
