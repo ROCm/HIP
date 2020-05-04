@@ -27,10 +27,12 @@ set(HIP_HOST_COMPILER "@HIP_HOST_COMPILER@") # path
 set(CMAKE_COMMAND "@CMAKE_COMMAND@") # path
 set(HIP_run_make2cmake "@HIP_run_make2cmake@") # path
 set(HCC_HOME "@HCC_HOME@") #path
+set(HIP_CLANG_PATH "@HIP_CLANG_PATH@") #path
 
 @HIP_HOST_FLAGS@
 @_HIP_HIPCC_FLAGS@
 @_HIP_HCC_FLAGS@
+@_HIP_CLANG_FLAGS@
 @_HIP_NVCC_FLAGS@
 set(HIP_HIPCC_INCLUDE_ARGS "@HIP_HIPCC_INCLUDE_ARGS@") # list (needs to be in quotes to handle spaces properly)
 
@@ -40,13 +42,22 @@ set(host_flag "@host_flag@") # bool
 
 # Determine compiler and compiler flags
 execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --platform OUTPUT_VARIABLE HIP_PLATFORM OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --compiler OUTPUT_VARIABLE HIP_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --runtime OUTPUT_VARIABLE HIP_RUNTIME OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(NOT host_flag)
     set(__CC ${HIP_HIPCC_EXECUTABLE})
-    if(HIP_PLATFORM STREQUAL "hcc")
-        if(NOT "x${HCC_HOME}" STREQUAL "x")
-            set(ENV{HCC_HOME} ${HCC_HOME})
+    if("${HIP_PLATFORM}" STREQUAL "hcc")
+        if("${HIP_COMPILER}" STREQUAL "hcc")
+            if(NOT "x${HCC_HOME}" STREQUAL "x")
+                set(ENV{HCC_HOME} ${HCC_HOME})
+            endif()
+            set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_HCC_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_HCC_FLAGS_${build_configuration}})
+        elseif("${HIP_COMPILER}" STREQUAL "clang")
+            if(NOT "x${HIP_CLANG_PATH}" STREQUAL "x")
+                set(ENV{HIP_CLANG_PATH} ${HIP_CLANG_PATH})
+            endif()
+            set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_CLANG_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_CLANG_FLAGS_${build_configuration}})
         endif()
-        set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_HCC_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_HCC_FLAGS_${build_configuration}})
     else()
         set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_NVCC_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_NVCC_FLAGS_${build_configuration}})
     endif()
