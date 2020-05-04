@@ -7,7 +7,7 @@
 #include "test_common.h"
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp timer.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../src/test_common.cpp timer.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -99,6 +99,8 @@ int main(int argc, char* argv[]) {
         memptr[0] = memptr[1] = NULL;
         alignedmemptr[0] = alignedmemptr[1] = NULL;
 
+        size_t width = static_cast<size_t>(sqrt(static_cast<float>(bufSize_)));
+
         if (srcTest == 3)
         {
             hostRegister[0] = true;
@@ -185,15 +187,15 @@ int main(int argc, char* argv[]) {
         CPerfCounter timer;
 
         //warm up
-        err = hipMemcpy(dstBuffer, srcBuffer, bufSize_, hipMemcpyDefault);
-        CHECK_RESULT(err, "hipMemcpy failed");
+        err = hipMemcpy2D(dstBuffer, width, srcBuffer, width, width, width, hipMemcpyDefault);
+        CHECK_RESULT(err, "hipMemcpy2D failed");
 
         timer.Reset();
         timer.Start();
         for (unsigned int i = 0; i < numIter; i++)
         {
-            err = hipMemcpyAsync(dstBuffer, srcBuffer, bufSize_, hipMemcpyDefault, NULL);
-            CHECK_RESULT(err, "hipMemcpyAsync failed");
+            err = hipMemcpy2DAsync(dstBuffer, width, srcBuffer, width, width, width, hipMemcpyDefault, NULL);
+            CHECK_RESULT(err, "hipMemcpyAsync2D failed");
         }
         err = hipDeviceSynchronize();
         CHECK_RESULT(err, "hipDeviceSynchronize failed");
@@ -232,17 +234,9 @@ int main(int argc, char* argv[]) {
             perf *= 2.0;
 
         char buf[256];
-        SNPRINTF(buf, sizeof(buf), "HIPPerfBufferCopySpeed[%d]\t(%8d bytes)\ts:%s d:%s\ti:%4d\t(GB/s) perf\t%f",
+        SNPRINTF(buf, sizeof(buf), "HIPPerfBufferCopyRectSpeed[%d]\t(%8d bytes)\ts:%s d:%s\ti:%4d\t(GB/s) perf\t%f",
                 test, bufSize_, strSrc, strDst, numIter, (float)perf);
         printf("%s\n", buf);
-
-        // Verification
-        void* temp = malloc(bufSize_ + 4096);
-        void* chkBuf = (void*)(((size_t)temp + 4095) & ~4095);
-        err = hipMemcpy(chkBuf, dstBuffer, bufSize_, hipMemcpyDefault);
-        CHECK_RESULT(err, "hipMemcpy failed");
-        checkData(chkBuf, bufSize_, 0xd0);
-        free(temp);
 
         //Free src
         if (hostMalloc[0])
