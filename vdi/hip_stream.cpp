@@ -68,13 +68,13 @@ bool Stream::Create() {
 }
 
 // ================================================================================================
-amd::HostQueue* Stream::asHostQueue() {
+amd::HostQueue* Stream::asHostQueue(bool skip_alloc) {
   // Access to the stream object is lock protected, because possible allocation
   amd::ScopedLock l(Lock());
   if (queue_ == nullptr) {
     // Create the host queue for the first time
-    if (!Create()) {
-      return nullptr;
+    if (!skip_alloc) {
+      Create();
     }
   }
   return queue_;
