@@ -422,7 +422,7 @@ foreach $arg (@ARGV)
     $trimarg = $arg;
     $trimarg =~ s/^\s+|\s+$//g;  # Remive whitespace
     my $swallowArg = 0;
-    if ($arg eq '-c' or $arg eq '--genco') {
+    if ($arg eq '-c' or $arg eq '--genco' or $arg eq '-E') {
         $compileOnly = 1;
         $needLDFLAGS  = 0;
     }
