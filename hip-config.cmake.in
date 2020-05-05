@@ -1,5 +1,5 @@
 @PACKAGE_INIT@
-
+include(CheckCXXCompilerFlag)
 include(CMakeFindDependencyMacro OPTIONAL RESULT_VARIABLE _CMakeFindDependencyMacro_FOUND)
 if (NOT _CMakeFindDependencyMacro_FOUND)
   macro(find_dependency dep)
@@ -39,6 +39,10 @@ if (NOT _CMakeFindDependencyMacro_FOUND)
   endmacro()
 endif()
 
+#Number of parallel jobs by default is 1
+if(NOT DEFINED HIP_CLANG_NUM_PARALLEL_JOBS)
+  set(HIP_CLANG_NUM_PARALLEL_JOBS 1)
+endif()
 set(HIP_COMPILER "@HIP_COMPILER@")
 set(HIP_RUNTIME "@HIP_RUNTIME@")
 
@@ -168,6 +172,22 @@ if(HIP_COMPILER STREQUAL "clang")
         INTERFACE_LINK_LIBRARIES "--cuda-gpu-arch=${GPU_TARGET}"
       )
   endforeach()
+  #Add support for parallel build and link
+  if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+    check_cxx_compiler_flag("-parallel-jobs=1" HIP_CLANG_SUPPORTS_PARALLEL_JOBS)
+  endif()
+  if(HIP_CLANG_NUM_PARALLEL_JOBS GREATER 1)
+    if(${HIP_CLANG_SUPPORTS_PARALLEL_JOBS} )
+      set_property(TARGET hip::device APPEND PROPERTY
+        INTERFACE_COMPILE_OPTIONS -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS} -Wno-format-nonliteral
+      )
+      set_property(TARGET hip::device APPEND PROPERTY
+        INTERFACE_LINK_LIBRARIES -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}
+      )
+    else()
+      message("clang compiler doesn't support parallel jobs")
+    endif()
+  endif()
 endif()
 
 set( hip_LIBRARIES hip::host hip::device)

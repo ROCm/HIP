@@ -11,6 +11,7 @@ set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
 
 project(12_cmake)
 
+set(HIP_CLANG_NUM_PARALLEL_JOBS 2)
 find_package(HIP QUIET)
 if(HIP_FOUND)
     message(STATUS "Found HIP: " ${HIP_VERSION})
