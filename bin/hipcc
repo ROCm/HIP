@@ -452,7 +452,7 @@ foreach $arg (@ARGV)
         $arg = "--cuda-device-only";
     }
 
-    if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0))
+    if(($trimarg eq '-stdlib=libstdc++') and ($setStdLib eq 0) and $HIP_PLATFORM eq 'hcc' and $HIP_COMPILER eq 'hcc')
     {
         $HIPCXXFLAGS .= $HCC_WA_FLAGS;
         $setStdLib = 1;
