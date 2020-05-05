@@ -120,7 +120,7 @@ char* demangle(const char* loweredName) {
   {
     free(demangledName);
     DevLogPrintfError("Cannot undecorate loweredName: %s demangledName: %s \n",
-                      loweredName, demangedName);
+                      loweredName, demangledName);
     return nullptr;
   }
 #else
