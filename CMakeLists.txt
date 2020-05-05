@@ -204,6 +204,10 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     endif()
 endif()
 
+if(DEV_LOG_ENABLE MATCHES "yes")
+  add_definitions(-DDEV_LOG_ENABLE)
+endif()
+
 # Set default install path as "/opt/rocm/hip", can override the path from cmake build.
 set(CPACK_INSTALL_PREFIX ${HIP_DEFAULT_INSTALL_PREFIX} CACHE PATH "Package Installation path for HIP")
 
