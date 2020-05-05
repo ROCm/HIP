@@ -267,8 +267,8 @@ bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFunc
 
   const device::Kernel::WorkGroupInfo* wginfo = it->second->workGroupInfo();
   func_attr->localSizeBytes = wginfo->localMemSize_;
-  func_attr->sharedSizeBytes = wginfo->size_;
-  func_attr->maxThreadsPerBlock = wginfo->wavefrontSize_;
+  func_attr->sharedSizeBytes = wginfo->usedLDSSize_;
+  func_attr->maxThreadsPerBlock = wginfo->size_;
   func_attr->numRegs = wginfo->usedVGPRs_;
 
   return true;
