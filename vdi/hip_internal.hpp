@@ -90,8 +90,13 @@ namespace hip {
 
   public:
     Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f = 0, bool null_stream = false);
+
+    /// Creates the hip stream object, including AMD host queue
     bool Create();
-    amd::HostQueue* asHostQueue();
+
+    /// Get device AMD host queue object. The method can allocate the queue
+    amd::HostQueue* asHostQueue(bool skip_alloc = false);
+
     void Destroy();
     void Finish() const;
     /// Get device ID associated with the current stream;
@@ -147,7 +152,7 @@ namespace hip {
         return hipErrorPeerAccessNotEnabled;
       }
     }
-    amd::HostQueue* NullStream();
+    amd::HostQueue* NullStream(bool skip_alloc = false);
   };
 
   extern std::once_flag g_ihipInitialized;
@@ -182,7 +187,6 @@ namespace hip {
 
     static Function* asFunction(hipFunction_t f) { return reinterpret_cast<Function*>(f); }
   };
-
 };
 
 struct ihipExec_t {

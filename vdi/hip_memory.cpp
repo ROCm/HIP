@@ -25,6 +25,7 @@
 #include "platform/command.hpp"
 #include "platform/memory.hpp"
 
+// ================================================================================================
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
   if (memObj != nullptr) {
@@ -41,21 +42,39 @@ amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   return memObj;
 }
 
+// ================================================================================================
 hipError_t ihipFree(void *ptr)
 {
   if (ptr == nullptr) {
     return hipSuccess;
   }
-  if (amd::SvmBuffer::malloced(ptr)) {
-    for (auto& dev : g_devices) {
-      dev->NullStream()->finish();
+
+  size_t offset = 0;
+  amd::Memory* memory_object = getMemoryObject(ptr, offset);
+
+  if (memory_object != nullptr) {
+    // Check if it's an allocation in system memory and can be shared across all devices
+    if (memory_object->getMemFlags() & CL_MEM_SVM_FINE_GRAIN_BUFFER) {
+      for (auto& dev : g_devices) {
+        // Skip stream allocation, since if it wasn't allocated until free, then the device
+        // wasn't used
+        constexpr bool SkipStreamAlloc = true;
+        amd::HostQueue* queue = dev->NullStream(SkipStreamAlloc);
+        if (queue != nullptr) {
+          queue->finish();
+        }
+      }
+    } else {
+      // Wait on the device, associated with the current memory object
+      hip::getNullStream(memory_object->getContext())->finish();
     }
-    amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
+    amd::SvmBuffer::free(memory_object->getContext(), ptr);
     return hipSuccess;
   }
   return hipErrorInvalidValue;
 }
 
+// ================================================================================================
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
   if (sizeBytes == 0) {
