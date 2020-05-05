@@ -28,6 +28,7 @@ set(CMAKE_COMMAND "@CMAKE_COMMAND@") # path
 set(HIP_run_make2cmake "@HIP_run_make2cmake@") # path
 set(HCC_HOME "@HCC_HOME@") #path
 set(HIP_CLANG_PATH "@HIP_CLANG_PATH@") #path
+set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "@HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS@")
 
 @HIP_HOST_FLAGS@
 @_HIP_HIPCC_FLAGS@
@@ -56,7 +57,7 @@ if(NOT host_flag)
             if(NOT "x${HIP_CLANG_PATH}" STREQUAL "x")
                 set(ENV{HIP_CLANG_PATH} ${HIP_CLANG_PATH})
             endif()
-            set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_CLANG_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_CLANG_FLAGS_${build_configuration}})
+            set(__CC_FLAGS ${HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS} ${HIP_HIPCC_FLAGS} ${HIP_CLANG_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_CLANG_FLAGS_${build_configuration}})
         endif()
     else()
         set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_NVCC_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_NVCC_FLAGS_${build_configuration}})
