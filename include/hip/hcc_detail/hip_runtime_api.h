@@ -50,9 +50,9 @@ THE SOFTWARE.
 #endif
 
 #if defined(_MSC_VER)
-#define DEPRECATED(msg) __declspec(deprecated(msg))
+#define HIP_DEPRECATED(msg) __declspec(deprecated(msg))
 #else // !defined(_MSC_VER)
-#define DEPRECATED(msg) __attribute__ ((deprecated(msg)))
+#define HIP_DEPRECATED(msg) __attribute__ ((deprecated(msg)))
 #endif // !defined(_MSC_VER)
 
 #define DEPRECATED_MSG "This API is marked as deprecated and may not be supported in future releases. For more details please refer https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_deprecated_api_list.md"
@@ -1111,7 +1111,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
  *
  *  @deprecated use hipHostMalloc() instead
  */
-DEPRECATED("use hipHostMalloc instead")
+HIP_DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMallocHost(void** ptr, size_t size);
 
 /**
@@ -1126,7 +1126,7 @@ hipError_t hipMallocHost(void** ptr, size_t size);
  *
  *  @deprecated use hipHostMalloc() instead
  */
-DEPRECATED("use hipHostMalloc instead")
+HIP_DEPRECATED("use hipHostMalloc instead")
 hipError_t hipMemAllocHost(void** ptr, size_t size);
 
 /**
@@ -1168,7 +1168,7 @@ hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags __dpa
  *
  *  @deprecated use hipHostMalloc() instead
  */
-DEPRECATED("use hipHostMalloc instead")
+HIP_DEPRECATED("use hipHostMalloc instead")
 hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flags);
 
 /**
@@ -1276,7 +1276,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @param[in]  height Requested pitched allocation height
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
- *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array. 
+ *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array.
  *  Given the row and column of an array element of type T, the address is computed as:
  *  T* pElement = (T*)((char*)BaseAddress + Row * Pitch) + Column;
  *
@@ -1313,7 +1313,7 @@ hipError_t hipFree(void* ptr);
 
  *  @deprecated use hipHostFree() instead
  */
-DEPRECATED("use hipHostFree instead")
+HIP_DEPRECATED("use hipHostFree instead")
 hipError_t hipFreeHost(void* ptr);
 
 /**
@@ -1500,7 +1500,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
 #else
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
-#ifdef __cplusplus //Start : Not supported in gcc 
+#ifdef __cplusplus //Start : Not supported in gcc
 namespace hip_impl {
 inline
 __attribute__((visibility("hidden")))
@@ -1935,9 +1935,9 @@ hipError_t hipFreeArray(hipArray* array);
 
 /**
  * @brief Frees a mipmapped array on the device
- * 
+ *
  * @param[in] mipmappedArray - Pointer to mipmapped array to free
- * 
+ *
  * @return #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
@@ -1965,7 +1965,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
  * @param[in]  extent          - Requested allocation size (width field in elements)
  * @param[in]  numLevels       - Number of mipmap levels to allocate
  * @param[in]  flags           - Flags for extensions
- * 
+ *
  * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  */
 hipError_t hipMallocMipmappedArray(
@@ -1981,7 +1981,7 @@ hipError_t hipMallocMipmappedArray(
  * @param[out] levelArray     - Returned mipmap level HIP array
  * @param[in]  mipmappedArray - HIP mipmapped array
  * @param[in]  level          - Mipmap level
- * 
+ *
  * @return #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipGetMipmappedArrayLevel(
@@ -2385,7 +2385,7 @@ hipError_t hipInit(unsigned int flags);
  * @see hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxPushCurrent,
  * hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
 
 /**
@@ -2398,7 +2398,7 @@ hipError_t hipCtxCreate(hipCtx_t* ctx, unsigned int flags, hipDevice_t device);
  * @see hipCtxCreate, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,hipCtxSetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDestroy(hipCtx_t ctx);
 
 /**
@@ -2411,7 +2411,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxSetCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
 
 /**
@@ -2424,7 +2424,7 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxPushCurrent(hipCtx_t ctx);
 
 /**
@@ -2437,7 +2437,7 @@ hipError_t hipCtxPushCurrent(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize , hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCurrent(hipCtx_t ctx);
 
 /**
@@ -2450,7 +2450,7 @@ hipError_t hipCtxSetCurrent(hipCtx_t ctx);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
 
 /**
@@ -2464,7 +2464,7 @@ hipError_t hipCtxGetCurrent(hipCtx_t* ctx);
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize
  */
 
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetDevice(hipDevice_t* device);
 
 /**
@@ -2484,7 +2484,7 @@ hipError_t hipCtxGetDevice(hipDevice_t* device);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetDevice, hipCtxGetFlags, hipCtxPopCurrent,
  * hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
 
 /**
@@ -2500,7 +2500,7 @@ hipError_t hipCtxGetApiVersion(hipCtx_t ctx, int* apiVersion);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
 
 /**
@@ -2516,7 +2516,7 @@ hipError_t hipCtxGetCacheConfig(hipFuncCache_t* cacheConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
 
 /**
@@ -2532,7 +2532,7 @@ hipError_t hipCtxSetCacheConfig(hipFuncCache_t cacheConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
 
 /**
@@ -2548,7 +2548,7 @@ hipError_t hipCtxSetSharedMemConfig(hipSharedMemConfig config);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
 
 /**
@@ -2562,7 +2562,7 @@ hipError_t hipCtxGetSharedMemConfig(hipSharedMemConfig* pConfig);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxGetFlags, hipCtxPopCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxSynchronize(void);
 
 /**
@@ -2575,7 +2575,7 @@ hipError_t hipCtxSynchronize(void);
  * @see hipCtxCreate, hipCtxDestroy, hipCtxPopCurrent, hipCtxGetCurrent, hipCtxGetCurrent,
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxGetFlags(unsigned int* flags);
 
 /**
@@ -2597,7 +2597,7 @@ hipError_t hipCtxGetFlags(unsigned int* flags);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
 
 /**
@@ -2616,7 +2616,7 @@ hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
  * hipCtxSetCurrent, hipCtxPushCurrent, hipCtxSetCacheConfig, hipCtxSynchronize, hipCtxGetDevice
  * @warning PeerToPeer support is experimental.
  */
-DEPRECATED(DEPRECATED_MSG)
+HIP_DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
 
 /**
@@ -3124,7 +3124,7 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStart API is under development.
  */
-DEPRECATED("use roctracer/rocTX instead")
+HIP_DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStart();
 
 
@@ -3133,7 +3133,7 @@ hipError_t hipProfilerStart();
  * When using this API, start the profiler with profiling disabled.  (--startdisabled)
  * @warning : hipProfilerStop API is under development.
  */
-DEPRECATED("use roctracer/rocTX instead")
+HIP_DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStop();
 
 
