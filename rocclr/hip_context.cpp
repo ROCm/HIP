@@ -84,7 +84,9 @@ amd::HostQueue* getQueue(hipStream_t stream) {
   } else {
     constexpr bool WaitNullStreamOnly = true;
     amd::HostQueue* queue = reinterpret_cast<hip::Stream*>(stream)->asHostQueue();
-    iHipWaitActiveStreams(queue, WaitNullStreamOnly);
+    if (!(reinterpret_cast<hip::Stream*>(stream)->Flags() & hipStreamNonBlocking)) {
+      iHipWaitActiveStreams(queue, WaitNullStreamOnly);
+    }
     return queue;
   }
 }
