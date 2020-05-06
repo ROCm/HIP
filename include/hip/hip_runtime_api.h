@@ -113,8 +113,8 @@ typedef struct hipDeviceProp_t {
     size_t maxSharedMemoryPerMultiProcessor;  ///< Maximum Shared Memory Per Multiprocessor.
     int isMultiGpuBoard;                      ///< 1 if device is on a multi-GPU board, 0 if not.
     int canMapHostMemory;                     ///< Check whether HIP can map host memory
-    int gcnArch;                              ///< AMD GCN Arch Value. Eg: 803, 701
-    char gcnArchName[16];                     ///< AMD GCN Arch Name (Arch Value as String).
+    int gcnArch;                              ///< AMD GCN Arch Value (Major Number Only). Eg: 800, 1000
+    char gcnArchName[16];                     ///< AMD GCN Arch Name (String Format). Eg: gfx906
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
     int cooperativeMultiDeviceLaunch; ///< HIP device supports cooperative launch on multiple devices

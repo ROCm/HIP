@@ -793,10 +793,10 @@ hipError_t ihipDevice_t::initProperties(hipDeviceProp_t* prop) {
     std::string name = archName + 3; 
     name = name.erase(name.size() - 2);
     prop->gcnArch = stoi(name) * 100; 
-     
+ 
     strcpy(prop->gcnArchName, archName);
     DeviceErrorCheck(err);
-    
+ 
     // Get agent node
     uint32_t node;
     err = hsa_agent_get_info(_hsaAgent, HSA_AGENT_INFO_NODE, &node);
