@@ -112,12 +112,12 @@ namespace hip {
   /// HIP Device class
   class Device {
     amd::Monitor lock_{"Device lock"};
-    /// VDI context
+    /// ROCclr context
     amd::Context* context_;
     /// Device's ID
     /// Store it here so we don't have to loop through the device list every time
     int deviceId_;
-    /// VDI host queue for default streams
+    /// ROCclr host queue for default streams
     Stream null_stream_;
     //Maintain list of user enabled peers
     std::list<int> userEnabledPeers;
@@ -168,11 +168,11 @@ namespace hip {
 
   extern void setCurrentDevice(unsigned int index);
 
-  /// Get VDI queue associated with hipStream
+  /// Get ROCclr queue associated with hipStream
   /// Note: This follows the CUDA spec to sync with default streams
   ///       and Blocking streams
   extern amd::HostQueue* getQueue(hipStream_t s);
-  /// Get default stream associated with the VDI context
+  /// Get default stream associated with the ROCclr context
   extern amd::HostQueue* getNullStream(amd::Context&);
   /// Get default stream of the thread
   extern amd::HostQueue* getNullStream();

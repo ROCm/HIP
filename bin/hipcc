@@ -127,7 +127,7 @@ $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform` // "hcc";
 $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
 #HIP_COMPILER controls whether to use hcc, clang or nvcc for compilation:
 $HIP_COMPILER= `$HIP_PATH/bin/hipconfig --compiler`;
-#HIP_RUNTIME controls whether to use HCC, VDI, or NVCC as the runtime:
+#HIP_RUNTIME controls whether to use HCC, ROCclr, or NVCC as the runtime:
 $HIP_RUNTIME= `$HIP_PATH/bin/hipconfig --runtime`;
 
 # If using ROCclr runtime, need to find HIP_ROCclr_HOME
