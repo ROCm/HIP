@@ -217,7 +217,8 @@ inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module)
 
 hipError_t ihipModuleLoadData(hipModule_t* module, const void* mmap_ptr, size_t mmap_size)
 {
-  const void* image = nullptr;
+  /* initialize image it to the mmap_ptr, if this is of no_clang_offload bundle then they directly pass the image */
+  const void* image = mmap_ptr;
   std::vector<std::pair<const void*, size_t>> code_objs;
   hipError_t code_obj_err = __hipExtractCodeObjectFromFatBinary(mmap_ptr,
                               {hip::getCurrentDevice()->devices()[0]->info().name_}, code_objs);
