@@ -195,17 +195,11 @@ target_link_libraries(device INTERFACE host)
 # TODO: we may create host_static and device_static to let app
 # link amdhip64_static
 
-<<<<<<< HEAD:vdi/CMakeLists.txt
 # FIXME: Linux convention is to create static library with same base
 # filename.
-target_link_libraries(amdhip64 PRIVATE amdvdi_static Threads::Threads dl)
+target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl)
 target_link_libraries(amdhip64_static PRIVATE Threads::Threads dl)
 target_link_libraries(amdhip64_static_temp PRIVATE Threads::Threads dl)
-=======
-target_link_libraries(amdhip64 PRIVATE amdrocclr_static pthread dl)
-target_link_libraries(amdhip64_static PRIVATE pthread dl)
-target_link_libraries(amdhip64_static_temp PRIVATE pthread dl)
->>>>>>> bf7c645f... name change vdi to rocclr:rocclr/CMakeLists.txt
 
 # combine objects of vid and hip into amdhip64_static
 add_custom_target(
