@@ -248,9 +248,6 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
     $HCC_VERSION_MAJOR=$HCC_VERSION;
     $HCC_VERSION_MAJOR=~s/\..*//;
 
-    $HIP_ATP_MARKER=$ENV{'HIP_ATP_MARKER'} // 1;
-    $marker_path = "$ROCM_PATH/profiler/CXLActivityLogger";
-
     # HCC* may be used to compile src/hip_hcc.o (and also feed the HIPCXXFLAGS below)
     $HCC = "$HCC_HOME/bin/hcc";
     $HCCFLAGS = "-hc  -D__HIPCC__ -isystem $HCC_HOME/include ";
@@ -297,20 +294,6 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
 
     $HIPLDFLAGS .= " -L$HSA_PATH/lib -L$ROCM_PATH/lib -lhsa-runtime64 -lhc_am ";
 #    $HIPLDFLAGS .= " -L$HCC_HOME/compiler/lib -lLLVMAMDGPUDesc -lLLVMAMDGPUUtils -lLLVMMC -lLLVMCore -lLLVMSupport ";
-
-    # Add trace marker library:
-    # TODO - once we cleanly separate the HIP API headers from HIP library headers this logic should move to CMakebuild option - apps do not need to see the marker library.
-    if ($HIP_ATP_MARKER) {
-        $marker_inc_path = "$marker_path/include";
-        if (-e $marker_inc_path) {
-            $HIPCXXFLAGS .= " -isystem $marker_inc_path";
-        }
-    }
-
-    $marker_lib_path = "$marker_path/bin/x86_64";
-    if (-e $marker_lib_path) {
-        $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
-    }
 
     if (not $isWindows) {
         $HIPLDFLAGS .= " -lm";
