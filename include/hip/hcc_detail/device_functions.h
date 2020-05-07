@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include <hip/hcc_detail/device_library_decls.h>
 #include <hip/hcc_detail/llvm_intrinsics.h>
 
-#if __HIP_CLANG_ONLY__ && __HIP_VDI__ && !_WIN32
+#if __HIP_CLANG_ONLY__ && __HIP_ROCclr__ && !_WIN32
 extern "C" __device__ int printf(const char *fmt, ...);
 #else
 #if HC_FEATURE_PRINTF
@@ -46,7 +46,7 @@ static inline __device__ void printf(const char* format, All... all) {
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
 #endif // HC_FEATURE_PRINTF
-#endif // __HIP_CLANG_ONLY__ && __HIP_VDI__
+#endif // __HIP_CLANG_ONLY__ && __HIP_ROCclr__
 
 /*
 Integer Intrinsics

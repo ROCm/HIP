@@ -33,7 +33,7 @@ if ($p_help) {
     print "  --cpp_config, -C   : print C++ compiler options\n";
     print "  --compiler, -c     : print compiler (hcc or clang or nvcc)\n";
     print "  --platform, -P     : print platform (hcc or nvcc)\n";
-    print "  --runtime, -r      : print runtime (HCC or VDI)\n";
+    print "  --runtime, -r      : print runtime (HCC or ROCclr)\n";
     print "  --full, -f         : print full config\n";
     print "  --version, -v      : print hip version\n";
     print "  --check            : check configuration\n";
@@ -109,14 +109,17 @@ if (not defined $HIP_PLATFORM) {
 }
 
 if ($HIP_COMPILER eq "hcc") {
-    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
+    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
 }
 if ($HIP_COMPILER eq "clang") {
     $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
     $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
     $HIP_CLANG_VERSION=$1;
 
-    $CPP_CONFIG= " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
+    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
+}
+if ($HIP_RUNTIME eq "ROCclr") {
+    $CPP_CONFIG .= " -D__HIP_ROCclr__";
 }
 if ($HIP_PLATFORM eq "nvcc") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
