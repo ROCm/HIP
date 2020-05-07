@@ -244,12 +244,19 @@ typedef struct cudaResourceViewDesc hipResourceViewDesc;
 #define HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT
 #define HIP_FUNC_ATTRIBUTE_MAX CU_FUNC_ATTRIBUTE_MAX
 
-#if CUDA_VERSION >= 9020
+#if CUDA_VERSION >= 9000
+static constexpr int warpSize = 32;
+
+#define __shfl(var, srcLane)             __shfl_sync(0xffffffff, var, srcLane, warpSize)
+#define __shfl_up(var, delta)            __shfl_up_sync(0xffffffff, var, delta, warpSize)
+#define __shfl_down(var, delta)          __shfl_down_sync(0xffffffff, var, delta, warpSize)
+#define __shfl_xor(var, laneMask)        __shfl_xor_sync(0xffffffff, var, laneMask, warpSize)
+
 #define __shfl(var, srcLane, width)      __shfl_sync(0xffffffff, var, srcLane, width)
 #define __shfl_up(var, delta, width)     __shfl_up_sync(0xffffffff, var, delta, width)
 #define __shfl_down(var, delta, width)   __shfl_down_sync(0xffffffff, var, delta, width)
 #define __shfl_xor(var, laneMask, width) __shfl_xor_sync(0xffffffff, var, laneMask, width)
-#endif // CUDA_VERSION >= 9020
+#endif // CUDA_VERSION >= 9000
 
 inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
     switch (cuError) {

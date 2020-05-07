@@ -242,4 +242,4 @@ Or pass "-DGENERIC_GRID_LAUNCH=0" to hipcc at application compilation time.
 Product of (grid.x and block.x), (grid.y and block.y) or (grid.z and block.z) should always be less than UINT_MAX.
 
 ### Are __shfl_*_sync functions supported on HIP platform?
-__shfl_*_sync call in HIP source code is not supported but all shuffle calls will be redirected to it's sync version for CUDA 9.0 and above.
+__shfl_*_sync call in HIP source code is not supported but for CUDA 9.0 and above all shuffle calls will be redirected to it's sync version.
