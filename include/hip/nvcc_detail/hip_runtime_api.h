@@ -1511,6 +1511,10 @@ inline static hipError_t hipProfilerStart() { return hipCUDAErrorTohipError(cuda
 
 inline static hipError_t hipProfilerStop() { return hipCUDAErrorTohipError(cudaProfilerStop()); }
 
+inline static hipError_t hipGetDeviceFlags(unsigned int* flags) {
+    return hipCUDAErrorTohipError(cudaGetDeviceFlags(flags));
+}
+
 inline static hipError_t hipSetDeviceFlags(unsigned int flags) {
     return hipCUDAErrorTohipError(cudaSetDeviceFlags(flags));
 }

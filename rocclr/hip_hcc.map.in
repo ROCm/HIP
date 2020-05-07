@@ -149,6 +149,7 @@ global:
     hipProfilerStart;
     hipProfilerStop;
     hipRuntimeGetVersion;
+    hipGetDeviceFlags;
     hipSetDevice;
     hipSetDeviceFlags;
     hipStreamAddCallback;

@@ -119,12 +119,14 @@ namespace hip {
     int deviceId_;
     /// ROCclr host queue for default streams
     Stream null_stream_;
-    //Maintain list of user enabled peers
+    /// Store device flags
+    unsigned int flags_;
+    /// Maintain list of user enabled peers
     std::list<int> userEnabledPeers;
 
   public:
     Device(amd::Context* ctx, int devId):
-      context_(ctx), deviceId_(devId), null_stream_(this, amd::CommandQueue::Priority::Normal, 0, true)
+      context_(ctx), deviceId_(devId), null_stream_(this, amd::CommandQueue::Priority::Normal, 0, true), flags_(hipDeviceScheduleSpin)
         { assert(ctx != nullptr); }
     ~Device() {}
 
@@ -152,6 +154,8 @@ namespace hip {
         return hipErrorPeerAccessNotEnabled;
       }
     }
+    unsigned int getFlags() const { return flags_; }
+    void setFlags(unsigned int flags) { flags_ = flags; }
     amd::HostQueue* NullStream(bool skip_alloc = false);
   };
 
