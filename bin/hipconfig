@@ -85,6 +85,8 @@ $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
 $HCC_HOME=$ENV{'HCC_HOME'} // "$ROCM_PATH/hcc";
 $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
+# HIP_ROCclr_HOME is used by Windows builds
+$HIP_ROCclr_HOME=$ENV{'HIP_ROCclr_HOME'};
 
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
@@ -92,8 +94,9 @@ $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
 # Read .hipInfo
 my %hipInfo = ();
 parse_config_file("$HIP_PATH/lib/.hipInfo", \%hipInfo);
-$HIP_COMPILER = $hipInfo{'HIP_COMPILER'} // "hcc";
-$HIP_RUNTIME = $hipInfo{'HIP_RUNTIME'} // "HCC";
+# Prioritize Env first, otherwise use the hipInfo config file
+$HIP_COMPILER = $ENV{'HIP_COMPILER'} // $hipInfo{'HIP_COMPILER'} // "hcc";
+$HIP_RUNTIME = $ENV{'HIP_RUNTIME'} // $hipInfo{'HIP_RUNTIME'} // "HCC";
 
 if (not defined $HIP_PLATFORM) {
     if (can_run("$HCC_HOME/bin/hcc") or can_run("hcc")) {
@@ -112,6 +115,10 @@ if ($HIP_COMPILER eq "hcc") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
 }
 if ($HIP_COMPILER eq "clang") {
+    # Windows does not have clang at linux default path
+    if (defined $HIP_ROCclr_HOME and (-e "$HIP_ROCclr_HOME/bin/clang" or -e "$HIP_ROCclr_HOME/bin/clang.exe")) {
+        $HIP_CLANG_PATH = "$HIP_ROCclr_HOME/bin";
+    }
     $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
     $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
     $HIP_CLANG_VERSION=$1;
