@@ -118,8 +118,8 @@ if ($HIP_COMPILER eq "clang") {
 
     $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
 }
-if ($HIP_RUNTIME eq "VDI") {
-    $CPP_CONFIG .= " -D__HIP_VDI__";
+if ($HIP_RUNTIME eq "ROCclr") {
+    $CPP_CONFIG .= " -D__HIP_ROCclr__";
 }
 if ($HIP_PLATFORM eq "nvcc") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
