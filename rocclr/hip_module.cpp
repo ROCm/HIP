@@ -314,8 +314,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
 
   switch(attrib) {
     case HIP_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES:
-      *value = static_cast<int>(wrkGrpInfo->localMemSize_
-                      - wrkGrpInfo->privateMemSize_);
+      *value = static_cast<int>(wrkGrpInfo->localMemSize_);
       break;
     case HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK:
       *value = static_cast<int>(wrkGrpInfo->wavefrontPerSIMD_
@@ -325,7 +324,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
       *value = 0;
       break;
     case HIP_FUNC_ATTRIBUTE_LOCAL_SIZE_BYTES:
-      *value = static_cast<int>(wrkGrpInfo->localMemSize_);
+      *value = static_cast<int>(wrkGrpInfo->privateMemSize_);
       break;
     case HIP_FUNC_ATTRIBUTE_NUM_REGS:
       *value = static_cast<int>(wrkGrpInfo->availableGPRs_);
@@ -340,7 +339,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
       *value = 0;
       break;
     case HIP_FUNC_ATTRIBUTE_MAX_DYNAMIC_SHARED_SIZE_BYTES:
-      *value = static_cast<int>(wrkGrpInfo->availableLDSSize_);
+      *value = static_cast<int>(wrkGrpInfo->availableLDSSize_ - wrkGrpInfo->localMemSize_);
       break;
     case HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT:
       *value = 0;
