@@ -46,16 +46,17 @@ In the above, BUILD commands provide instructions on how to build the test case 
 #### BUILD command
 
 The supported syntax for the BUILD command is:
-```
-BUILD: %t %s HIPCC_OPTIONS <hipcc_specific_options> HCC_OPTIONS <hcc_specific_options> NVCC_OPTIONS <nvcc_specific_options> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|VDI> EXCLUDE_HIP_COMPILER <hcc|clang> DEPENDS <dependencies>
+<<<<<<< HEAD
+BUILD: %t %s HIPCC_OPTIONS <hipcc_specific_options> HCC_OPTIONS <hcc_specific_options> CLANG_OPTIONS <clang_specific_options> NVCC_OPTIONS <nvcc_specific_options> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|ROCclr> EXCLUDE_HIP_COMPILER <hcc|clang> DEPENDS <dependencies>
 ```
 %s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
 HIPCC_OPTIONS: All options specified after this delimiter are passed to hipcc on both HCC and NVCC platforms.
-HCC_OPTIONS: All options specified after this delimiter are passed to hipcc on HCC platform only.
+HCC_OPTIONS: All options specified after this delimiter are passed to hipcc on HCC compiler only.
+CLANG_OPTIONS: All options specified after this delimiter are passed to hipcc on HIP-Clang compiler only.
 NVCC_OPTIONS: All options specified after this delimiter are passed to hipcc on NVCC platform only.
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms.
-EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from HCC or VDI runtime.
+EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from HCC or ROCclr runtime.
 EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from hcc or clang compiler.
 EXCLUDE_HIP_RUNTIME AND EXCLUDE_HIP_COMPILER: when both options are specified it excludes test case from particular runtime and compiler.
 DEPENDS: This can be used to specify dependencies that need to be built before building the current target.
@@ -65,7 +66,7 @@ DEPENDS: This can be used to specify dependencies that need to be built before b
 
 The supported syntax for the BUILD_CMD command is:
 ```
-BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|VDI> EXCLUDE_HIP_COMPILER <hcc|clang> DEPENDS <dependencies>
+BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|ROCclr> EXCLUDE_HIP_COMPILER <hcc|clang> DEPENDS <dependencies>
 ```
 %s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
@@ -76,7 +77,7 @@ BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCL
 %S: refers to path to current source file.
 %T: refers to path to current build target.
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms.
-EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from HCC or VDI runtime.
+EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from HCC or ROCclr runtime.
 EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from hcc or clang compiler.
 EXCLUDE_HIP_RUNTIME AND EXCLUDE_HIP_COMPILER: when both options are specified it excludes test from particular runtime and compiler.
 DEPENDS: This can be used to specify dependencies that need to be built before building the current target.
@@ -86,11 +87,11 @@ DEPENDS: This can be used to specify dependencies that need to be built before b
 
 The supported syntax for the TEST command is:
 ```
-TEST: %t <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|VDI> EXCLUDE_HIP_COMPILER <hcc|clang>
+TEST: %t <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|ROCclr> EXCLUDE_HIP_COMPILER <hcc|clang>
 ```
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from HCC, NVCC or both platforms. 
-EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from HCC or VDI runtime.
+EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from HCC or ROCclr runtime.
 EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from hcc or clang compiler.
 EXCLUDE_HIP_RUNTIME AND EXCLUDE_HIP_COMPILER: when both options are specified it excludes test from particular runtime and compiler.
 Note that if the test has been excluded for a specific platform/runtime/compiler in the BUILD command, it is automatically excluded from the TEST command as well for the sameplatform.
@@ -99,7 +100,7 @@ Note that if the test has been excluded for a specific platform/runtime/compiler
 
 When using the TEST command, HIT will squash and append the arguments specified to the test executable name to generate the CMAKE test name. Sometimes we might want to specify a more descriptive name. The TEST_NAMED command is used for that. The supported syntax for the TEST_NAMED command is:
 ```
-TEST: %t CMAKE_TEST_NAME <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|VDI> EXCLUDE_HIP_COMPILER <hcc|clang>
+TEST: %t CMAKE_TEST_NAME <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <hcc|nvcc|all> EXCLUDE_HIP_RUNTIME <HCC|ROCclr> EXCLUDE_HIP_COMPILER <hcc|clang>
 ```
 
 
@@ -120,6 +121,28 @@ ctest -R Memcpy
 ctest -R memory
 ```
 
+### Performance tests:
+```
+Above tests are direct tests which are majorly used for function verification.
+We also provide performance tests under tests/performance folder.
+
+# Build all performance tests after running "make install" under build folder:
+make build_perf
+
+Then all performance test applications will be built into ./performance_tests folder.
+
+# Run all performance tests:
+make perf
+
+# Run individual performance test:
+For example,
+performance_tests/memory/hipPerfMemMallocCpyFree
+
+# Run a specific test set:
+For example,
+/usr/bin/ctest -C performance -R performance_tests/perfDispatch --verbose
+Here "-C performance" indicate the "performance" configuration of ctest.
+```
 
 ### If a test fails - how to debug a test
 

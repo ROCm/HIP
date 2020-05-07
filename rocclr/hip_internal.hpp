@@ -90,8 +90,13 @@ namespace hip {
 
   public:
     Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f = 0, bool null_stream = false);
+
+    /// Creates the hip stream object, including AMD host queue
     bool Create();
-    amd::HostQueue* asHostQueue();
+
+    /// Get device AMD host queue object. The method can allocate the queue
+    amd::HostQueue* asHostQueue(bool skip_alloc = false);
+
     void Destroy();
     void Finish() const;
     /// Get device ID associated with the current stream;
@@ -107,12 +112,12 @@ namespace hip {
   /// HIP Device class
   class Device {
     amd::Monitor lock_{"Device lock"};
-    /// VDI context
+    /// ROCclr context
     amd::Context* context_;
     /// Device's ID
     /// Store it here so we don't have to loop through the device list every time
     int deviceId_;
-    /// VDI host queue for default streams
+    /// ROCclr host queue for default streams
     Stream null_stream_;
     //Maintain list of user enabled peers
     std::list<int> userEnabledPeers;
@@ -147,7 +152,7 @@ namespace hip {
         return hipErrorPeerAccessNotEnabled;
       }
     }
-    amd::HostQueue* NullStream();
+    amd::HostQueue* NullStream(bool skip_alloc = false);
   };
 
   extern std::once_flag g_ihipInitialized;
@@ -163,11 +168,11 @@ namespace hip {
 
   extern void setCurrentDevice(unsigned int index);
 
-  /// Get VDI queue associated with hipStream
+  /// Get ROCclr queue associated with hipStream
   /// Note: This follows the CUDA spec to sync with default streams
   ///       and Blocking streams
   extern amd::HostQueue* getQueue(hipStream_t s);
-  /// Get default stream associated with the VDI context
+  /// Get default stream associated with the ROCclr context
   extern amd::HostQueue* getNullStream(amd::Context&);
   /// Get default stream of the thread
   extern amd::HostQueue* getNullStream();
@@ -177,11 +182,11 @@ namespace hip {
     amd::Monitor lock_;
 
     Function(amd::Kernel* f) : function_(f), lock_("function lock") {}
+    ~Function() { function_->release(); }
     hipFunction_t asHipFunction() { return reinterpret_cast<hipFunction_t>(this); }
 
     static Function* asFunction(hipFunction_t f) { return reinterpret_cast<Function*>(f); }
   };
-
 };
 
 struct ihipExec_t {

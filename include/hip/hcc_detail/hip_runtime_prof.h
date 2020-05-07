@@ -23,7 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_PROF_H
 #define HIP_INCLUDE_HIP_HCC_DETAIL_HIP_RUNTIME_PROF_H
 
-// HIP VDI Op IDs enumeration
+// HIP ROCclr Op IDs enumeration
 enum HipVdiOpId {
   kHipVdiOpIdDispatch = 0,
   kHipVdiOpIdCopy     = 1,
@@ -31,7 +31,7 @@ enum HipVdiOpId {
   kHipVdiOpIdNumber   = 3
 };
 
-// Types of VDI commands
+// Types of ROCclr commands
 enum HipVdiCommandKind {
   kHipVdiCommandKernel            = 0x11F0,
   kHipVdiMemcpyDeviceToHost       = 0x11F3,

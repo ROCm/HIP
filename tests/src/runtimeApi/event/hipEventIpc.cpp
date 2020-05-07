@@ -24,7 +24,7 @@ THE SOFTWARE.
 // forces synchronization : set
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc vdi
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc rocclr
  * TEST: %t --iterations 10
  * HIT_END
  */

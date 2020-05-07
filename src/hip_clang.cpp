@@ -199,7 +199,7 @@ struct DeviceVar {
 
 std::unordered_multimap<std::string, DeviceVar > g_vars;
 
-//The logic follows PlatformState::getGlobalVar in VDI RT
+//The logic follows PlatformState::getGlobalVar in ROCclr RT
 static DeviceVar* findVar(std::string hostVar, int deviceId, hipModule_t hmod) {
   DeviceVar* dvar = nullptr;
   if (hmod != nullptr) {
@@ -326,7 +326,7 @@ static bool createGlobalVarObj(const hsa_executable_t& hsaExecutable, const hsa_
 // global variable in host code. The shadow host variable is used to keep
 // track of the value of the device side global variable between kernel
 // executions.
-// The basic logic is taken from VDI RT, but there is much difference.
+// The basic logic is taken from ROCclr RT, but there is much difference.
 extern "C" void __hipRegisterVar(
   std::vector<hipModule_t>* modules,   // The device modules containing code object
   char*       var,       // The shadow variable in host code

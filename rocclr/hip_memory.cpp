@@ -25,6 +25,7 @@
 #include "platform/command.hpp"
 #include "platform/memory.hpp"
 
+// ================================================================================================
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
   if (memObj != nullptr) {
@@ -41,21 +42,39 @@ amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   return memObj;
 }
 
+// ================================================================================================
 hipError_t ihipFree(void *ptr)
 {
   if (ptr == nullptr) {
     return hipSuccess;
   }
-  if (amd::SvmBuffer::malloced(ptr)) {
-    for (auto& dev : g_devices) {
-      dev->NullStream()->finish();
+
+  size_t offset = 0;
+  amd::Memory* memory_object = getMemoryObject(ptr, offset);
+
+  if (memory_object != nullptr) {
+    // Check if it's an allocation in system memory and can be shared across all devices
+    if (memory_object->getMemFlags() & CL_MEM_SVM_FINE_GRAIN_BUFFER) {
+      for (auto& dev : g_devices) {
+        // Skip stream allocation, since if it wasn't allocated until free, then the device
+        // wasn't used
+        constexpr bool SkipStreamAlloc = true;
+        amd::HostQueue* queue = dev->NullStream(SkipStreamAlloc);
+        if (queue != nullptr) {
+          queue->finish();
+        }
+      }
+    } else {
+      // Wait on the device, associated with the current memory object
+      hip::getNullStream(memory_object->getContext())->finish();
     }
-    amd::SvmBuffer::free(*hip::getCurrentDevice()->asContext(), ptr);
+    amd::SvmBuffer::free(memory_object->getContext(), ptr);
     return hipSuccess;
   }
   return hipErrorInvalidValue;
 }
 
+// ================================================================================================
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
   if (sizeBytes == 0) {
@@ -1654,7 +1673,7 @@ hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream) {
   HIP_RETURN(ihipMemcpyParam3D(pCopy, stream, true));
 }
 
-hipError_t packFillMemoryCommand(amd::Memory* memory, size_t offset, int value, size_t valueSize,
+hipError_t packFillMemoryCommand(amd::Memory* memory, size_t offset, int64_t value, size_t valueSize,
                                 size_t sizeBytes, amd::HostQueue* queue, bool isAsync = false) {
 
   if ((memory == nullptr) || (queue == nullptr)) {
@@ -1680,7 +1699,7 @@ hipError_t packFillMemoryCommand(amd::Memory* memory, size_t offset, int value, 
   return hipSuccess;
 }
 
-hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
+hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeBytes,
                       hipStream_t stream, bool isAsync = false) {
   if (sizeBytes == 0) {
     // Skip if nothing needs filling.
@@ -1702,38 +1721,42 @@ hipError_t ihipMemset(void* dst, int value, size_t valueSize, size_t sizeBytes,
   hipError_t hip_error = hipSuccess;
   amd::HostQueue* queue = hip::getQueue(stream);
 
-  int32_t value32 = 0;
-  const size_t dwordModSize = (sizeBytes % sizeof(int32_t));
+  int64_t value64 = 0;
+  const size_t uint64ModSize = (sizeBytes % sizeof(int64_t));
 
-  if (sizeBytes/sizeof(int32_t) > 0) {
+  if (sizeBytes/sizeof(int64_t) > 0) {
     if (valueSize == sizeof(int8_t)) {
       value = value & 0xff;
-      value32 = ((value << 24) | (value << 16) | (value << 8) | (value));
+      value64 = ((value << 56) | (value << 48) | (value << 40) | (value << 32)
+                 | (value << 24) | (value << 16) | (value << 8) | (value));
     } else if (valueSize == sizeof(int16_t)) {
       value = value & 0xffff;
-      value32 = ((value<<16) | (value));
+      value64 = ((value << 48) | (value << 32) | (value<<16) | (value));
     } else if(valueSize == sizeof(int32_t)) {
-      value32 = value;
+      value = value & 0xffffffff;
+      value64 = ((value<<32) | (value));
+    } else if (valueSize == sizeof(int64_t)) {
+      value64 = value;
     } else {
       LogPrintfError("Unsupported Pattern size: %u \n", valueSize);
       return hipErrorInvalidValue;
     }
-    // If dwordModSize is != 0 then we will do a second fillBuffer Command
+    // If uint64ModSize is != 0 then we will do a second fillBuffer Command
     // on the same stream below, dont wait, do the first call async.
-    hip_error = packFillMemoryCommand(memory, offset, value32, sizeof(int32_t),
-                                      sizeBytes - dwordModSize, queue,
-                                      ((dwordModSize != 0) || isAsync));
+    hip_error = packFillMemoryCommand(memory, offset, value64, sizeof(int64_t),
+                                      sizeBytes - uint64ModSize, queue,
+                                      ((uint64ModSize != 0) || isAsync));
     if(hip_error != hipSuccess) {
       return hip_error;
     }
   }
 
-  if (dwordModSize != 0) {
+  if (uint64ModSize != 0) {
     void* new_dst = reinterpret_cast<void*>((reinterpret_cast<address>(dst)
-                                             + sizeBytes) - dwordModSize);
+                                             + sizeBytes) - uint64ModSize);
     memory = getMemoryObject(new_dst, offset);
     hip_error = packFillMemoryCommand(memory, offset, value, valueSize,
-                                      dwordModSize, queue, isAsync);
+                                      uint64ModSize, queue, isAsync);
   }
 
   return hip_error;

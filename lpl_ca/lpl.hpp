@@ -4,7 +4,7 @@
 
 #include "clara/clara.hpp"
 #include "pstreams/pstream.h"
-#include "../include/hip/hcc_detail/elfio/elfio.hpp"
+#include "hip/hcc_detail/elfio/elfio.hpp"
 
 #include <unistd.h>
 

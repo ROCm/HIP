@@ -148,7 +148,7 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
     return hipErrorNotSupported;
   }
 
-  // TODO VDI assumes all dimensions have the same addressing mode.
+  // TODO ROCclr assumes all dimensions have the same addressing mode.
   cl_addressing_mode addressMode = CL_ADDRESS_NONE;
   // If hipTextureDesc::normalizedCoords is set to zero,
   // hipAddressModeWrap and hipAddressModeMirror won't be supported
@@ -220,7 +220,7 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
     if ((pResViewDesc != nullptr) ||
         (readMode == hipReadModeNormalizedFloat) ||
         (pTexDesc->sRGB == 1)) {
-      // TODO VDI currently right now can only change the format of the image.
+      // TODO ROCclr currently right now can only change the format of the image.
       const cl_channel_order channelOrder = (pResViewDesc != nullptr) ? hip::getCLChannelOrder(hip::getNumChannels(pResViewDesc->format), pTexDesc->sRGB) :
                                                                         hip::getCLChannelOrder(pResDesc->res.array.array->NumChannels, pTexDesc->sRGB);
       const cl_channel_type channelType = (pResViewDesc != nullptr) ? hip::getCLChannelType(hip::getArrayFormat(pResViewDesc->format), readMode) :
@@ -312,7 +312,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject,
 
 hipError_t ihipDestroyTextureObject(hipTextureObject_t texObject) {
   if (texObject == nullptr) {
-    return hipErrorInvalidValue;
+    return hipSuccess;
   }
 
   const hipResourceType type = texObject->resDesc.resType;
@@ -728,7 +728,7 @@ hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* pam,
   }
 
   // Currently, the only valid value for dim are 0 and 1.
-  if ((dim != 0) || (dim != 1)) {
+  if ((dim != 0) && (dim != 1)) {
     DevLogPrintfError("Currently only 2 dimensions (0,1) are valid,"
                       "dim : %d \n", dim);
     HIP_RETURN(hipErrorInvalidValue);
