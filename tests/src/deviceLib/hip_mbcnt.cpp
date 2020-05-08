@@ -38,11 +38,11 @@ THE SOFTWARE.
 
 __global__ void HIP_kernel(unsigned int* mbcnt_lo, unsigned int* mbcnt_hi, unsigned int* lane_id) {
     int x = blockDim.x * blockIdx.x + threadIdx.x;
-    mbcnt_lo[x] = __mbcnt_lo(0xFFFFFFFF, 0);
-    mbcnt_hi[x] = __mbcnt_hi(0xFFFFFFFF, 0);
+    mbcnt_lo[x] = __builtin_amdgcn_mbcnt_lo(0xFFFFFFFF, 0);
+    mbcnt_hi[x] = __builtin_amdgcn_mbcnt_hi(0xFFFFFFFF, 0);
     lane_id[x] = __lane_id();
 }
- 
+
 using namespace std;
 
 int main() {
