@@ -102,7 +102,6 @@ else ()
    set (HIP_LIB_VERSION_PATCH ${HIP_VERSION_PATCH})
 endif ()
 set (HIP_LIB_VERSION_STRING "${HIP_LIB_VERSION_MAJOR}.${HIP_LIB_VERSION_MINOR}.${HIP_LIB_VERSION_PATCH}")
-
 if (DEFINED ENV{ROCM_RPATH})
     set (CMAKE_INSTALL_RPATH "$ENV{ROCM_RPATH}")
     set (CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
@@ -669,8 +668,11 @@ endif()
 # Testing steps
 #############################
 # Target: test
-set(HIP_ROOT_DIR ${CMAKE_INSTALL_PREFIX})
+set(HIP_ROOT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+if(HIP_PLATFORM STREQUAL "nvcc")
+	execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
+endif()
 execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_ROOT_DIR}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 if(${RUN_HIT} EQUAL 0)
     execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_ROOT_DIR}/bin" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
@@ -713,7 +715,7 @@ endif()
 #############################
 # Target: clang
 if(HIP_HIPCC_EXECUTABLE)
-    add_custom_target(analyze 
+    add_custom_target(analyze
         COMMAND ${HIP_HIPCC_EXECUTABLE} -fvisibility=hidden -fvisibility-inlines-hidden --analyze --analyzer-outputtext  -isystem /opt/rocm/include ${HIP_HCC_BUILD_FLAGS} -Wno-unused-command-line-argument -I/opt/rocm/include -c  src/*.cpp -Iinclude/ -I./
     WORKING_DIRECTORY ${HIP_SRC_PATH})
     if(CPPCHECK_EXE)
