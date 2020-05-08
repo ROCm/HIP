@@ -51,6 +51,7 @@ hipExtGetLinkTypeAndHopCount
 hipExtLaunchMultiKernelMultiDevice
 hipExtMallocWithFlags
 hipExtModuleLaunchKernel
+hipExtLaunchKernel
 hipFree
 hipFreeArray
 hipFuncSetCacheConfig

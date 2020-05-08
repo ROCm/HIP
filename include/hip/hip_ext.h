@@ -23,6 +23,10 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_EXT_H
 #define HIP_INCLUDE_HIP_HIP_EXT_H
 #include "hip/hip_runtime.h"
+#if defined(__cplusplus)
+#include <tuple>
+#include <type_traits>
+#endif
 #ifdef __HCC__
 
 // Forward declarations:
@@ -109,8 +113,29 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr)
                                     __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
 
-//#if !__HIP_ROCclr__ && defined(__cplusplus)
-#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
+#if defined(__HIP_ROCclr__) && defined(__cplusplus)
+
+extern "C" hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks,
+                                         dim3 dimBlocks, void** args, size_t sharedMemBytes,
+                                         hipStream_t stream, hipEvent_t startEvent,
+                                         hipEvent_t stopEvent, int flags);
+
+template <typename... Args, typename F = void (*)(Args...)>
+inline void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                                  std::uint32_t sharedMemBytes, hipStream_t stream,
+                                  hipEvent_t startEvent, hipEvent_t stopEvent, std::uint32_t flags,
+                                  Args... args) {
+    constexpr size_t count = sizeof...(Args);
+    auto tup_ = std::tuple<Args...>{args...};
+    auto tup = validateArgsCountType(kernel, tup_);
+    void* _Args[count];
+    pArgs<0>(tup, _Args);
+
+    auto k = reinterpret_cast<void*>(kernel);
+    hipExtLaunchKernel(k, numBlocks, dimBlocks, _Args, sharedMemBytes, stream, startEvent,
+                       stopEvent, (int)flags);
+}
+#elif defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
 //kernel_descriptor and hip_impl::make_kernarg are in "grid_launch_GGL.hpp"
 
 namespace hip_impl {

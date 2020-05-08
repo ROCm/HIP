@@ -62,6 +62,14 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
 hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memory** amd_mem_obj,
                                   hipDeviceptr_t* dptr, size_t* bytes);
 
+extern hipError_t ihipModuleLaunchKernel(hipFunction_t f,
+                                 uint32_t gridDimX, uint32_t gridDimY, uint32_t gridDimZ,
+                                 uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
+                                 uint32_t sharedMemBytes, hipStream_t hStream,
+                                 void **kernelParams, void **extra,
+                                 hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0,
+                                 uint32_t params = 0, uint32_t gridId = 0, uint32_t numGrids = 0,
+                                 uint64_t prevGridSum = 0, uint64_t allGridSum = 0, uint32_t firstDevice = 0);
 static bool isCompatibleCodeObject(const std::string& codeobj_target_id,
                                    const char* device_name) {
   // Workaround for device name mismatch.
@@ -1339,16 +1347,16 @@ void hipLaunchCooperativeKernelGGLImpl(
 
 #endif // defined(ATI_OS_LINUX)
 
-extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
-                                      dim3 gridDim,
-                                      dim3 blockDim,
-                                      void** args,
-                                      size_t sharedMemBytes,
-                                      hipStream_t stream)
+hipError_t ihipLaunchKernel(const void* hostFunction,
+                                         dim3 gridDim,
+                                         dim3 blockDim,
+                                         void** args,
+                                         size_t sharedMemBytes,
+                                         hipStream_t stream,
+                                         hipEvent_t startEvent,
+                                         hipEvent_t stopEvent,
+                                         int flags)
 {
-  HIP_INIT_API(hipLaunchKernel, hostFunction, gridDim, blockDim, args, sharedMemBytes,
-               stream);
-
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
   int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
   if (deviceId == -1) {
@@ -1368,10 +1376,10 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
     HIP_RETURN(hipErrorInvalidDeviceFunction);
 #endif
   }
-
-  HIP_RETURN(hipModuleLaunchKernel(func, gridDim.x, gridDim.y, gridDim.z,
-                                    blockDim.x, blockDim.y, blockDim.z,
-                                    sharedMemBytes, stream, args, nullptr));
+  HIP_RETURN(ihipModuleLaunchKernel(func, (gridDim.x * blockDim.x), (gridDim.y * blockDim.y),
+                                    (gridDim.z * blockDim.z), blockDim.x, blockDim.y, blockDim.z,
+                                    sharedMemBytes, stream, args, nullptr, startEvent, stopEvent,
+                                    flags));
 }
 
 // conversion routines between float and half precision

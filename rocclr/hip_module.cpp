@@ -29,6 +29,16 @@
 
 hipError_t ihipModuleLoadData(hipModule_t* module, const void* mmap_ptr, size_t mmap_size);
 
+extern hipError_t ihipLaunchKernel(const void* hostFunction,
+                                         dim3 gridDim,
+                                         dim3 blockDim,
+                                         void** args,
+                                         size_t sharedMemBytes,
+                                         hipStream_t stream,
+                                         hipEvent_t startEvent,
+                                         hipEvent_t stopEvent,
+                                         int flags);
+
 const std::string& FunctionName(const hipFunction_t f)
 {
   return hip::Function::asFunction(f)->function_->name();
@@ -537,6 +547,31 @@ hipError_t hipModuleLaunchKernelExt(hipFunction_t f, uint32_t gridDimX,
 
   HIP_RETURN(ihipModuleLaunchKernel(f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
                                 sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent));
+}
+
+extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
+                                      dim3 gridDim,
+                                      dim3 blockDim,
+                                      void** args,
+                                      size_t sharedMemBytes,
+                                      hipStream_t stream)
+{
+    HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
+    HIP_RETURN(ihipLaunchKernel(hostFunction, gridDim, blockDim, args, sharedMemBytes, stream, nullptr, nullptr, 0));
+}
+
+extern "C" hipError_t hipExtLaunchKernel(const void* hostFunction,
+                                         dim3 gridDim,
+                                         dim3 blockDim,
+                                         void** args,
+                                         size_t sharedMemBytes,
+                                         hipStream_t stream,
+                                         hipEvent_t startEvent,
+                                         hipEvent_t stopEvent,
+                                         int flags)
+{
+    HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
+    HIP_RETURN(ihipLaunchKernel(hostFunction, gridDim, blockDim, args, sharedMemBytes, stream, startEvent, stopEvent, flags));
 }
 
 hipError_t hipLaunchCooperativeKernel(const void* f,
