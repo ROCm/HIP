@@ -313,7 +313,7 @@ bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFunc
   func_attr->localSizeBytes = wginfo->privateMemSize_;
   func_attr->sharedSizeBytes = wginfo->localMemSize_;
   func_attr->maxDynamicSharedSizeBytes = wginfo->availableLDSSize_ - wginfo->localMemSize_;
-  func_attr->maxThreadsPerBlock = wginfo->wavefrontSize_;
+  func_attr->maxThreadsPerBlock = wginfo->size_;
   func_attr->numRegs = wginfo->usedVGPRs_;
 
   return true;

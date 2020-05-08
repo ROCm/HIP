@@ -317,8 +317,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
       *value = static_cast<int>(wrkGrpInfo->localMemSize_);
       break;
     case HIP_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK:
-      *value = static_cast<int>(wrkGrpInfo->wavefrontPerSIMD_
-                * wrkGrpInfo->wavefrontSize_);
+      *value = static_cast<int>(wrkGrpInfo->size_);
       break;
     case HIP_FUNC_ATTRIBUTE_CONST_SIZE_BYTES:
       *value = 0;
