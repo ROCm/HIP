@@ -14,7 +14,7 @@ HIPDIR=$ROCMDIR/hip
 HIPLIBDIR=$ROCMDIR/hip/lib
 
 # Soft-link to library files
-HIPLIBFILES=$(ls -A $HIPLIBDIR | grep -v [-/$])
+HIPLIBFILES=$(ls -A $HIPLIBDIR | grep -v "cmake\|[-/$]")
 mkdir -p $ROCMLIBDIR
 mkdir -p $ROCMLIBDIR/cmake
 pushd $ROCMLIBDIR
