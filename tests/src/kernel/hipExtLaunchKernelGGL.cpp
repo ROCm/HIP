@@ -28,9 +28,52 @@ THE SOFTWARE.
 #include "hip/hip_ext.h"
 #include "test_common.h"
 
+struct _t {
+    double _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+};
+
+typedef struct _t _T;
+
+__global__ void sKernel(_T s, double *a) {
+    *a = s._a + s._b + s._c + s._d + s._e + s._f + s._g + s._h + s._i + s._j;
+}
+
+__global__ void mKernel(char f, short a, int b, double c, short d, int e, double* res) {
+    *res = a + b + c + d + e + f;
+}
+
+void testMixData() {
+    double m = 0;
+    double *d_m;
+    HIPCHECK(hipMalloc(&d_m, sizeof(double)));
+    int a = 1, e = 10;
+    short b = 2, d = 4;
+    double c = 3.0;
+    char ff = 10;
+    hipExtLaunchKernelGGL(mKernel, 1, 1, 0, 0, nullptr, nullptr, 0, ff, b, a, c, d, e, d_m);
+    HIPCHECK(hipMemcpy(&m, d_m, sizeof(double), hipMemcpyDeviceToHost));
+    if (m != 30.0) {
+        std::cout << "M is:: " << m << std::endl;
+        failed("Mismatch");
+    }
+    hipFree(d_m);
+}
+void testStruct() {
+    double m = 0;
+    double *d_m;
+    HIPCHECK(hipMalloc(&d_m, sizeof(double)));
+    _T s{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    hipExtLaunchKernelGGL(sKernel, 1, 1, 0, 0, nullptr, nullptr, 0, s, d_m);
+    HIPCHECK(hipMemcpy(&m, d_m, sizeof(double), hipMemcpyDeviceToHost));
+    if (m != 55.0) {
+        std::cout << "M is:: " << m << std::endl;
+        failed("Mismatch");
+    }
+    hipFree(d_m);
+}
+
 void test(size_t N) {
     size_t Nbytes = N * sizeof(int);
-#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
     int *A_d, *B_d, *C_d;
     int *A_h, *B_h, *C_h;
 
@@ -51,13 +94,13 @@ void test(size_t N) {
     HIPCHECK(hipDeviceSynchronize());
 
     HipTest::checkVectorADD(A_h, B_h, C_h, N);
-#endif
 }
 
 int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
     test(N);
-
+    testStruct();
+    testMixData();
     passed();
 }

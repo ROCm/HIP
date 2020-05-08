@@ -392,10 +392,53 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 typedef int hipLaunchParm;
 
+template <std::size_t n, typename... Ts,
+          typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
+void pArgs(const std::tuple<Ts...>&, void*) {}
+
+template <std::size_t n, typename... Ts,
+          typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
+void pArgs(const std::tuple<Ts...>& formals, void** _vargs) {
+    using T = typename std::tuple_element<n, std::tuple<Ts...> >::type;
+
+    static_assert(!std::is_reference<T>{},
+                  "A __global__ function cannot have a reference as one of its "
+                  "arguments.");
+#if defined(HIP_STRICT)
+    static_assert(std::is_trivially_copyable<T>{},
+                  "Only TriviallyCopyable types can be arguments to a __global__ "
+                  "function");
+#endif
+    _vargs[n] = const_cast<void*>(reinterpret_cast<const void*>(&std::get<n>(formals)));
+    return pArgs<n + 1>(formals, _vargs);
+}
+
+template <typename... Formals, typename... Actuals>
+std::tuple<Formals...> validateArgsCountType(void (*kernel)(Formals...), std::tuple<Actuals...>(actuals)) {
+    static_assert(sizeof...(Formals) == sizeof...(Actuals), "Argument Count Mismatch");
+    std::tuple<Formals...> to_formals{std::move(actuals)};
+    return to_formals;
+}
+
+#if defined(HIP_TEMPLATE_KERNEL_LAUNCH)
+template <typename... Args, typename F = void (*)(Args...)>
+void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                        std::uint32_t sharedMemBytes, hipStream_t stream, Args... args) {
+    constexpr size_t count = sizeof...(Args);
+    auto tup_ = std::tuple<Args...>{args...};
+    auto tup = validateArgsCountType(kernel, tup_);
+    void* _Args[count];
+    pArgs<0>(tup, _Args);
+
+    auto k = reinterpret_cast<void*>(kernel);
+    hipLaunchKernel(k, numBlocks, dimBlocks, _Args, sharedMemBytes, stream);
+}
+#else
 #define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
     do {                                                                                           \
         kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(__VA_ARGS__);         \
     } while (0)
+#endif
 
 #include <hip/hip_runtime_api.h>
 
