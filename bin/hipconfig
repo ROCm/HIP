@@ -17,9 +17,11 @@ Getopt::Long::Configure ( qw{bundling no_ignore_case});
 GetOptions(
      "help|h" => \$p_help
     ,"path|p" => \$p_path
+    ,"rocmpath|R" => \$p_rocmpath
     ,"compiler|c" => \$p_compiler
     ,"platform|P" => \$p_platform
     ,"runtime|r" => \$p_runtime
+    ,"hipclangpath|l" => \$p_hipclangpath
     ,"cpp_config|cxx_config|C" => \$p_cpp_config
     ,"full|f|info" => \$p_full,
     ,"version|v" => \$p_version,
@@ -30,10 +32,12 @@ GetOptions(
 if ($p_help) {
     print "usage: hipconfig [OPTIONS]\n";
     print "  --path,  -p        : print HIP_PATH (use env var if set, else determine from hipconfig path)\n";
+    print "  --rocmpath,  -R    : print ROCM_PATH (use env var if set, else determine from hip path or /opt/rocm)\n";
     print "  --cpp_config, -C   : print C++ compiler options\n";
     print "  --compiler, -c     : print compiler (hcc or clang or nvcc)\n";
     print "  --platform, -P     : print platform (hcc or nvcc)\n";
     print "  --runtime, -r      : print runtime (HCC or ROCclr)\n";
+    print "  --hipclangpath, -l : print HIP_CLANG_PATH\n";
     print "  --full, -f         : print full config\n";
     print "  --version, -v      : print hip version\n";
     print "  --check            : check configuration\n";
@@ -88,15 +92,30 @@ $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
 # HIP_ROCclr_HOME is used by Windows builds
 $HIP_ROCclr_HOME=$ENV{'HIP_ROCclr_HOME'};
 
+if (defined $HIP_ROCclr_HOME) {
+    $HIP_INFO_PATH= "$HIP_ROCclr_HOME/lib/.hipInfo";
+} else {
+    $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo"; # use actual file
+}
 #---
 #HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
 # Read .hipInfo
 my %hipInfo = ();
-parse_config_file("$HIP_PATH/lib/.hipInfo", \%hipInfo);
+parse_config_file("$HIP_INFO_PATH", \%hipInfo);
 # Prioritize Env first, otherwise use the hipInfo config file
 $HIP_COMPILER = $ENV{'HIP_COMPILER'} // $hipInfo{'HIP_COMPILER'} // "hcc";
 $HIP_RUNTIME = $ENV{'HIP_RUNTIME'} // $hipInfo{'HIP_RUNTIME'} // "HCC";
+
+# If using ROCclr runtime, need to find HIP_ROCclr_HOME
+if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "ROCclr" and !defined $HIP_ROCclr_HOME) {
+    my $hipconfig_dir = dirname($0);
+    if (-e "$hipconfig_dir/../lib/bitcode") {
+        $HIP_ROCclr_HOME = abs_path($hipconfig_dir . "/..");
+    } else {
+        $HIP_ROCclr_HOME = $HIP_PATH; # use HIP_PATH
+    }
+}
 
 if (not defined $HIP_PLATFORM) {
     if (can_run("$HCC_HOME/bin/hcc") or can_run("hcc")) {
@@ -146,6 +165,11 @@ if ($p_path) {
     $printed = 1;
 }
 
+if ($p_rocmpath) {
+    print "$ROCM_PATH";
+    $printed = 1;
+}
+
 if ($p_cpp_config) {
     print $CPP_CONFIG;
     $printed = 1;
@@ -166,6 +190,13 @@ if ($p_runtime) {
     $printed = 1;
 }
 
+if ($p_hipclangpath) {
+    if (defined $HIP_CLANG_PATH) {
+       print $HIP_CLANG_PATH;
+    }
+    $printed = 1;
+}
+
 if ($p_version) {
     print $HIP_VERSION;
     $printed = 1;
@@ -175,6 +206,7 @@ if (!$printed or $p_full) {
     print "HIP version  : ", $HIP_VERSION, "\n\n";
     print "== hipconfig\n";
     print "HIP_PATH     : ", $HIP_PATH, "\n";
+    print "ROCM_PATH    : ", $ROCM_PATH, "\n";
     print "HIP_COMPILER : ", $HIP_COMPILER, "\n";
     print "HIP_PLATFORM : ", $HIP_PLATFORM, "\n";
     print "HIP_RUNTIME  : ", $HIP_RUNTIME, "\n";
