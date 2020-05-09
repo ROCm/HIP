@@ -326,7 +326,7 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
       *value = static_cast<int>(wrkGrpInfo->privateMemSize_);
       break;
     case HIP_FUNC_ATTRIBUTE_NUM_REGS:
-      *value = static_cast<int>(wrkGrpInfo->availableGPRs_);
+      *value = static_cast<int>(wrkGrpInfo->usedVGPRs_);
       break;
     case HIP_FUNC_ATTRIBUTE_PTX_VERSION:
       *value = 30; // Defaults to 3.0 as HCC
