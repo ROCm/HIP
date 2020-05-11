@@ -767,7 +767,7 @@ if ($needHipHcc) {
     if ($linkType eq 0) {
         substr($HIPLDFLAGS,0,0) = "  $HIP_LIB_PATH/libhip_hcc_static.a " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = "  -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib $HIP_LIB_PATH/libhip_hcc.so ";
+        substr($HIPLDFLAGS,0,0) = "  -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib:$ROCM_PATH/lib64 $HIP_LIB_PATH/libhip_hcc.so ";
     }
 }
 
