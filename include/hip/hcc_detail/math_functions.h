@@ -1411,12 +1411,12 @@ float func(float x, int y) \
 __DEF_FLOAT_FUN2I(scalbn)
 
 template<class T>
-__DEVICE__ inline static T min(T arg1, T arg2) {
+__DEVICE__ inline T min(T arg1, T arg2) {
   return (arg1 < arg2) ? arg1 : arg2;
 }
 
 template<class T>
-__DEVICE__ inline static T max(T arg1, T arg2) {
+__DEVICE__ inline T max(T arg1, T arg2) {
   return (arg1 > arg2) ? arg1 : arg2;
 }
 
