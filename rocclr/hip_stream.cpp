@@ -23,7 +23,7 @@
 #include "hip_event.hpp"
 #include "thread/monitor.hpp"
 
-static amd::Monitor streamSetLock("Guards global stream set");
+static amd::Monitor streamSetLock{"Guards global stream set"};
 static std::unordered_set<hip::Stream*> streamSet;
 
 // Internal structure for stream callback handler
@@ -83,11 +83,11 @@ amd::HostQueue* Stream::asHostQueue(bool skip_alloc) {
 // ================================================================================================
 void Stream::Destroy() {
   if (queue_ != nullptr) {
-    queue_->release();
-    queue_ = nullptr;
-
     amd::ScopedLock lock(streamSetLock);
     streamSet.erase(this);
+
+    queue_->release();
+    queue_ = nullptr;
   }
   delete this;
 }
