@@ -620,7 +620,17 @@ foreach $arg (@ARGV)
             $toolArgs = substr $toolArgs, 0, -8;
             chomp $toolArgs;
         }
+    } elsif ($arg eq 'c' and $prevArg eq '-x') {
+        $hasC = 1;
+        $hasCXX = 0;
+        $hasHIP = 0;
+    } elsif ($arg eq 'c++' and $prevArg eq '-x') {
+        $hasC = 0;
+        $hasCXX = 1;
+        $hasHIP = 0;
     } elsif ($arg eq 'hip' and $prevArg eq '-x') {
+        $hasC = 0;
+        $hasCXX = 0;
         $hasHIP = 1;
     } elsif ($arg =~ m/^-/) {
         # options start with -
@@ -647,28 +657,35 @@ foreach $arg (@ARGV)
         #print "O: <$arg>\n";
     } elsif ($prevArg ne '-o') {
         # input files and libraries
-        if ($arg =~ /\.c$/) {
-            $hasC = 1;
+        # Skip guessing if `-x {c|c++|hip}` is already specified.
+        if (not ($hasC or $hasCXX or $hasHIP)) {
+            if ($arg =~ /\.c$/) {
+                $hasC = 1;
+                $needCFLAGS = 1;
+                $toolArgs .= " -x c"
+            } elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) ) {
+                $needCXXFLAGS = 1;
+                if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_COMPILER ne "clang") {
+                    $hasCXX = 1;
+                } else {
+                    $hasHIP = 1;
+                    $toolArgs .= " -x hip";
+                }
+            } elsif ((($arg =~ /\.cu$/ or $arg =~ /\.cuh$/) and $HIP_COMPILE_CXX_AS_HIP ne '0') or ($arg =~ /\.hip$/)) {
+                $needCXXFLAGS = 1;
+                if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
+                    $hasHIP = 1;
+                    $toolArgs .= " -x hip";
+                } else {
+                    $hasCU = 1;
+                }
+            }
+        } elsif ($hasC) {
             $needCFLAGS = 1;
-            $toolArgs .= " -x c"
-        }
-        elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) ) {
+        } elsif ($hasCXX) {
             $needCXXFLAGS = 1;
-            if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_COMPILER ne "clang") {
-                $hasCXX = 1;
-            } else {
-                $hasHIP = 1;
-                $toolArgs .= " -x hip";
-            }
-        }
-        elsif ((($arg =~ /\.cu$/ or $arg =~ /\.cuh$/) and $HIP_COMPILE_CXX_AS_HIP ne '0') or ($arg =~ /\.hip$/)) {
+        } else {
             $needCXXFLAGS = 1;
-            if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
-                $hasHIP = 1;
-                $toolArgs .= " -x hip";
-            } else {
-                $hasCU = 1;
-            }
         }
         push (@inputs, $arg);
         #print "I: <$arg>\n";
