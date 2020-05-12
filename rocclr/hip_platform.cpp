@@ -309,12 +309,20 @@ bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFunc
     return false;
   }
 
-  const device::Kernel::WorkGroupInfo* wginfo = it->second->workGroupInfo();
+  const device::Kernel* kernel = it->second;
+  const device::Kernel::WorkGroupInfo* wginfo = kernel->workGroupInfo();
+  func_attr->sharedSizeBytes = static_cast<int>(wginfo->localMemSize_);
+  func_attr->binaryVersion = static_cast<int>(kernel->signature().version());
+  func_attr->cacheModeCA = 0;
+  func_attr->constSizeBytes = 0;
   func_attr->localSizeBytes = wginfo->privateMemSize_;
-  func_attr->sharedSizeBytes = wginfo->localMemSize_;
-  func_attr->maxDynamicSharedSizeBytes = wginfo->availableLDSSize_ - wginfo->localMemSize_;
-  func_attr->maxThreadsPerBlock = wginfo->size_;
-  func_attr->numRegs = wginfo->usedVGPRs_;
+  func_attr->maxDynamicSharedSizeBytes = static_cast<int>(wginfo->availableLDSSize_
+                                                          - wginfo->localMemSize_);
+
+  func_attr->maxThreadsPerBlock = static_cast<int>(wginfo->size_);
+  func_attr->numRegs = static_cast<int>(wginfo->usedVGPRs_);
+  func_attr->preferredShmemCarveout = 0;
+  func_attr->ptxVersion = 30;
 
   return true;
 }
