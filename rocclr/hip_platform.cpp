@@ -122,10 +122,12 @@ hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
       num_code_objs++;
     }
   }
-  if (num_code_objs == devices.size())
+  if (num_code_objs == devices.size()) {
     return hipSuccess;
-  else
+  } else {
+    DevLogError("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
     return hipErrorNoBinaryForGpu;
+  }
 }
 
 extern "C" std::vector<std::pair<hipModule_t, bool>>* __hipRegisterFatBinary(const void* data)
