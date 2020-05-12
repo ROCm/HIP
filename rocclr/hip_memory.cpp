@@ -1717,7 +1717,9 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
   }
 
   size_t offset = 0;
-  amd::Memory* memory = getMemoryObject(dst, offset);
+  auto aligned_dst = amd::alignUp(reinterpret_cast<address>(dst), sizeof(uint64_t));
+
+  amd::Memory* memory = getMemoryObject(aligned_dst, offset);
   if (memory == nullptr) {
     // Host alloced memory
     memset(dst, value, sizeBytes);
@@ -1727,44 +1729,52 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
   hipError_t hip_error = hipSuccess;
   amd::HostQueue* queue = hip::getQueue(stream);
 
+  size_t n_head_bytes = 0;
+  size_t n_tail_bytes = 0;
   int64_t value64 = 0;
-  const size_t uint64ModSize = (sizeBytes % sizeof(int64_t));
-
   if (sizeBytes/sizeof(int64_t) > 0) {
+    n_head_bytes = static_cast<uint8_t*>(aligned_dst) - static_cast<uint8_t*>(dst);
     if (valueSize == sizeof(int8_t)) {
       value = value & 0xff;
       value64 = ((value << 56) | (value << 48) | (value << 40) | (value << 32)
                  | (value << 24) | (value << 16) | (value << 8) | (value));
     } else if (valueSize == sizeof(int16_t)) {
       value = value & 0xffff;
-      value64 = ((value << 48) | (value << 32) | (value<<16) | (value));
-    } else if(valueSize == sizeof(int32_t)) {
+      value64 = ((value << 48) | (value << 32) | (value << 16) | (value));
+    } else if (valueSize == sizeof(int32_t)) {
       value = value & 0xffffffff;
-      value64 = ((value<<32) | (value));
+      value64 = ((value << 32) | (value));
     } else if (valueSize == sizeof(int64_t)) {
       value64 = value;
     } else {
       LogPrintfError("Unsupported Pattern size: %u \n", valueSize);
       return hipErrorInvalidValue;
     }
-    // If uint64ModSize is != 0 then we will do a second fillBuffer Command
+    n_tail_bytes = ((sizeBytes - n_head_bytes) % sizeof(int64_t));
+    // If n_tail_bytes is != 0 then we will do a second fillBuffer Command
     // on the same stream below, dont wait, do the first call async.
     hip_error = packFillMemoryCommand(memory, offset, value64, sizeof(int64_t),
-                                      sizeBytes - uint64ModSize, queue,
-                                      ((uint64ModSize != 0) || isAsync));
-    if(hip_error != hipSuccess) {
+                                      sizeBytes - n_tail_bytes - n_head_bytes, queue,
+                                      ((n_head_bytes != 0) || (n_tail_bytes != 0) || isAsync));
+    if (hip_error != hipSuccess) {
       return hip_error;
     }
+  } else {
+    n_head_bytes = sizeBytes;
   }
 
-  if (uint64ModSize != 0) {
-    void* new_dst = reinterpret_cast<void*>((reinterpret_cast<address>(dst)
-                                             + sizeBytes) - uint64ModSize);
+  if (n_head_bytes != 0) {
+    memory = getMemoryObject(dst, offset);
+    hip_error = packFillMemoryCommand(memory, offset, value, valueSize,
+                                      n_head_bytes , queue, isAsync);
+  }
+
+  if (n_tail_bytes != 0) {
+    void* new_dst = (reinterpret_cast<address>(dst) + sizeBytes) - n_tail_bytes;
     memory = getMemoryObject(new_dst, offset);
     hip_error = packFillMemoryCommand(memory, offset, value, valueSize,
-                                      uint64ModSize, queue, isAsync);
+                                      n_tail_bytes, queue, isAsync);
   }
-
   return hip_error;
 }
 
