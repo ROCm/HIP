@@ -229,6 +229,11 @@ std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipMod
           = reinterpret_cast<texture<float, hipTextureType1D, hipReadModeElementType> *>(dvar.shadowVptr);
         delete tex_hptr;
       }
+      for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+        if (dvar.rvars[dev].getdeviceptr()) {
+          amd::MemObjMap::RemoveMemObj(dvar.rvars[dev].getdeviceptr());
+        }
+      }
       vars_.erase(it++);
     } else {
       ++it;
