@@ -208,6 +208,7 @@ public:
   void init();
   std::vector<std::pair<hipModule_t, bool>>* addFatBinary(const void*data)
   {
+    amd::ScopedLock lock(lock_);
     if (initialized_) {
       digestFatBinary(data, modules_[data]);
     }
@@ -215,6 +216,7 @@ public:
   }
   void removeFatBinary(std::vector<std::pair<hipModule_t, bool>>* module)
   {
+    amd::ScopedLock lock(lock_);
     for (auto& mod : modules_) {
       if (&mod.second == module) {
         modules_.erase(&mod);
