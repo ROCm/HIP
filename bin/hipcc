@@ -347,6 +347,8 @@ my $needCFLAGS = 0;    # need to add C flags to compile step
 my $needLDFLAGS = 1;   # need to add LDFLAGS to compile step.
 my $hasC = 0;          # options contain a c-style file
 my $hasCXX = 0;        # options contain a cpp-style file (NVCC must force recognition as GPU file)
+my $hasXLangOpt = 0;   # -x options Treat subsequent input files as having type <language>
+my $hasXLangArg;       # -x options : stores the language arg specified
 my $hasCU = 0;         # options contain a cu-style file (HCC must force recognition as GPU file)
 my $hasHIP = 0;        # options contain a hip-style file (HIP-Clang must pass offloading options)
 my $needHipHcc = ($HIP_PLATFORM eq 'hcc');      # set if we need to link hip_hcc.o from src tree. (some builds, ie cmake, provide their own)
@@ -620,8 +622,20 @@ foreach $arg (@ARGV)
             $toolArgs = substr $toolArgs, 0, -8;
             chomp $toolArgs;
         }
+    } elsif ($arg eq 'c++' and $prevArg eq '-x') {
+        $hasXLangOpt = 1;
+        $hasXLangArg = $arg;
+        $needCXXFLAGS = 1;
+        $needCFLAGS = 0;
+    } elsif ($arg eq 'c' and $prevArg eq '-x') {
+        $hasXLangOpt = 1;
+        $hasXLangArg = $arg;
+        $needCXXFLAGS = 0;
+        $needCFLAGS = 1;
     } elsif ($arg eq 'hip' and $prevArg eq '-x') {
         $hasHIP = 1;
+        $hasXLangOpt = 1;
+        $hasXLangArg = $arg;
     } elsif ($arg =~ m/^-/) {
         # options start with -
         if  ($arg eq '-fgpu-rdc') {
@@ -650,7 +664,6 @@ foreach $arg (@ARGV)
         if ($arg =~ /\.c$/) {
             $hasC = 1;
             $needCFLAGS = 1;
-            $toolArgs .= " -x c"
         }
         elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) ) {
             $needCXXFLAGS = 1;
@@ -736,11 +749,22 @@ if ($coFormatv3 and $HIP_PLATFORM eq 'hcc') {
     $HIPCXXFLAGS .= " -mcode-object-v3";
 }
 
-if ($hasCXX and $HIP_PLATFORM eq 'nvcc') {
-    $HIPCXXFLAGS .= " -x cu";
-}
-if ($hasCU and $HIP_PLATFORM eq 'hcc') {
-    $HIPCXXFLAGS .= " -x c++";
+# detect input file language when -x option is explicitly specified
+if ($hasXLangOpt eq 0) {
+    if ($hasCXX and $HIP_PLATFORM eq 'nvcc') {
+        $HIPCXXFLAGS .= " -x cu";
+    }
+    if ($hasCU and $HIP_PLATFORM eq 'hcc') {
+        $HIPCXXFLAGS .= " -x c++";
+    }
+    if ($hasC and $HIP_PLATFORM eq 'hcc') {
+        $HIPCXXFLAGS .= " -x c";
+        $HIPCFLAGS .= " -x c";
+    }
+} else {
+    # pass through -x lang spec
+    $HIPCXXFLAGS .= " -x " . $hasXLangArg;
+    $HIPCFLAGS .= " -x " . $hasXLangArg;
 }
 
 if ($buildDeps and $HIP_PLATFORM eq 'nvcc') {
