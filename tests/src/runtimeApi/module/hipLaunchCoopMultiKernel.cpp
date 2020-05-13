@@ -37,18 +37,13 @@ THE SOFTWARE.
 
 using namespace std::chrono;
 
-const static uint NumOfLoopIterrations = 16 * 1024;
-const static uint BufferSizeInDwords = 28672 * NumOfLoopIterrations;
+const static uint BufferSizeInDwords = 256 * 1024 * 1024;
 const static uint numQueues = 4;
 const static uint numIter = 100;
 constexpr uint NumKernelArgs = 4;
 constexpr uint MaxGPUs = 8;
 
 #include <stdio.h>
-/*
-namespace cg = cooperative_groups;
-using namespace cooperative_groups;
-*/
 
 __global__ void test_gws(uint* buf, uint bufSize, long* tmpBuf, long* result)
 {
@@ -126,11 +121,13 @@ int main() {
     size_t SIZE = copySizeInDwords * sizeof(uint);
 
     HIPCHECK(hipMalloc((void**)&dA[i], SIZE));
+    HIPCHECK(hipMalloc((void**)&dB[i], 64 * deviceProp[i].multiProcessorCount * sizeof(long)));
     if (i == 0) {
       HIPCHECK(hipHostMalloc((void**)&dC, (nGpu + 1) * sizeof(long), hipHostMallocCoherent));
     }
     HIPCHECK(hipMemcpy(dA[i], &init[i * copySizeInDwords] , SIZE, hipMemcpyHostToDevice));
     HIPCHECK(hipStreamCreate(&stream[i]));
+    hipDeviceSynchronize();
   }
 
   dim3 dimBlock;
@@ -146,22 +143,22 @@ int main() {
   uint workgroups[3] = {64, 128, 256};
 
   hipLaunchParams* launchParamsList = new hipLaunchParams[nGpu];
-
-  system_clock::time_point start = system_clock::now();
-
+  std::time_t end_time;
+  double time = 0;
   for (uint set = 0; set < 3; ++set) {
     void* args[MaxGPUs * NumKernelArgs];
-    std::cout << "---------- Test#" << set << "---------------\n";
+    std::cout << "---------- Test#" << set << ", size: "<< BufferSizeInDwords <<
+      " dwords ---------------\n";
     for (int i = 0; i < nGpu; i++) {
       HIPCHECK(hipSetDevice(i));
       dimBlock.x = workgroups[set];
       HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlocks,
       test_gws, dimBlock.x * dimBlock.y * dimBlock.z, dimBlock.x * sizeof(long)));
-      
-      std::cout << "GPU(" << i << ") Block size: " << dimBlock.x << " Num blocks per CU: " << numBlocks << "\n";
+
+      std::cout << "GPU(" << i << ") Block size: " << dimBlock.x <<
+        " Num blocks per CU: " << numBlocks << "\n";
 
       dimGrid.x = deviceProp[i].multiProcessorCount * std::min(numBlocks, 32);
-      HIPCHECK(hipMalloc((void**)&dB[i], dimGrid.x * sizeof(long)));
 
       args[i * NumKernelArgs]     = (void*)&dA[i];
       args[i * NumKernelArgs + 1] = (void*)&copySizeInDwords;
@@ -175,32 +172,34 @@ int main() {
       launchParamsList[i].stream = stream[i];
       launchParamsList[i].args = &args[i * NumKernelArgs];
     }
- 
-    hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0);
 
-    if (*dC != (((long)(BufferSizeInDwords) * (BufferSizeInDwords - 1)) / 2)) {
-      std::cout << "Data validation failed for grid size = " << dimGrid.x << " and block size = " << dimBlock.x << "\n";
+    system_clock::time_point start = system_clock::now();
+    hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0);
+    system_clock::time_point end = system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end - start;
+    end_time = std::chrono::system_clock::to_time_t(end);
+
+    time += elapsed_seconds.count();
+
+    size_t processedDwords = copySizeInDwords * nGpu;
+    if (*dC != (((long)(processedDwords) * (processedDwords - 1)) / 2)) {
+      std::cout << "Data validation failed ("<< *dC << " != " <<
+        (((long)(BufferSizeInDwords) * (BufferSizeInDwords - 1)) / 2) <<
+        ") for grid size = " << dimGrid.x << " and block size = " << dimBlock.x << "\n";
       std::cout << "Test failed! \n";
     }
-    for (int i = 0; i < nGpu; i++) {
-      hipFree(dB[i]);
-    }
   }
-  system_clock::time_point end = system_clock::now();
 
   delete [] launchParamsList;
 
-  std::chrono::duration<double> elapsed_seconds = end - start;
-
-  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
- 
   std::cout << "finished computation at " << std::ctime(&end_time) <<
-    "elapsed time: " << elapsed_seconds.count() << "s\n";
+    "elapsed time: " << time << "s\n";
 
   hipSetDevice(0);
   hipFree(dC);
   for (int i = 0; i < nGpu; i++) {
     hipFree(dA[i]);
+    hipFree(dB[i]);
     HIPCHECK(hipStreamDestroy(stream[i]));
   }
   delete [] init;
