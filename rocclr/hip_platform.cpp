@@ -191,6 +191,13 @@ void PlatformState::init()
   for (auto& it : vars_) {
     it.second.rvars.resize(g_devices.size());
   }
+  if (!HIP_ENABLE_LAZY_KERNEL_LOADING) {
+    for (size_t i = 0; i < g_devices.size(); ++i) {
+      for (auto& it: functions_) {
+        getFunc(it.first, i);
+      }
+    }
+  }
 }
 
 bool PlatformState::unregisterFunc(hipModule_t hmod) {
