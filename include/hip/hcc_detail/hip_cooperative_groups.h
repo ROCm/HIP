@@ -166,6 +166,55 @@ this_grid() {
   return grid_group(internal::grid::size());
 }
 
+/** \brief The workgroup (thread-block in CUDA terminology) cooperative group
+ *         type
+ *
+ *  \details Represents an intra-workgroup cooperative group type where the
+ *           participating threads within the group are exctly the same threads
+ *           which are participated in the currently executing `workgroup`
+ */
+class thread_block : public thread_group {
+  // Only these friend functions are allowed to construct an object of this
+  // class and access its resources
+  friend __CG_QUALIFIER__ thread_block this_thread_block();
+
+ protected:
+  // Construct a workgroup thread group (through the API this_thread_block())
+  explicit __CG_QUALIFIER__ thread_block(uint32_t size)
+      : thread_group(internal::cg_workgroup, size) { }
+
+ public:
+  // 3-dimensional block index within the grid
+  __CG_QUALIFIER__ dim3 group_index() {
+    return internal::workgroup::group_index();
+  }
+  // 3-dimensional thread index within the block
+  __CG_QUALIFIER__ dim3 thread_index() {
+    return internal::workgroup::thread_index();
+  }
+  __CG_QUALIFIER__ uint32_t thread_rank() const {
+    return internal::workgroup::thread_rank();
+  }
+  __CG_QUALIFIER__ bool is_valid() const {
+    return internal::workgroup::is_valid();
+  }
+  __CG_QUALIFIER__ void sync() const {
+    internal::workgroup::sync();
+  }
+};
+
+/** \brief User exposed API interface to construct workgroup cooperative
+ *         group type object - `thread_block`
+ *
+ *  \details User is not allowed to directly construct an object of type
+ *           `thread_block`. Instead, he should construct it through this API
+ *           function
+ */
+__CG_QUALIFIER__ thread_block
+this_thread_block() {
+  return thread_block(internal::workgroup::size());
+}
+
 /**
  *  Implemenation of all publicly exposed base class APIs
  */
@@ -176,6 +225,9 @@ __CG_QUALIFIER__ uint32_t thread_group::thread_rank() const {
     }
     case internal::cg_grid: {
       return (static_cast<const grid_group*>(this)->thread_rank());
+    }
+    case internal::cg_workgroup: {
+      return (static_cast<const thread_block*>(this)->thread_rank());
     }
     default: {
       return 0; //TODO(mahesha)
@@ -191,6 +243,9 @@ __CG_QUALIFIER__ bool thread_group::is_valid() const {
     case internal::cg_grid: {
       return (static_cast<const grid_group*>(this)->is_valid());
     }
+    case internal::cg_workgroup: {
+      return (static_cast<const thread_block*>(this)->is_valid());
+    }
     default: {
       return false;
     }
@@ -205,6 +260,10 @@ __CG_QUALIFIER__ void thread_group::sync() const {
     }
     case internal::cg_grid: {
       static_cast<const grid_group*>(this)->sync();
+      break;
+    }
+    case internal::cg_workgroup: {
+      static_cast<const thread_block*>(this)->sync();
       break;
     }
   }
