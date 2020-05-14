@@ -89,11 +89,11 @@ $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
 $HCC_HOME=$ENV{'HCC_HOME'} // "$ROCM_PATH/hcc";
 $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
-# HIP_ROCclr_HOME is used by Windows builds
-$HIP_ROCclr_HOME=$ENV{'HIP_ROCclr_HOME'};
+# HIP_ROCCLR_HOME is used by Windows builds
+$HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
 
-if (defined $HIP_ROCclr_HOME) {
-    $HIP_INFO_PATH= "$HIP_ROCclr_HOME/lib/.hipInfo";
+if (defined $HIP_ROCCLR_HOME) {
+    $HIP_INFO_PATH= "$HIP_ROCCLR_HOME/lib/.hipInfo";
 } else {
     $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo"; # use actual file
 }
@@ -107,13 +107,13 @@ parse_config_file("$HIP_INFO_PATH", \%hipInfo);
 $HIP_COMPILER = $ENV{'HIP_COMPILER'} // $hipInfo{'HIP_COMPILER'} // "hcc";
 $HIP_RUNTIME = $ENV{'HIP_RUNTIME'} // $hipInfo{'HIP_RUNTIME'} // "HCC";
 
-# If using ROCclr runtime, need to find HIP_ROCclr_HOME
-if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "ROCclr" and !defined $HIP_ROCclr_HOME) {
+# If using ROCclr runtime, need to find HIP_ROCCLR_HOME
+if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "ROCclr" and !defined $HIP_ROCCLR_HOME) {
     my $hipconfig_dir = dirname($0);
     if (-e "$hipconfig_dir/../lib/bitcode") {
-        $HIP_ROCclr_HOME = abs_path($hipconfig_dir . "/..");
+        $HIP_ROCCLR_HOME = abs_path($hipconfig_dir . "/..");
     } else {
-        $HIP_ROCclr_HOME = $HIP_PATH; # use HIP_PATH
+        $HIP_ROCCLR_HOME = $HIP_PATH; # use HIP_PATH
     }
 }
 
@@ -135,8 +135,8 @@ if ($HIP_COMPILER eq "hcc") {
 }
 if ($HIP_COMPILER eq "clang") {
     # Windows does not have clang at linux default path
-    if (defined $HIP_ROCclr_HOME and (-e "$HIP_ROCclr_HOME/bin/clang" or -e "$HIP_ROCclr_HOME/bin/clang.exe")) {
-        $HIP_CLANG_PATH = "$HIP_ROCclr_HOME/bin";
+    if (defined $HIP_ROCCLR_HOME and (-e "$HIP_ROCCLR_HOME/bin/clang" or -e "$HIP_ROCCLR_HOME/bin/clang.exe")) {
+        $HIP_CLANG_PATH = "$HIP_ROCCLR_HOME/bin";
     }
     $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
     $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
