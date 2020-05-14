@@ -99,7 +99,7 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 }
 
 hipError_t hipDeviceGetCount(int* count) {
-  HIP_INIT_API(NONE, count);
+  HIP_INIT_API(hipDeviceGetCount, count);
 
   HIP_RETURN(ihipDeviceGetCount(count));
 }
@@ -238,7 +238,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
 }
 
 hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
-  HIP_INIT_API(NONE, deviceId, acc);
+  HIP_INIT_API(hipHccGetAccelerator, deviceId, acc);
 
   assert(0 && "Unimplemented");
 
@@ -246,7 +246,7 @@ hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
 }
 
 hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
-  HIP_INIT_API(NONE, stream, av);
+  HIP_INIT_API(hipHccGetAcceleratorView, stream, av);
 
   assert(0 && "Unimplemented");
 
