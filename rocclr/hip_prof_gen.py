@@ -68,8 +68,8 @@ def filtr_api_name(name):
   return name
 
 def filtr_api_decl(record):
-  record = re.sub("\s__dparm\([^\)]*\)", '', record);
-  record = re.sub("\(void\*\)", '', record);
+  record = re.sub("\s__dparm\([^\)]*\)", r'', record);
+  record = re.sub("\(void\*\)", r'', record);
   return record
 
 # Normalizing API arguments
@@ -216,6 +216,8 @@ def parse_content(inp_file_p, api_map, out):
   api_name = ""
   # Valid public API found flag
   api_valid = 0
+  # API overload (parameters mismatch)
+  api_overload = 0
 
   # Input file patched content
   content = ''
@@ -240,6 +242,7 @@ def parse_content(inp_file_p, api_map, out):
 
     # Looking for API begin
     if found == 0:
+      record = re.sub(r'\s*extern\s+"C"\s+', r'', record);
       if beg_pattern.match(record):
         found = 1
         record = filtr_api_decl(record)
@@ -255,6 +258,8 @@ def parse_content(inp_file_p, api_map, out):
       # Checking if complete API matched
       if m:
         found = 2
+        api_valid = 0
+        api_overload = 0
         api_name = filtr_api_name(m.group(2))
         # Checking if API name is in the API map
         if (private_check_mode == 0) or (api_name in api_map):
@@ -280,48 +285,34 @@ def parse_content(inp_file_p, api_map, out):
             out[api_name] = filtr_api_opts(api_args)
             # Register missmatched API methods
           else:
+            api_overload = 1
             # Warning about mismatched API, possible non public overloaded version
             api_diff = '\t\t' + inp_file + " line(" + str(line_num) + ")\n\t\tapi: " + api_types + "\n\t\teta: " + eta_types
             message("\t" + api_name + ' args mismatch:\n' + api_diff + '\n')
 
-    if hip_patch_mode != 0:
-      # Looking for INIT macro
-      m = init_pattern.match(line)
-      if m:
-        if api_valid == 0: api_name = 'NONE'
-
-        if api_name == m.group(3):
-          if hip_patch_mode == 1: hip_patch_mode = 0
-          else: fatal("patching failed")
-        else:
-          hip_patch_mode = 2
-          init_args =  m.group(2)
-          if init_args != '': init_args = ', ' + init_args
-          line = m.group(1) + '(' + api_name + init_args + m.group(5) + '\n'
-          non_public_api = 0
-
     # API found action
     if found == 2:
-      # Looking for INIT macro
+      if hip_patch_mode != 0:
+        # Looking for INIT macro
+        m = init_pattern.match(line)
+        if m:
+          init_name = api_name
+          if api_overload == 1: init_name = 'NONE'
+          init_args = m.group(4)
+          line = m.group(1) + '(' + init_name + init_args + m.group(5) + '\n'
+
       m = init_pattern.match(line)
       if m:
         found = 0
-        non_public_api = 0
-
-        if api_valid == 1:
-          api_valid = 0
-          message("\t" + api_name)
-        else:
-          non_public_api = 1
-
-        if non_public_api == 1:
+        if api_valid == 1: message("\t" + api_name)
+        # Ignore if it is initialized as NONE
+        init_name = m.group(3)
+        if init_name != 'NONE':
+          # Check if init name matching API name
+          if init_name != api_name:
+            fatal("init name mismatch: '" + init_name +  "' <> '" + api_name + "'")
           # Registering dummy API for non public API if the name in INIT is not NONE
-          init_name = m.group(3)
-          # Ignore if it is initialized as NONE
-          if init_name != 'NONE':
-            # Check if init name matching API name
-            if init_name != api_name:
-              fatal("init name mismatch: '" + init_name +  "' <> '" + api_name + "'")
+          if api_valid == 0:
             # If init name is not in public API map then it is private API
             # else it was not identified and will be checked on finish
             if not init_name in api_map:
@@ -333,7 +324,6 @@ def parse_content(inp_file_p, api_map, out):
         # Expect INIT macro for valid public API
         # Removing and registering non-conformant APIs with missing HIP_INIT macro
         if api_valid == 1:
-          api_valid = 0
           if api_name in out:
             del out[api_name]
             del api_map[api_name]

@@ -480,7 +480,7 @@ hipError_t hipGetDeviceFlags ( unsigned int* flags ) {
 }
 
 hipError_t hipIpcGetEventHandle ( hipIpcEventHandle_t* handle, hipEvent_t event ) {
-  HIP_INIT_API(NONE, handle, event);
+  HIP_INIT_API(hipIpcGetEventHandle, handle, event);
 
   assert(0 && "Unimplemented");
 
@@ -488,7 +488,7 @@ hipError_t hipIpcGetEventHandle ( hipIpcEventHandle_t* handle, hipEvent_t event 
 }
 
 hipError_t hipIpcOpenEventHandle ( hipEvent_t* event, hipIpcEventHandle_t handle ) {
-  HIP_INIT_API(NONE, event, handle);
+  HIP_INIT_API(hipIpcOpenEventHandle, event, handle);
 
   assert(0 && "Unimplemented");
 
@@ -542,7 +542,7 @@ hipError_t hipSetDeviceFlags ( unsigned int  flags ) {
 }
 
 hipError_t hipSetValidDevices ( int* device_arr, int  len ) {
-  HIP_INIT_API(NONE, device_arr, len);
+  HIP_INIT_API(hipSetValidDevices, device_arr, len);
 
   assert(0 && "Unimplemented");
 

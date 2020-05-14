@@ -2090,7 +2090,7 @@ hipError_t hipArrayGetDescriptor(HIP_ARRAY_DESCRIPTOR* pArrayDescriptor,
 
 hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy,
                                  hipStream_t stream) {
-  HIP_INIT_API(hipMemcpyParam2D, pCopy);
+  HIP_INIT_API(hipMemcpyParam2DAsync, pCopy);
 
   HIP_RETURN(ihipMemcpyParam2D(pCopy, stream, true));
 }
