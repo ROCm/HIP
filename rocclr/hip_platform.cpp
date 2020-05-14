@@ -700,7 +700,7 @@ extern "C" hipError_t hipConfigureCall(
   size_t sharedMem,
   hipStream_t stream)
 {
-  HIP_INIT_API(NONE, gridDim, blockDim, sharedMem, stream);
+  HIP_INIT_API(hipConfigureCall, gridDim, blockDim, sharedMem, stream);
 
   PlatformState::instance().configureCall(gridDim, blockDim, sharedMem, stream);
 
@@ -713,7 +713,7 @@ extern "C" hipError_t __hipPushCallConfiguration(
   size_t sharedMem,
   hipStream_t stream)
 {
-  HIP_INIT_API(NONE, gridDim, blockDim, sharedMem, stream);
+  HIP_INIT_API(__hipPushCallConfiguration, gridDim, blockDim, sharedMem, stream);
 
   PlatformState::instance().configureCall(gridDim, blockDim, sharedMem, stream);
 
@@ -724,7 +724,7 @@ extern "C" hipError_t __hipPopCallConfiguration(dim3 *gridDim,
                                                 dim3 *blockDim,
                                                 size_t *sharedMem,
                                                 hipStream_t *stream) {
-  HIP_INIT_API(NONE, gridDim, blockDim, sharedMem, stream);
+  HIP_INIT_API(__hipPopCallConfiguration, gridDim, blockDim, sharedMem, stream);
 
   ihipExec_t exec;
   PlatformState::instance().popExec(exec);
@@ -741,7 +741,7 @@ extern "C" hipError_t hipSetupArgument(
   size_t size,
   size_t offset)
 {
-  HIP_INIT_API(NONE, arg, size, offset);
+  HIP_INIT_API(hipSetupArgument, arg, size, offset);
 
   PlatformState::instance().setupArgument(arg, size, offset);
 
@@ -750,7 +750,7 @@ extern "C" hipError_t hipSetupArgument(
 
 extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 {
-  HIP_INIT_API(NONE, hostFunction);
+  HIP_INIT_API(hipLaunchByPtr, hostFunction);
 
   ihipExec_t exec;
   PlatformState::instance().popExec(exec);
@@ -1295,7 +1295,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
                                       size_t sharedMemBytes,
                                       hipStream_t stream)
 {
-  HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes,
+  HIP_INIT_API(hipLaunchKernel, hostFunction, gridDim, blockDim, args, sharedMemBytes,
                stream);
 
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
