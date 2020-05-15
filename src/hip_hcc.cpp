@@ -1057,7 +1057,7 @@ void ihipCtx_t::locked_reset() {
     // Reset and release all memory stored in the tracker:
     // Reset will remove peer mapping so don't need to do this explicitly.
     // FIXME - This is clearly a non-const action!  Is this a context reset or a device reset - maybe should reference count?
-    ihipDevice_t *device = getWriteableDevice();
+    ihipDevice_t *device = getDevice();
     device->_state = 0;
     am_memtracker_reset(device->_acc);
 #endif

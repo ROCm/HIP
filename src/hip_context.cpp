@@ -119,7 +119,7 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
             tls->ctxStack.pop();
         }
         {
-            auto deviceHandle = ctx->getWriteableDevice();
+            auto deviceHandle = ctx->getDevice();
             deviceHandle->locked_removeContext(ctx);
             ctx->locked_reset();
         }
