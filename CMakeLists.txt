@@ -234,7 +234,7 @@ endif (NOT CPACK_SET_DESTDIR)
 # Generate profiling API macros/structures header
 if(HIP_PLATFORM STREQUAL "hcc")
 if(USE_PROF_API EQUAL 1)
-set(PROF_API_STR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_prof_str.h")
+set(PROF_API_STR "${PROJECT_BINARY_DIR}/include/hip/hcc_detail/hip_prof_str.h")
 set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hcc_detail/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
@@ -315,6 +315,7 @@ endif()
 message(STATUS "\nHSA runtime in: " ${HSA_PATH})
 # Build hip_hcc if platform is hcc
 if(HIP_PLATFORM STREQUAL "hcc")
+    include_directories(${PROJECT_BINARY_DIR}/include)
     include_directories(${PROJECT_SOURCE_DIR}/include)
     set(HIP_HCC_BUILD_FLAGS)
 
@@ -425,7 +426,8 @@ set(_versionInfoHeader
 #define HIP_VERSION       (HIP_VERSION_MAJOR * 100 + HIP_VERSION_MINOR)\n
 #endif\n
 ")
-file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
+file(WRITE "${PROJECT_BINARY_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
+include_directories(${PROJECT_BINARY_DIR}/include)
 
 # Build doxygen documentation
 find_program(DOXYGEN_EXE doxygen)
@@ -457,7 +459,11 @@ install(FILES ${PROJECT_BINARY_DIR}/.hipVersion DESTINATION bin)
 execute_process(COMMAND test ${CMAKE_INSTALL_PREFIX} -ef ${CMAKE_CURRENT_SOURCE_DIR}
     RESULT_VARIABLE INSTALL_SOURCE)
 if(NOT ${INSTALL_SOURCE} EQUAL 0)
-    install(DIRECTORY src DESTINATION .)
+    if(HIP_RUNTIME STREQUAL "HCC")
+        install(DIRECTORY src DESTINATION .)
+    elseif(HIP_RUNTIME STREQUAL "ROCclr")
+        install(DIRECTORY rocclr DESTINATION .)
+    endif()
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
     install(DIRECTORY include DESTINATION .)
     install(DIRECTORY cmake DESTINATION .)
@@ -468,7 +474,9 @@ endif()
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/hip/hcc_detail
         DESTINATION include/hip
         FILES_MATCHING PATTERN "*.h*")
-
+install(DIRECTORY ${PROJECT_BINARY_DIR}/include/hip
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h*")
 
 #############################
 # hip-config

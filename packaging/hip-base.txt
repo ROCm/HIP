@@ -3,6 +3,10 @@ project(hip_base)
 
 install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS)
 install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION .)
+install(FILES @PROJECT_BINARY_DIR@/include/hip/hcc_detail/hip_prof_str.h
+        DESTINATION include/hip/hcc_detail)
+install(FILES @PROJECT_BINARY_DIR@/include/hip/hip_version.h
+        DESTINATION include/hip)
 install(FILES @PROJECT_BINARY_DIR@/.hipVersion DESTINATION bin)
 install(PROGRAMS @PROJECT_BINARY_DIR@/lpl DESTINATION bin)
 install(PROGRAMS @PROJECT_BINARY_DIR@/ca DESTINATION bin)
