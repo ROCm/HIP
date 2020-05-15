@@ -506,6 +506,14 @@ hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t config);
  */
 hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig);
 
+/**
+ * @brief Gets the flags set for current device
+ *
+ * @param [out] flags
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ */
+hipError_t hipGetDeviceFlags(unsigned *flags);
 
 /**
  * @brief The bank width of shared memory on current device is set

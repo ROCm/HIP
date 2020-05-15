@@ -188,13 +188,13 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.arch.hasGlobalFloatAtomicExch    = 1;
   deviceProps.arch.hasSharedInt32Atomics       = 1;
   deviceProps.arch.hasSharedFloatAtomicExch    = 1;
-  deviceProps.arch.hasFloatAtomicAdd           = 0;
+  deviceProps.arch.hasFloatAtomicAdd           = 1;
   deviceProps.arch.hasGlobalInt64Atomics       = 1;
   deviceProps.arch.hasSharedInt64Atomics       = 1;
   deviceProps.arch.hasDoubles                  = 1;
-  deviceProps.arch.hasWarpVote                 = 0;
-  deviceProps.arch.hasWarpBallot               = 0;
-  deviceProps.arch.hasWarpShuffle              = 0;
+  deviceProps.arch.hasWarpVote                 = 1;
+  deviceProps.arch.hasWarpBallot               = 1;
+  deviceProps.arch.hasWarpShuffle              = 1;
   deviceProps.arch.hasFunnelShift              = 0;
   deviceProps.arch.hasThreadFenceSystem        = 1;
   deviceProps.arch.hasSyncThreadsExt           = 0;

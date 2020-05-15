@@ -122,10 +122,12 @@ hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
       num_code_objs++;
     }
   }
-  if (num_code_objs == devices.size())
+  if (num_code_objs == devices.size()) {
     return hipSuccess;
-  else
+  } else {
+    DevLogError("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
     return hipErrorNoBinaryForGpu;
+  }
 }
 
 extern "C" std::vector<std::pair<hipModule_t, bool>>* __hipRegisterFatBinary(const void* data)
@@ -189,6 +191,13 @@ void PlatformState::init()
   for (auto& it : vars_) {
     it.second.rvars.resize(g_devices.size());
   }
+  if (!HIP_ENABLE_LAZY_KERNEL_LOADING) {
+    for (size_t i = 0; i < g_devices.size(); ++i) {
+      for (auto& it: functions_) {
+        getFunc(it.first, i);
+      }
+    }
+  }
 }
 
 bool PlatformState::unregisterFunc(hipModule_t hmod) {
@@ -226,6 +235,11 @@ std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipMod
         texture<float, hipTextureType1D, hipReadModeElementType>* tex_hptr
           = reinterpret_cast<texture<float, hipTextureType1D, hipReadModeElementType> *>(dvar.shadowVptr);
         delete tex_hptr;
+      }
+      for (size_t dev = 0; dev < g_devices.size(); ++dev) {
+        if (dvar.rvars[dev].getdeviceptr()) {
+          amd::MemObjMap::RemoveMemObj(dvar.rvars[dev].getdeviceptr());
+        }
       }
       vars_.erase(it++);
     } else {
@@ -309,11 +323,20 @@ bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFunc
     return false;
   }
 
-  const device::Kernel::WorkGroupInfo* wginfo = it->second->workGroupInfo();
-  func_attr->localSizeBytes = wginfo->localMemSize_;
-  func_attr->sharedSizeBytes = wginfo->size_;
-  func_attr->maxThreadsPerBlock = wginfo->wavefrontSize_;
-  func_attr->numRegs = wginfo->usedVGPRs_;
+  const device::Kernel* kernel = it->second;
+  const device::Kernel::WorkGroupInfo* wginfo = kernel->workGroupInfo();
+  func_attr->sharedSizeBytes = static_cast<int>(wginfo->localMemSize_);
+  func_attr->binaryVersion = static_cast<int>(kernel->signature().version());
+  func_attr->cacheModeCA = 0;
+  func_attr->constSizeBytes = 0;
+  func_attr->localSizeBytes = wginfo->privateMemSize_;
+  func_attr->maxDynamicSharedSizeBytes = static_cast<int>(wginfo->availableLDSSize_
+                                                          - wginfo->localMemSize_);
+
+  func_attr->maxThreadsPerBlock = static_cast<int>(wginfo->size_);
+  func_attr->numRegs = static_cast<int>(wginfo->usedVGPRs_);
+  func_attr->preferredShmemCarveout = 0;
+  func_attr->ptxVersion = 30;
 
   return true;
 }

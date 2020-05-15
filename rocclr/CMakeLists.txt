@@ -27,30 +27,44 @@ endif()
 
 set(USE_PROF_API "1")
 
-if(NOT DEFINED LIBROCclr_STATIC_DIR)
-   find_path(LIBROCclr_STATIC_DIR
-        NAMES libamdrocclr_static.a
-        PATHS /opt/rocm/rocclr
-        PATH_SUFFIXES lib
-   )
+# FIXME: Make this required and remove the legacy handling below
+set(save_rocclr_dir ${ROCclr_DIR})
+set(save_rocclr_static_dir ${LIBROCclr_STATIC_DIR})
+
+find_package(ROCclr CONFIG
+  PATHS
+    /opt/rocm
+    /opt/rocm/rocclr)
+
+if (NOT ROCclr_FOUND)
+  if(NOT DEFINED LIBROCclr_STATIC_DIR)
+    find_path(LIBROCclr_STATIC_DIR
+      NAMES libamdrocclr_static.a
+      PATHS /opt/rocm/rocclr
+      PATH_SUFFIXES lib)
+  else()
+    set(LIBROCclr_STATIC_DIR ${save_rocclr_static_dir})
+  endif()
+
+  if(NOT DEFINED ROCclr_DIR)
+    find_path(ROCclr_DIR
+      NAMES top.hpp
+      PATH_SUFFIXES include
+      PATHS /opt/rocm/rocclr)
+  else()
+    set(ROCclr_DIR ${save_rocclr_dir})
+  endif()
+  message("Found Static rocclr lib:${LIBROCclr_STATIC_DIR} and rocclr includes: ${ROCclr_DIR}")
+  include(${LIBROCclr_STATIC_DIR}/amdrocclr_staticTargets.cmake)
 endif()
 
-if(NOT DEFINED ROCclr_DIR)
-   find_path(ROCclr_DIR
-        NAMES top.hpp
-        PATH_SUFFIXES include
-        PATHS /opt/rocm/rocclr
-   )
-endif()
-message("Found Static rocclr lib:${LIBROCclr_STATIC_DIR} and rocclr includes: ${ROCclr_DIR}")
 set(PROF_API_HEADER_PATH ${ROCclr_DIR}/platform)
 #############################
 # Profiling API support
 #############################
 # Generate profiling API macros/structures header
-# FIXME: This should not be writing to the source directory
 set(PROF_API_STR "${PROJECT_BINARY_DIR}/include/hip/hcc_detail/hip_prof_str.h")
-set(PROF_API_HDR "${CMAKE_CURRENT_SOURCE_DIR}/../include/hip/hcc_detail/hip_runtime_api.h")
+set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/include/hip/hcc_detail/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}")
 set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
 set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
@@ -66,25 +80,6 @@ add_custom_target(gen-prof-api-str-header ALL
   SOURCES ${PROF_API_HDR})
 
 # Enable profiling API
-if(USE_PROF_API EQUAL 1)
-    find_path(PROF_API_HEADER_DIR prof_protocol.h
-        HINTS
-            ${PROF_API_HEADER_PATH}
-        PATHS
-            /opt/rocm/roctracer
-        PATH_SUFFIXES
-            include/ext
-    )
-    if(NOT PROF_API_HEADER_DIR)
-        MESSAGE(WARNING "Profiling API header not found. Disabling roctracer integration. Use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
-    else()
-        add_definitions(-DUSE_PROF_API=1)
-        include_directories(${PROF_API_HEADER_DIR})
-        MESSAGE(STATUS "Profiling API: ${PROF_API_HEADER_DIR}")
-    endif()
-endif()
-
-
 if(NOT DEFINED ROCclr_DIR OR NOT DEFINED LIBOCL_STATIC_DIR OR NOT DEFINED LIBROCclr_STATIC_DIR )
 	#	message(FATAL_ERROR "define ROCclr_DIR, LIBOCL_STATIC_DIR\n")
 
@@ -92,35 +87,16 @@ endif()
 list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" )
 set(CMAKE_MODULE_PATH${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
-include_directories(${ROCR_INCLUDES})
-if (DEFINED LLVM_INCLUDES AND NOT ${LLVM_INCLUDES} STREQUAL "")
-   message(STATUS "LLVM includes found ${LLVM_INCLUDES}")
-   include_directories(${LLVM_INCLUDES})
-endif() # if (DEFINED LLVM_INCLUDES AND NOT ${LLVM_INCLUDES} STREQUAL "")
-
-include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(${PROJECT_BINARY_DIR}/include)
-include_directories(${CMAKE_SOURCE_DIR}/elfio)
-include_directories(${CMAKE_SOURCE_DIR}/amdocl)
-include_directories(${CMAKE_SOURCE_DIR}/include/hip/hcc_detail/elfio)
-include_directories(${ROCclr_DIR})
-include_directories(${ROCclr_DIR}/include)
-include_directories(${ROCclr_DIR}/compiler/lib)
-include_directories(${ROCclr_DIR}/compiler/lib/include)
-include_directories(${ROCclr_DIR}/elf/utils/common)
-include_directories(${ROCclr_DIR}/elf/utils/libelf)
 add_definitions(-DUSE_COMGR_LIBRARY -DCOMGR_DYN_DLL)
-    find_package(amd_comgr REQUIRED CONFIG
-            PATHS
-                /opt/rocm/
-            PATH_SUFFIXES
-                cmake/amd_comgr
-                lib/cmake/amd_comgr
-    )
-    MESSAGE(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 
-include_directories("$<TARGET_PROPERTY:amd_comgr,INTERFACE_INCLUDE_DIRECTORIES>")
+find_package(amd_comgr REQUIRED CONFIG
+  PATHS
+    /opt/rocm/
+  PATH_SUFFIXES
+    cmake/amd_comgr
+    lib/cmake/amd_comgr)
+
+message(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 
 add_definitions(-DBSD_LIBELF)
 
@@ -147,6 +123,55 @@ add_library(hip64 OBJECT
  )
 set_target_properties(hip64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+target_include_directories(hip64
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_BINARY_DIR}/include
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/elfio
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/amdocl
+    ${PROJECT_SOURCE_DIR}/include/hip/hcc_detail/elfio
+    ${ROCclr_DIR}
+    ${ROCclr_DIR}/include
+    ${ROCclr_DIR}/compiler/lib
+    ${ROCclr_DIR}/compiler/lib/include
+    ${ROCclr_DIR}/elf/utils/common
+    ${ROCclr_DIR}/elf/utils/libelf
+    ${ROCR_INCLUDES}
+    $<TARGET_PROPERTY:amd_comgr,INTERFACE_INCLUDE_DIRECTORIES>)
+target_compile_definitions(hip64
+  PRIVATE
+   $<TARGET_PROPERTY:amd_comgr,INTERFACE_COMPILE_DEFINITIONS>)
+
+if(ROCclr_FOUND)
+  target_include_directories(hip64
+    PRIVATE
+      $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_INCLUDE_DIRECTORIES>)
+  target_compile_definitions(hip64
+    PRIVATE
+      $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_COMPILE_DEFINITIONS>)
+endif()
+
+ # Enable profiling API
+if(USE_PROF_API EQUAL 1)
+  find_path(PROF_API_HEADER_DIR prof_protocol.h
+    HINTS
+      ${PROF_API_HEADER_PATH}
+    PATHS
+      /opt/rocm/roctracer
+    PATH_SUFFIXES
+      include/ext)
+
+  if(NOT PROF_API_HEADER_DIR)
+    message(WARNING "Profiling API header not found. Disabling roctracer integration. Use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
+    else()
+      target_compile_definitions(hip64 PUBLIC USE_PROF_API=1)
+      target_include_directories(hip64 PUBLIC ${PROF_API_HEADER_DIR})
+      message(STATUS "Profiling API: ${PROF_API_HEADER_DIR}")
+    endif()
+endif()
+
 set_target_properties(
     hip64 PROPERTIES
         CXX_STANDARD 14
@@ -157,7 +182,6 @@ add_dependencies(hip64 gen-prof-api-str-header)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-include(${LIBROCclr_STATIC_DIR}/amdrocclr_staticTargets.cmake)
 
 add_library(amdhip64 SHARED
     $<TARGET_OBJECTS:hip64>

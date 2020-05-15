@@ -471,7 +471,12 @@ hipError_t hipGetDeviceCount ( int* count ) {
 }
 
 hipError_t hipGetDeviceFlags ( unsigned int* flags ) {
-  HIP_RETURN(hipErrorNotSupported);
+  HIP_INIT_API(hipGetDeviceFlags, flags);
+  if (flags == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  *flags = hip::getCurrentDevice()->getFlags();
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipIpcGetEventHandle ( hipIpcEventHandle_t* handle, hipEvent_t event ) {
@@ -531,7 +536,8 @@ hipError_t hipSetDeviceFlags ( unsigned int  flags ) {
     default:
       break;
   }
- 
+  hip::getCurrentDevice()->setFlags(flags & hipDeviceScheduleMask);
+
   HIP_RETURN(hipSuccess);
 }
 
