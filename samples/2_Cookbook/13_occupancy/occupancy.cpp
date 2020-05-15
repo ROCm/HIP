@@ -44,8 +44,6 @@ void multiplyCPU(float* C, float* A, float* B, int N){
     }
 }
 
-#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
-
 void launchKernel(float* C, float* A, float* B, bool manual){
      
      hipDeviceProp_t devProp;
@@ -95,10 +93,8 @@ void launchKernel(float* C, float* A, float* B, bool manual){
 	std::cout << "Theoretical Occupancy is " << (double)numBlock* blockSize/devProp.maxThreadsPerMultiProcessor * 100 << "%" << std::endl;
      }
 }
-#endif
 
 int main() {
-#if defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
      float *A, *B, *C0, *C1, *cpuC;
      float *Ad, *Bd, *C0d, *C1d;
      int errors=0;
@@ -177,8 +173,5 @@ int main() {
      free(C0);
      free(C1);
      free(cpuC);
-#else
-     std::cout <<"hipOccupancyMaxPotentialBlockSize template not support for Clang compiler"<<std::endl;
-#endif
      return 0;
 }
