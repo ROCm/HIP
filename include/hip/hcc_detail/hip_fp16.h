@@ -529,14 +529,14 @@ THE SOFTWARE.
             }
 
             inline
-            __device__
+            __host__ __device__
             __half __low2half(__half2 x)
             {
                 return __half{__half_raw{static_cast<__half2_raw>(x).data.x}};
             }
 
             inline
-            __device__
+            __host__ __device__
             __half __high2half(__half2 x)
             {
                 return __half{__half_raw{static_cast<__half2_raw>(x).data.y}};
