@@ -592,6 +592,13 @@ void PlatformState::popExec(ihipExec_t& exec) {
   execStack_.pop();
 }
 
+namespace {
+const int HIP_ENABLE_DEFERRED_LOADING{[] () {
+  char *var = getenv("HIP_ENABLE_DEFERRED_LOADING");
+  return var ? atoi(var) : 1;
+}()};
+} /* namespace */
+
 extern "C" void __hipRegisterFunction(
   std::vector<std::pair<hipModule_t,bool> >* modules,
   const void*  hostFunction,
@@ -606,7 +613,7 @@ extern "C" void __hipRegisterFunction(
 {
   PlatformState::DeviceFunction func{ std::string{deviceName}, modules, std::vector<hipFunction_t>{g_devices.size()}};
   PlatformState::instance().registerFunction(hostFunction, func);
-  if (!HIP_ENABLE_LAZY_KERNEL_LOADING) {
+  if (!HIP_ENABLE_DEFERRED_LOADING) {
     HIP_INIT();
     for (size_t i = 0; i < g_devices.size(); ++i) {
       PlatformState::instance().getFunc(hostFunction, i);
