@@ -421,7 +421,7 @@ hipError_t memcpySync(void* dst, const void* src, size_t sizeBytes,
 int sharePtr(void* ptr, ihipCtx_t* ctx, bool shareWithAll, unsigned hipFlags) {
     int ret = 0;
 
-    auto device = ctx->getWriteableDevice();
+    auto device = ctx->getDevice();
 
     if (shareWithAll) {
         // shareWithAll memory is not mapped to any device
@@ -471,7 +471,7 @@ void* allocAndSharePtr(const char* msg, size_t sizeBytes, ihipCtx_t* ctx, bool s
                        unsigned amFlags, unsigned hipFlags, size_t alignment) {
     void* ptr = nullptr;
 
-    auto device = ctx->getWriteableDevice();
+    auto device = ctx->getDevice();
 
 #if (__hcc_workweek__ >= 17332)
     if (alignment != 0) {
@@ -534,7 +534,7 @@ hipError_t ihipHostMalloc(TlsData *tls, void** ptr, size_t sizeBytes, unsigned i
             // can't specify unsupported flags, can't specify both Coherent + NonCoherent
             hip_status = hipErrorInvalidValue;
         } else {
-            auto device = ctx->getWriteableDevice();
+            auto device = ctx->getDevice();
 #if (__hcc_workweek__ >= 19115)
             //Avoid mapping host pinned memory to all devices by HCC
             unsigned amFlags = amHostUnmapped;
@@ -742,7 +742,7 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
             hip_status = hipErrorInvalidValue;
             return ihipLogStatus(hip_status);
         }
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
         *ptr = hip_internal::allocAndSharePtr("device_mem", sizeBytes, ctx, false /*shareWithAll*/,
                                               amFlags /*amFlags*/, 0 /*hipFlags*/, 0);
 
@@ -1183,7 +1183,7 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
         if (ctx) {
             if ((flags == hipHostRegisterDefault) || (flags & hipHostRegisterPortable) ||
                 (flags & hipHostRegisterMapped) || (flags == hipExtHostRegisterCoarseGrained)) {
-                auto device = ctx->getWriteableDevice();
+                auto device = ctx->getDevice();
                 std::vector<hc::accelerator> vecAcc;
                 for (int i = 0; i < g_deviceCnt; i++) {
                     vecAcc.push_back(ihipGetDevice(i)->_acc);
@@ -1236,7 +1236,7 @@ hipError_t hipHostUnregister(void* hostPtr) {
     if (hostPtr == NULL) {
         hip_status = hipErrorInvalidValue;
     } else {
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
         am_status_t am_status = hc::am_memory_host_unlock(device->_acc, hostPtr);
         tprintf(DB_MEM, " %s unregistered ptr=%p\n", __func__, hostPtr);
         if (am_status != AM_SUCCESS) {
@@ -2299,7 +2299,7 @@ hipError_t hipMemGetInfo(size_t* free, size_t* total) {
 
     ihipCtx_t* ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
         if (total) {
             *total = device->_props.totalGlobalMem;
         }
@@ -2508,7 +2508,7 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
     auto ctx = ihipGetTlsDefaultCtx();
     {
         LockedAccessor_CtxCrit_t crit(ctx->criticalData());
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
         // the peerCnt always stores self so make sure the trace actually
         if(hsa_amd_ipc_memory_attach(
             (hsa_amd_ipc_memory_t*)&(iHandle->ipc_handle), iHandle->psize, crit->peerCnt(),

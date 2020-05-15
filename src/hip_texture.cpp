@@ -216,7 +216,7 @@ hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResou
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
 
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
@@ -337,7 +337,7 @@ hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject) {
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
 
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
@@ -414,7 +414,7 @@ hipError_t ihipBindTextureImpl(TlsData *tls_, int dim, enum hipTextureReadMode r
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
 
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
@@ -495,7 +495,7 @@ hipError_t ihipBindTexture2DImpl(TlsData *tls, int dim, enum hipTextureReadMode 
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
 
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
@@ -578,7 +578,7 @@ hipError_t ihipBindTextureToArrayImpl(TlsData *tls_, int dim, enum hipTextureRea
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
 
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
 
@@ -682,7 +682,7 @@ hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject) {
     auto ctx = ihipGetTlsDefaultCtx();
     if (ctx) {
         hc::accelerator acc = ctx->getDevice()->_acc;
-        auto device = ctx->getWriteableDevice();
+        auto device = ctx->getDevice();
 
         hsa_agent_t* agent = static_cast<hsa_agent_t*>(acc.get_hsa_agent());
         hipTexture* pTexture = textureHash[textureObject];

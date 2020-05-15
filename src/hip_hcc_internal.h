@@ -959,10 +959,9 @@ class ihipCtx_t {
     ihipCtxCritical_t& criticalData() { return _criticalData; };
 
     const ihipDevice_t* getDevice() const { return _device; };
-    int getDeviceNum() const { return _device->_deviceId; };
+    ihipDevice_t* getDevice() { return _device; };
 
-    // TODO - review uses of getWriteableDevice(), can these be converted to getDevice()
-    ihipDevice_t* getWriteableDevice() const { return _device; };
+    int getDeviceNum() const { return _device->_deviceId; };
 
     std::string toString() const;
 

@@ -162,7 +162,7 @@ hipError_t hipDeviceReset(void) {
     }
 #endif
     if (ctx) {
-        ihipDevice_t* deviceHandle = ctx->getWriteableDevice();
+        ihipDevice_t* deviceHandle = ctx->getDevice();
         deviceHandle->locked_reset();
     }
 
@@ -175,7 +175,7 @@ hipError_t ihipDeviceSetState(TlsData *tls) {
     auto* ctx = ihipGetTlsDefaultCtx();
 
     if (ctx) {
-        ihipDevice_t* deviceHandle = ctx->getWriteableDevice();
+        ihipDevice_t* deviceHandle = ctx->getDevice();
         if (deviceHandle->_state == 0) {
             deviceHandle->_state = 1;
         }

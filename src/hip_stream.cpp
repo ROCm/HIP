@@ -59,7 +59,7 @@ hipError_t ihipStreamCreate(TlsData *tls, hipStream_t* stream, unsigned int flag
         } else if( NULL == stream ){
             e = hipErrorInvalidValue;
         } else {
-            hc::accelerator acc = ctx->getWriteableDevice()->_acc;
+            hc::accelerator acc = ctx->getDevice()->_acc;
 
             // TODO - se try-catch loop to detect memory exception?
             //
