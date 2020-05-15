@@ -26,7 +26,7 @@ use Cwd 'abs_path';
 #                  script's abs_path). Used on AMD platforms only.
 # HSA_PATH       : Path to HSA dir (defaults to ../../hsa relative to abs_path
 #                  of this script). Used on AMD platforms only.
-# HIP_ROCclr_HOME : Path to HIP/ROCclr directory. Used on AMD platforms only.
+# HIP_ROCCLR_HOME : Path to HIP/ROCclr directory. Used on AMD platforms only.
 # HIP_CLANG_PATH : Path to HIP-Clang (default to ../../llvm/bin relative to this
 #                  script's abs_path). Used on AMD platforms only.
 
@@ -82,15 +82,15 @@ if (-e "$HIP_PATH/../.info/version") {
 } else {
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 }
-$HIP_ROCclr_HOME=$ENV{'HIP_ROCclr_HOME'};
+$HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
 $HIP_LIB_PATH=$ENV{'HIP_LIB_PATH'};
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
 $DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
 $HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibility mode
 $HIP_COMPILE_CXX_AS_HIP=$ENV{'HIP_COMPILE_CXX_AS_HIP'} // "1";
 
-if (defined $HIP_ROCclr_HOME) {
-    $HIP_INFO_PATH= "$HIP_ROCclr_HOME/lib/.hipInfo";
+if (defined $HIP_ROCCLR_HOME) {
+    $HIP_INFO_PATH= "$HIP_ROCCLR_HOME/lib/.hipInfo";
 } else {
     $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo"; # use actual file
 }
@@ -130,28 +130,28 @@ $HIP_COMPILER= `$HIP_PATH/bin/hipconfig --compiler`;
 #HIP_RUNTIME controls whether to use HCC, ROCclr, or NVCC as the runtime:
 $HIP_RUNTIME= `$HIP_PATH/bin/hipconfig --runtime`;
 
-# If using ROCclr runtime, need to find HIP_ROCclr_HOME
-if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "ROCclr" and !defined $HIP_ROCclr_HOME) {
+# If using ROCclr runtime, need to find HIP_ROCCLR_HOME
+if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "ROCclr" and !defined $HIP_ROCCLR_HOME) {
     my $hipcc_dir = dirname($0);
     if (-e "$hipcc_dir/../lib/bitcode") {
-        $HIP_ROCclr_HOME = abs_path($hipcc_dir . "/..");
+        $HIP_ROCCLR_HOME = abs_path($hipcc_dir . "/..");
     } else {
-        $HIP_ROCclr_HOME = $HIP_PATH; # use HIP_PATH
+        $HIP_ROCCLR_HOME = $HIP_PATH; # use HIP_PATH
     }
     $HIPCXXFLAGS .= "-D__HIP_ROCclr__";
     $HIPCFLAGS .= "-D__HIP_ROCclr__";
 }
 
-if (defined $HIP_ROCclr_HOME) {
-    if (!defined $HIP_CLANG_PATH and (-e "$HIP_ROCclr_HOME/bin/clang" or -e "$HIP_ROCclr_HOME/bin/clang.exe")) {
-        $HIP_CLANG_PATH = "$HIP_ROCclr_HOME/bin";
+if (defined $HIP_ROCCLR_HOME) {
+    if (!defined $HIP_CLANG_PATH and (-e "$HIP_ROCCLR_HOME/bin/clang" or -e "$HIP_ROCCLR_HOME/bin/clang.exe")) {
+        $HIP_CLANG_PATH = "$HIP_ROCCLR_HOME/bin";
     }
-    if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCclr_HOME/lib/bitcode") {
-        $DEVICE_LIB_PATH = "$HIP_ROCclr_HOME/lib/bitcode";
+    if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
+        $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
     }
-    $HIP_INCLUDE_PATH = "$HIP_ROCclr_HOME/include";
+    $HIP_INCLUDE_PATH = "$HIP_ROCCLR_HOME/include";
     if (!defined $HIP_LIB_PATH) {
-        $HIP_LIB_PATH = "$HIP_ROCclr_HOME/lib";
+        $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/lib";
     }
 }
 
@@ -199,8 +199,8 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
         $HIP_LIB_PATH = "$HIP_PATH/lib";
     }
     if ($verbose & 0x2) {
-        if (defined $HIP_ROCclr_HOME) {
-            print ("HIP_ROCclr_HOME=$HIP_ROCclr_HOME\n");
+        if (defined $HIP_ROCCLR_HOME) {
+            print ("HIP_ROCCLR_HOME=$HIP_ROCCLR_HOME\n");
         }
         print ("HIP_CLANG_PATH=$HIP_CLANG_PATH\n");
         print ("HIP_CLANG_INCLUDE_PATH=$HIP_CLANG_INCLUDE_PATH\n");
