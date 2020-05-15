@@ -393,6 +393,7 @@ if($HIP_PLATFORM eq "nvcc"){
     }
 }
 
+# TODO: convert toolArgs to an array rather than a string
 my $toolArgs = "";  # arguments to pass to the hcc or nvcc tool
 my $optArg = ""; # -O args
 my $targetOpt = '--amdgpu-target=';
@@ -402,7 +403,11 @@ my $prevArg = ""; # previous argument
 
 foreach $arg (@ARGV)
 {
+    # Save $arg, it can get changed in the loop.
     $trimarg = $arg;
+    # TODO: figure out why this space removal is wanted.
+    # TODO: If someone has gone to the effort of quoting the spaces to the shell
+    # TODO: why are we removing it here?
     $trimarg =~ s/^\s+|\s+$//g;  # Remive whitespace
     my $swallowArg = 0;
     if ($arg eq '-c' or $arg eq '--genco' or $arg eq '-E') {
@@ -411,6 +416,7 @@ foreach $arg (@ARGV)
     }
 
     if ($skipOutputFile) {
+	# TODO: handle filename with shell metacharacters
         $toolArgs .= " $arg";
         $prevArg = $arg;
         $skipOutputFile = 0;
@@ -659,6 +665,12 @@ foreach $arg (@ARGV)
         push (@inputs, $arg);
         #print "I: <$arg>\n";
     }
+    # Produce a version of $arg where characters significant to the shell are
+    # quoted. One could quote everything of course but don't bother for
+    # common characters such as alphanumerics.
+    # Do the quoting here because sometimes the $arg is changed in the loop
+    # Important to have all of '-Xlinker' in the set of unquoted characters.
+    $arg =~ s/[^-a-zA-Z0-9=+,.]/\\$&/g;
     $toolArgs .= " $arg" unless $swallowArg;
     $prevArg = $arg;
 }
@@ -805,6 +817,7 @@ if ($HIPCC_LINK_FLAGS_APPEND) {
     $HIPLDFLAGS .= " $HIPCC_LINK_FLAGS_APPEND";
 }
 
+# TODO: convert CMD to an array rather than a string
 my $CMD="$HIPCC";
 
 if ($needCFLAGS) {
