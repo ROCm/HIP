@@ -252,3 +252,4 @@ hipTexObjectDestroy
 hipTexObjectGetResourceDesc
 hipTexObjectGetResourceViewDesc
 hipTexObjectGetTextureDesc
+hipExtStreamCreateWithCUMask
