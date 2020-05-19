@@ -75,10 +75,12 @@ add_definitions(-DBSD_LIBELF)
 
 add_library(hip64 OBJECT
  hip_context.cpp
+ hip_code_object.cpp
  hip_device.cpp
  hip_device_runtime.cpp
  hip_error.cpp
  hip_event.cpp
+ hip_global.cpp
  hip_memory.cpp
  hip_module.cpp
  hip_peer.cpp

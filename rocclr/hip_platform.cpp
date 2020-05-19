@@ -20,6 +20,7 @@
 
 #include <hip/hip_runtime.h>
 #include <hip/hcc_detail/texture_types.h>
+#include "hip_platform.hpp"
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
 #include "platform/runtime.hpp"
@@ -37,23 +38,6 @@ struct __CudaFatBinaryWrapper {
   unsigned int version;
   void*        binary;
   void*        dummy1;
-};
-
-#define CLANG_OFFLOAD_BUNDLER_MAGIC_STR "__CLANG_OFFLOAD_BUNDLE__"
-#define HIP_AMDGCN_AMDHSA_TRIPLE "hip-amdgcn-amd-amdhsa"
-#define HCC_AMDGCN_AMDHSA_TRIPLE "hcc-amdgcn-amd-amdhsa-"
-
-struct __ClangOffloadBundleDesc {
-  uint64_t offset;
-  uint64_t size;
-  uint64_t tripleSize;
-  const char triple[1];
-};
-
-struct __ClangOffloadBundleHeader {
-  const char magic[sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1];
-  uint64_t numBundles;
-  __ClangOffloadBundleDesc desc[1];
 };
 
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
@@ -85,61 +69,7 @@ static bool isCompatibleCodeObject(const std::string& codeobj_target_id,
   return codeobj_target_id == short_name;
 }
 
-// Extracts code objects from fat binary in data for device names given in devices.
-// Returns true if code objects are extracted successfully.
-hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
-                                         const std::vector<const char*>& devices,
-                                         std::vector<std::pair<const void*, size_t>>& code_objs)
-{
-  std::string magic((const char*)data, sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
-  if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR)) {
-    return hipErrorInvalidKernelFile;
-  }
-
-  code_objs.resize(devices.size());
-  const auto obheader = reinterpret_cast<const __ClangOffloadBundleHeader*>(data);
-  const auto* desc = &obheader->desc[0];
-  unsigned num_code_objs = 0;
-  for (uint64_t i = 0; i < obheader->numBundles; ++i,
-       desc = reinterpret_cast<const __ClangOffloadBundleDesc*>(
-           reinterpret_cast<uintptr_t>(&desc->triple[0]) + desc->tripleSize)) {
-
-    std::size_t offset = 0;
-    if (!std::strncmp(desc->triple, HIP_AMDGCN_AMDHSA_TRIPLE,
-        sizeof(HIP_AMDGCN_AMDHSA_TRIPLE) - 1)) {
-      offset = sizeof(HIP_AMDGCN_AMDHSA_TRIPLE); //For code objects created by CLang
-    } else if (!std::strncmp(desc->triple, HCC_AMDGCN_AMDHSA_TRIPLE,
-               sizeof(HCC_AMDGCN_AMDHSA_TRIPLE) - 1)) {
-      offset = sizeof(HCC_AMDGCN_AMDHSA_TRIPLE); //For code objects created by Hcc
-    } else {
-      continue;
-    }
-    std::string target(desc->triple + offset, desc->tripleSize - offset);
-
-    const void *image = reinterpret_cast<const void*>(
-        reinterpret_cast<uintptr_t>(obheader) + desc->offset);
-    size_t size = desc->size;
-
-    for (size_t dev = 0; dev < devices.size(); ++dev) {
-      const char* name = devices[dev];
-
-      if (!isCompatibleCodeObject(target, name)) {
-          continue;
-      }
-      code_objs[dev] = std::make_pair(image, size);
-      num_code_objs++;
-    }
-  }
-  if (num_code_objs == devices.size()) {
-    return hipSuccess;
-  } else {
-    DevLogError("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
-    guarantee(false); //Aborting the program
-    return hipErrorNoBinaryForGpu;
-  }
-}
-
-extern "C" std::vector<std::pair<hipModule_t, bool>>* __hipRegisterFatBinary(const void* data)
+extern "C" hip::FatBinaryInfoType* __hipRegisterFatBinary(const void* data)
 {
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
   if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
@@ -149,169 +79,6 @@ extern "C" std::vector<std::pair<hipModule_t, bool>>* __hipRegisterFatBinary(con
   }
 
   return PlatformState::instance().addFatBinary(fbwrapper->binary);
-}
-
-void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipModule_t, bool>>& programs)
-{
-  if (programs.size() > 0) {
-    return;
-  }
-
-  std::vector<std::pair<const void*, size_t>> code_objs;
-  std::vector<const char*> devices;
-  for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-    devices.push_back(g_devices[dev]->devices()[0]->info().name_);
-  }
-
-  if (hipSuccess != __hipExtractCodeObjectFromFatBinary((char*)data, devices, code_objs)) {
-    return;
-  }
-
-  programs.resize(g_devices.size());
-
-  for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-    amd::Context* ctx = g_devices[dev]->asContext();
-    amd::Program* program = new amd::Program(*ctx);
-    if (program == nullptr) {
-      return;
-    }
-    programs.at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)) , false);
-    code_obj_.insert(std::make_pair(program, std::make_pair(code_objs[dev].first, code_objs[dev].second)));
-  }
-}
-
-void PlatformState::init()
-{
-  amd::ScopedLock lock(lock_);
-
-  if(initialized_ || g_devices.empty()) {
-    return;
-  }
-  initialized_ = true;
-
-  for (auto& it : modules_) {
-    digestFatBinary(it.first, it.second);
-  }
-  for (auto& it : functions_) {
-    it.second.functions.resize(g_devices.size());
-  }
-  for (auto& it : vars_) {
-    it.second.rvars.resize(g_devices.size());
-  }
-}
-
-bool PlatformState::unregisterFunc(hipModule_t hmod) {
-  amd::ScopedLock lock(lock_);
-  auto mod_it = module_map_.find(hmod);
-  if (mod_it != module_map_.cend()) {
-    PlatformState::Module* mod_ptr = mod_it->second;
-    if(mod_ptr != nullptr) {
-      for (auto func_it = mod_ptr->functions_.begin(); func_it != mod_ptr->functions_.end(); ++func_it) {
-        PlatformState::DeviceFunction &devFunc = func_it->second;
-        for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-          if (devFunc.functions[dev] != 0) {
-            hip::Function* f = reinterpret_cast<hip::Function*>(devFunc.functions[dev]);
-            delete f;
-          }
-        }
-        delete devFunc.modules;
-      }
-      delete mod_ptr;
-    }
-    module_map_.erase(mod_it);
-  }
-  return true;
-}
-
-std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipModule_t hmod) {
-  amd::ScopedLock lock(lock_);
-  std::vector< std::pair<hipModule_t, bool> >* rmodules = nullptr;
-  auto it = vars_.begin();
-  while (it != vars_.end()) {
-    DeviceVar& dvar = it->second;
-    if ((*dvar.modules)[0].first == hmod) {
-      rmodules = dvar.modules;
-      if (dvar.shadowAllocated) {
-        texture<float, hipTextureType1D, hipReadModeElementType>* tex_hptr
-          = reinterpret_cast<texture<float, hipTextureType1D, hipReadModeElementType> *>(dvar.shadowVptr);
-        delete tex_hptr;
-      }
-      for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-        if (dvar.rvars[dev].getdeviceptr()) {
-          amd::MemObjMap::RemoveMemObj(dvar.rvars[dev].getdeviceptr());
-          dvar.rvars[dev].amd_mem_obj()->release();
-        }
-      }
-      vars_.erase(it++);
-    } else {
-      ++it;
-    }
-  }
-  return rmodules;
-}
-
-PlatformState::DeviceVar* PlatformState::findVar(std::string hostVar, int deviceId, hipModule_t hmod) {
-  DeviceVar* dvar = nullptr;
-  if (hmod != nullptr) {
-    // If module is provided, then get the var only from that module
-    auto var_range = vars_.equal_range(hostVar);
-    for (auto it = var_range.first; it != var_range.second; ++it) {
-      if ((*it->second.modules)[deviceId].first == hmod) {
-        dvar = &(it->second);
-        break;
-      }
-    }
-  } else {
-    // If var count is < 2, return the var
-    if (vars_.count(hostVar) < 2) {
-      auto it = vars_.find(hostVar);
-      dvar = ((it == vars_.end()) ? nullptr : &(it->second));
-    } else {
-      // If var count is > 2, return the original var,
-      // if original var count != 1, return vars_.end()/Invalid
-      size_t orig_global_count = 0;
-      auto var_range = vars_.equal_range(hostVar);
-      for (auto it = var_range.first; it != var_range.second; ++it) {
-        // when dyn_undef is set, it is a shadow var
-        if (it->second.dyn_undef == false) {
-          ++orig_global_count;
-          dvar = &(it->second);
-        }
-      }
-      dvar = ((orig_global_count == 1) ? dvar : nullptr);
-    }
-  }
-
-  return dvar;
-}
-
-bool PlatformState::findSymbol(const void *hostVar,
-                               hipModule_t &hmod, std::string &symbolName) {
-  auto it = symbols_.find(hostVar);
-  if (it != symbols_.end()) {
-    hmod = it->second.first;
-    symbolName = it->second.second;
-    return true;
-  }
-  DevLogPrintfError("Could not find the Symbol: %s \n", symbolName.c_str());
-  return false;
-}
-
-void PlatformState::registerVarSym(const void* hostVar, hipModule_t hmod, const char* symbolName) {
-  amd::ScopedLock lock(lock_);
-  symbols_.insert(std::make_pair(hostVar, std::make_pair(hmod, std::string(symbolName))));
-}
-
-void PlatformState::registerVar(const char* hostvar,
-                                const DeviceVar& rvar) {
-  amd::ScopedLock lock(lock_);
-  vars_.insert(std::make_pair(std::string(hostvar), rvar));
-}
-
-void PlatformState::registerFunction(const void* hostFunction,
-                                     const DeviceFunction& func) {
-  amd::ScopedLock lock(lock_);
-  functions_.insert(std::make_pair(hostFunction, func));
 }
 
 bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFuncAttributes* func_attr) {
@@ -344,290 +111,23 @@ bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFunc
 
 bool PlatformState::getShadowVarInfo(std::string var_name, hipModule_t hmod,
                                      void** var_addr, size_t* var_size) {
-  DeviceVar* dvar = findVar(var_name, ihipGetDevice(), hmod);
-  if (dvar != nullptr) {
-    *var_addr = dvar->shadowVptr;
-    *var_size = dvar->size;
+
+  amd::ScopedLock lock(lock_);
+  if (hipSuccess == getDynGlobalVar(var_name.c_str(), ihipGetDevice(), hmod, var_addr, var_size)) {
     return true;
-  } else {
-    DevLogPrintfError("Cannot find Var name: %s in module: 0x%x \n", var_name.c_str(), hmod);
-    return false;
   }
+
+  if (hipSuccess == getStatGlobalVarByName(var_name, ihipGetDevice(), hmod, var_addr, var_size)) {
+    return true;
+  }
+
+  return false;
 }
 
 bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
                              size_t* var_size) {
   return PlatformState::instance().getShadowVarInfo(var_name, reinterpret_cast<hipModule_t>(program),
                                                     var_addr, var_size);
-}
-
-bool PlatformState::registerModFuncs(std::vector<std::string>& func_names, hipModule_t* module) {
-  amd::ScopedLock lock(lock_);
-  PlatformState::Module* mod_ptr = new PlatformState::Module(*module);
-
-  for (auto it = func_names.begin(); it != func_names.end(); ++it) {
-    auto modules = new std::vector<std::pair<hipModule_t, bool> >(g_devices.size());
-    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-      modules->at(dev) = std::make_pair(*module, true);
-    }
-
-    PlatformState::DeviceFunction dfunc{*it, modules,
-      std::vector<hipFunction_t>(g_devices.size(), 0)};
-    mod_ptr->functions_.insert(std::make_pair(*it, dfunc));
-  }
-
-  module_map_.insert(std::make_pair(*module, mod_ptr));
-  return true;
-}
-
-bool PlatformState::findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
-  amd::ScopedLock lock(lock_);
-
-  auto mod_it = module_map_.find(hmod);
-  if (mod_it != module_map_.cend()) {
-    assert(mod_it->second != nullptr);
-    auto func_it = mod_it->second->functions_.find(name);
-    if (func_it != mod_it->second->functions_.cend()) {
-      PlatformState::DeviceFunction& devFunc = func_it->second;
-      if (devFunc.functions[ihipGetDevice()] == 0) {
-        if(!createFunc(&devFunc.functions[ihipGetDevice()], hmod, name)) {
-          DevLogPrintfError("Could not create a function: %s at module: 0x%x \n", name, hmod);
-          return false;
-        }
-      }
-      *hfunc = devFunc.functions[ihipGetDevice()];
-      return true;
-    }
-  }
-  DevLogPrintfError("Cannot find module: 0x%x in PlatformState Module Map \n", hmod);
-  return false;
-}
-
-bool PlatformState::createFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name) {
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
-
-  const amd::Symbol* symbol = program->findSymbol(name);
-  if (!symbol) {
-    DevLogPrintfError("Cannot find Symbol with name: %s \n", name);
-    return false;
-  }
-
-  amd::Kernel* kernel = new amd::Kernel(*program, *symbol, name);
-  if (!kernel) {
-    DevLogPrintfError("Could not create a new kernel with name: %s \n", name);
-    return false;
-  }
-
-  hip::Function* f = new hip::Function(kernel);
-  if (!f) {
-    DevLogPrintfError("Could not create a new function with name: %s \n", name);
-    return false;
-  }
-
-  *hfunc = f->asHipFunction();
-
-  return true;
-}
-
-
-hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
-  amd::ScopedLock lock(lock_);
-  const auto it = functions_.find(hostFunction);
-  if (it != functions_.cend()) {
-    PlatformState::DeviceFunction& devFunc = it->second;
-    if (devFunc.functions[deviceId] == 0) {
-      hipModule_t module = (*devFunc.modules)[deviceId].first;
-      if (!(*devFunc.modules)[deviceId].second) {
-        amd::Program* program = as_amd(reinterpret_cast<cl_program>(module));
-        amd::Context* ctx = g_devices[deviceId]->asContext();
-        auto code_obj_it = code_obj_.find(program);
-        if (code_obj_.end() == code_obj_it) {
-          DevLogError("Cannot find image & size for static symbols");
-          guarantee(false); //Aborting the program
-          return nullptr;
-        }
-        if (CL_SUCCESS != program->addDeviceProgram(*ctx->devices()[0], code_obj_it->second.first,
-                                                    code_obj_it->second.second, false)) {
-          DevLogError("Cannot add Device Program");
-          guarantee(false); //Aborting the program
-          return nullptr;
-        }
-        program->setVarInfoCallBack(&getSvarInfo);
-        if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr,
-                                         kOptionChangeable, kNewDevProg)) {
-          DevLogPrintfError("Build error for module: 0x%x at device: %u \n", module, deviceId);
-          return nullptr;
-        }
-        (*devFunc.modules)[deviceId].second = true;
-      }
-      hipFunction_t function = nullptr;
-      if (createFunc(&function, module, devFunc.deviceName.c_str()) &&
-          function != nullptr) {
-        devFunc.functions[deviceId] = function;
-      } else {
-         DevLogPrintfError("__hipRegisterFunction cannot find kernel %s for device %d\n",
-                           devFunc.deviceName.c_str(), deviceId);
-         return nullptr;
-      }
-    }
-    return devFunc.functions[deviceId];
-  }
-  DevLogPrintfError("Cannot find function: 0x%x in PlatformState \n", hostFunction);
-  return nullptr;
-}
-
-bool PlatformState::getFuncAttr(const void* hostFunction,
-                                hipFuncAttributes* func_attr) {
-  if (func_attr == nullptr) {
-    return false;
-  }
-
-  const auto it = functions_.find(hostFunction);
-  if (it == functions_.cend()) {
-    DevLogPrintfError("Cannot find hostFunction 0x%x \n", hostFunction);
-    return false;
-  }
-
-  PlatformState::DeviceFunction& devFunc = it->second;
-  int deviceId = ihipGetDevice();
-
-  /* If module has not been initialized yet, build the kernel now*/
-  if (!(*devFunc.modules)[deviceId].second) {
-    if (nullptr == PlatformState::instance().getFunc(hostFunction, deviceId)) {
-      DevLogPrintfError("Cannot get hostFunction: 0x%x for deviceId:%d \n", hostFunction, deviceId);
-      return false;
-    }
-  }
-
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>((*devFunc.modules)[deviceId].first));
-  if (!ihipGetFuncAttributes(devFunc.deviceName.c_str(), program, func_attr)) {
-    DevLogPrintfError("Cannot get Func attributes for function: %s \n",
-                      devFunc.deviceName.c_str());
-    return false;
-  }
-  return true;
-}
-
-bool PlatformState::getTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef) {
-  amd::ScopedLock lock(lock_);
-  DeviceVar* dvar = findVar(std::string(hostVar), ihipGetDevice(), hmod);
-  if (dvar == nullptr) {
-    DevLogPrintfError("Cannot find var:%s for creating texture reference at module: 0x%x \n",
-                      hostVar, hmod);
-    return false;
-  }
-
-  switch (dvar->kind) {
-  case PlatformState::DVK_Variable:
-    // TODO: Need to define a target-specific symbol info to indicate the device
-    // variable kind, i.e. regular variable, texture or surface.
-    // Before that, have to assume the specified variable is a texture or
-    // surface reference variable.
-    dvar->kind = DVK_Texture;
-    // FALL THROUGH
-  case PlatformState::DVK_Texture:
-    break;
-  default:
-    // If it's already used as non-texture variable, bail out.
-    return false;
-  }
-
-  if (!dvar->shadowVptr) {
-    dvar->shadowVptr = new texture<char>{};
-    dvar->shadowAllocated = true;
-  }
-  *texRef = reinterpret_cast<textureReference *>(dvar->shadowVptr);
-  registerVarSym(dvar->shadowVptr, hmod, hostVar);
-
-  return true;
-}
-
-bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
-                                 hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
-  amd::ScopedLock lock(lock_);
-  DeviceVar* dvar = findVar(std::string(hostVar), deviceId, hmod);
-  if (dvar != nullptr) {
-    if (dvar->rvars[deviceId].getdeviceptr() == nullptr) {
-      size_t sym_size = 0;
-      hipDeviceptr_t device_ptr = nullptr;
-      amd::Memory* amd_mem_obj = nullptr;
-
-      if (!(*dvar->modules)[deviceId].second) {
-        amd::Program* program = as_amd(reinterpret_cast<cl_program>((*dvar->modules)[deviceId].first));
-        amd::Context* ctx = g_devices[deviceId]->asContext();
-        auto code_obj_it = code_obj_.find(program);
-        if (code_obj_.end() == code_obj_it) {
-          DevLogError("Cannot find image & size for static symbols");
-          guarantee(false); //Aborting the program
-          return false;
-        }
-        if (CL_SUCCESS != program->addDeviceProgram(*ctx->devices()[0], code_obj_it->second.first,
-                                                    code_obj_it->second.second, false)) {
-          DevLogError("Cannot add Device Program");
-          guarantee(false) //Aborting the program
-          return false;
-        }
-        program->setVarInfoCallBack(&getSvarInfo);
-        if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr,
-                                         kOptionChangeable, kNewDevProg)) {
-          DevLogPrintfError("Build Failure for module: 0x%x \n", hmod);
-          return false;
-        }
-        (*dvar->modules)[deviceId].second = true;
-      }
-      if((hipSuccess == ihipCreateGlobalVarObj(dvar->hostVar.c_str(), (*dvar->modules)[deviceId].first,
-                                               &amd_mem_obj, &device_ptr, &sym_size))
-           && (device_ptr != nullptr)) {
-        dvar->rvars[deviceId].size_ = sym_size;
-        dvar->rvars[deviceId].devicePtr_ = device_ptr;
-        dvar->rvars[deviceId].amd_mem_obj_ = amd_mem_obj;
-        amd::MemObjMap::AddMemObj(device_ptr, amd_mem_obj);
-      } else {
-        DevLogPrintfError("__hipRegisterVar cannot find Var: %s for deviceId: 0x%x \n",
-                           dvar->hostVar.c_str(), deviceId);
-        return false;
-      }
-    }
-    *size_ptr = dvar->rvars[deviceId].getvarsize();
-    *dev_ptr = dvar->rvars[deviceId].getdeviceptr();
-    return true;
-  } else {
-    DevLogPrintfError("Could not find global var: %s at module:0x%x \n", hostVar, hmod);
-    return false;
-  }
-}
-
-bool PlatformState::getGlobalVarFromSymbol(const void* hostVar, int deviceId,
-                                           hipDeviceptr_t* dev_ptr,
-                                           size_t* size_ptr) {
-  hipModule_t hmod;
-  std::string symbolName;
-  if (!PlatformState::instance().findSymbol(hostVar, hmod, symbolName)) {
-    return false;
-  }
-  return PlatformState::instance().getGlobalVar(symbolName.c_str(),
-                                                ihipGetDevice(), hmod,
-                                                dev_ptr, size_ptr);
-}
-
-void PlatformState::setupArgument(const void *arg, size_t size, size_t offset) {
-  auto& arguments = execStack_.top().arguments_;
-
-  if (arguments.size() < offset + size) {
-    arguments.resize(offset + size);
-  }
-
-  ::memcpy(&arguments[offset], arg, size);
-}
-
-void PlatformState::configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem,
-                                  hipStream_t stream) {
-  execStack_.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
-}
-
-void PlatformState::popExec(ihipExec_t& exec) {
-  exec = std::move(execStack_.top());
-  execStack_.pop();
 }
 
 namespace {
@@ -638,7 +138,7 @@ const int HIP_ENABLE_DEFERRED_LOADING{[] () {
 } /* namespace */
 
 extern "C" void __hipRegisterFunction(
-  std::vector<std::pair<hipModule_t,bool> >* modules,
+  hip::FatBinaryInfoType* modules,
   const void*  hostFunction,
   char*        deviceFunction,
   const char*  deviceName,
@@ -647,14 +147,16 @@ extern "C" void __hipRegisterFunction(
   uint3*       bid,
   dim3*        blockDim,
   dim3*        gridDim,
-  int*         wSize)
-{
-  PlatformState::DeviceFunction func{ std::string{deviceName}, modules, std::vector<hipFunction_t>{g_devices.size()}};
-  PlatformState::instance().registerFunction(hostFunction, func);
+  int*         wSize) {
+  hip::Function* func = new hip::Function(std::string(deviceName), modules);
+  PlatformState::instance().registerStatFunction(hostFunction, func);
   if (!HIP_ENABLE_DEFERRED_LOADING) {
     HIP_INIT();
-    for (size_t i = 0; i < g_devices.size(); ++i) {
-      PlatformState::instance().getFunc(hostFunction, i);
+    hipFunction_t hfunc = nullptr;
+    hipError_t hip_error = hipSuccess;
+    for (size_t dev_idx = 0; dev_idx < g_devices.size(); ++dev_idx) {
+      hip_error = PlatformState::instance().getStatFunc(&hfunc, hostFunction, dev_idx);
+      guarantee(hip_error == hipSuccess);
     }
   }
 }
@@ -665,7 +167,7 @@ extern "C" void __hipRegisterFunction(
 // track of the value of the device side global variable between kernel
 // executions.
 extern "C" void __hipRegisterVar(
-  std::vector<std::pair<hipModule_t,bool> >* modules,   // The device modules containing code object
+  hip::FatBinaryInfoType* modules,   // The device modules containing code object
   void*       var,       // The shadow variable in host code
   char*       hostVar,   // Variable name in host code
   char*       deviceVar, // Variable name in device code
@@ -674,70 +176,32 @@ extern "C" void __hipRegisterVar(
   int         constant,  // Whether this variable is constant
   int         global)    // Unknown, always 0
 {
-    PlatformState::DeviceVar dvar{PlatformState::DVK_Variable,
-                                  var,
-                                  std::string{hostVar},
-                                  size,
-                                  modules,
-                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
-                                  false,
-                                  /*type*/ 0,
-                                  /*norm*/ 0};
-
-    PlatformState::instance().registerVar(hostVar, dvar);
-    PlatformState::instance().registerVarSym(var, nullptr, deviceVar);
+  hip::Var* var_ptr = new hip::Var(std::string(hostVar), hip::Var::DeviceVarKind::DVK_Variable, size, 0, 0, modules);
+  PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipRegisterSurface(std::vector<std::pair<hipModule_t, bool>>*
-                                         modules,      // The device modules containing code object
+extern "C" void __hipRegisterSurface(hip::FatBinaryInfoType* modules,      // The device modules containing code object
                                      void* var,        // The shadow variable in host code
                                      char* hostVar,    // Variable name in host code
                                      char* deviceVar,  // Variable name in device code
                                      int type, int ext) {
-    PlatformState::DeviceVar dvar{PlatformState::DVK_Surface,
-                                  var,
-                                  std::string{hostVar},
-                                  sizeof(surfaceReference),  // Copy whole surfaceReference
-                                  modules,
-                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
-                                  false,
-                                  type,
-                                  /*norm*/ 0};
-    PlatformState::instance().registerVar(hostVar, dvar);
-    PlatformState::instance().registerVarSym(var, nullptr, deviceVar);
+  hip::Var* var_ptr = new hip::Var(std::string(hostVar), hip::Var::DeviceVarKind::DVK_Surface, sizeof(surfaceReference), 0, 0, modules);
+  PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipRegisterTexture(std::vector<std::pair<hipModule_t, bool>>*
-                                         modules,      // The device modules containing code object
+extern "C" void __hipRegisterTexture(hip::FatBinaryInfoType* modules,      // The device modules containing code object
                                      void* var,        // The shadow variable in host code
                                      char* hostVar,    // Variable name in host code
                                      char* deviceVar,  // Variable name in device code
                                      int type, int norm, int ext) {
-    PlatformState::DeviceVar dvar{PlatformState::DVK_Texture,
-                                  var,
-                                  std::string{hostVar},
-                                  sizeof(textureReference),  // Copy whole textureReference so far.
-                                  modules,
-                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
-                                  false,
-                                  type,
-                                  norm};
-    PlatformState::instance().registerVar(hostVar, dvar);
-    PlatformState::instance().registerVarSym(var, nullptr, deviceVar);
+  hip::Var* var_ptr = new hip::Var(std::string(hostVar), hip::Var::DeviceVarKind::DVK_Texture, sizeof(textureReference), 0, 0, modules);
+  PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipUnregisterFatBinary(std::vector< std::pair<hipModule_t, bool> >* modules)
+extern "C" void __hipUnregisterFatBinary(hip::FatBinaryInfoType* modules)
 {
   HIP_INIT();
 
-  std::for_each(modules->begin(), modules->end(), [](std::pair<hipModule_t, bool> module){
-    if (module.first != nullptr) {
-      as_amd(reinterpret_cast<cl_program>(module.first))->release();
-    }
-  });
-  if (modules->size() > 0) {
-    PlatformState::instance().unregisterVar((*modules)[0].first);
-  }
   PlatformState::instance().removeFatBinary(modules);
 }
 
@@ -808,8 +272,9 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
     DevLogPrintfError("Wrong DeviceId: %d \n", deviceId);
     HIP_RETURN(hipErrorNoDevice);
   }
-  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
-  if (func == nullptr) {
+  hipFunction_t func = nullptr;
+  hipError_t hip_error = PlatformState::instance().getStatFunc(&func, hostFunction, deviceId);
+  if ((hip_error != hipSuccess) || (func == nullptr)) {
     DevLogPrintfError("Could not retrieve hostFunction: 0x%x \n", hostFunction);
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
@@ -830,38 +295,20 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol) {
   HIP_INIT_API(hipGetSymbolAddress, devPtr, symbol);
 
-  hipModule_t hmod;
-  std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
-    DevLogPrintfError("Cannot find symbol: %s \n", symbolName.c_str());
-    HIP_RETURN(hipErrorInvalidSymbol);
-  }
-  size_t size = 0;
-  if(!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
-                                             devPtr, &size)) {
-    DevLogPrintfError("Cannot find global variable device ptr for symbol: %s at device: %d \n",
-                      symbolName.c_str(), ihipGetDevice());
-    HIP_RETURN(hipErrorInvalidSymbol);
-  }
+  hipError_t hip_error = hipSuccess;
+  size_t sym_size = 0;
+
+  HIP_RETURN_ONFAIL(PlatformState::instance().getStatGlobalVar(symbol, ihipGetDevice(), devPtr, &sym_size));
+
   HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbol) {
   HIP_INIT_API(hipGetSymbolSize, sizePtr, symbol);
 
-  hipModule_t hmod;
-  std::string symbolName;
-  if (!PlatformState::instance().findSymbol(symbol, hmod, symbolName)) {
-    DevLogPrintfError("Cannot find symbol: %s \n", symbolName.c_str());
-    HIP_RETURN(hipErrorInvalidSymbol);
-  }
-  hipDeviceptr_t devPtr = nullptr;
-  if (!PlatformState::instance().getGlobalVar(symbolName.c_str(), ihipGetDevice(), hmod,
-                                              &devPtr, sizePtr)) {
-    DevLogPrintfError("Cannot find global variable device ptr for symbol: %s at device: %d \n",
-                      symbolName.c_str(), ihipGetDevice());
-    HIP_RETURN(hipErrorInvalidSymbol);
-  }
+  hipDeviceptr_t device_ptr = nullptr;
+  HIP_RETURN_ONFAIL(PlatformState::instance().getStatGlobalVar(symbol, ihipGetDevice(), &device_ptr, sizePtr));
+
   HIP_RETURN(hipSuccess);
 }
 
@@ -897,8 +344,8 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
     const amd::Device& device, hipFunction_t func, int inputBlockSize,
     size_t dynamicSMemSize, bool bCalcPotentialBlkSz)
 {
-  hip::Function* function = hip::Function::asFunction(func);
-  const amd::Kernel& kernel = *function->function_;
+  hip::DeviceFunc* function = hip::DeviceFunc::asFunction(func);
+  const amd::Kernel& kernel = *function->kernel();
 
   const device::Kernel::WorkGroupInfo* wrkGrpInfo = kernel.getDeviceKernel(device)->workGroupInfo();
   if (bCalcPotentialBlkSz == false) {
@@ -989,9 +436,10 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
   if ((gridSize == nullptr) || (blockSize == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
-  hipFunction_t func = PlatformState::instance().getFunc(f, ihipGetDevice());
-  if (func == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
+  hipFunction_t func = nullptr;
+  hipError_t hip_error = PlatformState::instance().getStatFunc(&func, f, ihipGetDevice());
+  if ((hip_error != hipSuccess) || (func == nullptr)) {
+    return HIP_RETURN(hipErrorInvalidValue);
   }
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
   int max_blocks_per_grid = 0;
@@ -1093,9 +541,10 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  hipFunction_t func = PlatformState::instance().getFunc(f, ihipGetDevice());
-  if (func == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
+  hipFunction_t func = nullptr;
+  hipError_t hip_error = PlatformState::instance().getStatFunc(&func, f, ihipGetDevice());
+  if ((hip_error != hipSuccess) || (func == nullptr)) {
+    return HIP_RETURN(hipErrorInvalidValue);
   }
 
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
@@ -1118,9 +567,10 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  hipFunction_t func = PlatformState::instance().getFunc(f, ihipGetDevice());
-  if (func == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
+  hipFunction_t func = nullptr;
+  hipError_t hip_error = PlatformState::instance().getStatFunc(&func, f, ihipGetDevice());
+  if ((hip_error != hipSuccess) || (func == nullptr)) {
+    return HIP_RETURN(hipErrorInvalidValue);
   }
 
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
@@ -1290,10 +740,10 @@ const std::vector<hipModule_t>& modules() {
         if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR))
           continue;
 
-        const auto obheader = reinterpret_cast<const __ClangOffloadBundleHeader*>(&bundle[0]);
+        const auto obheader = reinterpret_cast<const hip::CodeObject::__ClangOffloadBundleHeader*>(&bundle[0]);
         const auto* desc = &obheader->desc[0];
         for (uint64_t i = 0; i < obheader->numBundles; ++i,
-             desc = reinterpret_cast<const __ClangOffloadBundleDesc*>(
+             desc = reinterpret_cast<const hip::CodeObject::__ClangOffloadBundleDesc*>(
                  reinterpret_cast<uintptr_t>(&desc->triple[0]) + desc->tripleSize)) {
 
           std::string triple(desc->triple, sizeof(HCC_AMDGCN_AMDHSA_TRIPLE) - 1);
@@ -1335,7 +785,6 @@ const std::unordered_map<uintptr_t, hipFunction_t>& functions()
 
   return r;
 }
-
 
 void hipLaunchKernelGGLImpl(
   uintptr_t function_address,
@@ -1391,8 +840,10 @@ hipError_t ihipLaunchKernel(const void* hostFunction,
     DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
     HIP_RETURN(hipErrorNoDevice);
   }
-  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
-  if (func == nullptr) {
+
+  hipFunction_t func =  nullptr;
+  hipError_t hip_error = PlatformState::instance().getStatFunc(&func, hostFunction, deviceId);
+  if ((hip_error != hipSuccess) || (func == nullptr)) {
 #ifdef ATI_OS_LINUX
     const auto it = hip_impl::functions().find(reinterpret_cast<uintptr_t>(hostFunction));
     if (it == hip_impl::functions().cend()) {
@@ -1449,3 +900,167 @@ extern "C" float __gnu_h2f_ieee(unsigned short h){
 extern "C" unsigned short __gnu_f2h_ieee(float f){
   return (unsigned short)__convert_float_to_half(f);
 }
+
+void PlatformState::init()
+{
+  amd::ScopedLock lock(lock_);
+
+  if(initialized_ || g_devices.empty()) {
+    return;
+  }
+  initialized_ = true;
+
+  for (auto& it : statCO_.modules_) {
+    digestFatBinary(it.first, it.second);
+  }
+
+  for (auto &it : statCO_.vars_) {
+    it.second->resize_dVar(g_devices.size());
+  }
+
+  for (auto &it : statCO_.functions_) {
+    it.second->resize_dFunc(g_devices.size());
+  }
+}
+
+hipError_t PlatformState::loadModule(hipModule_t *module, const char* fname, const void* image) {
+  amd::ScopedLock lock(lock_);
+
+  hip::DynCO* dynCo = new hip::DynCO();
+  hipError_t hip_error = dynCo->loadCodeObject(fname, image);
+  if (hip_error != hipSuccess) {
+    delete dynCo;
+    return hip_error;
+  }
+
+  *module = dynCo->module();
+  assert(*module != nullptr);
+
+  if (dynCO_map_.find(*module) != dynCO_map_.end()) {
+    return hipErrorAlreadyMapped;
+  }
+  dynCO_map_.insert(std::make_pair(*module, dynCo));
+
+  return hipSuccess;
+}
+
+hipError_t PlatformState::unloadModule(hipModule_t hmod) {
+  amd::ScopedLock lock(lock_);
+
+  auto it = dynCO_map_.find(hmod);
+  if (it == dynCO_map_.end()) {
+    return hipErrorNotFound;
+  }
+
+  delete it->second;
+  dynCO_map_.erase(hmod);
+
+  return hipSuccess;
+}
+
+hipError_t PlatformState::getDynFunc(hipFunction_t* hfunc, hipModule_t hmod,
+                                         const char* func_name) {
+  amd::ScopedLock lock(lock_);
+
+  auto it = dynCO_map_.find(hmod);
+  if (it == dynCO_map_.end()) {
+    DevLogPrintfError("Cannot find the module: 0x%x", hmod);
+    return hipErrorNotFound;
+  }
+
+  return it->second->getDynFunc(hfunc, func_name);
+}
+
+hipError_t PlatformState::getDynGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
+                                          hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
+  amd::ScopedLock lock(lock_);
+
+  auto it = dynCO_map_.find(hmod);
+  if (it == dynCO_map_.end()) {
+    DevLogPrintfError("Cannot find the module: 0x%x", hmod);
+    return hipErrorNotFound;
+  }
+
+  hip::DeviceVar* dvar = nullptr;
+  IHIP_RETURN_ONFAIL(it->second->getDeviceVar(&dvar, hostVar, deviceId));
+  *dev_ptr = dvar->device_ptr();
+  *size_ptr = dvar->size();
+
+  return hipSuccess;
+}
+
+hipError_t PlatformState::getDynTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef) {
+  amd::ScopedLock lock(lock_);
+
+  auto it = dynCO_map_.find(hmod);
+  if (it == dynCO_map_.end()) {
+    DevLogPrintfError("Cannot find the module: 0x%x", hmod);
+    return hipErrorNotFound;
+  }
+
+  hip::DeviceVar* dvar = nullptr;
+  IHIP_RETURN_ONFAIL(it->second->getDeviceVar(&dvar, hostVar, ihipGetDevice()));
+
+  dvar->shadowVptr = new texture<char>();
+  *texRef =  reinterpret_cast<textureReference*>(dvar->shadowVptr);
+  return hipSuccess;
+}
+
+hipError_t PlatformState::digestFatBinary(const void* data, hip::FatBinaryInfoType& programs) {
+ return statCO_.digestFatBinary(data, programs);
+}
+
+hip::FatBinaryInfoType* PlatformState::addFatBinary(const void* data) {
+  return statCO_.addFatBinary(data, initialized_);
+}
+
+hipError_t PlatformState::removeFatBinary(hip::FatBinaryInfoType* module) {
+  return statCO_.removeFatBinary(module);
+}
+
+hipError_t PlatformState::registerStatFunction(const void* hostFunction, hip::Function* func) {
+  return statCO_.registerStatFunction(hostFunction, func);
+}
+
+hipError_t PlatformState::registerStatGlobalVar(const void* hostVar, hip::Var* var) {
+  return statCO_.registerStatGlobalVar(hostVar, var);
+}
+
+hipError_t PlatformState::getStatFunc(hipFunction_t* hfunc, const void* hostFunction, int deviceId) {
+  return statCO_.getStatFunc(hfunc, hostFunction, deviceId);
+}
+
+hipError_t PlatformState::getStatFuncAttr(hipFuncAttributes* func_attr, const void* hostFunction, int deviceId) {
+  return statCO_.getStatFuncAttr(func_attr, hostFunction, deviceId);
+}
+
+hipError_t PlatformState::getStatGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
+                                           size_t* size_ptr) {
+  return statCO_.getStatGlobalVar(hostVar, deviceId, dev_ptr, size_ptr);
+}
+
+hipError_t PlatformState::getStatGlobalVarByName(std::string hostVar, int deviceId, hipModule_t hmod,
+                                                 hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
+  return statCO_.getStatGlobalVarByName(hostVar, deviceId, hmod, dev_ptr, size_ptr);
+}
+
+void PlatformState::setupArgument(const void *arg, size_t size, size_t offset) {
+  auto& arguments = execStack_.top().arguments_;
+
+  if (arguments.size() < offset + size) {
+    arguments.resize(offset + size);
+  }
+
+  ::memcpy(&arguments[offset], arg, size);
+}
+
+void PlatformState::configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem,
+                                  hipStream_t stream) {
+  execStack_.push(ihipExec_t{gridDim, blockDim, sharedMem, stream});
+}
+
+void PlatformState::popExec(ihipExec_t& exec) {
+  exec = std::move(execStack_.top());
+  execStack_.pop();
+}
+
