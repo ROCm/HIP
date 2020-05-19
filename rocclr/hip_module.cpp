@@ -39,9 +39,8 @@ extern hipError_t ihipLaunchKernel(const void* hostFunction,
                                          hipEvent_t stopEvent,
                                          int flags);
 
-const std::string& FunctionName(const hipFunction_t f)
-{
-  return hip::Function::asFunction(f)->function_->name();
+const std::string& FunctionName(const hipFunction_t f) {
+  return hip::DeviceFunc::asFunction(f)->kernel()->name();
 }
 
 static uint64_t ElfSize(const void *emi)
@@ -65,223 +64,48 @@ static uint64_t ElfSize(const void *emi)
   return total_size;
 }
 
-hipError_t hipModuleLoad(hipModule_t* module, const char* fname)
-{
-  HIP_INIT_API(hipModuleLoad, module, fname);
-
-  const void* mmap_ptr = nullptr;
-  size_t mmap_size = 0;
-
-  if (!fname) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
-
-  if (!amd::Os::MemoryMapFile(fname, &mmap_ptr, &mmap_size)) {
-    HIP_RETURN(hipErrorFileNotFound);
-  }
-
-  HIP_RETURN(ihipModuleLoadData(module, mmap_ptr, mmap_size));
-}
-
-bool ihipModuleUnregisterGlobal(hipModule_t hmod) {
-  std::vector< std::pair<hipModule_t, bool> >* modules =
-    PlatformState::instance().unregisterVar(hmod);
-  if (modules != nullptr) {
-    delete modules;
-  }
-  return true;
-}
-
-hipError_t hipModuleUnload(hipModule_t hmod)
-{
+hipError_t hipModuleUnload(hipModule_t hmod) {
   HIP_INIT_API(hipModuleUnload, hmod);
 
-  if (hmod == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
+  HIP_RETURN(PlatformState::instance().unloadModule(hmod));
+}
 
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
+hipError_t hipModuleLoad(hipModule_t* module, const char* fname) {
+  HIP_INIT_API(hipModuleLoad, module, fname);
 
-  if(!PlatformState::instance().unregisterFunc(hmod)) {
-    DevLogPrintfError("Cannot unregister module: 0x%x \n", hmod);
-    HIP_RETURN(hipErrorInvalidSymbol);
-  }
-
-  if(!ihipModuleUnregisterGlobal(hmod)) {
-    DevLogPrintfError("Cannot unregister Global vars for module: 0x%x \n", hmod);
-    HIP_RETURN(hipErrorInvalidSymbol);
-  }
-
-  program->release();
-
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(PlatformState::instance().loadModule(module, fname));
 }
 
 hipError_t hipModuleLoadData(hipModule_t *module, const void *image)
 {
   HIP_INIT_API(hipModuleLoadData, module, image);
 
-  HIP_RETURN(ihipModuleLoadData(module, image, 0));
+  HIP_RETURN(PlatformState::instance().loadModule(module, 0, image));
 }
 
 hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image,
-                               unsigned int numOptions, hipJitOption* options,
-                               void** optionsValues)
+                                  unsigned int numOptions, hipJitOption* options,
+                                  void** optionsValues)
 {
   /* TODO: Pass options to Program */
   HIP_INIT_API(hipModuleLoadDataEx, module, image);
 
-  HIP_RETURN(ihipModuleLoadData(module, image, 0));
+  HIP_RETURN(PlatformState::instance().loadModule(module, 0, image));
 }
 
 extern hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
                                                 const std::vector<const char*>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
 
-inline bool ihipModuleRegisterUndefined(amd::Program* program, hipModule_t* module) {
-
-  std::vector<std::string> undef_vars;
-  device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
-
-  if (!dev_program->getUndefinedVarFromCodeObj(&undef_vars)) {
-    DevLogPrintfError("Could not get undefined Variables for Module: 0x%x \n", *module);
-    return false;
-  }
-
-  for (auto it = undef_vars.begin(); it != undef_vars.end(); ++it) {
-    auto modules = new std::vector<std::pair<hipModule_t, bool> >(g_devices.size());
-    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-      modules->at(dev) = std::make_pair(*module, true);
-    }
-
-    texture<float, hipTextureType1D, hipReadModeElementType>* tex_hptr
-      = new texture<float, hipTextureType1D, hipReadModeElementType>();
-    memset(tex_hptr, 0x00, sizeof(texture<float, hipTextureType1D, hipReadModeElementType>));
-
-    PlatformState::DeviceVar dvar{PlatformState::DVK_Variable,
-                                  reinterpret_cast<char*>(tex_hptr),
-                                  it->c_str(),
-                                  sizeof(*tex_hptr),
-                                  modules,
-                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
-                                  true,
-                                  /*type*/ 0,
-                                  /*norm*/ 0};
-    PlatformState::instance().registerVar(it->c_str(), dvar);
-  }
-
-  return true;
-}
-
-inline bool ihipModuleRegisterFunc(amd::Program* program, hipModule_t* module) {
-
-  std::vector<std::string> func_names;
-  device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
-
-  // Get all the global func names from COMGR
-  if (!dev_program->getGlobalFuncFromCodeObj(&func_names)) {
-    DevLogPrintfError("Could not get Global Funcs from Code Obj for Module: 0x%x \n", *module);
-    return false;
-  }
-
-  return PlatformState::instance().registerModFuncs(func_names, module);
-}
-
-
-inline bool ihipModuleRegisterGlobal(amd::Program* program, hipModule_t* module) {
-
-  size_t var_size = 0;
-  hipDeviceptr_t device_ptr = nullptr;
-  std::vector<std::string> var_names;
-
-  device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
-
-  if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
-    DevLogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", *module);
-    return false;
-  }
-
-  for (auto it = var_names.begin(); it != var_names.end(); ++it) {
-    auto modules = new std::vector<std::pair<hipModule_t, bool> >(g_devices.size());
-    for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-      modules->at(dev) = std::make_pair(*module, true);
-    }
-
-    PlatformState::DeviceVar dvar{PlatformState::DVK_Variable,
-                                  nullptr,
-                                  it->c_str(),
-                                  0,
-                                  modules,
-                                  std::vector<PlatformState::RegisteredVar>{g_devices.size()},
-                                  false,
-                                  /*type*/ 0,
-                                  /*norm*/ 0};
-    PlatformState::instance().registerVar(it->c_str(), dvar);
-  }
-
-  return true;
-}
-
-hipError_t ihipModuleLoadData(hipModule_t* module, const void* mmap_ptr, size_t mmap_size)
-{
-  /* initialize image it to the mmap_ptr, if this is of no_clang_offload bundle then they directly pass the image */
-  const void* image = mmap_ptr;
-  std::vector<std::pair<const void*, size_t>> code_objs;
-  hipError_t code_obj_err = __hipExtractCodeObjectFromFatBinary(mmap_ptr,
-                              {hip::getCurrentDevice()->devices()[0]->info().name_}, code_objs);
-  if (code_obj_err == hipSuccess) {
-    image = code_objs[0].first;
-  } else if(code_obj_err == hipErrorNoBinaryForGpu) {
-     return code_obj_err;
-  }
-
-  amd::Program* program = new amd::Program(*hip::getCurrentDevice()->asContext(),
-                                           amd::Program::Language::Binary, mmap_ptr, mmap_size);
-  if (program == NULL) {
-    return hipErrorOutOfMemory;
-  }
-
-  program->setVarInfoCallBack(&getSvarInfo);
-
-  if (CL_SUCCESS != program->addDeviceProgram(*hip::getCurrentDevice()->devices()[0], image,
-                                              ElfSize(image), false)) {
-    return hipErrorInvalidKernelFile;
-  }
-
-  *module = reinterpret_cast<hipModule_t>(as_cl(program));
-
-  if (!ihipModuleRegisterGlobal(program, module)) {
-    return hipErrorSharedObjectSymbolNotFound;
-  }
-
-  if (!ihipModuleRegisterUndefined(program, module)) {
-    return hipErrorSharedObjectSymbolNotFound;
-  }
-
-  if (CL_SUCCESS != program->build(hip::getCurrentDevice()->devices(), nullptr, nullptr, nullptr,
-                                   kOptionChangeable, kNewDevProg)) {
-    return hipErrorSharedObjectInitFailed;
-  }
-
-  if (!ihipModuleRegisterFunc(program, module)) {
-    return hipErrorSharedObjectSymbolNotFound;
-  }
-
-  return hipSuccess;
-}
-
-hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const char *name)
-{
+hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const char *name) {
   HIP_INIT_API(hipModuleGetFunction, hfunc, hmod, name);
 
-  if (!PlatformState::instance().findModFunc(hfunc, hmod, name)) {
+  if (hipSuccess != PlatformState::instance().getDynFunc(hfunc, hmod, name)) {
     DevLogPrintfError("Cannot find the function: %s for module: 0x%x \n",
                       name, hmod);
     HIP_RETURN(hipErrorNotFound);
   }
+
   HIP_RETURN(hipSuccess);
 }
 
@@ -290,8 +114,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
   HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
 
   /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getGlobalVar(name, ihipGetDevice(), hmod,
-                                              dptr, bytes)) {
+  if (hipSuccess != PlatformState::instance().getDynGlobalVar(name, ihipGetDevice(), hmod, dptr, bytes)) {
     DevLogPrintfError("Cannot find global Var: %s for module: 0x%x at device: %d \n",
                        name, hmod, ihipGetDevice());
     HIP_RETURN(hipErrorNotFound);
@@ -307,12 +130,12 @@ hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunc
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  hip::Function* function = hip::Function::asFunction(hfunc);
+  hip::DeviceFunc* function = hip::DeviceFunc::asFunction(hfunc);
   if (function == nullptr) {
     HIP_RETURN(hipErrorInvalidHandle);
   }
 
-  amd::Kernel* kernel = function->function_;
+  amd::Kernel* kernel = function->kernel();
   if (kernel == nullptr) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
@@ -365,9 +188,7 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
 {
   HIP_INIT_API(hipFuncGetAttributes, attr, func);
 
-  if (!PlatformState::instance().getFuncAttr(func, attr)) {
-    HIP_RETURN(hipErrorInvalidDeviceFunction);
-  }
+  HIP_RETURN_ONFAIL(PlatformState::instance().getStatFuncAttr(attr, func, ihipGetDevice()));
 
   HIP_RETURN(hipSuccess);
 }
@@ -383,10 +204,10 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   HIP_INIT_API(ihipModuleLaunchKernel, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
     sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags, params);
 
-  hip::Function* function = hip::Function::asFunction(f);
-  amd::Kernel* kernel = function->function_;
+  hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
+  amd::Kernel* kernel = function->kernel();
 
-  amd::ScopedLock lock(function->lock_);
+  amd::ScopedLock lock(function->dflock_);
 
   hip::Event* eStart = reinterpret_cast<hip::Event*>(startEvent);
   hip::Event* eStop = reinterpret_cast<hip::Event*>(stopEvent);
@@ -557,7 +378,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
                                       size_t sharedMemBytes,
                                       hipStream_t stream)
 {
-    HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
+    HIP_INIT_API(hipLaunchKernel, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
     HIP_RETURN(ihipLaunchKernel(hostFunction, gridDim, blockDim, args, sharedMemBytes, stream, nullptr, nullptr, 0));
 }
 
@@ -571,7 +392,7 @@ extern "C" hipError_t hipExtLaunchKernel(const void* hostFunction,
                                          hipEvent_t stopEvent,
                                          int flags)
 {
-    HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
+    HIP_INIT_API(hipExtLaunchKernel, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
     HIP_RETURN(ihipLaunchKernel(hostFunction, gridDim, blockDim, args, sharedMemBytes, stream, startEvent, stopEvent, flags));
 }
 
@@ -583,10 +404,8 @@ hipError_t hipLaunchCooperativeKernel(const void* f,
                sharedMemBytes, hStream);
 
   int deviceId = ihipGetDevice();
-  hipFunction_t func = PlatformState::instance().getFunc(f, deviceId);
-  if (func == nullptr) {
-    HIP_RETURN(hipErrorInvalidDeviceFunction);
-  }
+  hipFunction_t func = nullptr;
+  HIP_RETURN_ONFAIL(PlatformState::instance().getStatFunc(&func, f, deviceId));
 
   HIP_RETURN(ihipModuleLaunchKernel(func, gridDim.x * blockDim.x, gridDim.y * blockDim.y, gridDim.z * blockDim.z,
                                 blockDim.x, blockDim.y, blockDim.z,
@@ -650,7 +469,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
     for (size_t dev = 0; dev < g_devices.size(); ++dev) {
       // Find the matching device and request the kernel function
       if (&queue->vdev()->device() == g_devices[dev]->devices()[0]) {
-        func = PlatformState::instance().getFunc(launch.func, dev);
+        IHIP_RETURN_ONFAIL(PlatformState::instance().getStatFunc(&func, launch.func, dev));
         // Save ROCclr index of the first device in the launch
         if (i == 0) {
           firstDevice = queue->vdev()->device().index();
@@ -714,7 +533,7 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
   }
 
    /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getTexRef(name, hmod, texRef)) {
+  if (!PlatformState::instance().getDynTexRef(name, hmod, texRef)) {
     DevLogPrintfError("Cannot get texRef for name: %s at module:0x%x \n",
                       name, hmod);
     HIP_RETURN(hipErrorNotFound);

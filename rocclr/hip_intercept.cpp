@@ -20,6 +20,7 @@
 
 #include "hip/hip_runtime.h"
 #include "hip_internal.hpp"
+#include "hip_platform.hpp"
 #include "hip_prof_api.h"
 
 // HIP API callback/activity
@@ -44,8 +45,9 @@ const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream) 
     DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
     return NULL;
   }
-  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
-  if (func == nullptr) {
+  hipFunction_t func = nullptr;
+  hipError_t hip_error = PlatformState::instance().getStatFunc(&func, hostFunction, deviceId);
+  if (hip_error != hipSuccess) {
     return NULL;
   }
   return hipKernelNameRef(func);
