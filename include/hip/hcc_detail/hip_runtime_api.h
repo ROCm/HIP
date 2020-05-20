@@ -1375,10 +1375,12 @@ hipError_t hipHostFree(void* ptr);
  *
  *  For hipMemcpy, the copy is always performed by the current device (set by hipSetDevice).
  *  For multi-gpu or peer-to-peer configurations, it is recommended to set the current device to the
- * device where the src data is physically located. For optimal peer-to-peer copies, the copy device
- * must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy
- * agent as the current device and src/dest as the peerDevice argument.  if this is not done, the
- * hipMemcpy will still work, but will perform the copy using a staging buffer on the host.
+ *  device where the src data is physically located. For optimal peer-to-peer copies, the copy device
+ *  must be able to access the src and dst pointers (by calling hipDeviceEnablePeerAccess with copy
+ *  agent as the current device and src/dest as the peerDevice argument.  if this is not done, the
+ *  hipMemcpy will still work, but will perform the copy using a staging buffer on the host.
+ *  Calling hipMemcpy with dst and src pointers that do not match the hipMemcpyKind results in
+ *  undefined behavior.
  *
  *  @param[out]  dst Data being copy to
  *  @param[in]  src Data being copy from
@@ -2089,13 +2091,14 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
 /**
  *  @brief Copies data between host and device.
  *
- *  @param[in]   dst    Destination memory address
- *  @param[in]   dpitch Pitch of destination memory
- *  @param[in]   src    Source memory address
- *  @param[in]   spitch Pitch of source memory
- *  @param[in]   width  Width of matrix transfer (columns in bytes)
- *  @param[in]   height Height of matrix transfer (rows)
- *  @param[in]   kind   Type of transfer
+ *  @param[in]   dst     Destination memory address
+ *  @param[in]   wOffset Destination starting X offset
+ *  @param[in]   hOffset Destination starting Y offset
+ *  @param[in]   src     Source memory address
+ *  @param[in]   spitch  Pitch of source memory
+ *  @param[in]   width   Width of matrix transfer (columns in bytes)
+ *  @param[in]   height  Height of matrix transfer (rows)
+ *  @param[in]   kind    Type of transfer
  *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
@@ -2108,13 +2111,12 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
 /**
  *  @brief Copies data between host and device.
  *
- *  @param[in]   dst    Destination memory address
- *  @param[in]   dpitch Pitch of destination memory
- *  @param[in]   src    Source memory address
- *  @param[in]   spitch Pitch of source memory
- *  @param[in]   width  Width of matrix transfer (columns in bytes)
- *  @param[in]   height Height of matrix transfer (rows)
- *  @param[in]   kind   Type of transfer
+ *  @param[in]   dst     Destination memory address
+ *  @param[in]   wOffset Destination starting X offset
+ *  @param[in]   hOffset Destination starting Y offset
+ *  @param[in]   src     Source memory address
+ *  @param[in]   count   size in bytes to copy
+ *  @param[in]   kind    Type of transfer
  *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
  * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
  *
