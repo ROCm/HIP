@@ -110,6 +110,9 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
     // Skip if nothing needs writing.
     return hipSuccess;
   }
+  if (dst == nullptr || src == nullptr) {
+    return hipErrorInvalidValue;
+  }
 
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
