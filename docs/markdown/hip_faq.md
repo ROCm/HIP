@@ -240,3 +240,6 @@ Or pass "-DGENERIC_GRID_LAUNCH=0" to hipcc at application compilation time.
 
 ### What is maximum limit of Generic Grid Launch parameters (grid and block)?
 Product of (grid.x and block.x), (grid.y and block.y) or (grid.z and block.z) should always be less than UINT_MAX.
+
+### Are __shfl_*_sync functions supported on HIP platform?
+__shfl_*_sync is not supported on HIP but for nvcc path CUDA 9.0 and above all shuffle calls get redirected to it's sync version.
