@@ -33,6 +33,8 @@ THE SOFTWARE.
 #define MAX_OFFSET 3
 // To test memset on unaligned pointer
 #define loop(offset, offsetMax) for (int offset = offsetMax; offset >= 0; offset --)
+
+#include <vector>
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 enum MemsetType {
@@ -154,6 +156,33 @@ bool testhipMemsetAsync(T*A_h, T*A_d, T memsetval, enum MemsetType type,
   return testResult;
 }
 
+bool testhipMemset2AsyncOps() {
+  printf("testhipMemset2AsyncOps 2 memset operations at the same time\n");
+  std::vector<float> v;
+  v.resize(2048);
+  float* p2, *p3;
+  hipMalloc(reinterpret_cast<void**>(&p2), 4096 + 4096*2);
+  p3 = p2+2048;
+  hipStream_t s;
+  hipStreamCreate(&s);
+  hipMemsetAsync(p2, 0, 32*32*4, s);
+  hipMemsetD32Async(p3, 0x3fe00000, 32*32, s );
+  hipStreamSynchronize(s);
+  for (int i = 0; i < 256; ++i) {
+    hipMemsetAsync(p2, 0, 32*32*4, s);
+    hipMemsetD32Async(p3, 0x3fe00000, 32*32, s );
+  }
+  hipStreamSynchronize(s);
+  hipDeviceSynchronize();
+  hipMemcpy(&v[0], p2, 1024, hipMemcpyDeviceToHost);
+  hipMemcpy(&v[1024], p3, 1024, hipMemcpyDeviceToHost);
+  if ((v[0] != 0) || (v[1024] != 1.75f)) {
+    printf("mismatch (%f != 0) or (%f != 1.75f)\n", v[0], v[1024]);
+    return false;
+  }
+  return true;
+}
+
 int main(int argc, char *argv[]) {
   HipTest::parseStandardArguments(argc, argv, true);
   bool testResult = true;
@@ -175,6 +204,7 @@ int main(int argc, char *argv[]) {
   testResult &= testhipMemsetAsync(iA_h, iA_d, memsetD32val, hipMemsetTypeD32, p_gpuDevice);
   testResult &= testhipMemsetAsync(siA_h, siA_d, memsetD16val, hipMemsetTypeD16, p_gpuDevice);
   testResult &= testhipMemsetAsync(cA_h, cA_d, memsetD8val, hipMemsetTypeD8, p_gpuDevice);
+  testResult &= testhipMemset2AsyncOps();
   if (testResult) passed();
   failed("Output Mismatch\n");
 }
