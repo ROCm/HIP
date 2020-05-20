@@ -58,7 +58,6 @@ if (NOT ROCclr_FOUND)
   include(${LIBROCclr_STATIC_DIR}/amdrocclr_staticTargets.cmake)
 endif()
 
-set(PROF_API_HEADER_PATH ${ROCclr_DIR}/platform)
 #############################
 # Profiling API support
 #############################
