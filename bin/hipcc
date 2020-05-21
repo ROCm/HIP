@@ -157,7 +157,14 @@ if (defined $HIP_COMPILER and $HIP_COMPILER eq "clang") {
     $HIP_CLANG_PATH = "$ROCM_PATH/llvm/bin";
   }
   if (!defined $DEVICE_LIB_PATH) {
-    $DEVICE_LIB_PATH = "$ROCM_PATH/lib";
+    if (-e "$ROCM_PATH/amdgcn/bitcode") {
+      $DEVICE_LIB_PATH = "$ROCM_PATH/amdgcn/bitcode";
+    }
+    else {
+      # This path is to support an older build of the device library
+      # TODO: To be removed in the future.
+      $DEVICE_LIB_PATH = "$ROCM_PATH/lib";
+    }
   }
 }
 
