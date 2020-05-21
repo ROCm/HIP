@@ -2023,7 +2023,9 @@ hipError_t hipIpcCloseMemHandle(void* dev_ptr) {
   amd::MemObjMap::RemoveMemObj(amd_mem_obj);
 
   /* detach the memory */
-  device->IpcDetach(*amd_mem_obj);
+  if (!device->IpcDetach(*amd_mem_obj)){
+     HIP_RETURN(hipErrorInvalidHandle);
+  }
 
   HIP_RETURN(hipSuccess);
 }
