@@ -142,18 +142,26 @@ else()
 endif()
 
 if(HIP_COMPILER STREQUAL "clang")
-  set_property(TARGET hip::device APPEND PROPERTY
-    INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
-  )
-
   if (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
     set_property(TARGET hip::device APPEND PROPERTY
       INTERFACE_COMPILE_OPTIONS -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false
     )
   endif()
 
+  if (EXISTS ${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode)
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode
+    )
+  else()
+    # This path is to support an older build of the device library
+    # TODO: To be removed in the future.
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
+    )
+  endif()
+
   set_property(TARGET hip::device APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib --hip-link
+     INTERFACE_LINK_LIBRARIES --hip-link
   )
 
   set_property(TARGET hip::device APPEND PROPERTY
