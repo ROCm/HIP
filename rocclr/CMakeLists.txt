@@ -132,6 +132,8 @@ target_include_directories(hip64
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/amdocl
     ${PROJECT_SOURCE_DIR}/include/hip/hcc_detail/elfio
+
+    # FIXME: Remove ROCclr_DIr explicit references
     ${ROCclr_DIR}
     ${ROCclr_DIR}/include
     ${ROCclr_DIR}/compiler/lib
@@ -139,6 +141,7 @@ target_include_directories(hip64
     ${ROCclr_DIR}/elf/utils/common
     ${ROCclr_DIR}/elf/utils/libelf
     ${ROCR_INCLUDES}
+    $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:amd_comgr,INTERFACE_INCLUDE_DIRECTORIES>)
 target_compile_definitions(hip64
   PRIVATE

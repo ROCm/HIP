@@ -35,7 +35,8 @@ set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "@HIP_CLANG_PARALLEL_BUILD_COMPILE_
 @_HIP_HCC_FLAGS@
 @_HIP_CLANG_FLAGS@
 @_HIP_NVCC_FLAGS@
-set(HIP_HIPCC_INCLUDE_ARGS "@HIP_HIPCC_INCLUDE_ARGS@") # list (needs to be in quotes to handle spaces properly)
+#Needed to bring the HIP_HIPCC_INCLUDE_ARGS variable in scope
+set(HIP_HIPCC_INCLUDE_ARGS @HIP_HIPCC_INCLUDE_ARGS@) # list
 
 set(cmake_dependency_file "@cmake_dependency_file@") # path
 set(source_file "@source_file@") # path
