@@ -513,7 +513,7 @@ hipError_t hipDeviceGetSharedMemConfig(hipSharedMemConfig* pConfig);
  *
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
-hipError_t hipGetDeviceFlags(unsigned *flags);
+hipError_t hipGetDeviceFlags(unsigned int* flags);
 
 /**
  * @brief The bank width of shared memory on current device is set

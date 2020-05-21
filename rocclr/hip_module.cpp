@@ -119,7 +119,7 @@ hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image,
                                void** optionsValues)
 {
   /* TODO: Pass options to Program */
-  HIP_INIT_API(hipModuleLoadData, module, image);
+  HIP_INIT_API(hipModuleLoadDataEx, module, image);
 
   HIP_RETURN(ihipModuleLoadData(module, image, 0));
 }
@@ -369,7 +369,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
                                  hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0,
                                  uint32_t params = 0, uint32_t gridId = 0, uint32_t numGrids = 0,
                                  uint64_t prevGridSum = 0, uint64_t allGridSum = 0, uint32_t firstDevice = 0) {
-  HIP_INIT_API(NONE, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
+  HIP_INIT_API(ihipModuleLaunchKernel, f, gridDimX, gridDimY, gridDimZ, blockDimX, blockDimY, blockDimZ,
     sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags, params);
 
   hip::Function* function = hip::Function::asFunction(f);
@@ -493,7 +493,7 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipStream_t hStream, void** kernelParams, void** extra,
                                     hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags)
 {
-  HIP_INIT_API(NONE, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
+  HIP_INIT_API(hipExtModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
                localWorkSizeX, localWorkSizeY, localWorkSizeZ,
                sharedMemBytes, hStream,
                kernelParams, extra, startEvent, stopEvent, flags);
@@ -512,7 +512,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX,
                                     hipEvent_t startEvent,
                                     hipEvent_t stopEvent)
 {
-  HIP_INIT_API(NONE, f, gridDimX, gridDimY, gridDimZ,
+  HIP_INIT_API(hipHccModuleLaunchKernel, f, gridDimX, gridDimY, gridDimZ,
                blockDimX, blockDimY, blockDimZ,
                sharedMemBytes, hStream,
                kernelParams, extra, startEvent, stopEvent);
@@ -529,7 +529,7 @@ hipError_t hipModuleLaunchKernelExt(hipFunction_t f, uint32_t gridDimX,
                                     hipEvent_t startEvent,
                                     hipEvent_t stopEvent)
 {
-  HIP_INIT_API(NONE, f, gridDimX, gridDimY, gridDimZ,
+  HIP_INIT_API(hipModuleLaunchKernelExt, f, gridDimX, gridDimY, gridDimZ,
                blockDimX, blockDimY, blockDimZ,
                sharedMemBytes, hStream,
                kernelParams, extra, startEvent, stopEvent);
