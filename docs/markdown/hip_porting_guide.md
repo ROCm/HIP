@@ -1,13 +1,13 @@
 # HIP Porting Guide
 In addition to providing a portable C++ programming environment for GPUs, HIP is designed to ease
-the porting of existing CUDA code into the HIP environment.  This section describes the available tools 
+the porting of existing CUDA code into the HIP environment.  This section describes the available tools
 and provides practical suggestions on how to port CUDA code and work through common issues.
 
 ## Table of Contents
 
 <!-- toc -->
 
-- [Porting a New Cuda Project](#porting-a-new-cuda-project)
+- [Porting a New CUDA Project](#porting-a-new-cuda-project)
   * [General Tips](#general-tips)
   * [Scanning existing CUDA code to scope the porting effort](#scanning-existing-cuda-code-to-scope-the-porting-effort)
   * [Converting a project "in-place"](#converting-a-project-in-place)
@@ -22,6 +22,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Device-Architecture Properties](#device-architecture-properties)
   * [Table of Architecture Properties](#table-of-architecture-properties)
 - [Finding HIP](#finding-hip)
+- [Identifying HIP Runtime](#identifying-hip-runtime)
 - [hipLaunchKernel](#hiplaunchkernel)
 - [Compiler Options](#compiler-options)
 - [Linking Issues](#linking-issues)
@@ -47,20 +48,20 @@ and provides practical suggestions on how to port CUDA code and work through com
     + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
   * [HIP Environment Variables](#hip-environment-variables)
   * [Editor Highlighting](#editor-highlighting)
-  
+
 
 <!-- tocstop -->
 
-## Porting a New Cuda Project
+## Porting a New CUDA Project
 
 ### General Tips
-- Starting the port on a Cuda machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in Cuda. (Recall that on Cuda machines HIP is just a thin layer over Cuda, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original Cuda code for function and performance.
-- Once the Cuda code is ported to HIP and is running on the Cuda machine, compile the HIP code using hcc on an AMD machine.
-- HIP ports can replace Cuda versions: HIP can deliver the same performance as a native Cuda implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
-- Use **[bin/hipconvertinplace-perl.sh](https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipconvertinplace-perl.sh)** to hipify all code files in the Cuda source directory.
+- Starting the port on a CUDA machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in CUDA. (Recall that on CUDA machines HIP is just a thin layer over CUDA, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original CUDA code for function and performance.
+- Once the CUDA code is ported to HIP and is running on the CUDA machine, compile the HIP code using the HIP compiler on an AMD machine.
+- HIP ports can replace CUDA versions: HIP can deliver the same performance as a native CUDA implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
+- Use **[bin/hipconvertinplace-perl.sh](https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipconvertinplace-perl.sh)** to hipify all code files in the CUDA source directory.
 
 ### Scanning existing CUDA code to scope the porting effort
-The hipexamine-perl.sh tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified, 
+The hipexamine-perl.sh tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified.
 ```
 > cd examples/rodinia_3.0/cuda/kmeans
 > $HIP_DIR/bin/hipexamine-perl.sh.
@@ -128,110 +129,119 @@ directory names.
 
 | CUDA Library | ROCm Library | Comment |
 |------- | ---------   | -----   |
-| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines 
-| cuFFT        |    rocFFT     | Fast Fourier Transfer Library   
-| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV 
-| cuSolver     |    rocSolver   | Lapack library
+| cuBLAS        |    rocBLAS     | Basic Linear Algebra Subroutines
+| cuFFT        |    rocFFT     | Fast Fourier Transfer Library
+| cuSPARSE     |    rocSPARSE   | Sparse BLAS  + SPMV
+| cuSolver     |    rocSOLVER   | Lapack library
 | AMG-X    |    rocALUTION   | Sparse iterative solvers and preconditioners with Geometric and Algebraic MultiGrid
-| Thrust    |    hipThrust | C++ parallel algorithms library
+| Thrust    |    rocThrust | C++ parallel algorithms library
 | CUB     |    rocPRIM | Low Level Optimized Parallel Primitives
-| cuDNN    |    MIOpen | Deep learning Solver Library 
+| cuDNN    |    MIOpen | Deep learning Solver Library
 | cuRAND    |    rocRAND | Random Number Generator Library
-| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers, 
+| EIGEN    |    EIGEN – HIP port | C++ template library for linear algebra: matrices, vectors, numerical solvers,
 | NCCL    |    RCCL  | Communications Primitives Library based on the MPI equivalents
 
 
- 
+
 ## Distinguishing Compiler Modes
- 
- 
+
+
 ### Identifying HIP Target Platform
-All HIP projects target either the hcc or nvcc platform. The platform affects which headers are included and which libraries are used for linking. 
- 
-- `HIPCC_PLATFORM_HCC` is defined if the HIP platform targets hcc
-- `HIPCC_PLATFORM_NVCC` is defined if the HIP platform targets nvcc
- 
-Many projects use a mixture of an accelerator compiler (hcc or nvcc) and a standard compiler (e.g., g++). These defines are set for both accelerator and standard compilers and thus are often the best option when writing code that uses conditional compilation.
- 
- 
+All HIP projects target either AMD or NVIDIA platform. The platform affects which headers are included and which libraries are used for linking.
+
+- `HIP_PLATFORM_HCC` is defined if the HIP platform targets AMD
+
+- `HIP_PLATFORM_NVCC` is defined if the HIP platform targets NVIDIA
+
+On AMD platform, the compiler was hcc, but is deprecated in ROCM v3.5 release, and HIP-Clang compiler is introduced for compiling HIP programs.
+
+For most HIP applications, the transition from hcc to HIP-Clang is transparent.
+HIPCC and HIP cmake files automatically choose compilation options for HIP-Clang and hide the difference between the hcc and hip-clang code.
+However, minor changes may be required as HIP-Clang has stricter syntax and semantic checks compared to hcc.
+
+Many projects use a mixture of an accelerator compiler (AMD or NVIDIA) and a standard compiler (e.g. g++). These defines are set for both accelerator and standard compilers and thus are often the best option when writing code that uses conditional compilation.
+
+
+
 ### Identifying the Compiler: hcc, hip-clang or nvcc
-Often, it's useful to know whether the underlying compiler is hcc, hip-clang or nvcc. This knowledge can guard platform-specific code (features that only work on the nvcc, hip-clang or hcc path but not all) or aid in platform-specific performance tuning.   
- 
+Often, it's useful to know whether the underlying compiler is hcc, HIP-Clang or nvcc. This knowledge can guard platform-specific code or aid in platform-specific performance tuning.
+
+
 ```
 #ifdef __HCC__
-// Compiled with hcc 
- 
+// Compiled with hcc
+
 ```
 ```
 #ifdef __HIP__
-// Compiled with hip-clang 
- 
+// Compiled with HIP-Clang
+
 ```
- 
+
 ```
 #ifdef __NVCC__
-// Compiled with nvcc  
-//  Could be compiling with Cuda language extensions enabled (for example, a ".cu file)
+// Compiled with nvcc
+//  Could be compiling with CUDA language extensions enabled (for example, a ".cu file)
 //  Could be in pass-through mode to an underlying host compile OR (for example, a .cpp file)
- 
+
 ```
- 
+
 ```
 #ifdef __CUDACC__
-// Compiled with nvcc (Cuda language extensions enabled) 
+// Compiled with nvcc (CUDA language extensions enabled)
 ```
- 
-hcc and hip-clang directly generates the host code (using the Clang x86 target) and passes the code to another host compiler. Thus, they have no equivalent of the \__CUDA_ACC define.
- 
-The macro `__HIPCC__` is set if either `__HCC__`, `__HIP__` or `__CUDACC__` is defined. This configuration is useful in determining when code is being compiled using an accelerator-enabled compiler (hcc or nvcc) as opposed to a standard host compiler (GCC, ICC, Clang, etc.).
- 
+
+Compiler directly generates the host code (using the Clang x86 target) and passes the code to another host compiler. Thus, they have no equivalent of the \__CUDA_ACC define.
+
+
 ### Identifying Current Compilation Pass: Host or Device
- 
-Both nvcc and hcc make two passes over the code: one for host code and one for device code. `__HIP_DEVICE_COMPILE__` is set to a nonzero value when the compiler (hcc or nvcc) is compiling code for a device inside a `__global__` kernel or for a device function. `__HIP_DEVICE_COMPILE__` can replace #ifdef checks on the `__CUDA_ARCH__` define.
- 
+
+nvcc makes two passes over the code: one for host code and one for device code.
+HIP-Clang will have multiple passes over the code: one for the host code, and one for each architecture on the device code.
+`__HIP_DEVICE_COMPILE__` is set to a nonzero value when the compiler (hcc, HIP-Clang or nvcc) is compiling code for a device inside a `__global__` kernel or for a device function. `__HIP_DEVICE_COMPILE__` can replace #ifdef checks on the `__CUDA_ARCH__` define.
+
 ```
-// #ifdef __CUDA_ARCH__  
+// #ifdef __CUDA_ARCH__
 #if __HIP_DEVICE_COMPILE__
 ```
- 
-Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, and it doesn't represent the feature capability of the target device.  
+
+Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, and it doesn't represent the feature capability of the target device.
 
 
 ### Compiler Defines: Summary
-|Define  		|  hcc      |  hip-clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.) 
+|Define  		|  hcc      |  HIP-Clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.)
 |--- | --- | --- | --- |---|
 |HIP-related defines:|
 |`__HIP_PLATFORM_HCC__`| Defined | Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
 |`__HIP_PLATFORM_NVCC__`| Undefined | Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
-|`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined 
+|`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined
 |`__HIPCC__`		| Defined   | Defined | Defined 		|  Undefined
-|`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) |0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0 
+|`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) |0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0
 |nvcc-related defines:|
 |`__CUDACC__` 		| Undefined | Undefined | Defined if source code is compiled by nvcc; undefined otherwise 		|  Undefined
 |`__NVCC__` 		| Undefined | Undefined | Defined 		|  Undefined
-|`__CUDA_ARCH__`		| Undefined | Undefined | Unsigned representing compute capability (e.g., "130") if in device code; 0 if in host code  | Undefined 
+|`__CUDA_ARCH__`		| Undefined | Undefined | Unsigned representing compute capability (e.g., "130") if in device code; 0 if in host code  | Undefined
 |hcc-related defines:|
 |`__HCC__`  		| Defined   | Undefined | Undefined   	|  Undefined
-|`__HCC_ACCELERATOR__`  	| Nonzero if in device code; otherwise undefined | Undefined | Undefined | Undefined 
+|`__HCC_ACCELERATOR__`  	| Nonzero if in device code; otherwise undefined | Undefined | Undefined | Undefined
 |hip-clang-related defines:|
 |`__HIP__`  		| Undefined | Defined   | Undefined   	|  Undefined
-|hcc/hip-clang common defines:|
+|hcc/HIP-Clang common defines:|
 |`__clang__`		| Defined   | Defined | Undefined 	|  Defined if using Clang; otherwise undefined
-
 
 ## Identifying Architecture Features
 
 ### HIP_ARCH Defines
 
-Some Cuda code tests `__CUDA_ARCH__` for a specific value to determine whether the machine supports a certain architectural feature. For instance,
+Some CUDA code tests `__CUDA_ARCH__` for a specific value to determine whether the machine supports a certain architectural feature. For instance,
 
 ```
-#if (__CUDA_ARCH__ >= 130) 
+#if (__CUDA_ARCH__ >= 130)
 // doubles are supported
 ```
-This type of code requires special attention, since hcc/AMD and nvcc/Cuda devices have different architectural capabilities. Moreover, you can't determine the presence of a feature using a simple comparison against an architecture's version number. HIP provides a set of defines and device properties to query whether a specific architectural feature is supported.
+This type of code requires special attention, since hcc/AMD and nvcc/CUDA devices have different architectural capabilities. Moreover, you can't determine the presence of a feature using a simple comparison against an architecture's version number. HIP provides a set of defines and device properties to query whether a specific architectural feature is supported.
 
-The `__HIP_ARCH_*` defines can replace comparisons of `__CUDA_ARCH__` values: 
+The `__HIP_ARCH_*` defines can replace comparisons of `__CUDA_ARCH__` values:
 ```
 //#if (__CUDA_ARCH__ >= 130)   // non-portable
 if __HIP_ARCH_HAS_DOUBLES__ {  // portable HIP feature query
@@ -281,7 +291,7 @@ The table below shows the full set of architectural properties that HIP supports
 |`__HIP_ARCH_HAS_SURFACE_FUNCS__`              |   hasSurfaceFuncs              |                                                     
 |`__HIP_ARCH_HAS_3DGRID__`                     |   has3dGrid                    | Grids and groups are 3D                                                     
 |`__HIP_ARCH_HAS_DYNAMIC_PARALLEL__`           |   hasDynamicParallelism        | 
-                                                                                 
+
 
 ## Finding HIP
 
@@ -291,10 +301,24 @@ Makefiles can use the following syntax to conditionally provide a default HIP_PA
 HIP_PATH ?= $(shell hipconfig --path)
 ```
 
-## hipLaunchKernel 
+## Identifying HIP Runtime
+
+HIP can depend on ROCclr, or NVCC as runtime
+
+- AMD platform
+`HIP_ROCclr` is defined on AMD platform that HIP use Radeon Open Compute Common Language Runtime, called ROCclr.
+
+ROCclr is a virtual device interface that HIP runtimes interact with different backends which allows runtimes to work on Linux , as well as Windows without much efforts.
+
+- NVIDIA platform
+On Nvidia platform, HIP is just a thin layer on top of CUDA.
+On non-AMD platform, HIP runtime determines if nvcc is available and can be used. If available, HIP_PLATFORM is set to nvcc and underneath CUDA path is used.
+
+
+## hipLaunchKernel
 
 hipLaunchKernel is a variadic macro which accepts as parameters the launch configurations (grid dims, group dims, stream, dynamic shared size) followed by a variable number of kernel arguments.
-This sequence is then expanded into the appropriate kernel launch syntax depending on the platform.  
+This sequence is then expanded into the appropriate kernel launch syntax depending on the platform.
 While this can be a convenient single-line kernel launch syntax, the macro implementation can cause issues when nested inside other macros.  For example, consider the following:
 
 ```
@@ -325,57 +349,42 @@ MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCal
 
 ## Compiler Options
 
-hipcc is a portable compiler driver that will call nvcc or hcc (depending on the target system) and attach all required include and library options. It passes options through to the target compiler. Tools that call hipcc must ensure the compiler options are appropriate for the target compiler. The `hipconfig` script may helpful in making
-infrastructure that identifies the target platform and sets options appropriately. It returns either "nvcc" or "hcc." The following sample shows the script in a makefile:
-
-```
-HIP_PLATFORM=$(shell hipconfig --compiler)
-
-ifeq (${HIP_PLATFORM}, nvcc)
-	HIPCC_FLAGS = -gencode=arch=compute_20,code=sm_20 
-endif
-ifeq (${HIP_PLATFORM}, hcc)
-	HIPCC_FLAGS = -Wno-deprecated-register
-endif
-
-```
-
+hipcc is a portable compiler driver that will call nvcc or HIP-Clang (depending on the target system) and attach all required include and library options. It passes options through to the target compiler. Tools that call hipcc must ensure the compiler options are appropriate for the target compiler.
+The `hipconfig` script may helpful in identifying the target platform, compiler and runtime. It can also help set options appropriately.
 
 ## Linking Issues
 
 ### Linking With hipcc
 
-hipcc adds the necessary libraries for HIP as well as for the accelerator compiler (nvcc or hcc). We recommend linking with hipcc.
+hipcc adds the necessary libraries for HIP as well as for the accelerator compiler (nvcc or AMD compiler). We recommend linking with hipcc since it automatically links the binary to the necessary HIP runtime libraries.  It also has knowledge on how to link and to manage the GPU objects.
 
 ### -lm Option
- 
+
 hipcc adds -lm by default to the link command.
 
 
 ## Linking Code With Other Compilers
 
-Cuda code often uses nvcc for accelerator code (defining and launching kernels, typically defined in .cu or .cuh files). 
-It also uses a standard compiler (g++) for the rest of the application. nvcc is a preprocessor that employs a standard host compiler (e.g., gcc) to generate the host code. 
-Code compiled using this tool can employ only the intersection of language features supported by both nvcc and the host compiler. 
-In some cases, you must take care to ensure the data types and alignment of the host compiler are identical to those of the device compiler. Only some host compilers are supported---for example, recent nvcc versions lack Clang host-compiler capability.  
+CUDA code often uses nvcc for accelerator code (defining and launching kernels, typically defined in .cu or .cuh files).
+It also uses a standard compiler (g++) for the rest of the application. nvcc is a preprocessor that employs a standard host compiler (gcc) to generate the host code.
+Code compiled using this tool can employ only the intersection of language features supported by both nvcc and the host compiler.
+In some cases, you must take care to ensure the data types and alignment of the host compiler are identical to those of the device compiler. Only some host compilers are supported---for example, recent nvcc versions lack Clang host-compiler capability.
 
 hcc generates both device and host code using the same Clang-based compiler. The code uses the same API as gcc, which allows code generated by different gcc-compatible compilers to be linked together. For example, code compiled using hcc can link with code compiled using "standard" compilers (such as gcc, ICC and Clang). Take care to ensure all compilers use the same standard C++ header and library formats.
 
 
 ### libc++ and libstdc++
 
-Version 0.86 of hipcc now uses libstdc++ by default for the HCC platform.  This improves cross-linking support between G++ and hcc, in particular for interfaces that use
-  standard C++ libraries (ie std::vector, std::string). 
+hipcc links to libstdc++ by default. This provides better compatibility between g++ and HIP.
 
-If you pass "--stdlib=libc++" to hipcc, hipcc will use the libc++ library.  Generally, libc++ provides a broader set of C++ features while libstdc++ is the standard 
-for more compilers (notably including g++).    
+If you pass "--stdlib=libc++" to hipcc, hipcc will use the libc++ library.  Generally, libc++ provides a broader set of C++ features while libstdc++ is the standard for more compilers (notably including g++).
 
-When cross-linking C++ code, any C++ functions that use types from the C++ standard library (including std::string, std::vector and other containers) must use the same standard-library implementation. They include the following:  
+When cross-linking C++ code, any C++ functions that use types from the C++ standard library (including std::string, std::vector and other containers) must use the same standard-library implementation. They include the following:
 
 - Functions or kernels defined in hcc that are called from a standard compiler
 - Functions defined in a standard compiler that are called from hcc.
 
-Applications with these interfaces should use the default libstdc++ linking.    
+Applications with these interfaces should use the default libstdc++ linking.
 
 Applications which are compiled entirely with hipcc, and which benefit from advanced C++ features not supported in libstdc++, and which do not require portability to nvcc, may choose to use libc++.
 
@@ -387,12 +396,12 @@ The hip_runtime.h and hip_runtime_api.h files define the types, functions and en
 - hip_runtime_api.h: defines all the HIP runtime APIs (e.g., hipMalloc) and the types required to call them. A source file that is only calling HIP APIs but neither defines nor launches any kernels can include hip_runtime_api.h. hip_runtime_api.h uses no custom hc language features and can be compiled using a standard C++ compiler.
 - hip_runtime.h: included in hip_runtime_api.h. It additionally provides the types and defines required to create and launch kernels. hip_runtime.h does use custom hc language features, but they are guarded by ifdef checks. It can be compiled using a standard C++ compiler but will expose a subset of the available functions.
 
-Cuda has slightly different contents for these two files. In some cases you may need to convert hipified code to include the richer hip_runtime.h instead of hip_runtime_api.h.
+CUDA has slightly different contents for these two files. In some cases you may need to convert hipified code to include the richer hip_runtime.h instead of hip_runtime_api.h.
 
 ### Using a Standard C++ Compiler
 You can compile hip\_runtime\_api.h using a standard C or C++ compiler (e.g., gcc or ICC). The HIP include paths and defines (`__HIP_PLATFORM_HCC__` or `__HIP_PLATFORM_NVCC__`) must pass to the standard compiler; hipconfig then returns the necessary options:
 ```
-> hipconfig --cxx_config 
+> hipconfig --cxx_config
  -D__HIP_PLATFORM_HCC__ -I/home/user1/hip/include
 ```
 
@@ -410,11 +419,11 @@ The hipify-perl script automatically converts "cuda_runtime.h" to "hip_runtime.h
 
 #### cuda.h
 
-The hcc path provides an empty cuda.h file. Some existing Cuda programs include this file but don't require any of the functions.
+The hcc path provides an empty cuda.h file. Some existing CUDA programs include this file but don't require any of the functions.
 
 ### Choosing HIP File Extensions
 
-Many existing Cuda projects use the ".cu" and ".cuh" file extensions to indicate code that should be run through the nvcc compiler. 
+Many existing CUDA projects use the ".cu" and ".cuh" file extensions to indicate code that should be run through the nvcc compiler.
 For quick HIP ports, leaving these file extensions unchanged is often easier, as it minimizes the work required to change file names in the directory and #include statements in the files.
 
 For new projects or ports which can be re-factored, we recommend the use of the extension ".hip.cpp" for source files, and
@@ -547,7 +556,7 @@ hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../..
 
 #### /usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();
 
-If you pass a ".cu" file, hcc will attempt to compile it as a Cuda language file. You must tell hcc that it's in fact a C++ file: use the "-x c++" option.
+If you pass a ".cu" file, hcc will attempt to compile it as a CUDA language file. You must tell hcc that it's in fact a C++ file: use the "-x c++" option.
 
 
 ### HIP Environment Variables
