@@ -1962,7 +1962,10 @@ hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* dev_ptr) {
 
   /* Create an handle for IPC. Store the memory size inside the handle */
   ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(handle);
-  dev_mem_obj->IpcCreate(offset, &(ihandle->psize), &(ihandle->ipc_handle));
+  if(!dev_mem_obj->IpcCreate(offset, &(ihandle->psize), &(ihandle->ipc_handle))) {
+    DevLogPrintfError("IPC memory creation failed for memory: 0x%x", dev_ptr);
+    HIP_RETURN(hipErrorInvalidValue);
+  }
 
   HIP_RETURN(hipSuccess);
 }
