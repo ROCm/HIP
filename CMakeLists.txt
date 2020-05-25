@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.4.3)
 project(hip)
 # sample command for hip-rocclr, you'll need to have rocclr installed
 #  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr ..
-#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr -DROCclr_DIR=/extra/lmoriche/hip-rocclr/rocclr -DOPENCL_DIR=/extra/lmoriche/clients/lmoriche_opencl_dev2/drivers/opencl/api/opencl -DLIBROCclr_STATIC_DIR=/extra/lmoriche/hip-rocclr/build/rocclr ..
+#  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr -DOPENCL_DIR=/path/to/opencl/api/opencl -DCMAKE_PREFIX_PATH=/path/to/rocclr/build/or/install/directory ..
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 

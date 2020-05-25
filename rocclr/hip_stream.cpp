@@ -44,15 +44,15 @@ namespace hip {
 
 // ================================================================================================
 Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p,
-    unsigned int f, bool null_stream)
+    unsigned int f, bool null_stream, const std::vector<uint32_t>& cuMask)
   : queue_(nullptr), lock_("Stream Callback lock"), device_(dev),
-    priority_(p), flags_(f), null_(null_stream) {}
+    priority_(p), flags_(f), null_(null_stream), cuMask_(cuMask) {}
 
 // ================================================================================================
 bool Stream::Create() {
   cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
   queue_ = new amd::HostQueue(*device_->asContext(), *device_->devices()[0], properties,
-                             amd::CommandQueue::RealTimeDisabled, priority_);
+                             amd::CommandQueue::RealTimeDisabled, priority_, cuMask_);
   // Create a host queue
   bool result = (queue_ != nullptr) ? queue_->create() : false;
   // Insert just created stream into the list of the blocking queues
@@ -160,8 +160,9 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
 
 // ================================================================================================
 static hipError_t ihipStreamCreate(hipStream_t* stream,
-                                  unsigned int flags, amd::CommandQueue::Priority priority) {
-  hip::Stream* hStream = new hip::Stream(hip::getCurrentDevice(), priority, flags);
+                                  unsigned int flags, amd::CommandQueue::Priority priority,
+                                  const std::vector<uint32_t>& cuMask = {}) {
+  hip::Stream* hStream = new hip::Stream(hip::getCurrentDevice(), priority, flags, false, cuMask);
 
   if (hStream == nullptr) {
     return hipErrorOutOfMemory;
@@ -311,3 +312,21 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
   HIP_RETURN(hipSuccess);
 }
+
+// ================================================================================================
+hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize,
+                                        const uint32_t* cuMask) {
+  HIP_INIT_API(hipExtStreamCreateWithCUMask, stream, cuMaskSize, cuMask);
+
+  if (stream == nullptr) {
+    HIP_RETURN(hipErrorInvalidHandle);
+  }
+  if (cuMaskSize == 0 || cuMask == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  const std::vector<uint32_t> cuMaskv(cuMask, cuMask + cuMaskSize);
+
+  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, amd::CommandQueue::Priority::Normal, cuMaskv));
+}
+

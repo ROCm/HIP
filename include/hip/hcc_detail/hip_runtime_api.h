@@ -850,6 +850,28 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority);
 
 
 /**
+ * @brief Create an asynchronous stream with the specified CU mask.
+ *
+ * @param[in, out] stream Pointer to new stream
+ * @param[in ] cuMaskSize Size of CU mask bit array passed in.
+ * @param[in ] cuMask Bit-vector representing the CU mask. Each active bit represents using one CU.
+ * The first 32 bits represent the first 32 CUs, and so on. If its size is greater than physical
+ * CU number (i.e., multiProcessorCount member of hipDeviceProp_t), the extra elements are ignored.
+ * It is user's responsibility to make sure the input is meaningful.
+ * @return #hipSuccess, #hipErrorInvalidHandle, #hipErrorInvalidValue
+ *
+ * Create a new asynchronous stream with the specified CU mask.  @p stream returns an opaque handle
+ * that can be used to reference the newly created stream in subsequent hipStream* commands.  The
+ * stream is allocated on the heap and will remain allocated even if the handle goes out-of-scope.
+ * To release the memory used by the stream, application must call hipStreamDestroy.
+ *
+ *
+ * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ */
+hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize, const uint32_t* cuMask);
+
+
+/**
  * Stream CallBack struct
  */
 typedef void (*hipStreamCallback_t)(hipStream_t stream, hipError_t status, void* userData);
