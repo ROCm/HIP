@@ -452,7 +452,12 @@ def generate_prof_header(f, api_map, opts_map):
         arg_type = arg_tuple[0]
         fld_name = arg_tuple[1]
         arg_name = opts_list[ind]
-        f.write('  cb_data.args.' + name + '.' + fld_name + ' = (' + arg_type + ')' + arg_name + '; \\\n')
+        if arg_type == "char*":
+          f.write('  cb_data.args.' + name + '.' + fld_name + ' = strdup("***"); \\\n')
+        elif arg_type == "const char*":
+          f.write('  cb_data.args.' + name + '.' + fld_name + ' = (' + arg_name + ') ? strdup(' + arg_name + ') : NULL; \\\n')
+        else:
+          f.write('  cb_data.args.' + name + '.' + fld_name + ' = (' + arg_type + ')' + arg_name + '; \\\n')
     f.write('};\n')
   f.write('#define INIT_CB_ARGS_DATA(cb_id, cb_data) INIT_##cb_id##_CB_ARGS_DATA(cb_data)\n')
 
@@ -467,13 +472,20 @@ def generate_prof_header(f, api_map, opts_map):
   f.write('  switch (id) {\n')
   for name, args in api_map.items():
     f.write('    case HIP_API_ID_' + name + ':\n')
-    f.write('      oss << "' + name + '("')
+    f.write('      oss << "' + name + '(";\n')
     for ind in range(0, len(args)):
       arg_tuple = args[ind]
+      arg_type = arg_tuple[0]
       arg_name = arg_tuple[1]
-      if ind != 0: f.write(' << ","')
-      f.write('\n          << " ' + arg_name  + '=" << data->args.' + name + '.' + arg_name)
-    f.write('\n          << ")";\n')
+      var_name = 'data->args.' + name + '.' + arg_name
+      delim = '' if ind == 0 else ', ';
+      oss_stream = 'oss << "' + delim + arg_name  + '='
+      line_shift = '      '
+      f.write(line_shift)
+      if re.search(r'\*', arg_type):
+        f.write('if (' + var_name + ' == NULL) ' + oss_stream + 'NULL";\n' + line_shift + 'else ')
+      f.write(oss_stream + '" << ' + var_name + ';\n')
+    f.write('      oss << ")";\n')
     f.write('    break;\n')
   f.write('    default: oss << "unknown";\n')
   f.write('  };\n')

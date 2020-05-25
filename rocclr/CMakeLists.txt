@@ -27,38 +27,11 @@ endif()
 
 set(USE_PROF_API "1")
 
-# FIXME: Make this required and remove the legacy handling below
-set(save_rocclr_dir ${ROCclr_DIR})
-set(save_rocclr_static_dir ${LIBROCclr_STATIC_DIR})
-
-find_package(ROCclr CONFIG
+find_package(ROCclr REQUIRED CONFIG
   PATHS
     /opt/rocm
     /opt/rocm/rocclr)
 
-if (NOT ROCclr_FOUND)
-  if(NOT DEFINED LIBROCclr_STATIC_DIR)
-    find_path(LIBROCclr_STATIC_DIR
-      NAMES libamdrocclr_static.a
-      PATHS /opt/rocm/rocclr
-      PATH_SUFFIXES lib)
-  else()
-    set(LIBROCclr_STATIC_DIR ${save_rocclr_static_dir})
-  endif()
-
-  if(NOT DEFINED ROCclr_DIR)
-    find_path(ROCclr_DIR
-      NAMES top.hpp
-      PATH_SUFFIXES include
-      PATHS /opt/rocm/rocclr)
-  else()
-    set(ROCclr_DIR ${save_rocclr_dir})
-  endif()
-  message("Found Static rocclr lib:${LIBROCclr_STATIC_DIR} and rocclr includes: ${ROCclr_DIR}")
-  include(${LIBROCclr_STATIC_DIR}/amdrocclr_staticTargets.cmake)
-endif()
-
-set(PROF_API_HEADER_PATH ${ROCclr_DIR}/platform)
 #############################
 # Profiling API support
 #############################
@@ -132,14 +105,6 @@ target_include_directories(hip64
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/amdocl
     ${PROJECT_SOURCE_DIR}/include/hip/hcc_detail/elfio
-
-    # FIXME: Remove ROCclr_DIr explicit references
-    ${ROCclr_DIR}
-    ${ROCclr_DIR}/include
-    ${ROCclr_DIR}/compiler/lib
-    ${ROCclr_DIR}/compiler/lib/include
-    ${ROCclr_DIR}/elf/utils/common
-    ${ROCclr_DIR}/elf/utils/libelf
     ${ROCR_INCLUDES}
     $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:amd_comgr,INTERFACE_INCLUDE_DIRECTORIES>)
@@ -204,17 +169,6 @@ set_target_properties(hip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
 set_target_properties(amdhip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
 set_target_properties(amdhip64_static PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
 
-
-
-# We expect amdhip64_static to contain objects of rocclr and hip. But linker
-# let amdhip64_static contain objects of hip only. So we will use a
-# a custom amdhip64_static_combiner to combine objects of vid and hip into
-# amdhip64_static. To avoid amdhip64_static contains itself,
-# amdhip64_static_temp is created internally.
-add_library(amdhip64_static_temp STATIC
-    $<TARGET_OBJECTS:hip64>
-    )
-
 add_library(host INTERFACE)
 target_link_libraries(host INTERFACE amdhip64)
 add_library(device INTERFACE)
@@ -226,18 +180,18 @@ target_link_libraries(device INTERFACE host)
 # filename.
 target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl)
 target_link_libraries(amdhip64_static PRIVATE Threads::Threads dl)
-target_link_libraries(amdhip64_static_temp PRIVATE Threads::Threads dl)
 
 # combine objects of vid and hip into amdhip64_static
 add_custom_target(
     amdhip64_static_combiner
     ALL
-    COMMAND rm -f $<TARGET_FILE:amdhip64_static>  # Must remove old one, otherwise the new one will contain obsolete stuff
-    COMMAND ${CMAKE_AR} -rcsT $<TARGET_FILE:amdhip64_static> $<TARGET_FILE:amdhip64_static_temp> $<TARGET_FILE:amdrocclr_static>
-    DEPENDS amdhip64_static amdhip64_static_temp amdrocclr_static # To make sure this is the last step
+    COMMAND rm -rf  static_lib_temp && mkdir static_lib_temp && cd static_lib_temp # Create temp folder to contain *.o
+    COMMAND ${CMAKE_AR} -x $<TARGET_FILE:amdrocclr_static> # Extract *.o from amdrocclr_static
+    COMMAND ${CMAKE_AR} -rcs $<TARGET_FILE:amdhip64_static> *.o # Append *.o to amdhip64_static
+    COMMAND cd .. && rm -rf  static_lib_temp # Remove temp folder
+    DEPENDS amdhip64_static amdrocclr_static # To make sure this is the last step
     COMMENT "Combining static libs into amdhip64_static"
 )
-
 
 INSTALL(PROGRAMS $<TARGET_FILE:amdhip64_static> DESTINATION lib COMPONENT MAIN)
 INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)

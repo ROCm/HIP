@@ -60,7 +60,8 @@ namespace internal {
 typedef enum {
   cg_invalid,
   cg_multi_grid,
-  cg_grid
+  cg_grid,
+  cg_workgroup
 } group_type;
 
 /**
@@ -135,6 +136,43 @@ __CG_STATIC_QUALIFIER__ void sync() {
 }
 
 } // namespace grid
+
+/**
+ *  Functionalities related to `workgroup` (thread_block in CUDA terminology)
+ *  cooperative group type
+ */
+namespace workgroup {
+
+__CG_STATIC_QUALIFIER__ dim3 group_index() {
+  return (dim3((uint32_t)hipBlockIdx_x, (uint32_t)hipBlockIdx_y,
+               (uint32_t)hipBlockIdx_z));
+}
+
+__CG_STATIC_QUALIFIER__ dim3 thread_index() {
+  return (dim3((uint32_t)hipThreadIdx_x, (uint32_t)hipThreadIdx_y,
+               (uint32_t)hipThreadIdx_z));
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t size() {
+  return((uint32_t)(hipBlockDim_x * hipBlockDim_y * hipBlockDim_z));
+}
+
+__CG_STATIC_QUALIFIER__ uint32_t thread_rank() {
+ return ((uint32_t)((hipThreadIdx_z * hipBlockDim_y * hipBlockDim_x) +
+                    (hipThreadIdx_y * hipBlockDim_x) +
+                    (hipThreadIdx_x)));
+}
+
+__CG_STATIC_QUALIFIER__ bool is_valid() {
+   //TODO(mahesha) any functionality need to be added here? I believe not
+  return true;
+}
+
+__CG_STATIC_QUALIFIER__ void sync() {
+  __syncthreads();
+}
+
+} // namespace workgroup
 
 } // namespace internal
 

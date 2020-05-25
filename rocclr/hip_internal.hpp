@@ -87,9 +87,11 @@ namespace hip {
     amd::CommandQueue::Priority priority_;
     unsigned int flags_;
     bool null_;
+    const std::vector<uint32_t> cuMask_;
 
   public:
-    Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f = 0, bool null_stream = false);
+    Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f = 0, bool null_stream = false,
+           const std::vector<uint32_t>& cuMask = {});
 
     /// Creates the hip stream object, including AMD host queue
     bool Create();
