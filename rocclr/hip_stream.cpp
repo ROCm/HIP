@@ -57,10 +57,8 @@ bool Stream::Create() {
   bool result = (queue_ != nullptr) ? queue_->create() : false;
   // Insert just created stream into the list of the blocking queues
   if (result) {
-    if (!(flags_ & hipStreamNonBlocking)) {
-      amd::ScopedLock lock(streamSetLock);
-      streamSet.insert(this);
-    }
+    amd::ScopedLock lock(streamSetLock);
+    streamSet.insert(this);
   } else {
     Destroy();
   }
@@ -104,6 +102,15 @@ int Stream::DeviceId() const {
   return device_->deviceId();
 }
 
+void Stream::syncNonBlockingStreams() {
+  amd::ScopedLock lock(streamSetLock);
+  for (auto& it : streamSet) {
+    if (it->Flags() & hipStreamNonBlocking) {
+      it->asHostQueue()->finish();
+    }
+  }
+}
+
 };
 
 // ================================================================================================
@@ -116,6 +123,8 @@ void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream
       amd::HostQueue* active_queue = stream->asHostQueue();
       // If it's the current device
       if ((&active_queue->device() == &blocking_queue->device()) &&
+          // Make sure it's a default stream
+          ((stream->Flags() & hipStreamNonBlocking) == 0) &&
           // and it's not the current stream
           (active_queue != blocking_queue) &&
           // check for a wait on the null stream
