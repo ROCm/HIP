@@ -247,20 +247,20 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
     const cl_channel_type channelType = hip::getCLChannelType(hip::getArrayFormat(pResDesc->res.linear.desc), pTexDesc->readMode);
     const amd::Image::Format imageFormat({channelOrder, channelType});
     const cl_mem_object_type imageType = hip::getCLMemObjectType(pResDesc->resType);
-    size_t offset = 0;
+    const size_t imageSizeInBytes = pResDesc->res.linear.sizeInBytes;
+    amd::Memory* buffer = getMemoryObjectWithOffset(pResDesc->res.linear.devPtr, imageSizeInBytes);
     image = ihipImageCreate(channelOrder,
                             channelType,
                             imageType,
-                            (pResDesc->res.linear.sizeInBytes / imageFormat.getElementSize()), /* imageWidth */
+                            imageSizeInBytes / imageFormat.getElementSize(), /* imageWidth */
                             0, /* imageHeight */
                             0, /* imageDepth */
                             0, /* imageArraySize */
                             0, /* imageRowPitch */
                             0, /* imageSlicePitch */
                             0, /* numMipLevels */
-                            getMemoryObject(pResDesc->res.linear.devPtr, offset));
-    // TODO take care of non-zero offset.
-    assert(offset == 0);
+                            buffer);
+    buffer->release();
     if (image == nullptr) {
       return hipErrorInvalidValue;
     }
@@ -270,7 +270,8 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
     const cl_channel_order channelOrder = hip::getCLChannelOrder(hip::getNumChannels(pResDesc->res.pitch2D.desc), pTexDesc->sRGB);
     const cl_channel_type channelType = hip::getCLChannelType(hip::getArrayFormat(pResDesc->res.pitch2D.desc), pTexDesc->readMode);
     const cl_mem_object_type imageType = hip::getCLMemObjectType(pResDesc->resType);
-    size_t offset = 0;
+    const size_t imageSizeInBytes = pResDesc->res.pitch2D.pitchInBytes * pResDesc->res.pitch2D.height;
+    amd::Memory* buffer = getMemoryObjectWithOffset(pResDesc->res.pitch2D.devPtr, imageSizeInBytes);
     image = ihipImageCreate(channelOrder,
                             channelType,
                             imageType,
@@ -281,9 +282,8 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
                             pResDesc->res.pitch2D.pitchInBytes, /* imageRowPitch */
                             0, /* imageSlicePitch */
                             0, /* numMipLevels */
-                            getMemoryObject(pResDesc->res.pitch2D.devPtr, offset));
-    // TODO take care of non-zero offset.
-    assert(offset == 0);
+                            buffer);
+    buffer->release();
     if (image == nullptr) {
       return hipErrorInvalidValue;
     }

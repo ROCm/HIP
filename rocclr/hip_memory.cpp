@@ -44,6 +44,27 @@ amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
 }
 
 // ================================================================================================
+amd::Memory* getMemoryObjectWithOffset(const void* ptr, const size_t size) {
+  size_t offset;
+  amd::Memory* memObj = getMemoryObject(ptr, offset);
+
+  if (memObj != nullptr) {
+    assert(size <= (memObj->getSize() - offset));
+    memObj = new (memObj->getContext()) amd::Buffer(*memObj, memObj->getMemFlags(), offset, size);
+    if (memObj == nullptr) {;
+      return nullptr;
+    }
+
+    if (!memObj->create(nullptr)) {
+      memObj->release();
+      return nullptr;
+    }
+  }
+
+  return memObj;
+}
+
+// ================================================================================================
 hipError_t ihipFree(void *ptr)
 {
   if (ptr == nullptr) {
