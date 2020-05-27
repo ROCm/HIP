@@ -37,7 +37,8 @@ public:
 
 class Event {
 public:
-  Event(unsigned int flags) : flags(flags), lock_("hipEvent_t"), event_(nullptr) {
+  Event(unsigned int flags) : flags(flags), lock_("hipEvent_t"),
+                              event_(nullptr), recorded_(false) {
     // No need to init event_ here as addMarker does that
   }
 
@@ -53,12 +54,17 @@ public:
   hipError_t elapsedTime(Event& stop, float& ms);
   hipError_t streamWait(amd::HostQueue* queue, uint flags);
 
-  void addMarker(amd::HostQueue* queue, amd::Command* command);
+  void addMarker(amd::HostQueue* queue, amd::Command* command, bool record);
 
 private:
   amd::Monitor lock_;
   amd::HostQueue* stream_;
   amd::Event* event_;
+
+  //! Flag to indicate hipEventRecord has been called. This is needed except for
+  //! hip*ModuleLaunchKernel API which takes start and stop events so no
+  //! hipEventRecord is called. Cleanup needed once those APIs are deprecated.
+  bool recorded_;
 
   bool ready();
 };
