@@ -442,10 +442,10 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
       if (createFunc(&function, module, devFunc.deviceName.c_str()) &&
           function != nullptr) {
         devFunc.functions[deviceId] = function;
-      }
-      else {
-   //     tprintf(DB_FB, "__hipRegisterFunction cannot find kernel %s for"
-   //         " device %d\n", deviceName, deviceId);
+      } else {
+         DevLogPrintfError("__hipRegisterFunction cannot find kernel %s for device %d\n",
+                           devFunc.deviceName.c_str(), deviceId);
+         return nullptr;
       }
     }
     return devFunc.functions[deviceId];
@@ -547,7 +547,9 @@ bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t 
         dvar->rvars[deviceId].amd_mem_obj_ = amd_mem_obj;
         amd::MemObjMap::AddMemObj(device_ptr, amd_mem_obj);
       } else {
-        LogError("__hipRegisterVar cannot find kernel for device \n");
+        DevLogPrintfError("__hipRegisterVar cannot find Var: %s for deviceId: 0x%x \n",
+                           dvar->hostVar.c_str(), deviceId);
+        return false;
       }
     }
     *size_ptr = dvar->rvars[deviceId].getvarsize();
