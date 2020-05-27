@@ -855,31 +855,37 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
 
 namespace hip_impl {
 hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-    int* numBlocks, int* numGrids,
-    const amd::Device& device, hipFunction_t func, int  blockSize,
+    int* maxBlocksPerCU, int* numBlocksPerGrid, int* bestBlockSize,
+    const amd::Device& device, hipFunction_t func, int inputBlockSize,
     size_t dynamicSMemSize, bool bCalcPotentialBlkSz)
 {
   hip::Function* function = hip::Function::asFunction(func);
   const amd::Kernel& kernel = *function->function_;
 
   const device::Kernel::WorkGroupInfo* wrkGrpInfo = kernel.getDeviceKernel(device)->workGroupInfo();
-  if (blockSize == 0) {
-    if (bCalcPotentialBlkSz == false){
+  if (bCalcPotentialBlkSz == false) {
+    if (inputBlockSize == 0) {
       return hipErrorInvalidValue;
     }
-    else {
-      blockSize = device.info().maxWorkGroupSize_; // maxwavefrontperblock
+    *bestBlockSize = 0;
+    // Make sure the requested block size is smaller than max supported
+    if (inputBlockSize > int(device.info().maxWorkGroupSize_)) {
+        *maxBlocksPerCU = 0;
+        *numBlocksPerGrid = 0;
+        return hipSuccess;
     }
   }
-
-  // Make sure the requested block size is smaller than max supported
-  if (blockSize > int(device.info().maxWorkGroupSize_)) {
-    numBlocks = 0;
-    numGrids = 0;
-    return hipSuccess;
+  else {
+    if (inputBlockSize > device.info().maxWorkGroupSize_ ||
+            inputBlockSize == 0) {
+      // The user wrote the kernel to work with a workgroup size
+      // bigger than this hardware can support. Or they do not care
+      // about the size So just assume its maximum size is
+      // constrained by hardware
+      inputBlockSize = device.info().maxWorkGroupSize_;
+    }
   }
-
-  // Find threads accupancy per CU => simd_per_cu * GPR usage
+  // Find wave occupancy per CU => simd_per_cu * GPR usage
   constexpr size_t MaxWavesPerSimd = 8;  // Limited by SPI 32 per CU, hence 8 per SIMD
   size_t VgprWaves = MaxWavesPerSimd;
   if (wrkGrpInfo->usedVGPRs_ > 0) {
@@ -888,26 +894,49 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
 
   size_t GprWaves = VgprWaves;
   if (wrkGrpInfo->usedSGPRs_ > 0) {
-    const size_t maxSGPRs = (device.info().gfxipVersion_ < 800) ? 512 : 800;
-    size_t SgprWaves = maxSGPRs / amd::alignUp(wrkGrpInfo->usedSGPRs_, 16);
+    size_t maxSGPRs;
+    if (device.info().gfxipVersion_ < 800) {
+      maxSGPRs = 512;
+    }
+    else if (device.info().gfxipVersion_ < 1000) {
+      maxSGPRs = 800;
+    }
+    else {
+      maxSGPRs = SIZE_MAX; // gfx10+ does not share SGPRs between waves
+    }
+    const size_t SgprWaves = maxSGPRs / amd::alignUp(wrkGrpInfo->usedSGPRs_, 16);
     GprWaves = std::min(VgprWaves, SgprWaves);
   }
 
-  size_t alu_accupancy = device.info().simdPerCU_ * std::min(MaxWavesPerSimd, GprWaves);
-  alu_accupancy *= wrkGrpInfo->wavefrontSize_;
-  // Calculate blocks occupancy per CU
-  *numBlocks = alu_accupancy / amd::alignUp(blockSize, wrkGrpInfo->wavefrontSize_);
+  const size_t alu_occupancy = device.info().simdPerCU_ * std::min(MaxWavesPerSimd, GprWaves);
+  const int alu_limited_threads = alu_occupancy * wrkGrpInfo->wavefrontSize_;
 
-  size_t total_used_lds = wrkGrpInfo->usedLDSSize_ + dynamicSMemSize;
+  int lds_occupancy_wgs = INT_MAX;
+  const size_t total_used_lds = wrkGrpInfo->usedLDSSize_ + dynamicSMemSize;
   if (total_used_lds != 0) {
-    // Calculate LDS occupancy per CU. lds_per_cu / (static_lsd + dynamic_lds)
-    int lds_occupancy = static_cast<int>(device.info().localMemSize_ / total_used_lds);
-    *numBlocks = std::min(*numBlocks, lds_occupancy);
+    lds_occupancy_wgs = static_cast<int>(device.info().localMemSize_ / total_used_lds);
   }
+  // Calculate how many blocks of inputBlockSize we can fit per CU
+  // Need to align with hardware wavefront size. If they want 65 threads, but
+  // waves are 64, then we need 128 threads per block.
+  // So this calculates how many blocks we can fit.
+  *maxBlocksPerCU = alu_limited_threads / amd::alignUp(inputBlockSize, wrkGrpInfo->wavefrontSize_);
+  // Unless those blocks are further constrained by LDS size.
+  *maxBlocksPerCU = std::min(*maxBlocksPerCU, lds_occupancy_wgs);
 
-  if (bCalcPotentialBlkSz) {
-    *numGrids = *numBlocks * device.info().numRTCUs_;
-  }
+  // Some callers of this function want to return the block size, in threads, that
+  // leads to the maximum occupancy. In that case, inputBlockSize is the maximum
+  // workgroup size the user wants to allow, or that the hardware can allow.
+  // It is either the number of threads that we are limited to due to occupancy, or
+  // the maximum available block size for this kernel, which could have come from the
+  // user. e.g., if the user indicates the maximum block size is 64 threads, but we
+  // calculate that 128 threads can fit in each CU, we have to give up and return 64.
+  *bestBlockSize = std::min(alu_limited_threads, amd::alignUp(inputBlockSize, wrkGrpInfo->wavefrontSize_));
+  // If the best block size is smaller than the block size used to fit the maximum,
+  // then we need to make the grid bigger for full occupancy.
+  const int bestBlocksPerCU = alu_limited_threads / (*bestBlockSize);
+  // Unless those blocks are further constrained by LDS size.
+  *numBlocksPerGrid = device.info().maxComputeUnits_ * std::min(bestBlocksPerCU, lds_occupancy_wgs);
 
   return hipSuccess;
 }
@@ -927,13 +956,14 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
     return HIP_RETURN(hipErrorInvalidValue);
   }
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
-  int num_grids = 0;
+  int max_blocks_per_grid = 0;
   int num_blocks = 0;
+  int best_block_size = 0;
   hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-    &num_blocks, &num_grids, device, func, 0, dynSharedMemPerBlk,true);
+    &num_blocks, &max_blocks_per_grid, &best_block_size, device, func, blockSizeLimit, dynSharedMemPerBlk,true);
   if (ret == hipSuccess) {
-    *blockSize = num_blocks;
-    *gridSize = num_grids;
+    *blockSize = best_block_size;
+    *gridSize = max_blocks_per_grid;
   }
   HIP_RETURN(ret);
 }
@@ -947,13 +977,14 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize
     return HIP_RETURN(hipErrorInvalidValue);
   }
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
-  int num_grids = 0;
+  int max_blocks_per_grid = 0;
   int num_blocks = 0;
+  int best_block_size = 0;
   hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-    &num_blocks, &num_grids, device, f, 0, dynSharedMemPerBlk,true);
+    &num_blocks, &max_blocks_per_grid, &best_block_size, device, f, blockSizeLimit, dynSharedMemPerBlk,true);
   if (ret == hipSuccess) {
-    *blockSize = num_blocks;
-    *gridSize = num_grids;
+    *blockSize = best_block_size;
+    *gridSize = max_blocks_per_grid;
   }
   HIP_RETURN(ret);
 }
@@ -967,13 +998,14 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* 
     return HIP_RETURN(hipErrorInvalidValue);
   }
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
-  int num_grids = 0;
+  int max_blocks_per_grid = 0;
   int num_blocks = 0;
+  int best_block_size = 0;
   hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-    &num_blocks, &num_grids, device, f, 0, dynSharedMemPerBlk,true);
+    &num_blocks, &max_blocks_per_grid, &best_block_size, device, f, blockSizeLimit, dynSharedMemPerBlk,true);
   if (ret == hipSuccess) {
-    *blockSize = num_blocks;
-    *gridSize = num_grids;
+    *blockSize = best_block_size;
+    *gridSize = max_blocks_per_grid;
   }
   HIP_RETURN(ret);
 }
@@ -988,8 +1020,10 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
 
   int num_blocks = 0;
+  int max_blocks_per_grid = 0;
+  int best_block_size = 0;
   hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-    &num_blocks, nullptr, device, f, blockSize, dynSharedMemPerBlk, false);
+    &num_blocks, &max_blocks_per_grid, &best_block_size, device, f, blockSize, dynSharedMemPerBlk, false);
   *numBlocks = num_blocks;
   HIP_RETURN(ret);
 }
@@ -1005,8 +1039,10 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numB
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
 
   int num_blocks = 0;
+  int max_blocks_per_grid = 0;
+  int best_block_size = 0;
   hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-    &num_blocks, nullptr, device, f, blockSize, dynSharedMemPerBlk, false);
+    &num_blocks, &max_blocks_per_grid, &best_block_size, device, f, blockSize, dynSharedMemPerBlk, false);
   *numBlocks = num_blocks;
   HIP_RETURN(ret);
 }
@@ -1027,8 +1063,10 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
 
   int num_blocks = 0;
+  int max_blocks_per_grid = 0;
+  int best_block_size = 0;
   hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-    &num_blocks, nullptr, device, func, blockSize, dynamicSMemSize, false);
+    &num_blocks, &max_blocks_per_grid, &best_block_size, device, func, blockSize, dynamicSMemSize, false);
   *numBlocks = num_blocks;
   HIP_RETURN(ret);
 }
@@ -1050,8 +1088,10 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
   const amd::Device& device = *hip::getCurrentDevice()->devices()[0];
 
   int num_blocks = 0;
+  int max_blocks_per_grid = 0;
+  int best_block_size = 0;
   hipError_t ret = hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-    &num_blocks, nullptr, device, func, blockSize, dynamicSMemSize, false);
+    &num_blocks, &max_blocks_per_grid, &best_block_size, device, func, blockSize, dynamicSMemSize, false);
   *numBlocks = num_blocks;
   HIP_RETURN(ret);
 }
