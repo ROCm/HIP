@@ -458,11 +458,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   command->enqueue();
 
   if(startEvent != nullptr) {
-    eStart->addMarker(queue, command);
+    eStart->addMarker(queue, command, false);
     command->retain();
   }
   if(stopEvent != nullptr) {
-    eStop->addMarker(queue, command);
+    eStop->addMarker(queue, command, false);
     command->retain();
   }
   command->release();
