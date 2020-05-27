@@ -3377,7 +3377,7 @@ hipError_t hipLaunchKernel(const void* function_address,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
 
-#if __HIP_ROCclr__
+#if __HIP_ROCclr__ || !defined(__HCC__)
 hipError_t hipBindTexture(
     size_t* offset,
     const textureReference* tex,
