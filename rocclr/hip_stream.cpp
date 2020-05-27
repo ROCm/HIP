@@ -134,6 +134,7 @@ void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream
         if ((command != nullptr) &&
             // Check the current active status
             (command->status() != CL_COMPLETE)) {
+          command->notifyCmdQueue();
           eventWaitList.push_back(command);
         }
       }
