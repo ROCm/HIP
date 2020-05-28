@@ -878,7 +878,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
     }
   }
   else {
-    if (inputBlockSize > device.info().maxWorkGroupSize_ ||
+    if (inputBlockSize > int(device.info().maxWorkGroupSize_) ||
             inputBlockSize == 0) {
       // The user wrote the kernel to work with a workgroup size
       // bigger than this hardware can support. Or they do not care
