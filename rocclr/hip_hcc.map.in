@@ -180,6 +180,7 @@ global:
     hipRemoveActivityCallback;
     hipApiName;
     hipKernelNameRef;
+    hipKernelNameRefByPtr;
     hipProfilerStart;
     hipProfilerStop;
     hiprtcCompileProgram;
