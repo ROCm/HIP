@@ -19,6 +19,7 @@
  THE SOFTWARE. */
 
 #include "hip/hip_runtime.h"
+#include "hip_internal.hpp"
 #include "hip_prof_api.h"
 
 // HIP API callback/activity
@@ -27,6 +28,19 @@ api_callbacks_table_t callbacks_table;
 
 extern const std::string& FunctionName(const hipFunction_t f);
 const char* hipKernelNameRef(const hipFunction_t f) { return FunctionName(f).c_str(); }
+const char* hipKernelNameRefByPtr(const void *hostFunction, hipStream_t stream) {
+  hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
+  int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
+  if (deviceId == -1) {
+    DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
+    return NULL;
+  }
+  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
+  if (func == nullptr) {
+    return NULL;
+  }
+  return hipKernelNameRef(func);
+}
 
 hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg) {
   return callbacks_table.set_callback(id, reinterpret_cast<api_callbacks_table_t::fun_t>(fun), arg) ?
