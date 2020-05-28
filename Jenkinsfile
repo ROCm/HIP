@@ -92,6 +92,48 @@ def docker_clean_images( String org, String image_name )
 ////////////////////////////////////////////////////////////////////////
 // Checkout source code, source dependencies and update version number numbers
 // Returns a relative path to the directory where the source exists in the workspace
+String checkout_opencl()
+{
+  String source_dir_rel = "src"
+  String source_opencl_rel = "${source_dir_rel}/opencl"
+  stage("opencl clone")
+  {
+    sh '''#!/usr/bin/env bash
+    git clone -b master-next https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git ${source_opencl_rel}
+    '''
+  }
+  return source_opencl_rel
+}
+String checkout_vdi()
+{
+  String source_dir_rel = "src"
+  String source_vdi_rel = "${source_dir_rel}/rocclr"
+  stage("vdi clone")
+  {
+    sh """#!/usr/bin/env bash
+    rm -rf ${source_vdi_rel}
+    git clone https://github.com/ROCm-Developer-Tools/ROCclr.git ${source_vdi_rel}
+    """
+  }
+  return source_vdi_rel
+}
+String build_vdi()
+{
+  String opencl_dir = checkout_opencl()
+  String vdi_dir = checkout_vdi()
+  String vdi_install = "/opt/rocm/vdi"
+  stage("vdi clone")
+  {
+    sh """#!/usr/bin/env bash
+    set -x
+    cd ${vdi_dir}
+    mkdir build
+    cd build
+    cmake -DOPENCL_DIR=${opencl_dir} -DCMAKE_INSTALL_PREFIX=${vdi_install} ..
+    make -j$(nproc) install"""
+  }
+  return vdi_dir
+}
 String checkout_and_version( String platform )
 {
   String source_dir_rel = "src"
@@ -339,6 +381,46 @@ parallel rocm_3_3:
     }
     docker_clean_images( job_name, hip_image_name )
     */
+  }
+},
+hipclang:
+{
+  node('hip-rocm')
+  {
+    String hcc_ver = 'rocm-head'
+    String from_image = 'ci_test_nodes/rocm-head/ubuntu-16.04:latest'
+    String inside_args = '--device=/dev/kfd --device=/dev/dri --group-add=video'
+
+    // Checkout source code, dependencies and version files
+    String vdi_source = build_vdi()
+    Srring vdi_install = "/opt/rocm/vdi"
+    String source_hip_rel = checkout_and_version( hcc_ver )
+
+    // Create/reuse a docker image that represents the hip build environment
+    String extra_arguments = """ -DHIP_COMPILER=clang -DHIP_RUNTIME=ROCclr -DLIBROCclr_STATIC_DIR=${vdi_install} 
+                                 -DROCclr_DIR=${vdi_source} 
+                                 -DCMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH:${vdi_install}/lib/cmake/rocclr """
+    def hip_build_image = docker_build_image( hcc_ver, 'hip', extra_arguments, source_hip_rel, from_image )
+
+    // Print system information for the log
+    hip_build_image.inside( inside_args )
+    {
+      sh  """#!/usr/bin/env bash
+          set -x
+          /opt/rocm/bin/rocm_agent_enumerator -t ALL
+          /opt/rocm/bin/hcc --version
+          /opt/rocm/llvm/bin/clang --version
+        """
+    }
+
+    // Conctruct a binary directory path based on build config
+    String build_hip_rel = build_directory_rel( build_config );
+
+    // Build hip inside of the build environment
+    docker_build_inside_image( hip_build_image, inside_args, hcc_ver, '', build_config, source_hip_rel, build_hip_rel )
+
+    // Clean docker image
+    docker_clean_images( 'hip', docker_build_image_name( ) )
   }
 },
 rocm_head:
