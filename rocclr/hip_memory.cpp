@@ -761,7 +761,7 @@ hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeByt
   if ((offset + sizeBytes) > sym_size) {
     DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
                    offset, sizeBytes, sym_size);
-    return HIP_RETURN(hipErrorInvalidDevicePointer);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -794,7 +794,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t sizeBytes,
   if ((offset + sizeBytes) > sym_size) {
     DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
                       offset, sizeBytes, sym_size);
-    return HIP_RETURN(hipErrorInvalidDevicePointer);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -827,7 +827,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t si
   if ((offset + sizeBytes) > sym_size) {
     DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
                       offset, sizeBytes, sym_size);
-    return HIP_RETURN(hipErrorInvalidDevicePointer);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -860,7 +860,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t sizeBy
   if ((offset + sizeBytes) > sym_size) {
     DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
                       offset, sizeBytes, sym_size);
-    return HIP_RETURN(hipErrorInvalidDevicePointer);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
