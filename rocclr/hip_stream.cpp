@@ -208,7 +208,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
     priority = static_cast<int>(amd::CommandQueue::Priority::Normal);
   }
 
-  return HIP_RETURN(ihipStreamCreate(stream, flags, static_cast<amd::CommandQueue::Priority>(priority)));
+  HIP_RETURN(ihipStreamCreate(stream, flags, static_cast<amd::CommandQueue::Priority>(priority)));
 }
 
 // ================================================================================================
@@ -222,7 +222,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
     // Only report one kind of priority for now.
     *greatestPriority = static_cast<int>(amd::CommandQueue::Priority::Normal);
   }
-  return HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipSuccess);
 }
 
 // ================================================================================================
