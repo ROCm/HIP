@@ -31,7 +31,7 @@
 - [On HIP-Clang, can I use HC functionality with HIP?](#on-hip-clang-can-i-use-hc-functionality-with-hip)
 - [How do I trace HIP application flow?](#how-do-i-trace-hip-application-flow)
 - [What if HIP generates an error of "symbol multiply defined!" only on AMD machine?](#what-if-hip-generates-error-of-symbol-multiply-defined-only-on-amd-machine)
-- [What is maximum limit of Generic kernel launching parameter?](#what-is-maximum-linit-of-generic-kernel-launching-parameter)
+- [What is maximum limit of Generic kernel launching parameter?](#what-is-maximum-limit-of-generic-kernel-launching-parameter)
 <!-- tocstop -->
 
 ### What APIs and features does HIP support?
@@ -155,7 +155,7 @@ NVCC is Nvidia's compiler driver for compiling "CUDA C++" code into PTX or devic
 ### What is HCC?
 HCC is AMD's compiler driver which compiles "heterogeneous C++" code into HSAIL or GCN device code for AMD GPUs.  It's an open-source compiler based on recent versions of CLANG/LLVM.
 
-In ROCM v3.5 release, HCC compiler is deprecated and HIP-Clang compiler is introduced to compile HIP programs
+In ROCM v3.5 release, HCC compiler is deprecated and HIP-Clang compiler is introduced to compile HIP programs.
 
 ### What is HIP-Clang?
 HIP-Clang is new compiler to emphasize its capability to compile HIP programs which can run on AMD platform.
@@ -177,16 +177,15 @@ Yes. HIP's HIP-Clang path only exposes the APIs and functions that work on AMD r
 In ROCM v3.5 release, HCC compiler is deprecated, and the HIP-Clang compiler can be used for compiling HIP programs.
 
 ### Do I need to make code changes in HIP code if switching compiler from HCC to HIP-Clang?
-For most HIP applications, the transition from HCC to HIP-Clang is transparent and efficient as the HIPCC and HIP cmake files automatically choose compiler options for HIP-Clang and hide the difference between the HCC and HIP-Clang code.
+For most HIP applications, the transition from HCC to HIP-Clang is transparent as the HIPCC and HIP cmake files automatically choose compiler options for HIP-Clang and hide the difference between the HCC and HIP-Clang code.
 However, minor changes may be required as HIP-Clang has stricter syntax and semantic checks compared to HCC.
 
 ### How to use HIP-Clang to build HIP programs?
-The environment variable is used to set compiler
+The environment variable can be used to set compiler path:
 - HIP_CLANG_PATH: path to hip-clang. When set, this variable let hipcc to use hip-clang for compilation/linking
 
-And also, there is another new envoronment variable
-- HIP_ROCCLR_HOME
-HIP_ROCCLR_HOME is the path to root directory of the HIP-ROCclr runtime. When set, this variable let hipcc use hip-clang from the ROCclr distribution.
+There is an alternative environment variable to set compiler path:
+- HIP_ROCCLR_HOME: path to root directory of the HIP-ROCclr runtime. When set, this variable let hipcc use hip-clang from the ROCclr distribution.
 NOTE: If HIP_ROCCLR_HOME is set, there is no need to set HIP_CLANG_PATH since hipcc will deduce them from HIP_ROCCLR_HOME.
 
 ### What is ROCclr?
@@ -199,7 +198,7 @@ HIP is a source-portable language that can be compiled to run on either AMD or N
 HIP is a portable C++ language that supports a strong subset of the CUDA run-time APIs and device-kernel language. It's designed to simplify CUDA conversion to portable C++. HIP provides a C-compatible run-time API, C-compatible kernel-launch mechanism, C++ kernel language and pointer-based memory management.
 
 A C++ dialect, hc is supported by the AMD compiler. It provides C++ run time, C++ kernel-launch APIs (parallel_for_each), C++ kernel language, and several memory-management options, including pointers, arrays and array_view (with implicit data synchronization). It's intended to be a leading indicator of the ISO C++ standard.
-hc has been deprecated in the release v3.5.
+The HCC compiler has been deprecated in the ROCm Release v3.5.
 
 ### On HIP-Clang, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang ?
 Yes.  HIP generates the object code which conforms to the GCC ABI, and also links with libstdc++.  This means you can compile host code with the compiler of your choice and link the generated object code
@@ -212,13 +211,15 @@ Yes. You can use HIP_PLATFORM to choose which path hipcc targets.  This configur
 
 
 ### HIP detected my platform (HIP-Clang vs nvcc) incorrectly - what should I do?
-HIP will set the platform to HIP-Clang if it sees that the AMD graphics driver is installed and has detected an AMD GPU.
-Sometimes this isn't what you want - you can force HIP to recognize the platform by setting HIP_PLATFORM to HIP-Clang.
+HIP will set the platform to hcc and compiler to HIP-Clang if it sees that the AMD graphics driver is installed and has detected an AMD GPU.
+Sometimes this isn't what you want - you can force HIP to recognize the platform by setting the following,
 ```
-export HIP_PLATFORM=clang
+export HIP_COMPILER=clang
+export HIP_PLATFORM=hcc
 ```
 
-One symptom of this problem is the message "error: 'unknown error'(11) at square.hipref.cpp:56".  This can occur if you have a CUDA installation on an AMD platform, and HIP incorrectly detects the platform as nvcc.  HIP may be able to compile the application using the nvcc tool-chain but will generate this error at runtime since the platform does not have a CUDA device. The fix is to set HIP_PLATFORM=clang and rebuild.
+One symptom of this problem is the message "error: 'unknown error'(11) at square.hipref.cpp:56".  This can occur if you have a CUDA installation on an AMD platform, and HIP incorrectly detects the platform as nvcc.  HIP may be able to compile the application using the nvcc tool-chain but will generate this error at runtime since the platform does not have a CUDA device.
+The fix is to set HIP_PLATFORM=hcc and rebuild.
 
 
 ### On CUDA, can I mix CUDA code with HIP code?

@@ -22,7 +22,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Device-Architecture Properties](#device-architecture-properties)
   * [Table of Architecture Properties](#table-of-architecture-properties)
 - [Finding HIP](#finding-hip)
-- [Identifying HIP Runtime](#identify-hip-runtime)
+- [Identifying HIP Runtime](#identifying-hip-runtime)
 - [hipLaunchKernel](#hiplaunchkernel)
 - [Compiler Options](#compiler-options)
 - [Linking Issues](#linking-issues)
@@ -350,7 +350,7 @@ MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCal
 ## Compiler Options
 
 hipcc is a portable compiler driver that will call nvcc or HIP-Clang (depending on the target system) and attach all required include and library options. It passes options through to the target compiler. Tools that call hipcc must ensure the compiler options are appropriate for the target compiler.
-
+The `hipconfig` script may helpful in identifying the target platform, compiler and runtime. It can also help set options appropriately.
 
 ## Linking Issues
 
