@@ -196,6 +196,20 @@ if(HIP_COMPILER STREQUAL "clang")
       message("clang compiler doesn't support parallel jobs")
     endif()
   endif()
+
+  # Add support for __fp16 and _Float16, explicitly link with compiler-rt
+  set_property(TARGET hip::host APPEND PROPERTY
+    INTERFACE_COMPILE_OPTIONS -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+  )
+  set_property(TARGET hip::host APPEND PROPERTY
+    INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+  )
+  set_property(TARGET hip::device APPEND PROPERTY
+    INTERFACE_COMPILE_OPTIONS -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+  )
+  set_property(TARGET hip::device APPEND PROPERTY
+    INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+  )
 endif()
 
 set( hip_LIBRARIES hip::host hip::device)
