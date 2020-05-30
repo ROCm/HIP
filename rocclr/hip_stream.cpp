@@ -51,15 +51,17 @@ Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p,
 // ================================================================================================
 bool Stream::Create() {
   cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
-  queue_ = new amd::HostQueue(*device_->asContext(), *device_->devices()[0], properties,
+  amd::HostQueue* queue = new amd::HostQueue(*device_->asContext(), *device_->devices()[0], properties,
                              amd::CommandQueue::RealTimeDisabled, priority_, cuMask_);
   // Create a host queue
-  bool result = (queue_ != nullptr) ? queue_->create() : false;
+  bool result = (queue != nullptr) ? queue->create() : false;
   // Insert just created stream into the list of the blocking queues
   if (result) {
     amd::ScopedLock lock(streamSetLock);
     streamSet.insert(this);
+    queue_ = queue;
   } else {
+    queue_ = queue;
     Destroy();
   }
   return result;
@@ -67,6 +69,9 @@ bool Stream::Create() {
 
 // ================================================================================================
 amd::HostQueue* Stream::asHostQueue(bool skip_alloc) {
+  if (queue_ != nullptr) {
+    return queue_;
+  }
   // Access to the stream object is lock protected, because possible allocation
   amd::ScopedLock l(Lock());
   if (queue_ == nullptr) {
@@ -159,10 +164,7 @@ void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream
 void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data) {
   hipError_t status = hipSuccess;
   StreamCallback* cbo = reinterpret_cast<StreamCallback*>(user_data);
-  {
-    amd::ScopedLock lock(reinterpret_cast<hip::Stream*>(cbo->stream_)->Lock());
-    cbo->callBack_(cbo->stream_, status, cbo->userData_);
-  }
+  cbo->callBack_(cbo->stream_, status, cbo->userData_);
   cbo->command_->release();
   delete cbo;
 }
