@@ -509,6 +509,12 @@ if (BUILD_HIPIFY_CLANG)
     add_dependencies(pkg_hip_base hipify-clang)
 endif()
 
+if(HIP_PLATFORM STREQUAL "vdi")
+    add_custom_target(hip_bins
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipcc -o ${PROJECT_BINARY_DIR}/hipInfo -v ${CMAKE_CURRENT_SOURCE_DIR}/samples/1_Utils/hipInfo/hipInfo.cpp
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipcc -o ${PROJECT_BINARY_DIR}/hipBusBandWidth ${CMAKE_CURRENT_SOURCE_DIR}/samples/1_Utils/hipBusBandwidth/hipBusBandwidth.cpp ${CMAKE_CURRENT_SOURCE_DIR}/samples/1_Utils/hipBusBandwidth/ResultDatabase.cpp)
+endif()
+
 if(HIP_PLATFORM STREQUAL "hcc")
   message("HCC Package\n")
   # Package: hip_hcc
@@ -536,6 +542,7 @@ else()
     COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
     WORKING_DIRECTORY ${BUILD_DIR} )
+    add_dependencies(hip_on_vdi hip_bins)
 endif()
 
 # Package: hip_nvcc
