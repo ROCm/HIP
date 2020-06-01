@@ -339,3 +339,15 @@ hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize
   HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, amd::CommandQueue::Priority::Normal, cuMaskv));
 }
 
+// ================================================================================================
+hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
+  HIP_INIT_API(hipStreamGetPriority, stream, priority);
+  if ((priority != nullptr) && (stream != nullptr)) {
+    *priority = static_cast<int>(reinterpret_cast<hip::Stream*>(stream)->Priority());
+  } else {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  HIP_RETURN(hipSuccess);
+
+}

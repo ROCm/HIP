@@ -253,3 +253,4 @@ hipTexObjectGetResourceDesc
 hipTexObjectGetResourceViewDesc
 hipTexObjectGetTextureDesc
 hipExtStreamCreateWithCUMask
+hipStreamGetPriority
