@@ -336,6 +336,9 @@ public:
   void popExec(ihipExec_t& exec);
 };
 
+constexpr bool kOptionChangeable = true;
+constexpr bool kNewDevProg = false;
+
 /// Wait all active streams on the blocking queue. The method enqueues a wait command and
 /// doesn't stall the current thread
 extern void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream = false);
@@ -347,5 +350,6 @@ extern hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags);
 extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 extern bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
                                     size_t* var_size);
+
 
 #endif // HIP_SRC_HIP_INTERNAL_H

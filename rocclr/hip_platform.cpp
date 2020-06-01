@@ -133,7 +133,7 @@ hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
   if (num_code_objs == devices.size()) {
     return hipSuccess;
   } else {
-    fatal("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
+    ("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
     return hipErrorNoBinaryForGpu;
   }
 }
@@ -440,7 +440,8 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
       if (!(*devFunc.modules)[deviceId].second) {
         amd::Program* program = as_amd(reinterpret_cast<cl_program>(module));
         program->setVarInfoCallBack(&getSvarInfo);
-        if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr)) {
+        if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr,
+                                         kOptionChangeable, kNewDevProg)) {
           DevLogPrintfError("Build error for module: 0x%x at device: %u \n", module, deviceId);
           return nullptr;
         }
@@ -541,7 +542,8 @@ bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t 
       if (!(*dvar->modules)[deviceId].second) {
         amd::Program* program = as_amd(reinterpret_cast<cl_program>((*dvar->modules)[deviceId].first));
         program->setVarInfoCallBack(&getSvarInfo);
-        if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr)) {
+        if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr,
+                                         kOptionChangeable, kNewDevProg)) {
           DevLogPrintfError("Build Failure for module: 0x%x \n", hmod);
           return false;
         }
