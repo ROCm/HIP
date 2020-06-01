@@ -321,3 +321,15 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
   HIP_RETURN(hipSuccess);
 }
+// ================================================================================================
+hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
+  HIP_INIT_API(hipStreamGetPriority, stream, priority);
+  if ((priority != nullptr) && (stream != nullptr)) {
+    *priority = static_cast<int>(reinterpret_cast<hip::Stream*>(stream)->Priority());
+  } else {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  HIP_RETURN(hipSuccess);
+
+}

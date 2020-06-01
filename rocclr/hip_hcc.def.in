@@ -251,3 +251,4 @@ hipTexObjectDestroy
 hipTexObjectGetResourceDesc
 hipTexObjectGetResourceViewDesc
 hipTexObjectGetTextureDesc
+hipStreamGetPriority
