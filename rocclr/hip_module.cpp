@@ -261,7 +261,8 @@ hipError_t ihipModuleLoadData(hipModule_t* module, const void* mmap_ptr, size_t 
     return hipErrorSharedObjectSymbolNotFound;
   }
 
-  if(CL_SUCCESS != program->build(hip::getCurrentDevice()->devices(), nullptr, nullptr, nullptr)) {
+  if (CL_SUCCESS != program->build(hip::getCurrentDevice()->devices(), nullptr, nullptr, nullptr,
+                                   kOptionChangeable, kNewDevProg)) {
     return hipErrorSharedObjectInitFailed;
   }
 
