@@ -109,6 +109,8 @@ namespace hip {
     amd::Monitor& Lock() const { return lock_; }
     /// Returns the creation flags for the current stream
     unsigned int Flags() const { return flags_; }
+    /// Returns the priority for the current stream
+    amd::CommandQueue::Priority Priority() const { return priority_; }
 
     /// Sync all non-blocking streams
     static void syncNonBlockingStreams();
