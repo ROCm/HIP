@@ -292,6 +292,9 @@ private:
   std::unordered_map<const void*,
                      std::pair<hipModule_t, std::string>> symbols_;
 
+  typedef std::pair<const void*, size_t> CodeObjPairType;
+  std::unordered_map<amd::Program*, CodeObjPairType> code_obj_;
+
   static PlatformState* platform_;
 
   PlatformState() {}
