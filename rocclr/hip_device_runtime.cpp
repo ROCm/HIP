@@ -442,6 +442,9 @@ hipError_t hipDeviceSynchronize ( void ) {
   }
 
   queue->finish();
+
+  hip::Stream::syncNonBlockingStreams();
+
   HIP_RETURN(hipSuccess);
 }
 

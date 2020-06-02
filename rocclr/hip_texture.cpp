@@ -772,7 +772,7 @@ hipError_t hipTexRefGetArray(hipArray_t* pArray,
   // TODO use ihipGetTextureObjectResourceDesc() to not pollute the API trace.
   hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef->textureObject);
   if (error != hipSuccess) {
-    return HIP_RETURN(error);
+    HIP_RETURN(error);
   }
 
   switch (resDesc.resType) {
@@ -848,7 +848,7 @@ hipError_t hipTexRefGetAddress(hipDeviceptr_t* dptr,
   if (error != hipSuccess) {
     DevLogPrintfError("hipGetTextureObjectResourceDesc failed with error code: %s \n",
                       hipGetErrorName(error));
-    return HIP_RETURN(error);
+    HIP_RETURN(error);
   }
 
   switch (resDesc.resType) {
@@ -903,7 +903,7 @@ hipError_t hipTexRefSetAddress(size_t* ByteOffset,
     // Align the user ptr to HW requirments.
     resDesc.res.linear.devPtr = static_cast<char*>(dptr) - *ByteOffset;
   } else {
-    return HIP_RETURN(hipErrorInvalidValue);
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   hipTextureDesc texDesc = hip::getTextureDesc(texRef);
@@ -1108,7 +1108,7 @@ hipError_t hipTexRefGetMipmappedArray(hipMipmappedArray_t* pArray,
   // TODO use ihipGetTextureObjectResourceDesc() to not pollute the API trace.
   hipError_t error = hipGetTextureObjectResourceDesc(&resDesc, texRef->textureObject);
   if (error != hipSuccess) {
-    return HIP_RETURN(error);
+    HIP_RETURN(error);
   }
 
   switch (resDesc.resType) {

@@ -761,7 +761,7 @@ hipError_t hipMemcpyToSymbol(const void* symbol, const void* src, size_t sizeByt
   if ((offset + sizeBytes) > sym_size) {
     DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
                    offset, sizeBytes, sym_size);
-    return HIP_RETURN(hipErrorInvalidDevicePointer);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -794,7 +794,7 @@ hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol, size_t sizeBytes,
   if ((offset + sizeBytes) > sym_size) {
     DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
                       offset, sizeBytes, sym_size);
-    return HIP_RETURN(hipErrorInvalidDevicePointer);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -827,7 +827,7 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t si
   if ((offset + sizeBytes) > sym_size) {
     DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
                       offset, sizeBytes, sym_size);
-    return HIP_RETURN(hipErrorInvalidDevicePointer);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -860,7 +860,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t sizeBy
   if ((offset + sizeBytes) > sym_size) {
     DevLogPrintfError("Trying to access out of bounds, offset: %u sizeBytes: %u sym_size: %u \n",
                       offset, sizeBytes, sym_size);
-    return HIP_RETURN(hipErrorInvalidDevicePointer);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   device_ptr = reinterpret_cast<address>(device_ptr) + offset;
@@ -1737,28 +1737,31 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
   int64_t value64 = 0;
   if (sizeBytes/sizeof(int64_t) > 0) {
     n_head_bytes = static_cast<uint8_t*>(aligned_dst) - static_cast<uint8_t*>(dst);
-    if (valueSize == sizeof(int8_t)) {
-      value = value & 0xff;
-      value64 = ((value << 56) | (value << 48) | (value << 40) | (value << 32)
-                 | (value << 24) | (value << 16) | (value << 8) | (value));
-    } else if (valueSize == sizeof(int16_t)) {
-      value = value & 0xffff;
-      value64 = ((value << 48) | (value << 32) | (value << 16) | (value));
-    } else if (valueSize == sizeof(int32_t)) {
-      value = value & 0xffffffff;
-      value64 = ((value << 32) | (value));
-    } else if (valueSize == sizeof(int64_t)) {
-      value64 = value;
-    } else {
-      LogPrintfError("Unsupported Pattern size: %u \n", valueSize);
-      return hipErrorInvalidValue;
-    }
     n_tail_bytes = ((sizeBytes - n_head_bytes) % sizeof(int64_t));
-    // If n_tail_bytes is != 0 then we will do a second fillBuffer Command
-    // on the same stream below, dont wait, do the first call async.
-    hip_error = packFillMemoryCommand(memory, offset, value64, sizeof(int64_t),
-                                      sizeBytes - n_tail_bytes - n_head_bytes, queue,
-                                      ((n_head_bytes != 0) || (n_tail_bytes != 0) || isAsync));
+    size_t n_bytes = sizeBytes - n_tail_bytes - n_head_bytes;
+    if (n_bytes > 0) {
+      if (valueSize == sizeof(int8_t)) {
+        value = value & 0xff;
+        value64 = ((value << 56) | (value << 48) | (value << 40) | (value << 32)
+                  | (value << 24) | (value << 16) | (value << 8) | (value));
+      } else if (valueSize == sizeof(int16_t)) {
+        value = value & 0xffff;
+        value64 = ((value << 48) | (value << 32) | (value << 16) | (value));
+      } else if (valueSize == sizeof(int32_t)) {
+        value = value & 0xffffffff;
+        value64 = ((value << 32) | (value));
+      } else if (valueSize == sizeof(int64_t)) {
+        value64 = value;
+      } else {
+        LogPrintfError("Unsupported Pattern size: %u \n", valueSize);
+        return hipErrorInvalidValue;
+      }
+      // If n_tail_bytes is != 0 then we will do a second fillBuffer Command
+      // on the same stream below, dont wait, do the first call async.
+      hip_error = packFillMemoryCommand(memory, offset, value64, sizeof(int64_t),
+                                        n_bytes, queue,
+                                        ((n_head_bytes != 0) || (n_tail_bytes != 0) || isAsync));
+    }
     if (hip_error != hipSuccess) {
       return hip_error;
     }
