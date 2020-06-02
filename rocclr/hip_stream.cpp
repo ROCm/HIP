@@ -57,10 +57,8 @@ bool Stream::Create() {
   bool result = (queue_ != nullptr) ? queue_->create() : false;
   // Insert just created stream into the list of the blocking queues
   if (result) {
-    if (!(flags_ & hipStreamNonBlocking)) {
-      amd::ScopedLock lock(streamSetLock);
-      streamSet.insert(this);
-    }
+    amd::ScopedLock lock(streamSetLock);
+    streamSet.insert(this);
   } else {
     Destroy();
   }
@@ -104,6 +102,15 @@ int Stream::DeviceId() const {
   return device_->deviceId();
 }
 
+void Stream::syncNonBlockingStreams() {
+  amd::ScopedLock lock(streamSetLock);
+  for (auto& it : streamSet) {
+    if (it->Flags() & hipStreamNonBlocking) {
+      it->asHostQueue()->finish();
+    }
+  }
+}
+
 };
 
 // ================================================================================================
@@ -116,6 +123,8 @@ void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream
       amd::HostQueue* active_queue = stream->asHostQueue();
       // If it's the current device
       if ((&active_queue->device() == &blocking_queue->device()) &&
+          // Make sure it's a default stream
+          ((stream->Flags() & hipStreamNonBlocking) == 0) &&
           // and it's not the current stream
           (active_queue != blocking_queue) &&
           // check for a wait on the null stream
@@ -199,7 +208,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
     priority = static_cast<int>(amd::CommandQueue::Priority::Normal);
   }
 
-  return HIP_RETURN(ihipStreamCreate(stream, flags, static_cast<amd::CommandQueue::Priority>(priority)));
+  HIP_RETURN(ihipStreamCreate(stream, flags, static_cast<amd::CommandQueue::Priority>(priority)));
 }
 
 // ================================================================================================
@@ -213,7 +222,7 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
     // Only report one kind of priority for now.
     *greatestPriority = static_cast<int>(amd::CommandQueue::Priority::Normal);
   }
-  return HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipSuccess);
 }
 
 // ================================================================================================
@@ -330,3 +339,15 @@ hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize
   HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, amd::CommandQueue::Priority::Normal, cuMaskv));
 }
 
+// ================================================================================================
+hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
+  HIP_INIT_API(hipStreamGetPriority, stream, priority);
+  if ((priority != nullptr) && (stream != nullptr)) {
+    *priority = static_cast<int>(reinterpret_cast<hip::Stream*>(stream)->Priority());
+  } else {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  HIP_RETURN(hipSuccess);
+
+}

@@ -181,6 +181,7 @@ global:
     hipRemoveActivityCallback;
     hipApiName;
     hipKernelNameRef;
+    hipKernelNameRefByPtr;
     hipProfilerStart;
     hipProfilerStop;
     hiprtcCompileProgram;
@@ -259,6 +260,7 @@ global:
     hipEnableActivityCallback*;
     hipGetCmdName*;
     hipExtStreamCreateWithCUMask;
+    hipStreamGetPriority;
     };
 local:
     *;

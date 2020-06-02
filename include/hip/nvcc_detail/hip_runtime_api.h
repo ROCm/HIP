@@ -236,6 +236,13 @@ typedef struct cudaResourceViewDesc hipResourceViewDesc;
 #define HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT CU_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT
 #define HIP_FUNC_ATTRIBUTE_MAX CU_FUNC_ATTRIBUTE_MAX
 
+#if CUDA_VERSION >= 9000
+#define __shfl(...)      __shfl_sync(0xffffffff, __VA_ARGS__)
+#define __shfl_up(...)   __shfl_up_sync(0xffffffff, __VA_ARGS__)
+#define __shfl_down(...) __shfl_down_sync(0xffffffff, __VA_ARGS__)
+#define __shfl_xor(...)  __shfl_xor_sync(0xffffffff, __VA_ARGS__)
+#endif // CUDA_VERSION >= 9000
+
 inline static hipError_t hipCUDAErrorTohipError(cudaError_t cuError) {
     switch (cuError) {
         case cudaSuccess:

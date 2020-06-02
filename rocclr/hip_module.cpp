@@ -392,11 +392,12 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
       return hipErrorLaunchFailure;
     }
     int num_blocks = 0;
-    int num_grids = 0;
+    int max_blocks_per_grid = 0;
+    int best_block_size = 0;
     int block_size = blockDimX * blockDimY * blockDimZ;
     hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-      &num_blocks, &num_grids, device, f, block_size, sharedMemBytes, true);
-    if (((gridDimX * gridDimY * gridDimZ) / block_size) > unsigned(num_grids)) {
+      &num_blocks, &max_blocks_per_grid, &best_block_size, device, f, block_size, sharedMemBytes, true);
+    if (((gridDimX * gridDimY * gridDimZ) / block_size) > unsigned(max_blocks_per_grid)) {
       return hipErrorCooperativeLaunchTooLarge;
     }
   }
@@ -458,11 +459,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f,
   command->enqueue();
 
   if(startEvent != nullptr) {
-    eStart->addMarker(queue, command);
+    eStart->addMarker(queue, command, false);
     command->retain();
   }
   if(stopEvent != nullptr) {
-    eStop->addMarker(queue, command);
+    eStop->addMarker(queue, command, false);
     command->retain();
   }
   command->release();

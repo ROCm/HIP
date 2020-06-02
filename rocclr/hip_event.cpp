@@ -90,11 +90,22 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
     return hipErrorNotReady;
   }
 
-  // For certain HIP Api's that take start and stop event
-  // the command is the same
-  if (event_ == eStop.event_) {
+  // For certain HIP API's that take start and stop event
+  // and no hipEventRecord needs to be called
+  if (event_ == eStop.event_ && !recorded_  && !eStop.recorded_) {
     ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
                           event_->profilingInfo().start_))/1000000.f;
+  } else if (event_ == eStop.event_) {
+    // Events are the same, which indicates the stream is empty and likely
+    // eventRecord is called on another stream. For such cases insert and measure a
+    // marker.
+    amd::Command* command = new amd::Marker(*event_->command().queue(), false);
+    command->enqueue();
+    command->awaitCompletion();
+    ms = static_cast<float>(static_cast<int64_t>(command->event().profilingInfo().end_ -
+                          event_->profilingInfo().end_))/1000000.f;
+    command->release();
+
   } else {
     ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
                           event_->profilingInfo().end_))/1000000.f;
@@ -126,7 +137,7 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
   return hipSuccess;
 }
 
-void Event::addMarker(amd::HostQueue* queue, amd::Command* command) {
+void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record) {
   amd::ScopedLock lock(lock_);
 
   if (event_ == &command->event()) return;
@@ -136,6 +147,7 @@ void Event::addMarker(amd::HostQueue* queue, amd::Command* command) {
   }
 
   event_ = &command->event();
+  recorded_ = record;
 }
 
 }
@@ -233,7 +245,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   }
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
-  e->addMarker(queue, command);
+  e->addMarker(queue, command, true);
 
   HIP_RETURN(hipSuccess);
 }
