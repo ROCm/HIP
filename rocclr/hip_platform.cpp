@@ -133,7 +133,8 @@ hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
   if (num_code_objs == devices.size()) {
     return hipSuccess;
   } else {
-    ("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
+    DevLogError("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
+    guarantee(false); //Aborting the program
     return hipErrorNoBinaryForGpu;
   }
 }
@@ -174,10 +175,8 @@ void PlatformState::digestFatBinary(const void* data, std::vector<std::pair<hipM
     if (program == nullptr) {
       return;
     }
-    if (CL_SUCCESS == program->addDeviceProgram(
-            *ctx->devices()[0], code_objs[dev].first, code_objs[dev].second, false)) {
-      programs.at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)) , false);
-    }
+    programs.at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)) , false);
+    code_obj_.insert(std::make_pair(program, std::make_pair(code_objs[dev].first, code_objs[dev].second)));
   }
 }
 
@@ -439,6 +438,19 @@ hipFunction_t PlatformState::getFunc(const void* hostFunction, int deviceId) {
       hipModule_t module = (*devFunc.modules)[deviceId].first;
       if (!(*devFunc.modules)[deviceId].second) {
         amd::Program* program = as_amd(reinterpret_cast<cl_program>(module));
+        amd::Context* ctx = g_devices[deviceId]->asContext();
+        auto code_obj_it = code_obj_.find(program);
+        if (code_obj_.end() == code_obj_it) {
+          DevLogError("Cannot find image & size for static symbols");
+          guarantee(false); //Aborting the program
+          return nullptr;
+        }
+        if (CL_SUCCESS != program->addDeviceProgram(*ctx->devices()[0], code_obj_it->second.first,
+                                                    code_obj_it->second.second, false)) {
+          DevLogError("Cannot add Device Program");
+          guarantee(false); //Aborting the program
+          return nullptr;
+        }
         program->setVarInfoCallBack(&getSvarInfo);
         if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr,
                                          kOptionChangeable, kNewDevProg)) {
@@ -541,6 +553,19 @@ bool PlatformState::getGlobalVar(const char* hostVar, int deviceId, hipModule_t 
 
       if (!(*dvar->modules)[deviceId].second) {
         amd::Program* program = as_amd(reinterpret_cast<cl_program>((*dvar->modules)[deviceId].first));
+        amd::Context* ctx = g_devices[deviceId]->asContext();
+        auto code_obj_it = code_obj_.find(program);
+        if (code_obj_.end() == code_obj_it) {
+          DevLogError("Cannot find image & size for static symbols");
+          guarantee(false); //Aborting the program
+          return false;
+        }
+        if (CL_SUCCESS != program->addDeviceProgram(*ctx->devices()[0], code_obj_it->second.first,
+                                                    code_obj_it->second.second, false)) {
+          DevLogError("Cannot add Device Program");
+          guarantee(false) //Aborting the program
+          return false;
+        }
         program->setVarInfoCallBack(&getSvarInfo);
         if (CL_SUCCESS != program->build(g_devices[deviceId]->devices(), nullptr, nullptr, nullptr,
                                          kOptionChangeable, kNewDevProg)) {
