@@ -3662,6 +3662,7 @@ hipError_t hipRemoveActivityCallback(uint32_t id);
 const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
+int hipGetStreamDeviceId(hipStream_t stream);
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
