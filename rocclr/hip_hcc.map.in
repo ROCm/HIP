@@ -183,6 +183,7 @@ global:
     hipApiName;
     hipKernelNameRef;
     hipKernelNameRefByPtr;
+    hipGetStreamDeviceId;
     hipProfilerStart;
     hipProfilerStop;
     hiprtcCompileProgram;
