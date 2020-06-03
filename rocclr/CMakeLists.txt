@@ -71,6 +71,14 @@ set(CMAKE_MODULE_PATH${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "$
 
 add_definitions(-DUSE_COMGR_LIBRARY -DCOMGR_DYN_DLL)
 
+
+find_package(hsa-runtime64 REQUIRED CONFIG
+   PATHS
+     /opt/rocm/lib
+   PATH_SUFFIXES
+     cmake/hsa-runtime64
+)
+
 find_package(amd_comgr REQUIRED CONFIG
   PATHS
     /opt/rocm/
@@ -163,26 +171,33 @@ add_dependencies(hip64 gen-prof-api-str-header)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-add_library(amdhip64 SHARED
-    $<TARGET_OBJECTS:hip64>
-    )
 
-add_library(amdhip64_static STATIC
-    $<TARGET_OBJECTS:hip64>
-    )
+if(${BUILD_SHARED_LIBS})
 
-set_target_properties(
-    amdhip64 PROPERTIES
-        VERSION ${HIP_LIB_VERSION_STRING}
-        SOVERSION ${HIP_LIB_VERSION_MAJOR}
-        )
+  add_library(amdhip64
+      $<TARGET_OBJECTS:hip64>
+  )
 
-set_target_properties(hip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
+  set_target_properties(
+      amdhip64 PROPERTIES
+         VERSION ${HIP_LIB_VERSION_STRING}
+         SOVERSION ${HIP_LIB_VERSION_MAJOR}
+      )
+
+  set_target_properties(hip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
+
+else()
+
+   add_library(amdhip64 STATIC
+      $<TARGET_OBJECTS:hip64>
+      )
+
+endif()
+
 set_target_properties(amdhip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
-set_target_properties(amdhip64_static PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
-
 add_library(host INTERFACE)
-target_link_libraries(host INTERFACE amdhip64)
+target_link_libraries(host INTERFACE hip::amdhip64)
+
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 # TODO: we may create host_static and device_static to let app
@@ -190,30 +205,37 @@ target_link_libraries(device INTERFACE host)
 
 # FIXME: Linux convention is to create static library with same base
 # filename.
-target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl numa)
-target_link_libraries(amdhip64_static PRIVATE Threads::Threads dl numa)
 
-# combine objects of vid and hip into amdhip64_static
-add_custom_target(
-    amdhip64_static_combiner
-    ALL
-    COMMAND rm -rf  static_lib_temp && mkdir static_lib_temp && cd static_lib_temp # Create temp folder to contain *.o
-    COMMAND ${CMAKE_AR} -x $<TARGET_FILE:amdrocclr_static> # Extract *.o from amdrocclr_static
-    COMMAND ${CMAKE_AR} -rcs $<TARGET_FILE:amdhip64_static> *.o # Append *.o to amdhip64_static
-    COMMAND cd .. && rm -rf  static_lib_temp # Remove temp folder
-    DEPENDS amdhip64_static amdrocclr_static # To make sure this is the last step
-    COMMENT "Combining static libs into amdhip64_static"
-)
 
-INSTALL(PROGRAMS $<TARGET_FILE:amdhip64_static> DESTINATION lib COMPONENT MAIN)
-INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
-INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so  )" DESTINATION lib COMPONENT MAIN)
+if(${BUILD_SHARED_LIBS})
+    target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl numa hsa-runtime64::hsa-runtime64)
+    INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
+    INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so  )" DESTINATION lib COMPONENT MAIN)
 
-INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhiprtc.so  )" DESTINATION lib COMPONENT MAIN)
-INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhip_hcc.so DESTINATION lib COMPONENT MAIN)
+    INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhiprtc.so  )" DESTINATION lib COMPONENT MAIN)
+    INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhip_hcc.so DESTINATION lib COMPONENT MAIN)
 
-INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAIN)
+    INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAIN)
 
-INSTALL(TARGETS amdhip64 amdhip64_static host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+else()
+
+    target_link_libraries(amdhip64 PRIVATE Threads::Threads dl numa hsa-runtime64::hsa-runtime64 amd_comgr)
+    # combine objects of vid and hip into amdhip64_static
+    add_custom_target(
+       amdhip64_static_combiner
+       ALL
+       COMMAND rm -rf  static_lib_temp && mkdir static_lib_temp && cd static_lib_temp # Create temp folder to contain *.o
+       COMMAND ${CMAKE_AR} -x $<TARGET_FILE:amdrocclr_static> # Extract *.o from amdrocclr_static
+       COMMAND ${CMAKE_AR} -rcs $<TARGET_FILE:amdhip64> *.o # Append *.o to amdhip64_static
+       COMMAND cd .. && rm -rf  static_lib_temp # Remove temp folder
+       DEPENDS amdhip64 amdrocclr_static # To make sure this is the last step
+       COMMENT "Combining static libs into amdhip64_static"
+    )
+
+    INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
+
+endif()
+
+INSTALL(TARGETS amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 
