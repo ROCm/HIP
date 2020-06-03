@@ -79,7 +79,7 @@ if(HIP_COMPILER STREQUAL "clang")
           ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
       NO_DEFAULT_PATH)
   find_dependency(AMDDeviceLibs)
-  set(AMDGPU_TARGETS "gfx900;gfx906" CACHE STRING "AMD GPU targets to compile for")
+  set(AMDGPU_TARGETS "gfx900;gfx906;gfx908" CACHE STRING "AMD GPU targets to compile for")
   set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU targets to compile for")
 else()
   find_dependency(hcc)
