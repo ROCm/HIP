@@ -4,6 +4,8 @@ project(hip)
 #  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr ..
 #  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr -DOPENCL_DIR=/path/to/opencl/api/opencl -DCMAKE_PREFIX_PATH=/path/to/rocclr/build/or/install/directory ..
 
+set(BUILD_SHARED_LIBS ON  CACHE BOOL "Build shared library (.so) or static lib (.a) ")
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 #############################
