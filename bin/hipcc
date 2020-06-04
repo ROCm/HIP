@@ -214,6 +214,7 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
         $HIP_LIB_PATH = "$HIP_PATH/lib";
     }
     if ($verbose & 0x2) {
+        print ("ROCM_PATH=$ROCM_PATH\n");
         if (defined $HIP_ROCCLR_HOME) {
             print ("HIP_ROCCLR_HOME=$HIP_ROCCLR_HOME\n");
         }
@@ -823,7 +824,9 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
             $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         }
     }
-    $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
+    if ($DEVICE_LIB_PATH ne "$ROCM_PATH/amdgcn/bitcode") {
+        $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
+    }
     if ($hasHIP) {
         $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
         if ($HIP_RUNTIME ne "HCC") {
