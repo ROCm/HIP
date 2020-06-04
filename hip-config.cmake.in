@@ -150,7 +150,7 @@ if(HIP_COMPILER STREQUAL "clang")
 
   if (EXISTS ${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode)
     set_property(TARGET hip::device APPEND PROPERTY
-      INTERFACE_COMPILE_OPTIONS -x hip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode
+      INTERFACE_COMPILE_OPTIONS -x hip
     )
   else()
     # This path is to support an older build of the device library
