@@ -305,11 +305,13 @@ static constexpr Coordinates<hip_impl::WorkitemId> threadIdx{};
 
 #endif // defined __HCC__
 #if __HCC_OR_HIP_CLANG__
+#if !__CLANG_HIP_RUNTIME_WRPPER_INCLUDED__
 extern "C" __device__ void* __hip_malloc(size_t);
 extern "C" __device__ void* __hip_free(void* ptr);
 
 static inline __device__ void* malloc(size_t size) { return __hip_malloc(size); }
 static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
+#endif // __CLANG_HIP_RUNTIME_WRPPER_INCLUDED__
 
 #if defined(__HCC_ACCELERATOR__) && defined(HC_FEATURE_PRINTF)
 template <typename... All>
@@ -320,7 +322,6 @@ static inline __device__ void printf(const char* format, All... all) {
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
 #endif
-
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
@@ -505,6 +506,7 @@ hc_get_workitem_absolute_id(int dim)
 
 #endif
 
+#if !__CLANG_HIP_RUNTIME_WRPPER_INCLUDED__
 // Support std::complex.
 #if !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 #pragma push_macro("__CUDA__")
@@ -517,7 +519,7 @@ hc_get_workitem_absolute_id(int dim)
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 #endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
-
+#endif // __CLANG_HIP_RUNTIME_WRPPER_INCLUDED__
 #endif // defined(__clang__) && defined(__HIP__)
 
 #include <hip/hcc_detail/hip_memory.h>

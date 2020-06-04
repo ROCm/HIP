@@ -191,6 +191,7 @@ if ($HIP_PLATFORM eq "clang") {
         $HIP_LIB_PATH = "$HIP_PATH/lib";
     }
     if ($verbose & 0x2) {
+        print ("ROCM_PATH=$ROCM_PATH\n");
         if (defined $HIP_VDI_HOME) {
             print ("HIP_VDI_HOME=$HIP_VDI_HOME\n");
         }
@@ -734,7 +735,9 @@ if ($HIP_PLATFORM eq "clang") {
             $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         }
     }
-    $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
+    if ($DEVICE_LIB_PATH ne "$ROCM_PATH/amdgcn/bitcode") {
+        $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
+    }
     $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
     if (not $isWindows) {
         $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
