@@ -57,9 +57,17 @@ typedef struct ihipIpcMemHandle_st {
     hip::g_device = g_devices[0];                          \
   }
 
+#define HIP_API_PRINT(...)                                 \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s ( %s )", getpid(), std::this_thread::get_id(),             \
+          __func__, ToString( __VA_ARGS__ ).c_str());
+
+#define HIP_ERROR_PRINT(err, ...)                             \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s: Returned %s : %s", getpid(), std::this_thread::get_id(),  \
+          __func__, hipGetErrorName(err), ToString( __VA_ARGS__ ).c_str());
+
 // This macro should be called at the beginning of every HIP API.
 #define HIP_INIT_API(cid, ...)                               \
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s ( %s )", getpid(), std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
+  HIP_API_PRINT(__VA_ARGS__)                                 \
   amd::Thread* thread = amd::Thread::current();              \
   if (!VDI_CHECK_THREAD(thread)) {                           \
     HIP_RETURN(hipErrorOutOfMemory);                         \
@@ -67,9 +75,9 @@ typedef struct ihipIpcMemHandle_st {
   HIP_INIT()                                                 \
   HIP_CB_SPAWNER_OBJECT(cid);
 
-#define HIP_RETURN(ret)          \
-  hip::g_lastError = ret;  \
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s: Returned %s", getpid(), std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
+#define HIP_RETURN(ret, ...)                      \
+  hip::g_lastError = ret;                         \
+  HIP_ERROR_PRINT(hip::g_lastError, __VA_ARGS__)  \
   return hip::g_lastError;
 
 namespace hc {
