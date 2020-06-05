@@ -245,6 +245,7 @@ public:
     ~RegisteredVar() {}
 
     hipDeviceptr_t getdeviceptr() const { return devicePtr_; };
+    amd::Memory* amd_mem_obj() const { return amd_mem_obj_; };
     size_t getvarsize() const { return size_; };
 
     size_t size_;               // Size of the variable
