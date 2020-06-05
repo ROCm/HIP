@@ -86,8 +86,9 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return hipErrorInvalidValue;
   }
 
-  amd::Context* amdContext = ((flags & CL_MEM_SVM_FINE_GRAIN_BUFFER) != 0)?
-    hip::host_device->asContext() : hip::getCurrentDevice()->asContext();
+  bool useHostDevice = (flags & CL_MEM_SVM_FINE_GRAIN_BUFFER) != 0;
+  amd::Context* curDevContext = hip::getCurrentDevice()->asContext();
+  amd::Context* amdContext = useHostDevice ? hip::host_device->asContext() : curDevContext;
 
   if (amdContext == nullptr) {
     return hipErrorOutOfMemory;
@@ -97,7 +98,8 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return hipErrorOutOfMemory;
   }
 
-  *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_);
+  *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_,
+              useHostDevice ? curDevContext->svmDevices()[0] : nullptr);
   if (*ptr == nullptr) {
     return hipErrorOutOfMemory;
   }
