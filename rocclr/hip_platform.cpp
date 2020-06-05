@@ -239,6 +239,7 @@ std::vector< std::pair<hipModule_t, bool> >* PlatformState::unregisterVar(hipMod
       for (size_t dev = 0; dev < g_devices.size(); ++dev) {
         if (dvar.rvars[dev].getdeviceptr()) {
           amd::MemObjMap::RemoveMemObj(dvar.rvars[dev].getdeviceptr());
+          dvar.rvars[dev].amd_mem_obj()->release();
         }
       }
       vars_.erase(it++);
