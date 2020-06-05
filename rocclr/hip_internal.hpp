@@ -81,16 +81,19 @@ namespace hip {
   class Device;
 
   class Stream {
+  public:
+    enum Priority : int {High = -1, Normal = 0, Low = 1};
+  private:
     amd::HostQueue* queue_;
     mutable amd::Monitor lock_;
     Device* device_;
-    amd::CommandQueue::Priority priority_;
+    Priority priority_;
     unsigned int flags_;
     bool null_;
     const std::vector<uint32_t> cuMask_;
 
   public:
-    Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f = 0, bool null_stream = false,
+    Stream(Device* dev, Priority p = Priority::Normal, unsigned int f = 0, bool null_stream = false,
            const std::vector<uint32_t>& cuMask = {});
 
     /// Creates the hip stream object, including AMD host queue
@@ -110,7 +113,7 @@ namespace hip {
     /// Returns the creation flags for the current stream
     unsigned int Flags() const { return flags_; }
     /// Returns the priority for the current stream
-    amd::CommandQueue::Priority Priority() const { return priority_; }
+    Priority GetPriority() const { return priority_; }
 
     /// Sync all non-blocking streams
     static void syncNonBlockingStreams();
@@ -133,7 +136,7 @@ namespace hip {
 
   public:
     Device(amd::Context* ctx, int devId):
-      context_(ctx), deviceId_(devId), null_stream_(this, amd::CommandQueue::Priority::Normal, 0, true), flags_(hipDeviceScheduleSpin)
+      context_(ctx), deviceId_(devId), null_stream_(this, Stream::Priority::Normal, 0, true), flags_(hipDeviceScheduleSpin)
         { assert(ctx != nullptr); }
     ~Device() {}
 

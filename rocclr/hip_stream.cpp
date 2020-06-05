@@ -43,7 +43,7 @@ class StreamCallback {
 namespace hip {
 
 // ================================================================================================
-Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p,
+Stream::Stream(hip::Device* dev, Priority p,
     unsigned int f, bool null_stream, const std::vector<uint32_t>& cuMask)
   : queue_(nullptr), lock_("Stream Callback lock"), device_(dev),
     priority_(p), flags_(f), null_(null_stream), cuMask_(cuMask) {}
@@ -51,8 +51,22 @@ Stream::Stream(hip::Device* dev, amd::CommandQueue::Priority p,
 // ================================================================================================
 bool Stream::Create() {
   cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
+  amd::CommandQueue::Priority p;
+  switch (priority_) {
+    case Priority::High:
+      p = amd::CommandQueue::Priority::High;
+      break;
+    case Priority::Low:
+      p = amd::CommandQueue::Priority::Low;
+      break;
+    case Priority::Normal:
+    default:
+      p = amd::CommandQueue::Priority::Normal;
+      break;
+  }
   amd::HostQueue* queue = new amd::HostQueue(*device_->asContext(), *device_->devices()[0], properties,
-                             amd::CommandQueue::RealTimeDisabled, priority_, cuMask_);
+                             amd::CommandQueue::RealTimeDisabled, p, cuMask_);
+
   // Create a host queue
   bool result = (queue != nullptr) ? queue->create() : false;
   // Insert just created stream into the list of the blocking queues
@@ -171,7 +185,7 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
 
 // ================================================================================================
 static hipError_t ihipStreamCreate(hipStream_t* stream,
-                                  unsigned int flags, amd::CommandQueue::Priority priority,
+                                  unsigned int flags, hip::Stream::Priority priority,
                                   const std::vector<uint32_t>& cuMask = {}) {
   hip::Stream* hStream = new hip::Stream(hip::getCurrentDevice(), priority, flags, false, cuMask);
 
@@ -190,27 +204,30 @@ static hipError_t ihipStreamCreate(hipStream_t* stream,
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   HIP_INIT_API(hipStreamCreateWithFlags, stream, flags);
 
-  HIP_RETURN(ihipStreamCreate(stream, flags, amd::CommandQueue::Priority::Normal));
+  HIP_RETURN(ihipStreamCreate(stream, flags, hip::Stream::Priority::Normal));
 }
 
 // ================================================================================================
 hipError_t hipStreamCreate(hipStream_t *stream) {
   HIP_INIT_API(hipStreamCreate, stream);
 
-  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, amd::CommandQueue::Priority::Normal));
+  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, hip::Stream::Priority::Normal));
 }
 
 // ================================================================================================
 hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority) {
   HIP_INIT_API(hipStreamCreateWithPriority, stream, flags, priority);
 
-  if (priority > static_cast<int>(amd::CommandQueue::Priority::High)) {
-    priority = static_cast<int>(amd::CommandQueue::Priority::High);
-  } else if (priority < static_cast<int>(amd::CommandQueue::Priority::Normal)) {
-    priority = static_cast<int>(amd::CommandQueue::Priority::Normal);
+  hip::Stream::Priority streamPriority;
+  if (priority <= hip::Stream::Priority::High) {
+    streamPriority = hip::Stream::Priority::High;
+  } else if (priority >= hip::Stream::Priority::Low) {
+    streamPriority = hip::Stream::Priority::Low;
+  } else {
+    streamPriority = hip::Stream::Priority::Normal;
   }
 
-  HIP_RETURN(ihipStreamCreate(stream, flags, static_cast<amd::CommandQueue::Priority>(priority)));
+  HIP_RETURN(ihipStreamCreate(stream, flags, streamPriority));
 }
 
 // ================================================================================================
@@ -218,11 +235,10 @@ hipError_t hipDeviceGetStreamPriorityRange(int* leastPriority, int* greatestPrio
   HIP_INIT_API(hipDeviceGetStreamPriorityRange, leastPriority, greatestPriority);
 
   if (leastPriority != nullptr) {
-    *leastPriority = static_cast<int>(amd::CommandQueue::Priority::Normal);
+    *leastPriority = hip::Stream::Priority::Low;
   }
   if (greatestPriority != nullptr) {
-    // Only report one kind of priority for now.
-    *greatestPriority = static_cast<int>(amd::CommandQueue::Priority::Normal);
+    *greatestPriority = hip::Stream::Priority::High;
   }
   HIP_RETURN(hipSuccess);
 }
@@ -338,14 +354,14 @@ hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize
 
   const std::vector<uint32_t> cuMaskv(cuMask, cuMask + cuMaskSize);
 
-  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, amd::CommandQueue::Priority::Normal, cuMaskv));
+  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, hip::Stream::Priority::Normal, cuMaskv));
 }
 
 // ================================================================================================
 hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
   HIP_INIT_API(hipStreamGetPriority, stream, priority);
   if ((priority != nullptr) && (stream != nullptr)) {
-    *priority = static_cast<int>(reinterpret_cast<hip::Stream*>(stream)->Priority());
+    *priority = static_cast<int>(reinterpret_cast<hip::Stream*>(stream)->GetPriority());
   } else {
     HIP_RETURN(hipErrorInvalidValue);
   }
