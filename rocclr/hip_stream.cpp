@@ -195,8 +195,6 @@ static hipError_t ihipStreamCreate(hipStream_t* stream,
 
   *stream = reinterpret_cast<hipStream_t>(hStream);
 
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "ihipStreamCreate: %zx", hStream);
-
   return hipSuccess;
 }
 
@@ -204,14 +202,14 @@ static hipError_t ihipStreamCreate(hipStream_t* stream,
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   HIP_INIT_API(hipStreamCreateWithFlags, stream, flags);
 
-  HIP_RETURN(ihipStreamCreate(stream, flags, hip::Stream::Priority::Normal));
+  HIP_RETURN(ihipStreamCreate(stream, flags, hip::Stream::Priority::Normal), *stream);
 }
 
 // ================================================================================================
 hipError_t hipStreamCreate(hipStream_t *stream) {
   HIP_INIT_API(hipStreamCreate, stream);
 
-  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, hip::Stream::Priority::Normal));
+  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, hip::Stream::Priority::Normal), *stream);
 }
 
 // ================================================================================================
@@ -227,7 +225,7 @@ hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, 
     streamPriority = hip::Stream::Priority::Normal;
   }
 
-  HIP_RETURN(ihipStreamCreate(stream, flags, streamPriority));
+  HIP_RETURN(ihipStreamCreate(stream, flags, streamPriority), *stream);
 }
 
 // ================================================================================================
@@ -354,7 +352,7 @@ hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize
 
   const std::vector<uint32_t> cuMaskv(cuMask, cuMask + cuMaskSize);
 
-  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, hip::Stream::Priority::Normal, cuMaskv));
+  HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, hip::Stream::Priority::Normal, cuMaskv), *stream);
 }
 
 // ================================================================================================

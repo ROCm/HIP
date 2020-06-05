@@ -100,7 +100,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   if (*ptr == nullptr) {
     return hipErrorOutOfMemory;
   }
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] ihipMalloc ptr=0x%zx",  getpid(),std::this_thread::get_id(), *ptr);
+
   return hipSuccess;
 }
 
@@ -207,13 +207,13 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_ATOMICS: 0));
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_ATOMICS: 0), *ptr);
 }
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
   HIP_INIT_API(hipMalloc, ptr, sizeBytes);
 
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, 0));
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, 0), *ptr);
 }
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
@@ -241,7 +241,7 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
     ihipFlags |= CL_MEM_SVM_ATOMICS;
   }
 
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, ihipFlags));
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, ihipFlags), *ptr);
 }
 
 hipError_t hipMallocManaged(void** devPtr, size_t size,
@@ -252,7 +252,7 @@ hipError_t hipMallocManaged(void** devPtr, size_t size,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipMalloc(devPtr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER));
+  HIP_RETURN(ihipMalloc(devPtr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER), *devPtr);
 }
 
 hipError_t hipFree(void* ptr) {
@@ -399,7 +399,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
   HIP_INIT_API(hipMallocPitch, ptr, pitch, width, height);
 
   const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
-  HIP_RETURN(ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format));
+  HIP_RETURN(ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format), *ptr);
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
@@ -422,7 +422,7 @@ hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
         pitchedDevPtr->ysize = extent.height;
   }
 
-  HIP_RETURN(status);
+  HIP_RETURN(status, *pitchedDevPtr);
 }
 
 amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
@@ -698,7 +698,7 @@ hipError_t hipHostRegister(void* hostPtr, size_t sizeBytes, unsigned int flags) 
     amd::MemObjMap::AddMemObj(hostPtr, mem);
     HIP_RETURN(hipSuccess);
   } else {
-    HIP_RETURN(ihipMalloc(&hostPtr, sizeBytes, flags));
+    HIP_RETURN(ihipMalloc(&hostPtr, sizeBytes, flags), hostPtr);
   }
 }
 
@@ -733,7 +733,7 @@ hipError_t hipHostUnregister(void* hostPtr) {
 
 // Deprecated function:
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, flags));
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, flags), *ptr);
 };
 
 
@@ -2303,7 +2303,7 @@ hipError_t hipMallocHost(void** ptr,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipMalloc(ptr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER));
+  HIP_RETURN(ihipMalloc(ptr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER), *ptr);
 }
 
 hipError_t hipFreeHost(void *ptr) {
