@@ -70,7 +70,7 @@ THE SOFTWARE.
 #define __global__ __attribute__((global))
 #define __shared__ __attribute__((shared))
 #define __constant__ __attribute__((constant))
-#endif // __CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 
 #define __noinline__ __attribute__((noinline))
 #define __forceinline__ inline __attribute__((always_inline))

@@ -701,7 +701,7 @@ double __llvm_amdgcn_rsq_f64(double) __asm("llvm.amdgcn.rsq.f64");
 // END INTRINSICS
 // END DOUBLE
 
-#endif // __CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 
 #if defined(__cplusplus)
     } // extern "C"

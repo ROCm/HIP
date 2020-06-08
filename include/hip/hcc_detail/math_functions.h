@@ -127,7 +127,7 @@ uint64_t __make_mantissa(const char* tagp)
 
     return __make_mantissa_base10(tagp);
 }
-#endif // __CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 
 // DOT FUNCTIONS
 #if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
@@ -1496,7 +1496,7 @@ __host__ inline static int min(int arg1, int arg2) {
 __host__ inline static int max(int arg1, int arg2) {
   return std::max(arg1, arg2);
 }
-#endif // __CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 
 #pragma pop_macro("__DEF_FLOAT_FUN")
 #pragma pop_macro("__DEF_FLOAT_FUN2")

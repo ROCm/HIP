@@ -80,4 +80,4 @@ extern "C"
     __device__ __attribute__((const)) __2f16 __ocml_sqrt_2f16(__2f16);
     __device__ __attribute__((const)) __2f16 __ocml_trunc_2f16(__2f16);
 }
-#endif // __CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
