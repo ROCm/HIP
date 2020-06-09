@@ -204,7 +204,7 @@ void runTest()
     // validate that stream priorities are working as expected
     #define OP(x, y) \
         if (enable_priority_##x && enable_priority_##y) { \
-            if (time_spent_##x < time_spent_##y) { printf("FAILED!"); exit(-1); } \
+            if ((1.05f * time_spent_##x) < time_spent_##y) { printf("FAILED!"); exit(-1); } \
         }
     OP(low, normal)
     OP(normal, high)
