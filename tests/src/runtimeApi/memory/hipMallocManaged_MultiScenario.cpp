@@ -24,8 +24,8 @@ THE SOFTWARE.
  * TEST_NAMED: %t hipMallocManaged2 --tests 2
  * TEST_NAMED: %t hipMallocManagedNegativeTests --tests 3
  * TEST_NAMED: %t hipMallocManagedMultiChunkSingleDevice --tests 4
- * TEST_NAMED: %t hipMallocManagedMultiChunkMultiDevice --tests 5 EXCLUDE_HIP_PLATFORM nvcc
- * TEST_NAMED: %t hipMallocManagedOversubscription --tests 6 EXCLUDE_HIP_PLATFORM rocclr nvcc
+ * TEST_NAMED: %t hipMallocManagedMultiChunkMultiDevice --tests 5 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST_NAMED: %t hipMallocManagedOversubscription --tests 6 EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
  * HIT_END
  */
 

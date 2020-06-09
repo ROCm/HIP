@@ -37,7 +37,7 @@ Testcase Scenarios :
 
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
  * TEST_NAMED: %t hipTestAtomicnoret-manywaves --atomicnoret --tests 1
  * TEST_NAMED: %t hipTestAtomicnoret-simple --atomicnoret --tests 2
  * TEST_NAMED: %t hipTestAtomic-manywaves --tests 1

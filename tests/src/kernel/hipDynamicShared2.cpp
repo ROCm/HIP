@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM hcc
- * TEST: %t EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME hcc
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 

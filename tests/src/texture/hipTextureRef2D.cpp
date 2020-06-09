@@ -1,5 +1,5 @@
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM rocclr
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME rocclr
  * TEST: %t
  * HIT_END
  */

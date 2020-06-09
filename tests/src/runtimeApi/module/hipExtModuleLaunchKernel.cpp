@@ -18,8 +18,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: matmul.code %hc --genco %S/matmul.cpp -o matmul.code EXCLUDE_HIP_PLATFORM nvcc
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc rocclr
+ * BUILD_CMD: matmul.code %hc --genco %S/matmul.cpp -o matmul.code EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
  * TEST: %t
  * HIT_END
  */

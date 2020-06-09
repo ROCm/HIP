@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp HCC_OPTIONS -Xclang -fallow-half-arguments-and-returns CLANG_OPTIONS -Xclang -fallow-half-arguments-and-returns EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../test_common.cpp HCC_OPTIONS -Xclang -fallow-half-arguments-and-returns CLANG_OPTIONS -Xclang -fallow-half-arguments-and-returns EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */

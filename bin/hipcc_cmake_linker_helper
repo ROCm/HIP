@@ -7,4 +7,6 @@ if [ "$HIP_COMPILER" =  "hcc" ]; then
   HCC_HOME=$1 $HIP_PATH/bin/hipcc "${@:2}"
 elif [ "$HIP_COMPILER" = "clang" ]; then
   HIP_CLANG_PATH=$1 $HIP_PATH/bin/hipcc "${@:2}"
+else
+  $HIP_PATH/bin/hipcc "${@:1}"
 fi
