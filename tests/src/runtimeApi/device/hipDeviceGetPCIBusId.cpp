@@ -24,9 +24,9 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvidia
  * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-hipDeviceGetAttribute --tests 0x1
- * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-lspci --tests 0x2 EXCLUDE_HIP_PLATFORM nvcc
+ * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-lspci --tests 0x2 EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 

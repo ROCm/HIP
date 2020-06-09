@@ -22,32 +22,32 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
- * TEST: %t --tests 0x10 EXCLUDE_HIP_PLATFORM hcc rocclr
- * TEST: %t --tests 0x11 EXCLUDE_HIP_PLATFORM hcc rocclr
- * TEST: %t --tests 0x12 EXCLUDE_HIP_PLATFORM hcc rocclr
+ * TEST: %t --tests 0x10 EXCLUDE_HIP_PLATFORM amd
+ * TEST: %t --tests 0x11 EXCLUDE_HIP_PLATFORM amd
+ * TEST: %t --tests 0x12 EXCLUDE_HIP_PLATFORM amd
  * TEST: %t --tests 0x13
  * TEST: %t --tests 0x14
  * TEST: %t --tests 0x15
- * TEST: %t --tests 0x20 EXCLUDE_HIP_PLATFORM hcc rocclr
- * TEST: %t --tests 0x21 EXCLUDE_HIP_PLATFORM hcc rocclr
+ * TEST: %t --tests 0x20 EXCLUDE_HIP_PLATFORM amd
+ * TEST: %t --tests 0x21 EXCLUDE_HIP_PLATFORM amd
  * TEST: %t --tests 0x22
- * TEST: %t --tests 0x30 EXCLUDE_HIP_PLATFORM hcc rocclr
- * TEST: %t --tests 0x31 EXCLUDE_HIP_PLATFORM hcc rocclr
+ * TEST: %t --tests 0x30 EXCLUDE_HIP_PLATFORM amd
+ * TEST: %t --tests 0x31 EXCLUDE_HIP_PLATFORM amd
  * TEST: %t --tests 0x32
- * TEST: %t --tests 0x40 EXCLUDE_HIP_PLATFORM hcc rocclr
+ * TEST: %t --tests 0x40 EXCLUDE_HIP_PLATFORM amd
  * TEST: %t --tests 0x41
  * TEST: %t --tests 0x42
- * TEST: %t --tests 0x43 EXCLUDE_HIP_PLATFORM hcc rocclr
- * TEST: %t --tests 0x44 EXCLUDE_HIP_PLATFORM nvcc
+ * TEST: %t --tests 0x43 EXCLUDE_HIP_PLATFORM amd
+ * TEST: %t --tests 0x44 EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t --tests 0x45
- * TEST: %t --tests 0x50 EXCLUDE_HIP_PLATFORM hcc rocclr nvcc
- * TEST: %t --tests 0x51 EXCLUDE_HIP_PLATFORM hcc rocclr nvcc
- * TEST: %t --tests 0x52 EXCLUDE_HIP_PLATFORM hcc rocclr
+ * TEST: %t --tests 0x50 EXCLUDE_HIP_PLATFORM amd nvidia
+ * TEST: %t --tests 0x51 EXCLUDE_HIP_PLATFORM amd nvidia
+ * TEST: %t --tests 0x52 EXCLUDE_HIP_PLATFORM amd
  * TEST: %t --tests 0x53
  * TEST: %t --tests 0x54
- * TEST: %t --tests 0x55 EXCLUDE_HIP_PLATFORM nvcc
+ * TEST: %t --tests 0x55 EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t --tests 0x56
- * TEST: %t --tests 0x60 EXCLUDE_HIP_PLATFORM nvcc
+ * TEST: %t --tests 0x60 EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 #include <stdio.h>

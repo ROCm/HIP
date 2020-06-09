@@ -25,7 +25,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvidia
  * TEST_NAMED: %t hipSetGetDevice-invalidDevice
  * TEST_NAMED: %t hipSetGetDevice-allValidDevice
  * TEST_NAMED: %t hipSetGetDevice-validDev1 --computeDevCnt 1

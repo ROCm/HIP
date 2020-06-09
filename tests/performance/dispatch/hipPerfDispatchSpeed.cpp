@@ -7,7 +7,7 @@
 #include "test_common.h"
 
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp ../../src/timer.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../src/test_common.cpp timer.cpp EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */

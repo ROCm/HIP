@@ -48,7 +48,7 @@ execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --compiler OUTPUT_VARIABLE H
 execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --runtime OUTPUT_VARIABLE HIP_RUNTIME OUTPUT_STRIP_TRAILING_WHITESPACE)
 if(NOT host_flag)
     set(__CC ${HIP_HIPCC_EXECUTABLE})
-    if("${HIP_PLATFORM}" STREQUAL "hcc")
+    if("${HIP_PLATFORM}" STREQUAL "amd")
         if("${HIP_COMPILER}" STREQUAL "hcc")
             if(NOT "x${HCC_HOME}" STREQUAL "x")
                 set(ENV{HCC_HOME} ${HCC_HOME})

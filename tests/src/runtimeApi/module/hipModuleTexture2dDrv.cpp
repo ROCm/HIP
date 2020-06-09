@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD_CMD: tex2d_kernel.code %hc --genco %S/tex2d_kernel.cpp -o tex2d_kernel.code
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc rocclr
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
  * TEST: %t
  * HIT_END
  */

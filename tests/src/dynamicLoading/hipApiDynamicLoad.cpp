@@ -25,8 +25,8 @@ THE SOFTWARE.
  * */
 
 /* HIT_START
- * BUILD_CMD: bit_extract_kernel.code %hc --genco %S/bit_extract_kernel.cpp -o bit_extract_kernel.code EXCLUDE_HIP_PLATFORM nvcc
- * BUILD_CMD: %t %hc %S/%s -I%S/.. -o %T/%t -ldl EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD_CMD: bit_extract_kernel.code %hc --genco %S/bit_extract_kernel.cpp -o bit_extract_kernel.code EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD_CMD: %t %hc %S/%s -I%S/.. -o %T/%t -ldl EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */

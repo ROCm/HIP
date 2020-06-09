@@ -35,8 +35,8 @@ if ($p_help) {
     print "  --rocmpath,  -R    : print ROCM_PATH (use env var if set, else determine from hip path or /opt/rocm)\n";
     print "  --cpp_config, -C   : print C++ compiler options\n";
     print "  --compiler, -c     : print compiler (hcc or clang or nvcc)\n";
-    print "  --platform, -P     : print platform (hcc or nvcc)\n";
-    print "  --runtime, -r      : print runtime (HCC or ROCclr)\n";
+    print "  --platform, -P     : print platform (amd or nvidia)\n";
+    print "  --runtime, -r      : print runtime (hcc or rocclr)\n";
     print "  --hipclangpath, -l : print HIP_CLANG_PATH\n";
     print "  --full, -f         : print full config\n";
     print "  --version, -v      : print hip version\n";
@@ -98,17 +98,17 @@ if (defined $HIP_ROCCLR_HOME) {
     $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo"; # use actual file
 }
 #---
-#HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
+#HIP_PLATFORM controls whether to use nvidia or amd platform:
 $HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
 # Read .hipInfo
 my %hipInfo = ();
 parse_config_file("$HIP_INFO_PATH", \%hipInfo);
 # Prioritize Env first, otherwise use the hipInfo config file
-$HIP_COMPILER = $ENV{'HIP_COMPILER'} // $hipInfo{'HIP_COMPILER'} // "hcc";
-$HIP_RUNTIME = $ENV{'HIP_RUNTIME'} // $hipInfo{'HIP_RUNTIME'} // "HCC";
+$HIP_COMPILER = $ENV{'HIP_COMPILER'} // $hipInfo{'HIP_COMPILER'} // "clang";
+$HIP_RUNTIME = $ENV{'HIP_RUNTIME'} // $hipInfo{'HIP_RUNTIME'} // "rocclr";
 
 # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
-if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "ROCclr" and !defined $HIP_ROCCLR_HOME) {
+if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "rocclr" and !defined $HIP_ROCCLR_HOME) {
     my $hipconfig_dir = dirname($0);
     if (-e "$hipconfig_dir/../lib/bitcode") {
         $HIP_ROCCLR_HOME = abs_path($hipconfig_dir . "/..");
@@ -118,15 +118,17 @@ if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "ROCclr" and !defined $HIP_ROCCLR_H
 }
 
 if (not defined $HIP_PLATFORM) {
-    if (can_run("$HCC_HOME/bin/hcc") or can_run("hcc")) {
-        $HIP_PLATFORM = "hcc";
-    } elsif (can_run("$HIP_CLANG_PATH/clang++") or can_run("clang++")) {
-        $HIP_PLATFORM = "hcc";
+    if (can_run("$HIP_CLANG_PATH/clang++") or can_run("clang++")) {
+        $HIP_PLATFORM = "amd";
+    } elsif (can_run("$HCC_HOME/bin/hcc") or can_run("hcc")) {
+        $HIP_PLATFORM = "amd";
     } elsif (can_run("$CUDA_PATH/bin/nvcc") or can_run("nvcc")) {
-        $HIP_PLATFORM = "nvcc";
+        $HIP_PLATFORM = "nvidia";
+        $HIP_COMPILER = "nvcc";
+        $HIP_RUNTIME = "cuda";
     } else {
-        # Default to hcc for now
-        $HIP_PLATFORM = "hcc";
+        # Default to amd for now
+        $HIP_PLATFORM = "amd";
     }
 }
 
@@ -144,10 +146,10 @@ if ($HIP_COMPILER eq "clang") {
 
     $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
 }
-if ($HIP_RUNTIME eq "ROCclr") {
+if ($HIP_RUNTIME eq "rocclr") {
     $CPP_CONFIG .= " -D__HIP_ROCclr__";
 }
-if ($HIP_PLATFORM eq "nvcc") {
+if ($HIP_PLATFORM eq "nvidia") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
 };
 
@@ -211,7 +213,7 @@ if (!$printed or $p_full) {
     print "HIP_PLATFORM : ", $HIP_PLATFORM, "\n";
     print "HIP_RUNTIME  : ", $HIP_RUNTIME, "\n";
     print "CPP_CONFIG   : ", $CPP_CONFIG, "\n";
-    if ($HIP_PLATFORM eq "hcc")
+    if ($HIP_PLATFORM eq "amd")
     {
         print "\n" ;
         if ($HIP_COMPILER eq "hcc")
@@ -243,7 +245,7 @@ if (!$printed or $p_full) {
             printf("\n");
         }
     }
-    if ($HIP_PLATFORM eq "nvcc")  {
+    if ($HIP_PLATFORM eq "nvidia")  {
         print "\n" ;
         print "== nvcc\n";
         #print "CUDA_PATH   :", $CUDA_PATH";
@@ -282,7 +284,7 @@ if ($p_check) {
         printf "good\n";
     }
 
-    if ($HIP_PLATFORM eq "hcc")  {
+    if ($HIP_PLATFORM eq "amd")  {
         $LD_LIBRARY_PATH=$ENV{'LD_LIBRARY_PATH'};
         printf("%-70s", "check LD_LIBRARY_PATH ($LD_LIBRARY_PATH) contains HSA_PATH ($HSA_PATH)...");
         if (index($LD_LIBRARY_PATH, $HSA_PATH) == -1) {
@@ -294,7 +296,6 @@ if ($p_check) {
         # TODO - check hipcc / nvcc found and executable.
     }
 }
-
 
 if ($p_newline) {
     print "\n";

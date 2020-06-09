@@ -186,12 +186,12 @@ bool testhipMemset2AsyncOps() {
 int main(int argc, char *argv[]) {
   HipTest::parseStandardArguments(argc, argv, true);
   bool testResult = true;
-  char * cA_d;
-  char * cA_h;
-  int16_t * siA_d;
-  int16_t * siA_h;
-  int32_t * iA_d;
-  int32_t * iA_h;
+  char * cA_d = NULL;
+  char * cA_h = NULL;
+  int16_t * siA_d = NULL;
+  int16_t * siA_h = NULL;
+  int32_t * iA_d = NULL;
+  int32_t * iA_h = NULL;
   HIPCHECK(hipSetDevice(p_gpuDevice));
   testResult &= testhipMemsetSmallSize(memsetval, p_gpuDevice);
 
