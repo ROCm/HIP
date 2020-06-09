@@ -189,7 +189,7 @@ static hipError_t ihipStreamCreate(hipStream_t* stream,
                                   const std::vector<uint32_t>& cuMask = {}) {
   hip::Stream* hStream = new hip::Stream(hip::getCurrentDevice(), priority, flags, false, cuMask);
 
-  if (hStream == nullptr) {
+  if (hStream == nullptr || !hStream->Create()) {
     return hipErrorOutOfMemory;
   }
 
