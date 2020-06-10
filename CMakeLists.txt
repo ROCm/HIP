@@ -645,31 +645,34 @@ endif()
 # Testing steps
 #############################
 # Target: test
-set(HIP_ROOT_DIR ${CMAKE_INSTALL_PREFIX})
-set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_ROOT_DIR}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
-if(${RUN_HIT} EQUAL 0)
-    execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_ROOT_DIR}/bin" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
-endif()
-if(${RUN_HIT} EQUAL 0)
-    set(CMAKE_MODULE_PATH "${HIP_ROOT_DIR}/cmake" ${CMAKE_MODULE_PATH})
-    include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
+include(CTest)
+if(BUILD_TESTING)
+    set(HIP_ROOT_DIR ${CMAKE_INSTALL_PREFIX})
+    set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
+    execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_ROOT_DIR}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
+    if(${RUN_HIT} EQUAL 0)
+        execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_ROOT_DIR}/bin" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
+    endif()
+    if(${RUN_HIT} EQUAL 0)
+        set(CMAKE_MODULE_PATH "${HIP_ROOT_DIR}/cmake" ${CMAKE_MODULE_PATH})
+        include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
 
-    # Add tests
-    include_directories(${HIP_SRC_PATH}/tests/src)
-    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
+        # Add tests
+        include_directories(${HIP_SRC_PATH}/tests/src)
+        hit_add_directory_recursive(${HIP_SRC_PATH}/tests/src "directed_tests")
 
-    # Add unit tests
-    include_directories(${HIP_SRC_PATH}/tests/unit)
-    hit_add_directory_recursive(${HIP_SRC_PATH}/tests/unit "unit_tests")
+        # Add unit tests
+        include_directories(${HIP_SRC_PATH}/tests/unit)
+        hit_add_directory_recursive(${HIP_SRC_PATH}/tests/unit "unit_tests")
 
-    # Add top-level tests to build_tests
-    add_custom_target(build_tests DEPENDS directed_tests unit_tests)
+        # Add top-level tests to build_tests
+        add_custom_target(build_tests DEPENDS directed_tests unit_tests)
 
-    # Add custom target: check
-    add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
-else()
-    message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
+        # Add custom target: check
+        add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
+    else()
+        message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
+    endif()
 endif()
 
 #############################
