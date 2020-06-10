@@ -238,6 +238,12 @@ __device__ static inline unsigned int __lane_id() {
         -1, __builtin_amdgcn_mbcnt_lo(-1, 0));
 }
 
+__device__
+static inline unsigned int __mbcnt_lo(unsigned int x, unsigned int y) {return __builtin_amdgcn_mbcnt_lo(x,y);};
+
+__device__
+static inline unsigned int __mbcnt_hi(unsigned int x, unsigned int y) {return __builtin_amdgcn_mbcnt_hi(x,y);};
+
 /*
 HIP specific device functions
 */
