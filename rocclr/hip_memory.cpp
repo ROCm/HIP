@@ -2026,7 +2026,12 @@ hipError_t hipIpcCloseMemHandle(void* dev_ptr) {
   }
 
   /* Remove the memory from MemObjMap */
-  amd::MemObjMap::RemoveMemObj(amd_mem_obj);
+  if (amd_mem_obj->getSvmPtr() != nullptr) {
+    amd::MemObjMap::RemoveMemObj(amd_mem_obj->getSvmPtr());
+  } else {
+    DevLogPrintfError("Does not have SVM or Host Mem for 0x%x, crash here!", dev_ptr);
+    guarantee(false);
+  }
 
   /* detach the memory */
   if (!device->IpcDetach(*amd_mem_obj)){
