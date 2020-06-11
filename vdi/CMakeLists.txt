@@ -146,7 +146,7 @@ set_target_properties(
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-include(${LIBVDI_STATIC_DIR}/amdvdi_staticTargets.cmake)
+include(${LIBVDI_STATIC_DIR}/amdrocclr_static.cmake)
 
 add_library(amdhip64 SHARED
     $<TARGET_OBJECTS:hip64>
