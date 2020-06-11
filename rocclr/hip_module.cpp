@@ -533,7 +533,7 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
   }
 
    /* Get address and size for the global symbol */
-  if (!PlatformState::instance().getDynTexRef(name, hmod, texRef)) {
+  if (hipSuccess != PlatformState::instance().getDynTexRef(name, hmod, texRef)) {
     DevLogPrintfError("Cannot get texRef for name: %s at module:0x%x \n",
                       name, hmod);
     HIP_RETURN(hipErrorNotFound);
@@ -542,6 +542,8 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
   // Texture references created by HIP driver API
   // have the default read mode set to normalized float.
   (*texRef)->readMode = hipReadModeNormalizedFloat;
+
+  PlatformState::instance().registerTexRef(*texRef, hmod, std::string(name));
 
   HIP_RETURN(hipSuccess);
 }

@@ -52,6 +52,9 @@ public:
                              hipDeviceptr_t* dev_ptr, size_t* size_ptr);
   hipError_t getDynTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef);
 
+  hipError_t registerTexRef(textureReference* texRef, hipModule_t hmod, std::string name);
+  hipError_t getDynTexGlobalVar(textureReference* texRef, int deviceId, hipDeviceptr_t* dev_ptr, size_t* size_ptr);
+
   /* Singleton instance */
   static PlatformState& instance() {
     if (platform_ == nullptr) {
@@ -90,4 +93,5 @@ private:
   std::unordered_map<hipModule_t, hip::DynCO*> dynCO_map_;
   hip::StatCO statCO_; //Static Code object var
   bool initialized_{false};
+  std::unordered_map<textureReference*, std::pair<hipModule_t, std::string>> texRef_map_;
 };
