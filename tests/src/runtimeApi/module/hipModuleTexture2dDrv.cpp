@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
+ * BUILD_CMD: tex2d_kernel.code %hc --genco %S/tex2d_kernel.cpp -o tex2d_kernel.code
  * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc rocclr
  * TEST: %t
  * HIT_END
@@ -33,9 +34,6 @@ THE SOFTWARE.
 
 #define fileName "tex2d_kernel.code"
 
-#if __HIP__
-__hip_pinned_shadow__
-#endif
 texture<float, 2, hipReadModeElementType> tex;
 bool testResult = false;
 
@@ -133,6 +131,7 @@ bool runTest(int argc, char** argv) {
     }
     hipFree(dData);
     hipFreeArray(array);
+    HIP_CHECK(hipModuleUnload(Module));
     return true;
 }
 

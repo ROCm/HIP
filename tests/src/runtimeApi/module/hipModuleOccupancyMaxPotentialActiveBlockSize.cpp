@@ -49,6 +49,7 @@ int main(int argc, char* argv[]) {
     assert(gridSize != 0 && blockSize != 0);
     HIPCHECK(hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, Function, blockSize, 0));
     assert(numBlock != 0);
+    HIPCHECK(hipModuleUnload(Module));
     HIPCHECK(hipCtxDestroy(context));
     passed();
 }
