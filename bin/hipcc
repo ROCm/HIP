@@ -816,9 +816,7 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
         $HIPCFLAGS .= " -O3";
         $HIPLDFLAGS .= " -O3";
     }
-    # Do not pass -mllvm on Windows since there is a clang bug causing duplicate -mllvm options in clang -cc1 on Windows.
-    # ToDo : remove restriction for Windows after clang bug is fixed.
-    if (!$funcSupp and $optArg ne "-O0" and not $isWindows and $hasHIP) {
+    if (!$funcSupp and $optArg ne "-O0" and $hasHIP) {
         $HIPCXXFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         if ($needLDFLAGS and not $needCXXFLAGS) {
             $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
