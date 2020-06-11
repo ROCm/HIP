@@ -27,7 +27,7 @@ set(USE_PROF_API "1")
 
 if(NOT DEFINED LIBVDI_STATIC_DIR)
    find_path(LIBVDI_STATIC_DIR
-        NAMES libamdvdi_static.a
+        NAMES libamdrocclr_static.a
         PATHS /opt/rocm/vdi
         PATH_SUFFIXES lib
    )
