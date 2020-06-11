@@ -161,8 +161,8 @@ target_link_libraries(host INTERFACE amdhip64)
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
-target_link_libraries(amdhip64_static PRIVATE amdvdi_static pthread dl)
-target_link_libraries(amdhip64 PRIVATE amdvdi_static pthread dl)
+target_link_libraries(amdhip64_static PRIVATE amdrocclr_static pthread dl)
+target_link_libraries(amdhip64 PRIVATE amdrocclr_static pthread dl)
 
 
 INSTALL(PROGRAMS $<TARGET_FILE:amdhip64_static> DESTINATION lib COMPONENT MAIN)
