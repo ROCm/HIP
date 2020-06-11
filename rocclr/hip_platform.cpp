@@ -955,6 +955,15 @@ hipError_t PlatformState::unloadModule(hipModule_t hmod) {
   delete it->second;
   dynCO_map_.erase(hmod);
 
+  auto tex_it = texRef_map_.begin();
+  while (tex_it != texRef_map_.end()) {
+    if (tex_it->second.first == hmod) {
+      tex_it = texRef_map_.erase(tex_it);
+    } else {
+      ++tex_it;
+    }
+  }
+
   return hipSuccess;
 }
 
@@ -983,6 +992,37 @@ hipError_t PlatformState::getDynGlobalVar(const char* hostVar, int deviceId, hip
 
   hip::DeviceVar* dvar = nullptr;
   IHIP_RETURN_ONFAIL(it->second->getDeviceVar(&dvar, hostVar, deviceId));
+  *dev_ptr = dvar->device_ptr();
+  *size_ptr = dvar->size();
+
+  return hipSuccess;
+}
+
+hipError_t PlatformState::registerTexRef(textureReference* texRef, hipModule_t hmod,
+                                         std::string name) {
+  amd::ScopedLock lock(lock_);
+  texRef_map_.insert(std::make_pair(texRef, std::make_pair(hmod, name)));
+  return hipSuccess;
+}
+
+hipError_t PlatformState::getDynTexGlobalVar(textureReference* texRef, int deviceId,
+                                             hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
+  amd::ScopedLock lock(lock_);
+
+  auto tex_it = texRef_map_.find(texRef);
+  if (tex_it == texRef_map_.end()) {
+    DevLogPrintfError("Cannot find the texRef Entry: 0x%x", texRef);
+    return hipErrorNotFound;
+  }
+
+  auto it = dynCO_map_.find(tex_it->second.first);
+  if (it == dynCO_map_.end()) {
+    DevLogPrintfError("Cannot find the module: 0x%x", tex_it->second.first);
+    return hipErrorNotFound;
+  }
+
+  hip::DeviceVar* dvar = nullptr;
+  IHIP_RETURN_ONFAIL(it->second->getDeviceVar(&dvar, tex_it->second.second, deviceId));
   *dev_ptr = dvar->device_ptr();
   *size_ptr = dvar->size();
 
