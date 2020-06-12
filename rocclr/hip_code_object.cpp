@@ -383,7 +383,6 @@ hipError_t StatCO::registerStatFunction(const void* hostFunction, Function* func
 
   if (functions_.find(hostFunction) != functions_.end()) {
     DevLogPrintfError("hostFunctionPtr: 0x%x already exists", hostFunction);
-    guarantee(false);
   }
   functions_.insert(std::make_pair(hostFunction, func));
 
