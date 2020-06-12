@@ -296,6 +296,9 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
   case hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem:
     *pi = prop.cooperativeMultiDeviceUnmatchedSharedMem;
     break;
+  case hipDeviceAttributeAsicRevision:
+    *pi = prop.asicRevision;
+     break;
   default:
     HIP_RETURN(hipErrorInvalidValue);
   }

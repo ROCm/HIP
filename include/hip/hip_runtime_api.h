@@ -138,6 +138,7 @@ typedef struct hipDeviceProp_t {
     int cooperativeMultiDeviceUnmatchedSharedMem;   ///< HIP device supports cooperative launch on multiple
                                                     ///devices with unmatched shared memories
     int isLargeBar;                  ///< 1: if it is a large PCI bar device, else 0
+    int asicRevision;                ///< Revision of the GPU in this device.
 } hipDeviceProp_t;
 
 
@@ -345,8 +346,9 @@ typedef enum hipDeviceAttribute_t {
                                                                   ///devices with unmatched grid dimensions
     hipDeviceAttributeCooperativeMultiDeviceUnmatchedBlockDim,    ///< Supports cooperative launch on multiple
                                                                   ///devices with unmatched block dimensions
-    hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem    ///< Supports cooperative launch on multiple
+    hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem,   ///< Supports cooperative launch on multiple
                                                                   ///devices with unmatched shared memories
+    hipDeviceAttributeAsicRevision          ///< Revision of the GPU in this device
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {
