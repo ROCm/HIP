@@ -81,6 +81,7 @@ add_library(hip64 OBJECT
  hip_error.cpp
  hip_event.cpp
  hip_global.cpp
+ hip_hmm.cpp
  hip_memory.cpp
  hip_module.cpp
  hip_peer.cpp

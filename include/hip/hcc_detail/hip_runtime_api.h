@@ -178,8 +178,10 @@ enum hipLimit_t {
     0x80000000  ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
                 ///< allocation.
 
-#define hipMemAttachGlobal 0x0
-#define hipMemAttachHost 0x1
+#define hipMemAttachGlobal  0x01    ///< Memory can be accessed by any stream on any device
+#define hipMemAttachHost    0x02    ///< Memory cannot be accessed by any stream on any device
+#define hipMemAttachSingle  0x04    ///< Memory can only be accessed by a single stream on
+                                    ///< the associated device
 
 #define hipDeviceMallocDefault 0x0
 #define hipDeviceMallocFinegrained 0x1  ///< Memory is allocated in fine grained region of device.
@@ -216,6 +218,41 @@ enum hipLimit_t {
 
 #define hipCooperativeLaunchMultiDeviceNoPreSync 0x01
 #define hipCooperativeLaunchMultiDeviceNoPostSync 0x02
+
+#define hipCpuDeviceId ((int)-1)
+#define hipInvalidDeviceId ((int)-2)
+
+/*
+ * @brief HIP Memory Advise values
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemoryAdvise {
+    hipMemAdviseSetReadMostly = 1,          ///< Data will mostly be read and only occassionally
+                                            ///< be written to
+    hipMemAdviseUnsetReadMostly = 2,        ///< Undo the effect of hipMemAdviseSetReadMostly
+    hipMemAdviseSetPreferredLocation = 3,   ///< Set the preferred location for the data as
+                                            ///< the specified device
+    hipMemAdviseUnsetPreferredLocation = 4, ///< Clear the preferred location for the data
+    hipMemAdviseSetAccessedBy = 5,          ///< Data will be accessed by the specified device,
+                                            ///< so prevent page faults as much as possible
+    hipMemAdviseUnsetAccessedBy = 6         ///< Let the Unified Memory subsystem decide on
+                                            ///< the page faulting policy for the specified device
+} hipMemoryAdvise;
+
+/*
+ * @brief HIP range attributes
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemRangeAttribute {
+    hipMemRangeAttributeReadMostly = 1,         ///< Whether the range will mostly be read and
+                                                ///< only occassionally be written to
+    hipMemRangeAttributePreferredLocation = 2,  ///< The preferred location of the range
+    hipMemRangeAttributeAccessedBy = 3,         ///< Memory range has cudaMemAdviseSetAccessedBy
+                                                ///< set for specified device
+    hipMemRangeAttributeLastPrefetchLocation = 4,///< The last location to which the range was prefetched
+} hipMemRangeAttribute;
 
 /*
  * @brief hipJitOption
@@ -1180,15 +1217,18 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 
 /**
- *  @brief Allocates memory that will be automatically managed by the Unified Memory system.
+ * @brief Allocates memory that will be automatically managed by AMD HMM.
  *
- *  @param[out] ptr Pointer to the allocated managed memory
- *  @param[in]  size Requested memory size
- *  @param[in]  flags must be either hipMemAttachGlobal/hipMemAttachHost
+ * @param [out] dev_ptr - pointer to allocated device memory
+ * @param [in]  size    - requested allocation size in bytes
+ * @param [in]  flags   - must be either hipMemAttachGlobal or hipMemAttachHost
+ *                        (defaults to hipMemAttachGlobal)
  *
- *  @return #hipSuccess, #hipErrorOutOfMemory
+ * @returns #hipSuccess, #hipErrorMemoryAllocation, #hipErrorNotSupported, #hipErrorInvalidValue
  */
-hipError_t hipMallocManaged(void** devPtr, size_t size, unsigned int flags __dparm(0));
+hipError_t hipMallocManaged(void** dev_ptr,
+                            size_t size,
+                            unsigned int flags __dparm(hipMemAttachGlobal));
 
 /**
  *  @brief Allocate device accessible page locked host memory [Deprecated]
@@ -3369,13 +3409,98 @@ hipError_t __hipPopCallConfiguration(dim3 *gridDim,
  * @returns #hipSuccess, #hipErrorInvalidValue, hipInvalidDevice
  *
  */
-
 hipError_t hipLaunchKernel(const void* function_address,
                            dim3 numBlocks,
                            dim3 dimBlocks,
                            void** args,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
+
+/**
+ * @brief Prefetches memory to the specified destination device using AMD HMM.
+ *
+ * @param [in] dev_ptr  pointer to be prefetched
+ * @param [in] count    size in bytes for prefetching
+ * @param [in] device   destination device to prefetch to
+ * @param [in] stream   stream to enqueue prefetch operation
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemPrefetchAsync(const void* dev_ptr,
+                               size_t count,
+                               int device,
+                               hipStream_t stream __dparm(0));
+
+/**
+ * @brief Advise about the usage of a given memory range to AMD HMM.
+ *
+ * @param [in] dev_ptr  pointer to memory to set the advice for
+ * @param [in] count    size in bytes of the memory range
+ * @param [in] advice   advice to be applied for the specified memory range
+ * @param [in] device   device to apply the advice for
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemAdvise(const void* dev_ptr,
+                        size_t count,
+                        hipMemoryAdvise advice,
+                        int device);
+
+/**
+ * @brief Query an attribute of a given memory range in AMD HMM.
+ *
+ * @param [in/out] data   a pointer to a memory location where the result of each
+ *                        attribute query will be written to
+ * @param [in] data_size  the size of data
+ * @param [in] attribute  the attribute to query
+ * @param [in] dev_ptr    start of the range to query
+ * @param [in] count      size of the range to query
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemRangeGetAttribute(void* data,
+                                   size_t data_size,
+                                   hipMemRangeAttribute attribute,
+                                   const void* dev_ptr,
+                                   size_t count);
+
+/**
+ * @brief Query attributes of a given memory range in AMD HMM.
+ *
+ * @param [in/out] data     a two-dimensional array containing pointers to memory locations
+ *                          where the result of each attribute query will be written to
+ * @param [in] data_sizes   an array, containing the sizes of each result
+ * @param [in] attributes   the attribute to query
+ * @param [in] num_attributes  an array of attributes to query (numAttributes and the number
+ *                          of attributes in this array should match)
+ * @param [in] dev_ptr      start of the range to query
+ * @param [in] count        size of the range to query
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemRangeGetAttributes(void** data,
+                                    size_t* data_sizes,
+                                    hipMemRangeAttribute* attributes,
+                                    size_t num_attributes,
+                                    const void* dev_ptr,
+                                    size_t count);
+
+/**
+ * @brief Attach memory to a stream asynchronously in AMD HMM.
+ *
+ * @param [in] stream     - stream in which to enqueue the attach operation
+ * @param [in] dev_ptr    - pointer to memory (must be a pointer to managed memory or
+ *                          to a valid host-accessible region of system-allocated memory)
+ * @param [in] length     - length of memory (defaults to zero)
+ * @param [in] flags      - must be one of cudaMemAttachGlobal, cudaMemAttachHost or
+ *                          cudaMemAttachSingle (defaults to cudaMemAttachSingle)
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipStreamAttachMemAsync(hipStream_t stream,
+                                   hipDeviceptr_t* dev_ptr,
+                                   size_t length __dparm(0),
+                                   unsigned int flags __dparm(hipMemAttachSingle));
 
 #if __HIP_ROCclr__ || !defined(__HCC__)
 //TODO: Move this to hip_ext.h
