@@ -4,11 +4,11 @@
 
 Key features include:
 
-* HIP is very thin and has little or no performance impact over coding directly in CUDA or hcc "HC" mode.
+* HIP is very thin and has little or no performance impact over coding directly in CUDA or AMD mode.
 * HIP allows coding in a single-source C++ programming language including features such as templates, C++11 lambdas, classes, namespaces, and more.
 * HIP allows developers to use the "best" development environment and tools on each target platform.
 * The [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md) tools automatically convert source from CUDA to HIP.
-* Developers can specialize for the platform (CUDA or hcc) to tune for performance or handle tricky cases 
+* Developers can specialize for the platform (CUDA or AMD) to tune for performance or handle tricky cases 
 
 New projects can be developed directly in the portable HIP C++ language and can run on either NVIDIA or AMD platforms.  Additionally, HIP provides porting tools which make it easy to port existing CUDA codes to the HIP layer, with no loss of performance as compared to the original CUDA application.  HIP is not intended to be a drop-in replacement for CUDA, and developers should expect to do some manual coding and performance tuning work to complete the port.
 
@@ -36,7 +36,7 @@ HIP releases are typically of two types. The tag naming convention is different 
 - [HIP Programming Guide](docs/markdown/hip_programming_guide.md)
 - [HIP Profiling ](docs/markdown/hip_profiling.md)
 - [HIP Debugging](docs/markdown/hip_debugging.md)
-- [HIP Terminology](docs/markdown/hip_terms.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenCL)
+- [HIP Terminology](docs/markdown/hip_terms2.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/HC/AMP/OpenCL)
 - [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md)
 - Supported CUDA APIs:
   * [Runtime API](docs/markdown/CUDA_Runtime_API_functions_supported_by_HIP.md)
@@ -105,7 +105,7 @@ HIP C++ code can be compiled with either :
   functions and thus has very low overhead - developers coding in HIP should expect the same performance as coding in native CUDA.  The code is then
   compiled with nvcc, the standard C++ compiler provided with the CUDA SDK.  Developers can use any tools supported by the CUDA SDK including the CUDA
   profiler and debugger.
-- On the AMD ROCm platform, HIP provides a header and runtime library built on top of hcc compiler.  The HIP runtime implements HIP streams, events, and memory APIs,
+- On the AMD ROCm platform, HIP provides a header and runtime library built on top of HIP-Clang compiler.  The HIP runtime implements HIP streams, events, and memory APIs,
   and is a object library that is linked with the application.  The source code for all headers and the library implementation is available on GitHub.
   HIP developers on ROCm can use AMD's CodeXL for debugging and profiling.
 
@@ -146,7 +146,7 @@ The README with the procedures and tips the team used during this porting effort
 * **bin**: Tools and scripts to help with hip porting
     * **hipify-perl** : Script based tool to convert CUDA code to portable CPP. Converts CUDA APIs and kernel builtins.
     * **hipcc** : Compiler driver that can be used to replace nvcc in existing CUDA code. hipcc will call nvcc or hcc depending on platform and include appropriate platform-specific headers and libraries.
-    * **hipconfig** : Print HIP configuration (HIP_PATH, HIP_PLATFORM, CXX config flags, etc.)
+    * **hipconfig** : Print HIP configuration (HIP_PATH, HIP_PLATFORM, HIP_COMPILER, HIP_RUNTIME, CXX config flags, etc.)
     * **hipexamine-perl.sh** : Script to scan the directory, find all code, and report statistics on how much can be ported with HIP (and identify likely features not yet supported).
     * **hipconvertinplace-perl.sh** : Script to scan the directory, find all code, and convert the found CUDA code to HIP reporting all unconverted things.
 
