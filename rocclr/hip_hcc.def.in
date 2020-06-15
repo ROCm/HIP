@@ -255,3 +255,8 @@ hipTexObjectGetResourceViewDesc
 hipTexObjectGetTextureDesc
 hipExtStreamCreateWithCUMask
 hipStreamGetPriority
+hipMemcpy2DFromArray
+hipMemcpy2DFromArrayAsync
+hipMemcpyAtoH
+hipMemcpyHtoA
+hipMemcpyParam2DAsync
