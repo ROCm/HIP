@@ -21,8 +21,17 @@ if(CMAKE_BUILD_TYPE MATCHES "^Debug$")
   add_definitions(-DDEBUG)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  add_compile_options("-Wno-ignored-attributes")
+if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR
+   (CMAKE_${COMPILER}_COMPILER_ID MATCHES "Clang"))
+  add_definitions(
+    # Enabling -Wextra or -pedantic will cause
+    # thousands of warnings. Keep things simple for now.
+    -Wall
+    # This one seems impossible to fix for now.
+    # There are hundreds of instances of unused vars/functions
+    # throughout the code base.
+    -Wno-unused-variable
+    -Wno-unused-function)
 endif()
 
 set(USE_PROF_API "1")
@@ -75,10 +84,13 @@ add_definitions(-DBSD_LIBELF)
 
 add_library(hip64 OBJECT
  hip_context.cpp
+ hip_code_object.cpp
  hip_device.cpp
  hip_device_runtime.cpp
  hip_error.cpp
  hip_event.cpp
+ hip_global.cpp
+ hip_hmm.cpp
  hip_memory.cpp
  hip_module.cpp
  hip_peer.cpp

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-Present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2020-Present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,18 +18,21 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM rocclr
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
  */
 
-#include "hip/hip_runtime.h"
-#include "hip/hip_runtime_api.h"
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <thread>
 #include <chrono>
+
+#include "hip/hip_runtime.h"
+#include "hip/hip_runtime_api.h"
+
 
 #include "test_common.h"
 
@@ -53,7 +56,8 @@ std::vector<char> load_file() {
   return buffer;
 }
 
-void run(const std::vector<char>& buffer) {
+void run(const std::vector<char>& buffer, int deviceNo) {
+  hipSetDevice(deviceNo);
   hipModule_t Module;
   hipFunction_t Function;
   HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
@@ -68,8 +72,8 @@ void run(const std::vector<char>& buffer) {
     B[i] = 0.0f;
   }
 
-  HIPCHECK(hipMalloc((void**)&Ad, SIZE));
-  HIPCHECK(hipMalloc((void**)&Bd, SIZE));
+  HIPCHECK(hipMalloc(&Ad, SIZE));
+  HIPCHECK(hipMalloc(&Bd, SIZE));
 
   HIPCHECK(hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice));
   HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
@@ -81,12 +85,12 @@ void run(const std::vector<char>& buffer) {
     void* _Ad;
     void* _Bd;
   } args;
-  args._Ad = (void*) Ad;
-  args._Bd = (void*) Bd;
+  args._Ad = static_cast<void*>(Ad);
+  args._Bd = static_cast<void*>(Bd);
   size_t size = sizeof(args);
 
   void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
-                    HIP_LAUNCH_PARAM_END};
+            HIP_LAUNCH_PARAM_END};
   HIPCHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config));
 
   HIPCHECK(hipStreamDestroy(stream));
@@ -98,7 +102,6 @@ void run(const std::vector<char>& buffer) {
   for (uint32_t i = 0; i < LEN; i++) {
     assert(A[i] == B[i]);
   }
-
   hipFree(Ad);
   hipFree(Bd);
   delete[] A;
@@ -119,11 +122,17 @@ struct joinable_thread : std::thread {
 };
 
 void run_multi_threads(uint32_t n, const std::vector<char>& buffer) {
+  int numDevices = 0;
+  HIPCHECK(hipGetDeviceCount(&numDevices));
+
   std::vector<joinable_thread> threads;
-  for (uint32_t i = 0; i < n; i++) {
+
+  for (int deviceNo=0; deviceNo < numDevices; ++deviceNo) {
+    for (uint32_t i = 0; i < n; i++) {
     threads.emplace_back(std::thread{[&, buffer] {
-    run(buffer);
+    run(buffer, deviceNo);
     }});
+    }
   }
 }
 

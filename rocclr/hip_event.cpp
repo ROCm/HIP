@@ -192,13 +192,13 @@ hipError_t ihipEventQuery(hipEvent_t event) {
 hipError_t hipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
   HIP_INIT_API(hipEventCreateWithFlags, event, flags);
 
-  HIP_RETURN(ihipEventCreateWithFlags(event, flags));
+  HIP_RETURN(ihipEventCreateWithFlags(event, flags), *event);
 }
 
 hipError_t hipEventCreate(hipEvent_t* event) {
   HIP_INIT_API(hipEventCreate, event);
 
-  HIP_RETURN(ihipEventCreateWithFlags(event, 0));
+  HIP_RETURN(ihipEventCreateWithFlags(event, 0), *event);
 }
 
 hipError_t hipEventDestroy(hipEvent_t event) {
@@ -227,7 +227,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
   hip::Event* eStart = reinterpret_cast<hip::Event*>(start);
   hip::Event* eStop  = reinterpret_cast<hip::Event*>(stop);
 
-  HIP_RETURN(eStart->elapsedTime(*eStop, *ms));
+  HIP_RETURN(eStart->elapsedTime(*eStop, *ms), "Elapsed Time = ", *ms);
 }
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {

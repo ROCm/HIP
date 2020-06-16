@@ -20,6 +20,7 @@
 
 #include <hip/hip_runtime.h>
 #include "hip_internal.hpp"
+#include "hip_platform.hpp"
 #include "platform/runtime.hpp"
 #include "utils/flags.hpp"
 #include "utils/versions.hpp"

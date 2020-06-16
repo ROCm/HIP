@@ -57,9 +57,17 @@ typedef struct ihipIpcMemHandle_st {
     hip::g_device = g_devices[0];                          \
   }
 
+#define HIP_API_PRINT(...)                                 \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s ( %s )", getpid(), std::this_thread::get_id(),             \
+          __func__, ToString( __VA_ARGS__ ).c_str());
+
+#define HIP_ERROR_PRINT(err, ...)                             \
+  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s: Returned %s : %s", getpid(), std::this_thread::get_id(),  \
+          __func__, hipGetErrorName(err), ToString( __VA_ARGS__ ).c_str());
+
 // This macro should be called at the beginning of every HIP API.
 #define HIP_INIT_API(cid, ...)                               \
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s ( %s )", getpid(), std::this_thread::get_id(), __func__, ToString( __VA_ARGS__ ).c_str()); \
+  HIP_API_PRINT(__VA_ARGS__)                                 \
   amd::Thread* thread = amd::Thread::current();              \
   if (!VDI_CHECK_THREAD(thread)) {                           \
     HIP_RETURN(hipErrorOutOfMemory);                         \
@@ -67,10 +75,29 @@ typedef struct ihipIpcMemHandle_st {
   HIP_INIT()                                                 \
   HIP_CB_SPAWNER_OBJECT(cid);
 
-#define HIP_RETURN(ret)          \
-  hip::g_lastError = ret;  \
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s: Returned %s", getpid(), std::this_thread::get_id(), __func__, hipGetErrorName(hip::g_lastError)); \
+#define HIP_RETURN(ret, ...)                      \
+  hip::g_lastError = ret;                         \
+  HIP_ERROR_PRINT(hip::g_lastError, __VA_ARGS__)  \
   return hip::g_lastError;
+
+#define HIP_RETURN_ONFAIL(func)          \
+  do {                                   \
+    hipError_t herror = (func);          \
+    if (herror != hipSuccess) {          \
+      HIP_RETURN(herror);                \
+    }                                    \
+  } while (0);
+
+// Cannot be use in place of HIP_RETURN.
+// Refrain from using for external HIP APIs
+#define IHIP_RETURN_ONFAIL(func)         \
+  do {                                   \
+    hipError_t herror = (func);          \
+    if (herror != hipSuccess) {          \
+      return herror;                     \
+    }                                    \
+  } while (0);
+
 
 namespace hc {
 class accelerator;
@@ -81,16 +108,19 @@ namespace hip {
   class Device;
 
   class Stream {
+  public:
+    enum Priority : int {High = -1, Normal = 0, Low = 1};
+  private:
     amd::HostQueue* queue_;
     mutable amd::Monitor lock_;
     Device* device_;
-    amd::CommandQueue::Priority priority_;
+    Priority priority_;
     unsigned int flags_;
     bool null_;
     const std::vector<uint32_t> cuMask_;
 
   public:
-    Stream(Device* dev, amd::CommandQueue::Priority p, unsigned int f = 0, bool null_stream = false,
+    Stream(Device* dev, Priority p = Priority::Normal, unsigned int f = 0, bool null_stream = false,
            const std::vector<uint32_t>& cuMask = {});
 
     /// Creates the hip stream object, including AMD host queue
@@ -110,7 +140,7 @@ namespace hip {
     /// Returns the creation flags for the current stream
     unsigned int Flags() const { return flags_; }
     /// Returns the priority for the current stream
-    amd::CommandQueue::Priority Priority() const { return priority_; }
+    Priority GetPriority() const { return priority_; }
 
     /// Sync all non-blocking streams
     static void syncNonBlockingStreams();
@@ -133,7 +163,7 @@ namespace hip {
 
   public:
     Device(amd::Context* ctx, int devId):
-      context_(ctx), deviceId_(devId), null_stream_(this, amd::CommandQueue::Priority::Normal, 0, true), flags_(hipDeviceScheduleSpin)
+      context_(ctx), deviceId_(devId), null_stream_(this, Stream::Priority::Normal, 0, true), flags_(hipDeviceScheduleSpin)
         { assert(ctx != nullptr); }
     ~Device() {}
 
@@ -187,17 +217,6 @@ namespace hip {
   extern amd::HostQueue* getNullStream(amd::Context&);
   /// Get default stream of the thread
   extern amd::HostQueue* getNullStream();
-
-  struct Function {
-    amd::Kernel* function_;
-    amd::Monitor lock_;
-
-    Function(amd::Kernel* f) : function_(f), lock_("function lock") {}
-    ~Function() { function_->release(); }
-    hipFunction_t asHipFunction() { return reinterpret_cast<hipFunction_t>(this); }
-
-    static Function* asFunction(hipFunction_t f) { return reinterpret_cast<Function*>(f); }
-  };
 };
 
 struct ihipExec_t {
@@ -206,131 +225,6 @@ struct ihipExec_t {
   size_t sharedMem_;
   hipStream_t hStream_;
   std::vector<char> arguments_;
-};
-
-class PlatformState {
-  amd::Monitor lock_{"Guards global function map", true};
-
-  std::unordered_map<const void*, std::vector<std::pair<hipModule_t, bool>>> modules_;
-  bool initialized_{false};
-
-  void digestFatBinary(const void* data, std::vector<std::pair<hipModule_t, bool>>& programs);
-public:
-  void init();
-  std::vector<std::pair<hipModule_t, bool>>* addFatBinary(const void*data)
-  {
-    amd::ScopedLock lock(lock_);
-    if (initialized_) {
-      digestFatBinary(data, modules_[data]);
-    }
-    return &modules_[data];
-  }
-  void removeFatBinary(std::vector<std::pair<hipModule_t, bool>>* module)
-  {
-    amd::ScopedLock lock(lock_);
-    for (auto& mod : modules_) {
-      if (&mod.second == module) {
-        modules_.erase(&mod);
-        return;
-      }
-    }
-  }
-
-  struct RegisteredVar {
-  public:
-    RegisteredVar(): size_(0), devicePtr_(nullptr), amd_mem_obj_(nullptr) {}
-    ~RegisteredVar() {}
-
-    hipDeviceptr_t getdeviceptr() const { return devicePtr_; };
-    size_t getvarsize() const { return size_; };
-
-    size_t size_;               // Size of the variable
-    hipDeviceptr_t devicePtr_;  //Device Memory Address of the variable.
-    amd::Memory* amd_mem_obj_;
-  };
-
-  struct DeviceFunction {
-    std::string deviceName;
-    std::vector< std::pair< hipModule_t, bool > >* modules;
-    std::vector<hipFunction_t> functions;
-  };
-  enum DeviceVarKind {
-    DVK_Variable,
-    DVK_Surface,
-    DVK_Texture
-  };
-  struct DeviceVar {
-    DeviceVarKind kind;
-    void* shadowVptr;
-    std::string hostVar;
-    size_t size;
-    std::vector< std::pair< hipModule_t, bool > >* modules;
-    std::vector<RegisteredVar> rvars;
-    bool dyn_undef;
-    int type; // surface/texture type
-    int norm; // texture has normalized output
-    bool shadowAllocated = false; // shadow ptr is allocated on-demand and needs freeing.
-  };
-private:
-  class Module {
-  public:
-    Module(hipModule_t hip_module_) : hip_module(hip_module_) {}
-    std::unordered_map<std::string, DeviceFunction > functions_;
-  private:
-    hipModule_t hip_module;
-  };
-  std::unordered_map<hipModule_t, Module*> module_map_;
-
-  std::unordered_map<const void*, DeviceFunction > functions_;
-  std::unordered_multimap<std::string, DeviceVar > vars_;
-  // Map from the host shadow symbol to its device name. As different modules
-  // may have the same name, each symbol is uniquely identified by a pair of
-  // module handle and its name.
-  std::unordered_map<const void*,
-                     std::pair<hipModule_t, std::string>> symbols_;
-
-  static PlatformState* platform_;
-
-  PlatformState() {}
-  ~PlatformState() {}
-public:
-  static PlatformState& instance() {
-    if (platform_ == nullptr) {
-       // __hipRegisterFatBinary() will call this when app starts, thus
-       // there is no multiple entry issue here.
-       platform_ =  new PlatformState();
-    }
-    return *platform_;
-  }
-
-  bool unregisterFunc(hipModule_t hmod);
-  std::vector< std::pair<hipModule_t, bool> >* unregisterVar(hipModule_t hmod);
-
-
-  bool findSymbol(const void *hostVar, hipModule_t &hmod, std::string &devName);
-  PlatformState::DeviceVar* findVar(std::string hostVar, int deviceId, hipModule_t hmod);
-  void registerVarSym(const void *hostVar, hipModule_t hmod, const char *symbolName);
-  void registerVar(const char* symbolName, const DeviceVar& var);
-  void registerFunction(const void* hostFunction, const DeviceFunction& func);
-
-  bool registerModFuncs(std::vector<std::string>& func_names, hipModule_t* module);
-  bool findModFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
-  bool createFunc(hipFunction_t* hfunc, hipModule_t hmod, const char* name);
-  hipFunction_t getFunc(const void* hostFunction, int deviceId);
-  bool getFuncAttr(const void* hostFunction, hipFuncAttributes* func_attr);
-  bool getGlobalVar(const char* hostVar, int deviceId, hipModule_t hmod,
-                    hipDeviceptr_t* dev_ptr, size_t* size_ptr);
-  bool getTexRef(const char* hostVar, hipModule_t hmod, textureReference** texRef);
-
-  bool getGlobalVarFromSymbol(const void* hostVar, int deviceId,
-                              hipDeviceptr_t* dev_ptr, size_t* size_ptr);
-
-  bool getShadowVarInfo(std::string var_name, hipModule_t hmod,
-                        void** var_addr, size_t* var_size);
-  void setupArgument(const void *arg, size_t size, size_t offset);
-  void configureCall(dim3 gridDim, dim3 blockDim, size_t sharedMem, hipStream_t stream);
-
-  void popExec(ihipExec_t& exec);
 };
 
 /// Wait all active streams on the blocking queue. The method enqueues a wait command and
@@ -345,4 +239,6 @@ extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 extern bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
                                     size_t* var_size);
 
+constexpr bool kOptionChangeable = true;
+constexpr bool kNewDevProg = false;
 #endif // HIP_SRC_HIP_INTERNAL_H

@@ -97,6 +97,7 @@ int main() {
         assert(A[i] == B[i]);
     }
 
-	HIPCHECK(hipCtxDestroy(context));
+    HIPCHECK(hipModuleUnload(Module));
+    HIPCHECK(hipCtxDestroy(context));
     passed();
 }
