@@ -120,6 +120,16 @@ def filtr_api_opts(args_str):
   for arg_tuple in args_list:
     opts_list.append(arg_tuple[1])
   return opts_list
+
+# Checking for pointer non-void arg type
+def pointer_ck(arg_type):
+  ptr_type = ''
+  m = re.match(r'(.*)\*$', arg_type)
+  if m:
+    ptr_type = m.group(1)
+    ptr_type = re.sub(r'const ', '', ptr_type)
+    if ptr_type == 'void': ptr_type = ''
+  return ptr_type
 #############################################################
 # Parsing API header
 # hipError_t hipSetupArgument(const void* arg, size_t size, size_t offset);
@@ -425,10 +435,15 @@ def generate_prof_header(f, api_map, opts_map):
     if len(args) != 0:
       f.write('    struct {\n')
       for arg_tuple in args:
-        if arg_tuple[0] == "hipLimit_t":
-          f.write('      enum ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
-        else:
-          f.write('      ' + arg_tuple[0] + ' ' + arg_tuple[1] + ';\n')
+        arg_type = arg_tuple[0]
+        ptr_type = pointer_ck(arg_type)
+        arg_name = arg_tuple[1]
+        # Checking for enum type
+        if arg_type == "hipLimit_t": arg_type = 'enum ' + arg_type
+        # Structuer field code
+        f.write('      ' + arg_type + ' ' + arg_name + ';\n')
+        if ptr_type != '':
+          f.write('      ' + ptr_type + ' ' + arg_name + '__val;\n')
       f.write('    } ' + name + ';\n')
   f.write(
   '  } args;\n' +
@@ -450,20 +465,43 @@ def generate_prof_header(f, api_map, opts_map):
       for ind in range(0, len(args)):
         arg_tuple = args[ind]
         arg_type = arg_tuple[0]
+        ptr_type = pointer_ck(arg_type)
         fld_name = arg_tuple[1]
-        arg_name = opts_list[ind]
-        if arg_type == "char*":
-          f.write('  cb_data.args.' + name + '.' + fld_name + ' = strdup("***"); \\\n')
-        elif arg_type == "const char*":
-          f.write('  cb_data.args.' + name + '.' + fld_name + ' = (' + arg_name + ') ? strdup(' + arg_name + ') : NULL; \\\n')
+        opt_name = opts_list[ind]
+        if arg_type == "const char*":
+          f.write('  cb_data.args.' + name + '.' + fld_name + ' = (' + opt_name + ') ? strdup(' + opt_name + ') : NULL; \\\n')
         else:
-          f.write('  cb_data.args.' + name + '.' + fld_name + ' = (' + arg_type + ')' + arg_name + '; \\\n')
+          f.write('  cb_data.args.' + name + '.' + fld_name + ' = (' + arg_type + ')' + opt_name + '; \\\n')
     f.write('};\n')
   f.write('#define INIT_CB_ARGS_DATA(cb_id, cb_data) INIT_##cb_id##_CB_ARGS_DATA(cb_data)\n')
 
+  f.write('#if HIP_PROF_HIP_API_STRING\n')
+  # Generating the method for the API args filling
+  f.write('\n')
+  f.write('// HIP API args filling method\n')
+  f.write('void hipApiArgsInit(hip_api_id_t id, hip_api_data_t* data) {\n')
+  f.write('  switch (id) {\n')
+  for name, args in api_map.items():
+    f.write('// ' + name + str(args) + '\n')
+    f.write('    case HIP_API_ID_' + name + ':\n')
+    for ind in range(0, len(args)):
+      arg_tuple = args[ind]
+      arg_type = arg_tuple[0]
+      ptr_type = pointer_ck(arg_type)
+      fld_name = arg_tuple[1]
+      var_name = 'data->args.' + name + '.' + fld_name
+      if arg_type == "char*":
+        f.write('      ' + var_name + ' = (' + var_name + ') ? strdup(' + var_name + ') : NULL; \\\n')
+      else:
+        if ptr_type != '':
+          f.write('      if (' + var_name + ') ' + var_name + '__val = *(' + var_name + '); \\\n')
+    f.write('      break;\n')
+  f.write('    default: break;\n')
+  f.write('  };\n')
+  f.write('}\n')
+
   # Generating the method for the API string, name and parameters
   f.write('\n')
-  f.write('#if HIP_PROF_HIP_API_STRING\n')
   f.write('#include <sstream>\n');
   f.write('#include <string>\n');
   f.write('// HIP API string method, method name and parameters\n')
@@ -476,21 +514,27 @@ def generate_prof_header(f, api_map, opts_map):
     for ind in range(0, len(args)):
       arg_tuple = args[ind]
       arg_type = arg_tuple[0]
+      ptr_type = pointer_ck(arg_type)
       arg_name = arg_tuple[1]
       var_name = 'data->args.' + name + '.' + arg_name
       delim = '' if ind == 0 else ', ';
       oss_stream = 'oss << "' + delim + arg_name  + '='
       line_shift = '      '
       f.write(line_shift)
-      if re.search(r'\*', arg_type):
+      if ptr_type != '':
         f.write('if (' + var_name + ' == NULL) ' + oss_stream + 'NULL";\n' + line_shift + 'else ')
-      f.write(oss_stream + '" << ' + var_name + ';\n')
+        if pointer_ck(ptr_type) != '':
+          f.write(oss_stream + '" << (void*)' + var_name + '__val' + ';\n')
+        else:
+          f.write(oss_stream + '" << ' + var_name + '__val' + ';\n')
+      else:
+        f.write(oss_stream + '" << ' + var_name + ';\n')
     f.write('      oss << ")";\n')
     f.write('    break;\n')
   f.write('    default: oss << "unknown";\n')
   f.write('  };\n')
   f.write('  return strdup(oss.str().c_str());\n')
-  f.write('};\n')
+  f.write('}\n')
   f.write('#endif  // HIP_PROF_HIP_API_STRING\n')
 
   f.write('#endif  // _HIP_PROF_STR_H\n');
