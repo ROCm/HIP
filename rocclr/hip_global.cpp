@@ -98,7 +98,7 @@ hipError_t Function::getDynFunc(hipFunction_t* hfunc, hipModule_t hmod) {
 hipError_t Function::getStatFunc(hipFunction_t* hfunc, int deviceId) {
   guarantee(modules_ != nullptr);
   guarantee(deviceId >= 0);
-  guarantee(deviceId < modules_->size());
+  guarantee(static_cast<size_t>(deviceId) < modules_->size());
 
   hipModule_t module = (*modules_)[deviceId].first;
   FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;
@@ -121,7 +121,7 @@ hipError_t Function::getStatFunc(hipFunction_t* hfunc, int deviceId) {
 hipError_t Function::getStatFuncAttr(hipFuncAttributes* func_attr, int deviceId) {
   guarantee(modules_ != nullptr);
   guarantee(deviceId >= 0);
-  guarantee(deviceId < modules_->size());
+  guarantee(static_cast<size_t>(deviceId) < modules_->size());
 
   hipModule_t module = (*modules_)[deviceId].first;
   FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;
@@ -166,7 +166,7 @@ Var::~Var() {
 
 hipError_t Var::getDeviceVar(DeviceVar** dvar, int deviceId, hipModule_t hmod) {
   guarantee(deviceId >= 0);
-  guarantee(deviceId < g_devices.size());
+  guarantee(static_cast<size_t>(deviceId) < g_devices.size());
   guarantee(dVar_.size() == g_devices.size());
 
   if (dVar_[deviceId] == nullptr) {
@@ -179,7 +179,7 @@ hipError_t Var::getDeviceVar(DeviceVar** dvar, int deviceId, hipModule_t hmod) {
 
 hipError_t Var::getStatDeviceVar(DeviceVar** dvar, int deviceId) {
   guarantee(deviceId >= 0);
-  guarantee(deviceId < g_devices.size());
+  guarantee(static_cast<size_t>(deviceId) < g_devices.size());
 
   hipModule_t module = (*modules_)[deviceId].first;
   FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;
