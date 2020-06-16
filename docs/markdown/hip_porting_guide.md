@@ -512,7 +512,7 @@ Compute programs sometimes use textures either to access dedicated texture cache
 point samples. AMD hardware, as well as recent competing hardware,
 has a unified texture/L1 cache, so it no longer has a dedicated texture cache. But the nvcc path often caches global loads in the L2 cache, and some programs may benefit from explicit control of the L1 cache contents.  We recommend the __ldg instruction for this purpose.
 
-AMD compilers currently load all data into both the L1 and L2 caches, so __ldg is treated as a no-op. 
+AMD compilers currently load all data into both the L1 and L2 caches, so __ldg is treated as a no-op.
 
 We recommend the following for functional portability:
 
@@ -520,13 +520,11 @@ We recommend the following for functional portability:
 - Programs that use texture object and reference APIs, work well on HIP
 
 
-``` 
-
 ## More Tips
 ### HIPTRACE Mode
 
 On an hcc/AMD platform, set the HIP_TRACE_API environment variable to see a textural API trace. Use the following bit mask:
-    
+
 - 0x1 = trace APIs
 - 0x2 = trace synchronization operations
 - 0x4 = trace memory allocation / deallocation

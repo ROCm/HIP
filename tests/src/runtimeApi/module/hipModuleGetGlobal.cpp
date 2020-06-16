@@ -153,6 +153,7 @@ int main() {
         };
     }
 
+    HIP_CHECK(hipModuleUnload(Module));
     hipCtxDestroy(context);
     return 0;
 }

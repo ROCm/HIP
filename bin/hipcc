@@ -168,7 +168,14 @@ if (defined $HIP_COMPILER and $HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang
     $HIP_CLANG_PATH = "$ROCM_PATH/llvm/bin";
   }
   if (!defined $DEVICE_LIB_PATH) {
-    $DEVICE_LIB_PATH = "$ROCM_PATH/lib";
+    if (-e "$ROCM_PATH/amdgcn/bitcode") {
+      $DEVICE_LIB_PATH = "$ROCM_PATH/amdgcn/bitcode";
+    }
+    else {
+      # This path is to support an older build of the device library
+      # TODO: To be removed in the future.
+      $DEVICE_LIB_PATH = "$ROCM_PATH/lib";
+    }
   }
 }
 
@@ -207,6 +214,7 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
         $HIP_LIB_PATH = "$HIP_PATH/lib";
     }
     if ($verbose & 0x2) {
+        print ("ROCM_PATH=$ROCM_PATH\n");
         if (defined $HIP_ROCCLR_HOME) {
             print ("HIP_ROCCLR_HOME=$HIP_ROCCLR_HOME\n");
         }
@@ -808,17 +816,17 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
         $HIPCFLAGS .= " -O3";
         $HIPLDFLAGS .= " -O3";
     }
-    # Do not pass -mllvm on Windows since there is a clang bug causing duplicate -mllvm options in clang -cc1 on Windows.
-    # ToDo : remove restriction for Windows after clang bug is fixed.
-    if (!$funcSupp and $optArg ne "-O0" and not $isWindows and $hasHIP) {
+    if (!$funcSupp and $optArg ne "-O0" and $hasHIP) {
         $HIPCXXFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         if ($needLDFLAGS and not $needCXXFLAGS) {
             $HIPLDFLAGS .= " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
         }
     }
-    $HIP_DEVLIB_FLAGS = " --hip-device-lib-path=$DEVICE_LIB_PATH";
+
     if ($hasHIP) {
-        $HIPCXXFLAGS .= " $HIP_DEVLIB_FLAGS";
+        if ($DEVICE_LIB_PATH ne "$ROCM_PATH/amdgcn/bitcode") {
+            $HIPCXXFLAGS .= " --hip-device-lib-path=$DEVICE_LIB_PATH";
+        }
         if ($HIP_RUNTIME ne "HCC") {
             $HIPCXXFLAGS .= " -fhip-new-launch-api";
         }
@@ -833,6 +841,8 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
       } else {
         $toolArgs .= " -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lhip_hcc ";
       }
+      # To support __fp16 and _Float16, explicitly link with compiler-rt
+      $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
     }
 }
 

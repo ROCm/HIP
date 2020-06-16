@@ -20,6 +20,7 @@
 
 #include "hip/hip_runtime.h"
 #include "hip_internal.hpp"
+#include "hip_platform.hpp"
 #include "hip_prof_api.h"
 
 // HIP API callback/activity
@@ -27,16 +28,26 @@
 api_callbacks_table_t callbacks_table;
 
 extern const std::string& FunctionName(const hipFunction_t f);
+
 const char* hipKernelNameRef(const hipFunction_t f) { return FunctionName(f).c_str(); }
-const char* hipKernelNameRefByPtr(const void *hostFunction, hipStream_t stream) {
+
+int hipGetStreamDeviceId(hipStream_t stream) {
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
-  int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
+  return (s != nullptr)? s->DeviceId() : ihipGetDevice();
+}
+
+const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream) {
+  if (hostFunction == NULL) {
+    return NULL;
+  }
+  int deviceId = hipGetStreamDeviceId(stream);
   if (deviceId == -1) {
     DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
     return NULL;
   }
-  hipFunction_t func = PlatformState::instance().getFunc(hostFunction, deviceId);
-  if (func == nullptr) {
+  hipFunction_t func = nullptr;
+  hipError_t hip_error = PlatformState::instance().getStatFunc(&func, hostFunction, deviceId);
+  if (hip_error != hipSuccess) {
     return NULL;
   }
   return hipKernelNameRef(func);

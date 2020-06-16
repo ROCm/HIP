@@ -449,7 +449,11 @@ hipError_t hipDeviceSynchronize ( void ) {
 }
 
 int ihipGetDevice() {
-  return hip::getCurrentDevice()->deviceId();
+  hip::Device* device = hip::getCurrentDevice();
+  if(device == nullptr){
+    return -1;
+  }
+  return device->deviceId();
 }
 
 hipError_t hipGetDevice ( int* deviceId ) {

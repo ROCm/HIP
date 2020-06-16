@@ -51,6 +51,7 @@ hipExtGetLinkTypeAndHopCount
 hipExtLaunchMultiKernelMultiDevice
 hipExtMallocWithFlags
 hipExtModuleLaunchKernel
+hipExtLaunchKernel
 hipFree
 hipFreeArray
 hipFuncSetCacheConfig
@@ -79,6 +80,7 @@ hipMallocManaged
 hipArrayCreate
 hipArray3DCreate
 hipMallocArray
+hipMemAdvise
 hipMemAllocPitch
 hipMallocPitch
 hipMemcpy
@@ -110,7 +112,10 @@ hipMemGetAddressRange
 hipGetSymbolAddress
 hipGetSymbolSize
 hipMemGetInfo
+hipMemPrefetchAsync
 hipMemPtrGetInfo
+hipMemRangeGetAttribute
+hipMemRangeGetAttributes
 hipMemset
 hipMemsetAsync
 hipMemsetD8
@@ -153,6 +158,7 @@ hipGetDeviceFlags
 hipSetDevice
 hipSetDeviceFlags
 hipStreamAddCallback
+hipStreamAttachMemAsync
 hipStreamCreate
 hipStreamCreateWithFlags
 hipStreamCreateWithPriority
@@ -254,3 +260,8 @@ hipTexObjectGetResourceViewDesc
 hipTexObjectGetTextureDesc
 hipExtStreamCreateWithCUMask
 hipStreamGetPriority
+hipMemcpy2DFromArray
+hipMemcpy2DFromArrayAsync
+hipMemcpyAtoH
+hipMemcpyHtoA
+hipMemcpyParam2DAsync

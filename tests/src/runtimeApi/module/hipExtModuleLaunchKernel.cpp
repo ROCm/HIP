@@ -127,6 +127,7 @@ int main()
     HIPCHECK(hipFree(Ad));
     HIPCHECK(hipFree(Bd));
     HIPCHECK(hipHostFree(C));
+    HIPCHECK(hipModuleUnload(Module));
     if(testStatus)
         passed();
 }

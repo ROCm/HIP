@@ -27,7 +27,7 @@ THE SOFTWARE.
 // */
 
 #include "host_defines.h"
-
+#if !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 extern "C"
 {
     __device__ __attribute__((const)) _Float16 __ocml_ceil_f16(_Float16);
@@ -82,3 +82,4 @@ extern "C"
     __device__ __attribute__((const)) __2f16 __ocml_sqrt_2f16(__2f16);
     __device__ __attribute__((const)) __2f16 __ocml_trunc_2f16(__2f16);
 }
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__

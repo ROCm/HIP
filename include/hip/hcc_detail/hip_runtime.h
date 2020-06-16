@@ -313,6 +313,7 @@ static constexpr Coordinates<hip_impl::WorkitemId> threadIdx{};
 
 #endif // defined __HCC__
 #if __HCC_OR_HIP_CLANG__
+#if !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 #if __HIP_ENABLE_DEVICE_MALLOC__
 extern "C" __device__ void* __hip_malloc(size_t);
 extern "C" __device__ void* __hip_free(void* ptr);
@@ -322,7 +323,7 @@ static inline __device__ void* free(void* ptr) { return __hip_free(ptr); }
 static inline __device__ void* malloc(size_t size) { __builtin_trap(); return nullptr; }
 static inline __device__ void* free(void* ptr) { __builtin_trap(); return nullptr; }
 #endif
-
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 #endif //__HCC_OR_HIP_CLANG__
 
 #ifdef __HCC__
@@ -392,10 +393,53 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 
 typedef int hipLaunchParm;
 
+template <std::size_t n, typename... Ts,
+          typename std::enable_if<n == sizeof...(Ts)>::type* = nullptr>
+void pArgs(const std::tuple<Ts...>&, void*) {}
+
+template <std::size_t n, typename... Ts,
+          typename std::enable_if<n != sizeof...(Ts)>::type* = nullptr>
+void pArgs(const std::tuple<Ts...>& formals, void** _vargs) {
+    using T = typename std::tuple_element<n, std::tuple<Ts...> >::type;
+
+    static_assert(!std::is_reference<T>{},
+                  "A __global__ function cannot have a reference as one of its "
+                  "arguments.");
+#if defined(HIP_STRICT)
+    static_assert(std::is_trivially_copyable<T>{},
+                  "Only TriviallyCopyable types can be arguments to a __global__ "
+                  "function");
+#endif
+    _vargs[n] = const_cast<void*>(reinterpret_cast<const void*>(&std::get<n>(formals)));
+    return pArgs<n + 1>(formals, _vargs);
+}
+
+template <typename... Formals, typename... Actuals>
+std::tuple<Formals...> validateArgsCountType(void (*kernel)(Formals...), std::tuple<Actuals...>(actuals)) {
+    static_assert(sizeof...(Formals) == sizeof...(Actuals), "Argument Count Mismatch");
+    std::tuple<Formals...> to_formals{std::move(actuals)};
+    return to_formals;
+}
+
+#if defined(HIP_TEMPLATE_KERNEL_LAUNCH)
+template <typename... Args, typename F = void (*)(Args...)>
+void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
+                        std::uint32_t sharedMemBytes, hipStream_t stream, Args... args) {
+    constexpr size_t count = sizeof...(Args);
+    auto tup_ = std::tuple<Args...>{args...};
+    auto tup = validateArgsCountType(kernel, tup_);
+    void* _Args[count];
+    pArgs<0>(tup, _Args);
+
+    auto k = reinterpret_cast<void*>(kernel);
+    hipLaunchKernel(k, numBlocks, dimBlocks, _Args, sharedMemBytes, stream);
+}
+#else
 #define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
     do {                                                                                           \
         kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(__VA_ARGS__);         \
     } while (0)
+#endif
 
 #include <hip/hip_runtime_api.h>
 
@@ -507,6 +551,7 @@ hc_get_workitem_absolute_id(int dim)
 
 #endif
 
+#if !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 // Support std::complex.
 #if !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 #pragma push_macro("__CUDA__")
@@ -524,7 +569,7 @@ hc_get_workitem_absolute_id(int dim)
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 #endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
-
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 #endif // defined(__clang__) && defined(__HIP__)
 
 #include <hip/hcc_detail/hip_memory.h>
