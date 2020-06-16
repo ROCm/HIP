@@ -77,7 +77,8 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
     return hipErrorOutOfMemory;
   }
 
-  if (amdContext->devices()[0]->info().maxMemAllocSize_ < sizeBytes) {
+  if (!(flags & CL_MEM_SVM_FINE_GRAIN_BUFFER) &&
+      (amdContext->devices()[0]->info().maxMemAllocSize_ < sizeBytes)) {
     return hipErrorOutOfMemory;
   }
 
