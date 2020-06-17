@@ -1412,6 +1412,7 @@ float func(float x, int y) \
   return func##f(x, y); \
 }
 __DEF_FLOAT_FUN2I(scalbn)
+__DEF_FLOAT_FUN2I(ldexp)
 
 template<class T>
 __DEVICE__ inline T min(T arg1, T arg2) {
