@@ -557,7 +557,7 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
                                       size_t sharedMemBytes,
                                       hipStream_t stream)
 {
-    HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
+    HIP_INIT_API(hipLaunchKernel, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
     HIP_RETURN(ihipLaunchKernel(hostFunction, gridDim, blockDim, args, sharedMemBytes, stream, nullptr, nullptr, 0));
 }
 
@@ -571,7 +571,7 @@ extern "C" hipError_t hipExtLaunchKernel(const void* hostFunction,
                                          hipEvent_t stopEvent,
                                          int flags)
 {
-    HIP_INIT_API(NONE, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
+    HIP_INIT_API(hipExtLaunchKernel, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
     HIP_RETURN(ihipLaunchKernel(hostFunction, gridDim, blockDim, args, sharedMemBytes, stream, startEvent, stopEvent, flags));
 }
 
