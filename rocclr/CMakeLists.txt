@@ -207,17 +207,9 @@ target_link_libraries(device INTERFACE host)
 # FIXME: Linux convention is to create static library with same base
 # filename.
 
-
 if(${BUILD_SHARED_LIBS})
     target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl hsa-runtime64::hsa-runtime64)
     INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
-    INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so  )" DESTINATION lib COMPONENT MAIN)
-
-    INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhiprtc.so  )" DESTINATION lib COMPONENT MAIN)
-    INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhip_hcc.so DESTINATION lib COMPONENT MAIN)
-
-    INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAIN)
-
 else()
 
     target_link_libraries(amdhip64 PRIVATE Threads::Threads dl hsa-runtime64::hsa-runtime64 amd_comgr)
