@@ -134,7 +134,6 @@ hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
     return hipSuccess;
   } else {
     DevLogError("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
-    guarantee(false); //Aborting the program
     return hipErrorNoBinaryForGpu;
   }
 }
