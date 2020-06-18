@@ -190,8 +190,8 @@ target_link_libraries(device INTERFACE host)
 
 # FIXME: Linux convention is to create static library with same base
 # filename.
-target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl)
-target_link_libraries(amdhip64_static PRIVATE Threads::Threads dl)
+target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl numa)
+target_link_libraries(amdhip64_static PRIVATE Threads::Threads dl numa)
 
 # combine objects of vid and hip into amdhip64_static
 add_custom_target(

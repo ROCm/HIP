@@ -171,6 +171,9 @@ enum hipLimit_t {
     0x2  ///< Map the allocation into the address space for the current device.  The device pointer
          ///< can be obtained with #hipHostGetDevicePointer.
 #define hipHostMallocWriteCombined 0x4
+#define hipHostMallocNumaUser                                                                      \
+    0x20000000  ///< Host memory allocation will follow numa policy set by user
+
 #define hipHostMallocCoherent                                                                      \
     0x40000000  ///< Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
                 ///< allocation.
