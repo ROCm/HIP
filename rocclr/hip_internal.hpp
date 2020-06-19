@@ -242,4 +242,7 @@ extern bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, vo
 
 constexpr bool kOptionChangeable = true;
 constexpr bool kNewDevProg = false;
+
+constexpr bool kMarkerDisableFlush = true;   //!< Avoids command batch flush in ROCclr
+
 #endif // HIP_SRC_HIP_INTERNAL_H
