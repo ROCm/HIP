@@ -1687,7 +1687,7 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
   size_t offset = 0;
   auto aligned_dst = amd::alignUp(reinterpret_cast<address>(dst), sizeof(uint64_t));
 
-  amd::Memory* memory = getMemoryObject(aligned_dst, offset);
+  amd::Memory* memory = getMemoryObject(dst, offset);
   if (memory == nullptr) {
     // Host alloced memory
     memset(dst, value, sizeBytes);
@@ -1703,6 +1703,7 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
   if (sizeBytes/sizeof(int64_t) > 0) {
     n_head_bytes = static_cast<uint8_t*>(aligned_dst) - static_cast<uint8_t*>(dst);
     n_tail_bytes = ((sizeBytes - n_head_bytes) % sizeof(int64_t));
+    offset = offset + n_head_bytes;
     size_t n_bytes = sizeBytes - n_tail_bytes - n_head_bytes;
     if (n_bytes > 0) {
       if (valueSize == sizeof(int8_t)) {
