@@ -99,7 +99,7 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
     // Events are the same, which indicates the stream is empty and likely
     // eventRecord is called on another stream. For such cases insert and measure a
     // marker.
-    amd::Command* command = new amd::Marker(*event_->command().queue(), false);
+    amd::Command* command = new amd::Marker(*event_->command().queue(), kMarkerDisableFlush);
     command->enqueue();
     command->awaitCompletion();
     ms = static_cast<float>(static_cast<int64_t>(command->event().profilingInfo().end_ -
@@ -127,7 +127,7 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
   amd::Command::EventWaitList eventWaitList;
   eventWaitList.push_back(event_);
 
-  amd::Command* command = new amd::Marker(*hostQueue, false, eventWaitList);
+  amd::Command* command = new amd::Marker(*hostQueue, kMarkerDisableFlush, eventWaitList);
   if (command == NULL) {
     return hipErrorOutOfMemory;
   }
@@ -240,7 +240,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   amd::HostQueue* queue = hip::getQueue(stream);
   amd::Command* command = queue->getLastQueuedCommand(true);
   if (command == nullptr) {
-    command = new amd::Marker(*queue, false);
+    command = new amd::Marker(*queue, kMarkerDisableFlush);
     command->enqueue();
   }
 
