@@ -29,6 +29,7 @@
 #include "elfio.hpp"
 
 constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
+int HIP_ENABLE_DEFERRED_LOADING = 1; // Will check later
 
 thread_local std::stack<ihipExec_t> execStack_;
 PlatformState* PlatformState::platform_; // Initiaized as nullptr by default
@@ -129,13 +130,6 @@ bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** va
   return PlatformState::instance().getShadowVarInfo(var_name, reinterpret_cast<hipModule_t>(program),
                                                     var_addr, var_size);
 }
-
-namespace {
-const int HIP_ENABLE_DEFERRED_LOADING{[] () {
-  char *var = getenv("HIP_ENABLE_DEFERRED_LOADING");
-  return var ? atoi(var) : 1;
-}()};
-} /* namespace */
 
 extern "C" void __hipRegisterFunction(
   hip::FatBinaryInfoType* modules,
@@ -909,6 +903,9 @@ void PlatformState::init()
     return;
   }
   initialized_ = true;
+
+  char *var = getenv("HIP_ENABLE_DEFERRED_LOADING");
+  HIP_ENABLE_DEFERRED_LOADING = var ? atoi(var) : 1;
 
   for (auto& it : statCO_.modules_) {
     digestFatBinary(it.first, it.second);
