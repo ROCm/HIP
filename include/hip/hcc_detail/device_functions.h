@@ -1131,6 +1131,30 @@ void __syncthreads()
   __barrier(__CLK_LOCAL_MEM_FENCE);
 }
 
+__device__
+inline
+__attribute__((convergent))
+int __syncthreads_count(int predicate)
+{
+  return __ockl_wgred_add_i32(!!predicate);
+}
+
+__device__
+inline
+__attribute__((convergent))
+int __syncthreads_and(int predicate)
+{
+  return __ockl_wgred_and_i32(!!predicate);
+}
+
+__device__
+inline
+__attribute__((convergent))
+int __syncthreads_or(int predicate)
+{
+  return __ockl_wgred_or_i32(!!predicate);
+}
+
 // hip.amdgcn.bc - device routine
 /*
    HW_ID Register bit structure
