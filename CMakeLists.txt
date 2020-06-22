@@ -91,6 +91,7 @@ if(NOT DEFINED HIP_PLATFORM)
     endif()
 endif()
 message(STATUS "HIP Platform: " ${HIP_PLATFORM})
+add_to_config(_buildInfo HIP_PLATFORM)
 
 # Determine HIP_COMPILER
 # Either hcc or clang; default is hcc
@@ -281,7 +282,6 @@ if(HIP_PLATFORM STREQUAL "vdi")
 
     include_directories(${PROJECT_SOURCE_DIR}/include)
     add_subdirectory(vdi)
-    file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 
 
 # set(VDI_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
@@ -398,14 +398,15 @@ if(HIP_PLATFORM STREQUAL "hcc")
     else()
         target_link_libraries(device INTERFACE host)
     endif()
-
-    # Generate .hipInfo
-    file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 endif()
 
 if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
 endif()
+
+# Generate .hipInfo
+file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
+
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
 
@@ -438,9 +439,7 @@ if(HIP_PLATFORM STREQUAL "hcc")
 endif()
 
 # Install .hipInfo
-if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "vdi")
-    install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
-endif()
+install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
 
 # Install .hipVersion
 install(FILES ${PROJECT_BINARY_DIR}/.hipVersion DESTINATION bin)
