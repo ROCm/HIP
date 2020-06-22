@@ -90,7 +90,6 @@ $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
 # Read .hipInfo
 my %hipInfo = ();
 parse_config_file("$HIP_PATH/lib/.hipInfo", \%hipInfo);
-#HIP_PLATFORM controls whether to use NVCC or HCC for compilation:
 $HIP_PLATFORM = $hipInfo{'HIP_PLATFORM'} // "hcc";
 $HIP_COMPILER = $hipInfo{'HIP_COMPILER'} // "hcc";
 $HIP_RUNTIME = $hipInfo{'HIP_RUNTIME'} // "HCC";
