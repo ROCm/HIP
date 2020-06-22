@@ -272,11 +272,17 @@ void HipMemcpyWithStreamtests::TestkindDtoD(void) {
   size_t Nbytes = N * sizeof(int);
   int numDevices = 0;
 
-
   unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
   HIPCHECK(hipGetDeviceCount(&numDevices));
   // If you have single GPU machine the return
   if (numDevices <= 1) {
+    return;
+  }
+
+  int canAccessPeer = 0;
+  hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+  if (!canAccessPeer) {
+    std::cout<<"Machine does not seem to have P2P Capabilities"<<std::endl;
     return;
   }
 
