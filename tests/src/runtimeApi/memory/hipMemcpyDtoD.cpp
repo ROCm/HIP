@@ -39,6 +39,9 @@ int main() {
 
     HIPCHECK(hipGetDeviceCount(&numDevices));
     if (numDevices > 1) {
+      int canAccessPeer = 0;
+      hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+      if (canAccessPeer) {
         HIPCHECK(hipSetDevice(0));
         unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
         HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, false);
@@ -47,23 +50,21 @@ int main() {
         HIPCHECK(hipMalloc(&Y_d, Nbytes));
         HIPCHECK(hipMalloc(&Z_d, Nbytes));
 
-
         HIPCHECK(hipSetDevice(0));
         HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
         HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
         hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
-                        static_cast<const int*>(A_d), static_cast<const int*>(B_d), C_d, N);
+                           static_cast<const int*>(A_d), static_cast<const int*>(B_d), C_d, N);
         HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
-
 
         HIPCHECK(hipSetDevice(1));
         HIPCHECK(hipMemcpyDtoD((hipDeviceptr_t)X_d, (hipDeviceptr_t)A_d, Nbytes));
         HIPCHECK(hipMemcpyDtoD((hipDeviceptr_t)Y_d, (hipDeviceptr_t)B_d, Nbytes));
 
         hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
-                        static_cast<const int*>(X_d), static_cast<const int*>(Y_d), Z_d, N);
+                          static_cast<const int*>(X_d), static_cast<const int*>(Y_d), Z_d, N);
         HIPCHECK(hipMemcpyDtoH(C_h, (hipDeviceptr_t)Z_d, Nbytes));
         HIPCHECK(hipDeviceSynchronize());
         HipTest::checkVectorADD(A_h, B_h, C_h, N);
@@ -72,6 +73,9 @@ int main() {
         HIPCHECK(hipFree(X_d));
         HIPCHECK(hipFree(Y_d));
         HIPCHECK(hipFree(Z_d));
+      } else {
+        std::cout<<"Machine does not seem to have P2P Capabilities, Empty Pass"<<std::endl;
+      }
     }
 
     passed();
