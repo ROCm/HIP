@@ -1903,36 +1903,19 @@ hipError_t hipMemAllocHost(void** ptr, size_t size) {
 hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* dev_ptr) {
   HIP_INIT_API(hipIpcGetMemHandle, handle, dev_ptr);
 
-  size_t offset = 0;
-  amd::Memory* amd_mem_obj = nullptr;
-  device::Memory* dev_mem_obj = nullptr;
+  amd::Device* device = nullptr;
   ihipIpcMemHandle_t* ihandle = nullptr;
 
   if ((handle == nullptr) || (dev_ptr == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  /* Get AMD::Memory object corresponding to this pointer */
-  amd_mem_obj = getMemoryObject(dev_ptr, offset);
-  if (amd_mem_obj == nullptr) {
-    DevLogPrintfError("Cannot retrieve amd_mem_obj for dev_ptr: 0x%x with offset: %u \n",
-                      dev_ptr, offset);
-    HIP_RETURN(hipErrorInvalidDevicePointer);
-  }
-
-  /* Get Device::Memory object pointer */
-  dev_mem_obj = amd_mem_obj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0],false);
-  if (dev_mem_obj == nullptr) {
-    DevLogPrintfError("Cannot get Device memory for amd_mem_obj: 0x%x dev_ptr: 0x%x offset: %u \n",
-                      amd_mem_obj, dev_ptr, offset);
-    HIP_RETURN(hipErrorInvalidDevicePointer);
-  }
-
-  /* Create an handle for IPC. Store the memory size inside the handle */
+  device = hip::getCurrentDevice()->devices()[0];
   ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(handle);
-  if(!dev_mem_obj->IpcCreate(offset, &(ihandle->psize), &(ihandle->ipc_handle))) {
+
+  if(!device->IpcCreate(dev_ptr, &(ihandle->psize), &(ihandle->ipc_handle))) {
     DevLogPrintfError("IPC memory creation failed for memory: 0x%x", dev_ptr);
-    HIP_RETURN(hipErrorInvalidValue);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   HIP_RETURN(hipSuccess);
@@ -1953,14 +1936,10 @@ hipError_t hipIpcOpenMemHandle(void** dev_ptr, hipIpcMemHandle_t handle, unsigne
   device = hip::getCurrentDevice()->devices()[0];
   ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(&handle);
 
-  amd_mem_obj = device->IpcAttach(&(ihandle->ipc_handle), ihandle->psize, flags, dev_ptr);
-  if (amd_mem_obj == nullptr) {
+  if(!device->IpcAttach(&(ihandle->ipc_handle), ihandle->psize, flags, dev_ptr)) {
     DevLogPrintfError("cannot attach ipc_handle: with ipc_size: %u flags: %u", ihandle->psize, flags);
     HIP_RETURN(hipErrorInvalidDevicePointer);
   }
-
-  /* Add the memory to the MemObjMap */
-  amd::MemObjMap::AddMemObj(*dev_ptr, amd_mem_obj);
 
   HIP_RETURN(hipSuccess);
 }
@@ -1978,28 +1957,14 @@ hipError_t hipIpcCloseMemHandle(void* dev_ptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  /* Get the amd::Memory object */
-  amd_mem_obj = getMemoryObject(dev_ptr, offset);
-  if (amd_mem_obj == nullptr) {
-    HIP_RETURN(hipErrorInvalidDevicePointer);
-  }
-
   /* Call IPC Detach from Device class */
   device = hip::getCurrentDevice()->devices()[0];
   if (device == nullptr) {
     HIP_RETURN(hipErrorNoDevice);
   }
 
-  /* Remove the memory from MemObjMap */
-  if (amd_mem_obj->getSvmPtr() != nullptr) {
-    amd::MemObjMap::RemoveMemObj(amd_mem_obj->getSvmPtr());
-  } else {
-    DevLogPrintfError("Does not have SVM or Host Mem for 0x%x, crash here!", dev_ptr);
-    guarantee(false);
-  }
-
   /* detach the memory */
-  if (!device->IpcDetach(*amd_mem_obj)){
+  if (!device->IpcDetach(dev_ptr)){
      HIP_RETURN(hipErrorInvalidHandle);
   }
 
