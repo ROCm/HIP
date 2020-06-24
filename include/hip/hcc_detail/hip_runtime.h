@@ -435,12 +435,10 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
     hipLaunchKernel(k, numBlocks, dimBlocks, _Args, sharedMemBytes, stream);
 }
 #else
-#define hipLaunchKernelGGLInternal(kernelName, numBlocks, numThreads, memPerBlock, streamId, ...)  \
+#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
     do {                                                                                           \
-        kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);         \
+        kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(__VA_ARGS__);         \
     } while (0)
-
-#define hipLaunchKernelGGL(...)  hipLaunchKernelGGLInternal(__VA_ARGS__)
 #endif
 
 #include <hip/hip_runtime_api.h>
