@@ -31,10 +31,12 @@ THE SOFTWARE.
 
 typedef int hipLaunchParm;
 
-#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
+#define hipLaunchKernelGGLInternal(kernelName, numBlocks, numThreads, memPerBlock, streamId, ...)  \
     do {                                                                                           \
-        kernelName<<<numblocks, numthreads, memperblock, streamId>>>(__VA_ARGS__);                 \
+        kernelName<<<numBlocks, numThreads, memPerBlock, streamId>>>(__VA_ARGS__);                 \
     } while (0)
+
+#define hipLaunchKernelGGL(kernelName, ...)  hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
 
 #define hipReadModeElementType cudaReadModeElementType
 
