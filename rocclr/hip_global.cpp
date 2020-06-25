@@ -19,7 +19,7 @@ DeviceVar::DeviceVar(std::string name, hipModule_t hmod) : shadowVptr(nullptr), 
   }
 
   if(!dev_program->createGlobalVarObj(&amd_mem_obj_, &device_ptr_, &size_, name.c_str())) {
-    DevLogPrintfError("Cannot create Global Var obj for symbol: %s \n", name);
+    DevLogPrintfError("Cannot create Global Var obj for symbol: %s \n", name.c_str());
     guarantee(false);
   }
 
@@ -54,13 +54,13 @@ DeviceFunc::DeviceFunc(std::string name, hipModule_t hmod) : dflock_("function l
 
   const amd::Symbol *symbol = program->findSymbol(name.c_str());
   if (symbol == nullptr) {
-    DevLogPrintfError("Cannot find Symbol with name: %s \n", name);
+    DevLogPrintfError("Cannot find Symbol with name: %s \n", name.c_str());
     guarantee(false);
   }
 
   kernel_ = new amd::Kernel(*program, *symbol, name);
   if (kernel_ == nullptr) {
-    DevLogPrintfError("Cannot create kernel with name: %s \n", name);
+    DevLogPrintfError("Cannot create kernel with name: %s \n", name.c_str());
     guarantee(false);
   }
 }
