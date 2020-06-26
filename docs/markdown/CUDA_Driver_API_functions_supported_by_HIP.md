@@ -177,7 +177,13 @@
 |          103 |*`CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED`* |                                                            | 10.2             |
 |          104 |*`CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED`*          |                                                            | 10.2             |
 |          105 |*`CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_KMT_HANDLE_SUPPORTED`*      |                                                            | 10.2             |
-|          106 |*`CU_DEVICE_ATTRIBUTE_MAX`*                                         |                                                            |
+|          106 |*`CU_DEVICE_ATTRIBUTE_MAX_BLOCKS_PER_MULTIPROCESSOR`*               |                                                            | 11.0             |
+|          107 |*`CU_DEVICE_ATTRIBUTE_GENERIC_COMPRESSION_SUPPORTED`*               |                                                            | 11.0             |
+|          108 |*`CU_DEVICE_ATTRIBUTE_MAX_PERSISTING_L2_CACHE_SIZE`*                |                                                            | 11.0             |
+|          109 |*`CU_DEVICE_ATTRIBUTE_MAX_ACCESS_POLICY_WINDOW_SIZE`*               |                                                            | 11.0             |
+|          110 |*`CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WITH_CUDA_VMM_SUPPORTED`*     |                                                            | 11.0             |
+|          111 |*`CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK`*            |                                                            | 11.0             |
+|          112 |*`CU_DEVICE_ATTRIBUTE_MAX`*                                         |                                                            |
 | enum         |***`CUevent_flags`***                                               |                                                            |
 | typedef      |***`CUevent_flags_enum`***                                          |                                                            |
 |         0x00 |*`CU_EVENT_DEFAULT`*                                                |*`hipEventDefault`*                                         |
@@ -276,6 +282,7 @@
 |           72 |*`CU_TARGET_COMPUTE_72`*                                            |                                                            | 10.1             |
 |           73 |*`CU_TARGET_COMPUTE_73`*                                            |                                                            | 9.1 - 9.2        |
 |           75 |*`CU_TARGET_COMPUTE_75`*                                            |                                                            | 9.1              |
+|           80 |*`CU_TARGET_COMPUTE_80`*                                            |                                                            | 11.0             |
 | enum         |***`CUjitInputType`***                                              |                                                            |
 | typedef      |***`CUjitInputType_enum`***                                         |                                                            |
 |            0 |*`CU_JIT_INPUT_CUBIN`*                                              |                                                            |
@@ -292,6 +299,7 @@
 |         0x03 |*`CU_LIMIT_DEV_RUNTIME_SYNC_DEPTH`*                                 |                                                            |
 |         0x04 |*`CU_LIMIT_DEV_RUNTIME_PENDING_LAUNCH_COUNT`*                       |                                                            |
 |         0x05 |*`CU_LIMIT_MAX_L2_FETCH_GRANULARITY`*                               |                                                            | 10.0             |
+|         0x06 |*`CU_LIMIT_PERSISTING_L2_CACHE_SIZE`*                               |                                                            | 11.0             |
 |              |*`CU_LIMIT_MAX`*                                                    |                                                            |
 | enum         |***`CUmem_advise`***                                                |                                                            | 8.0              |
 | typedef      |***`CUmem_advise_enum`***                                           |                                                            | 8.0              |
@@ -344,6 +352,7 @@
 |           12 |*`CU_POINTER_ATTRIBUTE_RANGE_SIZE`*                                 |                                                            | 10.2             |
 |           13 |*`CU_POINTER_ATTRIBUTE_MAPPED`*                                     |                                                            | 10.2             |
 |           14 |*`CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES`*                       |                                                            | 10.2             |
+|           15 |*`CU_POINTER_ATTRIBUTE_IS_GPU_DIRECT_RDMA_CAPABLE`*                 |                                                            | 11.0             |
 | enum         |***`CUresourcetype`***                                              |                                                            |
 | typedef      |***`CUresourcetype_enum`***                                         |                                                            |
 |         0x00 |*`CU_RESOURCE_TYPE_ARRAY`*                                          |                                                            |
@@ -802,6 +811,36 @@
 |          0x4 |*`CU_GRAPH_EXEC_UPDATE_ERROR_FUNCTION_CHANGED`*                     |                                                            | 10.2             |
 |          0x5 |*`CU_GRAPH_EXEC_UPDATE_ERROR_PARAMETERS_CHANGED`*                   |                                                            | 10.2             |
 |          0x6 |*`CU_GRAPH_EXEC_UPDATE_ERROR_NOT_SUPPORTED`*                        |                                                            | 10.2             |
+| enum         |***`CUaccessProperty`***                                            |                                                            | 11.0             |
+| typedef      |***`CUaccessProperty_enum`***                                       |                                                            | 11.0             |
+|            0 |*`CU_ACCESS_PROPERTY_NORMAL`*                                       |                                                            | 11.0             |
+|            1 |*`CU_ACCESS_PROPERTY_STREAMING`*                                    |                                                            | 11.0             |
+|            2 |*`CU_ACCESS_PROPERTY_PERSISTING`*                                   |                                                            | 11.0             |
+| struct       |`CUaccessPolicyWindow`                                              |                                                            | 11.0             |
+| typedef      |`CUaccessPolicyWindow_st`                                           |                                                            | 11.0             |
+| enum         |***`CUsynchronizationPolicy`***                                     |                                                            | 11.0             |
+| typedef      |***`CUsynchronizationPolicy_enum`***                                |                                                            | 11.0             |
+|            1 |*`CU_SYNC_POLICY_AUTO`*                                             |                                                            | 11.0             |
+|            2 |*`CU_SYNC_POLICY_SPIN`*                                             |                                                            | 11.0             |
+|            3 |*`CU_SYNC_POLICY_YIELD`*                                            |                                                            | 11.0             |
+|            4 |*`CU_SYNC_POLICY_BLOCKING_SYNC`*                                    |                                                            | 11.0             |
+| enum         |***`CUkernelNodeAttrID`***                                          |                                                            | 11.0             |
+| typedef      |***`CUkernelNodeAttrID_enum`***                                     |                                                            | 11.0             |
+|            1 |*`CU_KERNEL_NODE_ATTRIBUTE_ACCESS_POLICY_WINDOW`*                   |                                                            | 11.0             |
+|            2 |*`CU_KERNEL_NODE_ATTRIBUTE_COOPERATIVE`*                            |                                                            | 11.0             |
+| union        |`CUkernelNodeAttrValue`                                             |                                                            | 11.0             |
+| typedef      |`CUkernelNodeAttrValue_union`                                       |                                                            | 11.0             |
+| enum         |***`CUstreamAttrID`***                                              |                                                            | 11.0             |
+| typedef      |***`CUstreamAttrID_enum`***                                         |                                                            | 11.0             |
+|            1 |*`CU_STREAM_ATTRIBUTE_ACCESS_POLICY_WINDOW`*                        |                                                            | 11.0             |
+|            3 |*`CU_STREAM_ATTRIBUTE_SYNCHRONIZATION_POLICY`*                      |                                                            | 11.0             |
+| union        |`CUstreamAttrValue`                                                 |                                                            | 11.0             |
+| typedef      |`CUstreamAttrValue_union`                                           |                                                            | 11.0             |
+| enum         |***`CUmemAllocationCompType`***                                     |                                                            | 11.0             |
+| typedef      |***`CUmemAllocationCompType_enum`***                                |                                                            | 11.0             |
+|          0x0 |*`CU_MEM_ALLOCATION_COMP_NONE`*                                     |                                                            | 11.0             |
+|          0x1 |*`CU_MEM_ALLOCATION_COMP_GENERIC`*                                  |                                                            | 11.0             |
+| define       |`CU_TRSF_DISABLE_TRILINEAR_OPTIMIZATION`                            |                                                            | 11.0             |
 
 ## **2. Error Handling**
 
