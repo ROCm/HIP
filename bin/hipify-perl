@@ -1214,10 +1214,16 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bCUDA_ARRAY3D_DESCRIPTOR_st\b/HIP_ARRAY3D_DESCRIPTOR/g;
     $ft{'type'} += s/\bCUDA_ARRAY_DESCRIPTOR\b/HIP_ARRAY_DESCRIPTOR/g;
     $ft{'type'} += s/\bCUDA_ARRAY_DESCRIPTOR_st\b/HIP_ARRAY_DESCRIPTOR/g;
+    $ft{'type'} += s/\bCUDA_ARRAY_DESCRIPTOR_v1\b/HIP_ARRAY_DESCRIPTOR/g;
+    $ft{'type'} += s/\bCUDA_ARRAY_DESCRIPTOR_v1_st\b/HIP_ARRAY_DESCRIPTOR/g;
     $ft{'type'} += s/\bCUDA_MEMCPY2D\b/hip_Memcpy2D/g;
     $ft{'type'} += s/\bCUDA_MEMCPY2D_st\b/hip_Memcpy2D/g;
+    $ft{'type'} += s/\bCUDA_MEMCPY2D_v1\b/hip_Memcpy2D/g;
+    $ft{'type'} += s/\bCUDA_MEMCPY2D_v1_st\b/hip_Memcpy2D/g;
     $ft{'type'} += s/\bCUDA_MEMCPY3D\b/HIP_MEMCPY3D/g;
     $ft{'type'} += s/\bCUDA_MEMCPY3D_st\b/HIP_MEMCPY3D/g;
+    $ft{'type'} += s/\bCUDA_MEMCPY3D_v1\b/HIP_MEMCPY3D/g;
+    $ft{'type'} += s/\bCUDA_MEMCPY3D_v1_st\b/HIP_MEMCPY3D/g;
     $ft{'type'} += s/\bCUaddress_mode\b/hipTextureAddressMode/g;
     $ft{'type'} += s/\bCUaddress_mode_enum\b/hipTextureAddressMode/g;
     $ft{'type'} += s/\bCUarray\b/hipArray */g;
@@ -1232,6 +1238,7 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bCUdevice_attribute\b/hipDeviceAttribute_t/g;
     $ft{'type'} += s/\bCUdevice_attribute_enum\b/hipDeviceAttribute_t/g;
     $ft{'type'} += s/\bCUdeviceptr\b/hipDeviceptr_t/g;
+    $ft{'type'} += s/\bCUdeviceptr_v1\b/hipDeviceptr_t/g;
     $ft{'type'} += s/\bCUevent\b/hipEvent_t/g;
     $ft{'type'} += s/\bCUevent_st\b/ihipEvent_t/g;
     $ft{'type'} += s/\bCUfilter_mode\b/hipTextureFilterMode/g;
@@ -3739,6 +3746,7 @@ sub warnUnsupportedFunctions {
         "CUmemAllocationProp_st",
         "CUmemAttach_flags",
         "CUmemAttach_flags_enum",
+        "CUmemGenericAllocationHandle",
         "CUmemLocation",
         "CUmemLocationType",
         "CUmemLocationType_enum",
@@ -3802,6 +3810,7 @@ sub warnUnsupportedFunctions {
         "cuArrayGetDescriptor_v2",
         "cuCtxAttach",
         "cuCtxDetach",
+        "cuCtxResetPersistingL2Cache",
         "cuD3D10CtxCreate",
         "cuD3D10CtxCreateOnDevice",
         "cuD3D10GetDevice",
@@ -3856,6 +3865,7 @@ sub warnUnsupportedFunctions {
         "cuEventCreateFromEGLSync",
         "cuExternalMemoryGetMappedBuffer",
         "cuExternalMemoryGetMappedMipmappedArray",
+        "cuFuncGetModule",
         "cuFuncSetAttribute",
         "cuFuncSetBlockShape",
         "cuFuncSetCacheConfig",
@@ -3898,7 +3908,10 @@ sub warnUnsupportedFunctions {
         "cuGraphHostNodeSetParams",
         "cuGraphInstantiate",
         "cuGraphInstantiate_v2",
+        "cuGraphKernelNodeCopyAttributes",
+        "cuGraphKernelNodeGetAttribute",
         "cuGraphKernelNodeGetParams",
+        "cuGraphKernelNodeSetAttribute",
         "cuGraphKernelNodeSetParams",
         "cuGraphLaunch",
         "cuGraphMemcpyNodeGetParams",
@@ -3960,6 +3973,7 @@ sub warnUnsupportedFunctions {
         "cuMemRangeGetAttribute",
         "cuMemRangeGetAttributes",
         "cuMemRelease",
+        "cuMemRetainAllocationHandle",
         "cuMemSetAccess",
         "cuMemUnmap",
         "cuMemcpy",
@@ -3994,6 +4008,7 @@ sub warnUnsupportedFunctions {
         "cuMipmappedArrayGetLevel",
         "cuModuleGetSurfRef",
         "cuModuleLoadFatBinary",
+        "cuOccupancyAvailableDynamicSMemPerBlock",
         "cuOccupancyMaxPotentialBlockSizeWithFlags",
         "cuParamSetSize",
         "cuParamSetTexRef",
@@ -4010,10 +4025,13 @@ sub warnUnsupportedFunctions {
         "cuStreamBeginCapture",
         "cuStreamBeginCapture_ptsz",
         "cuStreamBeginCapture_v2",
+        "cuStreamCopyAttributes",
         "cuStreamEndCapture",
+        "cuStreamGetAttribute",
         "cuStreamGetCaptureInfo",
         "cuStreamGetCtx",
         "cuStreamIsCapturing",
+        "cuStreamSetAttribute",
         "cuStreamWaitValue32",
         "cuStreamWaitValue64",
         "cuStreamWriteValue32",

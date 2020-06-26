@@ -5,13 +5,21 @@
 | **type**     |   **CUDA**                                                         |   **HIP**                                                  |**CUDA version\***|
 |-------------:|:-------------------------------------------------------------------|:-----------------------------------------------------------|:----------------:|
 | struct       |`CUDA_ARRAY3D_DESCRIPTOR`                                           |`HIP_ARRAY3D_DESCRIPTOR`                                    |
+| struct       |`CUDA_ARRAY3D_DESCRIPTOR_v1`                                        |`HIP_ARRAY3D_DESCRIPTOR`                                    | 11.0             |
 | typedef      |`CUDA_ARRAY3D_DESCRIPTOR_st`                                        |`HIP_ARRAY3D_DESCRIPTOR`                                    |
+| typedef      |`CUDA_ARRAY3D_DESCRIPTOR_v1_st`                                     |`HIP_ARRAY3D_DESCRIPTOR`                                    | 11.0             |
 | struct       |`CUDA_ARRAY_DESCRIPTOR`                                             |`HIP_ARRAY_DESCRIPTOR`                                      |
+| struct       |`CUDA_ARRAY_DESCRIPTOR_v1`                                          |`HIP_ARRAY_DESCRIPTOR`                                      | 11.0             |
 | typedef      |`CUDA_ARRAY_DESCRIPTOR_st`                                          |`HIP_ARRAY_DESCRIPTOR`                                      |
+| typedef      |`CUDA_ARRAY_DESCRIPTOR_v1_st`                                       |`HIP_ARRAY_DESCRIPTOR`                                      | 11.0             |
 | struct       |`CUDA_MEMCPY2D`                                                     |`hip_Memcpy2D`                                              |
+| struct       |`CUDA_MEMCPY2D_v1`                                                  |`hip_Memcpy2D`                                              | 11.0             |
 | typedef      |`CUDA_MEMCPY2D_st`                                                  |`hip_Memcpy2D`                                              |
+| typedef      |`CUDA_MEMCPY2D_v1_st`                                               |`hip_Memcpy2D`                                              | 11.0             |
 | struct       |`CUDA_MEMCPY3D`                                                     |`HIP_MEMCPY3D`                                              |
+| struct       |`CUDA_MEMCPY3D_v1`                                                  |`HIP_MEMCPY3D`                                              | 11.0             |
 | typedef      |`CUDA_MEMCPY3D_st`                                                  |`HIP_MEMCPY3D`                                              |
+| typedef      |`CUDA_MEMCPY3D_v1_st`                                               |`HIP_MEMCPY3D`                                              | 11.0             |
 | struct       |`CUDA_MEMCPY3D_PEER`                                                |                                                            |
 | typedef      |`CUDA_MEMCPY3D_PEER_st`                                             |                                                            |
 | struct       |`CUDA_POINTER_ATTRIBUTE_P2P_TOKENS`                                 |                                                            |
@@ -544,6 +552,7 @@
 | typedef      |`CUcontext_st`                                                      |`hipCtx_t`                                                  |
 | typedef      |`CUdevice`                                                          |`hipDevice_t`                                               |
 | typedef      |`CUdeviceptr`                                                       |`hipDeviceptr_t`                                            |
+| typedef      |`CUdeviceptr_v1`                                                    |`hipDeviceptr_t`                                            | 11.0             |
 | struct       |`CUeglStreamConnection_st`                                          |                                                            | 9.1              |
 | typedef      |`CUeglStreamConnection`                                             |                                                            | 9.1              |
 | typedef      |`CUevent`                                                           |`hipEvent_t`                                                |
@@ -811,6 +820,7 @@
 |          0x4 |*`CU_GRAPH_EXEC_UPDATE_ERROR_FUNCTION_CHANGED`*                     |                                                            | 10.2             |
 |          0x5 |*`CU_GRAPH_EXEC_UPDATE_ERROR_PARAMETERS_CHANGED`*                   |                                                            | 10.2             |
 |          0x6 |*`CU_GRAPH_EXEC_UPDATE_ERROR_NOT_SUPPORTED`*                        |                                                            | 10.2             |
+| typedef      |`CUmemGenericAllocationHandle`                                      |                                                            | 10.2             |
 | enum         |***`CUaccessProperty`***                                            |                                                            | 11.0             |
 | typedef      |***`CUaccessProperty_enum`***                                       |                                                            | 11.0             |
 |            0 |*`CU_ACCESS_PROPERTY_NORMAL`*                                       |                                                            | 11.0             |
@@ -907,6 +917,7 @@
 | `cuCtxGetStreamPriorityRange`                             | `hipDeviceGetStreamPriorityRange`|
 | `cuCtxPopCurrent`                                         | `hipCtxPopCurrent`               |
 | `cuCtxPushCurrent`                                        | `hipCtxPushCurrent`              |
+| `cuCtxResetPersistingL2Cache`                             |                                  | 11.0             |
 | `cuCtxSetCacheConfig`                                     | `hipCtxSetCacheConfig`           |
 | `cuCtxSetCurrent`                                         | `hipCtxSetCurrent`               |
 | `cuCtxSetLimit`                                           | `hipDeviceSetLimit`              |
@@ -1023,6 +1034,7 @@
 | `cuMemImportFromShareableHandle`                          |                               | 10.2             |
 | `cuMemMap`                                                |                               | 10.2             |
 | `cuMemRelease`                                            |                               | 10.2             |
+| `cuMemRetainAllocationHandle`                             |                               | 11.0             |
 | `cuMemSetAccess`                                          |                               | 10.2             |
 | `cuMemUnmap`                                              |                               | 10.2             |
 
@@ -1044,17 +1056,20 @@
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuStreamAddCallback`                                     | `hipStreamAddCallback`        |
 | `cuStreamAttachMemAsync`                                  |                               |
+| `cuStreamCopyAttributes`                                  |                               | 11.0             |
 | `cuStreamCreate`                                          | `hipStreamCreateWithFlags`    |
 | `cuStreamCreateWithPriority`                              | `hipStreamCreateWithPriority` |
 | `cuStreamDestroy`                                         | `hipStreamDestroy`            |
 | `cuStreamGetFlags`                                        | `hipStreamGetFlags`           |
 | `cuStreamGetPriority`                                     | `hipStreamGetPriority`        |
 | `cuStreamQuery`                                           | `hipStreamQuery`              |
+| `cuStreamSetAttribute`                                    |                               | 11.0             |
 | `cuStreamSynchronize`                                     | `hipStreamSynchronize`        |
 | `cuStreamWaitEvent`                                       | `hipStreamWaitEvent`          |
 | `cuStreamBeginCapture`                                    |                               | 10.0             |
 | `cuStreamBeginCapture_ptsz`                               |                               | 10.1             |
 | `cuStreamEndCapture`                                      |                               | 10.0             |
+| `cuStreamGetAttribute`                                    |                               | 11.0             |
 | `cuStreamGetCaptureInfo`                                  |                               | 10.1             |
 | `cuStreamIsCapturing`                                     |                               | 10.0             |
 | `cuThreadExchangeStreamCaptureMode`                       |                               | 10.1             |
@@ -1098,6 +1113,7 @@
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cuFuncGetAttribute`                                      | `hipFuncGetAttribute`         |
+| `cuFuncGetModule`                                         |                               | 11.0             |
 | `cuFuncSetAttribute`                                      |                               | 9.0              |
 | `cuFuncSetCacheConfig`                                    | `hipFuncSetCacheConfig`       |
 | `cuFuncSetSharedMemConfig`                                |                               |
@@ -1128,6 +1144,7 @@
 | `cuGraphLaunch`                                           |                               | 10.0             |
 | `cuGraphAddKernelNode`                                    |                               | 10.0             |
 | `cuGraphKernelNodeGetParams`                              |                               | 10.0             |
+| `cuGraphKernelNodeSetAttribute`                           |                               | 11.0             |
 | `cuGraphKernelNodeSetParams`                              |                               | 10.0             |
 | `cuGraphAddMemcpyNode`                                    |                               | 10.0             |
 | `cuGraphMemcpyNodeGetParams`                              |                               | 10.0             |
@@ -1153,6 +1170,8 @@
 | `cuGraphRemoveDependencies`                               |                               | 10.0             |
 | `cuGraphDestroyNode`                                      |                               | 10.0             |
 | `cuGraphInstantiate`                                      |                               | 10.0             |
+| `cuGraphKernelNodeCopyAttributes`                         |                               | 11.0             |
+| `cuGraphKernelNodeGetAttribute`                           |                               | 11.0             |
 | `cuGraphExecDestroy`                                      |                               | 10.0             |
 | `cuGraphExecKernelNodeSetParams`                          |                               | 10.1             |
 | `cuGraphExecMemcpyNodeSetParams`                          |                               | 10.2             |
@@ -1163,8 +1182,9 @@
 
 ## **21. Occupancy**
 
-|   **CUDA**                                                |   **HIP**                                               |**CUDA version\***|
-|-----------------------------------------------------------|---------------------------------------------------------|------------------|
+|   **CUDA**                                                |   **HIP**                                                  |**CUDA version\***|
+|-----------------------------------------------------------|------------------------------------------------------------|------------------|
+| `cuOccupancyAvailableDynamicSMemPerBlock`                 |                                                            | 11.0             |
 | `cuOccupancyMaxActiveBlocksPerMultiprocessor`             |`hipDrvOccupancyMaxActiveBlocksPerMultiprocessor`           |
 | `cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`    |`hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |
 | `cuOccupancyMaxPotentialBlockSize`                        |`hipOccupancyMaxPotentialBlockSize`                         |
