@@ -1,0 +1,426 @@
+#!/usr/bin/perl
+use strict;
+use File::Copy;
+use File::Spec;
+use File::Basename;
+use File::Which;
+use Cwd 'realpath';
+use Getopt::Std;
+use List::Util qw(max);
+
+sub usage {
+  print("Usage: $0 [OPTION]... -i <input>\n");
+  print("Extract the device kernels from an hcc executable.\n\n");
+  print("-h                                \tshow this help message\n");
+  print("-i <input>                        \t[DEPRECATED] input file\n");
+  print("-E <kernel-name>[:<kernel-name>]  \tExtract code object by URI name. Multiple code object names may be specified using \':\' delimiter.\n");
+  print("-L                                \tList code object bundles, by entry name, and their embedded kernel code objects, by URI, available in source input file (-i option).\n");
+  print("-b                                \tList only bundle entries.\n");
+  print("-c <bundle-entry-name>            \tList only embedded code objects for specific code object bundle <bundle-entry-name>\n");
+  print("-o                                \tExtract only binary code objects.  Do not generate disassembled ISA\n");
+  print("-v                                \tVerbose mode.\n");
+  exit;
+}
+
+# my $debug = 1;
+
+my $input_file;
+my @avail_bundles;
+my %bundle_kernels;
+my $extract_range_specifier;
+my $extract_process_id;
+my $extract_file;
+my $extract_offset;
+my $extract_size;
+
+sub print_bundles {
+  for my $bund ( keys %bundle_kernels ) {
+     print("Bundle Entry Name: $bund\n");
+  }
+}
+
+sub list_codeobject {
+
+ if (scalar(@_)) {
+  # iterate over bundle name arguments if any
+  foreach my $bundle(@_) {
+    if (exists($bundle_kernels{$bundle})) {
+      print("bundle $bundle:\n");
+      for my $i ( 0 .. $#{ $bundle_kernels{$bundle}}) {
+          print("\t$bundle_kernels{$bundle}[$i]");  
+      }
+    } else {
+      print("bundle: $bundle does not exist\n");
+    } 
+   }
+ } else {
+   # if no bundle name arguments, just list all kernels, for all available bundles
+   for my $bund ( keys %bundle_kernels ) {
+     print("Bundle: $bund\n");
+     for my $i (0 .. $#{ $bundle_kernels{$bund} } ) {    
+         print("\t$bundle_kernels{$bund}[$i]");
+     }
+   }
+ }
+}
+
+# use clang offload bundler (instead of "dd")
+# to extract device object from the bundle
+my $use_clang_offload_bundler = 1;
+
+my %options=();
+getopts('dhi:E:Lbc:ov', \%options);
+
+if (!%options || defined $options{h}) {
+  usage();
+}
+
+my $debug = $options{d};
+
+# defined $options{i} || die("input not specified");
+$input_file = $options{i};
+#(-f $input_file) || die("can't find $input_file");
+
+# process generate code objets only option
+my $co_only = $options{o};
+
+#verbose mode
+my $verbose = $options{v};
+
+# process list of kernel names to extract
+my $extract_str = $options{E};
+if ($extract_str ne "") {
+
+ # we expect the URI to follow this BNF syntax:
+ #
+ #   code_object_uri ::== file_uri | memory_uri
+ #   file_uri        ::== "file://" extract_file [ range_specifier ]
+ #   memory_uri      ::== "memory://" process_id range_specifier
+ #     range_specifier  ::== [ "#" | "?" ] "offset=" number "&" "size=" number
+ #     extract_file        ::== URI_ENCODED_OS_FILE_PATH
+ #     process_id       ::== DECIMAL_NUMBER
+ #     number           ::== HEX_NUMBER | DECIMAL_NUMBER | OCTAL_NUMBER
+
+ # Example: file://dir1/dir2/hello_world#offset=133&size=14472
+ #          memory://1234#offset=0x20000&size=3000
+
+ my $uri = $extract_str;
+ my ($co_uri, $specs) = split(/:\/\//,$uri);
+
+ if (lc($co_uri) eq "file") {
+   # expect file path
+   ($extract_file, $extract_range_specifier) = split(/[#,?]/,$specs);
+
+   # verify file exists:
+   (-f $extract_file) || die("can't find $extract_file");
+
+   # and set "input_file" to extract_file.  -E overrides -i
+   $input_file = $extract_file;
+
+ } elsif ( lc($co_uri) eq "memory") {
+   # expect memory specifier
+   ($extract_process_id, $extract_range_specifier) = split(/[#,?]/,$specs);
+
+   # Currently not Supported.
+   die("URI with \"memory\" is not currently supported.\n");
+
+ } else {
+  # error, unrecognized Code Object URI
+  print("Error: \'$co_uri\' is not recognized as a proper code object URI.\n");
+ }
+
+ ($extract_offset, $extract_size) = split(/[&]/,$extract_range_specifier);
+ (undef, $extract_offset) = split(/=/,$extract_offset);
+ (undef, $extract_size) = split(/=/,$extract_size);
+}
+
+# process List option, suboptions
+my $list_full = $options{L};
+my $list_bundles = $options{b};
+my $list_code_objects = $options{c};
+
+
+# look for llvm-objdump and clang-offload-bundler
+my $tools_path_prefix;
+my $llvm_objdump;
+my $clang_offload_bundler;
+
+## SETUP: 
+if (defined $ENV{'HCC_HOME'}) {
+  $tools_path_prefix = File::Spec->catfile($ENV{'HCC_HOME'}, "bin");
+  $llvm_objdump = File::Spec->catfile($tools_path_prefix, "llvm-objdump");
+  $clang_offload_bundler = File::Spec->catfile($tools_path_prefix, "clang-offload-bundler");
+}
+else {
+  $tools_path_prefix = dirname(realpath($0));
+  $llvm_objdump = File::Spec->catfile($tools_path_prefix, "llvm-objdump");
+  $clang_offload_bundler = File::Spec->catfile($tools_path_prefix, "clang-offload-bundler");
+  if (!(-f $llvm_objdump)) {
+    $tools_path_prefix = realpath($tools_path_prefix."/../../hcc/bin");
+    $llvm_objdump = File::Spec->catfile($tools_path_prefix, "llvm-objdump");
+    $clang_offload_bundler = File::Spec->catfile($tools_path_prefix, "clang-offload-bundler");
+  }
+}
+
+if (!(-f $llvm_objdump)) {
+  $llvm_objdump = which("llvm-objdump");
+  if (!(-f $llvm_objdump)) {
+    die("Can't find llvm-objdump\n");
+  }
+}
+
+if (!(-f $clang_offload_bundler)) {
+  $clang_offload_bundler = which("clang-offload-bundler");
+  if (!(-f $clang_offload_bundler)) {
+    die("Can't find clang-offload-bundler\n");
+  }
+}
+
+# kernel section information for HCC
+my $kernel_section_name = ".kernel";
+my $kernel_triple = "hcc-amdgcn-amd-amdhsa--";
+my $kernel_blob_alignment = 1;
+
+my $kernel_section_size =  hex(`objdump -h $input_file | grep $kernel_section_name | awk '{print \$3}'`);
+
+if (!$kernel_section_size) {
+
+  # If there isn't a section created by HCC,
+  # try to detect a kernel section created by HIP-Clang
+  $kernel_section_name = ".hip_fatbin";
+  $kernel_triple = "hip-amdgcn-amd-amdhsa-";
+  $kernel_blob_alignment = 8;
+
+  $kernel_section_size =  hex(`objdump -h $input_file | grep $kernel_section_name | awk '{print \$3}'`);
+  $kernel_section_size or die("No kernel section found\n");
+}
+
+my $kernel_section_offset =  hex(`objdump -h $input_file | grep $kernel_section_name | awk '{print \$6}'`);
+my $kernel_section_end = $kernel_section_offset + $kernel_section_size;
+if ($debug) {
+  print "Kernel Code Object section size: $kernel_section_size\n";
+  print "kernel Code Object section offset: $kernel_section_offset\n";
+  print "kernel Code Object section end: $kernel_section_end\n";
+}
+
+# verbose message
+print("Reading input file \"$input_file\" ...\n") if ($verbose);
+
+# parse kernel bundle header
+open INPUT_FP, $input_file || die $!;
+binmode INPUT_FP;
+
+my $current_blob_offset = $kernel_section_offset;
+my $num_blobs = 0;
+#while ($current_blob_offset < $kernel_section_end) {
+### For EACH BLOB .....................................................................................................................................
+while(1) {
+
+  # adjust the offset to the blob alignment
+  $current_blob_offset = int(($current_blob_offset + ($kernel_blob_alignment - 1)) / $kernel_blob_alignment) * $kernel_blob_alignment;  
+
+  # debug
+  print "Current blob offset: $current_blob_offset\n" if ($debug);
+
+  if ($current_blob_offset >= $kernel_section_end) {
+    print "reached end of kernel section\n" if ($debug);
+    last;
+  }
+
+  seek(INPUT_FP, $current_blob_offset, 0);
+
+  # skip OFFLOAD_BUNDLER_MAGIC_STR
+  my $magic_str;
+  my $read_bytes = read(INPUT_FP, $magic_str, 24);
+  if (($read_bytes != 24) || ($magic_str ne "__CLANG_OFFLOAD_BUNDLE__")) {
+    # didn't detect the bundle magic string
+    print "Offload bundle magic string not detected\n" if ($debug);
+    last;
+  }
+
+  # read number of bundles
+  my $num_bundles;
+  $read_bytes = read(INPUT_FP, $num_bundles, 8);
+  $read_bytes == 8 or die("Fail to parse number of bundles\n");
+  $num_bundles = unpack("Q", $num_bundles);
+
+  # Listing
+  if ( ($list_bundles) || ($list_full )) {
+    print "Blob $num_blobs, number of code object bundles: $num_bundles\n";
+  }
+
+  # detected GPU targets
+  my @asic_target_array;
+
+  my $last_bundle_offset = 0;
+  my $last_bundle_size = 0;
+
+  # strings for creating new files
+  my $file_blob_number = sprintf("%03d", $num_blobs);
+  my $filename_prefix = "${input_file}-${file_blob_number}";
+
+  my $clang_offloadbundler_outputs="-outputs=/dev/null";
+  my $clang_offloadbundler_targets="-targets=host-x86_64-unknown-linux";
+
+ # =====================================================================================================================
+ # for each Bundle ....
+  for (my $iter = 0; $iter < $num_bundles; $iter++) {
+    # read bundle offset
+    my $bundle_offset;
+    my $abs_offset;
+
+    $read_bytes = read(INPUT_FP, $bundle_offset, 8);
+    $read_bytes == 8 or die("Fail to parse bundle offset\n");
+    $bundle_offset = unpack("Q", $bundle_offset);
+    $last_bundle_offset = max($last_bundle_offset, $bundle_offset);
+
+    # read bundle size
+    my $bundle_size;
+    $read_bytes = read(INPUT_FP, $bundle_size, 8);
+    $read_bytes == 8 or die("Fail to parse bundle size\n");
+    $bundle_size = unpack("Q", $bundle_size);
+    if ($last_bundle_offset == $bundle_offset) {
+      $last_bundle_size = $bundle_size;
+    }
+
+    # read triple size
+    my $triple_size;
+    $read_bytes = read(INPUT_FP, $triple_size, 8);
+    $read_bytes == 8 or die("Fail to parse triple size\n");
+    $triple_size = unpack("Q", $triple_size);
+
+    # triple
+    my $triple;
+    $read_bytes = read(INPUT_FP, $triple, $triple_size);
+    $read_bytes == $triple_size or die("Fail to parse triple\n");
+
+
+    $abs_offset = int($bundle_offset) + $current_blob_offset;
+
+    if ( ($list_bundles) || ($list_full)) {
+    #  print("\t bundle $iter: offset=$offset, size=$size, triple_size=$triple_size, triple=$triple\n");
+      if ($extract_file eq "") {
+         $extract_file = $input_file;
+      }
+      print("\tEntry ID: $triple  URI: file:\/\/$extract_file#offset=$abs_offset\\&size=$bundle_size\n");
+    }
+
+    if ($extract_str ne "") {
+	# we have an extract request.  Let's verify that the requested bundle exists, otherwise skip this one.
+	if ($extract_offset ne $abs_offset) {
+		print("extract_offset: $extract_offset does not equal abs_offset: $abs_offset.  Skipping this bundle.\n") if ($verbose);
+		next;
+        } 
+
+        if ($extract_size ne $bundle_size) {
+		print("extract_size: $extract_size does not equal bundle_size: $bundle_size.  Skipping this bundle.\n") if ($verbose);
+		next;
+        }
+
+	print("Extracting code object bundle: $triple\n") if ($verbose);
+    }
+
+    # collect available bundle names:
+    $avail_bundles[$iter] = $triple;
+
+    # Only process GPU targets, skip host targets
+    my $triple_pattern = "^$kernel_triple";
+    if ($triple =~ /$triple_pattern/) {
+      my $asic_target = substr($triple, length($kernel_triple));
+
+      # augment arguments for clang-offload-bundler
+      my $hsaco_file_name = "${filename_prefix}-${asic_target}.hsaco";
+      $clang_offloadbundler_outputs = "${clang_offloadbundler_outputs},${hsaco_file_name}";
+      $clang_offloadbundler_targets = "${clang_offloadbundler_targets},${triple}";
+
+      # add into asic_target_array
+      $asic_target_array[$#asic_target_array + 1]=$asic_target;
+
+      if (!$use_clang_offload_bundler) {
+        my $offset_for_hsaco = $current_blob_offset + $bundle_offset;
+        my $dd_command ="dd if=${input_file} of=${hsaco_file_name} skip=$offset_for_hsaco count=$bundle_size bs=1 status=none";
+        
+        print("extract code bundle with dd: $dd_command\n") if ($debug);
+
+        system($dd_command) == 0
+          or die("Fail to extract code bundle with dd\n");
+      }
+
+    }
+  } # END of for each Bundle ...
+  # =============================================================================================================================
+
+  # extract the code blob
+  my $blob_filename = "${filename_prefix}.bundle";
+  my $write_bytes = $last_bundle_offset + $last_bundle_size;
+
+  print("dd if=$input_file of=$blob_filename skip=$current_blob_offset count=$write_bytes bs=1 status=none\n") if ($debug);
+
+  system("dd if=$input_file of=$blob_filename skip=$current_blob_offset count=$write_bytes bs=1 status=none") == 0
+    or die("Extracting kernel bundle file failed: $?");
+
+  if ($extract_str ne "") {
+     print("Extract request:  file: $extract_file offset: $extract_offset size: $extract_size\n") if ($verbose); 
+  }
+
+  if ($use_clang_offload_bundler) {
+    # use clang-offload-bundler to unbundle HSACO
+    my $command = "${clang_offload_bundler} -unbundle -type=o -inputs=${blob_filename} ${clang_offloadbundler_outputs} ${clang_offloadbundler_targets}";
+    
+    print("clang offload bundler command: $command\n") if ($debug);
+
+    system($command) == 0 
+      or die("Fail to execute clang-offload-bundler");
+  }
+
+  # --------------------------------------------------------------------------------------------------------------------------------
+  # for each bundle .... created with asic_target.
+  for (my $iter = 0; $iter <= $#asic_target_array; $iter++) {
+    my $asic_target = $asic_target_array[$iter];
+    my $hsaco_file_name = "${filename_prefix}-${asic_target}.hsaco";
+    my $isa_file_name = "${filename_prefix}-${asic_target}.isa";
+
+
+    # use llvm-objdump to dump out GCN ISA
+    system("$llvm_objdump --disassemble --mcpu=$asic_target $hsaco_file_name > $isa_file_name") == 0 or die("Fail to disassemble AMDGPU ISA for target" . $asic_target) if (!$co_only);
+     
+    # list of embedded kernel functions:
+    my @functions = `$llvm_objdump -t --mcpu=$asic_target $hsaco_file_name --demangle | grep \" F \" | awk \'{\$1=\$2=\$3=\$4=\$5=\$6=\"\"\;print \$0 }\' | sed \'s!(.*!!\'`;
+
+    $bundle_kernels{"${kernel_triple}${asic_target}"} = [@functions];
+
+#    if ($list_full || $list_code_objects) {
+#       print("list_code_object = $list_code_objects\n");
+#       for (my $i=0; $i <= $#functions; $i++) {
+#         print("\t$functions[$i]");
+#       }
+#    }  
+
+ 
+    print("llvm-objdump command: $llvm_objdump --disassemble --mcpu=$asic_target $hsaco_file_name > $isa_file_name \n") if ($debug);
+    print("Generated GCN ISA for " . $asic_target . " at: " . $isa_file_name . "\n") if (($verbose) && (!$co_only));
+    print("Generated HSACO for " . $asic_target . " at: " . $hsaco_file_name . "\n") if ($verbose);
+  } # end of for each asic_target
+  # ----------------------------------------------------------------------------------------------------------------------------------
+
+  $current_blob_offset = $current_blob_offset + $last_bundle_offset + $last_bundle_size;
+  $num_blobs++;
+
+} # end of while (1)
+
+# process listing options:
+if ($list_full) {
+  list_codeobject();
+}
+
+if ($list_code_objects) {
+  list_codeobject($list_code_objects);
+}
+
+#if ($list_bundles) {
+#  print_bundles();
+#}
+
+$num_blobs or die("No device code found.\n");
+exit(0);
+
