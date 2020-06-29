@@ -153,25 +153,34 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
               *srcMemory->asBuffer(), sOffset, sizeBytes, dst);
     isAsync = false;
   } else if ((srcMemory != nullptr) && (dstMemory != nullptr)) {
-    if ((kind == hipMemcpyDeviceToDevice) &&
-        // Check if the queue device doesn't match the device on any memory object. Hence
-        // it's a P2P transfer, because the app has requested access to another GPU
-        (srcMemory->getContext().devices()[0] != dstMemory->getContext().devices()[0])) {
+    if (queueDevice != srcMemory->getContext().devices()[0]) {
+      amd::Coord3D srcOffset(sOffset, 0, 0);
+      amd::Coord3D dstOffset(dOffset, 0, 0);
+      amd::Coord3D copySize(sizeBytes, 1, 1);
       command = new amd::CopyMemoryP2PCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
-          *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
-      if (command == nullptr) {
-        return hipErrorOutOfMemory;
+                *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcOffset, dstOffset, copySize);
+      command->enqueue();
+      if (!isAsync) {
+        command->awaitCompletion();
       }
-      // Make sure runtime has valid memory for the command execution. P2P access
-      // requires page table mapping on the current device to another GPU memory
-      if (!static_cast<amd::CopyMemoryP2PCommand*>(command)->validateMemory()) {
-        delete command;
-        return hipErrorInvalidValue;
-      }
-    } else {
-      command = new amd::CopyMemoryCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
-          *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
+      command->release();
+      return hipSuccess;
     }
+    if (queueDevice != dstMemory->getContext().devices()[0]) {
+      amd::Coord3D srcOffset(sOffset, 0, 0);
+      amd::Coord3D dstOffset(dOffset, 0, 0);
+      amd::Coord3D copySize(sizeBytes, 1, 1);
+      command = new amd::CopyMemoryP2PCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
+                *srcMemory->asBuffer(),*dstMemory->asBuffer(), srcOffset, dstOffset, copySize);
+      command->enqueue();
+      if (!isAsync) {
+        command->awaitCompletion();
+      }
+      command->release();
+      return hipSuccess;
+    }
+    command = new amd::CopyMemoryCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
+              *srcMemory->asBuffer(),*dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
   }
 
   if (command == nullptr) {
