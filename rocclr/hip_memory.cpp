@@ -178,10 +178,9 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
               *srcMemory->asBuffer(), sOffset, sizeBytes, dst);
     isAsync = false;
   } else if ((srcMemory != nullptr) && (dstMemory != nullptr)) {
-    if ((kind == hipMemcpyDeviceToDevice) &&
-        // Check if the queue device doesn't match the device on any memory object. Hence
-        // it's a P2P transfer, because the app has requested access to another GPU
-        (srcMemory->getContext().devices()[0] != dstMemory->getContext().devices()[0])) {
+    // Check if the queue device doesn't match the device on any memory object. Hence
+    // it's a P2P transfer, because the app has requested access to another GPU
+    if (srcMemory->getContext().devices()[0] != dstMemory->getContext().devices()[0]) {
       command = new amd::CopyMemoryP2PCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
           *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
       if (command == nullptr) {
