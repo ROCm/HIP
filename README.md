@@ -41,6 +41,7 @@ HIP releases are typically naming convention for each ROCM release to help diffe
 - [HIP Porting Driver Guide](docs/markdown/hip_porting_driver_api.md)
 - [HIP Programming Guide](docs/markdown/hip_programming_guide.md)
 - [HIP Logging ](docs/markdown/hip_logging.md)
+- [Code Object tooling ] (docs/markdown/obj_tooling.md)
 - [HIP Terminology](docs/markdown/hip_terms2.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
 - [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md)
 - Supported CUDA APIs:

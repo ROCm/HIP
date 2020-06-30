@@ -111,12 +111,16 @@ else()
 endif()
 message ( "Using CPACK_DEBIAN_PACKAGE_RELEASE ${CPACK_DEBIAN_PACKAGE_RELEASE}" )
 
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "liburi-encode-perl libfile-basedir-perl, libfile-copy-recursive-perl, libfile-listing-perl, libfile-which-perl")
+
 ## RPM package specific variables
 if ( DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE} )
   set ( CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE} )
 else()
   set ( CPACK_RPM_PACKAGE_RELEASE "local" )
 endif()
+
+set(CPACK_RPM_PACKAGE_REQUIRES "perl(URI::Encode), perl(File::Copy), perl(File::Listing), perl(File::Which), perl(File::BaseDir)")
 
 ## 'dist' breaks manual builds on debian systems due to empty Provides
 execute_process( COMMAND rpm --eval %{?dist}
