@@ -141,11 +141,19 @@ hipError_t Function::getStatFuncAttr(hipFuncAttributes* func_attr, int deviceId)
 
   amd::Kernel* kernel = dFunc_[deviceId]->kernel();
   const device::Kernel::WorkGroupInfo* wginfo = kernel->getDeviceKernel(*devices[deviceId])->workGroupInfo();
+  func_attr->sharedSizeBytes = static_cast<int>(wginfo->localMemSize_);
+  func_attr->binaryVersion = static_cast<int>(kernel->signature().version());
+  func_attr->cacheModeCA = 0;
+  func_attr->constSizeBytes = 0;
   func_attr->localSizeBytes = wginfo->privateMemSize_;
-  func_attr->sharedSizeBytes = wginfo->localMemSize_;
-  func_attr->maxDynamicSharedSizeBytes = wginfo->availableLDSSize_ - wginfo->localMemSize_;
-  func_attr->maxThreadsPerBlock = wginfo->size_;
-  func_attr->numRegs = wginfo->usedVGPRs_;
+  func_attr->maxDynamicSharedSizeBytes = static_cast<int>(wginfo->availableLDSSize_
+                                                          - wginfo->localMemSize_);
+
+  func_attr->maxThreadsPerBlock = static_cast<int>(wginfo->size_);
+  func_attr->numRegs = static_cast<int>(wginfo->usedVGPRs_);
+  func_attr->preferredShmemCarveout = 0;
+  func_attr->ptxVersion = 30;
+
 
   return hipSuccess;
 }
