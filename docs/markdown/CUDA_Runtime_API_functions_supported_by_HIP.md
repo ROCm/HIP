@@ -607,6 +607,8 @@
 |           99 |*`cudaDevAttrHostRegisterSupported`*                 | 9.2              |                                                            |
 |          100 |*`cudaDevAttrPageableMemoryAccessUsesHostPageTables`*| 9.2              |                                                            |
 |          101 |*`cudaDevAttrDirectManagedMemAccessFromHost`*        | 9.2              |                                                            |
+|          106 |*`cudaDevAttrDirectManagedMemAccessFromHost`*        | 11.0             |                                                            |
+|          111 |*`cudaDevAttrDirectManagedMemAccessFromHost`*        | 11.0             |                                                            |
 | enum         |***`cudaDeviceP2PAttr`***                            | 8.0              |                                                            |
 |            1 |*`cudaDevP2PAttrPerformanceRank`*                    | 8.0              |                                                            |
 |            2 |*`cudaDevP2PAttrAccessSupported`*                    | 8.0              |                                                            |
@@ -856,6 +858,7 @@
 |         0x03 |*`cudaLimitDevRuntimeSyncDepth`*                     |                  |                                                            |
 |         0x04 |*`cudaLimitDevRuntimePendingLaunchCount`*            |                  |                                                            |
 |         0x05 |*`cudaLimitMaxL2FetchGranularity`*                   | 10.0             |                                                            |
+|         0x06 |*`cudaLimitPersistingL2CacheSize`*                   | 11.0             |                                                            |
 | enum         |***`cudaMemcpyKind`***                               |                  |***`hipMemcpyKind`***                                       |
 |            0 |*`cudaMemcpyHostToHost`*                             |                  |*`hipMemcpyHostToHost`*                                     |
 |            1 |*`cudaMemcpyHostToDevice`*                           |                  |*`hipMemcpyHostToDevice`*                                   |
@@ -1117,5 +1120,24 @@
 |          0x4 |*`cudaGraphExecUpdateErrorFunctionChanged`*          | 10.2             |                                                            |
 |          0x5 |*`cudaGraphExecUpdateErrorParametersChanged`*        | 10.2             |                                                            |
 |          0x6 |*`cudaGraphExecUpdateErrorNotSupported`*             | 10.2             |                                                            |
+| enum         |***`cudaAccessProperty`***                           | 11.0             |                                                            |
+|            0 |*`cudaAccessPropertyNormal`*                         | 11.0             |                                                            |
+|            1 |*`cudaAccessPropertyStreaming`*                      | 11.0             |                                                            |
+|            2 |*`cudaAccessPropertyPersisting`*                     | 11.0             |                                                            |
+| struct       |`cudaAccessPolicyWindow`                             | 11.0             |                                                            |
+| enum         |***`cudaSynchronizationPolicy`***                    | 11.0             |                                                            |
+|            1 |*`cudaSyncPolicyAuto`*                               | 11.0             |                                                            |
+|            2 |*`cudaSyncPolicySpin`*                               | 11.0             |                                                            |
+|            3 |*`cudaSyncPolicyYield`*                              | 11.0             |                                                            |
+|            4 |*`cudaSyncPolicyBlockingSync`*                       | 11.0             |                                                            |
+| enum         |***`cudaStreamAttrID`***                             | 11.0             |                                                            |
+|            1 |*`cudaStreamAttributeAccessPolicyWindow`*            | 11.0             |                                                            |
+|            3 |*`cudaStreamAttributeSynchronizationPolicy`*         | 11.0             |                                                            |
+| union        |`cudaStreamAttrValue`*                               | 11.0             |                                                            |
+| enum         |***`cudaKernelNodeAttrID`***                         | 11.0             |                                                            |
+|            1 |*`cudaKernelNodeAttributeAccessPolicyWindow`*        | 11.0             |                                                            |
+|            2 |*`cudaKernelNodeAttributeCooperative`*               | 11.0             |                                                            |
+| union        |`cudaKernelNodeAttrValue`*                           | 11.0             |                                                            |
+| typedef      |`cudaFunction_t`                                     | 11.0             | `hipFunction_t`                                            |
 
 \* CUDA version, in which API has appeared and (optional) last version before abandoning it; no value in case of earlier versions < 7.5.
