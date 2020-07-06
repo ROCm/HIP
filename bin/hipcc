@@ -675,7 +675,7 @@ foreach $arg (@ARGV)
                 $needCXXFLAGS = 1;
                 if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_COMPILER ne "clang") {
                     $hasCXX = 1;
-                } else {
+                } elsif ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
                     $hasHIP = 1;
                     $toolArgs .= " -x hip";
                 }
