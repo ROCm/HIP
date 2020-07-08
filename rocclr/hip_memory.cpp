@@ -1688,9 +1688,8 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
 
   amd::Memory* memory = getMemoryObject(dst, offset);
   if (memory == nullptr) {
-    // Host alloced memory
-    memset(dst, value, sizeBytes);
-    return hipSuccess;
+    // dst ptr is host ptr hence error
+    return hipErrorInvalidValue;
   }
 
   hipError_t hip_error = hipSuccess;
@@ -1820,7 +1819,8 @@ hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr,
   amd::Coord3D origin(offset);
   amd::Coord3D region(pitchedDevPtr.xsize, pitchedDevPtr.ysize, extent.depth);
   amd::BufferRect rect;
-  if (!rect.create(static_cast<size_t*>(origin), static_cast<size_t*>(region), pitchedDevPtr.pitch, 0)) {
+  if (pitchedDevPtr.pitch == 0 ||
+      !rect.create(static_cast<size_t*>(origin), static_cast<size_t*>(region), pitchedDevPtr.pitch, 0)) {
     return hipErrorInvalidValue;
   }
 
@@ -1851,12 +1851,7 @@ hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr,
       command->release();
     }
   } else {
-    for (size_t slice = 0; slice < extent.depth; slice++) {
-      for (size_t row = 0; row < extent.height; row++) {
-        const size_t rowOffset = rect.offset(0, row, slice);
-        std::memset(pitchedDevPtr.ptr, value, extent.width);
-      }
-    }
+	return hipErrorInvalidValue;
   }
 
   return hipSuccess;

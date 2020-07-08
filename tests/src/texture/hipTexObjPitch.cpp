@@ -57,7 +57,7 @@ void texture2Dtest()
     
     // Use the texture object
     hipResourceDesc texRes;
-    hipMemset(&texRes, 0, sizeof(texRes));
+    memset(&texRes, 0, sizeof(texRes));
     texRes.resType = hipResourceTypePitch2D;
     texRes.res.pitch2D.devPtr = devPtrA;
     texRes.res.pitch2D.height = SIZE_H;
@@ -66,7 +66,7 @@ void texture2Dtest()
     texRes.res.pitch2D.desc = hipCreateChannelDesc<TYPE_t>();
 
     hipTextureDesc texDescr;
-    hipMemset(&texDescr, 0, sizeof(texDescr));
+    memset(&texDescr, 0, sizeof(texDescr));
     texDescr.normalizedCoords = false;
     texDescr.filterMode = hipFilterModePoint;
     texDescr.mipmapFilterMode = hipFilterModePoint;
