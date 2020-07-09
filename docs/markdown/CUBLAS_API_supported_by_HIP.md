@@ -143,10 +143,10 @@
 |`cublasGetVector`                                          |`hipblasGetVector`                               |
 |`cublasSetMatrix`                                          |`hipblasSetMatrix`                               |
 |`cublasGetMatrix`                                          |`hipblasGetMatrix`                               |
-|`cublasSetVectorAsync`                                     |                                                 |
-|`cublasGetVectorAsync`                                     |                                                 |
-|`cublasSetMatrixAsync`                                     |                                                 |
-|`cublasGetMatrixAsync`                                     |                                                 |
+|`cublasSetVectorAsync`                                     |`hipblasSetVectorAsync`                          |
+|`cublasGetVectorAsync`                                     |`hipblasGetVectorAsync`                          |
+|`cublasSetMatrixAsync`                                     |`hipblasSetMatrixAsync`                          |
+|`cublasGetMatrixAsync`                                     |`hipblasGetMatrixAsync`                          |
 |`cublasXerbla`                                             |                                                 |
 |`cublasNrm2Ex`                                             |                                                 | 8.0              |
 |`cublasSnrm2`                                              |`hipblasSnrm2`                                   |

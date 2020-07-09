@@ -575,11 +575,13 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasDznrm2_v2\b/hipblasDznrm2/g;
     $ft{'library'} += s/\bcublasGemmEx\b/hipblasGemmEx/g;
     $ft{'library'} += s/\bcublasGetMatrix\b/hipblasGetMatrix/g;
+    $ft{'library'} += s/\bcublasGetMatrixAsync\b/hipblasGetMatrixAsync/g;
     $ft{'library'} += s/\bcublasGetPointerMode\b/hipblasGetPointerMode/g;
     $ft{'library'} += s/\bcublasGetPointerMode_v2\b/hipblasGetPointerMode/g;
     $ft{'library'} += s/\bcublasGetStream\b/hipblasGetStream/g;
     $ft{'library'} += s/\bcublasGetStream_v2\b/hipblasGetStream/g;
     $ft{'library'} += s/\bcublasGetVector\b/hipblasGetVector/g;
+    $ft{'library'} += s/\bcublasGetVectorAsync\b/hipblasGetVectorAsync/g;
     $ft{'library'} += s/\bcublasHgemm\b/hipblasHgemm/g;
     $ft{'library'} += s/\bcublasHgemmBatched\b/hipblasHgemmBatched/g;
     $ft{'library'} += s/\bcublasHgemmStridedBatched\b/hipblasHgemmStridedBatched/g;
@@ -612,11 +614,13 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasSdot\b/hipblasSdot/g;
     $ft{'library'} += s/\bcublasSdot_v2\b/hipblasSdot/g;
     $ft{'library'} += s/\bcublasSetMatrix\b/hipblasSetMatrix/g;
+    $ft{'library'} += s/\bcublasSetMatrixAsync\b/hipblasSetMatrixAsync/g;
     $ft{'library'} += s/\bcublasSetPointerMode\b/hipblasSetPointerMode/g;
     $ft{'library'} += s/\bcublasSetPointerMode_v2\b/hipblasSetPointerMode/g;
     $ft{'library'} += s/\bcublasSetStream\b/hipblasSetStream/g;
     $ft{'library'} += s/\bcublasSetStream_v2\b/hipblasSetStream/g;
     $ft{'library'} += s/\bcublasSetVector\b/hipblasSetVector/g;
+    $ft{'library'} += s/\bcublasSetVectorAsync\b/hipblasSetVectorAsync/g;
     $ft{'library'} += s/\bcublasSgbmv\b/hipblasSgbmv/g;
     $ft{'library'} += s/\bcublasSgbmv_v2\b/hipblasSgbmv/g;
     $ft{'library'} += s/\bcublasSgeam\b/hipblasSgeam/g;
@@ -4134,9 +4138,7 @@ sub warnUnsupportedFunctions {
         "cublasGetError",
         "cublasGetLoggerCallback",
         "cublasGetMathMode",
-        "cublasGetMatrixAsync",
         "cublasGetProperty",
-        "cublasGetVectorAsync",
         "cublasGetVersion",
         "cublasGetVersion_v2",
         "cublasIamaxEx",
@@ -4157,8 +4159,6 @@ sub warnUnsupportedFunctions {
         "cublasSetKernelStream",
         "cublasSetLoggerCallback",
         "cublasSetMathMode",
-        "cublasSetMatrixAsync",
-        "cublasSetVectorAsync",
         "cublasSgelsBatched",
         "cublasSgemmEx",
         "cublasSgetriBatched",
