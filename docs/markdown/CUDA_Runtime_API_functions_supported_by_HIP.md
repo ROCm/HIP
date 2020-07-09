@@ -57,11 +57,15 @@
 |   **CUDA**                                                |   **HIP**                     |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------|:----------------:|
 | `cudaStreamAddCallback`                                   | `hipStreamAddCallback`        |
+| `cudaCtxResetPersistingL2Cache`                           |                               | 11.0             |
 | `cudaStreamAttachMemAsync`                                |                               |
 | `cudaStreamBeginCapture`                                  |                               | 10.0             |
 | `cudaStreamEndCapture`                                    |                               | 10.0             |
 | `cudaStreamIsCapturing`                                   |                               | 10.0             |
 | `cudaStreamGetCaptureInfo`                                |                               | 10.1             |
+| `cudaStreamCopyAttributes`                                |                               | 11.0             |
+| `cudaStreamGetAttribute`                                  |                               | 11.0             |
+| `cudaStreamSetAttribute`                                  |                               | 11.0             |
 | `cudaStreamCreate`                                        | `hipStreamCreate`             |
 | `cudaStreamCreateWithFlags`                               | `hipStreamCreateWithFlags`    |
 | `cudaStreamCreateWithPriority`                            | `hipStreamCreateWithPriority` |
@@ -119,6 +123,7 @@
 
 |   **CUDA**                                                |   **HIP**                                             |**CUDA version\***|
 |-----------------------------------------------------------|-------------------------------------------------------|:----------------:|
+| `cudaOccupancyAvailableDynamicSMemPerBlock`               |                                                       | 11.0             |
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessor`           |`hipOccupancyMaxActiveBlocksPerMultiprocessor`         |
 | `cudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`  |`hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
 
@@ -404,6 +409,9 @@
 | `cudaGraphHostNodeGetParams`                              |                               | 10.0             |
 | `cudaGraphHostNodeSetParams`                              |                               | 10.0             |
 | `cudaGraphInstantiate`                                    |                               | 10.0             |
+| `cudaGraphKernelNodeCopyAttributes`                       |                               | 11.0             |
+| `cudaGraphKernelNodeGetAttribute`                         |                               | 11.0             |
+| `cudaGraphKernelNodeSetAttribute`                         |                               | 11.0             |
 | `cudaGraphExecKernelNodeSetParams`                        |                               | 10.1             |
 | `cudaGraphExecMemcpyNodeSetParams`                        |                               | 10.2             |
 | `cudaGraphExecMemsetNodeSetParams`                        |                               | 10.2             |
