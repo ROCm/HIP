@@ -76,6 +76,8 @@ hipInit
 hipIpcCloseMemHandle
 hipIpcGetMemHandle
 hipIpcOpenMemHandle
+hipIpcGetEventHandle
+hipIpcOpenEventHandle
 hipMalloc
 hipMalloc3D
 hipMalloc3DArray

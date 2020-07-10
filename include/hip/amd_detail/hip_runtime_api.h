@@ -98,9 +98,9 @@ typedef struct hipIpcMemHandle_st {
     char reserved[HIP_IPC_HANDLE_SIZE];
 } hipIpcMemHandle_t;
 
-// TODO: IPC event handle currently unsupported
-struct ihipIpcEventHandle_t;
-typedef struct ihipIpcEventHandle_t* hipIpcEventHandle_t;
+typedef struct hipIpcEventHandle_st {
+    char reserved[HIP_IPC_HANDLE_SIZE];
+} hipIpcEventHandle_t;
 
 typedef struct ihipModule_t* hipModule_t;
 
