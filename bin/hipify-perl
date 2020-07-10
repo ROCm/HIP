@@ -573,7 +573,9 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasDzasum_v2\b/hipblasDzasum/g;
     $ft{'library'} += s/\bcublasDznrm2\b/hipblasDznrm2/g;
     $ft{'library'} += s/\bcublasDznrm2_v2\b/hipblasDznrm2/g;
+    $ft{'library'} += s/\bcublasGemmBatchedEx\b/hipblasGemmBatchedEx/g;
     $ft{'library'} += s/\bcublasGemmEx\b/hipblasGemmEx/g;
+    $ft{'library'} += s/\bcublasGemmStridedBatchedEx\b/hipblasGemmStridedBatchedEx/g;
     $ft{'library'} += s/\bcublasGetMatrix\b/hipblasGetMatrix/g;
     $ft{'library'} += s/\bcublasGetMatrixAsync\b/hipblasGetMatrixAsync/g;
     $ft{'library'} += s/\bcublasGetPointerMode\b/hipblasGetPointerMode/g;
@@ -4131,8 +4133,6 @@ sub warnUnsupportedFunctions {
         "cublasDtpttr",
         "cublasDtrttp",
         "cublasFree",
-        "cublasGemmBatchedEx",
-        "cublasGemmStridedBatchedEx",
         "cublasGetAtomicsMode",
         "cublasGetCudartVersion",
         "cublasGetError",
