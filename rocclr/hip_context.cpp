@@ -194,9 +194,6 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  // Release last tracked command
-  hip::getNullStream()->setLastQueuedCommand(nullptr);
-
   // Need to remove the ctx of calling thread if its the top one
   if (!g_ctxtStack.empty() && g_ctxtStack.top() == dev) {
     g_ctxtStack.pop();
