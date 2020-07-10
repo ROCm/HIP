@@ -28,21 +28,6 @@ extern api_callbacks_table_t callbacks_table;
 
 static amd::Monitor streamSetLock{"Guards global stream set"};
 static std::unordered_set<hip::Stream*> streamSet;
-
-// Internal structure for stream callback handler
-class StreamCallback {
-   public:
-    StreamCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
-                  amd::Command* command)
-        : stream_(stream), callBack_(callback),
-          userData_(userData), command_(command) {
-        };
-    hipStream_t stream_;
-    hipStreamCallback_t callBack_;
-    void* userData_;
-    amd::Command* command_;
-};
-
 namespace hip {
 
 // ================================================================================================
@@ -306,6 +291,20 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
   HIP_RETURN(hipSuccess);
 }
 
+struct CallbackData {
+    int previous_read_index;
+    hip::ihipIpcEventShmem_t *shmem;
+};
+
+void WaitThenDecrementSignal(hipStream_t stream, hipError_t status, void* user_data){
+    CallbackData *data = (CallbackData *)user_data;
+    int offset = data->previous_read_index % IPC_SIGNALS_PER_EVENT;
+    while (data->shmem->read_index < data->previous_read_index+IPC_SIGNALS_PER_EVENT
+                    && data->shmem->signal[offset] != 0) {
+    }
+    delete data;
+}
+
 // ================================================================================================
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
   HIP_INIT_API(hipStreamWaitEvent, stream, event, flags);
@@ -317,8 +316,25 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
   amd::HostQueue* queue = hip::getQueue(stream);
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
-
-  HIP_RETURN(e->streamWait(queue, flags));
+  if (e->flags & hipEventInterprocess) {
+    amd::Command* command = queue->getLastQueuedCommand(true);
+    if (command == nullptr) {
+      command = new amd::Marker(*queue, false);
+      command->enqueue();
+    }
+    auto t{new CallbackData{e->ipc_evt_.ipc_shmem_->read_index, e->ipc_evt_.ipc_shmem_}};
+    StreamCallback* cbo = new StreamCallback(stream,
+                    reinterpret_cast<hipStreamCallback_t> (WaitThenDecrementSignal), t, command);
+    command->enqueue();
+    if (!command->setCallback(CL_COMPLETE, ihipStreamCallback,cbo)) {
+      command->release();
+      return hipErrorInvalidHandle;
+    }
+    command->awaitCompletion();
+    HIP_RETURN(hipSuccess);
+  } else {
+    HIP_RETURN(e->streamWait(queue, flags));
+  }
 }
 
 // ================================================================================================

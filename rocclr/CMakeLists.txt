@@ -217,7 +217,6 @@ if(__HIP_ENABLE_PCH)
 endif()
 
 target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl hsa-runtime64::hsa-runtime64)
-
 add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
     ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/.hipInfo ${PROJECT_BINARY_DIR}/lib/.hipInfo)
 add_custom_command(TARGET amdhip64 POST_BUILD COMMAND cp -rf

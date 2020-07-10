@@ -24,6 +24,23 @@
 #include "hip_internal.hpp"
 #include "thread/monitor.hpp"
 
+// Internal structure for stream callback handler
+class StreamCallback {
+   public:
+    StreamCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
+                  amd::Command* command)
+        : stream_(stream), callBack_(callback),
+          userData_(userData), command_(command) {
+        };
+    hipStream_t stream_;
+    hipStreamCallback_t callBack_;
+    void* userData_;
+    amd::Command* command_;
+};
+
+void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, void* user_data);
+
+
 namespace hip {
 
 class ProfileMarker: public amd::Marker {
@@ -36,6 +53,14 @@ public:
     profilingInfo_.clear();
   }
 };
+
+#define IPC_SIGNALS_PER_EVENT 32
+typedef struct ihipIpcEventShmem_s {
+  std::atomic<int> owners;
+  std::atomic<int> read_index;
+  std::atomic<int> write_index;
+  std::atomic<int> signal[IPC_SIGNALS_PER_EVENT];
+} ihipIpcEventShmem_t;
 
 class Event {
 public:
@@ -57,9 +82,21 @@ public:
   hipError_t streamWait(amd::HostQueue* queue, uint flags);
 
   void addMarker(amd::HostQueue* queue, amd::Command* command, bool record);
-
+  bool isRecorded() { return recorded_; }
   amd::Monitor& lock() { return lock_; }
 
+   //IPC Events
+  struct ihipIpcEvent_t {
+    std::string ipc_name_;
+    int ipc_fd_;
+    ihipIpcEventShmem_t* ipc_shmem_;
+    ihipIpcEvent_t(): ipc_name_("dummy"), ipc_fd_(0), ipc_shmem_(nullptr) {
+    }
+    void setipcname(const char* name) {
+      ipc_name_ = std::string(name);
+    }
+  };
+  ihipIpcEvent_t ipc_evt_;
 private:
   amd::Monitor lock_;
   amd::HostQueue* stream_;
