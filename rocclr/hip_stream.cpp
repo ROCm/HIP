@@ -202,6 +202,10 @@ static hipError_t ihipStreamCreate(hipStream_t* stream,
 hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
   HIP_INIT_API(hipStreamCreateWithFlags, stream, flags);
 
+  if (stream == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
   HIP_RETURN(ihipStreamCreate(stream, flags, hip::Stream::Priority::Normal), *stream);
 }
 
@@ -209,12 +213,20 @@ hipError_t hipStreamCreateWithFlags(hipStream_t *stream, unsigned int flags) {
 hipError_t hipStreamCreate(hipStream_t *stream) {
   HIP_INIT_API(hipStreamCreate, stream);
 
+  if (stream == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
   HIP_RETURN(ihipStreamCreate(stream, hipStreamDefault, hip::Stream::Priority::Normal), *stream);
 }
 
 // ================================================================================================
 hipError_t hipStreamCreateWithPriority(hipStream_t* stream, unsigned int flags, int priority) {
   HIP_INIT_API(hipStreamCreateWithPriority, stream, flags, priority);
+
+  if (stream == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
 
   hip::Stream::Priority streamPriority;
   if (priority <= hip::Stream::Priority::High) {
