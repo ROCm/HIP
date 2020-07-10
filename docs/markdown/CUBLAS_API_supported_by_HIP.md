@@ -91,9 +91,24 @@
 | enum         |***`cublasMath_t`***                                           | 9.0              |                                                            |
 |            0 |*`CUBLAS_DEFAULT_MATH`*                                        | 9.0              |                                                            |
 |            1 |*`CUBLAS_TENSOR_OP_MATH`*                                      | 9.0              |                                                            |
+|            2 |*`CUBLAS_PEDANTIC_MATH`*                                       | 11.0             |                                                            |
+|            3 |*`CUBLAS_TF32_TENSOR_OP_MATH`*                                 | 11.0             |                                                            |
+|           16 |*`CUBLAS_MATH_DISALLOW_REDUCED_PRECISION_REDUCTION`*           | 11.0             |                                                            |
 | enum*        |`cublasDataType_t`                                             | 7.5              |                                                            |
 | struct       |`cublasContext`                                                |                  |                                                            |
 | struct*      |`cublasHandle_t`                                               |                  |`hipblasHandle_t`                                           |
+| enum         |***`cublasComputeType_t`***                                    | 11.0             |                                                            |
+|           64 |*`CUBLAS_COMPUTE_16F`*                                         | 11.0             |                                                            |
+|           65 |*`CUBLAS_COMPUTE_16F_PEDANTIC`*                                | 11.0             |                                                            |
+|           68 |*`CUBLAS_COMPUTE_32F`*                                         | 11.0             |                                                            |
+|           69 |*`CUBLAS_COMPUTE_32F_PEDANTIC`*                                | 11.0             |                                                            |
+|           74 |*`CUBLAS_COMPUTE_32F_FAST_16F`*                                | 11.0             |                                                            |
+|           75 |*`CUBLAS_COMPUTE_32F_FAST_16BF`*                               | 11.0             |                                                            |
+|           77 |*`CUBLAS_COMPUTE_32F_FAST_TF32`*                               | 11.0             |                                                            |
+|           70 |*`CUBLAS_COMPUTE_64F`*                                         | 11.0             |                                                            |
+|           71 |*`CUBLAS_COMPUTE_64F_PEDANTIC`*                                | 11.0             |                                                            |
+|           72 |*`CUBLAS_COMPUTE_32I`*                                         | 11.0             |                                                            |
+|           73 |*`CUBLAS_COMPUTE_32I_PEDANTIC`*                                | 11.0             |                                                            |
 
 ## **2. CUBLAS API functions**
 
@@ -123,6 +138,7 @@
 |`cublasLoggerConfigure`                                    |                                                 | 9.2              |
 |`cublasSetLoggerCallback`                                  |                                                 | 9.2              |
 |`cublasGetLoggerCallback`                                  |                                                 | 9.2              |
+|`cublasMigrateComputeType`                                 |                                                 | 11.0             |
 |`cublasSetVector`                                          |`hipblasSetVector`                               |
 |`cublasGetVector`                                          |`hipblasGetVector`                               |
 |`cublasSetMatrix`                                          |`hipblasSetMatrix`                               |
