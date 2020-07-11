@@ -29,7 +29,6 @@
 #include "elfio.hpp"
 
 constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
-int HIP_ENABLE_DEFERRED_LOADING = 1; // Will check later
 
 thread_local std::stack<ihipExec_t> execStack_;
 PlatformState* PlatformState::platform_; // Initiaized as nullptr by default
@@ -114,9 +113,15 @@ extern "C" void __hipRegisterFunction(
   dim3*        blockDim,
   dim3*        gridDim,
   int*         wSize) {
+  static int enable_deferred_loading { []() {
+    char *var = getenv("HIP_ENABLE_DEFERRED_LOADING");
+    return var ? atoi(var) : 1;
+  }() };
+
   hip::Function* func = new hip::Function(std::string(deviceName), modules);
   PlatformState::instance().registerStatFunction(hostFunction, func);
-  if (!HIP_ENABLE_DEFERRED_LOADING) {
+
+  if (!enable_deferred_loading) {
     HIP_INIT();
     hipFunction_t hfunc = nullptr;
     hipError_t hip_error = hipSuccess;
@@ -875,9 +880,6 @@ void PlatformState::init()
     return;
   }
   initialized_ = true;
-
-  char *var = getenv("HIP_ENABLE_DEFERRED_LOADING");
-  HIP_ENABLE_DEFERRED_LOADING = var ? atoi(var) : 1;
 
   for (auto& it : statCO_.modules_) {
     digestFatBinary(it.first, it.second);
