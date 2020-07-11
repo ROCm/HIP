@@ -143,10 +143,10 @@
 |`cublasGetVector`                                          |`hipblasGetVector`                               |
 |`cublasSetMatrix`                                          |`hipblasSetMatrix`                               |
 |`cublasGetMatrix`                                          |`hipblasGetMatrix`                               |
-|`cublasSetVectorAsync`                                     |                                                 |
-|`cublasGetVectorAsync`                                     |                                                 |
-|`cublasSetMatrixAsync`                                     |                                                 |
-|`cublasGetMatrixAsync`                                     |                                                 |
+|`cublasSetVectorAsync`                                     |`hipblasSetVectorAsync`                          |
+|`cublasGetVectorAsync`                                     |`hipblasGetVectorAsync`                          |
+|`cublasSetMatrixAsync`                                     |`hipblasSetMatrixAsync`                          |
+|`cublasGetMatrixAsync`                                     |`hipblasGetMatrixAsync`                          |
 |`cublasXerbla`                                             |                                                 |
 |`cublasNrm2Ex`                                             |                                                 | 8.0              |
 |`cublasSnrm2`                                              |`hipblasSnrm2`                                   |
@@ -498,8 +498,8 @@
 |`cublasCgemmBatched`                                       |`hipblasCgemmBatched`                            |
 |`cublasCgemm3mBatched`                                     |                                                 | 8.0              |
 |`cublasZgemmBatched`                                       |`hipblasZgemmBatched`                            |
-|`cublasGemmBatchedEx`                                      |                                                 | 9.1              |
-|`cublasGemmStridedBatchedEx`                               |                                                 | 9.1              |
+|`cublasGemmBatchedEx`                                      |`hipblasGemmBatchedEx`                           | 9.1              |
+|`cublasGemmStridedBatchedEx`                               |`hipblasGemmStridedBatchedEx`                    | 9.1              |
 |`cublasSgemmStridedBatched`                                |`hipblasSgemmStridedBatched`                     | 8.0              |
 |`cublasDgemmStridedBatched`                                |`hipblasDgemmStridedBatched`                     | 8.0              |
 |`cublasCgemmStridedBatched`                                |`hipblasCgemmStridedBatched`                     | 8.0              |
