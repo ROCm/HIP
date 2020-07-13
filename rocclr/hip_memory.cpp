@@ -725,9 +725,14 @@ hipError_t hipHostUnregister(void* hostPtr) {
     amd::Memory* mem = getMemoryObject(hostPtr, offset);
 
     if(mem) {
-      for (const auto& device: hip::getCurrentDevice()->devices()) {
-        const device::Memory* devMem = mem->getDeviceMemory(*device);
-        amd::MemObjMap::RemoveMemObj(reinterpret_cast<void*>(devMem->virtualAddress()));
+      for (const auto& device: g_devices) {
+        const device::Memory* devMem = mem->getDeviceMemory(*device->devices()[0]);
+        if (devMem != nullptr) {
+          void* vAddr = reinterpret_cast<void*>(devMem->virtualAddress());
+          if (amd::MemObjMap::FindMemObj(vAddr)) {
+            amd::MemObjMap::RemoveMemObj(vAddr);
+          }
+        }
       }
       amd::MemObjMap::RemoveMemObj(hostPtr);
       mem->release();
