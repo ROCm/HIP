@@ -420,15 +420,18 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasCaxpy_v2\b/hipblasCaxpy/g;
     $ft{'library'} += s/\bcublasCcopy\b/hipblasCcopy/g;
     $ft{'library'} += s/\bcublasCcopy_v2\b/hipblasCcopy/g;
+    $ft{'library'} += s/\bcublasCdgmm\b/hipblasCdgmm/g;
     $ft{'library'} += s/\bcublasCdotc\b/hipblasCdotc/g;
     $ft{'library'} += s/\bcublasCdotc_v2\b/hipblasCdotc/g;
     $ft{'library'} += s/\bcublasCdotu\b/hipblasCdotu/g;
     $ft{'library'} += s/\bcublasCdotu_v2\b/hipblasCdotu/g;
     $ft{'library'} += s/\bcublasCgbmv\b/hipblasCgbmv/g;
     $ft{'library'} += s/\bcublasCgbmv_v2\b/hipblasCgbmv/g;
+    $ft{'library'} += s/\bcublasCgeam\b/hipblasCgeam/g;
     $ft{'library'} += s/\bcublasCgemm\b/hipblasCgemm/g;
     $ft{'library'} += s/\bcublasCgemmBatched\b/hipblasCgemmBatched/g;
     $ft{'library'} += s/\bcublasCgemmStridedBatched\b/hipblasCgemmStridedBatched/g;
+    $ft{'library'} += s/\bcublasCgemm_v2\b/hipblasCgemm/g;
     $ft{'library'} += s/\bcublasCgemv\b/hipblasCgemv/g;
     $ft{'library'} += s/\bcublasCgemv_v2\b/hipblasCgemv/g;
     $ft{'library'} += s/\bcublasCgeqrfBatched\b/hipblasCgeqrfBatched/g;
@@ -437,9 +440,12 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasCgeru\b/hipblasCgeru/g;
     $ft{'library'} += s/\bcublasCgeru_v2\b/hipblasCgeru/g;
     $ft{'library'} += s/\bcublasCgetrfBatched\b/hipblasCgetrfBatched/g;
+    $ft{'library'} += s/\bcublasCgetriBatched\b/hipblasCgetriBatched/g;
     $ft{'library'} += s/\bcublasCgetrsBatched\b/hipblasCgetrsBatched/g;
     $ft{'library'} += s/\bcublasChbmv\b/hipblasChbmv/g;
     $ft{'library'} += s/\bcublasChbmv_v2\b/hipblasChbmv/g;
+    $ft{'library'} += s/\bcublasChemm\b/hipblasChemm/g;
+    $ft{'library'} += s/\bcublasChemm_v2\b/hipblasChemm/g;
     $ft{'library'} += s/\bcublasChemv\b/hipblasChemv/g;
     $ft{'library'} += s/\bcublasChemv_v2\b/hipblasChemv/g;
     $ft{'library'} += s/\bcublasCher\b/hipblasCher/g;
@@ -471,6 +477,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasCsscal_v2\b/hipblasCsscal/g;
     $ft{'library'} += s/\bcublasCswap\b/hipblasCswap/g;
     $ft{'library'} += s/\bcublasCswap_v2\b/hipblasCswap/g;
+    $ft{'library'} += s/\bcublasCsymm\b/hipblasCsymm/g;
+    $ft{'library'} += s/\bcublasCsymm_v2\b/hipblasCsymm/g;
     $ft{'library'} += s/\bcublasCsymv\b/hipblasCsymv/g;
     $ft{'library'} += s/\bcublasCsymv_v2\b/hipblasCsymv/g;
     $ft{'library'} += s/\bcublasCsyr\b/hipblasCsyr/g;
@@ -484,6 +492,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasCsyrkx\b/hipblasCsyrkx/g;
     $ft{'library'} += s/\bcublasCtbmv\b/hipblasCtbmv/g;
     $ft{'library'} += s/\bcublasCtbmv_v2\b/hipblasCtbmv/g;
+    $ft{'library'} += s/\bcublasCtbsv\b/hipblasCtbsv/g;
+    $ft{'library'} += s/\bcublasCtbsv_v2\b/hipblasCtbsv/g;
     $ft{'library'} += s/\bcublasCtpmv\b/hipblasCtpmv/g;
     $ft{'library'} += s/\bcublasCtpmv_v2\b/hipblasCtpmv/g;
     $ft{'library'} += s/\bcublasCtpsv\b/hipblasCtpsv/g;
@@ -503,6 +513,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasDaxpy_v2\b/hipblasDaxpy/g;
     $ft{'library'} += s/\bcublasDcopy\b/hipblasDcopy/g;
     $ft{'library'} += s/\bcublasDcopy_v2\b/hipblasDcopy/g;
+    $ft{'library'} += s/\bcublasDdgmm\b/hipblasDdgmm/g;
     $ft{'library'} += s/\bcublasDdot\b/hipblasDdot/g;
     $ft{'library'} += s/\bcublasDdot_v2\b/hipblasDdot/g;
     $ft{'library'} += s/\bcublasDestroy\b/hipblasDestroy/g;
@@ -520,6 +531,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasDger\b/hipblasDger/g;
     $ft{'library'} += s/\bcublasDger_v2\b/hipblasDger/g;
     $ft{'library'} += s/\bcublasDgetrfBatched\b/hipblasDgetrfBatched/g;
+    $ft{'library'} += s/\bcublasDgetriBatched\b/hipblasDgetriBatched/g;
     $ft{'library'} += s/\bcublasDgetrsBatched\b/hipblasDgetrsBatched/g;
     $ft{'library'} += s/\bcublasDnrm2\b/hipblasDnrm2/g;
     $ft{'library'} += s/\bcublasDnrm2_v2\b/hipblasDnrm2/g;
@@ -543,6 +555,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasDspr_v2\b/hipblasDspr/g;
     $ft{'library'} += s/\bcublasDswap\b/hipblasDswap/g;
     $ft{'library'} += s/\bcublasDswap_v2\b/hipblasDswap/g;
+    $ft{'library'} += s/\bcublasDsymm\b/hipblasDsymm/g;
+    $ft{'library'} += s/\bcublasDsymm_v2\b/hipblasDsymm/g;
     $ft{'library'} += s/\bcublasDsymv\b/hipblasDsymv/g;
     $ft{'library'} += s/\bcublasDsymv_v2\b/hipblasDsymv/g;
     $ft{'library'} += s/\bcublasDsyr\b/hipblasDsyr/g;
@@ -556,6 +570,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasDsyrkx\b/hipblasDsyrkx/g;
     $ft{'library'} += s/\bcublasDtbmv\b/hipblasDtbmv/g;
     $ft{'library'} += s/\bcublasDtbmv_v2\b/hipblasDtbmv/g;
+    $ft{'library'} += s/\bcublasDtbsv\b/hipblasDtbsv/g;
+    $ft{'library'} += s/\bcublasDtbsv_v2\b/hipblasDtbsv/g;
     $ft{'library'} += s/\bcublasDtpmv\b/hipblasDtpmv/g;
     $ft{'library'} += s/\bcublasDtpmv_v2\b/hipblasDtpmv/g;
     $ft{'library'} += s/\bcublasDtpsv\b/hipblasDtpsv/g;
@@ -613,6 +629,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasScnrm2_v2\b/hipblasScnrm2/g;
     $ft{'library'} += s/\bcublasScopy\b/hipblasScopy/g;
     $ft{'library'} += s/\bcublasScopy_v2\b/hipblasScopy/g;
+    $ft{'library'} += s/\bcublasSdgmm\b/hipblasSdgmm/g;
     $ft{'library'} += s/\bcublasSdot\b/hipblasSdot/g;
     $ft{'library'} += s/\bcublasSdot_v2\b/hipblasSdot/g;
     $ft{'library'} += s/\bcublasSetMatrix\b/hipblasSetMatrix/g;
@@ -637,6 +654,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasSger\b/hipblasSger/g;
     $ft{'library'} += s/\bcublasSger_v2\b/hipblasSger/g;
     $ft{'library'} += s/\bcublasSgetrfBatched\b/hipblasSgetrfBatched/g;
+    $ft{'library'} += s/\bcublasSgetriBatched\b/hipblasSgetriBatched/g;
     $ft{'library'} += s/\bcublasSgetrsBatched\b/hipblasSgetrsBatched/g;
     $ft{'library'} += s/\bcublasSnrm2\b/hipblasSnrm2/g;
     $ft{'library'} += s/\bcublasSnrm2_v2\b/hipblasSnrm2/g;
@@ -660,6 +678,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasSspr_v2\b/hipblasSspr/g;
     $ft{'library'} += s/\bcublasSswap\b/hipblasSswap/g;
     $ft{'library'} += s/\bcublasSswap_v2\b/hipblasSswap/g;
+    $ft{'library'} += s/\bcublasSsymm\b/hipblasSsymm/g;
+    $ft{'library'} += s/\bcublasSsymm_v2\b/hipblasSsymm/g;
     $ft{'library'} += s/\bcublasSsymv\b/hipblasSsymv/g;
     $ft{'library'} += s/\bcublasSsymv_v2\b/hipblasSsymv/g;
     $ft{'library'} += s/\bcublasSsyr\b/hipblasSsyr/g;
@@ -673,6 +693,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasSsyrkx\b/hipblasSsyrkx/g;
     $ft{'library'} += s/\bcublasStbmv\b/hipblasStbmv/g;
     $ft{'library'} += s/\bcublasStbmv_v2\b/hipblasStbmv/g;
+    $ft{'library'} += s/\bcublasStbsv\b/hipblasStbsv/g;
+    $ft{'library'} += s/\bcublasStbsv_v2\b/hipblasStbsv/g;
     $ft{'library'} += s/\bcublasStpmv\b/hipblasStpmv/g;
     $ft{'library'} += s/\bcublasStpmv_v2\b/hipblasStpmv/g;
     $ft{'library'} += s/\bcublasStpsv\b/hipblasStpsv/g;
@@ -690,6 +712,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasZaxpy_v2\b/hipblasZaxpy/g;
     $ft{'library'} += s/\bcublasZcopy\b/hipblasZcopy/g;
     $ft{'library'} += s/\bcublasZcopy_v2\b/hipblasZcopy/g;
+    $ft{'library'} += s/\bcublasZdgmm\b/hipblasZdgmm/g;
     $ft{'library'} += s/\bcublasZdotc\b/hipblasZdotc/g;
     $ft{'library'} += s/\bcublasZdotc_v2\b/hipblasZdotc/g;
     $ft{'library'} += s/\bcublasZdotu\b/hipblasZdotu/g;
@@ -700,6 +723,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasZdscal_v2\b/hipblasZdscal/g;
     $ft{'library'} += s/\bcublasZgbmv\b/hipblasZgbmv/g;
     $ft{'library'} += s/\bcublasZgbmv_v2\b/hipblasZgbmv/g;
+    $ft{'library'} += s/\bcublasZgeam\b/hipblasZgeam/g;
     $ft{'library'} += s/\bcublasZgemm\b/hipblasZgemm/g;
     $ft{'library'} += s/\bcublasZgemmBatched\b/hipblasZgemmBatched/g;
     $ft{'library'} += s/\bcublasZgemmStridedBatched\b/hipblasZgemmStridedBatched/g;
@@ -712,9 +736,12 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasZgeru\b/hipblasZgeru/g;
     $ft{'library'} += s/\bcublasZgeru_v2\b/hipblasZgeru/g;
     $ft{'library'} += s/\bcublasZgetrfBatched\b/hipblasZgetrfBatched/g;
+    $ft{'library'} += s/\bcublasZgetriBatched\b/hipblasZgetriBatched/g;
     $ft{'library'} += s/\bcublasZgetrsBatched\b/hipblasZgetrsBatched/g;
     $ft{'library'} += s/\bcublasZhbmv\b/hipblasZhbmv/g;
     $ft{'library'} += s/\bcublasZhbmv_v2\b/hipblasZhbmv/g;
+    $ft{'library'} += s/\bcublasZhemm\b/hipblasZhemm/g;
+    $ft{'library'} += s/\bcublasZhemm_v2\b/hipblasZhemm/g;
     $ft{'library'} += s/\bcublasZhemv\b/hipblasZhemv/g;
     $ft{'library'} += s/\bcublasZhemv_v2\b/hipblasZhemv/g;
     $ft{'library'} += s/\bcublasZher\b/hipblasZher/g;
@@ -740,6 +767,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasZscal_v2\b/hipblasZscal/g;
     $ft{'library'} += s/\bcublasZswap\b/hipblasZswap/g;
     $ft{'library'} += s/\bcublasZswap_v2\b/hipblasZswap/g;
+    $ft{'library'} += s/\bcublasZsymm\b/hipblasZsymm/g;
+    $ft{'library'} += s/\bcublasZsymm_v2\b/hipblasZsymm/g;
     $ft{'library'} += s/\bcublasZsymv\b/hipblasZsymv/g;
     $ft{'library'} += s/\bcublasZsymv_v2\b/hipblasZsymv/g;
     $ft{'library'} += s/\bcublasZsyr\b/hipblasZsyr/g;
@@ -753,6 +782,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasZsyrkx\b/hipblasZsyrkx/g;
     $ft{'library'} += s/\bcublasZtbmv\b/hipblasZtbmv/g;
     $ft{'library'} += s/\bcublasZtbmv_v2\b/hipblasZtbmv/g;
+    $ft{'library'} += s/\bcublasZtbsv\b/hipblasZtbsv/g;
+    $ft{'library'} += s/\bcublasZtbsv_v2\b/hipblasZtbsv/g;
     $ft{'library'} += s/\bcublasZtpmv\b/hipblasZtpmv/g;
     $ft{'library'} += s/\bcublasZtpmv_v2\b/hipblasZtpmv/g;
     $ft{'library'} += s/\bcublasZtpsv\b/hipblasZtpsv/g;
@@ -4094,42 +4125,26 @@ sub warnUnsupportedFunctions {
         "cublasAsumEx",
         "cublasAtomicsMode_t",
         "cublasAxpyEx",
-        "cublasCdgmm",
-        "cublasCgeam",
         "cublasCgelsBatched",
         "cublasCgemm3m",
         "cublasCgemm3mBatched",
         "cublasCgemm3mEx",
         "cublasCgemm3mStridedBatched",
         "cublasCgemmEx",
-        "cublasCgemm_v2",
-        "cublasCgetriBatched",
-        "cublasChemm",
-        "cublasChemm_v2",
         "cublasCherk3mEx",
         "cublasCherkEx",
         "cublasCmatinvBatched",
         "cublasComputeType_t",
         "cublasContext",
         "cublasCopyEx",
-        "cublasCsymm",
-        "cublasCsymm_v2",
         "cublasCsyrk3mEx",
         "cublasCsyrkEx",
-        "cublasCtbsv",
-        "cublasCtbsv_v2",
         "cublasCtpttr",
         "cublasCtrttp",
-        "cublasDdgmm",
         "cublasDgelsBatched",
-        "cublasDgetriBatched",
         "cublasDmatinvBatched",
         "cublasDotEx",
         "cublasDotcEx",
-        "cublasDsymm",
-        "cublasDsymm_v2",
-        "cublasDtbsv",
-        "cublasDtbsv_v2",
         "cublasDtpttr",
         "cublasDtrttp",
         "cublasFree",
@@ -4154,37 +4169,22 @@ sub warnUnsupportedFunctions {
         "cublasRotmEx",
         "cublasRotmgEx",
         "cublasScalEx",
-        "cublasSdgmm",
         "cublasSetAtomicsMode",
         "cublasSetKernelStream",
         "cublasSetLoggerCallback",
         "cublasSetMathMode",
         "cublasSgelsBatched",
         "cublasSgemmEx",
-        "cublasSgetriBatched",
         "cublasShutdown",
         "cublasSmatinvBatched",
-        "cublasSsymm",
-        "cublasSsymm_v2",
-        "cublasStbsv",
-        "cublasStbsv_v2",
         "cublasStpttr",
         "cublasStrttp",
         "cublasSwapEx",
         "cublasUint8gemmBias",
         "cublasXerbla",
-        "cublasZdgmm",
-        "cublasZgeam",
         "cublasZgelsBatched",
         "cublasZgemm3m",
-        "cublasZgetriBatched",
-        "cublasZhemm",
-        "cublasZhemm_v2",
         "cublasZmatinvBatched",
-        "cublasZsymm",
-        "cublasZsymm_v2",
-        "cublasZtbsv",
-        "cublasZtbsv_v2",
         "cublasZtpttr",
         "cublasZtrttp",
         "cudaAccessPolicyWindow",
