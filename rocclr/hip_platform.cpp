@@ -629,8 +629,18 @@ hipError_t ihipLaunchKernel(const void* hostFunction,
   if ((hip_error != hipSuccess) || (func == nullptr)) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
-  HIP_RETURN(ihipModuleLaunchKernel(func, (gridDim.x * blockDim.x), (gridDim.y * blockDim.y),
-                                    (gridDim.z * blockDim.z), blockDim.x, blockDim.y, blockDim.z,
+  size_t globalWorkSizeX = gridDim.x * blockDim.x;
+  size_t globalWorkSizeY = gridDim.y * blockDim.y;
+  size_t globalWorkSizeZ = gridDim.z * blockDim.z;
+  if (globalWorkSizeX > std::numeric_limits<uint32_t>::max() ||
+      globalWorkSizeY > std::numeric_limits<uint32_t>::max() ||
+      globalWorkSizeZ > std::numeric_limits<uint32_t>::max()) {
+    HIP_RETURN(hipErrorInvalidConfiguration);
+  }
+  HIP_RETURN(ihipModuleLaunchKernel(func, static_cast<uint32_t>(globalWorkSizeX),
+                                    static_cast<uint32_t>(globalWorkSizeY),
+                                    static_cast<uint32_t>(globalWorkSizeZ),
+                                    blockDim.x, blockDim.y, blockDim.z,
                                     sharedMemBytes, stream, args, nullptr, startEvent, stopEvent,
                                     flags));
 }
