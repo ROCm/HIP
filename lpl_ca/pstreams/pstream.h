@@ -70,12 +70,12 @@ struct pstreams {
     /// Type used for file descriptors.
     typedef int fd_type;
 
-    static const pmode pstdin = std::ios_base::out;   ///< Write to stdin
-    static const pmode pstdout = std::ios_base::in;   ///< Read from stdout
-    static const pmode pstderr = std::ios_base::app;  ///< Read from stderr
+    static constexpr pmode pstdin = std::ios_base::out;   ///< Write to stdin
+    static constexpr pmode pstdout = std::ios_base::in;   ///< Read from stdout
+    static constexpr pmode pstderr = std::ios_base::app;  ///< Read from stderr
 
     /// Create a new process group for the child process.
-    static const pmode newpg = std::ios_base::trunc;
+    static constexpr pmode newpg = std::ios_base::trunc;
 
    protected:
     enum { bufsz = 32 };  ///< Size of pstreambuf buffers.
