@@ -230,12 +230,16 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
   HIP_RETURN(eStart->elapsedTime(*eStop, *ms), "Elapsed Time = ", *ms);
 }
 
+// ================================================================================================
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   HIP_INIT_API(hipEventRecord, event, stream);
 
   if (event == nullptr) {
     HIP_RETURN(hipErrorInvalidHandle);
   }
+
+  hip::Event* e = reinterpret_cast<hip::Event*>(event);
+  amd::ScopedLock lock(e->lock());
 
   amd::HostQueue* queue = hip::getQueue(stream);
   amd::Command* command = queue->getLastQueuedCommand(true);
@@ -244,12 +248,11 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     command->enqueue();
   }
 
-  hip::Event* e = reinterpret_cast<hip::Event*>(event);
   e->addMarker(queue, command, true);
-
   HIP_RETURN(hipSuccess);
 }
 
+// ================================================================================================
 hipError_t hipEventSynchronize(hipEvent_t event) {
   HIP_INIT_API(hipEventSynchronize, event);
 
