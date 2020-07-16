@@ -491,10 +491,10 @@ def generate_prof_header(f, api_map, opts_map):
       fld_name = arg_tuple[1]
       var_name = 'data->args.' + name + '.' + fld_name
       if arg_type == "char*":
-        f.write('      ' + var_name + ' = (' + var_name + ') ? strdup(' + var_name + ') : NULL; \\\n')
+        f.write('      ' + var_name + ' = (' + var_name + ') ? strdup(' + var_name + ') : NULL;\n')
       else:
         if ptr_type != '':
-          f.write('      if (' + var_name + ') ' + var_name + '__val = *(' + var_name + '); \\\n')
+          f.write('      if (' + var_name + ') ' + var_name + '__val = *(' + var_name + ');\n')
     f.write('      break;\n')
   f.write('    default: break;\n')
   f.write('  };\n')
