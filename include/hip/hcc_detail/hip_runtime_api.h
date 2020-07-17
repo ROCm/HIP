@@ -95,6 +95,13 @@ typedef struct ihipCtx_t* hipCtx_t;
 // Note many APIs also use integer deviceIds as an alternative to the device pointer:
 typedef int hipDevice_t;
 
+typedef enum hipDeviceP2PAttr {
+  hipDevP2PAttrPerformanceRank = 0,
+  hipDevP2PAttrAccessSupported,
+  hipDevP2PAttrNativeAtomicSupported,
+  hipDevP2PAttrHipArrayAccessSupported
+} hipDeviceP2PAttr;
+
 typedef struct ihipStream_t* hipStream_t;
 
 #define hipIpcMemLazyEnablePeerAccess 0
@@ -2798,6 +2805,19 @@ hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
+
+
+/**
+ * @brief Returns a value for attr of link between two devices
+ * @param [out] value
+ * @param [in] attr
+ * @param [in] srcDevice
+ * @param [in] dstDevice
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
+                                    int srcDevice, int dstDevice);
 
 /**
  * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.

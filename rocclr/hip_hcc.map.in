@@ -30,6 +30,7 @@ global:
     hipDeviceGetName;
     hipDeviceGetPCIBusId;
     hipDeviceGetSharedMemConfig;
+    hipDeviceGetP2PAttribute;
     hipDevicePrimaryCtxGetState;
     hipDevicePrimaryCtxRelease;
     hipDevicePrimaryCtxReset;
