@@ -179,6 +179,7 @@ typedef enum cudaSharedMemConfig hipSharedMemConfig;
 typedef CUfunc_cache hipFuncCache;
 typedef CUjit_option hipJitOption;
 typedef CUdevice hipDevice_t;
+typedef enum cudaDeviceP2PAttr hipDeviceP2PAttr;
 typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
@@ -1604,6 +1605,11 @@ inline static hipError_t hipDeviceComputeCapability(int* major, int* minor, hipD
 
 inline static hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device) {
     return hipCUResultTohipError(cuDeviceGetName(name, len, device));
+}
+
+inline static hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
+                                                  int srcDevice, int dstDevice) {
+    return hipCUDAErrorTohipError(cudaDeviceGetP2PAttribute(value, attr, srcDevice, dstDevice));
 }
 
 inline static hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, hipDevice_t device) {

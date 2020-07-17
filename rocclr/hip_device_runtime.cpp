@@ -367,13 +367,6 @@ hipError_t hipDeviceGetLimit ( size_t* pValue, hipLimit_t limit ) {
   }
 }
 
-/**
-hipError_t hipDeviceGetP2PAttribute ( int* value, hipDeviceP2PAttr attr, int  srcDevice, int  dstDevice ) {
-  assert(0);
-  HIP_RETURN(hipSuccess);
-}
-**/
-
 hipError_t hipDeviceGetPCIBusId ( char* pciBusId, int  len, int  device ) {
 
   HIP_INIT_API(hipDeviceGetPCIBusId, (void*)pciBusId, len, device);
