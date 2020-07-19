@@ -208,7 +208,7 @@ target_link_libraries(device INTERFACE host)
 
 
 if(${BUILD_SHARED_LIBS})
-    target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl numa hsa-runtime64::hsa-runtime64)
+    target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl hsa-runtime64::hsa-runtime64)
     INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
     INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so  )" DESTINATION lib COMPONENT MAIN)
 
@@ -219,7 +219,7 @@ if(${BUILD_SHARED_LIBS})
 
 else()
 
-    target_link_libraries(amdhip64 PRIVATE Threads::Threads dl numa hsa-runtime64::hsa-runtime64 amd_comgr)
+    target_link_libraries(amdhip64 PRIVATE Threads::Threads dl hsa-runtime64::hsa-runtime64 amd_comgr)
     # combine objects of vid and hip into amdhip64_static
     add_custom_target(
        amdhip64_static_combiner
