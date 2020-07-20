@@ -271,7 +271,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol) {
 
   HIP_RETURN_ONFAIL(PlatformState::instance().getStatGlobalVar(symbol, ihipGetDevice(), devPtr, &sym_size));
 
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipSuccess, *devPtr);
 }
 
 hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbol) {
@@ -280,7 +280,7 @@ hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbol) {
   hipDeviceptr_t device_ptr = nullptr;
   HIP_RETURN_ONFAIL(PlatformState::instance().getStatGlobalVar(symbol, ihipGetDevice(), &device_ptr, sizePtr));
 
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipSuccess, *sizePtr);
 }
 
 hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memory** amd_mem_obj,
