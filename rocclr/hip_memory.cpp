@@ -1404,10 +1404,34 @@ hipError_t ihipMemcpyParam3D(const HIP_MEMCPY3D* pCopy,
   hipMemoryType srcMemoryType = pCopy->srcMemoryType;
   if (srcMemoryType == hipMemoryTypeUnified) {
     srcMemoryType = amd::MemObjMap::FindMemObj(pCopy->srcDevice) ? hipMemoryTypeDevice : hipMemoryTypeHost;
+    if (srcMemoryType == hipMemoryTypeHost) {
+      // {src/dst}Host may be unitialized. Copy over {src/dst}Device into it if we detect system memory.
+      const_cast<HIP_MEMCPY3D*>(pCopy)->srcHost = pCopy->srcDevice;
+    }
   }
   hipMemoryType dstMemoryType = pCopy->dstMemoryType;
   if (dstMemoryType == hipMemoryTypeUnified) {
     dstMemoryType = amd::MemObjMap::FindMemObj(pCopy->dstDevice) ? hipMemoryTypeDevice : hipMemoryTypeHost;
+    if (srcMemoryType == hipMemoryTypeHost) {
+      const_cast<HIP_MEMCPY3D*>(pCopy)->dstHost = pCopy->dstDevice;
+    }
+  }
+
+  // If {src/dst}MemoryType is hipMemoryTypeHost, check if the memory was prepinned.
+  // In that case upgrade the copy type to hipMemoryTypeDevice to avoid extra pinning.
+  if (srcMemoryType == hipMemoryTypeHost) {
+    amd::Memory* mem = amd::MemObjMap::FindMemObj(pCopy->srcHost);
+    srcMemoryType = mem ? hipMemoryTypeDevice : hipMemoryTypeHost;
+    if (srcMemoryType == hipMemoryTypeDevice) {
+      const_cast<HIP_MEMCPY3D*>(pCopy)->srcDevice = const_cast<void*>(pCopy->srcHost);
+    }
+  }
+  if (dstMemoryType == hipMemoryTypeHost) {
+    amd::Memory* mem = amd::MemObjMap::FindMemObj(pCopy->dstHost);
+    dstMemoryType = mem ? hipMemoryTypeDevice : hipMemoryTypeHost;
+    if (dstMemoryType == hipMemoryTypeDevice) {
+      const_cast<HIP_MEMCPY3D*>(pCopy)->dstDevice = const_cast<void*>(pCopy->dstDevice);
+    }
   }
 
   amd::Coord3D srcOrigin = {pCopy->srcXInBytes, pCopy->srcY, pCopy->srcZ};
