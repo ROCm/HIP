@@ -37,7 +37,7 @@ public:
 
 class Event {
 public:
-  Event(unsigned int flags) : flags(flags), lock_("hipEvent_t"),
+  Event(unsigned int flags) : flags(flags), lock_("hipEvent_t", true),
                               event_(nullptr), recorded_(false) {
     // No need to init event_ here as addMarker does that
   }
@@ -55,6 +55,8 @@ public:
   hipError_t streamWait(amd::HostQueue* queue, uint flags);
 
   void addMarker(amd::HostQueue* queue, amd::Command* command, bool record);
+
+  amd::Monitor& lock() { return lock_; }
 
 private:
   amd::Monitor lock_;

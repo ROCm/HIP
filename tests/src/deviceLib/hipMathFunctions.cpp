@@ -186,6 +186,14 @@ void test_fp16() {
   CHECK_SIMPLE([]__device__(){ return min<__fp16>(1.0f, 2.0f); }, 1.0f);
 }
 
+void test_pown() {
+  CHECK_SIMPLE([]__device__(){ return powif(2.0f, 2); }, 4.0f);
+  CHECK_SIMPLE([]__device__(){ return powi(2.0, 2); }, 4.0);
+  CHECK_SIMPLE([]__device__(){ return pow(2.0f, 2); }, 4.0f);
+  CHECK_SIMPLE([]__device__(){ return pow(2.0, 2); }, 4.0);
+  CHECK_SIMPLE([]__device__(){ return pow(2.0f16, 2); }, 4.0f16);
+}
+
 int main(int argc, char* argv[]) {
     HipTest::parseStandardArguments(argc, argv, true);
 
@@ -194,6 +202,8 @@ int main(int argc, char* argv[]) {
     // check_lgamma_double();
     
     test_fp16();
+
+    test_pown();
 
     passed();
 }

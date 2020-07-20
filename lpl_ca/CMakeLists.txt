@@ -23,9 +23,14 @@ set_target_properties(
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 target_include_directories(ca SYSTEM PUBLIC ${HSA_PATH}/include)
 target_include_directories(ca PUBLIC ${PROJECT_SOURCE_DIR}/src)
-find_library(
-    hsart NAMES libhsa-runtime64.so libhsa-runtime64.so.1 HINTS ${HSA_PATH}/lib)
-target_link_libraries(ca PUBLIC ${hsart})
+
+find_package(hsa-runtime64 REQUIRED CONFIG
+  PATHS
+    /opt/rocm/
+  PATH_SUFFIXES
+    cmake/hsa-runtime64)
+
+target_link_libraries(ca PUBLIC hsa-runtime64::hsa-runtime64 )
 target_compile_options(ca PUBLIC -DDISABLE_REDUCED_GPU_BLOB_COPY -Wall)
 
 install(TARGETS ca RUNTIME DESTINATION bin)

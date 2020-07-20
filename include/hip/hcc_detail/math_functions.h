@@ -430,6 +430,9 @@ inline
 float powf(float x, float y) { return __ocml_pow_f32(x, y); }
 __DEVICE__
 inline
+float powif(float base, int iexp) { return __ocml_pown_f32(base, iexp); }
+__DEVICE__
+inline
 float rcbrtf(float x) { return __ocml_rcbrt_f32(x); }
 __DEVICE__
 inline
@@ -985,6 +988,9 @@ inline
 double pow(double x, double y) { return __ocml_pow_f64(x, y); }
 __DEVICE__
 inline
+double powi(double base, int iexp) { return __ocml_pown_f64(base, iexp); }
+__DEVICE__
+inline
 double rcbrt(double x) { return __ocml_rcbrt_f64(x); }
 __DEVICE__
 inline
@@ -1412,6 +1418,7 @@ float func(float x, int y) \
   return func##f(x, y); \
 }
 __DEF_FLOAT_FUN2I(scalbn)
+__DEF_FLOAT_FUN2I(ldexp)
 
 template<class T>
 __DEVICE__ inline T min(T arg1, T arg2) {
@@ -1510,6 +1517,22 @@ __host__ inline static int min(int arg1, int arg2) {
 __host__ inline static int max(int arg1, int arg2) {
   return std::max(arg1, arg2);
 }
+
+__DEVICE__
+inline float pow(float base, int iexp) {
+  return powif(base, iexp);
+}
+
+__DEVICE__
+inline double pow(double base, int iexp) {
+  return powi(base, iexp);
+}
+
+__DEVICE__
+inline _Float16 pow(_Float16 base, int iexp) {
+  return __ocml_pown_f16(base, iexp);
+}
+
 #endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 
 #pragma pop_macro("__DEF_FLOAT_FUN")

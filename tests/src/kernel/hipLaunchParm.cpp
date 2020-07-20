@@ -571,6 +571,10 @@ __global__ void hipLaunchKernelStructFunc21(
 
 __global__ void vAdd(float* a) {}
 
+template<class T1, class T2>
+__global__ void myKernel(T1 a, T2 b) {}
+
+
 //---
 // Some wrapper macro for testing:
 #define WRAP(...) __VA_ARGS__
@@ -912,6 +916,18 @@ int main() {
     hipLaunchKernelGGL(HIP_KERNEL_NAME(vAdd), 1024, dim3(1), 0, 0, Ad);
     hipLaunchKernelGGL(HIP_KERNEL_NAME(vAdd), dim3(1024), 1, 0, 0, Ad);
     hipLaunchKernelGGL(HIP_KERNEL_NAME(vAdd), dim3(1024), dim3(1), 0, 0, Ad);
+
+    // Test: Passing macro to hipLaunchKernelGGL
+#define KERNEL_CONFIG  dim3(1024), dim3(1), 0, 0
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(vAdd), KERNEL_CONFIG, Ad);
+
+    // Test: Same thing with templates:
+    int a;
+    float b;
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(myKernel<int, float>), KERNEL_CONFIG, a, b);
+
+#define TYPE_PARAM_CONFIG int, float
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(myKernel<TYPE_PARAM_CONFIG>), KERNEL_CONFIG, a, b);
 
     // Test: Passing hipLaunchKernelGGL inside another macro:
     float e0;

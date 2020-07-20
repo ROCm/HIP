@@ -81,34 +81,6 @@ extern "C" hip::FatBinaryInfoType* __hipRegisterFatBinary(const void* data)
   return PlatformState::instance().addFatBinary(fbwrapper->binary);
 }
 
-bool ihipGetFuncAttributes(const char* func_name, amd::Program* program, hipFuncAttributes* func_attr) {
-  device::Program* dev_program
-    = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
-
-  const auto it = dev_program->kernels().find(std::string(func_name));
-  if (it == dev_program->kernels().cend()) {
-    DevLogPrintfError("Could not find the function %s \n", func_name);
-    return false;
-  }
-
-  const device::Kernel* kernel = it->second;
-  const device::Kernel::WorkGroupInfo* wginfo = kernel->workGroupInfo();
-  func_attr->sharedSizeBytes = static_cast<int>(wginfo->localMemSize_);
-  func_attr->binaryVersion = static_cast<int>(kernel->signature().version());
-  func_attr->cacheModeCA = 0;
-  func_attr->constSizeBytes = 0;
-  func_attr->localSizeBytes = wginfo->privateMemSize_;
-  func_attr->maxDynamicSharedSizeBytes = static_cast<int>(wginfo->availableLDSSize_
-                                                          - wginfo->localMemSize_);
-
-  func_attr->maxThreadsPerBlock = static_cast<int>(wginfo->size_);
-  func_attr->numRegs = static_cast<int>(wginfo->usedVGPRs_);
-  func_attr->preferredShmemCarveout = 0;
-  func_attr->ptxVersion = 30;
-
-  return true;
-}
-
 bool PlatformState::getShadowVarInfo(std::string var_name, hipModule_t hmod,
                                      void** var_addr, size_t* var_size) {
 
@@ -130,13 +102,6 @@ bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** va
                                                     var_addr, var_size);
 }
 
-namespace {
-const int HIP_ENABLE_DEFERRED_LOADING{[] () {
-  char *var = getenv("HIP_ENABLE_DEFERRED_LOADING");
-  return var ? atoi(var) : 1;
-}()};
-} /* namespace */
-
 extern "C" void __hipRegisterFunction(
   hip::FatBinaryInfoType* modules,
   const void*  hostFunction,
@@ -148,9 +113,15 @@ extern "C" void __hipRegisterFunction(
   dim3*        blockDim,
   dim3*        gridDim,
   int*         wSize) {
+  static int enable_deferred_loading { []() {
+    char *var = getenv("HIP_ENABLE_DEFERRED_LOADING");
+    return var ? atoi(var) : 1;
+  }() };
+
   hip::Function* func = new hip::Function(std::string(deviceName), modules);
   PlatformState::instance().registerStatFunction(hostFunction, func);
-  if (!HIP_ENABLE_DEFERRED_LOADING) {
+
+  if (!enable_deferred_loading) {
     HIP_INIT();
     hipFunction_t hfunc = nullptr;
     hipError_t hip_error = hipSuccess;

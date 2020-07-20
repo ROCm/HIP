@@ -92,15 +92,23 @@ amd::HostQueue* getQueue(hipStream_t stream) {
   }
 }
 
+// ================================================================================================
 amd::HostQueue* getNullStream(amd::Context& ctx) {
- for (auto& it : g_devices) {
-   if (it->asContext() == &ctx) {
-     return it->NullStream();
-   }
- }
- return nullptr;
+  for (auto& it : g_devices) {
+    if (it->asContext() == &ctx) {
+      return it->NullStream();
+    }
+  }
+  // If it's a pure SVM allocation with system memory access, then it shouldn't matter which device
+  // runtime selects by default
+  if (hip::host_device->asContext() == &ctx) {
+    // Return current...
+    return getNullStream();
+  }
+  return nullptr;
 }
 
+// ================================================================================================
 amd::HostQueue* getNullStream() {
   Device* device = getCurrentDevice();
   return device ? device->NullStream() : nullptr;
@@ -185,9 +193,6 @@ hipError_t hipCtxDestroy(hipCtx_t ctx) {
   if (dev == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
-
-  // Release last tracked command
-  hip::getNullStream()->setLastQueuedCommand(nullptr);
 
   // Need to remove the ctx of calling thread if its the top one
   if (!g_ctxtStack.empty() && g_ctxtStack.top() == dev) {
