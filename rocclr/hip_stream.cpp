@@ -161,7 +161,7 @@ void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream
 
   // Check if we have to wait anything
   if (eventWaitList.size() > 0) {
-    amd::Command* command = new amd::Marker(*blocking_queue, false, eventWaitList);
+    amd::Command* command = new amd::Marker(*blocking_queue, kMarkerDisableFlush, eventWaitList);
     if (command != nullptr) {
       command->enqueue();
       command->release();
@@ -322,7 +322,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
   amd::Command* command = hostQueue->getLastQueuedCommand(true);
   if (command == nullptr) {
     amd::Command::EventWaitList eventWaitList;
-    command = new amd::Marker(*hostQueue, false, eventWaitList);
+    command = new amd::Marker(*hostQueue, kMarkerDisableFlush, eventWaitList);
     command->enqueue();
   }
   amd::Event& event = command->event();

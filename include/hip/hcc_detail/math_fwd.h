@@ -243,6 +243,9 @@ __attribute__((pure))
 float __ocml_pow_f32(float, float);
 __device__
 __attribute__((pure))
+float __ocml_pown_f32(float, int);
+__device__
+__attribute__((pure))
 float __ocml_rcbrt_f32(float);
 __device__
 __attribute__((const))
@@ -553,6 +556,9 @@ double __ocml_ncdfinv_f64(double);
 __device__
 __attribute__((pure))
 double __ocml_pow_f64(double, double);
+__device__
+__attribute__((pure))
+double __ocml_pown_f64(double, int);
 __device__
 __attribute__((pure))
 double __ocml_rcbrt_f64(double);

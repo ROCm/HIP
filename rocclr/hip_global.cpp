@@ -19,7 +19,7 @@ DeviceVar::DeviceVar(std::string name, hipModule_t hmod) : shadowVptr(nullptr), 
   }
 
   if(!dev_program->createGlobalVarObj(&amd_mem_obj_, &device_ptr_, &size_, name.c_str())) {
-    DevLogPrintfError("Cannot create Global Var obj for symbol: %s \n", name);
+    DevLogPrintfError("Cannot create Global Var obj for symbol: %s \n", name.c_str());
     guarantee(false);
   }
 
@@ -54,13 +54,13 @@ DeviceFunc::DeviceFunc(std::string name, hipModule_t hmod) : dflock_("function l
 
   const amd::Symbol *symbol = program->findSymbol(name.c_str());
   if (symbol == nullptr) {
-    DevLogPrintfError("Cannot find Symbol with name: %s \n", name);
+    DevLogPrintfError("Cannot find Symbol with name: %s \n", name.c_str());
     guarantee(false);
   }
 
   kernel_ = new amd::Kernel(*program, *symbol, name);
   if (kernel_ == nullptr) {
-    DevLogPrintfError("Cannot create kernel with name: %s \n", name);
+    DevLogPrintfError("Cannot create kernel with name: %s \n", name.c_str());
     guarantee(false);
   }
 }
@@ -98,7 +98,7 @@ hipError_t Function::getDynFunc(hipFunction_t* hfunc, hipModule_t hmod) {
 hipError_t Function::getStatFunc(hipFunction_t* hfunc, int deviceId) {
   guarantee(modules_ != nullptr);
   guarantee(deviceId >= 0);
-  guarantee(deviceId < modules_->size());
+  guarantee(static_cast<size_t>(deviceId) < modules_->size());
 
   hipModule_t module = (*modules_)[deviceId].first;
   FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;
@@ -121,7 +121,7 @@ hipError_t Function::getStatFunc(hipFunction_t* hfunc, int deviceId) {
 hipError_t Function::getStatFuncAttr(hipFuncAttributes* func_attr, int deviceId) {
   guarantee(modules_ != nullptr);
   guarantee(deviceId >= 0);
-  guarantee(deviceId < modules_->size());
+  guarantee(static_cast<size_t>(deviceId) < modules_->size());
 
   hipModule_t module = (*modules_)[deviceId].first;
   FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;
@@ -141,11 +141,19 @@ hipError_t Function::getStatFuncAttr(hipFuncAttributes* func_attr, int deviceId)
 
   amd::Kernel* kernel = dFunc_[deviceId]->kernel();
   const device::Kernel::WorkGroupInfo* wginfo = kernel->getDeviceKernel(*devices[deviceId])->workGroupInfo();
+  func_attr->sharedSizeBytes = static_cast<int>(wginfo->localMemSize_);
+  func_attr->binaryVersion = static_cast<int>(kernel->signature().version());
+  func_attr->cacheModeCA = 0;
+  func_attr->constSizeBytes = 0;
   func_attr->localSizeBytes = wginfo->privateMemSize_;
-  func_attr->sharedSizeBytes = wginfo->localMemSize_;
-  func_attr->maxDynamicSharedSizeBytes = wginfo->availableLDSSize_ - wginfo->localMemSize_;
-  func_attr->maxThreadsPerBlock = wginfo->size_;
-  func_attr->numRegs = wginfo->usedVGPRs_;
+  func_attr->maxDynamicSharedSizeBytes = static_cast<int>(wginfo->availableLDSSize_
+                                                          - wginfo->localMemSize_);
+
+  func_attr->maxThreadsPerBlock = static_cast<int>(wginfo->size_);
+  func_attr->numRegs = static_cast<int>(wginfo->usedVGPRs_);
+  func_attr->preferredShmemCarveout = 0;
+  func_attr->ptxVersion = 30;
+
 
   return hipSuccess;
 }
@@ -166,7 +174,7 @@ Var::~Var() {
 
 hipError_t Var::getDeviceVar(DeviceVar** dvar, int deviceId, hipModule_t hmod) {
   guarantee(deviceId >= 0);
-  guarantee(deviceId < g_devices.size());
+  guarantee(static_cast<size_t>(deviceId) < g_devices.size());
   guarantee(dVar_.size() == g_devices.size());
 
   if (dVar_[deviceId] == nullptr) {
@@ -179,7 +187,7 @@ hipError_t Var::getDeviceVar(DeviceVar** dvar, int deviceId, hipModule_t hmod) {
 
 hipError_t Var::getStatDeviceVar(DeviceVar** dvar, int deviceId) {
   guarantee(deviceId >= 0);
-  guarantee(deviceId < g_devices.size());
+  guarantee(static_cast<size_t>(deviceId) < g_devices.size());
 
   hipModule_t module = (*modules_)[deviceId].first;
   FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;

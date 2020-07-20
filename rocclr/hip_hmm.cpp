@@ -112,7 +112,8 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr, size_t count, int device,
 hipError_t hipMemAdvise(const void* dev_ptr, size_t count, hipMemoryAdvise advice, int device) {
   HIP_INIT_API(hipMemAdvise, dev_ptr, count, advice, device);
 
-  if ((dev_ptr == nullptr) || (count == 0) || (device >= g_devices.size())) {
+  if ((dev_ptr == nullptr) || (count == 0) ||
+      (static_cast<size_t>(device) >= g_devices.size())) {
     HIP_RETURN(hipErrorInvalidValue);
   }
   amd::Device* dev = g_devices[device]->devices()[0];

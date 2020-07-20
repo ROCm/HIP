@@ -145,5 +145,6 @@ int main(int argc, char* argv[]) {
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeKernelExecTimeout, props.kernelExecTimeoutEnabled));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCanMapHostMemory, props.canMapHostMemory));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeEccEnabled, props.ECCEnabled));
+    CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeAsicRevision, props.asicRevision));
     passed();
 };

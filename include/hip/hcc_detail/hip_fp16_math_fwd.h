@@ -44,6 +44,7 @@ extern "C"
     __device__ __attribute__((pure)) _Float16 __ocml_log_f16(_Float16);
     __device__ __attribute__((pure)) _Float16 __ocml_log10_f16(_Float16);
     __device__ __attribute__((pure)) _Float16 __ocml_log2_f16(_Float16);
+    __device__ __attribute__((pure)) _Float16 __ocml_pown_f16(_Float16, int);
     __device__ __attribute__((const)) _Float16 __llvm_amdgcn_rcp_f16(_Float16);
     __device__ __attribute__((const)) _Float16 __ocml_rint_f16(_Float16);
     __device__ __attribute__((const)) _Float16 __ocml_rsqrt_f16(_Float16);

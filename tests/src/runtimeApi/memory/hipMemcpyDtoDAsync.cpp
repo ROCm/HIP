@@ -40,6 +40,10 @@ int main() {
 
     HIPCHECK(hipGetDeviceCount(&numDevices));
     if (numDevices > 1) {
+
+      int canAccessPeer = 0;
+      hipDeviceCanAccessPeer(&canAccessPeer, 0, 1);
+      if (canAccessPeer) {
         HIPCHECK(hipSetDevice(0));
         unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
         HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, false);
@@ -75,6 +79,9 @@ int main() {
         HIPCHECK(hipFree(X_d));
         HIPCHECK(hipFree(Y_d));
         HIPCHECK(hipFree(Z_d));
+      } else {
+        std::cout<<"Machine does not seem to have P2P Capabilities, Empty Pass"<<std::endl;
+      }
     }
 
     passed();

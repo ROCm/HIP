@@ -44,6 +44,27 @@ amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
 }
 
 // ================================================================================================
+amd::Memory* getMemoryObjectWithOffset(const void* ptr, const size_t size) {
+  size_t offset;
+  amd::Memory* memObj = getMemoryObject(ptr, offset);
+
+  if (memObj != nullptr) {
+    assert(size <= (memObj->getSize() - offset));
+    memObj = new (memObj->getContext()) amd::Buffer(*memObj, memObj->getMemFlags(), offset, size);
+    if (memObj == nullptr) {;
+      return nullptr;
+    }
+
+    if (!memObj->create(nullptr)) {
+      memObj->release();
+      return nullptr;
+    }
+  }
+
+  return memObj;
+}
+
+// ================================================================================================
 hipError_t ihipFree(void *ptr)
 {
   if (ptr == nullptr) {
@@ -157,10 +178,9 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
               *srcMemory->asBuffer(), sOffset, sizeBytes, dst);
     isAsync = false;
   } else if ((srcMemory != nullptr) && (dstMemory != nullptr)) {
-    if ((kind == hipMemcpyDeviceToDevice) &&
-        // Check if the queue device doesn't match the device on any memory object. Hence
-        // it's a P2P transfer, because the app has requested access to another GPU
-        (srcMemory->getContext().devices()[0] != dstMemory->getContext().devices()[0])) {
+    // Check if the queue device doesn't match the device on any memory object. Hence
+    // it's a P2P transfer, because the app has requested access to another GPU
+    if (srcMemory->getContext().devices()[0] != dstMemory->getContext().devices()[0]) {
       command = new amd::CopyMemoryP2PCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
           *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
       if (command == nullptr) {
@@ -234,6 +254,10 @@ hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
       flags & (hipHostMallocCoherent | hipHostMallocMapped) ||
      (!(flags & hipHostMallocNonCoherent) && HIP_HOST_COHERENT)) {
     ihipFlags |= CL_MEM_SVM_ATOMICS;
+  }
+
+  if (flags & hipHostMallocNumaUser) {
+    ihipFlags |= CL_MEM_FOLLOW_USER_NUMA_POLICY;
   }
 
   HIP_RETURN(ihipMalloc(ptr, sizeBytes, ihipFlags), *ptr);
@@ -1662,11 +1686,10 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
   size_t offset = 0;
   auto aligned_dst = amd::alignUp(reinterpret_cast<address>(dst), sizeof(uint64_t));
 
-  amd::Memory* memory = getMemoryObject(aligned_dst, offset);
+  amd::Memory* memory = getMemoryObject(dst, offset);
   if (memory == nullptr) {
-    // Host alloced memory
-    memset(dst, value, sizeBytes);
-    return hipSuccess;
+    // dst ptr is host ptr hence error
+    return hipErrorInvalidValue;
   }
 
   hipError_t hip_error = hipSuccess;
@@ -1678,6 +1701,7 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
   if (sizeBytes/sizeof(int64_t) > 0) {
     n_head_bytes = static_cast<uint8_t*>(aligned_dst) - static_cast<uint8_t*>(dst);
     n_tail_bytes = ((sizeBytes - n_head_bytes) % sizeof(int64_t));
+    offset = offset + n_head_bytes;
     size_t n_bytes = sizeBytes - n_tail_bytes - n_head_bytes;
     if (n_bytes > 0) {
       if (valueSize == sizeof(int8_t)) {
@@ -1795,7 +1819,8 @@ hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr,
   amd::Coord3D origin(offset);
   amd::Coord3D region(pitchedDevPtr.xsize, pitchedDevPtr.ysize, extent.depth);
   amd::BufferRect rect;
-  if (!rect.create(static_cast<size_t*>(origin), static_cast<size_t*>(region), pitchedDevPtr.pitch, 0)) {
+  if (pitchedDevPtr.pitch == 0 ||
+      !rect.create(static_cast<size_t*>(origin), static_cast<size_t*>(region), pitchedDevPtr.pitch, 0)) {
     return hipErrorInvalidValue;
   }
 
@@ -1826,12 +1851,7 @@ hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr,
       command->release();
     }
   } else {
-    for (size_t slice = 0; slice < extent.depth; slice++) {
-      for (size_t row = 0; row < extent.height; row++) {
-        const size_t rowOffset = rect.offset(0, row, slice);
-        std::memset(pitchedDevPtr.ptr, value, extent.width);
-      }
-    }
+	return hipErrorInvalidValue;
   }
 
   return hipSuccess;
@@ -1878,36 +1898,19 @@ hipError_t hipMemAllocHost(void** ptr, size_t size) {
 hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* dev_ptr) {
   HIP_INIT_API(hipIpcGetMemHandle, handle, dev_ptr);
 
-  size_t offset = 0;
-  amd::Memory* amd_mem_obj = nullptr;
-  device::Memory* dev_mem_obj = nullptr;
+  amd::Device* device = nullptr;
   ihipIpcMemHandle_t* ihandle = nullptr;
 
   if ((handle == nullptr) || (dev_ptr == nullptr)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  /* Get AMD::Memory object corresponding to this pointer */
-  amd_mem_obj = getMemoryObject(dev_ptr, offset);
-  if (amd_mem_obj == nullptr) {
-    DevLogPrintfError("Cannot retrieve amd_mem_obj for dev_ptr: 0x%x with offset: %u \n",
-                      dev_ptr, offset);
-    HIP_RETURN(hipErrorInvalidDevicePointer);
-  }
-
-  /* Get Device::Memory object pointer */
-  dev_mem_obj = amd_mem_obj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0],false);
-  if (dev_mem_obj == nullptr) {
-    DevLogPrintfError("Cannot get Device memory for amd_mem_obj: 0x%x dev_ptr: 0x%x offset: %u \n",
-                      amd_mem_obj, dev_ptr, offset);
-    HIP_RETURN(hipErrorInvalidDevicePointer);
-  }
-
-  /* Create an handle for IPC. Store the memory size inside the handle */
+  device = hip::getCurrentDevice()->devices()[0];
   ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(handle);
-  if(!dev_mem_obj->IpcCreate(offset, &(ihandle->psize), &(ihandle->ipc_handle))) {
+
+  if(!device->IpcCreate(dev_ptr, &(ihandle->psize), &(ihandle->ipc_handle))) {
     DevLogPrintfError("IPC memory creation failed for memory: 0x%x", dev_ptr);
-    HIP_RETURN(hipErrorInvalidValue);
+    HIP_RETURN(hipErrorInvalidDevicePointer);
   }
 
   HIP_RETURN(hipSuccess);
@@ -1928,14 +1931,10 @@ hipError_t hipIpcOpenMemHandle(void** dev_ptr, hipIpcMemHandle_t handle, unsigne
   device = hip::getCurrentDevice()->devices()[0];
   ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(&handle);
 
-  amd_mem_obj = device->IpcAttach(&(ihandle->ipc_handle), ihandle->psize, flags, dev_ptr);
-  if (amd_mem_obj == nullptr) {
+  if(!device->IpcAttach(&(ihandle->ipc_handle), ihandle->psize, flags, dev_ptr)) {
     DevLogPrintfError("cannot attach ipc_handle: with ipc_size: %u flags: %u", ihandle->psize, flags);
     HIP_RETURN(hipErrorInvalidDevicePointer);
   }
-
-  /* Add the memory to the MemObjMap */
-  amd::MemObjMap::AddMemObj(*dev_ptr, amd_mem_obj);
 
   HIP_RETURN(hipSuccess);
 }
@@ -1953,28 +1952,14 @@ hipError_t hipIpcCloseMemHandle(void* dev_ptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  /* Get the amd::Memory object */
-  amd_mem_obj = getMemoryObject(dev_ptr, offset);
-  if (amd_mem_obj == nullptr) {
-    HIP_RETURN(hipErrorInvalidDevicePointer);
-  }
-
   /* Call IPC Detach from Device class */
   device = hip::getCurrentDevice()->devices()[0];
   if (device == nullptr) {
     HIP_RETURN(hipErrorNoDevice);
   }
 
-  /* Remove the memory from MemObjMap */
-  if (amd_mem_obj->getSvmPtr() != nullptr) {
-    amd::MemObjMap::RemoveMemObj(amd_mem_obj->getSvmPtr());
-  } else {
-    DevLogPrintfError("Does not have SVM or Host Mem for 0x%x, crash here!", dev_ptr);
-    guarantee(false);
-  }
-
   /* detach the memory */
-  if (!device->IpcDetach(*amd_mem_obj)){
+  if (!device->IpcDetach(dev_ptr)){
      HIP_RETURN(hipErrorInvalidHandle);
   }
 

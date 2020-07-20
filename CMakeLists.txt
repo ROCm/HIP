@@ -4,6 +4,8 @@ project(hip)
 #  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr ..
 #  cmake -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr -DOPENCL_DIR=/path/to/opencl/api/opencl -DCMAKE_PREFIX_PATH=/path/to/rocclr/build/or/install/directory ..
 
+set(BUILD_SHARED_LIBS ON  CACHE BOOL "Build shared library (.so) or static lib (.a) ")
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 #############################
@@ -626,18 +628,13 @@ if(POLICY CMP0037)
     cmake_policy(PUSH)
     cmake_policy(SET CMP0037 OLD)
 endif()
-file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/fixnames
-        CONTENT "pwd; for i in *.deb; do mv \"\$i\" \"\${i/.deb/-amd64.deb}\" ; done
-for i in *.rpm ; do mv \$i \${i/.rpm/.x86_64.rpm} ; done
-")
+
 if(HIP_PLATFORM STREQUAL "hcc")
     add_custom_target(package
-    COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     DEPENDS pkg_hip_base pkg_hip_hcc pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
 elseif(HIP_PLATFORM STREQUAL "rocclr")
     add_custom_target(package
-    COMMAND bash ${PROJECT_BINARY_DIR}/fixnames
     WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
     DEPENDS pkg_hip_base hip_on_rocclr pkg_hip_nvcc pkg_hip_doc pkg_hip_samples)
 endif()

@@ -89,8 +89,7 @@ hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
   if (num_code_objs == devices.size()) {
     return hipSuccess;
   } else {
-    DevLogError("hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
-    guarantee(false);
+    guarantee(false && "hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
     return hipErrorNoBinaryForGpu;
   }
 }

@@ -121,7 +121,7 @@ extern int HIP_TRACE_API;
 #endif
 
 // TODO-HCC add a dummy implementation of assert, need to replace with a proper kernel exit call.
-#if __HIP_DEVICE_COMPILE__ == 1
+#if defined(__HCC__) && __HIP_DEVICE_COMPILE__ == 1
 #undef assert
 #define assert(COND)                                                                               \
     {                                                                                              \
@@ -435,10 +435,12 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
     hipLaunchKernel(k, numBlocks, dimBlocks, _Args, sharedMemBytes, stream);
 }
 #else
-#define hipLaunchKernelGGL(kernelName, numblocks, numthreads, memperblock, streamId, ...)          \
+#define hipLaunchKernelGGLInternal(kernelName, numBlocks, numThreads, memPerBlock, streamId, ...)  \
     do {                                                                                           \
-        kernelName<<<(numblocks), (numthreads), (memperblock), (streamId)>>>(__VA_ARGS__);         \
+        kernelName<<<(numBlocks), (numThreads), (memPerBlock), (streamId)>>>(__VA_ARGS__);         \
     } while (0)
+
+#define hipLaunchKernelGGL(kernelName, ...)  hipLaunchKernelGGLInternal((kernelName), __VA_ARGS__)
 #endif
 
 #include <hip/hip_runtime_api.h>
@@ -446,22 +448,22 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
 #pragma push_macro("__DEVICE__")
 #define __DEVICE__ static __device__ __forceinline__
 
-extern "C" __device__ size_t __ockl_get_local_id(uint);
+extern "C" __device__ __attribute__((const)) size_t __ockl_get_local_id(uint);
 __DEVICE__ uint __hip_get_thread_idx_x() { return __ockl_get_local_id(0); }
 __DEVICE__ uint __hip_get_thread_idx_y() { return __ockl_get_local_id(1); }
 __DEVICE__ uint __hip_get_thread_idx_z() { return __ockl_get_local_id(2); }
 
-extern "C" __device__ size_t __ockl_get_group_id(uint);
+extern "C" __device__ __attribute__((const)) size_t __ockl_get_group_id(uint);
 __DEVICE__ uint __hip_get_block_idx_x() { return __ockl_get_group_id(0); }
 __DEVICE__ uint __hip_get_block_idx_y() { return __ockl_get_group_id(1); }
 __DEVICE__ uint __hip_get_block_idx_z() { return __ockl_get_group_id(2); }
 
-extern "C" __device__ size_t __ockl_get_local_size(uint);
+extern "C" __device__ __attribute__((const)) size_t __ockl_get_local_size(uint);
 __DEVICE__ uint __hip_get_block_dim_x() { return __ockl_get_local_size(0); }
 __DEVICE__ uint __hip_get_block_dim_y() { return __ockl_get_local_size(1); }
 __DEVICE__ uint __hip_get_block_dim_z() { return __ockl_get_local_size(2); }
 
-extern "C" __device__ size_t __ockl_get_num_groups(uint);
+extern "C" __device__ __attribute__((const)) size_t __ockl_get_num_groups(uint);
 __DEVICE__ uint __hip_get_grid_dim_x() { return __ockl_get_num_groups(0); }
 __DEVICE__ uint __hip_get_grid_dim_y() { return __ockl_get_num_groups(1); }
 __DEVICE__ uint __hip_get_grid_dim_z() { return __ockl_get_num_groups(2); }

@@ -74,6 +74,11 @@ extern "C" __device__ __attribute__((convergent)) void __ockl_multi_grid_sync(vo
 
 extern "C" __device__ void __ockl_atomic_add_noret_f32(float*, float);
 
+extern "C" __device__ __attribute__((convergent)) int __ockl_wgred_add_i32(int a);
+extern "C" __device__ __attribute__((convergent)) int __ockl_wgred_and_i32(int a);
+extern "C" __device__ __attribute__((convergent)) int __ockl_wgred_or_i32(int a);
+
+
 // Introduce local address space
 #define __local __attribute__((address_space(3)))
 

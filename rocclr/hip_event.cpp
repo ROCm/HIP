@@ -99,7 +99,7 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
     // Events are the same, which indicates the stream is empty and likely
     // eventRecord is called on another stream. For such cases insert and measure a
     // marker.
-    amd::Command* command = new amd::Marker(*event_->command().queue(), false);
+    amd::Command* command = new amd::Marker(*event_->command().queue(), kMarkerDisableFlush);
     command->enqueue();
     command->awaitCompletion();
     ms = static_cast<float>(static_cast<int64_t>(command->event().profilingInfo().end_ -
@@ -127,7 +127,7 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
   amd::Command::EventWaitList eventWaitList;
   eventWaitList.push_back(event_);
 
-  amd::Command* command = new amd::Marker(*hostQueue, false, eventWaitList);
+  amd::Command* command = new amd::Marker(*hostQueue, kMarkerDisableFlush, eventWaitList);
   if (command == NULL) {
     return hipErrorOutOfMemory;
   }
@@ -230,6 +230,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
   HIP_RETURN(eStart->elapsedTime(*eStop, *ms), "Elapsed Time = ", *ms);
 }
 
+// ================================================================================================
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   HIP_INIT_API(hipEventRecord, event, stream);
 
@@ -237,19 +238,21 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     HIP_RETURN(hipErrorInvalidHandle);
   }
 
+  hip::Event* e = reinterpret_cast<hip::Event*>(event);
+  amd::ScopedLock lock(e->lock());
+
   amd::HostQueue* queue = hip::getQueue(stream);
   amd::Command* command = queue->getLastQueuedCommand(true);
   if (command == nullptr) {
-    command = new amd::Marker(*queue, false);
+    command = new amd::Marker(*queue, kMarkerDisableFlush);
     command->enqueue();
   }
 
-  hip::Event* e = reinterpret_cast<hip::Event*>(event);
   e->addMarker(queue, command, true);
-
   HIP_RETURN(hipSuccess);
 }
 
+// ================================================================================================
 hipError_t hipEventSynchronize(hipEvent_t event) {
   HIP_INIT_API(hipEventSynchronize, event);
 
