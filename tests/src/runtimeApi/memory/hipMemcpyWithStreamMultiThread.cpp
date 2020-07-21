@@ -467,6 +467,7 @@ void HipMemcpyWithStreamMultiThreadtests::TestkindDefaultForDtoD(void) {
                       &A_h[0], &B_h[0], &C_h[0], N, false);
 
   for (int i=1; i < numDevices; ++i) {
+    HIPCHECK(hipSetDevice(i));
     HIPCHECK(hipMalloc(&A_d[i], Nbytes));
     HIPCHECK(hipMalloc(&B_d[i], Nbytes));
     HIPCHECK(hipMalloc(&C_d[i], Nbytes));
@@ -476,6 +477,7 @@ void HipMemcpyWithStreamMultiThreadtests::TestkindDefaultForDtoD(void) {
 
   hipStream_t stream[numDevices];
   for (int i=0; i < numDevices; ++i) {
+    HIPCHECK(hipSetDevice(i));
     HIPCHECK(hipStreamCreate(&stream[i]));
   }
 
