@@ -194,6 +194,7 @@ else()
 
 endif()
 
+set_target_properties(amdhip64 PROPERTIES LINK_FLAGS_RELEASE -s)
 set_target_properties(amdhip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
 add_library(host INTERFACE)
 target_link_libraries(host INTERFACE hip::amdhip64)
