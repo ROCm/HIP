@@ -193,7 +193,16 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
         return hipErrorInvalidValue;
       }
     } else {
-      command = new amd::CopyMemoryCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
+      amd::HostQueue* pQueue = &queue;
+      if (queueDevice != srcMemory->getContext().devices()[0]) {
+        pQueue = hip::getNullStream(srcMemory->getContext());
+        amd::Command* cmd = queue.getLastQueuedCommand(true);
+        if (cmd != nullptr) {
+          waitList.push_back(cmd);
+        }
+      }
+
+      command = new amd::CopyMemoryCommand(*pQueue, CL_COMMAND_COPY_BUFFER, waitList,
           *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
     }
   }
