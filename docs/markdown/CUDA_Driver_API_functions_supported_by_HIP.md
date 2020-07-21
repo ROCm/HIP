@@ -1027,7 +1027,6 @@
 | `cuMemAddressReserve`                                     |                               | 10.2             |
 | `cuMemCreate`                                             |                               | 10.2             |
 | `cuMemExportToShareableHandle`                            |                               | 10.2             |
-
 | `cuMemGetAccess`                                          |                               | 10.2             |
 | `cuMemGetAllocationGranularity`                           |                               | 10.2             |
 | `cuMemGetAllocationPropertiesFromHandle`                  |                               | 10.2             |
