@@ -288,6 +288,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
   profileNDRange = (startEvent != nullptr && stopEvent != nullptr);
 
+  // Flag set to 1 signifies that kernel can be launched in anyorder
+  if (flags & hipExtAnyOrderLaunch) {
+      params |= amd::NDRangeKernelCommand::AnyOrderLaunch;
+  }
+
   amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(
     *queue, waitList, *kernel, ndrange, sharedMemBytes,
     params, gridId, numGrids, prevGridSum, allGridSum, firstDevice, profileNDRange);
