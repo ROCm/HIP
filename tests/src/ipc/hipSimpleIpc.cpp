@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
@@ -43,6 +43,7 @@ void single_process() {
 
   // Negative, Make sure we return error when an offset of original ptr is passed
   ipc_offset_dptr = ipc_dptr + (OFFSET * sizeof(int));
+  // HIP API return value differs from CUDA's return type
   assert(hipErrorInvalidDevicePointer == hipIpcGetMemHandle(&ipc_offset_handle, ipc_offset_dptr));
 
   // Get handle for the device_ptr

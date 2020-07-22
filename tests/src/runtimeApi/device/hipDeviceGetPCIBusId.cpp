@@ -26,7 +26,7 @@
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-hipDeviceGetAttribute --tests 0x1
- * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-lspci --tests 0x2
+ * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-lspci --tests 0x2 EXCLUDE_HIP_PLATFORM nvcc
  * HIT_END
  */
 
@@ -106,8 +106,13 @@ bool compareHipDeviceGetPCIBusIdWithLspci() {
   getPciBusId(deviceCount, hipDeviceList);
 
   // Get lspci device list and compare with hip device list
+#if defined(__CUDA_ARCH__)
+  char const *command = "lspci -D | grep controller | grep NVIDIA | "
+                        "cut -d ' ' -f 1";
+#else
   char const *command = "lspci -D | grep controller | grep AMD/ATI | "
                         "cut -d ' ' -f 1";
+#endif
   fpipe = popen(command, "r");
 
   if (fpipe == nullptr) {

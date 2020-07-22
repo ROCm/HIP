@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     // Check if priorities are indeed supported
     if ((priority_low + priority_high) != 0) {
-      failed("Priorities are not supported");
+      passed(); // exit the test since priorities are not supported
     }
 
     // Checking Priority of default stream
