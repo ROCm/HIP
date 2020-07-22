@@ -140,6 +140,19 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
 void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record) {
   amd::ScopedLock lock(lock_);
 
+  if (queue->properties().test(CL_QUEUE_PROFILING_ENABLE)) {
+    if (command == nullptr) {
+      command = queue->getLastQueuedCommand(true);
+      if (command == nullptr) {
+        command = new amd::Marker(*queue, kMarkerDisableFlush);
+        command->enqueue();
+      }
+    }
+  } else if (command == nullptr) {
+    command = new hip::ProfileMarker(*queue, false);
+    command->enqueue();
+  }
+
   if (event_ == &command->event()) return;
 
   if (event_ != nullptr) {
@@ -239,16 +252,9 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   }
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
-  amd::ScopedLock lock(e->lock());
-
   amd::HostQueue* queue = hip::getQueue(stream);
-  amd::Command* command = queue->getLastQueuedCommand(true);
-  if (command == nullptr) {
-    command = new amd::Marker(*queue, kMarkerDisableFlush);
-    command->enqueue();
-  }
 
-  e->addMarker(queue, command, true);
+  e->addMarker(queue, nullptr, true);
   HIP_RETURN(hipSuccess);
 }
 

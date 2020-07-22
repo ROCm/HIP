@@ -249,7 +249,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
   size_t localWorkSize[3] = { blockDimX, blockDimY, blockDimZ };
   amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
   amd::Command::EventWaitList waitList;
-
+  bool profileNDRange = false;
   address kernargs = nullptr;
 
   // 'extra' is a struct that contains the following info: {
@@ -273,13 +273,16 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                desc.type_ == T_POINTER/*svmBound*/);
     } else {
       assert(extra == nullptr);
-      kernel->parameters().set(i, desc.size_, kernelParams[i], desc.type_ == T_POINTER/*svmBound*/);
+      kernel->parameters().set(i, desc.size_, kernelParams[i],
+                               desc.type_ == T_POINTER/*svmBound*/);
     }
   }
 
+  profileNDRange = (startEvent != nullptr && stopEvent != nullptr);
+
   amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(
     *queue, waitList, *kernel, ndrange, sharedMemBytes,
-    params, gridId, numGrids, prevGridSum, allGridSum, firstDevice);
+    params, gridId, numGrids, prevGridSum, allGridSum, firstDevice, profileNDRange);
   if (!command) {
     return hipErrorOutOfMemory;
   }
@@ -472,7 +475,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
   uint64_t prevGridSize = 0;
   uint32_t firstDevice = 0;
 
-  // Sync the execution streams on all devices 
+  // Sync the execution streams on all devices
   if ((flags & hipCooperativeLaunchMultiDeviceNoPreSync) == 0) {
     for (int i = 0; i < numDevices; ++i) {
       amd::HostQueue* queue =
@@ -520,7 +523,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
     prevGridSize += launch.gridDim.x * launch.gridDim.y * launch.gridDim.z;
   }
 
-  // Sync the execution streams on all devices 
+  // Sync the execution streams on all devices
   if ((flags & hipCooperativeLaunchMultiDeviceNoPostSync) == 0) {
     for (int i = 0; i < numDevices; ++i) {
       amd::HostQueue* queue =

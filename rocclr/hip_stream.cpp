@@ -22,6 +22,9 @@
 #include "hip_internal.hpp"
 #include "hip_event.hpp"
 #include "thread/monitor.hpp"
+#include "hip_prof_api.h"
+
+extern api_callbacks_table_t callbacks_table;
 
 static amd::Monitor streamSetLock{"Guards global stream set"};
 static std::unordered_set<hip::Stream*> streamSet;
@@ -50,7 +53,12 @@ Stream::Stream(hip::Device* dev, Priority p,
 
 // ================================================================================================
 bool Stream::Create() {
-  cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
+  // Enable queue profiling if a profiler is attached which sets the callback_table flag
+  // or if we force it with env var. This would enable time stamp collection for every
+  // command submitted to the stream(queue).
+  cl_command_queue_properties properties = (callbacks_table.is_enabled() ||
+                                            HIP_FORCE_QUEUE_PROFILING) ?
+                                             CL_QUEUE_PROFILING_ENABLE : 0;
   amd::CommandQueue::Priority p;
   switch (priority_) {
     case Priority::High:
@@ -64,8 +72,9 @@ bool Stream::Create() {
       p = amd::CommandQueue::Priority::Normal;
       break;
   }
-  amd::HostQueue* queue = new amd::HostQueue(*device_->asContext(), *device_->devices()[0], properties,
-                             amd::CommandQueue::RealTimeDisabled, p, cuMask_);
+  amd::HostQueue* queue = new amd::HostQueue(*device_->asContext(), *device_->devices()[0],
+                                             properties, amd::CommandQueue::RealTimeDisabled,
+                                             p, cuMask_);
 
   // Create a host queue
   bool result = (queue != nullptr) ? queue->create() : false;

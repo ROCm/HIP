@@ -26,12 +26,13 @@
 
 namespace hip {
 
-class TimerMarker: public amd::Marker {
+class ProfileMarker: public amd::Marker {
 public:
-  TimerMarker(amd::HostQueue& queue) : amd::Marker(queue, false) {
+  ProfileMarker(amd::HostQueue& queue, bool disableFlush)
+  : amd::Marker(queue, disableFlush) {
     profilingInfo_.enabled_ = true;
     profilingInfo_.callback_ = nullptr;
-    profilingInfo_.start_ = profilingInfo_.end_ = 0;
+    profilingInfo_.clear();
   }
 };
 
