@@ -477,9 +477,6 @@ if(HIP_PLATFORM STREQUAL "hcc" OR HIP_PLATFORM STREQUAL "rocclr")
     install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
 endif()
 
-# Install .hipInfo
-install(FILES ${PROJECT_BINARY_DIR}/.hipInfo DESTINATION lib)
-
 # Install .hipVersion
 install(FILES ${PROJECT_BINARY_DIR}/.hipVersion DESTINATION bin)
 
