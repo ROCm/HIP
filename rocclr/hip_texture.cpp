@@ -269,8 +269,10 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
   case hipResourceTypePitch2D: {
     const cl_channel_order channelOrder = hip::getCLChannelOrder(hip::getNumChannels(pResDesc->res.pitch2D.desc), pTexDesc->sRGB);
     const cl_channel_type channelType = hip::getCLChannelType(hip::getArrayFormat(pResDesc->res.pitch2D.desc), pTexDesc->readMode);
+    const amd::Image::Format imageFormat({channelOrder, channelType});
     const cl_mem_object_type imageType = hip::getCLMemObjectType(pResDesc->resType);
-    const size_t imageSizeInBytes = pResDesc->res.pitch2D.pitchInBytes * pResDesc->res.pitch2D.height;
+    const size_t imageSizeInBytes = pResDesc->res.pitch2D.width * imageFormat.getElementSize() +
+                                    pResDesc->res.pitch2D.pitchInBytes * (pResDesc->res.pitch2D.height - 1);
     amd::Memory* buffer = getMemoryObjectWithOffset(pResDesc->res.pitch2D.devPtr, imageSizeInBytes);
     image = ihipImageCreate(channelOrder,
                             channelType,
