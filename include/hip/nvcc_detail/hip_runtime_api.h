@@ -37,6 +37,18 @@ extern "C" {
 #define __dparm(x)
 #endif
 
+// Add Deprecated Support for CUDA Mapped HIP APIs
+#if defined(__DOXYGEN_ONLY__) || defined(HIP_ENABLE_DEPRECATED)
+#define __HIP_DEPRECATED
+#elif defined(_MSC_VER)
+#define __HIP_DEPRECATED __declspec(deprecated)
+#elif defined(__GNUC__)
+#define __HIP_DEPRECATED __attribute__((deprecated))
+#else
+#define __HIP_DEPRECATED
+#endif
+
+
 // TODO -move to include/hip_runtime_api.h as a common implementation.
 /**
  * Memory copy types
@@ -963,14 +975,16 @@ inline static hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_
                                                       height, hipMemcpyKindToCudaMemcpyKind(kind)));
 }
 
-inline static hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset,
-                                          const void* src, size_t count, hipMemcpyKind kind) {
+__HIP_DEPRECATED inline static hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset,
+                                                           size_t hOffset, const void* src,
+                                                           size_t count, hipMemcpyKind kind) {
     return hipCUDAErrorTohipError(
         cudaMemcpyToArray(dst, wOffset, hOffset, src, count, hipMemcpyKindToCudaMemcpyKind(kind)));
 }
 
-inline static hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset,
-                                            size_t hOffset, size_t count, hipMemcpyKind kind) {
+__HIP_DEPRECATED inline static hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray,
+                                                             size_t wOffset, size_t hOffset,
+                                                             size_t count, hipMemcpyKind kind) {
     return hipCUDAErrorTohipError(cudaMemcpyFromArray(dst, srcArray, wOffset, hOffset, count,
                                                       hipMemcpyKindToCudaMemcpyKind(kind)));
 }
@@ -1353,7 +1367,12 @@ inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attribut
     struct cudaPointerAttributes cPA;
     hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));
     if (err == hipSuccess) {
-        switch (cPA.memoryType) {
+#if (CUDART_VERSION >= 11000)
+        auto memType = cPA.type;
+#else
+        unsigned memType = cPA.memoryType; // No auto because cuda 10.2 doesnt force c++11
+#endif
+        switch (memType) {
             case cudaMemoryTypeDevice:
                 attributes->memoryType = hipMemoryTypeDevice;
                 break;
@@ -1695,14 +1714,17 @@ inline static hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t 
     return hipCUDAErrorTohipError(cudaFuncSetCacheConfig(func, cacheConfig));
 }
 
-inline static hipError_t hipBindTexture(size_t* offset, struct textureReference* tex, const void* devPtr,
-                                        const hipChannelFormatDesc* desc, size_t size __dparm(UINT_MAX)){
+__HIP_DEPRECATED inline static hipError_t hipBindTexture(size_t* offset,
+                                                         struct textureReference* tex,
+                                                         const void* devPtr,
+                                                         const hipChannelFormatDesc* desc,
+                                                         size_t size __dparm(UINT_MAX)) {
     return hipCUDAErrorTohipError(cudaBindTexture(offset, tex, devPtr, desc, size));
 }
 
-inline static hipError_t hipBindTexture2D(size_t* offset, struct textureReference* tex, const void* devPtr,
-                            const hipChannelFormatDesc* desc, size_t width, size_t height,
-                            size_t pitch) {
+__HIP_DEPRECATED inline static hipError_t hipBindTexture2D(
+    size_t* offset, struct textureReference* tex, const void* devPtr,
+    const hipChannelFormatDesc* desc, size_t width, size_t height, size_t pitch) {
     return hipCUDAErrorTohipError(cudaBindTexture2D(offset, tex, devPtr, desc, width, height, pitch));
 }
 
@@ -1737,8 +1759,8 @@ inline static hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDe
     return hipCUDAErrorTohipError(cudaGetTextureObjectResourceDesc( pResDesc, textureObject));
 }
 
-inline static hipError_t hipGetTextureAlignmentOffset(size_t* offset, const struct textureReference* texref)
-{
+__HIP_DEPRECATED inline static hipError_t hipGetTextureAlignmentOffset(
+    size_t* offset, const struct textureReference* texref) {
     return hipCUDAErrorTohipError(cudaGetTextureAlignmentOffset(offset,texref));
 }
 
@@ -1811,32 +1833,32 @@ inline static hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, r
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
+__HIP_DEPRECATED inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>* tex) {
     return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode> &tex) {
+__HIP_DEPRECATED inline static hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex) {
     return hipCUDAErrorTohipError(cudaUnbindTexture(tex));
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
-                                               hipArray_const_t array,
-                                               const hipChannelFormatDesc& desc) {
+__HIP_DEPRECATED inline static hipError_t hipBindTextureToArray(
+    struct texture<T, dim, readMode>& tex, hipArray_const_t array,
+    const hipChannelFormatDesc& desc) {
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array, desc));
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
-                                               hipArray_const_t array,
-                                               const hipChannelFormatDesc* desc) {
+__HIP_DEPRECATED inline static hipError_t hipBindTextureToArray(
+    struct texture<T, dim, readMode>* tex, hipArray_const_t array,
+    const hipChannelFormatDesc* desc) {
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array, desc));
 }
 
 template <class T, int dim, enum cudaTextureReadMode readMode>
-inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex,
-                                               hipArray_const_t array) {
+__HIP_DEPRECATED inline static hipError_t hipBindTextureToArray(
+    struct texture<T, dim, readMode>& tex, hipArray_const_t array) {
     return hipCUDAErrorTohipError(cudaBindTextureToArray(tex, array));
 }
 

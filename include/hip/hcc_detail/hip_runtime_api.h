@@ -2173,6 +2173,7 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
                             size_t count, hipMemcpyKind kind);
 
@@ -2191,6 +2192,7 @@ hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset, size_t hOffset, const
  *  @see hipMemcpy, hipMemcpy2DToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
  * hipMemcpyAsync
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipMemcpyFromArray(void* dst, hipArray_const_t srcArray, size_t wOffset, size_t hOffset,
                               size_t count, hipMemcpyKind kind);
 
@@ -3531,6 +3533,7 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
                               void** args, size_t sharedMemBytes, hipStream_t stream,
                               hipEvent_t startEvent, hipEvent_t stopEvent, int flags);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(
     size_t* offset,
     const textureReference* tex,
@@ -3538,6 +3541,7 @@ hipError_t hipBindTexture(
     const hipChannelFormatDesc* desc,
     size_t size __dparm(UINT_MAX));
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture2D(
     size_t* offset,
     const textureReference* tex,
@@ -3547,6 +3551,7 @@ hipError_t hipBindTexture2D(
     size_t height,
     size_t pitch);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTextureToArray(
     const textureReference* tex,
     hipArray_const_t array,
@@ -3557,6 +3562,7 @@ hipError_t hipBindTextureToMipmappedArray(
     hipMipmappedArray_const_t mipmappedArray,
     const hipChannelFormatDesc* desc);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipGetTextureAlignmentOffset(
     size_t* offset,
     const textureReference* texref);
@@ -3565,6 +3571,7 @@ hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
 
 hipError_t hipCreateTextureObject(
@@ -3834,6 +3841,7 @@ inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
 class TlsData;
 
 #if !__HIP_ROCclr__
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
                           const hipChannelFormatDesc* desc, size_t size = UINT_MAX);
 #endif
@@ -3861,6 +3869,7 @@ hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode re
  **/
 #if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
                           const struct hipChannelFormatDesc& desc, size_t size = UINT_MAX) {
     return ihipBindTextureImpl(nullptr, dim, readMode, offset, devPtr, &desc, size, &tex);
@@ -3883,6 +3892,7 @@ hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
  **/
 #if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
                           size_t size = UINT_MAX) {
     return ihipBindTextureImpl(nullptr, dim, readMode, offset, devPtr, &(tex.channelDesc), size, &tex);
@@ -3891,6 +3901,7 @@ hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex,
 
 // C API
 #if !__HIP_ROCclr__
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
                             const hipChannelFormatDesc* desc, size_t width, size_t height,
                             size_t pitch);
@@ -3904,6 +3915,7 @@ hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size
 
 #if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
                             const void* devPtr, size_t width, size_t height, size_t pitch) {
     return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &(tex.channelDesc), width, height,
@@ -3913,6 +3925,7 @@ hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& te
 
 #if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
                             const void* devPtr, const struct hipChannelFormatDesc& desc,
                             size_t width, size_t height, size_t pitch) {
@@ -3922,6 +3935,7 @@ hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& te
 
 // C API
 #if !__HIP_ROCclr__
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
                                  const hipChannelFormatDesc* desc);
 #endif
@@ -3935,6 +3949,7 @@ hipError_t ihipBindTextureToArrayImpl(TlsData *tls, int dim, enum hipTextureRead
 
 #if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array) {
     return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, tex.channelDesc, &tex);
 }
@@ -3942,6 +3957,7 @@ hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray
 
 #if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array,
                                  const struct hipChannelFormatDesc& desc) {
     return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, desc, &tex);
@@ -3950,6 +3966,7 @@ hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray
 
 #if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
                                                hipArray_const_t array,
                                                const struct hipChannelFormatDesc* desc) {
@@ -4019,6 +4036,7 @@ inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchPara
  *  @return #hipSuccess
  **/
 #if !__HIP_ROCclr__
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
 #endif
 
@@ -4028,6 +4046,7 @@ extern hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject)
 
 #if !__HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex) {
     return ihipUnbindTextureImpl(tex.textureObject);
 }
@@ -4035,7 +4054,10 @@ hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex) {
 
 #if !__HIP_ROCclr__
 hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
+
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* texref);
+
 hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol);
 
 hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResourceDesc* pResDesc,
@@ -4078,28 +4100,23 @@ hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipReso
 hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
 
 #if __HIP_ROCclr__
-template<class T, int dim, enum hipTextureReadMode readMode>
-static inline hipError_t hipBindTexture(
-    size_t *offset,
-    const struct texture<T, dim, readMode> &tex,
-    const void *devPtr,
-    size_t size = UINT_MAX)
-{
+template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
+static inline hipError_t hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex,
+                                        const void* devPtr, size_t size = UINT_MAX) {
     return hipBindTexture(offset, &tex, devPtr, &tex.channelDesc, size);
 }
 
-template<class T, int dim, enum hipTextureReadMode readMode>
-static inline hipError_t hipBindTexture(
-    size_t *offset,
-    const struct texture<T, dim, readMode> &tex,
-    const void *devPtr,
-    const struct hipChannelFormatDesc &desc,
-    size_t size = UINT_MAX)
-{
+template <class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
+static inline hipError_t
+    hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex, const void* devPtr,
+                   const struct hipChannelFormatDesc& desc, size_t size = UINT_MAX) {
     return hipBindTexture(offset, &tex, devPtr, &desc, size);
 }
 
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTexture2D(
     size_t *offset,
     const struct texture<T, dim, readMode> &tex,
@@ -4112,6 +4129,7 @@ static inline hipError_t hipBindTexture2D(
 }
 
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTexture2D(
   size_t *offset,
   const struct texture<T, dim, readMode> &tex,
@@ -4125,6 +4143,7 @@ static inline hipError_t hipBindTexture2D(
 }
 
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTextureToArray(
     const struct texture<T, dim, readMode> &tex,
     hipArray_const_t array)
@@ -4135,6 +4154,7 @@ static inline hipError_t hipBindTextureToArray(
 }
 
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTextureToArray(
     const struct texture<T, dim, readMode> &tex,
     hipArray_const_t array,
@@ -4168,6 +4188,7 @@ static inline hipError_t hipBindTextureToMipmappedArray(
 }
 
 template<class T, int dim, enum hipTextureReadMode readMode>
+DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipUnbindTexture(
     const struct texture<T, dim, readMode> &tex)
 {
