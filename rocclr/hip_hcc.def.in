@@ -55,6 +55,7 @@ hipExtModuleLaunchKernel
 hipExtLaunchKernel
 hipFree
 hipFreeArray
+hipFuncSetAttribute
 hipFuncSetCacheConfig
 hipGetDevice
 hipGetDeviceCount
