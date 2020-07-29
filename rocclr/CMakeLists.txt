@@ -66,6 +66,14 @@ if(NOT DEFINED ROCclr_DIR OR NOT DEFINED LIBOCL_STATIC_DIR OR NOT DEFINED LIBROC
 	#	message(FATAL_ERROR "define ROCclr_DIR, LIBOCL_STATIC_DIR\n")
 
 endif()
+
+#APPEND default path for CMAKE_PREFIX_PATH
+#User provided will be searched first since defualt path is at end.
+#Custom install path can be provided at compile time as cmake parameter(-DCMAKE_PREFIX_PATH="")
+#/opt/rocm:default:For amd_comgr,hsa-runtime64
+#/opt/rocm/llvm/:default:For llvm/clang pulled in as dependency from hsa/comgr
+list( APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/rocm" "/opt/rocm/llvm")
+
 list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" )
 set(CMAKE_MODULE_PATH${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
