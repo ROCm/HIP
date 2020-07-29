@@ -839,7 +839,7 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
       if ($linkType eq 0) {
         $toolArgs .= " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma ";
       } else {
-        $toolArgs .= " -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
+        $toolArgs .= " -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 -lnuma ";
       }
       # To support __fp16 and _Float16, explicitly link with compiler-rt
       $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
