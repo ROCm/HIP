@@ -615,8 +615,8 @@
 |           99 |*`cudaDevAttrHostRegisterSupported`*                 | 9.2              |                                                            |
 |          100 |*`cudaDevAttrPageableMemoryAccessUsesHostPageTables`*| 9.2              |                                                            |
 |          101 |*`cudaDevAttrDirectManagedMemAccessFromHost`*        | 9.2              |                                                            |
-|          106 |*`cudaDevAttrDirectManagedMemAccessFromHost`*        | 11.0             |                                                            |
-|          111 |*`cudaDevAttrDirectManagedMemAccessFromHost`*        | 11.0             |                                                            |
+|          106 |*`cudaDevAttrMaxBlocksPerMultiprocessor`*            | 11.0             |                                                            |
+|          111 |*`cudaDevAttrReservedSharedMemoryPerBlock`*          | 11.0             |                                                            |
 | enum         |***`cudaDeviceP2PAttr`***                            | 8.0              |                                                            |
 |            1 |*`cudaDevP2PAttrPerformanceRank`*                    | 8.0              |                                                            |
 |            2 |*`cudaDevP2PAttrAccessSupported`*                    | 8.0              |                                                            |
