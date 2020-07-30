@@ -122,6 +122,9 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   *ptr = amd::SvmBuffer::malloc(*amdContext, flags, sizeBytes, amdContext->devices()[0]->info().memBaseAddrAlign_,
               useHostDevice ? curDevContext->svmDevices()[0] : nullptr);
   if (*ptr == nullptr) {
+    size_t free = 0, total =0;
+    hipMemGetInfo(&free, &total);
+    LogPrintfError("Allocation failed : Device memory : required :%u | free :%u | total :%u \n", sizeBytes, free, total);
     return hipErrorOutOfMemory;
   }
 
