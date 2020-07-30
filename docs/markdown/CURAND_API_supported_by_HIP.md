@@ -43,6 +43,7 @@
 |          100 |*`CURAND_ORDERING_PSEUDO_BEST`*                                |                  |                                                            |
 |          101 |*`CURAND_ORDERING_PSEUDO_DEFAULT`*                             |                  |                                                            |
 |          102 |*`CURAND_ORDERING_PSEUDO_SEEDED`*                              |                  |                                                            |
+|          103 |*`CURAND_ORDERING_PSEUDO_LEGACY`*                              |                  |                                                            |
 |          201 |*`CURAND_ORDERING_QUASI_DEFAULT`*                              |                  |                                                            |
 | enum         |***`curandDirectionVectorSet`***                               |                  |                                                            |
 | enum         |***`curandDirectionVectorSet_t`***                             |                  |                                                            |
