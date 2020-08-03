@@ -68,7 +68,7 @@ static bool isCompatibleCodeObject(const std::string& codeobj_target_id,
   return codeobj_target_id == short_name;
 }
 
-extern "C" hip::FatBinaryInfoType* __hipRegisterFatBinary(const void* data)
+extern "C" hip::FatBinaryInfo** __hipRegisterFatBinary(const void* data)
 {
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
   if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
@@ -102,7 +102,7 @@ bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** va
 }
 
 extern "C" void __hipRegisterFunction(
-  hip::FatBinaryInfoType* modules,
+  hip::FatBinaryInfo** modules,
   const void*  hostFunction,
   char*        deviceFunction,
   const char*  deviceName,
@@ -137,7 +137,7 @@ extern "C" void __hipRegisterFunction(
 // track of the value of the device side global variable between kernel
 // executions.
 extern "C" void __hipRegisterVar(
-  hip::FatBinaryInfoType* modules,   // The device modules containing code object
+  hip::FatBinaryInfo** modules,   // The device modules containing code object
   void*       var,       // The shadow variable in host code
   char*       hostVar,   // Variable name in host code
   char*       deviceVar, // Variable name in device code
@@ -150,7 +150,7 @@ extern "C" void __hipRegisterVar(
   PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipRegisterSurface(hip::FatBinaryInfoType* modules,      // The device modules containing code object
+extern "C" void __hipRegisterSurface(hip::FatBinaryInfo** modules,      // The device modules containing code object
                                      void* var,        // The shadow variable in host code
                                      char* hostVar,    // Variable name in host code
                                      char* deviceVar,  // Variable name in device code
@@ -159,7 +159,7 @@ extern "C" void __hipRegisterSurface(hip::FatBinaryInfoType* modules,      // Th
   PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipRegisterTexture(hip::FatBinaryInfoType* modules,      // The device modules containing code object
+extern "C" void __hipRegisterTexture(hip::FatBinaryInfo** modules,      // The device modules containing code object
                                      void* var,        // The shadow variable in host code
                                      char* hostVar,    // Variable name in host code
                                      char* deviceVar,  // Variable name in device code
@@ -168,7 +168,7 @@ extern "C" void __hipRegisterTexture(hip::FatBinaryInfoType* modules,      // Th
   PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipUnregisterFatBinary(hip::FatBinaryInfoType* modules)
+extern "C" void __hipUnregisterFatBinary(hip::FatBinaryInfo** modules)
 {
   HIP_INIT();
 
@@ -835,15 +835,15 @@ hipError_t PlatformState::getDynTexRef(const char* hostVar, hipModule_t hmod, te
   return hipSuccess;
 }
 
-hipError_t PlatformState::digestFatBinary(const void* data, hip::FatBinaryInfoType& programs) {
+hipError_t PlatformState::digestFatBinary(const void* data, hip::FatBinaryInfo*& programs) {
  return statCO_.digestFatBinary(data, programs);
 }
 
-hip::FatBinaryInfoType* PlatformState::addFatBinary(const void* data) {
+hip::FatBinaryInfo** PlatformState::addFatBinary(const void* data) {
   return statCO_.addFatBinary(data, initialized_);
 }
 
-hipError_t PlatformState::removeFatBinary(hip::FatBinaryInfoType* module) {
+hipError_t PlatformState::removeFatBinary(hip::FatBinaryInfo** module) {
   return statCO_.removeFatBinary(module);
 }
 

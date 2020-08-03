@@ -29,15 +29,58 @@ bool CodeObject::isCompatibleCodeObject(const std::string& codeobj_target_id,
   return codeobj_target_id == short_name;
 }
 
-hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
-                       const std::vector<const char*>& devices,
+// This will be moved to COMGR eventually
+hipError_t CodeObject::ExtractCodeObjectFromFile(amd::Os::FileDesc fdesc, size_t fsize,
+                       const std::vector<const char*>& device_names,
                        std::vector<std::pair<const void*, size_t>>& code_objs) {
-    std::string magic((const char*)data, sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
+
+  hipError_t hip_error = hipSuccess;
+
+  if (fdesc < 0) {
+    return hipErrorFileNotFound;
+  }
+
+  // Map the file to memory, with offset 0.
+  const void* image = nullptr;
+  if (!amd::Os::MemoryMapFileDesc(fdesc, fsize, 0, &image)) {
+    return hipErrorInvalidValue;
+  }
+
+  // retrieve code_objs{binary_image, binary_size} for devices
+  hip_error = extractCodeObjectFromFatBinary(image, device_names, code_objs);
+
+  // Unmap the file memory after extracting code object.
+  if (!amd::Os::MemoryUnmapFile(image, fsize)) {
+    return hipErrorInvalidValue;
+  }
+
+  return hip_error;
+}
+
+// This will be moved to COMGR eventually
+hipError_t CodeObject::ExtractCodeObjectFromMemory(const void* data,
+                       const std::vector<const char*>& device_names,
+                       std::vector<std::pair<const void*, size_t>>& code_objs,
+                       std::string& uri) {
+
+  // Get the URI from memory
+  if (!amd::Os::GetURIFromMemory(data, 0, uri)) {
+    return hipErrorInvalidValue;
+  }
+
+  return extractCodeObjectFromFatBinary(data, device_names, code_objs);
+}
+
+// This will be moved to COMGR eventually
+hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
+                       const std::vector<const char*>& device_names,
+                       std::vector<std::pair<const void*, size_t>>& code_objs) {
+  std::string magic((const char*)data, sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
   if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR)) {
     return hipErrorInvalidKernelFile;
   }
 
-  code_objs.resize(devices.size());
+  code_objs.resize(device_names.size());
   const auto obheader = reinterpret_cast<const __ClangOffloadBundleHeader*>(data);
   const auto* desc = &obheader->desc[0];
   unsigned num_code_objs = 0;
@@ -61,8 +104,8 @@ hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
         reinterpret_cast<uintptr_t>(obheader) + desc->offset);
     size_t size = desc->size;
 
-    for (size_t dev = 0; dev < devices.size(); ++dev) {
-      const char* name = devices[dev];
+    for (size_t dev = 0; dev < device_names.size(); ++dev) {
+      const char* name = device_names[dev];
 
       if (!isCompatibleCodeObject(target, name)) {
           continue;
@@ -71,7 +114,7 @@ hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
       num_code_objs++;
     }
   }
-  if (num_code_objs == devices.size()) {
+  if (num_code_objs == device_names.size()) {
     return hipSuccess;
   } else {
     guarantee(false && "hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
@@ -79,61 +122,30 @@ hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
   }
 }
 
-hipError_t CodeObject::add_program(int deviceId, hipModule_t hmod, const void* binary_ptr,
-                                   size_t binary_size) {
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
-  amd::Context* ctx = g_devices[deviceId]->asContext();
-  if (CL_SUCCESS != program->addDeviceProgram(*ctx->devices()[0], binary_ptr,
-                                              binary_size, false)) {
-      return hipErrorNotFound;
-  }
-  return hipSuccess;
-}
-
-hipError_t CodeObject::build_module(hipModule_t hmod, const std::vector<amd::Device*>& devices) {
-  amd::Program* program = as_amd(reinterpret_cast<cl_program>(hmod));
-  program->setVarInfoCallBack(&getSvarInfo);
-  if (CL_SUCCESS != program->build(devices, nullptr, nullptr, nullptr, kOptionChangeable, kNewDevProg)) {
-    DevLogPrintfError("Build error for module: 0x%x \n", hmod);
-    return hipErrorSharedObjectInitFailed;
-  }
-  return hipSuccess;
-}
-
-DynCO::DynCO(): program_(nullptr) {}
-
 hipError_t DynCO::loadCodeObject(const char* fname, const void* image) {
 
   amd::ScopedLock lock(dclock_);
 
-  const void *mmap_ptr = nullptr;
-  size_t mmap_size = 0;
+  // Number of devices = 1 in dynamic code object
+  fb_info_ = new FatBinaryInfo(fname, image);
+  std::vector<hip::Device*> devices = { g_devices[ihipGetDevice()] };
+  IHIP_RETURN_ONFAIL(fb_info_->ExtractFatBinary(devices));
 
-  guarantee((fname || image) && "Both filename or image are nullptr");
-  if (fname != nullptr) {
-    /* We are given file name */
+  // No Lazy loading for DynCO
+  IHIP_RETURN_ONFAIL(fb_info_->BuildProgram(ihipGetDevice()));
 
-    if (!amd::Os::MemoryMapFile(fname, &mmap_ptr, &mmap_size)) {
-      return hipErrorFileNotFound;
-    }
-  } else if (image != nullptr) {
-    /*We are directly given image pointer directly */
-    mmap_ptr = image;
-  } else {
-    return hipErrorMissingConfiguration;
-  }
+  // Define Global variables
+  IHIP_RETURN_ONFAIL(populateDynGlobalVars());
 
-  return loadCodeObjectData(mmap_ptr, mmap_size);
+  // Define Global functions
+  IHIP_RETURN_ONFAIL(populateDynGlobalFuncs());
+
+  return hipSuccess;
 }
 
 //Dynamic Code Object
 DynCO::~DynCO() {
   amd::ScopedLock lock(dclock_);
-
-  if (program_ != nullptr) {
-    program_->release();
-    program_ = nullptr;
-  }
 
   for (auto& elem : vars_) {
     delete elem.second;
@@ -144,6 +156,8 @@ DynCO::~DynCO() {
     delete elem.second;
   }
   functions_.clear();
+
+  delete fb_info_;
 }
 
 hipError_t DynCO::getDeviceVar(DeviceVar** dvar, std::string var_name, int device_id) {
@@ -169,52 +183,7 @@ hipError_t DynCO::getDynFunc(hipFunction_t* hfunc, std::string func_name) {
   }
 
   /* See if this could be solved */
-  return it->second->getDynFunc(hfunc, reinterpret_cast<hipModule_t>(as_cl(program_)));
-}
-
-hipError_t DynCO::loadCodeObjectData(const void* mmap_ptr, size_t mmap_size) {
-
-  amd::ScopedLock lock(dclock_);
-
-  /* initialize image it to the mmap_ptr, if this is of no_clang_offload
-     bundle then they directly pass the image */
-  const void* image = mmap_ptr;
-  std::vector<std::pair<const void*, size_t>> code_objs;
-  hipError_t hip_error = extractCodeObjectFromFatBinary(mmap_ptr,
-                            {hip::getCurrentDevice()->devices()[0]->info().name_},
-                            code_objs);
-  if (hip_error == hipSuccess) {
-    image = code_objs[0].first;
-  } else if(hip_error == hipErrorNoBinaryForGpu) {
-     return hip_error;
-  }
-
-  program_ = new amd::Program(*hip::getCurrentDevice()->asContext(),
-                              amd::Program::Language::Binary, mmap_ptr, mmap_size);
-  if (program_ == NULL) {
-    return hipErrorOutOfMemory;
-  }
-
-  program_->setVarInfoCallBack(&getSvarInfo);
-
-  if (CL_SUCCESS != program_->addDeviceProgram(*hip::getCurrentDevice()->devices()[0], image,
-                                               ElfSize(image), false)) {
-    return hipErrorInvalidKernelFile;
-  }
-
-  //This has to happen before Program has been built, other wise undef vars fail.
-  IHIP_RETURN_ONFAIL(populateDynGlobalVars());
-
-  //program->setVarInfoCallBack(&getSvarInfo);
-  if(CL_SUCCESS != program_->build(hip::getCurrentDevice()->devices(), nullptr, nullptr, nullptr,
-                                   kOptionChangeable, kNewDevProg)) {
-    return hipErrorSharedObjectInitFailed;
-  }
-
-  //This has to happen after Program has been built, other wise symbolTable_ not populated.
-  IHIP_RETURN_ONFAIL(populateDynGlobalFuncs());
-
-  return hipSuccess;
+  return it->second->getDynFunc(hfunc, module());
 }
 
 hipError_t DynCO::populateDynGlobalVars() {
@@ -223,8 +192,10 @@ hipError_t DynCO::populateDynGlobalVars() {
   std::vector<std::string> var_names;
   std::vector<std::string> undef_var_names;
 
+  //For Dynamic Modules there is only one hipFatBinaryDevInfo_
   device::Program* dev_program
-    = program_->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
+    = fb_info_->GetProgram(ihipGetDevice())->getDeviceProgram
+                          (*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
     DevLogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", module());
@@ -252,7 +223,8 @@ hipError_t DynCO::populateDynGlobalFuncs() {
 
   std::vector<std::string> func_names;
   device::Program* dev_program
-    = program_->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
+    = fb_info_->GetProgram(ihipGetDevice())->getDeviceProgram(
+                           *hip::getCurrentDevice()->devices()[0]);
 
   // Get all the global func names from COMGR
   if (!dev_program->getGlobalFuncFromCodeObj(&func_names)) {
@@ -285,36 +257,21 @@ StatCO::~StatCO() {
   vars_.clear();
 }
 
-hipError_t StatCO::digestFatBinary(const void* data, FatBinaryInfoType& programs) {
+hipError_t StatCO::digestFatBinary(const void* data, FatBinaryInfo*& programs) {
   amd::ScopedLock lock(sclock_);
 
-  if (programs.size() > 0) {
+  if (programs != nullptr) {
     return hipSuccess;
   }
 
-  std::vector<std::pair<const void*, size_t>> code_objs;
-  std::vector<const char*> devices;
-  for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-    devices.push_back(g_devices[dev]->devices()[0]->info().name_);
-  }
-
-  IHIP_RETURN_ONFAIL(extractCodeObjectFromFatBinary((char*)data, devices, code_objs));
-  programs.resize(g_devices.size());
-
-  for (size_t dev = 0; dev < g_devices.size(); ++dev) {
-    amd::Context* ctx = g_devices[dev]->asContext();
-    amd::Program* program = new amd::Program(*ctx);
-    if (program == nullptr) {
-      return hipErrorOutOfMemory;
-    }
-    programs.at(dev) = std::make_pair(reinterpret_cast<hipModule_t>(as_cl(program)),
-                       new FatBinaryMetaInfo(false, code_objs[dev].first, code_objs[dev].second));
-  }
+  // Create a new fat binary object and extract the fat binary for all devices.
+  programs = new FatBinaryInfo(nullptr, data);
+  IHIP_RETURN_ONFAIL(programs->ExtractFatBinary(g_devices));
 
   return hipSuccess;
 }
 
-FatBinaryInfoType* StatCO::addFatBinary(const void* data, bool initialized) {
+FatBinaryInfo** StatCO::addFatBinary(const void* data, bool initialized) {
   amd::ScopedLock lock(sclock_);
 
   if (initialized) {
@@ -324,7 +281,7 @@ FatBinaryInfoType* StatCO::addFatBinary(const void* data, bool initialized) {
   return &modules_[data];
 }
 
-hipError_t StatCO::removeFatBinary(FatBinaryInfoType* module) {
+hipError_t StatCO::removeFatBinary(FatBinaryInfo** module) {
   amd::ScopedLock lock(sclock_);
 
   auto vit = vars_.begin();
@@ -350,9 +307,7 @@ hipError_t StatCO::removeFatBinary(FatBinaryInfoType* module) {
   auto mit = modules_.begin();
   while (mit != modules_.end()) {
     if (&mit->second == module) {
-      for (size_t dev=0; dev < g_devices.size(); ++dev) {
-        delete (*module)[dev].second;
-      }
+      delete mit->second;
       mit = modules_.erase(mit);
     } else {
       ++mit;

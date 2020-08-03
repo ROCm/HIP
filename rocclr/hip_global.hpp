@@ -57,7 +57,7 @@ private:
 //Abstract Structures
 class Function {
 public:
-  Function(std::string name, FatBinaryInfoType* modules=nullptr);
+  Function(std::string name, FatBinaryInfo** modules=nullptr);
   ~Function();
 
   //Return DeviceFunc for this this dynamically loaded module
@@ -67,12 +67,12 @@ public:
   hipError_t getStatFunc(hipFunction_t *hfunc, int deviceId);
   hipError_t getStatFuncAttr(hipFuncAttributes* func_attr, int deviceId);
   void resize_dFunc(size_t size) { dFunc_.resize(size); }
-  FatBinaryInfoType* moduleInfo() { return modules_; };
+  FatBinaryInfo** moduleInfo() { return modules_; };
 
 private:
   std::vector<DeviceFunc*> dFunc_;  //DeviceFuncObj per Device
   std::string name_;                //name of the func(not unique identifier)
-  FatBinaryInfoType* modules_;      // static module where it is referenced
+  FatBinaryInfo** modules_;      // static module where it is referenced
 };
 
 class Var {
@@ -85,7 +85,7 @@ public:
   };
 
   Var(std::string name, DeviceVarKind dVarKind, size_t size, int type, int norm,
-      FatBinaryInfoType* modules = nullptr);
+      FatBinaryInfo** modules = nullptr);
   ~Var();
 
   //Return DeviceVar for this dynamically loaded module
@@ -97,10 +97,10 @@ public:
 
   //Accessor for device_ptrs.
   std::string name() const { return name_; }
-  hipModule_t module(int deviceId) const { return (*modules_)[deviceId].first; }
+  hipModule_t module(int deviceId) const { return nullptr; }
   hipDeviceptr_t device_ptr(int deviceId) const { return dVar_[deviceId]->device_ptr(); }
   size_t device_size(int deviceId) const { return dVar_[deviceId]->size(); }
-  FatBinaryInfoType* moduleInfo() { return modules_; };
+  FatBinaryInfo** moduleInfo() { return modules_; };
 
 private:
   std::vector<DeviceVar*> dVar_;   // DeviceVarObj per Device
@@ -109,7 +109,7 @@ private:
   size_t size_;                    // Size of the variable
   int type_;                       // Type(Textures/Surfaces only)
   int norm_;                       // Type(Textures/Surfaces only)
-  FatBinaryInfoType* modules_;     // static module where it is referenced
+  FatBinaryInfo** modules_;     // static module where it is referenced
 };
 
 }; //namespace: hip
