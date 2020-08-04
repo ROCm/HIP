@@ -201,6 +201,15 @@ hipError_t hipFuncSetAttribute ( const void* func, hipFuncAttribute attr, int va
   HIP_RETURN(hipSuccess);
 }
 
+hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) {
+
+  HIP_INIT_API(hipFuncSetCacheConfig, cacheConfig);
+
+  // No way to set cache config yet.
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                  uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
