@@ -426,6 +426,7 @@ foreach $arg (@ARGV)
     # TODO: why are we removing it here?
     $trimarg =~ s/^\s+|\s+$//g;  # Remive whitespace
     my $swallowArg = 0;
+    my $escapeArg = 1;
     if ($arg eq '-c' or $arg eq '--genco' or $arg eq '-E') {
         $compileOnly = 1;
         $needLDFLAGS  = 0;
@@ -578,6 +579,7 @@ foreach $arg (@ARGV)
         close $in;
         close $out;
         $arg = "$new_arg -Wl,\@$new_file";
+        $escapeArg = 0;
     } elsif (($arg =~ m/\.a$/ || $arg =~ m/\.lo$/) &&
              $HIP_PLATFORM eq 'hcc' and $HIP_COMPILER eq 'clang') {
         ## process static library for hip-clang
@@ -624,6 +626,7 @@ foreach $arg (@ARGV)
             $new_arg .= " $tmpdir/$libBaseName";
         }
         $arg = "$new_arg";
+        $escapeArg = 0;
         if ($toolArgs =~ m/-Xlinker$/) {
             $toolArgs = substr $toolArgs, 0, -8;
             chomp $toolArgs;
@@ -703,7 +706,7 @@ foreach $arg (@ARGV)
     # common characters such as alphanumerics.
     # Do the quoting here because sometimes the $arg is changed in the loop
     # Important to have all of '-Xlinker' in the set of unquoted characters.
-    if (not $isWindows) {       # Windows needs different quoting, ignore for now
+    if (not $isWindows and $escapeArg) {       # Windows needs different quoting, ignore for now
         $arg =~ s/[^-a-zA-Z0-9_=+,.\/]/\\$&/g;
     }
     $toolArgs .= " $arg" unless $swallowArg;
