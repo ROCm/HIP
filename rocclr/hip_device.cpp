@@ -175,7 +175,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.maxGridSize[2] = INT32_MAX;
   deviceProps.clockRate = info.maxEngineClockFrequency_ * 1000;
   deviceProps.memoryClockRate = info.maxMemoryClockFrequency_ * 1000;
-  deviceProps.memoryBusWidth = info.globalMemChannels_ * 32;
+  deviceProps.memoryBusWidth = info.globalMemChannels_;
   deviceProps.totalConstMem = info.maxConstantBufferSize_;
   deviceProps.major = info.gfxipVersion_ / 100;
   deviceProps.minor = info.gfxipVersion_ % 100;
