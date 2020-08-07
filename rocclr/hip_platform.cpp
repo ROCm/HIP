@@ -351,10 +351,10 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
   size_t GprWaves = VgprWaves;
   if (wrkGrpInfo->usedSGPRs_ > 0) {
     size_t maxSGPRs;
-    if (device.info().gfxipVersion_ < 800) {
+    if (device.info().gfxipMajor_ < 8) {
       maxSGPRs = 512;
     }
-    else if (device.info().gfxipVersion_ < 1000) {
+    else if (device.info().gfxipMajor_ < 10) {
       maxSGPRs = 800;
     }
     else {
@@ -467,7 +467,7 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* 
   HIP_RETURN(ret);
 }
 
-hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, 
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
                                              hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk)
 {
   HIP_INIT_API(hipModuleOccupancyMaxActiveBlocksPerMultiprocessor, f, blockSize, dynSharedMemPerBlk);
@@ -486,7 +486,7 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 }
 
 hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
-                                                              hipFunction_t f, int blockSize, 
+                                                              hipFunction_t f, int blockSize,
                                                               size_t dynSharedMemPerBlk, unsigned int flags)
 {
   HIP_INIT_API(hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, f, blockSize, dynSharedMemPerBlk, flags);
@@ -847,4 +847,3 @@ void PlatformState::popExec(ihipExec_t& exec) {
   exec = std::move(execStack_.top());
   execStack_.pop();
 }
-
