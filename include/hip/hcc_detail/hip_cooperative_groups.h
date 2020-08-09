@@ -230,7 +230,8 @@ __CG_QUALIFIER__ uint32_t thread_group::thread_rank() const {
       return (static_cast<const thread_block*>(this)->thread_rank());
     }
     default: {
-      return 0; //TODO(mahesha)
+      assert(false && "invalid cooperative group type");
+      return -1;
     }
   }
 }
@@ -247,6 +248,7 @@ __CG_QUALIFIER__ bool thread_group::is_valid() const {
       return (static_cast<const thread_block*>(this)->is_valid());
     }
     default: {
+      assert(false && "invalid cooperative group type");
       return false;
     }
   }
@@ -266,7 +268,34 @@ __CG_QUALIFIER__ void thread_group::sync() const {
       static_cast<const thread_block*>(this)->sync();
       break;
     }
+    default: {
+      assert(false && "invalid cooperative group type");
+    }
   }
+}
+
+/**
+ *  Implemenation of publicly exposed `wrapper` APIs on top of basic cooperative
+ *  group type APIs
+ */
+template <class CGTy>
+__CG_QUALIFIER__ uint32_t group_size(CGTy const &g) {
+  return g.size();
+}
+
+template <class CGTy>
+__CG_QUALIFIER__ uint32_t thread_rank(CGTy const &g) {
+  return g.thread_rank();
+}
+
+template <class CGTy>
+__CG_QUALIFIER__ bool is_valid(CGTy const &g) {
+  return g.is_valid();
+}
+
+template <class CGTy>
+__CG_QUALIFIER__ void sync(CGTy const &g) {
+  g.sync();
 }
 
 } // namespace cooperative_groups
