@@ -71,7 +71,7 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr, size_t count, int device,
                                hipStream_t stream) {
   HIP_INIT_API(hipMemPrefetchAsync, dev_ptr, count, device, stream);
 
-  if ((dev_ptr == nullptr) || (count == 0) || (stream == nullptr)) {
+  if ((dev_ptr == nullptr) || (count == 0)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
   amd::HostQueue* queue = nullptr;
