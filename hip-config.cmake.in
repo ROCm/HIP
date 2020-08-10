@@ -58,8 +58,9 @@ if(HIP_COMPILER STREQUAL "clang")
     execute_process(COMMAND ${HIP_CXX_COMPILER} --version
                     OUTPUT_STRIP_TRAILING_WHITESPACE
                     OUTPUT_VARIABLE HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT)
-    if(HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[\t\r\n][\t\r\n]*([^\t\r\n])")
-      set(HIP_CLANG_ROOT ${CMAKE_MATCH_1})
+    if(HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir: ([^\t\r\n]+)")
+      # InstalledDir points to the bin/ directory, so the root is the parent dir
+      get_filename_component(HIP_CLANG_ROOT ${CMAKE_MATCH_1} DIRECTORY)
     else()
       set(HIP_CLANG_ROOT /opt/rocm/llvm)
     endif()
