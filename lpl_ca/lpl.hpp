@@ -4,7 +4,7 @@
 
 #include "clara/clara.hpp"
 #include "pstreams/pstream.h"
-#include "hip/hcc_detail/elfio/elfio.hpp"
+#include <elfio/elfio.hpp>
 
 #include <unistd.h>
 
@@ -71,14 +71,14 @@ inline std::string make_hipcc_call(const std::vector<std::string>& sources,
 }
 
 inline void copy_kernel_section_to_fat_binary(const std::string& tmp, const std::string& output) {
-    ELFIO::elfio reader;
+    amd::ELFIO::elfio reader;
     if (!reader.load(tmp)) {
         throw std::runtime_error{"The result of the compilation is inaccessible."};
     }
 
     const auto it =
         std::find_if(reader.sections.begin(), reader.sections.end(),
-                     [](const ELFIO::section* x) { return x->get_name() == kernel_section(); });
+                     [](const amd::ELFIO::section* x) { return x->get_name() == kernel_section(); });
 
     std::ofstream out{output};
 
