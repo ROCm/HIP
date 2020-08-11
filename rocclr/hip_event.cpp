@@ -143,7 +143,13 @@ void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record)
   if (queue->properties().test(CL_QUEUE_PROFILING_ENABLE)) {
     if (command == nullptr) {
       command = queue->getLastQueuedCommand(true);
-      if (command == nullptr) {
+      if ((command == nullptr) || (command->type() == 0)) {
+        // if lastEnqueuedCommand is user invisible command(command->type() == 0),
+        // which is only used for sync, create a new amd:Marker
+        // and release() lastEnqueuedCommand
+        if (command != nullptr) {
+          command->release();
+        }
         command = new amd::Marker(*queue, kMarkerDisableFlush);
         command->enqueue();
       }
