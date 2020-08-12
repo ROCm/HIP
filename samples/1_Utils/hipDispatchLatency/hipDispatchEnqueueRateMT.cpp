@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <thread>
 #include <future>
 #include <functional>
+#include <vector>
 
 #define NUM_GROUPS 1
 #define GROUP_SIZE 1
