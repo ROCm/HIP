@@ -88,9 +88,6 @@ int main(int argc, char* argv[]) {
 
   HIPCHECK(hipStreamCreate(&stream));
 
-
-  cout << "info: warm up launch for 'write_kernel' on the stream " << stream << endl;
-
   hipLaunchKernelGGL(write_kernel, dim3(blocks), dim3(threadsPerBlock), 0, stream, dDst, N, pval);
   HIPCHECK(hipMemcpy(hDst, dDst, nBytes , hipMemcpyDeviceToHost));
   hipDeviceSynchronize();
@@ -106,9 +103,6 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  cout << "info: data validated for warm up launch for 'write_kernel" << endl;
-  cout << "info: launching 'write_kernel' on the stream " << stream << " for "<< nIter << " iterations"<< endl;
-
   auto all_start = chrono::steady_clock::now();
   for(int i = 0; i < nIter; i++) {
     hipLaunchKernelGGL(write_kernel, dim3(blocks), dim3(threadsPerBlock), 0, stream, dDst, N, pval);
@@ -121,31 +115,8 @@ int main(int argc, char* argv[]) {
   double perf = ((double)nBytes * nIter * (double)(1e-09)) / all_kernel_time.count();
 
   cout << "info: average write speed of " << perf << " GB/s " << "achieved for memory size of " <<
-      nBytes / (1024 * 1024) << " MB, calculated based on host time" << endl;
+      nBytes / (1024 * 1024) << " MB" << endl;
 
-  // measure performance based on events time
-  hipEvent_t start, stop;
-  HIPCHECK(hipEventCreate(&start));
-  HIPCHECK(hipEventCreate(&stop));
-  float allEventMs = 0;
-  for(int i = 0; i < nIter; i++) {
-    HIPCHECK(hipEventRecord(start, NULL));
-
-    hipLaunchKernelGGL(write_kernel, dim3(blocks), dim3(threadsPerBlock), 0, stream, dDst, N, pval);
-
-    HIPCHECK(hipEventRecord(stop, NULL));
-    HIPCHECK(hipEventSynchronize(stop));
-
-    float eventMs = 1.0f;
-    HIPCHECK(hipEventElapsedTime(&eventMs, start, stop));
-
-    allEventMs += eventMs;
-
-  }
-
-  double perfe = ((double)nBytes * nIter * (double)(1e-06)) / allEventMs;
-  cout << "info: average write speed of " << perfe << " GB/s " << "achieved for memory size of " <<
-      nBytes / (1024 * 1024) << " MB, calculated based on events time" << endl;
 
   delete [] hDst;
   hipFree(dDst);

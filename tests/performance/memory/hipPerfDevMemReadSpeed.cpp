@@ -99,8 +99,6 @@ int main(int argc, char* argv[]) {
   HIPCHECK(hipMemcpy(dSrc, hSrc, nBytes, hipMemcpyHostToDevice));
   HIPCHECK(hipMemcpy(dDst, hDst, sizeof(uint), hipMemcpyHostToDevice));
 
-  cout << "info: warm up launch for 'read_kernel' on the stream " << stream << endl;
-
   hipLaunchKernelGGL(read_kernel, dim3(blocks), dim3(threadsPerBlock), 0, stream, dSrc, N, dDst);
   HIPCHECK(hipMemcpy(hDst, dDst, sizeof(uint), hipMemcpyDeviceToHost));
   hipDeviceSynchronize();
@@ -110,9 +108,6 @@ int main(int argc, char* argv[]) {
     cout << "info: expected " << nBytes / sizeof(uint) << " got " << hDst[0] << endl;
     HIPCHECK(hipErrorUnknown);
   }
-
-  cout << "info: data validated for warm up launch for 'read_kernel'" << endl;
-  cout << "info: launching 'read_kernel' on the stream " << stream << " for "<< nIter << " iterations"<< endl;
 
   // measure performance based on host time
   auto all_start = chrono::steady_clock::now();
@@ -129,31 +124,7 @@ int main(int argc, char* argv[]) {
   double perf = ((double)nBytes * nIter * (double)(1e-09)) / all_kernel_time.count();
 
   cout << "info: average read speed of " << perf << " GB/s " << "achieved for memory size of " <<
-      nBytes / (1024 * 1024) << " MB, calculated based on host time" << endl;
-
-  // measure performance based on events time
-  hipEvent_t start, stop;
-  HIPCHECK(hipEventCreate(&start));
-  HIPCHECK(hipEventCreate(&stop));
-  float allEventMs = 0;
-  for(int i = 0; i < nIter; i++) {
-    HIPCHECK(hipEventRecord(start, NULL));
-
-    hipLaunchKernelGGL(read_kernel, dim3(blocks), dim3(threadsPerBlock), 0, stream, dSrc, N, dDst);
-
-    HIPCHECK(hipEventRecord(stop, NULL));
-    HIPCHECK(hipEventSynchronize(stop));
-
-    float eventMs = 1.0f;
-    HIPCHECK(hipEventElapsedTime(&eventMs, start, stop));
-
-    allEventMs += eventMs;
-
-  }
-
-  double perfe = ((double)nBytes * nIter * (double)(1e-06)) / allEventMs;
-  cout << "info: average read speed of " << perfe << " GB/s " << "achieved for memory size of " <<
-      nBytes / (1024 * 1024) << " MB, calculated based on events time" << endl;
+      nBytes / (1024 * 1024) << " MB" << endl;
 
   delete [] hSrc;
   delete hDst;
