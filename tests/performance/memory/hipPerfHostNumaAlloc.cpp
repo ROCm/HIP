@@ -34,7 +34,7 @@ THE SOFTWARE.
 #include <array>
 #include "hip/hip_runtime.h"
 /* HIT_START
- * BUILD_CMD: hipHostNumaAlloc %hc -I%S/../../src %S/%s %S/../../src/test_common.cpp -lnuma -o %T/%t EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD_CMD: hipPerfHostNumaAlloc %hc -I%S/../../src %S/%s %S/../../src/test_common.cpp -lnuma -o %T/%t EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
