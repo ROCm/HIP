@@ -37,6 +37,15 @@
 #include <unistd.h>
 #endif
 
+#define KNRM "\x1B[0m"
+#define KRED "\x1B[31m"
+#define KGRN "\x1B[32m"
+#define KYEL "\x1B[33m"
+#define KBLU "\x1B[34m"
+#define KMAG "\x1B[35m"
+#define KCYN "\x1B[36m"
+#define KWHT "\x1B[37m"
+
 /*! IHIP IPC MEMORY Structure */
 #define IHIP_IPC_MEM_HANDLE_SIZE   32
 #define IHIP_IPC_MEM_RESERVED_SIZE LP64_SWITCH(28,24)
@@ -58,8 +67,8 @@ typedef struct ihipIpcMemHandle_st {
   }
 
 #define HIP_API_PRINT(...)                                 \
-  ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s ( %s )", getpid(), std::this_thread::get_id(),             \
-          __func__, ToString( __VA_ARGS__ ).c_str());
+  uint64_t startTimeUs=0 ; HIPPrintDuration(amd::LOG_INFO, amd::LOG_API, &startTimeUs, "%-5d: [%zx] %s%s ( %s )%s",  getpid(), std::this_thread::get_id(), KGRN,    \
+          __func__, ToString( __VA_ARGS__ ).c_str(),KNRM);
 
 #define HIP_ERROR_PRINT(err, ...)                             \
   ClPrint(amd::LOG_INFO, amd::LOG_API, "%-5d: [%zx] %s: Returned %s : %s", getpid(), std::this_thread::get_id(),  \
@@ -74,6 +83,12 @@ typedef struct ihipIpcMemHandle_st {
   }                                                          \
   HIP_INIT()                                                 \
   HIP_CB_SPAWNER_OBJECT(cid);
+
+#define HIP_RETURN_DURATION(ret, ...)                      \
+  hip::g_lastError = ret;                         \
+  HIPPrintDuration(amd::LOG_INFO, amd::LOG_API, &startTimeUs, "%-5d: [%zx] %s: Returned %s : %s",  getpid(), std::this_thread::get_id(),  \
+          __func__, hipGetErrorName(hip::g_lastError), ToString( __VA_ARGS__ ).c_str()); \
+  return hip::g_lastError;
 
 #define HIP_RETURN(ret, ...)                      \
   hip::g_lastError = ret;                         \

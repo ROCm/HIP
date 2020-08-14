@@ -59,7 +59,7 @@ static_assert(static_cast<uint32_t>(hipMemRangeAttributeLastPrefetchLocation) ==
 hipError_t hipMallocManaged(void** dev_ptr, size_t size, unsigned int flags) {
   HIP_INIT_API(hipMallocManaged, dev_ptr, size, flags);
 
-  if ((dev_ptr == nullptr) || (flags != hipMemAttachGlobal)) {
+  if ((dev_ptr == nullptr) || (size == 0) || (flags != hipMemAttachGlobal)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -71,7 +71,7 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr, size_t count, int device,
                                hipStream_t stream) {
   HIP_INIT_API(hipMemPrefetchAsync, dev_ptr, count, device, stream);
 
-  if ((dev_ptr == nullptr) || (count == 0) || (stream == nullptr)) {
+  if ((dev_ptr == nullptr) || (count == 0)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
   amd::HostQueue* queue = nullptr;

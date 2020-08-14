@@ -14,7 +14,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [CUDA to HIP Math Library Equivalents](#library-equivalents)
 - [Distinguishing Compiler Modes](#distinguishing-compiler-modes)
   * [Identifying HIP Target Platform](#identifying-hip-target-platform)
-  * [Identifying the Compiler: hcc, hip-clang, or nvcc](#identifying-the-compiler-hcc-hip-clang-or-nvcc)
+  * [Identifying the Compiler: hip-clang, or nvcc](#identifying-the-compiler-hip-clang-or-nvcc)
   * [Identifying Current Compilation Pass: Host or Device](#identifying-current-compilation-pass-host-or-device)
   * [Compiler Defines: Summary](#compiler-defines-summary)
 - [Identifying Architecture Features](#identifying-architecture-features)
@@ -41,12 +41,10 @@ and provides practical suggestions on how to port CUDA code and work through com
 - [threadfence_system](#threadfence_system)
   * [Textures and Cache Control](#textures-and-cache-control)
 - [More Tips](#more-tips)
-  * [HIPTRACE Mode](#hiptrace-mode)
-  * [Environment Variables](#environment-variables)
+  * [HIP Logging](#hip-logging)
   * [Debugging hipcc](#debugging-hipcc)
   * [What Does This Error Mean?](#what-does-this-error-mean)
     + [/usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();](#usrincludecv1memory517215-error-call-to-implicitly-deleted-default-constructor-of-std__1bad_weak_ptr-throw-bad_weak_ptr)
-  * [HIP Environment Variables](#hip-environment-variables)
   * [Editor Highlighting](#editor-highlighting)
 
 
@@ -163,17 +161,19 @@ Many projects use a mixture of an accelerator compiler (AMD or NVIDIA) and a sta
 
 
 
-### Identifying the Compiler: hcc, hip-clang or nvcc
-Often, it's useful to know whether the underlying compiler is hcc, HIP-Clang or nvcc. This knowledge can guard platform-specific code or aid in platform-specific performance tuning.
-
-
-```
-#ifdef __HCC__
-// Compiled with hcc
+### Identifying the Compiler: hip-clang or nvcc
+Often, it's useful to know whether the underlying compiler is HIP-Clang or nvcc. This knowledge can guard platform-specific code or aid in platform-specific performance tuning.
 
 ```
+#ifdef __HIP_PLATFORM_HCC__
+// Compiled with HIP-Clang
+
 ```
-#ifdef __HIP__
+
+```
+#if defined(__HCC__) || (defined(__clang__) && defined(__HIP__))
+#define __HIP_PLATFORM_HCC__
+#endif
 // Compiled with HIP-Clang
 
 ```
@@ -198,7 +198,7 @@ Compiler directly generates the host code (using the Clang x86 target) and passe
 
 nvcc makes two passes over the code: one for host code and one for device code.
 HIP-Clang will have multiple passes over the code: one for the host code, and one for each architecture on the device code.
-`__HIP_DEVICE_COMPILE__` is set to a nonzero value when the compiler (hcc, HIP-Clang or nvcc) is compiling code for a device inside a `__global__` kernel or for a device function. `__HIP_DEVICE_COMPILE__` can replace #ifdef checks on the `__CUDA_ARCH__` define.
+`__HIP_DEVICE_COMPILE__` is set to a nonzero value when the compiler (HIP-Clang or nvcc) is compiling code for a device inside a `__global__` kernel or for a device function. `__HIP_DEVICE_COMPILE__` can replace #ifdef checks on the `__CUDA_ARCH__` define.
 
 ```
 // #ifdef __CUDA_ARCH__
@@ -209,24 +209,21 @@ Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, an
 
 
 ### Compiler Defines: Summary
-|Define  		|  hcc      |  HIP-Clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.)
-|--- | --- | --- | --- |---|
+|Define  		|   HIP-Clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.)
+|--- | --- | --- |---|
 |HIP-related defines:|
-|`__HIP_PLATFORM_HCC__`| Defined | Defined | Undefined |  Defined if targeting hcc platform; undefined otherwise |
-|`__HIP_PLATFORM_NVCC__`| Undefined | Undefined | Defined |  Defined if targeting nvcc platform; undefined otherwise |
-|`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined
-|`__HIPCC__`		| Defined   | Defined | Defined 		|  Undefined
-|`__HIP_ARCH_*` | 0 or 1 depending on feature support (see below) |0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0
+|`__HIP_PLATFORM_HCC__`| Defined | Undefined |  Defined if targeting AMD platform; undefined otherwise |
+|`__HIP_PLATFORM_NVCC__`| Undefined  | Defined |  Defined if targeting nvcc platform; undefined otherwise |
+|`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined
+|`__HIPCC__`		|  Defined | Defined 		|  Undefined
+|`__HIP_ARCH_*` |0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0
 |nvcc-related defines:|
-|`__CUDACC__` 		| Undefined | Undefined | Defined if source code is compiled by nvcc; undefined otherwise 		|  Undefined
-|`__NVCC__` 		| Undefined | Undefined | Defined 		|  Undefined
-|`__CUDA_ARCH__`		| Undefined | Undefined | Unsigned representing compute capability (e.g., "130") if in device code; 0 if in host code  | Undefined
-|hcc-related defines:|
-|`__HCC__`  		| Defined   | Undefined | Undefined   	|  Undefined
-|`__HCC_ACCELERATOR__`  	| Nonzero if in device code; otherwise undefined | Undefined | Undefined | Undefined
+|`__CUDACC__` 		 | Defined if source code is compiled by nvcc; undefined otherwise 		|  Undefined
+|`__NVCC__` 		 | Undefined | Defined 		|  Undefined
+|`__CUDA_ARCH__`		 | Undefined | Unsigned representing compute capability (e.g., "130") if in device code; 0 if in host code  | Undefined
 |hip-clang-related defines:|
-|`__HIP__`  		| Undefined | Defined   | Undefined   	|  Undefined
-|hcc/HIP-Clang common defines:|
+|`__HIP__`  		 | Defined   | Undefined   	|  Undefined
+|HIP-Clang common defines:|
 |`__clang__`		| Defined   | Defined | Undefined 	|  Defined if using Clang; otherwise undefined
 
 ## Identifying Architecture Features
@@ -274,23 +271,23 @@ The table below shows the full set of architectural properties that HIP supports
 |`__HIP_ARCH_HAS_SHARED_INT32_ATOMICS__`        |    hasSharedInt32Atomics      |32-bit integer atomics for shared memory
 |`__HIP_ARCH_HAS_SHARED_FLOAT_ATOMIC_EXCH__`    |    hasSharedFloatAtomicExch   |32-bit float atomic exchange for shared memory
 |`__HIP_ARCH_HAS_FLOAT_ATOMIC_ADD__`            |     hasFloatAtomicAdd         |32-bit float atomic add in global and shared memory
-|64-bit atomics:                           |                                     |                                                     
-|`__HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__`        |    hasGlobalInt64Atomics      |64-bit integer atomics for global memory                                                 
+|64-bit atomics:                           |                                     |
+|`__HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__`        |    hasGlobalInt64Atomics      |64-bit integer atomics for global memory
 |`__HIP_ARCH_HAS_SHARED_INT64_ATOMICS__`        |    hasSharedInt64Atomics      |64-bit integer atomics for shared memory
 |Doubles:                                  |                                     |
-|`__HIP_ARCH_HAS_DOUBLES__`                    |     hasDoubles                 |Double-precision floating point                                                     
-|Warp cross-lane operations:              |                                      |                                                     
-|`__HIP_ARCH_HAS_WARP_VOTE__`                  |     hasWarpVote                |Warp vote instructions (any, all)                                                      
-|`__HIP_ARCH_HAS_WARP_BALLOT__`                |     hasWarpBallot              |Warp ballot instructions 
-|`__HIP_ARCH_HAS_WARP_SHUFFLE__`               |     hasWarpShuffle             |Warp shuffle operations (shfl\_\*)                                                     
+|`__HIP_ARCH_HAS_DOUBLES__`                    |     hasDoubles                 |Double-precision floating point
+|Warp cross-lane operations:              |                                      |
+|`__HIP_ARCH_HAS_WARP_VOTE__`                  |     hasWarpVote                |Warp vote instructions (any, all)
+|`__HIP_ARCH_HAS_WARP_BALLOT__`                |     hasWarpBallot              |Warp ballot instructions
+|`__HIP_ARCH_HAS_WARP_SHUFFLE__`               |     hasWarpShuffle             |Warp shuffle operations (shfl\_\*)
 |`__HIP_ARCH_HAS_WARP_FUNNEL_SHIFT__`          |     hasFunnelShift             |Funnel shift two input words into one
 |Sync:                                    |                                      |
 |`__HIP_ARCH_HAS_THREAD_FENCE_SYSTEM__`        |     hasThreadFenceSystem       |threadfence\_system
-|`__HIP_ARCH_HAS_SYNC_THREAD_EXT__`            |     hasSyncThreadsExt         |syncthreads\_count, syncthreads\_and, syncthreads\_or                                                      
-|Miscellaneous:                                |                                |                                                     
-|`__HIP_ARCH_HAS_SURFACE_FUNCS__`              |   hasSurfaceFuncs              |                                                     
-|`__HIP_ARCH_HAS_3DGRID__`                     |   has3dGrid                    | Grids and groups are 3D                                                     
-|`__HIP_ARCH_HAS_DYNAMIC_PARALLEL__`           |   hasDynamicParallelism        | 
+|`__HIP_ARCH_HAS_SYNC_THREAD_EXT__`            |     hasSyncThreadsExt         |syncthreads\_count, syncthreads\_and, syncthreads\_or
+|Miscellaneous:                                |                                |
+|`__HIP_ARCH_HAS_SURFACE_FUNCS__`              |   hasSurfaceFuncs              |
+|`__HIP_ARCH_HAS_3DGRID__`                     |   has3dGrid                    | Grids and groups are 3D
+|`__HIP_ARCH_HAS_DYNAMIC_PARALLEL__`           |   hasDynamicParallelism        |
 
 
 ## Finding HIP
@@ -498,19 +495,15 @@ int main()
     std::cout<<"Passed"<<std::endl;
 }
 ```
- 
+
 ## threadfence_system
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.
 Some implementations can provide this behavior by flushing the GPU L2 cache.
-HIP/HCC does not provide this functionality.  As a workaround, users can set the environment variable `HSA_DISABLE_CACHE=1` to 
-disable the GPU L2 cache. This will affect all accesses and for all kernels and so may have 
-a performance impact.
+HIP/HIP-Clang does not provide this functionality.  As a workaround, users can set the environment variable `HSA_DISABLE_CACHE=1` to disable the GPU L2 cache. This will affect all accesses and for all kernels and so may have a performance impact.
 
 ### Textures and Cache Control
 
-Compute programs sometimes use textures either to access dedicated texture caches or to use the texture-sampling hardware for interpolation and clamping. The former approach uses simple point samplers with linear interpolation, essentially only reading a single point. The latter approach uses the sampler hardware to interpolate and combine multiple
-point samples. AMD hardware, as well as recent competing hardware,
-has a unified texture/L1 cache, so it no longer has a dedicated texture cache. But the nvcc path often caches global loads in the L2 cache, and some programs may benefit from explicit control of the L1 cache contents.  We recommend the __ldg instruction for this purpose.
+Compute programs sometimes use textures either to access dedicated texture caches or to use the texture-sampling hardware for interpolation and clamping. The former approach uses simple point samplers with linear interpolation, essentially only reading a single point. The latter approach uses the sampler hardware to interpolate and combine multiple samples. AMD hardware, as well as recent competing hardware, has a unified texture/L1 cache, so it no longer has a dedicated texture cache. But the nvcc path often caches global loads in the L2 cache, and some programs may benefit from explicit control of the L1 cache contents.  We recommend the __ldg instruction for this purpose.
 
 AMD compilers currently load all data into both the L1 and L2 caches, so __ldg is treated as a no-op.
 
@@ -521,27 +514,51 @@ We recommend the following for functional portability:
 
 
 ## More Tips
-### HIPTRACE Mode
 
-On an hcc/AMD platform, set the HIP_TRACE_API environment variable to see a textural API trace. Use the following bit mask:
+### HIP Logging
 
-- 0x1 = trace APIs
-- 0x2 = trace synchronization operations
-- 0x4 = trace memory allocation / deallocation
+On an AMD platform, set the AMD_LOG_LEVEL environment variable to log HIP application execution information.
 
-### Environment Variables
+The value of the setting controls different logging level,
 
-On hcc/AMD platforms, set the HIP_PRINT_ENV environment variable to 1 and run an application that calls a HIP API to see all HIP-supported environment variables and their current values:
+```
+enum LogLevel {
+LOG_NONE = 0,
+LOG_ERROR = 1,
+LOG_WARNING = 2,
+LOG_INFO = 3,
+LOG_DEBUG = 4
+};
+```
 
-- HIP_PRINT_ENV = 1: print HIP environment variables
-- HIP_TRACE_API = 1: trace each HIP API call. Print the function name and return code to stderr as the program executes.
-- HIP_LAUNCH_BLOCKING = 0: make HIP APIs host-synchronous so they are blocked until any kernel launches or data-copy commands are complete (an alias is CUDA_LAUNCH_BLOCKING)
+Logging mask is used to print types of functionalities during the execution of HIP application.
+It can be set as one of the following values,
 
-- KMDUMPISA = 1 : Will dump the GCN ISA for all kernels into the local directory. (This flag is provided by HCC).
-
+```
+enum LogMask {
+  LOG_API       = 0x00000001, //!< API call
+  LOG_CMD       = 0x00000002, //!< Kernel and Copy Commands and Barriers
+  LOG_WAIT      = 0x00000004, //!< Synchronization and waiting for commands to finish
+  LOG_AQL       = 0x00000008, //!< Decode and display AQL packets
+  LOG_QUEUE     = 0x00000010, //!< Queue commands and queue contents
+  LOG_SIG       = 0x00000020, //!< Signal creation, allocation, pool
+  LOG_LOCK      = 0x00000040, //!< Locks and thread-safety code.
+  LOG_KERN      = 0x00000080, //!< kernel creations and arguments, etc.
+  LOG_COPY      = 0x00000100, //!< Copy debug
+  LOG_COPY2     = 0x00000200, //!< Detailed copy debug
+  LOG_RESOURCE  = 0x00000400, //!< Resource allocation, performance-impacting events.
+  LOG_INIT      = 0x00000800, //!< Initialization and shutdown
+  LOG_MISC      = 0x00001000, //!< misc debug, not yet classified
+  LOG_AQL2      = 0x00002000, //!< Show raw bytes of AQL packet
+  LOG_CODE      = 0x00004000, //!< Show code creation debug
+  LOG_CMD2      = 0x00008000, //!< More detailed command info, including barrier commands
+  LOG_LOCATION  = 0x00010000, //!< Log message location
+  LOG_ALWAYS    = 0xFFFFFFFF, //!< Log always even mask flag is zero
+};
+```
 
 ### Debugging hipcc
-To see the detailed commands that hipcc issues, set the environment variable HIPCC_VERBOSE to 1. Doing so will print to stderr the hcc (or nvcc) commands that hipcc generates. 
+To see the detailed commands that hipcc issues, set the environment variable HIPCC_VERBOSE to 1. Doing so will print to stderr the HIP-clang (or nvcc) commands that hipcc generates.
 
 ```
 export HIPCC_VERBOSE=1
@@ -555,25 +572,6 @@ hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../..
 #### /usr/include/c++/v1/memory:5172:15: error: call to implicitly deleted default constructor of 'std::__1::bad_weak_ptr' throw bad_weak_ptr();
 
 If you pass a ".cu" file, hcc will attempt to compile it as a CUDA language file. You must tell hcc that it's in fact a C++ file: use the "-x c++" option.
-
-
-### HIP Environment Variables
-
-On the HCC path, HIP provides a number of environment variables that control the behavior of HIP.  Some of these are useful for application development (for example HIP_VISIBLE_DEVICES, HIP_LAUNCH_BLOCKING),
-some are useful for performance tuning or experimentation (for example HIP_STAGING*), and some are useful for debugging (HIP_DB).  You can see the environment variables supported by HIP as well as
-their current values and usage with the environment var "HIP_PRINT_ENV" - set this and then run any HIP application.  For example:
-
-```
-$ HIP_PRINT_ENV=1 ./myhipapp
-HIP_PRINT_ENV                  =  1 : Print HIP environment variables.
-HIP_LAUNCH_BLOCKING            =  0 : Make HIP APIs 'host-synchronous', so they block until any kernel launches or data copy commands complete. Alias: CUDA_LAUNCH_BLOCKING.
-HIP_DB                         =  0 : Print various debug info.  Bitmask, see hip_hcc.cpp for more information.
-HIP_TRACE_API                  =  0 : Trace each HIP API call.  Print function name and return code to stderr as program executes.
-HIP_TRACE_API_COLOR            = green : Color to use for HIP_API.  None/Red/Green/Yellow/Blue/Magenta/Cyan/White
-HIP_PROFILE_API                 =  0 : Add HIP function begin/end to ATP file generated with CodeXL
-HIP_VISIBLE_DEVICES            =  0 : Only devices whose index is present in the secquence are visible to HIP applications and they are enumerated in the order of secquence
-
-```
 
 
 ### Editor Highlighting

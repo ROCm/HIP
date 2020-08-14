@@ -66,6 +66,14 @@ if(NOT DEFINED ROCclr_DIR OR NOT DEFINED LIBOCL_STATIC_DIR OR NOT DEFINED LIBROC
 	#	message(FATAL_ERROR "define ROCclr_DIR, LIBOCL_STATIC_DIR\n")
 
 endif()
+
+#APPEND default path for CMAKE_PREFIX_PATH
+#User provided will be searched first since defualt path is at end.
+#Custom install path can be provided at compile time as cmake parameter(-DCMAKE_PREFIX_PATH="")
+#/opt/rocm:default:For amd_comgr,hsa-runtime64
+#/opt/rocm/llvm/:default:For llvm/clang pulled in as dependency from hsa/comgr
+list( APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/rocm" "/opt/rocm/llvm")
+
 list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" )
 set(CMAKE_MODULE_PATH${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
@@ -194,6 +202,7 @@ else()
 
 endif()
 
+set_target_properties(amdhip64 PROPERTIES LINK_FLAGS_RELEASE -s)
 set_target_properties(amdhip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
 add_library(host INTERFACE)
 target_link_libraries(host INTERFACE hip::amdhip64)
@@ -206,20 +215,12 @@ target_link_libraries(device INTERFACE host)
 # FIXME: Linux convention is to create static library with same base
 # filename.
 
-
 if(${BUILD_SHARED_LIBS})
-    target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl numa hsa-runtime64::hsa-runtime64)
+    target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl hsa-runtime64::hsa-runtime64)
     INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
-    INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhip_hcc.so  )" DESTINATION lib COMPONENT MAIN)
-
-    INSTALL(CODE "execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink libamdhip64.so lib/libhiprtc.so  )" DESTINATION lib COMPONENT MAIN)
-    INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhip_hcc.so DESTINATION lib COMPONENT MAIN)
-
-    INSTALL(FILES ${CMAKE_BINARY_DIR}/lib/libhiprtc.so DESTINATION lib COMPONENT MAIN)
-
 else()
 
-    target_link_libraries(amdhip64 PRIVATE Threads::Threads dl numa hsa-runtime64::hsa-runtime64 amd_comgr)
+    target_link_libraries(amdhip64 PRIVATE Threads::Threads dl hsa-runtime64::hsa-runtime64 amd_comgr)
     # combine objects of vid and hip into amdhip64_static
     add_custom_target(
        amdhip64_static_combiner

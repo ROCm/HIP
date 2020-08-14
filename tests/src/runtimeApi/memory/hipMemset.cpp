@@ -166,11 +166,11 @@ bool testhipMemset2AsyncOps() {
   hipStream_t s;
   hipStreamCreate(&s);
   hipMemsetAsync(p2, 0, 32*32*4, s);
-  hipMemsetD32Async(p3, 0x3fe00000, 32*32, s );
+  hipMemsetD32Async((hipDeviceptr_t)p3, 0x3fe00000, 32*32, s );
   hipStreamSynchronize(s);
   for (int i = 0; i < 256; ++i) {
     hipMemsetAsync(p2, 0, 32*32*4, s);
-    hipMemsetD32Async(p3, 0x3fe00000, 32*32, s );
+    hipMemsetD32Async((hipDeviceptr_t)p3, 0x3fe00000, 32*32, s );
   }
   hipStreamSynchronize(s);
   hipDeviceSynchronize();

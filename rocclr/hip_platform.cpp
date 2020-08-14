@@ -271,7 +271,7 @@ hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol) {
 
   HIP_RETURN_ONFAIL(PlatformState::instance().getStatGlobalVar(symbol, ihipGetDevice(), devPtr, &sym_size));
 
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipSuccess, *devPtr);
 }
 
 hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbol) {
@@ -280,7 +280,7 @@ hipError_t hipGetSymbolSize(size_t* sizePtr, const void* symbol) {
   hipDeviceptr_t device_ptr = nullptr;
   HIP_RETURN_ONFAIL(PlatformState::instance().getStatGlobalVar(symbol, ihipGetDevice(), &device_ptr, sizePtr));
 
-  HIP_RETURN(hipSuccess);
+  HIP_RETURN(hipSuccess, *sizePtr);
 }
 
 hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memory** amd_mem_obj,
@@ -351,10 +351,10 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
   size_t GprWaves = VgprWaves;
   if (wrkGrpInfo->usedSGPRs_ > 0) {
     size_t maxSGPRs;
-    if (device.info().gfxipVersion_ < 800) {
+    if (device.info().gfxipMajor_ < 8) {
       maxSGPRs = 512;
     }
-    else if (device.info().gfxipVersion_ < 1000) {
+    else if (device.info().gfxipMajor_ < 10) {
       maxSGPRs = 800;
     }
     else {
@@ -467,7 +467,7 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSizeWithFlags(int* gridSize, int* 
   HIP_RETURN(ret);
 }
 
-hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks, 
+hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
                                              hipFunction_t f, int blockSize, size_t dynSharedMemPerBlk)
 {
   HIP_INIT_API(hipModuleOccupancyMaxActiveBlocksPerMultiprocessor, f, blockSize, dynSharedMemPerBlk);
@@ -486,7 +486,7 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessor(int* numBlocks,
 }
 
 hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
-                                                              hipFunction_t f, int blockSize, 
+                                                              hipFunction_t f, int blockSize,
                                                               size_t dynSharedMemPerBlk, unsigned int flags)
 {
   HIP_INIT_API(hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags, f, blockSize, dynSharedMemPerBlk, flags);
@@ -561,202 +561,6 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(int* numBlocks,
 
 namespace hip_impl {
 
-struct dl_phdr_info {
-  ELFIO::Elf64_Addr        dlpi_addr;
-  const char       *dlpi_name;
-  const ELFIO::Elf64_Phdr *dlpi_phdr;
-  ELFIO::Elf64_Half        dlpi_phnum;
-};
-
-extern "C" int dl_iterate_phdr(
-  int (*callback) (struct dl_phdr_info *info, size_t size, void *data), void *data
-);
-
-struct Symbol {
-  std::string name;
-  ELFIO::Elf64_Addr value = 0;
-  ELFIO::Elf_Xword size = 0;
-  ELFIO::Elf_Half sect_idx = 0;
-  uint8_t bind = 0;
-  uint8_t type = 0;
-  uint8_t other = 0;
-};
-
-inline Symbol read_symbol(const ELFIO::symbol_section_accessor& section, unsigned int idx) {
-  assert(idx < section.get_symbols_num());
-
-  Symbol r;
-  section.get_symbol(idx, r.name, r.value, r.size, r.bind, r.type, r.sect_idx, r.other);
-
-  return r;
-}
-
-template <typename P>
-inline ELFIO::section* find_section_if(ELFIO::elfio& reader, P p) {
-    const auto it = find_if(reader.sections.begin(), reader.sections.end(), std::move(p));
-
-    return it != reader.sections.end() ? *it : nullptr;
-}
-
-std::vector<std::pair<uintptr_t, std::string>> function_names_for(const ELFIO::elfio& reader,
-                                                                  ELFIO::section* symtab) {
-  std::vector<std::pair<uintptr_t, std::string>> r;
-  ELFIO::symbol_section_accessor symbols{reader, symtab};
-
-  for (auto i = 0u; i != symbols.get_symbols_num(); ++i) {
-    auto tmp = read_symbol(symbols, i);
-
-    if (tmp.type == STT_FUNC && tmp.sect_idx != SHN_UNDEF && !tmp.name.empty()) {
-      r.emplace_back(tmp.value, tmp.name);
-    }
-  }
-
-  return r;
-}
-
-const std::vector<std::pair<uintptr_t, std::string>>& function_names_for_process() {
-  static constexpr const char self[] = "/proc/self/exe";
-
-  static std::vector<std::pair<uintptr_t, std::string>> r;
-  static std::once_flag f;
-
-  std::call_once(f, []() {
-    ELFIO::elfio reader;
-
-    if (reader.load(self)) {
-      const auto it = find_section_if(
-          reader, [](const ELFIO::section* x) { return x->get_type() == SHT_SYMTAB; });
-
-      if (it) r = function_names_for(reader, it);
-    }
-  });
-
-  return r;
-}
-
-
-const std::unordered_map<uintptr_t, std::string>& function_names()
-{
-  static std::unordered_map<uintptr_t, std::string> r{
-    function_names_for_process().cbegin(),
-    function_names_for_process().cend()};
-  static std::once_flag f;
-
-  std::call_once(f, []() {
-    dl_iterate_phdr([](dl_phdr_info* info, size_t, void*) {
-      ELFIO::elfio reader;
-
-      if (reader.load(info->dlpi_name)) {
-        const auto it = find_section_if(
-            reader, [](const ELFIO::section* x) { return x->get_type() == SHT_SYMTAB; });
-
-        if (it) {
-          auto n = function_names_for(reader, it);
-
-          for (auto&& f : n) f.first += info->dlpi_addr;
-
-          r.insert(make_move_iterator(n.begin()), make_move_iterator(n.end()));
-        }
-      }
-      return 0;
-    },
-    nullptr);
-  });
-
-  return r;
-}
-
-std::vector<char> bundles_for_process() {
-  static constexpr const char self[] = "/proc/self/exe";
-  static constexpr const char kernel_section[] = ".kernel";
-  std::vector<char> r;
-
-  ELFIO::elfio reader;
-
-  if (reader.load(self)) {
-    auto it = find_section_if(
-        reader, [](const ELFIO::section* x) { return x->get_name() == kernel_section; });
-
-    if (it) r.insert(r.end(), it->get_data(), it->get_data() + it->get_size());
-  }
-
-  return r;
-}
-
-const std::vector<hipModule_t>& modules() {
-    static std::vector<hipModule_t> r;
-    static std::once_flag f;
-
-    std::call_once(f, []() {
-      static std::vector<std::vector<char>> bundles{bundles_for_process()};
-
-      dl_iterate_phdr(
-          [](dl_phdr_info* info, std::size_t, void*) {
-        ELFIO::elfio tmp;
-        if (tmp.load(info->dlpi_name)) {
-          const auto it = find_section_if(
-              tmp, [](const ELFIO::section* x) { return x->get_name() == ".kernel"; });
-
-          if (it) bundles.emplace_back(it->get_data(), it->get_data() + it->get_size());
-        }
-        return 0;
-      },
-      nullptr);
-
-      for (auto&& bundle : bundles) {
-        if (bundle.empty()) {
-          continue;
-        }
-        std::string magic(&bundle[0], sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
-        if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR))
-          continue;
-
-        const auto obheader = reinterpret_cast<const hip::CodeObject::__ClangOffloadBundleHeader*>(&bundle[0]);
-        const auto* desc = &obheader->desc[0];
-        for (uint64_t i = 0; i < obheader->numBundles; ++i,
-             desc = reinterpret_cast<const hip::CodeObject::__ClangOffloadBundleDesc*>(
-                 reinterpret_cast<uintptr_t>(&desc->triple[0]) + desc->tripleSize)) {
-
-          std::string triple(desc->triple, sizeof(HCC_AMDGCN_AMDHSA_TRIPLE) - 1);
-          if (triple.compare(HCC_AMDGCN_AMDHSA_TRIPLE))
-            continue;
-
-          std::string target(desc->triple + sizeof(HCC_AMDGCN_AMDHSA_TRIPLE),
-                             desc->tripleSize - sizeof(HCC_AMDGCN_AMDHSA_TRIPLE));
-
-          if (isCompatibleCodeObject(target, hip::getCurrentDevice()->devices()[0]->info().name_)) {
-            hipModule_t module;
-            if (hipSuccess == hipModuleLoadData(&module, reinterpret_cast<const void*>(
-                reinterpret_cast<uintptr_t>(obheader) + desc->offset)))
-              r.push_back(module);
-              break;
-          }
-        }
-      }
-    });
-
-    return r;
-}
-
-const std::unordered_map<uintptr_t, hipFunction_t>& functions()
-{
-  static std::unordered_map<uintptr_t, hipFunction_t> r;
-  static std::once_flag f;
-
-  std::call_once(f, []() {
-    for (auto&& function : function_names()) {
-      for (auto&& module : modules()) {
-        hipFunction_t f;
-        if (hipSuccess == hipModuleGetFunction(&f, module, function.second.c_str())) {
-          r[function.first] = f;
-        }
-      }
-    }
-  });
-
-  return r;
-}
-
 void hipLaunchKernelGGLImpl(
   uintptr_t function_address,
   const dim3& numBlocks,
@@ -767,11 +571,19 @@ void hipLaunchKernelGGLImpl(
 {
   HIP_INIT();
 
-  const auto it = functions().find(function_address);
-  if (it == functions().cend())
-    assert(0);
+  hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
+  int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
+  if (deviceId == -1) {
+    DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
+  }
 
-  hipModuleLaunchKernel(it->second,
+  hipFunction_t func = nullptr;
+  hipError_t hip_error = PlatformState::instance().getStatFunc(&func, reinterpret_cast<void*>(function_address), deviceId);
+  if ((hip_error != hipSuccess) || (func == nullptr)) {
+    DevLogPrintfError("Cannot find the static function: 0x%x", function_address);
+  }
+
+  hipModuleLaunchKernel(func,
     numBlocks.x, numBlocks.y, numBlocks.z,
     dimBlocks.x, dimBlocks.y, dimBlocks.z,
     sharedMemBytes, stream, nullptr, kernarg);
@@ -815,61 +627,22 @@ hipError_t ihipLaunchKernel(const void* hostFunction,
   hipFunction_t func =  nullptr;
   hipError_t hip_error = PlatformState::instance().getStatFunc(&func, hostFunction, deviceId);
   if ((hip_error != hipSuccess) || (func == nullptr)) {
-#ifdef ATI_OS_LINUX
-    const auto it = hip_impl::functions().find(reinterpret_cast<uintptr_t>(hostFunction));
-    if (it == hip_impl::functions().cend()) {
-      DevLogPrintfError("Cannot find function: 0x%x \n", hostFunction);
-      HIP_RETURN(hipErrorInvalidDeviceFunction);
-    }
-    func = it->second;
-#else
     HIP_RETURN(hipErrorInvalidDeviceFunction);
-#endif
   }
-  HIP_RETURN(ihipModuleLaunchKernel(func, (gridDim.x * blockDim.x), (gridDim.y * blockDim.y),
-                                    (gridDim.z * blockDim.z), blockDim.x, blockDim.y, blockDim.z,
+  size_t globalWorkSizeX = gridDim.x * blockDim.x;
+  size_t globalWorkSizeY = gridDim.y * blockDim.y;
+  size_t globalWorkSizeZ = gridDim.z * blockDim.z;
+  if (globalWorkSizeX > std::numeric_limits<uint32_t>::max() ||
+      globalWorkSizeY > std::numeric_limits<uint32_t>::max() ||
+      globalWorkSizeZ > std::numeric_limits<uint32_t>::max()) {
+    HIP_RETURN(hipErrorInvalidConfiguration);
+  }
+  HIP_RETURN(ihipModuleLaunchKernel(func, static_cast<uint32_t>(globalWorkSizeX),
+                                    static_cast<uint32_t>(globalWorkSizeY),
+                                    static_cast<uint32_t>(globalWorkSizeZ),
+                                    blockDim.x, blockDim.y, blockDim.z,
                                     sharedMemBytes, stream, args, nullptr, startEvent, stopEvent,
                                     flags));
-}
-
-// conversion routines between float and half precision
-static inline std::uint32_t f32_as_u32(float f) { union { float f; std::uint32_t u; } v; v.f = f; return v.u; }
-static inline float u32_as_f32(std::uint32_t u) { union { float f; std::uint32_t u; } v; v.u = u; return v.f; }
-static inline int clamp_int(int i, int l, int h) { return std::min(std::max(i, l), h); }
-
-// half float, the f16 is in the low 16 bits of the input argument
-static inline float __convert_half_to_float(std::uint32_t a) noexcept {
-  std::uint32_t u = ((a << 13) + 0x70000000U) & 0x8fffe000U;
-  std::uint32_t v = f32_as_u32(u32_as_f32(u) * u32_as_f32(0x77800000U)/*0x1.0p+112f*/) + 0x38000000U;
-  u = (a & 0x7fff) != 0 ? v : u;
-  return u32_as_f32(u) * u32_as_f32(0x07800000U)/*0x1.0p-112f*/;
-}
-
-// float half with nearest even rounding
-// The lower 16 bits of the result is the bit pattern for the f16
-static inline std::uint32_t __convert_float_to_half(float a) noexcept {
-  std::uint32_t u = f32_as_u32(a);
-  int e = static_cast<int>((u >> 23) & 0xff) - 127 + 15;
-  std::uint32_t m = ((u >> 11) & 0xffe) | ((u & 0xfff) != 0);
-  std::uint32_t i = 0x7c00 | (m != 0 ? 0x0200 : 0);
-  std::uint32_t n = ((std::uint32_t)e << 12) | m;
-  std::uint32_t s = (u >> 16) & 0x8000;
-  int b = clamp_int(1-e, 0, 13);
-  std::uint32_t d = (0x1000 | m) >> b;
-  d |= (d << b) != (0x1000 | m);
-  std::uint32_t v = e < 1 ? d : n;
-  v = (v >> 2) + (((v & 0x7) == 3) | ((v & 0x7) > 5));
-  v = e > 30 ? 0x7c00 : v;
-  v = e == 143 ? i : v;
-  return s | v;
-}
-
-extern "C" float __gnu_h2f_ieee(unsigned short h){
-  return __convert_half_to_float((std::uint32_t) h);
-}
-
-extern "C" unsigned short __gnu_f2h_ieee(float f){
-  return (unsigned short)__convert_float_to_half(f);
 }
 
 void PlatformState::init()
@@ -1074,4 +847,3 @@ void PlatformState::popExec(ihipExec_t& exec) {
   exec = std::move(execStack_.top());
   execStack_.pop();
 }
-

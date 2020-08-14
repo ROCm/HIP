@@ -34,12 +34,13 @@ THE SOFTWARE.
 #include <array>
 #include "hip/hip_runtime.h"
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD_CMD: hipPerfHostNumaAlloc %hc -I%S/../../src %S/%s %S/../../src/test_common.cpp -lnuma -o %T/%t EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
 
-// To run it correctly, we must not export HIP_VISIBLE_DEVICES
+// To run it correctly, we must not export HIP_VISIBLE_DEVICES.
+// And we must explicitly link libnuma because of numa api move_pages().
 #define NUM_PAGES 4
 char *h = nullptr;
 char *d_h = nullptr;
@@ -127,6 +128,7 @@ bool test(int cpuId, int gpuId, int numaMode, unsigned int hostMallocflags) {
   printf("\n");
 
   HIPCHECK(hipHostFree((void* )h));
+  hipHostUnregister(m);
   free(m);
 
   if (cpuId >= 0 && (numaMode == MPOL_BIND || numaMode == MPOL_PREFERRED)) {
@@ -149,8 +151,7 @@ bool runTest(const int &cpuCount, const int &gpuCount,
 
     for (int i = 0; i < cpuCount; i++) {
       for (int j = 0; j < gpuCount; j++) {
-        if (!test(i, j, mode[m],
-                  hipHostMallocDefault | hipHostMallocNumaUser)) {
+        if (!test(i, j, mode[m], hostMallocflags)) {
           return false;
         }
       }
