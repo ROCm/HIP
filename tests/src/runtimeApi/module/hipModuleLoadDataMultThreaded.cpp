@@ -56,8 +56,6 @@ std::vector<char> load_file() {
 void run(const std::vector<char>& buffer) {
   hipModule_t Module;
   hipFunction_t Function;
-  HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
-  HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
   float *A, *B, *Ad, *Bd;
   A = new float[LEN];
@@ -73,6 +71,9 @@ void run(const std::vector<char>& buffer) {
 
   HIPCHECK(hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice));
   HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
+
+  HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
+  HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
   hipStream_t stream;
   HIPCHECK(hipStreamCreate(&stream));

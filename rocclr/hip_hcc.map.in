@@ -30,6 +30,7 @@ global:
     hipDeviceGetName;
     hipDeviceGetPCIBusId;
     hipDeviceGetSharedMemConfig;
+    hipDeviceGetP2PAttribute;
     hipDevicePrimaryCtxGetState;
     hipDevicePrimaryCtxRelease;
     hipDevicePrimaryCtxReset;
@@ -175,8 +176,6 @@ global:
     __hipRegisterSurface;
     __hipRegisterTexture;
     __hipUnregisterFatBinary;
-    __gnu_h2f_ieee;
-    __gnu_f2h_ieee;
     hipConfigureCall;
     hipSetupArgument;
     hipLaunchByPtr;

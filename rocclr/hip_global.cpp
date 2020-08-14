@@ -23,16 +23,18 @@ DeviceVar::DeviceVar(std::string name, hipModule_t hmod) : shadowVptr(nullptr), 
     guarantee(false);
   }
 
-  if (amd_mem_obj_ == nullptr || device_ptr_ == nullptr) {
-    DevLogPrintfError("Cannot get memory for creating device Var: %s", name.c_str());
-    guarantee(false);
+  // Handle size 0 symbols
+  if (size_ != 0) {
+    if (amd_mem_obj_ == nullptr || device_ptr_ == nullptr) {
+      DevLogPrintfError("Cannot get memory for creating device Var: %s", name.c_str());
+      guarantee(false);
+    }
+    amd::MemObjMap::AddMemObj(device_ptr_, amd_mem_obj_);
   }
-
-  amd::MemObjMap::AddMemObj(device_ptr_, amd_mem_obj_);
 }
 
 DeviceVar::~DeviceVar() {
-  if (device_ptr_ != nullptr) {
+  if (amd_mem_obj_ != nullptr) {
     amd::MemObjMap::RemoveMemObj(device_ptr_);
     amd_mem_obj_->release();
   }

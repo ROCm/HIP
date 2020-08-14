@@ -92,8 +92,8 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
 
   auto* deviceHandle = g_devices[device]->devices()[0];
   const auto& info = deviceHandle->info();
-  *major = info.gfxipVersion_ / 100;
-  *minor = info.gfxipVersion_ % 100;
+  *major = info.gfxipMajor_;
+  *minor = info.gfxipMinor_;
 
   HIP_RETURN(hipSuccess);
 }
@@ -175,10 +175,10 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.maxGridSize[2] = INT32_MAX;
   deviceProps.clockRate = info.maxEngineClockFrequency_ * 1000;
   deviceProps.memoryClockRate = info.maxMemoryClockFrequency_ * 1000;
-  deviceProps.memoryBusWidth = info.globalMemChannels_ * 32;
+  deviceProps.memoryBusWidth = info.globalMemChannels_;
   deviceProps.totalConstMem = info.maxConstantBufferSize_;
-  deviceProps.major = info.gfxipVersion_ / 100;
-  deviceProps.minor = info.gfxipVersion_ % 100;
+  deviceProps.major = info.gfxipMajor_;
+  deviceProps.minor = info.gfxipMinor_;
   deviceProps.multiProcessorCount = info.maxComputeUnits_;
   deviceProps.l2CacheSize = info.l2CacheSize_;
   deviceProps.maxThreadsPerMultiProcessor = info.maxThreadsPerCU_;
@@ -208,7 +208,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.maxSharedMemoryPerMultiProcessor = info.localMemSizePerCU_;
   //deviceProps.isMultiGpuBoard = info.;
   deviceProps.canMapHostMemory = 1;
-  deviceProps.gcnArch = info.gfxipVersion_;
+  deviceProps.gcnArch = info.gfxipMajor_ * 100 + info.gfxipMinor_ * 10 + info.gfxipStepping_;
   sprintf(deviceProps.gcnArchName, "gfx%d%d%x", info.gfxipMajor_, info.gfxipMinor_, info.gfxipStepping_);
   deviceProps.cooperativeLaunch = info.cooperativeGroups_;
   deviceProps.cooperativeMultiDeviceLaunch = info.cooperativeMultiDeviceGroups_;

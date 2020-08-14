@@ -60,8 +60,6 @@ void run(const std::vector<char>& buffer, int deviceNo) {
   hipSetDevice(deviceNo);
   hipModule_t Module;
   hipFunction_t Function;
-  HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
-  HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
   float *A, *B, *Ad, *Bd;
   A = new float[LEN];
@@ -77,6 +75,9 @@ void run(const std::vector<char>& buffer, int deviceNo) {
 
   HIPCHECK(hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice));
   HIPCHECK(hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice));
+
+  HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
+  HIPCHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
   hipStream_t stream;
   HIPCHECK(hipStreamCreate(&stream));

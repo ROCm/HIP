@@ -52,24 +52,61 @@ hipError_t canAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId){
   amd::Device* device = nullptr;
   amd::Device* peer_device = nullptr;
   if (canAccessPeer == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
+    return hipErrorInvalidValue;
   }
   /* Peer cannot be self */
   if (deviceId == peerDeviceId) {
     *canAccessPeer = 0;
-    HIP_RETURN(hipSuccess);
+    return hipSuccess;
   }
   /* Cannot exceed the max number of devices */
   if (static_cast<size_t>(deviceId) >= g_devices.size()
        || static_cast<size_t>(peerDeviceId) >= g_devices.size()) {
-    HIP_RETURN(hipErrorInvalidDevice);
+    return hipErrorInvalidDevice;
   }
   device = g_devices[deviceId]->devices()[0];
   peer_device = g_devices[peerDeviceId]->devices()[0];
   *canAccessPeer = static_cast<int>(std::find(device->p2pDevices_.begin(),
                                               device->p2pDevices_.end(), as_cl(peer_device))
                                               != device->p2pDevices_.end());
-  HIP_RETURN(hipSuccess);
+  return hipSuccess;
+}
+
+hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
+                                    int srcDevice, int dstDevice) {
+  HIP_INIT_API(hipDeviceGetP2PAttribute, value, attr, srcDevice, dstDevice);
+
+  hipError_t hip_error = hipSuccess;
+
+  if (value == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  if (srcDevice >= static_cast<int>(g_devices.size())
+      || dstDevice >= static_cast<int>(g_devices.size())) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
+
+  switch (attr) {
+    case hipDevP2PAttrPerformanceRank :
+      assert(0 && "Unimplemented");
+      break;
+    case hipDevP2PAttrAccessSupported :
+      hip_error = canAccessPeer(value, srcDevice, dstDevice);
+      break;
+    case hipDevP2PAttrNativeAtomicSupported :
+      assert(0 && "Unimplemented");
+      break;
+    case hipDevP2PAttrHipArrayAccessSupported :
+      assert(0 && "Unimplemented");
+      break;
+    default :
+      DevLogPrintfError("Invalid attribute attr: %d ", attr);
+      hip_error = hipErrorInvalidValue;
+      break;
+  }
+
+  HIP_RETURN(hip_error);
 }
 
 hipError_t hipDeviceCanAccessPeer(int* canAccess, int deviceId, int peerDeviceId) {
