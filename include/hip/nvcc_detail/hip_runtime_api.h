@@ -185,6 +185,7 @@ typedef cudaStream_t hipStream_t;
 typedef cudaIpcEventHandle_t hipIpcEventHandle_t;
 typedef cudaIpcMemHandle_t hipIpcMemHandle_t;
 typedef enum cudaLimit hipLimit_t;
+typedef enum cudaFuncAttribute hipFuncAttribute;
 typedef enum cudaFuncCache hipFuncCache_t;
 typedef CUcontext hipCtx_t;
 typedef enum cudaSharedMemConfig hipSharedMemConfig;
@@ -1005,6 +1006,10 @@ inline static hipError_t hipDeviceSynchronize() {
 
 inline static hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* pCacheConfig) {
     return hipCUDAErrorTohipError(cudaDeviceGetCacheConfig(pCacheConfig));
+}
+
+inline static hipError_t hipFuncSetAttribute(const void* func, hipFuncAttribute attr, int value) {
+    return hipCUDAErrorTohipError(cudaFuncSetAttribute(func, attr, value));
 }
 
 inline static hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig) {

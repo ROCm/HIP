@@ -290,6 +290,14 @@ typedef enum hipJitOption {
     hipJitOptionNumOptions
 } hipJitOption;
 
+/**
+ * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
+ */
+typedef enum hipFuncAttribute {
+    hipFuncAttributeMaxDynamicSharedMemorySize = 8,
+    hipFuncAttributePreferredSharedMemoryCarveout = 9,
+    hipFuncAttributeMax
+} hipFuncAttribute;
 
 /**
  * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
@@ -527,6 +535,21 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 
+
+/**
+ * @brief Set attribute for a specific function
+ *
+ * @param [in] func;
+ * @param [in] attr;
+ * @param [in] value;
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
+ *
+ * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is
+ * ignored on those architectures.
+ *
+ */
+hipError_t hipFuncSetAttribute(const void* func, hipFuncAttribute attr, int value);
 
 /**
  * @brief Set Cache configuration for a specific function
