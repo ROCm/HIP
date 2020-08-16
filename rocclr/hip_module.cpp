@@ -193,6 +193,14 @@ hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func)
   HIP_RETURN(hipSuccess);
 }
 
+hipError_t hipFuncSetAttribute ( const void* func, hipFuncAttribute attr, int value ) {
+  HIP_INIT_API(hipFuncSetAttribute, func, attr, value);
+
+  // No way to set function attribute yet.
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                  uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
