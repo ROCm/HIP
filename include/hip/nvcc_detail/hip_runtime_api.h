@@ -1016,6 +1016,10 @@ inline static hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig) {
     return hipCUDAErrorTohipError(cudaDeviceSetCacheConfig(cacheConfig));
 }
 
+inline static hipError_t hipFuncSetSharedMemConfig(const void* func, hipSharedMemConfig config) {
+    return hipCUDAErrorTohipError(cudaFuncSetSharedMemConfig(func, config));
+}
+
 inline static const char* hipGetErrorString(hipError_t error) {
     return cudaGetErrorString(hipErrorToCudaError(error));
 }
