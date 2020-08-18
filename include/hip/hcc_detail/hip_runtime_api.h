@@ -232,6 +232,9 @@ enum hipLimit_t {
 #define hipCpuDeviceId ((int)-1)
 #define hipInvalidDeviceId ((int)-2)
 
+// Flags that can be used with hipExtLaunch Set of APIs
+#define hipExtAnyOrderLaunch 0x01  ///< AnyOrderLaunch of kernels
+
 /*
  * @brief HIP Memory Advise values
  * @enum

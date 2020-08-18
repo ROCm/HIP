@@ -49,15 +49,6 @@ hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
   HIP_RETURN(hipSuccess);
 };
 
-hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) {
-
-  HIP_INIT_API(hipFuncSetCacheConfig, cacheConfig);
-
-  // No way to set cache config yet.
-
-  HIP_RETURN(hipSuccess);
-}
-
 hipError_t hipDeviceTotalMem (size_t *bytes, hipDevice_t device) {
 
   HIP_INIT_API(hipDeviceTotalMem, bytes, device);
