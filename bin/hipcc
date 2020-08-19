@@ -201,7 +201,7 @@ if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
     }
 
     $HIP_CLANG_VERSION = `$HIPCC --version`;
-    $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
+    $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
 
     if (! defined $HIP_CLANG_INCLUDE_PATH) {
