@@ -139,7 +139,7 @@ if ($HIP_COMPILER eq "clang") {
         $HIP_CLANG_PATH = "$HIP_ROCCLR_HOME/bin";
     }
     $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
-    $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
+    $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
 
     $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
