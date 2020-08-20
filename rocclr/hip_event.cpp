@@ -90,12 +90,10 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
     return hipErrorNotReady;
   }
 
-  // For certain HIP API's that take start and stop event
-  // and no hipEventRecord needs to be called
-  if (event_ == eStop.event_ && !recorded_  && !eStop.recorded_) {
+  if (event_ != eStop.event_ && recorded_ && eStop.recorded_) {
     ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
-                          event_->profilingInfo().start_))/1000000.f;
-  } else if (event_ == eStop.event_) {
+                          event_->profilingInfo().end_))/1000000.f;
+  } else if (event_ == eStop.event_ && (recorded_ || eStop.recorded_)) {
     // Events are the same, which indicates the stream is empty and likely
     // eventRecord is called on another stream. For such cases insert and measure a
     // marker.
@@ -107,8 +105,10 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
     command->release();
 
   } else {
+  // For certain HIP API's that take both start and stop event
+  // or scenarios where HIP API takes one of the events and the other event is recorded with hipEventRecord
     ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
-                          event_->profilingInfo().end_))/1000000.f;
+                          event_->profilingInfo().start_))/1000000.f;
   }
   return hipSuccess;
 }
