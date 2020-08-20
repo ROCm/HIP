@@ -478,24 +478,36 @@ struct __hip_builtin_threadIdx_t {
   __HIP_DEVICE_BUILTIN(x,__hip_get_thread_idx_x());
   __HIP_DEVICE_BUILTIN(y,__hip_get_thread_idx_y());
   __HIP_DEVICE_BUILTIN(z,__hip_get_thread_idx_z());
+#ifdef __cplusplus
+  __device__ operator dim3() const { return dim3(x, y, z); }
+#endif
 };
 
 struct __hip_builtin_blockIdx_t {
   __HIP_DEVICE_BUILTIN(x,__hip_get_block_idx_x());
   __HIP_DEVICE_BUILTIN(y,__hip_get_block_idx_y());
   __HIP_DEVICE_BUILTIN(z,__hip_get_block_idx_z());
+#ifdef __cplusplus
+  __device__ operator dim3() const { return dim3(x, y, z); }
+#endif
 };
 
 struct __hip_builtin_blockDim_t {
   __HIP_DEVICE_BUILTIN(x,__hip_get_block_dim_x());
   __HIP_DEVICE_BUILTIN(y,__hip_get_block_dim_y());
   __HIP_DEVICE_BUILTIN(z,__hip_get_block_dim_z());
+#ifdef __cplusplus
+  __device__ operator dim3() const { return dim3(x, y, z); }
+#endif
 };
 
 struct __hip_builtin_gridDim_t {
   __HIP_DEVICE_BUILTIN(x,__hip_get_grid_dim_x());
   __HIP_DEVICE_BUILTIN(y,__hip_get_grid_dim_y());
   __HIP_DEVICE_BUILTIN(z,__hip_get_grid_dim_z());
+#ifdef __cplusplus
+  __device__ operator dim3() const { return dim3(x, y, z); }
+#endif
 };
 
 #undef __HIP_DEVICE_BUILTIN
