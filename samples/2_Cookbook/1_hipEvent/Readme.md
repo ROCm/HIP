@@ -39,7 +39,7 @@ We'll use the "eventMs" variable to store the time taken value:
 
 We'll start the timer by calling:
 `  hipEventRecord(start, NULL);`
-in this, the first parameter is the hipEvent_t, will will mark the start of the time from which the measurement has to be performed, while the second parameter has to be of the type hipStream_t. In current situation, we have passed NULL (the default stream). We will learn about the `hipStream_t` in more detail latter.
+in this, the first parameter is the hipEvent_t, which will mark the start of the time from which the measurement has to be performed, while the second parameter has to be of the type hipStream_t. In current situation, we have passed NULL (the default stream). We will learn about the `hipStream_t` in more detail latter.
 
 Now, we'll have the operation for which we need to compute the time taken. For the case of memory transfer, we'll place the `hipMemcpy`:
 `  hipMemcpy(gpuMatrix, Matrix, NUM*sizeof(float), hipMemcpyHostToDevice);`
