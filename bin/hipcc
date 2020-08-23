@@ -73,11 +73,14 @@ $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 # derive HIP_PATH, as dirname $0 could be /opt/rocm/bin or /opt/rocm/hip/bin
 # depending on how it gets invoked.
 # ROCM_PATH which points to <rocm_install_dir> is determined based on whether
-# we find .info/version in the parent of HIP_PATH or not. If it is found,
-# ROCM_PATH is defined relative to HIP_PATH else it is hardcoded to /opt/rocm.
+# we find .info/version-dev in the parent of HIP_PATH or not. The version-dev
+# file is installed when rocm-dev or rocm-devX.Y.Z package is installed.
+# If it is found, ROCM_PATH is defined relative to HIP_PATH else it is
+# hardcoded to /opt/rocm which is assumed to be a symbolic link to the directory
+# of the installed ROCm version, ex /opt/rocm-X.Y.Z, directory on the system.
 #
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
-if (-e "$HIP_PATH/../.info/version") {
+if (-e "$HIP_PATH/../.info/version-dev") {
     $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH
 } else {
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
