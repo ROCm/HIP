@@ -312,7 +312,6 @@ typedef enum hipFuncCache_t {
     hipFuncCachePreferEqual,   ///< prefer equal size L1 cache and shared memory
 } hipFuncCache_t;
 
-
 /**
  * @warning On AMD devices and some Nvidia devices, these hints and controls are ignored.
  */
@@ -565,6 +564,20 @@ hipError_t hipFuncSetAttribute(const void* func, hipFuncAttribute attr, int valu
  *
  */
 hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t config);
+
+/**
+ * @brief Set shared memory configuation for a specific function
+ *
+ * @param [in] func
+ * @param [in] config
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
+ *
+ * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is
+ * ignored on those architectures.
+ *
+ */
+hipError_t hipFuncSetSharedMemConfig(const void* func, hipSharedMemConfig config);
 
 /**
  * @brief Returns bank width of shared memory for current device

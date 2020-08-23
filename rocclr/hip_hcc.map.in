@@ -58,6 +58,7 @@ global:
     hipFreeArray;
     hipFuncSetAttribute;
     hipFuncSetCacheConfig;
+    hipFuncSetSharedMemConfig;
     hipGetDevice;
     hipGetDeviceCount;
     hipGetDeviceProperties;
