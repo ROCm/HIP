@@ -210,6 +210,14 @@ hipError_t hipFuncSetCacheConfig (const void* func, hipFuncCache_t cacheConfig) 
   HIP_RETURN(hipSuccess);
 }
 
+hipError_t hipFuncSetSharedMemConfig ( const void* func, hipSharedMemConfig config) {
+  HIP_INIT_API(hipFuncSetSharedMemConfig, func, config);
+
+  // No way to set Shared Memory config function yet.
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                  uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,

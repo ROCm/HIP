@@ -57,6 +57,7 @@ hipFree
 hipFreeArray
 hipFuncSetAttribute
 hipFuncSetCacheConfig
+hipFuncSetSharedMemConfig
 hipGetDevice
 hipGetDeviceCount
 hipGetDeviceProperties
