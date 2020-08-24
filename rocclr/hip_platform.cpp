@@ -127,7 +127,7 @@ extern "C" void __hipRegisterFunction(
     hipError_t hip_error = hipSuccess;
     for (size_t dev_idx = 0; dev_idx < g_devices.size(); ++dev_idx) {
       hip_error = PlatformState::instance().getStatFunc(&hfunc, hostFunction, dev_idx);
-      guarantee(hip_error == hipSuccess);
+      guarantee((hip_error == hipSuccess) && "Cannot Retrieve Static function");
     }
   }
 }
