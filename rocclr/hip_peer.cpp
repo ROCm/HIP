@@ -185,6 +185,11 @@ hipError_t hipDeviceDisablePeerAccess(int peerDeviceId) {
   if ((hipSuccess != canAccessPeer(&canAccess, deviceId, peerDeviceId)) || (canAccess == 0)) {
     HIP_RETURN(hipErrorInvalidDevice);
   }
+
+  amd::Device* device = g_devices[deviceId]->devices()[0];
+  amd::Device* peer_device = g_devices[peerDeviceId]->devices()[0];
+  peer_device->disableP2P(device);
+
   HIP_RETURN(hip::getCurrentDevice()->DisablePeerAccess(peerDeviceId));
 }
 
@@ -198,6 +203,11 @@ hipError_t hipDeviceEnablePeerAccess(int peerDeviceId, unsigned int flags) {
   if ((hipSuccess != canAccessPeer(&canAccess, deviceId, peerDeviceId)) || (canAccess == 0)) {
     HIP_RETURN(hipErrorInvalidDevice);
   }
+
+  amd::Device* device = g_devices[deviceId]->asContext()->devices()[0];
+  amd::Device* peer_device = g_devices[peerDeviceId]->asContext()->devices()[0];
+  peer_device->enableP2P(device);
+
   HIP_RETURN(hip::getCurrentDevice()->EnablePeerAccess(peerDeviceId));
 }
 
