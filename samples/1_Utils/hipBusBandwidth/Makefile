@@ -7,7 +7,7 @@ HIPCC=$(HIP_PATH)/bin/hipcc
 EXE=hipBusBandwidth
 CXXFLAGS = -O3
 
-all: install
+all: ${EXE}
 
 $(EXE): hipBusBandwidth.cpp ResultDatabase.cpp
 	$(HIPCC) $(CXXFLAGS) $^ -o $@
