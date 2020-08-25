@@ -124,7 +124,7 @@ hipError_t DynCO::loadCodeObject(const char* fname, const void* image) {
   const void *mmap_ptr = nullptr;
   size_t mmap_size = 0;
 
-  guarantee(fname || image);
+  guarantee((fname || image) && "Both filename or image are nullptr");
   if (fname != nullptr) {
     /* We are given file name */
 
