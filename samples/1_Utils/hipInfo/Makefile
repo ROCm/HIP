@@ -6,7 +6,7 @@ HIPCC=$(HIP_PATH)/bin/hipcc
 
 EXE=hipInfo
 
-all: install
+all: ${EXE}
 
 $(EXE): hipInfo.cpp
 	$(HIPCC) hipInfo.cpp -o $@
