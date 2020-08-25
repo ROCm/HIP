@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 $HIP_BASE_VERSION_MAJOR = "3";
-$HIP_BASE_VERSION_MINOR = "8";
+$HIP_BASE_VERSION_MINOR = "9";
 
 # Need perl > 5.10 to use logic-defined or
 use 5.006; use v5.10.1;
@@ -139,7 +139,7 @@ if ($HIP_COMPILER eq "clang") {
         $HIP_CLANG_PATH = "$HIP_ROCCLR_HOME/bin";
     }
     $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
-    $HIP_CLANG_VERSION=~/.*clang version ([^ ]+).*/;
+    $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
 
     $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
