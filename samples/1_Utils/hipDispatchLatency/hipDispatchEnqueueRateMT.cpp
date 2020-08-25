@@ -29,6 +29,7 @@ THE SOFTWARE.
 #include <thread>
 #include <future>
 #include <functional>
+#include <vector>
 
 #define NUM_GROUPS 1
 #define GROUP_SIZE 1
@@ -126,7 +127,7 @@ struct thread_pool {
             thread.get();
         }
         threads.clear();
-        shared = {0};
+        shared.store(0, std::memory_order_seq_cst);
     }
     ~thread_pool() {
         finish();
@@ -134,7 +135,7 @@ struct thread_pool {
 private:
     std::atomic_int shared {0};
     std::vector<std::future<void>> threads;
-    int max_threads = 1;
+    const int max_threads = 1;
 };
 
 
