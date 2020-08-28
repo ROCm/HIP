@@ -67,7 +67,7 @@ See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for 
 - C++-style device-side dynamic memory allocations (free, new, delete) (CUDA 4.0)
 - Virtual functions, indirect functions and try/catch (CUDA 4.0)
 - `__prof_trigger`
-- PTX assembly (CUDA 4.0).  HCC supports inline GCN assembly.
+- PTX assembly (CUDA 4.0).  HIP_Clang supports inline GCN assembly.
 - Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.  These include:
   - printf
 
@@ -95,7 +95,7 @@ However, we can provide a rough summary of the features included in each CUDA SD
     - __shfl intriniscs (supported)
 - CUDA 7.0 :
     - Per-thread-streams (under development)
-    - C++11 (HCC supports all of C++11, all of C++14 and some C++17 features)
+    - C++11 (HIP-Clang supports all of C++11, all of C++14 and some C++17 features)
 - CUDA 7.5 :
     - float16 (supported)
 - CUDA 8.0 :
@@ -239,7 +239,7 @@ No. HC functionality is not supported by HIP-Clang.
 See the [HIP Profiling Guide](hip_porting_guide.md) for more information.
 
 ### What if HIP generates error of "symbol multiply defined!" only on AMD machine?
-Unlike CUDA, in HCC, for functions defined in the header files, the keyword of "__forceinline__" does not imply "static".
+Unlike CUDA, in HIP_Clang, for functions defined in the header files, the keyword of "__forceinline__" does not imply "static".
 Thus, if failed to define "static" keyword, you might see a lot of "symbol multiply defined!" errors at compilation.
 The workaround is to explicitly add the keyword of "static" before any functions that were defined as "__forceinline__".
 
