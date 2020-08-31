@@ -21,20 +21,17 @@ struct CaptureStream {
     orig_fd = fileno(original);
     saved_fd = dup(orig_fd);
 
-    temp_fd = mkstemp(tempname);
-    if (errno) {
+    if ((temp_fd = mkstemp(tempname)) == -1) {
       error(0, errno, "Error");
       assert(false);
     }
 
     fflush(nullptr);
-    dup2(temp_fd, orig_fd);
-    if (errno) {
+    if (dup2(temp_fd, orig_fd) == -1) {
       error(0, errno, "Error");
       assert(false);
     }
-    close(temp_fd);
-    if (errno) {
+    if (close(temp_fd) != 0) {
       error(0, errno, "Error");
       assert(false);
     }
@@ -44,13 +41,11 @@ struct CaptureStream {
     if (saved_fd == -1)
       return;
     fflush(nullptr);
-    dup2(saved_fd, orig_fd);
-    if (errno) {
+    if (dup2(saved_fd, orig_fd) == -1) {
       error(0, errno, "Error");
       assert(false);
     }
-    close(saved_fd);
-    if (errno) {
+    if (close(saved_fd) != 0) {
       error(0, errno, "Error");
       assert(false);
     }
@@ -65,8 +60,7 @@ struct CaptureStream {
 
   ~CaptureStream() {
     restoreStream();
-    remove(tempname);
-    if (errno) {
+    if (remove(tempname) != 0) {
       error(0, errno, "Error");
       assert(false);
     }
