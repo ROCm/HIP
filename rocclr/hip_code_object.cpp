@@ -6,27 +6,12 @@
 #include "hip/hip_runtime.h"
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
+#include <elf/elf.hpp>
 
 namespace hip {
 
 uint64_t CodeObject::ElfSize(const void *emi) {
-  const Elf64_Ehdr *ehdr = (const Elf64_Ehdr*)emi;
-  const Elf64_Shdr *shdr = (const Elf64_Shdr*)((char*)emi + ehdr->e_shoff);
-
-  uint64_t max_offset = ehdr->e_shoff;
-  uint64_t total_size = max_offset + ehdr->e_shentsize * ehdr->e_shnum;
-
-  for (uint16_t i=0; i < ehdr->e_shnum; ++i){
-    uint64_t cur_offset = static_cast<uint64_t>(shdr[i].sh_offset);
-    if (max_offset < cur_offset) {
-      max_offset = cur_offset;
-      total_size = max_offset;
-      if(SHT_NOBITS != shdr[i].sh_type) {
-        total_size += static_cast<uint64_t>(shdr[i].sh_size);
-      }
-    }
-  }
-  return total_size;
+  return amd::Elf::getElfSize(emi);
 }
 
 bool CodeObject::isCompatibleCodeObject(const std::string& codeobj_target_id,

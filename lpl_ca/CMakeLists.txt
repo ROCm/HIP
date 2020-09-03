@@ -1,4 +1,10 @@
 #-------------------------------------LPL--------------------------------------#
+# Look for ROCclr which contains elfio
+find_package(ROCclr REQUIRED CONFIG
+  PATHS
+    /opt/rocm
+    /opt/rocm/rocclr)
+
 add_executable(lpl lpl.cpp)
 set_target_properties(
     lpl PROPERTIES
@@ -6,7 +12,12 @@ set_target_properties(
         CXX_STANDARD_REQUIRED ON
         CXX_EXTENSIONS OFF
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-target_include_directories(lpl PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(lpl
+  PUBLIC
+    ${PROJECT_SOURCE_DIR}/src
+  PRIVATE
+    $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_INCLUDE_DIRECTORIES>)
+
 target_compile_options(lpl PUBLIC -Wall)
 target_link_libraries(lpl PUBLIC pthread)
 

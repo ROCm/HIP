@@ -150,12 +150,14 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
   size_t dOffset = 0;
   amd::Memory *dstMemory = getMemoryObject(dst, dOffset);
   amd::Device* queueDevice = &queue.device();
-
-  if (((srcMemory == nullptr) && (dstMemory == nullptr)) ||
-      (kind == hipMemcpyHostToHost)) {
-    queue.finish();
-    memcpy(dst, src, sizeBytes);
-    return hipSuccess;
+  if ((srcMemory == nullptr) && (dstMemory == nullptr)) {
+    if ((kind == hipMemcpyHostToHost) || (kind == hipMemcpyDefault)) {
+      queue.finish();
+      memcpy(dst, src, sizeBytes);
+      return hipSuccess;
+    } else {
+      return hipErrorInvalidValue;
+    }
   } else if ((srcMemory == nullptr) && (dstMemory != nullptr)) {
     amd::HostQueue* pQueue = &queue;
     if (queueDevice != dstMemory->getContext().devices()[0]) {

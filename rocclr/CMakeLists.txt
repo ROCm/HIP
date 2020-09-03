@@ -96,8 +96,6 @@ find_package(amd_comgr REQUIRED CONFIG
 
 message(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 
-add_definitions(-DBSD_LIBELF)
-
 add_library(hip64 OBJECT
  hip_context.cpp
  hip_code_object.cpp
@@ -129,10 +127,8 @@ target_include_directories(hip64
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_BINARY_DIR}/include
   PRIVATE
-    ${CMAKE_SOURCE_DIR}/elfio
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/amdocl
-    ${PROJECT_SOURCE_DIR}/include/hip/hcc_detail/elfio
     ${ROCR_INCLUDES}
     $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_INCLUDE_DIRECTORIES>
     $<TARGET_PROPERTY:amd_comgr,INTERFACE_INCLUDE_DIRECTORIES>)
