@@ -8,6 +8,10 @@ set(BUILD_SHARED_LIBS ON  CACHE BOOL "Build shared library (.so) or static lib (
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
+if(NOT ${BUILD_SHARED_LIBS} AND NOT DEFINED ENABLE_HIP_PCH)
+  set(ENABLE_HIP_PCH ON CACHE BOOL "enable/disable pre-compiled hip headers")
+endif()
+
 #############################
 # Options
 #############################

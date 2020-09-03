@@ -145,7 +145,15 @@ if(ROCclr_FOUND)
       $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_COMPILE_DEFINITIONS>)
 endif()
 
- # Enable profiling API
+# Short-Term solution for pre-compiled headers for online compilation
+# Enable pre compiled header
+if(${ENABLE_HIP_PCH})
+    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_gen_pch.sh")
+    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh")
+    add_definitions(-DENABLE_HIP_PCH)
+endif()
+
+# Enable profiling API
 if(USE_PROF_API EQUAL 1)
   find_path(PROF_API_HEADER_DIR prof_protocol.h
     HINTS
@@ -205,17 +213,21 @@ target_link_libraries(host INTERFACE hip::amdhip64)
 
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
+
+# Short-Term solution for pre-compiled headers for online compilation
+if(${ENABLE_HIP_PCH})
+  target_link_libraries(amdhip64 PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
+endif()
+
 # TODO: we may create host_static and device_static to let app
 # link amdhip64_static
 
 # FIXME: Linux convention is to create static library with same base
 # filename.
-
 if(${BUILD_SHARED_LIBS})
     target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl hsa-runtime64::hsa-runtime64)
     INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
 else()
-
     target_link_libraries(amdhip64 PRIVATE Threads::Threads dl hsa-runtime64::hsa-runtime64 amd_comgr)
     # combine objects of vid and hip into amdhip64_static
     add_custom_target(
@@ -228,9 +240,7 @@ else()
        DEPENDS amdhip64 amdrocclr_static # To make sure this is the last step
        COMMENT "Combining static libs into amdhip64_static"
     )
-
     INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
-
 endif()
 
 INSTALL(TARGETS amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
