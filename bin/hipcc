@@ -307,7 +307,7 @@ if ($HIP_PLATFORM eq "clang") {
 
     $marker_lib_path = "$marker_path/bin/x86_64";
     if (-e $marker_lib_path) {
-        $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,--rpath=$marker_lib_path";
+        $HIPLDFLAGS .= " -L$marker_lib_path -lCXLActivityLogger -Wl,-rpath=$marker_lib_path";
     }
 
     if (not $isWindows) {
@@ -767,7 +767,7 @@ if ($needHipHcc) {
     if ($linkType eq 0) {
         substr($HIPLDFLAGS,0,0) = "  $HIP_LIB_PATH/libhip_hcc_static.a " ;
     } else {
-        substr($HIPLDFLAGS,0,0) = "  -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib $HIP_LIB_PATH/libhip_hcc.so ";
+        substr($HIPLDFLAGS,0,0) = "  -Wl,--enable-new-dtags -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib $HIP_LIB_PATH/libhip_hcc.so ";
     }
 }
 
