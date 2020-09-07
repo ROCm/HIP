@@ -1353,7 +1353,7 @@ inline static hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attribut
     struct cudaPointerAttributes cPA;
     hipError_t err = hipCUDAErrorTohipError(cudaPointerGetAttributes(&cPA, ptr));
     if (err == hipSuccess) {
-        switch (cPA.memoryType) {
+        switch (cPA.type) {
             case cudaMemoryTypeDevice:
                 attributes->memoryType = hipMemoryTypeDevice;
                 break;
