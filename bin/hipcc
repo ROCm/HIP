@@ -322,6 +322,9 @@ if ($HIP_PLATFORM eq "clang") {
 } elsif ($HIP_PLATFORM eq "nvcc") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
     $HIP_INCLUDE_PATH = "$HIP_PATH/include";
+    # Set HIP_COMPILER to nvcc - Resolves Issue 2163 (https://github.com/ROCm-Developer-Tools/HIP/issues/2163)
+    $HIP_COMPILER="$CUDA_PATH/bin/nvcc";
+    
     if ($verbose & 0x2) {
         print ("CUDA_PATH=$CUDA_PATH\n");
     }
