@@ -72,11 +72,47 @@ hipError_t canAccessPeer(int* canAccessPeer, int deviceId, int peerDeviceId){
   return hipSuccess;
 }
 
+hipError_t findLinkInfo(int device1, int device2,
+                        std::vector<amd::Device::LinkAttrType>* link_attrs) {
+
+  amd::Device* amd_dev_obj1 = nullptr;
+  amd::Device* amd_dev_obj2 = nullptr;
+  const int numDevices = static_cast<int>(g_devices.size());
+
+  if ((device1 < 0) || (device1 >= numDevices) || (device2 < 0) || (device2 >= numDevices)) {
+    return hipErrorInvalidDevice;
+  }
+
+  amd_dev_obj1 = g_devices[device1]->devices()[0];
+  amd_dev_obj2 = g_devices[device2]->devices()[0];
+
+  if (!amd_dev_obj1->findLinkInfo(*amd_dev_obj2, link_attrs)) {
+    return hipErrorInvalidHandle;
+  }
+
+  return hipSuccess;
+}
+
+hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2,
+                                        uint32_t* linktype, uint32_t* hopcount) {
+  HIP_INIT_API(hipExtGetLinkTypeAndHopCount, device1, device2, linktype, hopcount);
+
+  // Fill out the list of LinkAttributes
+  std::vector<amd::Device::LinkAttrType> link_attrs;
+  link_attrs.push_back(std::make_pair(amd::Device::LinkAttribute::kLinkLinkType, 0));
+  link_attrs.push_back(std::make_pair(amd::Device::LinkAttribute::kLinkHopCount, 0));
+
+  HIP_RETURN_ONFAIL(findLinkInfo(device1, device2, &link_attrs));
+
+  *linktype = static_cast<uint32_t>(link_attrs[0].second);
+  *hopcount = static_cast<uint32_t>(link_attrs[1].second);
+
+  HIP_RETURN(hipSuccess);
+}
+
 hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
                                     int srcDevice, int dstDevice) {
   HIP_INIT_API(hipDeviceGetP2PAttribute, value, attr, srcDevice, dstDevice);
-
-  hipError_t hip_error = hipSuccess;
 
   if (value == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
@@ -87,26 +123,50 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
     HIP_RETURN(hipErrorInvalidDevice);
   }
 
+  std::vector<amd::Device::LinkAttrType> link_attrs;
+
   switch (attr) {
-    case hipDevP2PAttrPerformanceRank :
-      assert(0 && "Unimplemented");
+    case hipDevP2PAttrPerformanceRank : {
+      link_attrs.push_back(std::make_pair(amd::Device::LinkAttribute::kLinkLinkType, 0));
       break;
-    case hipDevP2PAttrAccessSupported :
-      hip_error = canAccessPeer(value, srcDevice, dstDevice);
+    }
+    case hipDevP2PAttrAccessSupported : {
+      HIP_RETURN_ONFAIL(canAccessPeer(value, srcDevice, dstDevice));
       break;
-    case hipDevP2PAttrNativeAtomicSupported :
-      assert(0 && "Unimplemented");
+    }
+    case hipDevP2PAttrNativeAtomicSupported : {
+      link_attrs.push_back(std::make_pair(amd::Device::LinkAttribute::kLinkLinkType, 0));
       break;
-    case hipDevP2PAttrHipArrayAccessSupported :
-      assert(0 && "Unimplemented");
+    }
+    case hipDevP2PAttrHipArrayAccessSupported : {
+      hipDeviceProp_t srcDeviceProp;
+      hipDeviceProp_t dstDeviceProp;
+      HIP_RETURN_ONFAIL(hipGetDeviceProperties(&srcDeviceProp, srcDevice));
+      HIP_RETURN_ONFAIL(hipGetDeviceProperties(&dstDeviceProp, dstDevice));
+
+      // Linear layout access is supported if P2P is enabled
+      // Opaque Images are supported only on homogeneous systems
+      // Might have more conditions to check, in future.
+      if (srcDeviceProp.gcnArch == dstDeviceProp.gcnArch) {
+        HIP_RETURN_ONFAIL(canAccessPeer(value, srcDevice, dstDevice));
+      } else {
+        value = 0;
+      }
       break;
-    default :
+    }
+    default : {
       DevLogPrintfError("Invalid attribute attr: %d ", attr);
-      hip_error = hipErrorInvalidValue;
+      HIP_RETURN(hipErrorInvalidValue);
       break;
+    }
   }
 
-  HIP_RETURN(hip_error);
+  if ((attr != hipDevP2PAttrAccessSupported) && (attr != hipDevP2PAttrHipArrayAccessSupported)) {
+    HIP_RETURN_ONFAIL(findLinkInfo(srcDevice, dstDevice, &link_attrs));
+    *value = static_cast<int>(link_attrs[0].second);
+  }
+
+  HIP_RETURN(hipSuccess);
 }
 
 hipError_t hipDeviceCanAccessPeer(int* canAccess, int deviceId, int peerDeviceId) {

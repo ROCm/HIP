@@ -345,6 +345,12 @@ typedef struct hipLaunchParams_t {
     hipStream_t stream;     ///< Stream identifier
 } hipLaunchParams;
 
+// Pre-Compiled header for online compilation
+#ifdef ENABLE_HIP_PCH
+extern const char* __hip_pch;
+extern unsigned __hip_pch_size;
+void __hipGetPCH(const char** pch, unsigned int*size);
+#endif
 
 // Doxygen end group GlobalDefs
 /**  @} */

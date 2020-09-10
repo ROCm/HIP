@@ -2029,14 +2029,20 @@ hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsi
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
   HIP_INIT_API(hipPointerGetAttributes, attributes, ptr);
 
+  if (attributes == nullptr || ptr == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
   size_t offset = 0;
   amd::Memory* memObj = getMemoryObject(ptr, offset);
   int device = 0;
+  memset(attributes, 0, sizeof(hipPointerAttribute_t));
 
   if (memObj != nullptr) {
     attributes->memoryType = (CL_MEM_SVM_FINE_GRAIN_BUFFER & memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
-    attributes->hostPointer = memObj->getSvmPtr();
-    attributes->devicePointer = memObj->getSvmPtr();
+    if (attributes->memoryType == hipMemoryTypeHost) {
+      attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
+    }
+    attributes->devicePointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
     attributes->isManaged = 0;
     attributes->allocationFlags = memObj->getMemFlags() >> 16;
 
