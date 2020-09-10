@@ -1533,13 +1533,14 @@ inline _Float16 pow(_Float16 base, int iexp) {
   return __ocml_pown_f16(base, iexp);
 }
 
-#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
-
 #pragma pop_macro("__DEF_FLOAT_FUN")
 #pragma pop_macro("__DEF_FLOAT_FUN2")
 #pragma pop_macro("__DEF_FLOAT_FUN2I")
 #pragma pop_macro("__HIP_OVERLOAD")
 #pragma pop_macro("__HIP_OVERLOAD2")
+
+#endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
+
 #pragma pop_macro("__DEVICE__")
 #pragma pop_macro("__RETURN_TYPE")
 

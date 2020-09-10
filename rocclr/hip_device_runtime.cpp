@@ -551,29 +551,3 @@ hipError_t hipSetValidDevices ( int* device_arr, int  len ) {
 
   HIP_RETURN(hipErrorNotSupported);
 }
-
-hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* linktype, uint32_t* hopcount) {
-  HIP_INIT_API(hipExtGetLinkTypeAndHopCount, device1, device2, linktype, hopcount);
-
-  amd::Device* amd_dev_obj1 = nullptr;
-  amd::Device* amd_dev_obj2 = nullptr;
-  const int numDevices = static_cast<int>(g_devices.size());
-
-  if ((device1 < 0) || (device1 >= numDevices) || (device2 < 0) || (device2 >= numDevices)) {
-    HIP_RETURN(hipErrorInvalidDevice);
-  }
-
-  if ((linktype == nullptr) || (hopcount == nullptr)) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
-
-  amd_dev_obj1 = g_devices[device1]->devices()[0];
-  amd_dev_obj2 = g_devices[device2]->devices()[0];
-
-  if (!amd_dev_obj1->findLinkTypeAndHopCount(amd_dev_obj2, linktype, hopcount)) {
-    HIP_RETURN(hipErrorInvalidHandle);
-  }
-
-  HIP_RETURN(hipSuccess);
-}
-

@@ -274,6 +274,7 @@ global:
     hipMemcpyAtoH;
     hipMemcpyHtoA;
     hipMemcpyParam2DAsync;
+    __hipGetPCH;
     };
 local:
     *;
