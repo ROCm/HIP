@@ -264,3 +264,5 @@ hipMemcpy2DFromArrayAsync
 hipMemcpyAtoH
 hipMemcpyHtoA
 hipMemcpyParam2DAsync
+__gnu_h2f_ieee
+__gnu_f2h_ieee
