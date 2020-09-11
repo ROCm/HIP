@@ -496,6 +496,22 @@ int main()
 }
 ```
 
+## CU_POINTER_ATTRIBUTE_MEMORY_TYPE
+To get pointer's memory type in HIP/HIP-Clang one should use hipPointerGetAttributes API. First parameter of the API is hipPointerAttribute_t which has 'memoryType' as member variable. 'memoryType' indicates input pointer is allocated on device or host.
+
+For example:
+```
+double * ptr;
+hipMalloc(reinterpret_cast<void**>(&ptr), sizeof(double));
+hipPointerAttribute_t attr;
+hipPointerGetAttributes(&attr, ptr); /*attr.memoryType will have value as hipMemoryTypeDevice*/
+
+double* ptrHost;
+hipHostMalloc(&ptrHost, sizeof(double));
+hipPointerAttribute_t attr;
+hipPointerGetAttributes(&attr, ptrHost); /*attr.memoryType will have value as hipMemoryTypeHost*/
+```
+
 ## threadfence_system
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.
 Some implementations can provide this behavior by flushing the GPU L2 cache.
