@@ -686,11 +686,19 @@ static inline std::uint32_t __convert_float_to_half(float a) noexcept {
   return s | v;
 }
 
-extern "C" __attribute__((weak)) float  __gnu_h2f_ieee(unsigned short h){
+extern "C"
+#if !defined(_MSC_VER)
+__attribute__((weak))
+#endif
+float  __gnu_h2f_ieee(unsigned short h){
   return __convert_half_to_float((std::uint32_t) h);
 }
 
-extern "C" __attribute__((weak)) unsigned short  __gnu_f2h_ieee(float f){
+extern "C"
+#if !defined(_MSC_VER)
+__attribute__((weak))
+#endif
+unsigned short  __gnu_f2h_ieee(float f){
   return (unsigned short)__convert_float_to_half(f);
 }
 
