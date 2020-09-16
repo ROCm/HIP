@@ -773,6 +773,9 @@ hipError_t PlatformState::getDynFunc(hipFunction_t* hfunc, hipModule_t hmod,
     DevLogPrintfError("Cannot find the module: 0x%x", hmod);
     return hipErrorNotFound;
   }
+  if (0 == strlen(func_name)) {
+    return hipErrorNotFound;
+  }
 
   return it->second->getDynFunc(hfunc, func_name);
 }
