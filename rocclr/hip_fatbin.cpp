@@ -64,6 +64,9 @@ hipError_t FatBinaryInfo::ExtractFatBinary(const std::vector<hip::Device*>& devi
     if (!amd::Os::GetFileHandle(fname_.c_str(), &fdesc_, &fsize_)) {
       return hipErrorFileNotFound;
     }
+    if (fsize_ == 0) {
+      return hipErrorInvalidKernelFile;
+    }
 
     // Extract the code object from file
     hip_error = CodeObject::ExtractCodeObjectFromFile(fdesc_, fsize_,
