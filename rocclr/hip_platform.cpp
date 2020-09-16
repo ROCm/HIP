@@ -68,7 +68,7 @@ static bool isCompatibleCodeObject(const std::string& codeobj_target_id,
   return codeobj_target_id == short_name;
 }
 
-extern "C" hip::FatBinaryInfoType* __hipRegisterFatBinary(const void* data)
+extern "C" hip::FatBinaryInfo** __hipRegisterFatBinary(const void* data)
 {
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
   if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
@@ -102,7 +102,7 @@ bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** va
 }
 
 extern "C" void __hipRegisterFunction(
-  hip::FatBinaryInfoType* modules,
+  hip::FatBinaryInfo** modules,
   const void*  hostFunction,
   char*        deviceFunction,
   const char*  deviceName,
@@ -137,7 +137,7 @@ extern "C" void __hipRegisterFunction(
 // track of the value of the device side global variable between kernel
 // executions.
 extern "C" void __hipRegisterVar(
-  hip::FatBinaryInfoType* modules,   // The device modules containing code object
+  hip::FatBinaryInfo** modules,   // The device modules containing code object
   void*       var,       // The shadow variable in host code
   char*       hostVar,   // Variable name in host code
   char*       deviceVar, // Variable name in device code
@@ -150,7 +150,7 @@ extern "C" void __hipRegisterVar(
   PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipRegisterSurface(hip::FatBinaryInfoType* modules,      // The device modules containing code object
+extern "C" void __hipRegisterSurface(hip::FatBinaryInfo** modules,      // The device modules containing code object
                                      void* var,        // The shadow variable in host code
                                      char* hostVar,    // Variable name in host code
                                      char* deviceVar,  // Variable name in device code
@@ -159,7 +159,7 @@ extern "C" void __hipRegisterSurface(hip::FatBinaryInfoType* modules,      // Th
   PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipRegisterTexture(hip::FatBinaryInfoType* modules,      // The device modules containing code object
+extern "C" void __hipRegisterTexture(hip::FatBinaryInfo** modules,      // The device modules containing code object
                                      void* var,        // The shadow variable in host code
                                      char* hostVar,    // Variable name in host code
                                      char* deviceVar,  // Variable name in device code
@@ -168,7 +168,7 @@ extern "C" void __hipRegisterTexture(hip::FatBinaryInfoType* modules,      // Th
   PlatformState::instance().registerStatGlobalVar(var, var_ptr);
 }
 
-extern "C" void __hipUnregisterFatBinary(hip::FatBinaryInfoType* modules)
+extern "C" void __hipUnregisterFatBinary(hip::FatBinaryInfo** modules)
 {
   HIP_INIT();
 
@@ -644,23 +644,69 @@ hipError_t ihipLaunchKernel(const void* hostFunction,
                                     flags));
 }
 
+// conversion routines between float and half precision
+
+static inline std::uint32_t f32_as_u32(float f) { union { float f; std::uint32_t u; } v; v.f = f; return v.u; }
+
+static inline float u32_as_f32(std::uint32_t u) { union { float f; std::uint32_t u; } v; v.u = u; return v.f; }
+
+static inline int clamp_int(int i, int l, int h) { return std::min(std::max(i, l), h); }
+
+
+// half float, the f16 is in the low 16 bits of the input argument
+
+static inline float __convert_half_to_float(std::uint32_t a) noexcept {
+
+  std::uint32_t u = ((a << 13) + 0x70000000U) & 0x8fffe000U;
+
+  std::uint32_t v = f32_as_u32(u32_as_f32(u) * u32_as_f32(0x77800000U)/*0x1.0p+112f*/) + 0x38000000U;
+
+  u = (a & 0x7fff) != 0 ? v : u;
+
+  return u32_as_f32(u) * u32_as_f32(0x07800000U)/*0x1.0p-112f*/;
+
+}
+
+// float half with nearest even rounding
+// The lower 16 bits of the result is the bit pattern for the f16
+static inline std::uint32_t __convert_float_to_half(float a) noexcept {
+  std::uint32_t u = f32_as_u32(a);
+  int e = static_cast<int>((u >> 23) & 0xff) - 127 + 15;
+  std::uint32_t m = ((u >> 11) & 0xffe) | ((u & 0xfff) != 0);
+  std::uint32_t i = 0x7c00 | (m != 0 ? 0x0200 : 0);
+  std::uint32_t n = ((std::uint32_t)e << 12) | m;
+  std::uint32_t s = (u >> 16) & 0x8000;
+  int b = clamp_int(1-e, 0, 13);
+  std::uint32_t d = (0x1000 | m) >> b;
+  d |= (d << b) != (0x1000 | m);
+  std::uint32_t v = e < 1 ? d : n;
+  v = (v >> 2) + (((v & 0x7) == 3) | ((v & 0x7) > 5));
+  v = e > 30 ? 0x7c00 : v;
+  v = e == 143 ? i : v;
+  return s | v;
+}
+
+extern "C" __attribute__((weak)) float  __gnu_h2f_ieee(unsigned short h){
+  return __convert_half_to_float((std::uint32_t) h);
+}
+
+extern "C" __attribute__((weak)) unsigned short  __gnu_f2h_ieee(float f){
+  return (unsigned short)__convert_float_to_half(f);
+}
+
 void PlatformState::init()
 {
   amd::ScopedLock lock(lock_);
-
   if(initialized_ || g_devices.empty()) {
     return;
   }
   initialized_ = true;
-
   for (auto& it : statCO_.modules_) {
     digestFatBinary(it.first, it.second);
   }
-
   for (auto &it : statCO_.vars_) {
     it.second->resize_dVar(g_devices.size());
   }
-
   for (auto &it : statCO_.functions_) {
     it.second->resize_dFunc(g_devices.size());
   }
@@ -789,15 +835,15 @@ hipError_t PlatformState::getDynTexRef(const char* hostVar, hipModule_t hmod, te
   return hipSuccess;
 }
 
-hipError_t PlatformState::digestFatBinary(const void* data, hip::FatBinaryInfoType& programs) {
+hipError_t PlatformState::digestFatBinary(const void* data, hip::FatBinaryInfo*& programs) {
  return statCO_.digestFatBinary(data, programs);
 }
 
-hip::FatBinaryInfoType* PlatformState::addFatBinary(const void* data) {
+hip::FatBinaryInfo** PlatformState::addFatBinary(const void* data) {
   return statCO_.addFatBinary(data, initialized_);
 }
 
-hipError_t PlatformState::removeFatBinary(hip::FatBinaryInfoType* module) {
+hipError_t PlatformState::removeFatBinary(hip::FatBinaryInfo** module) {
   return statCO_.removeFatBinary(module);
 }
 

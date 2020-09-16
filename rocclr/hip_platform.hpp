@@ -66,9 +66,9 @@ public:
   }
 
   //Static Code Objects functions
-  hip::FatBinaryInfoType* addFatBinary(const void* data);
-  hipError_t removeFatBinary(hip::FatBinaryInfoType* module);
-  hipError_t digestFatBinary(const void* data, hip::FatBinaryInfoType& programs);
+  hip::FatBinaryInfo** addFatBinary(const void* data);
+  hipError_t removeFatBinary(hip::FatBinaryInfo** module);
+  hipError_t digestFatBinary(const void* data, hip::FatBinaryInfo*& programs);
 
   hipError_t registerStatFunction(const void* hostFunction, hip::Function* func);
   hipError_t registerStatGlobalVar(const void* hostVar, hip::Var* var);
