@@ -81,7 +81,7 @@ DeviceFunc::~DeviceFunc() {
 }
 
 //Abstract functions
-Function::Function(std::string name, FatBinaryInfoType* modules)
+Function::Function(std::string name, FatBinaryInfo** modules)
                    : name_(name), modules_(modules) {
   dFunc_.resize(g_devices.size());
 }
@@ -106,22 +106,13 @@ hipError_t Function::getDynFunc(hipFunction_t* hfunc, hipModule_t hmod) {
 
 hipError_t Function::getStatFunc(hipFunction_t* hfunc, int deviceId) {
   guarantee(modules_ != nullptr && "Module not initialized");
-  guarantee((deviceId >= 0) && "Invalid DeviceId, less than zero");
-  guarantee((static_cast<size_t>(deviceId) < modules_->size())
-             && "Invalid DeviceId, greater than no of code objects");
 
-  hipModule_t module = (*modules_)[deviceId].first;
-  FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;
-
-  if (!fb_meta->built()) {
-    IHIP_RETURN_ONFAIL(CodeObject::add_program(deviceId, module, fb_meta->binary_ptr(),
-                                               fb_meta->binary_size()));
-    IHIP_RETURN_ONFAIL(CodeObject::build_module(module, g_devices[deviceId]->devices()));
-    fb_meta->set_built();
-  }
+  hipModule_t hmod = nullptr;
+  (*modules_)->BuildProgram(deviceId);
+  (*modules_)->GetModule(deviceId, &hmod);
 
   if (dFunc_[deviceId] == nullptr) {
-    dFunc_[deviceId] = new DeviceFunc(name_, (*modules_)[deviceId].first);
+    dFunc_[deviceId] = new DeviceFunc(name_, hmod);
   }
   *hfunc = dFunc_[deviceId]->asHipFunction();
 
@@ -130,22 +121,13 @@ hipError_t Function::getStatFunc(hipFunction_t* hfunc, int deviceId) {
 
 hipError_t Function::getStatFuncAttr(hipFuncAttributes* func_attr, int deviceId) {
   guarantee((modules_ != nullptr) && "Module not initialized");
-  guarantee((deviceId >= 0) && "Invalid DeviceId, less than zero");
-  guarantee((static_cast<size_t>(deviceId) < modules_->size())
-            && "Invalid DeviceId, greater than no of code objects");
 
-  hipModule_t module = (*modules_)[deviceId].first;
-  FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;
-
-  if (!fb_meta->built()) {
-    IHIP_RETURN_ONFAIL(CodeObject::add_program(deviceId, module, fb_meta->binary_ptr(),
-                                               fb_meta->binary_size()));
-    IHIP_RETURN_ONFAIL(CodeObject::build_module(module, g_devices[deviceId]->devices()));
-    fb_meta->set_built();
-  }
+  hipModule_t hmod = nullptr;
+  (*modules_)->BuildProgram(deviceId);
+  (*modules_)->GetModule(deviceId, &hmod);
 
   if (dFunc_[deviceId] == nullptr) {
-    dFunc_[deviceId] = new DeviceFunc(name_, (*modules_)[deviceId].first);
+    dFunc_[deviceId] = new DeviceFunc(name_, hmod);
   }
 
   const std::vector<amd::Device*>& devices = amd::Device::getDevices(CL_DEVICE_TYPE_GPU, false);
@@ -171,7 +153,7 @@ hipError_t Function::getStatFuncAttr(hipFuncAttributes* func_attr, int deviceId)
 
 //Abstract Vars
 Var::Var(std::string name, DeviceVarKind dVarKind, size_t size, int type, int norm,
-         FatBinaryInfoType* modules) : name_(name), dVarKind_(dVarKind), size_(size),
+         FatBinaryInfo** modules) : name_(name), dVarKind_(dVarKind), size_(size),
          type_(type), norm_(norm), modules_(modules) {
   dVar_.resize(g_devices.size());
 }
@@ -203,18 +185,12 @@ hipError_t Var::getStatDeviceVar(DeviceVar** dvar, int deviceId) {
   guarantee((static_cast<size_t>(deviceId) < g_devices.size())
             && "Invalid DeviceId, greater than no of code objects");
 
-  hipModule_t module = (*modules_)[deviceId].first;
-  FatBinaryMetaInfo* fb_meta = (*modules_)[deviceId].second;
-
-  if (!fb_meta->built()) {
-    IHIP_RETURN_ONFAIL(CodeObject::add_program(deviceId, module, fb_meta->binary_ptr(),
-                                               fb_meta->binary_size()));
-    IHIP_RETURN_ONFAIL(CodeObject::build_module(module, g_devices[deviceId]->devices()));
-    fb_meta->set_built();
-  }
+  hipModule_t hmod = nullptr;
+  (*modules_)->BuildProgram(deviceId);
+  (*modules_)->GetModule(deviceId, &hmod);
 
   if (dVar_[deviceId] == nullptr) {
-    dVar_[deviceId] = new DeviceVar(name_, (*modules_)[deviceId].first);
+    dVar_[deviceId] = new DeviceVar(name_, hmod);
   }
 
   *dvar = dVar_[deviceId];

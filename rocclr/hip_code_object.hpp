@@ -21,11 +21,6 @@ class CodeObject {
 public:
   virtual ~CodeObject() {}
 
-  //Functions to add_dev_prog and build
-  static hipError_t add_program(int deviceId, hipModule_t hmod, const void* binary_ptr,
-                                size_t binary_size);
-  static hipError_t build_module(hipModule_t hmod, const std::vector<amd::Device*>& devices);
-
   //ClangOFFLOADBundle info
   #define CLANG_OFFLOAD_BUNDLER_MAGIC_STR "__CLANG_OFFLOAD_BUNDLE__"
   #define HIP_AMDGCN_AMDHSA_TRIPLE "hip-amdgcn-amd-amdhsa"
@@ -45,18 +40,30 @@ public:
     __ClangOffloadBundleDesc desc[1];
   };
 
+
+  // Given an file desc and file size, extracts to code object for corresponding devices,
+  // return code_objs{binary_ptr, binary_size}, which could be used to determine foffset
+  static hipError_t ExtractCodeObjectFromFile(amd::Os::FileDesc fdesc, size_t fsize,
+                    const std::vector<const char*>& device_names,
+                    std::vector<std::pair<const void*, size_t>>& code_objs);
+
+  // Given an ptr to memory, extracts to code object for corresponding devices,
+  // returns code_objs{binary_ptr, binary_size} and uniform resource indicator
+  static hipError_t ExtractCodeObjectFromMemory(const void* data,
+                    const std::vector<const char*>& device_names,
+                    std::vector<std::pair<const void*, size_t>>& code_objs,
+                    std::string& uri);
+
+  static uint64_t ElfSize(const void* emi);
+
 protected:
+  static hipError_t extractCodeObjectFromFatBinary(const void*,
+                    const std::vector<const char*>&,
+                    std::vector<std::pair<const void*, size_t>>&);
+
   CodeObject() {}
-  //Given an ptr to image or file, extracts to code object
-  //for corresponding devices
-  hipError_t extractCodeObjectFromFatBinary(const void*,
-             const std::vector<const char*>&,
-             std::vector<std::pair<const void*, size_t>>&);
-
-  uint64_t ElfSize(const void* emi);
-
 private:
-  bool isCompatibleCodeObject(const std::string& codeobj_target_id,
+  static bool isCompatibleCodeObject(const std::string& codeobj_target_id,
                                      const char* device_name);
 
   friend const std::vector<hipModule_t>& modules();
@@ -64,29 +71,26 @@ private:
 
 //Dynamic Code Object
 class DynCO : public CodeObject {
-  amd::Monitor dclock_{"Guards Static Code object", true};
+  amd::Monitor dclock_{"Guards Dynamic Code object", true};
 
 public:
-  DynCO();
+  DynCO() {}
   virtual ~DynCO();
 
   //LoadsCodeObject and its data
   hipError_t loadCodeObject(const char* fname, const void* image=nullptr);
-  hipModule_t module() { return reinterpret_cast<hipModule_t>(as_cl(program_)); };
+  hipModule_t module() { return fb_info_->Module(ihipGetDevice()); };
 
   //Gets GlobalVar/Functions from a dynamically loaded code object
   hipError_t getDynFunc(hipFunction_t* hfunc, std::string func_name);
   hipError_t getDeviceVar(DeviceVar** dvar, std::string var_name, int deviceId);
 
 private:
-  amd::Program* program_;
+  FatBinaryInfo* fb_info_;
 
   //Maps for vars/funcs, could be keyed in with std::string name
   std::unordered_map<std::string, Function*> functions_;
   std::unordered_map<std::string, Var*> vars_;
-
-  //Load Code Object Data(Vars/UndefinedVars/Funcs)
-  hipError_t loadCodeObjectData(const void* mmap_ptr, size_t mmap_size);
 
   //Populate Global Vars/Funcs from an code object(@ module_load)
   hipError_t populateDynGlobalFuncs();
@@ -101,9 +105,9 @@ public:
   virtual ~StatCO();
 
   //Add/Remove/Digest Fat Binaries passed to us from "__hipRegisterFatBinary"
-  FatBinaryInfoType* addFatBinary(const void* data, bool initialized);
-  hipError_t removeFatBinary(FatBinaryInfoType* module);
-  hipError_t digestFatBinary(const void* data, FatBinaryInfoType& programs);
+  FatBinaryInfo** addFatBinary(const void* data, bool initialized);
+  hipError_t removeFatBinary(FatBinaryInfo** module);
+  hipError_t digestFatBinary(const void* data, FatBinaryInfo*& programs);
 
   //Register vars/funcs given to use from __hipRegister[Var/Func]
   hipError_t registerStatFunction(const void* hostFunction, Function* func);
@@ -120,7 +124,7 @@ public:
 private:
   friend class ::PlatformState;
   //Populated during __hipRegisterFatBinary
-  std::unordered_map<const void*, FatBinaryInfoType> modules_;
+  std::unordered_map<const void*, FatBinaryInfo*> modules_;
   //Populated during __hipRegisterFuncs
   std::unordered_map<const void*, Function*> functions_;
   //Populated during __hipRegisterVars

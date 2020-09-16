@@ -103,6 +103,7 @@ add_library(hip64 OBJECT
  hip_device_runtime.cpp
  hip_error.cpp
  hip_event.cpp
+ hip_fatbin.cpp
  hip_global.cpp
  hip_hmm.cpp
  hip_memory.cpp
