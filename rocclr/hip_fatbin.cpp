@@ -12,7 +12,7 @@ FatBinaryDeviceInfo::~FatBinaryDeviceInfo() {
 }
 
 FatBinaryInfo::FatBinaryInfo(const char* fname, const void* image)
-               : fdesc_(-1), fsize_(0), image_(image), uri_(std::string()) {
+               : fdesc_(amd::Os::FDescInit()), fsize_(0), image_(image), uri_(std::string()) {
   guarantee(fname || image);
 
   if (fname != nullptr) {
@@ -41,7 +41,7 @@ FatBinaryInfo::~FatBinaryInfo() {
   }
 
   fname_ = std::string();
-  fdesc_ = -1;
+  fdesc_ = amd::Os::FDescInit();
   fsize_ = 0;
   image_ = nullptr;
   uri_ = std::string();
