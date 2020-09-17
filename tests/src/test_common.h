@@ -50,9 +50,12 @@ THE SOFTWARE.
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
-  // HIP Skip Return code set at cmake
+// HIP Skip Return code set at cmake
 #define HIP_SKIP_RETURN_CODE 127
 #define HIP_ENABLE_SKIP_TESTS 0
+
+// Recommended thresholds for Tests
+#define MAX_THREADS 100
 
 inline bool hip_skip_tests_enabled() {
   return HIP_ENABLE_SKIP_TESTS;
