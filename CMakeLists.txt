@@ -8,10 +8,15 @@ set(BUILD_SHARED_LIBS ON  CACHE BOOL "Build shared library (.so) or static lib (
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if(NOT ${BUILD_SHARED_LIBS} AND NOT DEFINED ENABLE_HIP_PCH)
-  set(ENABLE_HIP_PCH ON CACHE BOOL "enable/disable pre-compiled hip headers")
+if(NOT DEFINED __HIP_ENABLE_PCH)
+  set(__HIP_ENABLE_PCH ON CACHE BOOL "enable/disable pre-compiled hip headers")
 endif()
 
+if(${__HIP_ENABLE_PCH})
+  set(_pchStatus 1)
+else()
+  set(_pchStatus 0)
+endif()
 #############################
 # Options
 #############################
@@ -455,6 +460,7 @@ set(_versionInfoHeader
 #define HIP_VERSION_MINOR ${HIP_VERSION_MINOR}
 #define HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}
 #define HIP_VERSION       (HIP_VERSION_MAJOR * 100 + HIP_VERSION_MINOR)\n
+#define __HIP_HAS_GET_PCH ${_pchStatus}\n
 #endif\n
 ")
 file(WRITE "${PROJECT_BINARY_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
