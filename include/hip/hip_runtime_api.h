@@ -32,6 +32,7 @@ THE SOFTWARE.
 
 
 #include <string.h>  // for getDeviceProp
+#include <hip/hip_version.h>
 #include <hip/hip_common.h>
 
 enum {

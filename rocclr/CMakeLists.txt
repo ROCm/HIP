@@ -96,6 +96,14 @@ find_package(amd_comgr REQUIRED CONFIG
 
 message(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 
+find_package(LLVM REQUIRED CONFIG
+   PATHS
+     /opt/rocm/llvm
+   PATH_SUFFIXES
+     lib/cmake/llvm)
+
+message(STATUS "llvm found at ${LLVM_DIR}.")
+
 add_library(hip64 OBJECT
  hip_context.cpp
  hip_code_object.cpp
@@ -148,10 +156,9 @@ endif()
 
 # Short-Term solution for pre-compiled headers for online compilation
 # Enable pre compiled header
-if(${ENABLE_HIP_PCH})
-    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_gen_pch.sh")
-    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh")
-    add_definitions(-DENABLE_HIP_PCH)
+if(${__HIP_ENABLE_PCH})
+    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${LLVM_DIR}")
+    add_definitions(-D__HIP_ENABLE_PCH)
 endif()
 
 # Enable profiling API
@@ -216,7 +223,7 @@ add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
 # Short-Term solution for pre-compiled headers for online compilation
-if(${ENABLE_HIP_PCH})
+if(${__HIP_ENABLE_PCH})
   target_link_libraries(amdhip64 PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
 endif()
 
