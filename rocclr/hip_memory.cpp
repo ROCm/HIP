@@ -202,14 +202,14 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
       }
     } else {
       amd::HostQueue* pQueue = &queue;
-      if (queueDevice != srcMemory->getContext().devices()[0]) {
+      if ((srcMemory->getContext().devices()[0] == dstMemory->getContext().devices()[0]) &&
+          (queueDevice != srcMemory->getContext().devices()[0])) {
         pQueue = hip::getNullStream(srcMemory->getContext());
         amd::Command* cmd = queue.getLastQueuedCommand(true);
         if (cmd != nullptr) {
           waitList.push_back(cmd);
         }
       }
-
       command = new amd::CopyMemoryCommand(*pQueue, CL_COMMAND_COPY_BUFFER, waitList,
           *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
     }
