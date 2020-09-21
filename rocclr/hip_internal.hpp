@@ -252,8 +252,6 @@ extern int ihipGetDevice();
 extern hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags);
 extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 extern amd::Memory* getMemoryObjectWithOffset(const void* ptr, const size_t size);
-extern bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
-                                    size_t* var_size);
 
 constexpr bool kOptionChangeable = true;
 constexpr bool kNewDevProg = false;

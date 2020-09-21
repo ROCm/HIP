@@ -80,27 +80,6 @@ extern "C" hip::FatBinaryInfo** __hipRegisterFatBinary(const void* data)
   return PlatformState::instance().addFatBinary(fbwrapper->binary);
 }
 
-bool PlatformState::getShadowVarInfo(std::string var_name, hipModule_t hmod,
-                                     void** var_addr, size_t* var_size) {
-
-  amd::ScopedLock lock(lock_);
-  if (hipSuccess == getDynGlobalVar(var_name.c_str(), ihipGetDevice(), hmod, var_addr, var_size)) {
-    return true;
-  }
-
-  if (hipSuccess == getStatGlobalVarByName(var_name, ihipGetDevice(), hmod, var_addr, var_size)) {
-    return true;
-  }
-
-  return false;
-}
-
-bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
-                             size_t* var_size) {
-  return PlatformState::instance().getShadowVarInfo(var_name, reinterpret_cast<hipModule_t>(program),
-                                                    var_addr, var_size);
-}
-
 extern "C" void __hipRegisterFunction(
   hip::FatBinaryInfo** modules,
   const void*  hostFunction,
@@ -877,11 +856,6 @@ hipError_t PlatformState::getStatFuncAttr(hipFuncAttributes* func_attr, const vo
 hipError_t PlatformState::getStatGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                                            size_t* size_ptr) {
   return statCO_.getStatGlobalVar(hostVar, deviceId, dev_ptr, size_ptr);
-}
-
-hipError_t PlatformState::getStatGlobalVarByName(std::string hostVar, int deviceId, hipModule_t hmod,
-                                                 hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
-  return statCO_.getStatGlobalVarByName(hostVar, deviceId, hmod, dev_ptr, size_ptr);
 }
 
 void PlatformState::setupArgument(const void *arg, size_t size, size_t offset) {
