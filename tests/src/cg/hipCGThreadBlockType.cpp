@@ -166,6 +166,16 @@ int main()
   ASSERT_EQUAL(hipGetDeviceProperties(&deviceProperties, deviceId), hipSuccess);
   int maxThreadsPerBlock = deviceProperties.maxThreadsPerBlock;
 
+  if (!deviceProperties.cooperativeLaunch) {
+    std::cout << "info: Device doesn't support cooperative launch! skipping the test!\n";
+    if (hip_skip_tests_enabled()) {
+      return hip_skip_retcode();
+    } else {
+      passed();
+    }
+    return 0;
+  }
+
   // Test block sizes which are powers of 2
   int i = 0;
   while (true) {
