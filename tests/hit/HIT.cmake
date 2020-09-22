@@ -303,6 +303,7 @@ macro(MAKE_TEST _config exe)
         add_test(NAME ${testname} CONFIGURATIONS ${_config} COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN})
     endif()
     set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ENVIRONMENT HIP_PATH=${HIP_ROOT_DIR})
+    set_tests_properties(${testname} PROPERTIES SKIP_RETURN_CODE 127 ENVIRONMENT HIP_PATH=${HIP_ROOT_DIR})
 endmacro()
 
 macro(MAKE_NAMED_TEST _config exe testname)

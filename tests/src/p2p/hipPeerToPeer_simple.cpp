@@ -395,6 +395,9 @@ int main(int argc, char* argv[]) {
 
     if (gpuCount < 2) {
         printf("P2P application requires atleast 2 gpu devices\n");
+        if (hip_skip_tests_enabled()) {
+          return hip_skip_retcode();
+        }
     } else {
         if (p_tests & 0x100) {
             testPeerHostToDevice(false /*useAsyncCopy*/);

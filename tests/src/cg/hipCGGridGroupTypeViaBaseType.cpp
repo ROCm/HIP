@@ -139,7 +139,11 @@ int main()
 
   if (!deviceProperties.cooperativeLaunch) {
     std::cout << "info: Device doesn't support cooperative launch! skipping the test!\n";
-    passed();
+    if (hip_skip_tests_enabled()) {
+      return hip_skip_retcode();
+    } else {
+      passed();
+    }
     return 0;
   }
 
