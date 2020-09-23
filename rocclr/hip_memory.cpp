@@ -2038,7 +2038,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
   memset(attributes, 0, sizeof(hipPointerAttribute_t));
 
   if (memObj != nullptr) {
-    attributes->memoryType = (CL_MEM_SVM_FINE_GRAIN_BUFFER & memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
+    attributes->memoryType = ((CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR) & memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
     if (attributes->memoryType == hipMemoryTypeHost) {
       attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
     }
