@@ -487,6 +487,22 @@ struct __HIP_Coordinates {
 #endif
 
 };
+template <typename F>
+#if !defined(_MSC_VER)
+__attribute__((weak))
+#endif
+constexpr typename __HIP_Coordinates<F>::X __HIP_Coordinates<F>::x;
+template <typename F>
+#if !defined(_MSC_VER)
+__attribute__((weak))
+#endif
+constexpr typename __HIP_Coordinates<F>::Y __HIP_Coordinates<F>::y;
+template <typename F>
+#if !defined(_MSC_VER)
+__attribute__((weak))
+#endif
+constexpr typename __HIP_Coordinates<F>::Z __HIP_Coordinates<F>::z;
+
 extern "C" __device__ __attribute__((const)) size_t __ockl_get_global_size(uint);
 inline
 __device__
