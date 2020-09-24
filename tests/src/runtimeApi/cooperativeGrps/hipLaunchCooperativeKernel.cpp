@@ -29,8 +29,7 @@ THE SOFTWARE.
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include "hip/hcc_detail/device_library_decls.h"
-#include "hip/hcc_detail/hip_cooperative_groups.h"
+#include "hip/hip_cooperative_groups.h"
 #include <iostream>
 #include <chrono>
 #include "test_common.h"
