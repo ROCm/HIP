@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */

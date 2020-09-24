@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -37,34 +37,34 @@ THE SOFTWARE.
 using namespace cooperative_groups;
 
 static __global__
-void kernel_cg_grid_group_type_via_public_api(int *sizeTestD,
-                                              int *thdRankTestD,
-                                              int *isValidTestD,
-                                              int *syncTestD)
+void kernel_cg_grid_group_type(int *sizeTestD,
+                               int *thdRankTestD,
+                               int *isValidTestD,
+                               int *syncTestD)
 {
   grid_group gg = this_grid();
   int gIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-  // Test group_size api
-  sizeTestD[gIdx] = group_size(gg);
+  // Test size
+  sizeTestD[gIdx] = gg.size();
 
-  // Test thread_rank api
-  thdRankTestD[gIdx] = thread_rank(gg);
+  // Test thread_rank
+  thdRankTestD[gIdx] = gg.thread_rank();
 
-  // Test is_valid api
-  isValidTestD[gIdx] = is_valid(gg);
+  // Test is_valid
+  isValidTestD[gIdx] = gg.is_valid();
 
-  // Test sync api
+  // Test sync
   __device__ int gm[2];
   if (blockIdx.x == 0 && threadIdx.x == 0)
     gm[0] = 10;
   else if (blockIdx.x == 1 && threadIdx.x == 0)
     gm[1] = 20;
-  sync(gg);
+  gg.sync();
   syncTestD[gIdx] = gm[1] * gm[0];
 }
 
-static void test_cg_grid_group_type_via_public_api(int blockSize)
+static void test_cg_grid_group_type(int blockSize)
 {
   int nBytes = sizeof(int) * 2 * blockSize;
   int *sizeTestD, *sizeTestH;
@@ -90,7 +90,7 @@ static void test_cg_grid_group_type_via_public_api(int blockSize)
   params[1] = &thdRankTestD;
   params[2] = &isValidTestD;
   params[3] = &syncTestD;
-  hipLaunchCooperativeKernel(kernel_cg_grid_group_type_via_public_api,
+  hipLaunchCooperativeKernel(kernel_cg_grid_group_type,
                              2,
                              blockSize,
                              params,
@@ -153,14 +153,14 @@ int main()
     int blockSize = pow(2, i);
     if (blockSize > maxThreadsPerBlock)
       break;
-    test_cg_grid_group_type_via_public_api(blockSize);
+    test_cg_grid_group_type(blockSize);
     ++i;
   }
 
   // Test some random block sizes
   for(int j = 0; j < 10 ; ++j) {
     int blockSize = rand() % maxThreadsPerBlock;
-    test_cg_grid_group_type_via_public_api(blockSize);
+    test_cg_grid_group_type(blockSize);
   }
 
   passed();
