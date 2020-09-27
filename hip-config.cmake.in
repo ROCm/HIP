@@ -101,6 +101,7 @@ include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
 # without worrying other transitive dependencies
 find_dependency(hsa-runtime64)
 find_dependency(Threads)
+find_dependency(ROCclr)
 
 #get_filename_component cannot resolve the symlinks if called from /opt/rocm/lib/hip
 #and do three level up again

@@ -54,6 +54,20 @@ int main(int argc, char* argv[]) {
     size_t N = 1000000;
     size_t Nbytes = N * sizeof(uint32_t);
 
+#ifdef __HIP_ENABLE_PCH
+    // Verify hip_pch.o
+    const char* pch = nullptr;
+    unsigned int size = 0;
+    __hipGetPCH(&pch, &size);
+    printf("pch size: %u\n", size);
+    if (size == 0) {
+        printf("__hipGetPCH failed!\n");
+        return -1;
+    } else {
+        printf("__hipGetPCH succeeded!\n");
+    }
+#endif
+
     int deviceId;
     CHECK(hipGetDevice(&deviceId));
     hipDeviceProp_t props;

@@ -18,8 +18,8 @@
  * */
 
 /* HIT_START
- * BUILD_CMD: hipMalloc %cxx -D__HIP_PLATFORM_HCC__ -I%hip-path/include -I/opt/rocm/include %S/%s -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/%t -std=c++11 EXCLUDE_HIP_PLATFORM nvcc
- * TEST: %t EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD_CMD: hipMalloc %cxx -D__HIP_PLATFORM_HCC__ -I%hip-path/include -I/opt/rocm/include %S/%s -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/%t -std=c++11 EXCLUDE_HIP_PLATFORM nvcc EXCLUDE_HIP_LIB_TYPE static
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvcc EXCLUDE_HIP_LIB_TYPE static
  * HIT_END
  */
 
