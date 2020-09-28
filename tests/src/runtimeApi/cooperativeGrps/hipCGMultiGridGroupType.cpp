@@ -34,6 +34,8 @@ THE SOFTWARE.
 #include <climits>
 
 #define ASSERT_EQUAL(lhs, rhs) assert(lhs == rhs)
+#define ASSERT_LE(lhs, rhs) assert(lhs <= rhs)
+#define ASSERT_GE(lhs, rhs) assert(lhs >= rhs)
 
 using namespace cooperative_groups;
 
@@ -193,15 +195,27 @@ static void test_cg_multi_grid_group_type(int blockSize)
   }
 
   // Validate results
+  int gridsSeen[MaxGPUs];
   for (int i = 0; i < nGpu; ++i) {
     for (int j = 0; j < 2 * blockSize; ++j) {
-      //ASSERT_EQUAL(numGridsTestH[i][j], nGpu);
-      //ASSERT_EQUAL(gridRankTestH[i][j], i);
+      ASSERT_EQUAL(numGridsTestH[i][j], nGpu);
+      ASSERT_GE(gridRankTestH[i][j], 0);
+      ASSERT_LE(gridRankTestH[i][j], nGpu-1);
+      ASSERT_EQUAL(gridRankTestH[i][j], gridRankTestH[i][0]);
       ASSERT_EQUAL(sizeTestH[i][j], nGpu * 2 * blockSize);
-      ASSERT_EQUAL(thdRankTestH[i][j], (i * 2 * blockSize) + j);
+      int gridRank = gridRankTestH[i][j];
+      ASSERT_EQUAL(thdRankTestH[i][j], (gridRank * 2 * blockSize) + j);
       ASSERT_EQUAL(isValidTestH[i][j], 1);
     }
     ASSERT_EQUAL(syncResultD[i+1],  2 * blockSize);
+
+    // Validate uniqueness property of grid rank
+    gridsSeen[i] = gridRankTestH[i][0];
+    for (int k = 0; k < i; ++k) {
+      if (gridsSeen[k] == gridsSeen[i]) {
+        assert (false && "Grid rank in multi-gpu setup should be unique");
+      }
+    }
   }
   ASSERT_EQUAL(syncResultD[0], nGpu * 2 * blockSize);
 
