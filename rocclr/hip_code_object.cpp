@@ -160,8 +160,10 @@ DynCO::~DynCO() {
   delete fb_info_;
 }
 
-hipError_t DynCO::getDeviceVar(DeviceVar** dvar, std::string var_name, int device_id) {
+hipError_t DynCO::getDeviceVar(DeviceVar** dvar, std::string var_name) {
   amd::ScopedLock lock(dclock_);
+
+  CheckDeviceIdMatch();
 
   auto it = vars_.find(var_name);
   if (it == vars_.end()) {
@@ -169,12 +171,14 @@ hipError_t DynCO::getDeviceVar(DeviceVar** dvar, std::string var_name, int devic
     return hipErrorNotFound;
   }
 
-  it->second->getDeviceVar(dvar, device_id, module());
+  it->second->getDeviceVar(dvar, device_id_, module());
   return hipSuccess;
 }
 
 hipError_t DynCO::getDynFunc(hipFunction_t* hfunc, std::string func_name) {
   amd::ScopedLock lock(dclock_);
+
+  CheckDeviceIdMatch();
 
   auto it = functions_.find(func_name);
   if (it == functions_.end()) {

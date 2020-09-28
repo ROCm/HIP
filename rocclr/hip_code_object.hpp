@@ -74,7 +74,7 @@ class DynCO : public CodeObject {
   amd::Monitor dclock_{"Guards Dynamic Code object", true};
 
 public:
-  DynCO() {}
+  DynCO() : device_id_(ihipGetDevice()) {}
   virtual ~DynCO();
 
   //LoadsCodeObject and its data
@@ -83,9 +83,17 @@ public:
 
   //Gets GlobalVar/Functions from a dynamically loaded code object
   hipError_t getDynFunc(hipFunction_t* hfunc, std::string func_name);
-  hipError_t getDeviceVar(DeviceVar** dvar, std::string var_name, int deviceId);
+  hipError_t getDeviceVar(DeviceVar** dvar, std::string var_name);
+
+  // Device ID Check to check if module is launched in the same device it was loaded.
+  inline void CheckDeviceIdMatch() {
+    if (device_id_ != ihipGetDevice()) {
+      guarantee(false && "Device mismatch from where this module is loaded");
+    }
+  }
 
 private:
+  int device_id_;
   FatBinaryInfo* fb_info_;
 
   //Maps for vars/funcs, could be keyed in with std::string name
