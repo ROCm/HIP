@@ -98,7 +98,7 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
   HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
 
   /* Get address and size for the global symbol */
-  if (hipSuccess != PlatformState::instance().getDynGlobalVar(name, ihipGetDevice(), hmod, dptr, bytes)) {
+  if (hipSuccess != PlatformState::instance().getDynGlobalVar(name, hmod, dptr, bytes)) {
     DevLogPrintfError("Cannot find global Var: %s for module: 0x%x at device: %d \n",
                        name, hmod, ihipGetDevice());
     HIP_RETURN(hipErrorNotFound);
