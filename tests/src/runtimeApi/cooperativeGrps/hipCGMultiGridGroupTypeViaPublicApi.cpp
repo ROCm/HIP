@@ -34,11 +34,14 @@ THE SOFTWARE.
 #include <climits>
 
 #define ASSERT_EQUAL(lhs, rhs) assert(lhs == rhs)
+#define ASSERT_LE(lhs, rhs) assert(lhs <= rhs)
+#define ASSERT_GE(lhs, rhs) assert(lhs >= rhs)
 
 using namespace cooperative_groups;
 
 static __global__
 void kernel_cg_multi_grid_group_type_via_public_api(int *sizeTestD,
+                                                    int* gridRankTestD,
                                                     int *thdRankTestD,
                                                     int *isValidTestD,
                                                     int *syncTestD,
@@ -51,6 +54,7 @@ void kernel_cg_multi_grid_group_type_via_public_api(int *sizeTestD,
   sizeTestD[gIdx] = group_size(mg);
 
   // Test thread_rank api
+  gridRankTestD[gIdx] = this_multi_grid().grid_rank();
   thdRankTestD[gIdx] = thread_rank(mg);
 
   // Test is_valid api
@@ -110,6 +114,7 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
   // Allocate host and device memory
   int nBytes = sizeof(int) * 2 * blockSize;
   int *sizeTestD[MaxGPUs], *sizeTestH[MaxGPUs];
+  int *gridRankTestD[MaxGPUs], *gridRankTestH[MaxGPUs];
   int *thdRankTestD[MaxGPUs], *thdRankTestH[MaxGPUs];
   int *isValidTestD[MaxGPUs], *isValidTestH[MaxGPUs];
   int *syncTestD[MaxGPUs], *syncResultD;
@@ -117,11 +122,13 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
     ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
 
     ASSERT_EQUAL(hipMalloc(&sizeTestD[i], nBytes), hipSuccess);
+    ASSERT_EQUAL(hipMalloc(&gridRankTestD[i], nBytes), hipSuccess);
     ASSERT_EQUAL(hipMalloc(&thdRankTestD[i], nBytes), hipSuccess);
     ASSERT_EQUAL(hipMalloc(&isValidTestD[i], nBytes), hipSuccess);
     ASSERT_EQUAL(hipMalloc(&syncTestD[i], nBytes), hipSuccess);
 
     ASSERT_EQUAL(hipHostMalloc(&sizeTestH[i], nBytes), hipSuccess);
+    ASSERT_EQUAL(hipHostMalloc(&gridRankTestH[i], nBytes), hipSuccess);
     ASSERT_EQUAL(hipHostMalloc(&thdRankTestH[i], nBytes), hipSuccess);
     ASSERT_EQUAL(hipHostMalloc(&isValidTestH[i], nBytes), hipSuccess);
 
@@ -135,17 +142,18 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
   }
 
   // Launch Kernel
-  constexpr int NumKernelArgs = 5;
+  constexpr int NumKernelArgs = 6;
   hipLaunchParams* launchParamsList = new hipLaunchParams[nGpu];
   void* args[MaxGPUs * NumKernelArgs];
   for (int i = 0; i < nGpu; i++) {
     ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
 
     args[i * NumKernelArgs    ] = &sizeTestD[i];
-    args[i * NumKernelArgs + 1] = &thdRankTestD[i];
-    args[i * NumKernelArgs + 2] = &isValidTestD[i];
-    args[i * NumKernelArgs + 3] = &syncTestD[i];
-    args[i * NumKernelArgs + 4] = &syncResultD;
+    args[i * NumKernelArgs + 1] = &gridRankTestD[i];
+    args[i * NumKernelArgs + 2] = &thdRankTestD[i];
+    args[i * NumKernelArgs + 3] = &isValidTestD[i];
+    args[i * NumKernelArgs + 4] = &syncTestD[i];
+    args[i * NumKernelArgs + 5] = &syncResultD;
 
     launchParamsList[i].func = reinterpret_cast<void*>(kernel_cg_multi_grid_group_type_via_public_api);
     launchParamsList[i].gridDim = 2;
@@ -164,6 +172,8 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
 
     ASSERT_EQUAL(hipMemcpy(sizeTestH[i], sizeTestD[i], nBytes, hipMemcpyDeviceToHost),
                  hipSuccess);
+    ASSERT_EQUAL(hipMemcpy(gridRankTestH[i], gridRankTestD[i], nBytes, hipMemcpyDeviceToHost),
+                 hipSuccess);
     ASSERT_EQUAL(hipMemcpy(thdRankTestH[i], thdRankTestD[i], nBytes, hipMemcpyDeviceToHost),
                  hipSuccess);
     ASSERT_EQUAL(hipMemcpy(isValidTestH[i], isValidTestD[i], nBytes, hipMemcpyDeviceToHost),
@@ -173,13 +183,26 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
   }
 
   // Validate results
+  int gridsSeen[MaxGPUs];
   for (int i = 0; i < nGpu; ++i) {
     for (int j = 0; j < 2 * blockSize; ++j) {
       ASSERT_EQUAL(sizeTestH[i][j], nGpu * 2 * blockSize);
-      ASSERT_EQUAL(thdRankTestH[i][j], (i * 2 * blockSize) + j);
+      ASSERT_GE(gridRankTestH[i][j], 0);
+      ASSERT_LE(gridRankTestH[i][j], nGpu-1);
+      ASSERT_EQUAL(gridRankTestH[i][j], gridRankTestH[i][0]);
+      int gridRank = gridRankTestH[i][j];
+      ASSERT_EQUAL(thdRankTestH[i][j], (gridRank * 2 * blockSize) + j);
       ASSERT_EQUAL(isValidTestH[i][j], 1);
     }
     ASSERT_EQUAL(syncResultD[i+1],  2 * blockSize);
+
+    // Validate uniqueness property of grid rank
+    gridsSeen[i] = gridRankTestH[i][0];
+    for (int k = 0; k < i; ++k) {
+      if (gridsSeen[k] == gridsSeen[i]) {
+        assert (false && "Grid rank in multi-gpu setup should be unique");
+      }
+    }
   }
   ASSERT_EQUAL(syncResultD[0], nGpu * 2 * blockSize);
 
@@ -189,6 +212,7 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
     ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
 
     ASSERT_EQUAL(hipFree(sizeTestD[i]), hipSuccess);
+    ASSERT_EQUAL(hipFree(gridRankTestD[i]), hipSuccess);
     ASSERT_EQUAL(hipFree(thdRankTestD[i]), hipSuccess);
     ASSERT_EQUAL(hipFree(isValidTestD[i]), hipSuccess);
     ASSERT_EQUAL(hipFree(syncTestD[i]), hipSuccess);
@@ -197,6 +221,7 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
       ASSERT_EQUAL(hipFree(syncResultD), hipSuccess);
 
     ASSERT_EQUAL(hipHostFree(sizeTestH[i]), hipSuccess);
+    ASSERT_EQUAL(hipHostFree(gridRankTestH[i]), hipSuccess);
     ASSERT_EQUAL(hipHostFree(thdRankTestH[i]), hipSuccess);
     ASSERT_EQUAL(hipHostFree(isValidTestH[i]), hipSuccess);
 
