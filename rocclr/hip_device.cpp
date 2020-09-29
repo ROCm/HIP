@@ -229,19 +229,3 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   *props = deviceProps;
   HIP_RETURN(hipSuccess);
 }
-
-hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
-  HIP_INIT_API(hipHccGetAccelerator, deviceId, acc);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
-  HIP_INIT_API(hipHccGetAcceleratorView, stream, av);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorNotSupported);
-}

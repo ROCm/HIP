@@ -260,8 +260,6 @@ global:
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;
-    hipHccGetAccelerator*;
-    hipHccGetAcceleratorView*;
     hipCreateSurfaceObject*;
     hipDestroySurfaceObject*;
     hipHccModuleLaunchKernel*;

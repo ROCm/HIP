@@ -229,8 +229,6 @@ hipTexRefSetMipmapLevelClamp
 hipTexRefSetMipmappedArray
 hipProfilerStart
 hipProfilerStop
-hipHccGetAccelerator
-hipHccGetAcceleratorView
 hipCreateSurfaceObject
 hipDestroySurfaceObject
 hipInitActivityCallback
