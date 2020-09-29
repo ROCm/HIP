@@ -740,12 +740,9 @@ if($HIP_PLATFORM eq "hcc"){
         # Ignore 'gfx000' target reported by rocm_agent_enumerator.
         if ($val ne 'gfx000') {
             # Construct an arch macro to be passed to the compiler.
-            # Example: gfx900 --> -D__HIP_ARCH_GFX900__=1
-            my $archMacro = ' -D__HIP_ARCH_' . uc($val) . '__=1 ';
             # Add the arch option and macro to the compiler options.
             $GPU_ARCH_ARG = $GPU_ARCH_OPT . $val;
             $HIPLDARCHFLAGS .= $GPU_ARCH_ARG;
-            $HIPCXXFLAGS .= $archMacro;
             if ($HIP_COMPILER eq 'clang' and $hasHIP) {
                 $HIPCXXFLAGS .= $GPU_ARCH_ARG;
             }

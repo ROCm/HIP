@@ -32,13 +32,6 @@ THE SOFTWARE.
 
 using namespace std;
 
-#if __HIP_ARCH_GFX803__  || \
-    __HIP_ARCH_GFX900__  || \
-    __HIP_ARCH_GFX906__  || \
-    __HIP_ARCH_GFX908__  || \
-    __HIP_ARCH_GFX1010__ || \
-    __HIP_ARCH_GFX1012__
-
 __global__
 void __halfTest(bool* result, __half a) {
     // Construction
@@ -167,8 +160,6 @@ void __half2Test(bool* result, __half2 a) {
     result[0] = amd_mixed_dot(a, a, 1, 1) && result[0];
     #endif
 }
-
-#endif
 
 int main() {
     bool* result{nullptr};
