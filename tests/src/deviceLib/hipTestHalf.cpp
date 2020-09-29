@@ -28,13 +28,6 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-#if __HIP_ARCH_GFX803__  || \
-    __HIP_ARCH_GFX900__  || \
-    __HIP_ARCH_GFX906__  || \
-    __HIP_ARCH_GFX908__  || \
-    __HIP_ARCH_GFX1010__ || \
-    __HIP_ARCH_GFX1012__
-
 __device__ void test_convert() {
   __half x;
   float y = (float)x;
@@ -107,8 +100,6 @@ __global__ void testHalf2Abs(float2* p) {
     a = __habs2(a);
     *p = __half22float2(a);
 }
-
-#endif
 
 
 __half host_ushort_as_half(unsigned short s) {
