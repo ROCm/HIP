@@ -1019,7 +1019,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * #hipEventDisableTiming : Disable recording of timing information.  On ROCM platform, timing
  information is always recorded and this flag has no performance benefit.
 
- * @warning On HCC platform, hipEventInterprocess support is under development.  Use of this flag
+ * @warning On AMD platform, hipEventInterprocess support is under development.  Use of this flag
  will return an error.
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
@@ -1104,7 +1104,7 @@ hipError_t hipEventDestroy(hipEvent_t event);
  *
  *  If hipEventRecord() has not been called on @p event, this function returns immediately.
  *
- *  TODO-hcc - This function needs to support hipEventBlockingSync parameter.
+ *  TODO-hip- This function needs to support hipEventBlockingSync parameter.
  *
  *  @param[in] event Event on which to wait.
  *  @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized,
@@ -4255,29 +4255,6 @@ static inline hipError_t hipUnbindTexture(
 #ifdef __GNUC__
 #pragma GCC visibility pop
 #endif
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup HCC_Specific HCC-Specific Accessors
- *  @{
- *
- * The following calls are only supported when compiler HIP with HCC.
- * To produce portable code, use of these calls must be guarded #ifdef checks:
- * @code
- * #ifdef __HCC__
- *  hc::accelerator acc;
-    hipError_t err = hipHccGetAccelerator(deviceId, &acc)
- * #endif
- * @endcode
- *
- */
-
-// end-group HCC_Specific
-/**
- * @}
- */
-
 
 // doxygen end HIP API
 /**

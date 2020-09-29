@@ -27,42 +27,6 @@ THE SOFTWARE.
 #include <tuple>
 #include <type_traits>
 #endif
-#ifdef __HCC__
-
-// Forward declarations:
-namespace hc {
-class accelerator;
-class accelerator_view;
-};  // namespace hc
-
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup HCC-specific features
- *  @warning These APIs provide access to special features of HCC compiler and are not available
- *through the CUDA path.
- *  @{
- */
-
-
-/**
- * @brief Return hc::accelerator associated with the specified deviceId
- * @return #hipSuccess, #hipErrorInvalidDevice
- */
-HIP_PUBLIC_API
-hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc);
-
-/**
- * @brief Return hc::accelerator_view associated with the specified stream
- *
- * If stream is 0, the accelerator_view for the default stream is returned.
- * @return #hipSuccess
- */
-HIP_PUBLIC_API
-hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av);
-
-#endif  // #ifdef __HCC__
 
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed

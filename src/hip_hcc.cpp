@@ -2504,41 +2504,6 @@ hipError_t hipProfilerStop() {
     return ihipLogStatus(hipSuccess);
 };
 
-//-------------------------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------------------------
-// HCC-specific accessor functions:
-
-//---
-hipError_t hipHccGetAccelerator(int deviceId, hc::accelerator* acc) {
-    HIP_INIT_API(hipHccGetAccelerator, deviceId, acc);
-
-    const ihipDevice_t* device = ihipGetDevice(deviceId);
-    hipError_t err;
-    if (device == NULL) {
-        err = hipErrorInvalidDevice;
-    } else {
-        *acc = device->_acc;
-        err = hipSuccess;
-    }
-    return ihipLogStatus(err);
-}
-
-
-//---
-hipError_t hipHccGetAcceleratorView(hipStream_t stream, hc::accelerator_view** av) {
-    HIP_INIT_API(hipHccGetAcceleratorView, stream, av);
-
-    if (stream == hipStreamNull) {
-        ihipCtx_t* device = ihipGetTlsDefaultCtx();
-        stream = device->_defaultStream;
-    }
-
-    *av = stream->locked_getAv();  // TODO - review.
-
-    hipError_t err = hipSuccess;
-    return ihipLogStatus(err);
-}
-
 //// TODO - add identifier numbers for streams and devices to help with debugging.
 // TODO - add a contect sequence number for debug. Print operator<< ctx:0.1 (device.ctx)
 
