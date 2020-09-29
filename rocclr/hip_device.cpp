@@ -155,7 +155,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   ::strncpy(deviceProps.name, info.boardName_, 128);
   deviceProps.totalGlobalMem = info.globalMemSize_;
   deviceProps.sharedMemPerBlock = info.localMemSizePerCU_;
-  deviceProps.regsPerBlock = info.availableSGPRs_;
+  deviceProps.regsPerBlock = info.availableRegistersPerCU_;
   deviceProps.warpSize = info.wavefrontWidth_;
   deviceProps.maxThreadsPerBlock = info.maxWorkGroupSize_;
   deviceProps.maxThreadsDim[0] = info.maxWorkItemSizes_[0];
