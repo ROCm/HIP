@@ -377,6 +377,8 @@ extern "C" void __hipUnregisterFatBinary(std::vector<hipModule_t>* modules)
   delete modules;
 }
 
+// NPH
+// Add priority here
 hipError_t hipConfigureCall(
   dim3 gridDim,
   dim3 blockDim,
@@ -391,7 +393,8 @@ hipError_t hipConfigureCall(
   return hipSuccess;
 }
 
-
+// NPH
+// Add priority here
 extern "C" hipError_t __hipPushCallConfiguration(
   dim3 gridDim,
   dim3 blockDim,
@@ -406,6 +409,8 @@ extern "C" hipError_t __hipPushCallConfiguration(
   return hipSuccess;
 }
 
+// NPH
+// Add priority here
 extern "C" hipError_t __hipPopCallConfiguration(
   dim3 *gridDim,
   dim3 *blockDim,
@@ -482,6 +487,7 @@ hipError_t hipSetupArgument(
   return hipSuccess;
 }
 
+// NPH
 hipError_t hipLaunchByPtr(const void *hostFunction)
 {
   HIP_INIT_API(hipLaunchByPtr, hostFunction);
@@ -520,6 +526,8 @@ hipError_t hipLaunchByPtr(const void *hostFunction)
         HIP_LAUNCH_PARAM_END
       };
 
+    // NPH
+    // *IMP*. kernel is lunched here
     e = hipModuleLaunchKernel(it->second[deviceId],
       exec._gridDim.x, exec._gridDim.y, exec._gridDim.z,
       exec._blockDim.x, exec._blockDim.y, exec._blockDim.z,

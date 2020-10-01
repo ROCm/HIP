@@ -852,6 +852,8 @@ class ihipDevice_t {
 //=============================================================================
 
 
+// NPH
+// *IMP*. Add priority here
 //---
 //
 struct ihipExec_t {

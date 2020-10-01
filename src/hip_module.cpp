@@ -134,6 +134,8 @@ extern hipError_t ihipGetDeviceProperties(hipDeviceProp_t* props, int device);
         return ihipLogStatus(hipStatus);                                                           \
     }
 
+// NPH
+// *IMP*.
 hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t globalWorkSizeX,
                                   uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                   uint32_t localWorkSizeX, uint32_t localWorkSizeY,
@@ -273,6 +275,10 @@ hipError_t ihipModuleLaunchKernel(TlsData *tls, hipFunction_t f, uint32_t global
     return ret;
 }
 
+// NPH
+// Find out what is kernelParams?
+// *IMP*. Add priority here
+
 hipError_t hipModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX, uint32_t gridDimY,
                                  uint32_t gridDimZ, uint32_t blockDimX, uint32_t blockDimY,
                                  uint32_t blockDimZ, uint32_t sharedMemBytes, hipStream_t hStream,
@@ -293,6 +299,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, uint32_t gridDimX, uint32_t gr
         blockDimZ, sharedMemBytes, hStream, kernelParams, extra, nullptr, nullptr, 0));
 }
 
+// NPH
+// What is globalWorkSize and localWorkSize?
+
 hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                     uint32_t localWorkSizeX, uint32_t localWorkSizeY,
@@ -306,6 +315,8 @@ hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, localWorkSizeX, localWorkSizeY,
         localWorkSizeZ, sharedMemBytes, hStream, kernelParams, extra, startEvent, stopEvent, flags));
 }
+
+// NPH
 
 hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
@@ -499,6 +510,9 @@ __global__ void init_gws(uint nwm1) {
 }
 }
 
+// NPH
+// What is CooperativeKernel?
+
 hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
         dim3 blockDim, void** kernelParams, unsigned int sharedMemBytes,
         hipStream_t stream, hip_impl::program_state& ps) {
@@ -555,6 +569,8 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
 
     GET_TLS();
     int numBlocksPerSm = 0;
+
+    // NPH
     result = ihipOccupancyMaxActiveBlocksPerMultiprocessor(tls, &numBlocksPerSm, kd,
                     blockDim.x * blockDim.y * blockDim.z, sharedMemBytes);
     if (result != hipSuccess) {
@@ -603,6 +619,7 @@ hipError_t ihipLaunchCooperativeKernel(const void* f, dim3 gridDim,
     void* impCoopParams[1];
     impCoopParams[0] = &impCoopArg;
 
+    // NPH
     // launch the main kernel in the cooperative queue
     result = ihipModuleLaunchKernel(tls, kd,
             gridDim.x * blockDim.x,
@@ -1705,6 +1722,8 @@ hipError_t hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
         tls, numBlocks, f, blockSize, dynSharedMemPerBlk));
 }
 
+// NPH
+// *IMP*. Add priority
 hipError_t hipLaunchKernel(
     const void* func_addr, dim3 numBlocks, dim3 dimBlocks, void** args,
     size_t sharedMemBytes, hipStream_t stream)
