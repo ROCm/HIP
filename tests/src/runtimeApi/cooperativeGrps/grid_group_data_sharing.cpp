@@ -42,7 +42,7 @@ writing from thread X and then hitting a barrier allows thread Y to see the
 values.*/
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
