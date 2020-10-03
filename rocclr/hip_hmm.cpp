@@ -105,7 +105,7 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr, size_t count, int device,
   command->enqueue();
   command->release();
 
-  HIP_RETURN(hipErrorInvalidValue);
+  HIP_RETURN(hipSuccess);
 }
 
 // ================================================================================================
@@ -113,13 +113,15 @@ hipError_t hipMemAdvise(const void* dev_ptr, size_t count, hipMemoryAdvise advic
   HIP_INIT_API(hipMemAdvise, dev_ptr, count, advice, device);
 
   if ((dev_ptr == nullptr) || (count == 0) ||
-      (static_cast<size_t>(device) >= g_devices.size())) {
+      ((device != hipCpuDeviceId) && (static_cast<size_t>(device) >= g_devices.size()))) {
     HIP_RETURN(hipErrorInvalidValue);
   }
-  amd::Device* dev = g_devices[device]->devices()[0];
+  amd::Device* dev = (device == hipCpuDeviceId) ?
+    g_devices[0]->devices()[0] : g_devices[device]->devices()[0];
+  bool use_cpu = (device == hipCpuDeviceId) ? true : false;
 
   // Set the allocation attributes in AMD HMM
-  if (!dev->SetSvmAttributes(dev_ptr, count, static_cast<amd::MemoryAdvice>(advice))) {
+  if (!dev->SetSvmAttributes(dev_ptr, count, static_cast<amd::MemoryAdvice>(advice), use_cpu)) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -144,7 +146,7 @@ hipError_t hipMemRangeGetAttribute(void* data, size_t data_size, hipMemRangeAttr
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(hipErrorInvalidValue);
+  HIP_RETURN(hipSuccess);
 }
 
 // ================================================================================================
@@ -167,7 +169,7 @@ hipError_t hipMemRangeGetAttributes(void** data, size_t* data_sizes,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(hipErrorInvalidValue);
+  HIP_RETURN(hipSuccess);
 }
 
 // ================================================================================================
@@ -180,7 +182,7 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream, hipDeviceptr_t* dev_ptr,
   }
 
   // Unclear what should be done for this interface in AMD HMM, since it's generic SVM alloc
-  HIP_RETURN(hipErrorInvalidValue);
+  HIP_RETURN(hipSuccess);
 }
 
 // ================================================================================================
