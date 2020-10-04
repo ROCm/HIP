@@ -19,18 +19,47 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-
-/* HIT_START
- * BUILD_CMD: tex2d_kernel.code %hc --genco %S/tex2d_kernel.cpp -o tex2d_kernel.code EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
- * HIT_END
- */
-
 #include "hip/hip_runtime.h"
 
-texture<float, 2, hipReadModeElementType> tex;
+texture<float, 2, hipReadModeElementType> ftex;
+texture<int, 2, hipReadModeElementType> itex;
+texture<short, 2, hipReadModeElementType> stex;
+texture<char, 2, hipReadModeElementType> ctex;
 
-extern "C" __global__ void tex2dKernel(float* outputData, int width, int height) {
-    int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-    int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
-    outputData[y * width + x] = tex2D(tex, x, y);
+__device__ float deviceGlobalFloat;
+
+extern "C" __global__ void tex2dKernelFloat(float* outputData,
+                                       int width, int height) {
+  int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+  if ((x < width) && (y < width)) {
+    outputData[y * width + x] = tex2D(ftex, x, y);
+  }
+}
+
+extern "C" __global__ void tex2dKernelInt(int* outputData,
+                                          int width, int height) {
+  int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+  if ((x < width) && (y < width)) {
+    outputData[y * width + x] = tex2D(itex, x, y);
+  }
+}
+
+extern "C" __global__ void tex2dKernelInt16(short* outputData,
+                                          int width, int height) {
+  int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+  if ((x < width) && (y < width)) {
+    outputData[y * width + x] = tex2D(stex, x, y);
+  }
+}
+
+extern "C" __global__ void tex2dKernelInt8(char* outputData,
+                                          int width, int height) {
+  int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
+  int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+  if ((x < width) && (y < width)) {
+    outputData[y * width + x] = tex2D(ctex, x, y);
+  }
 }
