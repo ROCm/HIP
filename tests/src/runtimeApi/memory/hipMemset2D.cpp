@@ -20,7 +20,7 @@
 // Test for hipMemset2D functionality for different width and height values
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvcc
  * TEST_NAMED: %t hipMemset2D-basic
  * TEST_NAMED: %t hipMemset2D-dim1 --width2D 10 --height2D 10 --memsetWidth 4 --memsetHeight 4
  * TEST_NAMED: %t hipMemset2D-dim2 --width2D 100 --height2D 100 --memsetWidth 20 --memsetHeight 40

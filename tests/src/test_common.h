@@ -41,7 +41,6 @@ THE SOFTWARE.
 
 #define HC __attribute__((hc))
 
-
 #define KNRM "\x1B[0m"
 #define KRED "\x1B[31m"
 #define KGRN "\x1B[32m"
@@ -50,6 +49,19 @@ THE SOFTWARE.
 #define KMAG "\x1B[35m"
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
+
+  // HIP Skip Return code set at cmake
+#define HIP_SKIP_RETURN_CODE 127
+#define HIP_ENABLE_SKIP_TESTS 0
+
+inline bool hip_skip_tests_enabled() {
+  return HIP_ENABLE_SKIP_TESTS;
+}
+
+inline int hip_skip_retcode() {
+  // HIP Skip Return code set at cmake
+  return HIP_SKIP_RETURN_CODE;
+}
 
 #define passed()                                                                                   \
     printf("%sPASSED!%s\n", KGRN, KNRM);                                                           \

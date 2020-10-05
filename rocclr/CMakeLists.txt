@@ -96,6 +96,14 @@ find_package(amd_comgr REQUIRED CONFIG
 
 message(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 
+find_package(LLVM REQUIRED CONFIG
+   PATHS
+     /opt/rocm/llvm
+   PATH_SUFFIXES
+     lib/cmake/llvm)
+
+message(STATUS "llvm found at ${LLVM_DIR}.")
+
 add_library(hip64 OBJECT
  hip_context.cpp
  hip_code_object.cpp
@@ -148,10 +156,9 @@ endif()
 
 # Short-Term solution for pre-compiled headers for online compilation
 # Enable pre compiled header
-if(${ENABLE_HIP_PCH})
-    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_gen_pch.sh")
-    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh")
-    add_definitions(-DENABLE_HIP_PCH)
+if(${__HIP_ENABLE_PCH})
+    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${LLVM_DIR}")
+    add_definitions(-D__HIP_ENABLE_PCH)
 endif()
 
 # Enable profiling API
@@ -216,7 +223,7 @@ add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
 # Short-Term solution for pre-compiled headers for online compilation
-if(${ENABLE_HIP_PCH})
+if(${__HIP_ENABLE_PCH})
   target_link_libraries(amdhip64 PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
 endif()
 
@@ -227,6 +234,18 @@ endif()
 # filename.
 if(${BUILD_SHARED_LIBS})
     target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl hsa-runtime64::hsa-runtime64)
+
+    add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
+        ${CMAKE_COMMAND} -E create_symlink ${PROJECT_BINARY_DIR}/lib/libamdhip64.so.${HIP_LIB_VERSION_STRING}
+        ${PROJECT_BINARY_DIR}/lib/libhip_hcc.so.${HIP_LIB_VERSION_MAJOR})
+    add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
+        ${CMAKE_COMMAND} -E create_symlink ${PROJECT_BINARY_DIR}/lib/libhip_hcc.so.${HIP_LIB_VERSION_MAJOR}
+        ${PROJECT_BINARY_DIR}/lib/libhip_hcc.so)
+    add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
+        ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/.hipInfo ${PROJECT_BINARY_DIR}/lib/.hipInfo)
+    add_custom_command(TARGET amdhip64 POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${PROJECT_SOURCE_DIR}/include ${PROJECT_BINARY_DIR}/include)
+
     INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
 else()
     target_link_libraries(amdhip64 PRIVATE Threads::Threads dl hsa-runtime64::hsa-runtime64 amd_comgr)
@@ -243,6 +262,7 @@ else()
     )
     INSTALL(PROGRAMS $<TARGET_FILE:amdhip64> DESTINATION lib COMPONENT MAIN)
 endif()
+
 
 INSTALL(TARGETS amdhip64 host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)

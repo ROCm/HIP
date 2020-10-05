@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -37,34 +37,34 @@ THE SOFTWARE.
 using namespace cooperative_groups;
 
 static __global__
-void kernel_cg_grid_group_type(int *sizeTestD,
-                               int *thdRankTestD,
-                               int *isValidTestD,
-                               int *syncTestD)
+void kernel_cg_thread_block_type_via_public_api(int *sizeTestD,
+                                                int *thdRankTestD,
+                                                int *isValidTestD,
+                                                int *syncTestD)
 {
-  grid_group gg = this_grid();
+  thread_block tb = this_thread_block();
   int gIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
-  // Test size
-  sizeTestD[gIdx] = gg.size();
+  // Test group_size api
+  sizeTestD[gIdx] = group_size(tb);
 
-  // Test thread_rank
-  thdRankTestD[gIdx] = gg.thread_rank();
+  // Test thread_rank api
+  thdRankTestD[gIdx] = thread_rank(tb);
 
-  // Test is_valid
-  isValidTestD[gIdx] = gg.is_valid();
+  // Test is_valid api
+  isValidTestD[gIdx] = is_valid(tb);
 
-  // Test sync
-  __device__ int gm[2];
-  if (blockIdx.x == 0 && threadIdx.x == 0)
-    gm[0] = 10;
-  else if (blockIdx.x == 1 && threadIdx.x == 0)
-    gm[1] = 20;
-  gg.sync();
-  syncTestD[gIdx] = gm[1] * gm[0];
+  // Test sync api
+  __shared__ int sm[2];
+  if (threadIdx.x == 0)
+    sm[0] = 10;
+  else if (threadIdx.x == 1)
+    sm[1] = 20;
+  sync(tb);
+  syncTestD[gIdx] = sm[1] * sm[0];
 }
 
-static void test_cg_grid_group_type(int blockSize)
+static void test_cg_thread_block_type_via_public_api(int blockSize)
 {
   int nBytes = sizeof(int) * 2 * blockSize;
   int *sizeTestD, *sizeTestH;
@@ -85,17 +85,15 @@ static void test_cg_grid_group_type(int blockSize)
   ASSERT_EQUAL(hipHostMalloc(&syncTestH, nBytes), hipSuccess);
 
   // Launch Kernel
-  void *params[4];
-  params[0] = &sizeTestD;
-  params[1] = &thdRankTestD;
-  params[2] = &isValidTestD;
-  params[3] = &syncTestD;
-  hipLaunchCooperativeKernel(kernel_cg_grid_group_type,
-                             2,
-                             blockSize,
-                             params,
-                             0,
-                             0);
+  hipLaunchKernelGGL(kernel_cg_thread_block_type_via_public_api,
+                     2,
+                     blockSize,
+                     0,
+                     0,
+                     sizeTestD,
+                     thdRankTestD,
+                     isValidTestD,
+                     syncTestD);
 
   // Copy result from device to host
   ASSERT_EQUAL(hipMemcpy(sizeTestH, sizeTestD, nBytes, hipMemcpyDeviceToHost),
@@ -109,8 +107,8 @@ static void test_cg_grid_group_type(int blockSize)
 
   // Validate results for both blocks together
   for (int i = 0; i < 2 * blockSize; ++i) {
-    ASSERT_EQUAL(sizeTestH[i], 2 * blockSize);
-    ASSERT_EQUAL(thdRankTestH[i], i);
+    ASSERT_EQUAL(sizeTestH[i], blockSize);
+    ASSERT_EQUAL(thdRankTestH[i], i % blockSize);
     ASSERT_EQUAL(isValidTestH[i], 1);
     ASSERT_EQUAL(syncTestH[i], 200);
   }
@@ -139,7 +137,11 @@ int main()
 
   if (!deviceProperties.cooperativeLaunch) {
     std::cout << "info: Device doesn't support cooperative launch! skipping the test!\n";
-    passed();
+    if (hip_skip_tests_enabled()) {
+      return hip_skip_retcode();
+    } else {
+      passed();
+    }
     return 0;
   }
 
@@ -149,14 +151,14 @@ int main()
     int blockSize = pow(2, i);
     if (blockSize > maxThreadsPerBlock)
       break;
-    test_cg_grid_group_type(blockSize);
+    test_cg_thread_block_type_via_public_api(blockSize);
     ++i;
   }
 
   // Test some random block sizes
   for(int j = 0; j < 10 ; ++j) {
     int blockSize = rand() % maxThreadsPerBlock;
-    test_cg_grid_group_type(blockSize);
+    test_cg_thread_block_type_via_public_api(blockSize);
   }
 
   passed();
