@@ -1218,25 +1218,23 @@ void abort() {
 
 #elif defined(__clang__) && defined(__HIP__)
 
-#pragma push_macro("__DEVICE__")
-#define __DEVICE__ extern "C" __device__ __attribute__((always_inline)) \
-  __attribute__((weak))
-
-__DEVICE__
-inline
+// The noinline attribute helps encapsulate the printf expansion,
+// which otherwise has a performance impact just by increasing the
+// size of the calling function. Additionally, the weak attribute
+// allows the function to exist as a global although its definition is
+// included in every compilation unit.
+extern "C" __device__ __attribute__((noinline)) __attribute__((weak))
 void __assert_fail(const char * __assertion,
-                                     const char *__file,
-                                     unsigned int __line,
-                                     const char *__function)
+                   const char *__file,
+                   unsigned int __line,
+                   const char *__function)
 {
     printf("%s:%u: %s: Device-side assertion `%s' failed.\n", __file, __line,
            __function, __assertion);
-    // Ignore all the args for now.
     __builtin_trap();
 }
 
-__DEVICE__
-inline
+extern "C" __device__ __attribute__((noinline)) __attribute__((weak))
 void __assertfail(const char * __assertion,
                   const char *__file,
                   unsigned int __line,
@@ -1350,8 +1348,6 @@ unsigned __smid(void)
     /* Each shader engine has 16 CU */
     return (se_id << HW_ID_CU_ID_SIZE) + cu_id;
 }
-
-#pragma push_macro("__DEVICE__")
 
 // Macro to replace extern __shared__ declarations
 // to local variable definitions
