@@ -77,6 +77,9 @@ int main() {
         HIPCHECK(hipFree(Z_d));
       } else {
         std::cout<<"Machine does not seem to have P2P Capabilities, Empty Pass"<<std::endl;
+        if (hip_skip_tests_enabled()) {
+          return hip_skip_retcode();
+        }
       }
     }
     passed();

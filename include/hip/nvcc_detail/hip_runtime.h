@@ -104,13 +104,13 @@ typedef int hipLaunchParm;
 #define HIP_DYNAMIC_SHARED_ATTRIBUTE
 
 #ifdef __HIP_DEVICE_COMPILE__
-#define abort()                                                                                    \
+#define abort_()                                                                                    \
     { asm("trap;"); }
 #undef assert
 #define assert(COND)                                                                               \
     {                                                                                              \
         if (!COND) {                                                                               \
-            abort();                                                                               \
+            abort_();                                                                               \
         }                                                                                          \
     }
 #endif

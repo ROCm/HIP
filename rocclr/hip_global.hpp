@@ -95,11 +95,6 @@ public:
   hipError_t getStatDeviceVar(DeviceVar** dvar, int deviceId);
   void resize_dVar(size_t size) { dVar_.resize(size); }
 
-  //Accessor for device_ptrs.
-  std::string name() const { return name_; }
-  hipModule_t module(int deviceId) const { return nullptr; }
-  hipDeviceptr_t device_ptr(int deviceId) const { return dVar_[deviceId]->device_ptr(); }
-  size_t device_size(int deviceId) const { return dVar_[deviceId]->size(); }
   FatBinaryInfo** moduleInfo() { return modules_; };
 
 private:
