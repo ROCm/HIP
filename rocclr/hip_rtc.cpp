@@ -41,9 +41,6 @@ public:
   std::map<std::string, std::pair<std::string, std::string>> nameExpresssion_;
 
   static ProgramState& instance();
-  void createProgramHeaders(amd::Program* program, int numHeaders,
-                            const char** headers, const char** headerNames);
-  void getProgramHeaders(amd::Program* program, int* numHeaders, char** headers, char ** headerNames);
   uint32_t addNameExpression(const char* name_expression);
   char* getLoweredName(const char* name_expression);
 };
@@ -55,30 +52,6 @@ ProgramState& ProgramState::instance() {
     programState_ = new ProgramState;
   }
   return *programState_;
-}
-
-void ProgramState::createProgramHeaders(amd::Program* program, int numHeaders,
-                                        const char** headers, const char** headerNames) {
-  amd::ScopedLock lock(lock_);
-  std::vector<std::string> vHeaderNames;
-  std::vector<std::string> vHeaders;
-  for (auto i = 0; i != numHeaders; ++i) {
-    vHeaders.emplace_back(headers[i]);
-    vHeaderNames.emplace_back(headerNames[i]);
-    progHeaders_[program] = std::make_pair(std::move(vHeaders), std::move(vHeaderNames));
-  }
-}
-
-void ProgramState::getProgramHeaders(amd::Program* program, int* numHeaders,
-                                     char** headers, char ** headerNames) {
-  amd::ScopedLock lock(lock_);
-
-  const auto it = progHeaders_.find(program);
-  if (it != progHeaders_.cend()) {
-    *numHeaders = it->second.first.size();
-    *headers  = reinterpret_cast<char*>(it->second.first.data());
-    *headerNames = reinterpret_cast<char*>(it->second.second.data());
-  }
 }
 
 uint32_t ProgramState::addNameExpression(const char* name_expression) {
@@ -218,7 +191,8 @@ hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog, const char* src, const cha
     HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
 
-  amd::Program* program = new amd::Program(*hip::getCurrentDevice()->asContext(), src, amd::Program::HIP);
+  amd::Program* program = new amd::Program(*hip::getCurrentDevice()->asContext(), src, amd::Program::HIP,
+                                           numHeaders, headers, headerNames);
   if (program == NULL) {
     HIPRTC_RETURN(HIPRTC_ERROR_INVALID_INPUT);
   }
@@ -227,8 +201,6 @@ hiprtcResult hiprtcCreateProgram(hiprtcProgram* prog, const char* src, const cha
     program->release();
     HIPRTC_RETURN(HIPRTC_ERROR_PROGRAM_CREATION_FAILURE);
   }
-
-  ProgramState::instance().createProgramHeaders(program, numHeaders, headers, headerNames);
 
   *prog = reinterpret_cast<hiprtcProgram>(as_cl(program));
 
