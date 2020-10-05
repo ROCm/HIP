@@ -43,14 +43,15 @@ static constexpr auto NUM_BLOCKS{32};
 static constexpr auto saxpy{
 R"(
 #include <hip/hip_runtime.h>
-
+#include "test_header.h"
+#include "test_header1.h"
 extern "C"
 __global__
-void saxpy(float a, float* x, float* y, float* out, size_t n)
+void saxpy(real a, realptr x, realptr y, realptr out, size_t n)
 {
     size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
     if (tid < n) {
-       out[tid] = a * x[tid] + y[tid];
+       out[tid] = a * x[tid] + y[tid] ;
     }
 }
 )"};
@@ -60,17 +61,24 @@ int main()
     using namespace std;
 
     hiprtcProgram prog;
+    int num_headers = 2;
+    std::vector<const char*> header_names;
+    std::vector<const char*> header_sources;
+    header_names.push_back("test_header.h");
+    header_names.push_back("test_header1.h");
+    header_sources.push_back("#ifndef HIPRTC_TEST_HEADER_H\n#define HIPRTC_TEST_HEADER_H\ntypedef float real;\n#endif //HIPRTC_TEST_HEADER_H\n");
+    header_sources.push_back("#ifndef HIPRTC_TEST_HEADER1_H\n#define HIPRTC_TEST_HEADER1_H\ntypedef float* realptr;\n#endif //HIPRTC_TEST_HEADER1_H\n");
     hiprtcCreateProgram(&prog,      // prog
                         saxpy,      // buffer
                         "saxpy.cu", // name
-                        0,          // numHeaders
-                        nullptr,    // headers
-                        nullptr);   // includeNames
+                        num_headers,          // numHeaders
+                        &header_sources[0],    // headers
+                        &header_names[0]);   // includeNames
 
     hipDeviceProp_t props;
     int device = 0;
     hipGetDeviceProperties(&props, device);
-    std::string sarg = "--gpu-architecture=" + props.gcnArchName;
+    std::string sarg = std::string("--gpu-architecture=") + props.gcnArchName;
     const char* options[] = {
         sarg.c_str()
     };
@@ -99,7 +107,6 @@ int main()
 
     hipModule_t module;
     hipFunction_t kernel;
-
     hipModuleLoadData(&module, code.data());
     hipModuleGetFunction(&kernel, module, "saxpy");
 
@@ -138,7 +145,6 @@ int main()
 
     hipModuleLaunchKernel(kernel, NUM_BLOCKS, 1, 1, NUM_THREADS, 1, 1,
                           0, nullptr, nullptr, config);
-
     hipMemcpyDtoH(hOut.get(), dOut, bufferSize);
 
     for (size_t i = 0; i < n; ++i) {
