@@ -12,7 +12,7 @@ enum MallocMode { MallocPinned, MallocUnpinned, MallocRegistered };
 bool p_verbose = false;
 MallocMode p_malloc_mode = MallocPinned;
 int p_numa_ctl = -1;
-int p_iterations = 10;
+int p_iterations = 0;
 int p_beatsperiteration = 1;
 int p_device = 0;
 int p_detailed = 0;
@@ -89,7 +89,9 @@ hipError_t memcopy(void* dst, const void* src, size_t sizeBytes, enum hipMemcpyK
 int sizes[] = {-64, -256, -512, 1,    2,    4,     8,     16,    32,     64,     128,   256,
                512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131072, 262144, 524288};
 int nSizes = sizeof(sizes) / sizeof(int);
-
+// iterations to be run for the corresponding sizes, less number as the size increases
+int iterations[] = {1000, 1000, 1000, 1000, 500, 500, 500, 500, 500, 200, 200, 200,
+               200, 200, 100, 100, 100, 100, 50, 50, 50, 20, 20};
 
 // ****************************************************************************
 // Function: RunBenchmark_H2D
@@ -174,53 +176,48 @@ void RunBenchmark_H2D(ResultDatabase& resultDB) {
     hipEventCreate(&stop);
     CHECK_HIP_ERROR();
 
-    // Three passes, forward and backward both
-    for (int pass = 0; pass < p_iterations; pass++) {
-        // store the times temporarily to estimate latency
-        // float times[nSizes];
-        // Step through sizes forward on even passes and backward on odd
-        for (int i = 0; i < nSizes; i++) {
-            int sizeIndex;
-            if ((pass % 2) == 0)
-                sizeIndex = i;
-            else
-                sizeIndex = (nSizes - 1) - i;
+    // store the times temporarily to estimate latency
+    // float times[nSizes];
+    for (int i = 0; i < nSizes; i++) {
+      int sizeIndex, iterIndex;
+      sizeIndex = i;
+      iterIndex = i;
 
-            const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
-            const int nbytes = sizeToBytes(thisSize);
+      const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
+      const int nbytes = sizeToBytes(thisSize);
+      const int niter = p_iterations ? p_iterations : iterations[iterIndex];
+      for (int pass = 0; pass < niter; pass++) {
 
-            hipEventRecord(start, 0);
-            for (int j = 0; j < p_beatsperiteration; j++) {
-                memcopy(device, hostMem, nbytes, hipMemcpyHostToDevice);
-            }
-            hipEventRecord(stop, 0);
-            hipEventSynchronize(stop);
-            float t = 0;
-            hipEventElapsedTime(&t, start, stop);
-            // times[sizeIndex] = t;
-
-            // Convert to GB/sec
-            if (p_verbose) {
-                std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
-            }
-
-            double speed =
-                (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) /  1000) / t;
-            char sizeStr[256];
-            if (p_beatsperiteration > 1) {
-                sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(), p_beatsperiteration);
-            } else {
-                sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
-            }
-            resultDB.AddResult(std::string("H2D_Bandwidth") + "_" + mallocModeString(p_malloc_mode),
-                               sizeStr, "GB/sec", speed);
-            resultDB.AddResult(std::string("H2D_Time") + mallocModeString(p_malloc_mode), sizeStr,
-                               "ms", t);
-
-            if (p_onesize) {
-                break;
-            }
+        hipEventRecord(start, 0);
+        for (int j = 0; j < p_beatsperiteration; j++) {
+          memcopy(device, hostMem, nbytes, hipMemcpyHostToDevice);
         }
+        hipEventRecord(stop, 0);
+        hipEventSynchronize(stop);
+        float t = 0;
+        hipEventElapsedTime(&t, start, stop);
+        // times[sizeIndex] = t;
+        // Convert to GB/sec
+        if (p_verbose) {
+          std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
+        }
+
+        double speed =
+            (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) /  1000) / t;
+        char sizeStr[256];
+        if (p_beatsperiteration > 1) {
+          sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(), p_beatsperiteration);
+        } else {
+          sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+        }
+        resultDB.AddResult(std::string("H2D_Bandwidth") + "_" + mallocModeString(p_malloc_mode),
+                           sizeStr, "GB/sec", speed);
+        resultDB.AddResult(std::string("H2D_Time") + mallocModeString(p_malloc_mode), sizeStr,                                            "ms", t);
+
+      }
+      if (p_onesize) {
+        break;
+      }
     }
 
     if (p_onesize) {
@@ -347,53 +344,50 @@ void RunBenchmark_D2H(ResultDatabase& resultDB) {
     hipEventCreate(&stop);
     CHECK_HIP_ERROR();
 
-    // Three passes, forward and backward both
-    for (int pass = 0; pass < p_iterations; pass++) {
-        // store the times temporarily to estimate latency
-        // float times[nSizes];
-        // Step through sizes forward on even passes and backward on odd
-        for (int i = 0; i < nSizes; i++) {
-            int sizeIndex;
-            if ((pass % 2) == 0)
-                sizeIndex = i;
-            else
-                sizeIndex = (nSizes - 1) - i;
+    // store the times temporarily to estimate latency
+    // float times[nSizes];
+    for (int i = 0; i < nSizes; i++) {
+      int sizeIndex, iterIndex;
+      sizeIndex = i;
+      iterIndex = i;
 
-            const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
-            const int nbytes = sizeToBytes(thisSize);
+      const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
+      const int nbytes = sizeToBytes(thisSize);
+      const int niter = p_iterations ? p_iterations : iterations[iterIndex];
+      for (int pass = 0; pass < niter; pass++) {
 
-            hipEventRecord(start, 0);
-            for (int j = 0; j < p_beatsperiteration; j++) {
-                memcopy(hostMem2, device, nbytes, hipMemcpyDeviceToHost);
-            }
-            hipEventRecord(stop, 0);
-            hipEventSynchronize(stop);
-            float t = 0;
-            hipEventElapsedTime(&t, start, stop);
-            // times[sizeIndex] = t;
-
-            // Convert to GB/sec
-            if (p_verbose) {
-                std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
-            }
-
-            double speed =
-                (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) / 1000) / t;
-            char sizeStr[256];
-            sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
-            if (p_beatsperiteration > 1) {
-                sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(), p_beatsperiteration);
-            } else {
-                sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
-            }
-            resultDB.AddResult(std::string("D2H_Bandwidth") + "_" + mallocModeString(p_malloc_mode),
-                               sizeStr, "GB/sec", speed);
-            resultDB.AddResult(std::string("D2H_Time") + "_" + mallocModeString(p_malloc_mode),
-                               sizeStr, "ms", t);
-            if (p_onesize) {
-                break;
-            }
+        hipEventRecord(start, 0);
+        for (int j = 0; j < p_beatsperiteration; j++) {
+          memcopy(hostMem2, device, nbytes, hipMemcpyDeviceToHost);
         }
+        hipEventRecord(stop, 0);
+        hipEventSynchronize(stop);
+        float t = 0;
+        hipEventElapsedTime(&t, start, stop);
+        // times[sizeIndex] = t;
+        // Convert to GB/sec
+        if (p_verbose) {
+          std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
+        }
+
+        double speed =
+            (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) / 1000) / t;
+        char sizeStr[256];
+        sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+        if (p_beatsperiteration > 1) {
+          sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(), p_beatsperiteration);
+        } else {
+          sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+        }
+        resultDB.AddResult(std::string("D2H_Bandwidth") + "_" + mallocModeString(p_malloc_mode),
+                           sizeStr, "GB/sec", speed);
+        resultDB.AddResult(std::string("D2H_Time") + "_" + mallocModeString(p_malloc_mode),
+                           sizeStr, "ms", t);
+
+      }
+      if (p_onesize) {
+        break;
+      }
     }
 
     if (p_onesize) {
@@ -522,43 +516,43 @@ void RunBenchmark_Bidir(ResultDatabase& resultDB) {
     hipStreamCreate(&stream[0]);
     hipStreamCreate(&stream[1]);
 
-    // Three passes, forward and backward both
-    for (int pass = 0; pass < p_iterations; pass++) {
-        // store the times temporarily to estimate latency
-        // float times[nSizes];
-        // Step through sizes forward on even passes and backward on odd
-        for (int i = 0; i < nSizes; i++) {
-            int sizeIndex;
-            if ((pass % 2) == 0)
-                sizeIndex = i;
-            else
-                sizeIndex = (nSizes - 1) - i;
+    // store the times temporarily to estimate latency
+    // float times[nSizes];
+    for (int i = 0; i < nSizes; i++) {
+      int sizeIndex, iterIndex;
+      sizeIndex = i;
+      iterIndex = i;
 
-            const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
-            const int nbytes = sizeToBytes(thisSize);
+      const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
+      const int nbytes = sizeToBytes(thisSize);
+      const int niter = p_iterations ? p_iterations : iterations[iterIndex];
+      for (int pass = 0; pass < niter; pass++) {
 
-            hipEventRecord(start, 0);
-            hipMemcpyAsync(deviceMem[0], hostMem[0], nbytes, hipMemcpyHostToDevice, stream[0]);
-            hipMemcpyAsync(hostMem[1], deviceMem[1], nbytes, hipMemcpyDeviceToHost, stream[1]);
-            hipEventRecord(stop, 0);
-            hipEventSynchronize(stop);
-            float t = 0;
-            hipEventElapsedTime(&t, start, stop);
+        hipEventRecord(start, 0);
+        hipMemcpyAsync(deviceMem[0], hostMem[0], nbytes, hipMemcpyHostToDevice, stream[0]);
+        hipMemcpyAsync(hostMem[1], deviceMem[1], nbytes, hipMemcpyDeviceToHost, stream[1]);
+        hipEventRecord(stop, 0);
+        hipEventSynchronize(stop);
+        float t = 0;
+        hipEventElapsedTime(&t, start, stop);
 
-            // Convert to GB/sec
-            if (p_verbose) {
-                std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
-            }
-
-            double speed = (double(sizeToBytes(2 * thisSize)) / (1000 * 1000)) / t;
-            char sizeStr[256];
-            sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
-            resultDB.AddResult(
-                std::string("Bidir_Bandwidth") + "_" + mallocModeString(p_malloc_mode), sizeStr,
-                "GB/sec", speed);
-            resultDB.AddResult(std::string("Bidir_Time") + "_" + mallocModeString(p_malloc_mode),
-                               sizeStr, "ms", t);
+        // Convert to GB/sec
+        if (p_verbose) {
+          std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
         }
+
+        double speed = (double(sizeToBytes(2 * thisSize)) / (1000 * 1000)) / t;
+        char sizeStr[256];
+        sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+        resultDB.AddResult(
+            std::string("Bidir_Bandwidth") + "_" + mallocModeString(p_malloc_mode), sizeStr,
+            "GB/sec", speed);
+        resultDB.AddResult(std::string("Bidir_Time") + "_" + mallocModeString(p_malloc_mode),
+                           sizeStr, "ms", t);
+      }
+      if (p_onesize) {
+        break;
+      }
     }
 
     // Cleanup
@@ -708,66 +702,63 @@ void RunBenchmark_P2P_Unidir(ResultDatabase& resultDB) {
             hipEventCreate(&stop);
             CHECK_HIP_ERROR();
 
-            // Three passes, forward and backward both
-            for (int pass = 0; pass < p_iterations; pass++) {
-                // store the times temporarily to estimate latency
-                // float times[nSizes];
-                // Step through sizes forward on even passes and backward on odd
-                for (int i = 0; i < nSizes; i++) {
-                    int sizeIndex;
-                    if ((pass % 2) == 0)
-                        sizeIndex = i;
-                    else
-                        sizeIndex = (nSizes - 1) - i;
+            // store the times temporarily to estimate latency
+            // float times[nSizes];
+            for (int i = 0; i < nSizes; i++) {
+              int sizeIndex, iterIndex;
+              sizeIndex = i;
+              iterIndex = i;
 
-                    const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
-                    const int nbytes = sizeToBytes(thisSize);
+              const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
+              const int nbytes = sizeToBytes(thisSize);
+              const int niter = p_iterations ? p_iterations : iterations[iterIndex];
+              for (int pass = 0; pass < niter; pass++) {
 
-                    hipDeviceSynchronize();
+                hipDeviceSynchronize();
 
-                    hipEventRecord(start, 0);
+                hipEventRecord(start, 0);
 
-                    for (int j = 0; j < p_beatsperiteration; j++) {
-                        hipMemcpy(peerGpuMem, currentGpuMem, nbytes, hipMemcpyDeviceToDevice);
-                    }
+                for (int j = 0; j < p_beatsperiteration; j++) {
+                  hipMemcpy(peerGpuMem, currentGpuMem, nbytes, hipMemcpyDeviceToDevice);
+                }
 
-                    hipEventRecord(stop, 0);
+                hipEventRecord(stop, 0);
 
-                    hipEventSynchronize(stop);
+                hipEventSynchronize(stop);
 
-                    float t = 0;
-                    hipEventElapsedTime(&t, start, stop);
-                    // times[sizeIndex] = t;
+                float t = 0;
+                hipEventElapsedTime(&t, start, stop);
+                // times[sizeIndex] = t;
 
-                    // Convert to GB/sec
-                    if (p_verbose) {
-                        std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
-                    }
+                // Convert to GB/sec
+                if (p_verbose) {
+                  std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
+                }
 
-                    double speed =
-                        (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) / 1000) / t;
-                    char sizeStr[256];
-                    if (p_beatsperiteration > 1) {
-                        sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(),
-                                p_beatsperiteration);
-                    } else {
-                        sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
-                    }
+                double speed =
+                    (double(double(sizeToBytes(thisSize)/1000) * p_beatsperiteration) / 1000) / t;
+                char sizeStr[256];
+                if (p_beatsperiteration > 1) {
+                  sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(),
+                          p_beatsperiteration);
+                } else {
+                  sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+                }
 
-                    string cGpu, pGpu;
-                    cGpu = gpuIDToString(currentGpu);
-                    pGpu = gpuIDToString(peerGpu);
+                string cGpu, pGpu;
+                cGpu = gpuIDToString(currentGpu);
+                pGpu = gpuIDToString(peerGpu);
 
-                    resultDB.AddResult(std::string("p2p_uni") + "_gpu" + std::string(cGpu) +
-                                           "_gpu" + std::string(pGpu),
+                resultDB.AddResult(std::string("p2p_uni") + "_gpu" + std::string(cGpu) +
+                                       "_gpu" + std::string(pGpu),
                                        sizeStr, "GB/sec", speed);
-                    resultDB.AddResult(std::string("P2P_uni") + "_gpu" + std::string(cGpu) +
-                                           "_gpu" + std::string(pGpu),
+                resultDB.AddResult(std::string("P2P_uni") + "_gpu" + std::string(cGpu) +
+                                       "_gpu" + std::string(pGpu),
                                        sizeStr, "ms", t);
 
-                    if (p_onesize) {
-                        break;
-                    }
+              }
+                if (p_onesize) {
+                  break;
                 }
             }
 
@@ -829,71 +820,68 @@ void RunBenchmark_P2P_Bidir(ResultDatabase& resultDB) {
             hipStreamCreate(&stream[0]);
             hipStreamCreate(&stream[1]);
 
-            // Three passes, forward and backward both
-            for (int pass = 0; pass < p_iterations; pass++) {
-                // store the times temporarily to estimate latency
-                // float times[nSizes];
-                // Step through sizes forward on even passes and backward on odd
-                for (int i = 0; i < nSizes; i++) {
-                    int sizeIndex;
-                    if ((pass % 2) == 0)
-                        sizeIndex = i;
-                    else
-                        sizeIndex = (nSizes - 1) - i;
+            // store the times temporarily to estimate latency
+            // float times[nSizes];
+            for (int i = 0; i < nSizes; i++) {
+              int sizeIndex, iterIndex;
+              sizeIndex = i;
+              iterIndex = i;
 
-                    const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
-                    const int nbytes = sizeToBytes(thisSize);
+              const int thisSize = p_onesize ? p_onesize : sizes[sizeIndex];
+              const int nbytes = sizeToBytes(thisSize);
+              const int niter = p_iterations ? p_iterations : iterations[iterIndex];
+              for (int pass = 0; pass < niter; pass++) {
 
-                    hipDeviceSynchronize();
+                hipDeviceSynchronize();
 
-                    hipEventRecord(start, 0);
+                hipEventRecord(start, 0);
 
-                    for (int j = 0; j < p_beatsperiteration; j++) {
-                        hipMemcpyAsync(peerGpuMem[0], currentGpuMem[0], nbytes,
-                                       hipMemcpyDeviceToDevice, stream[0]);
-                        hipMemcpyAsync(currentGpuMem[1], peerGpuMem[1], nbytes,
-                                       hipMemcpyDeviceToDevice, stream[1]);
-                    }
-
-                    hipEventRecord(stop, 0);
-
-                    hipEventSynchronize(stop);
-
-                    float t = 0;
-                    hipEventElapsedTime(&t, start, stop);
-                    // times[sizeIndex] = t;
-
-                    // Convert to GB/sec
-                    if (p_verbose) {
-                        std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
-                    }
-
-                    double speed =
-                        (double(double(sizeToBytes(2 * thisSize)/1000) * p_beatsperiteration) / 1000) /
-                        t;
-                    char sizeStr[256];
-                    if (p_beatsperiteration > 1) {
-                        sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(),
-                                p_beatsperiteration);
-                    } else {
-                        sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
-                    }
-
-                    string cGpu, pGpu;
-                    cGpu = gpuIDToString(currentGpu);
-                    pGpu = gpuIDToString(peerGpu);
-
-                    resultDB.AddResult(std::string("p2p_bi") + "_gpu" + std::string(cGpu) + "_gpu" +
-                                           std::string(pGpu),
-                                       sizeStr, "GB/sec", speed);
-                    resultDB.AddResult(std::string("P2P_bi") + "_gpu" + std::string(cGpu) + "_gpu" +
-                                           std::string(pGpu),
-                                       sizeStr, "ms", t);
-
-                    if (p_onesize) {
-                        break;
-                    }
+                for (int j = 0; j < p_beatsperiteration; j++) {
+                  hipMemcpyAsync(peerGpuMem[0], currentGpuMem[0], nbytes,
+                                 hipMemcpyDeviceToDevice, stream[0]);
+                  hipMemcpyAsync(currentGpuMem[1], peerGpuMem[1], nbytes,
+                                 hipMemcpyDeviceToDevice, stream[1]);
                 }
+
+                hipEventRecord(stop, 0);
+
+                hipEventSynchronize(stop);
+
+                float t = 0;
+                hipEventElapsedTime(&t, start, stop);
+                // times[sizeIndex] = t;
+
+                // Convert to GB/sec
+                if (p_verbose) {
+                  std::cerr << "size " << sizeToString(thisSize) << " took " << t << " ms\n";
+                }
+
+                double speed =
+                    (double(double(sizeToBytes(2 * thisSize)/1000) * p_beatsperiteration) / 1000) /
+                    t;
+                char sizeStr[256];
+                if (p_beatsperiteration > 1) {
+                  sprintf(sizeStr, "%9sx%d", sizeToString(thisSize).c_str(),
+                          p_beatsperiteration);
+                } else {
+                  sprintf(sizeStr, "%9s", sizeToString(thisSize).c_str());
+                }
+
+                string cGpu, pGpu;
+                cGpu = gpuIDToString(currentGpu);
+                pGpu = gpuIDToString(peerGpu);
+
+                resultDB.AddResult(std::string("p2p_bi") + "_gpu" + std::string(cGpu) + "_gpu" +
+                                       std::string(pGpu),
+                                   sizeStr, "GB/sec", speed);
+                resultDB.AddResult(std::string("P2P_bi") + "_gpu" + std::string(cGpu) + "_gpu" +
+                                       std::string(pGpu),
+                                   sizeStr, "ms", t);
+
+              }
+              if (p_onesize) {
+                break;
+              }
             }
 
             if (p_onesize) {
