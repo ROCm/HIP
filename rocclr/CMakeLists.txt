@@ -156,7 +156,7 @@ endif()
 
 # Short-Term solution for pre-compiled headers for online compilation
 # Enable pre compiled header
-if(${__HIP_ENABLE_PCH})
+if(__HIP_ENABLE_PCH)
     execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${LLVM_DIR}")
     add_definitions(-D__HIP_ENABLE_PCH)
 endif()
@@ -223,7 +223,7 @@ add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
 # Short-Term solution for pre-compiled headers for online compilation
-if(${__HIP_ENABLE_PCH})
+if(__HIP_ENABLE_PCH)
   target_link_libraries(amdhip64 PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
 endif()
 
