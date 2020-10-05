@@ -22,15 +22,14 @@ THE SOFTWARE.
 // Simple test for hipLaunchCooperativeKernel API.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
  * TEST: %t
  * HIT_END
  */
 
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include "hip/hcc_detail/device_library_decls.h"
-#include "hip/hcc_detail/hip_cooperative_groups.h"
+#include "hip/hip_cooperative_groups.h"
 #include <iostream>
 #include <chrono>
 #include "test_common.h"
@@ -129,7 +128,7 @@ int main() {
     params[3] = (void*)&dC;
 
     std::cout << "Testing with grid size = " << dimGrid.x << " and block size = " << dimBlock.x << "\n";
-    HIPCHECK(hipLaunchCooperativeKernel(test_gws, dimGrid, dimBlock, params, dimBlock.x * sizeof(long), stream));
+    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_gws), dimGrid, dimBlock, params, dimBlock.x * sizeof(long), stream));
 
     HIPCHECK(hipMemcpy(init, dC, sizeof(long), hipMemcpyDeviceToHost));
 

@@ -77,11 +77,6 @@ public:
   hipError_t getStatFuncAttr(hipFuncAttributes* func_attr, const void* hostFunction, int deviceId);
   hipError_t getStatGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                               size_t* size_ptr);
-  hipError_t getStatGlobalVarByName(std::string hostVar, int deviceId, hipModule_t hmod,
-                                    hipDeviceptr_t* dev_ptr, size_t* size_ptr);
-
-  bool getShadowVarInfo(std::string var_name, hipModule_t hmod,
-                            void** var_addr, size_t* var_size);
 
   //Exec Functions
   void setupArgument(const void *arg, size_t size, size_t offset);
