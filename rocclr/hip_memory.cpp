@@ -1970,13 +1970,17 @@ hipError_t hipIpcOpenMemHandle(void** dev_ptr, hipIpcMemHandle_t handle, unsigne
   amd::Device* device = nullptr;
   ihipIpcMemHandle_t* ihandle = nullptr;
 
-  if (dev_ptr == nullptr) {
+  if (dev_ptr == nullptr || flags != hipIpcMemLazyEnablePeerAccess) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
   /* Call the IPC Attach from Device class */
   device = hip::getCurrentDevice()->devices()[0];
   ihandle = reinterpret_cast<ihipIpcMemHandle_t *>(&handle);
+
+  if (ihandle->psize == 0) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
 
   if(!device->IpcAttach(&(ihandle->ipc_handle), ihandle->psize, flags, dev_ptr)) {
     DevLogPrintfError("cannot attach ipc_handle: with ipc_size: %u flags: %u", ihandle->psize, flags);
