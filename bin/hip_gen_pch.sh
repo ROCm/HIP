@@ -2,11 +2,7 @@
 
 #set -x
 
-ROCM_PATH=${ROCM_PATH:-/opt/rocm}
-tmp=/tmp/hip_pch.$$
-mkdir -p $tmp
-
-cat >$tmp/hip_macros.h <<EOF
+cat >/tmp/hip_macros.h <<EOF
 #define __device__ __attribute__((device))
 #define __host__ __attribute__((host))
 #define __global__ __attribute__((global))
@@ -28,31 +24,13 @@ cat >$tmp/hip_macros.h <<EOF
     type* var = (type*)__amdgcn_get_dynamicgroupbaseptr();
 EOF
 
-cat >$tmp/hip_pch.h <<EOF
+cat >/tmp/hip_pch.h <<EOF
 #include "hip/hip_runtime.h"
 #include "hip/hip_fp16.h"
 EOF
 
+/opt/rocm/llvm/bin/clang -O3 -c -std=c++17 -isystem /opt/rocm/llvm/lib/clang/11.0.0/include/.. -isystem /opt/rocm/include -nogpulib --cuda-device-only -x hip /tmp/hip_pch.h -E >/tmp/pch.cui
 
-cat >$tmp/hip_pch.mcin <<EOF
- .type __hip_pch,@object
-  .section .hip_pch,"aMS",@progbits,1
-  .data
-  .globl __hip_pch
-  .globl __hip_pch_size
-  .p2align 3
-__hip_pch:
-  .incbin "$tmp/hip.pch"
-__hip_pch_size:
-  .long __hip_pch_size - __hip_pch
-EOF
+cat /tmp/hip_macros.h >> /tmp/pch.cui
 
-$ROCM_PATH/llvm/bin/clang -O3 -c -std=c++17 -isystem /opt/rocm/llvm/lib/clang/11.0.0/include/.. -isystem /opt/rocm/include -nogpulib --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui
-
-cat $tmp/hip_macros.h >> $tmp/pch.cui
-
-$ROCM_PATH/llvm/bin/clang -cc1 -O3 -emit-pch -triple amdgcn-amd-amdhsa -aux-triple x86_64-unknown-linux-gnu -fcuda-is-device -std=c++17 -fgnuc-version=4.2.1 -o $tmp/hip.pch -x hip-cpp-output - <$tmp/pch.cui
-
-$ROCM_PATH/llvm/bin/llvm-mc -o hip_pch.o $tmp/hip_pch.mcin --filetype=obj
-
-rm -rf $tmp
+/opt/rocm/llvm/bin/clang -cc1 -O3 -emit-pch -triple amdgcn-amd-amdhsa -aux-triple x86_64-unknown-linux-gnu -fcuda-is-device -std=c++17 -fgnuc-version=4.2.1 -o /tmp/hip.pch -x hip-cpp-output - </tmp/pch.cui

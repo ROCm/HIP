@@ -202,8 +202,17 @@ hipError_t DynCO::populateDynGlobalVars() {
     return hipErrorSharedObjectSymbolNotFound;
   }
 
+  if (!dev_program->getUndefinedVarFromCodeObj(&undef_var_names)) {
+    DevLogPrintfError("Could not get undefined Variables for Module: 0x%x \n", module());
+    return hipErrorSharedObjectSymbolNotFound;
+  }
+
   for (auto& elem : var_names) {
     vars_.insert(std::make_pair(elem, new Var(elem, Var::DeviceVarKind::DVK_Variable, 0, 0, 0, nullptr)));
+  }
+
+  for (auto& elem : undef_var_names) {
+    vars_.insert(std::make_pair(elem, new Var(elem, Var::DeviceVarKind::DVK_Texture, 0, 0, 0, nullptr)));
   }
 
   return hipSuccess;
@@ -367,5 +376,21 @@ hipError_t StatCO::getStatGlobalVar(const void* hostVar, int deviceId, hipDevice
   *dev_ptr = dvar->device_ptr();
   *size_ptr = dvar->size();
   return hipSuccess;
+}
+
+hipError_t StatCO::getStatGlobalVarByName(std::string hostVar, int deviceId, hipModule_t hmod,
+                                          hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
+  amd::ScopedLock lock(sclock_);
+
+  for (auto& elem : vars_) {
+    if ((elem.second->name() == hostVar)
+        && (elem.second->module(deviceId) == hmod)) {
+      *dev_ptr = elem.second->device_ptr(deviceId);
+      *size_ptr = elem.second->device_size(deviceId);
+      return hipSuccess;
+    }
+  }
+
+  return hipErrorNotFound;
 }
 }; //namespace: hip

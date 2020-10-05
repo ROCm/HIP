@@ -803,8 +803,7 @@ if ($needHipHcc) {
     if ($linkType eq 0) {
         substr($HIPLDFLAGS,0,0) = "  $HIP_LIB_PATH/libamdhip64.a " ;
     } else {
-        #Currently in ROCm some of libraries are in lib64 and rest are in lib folder in centos.
-        substr($HIPLDFLAGS,0,0) = "  -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib:$ROCM_PATH/lib64 $HIP_LIB_PATH/libamdhip64.so ";
+        substr($HIPLDFLAGS,0,0) = "  -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib $HIP_LIB_PATH/libamdhip64.so ";
     }
 }
 

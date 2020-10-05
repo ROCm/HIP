@@ -28,17 +28,14 @@ THE SOFTWARE.
  */
 
 #ifndef  HIP_INCLUDE_HIP_HIP_COOPERATIVE_GROUP_H
-#define  HIP_INCLUDE_HIP_HIP_COOPERATIVE_GROUP_H
-
-#include <hip/hip_version.h>
-#include <hip/hip_common.h>
+#define HIP_INCLUDE_HIP_HIP_VECTOR_TYPES_H
 
 #if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
-#if __cplusplus && defined(__clang__) && defined(__HIP__)
+#if __cplusplus
 #include <hip/hcc_detail/hip_cooperative_groups.h>
 #endif
 #elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)
-#include <hip/nvcc_detail/hip_cooperative_groups.h>
+#include <cooperative_groups.h>
 #else
 #error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
 #endif
