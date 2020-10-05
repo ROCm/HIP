@@ -8,19 +8,17 @@ set(BUILD_SHARED_LIBS ON  CACHE BOOL "Build shared library (.so) or static lib (
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if(NOT DEFINED __HIP_ENABLE_PCH)
-  set(__HIP_ENABLE_PCH ON CACHE BOOL "enable/disable pre-compiled hip headers")
-endif()
-
-if(${__HIP_ENABLE_PCH})
-  set(_pchStatus 1)
-else()
-  set(_pchStatus 0)
-endif()
 #############################
 # Options
 #############################
 option(BUILD_HIPIFY_CLANG "Enable building the CUDA->HIP converter" OFF)
+option(__HIP_ENABLE_PCH "Enable/Disable pre-compiled hip headers" ON)
+
+if(__HIP_ENABLE_PCH)
+  set(_pchStatus 1)
+else()
+  set(_pchStatus 0)
+endif()
 
 #############################
 # Setup config generation
