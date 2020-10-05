@@ -124,7 +124,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   if (*ptr == nullptr) {
     size_t free = 0, total =0;
     hipMemGetInfo(&free, &total);
-    LogPrintfError("Allocation failed : Device memory : required :%zu | free :%zu | total :%zu \n", sizeBytes, free, total);
+    LogPrintfError("Allocation failed : Device memory : required :%u | free :%u | total :%u \n", sizeBytes, free, total);
     return hipErrorOutOfMemory;
   }
 
@@ -202,14 +202,14 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
       }
     } else {
       amd::HostQueue* pQueue = &queue;
-      if ((srcMemory->getContext().devices()[0] == dstMemory->getContext().devices()[0]) &&
-          (queueDevice != srcMemory->getContext().devices()[0])) {
+      if (queueDevice != srcMemory->getContext().devices()[0]) {
         pQueue = hip::getNullStream(srcMemory->getContext());
         amd::Command* cmd = queue.getLastQueuedCommand(true);
         if (cmd != nullptr) {
           waitList.push_back(cmd);
         }
       }
+
       command = new amd::CopyMemoryCommand(*pQueue, CL_COMMAND_COPY_BUFFER, waitList,
           *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
     }
@@ -1850,26 +1850,17 @@ hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr,
                         hipExtent extent,
                         hipStream_t stream,
                         bool isAsync = false) {
-  size_t offset = 0;
-  amd::Memory* memory = getMemoryObject(pitchedDevPtr.ptr, offset);
-
-  auto sizeBytes = extent.width * extent.height * extent.depth;
-
-  if (memory == nullptr) {
-    return hipErrorInvalidValue;
-  }
-  if (sizeBytes > memory->getSize()) {
-    return hipErrorInvalidValue;
-  }
-
   if (pitchedDevPtr.pitch == extent.width) {
-    return ihipMemset(pitchedDevPtr.ptr, value, sizeof(int8_t), static_cast<size_t>(sizeBytes), stream, isAsync);
+    return ihipMemset(pitchedDevPtr.ptr, value, sizeof(int8_t), extent.width * extent.height * extent.depth, stream, isAsync);
   }
 
-  // Workaround for cases when pitch > row until fill kernel will be updated to support pitch.
-  // Fall back to filling one row at a time.
+  // Workaround for cases when pitch > row untill fill kernel will be updated to support pitch.
+  // Fallback to filling one row at a time.
 
   amd::HostQueue* queue = hip::getQueue(stream);
+
+  size_t offset = 0;
+  amd::Memory* memory = getMemoryObject(pitchedDevPtr.ptr, offset);
 
   amd::Coord3D origin(offset);
   amd::Coord3D region(pitchedDevPtr.xsize, pitchedDevPtr.ysize, extent.depth);
@@ -1879,26 +1870,34 @@ hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr,
     return hipErrorInvalidValue;
   }
 
-  std::vector<amd::FillMemoryCommand*> commands;
+  if (memory != nullptr) {
+    std::vector<amd::FillMemoryCommand*> commands;
 
-  for (size_t slice = 0; slice < extent.depth; slice++) {
-    for (size_t row = 0; row < extent.height; row++) {
-      const size_t rowOffset = rect.offset(0, row, slice);
-      amd::FillMemoryCommand *command = new amd::FillMemoryCommand(*queue,
-          CL_COMMAND_FILL_BUFFER, amd::Command::EventWaitList { },
-          *memory->asBuffer(), &value, sizeof(int8_t), amd::Coord3D { rowOffset,
-              0, 0 }, amd::Coord3D { extent.width, 1, 1 });
+    for (size_t slice = 0; slice < extent.depth; slice++) {
+      for (size_t row = 0; row < extent.height; row++) {
+        const size_t rowOffset = rect.offset(0, row, slice);
+        amd::FillMemoryCommand* command = new amd::FillMemoryCommand(*queue,
+                                                                     CL_COMMAND_FILL_BUFFER,
+                                                                     amd::Command::EventWaitList{},
+                                                                     *memory->asBuffer(),
+                                                                     &value,
+                                                                     sizeof(int8_t),
+                                                                     amd::Coord3D{rowOffset, 0, 0},
+                                                                     amd::Coord3D{extent.width, 1, 1});
 
-      command->enqueue();
-      commands.push_back(command);
+        command->enqueue();
+        commands.push_back(command);
+      }
     }
-  }
 
-  for (auto &command : commands) {
-    if (!isAsync) {
-      command->awaitCompletion();
+    for (auto &command: commands) {
+      if (!isAsync) {
+        command->awaitCompletion();
+      }
+      command->release();
     }
-    command->release();
+  } else {
+	return hipErrorInvalidValue;
   }
 
   return hipSuccess;
@@ -2039,7 +2038,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
   memset(attributes, 0, sizeof(hipPointerAttribute_t));
 
   if (memObj != nullptr) {
-    attributes->memoryType = ((CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR) & memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
+    attributes->memoryType = (CL_MEM_SVM_FINE_GRAIN_BUFFER & memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
     if (attributes->memoryType == hipMemoryTypeHost) {
       attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
     }

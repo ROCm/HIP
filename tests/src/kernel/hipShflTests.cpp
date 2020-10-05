@@ -57,15 +57,6 @@ void matrixTransposeCPUReference(T* output, T* input, const unsigned int width) 
     }
 }
 
-void getFactor(int& fact) { fact = 101; }
-void getFactor(unsigned int& fact) { fact = static_cast<unsigned int>(INT32_MAX)+1; }
-void getFactor(float& fact) { fact = 2.5; }
-void getFactor(double& fact) { fact = 2.5; }
-void getFactor(long& fact) { fact = 202; }
-void getFactor(unsigned long& fact) { fact = static_cast<unsigned long>(__LONG_MAX__)+1; }
-void getFactor(long long& fact) { fact = 303; }
-void getFactor(unsigned long long& fact) { fact = static_cast<unsigned long long>(__LONG_LONG_MAX__)+1; }
-
 template<typename T>
 void runTest() {
     T* Matrix;
@@ -86,10 +77,8 @@ void runTest() {
     cpuTransposeMatrix = (T*)malloc(NUM * sizeof(T));
 
     // initialize the input data
-    T factor;
-    getFactor(factor);
     for (i = 0; i < NUM; i++) {
-        Matrix[i] = (T)i + factor;
+        Matrix[i] = (T)i * 10l;
     }
 
     // allocate the memory on the device side
@@ -135,11 +124,7 @@ void runTest() {
 int main() {
     runTest<int>();
     runTest<float>();
-    runTest<double>();
     runTest<long>();
     runTest<long long>();
-    runTest<unsigned int>();
-    runTest<unsigned long>();
-    runTest<unsigned long long>();
     passed();
 }

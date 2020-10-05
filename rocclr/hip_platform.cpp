@@ -80,6 +80,27 @@ extern "C" hip::FatBinaryInfo** __hipRegisterFatBinary(const void* data)
   return PlatformState::instance().addFatBinary(fbwrapper->binary);
 }
 
+bool PlatformState::getShadowVarInfo(std::string var_name, hipModule_t hmod,
+                                     void** var_addr, size_t* var_size) {
+
+  amd::ScopedLock lock(lock_);
+  if (hipSuccess == getDynGlobalVar(var_name.c_str(), ihipGetDevice(), hmod, var_addr, var_size)) {
+    return true;
+  }
+
+  if (hipSuccess == getStatGlobalVarByName(var_name, ihipGetDevice(), hmod, var_addr, var_size)) {
+    return true;
+  }
+
+  return false;
+}
+
+bool CL_CALLBACK getSvarInfo(cl_program program, std::string var_name, void** var_addr,
+                             size_t* var_size) {
+  return PlatformState::instance().getShadowVarInfo(var_name, reinterpret_cast<hipModule_t>(program),
+                                                    var_addr, var_size);
+}
+
 extern "C" void __hipRegisterFunction(
   hip::FatBinaryInfo** modules,
   const void*  hostFunction,
@@ -665,19 +686,11 @@ static inline std::uint32_t __convert_float_to_half(float a) noexcept {
   return s | v;
 }
 
-extern "C"
-#if !defined(_MSC_VER)
-__attribute__((weak))
-#endif
-float  __gnu_h2f_ieee(unsigned short h){
+extern "C" __attribute__((weak)) float  __gnu_h2f_ieee(unsigned short h){
   return __convert_half_to_float((std::uint32_t) h);
 }
 
-extern "C"
-#if !defined(_MSC_VER)
-__attribute__((weak))
-#endif
-unsigned short  __gnu_f2h_ieee(float f){
+extern "C" __attribute__((weak)) unsigned short  __gnu_f2h_ieee(float f){
   return (unsigned short)__convert_float_to_half(f);
 }
 
@@ -750,9 +763,6 @@ hipError_t PlatformState::getDynFunc(hipFunction_t* hfunc, hipModule_t hmod,
   auto it = dynCO_map_.find(hmod);
   if (it == dynCO_map_.end()) {
     DevLogPrintfError("Cannot find the module: 0x%x", hmod);
-    return hipErrorNotFound;
-  }
-  if (0 == strlen(func_name)) {
     return hipErrorNotFound;
   }
 
@@ -856,6 +866,11 @@ hipError_t PlatformState::getStatFuncAttr(hipFuncAttributes* func_attr, const vo
 hipError_t PlatformState::getStatGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                                            size_t* size_ptr) {
   return statCO_.getStatGlobalVar(hostVar, deviceId, dev_ptr, size_ptr);
+}
+
+hipError_t PlatformState::getStatGlobalVarByName(std::string hostVar, int deviceId, hipModule_t hmod,
+                                                 hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
+  return statCO_.getStatGlobalVarByName(hostVar, deviceId, hmod, dev_ptr, size_ptr);
 }
 
 void PlatformState::setupArgument(const void *arg, size_t size, size_t offset) {

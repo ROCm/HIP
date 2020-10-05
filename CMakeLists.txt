@@ -8,15 +8,10 @@ set(BUILD_SHARED_LIBS ON  CACHE BOOL "Build shared library (.so) or static lib (
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
-if(NOT DEFINED __HIP_ENABLE_PCH)
-  set(__HIP_ENABLE_PCH ON CACHE BOOL "enable/disable pre-compiled hip headers")
+if(NOT ${BUILD_SHARED_LIBS} AND NOT DEFINED ENABLE_HIP_PCH)
+  set(ENABLE_HIP_PCH ON CACHE BOOL "enable/disable pre-compiled hip headers")
 endif()
 
-if(${__HIP_ENABLE_PCH})
-  set(_pchStatus 1)
-else()
-  set(_pchStatus 0)
-endif()
 #############################
 # Options
 #############################
@@ -85,8 +80,8 @@ if(GIT_FOUND)
 
   set(HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}-${HIP_VERSION_GITHASH})
 
-  if(DEFINED ENV{ROCM_LIBPATCH_VERSION})
-    set(HIP_PACKAGING_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}.$ENV{ROCM_LIBPATCH_VERSION})
+  if(DEFINED ENV{ROCM_BUILD_ID})
+    set(HIP_PACKAGING_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-$ENV{ROCM_BUILD_ID}-${HIP_VERSION_GITHASH})
   else()
     set(HIP_PACKAGING_VERSION_PATCH ${HIP_VERSION_GITDATE}.${HIP_VERSION_GITCOUNT}-${HIP_VERSION_GITHASH})
   endif()
@@ -94,36 +89,6 @@ else()
   # FIXME: Some parts depend on this being set.
   set(HIP_PACKAGING_VERSION_PATCH "0")
 endif()
-
-## Debian package specific variables
-if ( DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE} )
-  set ( CPACK_DEBIAN_PACKAGE_RELEASE $ENV{CPACK_DEBIAN_PACKAGE_RELEASE} )
-else()
-  set ( CPACK_DEBIAN_PACKAGE_RELEASE "local" )
-endif()
-message ( "Using CPACK_DEBIAN_PACKAGE_RELEASE ${CPACK_DEBIAN_PACKAGE_RELEASE}" )
-
-## RPM package specific variables
-if ( DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE} )
-  set ( CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE} )
-else()
-  set ( CPACK_RPM_PACKAGE_RELEASE "local" )
-endif()
-
-## 'dist' breaks manual builds on debian systems due to empty Provides
-execute_process( COMMAND rpm --eval %{?dist}
-                 RESULT_VARIABLE PROC_RESULT
-                 OUTPUT_VARIABLE EVAL_RESULT
-                 OUTPUT_STRIP_TRAILING_WHITESPACE )
-
-if ( PROC_RESULT EQUAL "0" AND NOT EVAL_RESULT STREQUAL "" )
-  string ( APPEND CPACK_RPM_PACKAGE_RELEASE "%{?dist}" )
-endif()
-message("CPACK_RPM_PACKAGE_RELEASE: ${CPACK_RPM_PACKAGE_RELEASE}")
-
-add_to_config(_versionInfo HIP_PACKAGING_VERSION_PATCH)
-add_to_config(_versionInfo CPACK_DEBIAN_PACKAGE_RELEASE)
-add_to_config(_versionInfo CPACK_RPM_PACKAGE_RELEASE)
 
 add_to_config(_versionInfo HIP_VERSION_MAJOR)
 add_to_config(_versionInfo HIP_VERSION_MINOR)
@@ -137,6 +102,7 @@ else ()
    set (HIP_LIB_VERSION_PATCH ${HIP_VERSION_PATCH})
 endif ()
 set (HIP_LIB_VERSION_STRING "${HIP_LIB_VERSION_MAJOR}.${HIP_LIB_VERSION_MINOR}.${HIP_LIB_VERSION_PATCH}")
+
 if (DEFINED ENV{ROCM_RPATH})
     set (CMAKE_INSTALL_RPATH "$ENV{ROCM_RPATH}")
     set (CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
@@ -490,7 +456,6 @@ set(_versionInfoHeader
 #define HIP_VERSION_MINOR ${HIP_VERSION_MINOR}
 #define HIP_VERSION_PATCH ${HIP_VERSION_GITDATE}
 #define HIP_VERSION       (HIP_VERSION_MAJOR * 100 + HIP_VERSION_MINOR)\n
-#define __HIP_HAS_GET_PCH ${_pchStatus}\n
 #endif\n
 ")
 file(WRITE "${PROJECT_BINARY_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
@@ -704,11 +669,8 @@ endif()
 # Testing steps
 #############################
 # Target: test
-set(HIP_ROOT_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(HIP_ROOT_DIR ${CMAKE_INSTALL_PREFIX})
 set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-if(HIP_PLATFORM STREQUAL "nvcc")
-	execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
-endif()
 execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_ROOT_DIR}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 if(${RUN_HIT} EQUAL 0)
     execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_ROOT_DIR}/bin" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
@@ -751,7 +713,7 @@ endif()
 #############################
 # Target: clang
 if(HIP_HIPCC_EXECUTABLE)
-    add_custom_target(analyze
+    add_custom_target(analyze 
         COMMAND ${HIP_HIPCC_EXECUTABLE} -fvisibility=hidden -fvisibility-inlines-hidden --analyze --analyzer-outputtext  -isystem /opt/rocm/include ${HIP_HCC_BUILD_FLAGS} -Wno-unused-command-line-argument -I/opt/rocm/include -c  src/*.cpp -Iinclude/ -I./
     WORKING_DIRECTORY ${HIP_SRC_PATH})
     if(CPPCHECK_EXE)

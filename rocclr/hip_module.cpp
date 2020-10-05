@@ -537,7 +537,7 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
     if (result != hipSuccess) {
       break;
     }
-    prevGridSize += globalWorkSizeX * globalWorkSizeY * globalWorkSizeZ;
+    prevGridSize += launch.gridDim.x * launch.gridDim.y * launch.gridDim.z;
   }
 
   // Sync the execution streams on all devices

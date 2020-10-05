@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -139,11 +139,7 @@ int main()
 
   if (!deviceProperties.cooperativeLaunch) {
     std::cout << "info: Device doesn't support cooperative launch! skipping the test!\n";
-    if (hip_skip_tests_enabled()) {
-      return hip_skip_retcode();
-    } else {
-      passed();
-    }
+    passed();
     return 0;
   }
 

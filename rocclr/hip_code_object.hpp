@@ -118,6 +118,8 @@ public:
   hipError_t getStatFuncAttr(hipFuncAttributes* func_attr, const void* hostFunction, int deviceId);
   hipError_t getStatGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                               size_t* size_ptr);
+  hipError_t getStatGlobalVarByName(std::string hostVar, int deviceId, hipModule_t hmod,
+                                    hipDeviceptr_t* dev_ptr, size_t* size_ptr);
 
 private:
   friend class ::PlatformState;

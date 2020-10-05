@@ -97,10 +97,6 @@ hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2,
                                         uint32_t* linktype, uint32_t* hopcount) {
   HIP_INIT_API(hipExtGetLinkTypeAndHopCount, device1, device2, linktype, hopcount);
 
-  if (linktype == nullptr || hopcount == nullptr ||
-      device1 == device2  || device1 < 0 || device2 < 0) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
   // Fill out the list of LinkAttributes
   std::vector<amd::Device::LinkAttrType> link_attrs;
   link_attrs.push_back(std::make_pair(amd::Device::LinkAttribute::kLinkLinkType, 0));
