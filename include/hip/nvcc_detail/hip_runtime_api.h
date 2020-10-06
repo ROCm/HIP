@@ -78,6 +78,115 @@ typedef enum hipMemcpyKind {
 #define HIP_LIBRARY_MINOR_VERSION MINOR_VERSION
 #define HIP_LIBRARY_PATCH_LEVEL PATCH_LEVEL
 
+#define HIP_ARRAY_DESCRIPTOR CUDA_ARRAY_DESCRIPTOR
+
+//hipArray_Format
+#define HIP_AD_FORMAT_UNSIGNED_INT8   CU_AD_FORMAT_UNSIGNED_INT8
+#define HIP_AD_FORMAT_UNSIGNED_INT16  CU_AD_FORMAT_UNSIGNED_INT16
+#define HIP_AD_FORMAT_UNSIGNED_INT32  CU_AD_FORMAT_UNSIGNED_INT32
+#define HIP_AD_FORMAT_SIGNED_INT8     CU_AD_FORMAT_SIGNED_INT8
+#define HIP_AD_FORMAT_SIGNED_INT16    CU_AD_FORMAT_SIGNED_INT16
+#define HIP_AD_FORMAT_SIGNED_INT32    CU_AD_FORMAT_SIGNED_INT32
+#define HIP_AD_FORMAT_HALF            CU_AD_FORMAT_HALF
+#define HIP_AD_FORMAT_FLOAT           CU_AD_FORMAT_FLOAT
+
+// hipArray_Format
+#define hipArray_Format CUarray_format
+
+inline static CUarray_format hipArray_FormatToCUarray_format(
+    hipArray_Format format) {
+    switch (format) {
+        case HIP_AD_FORMAT_UNSIGNED_INT8:
+            return CU_AD_FORMAT_UNSIGNED_INT8;
+        case HIP_AD_FORMAT_UNSIGNED_INT16:
+            return CU_AD_FORMAT_UNSIGNED_INT16;
+        case HIP_AD_FORMAT_UNSIGNED_INT32:
+            return CU_AD_FORMAT_UNSIGNED_INT32;
+        case HIP_AD_FORMAT_SIGNED_INT8:
+            return CU_AD_FORMAT_SIGNED_INT8;
+        case HIP_AD_FORMAT_SIGNED_INT16:
+            return CU_AD_FORMAT_SIGNED_INT16;
+        case HIP_AD_FORMAT_SIGNED_INT32:
+            return CU_AD_FORMAT_SIGNED_INT32;
+        case HIP_AD_FORMAT_HALF:
+            return CU_AD_FORMAT_HALF;
+        case HIP_AD_FORMAT_FLOAT:
+            return CU_AD_FORMAT_FLOAT;
+        default:
+            return CU_AD_FORMAT_UNSIGNED_INT8;
+    }
+}
+
+#define HIP_TR_ADDRESS_MODE_WRAP   CU_TR_ADDRESS_MODE_WRAP
+#define HIP_TR_ADDRESS_MODE_CLAMP  CU_TR_ADDRESS_MODE_CLAMP
+#define HIP_TR_ADDRESS_MODE_MIRROR CU_TR_ADDRESS_MODE_MIRROR
+#define HIP_TR_ADDRESS_MODE_BORDER CU_TR_ADDRESS_MODE_BORDER
+
+// hipAddress_mode
+#define hipAddress_mode CUaddress_mode
+
+inline static CUaddress_mode hipAddress_modeToCUaddress_mode(
+    hipAddress_mode mode) {
+    switch (mode) {
+        case HIP_TR_ADDRESS_MODE_WRAP:
+            return CU_TR_ADDRESS_MODE_WRAP;
+        case HIP_TR_ADDRESS_MODE_CLAMP:
+            return CU_TR_ADDRESS_MODE_CLAMP;
+        case HIP_TR_ADDRESS_MODE_MIRROR:
+            return CU_TR_ADDRESS_MODE_MIRROR;
+        case HIP_TR_ADDRESS_MODE_BORDER:
+            return CU_TR_ADDRESS_MODE_BORDER;
+        default:
+            return CU_TR_ADDRESS_MODE_WRAP;
+    }
+}
+
+#define HIP_TR_FILTER_MODE_POINT   CU_TR_FILTER_MODE_POINT
+#define HIP_TR_FILTER_MODE_LINEAR  CU_TR_FILTER_MODE_LINEAR
+
+// hipFilter_mode
+#define hipFilter_mode CUfilter_mode
+
+inline static CUfilter_mode hipFilter_mode_enumToCUfilter_mode(
+    hipFilter_mode mode) {
+    switch (mode) {
+        case HIP_TR_FILTER_MODE_POINT:
+            return CU_TR_FILTER_MODE_POINT;
+        case HIP_TR_FILTER_MODE_LINEAR:
+            return CU_TR_FILTER_MODE_LINEAR;
+        default:
+            return CU_TR_FILTER_MODE_POINT;
+    }
+}
+
+//hipResourcetype
+#define HIP_RESOURCE_TYPE_ARRAY            CU_RESOURCE_TYPE_ARRAY
+#define HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY  CU_RESOURCE_TYPE_MIPMAPPED_ARRAY
+#define HIP_RESOURCE_TYPE_LINEAR           CU_RESOURCE_TYPE_LINEAR
+#define HIP_RESOURCE_TYPE_PITCH2D          CU_RESOURCE_TYPE_PITCH2D
+
+// hipResourcetype
+#define hipResourcetype CUresourcetype
+
+inline static CUresourcetype hipResourcetype_enumToCUresourcetype(
+    hipResourcetype resType) {
+    switch (resType) {
+        case HIP_RESOURCE_TYPE_ARRAY:
+            return CU_RESOURCE_TYPE_ARRAY;
+        case HIP_RESOURCE_TYPE_MIPMAPPED_ARRAY:
+            return CU_RESOURCE_TYPE_MIPMAPPED_ARRAY;
+        case HIP_RESOURCE_TYPE_LINEAR:
+            return CU_RESOURCE_TYPE_LINEAR;
+        case HIP_RESOURCE_TYPE_PITCH2D:
+            return CU_RESOURCE_TYPE_PITCH2D;
+        default:
+            return CU_RESOURCE_TYPE_ARRAY;
+    }
+}
+
+#define hipTexRef CUtexref
+#define hiparray CUarray
+
 // hipTextureAddressMode
 typedef enum cudaTextureAddressMode hipTextureAddressMode;
 #define hipAddressModeWrap cudaAddressModeWrap
@@ -1678,6 +1787,10 @@ inline static hipError_t hipModuleGetFunction(hipFunction_t* function, hipModule
     return hipCUResultTohipError(cuModuleGetFunction(function, module, kname));
 }
 
+inline static hipError_t hipModuleGetTexRef(hipTexRef* pTexRef, hipModule_t hmod, const char* name){
+    hipCUResultTohipError(cuModuleGetTexRef(pTexRef, hmod, name));
+}
+
 inline static hipError_t hipFuncGetAttributes(hipFuncAttributes* attr, const void* func) {
     return hipCUDAErrorTohipError(cudaFuncGetAttributes(attr, func));
 }
@@ -1882,6 +1995,42 @@ inline static hipError_t hipLaunchCooperativeKernel(T f, dim3 gridDim, dim3 bloc
                                              void** kernelParams, unsigned int sharedMemBytes, hipStream_t stream) {
     return hipCUDAErrorTohipError(
             cudaLaunchCooperativeKernel(f, gridDim, blockDim, kernelParams, sharedMemBytes, stream));
+}
+
+inline static hipError_t hipTexRefSetAddressMode(hipTexRef hTexRef, int dim, hipAddress_mode am){
+    return hipCUResultTohipError(cuTexRefSetAddressMode(hTexRef,dim,am));
+}
+
+inline static hipError_t hipTexRefSetFilterMode(hipTexRef hTexRef, hipFilter_mode fm){
+    return hipCUResultTohipError(cuTexRefSetFilterMode(hTexRef,fm));
+}
+
+inline static hipError_t hipTexRefSetAddress(size_t *ByteOffset, hipTexRef hTexRef, hipDeviceptr_t dptr, size_t bytes){
+   return hipCUResultTohipError(cuTexRefSetAddress(ByteOffset,hTexRef,dptr,bytes));
+}
+
+inline static hipError_t hipTexRefSetAddress2D(hipTexRef hTexRef, const CUDA_ARRAY_DESCRIPTOR *desc, hipDeviceptr_t dptr, size_t Pitch){
+   return hipCUResultTohipError(cuTexRefSetAddress2D(hTexRef,desc,dptr,Pitch));
+}
+
+inline static hipError_t hipTexRefSetFormat(hipTexRef hTexRef, hipArray_Format fmt, int NumPackedComponents){
+   return hipCUResultTohipError(cuTexRefSetFormat(hTexRef,fmt,NumPackedComponents));
+}
+
+inline static hipError_t hipTexRefSetFlags(hipTexRef hTexRef, unsigned int Flags){
+   return hipCUResultTohipError(cuTexRefSetFlags(hTexRef,Flags));
+}
+
+inline static hipError_t hipTexRefSetArray(hipTexRef hTexRef, hiparray hArray, unsigned int Flags){
+   return hipCUResultTohipError(cuTexRefSetArray(hTexRef,hArray,Flags));
+}
+
+inline static hipError_t hipArrayCreate(hiparray* pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray){
+   return hipCUResultTohipError(cuArrayCreate(pHandle, pAllocateArray));
+}
+
+inline static hipError_t hipArrayDestroy(hiparray hArray){
+   return hipCUResultTohipError(cuArrayDestroy(hArray));
 }
 
 #endif  //__CUDACC__

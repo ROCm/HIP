@@ -109,7 +109,7 @@ typedef struct hip_Memcpy2D {
 
 
 typedef struct hipArray* hipArray_t;
-
+typedef hipArray_t hiparray;
 typedef const struct hipArray* hipArray_const_t;
 
 // TODO: It needs to be modified since it was just copied from hipArray.
