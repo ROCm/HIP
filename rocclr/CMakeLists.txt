@@ -236,12 +236,6 @@ if(${BUILD_SHARED_LIBS})
     target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl hsa-runtime64::hsa-runtime64)
 
     add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
-        ${CMAKE_COMMAND} -E create_symlink ${PROJECT_BINARY_DIR}/lib/libamdhip64.so.${HIP_LIB_VERSION_STRING}
-        ${PROJECT_BINARY_DIR}/lib/libhip_hcc.so.${HIP_LIB_VERSION_MAJOR})
-    add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
-        ${CMAKE_COMMAND} -E create_symlink ${PROJECT_BINARY_DIR}/lib/libhip_hcc.so.${HIP_LIB_VERSION_MAJOR}
-        ${PROJECT_BINARY_DIR}/lib/libhip_hcc.so)
-    add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
         ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/.hipInfo ${PROJECT_BINARY_DIR}/lib/.hipInfo)
     add_custom_command(TARGET amdhip64 POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${PROJECT_SOURCE_DIR}/include ${PROJECT_BINARY_DIR}/include)
