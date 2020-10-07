@@ -94,6 +94,8 @@ void run(const std::vector<char>& buffer, int deviceNo) {
             HIP_LAUNCH_PARAM_END};
   HIPCHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config));
 
+  HIPCHECK(hipStreamSynchronize(stream));
+
   HIPCHECK(hipStreamDestroy(stream));
 
   HIPCHECK(hipModuleUnload(Module));
