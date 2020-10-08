@@ -37,6 +37,10 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_HIP_RUNTIME_H
 
+#if (__gfx1010__ || __gfx1011__ || __gfx1012__ || __gfx1030__ || __gfx1031__) && __AMDGCN_WAVEFRONT_SIZE == 64
+#error HIP is not supported on GFX10 with wavefront size 64
+#endif
+
 // Some standard header files, these are included by hc.hpp and so want to make them avail on both
 // paths to provide a consistent include env and avoid "missing symbol" errors that only appears
 // on NVCC path:
