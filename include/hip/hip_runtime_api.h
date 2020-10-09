@@ -139,7 +139,13 @@ typedef struct hipDeviceProp_t {
     int cooperativeMultiDeviceUnmatchedSharedMem;   ///< HIP device supports cooperative launch on multiple
                                                     ///devices with unmatched shared memories
     int isLargeBar;                  ///< 1: if it is a large PCI bar device, else 0
-    int asicRevision;                ///< Revision of the GPU in this device.
+    int asicRevision;                ///< Revision of the GPU in this device
+    int managedMemory;               ///< Device supports allocating managed memory on this system
+    int directManagedMemAccessFromHost; ///< Host can directly access managed memory on the device without migration
+    int concurrentManagedAccess;     ///< Device can coherently access managed memory concurrently with the CPU
+    int pageableMemoryAccess;        ///< Device supports coherently accessing pageable memory
+                                     ///< without calling hipHostRegister on it
+    int pageableMemoryAccessUsesHostPageTables; ///< Device accesses pageable memory via the host's page tables
 } hipDeviceProp_t;
 
 
@@ -349,7 +355,16 @@ typedef enum hipDeviceAttribute_t {
                                                                   ///devices with unmatched block dimensions
     hipDeviceAttributeCooperativeMultiDeviceUnmatchedSharedMem,   ///< Supports cooperative launch on multiple
                                                                   ///devices with unmatched shared memories
-    hipDeviceAttributeAsicRevision          ///< Revision of the GPU in this device
+    hipDeviceAttributeAsicRevision,         ///< Revision of the GPU in this device
+    hipDeviceAttributeManagedMemory,        ///< Device supports allocating managed memory on this system
+    hipDeviceAttributeDirectManagedMemAccessFromHost, ///< Host can directly access managed memory on
+                                                      /// the device without migration
+    hipDeviceAttributeConcurrentManagedAccess,  ///< Device can coherently access managed memory
+                                                /// concurrently with the CPU
+    hipDeviceAttributePageableMemoryAccess,     ///< Device supports coherently accessing pageable memory
+                                                /// without calling hipHostRegister on it
+    hipDeviceAttributePageableMemoryAccessUsesHostPageTables, ///< Device accesses pageable memory via
+                                                              /// the host's page tables
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {

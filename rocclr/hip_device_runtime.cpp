@@ -298,7 +298,22 @@ hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int device)
     break;
   case hipDeviceAttributeAsicRevision:
     *pi = prop.asicRevision;
-     break;
+    break;
+  case hipDeviceAttributeManagedMemory:
+    *pi = prop.managedMemory;
+    break;
+  case hipDeviceAttributeDirectManagedMemAccessFromHost:
+    *pi = prop.directManagedMemAccessFromHost;
+    break;
+  case hipDeviceAttributeConcurrentManagedAccess:
+    *pi = prop.concurrentManagedAccess;
+    break;
+  case hipDeviceAttributePageableMemoryAccess:
+    *pi = prop.pageableMemoryAccess;
+    break;
+  case hipDeviceAttributePageableMemoryAccessUsesHostPageTables:
+    *pi = prop.pageableMemoryAccessUsesHostPageTables;
+    break;
   default:
     HIP_RETURN(hipErrorInvalidValue);
   }
