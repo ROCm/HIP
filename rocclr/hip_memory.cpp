@@ -2031,6 +2031,7 @@ hipError_t hipHostGetDevicePointer(void** devicePointer, void* hostPointer, unsi
   HIP_RETURN(hipSuccess);
 }
 
+// ================================================================================================
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr) {
   HIP_INIT_API(hipPointerGetAttributes, attributes, ptr);
 
@@ -2043,12 +2044,15 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
   memset(attributes, 0, sizeof(hipPointerAttribute_t));
 
   if (memObj != nullptr) {
-    attributes->memoryType = ((CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR) & memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
+    attributes->memoryType = ((CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR) &
+        memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
     if (attributes->memoryType == hipMemoryTypeHost) {
       attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
     }
     attributes->devicePointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
-    attributes->isManaged = 0;
+    constexpr uint32_t kManagedAlloc = (CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_ALLOC_HOST_PTR);
+    attributes->isManaged =
+        ((memObj->getMemFlags() & kManagedAlloc) == kManagedAlloc) ? true : false;
     attributes->allocationFlags = memObj->getMemFlags() >> 16;
 
     amd::Context* memObjCtx = &memObj->getContext();
@@ -2063,8 +2067,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
       }
       ++device;
     }
-    DevLogPrintfError("Cannot find memory object context, memObjCtx: 0x%x \n",
-                      memObjCtx);
+    DevLogPrintfError("Cannot find memory object context, memObjCtx: 0x%x \n", memObjCtx);
     HIP_RETURN(hipErrorInvalidDevice);
   }
 
@@ -2072,6 +2075,7 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
   HIP_RETURN(hipErrorInvalidValue);
 }
 
+// ================================================================================================
 hipError_t hipArrayDestroy(hipArray* array) {
   HIP_INIT_API(hipArrayDestroy, array);
 

@@ -226,6 +226,13 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.isLargeBar = info.largeBar_ ? 1 : 0;
   deviceProps.asicRevision = info.asicRevision_;
 
+  // HMM capabilities
+  deviceProps.managedMemory = info.hmmSupported_;
+  deviceProps.concurrentManagedAccess =  info.hmmSupported_;
+  deviceProps.directManagedMemAccessFromHost = info.hmmDirectHostAccess_;
+  deviceProps.pageableMemoryAccess = info.hmmCpuMemoryAccessible_;
+  deviceProps.pageableMemoryAccessUsesHostPageTables = info.hostUnifiedMemory_;
+
   *props = deviceProps;
   HIP_RETURN(hipSuccess);
 }
