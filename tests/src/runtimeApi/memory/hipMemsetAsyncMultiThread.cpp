@@ -22,7 +22,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc EXCLUDE_HIP_LIB_TYPE static
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
  * TEST: %t
  * HIT_END
  */
