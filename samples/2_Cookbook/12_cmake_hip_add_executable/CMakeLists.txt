@@ -9,9 +9,6 @@ if(NOT DEFINED HIP_PATH)
 endif()
 set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
 
-# Search for rocm in common locations
-list(APPEND CMAKE_PREFIX_PATH ${HIP_PATH} /opt/rocm)
-
 project(12_cmake)
 
 set(HIP_CLANG_NUM_PARALLEL_JOBS 2)

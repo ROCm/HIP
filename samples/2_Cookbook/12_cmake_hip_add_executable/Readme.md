@@ -37,13 +37,7 @@ Use the following commands to build and execute the sample
 ```
 mkdir build
 cd build
-
-For shared lib of hip rt,
 cmake ..
-Or for static lib of hip rt,
-cmake -DCMAKE_PREFIX_PATH="/opt/rocm/llvm/lib/cmake" ..
-
-Then,
 make
 ./MatrixTranspose
 ```
