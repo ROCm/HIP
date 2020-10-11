@@ -303,6 +303,11 @@ typedef CUfunc_cache hipFuncCache;
 typedef CUjit_option hipJitOption;
 typedef CUdevice hipDevice_t;
 typedef enum cudaDeviceP2PAttr hipDeviceP2PAttr;
+#define hipDevP2PAttrPerformanceRank cudaDevP2PAttrPerformanceRank
+#define hipDevP2PAttrAccessSupported cudaDevP2PAttrAccessSupported
+#define hipDevP2PAttrNativeAtomicSupported cudaDevP2PAttrNativeAtomicSupported
+#define hipDevP2PAttrHipArrayAccessSupported cudaDevP2PAttrCudaArrayAccessSupported
+
 typedef CUmodule hipModule_t;
 typedef CUfunction hipFunction_t;
 typedef CUdeviceptr hipDeviceptr_t;
