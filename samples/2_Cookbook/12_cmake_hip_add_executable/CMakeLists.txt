@@ -28,3 +28,11 @@ set(MY_NVCC_OPTIONS)
 
 set_source_files_properties(${MY_SOURCE_FILES} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
 hip_add_executable(${MY_TARGET_NAME} ${MY_SOURCE_FILES} HIPCC_OPTIONS ${MY_HIPCC_OPTIONS} HCC_OPTIONS ${MY_HCC_OPTIONS} CLANG_OPTIONS ${MY_CLANG_OPTIONS} NVCC_OPTIONS ${MY_NVCC_OPTIONS})
+
+# Search for rocm in common locations
+list(APPEND CMAKE_PREFIX_PATH ${HIP_PATH} /opt/rocm)
+find_package(hip QUIET)
+if(TARGET hip::host)
+    message(STATUS "Found hip::host at ${hip_DIR}")
+    target_link_libraries(${MY_TARGET_NAME} hip::host)
+endif()

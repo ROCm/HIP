@@ -23,9 +23,9 @@ THE SOFTWARE.
  */
 
 /* HIT_START
- * BUILD_CMD: libLazyLoad_amd %hc %S/%s -o liblazyLoad.so -I%S/.. -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD_CMD: libLazyLoad_amd %hc %S/%s -o liblazyLoad.so -I%S/.. -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
  * BUILD_CMD: libLazyLoad_nvidia %hc %S/%s --std=c++11 -o liblazyLoad.so -I%S/.. -Xcompiler -fPIC -lpthread -shared -DTEST_SHARED_LIBRARY EXCLUDE_HIP_PLATFORM amd
- * BUILD_CMD: %t %hc %S/%s --std=c++11 -o %T/%t -I%S/.. -ldl
+ * BUILD_CMD: %t %hc %S/%s --std=c++11 -o %T/%t -I%S/.. -ldl EXCLUDE_HIP_LIB_TYPE static
  * TEST: %t
  * HIT_END
  */

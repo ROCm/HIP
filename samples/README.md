@@ -12,16 +12,22 @@ make
 
 2.CMakeLists.txt can support shared and static libs of hip-rocclr runtime.
 
-To build a sample, type in sample folder,
+To build a sample, run in the sample folder,
 
-mkdir build (if build folder is missing)
+mkdir -p build && cd build
 
-cd build
+rm -rf * (to clear up)
+
+a. to build with shared libs, run
 
 cmake ..
 
+b. to build with static libs, run
+
+cmake -DCMAKE_PREFIX_PATH="/opt/rocm/llvm/lib/cmake" ..
+
+Then run,
+
 make
 
-If you want debug version, follow,
-
-cmake -DCMAKE_BUILD_TYPE=Debug ..
+Note that if you want debug version, add "-DCMAKE_BUILD_TYPE=Debug" in cmake cmd.
