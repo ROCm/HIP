@@ -11,6 +11,7 @@ set(HIP_HCC_FLAGS "" CACHE STRING "Semicolon delimited flags for HCC")
 set(HIP_CLANG_FLAGS "" CACHE STRING "Semicolon delimited flags for CLANG")
 set(HIP_NVCC_FLAGS "" CACHE STRING "Semicolon delimted flags for NVCC")
 mark_as_advanced(HIP_HIPCC_FLAGS HIP_HCC_FLAGS HIP_CLANG_FLAGS HIP_NVCC_FLAGS)
+
 set(_hip_configuration_types ${CMAKE_CONFIGURATION_TYPES} ${CMAKE_BUILD_TYPE} Debug MinSizeRel Release RelWithDebInfo)
 list(REMOVE_DUPLICATES _hip_configuration_types)
 foreach(config ${_hip_configuration_types})
@@ -226,7 +227,7 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
     endif()
     if(HIP_CLANG_NUM_PARALLEL_JOBS GREATER 1)
       if(${HIP_CLANG_SUPPORTS_PARALLEL_JOBS})
-        set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS} -Wno-format-nonliteral")
+        set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "-Wno-format-nonliteral -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}")
         set(HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS "-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}")
       else()
         message("clang compiler doesn't support parallel jobs")
@@ -237,6 +238,13 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
     set(CMAKE_HIP_CREATE_SHARED_LIBRARY "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <CMAKE_SHARED_LIBRARY_CXX_FLAGS> <LANGUAGE_COMPILE_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
     set(CMAKE_HIP_CREATE_SHARED_MODULE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> <SONAME_FLAG><TARGET_SONAME> -o <TARGET> <LINK_LIBRARIES> -shared" )
     set(CMAKE_HIP_LINK_EXECUTABLE "${HIP_HIPCC_CMAKE_LINKER_HELPER} ${HIP_CLANG_PATH} ${HIP_CLANG_PARALLEL_BUILD_LINK_OPTIONS} <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+
+    if("${HIP_RUNTIME}" STREQUAL "rocclr")
+      if(TARGET host)
+        message(STATUS "host interface - found")
+        set(HIP_HOST_INTERFACE host)
+      endif()
+    endif()
 endif()
 
 ###############################################################################
@@ -651,6 +659,11 @@ macro(HIP_ADD_EXECUTABLE hip_target)
         add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     endif()
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
+    # Link with host
+    if (HIP_HOST_INTERFACE)
+        # hip rt should be rocclr, compiler should be clang
+        target_link_libraries(${hip_target} ${HIP_HOST_INTERFACE})
+    endif()
 endmacro()
 
 ###############################################################################
@@ -669,6 +682,11 @@ macro(HIP_ADD_LIBRARY hip_target)
         add_library(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     endif()
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE ${HIP_C_OR_CXX})
+    # Link with host
+    if (HIP_HOST_INTERFACE)
+        # hip rt should be rocclr, compiler should be clang
+        target_link_libraries(${hip_target} ${HIP_HOST_INTERFACE})
+    endif()
 endmacro()
 
 # vim: ts=4:sw=4:expandtab:smartindent

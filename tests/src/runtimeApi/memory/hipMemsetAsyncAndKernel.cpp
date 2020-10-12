@@ -23,7 +23,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
  * TEST: %t
  * HIT_END
  */
