@@ -52,7 +52,7 @@
 - [In-Line Assembly](#in-line-assembly)
 - [C++ Support](#c-support)
 - [Kernel Compilation](#kernel-compilation)
-
+- [GFX Arch specific kernel](#gfx-arch-specific-kernel)
 <!-- tocstop -->
 
 ## Introduction
@@ -803,3 +803,5 @@ The file format for binary is `.co` which means Code Object. The following comma
 
 Note that one important fact to remember when using binary code objects is that the number of arguments to the kernel are different on HCC and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
 
+## gfx-arch-specific-kernel
+Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample 14_gpu_arch in samples/2_Cookbook.
