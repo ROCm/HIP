@@ -180,6 +180,10 @@ hipError_t DynCO::getDynFunc(hipFunction_t* hfunc, std::string func_name) {
 
   CheckDeviceIdMatch();
 
+  if(hfunc == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
   auto it = functions_.find(func_name);
   if (it == functions_.end()) {
     DevLogPrintfError("Cannot find the function: %s ", func_name.c_str());
