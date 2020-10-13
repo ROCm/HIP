@@ -224,7 +224,7 @@ target_link_libraries(device INTERFACE host)
 
 # Short-Term solution for pre-compiled headers for online compilation
 if(__HIP_ENABLE_PCH)
-  target_link_libraries(amdhip64 PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
+  target_sources(amdhip64 PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
 endif()
 
 # TODO: we may create host_static and device_static to let app
