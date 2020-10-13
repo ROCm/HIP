@@ -84,6 +84,10 @@ extern hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const char *name) {
   HIP_INIT_API(hipModuleGetFunction, hfunc, hmod, name);
 
+  if(hfunc == nullptr || name == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
   if (hipSuccess != PlatformState::instance().getDynFunc(hfunc, hmod, name)) {
     DevLogPrintfError("Cannot find the function: %s for module: 0x%x \n",
                       name, hmod);
@@ -96,6 +100,10 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t hmod, const char* name)
 {
   HIP_INIT_API(hipModuleGetGlobal, dptr, bytes, hmod, name);
+
+  if(dptr == nullptr || bytes == nullptr || name == nullptr) {
+    return hipErrorInvalidValue;
+  }
 
   /* Get address and size for the global symbol */
   if (hipSuccess != PlatformState::instance().getDynGlobalVar(name, hmod, dptr, bytes)) {

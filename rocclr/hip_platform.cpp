@@ -702,6 +702,10 @@ void PlatformState::init()
 hipError_t PlatformState::loadModule(hipModule_t *module, const char* fname, const void* image) {
   amd::ScopedLock lock(lock_);
 
+  if(module == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
   hip::DynCO* dynCo = new hip::DynCO();
   hipError_t hip_error = dynCo->loadCodeObject(fname, image);
   if (hip_error != hipSuccess) {
@@ -762,6 +766,10 @@ hipError_t PlatformState::getDynFunc(hipFunction_t* hfunc, hipModule_t hmod,
 hipError_t PlatformState::getDynGlobalVar(const char* hostVar, hipModule_t hmod,
                                           hipDeviceptr_t* dev_ptr, size_t* size_ptr) {
   amd::ScopedLock lock(lock_);
+
+  if(hostVar == nullptr || dev_ptr == nullptr || size_ptr == nullptr) {
+    return hipErrorInvalidValue;
+  }
 
   auto it = dynCO_map_.find(hmod);
   if (it == dynCO_map_.end()) {

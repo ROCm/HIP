@@ -13,7 +13,6 @@ FatBinaryDeviceInfo::~FatBinaryDeviceInfo() {
 
 FatBinaryInfo::FatBinaryInfo(const char* fname, const void* image)
                : fdesc_(amd::Os::FDescInit()), fsize_(0), image_(image), uri_(std::string()) {
-  guarantee(fname || image);
 
   if (fname != nullptr) {
     fname_ = std::string(fname);
@@ -35,7 +34,7 @@ FatBinaryInfo::~FatBinaryInfo() {
       guarantee(false && "Cannot close file");
     }
 
-    if (!amd::Os::MemoryUnmapFile(image_, fsize_)) {
+    if (fsize_ && !amd::Os::MemoryUnmapFile(image_, fsize_)) {
       guarantee(false && "Cannot unmap file");
     }
   }
@@ -82,7 +81,7 @@ hipError_t FatBinaryInfo::ExtractFatBinary(const std::vector<hip::Device*>& devi
     hip_error = CodeObject::ExtractCodeObjectFromMemory(image_,
                 device_names, code_objs, uri_);
   } else {
-    return hipErrorMissingConfiguration;
+    return hipErrorInvalidValue;
   }
 
   if (hip_error == hipErrorNoBinaryForGpu) {
