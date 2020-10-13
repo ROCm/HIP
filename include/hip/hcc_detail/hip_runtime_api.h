@@ -3046,6 +3046,15 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
                               hipModule_t hmod, const char* name);
 #endif // __HIP_ROCclr__
 
+/**
+ * @brief returns the handle of the texture reference with the name from the module.
+ *
+ * @param [in] hmod
+ * @param [in] name
+ * @param [out] texRef
+ *
+ * @returns hipSuccess, hipErrorNotInitialized, hipErrorNotFound, hipErrorInvalidValue
+ */
 hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const char* name);
 
 /**
