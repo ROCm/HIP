@@ -193,7 +193,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.arch.has3dGrid                   = 1;
   deviceProps.arch.hasDynamicParallelism       = 0;
   deviceProps.concurrentKernels = 1;
-  deviceProps.pciDomainID = info.deviceTopology_.pcie.function;
+  deviceProps.pciDomainID = info.pciDomainID;
   deviceProps.pciBusID = info.deviceTopology_.pcie.bus;
   deviceProps.pciDeviceID = info.deviceTopology_.pcie.device;
   deviceProps.maxSharedMemoryPerMultiProcessor = info.localMemSizePerCU_;
