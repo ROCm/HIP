@@ -1855,6 +1855,10 @@ hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr,
 
   auto sizeBytes = extent.width * extent.height * extent.depth;
 
+  if (sizeBytes == 0) {
+    // sizeBytes is zero hence returning early as nothing to be set
+    return hipSuccess;
+  }
   if (memory == nullptr) {
     return hipErrorInvalidValue;
   }
