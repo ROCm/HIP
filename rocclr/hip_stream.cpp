@@ -168,6 +168,10 @@ void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null_stream
             command->release();
           }
         }
+        // Nullstream, hence there is nothing else to wait
+        if (wait_null_stream) {
+          break;
+        }
       }
     }
   }
