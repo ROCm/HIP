@@ -8,17 +8,12 @@ The default device can be set with hipSetDevice.
 
 - "active host thread" - the thread which is running the HIP APIs.
 
-- completion_future becomes ready. "Completes".
-
-- hcc = Heterogeneous Compute Compiler ( https://github.com/RadeonOpenCompute/hcc).
-  Starting from ROCM v3.5 release, hcc compiler is deprecated and HIP-Clang compiler is introduced for compiling HIP programs
-
 - HIP-Clang - Heterogeneous AMDGPU Compiler, with its capability to compile HIP programs on AMD platform (https://github.com/RadeonOpenCompute/llvm-project).
 
 - ROCclr - a virtual device interface that compute runtimes interact with different backends such as ROCr on Linux or PAL on Windows.
   The ROCclr (https://github.com/ROCm-Developer-Tools/ROCclr) is an abstraction layer allowing runtimes to work on both OSes without much effort.
 
-- hipify tools - tools to convert CUDA(R) code to portable C++ code (https://github.com/ROCm-Developer-Tools/HIPIFY).
+- hipify tools - tools to convert CUDA code to portable C++ code (https://github.com/ROCm-Developer-Tools/HIPIFY).
 
 - hipconfig - tool to report various configuration properties of the target platform.
 
