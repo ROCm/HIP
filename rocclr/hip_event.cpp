@@ -138,26 +138,29 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
 }
 
 void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record) {
-  amd::ScopedLock lock(lock_);
+  if (command == nullptr) {
+    command = queue->getLastQueuedCommand(true);
 
-  if (queue->properties().test(CL_QUEUE_PROFILING_ENABLE)) {
-    if (command == nullptr) {
-      command = queue->getLastQueuedCommand(true);
-      if ((command == nullptr) || (command->type() == 0)) {
-        // if lastEnqueuedCommand is user invisible command(command->type() == 0),
-        // which is only used for sync, create a new amd:Marker
-        // and release() lastEnqueuedCommand
-        if (command != nullptr) {
-          command->release();
-        }
-        command = new amd::Marker(*queue, kMarkerDisableFlush);
-        command->enqueue();
+    bool cmdNullOrMarker = (command == nullptr) || (command->type() == 0);
+
+    // If lastQueuedCommand is user invisible command(command->type() == 0),
+    // Always submit a marker if queue profiling is not explicitly enabled else
+    // submit a normal marker. Disable queue flush to batch commands
+    if (!queue->properties().test(CL_QUEUE_PROFILING_ENABLE)) {
+      if (command != nullptr) {
+        command->release();
       }
+      command = new hip::ProfileMarker(*queue, cmdNullOrMarker, true);
+      command->enqueue();
+    } else if (cmdNullOrMarker) {
+      if (command != nullptr) {
+        command->release();
+      }
+      command = new amd::Marker(*queue, kMarkerDisableFlush);
+      command->enqueue();
     }
-  } else if (command == nullptr) {
-    command = new hip::ProfileMarker(*queue, false);
-    command->enqueue();
   }
+  amd::ScopedLock lock(lock_);
 
   if (event_ == &command->event()) return;
 
