@@ -1410,6 +1410,7 @@ static inline __device__ void* __hip_hc_memset(void* dst, unsigned char val, siz
 
     return dst;
 }
+#ifndef __OPENMP_AMDGCN__
 static inline __device__ void* memcpy(void* dst, const void* src, size_t size) {
     return __hip_hc_memcpy(dst, src, size);
 }
@@ -1418,5 +1419,5 @@ static inline __device__ void* memset(void* ptr, int val, size_t size) {
     unsigned char val8 = static_cast<unsigned char>(val);
     return __hip_hc_memset(ptr, val8, size);
 }
-
+#endif // !__OPENMP_AMDGCN__
 #endif

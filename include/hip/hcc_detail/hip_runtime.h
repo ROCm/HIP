@@ -312,6 +312,8 @@ static constexpr Coordinates<hip_impl::WorkitemId> threadIdx{};
 #define hipGridDim_z (hc_get_num_groups(2))
 
 #endif // defined __HCC__
+
+#ifndef __OPENMP_AMDGCN__
 #if __HCC_OR_HIP_CLANG__
 #if !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 #if __HIP_ENABLE_DEVICE_MALLOC__
@@ -325,6 +327,7 @@ static inline __device__ void* free(void* ptr) { __builtin_trap(); return nullpt
 #endif
 #endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 #endif //__HCC_OR_HIP_CLANG__
+#endif // !__OPENMP_AMDGCN__
 
 #ifdef __HCC__
 
