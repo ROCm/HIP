@@ -972,7 +972,7 @@ __device__ static inline float __ull2float_rz(unsigned long long int x) { return
 #define __HCC_OR_HIP_CLANG__ 0
 #endif
 
-#ifdef __HCC_OR_HIP_CLANG__
+#if __HCC_OR_HIP_CLANG__
 
 // Clock functions
 __device__ long long int __clock64();
