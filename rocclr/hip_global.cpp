@@ -110,8 +110,8 @@ hipError_t Function::getStatFunc(hipFunction_t* hfunc, int deviceId) {
   guarantee(modules_ != nullptr && "Module not initialized");
 
   hipModule_t hmod = nullptr;
-  (*modules_)->BuildProgram(deviceId);
-  (*modules_)->GetModule(deviceId, &hmod);
+  IHIP_RETURN_ONFAIL((*modules_)->BuildProgram(deviceId));
+  IHIP_RETURN_ONFAIL((*modules_)->GetModule(deviceId, &hmod));
 
   if (dFunc_[deviceId] == nullptr) {
     dFunc_[deviceId] = new DeviceFunc(name_, hmod);
@@ -125,8 +125,8 @@ hipError_t Function::getStatFuncAttr(hipFuncAttributes* func_attr, int deviceId)
   guarantee((modules_ != nullptr) && "Module not initialized");
 
   hipModule_t hmod = nullptr;
-  (*modules_)->BuildProgram(deviceId);
-  (*modules_)->GetModule(deviceId, &hmod);
+  IHIP_RETURN_ONFAIL((*modules_)->BuildProgram(deviceId));
+  IHIP_RETURN_ONFAIL((*modules_)->GetModule(deviceId, &hmod));
 
   if (dFunc_[deviceId] == nullptr) {
     dFunc_[deviceId] = new DeviceFunc(name_, hmod);
@@ -188,8 +188,8 @@ hipError_t Var::getStatDeviceVar(DeviceVar** dvar, int deviceId) {
             && "Invalid DeviceId, greater than no of code objects");
 
   hipModule_t hmod = nullptr;
-  (*modules_)->BuildProgram(deviceId);
-  (*modules_)->GetModule(deviceId, &hmod);
+  IHIP_RETURN_ONFAIL((*modules_)->BuildProgram(deviceId));
+  IHIP_RETURN_ONFAIL((*modules_)->GetModule(deviceId, &hmod));
 
   if (dVar_[deviceId] == nullptr) {
     dVar_[deviceId] = new DeviceVar(name_, hmod);
