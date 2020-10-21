@@ -202,7 +202,9 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
       }
     } else {
       amd::HostQueue* pQueue = &queue;
-      if ((srcMemory->getContext().devices()[0] == dstMemory->getContext().devices()[0]) &&
+      if (((srcMemory->getContext().devices()[0] == dstMemory->getContext().devices()[0]) ||
+          (srcMemory->getContext().devices().size() != 1)  ||
+          (dstMemory->getContext().devices().size() != 1)) &&
           (queueDevice != srcMemory->getContext().devices()[0])) {
         pQueue = hip::getNullStream(srcMemory->getContext());
         amd::Command* cmd = queue.getLastQueuedCommand(true);
