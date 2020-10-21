@@ -1185,7 +1185,6 @@ hipError_t hipEventQuery(hipEvent_t event);
  *
  */
 
-
 /**
  *  @brief Return attributes for the specified pointer
  *
@@ -1275,6 +1274,13 @@ hipError_t hipMemAllocHost(void** ptr, size_t size);
 hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 
 /**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Management Managed Memory (ROCm HMM)
+ *  @{
+ */
+
+/**
  * @brief Allocates memory that will be automatically managed by AMD HMM.
  *
  * @param [out] dev_ptr - pointer to allocated device memory
@@ -1287,6 +1293,97 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 hipError_t hipMallocManaged(void** dev_ptr,
                             size_t size,
                             unsigned int flags __dparm(hipMemAttachGlobal));
+
+/**
+ * @brief Prefetches memory to the specified destination device using AMD HMM.
+ *
+ * @param [in] dev_ptr  pointer to be prefetched
+ * @param [in] count    size in bytes for prefetching
+ * @param [in] device   destination device to prefetch to
+ * @param [in] stream   stream to enqueue prefetch operation
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemPrefetchAsync(const void* dev_ptr,
+                               size_t count,
+                               int device,
+                               hipStream_t stream __dparm(0));
+
+/**
+ * @brief Advise about the usage of a given memory range to AMD HMM.
+ *
+ * @param [in] dev_ptr  pointer to memory to set the advice for
+ * @param [in] count    size in bytes of the memory range
+ * @param [in] advice   advice to be applied for the specified memory range
+ * @param [in] device   device to apply the advice for
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemAdvise(const void* dev_ptr,
+                        size_t count,
+                        hipMemoryAdvise advice,
+                        int device);
+
+/**
+ * @brief Query an attribute of a given memory range in AMD HMM.
+ *
+ * @param [in/out] data   a pointer to a memory location where the result of each
+ *                        attribute query will be written to
+ * @param [in] data_size  the size of data
+ * @param [in] attribute  the attribute to query
+ * @param [in] dev_ptr    start of the range to query
+ * @param [in] count      size of the range to query
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemRangeGetAttribute(void* data,
+                                   size_t data_size,
+                                   hipMemRangeAttribute attribute,
+                                   const void* dev_ptr,
+                                   size_t count);
+
+/**
+ * @brief Query attributes of a given memory range in AMD HMM.
+ *
+ * @param [in/out] data     a two-dimensional array containing pointers to memory locations
+ *                          where the result of each attribute query will be written to
+ * @param [in] data_sizes   an array, containing the sizes of each result
+ * @param [in] attributes   the attribute to query
+ * @param [in] num_attributes  an array of attributes to query (numAttributes and the number
+ *                          of attributes in this array should match)
+ * @param [in] dev_ptr      start of the range to query
+ * @param [in] count        size of the range to query
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipMemRangeGetAttributes(void** data,
+                                    size_t* data_sizes,
+                                    hipMemRangeAttribute* attributes,
+                                    size_t num_attributes,
+                                    const void* dev_ptr,
+                                    size_t count);
+
+/**
+ * @brief Attach memory to a stream asynchronously in AMD HMM.
+ *
+ * @param [in] stream     - stream in which to enqueue the attach operation
+ * @param [in] dev_ptr    - pointer to memory (must be a pointer to managed memory or
+ *                          to a valid host-accessible region of system-allocated memory)
+ * @param [in] length     - length of memory (defaults to zero)
+ * @param [in] flags      - must be one of cudaMemAttachGlobal, cudaMemAttachHost or
+ *                          cudaMemAttachSingle (defaults to cudaMemAttachSingle)
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipStreamAttachMemAsync(hipStream_t stream,
+                                   hipDeviceptr_t* dev_ptr,
+                                   size_t length __dparm(0),
+                                   unsigned int flags __dparm(hipMemAttachSingle));
+
+// end doxygen Managed Memory
+/**
+ * @}
+ */
 
 /**
  *  @brief Allocate device accessible page locked host memory [Deprecated]
@@ -3497,92 +3594,6 @@ hipError_t hipLaunchKernel(const void* function_address,
                            void** args,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
-
-/**
- * @brief Prefetches memory to the specified destination device using AMD HMM.
- *
- * @param [in] dev_ptr  pointer to be prefetched
- * @param [in] count    size in bytes for prefetching
- * @param [in] device   destination device to prefetch to
- * @param [in] stream   stream to enqueue prefetch operation
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipMemPrefetchAsync(const void* dev_ptr,
-                               size_t count,
-                               int device,
-                               hipStream_t stream __dparm(0));
-
-/**
- * @brief Advise about the usage of a given memory range to AMD HMM.
- *
- * @param [in] dev_ptr  pointer to memory to set the advice for
- * @param [in] count    size in bytes of the memory range
- * @param [in] advice   advice to be applied for the specified memory range
- * @param [in] device   device to apply the advice for
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipMemAdvise(const void* dev_ptr,
-                        size_t count,
-                        hipMemoryAdvise advice,
-                        int device);
-
-/**
- * @brief Query an attribute of a given memory range in AMD HMM.
- *
- * @param [in/out] data   a pointer to a memory location where the result of each
- *                        attribute query will be written to
- * @param [in] data_size  the size of data
- * @param [in] attribute  the attribute to query
- * @param [in] dev_ptr    start of the range to query
- * @param [in] count      size of the range to query
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipMemRangeGetAttribute(void* data,
-                                   size_t data_size,
-                                   hipMemRangeAttribute attribute,
-                                   const void* dev_ptr,
-                                   size_t count);
-
-/**
- * @brief Query attributes of a given memory range in AMD HMM.
- *
- * @param [in/out] data     a two-dimensional array containing pointers to memory locations
- *                          where the result of each attribute query will be written to
- * @param [in] data_sizes   an array, containing the sizes of each result
- * @param [in] attributes   the attribute to query
- * @param [in] num_attributes  an array of attributes to query (numAttributes and the number
- *                          of attributes in this array should match)
- * @param [in] dev_ptr      start of the range to query
- * @param [in] count        size of the range to query
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipMemRangeGetAttributes(void** data,
-                                    size_t* data_sizes,
-                                    hipMemRangeAttribute* attributes,
-                                    size_t num_attributes,
-                                    const void* dev_ptr,
-                                    size_t count);
-
-/**
- * @brief Attach memory to a stream asynchronously in AMD HMM.
- *
- * @param [in] stream     - stream in which to enqueue the attach operation
- * @param [in] dev_ptr    - pointer to memory (must be a pointer to managed memory or
- *                          to a valid host-accessible region of system-allocated memory)
- * @param [in] length     - length of memory (defaults to zero)
- * @param [in] flags      - must be one of cudaMemAttachGlobal, cudaMemAttachHost or
- *                          cudaMemAttachSingle (defaults to cudaMemAttachSingle)
- *
- * @returns #hipSuccess, #hipErrorInvalidValue
- */
-hipError_t hipStreamAttachMemAsync(hipStream_t stream,
-                                   hipDeviceptr_t* dev_ptr,
-                                   size_t length __dparm(0),
-                                   unsigned int flags __dparm(hipMemAttachSingle));
 
 #if __HIP_ROCclr__ || !defined(__HCC__)
 //TODO: Move this to hip_ext.h
