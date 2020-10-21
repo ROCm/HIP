@@ -370,6 +370,7 @@ my $compileOnly = 0;
 my $needCXXFLAGS = 0;  # need to add CXX flags to compile step
 my $needCFLAGS = 0;    # need to add C flags to compile step
 my $needLDFLAGS = 1;   # need to add LDFLAGS to compile step.
+my $fileTypeFlag = 0;  # to see if -x flag is mentioned
 my $hasC = 0;          # options contain a c-style file
 my $hasCXX = 0;        # options contain a cpp-style file (NVCC must force recognition as GPU file)
 my $hasCU = 0;         # options contain a cu-style file (HCC must force recognition as GPU file)
@@ -655,6 +656,8 @@ foreach $arg (@ARGV)
             $toolArgs = substr $toolArgs, 0, -8;
             chomp $toolArgs;
         }
+    } elsif ($arg eq '-x') {
+        $fileTypeFlag = 1;
     } elsif ($arg eq 'c' and $prevArg eq '-x') {
         $hasC = 1;
         $hasCXX = 0;
@@ -693,11 +696,17 @@ foreach $arg (@ARGV)
     } elsif ($prevArg ne '-o') {
         # input files and libraries
         # Skip guessing if `-x {c|c++|hip}` is already specified.
-        if (not ($hasC or $hasCXX or $hasHIP)) {
+
+        # Add proper file extension before each file type
+        # File Extension                 -> Flag
+        # .c                             -> -x c
+        # .cpp/.cxx/.cc/.cu/.cuh/.hip    -> -x hip
+        # rest of the files              -> -x none
+        if ($fileTypeFlag eq 0) {
             if ($arg =~ /\.c$/) {
                 $hasC = 1;
                 $needCFLAGS = 1;
-                $toolArgs .= " -x c"
+                $toolArgs .= " -x c";
             } elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) ) {
                 $needCXXFLAGS = 1;
                 if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_COMPILER ne "clang") {
@@ -714,8 +723,13 @@ foreach $arg (@ARGV)
                 } else {
                     $hasCU = 1;
                 }
+            } else {
+                if ($HIP_PLATFORM eq "hcc" and $HIP_COMPILER eq "clang") {
+                    $toolArgs .= " -x none";
+                }
             }
-        } elsif ($hasC) {
+        }
+        if ($hasC) {
             $needCFLAGS = 1;
         } elsif ($hasCXX) {
             $needCXXFLAGS = 1;
