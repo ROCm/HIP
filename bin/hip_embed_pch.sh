@@ -1,7 +1,10 @@
 #!/bin/bash
 
 #set -x
-LLVM_DIR="$1/../../../"
+HIP_BUILD_INC_DIR=$1
+HIP_INC_DIR=$2
+LLVM_DIR="$3/../../../"
+HSA_DIR="$4"
 tmp=/tmp/hip_pch.$$
 mkdir -p $tmp
 
@@ -46,7 +49,7 @@ __hip_pch_size:
   .long __hip_pch_size - __hip_pch
 EOF
 
-$LLVM_DIR/bin/clang -O3 -c -std=c++17 -isystem $LLVM_DIR/lib/clang/11.0.0/include/.. -isystem /opt/rocm/include -nogpulib --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui
+$LLVM_DIR/bin/clang -O3 -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HSA_DIR/include --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui
 
 cat $tmp/hip_macros.h >> $tmp/pch.cui
 
