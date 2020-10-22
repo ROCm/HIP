@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,6 +17,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* HIT_START
+ * BUILD_CMD: hipPerfHostNumaAlloc %hc -I%S/../../src %S/%s %S/../../src/test_common.cpp -lnuma -o %T/%t EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t
+ * HIT_END
+ */
+
 #include "test_common.h"
 #include <iostream>
 #include <time.h>
@@ -33,11 +39,6 @@ THE SOFTWARE.
 #include <string>
 #include <array>
 #include "hip/hip_runtime.h"
-/* HIT_START
- * BUILD_CMD: hipPerfHostNumaAlloc %hc -I%S/../../src %S/%s %S/../../src/test_common.cpp -lnuma -o %T/%t EXCLUDE_HIP_PLATFORM nvcc
- * TEST: %t
- * HIT_END
- */
 
 // To run it correctly, we must not export HIP_VISIBLE_DEVICES.
 // And we must explicitly link libnuma because of numa api move_pages().
