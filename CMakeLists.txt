@@ -686,7 +686,7 @@ endif()
 # Target: test
 set(HIP_ROOT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-if(HIP_PLATFORM STREQUAL "nvcc")
+if(HIP_PLATFORM STREQUAL "nvidia")
 	execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 endif()
 execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_ROOT_DIR}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
