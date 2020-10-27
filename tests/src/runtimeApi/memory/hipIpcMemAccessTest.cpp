@@ -31,6 +31,20 @@ THE SOFTWARE.
 #include <unistd.h>
 #include "test_common.h"
 
+#define HIPCHECK_NO_RETURN(lastError, error)                                                      \
+    {                                                                                             \
+      if (lastError == hipSuccess) {                                                              \
+        hipError_t localError = error;                                                            \
+        if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {     \
+          printf("%serror: '%s'(%d) from %s at %s:%d%s\n", KRED, hipGetErrorString(localError),   \
+              localError, #error, __FILE__, __LINE__, KNRM);                                      \
+          lastError = localError;                                                                 \
+          if (shrd_mem)                                                                           \
+            shrd_mem->IfTestPassed = false;                                                       \
+        }                                                                                         \
+      }                                                                                           \
+    }
+
 #ifdef __linux__
 sem_t *sem_ob1 = NULL, *sem_ob2 = NULL;
 typedef struct mem_handle {
@@ -62,17 +76,19 @@ bool IpcMemHandleTest::Test() {
     printf("Resource initialization failed. Hence test skipped!");
     return false;
   }
+  hipError_t status = hipSuccess;
+
   pid = fork();
   if (pid != 0) {
     // Parent process
-    HIPCHECK(hipGetDeviceCount(&Num_devices));
+    HIPCHECK_NO_RETURN(status, hipGetDeviceCount(&Num_devices));
     for (int i = 0; i < Num_devices; ++i) {
       if (shrd_mem->IfTestPassed == true) {
-        HIPCHECK(hipSetDevice(i));
-        HIPCHECK(hipMalloc(&A_d, Nbytes));
-        HIPCHECK(hipIpcGetMemHandle((hipIpcMemHandle_t *) &shrd_mem->memHandle,
+        HIPCHECK_NO_RETURN(status, hipSetDevice(i));
+        HIPCHECK_NO_RETURN(status, hipMalloc(&A_d, Nbytes));
+        HIPCHECK_NO_RETURN(status, hipIpcGetMemHandle((hipIpcMemHandle_t *) &shrd_mem->memHandle,
                                     A_d));
-        HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
+        HIPCHECK_NO_RETURN(status, hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
         shrd_mem->device = i;
         if ((out=sem_post(sem_ob1)) == -1) {
           // Need to use inline function to release resources.
@@ -83,12 +99,12 @@ bool IpcMemHandleTest::Test() {
           shrd_mem->IfTestPassed = false;
           failed("sem_wait() call failed in parent process.");
         }
-        HIPCHECK(hipFree(A_d));
+        HIPCHECK_NO_RETURN(status, hipFree(A_d));
       }
     }
   } else {
     // Child process
-    HIPCHECK(hipGetDeviceCount(&Num_devices));
+    HIPCHECK_NO_RETURN(status, hipGetDeviceCount(&Num_devices));
     for (int j = 0; j < Num_devices; ++j) {
       if ((out=sem_wait(sem_ob1)) == -1) {
         shrd_mem->IfTestPassed = false;
@@ -100,14 +116,14 @@ bool IpcMemHandleTest::Test() {
       }
       for (int i = 0; i < Num_devices; ++i) {
         Data_mismatch = 0;
-        HIPCHECK(hipSetDevice(i));
-        HIPCHECK(hipMalloc(&Ad2, Nbytes));
-        HIPCHECK(hipIpcOpenMemHandle((void **) &Ad1, shrd_mem->memHandle,
+        HIPCHECK_NO_RETURN(status, hipSetDevice(i));
+        HIPCHECK_NO_RETURN(status, hipMalloc(&Ad2, Nbytes));
+        HIPCHECK_NO_RETURN(status, hipIpcOpenMemHandle((void **) &Ad1, shrd_mem->memHandle,
                                      hipIpcMemLazyEnablePeerAccess));
-        HIPCHECK(hipDeviceCanAccessPeer(&CanAccessPeer, i, shrd_mem->device));
+        HIPCHECK_NO_RETURN(status, hipDeviceCanAccessPeer(&CanAccessPeer, i, shrd_mem->device));
         if (CanAccessPeer == 1) {
-          HIPCHECK(hipMemcpy(Ad2, Ad1, Nbytes, hipMemcpyDeviceToDevice));
-          HIPCHECK(hipMemcpy(C_h, Ad2, Nbytes, hipMemcpyDeviceToDevice));
+          HIPCHECK_NO_RETURN(status, hipMemcpy(Ad2, Ad1, Nbytes, hipMemcpyDeviceToDevice));
+          HIPCHECK_NO_RETURN(status, hipMemcpy(C_h, Ad2, Nbytes, hipMemcpyDeviceToHost));
           for (int i = 0; i < N; ++i) {
             if (C_h[i] != 123)
               Data_mismatch++;
@@ -119,7 +135,7 @@ bool IpcMemHandleTest::Test() {
           }
           memset(reinterpret_cast<void*>(C_h), 0, Nbytes);
           // Checking if the data obtained from Ipc shared memory is consistent
-          HIPCHECK(hipMemcpy(C_h, Ad1, Nbytes, hipMemcpyDeviceToHost));
+          HIPCHECK_NO_RETURN(status, hipMemcpy(C_h, Ad1, Nbytes, hipMemcpyDeviceToHost));
           for (int i = 0; i < N; ++i) {
             if (C_h[i] != 123)
               Data_mismatch++;
@@ -130,9 +146,9 @@ bool IpcMemHandleTest::Test() {
             shrd_mem->IfTestPassed = false;
           }
         }
-        HIPCHECK(hipIpcCloseMemHandle(reinterpret_cast<void*>(Ad1)));
+        HIPCHECK_NO_RETURN(status, hipIpcCloseMemHandle(reinterpret_cast<void*>(Ad1)));
       }
-    HIPCHECK(hipFree(Ad2));
+    HIPCHECK_NO_RETURN(status, hipFree(Ad2));
     if ((out=sem_post(sem_ob2)) == -1) {
       shrd_mem->IfTestPassed = false;
       printf("sem_post() call on sem_ob2 failed");
@@ -148,8 +164,8 @@ bool IpcMemHandleTest::Test() {
   if ((out = sem_unlink("/my-sem-object2")) == -1) {
     printf("sem_unlink() call on /my-sem-object2 failed");
   }
-  int status;
-  waitpid(pid, &status, 0);
+  int rFlag = 0; // return flag
+  waitpid(pid, &rFlag, 0);
   if (shrd_mem->IfTestPassed == false) {
     return false;
   } else {
