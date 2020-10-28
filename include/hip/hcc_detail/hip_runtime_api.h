@@ -385,10 +385,135 @@ typedef struct hipLaunchParams_t {
 
 
 /**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
+ *  @defgroup Driver Initialization and Version
+ *  @{
+ *  This section describes the initializtion and version functions of HIP runtime API.
+ *
+ */
+
+/**
+ * @brief Explicitly initializes the HIP runtime.
+ *
+ * Most HIP APIs implicitly initialize the HIP runtime.
+ * This API provides control over the timing of the initialization.
+ */
+// TODO-ctx - more description on error codes.
+hipError_t hipInit(unsigned int flags);
+
+/**
+ * @brief Returns the approximate HIP driver version.
+ *
+ * @param [out] driverVersion
+ *
+ * @returns #hipSuccess, #hipErrorInavlidValue
+ *
+ * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
+ * This function always set *driverVersion to 4 as an approximation though HIP supports
+ * some features which were introduced in later CUDA SDK revisions.
+ * HIP apps code should not rely on the driver revision number here and should
+ * use arch feature flags to test device capabilities or conditional compilation.
+ *
+ * @see hipRuntimeGetVersion
+ */
+hipError_t hipDriverGetVersion(int* driverVersion);
+
+/**
+ * @brief Returns the approximate HIP Runtime version.
+ *
+ * @param [out] runtimeVersion
+ *
+ * @returns #hipSuccess, #hipErrorInavlidValue
+ *
+ * @warning On HIP/HCC path this function returns HIP runtime patch version however on
+ * HIP/NVCC path this function return CUDA runtime version.
+ *
+ * @see hipDriverGetVersion
+ */
+hipError_t hipRuntimeGetVersion(int* runtimeVersion);
+
+
+/**
+ * @brief Returns a handle to a compute device
+ * @param [out] device
+ * @param [in] ordinal
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
+
+/**
+ * @brief Returns the compute capability of the device
+ * @param [out] major
+ * @param [out] minor
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device);
+
+/**
+ * @brief Returns an identifer string for the device.
+ * @param [out] name
+ * @param [in] len
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
+
+
+/**
+ * @brief Returns a value for attr of link between two devices
+ * @param [out] value
+ * @param [in] attr
+ * @param [in] srcDevice
+ * @param [in] dstDevice
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
+                                    int srcDevice, int dstDevice);
+
+/**
+ * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.
+ * @param [out] pciBusId
+ * @param [in] len
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
+
+
+/**
+ * @brief Returns a handle to a compute device.
+ * @param [out] device handle
+ * @param [in] PCI Bus ID
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
+ */
+hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
+
+
+/**
+ * @brief Returns the total amount of memory on the device.
+ * @param [out] bytes
+ * @param [in] device
+ *
+ * @returns #hipSuccess, #hipErrorInavlidDevice
+ */
+hipError_t hipDeviceTotalMem(size_t* bytes, hipDevice_t device);
+
+
+// doxygen end initialization
+/**
+ * @}
+ */
+
+/**
  *  @defgroup Device Device Management
  *  @{
+ *  This section describes the device management functions of HIP runtime API.
  */
 
 /**
@@ -548,47 +673,6 @@ hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
 
 
 /**
- * @brief Set attribute for a specific function
- *
- * @param [in] func;
- * @param [in] attr;
- * @param [in] value;
- *
- * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
- *
- * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is
- * ignored on those architectures.
- *
- */
-hipError_t hipFuncSetAttribute(const void* func, hipFuncAttribute attr, int value);
-
-/**
- * @brief Set Cache configuration for a specific function
- *
- * @param [in] config;
- *
- * @returns #hipSuccess, #hipErrorNotInitialized
- * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
- * on those architectures.
- *
- */
-hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t config);
-
-/**
- * @brief Set shared memory configuation for a specific function
- *
- * @param [in] func
- * @param [in] config
- *
- * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
- *
- * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is
- * ignored on those architectures.
- *
- */
-hipError_t hipFuncSetSharedMemConfig(const void* func, hipSharedMemConfig config);
-
-/**
  * @brief Returns bank width of shared memory for current device
  *
  * @param [out] pConfig
@@ -673,7 +757,152 @@ hipError_t hipChooseDevice(int* device, const hipDeviceProp_t* prop);
  */
 hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* linktype, uint32_t* hopcount);
 
+
+// TODO: implement IPC apis
+
+/**
+ * @brief Gets an interprocess memory handle for an existing device memory
+ *          allocation
+ *
+ * Takes a pointer to the base of an existing device memory allocation created
+ * with hipMalloc and exports it for use in another process. This is a
+ * lightweight operation and may be called multiple times on an allocation
+ * without adverse effects.
+ *
+ * If a region of memory is freed with hipFree and a subsequent call
+ * to hipMalloc returns memory with the same device address,
+ * hipIpcGetMemHandle will return a unique handle for the
+ * new memory.
+ *
+ * @param handle - Pointer to user allocated hipIpcMemHandle to return
+ *                    the handle in.
+ * @param devPtr - Base pointer to previously allocated device memory
+ *
+ * @returns
+ * hipSuccess,
+ * hipErrorInvalidHandle,
+ * hipErrorOutOfMemory,
+ * hipErrorMapFailed,
+ *
+ */
+hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
+
+/**
+ * @brief Opens an interprocess memory handle exported from another process
+ *          and returns a device pointer usable in the local process.
+ *
+ * Maps memory exported from another process with hipIpcGetMemHandle into
+ * the current device address space. For contexts on different devices
+ * hipIpcOpenMemHandle can attempt to enable peer access between the
+ * devices as if the user called hipDeviceEnablePeerAccess. This behavior is
+ * controlled by the hipIpcMemLazyEnablePeerAccess flag.
+ * hipDeviceCanAccessPeer can determine if a mapping is possible.
+ *
+ * Contexts that may open hipIpcMemHandles are restricted in the following way.
+ * hipIpcMemHandles from each device in a given process may only be opened
+ * by one context per device per other process.
+ *
+ * Memory returned from hipIpcOpenMemHandle must be freed with
+ * hipIpcCloseMemHandle.
+ *
+ * Calling hipFree on an exported memory region before calling
+ * hipIpcCloseMemHandle in the importing context will result in undefined
+ * behavior.
+ *
+ * @param devPtr - Returned device pointer
+ * @param handle - hipIpcMemHandle to open
+ * @param flags  - Flags for this operation. Must be specified as hipIpcMemLazyEnablePeerAccess
+ *
+ * @returns
+ * hipSuccess,
+ * hipErrorMapFailed,
+ * hipErrorInvalidHandle,
+ * hipErrorTooManyPeers
+ *
+ * @note No guarantees are made about the address returned in @p *devPtr.
+ * In particular, multiple processes may not receive the same address for the same @p handle.
+ *
+ */
+hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
+
+/**
+ * @brief Close memory mapped with hipIpcOpenMemHandle
+ *
+ * Unmaps memory returnd by hipIpcOpenMemHandle. The original allocation
+ * in the exporting process as well as imported mappings in other processes
+ * will be unaffected.
+ *
+ * Any resources used to enable peer access will be freed if this is the
+ * last mapping using them.
+ *
+ * @param devPtr - Device pointer returned by hipIpcOpenMemHandle
+ *
+ * @returns
+ * hipSuccess,
+ * hipErrorMapFailed,
+ * hipErrorInvalidHandle,
+ *
+ */
+hipError_t hipIpcCloseMemHandle(void* devPtr);
+
+
+hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event);
+hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
+
 // end doxygen Device
+/**
+ * @}
+ */
+
+/**
+ *
+ *  @defgroup Execution Execution Control
+ *  @{
+ *  This section describes the execution control functions of HIP runtime API.
+ *
+ */
+/**
+ * @brief Set attribute for a specific function
+ *
+ * @param [in] func;
+ * @param [in] attr;
+ * @param [in] value;
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
+ *
+ * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is
+ * ignored on those architectures.
+ *
+ */
+hipError_t hipFuncSetAttribute(const void* func, hipFuncAttribute attr, int value);
+
+/**
+ * @brief Set Cache configuration for a specific function
+ *
+ * @param [in] config;
+ *
+ * @returns #hipSuccess, #hipErrorNotInitialized
+ * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
+ * on those architectures.
+ *
+ */
+hipError_t hipFuncSetCacheConfig(const void* func, hipFuncCache_t config);
+
+/**
+ * @brief Set shared memory configuation for a specific function
+ *
+ * @param [in] func
+ * @param [in] config
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDeviceFunction, #hipErrorInvalidValue
+ *
+ * Note: AMD devices and some Nvidia GPUS do not support shared cache banking, and the hint is
+ * ignored on those architectures.
+ *
+ */
+hipError_t hipFuncSetSharedMemConfig(const void* func, hipSharedMemConfig config);
+
+//doxygen end execution
 /**
  * @}
  */
@@ -683,6 +912,7 @@ hipError_t hipExtGetLinkTypeAndHopCount(int device1, int device2, uint32_t* link
  *-------------------------------------------------------------------------------------------------
  *  @defgroup Error Error Handling
  *  @{
+ *  This section describes the error handling functions of HIP runtime API.
  */
 
 /**
@@ -746,7 +976,7 @@ const char* hipGetErrorString(hipError_t hipError);
  *-------------------------------------------------------------------------------------------------
  *  @defgroup Stream Stream Management
  *  @{
- *
+ *  This section describes the stream management functions of HIP runtime API.
  *  The following Stream APIs are not (yet) supported in HIP:
  *  - cudaStreamAttachMemAsync
  */
@@ -1001,6 +1231,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  *-------------------------------------------------------------------------------------------------
  *  @defgroup Event Event Management
  *  @{
+ *  This section describes the event management functions of HIP runtime API.
  */
 
 /**
@@ -1176,7 +1407,7 @@ hipError_t hipEventQuery(hipEvent_t event);
  *-------------------------------------------------------------------------------------------------
  *  @defgroup Memory Memory Management
  *  @{
- *
+ *  This section describes the memory management functions of HIP runtime API.
  *  The following CUDA APIs are not currently supported:
  *  - cudaMalloc3D
  *  - cudaMalloc3DArray
@@ -1276,8 +1507,11 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Management Managed Memory (ROCm HMM)
+ *  @addtogroup MemoryM Managed Memory (ROCm HMM)
  *  @{
+ *  @ingroup Memory
+ *  This section describes the managed memory management functions of HIP runtime API.
+ *
  */
 
 /**
@@ -2469,11 +2703,10 @@ hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup PeerToPeer Device Memory Access
+ *  @defgroup PeerToPeer PeerToPeer Device Memory Access
  *  @{
- *
  *  @warning PeerToPeer support is experimental.
- *
+ *  This section describes the PeerToPeer device memory access functions of HIP runtime API.
  */
 
 /**
@@ -2582,29 +2815,21 @@ hipError_t hipMemcpyPeerAsync(void* dst, int dstDeviceId, const void* src, int s
  * @}
  */
 
+
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Driver Initialization and Version
+ *  @defgroup Context Context Management
  *  @{
- *
+ *  This section describes the context management functions of HIP runtime API.
  */
 
 /**
- * @brief Explicitly initializes the HIP runtime.
  *
- * Most HIP APIs implicitly initialize the HIP runtime.
- * This API provides control over the timing of the initialization.
- */
-// TODO-ctx - more description on error codes.
-hipError_t hipInit(unsigned int flags);
-
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Context Management
+ *  @addtogroup ContextD Context Management [Deprecated]
  *  @{
+ *  @ingroup Context
+ *  This section describes the deprecated context management functions of HIP runtime API.
  */
 
 /**
@@ -2853,6 +3078,11 @@ hipError_t hipCtxEnablePeerAccess(hipCtx_t peerCtx, unsigned int flags);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipCtxDisablePeerAccess(hipCtx_t peerCtx);
 
+// doxygen end Context deprecated
+/**
+ * @}
+ */
+
 /**
  * @brief Get the state of the primary context.
  *
@@ -2925,107 +3155,12 @@ hipError_t hipDevicePrimaryCtxSetFlags(hipDevice_t dev, unsigned int flags);
  */
 
 /**
- * @brief Returns a handle to a compute device
- * @param [out] device
- * @param [in] ordinal
  *
- * @returns #hipSuccess, #hipErrorInavlidDevice
+ *  @defgroup Module Module Management
+ *  @{
+ *  This section describes the module management functions of HIP runtime API.
+ *
  */
-hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
-
-/**
- * @brief Returns the compute capability of the device
- * @param [out] major
- * @param [out] minor
- * @param [in] device
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice
- */
-hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device);
-
-/**
- * @brief Returns an identifer string for the device.
- * @param [out] name
- * @param [in] len
- * @param [in] device
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice
- */
-hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
-
-
-/**
- * @brief Returns a value for attr of link between two devices
- * @param [out] value
- * @param [in] attr
- * @param [in] srcDevice
- * @param [in] dstDevice
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice
- */
-hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
-                                    int srcDevice, int dstDevice);
-
-/**
- * @brief Returns a PCI Bus Id string for the device, overloaded to take int device ID.
- * @param [out] pciBusId
- * @param [in] len
- * @param [in] device
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice
- */
-hipError_t hipDeviceGetPCIBusId(char* pciBusId, int len, int device);
-
-
-/**
- * @brief Returns a handle to a compute device.
- * @param [out] device handle
- * @param [in] PCI Bus ID
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice, #hipErrorInvalidValue
- */
-hipError_t hipDeviceGetByPCIBusId(int* device, const char* pciBusId);
-
-
-/**
- * @brief Returns the total amount of memory on the device.
- * @param [out] bytes
- * @param [in] device
- *
- * @returns #hipSuccess, #hipErrorInavlidDevice
- */
-hipError_t hipDeviceTotalMem(size_t* bytes, hipDevice_t device);
-
-/**
- * @brief Returns the approximate HIP driver version.
- *
- * @param [out] driverVersion
- *
- * @returns #hipSuccess, #hipErrorInavlidValue
- *
- * @warning The HIP feature set does not correspond to an exact CUDA SDK driver revision.
- * This function always set *driverVersion to 4 as an approximation though HIP supports
- * some features which were introduced in later CUDA SDK revisions.
- * HIP apps code should not rely on the driver revision number here and should
- * use arch feature flags to test device capabilities or conditional compilation.
- *
- * @see hipRuntimeGetVersion
- */
-hipError_t hipDriverGetVersion(int* driverVersion);
-
-/**
- * @brief Returns the approximate HIP Runtime version.
- *
- * @param [out] runtimeVersion
- *
- * @returns #hipSuccess, #hipErrorInavlidValue
- *
- * @warning On HIP/HCC path this function returns HIP runtime patch version however on
- * HIP/NVCC path this function return CUDA runtime version.
- *
- * @see hipDriverGetVersion
- */
-hipError_t hipRuntimeGetVersion(int* runtimeVersion);
 
 /**
  * @brief Loads code object from file into a hipModule_t
@@ -3247,6 +3382,34 @@ hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsLi
 #endif
 
 /**
+ * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
+ * on respective streams before enqueuing any other work on the specified streams from any other threads
+ *
+ *
+ * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] numDevices               Size of the launchParamsList array.
+ * @param [in] flags                    Flags to control launch behavior.
+ *
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
+ */
+hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
+                                              int  numDevices, unsigned int  flags);
+
+
+// doxygen end Module
+/**
+ * @}
+ */
+
+/**
+ *
+ *  @defgroup Occupancy Occupancy
+ *  @{
+ *  This section describes the occupancy functions of HIP runtime API.
+ *
+ */
+
+/**
  * @brief determine the grid and block sizes to achieves maximum occupancy for a kernel
  *
  * @param [out] gridSize           minimum grid size for maximum potential occupancy
@@ -3341,22 +3504,7 @@ hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
                                              const void* f, size_t dynSharedMemPerBlk,
                                              int blockSizeLimit);
 
-/**
- * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
- * on respective streams before enqueuing any other work on the specified streams from any other threads
- *
- *
- * @param [in] hipLaunchParams          List of launch parameters, one per device.
- * @param [in] numDevices               Size of the launchParamsList array.
- * @param [in] flags                    Flags to control launch behavior.
- *
- * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
- */
-hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
-                                              int  numDevices, unsigned int  flags);
-
-
-// doxygen end Version Management
+// doxygen end Occupancy
 /**
  * @}
  */
@@ -3365,9 +3513,9 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Profiler Control
+ *  @defgroup Profiler Profiler Control[Deprecated]
  *  @{
- *
+ *  This section describes the profiler control functions of HIP runtime API.
  *
  *  @warning The cudaProfilerInitialize API format for "configFile" is not supported.
  *
@@ -3392,108 +3540,17 @@ hipError_t hipProfilerStart();
 DEPRECATED("use roctracer/rocTX instead")
 hipError_t hipProfilerStop();
 
-
+// doxygen end profiler
 /**
  * @}
  */
-
-// TODO: implement IPC apis
-
-/**
- * @brief Gets an interprocess memory handle for an existing device memory
- *          allocation
- *
- * Takes a pointer to the base of an existing device memory allocation created
- * with hipMalloc and exports it for use in another process. This is a
- * lightweight operation and may be called multiple times on an allocation
- * without adverse effects.
- *
- * If a region of memory is freed with hipFree and a subsequent call
- * to hipMalloc returns memory with the same device address,
- * hipIpcGetMemHandle will return a unique handle for the
- * new memory.
- *
- * @param handle - Pointer to user allocated hipIpcMemHandle to return
- *                    the handle in.
- * @param devPtr - Base pointer to previously allocated device memory
- *
- * @returns
- * hipSuccess,
- * hipErrorInvalidHandle,
- * hipErrorOutOfMemory,
- * hipErrorMapFailed,
- *
- */
-hipError_t hipIpcGetMemHandle(hipIpcMemHandle_t* handle, void* devPtr);
-
-/**
- * @brief Opens an interprocess memory handle exported from another process
- *          and returns a device pointer usable in the local process.
- *
- * Maps memory exported from another process with hipIpcGetMemHandle into
- * the current device address space. For contexts on different devices
- * hipIpcOpenMemHandle can attempt to enable peer access between the
- * devices as if the user called hipDeviceEnablePeerAccess. This behavior is
- * controlled by the hipIpcMemLazyEnablePeerAccess flag.
- * hipDeviceCanAccessPeer can determine if a mapping is possible.
- *
- * Contexts that may open hipIpcMemHandles are restricted in the following way.
- * hipIpcMemHandles from each device in a given process may only be opened
- * by one context per device per other process.
- *
- * Memory returned from hipIpcOpenMemHandle must be freed with
- * hipIpcCloseMemHandle.
- *
- * Calling hipFree on an exported memory region before calling
- * hipIpcCloseMemHandle in the importing context will result in undefined
- * behavior.
- *
- * @param devPtr - Returned device pointer
- * @param handle - hipIpcMemHandle to open
- * @param flags  - Flags for this operation. Must be specified as hipIpcMemLazyEnablePeerAccess
- *
- * @returns
- * hipSuccess,
- * hipErrorMapFailed,
- * hipErrorInvalidHandle,
- * hipErrorTooManyPeers
- *
- * @note No guarantees are made about the address returned in @p *devPtr.
- * In particular, multiple processes may not receive the same address for the same @p handle.
- *
- */
-hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned int flags);
-
-/**
- * @brief Close memory mapped with hipIpcOpenMemHandle
- *
- * Unmaps memory returnd by hipIpcOpenMemHandle. The original allocation
- * in the exporting process as well as imported mappings in other processes
- * will be unaffected.
- *
- * Any resources used to enable peer access will be freed if this is the
- * last mapping using them.
- *
- * @param devPtr - Device pointer returned by hipIpcOpenMemHandle
- *
- * @returns
- * hipSuccess,
- * hipErrorMapFailed,
- * hipErrorInvalidHandle,
- *
- */
-hipError_t hipIpcCloseMemHandle(void* devPtr);
-
-
-hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event);
-hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
-
 
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
  *  @defgroup Clang Launch API to support the triple-chevron syntax
  *  @{
+ *  This section describes the API to support the triple-chevron syntax.
  */
 
 /**
@@ -3600,6 +3657,10 @@ hipError_t hipLaunchKernel(const void* function_address,
 hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3 dimBlocks,
                               void** args, size_t sharedMemBytes, hipStream_t stream,
                               hipEvent_t startEvent, hipEvent_t stopEvent, int flags);
+// doxygen end Clang launch
+/**
+ * @}
+ */
 
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(
