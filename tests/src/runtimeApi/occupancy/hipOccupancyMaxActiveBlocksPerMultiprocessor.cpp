@@ -25,14 +25,15 @@ Testcase Scenarios :
  2) Pass invalid kernel function/NULL and check the api behavior.
  3) Pass blockSize as zero and check appropriate error-code is returned.
  4) Pass shm as max size_t and validate error-code returned.
+ 5) Test occupancy api with other possible flags.
 
  (TestCase 2)::
- 5) Validate range by making sure (numBlock * blockSize) doesn't exceed
+ 6) Validate range by making sure (numBlock * blockSize) doesn't exceed
  devProp.maxThreadsPerMultiProcessor.
- 6) Check range of out param after passing valid dynSharedMemPerBlk.
+ 7) Check range of out param after passing valid dynSharedMemPerBlk.
 
  (TestCase 3)::
- 7) Test case for using kernel function pointer with template.
+ 8) Test case for using kernel function pointer with template.
 
 */
 
@@ -53,6 +54,10 @@ __global__ void f1(float *a) { *a = 1.0; }
 template <typename T>
 __global__ void f2(T *a) { *a = 1; }
 
+/**
+ * Defines
+ */
+#define OccupancyDisableCachingOverride 0x01
 
 /**
  * Performs argument validation
@@ -61,7 +66,7 @@ bool argValidation() {
   bool TestPassed = true;
   hipError_t ret;
   int numBlock = 0, blockSize = 0;
-  int gridSize = 0;
+  int gridSize = 0, defBlkSize = 32;
 
   // Get potential blocksize
   HIPCHECK(hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, f1, 0, 0));
@@ -69,7 +74,7 @@ bool argValidation() {
   // Validate each argument
   if ((ret = hipOccupancyMaxActiveBlocksPerMultiprocessor(NULL, f1,
                    blockSize, 0)) != hipErrorInvalidValue) {
-    printf("ArgValidation : Inappropritate error value returned for"
+    printf("ArgValidation : Inappropriate error value returned for"
         " numBlock(NULL). Error: '%s'(%d)\n", hipGetErrorString(ret), ret);
     TestPassed &= false;
   }
@@ -77,7 +82,7 @@ bool argValidation() {
   ret = hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, NULL,
                    blockSize, 0);
   if (ret != hipErrorInvalidValue && ret != hipErrorInvalidDeviceFunction) {
-    printf("ArgValidation : Inappropritate error value returned for"
+    printf("ArgValidation : Inappropriate error value returned for"
         "  kernelfunc(NULL). numBlk %d, Error: '%s'(%d)\n", numBlock,
         hipGetErrorString(ret), ret);
     TestPassed &= false;
@@ -85,7 +90,7 @@ bool argValidation() {
 
   if ((ret = hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock,
                   f1, 0, 0)) != hipErrorInvalidValue) {
-    printf("ArgValidation : Inappropritate error value returned for"
+    printf("ArgValidation : Inappropriate error value returned for"
         " blksize(0), shm(0). numBlk %d, Error: '%s'(%d)\n", numBlock,
         hipGetErrorString(ret), ret);
     TestPassed &= false;
@@ -94,9 +99,17 @@ bool argValidation() {
   if ((ret = hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock,
                   f1, 0, std::numeric_limits<std::size_t>::max()))
                   != hipErrorInvalidValue) {
-    printf("ArgValidation : Inappropritate error value returned for"
+    printf("ArgValidation : Inappropriate error value returned for"
         " blksize(0), shm(max). numBlk %d, Error: '%s'(%d)\n", numBlock,
         hipGetErrorString(ret), ret);
+    TestPassed &= false;
+  }
+
+  if ((ret = hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(&numBlock,
+                  f1, defBlkSize, 0, OccupancyDisableCachingOverride))
+                  != hipSuccess) {
+    printf("ArgValidation : Occupancy api with flags returned '%s'(%d)."
+        " Expected to return hipSuccess(0)\n", hipGetErrorString(ret), ret);
     TestPassed &= false;
   }
 
