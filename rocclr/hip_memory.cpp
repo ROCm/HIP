@@ -1511,6 +1511,12 @@ hipError_t ihipMemcpyParam2D(const hip_Memcpy2D* pCopy,
 hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch, size_t width,
                         size_t height, hipMemcpyKind kind, hipStream_t stream, bool isAsync = false) {
   hip_Memcpy2D desc = {};
+  if (spitch == 0 || dpitch == 0) {
+    return hipErrorUnknown;
+  }
+  if (width == 0) {
+    return hipSuccess;
+  }
 
   desc.srcXInBytes = 0;
   desc.srcY = 0;
