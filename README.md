@@ -16,15 +16,15 @@ New projects can be developed directly in the portable HIP C++ language and can 
 
 The HIP repository maintains several branches. The branches that are of importance are:
 
-* master branch: This is the stable branch. All stable releases are based on this branch.
-* developer-preview branch: This is the branch were the new features still under development are visible. While this maybe of interest to many, it should be noted that this branch and the features under development might not be stable.
+* Main branch: This is the stable branch. It is up to date with the latest release branch, for example, if the latest HIP release is rocm-3.9, main branch will be the repository based on this release.
+* Release branches. These are branches corresponding to each ROCM release, listed with release tags, such as rocm-3.8, rocm-3.9, etc.
 
 ## Release tagging:
 
-HIP releases are typically of two types. The tag naming convention is different for both types of releases to help differentiate them.
+HIP releases are typically naming convention for each ROCM release to help differentiate them.
 
-* release_x.yy.zzzz: These are the stable releases based on the master branch. This type of release is typically made once a month.
-* preview_x.yy.zzzz: These denote pre-release code and are based on the developer-preview branch. This type of release is typically made once a week.
+* rocm x.yy: These are the stable releases based on the ROCM release. 
+  This type of release is typically made once a month.*
 
 ## More Info:
 - [Installation](INSTALL.md)
