@@ -1930,7 +1930,7 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent)
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent, hipStream_t stream) {
   HIP_INIT_API(hipMemset3DAsync, pitchedDevPtr, value, extent, stream);
 
-  HIP_RETURN(ihipMemset3D(pitchedDevPtr, value, extent, stream, false));
+  HIP_RETURN(ihipMemset3D(pitchedDevPtr, value, extent, stream, true));
 }
 
 hipError_t hipMemAllocPitch(hipDeviceptr_t* dptr, size_t* pitch, size_t widthInBytes,
