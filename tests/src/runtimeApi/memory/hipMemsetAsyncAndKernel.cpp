@@ -23,7 +23,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */
@@ -32,7 +32,7 @@
 #define ITER 10
 #define N 1024 * 1024
 
-unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
+unsigned blocks = 0;
 
 template <typename T>
 __global__ void vector_square(T* B_d, T* C_d, size_t M) {
@@ -153,6 +153,9 @@ bool testhipMemsetD8AsyncWithKernel() {
 int main() {
   bool testResult = true;
   int numDevices = 0;
+  blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
+  printf("blocks: %u\n", blocks);
+
   HIPCHECK(hipGetDeviceCount(&numDevices));
   printf("total number of gpus in the system: %d\n", numDevices);
 

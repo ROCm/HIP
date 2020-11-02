@@ -24,7 +24,7 @@
 //
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */
@@ -35,7 +35,7 @@
 #define NUM_H 256
 #define NUM_W 256
 
-unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
+unsigned blocks = 0;
 hipStream_t stream;
 
 bool testResult = true;
@@ -149,6 +149,9 @@ bool testhipMemset2DAsyncMultiThread() {
 
 int main() {
   bool testResult = true;
+
+  blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
+  printf("blocks: %u\n", blocks);
 
   testResult &= testhipMemset2DAsyncWithKernel();
   if (testResult) {

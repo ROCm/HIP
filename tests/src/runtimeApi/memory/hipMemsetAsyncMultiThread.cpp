@@ -22,7 +22,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */
@@ -30,8 +30,6 @@
 #include "test_common.h"
 #define NUM_THREADS 50
 #define ITER 50
-
-unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
 
 template <typename T>
 class MemSetTest {
@@ -218,6 +216,9 @@ int main() {
   bool testResult = true;
   printf("Queueing up hipMemSetAsync jobs on multiple threads"
          "and checking results\n");
+
+  unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
+  printf("blocks: %u\n", blocks);
 
   testResult &= testhipMemsetAsyncWithMultiThread();
   if (!(testResult)) {
