@@ -198,7 +198,24 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
     if ((srcMemory->getContext().devices()[0] != dstMemory->getContext().devices()[0]) &&
         ((srcMemory->getContext().devices().size() == 1) &&
          (dstMemory->getContext().devices().size() == 1))) {
-      command = new amd::CopyMemoryP2PCommand(queue, CL_COMMAND_COPY_BUFFER, waitList,
+      amd::HostQueue* pQueue = &queue;
+
+      if (queueDevice != dstMemory->getContext().devices()[0]) {
+        pQueue = hip::getNullStream(dstMemory->getContext());
+        amd::Command* cmd = queue.getLastQueuedCommand(true);
+        if (cmd != nullptr) {
+          waitList.push_back(cmd);
+        }
+      }
+
+      if (queueDevice != srcMemory->getContext().devices()[0]) {
+        pQueue = hip::getNullStream(srcMemory->getContext());
+        amd::Command* cmd = queue.getLastQueuedCommand(true);
+        if (cmd != nullptr) {
+          waitList.push_back(cmd);
+        }
+      }
+      command = new amd::CopyMemoryP2PCommand(*pQueue, CL_COMMAND_COPY_BUFFER, waitList,
           *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
       if (command == nullptr) {
         return hipErrorOutOfMemory;
@@ -1777,6 +1794,11 @@ hipError_t ihipMemset(void* dst, int64_t value, size_t valueSize, size_t sizeByt
   if (memory == nullptr) {
     // dst ptr is host ptr hence error
     return hipErrorInvalidValue;
+  }
+
+  if (!((CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR) &
+        memory->getMemFlags())) {
+    isAsync = true;
   }
 
   hipError_t hip_error = hipSuccess;
