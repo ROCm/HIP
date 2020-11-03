@@ -156,6 +156,8 @@ namespace hip {
     unsigned int Flags() const { return flags_; }
     /// Returns the priority for the current stream
     Priority GetPriority() const { return priority_; }
+    /// Returns the CU mask for the current stream
+    const std::vector<uint32_t> GetCUMask() const { return cuMask_; }
 
     /// Sync all non-blocking streams
     static void syncNonBlockingStreams();

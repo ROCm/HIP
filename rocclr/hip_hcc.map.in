@@ -275,6 +275,7 @@ global:
     hipMemcpyHtoA;
     hipMemcpyParam2DAsync;
     __hipGetPCH;
+    hipExtStreamGetCUMask;
     };
 local:
     *;
