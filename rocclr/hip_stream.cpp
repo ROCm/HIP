@@ -396,3 +396,87 @@ hipError_t hipStreamGetPriority(hipStream_t stream, int* priority) {
   HIP_RETURN(hipSuccess);
 
 }
+
+// ================================================================================================
+hipError_t hipExtStreamGetCUMask(hipStream_t stream, uint32_t cuMaskSize, uint32_t* cuMask) {
+  HIP_INIT_API(hipExtStreamGetCUMask, stream, cuMaskSize, cuMask);
+
+  if (cuMask == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  int deviceId = hip::getCurrentDevice()->deviceId();
+  auto* deviceHandle = g_devices[deviceId]->devices()[0];
+  const auto& info = deviceHandle->info();
+
+  // find the minimum cuMaskSize required to present the CU mask bit-array in a patch of 32 bits
+  // and return error if the cuMaskSize argument is less than cuMaskSizeRequired
+  uint32_t cuMaskSizeRequired = info.maxComputeUnits_ / 32 +
+    ((info.maxComputeUnits_ % 32) ? 1 : 0);
+
+  if (cuMaskSize < cuMaskSizeRequired) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+
+  // make a default CU mask bit-array where all CUs are active
+  // this default mask will be returned when there is no
+  // custom or global CU mask defined
+  std::vector<uint32_t> defaultCUMask;
+  uint32_t temp = 0;
+  uint32_t bit_index = 0;
+  for (uint32_t i = 0; i < info.maxComputeUnits_; i++) {
+    temp |= 1UL << bit_index;
+    if (bit_index >= 32) {
+      defaultCUMask.push_back(temp);
+      temp = 0;
+      bit_index = 0;
+      temp |= 1UL << bit_index;
+    }
+    bit_index += 1;
+  }
+  if (bit_index != 0) {
+    defaultCUMask.push_back(temp);
+  }
+
+  // if the stream is null then either return globalCUMask_ (if it is defined)
+  // or return defaultCUMask
+  if (stream == nullptr) {
+    if (info.globalCUMask_.size() != 0) {
+      std::copy(info.globalCUMask_.begin(), info.globalCUMask_.end(), cuMask);
+    } else {
+      std::copy(defaultCUMask.begin(), defaultCUMask.end(), cuMask);
+    }
+  } else {
+  // if the stream is not null then get the stream's CU mask and return one of the below cases
+  // case1 if globalCUMask_ is defined then return the AND of globalCUMask_ and stream's CU mask
+  // case2 if globalCUMask_ is not defined then retuen AND of defaultCUMask and stream's CU mask
+  // in both cases above if stream's CU mask is empty then either globalCUMask_ (for case1)
+  // or defaultCUMask(for case2) will be returned
+    std::vector<uint32_t> streamCUMask;
+    streamCUMask = reinterpret_cast<hip::Stream*>(stream)->GetCUMask();
+    std::vector<uint32_t> mask = {};
+    if (info.globalCUMask_.size() != 0) {
+      for (uint32_t i = 0; i < std::min(streamCUMask.size(), info.globalCUMask_.size()); i++) {
+        mask.push_back(streamCUMask[i] & info.globalCUMask_[i]);
+      }
+    } else {
+      for (uint32_t i = 0; i < std::min(streamCUMask.size(), defaultCUMask.size()); i++) {
+        mask.push_back(streamCUMask[i] & defaultCUMask[i]);
+      }
+      // check to make sure after ANDing streamCUMask (custom-defined) with global CU mask,
+      //we have non-zero mask, oterwise just return either globalCUMask_ or defaultCUMask
+      bool zeroCUMask = true;
+      for (auto m : mask) {
+        if (m != 0) {
+          zeroCUMask = false;
+          break;
+        }
+      }
+      if (zeroCUMask) {
+        mask = (info.globalCUMask_.size() != 0) ? info.globalCUMask_ : defaultCUMask;
+      }
+      std::copy(mask.begin(), mask.end(), cuMask);
+    }
+  }
+  HIP_RETURN(hipSuccess);
+}

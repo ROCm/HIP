@@ -1197,6 +1197,20 @@ hipError_t hipExtStreamCreateWithCUMask(hipStream_t* stream, uint32_t cuMaskSize
 
 
 /**
+ * @brief Get CU mask associated with an asynchronous stream
+ *
+ * @param[in] stream stream to be queried
+ * @param[in] cuMaskSize number of the block of memories (uint32_t *) allocated by user
+ * @param[out] cuMask Pointer to a pre-allocated block of memories (uint32_t *) in which
+ * the stream's CU mask is returned. The CU mask is returned in a chunck of 32 bits where
+ * each active bit represents one active CU
+ * @return #hipSuccess, #hipErrorInvalidHandle, #hipErrorInvalidValue
+ *
+ * @see hipStreamCreate, hipStreamSynchronize, hipStreamWaitEvent, hipStreamDestroy
+ */
+hipError_t hipExtStreamGetCUMask(hipStream_t stream, uint32_t cuMaskSize, uint32_t* cuMask);
+
+/**
  * Stream CallBack struct
  */
 typedef void (*hipStreamCallback_t)(hipStream_t stream, hipError_t status, void* userData);
