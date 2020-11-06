@@ -332,7 +332,7 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char*pciBusIdstr) {
   int pciBusID = -1;
   int pciDeviceID = -1;
   int pciDomainID = -1;
-
+  bool found = false;
   if (sscanf (pciBusIdstr, "%04x:%02x:%02x", &pciDomainID, &pciBusID, &pciDeviceID) == 0x3) {
     int count = 0;
     ihipDeviceGetCount(&count);
@@ -345,9 +345,13 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char*pciBusIdstr) {
       if ((pciBusID == prop.pciBusID) && (pciDomainID == prop.pciDomainID)
                     && (pciDeviceID == prop.pciDeviceID)) {
         *device = i;
+        found = true;
         break;
       }
     }
+  }
+  if (!found) {
+    HIP_RETURN(hipErrorInvalidValue);
   }
 
   HIP_RETURN(hipSuccess);
@@ -389,11 +393,11 @@ hipError_t hipDeviceGetPCIBusId ( char* pciBusId, int  len, int  device ) {
 
   int count;
   ihipDeviceGetCount(&count);
-  if (device < 0 || device > count) {
+  if (device < 0 || device >= count) {
     HIP_RETURN(hipErrorInvalidDevice);
   }
 
-  if (pciBusId == nullptr || len < 0) {
+  if (pciBusId == nullptr || len <= 0) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
