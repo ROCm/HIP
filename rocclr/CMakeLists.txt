@@ -74,23 +74,7 @@ list( APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/rocm" "/opt/rocm/llvm"
 list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" )
 set(CMAKE_MODULE_PATH${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
-add_definitions(-DUSE_COMGR_LIBRARY -DCOMGR_DYN_DLL)
-
-
-find_package(hsa-runtime64 REQUIRED CONFIG
-   PATHS
-     /opt/rocm/lib
-   PATH_SUFFIXES
-     cmake/hsa-runtime64
-)
-
-find_package(amd_comgr REQUIRED CONFIG
-  PATHS
-    /opt/rocm/
-  PATH_SUFFIXES
-    cmake/amd_comgr
-    lib/cmake/amd_comgr)
-
+message(STATUS "Hsa runtime found at ${hsa-runtime64_DIR}.")
 message(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 
 find_package(LLVM REQUIRED CONFIG
