@@ -7,7 +7,7 @@ set(HIP_LIB_TYPE "shared")
 if (NOT ${BUILD_SHARED_LIBS})
     set(HIP_LIB_TYPE "static")
 endif()
-message(STATUS "HIP_LIB_TYPE - ${HIP_LIB_TYPE}")
+message(STATUS "HIP runtime lib type - ${HIP_LIB_TYPE}")
 #-------------------------------------------------------------------------------
 # Helper macro to parse BUILD instructions
 macro(PARSE_BUILD_COMMAND _target _sources _hipcc_options _hcc_options _clang_options _nvcc_options _link_options _exclude_platforms _exclude_runtime _exclude_compiler _exclude_lib_type _depends _dir)
