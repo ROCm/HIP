@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2015-2020 - present Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include "hip_code_object.hpp"
 
 #include <cstring>
@@ -8,25 +30,312 @@
 #include "platform/program.hpp"
 #include <elf/elf.hpp>
 
+namespace {
+size_t constexpr strLiteralLength(char const* str) {
+  return *str ? 1 + strLiteralLength(str + 1) : 0;
+}
+constexpr char const* CLANG_OFFLOAD_BUNDLER_MAGIC_STR = "__CLANG_OFFLOAD_BUNDLE__";
+constexpr char const* OFFLOAD_KIND_HIP = "hip";
+constexpr char const* OFFLOAD_KIND_HIPV4 = "hipv4";
+constexpr char const* OFFLOAD_KIND_HCC = "hcc";
+constexpr char const* AMDGCN_TARGET_TRIPLE = "amdgcn-amd-amdhsa-";
+
+// ClangOFFLOADBundle info.
+static constexpr size_t bundle_magic_string_size =
+    strLiteralLength(CLANG_OFFLOAD_BUNDLER_MAGIC_STR);
+
+// Clang Offload bundler description & Header.
+struct __ClangOffloadBundleInfo {
+  uint64_t offset;
+  uint64_t size;
+  uint64_t bundleEntryIdSize;
+  const char bundleEntryId[1];
+};
+
+struct __ClangOffloadBundleHeader {
+  const char magic[bundle_magic_string_size - 1];
+  uint64_t numOfCodeObjects;
+  __ClangOffloadBundleInfo desc[1];
+};
+}  // namespace
+
 namespace hip {
 
 uint64_t CodeObject::ElfSize(const void *emi) {
   return amd::Elf::getElfSize(emi);
 }
 
-bool CodeObject::isCompatibleCodeObject(const std::string& codeobj_target_id,
-                                        const char* device_name) {
-  // Workaround for device name mismatch.
-  // Device name may contain feature strings delimited by '+', e.g.
-  // gfx900+xnack. Currently HIP-Clang does not include feature strings
-  // in code object target id in fat binary. Therefore drop the feature
-  // strings from device name before comparing it with code object target id.
-  std::string short_name(device_name);
-  auto feature_loc = short_name.find('+');
-  if (feature_loc != std::string::npos) {
-    short_name.erase(feature_loc);
+static bool getProcName(uint32_t EFlags, std::string& proc_name, bool& xnackSupported,
+                        bool& sramEccSupported) {
+  switch (EFlags & EF_AMDGPU_MACH) {
+    case EF_AMDGPU_MACH_AMDGCN_GFX700:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx700";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX701:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx701";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX702:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx702";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX703:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx703";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX704:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx704";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX801:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx801";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX802:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx802";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX803:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx803";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX810:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx810";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX900:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx900";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX902:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx902";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX904:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx904";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX906:
+      xnackSupported = true;
+      sramEccSupported = true;
+      proc_name = "gfx906";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX908:
+      xnackSupported = true;
+      sramEccSupported = true;
+      proc_name = "gfx908";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX909:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx909";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX1010:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx1010";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX1011:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx1011";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX1012:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx1012";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX1030:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx1030";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX1031:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx1031";
+      break;
+    default:
+      return false;
   }
-  return codeobj_target_id == short_name;
+  return true;
+}
+
+static bool getTripleTargetIDFromCodeObject(const void* code_object, std::string& target_id,
+                                            unsigned& co_version) {
+  if (!code_object) return false;
+  const Elf64_Ehdr* ehdr = reinterpret_cast<const Elf64_Ehdr*>(code_object);
+  if (ehdr->e_machine != EM_AMDGPU) return false;
+  if (ehdr->e_ident[EI_OSABI] != ELFOSABI_AMDGPU_HSA) return false;
+
+  bool isXnackSupported{false}, isSramEccSupported{false};
+
+  std::string proc_name;
+  if (!getProcName(ehdr->e_flags, proc_name, isXnackSupported, isSramEccSupported)) return false;
+  target_id = std::string(AMDGCN_TARGET_TRIPLE) + '-' + proc_name;
+
+  switch (ehdr->e_ident[EI_ABIVERSION]) {
+    case ELFABIVERSION_AMDGPU_HSA_V2: {
+      co_version = 2;
+      return false;
+    }
+
+    case ELFABIVERSION_AMDGPU_HSA_V3: {
+      co_version = 3;
+      if (isSramEccSupported) {
+        if (ehdr->e_flags & EF_AMDGPU_FEATURE_SRAMECC_V3)
+          target_id += ":sramecc+";
+        else
+          target_id += ":sramecc-";
+      }
+      if (isXnackSupported) {
+        if (ehdr->e_flags & EF_AMDGPU_FEATURE_XNACK_V3)
+          target_id += ":xnack+";
+        else
+          target_id += ":xnack-";
+      }
+      break;
+    }
+
+    case ELFABIVERSION_AMDGPU_HSA_V4: {
+      co_version = 4;
+      unsigned co_sram_value = (ehdr->e_flags) & EF_AMDGPU_FEATURE_SRAMECC_V4;
+      if (co_sram_value == EF_AMDGPU_FEATURE_SRAMECC_OFF_V4)
+        target_id += ":sramecc-";
+      else if (co_sram_value == EF_AMDGPU_FEATURE_SRAMECC_ON_V4)
+        target_id += ":sramecc+";
+
+      unsigned co_xnack_value = (ehdr->e_flags) & EF_AMDGPU_FEATURE_XNACK_V4;
+      if (co_xnack_value == EF_AMDGPU_FEATURE_XNACK_OFF_V4)
+        target_id += ":xnack-";
+      else if (co_xnack_value == EF_AMDGPU_FEATURE_XNACK_ON_V4)
+        target_id += ":xnack+";
+      break;
+    }
+
+    default: {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Consumes the string 'consume_' from the starting of the given input
+// eg: input = amdgcn-amd-amdhsa--gfx908 and consume_ is amdgcn-amd-amdhsa--
+// input will become gfx908.
+static bool consume(std::string& input, std::string consume_) {
+  if (input.substr(0, consume_.size()) != consume_) {
+    return false;
+  }
+  input = input.substr(consume_.size());
+  return true;
+}
+
+// Trim String till character, will be used to get gpuname
+// example: input is gfx908:sram-ecc+ and trim char is :
+// input will become sram-ecc+.
+static std::string trimName(std::string& input, char trim) {
+  auto pos_ = input.find(trim);
+  auto res = input;
+  if (pos_ == std::string::npos) {
+    input = "";
+  } else {
+    res = input.substr(0, pos_);
+    input = input.substr(pos_);
+  }
+  return res;
+}
+
+static char getFeatureValue(std::string& input, std::string feature) {
+  char res = ' ';
+  if (consume(input, std::move(feature))) {
+    res = input[0];
+    input = input.substr(1);
+  }
+  return res;
+}
+
+static bool getTargetIDValue(std::string& input, std::string& processor, char& sramecc_value,
+                             char& xnack_value) {
+  processor = trimName(input, ':');
+  sramecc_value = getFeatureValue(input, std::string(":sramecc"));
+  if (sramecc_value != ' ' && sramecc_value != '+' && sramecc_value != '-') return false;
+  xnack_value = getFeatureValue(input, std::string(":xnack"));
+  if (xnack_value != ' ' && xnack_value != '+' && xnack_value != '-') return false;
+  return true;
+}
+
+static bool getTripleTargetID(std::string bundled_co_entry_id, const void* code_object,
+                              std::string& co_triple_target_id, unsigned& co_version) {
+  std::string offload_kind = trimName(bundled_co_entry_id, '-');
+  if (offload_kind != OFFLOAD_KIND_HIPV4 && offload_kind != OFFLOAD_KIND_HIP &&
+      offload_kind != OFFLOAD_KIND_HCC)
+    return false;
+
+  if (offload_kind != OFFLOAD_KIND_HIPV4)
+    return getTripleTargetIDFromCodeObject(code_object, co_triple_target_id, co_version);
+
+  // For code object V4 onwards the bundled code object entry ID correctly
+  // specifies the target tripple.
+  co_version = 4;
+  co_triple_target_id = bundled_co_entry_id.substr(1);
+  return true;
+}
+
+static bool isCodeObjectCompatibleWithDevice(std::string co_triple_target_id,
+                                             std::string agent_triple_target_id) {
+  // Primitive Check
+  if (co_triple_target_id == agent_triple_target_id) return true;
+
+  // Parse code object triple target id
+  if (!consume(co_triple_target_id, std::string(AMDGCN_TARGET_TRIPLE) + '-')) {
+    return false;
+  }
+
+  std::string co_processor;
+  char co_sram_ecc, co_xnack;
+  if (!getTargetIDValue(co_triple_target_id, co_processor, co_sram_ecc, co_xnack)) {
+    return false;
+  }
+
+  if (!co_triple_target_id.empty()) return false;
+
+  // Parse agent isa triple target id
+  if (!consume(agent_triple_target_id, std::string(AMDGCN_TARGET_TRIPLE) + '-')) {
+    return false;
+  }
+
+  std::string agent_isa_processor;
+  char isa_sram_ecc, isa_xnack;
+  if (!getTargetIDValue(agent_triple_target_id, agent_isa_processor, isa_sram_ecc, isa_xnack)) {
+    return false;
+  }
+
+  if (!agent_triple_target_id.empty()) return false;
+
+  // Check for compatibility
+  if (agent_isa_processor != co_processor) return false;
+  if (co_sram_ecc != ' ') {
+    if (co_sram_ecc != isa_sram_ecc) return false;
+  }
+  if (co_xnack != ' ') {
+    if (co_xnack != isa_xnack) return false;
+  }
+
+  return true;
 }
 
 // This will be moved to COMGR eventually
@@ -72,52 +381,80 @@ hipError_t CodeObject::ExtractCodeObjectFromMemory(const void* data,
 }
 
 // This will be moved to COMGR eventually
-hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
-                       const std::vector<const char*>& device_names,
+hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data, 
+                       const std::vector<const char*>& agent_triple_target_ids,
                        std::vector<std::pair<const void*, size_t>>& code_objs) {
-  std::string magic((const char*)data, sizeof(CLANG_OFFLOAD_BUNDLER_MAGIC_STR) - 1);
+  std::string magic((const char*)data, bundle_magic_string_size);
   if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR)) {
     return hipErrorInvalidKernelFile;
   }
 
-  code_objs.resize(device_names.size());
+  // Initialize Code objects
+  code_objs.reserve(agent_triple_target_ids.size());
+  for (size_t i = 0; i < agent_triple_target_ids.size(); i++) {
+    code_objs.push_back(std::make_pair(nullptr, 0));
+  }
+
   const auto obheader = reinterpret_cast<const __ClangOffloadBundleHeader*>(data);
   const auto* desc = &obheader->desc[0];
-  unsigned num_code_objs = 0;
-  for (uint64_t i = 0; i < obheader->numBundles; ++i,
-       desc = reinterpret_cast<const __ClangOffloadBundleDesc*>(
-           reinterpret_cast<uintptr_t>(&desc->triple[0]) + desc->tripleSize)) {
+  size_t num_code_objs = code_objs.size();
+  for (uint64_t i = 0; i < obheader->numOfCodeObjects; ++i,
+                desc = reinterpret_cast<const __ClangOffloadBundleInfo*>(
+                    reinterpret_cast<uintptr_t>(&desc->bundleEntryId[0]) +
+                    desc->bundleEntryIdSize)) {
+    const void* image =
+        reinterpret_cast<const void*>(reinterpret_cast<uintptr_t>(obheader) + desc->offset);
+    const size_t image_size = desc->size;
 
-    std::size_t offset = 0;
-    if (!std::strncmp(desc->triple, HIP_AMDGCN_AMDHSA_TRIPLE,
-        sizeof(HIP_AMDGCN_AMDHSA_TRIPLE) - 1)) {
-      offset = sizeof(HIP_AMDGCN_AMDHSA_TRIPLE); //For code objects created by CLang
-    } else if (!std::strncmp(desc->triple, HCC_AMDGCN_AMDHSA_TRIPLE,
-               sizeof(HCC_AMDGCN_AMDHSA_TRIPLE) - 1)) {
-      offset = sizeof(HCC_AMDGCN_AMDHSA_TRIPLE); //For code objects created by Hcc
-    } else {
-      continue;
-    }
-    std::string target(desc->triple + offset, desc->tripleSize - offset);
+    if (num_code_objs == 0) break;
+    std::string bundleEntryId{desc->bundleEntryId, desc->bundleEntryIdSize};
 
-    const void *image = reinterpret_cast<const void*>(
-        reinterpret_cast<uintptr_t>(obheader) + desc->offset);
-    size_t size = desc->size;
+    unsigned co_version = 0;
+    std::string co_triple_target_id;
+    if (!getTripleTargetID(bundleEntryId, image, co_triple_target_id, co_version)) continue;
 
-    for (size_t dev = 0; dev < device_names.size(); ++dev) {
-      const char* name = device_names[dev];
-
-      if (!isCompatibleCodeObject(target, name)) {
-          continue;
+    for (size_t dev = 0; dev < agent_triple_target_ids.size(); ++dev) {
+      if (code_objs[dev].first) continue;
+      if (isCodeObjectCompatibleWithDevice(co_triple_target_id, agent_triple_target_ids[dev])) {
+        code_objs[dev] = std::make_pair(image, image_size);
+        --num_code_objs;
       }
-      code_objs[dev] = std::make_pair(image, size);
-      num_code_objs++;
     }
   }
-  if (num_code_objs == device_names.size()) {
+  if (num_code_objs == 0) {
     return hipSuccess;
   } else {
-    guarantee(false && "hipErrorNoBinaryForGpu: Coudn't find binary for current devices!");
+    LogPrintfError("%s",
+                   "hipErrorNoBinaryForGpu: Unable to find code object for all current devices!");
+    LogPrintfError("%s", "  Devices:");
+    for (size_t i = 0; i < agent_triple_target_ids.size(); i++) {
+      LogPrintfError("    %s - [%s]", agent_triple_target_ids[i],
+                     ((code_objs[i].first) ? "Found" : "Not Found"));
+    }
+    const auto obheader = reinterpret_cast<const __ClangOffloadBundleHeader*>(data);
+    const auto* desc = &obheader->desc[0];
+    LogPrintfError("%s", "  Bundled Code Objects:");
+    for (uint64_t i = 0; i < obheader->numOfCodeObjects; ++i,
+                  desc = reinterpret_cast<const __ClangOffloadBundleInfo*>(
+                      reinterpret_cast<uintptr_t>(&desc->bundleEntryId[0]) +
+                      desc->bundleEntryIdSize)) {
+      std::string bundleEntryId{desc->bundleEntryId, desc->bundleEntryIdSize};
+      const void* image =
+          reinterpret_cast<const void*>(reinterpret_cast<uintptr_t>(obheader) + desc->offset);
+
+      unsigned co_version = 0;
+      std::string co_triple_target_id;
+      bool valid_co = getTripleTargetID(bundleEntryId, image, co_triple_target_id, co_version);
+
+      if (valid_co) {
+        LogPrintfError("    %s - [code object v%u is %s]", bundleEntryId.c_str(), co_version,
+                       co_triple_target_id.c_str());
+      } else {
+        LogPrintfError("    %s - [Unsupported]", bundleEntryId.c_str());
+      }
+    }
+
+    guarantee(false && "hipErrorNoBinaryForGpu: Unable to find code object for all current devices!");
     return hipErrorNoBinaryForGpu;
   }
 }

@@ -183,10 +183,10 @@ if(HIP_COMPILER STREQUAL "clang")
 
   foreach(GPU_TARGET ${GPU_TARGETS})
       set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_COMPILE_OPTIONS "--cuda-gpu-arch=${GPU_TARGET}"
+        INTERFACE_COMPILE_OPTIONS "--offload-arch=${GPU_TARGET}"
       )
       set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_LINK_LIBRARIES "--cuda-gpu-arch=${GPU_TARGET}"
+        INTERFACE_LINK_LIBRARIES "--offload-arch=${GPU_TARGET}"
       )
   endforeach()
   #Add support for parallel build and link
