@@ -48,11 +48,12 @@
 
 /*! IHIP IPC MEMORY Structure */
 #define IHIP_IPC_MEM_HANDLE_SIZE   32
-#define IHIP_IPC_MEM_RESERVED_SIZE LP64_SWITCH(28,24)
+#define IHIP_IPC_MEM_RESERVED_SIZE LP64_SWITCH(24,16)
 
 typedef struct ihipIpcMemHandle_st {
   char ipc_handle[IHIP_IPC_MEM_HANDLE_SIZE];  ///< ipc memory handle on ROCr
   size_t psize;
+  size_t poffset;
   char reserved[IHIP_IPC_MEM_RESERVED_SIZE];
 } ihipIpcMemHandle_t;
 
