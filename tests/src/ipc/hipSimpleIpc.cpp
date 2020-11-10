@@ -25,67 +25,78 @@ THE SOFTWARE.
 
 #include "test_common.h"
 
-#define N 1024
-#define OFFSET 128
+#define NUM 1024
 
-void single_process() {
+hipError_t single_process(int32_t offset) {
   int* ipc_dptr = nullptr;
   int* ipc_hptr = nullptr;
   int* ipc_out_dptr = nullptr;
   int* ipc_out_hptr = nullptr;
 
   int* ipc_offset_dptr = nullptr;
-
-  hipIpcMemHandle_t ipc_handle;
   hipIpcMemHandle_t ipc_offset_handle;
 
-  HIPCHECK(hipMalloc((void**)&ipc_dptr, N * sizeof(int)));
+  HIPCHECK_RETURN_ONFAIL(hipMalloc(reinterpret_cast<void**>(&ipc_dptr), NUM * sizeof(int)));
 
-  // Negative, Make sure we return error when an offset of original ptr is passed
-  ipc_offset_dptr = ipc_dptr + (OFFSET * sizeof(int));
-  // HIP API return value differs from CUDA's return type
-  assert(hipErrorInvalidDevicePointer == hipIpcGetMemHandle(&ipc_offset_handle, ipc_offset_dptr));
-
-  // Get handle for the device_ptr
-  HIPCHECK(hipIpcGetMemHandle(&ipc_handle, ipc_dptr));
+  // Add offset to the dev_ptr
+  ipc_offset_dptr = ipc_dptr + offset;
+  // Get handle for the offsetted device_ptr
+  HIPCHECK_RETURN_ONFAIL(hipIpcGetMemHandle(&ipc_offset_handle, ipc_offset_dptr));
 
   // Set Values @ Host Ptr
-  ipc_hptr = new int[N];
-  for (size_t idx = 0; idx < N; ++idx) {
+  ipc_hptr = new int[NUM];
+  for (size_t idx = 0; idx < NUM; ++idx) {
      ipc_hptr[idx] = idx;
   }
 
   // Copy values to Device ptr
-  HIPCHECK(hipMemset(ipc_dptr, 0x00, (N * sizeof(int))));
-  HIPCHECK(hipMemcpy(ipc_dptr, ipc_hptr, (N * sizeof(int)), hipMemcpyHostToDevice));
+  HIPCHECK_RETURN_ONFAIL(hipMemset(ipc_dptr, 0x00, (NUM * sizeof(int))));
+  HIPCHECK_RETURN_ONFAIL(hipMemcpy(ipc_dptr, ipc_hptr, (NUM * sizeof(int)), hipMemcpyHostToDevice));
 
   // Open handle to get dev_ptr
-  ipc_out_hptr = new int[N];
-  memset(ipc_out_hptr, 0x00, (N * sizeof(int)));
-  HIPCHECK(hipIpcOpenMemHandle((void**)&ipc_out_dptr, ipc_handle, 0));
+  ipc_out_hptr = new int[NUM];
+  memset(ipc_out_hptr, 0x00, (NUM * sizeof(int)));
+  HIPCHECK_RETURN_ONFAIL(hipIpcOpenMemHandle(reinterpret_cast<void**>(&ipc_out_dptr),
+                                             ipc_offset_handle, 0));
 
   // Copy Values from Device to Host and Check for correctness
-  HIPCHECK(hipMemcpy(ipc_out_hptr, ipc_out_dptr, (N * sizeof(int)), hipMemcpyDeviceToHost));
-  for (size_t idx = 0; idx < N; ++idx) {
-    if(ipc_out_hptr[idx] != idx) {
+  HIPCHECK_RETURN_ONFAIL(hipMemcpy(ipc_out_hptr, ipc_out_dptr, (NUM * sizeof(int)), hipMemcpyDeviceToHost));
+  for (size_t idx = offset; idx < NUM; ++idx) {
+    if (ipc_out_hptr[idx-offset] != ipc_dptr[idx]) {
       std::cout<<"Failing @ idx: "<<idx<<std::endl;
     }
   }
 
   //Close All Mem Handle
-  HIPCHECK(hipIpcCloseMemHandle(ipc_out_dptr));
-  HIPCHECK(hipFree(ipc_dptr));
+  HIPCHECK_RETURN_ONFAIL(hipIpcCloseMemHandle(ipc_out_dptr));
+  HIPCHECK_RETURN_ONFAIL(hipFree(ipc_dptr));
 
   delete[] ipc_hptr;
   delete[] ipc_out_hptr;
+
+  return hipSuccess;
 }
 
-void multi_process() {
-  //To create and open IPC handle via multiple process
+void positive_cases() {
+  HIPCHECK(single_process(0));
+  HIPCHECK(single_process(32));
+  HIPCHECK(single_process(128));
+  HIPCHECK(single_process(256));
+  HIPCHECK(single_process(512));
+
+  HIPCHECK(single_process(1023));
+  HIPCHECK(single_process(47));
+  HIPCHECK(single_process(191));
+  HIPCHECK(single_process(1022));
+}
+
+void negative_cases() {
+  HIPCHECK_API(single_process(-1), hipErrorInvalidDevicePointer);
+  HIPCHECK_API(single_process(1024), hipErrorInvalidDevicePointer);
 }
 
 int main() {
-  single_process();
-  multi_process();
+  positive_cases();
+  negative_cases();
   passed();
 }
