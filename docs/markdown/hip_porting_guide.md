@@ -349,6 +349,13 @@ MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCal
 hipcc is a portable compiler driver that will call nvcc or HIP-Clang (depending on the target system) and attach all required include and library options. It passes options through to the target compiler. Tools that call hipcc must ensure the compiler options are appropriate for the target compiler.
 The `hipconfig` script may helpful in identifying the target platform, compiler and runtime. It can also help set options appropriately.
 
+### Option for specifying GPU processor
+
+`--offload-arch=X` can be used to specify [target ID](https://clang.llvm.org/docs/ClangOffloadBundlerFileFormat.html#target-id).
+
+For backward compatibility, hipcc also accepts `--amdgpu-target=X` for specifying target ID. However, it will be deprecated
+in future releases.
+
 ## Linking Issues
 
 ### Linking With hipcc
