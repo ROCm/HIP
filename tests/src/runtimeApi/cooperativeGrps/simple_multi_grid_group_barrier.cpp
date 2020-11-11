@@ -318,7 +318,7 @@ int main(int argc, char** argv) {
     /*************************************************************************/
     /* Read back the buffers and print out its data **************************/
     for (int dev = 0; dev < 2; dev++) {
-      HIPCHECK(hipMemcpy(host_buffer[d + dev], kernel_buffer[d + dev],
+      HIPCHECK(hipMemcpy(host_buffer[dev], kernel_buffer[dev],
                          total_buffer_len * sizeof(unsigned int),
                          hipMemcpyDeviceToHost));
     }
