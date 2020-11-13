@@ -111,6 +111,35 @@ int main(int argc, char* argv[]) {
         delete [] Ad;
     }
 
+    if (p_tests & 0x3) {
+        float *A, **Ad;
+        int num_devices;
+        HIPCHECK(hipGetDeviceCount(&num_devices));
+        Ad = new float*[num_devices];
+        A = (float*)malloc(size);
+        HIPCHECK(hipHostRegister(A, size, 0));
+
+        for (int i = 0; i < N; i++) {
+            A[i] = float(1);
+        }
+
+        for (int i = 0; i < num_devices; i++) {
+            HIPCHECK(hipSetDevice(i));
+            HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A, 0));
+        }
+
+        // Reference the registered device pointer Ad in hipMemset:
+        for (int i = 0; i < num_devices; i++) {
+            HIPCHECK(hipSetDevice(i));
+            HIPCHECK(hipMemset(Ad[i], 0, size));
+        }
+        HIPASSERT(A[10] == 0.0f);
+
+        HIPCHECK(hipHostUnregister(A));
+
+        free(A);
+        delete [] Ad;
+    }
 
     if (p_tests & 0x6) {
         // Sensitize HIP bug if device does not match where the memory was registered.

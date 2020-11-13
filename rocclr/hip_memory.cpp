@@ -30,14 +30,23 @@
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
   if (memObj != nullptr) {
-    if (memObj->getSvmPtr() != nullptr) {
-      // SVM pointer
-      offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getSvmPtr());
-    } else if (memObj->getHostMem() != nullptr) {
-      // Prepinned memory
-      offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getHostMem());
-    } else {
-      ShouldNotReachHere();
+    const char* hostPtr = reinterpret_cast<const char*>(ptr);
+    const char* hostMem = reinterpret_cast<const char*>(memObj->getHostMem());
+    //Prepinned memory
+    if ((hostMem != nullptr) &&
+        (hostPtr >= hostMem && hostPtr <= (hostMem + memObj->getSize()))) {
+      offset = reinterpret_cast<size_t>(hostPtr) - reinterpret_cast<size_t>(hostMem);
+    }
+    else {
+      //SVM ptr or device ptr mapped from host
+      const void *devPtr = reinterpret_cast<void*>
+              (memObj->getDeviceMemory(*memObj->getContext().devices()[0])->virtualAddress());
+      if (devPtr != nullptr) {
+        offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(devPtr);
+      }
+      else {
+        ShouldNotReachHere();
+      }
     }
   }
   return memObj;
