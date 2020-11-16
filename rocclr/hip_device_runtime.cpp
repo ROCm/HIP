@@ -337,12 +337,13 @@ hipError_t hipDeviceGetByPCIBusId(int* device, const char*pciBusIdstr) {
     int count = 0;
     ihipDeviceGetCount(&count);
     for (cl_int i = 0; i < count; i++) {
-      int pi = 0;
       hipDevice_t dev;
       hipDeviceGet(&dev, i);
-      hipDeviceGetAttribute(&pi, hipDeviceAttributePciBusId, dev);
+      hipDeviceProp_t prop;
+      hipGetDeviceProperties(&prop, dev);
 
-      if (pciBusID == pi) {
+      if ((pciBusID == prop.pciBusID) && (pciDomainID == prop.pciDomainID)
+                    && (pciDeviceID == prop.pciDeviceID)) {
         *device = i;
         break;
       }
