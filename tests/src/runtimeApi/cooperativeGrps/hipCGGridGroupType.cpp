@@ -36,6 +36,8 @@ THE SOFTWARE.
 
 using namespace cooperative_groups;
 
+static __device__ int gm[2];
+
 static __global__
 void kernel_cg_grid_group_type(int *sizeTestD,
                                int *thdRankTestD,
@@ -55,7 +57,6 @@ void kernel_cg_grid_group_type(int *sizeTestD,
   isValidTestD[gIdx] = gg.is_valid();
 
   // Test sync
-  __device__ int gm[2];
   if (blockIdx.x == 0 && threadIdx.x == 0)
     gm[0] = 10;
   else if (blockIdx.x == 1 && threadIdx.x == 0)
