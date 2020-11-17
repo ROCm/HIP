@@ -152,24 +152,23 @@ endif()
 if(HIP_COMPILER STREQUAL "clang")
   if (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
     set_property(TARGET hip::device APPEND PROPERTY
-      INTERFACE_COMPILE_OPTIONS -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false
-    )
-  endif()
-
-  if (EXISTS ${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode)
-    set_property(TARGET hip::device APPEND PROPERTY
-      INTERFACE_COMPILE_OPTIONS -xhip
-    )
-  else()
-    # This path is to support an older build of the device library
-    # TODO: To be removed in the future.
-    set_property(TARGET hip::device APPEND PROPERTY
-      INTERFACE_COMPILE_OPTIONS -xhip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
+      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-mllvm;-amdgpu-early-inline-all=true;-mllvm;-amdgpu-function-calls=false>"
     )
   endif()
 
   set_property(TARGET hip::device APPEND PROPERTY
-     INTERFACE_LINK_LIBRARIES --hip-link
+      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-x hip>"
+    )
+  if (NOT EXISTS ${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode)
+    # This path is to support an older build of the device library
+    # TODO: To be removed in the future.
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:--hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib>"
+    )
+  endif()
+
+  set_property(TARGET hip::device APPEND PROPERTY
+     INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:--hip-link>"
   )
 
   set_property(TARGET hip::device APPEND PROPERTY
@@ -182,10 +181,10 @@ if(HIP_COMPILER STREQUAL "clang")
 
   foreach(GPU_TARGET ${GPU_TARGETS})
       set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_COMPILE_OPTIONS "--cuda-gpu-arch=${GPU_TARGET}"
+        INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:--cuda-gpu-arch=${GPU_TARGET}>"
       )
       set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_LINK_LIBRARIES "--cuda-gpu-arch=${GPU_TARGET}"
+        INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:--cuda-gpu-arch=${GPU_TARGET}>"
       )
   endforeach()
   #Add support for parallel build and link
@@ -195,10 +194,10 @@ if(HIP_COMPILER STREQUAL "clang")
   if(HIP_CLANG_NUM_PARALLEL_JOBS GREATER 1)
     if(${HIP_CLANG_SUPPORTS_PARALLEL_JOBS} )
       set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_COMPILE_OPTIONS -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS} -Wno-format-nonliteral
+        INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS};-Wno-format-nonliteral>"
       )
       set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_LINK_LIBRARIES -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}
+        INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}>"
       )
     else()
       message("clang compiler doesn't support parallel jobs")
@@ -207,10 +206,10 @@ if(HIP_COMPILER STREQUAL "clang")
 
   # Add support for __fp16 and _Float16, explicitly link with compiler-rt
   set_property(TARGET hip::host APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+    INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:${HIP_CLANG_INCLUDE_PATH}/lib/linux/libclang_rt.builtins-x86_64.a>"
   )
   set_property(TARGET hip::device APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+    INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:${HIP_CLANG_INCLUDE_PATH}/lib/linux/libclang_rt.builtins-x86_64.a>"
   )
 endif()
 
