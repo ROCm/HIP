@@ -49,12 +49,14 @@ __hip_pch_size:
   .long __hip_pch_size - __hip_pch
 EOF
 
-$LLVM_DIR/bin/clang -O3 -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HSA_DIR/include --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui
+set -x
 
-cat $tmp/hip_macros.h >> $tmp/pch.cui
+$LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HSA_DIR/include --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
 
-$LLVM_DIR/bin/clang -cc1 -O3 -emit-pch -triple amdgcn-amd-amdhsa -aux-triple x86_64-unknown-linux-gnu -fcuda-is-device -std=c++17 -fgnuc-version=4.2.1 -o $tmp/hip.pch -x hip-cpp-output - <$tmp/pch.cui
+cat $tmp/hip_macros.h >> $tmp/pch.cui &&
 
-$LLVM_DIR/bin/llvm-mc -o hip_pch.o $tmp/hip_pch.mcin --filetype=obj
+$LLVM_DIR/bin/clang -cc1 -O3 -emit-pch -triple amdgcn-amd-amdhsa -aux-triple x86_64-unknown-linux-gnu -fcuda-is-device -std=c++17 -fgnuc-version=4.2.1 -o $tmp/hip.pch -x hip-cpp-output - <$tmp/pch.cui &&
+
+$LLVM_DIR/bin/llvm-mc -o hip_pch.o $tmp/hip_pch.mcin --filetype=obj &&
 
 rm -rf $tmp
