@@ -36,6 +36,11 @@ endif()
 
 set(USE_PROF_API "1")
 
+# Need to add /opt/rocm/llvm to package search path since ROCclr will
+# find package amd_comgr and amd_comgr will find package llvm/clang.
+# Without this, the system llvm/clang at /usr/local may be found.
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/rocm/llvm")
+
 find_package(ROCclr REQUIRED CONFIG
   PATHS
     /opt/rocm
@@ -72,7 +77,7 @@ endif()
 #Custom install path can be provided at compile time as cmake parameter(-DCMAKE_PREFIX_PATH="")
 #/opt/rocm:default:For amd_comgr,hsa-runtime64
 #/opt/rocm/llvm/:default:For llvm/clang pulled in as dependency from hsa/comgr
-list( APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/rocm" "/opt/rocm/llvm")
+list( APPEND CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "/opt/rocm")
 
 list ( APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" )
 set(CMAKE_MODULE_PATH${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
@@ -157,7 +162,10 @@ endif()
 # Short-Term solution for pre-compiled headers for online compilation
 # Enable pre compiled header
 if(__HIP_ENABLE_PCH)
-    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${LLVM_DIR} ${HSA_PATH}")
+    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${LLVM_DIR} ${HSA_PATH}" COMMAND_ECHO STDERR RESULT_VARIABLE EMBED_PCH_RC)
+    if (EMBED_PCH_RC AND NOT EMBED_PCH_RC EQUAL 0)
+      message(FATAL_ERROR "Failed to embed PCH")
+    endif()
     add_definitions(-D__HIP_ENABLE_PCH)
 endif()
 
