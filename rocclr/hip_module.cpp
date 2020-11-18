@@ -222,6 +222,16 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams, extra, startEvent,
     stopEvent, flags, params);
 
+  if (f == nullptr) {
+    DevLogPrintfError("%s", "Function passed is null");
+    return hipErrorInvalidImage;
+  }
+  if ((kernelParams != nullptr) && (extra != nullptr)) {
+    DevLogPrintfError(
+        "%s", "Both, kernelParams and extra Params are provided, only one should be provided");
+    return hipErrorInvalidValue;
+  }
+
   hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
   amd::Kernel* kernel = function->kernel();
 
