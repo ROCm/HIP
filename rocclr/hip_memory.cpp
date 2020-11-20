@@ -1098,13 +1098,16 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
     return hipErrorOutOfMemory;
   }
 
+  hipError_t status = hipSuccess;
   command->enqueue();
   if (!isAsync) {
-    command->awaitCompletion();
+    if (!command->awaitCompletion()) {
+      status = hipErrorUnknown;
+    }
   }
   command->release();
 
-  return hipSuccess;
+  return status;
 }
 
 hipError_t ihipMemcpyDtoH(void* srcDevice,
@@ -1157,13 +1160,16 @@ hipError_t ihipMemcpyDtoH(void* srcDevice,
     return hipErrorOutOfMemory;
   }
 
+  hipError_t status = hipSuccess;
   command->enqueue();
   if (!isAsync) {
-    command->awaitCompletion();
+    if (!command->awaitCompletion()) {
+      status = hipErrorUnknown;
+    }
   }
   command->release();
 
-  return hipSuccess;
+  return status;
 }
 
 hipError_t ihipMemcpyHtoD(const void* srcHost,
@@ -1216,13 +1222,16 @@ hipError_t ihipMemcpyHtoD(const void* srcHost,
     return hipErrorOutOfMemory;
   }
 
+  hipError_t status = hipSuccess;
   command->enqueue();
   if (!isAsync) {
-    command->awaitCompletion();
+    if (!command->awaitCompletion()) {
+      status = hipErrorUnknown;
+    }
   }
   command->release();
 
-  return hipSuccess;
+  return status;
 }
 
 hipError_t ihipMemcpyHtoH(const void* srcHost,
