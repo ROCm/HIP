@@ -14,6 +14,7 @@
 |`cudaDeviceGetPCIBusId`|  |  |  |`hipDeviceGetPCIBusId`|
 |`cudaDeviceGetSharedMemConfig`|  |  |  |`hipDeviceGetSharedMemConfig`|
 |`cudaDeviceGetStreamPriorityRange`|  |  |  |`hipDeviceGetStreamPriorityRange`|
+|`cudaDeviceGetTexture1DLinearMaxWidth`| 11.1 |  |  ||
 |`cudaDeviceReset`|  |  |  |`hipDeviceReset`|
 |`cudaDeviceSetCacheConfig`|  |  |  |`hipDeviceSetCacheConfig`|
 |`cudaDeviceSetLimit`|  |  |  |`hipDeviceSetLimit`|
@@ -87,6 +88,7 @@
 |`cudaEventElapsedTime`|  |  |  |`hipEventElapsedTime`|
 |`cudaEventQuery`|  |  |  |`hipEventQuery`|
 |`cudaEventRecord`|  |  |  |`hipEventRecord`|
+|`cudaEventRecordWithFlags`| 11.1 |  |  ||
 |`cudaEventSynchronize`|  |  |  |`hipEventSynchronize`|
 
 ## **6. External Resource Interoperability**
@@ -136,6 +138,7 @@
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
 |`cudaArrayGetInfo`|  |  |  ||
+|`cudaArrayGetSparseProperties`| 11.1 |  |  ||
 |`cudaFree`|  |  |  |`hipFree`|
 |`cudaFreeArray`|  |  |  |`hipFreeArray`|
 |`cudaFreeHost`|  |  |  |`hipHostFree`|
@@ -392,19 +395,34 @@
 |`cudaGraphAddChildGraphNode`| 10.0 |  |  ||
 |`cudaGraphAddDependencies`| 10.0 |  |  ||
 |`cudaGraphAddEmptyNode`| 10.0 |  |  ||
+|`cudaGraphAddEventRecordNode`| 11.1 |  |  ||
+|`cudaGraphAddEventWaitNode`| 11.1 |  |  ||
 |`cudaGraphAddHostNode`| 10.0 |  |  ||
 |`cudaGraphAddKernelNode`| 10.0 |  |  ||
 |`cudaGraphAddMemcpyNode`| 10.0 |  |  ||
+|`cudaGraphAddMemcpyNode1D`| 11.1 |  |  ||
+|`cudaGraphAddMemcpyNodeFromSymbol`| 11.1 |  |  ||
+|`cudaGraphAddMemcpyNodeToSymbol`| 11.1 |  |  ||
 |`cudaGraphAddMemsetNode`| 10.0 |  |  ||
 |`cudaGraphChildGraphNodeGetGraph`| 10.0 |  |  ||
 |`cudaGraphClone`| 10.0 |  |  ||
 |`cudaGraphCreate`| 10.0 |  |  ||
 |`cudaGraphDestroy`| 10.0 |  |  ||
 |`cudaGraphDestroyNode`| 10.0 |  |  ||
+|`cudaGraphEventRecordNodeGetEvent`| 11.1 |  |  ||
+|`cudaGraphEventRecordNodeSetEvent`| 11.1 |  |  ||
+|`cudaGraphEventWaitNodeGetEvent`| 11.1 |  |  ||
+|`cudaGraphEventWaitNodeSetEvent`| 11.1 |  |  ||
+|`cudaGraphExecChildGraphNodeSetParams`| 11.1 |  |  ||
 |`cudaGraphExecDestroy`| 10.0 |  |  ||
+|`cudaGraphExecEventRecordNodeSetEvent`| 11.1 |  |  ||
+|`cudaGraphExecEventWaitNodeSetEvent`| 11.1 |  |  ||
 |`cudaGraphExecHostNodeSetParams`| 11.0 |  |  ||
 |`cudaGraphExecKernelNodeSetParams`| 11.0 |  |  ||
 |`cudaGraphExecMemcpyNodeSetParams`| 11.0 |  |  ||
+|`cudaGraphExecMemcpyNodeSetParams1D`| 11.1 |  |  ||
+|`cudaGraphExecMemcpyNodeSetParamsFromSymbol`| 11.1 |  |  ||
+|`cudaGraphExecMemcpyNodeSetParamsToSymbol`| 11.1 |  |  ||
 |`cudaGraphExecMemsetNodeSetParams`| 11.0 |  |  ||
 |`cudaGraphExecUpdate`| 11.0 |  |  ||
 |`cudaGraphGetEdges`| 10.0 |  |  ||
@@ -421,6 +439,9 @@
 |`cudaGraphLaunch`| 11.0 |  |  ||
 |`cudaGraphMemcpyNodeGetParams`| 11.0 |  |  ||
 |`cudaGraphMemcpyNodeSetParams`| 11.0 |  |  ||
+|`cudaGraphMemcpyNodeSetParams1D`| 11.1 |  |  ||
+|`cudaGraphMemcpyNodeSetParamsFromSymbol`| 11.1 |  |  ||
+|`cudaGraphMemcpyNodeSetParamsToSymbol`| 11.1 |  |  ||
 |`cudaGraphMemsetNodeGetParams`| 11.0 |  |  ||
 |`cudaGraphMemsetNodeSetParams`| 11.0 |  |  ||
 |`cudaGraphNodeFindInClone`| 11.0 |  |  ||
@@ -428,6 +449,7 @@
 |`cudaGraphNodeGetDependentNodes`| 11.0 |  |  ||
 |`cudaGraphNodeGetType`| 11.0 |  |  ||
 |`cudaGraphRemoveDependencies`| 11.0 |  |  ||
+|`cudaGraphUpload`| 11.1 |  |  ||
 
 ## **30. C++ API Routines**
 
@@ -485,6 +507,9 @@
 |`cudaArrayCubemap`|  |  |  |`hipArrayCubemap`|
 |`cudaArrayDefault`|  |  |  |`hipArrayDefault`|
 |`cudaArrayLayered`|  |  |  |`hipArrayLayered`|
+|`cudaArraySparse`| 11.1 |  |  ||
+|`cudaArraySparseProperties`| 11.1 |  |  ||
+|`cudaArraySparsePropertiesSingleMipTail`| 11.1 |  |  ||
 |`cudaArraySurfaceLoadStore`|  |  |  |`hipArraySurfaceLoadStore`|
 |`cudaArrayTextureGather`|  |  |  |`hipArrayTextureGather`|
 |`cudaArray_const_t`|  |  |  |`hipArray_const_t`|
@@ -556,6 +581,7 @@
 |`cudaDevAttrGlobalMemoryBusWidth`|  |  |  |`hipDeviceAttributeMemoryBusWidth`|
 |`cudaDevAttrGpuOverlap`|  |  |  ||
 |`cudaDevAttrHostNativeAtomicSupported`| 8.0 |  |  ||
+|`cudaDevAttrHostRegisterReadOnlySupported`| 11.1 |  |  ||
 |`cudaDevAttrHostRegisterSupported`| 9.2 |  |  ||
 |`cudaDevAttrIntegrated`|  |  |  |`hipDeviceAttributeIntegrated`|
 |`cudaDevAttrIsMultiGpuBoard`|  |  |  |`hipDeviceAttributeIsMultiGpuBoard`|
@@ -631,6 +657,7 @@
 |`cudaDevAttrReserved94`| 9.0 |  |  ||
 |`cudaDevAttrReservedSharedMemoryPerBlock`| 11.0 |  |  ||
 |`cudaDevAttrSingleToDoublePrecisionPerfRatio`| 8.0 |  |  ||
+|`cudaDevAttrSparseCudaArraySupported`| 11.1 |  |  ||
 |`cudaDevAttrStreamPrioritiesSupported`|  |  |  ||
 |`cudaDevAttrSurfaceAlignment`|  |  |  ||
 |`cudaDevAttrTccDriver`|  |  |  ||
@@ -747,12 +774,14 @@
 |`cudaErrorApiFailureBase`|  | 4.1 |  ||
 |`cudaErrorArrayIsMapped`| 10.1 |  |  |`hipErrorArrayIsMapped`|
 |`cudaErrorAssert`|  |  |  |`hipErrorAssert`|
+|`cudaErrorCallRequiresNewerDriver`| 11.1 |  |  ||
 |`cudaErrorCapturedEvent`| 10.0 |  |  ||
 |`cudaErrorCompatNotSupportedOnDevice`| 10.1 |  |  ||
 |`cudaErrorContextIsDestroyed`| 10.1 |  |  ||
 |`cudaErrorCooperativeLaunchTooLarge`| 9.0 |  |  |`hipErrorCooperativeLaunchTooLarge`|
 |`cudaErrorCudartUnloading`|  |  |  |`hipErrorDeinitialized`|
 |`cudaErrorDeviceAlreadyInUse`|  |  |  |`hipErrorContextAlreadyInUse`|
+|`cudaErrorDeviceNotLicensed`| 11.1 |  |  ||
 |`cudaErrorDeviceUninitialized`| 10.2 |  |  |`hipErrorInvalidContext`|
 |`cudaErrorDeviceUninitilialized`| 10.1 |  | 10.2 |`hipErrorInvalidContext`|
 |`cudaErrorDevicesUnavailable`|  |  |  ||
@@ -839,6 +868,7 @@
 |`cudaErrorStreamCaptureUnmatched`| 10.0 |  |  ||
 |`cudaErrorStreamCaptureUnsupported`| 10.0 |  |  ||
 |`cudaErrorStreamCaptureWrongThread`| 10.1 |  |  ||
+|`cudaErrorStubLibrary`| 11.1 |  |  ||
 |`cudaErrorSymbolNotFound`| 10.1 |  |  |`hipErrorNotFound`|
 |`cudaErrorSyncDepthExceeded`|  |  |  ||
 |`cudaErrorSynchronizationError`|  | 3.1 |  ||
@@ -851,11 +881,16 @@
 |`cudaErrorUnknown`|  |  |  |`hipErrorUnknown`|
 |`cudaErrorUnmapBufferObjectFailed`|  |  |  |`hipErrorUnmapFailed`|
 |`cudaErrorUnsupportedLimit`|  |  |  |`hipErrorUnsupportedLimit`|
+|`cudaErrorUnsupportedPtxVersion`| 11.1 |  |  ||
 |`cudaError_t`|  |  |  |`hipError_t`|
 |`cudaEventBlockingSync`|  |  |  |`hipEventBlockingSync`|
 |`cudaEventDefault`|  |  |  |`hipEventDefault`|
 |`cudaEventDisableTiming`|  |  |  |`hipEventDisableTiming`|
 |`cudaEventInterprocess`|  |  |  |`hipEventInterprocess`|
+|`cudaEventRecordDefault`| 11.1 |  |  ||
+|`cudaEventRecordExternal`| 11.1 |  |  ||
+|`cudaEventWaitDefault`| 11.1 |  |  ||
+|`cudaEventWaitExternal`|  |  |  ||
 |`cudaEvent_t`|  |  |  |`hipEvent_t`|
 |`cudaExtent`|  |  |  |`hipExtent`|
 |`cudaExternalMemoryBufferDesc`| 10.0 |  |  ||
@@ -921,11 +956,13 @@
 |`cudaGraphNodeType`| 10.0 |  |  ||
 |`cudaGraphNodeTypeCount`| 10.0 |  |  ||
 |`cudaGraphNodeTypeEmpty`| 10.0 |  |  ||
+|`cudaGraphNodeTypeEventRecord`| 11.1 |  |  ||
 |`cudaGraphNodeTypeGraph`| 10.0 |  |  ||
 |`cudaGraphNodeTypeHost`| 10.0 |  |  ||
 |`cudaGraphNodeTypeKernel`| 10.0 |  |  ||
 |`cudaGraphNodeTypeMemcpy`| 10.0 |  |  ||
 |`cudaGraphNodeTypeMemset`| 10.0 |  |  ||
+|`cudaGraphNodeTypeWaitEvent`| 11.1 |  |  ||
 |`cudaGraphNode_t`| 10.0 |  |  ||
 |`cudaGraph_t`| 10.0 |  |  ||
 |`cudaGraphicsCubeFace`|  |  |  ||
@@ -957,6 +994,7 @@
 |`cudaHostRegisterIoMemory`| 7.5 |  |  |`hipHostRegisterIoMemory`|
 |`cudaHostRegisterMapped`|  |  |  |`hipHostRegisterMapped`|
 |`cudaHostRegisterPortable`|  |  |  |`hipHostRegisterPortable`|
+|`cudaHostRegisterReadOnly`| 11.1 |  |  ||
 |`cudaInvalidDeviceId`| 8.0 |  |  ||
 |`cudaIpcEventHandle_st`|  |  |  |`ihipIpcEventHandle_t`|
 |`cudaIpcEventHandle_t`|  |  |  |`ihipIpcEventHandle_t`|

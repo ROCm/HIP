@@ -11,12 +11,15 @@
 |`CUDA_ARRAY3D_DESCRIPTOR`|  |  |  |`HIP_ARRAY3D_DESCRIPTOR`|
 |`CUDA_ARRAY3D_DESCRIPTOR_st`|  |  |  |`HIP_ARRAY3D_DESCRIPTOR`|
 |`CUDA_ARRAY3D_LAYERED`|  |  |  |`hipArrayLayered`|
+|`CUDA_ARRAY3D_SPARSE`| 11.1 |  |  ||
 |`CUDA_ARRAY3D_SURFACE_LDST`|  |  |  |`hipArraySurfaceLoadStore`|
 |`CUDA_ARRAY3D_TEXTURE_GATHER`|  |  |  |`hipArrayTextureGather`|
 |`CUDA_ARRAY_DESCRIPTOR`|  |  |  |`HIP_ARRAY_DESCRIPTOR`|
 |`CUDA_ARRAY_DESCRIPTOR_st`|  |  |  |`HIP_ARRAY_DESCRIPTOR`|
 |`CUDA_ARRAY_DESCRIPTOR_v1`|  |  |  |`HIP_ARRAY_DESCRIPTOR`|
 |`CUDA_ARRAY_DESCRIPTOR_v1_st`|  |  |  |`HIP_ARRAY_DESCRIPTOR`|
+|`CUDA_ARRAY_SPARSE_PROPERTIES`| 11.1 |  |  ||
+|`CUDA_ARRAY_SPARSE_PROPERTIES_st`| 11.1 |  |  ||
 |`CUDA_CB`|  |  |  ||
 |`CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC`| 9.0 |  |  |`hipCooperativeLaunchMultiDeviceNoPostSync`|
 |`CUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC`| 9.0 |  |  |`hipCooperativeLaunchMultiDeviceNoPreSync`|
@@ -31,6 +34,7 @@
 |`CUDA_ERROR_CONTEXT_IS_DESTROYED`|  |  |  ||
 |`CUDA_ERROR_COOPERATIVE_LAUNCH_TOO_LARGE`| 9.0 |  |  |`hipErrorCooperativeLaunchTooLarge`|
 |`CUDA_ERROR_DEINITIALIZED`|  |  |  |`hipErrorDeinitialized`|
+|`CUDA_ERROR_DEVICE_NOT_LICENSED`| 11.1 |  |  ||
 |`CUDA_ERROR_ECC_UNCORRECTABLE`|  |  |  |`hipErrorECCNotCorrectable`|
 |`CUDA_ERROR_FILE_NOT_FOUND`|  |  |  |`hipErrorFileNotFound`|
 |`CUDA_ERROR_GRAPH_EXEC_UPDATE_FAILURE`| 10.2 |  |  ||
@@ -88,6 +92,7 @@
 |`CUDA_ERROR_STREAM_CAPTURE_UNMATCHED`| 10.0 |  |  ||
 |`CUDA_ERROR_STREAM_CAPTURE_UNSUPPORTED`| 10.0 |  |  ||
 |`CUDA_ERROR_STREAM_CAPTURE_WRONG_THREAD`| 10.1 |  |  ||
+|`CUDA_ERROR_STUB_LIBRARY`| 11.1 |  |  ||
 |`CUDA_ERROR_SYSTEM_DRIVER_MISMATCH`| 10.1 |  |  ||
 |`CUDA_ERROR_SYSTEM_NOT_READY`| 10.0 |  |  ||
 |`CUDA_ERROR_TIMEOUT`| 10.2 |  |  ||
@@ -95,6 +100,7 @@
 |`CUDA_ERROR_UNKNOWN`|  |  |  |`hipErrorUnknown`|
 |`CUDA_ERROR_UNMAP_FAILED`|  |  |  |`hipErrorUnmapFailed`|
 |`CUDA_ERROR_UNSUPPORTED_LIMIT`|  |  |  |`hipErrorUnsupportedLimit`|
+|`CUDA_ERROR_UNSUPPORTED_PTX_VERSION`| 11.1 |  |  ||
 |`CUDA_EXTERNAL_MEMORY_BUFFER_DESC`| 10.0 |  |  ||
 |`CUDA_EXTERNAL_MEMORY_BUFFER_DESC_st`| 10.0 |  |  ||
 |`CUDA_EXTERNAL_MEMORY_DEDICATED`| 10.0 |  |  ||
@@ -130,6 +136,8 @@
 |`CUDA_MEMSET_NODE_PARAMS_st`| 10.0 |  |  ||
 |`CUDA_NVSCISYNC_ATTR_SIGNAL`| 10.2 |  |  ||
 |`CUDA_NVSCISYNC_ATTR_WAIT`| 10.2 |  |  ||
+|`CUDA_POINTER_ATTRIBUTE_ACCESS_FLAGS`| 11.1 |  |  ||
+|`CUDA_POINTER_ATTRIBUTE_ACCESS_FLAGS_enum`| 11.1 |  |  ||
 |`CUDA_POINTER_ATTRIBUTE_P2P_TOKENS`|  |  |  ||
 |`CUDA_POINTER_ATTRIBUTE_P2P_TOKENS_st`|  |  |  ||
 |`CUDA_RESOURCE_DESC`|  |  |  ||
@@ -155,6 +163,9 @@
 |`CU_AD_FORMAT_UNSIGNED_INT16`|  |  |  |`HIP_AD_FORMAT_UNSIGNED_INT16`|
 |`CU_AD_FORMAT_UNSIGNED_INT32`|  |  |  |`HIP_AD_FORMAT_UNSIGNED_INT32`|
 |`CU_AD_FORMAT_UNSIGNED_INT8`|  |  |  |`HIP_AD_FORMAT_UNSIGNED_INT8`|
+|`CU_ARRAY_SPARSE_PROPERTIES_SINGLE_MIPTAIL`| 11.1 |  |  ||
+|`CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_MIPTAIL`| 11.1 |  |  ||
+|`CU_ARRAY_SPARSE_SUBRESOURCE_TYPE_SPARSE_LEVEL`| 11.1 |  |  ||
 |`CU_COMPUTEMODE_DEFAULT`|  |  |  |`hipComputeModeDefault`|
 |`CU_COMPUTEMODE_EXCLUSIVE`|  |  | 8.0 |`hipComputeModeExclusive`|
 |`CU_COMPUTEMODE_EXCLUSIVE_PROCESS`|  |  |  |`hipComputeModeExclusiveProcess`|
@@ -297,10 +308,12 @@
 |`CU_DEVICE_ATTRIBUTE_PCI_BUS_ID`|  |  |  |`hipDeviceAttributePciBusId`|
 |`CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID`|  |  |  |`hipDeviceAttributePciDeviceId`|
 |`CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID`|  |  |  ||
+|`CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED`| 11.1 |  |  ||
 |`CU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK`|  | 5.0 |  |`hipDeviceAttributeMaxRegistersPerBlock`|
 |`CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK`| 11.0 |  |  ||
 |`CU_DEVICE_ATTRIBUTE_SHARED_MEMORY_PER_BLOCK`|  | 5.0 |  |`hipDeviceAttributeMaxSharedMemoryPerBlock`|
 |`CU_DEVICE_ATTRIBUTE_SINGLE_TO_DOUBLE_PRECISION_PERF_RATIO`| 8.0 |  |  ||
+|`CU_DEVICE_ATTRIBUTE_SPARSE_CUDA_ARRAY_SUPPORTED`| 11.1 |  |  ||
 |`CU_DEVICE_ATTRIBUTE_STREAM_PRIORITIES_SUPPORTED`|  |  |  ||
 |`CU_DEVICE_ATTRIBUTE_SURFACE_ALIGNMENT`|  |  |  ||
 |`CU_DEVICE_ATTRIBUTE_TCC_DRIVER`|  |  |  ||
@@ -399,6 +412,10 @@
 |`CU_EVENT_DEFAULT`|  |  |  |`hipEventDefault`|
 |`CU_EVENT_DISABLE_TIMING`|  |  |  |`hipEventDisableTiming`|
 |`CU_EVENT_INTERPROCESS`|  |  |  |`hipEventInterprocess`|
+|`CU_EVENT_RECORD_DEFAULT`| 11.1 |  |  ||
+|`CU_EVENT_RECORD_EXTERNAL`| 11.1 |  |  ||
+|`CU_EVENT_WAIT_DEFAULT`| 11.1 |  |  ||
+|`CU_EVENT_WAIT_EXTERNAL`| 11.1 |  |  ||
 |`CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_RESOURCE`| 10.2 |  |  ||
 |`CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_RESOURCE_KMT`| 10.2 |  |  ||
 |`CU_EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP`| 10.0 |  |  ||
@@ -453,11 +470,13 @@
 |`CU_GRAPH_EXEC_UPDATE_SUCCESS`| 10.2 |  |  ||
 |`CU_GRAPH_NODE_TYPE_COUNT`| 10.0 |  | 11.0 ||
 |`CU_GRAPH_NODE_TYPE_EMPTY`| 10.0 |  |  ||
+|`CU_GRAPH_NODE_TYPE_EVENT_RECORD`| 11.1 |  |  ||
 |`CU_GRAPH_NODE_TYPE_GRAPH`| 10.0 |  |  ||
 |`CU_GRAPH_NODE_TYPE_HOST`| 10.0 |  |  ||
 |`CU_GRAPH_NODE_TYPE_KERNEL`| 10.0 |  |  ||
 |`CU_GRAPH_NODE_TYPE_MEMCPY`| 10.0 |  |  ||
 |`CU_GRAPH_NODE_TYPE_MEMSET`| 10.0 |  |  ||
+|`CU_GRAPH_NODE_TYPE_WAIT_EVENT`| 11.1 |  |  ||
 |`CU_IPC_HANDLE_SIZE`|  |  |  ||
 |`CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS`|  |  |  |`hipIpcMemLazyEnablePeerAccess`|
 |`CU_JIT_CACHE_MODE`|  |  |  |`hipJitOptionCacheMode`|
@@ -509,6 +528,7 @@
 |`CU_MEMHOSTREGISTER_DEVICEMAP`|  |  |  |`hipHostRegisterMapped`|
 |`CU_MEMHOSTREGISTER_IOMEMORY`| 7.5 |  |  |`hipHostRegisterIoMemory`|
 |`CU_MEMHOSTREGISTER_PORTABLE`|  |  |  |`hipHostRegisterPortable`|
+|`CU_MEMHOSTREGISTER_READ_ONLY`| 11.1 |  |  ||
 |`CU_MEMORYTYPE_ARRAY`|  |  |  |`hipMemoryTypeArray`|
 |`CU_MEMORYTYPE_DEVICE`|  |  |  |`hipMemoryTypeDevice`|
 |`CU_MEMORYTYPE_HOST`|  |  |  |`hipMemoryTypeHost`|
@@ -528,6 +548,8 @@
 |`CU_MEM_ATTACH_GLOBAL`|  |  |  |`hipMemAttachGlobal`|
 |`CU_MEM_ATTACH_HOST`|  |  |  |`hipMemAttachHost`|
 |`CU_MEM_ATTACH_SINGLE`|  |  |  ||
+|`CU_MEM_CREATE_USAGE_TILE_POOL`| 11.1 |  |  ||
+|`CU_MEM_HANDLE_TYPE_GENERIC`| 11.1 |  |  ||
 |`CU_MEM_HANDLE_TYPE_MAX`| 10.2 |  |  ||
 |`CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR`| 10.2 |  |  ||
 |`CU_MEM_HANDLE_TYPE_WIN32`| 10.2 |  |  ||
@@ -535,6 +557,8 @@
 |`CU_MEM_LOCATION_TYPE_DEVICE`| 10.2 |  |  ||
 |`CU_MEM_LOCATION_TYPE_INVALID`| 10.2 |  |  ||
 |`CU_MEM_LOCATION_TYPE_MAX`| 10.2 |  |  ||
+|`CU_MEM_OPERATION_TYPE_MAP`| 11.1 |  |  ||
+|`CU_MEM_OPERATION_TYPE_UNMAP`| 11.1 |  |  ||
 |`CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY`| 8.0 |  |  ||
 |`CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION`| 8.0 |  |  ||
 |`CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION`| 8.0 |  |  ||
@@ -542,6 +566,10 @@
 |`CU_OCCUPANCY_DEFAULT`|  |  |  |`hipOccupancyDefault`|
 |`CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE`|  |  |  ||
 |`CU_PARAM_TR_DEFAULT`|  |  |  ||
+|`CU_POINTER_ATTRIBUTE_ACCESS_FLAGS`| 11.1 |  |  ||
+|`CU_POINTER_ATTRIBUTE_ACCESS_FLAG_NONE`| 11.1 |  |  ||
+|`CU_POINTER_ATTRIBUTE_ACCESS_FLAG_READ`| 11.1 |  |  ||
+|`CU_POINTER_ATTRIBUTE_ACCESS_FLAG_READWRITE`| 11.1 |  |  ||
 |`CU_POINTER_ATTRIBUTE_ALLOWED_HANDLE_TYPES`| 10.2 |  |  ||
 |`CU_POINTER_ATTRIBUTE_BUFFER_ID`|  |  |  ||
 |`CU_POINTER_ATTRIBUTE_CONTEXT`|  |  |  ||
@@ -652,6 +680,7 @@
 |`CU_TARGET_COMPUTE_73`| 9.1 |  | 10.0 ||
 |`CU_TARGET_COMPUTE_75`| 9.1 |  |  ||
 |`CU_TARGET_COMPUTE_80`| 11.0 |  |  ||
+|`CU_TARGET_COMPUTE_86`| 11.1 |  |  ||
 |`CU_TRSA_OVERRIDE_FORMAT`|  |  |  |`HIP_TRSA_OVERRIDE_FORMAT`|
 |`CU_TRSF_DISABLE_TRILINEAR_OPTIMIZATION`| 11.0 |  |  ||
 |`CU_TRSF_NORMALIZED_COORDINATES`|  |  |  |`HIP_TRSF_NORMALIZED_COORDINATES`|
@@ -670,6 +699,10 @@
 |`CUaddress_mode`|  |  |  |`hipTextureAddressMode`|
 |`CUaddress_mode_enum`|  |  |  |`hipTextureAddressMode`|
 |`CUarray`|  |  |  |`hipArray *`|
+|`CUarrayMapInfo`| 11.1 |  |  ||
+|`CUarrayMapInfo_st`| 11.1 |  |  ||
+|`CUarraySparseSubresourceType`| 11.1 |  |  ||
+|`CUarraySparseSubresourceType_enum`| 11.1 |  |  ||
 |`CUarray_cubemap_face`|  |  |  ||
 |`CUarray_cubemap_face_enum`|  |  |  ||
 |`CUarray_format`|  |  |  |`hipArray_format`|
@@ -715,7 +748,11 @@
 |`CUevent`|  |  |  |`hipEvent_t`|
 |`CUevent_flags`|  |  |  ||
 |`CUevent_flags_enum`|  |  |  ||
+|`CUevent_record_flags`| 11.1 |  |  ||
+|`CUevent_record_flags_enum`| 11.1 |  |  ||
 |`CUevent_st`|  |  |  |`ihipEvent_t`|
+|`CUevent_wait_flags`| 11.1 |  |  ||
+|`CUevent_wait_flags_enum`|  |  |  ||
 |`CUextMemory_st`| 10.0 |  |  ||
 |`CUextSemaphore_st`| 10.0 |  |  ||
 |`CUexternalMemory`| 10.0 |  |  ||
@@ -784,10 +821,14 @@
 |`CUmemAttach_flags`|  |  |  ||
 |`CUmemAttach_flags_enum`|  |  |  ||
 |`CUmemGenericAllocationHandle`| 10.2 |  |  ||
+|`CUmemHandleType`| 11.1 |  |  ||
+|`CUmemHandleType_enum`| 11.1 |  |  ||
 |`CUmemLocation`| 10.2 |  |  ||
 |`CUmemLocationType`| 10.2 |  |  ||
 |`CUmemLocationType_enum`| 10.2 |  |  ||
 |`CUmemLocation_st`| 10.2 |  |  ||
+|`CUmemOperationType`| 11.1 |  |  ||
+|`CUmemOperationType_enum`| 11.1 |  |  ||
 |`CUmem_advise`| 8.0 |  |  ||
 |`CUmem_advise_enum`| 8.0 |  |  ||
 |`CUmem_range_attribute`| 8.0 |  |  ||
@@ -875,6 +916,7 @@
 |`cuDeviceGetLuid`| 10.0 |  |  ||
 |`cuDeviceGetName`|  |  |  |`hipDeviceGetName`|
 |`cuDeviceGetNvSciSyncAttributes`| 10.2 |  |  ||
+|`cuDeviceGetTexture1DLinearMaxWidth`| 11.1 |  |  ||
 |`cuDeviceGetUuid`| 9.2 |  |  ||
 |`cuDeviceTotalMem`|  |  |  |`hipDeviceTotalMem`|
 |`cuDeviceTotalMem_v2`|  |  |  |`hipDeviceTotalMem`|
@@ -969,6 +1011,7 @@
 |`cuArrayDestroy`|  |  |  ||
 |`cuArrayGetDescriptor`|  |  |  ||
 |`cuArrayGetDescriptor_v2`|  |  |  ||
+|`cuArrayGetSparseProperties`| 11.1 |  |  ||
 |`cuDeviceGetByPCIBusId`|  |  |  |`hipDeviceGetByPCIBusId`|
 |`cuDeviceGetPCIBusId`|  |  |  |`hipDeviceGetPCIBusId`|
 |`cuIpcCloseMemHandle`|  |  |  |`hipIpcCloseMemHandle`|
@@ -1074,6 +1117,7 @@
 |`cuMemGetAllocationPropertiesFromHandle`| 10.2 |  |  ||
 |`cuMemImportFromShareableHandle`| 10.2 |  |  ||
 |`cuMemMap`| 10.2 |  |  ||
+|`cuMemMapArrayAsync`| 11.1 |  |  ||
 |`cuMemRelease`| 10.2 |  |  ||
 |`cuMemRetainAllocationHandle`| 11.0 |  |  ||
 |`cuMemSetAccess`| 10.2 |  |  ||
@@ -1128,6 +1172,7 @@
 |`cuEventElapsedTime`|  |  |  |`hipEventElapsedTime`|
 |`cuEventQuery`|  |  |  |`hipEventQuery`|
 |`cuEventRecord`|  |  |  |`hipEventRecord`|
+|`cuEventRecordWithFlags`| 11.1 |  |  ||
 |`cuEventSynchronize`|  |  |  |`hipEventSynchronize`|
 
 ## **16. External Resource Interoperability**
@@ -1189,6 +1234,8 @@
 |`cuGraphAddChildGraphNode`| 10.0 |  |  ||
 |`cuGraphAddDependencies`| 10.0 |  |  ||
 |`cuGraphAddEmptyNode`| 10.0 |  |  ||
+|`cuGraphAddEventRecordNode`| 11.1 |  |  ||
+|`cuGraphAddEventWaitNode`| 11.1 |  |  ||
 |`cuGraphAddHostNode`| 10.0 |  |  ||
 |`cuGraphAddKernelNode`| 10.0 |  |  ||
 |`cuGraphAddMemcpyNode`| 10.0 |  |  ||
@@ -1198,7 +1245,14 @@
 |`cuGraphCreate`| 10.0 |  |  ||
 |`cuGraphDestroy`| 10.0 |  |  ||
 |`cuGraphDestroyNode`| 10.0 |  |  ||
+|`cuGraphEventRecordNodeGetEvent`| 11.1 |  |  ||
+|`cuGraphEventRecordNodeSetEvent`| 11.1 |  |  ||
+|`cuGraphEventWaitNodeGetEvent`| 11.1 |  |  ||
+|`cuGraphEventWaitNodeSetEvent`| 11.1 |  |  ||
+|`cuGraphExecChildGraphNodeSetParams`| 11.1 |  |  ||
 |`cuGraphExecDestroy`| 10.0 |  |  ||
+|`cuGraphExecEventRecordNodeSetEvent`| 11.1 |  |  ||
+|`cuGraphExecEventWaitNodeSetEvent`| 11.1 |  |  ||
 |`cuGraphExecHostNodeSetParams`| 10.2 |  |  ||
 |`cuGraphExecKernelNodeSetParams`| 10.1 |  |  ||
 |`cuGraphExecMemcpyNodeSetParams`| 10.2 |  |  ||
@@ -1226,6 +1280,7 @@
 |`cuGraphNodeGetDependentNodes`| 10.0 |  |  ||
 |`cuGraphNodeGetType`| 10.0 |  |  ||
 |`cuGraphRemoveDependencies`| 10.0 |  |  ||
+|`cuGraphUpload`| 11.1 |  |  ||
 
 ## **21. Occupancy**
 
