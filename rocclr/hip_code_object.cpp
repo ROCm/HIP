@@ -93,6 +93,11 @@ static bool getProcName(uint32_t EFlags, std::string& proc_name, bool& xnackSupp
       sramEccSupported = false;
       proc_name = "gfx704";
       break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX705:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx705";
+      break;
     case EF_AMDGPU_MACH_AMDGCN_GFX801:
       xnackSupported = true;
       sramEccSupported = false;
@@ -107,6 +112,11 @@ static bool getProcName(uint32_t EFlags, std::string& proc_name, bool& xnackSupp
       xnackSupported = false;
       sramEccSupported = false;
       proc_name = "gfx803";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX805:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx805";
       break;
     case EF_AMDGPU_MACH_AMDGCN_GFX810:
       xnackSupported = true;
@@ -143,6 +153,11 @@ static bool getProcName(uint32_t EFlags, std::string& proc_name, bool& xnackSupp
       sramEccSupported = false;
       proc_name = "gfx909";
       break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX90C:
+      xnackSupported = true;
+      sramEccSupported = false;
+      proc_name = "gfx90c";
+      break;
     case EF_AMDGPU_MACH_AMDGCN_GFX1010:
       xnackSupported = true;
       sramEccSupported = false;
@@ -167,6 +182,16 @@ static bool getProcName(uint32_t EFlags, std::string& proc_name, bool& xnackSupp
       xnackSupported = false;
       sramEccSupported = false;
       proc_name = "gfx1031";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX1032:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx1032";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX1033:
+      xnackSupported = false;
+      sramEccSupported = false;
+      proc_name = "gfx1033";
       break;
     default:
       return false;
