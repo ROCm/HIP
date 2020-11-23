@@ -1,0 +1,20 @@
+#       HIP Object Generator
+# Use this generator to create a host bundled object file
+# with the input of an offload bundled fat binary.
+#
+# Input: Bundled Object file .hipfb file
+# Output: Host Bundled Object File .o
+#
+# Add MC directives to embed target binaries. We ensure that each
+# section and image is 4096-byte aligned. This facilitates faster
+# loading of device binaries. It has been verified this align does
+# not cause significant overall file size increase.
+#
+# Note: log 2 of 4096 is 12.
+#
+  .type __hip_fatbin,@object
+  .section .hip_fatbin,"a",@progbits
+  .globl __hip_fatbin
+  .p2align 12
+__hip_fatbin:
+  .incbin "offload_bundle.hipfb"
