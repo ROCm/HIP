@@ -1223,6 +1223,13 @@ void abort() {
 // size of the calling function. Additionally, the weak attribute
 // allows the function to exist as a global although its definition is
 // included in every compilation unit.
+#if defined(_WIN32) || defined(_WIN64)
+extern "C" __device__ __attribute__((noinline)) __attribute__((weak))
+void _wassert(const wchar_t *_msg, const wchar_t *_file, unsigned _line) {
+    // FIXME: Need `wchar_t` support to generate assertion message.
+    __builtin_trap();
+}
+#else /* defined(_WIN32) || defined(_WIN64) */
 extern "C" __device__ __attribute__((noinline)) __attribute__((weak))
 void __assert_fail(const char * __assertion,
                    const char *__file,
@@ -1244,6 +1251,7 @@ void __assertfail(const char * __assertion,
     // ignore all the args for now.
     __builtin_trap();
 }
+#endif /* defined(_WIN32) || defined(_WIN64) */
 
 __device__
 inline
