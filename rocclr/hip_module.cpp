@@ -350,9 +350,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f,
                blockDimX, blockDimY, blockDimZ,
                sharedMemBytes, hStream,
                kernelParams, extra);
-  size_t globalWorkSizeX = gridDimX * blockDimX;
-  size_t globalWorkSizeY = gridDimY * blockDimY;
-  size_t globalWorkSizeZ = gridDimZ * blockDimZ;
+  size_t globalWorkSizeX = static_cast<size_t>(gridDimX) * blockDimX;
+  size_t globalWorkSizeY = static_cast<size_t>(gridDimY) * blockDimY;
+  size_t globalWorkSizeZ = static_cast<size_t>(gridDimZ) * blockDimZ;
   if (globalWorkSizeX > std::numeric_limits<uint32_t>::max() ||
       globalWorkSizeY > std::numeric_limits<uint32_t>::max() ||
       globalWorkSizeZ > std::numeric_limits<uint32_t>::max()) {
@@ -452,9 +452,9 @@ hipError_t hipLaunchCooperativeKernel(const void* f,
   int deviceId = ihipGetDevice();
   hipFunction_t func = nullptr;
   HIP_RETURN_ONFAIL(PlatformState::instance().getStatFunc(&func, f, deviceId));
-  size_t globalWorkSizeX = gridDim.x * blockDim.x;
-  size_t globalWorkSizeY = gridDim.y * blockDim.y;
-  size_t globalWorkSizeZ = gridDim.z * blockDim.z;
+  size_t globalWorkSizeX = static_cast<size_t>(gridDim.x) * blockDim.x;
+  size_t globalWorkSizeY = static_cast<size_t>(gridDim.y) * blockDim.y;
+  size_t globalWorkSizeZ = static_cast<size_t>(gridDim.z) * blockDim.z;
   if (globalWorkSizeX > std::numeric_limits<uint32_t>::max() ||
       globalWorkSizeY > std::numeric_limits<uint32_t>::max() ||
       globalWorkSizeZ > std::numeric_limits<uint32_t>::max()) {
@@ -539,9 +539,9 @@ hipError_t ihipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsL
       result = hipErrorInvalidDeviceFunction;
       HIP_RETURN(result);
     }
-    size_t globalWorkSizeX = launch.gridDim.x * launch.blockDim.x;
-    size_t globalWorkSizeY = launch.gridDim.y * launch.blockDim.y;
-    size_t globalWorkSizeZ = launch.gridDim.z * launch.blockDim.z;
+    size_t globalWorkSizeX = static_cast<size_t>(launch.gridDim.x) * launch.blockDim.x;
+    size_t globalWorkSizeY = static_cast<size_t>(launch.gridDim.y) * launch.blockDim.y;
+    size_t globalWorkSizeZ = static_cast<size_t>(launch.gridDim.z) * launch.blockDim.z;
     if (globalWorkSizeX > std::numeric_limits<uint32_t>::max() ||
         globalWorkSizeY > std::numeric_limits<uint32_t>::max() ||
         globalWorkSizeZ > std::numeric_limits<uint32_t>::max()) {
