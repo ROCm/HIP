@@ -57,23 +57,10 @@ __device__
 inline
 float atomicAdd(float* address, float val)
 {
-    unsigned int* uaddr{reinterpret_cast<unsigned int*>(address)};
-    unsigned int r{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
-
-    unsigned int old;
-    do {
-        old = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
-
-        if (r != old) { r = old; continue; }
-
-        r = atomicCAS(uaddr, r, __float_as_uint(val + __uint_as_float(r)));
-
-        if (r == old) break;
-    } while (true);
-
-    return __uint_as_float(r);
+    return __atomic_fetch_add(address, val, __ATOMIC_RELAXED);
 }
 
+DEPRECATED("use atomicAdd instead")
 __device__
 inline
 void atomicAddNoRet(float* address, float val)
