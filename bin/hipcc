@@ -549,8 +549,11 @@ foreach $arg (@ARGV)
     ## hip-clang in command line.
     ## ToDo: Remove this after hip-clang switch to lto and lld is able to
     ## handle clang-offload-bundler bundles.
-    if ($arg =~ m/^-Wl,@/ and ($HIP_PLATFORM eq 'amd' or $HIP_PLATFORM eq "hcc") and $HIP_COMPILER eq 'clang') {
-        my $file = substr $arg, 5;
+    if (($arg =~ m/^-Wl,@/ or $arg =~ m/^@/) and
+        ($HIP_PLATFORM eq 'amd' or $HIP_PLATFORM eq "hcc") and
+        $HIP_COMPILER eq 'clang') {
+        my @split_arg = (split /\@/, $arg); # arg will have options type(-Wl,@ or @) and filename
+        my $file = $split_arg[1];
         open my $in, "<:encoding(utf8)", $file or die "$file: $!";
         my $new_arg = "";
         my $tmpdir = get_temp_dir ();
@@ -603,7 +606,7 @@ foreach $arg (@ARGV)
         }
         close $in;
         close $out;
-        $arg = "$new_arg -Wl,\@$new_file";
+        $arg = "$new_arg $split_arg[0]\@$new_file";
         $escapeArg = 0;
     } elsif (($arg =~ m/\.a$/ || $arg =~ m/\.lo$/) &&
              ($HIP_PLATFORM eq 'amd' or $HIP_PLATFORM eq "hcc") and $HIP_COMPILER eq 'clang') {
