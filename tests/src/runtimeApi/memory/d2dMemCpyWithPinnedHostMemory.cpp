@@ -22,7 +22,7 @@ THE SOFTWARE.
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST_NAMED: %t d2dMemCpyWithPinnedHostMemory_pinned --pinned
  * TEST_NAMED: %t d2dMemCpyWithPinnedHostMemory_registered --registered
  * HIT_END
