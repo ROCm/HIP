@@ -2,8 +2,7 @@
 
 #include "common.hpp"
 
-#include "../src/code_object_bundle.inl"
-
+#include "code_object_bundle.inl"
 #include "clara/clara.hpp"
 
 #include <algorithm>

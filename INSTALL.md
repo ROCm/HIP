@@ -95,9 +95,10 @@ git clone -b rocm-3.10.x https://github.com/ROCm-Developer-Tools/HIP.git
 export HIP_DIR="$(readlink -f HIP)"
 cd "$HIP_DIR"
 mkdir -p build; cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DHIP_COMPILER=clang -DHIP_PLATFORM=rocclr -DCMAKE_PREFIX_PATH="$ROCclr_DIR/build;/opt/rocm/" -DCMAKE_INSTALL_PREFIX=</where/to/install/hip> ..
+cmake -DCMAKE_PREFIX_PATH="$ROCclr_DIR/build;/opt/rocm/" -DCMAKE_INSTALL_PREFIX=</where/to/install/hip> ..
 make -j
 sudo make install
+Note: If you don't specify CMAKE_INSTALL_PREFIX, hip-rocclr runtime will be installed to "/opt/rocm/hip".
 ```
 
 ## Default paths and environment variables

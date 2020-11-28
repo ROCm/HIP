@@ -13,8 +13,6 @@ set_target_properties(
         CXX_EXTENSIONS OFF
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 target_include_directories(lpl
-  PUBLIC
-    ${PROJECT_SOURCE_DIR}/src
   PRIVATE
     $<TARGET_PROPERTY:amdrocclr_static,INTERFACE_INCLUDE_DIRECTORIES>)
 
@@ -34,7 +32,6 @@ set_target_properties(
         CXX_EXTENSIONS OFF
         RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 target_include_directories(ca SYSTEM PUBLIC ${HSA_PATH}/include)
-target_include_directories(ca PUBLIC ${PROJECT_SOURCE_DIR}/src)
 
 find_package(hsa-runtime64 REQUIRED CONFIG
   PATHS
