@@ -637,7 +637,7 @@ struct BoundFlagRefBase : BoundRefBase {
     auto isFlag() const -> bool override { return true; }
 
     auto setValue(std::string const& arg) -> ParserResult override {
-        bool flag;
+        bool flag = 0;
         auto result = convertInto(arg, flag);
         if (result) setFlag(flag);
         return result;

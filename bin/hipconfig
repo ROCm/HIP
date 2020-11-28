@@ -8,7 +8,7 @@ use 5.006; use v5.10.1;
 use Getopt::Long;
 use Cwd;
 
-# Return name of HIP compiler - either 'nvcc' or 'hcc'
+# Return name of HIP compiler - either 'clang' or 'nvcc'
 #
 use Getopt::Long;
 use File::Basename;
@@ -34,9 +34,9 @@ if ($p_help) {
     print "  --path,  -p        : print HIP_PATH (use env var if set, else determine from hipconfig path)\n";
     print "  --rocmpath,  -R    : print ROCM_PATH (use env var if set, else determine from hip path or /opt/rocm)\n";
     print "  --cpp_config, -C   : print C++ compiler options\n";
-    print "  --compiler, -c     : print compiler (hcc or clang or nvcc)\n";
+    print "  --compiler, -c     : print compiler (clang or nvcc)\n";
     print "  --platform, -P     : print platform (amd or nvidia)\n";
-    print "  --runtime, -r      : print runtime (hcc or rocclr)\n";
+    print "  --runtime, -r      : print runtime (rocclr or cuda)\n";
     print "  --hipclangpath, -l : print HIP_CLANG_PATH\n";
     print "  --full, -f         : print full config\n";
     print "  --version, -v      : print hip version\n";
@@ -86,7 +86,6 @@ if (-e "$HIP_PATH/../bin/rocm_agent_enumerator") {
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 }
 $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
-$HCC_HOME=$ENV{'HCC_HOME'} // "$ROCM_PATH/hcc";
 $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
 $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
 # HIP_ROCCLR_HOME is used by Windows builds
@@ -120,8 +119,6 @@ if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "rocclr" and !defined $HIP_ROCCLR_H
 if (not defined $HIP_PLATFORM) {
     if (can_run("$HIP_CLANG_PATH/clang++") or can_run("clang++")) {
         $HIP_PLATFORM = "amd";
-    } elsif (can_run("$HCC_HOME/bin/hcc") or can_run("hcc")) {
-        $HIP_PLATFORM = "amd";
     } elsif (can_run("$CUDA_PATH/bin/nvcc") or can_run("nvcc")) {
         $HIP_PLATFORM = "nvidia";
         $HIP_COMPILER = "nvcc";
@@ -132,9 +129,6 @@ if (not defined $HIP_PLATFORM) {
     }
 }
 
-if ($HIP_COMPILER eq "hcc") {
-    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
-}
 if ($HIP_COMPILER eq "clang") {
     # Windows does not have clang at linux default path
     if (defined $HIP_ROCCLR_HOME and (-e "$HIP_ROCCLR_HOME/bin/clang" or -e "$HIP_ROCCLR_HOME/bin/clang.exe")) {
@@ -216,20 +210,6 @@ if (!$printed or $p_full) {
     if ($HIP_PLATFORM eq "amd")
     {
         print "\n" ;
-        if ($HIP_COMPILER eq "hcc")
-        {
-            print "== hcc\n";
-            print ("HSA_PATH     : $HSA_PATH\n");
-            print ("HCC_HOME     : $HCC_HOME\n");
-            system("$HCC_HOME/bin/hcc --version");
-            system("$HCC_HOME/bin/llc --version");
-            print ("HCC-cxxflags : ");
-            system("$HCC_HOME/bin/hcc-config --cxxflags");
-            printf("\n");
-            print ("HCC-ldflags  : ");
-            system("$HCC_HOME/bin/hcc-config --ldflags");
-            printf("\n");
-        }
         if ($HIP_COMPILER eq "clang")
         {
             print "== hip-clang\n";
@@ -243,6 +223,8 @@ if (!$printed or $p_full) {
             print ("hip-clang-ldflags  : ");
             system("$HIP_PATH/bin/hipcc --ldflags");
             printf("\n");
+        } else {
+            print ("Unexpected HIP_COMPILER: $HIP_COMPILER\n");
         }
     }
     if ($HIP_PLATFORM eq "nvidia")  {
@@ -256,7 +238,7 @@ if (!$printed or $p_full) {
 
     print "=== Environment Variables\n";
     system("echo PATH=\$PATH");
-    system("env | egrep '^HIP|^HSA|^HCC|^CUDA|^LD_LIBRARY_PATH'");
+    system("env | egrep '^HIP|^HSA|^CUDA|^LD_LIBRARY_PATH'");
 
 
     print "\n" ;
