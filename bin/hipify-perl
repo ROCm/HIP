@@ -162,7 +162,7 @@ sub simpleSubstitutions {
     $ft{'version'} += s/\bcudaDriverGetVersion\b/hipDriverGetVersion/g;
     $ft{'version'} += s/\bcudaRuntimeGetVersion\b/hipRuntimeGetVersion/g;
     $ft{'device'} += s/\bcuDeviceComputeCapability\b/hipDeviceComputeCapability/g;
-    $ft{'device'} += s/\bcuDeviceGet\b/hipGetDevice/g;
+    $ft{'device'} += s/\bcuDeviceGet\b/hipDeviceGet/g;
     $ft{'device'} += s/\bcuDeviceGetAttribute\b/hipDeviceGetAttribute/g;
     $ft{'device'} += s/\bcuDeviceGetCount\b/hipGetDeviceCount/g;
     $ft{'device'} += s/\bcuDeviceGetName\b/hipDeviceGetName/g;
@@ -173,6 +173,7 @@ sub simpleSubstitutions {
     $ft{'device'} += s/\bcudaDeviceGetByPCIBusId\b/hipDeviceGetByPCIBusId/g;
     $ft{'device'} += s/\bcudaDeviceGetCacheConfig\b/hipDeviceGetCacheConfig/g;
     $ft{'device'} += s/\bcudaDeviceGetLimit\b/hipDeviceGetLimit/g;
+    $ft{'device'} += s/\bcudaDeviceGetP2PAttribute\b/hipDeviceGetP2PAttribute/g;
     $ft{'device'} += s/\bcudaDeviceGetPCIBusId\b/hipDeviceGetPCIBusId/g;
     $ft{'device'} += s/\bcudaDeviceGetSharedMemConfig\b/hipDeviceGetSharedMemConfig/g;
     $ft{'device'} += s/\bcudaDeviceGetStreamPriorityRange\b/hipDeviceGetStreamPriorityRange/g;
@@ -184,7 +185,7 @@ sub simpleSubstitutions {
     $ft{'device'} += s/\bcudaFuncSetCacheConfig\b/hipFuncSetCacheConfig/g;
     $ft{'device'} += s/\bcudaGetDevice\b/hipGetDevice/g;
     $ft{'device'} += s/\bcudaGetDeviceCount\b/hipGetDeviceCount/g;
-    $ft{'device'} += s/\bcudaGetDeviceFlags\b/hipCtxGetFlags/g;
+    $ft{'device'} += s/\bcudaGetDeviceFlags\b/hipGetDeviceFlags/g;
     $ft{'device'} += s/\bcudaGetDeviceProperties\b/hipGetDeviceProperties/g;
     $ft{'device'} += s/\bcudaIpcCloseMemHandle\b/hipIpcCloseMemHandle/g;
     $ft{'device'} += s/\bcudaIpcGetEventHandle\b/hipIpcGetEventHandle/g;
@@ -237,7 +238,9 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuDeviceGetByPCIBusId\b/hipDeviceGetByPCIBusId/g;
     $ft{'memory'} += s/\bcuDeviceGetPCIBusId\b/hipDeviceGetPCIBusId/g;
     $ft{'memory'} += s/\bcuIpcCloseMemHandle\b/hipIpcCloseMemHandle/g;
+    $ft{'memory'} += s/\bcuIpcGetEventHandle\b/hipIpcGetEventHandle/g;
     $ft{'memory'} += s/\bcuIpcGetMemHandle\b/hipIpcGetMemHandle/g;
+    $ft{'memory'} += s/\bcuIpcOpenEventHandle\b/hipIpcOpenEventHandle/g;
     $ft{'memory'} += s/\bcuIpcOpenMemHandle\b/hipIpcOpenMemHandle/g;
     $ft{'memory'} += s/\bcuMemAlloc\b/hipMalloc/g;
     $ft{'memory'} += s/\bcuMemAllocHost\b/hipHostMalloc/g;
@@ -293,9 +296,14 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcuMemsetD8\b/hipMemsetD8/g;
     $ft{'memory'} += s/\bcuMemsetD8Async\b/hipMemsetD8Async/g;
     $ft{'memory'} += s/\bcuMemsetD8_v2\b/hipMemsetD8/g;
+    $ft{'memory'} += s/\bcuMipmappedArrayCreate\b/hipMipmappedArrayCreate/g;
+    $ft{'memory'} += s/\bcuMipmappedArrayDestroy\b/hipMipmappedArrayDestroy/g;
+    $ft{'memory'} += s/\bcuMipmappedArrayGetLevel\b/hipMipmappedArrayGetLevel/g;
     $ft{'memory'} += s/\bcudaFree\b/hipFree/g;
     $ft{'memory'} += s/\bcudaFreeArray\b/hipFreeArray/g;
     $ft{'memory'} += s/\bcudaFreeHost\b/hipHostFree/g;
+    $ft{'memory'} += s/\bcudaFreeMipmappedArray\b/hipFreeMipmappedArray/g;
+    $ft{'memory'} += s/\bcudaGetMipmappedArrayLevel\b/hipGetMipmappedArrayLevel/g;
     $ft{'memory'} += s/\bcudaGetSymbolAddress\b/hipGetSymbolAddress/g;
     $ft{'memory'} += s/\bcudaGetSymbolSize\b/hipGetSymbolSize/g;
     $ft{'memory'} += s/\bcudaHostAlloc\b/hipHostMalloc/g;
@@ -309,8 +317,13 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bcudaMallocArray\b/hipMallocArray/g;
     $ft{'memory'} += s/\bcudaMallocHost\b/hipHostMalloc/g;
     $ft{'memory'} += s/\bcudaMallocManaged\b/hipMallocManaged/g;
+    $ft{'memory'} += s/\bcudaMallocMipmappedArray\b/hipMallocMipmappedArray/g;
     $ft{'memory'} += s/\bcudaMallocPitch\b/hipMallocPitch/g;
+    $ft{'memory'} += s/\bcudaMemAdvise\b/hipMemAdvise/g;
     $ft{'memory'} += s/\bcudaMemGetInfo\b/hipMemGetInfo/g;
+    $ft{'memory'} += s/\bcudaMemPrefetchAsync\b/hipMemPrefetchAsync/g;
+    $ft{'memory'} += s/\bcudaMemRangeGetAttribute\b/hipMemRangeGetAttribute/g;
+    $ft{'memory'} += s/\bcudaMemRangeGetAttributes\b/hipMemRangeGetAttributes/g;
     $ft{'memory'} += s/\bcudaMemcpy\b/hipMemcpy/g;
     $ft{'memory'} += s/\bcudaMemcpy2D\b/hipMemcpy2D/g;
     $ft{'memory'} += s/\bcudaMemcpy2DAsync\b/hipMemcpy2DAsync/g;
@@ -338,8 +351,12 @@ sub simpleSubstitutions {
     $ft{'memory'} += s/\bmake_cudaExtent\b/make_hipExtent/g;
     $ft{'memory'} += s/\bmake_cudaPitchedPtr\b/make_hipPitchedPtr/g;
     $ft{'memory'} += s/\bmake_cudaPos\b/make_hipPos/g;
+    $ft{'addressing'} += s/\bcuMemAdvise\b/hipMemAdvise/g;
+    $ft{'addressing'} += s/\bcuMemRangeGetAttribute\b/hipMemRangeGetAttribute/g;
+    $ft{'addressing'} += s/\bcuMemRangeGetAttributes\b/hipMemRangeGetAttributes/g;
     $ft{'addressing'} += s/\bcudaPointerGetAttributes\b/hipPointerGetAttributes/g;
     $ft{'stream'} += s/\bcuStreamAddCallback\b/hipStreamAddCallback/g;
+    $ft{'stream'} += s/\bcuStreamAttachMemAsync\b/hipStreamAttachMemAsync/g;
     $ft{'stream'} += s/\bcuStreamCreate\b/hipStreamCreateWithFlags/g;
     $ft{'stream'} += s/\bcuStreamCreateWithPriority\b/hipStreamCreateWithPriority/g;
     $ft{'stream'} += s/\bcuStreamDestroy\b/hipStreamDestroy/g;
@@ -350,6 +367,7 @@ sub simpleSubstitutions {
     $ft{'stream'} += s/\bcuStreamSynchronize\b/hipStreamSynchronize/g;
     $ft{'stream'} += s/\bcuStreamWaitEvent\b/hipStreamWaitEvent/g;
     $ft{'stream'} += s/\bcudaStreamAddCallback\b/hipStreamAddCallback/g;
+    $ft{'stream'} += s/\bcudaStreamAttachMemAsync\b/hipStreamAttachMemAsync/g;
     $ft{'stream'} += s/\bcudaStreamCreate\b/hipStreamCreate/g;
     $ft{'stream'} += s/\bcudaStreamCreateWithFlags\b/hipStreamCreateWithFlags/g;
     $ft{'stream'} += s/\bcudaStreamCreateWithPriority\b/hipStreamCreateWithPriority/g;
@@ -377,21 +395,38 @@ sub simpleSubstitutions {
     $ft{'execution'} += s/\bcuLaunchKernel\b/hipModuleLaunchKernel/g;
     $ft{'execution'} += s/\bcudaConfigureCall\b/hipConfigureCall/g;
     $ft{'execution'} += s/\bcudaFuncGetAttributes\b/hipFuncGetAttributes/g;
+    $ft{'execution'} += s/\bcudaFuncSetAttribute\b/hipFuncSetAttribute/g;
+    $ft{'execution'} += s/\bcudaFuncSetSharedMemConfig\b/hipFuncSetSharedMemConfig/g;
     $ft{'execution'} += s/\bcudaLaunch\b/hipLaunchByPtr/g;
     $ft{'execution'} += s/\bcudaLaunchCooperativeKernel\b/hipLaunchCooperativeKernel/g;
     $ft{'execution'} += s/\bcudaLaunchCooperativeKernelMultiDevice\b/hipLaunchCooperativeKernelMultiDevice/g;
     $ft{'execution'} += s/\bcudaLaunchKernel\b/hipLaunchKernel/g;
     $ft{'execution'} += s/\bcudaSetupArgument\b/hipSetupArgument/g;
-    $ft{'occupancy'} += s/\bcuOccupancyMaxActiveBlocksPerMultiprocessor\b/hipDrvOccupancyMaxActiveBlocksPerMultiprocessor/g;
-    $ft{'occupancy'} += s/\bcuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags\b/hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags/g;
-    $ft{'occupancy'} += s/\bcuOccupancyMaxPotentialBlockSize\b/hipOccupancyMaxPotentialBlockSize/g;
+    $ft{'occupancy'} += s/\bcuOccupancyMaxActiveBlocksPerMultiprocessor\b/hipModuleOccupancyMaxActiveBlocksPerMultiprocessor/g;
+    $ft{'occupancy'} += s/\bcuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags\b/hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags/g;
+    $ft{'occupancy'} += s/\bcuOccupancyMaxPotentialBlockSize\b/hipModuleOccupancyMaxPotentialBlockSize/g;
+    $ft{'occupancy'} += s/\bcuOccupancyMaxPotentialBlockSizeWithFlags\b/hipModuleOccupancyMaxPotentialBlockSizeWithFlags/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxActiveBlocksPerMultiprocessor\b/hipOccupancyMaxActiveBlocksPerMultiprocessor/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxActiveBlocksPerMultiprocessorWithFlags\b/hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags/g;
     $ft{'occupancy'} += s/\bcudaOccupancyMaxPotentialBlockSize\b/hipOccupancyMaxPotentialBlockSize/g;
+    $ft{'occupancy'} += s/\bcudaOccupancyMaxPotentialBlockSizeWithFlags\b/hipOccupancyMaxPotentialBlockSizeWithFlags/g;
+    $ft{'texture'} += s/\bcuTexObjectCreate\b/hipTexObjectCreate/g;
+    $ft{'texture'} += s/\bcuTexObjectDestroy\b/hipTexObjectDestroy/g;
+    $ft{'texture'} += s/\bcuTexObjectGetResourceDesc\b/hipTexObjectGetResourceDesc/g;
+    $ft{'texture'} += s/\bcuTexObjectGetResourceViewDesc\b/hipTexObjectGetResourceViewDesc/g;
+    $ft{'texture'} += s/\bcuTexObjectGetTextureDesc\b/hipTexObjectGetTextureDesc/g;
     $ft{'texture'} += s/\bcuTexRefGetAddress\b/hipTexRefGetAddress/g;
     $ft{'texture'} += s/\bcuTexRefGetAddressMode\b/hipTexRefGetAddressMode/g;
     $ft{'texture'} += s/\bcuTexRefGetAddress_v2\b/hipTexRefGetAddress/g;
     $ft{'texture'} += s/\bcuTexRefGetArray\b/hipTexRefGetArray/g;
+    $ft{'texture'} += s/\bcuTexRefGetFilterMode\b/hipTexRefGetFilterMode/g;
+    $ft{'texture'} += s/\bcuTexRefGetFlags\b/hipTexRefGetFlags/g;
+    $ft{'texture'} += s/\bcuTexRefGetFormat\b/hipTexRefGetFormat/g;
+    $ft{'texture'} += s/\bcuTexRefGetMaxAnisotropy\b/hipTexRefGetMaxAnisotropy/g;
+    $ft{'texture'} += s/\bcuTexRefGetMipmapFilterMode\b/hipTexRefGetMipmapFilterMode/g;
+    $ft{'texture'} += s/\bcuTexRefGetMipmapLevelBias\b/hipTexRefGetMipmapLevelBias/g;
+    $ft{'texture'} += s/\bcuTexRefGetMipmapLevelClamp\b/hipTexRefGetMipmapLevelClamp/g;
+    $ft{'texture'} += s/\bcuTexRefGetMipmappedArray\b/hipTexRefGetMipMappedArray/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress\b/hipTexRefSetAddress/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress2D\b/hipTexRefSetAddress2D/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress2D_v2\b/hipTexRefSetAddress2D/g;
@@ -399,9 +434,15 @@ sub simpleSubstitutions {
     $ft{'texture'} += s/\bcuTexRefSetAddressMode\b/hipTexRefSetAddressMode/g;
     $ft{'texture'} += s/\bcuTexRefSetAddress_v2\b/hipTexRefSetAddress/g;
     $ft{'texture'} += s/\bcuTexRefSetArray\b/hipTexRefSetArray/g;
+    $ft{'texture'} += s/\bcuTexRefSetBorderColor\b/hipTexRefSetBorderColor/g;
     $ft{'texture'} += s/\bcuTexRefSetFilterMode\b/hipTexRefSetFilterMode/g;
     $ft{'texture'} += s/\bcuTexRefSetFlags\b/hipTexRefSetFlags/g;
     $ft{'texture'} += s/\bcuTexRefSetFormat\b/hipTexRefSetFormat/g;
+    $ft{'texture'} += s/\bcuTexRefSetMaxAnisotropy\b/hipTexRefSetMaxAnisotropy/g;
+    $ft{'texture'} += s/\bcuTexRefSetMipmapFilterMode\b/hipTexRefSetMipmapFilterMode/g;
+    $ft{'texture'} += s/\bcuTexRefSetMipmapLevelBias\b/hipTexRefSetMipmapLevelBias/g;
+    $ft{'texture'} += s/\bcuTexRefSetMipmapLevelClamp\b/hipTexRefSetMipmapLevelClamp/g;
+    $ft{'texture'} += s/\bcuTexRefSetMipmappedArray\b/hipTexRefSetMipmappedArray/g;
     $ft{'texture'} += s/\bcudaBindTexture\b/hipBindTexture/g;
     $ft{'texture'} += s/\bcudaBindTexture2D\b/hipBindTexture2D/g;
     $ft{'texture'} += s/\bcudaBindTextureToArray\b/hipBindTextureToArray/g;
@@ -420,6 +461,7 @@ sub simpleSubstitutions {
     $ft{'peer'} += s/\bcuCtxDisablePeerAccess\b/hipCtxDisablePeerAccess/g;
     $ft{'peer'} += s/\bcuCtxEnablePeerAccess\b/hipCtxEnablePeerAccess/g;
     $ft{'peer'} += s/\bcuDeviceCanAccessPeer\b/hipDeviceCanAccessPeer/g;
+    $ft{'peer'} += s/\bcuDeviceGetP2PAttribute\b/hipDeviceGetP2PAttribute/g;
     $ft{'peer'} += s/\bcudaDeviceCanAccessPeer\b/hipDeviceCanAccessPeer/g;
     $ft{'peer'} += s/\bcudaDeviceDisablePeerAccess\b/hipDeviceDisablePeerAccess/g;
     $ft{'peer'} += s/\bcudaDeviceEnablePeerAccess\b/hipDeviceEnablePeerAccess/g;
@@ -630,6 +672,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasGemmBatchedEx\b/hipblasGemmBatchedEx/g;
     $ft{'library'} += s/\bcublasGemmEx\b/hipblasGemmEx/g;
     $ft{'library'} += s/\bcublasGemmStridedBatchedEx\b/hipblasGemmStridedBatchedEx/g;
+    $ft{'library'} += s/\bcublasGetAtomicsMode\b/hipblasGetAtomicsMode/g;
     $ft{'library'} += s/\bcublasGetMatrix\b/hipblasGetMatrix/g;
     $ft{'library'} += s/\bcublasGetMatrixAsync\b/hipblasGetMatrixAsync/g;
     $ft{'library'} += s/\bcublasGetPointerMode\b/hipblasGetPointerMode/g;
@@ -670,6 +713,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcublasSdgmm\b/hipblasSdgmm/g;
     $ft{'library'} += s/\bcublasSdot\b/hipblasSdot/g;
     $ft{'library'} += s/\bcublasSdot_v2\b/hipblasSdot/g;
+    $ft{'library'} += s/\bcublasSetAtomicsMode\b/hipblasSetAtomicsMode/g;
     $ft{'library'} += s/\bcublasSetMatrix\b/hipblasSetMatrix/g;
     $ft{'library'} += s/\bcublasSetMatrixAsync\b/hipblasSetMatrixAsync/g;
     $ft{'library'} += s/\bcublasSetPointerMode\b/hipblasSetPointerMode/g;
@@ -995,12 +1039,26 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcurandSetStream\b/hiprandSetStream/g;
     $ft{'library'} += s/\bcusparseCaxpyi\b/hipsparseCaxpyi/g;
     $ft{'library'} += s/\bcusparseCbsr2csr\b/hipsparseCbsr2csr/g;
+    $ft{'library'} += s/\bcusparseCbsric02\b/hipsparseCbsric02/g;
+    $ft{'library'} += s/\bcusparseCbsric02_analysis\b/hipsparseCbsric02_analysis/g;
+    $ft{'library'} += s/\bcusparseCbsric02_bufferSize\b/hipsparseCbsric02_bufferSize/g;
+    $ft{'library'} += s/\bcusparseCbsrilu02\b/hipsparseCbsrilu02/g;
+    $ft{'library'} += s/\bcusparseCbsrilu02_analysis\b/hipsparseCbsrilu02_analysis/g;
+    $ft{'library'} += s/\bcusparseCbsrilu02_bufferSize\b/hipsparseCbsrilu02_bufferSize/g;
+    $ft{'library'} += s/\bcusparseCbsrilu02_numericBoost\b/hipsparseCbsrilu02_numericBoost/g;
+    $ft{'library'} += s/\bcusparseCbsrmm\b/hipsparseCbsrmm/g;
     $ft{'library'} += s/\bcusparseCbsrmv\b/hipsparseCbsrmv/g;
+    $ft{'library'} += s/\bcusparseCbsrsv2_analysis\b/hipsparseCbsrsv2_analysis/g;
+    $ft{'library'} += s/\bcusparseCbsrsv2_bufferSize\b/hipsparseCbsrsv2_bufferSize/g;
+    $ft{'library'} += s/\bcusparseCbsrsv2_bufferSizeExt\b/hipsparseCbsrsv2_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseCbsrsv2_solve\b/hipsparseCbsrsv2_solve/g;
     $ft{'library'} += s/\bcusparseCcsc2dense\b/hipsparseCcsc2dense/g;
     $ft{'library'} += s/\bcusparseCcsr2bsr\b/hipsparseCcsr2bsr/g;
     $ft{'library'} += s/\bcusparseCcsr2csc\b/hipsparseCcsr2csc/g;
     $ft{'library'} += s/\bcusparseCcsr2csr_compress\b/hipsparseCcsr2csr_compress/g;
     $ft{'library'} += s/\bcusparseCcsr2dense\b/hipsparseCcsr2dense/g;
+    $ft{'library'} += s/\bcusparseCcsr2gebsr\b/hipsparseCcsr2gebsr/g;
+    $ft{'library'} += s/\bcusparseCcsr2gebsr_bufferSize\b/hipsparseCcsr2gebsr_bufferSize/g;
     $ft{'library'} += s/\bcusparseCcsr2hyb\b/hipsparseCcsr2hyb/g;
     $ft{'library'} += s/\bcusparseCcsrgeam\b/hipsparseCcsrgeam/g;
     $ft{'library'} += s/\bcusparseCcsrgeam2\b/hipsparseCcsrgeam2/g;
@@ -1016,6 +1074,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseCcsrilu02_analysis\b/hipsparseCcsrilu02_analysis/g;
     $ft{'library'} += s/\bcusparseCcsrilu02_bufferSize\b/hipsparseCcsrilu02_bufferSize/g;
     $ft{'library'} += s/\bcusparseCcsrilu02_bufferSizeExt\b/hipsparseCcsrilu02_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseCcsrilu02_numericBoost\b/hipsparseCcsrilu02_numericBoost/g;
     $ft{'library'} += s/\bcusparseCcsrmm\b/hipsparseCcsrmm/g;
     $ft{'library'} += s/\bcusparseCcsrmm2\b/hipsparseCcsrmm2/g;
     $ft{'library'} += s/\bcusparseCcsrmv\b/hipsparseCcsrmv/g;
@@ -1031,6 +1090,12 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseCdense2csr\b/hipsparseCdense2csr/g;
     $ft{'library'} += s/\bcusparseCdotci\b/hipsparseCdotci/g;
     $ft{'library'} += s/\bcusparseCdoti\b/hipsparseCdoti/g;
+    $ft{'library'} += s/\bcusparseCgebsr2csr\b/hipsparseCgebsr2csr/g;
+    $ft{'library'} += s/\bcusparseCgebsr2gebsc\b/hipsparseCgebsr2gebsc/g;
+    $ft{'library'} += s/\bcusparseCgebsr2gebsc_bufferSize\b/hipsparseCgebsr2gebsc_bufferSize/g;
+    $ft{'library'} += s/\bcusparseCgebsr2gebsr\b/hipsparseCgebsr2gebsr/g;
+    $ft{'library'} += s/\bcusparseCgebsr2gebsr_bufferSize\b/hipsparseCgebsr2gebsr_bufferSize/g;
+    $ft{'library'} += s/\bcusparseCgemmi\b/hipsparseCgemmi/g;
     $ft{'library'} += s/\bcusparseCgthr\b/hipsparseCgthr/g;
     $ft{'library'} += s/\bcusparseCgthrz\b/hipsparseCgthrz/g;
     $ft{'library'} += s/\bcusparseChyb2csr\b/hipsparseChyb2csr/g;
@@ -1038,6 +1103,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseCnnz\b/hipsparseCnnz/g;
     $ft{'library'} += s/\bcusparseCnnz_compress\b/hipsparseCnnz_compress/g;
     $ft{'library'} += s/\bcusparseCreate\b/hipsparseCreate/g;
+    $ft{'library'} += s/\bcusparseCreateBsric02Info\b/hipsparseCreateBsric02Info/g;
+    $ft{'library'} += s/\bcusparseCreateBsrilu02Info\b/hipsparseCreateBsrilu02Info/g;
     $ft{'library'} += s/\bcusparseCreateCsrgemm2Info\b/hipsparseCreateCsrgemm2Info/g;
     $ft{'library'} += s/\bcusparseCreateCsric02Info\b/hipsparseCreateCsric02Info/g;
     $ft{'library'} += s/\bcusparseCreateCsrilu02Info\b/hipsparseCreateCsrilu02Info/g;
@@ -1046,15 +1113,30 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseCreateHybMat\b/hipsparseCreateHybMat/g;
     $ft{'library'} += s/\bcusparseCreateIdentityPermutation\b/hipsparseCreateIdentityPermutation/g;
     $ft{'library'} += s/\bcusparseCreateMatDescr\b/hipsparseCreateMatDescr/g;
+    $ft{'library'} += s/\bcusparseCreatePruneInfo\b/hipsparseCreatePruneInfo/g;
     $ft{'library'} += s/\bcusparseCsctr\b/hipsparseCsctr/g;
     $ft{'library'} += s/\bcusparseDaxpyi\b/hipsparseDaxpyi/g;
     $ft{'library'} += s/\bcusparseDbsr2csr\b/hipsparseDbsr2csr/g;
+    $ft{'library'} += s/\bcusparseDbsric02\b/hipsparseDbsric02/g;
+    $ft{'library'} += s/\bcusparseDbsric02_analysis\b/hipsparseDbsric02_analysis/g;
+    $ft{'library'} += s/\bcusparseDbsric02_bufferSize\b/hipsparseDbsric02_bufferSize/g;
+    $ft{'library'} += s/\bcusparseDbsrilu02\b/hipsparseDbsrilu02/g;
+    $ft{'library'} += s/\bcusparseDbsrilu02_analysis\b/hipsparseDbsrilu02_analysis/g;
+    $ft{'library'} += s/\bcusparseDbsrilu02_bufferSize\b/hipsparseDbsrilu02_bufferSize/g;
+    $ft{'library'} += s/\bcusparseDbsrilu02_numericBoost\b/hipsparseDbsrilu02_numericBoost/g;
+    $ft{'library'} += s/\bcusparseDbsrmm\b/hipsparseDbsrmm/g;
     $ft{'library'} += s/\bcusparseDbsrmv\b/hipsparseDbsrmv/g;
+    $ft{'library'} += s/\bcusparseDbsrsv2_analysis\b/hipsparseDbsrsv2_analysis/g;
+    $ft{'library'} += s/\bcusparseDbsrsv2_bufferSize\b/hipsparseDbsrsv2_bufferSize/g;
+    $ft{'library'} += s/\bcusparseDbsrsv2_bufferSizeExt\b/hipsparseDbsrsv2_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseDbsrsv2_solve\b/hipsparseDbsrsv2_solve/g;
     $ft{'library'} += s/\bcusparseDcsc2dense\b/hipsparseDcsc2dense/g;
     $ft{'library'} += s/\bcusparseDcsr2bsr\b/hipsparseDcsr2bsr/g;
     $ft{'library'} += s/\bcusparseDcsr2csc\b/hipsparseDcsr2csc/g;
     $ft{'library'} += s/\bcusparseDcsr2csr_compress\b/hipsparseDcsr2csr_compress/g;
     $ft{'library'} += s/\bcusparseDcsr2dense\b/hipsparseDcsr2dense/g;
+    $ft{'library'} += s/\bcusparseDcsr2gebsr\b/hipsparseDcsr2gebsr/g;
+    $ft{'library'} += s/\bcusparseDcsr2gebsr_bufferSize\b/hipsparseDcsr2gebsr_bufferSize/g;
     $ft{'library'} += s/\bcusparseDcsr2hyb\b/hipsparseDcsr2hyb/g;
     $ft{'library'} += s/\bcusparseDcsrgeam\b/hipsparseDcsrgeam/g;
     $ft{'library'} += s/\bcusparseDcsrgeam2\b/hipsparseDcsrgeam2/g;
@@ -1070,6 +1152,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseDcsrilu02_analysis\b/hipsparseDcsrilu02_analysis/g;
     $ft{'library'} += s/\bcusparseDcsrilu02_bufferSize\b/hipsparseDcsrilu02_bufferSize/g;
     $ft{'library'} += s/\bcusparseDcsrilu02_bufferSizeExt\b/hipsparseDcsrilu02_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseDcsrilu02_numericBoost\b/hipsparseDcsrilu02_numericBoost/g;
     $ft{'library'} += s/\bcusparseDcsrmm\b/hipsparseDcsrmm/g;
     $ft{'library'} += s/\bcusparseDcsrmm2\b/hipsparseDcsrmm2/g;
     $ft{'library'} += s/\bcusparseDcsrmv\b/hipsparseDcsrmv/g;
@@ -1085,6 +1168,8 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseDdense2csr\b/hipsparseDdense2csr/g;
     $ft{'library'} += s/\bcusparseDdoti\b/hipsparseDdoti/g;
     $ft{'library'} += s/\bcusparseDestroy\b/hipsparseDestroy/g;
+    $ft{'library'} += s/\bcusparseDestroyBsric02Info\b/hipsparseDestroyBsric02Info/g;
+    $ft{'library'} += s/\bcusparseDestroyBsrilu02Info\b/hipsparseDestroyBsrilu02Info/g;
     $ft{'library'} += s/\bcusparseDestroyCsrgemm2Info\b/hipsparseDestroyCsrgemm2Info/g;
     $ft{'library'} += s/\bcusparseDestroyCsric02Info\b/hipsparseDestroyCsric02Info/g;
     $ft{'library'} += s/\bcusparseDestroyCsrilu02Info\b/hipsparseDestroyCsrilu02Info/g;
@@ -1092,12 +1177,31 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseDestroyCsrsv2Info\b/hipsparseDestroyCsrsv2Info/g;
     $ft{'library'} += s/\bcusparseDestroyHybMat\b/hipsparseDestroyHybMat/g;
     $ft{'library'} += s/\bcusparseDestroyMatDescr\b/hipsparseDestroyMatDescr/g;
+    $ft{'library'} += s/\bcusparseDestroyPruneInfo\b/hipsparseDestroyPruneInfo/g;
+    $ft{'library'} += s/\bcusparseDgebsr2csr\b/hipsparseDgebsr2csr/g;
+    $ft{'library'} += s/\bcusparseDgebsr2gebsc\b/hipsparseDgebsr2gebsc/g;
+    $ft{'library'} += s/\bcusparseDgebsr2gebsc_bufferSize\b/hipsparseDgebsr2gebsc_bufferSize/g;
+    $ft{'library'} += s/\bcusparseDgebsr2gebsr\b/hipsparseDgebsr2gebsr/g;
+    $ft{'library'} += s/\bcusparseDgebsr2gebsr_bufferSize\b/hipsparseDgebsr2gebsr_bufferSize/g;
+    $ft{'library'} += s/\bcusparseDgemmi\b/hipsparseDgemmi/g;
     $ft{'library'} += s/\bcusparseDgthr\b/hipsparseDgthr/g;
     $ft{'library'} += s/\bcusparseDgthrz\b/hipsparseDgthrz/g;
     $ft{'library'} += s/\bcusparseDhyb2csr\b/hipsparseDhyb2csr/g;
     $ft{'library'} += s/\bcusparseDhybmv\b/hipsparseDhybmv/g;
     $ft{'library'} += s/\bcusparseDnnz\b/hipsparseDnnz/g;
     $ft{'library'} += s/\bcusparseDnnz_compress\b/hipsparseDnnz_compress/g;
+    $ft{'library'} += s/\bcusparseDpruneCsr2csr\b/hipsparseDpruneCsr2csr/g;
+    $ft{'library'} += s/\bcusparseDpruneCsr2csrByPercentage\b/hipsparseDpruneCsr2csrByPercentage/g;
+    $ft{'library'} += s/\bcusparseDpruneCsr2csrByPercentage_bufferSizeExt\b/hipsparseDpruneCsr2csrByPercentage_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseDpruneCsr2csrNnz\b/hipsparseDpruneCsr2csrNnz/g;
+    $ft{'library'} += s/\bcusparseDpruneCsr2csrNnzByPercentage\b/hipsparseDpruneCsr2csrNnzByPercentage/g;
+    $ft{'library'} += s/\bcusparseDpruneCsr2csr_bufferSizeExt\b/hipsparseDpruneCsr2csr_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseDpruneDense2csr\b/hipsparseDpruneDense2csr/g;
+    $ft{'library'} += s/\bcusparseDpruneDense2csrByPercentage\b/hipsparseDpruneDense2csrByPercentage/g;
+    $ft{'library'} += s/\bcusparseDpruneDense2csrByPercentage_bufferSizeExt\b/hipsparseDpruneDense2csrByPercentage_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseDpruneDense2csrNnz\b/hipsparseDpruneDense2csrNnz/g;
+    $ft{'library'} += s/\bcusparseDpruneDense2csrNnzByPercentage\b/hipsparseDpruneDense2csrNnzByPercentage/g;
+    $ft{'library'} += s/\bcusparseDpruneDense2csr_bufferSizeExt\b/hipsparseDpruneDense2csr_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseDroti\b/hipsparseDroti/g;
     $ft{'library'} += s/\bcusparseDsctr\b/hipsparseDsctr/g;
     $ft{'library'} += s/\bcusparseGetMatDiagType\b/hipsparseGetMatDiagType/g;
@@ -1109,12 +1213,26 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseGetVersion\b/hipsparseGetVersion/g;
     $ft{'library'} += s/\bcusparseSaxpyi\b/hipsparseSaxpyi/g;
     $ft{'library'} += s/\bcusparseSbsr2csr\b/hipsparseSbsr2csr/g;
+    $ft{'library'} += s/\bcusparseSbsric02\b/hipsparseSbsric02/g;
+    $ft{'library'} += s/\bcusparseSbsric02_analysis\b/hipsparseSbsric02_analysis/g;
+    $ft{'library'} += s/\bcusparseSbsric02_bufferSize\b/hipsparseSbsric02_bufferSize/g;
+    $ft{'library'} += s/\bcusparseSbsrilu02\b/hipsparseSbsrilu02/g;
+    $ft{'library'} += s/\bcusparseSbsrilu02_analysis\b/hipsparseSbsrilu02_analysis/g;
+    $ft{'library'} += s/\bcusparseSbsrilu02_bufferSize\b/hipsparseSbsrilu02_bufferSize/g;
+    $ft{'library'} += s/\bcusparseSbsrilu02_numericBoost\b/hipsparseSbsrilu02_numericBoost/g;
+    $ft{'library'} += s/\bcusparseSbsrmm\b/hipsparseSbsrmm/g;
     $ft{'library'} += s/\bcusparseSbsrmv\b/hipsparseSbsrmv/g;
+    $ft{'library'} += s/\bcusparseSbsrsv2_analysis\b/hipsparseSbsrsv2_analysis/g;
+    $ft{'library'} += s/\bcusparseSbsrsv2_bufferSize\b/hipsparseSbsrsv2_bufferSize/g;
+    $ft{'library'} += s/\bcusparseSbsrsv2_bufferSizeExt\b/hipsparseSbsrsv2_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseSbsrsv2_solve\b/hipsparseSbsrsv2_solve/g;
     $ft{'library'} += s/\bcusparseScsc2dense\b/hipsparseScsc2dense/g;
     $ft{'library'} += s/\bcusparseScsr2bsr\b/hipsparseScsr2bsr/g;
     $ft{'library'} += s/\bcusparseScsr2csc\b/hipsparseScsr2csc/g;
     $ft{'library'} += s/\bcusparseScsr2csr_compress\b/hipsparseScsr2csr_compress/g;
     $ft{'library'} += s/\bcusparseScsr2dense\b/hipsparseScsr2dense/g;
+    $ft{'library'} += s/\bcusparseScsr2gebsr\b/hipsparseScsr2gebsr/g;
+    $ft{'library'} += s/\bcusparseScsr2gebsr_bufferSize\b/hipsparseScsr2gebsr_bufferSize/g;
     $ft{'library'} += s/\bcusparseScsr2hyb\b/hipsparseScsr2hyb/g;
     $ft{'library'} += s/\bcusparseScsrgeam\b/hipsparseScsrgeam/g;
     $ft{'library'} += s/\bcusparseScsrgeam2\b/hipsparseScsrgeam2/g;
@@ -1130,6 +1248,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseScsrilu02_analysis\b/hipsparseScsrilu02_analysis/g;
     $ft{'library'} += s/\bcusparseScsrilu02_bufferSize\b/hipsparseScsrilu02_bufferSize/g;
     $ft{'library'} += s/\bcusparseScsrilu02_bufferSizeExt\b/hipsparseScsrilu02_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseScsrilu02_numericBoost\b/hipsparseScsrilu02_numericBoost/g;
     $ft{'library'} += s/\bcusparseScsrmm\b/hipsparseScsrmm/g;
     $ft{'library'} += s/\bcusparseScsrmm2\b/hipsparseScsrmm2/g;
     $ft{'library'} += s/\bcusparseScsrmv\b/hipsparseScsrmv/g;
@@ -1150,15 +1269,35 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseSetMatType\b/hipsparseSetMatType/g;
     $ft{'library'} += s/\bcusparseSetPointerMode\b/hipsparseSetPointerMode/g;
     $ft{'library'} += s/\bcusparseSetStream\b/hipsparseSetStream/g;
+    $ft{'library'} += s/\bcusparseSgebsr2csr\b/hipsparseSgebsr2csr/g;
+    $ft{'library'} += s/\bcusparseSgebsr2gebsc\b/hipsparseSgebsr2gebsc/g;
+    $ft{'library'} += s/\bcusparseSgebsr2gebsc_bufferSize\b/hipsparseSgebsr2gebsc_bufferSize/g;
+    $ft{'library'} += s/\bcusparseSgebsr2gebsr\b/hipsparseSgebsr2gebsr/g;
+    $ft{'library'} += s/\bcusparseSgebsr2gebsr_bufferSize\b/hipsparseSgebsr2gebsr_bufferSize/g;
+    $ft{'library'} += s/\bcusparseSgemmi\b/hipsparseSgemmi/g;
     $ft{'library'} += s/\bcusparseSgthr\b/hipsparseSgthr/g;
     $ft{'library'} += s/\bcusparseSgthrz\b/hipsparseSgthrz/g;
     $ft{'library'} += s/\bcusparseShyb2csr\b/hipsparseShyb2csr/g;
     $ft{'library'} += s/\bcusparseShybmv\b/hipsparseShybmv/g;
     $ft{'library'} += s/\bcusparseSnnz\b/hipsparseSnnz/g;
     $ft{'library'} += s/\bcusparseSnnz_compress\b/hipsparseSnnz_compress/g;
+    $ft{'library'} += s/\bcusparseSpruneCsr2csr\b/hipsparseSpruneCsr2csr/g;
+    $ft{'library'} += s/\bcusparseSpruneCsr2csrByPercentage\b/hipsparseSpruneCsr2csrByPercentage/g;
+    $ft{'library'} += s/\bcusparseSpruneCsr2csrByPercentage_bufferSizeExt\b/hipsparseSpruneCsr2csrByPercentage_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseSpruneCsr2csrNnz\b/hipsparseSpruneCsr2csrNnz/g;
+    $ft{'library'} += s/\bcusparseSpruneCsr2csrNnzByPercentage\b/hipsparseSpruneCsr2csrNnzByPercentage/g;
+    $ft{'library'} += s/\bcusparseSpruneCsr2csr_bufferSizeExt\b/hipsparseSpruneCsr2csr_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseSpruneDense2csr\b/hipsparseSpruneDense2csr/g;
+    $ft{'library'} += s/\bcusparseSpruneDense2csrByPercentage\b/hipsparseSpruneDense2csrByPercentage/g;
+    $ft{'library'} += s/\bcusparseSpruneDense2csrByPercentage_bufferSizeExt\b/hipsparseSpruneDense2csrByPercentage_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseSpruneDense2csrNnz\b/hipsparseSpruneDense2csrNnz/g;
+    $ft{'library'} += s/\bcusparseSpruneDense2csrNnzByPercentage\b/hipsparseSpruneDense2csrNnzByPercentage/g;
+    $ft{'library'} += s/\bcusparseSpruneDense2csr_bufferSizeExt\b/hipsparseSpruneDense2csr_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseSroti\b/hipsparseSroti/g;
     $ft{'library'} += s/\bcusparseSsctr\b/hipsparseSsctr/g;
+    $ft{'library'} += s/\bcusparseXbsric02_zeroPivot\b/hipsparseXbsric02_zeroPivot/g;
     $ft{'library'} += s/\bcusparseXbsrilu02_zeroPivot\b/hipsparseXbsrilu02_zeroPivot/g;
+    $ft{'library'} += s/\bcusparseXbsrsv2_zeroPivot\b/hipsparseXbsrsv2_zeroPivot/g;
     $ft{'library'} += s/\bcusparseXcoo2csr\b/hipsparseXcoo2csr/g;
     $ft{'library'} += s/\bcusparseXcoosortByColumn\b/hipsparseXcoosortByColumn/g;
     $ft{'library'} += s/\bcusparseXcoosortByRow\b/hipsparseXcoosortByRow/g;
@@ -1167,6 +1306,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseXcscsort_bufferSizeExt\b/hipsparseXcscsort_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseXcsr2bsrNnz\b/hipsparseXcsr2bsrNnz/g;
     $ft{'library'} += s/\bcusparseXcsr2coo\b/hipsparseXcsr2coo/g;
+    $ft{'library'} += s/\bcusparseXcsr2gebsrNnz\b/hipsparseXcsr2gebsrNnz/g;
     $ft{'library'} += s/\bcusparseXcsrgeam2Nnz\b/hipsparseXcsrgeam2Nnz/g;
     $ft{'library'} += s/\bcusparseXcsrgeamNnz\b/hipsparseXcsrgeamNnz/g;
     $ft{'library'} += s/\bcusparseXcsrgemm2Nnz\b/hipsparseXcsrgemm2Nnz/g;
@@ -1177,14 +1317,29 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseXcsrsort\b/hipsparseXcsrsort/g;
     $ft{'library'} += s/\bcusparseXcsrsort_bufferSizeExt\b/hipsparseXcsrsort_bufferSizeExt/g;
     $ft{'library'} += s/\bcusparseXcsrsv2_zeroPivot\b/hipsparseXcsrsv2_zeroPivot/g;
+    $ft{'library'} += s/\bcusparseXgebsr2gebsrNnz\b/hipsparseXgebsr2gebsrNnz/g;
     $ft{'library'} += s/\bcusparseZaxpyi\b/hipsparseZaxpyi/g;
     $ft{'library'} += s/\bcusparseZbsr2csr\b/hipsparseZbsr2csr/g;
+    $ft{'library'} += s/\bcusparseZbsric02\b/hipsparseZbsric02/g;
+    $ft{'library'} += s/\bcusparseZbsric02_analysis\b/hipsparseZbsric02_analysis/g;
+    $ft{'library'} += s/\bcusparseZbsric02_bufferSize\b/hipsparseZbsric02_bufferSize/g;
+    $ft{'library'} += s/\bcusparseZbsrilu02\b/hipsparseZbsrilu02/g;
+    $ft{'library'} += s/\bcusparseZbsrilu02_analysis\b/hipsparseZbsrilu02_analysis/g;
+    $ft{'library'} += s/\bcusparseZbsrilu02_bufferSize\b/hipsparseZbsrilu02_bufferSize/g;
+    $ft{'library'} += s/\bcusparseZbsrilu02_numericBoost\b/hipsparseZbsrilu02_numericBoost/g;
+    $ft{'library'} += s/\bcusparseZbsrmm\b/hipsparseZbsrmm/g;
     $ft{'library'} += s/\bcusparseZbsrmv\b/hipsparseZbsrmv/g;
+    $ft{'library'} += s/\bcusparseZbsrsv2_analysis\b/hipsparseZbsrsv2_analysis/g;
+    $ft{'library'} += s/\bcusparseZbsrsv2_bufferSize\b/hipsparseZbsrsv2_bufferSize/g;
+    $ft{'library'} += s/\bcusparseZbsrsv2_bufferSizeExt\b/hipsparseZbsrsv2_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseZbsrsv2_solve\b/hipsparseZbsrsv2_solve/g;
     $ft{'library'} += s/\bcusparseZcsc2dense\b/hipsparseZcsc2dense/g;
     $ft{'library'} += s/\bcusparseZcsr2bsr\b/hipsparseZcsr2bsr/g;
     $ft{'library'} += s/\bcusparseZcsr2csc\b/hipsparseZcsr2csc/g;
     $ft{'library'} += s/\bcusparseZcsr2csr_compress\b/hipsparseZcsr2csr_compress/g;
     $ft{'library'} += s/\bcusparseZcsr2dense\b/hipsparseZcsr2dense/g;
+    $ft{'library'} += s/\bcusparseZcsr2gebsr\b/hipsparseZcsr2gebsr/g;
+    $ft{'library'} += s/\bcusparseZcsr2gebsr_bufferSize\b/hipsparseZcsr2gebsr_bufferSize/g;
     $ft{'library'} += s/\bcusparseZcsr2hyb\b/hipsparseZcsr2hyb/g;
     $ft{'library'} += s/\bcusparseZcsrgeam\b/hipsparseZcsrgeam/g;
     $ft{'library'} += s/\bcusparseZcsrgeam2\b/hipsparseZcsrgeam2/g;
@@ -1200,6 +1355,7 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseZcsrilu02_analysis\b/hipsparseZcsrilu02_analysis/g;
     $ft{'library'} += s/\bcusparseZcsrilu02_bufferSize\b/hipsparseZcsrilu02_bufferSize/g;
     $ft{'library'} += s/\bcusparseZcsrilu02_bufferSizeExt\b/hipsparseZcsrilu02_bufferSizeExt/g;
+    $ft{'library'} += s/\bcusparseZcsrilu02_numericBoost\b/hipsparseZcsrilu02_numericBoost/g;
     $ft{'library'} += s/\bcusparseZcsrmm\b/hipsparseZcsrmm/g;
     $ft{'library'} += s/\bcusparseZcsrmm2\b/hipsparseZcsrmm2/g;
     $ft{'library'} += s/\bcusparseZcsrmv\b/hipsparseZcsrmv/g;
@@ -1215,6 +1371,12 @@ sub simpleSubstitutions {
     $ft{'library'} += s/\bcusparseZdense2csr\b/hipsparseZdense2csr/g;
     $ft{'library'} += s/\bcusparseZdotci\b/hipsparseZdotci/g;
     $ft{'library'} += s/\bcusparseZdoti\b/hipsparseZdoti/g;
+    $ft{'library'} += s/\bcusparseZgebsr2csr\b/hipsparseZgebsr2csr/g;
+    $ft{'library'} += s/\bcusparseZgebsr2gebsc\b/hipsparseZgebsr2gebsc/g;
+    $ft{'library'} += s/\bcusparseZgebsr2gebsc_bufferSize\b/hipsparseZgebsr2gebsc_bufferSize/g;
+    $ft{'library'} += s/\bcusparseZgebsr2gebsr\b/hipsparseZgebsr2gebsr/g;
+    $ft{'library'} += s/\bcusparseZgebsr2gebsr_bufferSize\b/hipsparseZgebsr2gebsr_bufferSize/g;
+    $ft{'library'} += s/\bcusparseZgemmi\b/hipsparseZgemmi/g;
     $ft{'library'} += s/\bcusparseZgthr\b/hipsparseZgthr/g;
     $ft{'library'} += s/\bcusparseZgthrz\b/hipsparseZgthrz/g;
     $ft{'library'} += s/\bcusparseZhyb2csr\b/hipsparseZhyb2csr/g;
@@ -1310,6 +1472,8 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bCUcontext\b/hipCtx_t/g;
     $ft{'type'} += s/\bCUctx_st\b/ihipCtx_t/g;
     $ft{'type'} += s/\bCUdevice\b/hipDevice_t/g;
+    $ft{'type'} += s/\bCUdevice_P2PAttribute\b/hipDeviceP2PAttr/g;
+    $ft{'type'} += s/\bCUdevice_P2PAttribute_enum\b/hipDeviceP2PAttr/g;
     $ft{'type'} += s/\bCUdevice_attribute\b/hipDeviceAttribute_t/g;
     $ft{'type'} += s/\bCUdevice_attribute_enum\b/hipDeviceAttribute_t/g;
     $ft{'type'} += s/\bCUdeviceptr\b/hipDeviceptr_t/g;
@@ -1324,14 +1488,18 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bCUfunction\b/hipFunction_t/g;
     $ft{'type'} += s/\bCUfunction_attribute\b/hipFunction_attribute/g;
     $ft{'type'} += s/\bCUfunction_attribute_enum\b/hipFunction_attribute/g;
-    $ft{'type'} += s/\bCUipcEventHandle\b/ihipIpcEventHandle_t/g;
-    $ft{'type'} += s/\bCUipcEventHandle_st\b/ihipIpcEventHandle_t/g;
+    $ft{'type'} += s/\bCUipcEventHandle\b/hipIpcEventHandle_t/g;
+    $ft{'type'} += s/\bCUipcEventHandle_st\b/hipIpcEventHandle_st/g;
     $ft{'type'} += s/\bCUipcMemHandle\b/hipIpcMemHandle_t/g;
     $ft{'type'} += s/\bCUipcMemHandle_st\b/hipIpcMemHandle_st/g;
     $ft{'type'} += s/\bCUjit_option\b/hipJitOption/g;
     $ft{'type'} += s/\bCUjit_option_enum\b/hipJitOption/g;
     $ft{'type'} += s/\bCUlimit\b/hipLimit_t/g;
     $ft{'type'} += s/\bCUlimit_enum\b/hipLimit_t/g;
+    $ft{'type'} += s/\bCUmem_advise\b/hipMemoryAdvise/g;
+    $ft{'type'} += s/\bCUmem_advise_enum\b/hipMemoryAdvise/g;
+    $ft{'type'} += s/\bCUmem_range_attribute\b/hipMemRangeAttribute/g;
+    $ft{'type'} += s/\bCUmem_range_attribute_enum\b/hipMemRangeAttribute/g;
     $ft{'type'} += s/\bCUmemorytype\b/hipMemoryType/g;
     $ft{'type'} += s/\bCUmemorytype_enum\b/hipMemoryType/g;
     $ft{'type'} += s/\bCUmipmappedArray\b/hipMipmappedArray_t/g;
@@ -1350,6 +1518,8 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bCUstream_st\b/ihipStream_t/g;
     $ft{'type'} += s/\bCUtexObject\b/hipTextureObject_t/g;
     $ft{'type'} += s/\bCUtexref_st\b/textureReference/g;
+    $ft{'type'} += s/\bbsrilu02Info\b/bsrilu02Info/g;
+    $ft{'type'} += s/\bbsrilu02Info_t\b/bsrilu02Info_t/g;
     $ft{'type'} += s/\bcsrgemm2Info\b/csrgemm2Info/g;
     $ft{'type'} += s/\bcsrgemm2Info_t\b/csrgemm2Info_t/g;
     $ft{'type'} += s/\bcsrilu02Info_t\b/csrilu02Info_t/g;
@@ -1359,6 +1529,7 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bcuComplex\b/hipComplex/g;
     $ft{'type'} += s/\bcuDoubleComplex\b/hipDoubleComplex/g;
     $ft{'type'} += s/\bcuFloatComplex\b/hipFloatComplex/g;
+    $ft{'type'} += s/\bcublasAtomicsMode_t\b/hipblasAtomicsMode_t/g;
     $ft{'type'} += s/\bcublasDataType_t\b/hipblasDatatype_t/g;
     $ft{'type'} += s/\bcublasDiagType_t\b/hipblasDiagType_t/g;
     $ft{'type'} += s/\bcublasFillMode_t\b/hipblasFillMode_t/g;
@@ -1378,23 +1549,27 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bcudaDataType\b/hipblasDatatype_t/g;
     $ft{'type'} += s/\bcudaDataType_t\b/hipblasDatatype_t/g;
     $ft{'type'} += s/\bcudaDeviceAttr\b/hipDeviceAttribute_t/g;
+    $ft{'type'} += s/\bcudaDeviceP2PAttr\b/hipDeviceP2PAttr/g;
     $ft{'type'} += s/\bcudaDeviceProp\b/hipDeviceProp_t/g;
     $ft{'type'} += s/\bcudaError\b/hipError_t/g;
     $ft{'type'} += s/\bcudaError_enum\b/hipError_t/g;
     $ft{'type'} += s/\bcudaError_t\b/hipError_t/g;
     $ft{'type'} += s/\bcudaEvent_t\b/hipEvent_t/g;
     $ft{'type'} += s/\bcudaExtent\b/hipExtent/g;
+    $ft{'type'} += s/\bcudaFuncAttribute\b/hipFuncAttribute/g;
     $ft{'type'} += s/\bcudaFuncAttributes\b/hipFuncAttributes/g;
     $ft{'type'} += s/\bcudaFuncCache\b/hipFuncCache_t/g;
     $ft{'type'} += s/\bcudaFunction_t\b/hipFunction_t/g;
-    $ft{'type'} += s/\bcudaIpcEventHandle_st\b/ihipIpcEventHandle_t/g;
-    $ft{'type'} += s/\bcudaIpcEventHandle_t\b/ihipIpcEventHandle_t/g;
+    $ft{'type'} += s/\bcudaIpcEventHandle_st\b/hipIpcEventHandle_st/g;
+    $ft{'type'} += s/\bcudaIpcEventHandle_t\b/hipIpcEventHandle_t/g;
     $ft{'type'} += s/\bcudaIpcMemHandle_st\b/hipIpcMemHandle_st/g;
     $ft{'type'} += s/\bcudaIpcMemHandle_t\b/hipIpcMemHandle_t/g;
     $ft{'type'} += s/\bcudaLaunchParams\b/hipLaunchParams/g;
     $ft{'type'} += s/\bcudaLimit\b/hipLimit_t/g;
+    $ft{'type'} += s/\bcudaMemRangeAttribute\b/hipMemRangeAttribute/g;
     $ft{'type'} += s/\bcudaMemcpy3DParms\b/hipMemcpy3DParms/g;
     $ft{'type'} += s/\bcudaMemcpyKind\b/hipMemcpyKind/g;
+    $ft{'type'} += s/\bcudaMemoryAdvise\b/hipMemoryAdvise/g;
     $ft{'type'} += s/\bcudaMipmappedArray\b/hipMipmappedArray/g;
     $ft{'type'} += s/\bcudaMipmappedArray_const_t\b/hipMipmappedArray_const_t/g;
     $ft{'type'} += s/\bcudaMipmappedArray_t\b/hipMipmappedArray_t/g;
@@ -1501,6 +1676,10 @@ sub simpleSubstitutions {
     $ft{'type'} += s/\bcusparsePointerMode_t\b/hipsparsePointerMode_t/g;
     $ft{'type'} += s/\bcusparseSolvePolicy_t\b/hipsparseSolvePolicy_t/g;
     $ft{'type'} += s/\bcusparseStatus_t\b/hipsparseStatus_t/g;
+    $ft{'type'} += s/\bpruneInfo\b/pruneInfo/g;
+    $ft{'type'} += s/\bpruneInfo_t\b/pruneInfo_t/g;
+    $ft{'numeric_literal'} += s/\bCUBLAS_ATOMICS_ALLOWED\b/HIPBLAS_ATOMICS_ALLOWED/g;
+    $ft{'numeric_literal'} += s/\bCUBLAS_ATOMICS_NOT_ALLOWED\b/HIPBLAS_ATOMICS_NOT_ALLOWED/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_DIAG_NON_UNIT\b/HIPBLAS_DIAG_NON_UNIT/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_DIAG_UNIT\b/HIPBLAS_DIAG_UNIT/g;
     $ft{'numeric_literal'} += s/\bCUBLAS_FILL_MODE_FULL\b/HIPBLAS_FILL_MODE_FULL/g;
@@ -1814,13 +1993,16 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR\b/hipDeviceAttributeComputeCapabilityMinor/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_COMPUTE_MODE\b/hipDeviceAttributeComputeMode/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS\b/hipDeviceAttributeConcurrentKernels/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS\b/hipDeviceAttributeConcurrentManagedAccess/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH\b/hipDeviceAttributeCooperativeLaunch/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH\b/hipDeviceAttributeCooperativeMultiDeviceLaunch/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST\b/hipDeviceAttributeDirectManagedMemAccessFromHost/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_ECC_ENABLED\b/hipDeviceAttributeEccEnabled/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_GLOBAL_MEMORY_BUS_WIDTH\b/hipDeviceAttributeMemoryBusWidth/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_INTEGRATED\b/hipDeviceAttributeIntegrated/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT\b/hipDeviceAttributeKernelExecTimeout/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE\b/hipDeviceAttributeL2CacheSize/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MANAGED_MEMORY\b/hipDeviceAttributeManagedMemory/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE1D_WIDTH\b/hipDeviceAttributeMaxTexture1DWidth/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_HEIGHT\b/hipDeviceAttributeMaxTexture2DHeight/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MAXIMUM_TEXTURE2D_WIDTH\b/hipDeviceAttributeMaxTexture2DWidth/g;
@@ -1842,6 +2024,8 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MEMORY_CLOCK_RATE\b/hipDeviceAttributeMemoryClockRate/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT\b/hipDeviceAttributeMultiprocessorCount/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD\b/hipDeviceAttributeIsMultiGpuBoard/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS\b/hipDeviceAttributePageableMemoryAccess/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES\b/hipDeviceAttributePageableMemoryAccessUsesHostPageTables/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_PCI_BUS_ID\b/hipDeviceAttributePciBusId/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID\b/hipDeviceAttributePciDeviceId/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_REGISTERS_PER_BLOCK\b/hipDeviceAttributeMaxRegistersPerBlock/g;
@@ -1849,6 +2033,12 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT\b/hipDeviceAttributeTextureAlignment/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_TOTAL_CONSTANT_MEMORY\b/hipDeviceAttributeTotalConstantMemory/g;
     $ft{'numeric_literal'} += s/\bCU_DEVICE_ATTRIBUTE_WARP_SIZE\b/hipDeviceAttributeWarpSize/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_P2P_ATTRIBUTE_ACCESS_ACCESS_SUPPORTED\b/hipDevP2PAttrHipArrayAccessSupported/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED\b/hipDevP2PAttrAccessSupported/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED\b/hipDevP2PAttrHipArrayAccessSupported/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED\b/hipDevP2PAttrHipArrayAccessSupported/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED\b/hipDevP2PAttrNativeAtomicSupported/g;
+    $ft{'numeric_literal'} += s/\bCU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK\b/hipDevP2PAttrPerformanceRank/g;
     $ft{'numeric_literal'} += s/\bCU_EVENT_BLOCKING_SYNC\b/hipEventBlockingSync/g;
     $ft{'numeric_literal'} += s/\bCU_EVENT_DEFAULT\b/hipEventDefault/g;
     $ft{'numeric_literal'} += s/\bCU_EVENT_DISABLE_TIMING\b/hipEventDisableTiming/g;
@@ -1876,9 +2066,6 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCU_JIT_FAST_COMPILE\b/hipJitOptionFastCompile/g;
     $ft{'numeric_literal'} += s/\bCU_JIT_GENERATE_DEBUG_INFO\b/hipJitOptionGenerateDebugInfo/g;
     $ft{'numeric_literal'} += s/\bCU_JIT_GENERATE_LINE_INFO\b/hipJitOptionGenerateLineInfo/g;
-    $ft{'numeric_literal'} += s/\bCU_JIT_GLOBAL_SYMBOL_ADDRESSES\b/hipJitGlobalSymbolAddresses/g;
-    $ft{'numeric_literal'} += s/\bCU_JIT_GLOBAL_SYMBOL_COUNT\b/hipJitGlobalSymbolCount/g;
-    $ft{'numeric_literal'} += s/\bCU_JIT_GLOBAL_SYMBOL_NAMES\b/hipJitGlobalSymbolNames/g;
     $ft{'numeric_literal'} += s/\bCU_JIT_INFO_LOG_BUFFER\b/hipJitOptionInfoLogBuffer/g;
     $ft{'numeric_literal'} += s/\bCU_JIT_INFO_LOG_BUFFER_SIZE_BYTES\b/hipJitOptionInfoLogBufferSizeBytes/g;
     $ft{'numeric_literal'} += s/\bCU_JIT_LOG_VERBOSE\b/hipJitOptionLogVerbose/g;
@@ -1895,8 +2082,19 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bCU_MEMORYTYPE_DEVICE\b/hipMemoryTypeDevice/g;
     $ft{'numeric_literal'} += s/\bCU_MEMORYTYPE_HOST\b/hipMemoryTypeHost/g;
     $ft{'numeric_literal'} += s/\bCU_MEMORYTYPE_UNIFIED\b/hipMemoryTypeUnified/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_ADVISE_SET_ACCESSED_BY\b/hipMemAdviseSetAccessedBy/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_ADVISE_SET_PREFERRED_LOCATION\b/hipMemAdviseSetPreferredLocation/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_ADVISE_SET_READ_MOSTLY\b/hipMemAdviseSetReadMostly/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_ADVISE_UNSET_ACCESSED_BY\b/hipMemAdviseUnsetAccessedBy/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_ADVISE_UNSET_PREFERRED_LOCATION\b/hipMemAdviseUnsetPreferredLocation/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_ADVISE_UNSET_READ_MOSTLY\b/hipMemAdviseUnsetReadMostly/g;
     $ft{'numeric_literal'} += s/\bCU_MEM_ATTACH_GLOBAL\b/hipMemAttachGlobal/g;
     $ft{'numeric_literal'} += s/\bCU_MEM_ATTACH_HOST\b/hipMemAttachHost/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_ATTACH_SINGLE\b/hipMemAttachSingle/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY\b/hipMemRangeAttributeAccessedBy/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION\b/hipMemRangeAttributeLastPrefetchLocation/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION\b/hipMemRangeAttributePreferredLocation/g;
+    $ft{'numeric_literal'} += s/\bCU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY\b/hipMemRangeAttributeReadMostly/g;
     $ft{'numeric_literal'} += s/\bCU_OCCUPANCY_DEFAULT\b/hipOccupancyDefault/g;
     $ft{'numeric_literal'} += s/\bCU_RESOURCE_TYPE_ARRAY\b/hipResourceTypeArray/g;
     $ft{'numeric_literal'} += s/\bCU_RESOURCE_TYPE_LINEAR\b/hipResourceTypeLinear/g;
@@ -1969,14 +2167,17 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bcudaDevAttrComputeCapabilityMinor\b/hipDeviceAttributeComputeCapabilityMinor/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrComputeMode\b/hipDeviceAttributeComputeMode/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrConcurrentKernels\b/hipDeviceAttributeConcurrentKernels/g;
+    $ft{'numeric_literal'} += s/\bcudaDevAttrConcurrentManagedAccess\b/hipDeviceAttributeConcurrentManagedAccess/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrCooperativeLaunch\b/hipDeviceAttributeCooperativeLaunch/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrCooperativeMultiDeviceLaunch\b/hipDeviceAttributeCooperativeMultiDeviceLaunch/g;
+    $ft{'numeric_literal'} += s/\bcudaDevAttrDirectManagedMemAccessFromHost\b/hipDeviceAttributeDirectManagedMemAccessFromHost/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrEccEnabled\b/hipDeviceAttributeEccEnabled/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrGlobalMemoryBusWidth\b/hipDeviceAttributeMemoryBusWidth/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrIntegrated\b/hipDeviceAttributeIntegrated/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrIsMultiGpuBoard\b/hipDeviceAttributeIsMultiGpuBoard/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrKernelExecTimeout\b/hipDeviceAttributeKernelExecTimeout/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrL2CacheSize\b/hipDeviceAttributeL2CacheSize/g;
+    $ft{'numeric_literal'} += s/\bcudaDevAttrManagedMemory\b/hipDeviceAttributeManagedMemory/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrMaxBlockDimX\b/hipDeviceAttributeMaxBlockDimX/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrMaxBlockDimY\b/hipDeviceAttributeMaxBlockDimY/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrMaxBlockDimZ\b/hipDeviceAttributeMaxBlockDimZ/g;
@@ -1997,11 +2198,17 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bcudaDevAttrMaxThreadsPerMultiProcessor\b/hipDeviceAttributeMaxThreadsPerMultiProcessor/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrMemoryClockRate\b/hipDeviceAttributeMemoryClockRate/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrMultiProcessorCount\b/hipDeviceAttributeMultiprocessorCount/g;
+    $ft{'numeric_literal'} += s/\bcudaDevAttrPageableMemoryAccess\b/hipDeviceAttributePageableMemoryAccess/g;
+    $ft{'numeric_literal'} += s/\bcudaDevAttrPageableMemoryAccessUsesHostPageTables\b/hipDeviceAttributePageableMemoryAccessUsesHostPageTables/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrPciBusId\b/hipDeviceAttributePciBusId/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrPciDeviceId\b/hipDeviceAttributePciDeviceId/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrTextureAlignment\b/hipDeviceAttributeTextureAlignment/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrTotalConstantMemory\b/hipDeviceAttributeTotalConstantMemory/g;
     $ft{'numeric_literal'} += s/\bcudaDevAttrWarpSize\b/hipDeviceAttributeWarpSize/g;
+    $ft{'numeric_literal'} += s/\bcudaDevP2PAttrAccessSupported\b/hipDevP2PAttrAccessSupported/g;
+    $ft{'numeric_literal'} += s/\bcudaDevP2PAttrCudaArrayAccessSupported\b/hipDevP2PAttrHipArrayAccessSupported/g;
+    $ft{'numeric_literal'} += s/\bcudaDevP2PAttrNativeAtomicSupported\b/hipDevP2PAttrNativeAtomicSupported/g;
+    $ft{'numeric_literal'} += s/\bcudaDevP2PAttrPerformanceRank\b/hipDevP2PAttrPerformanceRank/g;
     $ft{'numeric_literal'} += s/\bcudaErrorAlreadyAcquired\b/hipErrorAlreadyAcquired/g;
     $ft{'numeric_literal'} += s/\bcudaErrorAlreadyMapped\b/hipErrorAlreadyMapped/g;
     $ft{'numeric_literal'} += s/\bcudaErrorArrayIsMapped\b/hipErrorArrayIsMapped/g;
@@ -2061,11 +2268,24 @@ sub simpleSubstitutions {
     $ft{'numeric_literal'} += s/\bcudaErrorUnsupportedLimit\b/hipErrorUnsupportedLimit/g;
     $ft{'numeric_literal'} += s/\bcudaFilterModeLinear\b/hipFilterModeLinear/g;
     $ft{'numeric_literal'} += s/\bcudaFilterModePoint\b/hipFilterModePoint/g;
+    $ft{'numeric_literal'} += s/\bcudaFuncAttributeMax\b/hipFuncAttributeMax/g;
+    $ft{'numeric_literal'} += s/\bcudaFuncAttributeMaxDynamicSharedMemorySize\b/hipFuncAttributeMaxDynamicSharedMemorySize/g;
+    $ft{'numeric_literal'} += s/\bcudaFuncAttributePreferredSharedMemoryCarveout\b/hipFuncAttributePreferredSharedMemoryCarveout/g;
     $ft{'numeric_literal'} += s/\bcudaFuncCachePreferEqual\b/hipFuncCachePreferEqual/g;
     $ft{'numeric_literal'} += s/\bcudaFuncCachePreferL1\b/hipFuncCachePreferL1/g;
     $ft{'numeric_literal'} += s/\bcudaFuncCachePreferNone\b/hipFuncCachePreferNone/g;
     $ft{'numeric_literal'} += s/\bcudaFuncCachePreferShared\b/hipFuncCachePreferShared/g;
     $ft{'numeric_literal'} += s/\bcudaLimitMallocHeapSize\b/hipLimitMallocHeapSize/g;
+    $ft{'numeric_literal'} += s/\bcudaMemAdviseSetAccessedBy\b/hipMemAdviseSetAccessedBy/g;
+    $ft{'numeric_literal'} += s/\bcudaMemAdviseSetPreferredLocation\b/hipMemAdviseSetPreferredLocation/g;
+    $ft{'numeric_literal'} += s/\bcudaMemAdviseSetReadMostly\b/hipMemAdviseSetReadMostly/g;
+    $ft{'numeric_literal'} += s/\bcudaMemAdviseUnsetAccessedBy\b/hipMemAdviseUnsetAccessedBy/g;
+    $ft{'numeric_literal'} += s/\bcudaMemAdviseUnsetPreferredLocation\b/hipMemAdviseUnsetPreferredLocation/g;
+    $ft{'numeric_literal'} += s/\bcudaMemAdviseUnsetReadMostly\b/hipMemAdviseUnsetReadMostly/g;
+    $ft{'numeric_literal'} += s/\bcudaMemRangeAttributeAccessedBy\b/hipMemRangeAttributeAccessedBy/g;
+    $ft{'numeric_literal'} += s/\bcudaMemRangeAttributeLastPrefetchLocation\b/hipMemRangeAttributeLastPrefetchLocation/g;
+    $ft{'numeric_literal'} += s/\bcudaMemRangeAttributePreferredLocation\b/hipMemRangeAttributePreferredLocation/g;
+    $ft{'numeric_literal'} += s/\bcudaMemRangeAttributeReadMostly\b/hipMemRangeAttributeReadMostly/g;
     $ft{'numeric_literal'} += s/\bcudaMemcpyDefault\b/hipMemcpyDefault/g;
     $ft{'numeric_literal'} += s/\bcudaMemcpyDeviceToDevice\b/hipMemcpyDeviceToDevice/g;
     $ft{'numeric_literal'} += s/\bcudaMemcpyDeviceToHost\b/hipMemcpyDeviceToHost/g;
@@ -2122,6 +2342,10 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bCUDA_ARRAY3D_TEXTURE_GATHER\b/hipArrayTextureGather/g;
     $ft{'define'} += s/\bCUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_POST_LAUNCH_SYNC\b/hipCooperativeLaunchMultiDeviceNoPostSync/g;
     $ft{'define'} += s/\bCUDA_COOPERATIVE_LAUNCH_MULTI_DEVICE_NO_PRE_LAUNCH_SYNC\b/hipCooperativeLaunchMultiDeviceNoPreSync/g;
+    $ft{'define'} += s/\bCUDA_IPC_HANDLE_SIZE\b/HIP_IPC_HANDLE_SIZE/g;
+    $ft{'define'} += s/\bCU_DEVICE_CPU\b/hipCpuDeviceId/g;
+    $ft{'define'} += s/\bCU_DEVICE_INVALID\b/hipInvalidDeviceId/g;
+    $ft{'define'} += s/\bCU_IPC_HANDLE_SIZE\b/HIP_IPC_HANDLE_SIZE/g;
     $ft{'define'} += s/\bCU_LAUNCH_PARAM_BUFFER_POINTER\b/HIP_LAUNCH_PARAM_BUFFER_POINTER/g;
     $ft{'define'} += s/\bCU_LAUNCH_PARAM_BUFFER_SIZE\b/HIP_LAUNCH_PARAM_BUFFER_SIZE/g;
     $ft{'define'} += s/\bCU_LAUNCH_PARAM_END\b/HIP_LAUNCH_PARAM_END/g;
@@ -2144,6 +2368,7 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bcudaArrayTextureGather\b/hipArrayTextureGather/g;
     $ft{'define'} += s/\bcudaCooperativeLaunchMultiDeviceNoPostSync\b/hipCooperativeLaunchMultiDeviceNoPostSync/g;
     $ft{'define'} += s/\bcudaCooperativeLaunchMultiDeviceNoPreSync\b/hipCooperativeLaunchMultiDeviceNoPreSync/g;
+    $ft{'define'} += s/\bcudaCpuDeviceId\b/hipCpuDeviceId/g;
     $ft{'define'} += s/\bcudaDeviceBlockingSync\b/hipDeviceScheduleBlockingSync/g;
     $ft{'define'} += s/\bcudaDeviceLmemResizeToMax\b/hipDeviceLmemResizeToMax/g;
     $ft{'define'} += s/\bcudaDeviceMapHost\b/hipDeviceMapHost/g;
@@ -2164,9 +2389,11 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bcudaHostRegisterIoMemory\b/hipHostRegisterIoMemory/g;
     $ft{'define'} += s/\bcudaHostRegisterMapped\b/hipHostRegisterMapped/g;
     $ft{'define'} += s/\bcudaHostRegisterPortable\b/hipHostRegisterPortable/g;
+    $ft{'define'} += s/\bcudaInvalidDeviceId\b/hipInvalidDeviceId/g;
     $ft{'define'} += s/\bcudaIpcMemLazyEnablePeerAccess\b/hipIpcMemLazyEnablePeerAccess/g;
     $ft{'define'} += s/\bcudaMemAttachGlobal\b/hipMemAttachGlobal/g;
     $ft{'define'} += s/\bcudaMemAttachHost\b/hipMemAttachHost/g;
+    $ft{'define'} += s/\bcudaMemAttachSingle\b/hipMemAttachSingle/g;
     $ft{'define'} += s/\bcudaOccupancyDefault\b/hipOccupancyDefault/g;
     $ft{'define'} += s/\bcudaStreamDefault\b/hipStreamDefault/g;
     $ft{'define'} += s/\bcudaStreamNonBlocking\b/hipStreamNonBlocking/g;
@@ -3313,8 +3540,6 @@ sub warnUnsupportedFunctions {
     my $k = 0;
     foreach $func (
         "surfaceReference",
-        "pruneInfo_t",
-        "pruneInfo",
         "libraryPropertyType_t",
         "libraryPropertyType",
         "cusparseZhybsv_solve",
@@ -3336,66 +3561,29 @@ sub warnUnsupportedFunctions {
         "cusparseZgpsvInterleavedBatch",
         "cusparseZgemvi_bufferSize",
         "cusparseZgemvi",
-        "cusparseZgemmi",
         "cusparseZgebsr2gebsr_bufferSizeExt",
-        "cusparseZgebsr2gebsr_bufferSize",
-        "cusparseZgebsr2gebsr",
         "cusparseZgebsr2gebsc_bufferSizeExt",
-        "cusparseZgebsr2gebsc_bufferSize",
-        "cusparseZgebsr2gebsc",
-        "cusparseZgebsr2csr",
         "cusparseZdense2hyb",
         "cusparseZcsru2csr_bufferSizeExt",
         "cusparseZcsrsv_solve",
         "cusparseZcsrsv_analysis",
         "cusparseZcsrsm_analysis",
         "cusparseZcsrmv_mp",
-        "cusparseZcsrilu02_numericBoost",
         "cusparseZcsrilu0",
         "cusparseZcsric0",
         "cusparseZcsrcolor",
         "cusparseZcsr2gebsr_bufferSizeExt",
-        "cusparseZcsr2gebsr_bufferSize",
-        "cusparseZcsr2gebsr",
         "cusparseZcsr2csru",
         "cusparseZcsc2hyb",
         "cusparseZbsrxmv",
-        "cusparseZbsrsv2_solve",
-        "cusparseZbsrsv2_bufferSizeExt",
-        "cusparseZbsrsv2_bufferSize",
-        "cusparseZbsrsv2_analysis",
         "cusparseZbsrsm2_solve",
         "cusparseZbsrsm2_bufferSizeExt",
         "cusparseZbsrsm2_bufferSize",
         "cusparseZbsrsm2_analysis",
-        "cusparseZbsrmm",
-        "cusparseZbsrilu02_numericBoost",
         "cusparseZbsrilu02_bufferSizeExt",
-        "cusparseZbsrilu02_bufferSize",
-        "cusparseZbsrilu02_analysis",
-        "cusparseZbsrilu02",
         "cusparseZbsric02_bufferSizeExt",
-        "cusparseZbsric02_bufferSize",
-        "cusparseZbsric02_analysis",
-        "cusparseZbsric02",
-        "cusparseXgebsr2gebsrNnz",
         "cusparseXgebsr2csr",
-        "cusparseXcsr2gebsrNnz",
-        "cusparseXbsrsv2_zeroPivot",
         "cusparseXbsrsm2_zeroPivot",
-        "cusparseXbsric02_zeroPivot",
-        "cusparseSpruneDense2csr_bufferSizeExt",
-        "cusparseSpruneDense2csrNnzByPercentage",
-        "cusparseSpruneDense2csrNnz",
-        "cusparseSpruneDense2csrByPercentage_bufferSizeExt",
-        "cusparseSpruneDense2csrByPercentage",
-        "cusparseSpruneDense2csr",
-        "cusparseSpruneCsr2csr_bufferSizeExt",
-        "cusparseSpruneCsr2csrNnzByPercentage",
-        "cusparseSpruneCsr2csrNnz",
-        "cusparseSpruneCsr2csrByPercentage_bufferSizeExt",
-        "cusparseSpruneCsr2csrByPercentage",
-        "cusparseSpruneCsr2csr",
         "cusparseSparseToDense_bufferSize",
         "cusparseSparseToDenseAlg_t",
         "cusparseSparseToDense",
@@ -3453,49 +3641,28 @@ sub warnUnsupportedFunctions {
         "cusparseSgpsvInterleavedBatch",
         "cusparseSgemvi_bufferSize",
         "cusparseSgemvi",
-        "cusparseSgemmi",
         "cusparseSgebsr2gebsr_bufferSizeExt",
-        "cusparseSgebsr2gebsr_bufferSize",
-        "cusparseSgebsr2gebsr",
         "cusparseSgebsr2gebsc_bufferSizeExt",
-        "cusparseSgebsr2gebsc_bufferSize",
-        "cusparseSgebsr2gebsc",
-        "cusparseSgebsr2csr",
         "cusparseSdense2hyb",
         "cusparseScsru2csr_bufferSizeExt",
         "cusparseScsrsv_solve",
         "cusparseScsrsv_analysis",
         "cusparseScsrsm_analysis",
         "cusparseScsrmv_mp",
-        "cusparseScsrilu02_numericBoost",
         "cusparseScsrilu0",
         "cusparseScsric0",
         "cusparseScsrcolor",
         "cusparseScsr2gebsr_bufferSizeExt",
-        "cusparseScsr2gebsr_bufferSize",
-        "cusparseScsr2gebsr",
         "cusparseScsr2csru",
         "cusparseScsc2hyb",
         "cusparseScatter",
         "cusparseSbsrxmv",
-        "cusparseSbsrsv2_solve",
-        "cusparseSbsrsv2_bufferSizeExt",
-        "cusparseSbsrsv2_bufferSize",
-        "cusparseSbsrsv2_analysis",
         "cusparseSbsrsm2_solve",
         "cusparseSbsrsm2_bufferSizeExt",
         "cusparseSbsrsm2_bufferSize",
         "cusparseSbsrsm2_analysis",
-        "cusparseSbsrmm",
-        "cusparseSbsrilu02_numericBoost",
         "cusparseSbsrilu02_bufferSizeExt",
-        "cusparseSbsrilu02_bufferSize",
-        "cusparseSbsrilu02_analysis",
-        "cusparseSbsrilu02",
         "cusparseSbsric02_bufferSizeExt",
-        "cusparseSbsric02_bufferSize",
-        "cusparseSbsric02_analysis",
-        "cusparseSbsric02",
         "cusparseRot",
         "cusparseOrder_t",
         "cusparseMatDescr",
@@ -3516,18 +3683,6 @@ sub warnUnsupportedFunctions {
         "cusparseGetLevelInfo",
         "cusparseGather",
         "cusparseFormat_t",
-        "cusparseDpruneDense2csr_bufferSizeExt",
-        "cusparseDpruneDense2csrNnzByPercentage",
-        "cusparseDpruneDense2csrNnz",
-        "cusparseDpruneDense2csrByPercentage_bufferSizeExt",
-        "cusparseDpruneDense2csrByPercentage",
-        "cusparseDpruneDense2csr",
-        "cusparseDpruneCsr2csr_bufferSizeExt",
-        "cusparseDpruneCsr2csrNnzByPercentage",
-        "cusparseDpruneCsr2csrNnz",
-        "cusparseDpruneCsr2csrByPercentage_bufferSizeExt",
-        "cusparseDpruneCsr2csrByPercentage",
-        "cusparseDpruneCsr2csr",
         "cusparseDnVecSetValues",
         "cusparseDnVecGetValues",
         "cusparseDnVecGet",
@@ -3559,25 +3714,16 @@ sub warnUnsupportedFunctions {
         "cusparseDgpsvInterleavedBatch",
         "cusparseDgemvi_bufferSize",
         "cusparseDgemvi",
-        "cusparseDgemmi",
         "cusparseDgebsr2gebsr_bufferSizeExt",
-        "cusparseDgebsr2gebsr_bufferSize",
-        "cusparseDgebsr2gebsr",
         "cusparseDgebsr2gebsc_bufferSizeExt",
-        "cusparseDgebsr2gebsc_bufferSize",
-        "cusparseDgebsr2gebsc",
-        "cusparseDgebsr2csr",
         "cusparseDestroySpVec",
         "cusparseDestroySpMat",
         "cusparseDestroySolveAnalysisInfo",
-        "cusparseDestroyPruneInfo",
         "cusparseDestroyDnVec",
         "cusparseDestroyDnMat",
         "cusparseDestroyCsru2csrInfo",
         "cusparseDestroyBsrsv2Info",
         "cusparseDestroyBsrsm2Info",
-        "cusparseDestroyBsrilu02Info",
-        "cusparseDestroyBsric02Info",
         "cusparseDenseToSparse_convert",
         "cusparseDenseToSparse_bufferSize",
         "cusparseDenseToSparse_analysis",
@@ -3588,34 +3734,19 @@ sub warnUnsupportedFunctions {
         "cusparseDcsrsv_analysis",
         "cusparseDcsrsm_analysis",
         "cusparseDcsrmv_mp",
-        "cusparseDcsrilu02_numericBoost",
         "cusparseDcsrilu0",
         "cusparseDcsric0",
         "cusparseDcsrcolor",
         "cusparseDcsr2gebsr_bufferSizeExt",
-        "cusparseDcsr2gebsr_bufferSize",
-        "cusparseDcsr2gebsr",
         "cusparseDcsr2csru",
         "cusparseDcsc2hyb",
         "cusparseDbsrxmv",
-        "cusparseDbsrsv2_solve",
-        "cusparseDbsrsv2_bufferSizeExt",
-        "cusparseDbsrsv2_bufferSize",
-        "cusparseDbsrsv2_analysis",
         "cusparseDbsrsm2_solve",
         "cusparseDbsrsm2_bufferSizeExt",
         "cusparseDbsrsm2_bufferSize",
         "cusparseDbsrsm2_analysis",
-        "cusparseDbsrmm",
-        "cusparseDbsrilu02_numericBoost",
         "cusparseDbsrilu02_bufferSizeExt",
-        "cusparseDbsrilu02_bufferSize",
-        "cusparseDbsrilu02_analysis",
-        "cusparseDbsrilu02",
         "cusparseDbsric02_bufferSizeExt",
-        "cusparseDbsric02_bufferSize",
-        "cusparseDbsric02_analysis",
-        "cusparseDbsric02",
         "cusparseCsrsv_solveEx",
         "cusparseCsrsv_analysisEx",
         "cusparseCsrmvEx_bufferSize",
@@ -3631,7 +3762,6 @@ sub warnUnsupportedFunctions {
         "cusparseCscSetPointers",
         "cusparseCreateSpVec",
         "cusparseCreateSolveAnalysisInfo",
-        "cusparseCreatePruneInfo",
         "cusparseCreateDnVec",
         "cusparseCreateDnMat",
         "cusparseCreateCsru2csrInfo",
@@ -3641,8 +3771,6 @@ sub warnUnsupportedFunctions {
         "cusparseCreateCoo",
         "cusparseCreateBsrsv2Info",
         "cusparseCreateBsrsm2Info",
-        "cusparseCreateBsrilu02Info",
-        "cusparseCreateBsric02Info",
         "cusparseCooSetStridedBatch",
         "cusparseCooSetPointers",
         "cusparseCooGet",
@@ -3671,48 +3799,27 @@ sub warnUnsupportedFunctions {
         "cusparseCgpsvInterleavedBatch",
         "cusparseCgemvi_bufferSize",
         "cusparseCgemvi",
-        "cusparseCgemmi",
         "cusparseCgebsr2gebsr_bufferSizeExt",
-        "cusparseCgebsr2gebsr_bufferSize",
-        "cusparseCgebsr2gebsr",
         "cusparseCgebsr2gebsc_bufferSizeExt",
-        "cusparseCgebsr2gebsc_bufferSize",
-        "cusparseCgebsr2gebsc",
-        "cusparseCgebsr2csr",
         "cusparseCdense2hyb",
         "cusparseCcsru2csr_bufferSizeExt",
         "cusparseCcsrsv_solve",
         "cusparseCcsrsv_analysis",
         "cusparseCcsrsm_analysis",
         "cusparseCcsrmv_mp",
-        "cusparseCcsrilu02_numericBoost",
         "cusparseCcsrilu0",
         "cusparseCcsric0",
         "cusparseCcsrcolor",
         "cusparseCcsr2gebsr_bufferSizeExt",
-        "cusparseCcsr2gebsr_bufferSize",
-        "cusparseCcsr2gebsr",
         "cusparseCcsr2csru",
         "cusparseCcsc2hyb",
         "cusparseCbsrxmv",
-        "cusparseCbsrsv2_solve",
-        "cusparseCbsrsv2_bufferSizeExt",
-        "cusparseCbsrsv2_bufferSize",
-        "cusparseCbsrsv2_analysis",
         "cusparseCbsrsm2_solve",
         "cusparseCbsrsm2_bufferSizeExt",
         "cusparseCbsrsm2_bufferSize",
         "cusparseCbsrsm2_analysis",
-        "cusparseCbsrmm",
-        "cusparseCbsrilu02_numericBoost",
         "cusparseCbsrilu02_bufferSizeExt",
-        "cusparseCbsrilu02_bufferSize",
-        "cusparseCbsrilu02_analysis",
-        "cusparseCbsrilu02",
         "cusparseCbsric02_bufferSizeExt",
-        "cusparseCbsric02_bufferSize",
-        "cusparseCbsric02_analysis",
-        "cusparseCbsric02",
         "cusparseAxpby",
         "cusparseAlgMode_t",
         "curand_mtgp32_specific",
@@ -4023,7 +4130,6 @@ sub warnUnsupportedFunctions {
         "cudaStreamAttributeAccessPolicyWindow",
         "cudaStreamAttrValue",
         "cudaStreamAttrID",
-        "cudaStreamAttachMemAsync",
         "cudaSignalExternalSemaphoresAsync",
         "cudaSharedmemCarveoutMaxShared",
         "cudaSharedmemCarveoutMaxL1",
@@ -4035,7 +4141,6 @@ sub warnUnsupportedFunctions {
         "cudaProfilerInitialize",
         "cudaOutputMode_t",
         "cudaOutputMode",
-        "cudaOccupancyMaxPotentialBlockSizeWithFlags",
         "cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags",
         "cudaOccupancyMaxPotentialBlockSizeVariableSMem",
         "cudaOccupancyDisableCachingOverride",
@@ -4048,7 +4153,6 @@ sub warnUnsupportedFunctions {
         "cudaMemoryTypeHost",
         "cudaMemoryTypeDevice",
         "cudaMemoryType",
-        "cudaMemoryAdvise",
         "cudaMemcpyFromArrayAsync",
         "cudaMemcpyArrayToArray",
         "cudaMemcpy3DPeerParms",
@@ -4056,23 +4160,6 @@ sub warnUnsupportedFunctions {
         "cudaMemcpy3DPeer",
         "cudaMemcpy2DToArrayAsync",
         "cudaMemcpy2DArrayToArray",
-        "cudaMemRangeGetAttributes",
-        "cudaMemRangeGetAttribute",
-        "cudaMemRangeAttributeReadMostly",
-        "cudaMemRangeAttributePreferredLocation",
-        "cudaMemRangeAttributeLastPrefetchLocation",
-        "cudaMemRangeAttributeAccessedBy",
-        "cudaMemRangeAttribute",
-        "cudaMemPrefetchAsync",
-        "cudaMemAttachSingle",
-        "cudaMemAdviseUnsetReadMostly",
-        "cudaMemAdviseUnsetPreferredLocation",
-        "cudaMemAdviseUnsetAccessedBy",
-        "cudaMemAdviseSetReadMostly",
-        "cudaMemAdviseSetPreferredLocation",
-        "cudaMemAdviseSetAccessedBy",
-        "cudaMemAdvise",
-        "cudaMallocMipmappedArray",
         "cudaLimitStackSize",
         "cudaLimitPrintfFifoSize",
         "cudaLimitPersistingL2CacheSize",
@@ -4086,7 +4173,6 @@ sub warnUnsupportedFunctions {
         "cudaKernelNodeAttributeAccessPolicyWindow",
         "cudaKernelNodeAttrValue",
         "cudaKernelNodeAttrID",
-        "cudaInvalidDeviceId",
         "cudaImportExternalSemaphore",
         "cudaImportExternalMemory",
         "cudaHostRegisterReadOnly",
@@ -4210,7 +4296,6 @@ sub warnUnsupportedFunctions {
         "cudaGetSurfaceObjectResourceDesc",
         "cudaGetParameterBufferV2",
         "cudaGetParameterBuffer",
-        "cudaGetMipmappedArrayLevel",
         "cudaGetFuncBySymbol",
         "cudaGLUnregisterBufferObject",
         "cudaGLUnmapBufferObjectAsync",
@@ -4229,13 +4314,6 @@ sub warnUnsupportedFunctions {
         "cudaGLDeviceListCurrentFrame",
         "cudaGLDeviceListAll",
         "cudaGLDeviceList",
-        "cudaFuncSetSharedMemConfig",
-        "cudaFuncSetAttribute",
-        "cudaFuncAttributePreferredSharedMemoryCarveout",
-        "cudaFuncAttributeMaxDynamicSharedMemorySize",
-        "cudaFuncAttributeMax",
-        "cudaFuncAttribute",
-        "cudaFreeMipmappedArray",
         "cudaFormatModeForced",
         "cudaFormatModeAuto",
         "cudaExternalSemaphore_t",
@@ -4426,15 +4504,9 @@ sub warnUnsupportedFunctions {
         "cudaEGLStreamConsumerConnect",
         "cudaEGLStreamConsumerAcquireFrame",
         "cudaDevicePropDontCare",
-        "cudaDeviceP2PAttr",
         "cudaDeviceMask",
         "cudaDeviceGetTexture1DLinearMaxWidth",
-        "cudaDeviceGetP2PAttribute",
         "cudaDeviceGetNvSciSyncAttributes",
-        "cudaDevP2PAttrPerformanceRank",
-        "cudaDevP2PAttrNativeAtomicSupported",
-        "cudaDevP2PAttrCudaArrayAccessSupported",
-        "cudaDevP2PAttrAccessSupported",
         "cudaDevAttrUnifiedAddressing",
         "cudaDevAttrTexturePitchAlignment",
         "cudaDevAttrTccDriver",
@@ -4447,8 +4519,6 @@ sub warnUnsupportedFunctions {
         "cudaDevAttrReserved93",
         "cudaDevAttrReserved92",
         "cudaDevAttrPciDomainId",
-        "cudaDevAttrPageableMemoryAccessUsesHostPageTables",
-        "cudaDevAttrPageableMemoryAccess",
         "cudaDevAttrMultiGpuBoardGroupID",
         "cudaDevAttrMaxTextureCubemapWidth",
         "cudaDevAttrMaxTextureCubemapLayeredWidth",
@@ -4487,15 +4557,12 @@ sub warnUnsupportedFunctions {
         "cudaDevAttrMaxSharedMemoryPerBlockOptin",
         "cudaDevAttrMaxRegistersPerMultiprocessor",
         "cudaDevAttrMaxBlocksPerMultiprocessor",
-        "cudaDevAttrManagedMemory",
         "cudaDevAttrLocalL1CacheSupported",
         "cudaDevAttrHostRegisterSupported",
         "cudaDevAttrHostRegisterReadOnlySupported",
         "cudaDevAttrHostNativeAtomicSupported",
         "cudaDevAttrGpuOverlap",
         "cudaDevAttrGlobalL1CacheSupported",
-        "cudaDevAttrDirectManagedMemAccessFromHost",
-        "cudaDevAttrConcurrentManagedAccess",
         "cudaDevAttrComputePreemptionSupported",
         "cudaDevAttrCanUseHostPointerForRegisteredMem",
         "cudaDevAttrCanFlushRemoteWrites",
@@ -4561,7 +4628,6 @@ sub warnUnsupportedFunctions {
         "cudaD3D10DeviceListAll",
         "cudaD3D10DeviceList",
         "cudaCtxResetPersistingL2Cache",
-        "cudaCpuDeviceId",
         "cudaCSV",
         "cudaCGScopeMultiGrid",
         "cudaCGScopeInvalid",
@@ -4596,7 +4662,6 @@ sub warnUnsupportedFunctions {
         "cublasSetMathMode",
         "cublasSetLoggerCallback",
         "cublasSetKernelStream",
-        "cublasSetAtomicsMode",
         "cublasScalEx",
         "cublasRotmgEx",
         "cublasRotmEx",
@@ -4617,7 +4682,6 @@ sub warnUnsupportedFunctions {
         "cublasGetLoggerCallback",
         "cublasGetError",
         "cublasGetCudartVersion",
-        "cublasGetAtomicsMode",
         "cublasFree",
         "cublasDtrttp",
         "cublasDtpttr",
@@ -4642,7 +4706,6 @@ sub warnUnsupportedFunctions {
         "cublasCgemm3m",
         "cublasCgelsBatched",
         "cublasAxpyEx",
-        "cublasAtomicsMode_t",
         "cublasAsumEx",
         "cublasAlloc",
         "cuWaitExternalSemaphoresAsync",
@@ -4650,28 +4713,9 @@ sub warnUnsupportedFunctions {
         "cuVDPAUGetDevice",
         "cuVDPAUCtxCreate",
         "cuThreadExchangeStreamCaptureMode",
-        "cuTexRefSetMipmappedArray",
-        "cuTexRefSetMipmapLevelClamp",
-        "cuTexRefSetMipmapLevelBias",
-        "cuTexRefSetMipmapFilterMode",
-        "cuTexRefSetMaxAnisotropy",
-        "cuTexRefSetBorderColor",
-        "cuTexRefGetMipmappedArray",
-        "cuTexRefGetMipmapLevelClamp",
-        "cuTexRefGetMipmapLevelBias",
-        "cuTexRefGetMipmapFilterMode",
-        "cuTexRefGetMaxAnisotropy",
-        "cuTexRefGetFormat",
-        "cuTexRefGetFlags",
-        "cuTexRefGetFilterMode",
         "cuTexRefGetBorderColor",
         "cuTexRefDestroy",
         "cuTexRefCreate",
-        "cuTexObjectGetTextureDesc",
-        "cuTexObjectGetResourceViewDesc",
-        "cuTexObjectGetResourceDesc",
-        "cuTexObjectDestroy",
-        "cuTexObjectCreate",
         "cuSurfRefSetArray",
         "cuSurfRefGetArray",
         "cuSurfObjectGetResourceDesc",
@@ -4692,7 +4736,6 @@ sub warnUnsupportedFunctions {
         "cuStreamBeginCapture_ptsz",
         "cuStreamBeginCapture",
         "cuStreamBatchMemOp",
-        "cuStreamAttachMemAsync",
         "cuSignalExternalSemaphoresAsync",
         "cuProfilerInitialize",
         "cuPointerSetAttribute",
@@ -4703,13 +4746,9 @@ sub warnUnsupportedFunctions {
         "cuParamSetf",
         "cuParamSetTexRef",
         "cuParamSetSize",
-        "cuOccupancyMaxPotentialBlockSizeWithFlags",
         "cuOccupancyAvailableDynamicSMemPerBlock",
         "cuModuleLoadFatBinary",
         "cuModuleGetSurfRef",
-        "cuMipmappedArrayGetLevel",
-        "cuMipmappedArrayDestroy",
-        "cuMipmappedArrayCreate",
         "cuMemsetD2D8_v2",
         "cuMemsetD2D8Async",
         "cuMemsetD2D8",
@@ -4741,8 +4780,6 @@ sub warnUnsupportedFunctions {
         "cuMemSetAccess",
         "cuMemRetainAllocationHandle",
         "cuMemRelease",
-        "cuMemRangeGetAttributes",
-        "cuMemRangeGetAttribute",
         "cuMemPrefetchAsync",
         "cuMemMapArrayAsync",
         "cuMemMap",
@@ -4752,7 +4789,6 @@ sub warnUnsupportedFunctions {
         "cuMemGetAccess",
         "cuMemExportToShareableHandle",
         "cuMemCreate",
-        "cuMemAdvise",
         "cuMemAddressReserve",
         "cuMemAddressFree",
         "cuLinkDestroy",
@@ -4769,8 +4805,6 @@ sub warnUnsupportedFunctions {
         "cuLaunchCooperativeKernelMultiDevice",
         "cuLaunchCooperativeKernel",
         "cuLaunch",
-        "cuIpcOpenEventHandle",
-        "cuIpcGetEventHandle",
         "cuImportExternalSemaphore",
         "cuImportExternalMemory",
         "cuGraphicsVDPAURegisterVideoSurface",
@@ -4875,7 +4909,6 @@ sub warnUnsupportedFunctions {
         "cuDeviceGetUuid",
         "cuDeviceGetTexture1DLinearMaxWidth",
         "cuDeviceGetProperties",
-        "cuDeviceGetP2PAttribute",
         "cuDeviceGetNvSciSyncAttributes",
         "cuDeviceGetLuid",
         "cuDestroyExternalSemaphore",
@@ -4932,8 +4965,6 @@ sub warnUnsupportedFunctions {
         "bsrsv2Info",
         "bsrsm2Info_t",
         "bsrsm2Info",
-        "bsrilu02Info_t",
-        "bsrilu02Info",
         "bsric02Info_t",
         "bsric02Info",
         "PATCH_LEVEL",
@@ -4973,10 +5004,6 @@ sub warnUnsupportedFunctions {
         "CUoccupancy_flags_enum",
         "CUoccupancy_flags",
         "CUoccupancyB2DSize",
-        "CUmem_range_attribute_enum",
-        "CUmem_range_attribute",
-        "CUmem_advise_enum",
-        "CUmem_advise",
         "CUmemOperationType_enum",
         "CUmemOperationType",
         "CUmemLocation_st",
@@ -5055,8 +5082,6 @@ sub warnUnsupportedFunctions {
         "CUeglColorFormat",
         "CUdevprop_st",
         "CUdevprop",
-        "CUdevice_P2PAttribute_enum",
-        "CUdevice_P2PAttribute",
         "CUd3d9register_flags_enum",
         "CUd3d9register_flags",
         "CUd3d9map_flags_enum",
@@ -5158,10 +5183,6 @@ sub warnUnsupportedFunctions {
         "CU_POINTER_ATTRIBUTE_ACCESS_FLAGS",
         "CU_PARAM_TR_DEFAULT",
         "CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE",
-        "CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY",
-        "CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION",
-        "CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION",
-        "CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY",
         "CU_MEM_OPERATION_TYPE_UNMAP",
         "CU_MEM_OPERATION_TYPE_MAP",
         "CU_MEM_LOCATION_TYPE_MAX",
@@ -5173,15 +5194,8 @@ sub warnUnsupportedFunctions {
         "CU_MEM_HANDLE_TYPE_MAX",
         "CU_MEM_HANDLE_TYPE_GENERIC",
         "CU_MEM_CREATE_USAGE_TILE_POOL",
-        "CU_MEM_ATTACH_SINGLE",
         "CU_MEM_ALLOC_GRANULARITY_RECOMMENDED",
         "CU_MEM_ALLOC_GRANULARITY_MINIMUM",
-        "CU_MEM_ADVISE_UNSET_READ_MOSTLY",
-        "CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION",
-        "CU_MEM_ADVISE_UNSET_ACCESSED_BY",
-        "CU_MEM_ADVISE_SET_READ_MOSTLY",
-        "CU_MEM_ADVISE_SET_PREFERRED_LOCATION",
-        "CU_MEM_ADVISE_SET_ACCESSED_BY",
         "CU_MEM_ACCESS_FLAGS_PROT_READWRITE",
         "CU_MEM_ACCESS_FLAGS_PROT_READ",
         "CU_MEM_ACCESS_FLAGS_PROT_NONE",
@@ -5202,10 +5216,12 @@ sub warnUnsupportedFunctions {
         "CU_JIT_INPUT_LIBRARY",
         "CU_JIT_INPUT_FATBINARY",
         "CU_JIT_INPUT_CUBIN",
+        "CU_JIT_GLOBAL_SYMBOL_NAMES",
+        "CU_JIT_GLOBAL_SYMBOL_COUNT",
+        "CU_JIT_GLOBAL_SYMBOL_ADDRESSES",
         "CU_JIT_CACHE_OPTION_NONE",
         "CU_JIT_CACHE_OPTION_CG",
         "CU_JIT_CACHE_OPTION_CA",
-        "CU_IPC_HANDLE_SIZE",
         "CU_GRAPH_NODE_TYPE_WAIT_EVENT",
         "CU_GRAPH_NODE_TYPE_MEMSET",
         "CU_GRAPH_NODE_TYPE_MEMCPY",
@@ -5333,14 +5349,6 @@ sub warnUnsupportedFunctions {
         "CU_EGL_COLOR_FORMAT_ARGB",
         "CU_EGL_COLOR_FORMAT_ABGR",
         "CU_EGL_COLOR_FORMAT_A",
-        "CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK",
-        "CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED",
-        "CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED",
-        "CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED",
-        "CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED",
-        "CU_DEVICE_P2P_ATTRIBUTE_ACCESS_ACCESS_SUPPORTED",
-        "CU_DEVICE_INVALID",
-        "CU_DEVICE_CPU",
         "CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED",
         "CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING",
         "CU_DEVICE_ATTRIBUTE_TEXTURE_PITCH_ALIGNMENT",
@@ -5352,8 +5360,6 @@ sub warnUnsupportedFunctions {
         "CU_DEVICE_ATTRIBUTE_RESERVED_SHARED_MEMORY_PER_BLOCK",
         "CU_DEVICE_ATTRIBUTE_READ_ONLY_HOST_REGISTER_SUPPORTED",
         "CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID",
-        "CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES",
-        "CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS",
         "CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID",
         "CU_DEVICE_ATTRIBUTE_MAX_SHARED_MEMORY_PER_BLOCK_OPTIN",
         "CU_DEVICE_ATTRIBUTE_MAX_REGISTERS_PER_MULTIPROCESSOR",
@@ -5398,7 +5404,6 @@ sub warnUnsupportedFunctions {
         "CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_WIDTH",
         "CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_LAYERS",
         "CU_DEVICE_ATTRIBUTE_MAX",
-        "CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY",
         "CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED",
         "CU_DEVICE_ATTRIBUTE_HOST_REGISTER_SUPPORTED",
         "CU_DEVICE_ATTRIBUTE_HOST_NATIVE_ATOMIC_SUPPORTED",
@@ -5409,8 +5414,6 @@ sub warnUnsupportedFunctions {
         "CU_DEVICE_ATTRIBUTE_GPU_DIRECT_RDMA_WITH_CUDA_VMM_SUPPORTED",
         "CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED",
         "CU_DEVICE_ATTRIBUTE_GENERIC_COMPRESSION_SUPPORTED",
-        "CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST",
-        "CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS",
         "CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED",
         "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_WAIT_VALUE_NOR",
         "CU_DEVICE_ATTRIBUTE_CAN_USE_STREAM_MEM_OPS",
@@ -5900,7 +5903,6 @@ sub warnUnsupportedFunctions {
         "CUDA_LAUNCH_PARAMS",
         "CUDA_KERNEL_NODE_PARAMS_st",
         "CUDA_KERNEL_NODE_PARAMS",
-        "CUDA_IPC_HANDLE_SIZE",
         "CUDA_HOST_NODE_PARAMS_st",
         "CUDA_HOST_NODE_PARAMS",
         "CUDA_EXTERNAL_SEMAPHORE_WAIT_SKIP_NVSCIBUF_MEMSYNC",
@@ -6019,9 +6021,7 @@ sub warnUnsupportedFunctions {
         "CUBLAS_COMPUTE_32F_FAST_16BF",
         "CUBLAS_COMPUTE_32F",
         "CUBLAS_COMPUTE_16F_PEDANTIC",
-        "CUBLAS_COMPUTE_16F",
-        "CUBLAS_ATOMICS_NOT_ALLOWED",
-        "CUBLAS_ATOMICS_ALLOWED"
+        "CUBLAS_COMPUTE_16F"
     )
     {
         my $mt = m/($func)/g;
