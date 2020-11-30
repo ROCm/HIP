@@ -4,8 +4,8 @@
 
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
-|`CUBLAS_ATOMICS_ALLOWED`|  |  |  ||
-|`CUBLAS_ATOMICS_NOT_ALLOWED`|  |  |  ||
+|`CUBLAS_ATOMICS_ALLOWED`|  |  |  |`HIPBLAS_ATOMICS_ALLOWED`|
+|`CUBLAS_ATOMICS_NOT_ALLOWED`|  |  |  |`HIPBLAS_ATOMICS_NOT_ALLOWED`|
 |`CUBLAS_COMPUTE_16F`| 11.0 |  |  |`HIPBLAS_COMPUTE_16F`|
 |`CUBLAS_COMPUTE_16F_PEDANTIC`| 11.0 |  |  |`HIPBLAS_COMPUTE_16F_PEDANTIC`|
 |`CUBLAS_COMPUTE_32F`| 11.0 |  |  |`HIPBLAS_COMPUTE_32F`|
@@ -95,7 +95,7 @@
 |`CUBLAS_VER_MAJOR`| 10.1 |  |  ||
 |`CUBLAS_VER_MINOR`| 10.1 |  |  ||
 |`CUBLAS_VER_PATCH`| 10.1 |  |  ||
-|`cublasAtomicsMode_t`|  |  |  ||
+|`cublasAtomicsMode_t`|  |  |  |`hipblasAtomicsMode_t`|
 |`cublasComputeType_t`| 11.0 |  |  |`hipblasComputeType_t`|
 |`cublasContext`|  |  |  ||
 |`cublasDataType_t`| 7.5 |  |  |`hipblasDatatype_t`|

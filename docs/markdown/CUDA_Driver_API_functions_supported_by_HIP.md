@@ -218,10 +218,10 @@
 |`CU_DEVICE_ATTRIBUTE_COMPUTE_MODE`|  |  |  |`hipDeviceAttributeComputeMode`|
 |`CU_DEVICE_ATTRIBUTE_COMPUTE_PREEMPTION_SUPPORTED`| 8.0 |  |  ||
 |`CU_DEVICE_ATTRIBUTE_CONCURRENT_KERNELS`|  |  |  |`hipDeviceAttributeConcurrentKernels`|
-|`CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS`| 8.0 |  |  ||
+|`CU_DEVICE_ATTRIBUTE_CONCURRENT_MANAGED_ACCESS`| 8.0 |  |  |`hipDeviceAttributeConcurrentManagedAccess`|
 |`CU_DEVICE_ATTRIBUTE_COOPERATIVE_LAUNCH`| 9.0 |  |  |`hipDeviceAttributeCooperativeLaunch`|
 |`CU_DEVICE_ATTRIBUTE_COOPERATIVE_MULTI_DEVICE_LAUNCH`| 9.0 |  |  |`hipDeviceAttributeCooperativeMultiDeviceLaunch`|
-|`CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST`| 9.2 |  |  ||
+|`CU_DEVICE_ATTRIBUTE_DIRECT_MANAGED_MEM_ACCESS_FROM_HOST`| 9.2 |  |  |`hipDeviceAttributeDirectManagedMemAccessFromHost`|
 |`CU_DEVICE_ATTRIBUTE_ECC_ENABLED`|  |  |  |`hipDeviceAttributeEccEnabled`|
 |`CU_DEVICE_ATTRIBUTE_GENERIC_COMPRESSION_SUPPORTED`| 11.0 |  |  ||
 |`CU_DEVICE_ATTRIBUTE_GLOBAL_L1_CACHE_SUPPORTED`|  |  |  ||
@@ -237,7 +237,7 @@
 |`CU_DEVICE_ATTRIBUTE_KERNEL_EXEC_TIMEOUT`|  |  |  |`hipDeviceAttributeKernelExecTimeout`|
 |`CU_DEVICE_ATTRIBUTE_L2_CACHE_SIZE`|  |  |  |`hipDeviceAttributeL2CacheSize`|
 |`CU_DEVICE_ATTRIBUTE_LOCAL_L1_CACHE_SUPPORTED`|  |  |  ||
-|`CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY`|  |  |  ||
+|`CU_DEVICE_ATTRIBUTE_MANAGED_MEMORY`|  |  |  |`hipDeviceAttributeManagedMemory`|
 |`CU_DEVICE_ATTRIBUTE_MAX`|  |  |  ||
 |`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_LAYERS`|  |  |  ||
 |`CU_DEVICE_ATTRIBUTE_MAXIMUM_SURFACE1D_LAYERED_WIDTH`|  |  |  ||
@@ -303,8 +303,8 @@
 |`CU_DEVICE_ATTRIBUTE_MULTIPROCESSOR_COUNT`|  |  |  |`hipDeviceAttributeMultiprocessorCount`|
 |`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD`|  |  |  |`hipDeviceAttributeIsMultiGpuBoard`|
 |`CU_DEVICE_ATTRIBUTE_MULTI_GPU_BOARD_GROUP_ID`|  |  |  ||
-|`CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS`| 8.0 |  |  ||
-|`CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES`| 9.2 |  |  ||
+|`CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS`| 8.0 |  |  |`hipDeviceAttributePageableMemoryAccess`|
+|`CU_DEVICE_ATTRIBUTE_PAGEABLE_MEMORY_ACCESS_USES_HOST_PAGE_TABLES`| 9.2 |  |  |`hipDeviceAttributePageableMemoryAccessUsesHostPageTables`|
 |`CU_DEVICE_ATTRIBUTE_PCI_BUS_ID`|  |  |  |`hipDeviceAttributePciBusId`|
 |`CU_DEVICE_ATTRIBUTE_PCI_DEVICE_ID`|  |  |  |`hipDeviceAttributePciDeviceId`|
 |`CU_DEVICE_ATTRIBUTE_PCI_DOMAIN_ID`|  |  |  ||
@@ -323,14 +323,14 @@
 |`CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING`|  |  |  ||
 |`CU_DEVICE_ATTRIBUTE_VIRTUAL_ADDRESS_MANAGEMENT_SUPPORTED`| 10.2 |  |  ||
 |`CU_DEVICE_ATTRIBUTE_WARP_SIZE`|  |  |  |`hipDeviceAttributeWarpSize`|
-|`CU_DEVICE_CPU`| 8.0 |  |  ||
-|`CU_DEVICE_INVALID`| 8.0 |  |  ||
-|`CU_DEVICE_P2P_ATTRIBUTE_ACCESS_ACCESS_SUPPORTED`| 10.1 | 10.1 |  ||
-|`CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED`| 8.0 |  |  ||
-|`CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED`| 9.2 | 10.0 | 10.1 ||
-|`CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED`| 10.0 |  |  ||
-|`CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED`| 8.0 |  |  ||
-|`CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK`| 8.0 |  |  ||
+|`CU_DEVICE_CPU`| 8.0 |  |  |`hipCpuDeviceId`|
+|`CU_DEVICE_INVALID`| 8.0 |  |  |`hipInvalidDeviceId`|
+|`CU_DEVICE_P2P_ATTRIBUTE_ACCESS_ACCESS_SUPPORTED`| 10.1 | 10.1 |  |`hipDevP2PAttrHipArrayAccessSupported`|
+|`CU_DEVICE_P2P_ATTRIBUTE_ACCESS_SUPPORTED`| 8.0 |  |  |`hipDevP2PAttrAccessSupported`|
+|`CU_DEVICE_P2P_ATTRIBUTE_ARRAY_ACCESS_ACCESS_SUPPORTED`| 9.2 | 10.0 | 10.1 |`hipDevP2PAttrHipArrayAccessSupported`|
+|`CU_DEVICE_P2P_ATTRIBUTE_CUDA_ARRAY_ACCESS_SUPPORTED`| 10.0 |  |  |`hipDevP2PAttrHipArrayAccessSupported`|
+|`CU_DEVICE_P2P_ATTRIBUTE_NATIVE_ATOMIC_SUPPORTED`| 8.0 |  |  |`hipDevP2PAttrNativeAtomicSupported`|
+|`CU_DEVICE_P2P_ATTRIBUTE_PERFORMANCE_RANK`| 8.0 |  |  |`hipDevP2PAttrPerformanceRank`|
 |`CU_EGL_COLOR_FORMAT_A`| 9.1 |  |  ||
 |`CU_EGL_COLOR_FORMAT_ABGR`| 9.1 |  |  ||
 |`CU_EGL_COLOR_FORMAT_ARGB`| 9.0 |  |  ||
@@ -477,7 +477,7 @@
 |`CU_GRAPH_NODE_TYPE_MEMCPY`| 10.0 |  |  ||
 |`CU_GRAPH_NODE_TYPE_MEMSET`| 10.0 |  |  ||
 |`CU_GRAPH_NODE_TYPE_WAIT_EVENT`| 11.1 |  |  ||
-|`CU_IPC_HANDLE_SIZE`|  |  |  ||
+|`CU_IPC_HANDLE_SIZE`|  |  |  |`HIP_IPC_HANDLE_SIZE`|
 |`CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS`|  |  |  |`hipIpcMemLazyEnablePeerAccess`|
 |`CU_JIT_CACHE_MODE`|  |  |  |`hipJitOptionCacheMode`|
 |`CU_JIT_CACHE_OPTION_CA`|  |  |  ||
@@ -489,9 +489,9 @@
 |`CU_JIT_FAST_COMPILE`|  |  |  |`hipJitOptionFastCompile`|
 |`CU_JIT_GENERATE_DEBUG_INFO`|  |  |  |`hipJitOptionGenerateDebugInfo`|
 |`CU_JIT_GENERATE_LINE_INFO`|  |  |  |`hipJitOptionGenerateLineInfo`|
-|`CU_JIT_GLOBAL_SYMBOL_ADDRESSES`|  |  |  |`hipJitGlobalSymbolAddresses`|
-|`CU_JIT_GLOBAL_SYMBOL_COUNT`|  |  |  |`hipJitGlobalSymbolCount`|
-|`CU_JIT_GLOBAL_SYMBOL_NAMES`|  |  |  |`hipJitGlobalSymbolNames`|
+|`CU_JIT_GLOBAL_SYMBOL_ADDRESSES`|  |  |  ||
+|`CU_JIT_GLOBAL_SYMBOL_COUNT`|  |  |  ||
+|`CU_JIT_GLOBAL_SYMBOL_NAMES`|  |  |  ||
 |`CU_JIT_INFO_LOG_BUFFER`|  |  |  |`hipJitOptionInfoLogBuffer`|
 |`CU_JIT_INFO_LOG_BUFFER_SIZE_BYTES`|  |  |  |`hipJitOptionInfoLogBufferSizeBytes`|
 |`CU_JIT_INPUT_CUBIN`|  |  |  ||
@@ -537,17 +537,17 @@
 |`CU_MEM_ACCESS_FLAGS_PROT_NONE`| 10.2 |  |  ||
 |`CU_MEM_ACCESS_FLAGS_PROT_READ`| 10.2 |  |  ||
 |`CU_MEM_ACCESS_FLAGS_PROT_READWRITE`| 10.2 |  |  ||
-|`CU_MEM_ADVISE_SET_ACCESSED_BY`| 8.0 |  |  ||
-|`CU_MEM_ADVISE_SET_PREFERRED_LOCATION`| 8.0 |  |  ||
-|`CU_MEM_ADVISE_SET_READ_MOSTLY`| 8.0 |  |  ||
-|`CU_MEM_ADVISE_UNSET_ACCESSED_BY`| 8.0 |  |  ||
-|`CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION`| 8.0 |  |  ||
-|`CU_MEM_ADVISE_UNSET_READ_MOSTLY`| 8.0 |  |  ||
+|`CU_MEM_ADVISE_SET_ACCESSED_BY`| 8.0 |  |  |`hipMemAdviseSetAccessedBy`|
+|`CU_MEM_ADVISE_SET_PREFERRED_LOCATION`| 8.0 |  |  |`hipMemAdviseSetPreferredLocation`|
+|`CU_MEM_ADVISE_SET_READ_MOSTLY`| 8.0 |  |  |`hipMemAdviseSetReadMostly`|
+|`CU_MEM_ADVISE_UNSET_ACCESSED_BY`| 8.0 |  |  |`hipMemAdviseUnsetAccessedBy`|
+|`CU_MEM_ADVISE_UNSET_PREFERRED_LOCATION`| 8.0 |  |  |`hipMemAdviseUnsetPreferredLocation`|
+|`CU_MEM_ADVISE_UNSET_READ_MOSTLY`| 8.0 |  |  |`hipMemAdviseUnsetReadMostly`|
 |`CU_MEM_ALLOC_GRANULARITY_MINIMUM`| 10.2 |  |  ||
 |`CU_MEM_ALLOC_GRANULARITY_RECOMMENDED`| 10.2 |  |  ||
 |`CU_MEM_ATTACH_GLOBAL`|  |  |  |`hipMemAttachGlobal`|
 |`CU_MEM_ATTACH_HOST`|  |  |  |`hipMemAttachHost`|
-|`CU_MEM_ATTACH_SINGLE`|  |  |  ||
+|`CU_MEM_ATTACH_SINGLE`|  |  |  |`hipMemAttachSingle`|
 |`CU_MEM_CREATE_USAGE_TILE_POOL`| 11.1 |  |  ||
 |`CU_MEM_HANDLE_TYPE_GENERIC`| 11.1 |  |  ||
 |`CU_MEM_HANDLE_TYPE_MAX`| 10.2 |  |  ||
@@ -559,10 +559,10 @@
 |`CU_MEM_LOCATION_TYPE_MAX`| 10.2 |  |  ||
 |`CU_MEM_OPERATION_TYPE_MAP`| 11.1 |  |  ||
 |`CU_MEM_OPERATION_TYPE_UNMAP`| 11.1 |  |  ||
-|`CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY`| 8.0 |  |  ||
-|`CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION`| 8.0 |  |  ||
-|`CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION`| 8.0 |  |  ||
-|`CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY`| 8.0 |  |  ||
+|`CU_MEM_RANGE_ATTRIBUTE_ACCESSED_BY`| 8.0 |  |  |`hipMemRangeAttributeAccessedBy`|
+|`CU_MEM_RANGE_ATTRIBUTE_LAST_PREFETCH_LOCATION`| 8.0 |  |  |`hipMemRangeAttributeLastPrefetchLocation`|
+|`CU_MEM_RANGE_ATTRIBUTE_PREFERRED_LOCATION`| 8.0 |  |  |`hipMemRangeAttributePreferredLocation`|
+|`CU_MEM_RANGE_ATTRIBUTE_READ_MOSTLY`| 8.0 |  |  |`hipMemRangeAttributeReadMostly`|
 |`CU_OCCUPANCY_DEFAULT`|  |  |  |`hipOccupancyDefault`|
 |`CU_OCCUPANCY_DISABLE_CACHING_OVERRIDE`|  |  |  ||
 |`CU_PARAM_TR_DEFAULT`|  |  |  ||
@@ -729,8 +729,8 @@
 |`CUd3d9register_flags`|  |  |  ||
 |`CUd3d9register_flags_enum`|  |  |  ||
 |`CUdevice`|  |  |  |`hipDevice_t`|
-|`CUdevice_P2PAttribute`| 8.0 |  |  ||
-|`CUdevice_P2PAttribute_enum`| 8.0 |  |  ||
+|`CUdevice_P2PAttribute`| 8.0 |  |  |`hipDeviceP2PAttr`|
+|`CUdevice_P2PAttribute_enum`| 8.0 |  |  |`hipDeviceP2PAttr`|
 |`CUdevice_attribute`|  |  |  |`hipDeviceAttribute_t`|
 |`CUdevice_attribute_enum`|  |  |  |`hipDeviceAttribute_t`|
 |`CUdeviceptr`|  |  |  |`hipDeviceptr_t`|
@@ -786,8 +786,8 @@
 |`CUgraphicsResource`|  |  |  ||
 |`CUgraphicsResource_st`|  |  |  ||
 |`CUhostFn`| 10.0 |  |  ||
-|`CUipcEventHandle`|  |  |  |`ihipIpcEventHandle_t`|
-|`CUipcEventHandle_st`|  |  |  |`ihipIpcEventHandle_t`|
+|`CUipcEventHandle`|  |  |  |`hipIpcEventHandle_t`|
+|`CUipcEventHandle_st`|  |  |  |`hipIpcEventHandle_st`|
 |`CUipcMemHandle`|  |  |  |`hipIpcMemHandle_t`|
 |`CUipcMemHandle_st`|  |  |  |`hipIpcMemHandle_st`|
 |`CUipcMem_flags`|  |  |  ||
@@ -829,10 +829,10 @@
 |`CUmemLocation_st`| 10.2 |  |  ||
 |`CUmemOperationType`| 11.1 |  |  ||
 |`CUmemOperationType_enum`| 11.1 |  |  ||
-|`CUmem_advise`| 8.0 |  |  ||
-|`CUmem_advise_enum`| 8.0 |  |  ||
-|`CUmem_range_attribute`| 8.0 |  |  ||
-|`CUmem_range_attribute_enum`| 8.0 |  |  ||
+|`CUmem_advise`| 8.0 |  |  |`hipMemoryAdvise`|
+|`CUmem_advise_enum`| 8.0 |  |  |`hipMemoryAdvise`|
+|`CUmem_range_attribute`| 8.0 |  |  |`hipMemRangeAttribute`|
+|`CUmem_range_attribute_enum`| 8.0 |  |  |`hipMemRangeAttribute`|
 |`CUmemorytype`|  |  |  |`hipMemoryType`|
 |`CUmemorytype_enum`|  |  |  |`hipMemoryType`|
 |`CUmipmappedArray`|  |  |  |`hipMipmappedArray_t`|
@@ -910,7 +910,7 @@
 
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
-|`cuDeviceGet`|  |  |  |`hipGetDevice`|
+|`cuDeviceGet`|  |  |  |`hipDeviceGet`|
 |`cuDeviceGetAttribute`|  |  |  |`hipDeviceGetAttribute`|
 |`cuDeviceGetCount`|  |  |  |`hipGetDeviceCount`|
 |`cuDeviceGetLuid`| 10.0 |  |  ||
@@ -1015,9 +1015,9 @@
 |`cuDeviceGetByPCIBusId`|  |  |  |`hipDeviceGetByPCIBusId`|
 |`cuDeviceGetPCIBusId`|  |  |  |`hipDeviceGetPCIBusId`|
 |`cuIpcCloseMemHandle`|  |  |  |`hipIpcCloseMemHandle`|
-|`cuIpcGetEventHandle`|  |  |  ||
+|`cuIpcGetEventHandle`|  |  |  |`hipIpcGetEventHandle`|
 |`cuIpcGetMemHandle`|  |  |  |`hipIpcGetMemHandle`|
-|`cuIpcOpenEventHandle`|  |  |  ||
+|`cuIpcOpenEventHandle`|  |  |  |`hipIpcOpenEventHandle`|
 |`cuIpcOpenMemHandle`|  |  |  |`hipIpcOpenMemHandle`|
 |`cuMemAlloc`|  |  |  |`hipMalloc`|
 |`cuMemAllocHost`|  |  |  |`hipHostMalloc`|
@@ -1100,9 +1100,9 @@
 |`cuMemsetD8`|  |  |  |`hipMemsetD8`|
 |`cuMemsetD8Async`|  |  |  |`hipMemsetD8Async`|
 |`cuMemsetD8_v2`|  |  |  |`hipMemsetD8`|
-|`cuMipmappedArrayCreate`|  |  |  ||
-|`cuMipmappedArrayDestroy`|  |  |  ||
-|`cuMipmappedArrayGetLevel`|  |  |  ||
+|`cuMipmappedArrayCreate`|  |  |  |`hipMipmappedArrayCreate`|
+|`cuMipmappedArrayDestroy`|  |  |  |`hipMipmappedArrayDestroy`|
+|`cuMipmappedArrayGetLevel`|  |  |  |`hipMipmappedArrayGetLevel`|
 
 ## **12. Virtual Memory Management**
 
@@ -1127,10 +1127,10 @@
 
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
-|`cuMemAdvise`| 8.0 |  |  ||
+|`cuMemAdvise`| 8.0 |  |  |`hipMemAdvise`|
 |`cuMemPrefetchAsync`| 8.0 |  |  ||
-|`cuMemRangeGetAttribute`| 8.0 |  |  ||
-|`cuMemRangeGetAttributes`| 8.0 |  |  ||
+|`cuMemRangeGetAttribute`| 8.0 |  |  |`hipMemRangeGetAttribute`|
+|`cuMemRangeGetAttributes`| 8.0 |  |  |`hipMemRangeGetAttributes`|
 |`cuPointerGetAttribute`|  |  |  ||
 |`cuPointerGetAttributes`|  |  |  ||
 |`cuPointerSetAttribute`|  |  |  ||
@@ -1140,7 +1140,7 @@
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
 |`cuStreamAddCallback`|  |  |  |`hipStreamAddCallback`|
-|`cuStreamAttachMemAsync`|  |  |  ||
+|`cuStreamAttachMemAsync`|  |  |  |`hipStreamAttachMemAsync`|
 |`cuStreamBeginCapture`| 10.0 |  |  ||
 |`cuStreamBeginCapture_ptsz`| 10.1 |  |  ||
 |`cuStreamBeginCapture_v2`| 10.1 |  |  ||
@@ -1287,10 +1287,10 @@
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
 |`cuOccupancyAvailableDynamicSMemPerBlock`| 11.0 |  |  ||
-|`cuOccupancyMaxActiveBlocksPerMultiprocessor`|  |  |  |`hipDrvOccupancyMaxActiveBlocksPerMultiprocessor`|
-|`cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|  |  |  |`hipDrvOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
-|`cuOccupancyMaxPotentialBlockSize`|  |  |  |`hipOccupancyMaxPotentialBlockSize`|
-|`cuOccupancyMaxPotentialBlockSizeWithFlags`|  |  |  ||
+|`cuOccupancyMaxActiveBlocksPerMultiprocessor`|  |  |  |`hipModuleOccupancyMaxActiveBlocksPerMultiprocessor`|
+|`cuOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|  |  |  |`hipModuleOccupancyMaxActiveBlocksPerMultiprocessorWithFlags`|
+|`cuOccupancyMaxPotentialBlockSize`|  |  |  |`hipModuleOccupancyMaxPotentialBlockSize`|
+|`cuOccupancyMaxPotentialBlockSizeWithFlags`|  |  |  |`hipModuleOccupancyMaxPotentialBlockSizeWithFlags`|
 
 ## **22. Texture Reference Management [DEPRECATED]**
 
@@ -1303,14 +1303,14 @@
 |`cuTexRefGetAddress_v2`|  | 11.0 |  |`hipTexRefGetAddress`|
 |`cuTexRefGetArray`|  | 11.0 |  |`hipTexRefGetArray`|
 |`cuTexRefGetBorderColor`| 8.0 | 11.0 |  ||
-|`cuTexRefGetFilterMode`|  | 11.0 |  ||
-|`cuTexRefGetFlags`|  | 11.0 |  ||
-|`cuTexRefGetFormat`|  | 11.0 |  ||
-|`cuTexRefGetMaxAnisotropy`|  | 11.0 |  ||
-|`cuTexRefGetMipmapFilterMode`|  | 11.0 |  ||
-|`cuTexRefGetMipmapLevelBias`|  | 11.0 |  ||
-|`cuTexRefGetMipmapLevelClamp`|  | 11.0 |  ||
-|`cuTexRefGetMipmappedArray`|  | 11.0 |  ||
+|`cuTexRefGetFilterMode`|  | 11.0 |  |`hipTexRefGetFilterMode`|
+|`cuTexRefGetFlags`|  | 11.0 |  |`hipTexRefGetFlags`|
+|`cuTexRefGetFormat`|  | 11.0 |  |`hipTexRefGetFormat`|
+|`cuTexRefGetMaxAnisotropy`|  | 11.0 |  |`hipTexRefGetMaxAnisotropy`|
+|`cuTexRefGetMipmapFilterMode`|  | 11.0 |  |`hipTexRefGetMipmapFilterMode`|
+|`cuTexRefGetMipmapLevelBias`|  | 11.0 |  |`hipTexRefGetMipmapLevelBias`|
+|`cuTexRefGetMipmapLevelClamp`|  | 11.0 |  |`hipTexRefGetMipmapLevelClamp`|
+|`cuTexRefGetMipmappedArray`|  | 11.0 |  |`hipTexRefGetMipMappedArray`|
 |`cuTexRefSetAddress`|  | 11.0 |  |`hipTexRefSetAddress`|
 |`cuTexRefSetAddress2D`|  | 11.0 |  |`hipTexRefSetAddress2D`|
 |`cuTexRefSetAddress2D_v2`|  |  |  |`hipTexRefSetAddress2D`|
@@ -1318,15 +1318,15 @@
 |`cuTexRefSetAddressMode`|  | 11.0 |  |`hipTexRefSetAddressMode`|
 |`cuTexRefSetAddress_v2`|  | 11.0 |  |`hipTexRefSetAddress`|
 |`cuTexRefSetArray`|  | 11.0 |  |`hipTexRefSetArray`|
-|`cuTexRefSetBorderColor`| 8.0 | 11.0 |  ||
+|`cuTexRefSetBorderColor`| 8.0 | 11.0 |  |`hipTexRefSetBorderColor`|
 |`cuTexRefSetFilterMode`|  | 11.0 |  |`hipTexRefSetFilterMode`|
 |`cuTexRefSetFlags`|  | 11.0 |  |`hipTexRefSetFlags`|
 |`cuTexRefSetFormat`|  | 11.0 |  |`hipTexRefSetFormat`|
-|`cuTexRefSetMaxAnisotropy`|  | 11.0 |  ||
-|`cuTexRefSetMipmapFilterMode`|  | 11.0 |  ||
-|`cuTexRefSetMipmapLevelBias`|  | 11.0 |  ||
-|`cuTexRefSetMipmapLevelClamp`|  | 11.0 |  ||
-|`cuTexRefSetMipmappedArray`|  | 11.0 |  ||
+|`cuTexRefSetMaxAnisotropy`|  | 11.0 |  |`hipTexRefSetMaxAnisotropy`|
+|`cuTexRefSetMipmapFilterMode`|  | 11.0 |  |`hipTexRefSetMipmapFilterMode`|
+|`cuTexRefSetMipmapLevelBias`|  | 11.0 |  |`hipTexRefSetMipmapLevelBias`|
+|`cuTexRefSetMipmapLevelClamp`|  | 11.0 |  |`hipTexRefSetMipmapLevelClamp`|
+|`cuTexRefSetMipmappedArray`|  | 11.0 |  |`hipTexRefSetMipmappedArray`|
 
 ## **23. Surface Reference Management [DEPRECATED]**
 
@@ -1339,11 +1339,11 @@
 
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
-|`cuTexObjectCreate`|  |  |  ||
-|`cuTexObjectDestroy`|  |  |  ||
-|`cuTexObjectGetResourceDesc`|  |  |  ||
-|`cuTexObjectGetResourceViewDesc`|  |  |  ||
-|`cuTexObjectGetTextureDesc`|  |  |  ||
+|`cuTexObjectCreate`|  |  |  |`hipTexObjectCreate`|
+|`cuTexObjectDestroy`|  |  |  |`hipTexObjectDestroy`|
+|`cuTexObjectGetResourceDesc`|  |  |  |`hipTexObjectGetResourceDesc`|
+|`cuTexObjectGetResourceViewDesc`|  |  |  |`hipTexObjectGetResourceViewDesc`|
+|`cuTexObjectGetTextureDesc`|  |  |  |`hipTexObjectGetTextureDesc`|
 
 ## **25. Surface Object Management**
 
@@ -1360,7 +1360,7 @@
 |`cuCtxDisablePeerAccess`|  |  |  |`hipCtxDisablePeerAccess`|
 |`cuCtxEnablePeerAccess`|  |  |  |`hipCtxEnablePeerAccess`|
 |`cuDeviceCanAccessPeer`|  |  |  |`hipDeviceCanAccessPeer`|
-|`cuDeviceGetP2PAttribute`| 8.0 |  |  ||
+|`cuDeviceGetP2PAttribute`| 8.0 |  |  |`hipDeviceGetP2PAttribute`|
 
 ## **27. Graphics Interoperability**
 

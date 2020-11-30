@@ -10,7 +10,7 @@
 |`cudaDeviceGetCacheConfig`|  |  |  |`hipDeviceGetCacheConfig`|
 |`cudaDeviceGetLimit`|  |  |  |`hipDeviceGetLimit`|
 |`cudaDeviceGetNvSciSyncAttributes`| 10.2 |  |  ||
-|`cudaDeviceGetP2PAttribute`| 8.0 |  |  ||
+|`cudaDeviceGetP2PAttribute`| 8.0 |  |  |`hipDeviceGetP2PAttribute`|
 |`cudaDeviceGetPCIBusId`|  |  |  |`hipDeviceGetPCIBusId`|
 |`cudaDeviceGetSharedMemConfig`|  |  |  |`hipDeviceGetSharedMemConfig`|
 |`cudaDeviceGetStreamPriorityRange`|  |  |  |`hipDeviceGetStreamPriorityRange`|
@@ -22,7 +22,7 @@
 |`cudaDeviceSynchronize`|  |  |  |`hipDeviceSynchronize`|
 |`cudaGetDevice`|  |  |  |`hipGetDevice`|
 |`cudaGetDeviceCount`|  |  |  |`hipGetDeviceCount`|
-|`cudaGetDeviceFlags`|  |  |  |`hipCtxGetFlags`|
+|`cudaGetDeviceFlags`|  |  |  |`hipGetDeviceFlags`|
 |`cudaGetDeviceProperties`|  |  |  |`hipGetDeviceProperties`|
 |`cudaIpcCloseMemHandle`|  |  |  |`hipIpcCloseMemHandle`|
 |`cudaIpcGetEventHandle`|  |  |  |`hipIpcGetEventHandle`|
@@ -59,7 +59,7 @@
 |:--|:-:|:-:|:-:|:--|
 |`cudaCtxResetPersistingL2Cache`| 11.0 |  |  ||
 |`cudaStreamAddCallback`|  |  |  |`hipStreamAddCallback`|
-|`cudaStreamAttachMemAsync`|  |  |  ||
+|`cudaStreamAttachMemAsync`|  |  |  |`hipStreamAttachMemAsync`|
 |`cudaStreamBeginCapture`| 10.0 |  |  ||
 |`cudaStreamCopyAttributes`| 11.0 |  |  ||
 |`cudaStreamCreate`|  |  |  |`hipStreamCreate`|
@@ -109,9 +109,9 @@
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
 |`cudaFuncGetAttributes`|  |  |  |`hipFuncGetAttributes`|
-|`cudaFuncSetAttribute`| 9.0 |  |  ||
+|`cudaFuncSetAttribute`| 9.0 |  |  |`hipFuncSetAttribute`|
 |`cudaFuncSetCacheConfig`|  |  |  |`hipFuncSetCacheConfig`|
-|`cudaFuncSetSharedMemConfig`|  |  |  ||
+|`cudaFuncSetSharedMemConfig`|  |  |  |`hipFuncSetSharedMemConfig`|
 |`cudaGetParameterBuffer`|  |  |  ||
 |`cudaGetParameterBufferV2`|  |  |  ||
 |`cudaLaunchCooperativeKernel`| 9.0 |  |  |`hipLaunchCooperativeKernel`|
@@ -131,7 +131,7 @@
 |`cudaOccupancyMaxPotentialBlockSize`|  |  |  |`hipOccupancyMaxPotentialBlockSize`|
 |`cudaOccupancyMaxPotentialBlockSizeVariableSMem`|  |  |  ||
 |`cudaOccupancyMaxPotentialBlockSizeVariableSMemWithFlags`|  |  |  ||
-|`cudaOccupancyMaxPotentialBlockSizeWithFlags`|  |  |  ||
+|`cudaOccupancyMaxPotentialBlockSizeWithFlags`|  |  |  |`hipOccupancyMaxPotentialBlockSizeWithFlags`|
 
 ## **9. Memory Management**
 
@@ -142,8 +142,8 @@
 |`cudaFree`|  |  |  |`hipFree`|
 |`cudaFreeArray`|  |  |  |`hipFreeArray`|
 |`cudaFreeHost`|  |  |  |`hipHostFree`|
-|`cudaFreeMipmappedArray`|  |  |  ||
-|`cudaGetMipmappedArrayLevel`|  |  |  ||
+|`cudaFreeMipmappedArray`|  |  |  |`hipFreeMipmappedArray`|
+|`cudaGetMipmappedArrayLevel`|  |  |  |`hipGetMipmappedArrayLevel`|
 |`cudaGetSymbolAddress`|  |  |  |`hipGetSymbolAddress`|
 |`cudaGetSymbolSize`|  |  |  |`hipGetSymbolSize`|
 |`cudaHostAlloc`|  |  |  |`hipHostMalloc`|
@@ -157,13 +157,13 @@
 |`cudaMallocArray`|  |  |  |`hipMallocArray`|
 |`cudaMallocHost`|  |  |  |`hipHostMalloc`|
 |`cudaMallocManaged`|  |  |  |`hipMallocManaged`|
-|`cudaMallocMipmappedArray`|  |  |  ||
+|`cudaMallocMipmappedArray`|  |  |  |`hipMallocMipmappedArray`|
 |`cudaMallocPitch`|  |  |  |`hipMallocPitch`|
-|`cudaMemAdvise`| 8.0 |  |  ||
+|`cudaMemAdvise`| 8.0 |  |  |`hipMemAdvise`|
 |`cudaMemGetInfo`|  |  |  |`hipMemGetInfo`|
-|`cudaMemPrefetchAsync`| 8.0 |  |  ||
-|`cudaMemRangeGetAttribute`| 8.0 |  |  ||
-|`cudaMemRangeGetAttributes`| 8.0 |  |  ||
+|`cudaMemPrefetchAsync`| 8.0 |  |  |`hipMemPrefetchAsync`|
+|`cudaMemRangeGetAttribute`| 8.0 |  |  |`hipMemRangeGetAttribute`|
+|`cudaMemRangeGetAttributes`| 8.0 |  |  |`hipMemRangeGetAttributes`|
 |`cudaMemcpy`|  |  |  |`hipMemcpy`|
 |`cudaMemcpy2D`|  |  |  |`hipMemcpy2D`|
 |`cudaMemcpy2DArrayToArray`|  |  |  ||
@@ -480,7 +480,7 @@
 | **CUDA** | **A** | **D** | **R** | **HIP** |
 |:--|:-:|:-:|:-:|:--|
 |`CUDA_EGL_MAX_PLANES`| 9.1 |  |  ||
-|`CUDA_IPC_HANDLE_SIZE`|  |  |  ||
+|`CUDA_IPC_HANDLE_SIZE`|  |  |  |`HIP_IPC_HANDLE_SIZE`|
 |`CUeglStreamConnection_st`| 9.1 |  |  ||
 |`CUevent_st`|  |  |  |`ihipEvent_t`|
 |`CUexternalMemory_st`| 10.0 |  |  ||
@@ -535,7 +535,7 @@
 |`cudaComputeModeProhibited`|  |  |  |`hipComputeModeProhibited`|
 |`cudaCooperativeLaunchMultiDeviceNoPostSync`| 9.0 |  |  |`hipCooperativeLaunchMultiDeviceNoPostSync`|
 |`cudaCooperativeLaunchMultiDeviceNoPreSync`| 9.0 |  |  |`hipCooperativeLaunchMultiDeviceNoPreSync`|
-|`cudaCpuDeviceId`| 8.0 |  |  ||
+|`cudaCpuDeviceId`| 8.0 |  |  |`hipCpuDeviceId`|
 |`cudaD3D10DeviceList`|  |  |  ||
 |`cudaD3D10DeviceListAll`|  |  |  ||
 |`cudaD3D10DeviceListCurrentFrame`|  |  |  ||
@@ -572,10 +572,10 @@
 |`cudaDevAttrComputeMode`|  |  |  |`hipDeviceAttributeComputeMode`|
 |`cudaDevAttrComputePreemptionSupported`| 8.0 |  |  ||
 |`cudaDevAttrConcurrentKernels`|  |  |  |`hipDeviceAttributeConcurrentKernels`|
-|`cudaDevAttrConcurrentManagedAccess`| 8.0 |  |  ||
+|`cudaDevAttrConcurrentManagedAccess`| 8.0 |  |  |`hipDeviceAttributeConcurrentManagedAccess`|
 |`cudaDevAttrCooperativeLaunch`| 9.0 |  |  |`hipDeviceAttributeCooperativeLaunch`|
 |`cudaDevAttrCooperativeMultiDeviceLaunch`| 9.0 |  |  |`hipDeviceAttributeCooperativeMultiDeviceLaunch`|
-|`cudaDevAttrDirectManagedMemAccessFromHost`| 9.2 |  |  ||
+|`cudaDevAttrDirectManagedMemAccessFromHost`| 9.2 |  |  |`hipDeviceAttributeDirectManagedMemAccessFromHost`|
 |`cudaDevAttrEccEnabled`|  |  |  |`hipDeviceAttributeEccEnabled`|
 |`cudaDevAttrGlobalL1CacheSupported`|  |  |  ||
 |`cudaDevAttrGlobalMemoryBusWidth`|  |  |  |`hipDeviceAttributeMemoryBusWidth`|
@@ -588,7 +588,7 @@
 |`cudaDevAttrKernelExecTimeout`|  |  |  |`hipDeviceAttributeKernelExecTimeout`|
 |`cudaDevAttrL2CacheSize`|  |  |  |`hipDeviceAttributeL2CacheSize`|
 |`cudaDevAttrLocalL1CacheSupported`|  |  |  ||
-|`cudaDevAttrManagedMemory`|  |  |  ||
+|`cudaDevAttrManagedMemory`|  |  |  |`hipDeviceAttributeManagedMemory`|
 |`cudaDevAttrMaxBlockDimX`|  |  |  |`hipDeviceAttributeMaxBlockDimX`|
 |`cudaDevAttrMaxBlockDimY`|  |  |  |`hipDeviceAttributeMaxBlockDimY`|
 |`cudaDevAttrMaxBlockDimZ`|  |  |  |`hipDeviceAttributeMaxBlockDimZ`|
@@ -647,8 +647,8 @@
 |`cudaDevAttrMemoryClockRate`|  |  |  |`hipDeviceAttributeMemoryClockRate`|
 |`cudaDevAttrMultiGpuBoardGroupID`|  |  |  ||
 |`cudaDevAttrMultiProcessorCount`|  |  |  |`hipDeviceAttributeMultiprocessorCount`|
-|`cudaDevAttrPageableMemoryAccess`| 8.0 |  |  ||
-|`cudaDevAttrPageableMemoryAccessUsesHostPageTables`| 9.2 |  |  ||
+|`cudaDevAttrPageableMemoryAccess`| 8.0 |  |  |`hipDeviceAttributePageableMemoryAccess`|
+|`cudaDevAttrPageableMemoryAccessUsesHostPageTables`| 9.2 |  |  |`hipDeviceAttributePageableMemoryAccessUsesHostPageTables`|
 |`cudaDevAttrPciBusId`|  |  |  |`hipDeviceAttributePciBusId`|
 |`cudaDevAttrPciDeviceId`|  |  |  |`hipDeviceAttributePciDeviceId`|
 |`cudaDevAttrPciDomainId`|  |  |  ||
@@ -666,16 +666,16 @@
 |`cudaDevAttrTotalConstantMemory`|  |  |  |`hipDeviceAttributeTotalConstantMemory`|
 |`cudaDevAttrUnifiedAddressing`|  |  |  ||
 |`cudaDevAttrWarpSize`|  |  |  |`hipDeviceAttributeWarpSize`|
-|`cudaDevP2PAttrAccessSupported`| 8.0 |  |  ||
-|`cudaDevP2PAttrCudaArrayAccessSupported`| 9.2 |  |  ||
-|`cudaDevP2PAttrNativeAtomicSupported`| 8.0 |  |  ||
-|`cudaDevP2PAttrPerformanceRank`| 8.0 |  |  ||
+|`cudaDevP2PAttrAccessSupported`| 8.0 |  |  |`hipDevP2PAttrAccessSupported`|
+|`cudaDevP2PAttrCudaArrayAccessSupported`| 9.2 |  |  |`hipDevP2PAttrHipArrayAccessSupported`|
+|`cudaDevP2PAttrNativeAtomicSupported`| 8.0 |  |  |`hipDevP2PAttrNativeAtomicSupported`|
+|`cudaDevP2PAttrPerformanceRank`| 8.0 |  |  |`hipDevP2PAttrPerformanceRank`|
 |`cudaDeviceAttr`|  |  |  |`hipDeviceAttribute_t`|
 |`cudaDeviceBlockingSync`|  |  |  |`hipDeviceScheduleBlockingSync`|
 |`cudaDeviceLmemResizeToMax`|  |  |  |`hipDeviceLmemResizeToMax`|
 |`cudaDeviceMapHost`|  |  |  |`hipDeviceMapHost`|
 |`cudaDeviceMask`|  |  |  ||
-|`cudaDeviceP2PAttr`| 8.0 |  |  ||
+|`cudaDeviceP2PAttr`| 8.0 |  |  |`hipDeviceP2PAttr`|
 |`cudaDeviceProp`|  |  |  |`hipDeviceProp_t`|
 |`cudaDevicePropDontCare`|  |  |  ||
 |`cudaDeviceScheduleAuto`|  |  |  |`hipDeviceScheduleAuto`|
@@ -926,10 +926,10 @@
 |`cudaFilterModePoint`|  |  |  |`hipFilterModePoint`|
 |`cudaFormatModeAuto`|  |  |  ||
 |`cudaFormatModeForced`|  |  |  ||
-|`cudaFuncAttribute`| 9.0 |  |  ||
-|`cudaFuncAttributeMax`| 9.0 |  |  ||
-|`cudaFuncAttributeMaxDynamicSharedMemorySize`| 9.0 |  |  ||
-|`cudaFuncAttributePreferredSharedMemoryCarveout`| 9.0 |  |  ||
+|`cudaFuncAttribute`| 9.0 |  |  |`hipFuncAttribute`|
+|`cudaFuncAttributeMax`| 9.0 |  |  |`hipFuncAttributeMax`|
+|`cudaFuncAttributeMaxDynamicSharedMemorySize`| 9.0 |  |  |`hipFuncAttributeMaxDynamicSharedMemorySize`|
+|`cudaFuncAttributePreferredSharedMemoryCarveout`| 9.0 |  |  |`hipFuncAttributePreferredSharedMemoryCarveout`|
 |`cudaFuncAttributes`|  |  |  |`hipFuncAttributes`|
 |`cudaFuncCache`|  |  |  |`hipFuncCache_t`|
 |`cudaFuncCachePreferEqual`|  |  |  |`hipFuncCachePreferEqual`|
@@ -995,9 +995,9 @@
 |`cudaHostRegisterMapped`|  |  |  |`hipHostRegisterMapped`|
 |`cudaHostRegisterPortable`|  |  |  |`hipHostRegisterPortable`|
 |`cudaHostRegisterReadOnly`| 11.1 |  |  ||
-|`cudaInvalidDeviceId`| 8.0 |  |  ||
-|`cudaIpcEventHandle_st`|  |  |  |`ihipIpcEventHandle_t`|
-|`cudaIpcEventHandle_t`|  |  |  |`ihipIpcEventHandle_t`|
+|`cudaInvalidDeviceId`| 8.0 |  |  |`hipInvalidDeviceId`|
+|`cudaIpcEventHandle_st`|  |  |  |`hipIpcEventHandle_st`|
+|`cudaIpcEventHandle_t`|  |  |  |`hipIpcEventHandle_t`|
 |`cudaIpcMemHandle_st`|  |  |  |`hipIpcMemHandle_st`|
 |`cudaIpcMemHandle_t`|  |  |  |`hipIpcMemHandle_t`|
 |`cudaIpcMemLazyEnablePeerAccess`|  |  |  |`hipIpcMemLazyEnablePeerAccess`|
@@ -1016,20 +1016,20 @@
 |`cudaLimitPersistingL2CacheSize`| 11.0 |  |  ||
 |`cudaLimitPrintfFifoSize`|  |  |  ||
 |`cudaLimitStackSize`|  |  |  ||
-|`cudaMemAdviseSetAccessedBy`| 8.0 |  |  ||
-|`cudaMemAdviseSetPreferredLocation`| 8.0 |  |  ||
-|`cudaMemAdviseSetReadMostly`| 8.0 |  |  ||
-|`cudaMemAdviseUnsetAccessedBy`| 8.0 |  |  ||
-|`cudaMemAdviseUnsetPreferredLocation`| 8.0 |  |  ||
-|`cudaMemAdviseUnsetReadMostly`| 8.0 |  |  ||
+|`cudaMemAdviseSetAccessedBy`| 8.0 |  |  |`hipMemAdviseSetAccessedBy`|
+|`cudaMemAdviseSetPreferredLocation`| 8.0 |  |  |`hipMemAdviseSetPreferredLocation`|
+|`cudaMemAdviseSetReadMostly`| 8.0 |  |  |`hipMemAdviseSetReadMostly`|
+|`cudaMemAdviseUnsetAccessedBy`| 8.0 |  |  |`hipMemAdviseUnsetAccessedBy`|
+|`cudaMemAdviseUnsetPreferredLocation`| 8.0 |  |  |`hipMemAdviseUnsetPreferredLocation`|
+|`cudaMemAdviseUnsetReadMostly`| 8.0 |  |  |`hipMemAdviseUnsetReadMostly`|
 |`cudaMemAttachGlobal`|  |  |  |`hipMemAttachGlobal`|
 |`cudaMemAttachHost`|  |  |  |`hipMemAttachHost`|
-|`cudaMemAttachSingle`|  |  |  ||
-|`cudaMemRangeAttribute`| 8.0 |  |  ||
-|`cudaMemRangeAttributeAccessedBy`| 8.0 |  |  ||
-|`cudaMemRangeAttributeLastPrefetchLocation`| 8.0 |  |  ||
-|`cudaMemRangeAttributePreferredLocation`| 8.0 |  |  ||
-|`cudaMemRangeAttributeReadMostly`| 8.0 |  |  ||
+|`cudaMemAttachSingle`|  |  |  |`hipMemAttachSingle`|
+|`cudaMemRangeAttribute`| 8.0 |  |  |`hipMemRangeAttribute`|
+|`cudaMemRangeAttributeAccessedBy`| 8.0 |  |  |`hipMemRangeAttributeAccessedBy`|
+|`cudaMemRangeAttributeLastPrefetchLocation`| 8.0 |  |  |`hipMemRangeAttributeLastPrefetchLocation`|
+|`cudaMemRangeAttributePreferredLocation`| 8.0 |  |  |`hipMemRangeAttributePreferredLocation`|
+|`cudaMemRangeAttributeReadMostly`| 8.0 |  |  |`hipMemRangeAttributeReadMostly`|
 |`cudaMemcpy3DParms`|  |  |  |`hipMemcpy3DParms`|
 |`cudaMemcpy3DPeerParms`|  |  |  ||
 |`cudaMemcpyDefault`|  |  |  |`hipMemcpyDefault`|
@@ -1038,7 +1038,7 @@
 |`cudaMemcpyHostToDevice`|  |  |  |`hipMemcpyHostToDevice`|
 |`cudaMemcpyHostToHost`|  |  |  |`hipMemcpyHostToHost`|
 |`cudaMemcpyKind`|  |  |  |`hipMemcpyKind`|
-|`cudaMemoryAdvise`| 8.0 |  |  ||
+|`cudaMemoryAdvise`| 8.0 |  |  |`hipMemoryAdvise`|
 |`cudaMemoryType`|  |  |  ||
 |`cudaMemoryTypeDevice`|  |  |  ||
 |`cudaMemoryTypeHost`|  |  |  ||
