@@ -2083,9 +2083,14 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
     attributes->memoryType = ((CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR) &
         memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
     if (attributes->memoryType == hipMemoryTypeHost) {
-      attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
+      if (memObj->getHostMem() != nullptr) {
+        attributes->hostPointer = static_cast<char*>(memObj->getHostMem()) + offset;
+      }
+      else {
+        attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
+      }
     }
-    attributes->devicePointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
+    attributes->devicePointer = reinterpret_cast<char*>(memObj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0])->virtualAddress() + offset);
     constexpr uint32_t kManagedAlloc = (CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_ALLOC_HOST_PTR);
     attributes->isManaged =
         ((memObj->getMemFlags() & kManagedAlloc) == kManagedAlloc) ? true : false;
