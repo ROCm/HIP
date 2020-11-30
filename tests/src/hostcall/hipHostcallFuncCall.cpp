@@ -27,26 +27,26 @@ THE SOFTWARE.
 
 #include <test_common.h>
 
-extern "C" __device__ HIP_vector_base<long, 2>::Native_vec_ __ockl_call_host_function(
-    ulong fptr, ulong arg0, ulong arg1, ulong arg2, ulong arg3, ulong arg4, ulong arg5, ulong arg6);
+extern "C" __device__ HIP_vector_base<long long, 2>::Native_vec_ __ockl_call_host_function(
+    uint64_t fptr, uint64_t arg0, uint64_t arg1, uint64_t arg2, uint64_t arg3, uint64_t arg4, uint64_t arg5, uint64_t arg6);
 
-static void callee(ulong* output, ulong* input) {
+static void callee(uint64_t* output, uint64_t* input) {
   output[0] = input[0] + 1;
   output[1] = input[1] + input[2];
 }
 
-__global__ void kernel(ulong fptr, ulong* retval0, ulong* retval1) {
+__global__ void kernel(uint64_t fptr, uint64_t* retval0, uint64_t* retval1) {
   uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-  ulong arg0 = (ulong)fptr;
-  ulong arg1 = tid;
-  ulong arg2 = 42;
-  ulong arg3 = tid % 23;
-  ulong arg4 = 0;
-  ulong arg5 = 0;
-  ulong arg6 = 0;
-  ulong arg7 = 0;
+  uint64_t arg0 = (uint64_t)fptr;
+  uint64_t arg1 = tid;
+  uint64_t arg2 = 42;
+  uint64_t arg3 = tid % 23;
+  uint64_t arg4 = 0;
+  uint64_t arg5 = 0;
+  uint64_t arg6 = 0;
+  uint64_t arg7 = 0;
 
-  long2 result = {0, 0};
+  longlong2 result = {0, 0};
   if (tid % 71 != 1) {
     result.data = __ockl_call_host_function(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
     retval0[tid] = result.x;
@@ -73,13 +73,13 @@ static bool test() {
     retval1[i] = 0x23232323;
   }
 
-  hipLaunchKernelGGL(kernel, dim3(num_blocks), dim3(threads_per_block), 0, 0, (ulong)callee,
+  hipLaunchKernelGGL(kernel, dim3(num_blocks), dim3(threads_per_block), 0, 0, (uint64_t)callee,
                      retval0, retval1);
 
   hipStreamSynchronize(0);
 
   for (uint i = 0; i != num_threads; ++i) {
-    ulong value = retval0[i];
+    uint64_t value = retval0[i];
     if (i % 71 == 1) {
       if (value != 0x23232323) {
         printf("failed\n");
