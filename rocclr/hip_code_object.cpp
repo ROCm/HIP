@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include "hip_code_object.hpp"
+#include "amd_hsa_elf.hpp"
 
 #include <cstring>
 
