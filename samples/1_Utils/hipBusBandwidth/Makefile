@@ -4,17 +4,25 @@ ifeq (,$(HIP_PATH))
 endif
 HIPCC=$(HIP_PATH)/bin/hipcc
 
-EXE=hipBusBandwidth
 CXXFLAGS = -O3
 
-all: install
+TARGETS=hipBusBandwidth
 
-$(EXE): hipBusBandwidth.cpp ResultDatabase.cpp
-	$(HIPCC) $(CXXFLAGS) $^ -o $@
+.PHONY: all clean run install
 
-install: $(EXE)
-	cp $(EXE) $(HIP_PATH)/bin
+all: $(TARGETS)
 
+run: $(TARGETS)
+	@for t in $(TARGETS); do\
+		echo "Running $$t"; \
+		./$$t; \
+	done
+
+install: $(TARGETS)
+	install -t $(HIP_PATH)/bin $(TARGETS)
 
 clean:
-	rm -f *.o $(EXE)
+	rm -f $(TARGETS) *.o
+
+hipBusBandwidth: hipBusBandwidth.cpp ResultDatabase.cpp
+	$(HIPCC) $(CXXFLAGS) $^ -o $@
