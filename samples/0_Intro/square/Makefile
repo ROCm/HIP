@@ -11,14 +11,21 @@ else
 	SOURCES=square.cpp
 endif
 
-all: square.out
+TARGETS=square
 
-# Step
+all: $(TARGETS)
+
+run: $(TARGETS)
+	@for t in $(TARGETS); do\
+		echo "Running $$t"; \
+		./$$t; \
+	done
+
+clean:
+	rm -f $(TARGETS) *.o square.cpp
+
 square.cpp: square.cu
 	$(HIP_PATH)/bin/hipify-perl square.cu > square.cpp
 
-square.out: $(SOURCES)
+square: $(SOURCES)
 	$(HIPCC) $(CXXFLAGS) $(SOURCES) -o $@
-
-clean:
-	rm -f *.o *.out square.cpp
