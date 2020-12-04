@@ -4,16 +4,23 @@ ifeq (,$(HIP_PATH))
 endif
 HIPCC=$(HIP_PATH)/bin/hipcc
 
-EXE=hipInfo
+TARGETS=hipInfo
 
-all: install
+.PHONY: all clean run install
 
-$(EXE): hipInfo.cpp
-	$(HIPCC) hipInfo.cpp -o $@
+all: $(TARGETS)
 
-install: $(EXE)
-	cp $(EXE) $(HIP_PATH)/bin
+run: $(TARGETS)
+	@for t in $(TARGETS); do\
+		echo "Running $$t"; \
+		./$$t; \
+	done
 
+install: $(TARGETS)
+	install -t $(HIP_PATH)/bin $(TARGETS)
 
 clean:
-	rm -f *.o $(EXE)
+	rm -f $(TARGETS) *.o
+
+hipInfo: hipInfo.cpp
+	$(HIPCC) hipInfo.cpp -o $@
