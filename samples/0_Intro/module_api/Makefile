@@ -5,19 +5,29 @@ endif
 HIPCC=$(HIP_PATH)/bin/hipcc
 HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --compiler)
 
-all: vcpy_kernel.code runKernel.hip.out launchKernelHcc.hip.out defaultDriver.hip.out
+EXE_TARGETS=runKernel launchKernelHcc defaultDriver
 
-runKernel.hip.out: runKernel.cpp
+TARGETS=${EXE_TARGETS} vcpy_kernel.code
+
+all: ${TARGETS}
+
+clean:
+	rm -f $(TARGETS) *.o
+
+run: $(TARGETS)
+	@for t in $(EXE_TARGETS); do\
+		echo "Running $$t"; \
+		./$$t; \
+	done
+
+runKernel: runKernel.cpp
 	$(HIPCC) $(HIPCC_FLAGS) $< -o $@
 
-launchKernelHcc.hip.out: launchKernelHcc.cpp
+launchKernelHcc: launchKernelHcc.cpp
 	$(HIPCC) $(HIPCC_FLAGS) $< -o $@
 
-defaultDriver.hip.out: defaultDriver.cpp
+defaultDriver: defaultDriver.cpp
 	$(HIPCC)  $(HIPCC_FLAGS) $< -o $@
 
 vcpy_kernel.code: vcpy_kernel.cpp
 	$(HIPCC)  --genco  $(GENCO_FLAGS) $^ -o $@
-
-clean:
-	rm -f *.code *.out
