@@ -216,11 +216,6 @@ if(__HIP_ENABLE_PCH)
   target_sources(amdhip64 PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
 endif()
 
-# TODO: we may create host_static and device_static to let app
-# link amdhip64_static
-
-# FIXME: Linux convention is to create static library with same base
-# filename.
 target_link_libraries(amdhip64 PRIVATE amdrocclr_static Threads::Threads dl hsa-runtime64::hsa-runtime64)
 
 add_custom_command(TARGET amdhip64 POST_BUILD COMMAND

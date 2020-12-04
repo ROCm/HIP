@@ -271,18 +271,14 @@ set(_versionInfoHeader
 #endif\n
 ")
 file(WRITE "${PROJECT_BINARY_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
-include_directories(${PROJECT_BINARY_DIR}/include)
 
 if(HIP_RUNTIME STREQUAL "rocclr")
-    include_directories(${PROJECT_SOURCE_DIR}/include)
     add_subdirectory(rocclr)
 
-    # set(ROCclr_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
     set(HIP_ROCclr_BUILD_FLAGS "${HIP_ROCclr_BUILD_FLAGS} -fPIC ${ROCclr_CXX_FLAGS} -I${HSA_PATH}/include")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
     set(HCC_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
-    set(HIP_HCC_BUILD_FLAGS "${HIP_HCC_BUILD_FLAGS} -fPIC ${HCC_CXX_FLAGS} -I${HSA_PATH}/include")
 endif()
 
 if(HIP_PLATFORM STREQUAL "amd")
@@ -472,11 +468,10 @@ endif()
 #############################
 # Testing steps
 #############################
-# Target: test
 set(HIP_ROOT_DIR ${CMAKE_CURRENT_BINARY_DIR})
 set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 if(HIP_PLATFORM STREQUAL "nvidia")
-	execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/include" "${CMAKE_CURRENT_BINARY_DIR}/include" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/include" "${HIP_ROOT_DIR}/include" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 endif()
 execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_ROOT_DIR}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 if(${RUN_HIT} EQUAL 0)
@@ -485,32 +480,7 @@ endif()
 if(${RUN_HIT} EQUAL 0)
     set(CMAKE_MODULE_PATH "${HIP_ROOT_DIR}/cmake" ${CMAKE_MODULE_PATH})
     include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
-
-    # Add tests
-    include_directories(${HIP_SRC_PATH}/tests/src)
-    hit_add_directory_recursive(${HIP_CTEST_CONFIG_DEFAULT} ${HIP_SRC_PATH}/tests/src "directed_tests")
-
-    # Add unit tests
-    include_directories(${HIP_SRC_PATH}/tests/unit)
-    hit_add_directory_recursive(${HIP_CTEST_CONFIG_DEFAULT} ${HIP_SRC_PATH}/tests/unit "unit_tests")
-
-    # Add performance tests
-    include_directories(${HIP_SRC_PATH}/tests/performance)
-    hit_add_directory_recursive(${HIP_CTEST_CONFIG_PERFORMANCE} ${HIP_SRC_PATH}/tests/performance "performance_tests")
-
-    # Add top-level tests to build_tests
-    add_custom_target(build_tests DEPENDS directed_tests unit_tests)
-
-    # Add top-level tests to build performance_tests.
-    # To build performance tests, just run "make build_perf"
-    add_custom_target(build_perf DEPENDS performance_tests)
-
-    # Add custom target: perf.
-    # To run performance tests, just run "make perf"
-    add_custom_target(perf COMMAND "${CMAKE_CTEST_COMMAND}" -C "${HIP_CTEST_CONFIG_PERFORMANCE}" -R "performance_tests/" --verbose)
-
-    # Add custom target: check
-    add_custom_target(check COMMAND "${CMAKE_COMMAND}" --build . --target test DEPENDS build_tests)
+    include(${HIP_SRC_PATH}/tests/Tests.cmake)
 else()
     message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
 endif()
@@ -521,7 +491,7 @@ endif()
 # Target: clang
 if(HIP_HIPCC_EXECUTABLE)
     add_custom_target(analyze
-        COMMAND ${HIP_HIPCC_EXECUTABLE} -fvisibility=hidden -fvisibility-inlines-hidden --analyze --analyzer-outputtext  -isystem /opt/rocm/include ${HIP_HCC_BUILD_FLAGS} -Wno-unused-command-line-argument -I/opt/rocm/include -c  src/*.cpp -Iinclude/ -I./
+        COMMAND ${HIP_HIPCC_EXECUTABLE} -fvisibility=hidden -fvisibility-inlines-hidden --analyze --analyzer-outputtext  -isystem /opt/rocm/include -Wno-unused-command-line-argument -I/opt/rocm/include -c  src/*.cpp -Iinclude/ -I./
     WORKING_DIRECTORY ${HIP_SRC_PATH})
     if(CPPCHECK_EXE)
         add_dependencies(analyze cppcheck)
