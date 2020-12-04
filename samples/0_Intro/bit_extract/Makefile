@@ -1,5 +1,3 @@
-#Dependencies : [MYHIP]/bin must be in user's path.
-
 HIP_PATH?= $(wildcard /opt/rocm/hip)
 ifeq (,$(HIP_PATH))
 	HIP_PATH=../../..
@@ -12,12 +10,20 @@ ifeq (${HIP_PLATFORM}, nvcc)
 	HIPCC_FLAGS = -gencode=arch=compute_20,code=sm_20
 endif
 
-EXE=bit_extract
+TARGETS=bit_extract
 
-$(EXE): bit_extract.cpp
-	$(HIPCC) $(HIPCC_FLAGS) $< -o $@
+.PHONY: all clean run
 
-all: $(EXE)
+all: $(TARGETS)
 
 clean:
-	rm -f *.o $(EXE)
+	rm -f $(TARGETS) *.o
+
+run: $(TARGETS)
+	@for t in $(TARGETS); do\
+		echo "Running $$t"; \
+		./$$t; \
+	done
+
+bit_extract: bit_extract.cpp
+	$(HIPCC) $(HIPCC_FLAGS) $< -o $@
