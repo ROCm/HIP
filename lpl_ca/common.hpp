@@ -11,9 +11,11 @@
 namespace hip_impl {
 inline const std::unordered_set<std::string>& amdgpu_targets() {  // The evolving list lives at:
     // https://www.llvm.org/docs/AMDGPUUsage.html#processors.
-    static const std::unordered_set<std::string> r{"gfx701", "gfx801", "gfx802", "gfx803",
-                                                   "gfx900", "gfx906", "gfx908"};
-
+    static const std::unordered_set<std::string> r{
+        "gfx700", "gfx701",  "gfx702",  "gfx703",  "gfx704",  "gfx705",
+        "gfx801", "gfx802", "gfx803", "gfx805",  "gfx810",
+        "gfx900",  "gfx902",  "gfx904",  "gfx906", "gfx908", "gfx909",
+        "gfx1010", "gfx1011", "gfx1012", "gfx1030", "gfx1031", "gfx1032"};
     return r;
 }
 
@@ -39,7 +41,7 @@ inline std::vector<std::string> tokenize_targets(
     //       ancient standard library implementations.
     if (x.empty()) return {};
 
-    static constexpr const char valid_characters[] = "gfx0123456789,";
+    static constexpr const char valid_characters[] = "0123456789abcdefghijklmnopqrstuvwxyz,";
 
     if (x.find_first_not_of(valid_characters) != std::string::npos) {
         throw std::runtime_error{"Invalid target string: " + x};
@@ -64,10 +66,10 @@ inline void validate_targets(const std::vector<std::string>& x) {
     assert(!x.empty());
 
     for (auto&& t : x) {
-        static const std::string digits{"0123456789"};
-        static const std::string pre{"gfx"};
+        static const std::string sufficies{"0123456789abcdefghijklmnopqrstuvwxyz"};
+        static const std::string prefix{"gfx"};
 
-        if (t.find(pre) != 0 || t.find_first_not_of(digits, pre.size()) != std::string::npos) {
+        if (t.find(prefix) != 0 || t.find_first_not_of(sufficies, prefix.size()) != std::string::npos) {
             throw std::runtime_error{"Invalid target: " + t};
         }
 
