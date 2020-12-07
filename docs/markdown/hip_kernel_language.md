@@ -52,7 +52,7 @@
 - [In-Line Assembly](#in-line-assembly)
 - [C++ Support](#c-support)
 - [Kernel Compilation](#kernel-compilation)
-
+- [GFX Arch specific kernel](#gfx-arch-specific-kernel)
 <!-- tocstop -->
 
 ## Introduction
@@ -96,8 +96,7 @@ Supported `__host__` functions are
 
 `__host__` cannot combine with `__global__`.
 
-HIP parses the `__noinline__` and `__forceinline__` keywords and converts them to the appropriate Clang attributes. The hcc compiler, however, currently in-lines all device functions, so they are effectively ignored.
-
+HIP parses the `__noinline__` and `__forceinline__` keywords and converts them to the appropriate Clang attributes.
 
 ## Calling `__global__` Functions
 
@@ -244,17 +243,17 @@ typedef struct dim3 {
 ## Memory-Fence Instructions
 HIP supports __threadfence() and  __threadfence_block().
 
-HIP provides workaround for threadfence_system() under HCC path.
+HIP provides workaround for threadfence_system() under the HIP-Clang path.
 To enable the workaround, HIP should be built with environment variable HIP_COHERENT_HOST_ALLOC enabled.
 In addition,the kernels that use __threadfence_system() should be modified as follows:
 - The kernel should only operate on finegrained system memory; which should be allocated with hipHostMalloc().
 - Remove all memcpy for those allocated finegrained system memory regions.
 
 ## Synchronization Functions
-The __syncthreads() built-in function is supported in HIP. The __syncthreads_count(int), __syncthreads_and(int) and __syncthreads_or(int) functions are under development.  
+The __syncthreads() built-in function is supported in HIP. The __syncthreads_count(int), __syncthreads_and(int) and __syncthreads_or(int) functions are under development.
 
 ## Math Functions
-hcc supports a set of math operations callable from the device.
+HIP-Clang supports a set of math operations callable from the device.
 
 ### Single Precision Mathematical Functions
 Following is the list of supported single precision mathematical functions.
@@ -467,10 +466,10 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
 | int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
 | int __mul24 ( int x, int y )<br><sub>Multiply two 24bit integers.</sub> |
 | unsigned int __umul24 ( unsigned int x, unsigned int y )<br><sub>Multiply two 24bit unsigned integers.</sub> |
-<sub><b id="f3"><sup>[1]</sup></b> 
-The hcc implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
-For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
-hcc provides hc::__lastbit_u32_u32(unsigned int input) and  hc::__lastbit_u32_u64(unsigned long long int input).
+<sub><b id="f3"><sup>[1]</sup></b>
+The HIP-Clang implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
+For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform,
+HIP-Clang provides __lastbit_u32_u32(unsigned int input) and __lastbit_u32_u64(unsigned long long int input).
 The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
 
 ### Floating-point Intrinsics
@@ -687,14 +686,13 @@ implementation of malloc and free that can be called from device functions.
 ## `__launch_bounds__`
 
 
-GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simulaneously running. Thus GPUs have a complex relationship between resource usage and performance.  
+GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simulaneously running. Thus GPUs have a complex relationship between resource usage and performance.
 
-__hip_launch_bounds__ allows the application to provide usage hints that influence the resources (primarily registers) used by the generated code.
-__hip_launch_bounds__ is a function attribute that must be attached to a __global__ function:
+__launch_bounds__ allows the application to provide usage hints that influence the resources (primarily registers) used by the generated code.  It is a function attribute that must be attached to a __global__ function:
 
 ```
 __global__ void `__launch_bounds__`(MAX_THREADS_PER_BLOCK, MIN_WARPS_PER_EU) MyKernel(...) ...
-MyKernel(hipGridLaunch lp, ...) 
+MyKernel(hipGridLaunch lp, ...)
 ...
 ```
 
@@ -734,17 +732,16 @@ The key differences in the interface are:
 The developer is trying to tell the compiler to control resource utilization to guarantee some amount of active Warps/EU for latency hiding.  Specifying active warps in terms of blocks appears to hide the micro-architectural details of the warp size, but makes the interface more confusing since the developer ultimately needs to compute the number of warps to obtain the desired level of control. 
 - Execution Units  (rather than multiProcessor):
 The use of execution units rather than multiprocessors provides support for architectures with multiple execution units/multi-processor. For example, the AMD GCN architecture has 4 execution units per multiProcessor.  The hipDeviceProps has a field executionUnitsPerMultiprocessor.
-Platform-specific coding techniques such as #ifdef can be used to specify different launch_bounds for NVCC and HCC platforms, if desired. 
+Platform-specific coding techniques such as #ifdef can be used to specify different launch_bounds for NVCC and HIP-Clang platforms, if desired.
 
 
 ### maxregcount
-Unlike nvcc, hcc does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
-micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both hcc and nvcc targets.
+Unlike nvcc, HIP-Clang does not support the "--maxregcount" option.  Instead, users are encouraged to use the hip_launch_bounds directive since the parameters are more intuitive and portable than
+micro-architecture details like registers, and also the directive allows per-kernel control rather than an entire file.  hip_launch_bounds works on both HIP-Clang and nvcc targets.
 
 
 ## Register Keyword
-The register keyword is deprecated in C++, and is silently ignored by both nvcc and hcc.  To see warnings, you can pass the option `-Wdeprecated-register` to hcc.
-
+The register keyword is deprecated in C++, and is silently ignored by both nvcc and HIP-Clang.  You can pass the option `-Wdeprecated-register` the compiler warning message.
 
 ## Pragma Unroll
 
@@ -789,17 +786,16 @@ The following C++ features are not supported:
 - Try/catch
 
 ## Kernel Compilation
-hipcc now supports compiling C++/HIP kernels to binary code objects. 
-The user can specify the target for which the binary can be generated. HIP/HCC does not yet support fat binaries so only a single target may be specified.
+hipcc now supports compiling C++/HIP kernels to binary code objects.
 The file format for binary is `.co` which means Code Object. The following command builds the code object using `hipcc`.
 
-`hipcc --genco --targets [TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]`
+`hipcc --genco --offload-arch=[TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]`
 
 ```
-[TARGET GPU] = gfx900 gfx803 gfx701
+[TARGET GPU] = GPU architecture
 [INPUT FILE] = Name of the file containing kernels
 [OUTPUT FILE] = Name of the generated code object file
 ```
 
-Note that one important fact to remember when using binary code objects is that the number of arguments to the kernel are different on HCC and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
-
+## gfx-arch-specific-kernel
+Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample 14_gpu_arch in samples/2_Cookbook.

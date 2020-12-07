@@ -151,31 +151,13 @@ All HIP projects target either AMD or NVIDIA platform. The platform affects whic
 
 - `HIP_PLATFORM_NVCC` is defined if the HIP platform targets NVIDIA
 
-On AMD platform, the compiler was hcc, but is deprecated in ROCM v3.5 release, and HIP-Clang compiler is introduced for compiling HIP programs.
-
-For most HIP applications, the transition from hcc to HIP-Clang is transparent.
-HIPCC and HIP cmake files automatically choose compilation options for HIP-Clang and hide the difference between the hcc and hip-clang code.
-However, minor changes may be required as HIP-Clang has stricter syntax and semantic checks compared to hcc.
-
-Many projects use a mixture of an accelerator compiler (AMD or NVIDIA) and a standard compiler (e.g. g++). These defines are set for both accelerator and standard compilers and thus are often the best option when writing code that uses conditional compilation.
-
-
-
 ### Identifying the Compiler: hip-clang or nvcc
 Often, it's useful to know whether the underlying compiler is HIP-Clang or nvcc. This knowledge can guard platform-specific code or aid in platform-specific performance tuning.
 
 ```
 #ifdef __HIP_PLATFORM_HCC__
 // Compiled with HIP-Clang
-
-```
-
-```
-#if defined(__HCC__) || (defined(__clang__) && defined(__HIP__))
-#define __HIP_PLATFORM_HCC__
 #endif
-// Compiled with HIP-Clang
-
 ```
 
 ```
@@ -236,7 +218,7 @@ Some CUDA code tests `__CUDA_ARCH__` for a specific value to determine whether t
 #if (__CUDA_ARCH__ >= 130)
 // doubles are supported
 ```
-This type of code requires special attention, since hcc/AMD and nvcc/CUDA devices have different architectural capabilities. Moreover, you can't determine the presence of a feature using a simple comparison against an architecture's version number. HIP provides a set of defines and device properties to query whether a specific architectural feature is supported.
+This type of code requires special attention, since AMD and CUDA devices have different architectural capabilities. Moreover, you can't determine the presence of a feature using a simple comparison against an architecture's version number. HIP provides a set of defines and device properties to query whether a specific architectural feature is supported.
 
 The `__HIP_ARCH_*` defines can replace comparisons of `__CUDA_ARCH__` values:
 ```
@@ -349,6 +331,21 @@ MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCal
 hipcc is a portable compiler driver that will call nvcc or HIP-Clang (depending on the target system) and attach all required include and library options. It passes options through to the target compiler. Tools that call hipcc must ensure the compiler options are appropriate for the target compiler.
 The `hipconfig` script may helpful in identifying the target platform, compiler and runtime. It can also help set options appropriately.
 
+### Compiler options supported on AMD platforms
+
+Here are the main compiler options supported on AMD platforms by HIP-Clang.
+
+| Option                            | Description |
+| ------                            | ----------- |
+| --amdgpu-target=<gpu_arch>        | [DEPRECATED] This option is being replaced by `--offload-arch=<target>`. Generate code for the given GPU target.  Supported targets are gfx701, gfx801, gfx802, gfx803, gfx900, gfx906, gfx908, gfx1010, gfx1011, gfx1012, gfx1030, gfx1031.  This option could appear multiple times on the same command line to generate a fat binary for multiple targets. |
+| --fgpu-rdc                        | Generate relocatable device code, which allows kernels or device functions calling device functions in different translation units. |
+| -ggdb                             | Equivalent to `-g` plus tuning for GDB.  This is recommended when using ROCm's GDB to debug GPU code. |
+| --gpu-max-threads-per-block=<num> | Generate code to support up to the specified number of threads per block.  |
+| -O<n>                             | Specify the optimization level. |
+| -offload-arch=<target>            | Specify the AMD GPU [target ID](https://clang.llvm.org/docs/ClangOffloadBundlerFileFormat.html#target-id). |
+| -save-temps                       | Save the compiler generated intermediate files. |
+| -v                                | Show the compilation steps. |
+
 ## Linking Issues
 
 ### Linking With hipcc
@@ -367,7 +364,7 @@ It also uses a standard compiler (g++) for the rest of the application. nvcc is 
 Code compiled using this tool can employ only the intersection of language features supported by both nvcc and the host compiler.
 In some cases, you must take care to ensure the data types and alignment of the host compiler are identical to those of the device compiler. Only some host compilers are supported---for example, recent nvcc versions lack Clang host-compiler capability.
 
-hcc generates both device and host code using the same Clang-based compiler. The code uses the same API as gcc, which allows code generated by different gcc-compatible compilers to be linked together. For example, code compiled using hcc can link with code compiled using "standard" compilers (such as gcc, ICC and Clang). Take care to ensure all compilers use the same standard C++ header and library formats.
+HIP-Clang generates both device and host code using the same Clang-based compiler. The code uses the same API as gcc, which allows code generated by different gcc-compatible compilers to be linked together. For example, code compiled using HIP-Clang can link with code compiled using "standard" compilers (such as gcc, ICC and Clang). Take care to ensure all compilers use the same standard C++ header and library formats.
 
 
 ### libc++ and libstdc++
@@ -378,8 +375,8 @@ If you pass "--stdlib=libc++" to hipcc, hipcc will use the libc++ library.  Gene
 
 When cross-linking C++ code, any C++ functions that use types from the C++ standard library (including std::string, std::vector and other containers) must use the same standard-library implementation. They include the following:
 
-- Functions or kernels defined in hcc that are called from a standard compiler
-- Functions defined in a standard compiler that are called from hcc.
+- Functions or kernels defined in HIP-Clang that are called from a standard compiler
+- Functions defined in a standard compiler that are called from HIP-Clanng.
 
 Applications with these interfaces should use the default libstdc++ linking.
 
@@ -416,7 +413,7 @@ The hipify-perl script automatically converts "cuda_runtime.h" to "hip_runtime.h
 
 #### cuda.h
 
-The hcc path provides an empty cuda.h file. Some existing CUDA programs include this file but don't require any of the functions.
+The HIP-Clang path provides an empty cuda.h file. Some existing CUDA programs include this file but don't require any of the functions.
 
 ### Choosing HIP File Extensions
 

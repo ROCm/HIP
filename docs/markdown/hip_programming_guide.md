@@ -41,9 +41,9 @@ Non-coherent
 | hipStreamWaitEvent   | stream waits for the specified event to complete                               | none                 | yes                        | no   |
 
 
-### hipEventSynchronize 
+### hipEventSynchronize
 Developers can control the release scope for hipEvents:
-- By default, the GPU performs a device-scope acquire and release operation with each recorded event.  This will make host and device memory visible to other commands executing on the same device. 
+- By default, the GPU performs a device-scope acquire and release operation with each recorded event.  This will make host and device memory visible to other commands executing on the same device.
 
 A stronger system-level fence can be specified when the event is created with hipEventCreateWithFlags:
 - hipEventReleaseToSystem : Perform a system-scope release operation when the event is recorded.  This will make both Coherent and Non-Coherent host memory visible to other agents in the system, but may involve heavyweight operations such as cache flushing.  Coherent memory will typically use lighter-weight in-kernel synchronization mechanisms such as an atomic operation and thus does not need to use hipEventReleaseToSystem.
@@ -53,71 +53,17 @@ A stronger system-level fence can be specified when the event is created with hi
 - Coherent host memory is the default and is the easiest to use since the memory is visible to the CPU at typical synchronization points.  This memory allows in-kernel synchronization commands such as threadfence_system to work transparently.
 - HIP/ROCm also supports the ability to cache host memory in the GPU using the "Non-Coherent" host memory allocations. This can provide performance benefit, but care must be taken to use the correct synchronization.
 
-
-## Unpinned Memory Transfer Optimization
-Please note that this document lists possible ways for experimenting with HIP stack to gain performance. Performance may vary from platform to platform.
- 
-### On Small BAR Setup
-
-There are two possible ways to transfer data from host-to-device (H2D) and device-to-host(D2H)
- * Using Staging Buffers
- * Using PinInPlace
-
-### On Large BAR Setup
-
-There are three possible ways to transfer data from host-to-device (H2D)
- * Using Staging Buffers
- * Using PinInPlace
- * Direct Memcpy
- 
- And there are two possible ways to transfer data from device-to-host (D2H)
- * Using Staging Buffers
- * Using PinInPlace
- 
-Some GPUs may not be able to directly access host memory, and in these cases we need to
-stage the copy through an optimized pinned staging buffer, to implement H2D and D2H copies.The copy is broken into buffer-sized chunks to limit the size of the buffer and also to provide better performance by overlapping the CPU copies with the DMA copies.
-
-PinInPlace is another algorithm which pins the host memory "in-place", and copies it with the DMA engine.  
-
-Unpinned memory transfer mode can be controlled using environment variable HCC_UNPINNED_COPY_MODE. 
-
-By default HCC_UNPINNED_COPY_MODE is set to 0, which uses default threshold values to decide which transfer way to use based on data size.
-
-Setting HCC_UNPINNED_COPY_MODE = 1, forces all unpinned transfer to use PinInPlace logic.
-
-Setting HCC_UNPINNED_COPY_MODE = 2, forces all unpinned transfer to use Staging buffers.
-
-Setting HCC_UNPINNED_COPY_MODE = 3, forces all unpinned transfer to use direct memcpy on large BAR systems.
- 
-Following environment variables can be used to control the transfer thresholds:
-
--   HCC_H2D_STAGING_THRESHOLD - Threshold in KB for H2D copy. For sizes smaller than threshold direct copy logic would be used else staging buffers logic. By default it is set to 64.
-   
--   HCC_H2D_PININPLACE_THRESHOLD - Threshold in KB for H2D copy. For sizes smaller than threshold staging buffers logic would be used else PinInPlace logic. By default it is set to 4096.
-
--   HCC_D2H_PININPLACE_THRESHOLD  - Threshold in KB for D2H copy. For sizes smaller than threshold staging buffer logic would be used else PinInPlace logic. By default it is set to 1024.
-
 ## Device-Side Malloc
 
-hip-hcc and hip-clang supports device-side malloc and free. Users can allocate
-memory dynamically in a kernel. The allocated memory are in global address
-space, however, different threads get different memory allocations for the same
-call of malloc. The allocated memory can be accessed or freed by other threads
-or other kernels. It persists in the life time of the HIP program until it is
-freed.
-
-The memory are allocated in pages. Users can define macro
-`__HIP_SIZE_OF_PAGE` for controlling the page size in bytes and macro
-`__HIP_NUM_PAGES` for controlling the total number of pages that can be
-allocated.
+HIP-Clang currenntly doesn't supports device-side malloc and free.
 
 ## Use of Long Double Type
 
-In HCC and HIP-Clang, long double type is 80-bit extended precision format for x86_64, which is not supported by AMDGPU. HCC and HIP-Clang treat long double type as IEEE double type for AMDGPU. Using long double type in HIP source code will not cause issue as long as data of long double type is not transferred between host and device. However, long double type should not be used as kernel argument type.
+In HIP-Clang, long double type is 80-bit extended precision format for x86_64, which is not supported by AMDGPU.  HIP-Clang treats long double type as IEEE double type for AMDGPU. Using long double type in HIP source code will not cause issue as long as data of long double type is not transferred between host and device. However, long double type should not be used as kernel argument type.
 
 ## FMA and contractions
 
-By default HIP-Clang assumes -ffp-contract=fast and HCC assumes -ffp-contract=off.
+By default HIP-Clang assumes -ffp-contract=fast.
 For x86_64, FMA is off by default since the generic x86_64 target does not
 support FMA by default. To turn on FMA on x86_64, either use -mfma or -march=native
 on CPU's supporting FMA.

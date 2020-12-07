@@ -2,12 +2,12 @@
 
 ## generates documentation about clang options.
 
-clang=/opt/rocm/llvm/bin/clang
+clang=/opt/rocm*/llvm/bin/clang
 
 exec > clang_options.md
 
 echo "# Support of Clang options"
-echo " Clang version: $($clang --version | head -1)"
+echo " Clang version: $($clang --version | head -1|sed 's:\(.*\) (.* \(.*\)).*:\1 \2:')"
 echo
 echo "|Option|Support|Description|"
 echo "|-------|------|-------|"
@@ -40,7 +40,7 @@ $clang --help | sed '1,5d'|  while read a b; do
     desc="$b"
   fi
   supp=
-  key=$(echo $opt |sed 's:\([^ =<]*\).*:\1:')
+  key=$(printf "%s" "$opt" |sed 's:\([^ =<]*\).*:\1:')
   if [[ "$key" != "" ]]; then
     supp="${db[$key]}"
     #echo "opt=$opt supp=${db[$opt]}"
@@ -48,28 +48,36 @@ $clang --help | sed '1,5d'|  while read a b; do
   if [[ "$supp" == "" ]]; then
     if [[ "$desc" = *AArch* ||\
           "$desc" = *MIPS* || \
-	  "$desc" = *ARM* || \
-	  "$desc" = *Objective-C* ]]; then
+          "$desc" = *ARM* || \
+          "$desc" = *Arm* || \
+          "$desc" = *SYCL* || \
+          "$desc" = *PPC* || \
+          "$desc" = *RISC-V* || \
+          "$desc" = *WebAssembly* || \
+          "$desc" = *Objective-C* || \
+          "$opt" = *xray* \
+       ]]; then
       supp="n"
-    elif [[ "$desc" = *OpenCL* ||\
-	    "$desc" = *HIP* || \
-	    "$desc" = *AMDGPU* ]]; then
+    elif [[ "$opt" = *sanity* ]]; then
+      supp="h"
+    else
       supp="s"
     fi
   fi
+  s=$supp
   case $supp in
     s) supp="Supported";;
     n) supp="Unsupported";;
     h) supp="Supported on Host only";;
   esac
 
-  desc=$(echo "$desc"| sed -e 's:|:\\|:g')
+  desc=$(echo "$desc"| sed -e 's:^ *::' -e 's:|:\\|:g')
   #echo a=$a
   #echo b=$b
   #echo opt=$opt
   #echo desc=$desc
   if [[ "$desc" != "" ]]; then
-    echo $key >>$tmpf
+    printf "%s %s\n" "$key" "$s" >>$tmpf
     echo '|`'$opt'`|'$supp'|`'$desc'`|'
   fi
 done
