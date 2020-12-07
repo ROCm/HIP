@@ -28,7 +28,7 @@ namespace hip {
 
 class ProfileMarker: public amd::Marker {
 public:
-  ProfileMarker(amd::HostQueue& queue, bool disableFlush, bool markerTs)
+  ProfileMarker(amd::HostQueue& queue, bool disableFlush, bool markerTs = false)
   : amd::Marker(queue, disableFlush) {
     profilingInfo_.enabled_ = true;
     profilingInfo_.callback_ = nullptr;

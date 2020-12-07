@@ -146,7 +146,8 @@ void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record)
     // If lastQueuedCommand is user invisible command(command->type() == 0),
     // Always submit a marker if queue profiling is not explicitly enabled else
     // submit a normal marker. Disable queue flush to batch commands
-    if (!queue->properties().test(CL_QUEUE_PROFILING_ENABLE)) {
+    if (!queue->properties().test(CL_QUEUE_PROFILING_ENABLE) &&
+        !(flags & hipEventDisableTiming)) {
       if (command != nullptr) {
         command->release();
       }

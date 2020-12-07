@@ -1261,8 +1261,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * #hipEventBlockingSync : The event will use blocking synchronization : if hipEventSynchronize is
  called on this event, the thread will block until the event completes.  This can increase latency
  for the synchroniation but can result in lower power and more resources for other CPU threads.
- * #hipEventDisableTiming : Disable recording of timing information.  On ROCM platform, timing
- information is always recorded and this flag has no performance benefit.
+ * #hipEventDisableTiming : Disable recording of timing information.
 
  * @warning On AMD platform, hipEventInterprocess support is under development.  Use of this flag
  will return an error.
@@ -1754,7 +1753,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
  *  @param[in]  height Requested pitched allocation height
  *
  *  If size is 0, no memory is allocated, *ptr returns nullptr, and hipSuccess is returned.
- *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array. 
+ *  The intended usage of pitch is as a separate parameter of the allocation, used to compute addresses within the 2D array.
  *  Given the row and column of an array element of type T, the address is computed as:
  *  T* pElement = (T*)((char*)BaseAddress + Row * Pitch) + Column;
  *
@@ -1980,7 +1979,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
 #else
 hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
-#ifdef __cplusplus //Start : Not supported in gcc 
+#ifdef __cplusplus //Start : Not supported in gcc
 namespace hip_impl {
 inline
 __attribute__((visibility("hidden")))
@@ -2415,9 +2414,9 @@ hipError_t hipFreeArray(hipArray* array);
 
 /**
  * @brief Frees a mipmapped array on the device
- * 
+ *
  * @param[in] mipmappedArray - Pointer to mipmapped array to free
- * 
+ *
  * @return #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray);
@@ -2445,7 +2444,7 @@ hipError_t hipMalloc3DArray(hipArray** array, const struct hipChannelFormatDesc*
  * @param[in]  extent          - Requested allocation size (width field in elements)
  * @param[in]  numLevels       - Number of mipmap levels to allocate
  * @param[in]  flags           - Flags for extensions
- * 
+ *
  * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  */
 hipError_t hipMallocMipmappedArray(
@@ -2461,7 +2460,7 @@ hipError_t hipMallocMipmappedArray(
  * @param[out] levelArray     - Returned mipmap level HIP array
  * @param[in]  mipmappedArray - HIP mipmapped array
  * @param[in]  level          - Mipmap level
- * 
+ *
  * @return #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipGetMipmappedArrayLevel(
