@@ -1098,6 +1098,11 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
     return hipErrorOutOfMemory;
   }
 
+  if (!command->validatePeerMemory()) {
+    delete command;
+    return hipErrorInvalidValue;
+  }
+
   hipError_t status = hipSuccess;
   command->enqueue();
   if (!isAsync) {
@@ -1160,6 +1165,11 @@ hipError_t ihipMemcpyDtoH(void* srcDevice,
     return hipErrorOutOfMemory;
   }
 
+  if (!command->validatePeerMemory()) {
+    delete command;
+    return hipErrorInvalidValue;
+  }
+
   hipError_t status = hipSuccess;
   command->enqueue();
   if (!isAsync) {
@@ -1220,6 +1230,11 @@ hipError_t ihipMemcpyHtoD(const void* srcHost,
 
   if (command == nullptr) {
     return hipErrorOutOfMemory;
+  }
+
+  if (!command->validatePeerMemory()) {
+    delete command;
+    return hipErrorInvalidValue;
   }
 
   hipError_t status = hipSuccess;
