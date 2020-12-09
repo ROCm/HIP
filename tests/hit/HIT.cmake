@@ -8,6 +8,7 @@ if (NOT ${BUILD_SHARED_LIBS})
     set(HIP_LIB_TYPE "static")
 endif()
 message(STATUS "HIP runtime lib type - ${HIP_LIB_TYPE}")
+message(STATUS "CMAKE_TESTING_TOOL: ${CMAKE_TESTING_TOOL}")
 #-------------------------------------------------------------------------------
 # Helper macro to parse BUILD instructions
 macro(PARSE_BUILD_COMMAND _target _sources _hipcc_options _hcc_options _clang_options _nvcc_options _link_options _exclude_platforms _exclude_runtime _exclude_compiler _exclude_lib_type _depends _dir)
@@ -232,26 +233,39 @@ macro(READ_FROM_MAP _map _key _value)
     set(${_value} "${${_map}_${_key}}")
 endmacro()
 
-# Helper macro to create a test
-macro(MAKE_TEST _config exe)
-    string(REPLACE " " "" smush_args ${ARGN})
-    set(testname ${exe}${smush_args}.tst)
+
+# Helper macro to generate a test
+macro(GENERATE_TEST _config testname cmdline)
+    set(TEST_CMD_LINE ${cmdline} ${ARGN})
     if(${_config} STREQUAL ${HIP_CTEST_CONFIG_DEFAULT})
-        add_test(NAME ${testname} COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN})
+        add_test(NAME ${testname} COMMAND ${TEST_CMD_LINE})
     else()
-        add_test(NAME ${testname} CONFIGURATIONS ${_config} COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN})
+        add_test(NAME ${testname} CONFIGURATIONS ${_config} COMMAND ${TEST_CMD_LINE})
     endif()
     set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ENVIRONMENT HIP_PATH=${HIP_ROOT_DIR})
     set_tests_properties(${testname} PROPERTIES SKIP_RETURN_CODE 127 ENVIRONMENT HIP_PATH=${HIP_ROOT_DIR})
 endmacro()
 
+# Helper macro to create a test
 macro(MAKE_NAMED_TEST _config exe testname)
-    if(${_config} STREQUAL ${HIP_CTEST_CONFIG_DEFAULT})
-        add_test(NAME ${testname} COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN})
-    else()
-        add_test(NAME ${testname} CONFIGURATIONS ${_config} COMMAND ${PROJECT_BINARY_DIR}/${exe} ${ARGN})
+    # to generate hip original test
+    set(TEST_CMD_LINE ${PROJECT_BINARY_DIR}/${exe} ${ARGN})
+    generate_test(${_config} ${testname} ${TEST_CMD_LINE})
+
+    # to generate test with tool enabled
+    if(DEFINED CMAKE_TESTING_TOOL)
+        # arguments passing to the testing tool
+        # <source dir>, <build dir>, <test name>, <test args...>
+        set(TOOL_CMD_LINE ${CMAKE_TESTING_TOOL} ${PROJECT_SOURCE_DIR} ${PROJECT_BINARY_DIR} ${TEST_CMD_LINE})
+        generate_test(${_config} ${testname}.prof ${TOOL_CMD_LINE})
     endif()
-    set_tests_properties(${testname} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" ENVIRONMENT HIP_PATH=${HIP_ROOT_DIR})
+endmacro()
+
+# Helper macro to create a test with default name
+macro(MAKE_TEST _config exe)
+    string(REPLACE " " "" smush_args ${ARGN})
+    set(testname ${exe}${smush_args}.tst)
+    make_named_test(${_config} ${exe} ${testname} ${ARGN})
 endmacro()
 #-------------------------------------------------------------------------------
 
