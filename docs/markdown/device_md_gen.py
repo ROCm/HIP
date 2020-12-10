@@ -389,7 +389,7 @@ __float2half_rz
 __floats2half2_rn
 __half22float2
 __half2float
-half2half2
+__half2half2
 __half2int_rd
 __half2int_rn
 __half2int_ru
