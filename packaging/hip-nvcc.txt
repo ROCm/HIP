@@ -7,6 +7,8 @@ project(hip_nvcc)
 set(CPACK_SET_DESTDIR TRUE)
 set(CPACK_INSTALL_PREFIX @CPACK_INSTALL_PREFIX@ )
 set(CPACK_PACKAGE_NAME "hip-nvcc")
+set(CPACK_PACKAGE_DESCRIPTION "HIP:
+          Heterogenous-computing Interface for Portability [NVCC]")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [NVCC]")
 set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
 set(CPACK_PACKAGE_CONTACT "HIP Support <hip.support@amd.com>")
