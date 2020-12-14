@@ -262,11 +262,21 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
 hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flags) {
   HIP_INIT_API(hipExtMallocWithFlags, ptr, sizeBytes, flags);
 
-  if (flags != hipDeviceMallocDefault && flags != hipDeviceMallocFinegrained) {
+  unsigned int ihipFlags = 0;
+  if (flags == hipDeviceMallocDefault) {
+    ihipFlags = 0;
+  } else if (flags == hipDeviceMallocFinegrained) {
+    ihipFlags = CL_MEM_SVM_ATOMICS;
+  } else if (flags == hipMallocSignalMemory) {
+    ihipFlags = CL_MEM_SVM_ATOMICS | CL_MEM_SVM_FINE_GRAIN_BUFFER | ROCCLR_MEM_HSA_SIGNAL_MEMORY;
+    if (sizeBytes != 8) {
+      HIP_RETURN(hipErrorInvalidValue);
+    }
+  } else {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_ATOMICS: 0), (ptr != nullptr)? *ptr : nullptr);
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, ihipFlags), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes) {

@@ -176,6 +176,7 @@ enum hipLimit_t {
 
 #define hipDeviceMallocDefault 0x0
 #define hipDeviceMallocFinegrained 0x1  ///< Memory is allocated in fine grained region of device.
+#define hipMallocSignalMemory 0x2       ///< Memory represents a HSA signal.
 
 //! Flags that can be used with hipHostRegister
 #define hipHostRegisterDefault 0x0   ///< Memory is Mapped and Portable
@@ -215,6 +216,12 @@ enum hipLimit_t {
 
 // Flags that can be used with hipExtLaunch Set of APIs
 #define hipExtAnyOrderLaunch 0x01  ///< AnyOrderLaunch of kernels
+
+// Flags to be used with hipStreamWaitValue32 and hipStreamWaitValue64
+#define hipStreamWaitValueGte 0x0
+#define hipStreamWaitValueEq 0x1
+#define hipStreamWaitValueAnd 0x2
+#define hipStreamWaitValueNor 0x3
 
 /*
  * @brief HIP Memory Advise values
@@ -1216,6 +1223,118 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 
 
 // end doxygen Stream
+/**
+ * @}
+ */
+
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Stream Memory Operations
+ *  @{
+ *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
+ */
+
+
+/**
+ * @brief Enqueues a wait command to the stream.
+ *
+ * @param [in] stream - Stream identifier
+ * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag.
+ * @param [in] value  - Value to be used in compare operation
+ * @param [in] mask   - Mask to be applied on value at memory before it is compared with value
+ * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
+ * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Enqueues a wait command to the stream, all operations enqueued  on this stream after this, will
+ * not execute until the defined wait condition is true.
+ *
+ * hipStreamWaitValueGte: waits until *ptr&mask >= value
+ * hipStreamWaitValueEq : waits until *ptr&mask == value
+ * hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
+ * hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
+ *
+ * @note when using 'hipStreamWaitValueNor', mask is applied on both 'value' and '*ptr'.
+ *
+ * @note Support for hipStreamWaitValue32 can be queried using 'hipDeviceGetAttribute()' and
+ * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
+ *
+ * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue64, hipStreamWriteValue64,
+ * hipStreamWriteValue32, hipDeviceGetAttribute
+ */
+
+hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, uint32_t mask, unsigned int flags);
+
+/**
+ * @brief Enqueues a wait command to the stream.
+ *
+ * @param [in] stream - Stream identifier
+ * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag.
+ * @param [in] value  - Value to be used in compare operation
+ * @param [in] mask   - Mask to be applied on value at memory before it is compared with value.
+ * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
+ * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Enqueues a wait command to the stream, all operations enqueued  on this stream after this, will
+ * not execute until the defined wait condition is true.
+ *
+ * hipStreamWaitValueGte: waits until *ptr&mask >= value
+ * hipStreamWaitValueEq : waits until *ptr&mask == value
+ * hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
+ * hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
+ *
+ * @note when using 'hipStreamWaitValueNor', mask is applied on both 'value' and '*ptr'.
+ *
+ * @note Support for hipStreamWaitValue64 can be queried using 'hipDeviceGetAttribute()' and
+ * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
+ *
+ * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue32, hipStreamWriteValue64,
+ * hipStreamWriteValue32, hipDeviceGetAttribute
+ */
+
+hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, uint64_t mask, unsigned int flags);
+
+/**
+ * @brief Enqueues a write command to the stream.
+ *
+ * @param [in] stream - Stream identifier
+ * @param [in] ptr    - Pointer to a GPU accessible memory object.
+ * @param [in] value  - Value to be written
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Enqueues a write command to the stream, write operation is performed after all earlier commands
+ * on this stream have completed the execution.
+ *
+ * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64
+ */
+hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value);
+
+/**
+ * @brief Enqueues a write command to the stream.
+ *
+ * @param [in] stream - Stream identifier
+ * @param [in] ptr    - Pointer to a GPU accessible memory object.
+ * @param [in] value  - Value to be written
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Enqueues a write command to the stream, write operation is performed after all earlier commands
+ * on this stream have completed the execution.
+ *
+ * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64
+ */
+hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value);
+
+
+// end doxygen Stream Memory Operations
 /**
  * @}
  */
