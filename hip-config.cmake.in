@@ -151,22 +151,26 @@ else()
 endif()
 
 if(HIP_COMPILER STREQUAL "clang")
-  if (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
+  get_property(compilePropIsSet TARGET hip::device PROPERTY INTERFACE_COMPILE_OPTIONS SET)
+
+  if (NOT compilePropIsSet AND HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
     set_property(TARGET hip::device APPEND PROPERTY
       INTERFACE_COMPILE_OPTIONS -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false
     )
   endif()
 
-  if (EXISTS ${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode)
-    set_property(TARGET hip::device APPEND PROPERTY
-      INTERFACE_COMPILE_OPTIONS -xhip
-    )
-  else()
-    # This path is to support an older build of the device library
-    # TODO: To be removed in the future.
-    set_property(TARGET hip::device APPEND PROPERTY
-      INTERFACE_COMPILE_OPTIONS -xhip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
-    )
+  if (NOT compilePropIsSet)
+    if (EXISTS ${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode)
+      set_property(TARGET hip::device APPEND PROPERTY
+        INTERFACE_COMPILE_OPTIONS -xhip
+      )
+    else()
+      # This path is to support an older build of the device library
+      # TODO: To be removed in the future.
+      set_property(TARGET hip::device APPEND PROPERTY
+        INTERFACE_COMPILE_OPTIONS -xhip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
+      )
+    endif()
   endif()
 
   set_property(TARGET hip::device APPEND PROPERTY
@@ -182,9 +186,11 @@ if(HIP_COMPILER STREQUAL "clang")
   )
 
   foreach(GPU_TARGET ${GPU_TARGETS})
-      set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_COMPILE_OPTIONS "--offload-arch=${GPU_TARGET}"
-      )
+      if (NOT compilePropIsSet)
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_COMPILE_OPTIONS "--offload-arch=${GPU_TARGET}"
+        )
+      endif()
       set_property(TARGET hip::device APPEND PROPERTY
         INTERFACE_LINK_LIBRARIES "--offload-arch=${GPU_TARGET}"
       )
@@ -195,9 +201,11 @@ if(HIP_COMPILER STREQUAL "clang")
   endif()
   if(HIP_CLANG_NUM_PARALLEL_JOBS GREATER 1)
     if(${HIP_CLANG_SUPPORTS_PARALLEL_JOBS} )
-      set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_COMPILE_OPTIONS -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS} -Wno-format-nonliteral
-      )
+      if (NOT compilePropIsSet)
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_COMPILE_OPTIONS -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS} -Wno-format-nonliteral
+        )
+      endif()
       set_property(TARGET hip::device APPEND PROPERTY
         INTERFACE_LINK_LIBRARIES -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}
       )
