@@ -27,6 +27,9 @@ THE SOFTWARE.
 #include <tuple>
 #include <type_traits>
 #endif
+/** @addtogroup Module Module Management
+ *  @{
+ */
 
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
