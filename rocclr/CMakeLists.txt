@@ -133,6 +133,7 @@ add_library(hip64 OBJECT
  hip_platform.cpp
  hip_profile.cpp
  hip_stream.cpp
+ hip_stream_ops.cpp
  hip_surface.cpp
  hip_texture.cpp
  hip_activity.cpp

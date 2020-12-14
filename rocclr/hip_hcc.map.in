@@ -172,6 +172,10 @@ global:
     hipStreamQuery;
     hipStreamSynchronize;
     hipStreamWaitEvent;
+    hipStreamWaitValue32;
+    hipStreamWaitValue64;
+    hipStreamWriteValue32;
+    hipStreamWriteValue64;
     __hipPopCallConfiguration;
     __hipPushCallConfiguration;
     __hipRegisterFatBinary;
