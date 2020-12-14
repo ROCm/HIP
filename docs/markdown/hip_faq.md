@@ -27,6 +27,9 @@
 - [How do I trace HIP application flow?](#how-do-i-trace-hip-application-flow)
 - [What if HIP generates an error of "symbol multiply defined!" only on AMD machine?](#what-if-hip-generates-error-of-symbol-multiply-defined-only-on-amd-machine)
 - [What is maximum limit of Generic kernel launching parameter?](#what-is-maximum-limit-of-generic-kernel-launching-parameter)
+- [Are _shfl_*_sync functions supported on HIP platform?](#are-_shfl_*_sync-functions-supported-on-hip-platform)
+- [How to create a guard for code that is specific to the host or the GPU?](#how-to-create-a-guard-for-code-that-is-specific-to-the-host-or-the-gpu)
+- [Why _OpenMP is undefined when compiling with -fopenmp?](#why-_openmp-is-undefined-when-compiling-with--fopenmp)
 <!-- tocstop -->
 
 ### What APIs and features does HIP support?
@@ -108,8 +111,7 @@ The hip interfaces support both ROCm and CUDA paths, with familiar library inter
 - [hipsparse](https://github.com/ROCmSoftwarePlatform/hcSPARSE)
 - [hiprng](https://github.com/ROCmSoftwarePlatform/hcrng)
 
-Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cublas or hcblas depending on the platform and replace the need
-to use conditional compilation.
+Additionally, some of the cublas routines are automatically converted to hipblas equivalents by the HIPIFY tools. These APIs use cublas or hcblas depending on the platform and replace the need to use conditional compilation.
 
 ### How does HIP compare with OpenCL?
 Both AMD and Nvidia support OpenCL 1.2 on their devices so that developers can write portable code.
@@ -127,13 +129,11 @@ Both HIP and CUDA are dialects of C++, and thus porting between them is relative
 Both dialects support templates, classes, lambdas, and other C++ constructs.
 As one example, the hipify-perl tool was originally a Perl script that used simple text conversions from CUDA to HIP.
 HIP and CUDA provide similar math library calls as well.  In summary, the HIP philosophy was to make the HIP language close enough to CUDA that the porting effort is relatively simple.
-This reduces the potential for error, and also makes it easy to automate the translation.  HIP's goal is to quickly get the ported program running on both platforms with little manual intervention,
-so that the programmer can focus on performance optimizations.
+This reduces the potential for error, and also makes it easy to automate the translation.  HIP's goal is to quickly get the ported program running on both platforms with little manual intervention, so that the programmer can focus on performance optimizations.
 
 There have been several tools that have attempted to convert CUDA into OpenCL, such as CU2CL.  OpenCL is a C99-based kernel language (rather than C++) and also does not support single-source compilation.
 As a result, the OpenCL syntax is different from CUDA, and the porting tools have to perform some heroic transformations to bridge this gap.
 The tools also struggle with more complex CUDA applications, in particular, those that use templates, classes, or other C++ features inside the kernel.
-
 
 ### What hardware does HIP support?
 - For AMD platforms, see the [ROCm documentation](https://github.com/RadeonOpenCompute/ROCm#supported-gpus) for the list of supported platforms.
@@ -169,7 +169,7 @@ Yes. HIP's HIP-Clang path only exposes the APIs and functions that work on AMD r
 
 ### How to use HIP-Clang to build HIP programs?
 The environment variable can be used to set compiler path:
-- HIP_CLANG_PATH: path to hip-clang. When set, this variable let hipcc to use hip-clang for compilation/linking
+- HIP_CLANG_PATH: path to hip-clang. When set, this variable let hipcc to use hip-clang for compilation/linking.
 
 There is an alternative environment variable to set compiler path:
 - HIP_ROCCLR_HOME: path to root directory of the HIP-ROCclr runtime. When set, this variable let hipcc use hip-clang from the ROCclr distribution.
@@ -212,7 +212,7 @@ hipCUResultTohipError
 If platform portability is important, use #ifdef __HIP_PLATFORM_NVCC__ to guard the CUDA-specific code.
 
 ### How do I trace HIP application flow?
-See the [HIP Profiling Guide](hip_porting_guide.md) for more information.
+See the [HIP Logging](hip_logging.md) for more information.
 
 ### What is maximum limit of kernel launching parameter?
 Product of block.x, block.y, and block.z should be less than 1024.
