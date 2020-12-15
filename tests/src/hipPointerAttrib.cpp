@@ -27,7 +27,7 @@ THE SOFTWARE.
 #include "test_common.h"
 #include <vector>
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
 #include "hc_am.hpp"
 
 #endif
@@ -289,7 +289,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
         reference[i]._pointer = ptr;
     }
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
     if (p_verbose & 0x2) {
         printf("Tracker after insertions:\n");
         hc::am_memtracker_print();
@@ -327,7 +327,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
         }
     }
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
     if (p_verbose & 0x2) {
         printf("Tracker after cleanup:\n");
         hc::am_memtracker_print();
@@ -392,7 +392,7 @@ void thread_query(void* ptr, const hipPointerAttribute_t* refAttrib) {
 }
 
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
 //---
 // Add pointers to tracker very quickly, then remove them quickly:
 enum Dir { Up, Down };
@@ -511,7 +511,7 @@ int main(int argc, char* argv[]) {
     }
 
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
     if (p_tests & 0x10) {
         srand(0x400);
         testMultiThreaded_2();

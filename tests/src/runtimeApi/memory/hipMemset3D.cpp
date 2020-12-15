@@ -60,7 +60,7 @@ bool testhipMemset3D(int memsetval,int p_gpuDevice)
     myparms.dstPtr = make_hipPitchedPtr(A_h, width , numW, numH);
     myparms.srcPtr = devPitchedPtr;
     myparms.extent = extent;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
     myparms.kind = hipMemcpyKindToCudaMemcpyKind(hipMemcpyDeviceToHost);
 #else
     myparms.kind = hipMemcpyDeviceToHost;
@@ -111,7 +111,7 @@ bool testhipMemset3DAsync(int memsetval,int p_gpuDevice)
     myparms.dstPtr = make_hipPitchedPtr(A_h, width , numW, numH);
     myparms.srcPtr = devPitchedPtr;
     myparms.extent = extent;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
     myparms.kind = hipMemcpyKindToCudaMemcpyKind(hipMemcpyDeviceToHost);
 #else
     myparms.kind = hipMemcpyDeviceToHost;

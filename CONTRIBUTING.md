@@ -20,9 +20,9 @@ After making HIP, don't forget the "make install" step !
 
     - Add a translation to the hipify-clang tool ; many examples abound.
        - For stat tracking purposes, place the API into an appropriate stat category ("dev", "mem", "stream", etc).
-    - Add a inlined NVCC implementation for the function in include/hip/nvcc_detail/hip_runtime_api.h.
+    - Add a inlined NVIDIA implementation for the function in include/hip/nvidia_detail/hip_runtime_api.h.
        - These are typically headers
-    - Add an HIP_ROCclr definition and Doxygen comments for the function in include/hcc_detail/hip_runtime_api.h
+    - Add an HIP_ROCclr definition and Doxygen comments for the function in include/amd_detail/hip_runtime_api.h
        - Source implementation typically go in hip/rocclr/hip_*.cpp. The implementation involve calls to HIP runtime (ie for hipStream_t).
 
 ## Check HIP-Clang version

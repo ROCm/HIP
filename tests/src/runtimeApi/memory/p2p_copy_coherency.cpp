@@ -34,7 +34,7 @@ THE SOFTWARE.
 
 #define USE_HCC_MEMTRACKER 0 /* Debug flag to show the memtracker periodically */
 
-#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_ROCclr__)
+#if defined(__HIP_PLATFORM_AMD__) && !defined(__HIP_ROCclr__)
 #include <hc_am.hpp>
 #else
 #define USE_HCC_MEMTRACKER 0

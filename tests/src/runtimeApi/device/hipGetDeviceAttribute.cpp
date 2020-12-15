@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCooperativeLaunch, props.cooperativeLaunch));
     CHECK(test_hipDeviceGetAttribute(deviceId, hipDeviceAttributeCooperativeMultiDeviceLaunch, props.cooperativeMultiDeviceLaunch));
 
-#ifndef __HIP_PLATFORM_NVCC__
+#ifndef __HIP_PLATFORM_NVIDIA__
     CHECK(test_hipDeviceGetHdpAddress(deviceId, hipDeviceAttributeHdpMemFlushCntl, props.hdpMemFlushCntl));
     CHECK(test_hipDeviceGetHdpAddress(deviceId, hipDeviceAttributeHdpRegFlushCntl, props.hdpRegFlushCntl));
 #endif

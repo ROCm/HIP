@@ -171,7 +171,7 @@ void printDeviceProp(int deviceId) {
     cout << endl;
 
 
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
     // Limits:
     cout << endl;
     printLimit(w1, cudaLimitStackSize, "bytes/thread");

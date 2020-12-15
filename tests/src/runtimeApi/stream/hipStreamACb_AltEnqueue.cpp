@@ -37,7 +37,7 @@ THE SOFTWARE.
 #include "test_common.h"
 
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
 #define HIPRT_CB
 #endif
 

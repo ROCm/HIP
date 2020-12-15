@@ -102,7 +102,7 @@ inline void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& d
     hipExtLaunchKernel(k, numBlocks, dimBlocks, _Args, sharedMemBytes, stream, startEvent,
                        stopEvent, (int)flags);
 }
-#elif defined(__HIP_PLATFORM_HCC__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
+#elif (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
 //kernel_descriptor and hip_impl::make_kernarg are in "grid_launch_GGL.hpp"
 
 namespace hip_impl {

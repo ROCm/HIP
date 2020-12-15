@@ -589,7 +589,7 @@ if (len(sys.argv) < 3):
          "  -p - HIP_INIT_API macro patching mode\n" +
          "\n" +
          "  Example:\n" +
-         "  $ " + sys.argv[0] + " -v -p -t --priv ./api/hip/include/hip/hcc_detail/hip_runtime_api.h ./api/hip ./api/hip/include/hip/hcc_detail/hip_prof_str.h");
+         "  $ " + sys.argv[0] + " -v -p -t --priv ./api/hip/include/hip/amd_detail/hip_runtime_api.h ./api/hip ./api/hip/include/hip/amd_detail/hip_prof_str.h");
 
 # API header file given as an argument
 src_pat = "\.cpp$"

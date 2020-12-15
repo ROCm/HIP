@@ -30,7 +30,7 @@ using TestQueues = std::tuple<QueueHipRt<true>, QueueHipRt<false>>;
 #define HIP_ASSERT(x) (assert((x)==hipSuccess))
 #define HIP_ASSERT_IGNORE(x,ign) auto err=x; HIP_ASSERT(err==ign ? hipSuccess : err)
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
   #define HIPRT_CB
 #endif
 

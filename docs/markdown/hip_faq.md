@@ -209,7 +209,7 @@ hipErrorToCudaError
 hipCUDAErrorTohipError
 hipCUResultTohipError
 
-If platform portability is important, use #ifdef __HIP_PLATFORM_NVCC__ to guard the CUDA-specific code.
+If platform portability is important, use #ifdef __HIP_PLATFORM_NVIDIA__ to guard the CUDA-specific code.
 
 ### How do I trace HIP application flow?
 See the [HIP Logging](hip_logging.md) for more information.

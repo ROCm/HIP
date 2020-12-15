@@ -278,7 +278,6 @@ if(HIP_RUNTIME STREQUAL "rocclr")
     set(HIP_ROCclr_BUILD_FLAGS "${HIP_ROCclr_BUILD_FLAGS} -fPIC ${ROCclr_CXX_FLAGS} -I${HSA_PATH}/include")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
-    set(HCC_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
 endif()
 
 if(HIP_PLATFORM STREQUAL "amd")
@@ -320,18 +319,21 @@ if(NOT ${INSTALL_SOURCE} EQUAL 0)
         install(DIRECTORY rocclr DESTINATION .)
     endif()
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
+
+    # The following two lines will be removed after upstream updation
+    install(CODE "MESSAGE(\"Removing ${CMAKE_INSTALL_PREFIX}/include\")")
+    install(CODE "file(REMOVE_RECURSE ${CMAKE_INSTALL_PREFIX}/include)")
+
     install(DIRECTORY include DESTINATION .)
     install(DIRECTORY cmake DESTINATION .)
 endif()
 
 # Install generated headers
 # FIXME: Associate with individual targets.
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/hip/hcc_detail
-        DESTINATION include/hip
-        FILES_MATCHING PATTERN "*.h*")
-install(DIRECTORY ${PROJECT_BINARY_DIR}/include/hip
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.h*")
+install(FILES ${PROJECT_BINARY_DIR}/include/hip/amd_detail/hip_prof_str.h
+        DESTINATION include/hip/amd_detail)
+install(FILES ${PROJECT_BINARY_DIR}/include/hip/hip_version.h
+        DESTINATION include/hip)
 
 #############################
 # hip-config

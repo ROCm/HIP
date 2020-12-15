@@ -430,7 +430,7 @@ if (len(sys.argv) < 3):
   fatal ("Usage: " + sys.argv[0] + " [-v] <input HIP API .h file> <patched srcs path>\n" +
          "  -v - verbose messages\n" +
          "  example:\n" +
-         "  $ hipap.py hip/include/hip/hcc_detail/hip_runtime_api.h hip/src")
+         "  $ hipap.py hip/include/hip/amd_detail/hip_runtime_api.h hip/src")
 
 # API header file given as an argument
 api_hfile = sys.argv[1]

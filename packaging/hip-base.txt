@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 2.8.3)
 project(hip_base)
 
 install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS)
-install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION .)
-install(FILES @PROJECT_BINARY_DIR@/include/hip/hcc_detail/hip_prof_str.h
-        DESTINATION include/hip/hcc_detail)
+# The following 'ATTERN "hcc_detail" EXCLUDE' will be removed after upstream updation
+install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION . PATTERN "hcc_detail" EXCLUDE)
+install(FILES @PROJECT_BINARY_DIR@/include/hip/amd_detail/hip_prof_str.h
+        DESTINATION include/hip/amd_detail)
 install(FILES @PROJECT_BINARY_DIR@/include/hip/hip_version.h
         DESTINATION include/hip)
 install(FILES @PROJECT_BINARY_DIR@/.hipVersion DESTINATION bin)
