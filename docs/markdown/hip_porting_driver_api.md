@@ -178,11 +178,11 @@ The below sample shows how to use `hipModuleGetFunction`.
 #define LEN 64
 #define SIZE LEN<<2
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
 #define fileName "vcpy_isa.co"
 #endif
 
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
 #define fileName "vcpy_isa.ptx"
 #endif
 
@@ -201,7 +201,7 @@ int main(){
     }
 
 
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
           hipInit(0);
           hipDevice_t device;
           hipCtx_t context;
@@ -238,7 +238,7 @@ int main(){
         std::cout<<A[i]<<" - "<<B[i]<<std::endl;
     }
 
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
           hipCtxDetach(context);
 #endif
 
@@ -248,7 +248,7 @@ int main(){
 
 ## HIP Module and Texture Driver API
 
-HIP supports texture driver APIs however texture reference should be declared in host scope. Following code explains the use of texture reference for __HIP_PLATFORM_HCC__ platform. 
+HIP supports texture driver APIs however texture reference should be declared in host scope. Following code explains the use of texture reference for __HIP_PLATFORM_AMD__ platform.
 
 ```
 // Code to generate code object

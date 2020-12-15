@@ -150,7 +150,7 @@ int main() {
         int numElements = 1024 * 16;
         size_t sizeBytes = numElements * sizeof(int);
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
         {
             // Stimulate error condition:
             int* A = &numElements;

@@ -79,7 +79,7 @@ bool argValidation() {
     TestPassed &= false;
   }
 
-#ifndef __HIP_PLATFORM_NVCC__
+#ifndef __HIP_PLATFORM_NVIDIA__
   // nvcc doesnt support kernelfunc(NULL) for api
   ret = hipOccupancyMaxPotentialBlockSize(&gridSize, &blockSize, NULL, 0, 0);
   if (ret != hipErrorInvalidValue) {

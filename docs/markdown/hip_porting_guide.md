@@ -155,7 +155,7 @@ All HIP projects target either AMD or NVIDIA platform. The platform affects whic
 Often, it's useful to know whether the underlying compiler is HIP-Clang or nvcc. This knowledge can guard platform-specific code or aid in platform-specific performance tuning.
 
 ```
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
 // Compiled with HIP-Clang
 #endif
 ```
@@ -194,8 +194,8 @@ Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, an
 |Define  		|   HIP-Clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.)
 |--- | --- | --- |---|
 |HIP-related defines:|
-|`__HIP_PLATFORM_HCC__`| Defined | Undefined |  Defined if targeting AMD platform; undefined otherwise |
-|`__HIP_PLATFORM_NVCC__`| Undefined  | Defined |  Defined if targeting nvcc platform; undefined otherwise |
+|`__HIP_PLATFORM_AMD__`| Defined | Undefined |  Defined if targeting AMD platform; undefined otherwise |
+|`__HIP_PLATFORM_NVIDIA__`| Undefined  | Defined |  Defined if targeting NVIDIA platform; undefined otherwise |
 |`__HIP_DEVICE_COMPILE__`     | 1 if compiling for device; undefined if compiling for host  |1 if compiling for device; undefined if compiling for host  | Undefined
 |`__HIPCC__`		|  Defined | Defined 		|  Undefined
 |`__HIP_ARCH_*` |0 or 1 depending on feature support (see below) | 0 or 1 depending on feature support (see below) | 0
@@ -393,10 +393,10 @@ The hip_runtime.h and hip_runtime_api.h files define the types, functions and en
 CUDA has slightly different contents for these two files. In some cases you may need to convert hipified code to include the richer hip_runtime.h instead of hip_runtime_api.h.
 
 ### Using a Standard C++ Compiler
-You can compile hip\_runtime\_api.h using a standard C or C++ compiler (e.g., gcc or ICC). The HIP include paths and defines (`__HIP_PLATFORM_HCC__` or `__HIP_PLATFORM_NVCC__`) must pass to the standard compiler; hipconfig then returns the necessary options:
+You can compile hip\_runtime\_api.h using a standard C or C++ compiler (e.g., gcc or ICC). The HIP include paths and defines (`__HIP_PLATFORM_AMD__` or `__HIP_PLATFORM_NVIDIA__`) must pass to the standard compiler; hipconfig then returns the necessary options:
 ```
 > hipconfig --cxx_config
- -D__HIP_PLATFORM_HCC__ -I/home/user1/hip/include
+ -D__HIP_PLATFORM_AMD__ -I/home/user1/hip/include
 ```
 
 You can capture the hipconfig output and passed it to the standard compiler; below is a sample makefile syntax:
@@ -577,7 +577,7 @@ To see the detailed commands that hipcc issues, set the environment variable HIP
 export HIPCC_VERBOSE=1
 make
 ...
-hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../../hc/include -I../../../../include/hcc_detail/cuda -I../../../../include -x c++ -I../../common -O3 -c backprop_cuda.cu
+hipcc-cmd: /opt/hcc/bin/hcc  -hc -I/opt/hcc/include -stdlib=libc++ -I../../../../hc/include -I../../../../include/amd_detail/cuda -I../../../../include -x c++ -I../../common -O3 -c backprop_cuda.cu
 ```
 
 ### What Does This Error Mean?

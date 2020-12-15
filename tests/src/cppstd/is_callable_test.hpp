@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip/hcc_detail/helpers.hpp>
+#include <hip/amd_detail/helpers.hpp>
 #include <memory>
 
 using hip_impl::is_callable;

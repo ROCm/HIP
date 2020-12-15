@@ -59,7 +59,7 @@ THE SOFTWARE.
 #define GRIDDIMZ 1
 #define BLOCKDIMZ 1
 
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
 
 #define CTX_CREATE() \
   hipCtx_t context;\
@@ -79,14 +79,14 @@ void initHipCtx(hipCtx_t *pcontext) {
   HIPCHECK(hipCtxCreate(pcontext, 0, device));
 }
 
-#else  // __HIP_PLATFORM_NVCC__
+#else  // __HIP_PLATFORM_NVIDIA__
 
 #define CTX_CREATE()
 #define CTX_DESTROY()
 #define ARRAY_DESTROY(array) HIPCHECK(hipFreeArray(array));
 #define HIP_TEX_REFERENCE textureReference*
 #define HIP_ARRAY hipArray*
-#endif  // __HIP_PLATFORM_NVCC__
+#endif  // __HIP_PLATFORM_NVIDIA__
 
 std::atomic<int> g_thTestPassed(1);
 
@@ -271,7 +271,7 @@ template <class T, class T1> void copyBuffer2Array(unsigned int width,
                                                    ) {
   hip_Memcpy2D copyParam;
   memset(&copyParam, 0, sizeof(copyParam));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   copyParam.dstMemoryType = CU_MEMORYTYPE_ARRAY;
   copyParam.srcMemoryType = CU_MEMORYTYPE_HOST;
   copyParam.dstArray = *array;
@@ -293,7 +293,7 @@ template <class T> void assignArray2TexRef(hipArray_Format format,
                                            T array
                                            ) {
   HIP_TEX_REFERENCE texref;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipModuleGetTexRef(&texref, Module, texRefName));
   HIPCHECK(hipTexRefSetAddressMode(texref, 0, CU_TR_ADDRESS_MODE_WRAP));
   HIPCHECK(hipTexRefSetAddressMode(texref, 1, CU_TR_ADDRESS_MODE_WRAP));
@@ -351,7 +351,7 @@ template <class T> bool testTexType(hipArray_Format format,
   HIPCHECK(hipModuleLoad(&Module, CODEOBJ_FILE));
   HIP_ARRAY array;
   allocInitArray(width, height, format, &array);
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   // Copy from hData to array using hipMemcpyParam2D
   copyBuffer2Array<T, HIP_ARRAY*>(width, height, hData, &array);
   // Get tex reference from the loaded kernel file
@@ -438,7 +438,7 @@ template <class T> bool testTexMultStream(const std::vector<char>& buffer,
   HIPCHECK(hipModuleLoadData(&Module, &buffer[0]));
   HIP_ARRAY array;
   allocInitArray(width, height, format, &array);
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   // Copy from hData to array using hipMemcpyParam2D
   copyBuffer2Array<T, HIP_ARRAY*>(width, height, hData, &array);
   // Get tex reference from the loaded kernel file

@@ -98,7 +98,7 @@ void testhipModuleLoadDataExUnloadStress() {
 
 int main(int argc, char* argv[]) {
   HipTest::parseStandardArguments(argc, argv, true);
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipInit(0));
   hipDevice_t device;
   hipCtx_t context;
@@ -112,7 +112,7 @@ int main(int argc, char* argv[]) {
   } else if (p_tests == 0x3) {
     testhipModuleLoadDataExUnloadStress();
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   passed();

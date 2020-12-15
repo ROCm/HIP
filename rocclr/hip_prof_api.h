@@ -26,7 +26,7 @@
 #include <mutex>
 
 #if USE_PROF_API
-#include "hip/hcc_detail/hip_prof_str.h"
+#include "hip/amd_detail/hip_prof_str.h"
 #include "platform/prof_protocol.h"
 
 // HIP API callbacks spawner object macro

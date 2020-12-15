@@ -379,7 +379,7 @@ void freeArrays(T* A_d, T* B_d, T* C_d, T* A_h, T* B_h, T* C_h, bool usePinnedHo
     freeArraysForHost(A_h, B_h, C_h, usePinnedHost);
 }
 
-#if defined(__HIP_PLATFORM_HCC__)
+#if defined(__HIP_PLATFORM_AMD__)
 template <typename T>
 void initArrays2DPitch(T** A_d, T** B_d, T** C_d, size_t* pitch_A, size_t* pitch_B, size_t* pitch_C,
                        size_t numW, size_t numH) {

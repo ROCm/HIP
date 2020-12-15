@@ -101,7 +101,7 @@ void createRandomFile(const char* filename) {
 /**
  * Internal Function
  */
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
 void initHipCtx(hipCtx_t *pcontext) {
   HIPCHECK(hipInit(0));
   hipDevice_t device;
@@ -117,7 +117,7 @@ void initHipCtx(hipCtx_t *pcontext) {
 bool testhipModuleLoadNeg10() {
   bool TestPassed = false;
   hipError_t ret;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -127,7 +127,7 @@ bool testhipModuleLoadNeg10() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -141,7 +141,7 @@ bool testhipModuleLoadNeg11() {
   bool TestPassed = false;
   hipError_t ret;
   hipModule_t Module;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -151,7 +151,7 @@ bool testhipModuleLoadNeg11() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -168,7 +168,7 @@ bool testhipModuleLoadNeg12() {
   std::fstream fs;
   fs.open(FILENAME_EMPTY, std::ios::out);
   fs.close();
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -178,7 +178,7 @@ bool testhipModuleLoadNeg12() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   remove(FILENAME_EMPTY);
@@ -195,7 +195,7 @@ bool testhipModuleLoadNeg13() {
   hipModule_t Module;
   // Create a binary file with random numbers
   createRandomFile(FILENAME_RAND);
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -205,7 +205,7 @@ bool testhipModuleLoadNeg13() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   remove(FILENAME_RAND);
@@ -220,7 +220,7 @@ bool testhipModuleLoadNeg14() {
   bool TestPassed = false;
   hipError_t ret;
   hipModule_t Module;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -230,7 +230,7 @@ bool testhipModuleLoadNeg14() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -244,7 +244,7 @@ bool testhipModuleLoadNeg15() {
   bool TestPassed = false;
   hipError_t ret;
   hipModule_t Module;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -253,7 +253,7 @@ bool testhipModuleLoadNeg15() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -267,7 +267,7 @@ bool testhipModuleLoadDataNeg20() {
   bool TestPassed = false;
   hipError_t ret;
   auto buffer = load_file(CODEOBJ_FILE);
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -277,7 +277,7 @@ bool testhipModuleLoadDataNeg20() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -291,7 +291,7 @@ bool testhipModuleLoadDataNeg21() {
   bool TestPassed = false;
   hipError_t ret;
   hipModule_t Module;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -301,7 +301,7 @@ bool testhipModuleLoadDataNeg21() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -319,7 +319,7 @@ bool testhipModuleLoadDataNeg22() {
   createRandomFile(FILENAME_RAND);
   // Open the code object file and copy it in a buffer
   auto buffer = load_file(FILENAME_RAND);
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -329,7 +329,7 @@ bool testhipModuleLoadDataNeg22() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   remove(FILENAME_RAND);
@@ -344,7 +344,7 @@ bool testhipModuleLoadDataExNeg30() {
   hipError_t ret;
   // Open the code object file and copy it in a buffer
   auto buffer = load_file(CODEOBJ_FILE);
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -354,7 +354,7 @@ bool testhipModuleLoadDataExNeg30() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -368,7 +368,7 @@ bool testhipModuleLoadDataExNeg31() {
   bool TestPassed = false;
   hipError_t ret;
   hipModule_t Module;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -378,7 +378,7 @@ bool testhipModuleLoadDataExNeg31() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -396,7 +396,7 @@ bool testhipModuleLoadDataExNeg32() {
   createRandomFile(FILENAME_RAND);
   // Open the code object file and copy it in a buffer
   auto buffer = load_file(FILENAME_RAND);
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -406,7 +406,7 @@ bool testhipModuleLoadDataExNeg32() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   remove(FILENAME_RAND);
@@ -421,7 +421,7 @@ bool testhipModuleGetFunctionNeg40() {
   bool TestPassed = false;
   hipError_t ret;
   hipModule_t Module;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -433,7 +433,7 @@ bool testhipModuleGetFunctionNeg40() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -448,7 +448,7 @@ bool testhipModuleGetFunctionNeg41() {
   hipError_t ret;
   hipModule_t Module;
   hipFunction_t Function;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -458,7 +458,7 @@ bool testhipModuleGetFunctionNeg41() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -473,7 +473,7 @@ bool testhipModuleGetFunctionNeg42() {
   hipError_t ret;
   hipModule_t Module;
   hipFunction_t Function;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -485,7 +485,7 @@ bool testhipModuleGetFunctionNeg42() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -500,7 +500,7 @@ bool testhipModuleGetFunctionNeg43() {
   hipError_t ret;
   hipModule_t Module;
   hipFunction_t Function;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -512,7 +512,7 @@ bool testhipModuleGetFunctionNeg43() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -527,7 +527,7 @@ bool testhipModuleGetFunctionNeg44() {
   hipError_t ret;
   hipModule_t Module;
   hipFunction_t Function;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -539,7 +539,7 @@ bool testhipModuleGetFunctionNeg44() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -554,7 +554,7 @@ bool testhipModuleGetFunctionNeg45() {
   hipError_t ret;
   hipModule_t Module;
   hipFunction_t Function;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -566,7 +566,7 @@ bool testhipModuleGetFunctionNeg45() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -581,7 +581,7 @@ bool testhipModuleGetGlobalNeg50() {
   hipError_t ret;
   hipModule_t Module;
   size_t deviceGlobalSize;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -593,7 +593,7 @@ bool testhipModuleGetGlobalNeg50() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -608,7 +608,7 @@ bool testhipModuleGetGlobalNeg51() {
   hipError_t ret;
   hipModule_t Module;
   hipDeviceptr_t deviceGlobal;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -620,7 +620,7 @@ bool testhipModuleGetGlobalNeg51() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -636,7 +636,7 @@ bool testhipModuleGetGlobalNeg52() {
   hipModule_t Module;
   hipDeviceptr_t deviceGlobal;
   size_t deviceGlobalSize;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -648,7 +648,7 @@ bool testhipModuleGetGlobalNeg52() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -664,7 +664,7 @@ bool testhipModuleGetGlobalNeg53() {
   hipModule_t Module;
   hipDeviceptr_t deviceGlobal;
   size_t deviceGlobalSize;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -676,7 +676,7 @@ bool testhipModuleGetGlobalNeg53() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -692,7 +692,7 @@ bool testhipModuleGetGlobalNeg54() {
   hipModule_t Module;
   hipDeviceptr_t deviceGlobal;
   size_t deviceGlobalSize;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -704,7 +704,7 @@ bool testhipModuleGetGlobalNeg54() {
            hipGetErrorString(ret), ret);
   }
   HIPCHECK(hipModuleUnload(Module));
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -720,7 +720,7 @@ bool testhipModuleGetGlobalNeg55() {
   hipModule_t Module;
   hipDeviceptr_t deviceGlobal;
   size_t deviceGlobalSize;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -732,7 +732,7 @@ bool testhipModuleGetGlobalNeg55() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -748,7 +748,7 @@ bool testhipModuleGetGlobalNeg56() {
   hipModule_t Module;
   hipDeviceptr_t deviceGlobal;
   size_t deviceGlobalSize;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -758,7 +758,7 @@ bool testhipModuleGetGlobalNeg56() {
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;
@@ -773,7 +773,7 @@ bool testhipModuleLoadNeg60() {
   bool TestPassed = true;
   hipError_t ret;
   hipModule_t Module;
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   hipCtx_t context;
   initHipCtx(&context);
 #endif
@@ -793,7 +793,7 @@ bool testhipModuleLoadNeg60() {
   } else {
     TestPassed &= false;
   }
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
   HIPCHECK(hipCtxDestroy(context));
 #endif
   return TestPassed;

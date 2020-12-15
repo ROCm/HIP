@@ -34,7 +34,7 @@ __global__ void gpu_ballot(unsigned int* device_ballot, int Num_Warps_per_Block,
                            int pshift) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     const unsigned int warp_num = threadIdx.x >> pshift;
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
     atomicAdd(&device_ballot[warp_num + blockIdx.x * Num_Warps_per_Block],
               __popcll(__ballot(tid - 245)));
 #else

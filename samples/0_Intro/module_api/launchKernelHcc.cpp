@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <vector>
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
 #include <hip/hip_ext.h>
 #endif
 

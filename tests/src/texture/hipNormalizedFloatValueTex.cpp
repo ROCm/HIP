@@ -116,7 +116,7 @@ int main(int argc, char** argv)
     hipDeviceProp_t props;
     HIPCHECK(hipGetDeviceProperties(&props, device));
     std::cout << "Device :: " << props.name << std::endl;
-    #ifdef __HIP_PLATFORM_HCC__
+    #ifdef __HIP_PLATFORM_AMD__
     std::cout << "Arch - AMD GPU :: " << props.gcnArch << std::endl;
     #endif
     

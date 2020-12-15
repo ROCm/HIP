@@ -19,7 +19,7 @@ THE SOFTWARE.
 
 #include <stdio.h>
 #include "hip/hip_runtime.h"
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
 #include "hip/hip_ext.h"
 #endif
 #include <iostream>

@@ -21,7 +21,7 @@ THE SOFTWARE.
 #include <iostream>
 #include "hip/hip_runtime.h"
 #include "hip/hip_runtime_api.h"
-#include "hip/hcc_detail/hip_complex.h"
+#include "hip/amd_detail/hip_complex.h"
 
 #define LEN 64
 #define SIZE 64 << 2

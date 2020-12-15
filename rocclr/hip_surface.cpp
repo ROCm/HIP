@@ -21,7 +21,7 @@
 #include <hip/hip_runtime.h>
 
 #include "hip_internal.hpp"
-#include <hip/hcc_detail/hip_surface_types.h>
+#include <hip/amd_detail/hip_surface_types.h>
 
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject,
                                   const hipResourceDesc* pResDesc) {
