@@ -108,12 +108,12 @@ hipError_t ihipFree(void *ptr)
 // ================================================================================================
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
+  if (ptr == nullptr) {
+    return hipErrorInvalidValue;
+  }
   if (sizeBytes == 0) {
     *ptr = nullptr;
     return hipSuccess;
-  }
-  else if (ptr == nullptr) {
-    return hipErrorInvalidValue;
   }
 
   bool useHostDevice = (flags & CL_MEM_SVM_FINE_GRAIN_BUFFER) != 0;
@@ -267,13 +267,13 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_ATOMICS: 0), *ptr);
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_ATOMICS: 0), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
   HIP_INIT_API(hipMalloc, ptr, sizeBytes);
 
-  HIP_RETURN_DURATION(ihipMalloc(ptr, sizeBytes, 0), *ptr);
+  HIP_RETURN_DURATION(ihipMalloc(ptr, sizeBytes, 0), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
@@ -452,7 +452,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
   HIP_INIT_API(hipMallocPitch, ptr, pitch, width, height);
 
   const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
-  HIP_RETURN(ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format), *ptr);
+  HIP_RETURN(ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
@@ -791,7 +791,9 @@ hipError_t hipHostUnregister(void* hostPtr) {
 
 // Deprecated function:
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, flags), *ptr);
+  HIP_INIT_API(hipHostAlloc, ptr, sizeBytes, flags);
+
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, flags), (ptr != nullptr)? *ptr : nullptr);
 };
 
 
@@ -2362,11 +2364,7 @@ hipError_t hipMallocHost(void** ptr,
                          size_t size) {
   HIP_INIT_API(hipMallocHost, ptr, size);
 
-  if (ptr == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
-
-  HIP_RETURN_DURATION(ihipMalloc(ptr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER), *ptr);
+  HIP_RETURN_DURATION(ihipMalloc(ptr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipFreeHost(void *ptr) {
