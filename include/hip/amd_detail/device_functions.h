@@ -1112,21 +1112,21 @@ void _wassert(const wchar_t *_msg, const wchar_t *_file, unsigned _line) {
 }
 #else /* defined(_WIN32) || defined(_WIN64) */
 extern "C" __device__ __attribute__((noinline)) __attribute__((weak))
-void __assert_fail(const char * __assertion,
-                   const char *__file,
-                   unsigned int __line,
-                   const char *__function)
+void __assert_fail(const char *assertion,
+                   const char *file,
+                   unsigned int line,
+                   const char *function)
 {
-    printf("%s:%u: %s: Device-side assertion `%s' failed.\n", __file, __line,
-           __function, __assertion);
+    printf("%s:%u: %s: Device-side assertion `%s' failed.\n", file, line,
+           function, assertion);
     __builtin_trap();
 }
 
 extern "C" __device__ __attribute__((noinline)) __attribute__((weak))
-void __assertfail(const char * __assertion,
-                  const char *__file,
-                  unsigned int __line,
-                  const char *__function,
+void __assertfail(const char *assertion,
+                  const char *file,
+                  unsigned int line,
+                  const char *function,
                   size_t charsize)
 {
     // ignore all the args for now.
