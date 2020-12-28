@@ -211,14 +211,30 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
       }
     } else {
       amd::HostQueue* pQueue = &queue;
-      if (((srcMemory->getContext().devices()[0] == dstMemory->getContext().devices()[0]) ||
-          (srcMemory->getContext().devices().size() != 1)  ||
-          (dstMemory->getContext().devices().size() != 1)) &&
+      if ((srcMemory->getContext().devices()[0] == dstMemory->getContext().devices()[0]) &&
           (queueDevice != srcMemory->getContext().devices()[0])) {
         pQueue = hip::getNullStream(srcMemory->getContext());
         amd::Command* cmd = queue.getLastQueuedCommand(true);
         if (cmd != nullptr) {
           waitList.push_back(cmd);
+        }
+      } else if (srcMemory->getContext().devices()[0] != dstMemory->getContext().devices()[0]) {
+        // Scenarios such as DtoH where dst is pinned memory
+        if ((queueDevice != srcMemory->getContext().devices()[0]) &&
+            (dstMemory->getContext().devices().size() != 1)) {
+          pQueue = hip::getNullStream(srcMemory->getContext());
+          amd::Command* cmd = queue.getLastQueuedCommand(true);
+          if (cmd != nullptr) {
+            waitList.push_back(cmd);
+          }
+        // Scenarios such as HtoD where src is pinned memory
+        } else if ((queueDevice != dstMemory->getContext().devices()[0]) &&
+                   (srcMemory->getContext().devices().size() != 1)) {
+          pQueue = hip::getNullStream(dstMemory->getContext());
+          amd::Command* cmd = queue.getLastQueuedCommand(true);
+          if (cmd != nullptr) {
+            waitList.push_back(cmd);
+          }
         }
       }
       command = new amd::CopyMemoryCommand(*pQueue, CL_COMMAND_COPY_BUFFER, waitList,
