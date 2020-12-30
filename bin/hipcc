@@ -67,26 +67,7 @@ $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 # Known Features
 @knownFeatures = ('sramecc-', 'sramecc+', 'xnack-', 'xnack+');
 
-#
-# TODO: Fix rpath LDFLAGS settings
-#
-# Since this hipcc script gets installed at two uneven hierarchical levels,
-# linked by symlink, the absolute path of this script should be used to
-# derive HIP_PATH, as dirname $0 could be /opt/rocm/bin or /opt/rocm/hip/bin
-# depending on how it gets invoked.
-# ROCM_PATH which points to <rocm_install_dir> is determined based on whether
-# we find bin/rocm_agent_enumerator in the parent of HIP_PATH or not. If it is found,
-# ROCM_PATH is defined relative to HIP_PATH else it is hardcoded to /opt/rocm.
-#
-$HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
-if (-e "$HIP_PATH/../bin/rocm_agent_enumerator") {
-    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH
-} else {
-    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
-}
-$HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
 $HIP_LIB_PATH=$ENV{'HIP_LIB_PATH'};
-$HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'};
 $DEVICE_LIB_PATH=$ENV{'DEVICE_LIB_PATH'};
 $HIP_CLANG_HCC_COMPAT_MODE=$ENV{'HIP_CLANG_HCC_COMPAT_MODE'}; # HCC compatibility mode
 $HIP_COMPILE_CXX_AS_HIP=$ENV{'HIP_COMPILE_CXX_AS_HIP'} // "1";
@@ -112,52 +93,39 @@ sub delete_temp_dirs {
     return 0;
 }
 
-#---
-#HIP_PLATFORM controls whether to use amd or nvidia as the platform:
-#HIP_COMPILER controls whether to use clang or nvcc for compilation:
-#HIP_RUNTIME controls whether to use rocclr or cuda  as the runtime:
-if ($isWindows) {
-    # Windows cannot run perl natively, so hipcc will explicitly call perl
-    $HIP_PLATFORM= `perl $HIP_PATH/bin/hipconfig --platform`;
-    $HIP_VERSION= `perl $HIP_PATH/bin/hipconfig --version`;
-    $HIP_COMPILER= `perl $HIP_PATH/bin/hipconfig --compiler`;
-    $HIP_RUNTIME= `perl $HIP_PATH/bin/hipconfig --runtime`;
-} else {
-    $HIP_PLATFORM= `$HIP_PATH/bin/hipconfig --platform`;
-    $HIP_VERSION= `$HIP_PATH/bin/hipconfig --version`;
-    $HIP_COMPILER= `$HIP_PATH/bin/hipconfig --compiler`;
-    $HIP_RUNTIME= `$HIP_PATH/bin/hipconfig --runtime`;
+my $base_dir;
+BEGIN {
+    $base_dir = Cwd::realpath( dirname(__FILE__) );
 }
+use lib "$base_dir/";
+use hipvars;
+
+$HIP_RUNTIME    =   $hipvars::HIP_RUNTIME;
+$HIP_PLATFORM   =   $hipvars::HIP_PLATFORM;
+$HIP_COMPILER   =   $hipvars::HIP_COMPILER;
+$HIP_CLANG_PATH =   $hipvars::HIP_CLANG_PATH;
+$CUDA_PATH      =   $hipvars::CUDA_PATH;
+$HIP_PATH       =   $hipvars::HIP_PATH;
+$ROCM_PATH      =   $hipvars::ROCM_PATH;
+$HIP_VERSION    =   $hipvars::HIP_VERSION;
+$HSA_PATH       =   $hipvars::HSA_PATH;
+$HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
 # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
-if ($HIP_PLATFORM eq "amd" and !defined $HIP_ROCCLR_HOME) {
-    my $hipcc_dir = dirname($0);
-    if (-e "$hipcc_dir/../lib/bitcode") {
-        $HIP_ROCCLR_HOME = abs_path($hipcc_dir . "/..");
-    } else {
-        $HIP_ROCCLR_HOME = $HIP_PATH; # use HIP_PATH
-    }
+if ($HIP_PLATFORM eq "amd") {
     $HIPCXXFLAGS .= "-D__HIP_ROCclr__";
     $HIPCFLAGS .= "-D__HIP_ROCclr__";
 }
 
-if (defined $HIP_ROCCLR_HOME) {
-    if (!defined $HIP_CLANG_PATH and (-e "$HIP_ROCCLR_HOME/bin/clang" or -e "$HIP_ROCCLR_HOME/bin/clang.exe")) {
-        $HIP_CLANG_PATH = "$HIP_ROCCLR_HOME/bin";
-    }
-    if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
-        $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
-    }
-    $HIP_INCLUDE_PATH = "$HIP_ROCCLR_HOME/include";
-    if (!defined $HIP_LIB_PATH) {
-        $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/lib";
-    }
+if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
+    $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
+}
+$HIP_INCLUDE_PATH = "$HIP_ROCCLR_HOME/include";
+if (!defined $HIP_LIB_PATH) {
+    $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/lib";
 }
 
 if ($HIP_PLATFORM eq "amd") {
-  if (!defined $HIP_CLANG_PATH) {
-    $HIP_CLANG_PATH = "$ROCM_PATH/llvm/bin";
-  }
   if (!defined $DEVICE_LIB_PATH) {
     if (-e "$ROCM_PATH/amdgcn/bitcode") {
       $DEVICE_LIB_PATH = "$ROCM_PATH/amdgcn/bitcode";
