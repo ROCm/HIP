@@ -1557,7 +1557,7 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
   if (spitch == 0 || dpitch == 0) {
     return hipErrorUnknown;
   }
-  if (width == 0) {
+  if (width == 0 || height == 0) {
     return hipSuccess;
   }
 
