@@ -31,11 +31,11 @@ FatBinaryInfo::~FatBinaryInfo() {
 
   if (fdesc_ > 0) {
     if (!amd::Os::CloseFileHandle(fdesc_)) {
-      guarantee(false && "Cannot close file");
+      guarantee(false, "Cannot close file");
     }
 
     if (fsize_ && !amd::Os::MemoryUnmapFile(image_, fsize_)) {
-      guarantee(false && "Cannot unmap file");
+      guarantee(false, "Cannot unmap file");
     }
   }
 
@@ -85,7 +85,7 @@ hipError_t FatBinaryInfo::ExtractFatBinary(const std::vector<hip::Device*>& devi
   }
 
   if (hip_error == hipErrorNoBinaryForGpu) {
-    guarantee(false && "hipErrorNoBinaryForGpu: Couldn't find binary for current devices!");
+    guarantee(false, "hipErrorNoBinaryForGpu: Couldn't find binary for current devices!");
     return hip_error;
   }
 
