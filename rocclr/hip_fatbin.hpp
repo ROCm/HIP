@@ -46,8 +46,8 @@ public:
 
   // Device Id bounds check
   inline void DeviceIdCheck(const int device_id) const {
-    guarantee(device_id >= 0);
-    guarantee(static_cast<size_t>(device_id) < fatbin_dev_info_.size());
+    guarantee(device_id >= 0, "Invalid DeviceId less than 0");
+    guarantee(static_cast<size_t>(device_id) < fatbin_dev_info_.size(), "Invalid DeviceId, greater than no of fatbin device info!");
   }
 
   // Getter Methods
