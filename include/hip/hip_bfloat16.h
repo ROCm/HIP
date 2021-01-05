@@ -29,7 +29,7 @@
 #ifndef _HIP_BFLOAT16_H_
 #define _HIP_BFLOAT16_H_
 
-#if __cplusplus < 201103L || (!defined(__HCC__) && !defined(__HIPCC__))
+#if __cplusplus < 201103L || !defined(__HIPCC__)
 
 // If this is a C compiler, C++ compiler below C++11, or a host-only compiler, we only
 // include a minimal definition of hip_bfloat16
@@ -41,7 +41,7 @@ typedef struct
     uint16_t data;
 } hip_bfloat16;
 
-#else // __cplusplus < 201103L || (!defined(__HCC__) && !defined(__HIPCC__))
+#else // __cplusplus < 201103L || !defined(__HIPCC__)
 
 #include <cmath>
 #include <cstddef>
@@ -275,6 +275,6 @@ namespace std
     }
 }
 
-#endif // __cplusplus < 201103L || (!defined(__HCC__) && !defined(__HIPCC__))
+#endif // __cplusplus < 201103L || !defined(__HIPCC__)
 
 #endif // _HIP_BFLOAT16_H_

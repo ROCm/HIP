@@ -151,11 +151,8 @@ void test() {
 }
 
 int main() {
-// ToDo: Fix bug in HCC causing linking error at -O0.
-#ifndef __HCC__
   test<float>();
   test<double>();
-#endif
   passed();
   return 0;
 }

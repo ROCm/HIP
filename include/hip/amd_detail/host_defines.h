@@ -34,35 +34,7 @@ THE SOFTWARE.
 #define GENERIC_GRID_LAUNCH 1
 #endif
 
-#ifdef __HCC__
-/**
- * Function and kernel markers
- */
-#define __host__ __attribute__((cpu))
-#define __device__ __attribute__((hc))
-
-#if GENERIC_GRID_LAUNCH == 0
-#define __global__ __attribute__((hc_grid_launch)) __attribute__((used))
-#else
-#if __hcc_workweek__ >= 17481
-#define __global__ __attribute__((annotate("__HIP_global_function__"), cpu, hc, used))
-#else
-#define __global__ __attribute__((hc, used))
-#endif
-#endif  // GENERIC_GRID_LAUNCH
-
-#define __noinline__ __attribute__((noinline))
-#define __forceinline__ inline __attribute__((always_inline))
-
-
-/*
- * Variable Type Qualifiers:
- */
-// _restrict is supported by the compiler
-#define __shared__ tile_static
-#define __constant__ __attribute__((hc, annotate("__HIP_constant__")))
-
-#elif defined(__clang__) && defined(__HIP__)
+#if defined(__clang__) && defined(__HIP__)
 
 #if !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 #define __host__ __attribute__((host))

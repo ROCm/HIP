@@ -49,7 +49,7 @@ union TData {
 #define __TEXTURE_FUNCTIONS_DECL__ static inline __device__
 
 
-#if (__hcc_workweek__ >= 18114) || __clang__
+#if __clang__
 #define ADDRESS_SPACE_CONSTANT __attribute__((address_space(4)))
 #else
 #define ADDRESS_SPACE_CONSTANT __attribute__((address_space(2)))

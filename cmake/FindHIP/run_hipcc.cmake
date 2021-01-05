@@ -26,13 +26,11 @@ set(HIP_HIPCONFIG_EXECUTABLE "@HIP_HIPCONFIG_EXECUTABLE@") #path
 set(HIP_HOST_COMPILER "@HIP_HOST_COMPILER@") # path
 set(CMAKE_COMMAND "@CMAKE_COMMAND@") # path
 set(HIP_run_make2cmake "@HIP_run_make2cmake@") # path
-set(HCC_HOME "@HCC_HOME@") #path
 set(HIP_CLANG_PATH "@HIP_CLANG_PATH@") #path
 set(HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS "@HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS@")
 
 @HIP_HOST_FLAGS@
 @_HIP_HIPCC_FLAGS@
-@_HIP_HCC_FLAGS@
 @_HIP_CLANG_FLAGS@
 @_HIP_NVCC_FLAGS@
 #Needed to bring the HIP_HIPCC_INCLUDE_ARGS variable in scope
@@ -49,17 +47,11 @@ execute_process(COMMAND ${HIP_HIPCONFIG_EXECUTABLE} --runtime OUTPUT_VARIABLE HI
 if(NOT host_flag)
     set(__CC ${HIP_HIPCC_EXECUTABLE})
     if("${HIP_PLATFORM}" STREQUAL "amd")
-        if("${HIP_COMPILER}" STREQUAL "hcc")
-            if(NOT "x${HCC_HOME}" STREQUAL "x")
-                set(ENV{HCC_HOME} ${HCC_HOME})
-            endif()
-            set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_HCC_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_HCC_FLAGS_${build_configuration}})
-        elseif("${HIP_COMPILER}" STREQUAL "clang")
+        if("${HIP_COMPILER}" STREQUAL "clang")
             if(NOT "x${HIP_CLANG_PATH}" STREQUAL "x")
                 set(ENV{HIP_CLANG_PATH} ${HIP_CLANG_PATH})
             endif()
-            # Temporarily include HIP_HCC_FLAGS for HIP-Clang for PyTorch builds
-            set(__CC_FLAGS ${HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS} ${HIP_HIPCC_FLAGS} ${HIP_HCC_FLAGS} ${HIP_CLANG_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_HCC_FLAGS_${build_configuration}} ${HIP_CLANG_FLAGS_${build_configuration}})
+            set(__CC_FLAGS ${HIP_CLANG_PARALLEL_BUILD_COMPILE_OPTIONS} ${HIP_HIPCC_FLAGS} ${HIP_CLANG_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_CLANG_FLAGS_${build_configuration}})
         endif()
     else()
         set(__CC_FLAGS ${HIP_HIPCC_FLAGS} ${HIP_NVCC_FLAGS} ${HIP_HIPCC_FLAGS_${build_configuration}} ${HIP_NVCC_FLAGS_${build_configuration}})

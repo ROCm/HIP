@@ -39,7 +39,7 @@ void runTest(int width,int height,int depth, hipChannelFormatKind formatKind)
             }
         }
     }
-    printf("test- sizeof(T) =%d\n", sizeof(T));
+    printf("test- sizeof(T) =%zu\n", sizeof(T));
     hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(T)*8, 0, 0, 0, formatKind);
     hipArray *arr,*arr1;
 

@@ -48,9 +48,6 @@ THE SOFTWARE.
     }
 
 void printCompilerInfo() {
-#ifdef __HCC__
-    printf("compiler: hcc version=%s, workweek (YYWWD) = %u\n", __hcc_version__, __hcc_workweek__);
-#endif
 #ifdef __NVCC__
     printf("compiler: nvcc\n");
 #endif

@@ -32,7 +32,7 @@ THE SOFTWARE.
 
 
 __global__ void DotFunctions(bool* result) {
-    #if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
+    #if __HIP_CLANG_ONLY__
     // Dot Functions
     short2 sa{1}, sb{1};
     result[0] = amd_mixed_dot(sa, sb, 1, result[0]) && result[0];

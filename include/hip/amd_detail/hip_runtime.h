@@ -49,56 +49,16 @@ THE SOFTWARE.
 #define __HIP_ENABLE_DEVICE_MALLOC__ 0
 #endif
 
-#if __HCC_OR_HIP_CLANG__
+#if __HIP_CLANG_ONLY__
 
-#if __HIP__
 #if !defined(__align__)
 #define __align__(x) __attribute__((aligned(x)))
-#endif
 #endif
 
 #define CUDA_SUCCESS hipSuccess
 
 #include <hip/hip_runtime_api.h>
-#endif  // __HCC_OR_HIP_CLANG__
 
-#if __HCC__
-// define HIP_ENABLE_PRINTF to enable printf
-#ifdef HIP_ENABLE_PRINTF
-#define HCC_ENABLE_ACCELERATOR_PRINTF 1
-#endif
-
-//---
-// Remainder of this file only compiles with HCC
-#if defined __HCC__
-#include "grid_launch.h"
-#include "hc_printf.hpp"
-// TODO-HCC-GL - change this to typedef.
-// typedef grid_launch_parm hipLaunchParm ;
-
-#if GENERIC_GRID_LAUNCH == 0
-#define hipLaunchParm grid_launch_parm
-#else
-namespace hip_impl {
-struct Empty_launch_parm {};
-}  // namespace hip_impl
-#define hipLaunchParm hip_impl::Empty_launch_parm
-#endif  // GENERIC_GRID_LAUNCH
-
-#if defined(GRID_LAUNCH_VERSION) and (GRID_LAUNCH_VERSION >= 20) || GENERIC_GRID_LAUNCH == 1
-#else  // Use field names for grid_launch 2.0 structure, if HCC supports GL 2.0.
-#error(HCC must support GRID_LAUNCH_20)
-#endif  // GRID_LAUNCH_VERSION
-
-#endif  // HCC
-
-#if GENERIC_GRID_LAUNCH == 1 && defined __HCC__
-#include "grid_launch_GGL.hpp"
-#endif  // GENERIC_GRID_LAUNCH
-
-#endif // HCC
-
-#if __HCC_OR_HIP_CLANG__
 extern int HIP_TRACE_API;
 
 #ifdef __cplusplus
@@ -108,29 +68,13 @@ extern int HIP_TRACE_API;
 #include <hip/amd_detail/host_defines.h>
 #include <hip/amd_detail/device_functions.h>
 #include <hip/amd_detail/surface_functions.h>
-#if __HCC__
-    #include <hip/amd_detail/math_functions.h>
-    #include <hip/amd_detail/texture_functions.h>
-#else
-    #include <hip/amd_detail/texture_fetch_functions.h>
-    #include <hip/amd_detail/texture_indirect_functions.h>
-#endif
+#include <hip/amd_detail/texture_fetch_functions.h>
+#include <hip/amd_detail/texture_indirect_functions.h>
+
 // TODO-HCC remove old definitions ; ~1602 hcc supports __HCC_ACCELERATOR__ define.
 #if defined(__KALMAR_ACCELERATOR__) && !defined(__HCC_ACCELERATOR__)
 #define __HCC_ACCELERATOR__ __KALMAR_ACCELERATOR__
 #endif
-
-// TODO-HCC add a dummy implementation of assert, need to replace with a proper kernel exit call.
-#if defined(__HCC__) && __HIP_DEVICE_COMPILE__ == 1
-#undef assert
-#define assert(COND)                                                                               \
-    {                                                                                              \
-        if (!(COND)) {                                                                             \
-            abort();                                                                               \
-        }                                                                                          \
-    }
-#endif
-
 
 // Feature tests:
 #if (defined(__HCC_ACCELERATOR__) && (__HCC_ACCELERATOR__ != 0)) || __HIP_DEVICE_COMPILE__
@@ -177,13 +121,6 @@ extern int HIP_TRACE_API;
 #define __launch_bounds__(...)                                                                     \
     select_impl_(__VA_ARGS__, launch_bounds_impl1, launch_bounds_impl0)(__VA_ARGS__)
 
-// Detect if we are compiling C++ mode or C mode
-#if defined(__cplusplus)
-#define __HCC_CPP__
-#elif defined(__STDC_VERSION__)
-#define __HCC_C__
-#endif
-
 __host__ inline void* __get_dynamicgroupbaseptr() { return nullptr; }
 
 #if __HIP_ARCH_GFX701__ == 0
@@ -203,118 +140,7 @@ __device__ int __hip_move_dpp_N(int src);
 
 #endif  //__HIP_ARCH_GFX803__ == 1
 
-#endif  // __HCC_OR_HIP_CLANG__
-
-#if defined __HCC__
-
-namespace hip_impl {
-  struct GroupId {
-    using R = decltype(hc_get_group_id(0));
-
-    __device__
-    R operator()(std::uint32_t x) const noexcept { return hc_get_group_id(x); }
-  };
-  struct GroupSize {
-    using R = decltype(hc_get_group_size(0));
-
-    __device__
-    R operator()(std::uint32_t x) const noexcept {
-      return hc_get_group_size(x);
-    }
-  };
-  struct NumGroups {
-    using R = decltype(hc_get_num_groups(0));
-
-    __device__
-    R operator()(std::uint32_t x) const noexcept {
-      return hc_get_num_groups(x);
-    }
-  };
-  struct WorkitemId {
-    using R = decltype(hc_get_workitem_id(0));
-
-    __device__
-    R operator()(std::uint32_t x) const noexcept {
-      return hc_get_workitem_id(x);
-    }
-  };
-} // Namespace hip_impl.
-
-template <typename F>
-struct Coordinates {
-  using R = decltype(F{}(0));
-
-  struct X { __device__ operator R() const noexcept { return F{}(0); } };
-  struct Y { __device__ operator R() const noexcept { return F{}(1); } };
-  struct Z { __device__ operator R() const noexcept { return F{}(2); } };
-
-  static constexpr X x{};
-  static constexpr Y y{};
-  static constexpr Z z{};
-};
-
-inline
-__device__
-std::uint32_t operator*(Coordinates<hip_impl::NumGroups>::X,
-                        Coordinates<hip_impl::GroupSize>::X) noexcept {
-  return hc_get_grid_size(0);
-}
-inline
-__device__
-std::uint32_t operator*(Coordinates<hip_impl::GroupSize>::X,
-                        Coordinates<hip_impl::NumGroups>::X) noexcept {
-  return hc_get_grid_size(0);
-}
-inline
-__device__
-std::uint32_t operator*(Coordinates<hip_impl::NumGroups>::Y,
-                        Coordinates<hip_impl::GroupSize>::Y) noexcept {
-  return hc_get_grid_size(1);
-}
-inline
-__device__
-std::uint32_t operator*(Coordinates<hip_impl::GroupSize>::Y,
-                        Coordinates<hip_impl::NumGroups>::Y) noexcept {
-  return hc_get_grid_size(1);
-}
-inline
-__device__
-std::uint32_t operator*(Coordinates<hip_impl::NumGroups>::Z,
-                        Coordinates<hip_impl::GroupSize>::Z) noexcept {
-  return hc_get_grid_size(2);
-}
-inline
-__device__
-std::uint32_t operator*(Coordinates<hip_impl::GroupSize>::Z,
-                        Coordinates<hip_impl::NumGroups>::Z) noexcept {
-  return hc_get_grid_size(2);
-}
-
-static constexpr Coordinates<hip_impl::GroupSize> blockDim{};
-static constexpr Coordinates<hip_impl::GroupId> blockIdx{};
-static constexpr Coordinates<hip_impl::NumGroups> gridDim{};
-static constexpr Coordinates<hip_impl::WorkitemId> threadIdx{};
-
-#define hipThreadIdx_x (hc_get_workitem_id(0))
-#define hipThreadIdx_y (hc_get_workitem_id(1))
-#define hipThreadIdx_z (hc_get_workitem_id(2))
-
-#define hipBlockIdx_x (hc_get_group_id(0))
-#define hipBlockIdx_y (hc_get_group_id(1))
-#define hipBlockIdx_z (hc_get_group_id(2))
-
-#define hipBlockDim_x (hc_get_group_size(0))
-#define hipBlockDim_y (hc_get_group_size(1))
-#define hipBlockDim_z (hc_get_group_size(2))
-
-#define hipGridDim_x (hc_get_num_groups(0))
-#define hipGridDim_y (hc_get_num_groups(1))
-#define hipGridDim_z (hc_get_num_groups(2))
-
-#endif // defined __HCC__
-
 #ifndef __OPENMP_AMDGCN__
-#if __HCC_OR_HIP_CLANG__
 #if !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 #if __HIP_ENABLE_DEVICE_MALLOC__
 extern "C" __device__ void* __hip_malloc(size_t);
@@ -326,47 +152,7 @@ static inline __device__ void* malloc(size_t size) { __builtin_trap(); return nu
 static inline __device__ void* free(void* ptr) { __builtin_trap(); return nullptr; }
 #endif
 #endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
-#endif //__HCC_OR_HIP_CLANG__
 #endif // !__OPENMP_AMDGCN__
-
-#ifdef __HCC__
-
-#define __syncthreads() hc_barrier(CLK_LOCAL_MEM_FENCE)
-
-#define HIP_KERNEL_NAME(...) (__VA_ARGS__)
-#define HIP_SYMBOL(X) #X
-
-#if defined __HCC_CPP__
-extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, dim3 block,
-                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
-extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, dim3 grid, size_t block,
-                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
-extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, dim3 block,
-                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
-extern hipStream_t ihipPreLaunchKernel(hipStream_t stream, size_t grid, size_t block,
-                                       grid_launch_parm* lp, const char* kernelNameStr, bool lockAcquired = 0);
-extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, grid_launch_parm& lp, bool unlockPostponed = 0);
-
-#if GENERIC_GRID_LAUNCH == 0
-//#warning "Original hipLaunchKernel defined"
-// Due to multiple overloaded versions of ihipPreLaunchKernel, the numBlocks3D and blockDim3D can be
-// either size_t or dim3 types
-#define hipLaunchKernel(_kernelName, _numBlocks3D, _blockDim3D, _groupMemBytes, _stream, ...)      \
-    do {                                                                                           \
-        grid_launch_parm lp;                                                                       \
-        lp.dynamic_group_mem_bytes = _groupMemBytes;                                               \
-        hipStream_t trueStream =                                                                   \
-            (ihipPreLaunchKernel(_stream, _numBlocks3D, _blockDim3D, &lp, #_kernelName));          \
-        _kernelName(lp, ##__VA_ARGS__);                                                            \
-        ihipPostLaunchKernel(#_kernelName, trueStream, lp);                                        \
-    } while (0)
-#endif  // GENERIC_GRID_LAUNCH
-
-#elif defined(__HCC_C__)
-
-// TODO - develop C interface.
-
-#endif  //__HCC_CPP__
 
 // End doxygen API:
 /**
@@ -376,8 +162,6 @@ extern void ihipPostLaunchKernel(const char* kernelName, hipStream_t stream, gri
 //
 // hip-clang functions
 //
-#elif defined(__clang__) && defined(__HIP__)
-
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 #define HIP_SYMBOL(X) X
 
@@ -605,7 +389,7 @@ hc_get_workitem_absolute_id(int dim)
 #pragma pop_macro("__CUDA__")
 #endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 #endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
-#endif // defined(__clang__) && defined(__HIP__)
+#endif // __HIP_CLANG_ONLY__
 
 #include <hip/amd_detail/hip_memory.h>
 

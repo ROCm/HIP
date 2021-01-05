@@ -88,8 +88,6 @@ if(HIP_COMPILER STREQUAL "clang")
   find_dependency(AMDDeviceLibs)
   set(AMDGPU_TARGETS "gfx900;gfx906;gfx908" CACHE STRING "AMD GPU targets to compile for")
   set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU targets to compile for")
-else()
-  find_dependency(hcc)
 endif()
 
 find_dependency(amd_comgr)
@@ -121,26 +119,11 @@ endif()
 
 # Right now this is only supported for amd platforms
 set_target_properties(hip::host PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "__HIP_PLATFORM_HCC__=1;__HIP_PLATFORM_AMD__=1"
+  INTERFACE_COMPILE_DEFINITIONS "__HIP_PLATFORM_AMD__=1"
 )
 
 if(HIP_RUNTIME MATCHES "rocclr")
   set_target_properties(hip::amdhip64 PROPERTIES
-    INTERFACE_COMPILE_DEFINITIONS "__HIP_ROCclr__=1"
-    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
-    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
-  )
-  set_target_properties(hip::device PROPERTIES
-    INTERFACE_COMPILE_DEFINITIONS "__HIP_ROCclr__=1"
-    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
-    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
-  )
-else()
-  set_target_properties(hip::hip_hcc_static PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
-    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}")
-
-  set_target_properties(hip::hip_hcc PROPERTIES
     INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
     INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include;${HSA_HEADER}"
   )
