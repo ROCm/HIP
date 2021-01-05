@@ -35,19 +35,10 @@ THE SOFTWARE.
 #define GENERIC_GRID_LAUNCH 1
 #endif
 
-#ifndef __HIP_ROCclr__
-#define __HIP_ROCclr__ 0
-#endif
-
 #include <hip/amd_detail/host_defines.h>
 #include <hip/amd_detail/driver_types.h>
 #include <hip/amd_detail/hip_texture_types.h>
 #include <hip/amd_detail/hip_surface_types.h>
-
-#if !__HIP_ROCclr__ && defined(__cplusplus)
-#include <hsa/hsa.h>
-#include <hip/amd_detail/program_state.hpp>
-#endif
 
 #if defined(_MSC_VER)
 #define DEPRECATED(msg) __declspec(deprecated(msg))
@@ -56,10 +47,6 @@ THE SOFTWARE.
 #endif // !defined(_MSC_VER)
 
 #define DEPRECATED_MSG "This API is marked as deprecated and may not be supported in future releases. For more details please refer https://github.com/ROCm-Developer-Tools/HIP/blob/master/docs/markdown/hip_deprecated_api_list.md"
-
-#if defined(__HCC__) && (__hcc_workweek__ < 16155)
-#error("This version of HIP requires a newer version of HCC.");
-#endif
 
 #define HIP_LAUNCH_PARAM_BUFFER_POINTER ((void*)0x01)
 #define HIP_LAUNCH_PARAM_BUFFER_SIZE ((void*)0x02)
@@ -77,7 +64,6 @@ THE SOFTWARE.
 #endif
 
 #ifdef __cplusplus
-
 namespace hip_impl {
 hipError_t hip_init();
 }  // namespace hip_impl
@@ -112,15 +98,10 @@ typedef struct hipIpcMemHandle_st {
     char reserved[HIP_IPC_HANDLE_SIZE];
 } hipIpcMemHandle_t;
 
-#if __HIP_ROCclr__
 // TODO: IPC event handle currently unsupported
 struct ihipIpcEventHandle_t;
 typedef struct ihipIpcEventHandle_t* hipIpcEventHandle_t;
-#else
-typedef struct hipIpcEventHandle_st {
-    char reserved[HIP_IPC_HANDLE_SIZE];
-} hipIpcEventHandle_t;
-#endif
+
 typedef struct ihipModule_t* hipModule_t;
 
 typedef struct ihipModuleSymbol_t* hipFunction_t;
@@ -1957,7 +1938,6 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
 
-#if __HIP_ROCclr__
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
 
@@ -1976,205 +1956,7 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
                                     hipStream_t stream __dparm(0));
-#else
-hipError_t hipModuleGetGlobal(void**, size_t*, hipModule_t, const char*);
 
-#ifdef __cplusplus //Start : Not supported in gcc
-namespace hip_impl {
-inline
-__attribute__((visibility("hidden")))
-hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-                                          const char* name);
-} // Namespace hip_impl.
-
-
-/**
- *  @brief Copies the memory address of symbol @p symbolName to @p devPtr
- *
- * @param[in]  symbolName - Symbol on device
- * @param[out] devPtr - Pointer to a pointer to the memory referred to by the symbol
- * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
- *
- *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
- * hipMemcpyFromSymbolAsync
- */
-inline
-__attribute__((visibility("hidden")))
-hipError_t hipGetSymbolAddress(void** devPtr, const void* symbolName) {
-    //HIP_INIT_API(hipGetSymbolAddress, devPtr, symbolName);
-    hip_impl::hip_init();
-    size_t size = 0;
-    return hip_impl::read_agent_global_from_process(devPtr, &size, (const char*)symbolName);
-}
-
-
-/**
- *  @brief Copies the size of symbol @p symbolName to @p size
- *
- * @param[in]  symbolName - Symbol on device
- * @param[out] size - Pointer to the size of the symbol
- * @return #hipSuccess, #hipErrorNotInitialized, #hipErrorNotFound
- *
- *  @see hipGetSymbolSize, hipMemcpyToSymbol, hipMemcpyFromSymbol, hipMemcpyToSymbolAsync,
- * hipMemcpyFromSymbolAsync
- */
-inline
-__attribute__((visibility("hidden")))
-hipError_t hipGetSymbolSize(size_t* size, const void* symbolName) {
-    // HIP_INIT_API(hipGetSymbolSize, size, symbolName);
-    hip_impl::hip_init();
-    void* devPtr = nullptr;
-    return hip_impl::read_agent_global_from_process(&devPtr, size, (const char*)symbolName);
-}
-#endif // End : Not supported in gcc
-
-#if defined(__cplusplus)
-} // extern "C"
-#endif
-
-#ifdef __cplusplus
-namespace hip_impl {
-hipError_t hipMemcpyToSymbol(void*, const void*, size_t, size_t, hipMemcpyKind,
-                             const char*);
-} // Namespace hip_impl.
-#endif
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-/**
- *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area
- * pointed to by @p offset bytes from the start of symbol @p symbol.
- *
- *  The memory areas may not overlap. Symbol can either be a variable that resides in global or
- * constant memory space, or it can be a character string, naming a variable that resides in global
- * or constant memory space. Kind can be either hipMemcpyHostToDevice or hipMemcpyDeviceToDevice
- *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use
- * hipErrorUnknown for now.
- *
- *  @param[in]  symbolName - Symbol destination on device
- *  @param[in]  src - Data being copy from
- *  @param[in]  sizeBytes - Data size in bytes
- *  @param[in]  offset - Offset from start of symbol in bytes
- *  @param[in]  kind - Type of transfer
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
- *
- *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
- * hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol,
- * hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync,
- * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
- * hipMemcpyFromSymbolAsync
- */
-#ifdef __cplusplus
-inline
-__attribute__((visibility("hidden")))
-hipError_t hipMemcpyToSymbol(const void* symbolName, const void* src,
-                             size_t sizeBytes, size_t offset __dparm(0),
-                             hipMemcpyKind kind __dparm(hipMemcpyHostToDevice)) {
-    if (!symbolName) return hipErrorInvalidSymbol;
-
-    hipDeviceptr_t dst = NULL;
-    hipGetSymbolAddress(&dst, (const char*)symbolName);
-
-    return hip_impl::hipMemcpyToSymbol(dst, src, sizeBytes, offset, kind,
-                                       (const char*)symbolName);
-}
-#endif
-
-#if defined(__cplusplus)
-} // extern "C"
-#endif
-
-#ifdef __cplusplus
-namespace hip_impl {
-hipError_t hipMemcpyToSymbolAsync(void*, const void*, size_t, size_t,
-                                  hipMemcpyKind, hipStream_t, const char*);
-hipError_t hipMemcpyFromSymbol(void*, const void*, size_t, size_t,
-                               hipMemcpyKind, const char*);
-hipError_t hipMemcpyFromSymbolAsync(void*, const void*, size_t, size_t,
-                                    hipMemcpyKind, hipStream_t, const char*);
-} // Namespace hip_impl.
-#endif
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-
-/**
- *  @brief Copies @p sizeBytes bytes from the memory area pointed to by @p src to the memory area
- * pointed to by @p offset bytes from the start of symbol @p symbol
- *
- *  The memory areas may not overlap. Symbol can either be a variable that resides in global or
- * constant memory space, or it can be a character string, naming a variable that resides in global
- * or constant memory space. Kind can be either hipMemcpyHostToDevice or hipMemcpyDeviceToDevice
- *  hipMemcpyToSymbolAsync() is asynchronous with respect to the host, so the call may return before
- * copy is complete.
- *  TODO: cudaErrorInvalidSymbol and cudaErrorInvalidMemcpyDirection is not supported, use
- * hipErrorUnknown for now.
- *
- *  @param[in]  symbolName - Symbol destination on device
- *  @param[in]  src - Data being copy from
- *  @param[in]  sizeBytes - Data size in bytes
- *  @param[in]  offset - Offset from start of symbol in bytes
- *  @param[in]  kind - Type of transfer
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
- *
- *  @see hipMemcpy, hipMemcpy2D, hipMemcpyToArray, hipMemcpy2DToArray, hipMemcpyFromArray,
- * hipMemcpy2DFromArray, hipMemcpyArrayToArray, hipMemcpy2DArrayToArray, hipMemcpyFromSymbol,
- * hipMemcpyAsync, hipMemcpy2DAsync, hipMemcpyToArrayAsync, hipMemcpy2DToArrayAsync,
- * hipMemcpyFromArrayAsync, hipMemcpy2DFromArrayAsync, hipMemcpyToSymbolAsync,
- * hipMemcpyFromSymbolAsync
- */
-
-#ifdef __cplusplus //Start : Not supported in gcc
-inline
-__attribute__((visibility("hidden")))
-hipError_t hipMemcpyToSymbolAsync(const void* symbolName, const void* src,
-                                  size_t sizeBytes, size_t offset,
-                                  hipMemcpyKind kind, hipStream_t stream __dparm(0)) {
-    if (!symbolName) return hipErrorInvalidSymbol;
-
-    hipDeviceptr_t dst = NULL;
-    hipGetSymbolAddress(&dst, symbolName);
-
-    return hip_impl::hipMemcpyToSymbolAsync(dst, src, sizeBytes, offset, kind,
-                                            stream,
-                                            (const char*)symbolName);
-}
-
-inline
-__attribute__((visibility("hidden")))
-hipError_t hipMemcpyFromSymbol(void* dst, const void* symbolName,
-                               size_t sizeBytes, size_t offset __dparm(0),
-                               hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost)) {
-    if (!symbolName) return hipErrorInvalidSymbol;
-
-    hipDeviceptr_t src = NULL;
-    hipGetSymbolAddress(&src, symbolName);
-
-    return hip_impl::hipMemcpyFromSymbol(dst, src, sizeBytes, offset, kind,
-                                         (const char*)symbolName);
-}
-
-inline
-__attribute__((visibility("hidden")))
-hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbolName,
-                                    size_t sizeBytes, size_t offset,
-                                    hipMemcpyKind kind,
-                                    hipStream_t stream __dparm(0)) {
-    if (!symbolName) return hipErrorInvalidSymbol;
-
-    hipDeviceptr_t src = NULL;
-    hipGetSymbolAddress(&src, symbolName);
-
-    return hip_impl::hipMemcpyFromSymbolAsync(dst, src, sizeBytes, offset, kind,
-                                              stream,
-                                              (const char*)symbolName);
-}
-#endif // End : Not supported in gcc
-
-#endif // __HIP_ROCclr__
 /**
  *  @brief Copy data from src to dst asynchronously.
  *
@@ -3234,63 +3016,6 @@ hipError_t hipFuncGetAttributes(struct hipFuncAttributes* attr, const void* func
  */
 hipError_t hipFuncGetAttribute(int* value, hipFunction_attribute attrib, hipFunction_t hfunc);
 
-#if !__HIP_ROCclr__
-#if defined(__cplusplus)
-} // extern "C"
-#endif
-
-#ifdef __cplusplus
-namespace hip_impl {
-    class agent_globals_impl;
-    class agent_globals {
-        public:
-            agent_globals();
-            ~agent_globals();
-            agent_globals(const agent_globals&) = delete;
-
-            hipError_t read_agent_global_from_module(hipDeviceptr_t* dptr, size_t* bytes,
-                    hipModule_t hmod, const char* name);
-            hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-                    const char* name);
-        private:
-            agent_globals_impl* impl;
-    };
-
-    inline
-    __attribute__((visibility("hidden")))
-    agent_globals& get_agent_globals() {
-        static agent_globals ag;
-        return ag;
-    }
-
-    extern "C"
-    inline
-    __attribute__((visibility("hidden")))
-    hipError_t read_agent_global_from_process(hipDeviceptr_t* dptr, size_t* bytes,
-        const char* name) {
-        return get_agent_globals().read_agent_global_from_process(dptr, bytes, name);
-    }
-} // Namespace hip_impl.
-#endif
-
-#if defined(__cplusplus)
-extern "C" {
-#endif
-/**
- * @brief returns device memory pointer and size of the kernel present in the module with symbol @p
- * name
- *
- * @param [out] dptr
- * @param [out] bytes
- * @param [in] hmod
- * @param [in] name
- *
- * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotInitialized
- */
-hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
-                              hipModule_t hmod, const char* name);
-#endif // __HIP_ROCclr__
-
 /**
  * @brief returns the handle of the texture reference with the name from the module.
  *
@@ -3358,8 +3083,6 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
                                  unsigned int sharedMemBytes, hipStream_t stream,
                                  void** kernelParams, void** extra);
 
-
-#if __HIP_ROCclr__ && !defined(__HCC__)
 /**
  * @brief launches kernel f with launch parameters and shared memory on stream with arguments passed
  * to kernelparams or extra, where thread blocks can cooperate and synchronize as they execute
@@ -3392,7 +3115,6 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDim
 hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                  int  numDevices, unsigned int  flags);
 
-#endif
 
 /**
  * @brief Launches kernels on multiple devices and guarantees all specified kernels are dispatched
@@ -3665,7 +3387,6 @@ hipError_t hipLaunchKernel(const void* function_address,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
 
-#if __HIP_ROCclr__ || !defined(__HCC__)
 //TODO: Move this to hip_ext.h
 hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3 dimBlocks,
                               void** args, size_t sharedMemBytes, hipStream_t stream,
@@ -3877,18 +3598,31 @@ hipError_t hipTexObjectGetResourceViewDesc(
 hipError_t hipTexObjectGetTextureDesc(
     HIP_TEXTURE_DESC* pTexDesc,
     hipTextureObject_t texObject);
-#endif
 
 /**
- * @}
+ * Callback/Activity API
  */
-
+hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
+hipError_t hipRemoveApiCallback(uint32_t id);
+hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg);
+hipError_t hipRemoveActivityCallback(uint32_t id);
+const char* hipApiName(uint32_t id);
+const char* hipKernelNameRef(const hipFunction_t f);
+const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
+int hipGetStreamDeviceId(hipStream_t stream);
 
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
 
-#if defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
+
+#if USE_PROF_API
+#include <hip/amd_detail/hip_prof_str.h>
+#endif
+
+#ifdef __cplusplus
+
+#if defined(__clang__) && defined(__HIP__)
 template <typename T>
 static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
     T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0) {
@@ -3900,9 +3634,7 @@ static hipError_t __host__ inline hipOccupancyMaxPotentialBlockSizeWithFlags(int
     T f, size_t dynSharedMemPerBlk = 0, int blockSizeLimit = 0, unsigned int  flags = 0 ) {
     return hipOccupancyMaxPotentialBlockSize(gridSize, blockSize, reinterpret_cast<const void*>(f),dynSharedMemPerBlk,blockSizeLimit);
 }
-#endif  // defined(__cplusplus) && !defined(__HCC__) && defined(__clang__) && defined(__HIP__)
-
-#if defined(__cplusplus) && !defined(__HCC__)
+#endif // defined(__clang__) && defined(__HIP__)
 
 template <typename T>
 hipError_t hipGetSymbolAddress(void** devPtr, const T &symbol) {
@@ -3940,32 +3672,6 @@ hipError_t hipMemcpyFromSymbolAsync(void* dst, const T& symbol, size_t sizeBytes
   return ::hipMemcpyFromSymbolAsync(dst, (const void*)&symbol, sizeBytes, offset, kind, stream);
 }
 
-#endif
-
-#if USE_PROF_API
-#include <hip/amd_detail/hip_prof_str.h>
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-/**
- * Callback/Activity API
- */
-hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
-hipError_t hipRemoveApiCallback(uint32_t id);
-hipError_t hipRegisterActivityCallback(uint32_t id, void* fun, void* arg);
-hipError_t hipRemoveActivityCallback(uint32_t id);
-const char* hipApiName(uint32_t id);
-const char* hipKernelNameRef(const hipFunction_t f);
-const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
-int hipGetStreamDeviceId(hipStream_t stream);
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
-
-#ifdef __cplusplus
-
 template <class T>
 inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessor(
     int* numBlocks, T f, int blockSize, size_t dynSharedMemPerBlk) {
@@ -3979,168 +3685,6 @@ inline hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
     return hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
         numBlocks, reinterpret_cast<const void*>(f), blockSize, dynSharedMemPerBlk, flags);
 }
-
-class TlsData;
-
-#if !__HIP_ROCclr__
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTexture(size_t* offset, textureReference* tex, const void* devPtr,
-                          const hipChannelFormatDesc* desc, size_t size = UINT_MAX);
-#endif
-
-#if !__HIP_ROCclr__
-hipError_t ihipBindTextureImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode, size_t* offset,
-                               const void* devPtr, const struct hipChannelFormatDesc* desc,
-                               size_t size, textureReference* tex);
-#endif
-
-/*
- * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture
- *reference tex.
- *
- * @p desc describes how the memory is interpreted when fetching values from the texture. The @p
- *offset parameter is an optional byte offset as with the low-level hipBindTexture() function. Any
- *memory previously bound to tex is unbound.
- *
- *  @param[in]  offset - Offset in bytes
- *  @param[out]  tex - texture to bind
- *  @param[in]  devPtr - Memory area on device
- *  @param[in]  desc - Channel format
- *  @param[in]  size - Size of the memory area pointed to by devPtr
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
- **/
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
-                          const struct hipChannelFormatDesc& desc, size_t size = UINT_MAX) {
-    return ihipBindTextureImpl(nullptr, dim, readMode, offset, devPtr, &desc, size, &tex);
-}
-#endif
-
-/*
- * @brief hipBindTexture Binds size bytes of the memory area pointed to by @p devPtr to the texture
- *reference tex.
- *
- * @p desc describes how the memory is interpreted when fetching values from the texture. The @p
- *offset parameter is an optional byte offset as with the low-level hipBindTexture() function. Any
- *memory previously bound to tex is unbound.
- *
- *  @param[in]  offset - Offset in bytes
- *  @param[in]  tex - texture to bind
- *  @param[in]  devPtr - Memory area on device
- *  @param[in]  size - Size of the memory area pointed to by devPtr
- *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryFree, #hipErrorUnknown
- **/
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTexture(size_t* offset, struct texture<T, dim, readMode>& tex, const void* devPtr,
-                          size_t size = UINT_MAX) {
-    return ihipBindTextureImpl(nullptr, dim, readMode, offset, devPtr, &(tex.channelDesc), size, &tex);
-}
-#endif
-
-// C API
-#if !__HIP_ROCclr__
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTexture2D(size_t* offset, textureReference* tex, const void* devPtr,
-                            const hipChannelFormatDesc* desc, size_t width, size_t height,
-                            size_t pitch);
-#endif
-
-#if !__HIP_ROCclr__
-hipError_t ihipBindTexture2DImpl(int dim, enum hipTextureReadMode readMode, size_t* offset,
-                                 const void* devPtr, const struct hipChannelFormatDesc* desc,
-                                 size_t width, size_t height, textureReference* tex, size_t pitch);
-#endif
-
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
-                            const void* devPtr, size_t width, size_t height, size_t pitch) {
-    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &(tex.channelDesc), width, height,
-                                 &tex);
-}
-#endif
-
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTexture2D(size_t* offset, struct texture<T, dim, readMode>& tex,
-                            const void* devPtr, const struct hipChannelFormatDesc& desc,
-                            size_t width, size_t height, size_t pitch) {
-    return ihipBindTexture2DImpl(dim, readMode, offset, devPtr, &desc, width, height, &tex);
-}
-#endif
-
-// C API
-#if !__HIP_ROCclr__
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTextureToArray(textureReference* tex, hipArray_const_t array,
-                                 const hipChannelFormatDesc* desc);
-#endif
-
-#if !__HIP_ROCclr__
-hipError_t ihipBindTextureToArrayImpl(TlsData *tls, int dim, enum hipTextureReadMode readMode,
-                                      hipArray_const_t array,
-                                      const struct hipChannelFormatDesc& desc,
-                                      textureReference* tex);
-#endif
-
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array) {
-    return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, tex.channelDesc, &tex);
-}
-#endif
-
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipBindTextureToArray(struct texture<T, dim, readMode>& tex, hipArray_const_t array,
-                                 const struct hipChannelFormatDesc& desc) {
-    return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, desc, &tex);
-}
-#endif
-
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-DEPRECATED(DEPRECATED_MSG)
-inline static hipError_t hipBindTextureToArray(struct texture<T, dim, readMode> *tex,
-                                               hipArray_const_t array,
-                                               const struct hipChannelFormatDesc* desc) {
-    return ihipBindTextureToArrayImpl(nullptr, dim, readMode, array, *desc, tex);
-}
-#endif
-
-// C API
-#if !__HIP_ROCclr__
-hipError_t hipBindTextureToMipmappedArray(const textureReference* tex,
-                                          hipMipmappedArray_const_t mipmappedArray,
-                                          const hipChannelFormatDesc* desc);
-#endif
-
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
-                                          hipMipmappedArray_const_t mipmappedArray) {
-    return hipSuccess;
-}
-#endif
-
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-hipError_t hipBindTextureToMipmappedArray(const texture<T, dim, readMode>& tex,
-                                          hipMipmappedArray_const_t mipmappedArray,
-                                          const hipChannelFormatDesc& desc) {
-    return hipSuccess;
-}
-#endif
-
-#if __HIP_ROCclr__ && !defined(__HCC__)
 
 template <typename F>
 inline hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
@@ -4161,87 +3705,16 @@ inline hipError_t hipLaunchCooperativeKernelMultiDevice(hipLaunchParams* launchP
     return hipLaunchCooperativeKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
-
 template <class T>
 inline hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
                                                      unsigned int  numDevices, unsigned int  flags = 0) {
     return hipExtLaunchMultiKernelMultiDevice(launchParamsList, numDevices, flags);
 }
 
-#endif
-
-/*
- * @brief Unbinds the textuer bound to @p tex
- *
- *  @param[in]  tex - texture to unbind
- *
- *  @return #hipSuccess
- **/
-#if !__HIP_ROCclr__
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipUnbindTexture(const textureReference* tex);
-#endif
-
-#if !__HIP_ROCclr__
-extern hipError_t ihipUnbindTextureImpl(const hipTextureObject_t& textureObject);
-#endif
-
-#if !__HIP_ROCclr__
-template <class T, int dim, enum hipTextureReadMode readMode>
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipUnbindTexture(struct texture<T, dim, readMode>& tex) {
-    return ihipUnbindTextureImpl(tex.textureObject);
-}
-#endif
-
-#if !__HIP_ROCclr__
-hipError_t hipGetChannelDesc(hipChannelFormatDesc* desc, hipArray_const_t array);
-
-DEPRECATED(DEPRECATED_MSG)
-hipError_t hipGetTextureAlignmentOffset(size_t* offset, const textureReference* texref);
-
-hipError_t hipGetTextureReference(const textureReference** texref, const void* symbol);
-
-hipError_t hipCreateTextureObject(hipTextureObject_t* pTexObject, const hipResourceDesc* pResDesc,
-                                  const hipTextureDesc* pTexDesc,
-                                  const hipResourceViewDesc* pResViewDesc);
-
-hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
-
-hipError_t hipGetTextureObjectResourceDesc(hipResourceDesc* pResDesc,
-                                           hipTextureObject_t textureObject);
-hipError_t hipGetTextureObjectResourceViewDesc(hipResourceViewDesc* pResViewDesc,
-                                               hipTextureObject_t textureObject);
-hipError_t hipGetTextureObjectTextureDesc(hipTextureDesc* pTexDesc,
-                                          hipTextureObject_t textureObject);
-hipError_t hipTexRefSetArray(textureReference* tex, hipArray_const_t array, unsigned int flags);
-
-hipError_t hipTexRefGetArray(hipArray_t* array, textureReference tex);
-
-hipError_t hipTexRefSetAddressMode(textureReference* tex, int dim, hipTextureAddressMode am);
-
-hipError_t hipTexRefGetAddressMode(hipTextureAddressMode* am, textureReference tex, int dim);
-
-hipError_t hipTexRefSetFilterMode(textureReference* tex, hipTextureFilterMode fm);
-
-hipError_t hipTexRefSetFlags(textureReference* tex, unsigned int flags);
-
-hipError_t hipTexRefSetFormat(textureReference* tex, hipArray_Format fmt, int NumPackedComponents);
-
-hipError_t hipTexRefSetAddress(size_t* offset, textureReference* tex, hipDeviceptr_t devPtr,
-                               size_t size);
-
-hipError_t hipTexRefGetAddress(hipDeviceptr_t* dev_ptr, textureReference tex);
-
-hipError_t hipTexRefSetAddress2D(textureReference* tex, const HIP_ARRAY_DESCRIPTOR* desc,
-                                 hipDeviceptr_t devPtr, size_t pitch);
-#endif
-
 hipError_t hipCreateSurfaceObject(hipSurfaceObject_t* pSurfObject, const hipResourceDesc* pResDesc);
 
 hipError_t hipDestroySurfaceObject(hipSurfaceObject_t surfaceObject);
 
-#if __HIP_ROCclr__
 template <class T, int dim, enum hipTextureReadMode readMode>
 DEPRECATED(DEPRECATED_MSG)
 static inline hipError_t hipBindTexture(size_t* offset, const struct texture<T, dim, readMode>& tex,
@@ -4336,7 +3809,6 @@ static inline hipError_t hipUnbindTexture(
 {
     return hipUnbindTexture(&tex);
 }
-#endif
 
 // doxygen end Texture
 /**
@@ -4344,7 +3816,7 @@ static inline hipError_t hipUnbindTexture(
  */
 
 
-#endif
+#endif // __cplusplus
 
 #ifdef __GNUC__
 #pragma GCC visibility pop
@@ -4355,4 +3827,4 @@ static inline hipError_t hipUnbindTexture(
  *   @}
  */
 
-#endif
+#endif // HIP_INCLUDE_HIP_AMD_DETAIL_HIP_RUNTIME_API_H

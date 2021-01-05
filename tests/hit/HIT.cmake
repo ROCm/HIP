@@ -11,11 +11,10 @@ message(STATUS "HIP runtime lib type - ${HIP_LIB_TYPE}")
 message(STATUS "CMAKE_TESTING_TOOL: ${CMAKE_TESTING_TOOL}")
 #-------------------------------------------------------------------------------
 # Helper macro to parse BUILD instructions
-macro(PARSE_BUILD_COMMAND _target _sources _hipcc_options _hcc_options _clang_options _nvcc_options _link_options _exclude_platforms _exclude_runtime _exclude_compiler _exclude_lib_type _depends _dir)
+macro(PARSE_BUILD_COMMAND _target _sources _hipcc_options _clang_options _nvcc_options _link_options _exclude_platforms _exclude_runtime _exclude_compiler _exclude_lib_type _depends _dir)
     set(${_target})
     set(${_sources})
     set(${_hipcc_options})
-    set(${_hcc_options})
     set(${_clang_options})
     set(${_nvcc_options})
     set(${_link_options})
@@ -33,7 +32,6 @@ macro(PARSE_BUILD_COMMAND _target _sources _hipcc_options _hcc_options _clang_op
             set(_target_found TRUE)
             set(${_target} ${arg})
         elseif("x${arg}" STREQUAL "xHIPCC_OPTIONS"
-            OR "x${arg}" STREQUAL "xHCC_OPTIONS"
             OR "x${arg}" STREQUAL "xCLANG_OPTIONS"
             OR "x${arg}" STREQUAL "xNVCC_OPTIONS"
             OR "x${arg}" STREQUAL "xLINK_OPTIONS"
@@ -45,8 +43,6 @@ macro(PARSE_BUILD_COMMAND _target _sources _hipcc_options _hcc_options _clang_op
             set(_flag ${arg})
         elseif("x${_flag}" STREQUAL "xHIPCC_OPTIONS")
             list(APPEND ${_hipcc_options} ${arg})
-        elseif("x${_flag}" STREQUAL "xHCC_OPTIONS")
-            list(APPEND ${_hcc_options} ${arg})
         elseif("x${_flag}" STREQUAL "xCLANG_OPTIONS")
             list(APPEND ${_clang_options} ${arg})
         elseif("x${_flag}" STREQUAL "xNVCC_OPTIONS")
@@ -282,7 +278,7 @@ macro(HIT_ADD_FILES _config _dir _label _parent)
         string(REGEX REPLACE "\n" ";" _contents "${_contents}")
         foreach(_cmd ${_contents})
             string(REGEX REPLACE " " ";" _cmd "${_cmd}")
-            parse_build_command(_target _sources _hipcc_options _hcc_options _clang_options _nvcc_options _link_options _exclude_platforms _exclude_runtime _exclude_compiler _exclude_lib_type _depends ${_dir} ${_cmd})
+            parse_build_command(_target _sources _hipcc_options _clang_options _nvcc_options _link_options _exclude_platforms _exclude_runtime _exclude_compiler _exclude_lib_type _depends ${_dir} ${_cmd})
             string(REGEX REPLACE "/" "." target ${_label}/${_target})
             if("all" IN_LIST _exclude_platforms OR ${HIP_PLATFORM} IN_LIST _exclude_platforms)
                 insert_into_map("_exclude" "${target}" TRUE)
@@ -297,7 +293,7 @@ macro(HIT_ADD_FILES _config _dir _label _parent)
             else()
                 set_source_files_properties(${_sources} PROPERTIES HIP_SOURCE_PROPERTY_FORMAT 1)
                 hip_reset_flags()
-                hip_add_executable(${target} ${_sources} HIPCC_OPTIONS ${_hipcc_options} HCC_OPTIONS ${_hcc_options} CLANG_OPTIONS ${_clang_options} NVCC_OPTIONS ${_nvcc_options} EXCLUDE_FROM_ALL)
+                hip_add_executable(${target} ${_sources} HIPCC_OPTIONS ${_hipcc_options} CLANG_OPTIONS ${_clang_options} NVCC_OPTIONS ${_nvcc_options} EXCLUDE_FROM_ALL)
                 target_link_libraries(${target} PRIVATE ${_link_options})
                 set_target_properties(${target} PROPERTIES OUTPUT_NAME ${_target} RUNTIME_OUTPUT_DIRECTORY ${_label} LINK_DEPENDS "${HIP_LIB_FILES}")
                 add_dependencies(${_parent} ${target})

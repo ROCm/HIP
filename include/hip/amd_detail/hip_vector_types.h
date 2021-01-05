@@ -28,10 +28,6 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_HIP_VECTOR_TYPES_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_HIP_VECTOR_TYPES_H
 
-#if defined(__HCC__) && (__hcc_workweek__ < 16032)
-#error("This version of HIP requires a newer version of HCC.");
-#endif
-
 #include "hip/amd_detail/host_defines.h"
 
 #if defined(__has_attribute)

@@ -86,29 +86,6 @@ extern "C" __device__ __attribute__((convergent)) int __ockl_wgred_or_i32(int a)
 __device__ inline static __local void* __to_local(unsigned x) { return (__local void*)x; }
 #endif //__HIP_DEVICE_COMPILE__
 
-#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
-// __llvm_fence* functions from device-libs/irif/src/fence.ll
-extern "C" __device__ void __llvm_fence_acq_sg(void);
-extern "C" __device__ void __llvm_fence_acq_wg(void);
-extern "C" __device__ void __llvm_fence_acq_dev(void);
-extern "C" __device__ void __llvm_fence_acq_sys(void);
-
-extern "C" __device__ void __llvm_fence_rel_sg(void);
-extern "C" __device__ void __llvm_fence_rel_wg(void);
-extern "C" __device__ void __llvm_fence_rel_dev(void);
-extern "C" __device__ void __llvm_fence_rel_sys(void);
-
-extern "C" __device__ void __llvm_fence_ar_sg(void);
-extern "C" __device__ void __llvm_fence_ar_wg(void);
-extern "C" __device__ void __llvm_fence_ar_dev(void);
-extern "C" __device__ void __llvm_fence_ar_sys(void);
-
-
-extern "C" __device__ void __llvm_fence_sc_sg(void);
-extern "C" __device__ void __llvm_fence_sc_wg(void);
-extern "C" __device__ void __llvm_fence_sc_dev(void);
-extern "C" __device__ void __llvm_fence_sc_sys(void);
-#else
 // Using hip.amdgcn.bc - sync threads
 #define __CLK_LOCAL_MEM_FENCE    0x01
 typedef unsigned __cl_mem_fence_flags;
@@ -134,6 +111,5 @@ typedef enum __memory_order
 // Linked from hip.amdgcn.bc
 extern "C" __device__ void
 __atomic_work_item_fence(__cl_mem_fence_flags, __memory_order, __memory_scope);
-#endif
 
 #endif

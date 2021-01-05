@@ -112,10 +112,6 @@ $HSA_PATH       =   $hipvars::HSA_PATH;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
 # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
-if ($HIP_PLATFORM eq "amd") {
-    $HIPCXXFLAGS .= "-D__HIP_ROCclr__";
-    $HIPCFLAGS .= "-D__HIP_ROCclr__";
-}
 
 if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
     $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
@@ -203,8 +199,6 @@ if ($HIP_PLATFORM eq "amd") {
     $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
     $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
     $HIPCFLAGS .= " -isystem $HSA_PATH/include";
-    $HIPCXXFLAGS .= " -D__HIP_ROCclr__";
-    $HIPCFLAGS .= " -D__HIP_ROCclr__";
 
 } elsif ($HIP_PLATFORM eq "nvidia") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';

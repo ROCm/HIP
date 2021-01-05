@@ -55,7 +55,7 @@ extern "C"
     typedef _Float16 __2f16 __attribute__((ext_vector_type(2)));
     typedef short __2i16 __attribute__((ext_vector_type(2)));
 
-    #if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
+    #if __HIP_CLANG_ONLY__
     __device__ __attribute__((const)) float __ockl_fdot2(__2f16 a, __2f16 b, float c, bool s);
     #endif
 

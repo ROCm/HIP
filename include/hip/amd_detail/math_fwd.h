@@ -28,7 +28,7 @@ THE SOFTWARE.
 #endif
 
 // DOT FUNCTIONS
-#if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
+#if __HIP_CLANG_ONLY__
 __device__
 __attribute__((const))
 int __ockl_sdot2(

@@ -23,8 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_HIP_LDG_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_HIP_LDG_H
 
-#if defined(__HCC_OR_HIP_CLANG__)
-#if __hcc_workweek__ >= 16164 || __HIP_CLANG_ONLY__
+#if __HIP_CLANG_ONLY__
 #include "hip_vector_types.h"
 #include "host_defines.h"
 
@@ -96,8 +95,6 @@ __device__ inline static double __ldg(const double* ptr) { return ptr[0]; }
 
 __device__ inline static double2 __ldg(const double2* ptr) { return ptr[0]; }
 
-#endif  // __hcc_workweek__ || __HIP_CLANG_ONLY__
-
-#endif  // defined(__HCC_OR_HIP_CLANG__)
+#endif  // __HIP_CLANG_ONLY__
 
 #endif  // HIP_LDG_H

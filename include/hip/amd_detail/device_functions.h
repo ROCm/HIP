@@ -34,19 +34,12 @@ THE SOFTWARE.
 #include <hip/amd_detail/device_library_decls.h>
 #include <hip/amd_detail/llvm_intrinsics.h>
 
-#if __HIP_CLANG_ONLY__ && __HIP_ROCclr__ && !_WIN32
+#if __HIP_CLANG_ONLY__ && !_WIN32
 extern "C" __device__ int printf(const char *fmt, ...);
-#else
-#if HC_FEATURE_PRINTF
-template <typename... All>
-static inline __device__ void printf(const char* format, All... all) {
-    hc::printf(format, all...);
-}
 #else
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
-#endif // HC_FEATURE_PRINTF
-#endif // __HIP_CLANG_ONLY__ && __HIP_ROCclr__
+#endif // __HIP_CLANG_ONLY__ && !_WIN32
 
 /*
 Integer Intrinsics
@@ -278,22 +271,14 @@ __device__ static inline float __hip_ds_permutef(int index, float src) {
 template <int pattern>
 __device__ static inline unsigned __hip_ds_swizzle_N(unsigned int src) {
     union { int i; unsigned u; float f; } tmp; tmp.u = src;
-#if defined(__HCC__)
-    tmp.i = __llvm_amdgcn_ds_swizzle(tmp.i, pattern);
-#else
     tmp.i = __builtin_amdgcn_ds_swizzle(tmp.i, pattern);
-#endif
     return tmp.u;
 }
 
 template <int pattern>
 __device__ static inline float __hip_ds_swizzlef_N(float src) {
     union { int i; unsigned u; float f; } tmp; tmp.f = src;
-#if defined(__HCC__)
-    tmp.i = __llvm_amdgcn_ds_swizzle(tmp.i, pattern);
-#else
     tmp.i = __builtin_amdgcn_ds_swizzle(tmp.i, pattern);
-#endif
     return tmp.f;
 }
 
@@ -964,15 +949,7 @@ __device__ static inline float __ull2float_rn(unsigned long long int x) { return
 __device__ static inline float __ull2float_ru(unsigned long long int x) { return (float)x; }
 __device__ static inline float __ull2float_rz(unsigned long long int x) { return (float)x; }
 
-#if defined(__HCC__)
-#define __HCC_OR_HIP_CLANG__ 1
-#elif defined(__clang__) && defined(__HIP__)
-#define __HCC_OR_HIP_CLANG__ 1
-#else
-#define __HCC_OR_HIP_CLANG__ 0
-#endif
-
-#if __HCC_OR_HIP_CLANG__
+#if __HIP_CLANG_ONLY__
 
 // Clock functions
 __device__ long long int __clock64();
@@ -985,10 +962,6 @@ __device__ void __named_sync(int a, int b);
 #ifdef __HIP_DEVICE_COMPILE__
 
 // Clock functions
-#if __HCC__
-extern "C" uint64_t __clock_u64()  __HC__;
-#endif
-
 __device__
 inline  __attribute((always_inline))
 long long int __clock64() {
@@ -1096,80 +1069,6 @@ void *__amdgcn_get_dynamicgroupbaseptr() {
     return __get_dynamicgroupbaseptr();
 }
 
-#if defined(__HCC__) && (__hcc_major__ < 3) && (__hcc_minor__ < 3)
-// hip.amdgcn.bc - sync threads
-#define __CLK_LOCAL_MEM_FENCE    0x01
-typedef unsigned __cl_mem_fence_flags;
-
-typedef enum __memory_scope {
-  __memory_scope_work_item = __OPENCL_MEMORY_SCOPE_WORK_ITEM,
-  __memory_scope_work_group = __OPENCL_MEMORY_SCOPE_WORK_GROUP,
-  __memory_scope_device = __OPENCL_MEMORY_SCOPE_DEVICE,
-  __memory_scope_all_svm_devices = __OPENCL_MEMORY_SCOPE_ALL_SVM_DEVICES,
-  __memory_scope_sub_group = __OPENCL_MEMORY_SCOPE_SUB_GROUP
-} __memory_scope;
-
-// enum values aligned with what clang uses in EmitAtomicExpr()
-typedef enum __memory_order
-{
-  __memory_order_relaxed = __ATOMIC_RELAXED,
-  __memory_order_acquire = __ATOMIC_ACQUIRE,
-  __memory_order_release = __ATOMIC_RELEASE,
-  __memory_order_acq_rel = __ATOMIC_ACQ_REL,
-  __memory_order_seq_cst = __ATOMIC_SEQ_CST
-} __memory_order;
-
-__device__
-inline
-static void
-__atomic_work_item_fence(__cl_mem_fence_flags flags, __memory_order order, __memory_scope scope)
-{
-    // We're tying global-happens-before and local-happens-before together as does HSA
-    if (order != __memory_order_relaxed) {
-        switch (scope) {
-        case __memory_scope_work_item:
-            break;
-        case __memory_scope_sub_group:
-            switch (order) {
-            case __memory_order_relaxed: break;
-            case __memory_order_acquire: __llvm_fence_acq_sg(); break;
-            case __memory_order_release: __llvm_fence_rel_sg(); break;
-            case __memory_order_acq_rel: __llvm_fence_ar_sg(); break;
-            case __memory_order_seq_cst: __llvm_fence_sc_sg(); break;
-            }
-            break;
-        case __memory_scope_work_group:
-            switch (order) {
-            case __memory_order_relaxed: break;
-            case __memory_order_acquire: __llvm_fence_acq_wg(); break;
-            case __memory_order_release: __llvm_fence_rel_wg(); break;
-            case __memory_order_acq_rel: __llvm_fence_ar_wg(); break;
-            case __memory_order_seq_cst: __llvm_fence_sc_wg(); break;
-            }
-            break;
-        case __memory_scope_device:
-            switch (order) {
-            case __memory_order_relaxed: break;
-            case __memory_order_acquire: __llvm_fence_acq_dev(); break;
-            case __memory_order_release: __llvm_fence_rel_dev(); break;
-            case __memory_order_acq_rel: __llvm_fence_ar_dev(); break;
-            case __memory_order_seq_cst: __llvm_fence_sc_dev(); break;
-            }
-            break;
-        case __memory_scope_all_svm_devices:
-            switch (order) {
-            case __memory_order_relaxed: break;
-            case __memory_order_acquire: __llvm_fence_acq_sys(); break;
-            case __memory_order_release: __llvm_fence_rel_sys(); break;
-            case __memory_order_acq_rel: __llvm_fence_ar_sys(); break;
-            case __memory_order_seq_cst: __llvm_fence_sc_sys(); break;
-            }
-            break;
-        }
-    }
-}
-#endif
-
 // Memory Fence Functions
 __device__
 inline
@@ -1199,24 +1098,6 @@ __attribute__((weak))
 void abort() {
     return __builtin_trap();
 }
-
-
-#endif // __HCC_OR_HIP_CLANG__
-
-#ifdef __HCC__
-
-/**
- * extern __shared__
- */
-
-// Macro to replace extern __shared__ declarations
-// to local variable definitions
-#define HIP_DYNAMIC_SHARED(type, var) type* var = (type*)__get_dynamicgroupbaseptr();
-
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE
-
-
-#elif defined(__clang__) && defined(__HIP__)
 
 // The noinline attribute helps encapsulate the printf expansion,
 // which otherwise has a performance impact just by increasing the

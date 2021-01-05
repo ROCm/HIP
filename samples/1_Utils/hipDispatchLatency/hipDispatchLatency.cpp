@@ -108,16 +108,6 @@ int main() {
     /* Measures latency to start & finish executing a kernel with GPU-scope visibility    */ 
     /***********************************************************************************/
 
-    //Timing directly the dispatch
-#if defined(__HIP_PLATFORM_AMD__) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
-    for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
-        hipExtLaunchKernelGGL((EmptyKernel), dim3(NUM_GROUPS), dim3(GROUP_SIZE), 0, stream0, start, stop, 0);
-        hipEventSynchronize(stop);
-        hipEventElapsedTime(&results[i], start, stop);
-    }
-    print_timing("Timing directly single dispatch latency", results);
-#endif
-
     //Timing around the dispatch
     for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
         hipEventRecord(start, 0);

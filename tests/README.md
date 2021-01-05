@@ -47,17 +47,16 @@ In the above, BUILD commands provide instructions on how to build the test case 
 
 The supported syntax for the BUILD command is:
 ```
-BUILD: %t %s HIPCC_OPTIONS <hipcc_specific_options> HCC_OPTIONS <hcc_specific_options> CLANG_OPTIONS <clang_specific_options> NVCC_OPTIONS <nvcc_specific_options> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EXCLUDE_HIP_RUNTIME <hcc|rocclr> EXCLUDE_HIP_COMPILER <hcc|clang> DEPENDS EXCLUDE_HIP_LIB_TYPE <static|shared> <dependencies>
+BUILD: %t %s HIPCC_OPTIONS <hipcc_specific_options> CLANG_OPTIONS <clang_specific_options> NVCC_OPTIONS <nvcc_specific_options> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EXCLUDE_HIP_RUNTIME <rocclr> EXCLUDE_HIP_COMPILER <clang> DEPENDS EXCLUDE_HIP_LIB_TYPE <static|shared> <dependencies>
 ```
 %s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
 HIPCC_OPTIONS: All options specified after this delimiter are passed to hipcc on both amd and nvidia platforms.
-HCC_OPTIONS: All options specified after this delimiter are passed to hipcc on hcc compiler only.
 CLANG_OPTIONS: All options specified after this delimiter are passed to hipcc on HIP-Clang compiler only.
 NVCC_OPTIONS: All options specified after this delimiter are passed to hipcc on nvidia platform only.
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from amd, nvidia or both platforms.
-EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from hcc or rocclr runtime.
-EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from hcc or clang compiler.
+EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from rocclr runtime.
+EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from clang compiler.
 EXCLUDE_HIP_RUNTIME AND EXCLUDE_HIP_COMPILER: when both options are specified it excludes test case from particular runtime and compiler.
 EXCLUDE_HIP_LIB_TYPE: This can be used to exclude a test case from static or shared libs.
 DEPENDS: This can be used to specify dependencies that need to be built before building the current target.
@@ -67,7 +66,7 @@ DEPENDS: This can be used to specify dependencies that need to be built before b
 
 The supported syntax for the BUILD_CMD command is:
 ```
-BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EXCLUDE_HIP_RUNTIME <hcc|rocclr> EXCLUDE_HIP_COMPILER <hcc|clang> EXCLUDE_HIP_LIB_TYPE <static|shared> DEPENDS <dependencies>
+BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EXCLUDE_HIP_RUNTIME <rocclr> EXCLUDE_HIP_COMPILER <clang> EXCLUDE_HIP_LIB_TYPE <static|shared> DEPENDS <dependencies>
 ```
 %s: refers to current source file name. Additional source files needed for the test can be specified by name (including relative path).
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
@@ -78,8 +77,8 @@ BUILD_CMD: <targetname> <build_command> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EX
 %S: refers to path to current source file.
 %T: refers to path to current build target.
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from amd, nvidia or both platforms.
-EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from hcc or rocclr runtime.
-EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from hcc or clang compiler.
+EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from rocclr runtime.
+EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from clang compiler.
 EXCLUDE_HIP_RUNTIME AND EXCLUDE_HIP_COMPILER: when both options are specified it excludes test from particular runtime and compiler.
 EXCLUDE_HIP_LIB_TYPE: This can be used to exclude a test case from static or shared libs.
 DEPENDS: This can be used to specify dependencies that need to be built before building the current target.
@@ -89,12 +88,12 @@ DEPENDS: This can be used to specify dependencies that need to be built before b
 
 The supported syntax for the TEST command is:
 ```
-TEST: %t <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EXCLUDE_HIP_RUNTIME <hcc|rocclr> EXCLUDE_HIP_COMPILER <hcc|clang> EXCLUDE_HIP_LIB_TYPE <static|shared>
+TEST: %t <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EXCLUDE_HIP_RUNTIME <rocclr> EXCLUDE_HIP_COMPILER <clang> EXCLUDE_HIP_LIB_TYPE <static|shared>
 ```
 %t: refers to target executable named derived by removing the extension from the current source file. Alternatively a target executable name can be specified.
 EXCLUDE_HIP_PLATFORM: This can be used to exclude a test case from amd, nvidia or both platforms. 
-EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from hcc or rocclr runtime.
-EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from hcc or clang compiler.
+EXCLUDE_HIP_RUNTIME: This can be used to exclude a test case from rocclr runtime.
+EXCLUDE_HIP_COMPILER: This can be used to exclude a test case from clang compiler.
 EXCLUDE_HIP_RUNTIME AND EXCLUDE_HIP_COMPILER: when both options are specified it excludes test from particular runtime and compiler.
 EXCLUDE_HIP_LIB_TYPE: This can be used to exclude a test case from static or shared libs.
 
@@ -104,7 +103,7 @@ Note that if the test has been excluded for a specific platform/runtime/compiler
 
 When using the TEST command, HIT will squash and append the arguments specified to the test executable name to generate the CMAKE test name. Sometimes we might want to specify a more descriptive name. The TEST_NAMED command is used for that. The supported syntax for the TEST_NAMED command is:
 ```
-TEST: %t CMAKE_TEST_NAME <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EXCLUDE_HIP_RUNTIME <hcc|rocclr> EXCLUDE_HIP_COMPILER <hcc|clang> EXCLUDE_HIP_LIB_TYPE <static|shared>
+TEST: %t CMAKE_TEST_NAME <arguments_to_test_executable> EXCLUDE_HIP_PLATFORM <amd|nvidia|all> EXCLUDE_HIP_RUNTIME <rocclr> EXCLUDE_HIP_COMPILER <clang> EXCLUDE_HIP_LIB_TYPE <static|shared>
 ```
 
 

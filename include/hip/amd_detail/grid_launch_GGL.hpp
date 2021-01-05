@@ -22,9 +22,5 @@ THE SOFTWARE.
 #pragma once
 
 #if GENERIC_GRID_LAUNCH == 1
-#if __hcc_workweek__ >= 17481
-#include "functional_grid_launch.hpp"
-#else
 #include "macro_based_grid_launch.hpp"
-#endif
 #endif  // GENERIC_GRID_LAUNCH

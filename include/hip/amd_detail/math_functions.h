@@ -41,12 +41,6 @@ THE SOFTWARE.
 #include <limits>
 #include <stdint.h>
 
-// HCC's own math functions should be included first, otherwise there will
-// be conflicts when hip/math_functions.h is included before hip/hip_runtime.h.
-#ifdef __HCC__
-#include "kalmar_math.h"
-#endif
-
 #if _LIBCPP_VERSION && __HIP__
 namespace std {
 template <>
@@ -63,13 +57,8 @@ struct __numeric_type<_Float16>
 #pragma push_macro("__DEVICE__")
 #pragma push_macro("__RETURN_TYPE")
 
-#ifdef __HCC__
-#define __DEVICE__ __device__
-#define __RETURN_TYPE int
-#else // to be consistent with __clang_cuda_math_forward_declares
 #define __DEVICE__ static __device__
 #define __RETURN_TYPE bool
-#endif
 
 #if !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 __DEVICE__
@@ -143,7 +132,7 @@ uint64_t __make_mantissa(const char* tagp)
 #endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 
 // DOT FUNCTIONS
-#if (__hcc_workweek__ >= 19015) || __HIP_CLANG_ONLY__
+#if __HIP_CLANG_ONLY__
 __DEVICE__
 inline
 int amd_mixed_dot(short2 a, short2 b, int c, bool saturate) {
@@ -1430,50 +1419,6 @@ __DEVICE__ inline T max(T arg1, T arg2) {
   return (arg1 > arg2) ? arg1 : arg2;
 }
 
-#if __HCC__
-
-__DEVICE__ inline static uint32_t min(uint32_t arg1, int32_t arg2) {
-  return min(arg1, (uint32_t) arg2);
-}
-/*__DEVICE__ inline static uint32_t min(int32_t arg1, uint32_t arg2) {
-  return min((uint32_t) arg1, arg2);
-}
-
-__DEVICE__ inline static uint64_t min(uint64_t arg1, int64_t arg2) {
-  return min(arg1, (uint64_t) arg2);
-}
-__DEVICE__ inline static uint64_t min(int64_t arg1, uint64_t arg2) {
-  return min((uint64_t) arg1, arg2);
-}
-
-__DEVICE__ inline static unsigned long long min(unsigned long long arg1, long long arg2) {
-  return min(arg1, (unsigned long long) arg2);
-}
-__DEVICE__ inline static unsigned long long min(long long arg1, unsigned long long arg2) {
-  return min((unsigned long long) arg1, arg2);
-}*/
-
-__DEVICE__ inline static uint32_t max(uint32_t arg1, int32_t arg2) {
-  return max(arg1, (uint32_t) arg2);
-}
-__DEVICE__ inline static uint32_t max(int32_t arg1, uint32_t arg2) {
-  return max((uint32_t) arg1, arg2);
-}
-
-/*__DEVICE__ inline static uint64_t max(uint64_t arg1, int64_t arg2) {
-  return max(arg1, (uint64_t) arg2);
-}
-__DEVICE__ inline static uint64_t max(int64_t arg1, uint64_t arg2) {
-  return max((uint64_t) arg1, arg2);
-}
-
-__DEVICE__ inline static unsigned long long max(unsigned long long arg1, long long arg2) {
-  return max(arg1, (unsigned long long) arg2);
-}
-__DEVICE__ inline static unsigned long long max(long long arg1, unsigned long long arg2) {
-  return max((unsigned long long) arg1, arg2);
-}*/
-#else
 __DEVICE__ inline int min(int arg1, int arg2) {
   return (arg1 < arg2) ? arg1 : arg2;
 }
@@ -1514,8 +1459,6 @@ double min(double x, double y) {
 
 __HIP_OVERLOAD2(double, max)
 __HIP_OVERLOAD2(double, min)
-
-#endif
 
 __host__ inline static int min(int arg1, int arg2) {
   return std::min(arg1, arg2);

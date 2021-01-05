@@ -48,15 +48,5 @@ int main(int argc, char* argv[]) {
     CHECK(hipGetDeviceProperties(&props, deviceId));
     printf("info: running on device #%d %s\n", deviceId, props.name);
 
-#ifdef __HCC__
-    hc::accelerator acc;
-    CHECK(hipHccGetAccelerator(deviceId, &acc));
-    std::wcout << "device_path=" << acc.get_device_path() << "\n";
-
-    hc::accelerator_view* av;
-    CHECK(hipHccGetAcceleratorView(0 /*nullStream*/, &av));
-#endif
-
-
     passed();
 };

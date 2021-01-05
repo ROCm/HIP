@@ -80,7 +80,7 @@ hipError_t hipHccModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                                     hipEvent_t stopEvent = nullptr)
                                     __attribute__((deprecated("use hipExtModuleLaunchKernel instead")));
 
-#if defined(__HIP_ROCclr__) && defined(__cplusplus)
+#if defined(__cplusplus)
 
 extern "C" hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks,
                                          dim3 dimBlocks, void** args, size_t sharedMemBytes,
@@ -102,60 +102,8 @@ inline void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& d
     hipExtLaunchKernel(k, numBlocks, dimBlocks, _Args, sharedMemBytes, stream, startEvent,
                        stopEvent, (int)flags);
 }
-#elif (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && GENERIC_GRID_LAUNCH == 1 && defined(__HCC__)
-//kernel_descriptor and hip_impl::make_kernarg are in "grid_launch_GGL.hpp"
 
-namespace hip_impl {
-inline
-__attribute__((visibility("hidden")))
-void hipExtLaunchKernelGGLImpl(
-    std::uintptr_t function_address,
-    const dim3& numBlocks,
-    const dim3& dimBlocks,
-    std::uint32_t sharedMemBytes,
-    hipStream_t stream,
-    hipEvent_t startEvent,
-    hipEvent_t stopEvent,
-    std::uint32_t flags,
-    void** kernarg) {
-
-    const auto& kd = hip_impl::get_program_state()
-        .kernel_descriptor(function_address, target_agent(stream));
-
-    hipExtModuleLaunchKernel(kd, numBlocks.x * dimBlocks.x,
-                             numBlocks.y * dimBlocks.y,
-                             numBlocks.z * dimBlocks.z,
-                             dimBlocks.x, dimBlocks.y, dimBlocks.z,
-                             sharedMemBytes, stream, nullptr, kernarg,
-                             startEvent, stopEvent, flags);
-}
-}  // namespace hip_impl
-
-template <typename... Args, typename F = void (*)(Args...)>
-inline
-void hipExtLaunchKernelGGL(F kernel, const dim3& numBlocks,
-                           const dim3& dimBlocks, std::uint32_t sharedMemBytes,
-                           hipStream_t stream, hipEvent_t startEvent,
-                           hipEvent_t stopEvent, std::uint32_t flags,
-                           Args... args) {
-    hip_impl::hip_init();
-    auto kernarg =
-        hip_impl::make_kernarg(kernel, std::tuple<Args...>{std::move(args)...});
-    std::size_t kernarg_size = kernarg.size();
-
-    void* config[]{
-        HIP_LAUNCH_PARAM_BUFFER_POINTER,
-        kernarg.data(),
-        HIP_LAUNCH_PARAM_BUFFER_SIZE,
-        &kernarg_size,
-        HIP_LAUNCH_PARAM_END};
-
-    hip_impl::hipExtLaunchKernelGGLImpl(reinterpret_cast<std::uintptr_t>(kernel),
-                                        numBlocks, dimBlocks, sharedMemBytes,
-                                        stream, startEvent, stopEvent, flags,
-                                        &config[0]);
-}
-#endif // !__HIP_ROCclr__ && defined(__cplusplus)
+#endif // defined(__cplusplus)
 
 // doxygen end AMD-specific features
 /**
