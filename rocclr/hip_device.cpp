@@ -200,7 +200,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.canMapHostMemory = 1;
   //FIXME: This should be removed, targets can have character names as well.
   deviceProps.gcnArch = info.gfxipMajor_ * 100 + info.gfxipMinor_ * 10 + info.gfxipStepping_;
-  sprintf(deviceProps.gcnArchName, "%s", info.name_);
+  sprintf(deviceProps.gcnArchName, "%s", info.targetId_);
   deviceProps.cooperativeLaunch = info.cooperativeGroups_;
   deviceProps.cooperativeMultiDeviceLaunch = info.cooperativeMultiDeviceGroups_;
 
