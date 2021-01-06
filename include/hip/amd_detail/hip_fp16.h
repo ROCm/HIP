@@ -220,9 +220,7 @@ THE SOFTWARE.
             #if !defined(__HIP_NO_HALF_CONVERSIONS__)
                 template<
                     typename T,
-                    Enable_if_t<
-                        std::is_floating_point<T>{} &&
-                        !std::is_same<T, double>{}>* = nullptr>
+                    Enable_if_t<std::is_floating_point<T>{}>* = nullptr>
                 __host__ __device__
                 operator T() const { return data; }
             #endif
