@@ -70,6 +70,15 @@ void init() {
   PlatformState::instance().init();
 }
 
+void tearDown() {
+  for (auto it = g_devices.begin(); it != g_devices.end(); ++it) {
+    delete *it;
+  }
+  g_devices.clear();
+
+  delete host_device;
+}
+
 Device* getCurrentDevice() {
   return g_device;
 }

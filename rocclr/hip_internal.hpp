@@ -156,6 +156,8 @@ namespace hip {
     unsigned int Flags() const { return flags_; }
     /// Returns the priority for the current stream
     Priority GetPriority() const { return priority_; }
+    /// Returns the owner Device of current stream
+    Device* GetDevice() const { return device_; }
 
     /// Sync all non-blocking streams
     static void syncNonBlockingStreams();
@@ -169,8 +171,10 @@ namespace hip {
     /// Device's ID
     /// Store it here so we don't have to loop through the device list every time
     int deviceId_;
+    /// Store hip::Stream created on this Device
+    std::list<Stream*> streams_;
     /// ROCclr host queue for default streams
-    Stream null_stream_;
+    Stream* null_stream_;
     /// Store device flags
     unsigned int flags_;
     /// Maintain list of user enabled peers
@@ -178,9 +182,18 @@ namespace hip {
 
   public:
     Device(amd::Context* ctx, int devId):
-      context_(ctx), deviceId_(devId), null_stream_(this, Stream::Priority::Normal, 0, true), flags_(hipDeviceScheduleSpin)
-        { assert(ctx != nullptr); }
-    ~Device() {}
+       context_(ctx), deviceId_(devId),
+       streams_(), null_stream_(new Stream(this, Stream::Priority::Normal, 0, true)),
+       flags_(hipDeviceScheduleSpin)
+        {
+          assert(ctx != nullptr);
+        }
+    ~Device() {
+      for (auto it = getStreams().begin(); it != getStreams().end(); ++it) {
+        (*it)->Destroy();
+      }
+      getStreams().clear();
+    }
 
     amd::Context* asContext() const { return context_; }
     int deviceId() const { return deviceId_; }
@@ -208,6 +221,19 @@ namespace hip {
     }
     unsigned int getFlags() const { return flags_; }
     void setFlags(unsigned int flags) { flags_ = flags; }
+
+    /// Streams:
+    std::list<Stream*>& getStreams() { return streams_; }
+    const std::list<Stream*>& getStreams() const { return streams_; }
+    void addStream(Stream* stream) {
+      amd::ScopedLock lock(lock_);
+      streams_.push_back(stream);
+    }
+    void removeStream(Stream* stream) {
+      amd::ScopedLock lock(lock_);
+      streams_.remove(stream);
+    }
+
     amd::HostQueue* NullStream(bool skip_alloc = false);
   };
 
@@ -219,6 +245,8 @@ namespace hip {
   extern Device* host_device;
 
   extern void init();
+
+  extern void tearDown();
 
   extern Device* getCurrentDevice();
 

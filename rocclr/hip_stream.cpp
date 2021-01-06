@@ -49,7 +49,10 @@ namespace hip {
 Stream::Stream(hip::Device* dev, Priority p,
     unsigned int f, bool null_stream, const std::vector<uint32_t>& cuMask)
   : queue_(nullptr), lock_("Stream Callback lock"), device_(dev),
-    priority_(p), flags_(f), null_(null_stream), cuMask_(cuMask) {}
+    priority_(p), flags_(f), null_(null_stream), cuMask_(cuMask)
+{
+  dev->addStream(this);
+}
 
 // ================================================================================================
 bool Stream::Create() {
@@ -297,7 +300,10 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
     HIP_RETURN(hipErrorInvalidHandle);
   }
 
-  reinterpret_cast<hip::Stream*>(stream)->Destroy();
+  hip::Stream* hipStream = reinterpret_cast<hip::Stream*>(stream);
+
+  hipStream->Destroy();
+  hipStream->GetDevice()->removeStream(hipStream);
 
   HIP_RETURN(hipSuccess);
 }

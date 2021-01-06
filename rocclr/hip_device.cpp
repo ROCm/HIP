@@ -26,7 +26,7 @@ namespace hip {
 
 // ================================================================================================
 amd::HostQueue* Device::NullStream(bool skip_alloc) {
-  amd::HostQueue* null_queue = null_stream_.asHostQueue(skip_alloc);
+  amd::HostQueue* null_queue = null_stream_->asHostQueue(skip_alloc);
   if (null_queue == nullptr) {
     return nullptr;
   }
