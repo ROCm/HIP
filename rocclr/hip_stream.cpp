@@ -346,7 +346,10 @@ hipError_t hipStreamQuery(hipStream_t stream) {
 hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback, void* userData,
                                 unsigned int flags) {
   HIP_INIT_API(hipStreamAddCallback, stream, callback, userData, flags);
-
+  //flags - Reserved for future use, must be 0
+  if (callback == nullptr || flags != 0) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
   amd::HostQueue* hostQueue = hip::getQueue(stream);
   amd::Command* command = hostQueue->getLastQueuedCommand(true);
   if (command == nullptr) {

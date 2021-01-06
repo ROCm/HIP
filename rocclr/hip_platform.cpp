@@ -607,9 +607,9 @@ hipError_t ihipLaunchKernel(const void* hostFunction,
   if ((hip_error != hipSuccess) || (func == nullptr)) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
-  size_t globalWorkSizeX = gridDim.x * blockDim.x;
-  size_t globalWorkSizeY = gridDim.y * blockDim.y;
-  size_t globalWorkSizeZ = gridDim.z * blockDim.z;
+  size_t globalWorkSizeX = static_cast<size_t>(gridDim.x) * blockDim.x;
+  size_t globalWorkSizeY = static_cast<size_t>(gridDim.y) * blockDim.y;
+  size_t globalWorkSizeZ = static_cast<size_t>(gridDim.z) * blockDim.z;
   if (globalWorkSizeX > std::numeric_limits<uint32_t>::max() ||
       globalWorkSizeY > std::numeric_limits<uint32_t>::max() ||
       globalWorkSizeZ > std::numeric_limits<uint32_t>::max()) {

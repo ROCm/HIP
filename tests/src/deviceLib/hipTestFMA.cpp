@@ -43,19 +43,38 @@ THE SOFTWARE.
     double doubleResult = fma(d, d, 3.0);
     Check(floatResult != doubleResult);
 
-    // check promote to float.
-    Check(fma(f, f, 3) == floatResult);
-    Check(fma(f, f, (char)3) == floatResult);
-    Check(fma(f, f, (unsigned char)3) == floatResult);
-    Check(fma(f, f, (short)3) == floatResult);
-    Check(fma(f, f, (unsigned short)3) == floatResult);
-    Check(fma(f, f, (int)3) == floatResult);
-    Check(fma(f, f, (unsigned int)3) == floatResult);
-    Check(fma(f, f, (long)3) == floatResult);
-    Check(fma(f, f, (unsigned long)3) == floatResult);
-    Check(fma(f, f, true) == fma(f, f, 1.0f));
+    if(sizeof(decltype(fma(f, f, 3))) == 8) {
+      // To align with libcxx, if any argument has integral type,
+      // it is cast to double.
+      // Check type promotes to double.
+      Check(fma(f, f, 3) == doubleResult);
+      Check(fma(f, f, (char)3) == doubleResult);
+      Check(fma(f, f, (unsigned char)3) == doubleResult);
+      Check(fma(f, f, (short)3) == doubleResult);
+      Check(fma(f, f, (unsigned short)3) == doubleResult);
+      Check(fma(f, f, (int)3) == doubleResult);
+      Check(fma(f, f, (unsigned int)3) == doubleResult);
+      Check(fma(f, f, (long)3) == doubleResult);
+      Check(fma(f, f, (unsigned long)3) == doubleResult);
+      Check(fma(f, f, true) == fma((double)f, (double)f, 1.0));
+    } else if(sizeof(decltype(fma(f, f, 3))) == 4) {
+      // Previous HIP headers returns float type.
+      // Delete this to support backwards compatibility.
+      // check promote to float.
+      Check(fma(f, f, 3) == floatResult);
+      Check(fma(f, f, (char)3) == floatResult);
+      Check(fma(f, f, (unsigned char)3) == floatResult);
+      Check(fma(f, f, (short)3) == floatResult);
+      Check(fma(f, f, (unsigned short)3) == floatResult);
+      Check(fma(f, f, (int)3) == floatResult);
+      Check(fma(f, f, (unsigned int)3) == floatResult);
+      Check(fma(f, f, (long)3) == floatResult);
+      Check(fma(f, f, (unsigned long)3) == floatResult);
+      Check(fma(f, f, true) == fma(f, f, 1.0f));
+    } else {
+      assert(0 && "Invalid fma return type.");
+    }
 
-    // check promote to double.
     Check(fma(d, (double)f, 3) == doubleResult);
     Check(fma(d, (double)f, (char)3) == doubleResult);
     Check(fma(d, (double)f, (unsigned char)3) == doubleResult);

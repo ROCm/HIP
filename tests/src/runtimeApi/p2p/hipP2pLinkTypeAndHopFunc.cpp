@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: %t %hc %S/%s -o %T/%t %S/../../test_common.cpp -I %S/../../ -L/opt/rocm/rocm_smi/lib -lrocm_smi64 -ldl EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD_CMD: %t %hc %S/%s -o %T/%t %S/../../test_common.cpp -I %S/../../ -L%rocm-path/rocm_smi/lib -lrocm_smi64 -ldl EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t --tests 0x1
  * TEST: %t --tests 0x2
  * TEST: %t --tests 0x3

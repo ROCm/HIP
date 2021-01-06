@@ -30,14 +30,23 @@
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
   amd::Memory *memObj = amd::MemObjMap::FindMemObj(ptr);
   if (memObj != nullptr) {
-    if (memObj->getSvmPtr() != nullptr) {
-      // SVM pointer
-      offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getSvmPtr());
-    } else if (memObj->getHostMem() != nullptr) {
-      // Prepinned memory
-      offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(memObj->getHostMem());
-    } else {
-      ShouldNotReachHere();
+    const char* hostPtr = reinterpret_cast<const char*>(ptr);
+    const char* hostMem = reinterpret_cast<const char*>(memObj->getHostMem());
+    //Prepinned memory
+    if ((hostMem != nullptr) &&
+        (hostPtr >= hostMem && hostPtr <= (hostMem + memObj->getSize()))) {
+      offset = reinterpret_cast<size_t>(hostPtr) - reinterpret_cast<size_t>(hostMem);
+    }
+    else {
+      //SVM ptr or device ptr mapped from host
+      const void *devPtr = reinterpret_cast<void*>
+              (memObj->getDeviceMemory(*memObj->getContext().devices()[0])->virtualAddress());
+      if (devPtr != nullptr) {
+        offset = reinterpret_cast<size_t>(ptr) - reinterpret_cast<size_t>(devPtr);
+      }
+      else {
+        ShouldNotReachHere();
+      }
     }
   }
   return memObj;
@@ -99,12 +108,12 @@ hipError_t ihipFree(void *ptr)
 // ================================================================================================
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
 {
+  if (ptr == nullptr) {
+    return hipErrorInvalidValue;
+  }
   if (sizeBytes == 0) {
     *ptr = nullptr;
     return hipSuccess;
-  }
-  else if (ptr == nullptr) {
-    return hipErrorInvalidValue;
   }
 
   bool useHostDevice = (flags & CL_MEM_SVM_FINE_GRAIN_BUFFER) != 0;
@@ -241,13 +250,13 @@ hipError_t hipExtMallocWithFlags(void** ptr, size_t sizeBytes, unsigned int flag
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_ATOMICS: 0), *ptr);
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, (flags & hipDeviceMallocFinegrained)? CL_MEM_SVM_ATOMICS: 0), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipMalloc(void** ptr, size_t sizeBytes) {
   HIP_INIT_API(hipMalloc, ptr, sizeBytes);
 
-  HIP_RETURN_DURATION(ihipMalloc(ptr, sizeBytes, 0), *ptr);
+  HIP_RETURN_DURATION(ihipMalloc(ptr, sizeBytes, 0), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipHostMalloc(void** ptr, size_t sizeBytes, unsigned int flags) {
@@ -426,7 +435,7 @@ hipError_t hipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t height
   HIP_INIT_API(hipMallocPitch, ptr, pitch, width, height);
 
   const cl_image_format image_format = { CL_R, CL_UNSIGNED_INT8 };
-  HIP_RETURN(ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format), *ptr);
+  HIP_RETURN(ihipMallocPitch(ptr, pitch, width, height, 1, CL_MEM_OBJECT_IMAGE2D, &image_format), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipMalloc3D(hipPitchedPtr* pitchedDevPtr, hipExtent extent) {
@@ -765,7 +774,9 @@ hipError_t hipHostUnregister(void* hostPtr) {
 
 // Deprecated function:
 hipError_t hipHostAlloc(void** ptr, size_t sizeBytes, unsigned int flags) {
-  HIP_RETURN(ihipMalloc(ptr, sizeBytes, flags), *ptr);
+  HIP_INIT_API(hipHostAlloc, ptr, sizeBytes, flags);
+
+  HIP_RETURN(ihipMalloc(ptr, sizeBytes, flags), (ptr != nullptr)? *ptr : nullptr);
 };
 
 
@@ -1098,6 +1109,11 @@ hipError_t ihipMemcpyDtoD(void* srcDevice,
     return hipErrorOutOfMemory;
   }
 
+  if (!command->validatePeerMemory()) {
+    delete command;
+    return hipErrorInvalidValue;
+  }
+
   hipError_t status = hipSuccess;
   command->enqueue();
   if (!isAsync) {
@@ -1160,6 +1176,11 @@ hipError_t ihipMemcpyDtoH(void* srcDevice,
     return hipErrorOutOfMemory;
   }
 
+  if (!command->validatePeerMemory()) {
+    delete command;
+    return hipErrorInvalidValue;
+  }
+
   hipError_t status = hipSuccess;
   command->enqueue();
   if (!isAsync) {
@@ -1220,6 +1241,11 @@ hipError_t ihipMemcpyHtoD(const void* srcHost,
 
   if (command == nullptr) {
     return hipErrorOutOfMemory;
+  }
+
+  if (!command->validatePeerMemory()) {
+    delete command;
+    return hipErrorInvalidValue;
   }
 
   hipError_t status = hipSuccess;
@@ -1514,7 +1540,7 @@ hipError_t ihipMemcpy2D(void* dst, size_t dpitch, const void* src, size_t spitch
   if (spitch == 0 || dpitch == 0) {
     return hipErrorUnknown;
   }
-  if (width == 0) {
+  if (width == 0 || height == 0) {
     return hipSuccess;
   }
 
@@ -2068,9 +2094,14 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
     attributes->memoryType = ((CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_USE_HOST_PTR) &
         memObj->getMemFlags())? hipMemoryTypeHost : hipMemoryTypeDevice;
     if (attributes->memoryType == hipMemoryTypeHost) {
-      attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
+      if (memObj->getHostMem() != nullptr) {
+        attributes->hostPointer = static_cast<char*>(memObj->getHostMem()) + offset;
+      }
+      else {
+        attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
+      }
     }
-    attributes->devicePointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
+    attributes->devicePointer = reinterpret_cast<char*>(memObj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0])->virtualAddress() + offset);
     constexpr uint32_t kManagedAlloc = (CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_ALLOC_HOST_PTR);
     attributes->isManaged =
         ((memObj->getMemFlags() & kManagedAlloc) == kManagedAlloc) ? true : false;
@@ -2311,11 +2342,7 @@ hipError_t hipMallocHost(void** ptr,
                          size_t size) {
   HIP_INIT_API(hipMallocHost, ptr, size);
 
-  if (ptr == nullptr) {
-    HIP_RETURN(hipErrorInvalidValue);
-  }
-
-  HIP_RETURN_DURATION(ihipMalloc(ptr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER), *ptr);
+  HIP_RETURN_DURATION(ihipMalloc(ptr, size, CL_MEM_SVM_FINE_GRAIN_BUFFER), (ptr != nullptr)? *ptr : nullptr);
 }
 
 hipError_t hipFreeHost(void *ptr) {

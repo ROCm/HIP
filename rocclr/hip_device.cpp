@@ -197,10 +197,10 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.pciBusID = info.deviceTopology_.pcie.bus;
   deviceProps.pciDeviceID = info.deviceTopology_.pcie.device;
   deviceProps.maxSharedMemoryPerMultiProcessor = info.localMemSizePerCU_;
-  //deviceProps.isMultiGpuBoard = info.;
   deviceProps.canMapHostMemory = 1;
+  //FIXME: This should be removed, targets can have character names as well.
   deviceProps.gcnArch = info.gfxipMajor_ * 100 + info.gfxipMinor_ * 10 + info.gfxipStepping_;
-  sprintf(deviceProps.gcnArchName, "gfx%d%d%x", info.gfxipMajor_, info.gfxipMinor_, info.gfxipStepping_);
+  sprintf(deviceProps.gcnArchName, "%s", info.name_);
   deviceProps.cooperativeLaunch = info.cooperativeGroups_;
   deviceProps.cooperativeMultiDeviceLaunch = info.cooperativeMultiDeviceGroups_;
 

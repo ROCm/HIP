@@ -1,17 +1,31 @@
 #!/usr/bin/perl -w
 
-$HIP_BASE_VERSION_MAJOR = "4";
-$HIP_BASE_VERSION_MINOR = "0";
-
 # Need perl > 5.10 to use logic-defined or
 use 5.006; use v5.10.1;
 use Getopt::Long;
 use Cwd;
 
-# Return name of HIP compiler - either 'nvcc' or 'hcc'
+# Return name of HIP compiler - either 'clang' or 'nvcc'
 #
 use Getopt::Long;
 use File::Basename;
+
+my $base_dir;
+BEGIN {
+    $base_dir = Cwd::realpath( dirname(__FILE__) );
+}
+use lib "$base_dir/";
+use hipvars;
+
+$HIP_RUNTIME    =   $hipvars::HIP_RUNTIME;
+$HIP_PLATFORM   =   $hipvars::HIP_PLATFORM;
+$HIP_COMPILER   =   $hipvars::HIP_COMPILER;
+$HIP_CLANG_PATH =   $hipvars::HIP_CLANG_PATH;
+$CUDA_PATH      =   $hipvars::CUDA_PATH;
+$HIP_PATH       =   $hipvars::HIP_PATH;
+$ROCM_PATH      =   $hipvars::ROCM_PATH;
+$HIP_VERSION    =   $hipvars::HIP_VERSION;
+$HSA_PATH       =   $hipvars::HSA_PATH;
 
 Getopt::Long::Configure ( qw{bundling no_ignore_case});
 GetOptions(
@@ -29,117 +43,7 @@ GetOptions(
     ,"newline|n" => \$p_newline
 );
 
-if ($p_help) {
-    print "usage: hipconfig [OPTIONS]\n";
-    print "  --path,  -p        : print HIP_PATH (use env var if set, else determine from hipconfig path)\n";
-    print "  --rocmpath,  -R    : print ROCM_PATH (use env var if set, else determine from hip path or /opt/rocm)\n";
-    print "  --cpp_config, -C   : print C++ compiler options\n";
-    print "  --compiler, -c     : print compiler (hcc or clang or nvcc)\n";
-    print "  --platform, -P     : print platform (amd or nvidia)\n";
-    print "  --runtime, -r      : print runtime (hcc or rocclr)\n";
-    print "  --hipclangpath, -l : print HIP_CLANG_PATH\n";
-    print "  --full, -f         : print full config\n";
-    print "  --version, -v      : print hip version\n";
-    print "  --check            : check configuration\n";
-    print "  --newline, -n      : print newline\n";
-    print "  --help, -h         : print help message\n";
-    exit();
-}
-
-#---
-# Function to parse config file
-sub parse_config_file {
-    my ($file, $config) = @_;
-    if (open (CONFIG, "$file")) {
-        while (<CONFIG>) {
-            my $config_line=$_;
-            chop ($config_line);
-            $config_line =~ s/^\s*//;
-            $config_line =~ s/\s*$//;
-            if (($config_line !~ /^#/) && ($config_line ne "")) {
-                my ($name, $value) = split (/=/, $config_line);
-                $$config{$name} = $value;
-            }
-        }
-        close(CONFIG);
-    }
-}
-
-#---
-# Function to check if executable can be run
-sub can_run {
-    my ($exe) = @_;
-    `$exe --version 2>&1`;
-    if ($? == 0) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-# Define HIP_PATH based on location of the script. Same as hipcc.
-# Derive ROCM_PATH same as hipcc does. Others are relative to ROCM_PATH. 
-$HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
-if (-e "$HIP_PATH/../bin/rocm_agent_enumerator") {
-    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH
-} else {
-    $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
-}
-$CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
-$HCC_HOME=$ENV{'HCC_HOME'} // "$ROCM_PATH/hcc";
-$HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
-$HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
-# HIP_ROCCLR_HOME is used by Windows builds
-$HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
-
-if (defined $HIP_ROCCLR_HOME) {
-    $HIP_INFO_PATH= "$HIP_ROCCLR_HOME/lib/.hipInfo";
-} else {
-    $HIP_INFO_PATH= "$HIP_PATH/lib/.hipInfo"; # use actual file
-}
-#---
-#HIP_PLATFORM controls whether to use nvidia or amd platform:
-$HIP_PLATFORM=$ENV{'HIP_PLATFORM'};
-# Read .hipInfo
-my %hipInfo = ();
-parse_config_file("$HIP_INFO_PATH", \%hipInfo);
-# Prioritize Env first, otherwise use the hipInfo config file
-$HIP_COMPILER = $ENV{'HIP_COMPILER'} // $hipInfo{'HIP_COMPILER'} // "clang";
-$HIP_RUNTIME = $ENV{'HIP_RUNTIME'} // $hipInfo{'HIP_RUNTIME'} // "rocclr";
-
-# If using ROCclr runtime, need to find HIP_ROCCLR_HOME
-if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "rocclr" and !defined $HIP_ROCCLR_HOME) {
-    my $hipconfig_dir = dirname($0);
-    if (-e "$hipconfig_dir/../lib/bitcode") {
-        $HIP_ROCCLR_HOME = abs_path($hipconfig_dir . "/..");
-    } else {
-        $HIP_ROCCLR_HOME = $HIP_PATH; # use HIP_PATH
-    }
-}
-
-if (not defined $HIP_PLATFORM) {
-    if (can_run("$HIP_CLANG_PATH/clang++") or can_run("clang++")) {
-        $HIP_PLATFORM = "amd";
-    } elsif (can_run("$HCC_HOME/bin/hcc") or can_run("hcc")) {
-        $HIP_PLATFORM = "amd";
-    } elsif (can_run("$CUDA_PATH/bin/nvcc") or can_run("nvcc")) {
-        $HIP_PLATFORM = "nvidia";
-        $HIP_COMPILER = "nvcc";
-        $HIP_RUNTIME = "cuda";
-    } else {
-        # Default to amd for now
-        $HIP_PLATFORM = "amd";
-    }
-}
-
-if ($HIP_COMPILER eq "hcc") {
-    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__=  -I$HIP_PATH/include -I$HCC_HOME/include -I$HSA_PATH/include";
-}
 if ($HIP_COMPILER eq "clang") {
-    # Windows does not have clang at linux default path
-    if (defined $HIP_ROCCLR_HOME and (-e "$HIP_ROCCLR_HOME/bin/clang" or -e "$HIP_ROCCLR_HOME/bin/clang.exe")) {
-        $HIP_CLANG_PATH = "$HIP_ROCCLR_HOME/bin";
-    }
     $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
     $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
@@ -153,14 +57,22 @@ if ($HIP_PLATFORM eq "nvidia") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__=  -I$HIP_PATH/include -I$CUDA_PATH/include";
 };
 
-#---
-# Read .hipVersion
-my %hipVersion = ();
-parse_config_file("$HIP_PATH/bin/.hipVersion", \%hipVersion);
-$HIP_VERSION_MAJOR = $hipVersion{'HIP_VERSION_MAJOR'} // $HIP_BASE_VERSION_MAJOR;
-$HIP_VERSION_MINOR = $hipVersion{'HIP_VERSION_MINOR'} // $HIP_BASE_VERSION_MINOR;
-$HIP_VERSION_PATCH = $hipVersion{'HIP_VERSION_PATCH'} // "0";
-$HIP_VERSION="$HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH";
+if ($p_help) {
+    print "usage: hipconfig [OPTIONS]\n";
+    print "  --path,  -p        : print HIP_PATH (use env var if set, else determine from hipconfig path)\n";
+    print "  --rocmpath,  -R    : print ROCM_PATH (use env var if set, else determine from hip path or /opt/rocm)\n";
+    print "  --cpp_config, -C   : print C++ compiler options\n";
+    print "  --compiler, -c     : print compiler (clang or nvcc)\n";
+    print "  --platform, -P     : print platform (amd or nvidia)\n";
+    print "  --runtime, -r      : print runtime (rocclr or cuda)\n";
+    print "  --hipclangpath, -l : print HIP_CLANG_PATH\n";
+    print "  --full, -f         : print full config\n";
+    print "  --version, -v      : print hip version\n";
+    print "  --check            : check configuration\n";
+    print "  --newline, -n      : print newline\n";
+    print "  --help, -h         : print help message\n";
+    exit();
+}
 
 if ($p_path) {
     print "$HIP_PATH";
@@ -216,20 +128,6 @@ if (!$printed or $p_full) {
     if ($HIP_PLATFORM eq "amd")
     {
         print "\n" ;
-        if ($HIP_COMPILER eq "hcc")
-        {
-            print "== hcc\n";
-            print ("HSA_PATH     : $HSA_PATH\n");
-            print ("HCC_HOME     : $HCC_HOME\n");
-            system("$HCC_HOME/bin/hcc --version");
-            system("$HCC_HOME/bin/llc --version");
-            print ("HCC-cxxflags : ");
-            system("$HCC_HOME/bin/hcc-config --cxxflags");
-            printf("\n");
-            print ("HCC-ldflags  : ");
-            system("$HCC_HOME/bin/hcc-config --ldflags");
-            printf("\n");
-        }
         if ($HIP_COMPILER eq "clang")
         {
             print "== hip-clang\n";
@@ -243,6 +141,8 @@ if (!$printed or $p_full) {
             print ("hip-clang-ldflags  : ");
             system("$HIP_PATH/bin/hipcc --ldflags");
             printf("\n");
+        } else {
+            print ("Unexpected HIP_COMPILER: $HIP_COMPILER\n");
         }
     }
     if ($HIP_PLATFORM eq "nvidia")  {
@@ -256,7 +156,7 @@ if (!$printed or $p_full) {
 
     print "=== Environment Variables\n";
     system("echo PATH=\$PATH");
-    system("env | egrep '^HIP|^HSA|^HCC|^CUDA|^LD_LIBRARY_PATH'");
+    system("env | egrep '^HIP|^HSA|^CUDA|^LD_LIBRARY_PATH'");
 
 
     print "\n" ;

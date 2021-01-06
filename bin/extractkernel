@@ -8,6 +8,22 @@ use Cwd 'realpath';
 use Getopt::Std;
 use List::Util qw(max);
 
+my $base_dir;
+BEGIN {
+    $base_dir = Cwd::realpath( dirname(__FILE__) );
+}
+use lib "$base_dir/";
+use hipvars;
+
+$HIP_COMPILER   =   $hipvars::HIP_COMPILER;
+$HIP_CLANG_PATH =   $hipvars::HIP_CLANG_PATH;
+$CUDA_PATH      =   $hipvars::CUDA_PATH;
+$HIP_PATH       =   $hipvars::HIP_PATH;
+$ROCM_PATH      =   $hipvars::ROCM_PATH;
+$HIP_VERSION    =   $hipvars::HIP_VERSION;
+$HSA_PATH       =   $hipvars::HSA_PATH;
+$HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
+
 sub usage {
   print("Usage: $0 [OPTION]... -i <input>\n");
   print("Extract the device kernels from an hcc executable.\n\n");
@@ -34,32 +50,14 @@ defined $options{i} || die("input not specified");
 $input_file = $options{i};
 (-f $input_file) || die("can't find $input_file");
 
-# derive HIP_PATH via env var or use parent directory of extractkernel
-my $HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../"));
-my $HIP_COMPILER = `$HIP_PATH/bin/hipconfig --compiler`;
-my $ROCM_PATH = `$HIP_PATH/bin/hipconfig --rocmpath`;
-my $HIP_CLANG_PATH = `$HIP_PATH/bin/hipconfig --hipclangpath`;
-
 # look for llvm-objdump and clang-offload-bundler
 my $tools_path_prefix;
 my $llvm_objdump;
 my $clang_offload_bundler;
 
-if (defined $HIP_COMPILER and $HIP_COMPILER eq "clang"){
-  # Search the path with respect to HIP_CLANG_PATH
-  $tools_path_prefix = $HIP_CLANG_PATH;
-}
-else {
-  if (defined $HIP_COMPILER and $HIP_COMPILER eq "hcc") {
-    # Search the path with respect to HCC_HOME if it is set, else search in ROCM_PATH
-    if (defined $ENV{'HCC_HOME'}) {
-      $tools_path_prefix = File::Spec->catfile($ENV{'HCC_HOME'}, "bin");
-    }
-    else {
-      $tools_path_prefix = realpath($ROCM_PATH."/hcc/bin");
-    }
-  }
-}
+# Search the path with respect to HIP_CLANG_PATH
+$tools_path_prefix = $HIP_CLANG_PATH;
+
 # Find llvm-objdump and clang-offload-bundler in the path set above
 $llvm_objdump = File::Spec->catfile($tools_path_prefix, "llvm-objdump");
 $clang_offload_bundler = File::Spec->catfile($tools_path_prefix, "clang-offload-bundler");

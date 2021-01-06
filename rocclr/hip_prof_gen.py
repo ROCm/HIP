@@ -413,15 +413,25 @@ def generate_prof_header(f, api_map, opts_map):
     f.write('  HIP_API_ID_' + name + ' = HIP_API_ID_NUMBER,\n')
   f.write('};\n')
 
-  # Generating the callbacks ID enumaration
-  f.write('\n// Return HIP API string\n')
-  f.write('inline const char* hip_api_name(const uint32_t id) {\n')
+  # Generating the method to return API name by ID
+  f.write('\n// Return HIP API string by given ID\n')
+  f.write('static inline const char* hip_api_name(const uint32_t id) {\n')
   f.write('  switch(id) {\n')
   for name in api_map.keys():
     f.write('    case HIP_API_ID_' + name + ': return "' +  name + '";\n')
   f.write('  };\n')
   f.write('  return "unknown";\n')
   f.write('};\n')
+
+  # Generating the method for querying API ID by name
+  f.write('\n')
+  f.write('#include <string.h>\n');
+  f.write('// Return HIP API ID by given name\n')
+  f.write('static inline uint32_t hipApiIdByName(const char* name) {\n')
+  for name, args in api_map.items():
+    f.write('  if (strcmp("' + name + '", name) == 0) return HIP_API_ID_' + name + ';\n')
+  f.write('  return HIP_API_ID_NUMBER;\n')
+  f.write('}\n')
 
   # Generating the callbacks data structure
   f.write('\n// HIP API callbacks data structure\n')
@@ -479,7 +489,7 @@ def generate_prof_header(f, api_map, opts_map):
   # Generating the method for the API args filling
   f.write('\n')
   f.write('// HIP API args filling method\n')
-  f.write('void hipApiArgsInit(hip_api_id_t id, hip_api_data_t* data) {\n')
+  f.write('static inline void hipApiArgsInit(hip_api_id_t id, hip_api_data_t* data) {\n')
   f.write('  switch (id) {\n')
   for name, args in api_map.items():
     f.write('// ' + name + str(args) + '\n')
@@ -505,7 +515,7 @@ def generate_prof_header(f, api_map, opts_map):
   f.write('#include <sstream>\n');
   f.write('#include <string>\n');
   f.write('// HIP API string method, method name and parameters\n')
-  f.write('const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {\n')
+  f.write('static inline const char* hipApiString(hip_api_id_t id, const hip_api_data_t* data) {\n')
   f.write('  std::ostringstream oss;\n')
   f.write('  switch (id) {\n')
   for name, args in api_map.items():
