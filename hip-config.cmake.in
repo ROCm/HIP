@@ -102,7 +102,7 @@ include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
 find_dependency(hsa-runtime64)
 find_dependency(Threads)
 
-#get_filename_component cannot resolve the symlinks if called from /opt/rocm/lib/hip
+#get_filename_component cannot resolve the symlinks if called from ${ROCM_PATH}/lib/hip
 #and do three level up again
 get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
@@ -111,7 +111,7 @@ get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 find_path(HSA_HEADER hsa/hsa.h
   PATHS
     "${_IMPORT_PREFIX}/../include"
-    /opt/rocm/include
+    "${ROCM_PATH}/include"
 )
 
 if (HSA_HEADER-NOTFOUND)
