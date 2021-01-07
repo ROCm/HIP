@@ -231,7 +231,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         "%s", "Both, kernelParams and extra Params are provided, only one should be provided");
     return hipErrorInvalidValue;
   }
-
+  if (globalWorkSizeX == 0 || globalWorkSizeY == 0 || globalWorkSizeZ == 0 ||
+      blockDimX == 0 || blockDimY == 0 || blockDimZ == 0) {
+    return hipErrorInvalidValue;
+  }
+  
   hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
   amd::Kernel* kernel = function->kernel();
 
