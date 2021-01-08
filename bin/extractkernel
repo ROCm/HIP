@@ -10,7 +10,7 @@ use List::Util qw(max);
 
 my $base_dir;
 BEGIN {
-    $base_dir = Cwd::realpath( dirname(__FILE__) );
+    $base_dir = dirname( Cwd::realpath(__FILE__) );
 }
 use lib "$base_dir/";
 use hipvars;
