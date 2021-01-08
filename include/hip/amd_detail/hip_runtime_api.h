@@ -1242,7 +1242,8 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * #hipEventBlockingSync : The event will use blocking synchronization : if hipEventSynchronize is
  called on this event, the thread will block until the event completes.  This can increase latency
  for the synchroniation but can result in lower power and more resources for other CPU threads.
- * #hipEventDisableTiming : Disable recording of timing information.
+ * #hipEventDisableTiming : Disable recording of timing information. Events created with this flag
+ would not record profiling data and provide best performance if used for synchronization.
 
  * @warning On AMD platform, hipEventInterprocess support is under development.  Use of this flag
  will return an error.
