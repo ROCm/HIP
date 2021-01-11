@@ -63,6 +63,7 @@ class ModuleLaunchKernel {
   hipFunction_t MultKernel, SixteenSecKernel, FourSecKernel,
   TwoSecKernel, KernelandExtraParamKernel;
   struct {
+    int clockRate;
     void* _Ad;
     void* _Bd;
     void* _Cd;
@@ -101,14 +102,18 @@ void ModuleLaunchKernel::AllocateMemory() {
   HIPCHECK(hipHostMalloc(reinterpret_cast<void**>(&C), SIZE*sizeof(int)));
   HIPCHECK(hipMemcpy(Ad, A, SIZE*sizeof(int), hipMemcpyHostToDevice));
   HIPCHECK(hipMemcpy(Bd, B, SIZE*sizeof(int), hipMemcpyHostToDevice));
+  int clkRate = 0;
+  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
   args1._Ad = Ad;
   args1._Bd = Bd;
   args1._Cd = C;
   args1._n  = N;
+  args1.clockRate = clkRate;
   args2._Ad = NULL;
   args2._Bd = NULL;
   args2._Cd = NULL;
   args2._n  = 0;
+  args2.clockRate = clkRate;
   size1 = sizeof(args1);
   size2 = sizeof(args2);
   HIPCHECK(hipEventCreate(&start_event1));
@@ -156,10 +161,12 @@ void ModuleLaunchKernel::DeAllocateMemory() {
  */
 bool ModuleLaunchKernel::ExtModule_KernelExecutionTime() {
   bool testStatus = true;
+  HIPCHECK(hipSetDevice(0));
   AllocateMemory();
   ModuleLoad();
   hipError_t e;
   float time_4sec, time_2sec;
+
   void *config2[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args2,
                      HIP_LAUNCH_PARAM_BUFFER_SIZE, &size2,
                      HIP_LAUNCH_PARAM_END};

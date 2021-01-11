@@ -20,7 +20,8 @@ THE SOFTWARE.
 #include"hip/hip_runtime.h"
 __device__ int deviceGlobal = 1;
 
-extern "C" __global__ void matmulK(int* A, int* B, int* C, int N) {
+extern "C" __global__ void matmulK(int clockrate, int* A, int* B, int* C,
+                                   int N) {
   int ROW = blockIdx.y*blockDim.y+threadIdx.y;
   int COL = blockIdx.x*blockDim.x+threadIdx.x;
   int tmpSum = 0;
@@ -48,31 +49,31 @@ extern "C" __global__ void KernelandExtraParams(int* A, int* B, int* C,
   D[ROW * N + COL] = tmpSum;
 }
 
-extern "C" __global__ void SixteenSecKernel() {
-  uint64_t wait_t = 32000000000,
-  start = clock64(), cur;
-  do { cur = clock64()-start;}while (cur < wait_t);
+extern "C" __global__ void SixteenSecKernel(int clockrate) {
+  uint64_t wait_t = 16000,
+  start = clock64()/clockrate, cur;
+  do { cur = clock64()/clockrate-start;}while (cur < wait_t);
 }
 
-extern "C" __global__ void TwoSecKernel() {
+extern "C" __global__ void TwoSecKernel(int clockrate) {
   if (deviceGlobal == 0x2222) {
     deviceGlobal = 0x3333;
   }
-  uint64_t wait_t = 4000000000,
-  start = clock64(), cur;
-  do { cur = clock64()-start;}while (cur < wait_t);
+  uint64_t wait_t = 2000,
+  start = clock64()/clockrate, cur;
+  do { cur = clock64()/clockrate-start;}while (cur < wait_t);
   if (deviceGlobal != 0x3333) {
     deviceGlobal = 0x5555;
   }
 }
 
-extern "C" __global__ void FourSecKernel() {
+extern "C" __global__ void FourSecKernel(int clockrate) {
   if (deviceGlobal == 1) {
     deviceGlobal = 0x2222;
   }
-  uint64_t wait_t = 8000000000,
-  start = clock64(), cur;
-  do { cur = clock64()-start;}while (cur < wait_t);
+  uint64_t wait_t = 4000,
+  start = clock64()/clockrate, cur;
+  do { cur = clock64()/clockrate-start;}while (cur < wait_t);
   if (deviceGlobal == 0x2222) {
     deviceGlobal = 0x4444;
   }
