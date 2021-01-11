@@ -65,21 +65,15 @@ if(DEFINED ENV{ROCM_PATH})
 endif()
 
 if(HIP_COMPILER STREQUAL "clang")
-  set(HIP_CLANG_ROOT "${ROCM_PATH}/llvm")
-  if(NOT HIP_CXX_COMPILER)
-    set(HIP_CXX_COMPILER ${CMAKE_CXX_COMPILER})
+  execute_process(COMMAND ${hip_HIPCC_EXECUTABLE} --version
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  OUTPUT_VARIABLE HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT)
+  if(HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[ \t]*([^\n]*)")
+    get_filename_component(HIP_CLANG_ROOT "${CMAKE_MATCH_1}" DIRECTORY)
+  else()
+    message(FATAL_ERROR "error during version check of hipcc in ${hip_HIPCC_EXECUTABLE}")
   endif()
-  if(HIP_CXX_COMPILER MATCHES ".*hipcc")
-    execute_process(COMMAND ${HIP_CXX_COMPILER} --version
-                    OUTPUT_STRIP_TRAILING_WHITESPACE
-                    OUTPUT_VARIABLE HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT)
-    if(HIP_CLANG_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[ \t]*([^\n]*)")
-      get_filename_component(HIP_CLANG_ROOT "${CMAKE_MATCH_1}" DIRECTORY)
-    endif()
-  elseif (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
-    get_filename_component(HIP_CLANG_ROOT "${HIP_CXX_COMPILER}" DIRECTORY)
-    get_filename_component(HIP_CLANG_ROOT "${HIP_CLANG_ROOT}" DIRECTORY)
-  endif()
+
   file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS ${HIP_CLANG_ROOT}/lib/clang/*/include)
   find_path(HIP_CLANG_INCLUDE_PATH stddef.h
       HINTS
