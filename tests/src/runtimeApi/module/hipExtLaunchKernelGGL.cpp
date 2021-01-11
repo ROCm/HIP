@@ -38,25 +38,25 @@
 #define TWOSEC_KERNEL  2999
 
 __device__ int globalvar = 1;
-__global__ void TwoSecKernel() {
+__global__ void TwoSecKernel(int clockrate) {
   if (globalvar == 0x2222) {
     globalvar = 0x3333;
   }
-  uint64_t wait_t = 4000000000,
-  start = clock64(), cur;
-  do { cur = clock64()-start;}while (cur < wait_t);
+  uint64_t wait_t = 2000,
+  start = clock64()/clockrate, cur;
+  do { cur = (clock64()/clockrate)-start;}while (cur < wait_t);
   if (globalvar != 0x3333) {
     globalvar = 0x5555;
   }
 }
 
-__global__ void FourSecKernel() {
+__global__ void FourSecKernel(int clockrate) {
   if (globalvar == 1) {
     globalvar = 0x2222;
   }
-  uint64_t wait_t = 8000000000,
-  start = clock64(), cur;
-  do { cur = clock64()-start;}while (cur < wait_t);
+  uint64_t wait_t = 4000,
+  start = clock64()/clockrate, cur;
+  do { cur = (clock64()/clockrate)-start;}while (cur < wait_t);
   if (globalvar == 0x2222) {
     globalvar = 0x4444;
   }
@@ -71,16 +71,19 @@ __global__ void FourSecKernel() {
 bool DisableTimeFlag() {
   bool testStatus = true;
   hipStream_t stream1;
+  HIPCHECK(hipSetDevice(0));
   hipError_t e;
   float time_4sec, time_2sec;
   hipEvent_t  start_event1, end_event1;
+  int clkRate = 0;
+  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
   HIPCHECK(hipEventCreateWithFlags(&start_event1,
                                    hipEventDisableTiming));
   HIPCHECK(hipEventCreateWithFlags(&end_event1,
                                    hipEventDisableTiming));
   HIPCHECK(hipStreamCreate(&stream1));
   hipExtLaunchKernelGGL((TwoSecKernel), dim3(1), dim3(1), 0,
-      stream1, start_event1, end_event1, 0);
+      stream1, start_event1, end_event1, 0, clkRate);
   HIPCHECK(hipStreamSynchronize(stream1));
   e = hipEventElapsedTime(&time_2sec, start_event1, end_event1);
   if (e == hipErrorInvalidHandle) {
@@ -108,12 +111,14 @@ bool ConcurencyCheck_GlobalVar(int conc_flag) {
   bool testStatus = true;
   hipStream_t stream1;
   int deviceGlobal_h = 0;
-
+  HIPCHECK(hipSetDevice(0));
+  int clkRate = 0;
+  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
   HIPCHECK(hipStreamCreate(&stream1));
   hipExtLaunchKernelGGL((FourSecKernel), dim3(1), dim3(1), 0,
-                         stream1, nullptr, nullptr, conc_flag);
+                         stream1, nullptr, nullptr, conc_flag, clkRate);
   hipExtLaunchKernelGGL((TwoSecKernel), dim3(1), dim3(1), 0,
-                         stream1, nullptr, nullptr, conc_flag);
+                         stream1, nullptr, nullptr, conc_flag, clkRate);
   HIPCHECK(hipStreamSynchronize(stream1));
   HIPCHECK(hipMemcpyFromSymbol(&deviceGlobal_h, globalvar,
            sizeof(int)));
@@ -123,6 +128,7 @@ bool ConcurencyCheck_GlobalVar(int conc_flag) {
   } else if (!conc_flag && deviceGlobal_h == 0x5555) {
     testStatus = true;
   } else {
+    printf("Concurrency check failed when conc_flag is %d ", conc_flag);
     testStatus = false;
   }
   HIPCHECK(hipStreamDestroy(stream1));
@@ -138,8 +144,11 @@ bool KernelTimeExecution() {
   bool testStatus = true;
   hipStream_t stream1;
   hipError_t e;
+  HIPCHECK(hipSetDevice(0));
   hipEvent_t  start_event1, end_event1, start_event2, end_event2;
   float time_4sec, time_2sec;
+  int clkRate = 0;
+  HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
 
   HIPCHECK(hipEventCreate(&start_event1));
   HIPCHECK(hipEventCreate(&end_event1));
@@ -147,9 +156,9 @@ bool KernelTimeExecution() {
   HIPCHECK(hipEventCreate(&end_event2));
   HIPCHECK(hipStreamCreate(&stream1));
   hipExtLaunchKernelGGL((FourSecKernel), dim3(1), dim3(1), 0,
-                         stream1, start_event1, end_event1, 0);
+                         stream1, start_event1, end_event1, 0, clkRate);
   hipExtLaunchKernelGGL((TwoSecKernel), dim3(1), dim3(1), 0,
-                          stream1, start_event2, end_event2, 0);
+                          stream1, start_event2, end_event2, 0, clkRate);
   HIPCHECK(hipStreamSynchronize(stream1));
   e = hipEventElapsedTime(&time_4sec, start_event1, end_event1);
   e = hipEventElapsedTime(&time_2sec, start_event2, end_event2);
