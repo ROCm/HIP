@@ -23,6 +23,10 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_DRIVER_TYPES_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_DRIVER_TYPES_H
 
+// The follow macro should be removed after upstream updation.
+// It's defined here for workarround of rocThrust building failure.
+#define HIP_INCLUDE_HIP_HCC_DETAIL_DRIVER_TYPES_H
+
 #ifndef __cplusplus
 #include <stdbool.h>
 #endif
