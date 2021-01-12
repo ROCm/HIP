@@ -1,5 +1,44 @@
 #!/bin/bash
 
+# Parse command-line options
+# Option strings
+SHORT=hr:
+LONG=help,rocclr-src:
+# read the options
+OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
+if [ $? != 0 ] ; then echo "Failed to parse options...exiting." >&2 ; exit 1 ; fi
+
+usage() {
+    echo "Usage: $0 -r|--roccclr-src <PATH to the rocclr src>" ;
+    exit 1;
+}
+
+[ $# -eq 0 ] && usage
+
+eval set -- "$OPTS"
+
+# extract options and their arguments into variables.
+while true ; do
+  case "$1" in
+    -r | --rocclr-src )
+      ROCCLR_DIR="$2"
+      shift 2
+      ;;
+    -h | --help )
+      usage
+      shift
+      ;;
+    -- )
+      shift
+      break
+      ;;
+    *)
+      echo "Internal error!"
+      exit 1
+      ;;
+  esac
+done
+
 BUILD_ROOT="$( mktemp -d )"
 SRC_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKING_DIR=$PWD
@@ -31,11 +70,24 @@ function setupENV()
 function buildHIP()
 {
     pushd $BUILD_ROOT
-    cmake $SRC_ROOT -DCMAKE_BUILD_TYPE=Release
+    OPENCL_RUNTIME="$BUILD_ROOT/opencl"
+    mkdir $OPENCL_RUNTIME
+    git clone https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/ $OPENCL_RUNTIME
+    ROCCLR_BUILD_DIR="$BUILD_ROOT/rocclr_build"
+    mkdir  $ROCCLR_BUILD_DIR
+    pushd $ROCCLR_BUILD_DIR
+    cmake $ROCCLR_DIR -DOPENCL_DIR=$OPENCL_RUNTIME -DCMAKE_BUILD_TYPE=Release
+    make $DASH_JAY
+    popd
+    HIP_BUILD_DIR="$BUILD_ROOT/hip_build"
+    mkdir $HIP_BUILD_DIR
+    pushd $HIP_BUILD_DIR
+    cmake $SRC_ROOT -DCMAKE_PREFIX_PATH="$ROCCLR_BUILD_DIR;/opt/rocm" -DCMAKE_BUILD_TYPE=Release
     make $DASH_JAY
     make package
     cp hip-*.deb $WORKING_DIR
-    sudo dpkg -i -B hip-base*.deb hip-hcc*.deb hip-sample*.deb hip-doc*.deb
+    sudo dpkg -i -B hip-base*.deb hip-rocclr*.deb hip-sample*.deb hip-doc*.deb
+    popd
     popd
     rm -rf $BUILD_ROOT
 }
