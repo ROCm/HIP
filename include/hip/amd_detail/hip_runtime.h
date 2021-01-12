@@ -89,7 +89,7 @@ extern int HIP_TRACE_API;
 
 // 64-bit Atomics:
 #define __HIP_ARCH_HAS_GLOBAL_INT64_ATOMICS__ (1)
-#define __HIP_ARCH_HAS_SHARED_INT64_ATOMICS__ (0)
+#define __HIP_ARCH_HAS_SHARED_INT64_ATOMICS__ (1)
 
 // Doubles
 #define __HIP_ARCH_HAS_DOUBLES__ (1)
