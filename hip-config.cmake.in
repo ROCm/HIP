@@ -54,18 +54,33 @@ set_and_check( hip_BIN_INSTALL_DIR "@PACKAGE_BIN_INSTALL_DIR@" )
 set_and_check(hip_HIPCC_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipcc")
 set_and_check(hip_HIPCONFIG_EXECUTABLE "${hip_BIN_INSTALL_DIR}/hipconfig")
 
-# set a default path for ROCM_PATH
-if(NOT DEFINED ROCM_PATH)
-  set(ROCM_PATH /opt/rocm)
-endif()
+# Windows Specific Definition here:
+if(WIN32)
+  if(DEFINED ENV{HIP_PATH})
+    set(HIP_PATH "$ENV{HIP_PATH}")
+  elseif(DEFINED ENV{HIP_DIR})
+    set(HIP_PATH "$ENV{HIP_DIR}")
+  else()
+    set(HIP_PATH "C:/Program Files/AMD HIP SDK/hip")
+  endif()
+else()
+  # Linux - set a default path for ROCM_PATH
+  if(NOT DEFINED ROCM_PATH)
+    set(ROCM_PATH /opt/rocm)
+  endif()
 
-#If HIP isnot installed under ROCm, need this to find HSA assuming HSA is under ROCm
-if(DEFINED ENV{ROCM_PATH})
-  set(ROCM_PATH "$ENV{ROCM_PATH}")
+  #If HIP is not installed under ROCm, need this to find HSA assuming HSA is under ROCm
+  if(DEFINED ENV{ROCM_PATH})
+    set(ROCM_PATH "$ENV{ROCM_PATH}")
+  endif()
 endif()
 
 if(HIP_COMPILER STREQUAL "clang")
-  set(HIP_CLANG_ROOT "${ROCM_PATH}/llvm")
+  if(WIN32)
+    set(HIP_CLANG_ROOT "${HIP_PATH}")
+  else()
+    set(HIP_CLANG_ROOT "${ROCM_PATH}/llvm")
+  endif()
   if(NOT HIP_CXX_COMPILER)
     set(HIP_CXX_COMPILER ${CMAKE_CXX_COMPILER})
   endif()
@@ -85,36 +100,45 @@ if(HIP_COMPILER STREQUAL "clang")
       HINTS
           ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
       NO_DEFAULT_PATH)
-  find_dependency(AMDDeviceLibs)
+  if(NOT WIN32)
+    find_dependency(AMDDeviceLibs)
+  endif()
   set(AMDGPU_TARGETS "gfx900;gfx906;gfx908" CACHE STRING "AMD GPU targets to compile for")
   set(GPU_TARGETS "${AMDGPU_TARGETS}" CACHE STRING "GPU targets to compile for")
 endif()
 
-find_dependency(amd_comgr)
+if(NOT WIN32)
+  find_dependency(amd_comgr)
+endif()
 
 include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
 
-#Using find_dependecy to locate the dependency for the packagaes
+#Using find_dependency to locate the dependency for the packages
 #This makes the cmake generated file xxxx-targets to supply the linker libraries
 # without worrying other transitive dependencies
-find_dependency(hsa-runtime64)
-find_dependency(Threads)
-find_dependency(ROCclr)
+if(NOT WIN32)
+  find_dependency(hsa-runtime64)
+  find_dependency(Threads)
+  find_dependency(ROCclr)
+endif()
 
 #get_filename_component cannot resolve the symlinks if called from /opt/rocm/lib/hip
 #and do three level up again
 get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
-#if HSA is not under ROCm then provide CMAKE_PREFIX_PATH=<HSA_PATH>
-find_path(HSA_HEADER hsa/hsa.h
-  PATHS
-    "${_IMPORT_PREFIX}/../include"
-    /opt/rocm/include
-)
+# Windows doesn't need HSA
+if(NOT WIN32)
+  #if HSA is not under ROCm then provide CMAKE_PREFIX_PATH=<HSA_PATH>
+  find_path(HSA_HEADER hsa/hsa.h
+    PATHS
+      "${_IMPORT_PREFIX}/../include"
+      /opt/rocm/include
+  )
 
-if (HSA_HEADER-NOTFOUND)
-  message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
+  if (HSA_HEADER-NOTFOUND)
+    message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
+  endif()
 endif()
 
 # Right now this is only supported for amd platforms
@@ -135,10 +159,12 @@ if(HIP_RUNTIME MATCHES "rocclr")
     target_link_libraries(amdrocclr_static INTERFACE hip::amdhip64)
   endif()
 
-  set_target_properties(hip::device PROPERTIES
-    INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
-    INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
-  )
+  if(NOT WIN32)
+    set_target_properties(hip::device PROPERTIES
+      INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
+      INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/../include"
+    )
+  endif()
 endif()
 
 if(HIP_COMPILER STREQUAL "clang")
@@ -158,9 +184,18 @@ if(HIP_COMPILER STREQUAL "clang")
     else()
       # This path is to support an older build of the device library
       # TODO: To be removed in the future.
-      set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_COMPILE_OPTIONS -xhip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
-      )
+      if(WIN32)
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_COMPILE_OPTIONS -xhip -fms-extensions -fms-compatibility
+        )
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_COMPILE_OPTIONS "--hip-device-lib-path=${HIP_PATH}/lib/bitcode"
+        )
+      else()
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_COMPILE_OPTIONS -xhip --hip-device-lib-path=${AMD_DEVICE_LIBS_PREFIX}/lib
+        )
+      endif()
     endif()
   endif()
 
@@ -207,10 +242,10 @@ if(HIP_COMPILER STREQUAL "clang")
 
   # Add support for __fp16 and _Float16, explicitly link with compiler-rt
   set_property(TARGET hip::host APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+    INTERFACE_LINK_LIBRARIES "-L\"${HIP_CLANG_INCLUDE_PATH}/../lib/linux\" -lclang_rt.builtins-x86_64"
   )
   set_property(TARGET hip::device APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+    INTERFACE_LINK_LIBRARIES "-L\"${HIP_CLANG_INCLUDE_PATH}/../lib/linux\" -lclang_rt.builtins-x86_64"
   )
 endif()
 
