@@ -205,10 +205,11 @@ if(HIP_COMPILER STREQUAL "clang")
     endif()
   endif()
 
+  add_library(hip::clang_rt_builtins INTERFACE)
+  target_link_libraries(hip::clang_rt_builtins PUBLIC -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64)
+
   # Add support for __fp16 and _Float16, explicitly link with compiler-rt
-  set_property(TARGET hip::device APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
-  )
+  target_link_libraries(hip::device PUBLIC hip::clang_rt_builtins)
 endif()
 
 set( hip_LIBRARIES hip::host hip::device)
