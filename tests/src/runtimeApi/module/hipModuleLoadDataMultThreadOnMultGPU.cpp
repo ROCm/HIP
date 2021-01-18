@@ -142,7 +142,12 @@ void run_multi_threads(uint32_t n, const std::vector<char>& buffer) {
 int main() {
   HIPCHECK(hipInit(0));
   auto buffer = load_file();
-  run_multi_threads(min(THREADS * std::thread::hardware_concurrency(), MAX_THREADS), buffer);
+  auto file_size = buffer.size() / (1024 * 1024);
+  auto thread_count = getHostThreadCount(file_size + 10);
+  if(thread_count == 0) {
+      failed("Thread Count is zero");
+  }
+  run_multi_threads(thread_count, buffer);
 
   passed();
 }

@@ -116,13 +116,17 @@ bool testhipMemset2DAsyncWithKernel() {
 
 bool testhipMemset2DAsyncMultiThread() {
   validateCount = 0;
-  std::thread t[NUM_THREADS];
+  auto thread_count = getHostThreadCount(200, NUM_THREADS);
+  if (thread_count == 0) {
+    failed("Thread count is 0");
+  }
+  std::thread *t = new std::thread[thread_count];
 
   memAllocate();
 
   printf("info: Queueing up hipMemset2DAsync jobs over multiple threads\n");
   for (int i = 0 ; i < ITER ; i++) {
-    for (int k = 0 ; k < NUM_THREADS ; k++) {
+    for (int k = 0 ; k < thread_count; k++) {
       if (k%2) {
         t[k] = std::thread(queueJobsForhipMemset2DAsync, A_d, A_h, pitch_A,
                            width);
@@ -131,7 +135,7 @@ bool testhipMemset2DAsyncMultiThread() {
                              width);
       }
     }
-    for (int j = 0 ; j < NUM_THREADS ; j++) {
+    for (int j = 0 ; j < thread_count; j++) {
       t[j].join();
     }
 
@@ -143,6 +147,7 @@ bool testhipMemset2DAsyncMultiThread() {
     }
   }
   memDeallocate();
+  delete[] t;
   testResult = (validateCount == (ITER * elements)) ? true : false;
   return testResult;
 }

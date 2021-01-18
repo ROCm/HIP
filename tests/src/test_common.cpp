@@ -21,6 +21,13 @@ THE SOFTWARE.
 */
 #include "test_common.h"
 
+#include <thread>
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#endif
+
 // standard global variables that can be set on command line
 size_t N = 4 * 1024 * 1024;
 char memsetval = 0x42;
@@ -44,6 +51,36 @@ const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES";
 const char* PATH_SEPERATOR_STR = "/";
 const char* NULL_DEVICE = "/dev/null";
 #endif
+
+// Get Free Memory from the system
+static size_t getMemoryAmount() {
+#if __linux__
+  struct sysinfo info;
+  int _ = sysinfo(&info);
+  return info.freeram / (1024 * 1024);  // MB
+#elif defined(_WIN32)
+  MEMORYSTATUSEX statex;
+  statex.dwLength = sizeof(statex);
+  GlobalMemoryStatusEx(&statex);
+  return (statex.ullAvailPhys / (1024 * 1024));  // MB
+#endif
+}
+
+size_t getHostThreadCount(const size_t memPerThread, const size_t maxThreads) {
+  if (memPerThread == 0) return 0;
+  auto memAmount = getMemoryAmount();
+  const auto processor_count = std::thread::hardware_concurrency();
+  if (processor_count == 0 || memAmount == 0) return 0;
+  size_t thread_count = 0;
+  if ((processor_count * memPerThread) < memAmount)
+    thread_count = processor_count;
+  else
+    thread_count = reinterpret_cast<size_t>(memAmount / memPerThread);
+  if (maxThreads > 0) {
+    return (thread_count > maxThreads) ? maxThreads : thread_count;
+  }
+  return thread_count;
+}
 
 namespace HipTest {
 
