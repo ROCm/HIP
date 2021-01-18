@@ -78,7 +78,7 @@ hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image,
 }
 
 extern hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
-                                                const std::vector<const char*>& devices,
+                                                const std::vector<std::string>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
 
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const char *name) {
