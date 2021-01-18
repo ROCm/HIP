@@ -17,6 +17,7 @@ BEGIN {
 use lib "$base_dir/";
 use hipvars;
 
+$isWindows      =   $hipvars::isWindows;
 $HIP_RUNTIME    =   $hipvars::HIP_RUNTIME;
 $HIP_PLATFORM   =   $hipvars::HIP_PLATFORM;
 $HIP_COMPILER   =   $hipvars::HIP_COMPILER;
@@ -44,13 +45,17 @@ GetOptions(
 );
 
 if ($HIP_COMPILER eq "clang") {
-    $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
+    $HIP_CLANG_VERSION = `\"$HIP_CLANG_PATH/clang++\" --version`;
     $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
 
-    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__= -D__HIP_PLATFORM_AMD__= -I$HIP_PATH/include -I$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION -I$HSA_PATH/include";
-}
+    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__= -D__HIP_PLATFORM_AMD__= -I\"$HIP_PATH/include\" -I\"$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION\"";
 
+    # HIP on Windows does not need HSA_PATH
+    if (not $isWindows) {
+        $CPP_CONFIG .= " -I$HSA_PATH/include";
+    }
+}
 if ($HIP_PLATFORM eq "nvidia") {
     $CPP_CONFIG = " -D__HIP_PLATFORM_NVCC__= -D__HIP_PLATFORM_NVIDIA__= -I$HIP_PATH/include -I$CUDA_PATH/include";
 };
@@ -129,16 +134,27 @@ if (!$printed or $p_full) {
         if ($HIP_COMPILER eq "clang")
         {
             print "== hip-clang\n";
-            print ("HSA_PATH         : $HSA_PATH\n");
+            if (not $isWindows) {
+                print ("HSA_PATH         : $HSA_PATH\n");
+            }
             print ("HIP_CLANG_PATH   : $HIP_CLANG_PATH\n");
-            system("$HIP_CLANG_PATH/clang++ --version");
-            system("$HIP_CLANG_PATH/llc --version");
-            print ("hip-clang-cxxflags : ");
-            system("$HIP_PATH/bin/hipcc --cxxflags");
-            printf("\n");
-            print ("hip-clang-ldflags  : ");
-            system("$HIP_PATH/bin/hipcc --ldflags");
-            printf("\n");
+            system("\"$HIP_CLANG_PATH/clang++\" --version");
+            system("\"$HIP_CLANG_PATH/llc\" --version");
+            if ($isWindows) {
+                printf("hip-clang-cxxflags : ");
+                $win_output = `perl \"$HIP_PATH/bin/hipcc\" --cxxflags`;
+                printf("$win_output \n");
+                printf("hip-clang-ldflags  : ");
+                $win_output = `perl \"$HIP_PATH/bin/hipcc\" --ldflags`;
+                printf("$win_output \n");
+            } else {
+                print ("hip-clang-cxxflags : ");
+                system("$HIP_PATH/bin/hipcc --cxxflags");
+                printf("\n");
+                print ("hip-clang-ldflags  : ");
+                system("$HIP_PATH/bin/hipcc --ldflags");
+                printf("\n");
+            }
         } else {
             print ("Unexpected HIP_COMPILER: $HIP_COMPILER\n");
         }
@@ -153,14 +169,25 @@ if (!$printed or $p_full) {
     print "\n" ;
 
     print "=== Environment Variables\n";
-    system("echo PATH=\$PATH");
-    system("env | egrep '^HIP|^HSA|^CUDA|^LD_LIBRARY_PATH'");
+    if ($isWindows) {
+        print ("PATH=$ENV{PATH}\n");
+        system("set | findstr /B /C:\"HIP\" /C:\"HSA\" /C:\"CUDA\" /C:\"LD_LIBRARY_PATH\"");
+    } else {
+        system("echo PATH=\$PATH");
+        system("env | egrep '^HIP|^HSA|^CUDA|^LD_LIBRARY_PATH'");
+    }
 
 
     print "\n" ;
-    print "== Linux Kernel\n";
-    print "Hostname     : "; system ("hostname");
-    system ("uname -a");
+    if ($isWindows) {
+        print "== Windows Display Drivers\n";
+        print "Hostname     : "; system ("hostname");
+        system ("wmic path win32_VideoController get AdapterCompatibility,InstalledDisplayDrivers,Name | findstr /B /C:\"Advanced Micro Devices\"");
+    } else {
+        print "== Linux Kernel\n";
+        print "Hostname     : "; system ("hostname");
+        system ("uname -a");
+    }
 
     if (-e "/usr/bin/lsb_release") {
         system ("/usr/bin/lsb_release -a");
