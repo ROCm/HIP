@@ -152,6 +152,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   hipDeviceProp_t deviceProps = {0};
 
   const auto& info = deviceHandle->info();
+  const auto& isa = deviceHandle->isa();
   ::strncpy(deviceProps.name, info.boardName_, 128);
   deviceProps.totalGlobalMem = info.globalMemSize_;
   deviceProps.sharedMemPerBlock = info.localMemSizePerCU_;
@@ -168,8 +169,8 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.memoryClockRate = info.maxMemoryClockFrequency_ * 1000;
   deviceProps.memoryBusWidth = info.globalMemChannels_;
   deviceProps.totalConstMem = info.maxConstantBufferSize_;
-  deviceProps.major = info.gfxipMajor_;
-  deviceProps.minor = info.gfxipMinor_;
+  deviceProps.major = isa.versionMajor();
+  deviceProps.minor = isa.versionMinor();
   deviceProps.multiProcessorCount = info.maxComputeUnits_;
   deviceProps.l2CacheSize = info.l2CacheSize_;
   deviceProps.maxThreadsPerMultiProcessor = info.maxThreadsPerCU_;
@@ -199,8 +200,8 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.maxSharedMemoryPerMultiProcessor = info.localMemSizePerCU_;
   deviceProps.canMapHostMemory = 1;
   //FIXME: This should be removed, targets can have character names as well.
-  deviceProps.gcnArch = info.gfxipMajor_ * 100 + info.gfxipMinor_ * 10 + info.gfxipStepping_;
-  sprintf(deviceProps.gcnArchName, "%s", info.targetId_);
+  deviceProps.gcnArch = isa.versionMajor() * 100 + isa.versionMinor() * 10 + isa.versionStepping();
+  sprintf(deviceProps.gcnArchName, "%s", isa.targetId());
   deviceProps.cooperativeLaunch = info.cooperativeGroups_;
   deviceProps.cooperativeMultiDeviceLaunch = info.cooperativeMultiDeviceGroups_;
 

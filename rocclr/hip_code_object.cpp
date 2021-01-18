@@ -365,7 +365,7 @@ static bool isCodeObjectCompatibleWithDevice(std::string co_triple_target_id,
 
 // This will be moved to COMGR eventually
 hipError_t CodeObject::ExtractCodeObjectFromFile(amd::Os::FileDesc fdesc, size_t fsize,
-                       const std::vector<const char*>& device_names,
+                       const std::vector<std::string>& device_names,
                        std::vector<std::pair<const void*, size_t>>& code_objs) {
 
   hipError_t hip_error = hipSuccess;
@@ -393,7 +393,7 @@ hipError_t CodeObject::ExtractCodeObjectFromFile(amd::Os::FileDesc fdesc, size_t
 
 // This will be moved to COMGR eventually
 hipError_t CodeObject::ExtractCodeObjectFromMemory(const void* data,
-                       const std::vector<const char*>& device_names,
+                       const std::vector<std::string>& device_names,
                        std::vector<std::pair<const void*, size_t>>& code_objs,
                        std::string& uri) {
 
@@ -406,8 +406,8 @@ hipError_t CodeObject::ExtractCodeObjectFromMemory(const void* data,
 }
 
 // This will be moved to COMGR eventually
-hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data, 
-                       const std::vector<const char*>& agent_triple_target_ids,
+hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
+                       const std::vector<std::string>& agent_triple_target_ids,
                        std::vector<std::pair<const void*, size_t>>& code_objs) {
   std::string magic((const char*)data, bundle_magic_string_size);
   if (magic.compare(CLANG_OFFLOAD_BUNDLER_MAGIC_STR)) {

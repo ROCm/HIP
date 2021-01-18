@@ -51,10 +51,10 @@ hipError_t FatBinaryInfo::ExtractFatBinary(const std::vector<hip::Device*>& devi
   std::vector<std::pair<const void*, size_t>> code_objs;
 
   // Copy device names for Extract Code object File
-  std::vector<const char*> device_names;
+  std::vector<std::string> device_names;
   device_names.reserve(devices.size());
   for (size_t dev_idx = 0; dev_idx < devices.size(); ++dev_idx) {
-    device_names.push_back(devices[dev_idx]->devices()[0]->info().targetId_);
+    device_names.push_back(devices[dev_idx]->devices()[0]->isa().isaName());
   }
 
   // We are given file name, get the file desc and file size
