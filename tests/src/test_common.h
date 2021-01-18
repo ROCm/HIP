@@ -158,6 +158,9 @@ extern const char* NULL_DEVICE;
 #define TYPENAME(T) "?"
 #endif
 
+// Get Optimal Thread count size
+size_t getHostThreadCount(const size_t memPerThread = 200 /* MB */, const size_t maxThreads = 0);
+
 namespace HipTest {
 
 // Returns the current system time in microseconds
