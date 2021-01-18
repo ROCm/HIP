@@ -313,7 +313,7 @@ THE SOFTWARE.
         __host__ __device__
         explicit
         constexpr
-        HIP_vector_base(T x) noexcept : data{x} {}
+        HIP_vector_base(T x_) noexcept : data{x_} {}
         __host__ __device__
         constexpr
         HIP_vector_base(const HIP_vector_base&) = default;
@@ -324,11 +324,11 @@ THE SOFTWARE.
         ~HIP_vector_base() = default;
 
         __host__ __device__
-        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+        HIP_vector_base& operator=(const HIP_vector_base& x_) noexcept {
             #if __has_attribute(ext_vector_type)
-                data = x.data;
+                data = x_.data;
             #else
-                data[0] = x.data[0];
+                data[0] = x_.data[0];
             #endif
 
             return *this;
@@ -363,10 +363,10 @@ THE SOFTWARE.
         __host__ __device__
         explicit
         constexpr
-        HIP_vector_base(T x) noexcept : data{x, x} {}
+        HIP_vector_base(T x_) noexcept : data{x_, x_} {}
         __host__ __device__
         constexpr
-        HIP_vector_base(T x, T y) noexcept : data{x, y} {}
+        HIP_vector_base(T x_, T y_) noexcept : data{x_, y_} {}
         __host__ __device__
         constexpr
         HIP_vector_base(const HIP_vector_base&) = default;
@@ -377,12 +377,12 @@ THE SOFTWARE.
         ~HIP_vector_base() = default;
 
         __host__ __device__
-        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+        HIP_vector_base& operator=(const HIP_vector_base& x_) noexcept {
             #if __has_attribute(ext_vector_type)
-                data = x.data;
+                data = x_.data;
             #else
-                data[0] = x.data[0];
-                data[1] = x.data[1];
+                data[0] = x_.data[0];
+                data[1] = x_.data[1];
             #endif
 
             return *this;
@@ -400,10 +400,10 @@ THE SOFTWARE.
             __host__ __device__
             explicit
             constexpr
-            Native_vec_(T x) noexcept : d{x, x, x} {}
+            Native_vec_(T x_) noexcept : d{x_, x_, x_} {}
             __host__ __device__
             constexpr
-            Native_vec_(T x, T y, T z) noexcept : d{x, y, z} {}
+            Native_vec_(T x_, T y_, T z_) noexcept : d{x_, y_, z_} {}
             __host__ __device__
             constexpr
             Native_vec_(const Native_vec_&) = default;
@@ -424,28 +424,28 @@ THE SOFTWARE.
             T operator[](unsigned int idx) const noexcept { return d[idx]; }
 
             __host__ __device__
-            Native_vec_& operator+=(const Native_vec_& x) noexcept
+            Native_vec_& operator+=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] += x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] += x_.d[i];
                 return *this;
             }
             __host__ __device__
-            Native_vec_& operator-=(const Native_vec_& x) noexcept
+            Native_vec_& operator-=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] -= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] -= x_.d[i];
                 return *this;
             }
 
             __host__ __device__
-            Native_vec_& operator*=(const Native_vec_& x) noexcept
+            Native_vec_& operator*=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] *= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] *= x_.d[i];
                 return *this;
             }
             __host__ __device__
-            Native_vec_& operator/=(const Native_vec_& x) noexcept
+            Native_vec_& operator/=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] /= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] /= x_.d[i];
                 return *this;
             }
 
@@ -474,62 +474,62 @@ THE SOFTWARE.
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Native_vec_& operator%=(const Native_vec_& x) noexcept
+            Native_vec_& operator%=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] %= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] %= x_.d[i];
                 return *this;
             }
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Native_vec_& operator^=(const Native_vec_& x) noexcept
+            Native_vec_& operator^=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] ^= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] ^= x_.d[i];
                 return *this;
             }
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Native_vec_& operator|=(const Native_vec_& x) noexcept
+            Native_vec_& operator|=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] |= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] |= x_.d[i];
                 return *this;
             }
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Native_vec_& operator&=(const Native_vec_& x) noexcept
+            Native_vec_& operator&=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] &= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] &= x_.d[i];
                 return *this;
             }
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Native_vec_& operator>>=(const Native_vec_& x) noexcept
+            Native_vec_& operator>>=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] >>= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] >>= x_.d[i];
                 return *this;
             }
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
             __host__ __device__
-            Native_vec_& operator<<=(const Native_vec_& x) noexcept
+            Native_vec_& operator<<=(const Native_vec_& x_) noexcept
             {
-                for (auto i = 0u; i != 3u; ++i) d[i] <<= x.d[i];
+                for (auto i = 0u; i != 3u; ++i) d[i] <<= x_.d[i];
                 return *this;
             }
 
             using Vec3_cmp = int __attribute__((vector_size(4 * sizeof(int))));
             __host__ __device__
-            Vec3_cmp operator==(const Native_vec_& x) const noexcept
+            Vec3_cmp operator==(const Native_vec_& x_) const noexcept
             {
-                return Vec3_cmp{d[0] == x.d[0], d[1] == x.d[1], d[2] == x.d[2]};
+                return Vec3_cmp{d[0] == x_.d[0], d[1] == x_.d[1], d[2] == x_.d[2]};
             }
         };
 
@@ -549,10 +549,10 @@ THE SOFTWARE.
         __host__ __device__
         explicit
         constexpr
-        HIP_vector_base(T x) noexcept : data{x, x, x} {}
+        HIP_vector_base(T x_) noexcept : data{x_, x_, x_} {}
         __host__ __device__
         constexpr
-        HIP_vector_base(T x, T y, T z) noexcept : data{x, y, z} {}
+        HIP_vector_base(T x_, T y_, T z_) noexcept : data{x_, y_, z_} {}
         __host__ __device__
         constexpr
         HIP_vector_base(const HIP_vector_base&) = default;
@@ -600,10 +600,10 @@ THE SOFTWARE.
         __host__ __device__
         explicit
         constexpr
-        HIP_vector_base(T x) noexcept : data{x, x, x, x} {}
+        HIP_vector_base(T x_) noexcept : data{x_, x_, x_, x_} {}
         __host__ __device__
         constexpr
-        HIP_vector_base(T x, T y, T z, T w) noexcept : data{x, y, z, w} {}
+        HIP_vector_base(T x_, T y_, T z_, T w_) noexcept : data{x_, y_, z_, w_} {}
         __host__ __device__
         constexpr
         HIP_vector_base(const HIP_vector_base&) = default;
@@ -614,14 +614,14 @@ THE SOFTWARE.
         ~HIP_vector_base() = default;
 
         __host__ __device__
-        HIP_vector_base& operator=(const HIP_vector_base& x) noexcept {
+        HIP_vector_base& operator=(const HIP_vector_base& x_) noexcept {
             #if __has_attribute(ext_vector_type)
-                data = x.data;
+                data = x_.data;
             #else
-                data[0] = x.data[0];
-                data[1] = x.data[1];
-                data[2] = x.data[2];
-                data[3] = x.data[3];
+                data[0] = x_.data[0];
+                data[1] = x_.data[1];
+                data[2] = x_.data[2];
+                data[3] = x_.data[3];
             #endif
 
             return *this;
