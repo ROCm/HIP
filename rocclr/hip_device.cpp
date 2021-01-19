@@ -82,9 +82,9 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
   }
 
   auto* deviceHandle = g_devices[device]->devices()[0];
-  const auto& info = deviceHandle->info();
-  *major = info.gfxipMajor_;
-  *minor = info.gfxipMinor_;
+  const auto& isa = deviceHandle->isa();
+  *major = isa.versionMajor();
+  *minor = isa.versionMinor();
 
   HIP_RETURN(hipSuccess);
 }
