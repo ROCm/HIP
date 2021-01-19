@@ -329,10 +329,10 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
   size_t GprWaves = VgprWaves;
   if (wrkGrpInfo->usedSGPRs_ > 0) {
     size_t maxSGPRs;
-    if (device.info().gfxipMajor_ < 8) {
+    if (device.isa().versionMajor() < 8) {
       maxSGPRs = 512;
     }
-    else if (device.info().gfxipMajor_ < 10) {
+    else if (device.isa().versionMajor() < 10) {
       maxSGPRs = 800;
     }
     else {
