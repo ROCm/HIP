@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include "hip/hip_ext.h"
 #endif
 #include <iostream>
+#include <fstream>
 #include <chrono>
 #include <algorithm>
 #include <atomic>
@@ -36,9 +37,34 @@ THE SOFTWARE.
 #define WARMUP_RUN_COUNT 10
 #define TIMING_RUN_COUNT 100
 #define TOTAL_RUN_COUNT WARMUP_RUN_COUNT + TIMING_RUN_COUNT
+#define FILENAME "test_kernel.code"
+#define failed(...)                                                                                \
+    abort();
+
+#define HIPCHECK(error)                                                                            \
+    {                                                                                              \
+        hipError_t localError = error;                                                             \
+        if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
+            printf("error: '%s'(%d) from %s at %s:%d\n",  hipGetErrorString(localError),           \
+                   localError, #error, __FILE__, __LINE__);                                        \
+                   failed("API returned error code.");                                             \
+        }                                                                                          \
+    }
+
 
 __global__ void EmptyKernel() {}
 
+std::vector<char> load_file() {
+  std::ifstream file(FILENAME, std::ios::binary | std::ios::ate);
+  std::streamsize fsize = file.tellg();
+  file.seekg(0, std::ios::beg);
+
+  std::vector<char> buffer(fsize);
+  if (!file.read(buffer.data(), fsize)) {
+    failed("could not open code object '%s'\n", FILENAME);
+  }
+  return buffer;
+}
 // Helper to print various timing metrics
 void print_timing(std::string test, std::array<float, TOTAL_RUN_COUNT> &results, int batch = 1)
 {
@@ -68,15 +94,17 @@ void print_timing(std::string test, std::array<float, TOTAL_RUN_COUNT> &results,
 }
 
 // Measure time taken to enqueue a kernel on the GPU using hipModuleLaunchKernel
-void hipModuleLaunchKernel_enqueue_rate(std::atomic_int* shared, int max_threads)
+void hipModuleLaunchKernel_enqueue_rate(const std::vector<char> buffer, std::atomic_int* shared, int max_threads)
 {
     //resources necessary for this thread
     hipStream_t stream;
-    hipStreamCreate(&stream);
+    HIPCHECK(hipStreamCreate(&stream));
     hipModule_t module;
     hipFunction_t function;
-    hipModuleLoad(&module, "test_kernel.code");
-    hipModuleGetFunction(&function, module, "test");
+
+    HIPCHECK(hipModuleLoadData(&module, &buffer[0]));
+    HIPCHECK(hipModuleGetFunction(&function, module, "test"));
+
     void* kernel_params = nullptr;
     std::array<float, TOTAL_RUN_COUNT> results;
 
@@ -86,19 +114,20 @@ void hipModuleLaunchKernel_enqueue_rate(std::atomic_int* shared, int max_threads
 
     for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
         auto start = std::chrono::high_resolution_clock::now();
-        hipModuleLaunchKernel(function, 1, 1, 1, 1, 1, 1, 0, stream, &kernel_params, nullptr);
+        HIPCHECK(hipModuleLaunchKernel(function, 1, 1, 1, 1, 1, 1, 0, stream, &kernel_params, nullptr));
         auto stop = std::chrono::high_resolution_clock::now();
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
     print_timing("Thread ID : " + std::to_string(tid) + " , " + "hipModuleLaunchKernel enqueue rate", results);
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 // Measure time taken to enqueue a kernel on the GPU using hipLaunchKernelGGL
-void hipLaunchKernelGGL_enqueue_rate(std::atomic_int* shared, int max_threads)
+void hipLaunchKernelGGL_enqueue_rate(const std::vector<char> buffer, std::atomic_int* shared, int max_threads)
 {
     //resources necessary for this thread
     hipStream_t stream;
-    hipStreamCreate(&stream);
+    HIPCHECK(hipStreamCreate(&stream));
     std::array<float, TOTAL_RUN_COUNT> results;
 
     //synchronize all threads, before running
@@ -112,14 +141,16 @@ void hipLaunchKernelGGL_enqueue_rate(std::atomic_int* shared, int max_threads)
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
     print_timing("Thread ID : " + std::to_string(tid) + " , " + "hipLaunchKernelGGL enqueue rate", results);
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 // Simple thread pool
 struct thread_pool {
     thread_pool(int total_threads) : max_threads(total_threads) {}
-    void start(std::function<void(std::atomic_int*, int)> f) {
+    void start(std::function<void(const std::vector<char>, std::atomic_int*, int)> f) {
+        auto buffer = load_file();
         for (int i = 0; i < max_threads; ++i) {
-            threads.push_back(std::async(std::launch::async, f, &shared, max_threads));
+            threads.push_back(std::async(std::launch::async, f, buffer, &shared, max_threads));
         }
     }
     void finish() {
@@ -127,7 +158,7 @@ struct thread_pool {
             thread.get();
         }
         threads.clear();
-        shared = {0};
+        shared = 0;
     }
     ~thread_pool() {
         finish();
@@ -162,7 +193,6 @@ int main(int argc, char* argv[])
         task.start(hipLaunchKernelGGL_enqueue_rate);
         task.finish();
     }
-
     return 0;
 }
 
