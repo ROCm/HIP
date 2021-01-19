@@ -65,7 +65,8 @@ THE SOFTWARE.
 #endif
 
 // The following are deprecation notices.
-// They will be removed after upstream updation.
+// They will be removed after upstream updation
+#if 0 // Temporarily disable deprecation warning as it will fail rocgdb test
 #if defined(__clang__)
 //The following work for clang rather than for gnu gcc/g++/c++
 #pragma GCC diagnostic push
@@ -104,6 +105,7 @@ THE SOFTWARE.
 #pragma message ("__HIP_PLATFORM_NVCC_ is deprecated, please use __HIP_PLATFORM_NVIDIA__ instead")
 #endif
 #endif // defined(__clang__)
+#endif
 
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_vector_types.h>
