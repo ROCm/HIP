@@ -30,12 +30,11 @@ FatBinaryInfo::~FatBinaryInfo() {
   }
 
   if (fdesc_ > 0) {
-    if (!amd::Os::CloseFileHandle(fdesc_)) {
-      guarantee(false, "Cannot close file");
-    }
-
     if (fsize_ && !amd::Os::MemoryUnmapFile(image_, fsize_)) {
       guarantee(false, "Cannot unmap file");
+    }
+    if (!amd::Os::CloseFileHandle(fdesc_)) {
+      guarantee(false, "Cannot close file");
     }
   }
 
@@ -68,13 +67,8 @@ hipError_t FatBinaryInfo::ExtractFatBinary(const std::vector<hip::Device*>& devi
     }
 
     // Extract the code object from file
-    hip_error = CodeObject::ExtractCodeObjectFromFile(fdesc_, fsize_,
+    hip_error = CodeObject::ExtractCodeObjectFromFile(fdesc_, fsize_, &image_,
                 device_names, code_objs);
-
-    // Map the file memory, Later: only map offset, throws error in ElfMagic now.
-    if (!amd::Os::MemoryMapFileDesc(fdesc_, fsize_, 0, &image_)) {
-      return hipErrorInvalidValue;
-    }
 
   } else if (image_ != nullptr) {
     // We are directly given image pointer directly, try to extract file desc & file Size

@@ -52,7 +52,7 @@ class CodeObject {
   // Given an file desc and file size, extracts to code object for corresponding devices,
   // return code_objs{binary_ptr, binary_size}, which could be used to determine foffset
   static hipError_t ExtractCodeObjectFromFile(amd::Os::FileDesc fdesc, size_t fsize,
-                    const std::vector<std::string>& device_names,
+                    const void ** image, const std::vector<std::string>& device_names,
                     std::vector<std::pair<const void*, size_t>>& code_objs);
 
   // Given an ptr to memory, extracts to code object for corresponding devices,

@@ -365,7 +365,7 @@ static bool isCodeObjectCompatibleWithDevice(std::string co_triple_target_id,
 
 // This will be moved to COMGR eventually
 hipError_t CodeObject::ExtractCodeObjectFromFile(amd::Os::FileDesc fdesc, size_t fsize,
-                       const std::vector<std::string>& device_names,
+                       const void ** image, const std::vector<std::string>& device_names,
                        std::vector<std::pair<const void*, size_t>>& code_objs) {
 
   hipError_t hip_error = hipSuccess;
@@ -375,18 +375,14 @@ hipError_t CodeObject::ExtractCodeObjectFromFile(amd::Os::FileDesc fdesc, size_t
   }
 
   // Map the file to memory, with offset 0.
-  const void* image = nullptr;
-  if (!amd::Os::MemoryMapFileDesc(fdesc, fsize, 0, &image)) {
+  //file will be unmapped in ModuleUnload
+  //const void* image = nullptr;
+  if (!amd::Os::MemoryMapFileDesc(fdesc, fsize, 0, image)) {
     return hipErrorInvalidValue;
   }
 
   // retrieve code_objs{binary_image, binary_size} for devices
-  hip_error = extractCodeObjectFromFatBinary(image, device_names, code_objs);
-
-  // Unmap the file memory after extracting code object.
-  if (!amd::Os::MemoryUnmapFile(image, fsize)) {
-    return hipErrorInvalidValue;
-  }
+  hip_error = extractCodeObjectFromFatBinary(*image, device_names, code_objs);
 
   return hip_error;
 }
