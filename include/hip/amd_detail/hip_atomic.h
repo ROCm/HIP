@@ -72,22 +72,7 @@ __device__
 inline
 double atomicAdd(double* address, double val)
 {
-    unsigned long long* uaddr{reinterpret_cast<unsigned long long*>(address)};
-    unsigned long long r{__atomic_load_n(uaddr, __ATOMIC_RELAXED)};
-
-    unsigned long long old;
-    do {
-        old = __atomic_load_n(uaddr, __ATOMIC_RELAXED);
-
-        if (r != old) { r = old; continue; }
-
-        r = atomicCAS(
-            uaddr, r, __double_as_longlong(val + __longlong_as_double(r)));
-
-        if (r == old) break;
-    } while (true);
-
-    return __longlong_as_double(r);
+    return __atomic_fetch_add(address, val, __ATOMIC_RELAXED);
 }
 
 __device__
