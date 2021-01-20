@@ -54,17 +54,6 @@ THE SOFTWARE.
 
 __global__ void EmptyKernel() {}
 
-std::vector<char> load_file() {
-  std::ifstream file(FILENAME, std::ios::binary | std::ios::ate);
-  std::streamsize fsize = file.tellg();
-  file.seekg(0, std::ios::beg);
-
-  std::vector<char> buffer(fsize);
-  if (!file.read(buffer.data(), fsize)) {
-    failed("could not open code object '%s'\n", FILENAME);
-  }
-  return buffer;
-}
 // Helper to print various timing metrics
 void print_timing(std::string test, std::array<float, TOTAL_RUN_COUNT> &results, int batch = 1)
 {
@@ -94,7 +83,7 @@ void print_timing(std::string test, std::array<float, TOTAL_RUN_COUNT> &results,
 }
 
 // Measure time taken to enqueue a kernel on the GPU using hipModuleLaunchKernel
-void hipModuleLaunchKernel_enqueue_rate(const std::vector<char> buffer, std::atomic_int* shared, int max_threads)
+void hipModuleLaunchKernel_enqueue_rate(const std::vector<char>& buffer, std::atomic_int* shared, int max_threads)
 {
     //resources necessary for this thread
     hipStream_t stream;
@@ -118,12 +107,13 @@ void hipModuleLaunchKernel_enqueue_rate(const std::vector<char> buffer, std::ato
         auto stop = std::chrono::high_resolution_clock::now();
         results[i] = std::chrono::duration<double, std::milli>(stop - start).count();
     }
+    HIPCHECK(hipModuleUnload(module));
     print_timing("Thread ID : " + std::to_string(tid) + " , " + "hipModuleLaunchKernel enqueue rate", results);
     HIPCHECK(hipStreamDestroy(stream));
 }
 
 // Measure time taken to enqueue a kernel on the GPU using hipLaunchKernelGGL
-void hipLaunchKernelGGL_enqueue_rate(const std::vector<char> buffer, std::atomic_int* shared, int max_threads)
+void hipLaunchKernelGGL_enqueue_rate(const std::vector<char>& buffer, std::atomic_int* shared, int max_threads)
 {
     //resources necessary for this thread
     hipStream_t stream;
@@ -146,11 +136,20 @@ void hipLaunchKernelGGL_enqueue_rate(const std::vector<char> buffer, std::atomic
 
 // Simple thread pool
 struct thread_pool {
-    thread_pool(int total_threads) : max_threads(total_threads) {}
-    void start(std::function<void(const std::vector<char>, std::atomic_int*, int)> f) {
-        auto buffer = load_file();
+    thread_pool(int total_threads) : max_threads(total_threads) {
+        std::ifstream file(FILENAME, std::ios::binary | std::ios::ate);
+        std::streamsize fsize = file.tellg();
+        file.seekg(0, std::ios::beg);
+
+        buffer.resize(fsize);
+        if (!file.read(buffer.data(), fsize)) {
+            failed("could not open code object '%s'\n", FILENAME);
+        }
+        file.close();
+    }
+    void start(std::function<void(const std::vector<char>&, std::atomic_int*, int)> f) {
         for (int i = 0; i < max_threads; ++i) {
-            threads.push_back(std::async(std::launch::async, f, buffer, &shared, max_threads));
+            threads.push_back(std::async(std::launch::async, f, std::ref(buffer), &shared, max_threads));
         }
     }
     void finish() {
@@ -165,6 +164,7 @@ struct thread_pool {
     }
 private:
     std::atomic_int shared {0};
+    std::vector<char> buffer;
     std::vector<std::future<void>> threads;
     int max_threads = 1;
 };
@@ -176,7 +176,6 @@ int main(int argc, char* argv[])
         std::cerr << "Run test as 'hipDispatchEnqueueRateMT <num_threads> <0-hipModuleLaunchKernel /1-hipLaunchKernelGGL>'\n";
         return -1;
     }
-
     int max_threads = atoi(argv[1]);
     int run_module_test = atoi(argv[2]);
     if(max_threads < 1 || run_module_test < 0 || run_module_test > 1) {
@@ -195,4 +194,3 @@ int main(int argc, char* argv[])
     }
     return 0;
 }
-
