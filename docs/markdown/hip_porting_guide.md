@@ -147,9 +147,11 @@ directory names.
 ### Identifying HIP Target Platform
 All HIP projects target either AMD or NVIDIA platform. The platform affects which headers are included and which libraries are used for linking.
 
-- `HIP_PLATFORM_AMD` is defined if the HIP platform targets AMD
+- `HIP_PLATFORM_AMD` is defined if the HIP platform targets AMD.
+Note, `HIP_PLATFORM_HCC` was previously defined if the HIP platform targeted AMD, it is deprecated.
 
-- `HIP_PLATFORM_NVIDA` is defined if the HIP platform targets NVIDIA
+- `HIP_PLATFORM_NVIDA` is defined if the HIP platform targets NVIDIA.
+Note, `HIP_PLATFORM_NVCC` was previously defined if the HIP platform targeted NVIDIA, it is deprecated.
 
 ### Identifying the Compiler: hip-clang or nvcc
 Often, it's useful to know whether the underlying compiler is HIP-Clang or nvcc. This knowledge can guard platform-specific code or aid in platform-specific performance tuning.
@@ -188,7 +190,6 @@ HIP-Clang will have multiple passes over the code: one for the host code, and on
 ```
 
 Unlike `__CUDA_ARCH__`, the `__HIP_DEVICE_COMPILE__` value is 1 or undefined, and it doesn't represent the feature capability of the target device.
-
 
 ### Compiler Defines: Summary
 |Define  		|   HIP-Clang  | nvcc 		|  Other (GCC, ICC, Clang, etc.)
@@ -286,8 +287,9 @@ HIP can depend on ROCclr, or NVCC as runtime
 
 - AMD platform
 On AMD platform, HIP uses Radeon Open Compute Common Language Runtime, called ROCclr.
-
 ROCclr is a virtual device interface that HIP runtimes interact with different backends which allows runtimes to work on Linux , as well as Windows without much efforts.
+
+Note, `HIP_ROCclr` needed to be defined on AMD platform that HIP used ROCclr, only when platform was defined as deprecated `HIP_PLATFORM_HCC`.
 
 - NVIDIA platform
 On Nvidia platform, HIP is just a thin layer on top of CUDA.
