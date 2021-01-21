@@ -158,6 +158,8 @@ const char *hipGetErrorName(hipError_t hip_error)
         return "hipErrorRuntimeMemory";
     case hipErrorRuntimeOther:
         return "hipErrorRuntimeOther";
+    case hipErrorCooperativeLaunchTooLarge:
+        return "hipErrorCooperativeLaunchTooLarge";
     case hipErrorTbd:
         return "hipErrorTbd";
     default:
