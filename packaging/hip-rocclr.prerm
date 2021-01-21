@@ -35,6 +35,7 @@ done
 pushd cmake
 unlink rocclr
 unlink hip
+unlink hip-lang
 popd
 rmdir --ignore-fail-on-non-empty cmake
 popd

@@ -36,5 +36,7 @@ done
 pushd cmake
 ln -s -r -f $ROCCLRLIBDIR/cmake/rocclr rocclr
 ln -s -r -f $HIPLIBDIR/cmake/hip hip
+ln -s -r -f $HIPLIBDIR/cmake/hip-lang hip-lang
+
 popd
 popd
