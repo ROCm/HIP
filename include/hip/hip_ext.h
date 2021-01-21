@@ -56,6 +56,8 @@ THE SOFTWARE.
  * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please
  refer to hip_porting_driver_api.md for sample usage.
  * HIP/ROCm actually updates the start event when the associated kernel completes.
+ * Currently, timing between startEvent and stopEvent does not include the time it takes to perform
+ * a system scope release / cache flush - only the time it takes to issues writes to cache.
  */
 HIP_PUBLIC_API
 hipError_t hipExtModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
