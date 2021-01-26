@@ -1352,7 +1352,7 @@ static GLenum clChannelDataTypeToGlType(cl_channel_type channel_type) {
     case CL_UNORM_SHORT_565:
     case CL_UNORM_SHORT_555:
     default:
-      guarantee(false && "Unexpected CL type.");
+      guarantee(false, "Unexpected CL type.");
       return 0;
   }
 }
@@ -1378,7 +1378,7 @@ static GLenum glInternalFormatToGlFormat(GLenum internalFormat) {
       return GL_RGBA_INTEGER;
 
     default:
-      guarantee(false && "Unexpected GL internal format.");
+      guarantee(false, "Unexpected GL internal format.");
       return 0;
   }
 }
