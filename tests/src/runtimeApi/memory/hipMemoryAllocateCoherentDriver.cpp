@@ -33,10 +33,15 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 
 using namespace std;
 
+const string coherent_test_dir = string(".") + PATH_SEPERATOR_STR + "directed_tests"
+                                 + PATH_SEPERATOR_STR + "runtimeApi" + PATH_SEPERATOR_STR
+                                 + "memory";
+
 string getRes() {
     FILE* in;
     char buff[512], buff_2[512];
-    string str = "./hipMemoryAllocateCoherent";
+    string coherent_test_str = "hipMemoryAllocateCoherent";
+    string str = coherent_test_dir + PATH_SEPERATOR_STR + coherent_test_str;
     if (!(in = popen(str.c_str(), "r"))) {
         exit(1);
     }
