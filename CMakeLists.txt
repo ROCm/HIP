@@ -284,10 +284,6 @@ if(HIP_RUNTIME STREQUAL "rocclr")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
 endif()
 
-if(HIP_PLATFORM STREQUAL "amd")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
-endif()
-
 # Generate .hipInfo
 file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 
@@ -379,8 +375,7 @@ add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.deb ${PROJECT_BINARY_DIR}
     COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-    WORKING_DIRECTORY ${BUILD_DIR}
-    DEPENDS lpl ca)
+    WORKING_DIRECTORY ${BUILD_DIR} )
 
 # Packaging needs to wait for hipify-clang to build if it's enabled...
 if (BUILD_HIPIFY_CLANG)
