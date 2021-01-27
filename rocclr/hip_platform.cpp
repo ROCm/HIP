@@ -298,7 +298,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
 
   const device::Kernel::WorkGroupInfo* wrkGrpInfo = kernel.getDeviceKernel(device)->workGroupInfo();
   if (bCalcPotentialBlkSz == false) {
-    if (inputBlockSize == 0) {
+    if (inputBlockSize <= 0) {
       return hipErrorInvalidValue;
     }
     *bestBlockSize = 0;
@@ -311,7 +311,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
   }
   else {
     if (inputBlockSize > int(device.info().maxWorkGroupSize_) ||
-            inputBlockSize == 0) {
+            inputBlockSize <= 0) {
       // The user wrote the kernel to work with a workgroup size
       // bigger than this hardware can support. Or they do not care
       // about the size So just assume its maximum size is
@@ -858,6 +858,9 @@ hipError_t PlatformState::getStatFunc(hipFunction_t* hfunc, const void* hostFunc
 }
 
 hipError_t PlatformState::getStatFuncAttr(hipFuncAttributes* func_attr, const void* hostFunction, int deviceId) {
+  if(func_attr == nullptr || hostFunction == nullptr) {
+    return hipErrorInvalidValue;
+  }
   return statCO_.getStatFuncAttr(func_attr, hostFunction, deviceId);
 }
 
