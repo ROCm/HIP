@@ -63,6 +63,22 @@ typedef enum hipMemcpyKind {
     hipMemcpyDefault
 } hipMemcpyKind;
 
+typedef enum hipMemoryAdvise {
+    hipMemAdviseSetReadMostly,
+    hipMemAdviseUnsetReadMostly,
+    hipMemAdviseSetPreferredLocation,
+    hipMemAdviseUnsetPreferredLocation,
+    hipMemAdviseSetAccessedBy,
+    hipMemAdviseUnsetAccessedBy
+} hipMemoryAdvise;
+
+typedef enum hipMemRangeAttribute {
+    hipMemRangeAttributeReadMostly,
+    hipMemRangeAttributePreferredLocation,
+    hipMemRangeAttributeAccessedBy,
+    hipMemRangeAttributeLastPrefetchLocation
+} hipMemRangeAttribute;
+
 // hipDataType
 #define hipDataType cudaDataType
 #define HIP_R_16F CUDA_R_16F
@@ -250,6 +266,7 @@ typedef enum cudaChannelFormatKind hipChannelFormatKind;
 
 #define hipMemAttachGlobal cudaMemAttachGlobal
 #define hipMemAttachHost cudaMemAttachHost
+#define hipMemAttachSingle cudaMemAttachSingle
 
 #define hipHostRegisterDefault cudaHostRegisterDefault
 #define hipHostRegisterPortable cudaHostRegisterPortable
@@ -336,6 +353,8 @@ typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipTextureType3D cudaTextureType3D
 #define hipDeviceMapHost cudaDeviceMapHost
 
+#define hipCpuDeviceId cudaCpuDeviceId
+#define hipInvalidDeviceId cudaInvalidDeviceId
 typedef struct cudaExtent hipExtent;
 typedef struct cudaPitchedPtr hipPitchedPtr;
 #define make_hipExtent make_cudaExtent
@@ -798,6 +817,42 @@ inline static enum cudaTextureAddressMode hipTextureAddressModeToCudaTextureAddr
     }
 }
 
+inline static enum cudaMemRangeAttribute hipMemRangeAttributeTocudaMemRangeAttribute(
+   hipMemRangeAttribute kind) {
+   switch (kind) {
+       case hipMemRangeAttributeReadMostly:
+           return cudaMemRangeAttributeReadMostly;
+       case hipMemRangeAttributePreferredLocation:
+           return cudaMemRangeAttributePreferredLocation;
+       case hipMemRangeAttributeAccessedBy:
+           return cudaMemRangeAttributeAccessedBy;
+       case hipMemRangeAttributeLastPrefetchLocation:
+           return cudaMemRangeAttributeLastPrefetchLocation;
+       default:
+           return cudaMemRangeAttributeReadMostly;
+   }
+}
+
+inline static enum cudaMemoryAdvise hipMemoryAdviseTocudaMemoryAdvise(
+    hipMemoryAdvise kind) {
+   switch (kind) {
+       case hipMemAdviseSetReadMostly:
+           return cudaMemAdviseSetReadMostly;
+       case hipMemAdviseUnsetReadMostly :
+           return cudaMemAdviseUnsetReadMostly ;
+       case hipMemAdviseSetPreferredLocation:
+           return cudaMemAdviseSetPreferredLocation;
+       case hipMemAdviseUnsetPreferredLocation:
+           return cudaMemAdviseUnsetPreferredLocation;
+       case hipMemAdviseSetAccessedBy:
+           return cudaMemAdviseSetAccessedBy;
+       case hipMemAdviseUnsetAccessedBy:
+           return cudaMemAdviseUnsetAccessedBy;
+       default:
+           return cudaMemAdviseSetReadMostly;
+   }
+}
+
 inline static enum cudaTextureFilterMode hipTextureFilterModeToCudaTextureFilterMode(
     hipTextureFilterMode kind) {
     switch (kind) {
@@ -892,6 +947,39 @@ inline static hipError_t hipHostAlloc(void** ptr, size_t size, unsigned int flag
 
 inline static hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags) {
     return hipCUDAErrorTohipError(cudaHostAlloc(ptr, size, flags));
+}
+
+inline static hipError_t hipMemAdvise(const void* dev_ptr, size_t count, hipMemoryAdvise advice,
+                                      int device) {
+    return hipCUDAErrorTohipError(cudaMemAdvise(dev_ptr, count,
+        hipMemoryAdviseTocudaMemoryAdvise(advice), device));
+}
+
+inline static hipError_t hipMemPrefetchAsync(const void* dev_ptr, size_t count, int device,
+                                             hipStream_t stream __dparm(0)) {
+    return hipCUDAErrorTohipError(cudaMemPrefetchAsync(dev_ptr, count, device, stream));
+}
+
+inline static hipError_t hipMemRangeGetAttribute(void* data, size_t data_size,
+                                                 hipMemRangeAttribute attribute,
+                                                 const void* dev_ptr, size_t count) {
+    return hipCUDAErrorTohipError(cudaMemRangeGetAttribute(data, data_size,
+        hipMemRangeAttributeTocudaMemRangeAttribute(attribute), dev_ptr, count));
+}
+
+inline static hipError_t hipMemRangeGetAttributes(void** data, size_t* data_sizes,
+                                                  hipMemRangeAttribute* attributes,
+                                                  size_t num_attributes, const void* dev_ptr,
+                                                  size_t count) {
+    auto attrs = hipMemRangeAttributeTocudaMemRangeAttribute(*attributes);
+    return hipCUDAErrorTohipError(cudaMemRangeGetAttributes(data, data_sizes, &attrs,
+        num_attributes, dev_ptr, count));
+}
+
+inline static hipError_t hipStreamAttachMemAsync(hipStream_t stream, hipDeviceptr_t* dev_ptr,
+                                                 size_t length __dparm(0),
+                                                 unsigned int flags __dparm(hipMemAttachSingle)) {
+    return hipCUDAErrorTohipError(cudaStreamAttachMemAsync(stream, dev_ptr, length, flags));
 }
 
 inline static hipError_t hipMallocManaged(void** ptr, size_t size, unsigned int flags) {
