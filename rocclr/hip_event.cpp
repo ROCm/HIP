@@ -21,10 +21,6 @@
 #include <hip/hip_runtime.h>
 
 #include "hip_event.hpp"
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <unistd.h>
 
 void ipcEventCallback(hipStream_t stream, hipError_t status, void* user_data)
 {
