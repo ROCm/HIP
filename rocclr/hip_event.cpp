@@ -280,6 +280,7 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
 
 // ================================================================================================
 bool createIpcEventShmemIfNeeded(hip::Event::ihipIpcEvent_t& ipc_evt) {
+#if !defined(_MSC_VER)
   char name_template[] = "/tmp/eventXXXXXX";
   int temp_fd = mkstemp(name_template);
   ipc_evt.ipc_name_ = name_template;
@@ -295,6 +296,9 @@ bool createIpcEventShmemIfNeeded(hip::Event::ihipIpcEvent_t& ipc_evt) {
     ipc_evt.ipc_shmem_->signal[sig_idx] = 0;
   }
   return true;
+#else
+  return false;
+#endif
 }
 
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
