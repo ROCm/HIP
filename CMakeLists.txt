@@ -330,8 +330,10 @@ endif()
 
 # Install generated headers
 # FIXME: Associate with individual targets.
+if(HIP_PLATFORM STREQUAL "amd")
 install(FILES ${PROJECT_BINARY_DIR}/include/hip/amd_detail/hip_prof_str.h
         DESTINATION include/hip/amd_detail)
+endif()
 install(FILES ${PROJECT_BINARY_DIR}/include/hip/hip_version.h
         DESTINATION include/hip)
 
