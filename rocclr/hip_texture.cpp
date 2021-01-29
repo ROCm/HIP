@@ -77,6 +77,11 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
   amd::Device* device = hip::getCurrentDevice()->devices()[0];
   const device::Info& info = device->info();
 
+  // Validate input params
+  if (pTexObject == nullptr || pResDesc == nullptr || pTexDesc == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
   // pResViewDesc can only be specified if the type of resource is a HIP array or a HIP mipmapped array.
   if ((pResViewDesc != nullptr) &&
       ((pResDesc->resType != hipResourceTypeArray) && (pResDesc->resType != hipResourceTypeMipmappedArray))) {
