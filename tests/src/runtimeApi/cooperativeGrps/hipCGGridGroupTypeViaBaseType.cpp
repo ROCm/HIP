@@ -44,7 +44,7 @@ void kernel_cg_grid_group_type_via_base_type(int *sizeTestD,
                                              int *isValidTestD,
                                              int *syncTestD)
 {
-  thread_group tg = this_grid();
+  grid_group tg = this_grid();
   int gIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
   // Test size

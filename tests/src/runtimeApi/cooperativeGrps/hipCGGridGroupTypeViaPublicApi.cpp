@@ -54,7 +54,7 @@ void kernel_cg_grid_group_type_via_public_api(int *sizeTestD,
   thdRankTestD[gIdx] = thread_rank(gg);
 
   // Test is_valid api
-  isValidTestD[gIdx] = is_valid(gg);
+  isValidTestD[gIdx] = gg.is_valid();
 
   // Test sync api
   if (blockIdx.x == 0 && threadIdx.x == 0)

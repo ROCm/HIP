@@ -74,7 +74,7 @@ __global__ void testExternSharedKernel(const T* A_d, const T* B_d, T* C_d,
 }
 
 template <typename T>
-void testExternShared(size_t N, size_t groupElements) {
+void testExternShared(size_t N, unsigned groupElements) {
     size_t Nbytes = N * sizeof(T);
 
     T *A_d, *B_d, *C_d;

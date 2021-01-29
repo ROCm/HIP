@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * TEST: %t
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 
@@ -39,7 +39,6 @@ using namespace cooperative_groups;
 static __global__
 void kernel_cg_thread_block_type_via_base_type(int *sizeTestD,
                                                int *thdRankTestD,
-                                               int *isValidTestD,
                                                int *syncTestD)
 {
   thread_group tg = this_thread_block();
@@ -50,9 +49,6 @@ void kernel_cg_thread_block_type_via_base_type(int *sizeTestD,
 
   // Test thread_rank
   thdRankTestD[gIdx] = tg.thread_rank();
-
-  // Test is_valid
-  isValidTestD[gIdx] = tg.is_valid();
 
   // Test sync
   __shared__ int sm[2];
@@ -69,19 +65,16 @@ static void test_cg_thread_block_type_via_base_type(int blockSize)
   int nBytes = sizeof(int) * 2 * blockSize;
   int *sizeTestD, *sizeTestH;
   int *thdRankTestD, *thdRankTestH;
-  int *isValidTestD, *isValidTestH;
   int *syncTestD, *syncTestH;
 
   // Allocate device memory
   ASSERT_EQUAL(hipMalloc(&sizeTestD, nBytes), hipSuccess);
   ASSERT_EQUAL(hipMalloc(&thdRankTestD, nBytes), hipSuccess);
-  ASSERT_EQUAL(hipMalloc(&isValidTestD, nBytes), hipSuccess);
   ASSERT_EQUAL(hipMalloc(&syncTestD, nBytes), hipSuccess);
 
   // Allocate host memory
   ASSERT_EQUAL(hipHostMalloc(&sizeTestH, nBytes), hipSuccess);
   ASSERT_EQUAL(hipHostMalloc(&thdRankTestH, nBytes), hipSuccess);
-  ASSERT_EQUAL(hipHostMalloc(&isValidTestH, nBytes), hipSuccess);
   ASSERT_EQUAL(hipHostMalloc(&syncTestH, nBytes), hipSuccess);
 
   // Launch Kernel
@@ -92,15 +85,12 @@ static void test_cg_thread_block_type_via_base_type(int blockSize)
                      0,
                      sizeTestD,
                      thdRankTestD,
-                     isValidTestD,
                      syncTestD);
 
   // Copy result from device to host
   ASSERT_EQUAL(hipMemcpy(sizeTestH, sizeTestD, nBytes, hipMemcpyDeviceToHost),
                hipSuccess);
   ASSERT_EQUAL(hipMemcpy(thdRankTestH, thdRankTestD, nBytes, hipMemcpyDeviceToHost),
-               hipSuccess);
-  ASSERT_EQUAL(hipMemcpy(isValidTestH, isValidTestD, nBytes, hipMemcpyDeviceToHost),
                hipSuccess);
   ASSERT_EQUAL(hipMemcpy(syncTestH, syncTestD, nBytes, hipMemcpyDeviceToHost),
                hipSuccess);
@@ -109,20 +99,17 @@ static void test_cg_thread_block_type_via_base_type(int blockSize)
   for (int i = 0; i < 2 * blockSize; ++i) {
     ASSERT_EQUAL(sizeTestH[i], blockSize);
     ASSERT_EQUAL(thdRankTestH[i], i % blockSize);
-    ASSERT_EQUAL(isValidTestH[i], 1);
     ASSERT_EQUAL(syncTestH[i], 200);
   }
 
   // Free device memory
   ASSERT_EQUAL(hipFree(sizeTestD), hipSuccess);
   ASSERT_EQUAL(hipFree(thdRankTestD), hipSuccess);
-  ASSERT_EQUAL(hipFree(isValidTestD), hipSuccess);
   ASSERT_EQUAL(hipFree(syncTestD), hipSuccess);
 
   //Free host memory
   ASSERT_EQUAL(hipHostFree(sizeTestH), hipSuccess);
   ASSERT_EQUAL(hipHostFree(thdRankTestH), hipSuccess);
-  ASSERT_EQUAL(hipHostFree(isValidTestH), hipSuccess);
   ASSERT_EQUAL(hipHostFree(syncTestH), hipSuccess);
 }
 

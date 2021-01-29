@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
- * TEST: %t
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 -rdc=true -gencode arch=compute_60,code=sm_60
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 
@@ -47,7 +47,7 @@ void kernel_cg_multi_grid_group_type_via_base_type(int *sizeTestD,
                                                    int *syncTestD,
                                                    int *syncResultD)
 {
-  thread_group tg = this_multi_grid();
+  multi_grid_group tg = this_multi_grid();
   int gIdx = (blockIdx.x * blockDim.x) + threadIdx.x;
 
   // Test size
