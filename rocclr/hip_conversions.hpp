@@ -126,11 +126,11 @@ cl_addressing_mode getCLAddressingMode(const hipTextureAddressMode hipAddressMod
     case hipAddressModeWrap:
       return CL_ADDRESS_REPEAT;
     case hipAddressModeClamp:
-      return CL_ADDRESS_CLAMP;
+      return CL_ADDRESS_CLAMP_TO_EDGE;
     case hipAddressModeMirror:
       return CL_ADDRESS_MIRRORED_REPEAT;
     case hipAddressModeBorder:
-      return CL_ADDRESS_CLAMP_TO_EDGE;
+      return CL_ADDRESS_CLAMP;
   }
 
   ShouldNotReachHere();
