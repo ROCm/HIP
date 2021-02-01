@@ -119,7 +119,7 @@ __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
 }
 
 MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
-// Alternatively, kernel can be launched by 
+// Alternatively, kernel can be launched by
 // hipLaunchKernel(MyKernel, dim3(gridDim), dim3(groupDim), 0/*dynamicShared*/, 0/*stream), a, b, c, n);
 
 ```
@@ -129,15 +129,15 @@ The hipLaunchKernel macro always starts with the five parameters specified above
 
 ## Kernel-Launch Example
 ```
-// Example showing device function, __device__ __host__   
-// <- compile for both device and host 
-float PlusOne(float x) 
+// Example showing device function, __device__ __host__
+// <- compile for both device and host
+float PlusOne(float x)
 {
     return x + 1.0;
 }
 
-__global__ 
-void 
+__global__
+void
 MyKernel (hipLaunchParm lp, /*lp parm for execution configuration */
           const float *a, const float *b, float *c, unsigned N)
 {
@@ -163,22 +163,22 @@ void callMyKernel()
 ### `__constant__`
 The `__constant__` keyword is supported. The host writes constant memory before launching the kernel; from the GPU, this memory is read-only during kernel execution. The functions for accessing constant memory (hipGetSymbolAddress(), hipGetSymbolSize(), hipMemcpyToSymbol(), hipMemcpyToSymbolAsync(), hipMemcpyFromSymbol(), hipMemcpyFromSymbolAsync()) are available.
 
-### `__shared__` 
+### `__shared__`
 The `__shared__` keyword is supported.
 
-`extern __shared__` allows the host to dynamically allocate shared memory and is specified as a launch parameter.  HIP uses an alternate syntax based on the HIP_DYNAMIC_SHARED macro.
+`extern __shared__` allows the host to dynamically allocate shared memory and is specified as a launch parameter.
 
 ### `__managed__`
 Managed memory, including the `__managed__` keyword, are not supported in HIP.
 
 ### `__restrict__`
-The `__restrict__` keyword tells the compiler that the associated memory pointer will not alias with any other pointer in the kernel or function.  This feature can help the compiler generate better code. In most cases, all pointer arguments must use this keyword to realize the benefit. 
+The `__restrict__` keyword tells the compiler that the associated memory pointer will not alias with any other pointer in the kernel or function.  This feature can help the compiler generate better code. In most cases, all pointer arguments must use this keyword to realize the benefit.
 
 
 ## Built-In Variables
 
 ### Coordinate Built-Ins
-These built-ins determine the coordinate of the active work item in the execution grid. They are defined in hip_runtime.h (rather than being implicitly defined by the compiler).   
+These built-ins determine the coordinate of the active work item in the execution grid. They are defined in hip_runtime.h (rather than being implicitly defined by the compiler).
 
 | **HIP Syntax** | **Cuda Syntax** |
 | --- | --- |
@@ -204,7 +204,7 @@ The warpSize variable is of type int and contains the warp size (in threads) for
 
 ## Vector Types
 
-Note that these types are defined in hip_runtime.h and are not automatically provided by the compiler. 
+Note that these types are defined in hip_runtime.h and are not automatically provided by the compiler.
 
 
 ### Short Vector Types
@@ -228,12 +228,12 @@ HIP supports the following short vector formats:
     - double1, double2, double3, double4
 
 ### dim3
-dim3 is a three-dimensional integer vector type commonly used to specify grid and group dimensions. Unspecified dimensions are initialized to 1. 
+dim3 is a three-dimensional integer vector type commonly used to specify grid and group dimensions. Unspecified dimensions are initialized to 1.
 ```
 typedef struct dim3 {
-  uint32_t x; 
-  uint32_t y; 
-  uint32_t z; 
+  uint32_t x;
+  uint32_t y;
+  uint32_t z;
 
   dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
 };
@@ -250,7 +250,7 @@ In addition,the kernels that use __threadfence_system() should be modified as fo
 - Remove all memcpy for those allocated finegrained system memory regions.
 
 ## Synchronization Functions
-The __syncthreads() built-in function is supported in HIP. The __syncthreads_count(int), __syncthreads_and(int) and __syncthreads_or(int) functions are under development.  
+The __syncthreads() built-in function is supported in HIP. The __syncthreads_count(int), __syncthreads_and(int) and __syncthreads_or(int) functions are under development.
 
 ## Math Functions
 HIP-Clang supports a set of math operations callable from the device.
@@ -295,7 +295,7 @@ Following is the list of supported single precision mathematical functions.
 | float log10f ( float  x ) <br><sub>Calculate the base 10 logarithm of the input argument.</sub> | ✓ | ✓ |
 | float log1pf ( float  x ) <br><sub>Calculate the value of log<sub>e</sub>( 1 + x ).</sub> | ✓ | ✓ |
 | float logbf ( float  x ) <br><sub>Calculate the floating point representation of the exponent of the input argument.</sub> | ✓ | ✓ |
-| float log2f ( float  x ) <br><sub>Calculate the base 2 logarithm of the input argument.</sub> | ✓ | ✓ | 
+| float log2f ( float  x ) <br><sub>Calculate the base 2 logarithm of the input argument.</sub> | ✓ | ✓ |
 | float logf ( float  x ) <br><sub>Calculate the natural logarithm of the input argument.</sub> | ✓ | ✓ |
 | float modff ( float  x, float* iptr ) <br><sub>Break down the input argument into fractional and integral parts.</sub> | ✓ | ✗ |
 | float nanf ( const char* tagp ) <br><sub>Returns "Not a Number" value.</sub> | ✗ | ✓ |
@@ -376,7 +376,7 @@ Following is the list of supported double precision mathematical functions.
 | double exp2 ( double  x ) <br><sub>Calculate the base 2 exponential of the input argument.</sub> | ✓ | ✓ |
 | double expm1 ( double  x ) <br><sub>Calculate the base e exponential of the input argument, minus 1.</sub> | ✓ | ✓ |
 | double fabs ( double  x ) <br><sub>Calculate the absolute value of the input argument.</sub> | ✓ | ✓ |
-| double fdim ( double  x, double  y ) <br><sub>Compute the positive difference between `x` and `y`.</sub> | ✓ | ✓ | 
+| double fdim ( double  x, double  y ) <br><sub>Compute the positive difference between `x` and `y`.</sub> | ✓ | ✓ |
 | double floor ( double  x ) <br><sub>Calculate the largest integer less than or equal to `x`.</sub> | ✓ | ✓ |
 | double fma ( double  x, double  y, double  z ) <br><sub>Compute `x × y + z` as a single operation.</sub> | ✓ | ✓ |
 | double fmax ( double , double ) <br><sub>Determine the maximum numeric value of the arguments.</sub> | ✓ | ✓ |
@@ -465,10 +465,11 @@ Following is the list of supported integer intrinsics. Note that intrinsics are 
 | unsigned int __popc ( unsigned int x ) <br><sub>Count the number of bits that are set to 1 in a 32 bit integer.</sub> |
 | int __popcll ( unsigned long long int x )<br><sub>Count the number of bits that are set to 1 in a 64 bit integer.</sub> |
 | int __mul24 ( int x, int y )<br><sub>Multiply two 24bit integers.</sub> |
-| unsigned int __umul24 ( unsigned int x, unsigned int y )<br><sub>Multiply two 24bit unsigned integers.</sub> |
-<sub><b id="f3"><sup>[1]</sup></b> 
+| unsigned int __umul24 ( unsigned int x, unsigned int y )<br><sub>Multiply two 24bit |unsigned integers.</sub> |
+
+<sub><b id="f3"><sup>[1]</sup></b>
 The HIP-Clang implementation of __ffs() and __ffsll() contains code to add a constant +1 to produce the ffs result format.
-For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform, 
+For the cases where this overhead is not acceptable and programmer is willing to specialize for the platform,
 HIP-Clang provides __lastbit_u32_u32(unsigned int input) and __lastbit_u32_u64(unsigned long long int input).
 The index returned by __lastbit_ instructions starts at -1, while for ffs the index starts at 0.
 
@@ -480,20 +481,14 @@ Following is the list of supported floating-point intrinsics. Note that intrinsi
 | float __cosf ( float  x ) <br><sub>Calculate the fast approximate cosine of the input argument.</sub> |
 | float __expf ( float  x ) <br><sub>Calculate the fast approximate base e exponential of the input argument.</sub> |
 | float __frsqrt_rn ( float  x ) <br><sub>Compute `1 / √x` in round-to-nearest-even mode.</sub> |
-| float __fsqrt_rd ( float  x ) <br><sub>Compute `√x` in round-down mode.</sub> |
 | float __fsqrt_rn ( float  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
-| float __fsqrt_ru ( float  x ) <br><sub>Compute `√x` in round-up mode.</sub> |
-| float __fsqrt_rz ( float  x ) <br><sub>Compute `√x` in round-towards-zero mode.</sub> |
 | float __log10f ( float  x ) <br><sub>Calculate the fast approximate base 10 logarithm of the input argument.</sub> |
 | float __log2f ( float  x ) <br><sub>Calculate the fast approximate base 2 logarithm of the input argument.</sub> |
 | float __logf ( float  x ) <br><sub>Calculate the fast approximate base e logarithm of the input argument.</sub> |
-| float __powf ( float  x, float  y ) <br><sub>Calculate the fast approximate of x<sup>y</sup>.</sub> |
+| float __powf ( float  x, float  y ) <br><sub>Calculate the fast approximate of x,y.</sub> |
 | float __sinf ( float  x ) <br><sub>Calculate the fast approximate sine of the input argument.</sub> |
 | float __tanf ( float  x ) <br><sub>Calculate the fast approximate tangent of the input argument.</sub> |
-| double __dsqrt_rd ( double  x ) <br><sub>Compute `√x` in round-down mode.</sub> |
 | double __dsqrt_rn ( double  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
-| double __dsqrt_ru ( double  x ) <br><sub>Compute `√x` in round-up mode.</sub> |
-| double __dsqrt_rz ( double  x ) <br><sub>Compute `√x` in round-towards-zero mode.</sub> |
 
 ## Texture Functions
 Texture functions are not supported.
@@ -511,8 +506,8 @@ Returns the value of counter that is incremented every clock cycle on device. Di
 
 ## Atomic Functions
 
-Atomic functions execute as read-modify-write operations residing in global or shared memory. No other device or thread can observe or modify the memory location during an atomic operation. If multiple instructions from different devices or threads target the same memory location, the 
-instructions are serialized in an undefined order.  
+Atomic functions execute as read-modify-write operations residing in global or shared memory. No other device or thread can observe or modify the memory location during an atomic operation. If multiple instructions from different devices or threads target the same memory location, the
+instructions are serialized in an undefined order.
 
 HIP supports the following atomic operations.
 
@@ -557,22 +552,23 @@ HIP supports the following atomic operations.
 
 Warp cross-lane functions operate across all lanes in a warp. The hardware guarantees that all warp lanes will execute in lockstep, so additional synchronization is unnecessary, and the instructions use no shared memory.
 
-Note that Nvidia and AMD devices have different warp sizes, so portable code should use the warpSize built-ins to query the warp size. Hipified code from the Cuda path requires careful review to ensure it doesn’t assume a waveSize of 32. "Wave-aware" code that assumes a waveSize of 32 will run on a wave-64 machine, but it will utilize only half of the machine resources. In addition to the warpSize device function, host code can obtain the warpSize from the device properties:
+Note that Nvidia and AMD devices have different warp sizes, so portable code should use the warpSize built-ins to query the warp size. Hipified code from the Cuda path requires careful review to ensure it doesn’t assume a waveSize of 32. "Wave-aware" code that assumes a waveSize of 32 will run on a wave-64 machine, but it will utilize only half of the machine resources. WarpSize built-ins should only be used in device functions and its value depends on GPU arch. Host functions should use hipGetDeviceProperties to get the default warp size of a GPU device:
 
 ```
 	cudaDeviceProp props;
 	cudaGetDeviceProperties(&props, deviceID);
-    int w = props.warpSize;  
+    int w = props.warpSize;
     // implement portable algorithm based on w (rather than assume 32 or 64)
 ```
 
+Note that assembly kernels may be built for a warp size which is different than the default warp size.
 
 ### Warp Vote and Ballot Functions
 
 ```
-int __all(int predicate)
-int __any(int predicate)
-uint64_t __ballot(int predicate)
+int __all(int predicate);
+int __any(int predicate);
+uint64_t __ballot(int predicate);
 ```
 
 Threads in a warp are referred to as *lanes* and are numbered from 0 to warpSize -- 1. For these functions, each warp lane contributes 1 -- the bit value (the predicate), which is efficiently broadcast to all lanes in the warp. The 32-bit int predicate from each lane reduces to a 1-bit value: 0 (predicate = 0) or 1 (predicate != 0). `__any` and `__all` provide a summary view of the predicates that the other warp lanes contribute:
@@ -585,7 +581,7 @@ Applications can test whether the target platform supports the any/all instructi
 `__ballot` provides a bit mask containing the 1-bit predicate value from each lane. The nth bit of the result contains the 1 bit contributed by the nth warp lane. Note that HIP's `__ballot` function supports a 64-bit return value (compared with Cuda’s 32 bits). Code ported from Cuda should support the larger warp sizes that the HIP version of this instruction supports. Applications can test whether the target platform supports the ballot instruction using the `hasWarpBallot` device property or the HIP_ARCH_HAS_WARP_BALLOT compiler define.
 
 
-### Warp Shuffle Functions 
+### Warp Shuffle Functions
 
 Half-float shuffles are not supported. The default width is warpSize---see [Warp Cross-Lane Functions](#warp-cross-lane-functions). Applications should not assume the warpSize is 32 or 64.
 
@@ -595,8 +591,8 @@ float __shfl      (float var, int srcLane, int width=warpSize);
 int   __shfl_up   (int var,   unsigned int delta, int width=warpSize);
 float __shfl_up   (float var, unsigned int delta, int width=warpSize);
 int   __shfl_down (int var,   unsigned int delta, int width=warpSize);
-float __shfl_down (float var, unsigned int delta, int width=warpSize) ;
-int   __shfl_xor  (int var,   int laneMask, int width=warpSize) 
+float __shfl_down (float var, unsigned int delta, int width=warpSize);
+int   __shfl_xor  (int var,   int laneMask, int width=warpSize);
 float __shfl_xor  (float var, int laneMask, int width=warpSize);
 
 ```
@@ -604,21 +600,20 @@ float __shfl_xor  (float var, int laneMask, int width=warpSize);
 ## Cooperative Groups Functions
 
 Cooperative groups is a mechanism for forming and communicating between groups of threads at
-a granularity different than the block.  This feature was introduced in Cuda 9.
+a granularity different than the block. This feature was introduced in Cuda 9.
 
-HIP does not support any of the kernel language cooperative groups
-types or functions.
+HIP supports the following kernel language cooperative groups types and functions.
 
 
 | **Function** | **Supported in HIP** | **Supported in CUDA** |
 | --- | --- | --- |
-| `void thread_group.sync()` | | ✓ |
-| `unsigned thread_group.size()` | | ✓ |
-| `unsigned thread_group.thread_rank()` | | ✓ |
-| `bool thread_group.is_valid()` | | ✓ |
+| `void thread_group.sync()` |✓| ✓ |
+| `unsigned thread_group.size()` |✓| ✓ |
+| `unsigned thread_group.thread_rank()` |✓| ✓ |
+| `bool thread_group.is_valid()` |✓| ✓ |
 | `thread_group tiled_partition(thread_group, size)` | | ✓ |
 | `thread_block_tile<N> tiled_partition<N>(thread_group)` | | ✓ |
-| `thread_block this_thread_block()` | | ✓ |
+| `thread_block this_thread_block()` |✓| ✓ |
 | `T thread_block_tile.shfl()` | | ✓ |
 | `T thread_block_tile.shfl_down()` | | ✓ |
 | `T thread_block_tile.shfl_up()` | | ✓ |
@@ -629,16 +624,24 @@ types or functions.
 | `T thread_block_tile.match_any()` | | ✓ |
 | `T thread_block_tile.match_all()` | | ✓ |
 | `coalesced_group coalesced_threads()` | | ✓ |
-| `grid_group this_grid()` | | ✓ |
-| `void grid_group.sync()` | | ✓ |
-| `unsigned grid_group.size()` | | ✓ |
-| `unsigned grid_group.thread_rank()` | | ✓ |
-| `bool grid_group.is_valid()` | | ✓ |
-| `multi_grid_group this_multi_grid()` | | ✓ |
-| `void multi_grid_group.sync()` | | ✓ |
-| `unsigned multi_grid_group.size()` | | ✓ |
-| `unsigned multi_grid_group.thread_rank()` | | ✓ |
-| `bool multi_grid_group.is_valid()` | | ✓ |
+| `grid_group this_grid()` |✓| ✓ |
+| `void grid_group.sync()` |✓| ✓ |
+| `unsigned grid_group.size()` |✓| ✓ |
+| `unsigned grid_group.thread_rank()` |✓| ✓ |
+| `bool grid_group.is_valid()` |✓| ✓ |
+| `multi_grid_group this_multi_grid()` |✓| ✓ |
+| `void multi_grid_group.sync()` |✓| ✓ |
+| `unsigned multi_grid_group.size()` |✓| ✓ |
+| `unsigned multi_grid_group.thread_rank()` |✓| ✓ |
+| `bool multi_grid_group.is_valid()` |✓| ✓ |
+| `void thread_block.sync()` |✓| ✓ |
+| `unsigned thread_block.size()` |✓| ✓ |
+| `unsigned thread_block.thread_rank()` |✓| ✓ |
+| `bool thread_block.is_valid()` |✓| ✓ |
+| `unsigned multi_grid_group.num_grids()` |✓| ✓ |
+| `unsigned multi_grid_group.grid_rank()` |✓| ✓ |
+| `dim3 thread_block.group_index()` |✓| ✓ |
+| `dim3 thread_block.thread_index()` |✓| ✓ |
 
 ## Warp Matrix Functions
 
@@ -686,13 +689,13 @@ implementation of malloc and free that can be called from device functions.
 ## `__launch_bounds__`
 
 
-GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simulaneously running. Thus GPUs have a complex relationship between resource usage and performance.  
+GPU multiprocessors have a fixed pool of resources (primarily registers and shared memory) which are shared by the actively running warps. Using more resources can increase IPC of the kernel but reduces the resources available for other warps and limits the number of warps that can be simulaneously running. Thus GPUs have a complex relationship between resource usage and performance.
 
 __launch_bounds__ allows the application to provide usage hints that influence the resources (primarily registers) used by the generated code.  It is a function attribute that must be attached to a __global__ function:
 
 ```
 __global__ void `__launch_bounds__`(MAX_THREADS_PER_BLOCK, MIN_WARPS_PER_EU) MyKernel(...) ...
-MyKernel(hipGridLaunch lp, ...) 
+MyKernel(hipGridLaunch lp, ...)
 ...
 ```
 
@@ -729,10 +732,10 @@ MIN_WARPS_PER_EXECUTION_UNIT = (MIN_BLOCKS_PER_MULTIPROCESSOR * MAX_THREADS_PER_
 
 The key differences in the interface are:
 - Warps (rather than blocks):
-The developer is trying to tell the compiler to control resource utilization to guarantee some amount of active Warps/EU for latency hiding.  Specifying active warps in terms of blocks appears to hide the micro-architectural details of the warp size, but makes the interface more confusing since the developer ultimately needs to compute the number of warps to obtain the desired level of control. 
+The developer is trying to tell the compiler to control resource utilization to guarantee some amount of active Warps/EU for latency hiding.  Specifying active warps in terms of blocks appears to hide the micro-architectural details of the warp size, but makes the interface more confusing since the developer ultimately needs to compute the number of warps to obtain the desired level of control.
 - Execution Units  (rather than multiProcessor):
 The use of execution units rather than multiprocessors provides support for architectures with multiple execution units/multi-processor. For example, the AMD GCN architecture has 4 execution units per multiProcessor.  The hipDeviceProps has a field executionUnitsPerMultiprocessor.
-Platform-specific coding techniques such as #ifdef can be used to specify different launch_bounds for NVCC and HIP-Clang platforms, if desired. 
+Platform-specific coding techniques such as #ifdef can be used to specify different launch_bounds for NVCC and HIP-Clang platforms, if desired.
 
 
 ### maxregcount
@@ -786,7 +789,7 @@ The following C++ features are not supported:
 - Try/catch
 
 ## Kernel Compilation
-hipcc now supports compiling C++/HIP kernels to binary code objects. 
+hipcc now supports compiling C++/HIP kernels to binary code objects.
 The file format for binary is `.co` which means Code Object. The following command builds the code object using `hipcc`.
 
 `hipcc --genco --offload-arch=[TARGET GPU] [INPUT FILE] -o [OUTPUT FILE]`

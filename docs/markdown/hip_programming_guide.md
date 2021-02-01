@@ -41,12 +41,13 @@ Non-coherent
 | hipStreamWaitEvent   | stream waits for the specified event to complete                               | none                 | yes                        | no   |
 
 
-### hipEventSynchronize 
+### hipEventSynchronize
 Developers can control the release scope for hipEvents:
-- By default, the GPU performs a device-scope acquire and release operation with each recorded event.  This will make host and device memory visible to other commands executing on the same device. 
+- By default, the GPU performs a device-scope acquire and release operation with each recorded event.  This will make host and device memory visible to other commands executing on the same device.
 
 A stronger system-level fence can be specified when the event is created with hipEventCreateWithFlags:
 - hipEventReleaseToSystem : Perform a system-scope release operation when the event is recorded.  This will make both Coherent and Non-Coherent host memory visible to other agents in the system, but may involve heavyweight operations such as cache flushing.  Coherent memory will typically use lighter-weight in-kernel synchronization mechanisms such as an atomic operation and thus does not need to use hipEventReleaseToSystem.
+- hipEventDisableTiming: Events created with this flag would not record profiling data and provide best performance if used for synchronization.
 
 ### Summary and Recommendations:
 
