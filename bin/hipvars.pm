@@ -5,7 +5,7 @@ use Cwd;
 use File::Basename;
 
 $HIP_BASE_VERSION_MAJOR = "4";
-$HIP_BASE_VERSION_MINOR = "0";
+$HIP_BASE_VERSION_MINOR = "1";
 
 #---
 # Function to parse config file
