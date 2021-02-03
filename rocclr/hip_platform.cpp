@@ -149,8 +149,6 @@ extern "C" void __hipRegisterTexture(hip::FatBinaryInfo** modules,      // The d
 
 extern "C" void __hipUnregisterFatBinary(hip::FatBinaryInfo** modules)
 {
-  HIP_INIT();
-
   PlatformState::instance().removeFatBinary(modules);
 }
 
