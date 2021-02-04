@@ -43,7 +43,7 @@ THE SOFTWARE.
  * @param [in] blockDimY Y grid dimension specified in work-items
  * @param [in] blockDimZ Z grid dimension specified in work-items
  * @param [in] sharedMemBytes Amount of dynamic shared memory to allocate for this kernel.  The
- kernel can access this with HIP_DYNAMIC_SHARED.
+ HIP-Clang compiler provides support for extern shared declarations
  * @param [in] stream Stream where the kernel should be dispatched.  May be 0, in which case th
  default stream is used with associated synchronization rules.
  * @param [in] kernelParams

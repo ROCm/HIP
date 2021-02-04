@@ -49,8 +49,7 @@ __global__ void matrixTranspose_static_shared(float* out, float* in,
 
 __global__ void matrixTranspose_dynamic_shared(float* out, float* in,
                                                const int width) {
-    // declare dynamic shared memory
-    HIP_DYNAMIC_SHARED(float, sharedMem)
+    extern __shared__ float sharedMem[];
 
     int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
     int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;

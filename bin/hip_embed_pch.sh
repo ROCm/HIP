@@ -24,17 +24,12 @@ cat >$tmp/hip_macros.h <<EOF
 #define __launch_bounds__(...)                                                                     \
     select_impl_(__VA_ARGS__, launch_bounds_impl1, launch_bounds_impl0)(__VA_ARGS__)
 
-// Macro to replace extern __shared__ declarations
-// to local variable definitions
-#define HIP_DYNAMIC_SHARED(type, var) \
-    type* var = (type*)__amdgcn_get_dynamicgroupbaseptr();
 EOF
 
 cat >$tmp/hip_pch.h <<EOF
 #include "hip/hip_runtime.h"
 #include "hip/hip_fp16.h"
 EOF
-
 
 cat >$tmp/hip_pch.mcin <<EOF
  .type __hip_pch,@object

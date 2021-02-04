@@ -33,7 +33,7 @@ THE SOFTWARE.
 #define SIZE LEN * 4
 
 __global__ void vectorAdd(float* Ad, float* Bd) {
-    HIP_DYNAMIC_SHARED(float, sBd);
+    extern __shared__ float sBd[];
     int tx = threadIdx.x;
     for (int i = 0; i < LEN / 64; i++) {
         sBd[tx + i * 64] = Ad[tx + i * 64] + 1.0f;

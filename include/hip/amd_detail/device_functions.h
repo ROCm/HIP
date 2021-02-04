@@ -1269,14 +1269,6 @@ unsigned __smid(void)
     return (se_id << HW_ID_CU_ID_SIZE) + cu_id;
 }
 
-// Macro to replace extern __shared__ declarations
-// to local variable definitions
-#define HIP_DYNAMIC_SHARED(type, var) \
-    type* var = (type*)__amdgcn_get_dynamicgroupbaseptr();
-
-#define HIP_DYNAMIC_SHARED_ATTRIBUTE
-
-
 #endif //defined(__clang__) && defined(__HIP__)
 
 
