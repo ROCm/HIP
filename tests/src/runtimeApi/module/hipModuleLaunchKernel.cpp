@@ -28,7 +28,6 @@
 
 
 #include "test_common.h"
-#include "hip/hip_ext.h"
 
 #define fileName "matmul.code"
 #define matmulK "matmulK"
