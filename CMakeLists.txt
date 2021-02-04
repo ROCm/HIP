@@ -51,6 +51,7 @@ execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --version
 string(REPLACE "." ";" VERSION_LIST ${HIP_BASE_VERSION})
 list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)
 list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
+set(HIP_VERSION_GITDATE 0)
 
 find_package(Git)
 
@@ -289,10 +290,6 @@ file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
-
-if(NOT DEFINED HIP_VERSION_GITDATE)
-    set(HIP_VERSION_GITDATE 0)
-endif()
 
 # Build doxygen documentation
 find_program(DOXYGEN_EXE doxygen)
