@@ -40,12 +40,12 @@ amd::HostQueue* Device::NullStream(bool skip_alloc) {
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
   HIP_INIT_API(hipDeviceGet, device, deviceId);
 
-  if (device != nullptr) {
-    *device = deviceId;
-  } else {
-    HIP_RETURN(hipErrorInvalidValue);
+  if (deviceId < 0 ||
+      static_cast<size_t>(deviceId) >= g_devices.size() ||
+      device == nullptr) {
+    HIP_RETURN(hipErrorInvalidDevice);
   }
-
+  *device = deviceId;
   HIP_RETURN(hipSuccess);
 };
 
