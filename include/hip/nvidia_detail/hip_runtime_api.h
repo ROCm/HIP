@@ -351,7 +351,14 @@ typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipTextureType2D cudaTextureType2D
 #define hipTextureType2DLayered cudaTextureType2DLayered
 #define hipTextureType3D cudaTextureType3D
+
+#define hipDeviceScheduleAuto cudaDeviceScheduleAuto
+#define hipDeviceScheduleSpin cudaDeviceScheduleSpin
+#define hipDeviceScheduleYield cudaDeviceScheduleYield
+#define hipDeviceScheduleBlockingSync cudaDeviceScheduleBlockingSync
+#define hipDeviceScheduleMask cudaDeviceScheduleMask
 #define hipDeviceMapHost cudaDeviceMapHost
+#define hipDeviceLmemResizeToMax cudaDeviceLmemResizeToMax
 
 #define hipCpuDeviceId cudaCpuDeviceId
 #define hipInvalidDeviceId cudaInvalidDeviceId
