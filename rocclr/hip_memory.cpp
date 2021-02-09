@@ -421,7 +421,7 @@ hipError_t ihipMallocPitch(void** ptr, size_t* pitch, size_t width, size_t heigh
     return hipErrorInvalidValue;
   }
 
-  if ((width == 0) || (height == 0)) {
+  if ((width == 0) || (height == 0) || (depth == 0)) {
     *ptr = nullptr;
     return hipSuccess;
   }
