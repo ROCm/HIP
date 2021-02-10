@@ -152,6 +152,7 @@ static void transformOptions(std::vector<const char*>& options, amd::Program* pr
   std::vector<const char*> t_option;
   for (auto& i : options) {
     std::string t_str(i);
+#ifdef __HIP_ENABLE_PCH
     // Use precompiled header for hip
     if (t_str == "-hip-pch") {
       const char* pch = nullptr;
@@ -160,12 +161,7 @@ static void transformOptions(std::vector<const char*>& options, amd::Program* pr
       program->addPreCompiledHeader(std::string(pch, pch_size));
       i = "-nogpuinc";
     }
-    // To maintain compatibility with nvrtc
-    if (t_str.find("--gpu-architecture=") != std::string::npos) {
-      auto value = getValueOf(t_str);
-      std::string newValue = "--offload-arch=" + value;
-      i = newValue.c_str();
-    }
+#endif
   }
 }
 
