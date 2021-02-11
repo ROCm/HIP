@@ -1469,6 +1469,12 @@ hipError_t ihipMemcpyAtoH(hipArray* srcArray,
 hipError_t ihipMemcpyParam3D(const HIP_MEMCPY3D* pCopy,
                              hipStream_t stream,
                              bool isAsync = false) {
+  if(pCopy->WidthInBytes == 0 || pCopy->Height == 0 || pCopy->Depth == 0) {
+    LogPrintfInfo("Either Width :%d or Height: %d and Depth: %d is zero", pCopy->WidthInBytes,
+                  pCopy->Height, pCopy->Depth);
+    return hipSuccess;
+  }
+
   // If {src/dst}MemoryType is hipMemoryTypeUnified, {src/dst}Device and {src/dst}Pitch specify the (unified virtual address space)
   // base address of the source data and the bytes per row to apply. {src/dst}Array is ignored.
   hipMemoryType srcMemoryType = pCopy->srcMemoryType;
@@ -1506,7 +1512,7 @@ hipError_t ihipMemcpyParam3D(const HIP_MEMCPY3D* pCopy,
 
   amd::Coord3D srcOrigin = {pCopy->srcXInBytes, pCopy->srcY, pCopy->srcZ};
   amd::Coord3D dstOrigin = {pCopy->dstXInBytes, pCopy->dstY, pCopy->dstZ};
-  amd::Coord3D copyRegion = {pCopy->WidthInBytes, (pCopy->Height != 0) ? pCopy->Height : 1, (pCopy->Depth != 0) ? pCopy->Depth :  1};
+  amd::Coord3D copyRegion = {pCopy->WidthInBytes, pCopy->Height, pCopy->Depth};
 
   if ((srcMemoryType == hipMemoryTypeHost) && (dstMemoryType == hipMemoryTypeHost)) {
     // Host to Host.

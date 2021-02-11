@@ -590,7 +590,7 @@ HIP_MEMCPY3D getDrvMemcpy3DDesc(const hip_Memcpy2D& desc2D) {
 
   desc3D.WidthInBytes = desc2D.WidthInBytes;
   desc3D.Height = desc2D.Height;
-  desc3D.Depth = 0;
+  desc3D.Depth = 1;
 
   return desc3D;
 }
