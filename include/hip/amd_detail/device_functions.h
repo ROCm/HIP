@@ -1117,40 +1117,9 @@ void __assert_fail(const char *assertion,
                    unsigned int line,
                    const char *function)
 {
-  const char fmt[] = "%s:%u: %s: Device-side assertion `%s' failed.\n";
-
-  // strlen is not available as a built-in yet, so we create our own
-  // loop in a macro. With a string literal argument, the compiler
-  // usually manages to replace the loop with a constant.
-  //
-  // The macro does not check for null pointer, since all the string
-  // arguments are defined to be constant literals when called from
-  // the assert() macro.
-  //
-  // NOTE: The loop below includes the null terminator in the length
-  // as required by append_string_n().
-#define __hip_get_string_length(LEN, STR)       \
-  do {                                          \
-    const char *tmp = STR;                      \
-    while (*tmp++);                             \
-    LEN = tmp - STR;                            \
-  } while (0)
-
-  auto msg = __ockl_fprintf_stderr_begin();
-  int len = 0;
-  __hip_get_string_length(len, fmt);
-  msg = __ockl_fprintf_append_string_n(msg, fmt, len, 0);
-  __hip_get_string_length(len, file);
-  msg = __ockl_fprintf_append_string_n(msg, file, len, 0);
-  msg = __ockl_fprintf_append_args(msg, 1, line, 0, 0, 0, 0, 0, 0, 0);
-  __hip_get_string_length(len, function);
-  msg = __ockl_fprintf_append_string_n(msg, function, len, 0);
-  __hip_get_string_length(len, assertion);
-  __ockl_fprintf_append_string_n(msg, assertion, len, /* is_last = */ 1);
-
-#undef __hip_get_string_length
-
-  __builtin_trap();
+    printf("%s:%u: %s: Device-side assertion `%s' failed.\n", file, line,
+           function, assertion);
+    __builtin_trap();
 }
 
 extern "C" __device__ __attribute__((noinline)) __attribute__((weak))
