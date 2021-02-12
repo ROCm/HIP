@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
              hipGetErrorString(ret), ret);
       TestPassed &= false;
     }
-
+#ifdef __HIP_PLATFORM_AMD__
     if ((ret = hipMemset3D(devPitchedPtr, memsetval, extMD))
         != hipErrorInvalidValue) {
       printf("ArgValidation : Inappropriate error value returned for "
@@ -176,6 +176,9 @@ int main(int argc, char *argv[]) {
              hipGetErrorString(ret), ret);
       TestPassed &= false;
     }
+#else
+    printf("Cuda doesn't check the maximum depth of extent field\n");
+#endif
   } else if (p_tests == 4) {
     // Device Ptr out bound and extent(0) passed for memset
 
