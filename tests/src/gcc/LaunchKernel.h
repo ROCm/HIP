@@ -22,17 +22,21 @@ extern "C"
 {
 #endif
 
-extern __global__ void kernel();
-extern __global__ void kernel1(int*);
-extern __global__ void kernel2(int*,int*);
-extern __global__ void kernel3(int*,int*,int*);
-
 struct things {
     char c;
     short s;
     int i;
 };
-extern __global__ void kernel4(int*, char, short, int, struct things);
+
+typedef enum func{
+   mykernel,
+   mykernel1,
+   mykernel2,
+   mykernel3,
+   mykernel4
+}func;
+
+extern const void* getKernelFunc(enum func f);
 
 #ifdef __cplusplus
 }

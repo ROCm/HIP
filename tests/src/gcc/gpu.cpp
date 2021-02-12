@@ -49,4 +49,15 @@ __global__ void kernel4(int *a, char c, short s, int i, struct things t)
    *a = c + s + i + t.c + t.s + t.i;
 }
 
+const void* funcTable[] = {
+   (const void*)kernel,
+   (const void*)kernel1,
+   (const void*)kernel2,
+   (const void*)kernel3,
+   (const void*)kernel4 };
+
+const void* getKernelFunc(enum func f){
+    return funcTable[f];
+ }
+
 }//extern "C"
