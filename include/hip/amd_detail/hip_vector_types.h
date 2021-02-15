@@ -642,8 +642,8 @@ THE SOFTWARE.
         __host__ __device__
         explicit
         constexpr
-        HIP_vector_type(U x) noexcept
-            : HIP_vector_base<T, rank>{static_cast<T>(x)}
+        HIP_vector_type(U x_) noexcept
+            : HIP_vector_base<T, rank>{static_cast<T>(x_)}
         {}
         template< // TODO: constrain based on type as well.
             typename... Us,
