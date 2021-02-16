@@ -1238,6 +1238,13 @@ unsigned __smid(void)
     return (se_id << HW_ID_CU_ID_SIZE) + cu_id;
 }
 
+/**
+ * Map HIP_DYNAMIC_SHARED to "extern __shared__" for compatibility with old HIP applications
+ * To be removed in a future release.
+ */
+#define HIP_DYNAMIC_SHARED(type, var) extern __shared__ type var[];
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE
+
 #endif //defined(__clang__) && defined(__HIP__)
 
 
