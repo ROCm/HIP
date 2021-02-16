@@ -781,32 +781,44 @@ __device__ static inline int __double2loint(double x) {
     return tmp[0];
 }
 
-__device__ static inline int __double2int_rd(double x) { return (int)x; }
-__device__ static inline int __double2int_rn(double x) { return (int)x; }
-__device__ static inline int __double2int_ru(double x) { return (int)x; }
+__device__ static inline int __double2int_rd(double x) { return (int)__ocml_floor_f64(x); }
+__device__ static inline int __double2int_rn(double x) { return (int)__ocml_rint_f64(x); }
+__device__ static inline int __double2int_ru(double x) { return (int)__ocml_ceil_f64(x); }
 __device__ static inline int __double2int_rz(double x) { return (int)x; }
 
-__device__ static inline long long int __double2ll_rd(double x) { return (long long int)x; }
-__device__ static inline long long int __double2ll_rn(double x) { return (long long int)x; }
-__device__ static inline long long int __double2ll_ru(double x) { return (long long int)x; }
-__device__ static inline long long int __double2ll_rz(double x) { return (long long int)x; }
+__device__ static inline long long int __double2ll_rd(double x) {
+  return (long long)__ocml_floor_f64(x);
+}
+__device__ static inline long long int __double2ll_rn(double x) {
+  return (long long)__ocml_rint_f64(x);
+}
+__device__ static inline long long int __double2ll_ru(double x) {
+  return (long long)__ocml_ceil_f64(x);
+}
+__device__ static inline long long int __double2ll_rz(double x) { return (long long)x; }
 
-__device__ static inline unsigned int __double2uint_rd(double x) { return (unsigned int)x; }
-__device__ static inline unsigned int __double2uint_rn(double x) { return (unsigned int)x; }
-__device__ static inline unsigned int __double2uint_ru(double x) { return (unsigned int)x; }
+__device__ static inline unsigned int __double2uint_rd(double x) {
+  return (unsigned int)__ocml_floor_f64(x);
+}
+__device__ static inline unsigned int __double2uint_rn(double x) {
+  return (unsigned int)__ocml_rint_f64(x);
+}
+__device__ static inline unsigned int __double2uint_ru(double x) {
+  return (unsigned int)__ocml_ceil_f64(x);
+}
 __device__ static inline unsigned int __double2uint_rz(double x) { return (unsigned int)x; }
 
 __device__ static inline unsigned long long int __double2ull_rd(double x) {
-    return (unsigned long long int)x;
+  return (unsigned long long int)__ocml_floor_f64(x);
 }
 __device__ static inline unsigned long long int __double2ull_rn(double x) {
-    return (unsigned long long int)x;
+  return (unsigned long long int)__ocml_rint_f64(x);
 }
 __device__ static inline unsigned long long int __double2ull_ru(double x) {
-    return (unsigned long long int)x;
+  return (unsigned long long int)__ocml_ceil_f64(x);
 }
 __device__ static inline unsigned long long int __double2ull_rz(double x) {
-    return (unsigned long long int)x;
+  return (unsigned long long int)x;
 }
 
 __device__ static inline long long int __double_as_longlong(double x) {
@@ -837,27 +849,39 @@ __device__ static inline int __float2int_rn(float x) { return (int)__ocml_rint_f
 __device__ static inline int __float2int_ru(float x) { return (int)__ocml_ceil_f32(x); }
 __device__ static inline int __float2int_rz(float x) { return (int)__ocml_trunc_f32(x); }
 
-__device__ static inline long long int __float2ll_rd(float x) { return (long long int)x; }
-__device__ static inline long long int __float2ll_rn(float x) { return (long long int)x; }
-__device__ static inline long long int __float2ll_ru(float x) { return (long long int)x; }
+__device__ static inline long long int __float2ll_rd(float x) {
+  return (long long int)__ocml_floor_f32(x);
+}
+__device__ static inline long long int __float2ll_rn(float x) {
+  return (long long int)__ocml_rint_f32(x);
+}
+__device__ static inline long long int __float2ll_ru(float x) {
+  return (long long int)__ocml_ceil_f32(x);
+}
 __device__ static inline long long int __float2ll_rz(float x) { return (long long int)x; }
 
-__device__ static inline unsigned int __float2uint_rd(float x) { return (unsigned int)x; }
-__device__ static inline unsigned int __float2uint_rn(float x) { return (unsigned int)x; }
-__device__ static inline unsigned int __float2uint_ru(float x) { return (unsigned int)x; }
+__device__ static inline unsigned int __float2uint_rd(float x) {
+  return (unsigned int)__ocml_floor_f32(x);
+}
+__device__ static inline unsigned int __float2uint_rn(float x) {
+  return (unsigned int)__ocml_rint_f32(x);
+}
+__device__ static inline unsigned int __float2uint_ru(float x) {
+  return (unsigned int)__ocml_ceil_f32(x);
+}
 __device__ static inline unsigned int __float2uint_rz(float x) { return (unsigned int)x; }
 
 __device__ static inline unsigned long long int __float2ull_rd(float x) {
-    return (unsigned long long int)x;
+  return (unsigned long long int)__ocml_floor_f32(x);
 }
 __device__ static inline unsigned long long int __float2ull_rn(float x) {
-    return (unsigned long long int)x;
+  return (unsigned long long int)__ocml_rint_f32(x);
 }
 __device__ static inline unsigned long long int __float2ull_ru(float x) {
-    return (unsigned long long int)x;
+  return (unsigned long long int)__ocml_ceil_f32(x);
 }
 __device__ static inline unsigned long long int __float2ull_rz(float x) {
-    return (unsigned long long int)x;
+  return (unsigned long long int)x;
 }
 
 __device__ static inline int __float_as_int(float x) {
