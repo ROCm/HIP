@@ -95,6 +95,13 @@ typedef int hipLaunchParm;
 
 #define HIP_SYMBOL(X) &X
 
+/**
+ * Map HIP_DYNAMIC_SHARED to "extern __shared__" for compatibility with old HIP applications
+ * To be removed in a future release.
+ */
+#define HIP_DYNAMIC_SHARED(type, var) extern __shared__ type var[];
+#define HIP_DYNAMIC_SHARED_ATTRIBUTE
+
 #ifdef __HIP_DEVICE_COMPILE__
 #define abort_()                                                                                    \
     { asm("trap;"); }
