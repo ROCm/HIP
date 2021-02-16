@@ -222,6 +222,8 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams, extra, startEvent,
     stopEvent, flags, params);
 
+  HIP_RETURN_ONFAIL(PlatformState::instance().initStatManagedVarDevicePtr(ihipGetDevice()));
+
   if (f == nullptr) {
     DevLogPrintfError("%s", "Function passed is null");
     return hipErrorInvalidImage;
