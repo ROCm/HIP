@@ -24,12 +24,15 @@ THE SOFTWARE.
 
 #include <cstring>
 
+#include <hip/amd_detail/driver_types.h>
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
 #include <elf/elf.hpp>
 
+hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                      amd::HostQueue& queue, bool isAsync = false);
 namespace {
 size_t constexpr strLiteralLength(char const* str) {
   return *str ? 1 + strLiteralLength(str + 1) : 0;
@@ -634,7 +637,6 @@ FatBinaryInfo** StatCO::addFatBinary(const void* data, bool initialized) {
   if (initialized) {
     digestFatBinary(data, modules_[data]);
   }
-
   return &modules_[data];
 }
 
@@ -648,6 +650,16 @@ hipError_t StatCO::removeFatBinary(FatBinaryInfo** module) {
       vit = vars_.erase(vit);
     } else {
       ++vit;
+    }
+  }
+
+  auto it = managedVars_.begin();
+  while (it != managedVars_.end()) {
+    if ((*it)->moduleInfo() == module) {
+      delete *it;
+      managedVars_.erase(it);
+    } else {
+      ++it;
     }
   }
 
@@ -732,6 +744,34 @@ hipError_t StatCO::getStatGlobalVar(const void* hostVar, int deviceId, hipDevice
 
   *dev_ptr = dvar->device_ptr();
   *size_ptr = dvar->size();
+  return hipSuccess;
+}
+
+hipError_t StatCO::registerStatManagedVar(Var* var) {
+  managedVars_.emplace_back(var);
+  return hipSuccess;
+}
+
+hipError_t StatCO::initStatManagedVarDevicePtr(int deviceId) {
+  amd::ScopedLock lock(sclock_);
+
+  if (managedVarsDevicePtrInitalized_.find(deviceId) == managedVarsDevicePtrInitalized_.end() ||
+      !managedVarsDevicePtrInitalized_[deviceId]) {
+    for (auto var : managedVars_) {
+      DeviceVar* dvar = nullptr;
+      IHIP_RETURN_ONFAIL(var->getStatDeviceVar(&dvar, deviceId));
+
+      amd::HostQueue* queue = hip::getNullStream();
+      if(queue != nullptr) {
+        ihipMemcpy(reinterpret_cast<address>(dvar->device_ptr()), var->getManagedVarPtr(),
+                  dvar->size(), hipMemcpyHostToDevice, *queue);
+      } else {
+        ClPrint(amd::LOG_ERROR, amd::LOG_API, "Host Queue is NULL");
+        return hipErrorInvalidResourceHandle;
+      }
+    }
+    managedVarsDevicePtrInitalized_[deviceId] = true;
+  }
   return hipSuccess;
 }
 }; //namespace: hip

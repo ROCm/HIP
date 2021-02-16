@@ -160,6 +160,12 @@ Var::Var(std::string name, DeviceVarKind dVarKind, size_t size, int type, int no
   dVar_.resize(g_devices.size());
 }
 
+Var::Var(std::string name, DeviceVarKind dVarKind, void *pointer, size_t size,
+         unsigned align, FatBinaryInfo** modules) : name_(name), dVarKind_(dVarKind),
+         size_(size), modules_(modules), managedVarPtr_(pointer), align_(align) {
+  dVar_.resize(g_devices.size());
+}
+
 Var::~Var() {
   for (auto& elem : dVar_) {
     delete elem;
@@ -186,15 +192,12 @@ hipError_t Var::getStatDeviceVar(DeviceVar** dvar, int deviceId) {
   guarantee((deviceId >= 0) , "Invalid DeviceId, less than zero");
   guarantee((static_cast<size_t>(deviceId) < g_devices.size()),
             "Invalid DeviceId, greater than no of code objects");
-
-  hipModule_t hmod = nullptr;
-  IHIP_RETURN_ONFAIL((*modules_)->BuildProgram(deviceId));
-  IHIP_RETURN_ONFAIL((*modules_)->GetModule(deviceId, &hmod));
-
   if (dVar_[deviceId] == nullptr) {
+    hipModule_t hmod = nullptr;
+    IHIP_RETURN_ONFAIL((*modules_)->BuildProgram(deviceId));
+    IHIP_RETURN_ONFAIL((*modules_)->GetModule(deviceId, &hmod));
     dVar_[deviceId] = new DeviceVar(name_, hmod);
   }
-
   *dvar = dVar_[deviceId];
   return hipSuccess;
 }

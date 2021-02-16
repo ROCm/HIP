@@ -179,6 +179,7 @@ __hipRegisterFunction
 __hipRegisterVar
 __hipRegisterSurface
 __hipRegisterTexture
+__hipRegisterManagedVar
 __hipUnregisterFatBinary
 hipConfigureCall
 hipSetupArgument

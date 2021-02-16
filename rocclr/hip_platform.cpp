@@ -32,6 +32,11 @@ constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
 thread_local std::stack<ihipExec_t> execStack_;
 PlatformState* PlatformState::platform_; // Initiaized as nullptr by default
 
+//forward declaration of methods required for __hipRegisrterManagedVar
+hipError_t ihipMallocManaged(void** ptr, size_t size, unsigned int align = 0);
+hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                      amd::HostQueue& queue, bool isAsync = false);
+
 struct __CudaFatBinaryWrapper {
   unsigned int magic;
   unsigned int version;
@@ -76,7 +81,6 @@ extern "C" hip::FatBinaryInfo** __hipRegisterFatBinary(const void* data)
                       fbwrapper->magic, fbwrapper->version);
     return nullptr;
   }
-
   return PlatformState::instance().addFatBinary(fbwrapper->binary);
 }
 
@@ -136,6 +140,30 @@ extern "C" void __hipRegisterSurface(hip::FatBinaryInfo** modules,      // The d
                                      int type, int ext) {
   hip::Var* var_ptr = new hip::Var(std::string(hostVar), hip::Var::DeviceVarKind::DVK_Surface, sizeof(surfaceReference), 0, 0, modules);
   PlatformState::instance().registerStatGlobalVar(var, var_ptr);
+}
+
+extern "C" void __hipRegisterManagedVar(void *hipModule,   // Pointer to hip module returned from __hipRegisterFatbinary
+                                        void **pointer,    // Pointer to a chunk of managed memory with size \p size and alignment \p align
+                                                           // HIP runtime allocates such managed memory and assign it to \p pointer
+                                        void *init_value,  // Initial value to be copied into \p pointer
+                                        const char *name,  // Name of the variable in code object
+                                        size_t size,
+                                        unsigned align) {
+  HIP_INIT();
+  hipError_t status = ihipMallocManaged(pointer, size, align);
+  if( status == hipSuccess) {
+    amd::HostQueue* queue = hip::getNullStream();
+    if(queue != nullptr) {
+      ihipMemcpy(*pointer, init_value, size, hipMemcpyHostToDevice, *queue);
+    } else {
+      ClPrint(amd::LOG_ERROR, amd::LOG_API, "Host Queue is NULL");
+    }
+  } else {
+    guarantee("Error during allocation of managed memory!");
+  }
+  hip::Var* var_ptr = new hip::Var(std::string(name), hip::Var::DeviceVarKind::DVK_Managed, pointer,
+                                   size, align, reinterpret_cast<hip::FatBinaryInfo**>(hipModule));
+  PlatformState::instance().registerStatManagedVar(var_ptr);
 }
 
 extern "C" void __hipRegisterTexture(hip::FatBinaryInfo** modules,      // The device modules containing code object
@@ -851,6 +879,10 @@ hipError_t PlatformState::registerStatGlobalVar(const void* hostVar, hip::Var* v
   return statCO_.registerStatGlobalVar(hostVar, var);
 }
 
+hipError_t PlatformState::registerStatManagedVar(hip::Var* var) {
+  return statCO_.registerStatManagedVar(var);
+}
+
 hipError_t PlatformState::getStatFunc(hipFunction_t* hfunc, const void* hostFunction, int deviceId) {
   return statCO_.getStatFunc(hfunc, hostFunction, deviceId);
 }
@@ -865,6 +897,10 @@ hipError_t PlatformState::getStatFuncAttr(hipFuncAttributes* func_attr, const vo
 hipError_t PlatformState::getStatGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                                            size_t* size_ptr) {
   return statCO_.getStatGlobalVar(hostVar, deviceId, dev_ptr, size_ptr);
+}
+
+hipError_t PlatformState::initStatManagedVarDevicePtr(int deviceId) {
+  return statCO_.initStatManagedVarDevicePtr(deviceId);
 }
 
 void PlatformState::setupArgument(const void *arg, size_t size, size_t offset) {
