@@ -42,7 +42,7 @@ const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream) 
   }
   int deviceId = hipGetStreamDeviceId(stream);
   if (deviceId == -1) {
-    DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
+    LogPrintfError("Wrong Device Id: %d \n", deviceId);
     return NULL;
   }
   hipFunction_t func = nullptr;

@@ -82,7 +82,7 @@ char* demangle(const char* loweredName) {
   int status = 0;
   char* demangledName = DEMANGLE(loweredName, nullptr, nullptr, &status);
   if (status != 0) {
-    DevLogPrintfError("Cannot demangle loweredName: %s \n", loweredName);
+    LogPrintfError("Cannot demangle loweredName: %s \n", loweredName);
     return nullptr;
   }
 #elif defined(_WIN32)
@@ -92,7 +92,7 @@ char* demangle(const char* loweredName) {
                             UNDECORATED_SIZE/ sizeof(*demangledName), UNDNAME_COMPLETE))
   {
     free(demangledName);
-    DevLogPrintfError("Cannot undecorate loweredName: %s demangledName: %s \n",
+    LogPrintfError("Cannot undecorate loweredName: %s demangledName: %s \n",
                       loweredName, demangledName);
     return nullptr;
   }
@@ -198,7 +198,7 @@ const char* hiprtcGetErrorString(hiprtcResult x) {
     case HIPRTC_ERROR_INTERNAL_ERROR:
       return "HIPRTC_ERROR_INTERNAL_ERROR";
     default:
-      DevLogPrintfError("Invalid HIPRTC error code: %d \n", x);
+      LogPrintfError("Invalid HIPRTC error code: %d \n", x);
       return nullptr;
   };
 
