@@ -533,7 +533,7 @@ hipError_t DynCO::getDeviceVar(DeviceVar** dvar, std::string var_name) {
 
   auto it = vars_.find(var_name);
   if (it == vars_.end()) {
-    DevLogPrintfError("Cannot find the Var: %s ", var_name.c_str());
+    LogPrintfError("Cannot find the Var: %s ", var_name.c_str());
     return hipErrorNotFound;
   }
 
@@ -552,7 +552,7 @@ hipError_t DynCO::getDynFunc(hipFunction_t* hfunc, std::string func_name) {
 
   auto it = functions_.find(func_name);
   if (it == functions_.end()) {
-    DevLogPrintfError("Cannot find the function: %s ", func_name.c_str());
+    LogPrintfError("Cannot find the function: %s ", func_name.c_str());
     return hipErrorNotFound;
   }
 
@@ -572,7 +572,7 @@ hipError_t DynCO::populateDynGlobalVars() {
                           (*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
-    DevLogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", module());
+    LogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", module());
     return hipErrorSharedObjectSymbolNotFound;
   }
 
@@ -593,7 +593,7 @@ hipError_t DynCO::populateDynGlobalFuncs() {
 
   // Get all the global func names from COMGR
   if (!dev_program->getGlobalFuncFromCodeObj(&func_names)) {
-    DevLogPrintfError("Could not get Global Funcs from Code Obj for Module: 0x%x \n", module());
+    LogPrintfError("Could not get Global Funcs from Code Obj for Module: 0x%x \n", module());
     return hipErrorSharedObjectSymbolNotFound;
   }
 
