@@ -214,12 +214,10 @@ hipError_t hipCtxPopCurrent(hipCtx_t* ctx) {
   HIP_INIT_API(hipCtxPopCurrent, ctx);
 
   hip::Device** dev = reinterpret_cast<hip::Device**>(ctx);
-  if (dev == nullptr) {
-    HIP_RETURN(hipErrorInvalidContext);
-  }
-
   if (!g_ctxtStack.empty()) {
-    *dev = g_ctxtStack.top();
+    if (dev != nullptr) {
+      *dev = g_ctxtStack.top();
+    }
     g_ctxtStack.pop();
   } else {
     DevLogError("Context Stack empty \n");
