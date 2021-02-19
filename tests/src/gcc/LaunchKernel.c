@@ -19,10 +19,10 @@
 
 
 /* HIT_START
- * BUILD_CMD: gpu.o %hc -I%hip-path/include -g -c %S/gpu.cpp -o %T/gpu.o EXCLUDE_HIP_PLATFORM nvidia
- * BUILD_CMD: launchkernel.o %hc -D__HIP_PLATFORM_AMD__ -g -I%hip-path/include -c %S/LaunchKernel.c -o %T/launchkernel.o EXCLUDE_HIP_PLATFORM nvidia
- * BUILD_CMD: LaunchKernel %hc %T/launchkernel.o %T/gpu.o -g -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/%t DEPENDS gpu.o launchkernel.o EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD_CMD: gpu.o %hc -I%hip-path/include -g -c %S/gpu.cpp -o %T/gpu.o EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
+ * BUILD_CMD: launchkernel.o %hc -D__HIP_PLATFORM_AMD__ -g -I%hip-path/include -c %S/LaunchKernel.c -o %T/launchkernel.o EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
+ * BUILD_CMD: LaunchKernel %hc %T/launchkernel.o %T/gpu.o -g -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/%t DEPENDS gpu.o launchkernel.o EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
  * HIT_END
  */
 
