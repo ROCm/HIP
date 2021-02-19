@@ -159,7 +159,7 @@ extern "C" void __hipRegisterManagedVar(void *hipModule,   // Pointer to hip mod
       ClPrint(amd::LOG_ERROR, amd::LOG_API, "Host Queue is NULL");
     }
   } else {
-    guarantee("Error during allocation of managed memory!");
+    guarantee(false, "Error during allocation of managed memory!");
   }
   hip::Var* var_ptr = new hip::Var(std::string(name), hip::Var::DeviceVarKind::DVK_Managed, pointer,
                                    size, align, reinterpret_cast<hip::FatBinaryInfo**>(hipModule));
