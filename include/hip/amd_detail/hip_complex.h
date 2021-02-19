@@ -214,7 +214,7 @@ __device__ __host__ static inline hipDoubleComplex hipCdiv(hipDoubleComplex p, h
     return ret;
 }
 
-__device__ __host__ static inline double hipCabs(hipDoubleComplex z) { return sqrtf(hipCsqabs(z)); }
+__device__ __host__ static inline double hipCabs(hipDoubleComplex z) { return sqrt(hipCsqabs(z)); }
 
 
 #if __cplusplus
