@@ -61,13 +61,13 @@ void NegativeTests(){
             hipEvent_t start;
             HIPCHECK(hipEventCreate(&start));
 
+            HIPCHECK(hipEventRecord(start, nullptr));
+            HIPCHECK(hipEventSynchronize(start));
+
             // create event on dev=1
             HIPCHECK(hipSetDevice(1));
             hipEvent_t stop;
             HIPCHECK(hipEventCreate(&stop));
-
-            HIPCHECK(hipEventRecord(start, nullptr));
-            HIPCHECK(hipEventSynchronize(start));
 
             HIPCHECK(hipEventRecord(stop, nullptr));
             HIPCHECK(hipEventSynchronize(stop));
