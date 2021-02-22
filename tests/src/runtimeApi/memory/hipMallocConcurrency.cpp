@@ -85,11 +85,15 @@ Testcase Scenarios :
 /* Buffer size for alloc/free cycles */
 #define BUFF_SIZE_AF (5*1024*1024)
 
+/* You may change it for individual test.
+ * But default 100 is for quick return in Jenkin Build */
+#define NUM_DIV 100
+
 /* Max alloc/free iterations for smaller chunks */
-#define MAX_ALLOCFREE_SC (5000000)
+#define MAX_ALLOCFREE_SC (5000000/NUM_DIV)
 
 /* Max alloc and pool iterations (TBD) */
-#define MAX_ALLOCPOOL_ITER (2000000)
+#define MAX_ALLOCPOOL_ITER (2000000/NUM_DIV)
 
 /**
  * Validates data consitency on supplied gpu
