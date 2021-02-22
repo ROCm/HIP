@@ -28,7 +28,7 @@ If your project already modifies ```CMAKE_MODULE_PATH```, you will need to appen
 ## Using the hip_add_executable macro
 FindHIP provides the ```hip_add_executable``` macro that is similar to the ```cuda_add_executable``` macro that is provided by FindCUDA.
 The syntax is also similar. The ```hip_add_executable``` macro uses the hipcc wrapper as the compiler.
-The macro supports specifying HCC-specific, CLANG-specific, NVCC-specific compiler options using the ```HCC_OPTIONS```, ```CLANG_OPTIONS``` and ```NVCC_OPTIONS``` keywords.
+The macro supports specifying CLANG-specific, NVCC-specific compiler options using the ```CLANG_OPTIONS``` and ```NVCC_OPTIONS``` keywords.
 Common options targeting both compilers can be specificed after the ```HIPCC_OPTIONS``` keyword.
 
 ## How to build and run:

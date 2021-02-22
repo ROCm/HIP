@@ -57,7 +57,7 @@ int main(int argc, char* argv[]) {
     hipDeviceProp_t props;
     CHECK(hipGetDeviceProperties(&props, device /*deviceID*/));
     printf("info: running on device %s\n", props.name);
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
     printf("info: architecture on AMD GPU device is: %s\n", props.gcnArchName);
 #endif
     printf("info: allocate host mem (%6.2f MB)\n", 2 * Nbytes / 1024.0 / 1024.0);

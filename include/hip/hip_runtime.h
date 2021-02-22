@@ -23,7 +23,7 @@ THE SOFTWARE.
 //! HIP = Heterogeneous-compute Interface for Portability
 //!
 //! Define a extremely thin runtime layer that allows source code to be compiled unmodified
-//! through either AMD HCC or NVCC.   Key features tend to be in the spirit
+//! through either AMD CLANG or NVCC.   Key features tend to be in the spirit
 //! and terminology of CUDA, but with a portable path to other accelerators as well:
 //
 //! Both paths support rich C++ features including classes, templates, lambdas, etc.
@@ -56,14 +56,56 @@ THE SOFTWARE.
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
 
-#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_PLATFORM_NVCC__)
-#include <hip/hcc_detail/hip_runtime.h>
-#elif defined(__HIP_PLATFORM_NVCC__) && !defined(__HIP_PLATFORM_HCC__)
-#include <hip/nvcc_detail/hip_runtime.h>
+#if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include <hip/amd_detail/hip_runtime.h>
+#elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
+#include <hip/nvidia_detail/hip_runtime.h>
 #else
-#error("Must define exactly one of __HIP_PLATFORM_HCC__ or __HIP_PLATFORM_NVCC__");
+#error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
 #endif
 
+// The following are deprecation notices.
+// They will be removed after upstream updation
+#if 0 // Temporarily disable deprecation warning as it will fail rocgdb test
+#if defined(__clang__)
+//The following work for clang rather than for gnu gcc/g++/c++
+#pragma GCC diagnostic push
+#pragma GCC diagnostic warning "-Wcpp"
+#ifdef __HCC__
+#warning("__HCC__ is deprecated, please don't use it")
+#endif
+
+#ifdef __HIP_ROCclr__
+#warning("__HIP_ROCclr__ is deprecated, please don't use it")
+#endif
+
+#ifdef __HIP_PLATFORM_HCC__
+#warning("__HIP_PLATFORM_HCC__ is deprecated, please use __HIP_PLATFORM_AMD__ instead")
+#endif
+
+#ifdef __HIP_PLATFORM_NVCC_
+#warning("__HIP_PLATFORM_NVCC_ is deprecated, please use __HIP_PLATFORM_NVIDIA__ instead")
+#endif
+#pragma GCC diagnostic pop
+#elif defined(__GNUC__)
+//The following work for gnu gcc/g++/c++ rather than for clang
+#ifdef __HCC__
+#pragma message ("__HCC__ is deprecated, please don't use it")
+#endif
+
+#ifdef __HIP_ROCclr__
+#pragma message ("__HIP_ROCclr__ is deprecated, please don't use it")
+#endif
+
+#ifdef __HIP_PLATFORM_HCC__
+#pragma message ("__HIP_PLATFORM_HCC__ is deprecated, please use __HIP_PLATFORM_AMD__ instead")
+#endif
+
+#ifdef __HIP_PLATFORM_NVCC_
+#pragma message ("__HIP_PLATFORM_NVCC_ is deprecated, please use __HIP_PLATFORM_NVIDIA__ instead")
+#endif
+#endif // defined(__clang__)
+#endif
 
 #include <hip/hip_runtime_api.h>
 #include <hip/hip_vector_types.h>

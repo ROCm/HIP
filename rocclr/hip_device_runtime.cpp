@@ -414,7 +414,9 @@ hipError_t hipDeviceGetPCIBusId ( char* pciBusId, int  len, int  device ) {
 
 hipError_t hipDeviceGetSharedMemConfig ( hipSharedMemConfig * pConfig ) {
   HIP_INIT_API(hipDeviceGetSharedMemConfig, pConfig);
-
+  if (pConfig == nullptr) {
+    return HIP_RETURN(hipErrorInvalidValue);
+  }
   *pConfig = hipSharedMemBankSizeFourByte;
 
   HIP_RETURN(hipSuccess);
@@ -500,22 +502,6 @@ hipError_t hipGetDeviceFlags ( unsigned int* flags ) {
   }
   *flags = hip::getCurrentDevice()->getFlags();
   HIP_RETURN(hipSuccess);
-}
-
-hipError_t hipIpcGetEventHandle ( hipIpcEventHandle_t* handle, hipEvent_t event ) {
-  HIP_INIT_API(hipIpcGetEventHandle, handle, event);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t hipIpcOpenEventHandle ( hipEvent_t* event, hipIpcEventHandle_t handle ) {
-  HIP_INIT_API(hipIpcOpenEventHandle, event, handle);
-
-  assert(0 && "Unimplemented");
-
-  HIP_RETURN(hipErrorNotSupported);
 }
 
 hipError_t hipSetDevice ( int  device ) {

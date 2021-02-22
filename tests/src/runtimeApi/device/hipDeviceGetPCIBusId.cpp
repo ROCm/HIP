@@ -24,16 +24,18 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-hipDeviceGetAttribute --tests 0x1
- * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-lspci --tests 0x2 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST_NAMED: %t  hipDeviceGetPCIBusId-vs-lspci --tests 0x2
+ * TEST_NAMED: %t  hipDeviceGetPCIBusId-negative --tests 0x3
  * HIT_END
  */
 
 #include "test_common.h"
 #define MAX_DEVICE_LENGTH 20
 
-static bool getPciBusId(int deviceCount, char hipDeviceList[][MAX_DEVICE_LENGTH]) {
+static bool getPciBusId(int deviceCount,
+                        char hipDeviceList[][MAX_DEVICE_LENGTH]) {
   for (int i = 0; i < deviceCount; i++) {
     HIPCHECK(hipDeviceGetPCIBusId(hipDeviceList[i], MAX_DEVICE_LENGTH, i));
   }
@@ -47,7 +49,6 @@ bool comparePciBusIDWithHipDeviceGetAttribute() {
   HIPASSERT(deviceCount != 0);
   printf("No.of gpus in the system: %d\n", deviceCount);
   char hipDeviceList[deviceCount][MAX_DEVICE_LENGTH];
-  char pciDeviceList[deviceCount][MAX_DEVICE_LENGTH];
 
   getPciBusId(deviceCount, hipDeviceList);
 
@@ -58,7 +59,8 @@ bool comparePciBusIDWithHipDeviceGetAttribute() {
     int tempPciBusId = -1;
     sscanf(hipDeviceList[i], "%04x:%02x:%02x", &pciDomainID, &pciBusID,
            &pciDeviceID);
-    HIPCHECK(hipDeviceGetAttribute(&tempPciBusId, hipDeviceAttributePciBusId, i));
+    HIPCHECK(hipDeviceGetAttribute(&tempPciBusId,
+                                    hipDeviceAttributePciBusId, i));
     if (pciBusID != tempPciBusId) {
       testResult = false;
       printf("pciBusID from hipDeviceGetPCIBusId mismatched to that from "
@@ -106,7 +108,7 @@ bool compareHipDeviceGetPCIBusIdWithLspci() {
   getPciBusId(deviceCount, hipDeviceList);
 
   // Get lspci device list and compare with hip device list
-#if defined(__CUDA_ARCH__)
+#ifdef __HIP_PLATFORM_NVCC__
   char const *command = "lspci -D | grep controller | grep NVIDIA | "
                         "cut -d ' ' -f 1";
 #else
@@ -132,7 +134,8 @@ bool compareHipDeviceGetPCIBusIdWithLspci() {
       }
     }
     if (bMatchFound == false) {
-      printf("PCI device: %s is not reported by HIP\n", pciDeviceList[index]);
+      printf("PCI device: %s is not reported by HIP\n",
+                                   pciDeviceList[index]);
     }
     index++;
   }
@@ -149,20 +152,75 @@ bool compareHipDeviceGetPCIBusIdWithLspci() {
   return testResult;
 }
 
+/**
+ * Validates negative scenarios for hipDeviceGetPCIBusId
+ * scenario1: pciBusId = nullptr
+ * scenario2: device = -1 (Invalid Device)
+ * scenario3: device = Non Existing Device
+ * scenario4: len = 0
+ * scenario5: len < 0
+ */
+bool testInvalidParameters() {
+  bool TestPassed = true;
+  hipError_t ret;
+  int deviceCount = 0;
+  HIPCHECK(hipGetDeviceCount(&deviceCount));
+  HIPASSERT(deviceCount != 0);
+  printf("No.of gpus in the system: %d\n", deviceCount);
+  char pciBusId[MAX_DEVICE_LENGTH];
+  // pciBusId = nullptr
+  int device;
+  HIPCHECK(hipGetDevice(&device));
+  ret = hipDeviceGetPCIBusId(nullptr, MAX_DEVICE_LENGTH, device);
+  if (ret == hipSuccess) {
+    TestPassed &= false;
+    printf("Test {pciBusId = nullptr} Failed \n");
+  }
+  // len = 0
+  ret = hipDeviceGetPCIBusId(pciBusId, 0, device);
+  if (ret == hipSuccess) {
+    TestPassed &= false;
+    printf("Test {len = 0} Failed \n");
+  }
+  // len < 0
+  ret = hipDeviceGetPCIBusId(pciBusId, -1, device);
+  if (ret == hipSuccess) {
+    TestPassed &= false;
+    printf("Test {len < 0} Failed \n");
+  }
+  // device = -1
+  ret = hipDeviceGetPCIBusId(pciBusId, MAX_DEVICE_LENGTH, -1);
+  if (ret == hipSuccess) {
+    TestPassed &= false;
+    printf("Test {device = -1} Failed \n");
+  }
+  // device = Non Existing Device
+  ret = hipDeviceGetPCIBusId(pciBusId, MAX_DEVICE_LENGTH, deviceCount);
+  if (ret == hipSuccess) {
+    TestPassed &= false;
+    printf("Test {device = Non Existing Device} Failed \n");
+  }
+  return TestPassed;
+}
+
 int main(int argc, char* argv[]) {
   bool testResult = true;
   HipTest::parseStandardArguments(argc, argv, true);
 
-  if (p_tests & 0x1) {
+  if (p_tests == 0x1) {
     testResult &= comparePciBusIDWithHipDeviceGetAttribute();
   }
 
-  if (p_tests & 0x2) {
+  if (p_tests == 0x2) {
 #ifdef __unix__
     testResult &= compareHipDeviceGetPCIBusIdWithLspci();
 #else
     printf("Detected non-linux OS. Skipping the test\n");
 #endif
+  }
+
+  if (p_tests == 0x3) {
+    testResult &= testInvalidParameters();
   }
 
   if (testResult) {

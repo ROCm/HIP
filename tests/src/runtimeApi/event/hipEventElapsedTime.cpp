@@ -35,7 +35,7 @@ void NegativeTests(){
         hipEvent_t start,end;
         float tms = 1.0f;
         HIPASSERT(hipEventElapsedTime(nullptr,start,end) == hipErrorInvalidValue);
-#ifndef __HIP_PLATFORM_NVCC__
+#ifndef __HIP_PLATFORM_NVIDIA__
         // On NVCC platform API throws seg fault hence skipping
         HIPASSERT(hipEventElapsedTime(&tms,nullptr,end) == hipErrorInvalidHandle);
         HIPASSERT(hipEventElapsedTime(&tms,start,nullptr) == hipErrorInvalidHandle);

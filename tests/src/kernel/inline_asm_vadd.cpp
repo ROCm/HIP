@@ -36,11 +36,11 @@ OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWA
 __global__ void vadd_asm(float* out, float* in) {
     int i = blockDim.x * blockIdx.x + threadIdx.x;
 
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
     asm volatile("add.f32 %0,%1,%2;" : "=f"(out[i]) : "f"(in[i]), "f"(out[i]));
 #endif
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
     asm volatile("v_add_f32_e32 %0, %1, %2" : "=v"(out[i]) : "v"(in[i]), "v"(out[i]));
 #endif
 }

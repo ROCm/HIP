@@ -48,9 +48,6 @@ THE SOFTWARE.
     }
 
 void printCompilerInfo() {
-#ifdef __HCC__
-    printf("compiler: hcc version=%s, workweek (YYWWD) = %u\n", __hcc_version__, __hcc_workweek__);
-#endif
 #ifdef __NVCC__
     printf("compiler: nvcc\n");
 #endif
@@ -171,7 +168,7 @@ void printDeviceProp(int deviceId) {
     cout << endl;
 
 
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
     // Limits:
     cout << endl;
     printLimit(w1, cudaLimitStackSize, "bytes/thread");

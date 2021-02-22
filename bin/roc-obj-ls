@@ -1,0 +1,136 @@
+#!/usr/bin/perl
+use strict;
+use File::Copy;
+use File::Spec;
+use File::Basename;
+use File::Which;
+use Cwd 'realpath';
+use Getopt::Std;
+use List::Util qw(max);
+use URI::Encode;
+
+sub usage {
+  print("Usage: $0 [-v|h] executable...\n");
+  print("List the URIs of the code objects embedded in the specfied host executables.\n");
+  print("-v \tVerbose output (includes Entry ID)\n");
+  print("-h \tShow this help message\n");
+  exit;
+}
+
+# sub to read a qword. 1st arg is a FP, 2nd arg is ref to destination var.
+sub readq {
+ my ($input_fp, $qword) = @_;
+ read($input_fp, my $bytes, 8) == 8 or die("Error: Failed to read 8 bytes\n");
+ ${$qword} = unpack("Q<", $bytes);
+}
+
+# Process options
+my %options=();
+getopts('vhd', \%options);
+
+if (defined $options{h}) {
+  usage();
+}
+
+my $verbose = $options{v};
+my $debug = $options{d};
+
+# look for objdump
+my $objdump = which("objdump");
+(-f $objdump) || die("Error: Can't find objdump command\n");
+
+# for each argument (which should be an executable):
+foreach my $executable_file(@ARGV) {
+
+  # debug message
+  print("Reading input file \"$executable_file\" ...\n") if ($debug);
+
+  # verify/open file specified.
+  open (INPUT_FP, "<", $executable_file) || die("Error: failed to open file: $executable_file\n");
+  binmode INPUT_FP;
+
+  # kernel section information
+  my $escaped_name=quotemeta($executable_file);
+  my $bundle_section_name = ".hip_fatbin";
+  my $bundle_section_size = hex(`$objdump -h $escaped_name | grep $bundle_section_name | awk '{print \$3}'`);
+  my $bundle_section_offset =  hex(`$objdump -h $escaped_name | grep $bundle_section_name | awk '{print \$6}'`);
+
+  $bundle_section_size or die("Error: No kernel section found\n");
+
+  my $bundle_section_end = $bundle_section_offset + $bundle_section_size;
+
+  if ($debug) {
+    print "Code Objects Bundle section size: $bundle_section_size\n";
+    print "Code Objects Bundle section offset: $bundle_section_offset\n";
+    print "Code Objects Bundle section end: $bundle_section_end\n";
+  }
+
+  my $current_bundle_offset = $bundle_section_offset;
+  print "Current Bundle offset: $current_bundle_offset\n" if ($debug);
+
+  # move fp to current_bundle_offset.
+  seek(INPUT_FP, $current_bundle_offset, 0);
+
+  # skip OFFLOAD_BUNDLER_MAGIC_STR
+  my $magic_str;
+  my $read_bytes = read(INPUT_FP, $magic_str, 24);
+  if (($read_bytes != 24) || ($magic_str ne "__CLANG_OFFLOAD_BUNDLE__")) {
+    print(STDERR "Error: Offload bundle magic string not detected\n") if ($debug);
+    last;
+  }
+
+  # read number of bundle entries, which are code objects.
+  my $num_codeobjects;
+  readq(\*INPUT_FP,\$num_codeobjects);
+  # $num_codeobjects = unpack("Q<", $num_codeobjects);
+
+  # Listing
+  print "Bundle of $num_codeobjects HIP Code Objects:\n" if ($verbose);
+
+  # strings for creating new files
+  my $file_co_number = sprintf("%03d", $num_codeobjects);
+  my $filename_prefix = "${executable_file}-${file_co_number}";
+
+  print("Entry ID:\t\t\tURI:\n") if ($verbose);
+
+  # for each Bundle entry (code object)  ....
+  for (my $iter = 0; $iter < $num_codeobjects; $iter++) {
+
+    # read bundle entry (code object) offset
+    my $entry_offset;
+    my $abs_offset;
+    readq(*INPUT_FP,\$entry_offset);
+    print("entry_offset: $entry_offset\n") if $debug;
+
+    # read bundle entry (code object) size
+    my $entry_size;
+    readq(*INPUT_FP,\$entry_size);
+    print("entry_size: $entry_size\n") if $debug;
+
+    # read triple size
+    my $triple_size;
+    readq(*INPUT_FP,\$triple_size);
+    print("triple_size: $triple_size\n") if $debug;
+
+    # read triple string
+    my $triple;
+    my $read_bytes = read(INPUT_FP, $triple, $triple_size);
+    $read_bytes == $triple_size or die("Error: Fail to parse triple\n");
+    print("triple: $triple\n") if $debug;
+
+    # because the bundle entry's offset is relative to the beginning of the bundled code object section.
+    $abs_offset = int($entry_offset) + $bundle_section_offset;
+
+    my $obj_uri_encode = URI::Encode->new();
+    my $encoded_executable_file = $obj_uri_encode->encode($executable_file);
+
+    if ($verbose) {
+      print(STDOUT "$triple\tfile:\/\/$encoded_executable_file#offset=$abs_offset\&size=$entry_size\n");
+    } else {
+      print(STDOUT "file:\/\/$encoded_executable_file#offset=$abs_offset\&size=$entry_size\n");
+    }
+
+  } # End of for each Bundle entry (code object) ...
+} # End of for each command line argument
+
+exit(0);

@@ -54,8 +54,6 @@ if(scalar @ARGV == 0){
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
 
-$isWindows = $^O eq 'MSWin32';
-
 $HIPCC_COMPILE_FLAGS_APPEND=$ENV{'HIPCC_COMPILE_FLAGS_APPEND'};
 $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 
@@ -95,11 +93,12 @@ sub delete_temp_dirs {
 
 my $base_dir;
 BEGIN {
-    $base_dir = Cwd::realpath( dirname(__FILE__) );
+    $base_dir = dirname(Cwd::realpath(__FILE__) );
 }
 use lib "$base_dir/";
 use hipvars;
 
+$isWindows      =   $hipvars::isWindows;
 $HIP_RUNTIME    =   $hipvars::HIP_RUNTIME;
 $HIP_PLATFORM   =   $hipvars::HIP_PLATFORM;
 $HIP_COMPILER   =   $hipvars::HIP_COMPILER;
@@ -112,10 +111,6 @@ $HSA_PATH       =   $hipvars::HSA_PATH;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
 # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
-if ($HIP_PLATFORM eq "amd") {
-    $HIPCXXFLAGS .= "-D__HIP_ROCclr__";
-    $HIPCFLAGS .= "-D__HIP_ROCclr__";
-}
 
 if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
     $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
@@ -151,11 +146,11 @@ $setStdLib = 0;  # TODO - set to 0
 $default_amdgpu_target = 1;
 
 if ($HIP_PLATFORM eq "amd") {
-    $HIPCC="$HIP_CLANG_PATH/clang++";
+    $HIPCC="\"$HIP_CLANG_PATH/clang++\"";
 
     # If $HIPCC clang++ is not compiled, use clang instead
     if ( ! -e $HIPCC ) {
-        $HIPCC="$HIP_CLANG_PATH/clang";
+        $HIPCC="\"$HIP_CLANG_PATH/clang\"";
         $HIPLDFLAGS = "--driver-mode=g++";
     }
 
@@ -189,9 +184,9 @@ if ($HIP_PLATFORM eq "amd") {
     } else {
       $HIPCXXFLAGS .= " -std=c++11";
     }
-    $HIPCXXFLAGS .= " -isystem $HIP_CLANG_INCLUDE_PATH/..";
-    $HIPCFLAGS .= " -isystem $HIP_CLANG_INCLUDE_PATH/..";
-    $HIPLDFLAGS .= " -L$HIP_LIB_PATH";
+    $HIPCXXFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
+    $HIPCFLAGS .= " -isystem \"$HIP_CLANG_INCLUDE_PATH/..\"";
+    $HIPLDFLAGS .= " -L\"$HIP_LIB_PATH\"";
     if ($isWindows) {
       $HIPLDFLAGS .= " -lamdhip64";
     }
@@ -200,11 +195,11 @@ if ($HIP_PLATFORM eq "amd") {
         $HIPCXXFLAGS .= " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
     }
 
-    $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
-    $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
-    $HIPCFLAGS .= " -isystem $HSA_PATH/include";
-    $HIPCXXFLAGS .= " -D__HIP_ROCclr__";
-    $HIPCFLAGS .= " -D__HIP_ROCclr__";
+    if (not $isWindows) {
+        $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
+        $HIPCXXFLAGS .= " -isystem $HSA_PATH/include";
+        $HIPCFLAGS .= " -isystem $HSA_PATH/include";
+    }
 
 } elsif ($HIP_PLATFORM eq "nvidia") {
     $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
@@ -226,8 +221,8 @@ if ($HIP_PLATFORM eq "amd") {
 }
 
 # Add paths to common HIP includes:
-$HIPCXXFLAGS .= " -isystem $HIP_INCLUDE_PATH" ;
-$HIPCFLAGS .= " -isystem $HIP_INCLUDE_PATH" ;
+$HIPCXXFLAGS .= " -isystem \"$HIP_INCLUDE_PATH\"" ;
+$HIPCFLAGS .= " -isystem \"$HIP_INCLUDE_PATH\"" ;
 
 my $compileOnly = 0;
 my $needCXXFLAGS = 0;  # need to add CXX flags to compile step
@@ -591,7 +586,7 @@ if($HIP_PLATFORM eq "amd"){
     if($default_amdgpu_target eq 1) {
         if (defined $ENV{HCC_AMDGPU_TARGET}) {
             $targetsStr = $ENV{HCC_AMDGPU_TARGET};
-        } else {
+        } elsif (not $isWindows) {
             # Else try using rocm_agent_enumerator
             $ROCM_AGENT_ENUM = "${ROCM_PATH}/bin/rocm_agent_enumerator";
             $targetsStr = `${ROCM_AGENT_ENUM} -t GPU`;
@@ -688,7 +683,7 @@ if ($HIP_PLATFORM eq "amd") {
 
     if ($hasHIP) {
         if ($DEVICE_LIB_PATH ne "$ROCM_PATH/amdgcn/bitcode") {
-            $HIPCXXFLAGS .= " --hip-device-lib-path=$DEVICE_LIB_PATH";
+            $HIPCXXFLAGS .= " --hip-device-lib-path=\"$DEVICE_LIB_PATH\"";
         }
         $HIPCXXFLAGS .= " -fhip-new-launch-api";
     }

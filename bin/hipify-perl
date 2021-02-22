@@ -1863,14 +1863,6 @@ sub simpleSubstitutions {
     $ft{'define'} += s/\bcudaTextureTypeCubemapLayered\b/hipTextureTypeCubemapLayered/g;
 }
 
-# CUDA extern __shared__ syntax replace with HIP_DYNAMIC_SHARED() macro
-sub transformExternShared {
-    no warnings qw/uninitialized/;
-    my $k = 0;
-    $k += s/extern\s+([\w\(\)]+)?\s*__shared__\s+([\w:<>\s]+)\s+(\w+)\s*\[\s*\]\s*;/HIP_DYNAMIC_SHARED($1 $2, $3)/g;
-    $ft{'extern_shared'} += $k;
-}
-
 # CUDA Kernel Launch Syntax
 sub transformKernelLaunch {
     no warnings qw/uninitialized/;

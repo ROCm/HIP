@@ -206,7 +206,7 @@ bool NegativeTestsMallocManaged(int NumDevices) {
     IfTestPassed = false;
   }
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
   // The flag hipMemAttachHost is currently not supported therefore
   // api should return "hipErrorInvalidValue" for now
   err = hipMallocManaged(&A, 1024, hipMemAttachHost);
@@ -215,7 +215,7 @@ bool NegativeTestsMallocManaged(int NumDevices) {
            hipGetErrorString(err));
     IfTestPassed = false;
   }
-#endif  // __HIP_PLATFORM_HCC__
+#endif  // __HIP_PLATFORM_AMD__
 
   err = hipMallocManaged(NULL, 0, 0);
   if (hipErrorInvalidValue != err) {

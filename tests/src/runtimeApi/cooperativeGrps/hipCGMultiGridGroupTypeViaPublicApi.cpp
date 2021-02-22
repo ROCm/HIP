@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp
- * TEST: %t
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 -rdc=true -gencode arch=compute_60,code=sm_60
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 
@@ -58,7 +58,7 @@ void kernel_cg_multi_grid_group_type_via_public_api(int *sizeTestD,
   thdRankTestD[gIdx] = thread_rank(mg);
 
   // Test is_valid api
-  isValidTestD[gIdx] = is_valid(mg);
+  isValidTestD[gIdx] = mg.is_valid();
 
   // Test sync api
   //

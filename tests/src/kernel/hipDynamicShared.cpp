@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME hcc
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
@@ -49,12 +49,7 @@ template <typename T>
 __global__ void testExternSharedKernel(const T* A_d, const T* B_d, T* C_d,
                                        size_t numElements, size_t groupElements) {
     // declare dynamic shared memory
-#if defined(__HIP_PLATFORM_HCC__)
-    HIP_DYNAMIC_SHARED(T, sdata)
-#else
-    HIP_DYNAMIC_SHARED(__align__(sizeof(T)) unsigned char, my_sdata)
-    T* sdata = reinterpret_cast<T*>(my_sdata);
-#endif
+    extern __shared__ double sdata[];
 
     size_t gid = (blockIdx.x * blockDim.x + threadIdx.x);
     size_t tid = threadIdx.x;
@@ -79,7 +74,7 @@ __global__ void testExternSharedKernel(const T* A_d, const T* B_d, T* C_d,
 }
 
 template <typename T>
-void testExternShared(size_t N, size_t groupElements) {
+void testExternShared(size_t N, unsigned groupElements) {
     size_t Nbytes = N * sizeof(T);
 
     T *A_d, *B_d, *C_d;

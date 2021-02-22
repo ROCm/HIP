@@ -28,3 +28,8 @@ mkdir -p $ROCMINCDIR
 pushd $ROCMINCDIR
     ln -r -s -f $HIPINCDIR hip
 popd
+
+# The following will be removed after upstream updation
+pushd $HIPINCDIR
+    ln -r -s -f amd_detail hcc_detail
+popd

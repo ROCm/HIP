@@ -50,9 +50,12 @@ THE SOFTWARE.
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
 
-  // HIP Skip Return code set at cmake
+// HIP Skip Return code set at cmake
 #define HIP_SKIP_RETURN_CODE 127
 #define HIP_ENABLE_SKIP_TESTS 0
+
+// Recommended thresholds for Tests
+#define MAX_THREADS 100
 
 inline bool hip_skip_tests_enabled() {
   return HIP_ENABLE_SKIP_TESTS;
@@ -154,6 +157,9 @@ extern const char* NULL_DEVICE;
 #else
 #define TYPENAME(T) "?"
 #endif
+
+// Get Optimal Thread count size
+size_t getHostThreadCount(const size_t memPerThread = 200 /* MB */, const size_t maxThreads = 0);
 
 namespace HipTest {
 
@@ -376,7 +382,7 @@ void freeArrays(T* A_d, T* B_d, T* C_d, T* A_h, T* B_h, T* C_h, bool usePinnedHo
     freeArraysForHost(A_h, B_h, C_h, usePinnedHost);
 }
 
-#if defined(__HIP_PLATFORM_HCC__)
+#if defined(__HIP_PLATFORM_AMD__)
 template <typename T>
 void initArrays2DPitch(T** A_d, T** B_d, T** C_d, size_t* pitch_A, size_t* pitch_B, size_t* pitch_C,
                        size_t numW, size_t numH) {

@@ -841,3 +841,13 @@ inline std::ostream& operator<<(std::ostream& os, const hipExtent& s) {
   << '}';
   return os;
 }
+
+inline std::ostream& operator<<(std::ostream& os, const hipIpcEventHandle_t& s) {
+  //TODO fill in later
+  return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const hipIpcEventHandle_t* s) {
+  //TODO fill in later
+  return os;
+}

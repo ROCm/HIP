@@ -19,10 +19,10 @@
 
 
 /* HIT_START
- * BUILD_CMD: gpu.o %hc -I%hip-path/include -g -c %S/gpu.cpp -o %T/gpu.o EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
- * BUILD_CMD: launchkernel.o %hc -D__HIP_PLATFORM_HCC__ -g -I%hip-path/include -c %S/LaunchKernel.c -o %T/launchkernel.o EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
- * BUILD_CMD: LaunchKernel %hc %T/launchkernel.o %T/gpu.o -g -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/%t DEPENDS gpu.o launchkernel.o EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD_CMD: gpu.o %hc -I%hip-path/include -g -c %S/gpu.cpp -o %T/gpu.o EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD_CMD: launchkernel.o %hc -D__HIP_PLATFORM_AMD__ -g -I%hip-path/include -c %S/LaunchKernel.c -o %T/launchkernel.o EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD_CMD: LaunchKernel %hc %T/launchkernel.o %T/gpu.o -g -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/%t DEPENDS gpu.o launchkernel.o EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 
@@ -36,7 +36,7 @@ bool LaunchKernelArg()
   dim3 blocks 	    = {1,1,1};
   dim3 threads      = {1,1,1};
 
-  HIPCHECK(hipLaunchKernel((const void *)kernel, blocks, threads, NULL, 0, 0));
+  HIPCHECK(hipLaunchKernel(getKernelFunc(mykernel), blocks, threads, NULL, 0, 0));
 
   return true;
 }
@@ -52,7 +52,7 @@ bool LaunchKernelArg1()
   HIPCHECK(hipMalloc((void**)&A_d, sizeof(int)));
  
   void* Args[]={&A_d};
-  HIPCHECK(hipLaunchKernel((const void *)kernel1, blocks, threads, Args, 0, 0));
+  HIPCHECK(hipLaunchKernel(getKernelFunc(mykernel1), blocks, threads, Args, 0, 0));
 
   // Get the result back to host memory
   HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
@@ -84,7 +84,7 @@ bool LaunchKernelArg2()
   HIPCHECK(hipMemcpy(B_d, &B, sizeof(int), hipMemcpyHostToDevice));
 
   void* Args[]={&A_d, &B_d};
-  HIPCHECK(hipLaunchKernel((const void *)kernel2, blocks, threads, Args,0,0));
+  HIPCHECK(hipLaunchKernel(getKernelFunc(mykernel2), blocks, threads, Args,0,0));
 
   // Get the result back to host memory
   HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
@@ -123,7 +123,7 @@ bool LaunchKernelArg3()
   HIPCHECK(hipMemcpy(B_d, &B, sizeof(int), hipMemcpyHostToDevice));
 
   void* Args[]={&A_d, &B_d, &C_d};
-  HIPCHECK(hipLaunchKernel((const void *)kernel3, blocks, threads, Args,0,0));
+  HIPCHECK(hipLaunchKernel(getKernelFunc(mykernel3), blocks, threads, Args,0,0));
 
   // Get the result back to host memory
   HIPCHECK(hipMemcpy(&C, C_d, sizeof(int), hipMemcpyDeviceToHost));
@@ -154,7 +154,7 @@ bool LaunchKernelArg4()
   struct things t = {2,20,200};
   
   void* Args[]={&A_d, &c, &s, &i, &t};
-  HIPCHECK(hipLaunchKernel((const void *)kernel4, blocks, threads, Args, 0, 0));
+  HIPCHECK(hipLaunchKernel(getKernelFunc(mykernel4), blocks, threads, Args, 0, 0));
 
   // Get the result back to host memory
   HIPCHECK(hipMemcpy(&A, A_d, sizeof(int), hipMemcpyDeviceToHost));
@@ -166,7 +166,6 @@ bool LaunchKernelArg4()
 
   return true;
 }
-
 
 int main()
 {

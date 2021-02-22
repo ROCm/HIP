@@ -40,12 +40,12 @@ amd::HostQueue* Device::NullStream(bool skip_alloc) {
 hipError_t hipDeviceGet(hipDevice_t *device, int deviceId) {
   HIP_INIT_API(hipDeviceGet, device, deviceId);
 
-  if (device != nullptr) {
-    *device = deviceId;
-  } else {
-    HIP_RETURN(hipErrorInvalidValue);
+  if (deviceId < 0 ||
+      static_cast<size_t>(deviceId) >= g_devices.size() ||
+      device == nullptr) {
+    HIP_RETURN(hipErrorInvalidDevice);
   }
-
+  *device = deviceId;
   HIP_RETURN(hipSuccess);
 };
 
@@ -82,9 +82,9 @@ hipError_t hipDeviceComputeCapability(int *major, int *minor, hipDevice_t device
   }
 
   auto* deviceHandle = g_devices[device]->devices()[0];
-  const auto& info = deviceHandle->info();
-  *major = info.gfxipMajor_;
-  *minor = info.gfxipMinor_;
+  const auto& isa = deviceHandle->isa();
+  *major = isa.versionMajor();
+  *minor = isa.versionMinor();
 
   HIP_RETURN(hipSuccess);
 }
@@ -152,6 +152,7 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   hipDeviceProp_t deviceProps = {0};
 
   const auto& info = deviceHandle->info();
+  const auto& isa = deviceHandle->isa();
   ::strncpy(deviceProps.name, info.boardName_, 128);
   deviceProps.totalGlobalMem = info.globalMemSize_;
   deviceProps.sharedMemPerBlock = info.localMemSizePerCU_;
@@ -168,8 +169,8 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.memoryClockRate = info.maxMemoryClockFrequency_ * 1000;
   deviceProps.memoryBusWidth = info.globalMemChannels_;
   deviceProps.totalConstMem = info.maxConstantBufferSize_;
-  deviceProps.major = info.gfxipMajor_;
-  deviceProps.minor = info.gfxipMinor_;
+  deviceProps.major = isa.versionMajor();
+  deviceProps.minor = isa.versionMinor();
   deviceProps.multiProcessorCount = info.maxComputeUnits_;
   deviceProps.l2CacheSize = info.l2CacheSize_;
   deviceProps.maxThreadsPerMultiProcessor = info.maxThreadsPerCU_;
@@ -199,8 +200,8 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.maxSharedMemoryPerMultiProcessor = info.localMemSizePerCU_;
   deviceProps.canMapHostMemory = 1;
   //FIXME: This should be removed, targets can have character names as well.
-  deviceProps.gcnArch = info.gfxipMajor_ * 100 + info.gfxipMinor_ * 10 + info.gfxipStepping_;
-  sprintf(deviceProps.gcnArchName, "%s", info.name_);
+  deviceProps.gcnArch = isa.versionMajor() * 100 + isa.versionMinor() * 10 + isa.versionStepping();
+  sprintf(deviceProps.gcnArchName, "%s", isa.targetId());
   deviceProps.cooperativeLaunch = info.cooperativeGroups_;
   deviceProps.cooperativeMultiDeviceLaunch = info.cooperativeMultiDeviceGroups_;
 
@@ -216,8 +217,8 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.maxTexture3D[0] = info.image3DMaxWidth_;
   deviceProps.maxTexture3D[1] = info.image3DMaxHeight_;
   deviceProps.maxTexture3D[2] = info.image3DMaxDepth_;
-  deviceProps.hdpMemFlushCntl = nullptr;
-  deviceProps.hdpRegFlushCntl = nullptr;
+  deviceProps.hdpMemFlushCntl = info.hdpMemFlushCntl;
+  deviceProps.hdpRegFlushCntl = info.hdpRegFlushCntl;
 
   deviceProps.memPitch = info.maxMemAllocSize_;
   deviceProps.textureAlignment = info.imageBaseAddressAlignment_;

@@ -19,7 +19,7 @@
  THE SOFTWARE. */
 
 #include <hip/hip_runtime.h>
-#include <hip/hcc_detail/texture_types.h>
+#include <hip/amd_detail/texture_types.h>
 #include "hip_internal.hpp"
 #include "hip_platform.hpp"
 #include "hip_conversions.hpp"
@@ -76,6 +76,11 @@ hipError_t ihipCreateTextureObject(hipTextureObject_t* pTexObject,
                                    const hipResourceViewDesc* pResViewDesc) {
   amd::Device* device = hip::getCurrentDevice()->devices()[0];
   const device::Info& info = device->info();
+
+  // Validate input params
+  if (pTexObject == nullptr || pResDesc == nullptr || pTexDesc == nullptr) {
+    return hipErrorInvalidValue;
+  }
 
   // pResViewDesc can only be specified if the type of resource is a HIP array or a HIP mipmapped array.
   if ((pResViewDesc != nullptr) &&

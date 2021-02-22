@@ -36,7 +36,7 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
 #define HIPRT_CB
 #endif
 
@@ -129,8 +129,12 @@ int main(int argc, char* argv[]) {
 
   HIPCHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
 
-  std::thread T[NUM_THREADS];
-  for (int i = 0; i < NUM_THREADS; i++) {
+  auto thread_count = getHostThreadCount(200, NUM_THREADS);
+  if (thread_count == 0) {
+    failed("Thread count is 0");
+  }
+  std::thread *T = new std::thread[thread_count];
+  for (int i = 0; i < thread_count; i++) {
     // Use different callback for every even thread
     // The callbacks will be added to same stream from different threads
     if ((i%2) == 0)
@@ -140,7 +144,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Wait until all the threads finish their execution
-  for (int i = 0; i < NUM_THREADS; i++) {
+  for (int i = 0; i < thread_count; i++) {
     T[i].join();
   }
 
@@ -155,11 +159,12 @@ int main(int argc, char* argv[]) {
 
   // Cb_count should match total number of callbacks added from both threads
   // Data_mismatch will be updated if there is problem in data validation
-  if (Cb_count.load() != NUM_THREADS) {
+  if (Cb_count.load() != thread_count) {
      failed("All callbacks for stream did not get called!");
   } else if (Data_mismatch.load() != 0) {
      failed("Mismatch found in the result of the computation!");
   }
+  delete[] T;
 
   passed();
 }

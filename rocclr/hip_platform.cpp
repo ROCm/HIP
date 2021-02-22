@@ -19,7 +19,7 @@
  THE SOFTWARE. */
 
 #include <hip/hip_runtime.h>
-#include <hip/hcc_detail/texture_types.h>
+#include <hip/amd_detail/texture_types.h>
 #include "hip_platform.hpp"
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
@@ -105,7 +105,7 @@ extern "C" void __hipRegisterFunction(
     hipError_t hip_error = hipSuccess;
     for (size_t dev_idx = 0; dev_idx < g_devices.size(); ++dev_idx) {
       hip_error = PlatformState::instance().getStatFunc(&hfunc, hostFunction, dev_idx);
-      guarantee((hip_error == hipSuccess) && "Cannot Retrieve Static function");
+      guarantee((hip_error == hipSuccess), "Cannot Retrieve Static function");
     }
   }
 }
@@ -149,8 +149,6 @@ extern "C" void __hipRegisterTexture(hip::FatBinaryInfo** modules,      // The d
 
 extern "C" void __hipUnregisterFatBinary(hip::FatBinaryInfo** modules)
 {
-  HIP_INIT();
-
   PlatformState::instance().removeFatBinary(modules);
 }
 
@@ -298,7 +296,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
 
   const device::Kernel::WorkGroupInfo* wrkGrpInfo = kernel.getDeviceKernel(device)->workGroupInfo();
   if (bCalcPotentialBlkSz == false) {
-    if (inputBlockSize == 0) {
+    if (inputBlockSize <= 0) {
       return hipErrorInvalidValue;
     }
     *bestBlockSize = 0;
@@ -311,7 +309,7 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
   }
   else {
     if (inputBlockSize > int(device.info().maxWorkGroupSize_) ||
-            inputBlockSize == 0) {
+            inputBlockSize <= 0) {
       // The user wrote the kernel to work with a workgroup size
       // bigger than this hardware can support. Or they do not care
       // about the size So just assume its maximum size is
@@ -329,10 +327,10 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
   size_t GprWaves = VgprWaves;
   if (wrkGrpInfo->usedSGPRs_ > 0) {
     size_t maxSGPRs;
-    if (device.info().gfxipMajor_ < 8) {
+    if (device.isa().versionMajor() < 8) {
       maxSGPRs = 512;
     }
-    else if (device.info().gfxipMajor_ < 10) {
+    else if (device.isa().versionMajor() < 10) {
       maxSGPRs = 800;
     }
     else {
@@ -858,6 +856,9 @@ hipError_t PlatformState::getStatFunc(hipFunction_t* hfunc, const void* hostFunc
 }
 
 hipError_t PlatformState::getStatFuncAttr(hipFuncAttributes* func_attr, const void* hostFunction, int deviceId) {
+  if(func_attr == nullptr || hostFunction == nullptr) {
+    return hipErrorInvalidValue;
+  }
   return statCO_.getStatFuncAttr(func_attr, hostFunction, deviceId);
 }
 

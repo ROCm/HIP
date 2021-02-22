@@ -51,6 +51,7 @@ execute_process(COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bin/hipconfig --version
 string(REPLACE "." ";" VERSION_LIST ${HIP_BASE_VERSION})
 list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)
 list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
+set(HIP_VERSION_GITDATE 0)
 
 find_package(Git)
 
@@ -111,12 +112,16 @@ else()
 endif()
 message ( "Using CPACK_DEBIAN_PACKAGE_RELEASE ${CPACK_DEBIAN_PACKAGE_RELEASE}" )
 
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "liburi-encode-perl libfile-basedir-perl, libfile-copy-recursive-perl, libfile-listing-perl, libfile-which-perl")
+
 ## RPM package specific variables
 if ( DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE} )
   set ( CPACK_RPM_PACKAGE_RELEASE $ENV{CPACK_RPM_PACKAGE_RELEASE} )
 else()
   set ( CPACK_RPM_PACKAGE_RELEASE "local" )
 endif()
+
+set(CPACK_RPM_PACKAGE_REQUIRES "perl(URI::Encode), perl(File::Copy), perl(File::Listing), perl(File::Which), perl(File::BaseDir)")
 
 ## 'dist' breaks manual builds on debian systems due to empty Provides
 execute_process( COMMAND rpm --eval %{?dist}
@@ -252,6 +257,7 @@ set(BIN_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/bin)
 set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
 set(INCLUDE_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/include)
 set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
+set(CONFIG_LANG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip-lang)
 
 # Build clang hipify if enabled
 if (BUILD_HIPIFY_CLANG)
@@ -278,11 +284,6 @@ if(HIP_RUNTIME STREQUAL "rocclr")
     set(HIP_ROCclr_BUILD_FLAGS "${HIP_ROCclr_BUILD_FLAGS} -fPIC ${ROCclr_CXX_FLAGS} -I${HSA_PATH}/include")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
-    set(HCC_CXX_FLAGS  "-hc -fno-gpu-rdc --amdgpu-target=gfx803 --amdgpu-target=gfx900 --amdgpu-target=gfx906 --amdgpu-target=gfx908 ")
-endif()
-
-if(HIP_PLATFORM STREQUAL "amd")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lpl_ca)
 endif()
 
 # Generate .hipInfo
@@ -290,10 +291,6 @@ file(WRITE "${PROJECT_BINARY_DIR}/.hipInfo" ${_buildInfo})
 
 # Generate .hipVersion
 file(WRITE "${PROJECT_BINARY_DIR}/.hipVersion" ${_versionInfo})
-
-if(NOT DEFINED HIP_VERSION_GITDATE)
-    set(HIP_VERSION_GITDATE 0)
-endif()
 
 # Build doxygen documentation
 find_program(DOXYGEN_EXE doxygen)
@@ -320,18 +317,23 @@ if(NOT ${INSTALL_SOURCE} EQUAL 0)
         install(DIRECTORY rocclr DESTINATION .)
     endif()
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
+
+    # The following two lines will be removed after upstream updation
+    install(CODE "MESSAGE(\"Removing ${CMAKE_INSTALL_PREFIX}/include\")")
+    install(CODE "file(REMOVE_RECURSE ${CMAKE_INSTALL_PREFIX}/include)")
+
     install(DIRECTORY include DESTINATION .)
     install(DIRECTORY cmake DESTINATION .)
 endif()
 
 # Install generated headers
 # FIXME: Associate with individual targets.
-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/include/hip/hcc_detail
-        DESTINATION include/hip
-        FILES_MATCHING PATTERN "*.h*")
-install(DIRECTORY ${PROJECT_BINARY_DIR}/include/hip
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.h*")
+if(HIP_PLATFORM STREQUAL "amd")
+install(FILES ${PROJECT_BINARY_DIR}/include/hip/amd_detail/hip_prof_str.h
+        DESTINATION include/hip/amd_detail)
+endif()
+install(FILES ${PROJECT_BINARY_DIR}/include/hip/hip_version.h
+        DESTINATION include/hip)
 
 #############################
 # hip-config
@@ -373,8 +375,7 @@ add_custom_target(pkg_hip_base COMMAND ${CMAKE_COMMAND} .
     COMMAND cp *.deb ${PROJECT_BINARY_DIR}
     COMMAND cp *.rpm ${PROJECT_BINARY_DIR}
     COMMAND cp *.tar.gz ${PROJECT_BINARY_DIR}
-    WORKING_DIRECTORY ${BUILD_DIR}
-    DEPENDS lpl ca)
+    WORKING_DIRECTORY ${BUILD_DIR} )
 
 # Packaging needs to wait for hipify-clang to build if it's enabled...
 if (BUILD_HIPIFY_CLANG)

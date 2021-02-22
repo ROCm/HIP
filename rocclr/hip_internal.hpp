@@ -56,6 +56,15 @@ typedef struct ihipIpcMemHandle_st {
   char reserved[IHIP_IPC_MEM_RESERVED_SIZE];
 } ihipIpcMemHandle_t;
 
+#define IHIP_IPC_EVENT_HANDLE_SIZE 32
+#define IHIP_IPC_EVENT_RESERVED_SIZE LP64_SWITCH(28,24)
+typedef struct ihipIpcEventHandle_st {
+    //hsa_amd_ipc_signal_t ipc_handle;  ///< ipc signal handle on ROCr
+    //char ipc_handle[IHIP_IPC_EVENT_HANDLE_SIZE];
+    //char reserved[IHIP_IPC_EVENT_RESERVED_SIZE];
+    char shmem_name[IHIP_IPC_EVENT_HANDLE_SIZE];
+}ihipIpcEventHandle_t;
+
 #ifdef _WIN32
   inline int getpid() { return _getpid(); }
 #endif

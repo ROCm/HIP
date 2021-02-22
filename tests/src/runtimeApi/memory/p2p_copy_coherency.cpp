@@ -32,14 +32,6 @@ THE SOFTWARE.
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#define USE_HCC_MEMTRACKER 0 /* Debug flag to show the memtracker periodically */
-
-#if defined(__HIP_PLATFORM_HCC__) && !defined(__HIP_ROCclr__)
-#include <hc_am.hpp>
-#else
-#define USE_HCC_MEMTRACKER 0
-#endif
-
 int elementSizes[] = {1, 16, 1024, 524288, 16 * 1000 * 1000};
 int nSizes = sizeof(elementSizes) / sizeof(int);
 
@@ -165,10 +157,6 @@ void testMultiGpu(int dev0, int dev1, int numElements, bool hostSync) {
 
     HIPCHECK(hipHostMalloc(&dataHost, sizeElements));
     memset(dataHost, 13, sizeElements);
-
-#if USE_HCC_MEMTRACKER
-    hc::am_memtracker_print(0x0);
-#endif
 
     printf("  test: init complete\n");
     runTestImpl(true, hostSync, gpu0Stream, gpu1Stream, numElements, dataGpu0_0, dataGpu0_1,

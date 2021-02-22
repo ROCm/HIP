@@ -78,7 +78,7 @@ hipError_t hipModuleLoadDataEx(hipModule_t *module, const void *image,
 }
 
 extern hipError_t __hipExtractCodeObjectFromFatBinary(const void* data,
-                                                const std::vector<const char*>& devices,
+                                                const std::vector<std::string>& devices,
                                                 std::vector<std::pair<const void*, size_t>>& code_objs);
 
 hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const char *name) {
@@ -231,7 +231,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
         "%s", "Both, kernelParams and extra Params are provided, only one should be provided");
     return hipErrorInvalidValue;
   }
-
+  if (globalWorkSizeX == 0 || globalWorkSizeY == 0 || globalWorkSizeZ == 0 ||
+      blockDimX == 0 || blockDimY == 0 || blockDimZ == 0) {
+    return hipErrorInvalidValue;
+  }
+  
   hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
   amd::Kernel* kernel = function->kernel();
 

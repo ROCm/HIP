@@ -30,12 +30,11 @@ FatBinaryInfo::~FatBinaryInfo() {
   }
 
   if (fdesc_ > 0) {
-    if (!amd::Os::CloseFileHandle(fdesc_)) {
-      guarantee(false && "Cannot close file");
-    }
-
     if (fsize_ && !amd::Os::MemoryUnmapFile(image_, fsize_)) {
-      guarantee(false && "Cannot unmap file");
+      guarantee(false, "Cannot unmap file");
+    }
+    if (!amd::Os::CloseFileHandle(fdesc_)) {
+      guarantee(false, "Cannot close file");
     }
   }
 
@@ -51,10 +50,10 @@ hipError_t FatBinaryInfo::ExtractFatBinary(const std::vector<hip::Device*>& devi
   std::vector<std::pair<const void*, size_t>> code_objs;
 
   // Copy device names for Extract Code object File
-  std::vector<const char*> device_names;
+  std::vector<std::string> device_names;
   device_names.reserve(devices.size());
   for (size_t dev_idx = 0; dev_idx < devices.size(); ++dev_idx) {
-    device_names.push_back(devices[dev_idx]->devices()[0]->info().targetId_);
+    device_names.push_back(devices[dev_idx]->devices()[0]->isa().isaName());
   }
 
   // We are given file name, get the file desc and file size
@@ -68,13 +67,8 @@ hipError_t FatBinaryInfo::ExtractFatBinary(const std::vector<hip::Device*>& devi
     }
 
     // Extract the code object from file
-    hip_error = CodeObject::ExtractCodeObjectFromFile(fdesc_, fsize_,
+    hip_error = CodeObject::ExtractCodeObjectFromFile(fdesc_, fsize_, &image_,
                 device_names, code_objs);
-
-    // Map the file memory, Later: only map offset, throws error in ElfMagic now.
-    if (!amd::Os::MemoryMapFileDesc(fdesc_, fsize_, 0, &image_)) {
-      return hipErrorInvalidValue;
-    }
 
   } else if (image_ != nullptr) {
     // We are directly given image pointer directly, try to extract file desc & file Size
@@ -85,7 +79,7 @@ hipError_t FatBinaryInfo::ExtractFatBinary(const std::vector<hip::Device*>& devi
   }
 
   if (hip_error == hipErrorNoBinaryForGpu) {
-    guarantee(false && "hipErrorNoBinaryForGpu: Couldn't find binary for current devices!");
+    guarantee(false, "hipErrorNoBinaryForGpu: Couldn't find binary for current devices!");
     return hip_error;
   }
 

@@ -31,10 +31,6 @@ THE SOFTWARE.
 
 #include <test_common.h>
 
-#ifdef __HCC__
-#include <hc.hpp>
-#endif
-
 // cudaA
 
 // Simple tests for variable type qualifiers:
@@ -87,14 +83,6 @@ __global__ void vectorADD(T __restrict__* A_d, T* B_d, T* C_d, size_t N) {
     float z = sin(x);
 #ifdef NOT_YET
     float fastZ = __sin(x);
-#endif
-
-#ifdef __HCC__
-
-    int b = threadIdx.x;
-    int c;
-
-    atomicAdd(&c, b);
 #endif
 
     __syncthreads();

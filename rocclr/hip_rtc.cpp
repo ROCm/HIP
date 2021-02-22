@@ -141,6 +141,30 @@ static std::string handleMangledName(std::string name) {
   return loweredName;
 }
 
+static std::string getValueOf(const std::string& option) {
+  std::string res;
+  auto f = std::find(option.begin(), option.end(), '=');
+  if (f != option.end()) res = std::string(f + 1, option.end());
+  return res;
+}
+
+static void transformOptions(std::vector<const char*>& options, amd::Program* program) {
+  std::vector<const char*> t_option;
+  for (auto& i : options) {
+    std::string t_str(i);
+#ifdef __HIP_ENABLE_PCH
+    // Use precompiled header for hip
+    if (t_str == "-hip-pch") {
+      const char* pch = nullptr;
+      unsigned int pch_size = 0;
+      __hipGetPCH(&pch, &pch_size);
+      program->addPreCompiledHeader(std::string(pch, pch_size));
+      i = "-nogpuinc";
+    }
+#endif
+  }
+}
+
 const char* hiprtcGetErrorString(hiprtcResult x) {
   switch (x) {
     case HIPRTC_SUCCESS:
@@ -217,6 +241,7 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char
 
   std::ostringstream ostrstr;
   std::vector<const char*> oarr(&options[0], &options[numOptions]);
+  transformOptions(oarr, program);
   std::copy(oarr.begin(), oarr.end(), std::ostream_iterator<std::string>(ostrstr, " "));
 
   ostrstr.str().append(" -DHIP_VERSION_MAJOR=9");

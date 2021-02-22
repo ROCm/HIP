@@ -38,6 +38,8 @@ sub can_run {
     }
 }
 
+$isWindows = $^O eq 'MSWin32';
+
 #
 # TODO: Fix rpath LDFLAGS settings
 #
@@ -57,7 +59,13 @@ if (-e "$HIP_PATH/../bin/rocm_agent_enumerator") {
 }
 $CUDA_PATH=$ENV{'CUDA_PATH'} // '/usr/local/cuda';
 $HSA_PATH=$ENV{'HSA_PATH'} // "$ROCM_PATH/hsa";
-$HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
+
+# Windows has a different structure, all binaries are inside hip/bin
+if ($isWindows) {
+    $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$HIP_PATH/bin";
+} else {
+    $HIP_CLANG_PATH=$ENV{'HIP_CLANG_PATH'} // "$ROCM_PATH/llvm/bin";
+}
 # HIP_ROCCLR_HOME is used by Windows builds
 $HIP_ROCCLR_HOME=$ENV{'HIP_ROCCLR_HOME'};
 
@@ -80,7 +88,7 @@ $HIP_RUNTIME = $ENV{'HIP_RUNTIME'} // $hipInfo{'HIP_RUNTIME'} // "rocclr";
 if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "rocclr" and !defined $HIP_ROCCLR_HOME) {
     my $hipvars_dir = dirname($0);
     if (-e "$hipvars_dir/../lib/bitcode") {
-        $HIP_ROCCLR_HOME = abs_path($hipvars_dir . "/..");
+        $HIP_ROCCLR_HOME = Cwd::abs_path($hipvars_dir . "/..");
     } else {
         $HIP_ROCCLR_HOME = $HIP_PATH; # use HIP_PATH
     }

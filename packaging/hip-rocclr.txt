@@ -11,6 +11,7 @@ endif()
 
 install(FILES @PROJECT_BINARY_DIR@/.hipInfo DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/hip-config.cmake @PROJECT_BINARY_DIR@/hip-config-version.cmake DESTINATION lib/cmake/hip)
+install(FILES @PROJECT_BINARY_DIR@/rocclr/hip-lang-config.cmake @PROJECT_BINARY_DIR@/rocclr/hip-lang-config-version.cmake DESTINATION lib/cmake/hip-lang)
 
 #############################
 # Rocclr install
@@ -46,9 +47,17 @@ foreach(_target_file ${_target_files})
 endforeach()
 install(FILES ${_target_files} DESTINATION lib/cmake/hip)
 
+file(GLOB _target_files @CONFIG_LANG_PACKAGE_INSTALL_DIR@/hip-lang-targets*.cmake)
+foreach(_target_file ${_target_files})
+  execute_process(COMMAND sed -i s:@CMAKE_INSTALL_PREFIX@:${CPACK_INSTALL_PREFIX}:g ${_target_file})
+endforeach()
+install(FILES ${_target_files} DESTINATION lib/cmake/hip-lang)
+
 set(CPACK_PACKAGE_NAME "hip-rocclr")
 set(HCC_PACKAGE_NAME "rocclr")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [ROCClr]")
+set(CPACK_PACKAGE_DESCRIPTION "HIP:
+      Heterogenous-computing Interface for Portability [ROCClr]")
 set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
 set(CPACK_PACKAGE_CONTACT "HIP Support <hip.support@amd.com>")
 set(CPACK_PACKAGE_VERSION_MAJOR @HIP_VERSION_MAJOR@)

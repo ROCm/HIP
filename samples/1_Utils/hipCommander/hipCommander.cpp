@@ -813,12 +813,12 @@ int main(int argc, char* argv[]) {
     CommandStream* cs;
 
     if (p_blockingSync) {
-#ifdef __HIP_PLATFORM_HCC__
+#ifdef __HIP_PLATFORM_AMD__
         printf("setting BlockingSync for AMD\n");
         setenv("HIP_BLOCKING_SYNC", "1", 1);
 
 #endif
-#ifdef __HIP_PLATFORM_NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
         printf("setting cudaDeviceBlockingSync\n");
         HIPCHECK(hipSetDeviceFlags(cudaDeviceBlockingSync));
 #endif
