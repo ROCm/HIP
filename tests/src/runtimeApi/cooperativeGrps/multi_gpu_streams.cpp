@@ -80,7 +80,7 @@ overlap-allowing flags work as expected.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 -rdc=true -gencode arch=compute_60,code=sm_60
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 -rdc=true -gencode arch=compute_70,code=sm_70
  * TEST: %t
  * HIT_END
  */

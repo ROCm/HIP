@@ -360,7 +360,7 @@ int main(int argc, char** argv) {
       std::cout << "hipErrorInvalidResourceHandle" << std::endl;
     }
     HIPCHECK(hipDeviceSynchronize());
-
+#ifndef __HIP_PLATFORM_NVIDIA__
     std::cout << "Launching a multi-GPU cooperative kernel with two ";
     std::cout << "different kernels." << std::endl;
     bool supports_sep_kernels = true;
@@ -551,6 +551,7 @@ int main(int argc, char** argv) {
     std::cout << "\tProperly launched." << std::endl;
 
     HIPCHECK(hipDeviceSynchronize());
+#endif
     for (int m = 0; m < 2; ++m) {
       HIPCHECK(hipFree(good_dev_array[m]));
       HIPCHECK(hipFree(bad_dev_array[m]));
