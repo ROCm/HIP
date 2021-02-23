@@ -192,7 +192,7 @@ if (!$printed or $p_full) {
         print "\n" ;
         print "== nvcc\n";
         print "CUDA_PATH   : ", $CUDA_PATH, "\n";
-        system("nvcc --version");
+        system("$CUDA_PATH/bin/nvcc --version");
 
     }
     print "\n" ;
