@@ -191,7 +191,7 @@ if (!$printed or $p_full) {
     if ($HIP_PLATFORM eq "nvidia")  {
         print "\n" ;
         print "== nvcc\n";
-        #print "CUDA_PATH   :", $CUDA_PATH";
+        print "CUDA_PATH   : ", $CUDA_PATH, "\n";
         system("nvcc --version");
 
     }
