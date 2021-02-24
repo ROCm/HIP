@@ -164,7 +164,7 @@ if(USE_PROF_API EQUAL 1)
     HINTS
       ${PROF_API_HEADER_PATH}
     PATHS
-      /opt/rocm/roctracer
+      ${ROCM_PATH}/roctracer
     PATH_SUFFIXES
       include/ext)
 
