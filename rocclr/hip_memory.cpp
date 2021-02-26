@@ -2392,3 +2392,12 @@ hipError_t hipFreeHost(void *ptr) {
 
   HIP_RETURN(ihipFree(ptr));
 }
+
+hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy) {
+  HIP_INIT_API(hipDrvMemcpy2DUnaligned, pCopy);
+
+  HIP_MEMCPY3D desc = hip::getDrvMemcpy3DDesc(*pCopy);
+
+  HIP_RETURN(ihipMemcpyParam3D(&desc, nullptr));
+}
+

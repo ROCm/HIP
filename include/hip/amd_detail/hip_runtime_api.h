@@ -3508,6 +3508,14 @@ hipError_t hipLaunchKernel(const void* function_address,
                            void** args,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
+/**
+ * Copies memory for 2D arrays.
+ *
+ * @param pCopy           - Parameters for the memory copy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy);
 
 //TODO: Move this to hip_ext.h
 hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3 dimBlocks,
