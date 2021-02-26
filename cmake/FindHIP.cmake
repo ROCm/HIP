@@ -668,6 +668,14 @@ macro(HIP_ADD_EXECUTABLE hip_target)
     else()
         add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
     endif()
+    #LINK_OPTIONS
+    if("${HIP_COMPILER}" STREQUAL "nvcc")
+        # Some arch flags need be sent to linker. _nvcc_options mixes compiling and linker flags.
+        string(REPLACE ";"  " " _nvcc_flags "${_nvcc_options}") # Replace ',' with space
+        if(NOT "x${_nvcc_flags}" STREQUAL "x")
+            set_target_properties(${hip_target} PROPERTIES LINK_FLAGS "${_nvcc_flags}")
+        endif()
+    endif()
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
     # Link with host
     if (HIP_HOST_INTERFACE)
