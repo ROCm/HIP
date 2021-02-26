@@ -2117,7 +2117,15 @@ hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void
         attributes->hostPointer = static_cast<char*>(memObj->getSvmPtr()) + offset;
       }
     }
-    attributes->devicePointer = reinterpret_cast<char*>(memObj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0])->virtualAddress() + offset);
+
+    device::Memory* devMem = memObj->getDeviceMemory(*hip::getCurrentDevice()->devices()[0]);
+    //getDeviceMemory can fail, hence validate the sanity of the mem obtained
+    if (nullptr == devMem) {
+      DevLogPrintfError("getDeviceMemory for ptr failed : %p \n", ptr);
+      HIP_RETURN(hipErrorMemoryAllocation);
+    }
+
+    attributes->devicePointer = reinterpret_cast<char*>(devMem->virtualAddress() + offset);
     constexpr uint32_t kManagedAlloc = (CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_ALLOC_HOST_PTR);
     attributes->isManaged =
         ((memObj->getMemFlags() & kManagedAlloc) == kManagedAlloc) ? true : false;
