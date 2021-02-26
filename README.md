@@ -93,8 +93,8 @@ template <typename T>
 __global__ void
 vector_square(T *C_d, const T *A_d, size_t N)
 {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x;
 
     for (size_t i=offset; i<N; i+=stride) {
         C_d[i] = A_d[i] * A_d[i];
@@ -120,18 +120,12 @@ provides source portability to either platform.   HIP provides the _hipcc_ compi
 
 ## Examples and Getting Started:
 
-* A sample and [blog](http://gpuopen.com/hip-to-be-squared-an-introductory-hip-tutorial) that uses any of [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md) tools to convert a simple app from CUDA to HIP:
+* A sample and [blog](https://github.com/ROCm-Developer-Tools/HIP/tree/main/samples/0_Intro/square) that uses any of [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md) tools to convert a simple app from CUDA to HIP:
 
 
 ```shell
 cd samples/01_Intro/square
 # follow README / blog steps to hipify the application.
-```
-
-* A sample and [blog](http://gpuopen.com/platform-aware-coding-inside-hip/) demonstrating platform specialization:
-```shell
-cd samples/01_Intro/bit_extract
-make
 ```
 
 * Guide to [Porting a New Cuda Project](docs/markdown/hip_porting_guide.md#porting-a-new-cuda-project")
