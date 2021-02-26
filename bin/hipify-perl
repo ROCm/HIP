@@ -2603,7 +2603,6 @@ while (@ARGV) {
         $countKeywords += m/__global__/;
         $countKeywords += m/__shared__/;
         simpleSubstitutions();
-        transformExternShared();
         transformKernelLaunch();
         transformCubNamespace();
         if ($print_stats) {
