@@ -265,6 +265,7 @@ hipExtStreamCreateWithCUMask
 hipStreamGetPriority
 hipMemcpy2DFromArray
 hipMemcpy2DFromArrayAsync
+hipDrvMemcpy2DUnaligned
 hipMemcpyAtoH
 hipMemcpyHtoA
 hipMemcpyParam2DAsync
