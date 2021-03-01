@@ -84,6 +84,7 @@ hipMalloc3DArray
 hipMallocManaged
 hipArrayCreate
 hipArray3DCreate
+hipArrayDestroy
 hipMallocArray
 hipMemAdvise
 hipMemAllocPitch
