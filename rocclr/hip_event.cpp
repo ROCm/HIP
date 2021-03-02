@@ -100,6 +100,10 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
   if (event_ != eStop.event_ && recorded_ && eStop.recorded_) {
     ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
                           event_->profilingInfo().end_))/1000000.f;
+  } else if (event_ != eStop.event_ && !recorded_ && !eStop.recorded_) {
+      //It is invalid to use unrecorded events across multiple commands to get time
+      //For example start and stop events from different hipExtLaunchKernelGGL calls
+      return hipErrorInvalidHandle;
   } else if (event_ == eStop.event_ && (recorded_ || eStop.recorded_)) {
     // Events are the same, which indicates the stream is empty and likely
     // eventRecord is called on another stream. For such cases insert and measure a
@@ -110,10 +114,9 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
     ms = static_cast<float>(static_cast<int64_t>(command->event().profilingInfo().end_ -
                           event_->profilingInfo().end_))/1000000.f;
     command->release();
-
   } else {
-  // For certain HIP API's that take both start and stop event
-  // or scenarios where HIP API takes one of the events and the other event is recorded with hipEventRecord
+    // For certain HIP API's that take both start and stop event
+    // or scenarios where HIP API takes one of the events and the other event is recorded with hipEventRecord
     ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
                           event_->profilingInfo().start_))/1000000.f;
   }
