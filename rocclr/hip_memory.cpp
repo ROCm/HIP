@@ -193,7 +193,7 @@ hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)
   return hipSuccess;
 }
 
-inline hipError_t ihipMemcpy_validate(void* dst, const void* src, size_t sizeBytes,
+hipError_t ihipMemcpy_validate(void* dst, const void* src, size_t sizeBytes,
                                       hipMemcpyKind kind) {
   if (dst == nullptr || src == nullptr) {
     return hipErrorInvalidValue;
@@ -980,6 +980,8 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t si
                                   size_t offset, hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(hipMemcpyToSymbolAsync, symbol, src, sizeBytes, offset, kind, stream);
 
+  STREAM_CAPTURE(hipMemcpyToSymbolAsync, stream, symbol, src, sizeBytes, offset, kind);
+
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
 
@@ -994,6 +996,8 @@ hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src, size_t si
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol, size_t sizeBytes,
                                     size_t offset, hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(hipMemcpyFromSymbolAsync, symbol, dst, sizeBytes, offset, kind, stream);
+
+  STREAM_CAPTURE(hipMemcpyFromSymbolAsync, stream, dst, symbol, sizeBytes, offset, kind);
 
   size_t sym_size = 0;
   hipDeviceptr_t device_ptr = nullptr;
@@ -1034,6 +1038,8 @@ hipError_t hipMemcpyDtoD(hipDeviceptr_t dstDevice,
 hipError_t hipMemcpyAsync(void* dst, const void* src, size_t sizeBytes,
                           hipMemcpyKind kind, hipStream_t stream) {
   HIP_INIT_API(hipMemcpyAsync, dst, src, sizeBytes, kind, stream);
+
+  STREAM_CAPTURE(hipMemcpyAsync, stream, dst, src, sizeBytes, kind);
 
   amd::HostQueue* queue = hip::getQueue(stream);
 
@@ -1927,6 +1933,8 @@ hipError_t hipMemcpy3D(const hipMemcpy3DParms* p) {
 hipError_t hipMemcpy3DAsync(const hipMemcpy3DParms* p, hipStream_t stream) {
   HIP_INIT_API(hipMemcpy3DAsync, p, stream);
 
+  STREAM_CAPTURE(hipMemcpy3DAsync, stream, p);
+
   HIP_RETURN_DURATION(ihipMemcpy3D(p, stream, true));
 }
 
@@ -1961,7 +1969,7 @@ hipError_t packFillMemoryCommand(amd::Command*& command, amd::Memory* memory, si
   return hipSuccess;
 }
 
-inline hipError_t ihipMemset_validate(void* dst, int64_t value, size_t valueSize,
+hipError_t ihipMemset_validate(void* dst, int64_t value, size_t valueSize,
                                       size_t sizeBytes) {
   if (sizeBytes == 0) {
     // Skip if nothing needs filling.
@@ -2075,6 +2083,8 @@ hipError_t hipMemset(void* dst, int value, size_t sizeBytes) {
 
 hipError_t hipMemsetAsync(void* dst, int value, size_t sizeBytes, hipStream_t stream) {
   HIP_INIT_API(hipMemsetAsync, dst, value, sizeBytes, stream);
+  size_t valueSize = sizeof(int8_t);
+  STREAM_CAPTURE(hipMemsetAsync, stream, dst, value, valueSize, sizeBytes);
 
   HIP_RETURN(ihipMemset(dst, value, sizeof(int8_t), sizeBytes, stream, true));
 }
@@ -2118,7 +2128,7 @@ hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count,
   HIP_RETURN(ihipMemset(dst, value, sizeof(int32_t), count * sizeof(int32_t), stream, true));
 }
 
-inline hipError_t ihipMemset3D_validate(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent,
+hipError_t ihipMemset3D_validate(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent,
                                         size_t sizeBytes) {
   size_t offset = 0;
   amd::Memory* memory = getMemoryObject(pitchedDevPtr.ptr, offset);
@@ -2200,6 +2210,8 @@ hipError_t hipMemset2DAsync(void* dst, size_t pitch, int value,
                             size_t width, size_t height, hipStream_t stream) {
   HIP_INIT_API(hipMemset2DAsync, dst, pitch, value, width, height, stream);
 
+  STREAM_CAPTURE(hipMemset2DAsync, stream, dst, pitch, value, width, height);
+
   HIP_RETURN(ihipMemset3D({dst, pitch, width, height}, value, {width, height, 1}, stream, true));
 }
 
@@ -2211,6 +2223,8 @@ hipError_t hipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent)
 
 hipError_t hipMemset3DAsync(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent, hipStream_t stream) {
   HIP_INIT_API(hipMemset3DAsync, pitchedDevPtr, value, extent, stream);
+
+  STREAM_CAPTURE(hipMemset3DAsync, stream, pitchedDevPtr, value, extent);
 
   HIP_RETURN(ihipMemset3D(pitchedDevPtr, value, extent, stream, true));
 }

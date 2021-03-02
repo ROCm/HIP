@@ -209,7 +209,7 @@ hipError_t hipFuncSetSharedMemConfig ( const void* func, hipSharedMemConfig conf
   HIP_RETURN(hipSuccess);
 }
 
-inline hipError_t ihipLaunchKernel_validate(hipFunction_t f, uint32_t globalWorkSizeX,
+hipError_t ihipLaunchKernel_validate(hipFunction_t f, uint32_t globalWorkSizeX,
                                             uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                             uint32_t blockDimX, uint32_t blockDimY,
                                             uint32_t blockDimZ, uint32_t sharedMemBytes,
@@ -484,7 +484,9 @@ extern "C" hipError_t hipLaunchKernel(const void *hostFunction,
                                       hipStream_t stream)
 {
     HIP_INIT_API(hipLaunchKernel, hostFunction, gridDim, blockDim, args, sharedMemBytes, stream);
-    HIP_RETURN(ihipLaunchKernel(hostFunction, gridDim, blockDim, args, sharedMemBytes, stream, nullptr, nullptr, 0));
+    STREAM_CAPTURE(hipLaunchKernel, stream, hostFunction, gridDim, blockDim, args, sharedMemBytes);
+    HIP_RETURN(ihipLaunchKernel(hostFunction, gridDim, blockDim, args, sharedMemBytes, stream,
+                                nullptr, nullptr, 0));
 }
 
 extern "C" hipError_t hipExtLaunchKernel(const void* hostFunction,
