@@ -31,10 +31,16 @@ static std::unordered_set<hip::Stream*> streamSet;
 namespace hip {
 
 // ================================================================================================
-Stream::Stream(hip::Device* dev, Priority p,
-    unsigned int f, bool null_stream, const std::vector<uint32_t>& cuMask)
-  : queue_(nullptr), lock_("Stream Callback lock"), device_(dev),
-    priority_(p), flags_(f), null_(null_stream), cuMask_(cuMask) {}
+Stream::Stream(hip::Device* dev, Priority p, unsigned int f, bool null_stream,
+               const std::vector<uint32_t>& cuMask, hipStreamCaptureStatus captureStatus)
+    : queue_(nullptr),
+      lock_("Stream Callback lock"),
+      device_(dev),
+      priority_(p),
+      flags_(f),
+      null_(null_stream),
+      cuMask_(cuMask),
+      captureStatus_(captureStatus) {}
 
 // ================================================================================================
 Stream::~Stream() {
@@ -47,6 +53,25 @@ Stream::~Stream() {
   }
 }
 
+hipError_t Stream::EndCapture() {
+  for (auto event : captureEvents_) {
+    hip::Event* e = reinterpret_cast<hip::Event*>(event);
+    e->EndCapture();
+  }
+  for (auto stream : parallelCaptureStreams_) {
+    hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
+    s->EndCapture();
+  }
+  captureStatus_ = hipStreamCaptureStatusNone;
+  pCaptureGraph_ = nullptr;
+  originStream_ = false;
+  parentStream_ = nullptr;
+  lastCapturedNodes_.clear();
+  parallelCaptureStreams_.clear();
+  captureEvents_.clear();
+
+  return hipSuccess;
+}
 // ================================================================================================
 bool Stream::Create() {
   // Enable queue profiling if a profiler is attached which sets the callback_table flag
@@ -344,6 +369,8 @@ void WaitThenDecrementSignal(hipStream_t stream, hipError_t status, void* user_d
 // ================================================================================================
 hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int flags) {
   HIP_INIT_API(hipStreamWaitEvent, stream, event, flags);
+
+  EVENT_CAPTURE(hipStreamWaitEvent, event, stream, flags);
 
   if (event == nullptr) {
     HIP_RETURN(hipErrorInvalidHandle);

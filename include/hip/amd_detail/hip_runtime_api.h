@@ -3887,6 +3887,130 @@ const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
 int hipGetStreamDeviceId(hipStream_t stream);
 
 #ifdef __cplusplus
+/**
+ * An opaque value that represents a hip graph
+ */
+class hipGraph;
+typedef hipGraph* hipGraph_t;
+
+/**
+ * An opaque value that represents a hip graph node
+ */
+class hipGraphNode;
+typedef hipGraphNode* hipGraphNode_t;
+
+/**
+ * An opaque value that represents a hip graph Exec
+ */
+class hipGraphExec;
+typedef hipGraphExec* hipGraphExec_t;
+typedef enum hipGraphNodeType {
+  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
+  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
+  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
+  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
+  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
+  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
+  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
+  hipGraphNodeTypeCount
+} hipGraphNodeType;
+
+typedef void (*hipHostFn_t)(void* userData);
+typedef struct hipHostNodeParams {
+  hipHostFn_t fn;
+  void* userData;
+} hipHostNodeParams;
+
+typedef struct hipKernelNodeParams {
+  dim3 blockDim;
+  void** extra;
+  void* func;
+  dim3 gridDim;
+  void** kernelParams;
+  unsigned int sharedMemBytes;
+} hipKernelNodeParams;
+
+typedef struct hipMemsetParams {
+  void* dst;
+  unsigned int elementSize;
+  size_t height;
+  size_t pitch;
+  unsigned int value;
+  size_t width;
+} hipMemsetParams;
+
+enum hipGraphExecUpdateResult {
+  hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
+  hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
+                                  ///< in the return value of the function
+  hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
+  hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
+  hipGraphExecUpdateErrorFunctionChanged =
+      0x4,  ///< The update failed because the function of a kernel node changed
+  hipGraphExecUpdateErrorParametersChanged =
+      0x5,  ///< The update failed because the parameters changed in a way that is not supported
+  hipGraphExecUpdateErrorNotSupported =
+      0x6,  ///< The update failed because something about the node is not supported
+  hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
+};
+
+enum hipStreamCaptureMode {
+  hipStreamCaptureModeGlobal = 0,
+  hipStreamCaptureModeThreadLocal,
+  hipStreamCaptureModeRelaxed
+};
+
+enum hipStreamCaptureStatus {
+  hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
+  hipStreamCaptureStatusActive,      ///< Stream is actively capturing
+  hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
+                                     ///< invalidated, but not terminated
+};
+
+hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
+
+hipError_t hipStreamEndCapture(hipStream_t stream, hipGraph_t* pGraph);
+
+// Creates a graph.
+hipError_t hipGraphCreate(hipGraph_t* pGraph, unsigned int flags);
+
+// Destroys a graph.
+hipError_t hipGraphDestroy(hipGraph_t graph);
+
+// Destroys an executable graph.
+hipError_t hipGraphExecDestroy(hipGraphExec_t pGraphExec);
+
+// Creates an executable graph from a graph.
+hipError_t hipGraphInstantiate(hipGraphExec_t* pGraphExec, hipGraph_t graph,
+                               hipGraphNode_t* pErrorNode, char* pLogBuffer, size_t bufferSize);
+
+// Launches an executable graph in a stream.
+hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
+
+// Creates a kernel execution node and adds it to a graph.
+hipError_t hipGraphAddKernelNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                                 const hipGraphNode_t* pDependencies, size_t numDependencies,
+                                 const hipKernelNodeParams* pNodeParams);
+
+// Creates a memcpy node and adds it to a graph.
+hipError_t hipGraphAddMemcpyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                                 const hipGraphNode_t* pDependencies, size_t numDependencies,
+                                 const hipMemcpy3DParms* pCopyParams);
+
+// Creates a memset node and adds it to a graph.
+hipError_t hipGraphAddMemsetNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                                 const hipGraphNode_t* pDependencies, size_t numDependencies,
+                                 const hipMemsetParams* pMemsetParams);
+#endif
+// doxygen end graph API
+/**
+ * @}
+ */
+#ifdef __cplusplus
 } /* extern "c" */
 #endif
 
@@ -4084,6 +4208,11 @@ static inline hipError_t hipUnbindTexture(
 {
     return hipUnbindTexture(&tex);
 }
+
+// doxygen end Texture
+/**
+ * @}
+ */
 
 #endif // __cplusplus
 

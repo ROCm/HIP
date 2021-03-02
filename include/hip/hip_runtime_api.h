@@ -280,6 +280,28 @@ typedef enum __HIP_NODISCARD hipError_t {
               ///< that was launched via cooperative launch APIs exceeds the maximum number of
               ///< allowed blocks for the current device
     hipErrorNotSupported = 801,  ///< Produced when the hip API is not supported/implemented
+    hipErrorStreamCaptureUnsupported = 900,  ///< The operation is not permitted when the stream
+                                             ///< is capturing.
+    hipErrorStreamCaptureInvalidated = 901,  ///< The current capture sequence on the stream
+                                             ///< has been invalidated due to a previous error.
+    hipErrorStreamCaptureMerge = 902,  ///< The operation would have resulted in a merge of
+                                       ///< two independent capture sequences.
+    hipErrorStreamCaptureUnmatched = 903,  ///< The capture was not initiated in this stream.
+    hipErrorStreamCaptureUnjoined = 904,  ///< The capture sequence contains a fork that was not
+                                          ///< joined to the primary stream.
+    hipErrorStreamCaptureIsolation = 905,  ///< A dependency would have been created which crosses
+                                           ///< the capture sequence boundary. Only implicit
+                                           ///< in-stream ordering dependencies  are allowed
+                                           ///< to cross the boundary
+    hipErrorStreamCaptureImplicit = 906,  ///< The operation would have resulted in a disallowed
+                                          ///< implicit dependency on a current capture sequence
+                                          ///< from hipStreamLegacy.
+    hipErrorCapturedEvent = 907,  ///< The operation is not permitted on an event which was last
+                                  ///< recorded in a capturing stream.
+    hipErrorStreamCaptureWrongThread = 908,  ///< A stream capture sequence not initiated with
+                                             ///< the hipStreamCaptureModeRelaxed argument to
+                                             ///< hipStreamBeginCapture was passed to 
+                                             ///< hipStreamEndCapture in a different thread.
     hipErrorUnknown = 999,  //< Unknown error.
     // HSA Runtime Error Codes start here.
     hipErrorRuntimeMemory = 1052,  ///< HSA runtime memory call returned error.  Typically not seen
