@@ -150,7 +150,7 @@ All HIP projects target either AMD or NVIDIA platform. The platform affects whic
 - `HIP_PLATFORM_AMD` is defined if the HIP platform targets AMD.
 Note, `HIP_PLATFORM_HCC` was previously defined if the HIP platform targeted AMD, it is deprecated.
 
-- `HIP_PLATFORM_NVIDA` is defined if the HIP platform targets NVIDIA.
+- `HIP_PLATFORM_NVDIA` is defined if the HIP platform targets NVIDIA.
 Note, `HIP_PLATFORM_NVCC` was previously defined if the HIP platform targeted NVIDIA, it is deprecated.
 
 ### Identifying the Compiler: hip-clang or nvcc

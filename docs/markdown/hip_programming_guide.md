@@ -21,7 +21,7 @@ ROCm defines two coherency options for host memory:
 - Non-coherent memory : Can be cached by GPU, but cannot support synchronization while the kernel is running.  Non-coherent memory can be optionally synchronized only at command (end-of-kernel or copy command) boundaries.  This memory is appropriate for high-performance access when fine-grain synchronization is not required.
 
 IP provides the developer with controls to select which type of memory is used via allocation flags passed to hipHostMalloc and the HIP_HOST_COHERENT environment variable:
-- hipHostllocCoherent=0, hipHostMallocNonCoherent=0: Use HIP_HOST_COHERENT environment variable: 
+- hipHostllocCoherent=0, hipHostMallocNonCoherent=0: Use HIP_HOST_COHERENT environment variable:
     - If HIP_HOST_COHERENT is 1 or undefined, the host memory allocation is coherent.
     - If host memory is `defined and 0: the host memory allocation is non-coherent.
 - hipHostMallocCoherent=1, hipHostMallocNonCoherent=0: The host memory allocation will be coherent.  HIP_HOST_COHERENT env variable is ignored.
@@ -29,8 +29,8 @@ IP provides the developer with controls to select which type of memory is used v
 - hipHostMallocCoherent=1, hipHostMallocNonCoherent=1: Illegal.
 
 
-### Visibility of Zero-Copy Host Memory 
-Coherent host memory is automatically visible at synchronization points.  
+### Visibility of Zero-Copy Host Memory
+Coherent host memory is automatically visible at synchronization points.
 Non-coherent
 
 | HIP API              | Synchronization Effect                                                         | Fence                | Coherent Host Memory Visibiity | Non-Coherent Host Memory Visibility|
@@ -41,12 +41,13 @@ Non-coherent
 | hipStreamWaitEvent   | stream waits for the specified event to complete                               | none                 | yes                        | no   |
 
 
-### hipEventSynchronize 
+### hipEventSynchronize
 Developers can control the release scope for hipEvents:
-- By default, the GPU performs a device-scope acquire and release operation with each recorded event.  This will make host and device memory visible to other commands executing on the same device. 
+- By default, the GPU performs a device-scope acquire and release operation with each recorded event.  This will make host and device memory visible to other commands executing on the same device.
 
 A stronger system-level fence can be specified when the event is created with hipEventCreateWithFlags:
 - hipEventReleaseToSystem : Perform a system-scope release operation when the event is recorded.  This will make both Coherent and Non-Coherent host memory visible to other agents in the system, but may involve heavyweight operations such as cache flushing.  Coherent memory will typically use lighter-weight in-kernel synchronization mechanisms such as an atomic operation and thus does not need to use hipEventReleaseToSystem.
+- hipEventDisableTiming: Events created with this flag would not record profiling data and provide best performance if used for synchronization.
 
 ### Summary and Recommendations:
 
@@ -61,9 +62,14 @@ HIP-Clang currenntly doesn't supports device-side malloc and free.
 
 In HIP-Clang, long double type is 80-bit extended precision format for x86_64, which is not supported by AMDGPU.  HIP-Clang treats long double type as IEEE double type for AMDGPU. Using long double type in HIP source code will not cause issue as long as data of long double type is not transferred between host and device. However, long double type should not be used as kernel argument type.
 
+## Use of _Float16 Type
+
+If a host function is to be used between clang (or hipcc) and gcc for x86_64, i.e. its definition is compiled by one compiler but the caller is compiled by a different compiler, _Float16 or aggregates containing _Float16 should not be used as function argument or return type. This is due to lack of stable ABI for _Float16 on x86_64. Passing _Float16 or aggregates containing _Float16 between clang and gcc could cause undefined behavior.
+
 ## FMA and contractions
 
-By default HIP-Clang assumes -ffp-contract=fast.
+By default HIP-Clang assumes -ffp-contract=fast-honor-pragmas.
+Users can use '#pragma clang fp contract(on|off|fast)' to control fp contraction of a block of code.
 For x86_64, FMA is off by default since the generic x86_64 target does not
 support FMA by default. To turn on FMA on x86_64, either use -mfma or -march=native
 on CPU's supporting FMA.
@@ -71,5 +77,9 @@ on CPU's supporting FMA.
 When contractions are enabled and the CPU has not enabled FMA instructions, the
 GPU can produce different numerical results than the CPU for expressions that
 can be contracted. Tolerance should be used for floating point comparsions.
+
+## Math functions with special rounding modes
+
+HIP does not support math functions with rounding modes ru (round up), rd (round down), and rz (round towards zero). HIP only supports math function with rounding mode rn (round to nearest). The math functions with postfixes _ru, _rd and _rz are implemented in the same way as math functions with postfix _rn. They serve as a workaround to get programs using them compiled.
 
 ## [Supported Clang Options](clang_options.md)
