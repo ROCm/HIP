@@ -368,6 +368,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
   }
   amd::HostQueue* hostQueue = hip::getQueue(stream);
   amd::Command* command = hostQueue->getLastQueuedCommand(true);
+  bool  cmd_created = false;
   if (command == nullptr ||
       // Add a marker if the last command is a notification,
       // since with multithreading AddCallback may occur before the previous
@@ -375,7 +376,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
       (command->type() == 0)) {
     amd::Command::EventWaitList eventWaitList;
     command = new amd::Marker(*hostQueue, kMarkerDisableFlush, eventWaitList);
-    command->enqueue();
+    cmd_created = true;
   }
   amd::Event& event = command->event();
   StreamCallback* cbo = new StreamCallback(stream, callback, userData, command);
@@ -384,7 +385,9 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
     command->release();
     return hipErrorInvalidHandle;
   }
-
+  if (cmd_created) {
+    command->enqueue();
+  }
   event.notifyCmdQueue();
 
   HIP_RETURN(hipSuccess);
