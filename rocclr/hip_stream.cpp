@@ -367,28 +367,31 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
     HIP_RETURN(hipErrorInvalidValue);
   }
   amd::HostQueue* hostQueue = hip::getQueue(stream);
-  amd::Command* command = hostQueue->getLastQueuedCommand(true);
-  bool  cmd_created = false;
-  if (command == nullptr ||
-      // Add a marker if the last command is a notification,
-      // since with multithreading AddCallback may occur before the previous
-      // command can be processed
-      (command->type() == 0)) {
-    amd::Command::EventWaitList eventWaitList;
-    command = new amd::Marker(*hostQueue, kMarkerDisableFlush, eventWaitList);
-    cmd_created = true;
+  amd::Command* last_command = hostQueue->getLastQueuedCommand(true);
+  amd::Command::EventWaitList eventWaitList;
+  if (last_command != nullptr) {
+    eventWaitList.push_back(last_command);
+  }
+  amd::Command* command = new amd::Marker(*hostQueue, !kMarkerDisableFlush, eventWaitList);
+  if (command == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
   }
   amd::Event& event = command->event();
   StreamCallback* cbo = new StreamCallback(stream, callback, userData, command);
 
-  if(!event.setCallback(CL_COMPLETE, ihipStreamCallback, reinterpret_cast<void*>(cbo))) {
+  if ((cbo == nullptr) || !event.setCallback(CL_COMPLETE, ihipStreamCallback, cbo)) {
     command->release();
+    if (last_command != nullptr) {
+      last_command->release();
+    }
     return hipErrorInvalidHandle;
   }
-  if (cmd_created) {
-    command->enqueue();
+  command->enqueue();
+  // @note: don't release the command here, because it will be released after HIP callback
+
+  if (last_command != nullptr) {
+    last_command->release();
   }
-  event.notifyCmdQueue();
 
   HIP_RETURN(hipSuccess);
 }
