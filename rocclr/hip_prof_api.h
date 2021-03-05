@@ -78,9 +78,30 @@ class api_callbacks_table_t {
 
     if (id < HIP_API_ID_NUMBER) {
       cb_sync(id);
+      /*
+      'fun != nullptr' indicates it is activity register call,
+      increment should happen only once but client is free to call
+      register CB multiple times for same API id hence the check
+
+      'fun == nullptr' indicates it is de-register call and
+      decrement should happen only once hence the check
+      */
+      if (fun != nullptr) {
+        if (callbacks_table_.arr[id].act == nullptr) {
+          enabled_api_count_++;
+        }
+      } else {
+        if (callbacks_table_.arr[id].act != nullptr) {
+          enabled_api_count_--;
+        }
+      }
+      if (enabled_api_count_ > 0) {
+        amd::IS_PROFILER_ON = true;
+      } else {
+        amd::IS_PROFILER_ON = false;
+      }
       callbacks_table_.arr[id].act = fun;
       callbacks_table_.arr[id].a_arg = arg;
-      enabled_ = true;
       cb_release(id);
     } else {
       ret = false;
@@ -97,7 +118,6 @@ class api_callbacks_table_t {
       cb_sync(id);
       callbacks_table_.arr[id].fun = fun;
       callbacks_table_.arr[id].arg = arg;
-      enabled_ = true;
       cb_release(id);
     } else {
       ret = false;
@@ -107,7 +127,7 @@ class api_callbacks_table_t {
   }
 
   void set_enabled(const bool& enabled) {
-    enabled_ = enabled;
+    amd::IS_PROFILER_ON = enabled;
   }
 
   inline hip_cb_table_entry_t& entry(const uint32_t& id) {
@@ -124,7 +144,7 @@ class api_callbacks_table_t {
   }
 
   inline bool is_enabled() const {
-    return enabled_;
+    return amd::IS_PROFILER_ON;
   }
 
  private:
@@ -161,7 +181,7 @@ class api_callbacks_table_t {
 
   mutex_t mutex_;
   hip_cb_table_t callbacks_table_;
-  bool enabled_;
+  uint32_t enabled_api_count_;
 };
 
 extern api_callbacks_table_t callbacks_table;
