@@ -58,6 +58,7 @@ __global__ void test_kernel() {
 }
 
 int main(int argc, char **argv) {
+#if !defined(_WIN32)
   std::string reference(R"here(xyzzy
 %
 hello % world
@@ -78,6 +79,28 @@ x
 (nil)
 3.14159000    hello 0xf01dab1eca55e77e
 )here");
+#else
+  std::string reference(R"here(xyzzy
+%
+hello % world
+%s
+%sF01DAB1ECA55E77E
+%cxyzzy
+sep
+-42
+42
+123.456000
+-123.456000
+-1.234560e+02
+1.234560E+02
+123.456
+-123.456
+x
+
+0000000000000000
+3.14159000    hello F01DAB1ECA55E77E
+)here");
+#endif
 
   CaptureStream captured(stdout);
   hipLaunchKernelGGL(test_kernel, dim3(1), dim3(1), 0, 0);
