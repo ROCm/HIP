@@ -218,6 +218,7 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorProfilerAlreadyStarted = 7,
     hipErrorProfilerAlreadyStopped = 8,
     hipErrorInvalidConfiguration = 9,
+    hipErrorInvalidPitchValue = 12,
     hipErrorInvalidSymbol = 13,
     hipErrorInvalidDevicePointer = 17,  ///< Invalid Device Pointer
     hipErrorInvalidMemcpyDirection = 21,  ///< Invalid memory copy direction

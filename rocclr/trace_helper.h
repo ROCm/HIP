@@ -83,6 +83,7 @@ inline const char* ihipErrorString(hipError_t hip_error) {
         CASE_STR(hipErrorInvalidConfiguration);
         CASE_STR(hipErrorInvalidDevice);
         CASE_STR(hipErrorInvalidValue);
+        CASE_STR(hipErrorInvalidPitchValue);
         CASE_STR(hipErrorInvalidDevicePointer);
         CASE_STR(hipErrorInvalidMemcpyDirection);
         CASE_STR(hipErrorUnknown);

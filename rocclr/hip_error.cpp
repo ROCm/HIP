@@ -78,6 +78,8 @@ const char *hipGetErrorName(hipError_t hip_error)
         return "hipErrorNoDevice";
     case hipErrorInvalidDevice:
         return "hipErrorInvalidDevice";
+    case hipErrorInvalidPitchValue:
+        return "hipErrorInvalidPitchValue";
     case hipErrorInvalidImage:
         return "hipErrorInvalidImage";
     case hipErrorInvalidContext:
