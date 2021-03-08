@@ -43,11 +43,14 @@ int main(int argc, char **argv) {
     123.45600000 hello * world
 )here");
 
-  CaptureStream captured(stdout);
+  CaptureStream capture(stdout);
+
+  capture.Begin();
   hipLaunchKernelGGL(test_kernel, dim3(1), dim3(1), 0, 0);
   hipStreamSynchronize(0);
-  auto CapturedData = captured.getCapturedData();
-  std::string device_output = gulp(CapturedData);
+  capture.End();
+
+  std::string device_output = capture.getData();
 
   HIPASSERT(device_output == reference);
   passed();

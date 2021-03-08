@@ -49,20 +49,25 @@ int main() {
   uint threads_per_block = 250;
   uint threads_per_device = num_blocks * threads_per_block;
 
+  CaptureStream capture(stdout);
+
   int num_devices = 0;
   hipGetDeviceCount(&num_devices);
-
-  CaptureStream captured(stdout);
+  capture.Begin();
   for (int i = 0; i != num_devices; ++i) {
     hipSetDevice(i);
     hipLaunchKernelGGL(print_things, dim3(num_blocks), dim3(threads_per_block),
                        0, 0);
     hipDeviceSynchronize();
   }
-  auto CapturedData = captured.getCapturedData();
+  capture.End();
+
+  std::string data = capture.getData();
+  std::stringstream dataStream;
+  dataStream << data;
 
   std::map<std::string, int> linecount;
-  for (std::string line; std::getline(CapturedData, line);) {
+  for (std::string line; std::getline(dataStream, line);) {
     linecount[line]++;
   }
 

@@ -137,6 +137,7 @@ inline int hip_skip_retcode() {
 #define dup(x) _dup(x)
 #define dup2(x,y) _dup2(x,y)
 #define close(x) _close(x)
+#define pipe(x,y,z) _pipe(x,y,z)
 #else
 #define aligned_free(x) free(x)
 #endif
