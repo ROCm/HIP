@@ -3526,6 +3526,22 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  * @}
  */
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Textur Texture Management
+ *  @{
+ *  This section describes the texture management functions of HIP runtime API.
+ */
+
+/**
+ *
+ *  @addtogroup TexturD Texture Management [Deprecated]
+ *  @{
+ *  @ingroup Texture
+ *  This section describes the deprecated texture management functions of HIP runtime API.
+ */
+
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(
     size_t* offset,
@@ -3550,22 +3566,27 @@ hipError_t hipBindTextureToArray(
     hipArray_const_t array,
     const hipChannelFormatDesc* desc);
 
-hipError_t hipBindTextureToMipmappedArray(
-    const textureReference* tex,
-    hipMipmappedArray_const_t mipmappedArray,
-    const hipChannelFormatDesc* desc);
-
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipGetTextureAlignmentOffset(
     size_t* offset,
     const textureReference* texref);
 
-hipError_t hipGetTextureReference(
-    const textureReference** texref,
-    const void* symbol);
-
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
+
+// doxygen end deprecated texture management
+/**
+ * @}
+ */
+
+hipError_t hipBindTextureToMipmappedArray(
+    const textureReference* tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const hipChannelFormatDesc* desc);
+
+ hipError_t hipGetTextureReference(
+    const textureReference** texref,
+    const void* symbol);
 
 hipError_t hipCreateTextureObject(
     hipTextureObject_t* pTexObject,
@@ -3656,10 +3677,6 @@ hipError_t hipTexRefSetArray(
     hipArray_const_t array,
     unsigned int flags);
 
-hipError_t hipTexRefSetBorderColor(
-    textureReference* texRef,
-    float* pBorderColor);
-
 hipError_t hipTexRefSetFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
@@ -3676,6 +3693,37 @@ hipError_t hipTexRefSetFormat(
 hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
+
+hipError_t hipTexObjectCreate(
+    hipTextureObject_t* pTexObject,
+    const HIP_RESOURCE_DESC* pResDesc,
+    const HIP_TEXTURE_DESC* pTexDesc,
+    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+
+hipError_t hipTexObjectDestroy(
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetResourceDesc(
+    HIP_RESOURCE_DESC* pResDesc,
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetResourceViewDesc(
+    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetTextureDesc(
+    HIP_TEXTURE_DESC* pTexDesc,
+    hipTextureObject_t texObject);
+
+// doxygen end Texture management
+/**
+ * @}
+ */
+
+// The following are not supported.
+hipError_t hipTexRefSetBorderColor(
+    textureReference* texRef,
+    float* pBorderColor);
 
 hipError_t hipTexRefSetMipmapFilterMode(
     textureReference* texRef,
@@ -3707,27 +3755,6 @@ hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
-
-hipError_t hipTexObjectCreate(
-    hipTextureObject_t* pTexObject,
-    const HIP_RESOURCE_DESC* pResDesc,
-    const HIP_TEXTURE_DESC* pTexDesc,
-    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
-
-hipError_t hipTexObjectDestroy(
-    hipTextureObject_t texObject);
-
-hipError_t hipTexObjectGetResourceDesc(
-    HIP_RESOURCE_DESC* pResDesc,
-    hipTextureObject_t texObject);
-
-hipError_t hipTexObjectGetResourceViewDesc(
-    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
-    hipTextureObject_t texObject);
-
-hipError_t hipTexObjectGetTextureDesc(
-    HIP_TEXTURE_DESC* pTexDesc,
-    hipTextureObject_t texObject);
 
 /**
  * Callback/Activity API
@@ -3939,12 +3966,6 @@ static inline hipError_t hipUnbindTexture(
 {
     return hipUnbindTexture(&tex);
 }
-
-// doxygen end Texture
-/**
- * @}
- */
-
 
 #endif // __cplusplus
 
