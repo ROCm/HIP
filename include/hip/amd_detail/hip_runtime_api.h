@@ -147,7 +147,7 @@ enum hipLimit_t {
                 /// obtain more precise timings of commands between events.  The flag is a no-op on
                 /// CUDA platforms.
 #define hipEventReleaseToSystem                                                                    \
-    0x80000000  /// < Use a system-scope release that when recording this event.  This flag is
+    0x80000000  /// < Use a system-scope release when recording this event.  This flag is
                 /// useful to make non-coherent host memory visible to the host.  The flag is a
                 /// no-op on CUDA platforms.
 

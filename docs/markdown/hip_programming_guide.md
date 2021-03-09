@@ -23,7 +23,7 @@ ROCm defines two coherency options for host memory:
 IP provides the developer with controls to select which type of memory is used via allocation flags passed to hipHostMalloc and the HIP_HOST_COHERENT environment variable:
 - hipHostllocCoherent=0, hipHostMallocNonCoherent=0: Use HIP_HOST_COHERENT environment variable:
     - If HIP_HOST_COHERENT is 1 or undefined, the host memory allocation is coherent.
-    - If host memory is `defined and 0: the host memory allocation is non-coherent.
+    - If HIP_HOST_COHERENT is `defined and 0: the host memory allocation is non-coherent.
 - hipHostMallocCoherent=1, hipHostMallocNonCoherent=0: The host memory allocation will be coherent.  HIP_HOST_COHERENT env variable is ignored.
 - hipHostMallocCoherent=0, hipHostMallocNonCoherent=1: The host memory allocation will be non-coherent.  HIP_HOST_COHERENT env variable is ignored.
 - hipHostMallocCoherent=1, hipHostMallocNonCoherent=1: Illegal.

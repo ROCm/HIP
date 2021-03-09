@@ -91,6 +91,8 @@ int main(int argc, char* argv[]) {
 
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
+    HIPCHECK(hipEventDestroy(start));
+    HIPCHECK(hipEventDestroy(stop));
 
     printf("check:\n");
 

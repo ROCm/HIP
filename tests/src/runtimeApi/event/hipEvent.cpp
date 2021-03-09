@@ -68,6 +68,7 @@ bool hipEvent_Nullcheck() {
     printf("hipEventDestroy failed when nullptr is passed \n");
     TestStatus = false;
   }
+
   return TestStatus;
 }
 

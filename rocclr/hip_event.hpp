@@ -57,6 +57,7 @@ public:
 #define IPC_SIGNALS_PER_EVENT 32
 typedef struct ihipIpcEventShmem_s {
   std::atomic<int> owners;
+  std::atomic<int> owners_device_id;
   std::atomic<int> read_index;
   std::atomic<int> write_index;
   std::atomic<int> signal[IPC_SIGNALS_PER_EVENT];
@@ -67,6 +68,7 @@ public:
   Event(unsigned int flags) : flags(flags), lock_("hipEvent_t", true),
                               event_(nullptr), recorded_(false) {
     // No need to init event_ here as addMarker does that
+    device_id_ = hip::getCurrentDevice()->deviceId(); // Created in current device ctx
   }
 
   ~Event() {
@@ -84,8 +86,10 @@ public:
   void addMarker(amd::HostQueue* queue, amd::Command* command, bool record);
   bool isRecorded() { return recorded_; }
   amd::Monitor& lock() { return lock_; }
+  const int deviceId() { return device_id_; }
+  void setDeviceId(int id) { device_id_ = id; }
 
-   //IPC Events
+  //IPC Events
   struct ihipIpcEvent_t {
     std::string ipc_name_;
     int ipc_fd_;
@@ -101,7 +105,7 @@ private:
   amd::Monitor lock_;
   amd::HostQueue* stream_;
   amd::Event* event_;
-
+  int device_id_;
   //! Flag to indicate hipEventRecord has been called. This is needed except for
   //! hip*ModuleLaunchKernel API which takes start and stop events so no
   //! hipEventRecord is called. Cleanup needed once those APIs are deprecated.
