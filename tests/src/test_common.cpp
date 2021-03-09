@@ -40,6 +40,7 @@ unsigned threadsPerBlock = 256;
 int p_gpuDevice = 0;
 unsigned p_verbose = 0;
 int p_tests = -1; /*which tests to run. Interpretation is left to each test.  default:all*/
+int debug_test = 0;
 #ifdef _WIN64
 const char* HIP_VISIBLE_DEVICES_STR = "HIP_VISIBLE_DEVICES=";
 const char* CUDA_VISIBLE_DEVICES_STR = "CUDA_VISIBLE_DEVICES=";
@@ -186,6 +187,10 @@ int parseStandardArguments(int argc, char* argv[], bool failOnUndefinedArg) {
                 failed("Bad tests argument");
             }
 
+        } else if (!strcmp(arg, "--debug") || (!strcmp(arg, "-d"))) {
+            if (++i >= argc || !HipTest::parseInt(argv[i], &debug_test)) {
+                failed("Bad tests argument");
+            }
         } else {
             if (failOnUndefinedArg) {
                 failed("Bad argument '%s'", arg);

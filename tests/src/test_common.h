@@ -154,6 +154,7 @@ extern unsigned threadsPerBlock;
 extern int p_gpuDevice;
 extern unsigned p_verbose;
 extern int p_tests;
+extern int debug_test;
 extern const char* HIP_VISIBLE_DEVICES_STR;
 extern const char* CUDA_VISIBLE_DEVICES_STR;
 extern const char* PATH_SEPERATOR_STR;
