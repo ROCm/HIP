@@ -688,7 +688,7 @@ if ($HIP_PLATFORM eq "amd") {
         $HIPCXXFLAGS .= " -fhip-new-launch-api";
     }
     if (not $isWindows) {
-        $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm";
+        $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm -lrt";
     }
 
     if (not $isWindows  and not $compileOnly) {
