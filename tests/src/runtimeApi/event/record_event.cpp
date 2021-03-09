@@ -104,11 +104,10 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
             assert(0);
     };
 
-
     float t;
 
     hipError_t e = hipEventElapsedTime(&t, start, start);
-    if ((e != hipSuccess) && (e != hipErrorNotReady)) {
+    if ((e != hipSuccess) && (e != hipErrorNotReady || syncMode != syncNone)) {
         failed("start event not in expected state, was %d=%s\n", e, hipGetErrorName(e));
     }
 
@@ -142,6 +141,9 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
         HIPCHECK_API(hipEventElapsedTime(&t, neverRecorded, stop), hipErrorInvalidHandle);
         HIPCHECK_API(hipEventElapsedTime(&t, start, neverRecorded), hipErrorInvalidHandle);
     }
+
+    HIPCHECK(hipEventDestroy(neverRecorded));
+    HIPCHECK(hipEventDestroy(timingDisabled));
 
     HIPCHECK(hipEventDestroy(start));
     HIPCHECK(hipEventDestroy(stop));

@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
 
 
         float eventMs = 1.0f;
-        // should fail
+        // should fail due to hipEventDisableTiming
         HIPASSERT(hipSuccess != hipEventElapsedTime(&eventMs, start, stop));
         float hostMs = HipTest::elapsed_time(hostStart, hostStop);
 
@@ -97,16 +97,27 @@ int main(int argc, char* argv[]) {
     HIPCHECK(hipEventSynchronize(ipc_event));
 
     HIPCHECK(hipEventDestroy(ipc_event));
+
+#ifndef __HIP_PLATFORM_AMD__
     HIPCHECK(hipEventDestroy(start));
     HIPCHECK(hipEventDestroy(stop));
+#endif
 
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
-
     printf("check:\n");
 
-    HipTest::checkVectorADD(A_h, B_h, C_h, N, true);
+#ifdef __HIP_PLATFORM_AMD__
+    // Due to implementation bug of hipEventInterprocess, as a workaround,
+    // we have to move hipEventDestroy here. Otherwise sporadic crash will
+    // happen in above hipMemcpy(). If hipEventInterprocess is officially
+    // implemented, we should revisit here and move these back to match cuda
+    // event behavior.
+    HIPCHECK(hipEventDestroy(start));
+    HIPCHECK(hipEventDestroy(stop));
+#endif
 
+    HipTest::checkVectorADD(A_h, B_h, C_h, N, true);
 
     passed();
 }

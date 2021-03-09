@@ -207,7 +207,6 @@ hipError_t ihipEventCreateWithFlags(hipEvent_t* event, unsigned flags) {
     if (e == nullptr) {
       return hipErrorOutOfMemory;
     }
-
     *event = reinterpret_cast<hipEvent_t>(e);
   } else {
     return hipErrorInvalidValue;
@@ -258,9 +257,8 @@ hipError_t hipEventDestroy(hipEvent_t event) {
     if (!amd::Os::MemoryUnmapFile(e->ipc_evt_.ipc_shmem_,sizeof(hip::ihipIpcEventShmem_t))) {
       HIP_RETURN(hipErrorInvalidHandle);
     }
-  } else {
-    delete e;
   }
+  delete e;
   HIP_RETURN(hipSuccess);
 }
 
@@ -278,14 +276,23 @@ hipError_t hipEventElapsedTime(float *ms, hipEvent_t start, hipEvent_t stop) {
   hip::Event* eStart = reinterpret_cast<hip::Event*>(start);
   hip::Event* eStop  = reinterpret_cast<hip::Event*>(stop);
 
+  if (eStart->deviceId() != eStop->deviceId()) {
+    HIP_RETURN(hipErrorInvalidHandle);
+  }
+
   HIP_RETURN(eStart->elapsedTime(*eStop, *ms), "Elapsed Time = ", *ms);
 }
 
 // ================================================================================================
 bool createIpcEventShmemIfNeeded(hip::Event::ihipIpcEvent_t& ipc_evt) {
 #if !defined(_MSC_VER)
+  if (ipc_evt.ipc_shmem_) {
+    // ipc_shmem_ already created, no need to create it again
+    return true;
+  }
   char name_template[] = "/tmp/eventXXXXXX";
   int temp_fd = mkstemp(name_template);
+
   ipc_evt.ipc_name_ = name_template;
   ipc_evt.ipc_name_.replace(0, 5, "/hip_");
   if (!amd::Os::MemoryMapFileTruncated(ipc_evt.ipc_name_.c_str(),
@@ -298,6 +305,8 @@ bool createIpcEventShmemIfNeeded(hip::Event::ihipIpcEvent_t& ipc_evt) {
   for (uint32_t sig_idx = 0; sig_idx < IPC_SIGNALS_PER_EVENT; ++sig_idx) {
     ipc_evt.ipc_shmem_->signal[sig_idx] = 0;
   }
+
+  close(temp_fd);
   return true;
 #else
   return false;
@@ -312,7 +321,13 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   }
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
+
   amd::HostQueue* queue = hip::getQueue(stream);
+
+  if (g_devices[e->deviceId()]->devices()[0] != &queue->device()) {
+    HIP_RETURN(hipErrorInvalidHandle);
+  }
+
   bool isRecorded = e->isRecorded();
   if ((e->flags & hipEventInterprocess) && !isRecorded) {
     amd::Command* command = queue->getLastQueuedCommand(true);
@@ -330,6 +345,8 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     }
     // Lock signal.
     e->ipc_evt_.ipc_shmem_->signal[offset] = 1;
+    e->ipc_evt_.ipc_shmem_->owners_device_id = e->deviceId();
+
     std::atomic<int> *signal = &e->ipc_evt_.ipc_shmem_->signal[offset];
     StreamCallback* cbo = new StreamCallback(stream,
                     reinterpret_cast<hipStreamCallback_t> (ipcEventCallback), signal, command);
@@ -421,7 +438,10 @@ hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle) 
                     (const void**) &(ipc_evt.ipc_shmem_), sizeof(hip::ihipIpcEventShmem_t))) {
     HIP_RETURN(hipErrorInvalidValue);
   }
+
   ipc_evt.ipc_shmem_->owners += 1;
+  e->setDeviceId(ipc_evt.ipc_shmem_->owners_device_id.load());
+
   HIP_RETURN(hipSuccess);
 #else
   assert(0 && "Unimplemented");
