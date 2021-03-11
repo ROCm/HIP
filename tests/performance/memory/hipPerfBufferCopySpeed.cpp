@@ -38,9 +38,9 @@ THE SOFTWARE.
 #define SNPRINTF snprintf
 #endif
 
-#define NUM_SIZES 8
+#define NUM_SIZES 9
 //4KB, 8KB, 64KB, 256KB, 1 MB, 4MB, 16 MB, 16MB+10
-static const unsigned int Sizes[NUM_SIZES] = {4096, 8192, 65536, 262144, 1048576, 4194304, 16777216, 16777216+10};
+static const unsigned int Sizes[NUM_SIZES] = {4096, 8192, 65536, 262144, 524288, 1048576, 4194304, 16777216, 16777216+10};
 
 static const unsigned int Iterations[2] = {1, 1000};
 
