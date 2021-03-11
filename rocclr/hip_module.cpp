@@ -209,134 +209,178 @@ hipError_t hipFuncSetSharedMemConfig ( const void* func, hipSharedMemConfig conf
   HIP_RETURN(hipSuccess);
 }
 
-hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
-                                 uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
-                                 uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
-                                 uint32_t sharedMemBytes, hipStream_t hStream,
-                                 void **kernelParams, void **extra,
-                                 hipEvent_t startEvent, hipEvent_t stopEvent, uint32_t flags = 0,
-                                 uint32_t params = 0, uint32_t gridId = 0, uint32_t numGrids = 0,
-                                 uint64_t prevGridSum = 0, uint64_t allGridSum = 0, uint32_t firstDevice = 0) {
-  HIP_INIT_API(ihipModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
-    blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams, extra, startEvent,
-    stopEvent, flags, params);
-
-  HIP_RETURN_ONFAIL(PlatformState::instance().initStatManagedVarDevicePtr(ihipGetDevice()));
-
+inline hipError_t ihipLaunchKernel_validate(hipFunction_t f, uint32_t globalWorkSizeX,
+                                            uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
+                                            uint32_t blockDimX, uint32_t blockDimY,
+                                            uint32_t blockDimZ, uint32_t sharedMemBytes,
+                                            void** kernelParams, void** extra,
+                                            uint32_t params = 0) {
   if (f == nullptr) {
     LogPrintfError("%s", "Function passed is null");
     return hipErrorInvalidImage;
   }
   if ((kernelParams != nullptr) && (extra != nullptr)) {
-    LogPrintfError(
-        "%s", "Both, kernelParams and extra Params are provided, only one should be provided");
+    LogPrintfError("%s",
+                   "Both, kernelParams and extra Params are provided, only one should be provided");
     return hipErrorInvalidValue;
   }
-  if (globalWorkSizeX == 0 || globalWorkSizeY == 0 || globalWorkSizeZ == 0 ||
-      blockDimX == 0 || blockDimY == 0 || blockDimZ == 0) {
+  if (globalWorkSizeX == 0 || globalWorkSizeY == 0 || globalWorkSizeZ == 0 || blockDimX == 0 ||
+      blockDimY == 0 || blockDimZ == 0) {
     return hipErrorInvalidValue;
   }
-  
-  hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
-  amd::Kernel* kernel = function->kernel();
 
-  amd::ScopedLock lock(function->dflock_);
-
-  hip::Event* eStart = reinterpret_cast<hip::Event*>(startEvent);
-  hip::Event* eStop = reinterpret_cast<hip::Event*>(stopEvent);
-  amd::HostQueue* queue = hip::getQueue(hStream);
-  const amd::Device& device = queue->vdev()->device();
-
+  if (extra != nullptr) {
+    if (extra[0] != HIP_LAUNCH_PARAM_BUFFER_POINTER || extra[2] != HIP_LAUNCH_PARAM_BUFFER_SIZE ||
+        extra[4] != HIP_LAUNCH_PARAM_END) {
+      return hipErrorNotInitialized;
+    }
+  }
+  const amd::Device* device = hip::getCurrentDevice()->devices()[0];
   // Make sure dispatch doesn't exceed max workgroup size limit
-  if (blockDimX * blockDimY * blockDimZ > device.info().maxWorkGroupSize_) {
+  if (blockDimX * blockDimY * blockDimZ > device->info().maxWorkGroupSize_) {
     return hipErrorInvalidConfiguration;
   }
-
+  hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
+  amd::Kernel* kernel = function->kernel();
   // Make sure the launch params are not larger than if specified launch_bounds
-  // If it exceeds, then print a warning and continue for now 
-  if (blockDimX * blockDimY * blockDimZ > kernel->getDeviceKernel(device)->workGroupInfo()->size_) {
+  // If it exceeds, then print a warning and continue for now
+  if (blockDimX * blockDimY * blockDimZ >
+      kernel->getDeviceKernel(*device)->workGroupInfo()->size_) {
     LogPrintfWarning("%s", "Launch params are larger than launch bounds");
   }
 
-
   if (params & amd::NDRangeKernelCommand::CooperativeGroups) {
-    if (!device.info().cooperativeGroups_) {
+    if (!device->info().cooperativeGroups_) {
       return hipErrorLaunchFailure;
     }
     int num_blocks = 0;
     int max_blocks_per_grid = 0;
     int best_block_size = 0;
     int block_size = blockDimX * blockDimY * blockDimZ;
-    hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(
-      &num_blocks, &max_blocks_per_grid, &best_block_size, device, f, block_size, sharedMemBytes, true);
+    hip_impl::ihipOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks, &max_blocks_per_grid,
+                                                            &best_block_size, *device, f,
+                                                            block_size, sharedMemBytes, true);
     if (((globalWorkSizeX * globalWorkSizeY * globalWorkSizeZ) / block_size) >
-       unsigned(max_blocks_per_grid)) {
+        unsigned(max_blocks_per_grid)) {
       return hipErrorCooperativeLaunchTooLarge;
     }
   }
   if (params & amd::NDRangeKernelCommand::CooperativeMultiDeviceGroups) {
-    if (!device.info().cooperativeMultiDeviceGroups_) {
+    if (!device->info().cooperativeMultiDeviceGroups_) {
       return hipErrorLaunchFailure;
     }
   }
-  if (!queue) {
-    return hipErrorOutOfMemory;
-  }
-
-  size_t globalWorkOffset[3] = {0};
-  size_t globalWorkSize[3] = { globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ };
-  size_t localWorkSize[3] = { blockDimX, blockDimY, blockDimZ };
-  amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
-  amd::Command::EventWaitList waitList;
-  bool profileNDRange = false;
   address kernargs = nullptr;
-
   // 'extra' is a struct that contains the following info: {
   //   HIP_LAUNCH_PARAM_BUFFER_POINTER, kernargs,
   //   HIP_LAUNCH_PARAM_BUFFER_SIZE, &kernargs_size,
   //   HIP_LAUNCH_PARAM_END }
   if (extra != nullptr) {
-    if (extra[0] != HIP_LAUNCH_PARAM_BUFFER_POINTER ||
-        extra[2] != HIP_LAUNCH_PARAM_BUFFER_SIZE || extra[4] != HIP_LAUNCH_PARAM_END) {
+    if (extra[0] != HIP_LAUNCH_PARAM_BUFFER_POINTER || extra[2] != HIP_LAUNCH_PARAM_BUFFER_SIZE ||
+        extra[4] != HIP_LAUNCH_PARAM_END) {
       return hipErrorNotInitialized;
     }
     kernargs = reinterpret_cast<address>(extra[1]);
   }
 
-    const amd::KernelSignature& signature = kernel->signature();
-    for (size_t i = 0; i < signature.numParameters(); ++i) {
-      const amd::KernelParameterDescriptor& desc = signature.at(i);
+  const amd::KernelSignature& signature = kernel->signature();
+  for (size_t i = 0; i < signature.numParameters(); ++i) {
+    const amd::KernelParameterDescriptor& desc = signature.at(i);
     if (kernelParams == nullptr) {
       assert(kernargs != nullptr);
       kernel->parameters().set(i, desc.size_, kernargs + desc.offset_,
-                               desc.type_ == T_POINTER/*svmBound*/);
+                               desc.type_ == T_POINTER /*svmBound*/);
     } else {
       assert(extra == nullptr);
       kernel->parameters().set(i, desc.size_, kernelParams[i],
-                               desc.type_ == T_POINTER/*svmBound*/);
+                               desc.type_ == T_POINTER /*svmBound*/);
     }
   }
+  return hipSuccess;
+}
+
+hipError_t ihipLaunchKernelCommand(amd::Command*& command, hipFunction_t f,
+                                   uint32_t globalWorkSizeX, uint32_t globalWorkSizeY,
+                                   uint32_t globalWorkSizeZ, uint32_t blockDimX, uint32_t blockDimY,
+                                   uint32_t blockDimZ, uint32_t sharedMemBytes,
+                                   amd::HostQueue* queue, void** kernelParams, void** extra,
+                                   hipEvent_t startEvent = nullptr, hipEvent_t stopEvent = nullptr,
+                                   uint32_t flags = 0, uint32_t params = 0, uint32_t gridId = 0,
+                                   uint32_t numGrids = 0, uint64_t prevGridSum = 0,
+                                   uint64_t allGridSum = 0, uint32_t firstDevice = 0) {
+  hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
+  amd::Kernel* kernel = function->kernel();
+
+  size_t globalWorkOffset[3] = {0};
+  size_t globalWorkSize[3] = {globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ};
+  size_t localWorkSize[3] = {blockDimX, blockDimY, blockDimZ};
+  amd::NDRangeContainer ndrange(3, globalWorkOffset, globalWorkSize, localWorkSize);
+  amd::Command::EventWaitList waitList;
+  bool profileNDRange = false;
+  address kernargs = nullptr;
 
   profileNDRange = (startEvent != nullptr || stopEvent != nullptr);
 
   // Flag set to 1 signifies that kernel can be launched in anyorder
   if (flags & hipExtAnyOrderLaunch) {
-      params |= amd::NDRangeKernelCommand::AnyOrderLaunch;
+    params |= amd::NDRangeKernelCommand::AnyOrderLaunch;
   }
 
-  amd::NDRangeKernelCommand* command = new amd::NDRangeKernelCommand(
-    *queue, waitList, *kernel, ndrange, sharedMemBytes,
-    params, gridId, numGrids, prevGridSum, allGridSum, firstDevice, profileNDRange);
-  if (!command) {
+  amd::NDRangeKernelCommand* kernelCommand = new amd::NDRangeKernelCommand(
+      *queue, waitList, *kernel, ndrange, sharedMemBytes, params, gridId, numGrids, prevGridSum,
+      allGridSum, firstDevice, profileNDRange);
+  if (!kernelCommand) {
     return hipErrorOutOfMemory;
   }
 
   // Capture the kernel arguments
-  if (CL_SUCCESS != command->captureAndValidate()) {
-    delete command;
+  if (CL_SUCCESS != kernelCommand->captureAndValidate()) {
+    delete kernelCommand;
     return hipErrorOutOfMemory;
   }
+  command = kernelCommand;
+  return hipSuccess;
+}
 
+hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
+                                  uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
+                                  uint32_t blockDimX, uint32_t blockDimY, uint32_t blockDimZ,
+                                  uint32_t sharedMemBytes, hipStream_t hStream, void** kernelParams,
+                                  void** extra, hipEvent_t startEvent, hipEvent_t stopEvent,
+                                  uint32_t flags = 0, uint32_t params = 0, uint32_t gridId = 0,
+                                  uint32_t numGrids = 0, uint64_t prevGridSum = 0,
+                                  uint64_t allGridSum = 0, uint32_t firstDevice = 0) {
+  HIP_INIT_API(ihipModuleLaunchKernel, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
+               blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams, extra,
+               startEvent, stopEvent, flags, params);
+
+  HIP_RETURN_ONFAIL(PlatformState::instance().initStatManagedVarDevicePtr(ihipGetDevice()));
+  if (f == nullptr) {
+    LogPrintfError("%s", "Function passed is null");
+    return hipErrorInvalidImage;
+  }
+  hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
+  amd::Kernel* kernel = function->kernel();
+  amd::ScopedLock lock(function->dflock_);
+
+  hipError_t status =
+      ihipLaunchKernel_validate(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, blockDimX,
+                                blockDimY, blockDimZ, sharedMemBytes, kernelParams, extra, params);
+  if (status != hipSuccess) {
+    return status;
+  }
+  amd::Command* command = nullptr;
+  amd::HostQueue* queue = hip::getQueue(hStream);
+  status = ihipLaunchKernelCommand(command, f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ,
+                                   blockDimX, blockDimY, blockDimZ, sharedMemBytes, queue,
+                                   kernelParams, extra, startEvent, stopEvent, flags, params,
+                                   gridId, numGrids, prevGridSum, allGridSum, firstDevice);
+  if (status != hipSuccess) {
+    return status;
+  }
+
+  hip::Event* eStart = reinterpret_cast<hip::Event*>(startEvent);
+  hip::Event* eStop = reinterpret_cast<hip::Event*>(stopEvent);
   command->enqueue();
 
   if (startEvent != nullptr) {
