@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2019 - present Advanced Micro Devices, Inc. All rights reserved.
+   Copyright (c) 2021 - present Advanced Micro Devices, Inc. All rights reserved.
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
    in the Software without restriction, including without limitation the rights
@@ -23,6 +23,12 @@
      without concurrency flag and verify the time difference between them
   4. hipExtModuleLaunchKernel API verifying the kernel execution time of a particular kernel.
   5. hipExtModuleLaunchKernel API verifying the kernel execution time by disabling the time flag
+  6. hipExtModuleLaunchKernel API verifying Corner Scenarios for Grid and Block dimensions
+  7. hipModuleLaunchKernel Work Group tests =>
+     - (block.x * block.y * block.z) <= Work Group Size
+       where block.x < MaxBlockDimX , block.y < MaxBlockDimY and block.z < MaxBlockDimZ
+     - (block.x * block.y * block.z) > Work Group Size
+       where block.x < MaxBlockDimX , block.y < MaxBlockDimY and block.z < MaxBlockDimZ
 
   Scenarios 2 and 3 concurrency verification scenarios are not included in HIT command
   as firmware currently does not support the concurrency in the same stream based on the flag.
@@ -33,10 +39,11 @@
  * TEST_NAMED: %t hipExtModuleLaunchKernel_NegativeTests --tests 1 EXCLUDE_HIP_PLATFORM nvidia
  * TEST_NAMED: %t hipExtModuleLaunchKernel_KernelExecutionTime --tests 4 EXCLUDE_HIP_PLATFORM nvidia
  * TEST_NAMED: %t hipExtModuleLaunchKernel_DisabledEventTimeFlag --tests 5 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST_NAMED: %t hipExtModuleLaunchKernel_CornerScenarios --tests 6 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST_NAMED: %t hipExtModuleLaunchKernel_WorkGroup --tests 7 EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
-
-#include<chrono>
+#include <math.h>
 #include "test_common.h"
 #include "hip/hip_ext.h"
 
@@ -47,9 +54,18 @@
 #define FourSec "FourSecKernel"
 #define TwoSec "TwoSecKernel"
 #define globalDevVar "deviceGlobal"
+#define dummyKernel "dummyKernel"
 #define FOURSEC_KERNEL 4999
 #define TWOSEC_KERNEL  2999
 
+struct gridblockDim {
+  unsigned int gridX;
+  unsigned int gridY;
+  unsigned int gridZ;
+  unsigned int blockX;
+  unsigned int blockY;
+  unsigned int blockZ;
+};
 class ModuleLaunchKernel {
   int N = 64;
   int SIZE = N*N;
@@ -61,7 +77,7 @@ class ModuleLaunchKernel {
   hipModule_t Module;
   hipDeviceptr_t deviceGlobal;
   hipFunction_t MultKernel, SixteenSecKernel, FourSecKernel,
-  TwoSecKernel, KernelandExtraParamKernel;
+  TwoSecKernel, KernelandExtraParamKernel, DummyKernel;
   struct {
     int clockRate;
     void* _Ad;
@@ -69,8 +85,11 @@ class ModuleLaunchKernel {
     void* _Cd;
     int _n;
   } args1, args2;
+  struct {
+  } args3;
   size_t size1;
   size_t size2;
+  size_t size3;
   size_t deviceGlobalSize;
  public :
   void AllocateMemory();
@@ -78,6 +97,8 @@ class ModuleLaunchKernel {
   void ModuleLoad();
   bool Module_Negative_tests();
   bool ExtModule_Negative_tests();
+  bool ExtModule_Corner_tests();
+  bool Module_WorkGroup_Test();
   bool ExtModule_KernelExecutionTime();
   bool ExtModule_ConcurencyCheck_GlobalVar(int conc_flag);
   bool ExtModule_ConcurrencyCheck_TimeVer();
@@ -116,6 +137,7 @@ void ModuleLaunchKernel::AllocateMemory() {
   args2.clockRate = clkRate;
   size1 = sizeof(args1);
   size2 = sizeof(args2);
+  size3 = sizeof(args3);
   HIPCHECK(hipEventCreate(&start_event1));
   HIPCHECK(hipEventCreate(&end_event1));
   HIPCHECK(hipEventCreate(&start_event2));
@@ -134,6 +156,7 @@ void ModuleLaunchKernel::ModuleLoad() {
                                 Module, KernelandExtra));
   HIPCHECK(hipModuleGetFunction(&FourSecKernel, Module, FourSec));
   HIPCHECK(hipModuleGetFunction(&TwoSecKernel, Module, TwoSec));
+  HIPCHECK(hipModuleGetFunction(&DummyKernel, Module, dummyKernel));
   HIPCHECK(hipModuleGetGlobal(&deviceGlobal, &deviceGlobalSize,
                               Module, globalDevVar));
 }
@@ -355,6 +378,54 @@ bool ModuleLaunchKernel::ExtModule_Negative_tests() {
     printf("hipExtModuleLaunchKernel failed for max values to block dimension");
     testStatus = false;
   }
+  // Passing 0 as value for all dimensions
+  err = hipExtModuleLaunchKernel(MultKernel, 0, 0, 0,
+                                 0,
+                                 0,
+                                 0, 0,
+                                 stream1, NULL,
+                                 reinterpret_cast<void**>(&config1),
+                                 nullptr, nullptr, 0);
+  if (err == hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed for 0 as value for all dimensions");
+    testStatus = false;
+  }
+  // Passing 0 as value for x dimension
+  err = hipExtModuleLaunchKernel(MultKernel, 0, 1, 1,
+                                 0,
+                                 1,
+                                 1, 0,
+                                 stream1, NULL,
+                                 reinterpret_cast<void**>(&config1),
+                                 nullptr, nullptr, 0);
+  if (err == hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed for 0 as value for x dimension");
+    testStatus = false;
+  }
+  // Passing 0 as value for y dimension
+  err = hipExtModuleLaunchKernel(MultKernel, 1, 0, 1,
+                                 1,
+                                 0,
+                                 1, 0,
+                                 stream1, NULL,
+                                 reinterpret_cast<void**>(&config1),
+                                 nullptr, nullptr, 0);
+  if (err == hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed for 0 as value for y dimension");
+    testStatus = false;
+  }
+  // Passing 0 as value for z dimension
+  err = hipExtModuleLaunchKernel(MultKernel, 1, 1, 0,
+                                 1,
+                                 1,
+                                 0, 0,
+                                 stream1, NULL,
+                                 reinterpret_cast<void**>(&config1),
+                                 nullptr, nullptr, 0);
+  if (err == hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed for 0 as value for z dimension");
+    testStatus = false;
+  }
   // Passing both kernel and extra params
   err = hipExtModuleLaunchKernel(KernelandExtraParamKernel, 1, 1, 1, 1, 1, 1, 0,
                                  stream1, reinterpret_cast<void**>(&params),
@@ -378,6 +449,40 @@ bool ModuleLaunchKernel::ExtModule_Negative_tests() {
     printf("hipExtModuleLaunchKernel failed for max group size");
     testStatus = false;
   }
+  // Block dimension X = Max Allowed + 1
+  err = hipExtModuleLaunchKernel(MultKernel, 1, 1, 1,
+                            deviceProp.maxThreadsDim[0]+1,
+                            1,
+                            1, 0, stream1, NULL,
+                            reinterpret_cast<void**>(&config1),
+                            nullptr, nullptr, 0);
+  if (err == hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed for (MaxBlockDimX + 1)");
+    testStatus = false;
+  }
+  // Block dimension Y = Max Allowed + 1
+  err = hipExtModuleLaunchKernel(MultKernel, 1, 1, 1,
+                            1,
+                            deviceProp.maxThreadsDim[1]+1,
+                            1, 0, stream1, NULL,
+                            reinterpret_cast<void**>(&config1),
+                            nullptr, nullptr, 0);
+  if (err == hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed for (MaxBlockDimY + 1)");
+    testStatus = false;
+  }
+  // Block dimension Z = Max Allowed + 1
+  err = hipExtModuleLaunchKernel(MultKernel, 1, 1, 1,
+                            1,
+                            1,
+                            deviceProp.maxThreadsDim[2]+1, 0, stream1, NULL,
+                            reinterpret_cast<void**>(&config1),
+                            nullptr, nullptr, 0);
+  if (err == hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed for (MaxBlockDimZ + 1)");
+    testStatus = false;
+  }
+
   // Passing invalid config data in extra params
   void *config3[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER,
                      HIP_LAUNCH_PARAM_BUFFER_SIZE, &size1,
@@ -387,6 +492,95 @@ bool ModuleLaunchKernel::ExtModule_Negative_tests() {
                                  nullptr, nullptr, 0);
   if (err == hipSuccess) {
     printf("hipExtModuleLaunchKernel failed for invalid conf \n");
+    testStatus = false;
+  }
+  DeAllocateMemory();
+  return testStatus;
+}
+
+bool ModuleLaunchKernel::ExtModule_Corner_tests() {
+  bool testStatus = true;
+  HIPCHECK(hipSetDevice(0));
+  hipError_t err;
+  AllocateMemory();
+  ModuleLoad();
+  void *config1[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args3,
+                     HIP_LAUNCH_PARAM_BUFFER_SIZE, &size3,
+                     HIP_LAUNCH_PARAM_END};
+  hipDeviceProp_t deviceProp;
+  hipGetDeviceProperties(&deviceProp, 0);
+  unsigned int maxblockX = deviceProp.maxThreadsDim[0];
+  unsigned int maxblockY = deviceProp.maxThreadsDim[1];
+  unsigned int maxblockZ = deviceProp.maxThreadsDim[2];
+  struct gridblockDim test[6] = {{1, 1, 1, maxblockX, 1, 1},
+                                 {1, 1, 1, 1, maxblockY, 1},
+                                 {1, 1, 1, 1, 1, maxblockZ},
+                                 {UINT32_MAX, 1, 1, 1, 1, 1},
+                                 {1, UINT32_MAX, 1, 1, 1, 1},
+                                 {1, 1, UINT32_MAX, 1, 1, 1}};
+
+  for (int i = 0; i < 6; i++) {
+    err = hipExtModuleLaunchKernel(DummyKernel,
+                                test[i].gridX,
+                                test[i].gridY,
+                                test[i].gridZ,
+                                test[i].blockX,
+                                test[i].blockY,
+                                test[i].blockZ,
+                                0,
+                                stream1, NULL,
+                                reinterpret_cast<void**>(&config1),
+                                nullptr, nullptr, 0);
+    if (err != hipSuccess) {
+      printf("hipExtModuleLaunchKernel failed (%u, %u, %u) and (%u, %u, %u)",
+      test[i].gridX, test[i].gridY, test[i].gridZ,
+      test[i].blockX, test[i].blockY, test[i].blockZ);
+      testStatus = false;
+    }
+  }
+  DeAllocateMemory();
+  return testStatus;
+}
+
+bool ModuleLaunchKernel::Module_WorkGroup_Test() {
+  bool testStatus = true;
+  HIPCHECK(hipSetDevice(0));
+  hipError_t err;
+  AllocateMemory();
+  ModuleLoad();
+  void *config1[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args3,
+                     HIP_LAUNCH_PARAM_BUFFER_SIZE, &size3,
+                     HIP_LAUNCH_PARAM_END};
+  hipDeviceProp_t deviceProp;
+  hipGetDeviceProperties(&deviceProp, 0);
+  double cuberootVal =
+                cbrt(static_cast<double>(deviceProp.maxThreadsPerBlock));
+  uint32_t cuberoot_floor = floor(cuberootVal);
+  uint32_t cuberoot_ceil = ceil(cuberootVal);
+  // Scenario: (block.x * block.y * block.z) <= Work Group Size where
+  // block.x < MaxBlockDimX , block.y < MaxBlockDimY and block.z < MaxBlockDimZ
+  err = hipExtModuleLaunchKernel(DummyKernel,
+                            1, 1, 1,
+                            cuberoot_floor, cuberoot_floor, cuberoot_floor,
+                            0, stream1, NULL,
+                            reinterpret_cast<void**>(&config1),
+                            nullptr, nullptr, 0);
+  if (err != hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed block dimensions (%u, %u, %u)",
+           cuberoot_floor, cuberoot_floor, cuberoot_floor);
+    testStatus = false;
+  }
+  // Scenario: (block.x * block.y * block.z) > Work Group Size where
+  // block.x < MaxBlockDimX , block.y < MaxBlockDimY and block.z < MaxBlockDimZ
+  err = hipExtModuleLaunchKernel(DummyKernel,
+                            1, 1, 1,
+                            cuberoot_ceil, cuberoot_ceil, cuberoot_ceil + 1,
+                            0, stream1, NULL,
+                            reinterpret_cast<void**>(&config1),
+                            nullptr, nullptr, 0);
+  if (err == hipSuccess) {
+    printf("hipExtModuleLaunchKernel failed block dimensions (%u, %u, %u)",
+           cuberoot_ceil, cuberoot_ceil, cuberoot_ceil);
     testStatus = false;
   }
   DeAllocateMemory();
@@ -408,6 +602,10 @@ int main(int argc, char* argv[]) {
     testStatus &= kernelLaunch.ExtModule_KernelExecutionTime();
   } else if (p_tests == 5) {
     testStatus &= kernelLaunch.ExtModule_Disabled_Timingflag();
+  } else if (p_tests == 6) {
+    testStatus &= kernelLaunch.ExtModule_Corner_tests();
+  } else if (p_tests == 7) {
+    testStatus &= kernelLaunch.Module_WorkGroup_Test();
   } else {
     failed("Didnt receive any valid option.\n");
   }
