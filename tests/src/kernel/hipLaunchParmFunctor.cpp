@@ -23,7 +23,6 @@ THE SOFTWARE.
  * HIT_END
  */
 
-
 #include "../test_common.h"
 
 #define test_passed(test_name)  printf("%s %s  PASSED!%s\n", KGRN, #test_name, KNRM);
@@ -56,9 +55,6 @@ class HipFunctorTests {
     void TestForFunctorContainInStructObj(void);
 };
 
-
-
-
 static const int BLOCK_DIM_SIZE = 1024;
 static const int THREADS_PER_BLOCK = 1;
 
@@ -69,9 +65,6 @@ class DoublerFunctor{
  public:
     __device__ int operator()(int x) { return x * 2;}
 };
-
-
-
 
 // simple doubler functor passed to kernel
 __global__ void DoublerFunctorKernel(
@@ -93,7 +86,6 @@ void HipFunctorTests::TestForSimpleClassFunctor(void) {
     hostResults[k] = false;
   }
 
-
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
   hipLaunchKernelGGL(DoublerFunctorKernel, dim3(BLOCK_DIM_SIZE),
@@ -108,9 +100,6 @@ void HipFunctorTests::TestForSimpleClassFunctor(void) {
   HIPCHECK(hipFree(deviceResults));
 }
 
-
-
-
 // pointer functor passed to kernel
 __global__ void PtrDoublerFunctorKernel(
                     DoublerFunctor *doubler_,
@@ -121,7 +110,7 @@ __global__ void PtrDoublerFunctorKernel(
 }
 
 void HipFunctorTests::TestForClassObjPtrFunctor(void) {
-  DoublerFunctor *ptrdoubler;
+  DoublerFunctor* ptrdoubler = new DoublerFunctor[sizeof(int)];
   bool *deviceResults, *hostResults;
   HIPCHECK(hipMalloc(&deviceResults, BLOCK_DIM_SIZE*sizeof(bool)));
   HIPCHECK(hipHostMalloc(&hostResults, BLOCK_DIM_SIZE*sizeof(bool)));
@@ -130,7 +119,6 @@ void HipFunctorTests::TestForClassObjPtrFunctor(void) {
     // true if the functor is called in device code
     hostResults[k] = false;
   }
-
 
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
@@ -144,7 +132,7 @@ void HipFunctorTests::TestForClassObjPtrFunctor(void) {
     HIPASSERT(hostResults[k] == true);
   HIPCHECK(hipHostFree(hostResults));
   HIPCHECK(hipFree(deviceResults));
-  delete ptrdoubler;
+  delete[] ptrdoubler;
 }
 
 class compare {
@@ -154,9 +142,6 @@ class compare {
        return v1 > v2;
     }
 };
-
-
-
 
 // template functor passed to kernel
 __global__ void TemplateFunctorKernel(
@@ -202,8 +187,6 @@ class DoublerCalculator {
     DoublerFunctor doubler;
 };
 
-
-
 // doubler functor conatined in class obj passed to kernel
 __global__ void DoublerCalculatorFunctorKernel(
                     DoublerCalculator doubler_,
@@ -242,7 +225,6 @@ void HipFunctorTests::TestForFunctorContainInClassObj(void) {
   HIPCHECK(hipFree(deviceResults));
 }
 
-
 // Struct functor tests
 
 // Simple doubler Functor
@@ -250,8 +232,6 @@ struct sDoublerFunctor {
  public:
     __device__ int operator()(int x) { return x * 2;}
 };
-
-
 
 
 // simple sturct doubler functor passed to kernel
@@ -298,7 +278,7 @@ __global__ void structPtrDoublerFunctorKernel(
 }
 
 void HipFunctorTests::TestForStructObjPtrFunctor(void) {
-  sDoublerFunctor *ptrdoubler;
+  sDoublerFunctor* ptrdoubler = new sDoublerFunctor[sizeof(int)];
   bool *deviceResults, *hostResults;
   HIPCHECK(hipMalloc(&deviceResults, BLOCK_DIM_SIZE*sizeof(bool)));
   HIPCHECK(hipHostMalloc(&hostResults, BLOCK_DIM_SIZE*sizeof(bool)));
@@ -307,7 +287,6 @@ void HipFunctorTests::TestForStructObjPtrFunctor(void) {
     // true if the functor is called in device code
     hostResults[k] = false;
   }
-
 
   HIPCHECK(hipMemcpy(deviceResults, hostResults, BLOCK_DIM_SIZE*sizeof(bool),
            hipMemcpyHostToDevice));
@@ -321,7 +300,7 @@ void HipFunctorTests::TestForStructObjPtrFunctor(void) {
     HIPASSERT(hostResults[k] == true);
   HIPCHECK(hipHostFree(hostResults));
   HIPCHECK(hipFree(deviceResults));
-  delete ptrdoubler;
+  delete[] ptrdoubler;
 }
 
 struct sCompare {
@@ -331,9 +310,6 @@ struct sCompare {
     return v1 > v2;
     }
 };
-
-
-
 
 // template functor passed to kernel
 __global__ void structTemplateFunctorKernel(
