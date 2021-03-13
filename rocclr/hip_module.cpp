@@ -252,6 +252,13 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     return hipErrorInvalidConfiguration;
   }
 
+  // Make sure the launch params are not larger than if specified launch_bounds
+  if (blockDimX * blockDimY * blockDimZ > kernel->getDeviceKernel(device)->workGroupInfo()->size_) {
+    LogPrintfError("%s", "Launch params are larger than launch bounds");
+    return hipErrorLaunchFailure;
+  }
+
+
   if (params & amd::NDRangeKernelCommand::CooperativeGroups) {
     if (!device.info().cooperativeGroups_) {
       return hipErrorLaunchFailure;
