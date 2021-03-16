@@ -1254,8 +1254,11 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * not execute until the defined wait condition is true.
  *
  * hipStreamWaitValueGte: waits until *ptr&mask >= value
+ *
  * hipStreamWaitValueEq : waits until *ptr&mask == value
+ *
  * hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
+ *
  * hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
  *
  * @note when using 'hipStreamWaitValueNor', mask is applied on both 'value' and '*ptr'.
