@@ -971,6 +971,10 @@ hipError_t ihipMemcpyAtoD(hipArray* srcArray,
   }
 
   amd::Image* srcImage = as_amd(srcMemObj)->asImage();
+  // HIP assumes the width is in bytes, but OCL assumes it's in pixels.
+  const size_t elementSize = srcImage->getImageFormat().getElementSize();
+  static_cast<size_t*>(srcOrigin)[0] /= elementSize;
+  static_cast<size_t*>(copyRegion)[0] /= elementSize;
 
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcImage->getRowPitch(), srcImage->getSlicePitch())) {
@@ -1031,6 +1035,10 @@ hipError_t ihipMemcpyDtoA(void* srcDevice,
   }
 
   amd::Image* dstImage = as_amd(dstMemObj)->asImage();
+  // HIP assumes the width is in bytes, but OCL assumes it's in pixels.
+  const size_t elementSize = dstImage->getImageFormat().getElementSize();
+  static_cast<size_t*>(dstOrigin)[0] /= elementSize;
+  static_cast<size_t*>(copyRegion)[0] /= elementSize;
 
   amd::BufferRect srcRect;
   if (!srcRect.create(static_cast<size_t*>(srcOrigin), static_cast<size_t*>(copyRegion), srcRowPitch, srcSlicePitch)) {
