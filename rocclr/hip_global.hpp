@@ -101,7 +101,15 @@ public:
   void resize_dVar(size_t size) { dVar_.resize(size); }
 
   FatBinaryInfo** moduleInfo() { return modules_; };
+  DeviceVarKind getVarKind() const { return dVarKind_; }
+  size_t getSize() const { return size_; }
+  
   void* getManagedVarPtr() { return managedVarPtr_; };
+  void setManagedVarInfo(void* pointer, size_t size) {
+    managedVarPtr_ = pointer;
+    size_ = size;
+    dVarKind_ = DVK_Managed;
+  }
 private:
   std::vector<DeviceVar*> dVar_;   // DeviceVarObj per Device
   std::string name_;               // Variable name (not unique identifier)
