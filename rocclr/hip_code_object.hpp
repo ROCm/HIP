@@ -92,6 +92,14 @@ public:
   hipError_t getDynFunc(hipFunction_t* hfunc, std::string func_name);
   hipError_t getDeviceVar(DeviceVar** dvar, std::string var_name);
 
+  hipError_t getManagedVarPointer(std::string name, void** pointer, size_t* size_ptr) const {
+    auto it = vars_.find(name);
+    if (it != vars_.end() && it->second->getVarKind() == Var::DVK_Managed) {
+      *pointer = it->second->getManagedVarPtr();
+      *size_ptr = it->second->getSize();
+    }
+    return hipSuccess;
+  }
   // Device ID Check to check if module is launched in the same device it was loaded.
   inline void CheckDeviceIdMatch() {
     if (device_id_ != ihipGetDevice()) {
@@ -110,6 +118,7 @@ private:
   //Populate Global Vars/Funcs from an code object(@ module_load)
   hipError_t populateDynGlobalFuncs();
   hipError_t populateDynGlobalVars();
+  hipError_t initDynManagedVars(const std::string& managedVar);
 };
 
 //Static Code Object

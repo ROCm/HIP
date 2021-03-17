@@ -820,12 +820,15 @@ hipError_t PlatformState::getDynGlobalVar(const char* hostVar, hipModule_t hmod,
     LogPrintfError("Cannot find the module: 0x%x", hmod);
     return hipErrorNotFound;
   }
-
-  hip::DeviceVar* dvar = nullptr;
-  IHIP_RETURN_ONFAIL(it->second->getDeviceVar(&dvar, hostVar));
-  *dev_ptr = dvar->device_ptr();
-  *size_ptr = dvar->size();
-
+  *dev_ptr = nullptr;
+  it->second->getManagedVarPointer(hostVar, dev_ptr, size_ptr);
+  // if dev_ptr is nullptr, hostvar is not in managed variable list
+  if (*dev_ptr == nullptr) {
+    hip::DeviceVar* dvar = nullptr;
+    IHIP_RETURN_ONFAIL(it->second->getDeviceVar(&dvar, hostVar));
+    *dev_ptr = dvar->device_ptr();
+    *size_ptr = dvar->size();
+  }
   return hipSuccess;
 }
 

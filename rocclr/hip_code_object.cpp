@@ -33,6 +33,9 @@ THE SOFTWARE.
 
 hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
                       amd::HostQueue& queue, bool isAsync = false);
+hipError_t ihipFree(void* ptr);
+//forward declaration of methods required for managed variables
+hipError_t ihipMallocManaged(void** ptr, size_t size, unsigned int align = 0);
 namespace {
 size_t constexpr strLiteralLength(char const* str) {
   return *str ? 1 + strLiteralLength(str + 1) : 0;
@@ -514,6 +517,9 @@ DynCO::~DynCO() {
   amd::ScopedLock lock(dclock_);
 
   for (auto& elem : vars_) {
+    if(elem.second->getVarKind() == Var::DVK_Managed) {
+      ihipFree(elem.second->getManagedVarPtr());
+    }
     delete elem.second;
   }
   vars_.clear();
@@ -560,16 +566,69 @@ hipError_t DynCO::getDynFunc(hipFunction_t* hfunc, std::string func_name) {
   return it->second->getDynFunc(hfunc, module());
 }
 
+hipError_t DynCO::initDynManagedVars(const std::string& managedVar) {
+  amd::ScopedLock lock(dclock_);
+  DeviceVar* dvar;
+  void* pointer = nullptr;
+  hipError_t status = hipSuccess;
+  // To get size of the managed variable
+  status = getDeviceVar(&dvar, managedVar + ".managed");
+  if (status != hipSuccess) {
+    ClPrint(amd::LOG_ERROR, amd::LOG_API, "Status %d, failed to get .managed device variable:%s",
+            status, managedVar.c_str());
+    return status;
+  }
+  // Allocate managed memory for these symbols
+  status = ihipMallocManaged(&pointer, dvar->size());
+  if (status != hipSuccess) {
+    ClPrint(amd::LOG_ERROR, amd::LOG_API, "Status %d, failed to allocate managed memory", status);
+    guarantee(false, "Error during allocation of managed memory!");
+  }
+  // update as manager variable and set managed memory pointer and size
+  auto it = vars_.find(managedVar);
+  it->second->setManagedVarInfo(pointer, dvar->size());
+
+  // copy initial value to the managed variable to the managed memory allocated
+  amd::HostQueue* queue = hip::getNullStream();
+  if (queue != nullptr) {
+    status = ihipMemcpy(pointer, reinterpret_cast<address>(dvar->device_ptr()), dvar->size(),
+                        hipMemcpyDeviceToDevice, *queue);
+    if (status != hipSuccess) {
+      ClPrint(amd::LOG_ERROR, amd::LOG_API, "Status %d, failed to copy device ptr:%s", status,
+              managedVar.c_str());
+      return status;
+    }
+  } else {
+    ClPrint(amd::LOG_ERROR, amd::LOG_API, "Host Queue is NULL");
+    return hipErrorInvalidResourceHandle;
+  }
+
+  // Get deivce ptr to initialize with managed memory pointer
+  status = getDeviceVar(&dvar, managedVar);
+  if (status != hipSuccess) {
+    ClPrint(amd::LOG_ERROR, amd::LOG_API, "Status %d, failed to get managed device variable:%s",
+            status, managedVar.c_str());
+    return status;
+  }
+  // copy managed memory pointer to the managed device variable
+  status = ihipMemcpy(reinterpret_cast<address>(dvar->device_ptr()), &pointer, dvar->size(),
+                      hipMemcpyHostToDevice, *queue);
+  if (status != hipSuccess) {
+    ClPrint(amd::LOG_ERROR, amd::LOG_API, "Status %d, failed to copy device ptr:%s", status,
+            managedVar.c_str());
+    return status;
+  }
+  return status;
+}
+
 hipError_t DynCO::populateDynGlobalVars() {
   amd::ScopedLock lock(dclock_);
-
   std::vector<std::string> var_names;
   std::vector<std::string> undef_var_names;
-
-  //For Dynamic Modules there is only one hipFatBinaryDevInfo_
-  device::Program* dev_program
-    = fb_info_->GetProgram(ihipGetDevice())->getDeviceProgram
-                          (*hip::getCurrentDevice()->devices()[0]);
+  std::string managedVarExt = ".managed";
+  // For Dynamic Modules there is only one hipFatBinaryDevInfo_
+  device::Program* dev_program = fb_info_->GetProgram(ihipGetDevice())
+                                     ->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
     LogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", module());
@@ -577,9 +636,17 @@ hipError_t DynCO::populateDynGlobalVars() {
   }
 
   for (auto& elem : var_names) {
-    vars_.insert(std::make_pair(elem, new Var(elem, Var::DeviceVarKind::DVK_Variable, 0, 0, 0, nullptr)));
+    vars_.insert(
+        std::make_pair(elem, new Var(elem, Var::DeviceVarKind::DVK_Variable, 0, 0, 0, nullptr)));
   }
 
+  for (auto& elem : var_names) {
+    if (elem.find(managedVarExt) != std::string::npos) {
+      std::string managedVar = elem;
+      managedVar.erase(managedVar.length() - managedVarExt.length(), managedVarExt.length());
+      initDynManagedVars(managedVar);
+    }
+  }
   return hipSuccess;
 }
 
@@ -661,6 +728,7 @@ hipError_t StatCO::removeFatBinary(FatBinaryInfo** module) {
   auto it = managedVars_.begin();
   while (it != managedVars_.end()) {
     if ((*it)->moduleInfo() == module) {
+      ihipFree((*it)->getManagedVarPtr());
       delete *it;
       managedVars_.erase(it);
     } else {
