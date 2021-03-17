@@ -963,10 +963,13 @@ hipError_t ihipMemcpyAtoD(hipArray* srcArray,
                           size_t dstSlicePitch,
                           hipStream_t stream,
                           bool isAsync = false) {
-  cl_mem srcMemObj = reinterpret_cast<cl_mem>(srcArray->data);
   size_t dstOffset = 0;
   amd::Memory* dstMemory = getMemoryObject(dstDevice, dstOffset);
-  if (!is_valid(srcMemObj) || (dstMemory == nullptr)) {
+  if (srcArray == nullptr || (dstMemory == nullptr)) {
+    return hipErrorInvalidValue;
+  }
+  cl_mem srcMemObj = reinterpret_cast<cl_mem>(srcArray->data);
+  if (!is_valid(srcMemObj)) {
     return hipErrorInvalidValue;
   }
 
@@ -1029,8 +1032,11 @@ hipError_t ihipMemcpyDtoA(void* srcDevice,
                           bool isAsync = false) {
   size_t srcOffset = 0;
   amd::Memory* srcMemory = getMemoryObject(srcDevice, srcOffset);
+  if ((srcMemory == nullptr) || dstArray == nullptr) {
+    return hipErrorInvalidValue;
+  }
   cl_mem dstMemObj = reinterpret_cast<cl_mem>(dstArray->data);
-  if ((srcMemory == nullptr) || !is_valid(dstMemObj)) {
+  if (!is_valid(dstMemObj)) {
     return hipErrorInvalidValue;
   }
 
@@ -1335,6 +1341,10 @@ hipError_t ihipMemcpyAtoA(hipArray* srcArray,
                           amd::Coord3D copyRegion,
                           hipStream_t stream,
                           bool isAsync = false) {
+  if (dstArray == nullptr || srcArray == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
   cl_mem srcMemObj = reinterpret_cast<cl_mem>(srcArray->data);
   cl_mem dstMemObj = reinterpret_cast<cl_mem>(dstArray->data);
   if (!is_valid(srcMemObj) || !is_valid(dstMemObj)) {
@@ -1388,8 +1398,11 @@ hipError_t ihipMemcpyHtoA(const void* srcHost,
                           size_t srcSlicePitch,
                           hipStream_t stream,
                           bool isAsync = false) {
+  if ((srcHost == nullptr) || dstArray == nullptr) {
+    return hipErrorInvalidValue;
+  }
   cl_mem dstMemObj = reinterpret_cast<cl_mem>(dstArray->data);
-  if ((srcHost == nullptr) || !is_valid(dstMemObj)) {
+  if (!is_valid(dstMemObj)) {
     return hipErrorInvalidValue;
   }
 
@@ -1440,8 +1453,11 @@ hipError_t ihipMemcpyAtoH(hipArray* srcArray,
                           size_t dstSlicePitch,
                           hipStream_t stream,
                           bool isAsync = false) {
+  if (srcArray == nullptr || (dstHost == nullptr)) {
+    return hipErrorInvalidValue;
+  }
   cl_mem srcMemObj = reinterpret_cast<cl_mem>(srcArray->data);
-  if (!is_valid(srcMemObj) || (dstHost == nullptr)) {
+  if (!is_valid(srcMemObj)) {
     return hipErrorInvalidValue;
   }
 
