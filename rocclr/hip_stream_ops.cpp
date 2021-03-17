@@ -76,8 +76,8 @@ hipError_t ihipStreamOperation(hipStream_t stream, cl_command_type cmdType, void
   return hipSuccess;
 }
 
-hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, uint32_t mask,
-                                unsigned int flags) {
+hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags,
+                                uint32_t mask) {
   HIP_INIT_API(hipStreamWaitValue32, stream, ptr, value, mask, flags);
   // NOTE: ptr corresponds to a HSA Signal memeory which is 64 bits.
   // 32 bit value and mask are converted to 64-bit values.
@@ -91,8 +91,8 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, ui
       0));  // sizeBytes un-used for wait, set it to 0
 }
 
-hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, uint64_t mask,
-                                unsigned int flags) {
+hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags,
+                                uint64_t mask) {
   HIP_INIT_API(hipStreamWaitValue64, stream, ptr, value, mask, flags);
   HIP_RETURN_DURATION(ihipStreamOperation(
       stream,
@@ -104,8 +104,8 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, ui
       0));  // sizeBytes un-used for wait, set it to 0
 }
 
-hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value) {
-  HIP_INIT_API(hipStreamWriteValue32, stream, ptr, value);
+hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags) {
+  HIP_INIT_API(hipStreamWriteValue32, stream, ptr, value, flags);
   HIP_RETURN_DURATION(ihipStreamOperation(
       stream,
       ROCCLR_COMMAND_STREAM_WRITE_VALUE,
@@ -116,8 +116,8 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value) {
       4));
 }
 
-hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value) {
-  HIP_INIT_API(hipStreamWriteValue64, stream, ptr, value);
+hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags) {
+  HIP_INIT_API(hipStreamWriteValue64, stream, ptr, value, flags);
   HIP_RETURN_DURATION(ihipStreamOperation(
       stream,
       ROCCLR_COMMAND_STREAM_WRITE_VALUE,

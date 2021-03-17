@@ -1241,11 +1241,12 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @brief Enqueues a wait command to the stream.
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag.
+ * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
  * @param [in] value  - Value to be used in compare operation
- * @param [in] mask   - Mask to be applied on value at memory before it is compared with value
  * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
- * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor
+ * @param [in] mask   - Mask to be applied on value at memory before it is compared with value,
+ * default value is set to enable every bit
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1266,17 +1267,19 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
 
-hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, uint32_t mask, unsigned int flags);
+hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags,
+                                uint32_t mask __dparm(0xFFFFFFFF));
 
 /**
  * @brief Enqueues a wait command to the stream.
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag.
+ * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
  * @param [in] value  - Value to be used in compare operation
- * @param [in] mask   - Mask to be applied on value at memory before it is compared with value.
  * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
  * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ * @param [in] mask   - Mask to be applied on value at memory before it is compared with value
+ * default value is set to enable every bit
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1297,14 +1300,16 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, ui
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
 
-hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, uint64_t mask, unsigned int flags);
+hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags,
+                                uint64_t mask __dparm(0xFFFFFFFFFFFFFFFF));
 
 /**
  * @brief Enqueues a write command to the stream.
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to a GPU accessible memory object.
+ * @param [in] ptr    - Pointer to a GPU accessible memory object
  * @param [in] value  - Value to be written
+ * @param [in] flags  - reserved, ignored for now, will be used in future releases
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1314,14 +1319,15 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, ui
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
-hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value);
+hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags);
 
 /**
  * @brief Enqueues a write command to the stream.
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to a GPU accessible memory object.
+ * @param [in] ptr    - Pointer to a GPU accessible memory object
  * @param [in] value  - Value to be written
+ * @param [in] flags  - reserved, ignored for now, will be used in future releases
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1331,7 +1337,7 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value);
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
-hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value);
+hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags);
 
 
 // end doxygen Stream Memory Operations
