@@ -51,6 +51,7 @@ THE SOFTWARE.
 // Random predefiend 32 and 64 bit values
 constexpr int32_t value32 =         0x70F0F0FF;
 constexpr int64_t value64 =         0x7FFF0000FFFF0000;
+constexpr unsigned int writeFlag = 0;
 
 constexpr float SLEEP_MS = 100;
 void testWrite() {
@@ -77,8 +78,8 @@ void testWrite() {
   hipHostRegister(host_ptr32, sizeof(int32_t), 0);
 
   // Test writting registered host pointer
-  HIPCHECK(hipStreamWriteValue64(stream, host_ptr64, value64));
-  HIPCHECK(hipStreamWriteValue32(stream, host_ptr32, value32));
+  HIPCHECK(hipStreamWriteValue64(stream, host_ptr64, value64, writeFlag));
+  HIPCHECK(hipStreamWriteValue32(stream, host_ptr32, value32, writeFlag));
   hipStreamSynchronize(stream);
 
   HIPASSERT(*host_ptr64 == value64);
@@ -92,15 +93,15 @@ void testWrite() {
   *host_ptr64 = 0x0;
   *host_ptr32 = 0x0;
 
-  HIPCHECK(hipStreamWriteValue64(stream, device_ptr64, value64));
-  HIPCHECK(hipStreamWriteValue32(stream, device_ptr32, value32));
+  HIPCHECK(hipStreamWriteValue64(stream, device_ptr64, value64, writeFlag));
+  HIPCHECK(hipStreamWriteValue32(stream, device_ptr32, value32, writeFlag));
   hipStreamSynchronize(stream);
 
   HIPASSERT(*host_ptr64 == value64);
   HIPASSERT(*host_ptr32 == value32);
 
   // Test Writing to Signal Memory
-  HIPCHECK(hipStreamWriteValue64(stream, signalPtr, value64));
+  HIPCHECK(hipStreamWriteValue64(stream, signalPtr, value64, writeFlag));
   hipStreamSynchronize(stream);
 
   HIPASSERT(*signalPtr == value64);
@@ -141,7 +142,6 @@ void testWait() {
     int64_t signalValueFail;
     int64_t signalValuePass;
   };
-
 
   TEST_WAIT testCases[] = {
     {
@@ -200,11 +200,82 @@ void testWait() {
     }
   };
 
+  struct TEST_WAIT32_NO_MASK {
+    int compareOp;
+    int32_t waitValue;
+    int32_t signalValueFail;
+    int32_t signalValuePass;
+  };
+
+  // default mask 0xFFFFFFFF will be used.
+  TEST_WAIT32_NO_MASK testCasesNoMask32[] = {
+    {
+      hipStreamWaitValueGte,
+      0x7FFF0001,
+      0x7FFF0000,
+      0x7FFF0010
+    },
+    {
+      hipStreamWaitValueEq,
+      0x7FFFFFFF,
+      0x7FFF0000,
+      0x7FFFFFFF
+    },
+    {
+      hipStreamWaitValueAnd,
+      0x70F0F0F0,
+      0x0F0F0F0F,
+      0X1F0F0F0F
+    },
+    {
+      hipStreamWaitValueNor,
+      0x7AAAAAAA,
+      static_cast<int32_t>(0x85555555),
+      static_cast<int32_t>(0x9AAAAAAA)
+    }
+  };
+
+  struct TEST_WAIT64_NO_MASK {
+    int compareOp;
+    int64_t waitValue;
+    int64_t signalValueFail;
+    int64_t signalValuePass;
+  };
+
+  // default mask 0xFFFFFFFFFFFFFFFF will be used.
+  TEST_WAIT64_NO_MASK testCasesNoMask64[] = {
+    {
+      hipStreamWaitValueGte,
+      0x7FFFFFFFFFFF0001,
+      0x7FFFFFFFFFFF0000,
+      0x7FFFFFFFFFFF0001
+    },
+    {
+      hipStreamWaitValueEq,
+      0x7FFFFFFFFFFFFFFF,
+      0x7FFFFFFF0FFF0000,
+      0x7FFFFFFFFFFFFFFF
+    },
+    {
+      hipStreamWaitValueAnd,
+      0x70F0F0F0F0F0F0F0,
+      0x0F0F0F0F0F0F0F0F,
+      0X1F0F0F0F0F0F0F0F
+    },
+    {
+      hipStreamWaitValueNor,
+      0x4724724747247247,
+      static_cast<int64_t>(0xbddbddbdbddbddbd),
+      static_cast<int64_t>(0xbddbddbdbddbddb3)
+    }
+  };
+
   if (!streamWaitValueSupported()) {
     std::cout << " hipStreamWaitValue: not supported on this device , skipping ... \n";
     return;
   }
-  std::cout << " hipStreamWaitValue: testing ... \n";
+  std::cout << " hipStreamWaitValue32: testing ... \n";
+  std::cout << " hipStreamWaitValue64: testing ... \n";
   hipStream_t stream;
   hipStreamCreate(&stream);
 
@@ -215,6 +286,7 @@ void testWait() {
   hipHostRegister(dataPtr32, sizeof(int32_t), 0);
 
   // We run all test cases twice
+
   // Run-1: streamWait is blocking (wait conditions is false)
   // Run-2: streamWait is non-blocking (wait condition is true)
   for (int run = 0; run < 2; run++) {
@@ -224,8 +296,8 @@ void testWait() {
       *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr64 = DATA_INIT;
 
-      HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.mask, tc.compareOp));
-      HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE));
+      HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.compareOp, tc.mask));
+      HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
 
       if (isBlocking) {
         // Trigger an implict flush and verify stream has pending work.
@@ -243,8 +315,8 @@ void testWait() {
       *dataPtr32 = DATA_INIT;
 
       HIPCHECK(hipStreamWaitValue32(stream, signalPtr, static_cast<int32_t>(tc.waitValue),
-                                    static_cast<uint32_t>(tc.mask), tc.compareOp));
-      HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE));
+                                    tc.compareOp, static_cast<uint32_t>(tc.mask)));
+      HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
 
       if (isBlocking) {
         // For DEBUG only
@@ -259,6 +331,64 @@ void testWait() {
       }
       hipStreamSynchronize(stream);
       HIPASSERT(*dataPtr32 == DATA_UPDATE);
+    }
+  }
+
+  std::cout << " hipStreamWaitValue32 with default mask: testing ... \n";
+  // Run-1: streamWait is blocking (wait conditions is false)
+  // Run-2: streamWait is non-blocking (wait condition is true)
+  for (int run = 0; run < 2; run++) {
+    bool isBlocking = run == 0;
+
+    for (const auto& tc : testCasesNoMask32) {
+      *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
+      *dataPtr32 = DATA_INIT;
+
+      HIPCHECK(hipStreamWaitValue32(stream, signalPtr, tc.waitValue, tc.compareOp));
+      HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
+
+      if (isBlocking) {
+        // For DEBUG only
+        // usleep(500);
+        // HIPASSERT(*dataPtr32 == DATA_INIT);
+
+        // Trigger an implict flush and verify stream has pending work.
+        HIPASSERT(hipStreamQuery(stream) == hipErrorNotReady);
+
+        // update signal to unblock the wait.
+        *signalPtr = tc.signalValuePass;
+      }
+      hipStreamSynchronize(stream);
+      HIPASSERT(*dataPtr32 == DATA_UPDATE);
+    }
+  }
+
+  std::cout << " hipStreamWaitValue64 with default mask: testing ... \n";
+  // Run-1: streamWait is blocking (wait conditions is false)
+  // Run-2: streamWait is non-blocking (wait condition is true)
+  for (int run = 0; run < 2; run++) {
+    bool isBlocking = run == 0;
+
+    for (const auto& tc : testCasesNoMask64) {
+      *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
+      *dataPtr64 = DATA_INIT;
+
+      HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.compareOp));
+      HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
+
+      if (isBlocking) {
+        // For DEBUG only
+        // usleep(500);
+        // HIPASSERT(*dataPtr64 == DATA_INIT);
+
+        // Trigger an implict flush and verify stream has pending work.
+        HIPASSERT(hipStreamQuery(stream) == hipErrorNotReady);
+
+        // update signal to unblock the wait.
+        *signalPtr = tc.signalValuePass;
+      }
+      hipStreamSynchronize(stream);
+      HIPASSERT(*dataPtr64 == DATA_UPDATE);
     }
   }
 
