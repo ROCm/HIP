@@ -95,6 +95,7 @@ typedef enum hipMemRangeAttribute {
 #define HIP_LIBRARY_PATCH_LEVEL PATCH_LEVEL
 
 #define HIP_ARRAY_DESCRIPTOR CUDA_ARRAY_DESCRIPTOR
+#define HIP_ARRAY3D_DESCRIPTOR CUDA_ARRAY3D_DESCRIPTOR
 
 //hipArray_Format
 #define HIP_AD_FORMAT_UNSIGNED_INT8   CU_AD_FORMAT_UNSIGNED_INT8
@@ -337,6 +338,7 @@ typedef struct cudaFuncAttributes hipFuncAttributes;
 typedef struct cudaLaunchParams hipLaunchParams;
 #define hipFunction_attribute CUfunction_attribute
 #define hip_Memcpy2D CUDA_MEMCPY2D
+#define HIP_MEMCPY3D CUDA_MEMCPY3D
 #define hipMemcpy3DParms cudaMemcpy3DParms
 #define hipArrayDefault cudaArrayDefault
 #define hipArrayLayered cudaArrayLayered
@@ -351,7 +353,14 @@ typedef cudaSurfaceObject_t hipSurfaceObject_t;
 #define hipTextureType2D cudaTextureType2D
 #define hipTextureType2DLayered cudaTextureType2DLayered
 #define hipTextureType3D cudaTextureType3D
+
+#define hipDeviceScheduleAuto cudaDeviceScheduleAuto
+#define hipDeviceScheduleSpin cudaDeviceScheduleSpin
+#define hipDeviceScheduleYield cudaDeviceScheduleYield
+#define hipDeviceScheduleBlockingSync cudaDeviceScheduleBlockingSync
+#define hipDeviceScheduleMask cudaDeviceScheduleMask
 #define hipDeviceMapHost cudaDeviceMapHost
+#define hipDeviceLmemResizeToMax cudaDeviceLmemResizeToMax
 
 #define hipCpuDeviceId cudaCpuDeviceId
 #define hipInvalidDeviceId cudaInvalidDeviceId
@@ -1157,14 +1166,20 @@ inline static hipError_t hipMemcpyParam2DAsync(const hip_Memcpy2D* pCopy, hipStr
   return hipCUResultTohipError(cuMemcpy2DAsync(pCopy, stream));
 }
 
-inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p)
-{
+inline static hipError_t hipMemcpy3D(const struct hipMemcpy3DParms *p) {
     return hipCUDAErrorTohipError(cudaMemcpy3D(p));
 }
 
-inline static hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms *p, hipStream_t stream)
-{
+inline static hipError_t hipMemcpy3DAsync(const struct hipMemcpy3DParms *p, hipStream_t stream) {
     return hipCUDAErrorTohipError(cudaMemcpy3DAsync(p, stream));
+}
+
+inline static hipError_t hipDrvMemcpy3D(const HIP_MEMCPY3D* pCopy) {
+    return hipCUResultTohipError(cuMemcpy3D(pCopy));
+}
+
+inline static hipError_t hipDrvMemcpy3DAsync(const HIP_MEMCPY3D* pCopy, hipStream_t stream) {
+    return hipCUResultTohipError(cuMemcpy3DAsync(pCopy, stream));
 }
 
 inline static hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t spitch,
@@ -1174,11 +1189,39 @@ inline static hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* 
                                                     hipMemcpyKindToCudaMemcpyKind(kind), stream));
 }
 
+inline static hipError_t hipMemcpy2DFromArray(void* dst, size_t dpitch, hipArray* src,
+                                              size_t wOffset, size_t hOffset, size_t width,
+                                              size_t height, hipMemcpyKind kind) {
+    return hipCUDAErrorTohipError(cudaMemcpy2DFromArray(dst, dpitch, src, wOffset, hOffset, width,
+                                                        height,
+                                                        hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpy2DFromArrayAsync(void* dst, size_t dpitch, hipArray* src,
+                                                   size_t wOffset, size_t hOffset, size_t width,
+                                                   size_t height, hipMemcpyKind kind,
+                                                   hipStream_t stream) {
+    return hipCUDAErrorTohipError(cudaMemcpy2DFromArrayAsync(dst, dpitch, src, wOffset, hOffset,
+                                                             width, height,
+                                                             hipMemcpyKindToCudaMemcpyKind(kind),
+                                                             stream));
+}
+
 inline static hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset,
                                             const void* src, size_t spitch, size_t width,
                                             size_t height, hipMemcpyKind kind) {
     return hipCUDAErrorTohipError(cudaMemcpy2DToArray(dst, wOffset, hOffset, src, spitch, width,
                                                       height, hipMemcpyKindToCudaMemcpyKind(kind)));
+}
+
+inline static hipError_t hipMemcpy2DToArrayAsync(hipArray* dst, size_t wOffset, size_t hOffset,
+                                                 const void* src, size_t spitch, size_t width,
+                                                 size_t height, hipMemcpyKind kind,
+                                                 hipStream_t stream) {
+    return hipCUDAErrorTohipError(cudaMemcpy2DToArrayAsync(dst, wOffset, hOffset, src, spitch,
+                                                           width, height,
+                                                           hipMemcpyKindToCudaMemcpyKind(kind),
+                                                           stream));
 }
 
 __HIP_DEPRECATED inline static hipError_t hipMemcpyToArray(hipArray* dst, size_t wOffset,
@@ -2126,6 +2169,11 @@ inline static hipError_t hipArrayCreate(hiparray* pHandle, const HIP_ARRAY_DESCR
 
 inline static hipError_t hipArrayDestroy(hiparray hArray){
    return hipCUResultTohipError(cuArrayDestroy(hArray));
+}
+
+inline static hipError_t hipArray3DCreate(hiparray* pHandle,
+                                          const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray){
+   return hipCUResultTohipError(cuArray3DCreate(pHandle, pAllocateArray));
 }
 
 #endif  //__CUDACC__

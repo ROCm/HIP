@@ -1,3 +1,23 @@
+# Copyright (C) 2016-2021 Advanced Micro Devices, Inc. All Rights Reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
 ###############################################################################
 # FindHIP.cmake
 ###############################################################################
@@ -647,6 +667,14 @@ macro(HIP_ADD_EXECUTABLE hip_target)
         add_executable(${hip_target} ${_cmake_options} ${_generated_files} "")
     else()
         add_executable(${hip_target} ${_cmake_options} ${_generated_files} ${_sources})
+    endif()
+    #LINK_OPTIONS
+    if("${HIP_COMPILER}" STREQUAL "nvcc")
+        # Some arch flags need be sent to linker. _nvcc_options mixes compiling and linker flags.
+        string(REPLACE ";"  " " _nvcc_flags "${_nvcc_options}") # Replace ',' with space
+        if(NOT "x${_nvcc_flags}" STREQUAL "x")
+            set_target_properties(${hip_target} PROPERTIES LINK_FLAGS "${_nvcc_flags}")
+        endif()
     endif()
     set_target_properties(${hip_target} PROPERTIES LINKER_LANGUAGE HIP)
     # Link with host

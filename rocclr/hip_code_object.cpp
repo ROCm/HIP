@@ -24,12 +24,15 @@ THE SOFTWARE.
 
 #include <cstring>
 
+#include <hip/amd_detail/driver_types.h>
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
 #include <elf/elf.hpp>
 
+hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                      amd::HostQueue& queue, bool isAsync = false);
 namespace {
 size_t constexpr strLiteralLength(char const* str) {
   return *str ? 1 + strLiteralLength(str + 1) : 0;
@@ -152,6 +155,11 @@ static bool getProcName(uint32_t EFlags, std::string& proc_name, bool& xnackSupp
       xnackSupported = true;
       sramEccSupported = false;
       proc_name = "gfx909";
+      break;
+    case EF_AMDGPU_MACH_AMDGCN_GFX90A:
+      xnackSupported = true;
+      sramEccSupported = true;
+      proc_name = "gfx90a";
       break;
     case EF_AMDGPU_MACH_AMDGCN_GFX90C:
       xnackSupported = true;
@@ -525,7 +533,7 @@ hipError_t DynCO::getDeviceVar(DeviceVar** dvar, std::string var_name) {
 
   auto it = vars_.find(var_name);
   if (it == vars_.end()) {
-    DevLogPrintfError("Cannot find the Var: %s ", var_name.c_str());
+    LogPrintfError("Cannot find the Var: %s ", var_name.c_str());
     return hipErrorNotFound;
   }
 
@@ -544,7 +552,7 @@ hipError_t DynCO::getDynFunc(hipFunction_t* hfunc, std::string func_name) {
 
   auto it = functions_.find(func_name);
   if (it == functions_.end()) {
-    DevLogPrintfError("Cannot find the function: %s ", func_name.c_str());
+    LogPrintfError("Cannot find the function: %s ", func_name.c_str());
     return hipErrorNotFound;
   }
 
@@ -564,7 +572,7 @@ hipError_t DynCO::populateDynGlobalVars() {
                           (*hip::getCurrentDevice()->devices()[0]);
 
   if (!dev_program->getGlobalVarFromCodeObj(&var_names)) {
-    DevLogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", module());
+    LogPrintfError("Could not get Global vars from Code Obj for Module: 0x%x \n", module());
     return hipErrorSharedObjectSymbolNotFound;
   }
 
@@ -585,7 +593,7 @@ hipError_t DynCO::populateDynGlobalFuncs() {
 
   // Get all the global func names from COMGR
   if (!dev_program->getGlobalFuncFromCodeObj(&func_names)) {
-    DevLogPrintfError("Could not get Global Funcs from Code Obj for Module: 0x%x \n", module());
+    LogPrintfError("Could not get Global Funcs from Code Obj for Module: 0x%x \n", module());
     return hipErrorSharedObjectSymbolNotFound;
   }
 
@@ -634,7 +642,6 @@ FatBinaryInfo** StatCO::addFatBinary(const void* data, bool initialized) {
   if (initialized) {
     digestFatBinary(data, modules_[data]);
   }
-
   return &modules_[data];
 }
 
@@ -648,6 +655,16 @@ hipError_t StatCO::removeFatBinary(FatBinaryInfo** module) {
       vit = vars_.erase(vit);
     } else {
       ++vit;
+    }
+  }
+
+  auto it = managedVars_.begin();
+  while (it != managedVars_.end()) {
+    if ((*it)->moduleInfo() == module) {
+      delete *it;
+      managedVars_.erase(it);
+    } else {
+      ++it;
     }
   }
 
@@ -732,6 +749,34 @@ hipError_t StatCO::getStatGlobalVar(const void* hostVar, int deviceId, hipDevice
 
   *dev_ptr = dvar->device_ptr();
   *size_ptr = dvar->size();
+  return hipSuccess;
+}
+
+hipError_t StatCO::registerStatManagedVar(Var* var) {
+  managedVars_.emplace_back(var);
+  return hipSuccess;
+}
+
+hipError_t StatCO::initStatManagedVarDevicePtr(int deviceId) {
+  amd::ScopedLock lock(sclock_);
+
+  if (managedVarsDevicePtrInitalized_.find(deviceId) == managedVarsDevicePtrInitalized_.end() ||
+      !managedVarsDevicePtrInitalized_[deviceId]) {
+    for (auto var : managedVars_) {
+      DeviceVar* dvar = nullptr;
+      IHIP_RETURN_ONFAIL(var->getStatDeviceVar(&dvar, deviceId));
+
+      amd::HostQueue* queue = hip::getNullStream();
+      if(queue != nullptr) {
+        ihipMemcpy(reinterpret_cast<address>(dvar->device_ptr()), var->getManagedVarPtr(),
+                  dvar->size(), hipMemcpyHostToDevice, *queue);
+      } else {
+        ClPrint(amd::LOG_ERROR, amd::LOG_API, "Host Queue is NULL");
+        return hipErrorInvalidResourceHandle;
+      }
+    }
+    managedVarsDevicePtrInitalized_[deviceId] = true;
+  }
   return hipSuccess;
 }
 }; //namespace: hip

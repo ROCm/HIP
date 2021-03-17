@@ -2,14 +2,84 @@
 #define COMMON_H
 
 #include <errno.h>
-#include <error.h>
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <stdlib.h>
 #include <string>
-#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <chrono>
 
+#if defined(_WIN32)
+#include <io.h>
+#else
+#include <error.h>
+#include <unistd.h>
+#endif
+
+#if defined(_WIN32)
+class CaptureStream {
+private:
+  FILE* stream;
+  int fdPipe[2];
+  int fd;
+
+  static constexpr size_t bufferSize = 25 * 1024 * 1024;
+
+public:
+  CaptureStream(FILE *original) {
+    stream = original;
+
+    if (pipe(fdPipe, bufferSize, O_TEXT) != 0) {
+      fprintf(stderr, "pipe(3) failed with error %d\n", errno);
+      assert(false);
+    }
+
+    if ((fd = dup(fileno(stream))) == -1) {
+      fprintf(stderr, "dup(1) failed with error %d\n", errno);
+      assert(false);
+    }
+  }
+
+  ~CaptureStream() {
+    close(fd);
+    close(fdPipe[1]);
+    close(fdPipe[0]);
+  }
+
+  void Begin() {
+    fflush(stream);
+
+    if (dup2(fdPipe[1], fileno(stream)) == -1) {
+      fprintf(stderr, "dup2(2) failed with error %d\n", errno);
+      assert(false);
+    }
+
+    setvbuf(stream, NULL, _IONBF, 0);
+  }
+
+  void End() {
+    if (dup2(fd, fileno(stream)) == -1) {
+      fprintf(stderr, "dup2(2) failed with error %d\n", errno);
+      assert(false);
+    }
+  }
+
+  std::string getData() {
+    std::string data;
+    data.resize(bufferSize);
+
+    int numRead = read(fdPipe[0], const_cast<char*>(data.c_str()), bufferSize);
+    data[numRead] = '\0';
+
+    data.resize(strlen(data.c_str()));
+    data.shrink_to_fit();
+
+    return data;
+  }
+};
+#else
 struct CaptureStream {
   int saved_fd;
   int orig_fd;
@@ -25,7 +95,9 @@ struct CaptureStream {
       error(0, errno, "Error");
       assert(false);
     }
+  }
 
+  void Begin() {
     fflush(nullptr);
     if (dup2(temp_fd, orig_fd) == -1) {
       error(0, errno, "Error");
@@ -37,9 +109,7 @@ struct CaptureStream {
     }
   }
 
-  void restoreStream() {
-    if (saved_fd == -1)
-      return;
+  void End() {
     fflush(nullptr);
     if (dup2(saved_fd, orig_fd) == -1) {
       error(0, errno, "Error");
@@ -49,33 +119,23 @@ struct CaptureStream {
       error(0, errno, "Error");
       assert(false);
     }
-    saved_fd = -1;
   }
 
-  std::ifstream getCapturedData() {
-    restoreStream();
-    std::ifstream temp(tempname);
-    return temp;
+  std::string getData() {
+    std::ifstream tmpFileStream(tempname);
+    std::stringstream strStream;
+    strStream << tmpFileStream.rdbuf();
+    return strStream.str();
   }
 
   ~CaptureStream() {
-    restoreStream();
     if (remove(tempname) != 0) {
       error(0, errno, "Error");
       assert(false);
     }
   }
 };
-
-static std::string gulp(std::ifstream &input) {
-  std::string retval;
-  input.seekg(0, std::ios_base::end);
-  retval.resize(input.tellg());
-  input.seekg(0, std::ios_base::beg);
-  input.read(&retval[0], retval.size());
-  input.close();
-  return retval;
-}
+#endif
 
 #define DECLARE_DATA()                                                         \
   const char *msg_short = "Carpe diem.";                                       \

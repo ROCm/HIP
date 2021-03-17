@@ -41,24 +41,29 @@ __global__ void kernel_uniform0(int *retval) {
 
 static void test_uniform0(int *retval, uint num_blocks,
                           uint threads_per_block) {
-  CaptureStream captured(stdout);
+  CaptureStream capture(stdout);
 
   uint num_threads = num_blocks * threads_per_block;
   for (uint i = 0; i != num_threads; ++i) {
     retval[i] = 0x23232323;
   }
 
+  capture.Begin();
   hipLaunchKernelGGL(kernel_uniform0, dim3(num_blocks), dim3(threads_per_block),
                      0, 0, retval);
   hipStreamSynchronize(0);
-  auto CapturedData = captured.getCapturedData();
+  capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
     HIPASSERT(retval[ii] == strlen("Hello World\n"));
   }
 
+  std::string data = capture.getData();
+  std::stringstream dataStream;
+  dataStream << data;
+
   std::map<std::string, int> linecount;
-  for (std::string line; std::getline(CapturedData, line);) {
+  for (std::string line; std::getline(dataStream, line);) {
     linecount[line]++;
   }
 
@@ -73,24 +78,29 @@ __global__ void kernel_uniform1(int *retval) {
 
 static void test_uniform1(int *retval, uint num_blocks,
                           uint threads_per_block) {
-  CaptureStream captured(stdout);
+  CaptureStream capture(stdout);
 
   uint num_threads = num_blocks * threads_per_block;
   for (uint i = 0; i != num_threads; ++i) {
     retval[i] = 0x23232323;
   }
 
+  capture.Begin();
   hipLaunchKernelGGL(kernel_uniform1, dim3(num_blocks), dim3(threads_per_block),
                      0, 0, retval);
   hipStreamSynchronize(0);
-  auto CapturedData = captured.getCapturedData();
+  capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
     HIPASSERT(retval[ii] == strlen("Six times Eight is 42") + 1);
   }
 
+  std::string data = capture.getData();
+  std::stringstream dataStream;
+  dataStream << data;
+
   std::map<std::string, int> linecount;
-  for (std::string line; std::getline(CapturedData, line);) {
+  for (std::string line; std::getline(dataStream, line);) {
     linecount[line]++;
   }
 
@@ -105,17 +115,18 @@ __global__ void kernel_divergent0(int *retval) {
 
 static void test_divergent0(int *retval, uint num_blocks,
                             uint threads_per_block) {
-  CaptureStream captured(stdout);
+  CaptureStream capture(stdout);
 
   uint num_threads = num_blocks * threads_per_block;
   for (uint i = 0; i != num_threads; ++i) {
     retval[i] = 0x23232323;
   }
 
+  capture.Begin();
   hipLaunchKernelGGL(kernel_divergent0, dim3(num_blocks),
                      dim3(threads_per_block), 0, 0, retval);
   hipStreamSynchronize(0);
-  auto CapturedData = captured.getCapturedData();
+  capture.End();
 
   for (uint ii = 0; ii != 10; ++ii) {
     HIPASSERT(retval[ii] == 13);
@@ -125,8 +136,12 @@ static void test_divergent0(int *retval, uint num_blocks,
     HIPASSERT(retval[ii] == 14);
   }
 
+  std::string data = capture.getData();
+  std::stringstream dataStream;
+  dataStream << data;
+
   std::vector<uint> threadIds;
-  for (std::string line; std::getline(CapturedData, line);) {
+  for (std::string line; std::getline(dataStream, line);) {
     auto pos = line.find(':');
     HIPASSERT(line.substr(0, pos) == "Thread ID");
     threadIds.push_back(std::stoul(line.substr(pos + 2)));
@@ -148,17 +163,18 @@ __global__ void kernel_divergent1(int *retval) {
 
 static void test_divergent1(int *retval, uint num_blocks,
                             uint threads_per_block) {
-  CaptureStream captured(stdout);
+  CaptureStream capture(stdout);
 
   uint num_threads = num_blocks * threads_per_block;
   for (uint i = 0; i != num_threads; ++i) {
     retval[i] = 0x23232323;
   }
 
+  capture.Begin();
   hipLaunchKernelGGL(kernel_divergent1, dim3(num_blocks),
                      dim3(threads_per_block), 0, 0, retval);
   hipStreamSynchronize(0);
-  auto CapturedData = captured.getCapturedData();
+  capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
     if (ii % 2) {
@@ -168,8 +184,12 @@ static void test_divergent1(int *retval, uint num_blocks,
     }
   }
 
+  std::string data = capture.getData();
+  std::stringstream dataStream;
+  dataStream << data;
+
   std::map<std::string, int> linecount;
-  for (std::string line; std::getline(CapturedData, line);) {
+  for (std::string line; std::getline(dataStream, line);) {
     linecount[line]++;
   }
 
@@ -191,25 +211,30 @@ __global__ void kernel_series(int *retval) {
 }
 
 static void test_series(int *retval, uint num_blocks, uint threads_per_block) {
-  CaptureStream captured(stdout);
+  CaptureStream capture(stdout);
 
   uint num_threads = num_blocks * threads_per_block;
   for (uint i = 0; i != num_threads; ++i) {
     retval[i] = 0x23232323;
   }
 
+  capture.Begin();
   hipLaunchKernelGGL(kernel_series, dim3(num_blocks), dim3(threads_per_block),
                      0, 0, retval);
   hipStreamSynchronize(0);
-  auto CapturedData = captured.getCapturedData();
+  capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
     HIPASSERT(retval[ii] ==
               strlen(msg_long1) + strlen(msg_short) + strlen(msg_long2) + 3);
   }
 
+  std::string data = capture.getData();
+  std::stringstream dataStream;
+  dataStream << data;
+
   std::map<std::string, int> linecount;
-  for (std::string line; std::getline(CapturedData, line);) {
+  for (std::string line; std::getline(dataStream, line);) {
     linecount[line]++;
   }
 
@@ -231,20 +256,25 @@ __global__ void kernel_divergent_loop() {
 }
 
 static void test_divergent_loop(uint num_blocks, uint threads_per_block) {
-  CaptureStream captured(stdout);
+  CaptureStream capture(stdout);
 
   uint num_threads = num_blocks * threads_per_block;
 
+  capture.Begin();
   hipLaunchKernelGGL(kernel_divergent_loop, dim3(num_blocks), dim3(threads_per_block),
                      0, 0);
   hipStreamSynchronize(0);
-  auto CapturedData = captured.getCapturedData();
+  capture.End();
+
+  std::string data = capture.getData();
+  std::stringstream dataStream;
+  dataStream << data;
 
   std::map<int, int> count;
   while (true) {
     int i;
-    CapturedData >> i;
-    if (CapturedData.fail())
+    dataStream >> i;
+    if (dataStream.fail())
       break;
     count[i]++;
   }

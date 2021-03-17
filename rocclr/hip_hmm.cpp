@@ -25,8 +25,8 @@
 #include "platform/command.hpp"
 #include "platform/memory.hpp"
 
-// Forward declaraiton of a static function
-static hipError_t ihipMallocManaged(void** ptr, size_t size);
+// Forward declaraiton of a function
+hipError_t ihipMallocManaged(void** ptr, size_t size, unsigned int align = 0);
 
 // Make sure HIP defines match ROCclr to avoid double conversion
 static_assert(hipCpuDeviceId == amd::CpuDeviceId, "CPU device ID mismatch with ROCclr!");
@@ -186,7 +186,7 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream, hipDeviceptr_t* dev_ptr,
 }
 
 // ================================================================================================
-static hipError_t ihipMallocManaged(void** ptr, size_t size) {
+hipError_t ihipMallocManaged(void** ptr, size_t size, unsigned int align) {
   if (size == 0) {
     *ptr = nullptr;
     return hipSuccess;
@@ -207,7 +207,7 @@ static hipError_t ihipMallocManaged(void** ptr, size_t size) {
   // Allocate SVM fine grain buffer with the forced host pointer, avoiding explicit memory
   // allocation in the device driver
   *ptr = amd::SvmBuffer::malloc(ctx, CL_MEM_SVM_FINE_GRAIN_BUFFER | CL_MEM_ALLOC_HOST_PTR,
-                                size, dev.info().memBaseAddrAlign_);
+                                size, (align == 0) ? dev.info().memBaseAddrAlign_ : align);
   if (*ptr == nullptr) {
     return hipErrorMemoryAllocation;
   }

@@ -82,7 +82,7 @@ char* demangle(const char* loweredName) {
   int status = 0;
   char* demangledName = DEMANGLE(loweredName, nullptr, nullptr, &status);
   if (status != 0) {
-    DevLogPrintfError("Cannot demangle loweredName: %s \n", loweredName);
+    LogPrintfError("Cannot demangle loweredName: %s \n", loweredName);
     return nullptr;
   }
 #elif defined(_WIN32)
@@ -92,7 +92,7 @@ char* demangle(const char* loweredName) {
                             UNDECORATED_SIZE/ sizeof(*demangledName), UNDNAME_COMPLETE))
   {
     free(demangledName);
-    DevLogPrintfError("Cannot undecorate loweredName: %s demangledName: %s \n",
+    LogPrintfError("Cannot undecorate loweredName: %s demangledName: %s \n",
                       loweredName, demangledName);
     return nullptr;
   }
@@ -148,20 +148,26 @@ static std::string getValueOf(const std::string& option) {
   return res;
 }
 
-static void transformOptions(std::vector<const char*>& options, amd::Program* program) {
+static void transformOptions(std::vector<std::string>& options, amd::Program* program) {
   std::vector<const char*> t_option;
   for (auto& i : options) {
-    std::string t_str(i);
 #ifdef __HIP_ENABLE_PCH
     // Use precompiled header for hip
-    if (t_str == "-hip-pch") {
+    if (i == "-hip-pch") {
       const char* pch = nullptr;
       unsigned int pch_size = 0;
       __hipGetPCH(&pch, &pch_size);
       program->addPreCompiledHeader(std::string(pch, pch_size));
       i = "-nogpuinc";
+      continue;
     }
 #endif
+    // Some rtc samples use --gpu-architecture
+    if (i.rfind("--gpu-architecture=", 0) == 0) {
+      auto val = getValueOf(i);
+      i = "--offload-arch=" + val;
+      continue;
+    }
   }
 }
 
@@ -192,7 +198,7 @@ const char* hiprtcGetErrorString(hiprtcResult x) {
     case HIPRTC_ERROR_INTERNAL_ERROR:
       return "HIPRTC_ERROR_INTERNAL_ERROR";
     default:
-      DevLogPrintfError("Invalid HIPRTC error code: %d \n", x);
+      LogPrintfError("Invalid HIPRTC error code: %d \n", x);
       return nullptr;
   };
 
@@ -240,12 +246,22 @@ hiprtcResult hiprtcCompileProgram(hiprtcProgram prog, int numOptions, const char
   amd::Program* program = as_amd(reinterpret_cast<cl_program>(prog));
 
   std::ostringstream ostrstr;
-  std::vector<const char*> oarr(&options[0], &options[numOptions]);
+  std::vector<std::string> oarr(&options[0], &options[numOptions]);
+
+  const std::string hipVerOpt{"--hip-version=" + std::to_string(HIP_VERSION_MAJOR) + '.' +
+                              std::to_string(HIP_VERSION_MINOR) + '.' +
+                              std::to_string(HIP_VERSION_PATCH)};
+  const std::string hipVerMajor{"-DHIP_VERSION_MAJOR=" + std::to_string(HIP_VERSION_MAJOR)};
+  const std::string hipVerMinor{"-DHIP_VERSION_MINOR=" + std::to_string(HIP_VERSION_MINOR)};
+  const std::string hipVerPatch{"-DHIP_VERSION_PATCH=" + std::to_string(HIP_VERSION_PATCH)};
+
+  oarr.push_back(hipVerOpt);
+  oarr.push_back(hipVerMajor);
+  oarr.push_back(hipVerMinor);
+  oarr.push_back(hipVerPatch);
+
   transformOptions(oarr, program);
   std::copy(oarr.begin(), oarr.end(), std::ostream_iterator<std::string>(ostrstr, " "));
-
-  ostrstr.str().append(" -DHIP_VERSION_MAJOR=9");
-  ostrstr.str().append(" -DHIP_VERSION_MINOR=0");
 
   std::vector<amd::Device*> devices{hip::getCurrentDevice()->devices()[0]};
   if (CL_SUCCESS != program->build(devices, ostrstr.str().c_str(), nullptr, nullptr)) {

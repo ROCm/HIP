@@ -122,7 +122,7 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  if (srcDevice >= static_cast<int>(g_devices.size())
+  if (srcDevice == dstDevice || srcDevice >= static_cast<int>(g_devices.size())
       || dstDevice >= static_cast<int>(g_devices.size())) {
     HIP_RETURN(hipErrorInvalidDevice);
   }
@@ -159,7 +159,7 @@ hipError_t hipDeviceGetP2PAttribute(int* value, hipDeviceP2PAttr attr,
       break;
     }
     default : {
-      DevLogPrintfError("Invalid attribute attr: %d ", attr);
+      LogPrintfError("Invalid attribute attr: %d ", attr);
       HIP_RETURN(hipErrorInvalidValue);
       break;
     }

@@ -32,6 +32,11 @@ constexpr unsigned __hipFatMAGIC2 = 0x48495046; // "HIPF"
 thread_local std::stack<ihipExec_t> execStack_;
 PlatformState* PlatformState::platform_; // Initiaized as nullptr by default
 
+//forward declaration of methods required for __hipRegisrterManagedVar
+hipError_t ihipMallocManaged(void** ptr, size_t size, unsigned int align = 0);
+hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind,
+                      amd::HostQueue& queue, bool isAsync = false);
+
 struct __CudaFatBinaryWrapper {
   unsigned int magic;
   unsigned int version;
@@ -72,11 +77,10 @@ extern "C" hip::FatBinaryInfo** __hipRegisterFatBinary(const void* data)
 {
   const __CudaFatBinaryWrapper* fbwrapper = reinterpret_cast<const __CudaFatBinaryWrapper*>(data);
   if (fbwrapper->magic != __hipFatMAGIC2 || fbwrapper->version != 1) {
-    DevLogPrintfError("Cannot Register fat binary. FatMagic: %u version: %u ",
-                      fbwrapper->magic, fbwrapper->version);
+    LogPrintfError("Cannot Register fat binary. FatMagic: %u version: %u ", fbwrapper->magic,
+                   fbwrapper->version);
     return nullptr;
   }
-
   return PlatformState::instance().addFatBinary(fbwrapper->binary);
 }
 
@@ -136,6 +140,30 @@ extern "C" void __hipRegisterSurface(hip::FatBinaryInfo** modules,      // The d
                                      int type, int ext) {
   hip::Var* var_ptr = new hip::Var(std::string(hostVar), hip::Var::DeviceVarKind::DVK_Surface, sizeof(surfaceReference), 0, 0, modules);
   PlatformState::instance().registerStatGlobalVar(var, var_ptr);
+}
+
+extern "C" void __hipRegisterManagedVar(void *hipModule,   // Pointer to hip module returned from __hipRegisterFatbinary
+                                        void **pointer,    // Pointer to a chunk of managed memory with size \p size and alignment \p align
+                                                           // HIP runtime allocates such managed memory and assign it to \p pointer
+                                        void *init_value,  // Initial value to be copied into \p pointer
+                                        const char *name,  // Name of the variable in code object
+                                        size_t size,
+                                        unsigned align) {
+  HIP_INIT();
+  hipError_t status = ihipMallocManaged(pointer, size, align);
+  if( status == hipSuccess) {
+    amd::HostQueue* queue = hip::getNullStream();
+    if(queue != nullptr) {
+      ihipMemcpy(*pointer, init_value, size, hipMemcpyHostToDevice, *queue);
+    } else {
+      ClPrint(amd::LOG_ERROR, amd::LOG_API, "Host Queue is NULL");
+    }
+  } else {
+    guarantee(false, "Error during allocation of managed memory!");
+  }
+  hip::Var* var_ptr = new hip::Var(std::string(name), hip::Var::DeviceVarKind::DVK_Managed, pointer,
+                                   size, align, reinterpret_cast<hip::FatBinaryInfo**>(hipModule));
+  PlatformState::instance().registerStatManagedVar(var_ptr);
 }
 
 extern "C" void __hipRegisterTexture(hip::FatBinaryInfo** modules,      // The device modules containing code object
@@ -216,13 +244,13 @@ extern "C" hipError_t hipLaunchByPtr(const void *hostFunction)
   hip::Stream* stream = reinterpret_cast<hip::Stream*>(exec.hStream_);
   int deviceId = (stream != nullptr)? stream->DeviceId() : ihipGetDevice();
   if (deviceId == -1) {
-    DevLogPrintfError("Wrong DeviceId: %d \n", deviceId);
+    LogPrintfError("Wrong DeviceId: %d \n", deviceId);
     HIP_RETURN(hipErrorNoDevice);
   }
   hipFunction_t func = nullptr;
   hipError_t hip_error = PlatformState::instance().getStatFunc(&func, hostFunction, deviceId);
   if ((hip_error != hipSuccess) || (func == nullptr)) {
-    DevLogPrintfError("Could not retrieve hostFunction: 0x%x \n", hostFunction);
+    LogPrintfError("Could not retrieve hostFunction: 0x%x \n", hostFunction);
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
 
@@ -272,12 +300,12 @@ hipError_t ihipCreateGlobalVarObj(const char* name, hipModule_t hmod, amd::Memor
   dev_program = program->getDeviceProgram(*hip::getCurrentDevice()->devices()[0]);
 
   if (dev_program == nullptr) {
-    DevLogPrintfError("Cannot get Device Function for module: 0x%x \n", hmod);
+    LogPrintfError("Cannot get Device Function for module: 0x%x \n", hmod);
     HIP_RETURN(hipErrorInvalidDeviceFunction);
   }
   /* Find the global Symbols */
   if (!dev_program->createGlobalVarObj(amd_mem_obj, dptr, bytes, name)) {
-    DevLogPrintfError("Cannot create Global Var obj for symbol: %s \n", name);
+    LogPrintfError("Cannot create Global Var obj for symbol: %s \n", name);
     HIP_RETURN(hipErrorInvalidSymbol);
   }
 
@@ -550,13 +578,13 @@ void hipLaunchKernelGGLImpl(
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
   int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
   if (deviceId == -1) {
-    DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
+    LogPrintfError("Wrong Device Id: %d \n", deviceId);
   }
 
   hipFunction_t func = nullptr;
   hipError_t hip_error = PlatformState::instance().getStatFunc(&func, reinterpret_cast<void*>(function_address), deviceId);
   if ((hip_error != hipSuccess) || (func == nullptr)) {
-    DevLogPrintfError("Cannot find the static function: 0x%x", function_address);
+    LogPrintfError("Cannot find the static function: 0x%x", function_address);
   }
 
   hipModuleLaunchKernel(func,
@@ -596,7 +624,7 @@ hipError_t ihipLaunchKernel(const void* hostFunction,
   hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
   int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
   if (deviceId == -1) {
-    DevLogPrintfError("Wrong Device Id: %d \n", deviceId);
+    LogPrintfError("Wrong Device Id: %d \n", deviceId);
     HIP_RETURN(hipErrorNoDevice);
   }
 
@@ -751,7 +779,7 @@ hipError_t PlatformState::getDynFunc(hipFunction_t* hfunc, hipModule_t hmod,
 
   auto it = dynCO_map_.find(hmod);
   if (it == dynCO_map_.end()) {
-    DevLogPrintfError("Cannot find the module: 0x%x", hmod);
+    LogPrintfError("Cannot find the module: 0x%x", hmod);
     return hipErrorNotFound;
   }
   if (0 == strlen(func_name)) {
@@ -771,7 +799,7 @@ hipError_t PlatformState::getDynGlobalVar(const char* hostVar, hipModule_t hmod,
 
   auto it = dynCO_map_.find(hmod);
   if (it == dynCO_map_.end()) {
-    DevLogPrintfError("Cannot find the module: 0x%x", hmod);
+    LogPrintfError("Cannot find the module: 0x%x", hmod);
     return hipErrorNotFound;
   }
 
@@ -796,13 +824,13 @@ hipError_t PlatformState::getDynTexGlobalVar(textureReference* texRef, hipDevice
 
   auto tex_it = texRef_map_.find(texRef);
   if (tex_it == texRef_map_.end()) {
-    DevLogPrintfError("Cannot find the texRef Entry: 0x%x", texRef);
+    LogPrintfError("Cannot find the texRef Entry: 0x%x", texRef);
     return hipErrorNotFound;
   }
 
   auto it = dynCO_map_.find(tex_it->second.first);
   if (it == dynCO_map_.end()) {
-    DevLogPrintfError("Cannot find the module: 0x%x", tex_it->second.first);
+    LogPrintfError("Cannot find the module: 0x%x", tex_it->second.first);
     return hipErrorNotFound;
   }
 
@@ -819,7 +847,7 @@ hipError_t PlatformState::getDynTexRef(const char* hostVar, hipModule_t hmod, te
 
   auto it = dynCO_map_.find(hmod);
   if (it == dynCO_map_.end()) {
-    DevLogPrintfError("Cannot find the module: 0x%x", hmod);
+    LogPrintfError("Cannot find the module: 0x%x", hmod);
     return hipErrorNotFound;
   }
 
@@ -851,6 +879,10 @@ hipError_t PlatformState::registerStatGlobalVar(const void* hostVar, hip::Var* v
   return statCO_.registerStatGlobalVar(hostVar, var);
 }
 
+hipError_t PlatformState::registerStatManagedVar(hip::Var* var) {
+  return statCO_.registerStatManagedVar(var);
+}
+
 hipError_t PlatformState::getStatFunc(hipFunction_t* hfunc, const void* hostFunction, int deviceId) {
   return statCO_.getStatFunc(hfunc, hostFunction, deviceId);
 }
@@ -865,6 +897,10 @@ hipError_t PlatformState::getStatFuncAttr(hipFuncAttributes* func_attr, const vo
 hipError_t PlatformState::getStatGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                                            size_t* size_ptr) {
   return statCO_.getStatGlobalVar(hostVar, deviceId, dev_ptr, size_ptr);
+}
+
+hipError_t PlatformState::initStatManagedVarDevicePtr(int deviceId) {
+  return statCO_.initStatManagedVarDevicePtr(deviceId);
 }
 
 void PlatformState::setupArgument(const void *arg, size_t size, size_t offset) {

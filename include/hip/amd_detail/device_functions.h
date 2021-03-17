@@ -34,12 +34,12 @@ THE SOFTWARE.
 #include <hip/amd_detail/device_library_decls.h>
 #include <hip/amd_detail/llvm_intrinsics.h>
 
-#if __HIP_CLANG_ONLY__ && !_WIN32
+#if __HIP_CLANG_ONLY__
 extern "C" __device__ int printf(const char *fmt, ...);
 #else
 template <typename... All>
 static inline __device__ void printf(const char* format, All... all) {}
-#endif // __HIP_CLANG_ONLY__ && !_WIN32
+#endif // __HIP_CLANG_ONLY__
 
 /*
 Integer Intrinsics

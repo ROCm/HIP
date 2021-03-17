@@ -367,21 +367,31 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
     HIP_RETURN(hipErrorInvalidValue);
   }
   amd::HostQueue* hostQueue = hip::getQueue(stream);
-  amd::Command* command = hostQueue->getLastQueuedCommand(true);
+  amd::Command* last_command = hostQueue->getLastQueuedCommand(true);
+  amd::Command::EventWaitList eventWaitList;
+  if (last_command != nullptr) {
+    eventWaitList.push_back(last_command);
+  }
+  amd::Command* command = new amd::Marker(*hostQueue, !kMarkerDisableFlush, eventWaitList);
   if (command == nullptr) {
-    amd::Command::EventWaitList eventWaitList;
-    command = new amd::Marker(*hostQueue, kMarkerDisableFlush, eventWaitList);
-    command->enqueue();
+    HIP_RETURN(hipErrorInvalidValue);
   }
   amd::Event& event = command->event();
   StreamCallback* cbo = new StreamCallback(stream, callback, userData, command);
 
-  if(!event.setCallback(CL_COMPLETE, ihipStreamCallback, reinterpret_cast<void*>(cbo))) {
+  if ((cbo == nullptr) || !event.setCallback(CL_COMPLETE, ihipStreamCallback, cbo)) {
     command->release();
+    if (last_command != nullptr) {
+      last_command->release();
+    }
     return hipErrorInvalidHandle;
   }
+  command->enqueue();
+  // @note: don't release the command here, because it will be released after HIP callback
 
-  event.notifyCmdQueue();
+  if (last_command != nullptr) {
+    last_command->release();
+  }
 
   HIP_RETURN(hipSuccess);
 }

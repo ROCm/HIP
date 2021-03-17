@@ -85,6 +85,7 @@ global:
     hipMalloc3DArray;
     hipMallocManaged;
     hipArrayCreate;
+    hipArrayDestroy;
     hipArray3DCreate;
     hipMallocArray;
     hipMallocPitch;
@@ -95,6 +96,7 @@ global:
     hipMemcpy2D;
     hipMemcpy2DAsync;
     hipMemcpy2DToArray;
+    hipDrvMemcpy2DUnaligned;
     hipMemcpy3D;
     hipMemcpy3DAsync;
     hipDrvMemcpy3D;
@@ -172,6 +174,10 @@ global:
     hipStreamQuery;
     hipStreamSynchronize;
     hipStreamWaitEvent;
+    hipStreamWaitValue32;
+    hipStreamWaitValue64;
+    hipStreamWriteValue32;
+    hipStreamWriteValue64;
     __hipPopCallConfiguration;
     __hipPushCallConfiguration;
     __hipRegisterFatBinary;
@@ -179,6 +185,7 @@ global:
     __hipRegisterVar;
     __hipRegisterSurface;
     __hipRegisterTexture;
+    __hipRegisterManagedVar;
     __hipUnregisterFatBinary;
     __gnu_h2f_ieee;
     __gnu_f2h_ieee;

@@ -124,9 +124,10 @@ public:
   hipError_t removeFatBinary(FatBinaryInfo** module);
   hipError_t digestFatBinary(const void* data, FatBinaryInfo*& programs);
 
-  //Register vars/funcs given to use from __hipRegister[Var/Func]
+  //Register vars/funcs given to use from __hipRegister[Var/Func/ManagedVar]
   hipError_t registerStatFunction(const void* hostFunction, Function* func);
   hipError_t registerStatGlobalVar(const void* hostVar, Var* var);
+  hipError_t registerStatManagedVar(Var *var);
 
   //Retrive Vars/Funcs for a given hostSidePtr(const void*), unless stated otherwise.
   hipError_t getStatFunc(hipFunction_t* hfunc, const void* hostFunction, int deviceId);
@@ -134,6 +135,9 @@ public:
   hipError_t getStatGlobalVar(const void* hostVar, int deviceId, hipDeviceptr_t* dev_ptr,
                               size_t* size_ptr);
 
+  //Managed variable is a defined symbol in code object
+  //pointer to the alocated managed memory has to be copied to the address of symbol
+  hipError_t initStatManagedVarDevicePtr(int deviceId);
 private:
   friend class ::PlatformState;
   //Populated during __hipRegisterFatBinary
@@ -142,6 +146,9 @@ private:
   std::unordered_map<const void*, Function*> functions_;
   //Populated during __hipRegisterVars
   std::unordered_map<const void*, Var*> vars_;
+  //Populated during __hipRegisterManagedVar
+  std::vector<Var*> managedVars_;
+  std::unordered_map<int, bool> managedVarsDevicePtrInitalized_;
 };
 
 }; // namespace hip

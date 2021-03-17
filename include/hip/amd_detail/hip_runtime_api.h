@@ -176,6 +176,7 @@ enum hipLimit_t {
 
 #define hipDeviceMallocDefault 0x0
 #define hipDeviceMallocFinegrained 0x1  ///< Memory is allocated in fine grained region of device.
+#define hipMallocSignalMemory 0x2       ///< Memory represents a HSA signal.
 
 //! Flags that can be used with hipHostRegister
 #define hipHostRegisterDefault 0x0   ///< Memory is Mapped and Portable
@@ -215,6 +216,12 @@ enum hipLimit_t {
 
 // Flags that can be used with hipExtLaunch Set of APIs
 #define hipExtAnyOrderLaunch 0x01  ///< AnyOrderLaunch of kernels
+
+// Flags to be used with hipStreamWaitValue32 and hipStreamWaitValue64
+#define hipStreamWaitValueGte 0x0
+#define hipStreamWaitValueEq 0x1
+#define hipStreamWaitValueAnd 0x2
+#define hipStreamWaitValueNor 0x3
 
 /*
  * @brief HIP Memory Advise values
@@ -1224,6 +1231,118 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
+ *  @defgroup Stream Memory Operations
+ *  @{
+ *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
+ */
+
+
+/**
+ * @brief Enqueues a wait command to the stream.
+ *
+ * @param [in] stream - Stream identifier
+ * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag.
+ * @param [in] value  - Value to be used in compare operation
+ * @param [in] mask   - Mask to be applied on value at memory before it is compared with value
+ * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
+ * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Enqueues a wait command to the stream, all operations enqueued  on this stream after this, will
+ * not execute until the defined wait condition is true.
+ *
+ * hipStreamWaitValueGte: waits until *ptr&mask >= value
+ * hipStreamWaitValueEq : waits until *ptr&mask == value
+ * hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
+ * hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
+ *
+ * @note when using 'hipStreamWaitValueNor', mask is applied on both 'value' and '*ptr'.
+ *
+ * @note Support for hipStreamWaitValue32 can be queried using 'hipDeviceGetAttribute()' and
+ * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
+ *
+ * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue64, hipStreamWriteValue64,
+ * hipStreamWriteValue32, hipDeviceGetAttribute
+ */
+
+hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, uint32_t mask, unsigned int flags);
+
+/**
+ * @brief Enqueues a wait command to the stream.
+ *
+ * @param [in] stream - Stream identifier
+ * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag.
+ * @param [in] value  - Value to be used in compare operation
+ * @param [in] mask   - Mask to be applied on value at memory before it is compared with value.
+ * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
+ * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Enqueues a wait command to the stream, all operations enqueued  on this stream after this, will
+ * not execute until the defined wait condition is true.
+ *
+ * hipStreamWaitValueGte: waits until *ptr&mask >= value
+ * hipStreamWaitValueEq : waits until *ptr&mask == value
+ * hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
+ * hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
+ *
+ * @note when using 'hipStreamWaitValueNor', mask is applied on both 'value' and '*ptr'.
+ *
+ * @note Support for hipStreamWaitValue64 can be queried using 'hipDeviceGetAttribute()' and
+ * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
+ *
+ * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue32, hipStreamWriteValue64,
+ * hipStreamWriteValue32, hipDeviceGetAttribute
+ */
+
+hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, uint64_t mask, unsigned int flags);
+
+/**
+ * @brief Enqueues a write command to the stream.
+ *
+ * @param [in] stream - Stream identifier
+ * @param [in] ptr    - Pointer to a GPU accessible memory object.
+ * @param [in] value  - Value to be written
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Enqueues a write command to the stream, write operation is performed after all earlier commands
+ * on this stream have completed the execution.
+ *
+ * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64
+ */
+hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value);
+
+/**
+ * @brief Enqueues a write command to the stream.
+ *
+ * @param [in] stream - Stream identifier
+ * @param [in] ptr    - Pointer to a GPU accessible memory object.
+ * @param [in] value  - Value to be written
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * Enqueues a write command to the stream, write operation is performed after all earlier commands
+ * on this stream have completed the execution.
+ *
+ * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
+ * hipStreamWaitValue64
+ */
+hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value);
+
+
+// end doxygen Stream Memory Operations
+/**
+ * @}
+ */
+
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
  *  @defgroup Event Event Management
  *  @{
  *  This section describes the event management functions of HIP runtime API.
@@ -2180,6 +2299,8 @@ hipError_t hipMemPtrGetInfo(void* ptr, size_t* size);
 hipError_t hipMallocArray(hipArray** array, const hipChannelFormatDesc* desc, size_t width,
                           size_t height __dparm(0), unsigned int flags __dparm(hipArrayDefault));
 hipError_t hipArrayCreate(hipArray** pHandle, const HIP_ARRAY_DESCRIPTOR* pAllocateArray);
+
+hipError_t hipArrayDestroy(hipArray* array);
 
 hipError_t hipArray3DCreate(hipArray** array, const HIP_ARRAY3D_DESCRIPTOR* pAllocateArray);
 
@@ -3387,6 +3508,14 @@ hipError_t hipLaunchKernel(const void* function_address,
                            void** args,
                            size_t sharedMemBytes __dparm(0),
                            hipStream_t stream __dparm(0));
+/**
+ * Copies memory for 2D arrays.
+ *
+ * @param pCopy           - Parameters for the memory copy
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ */
+hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy);
 
 //TODO: Move this to hip_ext.h
 hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3 dimBlocks,
@@ -3395,6 +3524,22 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
 // doxygen end Clang launch
 /**
  * @}
+ */
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Textur Texture Management
+ *  @{
+ *  This section describes the texture management functions of HIP runtime API.
+ */
+
+/**
+ *
+ *  @addtogroup TexturD Texture Management [Deprecated]
+ *  @{
+ *  @ingroup Texture
+ *  This section describes the deprecated texture management functions of HIP runtime API.
  */
 
 DEPRECATED(DEPRECATED_MSG)
@@ -3421,22 +3566,27 @@ hipError_t hipBindTextureToArray(
     hipArray_const_t array,
     const hipChannelFormatDesc* desc);
 
-hipError_t hipBindTextureToMipmappedArray(
-    const textureReference* tex,
-    hipMipmappedArray_const_t mipmappedArray,
-    const hipChannelFormatDesc* desc);
-
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipGetTextureAlignmentOffset(
     size_t* offset,
     const textureReference* texref);
 
-hipError_t hipGetTextureReference(
-    const textureReference** texref,
-    const void* symbol);
-
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
+
+// doxygen end deprecated texture management
+/**
+ * @}
+ */
+
+hipError_t hipBindTextureToMipmappedArray(
+    const textureReference* tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const hipChannelFormatDesc* desc);
+
+ hipError_t hipGetTextureReference(
+    const textureReference** texref,
+    const void* symbol);
 
 hipError_t hipCreateTextureObject(
     hipTextureObject_t* pTexObject,
@@ -3527,10 +3677,6 @@ hipError_t hipTexRefSetArray(
     hipArray_const_t array,
     unsigned int flags);
 
-hipError_t hipTexRefSetBorderColor(
-    textureReference* texRef,
-    float* pBorderColor);
-
 hipError_t hipTexRefSetFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
@@ -3547,6 +3693,37 @@ hipError_t hipTexRefSetFormat(
 hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
+
+hipError_t hipTexObjectCreate(
+    hipTextureObject_t* pTexObject,
+    const HIP_RESOURCE_DESC* pResDesc,
+    const HIP_TEXTURE_DESC* pTexDesc,
+    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+
+hipError_t hipTexObjectDestroy(
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetResourceDesc(
+    HIP_RESOURCE_DESC* pResDesc,
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetResourceViewDesc(
+    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+    hipTextureObject_t texObject);
+
+hipError_t hipTexObjectGetTextureDesc(
+    HIP_TEXTURE_DESC* pTexDesc,
+    hipTextureObject_t texObject);
+
+// doxygen end Texture management
+/**
+ * @}
+ */
+
+// The following are not supported.
+hipError_t hipTexRefSetBorderColor(
+    textureReference* texRef,
+    float* pBorderColor);
 
 hipError_t hipTexRefSetMipmapFilterMode(
     textureReference* texRef,
@@ -3578,27 +3755,6 @@ hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
-
-hipError_t hipTexObjectCreate(
-    hipTextureObject_t* pTexObject,
-    const HIP_RESOURCE_DESC* pResDesc,
-    const HIP_TEXTURE_DESC* pTexDesc,
-    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
-
-hipError_t hipTexObjectDestroy(
-    hipTextureObject_t texObject);
-
-hipError_t hipTexObjectGetResourceDesc(
-    HIP_RESOURCE_DESC* pResDesc,
-    hipTextureObject_t texObject);
-
-hipError_t hipTexObjectGetResourceViewDesc(
-    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
-    hipTextureObject_t texObject);
-
-hipError_t hipTexObjectGetTextureDesc(
-    HIP_TEXTURE_DESC* pTexDesc,
-    hipTextureObject_t texObject);
 
 /**
  * Callback/Activity API
@@ -3810,12 +3966,6 @@ static inline hipError_t hipUnbindTexture(
 {
     return hipUnbindTexture(&tex);
 }
-
-// doxygen end Texture
-/**
- * @}
- */
-
 
 #endif // __cplusplus
 

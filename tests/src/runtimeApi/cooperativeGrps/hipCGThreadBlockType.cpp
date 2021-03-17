@@ -23,7 +23,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t
  * HIT_END
  */
 
@@ -164,7 +164,7 @@ int main()
   }
 
   // Test block sizes which are powers of 2
-  int i = 0;
+  int i = 1;
   while (true) {
     int blockSize = pow(2, i);
     if (blockSize > maxThreadsPerBlock)

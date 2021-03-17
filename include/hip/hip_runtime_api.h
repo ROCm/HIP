@@ -147,6 +147,8 @@ typedef struct hipDeviceProp_t {
     int pageableMemoryAccess;        ///< Device supports coherently accessing pageable memory
                                      ///< without calling hipHostRegister on it
     int pageableMemoryAccessUsesHostPageTables; ///< Device accesses pageable memory via the host's page tables
+    int canUseStreamWaitValue;  ///< '1' if Device supports hipStreamWaitValue32() and
+                                ///< hipStreamWaitValue64() , '0' otherwise.
 } hipDeviceProp_t;
 
 
@@ -216,6 +218,7 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorProfilerAlreadyStarted = 7,
     hipErrorProfilerAlreadyStopped = 8,
     hipErrorInvalidConfiguration = 9,
+    hipErrorInvalidPitchValue = 12,
     hipErrorInvalidSymbol = 13,
     hipErrorInvalidDevicePointer = 17,  ///< Invalid Device Pointer
     hipErrorInvalidMemcpyDirection = 21,  ///< Invalid memory copy direction
@@ -366,6 +369,9 @@ typedef enum hipDeviceAttribute_t {
                                                 /// without calling hipHostRegister on it
     hipDeviceAttributePageableMemoryAccessUsesHostPageTables, ///< Device accesses pageable memory via
                                                               /// the host's page tables
+    hipDeviceAttributeCanUseStreamWaitValue ///< '1' if Device supports hipStreamWaitValue32() and
+                                            ///< hipStreamWaitValue64() , '0' otherwise.
+
 } hipDeviceAttribute_t;
 
 enum hipComputeMode {

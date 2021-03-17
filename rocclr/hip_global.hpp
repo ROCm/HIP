@@ -81,11 +81,16 @@ public:
   enum DeviceVarKind {
     DVK_Variable = 0,
     DVK_Surface,
-    DVK_Texture
+    DVK_Texture,
+    DVK_Managed
   };
 
   Var(std::string name, DeviceVarKind dVarKind, size_t size, int type, int norm,
       FatBinaryInfo** modules = nullptr);
+
+  Var(std::string name, DeviceVarKind dVarKind, void *pointer, size_t size, unsigned align,
+      FatBinaryInfo** modules = nullptr);
+
   ~Var();
 
   //Return DeviceVar for this dynamically loaded module
@@ -96,7 +101,7 @@ public:
   void resize_dVar(size_t size) { dVar_.resize(size); }
 
   FatBinaryInfo** moduleInfo() { return modules_; };
-
+  void* getManagedVarPtr() { return managedVarPtr_; };
 private:
   std::vector<DeviceVar*> dVar_;   // DeviceVarObj per Device
   std::string name_;               // Variable name (not unique identifier)
@@ -104,7 +109,10 @@ private:
   size_t size_;                    // Size of the variable
   int type_;                       // Type(Textures/Surfaces only)
   int norm_;                       // Type(Textures/Surfaces only)
-  FatBinaryInfo** modules_;     // static module where it is referenced
+  FatBinaryInfo** modules_;        // static module where it is referenced
+
+  void *managedVarPtr_;            // Managed memory pointer with size_ & align_
+  unsigned int align_;             // Managed memory alignment
 };
 
 }; //namespace: hip

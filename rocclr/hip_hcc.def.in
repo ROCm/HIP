@@ -84,6 +84,7 @@ hipMalloc3DArray
 hipMallocManaged
 hipArrayCreate
 hipArray3DCreate
+hipArrayDestroy
 hipMallocArray
 hipMemAdvise
 hipMemAllocPitch
@@ -179,6 +180,7 @@ __hipRegisterFunction
 __hipRegisterVar
 __hipRegisterSurface
 __hipRegisterTexture
+__hipRegisterManagedVar
 __hipUnregisterFatBinary
 hipConfigureCall
 hipSetupArgument
@@ -263,6 +265,7 @@ hipExtStreamCreateWithCUMask
 hipStreamGetPriority
 hipMemcpy2DFromArray
 hipMemcpy2DFromArrayAsync
+hipDrvMemcpy2DUnaligned
 hipMemcpyAtoH
 hipMemcpyHtoA
 hipMemcpyParam2DAsync

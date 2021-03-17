@@ -89,8 +89,7 @@ hipError_t hipModuleGetFunction(hipFunction_t *hfunc, hipModule_t hmod, const ch
   }
 
   if (hipSuccess != PlatformState::instance().getDynFunc(hfunc, hmod, name)) {
-    DevLogPrintfError("Cannot find the function: %s for module: 0x%x \n",
-                      name, hmod);
+    LogPrintfError("Cannot find the function: %s for module: 0x%x \n", name, hmod);
     HIP_RETURN(hipErrorNotFound);
   }
 
@@ -107,8 +106,8 @@ hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes, hipModule_t h
 
   /* Get address and size for the global symbol */
   if (hipSuccess != PlatformState::instance().getDynGlobalVar(name, hmod, dptr, bytes)) {
-    DevLogPrintfError("Cannot find global Var: %s for module: 0x%x at device: %d \n",
-                       name, hmod, ihipGetDevice());
+    LogPrintfError("Cannot find global Var: %s for module: 0x%x at device: %d \n", name, hmod,
+                   ihipGetDevice());
     HIP_RETURN(hipErrorNotFound);
   }
 
@@ -222,12 +221,14 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams, extra, startEvent,
     stopEvent, flags, params);
 
+  HIP_RETURN_ONFAIL(PlatformState::instance().initStatManagedVarDevicePtr(ihipGetDevice()));
+
   if (f == nullptr) {
-    DevLogPrintfError("%s", "Function passed is null");
+    LogPrintfError("%s", "Function passed is null");
     return hipErrorInvalidImage;
   }
   if ((kernelParams != nullptr) && (extra != nullptr)) {
-    DevLogPrintfError(
+    LogPrintfError(
         "%s", "Both, kernelParams and extra Params are provided, only one should be provided");
     return hipErrorInvalidValue;
   }
@@ -601,8 +602,7 @@ hipError_t hipModuleGetTexRef(textureReference** texRef, hipModule_t hmod, const
 
    /* Get address and size for the global symbol */
   if (hipSuccess != PlatformState::instance().getDynTexRef(name, hmod, texRef)) {
-    DevLogPrintfError("Cannot get texRef for name: %s at module:0x%x \n",
-                      name, hmod);
+    LogPrintfError("Cannot get texRef for name: %s at module:0x%x \n", name, hmod);
     HIP_RETURN(hipErrorNotFound);
   }
 
