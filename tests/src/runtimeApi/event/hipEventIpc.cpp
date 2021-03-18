@@ -96,9 +96,10 @@ int main(int argc, char* argv[]) {
 
     HIPCHECK(hipEventSynchronize(ipc_event));
 
-    HIPCHECK(hipEventDestroy(ipc_event));
+    HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
 #ifndef __HIP_PLATFORM_AMD__
+    HIPCHECK(hipEventDestroy(ipc_event));
     HIPCHECK(hipEventDestroy(start));
     HIPCHECK(hipEventDestroy(stop));
 #endif
@@ -113,6 +114,7 @@ int main(int argc, char* argv[]) {
     // happen in above hipMemcpy(). If hipEventInterprocess is officially
     // implemented, we should revisit here and move these back to match cuda
     // event behavior.
+    HIPCHECK(hipEventDestroy(ipc_event));
     HIPCHECK(hipEventDestroy(start));
     HIPCHECK(hipEventDestroy(stop));
 #endif
