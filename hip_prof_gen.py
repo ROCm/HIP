@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 import os, sys, re
 
 PROF_HEADER = "hip_prof_str.h"
