@@ -2470,6 +2470,28 @@ hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, con
  *  @param[in]   wOffset Destination starting X offset
  *  @param[in]   hOffset Destination starting Y offset
  *  @param[in]   src     Source memory address
+ *  @param[in]   spitch  Pitch of source memory
+ *  @param[in]   width   Width of matrix transfer (columns in bytes)
+ *  @param[in]   height  Height of matrix transfer (rows)
+ *  @param[in]   kind    Type of transfer
+ *  @param[in]   stream    Accelerator view which the copy is being enqueued
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DToArrayAsync(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
+                                   size_t spitch, size_t width, size_t height, hipMemcpyKind kind,
+                                   hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst     Destination memory address
+ *  @param[in]   wOffset Destination starting X offset
+ *  @param[in]   hOffset Destination starting Y offset
+ *  @param[in]   src     Source memory address
  *  @param[in]   count   size in bytes to copy
  *  @param[in]   kind    Type of transfer
  *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
