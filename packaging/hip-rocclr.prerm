@@ -19,14 +19,6 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-pushd () {
-    command pushd "$@" > /dev/null
-}
-
-popd () {
-    command popd "$@" > /dev/null
-}
-
 ROCMDIR=@ROCM_PATH@
 ROCMLIBDIR=$ROCMDIR/lib
 ROCCLRDIR=$ROCMDIR/rocclr
@@ -35,12 +27,12 @@ HIPDIR=$ROCMDIR/hip
 HIPLIBDIR=$ROCMDIR/hip/lib
 ([ ! -d $ROCMDIR ] || [ ! -d $ROCCLRDIR ] || [ ! -d $HIPDIR ]) && exit 0
 ([ ! -d $ROCMLIBDIR ] || [ ! -d $ROCCLRLIBDIR ] || [ ! -d $HIPLIBDIR ]) && exit 0
-
+CURRENTDIR=`pwd`
 # Remove soft-links to libraries
 ROCCLRLIBFILES=$(ls -A $ROCCLRLIBDIR | grep -v [-/$])
 HIPLIBFILES=$(ls -A $HIPLIBDIR | grep -v [-/$])
 
-pushd $ROCMLIBDIR
+cd  $ROCMLIBDIR
 for f in $ROCCLRLIBFILES; do
     [ -e $f ] || continue
     rm $(basename $f)
@@ -50,13 +42,16 @@ for f in $HIPLIBFILES; do
     [ -e $f ] || continue
     rm $(basename $f)
 done
+cd $CURRENTDIR
 
-pushd cmake
+cd $ROCMLIBDIR/cmake
 unlink rocclr
 unlink hip
 unlink hip-lang
-popd
+cd $CURRENTDIR
+
+cd $ROCMLIBDIR
 rmdir --ignore-fail-on-non-empty cmake
-popd
+cd $CURRENTDIR
 rmdir --ignore-fail-on-non-empty $ROCMLIBDIR
 

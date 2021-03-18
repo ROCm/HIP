@@ -18,14 +18,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
-pushd () {
-    command pushd "$@" > /dev/null
-}
-
-popd () {
-    command popd "$@" > /dev/null
-}
 ROCMDIR=@ROCM_PATH@
 HIPDIR=$ROCMDIR/hip
 
@@ -33,23 +25,24 @@ HIPDIR=$ROCMDIR/hip
 HIPBINFILES=$HIPDIR/bin/*
 ROCMBINDIR=$ROCMDIR/bin
 mkdir -p $ROCMBINDIR
-pushd $ROCMBINDIR
+CURRENTDIR=`pwd`
+cd $ROCMBINDIR
 for f in $HIPBINFILES
 do
     ln -r -s -f $f $(basename $f)
 done
     ln -r -s -f $HIPDIR/bin/.hipVersion .hipVersion
-popd
+cd $CURRENTDIR
 
 # Soft-link to headers
 HIPINCDIR=$HIPDIR/include/hip
 ROCMINCDIR=$ROCMDIR/include
 mkdir -p $ROCMINCDIR
-pushd $ROCMINCDIR
+cd $ROCMINCDIR
     ln -r -s -f $HIPINCDIR hip
-popd
+cd $CURRENTDIR
 
 # The following will be removed after upstream updation
-pushd $HIPINCDIR
+cd $HIPINCDIR
     ln -r -s -f amd_detail hcc_detail
-popd
+cd $CURRENTDIR

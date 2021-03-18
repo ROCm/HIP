@@ -18,15 +18,6 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
-pushd () {
-    command pushd "$@" > /dev/null
-}
-
-popd () {
-    command popd "$@" > /dev/null
-}
-
 ROCMDIR=@ROCM_PATH@
 HIPDIR=$ROCMDIR/hip
 ([ ! -d $ROCMDIR ] || [ ! -d $HIPDIR ]) && exit 0
@@ -36,21 +27,26 @@ HIPBINDIR=$HIPDIR/bin
 ROCMBINDIR=$ROCMDIR/bin
 ([ ! -d $ROCMBINDIR ] || [ ! -d $HIPBINDIR ]) && exit 0
 HIPBINFILES=$HIPBINDIR/*
-pushd $ROCMBINDIR
+CURRENTDIR=`pwd`
+cd $ROCMBINDIR
 for f in $HIPBINFILES; do
     [ -e $f ] || continue
     rm $(basename $f)
 done
 rm .hipVersion
-popd
+cd $CURRENTDIR
 rmdir --ignore-fail-on-non-empty $ROCMBINDIR
 
 # Remove soft-link to headers
 HIPINCDIR=$HIPDIR/include
+cd $HIPINCDIR/hip
+rm hcc_detail
+cd $CURRENTDIR
+
 ROCMINCDIR=$ROCMDIR/include
 ([ ! -d $ROCMINCDIR ] || [ ! -d $HIPINCDIR ]) && exit 0
-pushd $ROCMINCDIR
+cd $ROCMINCDIR
 rm hip
-popd
+cd $CURRENTDIR
 rmdir --ignore-fail-on-non-empty $ROCMINCDIR
 
