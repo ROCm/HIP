@@ -95,6 +95,7 @@ hipMemcpyParam2D
 hipMemcpy2D
 hipMemcpy2DAsync
 hipMemcpy2DToArray
+hipMemcpy2DToArrayAsync
 hipMemcpy3D
 hipMemcpy3DAsync
 hipDrvMemcpy3D
