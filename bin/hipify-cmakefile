@@ -1,4 +1,4 @@
-#!/usr/bin/perl  -w
+#!/usr/bin/env perl
 ##
 # Copyright (c) 2015-2016 Advanced Micro Devices, Inc. All rights reserved.
 #
@@ -21,6 +21,7 @@
 # THE SOFTWARE.
 ##
 #usage hipify-cmakefile [OPTIONS] INPUT_FILE
+use warnings;
 use Getopt::Long;
 
 GetOptions(
