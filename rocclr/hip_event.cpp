@@ -148,6 +148,9 @@ hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
 }
 
 void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record) {
+  // Keep the lock always at the beginning of this to avoid a race. SWDEV-277847
+  amd::ScopedLock lock(lock_);
+
   if (command == nullptr) {
     command = queue->getLastQueuedCommand(true);
 
@@ -171,7 +174,6 @@ void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record)
       command->enqueue();
     }
   }
-  amd::ScopedLock lock(lock_);
 
   if (event_ == &command->event()) return;
 
