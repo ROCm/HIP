@@ -147,8 +147,6 @@ typedef struct hipDeviceProp_t {
     int pageableMemoryAccess;        ///< Device supports coherently accessing pageable memory
                                      ///< without calling hipHostRegister on it
     int pageableMemoryAccessUsesHostPageTables; ///< Device accesses pageable memory via the host's page tables
-    int canUseStreamWaitValue;  ///< '1' if Device supports hipStreamWaitValue32() and
-                                ///< hipStreamWaitValue64() , '0' otherwise.
 } hipDeviceProp_t;
 
 

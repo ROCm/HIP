@@ -235,9 +235,6 @@ hipError_t hipGetDeviceProperties ( hipDeviceProp_t* props, hipDevice_t device )
   deviceProps.pageableMemoryAccess = info.hmmCpuMemoryAccessible_;
   deviceProps.pageableMemoryAccessUsesHostPageTables = info.hostUnifiedMemory_;
 
-  // hipStreamWaitValue64() and hipStreamWaitValue32() support
-  deviceProps.canUseStreamWaitValue = info.aqlBarrierValue_;
-
   *props = deviceProps;
   HIP_RETURN(hipSuccess);
 }
