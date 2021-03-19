@@ -333,6 +333,38 @@ typedef struct hipLaunchParams_t {
     hipStream_t stream;     ///< Stream identifier
 } hipLaunchParams;
 
+
+typedef enum hipExternalMemoryHandleType_enum {
+  hipExternalMemoryHandleTypeOpaqueFd = 1,
+  hipExternalMemoryHandleTypeOpaqueWin32 = 2,
+  hipExternalMemoryHandleTypeOpaqueWin32Kmt = 3,
+  hipExternalMemoryHandleTypeD3D12Heap = 4,
+  hipExternalMemoryHandleTypeD3D12Resource = 5,
+  hipExternalMemoryHandleTypeD3D11Resource = 6,
+  hipExternalMemoryHandleTypeD3D11ResourceKmt = 7,
+} hipExternalMemoryHandleType;
+
+typedef struct hipExternalMemoryHandleDesc_st {
+  hipExternalMemoryHandleType type;
+  union {
+    int fd;
+    struct {
+      void *handle;
+      const void *name;
+    } win32;
+  } handle;
+  unsigned long long size;
+  unsigned int flags;
+} hipExternalMemoryHandleDesc;
+
+typedef struct hipExternalMemoryBufferDesc_st {
+  unsigned long long offset;
+  unsigned long long size;
+  unsigned int flags;
+} hipExternalMemoryBufferDesc;
+
+typedef void* hipExternalMemory_t;
+
 #if __HIP_HAS_GET_PCH
 /**
  * Internal use only. This API may change in the future
@@ -1254,11 +1286,8 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * not execute until the defined wait condition is true.
  *
  * hipStreamWaitValueGte: waits until *ptr&mask >= value
- *
  * hipStreamWaitValueEq : waits until *ptr&mask == value
- *
  * hipStreamWaitValueAnd: waits until ((*ptr&mask) & value) != 0
- *
  * hipStreamWaitValueNor: waits until ~((*ptr&mask) | (value&mask)) != 0
  *
  * @note when using 'hipStreamWaitValueNor', mask is applied on both 'value' and '*ptr'.
@@ -1550,6 +1579,43 @@ hipError_t hipEventQuery(hipEvent_t event);
  *  @see hipGetDeviceCount, hipGetDevice, hipSetDevice, hipChooseDevice
  */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr);
+
+/**
+*  @brief Imports an external memory object.
+*
+*  @param[out] extMem_out  Returned handle to an external memory object
+*  @param[in]  memHandleDesc Memory import handle descriptor
+*
+*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*
+*  @see
+*/
+hipError_t hipImportExternalMemory(hipExternalMemory_t* extMem_out, const hipExternalMemoryHandleDesc* memHandleDesc);
+
+/**
+*  @brief Maps a buffer onto an imported memory object.
+*
+*  @param[out] devPtr Returned device pointer to buffer
+*  @param[in]  extMem  Handle to external memory object
+*  @param[in]  bufferDesc  Buffer descriptor
+*
+*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*
+*  @see
+*/
+hipError_t hipExternalMemoryGetMappedBuffer(void **devPtr, hipExternalMemory_t extMem, const hipExternalMemoryBufferDesc *bufferDesc);
+
+
+/**
+*  @brief Destroys an external memory object.
+*
+*  @param[in] extMem  External memory object to be destroyed
+*
+*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*
+*  @see
+*/
+hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem);
 
 /**
  *  @brief Allocate memory on the default accelerator

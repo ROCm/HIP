@@ -267,6 +267,9 @@ global:
     hipTexObjectGetResourceDesc;
     hipTexObjectGetResourceViewDesc;
     hipTexObjectGetTextureDesc;
+    hipImportExternalMemory;
+    hipExternalMemoryGetMappedBuffer;
+    hipDestroyExternalMemory;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;
