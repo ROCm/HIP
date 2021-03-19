@@ -25,6 +25,7 @@
 #include "platform/context.hpp"
 #include "platform/command.hpp"
 #include "platform/memory.hpp"
+#include "amdocl/cl_vk_amd.hpp"
 
 // ================================================================================================
 amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
@@ -103,6 +104,58 @@ hipError_t ihipFree(void *ptr)
     return hipSuccess;
   }
   return hipErrorInvalidValue;
+}
+
+hipError_t hipImportExternalMemory(hipExternalMemory_t* extMem_out, const hipExternalMemoryHandleDesc* memHandleDesc) {
+  HIP_INIT_API(hipImportExternalMemory, extMem_out, memHandleDesc);
+
+  size_t sizeBytes = memHandleDesc->size;
+  amd::Context& amdContext = *hip::getCurrentDevice()->asContext();
+
+  amd::BufferVk* pBufferVk = nullptr;
+#ifdef _WIN32
+  pBufferVk = new (amdContext) amd::BufferVk(amdContext, sizeBytes, memHandleDesc->handle.win32.handle);
+#else
+  pBufferVk = new (amdContext) amd::BufferVk(amdContext, sizeBytes, memHandleDesc->handle.fd);
+#endif
+
+  if (!pBufferVk) {
+    HIP_RETURN(hipErrorOutOfMemory);
+  }
+
+  if (!pBufferVk->create()) {
+    pBufferVk->release();
+    HIP_RETURN(hipErrorOutOfMemory);
+  }
+  *extMem_out = pBufferVk;
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipExternalMemoryGetMappedBuffer(void **devPtr, hipExternalMemory_t extMem, const hipExternalMemoryBufferDesc *bufferDesc) {
+  HIP_INIT_API(hipExternalMemoryGetMappedBuffer, devPtr, extMem, bufferDesc);
+
+  if (extMem == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  amd::BufferVk *buf = reinterpret_cast<amd::BufferVk*>(extMem);
+  const device::Memory* devMem = buf->getDeviceMemory(*hip::getCurrentDevice()->devices()[0]);
+  if (devMem != nullptr) {
+    *devPtr = reinterpret_cast<void*>(devMem->virtualAddress());
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem) {
+  HIP_INIT_API(hipDestroyExternalMemory, extMem);
+
+  if (extMem == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  reinterpret_cast<amd::BufferVk*>(extMem)->release();
+
+  HIP_RETURN(hipSuccess);
 }
 
 // ================================================================================================
