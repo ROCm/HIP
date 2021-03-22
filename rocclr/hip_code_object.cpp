@@ -457,7 +457,7 @@ hipError_t CodeObject::extractCodeObjectFromFatBinary(const void* data,
                    "hipErrorNoBinaryForGpu: Unable to find code object for all current devices!");
     LogPrintfError("%s", "  Devices:");
     for (size_t i = 0; i < agent_triple_target_ids.size(); i++) {
-      LogPrintfError("    %s - [%s]", agent_triple_target_ids[i],
+      LogPrintfError("    %s - [%s]", agent_triple_target_ids[i].c_str(),
                      ((code_objs[i].first) ? "Found" : "Not Found"));
     }
     const auto obheader = reinterpret_cast<const __ClangOffloadBundleHeader*>(data);
