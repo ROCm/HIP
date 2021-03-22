@@ -619,6 +619,13 @@ amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
     return nullptr;
   }
 
+  bool mipMapSupport = true;
+  for (auto& dev : devices) {
+    if (!dev->settings().checkExtension(ClKhrMipMapImage)) {
+      mipMapSupport = false;
+    }
+  }
+
   if (!amd::Image::validateDimensions(devices,
                                       imageType,
                                       imageWidth,
@@ -627,6 +634,23 @@ amd::Image* ihipImageCreate(const cl_channel_order channelOrder,
                                       imageArraySize)) {
     DevLogError("Image does not have valid dimensions \n");
     return nullptr;
+  }
+
+  if (numMipLevels > 0) {
+    if (mipMapSupport == true) {
+      size_t max_dim = std::max(std::max(imageWidth, imageHeight), imageDepth);
+      size_t mip_levels = 0;
+      for (mip_levels = 0; max_dim > 0; max_dim >>=1, mip_levels++);
+        // empty for loop
+
+      if (mip_levels < numMipLevels) {
+        LogPrintfError("Invalid Mip Levels: %d", numMipLevels);
+        return nullptr;
+      }
+    } else {
+      LogPrintfError("Mipmap not supported on one of the devices, Mip Level: %d", numMipLevels);
+      return nullptr;
+    }
   }
 
   // TODO validate the image descriptor.
@@ -2529,52 +2553,6 @@ hipError_t hipMemcpyHtoAAsync(hipArray* dstArray,
   HIP_RETURN_DURATION(ihipMemcpyHtoA(srcHost, dstArray, {0, 0, 0}, {dstOffset, 0, 0}, {ByteCount, 1, 1}, 0, 0, stream, true));
 }
 
-hipError_t hipMipmappedArrayCreate(hipMipmappedArray_t* pHandle,
-                                   HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
-                                   unsigned int numMipmapLevels) {
-  HIP_INIT_API(hipMipmappedArrayCreate, pHandle, pMipmappedArrayDesc, numMipmapLevels);
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t hipMallocMipmappedArray(hipMipmappedArray_t *mipmappedArray,
-                                   const hipChannelFormatDesc* desc,
-                                   hipExtent extent,
-                                   unsigned int numLevels,
-                                   unsigned int flags) {
-  HIP_INIT_API(hipMallocMipmappedArray, mipmappedArray, desc, extent, numLevels, flags);
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t hMipmappedArray) {
-  HIP_INIT_API(hipMipmappedArrayDestroy, hMipmappedArray);
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray) {
-  HIP_INIT_API(hipFreeMipmappedArray, mipmappedArray);
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t hipMipmappedArrayGetLevel(hipArray_t* pLevelArray,
-                                     hipMipmappedArray_t hMipMappedArray,
-                                     unsigned int level) {
-  HIP_INIT_API(hipMipmappedArrayGetLevel, pLevelArray, hMipMappedArray, level);
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
-hipError_t hipGetMipmappedArrayLevel(hipArray_t *levelArray,
-                                     hipMipmappedArray_const_t mipmappedArray,
-                                     unsigned int level) {
-  HIP_INIT_API(hipGetMipmappedArrayLevel, levelArray, mipmappedArray, level);
-
-  HIP_RETURN(hipErrorNotSupported);
-}
-
 hipError_t hipMallocHost(void** ptr,
                          size_t size) {
   HIP_INIT_API(hipMallocHost, ptr, size);
@@ -2594,5 +2572,175 @@ hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy) {
   HIP_MEMCPY3D desc = hip::getDrvMemcpy3DDesc(*pCopy);
 
   HIP_RETURN(ihipMemcpyParam3D(&desc, nullptr));
+}
+
+hipError_t hipMallocMipmappedArray(hipMipmappedArray_t *mipmappedArray,
+                                   const hipChannelFormatDesc* desc,
+                                   hipExtent extent,
+                                   unsigned int numLevels,
+                                   unsigned int flags) {
+  HIP_INIT_API(hipMallocMipmappedArray, mipmappedArray, desc, extent, numLevels, flags);
+
+  HIP_RETURN(hipErrorNotSupported);
+}
+
+hipError_t hipFreeMipmappedArray(hipMipmappedArray_t mipmappedArray) {
+  HIP_INIT_API(hipFreeMipmappedArray, mipmappedArray);
+
+  HIP_RETURN(hipErrorNotSupported);
+}
+
+hipError_t hipGetMipmappedArrayLevel(hipArray_t *levelArray,
+                                     hipMipmappedArray_const_t mipmappedArray,
+                                     unsigned int level) {
+  HIP_INIT_API(hipGetMipmappedArrayLevel, levelArray, mipmappedArray, level);
+
+  HIP_RETURN(hipErrorNotSupported);
+}
+
+hipError_t ihipMipmapArrayCreate(hipMipmappedArray_t* mipmapped_array_pptr,
+                                 HIP_ARRAY3D_DESCRIPTOR* mipmapped_array_desc_ptr,
+                                 unsigned int num_mipmap_levels) {
+
+  const cl_channel_order channel_order = hip::getCLChannelOrder(
+                                           mipmapped_array_desc_ptr->NumChannels, 0);
+  const cl_channel_type channel_type = hip::getCLChannelType(mipmapped_array_desc_ptr->Format,
+                                                             hipReadModeElementType);
+  const cl_mem_object_type image_type = hip::getCLMemObjectType(mipmapped_array_desc_ptr->Width,
+                                                                mipmapped_array_desc_ptr->Height,
+                                                                mipmapped_array_desc_ptr->Depth,
+                                                                mipmapped_array_desc_ptr->Flags);
+
+  // Create a new amd::Image with mipmap
+  amd::Image* image = ihipImageCreate(channel_order,
+                                      channel_type,
+                                      image_type,
+                                      mipmapped_array_desc_ptr->Width,
+                                      mipmapped_array_desc_ptr->Height,
+                                      mipmapped_array_desc_ptr->Depth,
+                                      mipmapped_array_desc_ptr->Depth,
+                                      0 /* row pitch */,
+                                      0 /* slice pitch */,
+                                      num_mipmap_levels,
+                                      nullptr /* buffer */);
+
+  if (image == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  cl_mem cl_mem_obj = as_cl<amd::Memory>(image);
+  *mipmapped_array_pptr = new hipMipmappedArray();
+  (*mipmapped_array_pptr)->data = reinterpret_cast<void*>(cl_mem_obj);
+
+  (*mipmapped_array_pptr)->desc = hip::getChannelFormatDesc(
+                                    mipmapped_array_desc_ptr->NumChannels,
+                                    mipmapped_array_desc_ptr->Format);
+  (*mipmapped_array_pptr)->type = image_type;
+  (*mipmapped_array_pptr)->width = mipmapped_array_desc_ptr->Width;
+  (*mipmapped_array_pptr)->height = mipmapped_array_desc_ptr->Height;
+  (*mipmapped_array_pptr)->depth = mipmapped_array_desc_ptr->Depth;
+  (*mipmapped_array_pptr)->min_mipmap_level = 0;
+  (*mipmapped_array_pptr)->max_mipmap_level = num_mipmap_levels;
+  (*mipmapped_array_pptr)->flags = mipmapped_array_desc_ptr->Flags;
+  (*mipmapped_array_pptr)->format = mipmapped_array_desc_ptr->Format;
+
+  return hipSuccess;
+}
+
+hipError_t ihipMipmappedArrayDestroy(hipMipmappedArray_t mipmapped_array_ptr) {
+
+  if (mipmapped_array_ptr == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  cl_mem mem_obj = reinterpret_cast<cl_mem>(mipmapped_array_ptr->data);
+  if (is_valid(mem_obj) == false) {
+    return hipErrorInvalidValue;
+  }
+
+  for (auto& dev : g_devices) {
+    dev->NullStream()->finish();
+  }
+
+  as_amd(mem_obj)->release();
+
+  delete mipmapped_array_ptr;
+
+  return hipSuccess;
+}
+
+hipError_t ihipMipmappedArrayGetLevel(hipArray_t* level_array_pptr,
+                                     hipMipmappedArray_t mipmapped_array_ptr,
+                                     unsigned int mip_level) {
+
+  if (level_array_pptr == nullptr || mipmapped_array_ptr == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  // Convert the raw data to amd::Image
+  cl_mem cl_mem_obj = reinterpret_cast<cl_mem>(mipmapped_array_ptr->data);
+  if (is_valid(cl_mem_obj) == false) {
+    return hipErrorInvalidValue;
+  }
+
+  amd::Image* image = as_amd(cl_mem_obj)->asImage();
+  if (image == nullptr) {
+    return hipErrorInvalidValue;
+  }
+
+  // Create new hip Array parameter and create an image view with new mip level.
+  (*level_array_pptr) = new hipArray();
+  (*level_array_pptr)->data = as_cl<amd::Memory>(image->createView(image->getContext(),
+                                                                   image->getImageFormat(),
+                                                                   NULL, mip_level, 0));
+
+  // Copy the new width, height & depth details of the flag to hipArray.
+  cl_mem cl_mip_mem_obj = reinterpret_cast<cl_mem>((*level_array_pptr)->data);
+  if (is_valid(cl_mem_obj) == false) {
+    return hipErrorInvalidValue;
+  }
+
+  // Fill the hip_array info from newly created amd::Image's view
+  amd::Image* mipmap_image = as_amd(cl_mip_mem_obj)->asImage();
+  (*level_array_pptr)->width = mipmap_image->getWidth();
+  (*level_array_pptr)->height = mipmap_image->getHeight();
+  (*level_array_pptr)->depth = mipmap_image->getDepth();
+
+  const cl_mem_object_type image_type = hip::getCLMemObjectType((*level_array_pptr)->width,
+                                                                (*level_array_pptr)->height,
+                                                                (*level_array_pptr)->depth,
+                                                                 mipmapped_array_ptr->flags);
+  (*level_array_pptr)->type = image_type;
+  (*level_array_pptr)->Format = mipmapped_array_ptr->format;
+  (*level_array_pptr)->desc = mipmapped_array_ptr->desc;
+  (*level_array_pptr)->NumChannels = hip::getNumChannels((*level_array_pptr)->desc);
+  (*level_array_pptr)->isDrv = 0;
+  (*level_array_pptr)->textureType = 0;
+
+  return hipSuccess;
+}
+
+hipError_t hipMipmappedArrayCreate(hipMipmappedArray_t* mipmapped_array_pptr,
+                                   HIP_ARRAY3D_DESCRIPTOR* mipmapped_array_desc_ptr,
+                                   unsigned int num_mipmap_levels) {
+  HIP_INIT_API(hipMipmappedArrayCreate, mipmapped_array_pptr, mipmapped_array_desc_ptr,
+               num_mipmap_levels);
+
+  HIP_RETURN(ihipMipmapArrayCreate(mipmapped_array_pptr, mipmapped_array_desc_ptr,
+                                   num_mipmap_levels));
+}
+
+hipError_t hipMipmappedArrayDestroy(hipMipmappedArray_t mipmapped_array_ptr) {
+  HIP_INIT_API(hipMipmappedArrayDestroy, mipmapped_array_ptr);
+
+  HIP_RETURN(ihipMipmappedArrayDestroy(mipmapped_array_ptr));
+}
+
+hipError_t hipMipmappedArrayGetLevel(hipArray_t* level_array_pptr,
+                                     hipMipmappedArray_t mipmapped_array_ptr,
+                                     unsigned int mip_level) {
+  HIP_INIT_API(hipMipmappedArrayGetLevel, level_array_pptr, mipmapped_array_ptr, mip_level);
+
+  HIP_RETURN(ihipMipmappedArrayGetLevel(level_array_pptr, mipmapped_array_ptr, mip_level));
 }
 
