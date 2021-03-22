@@ -116,14 +116,18 @@ typedef struct hipArray* hipArray_t;
 typedef hipArray_t hiparray;
 typedef const struct hipArray* hipArray_const_t;
 
-// TODO: It needs to be modified since it was just copied from hipArray.
-struct hipMipmappedArray {
-    void* data;  // FIXME: generalize this
-    struct hipChannelFormatDesc desc;
-    unsigned int width;
-    unsigned int height;
-    unsigned int depth;
-};
+typedef struct hipMipmappedArray {
+  void* data;
+  struct hipChannelFormatDesc desc;
+  unsigned int type;
+  unsigned int width;
+  unsigned int height;
+  unsigned int depth;
+  unsigned int min_mipmap_level;
+  unsigned int max_mipmap_level;
+  unsigned int flags;
+  enum hipArray_Format format;
+} hipMipmappedArray;
 
 typedef struct hipMipmappedArray* hipMipmappedArray_t;
 
