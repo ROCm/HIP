@@ -128,7 +128,7 @@ bool compareHipDeviceGetPCIBusIdWithLspci() {
   while (fgets(pciDeviceList[index], sizeof(pciDeviceList[index]), fpipe)) {
     bool bMatchFound = false;
     for (int deviceNo = 0; deviceNo < deviceCount; deviceNo++) {
-      if (!strncmp(pciDeviceList[index], hipDeviceList[deviceNo], 10)) {
+      if (!strncasecmp(pciDeviceList[index], hipDeviceList[deviceNo], 10)) {
         deviceMatchCount++;
         bMatchFound = true;
       }
