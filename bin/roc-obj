@@ -1,0 +1,264 @@
+#!/bin/bash
+
+#| Usage: roc-obj [-h] [-t REGEXP] [-o OUTDIR] [-I REPLACE-STRING|-i] [-d]
+#|                EXECUTABLE... [: [SUFFIX COMMAND [ARGS...] ;]...]
+#|
+#| Wrapper for roc-obj-ls and roc-obj-extract which extracts code objects
+#| embedded in each EXECUTABLE and optionally applies COMMANDs to them.
+#|
+#| If the POSIX extended regular expression REGEXP is specified, only embedded
+#| code objects whose Target ID matches REGEXP are extracted; otherwise all
+#| code objects are extracted.
+#|
+#| If the directory path OUTDIR is specified, it is created if it does not
+#| already exist, and the code objects are extracted into it; otherwise they
+#| are extracted into the current working directory.
+#|
+#| The extracted files are named by appending a ":" followed by the Target ID
+#| of the extracted code object to the input filename EXECUTABLE they were
+#| extracted from.
+#|
+#| If the list of EXECUTABLE arguments is terminated with ":" then after all
+#| selected files are successfully extracted, zero or more additional embedded
+#| command-lines, separated by ";", are read from the command-line starting
+#| after the ":". These must specify a SUFFIX used to name the output of the
+#| corresponding COMMAND, along with the COMMAND name and any ARGS to it.
+#|
+#| Then each COMMAND is executed, as if by a POSIX "execvp" function, once for
+#| each embedded code object that was created in OUTDIR. (Note: Typically this
+#| means the user must ensure the commands are present in at least one
+#| directory of the "PATH" environment variable.) For each execution of
+#| COMMAND:
+#|
+#| If REPLACE-STRING is specified, all instances of REPLACE-STRING in ARGS are
+#| replaced with the file path of the extracted code object before executing
+#| COMMAND.
+#|
+#| The standard input is redirected from the extracted code object.
+#|
+#| If SUFFIX is "-" the standard output is not redirected. If SUFFIX is "!" the
+#| standard output is redirected to /dev/null. Otherwise, the standard output
+#| is redirected to files named by the file path of the extracted code object
+#| with SUFFIX appended.
+#|
+#| Note: The executables roc-obj-ls, roc-obj-extract, and llvm-objdump (in the
+#| case of disassembly requested using the -d flag) are searched for in a
+#| unique way. A series of directories are searched, some conditionally, until
+#| a suitable executable is found. If all directories are searched without
+#| finding the executable, an error occurs. The first directory searched is the
+#| one containing the hard-link to the roc-obj being executed, known as the
+#| "base directory". Next, if the environment variable HIP_CLANG_PATH is set,
+#| it is searched; otherwise, the base directory path is appended with
+#| "../../llvm/bin" and it is searched. Finally, the PATH is searched as if by
+#| a POSIX "execvp" function.
+#|
+#| Option Descriptions:
+#|   -h, --help              print this help text and exit
+#|   -t, --target-id         only extract code objects from EXECUTABLE whose Target ID
+#|                           matches the POSIX extended regular expression REGEXP
+#|   -o, --outdir            set the output directory, which is created if it
+#|                           does not exist
+#|   -I, --replace-string    replace all occurrences of the literal string
+#|                           REPLACE-STRING in ARGS with the input filename
+#|   -i, --replace           equivalent to -I{}
+#|   -d, --disassemble       diassemble extracted code objects; equivalent to
+#|                           : .s llvm-objdump -d - ;
+#|
+#| Example Usage:
+#|
+#| Extract all code objects embedded in a.so:
+#| $ roc-obj a.so
+#|
+#| Extract all code objects embedded in a.so, b.so, and c.so:
+#| $ roc-obj a.so b.so c.so
+#|
+#| Extract all code objects embedded in a.so with "gfx9" in their Target ID:
+#| $ roc-obj -t gfx9 a.so
+#|
+#| Extract all code objects embedded in a.so into output/ (creating it if needed):
+#| $ roc-obj -o output/ a.so
+#|
+#| Extract all code objects embedded in a.so with "gfx9" in their Target ID
+#| into output/ (creating it if needed):
+#| $ roc-obj -t gfx9 -o output/ a.so
+#|
+#| Extract all code objects embedded in a.so, and then disassemble each of them
+#| to files ending with .s:
+#| $ roc-obj -d a.so
+#|
+#| Extract all code objects embedded in a.so, and count the number of bytes in
+#| each, writing the results to files ending with .count:
+#| $ roc-obj a.so : .count wc -c
+#|
+#| Extract all code objects embedded in a.so, and inspect their ELF headers
+#| using llvm-readelf (which will not read from standard input), writing to
+#| files ending with .hdr:
+#| $ roc-obj -I'{}' a.so : .hdr llvm-readelf -h '{}'
+#|
+#| Extract all code objects embedded in a.so, and then extract each of their
+#| .text sections using llvm-objcopy (which won't read from standard input
+#| or write to standard output):
+#| $ roc-obj -I'{}' a.so : ! llvm-objcopy -O binary :only-section=.text '{}' '{}.text'
+#|
+#| Extract all code objects embedded in a.so, b.so, and c.so with target
+#| feature xnack disabled into directory out/. Then, for each:
+#| Write the size in bytes into a file ending with .count, and
+#| Write a textual description of the ELF headers to a file ending with .hdr, and
+#| Extract the .text section to a file ending with .text
+#| $ roc-obj -I'{}' -t xnack- -o out/ a.so b.so c.so : \
+#|     .count wc -c \;
+#|     .hdr llvm-readelf -h '{}' \;
+#|     ! llvm-objcopy -O binary --only-section=.text '{}' '{}.text'
+
+set -euo pipefail
+
+usage() {
+  sed -n 's/^#| \?\(.*\)$/\1/p' "$0"
+}
+
+usage_then_exit() {
+  local -r status="$1"; shift
+  usage >&$(( status ? 2 : 1 ))
+  exit "$status"
+}
+
+fail() {
+  printf "error: %s\n" "$*" >&2
+  exit 1
+}
+
+# Account for the fact that we do not necessarily put ROCm tools in the PATH,
+# nor do we have a single, unified ROCm "bin/" directory.
+#
+# Note that this is only used for roc-obj-ls, roc-obj-extract, and "shortcut"
+# options like -d, and the user can still use any copy of llvm-* by explicitly
+# invoking it with a full path, e.g. : /path/to/llvm-* ... ;
+find_rocm_executable_or_fail() {
+  local -r command="$1"; shift
+  local file
+  local searched=()
+  for dir in "$BASE_DIR" "${HIP_CLANG_PATH:-"$BASE_DIR/../../llvm/bin"}"; do
+    file="$dir/$command"
+    if [[ -x $file ]]; then
+      printf "%s" "$file"
+      return
+    else
+      searched+=("$dir")
+    fi
+  done
+  if hash "$command" 2>/dev/null; then
+    printf "%s" "$command"
+  else
+    fail could not find "$command" in "${searched[*]}" or PATH
+  fi
+}
+
+# Extract the embedded code objects of the executable file given as the first
+# argument into OPT_OUTDIR, filtering them via OPT_TARGET_ID.
+#
+# Deletes any resulting files which are empty, and prints the paths of the
+# remaining files.
+extract() {
+  local -r executable="$1"; shift
+  local prefix
+  prefix="$(basename -- "$executable")"
+  # We want the shell to split the result of roc-obj-ls on whitespace, as
+  # neither the Target ID nor the URI can have embedded spaces.
+  # shellcheck disable=SC2046
+  set -- $(roc-obj-ls -v -- "$executable" | awk "NR>2 && \$1~/$OPT_TARGET_ID/")
+  while (( $# )); do
+    local output="$prefix:$1"; shift
+    local uri="$1"; shift
+    [[ -n $OPT_OUTDIR ]] && output="$OPT_OUTDIR/$output"
+    roc-obj-extract -o - -- "$uri" >"$output"
+    if [[ -s $output ]]; then
+      printf '%s\n' "$output"
+    else
+      rm "$output"
+    fi
+  done
+  (( $# )) && fail expected even number of fields from roc-obj-ls
+}
+
+# Run a command over a list of inputs, naming output files with the supplied
+# suffix and applying OPT_REPLACE_STRING if needed.
+#
+# Arguments are of the form:
+# $suffix $command $args... ; $inputs
+run_command() {
+  local -r suffix="$1"; shift
+  local -r command="$1"; shift
+  local args=()
+  while (( $# )); do
+    local arg="$1"; shift
+    [[ $arg == ';' ]] && break
+    args+=("$arg")
+  done
+  local inputs=("$@")
+  for input in "${inputs[@]}"; do
+    case "$suffix" in
+      '-') output=/dev/stdout;;
+      '!') output=/dev/null;;
+      *) output="$input$suffix";;
+    esac
+    "$command" "${args[@]//$OPT_REPLACE_STRING/$input}" <"$input" >"$output"
+  done
+}
+
+main() {
+  [[ -n $OPT_OUTDIR ]] && mkdir -p "$OPT_OUTDIR"
+  local inputs=()
+  while (( $# )); do
+    local executable="$1"; shift
+    [[ $executable == : ]] && break
+    # Append the file paths extracted from $executable to $inputs
+    readarray -t -O "${#inputs[@]}" inputs < <(extract "$executable")
+  done
+  (( ${#inputs[@]} )) || fail no executables specified
+  while (( $# )); do
+    local suffix="$1"; shift
+    local command="$1"; shift
+    local args=()
+    while (( $# )); do
+      local arg="$1"; shift
+      [[ $arg == \; ]] && break
+      args+=("$arg")
+    done
+    run_command "$suffix" "$command" "${args[@]}" \; "${inputs[@]}"
+  done
+  (( OPT_DISASSEMBLE )) && run_command .s "$OBJDUMP" -d - \; "${inputs[@]}"
+}
+
+OPT_TARGET_ID=''
+OPT_OUTDIR=''
+OPT_REPLACE_STRING=''
+OPT_DISASSEMBLE=0
+! getopt -T || fail util-linux enhanced getopt required
+getopt="$(getopt -o +hg:o:I:id \
+          --long help,target-id:,outdir:,replace:,replace-default,disassemble \
+          -n roc-obj -- "$@")"
+eval set -- "$getopt"
+unset getopt
+while true; do
+  case "$1" in
+    -h | --help) usage_then_exit 0;;
+    -t | --target-id) OPT_TARGET_ID="${2//\//\\\/}"; shift 2;;
+    -o | --outdir) OPT_OUTDIR="$2"; shift 2;;
+    -I | --replace-string) OPT_REPLACE_STRING="$2"; shift 2;;
+    -i | --replace) OPT_REPLACE_STRING='{}'; shift;;
+    -d | --disassemble) OPT_DISASSEMBLE=1; shift;;
+    --) shift; break;;
+    *) usage_then_exit 1;;
+  esac
+done
+readonly -- OPT_TARGET_ID OPT_OUTDIR OPT_REPLACE_STRING OPT_DISASSEMBLE
+
+# We expect to be installed as ROCM_PATH/hip/bin/roc-obj, which means BASE_DIR
+# is ROCM_PATH/hip/bin.
+readonly BASE_DIR="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")" && pwd)"
+(( OPT_DISASSEMBLE )) \
+  && readonly OBJDUMP="$(find_rocm_executable_or_fail llvm-objdump)"
+readonly ROC_OBJ_LS="$(find_rocm_executable_or_fail roc-obj-ls)"
+readonly ROC_OBJ_EXTRACT="$(find_rocm_executable_or_fail roc-obj-extract)"
+
+main "$@"
