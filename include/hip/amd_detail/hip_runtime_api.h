@@ -3643,55 +3643,67 @@ hipError_t hipGetTextureObjectTextureDesc(
     hipTextureDesc* pTexDesc,
     hipTextureObject_t textureObject);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetAddress(
     hipDeviceptr_t* dev_ptr,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetAddressMode(
     enum hipTextureAddressMode* pam,
     const textureReference* texRef,
     int dim);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFlags(
     unsigned int* pFlags,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFormat(
     hipArray_Format* pFormat,
     int* pNumChannels,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMaxAnisotropy(
     int* pmaxAnsio,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapLevelBias(
     float* pbias,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapLevelClamp(
     float* pminMipmapLevelClamp,
     float* pmaxMipmapLevelClamp,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipMappedArray(
     hipMipmappedArray_t* pArray,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddress(
     size_t* ByteOffset,
     textureReference* texRef,
     hipDeviceptr_t dptr,
     size_t bytes);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddress2D(
     textureReference* texRef,
     const HIP_ARRAY_DESCRIPTOR* desc,
@@ -3721,6 +3733,7 @@ hipError_t hipTexRefSetFormat(
     hipArray_Format fmt,
     int NumPackedComponents);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
@@ -3752,6 +3765,7 @@ hipError_t hipTexObjectGetTextureDesc(
  */
 
 // The following are not supported.
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
