@@ -181,7 +181,7 @@ bool TestOversubscriptionMallocManaged(int NumDevices) {
 bool NegativeTestsMallocManaged(int NumDevices) {
   bool IfTestPassed = true;
   hipError_t err;
-  void *A = NULL;
+  void *A;
   size_t total = 0, free = 0;
   HIPCHECK(hipMemGetInfo(&free, &total));
 
@@ -192,10 +192,17 @@ bool NegativeTestsMallocManaged(int NumDevices) {
     IfTestPassed = false;
   }
 
+  // cuda api doc says : If size is 0, cudaMallocManaged returns
+  // cudaErrorInvalidValue. However, it is observed that cuda 11.2 api returns
+  // success and contradicts with api doc.
+
+  // With size(0), api expected to return error code (or)
+  // reset ptr while returning success (to accomadate cuda 11.2 api behavior).
   err = hipMallocManaged(&A, 0, hipMemAttachGlobal);
-  if (hipErrorInvalidValue != err) {
-    printf("hipMallocManaged: Returned %s when size is 0\n",
-           hipGetErrorString(err));
+  if ((hipErrorInvalidValue == err) ||
+      ((hipSuccess == err) && (nullptr == A))) {
+    IfTestPassed &= true;
+  } else {
     IfTestPassed = false;
   }
 
