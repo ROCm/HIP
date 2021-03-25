@@ -20,6 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* Tests 6 and 7 are skipped for CUDA 11.2 due to cuda runtime issues */
 /* HIT_START
  * BUILD_CMD: tex2d_kernel.code %hc --genco %S/tex2d_kernel.cpp -o tex2d_kernel.code
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
@@ -616,15 +617,33 @@ int main(int argc, char** argv) {
                                           "tex2dKernelFloat",
                                           MAX_STREAMS);
   } else if (p_tests == 0x06) {
+    // Testcase skipped on nvidia with CUDA API version 11.2,
+    // as hipModuleLoadData returning error code
+    // 'a PTX JIT compilation failed'(218), which is invalid
+    // behavior. Test passes with AMD and previous CUDA versions.
+#if defined(__HIP_PLATFORM_NVIDIA__) && (CUDA_VERSION == 11020)
+    printf("Testcase skipped on CUDA version 11.2\n");
+    TestPassed = true;
+#else
     int gpu_cnt = 0;
     auto buffer = load_file();
     HIPCHECK(hipGetDeviceCount(&gpu_cnt));
     TestPassed = testTexSingleStreamMultGPU(gpu_cnt, buffer);
+#endif
   } else if (p_tests == 0x07) {
+    // Testcase skipped on nvidia with CUDA API version 11.2,
+    // as hipModuleLoadData returning error code
+    // 'a PTX JIT compilation failed'(218), which is invalid
+    // behavior. Test passes with AMD and previous CUDA versions.
+#if defined(__HIP_PLATFORM_NVIDIA__) && (CUDA_VERSION == 11020)
+    printf("Testcase skipped on CUDA version 11.2\n");
+    TestPassed = true;
+#else
     int gpu_cnt = 0;
     auto buffer = load_file();
     HIPCHECK(hipGetDeviceCount(&gpu_cnt));
     TestPassed = testTexMultStreamMultGPU(gpu_cnt, buffer);
+#endif
   } else if (p_tests == 0x10) {
     TestPassed = testTexRefEqNullPtr();
   } else if (p_tests == 0x11) {
