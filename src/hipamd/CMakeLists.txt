@@ -33,7 +33,7 @@ if (ADDRESS_SANITIZER)
     endif ()
 endif ()
 
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-keep-memory -Wl,-Bsymbolic -Wl,--unresolved-symbols=report-all -Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-keep-memory -Wl,-Bsymbolic -Wl,--unresolved-symbols=report-all -Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/src/hip_hcc.map.in")
 
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib)
@@ -76,10 +76,10 @@ find_package(ROCclr REQUIRED CONFIG)
 # Generate profiling API macros/structures header
 set(PROF_API_STR "${PROJECT_BINARY_DIR}/include/hip/amd_detail/hip_prof_str.h")
 #set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/include/hip/amd_detail/hip_runtime_api.h")
-set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/rocclr/hip/amd_detail/amd_hip_runtime_api.h")
+set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/src/hipamd/include/hip/amd_detail/amd_hip_runtime_api.h")
 #set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/src/hipamd/hip/amd_detail/hip_runtime_api.h")
-set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}")
-set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
+set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/src/hip_prof_gen.py")
 set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
 
 add_custom_command(OUTPUT ${PROF_API_STR}
@@ -120,36 +120,36 @@ find_package(LLVM REQUIRED CONFIG
 message(STATUS "llvm found at ${LLVM_DIR}.")
 
 add_library(hip64 OBJECT
- hip_context.cpp
- hip_code_object.cpp
- hip_device.cpp
- hip_device_runtime.cpp
- hip_error.cpp
- hip_event.cpp
- hip_fatbin.cpp
- hip_global.cpp
- hip_hmm.cpp
- hip_memory.cpp
- hip_module.cpp
- hip_peer.cpp
- hip_platform.cpp
- hip_profile.cpp
- hip_stream.cpp
- hip_stream_ops.cpp
- hip_surface.cpp
- hip_texture.cpp
- hip_activity.cpp
- hip_intercept.cpp
- hip_rtc.cpp
- cl_gl.cpp
- cl_lqdflash_amd.cpp
- fixme.cpp
+ src/hip_context.cpp
+ src/hip_code_object.cpp
+ src/hip_device.cpp
+ src/hip_device_runtime.cpp
+ src/hip_error.cpp
+ src/hip_event.cpp
+ src/hip_fatbin.cpp
+ src/hip_global.cpp
+ src/hip_hmm.cpp
+ src/hip_memory.cpp
+ src/hip_module.cpp
+ src/hip_peer.cpp
+ src/hip_platform.cpp
+ src/hip_profile.cpp
+ src/hip_stream.cpp
+ src/hip_stream_ops.cpp
+ src/hip_surface.cpp
+ src/hip_texture.cpp
+ src/hip_activity.cpp
+ src/hip_intercept.cpp
+ src/hip_rtc.cpp
+ src/cl_gl.cpp
+ src/cl_lqdflash_amd.cpp
+ src/fixme.cpp
  )
 set_target_properties(hip64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 target_include_directories(hip64
   PUBLIC
-      ${PROJECT_SOURCE_DIR}/rocclr/
+    ${PROJECT_SOURCE_DIR}/src/hipamd/include
   #    ${PROJECT_SOURCE_DIR}/src/hipamd
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_BINARY_DIR}/include
@@ -176,7 +176,8 @@ endif()
 # Short-Term solution for pre-compiled headers for online compilation
 # Enable pre compiled header
 if(__HIP_ENABLE_PCH)
-    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/rocclr/ ${LLVM_DIR} ${HSA_PATH}" COMMAND_ECHO STDERR  RESULT_VARIABLE EMBED_PCH_RC)
+    message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/imclude/ ${LLVM_DIR} ${HSA_PATH}")
+    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include/ ${PROJECT_SOURCE_DIR}/src/hipamd/include ${LLVM_DIR} ${HSA_PATH}" COMMAND_ECHO STDERR  RESULT_VARIABLE EMBED_PCH_RC)
     if (EMBED_PCH_RC AND NOT EMBED_PCH_RC EQUAL 0)
       message(FATAL_ERROR "Failed to embed PCH")
     endif()

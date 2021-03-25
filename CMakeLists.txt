@@ -294,7 +294,7 @@ set(_versionInfoHeader
 file(WRITE "${PROJECT_BINARY_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
 
 if(HIP_RUNTIME STREQUAL "rocclr")
-    add_subdirectory(rocclr)
+    add_subdirectory(src/hipamd)
     set(HIP_ROCclr_BUILD_FLAGS "${HIP_ROCclr_BUILD_FLAGS} -fPIC ${ROCclr_CXX_FLAGS} -I${HSA_PATH}/include")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HIP_ROCclr_BUILD_FLAGS}")
@@ -328,7 +328,7 @@ execute_process(COMMAND test ${CMAKE_INSTALL_PREFIX} -ef ${CMAKE_CURRENT_SOURCE_
     RESULT_VARIABLE INSTALL_SOURCE)
 if(NOT ${INSTALL_SOURCE} EQUAL 0)
     if(HIP_RUNTIME STREQUAL "rocclr")
-	    install(DIRECTORY rocclr DESTINATION .)
+	    install(DIRECTORY src/hipamd/src DESTINATION .)
     endif()
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
 
@@ -337,7 +337,7 @@ if(NOT ${INSTALL_SOURCE} EQUAL 0)
     install(CODE "file(REMOVE_RECURSE ${CMAKE_INSTALL_PREFIX}/include)")
 
     install(DIRECTORY include DESTINATION .)
-    install(DIRECTORY rocclr/hip/amd_detail/ DESTINATION include/hip/amd_detail)
+    install(DIRECTORY src/hipamd/include/hip/amd_detail/ DESTINATION include/hip/amd_detail)
     install(DIRECTORY cmake DESTINATION .)
 endif()
 
@@ -398,7 +398,7 @@ if (BUILD_HIPIFY_CLANG)
 endif()
 
 if(HIP_RUNTIME STREQUAL "rocclr")
-    set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/rocclr)
+    set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/hipamd)
     configure_file(packaging/hip-rocclr.txt ${BUILD_DIR}/CMakeLists.txt @ONLY)
     configure_file(packaging/hip-rocclr.postinst ${BUILD_DIR}/postinst @ONLY)
     configure_file(packaging/hip-rocclr.prerm ${BUILD_DIR}/prerm @ONLY)

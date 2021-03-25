@@ -22,8 +22,9 @@
 #set -x
 HIP_BUILD_INC_DIR=$1
 HIP_INC_DIR=$2
-LLVM_DIR="$3/../../../"
-HSA_DIR="$4"
+HIP_AMD_INC_DIR=$3
+LLVM_DIR="$4/../../../"
+HSA_DIR="$5"
 tmp=/tmp/hip_pch.$$
 mkdir -p $tmp
 
@@ -65,7 +66,7 @@ EOF
 
 set -x
 
-$LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HSA_DIR/include --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
+$LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_AMD_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HSA_DIR/include --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
 
 cat $tmp/hip_macros.h >> $tmp/pch.cui &&
 
