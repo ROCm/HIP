@@ -36,9 +36,9 @@ THE SOFTWARE.
 #endif
 
 #include <hip/amd_detail/host_defines.h>
-#include <hip/amd_detail/driver_types.h>
-#include <hip/amd_detail/hip_texture_types.h>
-#include <hip/amd_detail/hip_surface_types.h>
+#include <hip/amd_detail/amd_driver_types.h>
+#include <hip/amd_detail/amd_hip_texture_types.h>
+#include <hip/amd_detail/amd_hip_surface_types.h>
 
 #if defined(_MSC_VER)
 #define DEPRECATED(msg) __declspec(deprecated(msg))

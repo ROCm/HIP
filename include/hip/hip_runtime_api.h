@@ -384,7 +384,7 @@ enum hipComputeMode {
  */
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include "hip/amd_detail/hip_runtime_api.h"
+#include "hip/amd_detail/amd_hip_runtime_api.h"
 #elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #include "hip/nvidia_detail/hip_runtime_api.h"
 #else
@@ -423,5 +423,4 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
     return hipMallocManaged((void**)devPtr, size, flags);
 }
 #endif
-
 #endif

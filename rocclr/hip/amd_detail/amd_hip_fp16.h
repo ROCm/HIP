@@ -24,7 +24,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_HIP_FP16_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_HIP_FP16_H
 
-#include <hip/amd_detail/hip_common.h>
+#include <hip/amd_detail/amd_hip_common.h>
 
 #include "hip/amd_detail/host_defines.h"
 #include <assert.h>
@@ -60,7 +60,7 @@ THE SOFTWARE.
 
     #if defined(__cplusplus)
         #include "hip_fp16_math_fwd.h"
-        #include "hip_vector_types.h"
+        #include "amd_hip_vector_types.h"
         #include "host_defines.h"
 
         namespace std

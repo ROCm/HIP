@@ -1,6 +1,6 @@
 #pragma once
 
-#include "device_functions.h"
+#include "amd_device_functions.h"
 
 __device__
 inline

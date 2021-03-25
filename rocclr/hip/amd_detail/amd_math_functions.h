@@ -23,7 +23,7 @@ THE SOFTWARE.
 #pragma once
 
 #include "hip_fp16_math_fwd.h"
-#include "hip_vector_types.h"
+#include "amd_hip_vector_types.h"
 #include "math_fwd.h"
 
 #include <hip/amd_detail/host_defines.h>
@@ -1497,4 +1497,4 @@ inline _Float16 pow(_Float16 base, int iexp) {
 // For backward compatibility.
 // There are HIP applications e.g. TensorFlow, expecting __HIP_ARCH_* macros
 // defined after including math_functions.h.
-#include <hip/amd_detail/hip_runtime.h>
+#include <hip/amd_detail/amd_hip_runtime.h>

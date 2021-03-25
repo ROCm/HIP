@@ -29,7 +29,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_HIP_RUNTIME_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_HIP_RUNTIME_H
 
-#include <hip/amd_detail/hip_common.h>
+#include <hip/amd_detail/amd_hip_common.h>
 
 //---
 // Top part of file can be compiled with any compiler
@@ -64,10 +64,10 @@ extern int HIP_TRACE_API;
 #ifdef __cplusplus
 #include <hip/amd_detail/hip_ldg.h>
 #endif
-#include <hip/amd_detail/hip_atomic.h>
+#include <hip/amd_detail/amd_hip_atomic.h>
 #include <hip/amd_detail/host_defines.h>
-#include <hip/amd_detail/device_functions.h>
-#include <hip/amd_detail/surface_functions.h>
+#include <hip/amd_detail/amd_device_functions.h>
+#include <hip/amd_detail/amd_surface_functions.h>
 #include <hip/amd_detail/texture_fetch_functions.h>
 #include <hip/amd_detail/texture_indirect_functions.h>
 
@@ -340,7 +340,7 @@ extern "C" __device__ __attribute__((const)) size_t __ockl_get_num_groups(uint);
 #define hipGridDim_y (__ockl_get_num_groups(1))
 #define hipGridDim_z (__ockl_get_num_groups(2))
 
-#include <hip/amd_detail/math_functions.h>
+#include <hip/amd_detail/amd_math_functions.h>
 
 #if __HIP_HCC_COMPAT_MODE__
 // Define HCC work item functions in terms of HIP builtin variables.
