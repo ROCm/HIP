@@ -563,8 +563,6 @@ foreach $arg (@ARGV)
             $needCFLAGS = 1;
         } elsif ($hasCXX) {
             $needCXXFLAGS = 1;
-        } else {
-            $needCXXFLAGS = 1;
         }
         push (@inputs, $arg);
         #print "I: <$arg>\n";
