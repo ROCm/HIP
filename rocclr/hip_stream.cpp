@@ -188,6 +188,9 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
 static hipError_t ihipStreamCreate(hipStream_t* stream,
                                   unsigned int flags, hip::Stream::Priority priority,
                                   const std::vector<uint32_t>& cuMask = {}) {
+  if (flags != hipStreamDefault && flags != hipStreamNonBlocking) {
+    return hipErrorInvalidValue;
+  }
   hip::Stream* hStream = new hip::Stream(hip::getCurrentDevice(), priority, flags, false, cuMask);
 
   if (hStream == nullptr || !hStream->Create()) {
