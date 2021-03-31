@@ -125,6 +125,14 @@ if (not defined $HIP_PLATFORM) {
         # Default to amd for now
         $HIP_PLATFORM = "amd";
     }
+} elsif ($HIP_PLATFORM eq "hcc") {
+    $HIP_PLATFORM = "amd";
+    warn("Warning: HIP_PLATFORM=hcc is deprecated. Please use HIP_PLATFORM=amd. \n")
+} elsif ($HIP_PLATFORM eq "nvcc") {
+    $HIP_PLATFORM = "nvidia";
+    $HIP_COMPILER = "nvcc";
+    $HIP_RUNTIME = "cuda";
+    warn("Warning: HIP_PLATFORM=nvcc is deprecated. Please use HIP_PLATFORM=nvidia. \n")
 }
 
 if ($HIP_COMPILER eq "clang") {
