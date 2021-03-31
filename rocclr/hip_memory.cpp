@@ -1574,6 +1574,9 @@ hipError_t ihipMemcpyAtoH(hipArray* srcArray,
 hipError_t ihipMemcpyParam3D(const HIP_MEMCPY3D* pCopy,
                              hipStream_t stream,
                              bool isAsync = false) {
+  if (pCopy == nullptr) {
+    return hipErrorInvalidValue;
+  }
   if(pCopy->WidthInBytes == 0 || pCopy->Height == 0 || pCopy->Depth == 0) {
     LogPrintfInfo("Either Width :%d or Height: %d and Depth: %d is zero", pCopy->WidthInBytes,
                   pCopy->Height, pCopy->Depth);
@@ -1834,7 +1837,7 @@ hipError_t ihipMemcpy3D(const hipMemcpy3DParms* p,
                         bool isAsync = false) {
   // The struct passed to hipMemcpy3D() must specify one of srcArray or srcPtr and one of dstArray or dstPtr.
   // Passing more than one non-zero source or destination will cause hipMemcpy3D() to return an error.
-  if (((p->srcArray != nullptr) && (p->srcPtr.ptr != nullptr)) ||
+  if (p == nullptr || ((p->srcArray != nullptr) && (p->srcPtr.ptr != nullptr)) ||
       ((p->dstArray != nullptr) && (p->dstPtr.ptr != nullptr))) {
     return hipErrorInvalidValue;
   }
