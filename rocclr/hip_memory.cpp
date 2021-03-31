@@ -204,6 +204,7 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
     return hipErrorInvalidValue;
   }
 
+  amd::HostQueue* newQueue = nullptr;
   amd::Command* command = nullptr;
   amd::Command::EventWaitList waitList;
 
@@ -292,6 +293,9 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
       }
       command = new amd::CopyMemoryCommand(*pQueue, CL_COMMAND_COPY_BUFFER, waitList,
           *srcMemory->asBuffer(), *dstMemory->asBuffer(), sOffset, dOffset, sizeBytes);
+      if (pQueue != &queue) {
+        newQueue = pQueue;
+      }
     }
   }
   if (command == nullptr) {
@@ -301,6 +305,20 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
   command->enqueue();
   if (!isAsync) {
     command->awaitCompletion();
+  } else {
+    if (newQueue != nullptr) {
+      amd::Command::EventWaitList waitList;
+      amd::Command* cmd = newQueue->getLastQueuedCommand(true);
+      if (cmd != nullptr) {
+        waitList.push_back(cmd);
+        amd::Command* depdentMarker = new amd::Marker(queue, true, waitList);
+        if (depdentMarker != nullptr) {
+          depdentMarker->enqueue();
+          depdentMarker->release();
+        }
+        cmd->release();
+      }
+    }
   }
   command->release();
 
