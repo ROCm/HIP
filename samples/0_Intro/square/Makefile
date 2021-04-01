@@ -25,7 +25,7 @@ endif
 HIP_PLATFORM=$(shell $(HIP_PATH)/bin/hipconfig --platform)
 HIPCC=$(HIP_PATH)/bin/hipcc
 
-ifeq (${HIP_PLATFORM}, nvcc)
+ifeq (${HIP_PLATFORM}, nvidia)
 	SOURCES=square.cu
 else
 	SOURCES=square.cpp
