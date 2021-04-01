@@ -35,7 +35,7 @@ HIP-Clang is the compiler for compiling HIP programs on AMD platform.
 
 HIP-Clang can be built manually:
 ```
-git clone -b rocm-4.2.x https://github.com/RadeonOpenCompute/llvm-project.git
+git clone -b rocm-4.3.x https://github.com/RadeonOpenCompute/llvm-project.git
 cd llvm-project
 mkdir -p build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=/opt/rocm/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=1 -DLLVM_TARGETS_TO_BUILD="AMDGPU;X86" -DLLVM_ENABLE_PROJECTS="clang;lld;compiler-rt" ../llvm
@@ -46,7 +46,7 @@ sudo make install
 Rocm device library can be manually built as following,
 ```
 export PATH=/opt/rocm/llvm/bin:$PATH
-git clone -b rocm-4.2.x https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git
+git clone -b rocm-4.3.x https://github.com/RadeonOpenCompute/ROCm-Device-Libs.git
 cd ROCm-Device-Libs
 mkdir -p build && cd build
 CC=clang CXX=clang++ cmake -DLLVM_DIR=/opt/rocm/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_WERROR=1 -DLLVM_ENABLE_ASSERTIONS=1 -DCMAKE_INSTALL_PREFIX=/opt/rocm ..
@@ -77,9 +77,9 @@ ROCclr is defined on AMD platform that HIP use Radeon Open Compute Common Langua
 See https://github.com/ROCm-Developer-Tools/ROCclr
 
 ```
-git clone -b rocm-4.2.x https://github.com/ROCm-Developer-Tools/ROCclr.git
+git clone -b rocm-4.3.x https://github.com/ROCm-Developer-Tools/ROCclr.git
 export ROCclr_DIR="$(readlink -f ROCclr)"
-git clone -b rocm-4.2.x https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git
+git clone -b rocm-4.3.x https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git
 export OPENCL_DIR="$(readlink -f ROCm-OpenCL-Runtime)"
 cd "$ROCclr_DIR"
 mkdir -p build;cd build
@@ -91,7 +91,7 @@ sudo make install
 ## Build HIP
 
 ```
-git clone -b rocm-4.2.x https://github.com/ROCm-Developer-Tools/HIP.git
+git clone -b rocm-4.3.x https://github.com/ROCm-Developer-Tools/HIP.git
 export HIP_DIR="$(readlink -f HIP)"
 cd "$HIP_DIR"
 mkdir -p build; cd build
@@ -120,5 +120,5 @@ Run hipconfig (instructions below assume default installation path) :
 ```
 
 
-Compile and run the [square sample](https://github.com/ROCm-Developer-Tools/HIP/tree/master/samples/0_Intro/square).
+Compile and run the [square sample](https://github.com/ROCm-Developer-Tools/HIP/tree/main/samples/0_Intro/square).
 

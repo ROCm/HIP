@@ -493,7 +493,7 @@ Following is the list of supported floating-point intrinsics. Note that intrinsi
 | double __dsqrt_rn ( double  x ) <br><sub>Compute `√x` in round-to-nearest-even mode.</sub> |
 
 ## Texture Functions
-Texture functions are not supported.
+The supported Texture functions are listed in header files "texture_functions.h"(https://github.com/ROCm-Developer-Tools/HIP/blob/main/include/hip/hcc_detail/texture_functions.h) and"texture_indirect_functions.h" (https://github.com/ROCm-Developer-Tools/HIP/blob/main/include/hip/hcc_detail/texture_indirect_functions.h).
 
 ## Surface Functions
 Surface functions are not supported.
