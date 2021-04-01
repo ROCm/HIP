@@ -267,6 +267,7 @@ typedef enum __HIP_NODISCARD hipError_t {
     hipErrorPeerAccessNotEnabled =
         705,  ///< Peer access was never enabled from the current device.
     hipErrorSetOnActiveProcess = 708,
+    hipErrorContextIsDestroyed = 709,
     hipErrorAssert = 710,  ///< Produced when the kernel calls assert.
     hipErrorHostMemoryAlreadyRegistered =
         712,  ///< Produced when trying to lock a page-locked memory.

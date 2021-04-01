@@ -244,6 +244,8 @@ namespace hip {
   extern amd::HostQueue* getNullStream(amd::Context&);
   /// Get default stream of the thread
   extern amd::HostQueue* getNullStream();
+  /// Check if stream is valid
+  extern bool isValid(hipStream_t stream);
 };
 
 struct ihipExec_t {
