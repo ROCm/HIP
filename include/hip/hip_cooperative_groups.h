@@ -35,7 +35,7 @@ THE SOFTWARE.
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #if __cplusplus && defined(__clang__) && defined(__HIP__)
-#include <hip/amd_detail/hip_cooperative_groups.h>
+#include <hip/amd_detail/amd_hip_cooperative_groups.h>
 #endif
 #elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #include <hip/nvidia_detail/hip_cooperative_groups.h>

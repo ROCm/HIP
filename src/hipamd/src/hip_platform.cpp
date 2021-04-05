@@ -19,7 +19,7 @@
  THE SOFTWARE. */
 
 #include <hip/hip_runtime.h>
-#include <hip/amd_detail/texture_types.h>
+#include <hip/amd_detail/amd_texture_types.h>
 #include "hip_platform.hpp"
 #include "hip_internal.hpp"
 #include "platform/program.hpp"
