@@ -212,6 +212,12 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
   amd::Memory *srcMemory = getMemoryObject(src, sOffset);
   size_t dOffset = 0;
   amd::Memory *dstMemory = getMemoryObject(dst, dOffset);
+  // Return error if sizeBytes passed to memcpy is more than the actual size allocated
+  if ((dstMemory && sizeBytes > (dstMemory->getSize() - dOffset)) ||
+      (srcMemory && sizeBytes > (srcMemory->getSize() - sOffset))) {
+    return hipErrorInvalidValue;
+  }
+
   amd::Device* queueDevice = &queue.device();
   if ((srcMemory == nullptr) && (dstMemory == nullptr)) {
     if ((kind == hipMemcpyHostToHost) || (kind == hipMemcpyDefault)) {
