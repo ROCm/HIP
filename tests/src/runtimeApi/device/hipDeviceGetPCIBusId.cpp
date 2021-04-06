@@ -73,6 +73,7 @@ bool comparePciBusIDWithHipDeviceGetAttribute() {
   return testResult;
 }
 
+#ifdef __linux__
 bool compareHipDeviceGetPCIBusIdWithLspci() {
   FILE *fpipe;
   bool testResult = false;
@@ -128,7 +129,7 @@ bool compareHipDeviceGetPCIBusIdWithLspci() {
   while (fgets(pciDeviceList[index], sizeof(pciDeviceList[index]), fpipe)) {
     bool bMatchFound = false;
     for (int deviceNo = 0; deviceNo < deviceCount; deviceNo++) {
-      if (!strncmp(pciDeviceList[index], hipDeviceList[deviceNo], 10)) {
+      if (!strncasecmp(pciDeviceList[index], hipDeviceList[deviceNo], 10)) {
         deviceMatchCount++;
         bMatchFound = true;
       }
@@ -151,6 +152,7 @@ bool compareHipDeviceGetPCIBusIdWithLspci() {
   }
   return testResult;
 }
+#endif
 
 /**
  * Validates negative scenarios for hipDeviceGetPCIBusId
@@ -212,7 +214,7 @@ int main(int argc, char* argv[]) {
   }
 
   if (p_tests == 0x2) {
-#ifdef __unix__
+#ifdef __linux__
     testResult &= compareHipDeviceGetPCIBusIdWithLspci();
 #else
     printf("Detected non-linux OS. Skipping the test\n");

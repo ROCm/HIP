@@ -95,6 +95,7 @@ hipMemcpyParam2D
 hipMemcpy2D
 hipMemcpy2DAsync
 hipMemcpy2DToArray
+hipMemcpy2DToArrayAsync
 hipMemcpy3D
 hipMemcpy3DAsync
 hipDrvMemcpy3D
@@ -272,3 +273,6 @@ hipMemcpyParam2DAsync
 __gnu_h2f_ieee
 __gnu_f2h_ieee
 hipExtStreamGetCUMask
+hipImportExternalMemory
+hipExternalMemoryGetMappedBuffer
+hipDestroyExternalMemory

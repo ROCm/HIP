@@ -147,6 +147,7 @@ namespace hip {
   public:
     Stream(Device* dev, Priority p = Priority::Normal, unsigned int f = 0, bool null_stream = false,
            const std::vector<uint32_t>& cuMask = {});
+    ~Stream();
 
     /// Creates the hip stream object, including AMD host queue
     bool Create();
@@ -154,7 +155,6 @@ namespace hip {
     /// Get device AMD host queue object. The method can allocate the queue
     amd::HostQueue* asHostQueue(bool skip_alloc = false);
 
-    void Destroy();
     void Finish() const;
     /// Get device ID associated with the current stream;
     int DeviceId() const;

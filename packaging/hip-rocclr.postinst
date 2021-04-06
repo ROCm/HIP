@@ -19,29 +19,21 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-pushd () {
-    command pushd "$@" > /dev/null
-}
-
-popd () {
-    command popd "$@" > /dev/null
-}
-
 ROCMDIR=@ROCM_PATH@
 ROCMLIBDIR=$ROCMDIR/lib
 ROCCLRDIR=$ROCMDIR/rocclr
 ROCCLRLIBDIR=$ROCMDIR/rocclr/lib
 HIPDIR=$ROCMDIR/hip
 HIPLIBDIR=$ROCMDIR/hip/lib
-
+CURRENTDIR=`pwd`
 # Soft-link to library files
 ROCCLRLIBFILES=$(ls -A $ROCCLRLIBDIR | grep -v "cmake\|[-/$]")
 HIPLIBFILES=$(ls -A $HIPLIBDIR | grep -v "cmake\|[-/$]")
 
 mkdir -p $ROCMLIBDIR
 mkdir -p $ROCMLIBDIR/cmake
-pushd $ROCMLIBDIR
 
+cd $ROCMLIBDIR
 for f in $ROCCLRLIBFILES
 do
     ln -s -r -f $ROCCLRLIBDIR/$f $(basename $f)
@@ -51,12 +43,11 @@ for f in $HIPLIBFILES
 do
     ln -s -r -f $HIPLIBDIR/$f $(basename $f)
 done
+cd $CURRENTDIR
 
 # Make the hip cmake directory link.
-pushd cmake
+cd $ROCMLIBDIR/cmake
 ln -s -r -f $ROCCLRLIBDIR/cmake/rocclr rocclr
 ln -s -r -f $HIPLIBDIR/cmake/hip hip
 ln -s -r -f $HIPLIBDIR/cmake/hip-lang hip-lang
-
-popd
-popd
+cd $CURRENTDIR

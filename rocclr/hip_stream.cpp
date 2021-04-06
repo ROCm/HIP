@@ -37,6 +37,17 @@ Stream::Stream(hip::Device* dev, Priority p,
     priority_(p), flags_(f), null_(null_stream), cuMask_(cuMask) {}
 
 // ================================================================================================
+Stream::~Stream() {
+  if (queue_ != nullptr) {
+    amd::ScopedLock lock(streamSetLock);
+    streamSet.erase(this);
+
+    queue_->release();
+    queue_ = nullptr;
+  }
+}
+
+// ================================================================================================
 bool Stream::Create() {
   // Enable queue profiling if a profiler is attached which sets the callback_table flag
   // or if we force it with env var. This would enable time stamp collection for every
@@ -68,10 +79,10 @@ bool Stream::Create() {
     amd::ScopedLock lock(streamSetLock);
     streamSet.insert(this);
     queue_ = queue;
-  } else {
-    queue_ = queue;
-    Destroy();
+  } else if (queue != nullptr) {
+    queue->release();
   }
+
   return result;
 }
 
@@ -89,18 +100,6 @@ amd::HostQueue* Stream::asHostQueue(bool skip_alloc) {
     }
   }
   return queue_;
-}
-
-// ================================================================================================
-void Stream::Destroy() {
-  if (queue_ != nullptr) {
-    amd::ScopedLock lock(streamSetLock);
-    streamSet.erase(this);
-
-    queue_->release();
-    queue_ = nullptr;
-  }
-  delete this;
 }
 
 // ================================================================================================
@@ -189,9 +188,13 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
 static hipError_t ihipStreamCreate(hipStream_t* stream,
                                   unsigned int flags, hip::Stream::Priority priority,
                                   const std::vector<uint32_t>& cuMask = {}) {
+  if (flags != hipStreamDefault && flags != hipStreamNonBlocking) {
+    return hipErrorInvalidValue;
+  }
   hip::Stream* hStream = new hip::Stream(hip::getCurrentDevice(), priority, flags, false, cuMask);
 
   if (hStream == nullptr || !hStream->Create()) {
+    delete hStream;
     return hipErrorOutOfMemory;
   }
 
@@ -286,7 +289,7 @@ hipError_t hipStreamDestroy(hipStream_t stream) {
     HIP_RETURN(hipErrorInvalidHandle);
   }
 
-  reinterpret_cast<hip::Stream*>(stream)->Destroy();
+  delete reinterpret_cast<hip::Stream*>(stream);
 
   HIP_RETURN(hipSuccess);
 }

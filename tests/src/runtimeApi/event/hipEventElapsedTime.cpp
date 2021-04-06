@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
  */
@@ -49,6 +49,8 @@ void NegativeTests(){
         HIPCHECK(hipEventCreateWithFlags(&start,hipEventDisableTiming));
         HIPCHECK(hipEventCreateWithFlags(&stop,hipEventDisableTiming));
         HIPASSERT(hipEventElapsedTime(&timeElapsed, start, stop) == hipErrorInvalidHandle);
+        HIPCHECK(hipEventDestroy(start));
+        HIPCHECK(hipEventDestroy(stop));
     }
 
     // events created different devices
@@ -59,7 +61,9 @@ void NegativeTests(){
             // create event on dev=0
             HIPCHECK(hipSetDevice(0));
             hipEvent_t start;
+            hipEvent_t start1;
             HIPCHECK(hipEventCreate(&start));
+            HIPCHECK(hipEventCreate(&start1));
 
             HIPCHECK(hipEventRecord(start, nullptr));
             HIPCHECK(hipEventSynchronize(start));
@@ -69,11 +73,19 @@ void NegativeTests(){
             hipEvent_t stop;
             HIPCHECK(hipEventCreate(&stop));
 
+            // start1 on device 0 but null stream on device 1
+            HIPASSERT(hipEventRecord(start1, nullptr) == hipErrorInvalidHandle);
+
             HIPCHECK(hipEventRecord(stop, nullptr));
             HIPCHECK(hipEventSynchronize(stop));
 
             float tElapsed = 1.0f;
+            // start on device 0 but stop on device 1
             HIPASSERT(hipEventElapsedTime(&tElapsed,start,stop) == hipErrorInvalidHandle);
+
+            HIPCHECK(hipEventDestroy(start));
+            HIPCHECK(hipEventDestroy(start1));
+            HIPCHECK(hipEventDestroy(stop));
         }
     }
 }
@@ -92,7 +104,10 @@ void PositiveTest(){
     HIPCHECK(hipEventSynchronize(stop));
 
     float tElapsed = 1.0f;
-    HIPCHECK(hipEventElapsedTime(&tElapsed,start,stop));
+    HIPCHECK(hipEventElapsedTime(&tElapsed, start, stop));
+
+    HIPCHECK(hipEventDestroy(start));
+    HIPCHECK(hipEventDestroy(stop));
 }
 
 int main(){

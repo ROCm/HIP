@@ -147,7 +147,7 @@ enum hipLimit_t {
                 /// obtain more precise timings of commands between events.  The flag is a no-op on
                 /// CUDA platforms.
 #define hipEventReleaseToSystem                                                                    \
-    0x80000000  /// < Use a system-scope release that when recording this event.  This flag is
+    0x80000000  /// < Use a system-scope release when recording this event.  This flag is
                 /// useful to make non-coherent host memory visible to the host.  The flag is a
                 /// no-op on CUDA platforms.
 
@@ -332,6 +332,38 @@ typedef struct hipLaunchParams_t {
     size_t sharedMem;       ///< Shared memory
     hipStream_t stream;     ///< Stream identifier
 } hipLaunchParams;
+
+
+typedef enum hipExternalMemoryHandleType_enum {
+  hipExternalMemoryHandleTypeOpaqueFd = 1,
+  hipExternalMemoryHandleTypeOpaqueWin32 = 2,
+  hipExternalMemoryHandleTypeOpaqueWin32Kmt = 3,
+  hipExternalMemoryHandleTypeD3D12Heap = 4,
+  hipExternalMemoryHandleTypeD3D12Resource = 5,
+  hipExternalMemoryHandleTypeD3D11Resource = 6,
+  hipExternalMemoryHandleTypeD3D11ResourceKmt = 7,
+} hipExternalMemoryHandleType;
+
+typedef struct hipExternalMemoryHandleDesc_st {
+  hipExternalMemoryHandleType type;
+  union {
+    int fd;
+    struct {
+      void *handle;
+      const void *name;
+    } win32;
+  } handle;
+  unsigned long long size;
+  unsigned int flags;
+} hipExternalMemoryHandleDesc;
+
+typedef struct hipExternalMemoryBufferDesc_st {
+  unsigned long long offset;
+  unsigned long long size;
+  unsigned int flags;
+} hipExternalMemoryBufferDesc;
+
+typedef void* hipExternalMemory_t;
 
 #if __HIP_HAS_GET_PCH
 /**
@@ -1241,11 +1273,12 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @brief Enqueues a wait command to the stream.
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag.
+ * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
  * @param [in] value  - Value to be used in compare operation
- * @param [in] mask   - Mask to be applied on value at memory before it is compared with value
  * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
- * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor
+ * @param [in] mask   - Mask to be applied on value at memory before it is compared with value,
+ * default value is set to enable every bit
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1266,17 +1299,19 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
 
-hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, uint32_t mask, unsigned int flags);
+hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags,
+                                uint32_t mask __dparm(0xFFFFFFFF));
 
 /**
  * @brief Enqueues a wait command to the stream.
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag.
+ * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
  * @param [in] value  - Value to be used in compare operation
- * @param [in] mask   - Mask to be applied on value at memory before it is compared with value.
  * @param [in] flags  - Defines the compare operation, supported values are hipStreamWaitValueGte
  * hipStreamWaitValueEq, hipStreamWaitValueAnd and hipStreamWaitValueNor.
+ * @param [in] mask   - Mask to be applied on value at memory before it is compared with value
+ * default value is set to enable every bit
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1297,14 +1332,16 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, ui
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
 
-hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, uint64_t mask, unsigned int flags);
+hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags,
+                                uint64_t mask __dparm(0xFFFFFFFFFFFFFFFF));
 
 /**
  * @brief Enqueues a write command to the stream.
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to a GPU accessible memory object.
+ * @param [in] ptr    - Pointer to a GPU accessible memory object
  * @param [in] value  - Value to be written
+ * @param [in] flags  - reserved, ignored for now, will be used in future releases
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1314,14 +1351,15 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, ui
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
-hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value);
+hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags);
 
 /**
  * @brief Enqueues a write command to the stream.
  *
  * @param [in] stream - Stream identifier
- * @param [in] ptr    - Pointer to a GPU accessible memory object.
+ * @param [in] ptr    - Pointer to a GPU accessible memory object
  * @param [in] value  - Value to be written
+ * @param [in] flags  - reserved, ignored for now, will be used in future releases
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
@@ -1331,7 +1369,7 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value);
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
-hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value);
+hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags);
 
 
 // end doxygen Stream Memory Operations
@@ -1541,6 +1579,43 @@ hipError_t hipEventQuery(hipEvent_t event);
  *  @see hipGetDeviceCount, hipGetDevice, hipSetDevice, hipChooseDevice
  */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr);
+
+/**
+*  @brief Imports an external memory object.
+*
+*  @param[out] extMem_out  Returned handle to an external memory object
+*  @param[in]  memHandleDesc Memory import handle descriptor
+*
+*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*
+*  @see
+*/
+hipError_t hipImportExternalMemory(hipExternalMemory_t* extMem_out, const hipExternalMemoryHandleDesc* memHandleDesc);
+
+/**
+*  @brief Maps a buffer onto an imported memory object.
+*
+*  @param[out] devPtr Returned device pointer to buffer
+*  @param[in]  extMem  Handle to external memory object
+*  @param[in]  bufferDesc  Buffer descriptor
+*
+*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*
+*  @see
+*/
+hipError_t hipExternalMemoryGetMappedBuffer(void **devPtr, hipExternalMemory_t extMem, const hipExternalMemoryBufferDesc *bufferDesc);
+
+
+/**
+*  @brief Destroys an external memory object.
+*
+*  @param[in] extMem  External memory object to be destroyed
+*
+*  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+*
+*  @see
+*/
+hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem);
 
 /**
  *  @brief Allocate memory on the default accelerator
@@ -2453,6 +2528,28 @@ hipError_t hipMemcpy2DAsync(void* dst, size_t dpitch, const void* src, size_t sp
  */
 hipError_t hipMemcpy2DToArray(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
                               size_t spitch, size_t width, size_t height, hipMemcpyKind kind);
+
+/**
+ *  @brief Copies data between host and device.
+ *
+ *  @param[in]   dst     Destination memory address
+ *  @param[in]   wOffset Destination starting X offset
+ *  @param[in]   hOffset Destination starting Y offset
+ *  @param[in]   src     Source memory address
+ *  @param[in]   spitch  Pitch of source memory
+ *  @param[in]   width   Width of matrix transfer (columns in bytes)
+ *  @param[in]   height  Height of matrix transfer (rows)
+ *  @param[in]   kind    Type of transfer
+ *  @param[in]   stream    Accelerator view which the copy is being enqueued
+ *  @return      #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidPitchValue,
+ * #hipErrorInvalidDevicePointer, #hipErrorInvalidMemcpyDirection
+ *
+ *  @see hipMemcpy, hipMemcpyToArray, hipMemcpy2D, hipMemcpyFromArray, hipMemcpyToSymbol,
+ * hipMemcpyAsync
+ */
+hipError_t hipMemcpy2DToArrayAsync(hipArray* dst, size_t wOffset, size_t hOffset, const void* src,
+                                   size_t spitch, size_t width, size_t height, hipMemcpyKind kind,
+                                   hipStream_t stream __dparm(0));
 
 /**
  *  @brief Copies data between host and device.
@@ -3612,55 +3709,67 @@ hipError_t hipGetTextureObjectTextureDesc(
     hipTextureDesc* pTexDesc,
     hipTextureObject_t textureObject);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetAddress(
     hipDeviceptr_t* dev_ptr,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetAddressMode(
     enum hipTextureAddressMode* pam,
     const textureReference* texRef,
     int dim);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFlags(
     unsigned int* pFlags,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetFormat(
     hipArray_Format* pFormat,
     int* pNumChannels,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMaxAnisotropy(
     int* pmaxAnsio,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapFilterMode(
     enum hipTextureFilterMode* pfm,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapLevelBias(
     float* pbias,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipmapLevelClamp(
     float* pminMipmapLevelClamp,
     float* pmaxMipmapLevelClamp,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetMipMappedArray(
     hipMipmappedArray_t* pArray,
     const textureReference* texRef);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddress(
     size_t* ByteOffset,
     textureReference* texRef,
     hipDeviceptr_t dptr,
     size_t bytes);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddress2D(
     textureReference* texRef,
     const HIP_ARRAY_DESCRIPTOR* desc,
@@ -3690,6 +3799,7 @@ hipError_t hipTexRefSetFormat(
     hipArray_Format fmt,
     int NumPackedComponents);
 
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
@@ -3721,6 +3831,7 @@ hipError_t hipTexObjectGetTextureDesc(
  */
 
 // The following are not supported.
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
