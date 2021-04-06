@@ -60,7 +60,7 @@ hipError_t single_process(int32_t offset) {
                                              ipc_offset_handle, 0));
 
   // Copy Values from Device to Host and Check for correctness
-  HIPCHECK_RETURN_ONFAIL(hipMemcpy(ipc_out_hptr, ipc_out_dptr, (NUM * sizeof(int)), hipMemcpyDeviceToHost));
+  HIPCHECK_RETURN_ONFAIL(hipMemcpy(ipc_out_hptr, ipc_out_dptr, ((NUM-offset) * sizeof(int)), hipMemcpyDeviceToHost));
   for (size_t idx = offset; idx < NUM; ++idx) {
     if (ipc_out_hptr[idx-offset] != ipc_dptr[idx]) {
       std::cout<<"Failing @ idx: "<<idx<<std::endl;

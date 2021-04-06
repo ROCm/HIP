@@ -215,12 +215,24 @@ hipError_t hipMemcpyPeer(void* dst, int dstDevice, const void* src, int srcDevic
                          size_t sizeBytes) {
   HIP_INIT_API(hipMemcpyPeer, dst, dstDevice, src, srcDevice, sizeBytes);
 
+  if (srcDevice >= static_cast<int>(g_devices.size()) ||
+      dstDevice >= static_cast<int>(g_devices.size()) ||
+      srcDevice < 0 || dstDevice < 0) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
+
   HIP_RETURN(hipMemcpy(dst, src, sizeBytes, hipMemcpyDeviceToDevice));
 }
 
 hipError_t hipMemcpyPeerAsync(void* dst, int dstDevice, const void* src, int srcDevice,
                               size_t sizeBytes, hipStream_t stream) {
   HIP_INIT_API(hipMemcpyPeerAsync, dst, dstDevice, src, srcDevice, sizeBytes, stream);
+
+  if (srcDevice >= static_cast<int>(g_devices.size()) ||
+      dstDevice >= static_cast<int>(g_devices.size()) ||
+      srcDevice < 0 || dstDevice < 0) {
+    HIP_RETURN(hipErrorInvalidDevice);
+  }
 
   HIP_RETURN(hipMemcpyAsync(dst, src, sizeBytes, hipMemcpyDeviceToDevice, stream));
 }
