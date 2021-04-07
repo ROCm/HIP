@@ -329,7 +329,7 @@ THE SOFTWARE.
 
         // BEGIN STRUCT __HALF2
         struct __half2 {
-        protected:
+        public:
             union {
                 static_assert(
                     sizeof(_Float16_2) == sizeof(unsigned short[2]), "");
@@ -340,7 +340,7 @@ THE SOFTWARE.
                     unsigned short y;
                 };
             };
-        public:
+
             // CREATORS
             __host__ __device__
             __half2() = default;

@@ -59,10 +59,10 @@ struct __half2_raw {
 
     // BEGIN STRUCT __HALF2
     struct __half2 {
-    protected:
+    public:
         __half x;
         __half y;
-    public:
+
         // CREATORS
         __half2() = default;
         __half2(const __half2_raw& ix)
