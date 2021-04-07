@@ -350,19 +350,15 @@ hipError_t hipStreamWaitEvent(hipStream_t stream, hipEvent_t event, unsigned int
 
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
   if (e->flags & hipEventInterprocess) {
-    amd::Command* command = queue->getLastQueuedCommand(true);
-    if (command == nullptr) {
-      command = new amd::Marker(*queue, false);
-      command->enqueue();
-    }
+    amd::Command* command = new amd::Marker(*queue, false);
     auto t{new CallbackData{e->ipc_evt_.ipc_shmem_->read_index, e->ipc_evt_.ipc_shmem_}};
     StreamCallback* cbo = new StreamCallback(stream,
                     reinterpret_cast<hipStreamCallback_t> (WaitThenDecrementSignal), t, command);
-    command->enqueue();
     if (!command->setCallback(CL_COMPLETE, ihipStreamCallback,cbo)) {
       command->release();
       return hipErrorInvalidHandle;
     }
+    command->enqueue();
     command->awaitCompletion();
     HIP_RETURN(hipSuccess);
   } else {

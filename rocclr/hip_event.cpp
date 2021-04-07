@@ -229,12 +229,10 @@ hipError_t ihipEventQuery(hipEvent_t event) {
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
   if ((e->flags & hipEventInterprocess) && (e->ipc_evt_.ipc_shmem_)) {
     int prev_read_idx = e->ipc_evt_.ipc_shmem_->read_index;
-    if (prev_read_idx > 0) {
-      int offset = (prev_read_idx % IPC_SIGNALS_PER_EVENT);
-      while ((e->ipc_evt_.ipc_shmem_->read_index < prev_read_idx + IPC_SIGNALS_PER_EVENT)
-              && (e->ipc_evt_.ipc_shmem_->signal[offset] != 0)) {
-      }
-    }
+    int offset = (prev_read_idx % IPC_SIGNALS_PER_EVENT);
+    if (e->ipc_evt_.ipc_shmem_->read_index < prev_read_idx+IPC_SIGNALS_PER_EVENT && e->ipc_evt_.ipc_shmem_->signal[offset] != 0) {
+      return hipErrorNotReady;
+    } 
     return hipSuccess;
   } else {
     return e->query();
@@ -261,6 +259,8 @@ hipError_t hipEventDestroy(hipEvent_t event) {
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
   if ((e->flags & hipEventInterprocess) && (e->ipc_evt_.ipc_shmem_)) {
     int owners = -- e->ipc_evt_.ipc_shmem_->owners;
+    // Make sure event is synchronized
+    hipEventSynchronize(event);
     if (!amd::Os::MemoryUnmapFile(e->ipc_evt_.ipc_shmem_,sizeof(hip::ihipIpcEventShmem_t))) {
       HIP_RETURN(hipErrorInvalidHandle);
     }
@@ -337,12 +337,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
 
   bool isRecorded = e->isRecorded();
   if ((e->flags & hipEventInterprocess) && !isRecorded) {
-    amd::Command* command = queue->getLastQueuedCommand(true);
-    if (command == nullptr) {
-      command = new amd::Marker(*queue, kMarkerDisableFlush);
-      command->enqueue();
-    }
-    e->addMarker(queue, command, true);
+    amd::Command* command = new amd::Marker(*queue, kMarkerDisableFlush);
     amd::Event& tEvent = command->event();
     createIpcEventShmemIfNeeded(e->ipc_evt_);
     int write_index = e->ipc_evt_.ipc_shmem_->write_index++;
@@ -357,11 +352,11 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     std::atomic<int> *signal = &e->ipc_evt_.ipc_shmem_->signal[offset];
     StreamCallback* cbo = new StreamCallback(stream,
                     reinterpret_cast<hipStreamCallback_t> (ipcEventCallback), signal, command);
-    command->enqueue();
     if (!tEvent.setCallback(CL_COMPLETE, ihipStreamCallback,cbo)) {
       command->release();
       return hipErrorInvalidHandle;
     }
+    command->enqueue();
     tEvent.notifyCmdQueue();
     // Update read index to indicate new signal.
     int expected = write_index - 1;
@@ -385,7 +380,7 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
   if ((e->flags & hipEventInterprocess) && (e->ipc_evt_.ipc_shmem_)) {
     int prev_read_idx = e->ipc_evt_.ipc_shmem_->read_index;
-    if (prev_read_idx > 0) {
+    if (prev_read_idx >= 0) {
       int offset = (prev_read_idx % IPC_SIGNALS_PER_EVENT);
       while ((e->ipc_evt_.ipc_shmem_->read_index < prev_read_idx + IPC_SIGNALS_PER_EVENT)
                && (e->ipc_evt_.ipc_shmem_->signal[offset] != 0)) {
