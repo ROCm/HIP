@@ -17,7 +17,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-cmake_minimum_required(VERSION 3.4.3)
+cmake_minimum_required(VERSION 3.10)
 project(hip)
 
 # sample command for hip-rocclr runtime, you'll need to have rocclr built
@@ -130,7 +130,7 @@ if ( DEFINED ENV{CPACK_DEBIAN_PACKAGE_RELEASE} )
 else()
   set ( CPACK_DEBIAN_PACKAGE_RELEASE "local" )
 endif()
-message ( "Using CPACK_DEBIAN_PACKAGE_RELEASE ${CPACK_DEBIAN_PACKAGE_RELEASE}" )
+message (STATUS "Using CPACK_DEBIAN_PACKAGE_RELEASE ${CPACK_DEBIAN_PACKAGE_RELEASE}" )
 
 ## RPM package specific variables
 if ( DEFINED ENV{CPACK_RPM_PACKAGE_RELEASE} )
@@ -148,7 +148,7 @@ execute_process( COMMAND rpm --eval %{?dist}
 if ( PROC_RESULT EQUAL "0" AND NOT EVAL_RESULT STREQUAL "" )
   string ( APPEND CPACK_RPM_PACKAGE_RELEASE "%{?dist}" )
 endif()
-message("CPACK_RPM_PACKAGE_RELEASE: ${CPACK_RPM_PACKAGE_RELEASE}")
+message(STATUS "CPACK_RPM_PACKAGE_RELEASE: ${CPACK_RPM_PACKAGE_RELEASE}")
 
 add_to_config(_versionInfo HIP_PACKAGING_VERSION_PATCH)
 add_to_config(_versionInfo CPACK_DEBIAN_PACKAGE_RELEASE)
@@ -494,12 +494,16 @@ execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cm
 if(${RUN_HIT} EQUAL 0)
     execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_ROOT_DIR}/bin" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 endif()
-if(${RUN_HIT} EQUAL 0)
-    set(CMAKE_MODULE_PATH "${HIP_ROOT_DIR}/cmake" ${CMAKE_MODULE_PATH})
-    include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
-    include(${HIP_SRC_PATH}/tests/Tests.cmake)
+if(HIP_CATCH_TEST EQUAL "1")
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/tests/catch)
 else()
-    message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
+    if(${RUN_HIT} EQUAL 0)
+        set(CMAKE_MODULE_PATH "${HIP_ROOT_DIR}/cmake" ${CMAKE_MODULE_PATH})
+        include(${HIP_SRC_PATH}/tests/hit/HIT.cmake)
+        include(${HIP_SRC_PATH}/tests/Tests.cmake)
+    else()
+        message(STATUS "Testing targets will not be available. To enable them please ensure that the HIP installation directory is writeable. Use -DCMAKE_INSTALL_PREFIX to specify a suitable location")
+    endif()
 endif()
 
 #############################
