@@ -1492,6 +1492,13 @@ hipError_t hipEventSynchronize(hipEvent_t event);
  * recorded on one or both events (that is, hipEventQuery() would return #hipErrorNotReady on at
  * least one of the events), then #hipErrorNotReady is returned.
  *
+ * Note, for HIP Events used in kernel dispatch using hipExtLaunchKernelGGL/hipExtLaunchKernel,
+ * events passed in hipExtLaunchKernelGGL/hipExtLaunchKernel are not explicitly recorded and should
+ * only be used to get elapsed time for that specific launch. In case events are used across
+ * multiple dispatches, for example, start and stop events from different hipExtLaunchKernelGGL/
+ * hipExtLaunchKernel calls, they will be treated as invalid unrecorded events, HIP will throw
+ * error "hipErrorInvalidHandle" from hipEventElapsedTime.
+ *
  * @see hipEventCreate, hipEventCreateWithFlags, hipEventQuery, hipEventDestroy, hipEventRecord,
  * hipEventSynchronize
  */

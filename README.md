@@ -139,7 +139,10 @@ The README with the procedures and tips the team used during this porting effort
 * **include**:
     * **hip_runtime_api.h** : Defines HIP runtime APIs and can be compiled with many standard Linux compilers (GCC, ICC, CLANG, etc), in either C or C++ mode.
     * **hip_runtime.h** : Includes everything in hip_runtime_api.h PLUS hipLaunchKernel and syntax for writing device kernels and device functions.  hip_runtime.h can be compiled using a standard C++ compiler but will expose a subset of the available functions.
-    * **amd_detail/**** , **nvidia_detail/**** : Implementation details for specific platforms. HIP applications should not include these files directly.
+    * **amd_detail/*** : Implementation details for AMD platform. HIP applications should not include these files directly.
+Note, in previous releases, this include derectory was defined as "hcc_detail", it is deprecated in ROCM4.2 relase.
+    * **nvidia_detail/*** : Implementation details for nvidia platform. HIP applications should not include these files directly.
+Note, in previous releases, this directory was defined as "nvcc_detail", it is deprecated in ROCM4.2 relase.
 
 * **bin**: Tools and scripts to help with hip porting
     * **hipify-perl** : Script based tool to convert CUDA code to portable CPP. Converts CUDA APIs and kernel builtins.

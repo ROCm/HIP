@@ -20,10 +20,10 @@ ROCm defines two coherency options for host memory:
 - Coherent memory : Supports fine-grain synchronization while the kernel is running.  For example, a kernel can perform atomic operations that are visible to the host CPU or to other (peer) GPUs.  Synchronization instructions include threadfence_system and C++11-style atomic operations.    However, coherent memory cannot be cached by the GPU and thus may have lower performance.
 - Non-coherent memory : Can be cached by GPU, but cannot support synchronization while the kernel is running.  Non-coherent memory can be optionally synchronized only at command (end-of-kernel or copy command) boundaries.  This memory is appropriate for high-performance access when fine-grain synchronization is not required.
 
-IP provides the developer with controls to select which type of memory is used via allocation flags passed to hipHostMalloc and the HIP_HOST_COHERENT environment variable:
-- hipHostllocCoherent=0, hipHostMallocNonCoherent=0: Use HIP_HOST_COHERENT environment variable:
-    - If HIP_HOST_COHERENT is 1 or undefined, the host memory allocation is coherent.
-    - If host memory is `defined and 0: the host memory allocation is non-coherent.
+HIP provides the developer with controls to select which type of memory is used via allocation flags passed to hipHostMalloc and the HIP_HOST_COHERENT environment variable. By default, the environment variable HIP_HOST_COHERENT is set to 0 in HIP.
+- hipHostMallocCoherent=0, hipHostMallocNonCoherent=0: Use HIP_HOST_COHERENT environment variable,
+  - If HIP_HOST_COHERENT is defined as 1, the host memory allocation is coherent.
+  - If HIP_HOST_COHERENT is not defined, or defined as 0, the host memory allocation is non-coherent.
 - hipHostMallocCoherent=1, hipHostMallocNonCoherent=0: The host memory allocation will be coherent.  HIP_HOST_COHERENT env variable is ignored.
 - hipHostMallocCoherent=0, hipHostMallocNonCoherent=1: The host memory allocation will be non-coherent.  HIP_HOST_COHERENT env variable is ignored.
 - hipHostMallocCoherent=1, hipHostMallocNonCoherent=1: Illegal.
@@ -48,6 +48,9 @@ Developers can control the release scope for hipEvents:
 A stronger system-level fence can be specified when the event is created with hipEventCreateWithFlags:
 - hipEventReleaseToSystem : Perform a system-scope release operation when the event is recorded.  This will make both Coherent and Non-Coherent host memory visible to other agents in the system, but may involve heavyweight operations such as cache flushing.  Coherent memory will typically use lighter-weight in-kernel synchronization mechanisms such as an atomic operation and thus does not need to use hipEventReleaseToSystem.
 - hipEventDisableTiming: Events created with this flag would not record profiling data and provide best performance if used for synchronization.
+
+Note, for HIP Events used in kernel dispatch using hipExtLaunchKernelGGL/hipExtLaunchKernel, events passed in the API are not explicitly recorded and should only be used to get elapsed time for that specific launch.
+In case events are used across multiple dispatches, for example, start and stop events from different hipExtLaunchKernelGGL/hipExtLaunchKernel calls, they will be treated as invalid unrecorded events, HIP will throw error "hipErrorInvalidHandle" from hipEventElapsedTime.
 
 ### Summary and Recommendations:
 

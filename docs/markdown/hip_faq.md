@@ -193,12 +193,22 @@ Yes. You can use HIP_PLATFORM to choose which path hipcc targets.  This configur
 
 
 ### HIP detected my platform (HIP-Clang vs nvcc) incorrectly - what should I do?
-HIP will set the platform to HIP-Clang if it sees that the AMD graphics driver is installed and has detected an AMD GPU.
+HIP will set the platform to AMD and use HIP-Clang as compiler if it sees that the AMD graphics driver is installed and has detected an AMD GPU.
 Sometimes this isn't what you want - you can force HIP to recognize the platform by setting the following,
 ```
-export HIP_COMPILER=clang
-export HIP_PLATFORM=rocclr
+export HIP_PLATFORM=amd
 ```
+HIP then set and use correct AMD compiler and runtime,
+HIP_COMPILER=clang
+HIP_RUNTIME=rocclr
+
+To choose NVIDIA platform, you can set,
+```
+export HIP_PLATFORM=nvidia
+```
+In this case, HIP will set and use the following,
+HIP_COMPILER=nvcc
+HIP_RUNTIME=cuda
 
 One symptom of this problem is the message "error: 'unknown error'(11) at square.hipref.cpp:56".  This can occur if you have a CUDA installation on an AMD platform, and HIP incorrectly detects the platform as nvcc.  HIP may be able to compile the application using the nvcc tool-chain but will generate this error at runtime since the platform does not have a CUDA device.
 
