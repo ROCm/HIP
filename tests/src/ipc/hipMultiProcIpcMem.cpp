@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -37,6 +37,7 @@ void multi_process(int num_process, bool debug_process) {
   int* ipc_hptr = nullptr;
   int* ipc_out_dptr = nullptr;
   int* ipc_out_hptr = nullptr;
+  int* ipc_offset_dptr = nullptr;
 
   MultiProcess<hipIpcMemHandle_t>* mProcess = new MultiProcess<hipIpcMemHandle_t>(num_process);
   mProcess->CreateShmem();
@@ -48,7 +49,10 @@ void multi_process(int num_process, bool debug_process) {
     memset(&ipc_handle, 0x00, sizeof(hipIpcMemHandle_t));
 
     HIPCHECK(hipMalloc((void**)&ipc_dptr, NUM_ELEMS * sizeof(int)));
-    HIPCHECK(hipIpcGetMemHandle(&ipc_handle, ipc_dptr));
+    // Add offset to the dev_ptr
+    ipc_offset_dptr = ipc_dptr + OFFSET;
+    // Get handle for the offsetted device_ptr
+    HIPCHECK(hipIpcGetMemHandle(&ipc_handle, ipc_offset_dptr));
 
     ipc_hptr = new int[NUM_ELEMS];
     for (size_t idx = 0; idx < NUM_ELEMS; ++idx) {
@@ -68,7 +72,8 @@ void multi_process(int num_process, bool debug_process) {
 
     hipIpcMemHandle_t ipc_handle;
     mProcess->ReadHandleFromShmem(ipc_handle);
-    HIPCHECK(hipIpcOpenMemHandle((void**)&ipc_out_dptr, ipc_handle, 0));
+    // Open handle to get dev_ptr
+    HIPCHECK(hipIpcOpenMemHandle((void**)&ipc_out_dptr, ipc_handle, hipIpcMemLazyEnablePeerAccess));
 
     HIPCHECK(hipMemcpy(ipc_out_hptr, ipc_out_dptr, (NUM_ELEMS * sizeof(int)),
                        hipMemcpyDeviceToHost));
