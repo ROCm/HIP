@@ -32,7 +32,6 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_AMD_DETAIL_HIP_COOPERATIVE_GROUPS_HELPER_H
 
 #if __cplusplus
-#include <hip/amd_detail/amd_hip_runtime_api.h>
 #include <hip/amd_detail/amd_device_functions.h>
 
 #if !defined(__align__)

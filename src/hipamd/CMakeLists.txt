@@ -75,9 +75,7 @@ find_package(ROCclr REQUIRED CONFIG)
 #############################
 # Generate profiling API macros/structures header
 set(PROF_API_STR "${PROJECT_BINARY_DIR}/include/hip/amd_detail/hip_prof_str.h")
-#set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/include/hip/amd_detail/hip_runtime_api.h")
-set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/src/hipamd/include/hip/amd_detail/amd_hip_runtime_api.h")
-#set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/src/hipamd/hip/amd_detail/hip_runtime_api.h")
+set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/include/hip/hip_runtime_api.h")
 set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/src/hip_prof_gen.py")
 set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
