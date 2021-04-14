@@ -249,13 +249,13 @@ template <typename F>
 struct __HIP_Coordinates {
   using R = decltype(F{}(0));
 
-  struct X { __device__ operator R() const noexcept { return F{}(0); } };
-  struct Y { __device__ operator R() const noexcept { return F{}(1); } };
-  struct Z { __device__ operator R() const noexcept { return F{}(2); } };
+  struct __X { __device__ operator R() const noexcept { return F{}(0); } };
+  struct __Y { __device__ operator R() const noexcept { return F{}(1); } };
+  struct __Z { __device__ operator R() const noexcept { return F{}(2); } };
 
-  static constexpr X x{};
-  static constexpr Y y{};
-  static constexpr Z z{};
+  static constexpr __X x{};
+  static constexpr __Y y{};
+  static constexpr __Z z{};
 #ifdef __cplusplus
   __device__ operator dim3() const { return dim3(x, y, z); }
 #endif
@@ -265,53 +265,53 @@ template <typename F>
 #if !defined(_MSC_VER)
 __attribute__((weak))
 #endif
-constexpr typename __HIP_Coordinates<F>::X __HIP_Coordinates<F>::x;
+constexpr typename __HIP_Coordinates<F>::__X __HIP_Coordinates<F>::x;
 template <typename F>
 #if !defined(_MSC_VER)
 __attribute__((weak))
 #endif
-constexpr typename __HIP_Coordinates<F>::Y __HIP_Coordinates<F>::y;
+constexpr typename __HIP_Coordinates<F>::__Y __HIP_Coordinates<F>::y;
 template <typename F>
 #if !defined(_MSC_VER)
 __attribute__((weak))
 #endif
-constexpr typename __HIP_Coordinates<F>::Z __HIP_Coordinates<F>::z;
+constexpr typename __HIP_Coordinates<F>::__Z __HIP_Coordinates<F>::z;
 
 extern "C" __device__ __attribute__((const)) size_t __ockl_get_global_size(uint);
 inline
 __device__
-std::uint32_t operator*(__HIP_Coordinates<__HIP_GridDim>::X,
-                        __HIP_Coordinates<__HIP_BlockDim>::X) noexcept {
+std::uint32_t operator*(__HIP_Coordinates<__HIP_GridDim>::__X,
+                        __HIP_Coordinates<__HIP_BlockDim>::__X) noexcept {
   return __ockl_get_global_size(0);
 }
 inline
 __device__
-std::uint32_t operator*(__HIP_Coordinates<__HIP_BlockDim>::X,
-                        __HIP_Coordinates<__HIP_GridDim>::X) noexcept {
+std::uint32_t operator*(__HIP_Coordinates<__HIP_BlockDim>::__X,
+                        __HIP_Coordinates<__HIP_GridDim>::__X) noexcept {
   return __ockl_get_global_size(0);
 }
 inline
 __device__
-std::uint32_t operator*(__HIP_Coordinates<__HIP_GridDim>::Y,
-                        __HIP_Coordinates<__HIP_BlockDim>::Y) noexcept {
+std::uint32_t operator*(__HIP_Coordinates<__HIP_GridDim>::__Y,
+                        __HIP_Coordinates<__HIP_BlockDim>::__Y) noexcept {
   return __ockl_get_global_size(1);
 }
 inline
 __device__
-std::uint32_t operator*(__HIP_Coordinates<__HIP_BlockDim>::Y,
-                        __HIP_Coordinates<__HIP_GridDim>::Y) noexcept {
+std::uint32_t operator*(__HIP_Coordinates<__HIP_BlockDim>::__Y,
+                        __HIP_Coordinates<__HIP_GridDim>::__Y) noexcept {
   return __ockl_get_global_size(1);
 }
 inline
 __device__
-std::uint32_t operator*(__HIP_Coordinates<__HIP_GridDim>::Z,
-                        __HIP_Coordinates<__HIP_BlockDim>::Z) noexcept {
+std::uint32_t operator*(__HIP_Coordinates<__HIP_GridDim>::__Z,
+                        __HIP_Coordinates<__HIP_BlockDim>::__Z) noexcept {
   return __ockl_get_global_size(2);
 }
 inline
 __device__
-std::uint32_t operator*(__HIP_Coordinates<__HIP_BlockDim>::Z,
-                        __HIP_Coordinates<__HIP_GridDim>::Z) noexcept {
+std::uint32_t operator*(__HIP_Coordinates<__HIP_BlockDim>::__Z,
+                        __HIP_Coordinates<__HIP_GridDim>::__Z) noexcept {
   return __ockl_get_global_size(2);
 }
 
