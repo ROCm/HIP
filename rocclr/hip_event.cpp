@@ -182,6 +182,11 @@ void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record)
   }
 
   event_ = &command->event();
+  // Notify queue earlier so SW status for the command can be updated faster,
+  // since marker potentially means a wait
+  if (AMD_DIRECT_DISPATCH && (flags & hipEventDisableTiming)) {
+    command->notifyCmdQueue();
+  }
   recorded_ = record;
 }
 
