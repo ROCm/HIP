@@ -1564,6 +1564,18 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         case hipDeviceAttributeConcurrentManagedAccess:
             cdattr = cudaDevAttrConcurrentManagedAccess;
             break;
+        case hipDeviceAttributeManagedMemory:
+            cdattr = cudaDevAttrManagedMemory;
+            break;
+        case hipDeviceAttributePageableMemoryAccessUsesHostPageTables:
+            cdattr = cudaDevAttrPageableMemoryAccessUsesHostPageTables;
+            break;
+        case hipDeviceAttributePageableMemoryAccess:
+            cdattr = cudaDevAttrPageableMemoryAccess;
+            break;
+        case hipDeviceAttributeDirectManagedMemAccessFromHost:
+            cdattr = cudaDevAttrDirectManagedMemAccessFromHost;
+            break;
         default:
             return hipCUDAErrorTohipError(cudaErrorInvalidValue);
     }
