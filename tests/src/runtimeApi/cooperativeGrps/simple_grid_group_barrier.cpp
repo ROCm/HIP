@@ -110,8 +110,17 @@ test_kernel(unsigned int *atomic_val, unsigned int *array,
     // near "total number of blocks". It will be the last wavefront to
     // reach the atomicInc, but everyone will have only hit the atomic once.
     if (rank == (grid.size() - 1)) {
-      long long start_clock = clock64();
-      while (clock64() < (start_clock+1000000)) {}
+      long long time_diff = 0;
+      long long last_clock = clock64();
+      do {
+        long long cur_clock = clock64();
+        if (cur_clock > last_clock) {
+          time_diff += (cur_clock - last_clock);
+        }
+        // If it rolls over, we don't know how much to add to catch up.
+        // So just ignore those slipped cycles.
+        last_clock = cur_clock;
+      } while(time_diff < 1000000);
     }
 
     if (threadIdx.x == 0) {
