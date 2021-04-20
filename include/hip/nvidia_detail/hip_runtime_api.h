@@ -1561,6 +1561,9 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
         case hipDeviceAttributeCooperativeMultiDeviceLaunch:
             cdattr = cudaDevAttrCooperativeMultiDeviceLaunch;
             break;
+        case hipDeviceAttributeConcurrentManagedAccess:
+            cdattr = cudaDevAttrConcurrentManagedAccess;
+            break;
         default:
             return hipCUDAErrorTohipError(cudaErrorInvalidValue);
     }

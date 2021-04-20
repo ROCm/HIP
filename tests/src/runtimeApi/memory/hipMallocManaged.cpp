@@ -20,6 +20,15 @@ void add(int n, float *x, float *y)
 int main(int argc, char *argv[])
 {
     HipTest::parseStandardArguments(argc, argv, true);
+    int concurrentManagedAccess = 0;
+    HIPCHECK(hipDeviceGetAttribute(&concurrentManagedAccess,
+                           hipDeviceAttributeConcurrentManagedAccess,
+                           p_gpuDevice));
+    if(!concurrentManagedAccess) {
+        printf("info: concurrent managed access not supported on device %d\n Skipped\n",
+               p_gpuDevice);
+        passed();
+    }
 
     printf("info: set device to %d\n", p_gpuDevice);
     HIPCHECK(hipSetDevice(p_gpuDevice));
