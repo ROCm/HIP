@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 - present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -79,3 +79,5 @@ extern "C" __global__ void FourSecKernel(int clockrate) {
   }
 }
 
+extern "C" __global__ void dummyKernel() {
+}

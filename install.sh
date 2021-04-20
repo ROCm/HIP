@@ -62,6 +62,7 @@ BUILD_ROOT="$( mktemp -d )"
 SRC_ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKING_DIR=$PWD
 DASH_JAY="-j $(getconf _NPROCESSORS_ONLN)"
+OS_NAME="$(cat /etc/os-release | awk -F '=' '/^NAME/{print $2}' | awk '{print $1}' | tr -d '"')"
 
 err() {
     echo "${1-Died}." >&2
@@ -82,8 +83,16 @@ popd () {
 
 function setupENV()
 {
-    sudo apt-get update
-    sudo apt-get install dpkg-dev rpm doxygen libelf-dev rename
+    if [ "$OS_NAME" == "Ubuntu" ]
+    then
+      sudo apt-get update
+      sudo apt-get install dpkg-dev rpm doxygen libelf-dev rename liburi-encode-perl \
+         libfile-basedir-perl libfile-copy-recursive-perl libfile-listing-perl
+    elif [ "$OS_NAME" == "CentOS" ]
+    then
+      yum install dpkg-dev rpm-build doxygen elfutils-libelf-devel prename \
+         perl-URI-Encode perl-File-Listing perl-File-BaseDir
+    fi
 }
 
 function buildHIP()
@@ -104,8 +113,16 @@ function buildHIP()
     cmake $SRC_ROOT -DCMAKE_PREFIX_PATH="$ROCCLR_BUILD_DIR;/opt/rocm" -DCMAKE_BUILD_TYPE=Release
     make $DASH_JAY
     make package
-    cp hip-*.deb $WORKING_DIR
-    sudo dpkg -i -B hip-base*.deb hip-rocclr*.deb hip-sample*.deb hip-doc*.deb
+    if [ "$OS_NAME" == "Ubuntu" ]
+    then
+      cp hip-*.deb $WORKING_DIR
+      sudo dpkg -i -B hip-base*.deb hip-rocclr*.deb hip-sample*.deb hip-doc*.deb
+    elif [ "$OS_NAME" == "CentOS" ]
+    then
+      cp hip-*.rpm $WORKING_DIR
+      sudo rpm -ivh --replacefiles --force hip-base*.rpm hip-rocclr*.rpm hip-sample*.rpm \
+         hip-doc*.rpm
+    fi
     popd
     popd
     rm -rf $BUILD_ROOT
