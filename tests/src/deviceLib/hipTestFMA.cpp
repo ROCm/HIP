@@ -120,16 +120,45 @@ THE SOFTWARE.
       Check(halfResult != doubleResult);
 
       // check promote to half.
-      Check(fma(h, h, 3) == halfResult);
-      Check(fma(h, h, (char)3) == halfResult);
-      Check(fma(h, h, (unsigned char)3) == halfResult);
-      Check(fma(h, h, (short)3) == halfResult);
-      Check(fma(h, h, (unsigned short)3) == halfResult);
-      Check(fma(h, h, (int)3) == halfResult);
-      Check(fma(h, h, (unsigned int)3) == halfResult);
-      Check(fma(h, h, (long)3) == halfResult);
-      Check(fma(h, h, (unsigned long)3) == halfResult);
-      Check(fma(h, h, true) == fma(h, h, (_Float16)1));
+      // fma(_Float16, _Float16, int) should resolve to
+      // fma(double, double, double). This is similar to
+      // fma(float, float, int) resolving to fma(double, double, double)
+      // as required Standard C++ header <cmath>.
+      if (sizeof(decltype(fma(h, h, 3))) == 8) {
+        Check(fma(h, h, 3) == doubleResult);
+        Check(fma(h, h, (char)3) == doubleResult);
+        Check(fma(h, h, (unsigned char)3) == doubleResult);
+        Check(fma(h, h, (short)3) == doubleResult);
+        Check(fma(h, h, (unsigned short)3) == doubleResult);
+        Check(fma(h, h, (int)3) == doubleResult);
+        Check(fma(h, h, (unsigned int)3) == doubleResult);
+        Check(fma(h, h, (long)3) == doubleResult);
+        Check(fma(h, h, (unsigned long)3) == doubleResult);
+        Check(fma(h, h, true) == fma((double)h, (double) h, 1.0));
+      } else if (sizeof(decltype(fma(h, h, 3))) == 2) {
+        // ToDo: Currently there is a bug in clang header
+        // __clang_hip_cmath.h due to using
+        // std::numeric_limits<T>::is_specified to define
+        // overloaded math functions. Since numeric_limits is
+        // not specicialized for _Float16, overloaded template
+        // functions with argument promotion are not defined
+        // for _Float16. As a result, fma(_Float16, _Float16, int)
+        // is resolved to fma(_Float16, _Float16, _Float16).
+        // This part should be removed after __clang_hip_cmath.h
+        // is fixed.
+        Check(fma(h, h, 3) == halfResult);
+        Check(fma(h, h, (char)3) == halfResult);
+        Check(fma(h, h, (unsigned char)3) == halfResult);
+        Check(fma(h, h, (short)3) == halfResult);
+        Check(fma(h, h, (unsigned short)3) == halfResult);
+        Check(fma(h, h, (int)3) == halfResult);
+        Check(fma(h, h, (unsigned int)3) == halfResult);
+        Check(fma(h, h, (long)3) == halfResult);
+        Check(fma(h, h, (unsigned long)3) == halfResult);
+        Check(fma(h, h, true) == fma(h, h, (_Float16)1));
+      } else {
+        assert(0 && "Invalid fma return type.");
+      }
 
       while (i < LEN)
         Check(true);
