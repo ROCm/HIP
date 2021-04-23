@@ -281,6 +281,10 @@ global:
     hipStreamBeginCapture;
     hipStreamEndCapture;
     hipGraphExecDestroy;
+    hipImportExternalSemaphore;
+    hipSignalExternalSemaphoresAsync;
+    hipWaitExternalSemaphoresAsync;
+    hipDestroyExternalSemaphore;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;

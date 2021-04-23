@@ -287,3 +287,7 @@ hipStreamIsCapturing
 hipStreamBeginCapture
 hipStreamEndCapture
 hipGraphExecDestroy
+hipImportExternalSemaphore
+hipSignalExternalSemaphoresAsync
+hipWaitExternalSemaphoresAsync
+hipDestroyExternalSemaphore
