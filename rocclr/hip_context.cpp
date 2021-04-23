@@ -181,7 +181,8 @@ hipError_t hipRuntimeGetVersion(int *runtimeVersion) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
-  *runtimeVersion = AMD_PLATFORM_BUILD_NUMBER;
+  // HIP_VERSION = HIP_VERSION_MAJOR*100 + HIP_MINOR_VERSION
+  *runtimeVersion = HIP_VERSION;
 
   HIP_RETURN(hipSuccess);
 }
