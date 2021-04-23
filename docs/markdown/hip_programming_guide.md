@@ -93,4 +93,25 @@ can be contracted. Tolerance should be used for floating point comparsions.
 
 HIP does not support math functions with rounding modes ru (round up), rd (round down), and rz (round towards zero). HIP only supports math function with rounding mode rn (round to nearest). The math functions with postfixes _ru, _rd and _rz are implemented in the same way as math functions with postfix _rn. They serve as a workaround to get programs using them compiled.
 
+## Creating Static Libraries
+
+HIP-Clang supports generating two types of static libraries. The first type of static library does not export device functions, and only exports and launches host functions within the same library. The advantage of this type is the ability to link with a non-hipcc compiler such as gcc. The second type exports device functions to be linked by other code objects. However this requires using hipcc as the linker.
+
+In addition, the first type of library contains host objects with device code embedded as fat binaries. It is generated using the flag --emit-static-lib. The second type of library contains relocatable device objects and is generated using ar.
+
+Here is an example to create and use static libraries:
+- Type 1 using --emit-static-lib:
+    ```
+    hipcc hipOptLibrary.cpp --emit-static-lib -fPIC -o libHipOptLibrary.a
+    gcc test.cpp -L. -lhipOptLibrary -L/path/to/hip/lib -lamdhip64 -o test.out
+    ```
+- Type 2 using system ar:
+    ```
+    hipcc hipDevice.cpp -c -fgpu-rdc -o hipDevice.o
+    ar rcsD libHipDevice.a hipDevice.o
+    hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
+    ```
+
+For more information, please see samples/2_Cookbook/15_static_library/host_functions and samples/2_Cookbook/15_static_library/device_functions.
+
 ## [Supported Clang Options](clang_options.md)
