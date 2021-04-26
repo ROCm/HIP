@@ -11,9 +11,18 @@ The runtime tracks the hipHostMalloc allocations and can avoid some of the setup
 GPU can directly access the host memory over the CPU/GPU interconnect, without need to copy the data.  This avoids the need for the copy, but during the kernel access each memory access must traverse the interconnect, which can be tens of times slower than accessing the GPU's local device memory.  Zero-copy memory can be a good choice when the memory accesses are infrequent (perhaps only once).  Zero-copy memory is typically "Coherent" and thus not cached by the GPU but this can be overridden if desired and is explained in more detail below.
 
 ### Memory allocation flags
-hipHostMalloc always sets the hipHostMallocPortable and hipHostMallocMapped flags.  Both usage models described above use the same allocation flags, and the difference is in how the surrounding code uses the host memory.
+hipHostMalloc always sets the hipHostMallocPortable and hipHostMallocMapped flags. Both usage models described above use the same allocation flags, and the difference is in how the surrounding code uses the host memory.
+
+hipHostMallocNumaUser is the flag to allow host memory allocation to follow numa policy set by user.
+
 See the hipHostMalloc API for more information.
 
+### Numa-aware host memory allocation
+Numa policy determines how memory is allocated.
+Target of Numa policy is to select a CPU that is closest to each GPU.
+Numa distance is the measurement of how far between GPU and CPU devices.
+
+By default, each GPU selects a Numa CPU node that has the least Numa distance between them, that is, host memory will be automatically allocated closest on the memory pool of Numa node of the current GPU device. Using hipSetDevice API to a different GPU will still be able to access the host allocation, but can have longer Numa distance.
 
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
@@ -58,7 +67,7 @@ In case events are used across multiple dispatches, for example, start and stop 
 
 ## Device-Side Malloc
 
-HIP-Clang currenntly doesn't supports device-side malloc and free.
+HIP-Clang currently doesn't supports device-side malloc and free.
 
 ## Use of Long Double Type
 
