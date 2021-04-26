@@ -119,12 +119,12 @@ __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
 }
 
 MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
-// Alternatively, kernel can be launched by 
+// Alternatively, kernel can be launched by
 // hipLaunchKernel(MyKernel, dim3(gridDim), dim3(groupDim), 0/*dynamicShared*/, 0/*stream), a, b, c, n);
 
 ```
 
-The hipLaunchKernel macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernel, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernel parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (hipThread*, hipBlock*, hipGrid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See [Coordinate Built-Ins](#coordinate-builtins).
+The hipLaunchKernel macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernel, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernel parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (thread*, block*, grid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See [Coordinate Built-Ins](#coordinate-builtins).
 
 
 ## Kernel-Launch Example
@@ -298,7 +298,7 @@ Following is the list of supported single precision mathematical functions.
 | float log10f ( float  x ) <br><sub>Calculate the base 10 logarithm of the input argument.</sub> | ✓ | ✓ |
 | float log1pf ( float  x ) <br><sub>Calculate the value of log<sub>e</sub>( 1 + x ).</sub> | ✓ | ✓ |
 | float logbf ( float  x ) <br><sub>Calculate the floating point representation of the exponent of the input argument.</sub> | ✓ | ✓ |
-| float log2f ( float  x ) <br><sub>Calculate the base 2 logarithm of the input argument.</sub> | ✓ | ✓ | 
+| float log2f ( float  x ) <br><sub>Calculate the base 2 logarithm of the input argument.</sub> | ✓ | ✓ |
 | float logf ( float  x ) <br><sub>Calculate the natural logarithm of the input argument.</sub> | ✓ | ✓ |
 | float modff ( float  x, float* iptr ) <br><sub>Break down the input argument into fractional and integral parts.</sub> | ✓ | ✗ |
 | float nanf ( const char* tagp ) <br><sub>Returns "Not a Number" value.</sub> | ✗ | ✓ |
@@ -379,7 +379,7 @@ Following is the list of supported double precision mathematical functions.
 | double exp2 ( double  x ) <br><sub>Calculate the base 2 exponential of the input argument.</sub> | ✓ | ✓ |
 | double expm1 ( double  x ) <br><sub>Calculate the base e exponential of the input argument, minus 1.</sub> | ✓ | ✓ |
 | double fabs ( double  x ) <br><sub>Calculate the absolute value of the input argument.</sub> | ✓ | ✓ |
-| double fdim ( double  x, double  y ) <br><sub>Compute the positive difference between `x` and `y`.</sub> | ✓ | ✓ | 
+| double fdim ( double  x, double  y ) <br><sub>Compute the positive difference between `x` and `y`.</sub> | ✓ | ✓ |
 | double floor ( double  x ) <br><sub>Calculate the largest integer less than or equal to `x`.</sub> | ✓ | ✓ |
 | double fma ( double  x, double  y, double  z ) <br><sub>Compute `x × y + z` as a single operation.</sub> | ✓ | ✓ |
 | double fmax ( double , double ) <br><sub>Determine the maximum numeric value of the arguments.</sub> | ✓ | ✓ |
@@ -793,6 +793,8 @@ The file format for binary is `.co` which means Code Object. The following comma
 [INPUT FILE] = Name of the file containing kernels
 [OUTPUT FILE] = Name of the generated code object file
 ```
+
+Note: When using binary code objects is that the number of arguments to the kernel is different on HIP-Clang and NVCC path. Refer to the sample in samples/0_Intro/module_api for differences in the arguments to be passed to the kernel.
 
 ## gfx-arch-specific-kernel
 Clang defined '__gfx*__' macros can be used to execute gfx arch specific codes inside the kernel. Refer to the sample 14_gpu_arch in samples/2_Cookbook.
