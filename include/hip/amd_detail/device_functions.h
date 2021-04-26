@@ -291,16 +291,6 @@ __device__ static inline int __hip_move_dpp_N(int src) {
                                     bound_ctrl);
 }
 
-// FIXME: Remove the following workaround once the clang change is released.
-// This is for backward compatibility with older clang which does not define
-// __AMDGCN_WAVEFRONT_SIZE. It does not consider -mwavefrontsize64.
-#ifndef __AMDGCN_WAVEFRONT_SIZE
-#if __gfx1010__ || __gfx1011__ || __gfx1012__ || __gfx1030__ || __gfx1031__
-#define __AMDGCN_WAVEFRONT_SIZE 32
-#else
-#define __AMDGCN_WAVEFRONT_SIZE 64
-#endif
-#endif
 static constexpr int warpSize = __AMDGCN_WAVEFRONT_SIZE;
 
 __device__
