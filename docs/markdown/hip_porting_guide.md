@@ -163,7 +163,7 @@ Often, it's useful to know whether the underlying compiler is HIP-Clang or nvcc.
 ```
 
 ```
-#ifdef __NVCC__
+#ifdef __HIP_PLATFORM_NVIDIA__
 // Compiled with nvcc
 //  Could be compiling with CUDA language extensions enabled (for example, a ".cu file)
 //  Could be in pass-through mode to an underlying host compile OR (for example, a .cpp file)
@@ -283,17 +283,15 @@ HIP_PATH ?= $(shell hipconfig --path)
 
 ## Identifying HIP Runtime
 
-HIP can depend on ROCclr, or NVCC as runtime
+HIP can depend on rocclr, or cuda as runtime
 
 - AMD platform
 On AMD platform, HIP uses Radeon Open Compute Common Language Runtime, called ROCclr.
 ROCclr is a virtual device interface that HIP runtimes interact with different backends which allows runtimes to work on Linux , as well as Windows without much efforts.
 
-Note, `HIP_ROCclr` needed to be defined on AMD platform that HIP used ROCclr, only when platform was defined as deprecated `HIP_PLATFORM_HCC`.
-
 - NVIDIA platform
 On Nvidia platform, HIP is just a thin layer on top of CUDA.
-On non-AMD platform, HIP runtime determines if nvcc is available and can be used. If available, HIP_PLATFORM is set to nvcc and underneath CUDA path is used.
+On non-AMD platform, HIP runtime determines if cuda is available and can be used. If available, HIP_PLATFORM is set to nvidia and underneath CUDA path is used.
 
 
 ## hipLaunchKernel
