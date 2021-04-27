@@ -147,15 +147,15 @@ __device__
 static inline unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s) {
     struct uchar2Holder cHoldVal;
     struct ucharHolder cHoldKey;
-    struct ucharHolder cHoldOut;
     cHoldKey.ui = s;
     cHoldVal.ui[0] = x;
     cHoldVal.ui[1] = y;
-    cHoldOut.c[0] = cHoldVal.c[cHoldKey.c[0]];
-    cHoldOut.c[1] = cHoldVal.c[cHoldKey.c[1]];
-    cHoldOut.c[2] = cHoldVal.c[cHoldKey.c[2]];
-    cHoldOut.c[3] = cHoldVal.c[cHoldKey.c[3]];
-    return cHoldOut.ui;
+    unsigned int result;
+    result = cHoldVal.c[cHoldKey.c[0] & 0x07];
+    result += (cHoldVal.c[(cHoldKey.c[0] & 0x70) >> 4] << 8);
+    result += (cHoldVal.c[cHoldKey.c[1] & 0x07] << 16);
+    result += (cHoldVal.c[(cHoldKey.c[1] & 0x70) >> 4] << 24);
+    return result;
 }
 
 __device__ static inline unsigned int __hadd(int x, int y) {
