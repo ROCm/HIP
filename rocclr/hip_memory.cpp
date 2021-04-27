@@ -2066,16 +2066,11 @@ hipError_t hipMemsetD32Async(hipDeviceptr_t dst, int value, size_t count,
   HIP_RETURN(ihipMemset(dst, value, sizeof(int32_t), count * sizeof(int32_t), stream, true));
 }
 
-inline hipError_t ihipMemset3D_validate(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent) {
+inline hipError_t ihipMemset3D_validate(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent,
+                                        size_t sizeBytes) {
   size_t offset = 0;
   amd::Memory* memory = getMemoryObject(pitchedDevPtr.ptr, offset);
 
-  auto sizeBytes = extent.width * extent.height * extent.depth;
-
-  if (sizeBytes == 0) {
-    // sizeBytes is zero hence returning early as nothing to be set
-    return hipSuccess;
-  }
   if (memory == nullptr) {
     return hipErrorInvalidValue;
   }
@@ -2120,7 +2115,13 @@ hipError_t ihipMemset3DCommand(std::vector<amd::Command*> &commands, hipPitchedP
 
 hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent,
                         hipStream_t stream, bool isAsync = false) {
-  hipError_t status = ihipMemset3D_validate(pitchedDevPtr, value, extent);
+  auto sizeBytes = extent.width * extent.height * extent.depth;
+
+  if (sizeBytes == 0) {
+    // sizeBytes is zero hence returning early as nothing to be set
+    return hipSuccess;
+  }
+  hipError_t status = ihipMemset3D_validate(pitchedDevPtr, value, extent, sizeBytes);
   if (status != hipSuccess) {
     return status;
   }
@@ -2128,7 +2129,7 @@ hipError_t ihipMemset3D(hipPitchedPtr pitchedDevPtr, int value, hipExtent extent
   std::vector<amd::Command*> commands;
   ihipMemset3DCommand(commands, pitchedDevPtr, value, extent, queue);
   for (auto& command : commands) {
-    command->enqueue();    
+    command->enqueue();
     if (!isAsync) {
       command->awaitCompletion();
     }
