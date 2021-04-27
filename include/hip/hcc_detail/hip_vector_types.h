@@ -539,7 +539,7 @@ THE SOFTWARE.
 
         union {
             Native_vec_ data;
-            struct {
+            struct component {
                 T x;
                 T y;
                 T z;
@@ -1282,18 +1282,18 @@ THE SOFTWARE.
         } CUDA_name##4;
 #endif
 
-__MAKE_VECTOR_TYPE__(uchar, unsigned char);
-__MAKE_VECTOR_TYPE__(char, char);
-__MAKE_VECTOR_TYPE__(ushort, unsigned short);
-__MAKE_VECTOR_TYPE__(short, short);
-__MAKE_VECTOR_TYPE__(uint, unsigned int);
-__MAKE_VECTOR_TYPE__(int, int);
-__MAKE_VECTOR_TYPE__(ulong, unsigned long);
-__MAKE_VECTOR_TYPE__(long, long);
-__MAKE_VECTOR_TYPE__(ulonglong, unsigned long long);
-__MAKE_VECTOR_TYPE__(longlong, long long);
-__MAKE_VECTOR_TYPE__(float, float);
-__MAKE_VECTOR_TYPE__(double, double);
+__MAKE_VECTOR_TYPE__(uchar, unsigned char)
+__MAKE_VECTOR_TYPE__(char, char)
+__MAKE_VECTOR_TYPE__(ushort, unsigned short)
+__MAKE_VECTOR_TYPE__(short, short)
+__MAKE_VECTOR_TYPE__(uint, unsigned int)
+__MAKE_VECTOR_TYPE__(int, int)
+__MAKE_VECTOR_TYPE__(ulong, unsigned long)
+__MAKE_VECTOR_TYPE__(long, long)
+__MAKE_VECTOR_TYPE__(ulonglong, unsigned long long)
+__MAKE_VECTOR_TYPE__(longlong, long long)
+__MAKE_VECTOR_TYPE__(float, float)
+__MAKE_VECTOR_TYPE__(double, double)
 
 #ifdef __cplusplus
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
@@ -1335,65 +1335,65 @@ __MAKE_VECTOR_TYPE__(double, double);
      }
 #endif
 
-DECLOP_MAKE_ONE_COMPONENT(unsigned char, uchar1);
-DECLOP_MAKE_TWO_COMPONENT(unsigned char, uchar2);
-DECLOP_MAKE_THREE_COMPONENT(unsigned char, uchar3);
-DECLOP_MAKE_FOUR_COMPONENT(unsigned char, uchar4);
+DECLOP_MAKE_ONE_COMPONENT(unsigned char, uchar1)
+DECLOP_MAKE_TWO_COMPONENT(unsigned char, uchar2)
+DECLOP_MAKE_THREE_COMPONENT(unsigned char, uchar3)
+DECLOP_MAKE_FOUR_COMPONENT(unsigned char, uchar4)
 
-DECLOP_MAKE_ONE_COMPONENT(signed char, char1);
-DECLOP_MAKE_TWO_COMPONENT(signed char, char2);
-DECLOP_MAKE_THREE_COMPONENT(signed char, char3);
-DECLOP_MAKE_FOUR_COMPONENT(signed char, char4);
+DECLOP_MAKE_ONE_COMPONENT(signed char, char1)
+DECLOP_MAKE_TWO_COMPONENT(signed char, char2)
+DECLOP_MAKE_THREE_COMPONENT(signed char, char3)
+DECLOP_MAKE_FOUR_COMPONENT(signed char, char4)
 
-DECLOP_MAKE_ONE_COMPONENT(unsigned short, ushort1);
-DECLOP_MAKE_TWO_COMPONENT(unsigned short, ushort2);
-DECLOP_MAKE_THREE_COMPONENT(unsigned short, ushort3);
-DECLOP_MAKE_FOUR_COMPONENT(unsigned short, ushort4);
+DECLOP_MAKE_ONE_COMPONENT(unsigned short, ushort1)
+DECLOP_MAKE_TWO_COMPONENT(unsigned short, ushort2)
+DECLOP_MAKE_THREE_COMPONENT(unsigned short, ushort3)
+DECLOP_MAKE_FOUR_COMPONENT(unsigned short, ushort4)
 
-DECLOP_MAKE_ONE_COMPONENT(signed short, short1);
-DECLOP_MAKE_TWO_COMPONENT(signed short, short2);
-DECLOP_MAKE_THREE_COMPONENT(signed short, short3);
-DECLOP_MAKE_FOUR_COMPONENT(signed short, short4);
+DECLOP_MAKE_ONE_COMPONENT(signed short, short1)
+DECLOP_MAKE_TWO_COMPONENT(signed short, short2)
+DECLOP_MAKE_THREE_COMPONENT(signed short, short3)
+DECLOP_MAKE_FOUR_COMPONENT(signed short, short4)
 
-DECLOP_MAKE_ONE_COMPONENT(unsigned int, uint1);
-DECLOP_MAKE_TWO_COMPONENT(unsigned int, uint2);
-DECLOP_MAKE_THREE_COMPONENT(unsigned int, uint3);
-DECLOP_MAKE_FOUR_COMPONENT(unsigned int, uint4);
+DECLOP_MAKE_ONE_COMPONENT(unsigned int, uint1)
+DECLOP_MAKE_TWO_COMPONENT(unsigned int, uint2)
+DECLOP_MAKE_THREE_COMPONENT(unsigned int, uint3)
+DECLOP_MAKE_FOUR_COMPONENT(unsigned int, uint4)
 
-DECLOP_MAKE_ONE_COMPONENT(signed int, int1);
-DECLOP_MAKE_TWO_COMPONENT(signed int, int2);
-DECLOP_MAKE_THREE_COMPONENT(signed int, int3);
-DECLOP_MAKE_FOUR_COMPONENT(signed int, int4);
+DECLOP_MAKE_ONE_COMPONENT(signed int, int1)
+DECLOP_MAKE_TWO_COMPONENT(signed int, int2)
+DECLOP_MAKE_THREE_COMPONENT(signed int, int3)
+DECLOP_MAKE_FOUR_COMPONENT(signed int, int4)
 
-DECLOP_MAKE_ONE_COMPONENT(float, float1);
-DECLOP_MAKE_TWO_COMPONENT(float, float2);
-DECLOP_MAKE_THREE_COMPONENT(float, float3);
-DECLOP_MAKE_FOUR_COMPONENT(float, float4);
+DECLOP_MAKE_ONE_COMPONENT(float, float1)
+DECLOP_MAKE_TWO_COMPONENT(float, float2)
+DECLOP_MAKE_THREE_COMPONENT(float, float3)
+DECLOP_MAKE_FOUR_COMPONENT(float, float4)
 
-DECLOP_MAKE_ONE_COMPONENT(double, double1);
-DECLOP_MAKE_TWO_COMPONENT(double, double2);
-DECLOP_MAKE_THREE_COMPONENT(double, double3);
-DECLOP_MAKE_FOUR_COMPONENT(double, double4);
+DECLOP_MAKE_ONE_COMPONENT(double, double1)
+DECLOP_MAKE_TWO_COMPONENT(double, double2)
+DECLOP_MAKE_THREE_COMPONENT(double, double3)
+DECLOP_MAKE_FOUR_COMPONENT(double, double4)
 
-DECLOP_MAKE_ONE_COMPONENT(unsigned long, ulong1);
-DECLOP_MAKE_TWO_COMPONENT(unsigned long, ulong2);
-DECLOP_MAKE_THREE_COMPONENT(unsigned long, ulong3);
-DECLOP_MAKE_FOUR_COMPONENT(unsigned long, ulong4);
+DECLOP_MAKE_ONE_COMPONENT(unsigned long, ulong1)
+DECLOP_MAKE_TWO_COMPONENT(unsigned long, ulong2)
+DECLOP_MAKE_THREE_COMPONENT(unsigned long, ulong3)
+DECLOP_MAKE_FOUR_COMPONENT(unsigned long, ulong4)
 
-DECLOP_MAKE_ONE_COMPONENT(signed long, long1);
-DECLOP_MAKE_TWO_COMPONENT(signed long, long2);
-DECLOP_MAKE_THREE_COMPONENT(signed long, long3);
-DECLOP_MAKE_FOUR_COMPONENT(signed long, long4);
+DECLOP_MAKE_ONE_COMPONENT(signed long, long1)
+DECLOP_MAKE_TWO_COMPONENT(signed long, long2)
+DECLOP_MAKE_THREE_COMPONENT(signed long, long3)
+DECLOP_MAKE_FOUR_COMPONENT(signed long, long4)
 
-DECLOP_MAKE_ONE_COMPONENT(unsigned long long, ulonglong1);
-DECLOP_MAKE_TWO_COMPONENT(unsigned long long, ulonglong2);
-DECLOP_MAKE_THREE_COMPONENT(unsigned long long, ulonglong3);
-DECLOP_MAKE_FOUR_COMPONENT(unsigned long long, ulonglong4);
+DECLOP_MAKE_ONE_COMPONENT(unsigned long long, ulonglong1)
+DECLOP_MAKE_TWO_COMPONENT(unsigned long long, ulonglong2)
+DECLOP_MAKE_THREE_COMPONENT(unsigned long long, ulonglong3)
+DECLOP_MAKE_FOUR_COMPONENT(unsigned long long, ulonglong4)
 
-DECLOP_MAKE_ONE_COMPONENT(signed long long, longlong1);
-DECLOP_MAKE_TWO_COMPONENT(signed long long, longlong2);
-DECLOP_MAKE_THREE_COMPONENT(signed long long, longlong3);
-DECLOP_MAKE_FOUR_COMPONENT(signed long long, longlong4);
+DECLOP_MAKE_ONE_COMPONENT(signed long long, longlong1)
+DECLOP_MAKE_TWO_COMPONENT(signed long long, longlong2)
+DECLOP_MAKE_THREE_COMPONENT(signed long long, longlong3)
+DECLOP_MAKE_FOUR_COMPONENT(signed long long, longlong4)
 #else // !defined(__has_attribute)
 
 #if defined(_MSC_VER)
