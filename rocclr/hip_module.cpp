@@ -213,7 +213,7 @@ inline hipError_t ihipLaunchKernel_validate(hipFunction_t f, uint32_t globalWork
                                             uint32_t globalWorkSizeY, uint32_t globalWorkSizeZ,
                                             uint32_t blockDimX, uint32_t blockDimY,
                                             uint32_t blockDimZ, uint32_t sharedMemBytes,
-                                            void** kernelParams, void** extra,
+                                            void** kernelParams, void** extra, int deviceId,
                                             uint32_t params = 0) {
   if (f == nullptr) {
     LogPrintfError("%s", "Function passed is null");
@@ -235,7 +235,8 @@ inline hipError_t ihipLaunchKernel_validate(hipFunction_t f, uint32_t globalWork
       return hipErrorNotInitialized;
     }
   }
-  const amd::Device* device = hip::getCurrentDevice()->devices()[0];
+
+  const amd::Device* device = g_devices[deviceId]->devices()[0];
   // Make sure dispatch doesn't exceed max workgroup size limit
   if (blockDimX * blockDimY * blockDimZ > device->info().maxWorkGroupSize_) {
     return hipErrorInvalidConfiguration;
@@ -354,7 +355,8 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
                blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams, extra,
                startEvent, stopEvent, flags, params);
 
-  HIP_RETURN_ONFAIL(PlatformState::instance().initStatManagedVarDevicePtr(ihipGetDevice()));
+  int deviceId = hip::Stream::DeviceId(hStream);
+  HIP_RETURN_ONFAIL(PlatformState::instance().initStatManagedVarDevicePtr(deviceId));
   if (f == nullptr) {
     LogPrintfError("%s", "Function passed is null");
     return hipErrorInvalidImage;
@@ -365,7 +367,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
 
   hipError_t status =
       ihipLaunchKernel_validate(f, globalWorkSizeX, globalWorkSizeY, globalWorkSizeZ, blockDimX,
-                                blockDimY, blockDimZ, sharedMemBytes, kernelParams, extra, params);
+                                blockDimY, blockDimZ, sharedMemBytes, kernelParams, extra, deviceId, params);
   if (status != hipSuccess) {
     return status;
   }
@@ -505,8 +507,8 @@ hipError_t hipLaunchCooperativeKernel(const void* f,
   HIP_INIT_API(hipLaunchCooperativeKernel, f, gridDim, blockDim,
                sharedMemBytes, hStream);
 
-  int deviceId = ihipGetDevice();
   hipFunction_t func = nullptr;
+  int deviceId = hip::Stream::DeviceId(hStream);
   HIP_RETURN_ONFAIL(PlatformState::instance().getStatFunc(&func, f, deviceId));
   size_t globalWorkSizeX = static_cast<size_t>(gridDim.x) * blockDim.x;
   size_t globalWorkSizeY = static_cast<size_t>(gridDim.y) * blockDim.y;

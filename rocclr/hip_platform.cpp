@@ -621,14 +621,8 @@ hipError_t ihipLaunchKernel(const void* hostFunction,
                                          hipEvent_t stopEvent,
                                          int flags)
 {
-  hip::Stream* s = reinterpret_cast<hip::Stream*>(stream);
-  int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
-  if (deviceId == -1) {
-    LogPrintfError("Wrong Device Id: %d \n", deviceId);
-    HIP_RETURN(hipErrorNoDevice);
-  }
-
   hipFunction_t func =  nullptr;
+  int deviceId = hip::Stream::DeviceId(stream);
   hipError_t hip_error = PlatformState::instance().getStatFunc(&func, hostFunction, deviceId);
   if ((hip_error != hipSuccess) || (func == nullptr)) {
     HIP_RETURN(hipErrorInvalidDeviceFunction);

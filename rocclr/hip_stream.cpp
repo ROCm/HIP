@@ -114,6 +114,13 @@ int Stream::DeviceId() const {
   return device_->deviceId();
 }
 
+int Stream::DeviceId(const hipStream_t hStream) {
+  hip::Stream* s = reinterpret_cast<hip::Stream*>(hStream);
+  int deviceId = (s != nullptr)? s->DeviceId() : ihipGetDevice();
+  assert(deviceId >= 0 && deviceId < static_cast<int>(g_devices.size()));
+  return deviceId;
+}
+
 void Stream::syncNonBlockingStreams() {
   amd::ScopedLock lock(streamSetLock);
   for (auto& it : streamSet) {

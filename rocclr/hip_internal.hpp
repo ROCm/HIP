@@ -158,6 +158,8 @@ namespace hip {
     void Finish() const;
     /// Get device ID associated with the current stream;
     int DeviceId() const;
+    /// Get device ID associated with a stream;
+    static int DeviceId(const hipStream_t hStream);
     /// Returns if stream is null stream
     bool Null() const { return null_; }
     /// Returns the lock object for the current stream
@@ -263,6 +265,7 @@ extern void iHipWaitActiveStreams(amd::HostQueue* blocking_queue, bool wait_null
 extern std::vector<hip::Device*> g_devices;
 extern hipError_t ihipDeviceGetCount(int* count);
 extern int ihipGetDevice();
+
 extern hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags);
 extern amd::Memory* getMemoryObject(const void* ptr, size_t& offset);
 extern amd::Memory* getMemoryObjectWithOffset(const void* ptr, const size_t size);
