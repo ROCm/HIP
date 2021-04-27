@@ -110,17 +110,16 @@ $HIP_VERSION    =   $hipvars::HIP_VERSION;
 $HSA_PATH       =   $hipvars::HSA_PATH;
 $HIP_ROCCLR_HOME =   $hipvars::HIP_ROCCLR_HOME;
 
-# If using ROCclr runtime, need to find HIP_ROCCLR_HOME
-
-if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
-    $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
-}
-$HIP_INCLUDE_PATH = "$HIP_ROCCLR_HOME/include";
-if (!defined $HIP_LIB_PATH) {
-    $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/lib";
-}
-
 if ($HIP_PLATFORM eq "amd") {
+  # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
+  if (!defined $DEVICE_LIB_PATH and -e "$HIP_ROCCLR_HOME/lib/bitcode") {
+    $DEVICE_LIB_PATH = "$HIP_ROCCLR_HOME/lib/bitcode";
+  }
+  $HIP_INCLUDE_PATH = "$HIP_ROCCLR_HOME/include";
+  if (!defined $HIP_LIB_PATH) {
+    $HIP_LIB_PATH = "$HIP_ROCCLR_HOME/lib";
+  }
+
   if (!defined $DEVICE_LIB_PATH) {
     if (-e "$ROCM_PATH/amdgcn/bitcode") {
       $DEVICE_LIB_PATH = "$ROCM_PATH/amdgcn/bitcode";
