@@ -126,6 +126,7 @@ int main(int argc, char *argv[])
         printf ("info: checking result on bus 0x%2x %s\n", props.pciBusID, props.name);
 
         printf ("info: copy Device2Host\n");
+        HIPCHECK(hipSetDevice(j));
         HIPCHECK( hipMemcpy(C_h, C_d[j], Nbytes, hipMemcpyDeviceToHost));
 
         printf ("info: check result\n");
