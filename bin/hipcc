@@ -492,15 +492,18 @@ foreach $arg (@ARGV)
         }
     } elsif ($arg eq '-x') {
         $fileTypeFlag = 1;
-    } elsif ($arg eq 'c' and $prevArg eq '-x') {
+    } elsif (($arg eq 'c' and $prevArg eq '-x') or ($arg eq '-xc')) {
+        $fileTypeFlag = 1;
         $hasC = 1;
         $hasCXX = 0;
         $hasHIP = 0;
-    } elsif ($arg eq 'c++' and $prevArg eq '-x') {
+    } elsif (($arg eq 'c++' and $prevArg eq '-x') or ($arg eq '-xc++')) {
+        $fileTypeFlag = 1;
         $hasC = 0;
         $hasCXX = 1;
         $hasHIP = 0;
-    } elsif ($arg eq 'hip' and $prevArg eq '-x') {
+    } elsif (($arg eq 'hip' and $prevArg eq '-x') or ($arg eq '-xhip')) {
+        $fileTypeFlag = 1;
         $hasC = 0;
         $hasCXX = 0;
         $hasHIP = 1;
@@ -560,7 +563,7 @@ foreach $arg (@ARGV)
         }
         if ($hasC) {
             $needCFLAGS = 1;
-        } elsif ($hasCXX) {
+        } elsif ($hasCXX or $hasHIP) {
             $needCXXFLAGS = 1;
         }
         push (@inputs, $arg);
