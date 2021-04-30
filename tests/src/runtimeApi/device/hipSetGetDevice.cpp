@@ -40,8 +40,10 @@
  * HIT_END
  */
 
+#ifdef __linux__
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 #include "test_common.h"
 
 int sequence_num = 0;
@@ -275,7 +277,7 @@ bool testValidDevices(int numDevices, bool useRocrEnv, int *deviceList,
     testResult = false;
   }
 #else
-  printf("skipping testcase for non unix system \n)";
+  printf("skipping testcase for non unix system \n");
 #endif
   return testResult;
 }
@@ -365,7 +367,7 @@ bool testMaxRvdMinHvd(int numDevices, int *deviceList, int count) {
     testResult = false;
   }
 #else
-  printf("skipping testcase for non unix system \n)";
+  printf("skipping testcase for non unix system \n");
 #endif
   return testResult;
 }
@@ -409,7 +411,7 @@ bool testRvdCvd(int numDevices, int *deviceList, int count) {
     testResult = false;
   }
 #else
-  printf("skipping testcase for non unix system \n)";
+  printf("skipping testcase for non unix system \n");
 #endif
   return testResult;
 }
@@ -457,7 +459,7 @@ bool testMinRvdMaxHvd(int numDevices, int *deviceList, int count) {
     testResult = false;
   }
 #else
-  printf("skipping testcase for non unix system \n)";
+  printf("skipping testcase for non unix system \n");
 #endif
   return testResult;
 }
@@ -540,7 +542,7 @@ bool testDeviceListSequence(int numDevices, bool useRocrEnv,
     testResult = false;
   }
 #else
-  printf("skipping testcase for non unix system \n)";
+  printf("skipping testcase for non unix system \n");
 #endif
   return testResult;
 }

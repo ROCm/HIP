@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <hip/hip_runtime.h>
+#ifdef __linux__
 #include <unistd.h>
+#endif
 #include "test_common.h"
 #include <atomic>
 
