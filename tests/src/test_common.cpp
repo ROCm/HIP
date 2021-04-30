@@ -53,6 +53,14 @@ const char* PATH_SEPERATOR_STR = "/";
 const char* NULL_DEVICE = "/dev/null";
 #endif
 
+#ifdef _WIN64
+// Windows does not have rand_r, use srand and rand instead.
+int rand_r(unsigned int* s) {
+  srand(*s);
+  return rand();
+}
+#endif
+
 // Get Free Memory from the system
 static size_t getMemoryAmount() {
 #if __linux__

@@ -136,8 +136,8 @@ inline int hip_skip_retcode() {
 #define fileno(x) _fileno(x)
 #define dup(x) _dup(x)
 #define dup2(x,y) _dup2(x,y)
-#define close(x) _close(x)
 #define pipe(x,y,z) _pipe(x,y,z)
+#define sleep(x) _sleep(x)
 #else
 #define aligned_free(x) free(x)
 #endif
@@ -167,6 +167,10 @@ extern const char* NULL_DEVICE;
 #define TYPENAME(T) typeid(T).name()
 #else
 #define TYPENAME(T) "?"
+#endif
+
+#ifdef _WIN64
+int rand_r(unsigned int* s);
 #endif
 
 // Get Optimal Thread count size

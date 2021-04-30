@@ -69,9 +69,10 @@ Testcase Scenarios :
  */
 
 #include <sys/types.h>
+#ifdef __linux__
 #include <sys/wait.h>
 #include <unistd.h>
-
+#endif
 #include <iostream>
 #include <vector>
 #include <limits>

@@ -27,7 +27,9 @@
  */
 
 #include <stdio.h>
+#ifdef __linux__
 #include <unistd.h>
+#endif
 #include <thread>
 #include <chrono>
 #include "hip/hip_runtime.h"
