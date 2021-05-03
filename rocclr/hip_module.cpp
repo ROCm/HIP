@@ -390,7 +390,7 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     command->retain();
   }
   if (stopEvent != nullptr) {
-    eStop->addMarker(queue, command, false);
+    eStop->addMarker(queue, command, true);
     command->retain();
   }
   command->release();

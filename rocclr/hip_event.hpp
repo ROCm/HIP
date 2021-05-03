@@ -112,6 +112,7 @@ private:
   bool recorded_;
 
   bool ready();
+  int64_t time() const;
 };
 
 };
