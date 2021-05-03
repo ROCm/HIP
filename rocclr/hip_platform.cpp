@@ -346,10 +346,34 @@ hipError_t ihipOccupancyMaxActiveBlocksPerMultiprocessor(
     }
   }
   // Find wave occupancy per CU => simd_per_cu * GPR usage
-  constexpr size_t MaxWavesPerSimd = 8;  // Limited by SPI 32 per CU, hence 8 per SIMD
+  size_t MaxWavesPerSimd;
+
+  if (device.isa().versionMajor() <= 9) {
+    MaxWavesPerSimd = 8;  // Limited by SPI 32 per CU, hence 8 per SIMD
+  } else {
+    MaxWavesPerSimd = 16;
+  }
   size_t VgprWaves = MaxWavesPerSimd;
-  if (wrkGrpInfo->usedVGPRs_ > 0) {
-    VgprWaves = wrkGrpInfo->availableVGPRs_ / amd::alignUp(wrkGrpInfo->usedVGPRs_, 4);
+  size_t maxVGPRs;
+  uint32_t VgprGranularity;
+  if (device.isa().versionMajor() <= 9) {
+    if (device.isa().versionMajor() == 9 &&
+        device.isa().versionMinor() == 0 &&
+        device.isa().versionStepping() == 10) {
+      maxVGPRs = 512;
+      VgprGranularity = 8;
+    }
+    else {
+      maxVGPRs = 256;
+      VgprGranularity = 4;
+    }
+  }
+  else {
+    maxVGPRs = 1024;
+    VgprGranularity = 8;
+  }
+  if (wrkGrpInfo->usedSGPRs_ > 0) {
+    VgprWaves = maxVGPRs / amd::alignUp(wrkGrpInfo->usedVGPRs_, VgprGranularity);
   }
 
   size_t GprWaves = VgprWaves;
