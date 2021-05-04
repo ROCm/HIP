@@ -325,11 +325,11 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
   clock_t end = clock();
   double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
-  printf ( "\nEnd of ihipModuleLaunchKernel: %f\n", time_spent );
+  printf ( "\nEnd of HIP: ihipModuleLaunchKernel: %f\n", time_spent );
 
-  printf ( "ihipModuleLaunchKernel - clock begin = %ld\n", begin );
-  printf ( "ihipModuleLaunchKernel - clock end = %ld\n", end );
-  printf ( "ihipModuleLaunchKernel - clock per second = %ld\n", CLOCKS_PER_SEC );
+  printf ( "HIP: ihipModuleLaunchKernel - clock begin = %ld\n", begin );
+  printf ( "HIP: ihipModuleLaunchKernel - clock end = %ld\n", end );
+  printf ( "HIP: ihipModuleLaunchKernel - clock per second = %ld\n", CLOCKS_PER_SEC );
 
   return hipSuccess;
 }
