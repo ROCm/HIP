@@ -214,6 +214,9 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams, extra, startEvent,
     stopEvent, flags, params);
 
+  // FROCM
+  clock_t begin = clock();
+
   hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
   amd::Kernel* kernel = function->kernel();
 
@@ -318,6 +321,15 @@ hipError_t ihipModuleLaunchKernel(hipFunction_t f, uint32_t globalWorkSizeX,
     command->retain();
   }
   command->release();
+
+  clock_t end = clock();
+  double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+
+  printf ( "\nEnd of ihipModuleLaunchKernel: %f\n", time_spent );
+
+  printf ( "ihipModuleLaunchKernel - clock begin = %ld\n", begin );
+  printf ( "ihipModuleLaunchKernel - clock end = %ld\n", end );
+  printf ( "ihipModuleLaunchKernel - clock per second = %ld\n", CLOCKS_PER_SEC );
 
   return hipSuccess;
 }
