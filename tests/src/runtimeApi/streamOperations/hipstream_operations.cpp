@@ -56,6 +56,144 @@ constexpr int64_t value64 =         0x7FFF0000FFFF0000;
 constexpr unsigned int writeFlag = 0;
 
 constexpr float SLEEP_MS = 100;
+constexpr int32_t DATA_INIT = 0x1234;
+constexpr int32_t DATA_UPDATE = 0X4321;
+
+struct TEST_WAIT {
+  int compareOp;
+  uint64_t mask;
+  int64_t waitValue;
+  int64_t signalValueFail;
+  int64_t signalValuePass;
+};
+
+TEST_WAIT testCases[] = {
+  {
+    // mask will ignore few MSB bits
+    hipStreamWaitValueGte,
+    0x0000FFFFFFFFFFFF,
+    0x000000007FFF0001,
+    0x7FFF00007FFF0000,
+    0x000000007FFF0001
+  },
+  {
+    hipStreamWaitValueGte,
+    0xF,
+    0x4,
+    0x3,
+    0x6
+  },
+  {
+    // mask will ignore few MSB bits
+    hipStreamWaitValueEq,
+    0x0000FFFFFFFFFFFF,
+    0x000000000FFF0001,
+    0x7FFF00000FFF0000,
+    0x7F0000000FFF0001
+  },
+  {
+    hipStreamWaitValueEq,
+    0xFF,
+    0x11,
+    0x25,
+    0x11
+  },
+  {
+    // mask will discard bits 8 to 11
+    hipStreamWaitValueAnd,
+    0xFF,
+    0xF4A,
+    0xF35,
+    0X02
+  },
+  {
+    // mask is set to ignore the sign bit.
+    hipStreamWaitValueNor,
+    0x7FFFFFFFFFFFFFFF,
+    0x7FFFFFFFFFFFF247,
+    0x7FFFFFFFFFFFFdbd,
+    0x7FFFFFFFFFFFFdb5
+  },
+  {
+    // mask is set to apply NOR for bits 0 to 3.
+    hipStreamWaitValueNor,
+    0xF,
+    0x7E,
+    0x7D,
+    0x76
+  }
+};
+
+struct TEST_WAIT32_NO_MASK {
+  int compareOp;
+  int32_t waitValue;
+  int32_t signalValueFail;
+  int32_t signalValuePass;
+};
+
+// default mask 0xFFFFFFFF will be used.
+TEST_WAIT32_NO_MASK testCasesNoMask32[] = {
+  {
+    hipStreamWaitValueGte,
+    0x7FFF0001,
+    0x7FFF0000,
+    0x7FFF0010
+  },
+  {
+    hipStreamWaitValueEq,
+    0x7FFFFFFF,
+    0x7FFF0000,
+    0x7FFFFFFF
+  },
+  {
+    hipStreamWaitValueAnd,
+    0x70F0F0F0,
+    0x0F0F0F0F,
+    0X1F0F0F0F
+  },
+  {
+    hipStreamWaitValueNor,
+    0x7AAAAAAA,
+    static_cast<int32_t>(0x85555555),
+    static_cast<int32_t>(0x9AAAAAAA)
+  }
+};
+
+struct TEST_WAIT64_NO_MASK {
+  int compareOp;
+  int64_t waitValue;
+  int64_t signalValueFail;
+  int64_t signalValuePass;
+};
+
+// default mask 0xFFFFFFFFFFFFFFFF will be used.
+TEST_WAIT64_NO_MASK testCasesNoMask64[] = {
+  {
+    hipStreamWaitValueGte,
+    0x7FFFFFFFFFFF0001,
+    0x7FFFFFFFFFFF0000,
+    0x7FFFFFFFFFFF0001
+  },
+  {
+    hipStreamWaitValueEq,
+    0x7FFFFFFFFFFFFFFF,
+    0x7FFFFFFF0FFF0000,
+    0x7FFFFFFFFFFFFFFF
+  },
+  {
+    hipStreamWaitValueAnd,
+    0x70F0F0F0F0F0F0F0,
+    0x0F0F0F0F0F0F0F0F,
+    0X1F0F0F0F0F0F0F0F
+  },
+  {
+    hipStreamWaitValueNor,
+    0x4724724747247247,
+    static_cast<int64_t>(0xbddbddbdbddbddbd),
+    static_cast<int64_t>(0xbddbddbdbddbddb3)
+  }
+};
+
 void testWrite() {
 
   int64_t* signalPtr;
@@ -131,146 +269,28 @@ bool streamWaitValueSupported() {
   return false;
 }
 
+void waitAndWrite64(hipStream_t stream, int64_t* signalPtr, TEST_WAIT tc, int64_t* dataPtr64) {
+  HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.compareOp, tc.mask));
+  HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
+}
+void waitAndWrite32(hipStream_t stream, int64_t* signalPtr, TEST_WAIT tc, int32_t* dataPtr32) {
+  HIPCHECK(hipStreamWaitValue32(stream, signalPtr, static_cast<int32_t>(tc.waitValue), tc.compareOp,
+                                static_cast<uint32_t>(tc.mask)));
+  HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
+}
+void waitAndWrite32NoMask(hipStream_t stream, int64_t* signalPtr, TEST_WAIT32_NO_MASK tc,
+                          int32_t* dataPtr32) {
+  HIPCHECK(hipStreamWaitValue32(stream, signalPtr, tc.waitValue, tc.compareOp));
+  HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
+}
+void waitAndWrite64NoMask(hipStream_t stream, int64_t* signalPtr, TEST_WAIT64_NO_MASK tc,
+                          int64_t* dataPtr64) {
+  HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.compareOp));
+  HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
+}
+
 void testWait() {
   int64_t* signalPtr;
-  // random data values
-  int32_t DATA_INIT = 0x1234;
-  int32_t DATA_UPDATE = 0X4321;
-
-  struct TEST_WAIT {
-    int compareOp;
-    uint64_t mask;
-    int64_t waitValue;
-    int64_t signalValueFail;
-    int64_t signalValuePass;
-  };
-
-  TEST_WAIT testCases[] = {
-    {
-      // mask will ignore few MSB bits
-      hipStreamWaitValueGte,
-      0x0000FFFFFFFFFFFF,
-      0x000000007FFF0001,
-      0x7FFF00007FFF0000,
-      0x000000007FFF0001
-    },
-    {
-      hipStreamWaitValueGte,
-      0xF,
-      0x4,
-      0x3,
-      0x6
-    },
-    {
-      // mask will ignore few MSB bits
-      hipStreamWaitValueEq,
-      0x0000FFFFFFFFFFFF,
-      0x000000000FFF0001,
-      0x7FFF00000FFF0000,
-      0x7F0000000FFF0001
-    },
-    {
-      hipStreamWaitValueEq,
-      0xFF,
-      0x11,
-      0x25,
-      0x11
-    },
-    {
-      // mask will discard bits 8 to 11
-      hipStreamWaitValueAnd,
-      0xFF,
-      0xF4A,
-      0xF35,
-      0X02
-    },
-    {
-      // mask is set to ignore the sign bit.
-      hipStreamWaitValueNor,
-      0x7FFFFFFFFFFFFFFF,
-      0x7FFFFFFFFFFFF247,
-      0x7FFFFFFFFFFFFdbd,
-      0x7FFFFFFFFFFFFdb5
-    },
-    {
-      // mask is set to apply NOR for bits 0 to 3.
-      hipStreamWaitValueNor,
-      0xF,
-      0x7E,
-      0x7D,
-      0x76
-    }
-  };
-
-  struct TEST_WAIT32_NO_MASK {
-    int compareOp;
-    int32_t waitValue;
-    int32_t signalValueFail;
-    int32_t signalValuePass;
-  };
-
-  // default mask 0xFFFFFFFF will be used.
-  TEST_WAIT32_NO_MASK testCasesNoMask32[] = {
-    {
-      hipStreamWaitValueGte,
-      0x7FFF0001,
-      0x7FFF0000,
-      0x7FFF0010
-    },
-    {
-      hipStreamWaitValueEq,
-      0x7FFFFFFF,
-      0x7FFF0000,
-      0x7FFFFFFF
-    },
-    {
-      hipStreamWaitValueAnd,
-      0x70F0F0F0,
-      0x0F0F0F0F,
-      0X1F0F0F0F
-    },
-    {
-      hipStreamWaitValueNor,
-      0x7AAAAAAA,
-      static_cast<int32_t>(0x85555555),
-      static_cast<int32_t>(0x9AAAAAAA)
-    }
-  };
-
-  struct TEST_WAIT64_NO_MASK {
-    int compareOp;
-    int64_t waitValue;
-    int64_t signalValueFail;
-    int64_t signalValuePass;
-  };
-
-  // default mask 0xFFFFFFFFFFFFFFFF will be used.
-  TEST_WAIT64_NO_MASK testCasesNoMask64[] = {
-    {
-      hipStreamWaitValueGte,
-      0x7FFFFFFFFFFF0001,
-      0x7FFFFFFFFFFF0000,
-      0x7FFFFFFFFFFF0001
-    },
-    {
-      hipStreamWaitValueEq,
-      0x7FFFFFFFFFFFFFFF,
-      0x7FFFFFFF0FFF0000,
-      0x7FFFFFFFFFFFFFFF
-    },
-    {
-      hipStreamWaitValueAnd,
-      0x70F0F0F0F0F0F0F0,
-      0x0F0F0F0F0F0F0F0F,
-      0X1F0F0F0F0F0F0F0F
-    },
-    {
-      hipStreamWaitValueNor,
-      0x4724724747247247,
-      static_cast<int64_t>(0xbddbddbdbddbddbd),
-      static_cast<int64_t>(0xbddbddbdbddbddb3)
-    }
-  };
 
   if (!streamWaitValueSupported()) {
     std::cout << " hipStreamWaitValue: not supported on this device , skipping ... \n";
@@ -298,17 +318,20 @@ void testWait() {
       *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr64 = DATA_INIT;
 
-      HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.compareOp, tc.mask));
-      HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
+      std::thread waitThenUpdate64(waitAndWrite64, stream, signalPtr, tc, dataPtr64);
 
       if (isBlocking) {
-        // Trigger an implict flush and verify stream has pending work.
-        HIPASSERT(hipStreamQuery(stream) == hipErrorNotReady);
+        // For DEBUG only
+        // usleep(500);
+        // HIPASSERT(*dataPtr32 == DATA_INIT);
+
+        // NOTE: Any HIP API call here that takes device execution lock can lead to a deadlock
+        // since above write command waits for waitValue command if constant memeory filled up.
 
         // update signal to unblock the wait.
         *signalPtr = tc.signalValuePass;
       }
-      // HIPASSERT(hipStreamQuery(stream) == hipSuccess);
+      waitThenUpdate64.join();
       hipStreamSynchronize(stream);
       HIPASSERT(*dataPtr64 == DATA_UPDATE);
 
@@ -316,21 +339,20 @@ void testWait() {
       *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr32 = DATA_INIT;
 
-      HIPCHECK(hipStreamWaitValue32(stream, signalPtr, static_cast<int32_t>(tc.waitValue),
-                                    tc.compareOp, static_cast<uint32_t>(tc.mask)));
-      HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
+      std::thread waitThenUpdate32(waitAndWrite32, stream, signalPtr, tc, dataPtr32);
 
       if (isBlocking) {
         // For DEBUG only
         // usleep(500);
         // HIPASSERT(*dataPtr32 == DATA_INIT);
 
-        // Trigger an implict flush and verify stream has pending work.
-        HIPASSERT(hipStreamQuery(stream) == hipErrorNotReady);
+        // NOTE: Any HIP API call here that takes device execution lock can lead to a deadlock
+        // since above write command waits for waitValue command if constant memeory filled up.
 
         // update signal to unblock the wait.
         *signalPtr = static_cast<int32_t>(tc.signalValuePass);
       }
+      waitThenUpdate32.join();
       hipStreamSynchronize(stream);
       HIPASSERT(*dataPtr32 == DATA_UPDATE);
     }
@@ -346,20 +368,20 @@ void testWait() {
       *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr32 = DATA_INIT;
 
-      HIPCHECK(hipStreamWaitValue32(stream, signalPtr, tc.waitValue, tc.compareOp));
-      HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
+      std::thread waitThenUpdate32(waitAndWrite32NoMask, stream, signalPtr, tc, dataPtr32);
 
       if (isBlocking) {
         // For DEBUG only
         // usleep(500);
         // HIPASSERT(*dataPtr32 == DATA_INIT);
 
-        // Trigger an implict flush and verify stream has pending work.
-        HIPASSERT(hipStreamQuery(stream) == hipErrorNotReady);
+        // NOTE: Any HIP API call here that takes device execution lock can lead to a deadlock
+        // since above write command waits for waitValue command if constant memeory filled up.
 
         // update signal to unblock the wait.
         *signalPtr = tc.signalValuePass;
       }
+      waitThenUpdate32.join();
       hipStreamSynchronize(stream);
       HIPASSERT(*dataPtr32 == DATA_UPDATE);
     }
@@ -375,20 +397,20 @@ void testWait() {
       *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr64 = DATA_INIT;
 
-      HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.compareOp));
-      HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
+      std::thread waitThenUpdate64(waitAndWrite64NoMask, stream, signalPtr, tc, dataPtr64);
 
       if (isBlocking) {
         // For DEBUG only
         // usleep(500);
         // HIPASSERT(*dataPtr64 == DATA_INIT);
 
-        // Trigger an implict flush and verify stream has pending work.
-        HIPASSERT(hipStreamQuery(stream) == hipErrorNotReady);
+        // NOTE: Any HIP API call here that takes device execution lock can lead to a deadlock
+        // since above write command waits for waitValue command if constant memeory filled up.
 
         // update signal to unblock the wait.
         *signalPtr = tc.signalValuePass;
       }
+      waitThenUpdate64.join();
       hipStreamSynchronize(stream);
       HIPASSERT(*dataPtr64 == DATA_UPDATE);
     }
@@ -402,7 +424,6 @@ void testWait() {
   free(dataPtr32);
   hipStreamDestroy(stream);
 }
-
 
 int main() {
   testWrite();
