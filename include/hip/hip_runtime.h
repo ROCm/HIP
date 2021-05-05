@@ -41,6 +41,7 @@ THE SOFTWARE.
 #error HIP is not supported on GFX10 with wavefront size 64
 #endif
 
+#if !defined(__HIPCC_RTC__)
 // Some standard header files, these are included by hc.hpp and so want to make them avail on both
 // paths to provide a consistent include env and avoid "missing symbol" errors that only appears
 // on NVCC path:
@@ -52,6 +53,7 @@ THE SOFTWARE.
 #if __cplusplus > 199711L
 #include <thread>
 #endif
+#endif // !defined(__HIPCC_RTC__)
 
 #include <hip/hip_version.h>
 #include <hip/hip_common.h>
@@ -107,8 +109,10 @@ THE SOFTWARE.
 #endif // defined(__clang__)
 #endif
 
+#if !defined(__HIPCC_RTC__)
 #include <hip/hip_runtime_api.h>
-#include <hip/hip_vector_types.h>
 #include <hip/library_types.h>
+#endif // !defined(__HIPCC_RTC__)
+#include <hip/hip_vector_types.h>
 
 #endif

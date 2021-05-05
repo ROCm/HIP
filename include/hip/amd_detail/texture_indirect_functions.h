@@ -28,7 +28,9 @@ THE SOFTWARE.
 #include <hip/hip_texture_types.h>
 #include <hip/amd_detail/ockl_image.h>
 
+#if !defined(__HIPCC_RTC__)
 #include <type_traits>
+#endif // !defined(__HIPCC_RTC__)
 
 #define TEXTURE_OBJECT_PARAMETERS_INIT                                                            \
     unsigned int ADDRESS_SPACE_CONSTANT* i = (unsigned int ADDRESS_SPACE_CONSTANT*)textureObject; \

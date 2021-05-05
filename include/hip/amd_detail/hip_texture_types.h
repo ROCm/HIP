@@ -33,9 +33,10 @@ THE SOFTWARE.
  *                                                                              *
  *                                                                              *
  *******************************************************************************/
+#if !defined(__HIPCC_RTC__)
 #include <limits.h>
-//#include <hip/amd_detail/driver_types.h>
 #include <hip/amd_detail/channel_descriptor.h>
+#endif // !defined(__HIPCC_RTC__)
 #include <hip/amd_detail/texture_types.h>
 
 #if __cplusplus

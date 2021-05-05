@@ -30,6 +30,12 @@ THE SOFTWARE.
 
 #include "hip/amd_detail/host_defines.h"
 
+#if defined(__HIPCC_RTC__)
+    #define __HOST_DEVICE__ __device__
+#else
+    #define __HOST_DEVICE__ __host__ __device__
+#endif
+
 #if defined(__has_attribute)
     #if __has_attribute(ext_vector_type)
         #define __NATIVE_VECTOR__(n, T) T __attribute__((ext_vector_type(n)))
@@ -38,9 +44,11 @@ THE SOFTWARE.
     #endif
 
 #if defined(__cplusplus)
+#if !defined(__HIPCC_RTC__)
     #include <array>
     #include <iosfwd>
     #include <type_traits>
+#endif // !defined(__HIPCC_RTC__)
 
     namespace hip_impl {
         template<typename, typename, unsigned int> struct Scalar_accessor;
@@ -61,20 +69,20 @@ THE SOFTWARE.
             struct Address {
                 const Scalar_accessor* p;
 
-                __host__ __device__
+                __HOST_DEVICE__
                 operator const T*() const noexcept {
                     return &reinterpret_cast<const T*>(p)[idx];
                 }
-                __host__ __device__
+                __HOST_DEVICE__
                 operator const T*() const volatile noexcept {
                     return &reinterpret_cast<const T*>(p)[idx];
                 }
-                __host__ __device__
+                __HOST_DEVICE__
                 operator T*() noexcept {
                     return &reinterpret_cast<T*>(
                         const_cast<Scalar_accessor*>(p))[idx];
                 }
-                __host__ __device__
+                __HOST_DEVICE__
                 operator T*() volatile noexcept {
                     return &reinterpret_cast<T*>(
                         const_cast<Scalar_accessor*>(p))[idx];
@@ -101,9 +109,9 @@ THE SOFTWARE.
             // Idea from https://t0rakka.silvrback.com/simd-scalar-accessor
             Vector data;
 
-            __host__ __device__
+            __HOST_DEVICE__
             operator T() const noexcept { return data[idx]; }
-            __host__ __device__
+            __HOST_DEVICE__
             operator T() const volatile noexcept { return data[idx]; }
 
 #ifdef __HIP_ENABLE_VECTOR_SCALAR_ACCESSORY_ENUM_CONVERSION__
@@ -116,7 +124,7 @@ THE SOFTWARE.
                     std::is_enum<U>{} &&
                     std::is_convertible<
                         T, typename std::enable_if<std::is_enum<U>::value, std::underlying_type<U>>::type::type>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             operator U() const noexcept { return static_cast<U>(data[idx]); }
             template<
                 typename U,
@@ -125,60 +133,60 @@ THE SOFTWARE.
                     std::is_enum<U>{} &&
                     std::is_convertible<
                         T, typename std::enable_if<std::is_enum<U>::value, std::underlying_type<U>>::type::type>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             operator U() const volatile noexcept { return static_cast<U>(data[idx]); }
 #endif
 
-            __host__ __device__
+            __HOST_DEVICE__
             operator T&() noexcept {
                 return reinterpret_cast<
                     T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
             }
-            __host__ __device__
+            __HOST_DEVICE__
             operator volatile T&() volatile noexcept {
                 return reinterpret_cast<
                     volatile T (&)[sizeof(Vector) / sizeof(T)]>(data)[idx];
             }
 
-            __host__ __device__
+            __HOST_DEVICE__
             Address operator&() const noexcept { return Address{this}; }
 
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator=(const Scalar_accessor& x) noexcept {
                 data[idx] = x.data[idx];
 
                 return *this;
             }
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator=(T x) noexcept {
                 data[idx] = x;
 
                 return *this;
             }
-            __host__ __device__
+            __HOST_DEVICE__
             volatile Scalar_accessor& operator=(T x) volatile noexcept {
                 data[idx] = x;
 
                 return *this;
             }
 
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator++() noexcept {
                 ++data[idx];
                 return *this;
             }
-            __host__ __device__
+            __HOST_DEVICE__
             T operator++(int) noexcept {
                 auto r{data[idx]};
                 ++data[idx];
                 return *this;
             }
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator--() noexcept {
                 --data[idx];
                 return *this;
             }
-            __host__ __device__
+            __HOST_DEVICE__
             T operator--(int) noexcept {
                 auto r{data[idx]};
                 --data[idx];
@@ -191,7 +199,7 @@ THE SOFTWARE.
                 typename U,
                 typename std::enable_if<
                     std::is_convertible<U, T>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator+=(U x) noexcept {
                 data[idx] += x;
                 return *this;
@@ -200,7 +208,7 @@ THE SOFTWARE.
                 typename U,
                 typename std::enable_if<
                     std::is_convertible<U, T>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator-=(U x) noexcept {
                 data[idx] -= x;
                 return *this;
@@ -210,7 +218,7 @@ THE SOFTWARE.
                 typename U,
                 typename std::enable_if<
                     std::is_convertible<U, T>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator*=(U x) noexcept {
                 data[idx] *= x;
                 return *this;
@@ -219,7 +227,7 @@ THE SOFTWARE.
                 typename U,
                 typename std::enable_if<
                     std::is_convertible<U, T>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator/=(U x) noexcept {
                 data[idx] /= x;
                 return *this;
@@ -228,7 +236,7 @@ THE SOFTWARE.
                 typename U = T,
                 typename std::enable_if<std::is_convertible<U, T>{} &&
                                         std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator%=(U x) noexcept {
                 data[idx] %= x;
                 return *this;
@@ -238,7 +246,7 @@ THE SOFTWARE.
                 typename U = T,
                 typename std::enable_if<std::is_convertible<U, T>{} &&
                                         std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator>>=(U x) noexcept {
                 data[idx] >>= x;
                 return *this;
@@ -247,7 +255,7 @@ THE SOFTWARE.
                 typename U = T,
                 typename std::enable_if<std::is_convertible<U, T>{} &&
                                         std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator<<=(U x) noexcept {
                 data[idx] <<= x;
                 return *this;
@@ -256,7 +264,7 @@ THE SOFTWARE.
                 typename U = T,
                 typename std::enable_if<std::is_convertible<U, T>{} &&
                                         std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator&=(U x) noexcept {
                 data[idx] &= x;
                 return *this;
@@ -265,7 +273,7 @@ THE SOFTWARE.
                 typename U = T,
                 typename std::enable_if<std::is_convertible<U, T>{} &&
                                         std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator|=(U x) noexcept {
                 data[idx] |= x;
                 return *this;
@@ -274,7 +282,7 @@ THE SOFTWARE.
                 typename U = T,
                 typename std::enable_if<std::is_convertible<U, T>{} &&
                                         std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Scalar_accessor& operator^=(U x) noexcept {
                 data[idx] ^= x;
                 return *this;
@@ -308,22 +316,22 @@ THE SOFTWARE.
 
         using value_type = T;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base() = default;
-        __host__ __device__
+        __HOST_DEVICE__
         explicit
         constexpr
         HIP_vector_base(T x_) noexcept : data{x_} {}
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(const HIP_vector_base&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(HIP_vector_base&&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         ~HIP_vector_base() = default;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base& operator=(const HIP_vector_base& x_) noexcept {
             #if __has_attribute(ext_vector_type)
                 data = x_.data;
@@ -358,25 +366,25 @@ THE SOFTWARE.
 
         using value_type = T;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base() = default;
-        __host__ __device__
+        __HOST_DEVICE__
         explicit
         constexpr
         HIP_vector_base(T x_) noexcept : data{x_, x_} {}
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(T x_, T y_) noexcept : data{x_, y_} {}
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(const HIP_vector_base&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(HIP_vector_base&&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         ~HIP_vector_base() = default;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base& operator=(const HIP_vector_base& x_) noexcept {
             #if __has_attribute(ext_vector_type)
                 data = x_.data;
@@ -394,55 +402,55 @@ THE SOFTWARE.
         struct Native_vec_ {
             T d[3];
 
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_() = default;
 
-            __host__ __device__
+            __HOST_DEVICE__
             explicit
             constexpr
             Native_vec_(T x_) noexcept : d{x_, x_, x_} {}
-            __host__ __device__
+            __HOST_DEVICE__
             constexpr
             Native_vec_(T x_, T y_, T z_) noexcept : d{x_, y_, z_} {}
-            __host__ __device__
+            __HOST_DEVICE__
             constexpr
             Native_vec_(const Native_vec_&) = default;
-            __host__ __device__
+            __HOST_DEVICE__
             constexpr
             Native_vec_(Native_vec_&&) = default;
-            __host__ __device__
+            __HOST_DEVICE__
             ~Native_vec_() = default;
 
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator=(const Native_vec_&) = default;
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator=(Native_vec_&&) = default;
 
-            __host__ __device__
+            __HOST_DEVICE__
             T& operator[](unsigned int idx) noexcept { return d[idx]; }
-            __host__ __device__
+            __HOST_DEVICE__
             T operator[](unsigned int idx) const noexcept { return d[idx]; }
 
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator+=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] += x_.d[i];
                 return *this;
             }
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator-=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] -= x_.d[i];
                 return *this;
             }
 
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator*=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] *= x_.d[i];
                 return *this;
             }
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator/=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] /= x_.d[i];
@@ -452,7 +460,7 @@ THE SOFTWARE.
             template<
                 typename U = T,
                 typename std::enable_if<std::is_signed<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_ operator-() const noexcept
             {
                 auto r{*this};
@@ -463,7 +471,7 @@ THE SOFTWARE.
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_ operator~() const noexcept
             {
                 auto r{*this};
@@ -473,7 +481,7 @@ THE SOFTWARE.
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator%=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] %= x_.d[i];
@@ -482,7 +490,7 @@ THE SOFTWARE.
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator^=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] ^= x_.d[i];
@@ -491,7 +499,7 @@ THE SOFTWARE.
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator|=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] |= x_.d[i];
@@ -500,7 +508,7 @@ THE SOFTWARE.
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator&=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] &= x_.d[i];
@@ -509,7 +517,7 @@ THE SOFTWARE.
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator>>=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] >>= x_.d[i];
@@ -518,7 +526,7 @@ THE SOFTWARE.
             template<
                 typename U = T,
                 typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-            __host__ __device__
+            __HOST_DEVICE__
             Native_vec_& operator<<=(const Native_vec_& x_) noexcept
             {
                 for (auto i = 0u; i != 3u; ++i) d[i] <<= x_.d[i];
@@ -526,7 +534,7 @@ THE SOFTWARE.
             }
 
             using Vec3_cmp = int __attribute__((vector_size(4 * sizeof(int))));
-            __host__ __device__
+            __HOST_DEVICE__
             Vec3_cmp operator==(const Native_vec_& x_) const noexcept
             {
                 return Vec3_cmp{d[0] == x_.d[0], d[1] == x_.d[1], d[2] == x_.d[2]};
@@ -544,27 +552,27 @@ THE SOFTWARE.
 
         using value_type = T;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base() = default;
-        __host__ __device__
+        __HOST_DEVICE__
         explicit
         constexpr
         HIP_vector_base(T x_) noexcept : data{x_, x_, x_} {}
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(T x_, T y_, T z_) noexcept : data{x_, y_, z_} {}
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(const HIP_vector_base&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(HIP_vector_base&&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         ~HIP_vector_base() = default;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base& operator=(const HIP_vector_base&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base& operator=(HIP_vector_base&&) = default;
     };
 
@@ -595,25 +603,25 @@ THE SOFTWARE.
 
         using value_type = T;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base() = default;
-        __host__ __device__
+        __HOST_DEVICE__
         explicit
         constexpr
         HIP_vector_base(T x_) noexcept : data{x_, x_, x_, x_} {}
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(T x_, T y_, T z_, T w_) noexcept : data{x_, y_, z_, w_} {}
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(const HIP_vector_base&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_base(HIP_vector_base&&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         ~HIP_vector_base() = default;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_base& operator=(const HIP_vector_base& x_) noexcept {
             #if __has_attribute(ext_vector_type)
                 data = x_.data;
@@ -633,13 +641,13 @@ THE SOFTWARE.
         using HIP_vector_base<T, rank>::data;
         using typename HIP_vector_base<T, rank>::Native_vec_;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type() = default;
         template<
             typename U,
             typename std::enable_if<
                 std::is_convertible<U, T>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         explicit
         constexpr
         HIP_vector_type(U x_) noexcept
@@ -649,32 +657,32 @@ THE SOFTWARE.
             typename... Us,
             typename std::enable_if<
                 (rank > 1) && sizeof...(Us) == rank>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_type(Us... xs) noexcept
             : HIP_vector_base<T, rank>{static_cast<T>(xs)...}
         {}
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_type(const HIP_vector_type&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         constexpr
         HIP_vector_type(HIP_vector_type&&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         ~HIP_vector_type() = default;
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator=(const HIP_vector_type&) = default;
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator=(HIP_vector_type&&) = default;
 
         // Operators
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator++() noexcept
         {
             return *this += HIP_vector_type{1};
         }
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type operator++(int) noexcept
         {
             auto tmp(*this);
@@ -682,12 +690,12 @@ THE SOFTWARE.
             return tmp;
         }
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator--() noexcept
         {
             return *this -= HIP_vector_type{1};
         }
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type operator--(int) noexcept
         {
             auto tmp(*this);
@@ -695,7 +703,7 @@ THE SOFTWARE.
             return tmp;
         }
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator+=(const HIP_vector_type& x) noexcept
         {
             data += x.data;
@@ -705,13 +713,13 @@ THE SOFTWARE.
             typename U,
             typename std::enable_if<
                 std::is_convertible<U, T>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator+=(U x) noexcept
         {
             return *this += HIP_vector_type{x};
         }
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator-=(const HIP_vector_type& x) noexcept
         {
             data -= x.data;
@@ -721,13 +729,13 @@ THE SOFTWARE.
             typename U,
             typename std::enable_if<
                 std::is_convertible<U, T>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator-=(U x) noexcept
         {
             return *this -= HIP_vector_type{x};
         }
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator*=(const HIP_vector_type& x) noexcept
         {
             data *= x.data;
@@ -737,13 +745,13 @@ THE SOFTWARE.
             typename U,
             typename std::enable_if<
                 std::is_convertible<U, T>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator*=(U x) noexcept
         {
             return *this *= HIP_vector_type{x};
         }
 
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator/=(const HIP_vector_type& x) noexcept
         {
             data /= x.data;
@@ -753,7 +761,7 @@ THE SOFTWARE.
             typename U,
             typename std::enable_if<
                 std::is_convertible<U, T>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator/=(U x) noexcept
         {
             return *this /= HIP_vector_type{x};
@@ -762,7 +770,7 @@ THE SOFTWARE.
         template<
             typename U = T,
             typename std::enable_if<std::is_signed<U>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type operator-() const noexcept
         {
             auto tmp(*this);
@@ -773,7 +781,7 @@ THE SOFTWARE.
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type operator~() const noexcept
         {
             HIP_vector_type r{*this};
@@ -784,7 +792,7 @@ THE SOFTWARE.
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator%=(const HIP_vector_type& x) noexcept
         {
             data %= x.data;
@@ -794,7 +802,7 @@ THE SOFTWARE.
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator^=(const HIP_vector_type& x) noexcept
         {
             data ^= x.data;
@@ -804,7 +812,7 @@ THE SOFTWARE.
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator|=(const HIP_vector_type& x) noexcept
         {
             data |= x.data;
@@ -814,7 +822,7 @@ THE SOFTWARE.
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator&=(const HIP_vector_type& x) noexcept
         {
             data &= x.data;
@@ -824,7 +832,7 @@ THE SOFTWARE.
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator>>=(const HIP_vector_type& x) noexcept
         {
             data >>= x.data;
@@ -834,7 +842,7 @@ THE SOFTWARE.
         template<
             typename U = T,
             typename std::enable_if<std::is_integral<U>{}>::type* = nullptr>
-        __host__ __device__
+        __HOST_DEVICE__
         HIP_vector_type& operator<<=(const HIP_vector_type& x) noexcept
         {
             data <<= x.data;
@@ -843,7 +851,7 @@ THE SOFTWARE.
     };
 
     template<typename T, unsigned int n>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator+(
@@ -852,7 +860,7 @@ THE SOFTWARE.
         return HIP_vector_type<T, n>{x} += y;
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator+(
@@ -861,7 +869,7 @@ THE SOFTWARE.
         return HIP_vector_type<T, n>{x} += HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator+(
@@ -871,7 +879,7 @@ THE SOFTWARE.
     }
 
     template<typename T, unsigned int n>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator-(
@@ -880,7 +888,7 @@ THE SOFTWARE.
         return HIP_vector_type<T, n>{x} -= y;
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator-(
@@ -889,7 +897,7 @@ THE SOFTWARE.
         return HIP_vector_type<T, n>{x} -= HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator-(
@@ -899,7 +907,7 @@ THE SOFTWARE.
     }
 
     template<typename T, unsigned int n>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator*(
@@ -908,7 +916,7 @@ THE SOFTWARE.
         return HIP_vector_type<T, n>{x} *= y;
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator*(
@@ -917,7 +925,7 @@ THE SOFTWARE.
         return HIP_vector_type<T, n>{x} *= HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator*(
@@ -927,7 +935,7 @@ THE SOFTWARE.
     }
 
     template<typename T, unsigned int n>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator/(
@@ -936,7 +944,7 @@ THE SOFTWARE.
         return HIP_vector_type<T, n>{x} /= y;
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator/(
@@ -945,7 +953,7 @@ THE SOFTWARE.
         return HIP_vector_type<T, n>{x} /= HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator/(
@@ -955,7 +963,7 @@ THE SOFTWARE.
     }
 
     template<typename V>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     bool _hip_any_zero(const V& x, int n) noexcept
@@ -965,7 +973,7 @@ THE SOFTWARE.
     }
 
     template<typename T, unsigned int n>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     bool operator==(
@@ -974,7 +982,7 @@ THE SOFTWARE.
         return _hip_any_zero(x.data == y.data, n - 1);
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     bool operator==(const HIP_vector_type<T, n>& x, U y) noexcept
@@ -982,7 +990,7 @@ THE SOFTWARE.
         return x == HIP_vector_type<T, n>{y};
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     bool operator==(U x, const HIP_vector_type<T, n>& y) noexcept
@@ -991,7 +999,7 @@ THE SOFTWARE.
     }
 
     template<typename T, unsigned int n>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     bool operator!=(
@@ -1000,7 +1008,7 @@ THE SOFTWARE.
         return !(x == y);
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     bool operator!=(const HIP_vector_type<T, n>& x, U y) noexcept
@@ -1008,7 +1016,7 @@ THE SOFTWARE.
         return !(x == y);
     }
     template<typename T, unsigned int n, typename U>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     bool operator!=(U x, const HIP_vector_type<T, n>& y) noexcept
@@ -1020,7 +1028,7 @@ THE SOFTWARE.
         typename T,
         unsigned int n,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator%(
@@ -1033,7 +1041,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator%(
@@ -1046,7 +1054,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator%(
@@ -1059,7 +1067,7 @@ THE SOFTWARE.
         typename T,
         unsigned int n,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator^(
@@ -1072,7 +1080,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator^(
@@ -1085,7 +1093,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator^(
@@ -1098,7 +1106,7 @@ THE SOFTWARE.
         typename T,
         unsigned int n,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator|(
@@ -1111,7 +1119,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator|(
@@ -1124,7 +1132,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator|(
@@ -1137,7 +1145,7 @@ THE SOFTWARE.
         typename T,
         unsigned int n,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator&(
@@ -1150,7 +1158,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator&(
@@ -1163,7 +1171,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator&(
@@ -1176,7 +1184,7 @@ THE SOFTWARE.
         typename T,
         unsigned int n,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator>>(
@@ -1189,7 +1197,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator>>(
@@ -1202,7 +1210,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator>>(
@@ -1215,7 +1223,7 @@ THE SOFTWARE.
         typename T,
         unsigned int n,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator<<(
@@ -1228,7 +1236,7 @@ THE SOFTWARE.
         unsigned int n,
         typename U,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator<<(
@@ -1242,7 +1250,7 @@ THE SOFTWARE.
         typename U,
         typename std::enable_if<std::is_arithmetic<U>::value>::type,
         typename std::enable_if<std::is_integral<T>{}>* = nullptr>
-    __host__ __device__
+    __HOST_DEVICE__
     inline
     constexpr
     HIP_vector_type<T, n> operator<<(
@@ -1293,38 +1301,38 @@ __MAKE_VECTOR_TYPE__(double, double);
 
 #ifdef __cplusplus
 #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
-    static inline __device__ __host__ \
+    static inline __HOST_DEVICE__ \
     type make_##type(comp x) { type r{x}; return r; }
 
 #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
-    static inline __device__ __host__ \
+    static inline __HOST_DEVICE__ \
     type make_##type(comp x, comp y) { type r{x, y}; return r; }
 
 #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
-    static inline __device__ __host__ \
+    static inline __HOST_DEVICE__ \
     type make_##type(comp x, comp y, comp z) { type r{x, y, z}; return r; }
 
 #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
-    static inline __device__ __host__ \
+    static inline __HOST_DEVICE__ \
     type make_##type(comp x, comp y, comp z, comp w) { \
         type r{x, y, z, w}; \
         return r; \
     }
 #else
  #define DECLOP_MAKE_ONE_COMPONENT(comp, type) \
-     static inline __device__ __host__ \
+     static inline __HOST_DEVICE__ \
      type make_##type(comp x) { type r; r.x =x; return r; }
 
  #define DECLOP_MAKE_TWO_COMPONENT(comp, type) \
-     static inline __device__ __host__ \
+     static inline __HOST_DEVICE__ \
      type make_##type(comp x, comp y) { type r; r.x=x; r.y=y; return r; }
 
  #define DECLOP_MAKE_THREE_COMPONENT(comp, type) \
-     static inline __device__ __host__ \
+     static inline __HOST_DEVICE__ \
      type make_##type(comp x, comp y, comp z) { type r; r.x=x; r.y=y; r.z=z; return r; }
 
  #define DECLOP_MAKE_FOUR_COMPONENT(comp, type) \
-     static inline __device__ __host__ \
+     static inline __HOST_DEVICE__ \
      type make_##type(comp x, comp y, comp z, comp w) { \
          type r; r.x=x; r.y=y; r.z=z; r.w=w; \
          return r; \

@@ -26,9 +26,10 @@ THE SOFTWARE.
 #include "host_defines.h"
 #include "math_fwd.h"
 
+#if !defined(__HIPCC_RTC__)
 #include <hip/hip_runtime_api.h>
 #include <stddef.h>
-
+#endif // !defined(__HIPCC_RTC__)
 
 #include <hip/hip_vector_types.h>
 #include <hip/amd_detail/device_library_decls.h>
