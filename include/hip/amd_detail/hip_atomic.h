@@ -111,7 +111,9 @@ float atomicAdd_system(float* address, float val) {
   return __hip_atomic_fetch_add(address, val, __ATOMIC_RELAXED, __HIP_MEMORY_SCOPE_SYSTEM);
 }
 
+#if !defined(__HIPCC_RTC__)
 DEPRECATED("use atomicAdd instead")
+#endif // !defined(__HIPCC_RTC__)
 __device__
 inline
 void atomicAddNoRet(float* address, float val)
@@ -476,7 +478,9 @@ float atomicAdd(float* address, float val)
     return __atomic_fetch_add(address, val, __ATOMIC_RELAXED);
 }
 
+#if !defined(__HIPCC_RTC__)
 DEPRECATED("use atomicAdd instead")
+#endif // !defined(__HIPCC_RTC__)
 __device__
 inline
 void atomicAddNoRet(float* address, float val)

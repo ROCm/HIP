@@ -25,6 +25,10 @@ THE SOFTWARE.
 
 #include "hip/amd_detail/hip_vector_types.h"
 
+#if defined(__HIPCC_RTC__)
+#define __HOST_DEVICE__ __device__
+#else
+#define __HOST_DEVICE__ __host__ __device__
 // TODO: Clang has a bug which allows device functions to call std functions
 // when std functions are introduced into default namespace by using statement.
 // math.h may be included after this bug is fixed.
@@ -33,10 +37,11 @@ THE SOFTWARE.
 #else
 #include "math.h"
 #endif
+#endif // !defined(__HIPCC_RTC__)
 
 #if __cplusplus
 #define COMPLEX_NEG_OP_OVERLOAD(type)                                                              \
-    __device__ __host__ static inline type operator-(const type& op) {                             \
+    __HOST_DEVICE__ static inline type operator-(const type& op) {                             \
         type ret;                                                                                  \
         ret.x = -op.x;                                                                             \
         ret.y = -op.y;                                                                             \
@@ -44,17 +49,17 @@ THE SOFTWARE.
     }
 
 #define COMPLEX_EQ_OP_OVERLOAD(type)                                                               \
-    __device__ __host__ static inline bool operator==(const type& lhs, const type& rhs) {          \
+    __HOST_DEVICE__ static inline bool operator==(const type& lhs, const type& rhs) {          \
         return lhs.x == rhs.x && lhs.y == rhs.y;                                                   \
     }
 
 #define COMPLEX_NE_OP_OVERLOAD(type)                                                               \
-    __device__ __host__ static inline bool operator!=(const type& lhs, const type& rhs) {          \
+    __HOST_DEVICE__ static inline bool operator!=(const type& lhs, const type& rhs) {          \
         return !(lhs == rhs);                                                                      \
     }
 
 #define COMPLEX_ADD_OP_OVERLOAD(type)                                                              \
-    __device__ __host__ static inline type operator+(const type& lhs, const type& rhs) {           \
+    __HOST_DEVICE__ static inline type operator+(const type& lhs, const type& rhs) {           \
         type ret;                                                                                  \
         ret.x = lhs.x + rhs.x;                                                                     \
         ret.y = lhs.y + rhs.y;                                                                     \
@@ -62,7 +67,7 @@ THE SOFTWARE.
     }
 
 #define COMPLEX_SUB_OP_OVERLOAD(type)                                                              \
-    __device__ __host__ static inline type operator-(const type& lhs, const type& rhs) {           \
+    __HOST_DEVICE__ static inline type operator-(const type& lhs, const type& rhs) {           \
         type ret;                                                                                  \
         ret.x = lhs.x - rhs.x;                                                                     \
         ret.y = lhs.y - rhs.y;                                                                     \
@@ -70,7 +75,7 @@ THE SOFTWARE.
     }
 
 #define COMPLEX_MUL_OP_OVERLOAD(type)                                                              \
-    __device__ __host__ static inline type operator*(const type& lhs, const type& rhs) {           \
+    __HOST_DEVICE__ static inline type operator*(const type& lhs, const type& rhs) {           \
         type ret;                                                                                  \
         ret.x = lhs.x * rhs.x - lhs.y * rhs.y;                                                     \
         ret.y = lhs.x * rhs.y + lhs.y * rhs.x;                                                     \
@@ -78,7 +83,7 @@ THE SOFTWARE.
     }
 
 #define COMPLEX_DIV_OP_OVERLOAD(type)                                                              \
-    __device__ __host__ static inline type operator/(const type& lhs, const type& rhs) {           \
+    __HOST_DEVICE__ static inline type operator/(const type& lhs, const type& rhs) {           \
         type ret;                                                                                  \
         ret.x = (lhs.x * rhs.x + lhs.y * rhs.y);                                                   \
         ret.y = (rhs.x * lhs.y - lhs.x * rhs.y);                                                   \
@@ -88,33 +93,33 @@ THE SOFTWARE.
     }
 
 #define COMPLEX_ADD_PREOP_OVERLOAD(type)                                                           \
-    __device__ __host__ static inline type& operator+=(type& lhs, const type& rhs) {               \
+    __HOST_DEVICE__ static inline type& operator+=(type& lhs, const type& rhs) {               \
         lhs.x += rhs.x;                                                                            \
         lhs.y += rhs.y;                                                                            \
         return lhs;                                                                                \
     }
 
 #define COMPLEX_SUB_PREOP_OVERLOAD(type)                                                           \
-    __device__ __host__ static inline type& operator-=(type& lhs, const type& rhs) {               \
+    __HOST_DEVICE__ static inline type& operator-=(type& lhs, const type& rhs) {               \
         lhs.x -= rhs.x;                                                                            \
         lhs.y -= rhs.y;                                                                            \
         return lhs;                                                                                \
     }
 
 #define COMPLEX_MUL_PREOP_OVERLOAD(type)                                                           \
-    __device__ __host__ static inline type& operator*=(type& lhs, const type& rhs) {               \
+    __HOST_DEVICE__ static inline type& operator*=(type& lhs, const type& rhs) {               \
         lhs = lhs * rhs;                                                                           \
         return lhs;                                                                                \
     }
 
 #define COMPLEX_DIV_PREOP_OVERLOAD(type)                                                           \
-    __device__ __host__ static inline type& operator/=(type& lhs, const type& rhs) {               \
+    __HOST_DEVICE__ static inline type& operator/=(type& lhs, const type& rhs) {               \
         lhs = lhs / rhs;                                                                           \
         return lhs;                                                                                \
     }
 
 #define COMPLEX_SCALAR_PRODUCT(type, type1)                                                        \
-    __device__ __host__ static inline type operator*(const type& lhs, type1 rhs) {                 \
+    __HOST_DEVICE__ static inline type operator*(const type& lhs, type1 rhs) {                 \
         type ret;                                                                                  \
         ret.x = lhs.x * rhs;                                                                       \
         ret.y = lhs.y * rhs;                                                                       \
@@ -125,41 +130,41 @@ THE SOFTWARE.
 
 typedef float2 hipFloatComplex;
 
-__device__ __host__ static inline float hipCrealf(hipFloatComplex z) { return z.x; }
+__HOST_DEVICE__ static inline float hipCrealf(hipFloatComplex z) { return z.x; }
 
-__device__ __host__ static inline float hipCimagf(hipFloatComplex z) { return z.y; }
+__HOST_DEVICE__ static inline float hipCimagf(hipFloatComplex z) { return z.y; }
 
-__device__ __host__ static inline hipFloatComplex make_hipFloatComplex(float a, float b) {
+__HOST_DEVICE__ static inline hipFloatComplex make_hipFloatComplex(float a, float b) {
     hipFloatComplex z;
     z.x = a;
     z.y = b;
     return z;
 }
 
-__device__ __host__ static inline hipFloatComplex hipConjf(hipFloatComplex z) {
+__HOST_DEVICE__ static inline hipFloatComplex hipConjf(hipFloatComplex z) {
     hipFloatComplex ret;
     ret.x = z.x;
     ret.y = -z.y;
     return ret;
 }
 
-__device__ __host__ static inline float hipCsqabsf(hipFloatComplex z) {
+__HOST_DEVICE__ static inline float hipCsqabsf(hipFloatComplex z) {
     return z.x * z.x + z.y * z.y;
 }
 
-__device__ __host__ static inline hipFloatComplex hipCaddf(hipFloatComplex p, hipFloatComplex q) {
+__HOST_DEVICE__ static inline hipFloatComplex hipCaddf(hipFloatComplex p, hipFloatComplex q) {
     return make_hipFloatComplex(p.x + q.x, p.y + q.y);
 }
 
-__device__ __host__ static inline hipFloatComplex hipCsubf(hipFloatComplex p, hipFloatComplex q) {
+__HOST_DEVICE__ static inline hipFloatComplex hipCsubf(hipFloatComplex p, hipFloatComplex q) {
     return make_hipFloatComplex(p.x - q.x, p.y - q.y);
 }
 
-__device__ __host__ static inline hipFloatComplex hipCmulf(hipFloatComplex p, hipFloatComplex q) {
+__HOST_DEVICE__ static inline hipFloatComplex hipCmulf(hipFloatComplex p, hipFloatComplex q) {
     return make_hipFloatComplex(p.x * q.x - p.y * q.y, p.y * q.x + p.x * q.y);
 }
 
-__device__ __host__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hipFloatComplex q) {
+__HOST_DEVICE__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hipFloatComplex q) {
     float sqabs = hipCsqabsf(q);
     hipFloatComplex ret;
     ret.x = (p.x * q.x + p.y * q.y) / sqabs;
@@ -167,46 +172,46 @@ __device__ __host__ static inline hipFloatComplex hipCdivf(hipFloatComplex p, hi
     return ret;
 }
 
-__device__ __host__ static inline float hipCabsf(hipFloatComplex z) { return sqrtf(hipCsqabsf(z)); }
+__HOST_DEVICE__ static inline float hipCabsf(hipFloatComplex z) { return sqrtf(hipCsqabsf(z)); }
 
 
 typedef double2 hipDoubleComplex;
 
-__device__ __host__ static inline double hipCreal(hipDoubleComplex z) { return z.x; }
+__HOST_DEVICE__ static inline double hipCreal(hipDoubleComplex z) { return z.x; }
 
-__device__ __host__ static inline double hipCimag(hipDoubleComplex z) { return z.y; }
+__HOST_DEVICE__ static inline double hipCimag(hipDoubleComplex z) { return z.y; }
 
-__device__ __host__ static inline hipDoubleComplex make_hipDoubleComplex(double a, double b) {
+__HOST_DEVICE__ static inline hipDoubleComplex make_hipDoubleComplex(double a, double b) {
     hipDoubleComplex z;
     z.x = a;
     z.y = b;
     return z;
 }
 
-__device__ __host__ static inline hipDoubleComplex hipConj(hipDoubleComplex z) {
+__HOST_DEVICE__ static inline hipDoubleComplex hipConj(hipDoubleComplex z) {
     hipDoubleComplex ret;
     ret.x = z.x;
     ret.y = -z.y;
     return ret;
 }
 
-__device__ __host__ static inline double hipCsqabs(hipDoubleComplex z) {
+__HOST_DEVICE__ static inline double hipCsqabs(hipDoubleComplex z) {
     return z.x * z.x + z.y * z.y;
 }
 
-__device__ __host__ static inline hipDoubleComplex hipCadd(hipDoubleComplex p, hipDoubleComplex q) {
+__HOST_DEVICE__ static inline hipDoubleComplex hipCadd(hipDoubleComplex p, hipDoubleComplex q) {
     return make_hipDoubleComplex(p.x + q.x, p.y + q.y);
 }
 
-__device__ __host__ static inline hipDoubleComplex hipCsub(hipDoubleComplex p, hipDoubleComplex q) {
+__HOST_DEVICE__ static inline hipDoubleComplex hipCsub(hipDoubleComplex p, hipDoubleComplex q) {
     return make_hipDoubleComplex(p.x - q.x, p.y - q.y);
 }
 
-__device__ __host__ static inline hipDoubleComplex hipCmul(hipDoubleComplex p, hipDoubleComplex q) {
+__HOST_DEVICE__ static inline hipDoubleComplex hipCmul(hipDoubleComplex p, hipDoubleComplex q) {
     return make_hipDoubleComplex(p.x * q.x - p.y * q.y, p.y * q.x + p.x * q.y);
 }
 
-__device__ __host__ static inline hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q) {
+__HOST_DEVICE__ static inline hipDoubleComplex hipCdiv(hipDoubleComplex p, hipDoubleComplex q) {
     double sqabs = hipCsqabs(q);
     hipDoubleComplex ret;
     ret.x = (p.x * q.x + p.y * q.y) / sqabs;
@@ -214,7 +219,7 @@ __device__ __host__ static inline hipDoubleComplex hipCdiv(hipDoubleComplex p, h
     return ret;
 }
 
-__device__ __host__ static inline double hipCabs(hipDoubleComplex z) { return sqrt(hipCsqabs(z)); }
+__HOST_DEVICE__ static inline double hipCabs(hipDoubleComplex z) { return sqrt(hipCsqabs(z)); }
 
 
 #if __cplusplus
@@ -268,19 +273,19 @@ COMPLEX_SCALAR_PRODUCT(hipDoubleComplex, unsigned long long)
 
 typedef hipFloatComplex hipComplex;
 
-__device__ __host__ static inline hipComplex make_hipComplex(float x, float y) {
+__HOST_DEVICE__ static inline hipComplex make_hipComplex(float x, float y) {
     return make_hipFloatComplex(x, y);
 }
 
-__device__ __host__ static inline hipFloatComplex hipComplexDoubleToFloat(hipDoubleComplex z) {
+__HOST_DEVICE__ static inline hipFloatComplex hipComplexDoubleToFloat(hipDoubleComplex z) {
     return make_hipFloatComplex((float)z.x, (float)z.y);
 }
 
-__device__ __host__ static inline hipDoubleComplex hipComplexFloatToDouble(hipFloatComplex z) {
+__HOST_DEVICE__ static inline hipDoubleComplex hipComplexFloatToDouble(hipFloatComplex z) {
     return make_hipDoubleComplex((double)z.x, (double)z.y);
 }
 
-__device__ __host__ static inline hipComplex hipCfmaf(hipComplex p, hipComplex q, hipComplex r) {
+__HOST_DEVICE__ static inline hipComplex hipCfmaf(hipComplex p, hipComplex q, hipComplex r) {
     float real = (p.x * q.x) + r.x;
     float imag = (q.x * p.y) + r.y;
 
@@ -290,7 +295,7 @@ __device__ __host__ static inline hipComplex hipCfmaf(hipComplex p, hipComplex q
     return make_hipComplex(real, imag);
 }
 
-__device__ __host__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, hipDoubleComplex q,
+__HOST_DEVICE__ static inline hipDoubleComplex hipCfma(hipDoubleComplex p, hipDoubleComplex q,
                                                            hipDoubleComplex r) {
     double real = (p.x * q.x) + r.x;
     double imag = (q.x * p.y) + r.y;
