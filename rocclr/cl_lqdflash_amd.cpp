@@ -25,12 +25,14 @@
 
 #include "cl_lqdflash_amd.h"
 
+#ifndef WITH_LIQUID_FLASH
 #if (!defined(BUILD_HSA_TARGET) && defined(WITH_HSA_DEVICE) && \
-      defined(WITH_AMDGPU_PRO)) || defined(_WIN32) || defined(WITH_PAL_DEVICE)
+      defined(WITH_AMDGPU_PRO)) || defined(_WIN32)
 #define WITH_LIQUID_FLASH 1
 #endif  // _WIN32
+#endif
 
-#if defined(WITH_LIQUID_FLASH)
+#if WITH_LIQUID_FLASH
 #include "lf.h"
 #include <locale>
 #include <codecvt>
@@ -41,7 +43,7 @@ namespace amd {
 LiquidFlashFile::~LiquidFlashFile() { close(); }
 
 bool LiquidFlashFile::open() {
-#if defined WITH_LIQUID_FLASH
+#if WITH_LIQUID_FLASH
   lf_status err;
   lf_file_flags flags = 0;
 
@@ -84,7 +86,7 @@ bool LiquidFlashFile::open() {
 }
 
 void LiquidFlashFile::close() {
-#if defined WITH_LIQUID_FLASH
+#if WITH_LIQUID_FLASH
   if (handle_ != NULL) {
     lfReleaseFile((lf_file)handle_);
     handle_ = NULL;
@@ -95,7 +97,7 @@ void LiquidFlashFile::close() {
 bool LiquidFlashFile::transferBlock(bool writeBuffer, void* srcDst, uint64_t bufferSize,
                                     uint64_t fileOffset, uint64_t bufferOffset,
                                     uint64_t size) const {
-#if defined WITH_LIQUID_FLASH
+#if WITH_LIQUID_FLASH
   lf_status status;
 
   lf_region_descriptor region = {fileOffset / blockSize(), bufferOffset / blockSize(),
@@ -128,7 +130,7 @@ bool LiquidFlashFile::transferBlock(bool writeBuffer, void* srcDst, uint64_t buf
 RUNTIME_ENTRY_RET(cl_file_amd, clCreateSsgFileObjectAMD,
                   (cl_context context, cl_file_flags_amd flags, const wchar_t* file_name,
                    cl_int* errcode_ret)) {
-#if defined WITH_LIQUID_FLASH && defined ATI_OS_LINUX
+#if WITH_LIQUID_FLASH && defined ATI_OS_LINUX
   if (!is_valid(context)) {
     *not_null(errcode_ret) = CL_INVALID_CONTEXT;
     LogWarning("invalid parameter \"context\"");
