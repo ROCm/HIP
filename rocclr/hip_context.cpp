@@ -39,7 +39,7 @@ void init() {
   if (!amd::Runtime::initialized()) {
     amd::IS_HIP = true;
     GPU_NUM_MEM_DEPENDENCY = 0;
-    AMD_DIRECT_DISPATCH = flagIsDefault(AMD_DIRECT_DISPATCH) ? IS_LINUX : AMD_DIRECT_DISPATCH;
+    AMD_DIRECT_DISPATCH = flagIsDefault(AMD_DIRECT_DISPATCH) ? false : AMD_DIRECT_DISPATCH;
     amd::Runtime::init();
   }
 
