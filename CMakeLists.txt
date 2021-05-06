@@ -42,6 +42,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 #############################
 option(BUILD_HIPIFY_CLANG "Enable building the CUDA->HIP converter" OFF)
 option(__HIP_ENABLE_PCH "Enable/Disable pre-compiled hip headers" ON)
+option(__HIP_ENABLE_RTC "Enable/Disable pre-processed hiprtc shared lib" ON)
 
 if(__HIP_ENABLE_PCH)
   set(_pchStatus 1)

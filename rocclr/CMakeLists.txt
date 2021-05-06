@@ -116,6 +116,7 @@ find_package(LLVM REQUIRED CONFIG
      lib/cmake/llvm)
 
 message(STATUS "llvm found at ${LLVM_DIR}.")
+set(LLVM_ROOT "${LLVM_DIR}/../../..")
 
 add_library(hip64 OBJECT
  hip_context.cpp
@@ -174,11 +175,29 @@ endif()
 # Short-Term solution for pre-compiled headers for online compilation
 # Enable pre compiled header
 if(__HIP_ENABLE_PCH)
-    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${LLVM_DIR} ${HSA_PATH}" COMMAND_ECHO STDERR  RESULT_VARIABLE EMBED_PCH_RC)
+    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${LLVM_ROOT} ${HSA_PATH}" COMMAND_ECHO STDERR RESULT_VARIABLE EMBED_PCH_RC)
     if (EMBED_PCH_RC AND NOT EMBED_PCH_RC EQUAL 0)
       message(FATAL_ERROR "Failed to embed PCH")
     endif()
     add_definitions(-D__HIP_ENABLE_PCH)
+endif()
+
+# Enable preprocessed hiprtc-builtins library
+if(__HIP_ENABLE_RTC)
+  if(WIN32)
+    set(HIPRTC_LIB_NAME "hiprtc-builtins64_${HIP_LIB_VERSION_MAJOR}${HIP_LIB_VERSION_MINOR}.dll")
+  else()
+    set(HIPRTC_LIB_NAME "libhiprtc-builtins.so.${HIP_LIB_VERSION_MAJOR}.${HIP_LIB_VERSION_MINOR}")
+  endif()
+  execute_process(
+    COMMAND sh -c "mkdir -p ${PROJECT_BINARY_DIR}/lib; ${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${LLVM_ROOT} ${HSA_PATH} -r ${PROJECT_BINARY_DIR}/lib/${HIPRTC_LIB_NAME}"
+    COMMAND_ECHO STDERR
+    RESULT_VARIABLE EMBED_RTC_RC
+  )
+  if (EMBED_RTC_RC AND NOT EMBED_RTC_RC EQUAL 0)
+    message(FATAL_ERROR "Failed to create hiprtc shared lib")
+  endif()
+  install(FILES ${PROJECT_BINARY_DIR}/lib/${HIPRTC_LIB_NAME} DESTINATION lib)
 endif()
 
 # Enable profiling API
