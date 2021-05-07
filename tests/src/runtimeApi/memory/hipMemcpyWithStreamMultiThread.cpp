@@ -463,6 +463,7 @@ void HipMemcpyWithStreamMultiThreadtests::TestkindDefaultForDtoD(void) {
   int *A_h[numDevices], *B_h[numDevices], *C_h[numDevices];
 
   // Initialize and create the host and device elements for first device
+  HIPCHECK(hipSetDevice(0));
   HipTest::initArrays(&A_d[0], &B_d[0], &C_d[0],
                       &A_h[0], &B_h[0], &C_h[0], N, false);
 
@@ -481,7 +482,6 @@ void HipMemcpyWithStreamMultiThreadtests::TestkindDefaultForDtoD(void) {
     HIPCHECK(hipStreamCreate(&stream[i]));
   }
 
-  HIPCHECK(hipSetDevice(0));
   HIPCHECK(hipMemcpyWithStream(A_d[0], A_h[0], Nbytes,
            hipMemcpyHostToDevice, stream[0]));
   HIPCHECK(hipMemcpyWithStream(B_d[0], B_h[0], Nbytes,
@@ -491,7 +491,6 @@ void HipMemcpyWithStreamMultiThreadtests::TestkindDefaultForDtoD(void) {
   // using hipMemcpyDefault kind  that is numDevices in the setup.
   // 1st GPU start numbering from 0,1,2..n etc.
   for (int i=1; i < numDevices; ++i) {
-    HIPCHECK(hipSetDevice(i));
     HIPCHECK(hipMemcpyWithStream(A_d[i], A_d[0], Nbytes,
              hipMemcpyDefault, stream[i]));
     HIPCHECK(hipMemcpyWithStream(B_d[i], B_d[0], Nbytes,
@@ -499,14 +498,13 @@ void HipMemcpyWithStreamMultiThreadtests::TestkindDefaultForDtoD(void) {
   }
 
   for (int i=0; i < numDevices; ++i) {
-    HIPCHECK(hipSetDevice(i));
     hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock),
                        0, stream[i], static_cast<const int*>(A_d[i]),
                        static_cast<const int*>(B_d[i]), C_d[i], N);
   }
 
   for (int i=0; i < numDevices; ++i) {
-    HIPCHECK(hipSetDevice(i));
+    HIPCHECK(hipSetDevice(i));  // hipMemcpy will be on this device
     HIPCHECK(hipStreamSynchronize(stream[i]));
     HIPCHECK(hipMemcpy(C_h[i], C_d[i], Nbytes, hipMemcpyDeviceToHost));
     // Output of each GPU is getting validated with input of 1st GPU.

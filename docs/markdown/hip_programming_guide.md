@@ -11,9 +11,18 @@ The runtime tracks the hipHostMalloc allocations and can avoid some of the setup
 GPU can directly access the host memory over the CPU/GPU interconnect, without need to copy the data.  This avoids the need for the copy, but during the kernel access each memory access must traverse the interconnect, which can be tens of times slower than accessing the GPU's local device memory.  Zero-copy memory can be a good choice when the memory accesses are infrequent (perhaps only once).  Zero-copy memory is typically "Coherent" and thus not cached by the GPU but this can be overridden if desired and is explained in more detail below.
 
 ### Memory allocation flags
-hipHostMalloc always sets the hipHostMallocPortable and hipHostMallocMapped flags.  Both usage models described above use the same allocation flags, and the difference is in how the surrounding code uses the host memory.
+hipHostMalloc always sets the hipHostMallocPortable and hipHostMallocMapped flags. Both usage models described above use the same allocation flags, and the difference is in how the surrounding code uses the host memory.
+
+hipHostMallocNumaUser is the flag to allow host memory allocation to follow numa policy set by user.
+
 See the hipHostMalloc API for more information.
 
+### Numa-aware host memory allocation
+Numa policy determines how memory is allocated.
+Target of Numa policy is to select a CPU that is closest to each GPU.
+Numa distance is the measurement of how far between GPU and CPU devices.
+
+By default, each GPU selects a Numa CPU node that has the least Numa distance between them, that is, host memory will be automatically allocated closest on the memory pool of Numa node of the current GPU device. Using hipSetDevice API to a different GPU will still be able to access the host allocation, but can have longer Numa distance.
 
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
@@ -58,7 +67,7 @@ In case events are used across multiple dispatches, for example, start and stop 
 
 ## Device-Side Malloc
 
-HIP-Clang currenntly doesn't supports device-side malloc and free.
+HIP-Clang currently doesn't supports device-side malloc and free.
 
 ## Use of Long Double Type
 
@@ -83,5 +92,26 @@ can be contracted. Tolerance should be used for floating point comparsions.
 ## Math functions with special rounding modes
 
 HIP does not support math functions with rounding modes ru (round up), rd (round down), and rz (round towards zero). HIP only supports math function with rounding mode rn (round to nearest). The math functions with postfixes _ru, _rd and _rz are implemented in the same way as math functions with postfix _rn. They serve as a workaround to get programs using them compiled.
+
+## Creating Static Libraries
+
+HIP-Clang supports generating two types of static libraries. The first type of static library does not export device functions, and only exports and launches host functions within the same library. The advantage of this type is the ability to link with a non-hipcc compiler such as gcc. The second type exports device functions to be linked by other code objects. However this requires using hipcc as the linker.
+
+In addition, the first type of library contains host objects with device code embedded as fat binaries. It is generated using the flag --emit-static-lib. The second type of library contains relocatable device objects and is generated using ar.
+
+Here is an example to create and use static libraries:
+- Type 1 using --emit-static-lib:
+    ```
+    hipcc hipOptLibrary.cpp --emit-static-lib -fPIC -o libHipOptLibrary.a
+    gcc test.cpp -L. -lhipOptLibrary -L/path/to/hip/lib -lamdhip64 -o test.out
+    ```
+- Type 2 using system ar:
+    ```
+    hipcc hipDevice.cpp -c -fgpu-rdc -o hipDevice.o
+    ar rcsD libHipDevice.a hipDevice.o
+    hipcc libHipDevice.a test.cpp -fgpu-rdc -o test.out
+    ```
+
+For more information, please see samples/2_Cookbook/15_static_library/host_functions and samples/2_Cookbook/15_static_library/device_functions.
 
 ## [Supported Clang Options](clang_options.md)

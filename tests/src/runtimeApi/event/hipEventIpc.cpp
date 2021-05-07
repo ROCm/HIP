@@ -24,7 +24,7 @@ THE SOFTWARE.
 // forces synchronization : set
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t --iterations 10
  * HIT_END
  */
@@ -96,28 +96,12 @@ int main(int argc, char* argv[]) {
 
     HIPCHECK(hipEventSynchronize(ipc_event));
 
-    HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
-
-#ifndef __HIP_PLATFORM_AMD__
     HIPCHECK(hipEventDestroy(ipc_event));
     HIPCHECK(hipEventDestroy(start));
     HIPCHECK(hipEventDestroy(stop));
-#endif
 
     HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
-
     printf("check:\n");
-
-#ifdef __HIP_PLATFORM_AMD__
-    // Due to implementation bug of hipEventInterprocess, as a workaround,
-    // we have to move hipEventDestroy here. Otherwise sporadic crash will
-    // happen in above hipMemcpy(). If hipEventInterprocess is officially
-    // implemented, we should revisit here and move these back to match cuda
-    // event behavior.
-    HIPCHECK(hipEventDestroy(ipc_event));
-    HIPCHECK(hipEventDestroy(start));
-    HIPCHECK(hipEventDestroy(stop));
-#endif
 
     HipTest::checkVectorADD(A_h, B_h, C_h, N, true);
 

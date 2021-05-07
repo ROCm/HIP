@@ -97,30 +97,28 @@ hipError_t Event::elapsedTime(Event& eStop, float& ms) {
     return hipErrorNotReady;
   }
 
-  if (event_ != eStop.event_ && recorded_ && eStop.recorded_) {
-    ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
-                          event_->profilingInfo().end_))/1000000.f;
-  } else if (event_ != eStop.event_ && !recorded_ && !eStop.recorded_) {
-      //It is invalid to use unrecorded events across multiple commands to get time
-      //For example start and stop events from different hipExtLaunchKernelGGL calls
-      return hipErrorInvalidHandle;
-  } else if (event_ == eStop.event_ && (recorded_ || eStop.recorded_)) {
+  if (event_ == eStop.event_ && recorded_ && eStop.recorded_) {
     // Events are the same, which indicates the stream is empty and likely
     // eventRecord is called on another stream. For such cases insert and measure a
     // marker.
     amd::Command* command = new amd::Marker(*event_->command().queue(), kMarkerDisableFlush);
     command->enqueue();
     command->awaitCompletion();
-    ms = static_cast<float>(static_cast<int64_t>(command->event().profilingInfo().end_ -
-                          event_->profilingInfo().end_))/1000000.f;
+    ms = static_cast<float>(static_cast<int64_t>(command->event().profilingInfo().end_) - time())/1000000.f;
     command->release();
   } else {
-    // For certain HIP API's that take both start and stop event
-    // or scenarios where HIP API takes one of the events and the other event is recorded with hipEventRecord
-    ms = static_cast<float>(static_cast<int64_t>(eStop.event_->profilingInfo().end_ -
-                          event_->profilingInfo().start_))/1000000.f;
+    ms = static_cast<float>(eStop.time() - time())/1000000.f;
   }
   return hipSuccess;
+}
+
+int64_t Event::time() const {
+  assert(event_ != nullptr);
+  if (recorded_) {
+    return static_cast<int64_t>(event_->profilingInfo().end_);
+  } else {
+    return static_cast<int64_t>(event_->profilingInfo().start_);
+  }
 }
 
 hipError_t Event::streamWait(amd::HostQueue* hostQueue, uint flags) {
@@ -229,12 +227,10 @@ hipError_t ihipEventQuery(hipEvent_t event) {
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
   if ((e->flags & hipEventInterprocess) && (e->ipc_evt_.ipc_shmem_)) {
     int prev_read_idx = e->ipc_evt_.ipc_shmem_->read_index;
-    if (prev_read_idx > 0) {
-      int offset = (prev_read_idx % IPC_SIGNALS_PER_EVENT);
-      while ((e->ipc_evt_.ipc_shmem_->read_index < prev_read_idx + IPC_SIGNALS_PER_EVENT)
-              && (e->ipc_evt_.ipc_shmem_->signal[offset] != 0)) {
-      }
-    }
+    int offset = (prev_read_idx % IPC_SIGNALS_PER_EVENT);
+    if (e->ipc_evt_.ipc_shmem_->read_index < prev_read_idx+IPC_SIGNALS_PER_EVENT && e->ipc_evt_.ipc_shmem_->signal[offset] != 0) {
+      return hipErrorNotReady;
+    } 
     return hipSuccess;
   } else {
     return e->query();
@@ -261,6 +257,8 @@ hipError_t hipEventDestroy(hipEvent_t event) {
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
   if ((e->flags & hipEventInterprocess) && (e->ipc_evt_.ipc_shmem_)) {
     int owners = -- e->ipc_evt_.ipc_shmem_->owners;
+    // Make sure event is synchronized
+    hipEventSynchronize(event);
     if (!amd::Os::MemoryUnmapFile(e->ipc_evt_.ipc_shmem_,sizeof(hip::ihipIpcEventShmem_t))) {
       HIP_RETURN(hipErrorInvalidHandle);
     }
@@ -337,12 +335,7 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
 
   bool isRecorded = e->isRecorded();
   if ((e->flags & hipEventInterprocess) && !isRecorded) {
-    amd::Command* command = queue->getLastQueuedCommand(true);
-    if (command == nullptr) {
-      command = new amd::Marker(*queue, kMarkerDisableFlush);
-      command->enqueue();
-    }
-    e->addMarker(queue, command, true);
+    amd::Command* command = new amd::Marker(*queue, kMarkerDisableFlush);
     amd::Event& tEvent = command->event();
     createIpcEventShmemIfNeeded(e->ipc_evt_);
     int write_index = e->ipc_evt_.ipc_shmem_->write_index++;
@@ -357,11 +350,11 @@ hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
     std::atomic<int> *signal = &e->ipc_evt_.ipc_shmem_->signal[offset];
     StreamCallback* cbo = new StreamCallback(stream,
                     reinterpret_cast<hipStreamCallback_t> (ipcEventCallback), signal, command);
-    command->enqueue();
     if (!tEvent.setCallback(CL_COMPLETE, ihipStreamCallback,cbo)) {
       command->release();
       return hipErrorInvalidHandle;
     }
+    command->enqueue();
     tEvent.notifyCmdQueue();
     // Update read index to indicate new signal.
     int expected = write_index - 1;
@@ -385,7 +378,7 @@ hipError_t hipEventSynchronize(hipEvent_t event) {
   hip::Event* e = reinterpret_cast<hip::Event*>(event);
   if ((e->flags & hipEventInterprocess) && (e->ipc_evt_.ipc_shmem_)) {
     int prev_read_idx = e->ipc_evt_.ipc_shmem_->read_index;
-    if (prev_read_idx > 0) {
+    if (prev_read_idx >= 0) {
       int offset = (prev_read_idx % IPC_SIGNALS_PER_EVENT);
       while ((e->ipc_evt_.ipc_shmem_->read_index < prev_read_idx + IPC_SIGNALS_PER_EVENT)
                && (e->ipc_evt_.ipc_shmem_->signal[offset] != 0)) {

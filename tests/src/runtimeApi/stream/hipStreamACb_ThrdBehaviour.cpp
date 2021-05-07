@@ -27,7 +27,9 @@
  * HIT_END
  */
 
+#ifdef __linux__
 #include <unistd.h>
+#endif
 #include <stdio.h>
 #include "hip/hip_runtime.h"
 #include "test_common.h"

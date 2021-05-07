@@ -177,7 +177,7 @@ if(HIP_RUNTIME MATCHES "rocclr")
   if(${amdhip64_type} STREQUAL "STATIC_LIBRARY")
     # For cyclic dependence
     get_target_property(link_interf_libs amdrocclr_static LINK_INTERFACE_LIBRARIES)
-    if(NOT "${link_interf_libs}" MATCHES "hip\:\:amdhip64")
+    if(NOT "${link_interf_libs}" MATCHES "hip::amdhip64")
       # Prevent repeatedly linking dependence
       target_link_libraries(amdrocclr_static INTERFACE hip::amdhip64)
     endif()

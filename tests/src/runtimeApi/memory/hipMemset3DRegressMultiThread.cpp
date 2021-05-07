@@ -40,8 +40,10 @@ Testcase Scenarios :
  */
 
 #include <sys/types.h>
+#ifdef __linux__
 #include <sys/wait.h>
 #include <unistd.h>
+#endif
 #include <vector>
 #include "test_common.h"
 

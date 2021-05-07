@@ -368,8 +368,18 @@ int main(int argc, char* argv[]) {
     failed("Valid arguments are from 1 to 5");
   }
 
+  int managed_memory = 0;
+  HIPCHECK(hipDeviceGetAttribute(&managed_memory,
+                                hipDeviceAttributeManagedMemory,
+                                p_gpuDevice));
+  if (!managed_memory) {
+    printf("info: managed memory access not supported on device %d\n Skipped\n", p_gpuDevice);
+    passed();
+  }
+
   int NumDevices = 0;
   HIPCHECK(hipGetDeviceCount(&NumDevices));
+
   bool TestStatus = true, OverAllStatus = true;
   if (p_tests == 1) {
     TestStatus = TestMallocManaged1<float>(NumDevices);

@@ -72,13 +72,6 @@ typedef enum hipMemoryAdvise {
     hipMemAdviseUnsetAccessedBy
 } hipMemoryAdvise;
 
-typedef enum hipMemRangeAttribute {
-    hipMemRangeAttributeReadMostly,
-    hipMemRangeAttributePreferredLocation,
-    hipMemRangeAttributeAccessedBy,
-    hipMemRangeAttributeLastPrefetchLocation
-} hipMemRangeAttribute;
-
 // hipDataType
 #define hipDataType cudaDataType
 #define HIP_R_16F CUDA_R_16F
@@ -227,6 +220,13 @@ typedef enum cudaChannelFormatKind hipChannelFormatKind;
 #define hipChannelFormatKindUnsigned    cudaChannelFormatKindUnsigned
 #define hipChannelFormatKindFloat       cudaChannelFormatKindFloat
 #define hipChannelFormatKindNone        cudaChannelFormatKindNone
+
+// hipMemRangeAttribute
+typedef enum cudaMemRangeAttribute hipMemRangeAttribute;
+#define hipMemRangeAttributeReadMostly cudaMemRangeAttributeReadMostly
+#define hipMemRangeAttributePreferredLocation cudaMemRangeAttributePreferredLocation
+#define hipMemRangeAttributeAccessedBy cudaMemRangeAttributeAccessedBy
+#define hipMemRangeAttributeLastPrefetchLocation cudaMemRangeAttributeLastPrefetchLocation
 
 #define hipSurfaceBoundaryMode cudaSurfaceBoundaryMode
 #define hipBoundaryModeZero cudaBoundaryModeZero
@@ -826,7 +826,7 @@ inline static enum cudaTextureAddressMode hipTextureAddressModeToCudaTextureAddr
     }
 }
 
-inline static enum cudaMemRangeAttribute hipMemRangeAttributeTocudaMemRangeAttribute(
+inline static enum cudaMemRangeAttribute hipMemRangeAttributeToCudaMemRangeAttribute(
    hipMemRangeAttribute kind) {
    switch (kind) {
        case hipMemRangeAttributeReadMostly:
@@ -973,15 +973,14 @@ inline static hipError_t hipMemRangeGetAttribute(void* data, size_t data_size,
                                                  hipMemRangeAttribute attribute,
                                                  const void* dev_ptr, size_t count) {
     return hipCUDAErrorTohipError(cudaMemRangeGetAttribute(data, data_size,
-        hipMemRangeAttributeTocudaMemRangeAttribute(attribute), dev_ptr, count));
+        hipMemRangeAttributeToCudaMemRangeAttribute(attribute), dev_ptr, count));
 }
 
 inline static hipError_t hipMemRangeGetAttributes(void** data, size_t* data_sizes,
                                                   hipMemRangeAttribute* attributes,
                                                   size_t num_attributes, const void* dev_ptr,
                                                   size_t count) {
-    auto attrs = hipMemRangeAttributeTocudaMemRangeAttribute(*attributes);
-    return hipCUDAErrorTohipError(cudaMemRangeGetAttributes(data, data_sizes, &attrs,
+    return hipCUDAErrorTohipError(cudaMemRangeGetAttributes(data, data_sizes, attributes,
         num_attributes, dev_ptr, count));
 }
 
@@ -1560,6 +1559,21 @@ inline static hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t att
             break;
         case hipDeviceAttributeCooperativeMultiDeviceLaunch:
             cdattr = cudaDevAttrCooperativeMultiDeviceLaunch;
+            break;
+        case hipDeviceAttributeConcurrentManagedAccess:
+            cdattr = cudaDevAttrConcurrentManagedAccess;
+            break;
+        case hipDeviceAttributeManagedMemory:
+            cdattr = cudaDevAttrManagedMemory;
+            break;
+        case hipDeviceAttributePageableMemoryAccessUsesHostPageTables:
+            cdattr = cudaDevAttrPageableMemoryAccessUsesHostPageTables;
+            break;
+        case hipDeviceAttributePageableMemoryAccess:
+            cdattr = cudaDevAttrPageableMemoryAccess;
+            break;
+        case hipDeviceAttributeDirectManagedMemAccessFromHost:
+            cdattr = cudaDevAttrDirectManagedMemAccessFromHost;
             break;
         default:
             return hipCUDAErrorTohipError(cudaErrorInvalidValue);
