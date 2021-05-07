@@ -244,10 +244,11 @@ inline hipError_t ihipLaunchKernel_validate(hipFunction_t f, uint32_t globalWork
   hip::DeviceFunc* function = hip::DeviceFunc::asFunction(f);
   amd::Kernel* kernel = function->kernel();
   // Make sure the launch params are not larger than if specified launch_bounds
-  // If it exceeds, then print a warning and continue for now
+  // If it exceeds, then return a failure
   if (blockDimX * blockDimY * blockDimZ >
       kernel->getDeviceKernel(*device)->workGroupInfo()->size_) {
-    LogPrintfWarning("%s", "Launch params are larger than launch bounds");
+    LogPrintfError("%s", "Launch params are larger than launch bounds");
+    return hipErrorLaunchFailure;
   }
 
   if (params & amd::NDRangeKernelCommand::CooperativeGroups) {
