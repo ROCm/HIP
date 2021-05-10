@@ -148,6 +148,10 @@ hipError_t FatBinaryInfo::BuildProgram(const int device_id) {
     }
     fbd_info->prog_built_ = true;
   }
+
+  if (!fbd_info->program_->load()) {
+    return hipErrorSharedObjectInitFailed;
+  }
   return hipSuccess;
 }
 
