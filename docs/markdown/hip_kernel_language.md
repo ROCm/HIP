@@ -172,7 +172,8 @@ Previously, it was essential to declare dynamic shared memory using the HIP_DYNA
 Now, the HIP-Clang compiler provides support for extern shared declarations, and the HIP_DYNAMIC_SHARED option is no longer required..
 
 ### `__managed__`
-Managed memory, including the `__managed__` keyword, are not supported in HIP.
+Managed memory, including the `__managed__` keyword, are supported in HIP combined host/device compilation.
+Support of `__managed__` keyword in hipRTC and dynamically loaded code objects is under development.
 
 ### `__restrict__`
 The `__restrict__` keyword tells the compiler that the associated memory pointer will not alias with any other pointer in the kernel or function.  This feature can help the compiler generate better code. In most cases, all pointer arguments must use this keyword to realize the benefit.
