@@ -24,9 +24,32 @@ Numa distance is the measurement of how far between GPU and CPU devices.
 
 By default, each GPU selects a Numa CPU node that has the least Numa distance between them, that is, host memory will be automatically allocated closest on the memory pool of Numa node of the current GPU device. Using hipSetDevice API to a different GPU will still be able to access the host allocation, but can have longer Numa distance.
 
+### Managed memory allocation
+Managed memory, including the `__managed__` keyword, are supported in HIP combined host/device compilation.
+The allocation will be automatically managed by AMD HMM (Heterogeneous Memory Management).
+
+In HIP application, there should be the capability check before make managed memory API call hipMallocManaged.
+
+For example,
+```
+int managed_memory = 0;
+HIPCHECK(hipDeviceGetAttribute(&managed_memory,
+  hipDeviceAttributeManagedMemory,p_gpuDevice));
+
+if (!managed_memory ) {
+  printf ("info: managed memory access not supported on the device %d\n Skipped\n", p_gpuDevice);
+}
+else {
+  HIPCHECK(hipSetDevice(p_gpuDevice));
+  HIPCHECK(hipMallocManaged(&Hmm, N * sizeof(T)));
+. . .
+}
+```
+For more details on managed memory APIs, please refer to the documentation HIP-API.pdf.
+
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
-- Coherent memory : Supports fine-grain synchronization while the kernel is running.  For example, a kernel can perform atomic operations that are visible to the host CPU or to other (peer) GPUs.  Synchronization instructions include threadfence_system and C++11-style atomic operations.    However, coherent memory cannot be cached by the GPU and thus may have lower performance.
+- Coherent memory : Supports fine-grain synchronization while the kernel is running.  For example, a kernel can perform atomic operations that are visible to the host CPU or to other (peer) GPUs.  Synchronization instructions include threadfence_system and C++11-style atomic operations. However, coherent memory cannot be cached by the GPU and thus may have lower performance.
 - Non-coherent memory : Can be cached by GPU, but cannot support synchronization while the kernel is running.  Non-coherent memory can be optionally synchronized only at command (end-of-kernel or copy command) boundaries.  This memory is appropriate for high-performance access when fine-grain synchronization is not required.
 
 HIP provides the developer with controls to select which type of memory is used via allocation flags passed to hipHostMalloc and the HIP_HOST_COHERENT environment variable. By default, the environment variable HIP_HOST_COHERENT is set to 0 in HIP.
