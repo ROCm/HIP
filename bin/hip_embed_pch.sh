@@ -21,7 +21,7 @@
 
 printUsage() {
   echo
-  echo "Usage: $(basename "$0") HIP_BUILD_INC_DIR HIP_INC_DIR LLVM_DIR HSA_DIR [option] [RTC_LIB_OUTPUT]"
+  echo "Usage: $(basename "$0") HIP_BUILD_INC_DIR HIP_INC_DIR LLVM_DIR [option] [RTC_LIB_OUTPUT]"
   echo
   echo "Options:"
   echo "  -p,  --generate_pch  Generate pre-compiled header (default)"
@@ -40,13 +40,12 @@ fi
 HIP_BUILD_INC_DIR="$1"
 HIP_INC_DIR="$2"
 LLVM_DIR="$3"
-HSA_DIR="$4"
 # By default, generate pch
 TARGET="generatepch"
 
-while [ "$5" != "" ];
+while [ "$4" != "" ];
 do
-  case "$5" in
+  case "$4" in
     -h | --help )
         printUsage ; exit 0 ;;
     -p | --generate_pch )
@@ -54,14 +53,14 @@ do
     -r | --generate_rtc )
         TARGET="generatertc" ; break ;;
     *)
-        echo " UNEXPECTED ERROR Parm : [$5] ">&2 ; exit 20 ;;
+        echo " UNEXPECTED ERROR Parm : [$4] ">&2 ; exit 20 ;;
   esac
   shift 1
 done
 
 # Allow hiprtc lib name to be set by argument 6
-if [[ "$6" != "" ]]; then
-  rtc_shared_lib_out="$6"
+if [[ "$5" != "" ]]; then
+  rtc_shared_lib_out="$5"
 else
   if [[ "$OSTYPE" == cygwin ]]; then
     rtc_shared_lib_out=hiprtc-builtins64.dll
@@ -120,7 +119,7 @@ EOF
 
   set -x
 
-  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HSA_DIR/include --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
+  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
 
   cat $tmp/hip_macros.h >> $tmp/pch.cui &&
 

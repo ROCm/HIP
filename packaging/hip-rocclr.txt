@@ -38,24 +38,6 @@ if(@__HIP_ENABLE_RTC@)
 endif()
 
 #############################
-# Rocclr install
-#############################
-
-set(ROCclr_BUILD_DIR "@ROCclr_DIR@/../../..")
-set(ROCclr_LIB_DIR "@ROCM_PATH@/rocclr/lib")
-set(ROCclr_CMAKE_DDIR "@ROCM_PATH@/rocclr/lib/cmake/rocclr")
-set(ROCclr_CMAKE_SDIR "${ROCclr_BUILD_DIR}/CMakeFiles/Export/lib/cmake/rocclr")
-
-install(FILES ${ROCclr_BUILD_DIR}/libamdrocclr_static.a DESTINATION ${ROCclr_LIB_DIR})
-install(FILES @ROCclr_DIR@/ROCclrConfig.cmake DESTINATION ${ROCclr_CMAKE_DDIR})
-install(FILES @ROCclr_DIR@/rocclr-config-version.cmake DESTINATION ${ROCclr_CMAKE_DDIR})
-file(GLOB _rocclr_target_files ${ROCclr_CMAKE_SDIR}/rocclr-targets*.cmake)
-foreach(_rocclr_target_file ${_rocclr_target_files})
-  message(STATUS "_rocclr_target_file: ${_rocclr_target_file}")
-endforeach()
-install(FILES ${_rocclr_target_files} DESTINATION ${ROCclr_CMAKE_DDIR})
-
-#############################
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
