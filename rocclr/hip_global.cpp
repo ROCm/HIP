@@ -5,15 +5,6 @@
 #include "hip_code_object.hpp"
 #include "platform/program.hpp"
 
-#ifdef __HIP_ENABLE_PCH
-extern const char __hip_pch[];
-extern unsigned __hip_pch_size;
-void __hipGetPCH(const char** pch, unsigned int *size) {
-  *pch = __hip_pch;
-  *size = __hip_pch_size;
-}
-#endif
-
 namespace hip {
 
 //Device Vars
