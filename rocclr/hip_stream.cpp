@@ -77,8 +77,8 @@ bool Stream::Create() {
   // Enable queue profiling if a profiler is attached which sets the callback_table flag
   // or if we force it with env var. This would enable time stamp collection for every
   // command submitted to the stream(queue).
-  cl_command_queue_properties properties = (callbacks_table.is_enabled() ||
-                                            HIP_FORCE_QUEUE_PROFILING) ?
+  bool isProfilerAttached = callbacks_table.is_enabled();
+  cl_command_queue_properties properties = (isProfilerAttached || HIP_FORCE_QUEUE_PROFILING) ?
                                              CL_QUEUE_PROFILING_ENABLE : 0;
   amd::CommandQueue::Priority p;
   switch (priority_) {
@@ -104,6 +104,7 @@ bool Stream::Create() {
     amd::ScopedLock lock(streamSetLock);
     streamSet.insert(this);
     queue_ = queue;
+    queue->vdev()->profilerAttach(isProfilerAttached);
   } else if (queue != nullptr) {
     queue->release();
   }
