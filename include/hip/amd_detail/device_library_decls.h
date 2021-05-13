@@ -23,6 +23,9 @@ THE SOFTWARE.
 /**
  *  @file  amd_detail/device_library_decls.h
  *  @brief Contains declarations for types and functions in device library.
+ *         Uses int64_t and uint64_t instead of long, long long, unsigned
+ *         long and unsigned long long types for device library API
+ *         declarations.
  */
 
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_DEVICE_LIBRARY_DECLS_H
@@ -49,7 +52,7 @@ extern "C" __device__ __attribute__((const)) uint __ockl_sadd_u32(uint, uint, ui
 extern "C" __device__ __attribute__((const)) uchar __ockl_clz_u8(uchar);
 extern "C" __device__ __attribute__((const)) ushort __ockl_clz_u16(ushort);
 extern "C" __device__ __attribute__((const)) uint __ockl_clz_u32(uint);
-extern "C" __device__ __attribute__((const)) ullong __ockl_clz_u64(ullong);
+extern "C" __device__ __attribute__((const)) uint64_t __ockl_clz_u64(uint64_t);
 
 extern "C" __device__ __attribute__((const)) float __ocml_floor_f32(float);
 extern "C" __device__ __attribute__((const)) float __ocml_rint_f32(float);
