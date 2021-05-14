@@ -49,6 +49,9 @@ amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
         ShouldNotReachHere();
       }
     }
+  } else {
+    // If memObj not found, use arena_mem_obj. arena_mem_obj is null, if HMM and Xnack is disabled.
+    memObj = (hip::getCurrentDevice()->asContext()->svmDevices()[0])->GetArenaMemObj(ptr, offset);
   }
   return memObj;
 }
