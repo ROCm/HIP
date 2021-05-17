@@ -200,10 +200,6 @@ hipError_t ihipMallocManaged(void** ptr, size_t size, unsigned int align) {
 
   const amd::Device& dev = *ctx.devices()[0];
 
-  if (!dev.info().hmmSupported_) {
-    return hipErrorInvalidValue;
-  }
-
   // For now limit to the max allocation size on the device.
   // The apps should be able to go over the limit in the future
   if (dev.info().maxMemAllocSize_ < size) {
