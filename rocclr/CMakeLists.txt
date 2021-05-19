@@ -142,6 +142,8 @@ add_library(hip64 OBJECT
  cl_gl.cpp
  cl_lqdflash_amd.cpp
  fixme.cpp
+ hip_graph.cpp
+ hip_graph_internal.cpp
  )
 set_target_properties(hip64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

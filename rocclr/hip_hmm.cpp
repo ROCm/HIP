@@ -59,7 +59,8 @@ static_assert(static_cast<uint32_t>(hipMemRangeAttributeLastPrefetchLocation) ==
 hipError_t hipMallocManaged(void** dev_ptr, size_t size, unsigned int flags) {
   HIP_INIT_API(hipMallocManaged, dev_ptr, size, flags);
 
-  if ((dev_ptr == nullptr) || (size == 0) || (flags != hipMemAttachGlobal)) {
+  if ((dev_ptr == nullptr) || (size == 0) ||
+      ((flags != hipMemAttachGlobal) && (flags != hipMemAttachHost))) {
     HIP_RETURN(hipErrorInvalidValue);
   }
 
@@ -187,19 +188,24 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream, hipDeviceptr_t* dev_ptr,
 
 // ================================================================================================
 hipError_t ihipMallocManaged(void** ptr, size_t size, unsigned int align) {
-  if (size == 0) {
+  if (ptr == nullptr) {
+    return hipErrorInvalidValue;
+  } else if (size == 0) {
     *ptr = nullptr;
     return hipSuccess;
-  } else if (ptr == nullptr) {
-    return hipErrorInvalidValue;
   }
 
   assert((hip::host_device->asContext()!= nullptr) && "Current host context must be valid");
   amd::Context& ctx = *hip::host_device->asContext();
 
   const amd::Device& dev = *ctx.devices()[0];
+
+  if (!dev.info().hmmSupported_) {
+    return hipErrorInvalidValue;
+  }
+
   // For now limit to the max allocation size on the device.
-  // The apps should be able to go over theCould you  limit allocation in the future
+  // The apps should be able to go over the limit in the future
   if (dev.info().maxMemAllocSize_ < size) {
     return hipErrorMemoryAllocation;
   }

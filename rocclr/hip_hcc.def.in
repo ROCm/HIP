@@ -276,3 +276,16 @@ hipExtStreamGetCUMask
 hipImportExternalMemory
 hipExternalMemoryGetMappedBuffer
 hipDestroyExternalMemory
+hipGraphCreate
+hipGraphDestroy
+hipGraphAddKernelNode
+hipGraphAddMemsetNode
+hipGraphAddMemcpyNode
+hipGraphAddMemcpyNode1D
+hipGraphAddHostNode
+hipGraphInstantiate
+hipGraphLaunch
+hipStreamIsCapturing
+hipStreamBeginCapture
+hipStreamEndCapture
+hipGraphExecDestroy

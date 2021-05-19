@@ -26,6 +26,9 @@
 #include "trace_helper.h"
 #include "utils/debug.hpp"
 #include "hip_formatting.hpp"
+
+#include "hip_graph_capture.hpp"
+
 #include <unordered_set>
 #include <thread>
 #include <stack>
@@ -123,6 +126,19 @@ typedef struct ihipIpcEventHandle_st {
     }                                    \
   } while (0);
 
+#define STREAM_CAPTURE(name, stream, ...)                                                          \
+  if (stream != nullptr &&                                                                         \
+      reinterpret_cast<hip::Stream*>(stream)->GetCaptureStatus() ==                                \
+          hipStreamCaptureStatusActive) {                                                          \
+    hipError_t status = capture##name(stream, ##__VA_ARGS__);                                      \
+    HIP_RETURN(status);                                                                            \
+  }
+
+#define EVENT_CAPTURE(name, event, ...)                                                            \
+  if (event != nullptr && reinterpret_cast<hip::Event*>(event)->GetCaptureStatus() == true) {      \
+    hipError_t status = capture##name(event, ##__VA_ARGS__);                                       \
+    HIP_RETURN(status);                                                                            \
+  }
 
 namespace hc {
 class accelerator;
@@ -134,7 +150,8 @@ namespace hip {
 
   class Stream {
   public:
-    enum Priority : int {High = -1, Normal = 0, Low = 1};
+    enum Priority : int { High = -1, Normal = 0, Low = 1 };
+
   private:
     amd::HostQueue* queue_;
     mutable amd::Monitor lock_;
@@ -144,11 +161,31 @@ namespace hip {
     bool null_;
     const std::vector<uint32_t> cuMask_;
 
+    /// Stream capture related parameters
+
+    /// Current capture status of the stream
+    hipStreamCaptureStatus captureStatus_;
+    /// Graph that is constructed with capture
+    hipGraph_t pCaptureGraph_;
+    /// Based on mode stream capture places restrictions on API calls that can be made within or
+    /// concurrently
+    hipStreamCaptureMode captureMode_;
+    bool originStream_;
+    /// Origin sream has no parent. Parent stream for the derived captured streams with event
+    /// dependencies
+    hipStream_t parentStream_;
+    /// Last graph node captured in the stream
+    std::vector<hipGraphNode_t> lastCapturedNodes_;
+    /// Derived streams/Paralell branches from the origin stream
+    std::vector<hipStream_t> parallelCaptureStreams_;
+    /// Capture events
+    std::vector<hipEvent_t> captureEvents_;
+
   public:
     Stream(Device* dev, Priority p = Priority::Normal, unsigned int f = 0, bool null_stream = false,
-           const std::vector<uint32_t>& cuMask = {});
+           const std::vector<uint32_t>& cuMask = {},
+           hipStreamCaptureStatus captureStatus = hipStreamCaptureStatusNone);
     ~Stream();
-
     /// Creates the hip stream object, including AMD host queue
     bool Create();
 
@@ -173,6 +210,44 @@ namespace hip {
 
     /// Sync all non-blocking streams
     static void syncNonBlockingStreams();
+
+    /// Returns capture status of the current stream
+    hipStreamCaptureStatus GetCaptureStatus() const { return captureStatus_; }
+    /// Returns capture mode of the current stream
+    hipStreamCaptureMode GetCaptureMode() const { return captureMode_; }
+    /// Returns if stream is origin stream
+    bool IsOriginStream() const { return originStream_; }
+    void SetOriginStream() { originStream_ = true; }
+    /// Returns captured graph
+    hipGraph_t GetCaptureGraph() const { return pCaptureGraph_; }
+    /// Returns last captured graph node
+    std::vector<hipGraphNode_t> GetLastCapturedNodes() const { return lastCapturedNodes_; }
+    /// Set last captured graph node
+    void SetLastCapturedNode(hipGraphNode_t graphNode) {
+      lastCapturedNodes_.clear();
+      lastCapturedNodes_.push_back(graphNode);
+    }
+    /// Append captured node via the wait event cross stream
+    void AddCrossCapturedNode(std::vector<hipGraphNode_t> graphNodes) {
+      for (auto node : graphNodes) {
+        lastCapturedNodes_.push_back(node);
+      }
+    }
+    /// Set graph that is being captured
+    void SetCaptureGraph(hipGraph_t pGraph) {
+      pCaptureGraph_ = pGraph;
+      captureStatus_ = hipStreamCaptureStatusActive;
+    }
+    /// reset capture parameters
+    hipError_t EndCapture();
+    /// Set capture status
+    void SetCaptureStatus(hipStreamCaptureStatus captureStatus) { captureStatus_ = captureStatus; }
+    /// Set capture mode
+    void SetCaptureMode(hipStreamCaptureMode captureMode) { captureMode_ = captureMode; }
+    /// Set parent stream
+    void SetParentStream(hipStream_t parentStream) { parentStream_ = parentStream; }
+    /// Get parent stream
+    hipStream_t GetParentStream() { return parentStream_; }
   };
 
   /// HIP Device class

@@ -321,6 +321,8 @@ bool createIpcEventShmemIfNeeded(hip::Event::ihipIpcEvent_t& ipc_evt) {
 hipError_t hipEventRecord(hipEvent_t event, hipStream_t stream) {
   HIP_INIT_API(hipEventRecord, event, stream);
 
+  STREAM_CAPTURE(hipEventRecord, stream, event);
+
   if (event == nullptr) {
     HIP_RETURN(hipErrorInvalidHandle);
   }

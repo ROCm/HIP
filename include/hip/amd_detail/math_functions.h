@@ -28,18 +28,18 @@ THE SOFTWARE.
 
 #include <hip/amd_detail/host_defines.h>
 
+#if !defined(__HIPCC_RTC__)
 #include <algorithm>
-
 // assert.h is only for the host version of assert.
 // The device version of assert is implemented in hip/amd_detail/hip_runtime.h.
 // Users should include hip_runtime.h for the device version of assert.
 #if !__HIP_DEVICE_COMPILE__
 #include <assert.h>
 #endif
-
 #include <limits.h>
 #include <limits>
 #include <stdint.h>
+#endif // !defined(__HIPCC_RTC__)
 
 #if _LIBCPP_VERSION && __HIP__
 namespace std {
@@ -1460,6 +1460,7 @@ double min(double x, double y) {
 __HIP_OVERLOAD2(double, max)
 __HIP_OVERLOAD2(double, min)
 
+#if !defined(__HIPCC_RTC__)
 __host__ inline static int min(int arg1, int arg2) {
   return std::min(arg1, arg2);
 }
@@ -1467,6 +1468,7 @@ __host__ inline static int min(int arg1, int arg2) {
 __host__ inline static int max(int arg1, int arg2) {
   return std::max(arg1, arg2);
 }
+#endif // !defined(__HIPCC_RTC__)
 
 __DEVICE__
 inline float pow(float base, int iexp) {

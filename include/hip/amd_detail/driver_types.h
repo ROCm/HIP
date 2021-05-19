@@ -27,9 +27,11 @@ THE SOFTWARE.
 // It's defined here for workarround of rocThrust building failure.
 #define HIP_INCLUDE_HIP_HCC_DETAIL_DRIVER_TYPES_H
 
+#if !defined(__HIPCC_RTC__)
 #ifndef __cplusplus
 #include <stdbool.h>
 #endif
+#endif // !defined(__HIPCC_RTC__)
 
 typedef void* hipDeviceptr_t;
 typedef enum hipChannelFormatKind {
@@ -92,6 +94,7 @@ typedef struct hipArray {
     unsigned int textureType;
 }hipArray;
 
+#if !defined(__HIPCC_RTC__)
 typedef struct hip_Memcpy2D {
     size_t srcXInBytes;
     size_t srcY;
@@ -110,7 +113,7 @@ typedef struct hip_Memcpy2D {
     size_t WidthInBytes;
     size_t Height;
 } hip_Memcpy2D;
-
+#endif // !defined(__HIPCC_RTC__)
 
 typedef struct hipArray* hipArray_t;
 typedef hipArray_t hiparray;
@@ -359,6 +362,7 @@ typedef struct HIP_RESOURCE_VIEW_DESC_st
  * Memory copy types
  *
  */
+#if !defined(__HIPCC_RTC__)
 typedef enum hipMemcpyKind {
     hipMemcpyHostToHost = 0,      ///< Host-to-Host Copy
     hipMemcpyHostToDevice = 1,    ///< Host-to-Device Copy
@@ -470,5 +474,5 @@ typedef enum hipFunction_attribute {
     HIP_FUNC_ATTRIBUTE_PREFERRED_SHARED_MEMORY_CARVEOUT,
     HIP_FUNC_ATTRIBUTE_MAX
 }hipFunction_attribute;
-
+#endif // !defined(__HIPCC_RTC__)
 #endif

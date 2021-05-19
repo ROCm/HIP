@@ -34,6 +34,7 @@ THE SOFTWARE.
 //---
 // Top part of file can be compiled with any compiler
 
+#if !defined(__HIPCC_RTC__)
 //#include <cstring>
 #if __cplusplus
 #include <cmath>
@@ -42,7 +43,8 @@ THE SOFTWARE.
 #include <math.h>
 #include <string.h>
 #include <stddef.h>
-#endif  //__cplusplus
+#endif // __cplusplus
+#endif // !defined(__HIPCC_RTC__)
 
 // __hip_malloc is not working. Disable it by default.
 #ifndef __HIP_ENABLE_DEVICE_MALLOC__
@@ -57,9 +59,10 @@ THE SOFTWARE.
 
 #define CUDA_SUCCESS hipSuccess
 
+#if !defined(__HIPCC_RTC__)
 #include <hip/hip_runtime_api.h>
-
 extern int HIP_TRACE_API;
+#endif // !defined(__HIPCC_RTC__)
 
 #ifdef __cplusplus
 #include <hip/amd_detail/hip_ldg.h>
@@ -121,7 +124,9 @@ extern int HIP_TRACE_API;
 #define __launch_bounds__(...)                                                                     \
     select_impl_(__VA_ARGS__, launch_bounds_impl1, launch_bounds_impl0)(__VA_ARGS__)
 
+#if !defined(__HIPCC_RTC__)
 __host__ inline void* __get_dynamicgroupbaseptr() { return nullptr; }
+#endif // !defined(__HIPCC_RTC__)
 
 #if __HIP_ARCH_GFX701__ == 0
 
@@ -162,6 +167,7 @@ static inline __device__ void* free(void* ptr) { __builtin_trap(); return nullpt
 //
 // hip-clang functions
 //
+#if !defined(__HIPCC_RTC__)
 #define HIP_KERNEL_NAME(...) __VA_ARGS__
 #define HIP_SYMBOL(X) X
 
@@ -218,6 +224,8 @@ void hipLaunchKernelGGL(F kernel, const dim3& numBlocks, const dim3& dimBlocks,
 #endif
 
 #include <hip/hip_runtime_api.h>
+#endif // !defined(__HIPCC_RTC__)
+
 extern "C" __device__ __attribute__((const)) size_t __ockl_get_local_id(uint);
 extern "C" __device__ __attribute__((const)) size_t __ockl_get_group_id(uint);
 extern "C" __device__ __attribute__((const)) size_t __ockl_get_local_size(uint);
@@ -244,6 +252,17 @@ struct __HIP_ThreadIdx {
     return __ockl_get_local_id(x);
   }
 };
+
+#if defined(__HIPCC_RTC__)
+typedef struct dim3 {
+    uint32_t x;  ///< x
+    uint32_t y;  ///< y
+    uint32_t z;  ///< z
+#ifdef __cplusplus
+    constexpr __device__ dim3(uint32_t _x = 1, uint32_t _y = 1, uint32_t _z = 1) : x(_x), y(_y), z(_z){};
+#endif
+} dim3;
+#endif // !defined(__HIPCC_RTC__)
 
 template <typename F>
 struct __HIP_Coordinates {
@@ -371,6 +390,7 @@ hc_get_workitem_absolute_id(int dim)
 #endif
 
 #if !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
+#if !defined(__HIPCC_RTC__)
 // Support std::complex.
 #if !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
 #pragma push_macro("__CUDA__")
@@ -388,6 +408,7 @@ hc_get_workitem_absolute_id(int dim)
 #undef __CUDA__
 #pragma pop_macro("__CUDA__")
 #endif // !_OPENMP || __HIP_ENABLE_CUDA_WRAPPER_FOR_OPENMP__
+#endif // !defined(__HIPCC_RTC__)
 #endif // !__CLANG_HIP_RUNTIME_WRAPPER_INCLUDED__
 #endif // __HIP_CLANG_ONLY__
 

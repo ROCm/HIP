@@ -64,10 +64,18 @@ typedef struct ihipIpcEventShmem_s {
 } ihipIpcEventShmem_t;
 
 class Event {
-public:
+  /// event recorded on stream where capture is active
+  bool onCapture_;
+  /// capture stream where event is recorded
+  hipStream_t captureStream_;
+  /// Previous captured nodes before event record
+  std::vector<hipGraphNode_t> nodesPrevToRecorded_;
+
+ public:
   Event(unsigned int flags) : flags(flags), lock_("hipEvent_t", true),
                               event_(nullptr), recorded_(false) {
     // No need to init event_ here as addMarker does that
+    onCapture_ = false;
     device_id_ = hip::getCurrentDevice()->deviceId(); // Created in current device ctx
   }
 
@@ -89,7 +97,30 @@ public:
   const int deviceId() { return device_id_; }
   void setDeviceId(int id) { device_id_ = id; }
 
-  //IPC Events
+  /// End capture on this event
+  void EndCapture() {
+    onCapture_ = false;
+    captureStream_ = nullptr;
+  }
+  /// Start capture when waited on this event
+  void StartCapture(hipStream_t stream) {
+    onCapture_ = true;
+    captureStream_ = stream;
+  }
+  /// Get capture status of the graph
+  bool GetCaptureStatus() { return onCapture_; }
+  /// Get capture stream where event is recorded
+  hipStream_t GetCaptureStream() { return captureStream_; }
+  /// Set capture stream where event is recorded
+  void SetCaptureStream(hipStream_t stream) { captureStream_ = stream; }
+  /// Returns previous captured nodes before event record
+  std::vector<hipGraphNode_t> GetNodesPrevToRecorded() const { return nodesPrevToRecorded_; }
+  /// Set last captured graph node before event record
+  void SetNodesPrevToRecorded(std::vector<hipGraphNode_t>& graphNode) {
+    nodesPrevToRecorded_ = graphNode;
+  }
+
+  // IPC Events
   struct ihipIpcEvent_t {
     std::string ipc_name_;
     int ipc_fd_;
