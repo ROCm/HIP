@@ -376,6 +376,15 @@ foreach $arg (@ARGV)
         $swallowArg = 1;
     }
 
+    # nvcc does not handle standard compiler options properly
+    # This can prevent hipcc being used as standard CXX/C Compiler
+    # To fix this we need to pass -Xcompiler for options
+    if (($arg eq '-fPIC' or $arg =~ '-Wl,') and $HIP_COMPILER eq 'nvcc')
+    {
+        $HIPCXXFLAGS .= " -Xcompiler ".$arg;
+        $swallowArg = 1;
+    }
+
     ## process linker response file for hip-clang
     ## extract object files from static library and pass them directly to
     ## hip-clang in command line.
