@@ -444,9 +444,6 @@ hipError_t ihipMemcpy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKin
           depdentMarker->release();
         }
         cmd->release();
-        if (waitList.size() > 0) {
-          waitList[0]->release();
-        }
       }
     }
   }
