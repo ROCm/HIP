@@ -15,26 +15,6 @@ namespace fs = std::experimental::filesystem;
 
 #include <regex>
 
-static std::string getValue(std::string option, const std::string& opt_str) {
-  std::string s_opt = opt_str;
-  return s_opt.erase(0, option.size());
-}
-
-static std::string trimName(std::string input, char trim) {
-  auto pos_ = input.find(trim);
-  auto res = input;
-  if (pos_ == std::string::npos) {
-    input = "";
-  } else {
-    res = input.substr(0, pos_);
-    input = input.substr(pos_);
-  }
-  return res;
-}
-
-const std::vector<std::string>& TestContext::getDevices() const { return config_.devices; }
-const std::vector<std::string>& TestContext::getTargetId() const { return config_.targetId; }
-
 void TestContext::detectOS() {
 #if (HT_WIN == 1)
   p_windows = true;
@@ -57,18 +37,21 @@ void TestContext::fillConfig() {
             (env_config != nullptr) ? env_config : "Not found, using default config");
 
   // Check if path has been provided
+  std::string def_config_json = "config.json";
   std::string config_str;
   if (env_config != nullptr) {
     config_str = env_config;
   } else {
-    config_str = "config.json";
+    config_str = def_config_json;
   }
 
   fs::path config_path = config_str;
-  if (config_path.has_parent_path()) {
+  if (config_path.has_parent_path() && config_path.has_filename()) {
     config_.json_file = config_str;
+  } else if (config_path.has_parent_path()) {
+    config_.json_file = config_path / def_config_json;
   } else {
-    config_.json_file = exe_path + config_str;
+    config_.json_file = exe_path + def_config_json;
   }
   LogPrintf("Config file path: %s", config_.json_file.c_str());
 
@@ -78,37 +61,6 @@ void TestContext::fillConfig() {
   if (config_.os == "unknown" || config_.platform == "unknown") {
     LogPrintf("%s", "Either Config or Os is unknown, this wont end well");
     abort();
-  }
-
-  int deviceCount = 0;
-  auto res = hipGetDeviceCount(&deviceCount);
-  if (res != hipSuccess) {
-    LogPrintf("HIP Device Count query failed with: %s", hipGetErrorString(res));
-    abort();
-  }
-  if (deviceCount == 0) {
-    LogPrintf("%s", "No hip devices found");
-    abort();
-  }
-  config_.devices.reserve(deviceCount);
-  for (int i = 0; i < deviceCount; i++) {
-    hipDeviceProp_t props;
-    res = hipGetDeviceProperties(&props, i);
-    if (res != hipSuccess) {
-      LogPrintf("HIP Device Count query failed with: %s", hipGetErrorString(res));
-      abort();
-    }
-    if (amd) {
-      std::string tid = std::string(props.gcnArchName);
-      config_.targetId.push_back(tid);
-      std::string dev = trimName(tid, ':');
-      config_.devices.push_back(dev);
-    } else if (nvidia) {
-      config_.devices.push_back(std::string(props.name));
-    } else {
-      LogPrintf("%s", "Unknown platform");
-      abort();
-    }
   }
 }
 
@@ -122,6 +74,7 @@ TestContext::TestContext(int argc, char** argv) {
 }
 
 void TestContext::setExePath(int argc, char** argv) {
+  if (argc == 0) return;
   fs::path p = std::string(argv[0]);
   if (p.has_filename()) p.remove_filename();
   exe_path = p.string();
@@ -168,8 +121,6 @@ bool TestContext::parseJsonFile() {
 
   picojson::value v;
   std::string err;
-  const char* json_end =
-      picojson::parse(v, json_str.data(), json_str.data() + json_str.size(), &err);
   if (err.size() > 1) {
     LogPrintf("Error from PicoJson: %s", err.data());
     return false;
