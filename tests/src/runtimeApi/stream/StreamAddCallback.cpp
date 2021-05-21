@@ -1,8 +1,5 @@
 #include <stdio.h>
 #include <hip/hip_runtime.h>
-#ifdef __linux__
-#include <unistd.h>
-#endif
 #include "test_common.h"
 #include <atomic>
 
@@ -41,7 +38,7 @@ void myCallback(hipStream_t stream, hipError_t status, void* user_data)
     UserData* data = reinterpret_cast<UserData*>(user_data);
     printf("Callback started\n");
 
-    sleep(1);
+    std::this_thread::sleep_for (std::chrono::seconds(1));
 
     printf("Callback ending.\n");
     gData.store(ExecState::EXEC_CB_FINISHED);
