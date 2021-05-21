@@ -28,9 +28,6 @@
  */
 
 #include <stdio.h>
-#ifdef __linux__
-#include <unistd.h>
-#endif
 #include <chrono>
 #include <atomic>
 #include "hip/hip_runtime.h"
@@ -80,7 +77,7 @@ static void HIPRT_CB Callback1(hipStream_t stream, hipError_t status,
   }
 
   // Delay the callback completion
-  sleep(SECONDS_TO_WAIT);
+  std::this_thread::sleep_for (std::chrono::seconds(SECONDS_TO_WAIT));
 }
 
 bool rangedCompare(long a, long b) {

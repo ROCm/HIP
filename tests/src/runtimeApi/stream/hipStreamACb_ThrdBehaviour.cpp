@@ -27,9 +27,6 @@
  * HIT_END
  */
 
-#ifdef __linux__
-#include <unistd.h>
-#endif
 #include <stdio.h>
 #include "hip/hip_runtime.h"
 #include "test_common.h"
@@ -41,7 +38,7 @@
 bool Callback_Completed = false;
 
 void HIPRT_CB Callback1(hipStream_t stream, hipError_t status, void* userData) {
-  sleep(5);
+  std::this_thread::sleep_for (std::chrono::seconds(5));
   Callback_Completed = true;
 }
 
@@ -49,7 +46,7 @@ int main(int argc, char* argv[]) {
   hipStream_t mystream;
   HIPCHECK(hipStreamCreateWithFlags(&mystream, hipStreamNonBlocking));
   HIPCHECK(hipStreamAddCallback(mystream, Callback1, NULL, 0));
-  sleep(1);
+  std::this_thread::sleep_for (std::chrono::seconds(1));
 
   // Callback_Completed is initialized to false.  The same is set to true at
   // the end of callback and callback sleeps for 5 seconds.
