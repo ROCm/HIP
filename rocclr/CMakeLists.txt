@@ -111,12 +111,10 @@ message(STATUS "Code Object Manager found at ${amd_comgr_DIR}.")
 
 find_package(LLVM REQUIRED CONFIG
    PATHS
-     /opt/rocm/llvm
-   PATH_SUFFIXES
-     lib/cmake/llvm)
-
+     /opt/rocm/llvm)
+# find_package(LLVM) returns the lib/cmake/llvm location. We require the root.
+set(HIP_LLVM_ROOT "${LLVM_DIR}/../../.." CACHE PATH "LLVM Root Directory")
 message(STATUS "llvm found at ${LLVM_DIR}.")
-set(LLVM_ROOT "${LLVM_DIR}/../../..")
 
 add_library(hip64 OBJECT
  hip_context.cpp
@@ -175,7 +173,7 @@ endif()
 # Short-Term solution for pre-compiled headers for online compilation
 # Enable pre compiled header
 if(__HIP_ENABLE_PCH)
-    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${LLVM_ROOT} ${HSA_PATH}" COMMAND_ECHO STDERR RESULT_VARIABLE EMBED_PCH_RC)
+    execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${HIP_LLVM_ROOT} ${HSA_PATH}" COMMAND_ECHO STDERR RESULT_VARIABLE EMBED_PCH_RC)
     if (EMBED_PCH_RC AND NOT EMBED_PCH_RC EQUAL 0)
       message(FATAL_ERROR "Failed to embed PCH")
     endif()
@@ -190,7 +188,7 @@ if(__HIP_ENABLE_RTC)
     set(HIPRTC_LIB_NAME "libhiprtc-builtins.so.${HIP_LIB_VERSION_MAJOR}.${HIP_LIB_VERSION_MINOR}")
   endif()
   execute_process(
-    COMMAND sh -c "mkdir -p ${PROJECT_BINARY_DIR}/lib; ${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${LLVM_ROOT} ${HSA_PATH} -r ${PROJECT_BINARY_DIR}/lib/${HIPRTC_LIB_NAME}"
+    COMMAND sh -c "mkdir -p ${PROJECT_BINARY_DIR}/lib; ${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${HIP_LLVM_ROOT} ${HSA_PATH} -r ${PROJECT_BINARY_DIR}/lib/${HIPRTC_LIB_NAME}"
     COMMAND_ECHO STDERR
     RESULT_VARIABLE EMBED_RTC_RC
   )
