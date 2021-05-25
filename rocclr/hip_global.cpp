@@ -5,15 +5,6 @@
 #include "hip_code_object.hpp"
 #include "platform/program.hpp"
 
-#ifdef __HIP_ENABLE_PCH
-extern const char __hip_pch[];
-extern unsigned __hip_pch_size;
-void __hipGetPCH(const char** pch, unsigned int *size) {
-  *pch = __hip_pch;
-  *size = __hip_pch_size;
-}
-#endif
-
 namespace hip {
 
 //Device Vars
@@ -177,7 +168,7 @@ hipError_t Var::getDeviceVar(DeviceVar** dvar, int deviceId, hipModule_t hmod) {
   guarantee((deviceId >= 0), "Invalid DeviceId, less than zero");
   guarantee((static_cast<size_t>(deviceId) < g_devices.size()),
             "Invalid DeviceId, greater than no of code objects");
-  guarantee((dVar_.size() == g_devices.size()), 
+  guarantee((dVar_.size() == g_devices.size()),
              "Device Var not initialized to size");
 
   if (dVar_[deviceId] == nullptr) {

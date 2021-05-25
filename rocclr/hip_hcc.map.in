@@ -275,14 +275,16 @@ global:
     hipGraphAddKernelNode;
     hipGraphAddMemsetNode;
     hipGraphAddMemcpyNode;
-    hipGraphAddMemcpyNode1D;
-    hipGraphAddHostNode;
     hipGraphInstantiate;
     hipGraphLaunch;
     hipStreamIsCapturing;
     hipStreamBeginCapture;
     hipStreamEndCapture;
     hipGraphExecDestroy;
+    hipImportExternalSemaphore;
+    hipSignalExternalSemaphoresAsync;
+    hipWaitExternalSemaphoresAsync;
+    hipDestroyExternalSemaphore;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;

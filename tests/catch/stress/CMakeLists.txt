@@ -1,0 +1,7 @@
+add_custom_target(build_stress_test)
+add_executable(StressTest EXCLUDE_FROM_ALL ../hipTestMain/main.cc)
+add_dependencies(build_stress_test StressTest)
+add_custom_target(stress_test COMMAND StressTest)
+#add_dependencies(stress_test build_stress_test)
+add_subdirectory(memory)
+target_link_libraries(StressTest PRIVATE memory ht_context)

@@ -161,8 +161,17 @@ __global__ void test_coop_kernel(unsigned int loops, long long *array,
   }
 
   for (int i = 0; i < loops; i++) {
-    long long start_clock = clock64();
-    while (clock64() < (start_clock+1000000)) {}
+    long long time_diff = 0;
+    long long last_clock = clock64();
+    do {
+      long long cur_clock = clock64();
+      if (cur_clock > last_clock) {
+        time_diff += (cur_clock - last_clock);
+      }
+      // If it rolls over, we don't know how much to add to catch up.
+      // So just ignore those slipped cycles.
+      last_clock = cur_clock;
+    } while(time_diff < 1000000);
     array[rank] += clock64();
   }
 }
@@ -171,8 +180,17 @@ __global__ void test_kernel(uint32_t loops, unsigned long long *array) {
   unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
 
   for (int i = 0; i < loops; i++) {
-    long long start_clock = clock64();
-    while (clock64() < (start_clock+1000000)) {}
+    long long time_diff = 0;
+    long long last_clock = clock64();
+    do {
+      long long cur_clock = clock64();
+      if (cur_clock > last_clock) {
+        time_diff += (cur_clock - last_clock);
+      }
+      // If it rolls over, we don't know how much to add to catch up.
+      // So just ignore those slipped cycles.
+      last_clock = cur_clock;
+    } while(time_diff < 1000000);
     array[rank] += clock64();
   }
 }

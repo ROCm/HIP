@@ -64,15 +64,23 @@ GetOptions(
 );
 
 if ($HIP_COMPILER eq "clang") {
-    $HIP_CLANG_VERSION = `\"$HIP_CLANG_PATH/clang++\" --version`;
+    $HIP_CLANG_VERSION = "";
+    if($isWindows) {
+        $HIP_CLANG_VERSION = `\"$HIP_CLANG_PATH/clang++\" --version`;
+    } else {
+        $HIP_CLANG_VERSION = `$HIP_CLANG_PATH/clang++ --version`;
+    }
     $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
 
-    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__= -D__HIP_PLATFORM_AMD__= -I\"$HIP_PATH/include\" -I\"$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION\"";
+    $CPP_CONFIG = " -D__HIP_PLATFORM_HCC__= -D__HIP_PLATFORM_AMD__=";
 
-    # HIP on Windows does not need HSA_PATH
-    if (not $isWindows) {
-        $CPP_CONFIG .= " -I$HSA_PATH/include";
+    $HIP_PATH_INCLUDE = $HIP_PATH."/include";
+    $HIP_CLANG_INCLUDE = $HIP_CLANG_PATH."/../lib/clang/".$HIP_CLANG_VERSION;
+    if($isWindows) {
+        $CPP_CONFIG .= " -I\"$HIP_PATH_INCLUDE\" -I\"$HIP_CLANG_INCLUDE\"";
+    } else {
+        $CPP_CONFIG .= " -I$HIP_PATH_INCLUDE -I$HIP_CLANG_INCLUDE -I$HSA_PATH/include";
     }
 }
 if ($HIP_PLATFORM eq "nvidia") {
@@ -157,9 +165,9 @@ if (!$printed or $p_full) {
                 print ("HSA_PATH         : $HSA_PATH\n");
             }
             print ("HIP_CLANG_PATH   : $HIP_CLANG_PATH\n");
-            system("\"$HIP_CLANG_PATH/clang++\" --version");
-            system("\"$HIP_CLANG_PATH/llc\" --version");
             if ($isWindows) {
+                system("\"$HIP_CLANG_PATH/clang++\" --version");
+                system("\"$HIP_CLANG_PATH/llc\" --version");
                 printf("hip-clang-cxxflags : ");
                 $win_output = `perl \"$HIP_PATH/bin/hipcc\" --cxxflags`;
                 printf("$win_output \n");
@@ -167,6 +175,8 @@ if (!$printed or $p_full) {
                 $win_output = `perl \"$HIP_PATH/bin/hipcc\" --ldflags`;
                 printf("$win_output \n");
             } else {
+                system("$HIP_CLANG_PATH/clang++ --version");
+                system("$HIP_CLANG_PATH/llc --version");
                 print ("hip-clang-cxxflags : ");
                 system("$HIP_PATH/bin/hipcc --cxxflags");
                 printf("\n");

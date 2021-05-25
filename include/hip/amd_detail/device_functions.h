@@ -59,7 +59,7 @@ __device__ static inline int __clz(int input) {
 }
 
 __device__ static inline int __clzll(long long int input) {
-    return __ockl_clz_u64((ullong)input);
+    return __ockl_clz_u64((uint64_t)input);
 }
 
 __device__ static inline unsigned int __ffs(unsigned int input) {
@@ -976,16 +976,37 @@ __device__ void __named_sync(int a, int b);
 
 #ifdef __HIP_DEVICE_COMPILE__
 
-// Clock functions
+// Clock function to return GPU core cycle count.
+// GPU can change its core clock frequency at runtime. The maximum frequency can be queried
+// through hipDeviceAttributeClockRate attribute.
 __device__
 inline  __attribute((always_inline))
 long long int __clock64() {
-return (long long int)  __builtin_readcyclecounter();
+#if __has_builtin(__builtin_amdgcn_s_memtime)
+  // Exists on gfx8, gfx9, gfx10.1, gfx10.2, gfx10.3
+  return (long long int) __builtin_amdgcn_s_memtime();
+#else
+  // Subject to change when better solution available
+  return (long long int) __builtin_readcyclecounter();
+#endif
 }
 
 __device__
 inline __attribute((always_inline))
 long long int  __clock() { return __clock64(); }
+
+// Clock function to return wall clock count at a constant frequency. The interface to query
+// the frequency will be implemented.
+__device__
+inline  __attribute__((always_inline))
+long long int wall_clock64() {
+#if __has_builtin(__builtin_amdgcn_s_memrealtime)
+  // Exists since gfx8
+  return (long long int) __builtin_amdgcn_s_memrealtime();
+#else
+  return -1; // Negative return means __builtin_amdgcn_s_memrealtime unavailable.
+#endif
+}
 
 __device__
 inline  __attribute__((always_inline))

@@ -365,6 +365,64 @@ typedef struct hipExternalMemoryBufferDesc_st {
 
 typedef void* hipExternalMemory_t;
 
+typedef enum hipExternalSemaphoreHandleType_enum {
+  hipExternalSemaphoreHandleTypeOpaqueFd = 1,
+  hipExternalSemaphoreHandleTypeOpaqueWin32 = 2,
+  hipExternalSemaphoreHandleTypeOpaqueWin32Kmt = 3,
+  hipExternalSemaphoreHandleTypeD3D12Fence = 4
+} hipExternalSemaphoreHandleType;
+
+
+typedef struct hipExternalSemaphoreHandleDesc_st {
+  hipExternalSemaphoreHandleType type;
+  union {
+    int fd;
+    struct {
+      void* handle;
+      const void* name;
+    } win32;
+  } handle;
+  unsigned int flags;
+} hipExternalSemaphoreHandleDesc;
+
+typedef void* hipExternalSemaphore_t;
+
+typedef struct hipExternalSemaphoreSignalParams_st {
+  struct {
+    struct {
+      unsigned long long value;
+    } fence;
+
+    struct {
+      unsigned long long key;
+    } keyedMutex;
+    unsigned int reserved[12];
+  } params;
+
+  unsigned int flags;
+  unsigned int reserved[16];
+} hipExternalSemaphoreSignalParams;
+
+/**
+ * External semaphore wait parameters, compatible with driver type
+ */
+typedef struct hipExternalSemaphoreWaitParams_st {
+  struct {
+    struct {
+      unsigned long long value;
+    } fence;
+
+    struct {
+      unsigned long long key;
+      unsigned int timeoutMs;
+    } keyedMutex;
+    unsigned int reserved[10];
+  } params;
+
+  unsigned int flags;
+  unsigned int reserved[16];
+} hipExternalSemaphoreWaitParams;
+
 #if __HIP_HAS_GET_PCH
 /**
  * Internal use only. This API may change in the future
@@ -1587,6 +1645,74 @@ hipError_t hipEventQuery(hipEvent_t event);
  */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr);
 
+
+
+/**
+ *  @brief Imports an external semaphore.
+ *
+ *  @param[out] extSem_out  External semaphores to be waited on
+ *  @param[in] semHandleDesc Semaphore import handle descriptor
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @see
+ */
+hipError_t hipImportExternalSemaphore(hipExternalSemaphore_t* extSem_out,
+                                      const hipExternalSemaphoreHandleDesc* semHandleDesc);
+
+
+
+/**
+ *  @brief Signals a set of external semaphore objects.
+ *
+ *  @param[in] extSem_out  External semaphores to be waited on
+ *  @param[in] paramsArray Array of semaphore parameters
+ *  @param[in] numExtSems Number of semaphores to wait on
+ *  @param[in] stream Stream to enqueue the wait operations in
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @see
+ */
+
+hipError_t hipSignalExternalSemaphoresAsync(const hipExternalSemaphore_t* extSemArray,
+                                            const hipExternalSemaphoreSignalParams* paramsArray,
+                                            unsigned int numExtSems, hipStream_t stream);
+
+
+
+/**
+ *  @brief Waits on a set of external semaphore objects
+ *
+ *  @param[in] extSem_out  External semaphores to be waited on
+ *  @param[in] paramsArray Array of semaphore parameters
+ *  @param[in] numExtSems Number of semaphores to wait on
+ *  @param[in] stream Stream to enqueue the wait operations in
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @see
+ */
+hipError_t hipWaitExternalSemaphoresAsync(const hipExternalSemaphore_t* extSemArray,
+                                              const hipExternalSemaphoreWaitParams* paramsArray,
+                                              unsigned int numExtSems, hipStream_t stream);
+
+
+
+/**
+ *  @brief Destroys an external semaphore object and releases any references to the underlying resource. Any outstanding signals or waits must have completed before the semaphore is destroyed.
+
+ *
+ *  @param[in] extSem handle to an external memory object
+
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @see
+ */
+hipError_t hipDestroyExternalSemaphore(hipExternalSemaphore_t extSem);
+
+ 
 /**
 *  @brief Imports an external memory object.
 *

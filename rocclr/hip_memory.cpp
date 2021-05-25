@@ -49,6 +49,9 @@ amd::Memory* getMemoryObject(const void* ptr, size_t& offset) {
         ShouldNotReachHere();
       }
     }
+  } else {
+    // If memObj not found, use arena_mem_obj. arena_mem_obj is null, if HMM and Xnack is disabled.
+    memObj = (hip::getCurrentDevice()->asContext()->svmDevices()[0])->GetArenaMemObj(ptr, offset);
   }
   return memObj;
 }
@@ -157,6 +160,98 @@ hipError_t hipDestroyExternalMemory(hipExternalMemory_t extMem) {
 
   HIP_RETURN(hipSuccess);
 }
+
+
+hipError_t hipImportExternalSemaphore(hipExternalSemaphore_t* extSem_out,
+                                      const hipExternalSemaphoreHandleDesc* semHandleDesc)
+{
+  HIP_INIT_API(hipImportExternalSemaphore, extSem_out, semHandleDesc);
+  if (extSem_out == nullptr || semHandleDesc == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
+
+#ifdef _WIN32
+  if (device->importExtSemaphore(extSem_out, semHandleDesc->handle.win32.handle)) {
+#else
+  if (device->importExtSemaphore(
+          extSem_out, semHandleDesc->handle.fd)) {
+#endif
+    HIP_RETURN(hipSuccess);
+  }
+  HIP_RETURN(hipErrorInvalidValue);
+}
+
+
+hipError_t hipSignalExternalSemaphoresAsync(
+    const hipExternalSemaphore_t* extSemArray, const hipExternalSemaphoreSignalParams* paramsArray,
+    unsigned int numExtSems, hipStream_t stream )
+{
+  HIP_INIT_API(hipSignalExternalSemaphoresAsync, extSemArray, paramsArray, numExtSems, stream);
+  if (extSemArray == nullptr || paramsArray == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  amd::HostQueue* queue = hip::getQueue(stream);
+  const amd::Device& device = queue->vdev()->device();
+
+  for (unsigned int i = 0; i < numExtSems; i++) {
+    if (extSemArray[i] != nullptr) {
+      amd::ExternalSemaphoreCmd* command =
+          new amd::ExternalSemaphoreCmd(*queue, extSemArray[i], paramsArray[i].params.fence.value,
+                                        amd::ExternalSemaphoreCmd::COMMAND_SIGNAL_EXTSEMAPHORE);
+      if (command == nullptr) {
+        return hipErrorOutOfMemory;
+      }
+      command->enqueue();
+      command->release();
+    } else {
+      HIP_RETURN(hipErrorInvalidValue);
+    }
+  }
+
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipWaitExternalSemaphoresAsync(const hipExternalSemaphore_t* extSemArray,
+        const hipExternalSemaphoreWaitParams* paramsArray,
+        unsigned int numExtSems, hipStream_t stream)
+{
+  HIP_INIT_API(hipWaitExternalSemaphoresAsync, extSemArray, paramsArray, numExtSems,
+               stream);
+  if (extSemArray == nullptr || paramsArray == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  amd::HostQueue* queue = hip::getQueue(stream);
+  const amd::Device& device = queue->vdev()->device();
+
+  for (unsigned int i = 0; i < numExtSems; i++) {
+    if (extSemArray[i] != nullptr) {
+      amd::ExternalSemaphoreCmd* command =
+          new amd::ExternalSemaphoreCmd(*queue, extSemArray[i], paramsArray[i].params.fence.value,
+                                        amd::ExternalSemaphoreCmd::COMMAND_WAIT_EXTSEMAPHORE);
+      if (command == nullptr) {
+        return hipErrorOutOfMemory;
+      }
+      command->enqueue();
+      command->release();
+    } else {
+      HIP_RETURN(hipErrorInvalidValue);
+    }
+  }
+  HIP_RETURN(hipSuccess);
+}
+
+hipError_t hipDestroyExternalSemaphore(hipExternalSemaphore_t extSem)
+{
+  HIP_INIT_API(hipDestroyExternalSemaphore, extSem);
+  if (extSem == nullptr ) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  amd::Device* device = hip::getCurrentDevice()->devices()[0];
+  device->DestroyExtSemaphore(extSem);
+  HIP_RETURN(hipSuccess);
+}
+
 
 // ================================================================================================
 hipError_t ihipMalloc(void** ptr, size_t sizeBytes, unsigned int flags)

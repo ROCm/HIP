@@ -112,20 +112,21 @@ static int verify_multi_gpu_buffer(unsigned int loops, unsigned int array_val) {
   for (int i = 0; i < loops; i++) {
     if (i % 2 == 0) {
       desired_val += 2;
-    } else {
+    }
+    else {
       desired_val *= 2;
     }
-  }
-  std::cout << "Desired value is " << desired_val << std::endl;
-  if (array_val != desired_val) {
-    std::cerr << "ERROR! Multi-grid barrier does not appear to work.";
-    std::cerr << std::endl;
-    std::cerr << "Expected the multi-GPUs to work together to produce ";
-    std::cerr << "the value " << desired_val << std::endl;
-    std::cerr << "However, the entry returned from the multi-GPU ";
-    std::cerr << "kernel was " << array_val << std::endl;
-    return -1;
-  }
+    }
+    std::cout << "Desired value is " << desired_val << std::endl;
+    if (array_val != desired_val) {
+      std::cerr << "ERROR! Multi-grid barrier does not appear to work.";
+      std::cerr << std::endl;
+      std::cerr << "Expected the multi-GPUs to work together to produce ";
+      std::cerr << "the value " << desired_val << std::endl;
+      std::cerr << "However, the entry returned from the multi-GPU ";
+      std::cerr << "kernel was " << array_val << std::endl;
+      return -1;
+    }
     std::cout << "\tMulti-GPU barriers appear to work here." << std::endl;
     return 0;
 }
@@ -152,8 +153,17 @@ test_kernel(unsigned int *atomic_val, unsigned int *global_array,
     // near "total number of blocks". It will be the last wavefront to
     // reach the atomicInc, but everyone will have only hit the atomic once.
     if (rank == (grid.size() - 1)) {
-      long long start_clock = clock64();
-      while (clock64() < (start_clock + 1000000)) {}
+      long long time_diff = 0;
+      long long last_clock = clock64();
+      do {
+        long long cur_clock = clock64();
+        if (cur_clock > last_clock) {
+          time_diff += (cur_clock - last_clock);
+        }
+        // If it rolls over, we don't know how much to add to catch up.
+        // So just ignore those slipped cycles.
+        last_clock = cur_clock;
+      } while(time_diff < 1000000);
     }
     if (threadIdx.x == 0) {
       array[offset] = atomicInc(atomic_val, UINT_MAX);
@@ -166,8 +176,17 @@ test_kernel(unsigned int *atomic_val, unsigned int *global_array,
     // will end up being out of sync, because the intermingling of adds
     // and multiplies will not be aligned between to the two GPUs.
     if (global_rank == (mgrid.size() - 1)) {
-      long long start_clock = clock64();
-      while (clock64() < (start_clock + 100000000)) {}
+      long long time_diff = 0;
+      long long last_clock = clock64();
+      do {
+        long long cur_clock = clock64();
+        if (cur_clock > last_clock) {
+          time_diff += (cur_clock - last_clock);
+        }
+        // If it rolls over, we don't know how much to add to catch up.
+        // So just ignore those slipped cycles.
+        last_clock = cur_clock;
+      } while(time_diff < 1000000);
     }
     // During even iterations, add into your own array entry
     // During odd iterations, add into your partner's array entry
