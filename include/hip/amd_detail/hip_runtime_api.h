@@ -237,8 +237,8 @@ typedef enum hipMemoryAdvise {
     hipMemAdviseUnsetPreferredLocation = 4, ///< Clear the preferred location for the data
     hipMemAdviseSetAccessedBy = 5,          ///< Data will be accessed by the specified device,
                                             ///< so prevent page faults as much as possible
-    hipMemAdviseUnsetAccessedBy = 6         ///< Let the Unified Memory subsystem decide on
-                                            ///< the page faulting policy for the specified device
+    hipMemAdviseUnsetAccessedBy = 6         ///< Let HIP to decide on the page faulting policy
+                                            ///< for the specified device
 } hipMemoryAdvise;
 
 /*
@@ -250,9 +250,9 @@ typedef enum hipMemRangeAttribute {
     hipMemRangeAttributeReadMostly = 1,         ///< Whether the range will mostly be read and
                                                 ///< only occassionally be written to
     hipMemRangeAttributePreferredLocation = 2,  ///< The preferred location of the range
-    hipMemRangeAttributeAccessedBy = 3,         ///< Memory range has cudaMemAdviseSetAccessedBy
-                                                ///< set for specified device
-    hipMemRangeAttributeLastPrefetchLocation = 4,///< The last location to which the range was prefetched
+    hipMemRangeAttributeAccessedBy = 3,         ///< Memory range has hipMemAdviseSetAccessedBy
+                                                ///< set for the specified device
+    hipMemRangeAttributeLastPrefetchLocation = 4,///< The last location to where the range was prefetched
 } hipMemRangeAttribute;
 
 /*
@@ -1056,7 +1056,7 @@ const char* hipGetErrorString(hipError_t hipError);
  *  @{
  *  This section describes the stream management functions of HIP runtime API.
  *  The following Stream APIs are not (yet) supported in HIP:
- *  - cudaStreamAttachMemAsync
+ *  - hipStreamAttachMemAsync is a nop
  */
 
 
@@ -1296,7 +1296,7 @@ typedef void (*hipStreamCallback_t)(hipStream_t stream, hipError_t status, void*
 /**
  * @brief Adds a callback to be called on the host after all currently enqueued
  * items in the stream have completed.  For each
- * cudaStreamAddCallback call, a callback will be executed exactly once.
+ * hipStreamAddCallback call, a callback will be executed exactly once.
  * The callback will block later work in the stream until it is finished.
  * @param[in] stream   - Stream to add callback to
  * @param[in] callback - The function to call once preceding stream operations are complete
@@ -1829,7 +1829,7 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @addtogroup MemoryM Managed Memory (ROCm HMM)
+ *  @addtogroup Memory Managed Memory
  *  @{
  *  @ingroup Memory
  *  This section describes the managed memory management functions of HIP runtime API.
@@ -1837,7 +1837,7 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
  */
 
 /**
- * @brief Allocates memory that will be automatically managed by AMD HMM.
+ * @brief Allocates memory that will be automatically managed by HIP.
  *
  * @param [out] dev_ptr - pointer to allocated device memory
  * @param [in]  size    - requested allocation size in bytes
@@ -1851,7 +1851,7 @@ hipError_t hipMallocManaged(void** dev_ptr,
                             unsigned int flags __dparm(hipMemAttachGlobal));
 
 /**
- * @brief Prefetches memory to the specified destination device using AMD HMM.
+ * @brief Prefetches memory to the specified destination device using HIP.
  *
  * @param [in] dev_ptr  pointer to be prefetched
  * @param [in] count    size in bytes for prefetching
@@ -1866,7 +1866,7 @@ hipError_t hipMemPrefetchAsync(const void* dev_ptr,
                                hipStream_t stream __dparm(0));
 
 /**
- * @brief Advise about the usage of a given memory range to AMD HMM.
+ * @brief Advise about the usage of a given memory range to HIP.
  *
  * @param [in] dev_ptr  pointer to memory to set the advice for
  * @param [in] count    size in bytes of the memory range
@@ -1881,7 +1881,7 @@ hipError_t hipMemAdvise(const void* dev_ptr,
                         int device);
 
 /**
- * @brief Query an attribute of a given memory range in AMD HMM.
+ * @brief Query an attribute of a given memory range in HIP.
  *
  * @param [in/out] data   a pointer to a memory location where the result of each
  *                        attribute query will be written to
@@ -1899,7 +1899,7 @@ hipError_t hipMemRangeGetAttribute(void* data,
                                    size_t count);
 
 /**
- * @brief Query attributes of a given memory range in AMD HMM.
+ * @brief Query attributes of a given memory range in HIP.
  *
  * @param [in/out] data     a two-dimensional array containing pointers to memory locations
  *                          where the result of each attribute query will be written to
@@ -1920,14 +1920,14 @@ hipError_t hipMemRangeGetAttributes(void** data,
                                     size_t count);
 
 /**
- * @brief Attach memory to a stream asynchronously in AMD HMM.
+ * @brief Attach memory to a stream asynchronously in HIP.
  *
  * @param [in] stream     - stream in which to enqueue the attach operation
  * @param [in] dev_ptr    - pointer to memory (must be a pointer to managed memory or
  *                          to a valid host-accessible region of system-allocated memory)
  * @param [in] length     - length of memory (defaults to zero)
- * @param [in] flags      - must be one of cudaMemAttachGlobal, cudaMemAttachHost or
- *                          cudaMemAttachSingle (defaults to cudaMemAttachSingle)
+ * @param [in] flags      - must be one of hipMemAttachGlobal, hipMemAttachHost or
+ *                          hipMemAttachSingle (defaults to hipMemAttachSingle)
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
