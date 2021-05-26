@@ -247,7 +247,10 @@ hipError_t ihipLaunchKernel_validate(hipFunction_t f, uint32_t globalWorkSizeX,
   // If it exceeds, then return a failure
   if (blockDimX * blockDimY * blockDimZ >
       kernel->getDeviceKernel(*device)->workGroupInfo()->size_) {
-    LogPrintfError("%s", "Launch params are larger than launch bounds");
+    LogPrintfError("Launch params (%u, %u, %u) are larger than launch bounds (%lu) for kernel %s",
+                   blockDimX, blockDimY, blockDimZ,
+                   kernel->getDeviceKernel(*device)->workGroupInfo()->size_,
+                   function->name().c_str());
     return hipErrorLaunchFailure;
   }
 
