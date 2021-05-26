@@ -543,7 +543,7 @@ foreach $arg (@ARGV)
                 $hasC = 1;
                 $needCFLAGS = 1;
                 $toolArgs .= " -x c";
-            } elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) ) {
+            } elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) or ($arg =~ /\.C$/)) {
                 $needCXXFLAGS = 1;
                 if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_PLATFORM ne "amd") {
                     $hasCXX = 1;
