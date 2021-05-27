@@ -72,10 +72,15 @@ else()
   set_target_properties(amdhip PROPERTIES OUTPUT_NAME "amdhip32")
 endif()
 
-if(BUILD_SHARED_LIBS)
-  set_target_properties(amdhip PROPERTIES
-     VERSION ${HIP_LIB_VERSION_STRING}
-     SOVERSION ${HIP_LIB_VERSION_MAJOR})
+# Disable versioning for Windows
+# as currently HIP_LIB_VERSION_STRING and HIP_LIB_VERSION_MAJOR
+# are not being populated
+if(NOT WIN32)
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(amdhip PROPERTIES
+      VERSION ${HIP_LIB_VERSION_STRING}
+      SOVERSION ${HIP_LIB_VERSION_MAJOR})
+  endif()
 endif()
 
 target_sources(amdhip PRIVATE
