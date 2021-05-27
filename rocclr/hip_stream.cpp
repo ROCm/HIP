@@ -449,22 +449,33 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
   if (command == nullptr) {
     HIP_RETURN(hipErrorInvalidValue);
   }
-  amd::Event& event = command->event();
   StreamCallback* cbo = new StreamCallback(stream, callback, userData, command);
 
-  if ((cbo == nullptr) || !event.setCallback(CL_COMPLETE, ihipStreamCallback, cbo)) {
+  if ((cbo == nullptr) || !command->setCallback(CL_COMPLETE, ihipStreamCallback, cbo)) {
     command->release();
     if (last_command != nullptr) {
       last_command->release();
     }
     return hipErrorInvalidHandle;
   }
+  // Retain callback command for the blocking marker
+  command->retain();
   command->enqueue();
   // @note: don't release the command here, because it will be released after HIP callback
-
   if (last_command != nullptr) {
     last_command->release();
   }
+  // Add the new barrier to stall the stream, until the callback is done
+  eventWaitList.clear();
+  eventWaitList.push_back(command);
+  amd::Command* block_command = new amd::Marker(*hostQueue, !kMarkerDisableFlush, eventWaitList);
+  if (block_command == nullptr) {
+    HIP_RETURN(hipErrorInvalidValue);
+  }
+  block_command->enqueue();
+  block_command->release();
+  // Release the callback marker
+  command->release();
 
   HIP_RETURN(hipSuccess);
 }
