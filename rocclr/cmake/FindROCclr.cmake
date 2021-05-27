@@ -42,7 +42,7 @@ find_path(ROCCLR_INCLUDE_DIR top.hpp
     include)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(ROCCLR
+find_package_handle_standard_args(ROCclr
   "\nROCclr not found"
   ROCCLR_INCLUDE_DIR)
 mark_as_advanced(ROCCLR_INCLUDE_DIR)
