@@ -115,7 +115,7 @@ endif()
 
 if(BUILD_SHARED_LIBS)
   if(WIN32)
-    target_sources(amdhip PRIVATE amdhip.def)
+    target_sources(amdhip PRIVATE hip_hcc.def.in)
   else()
     set_target_properties(amdhip PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
   endif()
