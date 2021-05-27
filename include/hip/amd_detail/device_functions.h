@@ -116,6 +116,28 @@ __device__ static inline uint64_t __bitinsert_u64(uint64_t src0, uint64_t src1, 
     return ((src0 & ~(mask << offset)) | ((src1 & mask) << offset));
 }
 
+__device__ inline unsigned int __funnelshift_l(unsigned int lo, unsigned int hi, unsigned int shift)
+{
+    uint32_t mask_shift = shift & 31;
+    return mask_shift == 0 ? hi : __builtin_amdgcn_alignbit(hi, lo, 32 - mask_shift);
+}
+
+__device__ inline unsigned int __funnelshift_lc(unsigned int lo, unsigned int hi, unsigned int shift)
+{
+    uint32_t min_shift = shift >= 32 ? 32 : shift;
+    return min_shift == 0 ? hi : __builtin_amdgcn_alignbit(hi, lo, 32 - min_shift);
+}
+
+__device__ inline unsigned int __funnelshift_r(unsigned int lo, unsigned int hi, unsigned int shift)
+{
+    return __builtin_amdgcn_alignbit(hi, lo, shift);
+}
+
+__device__ inline unsigned int __funnelshift_rc(unsigned int lo, unsigned int hi, unsigned int shift)
+{
+    return shift >= 32 ? hi : __builtin_amdgcn_alignbit(hi, lo, shift);
+}
+
 __device__ static unsigned int __byte_perm(unsigned int x, unsigned int y, unsigned int s);
 __device__ static unsigned int __hadd(int x, int y);
 __device__ static int __mul24(int x, int y);
