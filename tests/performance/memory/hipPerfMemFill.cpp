@@ -24,6 +24,7 @@
  */
 
 #include "test_common.h"
+#include <printf/printf_common.h>
 #include <iostream>
 #include <chrono>
 #include <sys/time.h>
@@ -42,6 +43,31 @@ __global__ void vec_fill(T *x, T coef, int N) {
     x[i] = coef;
 #else
     x[i] = coef * i;
+#endif
+  }
+}
+
+__device__ void print_log(int i, double value, double expected) {
+  printf("failed at %d: val=%g, expected=%g\n", i, value, expected);
+}
+
+__device__ void print_log(int i, int value, int expected) {
+  printf("failed at %d: val=%d, expected=%d\n", i, value, expected);
+}
+
+template<class T>
+__global__ void vec_verify(T *x, T coef, int N) {
+  const int istart = threadIdx.x + blockIdx.x * blockDim.x;
+  const int ishift = blockDim.x * gridDim.x;
+  for (int i = istart; i < N; i += ishift) {
+#if SIMPLY_ASSIGN
+    if(x[i] != coef) {
+      print_log(i, x[i], coef);
+    }
+#else
+    if(x[i] != coef * i) {
+      print_log(i, x[i], coef * i);
+    }
 #endif
   }
 }
@@ -120,6 +146,19 @@ class hipPerfMemFill {
         << std::endl;
   }
 
+  void log_host(const char* title, double GBytes, double sec) {
+    cout << title << " [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
+        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << endl;
+  }
+
+  void log_kernel(const char* title, double GBytes, double sec, double sec_hv, double sec_kv) {
+    cout << title << " [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
+        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << ", hostVerify cost "
+        << setw(10) << sec_hv << " s in bandwidth " << setw(10) << GBytes / sec_hv << " [GB/s]"
+        << ", kernelVerify cost "<< setw(10) << sec_kv << " s in bandwidth " << setw(10)
+        << GBytes / sec_kv << " [GB/s]" << endl;
+  }
+
   void hostFill(size_t size, T *data, T coef, double &sec) {
     size_t num = size / sizeof(T);  // Size of elements
     auto start = chrono::steady_clock::now();
@@ -156,18 +195,18 @@ class hipPerfMemFill {
     sec = diff.count() / NUM_ITER;  // in second
   }
 
-  void verify(size_t size, T *data, T coef, double &sec) {
+  void hostVerify(size_t size, T *data, T coef, double &sec) {
     size_t num = size / sizeof(T);  // Size of elements
     auto start = chrono::steady_clock::now();
     for (int i = 0; i < num; ++i) {
 #if SIMPLY_ASSIGN
       if(data[i] != coef) {
-        cout << "verify failed: i=" << i << ", data[i]=" << data[i] << ", expected=" << coef << endl;
+        cout << "hostVerify failed: i=" << i << ", data[i]=" << data[i] << ", expected=" << coef << endl;
         failed("failed\n");
       }
 #else
       if(data[i] != coef * i) {
-        cout << "verify failed: i=" << i << ", data[i]=" << data[i] << ", expected=" << coef * i << endl;
+        cout << "hostVerify failed: i=" << i << ", data[i]=" << data[i] << ", expected=" << coef * i << endl;
         failed("failed\n");
       }
 #endif
@@ -177,7 +216,40 @@ class hipPerfMemFill {
     sec = diff.count();
   }
 
-  bool testLargeBarHostFill(size_t size) {
+  void kernelVerify(size_t size, T *data, T coef, double &sec) {
+    size_t num = size / sizeof(T);  // Size of elements
+    unsigned blocks = setNumBlocks(num);
+
+    CaptureStream *capture = new CaptureStream(stdout);
+    capture->Begin();
+
+    hipLaunchKernelGGL(HIP_KERNEL_NAME(vec_verify<T>), dim3(blocks),
+                       dim3(threadsPerBlock), 0, 0, data, coef, num);  // kernel will be loaded first time
+    HIPCHECK(hipDeviceSynchronize());
+
+    capture->End();
+    capture->Truncate(1000); // Don't want too long log if existing
+    std::string device_output = capture->getData();
+    delete capture;
+    if (device_output.length() > 0) {
+      failed("kernelVerify failed:\n%s\n", device_output.c_str());
+    }
+
+    // Now all data verified. The following is to test bandwidth.
+    auto start = chrono::steady_clock::now();
+
+    for (int iter = 0; iter < NUM_ITER; ++iter) {
+      hipLaunchKernelGGL(HIP_KERNEL_NAME(vec_verify<T>), dim3(blocks),
+                             dim3(threadsPerBlock), 0, 0, data, coef, num);
+    }
+    HIPCHECK(hipDeviceSynchronize());
+
+    auto end = chrono::steady_clock::now();
+    chrono::duration<double> diff = end - start;  // in second
+    sec = diff.count() / NUM_ITER;  // in second
+  }
+
+  bool testLargeBarDeviceMemoryHostFill(size_t size) {
     if (!supportLargeBar()) {
       return false;
     }
@@ -190,8 +262,7 @@ class hipPerfMemFill {
     hostFill(size, A, coef_, sec);  // Cpu can access device mem in LB
     HIPCHECK(hipFree(A));
 
-    cout << "Largebar: host   fill [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
-        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << endl;
+    log_host("Largebar: host   fill", GBytes, sec);
     return true;
   }
 
@@ -202,7 +273,7 @@ class hipPerfMemFill {
 
     cout << "Test large bar device memory host filling" << endl;
     for (int i = 0; i < NUM_SIZE; i++) {
-      if (!testLargeBarHostFill(totalSizes_[i])) {
+      if (!testLargeBarDeviceMemoryHostFill(totalSizes_[i])) {
         return false;
       }
     }
@@ -222,9 +293,7 @@ class hipPerfMemFill {
     hostFill(size, A, coef_, sec);  // Cpu can access HMM mem
     HIPCHECK(hipFree(A));
 
-    cout << "Managed: host   fill [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
-        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << endl;
-
+    log_host("Managed: host   fill", GBytes, sec);
     return true;
   }
 
@@ -236,15 +305,14 @@ class hipPerfMemFill {
 
     T *A;
     HIPCHECK(hipMallocManaged(&A, size));
-    double sec = 0, sec_v = 0;
+
+    double sec = 0, sec_hv = 0, sec_kv = 0;
     kernelFill(size, A, coef_, sec);
-    verify(size, A, coef_, sec_v); // Managed memory can be verified by host
+    hostVerify(size, A, coef_, sec_hv);  // Managed memory can be verified by host
+    kernelVerify(size, A, coef_, sec_kv);
     HIPCHECK(hipFree(A));
 
-    cout << "Managed: kernel fill [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
-        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << ", verify: cost "
-        << setw(10) << sec_v << " s in bandwidth " << setw(10) << GBytes / sec_v << " [GB/s]"
-        << endl;
+    log_kernel("Managed: kernel fill", GBytes, sec, sec_hv, sec_kv);
 
     return true;
   }
@@ -279,9 +347,7 @@ class hipPerfMemFill {
     hostFill(size, A, coef_, sec);
     HIPCHECK(hipHostFree(A));
 
-    cout << "Host: host   fill [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
-        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << endl;
-
+    log_host("Host: host   fill", GBytes, sec);
     return true;
   }
 
@@ -290,16 +356,13 @@ class hipPerfMemFill {
 
     T *A;
     HIPCHECK(hipHostMalloc((void** ) &A, size, flags));
-    double sec = 0, sec_v = 0;
+    double sec = 0, sec_hv = 0, sec_kv = 0;
     kernelFill(size, A, coef_, sec);
-    verify(size, A, coef_, sec_v);
+    hostVerify(size, A, coef_, sec_hv);
+    kernelVerify(size, A, coef_, sec_kv);
     HIPCHECK(hipHostFree(A));
 
-    cout << "Host: kernel fill [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
-        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << ", verify cost "
-        << setw(10) << sec_v << " s in bandwidth " << setw(10) << GBytes / sec_v << " [GB/s]"
-        << endl;
-
+    log_kernel("Host: kernel fill", GBytes, sec, sec_hv, sec_kv);
     return true;
   }
 
@@ -356,12 +419,15 @@ class hipPerfMemFill {
     return (num + threadsPerBlock_ - 1) / threadsPerBlock_;
 #endif
   }
+
   bool testExtDeviceMemoryHostFill(size_t size, unsigned int flags) {
     double GBytes = (double) size / (1024.0 * 1024.0 * 1024.0);
 
     T *A = nullptr;
     HIPCHECK(hipExtMallocWithFlags((void **)&A, size, flags));
     if (!A) {
+      cout << "failed hipExtMallocWithFlags() with size =" << size << " flags="
+           << std::hex << flags << endl;
       return false;
     }
 
@@ -369,8 +435,7 @@ class hipPerfMemFill {
     hostFill(size, A, coef_, sec);  // Cpu can access this mem
     HIPCHECK(hipFree(A));
 
-    cout << "ExtDevice: host   fill [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
-        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << endl;
+    log_host("ExtDevice: host   fill", GBytes, sec);
     return true;
   }
 
@@ -380,18 +445,18 @@ class hipPerfMemFill {
     T *A = nullptr;
     HIPCHECK(hipExtMallocWithFlags((void **)&A, size, flags));
     if (!A) {
+      cout << "failed hipExtMallocWithFlags() with size =" << size << " flags="
+           << std::hex << flags << endl;
       return false;
     }
 
-    double sec = 0, sec_v = 0;
+    double sec = 0, sec_hv = 0, sec_kv = 0;
     kernelFill(size, A, coef_, sec);
-    verify(size, A, coef_, sec_v); // Fine grained device memory can be verified by host
+    hostVerify(size, A, coef_, sec_hv);  // Fine grained device memory can be verified by host
+    kernelVerify(size, A, coef_, sec_kv);
     HIPCHECK(hipFree(A));
 
-    cout << "ExtDevice: kernel fill [" << setw(7) << GBytes << " GB]: cost " << setw(10) << sec
-        << " s in bandwidth " << setw(10) << GBytes / sec << " [GB/s]" << ", verify cost "
-        << setw(10) << sec_v << " s in bandwidth " << setw(10) << GBytes / sec_v << " [GB/s]"
-        << endl;
+    log_kernel("ExtDevice: kernel fill", GBytes, sec, sec_hv, sec_kv);
 
     return true;
   }
