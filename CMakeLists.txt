@@ -315,9 +315,6 @@ install(FILES ${PROJECT_BINARY_DIR}/.hipVersion DESTINATION bin)
 execute_process(COMMAND test ${CMAKE_INSTALL_PREFIX} -ef ${CMAKE_CURRENT_SOURCE_DIR}
     RESULT_VARIABLE INSTALL_SOURCE)
 if(NOT ${INSTALL_SOURCE} EQUAL 0)
-    if(HIP_RUNTIME STREQUAL "rocclr")
-        install(DIRECTORY rocclr DESTINATION .)
-    endif()
     install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
 
     # The following two lines will be removed after upstream updation

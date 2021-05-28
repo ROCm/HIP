@@ -20,12 +20,7 @@
 
 cmake_minimum_required(VERSION 3.5.1)
 
-# TODO, this install logic is hacky. We should not be manually specifying install locations.
-# Cmake should handle this for us based on the target properties.
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ${CMAKE_BINARY_DIR}/lib)
-set(LIB_INSTALL_DIR ${CMAKE_INSTALL_PREFIX}/lib)
-set(CONFIG_PACKAGE_INSTALL_DIR ${LIB_INSTALL_DIR}/cmake/hip)
+include(GNUInstallDirs)
 
 if(ADDRESS_SANITIZER)
   set(ASAN_LINKER_FLAGS "-fsanitize=address")
@@ -64,7 +59,10 @@ set_target_properties(amdhip PROPERTIES
   CXX_STANDARD 14
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
-  POSITION_INDEPENDENT_CODE ON)
+  POSITION_INDEPENDENT_CODE ON
+  # Workaround for many places in the HIP project
+  # having hardcoded references to build/lib/libamdhip64.so
+  LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set_target_properties(amdhip PROPERTIES OUTPUT_NAME "amdhip64")
@@ -240,18 +238,26 @@ add_custom_command(TARGET amdhip POST_BUILD COMMAND
 add_custom_command(TARGET amdhip POST_BUILD COMMAND
   ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/include ${PROJECT_BINARY_DIR}/include)
 
-INSTALL(PROGRAMS $<TARGET_FILE:amdhip> DESTINATION lib COMPONENT MAIN)
-
 add_library(host INTERFACE)
 target_link_libraries(host INTERFACE amdhip)
   
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
-INSTALL(TARGETS amdhip host device EXPORT hip-targets DESTINATION ${LIB_INSTALL_DIR})
+INSTALL(TARGETS amdhip host device
+  EXPORT hip-targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 
-INSTALL(TARGETS amdhip host device EXPORT hip-lang-targets DESTINATION ${LIB_INSTALL_DIR})
+INSTALL(TARGETS amdhip host device
+  EXPORT hip-lang-targets
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 INSTALL(EXPORT hip-lang-targets DESTINATION ${CONFIG_LANG_PACKAGE_INSTALL_DIR} NAMESPACE hip-lang::)
 
 if(NOT WIN32)
