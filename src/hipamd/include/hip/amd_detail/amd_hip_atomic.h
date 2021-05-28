@@ -1,6 +1,6 @@
 
 
-#include "device_functions.h"
+#include "amd_device_functions.h"
 
 #if __has_builtin(__hip_atomic_compare_exchange_strong)
 

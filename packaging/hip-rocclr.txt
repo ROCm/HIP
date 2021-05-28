@@ -31,7 +31,7 @@ endif()
 
 install(FILES @PROJECT_BINARY_DIR@/.hipInfo DESTINATION lib)
 install(FILES @PROJECT_BINARY_DIR@/hip-config.cmake @PROJECT_BINARY_DIR@/hip-config-version.cmake DESTINATION lib/cmake/hip)
-install(FILES @PROJECT_BINARY_DIR@/rocclr/hip-lang-config.cmake @PROJECT_BINARY_DIR@/rocclr/hip-lang-config-version.cmake DESTINATION lib/cmake/hip-lang)
+install(FILES @PROJECT_BINARY_DIR@/src/hipamd/hip-lang-config.cmake @PROJECT_BINARY_DIR@/src/hipamd/hip-lang-config-version.cmake DESTINATION lib/cmake/hip-lang)
 
 if(@__HIP_ENABLE_RTC@)
   install(FILES @PROJECT_BINARY_DIR@/lib/libhiprtc-builtins.so.@HIP_LIB_VERSION_MAJOR@.@HIP_LIB_VERSION_MINOR@ DESTINATION lib)

@@ -24,7 +24,7 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_AMD_DETAIL_HIP_LDG_H
 
 #if __HIP_CLANG_ONLY__
-#include "hip_vector_types.h"
+#include "amd_hip_vector_types.h"
 #include "host_defines.h"
 
 __device__ inline static char __ldg(const char* ptr) { return *ptr; }

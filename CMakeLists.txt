@@ -285,7 +285,7 @@ set(_versionInfoHeader
 file(WRITE "${PROJECT_BINARY_DIR}/include/hip/hip_version.h" ${_versionInfoHeader})
 
 if(HIP_RUNTIME STREQUAL "rocclr")
-    add_subdirectory(rocclr)
+    add_subdirectory(src/hipamd)
 endif()
 
 # Generate .hipInfo
@@ -322,6 +322,7 @@ if(NOT ${INSTALL_SOURCE} EQUAL 0)
     install(CODE "file(REMOVE_RECURSE ${CMAKE_INSTALL_PREFIX}/include)")
 
     install(DIRECTORY include DESTINATION .)
+    install(DIRECTORY src/hipamd/include/hip/ DESTINATION include/hip/)
     install(DIRECTORY cmake DESTINATION .)
 endif()
 
@@ -478,6 +479,7 @@ set(HIP_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 if(HIP_PLATFORM STREQUAL "nvidia")
     execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/include" "${HIP_ROOT_DIR}/include" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 endif()
+execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/src/hipamd/include/hip/" "${HIP_ROOT_DIR}/include/hip/" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/cmake" "${HIP_ROOT_DIR}/cmake" RESULT_VARIABLE RUN_HIT ERROR_QUIET)
 if(${RUN_HIT} EQUAL 0)
     execute_process(COMMAND "${CMAKE_COMMAND}" -E copy_directory "${HIP_SRC_PATH}/bin" "${HIP_ROOT_DIR}/bin" RESULT_VARIABLE RUN_HIT ERROR_QUIET)

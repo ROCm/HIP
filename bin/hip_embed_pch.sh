@@ -21,7 +21,7 @@
 
 printUsage() {
   echo
-  echo "Usage: $(basename "$0") HIP_BUILD_INC_DIR HIP_INC_DIR LLVM_DIR [option] [RTC_LIB_OUTPUT]"
+  echo "Usage: $(basename "$0") HIP_BUILD_INC_DIR HIP_INC_DIR HIP_AMD_INC_DIR LLVM_DIR [option] [RTC_LIB_OUTPUT]"
   echo
   echo "Options:"
   echo "  -p,  --generate_pch  Generate pre-compiled header (default)"
@@ -39,13 +39,14 @@ fi
 
 HIP_BUILD_INC_DIR="$1"
 HIP_INC_DIR="$2"
-LLVM_DIR="$3"
+HIP_AMD_INC_DIR="$3"
+LLVM_DIR="$4"
 # By default, generate pch
 TARGET="generatepch"
 
-while [ "$4" != "" ];
+while [ "$5" != "" ];
 do
-  case "$4" in
+  case "$5" in
     -h | --help )
         printUsage ; exit 0 ;;
     -p | --generate_pch )
@@ -58,9 +59,9 @@ do
   shift 1
 done
 
-# Allow hiprtc lib name to be set by argument 6
-if [[ "$5" != "" ]]; then
-  rtc_shared_lib_out="$5"
+# Allow hiprtc lib name to be set by argument 7
+if [[ "$6" != "" ]]; then
+  rtc_shared_lib_out="$6"
 else
   if [[ "$OSTYPE" == cygwin ]]; then
     rtc_shared_lib_out=hiprtc-builtins64.dll
@@ -124,7 +125,7 @@ EOF
 
   set -x
 
-  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
+  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HIP_AMD_INC_DIR --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
 
   cat $tmp/hip_macros.h >> $tmp/pch.cui &&
 
@@ -174,7 +175,7 @@ __hipRTC_header_size:
 EOF
 
   set -x
-  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++14 -nogpulib --hip-version=4.4 -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR --cuda-device-only -D__HIPCC_RTC__ -x hip $tmp/hipRTC_header.h -E -o $tmp/hiprtc &&
+  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++14 -nogpulib --hip-version=4.4 -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HIP_AMD_INC_DIR --cuda-device-only -D__HIPCC_RTC__ -x hip $tmp/hipRTC_header.h -E -o $tmp/hiprtc &&
   cat $macroFile >> $tmp/hiprtc &&
   $LLVM_DIR/bin/llvm-mc -o $tmp/hiprtc_header.o $tmp/hipRTC_header.mcin --filetype=obj &&
   $LLVM_DIR/bin/clang $tmp/hiprtc_header.o -o $rtc_shared_lib_out -shared &&

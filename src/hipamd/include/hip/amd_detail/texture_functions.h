@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_TEXTURE_FUNCTIONS_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_TEXTURE_FUNCTIONS_H
-#include <hip/amd_detail/hip_vector_types.h>
-#include <hip/amd_detail/hip_texture_types.h>
+#include <hip/amd_detail/amd_hip_vector_types.h>
+#include <hip/amd_detail/amd_hip_texture_types.h>
 
 #pragma push_macro("TYPEDEF_VECTOR_VALUE_TYPE")
 #define TYPEDEF_VECTOR_VALUE_TYPE(SCALAR_TYPE) \
