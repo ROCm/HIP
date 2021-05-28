@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 #include <cstring>
 
-#include <hip/amd_detail/driver_types.h>
+#include <hip/amd_detail/amd_driver_types.h>
 #include "hip/hip_runtime_api.h"
 #include "hip/hip_runtime.h"
 #include "hip_internal.hpp"

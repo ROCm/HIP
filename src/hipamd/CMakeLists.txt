@@ -82,51 +82,52 @@ if(NOT WIN32)
 endif()
 
 target_sources(amdhip64 PRIVATE
-  cl_gl.cpp
-  cl_lqdflash_amd.cpp
-  fixme.cpp
-  hip_activity.cpp
-  hip_code_object.cpp
-  hip_context.cpp
-  hip_device_runtime.cpp
-  hip_device.cpp
-  hip_error.cpp
-  hip_event.cpp
-  hip_fatbin.cpp
-  hip_global.cpp
-  hip_graph_internal.cpp
-  hip_graph.cpp
-  hip_hmm.cpp
-  hip_intercept.cpp
-  hip_memory.cpp
-  hip_module.cpp
-  hip_peer.cpp
-  hip_platform.cpp
-  hip_profile.cpp
-  hip_rtc.cpp
-  hip_stream_ops.cpp
-  hip_stream.cpp
-  hip_surface.cpp
-  hip_texture.cpp)
+  src/cl_gl.cpp
+  src/cl_lqdflash_amd.cpp
+  src/fixme.cpp
+  src/hip_activity.cpp
+  src/hip_code_object.cpp
+  src/hip_context.cpp
+  src/hip_device_runtime.cpp
+  src/hip_device.cpp
+  src/hip_error.cpp
+  src/hip_event.cpp
+  src/hip_fatbin.cpp
+  src/hip_global.cpp
+  src/hip_graph_internal.cpp
+  src/hip_graph.cpp
+  src/hip_hmm.cpp
+  src/hip_intercept.cpp
+  src/hip_memory.cpp
+  src/hip_module.cpp
+  src/hip_peer.cpp
+  src/hip_platform.cpp
+  src/hip_profile.cpp
+  src/hip_rtc.cpp
+  src/hip_stream_ops.cpp
+  src/hip_stream.cpp
+  src/hip_surface.cpp
+  src/hip_texture.cpp)
 
 if(WIN32)
   target_sources(amdhip64 PRIVATE
-    cl_d3d9.cpp
-    cl_d3d10.cpp
-    cl_d3d11.cpp)
+    src/cl_d3d9.cpp
+    src/cl_d3d10.cpp
+    src/cl_d3d11.cpp)
 endif()
 
 if(BUILD_SHARED_LIBS)
   if(WIN32)
     target_sources(amdhip64 PRIVATE amdhip.def)
   else()
-    target_link_libraries(amdhip64 PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
-    set_target_properties(amdhip64 PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
+    target_link_libraries(amdhip64 PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/src/hip_hcc.map.in")
+    set_target_properties(amdhip64 PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/hip_hcc.map.in")
   endif()
 endif()
 
 target_include_directories(amdhip64
   PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/hipamd/include
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_BINARY_DIR}/include)
 
@@ -156,7 +157,8 @@ if(__HIP_ENABLE_PCH)
   # find_package(LLVM) returns the lib/cmake/llvm location. We require the root.
   set(HIP_LLVM_ROOT "${LLVM_DIR}/../../..")
 
-  execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${HIP_LLVM_ROOT}" COMMAND_ECHO STDERR RESULT_VARIABLE EMBED_PCH_RC)
+  #  execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${HIP_LLVM_ROOT}" COMMAND_ECHO STDERR RESULT_VARIABLE EMBED_PCH_RC)
+  execute_process(COMMAND sh -c "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src/hipamd/include ${HIP_LLVM_ROOT}" COMMAND_ECHO STDERR RESULT_VARIABLE EMBED_PCH_RC)
   if (EMBED_PCH_RC AND NOT EMBED_PCH_RC EQUAL 0)
     message(FATAL_ERROR "Failed to embed PCH")
   endif()
@@ -179,7 +181,7 @@ if(__HIP_ENABLE_RTC)
     set(HIPRTC_LIB_NAME "libhiprtc-builtins.so.${HIP_LIB_VERSION_MAJOR}.${HIP_LIB_VERSION_MINOR}")
   endif()
   execute_process(
-    COMMAND sh -c "mkdir -p ${PROJECT_BINARY_DIR}/lib; ${CMAKE_CURRENT_SOURCE_DIR}/../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${HIP_LLVM_ROOT} -r ${PROJECT_BINARY_DIR}/lib/${HIPRTC_LIB_NAME}"
+    COMMAND sh -c "mkdir -p ${PROJECT_BINARY_DIR}/lib; ${CMAKE_CURRENT_SOURCE_DIR}/../../bin/hip_embed_pch.sh ${PROJECT_BINARY_DIR}/include ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src/hipamd/include ${HIP_LLVM_ROOT} -r ${PROJECT_BINARY_DIR}/lib/${HIPRTC_LIB_NAME}"
     COMMAND_ECHO STDERR
     RESULT_VARIABLE EMBED_RTC_RC
   )
@@ -194,9 +196,9 @@ endif()
 #############################
 # Generate profiling API macros/structures header
 set(PROF_API_STR "${PROJECT_BINARY_DIR}/include/hip/amd_detail/hip_prof_str.h")
-set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/include/hip/amd_detail/hip_runtime_api.h")
-set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}")
-set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/hip_prof_gen.py")
+set(PROF_API_HDR "${PROJECT_SOURCE_DIR}/include/hip/hip_runtime_api.h")
+set(PROF_API_SRC "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(PROF_API_GEN "${CMAKE_CURRENT_SOURCE_DIR}/src/hip_prof_gen.py")
 set(PROF_API_LOG "${PROJECT_BINARY_DIR}/hip_prof_gen.log.txt")
 
 find_package(PythonInterp REQUIRED)

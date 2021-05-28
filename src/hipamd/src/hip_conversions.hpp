@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 #pragma once
 
-#include <hip/amd_detail/driver_types.h>
-#include <hip/amd_detail/texture_types.h>
+#include <hip/amd_detail/amd_driver_types.h>
+#include <hip/amd_detail/amd_texture_types.h>
 
 namespace hip
 {

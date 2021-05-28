@@ -23,7 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_SURFACE_FUNCTIONS_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_SURFACE_FUNCTIONS_H
 
-#include <hip/amd_detail/hip_surface_types.h>
+#include <hip/amd_detail/amd_hip_surface_types.h>
 
 #define __SURFACE_FUNCTIONS_DECL__ static inline __device__
 template <class T>

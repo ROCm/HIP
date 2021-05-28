@@ -28,7 +28,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_HIP_SURFACE_TYPES_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_HIP_SURFACE_TYPES_H
 
-#include <hip/amd_detail/driver_types.h>
+#include <hip/amd_detail/amd_driver_types.h>
 
 /**
  * An opaque value that represents a hip surface object

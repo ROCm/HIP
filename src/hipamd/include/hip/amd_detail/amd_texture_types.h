@@ -24,7 +24,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_TEXTURE_TYPES_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_TEXTURE_TYPES_H
 
-#include <hip/amd_detail/driver_types.h>
+#include <hip/amd_detail/amd_driver_types.h>
 
 #define hipTextureType1D 0x01
 #define hipTextureType2D 0x02

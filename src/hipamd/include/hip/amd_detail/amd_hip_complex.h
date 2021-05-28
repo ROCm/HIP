@@ -23,7 +23,7 @@ THE SOFTWARE.
 #ifndef HIP_INCLUDE_HIP_AMD_DETAIL_HIP_COMPLEX_H
 #define HIP_INCLUDE_HIP_AMD_DETAIL_HIP_COMPLEX_H
 
-#include "hip/amd_detail/hip_vector_types.h"
+#include "hip/amd_detail/amd_hip_vector_types.h"
 
 #if defined(__HIPCC_RTC__)
 #define __HOST_DEVICE__ __device__
