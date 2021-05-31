@@ -4,6 +4,8 @@ set(TEST_SRC
     malloc.cc
     hipMemcpy2DToArray.cc
     hipMemcpy2DToArrayAsync.cc
+    hipMemcpyPeer.cc
+    hipMemcpyPeerAsync.cc
 )
 
 # Create shared lib of all tests
