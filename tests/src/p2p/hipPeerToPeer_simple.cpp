@@ -24,9 +24,9 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp
- * TEST: %t EXCLUDE_HIP_PLATFORM amd
- * TEST: %t --memcpyWithPeer EXCLUDE_HIP_PLATFORM amd
- * TEST: %t --mirrorPeers EXCLUDE_HIP_PLATFORM amd
+ * TEST: %t
+ * TEST: %t --memcpyWithPeer
+ * TEST: %t --mirrorPeers
  * HIT_END
  */
 

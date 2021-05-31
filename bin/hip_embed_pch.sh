@@ -71,8 +71,10 @@ else
 fi
 
 if [[ "$OSTYPE" == cygwin || "$OSTYPE" == msys ]]; then
+  isWindows=1
   tmpdir=.
 else
+  isWindows=0
   tmpdir=/tmp
 fi
 
@@ -132,13 +134,19 @@ EOF
 generate_rtc_header() {
   tmp=$tmpdir/hip_rtc.$$
   mkdir -p $tmp
+  local headerFile="$tmp/hipRTC_header.h"
+  local mcinFile="$tmp/hipRTC_header.mcin"
 
-cat >$tmp/hipRTC_header.h <<EOF
+cat >$headerFile <<EOF
 #include "hip/hip_runtime.h"
 #include "hip/hip_fp16.h"
 EOF
 
-cat >$tmp/hipRTC_header.mcin <<EOF
+  echo "// Automatically generated script for HIP RTC." > $mcinFile
+  if [[ $isWindows -eq 0 ]]; then
+    echo "  .type __hipRTC_header,@object" >> $mcinFile
+  fi
+cat >>$mcinFile <<EOF
   .section .hipRTC_header,"a"
   .globl __hipRTC_header
   .globl __hipRTC_header_size

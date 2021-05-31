@@ -22,16 +22,17 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t
+ * TEST: %t EXCLUDE_HIP_PLATFORM amd
  * HIT_END
  */
 
 #include "test_common.h"
 #include <thread>
-#include <unistd.h>
-#include <atomic>
-int *A, *B, *Ad, *Bd;
-std::atomic<bool> signal { false };
+#include <vector>
+
+#define THREADS 8
+#define MAX_NUM_THREADS 512
+#define ITER 100
 
 extern "C" __global__ void WaitKernel(int *Ad, int clockrate) {
   uint64_t wait_t = 500,
@@ -40,45 +41,46 @@ extern "C" __global__ void WaitKernel(int *Ad, int clockrate) {
   *Ad = 1;
 }
 
-void thread1(hipEvent_t start, hipStream_t stream1, int clkRate) {
-  *B = 0;
-
-  hipLaunchKernelGGL(HIP_KERNEL_NAME(WaitKernel), dim3(1), dim3(1), 0, stream1, Bd, clkRate);
-
-  HIPCHECK(hipEventRecord(start, stream1));
-
-}
-
-void thread2(hipEvent_t start, hipStream_t stream1, int clkRate) {
+void t1(hipEvent_t start, hipStream_t stream1, int clkRate, int *A, int *Ad) {
   *A = 0;
 
   hipLaunchKernelGGL(HIP_KERNEL_NAME(WaitKernel), dim3(1), dim3(1), 0, stream1, Ad, clkRate);
 
   HIPCHECK(hipEventRecord(start, stream1));
+
 }
 
 int main(int argc, char* argv[]) {
+
+  int NUM_THREADS = min(THREADS * std::thread::hardware_concurrency(), MAX_NUM_THREADS);
   int clkRate = 0;
-  A = (int *)malloc(sizeof(int));
-  Ad = (int *)malloc(sizeof(int));
-  B = (int *)malloc(sizeof(int));
-  Bd = (int *)malloc(sizeof(int));
-  HIPCHECK(hipHostRegister(A, sizeof(int), 0));
-  HIPCHECK(hipHostGetDevicePointer((void**)&Ad, A, 0));
-  HIPCHECK(hipHostRegister(B, sizeof(int), 0));
-  HIPCHECK(hipHostGetDevicePointer((void**)&Bd, B, 0));
+  std::vector<int *> A, Ad;
+  bool TestPassed = true;
+
+  for (int i = 0; i < NUM_THREADS; i++) {
+    int *aPtr, *adPtr;
+    aPtr = (int *)malloc(sizeof(int));
+    A.push_back(aPtr);
+    Ad.push_back(adPtr);
+    HIPCHECK(hipHostRegister(A[i], sizeof(int), 0));
+    HIPCHECK(hipHostGetDevicePointer((void**)&Ad[i], A[i], 0));
+  }
+
   HIPCHECK(hipDeviceGetAttribute(&clkRate, hipDeviceAttributeClockRate, 0));
   hipStream_t stream1;
   hipStreamCreate(&stream1);
   hipEvent_t start;
   hipEventCreate(&start);
+  std::thread t[NUM_THREADS];
 
-  for (unsigned i = 0; i < 1000; i++) {
-    std::thread t1(thread1, start, stream1, clkRate);
-    std::thread t2(thread2, start, stream1, clkRate);
+  for (int i = 0; i < ITER; i++) {
+    for (int j = 0; j < NUM_THREADS; j++) {
+       t[j] = std::thread(t1, start, stream1, clkRate, A[j], Ad[j]);
+    }
 
-    t1.join();
-    t2.join();
+    for (int j = 0 ; j < NUM_THREADS; j++) {
+      t[j].join();
+    }
 
     HIPCHECK(hipStreamWaitEvent(stream1, start, 0));
     hipError_t err = hipEventQuery(start);
@@ -86,12 +88,27 @@ int main(int argc, char* argv[]) {
       err = hipEventQuery(start);
     }
 
-    if (*A == 1 && *B == 1) {
-      continue;
+    for (int j = 0; j < NUM_THREADS; j++) {
+      if (*A[j] != 1) {
+        TestPassed = false;
+        break;
+      }
     }
-    else {
-      failed("Test Failed due to race condition");
+
+    if (!TestPassed) {
+      failed("Test Failed due to possible race condition!");
     }
   }
+
+  HIPCHECK(hipStreamDestroy(stream1));
+  HIPCHECK(hipEventDestroy(start));
+
+  for (auto ptr: A) {
+    free(ptr);
+  }
+
+  A.clear();
+  Ad.clear();
+
   passed();
 }

@@ -44,11 +44,12 @@ THE SOFTWARE.
     #endif
 
 #if defined(__cplusplus)
-#if !defined(__HIPCC_RTC__)
+// FIXME: Temporarily enable C++ headers while mainline headers is outdated.
+//#if !defined(__HIPCC_RTC__)
     #include <array>
     #include <iosfwd>
     #include <type_traits>
-#endif // !defined(__HIPCC_RTC__)
+//#endif // !defined(__HIPCC_RTC__)
 
     namespace hip_impl {
         template<typename, typename, unsigned int> struct Scalar_accessor;
