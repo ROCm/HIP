@@ -237,8 +237,14 @@ typedef enum hipMemoryAdvise {
     hipMemAdviseUnsetPreferredLocation = 4, ///< Clear the preferred location for the data
     hipMemAdviseSetAccessedBy = 5,          ///< Data will be accessed by the specified device,
                                             ///< so prevent page faults as much as possible
-    hipMemAdviseUnsetAccessedBy = 6         ///< Let HIP to decide on the page faulting policy
+    hipMemAdviseUnsetAccessedBy = 6,        ///< Let HIP to decide on the page faulting policy
                                             ///< for the specified device
+    hipMemAdviseSetCoarseGrain = 100,       ///< The default memory model is fine-grain. That allows
+                                            ///< coherent operations between host and device, while
+                                            ///< executing kernels. The coarse-grain can be used
+                                            ///< for data that only needs to be coherent at dispatch
+                                            ///< boundaries for better performance.
+    hipMemAdviseUnsetCoarseGrain = 101      ///< Restores cache coherency policy back to fine-grain
 } hipMemoryAdvise;
 
 /*
