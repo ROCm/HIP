@@ -139,7 +139,6 @@ include( "${CMAKE_CURRENT_LIST_DIR}/hip-targets.cmake" )
 if(NOT WIN32)
   find_dependency(hsa-runtime64)
   find_dependency(Threads)
-  find_dependency(ROCclr)
 endif()
 
 #get_filename_component cannot resolve the symlinks if called from /opt/rocm/lib/hip
@@ -174,14 +173,6 @@ if(HIP_RUNTIME MATCHES "rocclr")
 
   get_target_property(amdhip64_type hip::amdhip64 TYPE)
   message(STATUS "hip::amdhip64 is ${amdhip64_type}")
-  if(${amdhip64_type} STREQUAL "STATIC_LIBRARY")
-    # For cyclic dependence
-    get_target_property(link_interf_libs amdrocclr_static LINK_INTERFACE_LIBRARIES)
-    if(NOT "${link_interf_libs}" MATCHES "hip::amdhip64")
-      # Prevent repeatedly linking dependence
-      target_link_libraries(amdrocclr_static INTERFACE hip::amdhip64)
-    endif()
-  endif()
 
   if(NOT WIN32)
     set_target_properties(hip::device PROPERTIES
