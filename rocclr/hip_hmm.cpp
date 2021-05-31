@@ -45,6 +45,10 @@ static_assert(static_cast<uint32_t>(hipMemAdviseSetAccessedBy) ==
               amd::MemoryAdvice::SetAccessedBy, "Enum mismatch with ROCclr!");
 static_assert(static_cast<uint32_t>(hipMemAdviseUnsetAccessedBy) ==
               amd::MemoryAdvice::UnsetAccessedBy, "Enum mismatch with ROCclr!");
+static_assert(static_cast<uint32_t>(hipMemAdviseSetCoarseGrain) ==
+              amd::MemoryAdvice::SetCoarseGrain, "Enum mismatch with ROCclr!");
+static_assert(static_cast<uint32_t>(hipMemAdviseUnsetCoarseGrain) ==
+              amd::MemoryAdvice::UnsetCoarseGrain, "Enum mismatch with ROCclr!");
 
 static_assert(static_cast<uint32_t>(hipMemRangeAttributeReadMostly) ==
               amd::MemRangeAttribute::ReadMostly, "Enum mismatch with ROCclr!");
