@@ -46,16 +46,16 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 find_package(ROCclr)
 
 if(BUILD_SHARED_LIBS)
-  add_library(amdhip SHARED)
+  add_library(amdhip64 SHARED)
   # Windows doesn't have a strip utility, so CMAKE_STRIP won't be set.
   if((CMAKE_BUILD_TYPE STREQUAL "Release") AND NOT ("${CMAKE_STRIP}" STREQUAL ""))
-    add_custom_command(TARGET amdhip POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:amdhip>)
+    add_custom_command(TARGET amdhip64 POST_BUILD COMMAND ${CMAKE_STRIP} $<TARGET_FILE:amdhip64>)
   endif()
 else()
-  add_library(amdhip STATIC $<TARGET_OBJECTS:rocclr>)
+  add_library(amdhip64 STATIC $<TARGET_OBJECTS:rocclr>)
 endif()
 
-set_target_properties(amdhip PROPERTIES
+set_target_properties(amdhip64 PROPERTIES
   CXX_STANDARD 14
   CXX_STANDARD_REQUIRED ON
   CXX_EXTENSIONS OFF
@@ -65,9 +65,9 @@ set_target_properties(amdhip PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set_target_properties(amdhip PROPERTIES OUTPUT_NAME "amdhip64")
+  set_target_properties(amdhip64 PROPERTIES OUTPUT_NAME "amdhip64")
 else()
-  set_target_properties(amdhip PROPERTIES OUTPUT_NAME "amdhip32")
+  set_target_properties(amdhip64 PROPERTIES OUTPUT_NAME "amdhip32")
 endif()
 
 # Disable versioning for Windows
@@ -75,13 +75,13 @@ endif()
 # are not being populated
 if(NOT WIN32)
   if(BUILD_SHARED_LIBS)
-    set_target_properties(amdhip PROPERTIES
+    set_target_properties(amdhip64 PROPERTIES
       VERSION ${HIP_LIB_VERSION_STRING}
       SOVERSION ${HIP_LIB_VERSION_MAJOR})
   endif()
 endif()
 
-target_sources(amdhip PRIVATE
+target_sources(amdhip64 PRIVATE
   cl_gl.cpp
   cl_lqdflash_amd.cpp
   fixme.cpp
@@ -110,7 +110,7 @@ target_sources(amdhip PRIVATE
   hip_texture.cpp)
 
 if(WIN32)
-  target_sources(amdhip PRIVATE
+  target_sources(amdhip64 PRIVATE
     cl_d3d9.cpp
     cl_d3d10.cpp
     cl_d3d11.cpp)
@@ -118,32 +118,32 @@ endif()
 
 if(BUILD_SHARED_LIBS)
   if(WIN32)
-    target_sources(amdhip PRIVATE hip_hcc.def.in)
+    target_sources(amdhip64 PRIVATE hip_hcc.def.in)
   else()
-    set_target_properties(amdhip PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
+    set_target_properties(amdhip64 PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/hip_hcc.map.in")
   endif()
 endif()
 
-target_include_directories(amdhip
+target_include_directories(amdhip64
   PRIVATE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_BINARY_DIR}/include)
 
-target_compile_definitions(amdhip PRIVATE __HIP_PLATFORM_AMD__)
+target_compile_definitions(amdhip64 PRIVATE __HIP_PLATFORM_AMD__)
 
-target_link_libraries(amdhip PRIVATE ${CMAKE_DL_LIBS})
+target_link_libraries(amdhip64 PRIVATE ${CMAKE_DL_LIBS})
 # Additional dependencies for hipRTC
 if(WIN32)
-  target_link_libraries(amdhip PRIVATE Dbghelp.lib)
+  target_link_libraries(amdhip64 PRIVATE Dbghelp.lib)
 endif()
 
 # Note in static case we cannot link against rocclr.
 # If we would, we'd also have to export rocclr and have hipcc pass it to the linker.
 if(BUILD_SHARED_LIBS)
-  target_link_libraries(amdhip PRIVATE rocclr)
+  target_link_libraries(amdhip64 PRIVATE rocclr)
 else()
-  target_compile_definitions(amdhip PRIVATE $<TARGET_PROPERTY:rocclr,COMPILE_DEFINITIONS>)
-  target_include_directories(amdhip PRIVATE $<TARGET_PROPERTY:rocclr,INCLUDE_DIRECTORIES>)
+  target_compile_definitions(amdhip64 PRIVATE $<TARGET_PROPERTY:rocclr,COMPILE_DEFINITIONS>)
+  target_include_directories(amdhip64 PRIVATE $<TARGET_PROPERTY:rocclr,INCLUDE_DIRECTORIES>)
 endif()
 
 # Short-Term solution for pre-compiled headers for online compilation
@@ -160,8 +160,8 @@ if(__HIP_ENABLE_PCH)
     message(FATAL_ERROR "Failed to embed PCH")
   endif()
 
-  target_compile_definitions(amdhip PRIVATE __HIP_ENABLE_PCH)
-  target_sources(amdhip PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
+  target_compile_definitions(amdhip64 PRIVATE __HIP_ENABLE_PCH)
+  target_sources(amdhip64 PRIVATE ${CMAKE_BINARY_DIR}/hip_pch.o)
 endif()
 
 # Enable preprocessed hiprtc-builtins library
@@ -209,7 +209,7 @@ add_custom_target(gen-prof-api-str-header ALL
   DEPENDS ${PROF_API_STR}
   SOURCES ${PROF_API_HDR})
 
-set_target_properties(amdhip PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
+set_target_properties(amdhip64 PROPERTIES PUBLIC_HEADER ${PROF_API_STR})
 
 option(USE_PROF_API ON "Enable roctracer integration")
 # Enable profiling API
@@ -225,26 +225,26 @@ if(USE_PROF_API)
   if(NOT PROF_API_HEADER_DIR)
     message(WARNING "Profiling API header not found. Disabling roctracer integration. Use -DPROF_API_HEADER_PATH=<path to prof_protocol.h header>")
   else()
-    target_compile_definitions(amdhip PUBLIC USE_PROF_API=1)
-    target_include_directories(amdhip PUBLIC ${PROF_API_HEADER_DIR})
+    target_compile_definitions(amdhip64 PUBLIC USE_PROF_API=1)
+    target_include_directories(amdhip64 PUBLIC ${PROF_API_HEADER_DIR})
     message(STATUS "Profiling API: ${PROF_API_HEADER_DIR}")
   endif()
 endif()
 
-add_dependencies(amdhip gen-prof-api-str-header)
+add_dependencies(amdhip64 gen-prof-api-str-header)
 
-add_custom_command(TARGET amdhip POST_BUILD COMMAND
+add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
   ${CMAKE_COMMAND} -E copy ${PROJECT_BINARY_DIR}/.hipInfo ${PROJECT_BINARY_DIR}/lib/.hipInfo)
-add_custom_command(TARGET amdhip POST_BUILD COMMAND
+add_custom_command(TARGET amdhip64 POST_BUILD COMMAND
   ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/include ${PROJECT_BINARY_DIR}/include)
 
 add_library(host INTERFACE)
-target_link_libraries(host INTERFACE amdhip)
+target_link_libraries(host INTERFACE amdhip64)
   
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
-INSTALL(TARGETS amdhip host device
+INSTALL(TARGETS amdhip64 host device
   EXPORT hip-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -252,7 +252,7 @@ INSTALL(TARGETS amdhip host device
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
 
-INSTALL(TARGETS amdhip host device
+INSTALL(TARGETS amdhip64 host device
   EXPORT hip-lang-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
