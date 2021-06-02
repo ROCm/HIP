@@ -150,27 +150,11 @@ void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record)
   amd::ScopedLock lock(lock_);
 
   if (command == nullptr) {
-    command = queue->getLastQueuedCommand(true);
-
-    bool cmdNullOrMarker = (command == nullptr) || (command->type() == 0);
-
-    // If lastQueuedCommand is user invisible command(command->type() == 0),
-    // Always submit a marker if queue profiling is not explicitly enabled else
-    // submit a normal marker. Disable queue flush to batch commands
-    if (!queue->properties().test(CL_QUEUE_PROFILING_ENABLE) &&
-        !(flags & hipEventDisableTiming)) {
-      if (command != nullptr) {
-        command->release();
-      }
-      command = new hip::ProfileMarker(*queue, cmdNullOrMarker, true);
-      command->enqueue();
-    } else if (cmdNullOrMarker) {
-      if (command != nullptr) {
-        command->release();
-      }
-      command = new amd::Marker(*queue, kMarkerDisableFlush);
-      command->enqueue();
-    }
+    bool recordExplicitGpuTs = !queue->properties().test(CL_QUEUE_PROFILING_ENABLE) &&
+                               !(flags & hipEventDisableTiming);
+    // Always submit a EventMarker. This would submit a NOP with a signal.
+    command = new hip::EventMarker(*queue, !kMarkerDisableFlush, recordExplicitGpuTs);
+    command->enqueue();
   }
 
   if (event_ == &command->event()) return;
@@ -180,11 +164,6 @@ void Event::addMarker(amd::HostQueue* queue, amd::Command* command, bool record)
   }
 
   event_ = &command->event();
-  // Notify queue earlier so SW status for the command can be updated faster,
-  // since marker potentially means a wait
-  if (AMD_DIRECT_DISPATCH && (flags & hipEventDisableTiming)) {
-    command->notifyCmdQueue();
-  }
   recorded_ = record;
 }
 
@@ -230,7 +209,7 @@ hipError_t ihipEventQuery(hipEvent_t event) {
     int offset = (prev_read_idx % IPC_SIGNALS_PER_EVENT);
     if (e->ipc_evt_.ipc_shmem_->read_index < prev_read_idx+IPC_SIGNALS_PER_EVENT && e->ipc_evt_.ipc_shmem_->signal[offset] != 0) {
       return hipErrorNotReady;
-    } 
+    }
     return hipSuccess;
   } else {
     return e->query();

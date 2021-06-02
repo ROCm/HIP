@@ -43,9 +43,9 @@ void CL_CALLBACK ihipStreamCallback(cl_event event, cl_int command_exec_status, 
 
 namespace hip {
 
-class ProfileMarker: public amd::Marker {
+class EventMarker: public amd::Marker {
 public:
-  ProfileMarker(amd::HostQueue& queue, bool disableFlush, bool markerTs = false)
+  EventMarker(amd::HostQueue& queue, bool disableFlush, bool markerTs = false)
   : amd::Marker(queue, disableFlush) {
     profilingInfo_.enabled_ = true;
     profilingInfo_.callback_ = nullptr;
