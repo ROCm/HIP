@@ -25,7 +25,7 @@ Numa distance is the measurement of how far between GPU and CPU devices.
 By default, each GPU selects a Numa CPU node that has the least Numa distance between them, that is, host memory will be automatically allocated closest on the memory pool of Numa node of the current GPU device. Using hipSetDevice API to a different GPU will still be able to access the host allocation, but can have longer Numa distance.
 
 ### Managed memory allocation
-Managed memory, including the `__managed__` keyword, are supported in HIP combined host/device compilation.
+Managed memory, except the `__managed__` keyword, are supported in HIP combined host/device compilation.
 The allocation will be automatically managed by AMD HMM (Heterogeneous Memory Management).
 
 In HIP application, there should be the capability check before make managed memory API call hipMallocManaged.
@@ -46,6 +46,16 @@ else {
 }
 ```
 For more details on managed memory APIs, please refer to the documentation HIP-API.pdf.
+
+### HIP Stream Memory Operations
+
+HIP supports Stream Memory Operations to enable direct synchronization between Network Nodes and GPU. Following new APIs are added,
+  hipStreamWaitValue32
+  hipStreamWaitValue64
+  hipStreamWriteValue32
+  hipStreamWriteValue64
+
+For more details, please check the documentation HIP-API.pdf.
 
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
