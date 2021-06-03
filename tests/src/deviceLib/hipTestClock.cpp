@@ -31,21 +31,21 @@ THE SOFTWARE.
 #define HIP_ASSERT(status) assert(status == hipSuccess)
 
 #define LEN 512
-#define SIZE 2048
+#define SIZE (LEN * sizeof(long long))
 
-  static __global__ void kernel1(int* Ad) {
+  static __global__ void kernel1(long long* Ad) {
       int tid = threadIdx.x + blockIdx.x * blockDim.x;
       Ad[tid] = clock() + clock64() + __clock() + __clock64();
   }
 
-  static __global__ void kernel2(int* Ad) {
+  static __global__ void kernel2(long long* Ad) {
       int tid = threadIdx.x + blockIdx.x * blockDim.x;
       Ad[tid] = clock() + clock64() + __clock() + __clock64() - Ad[tid];
   }
 
   void run() {
-    int *A, *Ad;
-    A = new int[LEN];
+    long long *A, *Ad;
+    A = new long long[LEN];
     for (unsigned i = 0; i < LEN; i++) {
         A[i] = 0;
     }
