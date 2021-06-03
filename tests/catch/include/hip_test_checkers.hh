@@ -51,7 +51,7 @@ void checkTest(T* expected_H, T* result_H, size_t N, bool expectMatch = true) {
   checkVectors<T>(
       expected_H, expected_H, result_H, N,
       [](T a, T b) {
-        assert(a == b);
+        guarantee(a == b, "Both values should be equal");
         return a;
       },
       expectMatch);
