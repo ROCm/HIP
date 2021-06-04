@@ -511,40 +511,72 @@ Returns the value of counter that is incremented every clock cycle on device. Di
 
 Atomic functions execute as read-modify-write operations residing in global or shared memory. No other device or thread can observe or modify the memory location during an atomic operation. If multiple instructions from different devices or threads target the same memory location, the instructions are serialized in an undefined order.
 
+HIP adds new APIs with _system as suffix to support system scope atomic operations. For example,  atomicAnd atomic is dedicated to the GPU device, atomicAnd_system will allow developers to extend the atomic operation to system scope, from the GPU device to other CPUs and GPU devices in the system.  
+
 HIP supports the following atomic operations.
 
-| **Function** | **Supported in HIP** | **Supported in CUDA** |
-| --- | --- | --- |
-| int atomicAdd(int* address, int val) | ✓ | ✓ |
-| unsigned int atomicAdd(unsigned int* address,unsigned int val) | ✓ | ✓ |
-| unsigned long long int atomicAdd(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| float atomicAdd(float* address, float val) | ✓ | ✓ |
-| int atomicSub(int* address, int val) | ✓ | ✓ |
-| unsigned int atomicSub(unsigned int* address,unsigned int val) | ✓ | ✓ |
-| int atomicExch(int* address, int val) | ✓ | ✓ |
-| unsigned int atomicExch(unsigned int* address,unsigned int val) | ✓ | ✓ |
-| unsigned long long int atomicExch(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| float atomicExch(float* address, float val) | ✓ | ✓ |
-| int atomicMin(int* address, int val) | ✓ | ✓ |
-| unsigned int atomicMin(unsigned int* address,unsigned int val) | ✓ | ✓ |
-| unsigned long long int atomicMin(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| int atomicMax(int* address, int val) | ✓ | ✓ |
-| unsigned int atomicMax(unsigned int* address,unsigned int val) | ✓ | ✓ |
-| unsigned long long int atomicMax(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| unsigned int atomicInc(unsigned int* address)| ✗ | ✓  |
-| unsigned int atomicDec(unsigned int* address)| ✗ | ✓ |
-| int atomicCAS(int* address, int compare, int val) | ✓ | ✓ |
-| unsigned int atomicCAS(unsigned int* address,unsigned int compare,unsigned int val) | ✓ | ✓ |
-| unsigned long long int atomicCAS(unsigned long long int* address,unsigned long long int compare,unsigned long long int val) | ✓ | ✓ |
-| int atomicAnd(int* address, int val) | ✓ | ✓ |
-| unsigned int atomicAnd(unsigned int* address,unsigned int val) | ✓ | ✓ |
-| unsigned long long int atomicAnd(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| int atomicOr(int* address, int val) | ✓ | ✓ |
-| unsigned int atomicOr(unsigned int* address,unsigned int val) | ✓ | ✓ |
-| unsigned long long int atomicOr(unsigned long long int* address,unsigned long long int val) | ✓ | ✓ |
-| int atomicXor(int* address, int val) | ✓ | ✓ |
-| unsigned int atomicXor(unsigned int* address,unsigned int val) | ✓ | ✓ |
-| unsigned long long int atomicXor(unsigned long long int* address,unsigned long long int val)) | ✓ | ✓ |
+| **Function**                                                                                                         |  **Supported in HIP** |  **Supported in CUDA** |
+| -------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------- |
+| int atomicAdd(int* address, int val)                                                                                 |  ✓                    |  ✓                     |
+| int atomicAdd_system(int* address, int val)                                                                          |  ✓                    |  ✓                     |
+| unsigned int atomicAdd(unsigned int* address,unsigned int val)                                                       |  ✓                    |  ✓                     |
+| unsigned int atomicAdd_system(unsigned int* address, unsigned int val)                                               |  ✓                    |  ✓                     |
+| unsigned long long atomicAdd(unsigned long long* address,unsigned long long val)                                     |  ✓                    |  ✓                     |
+| unsigned long long atomicAdd_system(unsigned long long* address, unsigned long long val)                             |  ✓                    |  ✓                     |
+| float atomicAdd(float* address, float val)                                                                           |  ✓                    |  ✓                     |
+| float atomicAdd_system(float* address, float val)                                                                    |  ✓                    |  ✓                     |
+| double atomicAdd(double* address, double val)                                                                        |  ✓                    |  ✓                     |
+| double atomicAdd_system(double* address, double val)                                                                 |  ✓                    |  ✓                     |
+| int atomicSub(int* address, int val)                                                                                 |  ✓                    |  ✓                     |
+| int atomicSub_system(int* address, int val)                                                                          |  ✓                    |  ✓                     |
+| unsigned int atomicSub(unsigned int* address,unsigned int val)                                                       |  ✓                    |  ✓                     |
+| unsigned int atomicSub_system(unsigned int* address, unsigned int val)                                               |  ✓                    |  ✓                     |
+| int atomicExch(int* address, int val)                                                                                |  ✓                    |  ✓                     |
+| int atomicExch_system(int* address, int val)                                                                         |  ✓                    |  ✓                     |
+| unsigned int atomicExch(unsigned int* address,unsigned int val)                                                      |  ✓                    |  ✓                     |
+| unsigned int atomicExch_system(unsigned int* address, unsigned int val)                                              |  ✓                    |  ✓                     |
+| unsigned long long atomicExch(unsigned long long int* address,unsigned long long int val)                            |  ✓                    |  ✓                     |
+| unsigned long long atomicExch_system(unsigned long long* address, unsigned long long val)                            |  ✓                    |  ✓                     |
+| unsigned long long atomicExch_system(unsigned long long* address, unsigned long long val)                            |  ✓                    |  ✓                     |
+| float atomicExch(float* address, float val)                                                                          |  ✓                    |  ✓                     |
+| int atomicMin(int* address, int val)                                                                                 |  ✓                    |  ✓                     |
+| int atomicMin_system(int* address, int val)                                                                          |  ✓                    |  ✓                     |
+| unsigned int atomicMin(unsigned int* address,unsigned int val)                                                       |  ✓                    |  ✓                     |
+| unsigned int atomicMin_system(unsigned int* address, unsigned int val)                                               |  ✓                    |  ✓                     |
+| unsigned long long atomicMin(unsigned long long* address,unsigned long long val)                                     |  ✓                    |  ✓                     |
+| int atomicMax(int* address, int val)                                                                                 |  ✓                    |  ✓                     |
+| int atomicMax_system(int* address, int val)                                                                          |  ✓                    |  ✓                     |
+| unsigned int atomicMax(unsigned int* address,unsigned int val)                                                       |  ✓                    |  ✓                     |
+| unsigned int atomicMax_system(unsigned int* address, unsigned int val)                                               |  ✓                    |  ✓                     |
+| unsigned long long atomicMax(unsigned long long* address,unsigned long long val)                                     |  ✓                    |  ✓                     |
+| unsigned int atomicInc(unsigned int* address)                                                                        |  ✗                    |  ✓                     |
+| unsigned int atomicDec(unsigned int* address)                                                                        |  ✗                    |  ✓                     |
+| int atomicCAS(int* address, int compare, int val)                                                                    |  ✓                    |  ✓                     |
+| int atomicCAS_system(int* address, int compare, int val)                                                             |  ✓                    |  ✓                     |
+| unsigned int atomicCAS(unsigned int* address,unsigned int compare,unsigned int val)                                  |  ✓                    |  ✓                     |
+| unsigned int atomicCAS_system(unsigned int* address, unsigned int compare, unsigned int val)                         |  ✓                    |  ✓                     |
+| unsigned long long atomicCAS(unsigned long long* address,unsigned long long compare,unsigned long long val)          |  ✓                    |  ✓                     |
+| unsigned long long atomicCAS_system(unsigned long long* address, unsigned long long compare, unsigned long long val) |  ✓                    |  ✓                     |
+| int atomicAnd(int* address, int val)                                                                                 |  ✓                    |  ✓                     |
+| int atomicAnd_system(int* address, int val)                                                                          |  ✓                    |  ✓                     |
+| unsigned int atomicAnd(unsigned int* address,unsigned int val)                                                       |  ✓                    |  ✓                     |
+| unsigned int atomicAnd_system(unsigned int* address, unsigned int val)                                               |  ✓                    |  ✓                     |
+| unsigned long long atomicAnd(unsigned long long* address,unsigned long long val)                                     |  ✓                    |  ✓                     |
+| unsigned long long atomicAnd_system(unsigned long long* address, unsigned long long val)                             |  ✓                    |  ✓                     |
+| int atomicOr(int* address, int val)                                                                                  |  ✓                    |  ✓                     |
+| int atomicOr_system(int* address, int val)                                                                           |  ✓                    |  ✓                     |
+| unsigned int atomicOr(unsigned int* address,unsigned int val)                                                        |  ✓                    |  ✓                     |
+| unsigned int atomicOr_system(unsigned int* address, unsigned int val)                                                |  ✓                    |  ✓                     |
+| unsigned int atomicOr_system(unsigned int* address, unsigned int val)                                                |  ✓                    |  ✓                     |
+| unsigned long long atomicOr(unsigned long long int* address,unsigned long long val)                                  |  ✓                    |  ✓                     |
+| unsigned long long atomicOr_system(unsigned long long* address, unsigned long long val)                              |  ✓                    |  ✓                     |
+| int atomicXor(int* address, int val)                                                                                 |  ✓                    |  ✓                     |
+| int atomicXor_system(int* address, int val)                                                                          |  ✓                    |  ✓                     |
+| unsigned int atomicXor(unsigned int* address,unsigned int val)                                                       |  ✓                    |  ✓                     |
+| unsigned int atomicXor_system(unsigned int* address, unsigned int val)                                               |  ✓                    |  ✓                     |
+| unsigned long long atomicXor(unsigned long long* address,unsigned long long val))                                    |  ✓                    |  ✓                     |
+| unsigned long long atomicXor_system(unsigned long long* address, unsigned long long val)                             |  ✓                    |  ✓                     |
+
 
 ### Caveats and Features Under-Development:
 
