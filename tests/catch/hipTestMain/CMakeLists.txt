@@ -16,7 +16,7 @@ target_link_libraries(UnitTests PRIVATE DeviceLibs
 
 # Add AMD Only Tests
 if(HIP_PLATFORM MATCHES "amd")
-    target_link_libraries(UnitTests PRIVATE RTC)
+    # target_link_libraries(UnitTests PRIVATE RTC)
 endif()
 
 catch_discover_tests(UnitTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
