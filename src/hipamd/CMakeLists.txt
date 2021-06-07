@@ -247,10 +247,15 @@ target_link_libraries(host INTERFACE amdhip64)
 add_library(device INTERFACE)
 target_link_libraries(device INTERFACE host)
 
+# Current packaging assumes that HIP runtime will always be installed in /opt/rocm/lib
+# This is false to assume, because some distros like CentOS will use the lib64 directory instead of lib
+# Relying on CMake to choose the library directory for us will default in that case to lib64
+# Hence there will be a mismatch between where HIP is installed and where CMake thinks it is
+
 INSTALL(TARGETS amdhip64 host device
   EXPORT hip-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE hip::)
@@ -258,7 +263,7 @@ INSTALL(EXPORT hip-targets DESTINATION ${CONFIG_PACKAGE_INSTALL_DIR} NAMESPACE h
 INSTALL(TARGETS amdhip64 host device
   EXPORT hip-lang-targets
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  LIBRARY DESTINATION lib
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 INSTALL(EXPORT hip-lang-targets DESTINATION ${CONFIG_LANG_PACKAGE_INSTALL_DIR} NAMESPACE hip-lang::)
