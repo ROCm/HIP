@@ -118,7 +118,7 @@ endif()
 
 if(BUILD_SHARED_LIBS)
   if(WIN32)
-    target_sources(amdhip64 PRIVATE amdhip.def)
+    target_sources(amdhip64 PRIVATE src/amdhip.def)
   else()
     target_link_libraries(amdhip64 PRIVATE "-Wl,--version-script=${CMAKE_CURRENT_LIST_DIR}/src/hip_hcc.map.in")
     set_target_properties(amdhip64 PROPERTIES LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/src/hip_hcc.map.in")
