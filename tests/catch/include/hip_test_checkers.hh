@@ -1,5 +1,15 @@
 #pragma once
 #include "hip_test_common.hh"
+#include <iostream>
+using namespace std;
+#define guarantee(cond, str)                                                                        \
+   {                                                                                                \
+     if (!(cond)) {                                                                                 \
+       std::cout << str << std::endl;                                                               \
+       abort();                                                                                   \
+     }                                                                                              \
+   }
+
 
 namespace HipTest {
 template <typename T>
@@ -38,6 +48,34 @@ size_t checkVectors(T* A, T* B, T* Out, size_t N, T (*F)(T a, T b), bool expectM
 
   return mismatchCount;
 }
+template<typename T> // pointer type
+void checkArray(T hData, T hOutputData, size_t width, size_t height,size_t depth) {
+  for (size_t i = 0; i < depth; i++) {
+    for (size_t j = 0; j < height; j++) {
+      for (size_t k = 0; k < width; k++) {
+        int offset = i*width*height + j*width + k;
+        if (hData[offset] != hOutputData[offset]) {
+          cerr << '[' << i << ',' << j << ',' << k << "]:" << hData[offset] << "----"
+            << hOutputData[offset]<<"  ";
+          cout << "mistmatch at: " << i<< j<<k;
+        }
+      }
+    }
+  }
+}
+
+template<typename T> // pointer type
+bool checkArray(T *result, T *compare, size_t width, size_t height) {
+  for (size_t i = 0; i < height; i++) {
+    for (size_t j = 0; j < width; j++) {
+      if (result[(i*width) + j] != compare[(i*width) + j]) {
+        std::cout << result[(i*width) + j]  << "\t" << compare[(i*width) + j] << std::endl;
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 template <typename T>
 size_t checkVectorADD(T* A_h, T* B_h, T* result_H, size_t N, bool expectMatch = true,
@@ -62,10 +100,21 @@ void checkTest(T* expected_H, T* result_H, size_t N, bool expectMatch = true) {
 
 template <typename T> void setDefaultData(size_t numElements, T* A_h, T* B_h, T* C_h) {
   // Initialize the host data:
+
   for (size_t i = 0; i < numElements; i++) {
-    if (A_h) (A_h)[i] = 3.146f + i;  // Pi
-    if (B_h) (B_h)[i] = 1.618f + i;  // Phi
-    if (C_h) (C_h)[i] = 0.0f + i;
+    if (std::is_same<T, int>::value || std::is_same<T, unsigned int>::value) {
+      if (A_h) (A_h)[i] = 3;
+      if (B_h) (B_h)[i] = 4;
+      if (C_h) (C_h)[i] = 5;
+    } else if(std::is_same<T, char>::value || std::is_same<T, unsigned char>::value) {
+      if (A_h) (A_h)[i] = 'a';
+      if (B_h) (B_h)[i] = 'b';
+      if (C_h) (C_h)[i] = 'c';
+    } else {
+      if (A_h) (A_h)[i] = 3.146f + i;
+      if (B_h) (B_h)[i] = 1.618f + i;
+      if (C_h) (C_h)[i] = 1.4f + i;
+    }
   }
 }
 
