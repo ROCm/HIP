@@ -20,6 +20,7 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_nvcc)
+install(DIRECTORY @PROJECT_BINARY_DIR@/include/hip/nvcc_detail DESTINATION .)
 
 #############################
 # Packaging steps
