@@ -428,7 +428,7 @@ foreach $arg (@ARGV)
                 } elsif ($realObjs) {
                     my($libBaseName, $libDir, $libExt) = fileparse($libFile);
                     $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
-                    system("cd $tmpdir; ar c $libBaseName $realObjs");
+                    system("cd $tmpdir; ar rc $libBaseName $realObjs");
                     print $out "$tmpdir/$libBaseName\n";
                 }
             } elsif ($line =~ m/\.o$/) {
@@ -490,7 +490,7 @@ foreach $arg (@ARGV)
         } elsif ($realObjs) {
             my($libBaseName, $libDir, $libExt) = fileparse($libFile);
             $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
-            system("cd $tmpdir; ar c $libBaseName $realObjs");
+            system("cd $tmpdir; ar rc $libBaseName $realObjs");
             $new_arg .= " $tmpdir/$libBaseName";
         }
         $arg = "$new_arg";
