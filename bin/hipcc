@@ -296,7 +296,7 @@ foreach $arg (@ARGV)
 
     if ($skipOutputFile) {
 	# TODO: handle filename with shell metacharacters
-        $toolArgs .= " $arg";
+        $toolArgs .= " \"$arg\"";
         $prevArg = $arg;
         $skipOutputFile = 0;
         next;
