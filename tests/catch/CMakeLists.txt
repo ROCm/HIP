@@ -14,7 +14,7 @@ if(NOT DEFINED CATCH2_PATH)
     if(DEFINED ENV{CATCH2_PATH})
         set(CATCH2_PATH $ENV{CATCH2_PATH} CACHE STRING "Catch2 Path")
     else()
-        set(CATCH2_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/Catch2")
+        set(CATCH2_PATH "${CMAKE_CURRENT_LIST_DIR}/external/Catch2")
     endif()
 endif()
 message(STATUS "Catch2 Path: ${CATCH2_PATH}")
@@ -24,14 +24,14 @@ if(NOT DEFINED JSON_PARSER)
     if(DEFINED ENV{JSON_PARSER})
         set(JSON_PARSER $ENV{JSON_PARSER} CACHE STRING "JSON Parser Path")
     else()
-        set(JSON_PARSER "${CMAKE_CURRENT_SOURCE_DIR}/external/picojson")
+        set(JSON_PARSER "${CMAKE_CURRENT_LIST_DIR}/external/picojson")
     endif()
 endif()
 
-message(STATUS "Searching Catch2 in: ${CMAKE_CURRENT_SOURCE_DIR}/external")
+message(STATUS "Searching Catch2 in: ${CMAKE_CURRENT_LIST_DIR}/external")
 find_package(Catch2 REQUIRED
     PATHS
-        ${CMAKE_CURRENT_SOURCE_DIR}/external
+        ${CMAKE_CURRENT_LIST_DIR}/external
     PATH_SUFFIXES
     Catch2/cmake/Catch2
 )

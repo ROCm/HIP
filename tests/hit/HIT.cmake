@@ -290,7 +290,7 @@ file(GLOB HIP_LIB_FILES ${HIP_PATH}/lib/*)
 macro(HIT_ADD_FILES _config _dir _label _parent)
     foreach (file ${ARGN})
         # Build tests
-        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --buildCMDs ${file}
+        execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/hit/parser --buildCMDs ${file}
             OUTPUT_VARIABLE _contents
             ERROR_QUIET
             WORKING_DIRECTORY ${_dir}
@@ -325,7 +325,7 @@ macro(HIT_ADD_FILES _config _dir _label _parent)
         endforeach()
 
         # Custom build commands
-        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --customBuildCMDs ${file}
+        execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/hit/parser --customBuildCMDs ${file}
             OUTPUT_VARIABLE _contents
             ERROR_QUIET
             WORKING_DIRECTORY ${_dir}
@@ -373,7 +373,7 @@ macro(HIT_ADD_FILES _config _dir _label _parent)
                         set_target_properties(${target} PROPERTIES OUTPUT_NAME ${_target_r} RUNTIME_OUTPUT_DIRECTORY "." LINK_DEPENDS "${HIP_LIB_FILES}" PREFIX "" SUFFIX "")
                 else()
                     # message(STATUS "add_custom_target*: target= ${target}  _buildcmd= ${_buildcmd}")
-                    add_custom_target(${target} COMMAND sh -c "${_buildcmd}")
+                    add_custom_target(${target} COMMAND sh -c "${_buildcmd} -L${CMAKE_CURRENT_SOURCE_DIR}/build/lib -isystem ${CMAKE_CURRENT_SOURCE_DIR}/include")
                 endif()
                 add_dependencies(${_parent} ${target})
                 foreach(_dependency ${_depends})
@@ -384,7 +384,7 @@ macro(HIT_ADD_FILES _config _dir _label _parent)
         endforeach()
 
         # Add tests
-        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --testCMDs ${file}
+        execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/hit/parser --testCMDs ${file}
             OUTPUT_VARIABLE _contents
             ERROR_QUIET
             WORKING_DIRECTORY ${_dir}
@@ -407,7 +407,7 @@ macro(HIT_ADD_FILES _config _dir _label _parent)
         endforeach()
 
         # Add named tests
-        execute_process(COMMAND ${HIP_SRC_PATH}/tests/hit/parser --testNamedCMDs ${file}
+        execute_process(COMMAND ${CMAKE_CURRENT_LIST_DIR}/hit/parser --testNamedCMDs ${file}
             OUTPUT_VARIABLE _contents
             ERROR_QUIET
             WORKING_DIRECTORY ${_dir}
