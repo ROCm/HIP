@@ -23,16 +23,17 @@
 ###############################################################################
 
 # Add tests
-include_directories(${HIP_SRC_PATH}/tests/src)
-hit_add_directory_recursive(${HIP_CTEST_CONFIG_DEFAULT} ${HIP_SRC_PATH}/tests/src "directed_tests")
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_LIST_DIR}/src)
+hit_add_directory_recursive(${HIP_CTEST_CONFIG_DEFAULT} ${CMAKE_CURRENT_LIST_DIR}/src "directed_tests")
 
 # Add unit tests
-include_directories(${HIP_SRC_PATH}/tests/unit)
-hit_add_directory_recursive(${HIP_CTEST_CONFIG_DEFAULT} ${HIP_SRC_PATH}/tests/unit "unit_tests")
+include_directories(${CMAKE_CURRENT_LIST_DIR}/unit)
+hit_add_directory_recursive(${HIP_CTEST_CONFIG_DEFAULT} ${CMAKE_CURRENT_LIST_DIR}/unit "unit_tests")
 
 # Add performance tests
-include_directories(${HIP_SRC_PATH}/tests/performance)
-hit_add_directory_recursive(${HIP_CTEST_CONFIG_PERFORMANCE} ${HIP_SRC_PATH}/tests/performance "performance_tests")
+include_directories(${CMAKE_CURRENT_LIST_DIR}/performance)
+hit_add_directory_recursive(${HIP_CTEST_CONFIG_PERFORMANCE} ${CMAKE_CURRENT_LIST_DIR}/performance "performance_tests")
 
 # Add top-level tests to build_tests
 add_custom_target(build_tests DEPENDS directed_tests unit_tests)
