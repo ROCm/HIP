@@ -438,6 +438,37 @@ typedef struct hipExternalSemaphoreWaitParams_st {
     void __hipGetPCH(const char** pch, unsigned int*size);
 #endif
 
+/*
+    * @brief HIP Devices used by current OpenGL Context.
+    * @enum
+    * @ingroup Enumerations
+    */
+typedef enum hipGLDeviceList {
+    hipGLDeviceListAll = 1,           ///< All hip devices used by current OpenGL context.
+    hipGLDeviceListCurrentFrame = 2,  ///< Hip devices used by current OpenGL context in current
+                                    ///< frame
+    hipGLDeviceListNextFrame = 3      ///< Hip devices used by current OpenGL context in next
+                                    ///< frame.
+} hipGLDeviceList;
+
+/*
+    * @brief HIP Access falgs for Interop resources.
+    * @enum
+    * @ingroup Enumerations
+    */
+typedef enum hipGraphicsRegisterFlags {
+    hipGraphicsRegisterFlagsNone = 0,
+    hipGraphicsRegisterFlagsReadOnly = 1,  ///< HIP will not write to this registered resource
+    hipGraphicsRegisterFlagsWriteDiscard =
+        2,  ///< HIP will only write and will not read from this registered resource
+    hipGraphicsRegisterFlagsSurfaceLoadStore = 4,  ///< HIP will bind this resource to a surface
+    hipGraphicsRegisterFlagsTextureGather =
+        8  ///< HIP will perform texture gather operations on this registered resource
+} hipGraphicsRegisterFlags;
+
+typedef struct _hipGraphicsResource hipGraphicsResource;
+
+typedef hipGraphicsResource* hipGraphicsResource_t;
 
 // Doxygen end group GlobalDefs
 /**  @} */
@@ -1718,7 +1749,7 @@ hipError_t hipWaitExternalSemaphoresAsync(const hipExternalSemaphore_t* extSemAr
  */
 hipError_t hipDestroyExternalSemaphore(hipExternalSemaphore_t extSem);
 
- 
+
 /**
 *  @brief Imports an external memory object.
 *
@@ -4356,6 +4387,49 @@ static inline hipError_t hipUnbindTexture(
     return hipUnbindTexture(&tex);
 }
 
+
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup GL Interop
+ *  @{
+ *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
+ */
+
+typedef unsigned int GLuint;
+
+// Triggers GL Interop begin.
+void hipSetupGLInterop();
+
+// Queries devices associated with GL Context.
+hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
+                           unsigned int hipDeviceCount, hipGLDeviceList deviceList);
+
+// Registers a GL Buffer for interop and returns corresponding graphics resource.
+hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
+                                       unsigned int flags);
+
+// Maps a graphics resource for hip access.
+hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
+                                   hipStream_t stream = 0);
+
+// Gets device accessible address of a graphics resource.
+hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
+                                               hipGraphicsResource_t resource);
+
+// Unmaps a graphics resource for hip access.
+hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources,
+                                     hipStream_t stream = 0);
+
+// Unregisters a graphics resource.
+hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
+
+
+// doxygen end GL Interop
+/**
+ * @}
+ */
 
 #endif // __cplusplus
 
