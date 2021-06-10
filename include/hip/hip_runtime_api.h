@@ -3807,7 +3807,7 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Textur Texture Management
+ *  @defgroup Texture Texture Management
  *  @{
  *  This section describes the texture management functions of HIP runtime API.
  */
@@ -4000,6 +4000,21 @@ hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Runtime Runtime Compilation
+ *  @{
+ *  This section describes the runtime compilation functions of HIP runtime API.
+ *
+ */
+// This group is for HIPrtc
+
+// doxygen end Runtime
+/**
+ * @}
+ */
+
 /**
  * Callback/Activity API
  */
@@ -4287,10 +4302,6 @@ static inline hipError_t hipUnbindTexture(
 {
     return hipUnbindTexture(&tex);
 }
-// doxygen end Texture
-/**
- * @}
- */
 #endif // __cplusplus
 #ifdef __GNUC__
 #pragma GCC visibility pop
