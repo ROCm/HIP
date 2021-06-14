@@ -190,9 +190,9 @@ template <int cid_>
 class api_callbacks_spawner_t {
  public:
   api_callbacks_spawner_t() :
-    api_data_(NULL)
+    api_data_(NULL), was_enabled_on_construction_(is_enabled())
   {
-    if (!is_enabled()) return;
+    if (!was_enabled_on_construction_) return;
 
     if (cid_ >= HIP_API_ID_NUMBER) {
       fprintf(stderr, "HIP %s bad id %d\n", __FUNCTION__, cid_);
@@ -214,7 +214,7 @@ class api_callbacks_spawner_t {
   }
 
   ~api_callbacks_spawner_t() {
-    if (!is_enabled()) return;
+    if (!was_enabled_on_construction_) return;
 
     if (api_data_ != NULL) {
       hip_api_callback_t fun = entry(cid_).fun;
@@ -242,6 +242,7 @@ class api_callbacks_spawner_t {
   }
 
   hip_api_data_t* api_data_;
+  bool was_enabled_on_construction_ = false;
 };
 
 template <>
