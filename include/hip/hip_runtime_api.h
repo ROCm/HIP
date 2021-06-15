@@ -804,6 +804,39 @@ typedef struct hipExternalSemaphoreWaitParams_st {
  */
     void __hipGetPCH(const char** pch, unsigned int*size);
 #endif
+
+/*
+    * @brief HIP Devices used by current OpenGL Context.
+    * @enum
+    * @ingroup Enumerations
+    */
+typedef enum hipGLDeviceList {
+    hipGLDeviceListAll = 1,           ///< All hip devices used by current OpenGL context.
+    hipGLDeviceListCurrentFrame = 2,  ///< Hip devices used by current OpenGL context in current
+                                    ///< frame
+    hipGLDeviceListNextFrame = 3      ///< Hip devices used by current OpenGL context in next
+                                    ///< frame.
+} hipGLDeviceList;
+
+/*
+    * @brief HIP Access falgs for Interop resources.
+    * @enum
+    * @ingroup Enumerations
+    */
+typedef enum hipGraphicsRegisterFlags {
+    hipGraphicsRegisterFlagsNone = 0,
+    hipGraphicsRegisterFlagsReadOnly = 1,  ///< HIP will not write to this registered resource
+    hipGraphicsRegisterFlagsWriteDiscard =
+        2,  ///< HIP will only write and will not read from this registered resource
+    hipGraphicsRegisterFlagsSurfaceLoadStore = 4,  ///< HIP will bind this resource to a surface
+    hipGraphicsRegisterFlagsTextureGather =
+        8  ///< HIP will perform texture gather operations on this registered resource
+} hipGraphicsRegisterFlags;
+
+typedef struct _hipGraphicsResource hipGraphicsResource;
+
+typedef hipGraphicsResource* hipGraphicsResource_t;
+
 // Doxygen end group GlobalDefs
 /**  @} */
 //-------------------------------------------------------------------------------------------------
