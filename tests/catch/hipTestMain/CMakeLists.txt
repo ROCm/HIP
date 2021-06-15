@@ -9,9 +9,8 @@ else()
     target_compile_options(UnitTests PUBLIC -std=c++17)
 endif()
 
-target_link_libraries(UnitTests PRIVATE DeviceLibs
+target_link_libraries(UnitTests PRIVATE UnitDeviceTests
                                         MemoryTest
-                                        Kernels
                                         stdc++fs)
 
 # Add AMD Only Tests
@@ -20,7 +19,19 @@ if(HIP_PLATFORM MATCHES "amd")
 endif()
 
 catch_discover_tests(UnitTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
-add_dependencies(build_tests UnitTests)
+
+# ABM exe
+add_executable(ABMTests EXCLUDE_FROM_ALL main.cc hip_test_context.cc)
+if(HIP_PLATFORM MATCHES "amd")
+    set_property(TARGET ABMTests PROPERTY CXX_STANDARD 17)
+else()
+    target_compile_options(ABMTests PUBLIC -std=c++17)
+endif()
+
+target_link_libraries(ABMTests PRIVATE ABMAddKernels)
+catch_discover_tests(ABMTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
+
+add_dependencies(build_tests UnitTests ABMTests)
 
 # Add Multiproc tests as seperate binary
 if(UNIX AND HIP_PLATFORM MATCHES "amd")

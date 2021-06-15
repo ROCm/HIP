@@ -66,6 +66,7 @@ add_custom_target(build_tests)
 
 # Tests folder
 add_subdirectory(unit)
+add_subdirectory(ABM)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
 

@@ -4,7 +4,7 @@ set(TEST_SRC
 )
 
 # Create shared lib of all tests
-add_library(Kernels SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
+add_library(ABMAddKernels SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
 
 # Add dependency on build_tests to build it on this custom target
-add_dependencies(build_tests Kernels)
+add_dependencies(build_tests ABMAddKernels)
