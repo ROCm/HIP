@@ -29,20 +29,20 @@ The HIP repository maintains several branches. The branches that are of importan
 
 HIP releases are typically naming convention for each ROCM release to help differentiate them.
 
-* rocm x.yy: These are the stable releases based on the ROCM release. 
+* rocm x.yy: These are the stable releases based on the ROCM release.
   This type of release is typically made once a month.*
 
 ## More Info:
 - [Installation](INSTALL.md)
 - [HIP FAQ](docs/markdown/hip_faq.md)
 - [HIP Kernel Language](docs/markdown/hip_kernel_language.md)
-- [HIP Runtime API (Doxygen)](http://rocm-developer-tools.github.io/HIP)
+- [HIP Runtime API (Doxygen)](https://github.com/RadeonOpenCompute/ROCm)
 - [HIP Porting Guide](docs/markdown/hip_porting_guide.md)
 - [HIP Porting Driver Guide](docs/markdown/hip_porting_driver_api.md)
 - [HIP Programming Guide](docs/markdown/hip_programming_guide.md)
 - [HIP Logging ](docs/markdown/hip_logging.md)
 - [HIP Debugging ](docs/markdown/hip_debugging.md)
-- [Code Object tooling ] (docs/markdown/obj_tooling.md)
+- [Code Object tooling ](docs/markdown/obj_tooling.md)
 - [HIP Terminology](docs/markdown/hip_terms2.md) (including Rosetta Stone of GPU computing terms across CUDA/HIP/OpenCL)
 - [HIPIFY](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/README.md)
 - Supported CUDA APIs:
