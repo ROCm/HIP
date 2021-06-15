@@ -120,7 +120,7 @@ bool TestContext::parseJsonFile() {
   LogPrintf("Json contents:: %s", json_str.data());
 
   picojson::value v;
-  std::string err;
+  std::string err = picojson::parse(v, json_str);
   if (err.size() > 1) {
     LogPrintf("Error from PicoJson: %s", err.data());
     return false;
@@ -130,6 +130,7 @@ bool TestContext::parseJsonFile() {
     LogPrintf("%s", "Data in json is not in correct format, it should be an object");
     return false;
   }
+
   const picojson::object &o = v.get<picojson::object>();
   for (picojson::object::const_iterator i = o.begin(); i != o.end(); ++i) {
     // Processing for DisabledTests

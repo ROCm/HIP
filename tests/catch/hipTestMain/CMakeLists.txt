@@ -3,7 +3,11 @@ if(CMAKE_BUILD_TYPE MATCHES "^Debug$")
 endif()
 
 add_executable(UnitTests EXCLUDE_FROM_ALL main.cc hip_test_context.cc)
-set_property(TARGET UnitTests PROPERTY CXX_STANDARD 17)
+if(HIP_PLATFORM MATCHES "amd")
+    set_property(TARGET UnitTests PROPERTY CXX_STANDARD 17)
+else()
+    target_compile_options(UnitTests PUBLIC -std=c++17)
+endif()
 
 target_link_libraries(UnitTests PRIVATE DeviceLibs
                                         MemoryTest
@@ -19,11 +23,11 @@ catch_discover_tests(UnitTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THI
 add_dependencies(build_tests UnitTests)
 
 # Add Multiproc tests as seperate binary
-if(UNIX)
-  add_executable(MultiProcTests EXCLUDE_FROM_ALL main.cc hip_test_context.cc)
-  set_property(TARGET MultiProcTests PROPERTY CXX_STANDARD 17)
-  target_link_libraries(MultiProcTests PRIVATE MultiProc
+if(UNIX AND HIP_PLATFORM MATCHES "amd")
+    add_executable(MultiProcTests EXCLUDE_FROM_ALL main.cc hip_test_context.cc)
+    set_property(TARGET MultiProcTests PROPERTY CXX_STANDARD 17)
+    target_link_libraries(MultiProcTests PRIVATE MultiProc
                                           stdc++fs)
-  catch_discover_tests(MultiProcTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
-  add_dependencies(build_tests MultiProcTests)
+    catch_discover_tests(MultiProcTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
+    add_dependencies(build_tests MultiProcTests)
 endif()

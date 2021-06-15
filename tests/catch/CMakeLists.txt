@@ -64,8 +64,13 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_custom_target(build_tests)
 
+# Tests folder
 add_subdirectory(unit)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
-add_subdirectory(multiproc)
+
+if(UNIX AND HIP_PLATFORM MATCHES "amd")
+    add_subdirectory(multiproc)
+endif()
+
 cmake_policy(POP)
