@@ -71,3 +71,18 @@ Catch2 allows multiple ways in which you can debug the test case.
 ## External Libs being used
 - [Catch2](https://github.com/catchorg/Catch2) - Testing framework
 - [picojson](https://github.com/kazuho/picojson) - For config file parsing
+
+# Testing Guidelines
+Tests fall in 5 categories and its file name prefix are as follows:
+ - Unit tests (Prefix: Unit_\*API\*_\*Optional Scenario\*, example : Unit_hipMalloc_Negative or Unit_hipMalloc): Unit Tests are simplest test for an API, the target here is to test the API with different types of input and different ways of calling.
+ - Application Behavior Modelling tests (Prefix: ABM_\*Intent\*_\*Optional Scenario\*, example: ABM_ModuleLoadAndRun): ABM tests are used to model a specific use case of HIP APIs, either seen in a customer app or a general purpose app. It mimics the calling behavior seen in aforementioned app.
+ - Stress/Scale tests (Prefix: Stress_\*API\*_\*Intent\*_\*Optional Scenario\*, example: Stress_hipMemset_ExhaustVRAM): These tests are used to see the behavior of HIP APIs in edge scenarios, for example what happens when we have exhausted vram and do a hipMalloc or run many instances of same API in parallel.
+ - Multi Process tests (Prefix: MultiProc_\*API\*_\*Optional Scenario\*, example: MultiProc_hipIPCMemHandle_GetDataFromProc): These tests are multi process tests and will only run on linux. They are used to test HIP APIs in multi process environment
+ - Performance tests(Prefix: Perf_\*Intent\*_\*Optional Scenario\*, example: Perf_DispatchLatenc  y): Performance tests are used to get results of HIP APIs.
+
+General Guidelines:
+ - Do not use the catch2 tags. Tags wont be used for filtering
+ - Add as many INFO() as you can in tests which prints state of the t est, this will help the debugger when the test fails (INFO macro only prints when the test fails)
+ - Check return of each HIP API and fail whenever there is a misma    tch with hipSuccess or hiprtcSuccess.
+ - Each Category of test will hav e its own exe and catch_discover_test macro will be called on it to discover its tests
+ - Optional Scenario in test names are optional. For example you  can test all Scenarios of hipMalloc API in one file, you can name the file Unit_hipMalloc, if you are having a file just for negative scenarios you can name it as Unit_hipMalloc_Negative.

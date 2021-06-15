@@ -75,13 +75,13 @@ bool initArraysForHost(T** A_h, T** B_h, T** C_h, size_t N, bool usePinnedHost =
 
   if (usePinnedHost) {
     if (A_h) {
-      HIPCHECK(hipHostMalloc((void**)A_h, Nbytes));
+      HIP_CHECK(hipHostMalloc((void**)A_h, Nbytes));
     }
     if (B_h) {
-      HIPCHECK(hipHostMalloc((void**)B_h, Nbytes));
+      HIP_CHECK(hipHostMalloc((void**)B_h, Nbytes));
     }
     if (C_h) {
-      HIPCHECK(hipHostMalloc((void**)C_h, Nbytes));
+      HIP_CHECK(hipHostMalloc((void**)C_h, Nbytes));
     }
   } else {
     if (A_h) {
@@ -110,13 +110,13 @@ bool initArrays(T** A_d, T** B_d, T** C_d, T** A_h, T** B_h, T** C_h, size_t N,
   size_t Nbytes = N * sizeof(T);
 
   if (A_d) {
-    HIPCHECK(hipMalloc(A_d, Nbytes));
+    HIP_CHECK(hipMalloc(A_d, Nbytes));
   }
   if (B_d) {
-    HIPCHECK(hipMalloc(B_d, Nbytes));
+    HIP_CHECK(hipMalloc(B_d, Nbytes));
   }
   if (C_d) {
-    HIPCHECK(hipMalloc(C_d, Nbytes));
+    HIP_CHECK(hipMalloc(C_d, Nbytes));
   }
 
   return initArraysForHost(A_h, B_h, C_h, N, usePinnedHost);
@@ -125,13 +125,13 @@ bool initArrays(T** A_d, T** B_d, T** C_d, T** A_h, T** B_h, T** C_h, size_t N,
 template <typename T> bool freeArraysForHost(T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
   if (usePinnedHost) {
     if (A_h) {
-      HIPCHECK(hipHostFree(A_h));
+      HIP_CHECK(hipHostFree(A_h));
     }
     if (B_h) {
-      HIPCHECK(hipHostFree(B_h));
+      HIP_CHECK(hipHostFree(B_h));
     }
     if (C_h) {
-      HIPCHECK(hipHostFree(C_h));
+      HIP_CHECK(hipHostFree(C_h));
     }
   } else {
     if (A_h) {
@@ -150,13 +150,13 @@ template <typename T> bool freeArraysForHost(T* A_h, T* B_h, T* C_h, bool usePin
 template <typename T>
 bool freeArrays(T* A_d, T* B_d, T* C_d, T* A_h, T* B_h, T* C_h, bool usePinnedHost) {
   if (A_d) {
-    HIPCHECK(hipFree(A_d));
+    HIP_CHECK(hipFree(A_d));
   }
   if (B_d) {
-    HIPCHECK(hipFree(B_d));
+    HIP_CHECK(hipFree(B_d));
   }
   if (C_d) {
-    HIPCHECK(hipFree(C_d));
+    HIP_CHECK(hipFree(C_d));
   }
 
   return freeArraysForHost(A_h, B_h, C_h, usePinnedHost);

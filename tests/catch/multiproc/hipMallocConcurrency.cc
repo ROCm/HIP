@@ -20,9 +20,9 @@ unsigned threadsPerBlock = 256;
 
 unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N) {
   int device;
-  HIPCHECK(hipGetDevice(&device));
+  HIP_CHECK(hipGetDevice(&device));
   hipDeviceProp_t props;
-  HIPCHECK(hipGetDeviceProperties(&props, device));
+  HIP_CHECK(hipGetDeviceProperties(&props, device));
 
   unsigned blocks = props.multiProcessorCount * blocksPerCU;
   if (blocks * threadsPerBlock > N) {
@@ -43,20 +43,20 @@ bool validateMemoryOnGPU(int gpu, bool concurOnOneGPU = false) {
   size_t prevAvl, prevTot, curAvl, curTot;
   bool TestPassed = true;
 
-  HIPCHECK(hipSetDevice(gpu));
-  HIPCHECK(hipMemGetInfo(&prevAvl, &prevTot));
+  HIP_CHECK(hipSetDevice(gpu));
+  HIP_CHECK(hipMemGetInfo(&prevAvl, &prevTot));
   printf("tgs allocating..\n");
   HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, false);
 
   unsigned blocks = setNumBlocks(blocksPerCU, threadsPerBlock, N);
 
-  HIPCHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
-  HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
+  HIP_CHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
+  HIP_CHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
   hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
                      static_cast<const int*>(A_d), static_cast<const int*>(B_d), C_d, N);
 
-  HIPCHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
+  HIP_CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
 
   if (!HipTest::checkVectorADD(A_h, B_h, C_h, N)) {
     printf("Validation PASSED for gpu %d from pid %d\n", gpu, getpid());
@@ -66,7 +66,7 @@ bool validateMemoryOnGPU(int gpu, bool concurOnOneGPU = false) {
   }
 
   HipTest::freeArrays(A_d, B_d, C_d, A_h, B_h, C_h, false);
-  HIPCHECK(hipMemGetInfo(&curAvl, &curTot));
+  HIP_CHECK(hipMemGetInfo(&curAvl, &curTot));
 
   if (!concurOnOneGPU && (prevAvl != curAvl || prevTot != curTot)) {
     // In concurrent calls on one GPU, we cannot verify leaking in this way
@@ -116,7 +116,7 @@ void getDeviceCount1(int* pdevCnt) {
     // writing only, no need for read-descriptor
     close(fd[0]);
 
-    HIPCHECK(hipGetDeviceCount(&devCnt));
+    HIP_CHECK(hipGetDeviceCount(&devCnt));
     // send the value on the write-descriptor:
     write(fd[1], &devCnt, sizeof(devCnt));
 
@@ -129,7 +129,7 @@ void getDeviceCount1(int* pdevCnt) {
   }
 
 #else
-  HIPCHECK(hipGetDeviceCount(pdevCnt));
+  HIP_CHECK(hipGetDeviceCount(pdevCnt));
 #endif
 }
 #endif
