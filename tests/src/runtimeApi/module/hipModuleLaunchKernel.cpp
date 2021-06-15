@@ -227,11 +227,7 @@ bool Module_GridBlock_Corner_Tests() {
   bool testStatus = true;
   HIPCHECK(hipSetDevice(0));
   hipError_t err;
-  struct {
-  } args1;
   hipFunction_t DummyKernel;
-  size_t size1;
-  size1 = sizeof(args1);
   hipModule_t Module;
   hipStream_t stream1;
   hipDeviceptr_t *Ad;
@@ -243,9 +239,6 @@ bool Module_GridBlock_Corner_Tests() {
 #endif
   HIPCHECK(hipModuleLoad(&Module, fileName));
   HIPCHECK(hipModuleGetFunction(&DummyKernel, Module, dummyKernel));
-  void *config1[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args1,
-    HIP_LAUNCH_PARAM_BUFFER_SIZE, &size1,
-    HIP_LAUNCH_PARAM_END};
   HIPCHECK(hipStreamCreate(&stream1));
   // Passing Max int value to block dimensions
   hipDeviceProp_t deviceProp;
@@ -277,8 +270,7 @@ bool Module_GridBlock_Corner_Tests() {
                                 test[i].blockY,
                                 test[i].blockZ,
                                 0,
-                                stream1, NULL,
-                                reinterpret_cast<void**>(&config1));
+                                stream1, NULL, NULL);
     if (err != hipSuccess) {
       printf("hipModuleLaunchKernel failed (%u, %u, %u) and (%u, %u, %u)",
       test[i].gridX, test[i].gridY, test[i].gridZ,
@@ -298,11 +290,7 @@ bool Module_WorkGroup_Test() {
   bool testStatus = true;
   HIPCHECK(hipSetDevice(0));
   hipError_t err;
-  struct {
-  } args1;
   hipFunction_t DummyKernel;
-  size_t size1;
-  size1 = sizeof(args1);
   hipModule_t Module;
   hipStream_t stream1;
   hipDeviceptr_t *Ad;
@@ -314,9 +302,6 @@ bool Module_WorkGroup_Test() {
 #endif
   HIPCHECK(hipModuleLoad(&Module, fileName));
   HIPCHECK(hipModuleGetFunction(&DummyKernel, Module, dummyKernel));
-  void *config1[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args1,
-    HIP_LAUNCH_PARAM_BUFFER_SIZE, &size1,
-    HIP_LAUNCH_PARAM_END};
   HIPCHECK(hipStreamCreate(&stream1));
   // Passing Max int value to block dimensions
   hipDeviceProp_t deviceProp;
@@ -330,8 +315,7 @@ bool Module_WorkGroup_Test() {
   err = hipModuleLaunchKernel(DummyKernel,
                             1, 1, 1,
                             cuberoot_floor, cuberoot_floor, cuberoot_floor,
-                            0, stream1, NULL,
-                            reinterpret_cast<void**>(&config1));
+                            0, stream1, NULL, NULL);
   if (err != hipSuccess) {
     printf("hipModuleLaunchKernel failed block dimensions (%u, %u, %u)",
            cuberoot_floor, cuberoot_floor, cuberoot_floor);
@@ -342,8 +326,7 @@ bool Module_WorkGroup_Test() {
   err = hipModuleLaunchKernel(DummyKernel,
                             1, 1, 1,
                             cuberoot_ceil, cuberoot_ceil, cuberoot_ceil + 1,
-                            0, stream1, NULL,
-                            reinterpret_cast<void**>(&config1));
+                            0, stream1, NULL, NULL);
   if (err == hipSuccess) {
     printf("hipModuleLaunchKernel failed block dimensions (%u, %u, %u)",
            cuberoot_ceil, cuberoot_ceil, cuberoot_ceil);
