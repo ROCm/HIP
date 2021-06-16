@@ -21,7 +21,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_base)
 
-install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS)
+if(WIN32)
+  install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS)
+else()
+  install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS
+          PATTERN *.bat EXCLUDE)
+endif()
 install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION .)
 install(DIRECTORY @HIP_AMD_BACKEND_SOURCE_DIR@/include/hip/amd_detail DESTINATION include/hip)
 install(DIRECTORY @HIP_AMD_BACKEND_SOURCE_DIR@/include/hip/nvidia_detail DESTINATION include/hip)

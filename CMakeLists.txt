@@ -322,7 +322,13 @@ install(FILES ${PROJECT_BINARY_DIR}/.hipVersion DESTINATION bin)
 execute_process(COMMAND test ${CMAKE_INSTALL_PREFIX} -ef ${CMAKE_CURRENT_SOURCE_DIR}
     RESULT_VARIABLE INSTALL_SOURCE)
 if(NOT ${INSTALL_SOURCE} EQUAL 0)
-    install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
+    # Exclude .bat files on Linux.
+    if(WIN32)
+      install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS)
+    else()
+      install(DIRECTORY bin DESTINATION . USE_SOURCE_PERMISSIONS
+              PATTERN *.bat EXCLUDE)
+    endif()
 
     # The following two lines will be removed after upstream updation
     install(CODE "MESSAGE(\"Removing ${CMAKE_INSTALL_PREFIX}/include\")")
