@@ -150,15 +150,20 @@ else()
   )
 endif()
 
+set(_HIP_SHELL "SHELL:")
+if(CMAKE_VERSION VERSION_LESS 3.13)
+  set(_HIP_SHELL "")
+endif()
+
 if(HIP_COMPILER STREQUAL "clang")
   if (HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
     set_property(TARGET hip::device APPEND PROPERTY
-      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-mllvm;-amdgpu-early-inline-all=true;-mllvm;-amdgpu-function-calls=false>"
+      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:${_HIP_SHELL}-mllvm;-amdgpu-early-inline-all=true;-mllvm;-amdgpu-function-calls=false>"
     )
   endif()
 
   set_property(TARGET hip::device APPEND PROPERTY
-      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-x hip>"
+      INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:${_HIP_SHELL}-x hip>"
     )
   if (NOT EXISTS ${AMD_DEVICE_LIBS_PREFIX}/amdgcn/bitcode)
     # This path is to support an older build of the device library
@@ -168,9 +173,15 @@ if(HIP_COMPILER STREQUAL "clang")
     )
   endif()
 
-  set_property(TARGET hip::device APPEND PROPERTY
-     INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:--hip-link>"
-  )
+  if(CMAKE_VERSION VERSION_LESS 3.18)
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES --hip-link
+    )
+  else()
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:--hip-link>"
+    )
+  endif()
 
   set_property(TARGET hip::device APPEND PROPERTY
     INTERFACE_INCLUDE_DIRECTORIES "${HIP_CLANG_INCLUDE_PATH}/.."
@@ -184,9 +195,15 @@ if(HIP_COMPILER STREQUAL "clang")
       set_property(TARGET hip::device APPEND PROPERTY
         INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:--cuda-gpu-arch=${GPU_TARGET}>"
       )
-      set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:--cuda-gpu-arch=${GPU_TARGET}>"
-      )
+      if(CMAKE_VERSION VERSION_LESS 3.18)
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_LINK_LIBRARIES "--cuda-gpu-arch=${GPU_TARGET}"
+        )
+      else()
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:--cuda-gpu-arch=${GPU_TARGET}>"
+        )
+      endif()
   endforeach()
   #Add support for parallel build and link
   if(${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
@@ -197,21 +214,36 @@ if(HIP_COMPILER STREQUAL "clang")
       set_property(TARGET hip::device APPEND PROPERTY
         INTERFACE_COMPILE_OPTIONS "$<$<COMPILE_LANGUAGE:CXX>:-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS};-Wno-format-nonliteral>"
       )
-      set_property(TARGET hip::device APPEND PROPERTY
-        INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}>"
-      )
+      if(CMAKE_VERSION VERSION_LESS 3.18)
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_LINK_LIBRARIES -parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}
+        )
+      else()
+        set_property(TARGET hip::device APPEND PROPERTY
+          INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:-parallel-jobs=${HIP_CLANG_NUM_PARALLEL_JOBS}>"
+        )
+      endif()
     else()
       message("clang compiler doesn't support parallel jobs")
     endif()
   endif()
 
   # Add support for __fp16 and _Float16, explicitly link with compiler-rt
-  set_property(TARGET hip::host APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:${HIP_CLANG_INCLUDE_PATH}/../lib/linux/libclang_rt.builtins-x86_64.a>"
-  )
-  set_property(TARGET hip::device APPEND PROPERTY
-    INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:${HIP_CLANG_INCLUDE_PATH}/../lib/linux/libclang_rt.builtins-x86_64.a>"
-  )
+  if(CMAKE_VERSION VERSION_LESS 3.18)
+    set_property(TARGET hip::host APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+    )
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES -L${HIP_CLANG_INCLUDE_PATH}/../lib/linux -lclang_rt.builtins-x86_64
+    )
+  else()
+    set_property(TARGET hip::host APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:${HIP_CLANG_INCLUDE_PATH}/../lib/linux/libclang_rt.builtins-x86_64.a>"
+    )
+    set_property(TARGET hip::device APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:CXX>:${HIP_CLANG_INCLUDE_PATH}/../lib/linux/libclang_rt.builtins-x86_64.a>"
+    )
+  endif()
 endif()
 
 set( hip_LIBRARIES hip::host hip::device)
