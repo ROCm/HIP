@@ -151,7 +151,7 @@ else()
 endif()
 
 set(_HIP_SHELL "SHELL:")
-if(CMAKE_VERSION VERSION_LESS 3.13)
+if(CMAKE_VERSION VERSION_LESS 3.12)
   set(_HIP_SHELL "")
 endif()
 
