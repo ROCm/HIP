@@ -9,3 +9,11 @@
 *.h text eol=lf
 *.hpp text eol=lf
 *.txt text eol=lf
+
+# auto remove white space
+*.cpp filter=trimspace
+*.c filter=trimspace
+*.h filter=trimspacecpp
+*.hpp filter=trimspace
+*.md filter=trimspace
+
