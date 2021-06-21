@@ -104,9 +104,21 @@ if(HIP_COMPILER STREQUAL "clang")
   if(NOT HIP_CXX_COMPILER)
     set(HIP_CXX_COMPILER ${CMAKE_CXX_COMPILER})
   endif()
-  execute_process(COMMAND ${HIP_CXX_COMPILER} --version
-                  OUTPUT_STRIP_TRAILING_WHITESPACE
-                  OUTPUT_VARIABLE HIP_CXX_COMPILER_VERSION_OUTPUT)
+  if(HIP_CXX_COMPILER MATCHES ".*hipcc" OR HIP_CXX_COMPILER MATCHES ".*clang\\+\\+")
+    execute_process(COMMAND ${HIP_CXX_COMPILER} --version
+                    OUTPUT_STRIP_TRAILING_WHITESPACE
+                    OUTPUT_VARIABLE HIP_CXX_COMPILER_VERSION_OUTPUT)
+    # Capture the repo, branch and patch level details of the HIP CXX Compiler.
+    # Ex. clang version 13.0.0 (https://github.com/ROCm-Developer-Tools/HIP main 12345 COMMIT_HASH)
+    # HIP_CLANG_REPO: https://github.com/ROCm-Developer-Tools/HIP
+    # HIP_CLANG_BRANCH: main
+    # HIP_CLANG_PATCH_LEVEL: 12345
+    if(${HIP_CXX_COMPILER_VERSION_OUTPUT} MATCHES "clang version [0-9]+\\.[0-9]+\\.[0-9]+ \\(([^ \n]*) ([^ \n]*) ([^ \n]*)")
+      set(HIP_CLANG_REPO ${CMAKE_MATCH_1})
+      set(HIP_CLANG_BRANCH ${CMAKE_MATCH_2})
+      set(HIP_CLANG_PATCH_LEVEL ${CMAKE_MATCH_3})
+    endif()
+  endif()
   if(HIP_CXX_COMPILER MATCHES ".*hipcc")
     if(HIP_CXX_COMPILER_VERSION_OUTPUT MATCHES "InstalledDir:[ \t]*([^\n]*)")
       get_filename_component(HIP_CLANG_ROOT "${CMAKE_MATCH_1}" DIRECTORY)
@@ -127,17 +139,6 @@ if(HIP_COMPILER STREQUAL "clang")
   set(GPU_SUPPORTED_TARGETS "gfx701;gfx801;gfx802;gfx803;gfx900;gfx906;gfx908;gfx90a;gfx1010;gfx1011;gfx1012;gfx1030;gfx1031")
   set(GPU_TARGETS "${GPU_DEFAULT_TARGETS}" CACHE STRING "GPU targets to compile for")
   set_property(CACHE GPU_TARGETS PROPERTY STRINGS ${GPU_SUPPORTED_TARGETS})
-
-  # Capture the repo, branch and patch level details of the HIP CXX Compiler.
-  # Ex. clang version 13.0.0 (https://github.com/ROCm-Developer-Tools/HIP main 12345 COMMIT_HASH)
-  # HIP_CLANG_REPO: https://github.com/ROCm-Developer-Tools/HIP
-  # HIP_CLANG_BRANCH: main
-  # HIP_CLANG_PATCH_LEVEL: 12345
-  if(${HIP_CXX_COMPILER_VERSION_OUTPUT} MATCHES "clang version [0-9]+\\.[0-9]+\\.[0-9]+ \\(([^ \n]*) ([^ \n]*) ([^ \n]*)")
-    set(HIP_CLANG_REPO ${CMAKE_MATCH_1})
-    set(HIP_CLANG_BRANCH ${CMAKE_MATCH_2})
-    set(HIP_CLANG_PATCH_LEVEL ${CMAKE_MATCH_3})
-  endif()
 endif()
 
 if(NOT WIN32)
