@@ -10,28 +10,11 @@
 #include <limits>
 #include <atomic>
 
-
 #include <hip_test_common.hh>
 
 size_t N = 4 * 1024 * 1024;
 unsigned blocksPerCU = 6;  // to hide latency
 unsigned threadsPerBlock = 256;
-
-
-unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N) {
-  int device;
-  HIP_CHECK(hipGetDevice(&device));
-  hipDeviceProp_t props;
-  HIP_CHECK(hipGetDeviceProperties(&props, device));
-
-  unsigned blocks = props.multiProcessorCount * blocksPerCU;
-  if (blocks * threadsPerBlock > N) {
-    blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
-  }
-
-  return blocks;
-}
-
 
 /**
  * Validates data consitency on supplied gpu
@@ -48,7 +31,7 @@ bool validateMemoryOnGPU(int gpu, bool concurOnOneGPU = false) {
   printf("tgs allocating..\n");
   HipTest::initArrays(&A_d, &B_d, &C_d, &A_h, &B_h, &C_h, N, false);
 
-  unsigned blocks = setNumBlocks(blocksPerCU, threadsPerBlock, N);
+  unsigned blocks =  HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
 
   HIP_CHECK(hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice));
   HIP_CHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
