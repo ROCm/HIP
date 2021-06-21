@@ -49,6 +49,11 @@ THE SOFTWARE.
 #define HIP_ASSERT(x)                                                                              \
   { REQUIRE((x)); }
 
+#ifdef __cplusplus
+  #include <iostream>
+  #include <iomanip>
+  #include <chrono>
+#endif
 
 // Utility Functions
 namespace HipTest {
@@ -56,5 +61,29 @@ static inline int getDeviceCount() {
   int dev = 0;
   HIP_CHECK(hipGetDeviceCount(&dev));
   return dev;
+}
+
+// Returns the current system time in microseconds
+static inline long long get_time() {
+  return std::chrono::high_resolution_clock::now().time_since_epoch()
+      /std::chrono::microseconds(1);
+}
+
+static inline double elapsed_time(long long startTimeUs, long long stopTimeUs) {
+  return ((double)(stopTimeUs - startTimeUs)) / ((double)(1000));
+}
+
+static inline unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N) {
+  int device;
+  HIP_CHECK(hipGetDevice(&device));
+  hipDeviceProp_t props;
+  HIP_CHECK(hipGetDeviceProperties(&props, device));
+
+  unsigned blocks = props.multiProcessorCount * blocksPerCU;
+  if (blocks * threadsPerBlock > N) {
+    blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
+  }
+
+  return blocks;
 }
 }
