@@ -16,7 +16,6 @@ static constexpr auto NUM_BLOCKS{32};
 
 static constexpr auto saxpy{
 R"(
-#include <hip/hip_runtime.h>
 extern "C"
 __global__
 void saxpy(float a, float* x, float* y, float* out, size_t n)

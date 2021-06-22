@@ -36,8 +36,6 @@ THE SOFTWARE.
 
 static constexpr const char gpu_program[]{
 R"(
-#include <hip/hip_runtime.h>
-
 __device__ int V1; // set from host code
 static __global__ void f1(int *result) { *result = V1 + 10; }
 namespace N1 {
