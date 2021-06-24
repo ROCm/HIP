@@ -18,11 +18,12 @@
  * */
 
 /* HIT_START
- * BUILD_CMD: hipMalloc %cxx -D__HIP_PLATFORM_AMD__ -I%hip-path/include -I%rocm-path/include %S/%s -Wl,--rpath=%rocm-path/lib %hip-path/lib/libamdhip64.so -o %T/%t -std=c++11 EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_LIB_TYPE static
+ * BUILD_CMD: hipMalloc %cxx -D__HIP_PLATFORM_NVIDIA__ -I%hip-path/include -I/usr/local/cuda/include %S/%s -o %T/hipMalloc_nvidia -L/usr/local/cuda/lib64 -lcudart -std=c++11 EXCLUDE_HIP_PLATFORM amd
+ * BUILD_CMD: hipMalloc %cxx -D__HIP_PLATFORM_AMD__ -I%hip-path/include %S/%s -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/hipMalloc_amd EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: hipMalloc_nvidia EXCLUDE_HIP_PLATFORM amd
+ * TEST: hipMalloc_amd EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
-
 
 #include <hip/hip_runtime_api.h>
 #include <iostream>
@@ -30,5 +31,5 @@
 int main() {
     int* Ad;
     hipMalloc((void**)&Ad, 1024);
-    std::cout<<"PASSED!"<<std::endl;   
+    std::cout<<"PASSED!"<<std::endl;
 }

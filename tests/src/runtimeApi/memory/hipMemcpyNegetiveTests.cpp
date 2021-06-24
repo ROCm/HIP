@@ -18,7 +18,7 @@
  * */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -41,13 +41,13 @@ int main() {
     HIPCHECK(hipMemcpy(A,  Ad, sizeof(int), hipMemcpyHostToDevice));
     HIPCHECK(hipMemcpy(Ad, Bd, sizeof(int), hipMemcpyHostToHost));
     HIPCHECK(hipMemcpy(A,  A, sizeof(int), hipMemcpyDeviceToDevice));
-    
+
     // nullptr passed as source or destination pointer
     HIPASSERT(hipSuccess != hipMemcpy(nullptr, A, sizeof(int), hipMemcpyHostToDevice));
     HIPASSERT(hipSuccess != hipMemcpy(Ad, nullptr, sizeof(int), hipMemcpyHostToDevice));
-    
+
     HIPCHECK(hipFree(Ad));
     HIPCHECK(hipFree(Bd));
-    HIPCHECK(hipFree(A));
-    passed();   
+    HIPCHECK(hipHostFree(A));
+    passed();
 }
