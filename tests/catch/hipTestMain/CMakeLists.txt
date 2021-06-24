@@ -28,7 +28,9 @@ else()
     target_compile_options(ABMTests PUBLIC -std=c++17)
 endif()
 
-target_link_libraries(ABMTests PRIVATE ABMAddKernels)
+target_link_libraries(ABMTests PRIVATE ABMAddKernels
+                                       stdc++fs)
+
 catch_discover_tests(ABMTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
 
 add_dependencies(build_tests UnitTests ABMTests)
