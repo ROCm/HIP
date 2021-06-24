@@ -7,11 +7,18 @@ set(TEST_SRC
     ffs.cc
     funnelshift.cc
     brev.cc
+    popc.cc
+    ldg.cc
+    syncthreadsand.cc
+    syncthreadscount.cc
+    syncthreadsor.cc
+    threadfence_system.cc
 )
 
 # AMD only tests
 set(AMD_TEST_SRC
     vectorTypesDevice.cc
+    mbcnt.cc
     bitExtract.cc
     bitInsert.cc
     floatTM.cc
