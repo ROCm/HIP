@@ -23,7 +23,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -111,7 +111,7 @@ bool testhipMemsetD32AsyncWithKernel() {
   for (int k = 0 ; k < ITER ; k++) {
     hipLaunchKernelGGL(vector_square, dim3(blocks), dim3(threadsPerBlock), 0,
                        obj.stream, obj.B_d, obj.C_d, N);
-    HIPCHECK(hipMemsetD32Async(obj.C_d , obj.memSetVal , N , obj.stream));
+    HIPCHECK(hipMemsetD32Async((hipDeviceptr_t)obj.C_d , obj.memSetVal , N , obj.stream));
     HIPCHECK(hipStreamSynchronize(obj.stream));
     HIPCHECK(hipMemcpy(obj.A_h, obj.C_d, obj.Nbytes, hipMemcpyDeviceToHost));
 
@@ -126,7 +126,7 @@ bool testhipMemsetD16AsyncWithKernel() {
   for (int k = 0 ; k < ITER ; k++) {
     hipLaunchKernelGGL(vector_square, dim3(blocks), dim3(threadsPerBlock), 0,
                        obj.stream, obj.B_d, obj.C_d, N);
-    HIPCHECK(hipMemsetD16Async(obj.C_d , obj.memSetVal , N , obj.stream));
+    HIPCHECK(hipMemsetD16Async((hipDeviceptr_t)obj.C_d , obj.memSetVal , N , obj.stream));
     HIPCHECK(hipStreamSynchronize(obj.stream));
     HIPCHECK(hipMemcpy(obj.A_h , obj.C_d, obj.Nbytes , hipMemcpyDeviceToHost));
 
@@ -141,7 +141,7 @@ bool testhipMemsetD8AsyncWithKernel() {
   for (int k = 0; k < ITER; k++) {
     hipLaunchKernelGGL(vector_square, dim3(blocks), dim3(threadsPerBlock), 0,
                        obj.stream, obj.B_d, obj.C_d, N);
-    HIPCHECK(hipMemsetD8Async(obj.C_d, obj.memSetVal, N, obj.stream));
+    HIPCHECK(hipMemsetD8Async((hipDeviceptr_t)obj.C_d, obj.memSetVal, N, obj.stream));
     HIPCHECK(hipStreamSynchronize(obj.stream));
     HIPCHECK(hipMemcpy(obj.A_h, obj.C_d, obj.Nbytes, hipMemcpyDeviceToHost));
 
