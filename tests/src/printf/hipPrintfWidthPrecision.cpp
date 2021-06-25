@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s
+ * TEST: %t
  * HIT_END
  */
 

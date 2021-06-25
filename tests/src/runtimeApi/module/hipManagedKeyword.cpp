@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD_CMD: managed_kernel.code %hc --genco %S/managed_kernel.cpp -o managed_kernel.code EXCLUDE_HIP_PLATFORM amd
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_PLATFORM amd
+ * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM amd
  * TEST: %t
  * HIT_END
  */
@@ -42,6 +42,10 @@ bool managedMultiGPUTest() {
   hipGetDeviceCount(&numDevices);
   for (int i = 0; i < numDevices; i++) {
     hipSetDevice(i);
+    hipDevice_t device;
+    hipCtx_t context;
+    hipDeviceGet(&device, i);
+    hipCtxCreate(&context, 0, device);
     hipModule_t Module;
     HIPCHECK(hipModuleLoad(&Module, fileName));
     hipFunction_t Function;
@@ -52,9 +56,11 @@ bool managedMultiGPUTest() {
     HIPCHECK(hipMemcpyDtoH(&data, hipDeviceptr_t(x), xSize));
     if (data != (1 + MANAGED_VAR_INIT_VALUE)) {
       HIPCHECK(hipModuleUnload(Module));
+      hipCtxDestroy(context);
       return false;
     }
     HIPCHECK(hipModuleUnload(Module));
+    hipCtxDestroy(context);
   }
   return true;
 }
