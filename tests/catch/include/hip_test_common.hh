@@ -43,5 +43,9 @@ THE SOFTWARE.
 
 // Utility Functions
 namespace HipTest {
-int getDeviceCount();
+static inline int getDeviceCount() {
+  int dev = 0;
+  HIP_CHECK(hipGetDeviceCount(&dev));
+  return dev;
+}
 }

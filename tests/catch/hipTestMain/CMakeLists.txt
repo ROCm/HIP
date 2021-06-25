@@ -11,6 +11,7 @@ endif()
 
 target_link_libraries(UnitTests PRIVATE UnitDeviceTests
                                         MemoryTest
+                                        StreamTest
                                         stdc++fs)
 
 # Add AMD Only Tests
