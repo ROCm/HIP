@@ -25,7 +25,7 @@ Numa distance is the measurement of how far between GPU and CPU devices.
 By default, each GPU selects a Numa CPU node that has the least Numa distance between them, that is, host memory will be automatically allocated closest on the memory pool of Numa node of the current GPU device. Using hipSetDevice API to a different GPU will still be able to access the host allocation, but can have longer Numa distance.
 
 ### Managed memory allocation
-Managed memory, including the `__managed__` keyword, are supported in HIP combined host/device compilation.
+Managed memory, except the `__managed__` keyword, are supported in HIP combined host/device compilation.
 The allocation will be automatically managed by AMD HMM (Heterogeneous Memory Management).
 
 In HIP application, there should be the capability check before make managed memory API call hipMallocManaged.
@@ -46,6 +46,16 @@ else {
 }
 ```
 For more details on managed memory APIs, please refer to the documentation HIP-API.pdf.
+
+### HIP Stream Memory Operations
+
+HIP supports Stream Memory Operations to enable direct synchronization between Network Nodes and GPU. Following new APIs are added,
+  hipStreamWaitValue32
+  hipStreamWaitValue64
+  hipStreamWriteValue32
+  hipStreamWriteValue64
+
+For more details, please check the documentation HIP-API.pdf.
 
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
@@ -87,6 +97,15 @@ In case events are used across multiple dispatches, for example, start and stop 
 
 - Coherent host memory is the default and is the easiest to use since the memory is visible to the CPU at typical synchronization points.  This memory allows in-kernel synchronization commands such as threadfence_system to work transparently.
 - HIP/ROCm also supports the ability to cache host memory in the GPU using the "Non-Coherent" host memory allocations. This can provide performance benefit, but care must be taken to use the correct synchronization.
+
+## HIP Runtime Compilation
+HIP now supports runtime compilation (hipRTC), the usage of which will provide the possibility of optimizations and performance improvement compared with other APIs via regular offline static compilation.
+
+hipRTC APIs accept HIP source files in character string format as input parameters and create handles of programs by compiling the HIP source files without spawning separate processes.
+
+For more details on hipRTC APIs, refer to HIP-API.pdf in GitHub (https://github.com/RadeonOpenCompute/ROCm).
+
+The link here(https://github.com/ROCm-Developer-Tools/HIP/blob/main/tests/src/hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism.
 
 ## Device-Side Malloc
 

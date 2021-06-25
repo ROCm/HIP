@@ -134,6 +134,21 @@ struct CaptureStream {
       assert(false);
     }
   }
+
+  // Truncate the file up to size if we don't want too long log
+  void Truncate(size_t size) {
+    struct stat sb = { 0 };
+    if (::stat(tempname, &sb) == -1) {
+      failed("failed lstat(%s) with error: %s \n", tempname, ::strerror(errno));
+      return;
+    }
+    if (sb.st_size > size) {
+      if (::truncate(tempname, static_cast<off_t>(size)) == -1) {
+        failed("failed truncate(%s) with error: %s \n", tempname, ::strerror(errno));
+        return;
+      }
+    }
+  }
 };
 #endif
 

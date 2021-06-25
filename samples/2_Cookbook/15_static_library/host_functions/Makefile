@@ -25,7 +25,7 @@ $(HIPCC_EXE): $(EMIT_STATIC_LIB)
 
 # Compiles hipMain1 with g++ and links with libHipOptLibrary.a which contains host function.
 $(HOST_EXE): $(EMIT_STATIC_LIB)
-	$(GXX) $(EMIT_STATIC_MAIN_SRC) -L. -lHipOptLibrary -L$(HIP_PATH)/lib -lamdhip64 -o $@
+	$(GXX) $(EMIT_STATIC_MAIN_SRC) -L. -lHipOptLibrary -L$(HIP_PATH)/lib -lamdhip64 -Wl,-rpath=$(HIP_PATH)/lib -o $@
 
 test: $(HIPCC_EXE) $(HOST_EXE)
 	$(HIPCC_EXE)

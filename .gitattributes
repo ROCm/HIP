@@ -1,0 +1,19 @@
+# Set the default behavior, in case people don't have core.autolf set.
+* text=auto
+
+# Explicitly declare text files you want to always be normalized and converted
+# to have LF line endings on checkout.
+*.c text eol=lf
+*.cpp text eol=lf
+*.cc text eol=lf
+*.h text eol=lf
+*.hpp text eol=lf
+*.txt text eol=lf
+
+# auto remove white space
+*.cpp filter=trimspace
+*.c filter=trimspace
+*.h filter=trimspacecpp
+*.hpp filter=trimspace
+*.md filter=trimspace
+

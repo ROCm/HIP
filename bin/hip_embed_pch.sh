@@ -21,7 +21,7 @@
 
 printUsage() {
   echo
-  echo "Usage: $(basename "$0") HIP_BUILD_INC_DIR HIP_INC_DIR LLVM_DIR HSA_DIR [option] [RTC_LIB_OUTPUT]"
+  echo "Usage: $(basename "$0") HIP_BUILD_INC_DIR HIP_INC_DIR HIP_AMD_INC_DIR LLVM_DIR [option] [RTC_LIB_OUTPUT]"
   echo
   echo "Options:"
   echo "  -p,  --generate_pch  Generate pre-compiled header (default)"
@@ -39,8 +39,8 @@ fi
 
 HIP_BUILD_INC_DIR="$1"
 HIP_INC_DIR="$2"
-LLVM_DIR="$3"
-HSA_DIR="$4"
+HIP_AMD_INC_DIR="$3"
+LLVM_DIR="$4"
 # By default, generate pch
 TARGET="generatepch"
 
@@ -54,12 +54,12 @@ do
     -r | --generate_rtc )
         TARGET="generatertc" ; break ;;
     *)
-        echo " UNEXPECTED ERROR Parm : [$5] ">&2 ; exit 20 ;;
+        echo " UNEXPECTED ERROR Parm : [$4] ">&2 ; exit 20 ;;
   esac
   shift 1
 done
 
-# Allow hiprtc lib name to be set by argument 6
+# Allow hiprtc lib name to be set by argument 7
 if [[ "$6" != "" ]]; then
   rtc_shared_lib_out="$6"
 else
@@ -78,11 +78,9 @@ else
   tmpdir=/tmp
 fi
 
-generate_pch() {
-  tmp=$tmpdir/hip_pch.$$
-  mkdir -p $tmp
-
-cat >$tmp/hip_macros.h <<EOF
+# Expected first argument $1 to be output file name.
+create_hip_macro_file() {
+cat >$1 <<EOF
 #define __device__ __attribute__((device))
 #define __host__ __attribute__((host))
 #define __global__ __attribute__((global))
@@ -99,6 +97,13 @@ cat >$tmp/hip_macros.h <<EOF
     select_impl_(__VA_ARGS__, launch_bounds_impl1, launch_bounds_impl0)(__VA_ARGS__)
 
 EOF
+}
+
+generate_pch() {
+  tmp=$tmpdir/hip_pch.$$
+  mkdir -p $tmp
+
+  create_hip_macro_file $tmp/hip_macros.h
 
 cat >$tmp/hip_pch.h <<EOF
 #include "hip/hip_runtime.h"
@@ -120,7 +125,7 @@ EOF
 
   set -x
 
-  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HSA_DIR/include --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
+  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HIP_AMD_INC_DIR --cuda-device-only -x hip $tmp/hip_pch.h -E >$tmp/pch.cui &&
 
   cat $tmp/hip_macros.h >> $tmp/pch.cui &&
 
@@ -134,17 +139,29 @@ EOF
 generate_rtc_header() {
   tmp=$tmpdir/hip_rtc.$$
   mkdir -p $tmp
+  local macroFile="$tmp/hip_macros.h"
   local headerFile="$tmp/hipRTC_header.h"
   local mcinFile="$tmp/hipRTC_header.mcin"
 
+  create_hip_macro_file $macroFile
+
 cat >$headerFile <<EOF
+#pragma push_macro("CHAR_BIT")
+#pragma push_macro("INT_MAX")
+#define CHAR_BIT __CHAR_BIT__
+#define INT_MAX __INTMAX_MAX__
+
 #include "hip/hip_runtime.h"
 #include "hip/hip_fp16.h"
+
+#pragma pop_macro("CHAR_BIT")
+#pragma pop_macro("INT_MAX")
 EOF
 
   echo "// Automatically generated script for HIP RTC." > $mcinFile
   if [[ $isWindows -eq 0 ]]; then
     echo "  .type __hipRTC_header,@object" >> $mcinFile
+    echo "  .type __hipRTC_header_size,@object" >> $mcinFile
   fi
 cat >>$mcinFile <<EOF
   .section .hipRTC_header,"a"
@@ -158,9 +175,11 @@ __hipRTC_header_size:
 EOF
 
   set -x
-  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++17 -nogpulib -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem --cuda-device-only -D__HIPCC_RTC__ -x hip $tmp/hipRTC_header.h -E -o $tmp/hiprtc &&
+  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++14 -nogpulib --hip-version=4.4 -isystem $HIP_INC_DIR -isystem $HIP_BUILD_INC_DIR -isystem $HIP_AMD_INC_DIR --cuda-device-only -D__HIPCC_RTC__ -x hip $tmp/hipRTC_header.h -E -o $tmp/hiprtc &&
+  cat $macroFile >> $tmp/hiprtc &&
   $LLVM_DIR/bin/llvm-mc -o $tmp/hiprtc_header.o $tmp/hipRTC_header.mcin --filetype=obj &&
   $LLVM_DIR/bin/clang $tmp/hiprtc_header.o -o $rtc_shared_lib_out -shared &&
+  $LLVM_DIR/bin/clang -O3 --rocm-path=$HIP_INC_DIR/.. -std=c++14 -nogpulib -nogpuinc -emit-llvm -c -o $tmp/tmp.bc --cuda-device-only -D__HIPCC_RTC__ --offload-arch=gfx906 -x hip-cpp-output $tmp/hiprtc &&
   rm -rf $tmp
 }
 

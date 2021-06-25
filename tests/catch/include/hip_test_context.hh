@@ -34,12 +34,9 @@ static int _log_enable = (std::getenv("HT_LOG_ENABLE") ? 1 : 0);
     }                                                                                              \
   }
 
-
 typedef struct Config_ {
   std::string json_file;              // Json file
   std::string platform;               // amd/nvidia
-  std::vector<std::string> devices;   // gfx906, etc
-  std::vector<std::string> targetId;  // Target Ids, only for AMD, gfx906:sramecc+:xnack-
   std::string os;                     // windows/linux
 } Config;
 
@@ -73,8 +70,6 @@ class TestContext {
   bool isNvidia() const;
   bool isAmd() const;
   bool skipTest() const;
-  const std::vector<std::string>& getDevices() const;
-  const std::vector<std::string>& getTargetId() const;
 
   const std::string& getCurrentTest() const { return current_test; }
   std::string currentPath();
