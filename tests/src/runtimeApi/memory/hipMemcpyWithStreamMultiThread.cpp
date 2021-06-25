@@ -24,7 +24,7 @@ THE SOFTWARE.
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
  */
@@ -53,7 +53,9 @@ enum class ops
     TestkindDtoD,
     TestkindHtoH,
     TestkindDefault,
+#ifndef __HIP_PLATFORM_NVIDIA__
     TestkindDefaultForDtoD,
+#endif
     TestDtoDonSameDevice,
     END_OF_LIST
 };
@@ -601,9 +603,11 @@ void HipMemcpyWithStreamMultiThreadtests::TestwithMultiThreaded(ops op) {
         case ops::TestkindDefault:
           TestkindDefault();
           break;
+#ifndef __HIP_PLATFORM_NVIDIA__
         case ops::TestkindDefaultForDtoD:
           TestkindDefaultForDtoD();
           break;
+#endif
         case ops::TestDtoDonSameDevice:
           TestDtoDonSameDevice();
           break;
@@ -648,10 +652,12 @@ int main() {
         test_passed(HipMemcpyWithStreamMultiThreadtests
                     ::TestkindDefault);
         break;
+#ifndef __HIP_PLATFORM_NVIDIA__
       case ops::TestkindDefaultForDtoD:
         test_passed(HipMemcpyWithStreamMultiThreadtests
                     ::TestkindDefaultForDtoD);
         break;
+#endif
       case ops::TestDtoDonSameDevice:
         test_passed(HipMemcpyWithStreamMultiThreadtests
                     ::TestDtoDonSameDevice);

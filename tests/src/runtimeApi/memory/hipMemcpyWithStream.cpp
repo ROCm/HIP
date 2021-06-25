@@ -24,7 +24,7 @@ THE SOFTWARE.
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -504,8 +504,10 @@ int main() {
   test_passed(TestOnMultiGPUwithOneStream);
   tests.TestkindDtoD();
   test_passed(TestkindDtoD);
+#ifndef __HIP_PLATFORM_NVIDIA__
   tests.TestkindDefaultForDtoD();
   test_passed(TestkindDefaultForDtoD);
+#endif
   tests.TestkindHtoH();
   test_passed(TestkindsHtoH);
 }

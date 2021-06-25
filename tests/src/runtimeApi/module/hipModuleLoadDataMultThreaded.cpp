@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_RUNTIME rocclr EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */
@@ -131,7 +131,13 @@ void run_multi_threads(uint32_t n, const std::vector<char>& buffer) {
 int main() {
   HIPCHECK(hipInit(0));
   auto buffer = load_file();
-  run_multi_threads(getThreadCount(), buffer);
+  auto file_size = buffer.size() / (1024 * 1024);
+  auto thread_count = getHostThreadCount(file_size + 10);
+  if(thread_count == 0) {
+      failed("Thread Count is zero");
+  }
+
+  run_multi_threads(thread_count, buffer);
 
   passed();
 }
