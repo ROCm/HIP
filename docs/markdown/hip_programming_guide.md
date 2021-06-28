@@ -55,6 +55,8 @@ HIP supports Stream Memory Operations to enable direct synchronization between N
   hipStreamWriteValue32
   hipStreamWriteValue64
 
+Note, CPU access to the semaphore's memory requires volatile keyword to disable CPU compiler's optimizations on memory access.
+
 For more details, please check the documentation HIP-API.pdf.
 
 ### Coherency Controls
@@ -97,6 +99,16 @@ In case events are used across multiple dispatches, for example, start and stop 
 
 - Coherent host memory is the default and is the easiest to use since the memory is visible to the CPU at typical synchronization points.  This memory allows in-kernel synchronization commands such as threadfence_system to work transparently.
 - HIP/ROCm also supports the ability to cache host memory in the GPU using the "Non-Coherent" host memory allocations. This can provide performance benefit, but care must be taken to use the correct synchronization.
+
+## Direct Dispatch
+HIP runtime has Direct Dispatch enabled by default in ROCM 4.4. With this feature we move away from our conventional producer-consumer model where the runtime creates a worker thread(consumer) for each HIP Stream, where as the host thread(producer) enqueues commands to a command queue(per stream).
+
+For Direct Dispatch, the runtime would directly queue a packet to the AQL queue (user mode queue to GPU) in case of Dispatch and some of the synchronization. This has shown to the total latency of the HIP Dispatch API and latency to launch first wave on the GPU.
+
+In addition, eliminating the threads in runtime has reduced the variance in the dispatch numbers as the thread scheduling delays and atomics/locks synchronization latencies are reduced.
+
+This feature can be disabled via setting the following environment variable,
+AMD_DIRECT_DISPATCH=0
 
 ## HIP Runtime Compilation
 HIP now supports runtime compilation (hipRTC), the usage of which will provide the possibility of optimizations and performance improvement compared with other APIs via regular offline static compilation.
