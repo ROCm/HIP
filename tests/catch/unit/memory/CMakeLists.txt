@@ -10,6 +10,8 @@ set(TEST_SRC
     hipMemcpy3DAsync.cc
     hipMemcpyParam2D.cc
     hipMemcpyParam2DAsync.cc
+    hipMemcpy2D.cc
+    hipMemcpy2DAsync.cc
 )
 
 # Create shared lib of all tests
