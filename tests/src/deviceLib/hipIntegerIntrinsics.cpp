@@ -46,10 +46,6 @@ __device__ void integer_intrinsics() {
     __clzll((long long)10);
     __ffs((int)10);
     __ffsll((long long)10);
-    __funnelshift_l((unsigned int)0xfacefeed, (unsigned int)0xdeadbeef, 0);
-    __funnelshift_lc((unsigned int)0xfacefeed, (unsigned int)0xdeadbeef, 0);
-    __funnelshift_r((unsigned int)0xfacefeed, (unsigned int)0xdeadbeef, 0);
-    __funnelshift_rc((unsigned int)0xfacefeed, (unsigned int)0xdeadbeef, 0);
     __hadd((int)1, (int)3);
     __mul24((int)1, (int)2);
     __mul64hi((long long)1, (long long)2);

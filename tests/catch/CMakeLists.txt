@@ -44,33 +44,15 @@ include_directories(
     ${HIP_PATH}/include
     ${JSON_PARSER}
 )
-
-if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
-endif()
-
 cmake_policy(PUSH)
 if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD)
 endif()
-
-# Use clang as host compiler with nvcc
-if(HIP_COMPILER MATCHES "nvcc")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ccbin clang")
-endif()
-
-# Disable CXX extensions (gnu++11 etc)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
 add_custom_target(build_tests)
+add_custom_target(test COMMAND ${CMAKE_CTEST_COMMAND})
+add_dependencies(test build_tests)
 
-# Tests folder
 add_subdirectory(unit)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
-
-if(UNIX AND HIP_PLATFORM MATCHES "amd")
-    add_subdirectory(multiproc)
-endif()
-
 cmake_policy(POP)

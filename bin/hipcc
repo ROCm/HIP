@@ -296,7 +296,7 @@ foreach $arg (@ARGV)
 
     if ($skipOutputFile) {
 	# TODO: handle filename with shell metacharacters
-        $toolArgs .= " \"$arg\"";
+        $toolArgs .= " $arg";
         $prevArg = $arg;
         $skipOutputFile = 0;
         next;
@@ -376,15 +376,6 @@ foreach $arg (@ARGV)
         $swallowArg = 1;
     }
 
-    # nvcc does not handle standard compiler options properly
-    # This can prevent hipcc being used as standard CXX/C Compiler
-    # To fix this we need to pass -Xcompiler for options
-    if (($arg eq '-fPIC' or $arg =~ '-Wl,') and $HIP_COMPILER eq 'nvcc')
-    {
-        $HIPCXXFLAGS .= " -Xcompiler ".$arg;
-        $swallowArg = 1;
-    }
-
     ## process linker response file for hip-clang
     ## extract object files from static library and pass them directly to
     ## hip-clang in command line.
@@ -428,7 +419,7 @@ foreach $arg (@ARGV)
                 } elsif ($realObjs) {
                     my($libBaseName, $libDir, $libExt) = fileparse($libFile);
                     $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
-                    system("cd $tmpdir; ar rc $libBaseName $realObjs");
+                    system("cd $tmpdir; ar c $libBaseName $realObjs");
                     print $out "$tmpdir/$libBaseName\n";
                 }
             } elsif ($line =~ m/\.o$/) {
@@ -490,7 +481,7 @@ foreach $arg (@ARGV)
         } elsif ($realObjs) {
             my($libBaseName, $libDir, $libExt) = fileparse($libFile);
             $libBaseName = mktemp($libBaseName . "XXXX") . $libExt;
-            system("cd $tmpdir; ar rc $libBaseName $realObjs");
+            system("cd $tmpdir; ar c $libBaseName $realObjs");
             $new_arg .= " $tmpdir/$libBaseName";
         }
         $arg = "$new_arg";
@@ -552,7 +543,7 @@ foreach $arg (@ARGV)
                 $hasC = 1;
                 $needCFLAGS = 1;
                 $toolArgs .= " -x c";
-            } elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) or ($arg =~ /\.C$/)) {
+            } elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) ) {
                 $needCXXFLAGS = 1;
                 if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_PLATFORM ne "amd") {
                     $hasCXX = 1;
@@ -702,9 +693,9 @@ if ($HIP_PLATFORM eq "amd") {
 
     if (not $isWindows  and not $compileOnly) {
       if ($linkType eq 0) {
-        $toolArgs = " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma " . ${toolArgs};
+        $toolArgs .= " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma ";
       } else {
-        $toolArgs = " -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 " . ${toolArgs};
+        $toolArgs .= " -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 ";
       }
       # To support __fp16 and _Float16, explicitly link with compiler-rt
       $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "

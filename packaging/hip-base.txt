@@ -21,15 +21,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(hip_base)
 
-if(WIN32)
-  install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS)
-else()
-  install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS
-          PATTERN *.bat EXCLUDE)
-endif()
-install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION .)
-install(DIRECTORY @HIP_AMD_BACKEND_SOURCE_DIR@/include/hip/amd_detail DESTINATION include/hip)
-install(DIRECTORY @HIP_AMD_BACKEND_SOURCE_DIR@/include/hip/nvidia_detail DESTINATION include/hip)
+install(DIRECTORY @hip_SOURCE_DIR@/bin DESTINATION . USE_SOURCE_PERMISSIONS)
+# The following 'ATTERN "hcc_detail" EXCLUDE' will be removed after upstream updation
+install(DIRECTORY @hip_SOURCE_DIR@/include DESTINATION . PATTERN "hcc_detail" EXCLUDE)
 install(FILES @PROJECT_BINARY_DIR@/include/hip/amd_detail/hip_prof_str.h
         DESTINATION include/hip/amd_detail)
 install(FILES @PROJECT_BINARY_DIR@/include/hip/hip_version.h

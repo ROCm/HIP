@@ -114,10 +114,7 @@ __device__ void double_precision_math_functions() {
     scalbn(0.0, 1);
     signbit(1.0);
     sin(0.0);
-#if not(defined(__HIP_PLATFORM_NVIDIA__) && (CUDA_VERSION == 11030 || CUDA_VERSION == 11020))
-    //NV A100 has a bug in sincos(), so temporarily disbale it
     sincos(0.0, &fX, &fY);
-#endif
     sincospi(0.0, &fX, &fY);
     sinh(0.0);
     sinpi(0.0);

@@ -26,7 +26,7 @@ THE SOFTWARE.
 #include <hip/hip_common.h>
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include <hip/amd_detail/amd_driver_types.h>
+#include <hip/amd_detail/driver_types.h>
 #elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #include "driver_types.h"
 #else

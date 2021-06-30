@@ -20,7 +20,7 @@ THE SOFTWARE.
 // Simple test for hipLaunchCooperativeKernelMultiDevice API.
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 -rdc=true -gencode arch=compute_70,code=sm_70 -gencode arch=compute_80,code=sm_80
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 -rdc=true -gencode arch=compute_70,code=sm_70
  * TEST: %t
  * HIT_END
  */
@@ -123,7 +123,7 @@ int main() {
     HIPCHECK(hipMalloc((void**)&dA[i], SIZE));
     HIPCHECK(hipMalloc((void**)&dB[i], 64 * deviceProp[i].multiProcessorCount * sizeof(long)));
     if (i == 0) {
-      HIPCHECK(hipHostMalloc((void**)&dC, (nGpu + 1) * sizeof(long)));
+      HIPCHECK(hipHostMalloc((void**)&dC, (nGpu + 1) * sizeof(long), hipHostMallocCoherent));
     }
     HIPCHECK(hipMemcpy(dA[i], &init[i * copySizeInDwords] , SIZE, hipMemcpyHostToDevice));
     HIPCHECK(hipStreamCreate(&stream[i]));
@@ -175,9 +175,6 @@ int main() {
 
     system_clock::time_point start = system_clock::now();
     hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0);
-    for (int i = 0; i < nGpu; i++) {
-      hipStreamSynchronize(stream[i]);
-    }
     system_clock::time_point end = system_clock::now();
     std::chrono::duration<double> elapsed_seconds = end - start;
     end_time = std::chrono::system_clock::to_time_t(end);

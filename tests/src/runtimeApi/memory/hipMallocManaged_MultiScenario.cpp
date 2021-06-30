@@ -197,7 +197,7 @@ bool NegativeTestsMallocManaged(int NumDevices) {
   // success and contradicts with api doc.
 
   // With size(0), api expected to return error code (or)
-  // reset ptr while returning success (to accommodate cuda 11.2 api behavior).
+  // reset ptr while returning success (to accomadate cuda 11.2 api behavior).
   err = hipMallocManaged(&A, 0, hipMemAttachGlobal);
   if ((hipErrorInvalidValue == err) ||
       ((hipSuccess == err) && (nullptr == A))) {
@@ -213,33 +213,16 @@ bool NegativeTestsMallocManaged(int NumDevices) {
     IfTestPassed = false;
   }
 
-  err = hipMallocManaged(NULL, 1024, hipMemAttachHost);
+#ifdef __HIP_PLATFORM_AMD__
+  // The flag hipMemAttachHost is currently not supported therefore
+  // api should return "hipErrorInvalidValue" for now
+  err = hipMallocManaged(&A, 1024, hipMemAttachHost);
   if (hipErrorInvalidValue != err) {
     printf("hipMallocManaged: Returned %s for 'hipMemAttachHost' flag\n",
            hipGetErrorString(err));
     IfTestPassed = false;
   }
-
-  // cuda api doc says : If size is 0, cudaMallocManaged returns
-  // cudaErrorInvalidValue. However, it is observed that cuda 11.2 api returns
-  // success and contradicts with api doc.
-
-  // With size(0), api expected to return error code (or)
-  // reset ptr while returning success (to accommodate cuda 11.2 api behavior).
-  err = hipMallocManaged(&A, 0, hipMemAttachHost);
-  if ((hipErrorInvalidValue == err) ||
-      ((hipSuccess == err) && (nullptr == A))) {
-    IfTestPassed &= true;
-  } else {
-    IfTestPassed = false;
-  }
-
-  err = hipMallocManaged(NULL, 0, hipMemAttachHost);
-  if (hipErrorInvalidValue != err) {
-    printf("hipMallocManaged: Returned %s when devPtr & size is null & 0\n",
-           hipGetErrorString(err));
-    IfTestPassed = false;
-  }
+#endif  // __HIP_PLATFORM_AMD__
 
   err = hipMallocManaged(NULL, 0, 0);
   if (hipErrorInvalidValue != err) {

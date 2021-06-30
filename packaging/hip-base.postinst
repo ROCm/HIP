@@ -45,5 +45,4 @@ cd $CURRENTDIR
 # The following will be removed after upstream updation
 cd $HIPINCDIR
     ln -r -s -f amd_detail hcc_detail
-    ln -r -s -f nvidia_detail nvcc_detail
 cd $CURRENTDIR

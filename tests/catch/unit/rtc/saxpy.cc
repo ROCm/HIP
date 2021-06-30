@@ -15,7 +15,7 @@ static constexpr auto NUM_THREADS{128};
 static constexpr auto NUM_BLOCKS{32};
 
 static constexpr auto saxpy{
-R"(
+    R"(
 #include <hip/hip_runtime.h>
 extern "C"
 __global__
@@ -23,7 +23,8 @@ void saxpy(float a, float* x, float* y, float* out, size_t n)
 {
     size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
         if (tid < n) {
-               out[tid] = a * x[tid] + y[tid];
+               out[tid] = a * x[tid] + y[tid] ;
+                   
         }
         
 }
@@ -71,42 +72,42 @@ TEST_CASE("saxpy", "[hiprtc][saxpy]") {
   unique_ptr<float[]> hX{new float[n]};
   unique_ptr<float[]> hY{new float[n]};
   unique_ptr<float[]> hOut{new float[n]};
-  for (size_t i = 0; i < n; ++i) {
-    hX[i] = static_cast<float>(i);
-    hY[i] = static_cast<float>(i * 2);
-  }
+for (size_t i = 0; i < n; ++i) {
+        hX[i] = static_cast<float>(i);
+        hY[i] = static_cast<float>(i * 2);
+    }
 
-  hipDeviceptr_t dX, dY, dOut;
-  hipMalloc(&dX, bufferSize);
-  hipMalloc(&dY, bufferSize);
-  hipMalloc(&dOut, bufferSize);
-  hipMemcpyHtoD(dX, hX.get(), bufferSize);
-  hipMemcpyHtoD(dY, hY.get(), bufferSize);
+    hipDeviceptr_t dX, dY, dOut;
+    hipMalloc(&dX, bufferSize);
+    hipMalloc(&dY, bufferSize);
+    hipMalloc(&dOut, bufferSize);
+    hipMemcpyHtoD(dX, hX.get(), bufferSize);
+    hipMemcpyHtoD(dY, hY.get(), bufferSize);
 
-  struct {
-    float a_;
-    hipDeviceptr_t b_;
-    hipDeviceptr_t c_;
-    hipDeviceptr_t d_;
-    size_t e_;
-  } args{a, dX, dY, dOut, n};
+    struct {
+        float a_;
+        hipDeviceptr_t b_;
+        hipDeviceptr_t c_;
+        hipDeviceptr_t d_;
+        size_t e_;
+    } args{a, dX, dY, dOut, n};
 
-  auto size = sizeof(args);
-  void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args, HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
-                    HIP_LAUNCH_PARAM_END};
+    auto size = sizeof(args);
+    void* config[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args,
+                      HIP_LAUNCH_PARAM_BUFFER_SIZE, &size,
+                      HIP_LAUNCH_PARAM_END};
 
-  hipModuleLaunchKernel(kernel, NUM_BLOCKS, 1, 1, NUM_THREADS, 1, 1, 0, nullptr, nullptr, config);
-  hipMemcpyDtoH(hOut.get(), dOut, bufferSize);
+    hipModuleLaunchKernel(kernel, NUM_BLOCKS, 1, 1, NUM_THREADS, 1, 1,
+                          0, nullptr, nullptr, config);
+    hipMemcpyDtoH(hOut.get(), dOut, bufferSize);
 
-  for (size_t i = 0; i < n; ++i) {
-    INFO("For " << i << " Value: " << fabs(a * hX[i] + hY[i] - hOut[i])
-                << " with: " << (fabs(hOut[i] * 1.0f) * 1e-6));
-    REQUIRE(fabs(a * hX[i] + hY[i] - hOut[i]) <= fabs(hOut[i]) * 1e-6);
-  }
+    for (size_t i = 0; i < n; ++i) {
+      REQUIRE(fabs(a * hX[i] + hY[i] - hOut[i]) > fabs(hOut[i]) * 1e-6);
+    }
 
-  hipFree(dX);
-  hipFree(dY);
-  hipFree(dOut);
+    hipFree(dX);
+    hipFree(dY);
+    hipFree(dOut);
 
-  hipModuleUnload(module);
+    hipModuleUnload(module);
 }

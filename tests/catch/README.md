@@ -12,7 +12,7 @@ Tests in Catch2 are declared via ```TEST_CASE```.
 
 ## Taking care of existing features
 - Don’t build on platform: EXCLUDE_(HIP_PLATFORM/HIP_RUNTIME), can be done via CMAKE. Adding source in if(HIP_PLATFORM == amd/nvidia).
-- HIPCC_OPTIONS/CLANG Options: Can be done via: set_source_files_properties(src.cc PROPERTIES COMPILE_FLAGS “…”).
+- HIPCC_OPTIONS/CLANG Options: Can be done via: set_source_files_properties(src.cc PROPERTIES COMPILE_FLAGS “…”).
 - Additional libraries: Can be done via target_link_libraries()
 - Multiple runs with different args: This can be done by Catch’s Feature: GENERATE(…)
 Running Subtest: ctest –R “...” (Regex to match the subtest name)
@@ -31,6 +31,8 @@ Some useful functions are:
 - `bool isLinux()` : true if os is linux
 - `bool isAmd()` : true if platform is AMD
 - `bool isNvidia()` : true if platform is NVIDIA
+- `std::vector<std::string> getDevices()` : returns a vector of strings that contains device names (eg: For AMD: gfx906, gfx908 etc / For NVIDIA: RTX 2070 Super)
+- `std::vector<std::string> getTargetId()` : (AMD Only) returns target id for gpus (eg: gfx906:sramecc+:xnack- etc)
 
 This information can be accessed in any test via using: `TestContext::get().isAmd()`.
 
@@ -70,4 +72,5 @@ Catch2 allows multiple ways in which you can debug the test case.
 
 ## External Libs being used
 - [Catch2](https://github.com/catchorg/Catch2) - Testing framework
-- [picojson](https://github.com/kazuho/picojson) - For config file parsing
+- [taocpp/json](https://github.com/taocpp/json) - For config file parsing
+- [taocpp/PEGTL](https://github.com/taocpp/PEGTL) - Helper lib for taojson

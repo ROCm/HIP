@@ -24,8 +24,9 @@
 #include <vector>
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t EXCLUDE_HIP_PLATFORM all
  * HIT_END
+
  */
 #define THREADS_PER_BLOCK 512
 #define GRAPH_LAUNCH_ITERATIONS 3
@@ -244,6 +245,9 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
 int main(int argc, char** argv) {
   size_t size = 1 << 12;  // number of elements to reduce
   size_t maxBlocks = 512;
+  // This will pick the best possible CUDA capable device
+  int devID = 1;  // TODO: implement: findCudaDevice(argc, (const char**)argv); based of max GFLOPS
+                  // incase of multiple devic
   hipSetDevice(0);  //
   printf("%zu elements\n", size);
   printf("threads per block  = %d\n", THREADS_PER_BLOCK);

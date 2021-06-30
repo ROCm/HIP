@@ -41,7 +41,6 @@ rmdir --ignore-fail-on-non-empty $ROCMBINDIR
 HIPINCDIR=$HIPDIR/include
 cd $HIPINCDIR/hip
 rm hcc_detail
-rm nvcc_detail
 cd $CURRENTDIR
 
 ROCMINCDIR=$ROCMDIR/include
