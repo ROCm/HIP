@@ -13,6 +13,7 @@ target_link_libraries(UnitTests PRIVATE UnitDeviceTests
                                         MemoryTest
                                         StreamTest
                                         OccupancyTest
+                                        DeviceTest
                                         stdc++fs)
 
 # Add AMD Only Tests
