@@ -18,10 +18,10 @@
  * */
 
 /* HIT_START
- * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_NVIDIA__ -I%hip-path/include -I/usr/local/cuda/include %S/%s -o %T/hipMalloc_nv -L/usr/local/cuda/lib64 -lcudart EXCLUDE_HIP_PLATFORM amd
- * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_AMD__ -I%hip-path/include %S/%s -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/hipMalloc_hcc EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
- * TEST: hipMalloc_nv EXCLUDE_HIP_PLATFORM amd
- * TEST: hipMalloc_hcc EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_NVIDIA__ -I%hip-path/include -I/usr/local/cuda/include %S/%s -o %T/hipMalloc_cc_nvidia -L/usr/local/cuda/lib64 -lcudart EXCLUDE_HIP_PLATFORM amd
+ * BUILD_CMD: hipMalloc %cc -D__HIP_PLATFORM_AMD__ -I%hip-path/include %S/%s -Wl,--rpath=%hip-path/lib %hip-path/lib/libamdhip64.so -o %T/hipMalloc_cc_amd EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: hipMalloc_cc_nvidia EXCLUDE_HIP_PLATFORM amd
+ * TEST: hipMalloc_cc_amd EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 
