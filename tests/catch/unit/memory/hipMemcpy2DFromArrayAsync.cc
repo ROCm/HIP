@@ -83,12 +83,15 @@ TEST_CASE("Unit_hipMemcpy2DFromArrayAsync_ExtentValidation") {
   HIP_CHECK(hipSetDevice(0));
   hipArray *A_d{nullptr};
   size_t width{sizeof(float)*NUM_W};
-  float *A_h{nullptr}, *hData{nullptr};
+  float *A_h{nullptr}, *hData{nullptr}, *valData{nullptr};
   hipStream_t stream;
 
   // Initialization of variables
   HipTest::initArrays<float>(nullptr, nullptr, nullptr,
                              &A_h, &hData, nullptr,
+                             width*NUM_H, false);
+  HipTest::initArrays<float>(nullptr, nullptr, nullptr,
+                             nullptr, &valData, nullptr,
                              width*NUM_H, false);
   hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
   HIP_CHECK(hipMallocArray(&A_d, &desc, NUM_W, NUM_H, hipArrayDefault));
@@ -116,7 +119,7 @@ TEST_CASE("Unit_hipMemcpy2DFromArrayAsync_ExtentValidation") {
                                    0, 0, NUM_W*sizeof(float),
                                    0, hipMemcpyDeviceToHost, stream));
     HIP_CHECK(hipStreamSynchronize(stream));
-    REQUIRE(HipTest::checkArray(hData, A_h, NUM_W, NUM_H) != true);
+    REQUIRE(HipTest::checkArray(hData, valData, NUM_W, NUM_H) == true);
   }
   // hipMemcpy2DFromArrayAsync API would return success for
   //   width and height as 0
@@ -135,7 +138,7 @@ TEST_CASE("Unit_hipMemcpy2DFromArrayAsync_ExtentValidation") {
                                         0, 0, 0,
                                         NUM_H, hipMemcpyDeviceToHost, stream));
     HIP_CHECK(hipStreamSynchronize(stream));
-    REQUIRE(HipTest::checkArray(hData, A_h, NUM_W, NUM_H) != true);
+    REQUIRE(HipTest::checkArray(hData, valData, NUM_W, NUM_H) == true);
   }
 
   // Cleaning the memory
@@ -143,6 +146,8 @@ TEST_CASE("Unit_hipMemcpy2DFromArrayAsync_ExtentValidation") {
   HIP_CHECK(hipStreamDestroy(stream));
   HipTest::freeArrays<float>(nullptr, nullptr, nullptr,
                              A_h, hData, nullptr, false);
+  HipTest::freeArrays<float>(nullptr, nullptr, nullptr,
+                             nullptr, valData, nullptr, false);
 }
 /*
  * This Scenario Verifies hipMemcpy2DFromArrayAsync API by copying the

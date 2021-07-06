@@ -72,7 +72,6 @@ __global__ void addCountReverse(const T* A_d, T* C_d, int64_t NELEM, int count) 
   }
 }
 
-
 template <typename T> __global__ void memsetReverse(T* C_d, T val, int64_t NELEM) {
   size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
   size_t stride = blockDim.x * gridDim.x;
@@ -81,4 +80,13 @@ template <typename T> __global__ void memsetReverse(T* C_d, T val, int64_t NELEM
     C_d[i] = val;
   }
 }
+
+template <typename T> __global__ void vector_square(const T* A_d, T* C_d, size_t N_ELMTS) {
+  size_t gputhread = (blockIdx.x * blockDim.x + threadIdx.x);
+  size_t stride = blockDim.x * gridDim.x;
+  for (size_t i = gputhread; i < N_ELMTS; i += stride) {
+    C_d[i] = A_d[i] * A_d[i];
+  }
+}
+
 }  // namespace HipTest
