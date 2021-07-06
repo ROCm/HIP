@@ -25,9 +25,9 @@ THE SOFTWARE.
 #define HIP_INCLUDE_HIP_HIP_TEXTURE_TYPES_H
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include <hip/amd_detail/hip_texture_types.h>
+#include <hip/amd_detail/amd_hip_texture_types.h>
 #elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include <hip/nvidia_detail/hip_texture_types.h>
+#include <hip/nvidia_detail/nvidia_hip_texture_types.h>
 #else
 #error("Must define exactly one of __HIP_PLATFORM_AMD__ or __HIP_PLATFORM_NVIDIA__");
 #endif

@@ -12,7 +12,7 @@ Tests in Catch2 are declared via ```TEST_CASE```.
 
 ## Taking care of existing features
 - Don’t build on platform: EXCLUDE_(HIP_PLATFORM/HIP_RUNTIME), can be done via CMAKE. Adding source in if(HIP_PLATFORM == amd/nvidia).
-- HIPCC_OPTIONS/CLANG Options: Can be done via: set_source_files_properties(src.cc PROPERTIES COMPILE_FLAGS “…”).
+- HIPCC_OPTIONS/CLANG Options: Can be done via: set_source_files_properties(src.cc PROPERTIES COMPILE_FLAGS “…”).
 - Additional libraries: Can be done via target_link_libraries()
 - Multiple runs with different args: This can be done by Catch’s Feature: GENERATE(…)
 Running Subtest: ctest –R “...” (Regex to match the subtest name)
@@ -31,8 +31,6 @@ Some useful functions are:
 - `bool isLinux()` : true if os is linux
 - `bool isAmd()` : true if platform is AMD
 - `bool isNvidia()` : true if platform is NVIDIA
-- `std::vector<std::string> getDevices()` : returns a vector of strings that contains device names (eg: For AMD: gfx906, gfx908 etc / For NVIDIA: RTX 2070 Super)
-- `std::vector<std::string> getTargetId()` : (AMD Only) returns target id for gpus (eg: gfx906:sramecc+:xnack- etc)
 
 This information can be accessed in any test via using: `TestContext::get().isAmd()`.
 
@@ -72,5 +70,19 @@ Catch2 allows multiple ways in which you can debug the test case.
 
 ## External Libs being used
 - [Catch2](https://github.com/catchorg/Catch2) - Testing framework
-- [taocpp/json](https://github.com/taocpp/json) - For config file parsing
-- [taocpp/PEGTL](https://github.com/taocpp/PEGTL) - Helper lib for taojson
+- [picojson](https://github.com/kazuho/picojson) - For config file parsing
+
+# Testing Guidelines
+Tests fall in 5 categories and its file name prefix are as follows:
+ - Unit tests (Prefix: Unit_\*API\*_\*Optional Scenario\*, example : Unit_hipMalloc_Negative or Unit_hipMalloc): Unit Tests are simplest test for an API, the target here is to test the API with different types of input and different ways of calling.
+ - Application Behavior Modelling tests (Prefix: ABM_\*Intent\*_\*Optional Scenario\*, example: ABM_ModuleLoadAndRun): ABM tests are used to model a specific use case of HIP APIs, either seen in a customer app or a general purpose app. It mimics the calling behavior seen in aforementioned app.
+ - Stress/Scale tests (Prefix: Stress_\*API\*_\*Intent\*_\*Optional Scenario\*, example: Stress_hipMemset_ExhaustVRAM): These tests are used to see the behavior of HIP APIs in edge scenarios, for example what happens when we have exhausted vram and do a hipMalloc or run many instances of same API in parallel.
+ - Multi Process tests (Prefix: MultiProc_\*API\*_\*Optional Scenario\*, example: MultiProc_hipIPCMemHandle_GetDataFromProc): These tests are multi process tests and will only run on linux. They are used to test HIP APIs in multi process environment
+ - Performance tests(Prefix: Perf_\*Intent\*_\*Optional Scenario\*, example: Perf_DispatchLatenc  y): Performance tests are used to get results of HIP APIs.
+
+General Guidelines:
+ - Do not use the catch2 tags. Tags wont be used for filtering
+ - Add as many INFO() as you can in tests which prints state of the t est, this will help the debugger when the test fails (INFO macro only prints when the test fails)
+ - Check return of each HIP API and fail whenever there is a misma    tch with hipSuccess or hiprtcSuccess.
+ - Each Category of test will hav e its own exe and catch_discover_test macro will be called on it to discover its tests
+ - Optional Scenario in test names are optional. For example you  can test all Scenarios of hipMalloc API in one file, you can name the file Unit_hipMalloc, if you are having a file just for negative scenarios you can name it as Unit_hipMalloc_Negative.

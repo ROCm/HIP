@@ -22,7 +22,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -87,21 +87,21 @@ void queueJobsForhipMemsetAsync(T* A_d, T* A_h, T memSetVal, size_t Nbytes,
 template <typename T>
 void queueJobsForhipMemsetD32Async(T* A_d, T* A_h, T memSetVal, size_t Nbytes,
                                    hipStream_t stream) {
-  HIPCHECK(hipMemsetD32Async(A_d, memSetVal, N, stream));
+  HIPCHECK(hipMemsetD32Async((hipDeviceptr_t)A_d, memSetVal, N, stream));
   HIPCHECK(hipMemcpyAsync(A_h, A_d, Nbytes, hipMemcpyDeviceToHost, stream));
 }
 
 template <typename T>
 void queueJobsForhipMemsetD16Async(T* A_d, T* A_h, T memSetVal, size_t Nbytes,
                                    hipStream_t stream) {
-  HIPCHECK(hipMemsetD16Async(A_d, memSetVal, N, stream));
+  HIPCHECK(hipMemsetD16Async((hipDeviceptr_t)A_d, memSetVal, N, stream));
   HIPCHECK(hipMemcpyAsync(A_h, A_d, Nbytes, hipMemcpyDeviceToHost, stream));
 }
 
 template <typename T>
 void queueJobsForhipMemsetD8Async(T* A_d, T* A_h, T memSetVal, size_t Nbytes,
                                   hipStream_t stream) {
-  HIPCHECK(hipMemsetD8Async(A_d, memSetVal, N, stream));
+  HIPCHECK(hipMemsetD8Async((hipDeviceptr_t)A_d, memSetVal, N, stream));
   HIPCHECK(hipMemcpyAsync(A_h, A_d, Nbytes, hipMemcpyDeviceToHost, stream));
 }
 

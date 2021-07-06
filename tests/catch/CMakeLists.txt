@@ -14,7 +14,7 @@ if(NOT DEFINED CATCH2_PATH)
     if(DEFINED ENV{CATCH2_PATH})
         set(CATCH2_PATH $ENV{CATCH2_PATH} CACHE STRING "Catch2 Path")
     else()
-        set(CATCH2_PATH "${CMAKE_CURRENT_SOURCE_DIR}/external/Catch2")
+        set(CATCH2_PATH "${CMAKE_CURRENT_LIST_DIR}/external/Catch2")
     endif()
 endif()
 message(STATUS "Catch2 Path: ${CATCH2_PATH}")
@@ -24,14 +24,14 @@ if(NOT DEFINED JSON_PARSER)
     if(DEFINED ENV{JSON_PARSER})
         set(JSON_PARSER $ENV{JSON_PARSER} CACHE STRING "JSON Parser Path")
     else()
-        set(JSON_PARSER "${CMAKE_CURRENT_SOURCE_DIR}/external/picojson")
+        set(JSON_PARSER "${CMAKE_CURRENT_LIST_DIR}/external/picojson")
     endif()
 endif()
 
-message(STATUS "Searching Catch2 in: ${CMAKE_CURRENT_SOURCE_DIR}/external")
+message(STATUS "Searching Catch2 in: ${CMAKE_CURRENT_LIST_DIR}/external")
 find_package(Catch2 REQUIRED
     PATHS
-        ${CMAKE_CURRENT_SOURCE_DIR}/external
+        ${CMAKE_CURRENT_LIST_DIR}/external
     PATH_SUFFIXES
     Catch2/cmake/Catch2
 )
@@ -44,15 +44,34 @@ include_directories(
     ${HIP_PATH}/include
     ${JSON_PARSER}
 )
+
+if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
+endif()
+
 cmake_policy(PUSH)
 if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD)
 endif()
-add_custom_target(build_tests)
-add_custom_target(test COMMAND ${CMAKE_CTEST_COMMAND})
-add_dependencies(test build_tests)
 
+# Use clang as host compiler with nvcc
+if(HIP_COMPILER MATCHES "nvcc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ccbin clang")
+endif()
+
+# Disable CXX extensions (gnu++11 etc)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+add_custom_target(build_tests)
+
+# Tests folder
 add_subdirectory(unit)
+add_subdirectory(ABM)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
+
+if(UNIX AND HIP_PLATFORM MATCHES "amd")
+    add_subdirectory(multiproc)
+endif()
+
 cmake_policy(POP)

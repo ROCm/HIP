@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -std=c++11
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t
  * HIT_END
  */
 

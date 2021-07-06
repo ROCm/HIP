@@ -1,3 +1,25 @@
+/*
+Copyright (c) 2021 - present Advanced Micro Devices, Inc. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*/
+
 #include <hip_test_common.hh>
 #include <type_traits>
 #include <memory>
@@ -218,7 +240,7 @@ template <typename V, typename... Vs> bool run_CheckSharedVectorTypes() {
   return run_CheckSharedVectorType<V>() && run_CheckSharedVectorTypes<Vs...>();
 }
 
-TEST_CASE("VectorTypesTest") {
+TEST_CASE("Unit_vectorTypes_CompileTest") {
   static_assert(sizeof(float1) == 4, "");
   static_assert(sizeof(float2) >= 8, "");
   static_assert(sizeof(float3) >= 12, "");
@@ -242,5 +264,7 @@ TEST_CASE("VectorTypesTest") {
                uint3, uint4, long1, long2, long3, long4, ulong1, ulong2, ulong3, ulong4, longlong1,
                longlong2, longlong3, longlong4, ulonglong1, ulonglong2, ulonglong3, ulonglong4,
                float1, float2, float3, float4, double1, double2, double3, double4>();
+
+  HIP_CHECK(hipFree(ptr));
   REQUIRE(passed == true);
 }
