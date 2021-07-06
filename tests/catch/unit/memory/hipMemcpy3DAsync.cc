@@ -479,11 +479,12 @@ void Memcpy3DAsync<T>::NegativeTests() {
 template <typename T>
 void Memcpy3DAsync<T>::D2D_SameDeviceMem_StreamDiffDevice() {
   HIP_CHECK(hipSetDevice(0));
+  // Allocating the Memory
   AllocateMemory();
   HIP_CHECK(hipSetDevice(1));
   HIP_CHECK(hipStreamCreate(&stream));
-  SetDefaultData();
   memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
+  SetDefaultData();
 
   // Host to Device
   myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
@@ -507,12 +508,13 @@ void Memcpy3DAsync<T>::D2D_SameDeviceMem_StreamDiffDevice() {
   myparms.kind = hipMemcpyDeviceToDevice;
 #endif
   REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
-  memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
+  HIP_CHECK(hipStreamSynchronize(stream));
   T *hOutputData = reinterpret_cast<T*>(malloc(size));
   memset(hOutputData, 0,  size);
-  SetDefaultData();
 
   // Device to host
+  memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
+  SetDefaultData();
   myparms.dstPtr = make_hipPitchedPtr(hOutputData,
                    width * sizeof(T), width, height);
   myparms.srcArray = arr1;
@@ -727,8 +729,8 @@ TEST_CASE("Unit_hipMemcpy3DAsync_multiDevice-DiffStream") {
   int numDevices = 0;
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   if (numDevices > 1) {
-    Memcpy3DAsync<int> memcpy3dAsync(width, height, depth,
-                                     hipChannelFormatKindSigned);
+    Memcpy3DAsync<float> memcpy3dAsync(width, height, depth,
+                                     hipChannelFormatKindFloat);
     memcpy3dAsync.D2D_SameDeviceMem_StreamDiffDevice();
   } else {
     SUCCEED("skipping the testcases as numDevices < 2");

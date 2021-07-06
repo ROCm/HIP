@@ -16,6 +16,14 @@ set(TEST_SRC
     hipMemcpy2DFromArrayAsync.cc
     hipMemcpyAtoH.cc
     hipMemcpyHtoA.cc
+    hipMemcpyDtoD.cc
+    hipMemcpyDtoDAsync.cc
+    hipMemcpyAsync.cc
+    hipMemcpy.cc
+    hipMemcpyWithStream.cc
+    hipMemcpyAllApiNegative.cc
+    hipMemcpyWithStreamMultiThread.cc
+    hipMemcpy_MultiThread.cc
 )
 
 # Create shared lib of all tests

@@ -55,6 +55,24 @@ THE SOFTWARE.
   #include <chrono>
 #endif
 
+#define HIPCHECK(error)                                                                            \
+    {                                                                                              \
+        hipError_t localError = error;                                                             \
+        if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
+            printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(localError),            \
+                   localError, #error, __FILE__, __LINE__);                                        \
+            abort();                                                                               \
+        }                                                                                          \
+    }
+
+#define HIPASSERT(condition)                                                                       \
+    if (!(condition)) {                                                                            \
+        printf("assertion %s at %s:%d \n", #condition, __FILE__, __LINE__);                        \
+        abort();                                                                                   \
+    }
+
+
+
 // Utility Functions
 namespace HipTest {
 static inline int getDeviceCount() {
