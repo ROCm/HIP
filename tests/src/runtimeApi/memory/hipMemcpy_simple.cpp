@@ -33,7 +33,7 @@ THE SOFTWARE.
 bool p_async = false;
 
 // ****************************************************************************
-hipError_t memcopy(void* dst, const void* src, size_t sizeBytes, enum hipMemcpyKind kind) {
+hipError_t memcopy(void* dst, const void* src, size_t sizeBytes, hipMemcpyKind kind) {
     if (p_async) {
         return hipMemcpyAsync(dst, src, sizeBytes, kind, NULL);
     } else {
