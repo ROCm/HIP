@@ -23,7 +23,7 @@
 #include <test_common.h>
 #include <vector>
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
