@@ -21,7 +21,7 @@ THE SOFTWARE.
  * BUILD_CMD: vcpy_kernel.code %hc --genco %S/vcpy_kernel.cpp -o vcpy_kernel.code
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t --tests 0x1
- * TEST: %t --tests 0x2 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t --tests 0x2
  * HIT_END
  */
 
