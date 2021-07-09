@@ -39,7 +39,6 @@ THE SOFTWARE.
 #define LEN 64
 #define SIZE LEN << 2
 #define THREADS 8
-#define MAX_THREADS 512
 
 #define FILENAME "vcpy_kernel.code"
 #define kernel_name "hello_world"

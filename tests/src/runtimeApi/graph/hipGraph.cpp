@@ -21,7 +21,7 @@
 #include <vector>
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp
- * TEST: %t
+ * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
  * HIT_END
  */
 #define THREADS_PER_BLOCK 512
