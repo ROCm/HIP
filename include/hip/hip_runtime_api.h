@@ -2170,7 +2170,7 @@ hipError_t hipMemRangeGetAttributes(void** data,
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipStreamAttachMemAsync(hipStream_t stream,
-                                   hipDeviceptr_t* dev_ptr,
+                                   void* dev_ptr,
                                    size_t length __dparm(0),
                                    unsigned int flags __dparm(hipMemAttachSingle));
 // end doxygen Managed Memory
