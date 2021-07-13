@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s
+ * TEST: %t
  * HIT_END
  */
 
@@ -44,6 +44,22 @@ __global__ void print_things() {
   printf("%s\n", msg[(tid + 2) % 3]);
 }
 
+size_t get_things_size(uint threads_per_device, uint num_devices) {
+  DECLARE_DATA();
+  const char *msg[] = {msg_short, msg_long1, msg_long2};
+  uint num_threads = threads_per_device * num_devices;
+  size_t size = 0;
+
+  for(auto str: msg) {
+    size += strlen(str) + 1;
+  }
+
+  size *= num_threads;
+  size += ((threads_per_device + 2) / 3) * num_devices * (strlen(msg_short) + 1);
+
+  return size;
+}
+
 int main() {
   uint num_blocks = 14;
   uint threads_per_block = 250;
@@ -53,6 +69,20 @@ int main() {
 
   int num_devices = 0;
   hipGetDeviceCount(&num_devices);
+#ifdef __HIP_PLATFORM_NVIDIA__
+  // By default, Cuda has different printf ring buffer size in different GPUs(or ENVs).
+  // For example, A100 has 7M, Quadro RTX 5000 has 1.5M, GeForce RTX 2070 Supper has 1.3M in tests.
+  // We have to detect, compare and set it
+  size_t size = get_things_size(threads_per_device, num_devices);
+  size_t size_expected = size * 4;  // Cuda printf buffer format is unknown, but test shows 4 times can work here.
+  size_t size_current = 0;
+  HIPCHECK(hipDeviceGetLimit(&size_current, hipLimitPrintfFifoSize));
+  printf("things size = %zu, expected %zu, current %zu\n", size, size_expected, size_current);
+
+  if(size_current < size_expected) {
+    HIPCHECK(hipDeviceSetLimit(hipLimitPrintfFifoSize, size_expected));
+  }
+#endif
   capture.Begin();
   for (int i = 0; i != num_devices; ++i) {
     hipSetDevice(i);
@@ -77,6 +107,5 @@ int main() {
   HIPASSERT(linecount[msg_long2] == num_threads);
   HIPASSERT(linecount[msg_short] ==
             num_threads + ((threads_per_device + 2) / 3) * num_devices);
-
   passed();
 }

@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s
+ * TEST: %t
  * HIT_END
  */
 
@@ -35,7 +35,11 @@ __global__ void test_kernel() {
   printf("%#X\n", 0x42);
   printf("%#08x\n", 0x42);
   printf("%#f\n", -123.456);
+#ifdef __HIP_PLATFORM_AMD__
   printf("%#F\n", 123.456);
+#else
+  printf("%#f\n", 123.456); // In Cuda, printf only supports "%cdiouxXpeEfgGaAs"
+#endif
   printf("%#e\n", 123.456);
   printf("%#E\n", -123.456);
   printf("%#g\n", -123.456);

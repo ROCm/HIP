@@ -21,14 +21,15 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s
+ * TEST: %t
  * HIT_END
  */
 
 #include "test_common.h"
 #include "printf_common.h"
 #include <vector>
+#include <algorithm>
 
 // Global string constants don't work inside device functions, so we
 // use a macro to repeat the declaration in host and device contexts.
@@ -38,7 +39,6 @@ __global__ void kernel_mixed0(int *retval) {
   DECLARE_DATA();
 
   uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-  ulong result = 0;
 
   // Three strings passed as divergent values to the same hostcall.
   const char *msg;
@@ -72,6 +72,7 @@ static void test_mixed0(int *retval, uint num_blocks, uint threads_per_block) {
   capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     switch (ii % 3) {
     case 0:
       HIPASSERT(retval[ii] == strlen(msg_short) + 1);
@@ -83,6 +84,9 @@ static void test_mixed0(int *retval, uint num_blocks, uint threads_per_block) {
       HIPASSERT(retval[ii] == strlen(msg_long2) + 1);
       break;
     }
+#else
+    HIPASSERT(retval[ii] == 1);
+#endif
   }
 
   std::string data = capture.getData();
@@ -134,6 +138,7 @@ static void test_mixed1(int *retval, uint num_blocks, uint threads_per_block) {
   capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     switch (ii % 3) {
     case 0:
       HIPASSERT(retval[ii] == strlen(msg_short) + 1);
@@ -145,6 +150,9 @@ static void test_mixed1(int *retval, uint num_blocks, uint threads_per_block) {
       HIPASSERT(retval[ii] == strlen(msg_long2) + 1);
       break;
     }
+#else
+    HIPASSERT(retval[ii] == 1);
+#endif
   }
 
   std::string data = capture.getData();
@@ -189,8 +197,12 @@ static void test_mixed2(int *retval, uint num_blocks, uint threads_per_block) {
   capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     HIPASSERT(retval[ii] ==
               strlen(msg_short) + strlen(msg_long1) + strlen(msg_long2) + 1);
+#else
+    HIPASSERT(retval[ii] == 3);
+#endif
   }
 
   std::string data = capture.getData();
@@ -230,6 +242,21 @@ __global__ void kernel_mixed3(int *retval) {
   retval[tid] = result;
 }
 
+size_t get_mixed3_size(uint num_threads) {
+  DECLARE_DATA();
+  const char *msg[] = {msg_long1, msg_long2};
+  size_t size = 0;
+
+  for(auto str: msg) {
+    size += strlen(str) + 1;
+  }
+
+  size *= num_threads;
+  size += ((num_threads + 2) / 3) * (strlen(msg_short) + 1);
+
+  return size;
+}
+
 static void test_mixed3(int *retval, uint num_blocks, uint threads_per_block) {
   CaptureStream capture(stdout);
 
@@ -245,12 +272,16 @@ static void test_mixed3(int *retval, uint num_blocks, uint threads_per_block) {
   capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     if (ii % 3 == 0) {
       HIPASSERT(retval[ii] ==
                 strlen(msg_long1) + strlen(msg_short) + strlen(msg_long2) + 3);
     } else {
       HIPASSERT(retval[ii] == strlen(msg_long1) + strlen(msg_long2) + 2);
     }
+#else
+    HIPASSERT(retval[ii] == (ii % 3 ? 2 : 3));
+#endif
   }
 
   std::string data = capture.getData();
@@ -274,6 +305,18 @@ __global__ void kernel_numbers() {
     uint base = tid * 21 + i * 3;
     printf("%d %d %d\n", base, base + 1, base + 2);
   }
+}
+
+size_t get_numbers_size(uint num_threads) {
+  char buf[100] = { 0 };
+  size_t size = 0;
+  for (uint tid = 0; tid < num_threads; tid++) {
+    for (uint i = 0; i != 7; ++i) {
+      uint base = tid * 21 + i * 3;
+      size += snprintf(buf, 100, "%d %d %d\n", base, base + 1, base + 2);
+    }
+  }
+  return size;
 }
 
 static void test_numbers(uint num_blocks, uint threads_per_block) {
@@ -309,7 +352,23 @@ int main(int argc, char **argv) {
   uint num_blocks = 150;
   uint threads_per_block = 250;
   uint num_threads = num_blocks * threads_per_block;
+#ifdef __HIP_PLATFORM_NVIDIA__
+  // By default, Cuda has different printf ring buffer size in different GPUs(or ENVs).
+  // For example, A100 has 7M, Quadro RTX 5000 has 1.5M, GeForce RTX 2070 Supper has 1.3M in tests.
+  // We have to detect, compare and set it
+  size_t size_mixed3 = get_mixed3_size(num_threads);
+  size_t size_numbers = get_numbers_size(num_threads);
+  size_t size_max = size_mixed3 >= size_numbers ? size_mixed3 : size_numbers;  // Max size
+  size_t size_expected = size_max * 10;  // Cuda printf buffer format is unknown, but test shows 10 times can work here.
+  size_t size_current = 0;
+  HIPCHECK(hipDeviceGetLimit(&size_current, hipLimitPrintfFifoSize));
+  printf("size_mixed3 = %zu, size_numbers = %zu\n", size_mixed3, size_numbers);
+  printf("max size = %zu, expected %zu, current %zu\n", size_max, size_expected, size_current);
 
+  if(size_current < size_expected) {
+    HIPCHECK(hipDeviceSetLimit(hipLimitPrintfFifoSize, size_expected));
+  }
+#endif
   void *retval_void;
   HIPCHECK(hipHostMalloc(&retval_void, 4 * num_threads));
   auto retval = reinterpret_cast<int *>(retval_void);
@@ -319,6 +378,5 @@ int main(int argc, char **argv) {
   test_mixed2(retval, num_blocks, threads_per_block);
   test_mixed3(retval, num_blocks, threads_per_block);
   test_numbers(num_blocks, threads_per_block);
-
   passed();
 }

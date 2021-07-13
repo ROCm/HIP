@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s
+ * TEST: %t
  * HIT_END
  */
 
@@ -31,9 +31,16 @@ THE SOFTWARE.
 
 __global__ void test_kernel() {
   printf("%*d\n", 16, 42);
+#ifdef __HIP_PLATFORM_AMD__
   printf("%.*d\n", 8, 42);
   printf("%*.*d\n", -16, 8, 42);
   printf("%*.*f %s * %.*s\n", 16, 8, 123.456, "hello", 5, "worldxyz");
+#else
+  // In Cuda, printf doesn't support %.*, %*.*
+  printf("%.8d\n", 42);
+  printf("%-16.8d\n", 42);
+  printf("%16.8f %s * %.5s\n", 123.456, "hello", "worldxyz");
+#endif
 }
 
 int main(int argc, char **argv) {
