@@ -529,6 +529,7 @@ typedef struct hipFuncAttributes {
 } hipFuncAttributes;
 typedef struct ihipEvent_t* hipEvent_t;
 enum hipLimit_t {
+    hipLimitPrintfFifoSize = 0x01,
     hipLimitMallocHeapSize = 0x02,
 };
 /**

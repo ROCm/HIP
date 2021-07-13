@@ -21,14 +21,15 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s
+ * TEST: %t
  * HIT_END
  */
 
 #include "test_common.h"
 #include "printf_common.h"
 #include <vector>
+#include <algorithm>
 
 // Global string constants don't work inside device functions, so we
 // use a macro to repeat the declaration in host and device contexts.
@@ -36,7 +37,8 @@ DECLARE_DATA();
 
 __global__ void kernel_uniform0(int *retval) {
   uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-  retval[tid] = printf("Hello World\n");
+  retval[tid] = printf("Hello World\n"); // In Hip-Rocclr, printf returns number of characters printed.
+                                         // In Cuda, printf returns the number of arguments parsed.
 }
 
 static void test_uniform0(int *retval, uint num_blocks,
@@ -55,7 +57,11 @@ static void test_uniform0(int *retval, uint num_blocks,
   capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     HIPASSERT(retval[ii] == strlen("Hello World\n"));
+#else
+    HIPASSERT(retval[ii] == 0);
+#endif
   }
 
   std::string data = capture.getData();
@@ -92,7 +98,11 @@ static void test_uniform1(int *retval, uint num_blocks,
   capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     HIPASSERT(retval[ii] == strlen("Six times Eight is 42") + 1);
+#else
+    HIPASSERT(retval[ii] == 1);
+#endif
   }
 
   std::string data = capture.getData();
@@ -129,11 +139,19 @@ static void test_divergent0(int *retval, uint num_blocks,
   capture.End();
 
   for (uint ii = 0; ii != 10; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     HIPASSERT(retval[ii] == 13);
+#else
+    HIPASSERT(retval[ii] == 1);
+#endif
   }
 
   for (uint ii = 10; ii != num_threads; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     HIPASSERT(retval[ii] == 14);
+#else
+    HIPASSERT(retval[ii] == 1);
+#endif
   }
 
   std::string data = capture.getData();
@@ -178,7 +196,11 @@ static void test_divergent1(int *retval, uint num_blocks,
 
   for (uint ii = 0; ii != num_threads; ++ii) {
     if (ii % 2) {
+#ifdef __HIP_PLATFORM_AMD__
       HIPASSERT(retval[ii] == strlen("Hello World\n"));
+#else
+      HIPASSERT(retval[ii] == 0);
+#endif
     } else {
       HIPASSERT(retval[ii] == -1);
     }
@@ -202,11 +224,9 @@ __global__ void kernel_series(int *retval) {
 
   const uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   int result = 0;
-
   result += printf("%s\n", msg_long1);
   result += printf("%s\n", msg_short);
   result += printf("%s\n", msg_long2);
-
   retval[tid] = result;
 }
 
@@ -225,8 +245,12 @@ static void test_series(int *retval, uint num_blocks, uint threads_per_block) {
   capture.End();
 
   for (uint ii = 0; ii != num_threads; ++ii) {
+#ifdef __HIP_PLATFORM_AMD__
     HIPASSERT(retval[ii] ==
               strlen(msg_long1) + strlen(msg_short) + strlen(msg_long2) + 3);
+#else
+    HIPASSERT(retval[ii] == 3);
+#endif
   }
 
   std::string data = capture.getData();
@@ -245,8 +269,6 @@ static void test_series(int *retval, uint num_blocks, uint threads_per_block) {
 }
 
 __global__ void kernel_divergent_loop() {
-  DECLARE_DATA();
-
   const uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
   int result = 0;
 

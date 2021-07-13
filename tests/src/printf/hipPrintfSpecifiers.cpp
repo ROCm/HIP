@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s
+ * TEST: %t
  * HIT_END
  */
 
@@ -32,7 +32,6 @@ THE SOFTWARE.
 __global__ void test_kernel() {
   const char *N = nullptr;
   const char *s = "hello world";
-
   printf("xyzzy\n");
   printf("%%\n");
   printf("hello %% world\n");
@@ -46,7 +45,11 @@ __global__ void test_kernel() {
   printf("%d\n", -42);
   printf("%u\n", 42);
   printf("%f\n", 123.456);
+#ifdef __HIP_PLATFORM_AMD__
   printf("%F\n", -123.456);
+#else
+  printf("%f\n", -123.456);
+#endif
   printf("%e\n", -123.456);
   printf("%E\n", 123.456);
   printf("%g\n", 123.456);
@@ -54,11 +57,37 @@ __global__ void test_kernel() {
   printf("%c\n", 'x');
   printf("%s\n", N);
   printf("%p\n", N);
+#ifdef __HIP_PLATFORM_AMD__
   printf("%.*f %*.*s %p\n", 8, 3.14159, 8, 5, s, (void *)0xf01dab1eca55e77e);
+#else
+  // In Cuda, printf doesn't support %.*, %*.*
+  printf("%.8f %8.5s %p\n", 3.14159, s, (void *)0xf01dab1eca55e77e);
+#endif
 }
 
 int main(int argc, char **argv) {
-#if !defined(_WIN32)
+#ifdef __HIP_PLATFORM_NVIDIA__
+  std::string reference(R"here(xyzzy
+%
+hello % world
+%s
+%s0xf01dab1eca55e77e
+%cxyzzy
+sep
+-42
+42
+123.456000
+-123.456000
+-1.234560e+02
+1.234560E+02
+123.456
+-123.456
+x
+(null)
+(nil)
+3.14159000    hello 0xf01dab1eca55e77e
+)here");
+#elif !defined(_WIN32)
   std::string reference(R"here(xyzzy
 %
 hello % world
