@@ -610,8 +610,8 @@ void HipMemcpyWithStreamMultiThreadtests::TestkindHtoH(bool &val_res) {
   HIPCHECK(hipStreamDestroy(stream));
 }
 
-TEST_CASE("Unit_hipMemcpyWithStream_NewMultiThread") {
-  const auto Threadcount{100};
+TEST_CASE("Unit_hipMemcpyWithStream_MultiThread") {
+  const auto Threadcount{10};
   bool ret_val[Threadcount];
   std::thread th[Threadcount];
   for (int op = static_cast<int>(ops::TestwithOnestream);
