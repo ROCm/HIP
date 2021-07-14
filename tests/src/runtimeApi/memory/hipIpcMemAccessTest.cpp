@@ -60,10 +60,9 @@ class IpcMemHandleTest {
   pid_t pid;
   size_t N = 1024;
   size_t Nbytes = N * sizeof(int);
-  int *A_d = NULL, out = 0;
+  int out = 0;
   int *A_h, *C_h;
   int Num_devices = 0, Data_mismatch, CanAccessPeer = 0;
-  int *Ad1 = NULL, *Ad2 = NULL;
   IpcMemHandleTest();
   bool Test();
   ~IpcMemHandleTest();
@@ -84,6 +83,7 @@ bool IpcMemHandleTest::Test() {
     HIPCHECK_NO_RETURN(status, hipGetDeviceCount(&Num_devices));
     for (int i = 0; i < Num_devices; ++i) {
       if (shrd_mem->IfTestPassed == true) {
+        int *A_d = NULL;
         HIPCHECK_NO_RETURN(status, hipSetDevice(i));
         HIPCHECK_NO_RETURN(status, hipMalloc(&A_d, Nbytes));
         HIPCHECK_NO_RETURN(status, hipIpcGetMemHandle((hipIpcMemHandle_t *) &shrd_mem->memHandle,
@@ -116,6 +116,8 @@ bool IpcMemHandleTest::Test() {
       }
       for (int i = 0; i < Num_devices; ++i) {
         Data_mismatch = 0;
+        int *Ad1 = NULL;
+        int *Ad2 = NULL;
         HIPCHECK_NO_RETURN(status, hipSetDevice(i));
         HIPCHECK_NO_RETURN(status, hipMalloc(&Ad2, Nbytes));
         HIPCHECK_NO_RETURN(status, hipIpcOpenMemHandle((void **) &Ad1, shrd_mem->memHandle,
@@ -147,8 +149,8 @@ bool IpcMemHandleTest::Test() {
           }
         }
         HIPCHECK_NO_RETURN(status, hipIpcCloseMemHandle(reinterpret_cast<void*>(Ad1)));
+        HIPCHECK_NO_RETURN(status, hipFree(Ad2));
       }
-    HIPCHECK_NO_RETURN(status, hipFree(Ad2));
     if ((out=sem_post(sem_ob2)) == -1) {
       shrd_mem->IfTestPassed = false;
       printf("sem_post() call on sem_ob2 failed");
@@ -210,11 +212,8 @@ IpcMemHandleTest::IpcMemHandleTest() {
 
 IpcMemHandleTest::~IpcMemHandleTest() {
   munmap(shrd_mem, sizeof(hip_ipc_t));
-  HIPCHECK(hipFree((A_d)));
   free(A_h);
   free(C_h);
-  HIPCHECK(hipFree((Ad1)));
-  HIPCHECK(hipFree((Ad2)));
 }
 #endif
 

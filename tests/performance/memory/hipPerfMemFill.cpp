@@ -130,8 +130,7 @@ class hipPerfMemFill {
     int nGpu = 0;
     HIPCHECK(hipGetDeviceCount(&nGpu));
     if (nGpu < 1) {
-      cout << "Info: didn't find any GPU! skipping the test!\n";
-      passed();
+      failed("No GPU!");
     } else if (deviceId >= nGpu) {
       failed("Info: wrong GPU Id %d\n", deviceId);
     }

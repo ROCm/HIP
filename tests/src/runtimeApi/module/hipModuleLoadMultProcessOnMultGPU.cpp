@@ -275,9 +275,7 @@ void spawnProc(int deviceCount, const std::vector<char>& buffer) {
     TestPassed &= testhipModuleLoadUnloadFunc(buffer);
   }
 #endif
-  if (TestPassed) {
-    passed();
-  } else {
+  if (!TestPassed) {
     failed("hipMallocChild_Concurrency_MultiGpu Failed!");
   }
 }
@@ -309,4 +307,5 @@ int main(int argc, char* argv[]) {
     globTestID = 3;
     spawnProc(numDevices, buffer);
   }
+  passed();
 }

@@ -54,9 +54,7 @@ void hipPerfStreamCreateCopyDestroy::open(int deviceId) {
   int nGpu = 0;
   HIPCHECK(hipGetDeviceCount(&nGpu));
   if (nGpu < 1) {
-    std::cout << "info: didn't find any GPU! skipping the test!\n";
-    passed();
-    return;
+    failed("No GPU!");
   }
 
   HIPCHECK(hipSetDevice(deviceId));
