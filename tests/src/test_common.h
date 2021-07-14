@@ -67,9 +67,11 @@ inline int hip_skip_retcode() {
   return HIP_SKIP_RETURN_CODE;
 }
 
+// This must be called in the end of main() to indicate test passed with success.
+// If it's called somewhere else, compiling issues or unexpected result will arise.
 #define passed()                                                                                   \
     printf("%sPASSED!%s\n", KGRN, KNRM);                                                           \
-    exit(0);
+    return 0;
 
 // The real "assert" would have written to stderr. But it is
 // sufficient to just fflush here without getting pedantic. This also

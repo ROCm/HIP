@@ -238,9 +238,7 @@ int main(int argc, char* argv[]) {
   HIPCHECK(hipGetDeviceCount(&nGpu));
 
   if (nGpu < 1) {
-  std::cout << "info: didn't find any GPU! skipping the test!\n";
-  passed();
-  return 0;
+    failed("No GPU!");
   }
   hipDeviceProp_t props = {0};
   props = {0};
@@ -379,6 +377,6 @@ int main(int argc, char* argv[]) {
   HIPCHECK(hipFree(workspace));
 
   }
-
+  passed();
   return 0;
 }

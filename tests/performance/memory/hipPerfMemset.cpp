@@ -18,7 +18,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvcc
+ * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
  * TEST: %t
  * HIT_END
  */
@@ -110,9 +110,7 @@ void hipPerfMemset::open(int deviceId) {
   int nGpu = 0;
   HIPCHECK(hipGetDeviceCount(&nGpu));
   if (nGpu < 1) {
-    std::cout << "info: didn't find any GPU! skipping the test!\n";
-    passed();
-    return;
+    failed("No GPU!");
   }
 
   HIPCHECK(hipSetDevice(deviceId));
