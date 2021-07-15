@@ -118,7 +118,7 @@ cpu_thread(int *A, int *B, int *X, int *Y, size_t N,
   }
 }
 
-// This test runs on gfx90a where XGMI enables fine-grained communication
+// This test runs on devices where XGMI enables fine-grained communication
 // between GPUs. This performs a message passing test.
 // Array A is allocated on Device 0, and remotely on host.
 // Device 0 also increments atomic ints AA1 and AA2.
@@ -142,12 +142,13 @@ bool cpu_to_gpu_coherency() {
     return false;
   }
 
-  // Skip this test if device is not gfx90a.
+  // Skip this test if feature is not supported.
   static int device0 = 0;
   hipDeviceProp_t props;
   HIPCHECK(hipGetDeviceProperties(&props, device0));
-  if (strncmp(props.gcnArchName, "gfx90a", 6) != 0) {
-    printf("info: skipping test on non-gfx90a devices.\n");
+  if (strncmp(props.gcnArchName, "gfx90a", 6) != 0 &&
+      strncmp(props.gcnArchName, "gfx940", 6) != 0) {
+    printf("info: skipping test on devices other than gfx90a and gfx940.\n");
     return true;
   }
 
