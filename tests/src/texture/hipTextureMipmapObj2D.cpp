@@ -39,9 +39,11 @@ std::vector<unsigned int> mip_vector = {8, 4, 2, 1};
 
 __global__ void tex2DKernel(float* outputData, hipTextureObject_t textureObject, int width,
                             int height, float level) {
+#ifndef __gfx90a__
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
   outputData[y * width + x] = tex2DLod<float>(textureObject, x, y, level);
+#endif
 }
 
 bool runMipMapTest(unsigned int width, unsigned int height, unsigned int mipmap_level) {
