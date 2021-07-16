@@ -300,7 +300,7 @@ typedef enum __HIP_NODISCARD hipError_t {
                                   ///< recorded in a capturing stream.
     hipErrorStreamCaptureWrongThread = 908,  ///< A stream capture sequence not initiated with
                                              ///< the hipStreamCaptureModeRelaxed argument to
-                                             ///< hipStreamBeginCapture was passed to 
+                                             ///< hipStreamBeginCapture was passed to
                                              ///< hipStreamEndCapture in a different thread.
     hipErrorUnknown = 999,  //< Unknown error.
     // HSA Runtime Error Codes start here.
@@ -1653,7 +1653,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue64, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
-hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags,
+hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags,
                                 uint32_t mask __dparm(0xFFFFFFFF));
 /**
  * @brief Enqueues a wait command to the stream.
@@ -1684,7 +1684,7 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, un
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue32, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
-hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags,
+hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, unsigned int flags,
                                 uint64_t mask __dparm(0xFFFFFFFFFFFFFFFF));
 /**
  * @brief Enqueues a write command to the stream.
@@ -1702,7 +1702,7 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, un
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
-hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags);
+hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags);
 /**
  * @brief Enqueues a write command to the stream.
  *
@@ -1719,7 +1719,7 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value, u
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
-hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags);
+hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, unsigned int flags);
 // end doxygen Stream Memory Operations
 /**
  * @}
