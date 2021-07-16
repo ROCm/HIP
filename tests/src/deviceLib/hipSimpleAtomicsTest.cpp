@@ -35,24 +35,18 @@ THE SOFTWARE.
 #include <math.h>
 #include <type_traits>
 
-#define EXIT_WAIVED 2
-
-const char* sampleName = "hipSimpleAtomicsTest";
-
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Auto-Verification Code
-bool testResult = true;
-
 ////////////////////////////////////////////////////////////////////////////////
 
-bool computeGoldBitwise(...) {
+bool verifyBitwise(...) {
     return true;
 }
 
 template<typename T, typename enable_if<is_integral<T>{}>::type* = nullptr>
-bool computeGoldBitwise(T* gpuData, int len) {
+bool verifyBitwise(T* gpuData, int len) {
     T val = 0xff;
 
     for (int i = 0; i < len; ++i) {
@@ -61,7 +55,8 @@ bool computeGoldBitwise(T* gpuData, int len) {
     }
 
     if (val != gpuData[8]) {
-        printf("atomicAnd failed\n");
+        printf("atomicAnd failed: gpuData[8]=%llu, expect=%llu\n",
+               (unsigned long long)gpuData[8], (unsigned long long)val);
         return false;
     }
 
@@ -92,8 +87,133 @@ bool computeGoldBitwise(T* gpuData, int len) {
     return true;
 }
 
+bool verifySub(...) {
+  return true;
+}
+
+template<
+    typename T,
+    typename enable_if<
+        is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
+bool verifySub(T* gpuData, int len) {
+  T val = 0;
+
+  for (int i = 0; i < len; ++i) {
+      val -= 10;
+  }
+
+  if (val != gpuData[1]) {
+      printf("atomicSub failed: gpuData[1]=%d, expected=%d\n",
+             (int)gpuData[1], (int)val);
+      return false;
+  } else {
+      printf("atomicSub succeeded: gpuData[1]=%d, expected=%d\n",
+             (int)gpuData[1], (int)val);
+  }
+  return true;
+}
+
+bool verifyExch(...) {
+  return true;
+}
+
+template<typename T, typename enable_if<!is_same<T, double> {}>::type* = nullptr>
+bool computeExchExch(T* gpuData, int len) {
+  T val = 0;
+
+  bool found = false;
+
+  for (T i = 0; i < len; ++i) {
+      if (i == gpuData[2]) {
+          found = true;
+          break;
+      }
+  }
+
+  if (!found) {
+      printf("atomicExch failed\n");
+      return false;
+  }
+  return true;
+}
+
+bool VerifyIntegral(...) {
+  return true;
+}
+
+template<typename T, typename enable_if<is_integral<T>{}>::type* = nullptr>
+bool VerifyIntegral(T* gpuData, int len) {
+  T val = 0;
+
+  bool found = false;
+
+  for (T i = 0; i < len; ++i) {
+      // fourth element should be len-1
+      val = max(val, i);
+  }
+
+  if (val != gpuData[3]) {
+      printf("atomicMax failed: gpuData[3]=%llu, expected=%llu\n",
+             (unsigned long long)gpuData[3], (unsigned long long)val);
+      return false;
+  } else {
+      printf("atomicMax succeeded: gpuData[3]=%llu, expected=%llu\n",
+             (unsigned long long)gpuData[3], (unsigned long long)val);
+  }
+
+  val = 1 << 8;
+
+  for (T i = 0; i < len; ++i) {
+      val = min(val, i);
+  }
+
+  if (val != gpuData[4]) {
+      printf("atomicMin failed\n");
+      return false;
+  }
+
+  int limit = 17;
+  val = 0;
+
+  for (int i = 0; i < len; ++i) {
+      val = (val >= limit) ? 0 : val + 1;
+  }
+
+  if (val != gpuData[5]) {
+      printf("atomicInc failed\n");
+      return false;
+  }
+
+  limit = 137;
+  val = 0;
+
+  for (int i = 0; i < len; ++i) {
+      val = ((val == 0) || (val > limit)) ? limit : val - 1;
+  }
+
+  if (val != gpuData[6]) {
+      printf("atomicDec failed\n");
+      return false;
+  }
+
+  found = false;
+
+  for (T i = 0; i < len; ++i) {
+      // eighth element should be a member of [0, len)
+      if (i == gpuData[7]) {
+          found = true;
+          break;
+      }
+  }
+  if (!found) {
+      printf("atomicCAS failed\n");
+      return false;
+  }
+  return verifyBitwise(gpuData, len) && verifySub(gpuData, len);
+}
+
 template<typename T>
-bool computeGold(T* gpuData, int len) {
+bool verifyData(T* gpuData, int len) {
     T val = 0;
 
     for (int i = 0; i < len; ++i) {
@@ -105,94 +225,7 @@ bool computeGold(T* gpuData, int len) {
         return false;
     }
 
-    val = 0;
-
-    for (int i = 0; i < len; ++i) {
-        val -= 10;
-    }
-
-    if (val != gpuData[1]) {
-        printf("atomicSub failed\n");
-        return false;
-    }
-
-    bool found = false;
-
-    for (T i = 0; i < len; ++i) {
-        // third element should be a member of [0, len)
-        if (i == gpuData[2]) {
-            found = true;
-            break;
-        }
-    }
-
-    if (!found) {
-        printf("atomicExch failed\n");
-        return false;
-    }
-
-    val = -(1 << 8);
-
-    for (T i = 0; i < len; ++i) {
-        // fourth element should be len-1
-        val = max(val, i);
-    }
-
-    if (val != gpuData[3]) {
-        printf("atomicMax failed\n");
-        return false;
-    }
-
-    val = 1 << 8;
-
-    for (T i = 0; i < len; ++i) {
-        val = min(val, i);
-    }
-
-    if (val != gpuData[4]) {
-        printf("atomicMin failed\n");
-        return false;
-    }
-
-    int limit = 17;
-    val = 0;
-
-    for (int i = 0; i < len; ++i) {
-        val = (val >= limit) ? 0 : val + 1;
-    }
-
-    if (val != gpuData[5]) {
-        printf("atomicInc failed\n");
-        return false;
-    }
-
-    limit = 137;
-    val = 0;
-
-    for (int i = 0; i < len; ++i) {
-        val = ((val == 0) || (val > limit)) ? limit : val - 1;
-    }
-
-    if (val != gpuData[6]) {
-        printf("atomicDec failed\n");
-        return false;
-    }
-
-    found = false;
-
-    for (T i = 0; i < len; ++i) {
-        // eighth element should be a member of [0, len)
-        if (i == gpuData[7]) {
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
-        printf("atomicCAS failed\n");
-        return false;
-    }
-
-    return computeGoldBitwise(gpuData, len);
+    return VerifyIntegral(gpuData, len) && verifyExch(gpuData, len);
 }
 
 __device__
@@ -212,7 +245,7 @@ __device__
 void testKernelSub(...) {}
 
 template<
-    typename T, 
+    typename T,
     typename enable_if<
         is_same<T, int>{} || is_same<T, unsigned int>{}>::type* = nullptr>
 __device__
@@ -270,24 +303,13 @@ __global__ void testKernel(T* g_odata) {
 
 template<typename T>
 void runTest() {
-    hipDeviceProp_t deviceProp;
-    deviceProp.major = 0;
-    deviceProp.minor = 0;
-    int dev = 0;
-
-    hipGetDeviceProperties(&deviceProp, dev);
-
-    // Statistics about the GPU device
-    printf(
-        "> GPU device has %d Multi-Processors, "
-        "SM %d.%d compute capabilities\n\n",
-        deviceProp.multiProcessorCount, deviceProp.major, deviceProp.minor);
-
-
+    bool testResult = true;
     unsigned int numThreads = 256;
     unsigned int numBlocks = 64;
     unsigned int numData = 11;
     unsigned int memSize = sizeof(T) * numData;
+
+    printf("runTest<%s>, total thread=%u\n", typeid(T).name(), numThreads*numBlocks);
 
     // allocate mem for the result on host side
     T* hOData = (T*)malloc(memSize);
@@ -312,18 +334,25 @@ void runTest() {
     hipMemcpy(hOData, dOData, memSize, hipMemcpyDeviceToHost);
 
     // Compute reference solution
-    testResult = computeGold(hOData, numThreads * numBlocks);
+    testResult = verifyData(hOData, numThreads * numBlocks);
 
     // Cleanup memory
     free(hOData);
     hipFree(dOData);
 
-    passed();
+    if(!testResult) {
+      failed("runTest<%s> failed\n", typeid(T).name());
+    }
 }
 
-
 int main(int argc, char** argv) {
-    printf("%s starting...\n", sampleName);
+    hipDeviceProp_t deviceProp;
+    hipGetDeviceProperties(&deviceProp, 0);
+    // Statistics about the GPU device
+    printf(
+        "> GPU device has %d Multi-Processors, "
+        "SM %d.%d compute capabilities\n\n",
+        deviceProp.multiProcessorCount, deviceProp.major, deviceProp.minor);
 
     runTest<int>();
     runTest<unsigned int>();
@@ -332,6 +361,5 @@ int main(int argc, char** argv) {
     runTest<double>();
 
     hipDeviceReset();
-    printf("%s completed, returned %s\n", sampleName, testResult ? "OK" : "ERROR!");
-    exit(testResult ? EXIT_SUCCESS : EXIT_FAILURE);
+    passed();
 }
