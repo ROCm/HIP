@@ -18,12 +18,18 @@ THE SOFTWARE.
 */
 /* HIT_START
  * BUILD: %t %s NVCC_OPTIONS -std=c++11
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t
  * HIT_END
  */
 #include "test_common.h"
 #include <iostream>
+#ifdef __HIP_PLATFORM_AMD__
 #include <complex>
+using namespace std;
+#else
+#include <cuda/std/complex>
+using namespace cuda::std;
+#endif
 
 // Tolerance for error
 const double tolerance = 1e-6;
@@ -52,6 +58,7 @@ std::string getName(enum CalcKind CK) {
   switch(CK){
   ALL_FUN
   }
+  return "";  // To prevent compile warning
 }
 #undef OP
 
@@ -60,11 +67,11 @@ std::string getName(enum CalcKind CK) {
 // If the function returns real number, converts it to a complex number.
 #define ONE_ARG(func) \
   case CK_##func: \
-    return std::complex<FloatT>(std::func(A));
+    return complex<FloatT>(func(A));
 
 template<typename FloatT>
-__device__ __host__ std::complex<FloatT> calc(std::complex<FloatT> A,
-                                              std::complex<FloatT> B,
+__device__ __host__ complex<FloatT> calc(complex<FloatT> A,
+                                              complex<FloatT> B,
                                               enum CalcKind CK) {
   switch(CK) {
   case CK_add:
@@ -81,11 +88,12 @@ __device__ __host__ std::complex<FloatT> calc(std::complex<FloatT> A,
     ONE_ARG(sin)
     ONE_ARG(cos)
   }
+  return A;  // To prevent compile warning
 }
 
 template<typename FloatT>
-__global__ void kernel(std::complex<FloatT>* A,
-                       std::complex<FloatT>* B, std::complex<FloatT>* C,
+__global__ void kernel(complex<FloatT>* A,
+                       complex<FloatT>* B, complex<FloatT>* C,
                        enum CalcKind CK) {
     int tx = threadIdx.x + blockIdx.x * blockDim.x;
     C[tx] = calc<FloatT>(A[tx], B[tx], CK);
@@ -93,7 +101,8 @@ __global__ void kernel(std::complex<FloatT>* A,
 
 template<typename FloatT>
 void test() {
-    typedef std::complex<FloatT> ComplexT;
+    typedef complex<FloatT> ComplexT;
+
     ComplexT *A, *Ad, *B, *Bd, *C, *Cd, *D;
     A = new ComplexT[LEN];
     B = new ComplexT[LEN];
@@ -118,15 +127,15 @@ void test() {
       hipMemcpy(C, Cd, sizeof(ComplexT)*LEN, hipMemcpyDeviceToHost);
       for (int i = 0; i < LEN; i++) {
         ComplexT Expected = calc(A[i], B[i], CK);
-        FloatT error = std::abs(C[i] - Expected);
-        if (std::abs(Expected) > tolerance)
-          error /= std::abs(Expected);
+        FloatT error = abs(C[i] - Expected);
+        if (abs(Expected) > tolerance)
+          error /= abs(Expected);
         bool pass = error < tolerance;
         if (verbose || !pass) {
           std::cout << "Function: " << getName(CK)
-                    << " Operands: " << A[i] << " " << B[i]
-                    << " Result: " << C[i]
-                    << " Expected: " << Expected
+                    << " Operands: " << A[i].real() << ", " << A[i].imag() << "; " <<B[i].real() << ", " << B[i].imag()
+                    << " Result: " << C[i].real() << ", " << C[i].imag()
+                    << " Expected: " << Expected.real() << ", " << Expected.imag()
                     << " Error: " << error
                     << " Pass: " << pass
                     << std::endl;
