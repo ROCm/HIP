@@ -44,6 +44,9 @@ SQ_IR_EXE=square_ir.out
 MCIN_OBJ_GEN=hip_obj_gen.mcin
 GPU_ARCH1=gfx900
 GPU_ARCH2=gfx906
+GPU_ARCH3=gfx908
+GPU_ARCH4=gfx1010
+GPU_ARCH5=gfx1030
 
 .PHONY: test
 
@@ -51,16 +54,22 @@ all: src_to_ir bc_to_ll ll_to_bc ir_to_exec
 
 src_to_ir:
 	$(HIPCC) -c -emit-llvm --cuda-host-only -target x86_64-linux-gnu -o $(SQ_HOST_BC) $(SRCS)
-	$(HIPCC) -c -emit-llvm --cuda-device-only --offload-arch=$(GPU_ARCH1) --offload-arch=$(GPU_ARCH2) $(SRCS)
+	$(HIPCC) -c -emit-llvm --cuda-device-only --offload-arch=$(GPU_ARCH1) --offload-arch=$(GPU_ARCH2) --offload-arch=$(GPU_ARCH3) --offload-arch=$(GPU_ARCH4) --offload-arch=$(GPU_ARCH5) $(SRCS)
 
 # By default, the LLVM IR Bitcode file names will be:
 #   square-hip-amdgcn-amd-amdhsa-gfx900.bc
 #   square-hip-amdgcn-amd-amdhsa-gfx906.bc
+#   square-hip-amdgcn-amd-amdhsa-gfx908.bc
+#   square-hip-amdgcn-amd-amdhsa-gfx1010.bc
+#   square-hip-amdgcn-amd-amdhsa-gfx1030.bc
 
 bc_to_ll:
 	$(LLVM_DIS) $(SQ_HOST_BC) -o $(SQ_HOST_LL)
 	$(LLVM_DIS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH1).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH1).ll
 	$(LLVM_DIS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH2).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH2).ll
+	$(LLVM_DIS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH3).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH3).ll
+	$(LLVM_DIS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH4).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH4).ll
+	$(LLVM_DIS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH5).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH5).ll
 
 # You may modify the .ll LLVM IR files before the next step
 #
@@ -70,12 +79,18 @@ ll_to_bc:
 	$(LLVM_AS) $(SQ_HOST_LL) -o $(SQ_HOST_BC)
 	$(LLVM_AS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH1).ll -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH1).bc
 	$(LLVM_AS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH2).ll -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH2).bc
+	$(LLVM_AS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH3).ll -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH3).bc
+	$(LLVM_AS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH4).ll -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH4).bc
+	$(LLVM_AS) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH5).ll -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH5).bc
 
 ir_to_exec:
 	$(HIPCC) -c $(SQ_HOST_BC) -o $(SQ_HOST_OBJ)
 	$(CLANG) -target amdgcn-amd-amdhsa -mcpu=$(GPU_ARCH1) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH1).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH1).o
 	$(CLANG) -target amdgcn-amd-amdhsa -mcpu=$(GPU_ARCH2) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH2).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH2).o
-	$(CLANG_OFFLOAD_BUNDLER) -type=o -bundle-align=4096 -targets=host-x86_64-unknown-linux,hip-amdgcn-amd-amdhsa-$(GPU_ARCH1),hip-amdgcn-amd-amdhsa-$(GPU_ARCH2) -inputs=/dev/null,square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH1).o,square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH2).o -outputs=$(SQ_DEVICE_HIPFB)
+	$(CLANG) -target amdgcn-amd-amdhsa -mcpu=$(GPU_ARCH3) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH3).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH3).o
+	$(CLANG) -target amdgcn-amd-amdhsa -mcpu=$(GPU_ARCH4) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH4).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH4).o
+	$(CLANG) -target amdgcn-amd-amdhsa -mcpu=$(GPU_ARCH5) square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH5).bc -o square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH5).o
+	$(CLANG_OFFLOAD_BUNDLER) -type=o -bundle-align=4096 -targets=host-x86_64-unknown-linux,hip-amdgcn-amd-amdhsa-$(GPU_ARCH1),hip-amdgcn-amd-amdhsa-$(GPU_ARCH2),hip-amdgcn-amd-amdhsa-$(GPU_ARCH3),hip-amdgcn-amd-amdhsa-$(GPU_ARCH4),hip-amdgcn-amd-amdhsa-$(GPU_ARCH5) -inputs=/dev/null,square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH1).o,square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH2).o,square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH3).o,square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH4).o,square-hip-amdgcn-amd-amdhsa-$(GPU_ARCH5).o -outputs=$(SQ_DEVICE_HIPFB)
 	$(LLVM_MC) $(MCIN_OBJ_GEN) -o $(SQ_DEVICE_OBJ) --filetype=obj
 	$(HIPCC) $(SQ_HOST_OBJ) $(SQ_DEVICE_OBJ) -o $(SQ_IR_EXE)
 
