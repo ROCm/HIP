@@ -4059,22 +4059,18 @@ const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
 int hipGetStreamDeviceId(hipStream_t stream);
-#ifdef __cplusplus
 /**
  * An opaque value that represents a hip graph
  */
-class hipGraph;
-typedef hipGraph* hipGraph_t;
+typedef struct ihipGraph* hipGraph_t;
 /**
  * An opaque value that represents a hip graph node
  */
-class hipGraphNode;
-typedef hipGraphNode* hipGraphNode_t;
+typedef struct hipGraphNode* hipGraphNode_t;
 /**
  * An opaque value that represents a hip graph Exec
  */
-class hipGraphExec;
-typedef hipGraphExec* hipGraphExec_t;
+typedef struct hipGraphExec* hipGraphExec_t;
 typedef enum hipGraphNodeType {
   hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
   hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
@@ -4110,7 +4106,7 @@ typedef struct hipMemsetParams {
   unsigned int value;
   size_t width;
 } hipMemsetParams;
-enum hipGraphExecUpdateResult {
+typedef enum hipGraphExecUpdateResult {
   hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
   hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
                                   ///< in the return value of the function
@@ -4123,18 +4119,18 @@ enum hipGraphExecUpdateResult {
   hipGraphExecUpdateErrorNotSupported =
       0x6,  ///< The update failed because something about the node is not supported
   hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
-};
-enum hipStreamCaptureMode {
+} hipGraphExecUpdateResult;
+typedef enum hipStreamCaptureMode {
   hipStreamCaptureModeGlobal = 0,
   hipStreamCaptureModeThreadLocal,
   hipStreamCaptureModeRelaxed
-};
-enum hipStreamCaptureStatus {
+} hipStreamCaptureMode;
+typedef enum hipStreamCaptureStatus {
   hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
   hipStreamCaptureStatusActive,      ///< Stream is actively capturing
   hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
                                      ///< invalidated, but not terminated
-};
+} hipStreamCaptureStatus;
 hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
 hipError_t hipStreamEndCapture(hipStream_t stream, hipGraph_t* pGraph);
 // Creates a graph.
@@ -4186,7 +4182,6 @@ hipError_t hipGraphAddDependencies(hipGraph_t graph, const hipGraphNode_t* from,
 // Creates an empty node and adds it to a graph.
 hipError_t hipGraphAddEmptyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                 const hipGraphNode_t* pDependencies, size_t numDependencies);
-#endif
 // doxygen end graph API
 /**
  * @}
