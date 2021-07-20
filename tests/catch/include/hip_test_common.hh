@@ -36,6 +36,15 @@ THE SOFTWARE.
     }                                                                                              \
   }
 
+#define HIPRTC_CHECK(error)                                                                        \
+  {                                                                                                \
+    auto localError = error;                                                                       \
+    if (localError != HIPRTC_SUCCESS) {                                                            \
+      INFO("Error: " << hiprtcGetErrorString(localError) << " Code: " << localError << " Str: "    \
+                     << #error << " In File: " << __FILE__ << " At line: " << __LINE__);           \
+      REQUIRE(false);                                                                              \
+    }                                                                                              \
+  }
 // Although its assert, it will be evaluated at runtime
 #define HIP_ASSERT(x)                                                                              \
   { REQUIRE((x)); }

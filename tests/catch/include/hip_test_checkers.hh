@@ -2,13 +2,13 @@
 #include "hip_test_common.hh"
 #include <iostream>
 using namespace std;
-#define guarantee(cond, str)                                                                        \
-   {                                                                                                \
-     if (!(cond)) {                                                                                 \
-       std::cout << str << std::endl;                                                               \
-       abort();                                                                                   \
-     }                                                                                              \
-   }
+#define guarantee(cond, str)                                                                       \
+  {                                                                                                \
+    if (!(cond)) {                                                                                 \
+      std::cout << str << std::endl;                                                               \
+      abort();                                                                                     \
+    }                                                                                              \
+  }
 
 
 namespace HipTest {
