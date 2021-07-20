@@ -45,6 +45,7 @@ else {
 . . .
 }
 ```
+Please note, the managed memory capability check may not be necessary, but if HMM is not supported, then managed malloc will fall back to using system memory and other managed memory API calls will have undefined behavior.
 For more details on managed memory APIs, please refer to the documentation HIP-API.pdf.
 
 ### HIP Stream Memory Operations

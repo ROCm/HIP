@@ -42,7 +42,6 @@ cmake -DCMAKE_INSTALL_PREFIX=/opt/rocm/llvm -DCMAKE_BUILD_TYPE=Release -DLLVM_EN
 make -j
 sudo make install
 ```
-
 Rocm device library can be manually built as following,
 ```
 export PATH=/opt/rocm/llvm/bin:$PATH
@@ -63,7 +62,6 @@ HIP-nvcc is the compiler for HIP program compilation on NVIDIA platform.
 ```
 apt-get install hip-nvcc
 ```
-
 * Default paths and environment variables:
    * By default HIP looks for CUDA SDK in /usr/local/cuda (can be overriden by setting CUDA_PATH env variable).
    * By default HIP is installed into /opt/rocm/hip (can be overridden by setting HIP_PATH environment variable).
@@ -71,35 +69,42 @@ apt-get install hip-nvcc
 
 # Building HIP from source
 
-## Build ROCclr
+## Get HIP source code
+
+```
+git clone -b rocm-4.4.x https://github.com/ROCm-Developer-Tools/hipamd.git
+git clone -b rocm-4.4.x https://github.com/ROCm-Developer-Tools/hip.git
+git clone -b rocm-4.4.x https://github.com/ROCm-Developer-Tools/ROCclr.git
+git clone -b rocm-4.4.x https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git
+```
+
+## Set the environment variables
+
+```
+export HIPAMD_DIR="$(readlink -f hipamd)"
+export HIP_DIR="$(readlink -f hip)"
+export ROCclr_DIR="$(readlink -f ROCclr)"
+export OPENCL_DIR="$(readlink -f ROCm-OpenCL-Runtime)"
+```
 
 ROCclr is defined on AMD platform that HIP use Radeon Open Compute Common Language Runtime (ROCclr), which is a virtual device interface that HIP runtimes interact with different backends.
 See https://github.com/ROCm-Developer-Tools/ROCclr
 
-```
-git clone -b rocm-4.3.x https://github.com/ROCm-Developer-Tools/ROCclr.git
-export ROCclr_DIR="$(readlink -f ROCclr)"
-git clone -b rocm-4.3.x https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git
-export OPENCL_DIR="$(readlink -f ROCm-OpenCL-Runtime)"
-cd "$ROCclr_DIR"
-mkdir -p build;cd build
-cmake -DOPENCL_DIR="$OPENCL_DIR" -DCMAKE_INSTALL_PREFIX=/opt/rocm/rocclr ..
-make -j
-sudo make install
-```
+HIPAMP repository provides implementation specifically for AMD platform.
+See https://github.com/ROCm-Developer-Tools/hipamd
 
 ## Build HIP
 
 ```
-git clone -b rocm-4.3.x https://github.com/ROCm-Developer-Tools/HIP.git
-export HIP_DIR="$(readlink -f HIP)"
-cd "$HIP_DIR"
+cd "$HIPAMD_DIR"
 mkdir -p build; cd build
-cmake -DCMAKE_PREFIX_PATH="$ROCclr_DIR/build;/opt/rocm/" -DCMAKE_INSTALL_PREFIX=</where/to/install/hip> ..
-make -j
+cmake -DHIP_COMMON_DIR=$HIP_DIR -DAMD_OPENCL_PATH=$OPENCL_DIR -DROCCLR_PATH=$ROCCLR_DIR -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=$PWD/install ..
+make -j$(nproc)
 sudo make install
-Note: If you don't specify CMAKE_INSTALL_PREFIX, hip-rocclr runtime will be installed to "/opt/rocm/hip".
 ```
+
+Note: If you don't specify CMAKE_INSTALL_PREFIX, hip runtime will be installed to "/opt/rocm/hip".
+By default, release version of AMDHIP is built.
 
 ## Default paths and environment variables
 
@@ -118,7 +123,6 @@ Run hipconfig (instructions below assume default installation path) :
 ```shell
 /opt/rocm/bin/hipconfig --full
 ```
-
 
 Compile and run the [square sample](https://github.com/ROCm-Developer-Tools/HIP/tree/main/samples/0_Intro/square).
 
