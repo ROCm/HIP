@@ -19,6 +19,7 @@
 - [Can I develop HIP code on an Nvidia CUDA platform?](#can-i-develop-hip-code-on-an-nvidia-cuda-platform)
 - [Can I develop HIP code on an AMD HIP-Clang platform?](#can-i-develop-hip-code-on-an-amd-hip-clang-platform)
 - [What is ROCclr?](#what-is-rocclr)
+- [What is hipamd?](#what-is-hipamd)
 - [Can a HIP binary run on both AMD and Nvidia platforms?](#can-a-hip-binary-run-on-both-amd-and-nvidia-platforms)
 - [On HIP-Clang, can I link HIP code with host code compiled with another compiler such as gcc, icc, or clang?](#on-HIP-Clang-can-i-link-hip-code-with-host-code-compiled-with-another-compiler-such-as-gcc-icc-or-clang-)
 - [HIP detected my platform (hip-clang vs nvcc) incorrectly - what should I do?](#hip-detected-my-platform-hip-clang-vs-nvcc-incorrectly---what-should-i-do)
@@ -179,6 +180,9 @@ NOTE: If HIP_ROCCLR_HOME is set, there is no need to set HIP_CLANG_PATH since hi
 
 ### What is ROCclr?
 ROCclr (Radeon Open Compute Common Language Runtime) is a virtual device interface that compute runtimes interact with backends such as ROCr on Linux, as well as PAL on Windows.
+
+### What is HIPAMD?
+HIPAMD is a repository branched out from HIP, mainly the implementation for AMD GPU.
 
 ### Can a HIP binary run on both AMD and Nvidia platforms?
 HIP is a source-portable language that can be compiled to run on either AMD or NVIDIA platform. HIP tools don't create a "fat binary" that can run on either platform, however.
