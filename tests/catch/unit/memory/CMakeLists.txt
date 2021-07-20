@@ -2,6 +2,16 @@
 set(TEST_SRC
     memset.cc
     malloc.cc
+    hipMemcpy2DToArray.cc
+    hipMemcpy2DToArrayAsync.cc
+    hipMemcpyPeer.cc
+    hipMemcpyPeerAsync.cc
+    hipMemcpy3D.cc
+    hipMemcpy3DAsync.cc
+    hipMemcpyParam2D.cc
+    hipMemcpyParam2DAsync.cc
+    hipMemcpy2D.cc
+    hipMemcpy2DAsync.cc
 )
 
 # Create shared lib of all tests

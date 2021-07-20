@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-# Copyright (c) 2020-2021 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2020 - 2021 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ use Cwd;
 use File::Basename;
 
 $HIP_BASE_VERSION_MAJOR = "4";
-$HIP_BASE_VERSION_MINOR = "3";
+$HIP_BASE_VERSION_MINOR = "4";
 
 #---
 # Function to parse config file

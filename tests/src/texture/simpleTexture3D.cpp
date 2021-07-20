@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2019-present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2019 - 2021 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -85,7 +85,11 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
     myparms.extent = make_hipExtent(width, height, depth);
+#ifdef __HIP_PLATFORM_NVIDIA__
+    myparms.kind = cudaMemcpyHostToDevice;
+#else
     myparms.kind = hipMemcpyHostToDevice;
+#endif
     HIPCHECK(hipMemcpy3D(&myparms));
 
     // set texture parameters

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015-present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -24,7 +24,7 @@ THE SOFTWARE.
  */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -504,8 +504,10 @@ int main() {
   test_passed(TestOnMultiGPUwithOneStream);
   tests.TestkindDtoD();
   test_passed(TestkindDtoD);
+#ifndef __HIP_PLATFORM_NVIDIA__
   tests.TestkindDefaultForDtoD();
   test_passed(TestkindDefaultForDtoD);
+#endif
   tests.TestkindHtoH();
   test_passed(TestkindsHtoH);
 }

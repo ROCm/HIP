@@ -1,15 +1,12 @@
-/* Copyright (c) 2021-present Advanced Micro Devices, Inc.
-
+/* Copyright (c) 2021 - 2021 Advanced Micro Devices, Inc.
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
  in the Software without restriction, including without limitation the rights
  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  copies of the Software, and to permit persons to whom the Software is
  furnished to do so, subject to the following conditions:
-
  The above copyright notice and this permission notice shall be included in
  all copies or substantial portions of the Software.
-
  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -17,24 +14,22 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE. */
- 
+
 #include <hip/hip_runtime.h>
 #include <chrono>
 #include <test_common.h>
 #include <vector>
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp
+ * TEST: %t
  * HIT_END
  */
 #define THREADS_PER_BLOCK 512
 #define GRAPH_LAUNCH_ITERATIONS 3
-
 __global__ void reduce(float* d_in, double* d_out, size_t inputSize, size_t outputSize) {
   // sdata is allocated in the kernel call: 3rd arg to <<<b, t, shmem>>>
   int myId = threadIdx.x + blockDim.x * blockIdx.x;
   int tid = threadIdx.x;
-
   // do reduction in global mem
   for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
     if (tid < s) {
@@ -42,7 +37,6 @@ __global__ void reduce(float* d_in, double* d_out, size_t inputSize, size_t outp
     }
     __syncthreads();  // make sure all adds at one stage are done!
   }
-
   // only thread 0 writes result for this block back to global mem
   if (tid == 0) {
     int blkx = blockIdx.x;
@@ -53,7 +47,6 @@ __global__ void reduceFinal(double* d_in, double* d_out, size_t inputSize) {
   // sdata is allocated in the kernel call: 3rd arg to <<<b, t, shmem>>>
   int myId = threadIdx.x + blockDim.x * blockIdx.x;
   int tid = threadIdx.x;
-
   // do reduction in global mem
   for (unsigned int s = blockDim.x / 2; s > 0; s >>= 1) {
     if (tid < s) {
@@ -61,65 +54,48 @@ __global__ void reduceFinal(double* d_in, double* d_out, size_t inputSize) {
     }
     __syncthreads();  // make sure all adds at one stage are done!
   }
-
   // only thread 0 writes result for this block back to global mem
   if (tid == 0) {
     *d_out = d_in[myId];
   }
 }
-
 void init_input(float* a, size_t size) {
   for (size_t i = 0; i < size; i++) a[i] = (rand() & 0xFF) / (float)RAND_MAX;
 }
-
 bool hipGraphsUsingStreamCapture(float* inputVec_h, float* inputVec_d, double* outputVec_d,
                                  double* result_d, size_t inputSize, size_t numOfBlocks) {
   hipStream_t stream1, stream2, stream3, streamForGraph;
   hipEvent_t forkStreamEvent, memsetEvent1, memsetEvent2;
   hipGraph_t graph;
   double result_h = 0.0;
-
   HIPCHECK(hipStreamCreate(&stream1));
   HIPCHECK(hipStreamCreate(&stream2));
   HIPCHECK(hipStreamCreate(&stream3));
   HIPCHECK(hipStreamCreate(&streamForGraph));
-
   HIPCHECK(hipEventCreate(&forkStreamEvent));
   HIPCHECK(hipEventCreate(&memsetEvent1));
   HIPCHECK(hipEventCreate(&memsetEvent2));
-
   HIPCHECK(hipStreamBeginCapture(stream1, hipStreamCaptureModeGlobal));
-
   HIPCHECK(hipEventRecord(forkStreamEvent, stream1));
   HIPCHECK(hipStreamWaitEvent(stream2, forkStreamEvent, 0));
   HIPCHECK(hipStreamWaitEvent(stream3, forkStreamEvent, 0));
-
   HIPCHECK(
       hipMemcpyAsync(inputVec_d, inputVec_h, sizeof(float) * inputSize, hipMemcpyDefault, stream1));
-
   HIPCHECK(hipMemsetAsync(outputVec_d, 0, sizeof(double) * numOfBlocks, stream2));
-
   HIPCHECK(hipEventRecord(memsetEvent1, stream2));
-
   HIPCHECK(hipMemsetAsync(result_d, 0, sizeof(double), stream3));
   HIPCHECK(hipEventRecord(memsetEvent2, stream3));
-
   HIPCHECK(hipStreamWaitEvent(stream1, memsetEvent1, 0));
-
   hipLaunchKernelGGL(reduce, dim3(inputSize / THREADS_PER_BLOCK, 1, 1),
                      dim3(THREADS_PER_BLOCK, 1, 1), 0, stream1, inputVec_d, outputVec_d, inputSize,
                      numOfBlocks);
   HIPCHECK(hipStreamWaitEvent(stream1, memsetEvent2, 0));
-
   hipLaunchKernelGGL(reduceFinal, dim3(1, 1, 1), dim3(THREADS_PER_BLOCK, 1, 1), 0, stream1,
                      outputVec_d, result_d, numOfBlocks);
   HIPCHECK(hipMemcpyAsync(&result_h, result_d, sizeof(double), hipMemcpyDefault, stream1));
-
   HIPCHECK(hipStreamEndCapture(stream1, &graph));
-
   hipGraphExec_t graphExec;
   HIPCHECK(hipGraphInstantiate(&graphExec, graph, NULL, NULL, 0));
-
   for (int i = 0; i < GRAPH_LAUNCH_ITERATIONS; i++) {
     HIPCHECK(hipGraphLaunch(graphExec, streamForGraph));
   }
@@ -130,7 +106,6 @@ bool hipGraphsUsingStreamCapture(float* inputVec_h, float* inputVec_d, double* o
   HIPCHECK(hipStreamDestroy(stream2));
   HIPCHECK(hipStreamDestroy(streamForGraph));
   double result_h_cpu = 0.0;
-
   for (int i = 0; i < inputSize; i++) {
     result_h_cpu += inputVec_h[i];
   }
@@ -140,7 +115,6 @@ bool hipGraphsUsingStreamCapture(float* inputVec_h, float* inputVec_d, double* o
   }
   return true;
 }
-
 bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, double* result_d,
                      size_t inputSize, size_t numOfBlocks) {
   hipStream_t streamForGraph;
@@ -216,21 +190,17 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
   nodeDependencies.clear();
   nodeDependencies.push_back(memcpyNode);
   hipGraphNode_t hostNode;
-
   hipGraphExec_t graphExec;
   HIPCHECK(hipGraphInstantiate(&graphExec, graph, NULL, NULL, 0));
-
   for (int i = 0; i < GRAPH_LAUNCH_ITERATIONS; i++) {
     HIPCHECK(hipGraphLaunch(graphExec, streamForGraph));
   }
   HIPCHECK(hipStreamSynchronize(streamForGraph));
-  
+
   HIPCHECK(hipGraphExecDestroy(graphExec));
   HIPCHECK(hipGraphDestroy(graph));
   HIPCHECK(hipStreamDestroy(streamForGraph));
-
   double result_h_cpu = 0.0;
-
   for (int i = 0; i < inputSize; i++) {
     result_h_cpu += inputVec_h[i];
   }
@@ -240,7 +210,6 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
   }
   return true;
 }
-
 int main(int argc, char** argv) {
   size_t size = 1 << 12;  // number of elements to reduce
   size_t maxBlocks = 512;
@@ -256,14 +225,15 @@ int main(int argc, char** argv) {
   HIPCHECK(hipMalloc(&result_d, sizeof(double)));
   init_input(inputVec_h, size);
   bool status1 = hipGraphsManual(inputVec_h, inputVec_d, outputVec_d, result_d, size, maxBlocks);
-  bool status2 = hipGraphsUsingStreamCapture(inputVec_h, inputVec_d, outputVec_d, result_d, size, maxBlocks);
+  bool status2 =
+      hipGraphsUsingStreamCapture(inputVec_h, inputVec_d, outputVec_d, result_d, size, maxBlocks);
   HIPCHECK(hipFree(inputVec_d));
   HIPCHECK(hipFree(outputVec_d));
   HIPCHECK(hipFree(result_d));
-  if(!status1) {
+  if (!status1) {
     failed("Failed during hip Graph Manual\n");
   }
-  if(!status2) {
+  if (!status2) {
     failed("Failed during hip Graphs during stream capture\n");
   }
   passed();

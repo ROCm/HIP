@@ -70,7 +70,7 @@ add_subdirectory(ABM)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
 
-if(UNIX AND HIP_PLATFORM MATCHES "amd")
+if(UNIX)
     add_subdirectory(multiproc)
 endif()
 

@@ -2,6 +2,13 @@
 set(LINUX_TEST_SRC
     hipMallocConcurrency.cc
     childMalloc.cc
+    hipDeviceComputeCapabilityMproc.cc
+    hipDeviceGetPCIBusIdMproc.cc
+    hipDeviceTotalMemMproc.cc
+    hipGetDeviceAttributeMproc.cc
+    hipGetDeviceCountMproc.cc
+    hipGetDevicePropertiesMproc.cc
+    hipSetGetDeviceMproc.cc
 )
 
 if(UNIX)

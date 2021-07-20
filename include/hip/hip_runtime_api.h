@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -2170,7 +2170,7 @@ hipError_t hipMemRangeGetAttributes(void** data,
  * @returns #hipSuccess, #hipErrorInvalidValue
  */
 hipError_t hipStreamAttachMemAsync(hipStream_t stream,
-                                   hipDeviceptr_t* dev_ptr,
+                                   void* dev_ptr,
                                    size_t length __dparm(0),
                                    unsigned int flags __dparm(hipMemAttachSingle));
 // end doxygen Managed Memory
@@ -4160,6 +4160,32 @@ hipError_t hipGraphAddMemcpyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
 hipError_t hipGraphAddMemsetNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
                                  const hipMemsetParams* pMemsetParams);
+// Returns graph nodes
+hipError_t hipGraphGetNodes(hipGraph_t graph, hipGraphNode_t* nodes, size_t* numNodes);
+// Returns graph's root nodes.
+hipError_t hipGraphGetRootNodes(hipGraph_t graph, hipGraphNode_t* pRootNodes,
+                                   size_t* pNumRootNodes);
+// Returns a kernel node's parameters.
+hipError_t hipGraphKernelNodeGetParams(hipGraphNode_t node, hipKernelNodeParams* pNodeParams);
+// Sets a kernel node's parameters.
+hipError_t hipGraphKernelNodeSetParams(hipGraphNode_t node, const hipKernelNodeParams* pNodeParams);
+// Returns a memcpy node's parameters.
+hipError_t hipGraphMemcpyNodeGetParams(hipGraphNode_t node, hipMemcpy3DParms* pNodeParams);
+// Sets a memcpy node's parameters.
+hipError_t hipGraphMemcpyNodeSetParams(hipGraphNode_t node, const hipMemcpy3DParms* pNodeParams);
+// Returns a memset node's parameters.
+hipError_t hipGraphMemsetNodeGetParams(hipGraphNode_t node, hipMemsetParams* pNodeParams);
+// Sets a memset node's parameters.
+hipError_t hipGraphMemsetNodeSetParams(hipGraphNode_t node, const hipMemsetParams* pNodeParams);
+// Sets the parameters for a kernel node in the given graphExec.
+hipError_t hipGraphExecKernelNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
+                                           const hipKernelNodeParams* pNodeParams);
+// Adds dependency edges to a graph.
+hipError_t hipGraphAddDependencies(hipGraph_t graph, const hipGraphNode_t* from,
+                                   const hipGraphNode_t* to, size_t numDependencies);
+// Creates an empty node and adds it to a graph.
+hipError_t hipGraphAddEmptyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                                const hipGraphNode_t* pDependencies, size_t numDependencies);
 #endif
 // doxygen end graph API
 /**
@@ -4335,7 +4361,41 @@ static inline hipError_t hipUnbindTexture(
 {
     return hipUnbindTexture(&tex);
 }
+
+
 #endif // __cplusplus
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup GL Interop
+ *  @{
+ *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
+ */
+typedef unsigned int GLuint;
+
+// Queries devices associated with GL Context.
+hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
+                           unsigned int hipDeviceCount, hipGLDeviceList deviceList);
+// Registers a GL Buffer for interop and returns corresponding graphics resource.
+hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
+                                       unsigned int flags);
+// Maps a graphics resource for hip access.
+hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
+                                   hipStream_t stream  __dparm(0) );
+// Gets device accessible address of a graphics resource.
+hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
+                                               hipGraphicsResource_t resource);
+// Unmaps a graphics resource for hip access.
+hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources,
+                                     hipStream_t stream  __dparm(0));
+// Unregisters a graphics resource.
+hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
+// doxygen end GL Interop
+/**
+ * @}
+ */
+
 #ifdef __GNUC__
 #pragma GCC visibility pop
 #endif
