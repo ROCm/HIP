@@ -1,4 +1,4 @@
-{
+hip_4.2 {
 global:
     hipChooseDevice;
     hipCtxCreate;
@@ -85,7 +85,6 @@ global:
     hipMalloc3DArray;
     hipMallocManaged;
     hipArrayCreate;
-    hipArrayDestroy;
     hipArray3DCreate;
     hipMallocArray;
     hipMallocPitch;
@@ -96,8 +95,6 @@ global:
     hipMemcpy2D;
     hipMemcpy2DAsync;
     hipMemcpy2DToArray;
-    hipMemcpy2DToArrayAsync;
-    hipDrvMemcpy2DUnaligned;
     hipMemcpy3D;
     hipMemcpy3DAsync;
     hipDrvMemcpy3D;
@@ -267,22 +264,6 @@ global:
     hipTexObjectGetResourceDesc;
     hipTexObjectGetResourceViewDesc;
     hipTexObjectGetTextureDesc;
-    hipImportExternalMemory;
-    hipExternalMemoryGetMappedBuffer;
-    hipDestroyExternalMemory;
-    hipGraphCreate;
-    hipGraphDestroy;
-    hipGraphAddKernelNode;
-    hipGraphAddMemsetNode;
-    hipGraphAddMemcpyNode;
-    hipGraphAddMemcpyNode1D;
-    hipGraphAddHostNode;
-    hipGraphInstantiate;
-    hipGraphLaunch;
-    hipStreamIsCapturing;
-    hipStreamBeginCapture;
-    hipStreamEndCapture;
-    hipGraphExecDestroy;
     extern "C++" {
     hip_impl::hipLaunchKernelGGLImpl*;
     hip_impl::demangle*;
@@ -306,3 +287,29 @@ global:
 local:
     *;
 };
+hip_4.3 {
+global:
+    hipGraphCreate;
+    hipGraphDestroy;
+    hipGraphAddKernelNode;
+    hipGraphAddMemsetNode;
+    hipGraphAddMemcpyNode;
+    hipGraphInstantiate;
+    hipGraphLaunch;
+    hipStreamIsCapturing;
+    hipStreamBeginCapture;
+    hipStreamEndCapture;
+    hipGraphExecDestroy;
+    hipImportExternalSemaphore;
+    hipSignalExternalSemaphoresAsync;
+    hipWaitExternalSemaphoresAsync;
+    hipDestroyExternalSemaphore;
+    hipImportExternalMemory;
+    hipExternalMemoryGetMappedBuffer;
+    hipDestroyExternalMemory;
+    hipMemcpy2DToArrayAsync;
+    hipDrvMemcpy2DUnaligned;
+    hipArrayDestroy;
+local:
+    *;
+} hip_4.2;
