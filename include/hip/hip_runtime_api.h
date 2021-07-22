@@ -613,6 +613,8 @@ enum hipLimit_t {
 #define hipStreamWaitValueEq 0x1
 #define hipStreamWaitValueAnd 0x2
 #define hipStreamWaitValueNor 0x3
+// Stream per thread
+#define hipStreamPerThread ((hipStream_t)2) ///< Implicit stream per application thread
 /*
  * @brief HIP Memory Advise values
  * @enum
