@@ -90,7 +90,7 @@ export OPENCL_DIR="$(readlink -f ROCm-OpenCL-Runtime)"
 ROCclr is defined on AMD platform that HIP use Radeon Open Compute Common Language Runtime (ROCclr), which is a virtual device interface that HIP runtimes interact with different backends.
 See https://github.com/ROCm-Developer-Tools/ROCclr
 
-HIPAMP repository provides implementation specifically for AMD platform.
+HIPAMD repository provides implementation specifically for AMD platform.
 See https://github.com/ROCm-Developer-Tools/hipamd
 
 ## Build HIP
