@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST: %t
  * HIT_END
  */
@@ -90,6 +90,8 @@ void run(const std::vector<char>& buffer) {
                     HIP_LAUNCH_PARAM_END};
   HIPCHECK(hipModuleLaunchKernel(Function, 1, 1, 1, LEN, 1, 1, 0, stream, NULL, (void**)&config));
 
+  HIPCHECK(hipStreamSynchronize(stream));
+
   HIPCHECK(hipStreamDestroy(stream));
 
   HIPCHECK(hipModuleUnload(Module));
@@ -122,7 +124,7 @@ struct joinable_thread : std::thread {
 void run_multi_threads(uint32_t n, const std::vector<char>& buffer) {
   std::vector<joinable_thread> threads;
   for (uint32_t i = 0; i < n; i++) {
-    threads.emplace_back(std::thread{[&, buffer] {
+    threads.emplace_back(std::thread{[&] {
     run(buffer);
     }});
   }
