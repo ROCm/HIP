@@ -4194,9 +4194,6 @@ hipError_t hipGraphAddEmptyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
-#if USE_PROF_API
-#include <hip/amd_detail/hip_prof_str.h>
-#endif
 #ifdef __cplusplus
 #if defined(__clang__) && defined(__HIP__)
 template <typename T>
@@ -4442,4 +4439,8 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
     return hipMallocManaged((void**)devPtr, size, flags);
 }
 #endif
+#endif
+
+#if USE_PROF_API
+#include <hip/amd_detail/hip_prof_str.h>
 #endif
