@@ -50,27 +50,28 @@ TEST_CASE("Unit_hipMultiStream_sameDevice") {
     HIP_CHECK(hipMalloc(&data[i], NN * sizeof(float)));
     hipLaunchKernelGGL(kernel, dim3(1), dim3(1), 0, streams[i], data[i], xd, NN);
     hipLaunchKernelGGL(HIP_KERNEL_NAME(nKernel), dim3(1), dim3(1), 0, 0, yd);
+    HIP_CHECK(hipFree(data[i]));
   }
   HIP_CHECK(hipMemcpy(&x, xd, sizeof(float), hipMemcpyDeviceToHost));
   HIP_CHECK(hipMemcpy(&y, yd, sizeof(float), hipMemcpyDeviceToHost));
   REQUIRE(x == Approx(y));
 }
+
 TEST_CASE("Unit_hipMultiStream_multimeDevice") {
-  constexpr int nLoops = 100000;
+  constexpr int nLoops = 50000;
   constexpr int nStreams = 2;
   std::vector<hipStream_t> streams(nStreams);
   int nGpu = 0;
   HIP_CHECK(hipGetDeviceCount(&nGpu));
   if (nGpu < 1) {
-    std::cout << "info: didn't find any GPU! skipping the test!\n";
-    REQUIRE(true);
+    INFO("No GPU for Testing");
+    SUCCEED(true);
   }
   static int device = 0;
   HIP_CHECK(hipSetDevice(device));
   hipDeviceProp_t props;
   HIP_CHECK(hipGetDeviceProperties(&props, device));
-  std::cout << "info: running on bus "
-            << "0x" << props.pciBusID << " " << props.name << std::endl;
+  INFO("Running on Bus: " << props.pciBusID << " " << props.name);
   for (int i = 0; i < nStreams; i++) {
     HIP_CHECK(hipStreamCreate(&streams[i]));
   }
@@ -85,7 +86,7 @@ TEST_CASE("Unit_hipMultiStream_multimeDevice") {
     // Sync stream 1
     HIP_CHECK(hipStreamSynchronize(streams[0]));
     if (k % 10000 == 0 || k == nLoops) {
-      std::cout << "Info: Iteration = " << k << std::endl;
+      INFO("Iter: " << k);
     }
   }
   HIP_CHECK(hipDeviceSynchronize());
