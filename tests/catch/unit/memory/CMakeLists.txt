@@ -48,6 +48,7 @@ set(TEST_SRC
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
+    hipMemPrefetchAsync.cc
 )
 else()
 set(TEST_SRC
@@ -96,6 +97,7 @@ set(TEST_SRC
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
+    hipMemPrefetchAsync.cc
 )
 endif()
 # Create shared lib of all tests
