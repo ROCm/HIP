@@ -21,13 +21,15 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia EXCLUDE_HIP_PLATFORM amd
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
 
 #include "test_common.h"
+#include <math.h>
 #define SIZE 10
+#define THRESH_HOLD 0.02
 
 static float getNormalizedValue(const float value,
                                 const hipChannelFormatDesc& desc) {
@@ -94,9 +96,11 @@ bool textureTest(texture<T, hipTextureType1D, hipReadModeNormalizedFloat> *tex)
     for(int i = 0; i < SIZE; i++)
     {
         float expected = getNormalizedValue(float(hData[i]), desc);
-        if(expected != hOutputData[i])
+        float mean = (fabs(expected) + fabs(hOutputData[i])) / 2;
+        float ratio = fabs(expected - hOutputData[i]) / mean;
+        if(ratio > THRESH_HOLD)
         {
-            printf("mismatch at index:%d output:%f expected:%f\n",i,hOutputData[i],expected);
+            printf("mismatch at index:%d output:%f expected:%f, ratio:%f\n", i, hOutputData[i], expected, ratio);
             testResult = false;
             break;
         }
@@ -120,6 +124,8 @@ int main(int argc, char** argv)
     std::cout << "Arch - AMD GPU :: " << props.gcnArch << std::endl;
     #endif
     
+    printf("THRESH_HOLD:%f\n", THRESH_HOLD);
+
     status &= textureTest<char>          (&texc);
     status &= textureTest<unsigned char> (&texuc);
     status &= textureTest<short>         (&texs);
