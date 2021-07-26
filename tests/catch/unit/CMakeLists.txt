@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+add_subdirectory(module)
 add_subdirectory(memory)
 add_subdirectory(deviceLib)
 add_subdirectory(stream)

@@ -1,16 +1,13 @@
 /*
 Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
-
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -20,18 +17,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
-#include "hip_test_common.hh"
+#include <hip_test_common.hh>
 
-#ifdef __linux__
-#include <sys/sysinfo.h>
-#endif
-
-namespace HipTest {
-static inline int getGeviceCount() {
-  int dev = 0;
-  HIP_CHECK(hipGetDeviceCount(&dev));
-  return dev;
+__global__ void Empty_Kernel() {
 }
 
-}  // namespace HipTest
+/*
+This testcase verifies the basic funct of hipFuncSetCacheConfig API
+On GPU devices, where L1 and shared memory uses same resources
+This sets the preferred cache configuration for the kernel function
+In this testcases we are setting hipFuncCachePreferL1 where L1 is
+preferred more than shared memory
+*/
+TEST_CASE("Unit_hipFuncSetCacheConfig_Basic") {
+  hipFuncCache_t cacheConfig{hipFuncCachePreferL1};
+  HIP_CHECK(hipFuncSetCacheConfig(reinterpret_cast<void*>(Empty_Kernel),
+                                  cacheConfig));
+}
