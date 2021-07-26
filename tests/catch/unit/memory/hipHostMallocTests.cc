@@ -53,9 +53,10 @@ TEST_CASE("Unit_hipHostMalloc_ArgValidation") {
                              std::numeric_limits<unsigned int>::max());
     REQUIRE(ret != hipSuccess);
   }
-
+#if HT_AMD
   SECTION("Pass size as zero and check ptr reset") {
     HIP_CHECK(hipHostMalloc(&ptr, 0));
     REQUIRE(ptr == nullptr);
   }
+#endif
 }

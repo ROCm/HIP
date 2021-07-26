@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -71,6 +71,35 @@ __global__ void addCountReverse(const T* A_d, T* C_d, int64_t NELEM, int count) 
     }
   }
 }
+
+template<typename T>
+__device__ void waitKernel(uint64_t wait_sec, T clockrate) {
+  uint64_t start = clock64()/clockrate, cur;
+  do { cur = clock64()/clockrate-start;}while (cur < (wait_sec*1000));
+}
+
+template<typename T>
+__global__ void TwoSecKernel_GlobalVar(int globalvar, int clockrate) {
+  if (globalvar == 0x2222) {
+    globalvar = 0x3333;
+  }
+  waitKernel(2, clockrate);
+  if (globalvar != 0x3333) {
+    globalvar = 0x5555;
+  }
+}
+
+template<typename T>
+__global__ void FourSecKernel_GlobalVar(int globalvar, int clockrate) {
+  if (globalvar == 1) {
+    globalvar = 0x2222;
+  }
+  waitKernel(4, clockrate);
+  if (globalvar == 0x2222) {
+    globalvar = 0x4444;
+  }
+}
+
 
 template <typename T> __global__ void memsetReverse(T* C_d, T val, int64_t NELEM) {
   size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
