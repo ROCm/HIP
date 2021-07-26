@@ -589,7 +589,6 @@ bool testhipModuleGetGlobalNeg50() {
   HIPCHECK(hipModuleLoad(&Module, CODEOBJ_GLOBAL));
   if ((ret = hipModuleGetGlobal(nullptr,
     &deviceGlobalSize, Module, DEVGLOB_VAR)) != hipSuccess) {
-    TestPassed = true; // To be removed
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   } else {
@@ -619,7 +618,6 @@ bool testhipModuleGetGlobalNeg51() {
   HIPCHECK(hipModuleLoad(&Module, CODEOBJ_GLOBAL));
   if ((ret = hipModuleGetGlobal(&deviceGlobal, nullptr,
       Module, DEVGLOB_VAR)) != hipSuccess) {
-    TestPassed = true; // To be removed
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
   } else {
