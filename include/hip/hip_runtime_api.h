@@ -1274,8 +1274,40 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
  *
  */
 hipError_t hipIpcCloseMemHandle(void* devPtr);
+
+/**
+ * @brief Gets an opaque interprocess handle for an event.
+ *
+ * This opaque handle may be copied into other processes and opened with cudaIpcOpenEventHandle.
+ * Then cudaEventRecord, cudaEventSynchronize, cudaStreamWaitEvent and cudaEventQuery may be used in
+ * either process. Operations on the imported event after the exported event has been freed with hipEventDestroy
+ * will result in undefined behavior.
+ *
+ * @param[out]  handle Pointer to cudaIpcEventHandle to return the opaque event handle
+ * @param[in]   event  Event allocated with cudaEventInterprocess and cudaEventDisableTiming flags
+ *
+ * @returns #hipSuccess, #hipErrorInvalidConfiguration, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event);
+
+/**
+ * @brief Opens an interprocess event handles.
+ *
+ * Opens an interprocess event handle exported from another process with cudaIpcGetEventHandle. The returned
+ * hipEvent_t behaves like a locally created event with the hipEventDisableTiming flag specified. This event
+ * need be freed with hipEventDestroy. Operations on the imported event after the exported event has been freed
+ * with hipEventDestroy will result in undefined behavior. If the function is called within the same process where
+ * handle is returned by hipIpcGetEventHandle, it will return hipErrorInvalidContext.
+ *
+ * @param[out]  event  Pointer to hipEvent_t to return the event
+ * @param[in]   handle The opaque interprocess handle to open
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidContext
+ *
+ */
 hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
+
 // end doxygen Device
 /**
  * @}
@@ -2485,6 +2517,21 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
  */
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
+
+/**
+ *  @brief Returns a global pointer from a module.
+ *  Returns in *dptr and *bytes the pointer and size of the global of name name located in module hmod.
+ *  If no variable of that name exists, it returns hipErrorNotFound. Both parameters dptr and bytes are optional.
+ *  If one of them is NULL, it is ignored and hipSuccess is returned.
+ *
+ *  @param[out]  dptr  Returned global device pointer
+ *  @param[out]  bytes Returned global size in bytes
+ *  @param[in]   hmod  Module to retrieve global from
+ *  @param[in]   name  Name of global to retrieve
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotFound, #hipErrorInvalidContext
+ *
+ */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);

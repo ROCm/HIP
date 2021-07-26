@@ -24,7 +24,7 @@ THE SOFTWARE.
 // forces synchronization : set
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t --iterations 10
  * HIT_END
  */
@@ -87,16 +87,19 @@ int main(int argc, char* argv[]) {
         printf("\n");
 
     }
-
     hipIpcEventHandle_t ipc_handle;
     HIPCHECK(hipIpcGetEventHandle(&ipc_handle, start));
 
     hipEvent_t ipc_event;
-    HIPCHECK(hipIpcOpenEventHandle(&ipc_event, ipc_handle));
+    auto ret = hipIpcOpenEventHandle(&ipc_event, ipc_handle);
 
-    HIPCHECK(hipEventSynchronize(ipc_event));
+    if (ret == hipErrorInvalidContext) {
+      // tests/src/ipc/hipMultiProcIpcEvent.cpp is the right sample in different process.
+      printf("hipIpcOpenEventHandle() should be called in a different process\n");
+    } else if (ret == hipSuccess) {
+      // To be removed
+    }
 
-    HIPCHECK(hipEventDestroy(ipc_event));
     HIPCHECK(hipEventDestroy(start));
     HIPCHECK(hipEventDestroy(stop));
 
