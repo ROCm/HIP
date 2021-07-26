@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 - present Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,13 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#pragma once
-#include "hip_test_common.hh"
+#include <hip_test_kernels.hh>
+#include "hip/hip_runtime.h"
 
-namespace HipTest {
-static inline int getGeviceCount() {
-  int dev = 0;
-  HIPCHECK(hipGetDeviceCount(&dev));
-  return dev;
+extern "C" __global__ void EmptyKernel() {
 }
-}  // namespace HipTest
+
