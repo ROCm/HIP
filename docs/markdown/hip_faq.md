@@ -33,6 +33,7 @@
 - [Why _OpenMP is undefined when compiling with -fopenmp?](#why-_openmp-is-undefined-when-compiling-with--fopenmp)
 - [Does the HIP-Clang compiler support extern shared declarations?](#does-the-hip-clang-compiler-support-extern-shared-declarations)
 - [I have multiple HIP enabled devices and I am getting an error message hipErrorNoBinaryForGpu: Unable to find code object for all current devices?](#i-have-multiple-hip-enabled-devices-and-i-am-getting-an-error-message-hipErrorNoBinaryForGpu-unable-to-find-code-object-for-all-current-devices)
+- [How can I know the version of HIP?](#how-can-I-know-the-version-of-hip)
 <!-- tocstop -->
 
 ### What APIs and features does HIP support?
@@ -259,3 +260,14 @@ If you have a precompiled application/library (like rocblas, tensorflow etc) whi
 
  - The application/library does not ship code object bundles for *all* of your device(s): in this case you need to recompile the application/library yourself with correct `--offload-arch`.
  - The application/library does not ship code object bundles for *some* of your device(s), for example you have a system with an APU + GPU and the library does not ship code objects for your APU. For this you can set the environment variable `HIP_VISIBLE_DEVICES` to only enable GPUs for which code object is available. This will limit the GPUs visible to your application and allow it to run.
+
+### How can I know the version of HIP?
+
+HIP version definition has been updated since ROCm 4.2 release as the following:
+
+HIP_VERSION=HIP_VERSION_MAJOR * 10000000 + HIP_VERSION_MINOR * 100000 + HIP_VERSION_PATCH)
+
+HIP version can be queried from HIP API call,
+hipRuntimeGetVersion(&runtimeVersion);
+
+The version returned will always be greater than the versions in previous ROCm releases.
