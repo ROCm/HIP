@@ -577,6 +577,12 @@ HIP supports the following atomic operations.
 | unsigned long long atomicXor(unsigned long long* address,unsigned long long val))                                    |  ✓                    |  ✓                     |
 | unsigned long long atomicXor_system(unsigned long long* address, unsigned long long val)                             |  ✓                    |  ✓                     |
 
+Note, in order to keep backwards compitability in float/double atomicAdd functions, in ROCm4.4 release, we introduce a new compilation flag as an option in CMake file,
+__HIP_USE_CMPXCHG_FOR_FP_ATOMICS
+
+By default, this compilation flag is not set("0"), so hip runtime will use current float/double atomicAdd functions.
+If this compilation flag is set to "1", that is, with the cmake option "-D__HIP_USE_CMPXCHG_FOR_FP_ATOMICS=1", the old float/double atomicAdd functions will be used instead, for compatibility with compilers not supporting floating point atomics.
+For details steps how to build hip runtime, please refer to the section "build HIPAMD" (https://github.com/ROCm-Developer-Tools/hipamd/blob/develop/INSTALL.md).
 
 ### Caveats and Features Under-Development:
 
@@ -636,39 +642,36 @@ float __shfl_xor  (float var, int laneMask, int width=warpSize);
 Cooperative groups is a mechanism for forming and communicating between groups of threads at
 a granularity different than the block.  This feature was introduced in Cuda 9.
 
-HIP does not support any of the kernel language cooperative groups
-types or functions.
+HIP supports the following kernel language cooperative groups types or functions.
 
 
 | **Function** | **Supported in HIP** | **Supported in CUDA** |
 | --- | --- | --- |
-| `void thread_group.sync()` | | ✓ |
-| `unsigned thread_group.size()` | | ✓ |
-| `unsigned thread_group.thread_rank()` | | ✓ |
-| `bool thread_group.is_valid()` | | ✓ |
-| `thread_group tiled_partition(thread_group, size)` | | ✓ |
-| `thread_block_tile<N> tiled_partition<N>(thread_group)` | | ✓ |
-| `thread_block this_thread_block()` | | ✓ |
-| `T thread_block_tile.shfl()` | | ✓ |
-| `T thread_block_tile.shfl_down()` | | ✓ |
-| `T thread_block_tile.shfl_up()` | | ✓ |
-| `T thread_block_tile.shfl_xor()` | | ✓ |
-| `T thread_block_tile.any()` | | ✓ |
-| `T thread_block_tile.all()` | | ✓ |
-| `T thread_block_tile.ballot()` | | ✓ |
-| `T thread_block_tile.match_any()` | | ✓ |
-| `T thread_block_tile.match_all()` | | ✓ |
-| `coalesced_group coalesced_threads()` | | ✓ |
-| `grid_group this_grid()` | | ✓ |
-| `void grid_group.sync()` | | ✓ |
-| `unsigned grid_group.size()` | | ✓ |
-| `unsigned grid_group.thread_rank()` | | ✓ |
-| `bool grid_group.is_valid()` | | ✓ |
-| `multi_grid_group this_multi_grid()` | | ✓ |
-| `void multi_grid_group.sync()` | | ✓ |
-| `unsigned multi_grid_group.size()` | | ✓ |
-| `unsigned multi_grid_group.thread_rank()` | | ✓ |
-| `bool multi_grid_group.is_valid()` | | ✓ |
+| `void thread_group.sync();` | ✓ | ✓ |
+| `unsigned thread_group.size();` | ✓ | ✓ |
+| `unsigned thread_group.thread_rank()` | ✓ | ✓ |
+| `bool thread_group.is_valid();` | ✓ | ✓ |
+| `grid_group this_grid()` | ✓ | ✓ |
+| `void grid_group.sync()` | ✓ | ✓ |
+| `unsigned grid_group.size()` | ✓ | ✓ |
+| `unsigned grid_group.thread_rank()` | ✓ | ✓ |
+| `bool grid_group.is_valid()` | ✓ | ✓ |
+| `multi_grid_group this_multi_grid()` | ✓ | ✓ |
+| `void multi_grid_group.sync()` | ✓ | ✓ |
+| `unsigned multi_grid_group.size()` | ✓ | ✓ |
+| `unsigned multi_grid_group.thread_rank()` | ✓ | ✓ |
+| `bool multi_grid_group.is_valid()` | ✓ | ✓ |
+| `unsigned multi_grid_group.num_grids()` | ✓ | ✓ |
+| `unsigned multi_grid_group.grid_rank()` | ✓ | ✓ |
+| `thread_block this_thread_block()` | ✓ | ✓ |
+| `multi_grid_group this_multi_grid()` | ✓ | ✓ |
+| `void multi_grid_group.sync()` | ✓ | ✓ |
+| `void thread_block.sync()` | ✓ | ✓ |
+| `unsigned thread_block.size()` | ✓ | ✓ |
+| `unsigned thread_block.thread_rank()` | ✓ | ✓ |
+| `bool thread_block.is_valid()` | ✓ | ✓ |
+| `dim3 thread_block.group_index()` | ✓ | ✓ |
+| `dim3 thread_block.thread_index()` | ✓ | ✓ |
 
 ## Warp Matrix Functions
 
