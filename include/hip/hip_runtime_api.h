@@ -1659,7 +1659,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
  */
 /**
- * @brief Enqueues a wait command to the stream.
+ * @brief Enqueues a wait command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
@@ -1684,13 +1684,16 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @note Support for hipStreamWaitValue32 can be queried using 'hipDeviceGetAttribute()' and
  * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
  *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue64, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
 hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags,
                                 uint32_t mask __dparm(0xFFFFFFFF));
 /**
- * @brief Enqueues a wait command to the stream.
+ * @brief Enqueues a wait command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
@@ -1715,13 +1718,16 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, u
  * @note Support for hipStreamWaitValue64 can be queried using 'hipDeviceGetAttribute()' and
  * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
  *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue32, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
 hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, unsigned int flags,
                                 uint64_t mask __dparm(0xFFFFFFFFFFFFFFFF));
 /**
- * @brief Enqueues a write command to the stream.
+ * @brief Enqueues a write command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to a GPU accessible memory object
@@ -1732,13 +1738,16 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, u
  *
  * Enqueues a write command to the stream, write operation is performed after all earlier commands
  * on this stream have completed the execution.
+ *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
 hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags);
 /**
- * @brief Enqueues a write command to the stream.
+ * @brief Enqueues a write command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to a GPU accessible memory object
@@ -1749,6 +1758,9 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, 
  *
  * Enqueues a write command to the stream, write operation is performed after all earlier commands
  * on this stream have completed the execution.
+ *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
