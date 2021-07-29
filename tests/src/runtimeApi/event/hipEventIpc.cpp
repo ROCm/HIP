@@ -91,14 +91,9 @@ int main(int argc, char* argv[]) {
     HIPCHECK(hipIpcGetEventHandle(&ipc_handle, start));
 
     hipEvent_t ipc_event;
-    auto ret = hipIpcOpenEventHandle(&ipc_event, ipc_handle);
-
-    if (ret == hipErrorInvalidContext) {
-      // tests/src/ipc/hipMultiProcIpcEvent.cpp is the right sample in different process.
-      printf("hipIpcOpenEventHandle() should be called in a different process\n");
-    } else if (ret == hipSuccess) {
-      // To be removed
-    }
+    // hipIpcOpenEventHandle() should be called in a different process
+    // tests/src/ipc/hipMultiProcIpcEvent.cpp is the right sample in different process
+    HIPCHECK_API(hipIpcOpenEventHandle(&ipc_event, ipc_handle), hipErrorInvalidContext);
 
     HIPCHECK(hipEventDestroy(start));
     HIPCHECK(hipEventDestroy(stop));
