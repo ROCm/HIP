@@ -22,15 +22,15 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t
  * HIT_END
  */
 
 #include "hip/hip_runtime.h"
 #include "test_common.h"
 
-#define LEN 16 * 1024
-#define SIZE LEN * 4
+#define LEN  (16 * 1024)
+#define SIZE (LEN * sizeof(float))
 
 __global__ void vectorAdd(float* Ad, float* Bd) {
     extern __shared__ float sBd[];
@@ -53,7 +53,19 @@ int main() {
     hipMalloc(&Bd, SIZE);
     hipMemcpy(Ad, A, SIZE, hipMemcpyHostToDevice);
     hipMemcpy(Bd, B, SIZE, hipMemcpyHostToDevice);
+
+    hipError_t ret = hipFuncSetAttribute(
+        reinterpret_cast<const void*>(&vectorAdd),
+        hipFuncAttributeMaxDynamicSharedMemorySize, SIZE);
+
+    if (ret != hipSuccess) {
+        printf("Failed requesting enough shared memory size(%zu), error: '%s'(%d), ignored!\n",
+             SIZE, hipGetErrorString(ret), ret);
+        passed();
+    }
+
     hipLaunchKernelGGL(vectorAdd, dim3(1, 1, 1), dim3(64, 1, 1), SIZE, 0, Ad, Bd);
+    HIPCHECK(hipGetLastError());
     hipMemcpy(B, Bd, SIZE, hipMemcpyDeviceToHost);
     for (int i = 0; i < LEN; i++) {
         assert(B[i] > 1.0f && B[i] < 3.0f);
