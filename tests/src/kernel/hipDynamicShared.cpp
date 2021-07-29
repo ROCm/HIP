@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp
- * TEST: %t EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t
  * HIT_END
  */
 
@@ -49,7 +49,8 @@ template <typename T>
 __global__ void testExternSharedKernel(const T* A_d, const T* B_d, T* C_d,
                                        size_t numElements, size_t groupElements) {
     // declare dynamic shared memory
-    extern __shared__ double sdata[];
+    extern __shared__ double sdata0[];
+    T* sdata = reinterpret_cast<T *>(sdata0);
 
     size_t gid = (blockIdx.x * blockDim.x + threadIdx.x);
     size_t tid = threadIdx.x;
@@ -90,7 +91,7 @@ void testExternShared(size_t N, unsigned groupElements) {
     HIPCHECK(hipMemcpy(B_d, B_h, Nbytes, hipMemcpyHostToDevice));
 
     // calculate the amount of dynamic shared memory required
-    size_t groupMemBytes = groupElements * sizeof(T);
+    size_t groupMemBytes = groupElements * sizeof(double);
 
     // launch kernel with dynamic shared memory
     hipLaunchKernelGGL(HIP_KERNEL_NAME(testExternSharedKernel<T>), dim3(blocks), dim3(threadsPerBlock),
