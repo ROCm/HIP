@@ -30,8 +30,8 @@ COPY *.deb /tmp/
 # Install the debian package
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y curl \
   && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --allow-unauthenticated -y \
-    /tmp/hip-base-*.deb \
-    /tmp/hip-hcc-*.deb \
+    /tmp/hip-devel-*.deb \
+    /tmp/hip-runtime-amd-*.deb \
     /tmp/hip-doc-*.deb \
     /tmp/hip-samples-* \
   && rm -f /tmp/*.deb \
