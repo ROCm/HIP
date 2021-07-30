@@ -83,6 +83,11 @@ struct hip_bfloat16
         return u.fp32;
     }
 
+    explicit __host__ __device__ operator bool() const
+    {
+        return data & 0x7fff;
+    }
+
     static  __host__ __device__ hip_bfloat16 round_to_bfloat16(float f)
     {
         hip_bfloat16 output;
@@ -96,6 +101,30 @@ struct hip_bfloat16
         output.data = truncate_float_to_bfloat16(f);
         return output;
     }
+
+    #if !defined(__HIP_NO_BFLOAT16_CONVERSIONS__)
+    template<
+        typename T,
+        Enable_if_t<std::is_floating_point<T>{}>* = nullptr>
+    __host__ __device__
+    hip_bfloat16& operator=(T x)
+    {
+        data = static_cast<_Float16>(x);
+        return *this;
+    }
+    #endif
+
+    // MANIPULATORS - DEVICE ONLY
+    #if !defined(__HIP_NO_BFLOAT16_CONVERSIONS__)
+    template<
+        typename T, Enable_if_t<std::is_integral<T>{}>* = nullptr>
+    __host__ __device__
+    hip_bfloat16& operator=(T x)
+    {
+        data = static_cast<_Float16>(x);
+        return *this;
+    }
+    #endif
 
 private:
     static __host__ __device__ uint16_t float_to_bfloat16(float f)
