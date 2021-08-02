@@ -465,7 +465,7 @@ enum hipComputeMode {
 #include <hip/amd_detail/host_defines.h>
 #include <hip/driver_types.h>
 #include <hip/texture_types.h>
-#include <hip/amd_detail/amd_hip_surface_types.h>
+#include <hip/surface_types.h>
 #if defined(_MSC_VER)
 #define DEPRECATED(msg) __declspec(deprecated(msg))
 #else // !defined(_MSC_VER)
