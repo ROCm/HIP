@@ -22,14 +22,18 @@ THE SOFTWARE.
 
 /* HIT_START
  * BUILD: %t %s ../test_common.cpp
- * TEST: %t
+ * // Test hipFilterModePoint
+ * TEST: %t --textureFilterMode 0
+ * // Test hipFilterModeLinear
+ * TEST: %t --textureFilterMode 1
  * HIT_END
  */
 
 #include "test_common.h"
 #include <math.h>
 #define SIZE 10
-#define THRESH_HOLD 0.02
+#define EPSILON     0.00001
+#define THRESH_HOLD 0.01  // For filter mode
 
 static float getNormalizedValue(const float value,
                                 const hipChannelFormatDesc& desc) {
@@ -70,7 +74,57 @@ __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
         pDst[elementID] = tex1D(texus, coord);
 }
 
-template<typename T>
+bool textureVerifyFilterModePoint(float *hOutputData, float *expected, size_t size) {
+    bool testResult = true;
+    for (int i = 0; i < size; i++) {
+      if ((hOutputData[i] == expected[i])
+          || (i >= 1 && hOutputData[i] == expected[i - 1]) ||  // round down
+          (i < (size - 1) && hOutputData[i] == expected[i + 1]))  // round up
+          {
+        continue;
+      }
+      printf("mismatch at output[%d]:%f expected[%d]:%f", i, hOutputData[i], i,
+             expected[i]);
+      if (i >= 1) {
+        printf(", expected[%d]:%f", i - 1, expected[i - 1]);
+      }
+      if (i < (size - 1)) {
+        printf(", expected[%d]:%f", i + 1, expected[i + 1]);
+      }
+      printf("\n");
+      testResult = false;
+      break;
+    }
+    return testResult;
+}
+
+bool textureVerifyFilterModeLinear(float *hOutputData, float *expected,  size_t size) {
+    bool testResult = true;
+    for (int i = 0; i < size; i++) {
+      float mean = (fabs(expected[i]) + fabs(hOutputData[i])) / 2;
+      float ratio = fabs(expected[i] - hOutputData[i]) / (mean + EPSILON);
+      if (ratio > THRESH_HOLD) {
+        printf("mismatch at output[%d]:%f expected[%d]:%f, ratio:%f\n", i,
+               hOutputData[i], i, expected[i], ratio);
+        testResult = false;
+        break;
+      }
+    }
+    return testResult;
+}
+
+template<hipTextureFilterMode fMode = hipFilterModePoint>
+bool textureVerify(float *hOutputData, float *expected, size_t size) {
+    bool testResult = true;
+    if (fMode == hipFilterModePoint) {
+      testResult = textureVerifyFilterModePoint(hOutputData, expected, size);
+    } else if (fMode == hipFilterModeLinear) {
+      testResult = textureVerifyFilterModeLinear(hOutputData, expected, size);
+    }
+    return testResult;
+}
+
+template<typename T, hipTextureFilterMode fMode = hipFilterModePoint>
 bool textureTest(texture<T, hipTextureType1D, hipReadModeNormalizedFloat> *tex)
 {
     hipChannelFormatDesc desc = hipCreateChannelDesc<T>();
@@ -82,6 +136,7 @@ bool textureTest(texture<T, hipTextureType1D, hipReadModeNormalizedFloat> *tex)
 
     tex->normalized = true;
     tex->channelDesc = desc;
+    tex->filterMode = fMode;
     HIPCHECK(hipBindTextureToArray(tex, dData, &desc));
 
     float *dOutputData = NULL;
@@ -92,19 +147,11 @@ bool textureTest(texture<T, hipTextureType1D, hipReadModeNormalizedFloat> *tex)
     float *hOutputData = new float[SIZE];
     HIPCHECK(hipMemcpy(hOutputData, dOutputData, (sizeof(float)*SIZE), hipMemcpyDeviceToHost));
 
-    bool testResult = true;
-    for(int i = 0; i < SIZE; i++)
-    {
-        float expected = getNormalizedValue(float(hData[i]), desc);
-        float mean = (fabs(expected) + fabs(hOutputData[i])) / 2;
-        float ratio = fabs(expected - hOutputData[i]) / mean;
-        if(ratio > THRESH_HOLD)
-        {
-            printf("mismatch at index:%d output:%f expected:%f, ratio:%f\n", i, hOutputData[i], expected, ratio);
-            testResult = false;
-            break;
-        }
+    float expected[SIZE];
+    for(int i = 0; i < SIZE; i++) {
+      expected[i] = getNormalizedValue(float(hData[i]), desc);
     }
+    bool testResult = textureVerify<fMode>(hOutputData, expected, SIZE);
 
     HIPCHECK(hipFreeArray(dData));
     HIPCHECK(hipFree(dOutputData));
@@ -112,10 +159,21 @@ bool textureTest(texture<T, hipTextureType1D, hipReadModeNormalizedFloat> *tex)
     return testResult;
 }
 
+template<hipTextureFilterMode fMode = hipFilterModePoint>
+bool runTest() {
+    bool status = true;
+    status &= textureTest<char, fMode>(&texc);
+    status &= textureTest<unsigned char, fMode>(&texuc);
+    status &= textureTest<short, fMode>(&texs);
+    status &= textureTest<unsigned short, fMode>(&texus);
+    return status;
+}
+
 int main(int argc, char** argv)
 {
+    HipTest::parseStandardArguments(argc, argv, true);
     int device = 0;
-    bool status = true;
+    bool status = false;
     HIPCHECK(hipSetDevice(device));
     hipDeviceProp_t props;
     HIPCHECK(hipGetDeviceProperties(&props, device));
@@ -124,12 +182,18 @@ int main(int argc, char** argv)
     std::cout << "Arch - AMD GPU :: " << props.gcnArch << std::endl;
     #endif
     
-    printf("THRESH_HOLD:%f\n", THRESH_HOLD);
-
-    status &= textureTest<char>          (&texc);
-    status &= textureTest<unsigned char> (&texuc);
-    status &= textureTest<short>         (&texs);
-    status &= textureTest<unsigned short>(&texus);
+    if(textureFilterMode == 0) {
+      printf("Test hipFilterModePoint\n");
+      status = runTest<hipFilterModePoint>();
+    } else if(textureFilterMode == 1) {
+      printf("Test hipFilterModeLinear\n");
+      printf("THRESH_HOLD:%f, EPSILON:%f\n", THRESH_HOLD, EPSILON);
+      status = runTest<hipFilterModeLinear>();
+    } else {
+      printf("Wrong argument!\n");
+      printf("hipNormalizedFloatValueTex --textureFilterMode 0 for hipFilterModePoint\n");
+      printf("hipNormalizedFloatValueTex --textureFilterMode 1 for hipFilterModeLinear\n");
+    }
 
     if(status){
         passed();
