@@ -33,6 +33,9 @@ set(TEST_SRC
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
     hipManagedKeyword.cc
+    hipMemset3D.cc
+    hipMemset2D.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
 )
 else()
 set(TEST_SRC
@@ -66,6 +69,9 @@ set(TEST_SRC
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
     hipManagedKeyword.cc
+    hipMemset3D.cc
+    hipMemset2D.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
 )
 endif()
 # Create shared lib of all tests
