@@ -33,6 +33,10 @@ set(TEST_SRC
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
     hipManagedKeyword.cc
+    hipMemsetInvalidPtr.cc
+    hipMemset.cc
+    hipMemsetAsyncMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
 )
 else()
 set(TEST_SRC
@@ -66,6 +70,10 @@ set(TEST_SRC
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
     hipManagedKeyword.cc
+    hipMemsetInvalidPtr.cc
+    hipMemset.cc
+    hipMemsetAsyncMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
 )
 endif()
 # Create shared lib of all tests
