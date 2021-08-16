@@ -190,42 +190,33 @@ template <int cid_>
 class api_callbacks_spawner_t {
  public:
   api_callbacks_spawner_t() :
-    api_data_(NULL), was_enabled_on_construction_(is_enabled())
+    api_data_(NULL)
   {
-    if (!was_enabled_on_construction_) return;
+    if (!is_enabled()) return;
 
-    if (cid_ >= HIP_API_ID_NUMBER) {
-      fprintf(stderr, "HIP %s bad id %d\n", __FUNCTION__, cid_);
-      abort();
-    }
+    static_assert(cid_ < HIP_API_ID_NUMBER, "Invalid Callback ID");
     callbacks_table.sem_sync(cid_);
 
-    hip_act_callback_t act = entry(cid_).act;
-    if (act != NULL) api_data_ = (hip_api_data_t*) act(cid_, NULL, NULL, NULL);
+    auto &entry = this->entry(cid_);
+    fun_ = std::make_pair(entry.fun, entry.arg);
+    act_ = std::make_pair(entry.act, entry.a_arg);
+    callbacks_table.sem_release(cid_);
+
+    if (act_.first != NULL) api_data_ = (hip_api_data_t*) act_.first(cid_, NULL, NULL, NULL);
   }
 
   void call() {
-    hip_api_callback_t fun = entry(cid_).fun;
-    void* arg = entry(cid_).arg;
-    if (fun != NULL) {
-      fun(HIP_DOMAIN_ID, cid_, api_data_, arg);
+    if (fun_.first != NULL) {
+      fun_.first(HIP_DOMAIN_ID, cid_, api_data_, fun_.second);
       api_data_->phase = ACTIVITY_API_PHASE_EXIT;
     }
   }
 
   ~api_callbacks_spawner_t() {
-    if (!was_enabled_on_construction_) return;
-
     if (api_data_ != NULL) {
-      hip_api_callback_t fun = entry(cid_).fun;
-      void* arg = entry(cid_).arg;
-      hip_act_callback_t act = entry(cid_).act;
-      void* a_arg = entry(cid_).a_arg;
-      if (fun != NULL) fun(HIP_DOMAIN_ID, cid_, api_data_, arg);
-      if (act != NULL) act(cid_, NULL, NULL, a_arg);
+      if (fun_.first != NULL) fun_.first(HIP_DOMAIN_ID, cid_, api_data_, fun_.second);
+      if (act_.first != NULL) act_.first(cid_, NULL, NULL, act_.second);
     }
-
-    callbacks_table.sem_release(cid_);
   }
 
   hip_api_data_t* get_api_data_ptr() {
@@ -241,8 +232,9 @@ class api_callbacks_spawner_t {
     return callbacks_table.entry(id);
   }
 
+  std::pair<hip_api_callback_t, void *> fun_;
+  std::pair<hip_act_callback_t, void *> act_;
   hip_api_data_t* api_data_;
-  bool was_enabled_on_construction_ = false;
 };
 
 template <>
