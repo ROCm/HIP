@@ -635,9 +635,23 @@ typedef enum hipMemoryAdvise {
                                             ///< coherent operations between host and device, while
                                             ///< executing kernels. The coarse-grain can be used
                                             ///< for data that only needs to be coherent at dispatch
-                                            ///< boundaries for better performance.
+                                            ///< boundaries for better performance
     hipMemAdviseUnsetCoarseGrain = 101      ///< Restores cache coherency policy back to fine-grain
 } hipMemoryAdvise;
+/*
+ * @brief HIP Coherency Mode
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemRangeCoherencyMode {
+    hipMemRangeCoherencyModeFineGrain = 0,      ///< Updates to memory with this attribute can be
+                                                ///< done coherently from all devices
+    hipMemRangeCoherencyModeCoarseGrain = 1,    ///< Writes to memory with this attribute can be
+                                                ///< performed by a single device at a time
+    hipMemRangeCoherencyModeIndeterminate = 2   ///< Memory region queried contains subregions with
+                                                ///< both hipMemRangeCoherencyModeFineGrain and
+                                                ///< hipMemRangeCoherencyModeCoarseGrain attributes
+} hipMemRangeCoherencyMode;
 /*
  * @brief HIP range attributes
  * @enum
@@ -649,7 +663,10 @@ typedef enum hipMemRangeAttribute {
     hipMemRangeAttributePreferredLocation = 2,  ///< The preferred location of the range
     hipMemRangeAttributeAccessedBy = 3,         ///< Memory range has hipMemAdviseSetAccessedBy
                                                 ///< set for the specified device
-    hipMemRangeAttributeLastPrefetchLocation = 4,///< The last location to where the range was prefetched
+    hipMemRangeAttributeLastPrefetchLocation = 4,///< The last location to where the range was
+                                                ///< prefetched
+    hipMemRangeAttributeCoherencyMode = 100,    ///< Returns coherency mode
+                                                ///< @ref hipMemRangeCoherencyMode for the range
 } hipMemRangeAttribute;
 /*
  * @brief hipJitOption
