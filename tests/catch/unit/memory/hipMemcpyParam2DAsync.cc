@@ -71,13 +71,14 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyParam2DAsync_multiDevice-StreamOnDiffDevice",
                               &pitch_E, width, NUM_H));
 
       // Initalizing A_d with C_h
-      HIP_CHECK(hipMemcpy2D(A_d, pitch_A, C_h, width,
-                           NUM_W*sizeof(TestType), NUM_H,
-                           hipMemcpyHostToDevice));
       HIP_CHECK(hipSetDevice(1));
       hipStream_t stream;
       hipStreamCreate(&stream);
 
+      HIP_CHECK(hipMemcpy2DAsync(A_d, pitch_A, C_h, width,
+                           NUM_W*sizeof(TestType), NUM_H,
+                           hipMemcpyHostToDevice, stream));
+      HIP_CHECK(hipStreamSynchronize(stream));
       // Device to Device
       hip_Memcpy2D desc = {};
 #ifdef __HIP_PLATFORM_NVCC__
