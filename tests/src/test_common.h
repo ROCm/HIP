@@ -153,6 +153,7 @@ extern char memsetD8val;
 extern int iterations;
 extern unsigned blocksPerCU;
 extern unsigned threadsPerBlock;
+extern int textureFilterMode;
 extern int p_gpuDevice;
 extern unsigned p_verbose;
 extern int p_tests;

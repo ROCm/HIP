@@ -37,6 +37,7 @@ char memsetD8val = 0xDE;
 int iterations = 1;
 unsigned blocksPerCU = 6;  // to hide latency
 unsigned threadsPerBlock = 256;
+int textureFilterMode = 0; // 0: hipFilterModePoint; 1: hipFilterModeLinear
 int p_gpuDevice = 0;
 unsigned p_verbose = 0;
 int p_tests = -1; /*which tests to run. Interpretation is left to each test.  default:all*/
@@ -176,11 +177,16 @@ int parseStandardArguments(int argc, char* argv[], bool failOnUndefinedArg) {
                 failed("Bad memsetD8val argument");
             }
             memsetD8val = ex;
+        } else if (!strcmp(arg, "--textureFilterMode")) {
+          int mode;
+          if (++i >= argc || !HipTest::parseInt(argv[i], &mode)) {
+              failed("Bad textureFilterMode argument");
+          }
+          textureFilterMode = mode;
         } else if (!strcmp(arg, "--iterations") || (!strcmp(arg, "-i"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &iterations)) {
                 failed("Bad iterations argument");
             }
-
         } else if (!strcmp(arg, "--gpu") || (!strcmp(arg, "-gpuDevice")) || (!strcmp(arg, "-g"))) {
             if (++i >= argc || !HipTest::parseInt(argv[i], &p_gpuDevice)) {
                 failed("Bad gpuDevice argument");
