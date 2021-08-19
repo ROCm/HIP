@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # Copyright (c) 2020 - 2021 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,6 +20,7 @@
 # THE SOFTWARE.
 
 package hipvars;
+use warnings;
 use Getopt::Long;
 use Cwd;
 use File::Basename;
