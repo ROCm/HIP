@@ -51,8 +51,8 @@ void test(unsigned testMask, int* C_d, int* C_h, int64_t numElements, hipStream_
     if (!(testMask & tests)) {
         return;
     }
-    std::cout << "\n test 0x " << testMask << ": stream= " << stream << " waitStart= " << waitStart
-              << " syncMode= " << syncModeString(syncMode) << std::endl;
+    std::cout << "\ntest " << std::showbase << std::hex << testMask << ": stream=" << stream
+         << " waitStart=" << waitStart << " syncMode=" << syncModeString(syncMode) << std::endl;
 
     size_t sizeBytes = numElements * sizeof(int);
 
@@ -183,5 +183,5 @@ void runTests(int64_t numElements) {
 
 
 TEST_CASE("Unit_hipEvent") {
-  runTests(80000000);
+  runTests(10000000);
 }

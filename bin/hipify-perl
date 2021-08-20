@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 
 ##
 # Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
@@ -26,6 +26,7 @@
 
 #usage hipify-perl [OPTIONS] INPUT_FILE
 
+use warnings;
 use Getopt::Long;
 my $whitelist = "";
 my $fileName = "";

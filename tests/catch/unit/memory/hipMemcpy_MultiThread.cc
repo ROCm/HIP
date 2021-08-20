@@ -27,7 +27,7 @@ This testfile verifies the following scenarios of all hipMemcpy API
 1. Multi thread
 */
 static constexpr auto NUM_ELM{1024};
-static constexpr auto NUM_THREADS{10};
+static constexpr auto NUM_THREADS{5};
 static auto Available_Gpus{0};
 static constexpr auto MAX_GPU{256};
 
