@@ -1,4 +1,4 @@
-#!/usr/bin/perl  -w
+#!/usr/bin/env perl
 ##
 # Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
 #
@@ -22,6 +22,7 @@
 ##
 #usage hipify-cmakefile [OPTIONS] INPUT_FILE
 use Getopt::Long;
+use warnings;
 
 GetOptions(
     "print-stats" => \$print_stats    # print the command-line, like a header.

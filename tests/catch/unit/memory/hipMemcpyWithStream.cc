@@ -33,7 +33,6 @@ This testfile verifies the following scenarios
 7. hipMemcpyWithStream API with testkind TestkindDefault
 8. hipMemcpyWithStream API with testkind TestkindDefaultForDtoD
 9. hipMemcpyWithStream API DtoD on same device
-10.Multi threaded scenario
 */
 
 
@@ -540,55 +539,6 @@ void TestkindHtoH(void) {
   HIP_CHECK(hipStreamDestroy(stream));
 }
 
-TEST_CASE("Unit_hipMemcpyWithStream_MultiThread") {
-  size_t thread_count = 10;
-  std::vector<joinable_thread> threads;
-  int deviceCount = 0;
-  HIP_CHECK(hipGetDeviceCount(&deviceCount));
-  if (deviceCount < 2) {
-    SUCCEED("deviceCount < 2");
-  } else {
-    for (int op = static_cast<int>(ops::TestwithOnestream);
-        op < static_cast<int>(ops::END_OF_LIST); ++op) {
-      for (uint32_t i = 0; i < thread_count; i++) {
-        threads.emplace_back(std::thread{[&] {
-            switch ( op ) {
-            case static_cast<int>(ops::TestwithOnestream):
-            TestwithOnestream();
-            break;
-            case static_cast<int>(ops::TestwithTwoStream):
-            TestwithTwoStream();
-            break;
-            case static_cast<int>(ops::TestkindDtoH):
-            TestkindDtoH();
-            break;
-            case static_cast<int>(ops::TestkindHtoH):
-            TestkindHtoH();
-            break;
-            case static_cast<int>(ops::TestkindDtoD):
-            TestkindDtoD();
-            break;
-            case static_cast<int>(ops::TestOnMultiGPUwithOneStream):
-            TestOnMultiGPUwithOneStream();
-            break;
-            case static_cast<int>(ops::TestkindDefault):
-            TestkindDefault();
-            break;
-#ifndef __HIP_PLATFORM_NVCC__
-            case static_cast<int>(ops::TestkindDefaultForDtoD):
-            TestkindDefaultForDtoD();
-            break;
-#endif
-            case static_cast<int>(ops::TestDtoDonSameDevice):
-            TestDtoDonSameDevice();
-            break;
-            default:{}
-            }
-        }});
-      }
-    }
-  }
-}
 
 TEST_CASE("Unit_hipMemcpyWithStream_TestWithOneStream") {
   TestwithOnestream();

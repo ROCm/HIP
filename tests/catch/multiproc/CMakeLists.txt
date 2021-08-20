@@ -9,6 +9,7 @@ set(LINUX_TEST_SRC
     hipGetDeviceCountMproc.cc
     hipGetDevicePropertiesMproc.cc
     hipSetGetDeviceMproc.cc
+    hipIpcMemAccessTest.cc
 )
 
 if(UNIX)
