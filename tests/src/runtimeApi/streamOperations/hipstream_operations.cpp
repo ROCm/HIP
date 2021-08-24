@@ -51,18 +51,18 @@ THE SOFTWARE.
 #include "test_common.h"
 
 // Random predefiend 32 and 64 bit values
-constexpr int32_t value32 =         0x70F0F0FF;
-constexpr int64_t value64 =         0x7FFF0000FFFF0000;
+constexpr uint32_t value32 =         0x70F0F0FF;
+constexpr uint64_t value64 =         0x7FFF0000FFFF0000;
 constexpr unsigned int writeFlag = 0;
 
 constexpr float SLEEP_MS = 100;
-constexpr int32_t DATA_INIT = 0x1234;
-constexpr int32_t DATA_UPDATE = 0X4321;
+constexpr uint32_t DATA_INIT = 0x1234;
+constexpr uint32_t DATA_UPDATE = 0X4321;
 
 struct TEST_WAIT {
   int compareOp;
   uint64_t mask;
-  int64_t waitValue;
+  uint64_t waitValue;
   int64_t signalValueFail;
   int64_t signalValuePass;
 };
@@ -126,7 +126,7 @@ TEST_WAIT testCases[] = {
 
 struct TEST_WAIT32_NO_MASK {
   int compareOp;
-  int32_t waitValue;
+  uint32_t waitValue;
   int32_t signalValueFail;
   int32_t signalValuePass;
 };
@@ -161,7 +161,7 @@ TEST_WAIT32_NO_MASK testCasesNoMask32[] = {
 
 struct TEST_WAIT64_NO_MASK {
   int compareOp;
-  int64_t waitValue;
+  uint64_t waitValue;
   int64_t signalValueFail;
   int64_t signalValuePass;
 };
@@ -201,8 +201,8 @@ void testWrite() {
   hipStream_t stream;
   hipStreamCreate(&stream);
 
-  int64_t* host_ptr64 = (int64_t *) malloc(sizeof(int64_t));
-  int32_t* host_ptr32 = (int32_t *) malloc(sizeof(int32_t));
+  uint64_t* host_ptr64 = (uint64_t *) malloc(sizeof(uint64_t));
+  uint32_t* host_ptr32 = (uint32_t *) malloc(sizeof(uint32_t));
   std::cout << " hipStreamWriteValue: testing ... \n";
 
   HIPCHECK(hipExtMallocWithFlags((void **)&signalPtr, 8, hipMallocSignalMemory));
@@ -214,8 +214,8 @@ void testWrite() {
   *host_ptr32 = 0x0;
   *signalPtr = 0x0;
 
-  hipHostRegister(host_ptr64, sizeof(int64_t), 0);
-  hipHostRegister(host_ptr32, sizeof(int32_t), 0);
+  hipHostRegister(host_ptr64, sizeof(uint64_t), 0);
+  hipHostRegister(host_ptr32, sizeof(uint32_t), 0);
 
   // Test writting registered host pointer
   HIPCHECK(hipStreamWriteValue64(stream, host_ptr64, value64, writeFlag));
@@ -274,7 +274,7 @@ void waitAndWrite64(hipStream_t stream, int64_t* signalPtr, TEST_WAIT tc, int64_
   HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
 }
 void waitAndWrite32(hipStream_t stream, int64_t* signalPtr, TEST_WAIT tc, int32_t* dataPtr32) {
-  HIPCHECK(hipStreamWaitValue32(stream, signalPtr, static_cast<int32_t>(tc.waitValue), tc.compareOp,
+  HIPCHECK(hipStreamWaitValue32(stream, signalPtr, static_cast<uint32_t>(tc.waitValue), tc.compareOp,
                                 static_cast<uint32_t>(tc.mask)));
   HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
 }

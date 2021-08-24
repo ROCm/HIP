@@ -39,8 +39,8 @@ Testcase Scenarios :
 /* HIT_START
  * BUILD_CMD: %t %hc %S/%s %S/../../test_common.cpp -I%S/../../ -o %T/%t -ldl -std=c++11
  * TEST: %t --tests 1
- * TEST: %t --tests 2 EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t --tests 3 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t --tests 2
+ * TEST: %t --tests 3
  * HIT_END
  */
 

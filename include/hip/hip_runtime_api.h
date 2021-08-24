@@ -300,7 +300,7 @@ typedef enum __HIP_NODISCARD hipError_t {
                                   ///< recorded in a capturing stream.
     hipErrorStreamCaptureWrongThread = 908,  ///< A stream capture sequence not initiated with
                                              ///< the hipStreamCaptureModeRelaxed argument to
-                                             ///< hipStreamBeginCapture was passed to 
+                                             ///< hipStreamBeginCapture was passed to
                                              ///< hipStreamEndCapture in a different thread.
     hipErrorUnknown = 999,  //< Unknown error.
     // HSA Runtime Error Codes start here.
@@ -529,6 +529,7 @@ typedef struct hipFuncAttributes {
 } hipFuncAttributes;
 typedef struct ihipEvent_t* hipEvent_t;
 enum hipLimit_t {
+    hipLimitPrintfFifoSize = 0x01,
     hipLimitMallocHeapSize = 0x02,
 };
 /**
@@ -612,6 +613,8 @@ enum hipLimit_t {
 #define hipStreamWaitValueEq 0x1
 #define hipStreamWaitValueAnd 0x2
 #define hipStreamWaitValueNor 0x3
+// Stream per thread
+#define hipStreamPerThread ((hipStream_t)2) ///< Implicit stream per application thread
 /*
  * @brief HIP Memory Advise values
  * @enum
@@ -1271,8 +1274,40 @@ hipError_t hipIpcOpenMemHandle(void** devPtr, hipIpcMemHandle_t handle, unsigned
  *
  */
 hipError_t hipIpcCloseMemHandle(void* devPtr);
+
+/**
+ * @brief Gets an opaque interprocess handle for an event.
+ *
+ * This opaque handle may be copied into other processes and opened with cudaIpcOpenEventHandle.
+ * Then cudaEventRecord, cudaEventSynchronize, cudaStreamWaitEvent and cudaEventQuery may be used in
+ * either process. Operations on the imported event after the exported event has been freed with hipEventDestroy
+ * will result in undefined behavior.
+ *
+ * @param[out]  handle Pointer to cudaIpcEventHandle to return the opaque event handle
+ * @param[in]   event  Event allocated with cudaEventInterprocess and cudaEventDisableTiming flags
+ *
+ * @returns #hipSuccess, #hipErrorInvalidConfiguration, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipIpcGetEventHandle(hipIpcEventHandle_t* handle, hipEvent_t event);
+
+/**
+ * @brief Opens an interprocess event handles.
+ *
+ * Opens an interprocess event handle exported from another process with cudaIpcGetEventHandle. The returned
+ * hipEvent_t behaves like a locally created event with the hipEventDisableTiming flag specified. This event
+ * need be freed with hipEventDestroy. Operations on the imported event after the exported event has been freed
+ * with hipEventDestroy will result in undefined behavior. If the function is called within the same process where
+ * handle is returned by hipIpcGetEventHandle, it will return hipErrorInvalidContext.
+ *
+ * @param[out]  event  Pointer to hipEvent_t to return the event
+ * @param[in]   handle The opaque interprocess handle to open
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidContext
+ *
+ */
 hipError_t hipIpcOpenEventHandle(hipEvent_t* event, hipIpcEventHandle_t handle);
+
 // end doxygen Device
 /**
  * @}
@@ -1652,7 +1687,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue64, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
-hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags,
+hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags,
                                 uint32_t mask __dparm(0xFFFFFFFF));
 /**
  * @brief Enqueues a wait command to the stream.
@@ -1683,7 +1718,7 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, int32_t value, un
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue32, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
-hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags,
+hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, unsigned int flags,
                                 uint64_t mask __dparm(0xFFFFFFFFFFFFFFFF));
 /**
  * @brief Enqueues a write command to the stream.
@@ -1701,7 +1736,7 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, int64_t value, un
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
-hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value, unsigned int flags);
+hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags);
 /**
  * @brief Enqueues a write command to the stream.
  *
@@ -1718,7 +1753,7 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, int32_t value, u
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
-hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, int64_t value, unsigned int flags);
+hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, unsigned int flags);
 // end doxygen Stream Memory Operations
 /**
  * @}
@@ -2482,6 +2517,21 @@ hipError_t hipMemcpyDtoHAsync(void* dst, hipDeviceptr_t src, size_t sizeBytes, h
  */
 hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t sizeBytes,
                               hipStream_t stream);
+
+/**
+ *  @brief Returns a global pointer from a module.
+ *  Returns in *dptr and *bytes the pointer and size of the global of name name located in module hmod.
+ *  If no variable of that name exists, it returns hipErrorNotFound. Both parameters dptr and bytes are optional.
+ *  If one of them is NULL, it is ignored and hipSuccess is returned.
+ *
+ *  @param[out]  dptr  Returned global device pointer
+ *  @param[out]  bytes Returned global size in bytes
+ *  @param[in]   hmod  Module to retrieve global from
+ *  @param[in]   name  Name of global to retrieve
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotFound, #hipErrorInvalidContext
+ *
+ */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
@@ -4059,22 +4109,18 @@ const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
 int hipGetStreamDeviceId(hipStream_t stream);
-#ifdef __cplusplus
 /**
  * An opaque value that represents a hip graph
  */
-class hipGraph;
-typedef hipGraph* hipGraph_t;
+typedef struct ihipGraph* hipGraph_t;
 /**
  * An opaque value that represents a hip graph node
  */
-class hipGraphNode;
-typedef hipGraphNode* hipGraphNode_t;
+typedef struct hipGraphNode* hipGraphNode_t;
 /**
  * An opaque value that represents a hip graph Exec
  */
-class hipGraphExec;
-typedef hipGraphExec* hipGraphExec_t;
+typedef struct hipGraphExec* hipGraphExec_t;
 typedef enum hipGraphNodeType {
   hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
   hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
@@ -4110,7 +4156,7 @@ typedef struct hipMemsetParams {
   unsigned int value;
   size_t width;
 } hipMemsetParams;
-enum hipGraphExecUpdateResult {
+typedef enum hipGraphExecUpdateResult {
   hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
   hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
                                   ///< in the return value of the function
@@ -4123,18 +4169,18 @@ enum hipGraphExecUpdateResult {
   hipGraphExecUpdateErrorNotSupported =
       0x6,  ///< The update failed because something about the node is not supported
   hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
-};
-enum hipStreamCaptureMode {
+} hipGraphExecUpdateResult;
+typedef enum hipStreamCaptureMode {
   hipStreamCaptureModeGlobal = 0,
   hipStreamCaptureModeThreadLocal,
   hipStreamCaptureModeRelaxed
-};
-enum hipStreamCaptureStatus {
+} hipStreamCaptureMode;
+typedef enum hipStreamCaptureStatus {
   hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
   hipStreamCaptureStatusActive,      ///< Stream is actively capturing
   hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
                                      ///< invalidated, but not terminated
-};
+} hipStreamCaptureStatus;
 hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
 hipError_t hipStreamEndCapture(hipStream_t stream, hipGraph_t* pGraph);
 // Creates a graph.
@@ -4156,6 +4202,10 @@ hipError_t hipGraphAddKernelNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
 hipError_t hipGraphAddMemcpyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
                                  const hipMemcpy3DParms* pCopyParams);
+// Creates a 1D memcpy node and adds it to a graph.
+hipError_t hipGraphAddMemcpyNode1D(hipGraphNode_t* pGraphNode, hipGraph_t graph,
+                                   const hipGraphNode_t* pDependencies, size_t numDependencies,
+                                   void* dst, const void* src, size_t count, hipMemcpyKind kind);
 // Creates a memset node and adds it to a graph.
 hipError_t hipGraphAddMemsetNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -4186,16 +4236,12 @@ hipError_t hipGraphAddDependencies(hipGraph_t graph, const hipGraphNode_t* from,
 // Creates an empty node and adds it to a graph.
 hipError_t hipGraphAddEmptyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                 const hipGraphNode_t* pDependencies, size_t numDependencies);
-#endif
 // doxygen end graph API
 /**
  * @}
  */
 #ifdef __cplusplus
 } /* extern "c" */
-#endif
-#if USE_PROF_API
-#include <hip/amd_detail/hip_prof_str.h>
 #endif
 #ifdef __cplusplus
 #if defined(__clang__) && defined(__HIP__)
@@ -4442,4 +4488,8 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
     return hipMallocManaged((void**)devPtr, size, flags);
 }
 #endif
+#endif
+
+#if USE_PROF_API
+#include <hip/amd_detail/hip_prof_str.h>
 #endif

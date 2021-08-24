@@ -29,7 +29,7 @@ THE SOFTWARE.
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS -std=c++11
  * TEST_NAMED: %t hipMemcpyAtoH_simple --tests 1
- * TEST_NAMED: %t hipMemcpyAtoH_DeviceContextChange --tests 3 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST_NAMED: %t hipMemcpyAtoH_DeviceContextChange --tests 3
  * TEST_NAMED: %t hipMemcpyAtoH_NegativeTests --tests 4
  * TEST_NAMED: %t hipMemcpyAtoH_PinnedHostMemory --tests 5
  * HIT_END

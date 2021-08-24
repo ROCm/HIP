@@ -12,11 +12,13 @@ endif()
 target_link_libraries(UnitTests PRIVATE UnitDeviceTests
                                         MemoryTest
                                         StreamTest
+                                        OccupancyTest
+                                        DeviceTest
+                                        RTC
                                         stdc++fs)
 
-# Add AMD Only Tests
-if(HIP_PLATFORM MATCHES "amd")
-    # target_link_libraries(UnitTests PRIVATE RTC)
+if(HIP_PLATFORM MATCHES "nvidia")
+    target_link_libraries(UnitTests PRIVATE nvrtc)
 endif()
 
 catch_discover_tests(UnitTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")

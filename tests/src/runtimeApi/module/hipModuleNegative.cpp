@@ -38,16 +38,16 @@ THE SOFTWARE.
  * TEST: %t --tests 0x41
  * TEST: %t --tests 0x42
  * TEST: %t --tests 0x43
- * TEST: %t --tests 0x44 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t --tests 0x44
  * TEST: %t --tests 0x45
- * TEST: %t --tests 0x50 EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t --tests 0x51 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t --tests 0x50
+ * TEST: %t --tests 0x51
  * TEST: %t --tests 0x52
  * TEST: %t --tests 0x53
  * TEST: %t --tests 0x54
- * TEST: %t --tests 0x55 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t --tests 0x55
  * TEST: %t --tests 0x56
- * TEST: %t --tests 0x60 EXCLUDE_HIP_PLATFORM nvidia
+ * TEST: %t --tests 0x60
  * HIT_END
  */
 #include <stdio.h>
@@ -57,6 +57,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <cstddef>
 #include <vector>
+#include <signal.h>
 #include "test_common.h"
 
 #define FILENAME_NONEXST "sample_nonexst.code"
@@ -588,9 +589,11 @@ bool testhipModuleGetGlobalNeg50() {
   HIPCHECK(hipModuleLoad(&Module, CODEOBJ_GLOBAL));
   if ((ret = hipModuleGetGlobal(nullptr,
     &deviceGlobalSize, Module, DEVGLOB_VAR)) != hipSuccess) {
-    TestPassed = true;
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
+  } else {
+    // If one of first two parameters is nullptr, it is ignored.
+    TestPassed = true;
   }
   HIPCHECK(hipModuleUnload(Module));
 #ifdef __HIP_PLATFORM_NVIDIA__
@@ -615,9 +618,11 @@ bool testhipModuleGetGlobalNeg51() {
   HIPCHECK(hipModuleLoad(&Module, CODEOBJ_GLOBAL));
   if ((ret = hipModuleGetGlobal(&deviceGlobal, nullptr,
       Module, DEVGLOB_VAR)) != hipSuccess) {
-    TestPassed = true;
     printf("Test Passed: Error Code Returned: '%s'(%d)\n",
            hipGetErrorString(ret), ret);
+  } else {
+    // If one of first two parameters is nullptr, it is ignored.
+    TestPassed = true;
   }
   HIPCHECK(hipModuleUnload(Module));
 #ifdef __HIP_PLATFORM_NVIDIA__
@@ -799,9 +804,28 @@ bool testhipModuleLoadNeg60() {
   return TestPassed;
 }
 
+#ifdef __HIP_PLATFORM_NVIDIA__
+extern "C" void signalHandler(int sig, siginfo_t *info, void *xxx)
+{
+  printf("signalHandler(%d) called\n", sig);
+  throw sig;
+}
+#endif
+
 int main(int argc, char* argv[]) {
   HipTest::parseStandardArguments(argc, argv, true);
-  bool TestPassed = true;
+  bool TestPassed = false;
+
+#ifdef __HIP_PLATFORM_NVIDIA__
+  if (p_tests == 0x41 || p_tests == 0x44 || p_tests == 0x55
+      || p_tests == 0x56 || p_tests == 0x60) {
+    struct sigaction sa = {0};
+    sa.sa_sigaction = signalHandler;
+    sigaction(SIGSEGV, &sa, NULL);
+  }
+  try {
+#endif
+
   if (p_tests == 0x10) {
     TestPassed = testhipModuleLoadNeg10();
   } else if (p_tests == 0x11) {
@@ -858,6 +882,19 @@ int main(int argc, char* argv[]) {
     printf("Invalid Test Case \n");
     exit(1);
   }
+#ifdef __HIP_PLATFORM_NVIDIA__
+  }
+  catch (const int sig) {
+    printf("catch exception %d\n", sig);
+    if (sig == SIGSEGV) {
+      TestPassed = true;
+    }
+  }
+  catch (...) {
+    printf("catch unknown exception\n");
+  }
+#endif
+
   if (TestPassed) {
     passed();
   } else {

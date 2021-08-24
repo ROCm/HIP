@@ -42,7 +42,6 @@ static constexpr auto NUM_BLOCKS{32};
 
 static constexpr auto saxpy{
 R"(
-#include <hip/hip_runtime.h>
 #include "test_header.h"
 #include "test_header1.h"
 extern "C"

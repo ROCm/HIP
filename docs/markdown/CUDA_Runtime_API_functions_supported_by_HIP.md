@@ -851,7 +851,7 @@
 |              |*`cudaGraphNodeTypeCount`*                           | 10.0             |                                                            |
 | enum         |***`cudaLimit`***                                    |                  |***`hipLimit_t`***                                          |
 |         0x00 |*`cudaLimitStackSize`*                               |                  |                                                            |
-|         0x01 |*`cudaLimitPrintfFifoSize`*                          |                  |                                                            |
+|         0x01 |*`cudaLimitPrintfFifoSize`*                          |                  |*`hipLimitPrintfFifoSize`*                                  |
 |         0x02 |*`cudaLimitMallocHeapSize`*                          |                  |*`hipLimitMallocHeapSize`*                                  |
 |         0x03 |*`cudaLimitDevRuntimeSyncDepth`*                     |                  |                                                            |
 |         0x04 |*`cudaLimitDevRuntimePendingLaunchCount`*            |                  |                                                            |

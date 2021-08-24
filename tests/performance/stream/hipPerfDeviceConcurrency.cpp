@@ -95,17 +95,12 @@ hipPerfDeviceConcurrency::hipPerfDeviceConcurrency() {}
 hipPerfDeviceConcurrency::~hipPerfDeviceConcurrency() {}
 
 void hipPerfDeviceConcurrency::open(void) {
-
-
   int nGpu = 0;
   HIPCHECK(hipGetDeviceCount(&nGpu));
   setNumGpus(nGpu);
   if (nGpu < 1) {
-  std::cout << "info: didn't find any GPU! skipping the test!\n";
-  passed();
+    failed("No GPU!");
   }
-
-
 }
 
 
