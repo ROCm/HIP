@@ -62,6 +62,8 @@ set(TEST_SRC
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
+    hipManagedKeyword.cc
+    hipMallocMngdMultiThread.cc
 )
 else()
 set(TEST_SRC
