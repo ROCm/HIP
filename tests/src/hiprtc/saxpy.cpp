@@ -20,11 +20,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -lnvrtc
  * TEST: %t
  * HIT_END
  */
-
 #include <test_common.h>
 
 #include <hip/hiprtc.h>
@@ -77,7 +76,12 @@ int main()
     hipDeviceProp_t props;
     int device = 0;
     hipGetDeviceProperties(&props, device);
+#ifdef __HIP_PLATFORM_AMD__
     std::string sarg = std::string("--gpu-architecture=") + props.gcnArchName;
+#else
+    std::string sarg = std::string("--gpu-architecture=compute_")
+      + std::to_string(props.major) + std::to_string(props.minor);
+#endif
     const char* options[] = {
         sarg.c_str()
     };
@@ -106,6 +110,12 @@ int main()
 
     hipModule_t module;
     hipFunction_t kernel;
+
+#ifdef __HIP_PLATFORM_NVIDIA__
+    HIPCHECK(hipInit(0));
+    hipCtx_t ctx;
+    HIPCHECK(hipCtxCreate(&ctx, 0, device));
+#endif
     hipModuleLoadData(&module, code.data());
     hipModuleGetFunction(&kernel, module, "saxpy");
 
@@ -123,9 +133,9 @@ int main()
     }
 
     hipDeviceptr_t dX, dY, dOut;
-    hipMalloc(&dX, bufferSize);
-    hipMalloc(&dY, bufferSize);
-    hipMalloc(&dOut, bufferSize);
+    hipMalloc((void **)&dX, bufferSize);
+    hipMalloc((void **)&dY, bufferSize);
+    hipMalloc((void **)&dOut, bufferSize);
     hipMemcpyHtoD(dX, hX.get(), bufferSize);
     hipMemcpyHtoD(dY, hY.get(), bufferSize);
 
@@ -150,11 +160,14 @@ int main()
         if (fabs(a * hX[i] + hY[i] - hOut[i]) > fabs(hOut[i])* 1e-6) { failed("Validation failed."); }
     }
 
-    hipFree(dX);
-    hipFree(dY);
-    hipFree(dOut);
+    hipFree((void *)dX);
+    hipFree((void *)dY);
+    hipFree((void *)dOut);
 
     hipModuleUnload(module);
 
+#ifdef __HIP_PLATFORM_NVIDIA__
+    HIPCHECK(hipCtxDestroy(ctx));
+#endif
     passed();
 }
