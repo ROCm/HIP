@@ -41,8 +41,8 @@ def hipBuildTest(String backendLabel) {
                     else
                         cmake -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
                     fi
-                    make install  -j\$(nproc)
-                    make build_tests  -j\$(nproc)
+                    make install
+                    make build_tests
                     """
             }
         }
