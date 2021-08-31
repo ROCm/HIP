@@ -23,16 +23,16 @@ THE SOFTWARE.
       Both 32 and 64 bit version of this APIs are tested by writing a specific value and checking
    the correctness. Various mememory objects (host registered, device and Signal Memory) are tested.
     Stream Wait:
-      Wait API is tested using two memory locations (DataPr and SignalPtr). Following
+      Wait API is tested using two memory locations (DataPr and devPtr). Following
       commands are executed for each type of wait operaitons (GEQ, EQ, AND and NOR) in the order
    specified.
-        1. CPU : An intial values are written to DataPtr and SignalPtr
+        1. CPU : An intial values are written to DataPtr and devPtr
         2. GPU : Wait operation (with false condition that blocks the stream) is enqued.
         3. GPU : Write operation on DataPtr to update its value is enqued.
         4. CPU : A query or CPU wait to make sure all commands are processed by GPU.
         5. CPU : streamQuery is performed to make sure it is not finshed executing the commands,
    since step-2 is blocking.
-        6. CPU : A new value is written to SignalPtr memory that make wait condition defined in
+        6. CPU : A new value is written to devPtr memory that make wait condition defined in
    step-2 to be true. This causes step-3 to be executed.
         7. CPU : Synchronize the stream and read value at DataPtr, it should be equal to updated
    value (step-3).
@@ -63,9 +63,12 @@ struct TEST_WAIT {
   int compareOp;
   uint64_t mask;
   uint64_t waitValue;
-  int64_t signalValueFail;
-  int64_t signalValuePass;
+  uint64_t signalValueFail;
+  uint64_t signalValuePass;
 };
+
+// For Debug only. Use GPU_STREAMOPS_CP_WAIT=1 to wait on CP.
+#define GPU_STREAMOPS_CP_WAIT 0
 
 TEST_WAIT testCases[] = {
   {
@@ -127,8 +130,8 @@ TEST_WAIT testCases[] = {
 struct TEST_WAIT32_NO_MASK {
   int compareOp;
   uint32_t waitValue;
-  int32_t signalValueFail;
-  int32_t signalValuePass;
+  uint32_t signalValueFail;
+  uint32_t signalValuePass;
 };
 
 // default mask 0xFFFFFFFF will be used.
@@ -154,16 +157,16 @@ TEST_WAIT32_NO_MASK testCasesNoMask32[] = {
   {
     hipStreamWaitValueNor,
     0x7AAAAAAA,
-    static_cast<int32_t>(0x85555555),
-    static_cast<int32_t>(0x9AAAAAAA)
+    static_cast<uint32_t>(0x85555555),
+    static_cast<uint32_t>(0x9AAAAAAA)
   }
 };
 
 struct TEST_WAIT64_NO_MASK {
   int compareOp;
   uint64_t waitValue;
-  int64_t signalValueFail;
-  int64_t signalValuePass;
+  uint64_t signalValueFail;
+  uint64_t signalValuePass;
 };
 
 // default mask 0xFFFFFFFFFFFFFFFF will be used.
@@ -189,14 +192,14 @@ TEST_WAIT64_NO_MASK testCasesNoMask64[] = {
   {
     hipStreamWaitValueNor,
     0x4724724747247247,
-    static_cast<int64_t>(0xbddbddbdbddbddbd),
-    static_cast<int64_t>(0xbddbddbdbddbddb3)
+    static_cast<uint64_t>(0xbddbddbdbddbddbd),
+    static_cast<uint64_t>(0xbddbddbdbddbddb3)
   }
 };
 
 void testWrite() {
 
-  int64_t* signalPtr;
+  uint64_t* signalPtr;
 
   hipStream_t stream;
   hipStreamCreate(&stream);
@@ -269,43 +272,54 @@ bool streamWaitValueSupported() {
   return false;
 }
 
-void waitAndWrite64(hipStream_t stream, int64_t* signalPtr, TEST_WAIT tc, int64_t* dataPtr64) {
-  HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.compareOp, tc.mask));
+void waitAndWrite64(hipStream_t stream, uint64_t* devPtr, TEST_WAIT tc, uint64_t* dataPtr64) {
+  HIPCHECK(hipStreamWaitValue64(stream, devPtr, tc.waitValue, tc.compareOp, tc.mask));
   HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
 }
-void waitAndWrite32(hipStream_t stream, int64_t* signalPtr, TEST_WAIT tc, int32_t* dataPtr32) {
-  HIPCHECK(hipStreamWaitValue32(stream, signalPtr, static_cast<uint32_t>(tc.waitValue), tc.compareOp,
+void waitAndWrite32(hipStream_t stream, uint64_t* devPtr, TEST_WAIT tc, uint32_t* dataPtr32) {
+  HIPCHECK(hipStreamWaitValue32(stream, devPtr, static_cast<uint32_t>(tc.waitValue), tc.compareOp,
                                 static_cast<uint32_t>(tc.mask)));
   HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
 }
-void waitAndWrite32NoMask(hipStream_t stream, int64_t* signalPtr, TEST_WAIT32_NO_MASK tc,
-                          int32_t* dataPtr32) {
-  HIPCHECK(hipStreamWaitValue32(stream, signalPtr, tc.waitValue, tc.compareOp));
+void waitAndWrite32NoMask(hipStream_t stream, uint64_t* devPtr, TEST_WAIT32_NO_MASK tc,
+                          uint32_t* dataPtr32) {
+  HIPCHECK(hipStreamWaitValue32(stream, devPtr, tc.waitValue, tc.compareOp));
   HIPCHECK(hipStreamWriteValue32(stream, dataPtr32, DATA_UPDATE, writeFlag));
 }
-void waitAndWrite64NoMask(hipStream_t stream, int64_t* signalPtr, TEST_WAIT64_NO_MASK tc,
-                          int64_t* dataPtr64) {
-  HIPCHECK(hipStreamWaitValue64(stream, signalPtr, tc.waitValue, tc.compareOp));
+void waitAndWrite64NoMask(hipStream_t stream, uint64_t* devPtr, TEST_WAIT64_NO_MASK tc,
+                          uint64_t* dataPtr64) {
+  HIPCHECK(hipStreamWaitValue64(stream, devPtr, tc.waitValue, tc.compareOp));
   HIPCHECK(hipStreamWriteValue64(stream, dataPtr64, DATA_UPDATE, writeFlag));
 }
 
 void testWait() {
-  int64_t* signalPtr;
+  uint64_t* devPtr;
 
-  if (!streamWaitValueSupported()) {
-    std::cout << " hipStreamWaitValue: not supported on this device , skipping ... \n";
-    return;
+  // For Debug only.
+  if (GPU_STREAMOPS_CP_WAIT) {
+    if (!streamWaitValueSupported()) {
+      std::cout << " hipStreamWaitValue: not supported on this device , skipping ... \n";
+      return;
+    }
   }
+
   std::cout << " hipStreamWaitValue32: testing ... \n";
   std::cout << " hipStreamWaitValue64: testing ... \n";
   hipStream_t stream;
   hipStreamCreate(&stream);
 
-  HIPCHECK(hipExtMallocWithFlags((void **)&signalPtr, 8, hipMallocSignalMemory));
-  int64_t* dataPtr64 = (int64_t *) malloc(sizeof(int64_t));
-  int32_t* dataPtr32 = (int32_t *) malloc(sizeof(int32_t));
-  hipHostRegister(dataPtr64, sizeof(int64_t), 0);
-  hipHostRegister(dataPtr32, sizeof(int32_t), 0);
+  //  For Debug only. Use signalMemory allocation and GPU_STREAMOPS_CP_WAIT=1 to wait on CP.
+  if (GPU_STREAMOPS_CP_WAIT) {
+    HIPCHECK(hipExtMallocWithFlags(reinterpret_cast<void **>(&devPtr), 8, hipMallocSignalMemory));
+  } else {
+    devPtr = reinterpret_cast<uint64_t*>(malloc(sizeof(uint64_t)));
+    hipHostRegister(devPtr, sizeof(uint64_t), 0);
+  }
+
+  uint64_t* dataPtr64 = reinterpret_cast<uint64_t*> (malloc(sizeof(uint64_t)));
+  uint32_t* dataPtr32 = reinterpret_cast<uint32_t*> (malloc(sizeof(uint32_t)));
+  hipHostRegister(dataPtr64, sizeof(uint64_t), 0);
+  hipHostRegister(dataPtr32, sizeof(uint32_t), 0);
 
   // We run all test cases twice
 
@@ -315,10 +329,10 @@ void testWait() {
     bool isBlocking = run == 0;
 
     for (const auto& tc : testCases) {
-      *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
+      *devPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr64 = DATA_INIT;
 
-      std::thread waitThenUpdate64(waitAndWrite64, stream, signalPtr, tc, dataPtr64);
+      std::thread waitThenUpdate64(waitAndWrite64, stream, devPtr, tc, dataPtr64);
 
       if (isBlocking) {
         // For DEBUG only
@@ -329,17 +343,17 @@ void testWait() {
         // since above write command waits for waitValue command if constant memeory filled up.
 
         // update signal to unblock the wait.
-        *signalPtr = tc.signalValuePass;
+        *devPtr = tc.signalValuePass;
       }
       waitThenUpdate64.join();
       hipStreamSynchronize(stream);
       HIPASSERT(*dataPtr64 == DATA_UPDATE);
 
       // 32-bit API
-      *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
+      *devPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr32 = DATA_INIT;
 
-      std::thread waitThenUpdate32(waitAndWrite32, stream, signalPtr, tc, dataPtr32);
+      std::thread waitThenUpdate32(waitAndWrite32, stream, devPtr, tc, dataPtr32);
 
       if (isBlocking) {
         // For DEBUG only
@@ -350,7 +364,7 @@ void testWait() {
         // since above write command waits for waitValue command if constant memeory filled up.
 
         // update signal to unblock the wait.
-        *signalPtr = static_cast<int32_t>(tc.signalValuePass);
+        *devPtr = static_cast<int32_t>(tc.signalValuePass);
       }
       waitThenUpdate32.join();
       hipStreamSynchronize(stream);
@@ -365,10 +379,10 @@ void testWait() {
     bool isBlocking = run == 0;
 
     for (const auto& tc : testCasesNoMask32) {
-      *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
+      *devPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr32 = DATA_INIT;
 
-      std::thread waitThenUpdate32(waitAndWrite32NoMask, stream, signalPtr, tc, dataPtr32);
+      std::thread waitThenUpdate32(waitAndWrite32NoMask, stream, devPtr, tc, dataPtr32);
 
       if (isBlocking) {
         // For DEBUG only
@@ -379,7 +393,7 @@ void testWait() {
         // since above write command waits for waitValue command if constant memeory filled up.
 
         // update signal to unblock the wait.
-        *signalPtr = tc.signalValuePass;
+        *devPtr = tc.signalValuePass;
       }
       waitThenUpdate32.join();
       hipStreamSynchronize(stream);
@@ -394,10 +408,10 @@ void testWait() {
     bool isBlocking = run == 0;
 
     for (const auto& tc : testCasesNoMask64) {
-      *signalPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
+      *devPtr = isBlocking ? tc.signalValueFail : tc.signalValuePass;
       *dataPtr64 = DATA_INIT;
 
-      std::thread waitThenUpdate64(waitAndWrite64NoMask, stream, signalPtr, tc, dataPtr64);
+      std::thread waitThenUpdate64(waitAndWrite64NoMask, stream, devPtr, tc, dataPtr64);
 
       if (isBlocking) {
         // For DEBUG only
@@ -408,7 +422,7 @@ void testWait() {
         // since above write command waits for waitValue command if constant memeory filled up.
 
         // update signal to unblock the wait.
-        *signalPtr = tc.signalValuePass;
+        *devPtr = tc.signalValuePass;
       }
       waitThenUpdate64.join();
       hipStreamSynchronize(stream);
@@ -417,7 +431,12 @@ void testWait() {
   }
 
   // Cleanup
-  HIPCHECK(hipFree(signalPtr));
+  // For Debug only.
+  if (GPU_STREAMOPS_CP_WAIT) {
+    hipFree(devPtr);
+  } else {
+    free(devPtr);
+  }
   hipHostUnregister(dataPtr64);
   hipHostUnregister(dataPtr32);
   free(dataPtr64);
