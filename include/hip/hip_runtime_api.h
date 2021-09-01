@@ -463,9 +463,9 @@ enum hipComputeMode {
 #define GENERIC_GRID_LAUNCH 1
 #endif
 #include <hip/amd_detail/host_defines.h>
-#include <hip/amd_detail/amd_driver_types.h>
-#include <hip/amd_detail/amd_hip_texture_types.h>
-#include <hip/amd_detail/amd_hip_surface_types.h>
+#include <hip/driver_types.h>
+#include <hip/texture_types.h>
+#include <hip/surface_types.h>
 #if defined(_MSC_VER)
 #define DEPRECATED(msg) __declspec(deprecated(msg))
 #else // !defined(_MSC_VER)
@@ -635,9 +635,23 @@ typedef enum hipMemoryAdvise {
                                             ///< coherent operations between host and device, while
                                             ///< executing kernels. The coarse-grain can be used
                                             ///< for data that only needs to be coherent at dispatch
-                                            ///< boundaries for better performance.
+                                            ///< boundaries for better performance
     hipMemAdviseUnsetCoarseGrain = 101      ///< Restores cache coherency policy back to fine-grain
 } hipMemoryAdvise;
+/*
+ * @brief HIP Coherency Mode
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemRangeCoherencyMode {
+    hipMemRangeCoherencyModeFineGrain = 0,      ///< Updates to memory with this attribute can be
+                                                ///< done coherently from all devices
+    hipMemRangeCoherencyModeCoarseGrain = 1,    ///< Writes to memory with this attribute can be
+                                                ///< performed by a single device at a time
+    hipMemRangeCoherencyModeIndeterminate = 2   ///< Memory region queried contains subregions with
+                                                ///< both hipMemRangeCoherencyModeFineGrain and
+                                                ///< hipMemRangeCoherencyModeCoarseGrain attributes
+} hipMemRangeCoherencyMode;
 /*
  * @brief HIP range attributes
  * @enum
@@ -649,7 +663,10 @@ typedef enum hipMemRangeAttribute {
     hipMemRangeAttributePreferredLocation = 2,  ///< The preferred location of the range
     hipMemRangeAttributeAccessedBy = 3,         ///< Memory range has hipMemAdviseSetAccessedBy
                                                 ///< set for the specified device
-    hipMemRangeAttributeLastPrefetchLocation = 4,///< The last location to where the range was prefetched
+    hipMemRangeAttributeLastPrefetchLocation = 4,///< The last location to where the range was
+                                                ///< prefetched
+    hipMemRangeAttributeCoherencyMode = 100,    ///< Returns coherency mode
+                                                ///< @ref hipMemRangeCoherencyMode for the range
 } hipMemRangeAttribute;
 /*
  * @brief hipJitOption
@@ -1659,7 +1676,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
  */
 /**
- * @brief Enqueues a wait command to the stream.
+ * @brief Enqueues a wait command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
@@ -1684,13 +1701,16 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @note Support for hipStreamWaitValue32 can be queried using 'hipDeviceGetAttribute()' and
  * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
  *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue64, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
 hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags,
                                 uint32_t mask __dparm(0xFFFFFFFF));
 /**
- * @brief Enqueues a wait command to the stream.
+ * @brief Enqueues a wait command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to memory object allocated using 'hipMallocSignalMemory' flag
@@ -1715,13 +1735,16 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, u
  * @note Support for hipStreamWaitValue64 can be queried using 'hipDeviceGetAttribute()' and
  * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
  *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue32, hipStreamWriteValue64,
  * hipStreamWriteValue32, hipDeviceGetAttribute
  */
 hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, unsigned int flags,
                                 uint64_t mask __dparm(0xFFFFFFFFFFFFFFFF));
 /**
- * @brief Enqueues a write command to the stream.
+ * @brief Enqueues a write command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to a GPU accessible memory object
@@ -1732,13 +1755,16 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, u
  *
  * Enqueues a write command to the stream, write operation is performed after all earlier commands
  * on this stream have completed the execution.
+ *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64
  */
 hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, unsigned int flags);
 /**
- * @brief Enqueues a write command to the stream.
+ * @brief Enqueues a write command to the stream.[BETA]
  *
  * @param [in] stream - Stream identifier
  * @param [in] ptr    - Pointer to a GPU accessible memory object
@@ -1749,6 +1775,9 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, 
  *
  * Enqueues a write command to the stream, write operation is performed after all earlier commands
  * on this stream have completed the execution.
+ *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
  * hipStreamWaitValue64

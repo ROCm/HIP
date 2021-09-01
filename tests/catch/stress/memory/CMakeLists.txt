@@ -1,6 +1,7 @@
 # Common Tests - Test independent of all platforms
 set(TEST_SRC
     memcpy.cc
+    hipMemcpyMThreadMSize.cc
 )
 
 # Create shared lib of all tests

@@ -58,9 +58,9 @@ sudo make install
 HIP-nvcc is the compiler for HIP program compilation on NVIDIA platform.
 
 * Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
-* Install the "hip-nvcc" package.  This will install CUDA SDK and the HIP porting layer.
+* Install the "hip-runtime-nvidia" and "hip-devel" package.  This will install CUDA SDK and the HIP porting layer.
 ```
-apt-get install hip-nvcc
+apt-get install hip-runtime-nvidia hip-devel
 ```
 * Default paths and environment variables:
    * By default HIP looks for CUDA SDK in /usr/local/cuda (can be overriden by setting CUDA_PATH env variable).

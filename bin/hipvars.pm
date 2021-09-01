@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # Copyright (c) 2020 - 2021 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -20,12 +20,14 @@
 # THE SOFTWARE.
 
 package hipvars;
+use warnings;
 use Getopt::Long;
 use Cwd;
 use File::Basename;
 
 $HIP_BASE_VERSION_MAJOR = "4";
 $HIP_BASE_VERSION_MINOR = "4";
+$HIP_BASE_VERSION_PATCH = "0";
 
 #---
 # Function to parse config file
@@ -148,5 +150,6 @@ my %hipVersion = ();
 parse_config_file("$hipvars::HIP_PATH/bin/.hipVersion", \%hipVersion);
 $HIP_VERSION_MAJOR = $hipVersion{'HIP_VERSION_MAJOR'} // $HIP_BASE_VERSION_MAJOR;
 $HIP_VERSION_MINOR = $hipVersion{'HIP_VERSION_MINOR'} // $HIP_BASE_VERSION_MINOR;
-$HIP_VERSION_PATCH = $hipVersion{'HIP_VERSION_PATCH'} // "0";
-$HIP_VERSION="$HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH";
+$HIP_VERSION_PATCH = $hipVersion{'HIP_VERSION_PATCH'} // $HIP_BASE_VERSION_PATCH;
+$HIP_VERSION_GITHASH = $hipVersion{'HIP_VERSION_GITHASH'} // 0;
+$HIP_VERSION="$HIP_VERSION_MAJOR.$HIP_VERSION_MINOR.$HIP_VERSION_PATCH-$HIP_VERSION_GITHASH";

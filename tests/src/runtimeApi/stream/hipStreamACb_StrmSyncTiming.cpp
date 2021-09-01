@@ -17,9 +17,8 @@
 * THE SOFTWARE.
 */
 
-// Testcase Description: This test case checks whether hipStreamSynchronize()
-// is taking less time than the time taken by Callback() function launched
-// by hipStreamAddCallback() api.
+// Testcase Description: This test case checks whether hipStreamSynchronize() is taking
+// lesser time after the Callback() function launched by hipStreamAddCallback() api.
 
 /* HIT_START
  * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
@@ -37,12 +36,12 @@
 #define HIPRT_CB
 #endif
 
-#define SECONDS_TO_WAIT 5
+#define SECONDS_TO_WAIT 2
 #define TO_MICROSECONDS 1000000
 
 hipStream_t mystream;
 size_t N_elmts = 4096;
-bool Init_callback = false;
+bool cbDone = false;
 std::atomic<int> Data_mismatch{0};
 
 __global__ void vector_square(float* C_d, float* A_d, size_t N_elmts) {
@@ -66,9 +65,6 @@ float *A_h, *C_h;
 
 static void HIPRT_CB Callback1(hipStream_t stream, hipError_t status,
                                void* userData) {
-  // Mark that the callback is entered.  This is checked in main thread.
-  Init_callback = true;
-
   // Validate the data
   for (size_t i = 0; i < N_elmts; i++) {
     if (C_h[i] != A_h[i] * A_h[i]) {
@@ -78,15 +74,8 @@ static void HIPRT_CB Callback1(hipStream_t stream, hipError_t status,
 
   // Delay the callback completion
   std::this_thread::sleep_for (std::chrono::seconds(SECONDS_TO_WAIT));
+  cbDone = true;
 }
-
-bool rangedCompare(long a, long b) {
-  auto diff = b - a;
-  if (diff < 0) diff *= -1;
-  if (diff < 500) return true;
-  return false;
-}
-
 
 int main(int argc, char* argv[]) {
   float *A_d, *C_d;
@@ -118,11 +107,14 @@ int main(int argc, char* argv[]) {
   HIPCHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
   HIPCHECK(hipStreamAddCallback(mystream, Callback1, NULL, 0));
 
-  // Wait untill Callback() function changes the Init_callback value to true
-  while (!Init_callback) {}
+  // Wait untill Callback() function changes the cbDone value to true
+  while (!cbDone) {
+    std::this_thread::sleep_for (std::chrono::milliseconds(10));
+  }
 
   // Since the callback is supposed to be called only after an implicit stream
-  // synchronization, hipStreamSynchronize call shoud not take much time.
+  // synchronization, and the runtime cannot continue until the callback is done
+  // hipStreamSynchronize call should not take much time.
   auto start = std::chrono::high_resolution_clock::now();
   HIPCHECK(hipStreamSynchronize(mystream));
   auto stop = std::chrono::high_resolution_clock::now();
@@ -138,17 +130,15 @@ int main(int argc, char* argv[]) {
     failed("Output from kernel execution is not as expected");
   }
 
-  // There is a delay of 5000000 microseconds in the Callback() function, the
-  // duration.count() value is expected to less than 5000000 microseconds
-  // because it is expected that stream synchronization completed the moment
-  // Callback function starts the execution and not untill Callback function
-  // completes the execution. Therefore the hipStreamSynchronize() in the
+  // HIP runtime cannot proceed further in the queue until callback completes
+  // Stream synchronize should not have much task to do after callback
+  // It should just be an extra empty marker wait
+  // Therefore the hipStreamSynchronize() in the
   // main thread should hardly take any time to complete.
 
-  if ((duration.count() < (SECONDS_TO_WAIT * TO_MICROSECONDS)) ||
-      (rangedCompare(duration.count(), SECONDS_TO_WAIT * TO_MICROSECONDS))) {
+  if (duration.count() < 100) {
     passed();
   } else {
-    failed("hipStreamSynchronize is waiting untill Callback() completes.");
+    failed("hipStreamSynchronize is taking more time than expected after Callback()");
   }
 }

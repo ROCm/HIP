@@ -26,7 +26,22 @@ THE SOFTWARE.
 #include <hip/hip_common.h>
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
-#include <hip/amd_detail/amd_library_types.h>
+
+typedef enum hipDataType {
+  HIP_R_16F = 2,
+  HIP_R_32F = 0,
+  HIP_R_64F = 1,
+  HIP_C_16F = 6,
+  HIP_C_32F = 4,
+  HIP_C_64F = 5
+} hipDataType;
+
+typedef enum hipLibraryPropertyType {
+  HIP_LIBRARY_MAJOR_VERSION,
+  HIP_LIBRARY_MINOR_VERSION,
+  HIP_LIBRARY_PATCH_LEVEL
+} hipLibraryPropertyType;
+
 #elif !(defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && (defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
 #include "library_types.h"
 #else
