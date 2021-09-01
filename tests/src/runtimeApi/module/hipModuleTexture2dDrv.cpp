@@ -35,7 +35,7 @@ THE SOFTWARE.
  * TEST: %t --tests 0x11
  * TEST: %t --tests 0x12
  * TEST: %t --tests 0x13
- * TEST: %t --tests 0x14 EXCLUDE_HIP_PLATFORM amd
+ * TEST: %t --tests 0x14
  * TEST: %t --tests 0x15
  * HIT_END
  */
