@@ -1441,6 +1441,7 @@ const char* hipGetErrorString(hipError_t hipError);
  *  The following Stream APIs are not (yet) supported in HIP:
  *  - hipStreamAttachMemAsync is a nop
  */
+
 /**
  * @brief Create an asynchronous stream.
  *
@@ -2187,7 +2188,7 @@ hipError_t hipMemAdvise(const void* dev_ptr,
 /**
  * @brief Query an attribute of a given memory range in HIP.
  *
- * @param [in/out] data   a pointer to a memory location where the result of each
+ * @param [in,out] data   a pointer to a memory location where the result of each
  *                        attribute query will be written to
  * @param [in] data_size  the size of data
  * @param [in] attribute  the attribute to query
@@ -2204,7 +2205,7 @@ hipError_t hipMemRangeGetAttribute(void* data,
 /**
  * @brief Query attributes of a given memory range in HIP.
  *
- * @param [in/out] data     a two-dimensional array containing pointers to memory locations
+ * @param [in,out] data     a two-dimensional array containing pointers to memory locations
  *                          where the result of each attribute query will be written to
  * @param [in] data_sizes   an array, containing the sizes of each result
  * @param [in] attributes   the attribute to query
@@ -3652,7 +3653,7 @@ hipError_t hipLaunchCooperativeKernel(const void* f, dim3 gridDim, dim3 blockDim
  * @brief Launches kernels on multiple devices where thread blocks can cooperate and
  * synchronize as they execute.
  *
- * @param [in] hipLaunchParams          List of launch parameters, one per device.
+ * @param [in] launchParamsList         List of launch parameters, one per device.
  * @param [in] numDevices               Size of the launchParamsList array.
  * @param [in] flags                    Flags to control launch behavior.
  *
@@ -4138,6 +4139,7 @@ const char* hipApiName(uint32_t id);
 const char* hipKernelNameRef(const hipFunction_t f);
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
 int hipGetStreamDeviceId(hipStream_t stream);
+
 /**
  * An opaque value that represents a hip graph
  */
@@ -4150,6 +4152,12 @@ typedef struct hipGraphNode* hipGraphNode_t;
  * An opaque value that represents a hip graph Exec
  */
 typedef struct hipGraphExec* hipGraphExec_t;
+
+/**
+ * @brief hipGraphNodeType
+ * @enum
+ *
+ */
 typedef enum hipGraphNodeType {
   hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
   hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
@@ -4164,6 +4172,7 @@ typedef enum hipGraphNodeType {
   hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
   hipGraphNodeTypeCount
 } hipGraphNodeType;
+
 typedef void (*hipHostFn_t)(void* userData);
 typedef struct hipHostNodeParams {
   hipHostFn_t fn;
@@ -4185,13 +4194,19 @@ typedef struct hipMemsetParams {
   unsigned int value;
   size_t width;
 } hipMemsetParams;
+
+/**
+ * @brief hipGraphExecUpdateResult
+ * @enum
+ *
+ */
 typedef enum hipGraphExecUpdateResult {
   hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
   hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
                                   ///< in the return value of the function
   hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
   hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
-  hipGraphExecUpdateErrorFunctionChanged =
+  hipGraphExecUpdateErrorFunctionChanged = 
       0x4,  ///< The update failed because the function of a kernel node changed
   hipGraphExecUpdateErrorParametersChanged =
       0x5,  ///< The update failed because the parameters changed in a way that is not supported
@@ -4199,6 +4214,7 @@ typedef enum hipGraphExecUpdateResult {
       0x6,  ///< The update failed because something about the node is not supported
   hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
 } hipGraphExecUpdateResult;
+
 typedef enum hipStreamCaptureMode {
   hipStreamCaptureModeGlobal = 0,
   hipStreamCaptureModeThreadLocal,
@@ -4212,63 +4228,261 @@ typedef enum hipStreamCaptureStatus {
 } hipStreamCaptureStatus;
 hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
 hipError_t hipStreamEndCapture(hipStream_t stream, hipGraph_t* pGraph);
-// Creates a graph.
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Graph Graph Management
+ *  @{
+ *  This section describes the graph management functions of HIP runtime API.
+ */
+/**
+ * @brief Creates a graph
+ *
+ * @param [out] pGraph - pointer to graph to create.
+ * @param [in] flags - flags for graph creation, must be 0.
+ *
+ * @returns #hipSuccess.
+ *
+ */
 hipError_t hipGraphCreate(hipGraph_t* pGraph, unsigned int flags);
-// Destroys a graph.
+
+/**
+ * @brief Destroys a graph
+ *
+ * @param [in] graph - instance of graph to destroy.
+ *
+ * @returns #hipSuccess.
+ *
+ */
 hipError_t hipGraphDestroy(hipGraph_t graph);
-// Destroys an executable graph.
+
+/**
+ * @brief Destroys an executable graph
+ *
+ * @param [in] pGraphExec - instance of executable graph to destry.
+ *
+ * @returns #hipSuccess.
+ *
+ */
 hipError_t hipGraphExecDestroy(hipGraphExec_t pGraphExec);
-// Creates an executable graph from a graph.
+
+/**
+ * @brief Creates an executable graph from a graph
+ *
+ * @param [out] pGraphExec - pointer to instantiated executable graph to create.
+ * @param [in] graph - instance of graph to instantiate.
+ * @param [out] pErrorNode - pointer to error node in case error occured in graph instantiation, 
+ *  it could modify the correponding node.
+ * @param [out] pLogBuffer - pointer to log buffer.
+ * @param [in] bufferSize - the size of log buffer.
+ *
+ * @returns #hipSuccess, #hipErrorOutOfMemory.
+ *
+ */
 hipError_t hipGraphInstantiate(hipGraphExec_t* pGraphExec, hipGraph_t graph,
                                hipGraphNode_t* pErrorNode, char* pLogBuffer, size_t bufferSize);
+
 // Launches an executable graph in a stream.
+/**
+ * @brief launches an executable graph in a stream
+ *
+ * @param [in] graphExec - instance of executable graph to launch.
+ * @param [in] stream - instance of stream in which to launch executable graph.
+ * @returns #hipSuccess, #hipErrorOutOfMemory, #hipErrorInvalidHandle, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
-// Creates a kernel execution node and adds it to a graph.
+
+/**
+ * @brief Creates a kernel execution node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to graph node to create.
+ * @param [in,out] graph - instance of graph to add the created node.
+ * @param [in] pDependencies - pointer to the dependencies on the kernel execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] pNodeParams - pointer to the parameters to the kernel execution node on the GPU.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction
+ *
+ */
 hipError_t hipGraphAddKernelNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
                                  const hipKernelNodeParams* pNodeParams);
-// Creates a memcpy node and adds it to a graph.
+
+
+/**
+ * @brief Creates a memcpy node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to graph node to create.
+ * @param [in,out] graph - instance of graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the kernel execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] pCopyParams - const pointer to the parameters for the memory copy.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphAddMemcpyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
                                  const hipMemcpy3DParms* pCopyParams);
-// Creates a 1D memcpy node and adds it to a graph.
+
+/**
+ * @brief Creates a 1D memcpy node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to graph node to create.
+ * @param [in,out] graph - instance of the graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the kernel execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] dst - pointer to memory address to the destination.
+ * @param [in] src - pointer to memory address to the source.
+ * @param [in] count - the size of the memory to copy.
+ * @param [in] kind - the type of memory copy.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphAddMemcpyNode1D(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                    const hipGraphNode_t* pDependencies, size_t numDependencies,
                                    void* dst, const void* src, size_t count, hipMemcpyKind kind);
-// Creates a memset node and adds it to a graph.
+
+/**
+ * @brief Creates a memset node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to the graph node to create.
+ * @param [in,out] graph - instance of the graph to add the created node.
+ * @param [in] pDependencies - const pointer to the dependencies on the kernel execution node.
+ * @param [in] numDependencies - the number of the dependencies.
+ * @param [in] pMemsetParams - const pointer to the parameters for the memory set.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphAddMemsetNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
                                  const hipMemsetParams* pMemsetParams);
-// Returns graph nodes
+
+/**
+ * @brief Returns graph nodes.
+ *
+ * @param [in] graph - instance of graph to get the nodes.
+ * @param [out] nodes - pointer to the graph nodes.
+ * @param [out] numNodes - the number of graph nodes.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphGetNodes(hipGraph_t graph, hipGraphNode_t* nodes, size_t* numNodes);
-// Returns graph's root nodes.
+
+/**
+ * @brief Returns graph's root nodes.
+ *
+ * @param [in] graph - instance of the graph to get the nodes.
+ * @param [out] pRootNodes - pointer to the graph's root nodes.
+ * @param [out] pNumRootNodes - the number of graph's root nodes.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphGetRootNodes(hipGraph_t graph, hipGraphNode_t* pRootNodes,
                                    size_t* pNumRootNodes);
-// Returns a kernel node's parameters.
+
+/**
+ * @brief Gets kernel node's parameters.
+ *
+ * @param [in] node - instance of the node to get parameters from.
+ * @param [out] pNodeParams - pointer to the parameters
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphKernelNodeGetParams(hipGraphNode_t node, hipKernelNodeParams* pNodeParams);
-// Sets a kernel node's parameters.
+
+/**
+ * @brief Sets a kernel node's parameters.
+ *
+ * @param [in] node - instance of the node to set parameters to.
+ * @param [in] pNodeParams - const pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphKernelNodeSetParams(hipGraphNode_t node, const hipKernelNodeParams* pNodeParams);
-// Returns a memcpy node's parameters.
+
+/**
+ * @brief Gets a memcpy node's parameters.
+ *
+ * @param [in] node - instance of the node to get parameters from.
+ * @param [out] pNodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphMemcpyNodeGetParams(hipGraphNode_t node, hipMemcpy3DParms* pNodeParams);
-// Sets a memcpy node's parameters.
+
+/**
+ * @brief Sets a memcpy node's parameters.
+ *
+ * @param [in] node - instance of the node to set parameters to.
+ * @param [in] pNodeParams - const pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphMemcpyNodeSetParams(hipGraphNode_t node, const hipMemcpy3DParms* pNodeParams);
-// Returns a memset node's parameters.
+
+/**
+ * @brief Gets a memset node's parameters.
+ *
+ * @param [in] node - instane of the node to get parameters from.
+ * @param [out] pNodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphMemsetNodeGetParams(hipGraphNode_t node, hipMemsetParams* pNodeParams);
-// Sets a memset node's parameters.
+
+/**
+ * @brief Sets a memset node's parameters.
+ *
+ * @param [in] node - instance of the node to set parameters to.
+ * @param [out] pNodeParams - pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphMemsetNodeSetParams(hipGraphNode_t node, const hipMemsetParams* pNodeParams);
-// Sets the parameters for a kernel node in the given graphExec.
+
+/**
+ * @brief Sets the parameters for a kernel node in the given graphExec.
+ *
+ * @param [in] hGraphExec - instance of the executable graph with the node.
+ * @param [in] node - instance of the node to set parameters to.
+ * @param [in] pNodeParams - const pointer to the kernel node parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphExecKernelNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                            const hipKernelNodeParams* pNodeParams);
-// Adds dependency edges to a graph.
+/**
+ * @brief Adds dependency edges to a graph.
+ *
+ * @param [in] graph - instance of the graph to add dependencies.
+ * @param [in] from - pointer to the graph nodes with dependenties to add from.
+ * @param [in] to - pointer to the graph nodes to add dependenties to.
+ * @param [in] numDependencies - the number of dependencies to add.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphAddDependencies(hipGraph_t graph, const hipGraphNode_t* from,
                                    const hipGraphNode_t* to, size_t numDependencies);
-// Creates an empty node and adds it to a graph.
+
+/**
+ * @brief Creates an empty node and adds it to a graph.
+ *
+ * @param [out] pGraphNode - pointer to the graph node to create and add to the graph.
+ * @param [in,out] graph - instane of the graph the node is add to.
+ * @param [in] pDependencies - const pointer to the node dependenties.
+ * @param [in] numDependencies - the number of dependencies.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGraphAddEmptyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                 const hipGraphNode_t* pDependencies, size_t numDependencies);
+
 // doxygen end graph API
 /**
  * @}
  */
+
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
