@@ -63,6 +63,11 @@ set(TEST_SRC
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
 )
 else()
 set(TEST_SRC
@@ -105,6 +110,11 @@ set(TEST_SRC
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
 )
 endif()
 
