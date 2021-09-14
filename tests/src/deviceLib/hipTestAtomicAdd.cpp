@@ -37,7 +37,7 @@ Testcase Scenarios :
 
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS --gpu-architecture=compute_60
  * TEST_NAMED: %t hipTestAtomicnoret-manywaves --atomicnoret --tests 1
  * TEST_NAMED: %t hipTestAtomicnoret-simple --atomicnoret --tests 2
  * TEST_NAMED: %t hipTestAtomic-manywaves --tests 1
@@ -59,6 +59,13 @@ Testcase Scenarios :
 #define LONG_INITIAL_VALUE 10000
 #define UNSIGNED_INITIAL_VALUE 20
 
+#ifdef __HIP_PLATFORM_NVIDIA__
+// atomicAddNoRet is unavailable in cuda
+template <typename T>
+__device__ void atomicAddNoRet(T* x, int y) {
+  atomicAdd(x, static_cast<T>(y));
+}
+#endif
 
 
 /*
