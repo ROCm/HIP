@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -lnvrtc
  * TEST: %t
  * HIT_END
  */
@@ -81,7 +81,12 @@ int main()
     hipDeviceProp_t props;
     int device = 0;
     hipGetDeviceProperties(&props, device);
+#ifdef __HIP_PLATFORM_AMD__
     std::string sarg = std::string("--gpu-architecture=") + props.gcnArchName;
+#else
+    std::string sarg = std::string("--gpu-architecture=compute_")
+      + std::to_string(props.major) + std::to_string(props.minor);
+#endif
     const char* options[] = {
             sarg.c_str()
     };
@@ -108,11 +113,16 @@ int main()
     hiprtcGetCode(prog, code.data());
 
     hipModule_t module;
+#ifdef __HIP_PLATFORM_NVIDIA__
+    HIPCHECK(hipInit(0));
+    hipCtx_t ctx;
+    HIPCHECK(hipCtxCreate(&ctx, 0, device));
+#endif
     hipModuleLoadData(&module, code.data());
 
     hipDeviceptr_t dResult;
     int hResult = 0;
-    hipMalloc(&dResult, sizeof(hResult));
+    hipMalloc((void **)&dResult, sizeof(hResult));
     hipMemcpyHtoD(dResult, &hResult, sizeof(hResult));
 
     for (decltype(variable_name_vec.size()) i = 0; i != variable_name_vec.size(); ++i) {
@@ -149,10 +159,12 @@ int main()
         if (expected_result[i] != hResult) { failed("Validation failed."); }
     }
 
-    hipFree(dResult);
+    hipFree((void *)dResult);
     hipModuleUnload(module);
-
     hiprtcDestroyProgram(&prog);
 
+#ifdef __HIP_PLATFORM_NVIDIA__
+    HIPCHECK(hipCtxDestroy(ctx));
+#endif
     passed();
 }
