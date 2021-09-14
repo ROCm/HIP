@@ -18,7 +18,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../src/test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -140,13 +140,13 @@ void hipPerfMemset::run1D(unsigned int test, T memsetval, enum MemsetType type, 
   HIPCHECK(hipStreamCreate(&stream));
 
   // Warm-up
-  HIPCHECK(hipMemset((hipDeviceptr_t)A_d, memsetval, bufSize_));
+  HIPCHECK(hipMemset((void *)A_d, memsetval, bufSize_));
 
   auto start = chrono::steady_clock::now();
 
   for (uint i = 0; i < NUM_ITER; i++) {
     if (type == hipMemsetTypeDefault && !async) {
-      HIPCHECK(hipMemset((hipDeviceptr_t)A_d, memsetval, bufSize_));
+      HIPCHECK(hipMemset((void *)A_d, memsetval, bufSize_));
     }
     else if (type == hipMemsetTypeDefault && async) {
       HIPCHECK(hipMemsetAsync(A_d, memsetval, bufSize_, stream));
