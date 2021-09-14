@@ -18,7 +18,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../src/test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -489,6 +489,7 @@ void hipPerfMandelBrot::double_mandel_unroll(uint *out, uint width, float xPos, 
 void hipPerfMandelBrot::run(unsigned int testCase,unsigned int deviceId) {
 
   unsigned int numStreams = getNumStreams();
+  coordIdx = testCase % numCoords;
 
   funPtr p[] = {&hipPerfMandelBrot::float_mad, &hipPerfMandelBrot::float_mandel_unroll,
                &hipPerfMandelBrot::double_mad, &hipPerfMandelBrot::double_mandel_unroll};
@@ -555,9 +556,6 @@ void hipPerfMandelBrot::run(unsigned int testCase,unsigned int deviceId) {
   double totalTime = 0.0;
 
   for (unsigned int k = 0; k < numLoops; k++) {
-
-  coordIdx = testCase % numCoords;
-
   if ((testCase == 0 || testCase == 1 || testCase == 2 ||
                   testCase == 5 || testCase == 6 || testCase == 7 ||
                   testCase == 10 || testCase == 11 || testCase == 12)) {
@@ -653,7 +651,7 @@ void hipPerfMandelBrot::run(unsigned int testCase,unsigned int deviceId) {
 
   // Free host and device memory
   for (uint i = 0; i < numKernels; i++) {
-    HIPCHECK(hipFree(hPtr[i]));
+    HIPCHECK(hipHostFree(hPtr[i]));
     HIPCHECK(hipFree(dPtr[i]));
   }
 

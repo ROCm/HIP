@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,37 +17,26 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-// Testcase Description: This test case is used to check the behaviour of HIP
-// when multiple hipStreaAddCallback() are called over multiple Threads
-// This test case is disabled currently.
+/**
+Testcase Scenario :
+Validate behaviour of HIP when multiple hipStreaAddCallback() are called over
+multiple Threads.
+*/
 
-/* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
- * TEST: %t
- * HIT_END
- */
-
-
-
-#include <stdio.h>
-#include <thread>
-#include <chrono>
+#include <hip_test_common.hh>
 #include <atomic>
-#include "hip/hip_runtime.h"
-#include "test_common.h"
 
-#ifdef __HIP_PLATFORM_AMD__
+static constexpr size_t N = 4096;
+static constexpr int numThreads = 1000;
+static std::atomic<int> Cb_count{0}, Data_mismatch{0};
+static hipStream_t mystream;
+static float *A1_h, *C1_h;
+
+#if HT_AMD
 #define HIPRT_CB
 #endif
 
-#define NUM_THREADS 2000
-
-size_t Num = 4096;
-std::atomic<size_t>Cb_count{0}, Data_mismatch{0};
-hipStream_t mystream;
-float *A_h, *C_h;
-
-__global__ void vector_square(float* C_d, float* A_d, size_t Num) {
+static __global__ void device_function(float* C_d, float* A_d, size_t Num) {
   size_t gputhread = (blockIdx.x * blockDim.x + threadIdx.x);
   size_t stride = blockDim.x * gridDim.x;
 
@@ -57,7 +46,7 @@ __global__ void vector_square(float* C_d, float* A_d, size_t Num) {
 
   // Delay thread 1 only in the GPU
   if (gputhread == 1) {
-    unsigned long long int wait_t = 3200000000, start = clock64(), cur;
+    uint64_t wait_t = 3200000000, start = clock64(), cur;
     do {
       cur = clock64() - start;
     } while (cur < wait_t);
@@ -67,9 +56,13 @@ __global__ void vector_square(float* C_d, float* A_d, size_t Num) {
 
 static void HIPRT_CB Thread1_Callback(hipStream_t stream, hipError_t status,
                                       void* userData) {
-  for (size_t i = 0; i < Num; i++) {
+  HIPASSERT(stream == mystream);
+  HIPASSERT(userData == nullptr);
+  HIPCHECK(status);
+
+  for (size_t i = 0; i < N; i++) {
     // Validate the data and update Data_mismatch
-    if (C_h[i] != A_h[i] * A_h[i]) {
+    if (C1_h[i] != A1_h[i] * A1_h[i]) {
       Data_mismatch++;
     }
   }
@@ -80,9 +73,13 @@ static void HIPRT_CB Thread1_Callback(hipStream_t stream, hipError_t status,
 
 static void HIPRT_CB Thread2_Callback(hipStream_t stream, hipError_t status,
                                       void* userData) {
-  for (size_t i = 0; i < Num; i++) {
+  HIPASSERT(stream == mystream);
+  HIPASSERT(userData == nullptr);
+  HIPCHECK(status);
+
+  for (size_t i = 0; i < N; i++) {
     // Validate the data and update Data_mismatch
-    if (C_h[i] != A_h[i] * A_h[i]) {
+    if (C1_h[i] != A1_h[i] * A1_h[i]) {
       Data_mismatch++;
     }
   }
@@ -92,49 +89,55 @@ static void HIPRT_CB Thread2_Callback(hipStream_t stream, hipError_t status,
 }
 
 void Thread1_func() {
-  HIPCHECK(hipStreamAddCallback(mystream, Thread1_Callback, NULL, 0));
+  HIPCHECK(hipStreamAddCallback(mystream, Thread1_Callback, nullptr, 0));
 }
 
 void Thread2_func() {
-  HIPCHECK(hipStreamAddCallback(mystream, Thread2_Callback, NULL, 0));
+  HIPCHECK(hipStreamAddCallback(mystream, Thread2_Callback, nullptr, 0));
 }
 
-
-int main(int argc, char* argv[]) {
+/**
+ Test multiple hipStreamAddCallback() called over
+ multiple Threads.
+ */
+TEST_CASE("Unit_hipStreamAddCallback_MultipleThreads") {
   float *A_d, *C_d;
-  size_t Nbytes = Num * sizeof(float);
+  size_t Nbytes = (N) * sizeof(float);
+  constexpr float Phi = 1.618f;
 
-  A_h = (float*)malloc(Nbytes);
-  HIPCHECK(A_h == 0 ? hipErrorOutOfMemory : hipSuccess);
-  C_h = (float*)malloc(Nbytes);
-  HIPCHECK(C_h == 0 ? hipErrorOutOfMemory : hipSuccess);
+  A1_h = reinterpret_cast<float*>(malloc(Nbytes));
+  REQUIRE(A1_h != nullptr);
+  C1_h = reinterpret_cast<float*>(malloc(Nbytes));
+  REQUIRE(C1_h != nullptr);
 
   // Fill with Phi + i
-  for (size_t i = 0; i < Num; i++) {
-    A_h[i] = 1.618f + i;
+  for (size_t i = 0; i < N; i++) {
+    A1_h[i] = Phi + i;
   }
 
-  HIPCHECK(hipMalloc(&A_d, Nbytes));
-  HIPCHECK(hipMalloc(&C_d, Nbytes));
+  HIP_CHECK(hipMalloc(&A_d, Nbytes));
+  HIP_CHECK(hipMalloc(&C_d, Nbytes));
 
-  HIPCHECK(hipStreamCreateWithFlags(&mystream, hipStreamNonBlocking));
+  HIP_CHECK(
+  hipStreamCreateWithFlags(&mystream, hipStreamNonBlocking));
 
-  HIPCHECK(hipMemcpyAsync(A_d, A_h, Nbytes, hipMemcpyHostToDevice, mystream));
+  HIP_CHECK(
+  hipMemcpyAsync(A_d, A1_h, Nbytes, hipMemcpyHostToDevice,
+                 mystream));
 
-  const unsigned threadsPerBlock = 256;
-  const unsigned blocks = (Num+255)/threadsPerBlock;
+  constexpr unsigned threadsPerBlock = 256;
+  constexpr unsigned blocks = (N + 255)/threadsPerBlock;
 
-  hipLaunchKernelGGL((vector_square), dim3(blocks), dim3(threadsPerBlock), 0,
-                      mystream, C_d, A_d, Num);
+  hipLaunchKernelGGL((device_function), dim3(blocks),
+                     dim3(threadsPerBlock), 0,
+                     mystream, C_d, A_d, N);
 
-  HIPCHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mystream));
+  HIP_CHECK(
+  hipMemcpyAsync(C1_h, C_d, Nbytes,
+                 hipMemcpyDeviceToHost, mystream));
 
-  auto thread_count = getHostThreadCount(200, NUM_THREADS);
-  if (thread_count == 0) {
-    failed("Thread count is 0");
-  }
-  std::thread *T = new std::thread[thread_count];
-  for (int i = 0; i < thread_count; i++) {
+  std::thread *T = new std::thread[numThreads];
+  for (int i = 0; i < numThreads; i++) {
     // Use different callback for every even thread
     // The callbacks will be added to same stream from different threads
     if ((i%2) == 0)
@@ -144,27 +147,22 @@ int main(int argc, char* argv[]) {
   }
 
   // Wait until all the threads finish their execution
-  for (int i = 0; i < thread_count; i++) {
+  for (int i = 0; i < numThreads; i++) {
     T[i].join();
   }
 
-  HIPCHECK(hipStreamSynchronize(mystream));
-  HIPCHECK(hipStreamDestroy(mystream));
+  HIP_CHECK(hipStreamSynchronize(mystream));
+  HIP_CHECK(hipStreamDestroy(mystream));
 
-  HIPCHECK(hipFree(A_d));
-  HIPCHECK(hipFree(C_d));
+  HIP_CHECK(hipFree(A_d));
+  HIP_CHECK(hipFree(C_d));
 
-  free(A_h);
-  free(C_h);
+  free(A1_h);
+  free(C1_h);
 
   // Cb_count should match total number of callbacks added from both threads
   // Data_mismatch will be updated if there is problem in data validation
-  if (Cb_count.load() != thread_count) {
-     failed("All callbacks for stream did not get called!");
-  } else if (Data_mismatch.load() != 0) {
-     failed("Mismatch found in the result of the computation!");
-  }
+  REQUIRE(Cb_count.load() == numThreads);
+  REQUIRE(Data_mismatch.load() == 0);
   delete[] T;
-
-  passed();
 }
