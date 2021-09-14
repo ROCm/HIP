@@ -4,7 +4,7 @@
 
 //Enable test when compiler support is available in mainline
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM amd
+ * BUILD: %t %s ../../test_common.cpp
  * HIT_END
  */
 #define N 1048576

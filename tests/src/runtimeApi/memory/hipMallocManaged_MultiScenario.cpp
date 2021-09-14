@@ -75,11 +75,17 @@ bool MultiChunkMultiDevice(int NumDevices) {
   const unsigned threadsPerBlock = 256;
   const unsigned blocks = (NUM_ELMS + 255)/256;
   for (int Klaunch = 0; Klaunch < NumDevices; ++Klaunch) {
+
+    // If without setting device, Hmm value will be read as 0 in kernel on
+    // GPU where Hmm isn't allocated by hipMallocManaged(). This looks like
+    // a bug of cuda. The following line is to fix the bug on cuda only.
+    HIPCHECK(hipSetDevice(Klaunch));
+
     vector_sum<float> <<<blocks, threadsPerBlock, 0, stream[Klaunch]>>>
                       (&Hmm[Klaunch * NUM_ELMS], Ad[Klaunch], NUM_ELMS);
   }
-  HIPCHECK(hipDeviceSynchronize());
   for (int m = 0; m < NumDevices; ++m) {
+    HIPCHECK(hipStreamSynchronize(stream[m]));
     HIPCHECK(hipMemcpy(Ah, Ad[m], NUM_ELMS * sizeof(float),
                        hipMemcpyDeviceToHost));
     for (int n = 0; n < NUM_ELMS; ++n) {

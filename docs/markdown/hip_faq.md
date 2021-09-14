@@ -271,3 +271,5 @@ HIP version can be queried from HIP API call,
 hipRuntimeGetVersion(&runtimeVersion);
 
 The version returned will always be greater than the versions in previous ROCm releases.
+
+Note: The version definition of HIP runtime is different from CUDA. On AMD platform, the function returns HIP runtime version, while on NVIDIA platform, it returns CUDA runtime version. And there is no mapping/correlation between HIP version and CUDA version.

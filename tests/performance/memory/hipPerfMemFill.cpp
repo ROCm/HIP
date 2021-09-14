@@ -18,7 +18,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../src/test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -136,6 +136,7 @@ class hipPerfMemFill {
     }
 
     HIPCHECK(hipSetDevice(deviceId));
+    memset(&props_, 0, sizeof(props_));
     HIPCHECK(hipGetDeviceProperties(&props_, deviceId));
     std::cout << "Info: running on device: id: " << deviceId << ", bus: 0x"
         << props_.pciBusID << " " << props_.name << " with "
@@ -397,8 +398,9 @@ class hipPerfMemFill {
     return true;
   }
 
-  /* This fuction should be via device attribute query*/
+  /* This function should be via device attribute query*/
   bool supportDeviceMallocFinegrained() {
+#ifdef __HIP_PLATFORM_AMD__
     T *A = nullptr;
     hipExtMallocWithFlags((void **)&A, sizeof(T), hipDeviceMallocFinegrained);
     if (!A) {
@@ -406,6 +408,9 @@ class hipPerfMemFill {
     }
     HIPCHECK(hipFree(A));
     return true;
+#else
+    return false;
+#endif
   }
 
   unsigned int setNumBlocks(size_t size) {
@@ -419,6 +424,7 @@ class hipPerfMemFill {
 #endif
   }
 
+#ifdef __HIP_PLATFORM_AMD__
   bool testExtDeviceMemoryHostFill(size_t size, unsigned int flags) {
     double GBytes = (double) size / (1024.0 * 1024.0 * 1024.0);
 
@@ -481,6 +487,7 @@ class hipPerfMemFill {
 
     return true;
   }
+#endif
 
   bool run() {
     if (supportLargeBar()) {
@@ -499,11 +506,13 @@ class hipPerfMemFill {
       return false;
     }
 
+#ifdef __HIP_PLATFORM_AMD__
     if (supportDeviceMallocFinegrained()) {
       if (!testExtDeviceMemory()) {
         return false;
       }
     }
+#endif
     return true;
   }
 

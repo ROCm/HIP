@@ -18,7 +18,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../src/test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -226,7 +226,7 @@ void hipPerfDeviceConcurrency::run(unsigned int testCase, int numGpus) {
   HIPCHECK(hipStreamDestroy(streams[i]));
 
   // Free host and device memory
-  HIPCHECK(hipFree(hPtr[i]));
+  HIPCHECK(hipHostFree(hPtr[i]));
   HIPCHECK(hipFree(dPtr[i]));
   }
 

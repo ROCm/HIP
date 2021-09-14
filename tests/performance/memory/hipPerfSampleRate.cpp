@@ -18,7 +18,7 @@
  */
 
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../src/test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -42,6 +42,18 @@ vector<unsigned int> sizes = {1,  2,   4,   8,   16,   32,
 #define NUM_BUFS 6
 #define MAX_BUFS (1 << (NUM_BUFS - 1))
 
+#ifdef __HIP_PLATFORM_NVIDIA__
+inline __host__ __device__ void operator+=(float2 &a, float2 b)
+{
+  a.x += b.x; a.y += b.y;
+}
+
+inline __host__ __device__ void operator+=(float4 &a, float4 b)
+{
+  a.x += b.x; a.y += b.y; a.z += b.z; a.w += b.w;
+}
+#endif
+
 template <typename T>
 __global__ void sampleRate(T * outBuffer, unsigned int inBufSize, unsigned int writeIt,
                            T **inBuffer, int numBufs) {
@@ -49,7 +61,8 @@ __global__ void sampleRate(T * outBuffer, unsigned int inBufSize, unsigned int w
   uint gid = (blockIdx.x * blockDim.x + threadIdx.x);
   uint inputIdx = gid % inBufSize;
 
-  T tmp = (T)0.0f;
+  T tmp;
+  memset(&tmp, 0, sizeof(T));
   for(int i = 0; i < numBufs; i++) {
     tmp += *(*(inBuffer+i)+inputIdx);
   }
@@ -264,11 +277,11 @@ void hipPerfSampleRate::run(unsigned int test) {
 
    // Free host and device memory
    for (uint i = 0; i < numBufs_; i++) {
-    HIPCHECK(hipFree(hInPtr[i]));
+    HIPCHECK(hipHostFree(hInPtr[i]));
     HIPCHECK(hipFree(dInPtr[i]));
     }
 
-   HIPCHECK(hipFree(hOutPtr));
+   HIPCHECK(hipHostFree(hOutPtr));
    HIPCHECK(hipFree(dPtr));
 }
 
