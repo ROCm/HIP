@@ -913,8 +913,10 @@ hipError_t hipDriverGetVersion(int* driverVersion);
  *
  * @returns #hipSuccess, #hipErrorInavlidValue
  *
- * @warning On HIP/HCC path this function returns HIP runtime patch version however on
- * HIP/NVCC path this function return CUDA runtime version.
+ * @warning The version definition of HIP runtime is different from CUDA.
+ * On AMD platform, the function returns HIP runtime version,
+ * while on NVIDIA platform, it returns CUDA runtime version.
+ * And there is no mapping/correlation between HIP version and CUDA version.
  *
  * @see hipDriverGetVersion
  */
