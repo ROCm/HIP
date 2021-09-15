@@ -38,9 +38,9 @@ THE SOFTWARE.
 __global__ void EmptyKernel() { }
 
 void print_timing(std::string test, const std::array<float, TOTAL_RUN_COUNT> &results, int batch = 1) {
-    
+
     float total_us = 0.0f, mean_us = 0.0f, stddev_us = 0.0f;
-    
+
     // skip warm-up runs
     auto start_iter = std::next(results.begin(), WARMUP_RUN_COUNT);
     auto end_iter = results.end();
@@ -48,7 +48,7 @@ void print_timing(std::string test, const std::array<float, TOTAL_RUN_COUNT> &re
     // mean
     std::for_each(start_iter, end_iter, [&](const float &run_ms) {
         total_us += (run_ms * 1000) / batch;
-    });   
+    });
     mean_us = total_us  / TIMING_RUN_COUNT;
 
    // stddev
@@ -63,18 +63,18 @@ void print_timing(std::string test, const std::array<float, TOTAL_RUN_COUNT> &re
     printf("\n %s: %.1f us, std: %.1f us\n", test.c_str(), mean_us, stddev_us);
 }
 
-int main() {   
+int main() {
     hipStream_t stream0 = 0;
     hipDevice_t device;
     hipDeviceGet(&device, 0);
-    hipCtx_t context;     
-    hipCtxCreate(&context, 0, device); 
+    hipCtx_t context;
+    hipCtxCreate(&context, 0, device);
     hipModule_t module;
     hipFunction_t function;
     hipModuleLoad(&module, FILE_NAME);
     hipModuleGetFunction(&function, module, KERNEL_NAME);
     void* params = nullptr;
-    
+
     std::array<float, TOTAL_RUN_COUNT> results;
     hipEvent_t start, stop;
     hipEventCreate(&start);
@@ -83,7 +83,7 @@ int main() {
     /************************************************************************************/
     /* HIP kernel launch enqueue rate:                                                  */
     /* Measure time taken to enqueue a kernel on the GPU                                */
-    /************************************************************************************/ 
+    /************************************************************************************/
 
     // Timing hipModuleLaunchKernel
     for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
@@ -104,8 +104,8 @@ int main() {
     print_timing("hipLaunchKernelGGL enqueue rate", results);
 
     /***********************************************************************************/
-    /* Single dispatch execution latency using HIP events:                             */   
-    /* Measures latency to start & finish executing a kernel with GPU-scope visibility    */ 
+    /* Single dispatch execution latency using HIP events:                             */
+    /* Measures latency to start & finish executing a kernel with GPU-scope visibility    */
     /***********************************************************************************/
 
     //Timing around the dispatch
@@ -120,7 +120,7 @@ int main() {
 
     /*********************************************************************************/
     /* Batch dispatch execution latency using HIP events:                            */
-    /* Measures latency to start & finish executing each dispatch in a batch    */ 
+    /* Measures latency to start & finish executing each dispatch in a batch    */
     /*********************************************************************************/
 
     for (auto i = 0; i < TOTAL_RUN_COUNT; ++i) {
