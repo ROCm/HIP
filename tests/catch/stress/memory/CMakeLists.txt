@@ -2,6 +2,7 @@
 set(TEST_SRC
     memcpy.cc
     hipMemcpyMThreadMSize.cc
+    hipMemcpyBoundaryOffsetCheck.cc
 )
 
 # Create shared lib of all tests

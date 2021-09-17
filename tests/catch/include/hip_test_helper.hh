@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,46 @@ THE SOFTWARE.
 #pragma once
 #include "hip_test_common.hh"
 
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#endif
+
 namespace HipTest {
 static inline int getGeviceCount() {
   int dev = 0;
-  HIPCHECK(hipGetDeviceCount(&dev));
+  HIP_CHECK(hipGetDeviceCount(&dev));
   return dev;
 }
+
+// Get Free Memory from the system
+static size_t getMemoryAmount() {
+#ifdef __linux__
+  struct sysinfo info{};
+  sysinfo(&info);
+  return info.freeram / (1024 * 1024);  // MB
+#elif defined(_WIN32)
+  MEMORYSTATUSEX statex;
+  statex.dwLength = sizeof(statex);
+  GlobalMemoryStatusEx(&statex);
+  return (statex.ullAvailPhys / (1024 * 1024));  // MB
+#endif
+}
+
+static size_t getHostThreadCount(const size_t memPerThread,
+                                           const size_t maxThreads) {
+  if (memPerThread == 0) return 0;
+  auto memAmount = getMemoryAmount();
+  const auto processor_count = std::thread::hardware_concurrency();
+  if (processor_count == 0 || memAmount == 0) return 0;
+  size_t thread_count = 0;
+  if ((processor_count * memPerThread) < memAmount)
+    thread_count = processor_count;
+  else
+    thread_count = reinterpret_cast<size_t>(memAmount / memPerThread);
+  if (maxThreads > 0) {
+    return (thread_count > maxThreads) ? maxThreads : thread_count;
+  }
+  return thread_count;
+}
+
 }  // namespace HipTest
