@@ -37,6 +37,9 @@ set(TEST_SRC
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemsetAsyncAndKernel.cc
+    hipMemset3D.cc
+    hipMemset2D.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
 )
 else()
 set(TEST_SRC
@@ -74,6 +77,9 @@ set(TEST_SRC
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemsetAsyncAndKernel.cc
+    hipMemset3D.cc
+    hipMemset2D.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
 )
 endif()
 # Create shared lib of all tests
