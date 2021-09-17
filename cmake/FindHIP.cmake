@@ -190,6 +190,17 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         set(HIP_RUNTIME ${_hip_runtime} CACHE STRING "HIP runtime as computed by hipconfig")
         mark_as_advanced(HIP_RUNTIME)
     endif()
+
+    # When hipcc/hipconfig cpp executables are used
+    if(EXISTS ${HIP_COMMON_SRC_DIR})
+        message (STATUS "Using cpp executables for hipcc/hipconfig")
+        unset(HIP_HIPCC_EXECUTABLE CACHE)
+        unset(HIP_HIPCONFIG_EXECUTABLE CACHE)
+        set(HIP_HIPCC_EXECUTABLE ${HIP_ROOT_DIR}/bin/hipcc CACHE STRING "HIPCC using executable")
+        set(HIP_HIPCONFIG_EXECUTABLE ${HIP_ROOT_DIR}/bin/hipconfig CACHE STRING "HIPCONFIG using executable")
+        mark_as_advanced(HIP_HIPCC_EXECUTABLE)
+        mark_as_advanced(HIP_HIPCONFIG_EXECUTABLE)
+    endif()
 endif()
 
 include(FindPackageHandleStandardArgs)
