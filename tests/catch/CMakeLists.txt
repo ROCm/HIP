@@ -69,6 +69,7 @@ add_subdirectory(unit)
 add_subdirectory(ABM)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
+add_subdirectory(TypeQualifiers)
 
 if(UNIX)
     add_subdirectory(multiproc)
