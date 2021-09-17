@@ -1,4 +1,5 @@
 add_subdirectory(memory)
+add_subdirectory(module)
 if(HIP_PLATFORM MATCHES "amd")
 add_subdirectory(printf)
 add_subdirectory(stream)

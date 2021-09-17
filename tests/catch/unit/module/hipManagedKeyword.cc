@@ -19,14 +19,38 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+/*
+hipManagedKeyword API Scenario
+1. Test hipModuleLoad on multiple GPUs
+*/
 
-#pragma once
 #include "hip_test_common.hh"
+#include "hip_test_kernels.hh"
+#include "hip_test_checkers.hh"
 
-namespace HipTest {
-static inline int getGeviceCount() {
-  int dev = 0;
-  HIPCHECK(hipGetDeviceCount(&dev));
-  return dev;
+#define MANAGED_VAR_INIT_VALUE 10
+#define fileName "module_kernels.code"
+
+TEST_CASE("Unit_hipMangedKeyword_ModuleLoadMultiGPU") {
+  int numDevices = 0, data;
+  hipDeviceptr_t x;
+  size_t xSize;
+  hipGetDeviceCount(&numDevices);
+  for (int i = 0; i < numDevices; i++) {
+    hipSetDevice(i);
+    CTX_CREATE()
+    hipModule_t Module;
+    HIP_CHECK(hipModuleLoad(&Module, fileName));
+    hipFunction_t Function;
+    HIP_CHECK(hipModuleGetFunction(&Function, Module, "GPU_func"));
+    HIP_CHECK(hipModuleLaunchKernel(Function, 1, 1, 1, 1, 1,
+                                    1, 0, 0, NULL, NULL));
+    hipDeviceSynchronize();
+    HIP_CHECK(hipModuleGetGlobal(reinterpret_cast<hipDeviceptr_t*>(&x),
+                                 &xSize, Module, "x"));
+    HIP_CHECK(hipMemcpyDtoH(&data, hipDeviceptr_t(x), xSize));
+    REQUIRE(data == (1 + MANAGED_VAR_INIT_VALUE));
+    HIP_CHECK(hipModuleUnload(Module));
+    CTX_DESTROY()
+  }
 }
-}  // namespace HipTest
