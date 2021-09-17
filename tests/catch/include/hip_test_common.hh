@@ -1,6 +1,5 @@
 /*
-Copyright (c) 2021 - 2021 Advanced Micro Devices, Inc. All rights reserved.
-
+Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -23,6 +22,13 @@ THE SOFTWARE.
 #pragma once
 #include "hip_test_context.hh"
 #include <catch.hpp>
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#elif defined(_WIN32)
+#include <windows.h>
+#endif
+
+
 
 #define HIP_PRINT_STATUS(status) INFO(hipGetErrorName(status) << " at line: " << __LINE__);
 
@@ -72,6 +78,27 @@ THE SOFTWARE.
     }
 
 
+#if HT_NVIDIA
+#define CTX_CREATE() \
+  hipCtx_t context;\
+  initHipCtx(&context);
+#define CTX_DESTROY() HIPCHECK(hipCtxDestroy(context));
+#define ARRAY_DESTROY(array) HIPCHECK(hipArrayDestroy(array));
+#define HIP_TEX_REFERENCE hipTexRef
+#define HIP_ARRAY hiparray
+static void initHipCtx(hipCtx_t *pcontext) {
+  HIPCHECK(hipInit(0));
+  hipDevice_t device;
+  HIPCHECK(hipDeviceGet(&device, 0));
+  HIPCHECK(hipCtxCreate(pcontext, 0, device));
+}
+#else
+#define CTX_CREATE()
+#define CTX_DESTROY()
+#define ARRAY_DESTROY(array) HIPCHECK(hipFreeArray(array));
+#define HIP_TEX_REFERENCE textureReference*
+#define HIP_ARRAY hipArray*
+#endif
 
 // Utility Functions
 namespace HipTest {
@@ -104,4 +131,34 @@ static inline unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlo
 
   return blocks;
 }
+// Get Free Memory from the system
+static size_t getMemoryAmount() {
+#if __linux__
+  struct sysinfo info;
+  sysinfo(&info);
+  return info.freeram / (1024 * 1024);  // MB
+#elif defined(_WIN32)
+  MEMORYSTATUSEX statex;
+  statex.dwLength = sizeof(statex);
+  GlobalMemoryStatusEx(&statex);
+  return (statex.ullAvailPhys / (1024 * 1024));  // MB
+#endif
+}
+
+static inline size_t getHostThreadCount(const size_t memPerThread = 200, const size_t maxThreads = 0) {
+  if (memPerThread == 0) return 0;
+  auto memAmount = getMemoryAmount();
+  const auto processor_count = std::thread::hardware_concurrency();
+  if (processor_count == 0 || memAmount == 0) return 0;
+  size_t thread_count = 0;
+  if ((processor_count * memPerThread) < memAmount)
+    thread_count = processor_count;
+  else
+    thread_count = reinterpret_cast<size_t>(memAmount / memPerThread);
+  if (maxThreads > 0) {
+    return (thread_count > maxThreads) ? maxThreads : thread_count;
+  }
+  return thread_count;
+}
+
 }

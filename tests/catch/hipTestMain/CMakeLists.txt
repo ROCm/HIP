@@ -15,6 +15,7 @@ target_link_libraries(UnitTests PRIVATE UnitDeviceTests
                                         EventTest
                                         OccupancyTest
                                         DeviceTest
+                                        ModuleTest
                                         RTC
                                         stdc++fs)
 
@@ -36,6 +37,7 @@ target_link_libraries(ABMTests PRIVATE ABMAddKernels
                                        stdc++fs)
 
 catch_discover_tests(ABMTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
+add_dependencies(UnitTests module_kernels.code)
 
 add_dependencies(build_tests UnitTests ABMTests)
 
@@ -63,7 +65,7 @@ else()
     target_compile_options(StressTest PUBLIC -std=c++17)
 endif()
 if(HIP_PLATFORM MATCHES "amd")
-target_link_libraries(StressTest PRIVATE printf stream)
+target_link_libraries(StressTest PRIVATE printf stream module)
 endif()
 target_link_libraries(StressTest PRIVATE memory stdc++fs)
 add_dependencies(build_stress_test StressTest)
