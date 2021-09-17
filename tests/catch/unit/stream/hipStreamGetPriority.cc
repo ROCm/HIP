@@ -16,11 +16,28 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
+/**
+Testcase Scenarios :
+1) Negative tests for hipStreamGetPriority api.
+2) Create stream and check default priority of stream is within range.
+3) Create stream with high or low priority and check priority is set as expected.
+4) Create stream with higher priority or lower priority for the priority range returned.
+5) Create stream with CUMask and check priority is returned as expected.
+*/
+
 #include <hip_test_common.hh>
+
+/**
+ * Negative tests for hipStreamGetPriority api.
+ */
 TEST_CASE("Unit_hipStreamGetPriority_Negative") {
   hipStream_t stream = 0;
   REQUIRE(hipStreamGetPriority(stream, nullptr) == hipErrorInvalidValue);
 }
+
+/**
+ * Create stream and check default priority of stream is within range.
+ */
 TEST_CASE("Unit_hipStreamGetPriority_default") {
   int priority_low = 0;
   int priority_high = 0;
@@ -37,6 +54,10 @@ TEST_CASE("Unit_hipStreamGetPriority_default") {
   REQUIRE(priority >= priority_high);
   HIP_CHECK(hipStreamDestroy(stream));
 }
+
+/**
+ * Create stream with high priority and check priority is set as expected.
+ */
 TEST_CASE("Unit_hipStreamGetPriority_high") {
   int priority_low = 0;
   int priority_high = 0;
@@ -44,12 +65,17 @@ TEST_CASE("Unit_hipStreamGetPriority_high") {
   HIP_CHECK(hipSetDevice(devID));
   HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
   hipStream_t stream;
-  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_high));
+  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault,
+                                                            priority_high));
   int priority = 0;
   HIP_CHECK(hipStreamGetPriority(stream, &priority));
   REQUIRE(priority == priority_high);
   HIP_CHECK(hipStreamDestroy(stream));
 }
+
+/**
+ * Create stream with higher priority for the priority range returned.
+ */
 TEST_CASE("Unit_hipStreamGetPriority_higher") {
   int priority_low = 0;
   int priority_high = 0;
@@ -57,12 +83,17 @@ TEST_CASE("Unit_hipStreamGetPriority_higher") {
   HIP_CHECK(hipSetDevice(devID));
   HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
   hipStream_t stream;
-  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking, priority_high-1));
+  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking,
+                                                           priority_high-1));
   int priority = 0;
   HIP_CHECK(hipStreamGetPriority(stream, &priority));
   REQUIRE(priority == priority_high);
   HIP_CHECK(hipStreamDestroy(stream));
 }
+
+/**
+ * Create stream with low priority and check priority is set as expected.
+ */
 TEST_CASE("Unit_hipStreamGetPriority_low") {
   int priority_low = 0;
   int priority_high = 0;
@@ -70,12 +101,17 @@ TEST_CASE("Unit_hipStreamGetPriority_low") {
   HIP_CHECK(hipSetDevice(devID));
   HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
   hipStream_t stream;
-  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_low));
+  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault,
+                                                              priority_low));
   int priority = 0;
   HIP_CHECK(hipStreamGetPriority(stream, &priority));
   REQUIRE(priority_low == priority);
   HIP_CHECK(hipStreamDestroy(stream));
 }
+
+/**
+ * Create stream with lower priority for the priority range returned.
+ */
 TEST_CASE("Unit_hipStreamGetPriority_lower") {
   int priority_low = 0;
   int priority_high = 0;
@@ -83,9 +119,35 @@ TEST_CASE("Unit_hipStreamGetPriority_lower") {
   HIP_CHECK(hipSetDevice(devID));
   HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
   hipStream_t stream;
-  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking, priority_low+1));
+  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking,
+                                                           priority_low+1));
   int priority = 0;
   HIP_CHECK(hipStreamGetPriority(stream, &priority));
   REQUIRE(priority_low == priority);
   HIP_CHECK(hipStreamDestroy(stream));
 }
+
+#if HT_AMD
+/**
+ * Create stream with CUMask and check priority is returned as expected.
+ */
+TEST_CASE("Unit_hipStreamGetPriority_StreamsWithCUMask") {
+  hipStream_t stream;
+  int priority = 0;
+  int priority_normal = 0;
+  int priority_low = 0;
+  int priority_high = 0;
+  // Test is to get the Stream Priority Range
+  HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
+  priority_normal = priority_low + priority_high;
+  // Check if priorities are indeed supported
+  REQUIRE_FALSE(priority_low == priority_high);
+  // Creating a stream with hipExtStreamCreateWithCUMask and checking
+  // priority.
+  const uint32_t cuMask = 0xffffffff;
+  HIP_CHECK(hipExtStreamCreateWithCUMask(&stream, 1, &cuMask));
+  HIP_CHECK(hipStreamGetPriority(stream, &priority));
+  REQUIRE_FALSE(priority_normal != priority);
+  HIP_CHECK(hipStreamDestroy(stream));
+}
+#endif
