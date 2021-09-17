@@ -33,6 +33,10 @@ set(TEST_SRC
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
     hipManagedKeyword.cc
+    hipMemsetInvalidPtr.cc
+    hipMemset.cc
+    hipMemsetAsyncMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
     hipMemset3D.cc
     hipMemset2D.cc
     hipMemset2DAsyncMultiThreadAndKernel.cc
@@ -69,6 +73,10 @@ set(TEST_SRC
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
     hipManagedKeyword.cc
+    hipMemsetInvalidPtr.cc
+    hipMemset.cc
+    hipMemsetAsyncMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
     hipMemset3D.cc
     hipMemset2D.cc
     hipMemset2DAsyncMultiThreadAndKernel.cc
