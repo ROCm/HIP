@@ -32,7 +32,6 @@ set(TEST_SRC
     hipHostGetFlags.cc
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
-    hipManagedKeyword.cc
     hipMemsetInvalidPtr.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
@@ -77,7 +76,6 @@ set(TEST_SRC
     hipHostGetFlags.cc
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
-    hipManagedKeyword.cc
     hipMemsetInvalidPtr.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
