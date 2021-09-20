@@ -731,10 +731,17 @@ MyKernel(hipGridLaunch lp, ...)
 
 __launch_bounds__ supports two parameters:
 - MAX_THREADS_PER_BLOCK - The programmers guarantees that kernel will be launched with threads less than MAX_THREADS_PER_BLOCK. (On NVCC this maps to the .maxntid PTX directive). If no launch_bounds is specified, MAX_THREADS_PER_BLOCK is the maximum block size supported by the device (typically 1024 or larger). Specifying MAX_THREADS_PER_BLOCK less than the maximum effectively allows the compiler to use more resources than a default unconstrained compilation that supports all possible block sizes at launch time.
-The threads-per-block is the product of (hipBlockDim_x * hipBlockDim_y * hipBlockDim_z).
+  The threads-per-block is the product of (hipBlockDim_x * hipBlockDim_y * hipBlockDim_z).
 - MIN_WARPS_PER_EU - directs the compiler to minimize resource usage so that the requested number of warps can be simultaneously active on a multi-processor. Since active warps compete for the same fixed pool of resources, the compiler must reduce resources required by each warp(primarily registers). MIN_WARPS_PER_EU is optional and defaults to 1 if not specified. Specifying a MIN_WARPS_PER_EU greater than the default 1 effectively constrains the compiler's resource usage.
 
+When launch kernel with HIP APIs, for example, hipModuleLaunchKernel(), HIP will do validation to make sure input kernel dimension size is not larger than specified launch_bounds.
+
+In case exceeded, HIP would return launch failure, if AMD_LOG_LEVEL is set with proper value (for details, please refer to docs/markdown/hip_logging.md), detail information will be shown in the error log message, including
+
+launch parameters of kernel dim size, launch bounds, and the name of the faulting kernel. It's helpful to figure out which is the faulting kernel, besides, the kernel dim size and launch bounds values will also assist in debugging such failures.
+
 ### Compiler Impact
+
 The compiler uses these parameters as follows:
 - The compiler uses the hints only to manage register usage, and does not automatically reduce shared memory or other resources.
 - Compilation fails if compiler cannot generate a kernel which meets the requirements of the specified launch bounds.
@@ -748,7 +755,7 @@ If MIN_WARPS_PER_EU is 1, then the kernel can use all registers supported by the
 
 ### CU and EU Definitions
 A compute unit (CU) is responsible for executing the waves of a work-group. It is composed of one or more execution units (EU) which are responsible for executing waves. An EU can have enough resources to maintain the state of more than one executing wave. This allows an EU to hide latency by switching between waves in a similar way to symmetric multithreading on a CPU. In order to allow the state for multiple waves to fit on an EU, the resources used by a single wave have to be limited. Limiting such resources can allow greater latency hiding, but can result in having to spill some register state to memory. This attribute allows an advanced developer to tune the number of waves that are capable of fitting within the resources of an EU. It can be used to ensure at least a certain number will fit to help hide latency, and can also be used to ensure no more than a certain number will fit to limit cache thrashing.
- 
+
 ### Porting from CUDA __launch_bounds
 CUDA defines a __launch_bounds which is also designed to control occupancy:
 ```

@@ -66,12 +66,15 @@ ROCm defines two coherency options for host memory:
 - Non-coherent memory : Can be cached by GPU, but cannot support synchronization while the kernel is running.  Non-coherent memory can be optionally synchronized only at command (end-of-kernel or copy command) boundaries.  This memory is appropriate for high-performance access when fine-grain synchronization is not required.
 
 HIP provides the developer with controls to select which type of memory is used via allocation flags passed to hipHostMalloc and the HIP_HOST_COHERENT environment variable. By default, the environment variable HIP_HOST_COHERENT is set to 0 in HIP.
-- hipHostMallocCoherent=0, hipHostMallocNonCoherent=0: Use HIP_HOST_COHERENT environment variable,
+The control logic in the current version of HIP is as follows:
+- No flags are passed in: the host memory allocation is coherent, the HIP_HOST_COHERENT environment variable is ignored.
+- hipHostMallocCoherent=1: The host memory allocation will be coherent, the HIP_HOST_COHERENT environment variable is ignored.
+- hipHostMallocMapped=1: The host memory allocation will be coherent, the HIP_HOST_COHERENT environment variable is ignored.
+- hipHostMallocNonCoherent=1, hipHostMallocCoherent=0, and hipHostMallocMapped=0: The host memory will be non-coherent, the HIP_HOST_COHERENT environment variable is ignored.
+- hipHostMallocCoherent=0, hipHostMallocNonCoherent=0, hipHostMallocMapped=0, but one of the other HostMalloc flags is set:
   - If HIP_HOST_COHERENT is defined as 1, the host memory allocation is coherent.
   - If HIP_HOST_COHERENT is not defined, or defined as 0, the host memory allocation is non-coherent.
-- hipHostMallocCoherent=1, hipHostMallocNonCoherent=0: The host memory allocation will be coherent.  HIP_HOST_COHERENT env variable is ignored.
-- hipHostMallocCoherent=0, hipHostMallocNonCoherent=1: The host memory allocation will be non-coherent.  HIP_HOST_COHERENT env variable is ignored.
-- hipHostMallocCoherent=1, hipHostMallocNonCoherent=1: Illegal.
+- hipHostMallocCoherent=1, hipHostMallocNonCoherent=1: Illegal.
 
 ### Visibility of Zero-Copy Host Memory
 Coherent host memory is automatically visible at synchronization points.
