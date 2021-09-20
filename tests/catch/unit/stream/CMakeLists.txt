@@ -9,6 +9,8 @@ set(TEST_SRC
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
     hipStreamWithCUMask.cc
+    hipStreamGetCUMask.cc
+    hipAPIStreamDisable.cc
 )
 else()
 set(TEST_SRC
@@ -20,6 +22,7 @@ set(TEST_SRC
     hipStreamAddCallback.cc
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
+    hipAPIStreamDisable.cc
 )
 endif()
 

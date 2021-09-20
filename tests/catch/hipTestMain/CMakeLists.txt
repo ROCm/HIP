@@ -69,3 +69,14 @@ target_link_libraries(StressTest PRIVATE memory stdc++fs)
 add_dependencies(build_stress_test StressTest)
 add_custom_target(stress_test COMMAND StressTest)
 
+# Space Specifiers/Qualifiers exe
+add_executable(TypeQualifierTests EXCLUDE_FROM_ALL main.cc hip_test_context.cc)
+if(HIP_PLATFORM MATCHES "amd")
+    set_property(TARGET TypeQualifierTests PROPERTY CXX_STANDARD 17)
+else()
+    target_compile_options(TypeQualifierTests PUBLIC -std=c++17)
+endif()
+target_link_libraries(TypeQualifierTests PRIVATE TypeQualifiers stdc++fs)
+
+catch_discover_tests(TypeQualifierTests PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
+add_dependencies(build_tests TypeQualifierTests)
