@@ -44,7 +44,6 @@ set(TEST_SRC
     hipMemset3DFunctional.cc
     hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
-    hipManagedKeyword.cc
     hipMallocManagedFlagsTst.cc
 )
 else()
@@ -90,7 +89,6 @@ set(TEST_SRC
     hipMemset3DFunctional.cc
     hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
-    hipManagedKeyword.cc
     hipMallocManagedFlagsTst.cc
 )
 endif()
