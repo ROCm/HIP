@@ -1701,7 +1701,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
  * @note Support for hipStreamWaitValue32 can be queried using 'hipDeviceGetAttribute()' and
  * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
  *
- * @beta This API is marked as beta, meaning, while this is feature complete,
+ * @warning This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue64, hipStreamWriteValue64,
@@ -1735,7 +1735,7 @@ hipError_t hipStreamWaitValue32(hipStream_t stream, void* ptr, uint32_t value, u
  * @note Support for hipStreamWaitValue64 can be queried using 'hipDeviceGetAttribute()' and
  * 'hipDeviceAttributeCanUseStreamWaitValue' flag.
  *
- * @beta This API is marked as beta, meaning, while this is feature complete,
+ * @warning This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWaitValue32, hipStreamWriteValue64,
@@ -1756,7 +1756,7 @@ hipError_t hipStreamWaitValue64(hipStream_t stream, void* ptr, uint64_t value, u
  * Enqueues a write command to the stream, write operation is performed after all earlier commands
  * on this stream have completed the execution.
  *
- * @beta This API is marked as beta, meaning, while this is feature complete,
+ * @warning This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
@@ -1776,7 +1776,7 @@ hipError_t hipStreamWriteValue32(hipStream_t stream, void* ptr, uint32_t value, 
  * Enqueues a write command to the stream, write operation is performed after all earlier commands
  * on this stream have completed the execution.
  *
- * @beta This API is marked as beta, meaning, while this is feature complete,
+ * @warning This API is marked as beta, meaning, while this is feature complete,
  * it is still open to changes and may have outstanding issues.
  *
  * @see hipExtMallocWithFlags, hipFree, hipStreamWriteValue32, hipStreamWaitValue32,
