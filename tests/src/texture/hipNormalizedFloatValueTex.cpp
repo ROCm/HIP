@@ -60,6 +60,7 @@ texture<unsigned short, hipTextureType1D, hipReadModeNormalizedFloat> texus;
 template<typename T>
 __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
 {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     unsigned int elementID = hipThreadIdx_x;
     if(elementID >= numElements)
         return;
@@ -72,6 +73,7 @@ __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
         pDst[elementID] = tex1D(texs, coord);
     else if(std::is_same<T, unsigned short>::value)
         pDst[elementID] = tex1D(texus, coord);
+#endif
 }
 
 bool textureVerifyFilterModePoint(float *hOutputData, float *expected, size_t size) {
@@ -171,6 +173,13 @@ bool runTest() {
 
 int main(int argc, char** argv)
 {
+    int imageSupport = 0;
+    hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                              p_gpuDevice);
+    if (!imageSupport) {
+      printf("Texture is not support on the device\n");
+      passed();
+    }
     HipTest::parseStandardArguments(argc, argv, true);
     int device = 0;
     bool status = false;
