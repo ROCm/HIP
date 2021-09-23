@@ -4150,9 +4150,9 @@ int hipGetStreamDeviceId(hipStream_t stream);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Types
+ *  @defgroup Graph Management
  *  @{
- *  This section describes the graph types of HIP runtime API.
+ *  This section describes the graph management types & functions of HIP runtime API.
  */
 
 /**
@@ -4248,14 +4248,6 @@ typedef enum hipStreamUpdateCaptureDependenciesFlags {
 } hipStreamUpdateCaptureDependenciesFlags;
 
 /**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Stream Capture APIs
- *  @{
- *  This section describes the stream capture functions of HIP runtime API.
- */
-
-/**
  * @brief Begins graph capture on a stream.
  *
  * @param [in] stream - Stream to initiate capture.
@@ -4345,13 +4337,6 @@ hipError_t hipStreamIsCapturing(hipStream_t stream, hipStreamCaptureStatus* pCap
 hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t* dependencies,
                                               size_t numDependencies,
                                               unsigned int flags __dparm(0));
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Management
- *  @{
- *  This section describes the graph management functions of HIP runtime API.
- */
 
 /**
  * @brief Creates a graph
@@ -4523,13 +4508,6 @@ hipError_t hipGraphNodeGetType(hipGraphNode_t node, hipGraphNodeType* pType);
 hipError_t hipGraphDestroyNode(hipGraphNode_t node);
 
 /**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph clone APIs
- *  @{
- *  This section describes the graph clone functions of HIP runtime API.
- */
-/**
  * @brief Clones a graph.
  *
  * @param [out] pGraphClone - Returns newly created cloned graph.
@@ -4555,13 +4533,6 @@ hipError_t hipGraphClone(hipGraph_t* pGraphClone, hipGraph_t originalGraph);
 hipError_t hipGraphNodeFindInClone(hipGraphNode_t* pNode, hipGraphNode_t originalNode,
                                    hipGraph_t clonedGraph);
 
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph action APIs
- *  @{
- *  This section describes the graph action functions of HIP runtime API.
- */
 /**
  * @brief Creates an executable graph from a graph
  *
@@ -4634,13 +4605,6 @@ hipError_t hipGraphExecUpdate(hipGraphExec_t hGraphExec, hipGraph_t hGraph,
                               hipGraphExecUpdateResult* updateResult_out);
 
 /**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Kernel APIs
- *  @{
- *  This section describes the graph kernel functions of HIP runtime API.
- */
-/**
  * @brief Creates a kernel execution node and adds it to a graph.
  *
  * @param [out] pGraphNode - pointer to graph node to create.
@@ -4688,13 +4652,6 @@ hipError_t hipGraphExecKernelNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNo
                                            const hipKernelNodeParams* pNodeParams);
 
 /**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Memcpy APIs
- *  @{
- *  This section describes the graph Memcpy functions of HIP runtime API.
- */
-/**
  * @brief Creates a memcpy node and adds it to a graph.
  *
  * @param [out] pGraphNode - pointer to graph node to create.
@@ -4740,13 +4697,6 @@ hipError_t hipGraphMemcpyNodeSetParams(hipGraphNode_t node, const hipMemcpy3DPar
 hipError_t hipGraphExecMemcpyNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                            hipMemcpy3DParms* pNodeParams);
 
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Memcpy 1D APIs
- *  @{
- *  This section describes the graph Memcpy 1D functions of HIP runtime API.
- */
 /**
  * @brief Creates a 1D memcpy node and adds it to a graph.
  *
@@ -4796,13 +4746,6 @@ hipError_t hipGraphExecMemcpyNodeSetParams1D(hipGraphExec_t hGraphExec, hipGraph
                                              void* dst, const void* src, size_t count,
                                              hipMemcpyKind kind);
 
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Memcpy from symbol APIs
- *  @{
- *  This section describes the graph Memcpy from symbol functions of HIP runtime API.
- */
 /**
  * @brief Creates a memcpy node to copy from a symbol on the device and adds it to a graph.
  *
@@ -4856,13 +4799,6 @@ hipError_t hipGraphExecMemcpyNodeSetParamsFromSymbol(hipGraphExec_t hGraphExec, 
                                                      void* dst, const void* symbol, size_t count,
                                                      size_t offset, hipMemcpyKind kind);
 
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Memcpy To symbol APIs
- *  @{
- *  This section describes the graph Memcpy To symbol functions of HIP runtime API.
- */
 /**
  * @brief Creates a memcpy node to copy to a symbol on the device and adds it to a graph.
  *
@@ -4919,13 +4855,6 @@ hipError_t hipGraphExecMemcpyNodeSetParamsToSymbol(hipGraphExec_t hGraphExec, hi
                                                    size_t count, size_t offset, hipMemcpyKind kind);
 
 /**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Memset APIs
- *  @{
- *  This section describes the graph Memset functions of HIP runtime API.
- */
-/**
  * @brief Creates a memset node and adds it to a graph.
  *
  * @param [out] pGraphNode - pointer to the graph node to create.
@@ -4972,13 +4901,6 @@ hipError_t hipGraphMemsetNodeSetParams(hipGraphNode_t node, const hipMemsetParam
 hipError_t hipGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                            const hipMemsetParams* pNodeParams);
 
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph host APIs
- *  @{
- *  This section describes the graph host functions of HIP runtime API.
- */
 /**
  * @brief Creates a host execution node and adds it to a graph.
  *
@@ -5027,13 +4949,6 @@ hipError_t hipGraphExecHostNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode
                                          const hipHostNodeParams* pNodeParams);
 
 /**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph child graph APIs
- *  @{
- *  This section describes the child graph functions of HIP runtime API.
- */
-/**
  * @brief Creates a child graph node and adds it to a graph.
  *
  * @param [out] pGraphNode - pointer to the graph node to create.
@@ -5071,13 +4986,6 @@ hipError_t hipGraphExecChildGraphNodeSetParams(hipGraphExec_t hGraphExec, hipGra
                                                hipGraph_t childGraph);
 
 /**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Empty node APIs
- *  @{
- *  This section describes the graph Empty node functions of HIP runtime API.
- */
-/**
  * @brief Creates an empty node and adds it to a graph.
  *
  * @param [out] pGraphNode - pointer to the graph node to create and add to the graph.
@@ -5091,13 +4999,6 @@ hipError_t hipGraphAddEmptyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                 const hipGraphNode_t* pDependencies, size_t numDependencies);
 
 
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Event Record APIs
- *  @{
- *  This section describes the graph Event Record functions of HIP runtime API.
- */
 /**
  * @brief Creates an event record node and adds it to a graph.
  *
@@ -5145,13 +5046,6 @@ hipError_t hipGraphEventRecordNodeSetEvent(hipGraphNode_t node, hipEvent_t event
 hipError_t hipGraphExecEventRecordNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                                hipEvent_t event);
 
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Event Wait APIs
- *  @{
- *  This section describes the graph Event Wait node functions of HIP runtime API.
- */
 /**
  * @brief Creates an event wait node and adds it to a graph.
  *
