@@ -18,11 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-add_subdirectory(memory)
-add_subdirectory(deviceLib)
-add_subdirectory(stream)
-add_subdirectory(event)
-add_subdirectory(occupancy)
-add_subdirectory(device)
-add_subdirectory(rtc)
-add_subdirectory(texture)
+# Common Tests - Test independent of all platforms
+set(TEST_SRC
+    hipCreateTextureObject_ArgValidation.cc
+    hipCreateTextureObject_Linear.cc
+    hipCreateTextureObject_Pitch2D.cc
+    hipCreateTextureObject_Array.cc
+)
+
+# Create shared lib of all tests
+add_library(TextureTest SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
+
+# Add dependency on build_tests to build it on this custom target
+add_dependencies(build_tests TextureTest)
