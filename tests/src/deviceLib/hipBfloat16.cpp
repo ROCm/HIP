@@ -55,17 +55,17 @@ __host__ __device__ void testOperations(float &fa, float &fb) {
   hip_bfloat16 bf_a(fa);
   hip_bfloat16 bf_b(fb);
   float fc = float(bf_a);
-  float fd = float(bf_b); 
+  float fd = float(bf_b);
 
   assert(testRelativeAccuracy(fa, bf_a));
   assert(testRelativeAccuracy(fb, bf_b));
 
   assert(testRelativeAccuracy(fc + fd, bf_a + bf_b));
-  //when checked as above for add, operation sub fails on GPU 
+  //when checked as above for add, operation sub fails on GPU
   assert(hip_bfloat16(fc - fd) == (bf_a - bf_b));
   assert(testRelativeAccuracy(fc * fd, bf_a * bf_b));
   assert(testRelativeAccuracy(fc / fd, bf_a / bf_b));
- 
+
   hip_bfloat16 bf_opNegate = -bf_a;
   assert(bf_opNegate == -bf_a);
 
@@ -75,7 +75,7 @@ __host__ __device__ void testOperations(float &fa, float &fb) {
   bf_x--;
   ++bf_x;
   --bf_x;
-  //hip_bfloat16 is converted to float and then inc/decremented, hence check with reduced precision 
+  //hip_bfloat16 is converted to float and then inc/decremented, hence check with reduced precision
   assert(testRelativeAccuracy(bf_x,bf_a));
 
   bf_x = bf_a;
@@ -95,7 +95,7 @@ __host__ __device__ void testOperations(float &fa, float &fb) {
   if (isnan(bf_rounded)) {
     assert(isnan(bf_rounded) || isinf(bf_rounded));
   }
-}  
+}
 
 __global__ void testOperationsGPU(float* d_a, float* d_b)
 {
@@ -126,7 +126,7 @@ int main(){
 
   hipLaunchKernelGGL(testOperationsGPU, 1, SIZE, 0, 0, d_fa, d_fb);
   hipDeviceSynchronize();
-  cout<<"Device bfloat16 Operations Successful!!"<<endl; 
+  cout<<"Device bfloat16 Operations Successful!!"<<endl;
 
   delete[] h_fa;
   delete[] h_fb;

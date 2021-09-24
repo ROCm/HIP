@@ -84,7 +84,7 @@ void kernel_hisnan(__half* input, int* output) {
 }
 
 __global__
-void kernel_hisinf(__half* input, int* output) { 
+void kernel_hisinf(__half* input, int* output) {
   int tx = threadIdx.x;
   output[tx] = __hisinf(input[tx]);
 }

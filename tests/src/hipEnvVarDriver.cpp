@@ -41,7 +41,7 @@ int readHipEnvVar(string flags, char* buff){
 
     std::cout << "\nFinding hipEnvVar in " << directed_dir << "...\n";
     FILE* directed_in = popen((directed_dir + flags).c_str(), "r");
-    
+
     if(fgets(buff, 512, directed_in) == NULL){
         std::cout << "Finding hipEnvVar in " << dir << "...\n";
         FILE* in = popen((dir + flags).c_str(), "r");
@@ -74,7 +74,7 @@ int getDeviceNumber(bool print_err=true) {
 }
 
 // Query the current device ID remotely to hipEnvVar
-void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {    
+void getDevicePCIBusNumRemote(int deviceID, char* pciBusID) {
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     if (readHipEnvVar((" -d " + std::to_string(deviceID)), pciBusID)){
         std::cerr << "The system cannot find hipEnvVar\n";

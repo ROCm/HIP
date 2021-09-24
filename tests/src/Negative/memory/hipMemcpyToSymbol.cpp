@@ -36,11 +36,11 @@ int main(){
 
     e = hipMemcpyToSymbol(HIP_SYMBOL(Sd), S, SIZE, 0, hipMemcpyHostToDevice);
     HIPASSERT(e==hipErrorInvalidSymbol);
-    
+
     e = hipMemcpyToSymbol(NULL, S, SIZE, 0, hipMemcpyHostToDevice);
     HIPASSERT(e==hipErrorInvalidSymbol);
 
-    HIPCHECK(hipFree(Sd)); 
-    
+    HIPCHECK(hipFree(Sd));
+
     passed();
 }
