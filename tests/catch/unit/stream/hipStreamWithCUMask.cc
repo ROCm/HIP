@@ -95,10 +95,9 @@ void createDisabledCUMask(std::vector<uint32_t> *pdisabledCUMask,
   }
 }
 
-void Callback(hipStream_t stream, hipError_t status,
+void Callback(hipStream_t, hipError_t status,
               void* userData) {
   isPassed = true;
-  stream = 0;
   HIP_CHECK(status);
   REQUIRE(userData == nullptr);
   for (size_t i = 0; i < N; i++) {
