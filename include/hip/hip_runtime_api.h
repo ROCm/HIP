@@ -4256,7 +4256,8 @@ typedef enum hipStreamUpdateCaptureDependenciesFlags {
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
@@ -4269,7 +4270,8 @@ hipError_t hipStreamBeginCapture(hipStream_t stream, hipStreamCaptureMode mode);
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipStreamEndCapture(hipStream_t stream, hipGraph_t* pGraph);
@@ -4283,7 +4285,8 @@ hipError_t hipStreamEndCapture(hipStream_t stream, hipGraph_t* pGraph);
  *
  * @returns #hipSuccess, #hipErrorStreamCaptureImplicit
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipStreamGetCaptureInfo(hipStream_t stream, hipStreamCaptureStatus* pCaptureStatus,
@@ -4301,7 +4304,8 @@ hipError_t hipStreamGetCaptureInfo(hipStream_t stream, hipStreamCaptureStatus* p
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorStreamCaptureImplicit
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipStreamGetCaptureInfo_v2(hipStream_t stream, hipStreamCaptureStatus* captureStatus_out,
@@ -4318,7 +4322,8 @@ hipError_t hipStreamGetCaptureInfo_v2(hipStream_t stream, hipStreamCaptureStatus
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorStreamCaptureImplicit
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipStreamIsCapturing(hipStream_t stream, hipStreamCaptureStatus* pCaptureStatus);
@@ -4331,7 +4336,8 @@ hipError_t hipStreamIsCapturing(hipStream_t stream, hipStreamCaptureStatus* pCap
  * @param [in] numDependencies - size of the array in dependencies.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorIllegalState
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t* dependencies,
@@ -4346,7 +4352,8 @@ hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t
  *
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphCreate(hipGraph_t* pGraph, unsigned int flags);
@@ -4358,7 +4365,8 @@ hipError_t hipGraphCreate(hipGraph_t* pGraph, unsigned int flags);
  *
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphDestroy(hipGraph_t graph);
@@ -4372,7 +4380,8 @@ hipError_t hipGraphDestroy(hipGraph_t graph);
  * @param [in] numDependencies - the number of dependencies to add.
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphAddDependencies(hipGraph_t graph, const hipGraphNode_t* from,
@@ -4387,7 +4396,8 @@ hipError_t hipGraphAddDependencies(hipGraph_t graph, const hipGraphNode_t* from,
  * @param [in] numDependencies - the number of dependencies to remove.
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphRemoveDependencies(hipGraph_t graph, const hipGraphNode_t* from,
@@ -4406,7 +4416,8 @@ hipError_t hipGraphRemoveDependencies(hipGraph_t graph, const hipGraphNode_t* fr
  * numEdges. Otherwise, numEdges entries will be filled in. If numEdges is higher than the actual
  * number of edges, the remaining entries in from and to will be set to NULL, and the number of
  * edges actually returned will be written to numEdges
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphGetEdges(hipGraph_t graph, hipGraphNode_t* from, hipGraphNode_t* to,
@@ -4424,7 +4435,8 @@ hipError_t hipGraphGetEdges(hipGraph_t graph, hipGraphNode_t* from, hipGraphNode
  * Otherwise, numNodes entries will be filled in. If numNodes is higher than the actual number of
  * nodes, the remaining entries in nodes will be set to NULL, and the number of nodes actually
  * obtained will be returned in numNodes.
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphGetNodes(hipGraph_t graph, hipGraphNode_t* nodes, size_t* numNodes);
@@ -4441,7 +4453,8 @@ hipError_t hipGraphGetNodes(hipGraph_t graph, hipGraphNode_t* nodes, size_t* num
  * pNumRootNodes. Otherwise, pNumRootNodes entries will be filled in. If pNumRootNodes is higher
  * than the actual number of root nodes, the remaining entries in pRootNodes will be set to NULL,
  * and the number of nodes actually obtained will be returned in pNumRootNodes.
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphGetRootNodes(hipGraph_t graph, hipGraphNode_t* pRootNodes,
@@ -4459,7 +4472,8 @@ hipError_t hipGraphGetRootNodes(hipGraph_t graph, hipGraphNode_t* pRootNodes,
  * pNumDependencies. Otherwise, pNumDependencies entries will be filled in. If pNumDependencies is
  * higher than the actual number of dependencies, the remaining entries in pDependencies will be set
  * to NULL, and the number of nodes actually obtained will be returned in pNumDependencies.
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphNodeGetDependencies(hipGraphNode_t node, hipGraphNode_t* pDependencies,
@@ -4478,7 +4492,8 @@ hipError_t hipGraphNodeGetDependencies(hipGraphNode_t node, hipGraphNode_t* pDep
  * pNumDependentNodes is higher than the actual number of dependent nodes, the remaining entries in
  * pDependentNodes will be set to NULL, and the number of nodes actually obtained will be returned
  * in pNumDependentNodes.
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphNodeGetDependentNodes(hipGraphNode_t node, hipGraphNode_t* pDependentNodes,
@@ -4491,7 +4506,8 @@ hipError_t hipGraphNodeGetDependentNodes(hipGraphNode_t node, hipGraphNode_t* pD
  * @param [out] pType - pointer to the return the type
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphNodeGetType(hipGraphNode_t node, hipGraphNodeType* pType);
@@ -4502,7 +4518,8 @@ hipError_t hipGraphNodeGetType(hipGraphNode_t node, hipGraphNodeType* pType);
  * @param [in] node - graph node to remove
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphDestroyNode(hipGraphNode_t node);
@@ -4514,7 +4531,8 @@ hipError_t hipGraphDestroyNode(hipGraphNode_t node);
  * @param [in] originalGraph - original graph to clone from.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorMemoryAllocation
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphClone(hipGraph_t* pGraphClone, hipGraph_t originalGraph);
@@ -4527,7 +4545,8 @@ hipError_t hipGraphClone(hipGraph_t* pGraphClone, hipGraph_t originalGraph);
  * @param [in] clonedGraph - Cloned graph to query.
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphNodeFindInClone(hipGraphNode_t* pNode, hipGraphNode_t originalNode,
@@ -4545,7 +4564,8 @@ hipError_t hipGraphNodeFindInClone(hipGraphNode_t* pNode, hipGraphNode_t origina
  *
  * @returns #hipSuccess, #hipErrorOutOfMemory
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphInstantiate(hipGraphExec_t* pGraphExec, hipGraph_t graph,
@@ -4559,7 +4579,8 @@ hipError_t hipGraphInstantiate(hipGraphExec_t* pGraphExec, hipGraph_t graph,
  * @param [in] flags - Flags to control instantiation.
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  *
  */
 hipError_t hipGraphInstantiateWithFlags(hipGraphExec_t* pGraphExec, hipGraph_t graph,
@@ -4572,7 +4593,8 @@ hipError_t hipGraphInstantiateWithFlags(hipGraphExec_t* pGraphExec, hipGraph_t g
  * @param [in] stream - instance of stream in which to launch executable graph.
  * @returns #hipSuccess, #hipErrorInvalidValue
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
 
@@ -4583,7 +4605,8 @@ hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
  *
  * @returns #hipSuccess.
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecDestroy(hipGraphExec_t graphExec);
 
@@ -4598,7 +4621,8 @@ hipError_t hipGraphExecDestroy(hipGraphExec_t graphExec);
  * @param [in] updateResult_out - Whether the graph update was permitted.
  * @returns #hipSuccess, #hipErrorGraphExecUpdateFailure
  *
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecUpdate(hipGraphExec_t hGraphExec, hipGraph_t hGraph,
                               hipGraphNode_t* hErrorNode_out,
@@ -4613,7 +4637,8 @@ hipError_t hipGraphExecUpdate(hipGraphExec_t hGraphExec, hipGraph_t hGraph,
  * @param [in] numDependencies - the number of the dependencies.
  * @param [in] pNodeParams - pointer to the parameters to the kernel execution node on the GPU.
  * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDeviceFunction
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddKernelNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -4625,7 +4650,8 @@ hipError_t hipGraphAddKernelNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
  * @param [in] node - instance of the node to get parameters from.
  * @param [out] pNodeParams - pointer to the parameters
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphKernelNodeGetParams(hipGraphNode_t node, hipKernelNodeParams* pNodeParams);
 
@@ -4635,7 +4661,8 @@ hipError_t hipGraphKernelNodeGetParams(hipGraphNode_t node, hipKernelNodeParams*
  * @param [in] node - instance of the node to set parameters to.
  * @param [in] pNodeParams - const pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphKernelNodeSetParams(hipGraphNode_t node, const hipKernelNodeParams* pNodeParams);
 
@@ -4646,7 +4673,8 @@ hipError_t hipGraphKernelNodeSetParams(hipGraphNode_t node, const hipKernelNodeP
  * @param [in] node - instance of the node to set parameters to.
  * @param [in] pNodeParams - const pointer to the kernel node parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecKernelNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                            const hipKernelNodeParams* pNodeParams);
@@ -4660,7 +4688,8 @@ hipError_t hipGraphExecKernelNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNo
  * @param [in] numDependencies - the number of the dependencies.
  * @param [in] pCopyParams - const pointer to the parameters for the memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddMemcpyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -4671,7 +4700,8 @@ hipError_t hipGraphAddMemcpyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
  * @param [in] node - instance of the node to get parameters from.
  * @param [out] pNodeParams - pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphMemcpyNodeGetParams(hipGraphNode_t node, hipMemcpy3DParms* pNodeParams);
 
@@ -4681,7 +4711,8 @@ hipError_t hipGraphMemcpyNodeGetParams(hipGraphNode_t node, hipMemcpy3DParms* pN
  * @param [in] node - instance of the node to set parameters to.
  * @param [in] pNodeParams - const pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphMemcpyNodeSetParams(hipGraphNode_t node, const hipMemcpy3DParms* pNodeParams);
 
@@ -4692,7 +4723,8 @@ hipError_t hipGraphMemcpyNodeSetParams(hipGraphNode_t node, const hipMemcpy3DPar
  * @param [in] node - instance of the node to set parameters to.
  * @param [in] pNodeParams - const pointer to the kernel node parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecMemcpyNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                            hipMemcpy3DParms* pNodeParams);
@@ -4709,7 +4741,8 @@ hipError_t hipGraphExecMemcpyNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNo
  * @param [in] count - the size of the memory to copy.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddMemcpyNode1D(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                    const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -4724,7 +4757,8 @@ hipError_t hipGraphAddMemcpyNode1D(hipGraphNode_t* pGraphNode, hipGraph_t graph,
  * @param [in] count - the size of the memory to copy.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphMemcpyNodeSetParams1D(hipGraphNode_t node, void* dst, const void* src,
                                          size_t count, hipMemcpyKind kind);
@@ -4740,7 +4774,8 @@ hipError_t hipGraphMemcpyNodeSetParams1D(hipGraphNode_t node, void* dst, const v
  * @param [in] count - the size of the memory to copy.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecMemcpyNodeSetParams1D(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                              void* dst, const void* src, size_t count,
@@ -4759,7 +4794,8 @@ hipError_t hipGraphExecMemcpyNodeSetParams1D(hipGraphExec_t hGraphExec, hipGraph
  * @param [in] offset - Offset from start of symbol in bytes.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddMemcpyNodeFromSymbol(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                            const hipGraphNode_t* pDependencies,
@@ -4776,7 +4812,8 @@ hipError_t hipGraphAddMemcpyNodeFromSymbol(hipGraphNode_t* pGraphNode, hipGraph_
  * @param [in] offset - Offset from start of symbol in bytes.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphMemcpyNodeSetParamsFromSymbol(hipGraphNode_t node, void* dst, const void* symbol,
                                                  size_t count, size_t offset, hipMemcpyKind kind);
@@ -4793,7 +4830,8 @@ hipError_t hipGraphMemcpyNodeSetParamsFromSymbol(hipGraphNode_t node, void* dst,
  * @param [in] offset - Offset from start of symbol in bytes.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecMemcpyNodeSetParamsFromSymbol(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                                      void* dst, const void* symbol, size_t count,
@@ -4812,7 +4850,8 @@ hipError_t hipGraphExecMemcpyNodeSetParamsFromSymbol(hipGraphExec_t hGraphExec, 
  * @param [in] offset - Offset from start of symbol in bytes.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddMemcpyNodeToSymbol(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                          const hipGraphNode_t* pDependencies,
@@ -4830,7 +4869,8 @@ hipError_t hipGraphAddMemcpyNodeToSymbol(hipGraphNode_t* pGraphNode, hipGraph_t 
  * @param [in] offset - Offset from start of symbol in bytes.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphMemcpyNodeSetParamsToSymbol(hipGraphNode_t node, const void* symbol,
                                                const void* src, size_t count, size_t offset,
@@ -4848,7 +4888,8 @@ hipError_t hipGraphMemcpyNodeSetParamsToSymbol(hipGraphNode_t node, const void* 
  * @param [in] offset - Offset from start of symbol in bytes.
  * @param [in] kind - the type of memory copy.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecMemcpyNodeSetParamsToSymbol(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                                    const void* symbol, const void* src,
@@ -4863,7 +4904,8 @@ hipError_t hipGraphExecMemcpyNodeSetParamsToSymbol(hipGraphExec_t hGraphExec, hi
  * @param [in] numDependencies - the number of the dependencies.
  * @param [in] pMemsetParams - const pointer to the parameters for the memory set.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddMemsetNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                  const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -4875,7 +4917,8 @@ hipError_t hipGraphAddMemsetNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
  * @param [in] node - instane of the node to get parameters from.
  * @param [out] pNodeParams - pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphMemsetNodeGetParams(hipGraphNode_t node, hipMemsetParams* pNodeParams);
 
@@ -4885,7 +4928,8 @@ hipError_t hipGraphMemsetNodeGetParams(hipGraphNode_t node, hipMemsetParams* pNo
  * @param [in] node - instance of the node to set parameters to.
  * @param [in] pNodeParams - pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphMemsetNodeSetParams(hipGraphNode_t node, const hipMemsetParams* pNodeParams);
 
@@ -4896,7 +4940,8 @@ hipError_t hipGraphMemsetNodeSetParams(hipGraphNode_t node, const hipMemsetParam
  * @param [in] node - instance of the node to set parameters to.
  * @param [in] pNodeParams - pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                            const hipMemsetParams* pNodeParams);
@@ -4910,7 +4955,8 @@ hipError_t hipGraphExecMemsetNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNo
  * @param [in] numDependencies - the number of the dependencies.
  * @param [in] pNodeParams -pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddHostNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -4922,7 +4968,8 @@ hipError_t hipGraphAddHostNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
  * @param [in] node - instane of the node to get parameters from.
  * @param [out] pNodeParams - pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphHostNodeGetParams(hipGraphNode_t node, hipHostNodeParams* pNodeParams);
 
@@ -4932,7 +4979,8 @@ hipError_t hipGraphHostNodeGetParams(hipGraphNode_t node, hipHostNodeParams* pNo
  * @param [in] node - instance of the node to set parameters to.
  * @param [in] pNodeParams - pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphHostNodeSetParams(hipGraphNode_t node, const hipHostNodeParams* pNodeParams);
 
@@ -4943,7 +4991,8 @@ hipError_t hipGraphHostNodeSetParams(hipGraphNode_t node, const hipHostNodeParam
  * @param [in] node - instance of the node to set parameters to.
  * @param [in] pNodeParams - pointer to the parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecHostNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                          const hipHostNodeParams* pNodeParams);
@@ -4957,7 +5006,8 @@ hipError_t hipGraphExecHostNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode
  * @param [in] numDependencies - the number of the dependencies.
  * @param [in] childGraph - the graph to clone into this node
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddChildGraphNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                      const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -4969,7 +5019,8 @@ hipError_t hipGraphAddChildGraphNode(hipGraphNode_t* pGraphNode, hipGraph_t grap
  * @param [in] node - instane of the node to get child graph.
  * @param [out] pGraph - pointer to get the graph.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphChildGraphNodeGetGraph(hipGraphNode_t node, hipGraph_t* pGraph);
 
@@ -4980,7 +5031,8 @@ hipError_t hipGraphChildGraphNodeGetGraph(hipGraphNode_t node, hipGraph_t* pGrap
  * @param [in] node - node from the graph which was used to instantiate graphExec.
  * @param [in] childGraph - child graph with updated parameters.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecChildGraphNodeSetParams(hipGraphExec_t hGraphExec, hipGraphNode_t node,
                                                hipGraph_t childGraph);
@@ -4993,7 +5045,8 @@ hipError_t hipGraphExecChildGraphNodeSetParams(hipGraphExec_t hGraphExec, hipGra
  * @param [in] pDependencies - const pointer to the node dependenties.
  * @param [in] numDependencies - the number of dependencies.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddEmptyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                 const hipGraphNode_t* pDependencies, size_t numDependencies);
@@ -5008,7 +5061,8 @@ hipError_t hipGraphAddEmptyNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
  * @param [in] numDependencies - the number of dependencies.
  * @param [in] event - Event for the node.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddEventRecordNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                       const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -5020,7 +5074,8 @@ hipError_t hipGraphAddEventRecordNode(hipGraphNode_t* pGraphNode, hipGraph_t gra
  * @param [in] node -  instane of the node to get event from.
  * @param [out] event_out - Pointer to return the event.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphEventRecordNodeGetEvent(hipGraphNode_t node, hipEvent_t* event_out);
 
@@ -5030,7 +5085,8 @@ hipError_t hipGraphEventRecordNodeGetEvent(hipGraphNode_t node, hipEvent_t* even
  * @param [in] node - instane of the node to set event to.
  * @param [in] event - pointer to the event.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphEventRecordNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
 
@@ -5041,7 +5097,8 @@ hipError_t hipGraphEventRecordNodeSetEvent(hipGraphNode_t node, hipEvent_t event
  * @param [in] hNode - node from the graph which was used to instantiate graphExec.
  * @param [in] event - pointer to the event.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecEventRecordNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                                hipEvent_t event);
@@ -5055,7 +5112,8 @@ hipError_t hipGraphExecEventRecordNodeSetEvent(hipGraphExec_t hGraphExec, hipGra
  * @param [in] numDependencies - the number of dependencies.
  * @param [in] event - Event for the node.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphAddEventWaitNode(hipGraphNode_t* pGraphNode, hipGraph_t graph,
                                     const hipGraphNode_t* pDependencies, size_t numDependencies,
@@ -5068,7 +5126,8 @@ hipError_t hipGraphAddEventWaitNode(hipGraphNode_t* pGraphNode, hipGraph_t graph
  * @param [in] node -  instane of the node to get event from.
  * @param [out] event_out - Pointer to return the event.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphEventWaitNodeGetEvent(hipGraphNode_t node, hipEvent_t* event_out);
 
@@ -5078,7 +5137,8 @@ hipError_t hipGraphEventWaitNodeGetEvent(hipGraphNode_t node, hipEvent_t* event_
  * @param [in] node - instane of the node to set event to.
  * @param [in] event - pointer to the event.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphEventWaitNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
 
@@ -5089,7 +5149,8 @@ hipError_t hipGraphEventWaitNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
  * @param [in] hNode - node from the graph which was used to instantiate graphExec.
  * @param [in] event - pointer to the event.
  * @returns #hipSuccess, #hipErrorInvalidValue
- * @warning : This is beta API, behaviour and signature could change in the future release.
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                              hipEvent_t event);
