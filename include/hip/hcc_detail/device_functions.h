@@ -427,7 +427,7 @@ inline
 int __shfl_up(int var, unsigned int lane_delta, int width = warpSize) {
     int self = __lane_id();
     int index = self - lane_delta;
-    index = (index < (self & ~(width-1)))?self:index;
+    index = (index < (self & ~(width-1)))?index:self;
     return __builtin_amdgcn_ds_bpermute(index<<2, var);
 }
 __device__
