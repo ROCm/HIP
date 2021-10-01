@@ -127,7 +127,7 @@ Breakpoint 1, main ()
 ```
 
 ### Other Debugging Tools
-There are also other debugging tools availble online developers can google and choose the one best suits the debugging requirements.
+There are also other debugging tools available online developers can google and choose the one best suits the debugging requirements.
 
 ## Debugging HIP Applications
 
@@ -192,7 +192,7 @@ AMD_SERIALIZE_COPY, for serializing copies.
 So HIP runtime can wait for GPU idle before/after any GPU command depending on the environment setting.
 
 ### Making Device visible
-For system with multiple devices, it's possible to make only certain device(s) visible to HIP via setting environment varible,
+For system with multiple devices, it's possible to make only certain device(s) visible to HIP via setting environment variable,
 HIP_VISIBLE_DEVICES, only devices whose index is present in the sequence are visible to HIP.
 
 For example,
@@ -200,7 +200,7 @@ For example,
 $ HIP_VISIBLE_DEVICES=0,1
 ```
 
-or in the appliation,
+or in the application,
 ```
 if (totalDeviceNum > 2) {
   setenv("HIP_VISIBLE_DEVICES", "0,1,2", 1);
@@ -210,11 +210,11 @@ if (totalDeviceNum > 2) {
 ```
 
 ### Dump code object
-Developers can dump code object to anylize compiler related issues via setting environment variable,
+Developers can dump code object to analyze compiler related issues via setting environment variable,
 GPU_DUMP_CODE_OBJECT
 
 ### HSA related environment variables
-HSA provides some environment varibles help to analize issues in driver or hardware, for example,
+HSA provides some environment variables help to analyze issues in driver or hardware, for example,
 
 HSA_ENABLE_SDMA=0
 It causes host-to-device and device-to-host copies to use compute shader blit kernels rather than the dedicated DMA copy engines.
@@ -225,8 +225,24 @@ HSA_ENABLE_INTERRUPT=0
 Causes completion signals to be detected with memory-based polling rather than interrupts.
 This environment variable can be useful to diagnose interrupt storm issues in the driver.
 
+### Summary of environment variables in HIP
+
+The following is the summary of the most useful environment variables in HIP.
+
+| **Environment variable**                                                                                       | **Default value** | **Usage** |
+| ---------------------------------------------------------------------------------------------------------------| ----------------- | --------- |
+| AMD_LOG_LEVEL <br><sub> Enable HIP log on different Level. </sub> |  0  | 0: Disable log. <br> 1: Enable log on error level. <br> 2: Enable log on warning and below levels. <br> 0x3: Enable log on information and below levels. <br> 0x4: Decode and display AQL packets. |
+| AMD_LOG_MASK <br><sub> Enable HIP log on different Level. </sub> |  0x7FFFFFFF  | 0x1: Log API calls. <br> 0x02: Kernel and Copy Commands and Barriers. <br> 0x4: Synchronization and waiting for commands to finish. <br> 0x8: Enable log on information and below levels. <br> 0x20: Queue commands and queue contents. <br> 0x40:Signal creation, allocation, pool. <br> 0x80: Locks and thread-safety code. <br> 0x100: Copy debug. <br> 0x200: Detailed copy debug. <br> 0x400: Resource allocation, performance-impacting events. <br> 0x800: Initialization and shutdown. <br> 0x1000: Misc debug, not yet classified. <br> 0x2000: Show raw bytes of AQL packet. <br> 0x4000: Show code creation debug. <br> 0x8000: More detailed command info, including barrier commands. <br> 0x10000: Log message location. <br> 0xFFFFFFFF: Log always even mask flag is zero. |
+| HIP_VISIBLE_DEVICES <br><sub> Only devices whose index is present in the sequence are visible to HIP. </sub> |   | 0,1,2: Depending on the number of devices on the system.  |
+| GPU_DUMP_CODE_OBJECT <br><sub> Dump code object. </sub> |  0  | 0: Disable. <br> 1: Enable. |
+| AMD_SERIALIZE_KERNEL <br><sub> Serialize kernel enqueue. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |
+| AMD_SERIALIZE_COPY <br><sub> Serialize copies. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |
+| HIP_HOST_COHERENT <br><sub> Coherent memory in hipHostMalloc. </sub> |  0  |  0: memory is not coherent between host and GPU. <br> 1: memory is coherent with host. |
+| AMD_DIRECT_DISPATCH <br><sub> Enable direct kernel dispatch. </sub> | 0  | 0: Disable. <br> 1: Enable. |
+
+
 ## General Debugging Tips
-- 'gdb --args' can be used to conviently pass the executable and arguments to gdb.
+- 'gdb --args' can be used to conveniently pass the executable and arguments to gdb.
 - From inside GDB, you can set environment variables "set env".  Note the command does not use an '=' sign:
 
 ```

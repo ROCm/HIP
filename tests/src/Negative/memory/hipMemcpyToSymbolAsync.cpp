@@ -31,7 +31,7 @@ int main(){
     void *Sd;
     hipError_t e;
     char S[SIZE]="This is not a device symbol";
-    
+
     HIPCHECK(hipMalloc(&Sd,SIZE));
 
     hipStream_t stream;
@@ -39,11 +39,11 @@ int main(){
 
     e = hipMemcpyToSymbolAsync(HIP_SYMBOL(Sd), S, SIZE, 0, hipMemcpyHostToDevice, stream);
     HIPASSERT(e==hipErrorInvalidSymbol);
-    
+
     e = hipMemcpyToSymbolAsync(NULL, S, SIZE, 0, hipMemcpyHostToDevice, stream);
     HIPASSERT(e==hipErrorInvalidSymbol);
-   
-    HIPCHECK(hipFree(Sd)); 
-    
+
+    HIPCHECK(hipFree(Sd));
+
     passed();
 }

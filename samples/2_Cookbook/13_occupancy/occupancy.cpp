@@ -29,23 +29,23 @@ THE SOFTWARE.
 
 // Device (Kernel) function
 __global__ void multiply(float* C, float* A, float* B, int N){
-      
+
     int tx = blockDim.x*blockIdx.x+threadIdx.x;
-    
+
     if (tx < N){
 	C[tx] = A[tx] * B[tx];
     }
 }
 // CPU implementation
 void multiplyCPU(float* C, float* A, float* B, int N){
-    
-    for(unsigned int i=0; i<N; i++){     
-        C[i] = A[i] * B[i];      
+
+    for(unsigned int i=0; i<N; i++){
+        C[i] = A[i] * B[i];
     }
 }
 
 void launchKernel(float* C, float* A, float* B, bool manual){
-     
+
      hipDeviceProp_t devProp;
      HIP_CHECK(hipGetDeviceProperties(&devProp, 0));
 
@@ -59,9 +59,9 @@ void launchKernel(float* C, float* A, float* B, bool manual){
      int mingridSize = 0;
      int gridSize = 0;
      int blockSize = 0;
-     
+
      if (manual){
-	blockSize = threadsperblock; 
+	blockSize = threadsperblock;
 	gridSize  = blocks;
 	std::cout << std::endl << "Manual Configuration with block size " << blockSize << std::endl;
      }
@@ -69,15 +69,15 @@ void launchKernel(float* C, float* A, float* B, bool manual){
 	HIP_CHECK(hipOccupancyMaxPotentialBlockSize(&mingridSize, &blockSize, multiply, 0, 0));
 	std::cout << std::endl << "Automatic Configuation based on hipOccupancyMaxPotentialBlockSize " << std::endl;
 	std::cout << "Suggested blocksize is " << blockSize << ", Minimum gridsize is " << mingridSize << std::endl;
-	gridSize = (NUM/blockSize)+1; 
+	gridSize = (NUM/blockSize)+1;
      }
 
      // Record the start event
-     HIP_CHECK(hipEventRecord(start, NULL));  
+     HIP_CHECK(hipEventRecord(start, NULL));
 
      // Launching the Kernel from Host
      hipLaunchKernelGGL(multiply, dim3(gridSize), dim3(blockSize), 0, 0, C, A, B, NUM);
-     
+
      // Record the stop event
      HIP_CHECK(hipEventRecord(stop, NULL));
      HIP_CHECK(hipEventSynchronize(stop));
@@ -88,7 +88,7 @@ void launchKernel(float* C, float* A, float* B, bool manual){
      //Calculate Occupancy
      int numBlock = 0;
      HIP_CHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&numBlock, multiply, blockSize, 0));
-     
+
      if(devProp.maxThreadsPerMultiProcessor){
 	std::cout << "Theoretical Occupancy is " << (double)numBlock* blockSize/devProp.maxThreadsPerMultiProcessor * 100 << "%" << std::endl;
      }
@@ -106,26 +106,26 @@ int main() {
      C0 = (float *)malloc(NUM * sizeof(float));
      C1 = (float *)malloc(NUM * sizeof(float));
      cpuC = (float *)malloc(NUM * sizeof(float));
-     
+
      for(i=0; i< NUM; i++){
 	A[i] = i;
 	B[i] = i;
      }
-    
-     // allocate the memory on the device side   
+
+     // allocate the memory on the device side
      HIP_CHECK(hipMalloc((void**)&Ad, NUM * sizeof(float)));
      HIP_CHECK(hipMalloc((void**)&Bd, NUM * sizeof(float)));
      HIP_CHECK(hipMalloc((void**)&C0d, NUM * sizeof(float)));
      HIP_CHECK(hipMalloc((void**)&C1d, NUM * sizeof(float)));
- 
+
      // Memory transfer from host to device
      HIP_CHECK(hipMemcpy(Ad,A,NUM * sizeof(float), hipMemcpyHostToDevice));
      HIP_CHECK(hipMemcpy(Bd,B,NUM * sizeof(float), hipMemcpyHostToDevice));
 
      //Kernel launch with manual/default block size
      launchKernel(C0d, Ad, Bd, 1);
-     
-     //Kernel launch with the block size suggested by hipOccupancyMaxPotentialBlockSize 
+
+     //Kernel launch with the block size suggested by hipOccupancyMaxPotentialBlockSize
      launchKernel(C1d, Ad, Bd, 0);
 
      // Memory transfer from device to host
@@ -137,26 +137,26 @@ int main() {
 
      //verify the results
      double eps = 1.0E-6;
-     
+
        for (i = 0; i < NUM; i++) {
 	  if (std::abs(C0[i] - cpuC[i]) > eps) {
 		  errors++;
 	}
      }
-          
+
      if (errors != 0){
 	printf("\nManual Test FAILED: %d errors\n", errors);
 	errors=0;
      } else {
 	printf("\nManual Test PASSED!\n");
      }
-     
+
      for (i = 0; i < NUM; i++) {
 	  if (std::abs(C1[i] - cpuC[i]) > eps) {
 		  errors++;
 	}
      }
-          
+
      if (errors != 0){
 	printf("\n Automatic Test FAILED: %d errors\n", errors);
      } else {
