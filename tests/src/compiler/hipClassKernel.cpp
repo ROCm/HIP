@@ -45,7 +45,7 @@ void HipClassTests::TestForOverride(void){
                      0,
                      0,
                      result_ecd);
-  
+
   HipClassTests::VerifyResult(result_ech,result_ecd);
   HipClassTests::FreeMem(result_ech,result_ecd);
 }
@@ -70,13 +70,13 @@ void HipClassTests::TestForOverload(void){
                      0,
                      0,
                      result_ecd);
-  
+
   HipClassTests::VerifyResult(result_ech,result_ecd);
   HipClassTests::FreeMem(result_ech,result_ecd);
 }
 #endif
 
-#ifdef ENABLE_FRIEND_TEST 
+#ifdef ENABLE_FRIEND_TEST
 // check for friend
 __global__ void
 friendClassKernel(bool* result_ecd){
@@ -106,7 +106,7 @@ void HipClassTests::TestForEmptyClass(void){
                      0,
                      0,
                      result_ecd);
-  
+
   HipClassTests::VerifyResult(result_ech,result_ecd);
   HipClassTests::FreeMem(result_ech,result_ecd);
 }
@@ -157,7 +157,7 @@ void HipClassTests::TestForClassSize(void){
                       0,
                       0,
                       result_ecd);
-  
+
   HipClassTests::VerifyResult(result_ech,result_ecd);
   HipClassTests::FreeMem(result_ech,result_ecd);
 }
@@ -217,7 +217,7 @@ void HipClassTests::TestForPassByValue(void){
   HipClassTests::VerifyResult(result_ech,result_ecd);
   HipClassTests::FreeMem(result_ech,result_ecd);
 }
- 
+
  // check obj created with hipMalloc
 __global__ void
 mallocObjKernel(testPassByValue *obj, bool* result_ecd) {
@@ -292,7 +292,7 @@ bool* HipClassTests::AllocateHostMemory(void){
 }
 
 bool* HipClassTests::AllocateDeviceMemory(void){
-  bool* result_ecd; 
+  bool* result_ecd;
   HIPCHECK(hipMalloc(&result_ecd,
                      NBOOL));
   HIPCHECK(hipMemset(result_ecd,
@@ -351,5 +351,5 @@ int main(){
 #ifdef ENABLE_DESTRUCTOR_TEST
   classTests.TestForConsrtDesrt();
   test_passed(TestForConsrtDesrt);
-#endif 
+#endif
 }

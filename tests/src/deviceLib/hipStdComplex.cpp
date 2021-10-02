@@ -82,7 +82,7 @@ __device__ __host__ complex<FloatT> calc(complex<FloatT> A,
     return A * B;
   case CK_div:
     return A / B;
-    
+
     ONE_ARG(abs)
     ONE_ARG(arg)
     ONE_ARG(sin)
@@ -111,7 +111,7 @@ void test() {
     hipMalloc((void**)&Ad, sizeof(ComplexT)*LEN);
     hipMalloc((void**)&Bd, sizeof(ComplexT)*LEN);
     hipMalloc((void**)&Cd, sizeof(ComplexT)*LEN);
-    
+
     for (uint32_t i = 0; i < LEN; i++) {
         A[i] = ComplexT((i + 1) * 1.0f, (i + 2) * 1.0f);
         B[i] = A[i];
@@ -119,7 +119,7 @@ void test() {
     }
     hipMemcpy(Ad, A, sizeof(ComplexT)*LEN, hipMemcpyHostToDevice);
     hipMemcpy(Bd, B, sizeof(ComplexT)*LEN, hipMemcpyHostToDevice);
-    
+
     // Run kernel for a calculation kind and verify by comparing with host
     // calculation result. Returns false if fails.
     auto test_fun = [&](enum CalcKind CK) {
@@ -145,7 +145,7 @@ void test() {
       }
       return true;
     };
-    
+
 #define OP(x) assert(test_fun(CK_##x));
     ALL_FUN
 #undef OP

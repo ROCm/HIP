@@ -54,6 +54,39 @@ if(POLICY CMP0037)
     cmake_policy(SET CMP0037 OLD)
 endif()
 
+# Turn off CMAKE_HIP_ARCHITECTURES Feature if cmake version is 3.21+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21.0)
+    set(CMAKE_HIP_ARCHITECTURES OFF)
+endif()
+message(STATUS "CMAKE HIP ARCHITECTURES: ${CMAKE_HIP_ARCHITECTURES}")
+
+# Identify the GPU Targets.
+# This is done due to limitation of rocm_agent_enumerator
+# While building test parallelly, rocm_agent_enumerator can fail and give out an empty target
+# That results in hipcc building the test for gfx803 (the default target)
+if(NOT DEFINED OFFLOAD_ARCH_STR AND EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerator"
+   AND HIP_PLATFORM STREQUAL "amd" AND UNIX)
+    execute_process(COMMAND ${ROCM_PATH}/bin/rocm_agent_enumerator OUTPUT_VARIABLE HIP_GPU_ARCH
+         RESULT_VARIABLE ROCM_AGENT_ENUM_RESULT)
+    # Trim out gfx000
+    string(REPLACE "gfx000\n" "" HIP_GPU_ARCH ${HIP_GPU_ARCH})
+    string(LENGTH ${HIP_GPU_ARCH} HIP_GPU_ARCH_LEN)
+
+    # If string has more gfx target except gfx000
+    if(${HIP_GPU_ARCH_LEN} GREATER_EQUAL 1)
+		string(REGEX REPLACE "\n" ";" HIP_GPU_ARCH_LIST "${HIP_GPU_ARCH}")
+		set(OFFLOAD_ARCH_STR "")
+		foreach(_hip_gpu_arch ${HIP_GPU_ARCH_LIST})
+			set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
+		endforeach()
+		message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
+    endif()
+endif()
+
+if(DEFINED OFFLOAD_ARCH_STR)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OFFLOAD_ARCH_STR} ")
+endif()
+
 # Use clang as host compiler with nvcc
 if(HIP_COMPILER MATCHES "nvcc")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ccbin clang")
@@ -69,6 +102,7 @@ add_subdirectory(unit)
 add_subdirectory(ABM)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
+add_subdirectory(TypeQualifiers)
 
 if(UNIX)
     add_subdirectory(multiproc)
