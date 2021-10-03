@@ -112,9 +112,6 @@ TEST_CASE("Unit_hipMemset2DAsync_WithKernel") {
  * hipMemSet2DAsync execution in multiple threads.
  */
 TEST_CASE("Unit_hipMemset2DAsync_MultiThread") {
-  constexpr auto N = 4 * 1024 * 1024;
-  constexpr auto blocksPerCU = 6;  // to hide latency
-  constexpr auto threadsPerBlock = 256;
   constexpr auto memPerThread = 200;
   constexpr int memsetval = 0x22;
   char *A_d, *A_h, *B_d, *B_h, *C_d;
@@ -122,11 +119,10 @@ TEST_CASE("Unit_hipMemset2DAsync_MultiThread") {
   size_t width = NUM_W * sizeof(char);
   size_t sizeElements = width * NUM_H;
   size_t elements = NUM_W * NUM_H;
-  unsigned blocks{};
+
   int validateCount{};
   hipStream_t stream;
 
-  blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
   auto thread_count = HipTest::getHostThreadCount(memPerThread, NUM_THREADS);
   if (thread_count == 0) {
     WARN("Resources not available for thread creation");

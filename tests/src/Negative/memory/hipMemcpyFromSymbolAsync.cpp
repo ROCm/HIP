@@ -39,11 +39,11 @@ int main(){
 
     e = hipMemcpyFromSymbolAsync(S, HIP_SYMBOL(Sd), SIZE, 0, hipMemcpyDeviceToHost, stream);
     HIPASSERT(e==hipErrorInvalidSymbol);
-    
+
     e = hipMemcpyFromSymbolAsync(S, NULL, SIZE, 0, hipMemcpyDeviceToHost, stream);
     HIPASSERT(e==hipErrorInvalidSymbol);
 
-    HIPCHECK(hipFree(Sd)); 
-    
+    HIPCHECK(hipFree(Sd));
+
     passed();
 }
