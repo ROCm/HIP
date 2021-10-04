@@ -5,6 +5,7 @@
    The following commands are "host-asynchronous" - meaning they do not wait for any preceding commands to complete, and may return control to the host thread before the requested operation completes:
 
     - Kernel launches (hipLaunchKernel() )
+    - Added for testing
     - Asynchronous memory copies - any memory copy API which contains "Async", such as hipMemcpyAsync())
     - Any memory set (for example, hipMemset());
     - TODO
