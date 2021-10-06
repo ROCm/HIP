@@ -45,6 +45,7 @@ set(TEST_SRC
     hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
+    hipMemPrefetchAsyncExtTsts.cc
 )
 else()
 set(TEST_SRC
@@ -90,6 +91,7 @@ set(TEST_SRC
     hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
+    hipMemPrefetchAsyncExtTsts.cc
 )
 endif()
 # Create shared lib of all tests
