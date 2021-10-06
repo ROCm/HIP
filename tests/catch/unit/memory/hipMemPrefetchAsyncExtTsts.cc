@@ -319,7 +319,6 @@ TEST_CASE("Unit_hipMemPrefetchAsyncNegativeTst") {
     }
 
     SECTION("Passing unusual count size(2nd param)") {
-      int *Ptr;
       // Passing count size as zero
       // expectation: Api should return error
       err = hipMemPrefetchAsync(Hmm, 0, 0, strm);
