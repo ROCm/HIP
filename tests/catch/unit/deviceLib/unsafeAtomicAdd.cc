@@ -127,7 +127,7 @@ TEST_CASE("Unit_unsafeAtomicAdd") {
 
     HIP_CHECK(hipModuleUnload(module));
 
-    REQUIRE(fabs(res_f - (1000 * f_val)) <= 0.2f);
-    REQUIRE(fabs(res_d - (1000 * d_val)) <= 0.2);
+    REQUIRE(fabs((res_f/1000) - f_val) <= 0.2f);
+    REQUIRE(fabs((res_d/1000) - d_val) <= 0.2);
   }
 }

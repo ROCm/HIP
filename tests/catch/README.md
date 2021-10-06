@@ -80,6 +80,15 @@ Tests fall in 5 categories and its file name prefix are as follows:
  - Multi Process tests (Prefix: MultiProc_\*API\*_\*Optional Scenario\*, example: MultiProc_hipIPCMemHandle_GetDataFromProc): These tests are multi process tests and will only run on linux. They are used to test HIP APIs in multi process environment
  - Performance tests(Prefix: Perf_\*Intent\*_\*Optional Scenario\*, example: Perf_DispatchLatenc  y): Performance tests are used to get results of HIP APIs.
 
+There is a special interface available for process isolation. ```hip::SpawnProc``` in ```hip_test_process.hh```. Using this interface test can spawn of process and place passing conditions on its return value or its output to stdout. This can be useful for testing printf tests.
+Sample Usage:
+```cpp
+hip::SpawnProc proc(<relative path of exe with test folder>, <optional bool value, if output is to be recorded>);
+REQUIRE(0 == proc.run()); // Test of return value of the proc
+REQUIRE(exepctedOutput == proc.getOutput()); // Test on expected output of the process
+```
+The process can be a standalone exe (see tests/catch/unit/printfExe for more information).
+
 General Guidelines:
  - Do not use the catch2 tags. Tags wont be used for filtering
  - Add as many INFO() as you can in tests which prints state of the t est, this will help the debugger when the test fails (INFO macro only prints when the test fails)
