@@ -155,10 +155,25 @@ static unsigned blocksPerCU{6};
 static unsigned threadsPerBlock{256};
 
 /*
-   This testcase verifies the hipMallocManaged basic scenario
+   This testcase verifies the hipMallocManaged basic scenario - supported on all devices
  */
 
 TEST_CASE("Unit_hipMallocManaged_Basic") {
+    int numElements = (N < (64 * 1024 * 1024)) ? 64 * 1024 * 1024 : N;
+    float *A, *B, *C;
+
+    HIP_CHECK(hipMallocManaged(&A, numElements*sizeof(float)));
+    HIP_CHECK(hipMallocManaged(&B, numElements*sizeof(float)));
+    HIP_CHECK(hipMallocManaged(&C, numElements*sizeof(float)));
+}
+
+/*
+   This testcase verifies the hipMallocManaged basic scenario - supported only on HMM enabled devices
+ */
+
+TEST_CASE("Unit_hipMallocManaged_Advanced") {
+  int managed =  HmmAttrPrint();
+  if (managed == 1) {
     int numElements = (N < (64 * 1024 * 1024)) ? 64 * 1024 * 1024 : N;
     float *A, *B, *C;
 
@@ -220,6 +235,10 @@ TEST_CASE("Unit_hipMallocManaged_Basic") {
     HIP_CHECK(hipFree(A));
     HIP_CHECK(hipFree(B));
     REQUIRE(maxError != 0.0f);
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
+           "attribute. Hence skipping the testing with Pass result.\n");
+  }
 }
 
 
@@ -237,7 +256,7 @@ TEST_CASE("Unit_hipMallocManaged_KrnlWth2MemTypes") {
     HIP_CHECK(hipStreamCreate(&strm));
     HIP_CHECK(hipMallocManaged(&Hmm, sizeof(int) * NumElms));
     HIP_CHECK(hipMalloc(&Dptr, sizeof(int) * NumElms));
-    for (int i = 0; i < NumElms; ++i) {
+    for (size_t i = 0; i < NumElms; ++i) {
       Hmm[i] = 0;
       Hptr[i] = InitVal;
     }
@@ -248,7 +267,7 @@ TEST_CASE("Unit_hipMallocManaged_KrnlWth2MemTypes") {
     KrnlWth2MemTypes<<<dimGrid, dimBlock, 0, strm>>>(Hmm, Dptr, NumElms);
     HIP_CHECK(hipStreamSynchronize(strm));
     // Verifying the results
-    for (int k = 0; k < NumElms; ++k) {
+    for (size_t k = 0; k < NumElms; ++k) {
       if (Hmm[k] != (InitVal + 10)) {
         DataMismatch++;
       }
