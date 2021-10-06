@@ -238,6 +238,7 @@ int main(int argc, char** argv) {
   HIPCHECK(hipGetDeviceCount(&device_num));
   for (int dev = 0; dev < device_num; ++dev) {
     /*************************************************************************/
+    HIPCHECK(hipSetDevice(dev));
     hipDeviceProp_t device_properties;
     HIPCHECK(hipGetDeviceProperties(&device_properties, dev));
 
