@@ -105,7 +105,7 @@ bool TestContext::skipTest() const {
   return false;
 }
 
-std::string TestContext::currentPath() { return fs::current_path().string(); }
+std::string TestContext::currentPath() const { return fs::current_path().string(); }
 
 bool TestContext::parseJsonFile() {
   // Check if file exists
