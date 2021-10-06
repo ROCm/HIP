@@ -36,6 +36,7 @@ target_link_libraries(UnitTests PRIVATE UnitDeviceTests
                                         OccupancyTest
                                         DeviceTest
                                         RTC
+                                        printfTests
                                         TextureTest
                                         stdc++fs)
 
