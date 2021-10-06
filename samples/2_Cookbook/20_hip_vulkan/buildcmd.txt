@@ -1,0 +1,11 @@
+•	Install hip and visual studio
+•	Install vulkan sdk from vulkan.lunarg.com
+•	Download GLFW binaries from glfw.org
+•	Convert sinwave.farg and vert files to spv
+o	c:\VulkanSDK\1.2.182.0\bin\glslangValidator.exe sinewave.vert -V -o vert.spv
+o	c:\VulkanSDK\1.2.182.0\bin\glslangValidator.exe sinewave.frag -V -o frag.spv
+
+•	set HCC_AMDGPU_TARGET=gfx906:sramecc-:xnack- (for your graphic card, you can get the name from hipinfo )
+$•	hipcc -v *.cpp *.hip -Ic:\VulkanSDK\1.2.182.0\include -L c:\VulkanSDK\1.2.182.0\lib -Ic:\glfw-3.3.4.bin.WIN64\include -L c:\glfw-3.3.4.bin.WIN64\lib-vc2019 -Ic:\hip\include\hip -lglfw3dll -lvulkan-1 -ladvapi32 -std=c++14
+•	run a.exe, you should see a 3D sinewave simulation
+
