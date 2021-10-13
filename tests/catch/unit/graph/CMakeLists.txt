@@ -25,6 +25,8 @@ set(TEST_SRC
   hipGraph.cc
   hipSimpleGraphWithKernel.cc
   hipGraphAddMemcpyNode.cc
+  hipGraphGetNodes.cc
+  hipGraphGetRootNodes.cc
 )
 
 # Create shared lib of all tests
