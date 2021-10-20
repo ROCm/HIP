@@ -87,6 +87,7 @@ endif()
 find_path(HSA_HEADER hsa/hsa.h
   PATHS
     "${_IMPORT_PREFIX}/../include"
+    "${ROCM_PATH}/include"
     /opt/rocm/include
 )
 
