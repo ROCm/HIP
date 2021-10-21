@@ -28,15 +28,12 @@ set(AMD_TEST_SRC
 if(HIP_PLATFORM MATCHES "amd")
     set(TEST_SRC ${TEST_SRC} ${AMD_TEST_SRC})
     set_source_files_properties(floatTM.cc PROPERTIES COMPILE_FLAGS -std=c++17)
+    hip_add_exe_to_target(NAME UnitDeviceTests
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests)
+elseif(HIP_PLATFORM MATCHES "nvidia")
+    hip_add_exe_to_target(NAME UnitDeviceTests
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests
+                      COMPILE_OPTIONS --Wno-deprecated-declarations)
 endif()
-
-
-# Create shared lib of all tests
-add_library(UnitDeviceTests SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
-
-if(HIP_PLATFORM MATCHES "nvidia")
-    target_compile_options(UnitDeviceTests PUBLIC --Wno-deprecated-declarations)
-endif()
-
-# Add dependency on build_tests to build it on this custom target
-add_dependencies(build_tests UnitDeviceTests)
