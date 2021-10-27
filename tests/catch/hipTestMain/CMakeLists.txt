@@ -38,6 +38,7 @@ target_link_libraries(UnitTests PRIVATE UnitDeviceTests
                                         RTC
                                         printfTests
                                         TextureTest
+                                        GraphsTest
                                         stdc++fs)
 
 if(HIP_PLATFORM MATCHES "nvidia")
