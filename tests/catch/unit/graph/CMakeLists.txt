@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Advanced Micro Devices, Inc. All Rights Reserved.
+# Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -18,14 +18,14 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-add_subdirectory(memory)
-add_subdirectory(deviceLib)
-add_subdirectory(stream)
-add_subdirectory(event)
-add_subdirectory(occupancy)
-add_subdirectory(device)
-add_subdirectory(rtc)
-add_subdirectory(printf)
-add_subdirectory(printfExe)
-add_subdirectory(texture)
-add_subdirectory(graph)
+# Common Tests - Test independent of all platforms
+set(TEST_SRC
+  hipGraph.cc
+  hipSimpleGraphWithKernel.cc
+)
+
+# Create shared lib of all tests
+add_library(GraphsTest SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
+
+# Add dependency on build_tests to build it on this custom target
+add_dependencies(build_tests GraphsTest)
