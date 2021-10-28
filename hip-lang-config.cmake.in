@@ -94,7 +94,7 @@ if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
-file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${_IMPORT_PREFIX}/../llvm/lib/clang/*/lib/*")
+file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${CMAKE_HIP_COMPILER}/../lib/clang/*/lib/*")
 find_library(CLANGRT_BUILTINS
     NAMES
       clang_rt.builtins
