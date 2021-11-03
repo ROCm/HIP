@@ -201,7 +201,7 @@ if (!$printed or $p_full) {
     print "=== Environment Variables\n";
     if ($isWindows) {
         print ("PATH=$ENV{PATH}\n");
-        system("set | findstr /B /C:\"HIP\" /C:\"HSA\" /C:\"CUDA\" /C:\"LD_LIBRARY_PATH\"");
+        system("set | findstr //B //C:\"HIP\" //C:\"HSA\" //C:\"CUDA\" //C:\"LD_LIBRARY_PATH\"");
     } else {
         system("echo PATH=\$PATH");
         system("env | egrep '^HIP|^HSA|^CUDA|^LD_LIBRARY_PATH'");
@@ -212,7 +212,7 @@ if (!$printed or $p_full) {
     if ($isWindows) {
         print "== Windows Display Drivers\n";
         print "Hostname     : "; system ("hostname");
-        system ("wmic path win32_VideoController get AdapterCompatibility,InstalledDisplayDrivers,Name | findstr /B /C:\"Advanced Micro Devices\"");
+        system ("wmic path win32_VideoController get AdapterCompatibility,InstalledDisplayDrivers,Name | findstr //B //C:\"Advanced Micro Devices\"");
     } else {
         print "== Linux Kernel\n";
         print "Hostname     : "; system ("hostname");
