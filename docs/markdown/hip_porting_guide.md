@@ -56,10 +56,10 @@ and provides practical suggestions on how to port CUDA code and work through com
 - Starting the port on a CUDA machine is often the easiest approach, since you can incrementally port pieces of the code to HIP while leaving the rest in CUDA. (Recall that on CUDA machines HIP is just a thin layer over CUDA, so the two code types can interoperate on nvcc platforms.) Also, the HIP port can be compared with the original CUDA code for function and performance.
 - Once the CUDA code is ported to HIP and is running on the CUDA machine, compile the HIP code using the HIP compiler on an AMD machine.
 - HIP ports can replace CUDA versions: HIP can deliver the same performance as a native CUDA implementation, with the benefit of portability to both Nvidia and AMD architectures as well as a path to future C++ standard support. You can handle platform-specific features through conditional compilation or by adding them to the open-source HIP infrastructure.
-- Use **[bin/hipconvertinplace-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipconvertinplace-perl.sh)** to hipify all code files in the CUDA source directory.
+- Use **[hipconvertinplace-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipconvertinplace-perl.sh)** to hipify all code files in the CUDA source directory.
 
 ### Scanning existing CUDA code to scope the porting effort
-The hipexamine-perl.sh tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified.
+The **[hipexamine-perl.sh](https://github.com/ROCm-Developer-Tools/HIPIFY/blob/master/bin/hipexamine-perl.sh)** tool will scan a source directory to determine which files contain CUDA code and how much of that code can be automatically hipified.
 ```
 > cd examples/rodinia_3.0/cuda/kmeans
 > $HIP_DIR/bin/hipexamine-perl.sh.
