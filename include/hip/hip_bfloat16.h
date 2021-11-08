@@ -107,7 +107,7 @@ struct hip_bfloat16
         typename T,
         Enable_if_t<std::is_floating_point<T>{}>* = nullptr>
     __host__ __device__
-    hip_bfloat16& operator=(T x)
+    hip_bfloat16& operator=(const T& x)
     {
         data = float_to_bfloat16(x);
         return *this;
