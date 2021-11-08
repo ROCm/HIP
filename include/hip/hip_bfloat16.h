@@ -121,7 +121,7 @@ struct hip_bfloat16
     __host__ __device__
     hip_bfloat16& operator=(const T& x)
     {
-        data = static_cast<_Float16>(x);
+        data = float_to_bfloat16(static_cast<float>(x));
         return *this;
     }
     #endif
