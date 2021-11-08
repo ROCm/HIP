@@ -119,7 +119,7 @@ struct hip_bfloat16
     template<
         typename T, Enable_if_t<std::is_integral<T>{}>* = nullptr>
     __host__ __device__
-    hip_bfloat16& operator=(T x)
+    hip_bfloat16& operator=(const T& x)
     {
         data = static_cast<_Float16>(x);
         return *this;
