@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,35 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM all
- * TEST: %t
- * HIT_END
- */
+/*
+This testfile verifies the basic scenario of hipMemPtrGetInfo API
+*/
+#include <hip_test_common.hh>
+struct MemInfo{
+    float a;
+    int b;
+    void* c;
+};
 
-#include "hip/hip_runtime.h"
-#include "test_common.h"
-#include<stdio.h>
-
-#define ITER 1<<20
-#define SIZE 1024*1024*sizeof(int)
-
-__global__ void Iter(int *Ad){
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
-    if(tx == 0){
-        for(int i=0;i<ITER;i++){
-            Ad[tx] += 1;
-        }
-    }
-}
-
-int main(){
-    int A=0, *Ad;
-    hipMalloc((void**)&Ad, SIZE);
-    hipMemcpy(Ad, &A, SIZE, hipMemcpyHostToDevice);
-    dim3 dimGrid, dimBlock;
-    dimGrid.x = 1, dimGrid.y =1, dimGrid.z = 1;
-    dimBlock.x = 1, dimBlock.y = 1, dimGrid.z = 1;
-    hipLaunchKernelGGL(HIP_KERNEL_NAME(Iter), dimGrid, dimBlock, 0, 0, Ad);
-    hipMemcpy(&A, Ad, SIZE, hipMemcpyDeviceToHost);
-    passed();
+/*
+This testcase verifies the basic scenario of
+hipMemPtrGetInfo API
+1. Allocates specific size of memory for the variables
+2. Gets the allocated size of that variable using hipMemPtrGetInfo API
+3. Validates the initial size and allocated size
+*/
+TEST_CASE("Unit_hipMemPtrGetInfo_Basic") {
+  int* iPtr;
+  float* fPtr;
+  MemInfo* sPtr;
+  size_t sSetSize = 1024, sGetSize;
+  HIP_CHECK(hipMalloc(&iPtr, sSetSize));
+  HIP_CHECK(hipMalloc(&fPtr, sSetSize));
+  HIP_CHECK(hipMalloc(&sPtr, sSetSize));
+  HIP_CHECK(hipMemPtrGetInfo(iPtr, &sGetSize));
+  REQUIRE(sGetSize == sSetSize);
+  HIP_CHECK(hipMemPtrGetInfo(fPtr, &sGetSize));
+  REQUIRE(sGetSize == sSetSize);
+  HIP_CHECK(hipMemPtrGetInfo(sPtr, &sGetSize));
+  REQUIRE(sGetSize == sSetSize);
 }

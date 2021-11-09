@@ -50,8 +50,10 @@ regular kernels can properly run in parallel with cooperative kernels.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11
+ * TEST_NAMED: %t  cooperative_streams_least_capacity --tests 0x0
+ * TEST_NAMED: %t  cooperative_streams_half_capacity --tests 0x1
+ * TEST_NAMED: %t  cooperative_streams_full_capacity --tests 0x2
  * HIT_END
  */
 
@@ -67,7 +69,7 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << "hip error: " << hipGetErrorString(errval);
     std::cerr << std::endl;
     std::cerr << "Location: " << file << ":" << line << std::endl;
-    failed("");
+    failed(" ");
   }
   if (last_err != errval) {
     std::cerr << "Error: the return value of a function was not the same ";
@@ -77,35 +79,13 @@ static inline void hipCheckAndFail(hipError_t errval,
     std::cerr << " (" << errval << ")" << std::endl;
     std::cerr << "hipGetLastError() returned: " << hipGetErrorString(last_err);
     std::cerr << " (" << last_err << ")" << std::endl;
-    failed("");
+    failed(" ");
   }
 }
 #define hipCheckErr(errval) \
   do { hipCheckAndFail((errval), __FILE__, __LINE__); } while (0)
 
-static int cooperative_groups_support(int device_id) {
-  hipError_t err;
-  int cooperative_attribute;
-  HIPCHECK(hipDeviceGetAttribute(&cooperative_attribute,
-           hipDeviceAttributeCooperativeLaunch, device_id));
-  if (!cooperative_attribute) {
-    std::cerr << "Cooperative launch support not available in ";
-    std::cerr << "the device attribute for device " << device_id;
-    std::cerr << std::endl;
-    return 0;
-  }
-
-  hipDeviceProp_t device_properties;
-  HIPCHECK(hipGetDeviceProperties(&device_properties, device_id));
-  if (device_properties.cooperativeLaunch == 0) {
-    std::cerr << "Cooperative group support not available in ";
-    std::cerr << "device properties." << std::endl;
-    return 0;
-  }
-  return 1;
-}
-
-__global__ void test_kernel(uint32_t loops, unsigned long long *array) {
+__global__ void test_kernel(uint32_t loops, unsigned long long *array, long long totalTicks) {
   unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
 
   for (int i = 0; i < loops; i++) {
@@ -119,15 +99,137 @@ __global__ void test_kernel(uint32_t loops, unsigned long long *array) {
       // If it rolls over, we don't know how much to add to catch up.
       // So just ignore those slipped cycles.
       last_clock = cur_clock;
-    } while(time_diff < 1000000);
+    } while(time_diff < totalTicks);
     array[rank] += clock64();
   }
 }
 
+template<typename T>
+bool verifyLeastCapacity(T& single_kernel_time, T& double_kernel_time, T& triple_kernel_time)
+{
+#ifdef __HIP_PLATFORM_AMD__
+  // hipLaunchCooperativeKernel() follows serialization policy on AMD devices
+  // Test that the two cooperative kernels took roughly twice as long as the one
+  if (double_kernel_time < 1.8 * single_kernel_time ||
+      double_kernel_time > 2.2 * single_kernel_time ) {
+    std::cerr << "ERROR!" << std::endl;
+    std::cerr << "Two cooperative kernels launched at the same ";
+    std::cerr << "time did not take roughly twice as long as a single ";
+    std::cerr << "cooperative kernel." << std::endl;
+    std::cerr << "Were they truly serialized?" << std::endl;
+    return false;
+  }
+#else
+  // hipLaunchCooperativeKernel() doesn't follow serialization policy on NV devices
+  // Test that the two cooperative kernels took roughly as long as the one
+  if (double_kernel_time < 0.8 * single_kernel_time ||
+      double_kernel_time > 1.2 * single_kernel_time ) {
+    std::cerr << "ERROR!" << std::endl;
+    std::cerr << "Two cooperative kernels launched at the same ";
+    std::cerr << "time did not take roughly as long as a single ";
+    std::cerr << "cooperative kernel." << std::endl;
+    return false;
+  }
+#endif
+
+  // Test that the three kernels together took roughly as long as the two
+  // cooperative kernels.
+  if (triple_kernel_time > 1.1 * double_kernel_time) {
+    std::cerr << "ERROR!" << std::endl;
+    std::cerr << "Launching a normal kernel in parallel with two ";
+    std::cerr << "back-to-back cooperative kernels still ended up taking ";
+    std::cerr << "more than 10% longer than the two cooperative kernels ";
+    std::cerr << "alone." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+template<typename T>
+bool verifyHalfCapacity(T& single_kernel_time, T& double_kernel_time, T& triple_kernel_time)
+{
+  // Test that the two cooperative kernels took roughly twice as long as the one
+  if (double_kernel_time < 1.8 * single_kernel_time ||
+      double_kernel_time > 2.2 * single_kernel_time ) {
+    std::cerr << "ERROR!" << std::endl;
+    std::cerr << "Two cooperative kernels launched at the same ";
+    std::cerr << "time did not take roughly twice as long as a single ";
+    std::cerr << "cooperative kernel." << std::endl;
+    return false;
+  }
+
+  // Test that the three kernels together took roughly as long as the two
+  // cooperative kernels.
+  if (triple_kernel_time > 1.1 * double_kernel_time) {
+    std::cerr << "ERROR!" << std::endl;
+    std::cerr << "Launching a normal kernel in parallel with two ";
+    std::cerr << "back-to-back cooperative kernels still ended up taking ";
+    std::cerr << "more than 10% longer than the two cooperative kernels ";
+    std::cerr << "alone." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+template<typename T>
+bool verifyFullCapacity(T& single_kernel_time, T& double_kernel_time, T& triple_kernel_time)
+{
+  // Test that the two cooperative kernels took roughly twice as long as the one
+  if (double_kernel_time < 1.8 * single_kernel_time ||
+      double_kernel_time > 2.2 * single_kernel_time ) {
+    std::cerr << "ERROR!" << std::endl;
+    std::cerr << "Two cooperative kernels launched at the same ";
+    std::cerr << "time did not take roughly twice as long as a single ";
+    std::cerr << "cooperative kernel." << std::endl;
+    return false;
+  }
+
+  // Test that the three kernels together took roughly 1.6 times as long as the two
+  // cooperative kernels. If the first 2 kernels run very fast, the third
+  // won't share much time with the second kernel.
+  if (triple_kernel_time > 1.7 * double_kernel_time) {
+    std::cerr << "ERROR!" << std::endl;
+    std::cerr << "Launching a normal kernel in parallel with two ";
+    std::cerr << "back-to-back cooperative kernels still ended up taking ";
+    std::cerr << "more than 70% longer than the two cooperative kernels ";
+    std::cerr << "alone." << std::endl;
+    return false;
+  }
+  return true;
+}
+
+template<typename T>
+bool verify(int tests, T &single_kernel_time, T &double_kernel_time,
+            T &triple_kernel_time) {
+  switch (tests) {
+    case 0:
+      return verifyLeastCapacity(single_kernel_time, double_kernel_time,
+                                 triple_kernel_time);
+    case 1:
+      return verifyHalfCapacity(single_kernel_time, double_kernel_time,
+                                triple_kernel_time);
+    case 2:
+      return verifyFullCapacity(single_kernel_time, double_kernel_time,
+                                triple_kernel_time);
+    default:
+      return false;
+  }
+}
+
 int main(int argc, char** argv) {
-  hipError_t err;
+  p_tests = 1; // Default for half capacity
+  HipTest::parseStandardArguments(argc, argv, true);
+
+  if (p_tests < 0 || p_tests > 2) {
+    printf("--tests 0: test least capacity\n");
+    printf("        1: test half capacity\n");
+    printf("        2: test full capacity\n");
+    failed("Wrong p_tests %d\n", p_tests);
+  }
+  hipError_t err = hipSuccess;
   /*************************************************************************/
-  int device_num = 0, loops = 1000, FailFlag = 0;
+  int device_num = 0, loops = 1000;
+  bool FailFlag = false;
   /* Create the streams we will use in this test. **************************/
   hipStream_t streams[3];
   // Alocate the host input buffer, and two device-focused buffers that we
@@ -136,36 +238,63 @@ int main(int argc, char** argv) {
   HIPCHECK(hipGetDeviceCount(&device_num));
   for (int dev = 0; dev < device_num; ++dev) {
     /*************************************************************************/
-    /* Test whether target device supports cooperative groups ****************/
     HIPCHECK(hipSetDevice(dev));
-    if (!cooperative_groups_support(dev)) {
-      std::cout << "Skipping the test with Pass result.\n";
-      passed();
-    }
-
-    /*************************************************************************/
-    /* We will launch enough waves to fill up all of the GPU *****************/
     hipDeviceProp_t device_properties;
     HIPCHECK(hipGetDeviceProperties(&device_properties, dev));
+
+    /* Test whether target device supports cooperative groups ****************/
+    if (device_properties.cooperativeLaunch == 0) {
+      std::cout << "Cooperative group support not available in device " << dev << std::endl;
+      continue;
+    }
+
+    /* We will launch enough waves to fill up all of the GPU *****************/
     int warp_size = device_properties.warpSize;
     int num_sms = device_properties.multiProcessorCount;
-    int desired_blocks = 1;
-    std::cout << "Device: " << dev << std::endl;
-    std::cout << "Device name: " << device_properties.name << std::endl;
-
-    int max_blocks_per_sm;
+    long long totalTicks = device_properties.clockRate ;
+    int max_blocks_per_sm = 0;
     // Calculate the device occupancy to know how many blocks can be run.
     HIPCHECK(hipOccupancyMaxActiveBlocksPerMultiprocessor(&max_blocks_per_sm,
                                                           test_kernel,
                                                           warp_size, 0));
+    int max_active_blocks = max_blocks_per_sm * num_sms;
+    int coop_blocks = 0;
+    int reg_blocks  = 0;
 
-    if (desired_blocks > max_blocks_per_sm * num_sms) {
-      std::cerr << "The requested number of blocks will not fit on the GPU";
-      std::cerr << std::endl;
-      std::cerr << "You requested " << desired_blocks << " but we can only ";
-      std::cerr << "fit " << (max_blocks_per_sm * num_sms) << std::endl;
-      failed("");
+    switch (p_tests) {
+      case 0:
+        // 1 block
+        coop_blocks = 1;
+        reg_blocks = 1;
+        break;
+      case 1:
+        // Half capacity
+        // To make sure the second kernel launched by hipLaunchCooperativeKernel
+        // is invoked after the first kernel finished
+        coop_blocks = max_active_blocks / 2 + 1;
+        // To make sure the third kernel launched by hipLaunchKernelGGL is invoked
+        // concurrently with the second kernel
+        reg_blocks  = max_active_blocks - coop_blocks;
+        break;
+      case 2:
+        // Full capacity
+        coop_blocks = max_active_blocks;
+        reg_blocks = max_active_blocks;
+        break;
+      default:
+        failed("wrong p_tests %d", p_tests);
     }
+    std::cout << "p_tests: " << p_tests << std::endl;
+    std::cout << "Device: " << dev << std::endl;
+    std::cout << "Device name: " << device_properties.name << std::endl;
+    std::cout << "clockRate: " << device_properties.clockRate << " khz" <<std::endl;
+    std::cout << "warp_size: " << device_properties.warpSize << std::endl;
+    std::cout << "num_sms: " << device_properties.multiProcessorCount << std::endl;
+    std::cout << "max_blocks_per_sm: " << max_blocks_per_sm << std::endl;
+    std::cout << "max_active_blocks: " << max_active_blocks << std::endl;
+    std::cout << "coop_blocks: " << coop_blocks << std::endl;
+    std::cout << "reg_blocks: " << reg_blocks << std::endl;
+
 
     /*************************************************************************/
     for (int i = 0; i < 3; i++) {
@@ -186,16 +315,31 @@ int main(int argc, char** argv) {
 
     /*************************************************************************/
     /* Launch the kernels ****************************************************/
-    void *coop_params[3][2];
+    void *coop_params[3][3];
     for (int i = 0; i < 3; i++) {
       coop_params[i][0] = reinterpret_cast<void*>(&loops);
       coop_params[i][1] = reinterpret_cast<void*>(&dev_array[i]);
+      coop_params[i][2] = reinterpret_cast<void*>(&totalTicks);
     }
+
+    // Verify over capacity
+    HIPCHECK_API(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+                                     max_active_blocks + 1, warp_size,
+                                     coop_params[0], 0, streams[0]), hipErrorCooperativeLaunchTooLarge);
+
+    std::cout << "Launching an initial single cooperative kernel..." << std::endl;
+    // We need exclude the the initial launching as it will need time to load code obj.
+    auto single_start0 = std::chrono::system_clock::now();
+    HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
+                                        max_active_blocks, warp_size,
+                                        coop_params[0], 0, streams[0]));
+    HIPCHECK(hipDeviceSynchronize());
+    auto single_end0 = std::chrono::system_clock::now();
 
     std::cout << "Launching a single cooperative kernel..." << std::endl;
     auto single_start = std::chrono::system_clock::now();
     HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
-                                        desired_blocks, warp_size,
+                                        coop_blocks, warp_size,
                                         coop_params[0], 0, streams[0]));
 
     HIPCHECK(hipDeviceSynchronize());
@@ -205,10 +349,10 @@ int main(int argc, char** argv) {
 
     auto double_start = std::chrono::system_clock::now();
     HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
-                                        desired_blocks, warp_size,
+                                        coop_blocks, warp_size,
                                         coop_params[0], 0, streams[0]));
     HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
-                                        desired_blocks, warp_size,
+                                        coop_blocks, warp_size,
                                         coop_params[1], 0, streams[1]));
 
     HIPCHECK(hipDeviceSynchronize());
@@ -218,18 +362,18 @@ int main(int argc, char** argv) {
 
     auto triple_start = std::chrono::system_clock::now();
     HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
-                                        desired_blocks, warp_size,
+                                        coop_blocks, warp_size,
                                         coop_params[0], 0, streams[0]));
     HIPCHECK(hipLaunchCooperativeKernel(reinterpret_cast<void*>(test_kernel),
-                                        desired_blocks, warp_size,
+                                        coop_blocks, warp_size,
                                         coop_params[1], 0, streams[1]));
-    hipLaunchKernelGGL(test_kernel, dim3(desired_blocks), dim3(warp_size),
-                       0, streams[2], loops, dev_array[2]);
-    err = hipGetLastError();
-    hipCheckErr(err);
+    hipLaunchKernelGGL(test_kernel, dim3(reg_blocks), dim3(warp_size),
+                       0, streams[2], loops, dev_array[2], totalTicks);
 
     HIPCHECK(hipDeviceSynchronize());
     auto triple_end = std::chrono::system_clock::now();
+    std::chrono::duration<double> single_kernel_time0 =
+                                  (single_end0 - single_start0);
     std::chrono::duration<double> single_kernel_time =
                                   (single_end - single_start);
     std::chrono::duration<double> double_kernel_time =
@@ -237,6 +381,10 @@ int main(int argc, char** argv) {
     std::chrono::duration<double> triple_kernel_time =
                                   (triple_end - triple_start);
 
+    std::cout << "Initial single kernel took:" << std::endl;
+    std::cout << "    " << single_kernel_time0.count();
+    std::cout << " seconds" << std::endl;
+    std::cout << std::endl;
     std::cout << "A single kernel took:" << std::endl;
     std::cout << "    " << single_kernel_time.count();
     std::cout << " seconds" << std::endl;
@@ -252,41 +400,17 @@ int main(int argc, char** argv) {
     std::cout << " seconds" << std::endl;
 
     std::cout << "Testing whether these times make sense.." << std::endl;
-    // Test that two cooperative kernels is roughly twice as long as one
-    if (double_kernel_time < 1.8 * single_kernel_time) {
-      std::cerr << "ERROR!" << std::endl;
-      std::cerr << "Two cooperative kernels launched at the same ";
-      std::cerr << "time did not take roughly twice as long as a single ";
-      std::cerr << "cooperative kernel." << std::endl;
-      std::cerr << "Were they truly serialized?" << std::endl;
-      FailFlag = 1;
-      break;
-    }
 
-    // Test that the three kernels together took roughly as long as two
-    // cooperative kernels.
-    if (triple_kernel_time > 1.1 * double_kernel_time) {
-      std::cerr << "ERROR!" << std::endl;
-      std::cerr << "Launching a normal kernel in parallel with two ";
-      std::cerr << "back-to-back cooperative kernels still ended up taking ";
-      std::cerr << "more than 10% longer than the two cooperative kernels ";
-      std::cerr << "alone." << std::endl;
-      std::cerr << "Is the normal kernel being serialized with the ";
-      std::cerr << "cooperative kernels on different streams?" << std::endl;
-      FailFlag = 1;
-      break;
-    }
+    FailFlag = !verify(p_tests, single_kernel_time,
+                       double_kernel_time, triple_kernel_time);
+
     for (int k = 0; k < 3; ++k) {
       HIPCHECK(hipFree(dev_array[k]));
       HIPCHECK(hipStreamDestroy(streams[k]));
     }
-  }
-  if (FailFlag == 1) {
-    for (int k = 0; k < 3; ++k) {
-      HIPCHECK(hipFree(dev_array[k]));
-      HIPCHECK(hipStreamDestroy(streams[k]));
+    if (FailFlag) {
+      failed("Failed to exit ");
     }
-    failed("");
   }
   passed();
 }

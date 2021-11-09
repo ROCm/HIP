@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 # Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,6 +21,7 @@
 
 # Need perl > 5.10 to use logic-defined or
 use 5.006; use v5.10.1;
+use warnings;
 use File::Basename;
 use File::Temp qw/ :mktemp  /;
 use Cwd;
@@ -228,6 +229,7 @@ my $needCXXFLAGS = 0;  # need to add CXX flags to compile step
 my $needCFLAGS = 0;    # need to add C flags to compile step
 my $needLDFLAGS = 1;   # need to add LDFLAGS to compile step.
 my $fileTypeFlag = 0;  # to see if -x flag is mentioned
+my $hasOMPTargets = 0; # If OMP targets is mentioned
 my $hasC = 0;          # options contain a c-style file
 my $hasCXX = 0;        # options contain a cpp-style file (NVCC must force recognition as GPU file)
 my $hasCU = 0;         # options contain a cu-style file (HCC must force recognition as GPU file)
@@ -516,6 +518,8 @@ foreach $arg (@ARGV)
         $hasC = 0;
         $hasCXX = 0;
         $hasHIP = 1;
+    } elsif ($arg  =~ '-fopenmp-targets=') {
+        $hasOMPTargets = 1;
     } elsif ($arg =~ m/^-/) {
         # options start with -
         if  ($arg eq '-fgpu-rdc') {
@@ -554,7 +558,7 @@ foreach $arg (@ARGV)
                 $toolArgs .= " -x c";
             } elsif (($arg =~ /\.cpp$/) or ($arg =~ /\.cxx$/) or ($arg =~ /\.cc$/) or ($arg =~ /\.C$/)) {
                 $needCXXFLAGS = 1;
-                if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_PLATFORM ne "amd") {
+                if ($HIP_COMPILE_CXX_AS_HIP eq '0' or $HIP_PLATFORM ne "amd" or $hasOMPTargets eq 1) {
                     $hasCXX = 1;
                 } elsif ($HIP_PLATFORM eq "amd") {
                     $hasHIP = 1;
@@ -704,7 +708,7 @@ if ($HIP_PLATFORM eq "amd") {
       if ($linkType eq 0) {
         $toolArgs = " -L$HIP_LIB_PATH -lamdhip64 -L$ROCM_PATH/lib -lhsa-runtime64 -ldl -lnuma " . ${toolArgs};
       } else {
-        $toolArgs = " -Wl,--enable-new-dtags -Wl,--rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 " . ${toolArgs};
+        $toolArgs = " -Wl,--enable-new-dtags -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 " . ${toolArgs};
       }
       # To support __fp16 and _Float16, explicitly link with compiler-rt
       $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "

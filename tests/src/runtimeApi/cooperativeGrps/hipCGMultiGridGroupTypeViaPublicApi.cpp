@@ -22,8 +22,8 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 -rdc=true -gencode arch=compute_60,code=sm_60
- * TEST: %t EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s ../../test_common.cpp NVCC_OPTIONS --std=c++11 -rdc=true -gencode arch=compute_60,code=sm_60 -gencode arch=compute_70,code=sm_70 -gencode arch=compute_80,code=sm_80
+ * TEST: %t
  * HIT_END
  */
 
@@ -36,6 +36,9 @@ THE SOFTWARE.
 #define ASSERT_EQUAL(lhs, rhs) assert(lhs == rhs)
 #define ASSERT_LE(lhs, rhs) assert(lhs <= rhs)
 #define ASSERT_GE(lhs, rhs) assert(lhs >= rhs)
+
+constexpr int MaxGPUs = 8;
+int nGpu = 0;
 
 using namespace cooperative_groups;
 
@@ -76,7 +79,7 @@ void kernel_cg_multi_grid_group_type_via_public_api(int *sizeTestD,
   // multi-grid level sync via public api
   sync(mg);
   // grid (gpu) 0 does final reduction across all grids (gpus)
-  if (this_multi_grid().grid_rank() == 0) {
+  if (this_multi_grid().grid_rank() == 0 && blockIdx.x == 0 && threadIdx.x == 0) {
     syncResultD[0] = 0;
     for (int i = 1; i <= this_multi_grid().num_grids(); ++i) {
       syncResultD[0] += syncResultD[i];
@@ -86,29 +89,12 @@ void kernel_cg_multi_grid_group_type_via_public_api(int *sizeTestD,
 
 static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
 {
-  // Get device count
-  constexpr int MaxGPUs = 8;
-  int nGpu = 0;
-  ASSERT_EQUAL(hipGetDeviceCount(&nGpu), hipSuccess);
-
-  // Check if device suppurts multi gpu cooperative group support
-  hipDeviceProp_t deviceProp[MaxGPUs];
-  for (int i = 0; i < nGpu; i++) {
-    ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
-    hipGetDeviceProperties(&deviceProp[i], 0);
-    if (!deviceProp[i].cooperativeMultiDeviceLaunch) {
-      printf("Device doesn't support multi gpu cooperative launch");
-      return;
-    }
-    hipDeviceSynchronize();
-  }
-
   // Create a stream each device
   hipStream_t stream[MaxGPUs];
   for (int i = 0; i < nGpu; i++) {
     ASSERT_EQUAL(hipSetDevice(i), hipSuccess);
+    hipDeviceSynchronize();  // Make sure work is done on this device
     ASSERT_EQUAL(hipStreamCreate(&stream[i]), hipSuccess);
-    hipDeviceSynchronize();
   }
 
   // Allocate host and device memory
@@ -137,8 +123,6 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
         hipHostMalloc(&syncResultD, sizeof(int) * (nGpu + 1), hipHostMallocCoherent),
         hipSuccess);
     }
-
-    hipDeviceSynchronize();
   }
 
   // Launch Kernel
@@ -161,10 +145,8 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
     launchParamsList[i].sharedMem = 0;
     launchParamsList[i].stream = stream[i];
     launchParamsList[i].args = &args[i * NumKernelArgs];
-
-    hipDeviceSynchronize();
   }
-  hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0);
+  HIPCHECK(hipLaunchCooperativeKernelMultiDevice(launchParamsList, nGpu, 0));
 
   // Copy result from device to host
   for (int i = 0; i < nGpu; i++) {
@@ -178,8 +160,6 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
                  hipSuccess);
     ASSERT_EQUAL(hipMemcpy(isValidTestH[i], isValidTestD[i], nBytes, hipMemcpyDeviceToHost),
                  hipSuccess);
-
-    hipDeviceSynchronize();
   }
 
   // Validate results
@@ -218,29 +198,32 @@ static void test_cg_multi_grid_group_type_via_public_api(int blockSize)
     ASSERT_EQUAL(hipFree(syncTestD[i]), hipSuccess);
 
     if (i == 0)
-      ASSERT_EQUAL(hipFree(syncResultD), hipSuccess);
+      ASSERT_EQUAL(hipHostFree(syncResultD), hipSuccess);
 
     ASSERT_EQUAL(hipHostFree(sizeTestH[i]), hipSuccess);
     ASSERT_EQUAL(hipHostFree(gridRankTestH[i]), hipSuccess);
     ASSERT_EQUAL(hipHostFree(thdRankTestH[i]), hipSuccess);
     ASSERT_EQUAL(hipHostFree(isValidTestH[i]), hipSuccess);
-
-    hipDeviceSynchronize();
   }
 }
 
 int main()
 {
   // Set `maxThreadsPerBlock` by taking minimum among all available devices
-  int nGpu = 0;
   ASSERT_EQUAL(hipGetDeviceCount(&nGpu), hipSuccess);
+  if (nGpu > MaxGPUs) {
+    nGpu = MaxGPUs;
+  }
   int maxThreadsPerBlock = INT_MAX;
   for (int i = 0; i < nGpu; i++) {
     hipDeviceProp_t deviceProperties;
     ASSERT_EQUAL(hipGetDeviceProperties(&deviceProperties, i), hipSuccess);
+    if (!deviceProperties.cooperativeMultiDeviceLaunch) {
+      printf("Device doesn't support cooperative launch!");
+      passed();
+    }
     int curDeviceMaxThreadsPerBlock = deviceProperties.maxThreadsPerBlock;
     maxThreadsPerBlock = min(maxThreadsPerBlock, curDeviceMaxThreadsPerBlock);
-    hipDeviceSynchronize();
   }
 
   // Test block sizes which are powers of 2

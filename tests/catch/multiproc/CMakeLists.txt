@@ -1,6 +1,5 @@
-# AMD Tests
+# Common Tests
 set(LINUX_TEST_SRC
-    hipMallocConcurrency.cc
     childMalloc.cc
     hipDeviceComputeCapabilityMproc.cc
     hipDeviceGetPCIBusIdMproc.cc
@@ -9,11 +8,16 @@ set(LINUX_TEST_SRC
     hipGetDeviceCountMproc.cc
     hipGetDevicePropertiesMproc.cc
     hipSetGetDeviceMproc.cc
+    hipIpcMemAccessTest.cc
+    hipHostMallocTestsMproc.cc
+    hipMallocConcurrencyMproc.cc
 )
 
 if(UNIX)
     # Create shared lib of all tests
     add_library(MultiProc SHARED EXCLUDE_FROM_ALL ${LINUX_TEST_SRC})
+
+    target_link_libraries(MultiProc ${CMAKE_DL_LIBS})
 
     # Add dependency on build_tests to build it on this custom target
     add_dependencies(build_tests MultiProc)

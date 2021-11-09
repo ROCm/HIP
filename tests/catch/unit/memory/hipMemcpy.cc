@@ -513,23 +513,6 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy_H2H-H2D-D2H-H2PinMem", "", int,
                                 B_Ph, nullptr, true);
 }
 /*
-This testcase verfies the boundary checks of hipMemcpy API for different sizes
-*/
-TEST_CASE("Unit_hipMemcpy_BoundaryCheck") {
-  size_t maxElem = 32 * 1024 * 1024;
-  DeviceMemory<float> memD(maxElem);
-  HostMemory<float> memU(maxElem, 0 /*usePinnedHost*/);
-  HostMemory<float> memP(maxElem, 0 /*usePinnedHost*/);
-  memcpytest2<float>(&memD, &memU, 32 * 1024 * 1024, 0, 0, 0);
-  auto sizes = GENERATE(15 * 1024 * 1024, 16 * 1024 * 1024,
-                        16 * 1024 * 1024 + 16 * 1024,
-                        16 * 1024 * 1024 + 512 * 1024,
-                        17 * 1024 * 1024 + 1024,
-                        32 * 1024 * 1024);
-  memcpytest2<float>(&memD, &memP, sizes, 0, 0, 0);
-}
-
-/*
 This testcase verifies the multi thread scenario
 */
 TEST_CASE("Unit_hipMemcpy_MultiThreadWithSerialization") {
@@ -541,16 +524,6 @@ TEST_CASE("Unit_hipMemcpy_MultiThreadWithSerialization") {
 
   // Serialize, but use unpinned memory to stress the unpinned memory xfer path.
   multiThread_1<float>(true, false);
-}
-
-/*
-This testcase verifies the device offsets
-*/
-TEMPLATE_TEST_CASE("Unit_hipMemcpy_DeviceOffsets", "", float, double) {
-  HIP_CHECK(hipDeviceReset());
-  size_t maxSize = 256 * 1024;
-  memcpytest2_offsets<TestType>(maxSize, true, false);
-  memcpytest2_offsets<TestType>(maxSize, false, true);
 }
 
 /*

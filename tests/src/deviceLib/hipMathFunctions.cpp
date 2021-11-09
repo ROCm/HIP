@@ -56,21 +56,21 @@ __global__ void kernel_lgamma_double(double *input, double *output) {
 void check_lgamma_double() {
 
   using datatype_t = double;
-  
+
   const int NUM_INPUTS = 8;
   auto memsize = NUM_INPUTS * sizeof(datatype_t);
-  
+
   // allocate memories
   datatype_t *inputCPU = (datatype_t *) malloc(memsize);
   datatype_t *outputCPU = (datatype_t *) malloc(memsize);
   datatype_t *inputGPU = nullptr; hipMalloc((void**)&inputGPU, memsize);
   datatype_t *outputGPU = nullptr; hipMalloc((void**)&outputGPU, memsize);
-  
+
   // populate input
   for (int i=0; i<NUM_INPUTS; i++) {
     inputCPU[i] = -3.5 + i;
   }
-  
+
   // copy inputs to device
   hipMemcpy(inputGPU, inputCPU, memsize, hipMemcpyHostToDevice);
 
@@ -84,13 +84,13 @@ void check_lgamma_double() {
   for (int i=0; i<NUM_INPUTS; i++) {
     CHECK_LGAMMA_DOUBLE(inputCPU[i], outputCPU[i], lgamma(inputCPU[i]));
   }
-  
+
   // free memories
   hipFree(inputGPU);
   hipFree(outputGPU);
   free(inputCPU);
   free(outputCPU);
-  
+
   // done
   return;
 }
@@ -102,15 +102,15 @@ void check_abs_int64() {
 
   const int NUM_INPUTS = 8;
   auto memsize = NUM_INPUTS * sizeof(datatype_t);
-  
+
   // allocate memories
   datatype_t *inputCPU = (datatype_t *) malloc(memsize);
   datatype_t *outputCPU = (datatype_t *) malloc(memsize);
   datatype_t *inputGPU = nullptr; hipMalloc((void**)&inputGPU, memsize);
   datatype_t *outputGPU = nullptr; hipMalloc((void**)&outputGPU, memsize);
-  
+
   // populate input
-  inputCPU[0] = -81985529216486895ll; 
+  inputCPU[0] = -81985529216486895ll;
   inputCPU[1] =  81985529216486895ll;
   inputCPU[2] = -1250999896491ll;
   inputCPU[3] =  1250999896491ll;
@@ -118,7 +118,7 @@ void check_abs_int64() {
   inputCPU[5] =  19088743ll;
   inputCPU[6] = -291ll;
   inputCPU[7] =  291ll;
-  
+
   // copy inputs to device
   hipMemcpy(inputGPU, inputCPU, memsize, hipMemcpyHostToDevice);
 
@@ -137,17 +137,17 @@ void check_abs_int64() {
   CHECK_ABS_INT64(inputCPU[5], outputCPU[5], outputCPU[5]);
   CHECK_ABS_INT64(inputCPU[6], outputCPU[6], outputCPU[7]);
   CHECK_ABS_INT64(inputCPU[7], outputCPU[7], outputCPU[7]);
-  
+
   // free memories
   hipFree(inputGPU);
   hipFree(outputGPU);
   free(inputCPU);
   free(outputCPU);
-  
+
   // done
   return;
 }
-  
+
 
 template<class T, class F>
 __global__ void kernel_simple(F f, T *out) {
@@ -191,7 +191,7 @@ int main(int argc, char* argv[]) {
     check_abs_int64();
 
     // check_lgamma_double();
-    
+
     test_fp16();
 
     test_pown();
