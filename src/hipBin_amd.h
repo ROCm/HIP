@@ -24,14 +24,34 @@ THE SOFTWARE.
 #define SRC_HIPBIN_AMD_H_
 
 #include "hipBin_base.h"
+#include "hipBin_util.h"
 #include <vector>
 #include <string>
 
+
+// Known HIP target names.
+vector<string> knownTargets = { "gfx700", "gfx701", "gfx702", "gfx703",
+                                "gfx704", "gfx705", "gfx801", "gfx802",
+                                "gfx803", "gfx805", "gfx810", "gfx900",
+                                "gfx902", "gfx904", "gfx906", "gfx908",
+                                "gfx909", "gfx90a", "gfx1010", "gfx1011",
+                                "gfx1012", "gfx1030", "gfx1031", "gfx1032" };
+
+
+// Known Features
+vector<string> knownFeatures = { "sramecc - " , "sramecc + ",
+                                 "xnack - ", "xnack + " };
+
+
 class HipBinAmd : public HipBinBase {
  private:
+  HipBinUtil* hipBinUtilPtr_;
   string hipClangPath_ = "";
+  string roccmPathEnv_, hipRocclrPathEnv_, hsaPathEnv_;
   PlatformInfo platformInfoAMD_;
   string hipCFlags_, hipCXXFlags_, hipLdFlags_;
+  void constructRocclrHomePath();
+  void constructHsaPath();
 
  public:
   HipBinAmd();
@@ -57,6 +77,9 @@ class HipBinAmd : public HipBinBase {
   virtual const string& getHipCFlags() const;
   virtual const string& getHipLdFlags() const;
   virtual void executeHipCCCmd(vector<string> argv);
+  // non virtual functions
+  const string& getHsaPath() const;
+  const string& getRocclrHomePath() const;
 };
 
 HipBinAmd::HipBinAmd() {
@@ -66,7 +89,54 @@ HipBinAmd::HipBinAmd() {
   platformInfo.runtime = rocclr;
   platformInfo.compiler = clang;
   platformInfoAMD_ = platformInfo;
+  constructRocclrHomePath();    // constructs RocclrHomePath
+  constructHsaPath();           // constructs hsa path
   constructCompilerPath();
+}
+
+// returns the Rocclr Home path
+void HipBinAmd::constructRocclrHomePath() {
+  fs::path full_path(fs::current_path());
+  fs::path hipvars_dir = full_path;
+  fs::path bitcode = hipvars_dir;
+  string rocclrHomePath = getEnvVariables().hipRocclrPathEnv_;
+  if (rocclrHomePath.empty()) {
+    bitcode /= "../lib/bitcode";
+    if (!fs::exists(bitcode)) {
+      rocclrHomePath = getHipPath();
+    } else {
+      hipvars_dir /= "..";
+      rocclrHomePath = hipvars_dir.string();
+    }
+  }
+  hipRocclrPathEnv_ = rocclrHomePath;
+}
+
+
+// construct hsa Path
+void HipBinAmd::constructHsaPath() {
+  fs::path hsaPathfs;
+  string hsaPath = getEnvVariables().hsaPathEnv_;
+  if (hsaPath.empty()) {
+    hsaPath = getRoccmPath();
+    hsaPathfs = hsaPath;
+    hsaPathfs /= "hsa";
+    hsaPath = hsaPathfs.string();
+    hsaPathEnv_ = hsaPath;
+  } else {
+    hsaPathEnv_ = hsaPath;
+  }
+}
+
+// returns the Rocclr Home path
+const string& HipBinAmd::getRocclrHomePath() const {
+  return hipRocclrPathEnv_;
+}
+
+// returns hsa Path
+const string& HipBinAmd::getHsaPath() const {
+  // return variables_.hsaPathEnv_;
+  return hsaPathEnv_;
 }
 
 
@@ -151,7 +221,8 @@ void HipBinAmd::initializeHipCXXFlags() {
   const EnvVariables& var = getEnvVariables();
   // Allow __fp16 as function parameter and return type.
   if (var.hipClangHccCompactModeEnv_.compare("1") == 0) {
-    hipCXXFlags += " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
+    hipCXXFlags +=
+    " -Xclang -fallow-half-arguments-and-returns -D__HIP_HCC_COMPAT_MODE__=1";
   }
 
   if (os != windows) {
@@ -233,12 +304,13 @@ string HipBinAmd::getCompilerVersion() {
   const string& hipClangPath = getCompilerPath();
   fs::path cmdAmd = hipClangPath;
   cmdAmd /= "clang++";
-  if (canRun(cmdAmd.string(), out) || canRun("clang++", out)) {
+  if (canRunCompiler(cmdAmd.string(), out) || canRunCompiler("clang++", out)) {
     regex regexp("([0-9.]+)");
     smatch m;
     if (regex_search(out, m, regexp)) {
       if (m.size() > 1) {
-        std::ssub_match sub_match = m[1];  // get the index =1 match, 0=whole match we ignore
+        // get the index =1 match, 0=whole match we ignore
+        std::ssub_match sub_match = m[1];
         complierVersion = sub_match.str();
       }
     }
@@ -281,7 +353,8 @@ string HipBinAmd::getCppConfig() {
     cppConfigFs /= "/";
   } else {
     const string& hsaPath = getHsaPath();
-    cppConfig += " -I" + hipPathInclude.string() + " -I" + hipClangPath + " -I" + hsaPath;
+    cppConfig += " -I" + hipPathInclude.string() +
+                 " -I" + hipClangPath + " -I" + hsaPath;
     cppConfigFs = cppConfig;
     cppConfigFs /= "include";
     cppConfig = cppConfigFs.string();
@@ -325,14 +398,18 @@ bool HipBinAmd::detectPlatform() {
   const EnvVariables& var = getEnvVariables();
   bool detected = false;
   if (var.hipPlatformEnv_.empty()) {
-    if (canRun(cmdAmd.string(), out) || (canRun("clang++", out))) {
+    if (canRunCompiler(cmdAmd.string(), out) ||
+       (canRunCompiler("clang++", out))) {
       detected = true;
     }
   } else {
-    if (var.hipPlatformEnv_ == "amd" || var.hipPlatformEnv_ == "hcc") {
+    if (var.hipPlatformEnv_ == "amd" ||
+        var.hipPlatformEnv_ == "hcc") {
       detected = true;
       if (var.hipPlatformEnv_ == "hcc")
-        cout << "Warning: HIP_PLATFORM=hcc is deprecated. Please use HIP_PLATFORM=amd." << endl;
+        cout <<
+        "Warning: HIP_PLATFORM=hcc is deprecated."<<
+        "Please use HIP_PLATFORM=amd." << endl;
     }
   }
   return detected;
@@ -401,11 +478,12 @@ void HipBinAmd::checkHipconfig() {
   const EnvVariables& env = getEnvVariables();
   ldLibraryPath = env.ldLibraryPathEnv_;
   const string& hsaPath = getHsaPath();
-  cout << "check LD_LIBRARY_PATH (" << ldLibraryPath << ") contains HSA_PATH (" << hsaPath << ")..." << endl;
-  if (ldLibraryPath.find(hsaPath) == std::string::npos) {
-    std::cout << "FAIL" << endl;
+  cout << "check LD_LIBRARY_PATH (" << ldLibraryPath <<
+          ") contains HSA_PATH (" << hsaPath << ")..." << endl;
+  if (ldLibraryPath.find(hsaPath) == string::npos) {
+    cout << "FAIL" << endl;
   } else {
-    std::cout << "good" << endl;
+    cout << "good" << endl;
   }
 }
 
@@ -422,9 +500,12 @@ void HipBinAmd::printFull() {
   cout << endl << "==hipconfig" << endl;
   cout << "HIP_PATH           :" << hipPath << endl;
   cout << "ROCM_PATH          :" << roccmPath << endl;
-  cout << "HIP_COMPILER       :" << CompilerTypeStr(platformInfo.compiler) << endl;
-  cout << "HIP_PLATFORM       :" << PlatformTypeStr(platformInfo.platform) << endl;
-  cout << "HIP_RUNTIME        :" << RuntimeTypeStr(platformInfo.runtime) << endl;
+  cout << "HIP_COMPILER       :" << CompilerTypeStr(
+                                    platformInfo.compiler) << endl;
+  cout << "HIP_PLATFORM       :" << PlatformTypeStr(
+                                    platformInfo.platform) << endl;
+  cout << "HIP_RUNTIME        :" << RuntimeTypeStr(
+                                    platformInfo.runtime) << endl;
   cout << "CPP_CONFIG         :" << ccpConfig << endl;
 
   cout << endl << "==hip-clang" << endl;
@@ -432,7 +513,7 @@ void HipBinAmd::printFull() {
   cout << "HIP_CLANG_PATH     :" << hipClangPath << endl;
   printCompilerInfo();
   cout << endl << "== Envirnoment Variables" << endl;
-  printEnvirnomentVariables();
+  printEnvironmentVariables();
   getSystemInfo();
   if (fs::exists("/usr/bin/lsb_release"))
     system("/usr/bin/lsb_release -a");
@@ -451,7 +532,8 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     verbose = stoi(var.verboseEnv_);
 
   // Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
-  // set if user explicitly requests -stdlib=libc++ (else we default to libstdc++ for better interop with g++)
+  // set if user explicitly requests -stdlib=libc++
+  // (else we default to libstdc++ for better interop with g++)
   bool setStdLib = 0;
   bool default_amdgpu_target = 1;
   bool compileOnly = 0;
@@ -461,8 +543,10 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
   bool fileTypeFlag = 0;  // to see if -x flag is mentioned
   bool hasOMPTargets = 0;  // If OMP targets is mentioned
   bool hasC = 0;          // options contain a c-style file
-  bool hasCXX = 0;        // options contain a cpp-style file (NVCC must force recognition as GPU file)
-  bool hasHIP = 0;        // options contain a hip-style file (HIP-Clang must pass offloading options)
+  // options contain a cpp-style file (NVCC must force recognition as GPU file)
+  bool hasCXX = 0;
+  // options contain a hip-style file (HIP-Clang must pass offloading options)
+  bool hasHIP = 0;
   bool printHipVersion = 0;    // print HIP version
   bool printCXXFlags = 0;      // print HIPCXXFLAGS
   bool printLDFlags = 0;       // print HIPLDFLAGS
@@ -480,11 +564,13 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
   string optArg;     // -O args
   vector<string> options, inputs;
 
-  // TODO(hipcc): hipcc uses --amdgpu-target for historical reasons. It should be replaced
+  // TODO(hipcc): hipcc uses --amdgpu-target for historical reasons.
+  // It should be replaced
   // by clang option --offload-arch.
   vector<string> targetOpts = {"--offload-arch=", "--amdgpu-target="};
   string targetsStr;
-  bool skipOutputFile = false;   // file followed by -o should not contibute in picking compiler flags
+  // file followed by -o should not contibute in picking compiler flags
+  bool skipOutputFile = false;
 
   const OsType& os = getOSInfo();
   string hip_compile_cxx_as_hip;
@@ -542,10 +628,12 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     // Save $arg, it can get changed in the loop.
     string arg = argv.at(argcount);
     // TODO(hipcc): figure out why this space removal is wanted.
-    // TODO(hipcc): If someone has gone to the effort of quoting the spaces to the shell
+    // TODO(hipcc): If someone has gone to the effort of
+    // quoting the spaces to the shell
     // TODO(hipcc): why are we removing it here?
-    std::regex toRemove("\\s+");
-    string trimarg = replaceRegex(arg, toRemove, "");   // Remive whitespace
+    regex toRemove("\\s+");
+    // Remove whitespace
+    string trimarg = hipBinUtilPtr_->replaceRegex(arg, toRemove, "");
     bool swallowArg = false;
     bool escapeArg = true;
     if (arg == "-c" || arg == "--genco" || arg == "-E") {
@@ -574,17 +662,20 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     // Check target selection option: --offload-arch= and --amdgpu-target=...
     for (unsigned int i = 0; i <targetOpts.size(); i++) {
       string targetOpt = targetOpts.at(i);
-      string pattern = "^" + targetOpt + ".*";  // match arg with the starting of targetOpt
-      if (stringRegexMatch(arg, pattern))  {
-        // If targets string is not empty, add a comma before adding new target option value.
+      // match arg with the starting of targetOpt
+      string pattern = "^" + targetOpt + ".*";
+      if (hipBinUtilPtr_->stringRegexMatch(arg, pattern))  {
+        // If targets string is not empty,
+        // add a comma before adding new target option value.
         targetsStr.size() >0 ? targetsStr += ",": targetsStr += "";
         targetsStr += arg.substr(targetOpt.size());  // argument of targetOpts
         default_amdgpu_target = 0;
-        swallowArg = 1;  // Collect the GPU arch options and pass them to clang later.
+        // Collect the GPU arch options and pass them to clang later.
+        swallowArg = 1;
       }
     }  // end of for targetOpts for loop
 
-    if (substringPresent(arg, "--genco")) {
+    if (hipBinUtilPtr_->substringPresent(arg, "--genco")) {
       arg = "--cuda-device-only";
     }
 
@@ -620,11 +711,13 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
       linkType = 1;
       setLinkType = 1;
     }
-    if (stringRegexMatch(arg, "^-O.*")) {
+    if (hipBinUtilPtr_->stringRegexMatch(arg, "^-O.*")) {
       optArg = arg;
     }
-    if (substringPresent(arg, "--amdhsa-code-object-version=")) {
-      arg = replaceStr(arg, "--amdhsa-code-object-version=", "");
+    if (hipBinUtilPtr_->substringPresent(
+        arg, "--amdhsa-code-object-version=")) {
+      arg = hipBinUtilPtr_->replaceStr(
+            arg, "--amdhsa-code-object-version=", "");
       hsacoVersion = arg;
       swallowArg = 1;
     }
@@ -634,9 +727,10 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     // hip-clang in command line.
     // TODO(hipcc): Remove this after hip-clang switch to lto and lld is able to
     // handle clang-offload-bundler bundles.
-    if ((stringRegexMatch(arg, "^-Wl,@.*")) || (stringRegexMatch(arg, "^@.*"))) {
+    if ((hipBinUtilPtr_->stringRegexMatch(arg, "^-Wl,@.*")) ||
+       (hipBinUtilPtr_->stringRegexMatch(arg, "^@.*"))) {
       // arg will have options type(-Wl,@ or @) and filename
-      vector<string> split_arg = splitStr(targetsStr, '@');
+      vector<string> split_arg = hipBinUtilPtr_->splitStr(targetsStr, '@');
       string file = split_arg.at(1);
       ifstream in(file);
       if (!in.is_open()) {
@@ -644,45 +738,48 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
         exit(-1);
       }
       string new_arg;
-      string tmpdir = getTempDir();
+      string tmpdir = hipBinUtilPtr_->getTempDir();
       fs::path new_file = tmpdir;
       new_file /=  "response_file";
       ofstream out(new_file);
       if (!out.is_open()) {
-        cout << "unable to open file for writing: " << new_file.string() << endl;
+        cout << "unable to open file for writing: " <<
+                 new_file.string() << endl;
         exit(-1);
       }
       string line;
       while (getline(in, line)) {
-        line = chomp(line);
-        if ((stringRegexMatch(line, ".*\\.a$")) || (stringRegexMatch(line, ".*\\.lo$"))) {
+        line = hipBinUtilPtr_->trim(line);
+        if ((hipBinUtilPtr_->stringRegexMatch(line, ".*\\.a$")) ||
+            (hipBinUtilPtr_->stringRegexMatch(line, ".*\\.lo$"))) {
           //## process static library for hip-clang
-          //## extract object files from static library and pass them directly to
-          //## hip-clang.
-          //## ToDo: Remove this after hip-clang switch to lto and lld is able to
-          //## handle clang-offload-bundler bundles.
+          //## extract object files from static library and
+          //##  pass them directly to hip-clang.
+          //## ToDo: Remove this after hip-clang switch to lto and
+          //## lld is able to handle clang-offload-bundler bundles.
           string libFile  = line;
           string path = fs::absolute(line).string();
           // Check if all files in .a are object files.
           string cmd = "cd "+ tmpdir + "; ar xv " + path;
           SystemCmdOut sysOut;
-          sysOut = exec(cmd.c_str());
+          sysOut = hipBinUtilPtr_->exec(cmd.c_str());
           string cmdOut = sysOut.out;
-          vector<string> objs = splitStr(cmdOut, '\n');
+          vector<string> objs = hipBinUtilPtr_->splitStr(cmdOut, '\n');
           bool allIsObj = 1;
           string realObjs = "";
           for (unsigned int i=0; i < objs.size(); i++) {
             string obj = objs.at(i);
-            obj = chomp(obj);
-            std::regex toReplace("x - ");
-            obj = replaceRegex(obj, toReplace, "");
+            obj = hipBinUtilPtr_->trim(obj);
+            regex toReplace("x - ");
+            obj = hipBinUtilPtr_->replaceRegex(obj, toReplace, "");
             obj = "\"" + tmpdir + "/" + obj;
             cmd = "file " + obj;
             SystemCmdOut sysOut;
-            sysOut = exec(cmd.c_str());
+            sysOut = hipBinUtilPtr_->exec(cmd.c_str());
             string fileType = sysOut.out;
             bool isObj;
-            (substringPresent(fileType, "ELF") || substringPresent(fileType, "COFF")) ?
+            (hipBinUtilPtr_->substringPresent(fileType, "ELF") ||
+             hipBinUtilPtr_->substringPresent(fileType, "COFF")) ?
                                     isObj = true : isObj = false;
             allIsObj = allIsObj && isObj;
             if (isObj) {
@@ -692,7 +789,7 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
               new_arg = "\"" + new_arg + obj + "\"";
             }
           }  // end of objs for loop
-          realObjs = chomp(realObjs);
+          realObjs = hipBinUtilPtr_->trim(realObjs);
           if (allIsObj) {
             out << line << "\n";
           } else if (!realObjs.empty()) {
@@ -701,20 +798,21 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
             string libDir = libFilefs.parent_path().string();
             string libExt = libFilefs.extension().string();
             string  libBaseNameTemp = libBaseName + "XXXXXX";
-            libBaseName = mktempFile(libBaseNameTemp) + libExt;
+            libBaseName = hipBinUtilPtr_->mktempFile(libBaseNameTemp) + libExt;
             cmd = "cd " + tmpdir + "; ar rc " + libBaseName + " " +realObjs;
             SystemCmdOut sysOut;
-            sysOut = exec(cmd.c_str());
+            sysOut = hipBinUtilPtr_->exec(cmd.c_str());
             string cmdOut = sysOut.out;
             out << tmpdir + "/"+ libBaseName + "\n";
           }
-        } else if (stringRegexMatch(line, ".*\\.o$")) {
+        } else if (hipBinUtilPtr_->stringRegexMatch(line, ".*\\.o$")) {
           string cmd = "file " + line;
           SystemCmdOut sysOut;
-          sysOut = exec(cmd.c_str());
+          sysOut = hipBinUtilPtr_->exec(cmd.c_str());
           string fileType = sysOut.out;
           bool isObj;
-          (substringPresent(fileType, "ELF") || substringPresent(fileType, "COFF")) ?
+          (hipBinUtilPtr_->substringPresent(fileType, "ELF") ||
+           hipBinUtilPtr_->substringPresent(fileType, "COFF")) ?
                                   isObj = true : isObj = false;
           if (isObj) {
             out << line << "\n";
@@ -730,37 +828,40 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
         out.close();
         arg = "\"" + new_arg +" " +split_arg.at(0) + "\\" + new_file.string();
         escapeArg = 0;
-      } else if ((stringRegexMatch(arg, ".*\\.a$")) || (stringRegexMatch(arg, ".*\\.lo$"))) {
+      } else if ((hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.a$")) ||
+                 (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.lo$"))) {
         string new_arg = "";
-        string tmpdir = getTempDir();
+        string tmpdir = hipBinUtilPtr_->getTempDir();
         string libFile = arg;
         string path = fs::absolute(arg).string();
         string cmd = "cd "+ tmpdir + "; ar xv " + path;
         SystemCmdOut sysOut;
-        sysOut = exec(cmd.c_str());
+        sysOut = hipBinUtilPtr_->exec(cmd.c_str());
         string cmdOut = sysOut.out;
-        vector<string> objs = splitStr(cmdOut, '\n');
+        vector<string> objs = hipBinUtilPtr_->splitStr(cmdOut, '\n');
         bool allIsObj = 1;
         string realObjs = "";
         for (unsigned int i =0; i< objs.size(); i++) {
           string obj = objs.at(i);
-          obj = chomp(obj);
-          std::regex toReplace("x - ");
+          obj = hipBinUtilPtr_->trim(obj);
+          regex toReplace("x - ");
           string replaceWith = "";
-          obj = replaceRegex(obj, toReplace , replaceWith);
+          obj = hipBinUtilPtr_->replaceRegex(obj, toReplace , replaceWith);
           obj = "\"" + tmpdir + "/" + obj + "\"";
           string cmd = "file " + obj;
           SystemCmdOut sysOut;
-          sysOut = exec(cmd.c_str());
+          sysOut = hipBinUtilPtr_->exec(cmd.c_str());
           string fileType = sysOut.out;
           bool isObj;
-          isObj =  (substringPresent(fileType, "ELF") || substringPresent(fileType, "COFF"));
-          if (substringPresent(fileType, "ELF")) {
+          isObj =  (hipBinUtilPtr_->substringPresent(fileType, "ELF") ||
+                    hipBinUtilPtr_->substringPresent(fileType, "COFF"));
+          if (hipBinUtilPtr_->substringPresent(fileType, "ELF")) {
             cmd = "readelf -e -W " + obj;
             SystemCmdOut sysOut;
-            sysOut = exec(cmd.c_str());
+            sysOut = hipBinUtilPtr_->exec(cmd.c_str());
             string sections = sysOut.out;
-            isObj  = !(substringPresent(sections, "__CLANG_OFFLOAD_BUNDLE__"));
+            isObj  = !(hipBinUtilPtr_->substringPresent(
+                       sections, "__CLANG_OFFLOAD_BUNDLE__"));
           }
           allIsObj = (allIsObj && isObj);
           if (isObj) {
@@ -774,7 +875,7 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
           }
         }  // end of objs for loop
 
-        realObjs = chomp(realObjs);
+        realObjs = hipBinUtilPtr_->trim(realObjs);
         if (allIsObj) {
           new_arg = arg;
         } else if (!realObjs.empty()) {
@@ -783,18 +884,20 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
           string libDir = libFilefs.parent_path().string();
           string libExt = libFilefs.extension().string();
           string  libBaseNameTemp = libBaseName + "XXXXXX";
-          libBaseName = mktempFile(libBaseNameTemp) + libExt;
-          string cmd = "cd " + tmpdir +"; ar rc " + libBaseName + " " + realObjs;
+          libBaseName = hipBinUtilPtr_->mktempFile(
+                        libBaseNameTemp) + libExt;
+          string cmd = "cd " + tmpdir +"; ar rc " +
+                       libBaseName + " " + realObjs;
           SystemCmdOut sysOut;
-          sysOut = exec(cmd.c_str());
+          sysOut = hipBinUtilPtr_->exec(cmd.c_str());
           string cmdOut = sysOut.out;
           new_arg += "\"" + tmpdir +"/" + libBaseName + "\"";
         }
         arg = "\"" + new_arg + "\"";
         escapeArg = 0;
-        if (stringRegexMatch(toolArgs, ".*-Xlinker$")) {
+        if (hipBinUtilPtr_->stringRegexMatch(toolArgs, ".*-Xlinker$")) {
           toolArgs = toolArgs.substr(0, -8);
-          toolArgs = chomp(toolArgs);
+          toolArgs = hipBinUtilPtr_->trim(toolArgs);
         }
     } else if (arg == "-x") {  // end of substring \.a || .lo section
         fileTypeFlag = 1;
@@ -813,16 +916,17 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
         hasC = 0;
         hasCXX = 0;
         hasHIP = 1;
-    } else if (substringPresent(arg, "-fopenmp-targets=")) {
+    } else if (hipBinUtilPtr_->substringPresent(arg, "-fopenmp-targets=")) {
         hasOMPTargets = 1;
-    } else if (stringRegexMatch(arg, "^-.*")) {  // options start with -
+      // options start with -
+    } else if (hipBinUtilPtr_->stringRegexMatch(arg, "^-.*")) {
         if  (arg == "-fgpu-rdc") {
           rdc = 1;
         } else if (arg == "-fno-gpu-rdc") {
           rdc = 0;
         }
         //# Process HIPCC options here:
-        if (stringRegexMatch(arg, "^--hipcc.*")) {
+        if (hipBinUtilPtr_->stringRegexMatch(arg, "^--hipcc.*")) {
           swallowArg = 1;
           // if $arg eq "--hipcc_profile") {  # Example argument here, hipcc
           //
@@ -845,12 +949,14 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     // .cpp/.cxx/.cc/.cu/.cuh/.hip    -> -x hip
 
     if (fileTypeFlag == 0) {
-      if (stringRegexMatch(arg, ".*\\.c$")) {
+      if (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.c$")) {
         hasC = 1;
         needCFLAGS = 1;
         toolArgs += " -x c";
-      } else if ((stringRegexMatch(arg, ".*\\.cpp$")) || (stringRegexMatch(arg, ".*\\.cxx$")) ||
-        (stringRegexMatch(arg, ".*\\.cc$")) || (stringRegexMatch(arg, ".*\\.C$"))) {
+      } else if ((hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cpp$")) ||
+                 (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cxx$")) ||
+                 (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cc$")) ||
+                 (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.C$"))) {
         needCXXFLAGS = 1;
         if (hip_compile_cxx_as_hip == "0" || hasOMPTargets == 1) {
           hasCXX = 1;
@@ -858,8 +964,10 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
           hasHIP = 1;
           toolArgs += " -x hip";
         }
-      } else if (((stringRegexMatch(arg, ".*\\.cu$") || stringRegexMatch(arg, ".*\\.cuh$"))
-                && hip_compile_cxx_as_hip != "0") || (stringRegexMatch(arg, ".*\\.hip$"))) {
+      } else if (((hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cu$") ||
+                   hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cuh$")) &&
+                   hip_compile_cxx_as_hip != "0") ||
+                  (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.hip$"))) {
         needCXXFLAGS = 1;
         hasHIP = 1;
         toolArgs += " -x hip";
@@ -878,9 +986,10 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     // common characters such as alphanumerics.
     // Do the quoting here because sometimes the $arg is changed in the loop
     // Important to have all of '-Xlinker' in the set of unquoted characters.
-    if (os != windows && escapeArg) {       // Windows needs different quoting, ignore for now
+    // Windows needs different quoting, ignore for now
+    if (os != windows && escapeArg) {
       regex reg("[^-a-zA-Z0-9_=+,.\/]");
-      arg = std::regex_replace(arg, reg, "\\$&");
+      arg = regex_replace(arg, reg, "\\$&");
     }
     if (!swallowArg)
       toolArgs += " " + arg;
@@ -895,21 +1004,22 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
       string ROCM_AGENT_ENUM;
       ROCM_AGENT_ENUM = roccmPath + "/bin/rocm_agent_enumerator";
       targetsStr = ROCM_AGENT_ENUM +" -t GPU";
-      SystemCmdOut sysOut = exec(targetsStr.c_str());
-      std::regex toReplace("\n+");
-      targetsStr = replaceRegex(sysOut.out, toReplace, ",");
+      SystemCmdOut sysOut = hipBinUtilPtr_->exec(targetsStr.c_str());
+      regex toReplace("\n+");
+      targetsStr = hipBinUtilPtr_->replaceRegex(sysOut.out, toReplace, ",");
     }
     default_amdgpu_target = 0;
   }
-  // Parse the targets collected in targetStr and set corresponding compiler options.
-  vector<string> targets = splitStr(targetsStr, ',');
+  // Parse the targets collected in targetStr
+  // and set corresponding compiler options.
+  vector<string> targets = hipBinUtilPtr_->splitStr(targetsStr, ',');
   string GPU_ARCH_OPT = " --offload-arch=";
 
   for (unsigned int count = 0; count < targets.size(); count++) {
     string val = targets.at(count);
     // Ignore 'gfx000' target reported by rocm_agent_enumerator.
     if (val != "gfx000") {
-      vector<string> procAndFeatures = splitStr(val, ':');
+      vector<string> procAndFeatures = hipBinUtilPtr_->splitStr(val, ':');
       int len = static_cast<int>(procAndFeatures.size());
       string procName;
       if (len >= 1 && len <= 3) {  //# proc and features
@@ -933,7 +1043,8 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
         HIPCXXFLAGS += GPU_ARCH_ARG;
       }
       for (unsigned int j= 0; j < knownTargets.size(); j++) {
-        // If the specified target is not in the list of known target names, emit a warning.
+        // If the specified target is not
+        // in the list of known target names, emit a warning.
         if (procName == knownTargets.at(j)) {
           cout << "Warning: The specified HIP target: "<< val <<
           " is unknown. Correct compilation is not guaranteed.\n";
@@ -967,9 +1078,11 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     HIPLDFLAGS += HIPLDARCHFLAGS;
   }
 
-  // hipcc currrently requires separate compilation of source files, ie it is not possible to pass
+  // hipcc currrently requires separate compilation of source files,
+  // ie it is not possible to pass
   // CPP files combined with .O files
-  // Reason is that NVCC uses the file extension to determine whether to compile in CUDA mode or
+  // Reason is that NVCC uses the file extension to determine
+  // whether to compile in CUDA mode or
   // pass-through CPP mode.
   // Set default optimization level to -O3 for hip-clang.
   if (optArg.empty()) {
@@ -979,9 +1092,12 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
   }
 
   if (!funcSupp && optArg != "-O0" && hasHIP) {
-    HIPCXXFLAGS += " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
+    HIPCXXFLAGS +=
+    " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
     if (needLDFLAGS && !needCXXFLAGS) {
-      HIPLDFLAGS += " -mllvm -amdgpu-early-inline-all=true -mllvm -amdgpu-function-calls=false";
+      HIPLDFLAGS +=
+      " -mllvm -amdgpu-early-inline-all=true"
+      " -mllvm -amdgpu-function-calls=false";
     }
   }
 
@@ -989,7 +1105,8 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     fs::path bitcodeFs = roccmPath;
     bitcodeFs /= "amdgcn/bitcode";
     if (deviceLibPath != bitcodeFs.string()) {
-      string hip_device_lib_str = " --hip-device-lib-path=\"" + deviceLibPath + "\"";
+      string hip_device_lib_str = " --hip-device-lib-path=\""
+                                  + deviceLibPath + "\"";
       HIPCXXFLAGS += hip_device_lib_str;
     }
     HIPCXXFLAGS += " -fhip-new-launch-api";
@@ -1012,7 +1129,8 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
 
     hipClangVersion = getCompilerVersion();
     // To support __fp16 and _Float16, explicitly link with compiler-rt
-    toolArgs += " -L" + hipClangPath + "/../lib/clang/" + hipClangVersion + "/lib/linux -lclang_rt.builtins-x86_64 ";
+    toolArgs += " -L" + hipClangPath + "/../lib/clang/" +
+                hipClangVersion + "/lib/linux -lclang_rt.builtins-x86_64 ";
   }
   if (!var.hipccCompileFlagsAppendEnv_.empty()) {
     HIPCXXFLAGS += " " + var.hipccCompileFlagsAppendEnv_ + " ";
@@ -1056,7 +1174,7 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
   }
   if (runCmd) {
     SystemCmdOut sysOut;
-    sysOut = exec(CMD.c_str(), true);
+    sysOut = hipBinUtilPtr_->exec(CMD.c_str(), true);
     string cmdOut = sysOut.out;
     int CMD_EXIT_CODE = sysOut.exitCode;
     if (CMD_EXIT_CODE == -1) {
@@ -1064,15 +1182,16 @@ void HipBinAmd::executeHipCCCmd(vector<string> argv) {
     } else if (CMD_EXIT_CODE & 127) {
       string childOut;
       int childCode;
-      (CMD_EXIT_CODE & 127),  (CMD_EXIT_CODE & 128) ? childOut = "with" : childOut = "without";
       (CMD_EXIT_CODE & 127),  (CMD_EXIT_CODE & 128) ?
-                          childCode = (CMD_EXIT_CODE & 127) : childCode = (CMD_EXIT_CODE & 128);
+              childOut = "with" : childOut = "without";
+      (CMD_EXIT_CODE & 127),  (CMD_EXIT_CODE & 128) ?
+              childCode = (CMD_EXIT_CODE & 127) :
+              childCode = (CMD_EXIT_CODE & 128);
       cout <<  "child died with signal " << childCode << "," << childOut <<
                           " coredump "<< " for cmd: " << CMD << endl;
     } else {
       CMD_EXIT_CODE = CMD_EXIT_CODE >> 8;
     }
-    deleteTempFiles();
     exit(CMD_EXIT_CODE);
   }  // end of runCmd section
 }   // end of function

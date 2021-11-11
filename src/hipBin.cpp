@@ -20,11 +20,13 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "hipBin_util.h"
 #include "hipBin_amd.h"
 #include "hipBin_nvidia.h"
 #include <vector>
 #include <string>
 
+class HipBinUtil;
 class HipBinBase;
 class HipBinAmd;
 class HipBinNvidia;
@@ -33,6 +35,7 @@ class HipBin;
 
 class HipBin {
  private:
+  HipBinUtil* hipBinUtilPtr_;
   vector<HipBinBase*> hipBinBasePtrs_;
   vector<PlatformInfo> platformVec_;
   HipBinBase* hipBinNVPtr_;
@@ -43,13 +46,9 @@ class HipBin {
   ~HipBin();
   vector<HipBinBase*>& getHipBinPtrs();
   vector<PlatformInfo>& getPlaformInfo();
-
-  HipBinCommand gethipconfigCmd(string argument);
-  bool checkCmd(const vector<string>& commands, const string& argument);
+  void executeHipBin(string filename, int argc, char* argv[]);
   void executeHipConfig(int argc, char* argv[]);
   void executeHipCC(int argc, char* argv[]);
-  bool substringPresent(string fullString, string subString) const;
-
 };
 
 
@@ -57,16 +56,19 @@ class HipBin {
 //===========================================================================
 
 HipBin::HipBin() {
+  hipBinUtilPtr_ = hipBinUtilPtr_->getInstance();
   hipBinNVPtr_ = new HipBinNvidia();
   hipBinAMDPtr_ = new HipBinAmd();
   bool platformDetected = false;
   if (hipBinAMDPtr_->detectPlatform()) {
-    const PlatformInfo& platformInfo = hipBinAMDPtr_->getPlatformInfo();   // populates the struct with AMD info
+    // populates the struct with AMD info
+    const PlatformInfo& platformInfo = hipBinAMDPtr_->getPlatformInfo();
     platformVec_.push_back(platformInfo);
     hipBinBasePtrs_.push_back(hipBinAMDPtr_);
     platformDetected = true;
   } else if (hipBinNVPtr_->detectPlatform()) {
-    const PlatformInfo& platformInfo = hipBinNVPtr_->getPlatformInfo();  // populates the struct with Nvidia info
+    // populates the struct with Nvidia info
+    const PlatformInfo& platformInfo = hipBinNVPtr_->getPlatformInfo();
     platformVec_.push_back(platformInfo);
     hipBinBasePtrs_.push_back(hipBinNVPtr_);
     platformDetected = true;
@@ -74,7 +76,8 @@ HipBin::HipBin() {
   // if no device is detected, then it is defaulted to AMD
   if (!platformDetected) {
     cout << "Device not supported - Defaulting to AMD" << endl;
-    const PlatformInfo& platformInfo = hipBinAMDPtr_->getPlatformInfo();   // populates the struct with AMD info
+    // populates the struct with AMD info
+    const PlatformInfo& platformInfo = hipBinAMDPtr_->getPlatformInfo();
     platformVec_.push_back(platformInfo);
     hipBinBasePtrs_.push_back(hipBinAMDPtr_);
   }
@@ -83,18 +86,11 @@ HipBin::HipBin() {
 HipBin::~HipBin() {
   delete hipBinNVPtr_;
   delete hipBinAMDPtr_;
-  hipBinBasePtrs_.clear();  // clearing the vector so no one accesses the pointers
-  platformVec_.clear();     // clearing the platform vector as the pointers are deleted
-}
-
-
-// subtring is present in string
-bool HipBin::substringPresent(string fullString, string subString) const {
-  bool found = false;
-  if (fullString.find(subString) != std::string::npos) {
-    found = true;
-  }
-  return found;
+  // clearing the vector so no one accesses the pointers
+  hipBinBasePtrs_.clear();
+  // clearing the platform vector as the pointers are deleted
+  platformVec_.clear();
+  delete hipBinUtilPtr_;
 }
 
 vector<PlatformInfo>& HipBin::getPlaformInfo() {
@@ -107,10 +103,23 @@ vector<HipBinBase*>& HipBin::getHipBinPtrs() {
 }
 
 
+void HipBin::executeHipBin(string filename, int argc, char* argv[]) {
+  if (hipBinUtilPtr_->substringPresent(filename, "hipconfig")) {
+    executeHipConfig(argc, argv);
+  } else if (hipBinUtilPtr_->substringPresent(filename, "hipcc")) {
+    executeHipCC(argc, argv);
+  } else {
+    cout << "Command " << filename
+    << " not supported. Name the exe as hipconfig"
+    << " or hipcc and then try again ..." << endl;
+  }
+}
+
+
 void HipBin::executeHipCC(int argc, char* argv[]) {
   cout << "HIPCC executable" <<endl;
   vector<HipBinBase*>& platformPtrs = getHipBinPtrs();
-  std::vector<string> argvcc;
+  vector<string> argvcc;
   for (int i = 0; i < argc; i++) {
     argvcc.push_back(argv[i]);
   }
@@ -128,60 +137,31 @@ void HipBin::executeHipConfig(int argc, char* argv[]) {
     }
     for (int i = 1; i < argc; ++i) {
       HipBinCommand cmd;
-      cmd = gethipconfigCmd(argv[i]);
+      cmd = platformPtrs.at(j)->gethipconfigCmd(argv[i]);
       switch (cmd) {
       case help: platformPtrs.at(j)->printUsage();
         break;
-      case path: {
-        string hipPath;
-        hipPath = platformPtrs.at(j)->getHipPath();
-        cout << hipPath;
+      case path: cout << platformPtrs.at(j)->getHipPath();
         break;
-      }
-      case roccmpath: {
-        string roccmPath;
-        roccmPath = platformPtrs.at(j)->getRoccmPath();
-        cout << roccmPath;
+      case roccmpath: cout << platformPtrs.at(j)->getRoccmPath();
         break;
-      }
-      case cpp_config: {
-        string cppConfig;
-        cppConfig = platformPtrs.at(j)->getCppConfig();
-        cout << cppConfig;
+      case cpp_config: cout << platformPtrs.at(j)->getCppConfig();
         break;
-      }
-      case compiler: {
-        PlatformInfo platform;
-        platform = platformPtrs.at(j)->getPlatformInfo();
-        cout << CompilerTypeStr(platform.compiler);
+      case compiler: cout << CompilerTypeStr((
+                             platformPtrs.at(j)->getPlatformInfo()).compiler);
         break;
-      }
-      case platform: {
-        PlatformInfo platform;
-        platform = platformPtrs.at(j)->getPlatformInfo();
-        cout << PlatformTypeStr(platform.platform);
+      case platform: cout << PlatformTypeStr((
+                             platformPtrs.at(j)->getPlatformInfo()).platform);
         break;
-      }
-      case runtime: {
-        PlatformInfo platform;
-        platform = platformPtrs.at(j)->getPlatformInfo();
-        cout << RuntimeTypeStr(platform.runtime);
+      case runtime: cout << RuntimeTypeStr((
+                            platformPtrs.at(j)->getPlatformInfo()).runtime);
         break;
-      }
-      case hipclangpath: {
-        string compilerPath;
-        compilerPath = platformPtrs.at(j)->getCompilerPath();
-        cout << compilerPath;
+      case hipclangpath: cout << platformPtrs.at(j)->getCompilerPath();
         break;
-      }
       case full: platformPtrs.at(j)->printFull();
         break;
-      case version: {
-        string hipVersion;
-        hipVersion = platformPtrs.at(j)->getHipVersion();
-        cout << hipVersion;
+      case version: cout << platformPtrs.at(j)->getHipVersion();
         break;
-      }
       case check: platformPtrs.at(j)->checkHipconfig();
         break;
       case newline: platformPtrs.at(j)->printFull();
@@ -195,73 +175,13 @@ void HipBin::executeHipConfig(int argc, char* argv[]) {
   }
 }
 
-
-bool HipBin::checkCmd(const vector<string>& commands, const string& argument) {
-  bool found = false;
-  for (unsigned int i = 0; i < commands.size(); i++) {
-    if (argument.compare(commands.at(i)) == 0) {
-      found = true;
-      break;
-    }
-  }
-  return found;
-}
-
-
-HipBinCommand HipBin::gethipconfigCmd(string argument) {
-  vector<string> pathStrs = { "-p", "--path", "-path", "--p" };
-  if (checkCmd(pathStrs, argument))
-    return path;
-  vector<string> rocmPathStrs = { "-R", "--rocmpath", "-rocmpath", "--R" };
-  if (checkCmd(rocmPathStrs, argument))
-    return roccmpath;
-  vector<string> cppConfigStrs = { "-C", "--cpp_config", "-cpp_config", "--C", };
-  if (checkCmd(cppConfigStrs, argument))
-    return cpp_config;
-  vector<string> CompilerStrs = { "-c", "--compiler", "-compiler", "--c" };
-  if (checkCmd(CompilerStrs, argument))
-    return compiler;
-  vector<string> platformStrs = { "-P", "--platform", "-platform", "--P" };
-  if (checkCmd(platformStrs, argument))
-    return platform;
-  vector<string> runtimeStrs = { "-r", "--runtime", "-runtime", "--r" };
-  if (checkCmd(runtimeStrs, argument))
-    return runtime;
-  vector<string> hipClangPathStrs = { "-l", "--hipclangpath", "-hipclangpath", "--l" };
-  if (checkCmd(hipClangPathStrs, argument))
-    return hipclangpath;
-  vector<string> fullStrs = { "-f", "--full", "-full", "--f" };
-  if (checkCmd(fullStrs, argument))
-    return full;
-  vector<string> versionStrs = { "-v", "--version", "-version", "--v" };
-  if (checkCmd(versionStrs, argument))
-    return version;
-  vector<string> checkStrs = { "--check", "-check" };
-  if (checkCmd(checkStrs, argument))
-    return check;
-  vector<string> newlineStrs = { "--n", "-n", "--newline", "-newline" };
-  if (checkCmd(newlineStrs, argument))
-    return newline;
-  vector<string> helpStrs = { "-h", "--help", "-help", "--h" };
-  if (checkCmd(helpStrs, argument))
-    return help;
-  return full;  // default is full. return full if no commands are matched
-}
-
 //===========================================================================
 //===========================================================================
 
 int main(int argc, char* argv[]) {
   fs::path filename(argv[0]);
   filename = filename.filename();
+
   HipBin hipBin;
-  // checking the exe name based on that we decide which one to execute
-  if (hipBin.substringPresent(filename.string(), "hipconfig")) {
-    hipBin.executeHipConfig(argc, argv);
-  } else if (hipBin.substringPresent(filename.string(), "hipcc")) {
-    hipBin.executeHipCC(argc, argv);
-  } else {
-    cout << "Command " << filename.string()
-    << " not supported. Name the exe as hipconfig or hipcc and then try again ..." << endl;
-  }
+  hipBin.executeHipBin(filename.string(), argc, argv);
 }

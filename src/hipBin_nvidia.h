@@ -24,11 +24,13 @@ THE SOFTWARE.
 #define SRC_HIPBIN_NVIDIA_H_
 
 #include "hipBin_base.h"
+#include "hipBin_util.h"
 #include <vector>
 #include <string>
 
 class HipBinNvidia : public HipBinBase {
  private:
+  HipBinUtil* hipBinUtilPtr_;
   string cudaPath_ = "";
   PlatformInfo platformInfoNV_;
   string hipCFlags_, hipCXXFlags_, hipLdFlags_;
@@ -69,7 +71,6 @@ HipBinNvidia::HipBinNvidia() {
   constructCompilerPath();
 }
 
-
 // detects if cuda is installed
 bool HipBinNvidia::detectPlatform() {
   string out;
@@ -80,14 +81,15 @@ bool HipBinNvidia::detectPlatform() {
   const EnvVariables& var = getEnvVariables();
   bool detected = false;
   if (var.hipPlatformEnv_.empty()) {
-    if (canRun(cmdNv.string(), out) || (canRun("nvcc", out))) {
+    if (canRunCompiler(cmdNv.string(), out) || (canRunCompiler("nvcc", out))) {
       detected = true;
     }
   } else {
     if (var.hipPlatformEnv_ == "nvidia" || var.hipPlatformEnv_ == "nvcc") {
       detected = true;
       if (var.hipPlatformEnv_ == "nvcc")
-        cout << "Warning: HIP_PLATFORM=nvcc is deprecated. Please use HIP_PLATFORM=nvidia." << endl;
+        cout << "Warning: HIP_PLATFORM=nvcc is deprecated."
+             << "Please use HIP_PLATFORM=nvidia." << endl;
     }
   }
   return detected;
@@ -137,21 +139,23 @@ void HipBinNvidia::printFull() {
   const string& roccmPath = getRoccmPath();
   const PlatformInfo& platformInfo = getPlatformInfo();
   const string& ccpConfig = getCppConfig();
-  const string& hsaPath = getHsaPath();
   const string& cudaPath = getCompilerPath();
   cout << "HIP version: " << hipVersion << endl;
   cout << endl << "==hipconfig" << endl;
   cout << "HIP_PATH           :" << hipPath << endl;
   cout << "ROCM_PATH          :" << roccmPath << endl;
-  cout << "HIP_COMPILER       :" << CompilerTypeStr(platformInfo.compiler) << endl;
-  cout << "HIP_PLATFORM       :" << PlatformTypeStr(platformInfo.platform) << endl;
-  cout << "HIP_RUNTIME        :" << RuntimeTypeStr(platformInfo.runtime) << endl;
+  cout << "HIP_COMPILER       :" << CompilerTypeStr(
+                                    platformInfo.compiler) << endl;
+  cout << "HIP_PLATFORM       :" << PlatformTypeStr(
+                                    platformInfo.platform) << endl;
+  cout << "HIP_RUNTIME        :" << RuntimeTypeStr(
+                                    platformInfo.runtime) << endl;
   cout << "CPP_CONFIG         :" << ccpConfig << endl;
   cout << endl << "== nvcc" << endl;
   cout << "CUDA_PATH          :" << cudaPath <<endl;
   printCompilerInfo();
   cout << endl << "== Envirnoment Variables" << endl;
-  printEnvirnomentVariables();
+  printEnvironmentVariables();
   getSystemInfo();
   if (fs::exists("/usr/bin/lsb_release"))
     system("/usr/bin/lsb_release -a");
@@ -171,7 +175,8 @@ string HipBinNvidia::getHipInclude() const {
 void HipBinNvidia::initializeHipLdFlags() {
   string hipLdFlags;
   const string& cudaPath = getCompilerPath();
-  hipLdFlags = " -Wno-deprecated-gpu-targets -lcuda -lcudart -L" + cudaPath + "/lib64";
+  hipLdFlags = " -Wno-deprecated-gpu-targets -lcuda -lcudart -L" +
+               cudaPath + "/lib64";
   hipLdFlags_ = hipLdFlags;
 }
 
@@ -269,7 +274,8 @@ const PlatformInfo& HipBinNvidia::getPlatformInfo() const {
 
 // returns the cpp config
 string HipBinNvidia::getCppConfig() {
-  string cppConfig = " - D__HIP_PLATFORM_NVCC__ = -D__HIP_PLATFORM_NVIDIA__ = -I";
+  string cppConfig =
+  " - D__HIP_PLATFORM_NVCC__ = -D__HIP_PLATFORM_NVIDIA__ = -I";
   string hipPath;
   hipPath = getHipPath();
   cppConfig += hipPath;
@@ -290,7 +296,8 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
   if (!var.verboseEnv_.empty())
     verbose = stoi(var.verboseEnv_);
   // Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
-  // set if user explicitly requests -stdlib=libc++. (else we default to libstdc++ for better interop with g++):
+  // set if user explicitly requests -stdlib=libc++.
+  // (else we default to libstdc++ for better interop with g++):
   bool setStdLib = 0;
   bool default_amdgpu_target = 1;
   bool compileOnly = 0;
@@ -300,9 +307,12 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
   bool fileTypeFlag = 0;  // to see if -x flag is mentioned
   bool hasOMPTargets = 0;  // If OMP targets is mentioned
   bool hasC = 0;          // options contain a c-style file
-  bool hasCXX = 0;        // options contain a cpp-style file (NVCC must force recognition as GPU file)
-  bool hasCU = 0;         // options contain a cu-style file (HCC must force recognition as GPU file)
-  bool hasHIP = 0;        // options contain a hip-style file (HIP-Clang must pass offloading options)
+  // options contain a cpp-style file (NVCC must force recognition as GPU file)
+  bool hasCXX = 0;
+  // options contain a cu-style file (HCC must force recognition as GPU file)
+  bool hasCU = 0;
+  // options contain a hip-style file (HIP-Clang must pass offloading options)
+  bool hasHIP = 0;
   bool printHipVersion = 0;    // print HIP version
   bool printCXXFlags = 0;      // print HIPCXXFLAGS
   bool printLDFlags = 0;       // print HIPLDFLAGS
@@ -314,11 +324,12 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
   bool funcSupp = 0;      // enable function support
   bool rdc = 0;           // whether -fgpu-rdc is on
   string prevArg;
-  string toolArgs;  // TODO(hipcc): convert toolArgs to an array rather than a string
+  // TODO(hipcc): convert toolArgs to an array rather than a string
+  string toolArgs;
   string optArg;
   vector<string> options, inputs;
-  // TODO(hipcc): hipcc uses --amdgpu-target for historical reasons. It should be replaced
-  // by clang option --offload-arch.
+  // TODO(hipcc): hipcc uses --amdgpu-target for historical reasons.
+  // It should be replaced by clang option --offload-arch.
   vector<string> targetOpts = {"--offload-arch=", "--amdgpu-target="};
   string targetsStr;
   bool skipOutputFile = false;
@@ -374,11 +385,12 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
   for (unsigned int argcount = 1; argcount < argv.size(); argcount++) {
     // Save $arg, it can get changed in the loop.
     string arg = argv.at(argcount);
-    std::regex toRemove("\\s+");
+    regex toRemove("\\s+");
     // TODO(hipcc): figure out why this space removal is wanted.
-    // TODO(hipcc): If someone has gone to the effort of quoting the spaces to the shell
+    // TODO(hipcc): If someone has gone to the effort of quoting
+    // the spaces to the shell
     // TODO(hipcc): why are we removing it here?
-    string trimarg = replaceRegex(arg, toRemove, "");
+    string trimarg = hipBinUtilPtr_->replaceRegex(arg, toRemove, "");
     bool swallowArg = false;
     bool escapeArg = true;
     if (arg == "-c" || arg == "--genco" || arg == "-E") {
@@ -404,8 +416,9 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
     for (unsigned int i = 0; i <targetOpts.size(); i++) {
       string targetOpt = targetOpts.at(i);
       string pattern = "^" + targetOpt + ".*";
-      if (stringRegexMatch(arg, pattern)) {
-        // If targets string is not empty, add a comma before adding new target option value.
+      if (hipBinUtilPtr_->stringRegexMatch(arg, pattern)) {
+        // If targets string is not empty, add a comma before
+        // adding new target option value.
         targetsStr.size() >0 ? targetsStr += ",": targetsStr += "";
         targetsStr += arg.substr(targetOpt.size());
         default_amdgpu_target = 0;
@@ -443,18 +456,20 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
       linkType = 1;
       setLinkType = 1;
     }
-    if (stringRegexMatch(arg, "^-O.*")) {
+    if (hipBinUtilPtr_->stringRegexMatch(arg, "^-O.*")) {
       optArg = arg;
     }
-    if (substringPresent(arg, "--amdhsa-code-object-version=")) {
-      arg = replaceStr(arg, "--amdhsa-code-object-version=", "");
+    if (hipBinUtilPtr_->substringPresent(
+                        arg, "--amdhsa-code-object-version=")) {
+      arg = hipBinUtilPtr_->replaceStr(
+                            arg, "--amdhsa-code-object-version=", "");
       hsacoVersion = arg;
       swallowArg = 1;
     }
     // nvcc does not handle standard compiler options properly
     // This can prevent hipcc being used as standard CXX/C Compiler
     // To fix this we need to pass -Xcompiler for options
-    if (arg == "-fPIC" || substringPresent(arg, "-Wl,")) {
+    if (arg == "-fPIC" || hipBinUtilPtr_->substringPresent(arg, "-Wl,")) {
       HIPCXXFLAGS += " -Xcompiler "+ arg;
       swallowArg = 1;
     }
@@ -475,15 +490,15 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
       hasC = 0;
       hasCXX = 0;
       hasHIP = 1;
-    } else if (substringPresent(arg, "-fopenmp-targets=")) {
+    } else if (hipBinUtilPtr_->substringPresent(arg, "-fopenmp-targets=")) {
       hasOMPTargets = 1;
-    } else if (stringRegexMatch(arg, "^-.*")) {
+    } else if (hipBinUtilPtr_->stringRegexMatch(arg, "^-.*")) {
       if  (arg == "-fgpu-rdc") {
         rdc = 1;
       } else if (arg == "-fno-gpu-rdc") {
         rdc = 0;
       }
-      if (stringRegexMatch(arg, "^--hipcc.*")) {
+      if (hipBinUtilPtr_->stringRegexMatch(arg, "^--hipcc.*")) {
         swallowArg = 1;
         if (arg == "--hipcc-func-supp") {
           funcSupp = 1;
@@ -495,16 +510,20 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
       }
     } else if (prevArg != "-o") {
     if (fileTypeFlag == 0) {
-      if (stringRegexMatch(arg, ".*\\.c$")) {
+      if (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.c$")) {
         hasC = 1;
         needCFLAGS = 1;
         toolArgs += " -x c";
-      } else if ((stringRegexMatch(arg, ".*\\.cpp$")) || (stringRegexMatch(arg, ".*\\.cxx$"))
-            || (stringRegexMatch(arg, ".*\\.cc$")) || (stringRegexMatch(arg, ".*\\.C$"))) {
+      } else if ((hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cpp$")) ||
+                 (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cxx$")) ||
+                 (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cc$")) ||
+                 (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.C$"))) {
         needCXXFLAGS = 1;
         hasCXX = 1;
-      } else if (((stringRegexMatch(arg, ".*\\.cu$") || stringRegexMatch(arg, ".*\\.cuh$"))
-                && hip_compile_cxx_as_hip != "0") || (stringRegexMatch(arg, ".*\\.hip$"))) {
+      } else if (((hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cu$") ||
+                   hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.cuh$")) &&
+                   hip_compile_cxx_as_hip != "0") ||
+                   (hipBinUtilPtr_->stringRegexMatch(arg, ".*\\.hip$"))) {
         needCXXFLAGS = 1;
         hasCU = 1;
       }
@@ -516,9 +535,10 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
     }
     inputs.push_back(arg);
     }
-    if (os != windows && escapeArg) {  // Windows needs different quoting, ignore for now
+    // Windows needs different quoting, ignore for now
+    if (os != windows && escapeArg) {
       regex reg("[^-a-zA-Z0-9_=+,.\/]");
-      arg = std::regex_replace(arg, reg, "\\$&");
+      arg = regex_replace(arg, reg, "\\$&");
     }
     if (!swallowArg)
       toolArgs += " " + arg;
@@ -568,7 +588,7 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
   }
   if (runCmd) {
     SystemCmdOut sysOut;
-    sysOut = exec(CMD.c_str(), true);
+    sysOut = hipBinUtilPtr_->exec(CMD.c_str(), true);
     string cmdOut = sysOut.out;
     int CMD_EXIT_CODE = sysOut.exitCode;
     if (CMD_EXIT_CODE == -1) {
@@ -586,7 +606,6 @@ void HipBinNvidia::executeHipCCCmd(vector<string> argv) {
     } else {
       CMD_EXIT_CODE = CMD_EXIT_CODE >> 8;
     }
-    deleteTempFiles();
     exit(CMD_EXIT_CODE);
   }
 }   // end of function
