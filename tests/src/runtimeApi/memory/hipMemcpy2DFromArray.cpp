@@ -173,6 +173,7 @@ bool Memcpy2DFromArray<T>::hipMemcpy2DFromArray_PeerDeviceContext() {
     err = hipMemcpy2DFromArray(A_h, width, A_d,
                                0, 0, width,
                                NUM_H, hipMemcpyDeviceToHost);
+
     if (err == hipSuccess) {
       TestPassed = ValidateResult(A_h, INITIAL_VAL);
     } else {
@@ -281,7 +282,11 @@ int main(int argc, char **argv) {
     TestPassed &= Array_obj.hipMemcpy2DFromArray_SizeCheck();
   } else if (p_tests == 3) {
     if (numDevices > 1) {
+#ifndef _WIN64
     TestPassed &= Array_obj.hipMemcpy2DFromArray_PeerDeviceContext();
+#else
+    printf("xgmi memory test not supported on windows\n");
+#endif
     } else {
       printf("skipped the testcase as noof devices <2\n");
     }
@@ -289,8 +294,12 @@ int main(int argc, char **argv) {
     TestPassed &= Array_obj.hipMemcpy2DFromArray_NegativeTests();
   } else if (p_tests == 5) {
     if (numDevices > 1) {
+#ifndef _WIN64
     TestPassed &= Array_obj.hipMemcpy2DFromArray_PinnedHostMemory_SameGPU();
     TestPassed &= Array_obj.hipMemcpy2DFromArray_PinnedHostMemory_PeerGPU();
+#else
+    printf("xgmi memory test not supported on windows\n");
+#endif
     } else {
       printf("skipped the testcases as noof devices <2\n");
     }
