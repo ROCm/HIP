@@ -32,6 +32,7 @@ endif()
 target_link_libraries(UnitTests PRIVATE UnitDeviceTests
                                         MemoryTest
                                         StreamTest
+                                        StreamPerThreadTest
                                         EventTest
                                         OccupancyTest
                                         DeviceTest
