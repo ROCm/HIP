@@ -4302,6 +4302,10 @@ typedef enum hipStreamUpdateCaptureDependenciesFlags {
   hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
 } hipStreamUpdateCaptureDependenciesFlags;
 
+typedef enum hipGraphInstantiateFlags {
+  hipGraphInstantiateFlagAutoFreeOnLaunch =
+      0,  ///< Automatically free memory allocated in a graph before relaunching.
+} hipGraphInstantiateFlags;
 /**
  * @brief Begins graph capture on a stream.
  *
