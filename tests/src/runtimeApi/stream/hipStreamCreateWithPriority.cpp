@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -55,7 +55,7 @@ __global__ void memcpy_kernel(T* dst, T* src, size_t n)
 }
 
 template <typename T>
-void runTest()
+int runTest()
 {
     size_t size = NUMITERS*MEMCPYSIZE;
 
@@ -71,13 +71,16 @@ void runTest()
     printf("HIP stream priority range - low: %d to high: %d\n", priority_low, priority_high);
 
     // Check if priorities are indeed supported
-    if ((priority_low - priority_high) == 0) { passed(); }
-    
+    if (priority_low == 0 && priority_high == 0) {
+      printf("The device doesn't support stream priorities\n");
+      passed();
+    }
+
     // Enable/disable priorities based on number of available priority levels
     enable_priority_low = true;
     enable_priority_high = true;
     if ((priority_low - priority_high) > 1) enable_priority_normal = true;
-    if (enable_priority_normal) priority_normal = ((priority_low - priority_high) / 2);
+    if (enable_priority_normal) priority_normal = ((priority_low + priority_high) / 2);
 
     // create streams with highest and lowest available priorities
     #define OP(x) \
@@ -216,5 +219,5 @@ void runTest()
 int main(int argc, char **argv)
 {
     HipTest::parseStandardArguments(argc, argv, false);
-    runTest<int>();
+    return runTest<int>();
 }

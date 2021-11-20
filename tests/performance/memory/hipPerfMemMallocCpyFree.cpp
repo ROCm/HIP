@@ -22,7 +22,7 @@ THE SOFTWARE.
 #include <time.h>
 
 /* HIT_START
- * BUILD: %t %s ../../src/test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
+ * BUILD: %t %s ../../src/test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -37,10 +37,15 @@ void valSet(int* A, int val, size_t size) {
     }
 }
 
-void setup(size_t *size, const int num, int **pA) {
+void setup(size_t *size, int &num, int **pA, const size_t totalGlobalMem) {
+
     std::cout << "size: ";
     for (int i = 0; i < num; i++) {
         size[i] = 1 << (i + 6);
+        if((NUM_ITER + 1) * size[i] > totalGlobalMem) {
+          num = i;
+          break;
+        }
         std::cout << size[i] << " ";
     }
     std::cout << std::endl;
@@ -77,11 +82,16 @@ int main() {
     size_t size[NUM_SIZE] = { 0 };
     int *Ad[NUM_ITER] = { nullptr };
     int *A;
+    hipDeviceProp_t props;
+    memset(&props, 0, sizeof(props));
+    HIPCHECK(hipGetDeviceProperties(&props, 0));
+    std::cout << "totalGlobalMem: " << props.totalGlobalMem << std::endl;
 
-    setup(size, NUM_SIZE, &A);
+    int num = NUM_SIZE;
+    setup(size, num, &A, props.totalGlobalMem);
     testInit(size[0], A);
 
-    for (int i = 0; i < NUM_SIZE; i++) {
+    for (int i = 0; i < num; i++) {
         std::cout << size[i] << std::endl;
         start = clock();
         for (int j = 0; j < NUM_ITER; j++) {

@@ -41,7 +41,7 @@ THE SOFTWARE.
   private:
       int a;
   };
-     
+
   static __global__ void kernel(int* Ad) {
       int tid = threadIdx.x + blockIdx.x * blockDim.x;
       new(Ad+tid) A();
