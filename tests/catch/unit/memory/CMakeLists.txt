@@ -32,7 +32,22 @@ set(TEST_SRC
     hipHostGetFlags.cc
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
-    hipManagedKeyword.cc
+    hipMemsetInvalidPtr.cc
+    hipMemset.cc
+    hipMemsetAsyncMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
+    hipMemset3D.cc
+    hipMemset2D.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
+    hipHostMallocTests.cc
+    hipMallocConcurrency.cc
+    hipMemset3DFunctional.cc
+    hipMemset3DNegative.cc
+    hipMemset3DRegressMultiThread.cc
+    hipMallocManagedFlagsTst.cc
+    hipMemPrefetchAsyncExtTsts.cc
+    hipMemAdviseMmap.cc
+    hipMallocManaged.cc
 )
 else()
 set(TEST_SRC
@@ -65,7 +80,22 @@ set(TEST_SRC
     hipHostGetFlags.cc
     hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
-    hipManagedKeyword.cc
+    hipMemsetInvalidPtr.cc
+    hipMemset.cc
+    hipMemsetAsyncMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
+    hipMemset3D.cc
+    hipMemset2D.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
+    hipHostMallocTests.cc
+    hipMallocConcurrency.cc
+    hipMemset3DFunctional.cc
+    hipMemset3DNegative.cc
+    hipMemset3DRegressMultiThread.cc
+    hipMallocManagedFlagsTst.cc
+    hipMemPrefetchAsyncExtTsts.cc
+    hipMemAdviseMmap.cc
+    hipMallocManaged.cc
 )
 endif()
 # Create shared lib of all tests

@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM nvidia
- * TEST: %t EXCLUDE_HIP_PLATFORM amd
+ * BUILD: %t %s ../../test_common.cpp
+ * TEST: %t
  * HIT_END
  */
 
@@ -30,9 +30,12 @@ THE SOFTWARE.
 #include <thread>
 #include <vector>
 
-#define THREADS 8
+#define THREADS 2  // threads per core
 #define MAX_NUM_THREADS 512
-#define ITER 100
+#define ITER 5  // total loop number
+
+// 5 loops and 2 threads per core are enough for function verification.
+// You may adjust them for your test purpose.
 
 extern "C" __global__ void WaitKernel(int *Ad, int clockrate) {
   uint64_t wait_t = 500,
@@ -73,7 +76,9 @@ int main(int argc, char* argv[]) {
   hipEventCreate(&start);
   std::thread t[NUM_THREADS];
 
+  printf("NUM_THREADS=%d\n", NUM_THREADS);
   for (int i = 0; i < ITER; i++) {
+    printf("loop %d/%d\n", i, ITER);
     for (int j = 0; j < NUM_THREADS; j++) {
        t[j] = std::thread(t1, start, stream1, clkRate, A[j], Ad[j]);
     }

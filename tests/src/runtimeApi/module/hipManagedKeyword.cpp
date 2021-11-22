@@ -21,8 +21,8 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD_CMD: managed_kernel.code %hc --genco %S/managed_kernel.cpp -o managed_kernel.code EXCLUDE_HIP_PLATFORM amd
- * BUILD: %t %s ../../test_common.cpp EXCLUDE_HIP_PLATFORM amd
+ * BUILD_CMD: managed_kernel.code %hc --genco %S/managed_kernel.cpp -o managed_kernel.code
+ * BUILD: %t %s ../../test_common.cpp
  * TEST: %t
  * HIT_END
  */

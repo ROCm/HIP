@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,36 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-/* HIT_START
- * BUILD: %t %s EXCLUDE_HIP_PLATFORM all
- * TEST: %t
- * HIT_END
- */
+#include <hip/hip_runtime.h>
 
-#include "hip/hip_runtime.h"
-#include "test_common.h"
-#include<stdio.h>
-
-#define ITER 1<<20
-#define SIZE 1024*1024*sizeof(int)
-
-__global__ void Iter(int *Ad){
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
-    if(tx == 0){
-        for(int i=0;i<ITER;i++){
-            Ad[tx] += 1;
-        }
-    }
+__global__ void test_kernel() {
+  printf("%08d\n", 42);
+  printf("%08i\n", -42);
+  printf("%08u\n", 42);
+  printf("%08g\n", 123.456);
+  printf("%0+8d\n", 42);
+  printf("%+d\n", -42);
+  printf("%+08d\n", 42);
+  printf("%-8s\n", "xyzzy");
+  printf("% i\n", -42);
+  printf("%-16.8d\n", 42);
+  printf("%16.8d\n", 42);
 }
 
-int main(){
-    int A=0, *Ad;
-    hipMalloc((void**)&Ad, SIZE);
-    hipMemcpy(Ad, &A, SIZE, hipMemcpyHostToDevice);
-    dim3 dimGrid, dimBlock;
-    dimGrid.x = 1, dimGrid.y =1, dimGrid.z = 1;
-    dimBlock.x = 1, dimBlock.y = 1, dimGrid.z = 1;
-    hipLaunchKernelGGL(HIP_KERNEL_NAME(Iter), dimGrid, dimBlock, 0, 0, Ad);
-    hipMemcpy(&A, Ad, SIZE, hipMemcpyDeviceToHost);
-    passed();
+int main() {
+  test_kernel<<<1, 1>>>();
+  hipDeviceSynchronize();
 }
