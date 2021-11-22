@@ -3,17 +3,19 @@
 ## Host Memory
 
 ### Introduction
-hipHostMalloc allocates pinned host memory which is mapped into the address space of all GPUs in the system.
+hipHostMalloc allocates pinned host memory which is mapped into the address space of all GPUs in the system, the memory can be accessed directly by the GPU device, and can be read or written with much higher bandwidth than pageable memory obtained with functions such as malloc().
 There are two use cases for this host memory:
 - Faster HostToDevice and DeviceToHost Data Transfers:
 The runtime tracks the hipHostMalloc allocations and can avoid some of the setup required for regular unpinned memory.  For exact measurements on a specific system, experiment with --unpinned and --pinned switches for the hipBusBandwidth tool.
 - Zero-Copy GPU Access:
-GPU can directly access the host memory over the CPU/GPU interconnect, without need to copy the data.  This avoids the need for the copy, but during the kernel access each memory access must traverse the interconnect, which can be tens of times slower than accessing the GPU's local device memory.  Zero-copy memory can be a good choice when the memory accesses are infrequent (perhaps only once).  Zero-copy memory is typically "Coherent" and thus not cached by the GPU but this can be overridden if desired and is explained in more detail below.
+GPU can directly access the host memory over the CPU/GPU interconnect, without need to copy the data.  This avoids the need for the copy, but during the kernel access each memory access must traverse the interconnect, which can be tens of times slower than accessing the GPU's local device memory.  Zero-copy memory can be a good choice when the memory accesses are infrequent (perhaps only once).  Zero-copy memory is typically "Coherent" and thus not cached by the GPU but this can be overridden if desired.
 
 ### Memory allocation flags
-hipHostMalloc always sets the hipHostMallocPortable and hipHostMallocMapped flags. Both usage models described above use the same allocation flags, and the difference is in how the surrounding code uses the host memory.
-
-hipHostMallocNumaUser is the flag to allow host memory allocation to follow numa policy set by user.
+There are flags parameter which can specify options how to allocate the memory, for example,
+hipHostMallocPortable, the memory is considered allocated by all contexts, not just the one on which the allocation is made.
+hipHostMallocMapped, will map the allocation into the address space for the current device, and the device pointer can be obtained with the API hipHostGetDevicePointer().
+hipHostMallocNumaUser is the flag to allow host memory allocation to follow numa policy by user.
+All allocation flags are independent, and can be used with combination without restriction, for instance, hipHostMalloc can be called with both hipHostMallocPortable and hipHostMallocMapped flags set. Both usage models described above use the same allocation flags, and the difference is in how the surrounding code uses the host memory.
 
 See the hipHostMalloc API for more information.
 
@@ -25,12 +27,13 @@ Numa distance is the measurement of how far between GPU and CPU devices.
 By default, each GPU selects a Numa CPU node that has the least Numa distance between them, that is, host memory will be automatically allocated closest on the memory pool of Numa node of the current GPU device. Using hipSetDevice API to a different GPU will still be able to access the host allocation, but can have longer Numa distance.
 
 ### Managed memory allocation
-Managed memory, except the `__managed__` keyword, are supported in HIP combined host/device compilation.
-The allocation will be automatically managed by AMD HMM (Heterogeneous Memory Management).
+Managed memory, including the `__managed__` keyword, is supported in HIP combined host/device compilation.
 
-In HIP application, there should be the capability check before make managed memory API call hipMallocManaged.
+Managed memory, via unified memory allocation, allows data be shared and accessible to both the CPU and GPU using a single pointer. 
+The allocation will be managed by AMD GPU driver using the linux HMM (Heterogeneous Memory Management) mechanism, the user can call managed memory API hipMallocManaged to allocate a large chuch of HMM memory, execute kernels on device and fetch data between the host and device as needed.
 
-For example,
+In HIP application,  It is recommend to do the capability check before calling the managed memory APIs. For example:
+
 ```
 int managed_memory = 0;
 HIPCHECK(hipDeviceGetAttribute(&managed_memory,
@@ -46,7 +49,7 @@ else {
 }
 ```
 Please note, the managed memory capability check may not be necessary, but if HMM is not supported, then managed malloc will fall back to using system memory and other managed memory API calls will have undefined behavior.
-For more details on managed memory APIs, please refer to the documentation HIP-API.pdf.
+For more details on managed memory APIs, please refer to the documentation HIP-API.pdf, and the application at (https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-4.5.x/tests/src/runtimeApi/memory/hipMallocManaged.cpp) is a sample usage.
 
 ### HIP Stream Memory Operations
 
@@ -62,7 +65,9 @@ For more details, please check the documentation HIP-API.pdf.
 
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
-- Coherent memory : Supports fine-grain synchronization while the kernel is running.  For example, a kernel can perform atomic operations that are visible to the host CPU or to other (peer) GPUs.  Synchronization instructions include threadfence_system and C++11-style atomic operations. However, coherent memory cannot be cached by the GPU and thus may have lower performance.
+- Coherent memory : Supports fine-grain synchronization while the kernel is running.  For example, a kernel can perform atomic operations that are visible to the host CPU or to other (peer) GPUs.  Synchronization instructions include threadfence_system and C++11-style atomic operations.
+In order to achieve this fine-grained coherence, many AMD GPUs use a limited cache policy, such as leaving these allocations uncached by the GPU, or making them read-only.
+
 - Non-coherent memory : Can be cached by GPU, but cannot support synchronization while the kernel is running.  Non-coherent memory can be optionally synchronized only at command (end-of-kernel or copy command) boundaries.  This memory is appropriate for high-performance access when fine-grain synchronization is not required.
 
 HIP provides the developer with controls to select which type of memory is used via allocation flags passed to hipHostMalloc and the HIP_HOST_COHERENT environment variable. By default, the environment variable HIP_HOST_COHERENT is set to 0 in HIP.
@@ -122,7 +127,6 @@ hipRTC APIs accept HIP source files in character string format as input paramete
 For more details on hipRTC APIs, refer to HIP-API.pdf in GitHub (https://github.com/RadeonOpenCompute/ROCm).
 
 The link here(https://github.com/ROCm-Developer-Tools/HIP/blob/main/tests/src/hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail hipRTC programming guide is also available in Github (https://github.com/ROCm-Developer-Tools/HIP/blob/main/docs/markdown/hip_rtc.md).
-
 
 ## Device-Side Malloc
 
