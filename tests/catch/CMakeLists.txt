@@ -1,3 +1,19 @@
+cmake_minimum_required(VERSION 3.16.8)
+project(hiptests)
+
+# Check if platform and compiler are set
+if(HIP_PLATFORM STREQUAL "amd")
+    if(HIP_COMPILER STREQUAL "nvcc")
+        message(FATAL_ERROR "Unexpected HIP_COMPILER:${HIP_COMPILER} is set for HIP_PLATFOR:amd")
+    endif()
+elseif(HIP_PLATFORM STREQUAL "nvidia")
+    if(NOT DEFINED HIP_COMPILER OR NOT HIP_COMPILER STREQUAL "nvcc")
+        message(FATAL_ERROR "Unexpected HIP_COMPILER: ${HIP_COMPILER} is set for HIP_PLATFORM:nvidia")
+    endif()
+else()
+    message(FATAL_ERROR "Unexpected HIP_PLATFORM: " ${HIP_PLATFORM})
+endif()
+
 # Set HIP Path
 if(NOT DEFINED HIP_PATH)
     if(DEFINED ENV{HIP_PATH})
