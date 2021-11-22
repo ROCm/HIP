@@ -125,8 +125,20 @@ bool MemcpyAtoH<T>::hipMemcpyAtoH_PeerDeviceContext() {
       printf("Skipped the test as there is no peer access\n");
     } else {
       HIPCHECK(hipSetDevice(0));
+
+      unsigned int flags = 0;
+      HIPCHECK(hipGetDeviceFlags(&flags));
+
       AllocateMemory();
       HIPCHECK(hipSetDevice(1));
+
+      // hipMemcpyAtoH will invoke cuda driver api cuMemcpyAtoH() which need
+      // the primary context for device 1. The primary context can be
+      // initialized at the first call of a runtime api through hipSetDeviceFlags().
+      // Because of no runtime api called before cuMemcpyAtoH(), we have to
+      // explicitly call hipSetDeviceFlags().
+      HIPCHECK(hipSetDeviceFlags(flags));  // Only cuda driver api need this
+
       HIPCHECK(hipMemcpyAtoH(B_h, A_d, 0, BYTE_COUNT*sizeof(T)));
       TestPassed = ValidateResult(B_h, hData[0]);
       DeAllocateMemory();
