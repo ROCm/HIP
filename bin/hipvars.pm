@@ -25,8 +25,8 @@ use Getopt::Long;
 use Cwd;
 use File::Basename;
 
-$HIP_BASE_VERSION_MAJOR = "5";
-$HIP_BASE_VERSION_MINOR = "0";
+$HIP_BASE_VERSION_MAJOR = "4";
+$HIP_BASE_VERSION_MINOR = "4";
 $HIP_BASE_VERSION_PATCH = "0";
 
 #---
