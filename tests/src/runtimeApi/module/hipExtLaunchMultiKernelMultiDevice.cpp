@@ -33,7 +33,7 @@ THE SOFTWARE.
 #include <stdio.h>
 
 #define MAX_GPUS 8
-/* 
+/*
  * Square each element in the array A and write to array C.
  */
 #define NUM_KERNEL_ARGS 3
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     // Fill with Phi + i
     for (size_t i = 0; i < N; i++)
     {
-        A_h[i] = 1.618f + i; 
+        A_h[i] = 1.618f + i;
     }
 
     const unsigned blocks = 512;
@@ -136,6 +136,6 @@ int main(int argc, char *argv[])
             }
         }
     }
-    
+
     printf ("PASSED!\n");
 }
