@@ -12,22 +12,22 @@ detailed overview, see the help text available with `roc-obj --help`.
 ### Examples:
 
 #### Extract all ROCm code objects from a list of executables
-    roc-obj executable...
+    roc-obj <executable>...
 
 #### Extract all ROCm code objects from a list of executables, and disassemble them
-    roc-obj --disassemble executable...
+    roc-obj --disassemble <executable>...
     # or
-    roc-obj -d executable...
+    roc-obj -d <executable>...
 
 #### Extract all ROCm code objects from a list of executables into dir/
-    roc-obj --outdir dir/ executable...
+    roc-obj --outdir dir/ <executable>...
     # or
-    roc-obj -o dir/ executable...
+    roc-obj -o dir/ <executable>...
 
 #### Extract only ROCm code objects matching regex over Target ID
-    roc-obj --grep gfx9 executable...
+    roc-obj --target-id gfx9 <executable>...
     # or
-    roc-obj -g gfx9 executable...
+    roc-obj -t gfx9 <executable>...
 
 ## Low-Level Tooling
 
@@ -48,19 +48,19 @@ detailed overview, see the help text available with `roc-obj --help`.
 
 ### List available ROCm Code Objects: rocm-obj-ls
 
-  Use this tool to list available ROCm code objects.  Code objects are listed using URI syntax.
+  Use this tool to list available ROCm code objects.  Code objects are listed by bundle number, entry ID, and URI syntax.
 
   Usage: roc-obj-ls [-v|h] executable...
   List the URIs of the code objects embedded in the specfied host executables.
-    -v Verbose output (includes Entry ID)
+    -v Verbose output.  Adds column headers for more human readable format
     -h Show this help message
 
 
-### Extract ROCm Code Objects: rocm-obj-extract
+### Extract ROCm Code Objects: roc-obj-extract
 
   Extracts available ROCm code objects from specified URI.
 
-  Usage: rocm-obj-extract [-o|v|h] URI...
+  Usage: roc-obj-extract [-o|v|h] URI...
     - URIs can be read from STDIN, one per line.
     - From the URIs specified, extracts code objects into files named: <executable_name>-[pid<number>]-offset<number>-size<number>.co
 
@@ -74,14 +74,11 @@ detailed overview, see the help text available with `roc-obj --help`.
 
 ### Examples:
 
-#### Dump all code objects to current directory:
-    roc-obj-ls <exe> | roc-obj-extract
-
 #### Dump the ISA for gfx906:
-    roc-obj-ls -v <exe> | awk '/gfx906/{print $2}' | roc-obj-extract -o - | llvm-objdump -d - > <exe>.gfx906.isa
+    roc-obj-ls -v <exe> | awk '/gfx906/{print $3}' | roc-obj-extract -o - | llvm-objdump -d - > <exe>.gfx906.isa
 
 #### Check the e_flags of the gfx908 code object:
-    roc-obj-ls -v <exe> | awk '/gfx908/{print $2}' | roc-obj-extract -o - | llvm-readelf -h - | grep Flags
+    roc-obj-ls -v <exe> | awk '/gfx908/{print $3}' | roc-obj-extract -o - | llvm-readelf -h - | grep Flags
 
 #### Disassemble the fourth code object:
     roc-obj-ls <exe> | sed -n 4p | roc-obj-extract -o - | llvm-objdump -d -
@@ -90,6 +87,6 @@ detailed overview, see the help text available with `roc-obj --help`.
     for uri in $(roc-obj-ls <exe>); do printf "%d: %s\n" "$(roc-obj-extract -o - "$uri" | wc -c)" "$uri"; done | sort -n
 
 #### Compare disassembly of gfx803 and gfx900 code objects:
-    dis() { roc-obj-ls -v <exe> | grep "$1" | awk '{print $2}' | roc-obj-extract -o - | llvm-objdump -d -; }
+    dis() { roc-obj-ls -v <exe> | grep "$1" | awk '{print $3}' | roc-obj-extract -o - | llvm-objdump -d -; }
     diff <(dis gfx803) <(dis gfx900)
 
