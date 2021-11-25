@@ -58,11 +58,6 @@ $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 $HIPCC_COMPILE_FLAGS_APPEND=$ENV{'HIPCC_COMPILE_FLAGS_APPEND'};
 $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 
-# Known HIP target names.
-@knownTargets = ('gfx700', 'gfx701', 'gfx702', 'gfx703', 'gfx704', 'gfx705',
-                 'gfx801', 'gfx802', 'gfx803', 'gfx805', 'gfx810',
-                 'gfx900', 'gfx902', 'gfx904', 'gfx906', 'gfx908', 'gfx909', 'gfx90a',
-                 'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030', 'gfx1031', 'gfx1032');
 # Known Features
 @knownFeatures = ('sramecc-', 'sramecc+', 'xnack-', 'xnack+');
 
@@ -640,11 +635,6 @@ if($HIP_PLATFORM eq "amd"){
             $HIPLDARCHFLAGS .= $GPU_ARCH_ARG;
             if ($HIP_PLATFORM eq 'amd' and $hasHIP) {
                 $HIPCXXFLAGS .= $GPU_ARCH_ARG;
-            }
-
-            # If the specified target is not in the list of known target names, emit a warning.
-            if (grep($procName, @knownTargets) eq 0) {
-                print "Warning: The specified HIP target: $val is unknown. Correct compilation is not guaranteed.\n";
             }
         }
     }
