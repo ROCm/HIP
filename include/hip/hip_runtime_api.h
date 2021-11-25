@@ -5181,6 +5181,38 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
  * @}
  */
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup GL Interop
+ *  @{
+ *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
+ */
+typedef unsigned int GLuint;
+
+// Queries devices associated with GL Context.
+hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
+                           unsigned int hipDeviceCount, hipGLDeviceList deviceList);
+// Registers a GL Buffer for interop and returns corresponding graphics resource.
+hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
+                                       unsigned int flags);
+// Maps a graphics resource for hip access.
+hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
+                                   hipStream_t stream  __dparm(0) );
+// Gets device accessible address of a graphics resource.
+hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
+                                               hipGraphicsResource_t resource);
+// Unmaps a graphics resource for hip access.
+hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources,
+                                     hipStream_t stream  __dparm(0));
+// Unregisters a graphics resource.
+hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
+// doxygen end GL Interop
+/**
+ * @}
+ */
+
+
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
@@ -5351,37 +5383,6 @@ static inline hipError_t hipUnbindTexture(
 
 
 #endif // __cplusplus
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup GL Interop
- *  @{
- *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
- */
-typedef unsigned int GLuint;
-
-// Queries devices associated with GL Context.
-hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
-                           unsigned int hipDeviceCount, hipGLDeviceList deviceList);
-// Registers a GL Buffer for interop and returns corresponding graphics resource.
-hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
-                                       unsigned int flags);
-// Maps a graphics resource for hip access.
-hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
-                                   hipStream_t stream  __dparm(0) );
-// Gets device accessible address of a graphics resource.
-hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
-                                               hipGraphicsResource_t resource);
-// Unmaps a graphics resource for hip access.
-hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources,
-                                     hipStream_t stream  __dparm(0));
-// Unregisters a graphics resource.
-hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
-// doxygen end GL Interop
-/**
- * @}
- */
 
 #ifdef __GNUC__
 #pragma GCC visibility pop
