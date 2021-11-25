@@ -19,10 +19,13 @@
 # THE SOFTWARE.
 
 cmake_minimum_required(VERSION 2.8.3)
+if (NOT DEFINED ROCM_PATH )
+     set ( ROCM_PATH "/opt/rocm"  CACHE STRING "Default ROCM installation directory." )
+endif ()
 
 if(NOT DEFINED HIP_PATH)
     if(NOT DEFINED ENV{HIP_PATH})
-        set(HIP_PATH "/opt/rocm/hip" CACHE PATH "Path to which HIP has been installed")
+        set(HIP_PATH "${ROCM_PATH}/hip" CACHE PATH "Path to which HIP has been installed")
     else()
         set(HIP_PATH $ENV{HIP_PATH} CACHE PATH "Path to which HIP has been installed")
     endif()
@@ -36,7 +39,7 @@ find_package(HIP QUIET)
 if(HIP_FOUND)
     message(STATUS "Found HIP: " ${HIP_VERSION})
 else()
-    message(FATAL_ERROR "Could not find HIP. Ensure that HIP is either installed in /opt/rocm/hip or the variable HIP_PATH is set to point to the right location.")
+    message(FATAL_ERROR "Could not find HIP. Ensure that HIP is either installed in ${ROCM_PATH}/hip or the variable HIP_PATH is set to point to the right location.")
 endif()
 
 set(MY_SOURCE_FILES MatrixTranspose.cpp)
@@ -50,7 +53,7 @@ set_source_files_properties(${MY_SOURCE_FILES} PROPERTIES HIP_SOURCE_PROPERTY_FO
 hip_add_executable(${MY_TARGET_NAME} ${MY_SOURCE_FILES} HIPCC_OPTIONS ${MY_HIPCC_OPTIONS} HCC_OPTIONS ${MY_HCC_OPTIONS} CLANG_OPTIONS ${MY_CLANG_OPTIONS} NVCC_OPTIONS ${MY_NVCC_OPTIONS})
 
 # Search for rocm in common locations
-list(APPEND CMAKE_PREFIX_PATH ${HIP_PATH} /opt/rocm)
+list(APPEND CMAKE_PREFIX_PATH ${HIP_PATH} ${ROCM_PATH})
 find_package(hip QUIET)
 if(TARGET hip::host)
     message(STATUS "Found hip::host at ${hip_DIR}")
