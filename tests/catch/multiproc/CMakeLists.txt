@@ -11,6 +11,7 @@ set(LINUX_TEST_SRC
     hipIpcMemAccessTest.cc
     hipHostMallocTestsMproc.cc
     hipMallocConcurrencyMproc.cc
+    hipMemCoherencyTstMProc.cc
 )
 
 if(UNIX)
