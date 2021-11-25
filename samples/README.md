@@ -24,7 +24,7 @@ cmake ..
 
 b. to build with static libs, run
 
-cmake -DCMAKE_PREFIX_PATH="/opt/rocm/llvm/lib/cmake" ..
+cmake -DCMAKE_PREFIX_PATH="<ROCM_PATH>/llvm/lib/cmake" ..
 
 Then run,
 
