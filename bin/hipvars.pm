@@ -60,7 +60,7 @@ sub can_run {
     }
 }
 
-$isWindows = $^O eq 'MSWin32';
+$isWindows =  ($^O eq 'MSWin32' or $^O eq 'msys');
 
 #
 # TODO: Fix rpath LDFLAGS settings
