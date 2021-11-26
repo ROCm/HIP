@@ -1,6 +1,6 @@
 #include <hip_test_common.hh>
 
-TEST_CASE("hipMalloc", "DifferentSizes") {
+TEST_CASE("Stress_hipMalloc", "DifferentSizes") {
   int* d_a = nullptr;
   SECTION("Size 10") {
     auto res = hipMalloc(&d_a, sizeof(10));

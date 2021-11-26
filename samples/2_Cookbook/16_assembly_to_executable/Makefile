@@ -18,7 +18,8 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-HIP_PATH?= $(wildcard /opt/rocm/hip)
+ROCM_PATH?= $(wildcard /opt/rocm/)
+HIP_PATH?= $(wildcard $(ROCM_PATH)/hip)
 ifeq (,$(HIP_PATH))
 	HIP_PATH=../../..
 endif

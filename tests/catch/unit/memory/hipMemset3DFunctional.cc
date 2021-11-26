@@ -236,7 +236,7 @@ static void seekAndSet3DArraySlice(bool bAsync) {
 
   // select random slice for memset
   unsigned int seed = time(nullptr);
-  int slice_index = rand_r(&seed) % ZSIZE_S;
+  int slice_index = HipTest::RAND_R(&seed) % ZSIZE_S;
 
   INFO("memset3d for sliceindex " << slice_index);
 
