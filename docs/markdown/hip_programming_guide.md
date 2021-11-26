@@ -121,7 +121,8 @@ hipRTC APIs accept HIP source files in character string format as input paramete
 
 For more details on hipRTC APIs, refer to HIP-API.pdf in GitHub (https://github.com/RadeonOpenCompute/ROCm).
 
-The link here(https://github.com/ROCm-Developer-Tools/HIP/blob/main/tests/src/hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism.
+The link here(https://github.com/ROCm-Developer-Tools/HIP/blob/main/tests/src/hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail hipRTC programming guide is also available in Github (https://github.com/ROCm-Developer-Tools/HIP/blob/main/docs/markdown/hip_rtc.md).
+
 
 ## Device-Side Malloc
 

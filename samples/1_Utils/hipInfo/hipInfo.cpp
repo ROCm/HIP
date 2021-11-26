@@ -75,7 +75,7 @@ void printDeviceProp(int deviceId) {
          << endl;
     cout << setw(w1) << "device#" << deviceId << endl;
 
-    hipDeviceProp_t props;
+    hipDeviceProp_t props = {0};
     HIPCHECK(hipGetDeviceProperties(&props, deviceId));
 
     cout << setw(w1) << "Name: " << props.name << endl;
@@ -90,12 +90,8 @@ void printDeviceProp(int deviceId) {
     cout << setw(w1) << "memoryClockRate: " << (float)props.memoryClockRate / 1000.0 << " Mhz"
          << endl;
     cout << setw(w1) << "memoryBusWidth: " << props.memoryBusWidth << endl;
-    cout << setw(w1) << "clockInstructionRate: " << (float)props.clockInstructionRate / 1000.0
-         << " Mhz" << endl;
     cout << setw(w1) << "totalGlobalMem: " << fixed << setprecision(2)
          << bytesToGB(props.totalGlobalMem) << " GB" << endl;
-    cout << setw(w1) << "maxSharedMemoryPerMultiProcessor: " << fixed << setprecision(2)
-         << bytesToKB(props.maxSharedMemoryPerMultiProcessor) << " KB" << endl;
     cout << setw(w1) << "totalConstMem: " << props.totalConstMem << endl;
     cout << setw(w1) << "sharedMemPerBlock: " << (float)props.sharedMemPerBlock / 1024.0 << " KB"
          << endl;
@@ -116,6 +112,21 @@ void printDeviceProp(int deviceId) {
     cout << setw(w1) << "concurrentKernels: " << props.concurrentKernels << endl;
     cout << setw(w1) << "cooperativeLaunch: " << props.cooperativeLaunch << endl;
     cout << setw(w1) << "cooperativeMultiDeviceLaunch: " << props.cooperativeMultiDeviceLaunch << endl;
+    cout << setw(w1) << "isIntegrated: " << props.integrated << endl;
+    cout << setw(w1) << "maxTexture1D: " << props.maxTexture1D << endl;
+    cout << setw(w1) << "maxTexture2D.width: " << props.maxTexture2D[0] << endl;
+    cout << setw(w1) << "maxTexture2D.height: " << props.maxTexture2D[1] << endl;
+    cout << setw(w1) << "maxTexture3D.width: " << props.maxTexture3D[0] << endl;
+    cout << setw(w1) << "maxTexture3D.height: " << props.maxTexture3D[1] << endl;
+    cout << setw(w1) << "maxTexture3D.depth: " << props.maxTexture3D[2] << endl;
+
+#ifdef __HIP_PLATFORM_AMD__
+    cout << setw(w1) << "isLargeBar: " << props.isLargeBar << endl;
+    cout << setw(w1) << "asicRevision: " << props.asicRevision << endl;
+    cout << setw(w1) << "maxSharedMemoryPerMultiProcessor: " << fixed << setprecision(2)
+         << bytesToKB(props.maxSharedMemoryPerMultiProcessor) << " KB" << endl;
+    cout << setw(w1) << "clockInstructionRate: " << (float)props.clockInstructionRate / 1000.0
+         << " Mhz" << endl;
     cout << setw(w1) << "arch.hasGlobalInt32Atomics: " << props.arch.hasGlobalInt32Atomics << endl;
     cout << setw(w1) << "arch.hasGlobalFloatAtomicExch: " << props.arch.hasGlobalFloatAtomicExch
          << endl;
@@ -136,16 +147,7 @@ void printDeviceProp(int deviceId) {
     cout << setw(w1) << "arch.has3dGrid: " << props.arch.has3dGrid << endl;
     cout << setw(w1) << "arch.hasDynamicParallelism: " << props.arch.hasDynamicParallelism << endl;
     cout << setw(w1) << "gcnArchName: " << props.gcnArchName << endl;
-    cout << setw(w1) << "isIntegrated: " << props.integrated << endl;
-    cout << setw(w1) << "maxTexture1D: " << props.maxTexture1D << endl;
-    cout << setw(w1) << "maxTexture2D.width: " << props.maxTexture2D[0] << endl;
-    cout << setw(w1) << "maxTexture2D.height: " << props.maxTexture2D[1] << endl;
-    cout << setw(w1) << "maxTexture3D.width: " << props.maxTexture3D[0] << endl;
-    cout << setw(w1) << "maxTexture3D.height: " << props.maxTexture3D[1] << endl;
-    cout << setw(w1) << "maxTexture3D.depth: " << props.maxTexture3D[2] << endl;
-    cout << setw(w1) << "isLargeBar: " << props.isLargeBar << endl;
-    cout << setw(w1) << "asicRevision: " << props.asicRevision << endl;
-
+#endif
     int deviceCnt;
     hipGetDeviceCount(&deviceCnt);
     cout << setw(w1) << "peers: ";
