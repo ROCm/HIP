@@ -261,7 +261,7 @@ void Memcpy_And_verify(int NUM_ELM) {
   }
 }
 
-TEMPLATE_TEST_CASE("Unit_hipMemcpy_multiDevice-AllAPIs", "",
+TEMPLATE_TEST_CASE("Stress_hipMemcpy_multiDevice-AllAPIs", "",
                    char, int, size_t, long double) {
   auto diff_size = GENERATE(1, 5, 10, 100, 1024, 10*1024, 100*1024,
                             1024*1024, 10*1024*1024, 100*1024*1024,
