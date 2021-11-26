@@ -23,6 +23,7 @@ THE SOFTWARE.
 #pragma once
 #include "hip_test_context.hh"
 #include <catch.hpp>
+#include <stdlib.h>
 
 #define HIP_PRINT_STATUS(status) INFO(hipGetErrorName(status) << " at line: " << __LINE__);
 
@@ -105,4 +106,13 @@ static inline unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlo
   return blocks;
 }
 
+static inline int RAND_R(unsigned* rand_seed)
+{
+  #if defined(_WIN32) || defined(_WIN64)
+        srand(*rand_seed);
+        return rand();
+  #else
+      return rand_r(rand_seed);
+  #endif
+}
 }

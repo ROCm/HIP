@@ -36,7 +36,8 @@ are ignored and hipExtStreamCreateWithCUMask must return hipSuccess.
 
 #include <hip_test_common.hh>
 #include <hip_test_kernels.hh>
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 #include <iostream>
 #include <vector>
 
@@ -159,7 +160,7 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_ValidateCallbackFunc") {
   HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost,
           mystream));
   HIP_CHECK(hipStreamAddCallback(mystream, Callback, nullptr, 0));
-  while (!cbDone) usleep(100000);  // Sleep for 100 ms
+  while (!cbDone) std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
   HIP_CHECK(hipStreamDestroy(mystream));
   HIP_CHECK(hipFree(reinterpret_cast<void*>(C_d)));
   HIP_CHECK(hipFree(reinterpret_cast<void*>(A_d)));

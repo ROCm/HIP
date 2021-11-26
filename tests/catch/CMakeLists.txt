@@ -24,7 +24,22 @@ if(NOT DEFINED HIP_PATH)
 endif()
 message(STATUS "HIP Path: ${HIP_PATH}")
 
-set(CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc")
+if(UNIX)
+    set(CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc")
+    set(CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc")
+else()
+    # using cmake_path as it handles path correctly.
+    # Set both compilers else windows cmake complains of mismatch
+    cmake_path(SET CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc.bat")
+    cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
+endif()
+
+
+if(NOT UNIX)
+    # In linux this reruns the cmake and fails with incorrect vars.
+    # so the project command is used only for windows
+    project(build_tests)
+endif()
 
 if(NOT DEFINED CATCH2_PATH)
     if(DEFINED ENV{CATCH2_PATH})
@@ -118,10 +133,10 @@ add_subdirectory(unit)
 add_subdirectory(ABM)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
-add_subdirectory(TypeQualifiers)
 
 if(UNIX)
     add_subdirectory(multiproc)
+    add_subdirectory(TypeQualifiers)
 endif()
 
 cmake_policy(POP)

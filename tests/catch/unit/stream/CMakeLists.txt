@@ -4,14 +4,20 @@ set(TEST_SRC
     hipStreamGetFlags.cc
     hipStreamGetPriority.cc
     hipMultiStream.cc
-    hipStreamACb_MultiThread.cc
     hipStreamAddCallback.cc
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
-    hipStreamWithCUMask.cc
     hipStreamGetCUMask.cc
     hipAPIStreamDisable.cc
 )
+
+#skipped in windows - duplicate HipTest::vector_square sym (compiler issue)
+if(UNIX)
+    set(TEST_SRC ${TEST_SRC}
+                 hipStreamWithCUMask.cc
+                 hipStreamACb_MultiThread.cc)
+endif()
+
 else()
 set(TEST_SRC
     hipStreamCreate.cc

@@ -2,18 +2,8 @@
 #include <picojson.h>
 #include <fstream>
 #include <sstream>
-
-#if __has_include(<filesystem>)
-#include <filesystem>
-namespace fs = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#error "gg filesystem"
-#endif
-
 #include <regex>
+#include "hip_test_filesystem.hh"
 
 void TestContext::detectOS() {
 #if (HT_WIN == 1)
@@ -49,7 +39,7 @@ void TestContext::fillConfig() {
   if (config_path.has_parent_path() && config_path.has_filename()) {
     config_.json_file = config_str;
   } else if (config_path.has_parent_path()) {
-    config_.json_file = config_path / def_config_json;
+    config_.json_file = config_path.string() + def_config_json;
   } else {
     config_.json_file = exe_path + def_config_json;
   }

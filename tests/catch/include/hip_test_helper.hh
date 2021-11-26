@@ -25,6 +25,9 @@ THE SOFTWARE.
 
 #ifdef __linux__
   #include <sys/sysinfo.h>
+#else
+  #include <windows.h>
+  #include <sysinfoapi.h>
 #endif
 
 namespace HipTest {
