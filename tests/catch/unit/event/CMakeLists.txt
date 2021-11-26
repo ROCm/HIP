@@ -3,9 +3,14 @@ set(TEST_SRC
     Unit_hipEvent_Negative.cc
     Unit_hipEvent.cc
     Unit_hipEventElapsedTime.cc
-    Unit_hipEventRecord.cc
-    Unit_hipEventIpc.cc
 )
+
+# skipped for windows due to duplicate symbols
+if(UNIX)
+    set(TEST_SRC ${TEST_SRC}
+                 Unit_hipEventRecord.cc
+                 Unit_hipEventIpc.cc)
+endif()
 
 hip_add_exe_to_target(NAME EventTest
                       TEST_SRC ${TEST_SRC}

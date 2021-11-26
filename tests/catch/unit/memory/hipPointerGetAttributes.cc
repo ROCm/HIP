@@ -148,7 +148,7 @@ void clusterAllocs(int numAllocs, size_t minSize, size_t maxSize) {
   }
   for (int i = 0; i < numAllocs; i++) {
     unsigned rand_seed = time(NULL);
-    bool isDevice = rand_r(&rand_seed) & 0x1;
+    bool isDevice = HipTest::RAND_R(&rand_seed) & 0x1;
     reference[i]._sizeBytes = zrand(maxSize - minSize) + minSize;
 
     reference[i]._attrib.device = zrand(numDevices);

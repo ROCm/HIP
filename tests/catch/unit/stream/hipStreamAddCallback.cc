@@ -26,7 +26,8 @@ Testcase Scenarios :
 
 #include <hip_test_common.hh>
 #include <hip_test_kernels.hh>
-#include <unistd.h>
+#include <chrono>
+#include <thread>
 
 #define UNUSED(expr) do { (void)(expr); } while (0)
 
@@ -89,7 +90,7 @@ bool testStreamCallbackFunctionality(bool isDefault) {
     HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost,
                             0));
     HIP_CHECK(hipStreamAddCallback(0, Callback, nullptr, 0));
-    while (!gcbDone) usleep(100000);  // Sleep for 100 ms
+    while (!gcbDone) std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
   } else {
     hipStream_t mystream;
     HIP_CHECK(hipStreamCreateWithFlags(&mystream, hipStreamNonBlocking));
@@ -105,7 +106,7 @@ bool testStreamCallbackFunctionality(bool isDefault) {
     HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost,
                             mystream));
     HIP_CHECK(hipStreamAddCallback(mystream, Callback, nullptr, 0));
-    while (!gcbDone) usleep(100000);  // Sleep for 100 ms
+    while (!gcbDone) std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
     HIP_CHECK(hipStreamDestroy(mystream));
   }
   HIP_CHECK(hipFree(reinterpret_cast<void*>(C_d)));
@@ -192,7 +193,7 @@ TEST_CASE("Unit_hipStreamAddCallback_ParamTst") {
     HIP_CHECK(hipStreamAddCallback(mystream, Callback_ChkUsrdataPtr,
                                   gusrptr, 0));
     while (!gcbDone) {
-      usleep(100000);  // Sleep for 100 ms
+      std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
     }
     REQUIRE_FALSE(!gPassed);
   }
@@ -204,7 +205,7 @@ TEST_CASE("Unit_hipStreamAddCallback_ParamTst") {
     HIP_CHECK(hipStreamAddCallback(mystream, Callback_ChkStreamValue,
                                   nullptr, 0));
     while (!gcbDone) {
-      usleep(100000);  // Sleep for 100 ms
+      std::this_thread::sleep_for(std::chrono::microseconds(100000));  // Sleep for 100 ms
     }
     REQUIRE_FALSE(!gPassed);
   }
