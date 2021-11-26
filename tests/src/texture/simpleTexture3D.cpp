@@ -38,7 +38,7 @@ texture<int, hipTextureType3D, hipReadModeElementType> texi;
 texture<char, hipTextureType3D, hipReadModeElementType> texc;
 
 template <typename T>
-__global__ void simpleKernel3DArray(T* outputData, 
+__global__ void simpleKernel3DArray(T* outputData,
                                     int width,
                                     int height,int depth)
 {
@@ -114,7 +114,7 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
 
     // copy result from device to host
     HIPCHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
-    HipTest::checkArray(hData,hOutputData,width,height,depth); 
+    HipTest::checkArray(hData,hOutputData,width,height,depth);
 
     hipFree(dData);
     hipFreeArray(arr);

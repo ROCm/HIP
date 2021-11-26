@@ -61,7 +61,7 @@ int runTest(hipTextureAddressMode addressMode, hipTextureFilterMode filterMode) 
     // Allocating the required buffer on gpu device
     float *texBuf, *texBufOut;
     float val[N], output[N];
-    
+
     for (int i = 0; i < N; i++) {
         val[i] = i+1;
         output[i] = 0.0;
@@ -85,7 +85,7 @@ int runTest(hipTextureAddressMode addressMode, hipTextureFilterMode filterMode) 
 
     texDesc.addressMode[0] = addressMode;
     texDesc.addressMode[1] = addressMode;
-    texDesc.filterMode = filterMode;   
+    texDesc.filterMode = filterMode;
     texDesc.normalizedCoords = false;
 
     // Creating texture object

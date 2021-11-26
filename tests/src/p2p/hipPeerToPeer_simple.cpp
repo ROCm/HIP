@@ -389,39 +389,65 @@ void simpleNegative() {
 
 
 int main(int argc, char* argv[]) {
-    parseMyArguments(argc, argv);
+  int ret_code = 0;
+
+  do {
     int gpuCount;
     HIPCHECK(hipGetDeviceCount(&gpuCount));
-
     if (gpuCount < 2) {
-        printf("P2P application requires atleast 2 gpu devices\n");
-        if (hip_skip_tests_enabled()) {
-          return hip_skip_retcode();
-        }
-    } else {
-        if (p_tests & 0x100) {
-            testPeerHostToDevice(false /*useAsyncCopy*/);
-        }
-        testPeerHostToDevice(true /*useAsyncCopy*/);
-
-        if (p_tests & 0x1) {
-            enablePeerFirst(false /*useAsyncCopy*/);
-        }
-
-        if (p_tests & 0x2) {
-            allocMemoryFirst(false /*useAsyncCopy*/);
-        }
-
-        if (p_tests & 0x4) {
-            simpleNegative();
-        }
-
-        if (p_tests & 0x8) {
-            enablePeerFirst(true /*useAsyncCopy*/);
-        }
-        if (p_tests & 0x10) {
-            allocMemoryFirst(true /*useAsyncCopy*/);
-        }
+      printf("P2P application requires atleast 2 gpu devices\n");
+      if (hip_skip_tests_enabled()) {
+        ret_code = hip_skip_retcode();
+      }
+      break; //break from do while(0).
     }
+
+    int canAccessPeer;
+    for (int dev_idx = 0; dev_idx < (gpuCount-1); ++dev_idx) {
+      HIPCHECK(hipDeviceCanAccessPeer(&canAccessPeer, dev_idx, dev_idx + 1));
+      if (canAccessPeer == 0) {
+        printf("P2P Access not available between GPUs %d and %d \n", dev_idx, dev_idx + 1);
+        if (hip_skip_tests_enabled()) {
+          ret_code = hip_skip_retcode();
+        }
+        break; // break from for loop.
+      }
+    }
+
+    if (canAccessPeer == 0) {
+      break; //break from do while(0).
+    }
+
+    // Run the test case scenarios
+    parseMyArguments(argc, argv);
+    if (p_tests & 0x100) {
+      testPeerHostToDevice(false /*useAsyncCopy*/);
+    }
+    testPeerHostToDevice(true /*useAsyncCopy*/);
+
+    if (p_tests & 0x1) {
+      enablePeerFirst(false /*useAsyncCopy*/);
+    }
+
+    if (p_tests & 0x2) {
+      allocMemoryFirst(false /*useAsyncCopy*/);
+    }
+
+    if (p_tests & 0x4) {
+      simpleNegative();
+    }
+
+    if (p_tests & 0x8) {
+      enablePeerFirst(true /*useAsyncCopy*/);
+    }
+    if (p_tests & 0x10) {
+      allocMemoryFirst(true /*useAsyncCopy*/);
+    }
+  } while (0);
+
+  if (ret_code == 0 || ret_code == hip_skip_retcode()) {
     passed();
+  }
+
+  return ret_code;
 }
