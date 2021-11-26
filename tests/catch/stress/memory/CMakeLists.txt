@@ -2,6 +2,7 @@
 set(TEST_SRC
     memcpy.cc
     hipMemcpyMThreadMSize.cc
+    hipMallocManagedStress.cc
 )
 
 hip_add_exe_to_target(NAME memory

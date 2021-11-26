@@ -48,6 +48,7 @@ set(TEST_SRC
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
+    hipMemCoherencyTst.cc
 )
 else()
 set(TEST_SRC
@@ -96,6 +97,7 @@ set(TEST_SRC
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
+    hipMemCoherencyTst.cc
 )
 endif()
 

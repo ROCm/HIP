@@ -26,12 +26,16 @@ if(NOT DEFINED __HIP_ENABLE_PCH)
   set(__HIP_ENABLE_PCH ON CACHE BOOL "enable/disable pre-compiled hip headers")
 endif()
 
+if (NOT DEFINED ROCM_PATH )
+     set ( ROCM_PATH "/opt/rocm"  CACHE STRING "Default ROCM installation directory." )
+endif ()
+
 if(${__HIP_ENABLE_PCH})
   add_definitions(-D__HIP_ENABLE_PCH)
 endif()
 
 # Search for rocm in common locations
-list(APPEND CMAKE_PREFIX_PATH /opt/rocm/hip /opt/rocm)
+list(APPEND CMAKE_PREFIX_PATH ${ROCM_PATH}/hip ${ROCM_PATH})
 
 # Find hip
 find_package(hip)
