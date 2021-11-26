@@ -24,7 +24,7 @@ THE SOFTWARE.
 #include "hip_test_common.hh"
 
 #ifdef __linux__
-#include <sys/sysinfo.h>
+  #include <sys/sysinfo.h>
 #endif
 
 namespace HipTest {

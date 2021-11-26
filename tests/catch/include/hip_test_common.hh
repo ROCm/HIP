@@ -104,4 +104,5 @@ static inline unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlo
 
   return blocks;
 }
+
 }
