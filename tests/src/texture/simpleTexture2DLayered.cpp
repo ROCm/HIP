@@ -82,7 +82,7 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
     dim3 dimGrid(width / dimBlock.x, height / dimBlock.y, 1);
     for (unsigned int layer = 0; layer < num_layers; layer++)
         hipLaunchKernelGGL(simpleKernelLayeredArray, dimGrid, dimBlock, 0, 0, dData, width, height, layer);
-    
+
     HIPCHECK(hipDeviceSynchronize());
     // Allocate mem for the result on host side
     T *hOutputData = (T*) malloc(size);
@@ -90,7 +90,7 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
 
     // copy result from device to host
     HIPCHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
-    HipTest::checkArray(hData,hOutputData,width,height,num_layers); 
+    HipTest::checkArray(hData,hOutputData,width,height,num_layers);
 
     hipFree(dData);
     hipFreeArray(arr);

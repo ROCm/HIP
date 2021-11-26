@@ -74,7 +74,8 @@ hipcc hipMain1.cpp -L. -lHipOptLibrary -o test_emit_static_hipcc_linker.out
 ```
 Using g++:
 ```
-g++ hipMain1.cpp -L. -lHipOptLibrary -L/opt/rocm/hip/lib -lamdhip64 -o test_emit_static_host_linker.out
+ROCM_PATH is the path where ROCM is installed. default path is /opt/rocm.
+g++ hipMain1.cpp -L. -lHipOptLibrary -L<ROCM_PATH>/hip/lib -lamdhip64 -o test_emit_static_host_linker.out
 ```
 
 ## Static libraries with device functions

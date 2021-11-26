@@ -11,14 +11,13 @@ set(LINUX_TEST_SRC
     hipIpcMemAccessTest.cc
     hipHostMallocTestsMproc.cc
     hipMallocConcurrencyMproc.cc
+    hipMemCoherencyTstMProc.cc
 )
 
 if(UNIX)
-    # Create shared lib of all tests
-    add_library(MultiProc SHARED EXCLUDE_FROM_ALL ${LINUX_TEST_SRC})
-
-    target_link_libraries(MultiProc ${CMAKE_DL_LIBS})
-
-    # Add dependency on build_tests to build it on this custom target
-    add_dependencies(build_tests MultiProc)
+  # the last argument linker libraries is required for this test but optional to the function
+  hip_add_exe_to_target(NAME MultiProc
+                        TEST_SRC ${LINUX_TEST_SRC}
+                        TEST_TARGET_NAME build_tests
+                        LINKER_LIBS ${CMAKE_DL_LIBS})
 endif()

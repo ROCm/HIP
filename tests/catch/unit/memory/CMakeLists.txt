@@ -5,8 +5,6 @@ set(TEST_SRC
     malloc.cc
     hipMemcpy2DToArray.cc
     hipMemcpy2DToArrayAsync.cc
-    hipMemcpyPeer.cc
-    hipMemcpyPeerAsync.cc
     hipMemcpy3D.cc
     hipMemcpy3DAsync.cc
     hipMemcpyParam2D.cc
@@ -17,37 +15,26 @@ set(TEST_SRC
     hipMemcpy2DFromArrayAsync.cc
     hipMemcpyAtoH.cc
     hipMemcpyHtoA.cc
-    hipMemcpyDtoD.cc
-    hipMemcpyDtoDAsync.cc
-    hipMemcpyAsync.cc
-    hipMemcpy.cc
-    hipMemcpyWithStream.cc
     hipMemcpyAllApiNegative.cc
-    hipMemcpyWithStreamMultiThread.cc
     hipMemcpy_MultiThread.cc
-    hipHostMalloc.cc
     hipHostRegister.cc
     hipMemPtrGetInfo.cc
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
-    hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
     hipMemsetInvalidPtr.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
-    hipMemsetAsyncAndKernel.cc
     hipMemset3D.cc
     hipMemset2D.cc
-    hipMemset2DAsyncMultiThreadAndKernel.cc
     hipHostMallocTests.cc
-    hipMallocConcurrency.cc
     hipMemset3DFunctional.cc
     hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
-    hipMallocManaged.cc
+    hipMemCoherencyTst.cc
 )
 else()
 set(TEST_SRC
@@ -55,8 +42,6 @@ set(TEST_SRC
     malloc.cc
     hipMemcpy2DToArray.cc
     hipMemcpy2DToArrayAsync.cc
-    hipMemcpyPeer.cc
-    hipMemcpyPeerAsync.cc
     hipMemcpy3D.cc
     hipMemcpy3DAsync.cc
     hipMemcpyParam2D.cc
@@ -67,39 +52,45 @@ set(TEST_SRC
     hipMemcpy2DFromArrayAsync.cc
     hipMemcpyAtoH.cc
     hipMemcpyHtoA.cc
-    hipMemcpyDtoD.cc
-    hipMemcpyDtoDAsync.cc
-    hipMemcpyAsync.cc
-    hipMemcpy.cc
-    hipMemcpyWithStream.cc
     hipMemcpyAllApiNegative.cc
-    hipMemcpyWithStreamMultiThread.cc
     hipMemcpy_MultiThread.cc
-    hipHostMalloc.cc
     hipHostRegister.cc
     hipHostGetFlags.cc
-    hipMemoryAllocateCoherent.cc
     hipMallocManaged_MultiScenario.cc
     hipMemsetInvalidPtr.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
-    hipMemsetAsyncAndKernel.cc
     hipMemset3D.cc
     hipMemset2D.cc
-    hipMemset2DAsyncMultiThreadAndKernel.cc
     hipHostMallocTests.cc
-    hipMallocConcurrency.cc
     hipMemset3DFunctional.cc
     hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
-    hipMallocManaged.cc
 )
 endif()
-# Create shared lib of all tests
-add_library(MemoryTest SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
 
-# Add dependency on build_tests to build it on this custom target
-add_dependencies(build_tests MemoryTest)
+#skipped in windows -duplicate HipTest::vectorADD sym (compiler issue)
+if(UNIX)
+    set(TEST_SRC ${TEST_SRC}
+                 hipMemcpyPeer.cc
+                 hipMemcpyPeerAsync.cc
+                 hipMemcpyWithStream.cc
+                 hipMemcpyWithStreamMultiThread.cc
+                 hipMemsetAsyncAndKernel.cc
+                 hipMemset2DAsyncMultiThreadAndKernel.cc
+                 hipMallocManaged.cc
+                 hipMallocConcurrency.cc
+                 hipMemcpyDtoD.cc
+                 hipMemcpyDtoDAsync.cc
+                 hipMemoryAllocateCoherent.cc
+                 hipHostMalloc.cc
+                 hipMemcpy.cc
+                 hipMemcpyAsync.cc)
+endif()
+
+hip_add_exe_to_target(NAME MemoryTest
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests)

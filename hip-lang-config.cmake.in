@@ -87,12 +87,22 @@ endif()
 find_path(HSA_HEADER hsa/hsa.h
   PATHS
     "${_IMPORT_PREFIX}/../include"
+    "${ROCM_PATH}/include"
     /opt/rocm/include
 )
 
 if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
+
+file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${CMAKE_HIP_COMPILER}/../lib/clang/*/lib/*")
+find_library(CLANGRT_BUILTINS
+    NAMES
+      clang_rt.builtins
+      clang_rt.builtins-x86_64
+    PATHS
+      ${HIP_CLANGRT_LIB_SEARCH_PATHS}
+      ${HIP_CLANG_INCLUDE_PATH}/../lib/linux)
 
 set_target_properties(hip-lang::device PROPERTIES
   INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;${HIP_CLANG_INCLUDE_PATH}>"
@@ -123,9 +133,13 @@ set_property(TARGET hip-lang::device APPEND PROPERTY
 )
 
 # Add support for __fp16 and _Float16, explicitly link with compiler-rt
-set_property(TARGET hip-lang::device APPEND PROPERTY
-  INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:HIP>:${HIP_CLANG_INCLUDE_PATH}/lib/linux/libclang_rt.builtins-x86_64.a>"
-)
+if(CLANGRT_BUILTINS-NOTFOUND)
+    message(FATAL_ERROR "clangrt builtins lib not found")
+else()
+  set_property(TARGET hip-lang::device APPEND PROPERTY
+    INTERFACE_LINK_LIBRARIES "$<$<LINK_LANGUAGE:HIP>:${CLANGRT_BUILTINS}>"
+  )
+endif()
 
 # Approved by CMake to use this name. This is used so that HIP can
 # change the name of the target and not require any modifications in CMake

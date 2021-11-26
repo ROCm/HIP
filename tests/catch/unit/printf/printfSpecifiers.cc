@@ -89,7 +89,7 @@ x
 )here");
 #endif
 
-  hip::SpawnProc proc("unit/printfExe/printfSepcifiers", true);
+  hip::SpawnProc proc("printfExe/printfSepcifiers", true);
   REQUIRE(0 == proc.run());
   REQUIRE(proc.getOutput() == reference);
 }
