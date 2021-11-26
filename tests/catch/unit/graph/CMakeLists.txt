@@ -20,6 +20,7 @@
 
 # Common Tests - Test independent of all platforms
 set(TEST_SRC
+  hipGraphAddEmptyNode.cc
   hipGraphAddDependencies.cc
   hipGraph.cc
   hipSimpleGraphWithKernel.cc
