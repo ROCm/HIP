@@ -19,9 +19,9 @@ $ export HIP_PATH=[MYHIP]
 ```
 $ cd ~/hip/samples/0_Intro/square
 $ make
-/home/user/hip/bin/hipify-perl square.cu > square.cpp
-/home/user/hip/bin/hipcc  square.cpp -o square.out
-/home/user/hip/bin/hipcc -use-staticlib  square.cpp -o square.out.static
+/opt/rocm/hip/bin/hipify-perl square.cu > square.cpp
+/opt/rocm/hip/bin/hipcc  square.cpp -o square.out
+/opt/rocm/hip/bin/hipcc -use-staticlib  square.cpp -o square.out.static
 ```
 - Execute file
 ```
