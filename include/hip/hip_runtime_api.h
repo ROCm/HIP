@@ -1977,15 +1977,48 @@ hipError_t hipEventQuery(hipEvent_t event);
 /**
  *  @brief Return attributes for the specified pointer
  *
- *  @param[out] attributes for the specified pointer
- *  @param[in]  pointer to get attributes for
+ *  @param [out]  attributes  attributes for the specified pointer
+ *  @param [in]   ptr         pointer to get attributes for
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
- *  @see hipGetDeviceCount, hipGetDevice, hipSetDevice, hipChooseDevice
+ *  @see hipPointerGetAttribute
  */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr);
-
+/**
+ *  @brief Returns information about the specified pointer.[BETA]
+ *
+ *  @param [in, out] data     returned pointer attribute value
+ *  @param [in]      atribute attribute to query for
+ *  @param [in]      ptr      pointer to get attributes for
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @beta This API is marked as beta, meaning, while this is feature complete,
+ *  it is still open to changes and may have outstanding issues.
+ *
+ *  @see hipPointerGetAttributes
+ */
+hipError_t hipPointerGetAttribute(void* data, hipPointer_attribute attribute,
+                                  hipDeviceptr_t ptr);
+/**
+ *  @brief Returns information about the specified pointer.[BETA]
+ *
+ *  @param [in]  numAttributes   number of attributes to query for
+ *  @param [in]  attributes      attributes to query for
+ *  @param [in, out] data        a two-dimensional containing pointers to memory locations
+ *                               where the result of each attribute query will be written to
+ *  @param [in]  ptr             pointer to get attributes for
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @beta This API is marked as beta, meaning, while this is feature complete,
+ *  it is still open to changes and may have outstanding issues.
+ *
+ *  @see hipPointerGetAttribute
+ */
+hipError_t hipDrvPointerGetAttributes(unsigned int numAttributes, hipPointer_attribute* attributes,
+                                      void** data, hipDeviceptr_t ptr);
 /**
  *  @brief Imports an external semaphore.
  *
