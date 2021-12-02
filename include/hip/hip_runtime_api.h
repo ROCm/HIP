@@ -442,7 +442,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIsLargeBar,                               ///< Whether it is LargeBar
     hipDeviceAttributeAsicRevision,                             ///< Revision of the GPU in this device
     hipDeviceAttributeCanUseStreamWaitValue,                    ///< '1' if Device supports hipStreamWaitValue32() and
-                                                                ///< hipStreamWaitValue64() , '0' otherwise.
+                                                                ///< hipStreamWaitValue64(), '0' otherwise.
+    hipDeviceAttributeImageSupport,                             ///< '1' if Device supports image, '0' otherwise.
 
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,

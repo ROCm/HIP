@@ -36,6 +36,13 @@ using namespace std;
 bool runTest(void);
 
 int main(int argc, char** argv) {
+    int imageSupport = 0;
+    hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                              p_gpuDevice);
+    if (!imageSupport) {
+      printf("Texture is not support on the device\n");
+      passed();
+    }
     bool testResult=runTest();
 
     if (testResult) {
