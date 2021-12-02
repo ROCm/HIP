@@ -209,7 +209,9 @@ int main(int argc, char **argv) {
   } else if (p_tests == 2) {
     TestPassed = AtoH_obj.hipMemcpyAtoH_ByteCountZero();
   } else if (p_tests == 3) {
+#ifndef _WIN64
     TestPassed = AtoH_obj.hipMemcpyAtoH_PeerDeviceContext();
+#endif
   } else if (p_tests == 4) {
     TestPassed = AtoH_obj.hipMemcpyAtoH_NegativeTests();
   } else if (p_tests == 5) {
