@@ -42,8 +42,12 @@ int main() {
   HIPCHECK(hipGetDeviceCount(&count))
 
   if (count >= 2){
+#ifdef _WIN64
+    std::cout<<"XGMI p2p attribute test no supported on windows"<<std::endl;
+#else
     for (int dev_idx = 0; dev_idx < (count-1); ++dev_idx) {
       runTest(dev_idx, 1 + dev_idx);
+#endif
     }
   } else {
     std::cout<<"Not enough GPUs to run the single GPU tests"<<std::endl;

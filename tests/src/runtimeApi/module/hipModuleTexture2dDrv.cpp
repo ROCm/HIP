@@ -592,6 +592,13 @@ bool testTexSingleStreamMultGPU(unsigned int numOfGPUs,
 
 int main(int argc, char** argv) {
   HipTest::parseStandardArguments(argc, argv, true);
+  int imageSupport = 0;
+  hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                            p_gpuDevice);
+  if (!imageSupport) {
+    printf("Texture is not support on the device\n");
+    passed();
+  }
   bool TestPassed = true;
   if (p_tests == 0x01) {
     TestPassed = testTexType<float>(HIP_AD_FORMAT_FLOAT,
