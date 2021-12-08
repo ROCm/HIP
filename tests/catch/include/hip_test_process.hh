@@ -29,16 +29,7 @@ THE SOFTWARE.
 #include <random>
 #include <fstream>
 #include <streambuf>
-
-#if __has_include(<filesystem>)
-#include <filesystem>
-namespace fs = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#error "gg filesystem"
-#endif
+#include "hip_test_filesystem.hh"
 
 namespace hip {
 class SpawnProc {

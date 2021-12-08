@@ -49,12 +49,12 @@ void texture2Dtest()
     for(size_t i=1; i <= (SIZE_H*SIZE_W); i++){
         A[i-1] = i;
     }
-    
+
     size_t devPitchA;
     HIPCHECK(hipMallocPitch((void**)&devPtrA, &devPitchA ,SIZE_W*sizeof(TYPE_t), SIZE_H)) ;
     HIPCHECK(hipMemcpy2D(devPtrA, devPitchA, A, SIZE_W*sizeof(TYPE_t),
             SIZE_W*sizeof(TYPE_t), SIZE_H, hipMemcpyHostToDevice));
-    
+
     // Use the texture object
     hipResourceDesc texRes;
     memset(&texRes, 0, sizeof(texRes));
