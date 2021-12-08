@@ -159,6 +159,7 @@ if ($HIP_PLATFORM eq "amd") {
 
     # Figure out the target with which llvm is configured
     $HIP_CLANG_TARGET = `$HIPCC -print-target-triple`;
+    $HIP_CLANG_TARGET = chomp($HIP_CLANG_TARGET);
 
     if (! defined $HIP_CLANG_INCLUDE_PATH) {
         $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
