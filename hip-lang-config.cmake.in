@@ -68,17 +68,30 @@ include( "${CMAKE_CURRENT_LIST_DIR}/hip-lang-targets.cmake" )
 #get_filename_component cannot resolve the symlinks if called from /opt/rocm/lib/hip
 #and do three level up again
 get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
+# root directory of the hip library installation
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
+# extract HIP_CLANG_ROOT from CMAKE_HIP_COMPILER
+find_program(CMAKE_HIP_COMPILER_WITH_PATH ${CMAKE_HIP_COMPILER})
+cmake_path(GET CMAKE_HIP_COMPILER_WITH_PATH PARENT_PATH HIP_CLANG_BIN)
+cmake_path(GET HIP_CLANG_BIN PARENT_PATH HIP_CLANG_ROOT)
 
-#need _IMPORT_PREFIX to be set
-file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${_IMPORT_PREFIX}/../llvm/lib/clang/*/include")
+#need HIP_CLANG_ROOT to be set
+file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${HIP_CLANG_ROOT}/lib/clang/*/include")
 find_path(HIP_CLANG_INCLUDE_PATH __clang_cuda_math.h
     HINTS ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
     NO_DEFAULT_PATH)
-get_filename_component(HIP_CLANG_INCLUDE_PATH "${HIP_CLANG_INCLUDE_PATH}" DIRECTORY)
 
-#If HIP isnot installed under ROCm, need this to find HSA assuming HSA is under ROCm
+file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${HIP_CLANG_ROOT}/lib/clang/*/lib/*")
+find_library(CLANGRT_BUILTINS
+    NAMES
+      clang_rt.builtins
+      clang_rt.builtins-x86_64
+    PATHS
+      ${HIP_CLANGRT_LIB_SEARCH_PATHS}
+      ${HIP_CLANG_INCLUDE_PATH}/../lib/linux)
+
+#If HIP is not installed under ROCm, need this to find HSA assuming HSA is under ROCm
 if( DEFINED ENV{ROCM_PATH} )
   set(ROCM_PATH "$ENV{ROCM_PATH}")
 endif()
@@ -86,6 +99,7 @@ endif()
 #if HSA is not under ROCm then provide CMAKE_PREFIX_PATH=<HSA_PATH>
 find_path(HSA_HEADER hsa/hsa.h
   PATHS
+    "${CMAKE_HIP_COMPILER_ROCM_ROOT}/include"
     "${_IMPORT_PREFIX}/../include"
     "${ROCM_PATH}/include"
     /opt/rocm/include
@@ -95,27 +109,14 @@ if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
-file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${CMAKE_HIP_COMPILER}/../lib/clang/*/lib/*")
-find_library(CLANGRT_BUILTINS
-    NAMES
-      clang_rt.builtins
-      clang_rt.builtins-x86_64
-    PATHS
-      ${HIP_CLANGRT_LIB_SEARCH_PATHS}
-      ${HIP_CLANG_INCLUDE_PATH}/../lib/linux)
-
-set_target_properties(hip-lang::device PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;${HIP_CLANG_INCLUDE_PATH}>"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;${HIP_CLANG_INCLUDE_PATH}>"
-)
-
 set_target_properties(hip-lang::amdhip64 PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "$<$<COMPILE_LANGUAGE:HIP>:__HIP_ROCclr__=1>"
   INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HSA_HEADER}>"
   INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HSA_HEADER}>"
 )
+
 set_target_properties(hip-lang::device PROPERTIES
-  INTERFACE_COMPILE_DEFINITIONS "$<$<COMPILE_LANGUAGE:HIP>:__HIP_ROCclr__=1>"
+  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${HIP_CLANG_INCLUDE_PATH}>"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${HIP_CLANG_INCLUDE_PATH}>"
 )
 
 set_property(TARGET hip-lang::device APPEND PROPERTY
