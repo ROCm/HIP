@@ -57,7 +57,7 @@ def hipBuildTest(String backendLabel) {
                     set -x
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
-                        LLVM_PATH=/opt/rocm/llvm make test
+                        LLVM_PATH=/opt/rocm/llvm ctest -E 'saxpy.tst|hiprtcGetLoweredName.tst'
                     else
                         make test
                     fi
@@ -97,7 +97,7 @@ def hipBuildTest(String backendLabel) {
                     set -x
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
-                        LLVM_PATH=/opt/rocm/llvm make test
+                        LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hiprtc_saxpy'
                     else
                         make test
                     fi
