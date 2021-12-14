@@ -25,6 +25,7 @@ set(TEST_SRC
   hipGraph.cc
   hipSimpleGraphWithKernel.cc
   hipGraphAddMemcpyNode.cc
+  hipGraphInstantiateWithFlags.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest
