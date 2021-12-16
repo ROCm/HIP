@@ -27,8 +27,6 @@ set(TEST_SRC
   hipGraphAddMemcpyNode.cc
 )
 
-# Create shared lib of all tests
-add_library(GraphsTest SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
-
-# Add dependency on build_tests to build it on this custom target
-add_dependencies(build_tests GraphsTest)
+hip_add_exe_to_target(NAME GraphsTest
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests)
