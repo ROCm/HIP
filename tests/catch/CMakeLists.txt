@@ -74,6 +74,8 @@ include_directories(
     ${JSON_PARSER}
 )
 
+file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
+
 if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
     add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
