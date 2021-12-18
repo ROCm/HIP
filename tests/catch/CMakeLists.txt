@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.16.8)
-project(hiptests)
 
 # Check if platform and compiler are set
 if(HIP_PLATFORM STREQUAL "amd")
@@ -34,11 +33,10 @@ else()
     cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
 endif()
 
-
 if(NOT UNIX)
     # In linux this reruns the cmake and fails with incorrect vars.
     # so the project command is used only for windows
-    project(build_tests)
+    project(hiptests)
 endif()
 
 if(NOT DEFINED CATCH2_PATH)
@@ -75,6 +73,8 @@ include_directories(
     ${HIP_PATH}/include
     ${JSON_PARSER}
 )
+
+file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
 
 if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
     add_compile_options(-Wall -Wextra -pedantic -Werror)
