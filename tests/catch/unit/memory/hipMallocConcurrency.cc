@@ -285,8 +285,8 @@ static bool regressAllocInLoopMthread(int gpu) {
  * Thread func to regress alloc and check data consistency
  */
 static void threadFunc(int gpu) {
-  g_thTestPassed = regressAllocInLoopMthread(gpu);
-  g_thTestPassed = g_thTestPassed & validateMemoryOnGpuMThread(gpu);
+  g_thTestPassed = regressAllocInLoopMthread(gpu)
+                          && validateMemoryOnGpuMThread(gpu);
 
   UNSCOPED_INFO("thread execution status on gpu" << gpu << ":" <<
                                          g_thTestPassed.load());
