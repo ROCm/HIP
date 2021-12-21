@@ -68,15 +68,22 @@ class TestContext {
   std::string exe_path;
   std::string current_test;
   std::set<std::string> skip_test;
+  std::string json_file_;
+  std::vector<std::string>  platform_list_ = {"amd" , "nvidia"};
+  std::vector<std::string>  os_list_ = {"windows", "linux", "all"};
+  std::vector<std::string>  amd_arch_list_ = {};
 
   Config config_;
-
+  std::string& getJsonFile();
+  std::string substringFound( std::vector<std::string> list,
+                              std::string filename);
   void detectOS();
   void detectPlatform();
   void fillConfig();
   void setExePath(int, char**);
   void parseOptions(int, char**);
   bool parseJsonFile();
+  std::string getMatchingConfigFile(std::string config_dir);
   const Config& getConfig() const { return config_; }
 
   TestContext(int argc, char** argv);
