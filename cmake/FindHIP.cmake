@@ -50,8 +50,8 @@ mark_as_advanced(HIP_HOST_COMPILATION_CPP)
 
 get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_DIR}/../" REALPATH)
 
-# HIP is supported on Linux only
-if(UNIX AND NOT APPLE AND NOT CYGWIN)
+# HIP is currently not supported for apple
+if(NOT APPLE)
     # Search for HIP installation
     if(NOT HIP_ROOT_DIR)
         # Search in user specified path first
@@ -94,7 +94,6 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         # Now search in default paths
         find_program(HIP_HIPCC_EXECUTABLE hipcc)
     endif()
-    mark_as_advanced(HIP_HIPCC_EXECUTABLE)
 
     # Find HIPCONFIG executable
     find_program(
@@ -113,7 +112,12 @@ if(UNIX AND NOT APPLE AND NOT CYGWIN)
         # Now search in default paths
         find_program(HIP_HIPCONFIG_EXECUTABLE hipconfig)
     endif()
+    if(NOT UNIX)
+        set(HIP_HIPCONFIG_EXECUTABLE "${HIP_HIPCONFIG_EXECUTABLE}.bat")
+        set(HIP_HIPCC_EXECUTABLE "${HIP_HIPCC_EXECUTABLE}.bat")
+    endif()
     mark_as_advanced(HIP_HIPCONFIG_EXECUTABLE)
+    mark_as_advanced(HIP_HIPCC_EXECUTABLE)
 
     # Find HIPCC_CMAKE_LINKER_HELPER executable
     find_program(
