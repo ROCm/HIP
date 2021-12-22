@@ -89,4 +89,11 @@ template <typename T> __global__ void vector_square(const T* A_d, T* C_d, size_t
   }
 }
 
+template <typename T> __global__ void vector_cubic(const T* A_d, T* C_d, size_t N_ELMTS) {
+  size_t gputhread = (blockIdx.x * blockDim.x + threadIdx.x);
+  size_t stride = blockDim.x * gridDim.x;
+  for (size_t i = gputhread; i < N_ELMTS; i += stride) {
+    C_d[i] = A_d[i] * A_d[i] * A_d[i];
+  }
+}
 }  // namespace HipTest
