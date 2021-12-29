@@ -67,7 +67,7 @@ See the [Installation](INSTALL.md) notes.
 ## Simple Example
 The HIP API includes functions such as hipMalloc, hipMemcpy, and hipFree.
 Programmers familiar with CUDA will also be able to quickly learn and start coding with the HIP API.
-Compute kernels are launched with the "hipLaunchKernel" macro call.    Here is simple example showing a
+Compute kernels are launched with the "hipLaunchKernelGGL" macro call.    Here is simple example showing a
 snippet of HIP API code:
 
 ```cpp
@@ -78,7 +78,7 @@ hipMemcpy(A_d, A_h, Nbytes, hipMemcpyHostToDevice);
 
 const unsigned blocks = 512;
 const unsigned threadsPerBlock = 256;
-hipLaunchKernel(vector_square,   /* compute kernel*/
+hipLaunchKernelGGL(vector_square,   /* compute kernel*/
                 dim3(blocks), dim3(threadsPerBlock), 0/*dynamic shared*/, 0/*stream*/,     /* launch config*/
                 C_d, A_d, N);  /* arguments to the compute kernel */
 
@@ -142,7 +142,7 @@ The README with the procedures and tips the team used during this porting effort
 ## Tour of the HIP Directories
 * **include**:
     * **hip_runtime_api.h** : Defines HIP runtime APIs and can be compiled with many standard Linux compilers (GCC, ICC, CLANG, etc), in either C or C++ mode.
-    * **hip_runtime.h** : Includes everything in hip_runtime_api.h PLUS hipLaunchKernel and syntax for writing device kernels and device functions.  hip_runtime.h can be compiled using a standard C++ compiler but will expose a subset of the available functions.
+    * **hip_runtime.h** : Includes everything in hip_runtime_api.h PLUS hipLaunchKernelGGL and syntax for writing device kernels and device functions.  hip_runtime.h can be compiled using a standard C++ compiler but will expose a subset of the available functions.
     * **amd_detail/**** , **nvidia_detail/**** : Implementation details for specific platforms. HIP applications should not include these files directly.
 
 * **bin**: Tools and scripts to help with hip porting
