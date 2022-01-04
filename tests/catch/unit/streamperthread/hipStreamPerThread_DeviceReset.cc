@@ -28,7 +28,7 @@ THE SOFTWARE.
  Watch out: hipDeviceRest should be successfull without any crash
  */
 static void Copy_to_device() {
-  constexpr unsigned int ele_size = (32 * 1024);  // 32KB
+  unsigned int ele_size = (32 * 1024);  // 32KB
   int* A_h = nullptr;
   int* A_d = nullptr;
 
@@ -38,7 +38,7 @@ static void Copy_to_device() {
   status = hipMalloc(&A_d, ele_size * sizeof(int));
   if (status != hipSuccess) return;
 
-  for(int i = 0; i < ele_size; ++i) {
+  for(unsigned int i = 0; i < ele_size; ++i) {
     A_h[i] = 123;
   }
   hipMemcpyAsync(A_d, A_h, ele_size * sizeof(int), hipMemcpyHostToDevice,
@@ -50,7 +50,7 @@ TEST_CASE("Unit_hipStreamPerThread_DeviceReset_1") {
   std::vector<std::thread> threads(MAX_THREAD_CNT);
 
   for (auto &th : threads) {
-    th = std::move(std::thread(Copy_to_device));
+    th = std::thread(Copy_to_device);
     th.detach();
   }
   HIP_CHECK(hipDeviceReset());
@@ -65,7 +65,7 @@ TEST_CASE("Unit_hipStreamPerThread_DeviceReset_1") {
             it should available to use.
  */
 TEST_CASE("Unit_hipStreamPerThread_DeviceReset_2") {
-  constexpr unsigned int ele_size = (32 * 1024);  // 32KB
+  unsigned int ele_size = (32 * 1024);  // 32KB
   int* A_h = nullptr;
   int* A_d = nullptr;
 
@@ -74,7 +74,7 @@ TEST_CASE("Unit_hipStreamPerThread_DeviceReset_2") {
   status = hipMalloc(&A_d, ele_size * sizeof(int));
   if (status != hipSuccess) return;
 
-  for (int i = 0; i < ele_size; ++i) {
+  for (unsigned int i = 0; i < ele_size; ++i) {
     A_h[i] = 123;
   }
   hipMemcpyAsync(A_d, A_h, ele_size * sizeof(int), hipMemcpyHostToDevice,

@@ -22,14 +22,14 @@ THE SOFTWARE.
 #include <thread>
 
 static void Copy_to_device() {
-  constexpr unsigned int ele_size = (32 * 1024);  // 32KB
+  unsigned int ele_size = (32 * 1024);  // 32KB
   int* A_h = nullptr;
   int* A_d = nullptr;
 
-  hipError_t status =  hipHostMalloc(&A_h, ele_size*sizeof(int));
+  hipHostMalloc(&A_h, ele_size*sizeof(int));
   hipMalloc(&A_d, ele_size * sizeof(int));
 
-  for (int i = 0; i < ele_size; ++i) {
+  for (unsigned int i = 0; i < ele_size; ++i) {
     A_h[i] = 123;
   }
   hipMemcpyAsync(A_d, A_h, ele_size * sizeof(int), hipMemcpyHostToDevice,
@@ -46,7 +46,7 @@ TEST_CASE("Unit_hipStreamPerThread_MultiThread") {
   std::vector<std::thread> threads(MAX_THREAD_CNT);
 
   for (auto &th : threads) {
-    th = std::move(std::thread(Copy_to_device));
+    th = std::thread(Copy_to_device);
   }
 
   for (auto& th : threads) {

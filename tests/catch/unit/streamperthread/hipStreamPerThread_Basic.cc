@@ -65,7 +65,7 @@ TEST_CASE("Unit_hipStreamPerThread_StreamQuery") {
   std::vector<std::thread> threads(MAX_THREAD_CNT);
 
   for (auto &th : threads) {
-    th = std::move(std::thread([](){HIP_CHECK(hipStreamQuery(hipStreamPerThread));}));
+    th = std::thread([](){HIP_CHECK(hipStreamQuery(hipStreamPerThread));});
   }
 
   for (auto& th : threads) {
@@ -79,7 +79,7 @@ TEST_CASE("Unit_hipStreamPerThread_StreamSynchronize") {
   std::vector<std::thread> threads(MAX_THREAD_CNT);
 
   for (auto &th : threads) {
-    th = std::move(std::thread([](){HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));}));
+    th = std::thread([](){HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));});
   }
 
   for (auto& th : threads) {
@@ -104,21 +104,21 @@ TEST_CASE("Unit_hipStreamPerThread_StreamDestroy") {
 }
 
 TEST_CASE("Unit_hipStreamPerThread_MemcpyAsync") {
-  constexpr unsigned int ele_size = (16 * 1024);  // 16KB
+  unsigned int ele_size = (16 * 1024);  // 16KB
   int* A_h = nullptr;
   int* A_d = nullptr;
 
   HIP_CHECK(hipHostMalloc(&A_h, ele_size*sizeof(int)));
   HIP_CHECK(hipMalloc(&A_d, ele_size * sizeof(int)));
 
-  for (int i = 0; i < ele_size; ++i) {
+  for (unsigned int i = 0; i < ele_size; ++i) {
     A_h[i] = 123;
   }
 
   HIP_CHECK(hipMemcpy(A_d, A_h, ele_size * sizeof(int), hipMemcpyHostToDevice));
 
   // Rest host memory
-  for (int i = 0; i < ele_size; ++i) {
+  for (unsigned int i = 0; i < ele_size; ++i) {
     A_h[i] = 0;
   }
 
@@ -127,7 +127,7 @@ TEST_CASE("Unit_hipStreamPerThread_MemcpyAsync") {
   HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
 
   // Verify result
-  for (int i = 0; i < ele_size; ++i) {
+  for (unsigned int i = 0; i < ele_size; ++i) {
     REQUIRE(A_h[i] == 123);
   }
 }
