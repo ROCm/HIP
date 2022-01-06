@@ -6,10 +6,15 @@
   * [Prerequisites](#prerequisites)
   * [AMD Platform](#amd-platform)
   * [NVIDIA Platform](#nvidia-platform)
-- [Building HIP from source](#building-hip-from-source)
-  * [Build ROCclr](#build-rocclr)
+- [Building HIP from source on AMD platform](#building-hip-from-source-on-amd-platform)
+  * [Get HIP source code](#get-hip-source-code)
+  * [Set the environment variables](#set-the-environment-variables)
   * [Build HIP](#build-hip)
   * [Default paths and environment variables](#default-paths-and-environment-variables)
+- [Building HIP from source on NVIDIA platform](#building-hip-from-source-on-NVIDIA-platform)
+  * [Get HIP source code](#get-hip-source-code)
+  * [Set the environment variables](#set-the-environment-variables)
+  * [Build HIP](#build-hip)
 - [Verify your installation](#verify-your-installation)
 <!-- tocstop -->
 
@@ -57,17 +62,27 @@ sudo make install
 
 HIP-nvcc is the compiler for HIP program compilation on NVIDIA platform.
 
-* Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
-* Install the "hip-runtime-nvidia" and "hip-devel" package.  This will install CUDA SDK and the HIP porting layer.
+* Install Nvidia Driver
 ```
-apt-get install hip-runtime-nvidia hip-devel
+sudo apt-get install ubuntu-drivers-common && sudo ubuntu-drivers autoinstall
+sudo reboot
+```
+Or download the latest cuda-toolkit at https://developer.nvidia.com/cuda-downloads
+The driver will be installed automatically.
+
+* Add the ROCm package server to your system as per the OS-specific guide available [here](https://rocm.github.io/ROCmInstall.html#installing-from-amd-rocm-repositories).
+* Install the "hip-runtime-nvidia" and "hip-dev" package.  This will install CUDA SDK and the HIP porting layer.
+```
+apt-get install hip-runtime-nvidia hip-dev
 ```
 * Default paths and environment variables:
    * By default HIP looks for CUDA SDK in /usr/local/cuda (can be overriden by setting CUDA_PATH env variable).
    * By default HIP is installed into <ROCM_PATH>/hip (can be overridden by setting HIP_PATH environment variable).
    * Optionally, consider adding <ROCM_PATH>/bin to your path to make it easier to use the tools.
 
-# Building HIP from source
+
+# Building HIP from source on AMD platform
+
 
 ## Get HIP source code
 
@@ -117,12 +132,45 @@ By default, release version of AMDHIP is built.
 
 After installation, make sure HIP_PATH is pointed to /where/to/install/hip
 
+
+# Building HIP from source on NVIDIA platform
+
+
+## Get HIP source code
+
+```
+git clone -b develop https://github.com/ROCm-Developer-Tools/hip.git
+git clone -b develop https://github.com/ROCm-Developer-Tools/hipamd.git
+```
+
+## Set the environment variables
+
+```
+export HIP_DIR="$(readlink -f hip)"
+export HIPAMD_DIR="$(readlink -f hipamd)"
+```
+
+## Build HIP
+
+```
+cd "$HIPAMD_DIR"
+mkdir -p build; cd build
+cmake -DHIP_COMMON_DIR=$HIP_DIR -DHIP_PLATFORM=nvidia -DCMAKE_INSTALL_PREFIX=$PWD/install ..
+make -j$(nproc)
+sudo make install
+```
+
 # Verify your installation
 
 Run hipconfig (instructions below assume default installation path) :
 ```shell
 <ROCM_PATH>/bin/hipconfig --full
 ```
+or
 
-Compile and run the [square sample](https://github.com/ROCm-Developer-Tools/HIP/tree/main/samples/0_Intro/square).
+```shell
+$PWD/install/bin/hipconfig --full
+```
+
+Compile and run the [square sample](https://github.com/ROCm-Developer-Tools/HIP/tree/rocm-4.5.x/samples/0_Intro/square).
 
