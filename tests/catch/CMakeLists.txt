@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 3.16.8)
+project(hiptests)
 
 # Check if platform and compiler are set
 if(HIP_PLATFORM STREQUAL "amd")
@@ -31,12 +32,6 @@ else()
     # Set both compilers else windows cmake complains of mismatch
     cmake_path(SET CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc.bat")
     cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
-endif()
-
-if(NOT UNIX)
-    # In linux this reruns the cmake and fails with incorrect vars.
-    # so the project command is used only for windows
-    project(hiptests)
 endif()
 
 if(NOT DEFINED CATCH2_PATH)
