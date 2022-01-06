@@ -91,6 +91,31 @@ static void TstCoherency(int *Ptr, bool HmmMem) {
   }
 }
 
+static int HmmAttrPrint() {
+  int managed = 0;
+  INFO("The following are the attribute values related to HMM for"
+         " device 0:\n");
+  HIP_CHECK(hipDeviceGetAttribute(&managed,
+              hipDeviceAttributeDirectManagedMemAccessFromHost, 0));
+  INFO("hipDeviceAttributeDirectManagedMemAccessFromHost: " << managed);
+  HIP_CHECK(hipDeviceGetAttribute(&managed,
+                                 hipDeviceAttributeConcurrentManagedAccess, 0));
+  INFO("hipDeviceAttributeConcurrentManagedAccess: " << managed);
+  HIP_CHECK(hipDeviceGetAttribute(&managed,
+                                 hipDeviceAttributePageableMemoryAccess, 0));
+  INFO("hipDeviceAttributePageableMemoryAccess: " << managed);
+  HIP_CHECK(hipDeviceGetAttribute(&managed,
+              hipDeviceAttributePageableMemoryAccessUsesHostPageTables, 0));
+  INFO("hipDeviceAttributePageableMemoryAccessUsesHostPageTables:"
+         << managed);
+
+  HIP_CHECK(hipDeviceGetAttribute(&managed, hipDeviceAttributeManagedMemory,
+                                  0));
+  INFO("hipDeviceAttributeManagedMemory: " << managed);
+  return managed;
+}
+
+
 /* Test case description: The following test validates if fine grain
    behavior is observed or not with memory allocated using hipHostMalloc()*/
 // The following tests are disabled for Nvidia as they are not consistently
@@ -127,16 +152,23 @@ TEST_CASE("Unit_hipMallocManaged_CoherentTst") {
   int *Ptr = nullptr, SIZE = sizeof(int);
   bool HmmMem = true;
   YES_COHERENT = false;
-  // Allocating hipMallocManaged() memory
-  SECTION("hipMallocManaged with hipMemAttachGlobal flag") {
-    HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachGlobal));
+
+  int managed =  HmmAttrPrint();
+  if (managed == 1) {
+    // Allocating hipMallocManaged() memory
+    SECTION("hipMallocManaged with hipMemAttachGlobal flag") {
+      HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachGlobal));
+    }
+    SECTION("hipMallocManaged with hipMemAttachHost flag") {
+      HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachHost));
+    }
+    TstCoherency(Ptr, HmmMem);
+    HIP_CHECK(hipFree(Ptr));
+    REQUIRE(YES_COHERENT);
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
+           "attribute. Hence skipping the testing with Pass result.\n");
   }
-  SECTION("hipMallocManaged with hipMemAttachHost flag") {
-    HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachHost));
-  }
-  TstCoherency(Ptr, HmmMem);
-  HIP_CHECK(hipFree(Ptr));
-  REQUIRE(YES_COHERENT);
 }
 #endif
 
@@ -197,37 +229,44 @@ TEST_CASE("Unit_hipExtMallocWithFlags_CoherentTst") {
   int *Ptr = nullptr, SIZE = sizeof(int), InitVal = 9;
   bool FineGrain = true;
   YES_COHERENT = false;
-  // Allocating hipExtMallocWithFlags() memory with flags
-  SECTION("hipExtMallocWithFlags with hipDeviceMallocFinegrained flag") {
-    HIP_CHECK(hipExtMallocWithFlags(reinterpret_cast<void**>(&Ptr), SIZE*2,
-                                    hipDeviceMallocFinegrained));
-  }
-  SECTION("hipExtMallocWithFlags with hipDeviceMallocSignalMemory flag") {
-    // for hipMallocSignalMemory flag the size of memory must be 8
-    HIP_CHECK(hipExtMallocWithFlags(reinterpret_cast<void**>(&Ptr), SIZE*2,
-                                    hipMallocSignalMemory));
-  }
-  SECTION("hipExtMallocWithFlags with hipDeviceMallocDefault flag") {
-    /* hipExtMallocWithFlags() with flag
-    hipDeviceMallocDefault allocates CoarseGrain memory */
-    FineGrain = false;
-    HIP_CHECK(hipExtMallocWithFlags(reinterpret_cast<void**>(&Ptr), SIZE*2,
-                                    hipDeviceMallocDefault));
-  }
-  if (FineGrain) {
-    TstCoherency(Ptr, FineGrain);
-  } else {
-    *Ptr = InitVal;
-    hipStream_t strm;
-    HIP_CHECK(hipStreamCreate(&strm));
-    SquareKrnl<<<1, 1, 0, strm>>>(Ptr);
-    HIP_CHECK(hipStreamSynchronize(strm));
-    if (*Ptr == (InitVal * InitVal)) {
-      YES_COHERENT = true;
+
+  int managed =  HmmAttrPrint();
+  if (managed == 1) {
+    // Allocating hipExtMallocWithFlags() memory with flags
+    SECTION("hipExtMallocWithFlags with hipDeviceMallocFinegrained flag") {
+      HIP_CHECK(hipExtMallocWithFlags(reinterpret_cast<void**>(&Ptr), SIZE*2,
+                                      hipDeviceMallocFinegrained));
     }
+    SECTION("hipExtMallocWithFlags with hipDeviceMallocSignalMemory flag") {
+      // for hipMallocSignalMemory flag the size of memory must be 8
+      HIP_CHECK(hipExtMallocWithFlags(reinterpret_cast<void**>(&Ptr), SIZE*2,
+                                      hipMallocSignalMemory));
+    }
+    SECTION("hipExtMallocWithFlags with hipDeviceMallocDefault flag") {
+      /* hipExtMallocWithFlags() with flag
+      hipDeviceMallocDefault allocates CoarseGrain memory */
+      FineGrain = false;
+      HIP_CHECK(hipExtMallocWithFlags(reinterpret_cast<void**>(&Ptr), SIZE*2,
+                                      hipDeviceMallocDefault));
+    }
+    if (FineGrain) {
+      TstCoherency(Ptr, FineGrain);
+    } else {
+      *Ptr = InitVal;
+      hipStream_t strm;
+      HIP_CHECK(hipStreamCreate(&strm));
+      SquareKrnl<<<1, 1, 0, strm>>>(Ptr);
+      HIP_CHECK(hipStreamSynchronize(strm));
+      if (*Ptr == (InitVal * InitVal)) {
+        YES_COHERENT = true;
+      }
+    }
+    HIP_CHECK(hipFree(Ptr));
+    REQUIRE(YES_COHERENT);
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
+           "attribute. Hence skipping the testing with Pass result.\n");
   }
-  HIP_CHECK(hipFree(Ptr));
-  REQUIRE(YES_COHERENT);
 }
 #endif
 
