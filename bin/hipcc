@@ -58,11 +58,6 @@ $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 $HIPCC_COMPILE_FLAGS_APPEND=$ENV{'HIPCC_COMPILE_FLAGS_APPEND'};
 $HIPCC_LINK_FLAGS_APPEND=$ENV{'HIPCC_LINK_FLAGS_APPEND'};
 
-# Known HIP target names.
-@knownTargets = ('gfx700', 'gfx701', 'gfx702', 'gfx703', 'gfx704', 'gfx705',
-                 'gfx801', 'gfx802', 'gfx803', 'gfx805', 'gfx810',
-                 'gfx900', 'gfx902', 'gfx904', 'gfx906', 'gfx908', 'gfx909', 'gfx90a',
-                 'gfx1010', 'gfx1011', 'gfx1012', 'gfx1030', 'gfx1031', 'gfx1032');
 # Known Features
 @knownFeatures = ('sramecc-', 'sramecc+', 'xnack-', 'xnack+');
 
@@ -146,17 +141,25 @@ $setStdLib = 0;  # TODO - set to 0
 $default_amdgpu_target = 1;
 
 if ($HIP_PLATFORM eq "amd") {
-    $HIPCC="\"$HIP_CLANG_PATH/clang++\"";
+    $execExtension = "";
+    if($isWindows) {
+        $execExtension = ".exe";
+    } 
+    $HIPCC="$HIP_CLANG_PATH/clang++" . $execExtension;
 
     # If $HIPCC clang++ is not compiled, use clang instead
     if ( ! -e $HIPCC ) {
-        $HIPCC="\"$HIP_CLANG_PATH/clang\"";
+        $HIPCC="$HIP_CLANG_PATH/clang" . $execExtension;
         $HIPLDFLAGS = "--driver-mode=g++";
     }
 
     $HIP_CLANG_VERSION = `$HIPCC --version`;
     $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
+
+    # Figure out the target with which llvm is configured
+    $HIP_CLANG_TARGET = `$HIPCC -print-target-triple`;
+    $HIP_CLANG_TARGET = chomp($HIP_CLANG_TARGET);
 
     if (! defined $HIP_CLANG_INCLUDE_PATH) {
         $HIP_CLANG_INCLUDE_PATH = abs_path("$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/include");
@@ -177,6 +180,7 @@ if ($HIP_PLATFORM eq "amd") {
         print ("HIP_INCLUDE_PATH=$HIP_INCLUDE_PATH\n");
         print ("HIP_LIB_PATH=$HIP_LIB_PATH\n");
         print ("DEVICE_LIB_PATH=$DEVICE_LIB_PATH\n");
+        print ("HIP_CLANG_TARGET=$HIP_CLANG_TARGET\n");
     }
 
     if ($isWindows) {
@@ -633,11 +637,6 @@ if($HIP_PLATFORM eq "amd"){
             if ($HIP_PLATFORM eq 'amd' and $hasHIP) {
                 $HIPCXXFLAGS .= $GPU_ARCH_ARG;
             }
-
-            # If the specified target is not in the list of known target names, emit a warning.
-            if (grep($procName, @knownTargets) eq 0) {
-                print "Warning: The specified HIP target: $val is unknown. Correct compilation is not guaranteed.\n";
-            }
         }
     }
     if ($hsacoVersion > 0) {
@@ -711,7 +710,12 @@ if ($HIP_PLATFORM eq "amd") {
         $toolArgs = " -Wl,--enable-new-dtags -Wl,-rpath=$HIP_LIB_PATH:$ROCM_PATH/lib -lamdhip64 " . ${toolArgs};
       }
       # To support __fp16 and _Float16, explicitly link with compiler-rt
-      $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
+      $HIP_CLANG_BUILTIN_LIB="$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET/libclang_rt.builtins.a";
+      if (-e $HIP_CLANG_BUILTIN_LIB) {
+        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/$HIP_CLANG_TARGET -lclang_rt.builtins "
+      } else {
+        $toolArgs .= " -L$HIP_CLANG_PATH/../lib/clang/$HIP_CLANG_VERSION/lib/linux -lclang_rt.builtins-x86_64 "
+      }
     }
 }
 

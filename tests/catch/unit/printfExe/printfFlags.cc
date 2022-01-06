@@ -38,5 +38,5 @@ __global__ void test_kernel() {
 
 int main() {
   test_kernel<<<1, 1>>>();
-  hipDeviceSynchronize();
+  static_cast<void>(hipDeviceSynchronize());
 }

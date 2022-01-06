@@ -393,13 +393,29 @@ int main(int argc, char* argv[]) {
     printf("This test is skipped due to non linux environment.\n");
 #endif
   } else if (p_tests == 0x3) {
+#ifdef __linux__
     TestPassed = testhipInvalidLinkType();
+#else
+    printf("This test is skipped due to non linux environment.\n");
+#endif
   } else if (p_tests == 0x4) {
+#ifdef __linux__
     TestPassed = testhipInvalidHopcount();
+#else
+    printf("This test is skipped due to non linux environment.\n");
+#endif
   } else if (p_tests == 0x5) {
+#ifdef __linux__
     TestPassed = testhipSameDevice(numDevices);
+#else
+    printf("This test is skipped due to non linux environment.\n");
+#endif
   } else if (p_tests == 0x6) {
+#ifdef __linux__
     TestPassed = testhipLinkTypeHopcountDeviceOrderRev(numDevices);
+#else
+    printf("This test is skipped due to non linux environment.\n");
+#endif
   } else if (p_tests == 0x7) {
     /*TODO:This test is currently ommited from directed test due to existing issues
     in rocm-smi. Once rocm-smi issues are resolved, this test will be enabled. */

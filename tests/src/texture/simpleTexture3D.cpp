@@ -38,10 +38,11 @@ texture<int, hipTextureType3D, hipReadModeElementType> texi;
 texture<char, hipTextureType3D, hipReadModeElementType> texc;
 
 template <typename T>
-__global__ void simpleKernel3DArray(T* outputData, 
+__global__ void simpleKernel3DArray(T* outputData,
                                     int width,
                                     int height,int depth)
 {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     for (int i = 0; i < depth; i++) {
         for (int j = 0; j < height; j++) {
             for (int k = 0; k < width; k++) {
@@ -54,6 +55,7 @@ __global__ void simpleKernel3DArray(T* outputData,
             }
         }
     }
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +116,7 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
 
     // copy result from device to host
     HIPCHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
-    HipTest::checkArray(hData,hOutputData,width,height,depth); 
+    HipTest::checkArray(hData,hOutputData,width,height,depth);
 
     hipFree(dData);
     hipFreeArray(arr);
@@ -127,6 +129,13 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+    int imageSupport = 0;
+    hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                              p_gpuDevice);
+    if (!imageSupport) {
+      printf("Texture is not support on the device\n");
+      passed();
+    }
     printf("%s starting...\n", sampleName);
     for(int i=1;i<25;i++)
     {

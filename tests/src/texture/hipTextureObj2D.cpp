@@ -12,14 +12,23 @@
 
 __global__ void tex2DKernel(float* outputData, hipTextureObject_t textureObject, int width,
                             int height) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     outputData[y * width + x] = tex2D<float>(textureObject, x, y);
+#endif
 }
 
 int runTest(int argc, char** argv);
 
 int main(int argc, char** argv) {
+    int imageSupport = 0;
+    hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                              p_gpuDevice);
+    if (!imageSupport) {
+      printf("Texture is not support on the device\n");
+      passed();
+    }
     int testResult = runTest(argc, argv);
 
     if (testResult) {
@@ -70,7 +79,6 @@ int runTest(int argc, char** argv) {
     // Create texture object
     hipTextureObject_t textureObject = 0;
     hipCreateTextureObject(&textureObject, &resDesc, &texDesc, NULL);
-
     float* dData = NULL;
     hipMalloc((void**)&dData, size);
 
@@ -104,5 +112,6 @@ int runTest(int argc, char** argv) {
     hipDestroyTextureObject(textureObject);
     hipFree(dData);
     hipFreeArray(hipArray);
+    free(hData);
     return testResult;
 }

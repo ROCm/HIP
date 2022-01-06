@@ -35,7 +35,14 @@ Some useful functions are:
 This information can be accessed in any test via using: `TestContext::get().isAmd()`.
 
 ## Config file schema
-Some tests can be skipped using a config file placed in same directory as the exe.
+Some tests can be skipped using a config file placed in hipTestMain/config folder. Multiple config files can be defined for different configurations.
+The naming convention for the file needs to be "config_platform_os_archname.json"
+Platform and os are mandatory, "all" for os if the tests needs to be skipped for all OS.
+Arch name is optional and takes precedence while loading the json file.
+
+example:
+config_amd_windows.json
+config_nvidia_windows.json
 
 The schema of the json file is as follows:
 ```json

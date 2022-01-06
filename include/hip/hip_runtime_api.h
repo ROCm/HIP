@@ -442,7 +442,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeIsLargeBar,                               ///< Whether it is LargeBar
     hipDeviceAttributeAsicRevision,                             ///< Revision of the GPU in this device
     hipDeviceAttributeCanUseStreamWaitValue,                    ///< '1' if Device supports hipStreamWaitValue32() and
-                                                                ///< hipStreamWaitValue64() , '0' otherwise.
+                                                                ///< hipStreamWaitValue64(), '0' otherwise.
+    hipDeviceAttributeImageSupport,                             ///< '1' if Device supports image, '0' otherwise.
 
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
@@ -1976,15 +1977,48 @@ hipError_t hipEventQuery(hipEvent_t event);
 /**
  *  @brief Return attributes for the specified pointer
  *
- *  @param[out] attributes for the specified pointer
- *  @param[in]  pointer to get attributes for
+ *  @param [out]  attributes  attributes for the specified pointer
+ *  @param [in]   ptr         pointer to get attributes for
  *
  *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  *
- *  @see hipGetDeviceCount, hipGetDevice, hipSetDevice, hipChooseDevice
+ *  @see hipPointerGetAttribute
  */
 hipError_t hipPointerGetAttributes(hipPointerAttribute_t* attributes, const void* ptr);
-
+/**
+ *  @brief Returns information about the specified pointer.[BETA]
+ *
+ *  @param [in, out] data     returned pointer attribute value
+ *  @param [in]      atribute attribute to query for
+ *  @param [in]      ptr      pointer to get attributes for
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @beta This API is marked as beta, meaning, while this is feature complete,
+ *  it is still open to changes and may have outstanding issues.
+ *
+ *  @see hipPointerGetAttributes
+ */
+hipError_t hipPointerGetAttribute(void* data, hipPointer_attribute attribute,
+                                  hipDeviceptr_t ptr);
+/**
+ *  @brief Returns information about the specified pointer.[BETA]
+ *
+ *  @param [in]  numAttributes   number of attributes to query for
+ *  @param [in]  attributes      attributes to query for
+ *  @param [in, out] data        a two-dimensional containing pointers to memory locations
+ *                               where the result of each attribute query will be written to
+ *  @param [in]  ptr             pointer to get attributes for
+ *
+ *  @return #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
+ *
+ *  @beta This API is marked as beta, meaning, while this is feature complete,
+ *  it is still open to changes and may have outstanding issues.
+ *
+ *  @see hipPointerGetAttribute
+ */
+hipError_t hipDrvPointerGetAttributes(unsigned int numAttributes, hipPointer_attribute* attributes,
+                                      void** data, hipDeviceptr_t ptr);
 /**
  *  @brief Imports an external semaphore.
  *
@@ -3931,6 +3965,66 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  *  @{
  *  This section describes the texture management functions of HIP runtime API.
  */
+hipError_t hipBindTextureToMipmappedArray(
+    const textureReference* tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const hipChannelFormatDesc* desc);
+hipError_t hipGetTextureReference(
+    const textureReference** texref,
+    const void* symbol);
+hipError_t hipCreateTextureObject(
+    hipTextureObject_t* pTexObject,
+    const hipResourceDesc* pResDesc,
+    const hipTextureDesc* pTexDesc,
+    const struct hipResourceViewDesc* pResViewDesc);
+hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
+hipError_t hipGetChannelDesc(
+    hipChannelFormatDesc* desc,
+    hipArray_const_t array);
+hipError_t hipGetTextureObjectResourceDesc(
+    hipResourceDesc* pResDesc,
+    hipTextureObject_t textureObject);
+hipError_t hipGetTextureObjectResourceViewDesc(
+    struct hipResourceViewDesc* pResViewDesc,
+    hipTextureObject_t textureObject);
+hipError_t hipGetTextureObjectTextureDesc(
+    hipTextureDesc* pTexDesc,
+    hipTextureObject_t textureObject);
+hipError_t hipTexRefSetAddressMode(
+    textureReference* texRef,
+    int dim,
+    enum hipTextureAddressMode am);
+hipError_t hipTexRefSetArray(
+    textureReference* tex,
+    hipArray_const_t array,
+    unsigned int flags);
+hipError_t hipTexRefSetFilterMode(
+    textureReference* texRef,
+    enum hipTextureFilterMode fm);
+hipError_t hipTexRefSetFlags(
+    textureReference* texRef,
+    unsigned int Flags);
+hipError_t hipTexRefSetFormat(
+    textureReference* texRef,
+    hipArray_Format fmt,
+    int NumPackedComponents);
+hipError_t hipTexObjectCreate(
+    hipTextureObject_t* pTexObject,
+    const HIP_RESOURCE_DESC* pResDesc,
+    const HIP_TEXTURE_DESC* pTexDesc,
+    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+hipError_t hipTexObjectDestroy(
+    hipTextureObject_t texObject);
+hipError_t hipTexObjectGetResourceDesc(
+    HIP_RESOURCE_DESC* pResDesc,
+    hipTextureObject_t texObject);
+hipError_t hipTexObjectGetResourceViewDesc(
+    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+    hipTextureObject_t texObject);
+hipError_t hipTexObjectGetTextureDesc(
+    HIP_TEXTURE_DESC* pTexDesc,
+    hipTextureObject_t texObject);
+
 /**
  *
  *  @addtogroup TexturD Texture Management [Deprecated]
@@ -3965,35 +4059,6 @@ hipError_t hipGetTextureAlignmentOffset(
     const textureReference* texref);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipUnbindTexture(const textureReference* tex);
-// doxygen end deprecated texture management
-/**
- * @}
- */
-hipError_t hipBindTextureToMipmappedArray(
-    const textureReference* tex,
-    hipMipmappedArray_const_t mipmappedArray,
-    const hipChannelFormatDesc* desc);
- hipError_t hipGetTextureReference(
-    const textureReference** texref,
-    const void* symbol);
-hipError_t hipCreateTextureObject(
-    hipTextureObject_t* pTexObject,
-    const hipResourceDesc* pResDesc,
-    const hipTextureDesc* pTexDesc,
-    const struct hipResourceViewDesc* pResViewDesc);
-hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
-hipError_t hipGetChannelDesc(
-    hipChannelFormatDesc* desc,
-    hipArray_const_t array);
-hipError_t hipGetTextureObjectResourceDesc(
-    hipResourceDesc* pResDesc,
-    hipTextureObject_t textureObject);
-hipError_t hipGetTextureObjectResourceViewDesc(
-    struct hipResourceViewDesc* pResViewDesc,
-    hipTextureObject_t textureObject);
-hipError_t hipGetTextureObjectTextureDesc(
-    hipTextureDesc* pTexDesc,
-    hipTextureObject_t textureObject);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefGetAddress(
     hipDeviceptr_t* dev_ptr,
@@ -4049,49 +4114,23 @@ hipError_t hipTexRefSetAddress2D(
     const HIP_ARRAY_DESCRIPTOR* desc,
     hipDeviceptr_t dptr,
     size_t Pitch);
-hipError_t hipTexRefSetAddressMode(
-    textureReference* texRef,
-    int dim,
-    enum hipTextureAddressMode am);
-hipError_t hipTexRefSetArray(
-    textureReference* tex,
-    hipArray_const_t array,
-    unsigned int flags);
-hipError_t hipTexRefSetFilterMode(
-    textureReference* texRef,
-    enum hipTextureFilterMode fm);
-hipError_t hipTexRefSetFlags(
-    textureReference* texRef,
-    unsigned int Flags);
-hipError_t hipTexRefSetFormat(
-    textureReference* texRef,
-    hipArray_Format fmt,
-    int NumPackedComponents);
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
-hipError_t hipTexObjectCreate(
-    hipTextureObject_t* pTexObject,
-    const HIP_RESOURCE_DESC* pResDesc,
-    const HIP_TEXTURE_DESC* pTexDesc,
-    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
-hipError_t hipTexObjectDestroy(
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetResourceDesc(
-    HIP_RESOURCE_DESC* pResDesc,
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetResourceViewDesc(
-    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetTextureDesc(
-    HIP_TEXTURE_DESC* pTexDesc,
-    hipTextureObject_t texObject);
-// doxygen end Texture management
+// doxygen end deprecated texture management
 /**
  * @}
  */
+
 // The following are not supported.
+/**
+ *
+ *  @addtogroup TextureU Texture Management [Not supported]
+ *  @{
+ *  @ingroup Texture
+ *  This section describes the texture management functions currently unsupported in HIP runtime.
+ */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
@@ -4120,6 +4159,15 @@ hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
+// doxygen end Texture management unsupported
+/**
+ * @}
+ */
+
+// doxygen end Texture management
+/**
+ * @}
+ */
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
@@ -4136,7 +4184,10 @@ hipError_t hipMipmappedArrayGetLevel(
  */
 
 /**
- * Callback/Activity API
+ *
+ *  @defgroup Callback Callback Activity APIs
+ *  @{
+ *  This section describes the callback/Activity of HIP runtime API.
  */
 hipError_t hipRegisterApiCallback(uint32_t id, void* fun, void* arg);
 hipError_t hipRemoveApiCallback(uint32_t id);
@@ -4147,6 +4198,10 @@ const char* hipKernelNameRef(const hipFunction_t f);
 const char* hipKernelNameRefByPtr(const void* hostFunction, hipStream_t stream);
 int hipGetStreamDeviceId(hipStream_t stream);
 
+// doxygen end Callback
+/**
+ * @}
+ */
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
@@ -5160,6 +5215,38 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
  * @}
  */
 
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup GL Interop
+ *  @{
+ *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
+ */
+typedef unsigned int GLuint;
+
+// Queries devices associated with GL Context.
+hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
+                           unsigned int hipDeviceCount, hipGLDeviceList deviceList);
+// Registers a GL Buffer for interop and returns corresponding graphics resource.
+hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
+                                       unsigned int flags);
+// Maps a graphics resource for hip access.
+hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
+                                   hipStream_t stream  __dparm(0) );
+// Gets device accessible address of a graphics resource.
+hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
+                                               hipGraphicsResource_t resource);
+// Unmaps a graphics resource for hip access.
+hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources,
+                                     hipStream_t stream  __dparm(0));
+// Unregisters a graphics resource.
+hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
+// doxygen end GL Interop
+/**
+ * @}
+ */
+
+
 #ifdef __cplusplus
 } /* extern "c" */
 #endif
@@ -5330,37 +5417,6 @@ static inline hipError_t hipUnbindTexture(
 
 
 #endif // __cplusplus
-
-/**
- *-------------------------------------------------------------------------------------------------
- *-------------------------------------------------------------------------------------------------
- *  @defgroup GL Interop
- *  @{
- *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
- */
-typedef unsigned int GLuint;
-
-// Queries devices associated with GL Context.
-hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
-                           unsigned int hipDeviceCount, hipGLDeviceList deviceList);
-// Registers a GL Buffer for interop and returns corresponding graphics resource.
-hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
-                                       unsigned int flags);
-// Maps a graphics resource for hip access.
-hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
-                                   hipStream_t stream  __dparm(0) );
-// Gets device accessible address of a graphics resource.
-hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
-                                               hipGraphicsResource_t resource);
-// Unmaps a graphics resource for hip access.
-hipError_t hipGraphicsUnmapResources(int count, hipGraphicsResource_t* resources,
-                                     hipStream_t stream  __dparm(0));
-// Unregisters a graphics resource.
-hipError_t hipGraphicsUnregisterResource(hipGraphicsResource_t resource);
-// doxygen end GL Interop
-/**
- * @}
- */
 
 #ifdef __GNUC__
 #pragma GCC visibility pop

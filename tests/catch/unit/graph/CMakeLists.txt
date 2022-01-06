@@ -1,5 +1,4 @@
-#!/bin/bash
-# Copyright (c) 2017 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (c) 2021 Advanced Micro Devices, Inc. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,13 +18,15 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-#usage : hipexamine-perl.sh DIRNAME [hipify-perl options]
+# Common Tests - Test independent of all platforms
+set(TEST_SRC
+  hipGraphAddEmptyNode.cc
+  hipGraphAddDependencies.cc
+  hipGraph.cc
+  hipSimpleGraphWithKernel.cc
+  hipGraphAddMemcpyNode.cc
+)
 
-# Generate HIP stats (LOC, CUDA->API conversions, missing functionality) for all the code files
-# in the specified directory.
-
-
-SCRIPT_DIR=`dirname $0`
-SEARCH_DIR=$1
-shift
-$SCRIPT_DIR/hipify-perl -no-output -print-stats "$@" `$SCRIPT_DIR/findcode.sh $SEARCH_DIR`
+hip_add_exe_to_target(NAME GraphsTest
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests)
