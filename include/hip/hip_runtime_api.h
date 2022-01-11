@@ -4276,7 +4276,7 @@ typedef enum hipGraphExecUpdateResult {
                                   ///< in the return value of the function
   hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
   hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
-  hipGraphExecUpdateErrorFunctionChanged = 
+  hipGraphExecUpdateErrorFunctionChanged =
       0x4,  ///< The update failed because the function of a kernel node changed
   hipGraphExecUpdateErrorParametersChanged =
       0x5,  ///< The update failed because the parameters changed in a way that is not supported
@@ -5223,6 +5223,7 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
  *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
  */
 typedef unsigned int GLuint;
+typedef unsigned int GLenum;
 
 // Queries devices associated with GL Context.
 hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
@@ -5230,9 +5231,15 @@ hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
 // Registers a GL Buffer for interop and returns corresponding graphics resource.
 hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
                                        unsigned int flags);
+// Register a GL Image for interop and returns the corresponding graphic resource
+hipError_t hipGraphicsGLRegisterImage(hipGraphicsResource** resource, GLuint image,
+                                      GLenum target, unsigned int flags);
 // Maps a graphics resource for hip access.
 hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
                                    hipStream_t stream  __dparm(0) );
+// Get an array through which to access a subresource of a mapped graphics resource.
+hipError_t hipGraphicsSubResourceGetMappedArray(hipArray_t* array, hipGraphicsResource_t resource,
+                                                unsigned int arrayIndex, unsigned int mipLevel);
 // Gets device accessible address of a graphics resource.
 hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
                                                hipGraphicsResource_t resource);
