@@ -272,6 +272,7 @@ void Memcpy3D<T>::NegativeTests() {
   AllocateMemory();
 
   // Initialization of data
+  memset(&myparms, 0, sizeof(myparms));
   myparms.srcPos = make_hipPos(0, 0, 0);
   myparms.dstPos = make_hipPos(0, 0, 0);
   myparms.extent = make_hipExtent(width , height, depth);
