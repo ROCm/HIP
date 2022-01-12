@@ -21,6 +21,7 @@
 add_subdirectory(memory)
 add_subdirectory(deviceLib)
 add_subdirectory(stream)
+add_subdirectory(streamperthread)
 add_subdirectory(event)
 add_subdirectory(occupancy)
 add_subdirectory(device)
