@@ -48,6 +48,7 @@ $ROCM_PATH      =   $hipvars::ROCM_PATH;
 $HIP_VERSION    =   $hipvars::HIP_VERSION;
 $HSA_PATH       =   $hipvars::HSA_PATH;
 
+
 Getopt::Long::Configure ( qw{bundling no_ignore_case});
 GetOptions(
      "help|h" => \$p_help
@@ -148,6 +149,9 @@ if ($p_version) {
 }
 
 if (!$printed or $p_full) {
+    $warn = "Please note that hipcc/hipconfig perl binaries are deprecated and will be removed in a future release.
+hipcc/hipconfig as C++ binaries are available for use as hipcc.bin and hipconfig.bin. \n";
+    print "$warn";
     print "HIP version  : ", $HIP_VERSION, "\n\n";
     print "== hipconfig\n";
     print "HIP_PATH     : ", $HIP_PATH, "\n";

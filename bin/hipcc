@@ -759,6 +759,11 @@ if ($printCXXFlags) {
 if ($printLDFlags) {
     print $HIPLDFLAGS;
 }
+
+$warn = "\nPlease note that hipcc/hipconfig perl binaries are deprecated and will be removed in a future release.
+hipcc/hipconfig as C++ binaries are available for use as hipcc.bin and hipconfig.bin. \n";
+print "$warn";
+
 if ($runCmd) {
     system ("$CMD");
     if ($? == -1) {
