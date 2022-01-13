@@ -162,6 +162,31 @@ typedef enum hipMemoryType {
     hipMemoryTypeUnified  ///< Not used currently
 } hipMemoryType;
 
+/**
+ * @brief hipKernelNodeAttrID
+ * @enum
+ *
+ */
+typedef enum hipKernelNodeAttrID {
+    hipKernelNodeAttributeAccessPolicyWindow = 1,
+    hipKernelNodeAttributeCooperative = 2,
+} hipKernelNodeAttrID;
+typedef enum hipAccessProperty {
+    hipAccessPropertyNormal = 0,
+    hipAccessPropertyStreaming  = 1,
+    hipAccessPropertyPersisting = 2,
+} hipAccessProperty;
+typedef struct hipAccessPolicyWindow {
+    void* base_ptr;
+    hipAccessProperty hitProp;
+    float hitRatio;
+    hipAccessProperty missProp;
+    size_t num_bytes;
+} hipAccessPolicyWindow;
+typedef union hipKernelNodeAttrValue {
+    hipAccessPolicyWindow accessPolicyWindow;
+    int cooperative;
+} hipKernelNodeAttrValue;
 
 /**
  * Pointer attributes
@@ -4873,6 +4898,30 @@ hipError_t hipGraphMemcpyNodeGetParams(hipGraphNode_t node, hipMemcpy3DParms* pN
  */
 hipError_t hipGraphMemcpyNodeSetParams(hipGraphNode_t node, const hipMemcpy3DParms* pNodeParams);
 
+/**
+ * @brief Sets a node attribute.
+ *
+ * @param [in] hNode - instance of the node to set parameters to.
+ * @param [in] attr - the attribute node is set to.
+ * @param [in] value - const pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphKernelNodeSetAttribute(hipGraphNode_t hNode, hipKernelNodeAttrID attr,
+                                          const hipKernelNodeAttrValue* value);
+/**
+ * @brief Gets a node attribute.
+ *
+ * @param [in] hNode - instance of the node to set parameters to.
+ * @param [in] attr - the attribute node is set to.
+ * @param [in] value - const pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphKernelNodeGetAttribute(hipGraphNode_t hNode, hipKernelNodeAttrID attr,
+                                          hipKernelNodeAttrValue* value);
 /**
  * @brief Sets the parameters for a memcpy node in the given graphExec.
  *
