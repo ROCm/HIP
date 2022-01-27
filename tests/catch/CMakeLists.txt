@@ -34,13 +34,6 @@ else()
     cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
 endif()
 
-
-if(NOT UNIX)
-    # In linux this reruns the cmake and fails with incorrect vars.
-    # so the project command is used only for windows
-    project(build_tests)
-endif()
-
 if(NOT DEFINED CATCH2_PATH)
     if(DEFINED ENV{CATCH2_PATH})
         set(CATCH2_PATH $ENV{CATCH2_PATH} CACHE STRING "Catch2 Path")
@@ -75,6 +68,8 @@ include_directories(
     ${HIP_PATH}/include
     ${JSON_PARSER}
 )
+
+file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
 
 if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
     add_compile_options(-Wall -Wextra -pedantic -Werror)
