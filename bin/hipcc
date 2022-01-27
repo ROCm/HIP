@@ -35,12 +35,12 @@ my $SCRIPT_DIR=dirname(__FILE__);
 if ($HIPCC_USE_PERL_SCRIPT) {
     #Invoke hipcc.pl
     my $HIPCC_PERL=catfile($SCRIPT_DIR, '/hipcc.pl');
-    system($^X, $HIPCC_PERL, @ARGV);
+    exec($^X, $HIPCC_PERL, @ARGV);
 } else {
     #Invoke hipcc.bin
     my $HIPCC_BIN=catfile($SCRIPT_DIR, '/hipcc.bin');
     if ( -e $HIPCC_BIN ) {
-        system($^X, $HIPCC_BIN, @ARGV);
+        exec($^X, $HIPCC_BIN, @ARGV);
     } else {
         print "hipcc.bin not present; Install HIPCC binaries before proceeding";
     }
