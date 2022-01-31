@@ -116,6 +116,17 @@ if(NOT DEFINED OFFLOAD_ARCH_STR AND EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerat
     endif()
 endif()
 
+# In windows get the gpu targets list from cmd line
+if (HIP_PLATFORM STREQUAL "amd" AND NOT UNIX)
+    if (DEFINED GPU_ARCH_LIST)
+        foreach(_hip_gpu_arch ${GPU_ARCH_LIST})
+            set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
+        endforeach()
+    endif()
+    message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
+endif()
+
+
 if(DEFINED OFFLOAD_ARCH_STR)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OFFLOAD_ARCH_STR} ")
 endif()
