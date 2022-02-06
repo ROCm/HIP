@@ -24,6 +24,7 @@ set(TEST_SRC
     hipCreateTextureObject_Linear.cc
     hipCreateTextureObject_Pitch2D.cc
     hipCreateTextureObject_Array.cc
+    hipTextureObjFetchVector.cc
 )
 
 hip_add_exe_to_target(NAME TextureTest
