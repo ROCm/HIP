@@ -40,7 +40,7 @@ if ($HIPCONFIG_USE_PERL_SCRIPT) {
     #Invoke hipconfig.bin
     my $HIPCONFIG_BIN=catfile($SCRIPT_DIR, '/hipconfig.bin');
     if ( -e $HIPCONFIG_BIN ) {
-        exec($^X, $HIPCONFIG_BIN, @ARGV);
+        exec($HIPCONFIG_BIN, @ARGV);
     } else {
         print "hipconfig.bin not present; Install HIPCC binaries before proceeding";
     }
