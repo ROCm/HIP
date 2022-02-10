@@ -154,7 +154,7 @@ if ($HIP_PLATFORM eq "amd") {
     }
 
     $HIP_CLANG_VERSION = `$HIPCC --version`;
-    $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
+    $HIP_CLANG_VERSION=~/.*clang version ([0-9\.]*).*/;
     $HIP_CLANG_VERSION=$1;
 
     # Figure out the target with which llvm is configured
