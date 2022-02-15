@@ -1,4 +1,9 @@
 cmake_minimum_required(VERSION 3.16.8)
+
+# to skip the simple compiler test
+set(CMAKE_C_COMPILER_WORKS 1)
+set(CMAKE_CXX_COMPILER_WORKS 1)
+
 project(hiptests)
 
 # Check if platform and compiler are set
@@ -32,7 +37,9 @@ else()
     # Set both compilers else windows cmake complains of mismatch
     cmake_path(SET CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc.bat")
     cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rocm-path=${ROCM_PATH}")
 endif()
+
 
 if(NOT DEFINED CATCH2_PATH)
     if(DEFINED ENV{CATCH2_PATH})
@@ -128,10 +135,9 @@ add_subdirectory(unit)
 add_subdirectory(ABM)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
-
+add_subdirectory(TypeQualifiers)
 if(UNIX)
     add_subdirectory(multiproc)
-    add_subdirectory(TypeQualifiers)
 endif()
 
 cmake_policy(POP)
