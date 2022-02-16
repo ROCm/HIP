@@ -37,7 +37,7 @@ THE SOFTWARE.
     }                                                                                              \
   }
 
-// Check that an expression, errorExpr, evaluates to the expected error_t, expectedErrorT.
+// Check that an expression, errorExpr, evaluates to the expected error_t, expectedError.
 #define HIP_CHECK_ERROR(errorExpr, expectedError)                                                  \
   {                                                                                                \
     hipError_t localError = errorExpr;                                                             \
