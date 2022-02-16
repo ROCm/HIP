@@ -37,6 +37,21 @@ THE SOFTWARE.
     }                                                                                              \
   }
 
+// Check that an expression, errorExpr, evaluates to the expected error_t, expectedErrorT.
+#define HIP_CHECK_ERROR(errorExpr, expectedError)                                                  \
+  {                                                                                                \
+    hipError_t localError = errorExpr;                                                             \
+    if (localError != expectedError) {                                                             \
+      INFO("Expected Error: " << hipGetErrorString(localError)                                     \
+                              << " Expected Code: " << expectedError << '\n'                       \
+                              << " Actual Error: " << hipGetErrorString(localError)                \
+                              << " Actual Code: " << localError << " Str: " << #errorExpr          \
+                              << " In File: " << __FILE__ << " At line: " << __LINE__);            \
+      REQUIRE(false);                                                                              \
+    }                                                                                              \
+  }
+
+
 #define HIPRTC_CHECK(error)                                                                        \
   {                                                                                                \
     auto localError = error;                                                                       \
