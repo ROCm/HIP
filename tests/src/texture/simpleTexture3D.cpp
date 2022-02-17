@@ -87,11 +87,8 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
     myparms.extent = make_hipExtent(width, height, depth);
-#ifdef __HIP_PLATFORM_NVIDIA__
-    myparms.kind = cudaMemcpyHostToDevice;
-#else
     myparms.kind = hipMemcpyHostToDevice;
-#endif
+
     HIPCHECK(hipMemcpy3D(&myparms));
 
     // set texture parameters
