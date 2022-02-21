@@ -61,6 +61,7 @@ THE SOFTWARE.
       REQUIRE(false);                                                                              \
     }                                                                                              \
   }
+
 // Although its assert, it will be evaluated at runtime
 #define HIP_ASSERT(x)                                                                              \
   { REQUIRE((x)); }
