@@ -43,7 +43,7 @@ kernel tasks on these streams from multiple threads. Validate all the results.
 8) Validate stream priorities with event after classifying them as low, medium, high.
 */
 
-#include <hip_test_common.hh>
+#include "streamCommon.hh"
 #include <hip_test_kernels.hh>
 #include <atomic>
 #include <vector>
@@ -565,14 +565,12 @@ TEST_CASE("Unit_hipStreamCreateWithPriority_MulthreadNonblockingflag") {
               flag = 0xffffffff.
 */
 TEST_CASE("Unit_hipStreamCreateWithPriority_NegTst") {
-  hipStream_t stream;
-  int priority_low;
-  int priority_high;
-  hipError_t ret;
+  hipStream_t stream{nullptr};
+  int priority_low{0};
+  int priority_high{0};
 
   // Test is to get the Stream Priority Range
-  HIP_CHECK(
-          hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
+  HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
   // Check if priorities are indeed supported
   if (priority_low == priority_high) {
     WARN("Stream priority range not supported. Skipping test.");
@@ -580,18 +578,49 @@ TEST_CASE("Unit_hipStreamCreateWithPriority_NegTst") {
   }
 
   SECTION("stream = nullptr test") {
-    ret = hipStreamCreateWithPriority(nullptr, hipStreamDefault,
-                                    priority_low);
-
-    REQUIRE(ret != hipSuccess);
+    REQUIRE(hipErrorInvalidValue ==
+            hipStreamCreateWithPriority(nullptr, hipStreamDefault, priority_low));
   }
 
   SECTION("flag value invalid test") {
-    ret = hipStreamCreateWithPriority(&stream, 0xffffffff,
-                                 priority_low);
-
-    REQUIRE(ret != hipSuccess);
+    REQUIRE(hipErrorInvalidValue == hipStreamCreateWithPriority(&stream, 0xffffffff, priority_low));
   }
+}
+
+TEST_CASE("Unit_hipStreamCreateWithPriority") {
+  int id = GENERATE(range(0, HipTest::getDeviceCount()));
+
+  HIP_CHECK(hipSetDevice(id));
+
+  int priority_low = 0, priority_high = 0;
+  HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
+  hipStream_t stream{nullptr};
+
+  SECTION("Setting high priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_high));
+    REQUIRE(stream != nullptr);
+    REQUIRE(hip::checkStreamPriority(stream, priority_high));
+  }
+
+  SECTION("Setting low priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_low));
+    REQUIRE(stream != nullptr);
+    REQUIRE(hip::checkStreamPriority(stream, priority_low));
+  }
+
+  SECTION("Setting lowest possible value priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, INT_MAX));
+    REQUIRE(stream != nullptr);
+    REQUIRE(hip::checkStreamPriority(stream, priority_low));
+  }
+
+  SECTION("Setting highest possible value priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, INT_MIN));
+    REQUIRE(stream != nullptr);
+    REQUIRE(hip::checkStreamPriority(stream, priority_high));
+  }
+
+  HIP_CHECK(hipStreamDestroy(stream));
 }
 
 /**
@@ -599,7 +628,6 @@ TEST_CASE("Unit_hipStreamCreateWithPriority_NegTst") {
  */
 TEST_CASE("Unit_hipStreamCreateWithPriority_ValidateWithEvents") {
   bool TestPassed = true;
-  TestPassed = hipStreamCreateWithPriorityTest::
-  validateStreamPrioritiesWithEvents<int>();
+  TestPassed = hipStreamCreateWithPriorityTest::validateStreamPrioritiesWithEvents<int>();
   REQUIRE(TestPassed);
 }
