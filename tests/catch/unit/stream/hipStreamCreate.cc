@@ -16,11 +16,24 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
-#include <hip_test_common.hh>
+
+#include "streamCommon.hh"
+
 TEST_CASE("Unit_hipStreamCreate_default") {
-  hipStream_t stream;
+  int id = GENERATE(range(0, HipTest::getDeviceCount()));
+  HIP_CHECK(hipSetDevice(id));
+
+  hipStream_t stream{nullptr};
   HIP_CHECK(hipStreamCreate(&stream));
+  REQUIRE(stream != nullptr);         // Check if stream has a valid ptr
+  REQUIRE(hip::checkStream(stream));  // check its flags and priority
+  HIP_CHECK(hipStreamDestroy(stream));
 }
+
+TEST_CASE("Unit_hipStreamCreate_Negative") {
+  REQUIRE(hipErrorInvalidValue == hipStreamCreate(nullptr));
+}
+
 TEST_CASE("Unit_hipStreamCreateWithFlags_Negative") {
   hipStream_t stream;
   auto status = hipStreamCreateWithFlags(&stream, 0xFF);
@@ -28,6 +41,7 @@ TEST_CASE("Unit_hipStreamCreateWithFlags_Negative") {
   status = hipStreamCreateWithFlags(nullptr, hipStreamDefault);
   REQUIRE(status == hipErrorInvalidValue);
 }
+
 TEST_CASE("Unit_hipStreamCreateWithFlags") {
   hipStream_t stream;
   HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamDefault));
@@ -35,17 +49,4 @@ TEST_CASE("Unit_hipStreamCreateWithFlags") {
   HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamNonBlocking));
   HIP_CHECK(hipStreamDestroy(stream));
 }
-TEST_CASE("Unit_hipStreamCreateWithPriority") {
-  int priority_low = 0;
-  int priority_high = 0;
-  HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
-  hipStream_t stream;
 
-  SECTION("Setting high prirority") {
-    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_high));
-  }
-  SECTION("Setting low priority") {
-    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_low));
-  }
-  HIP_CHECK(hipStreamDestroy(stream));
-}
