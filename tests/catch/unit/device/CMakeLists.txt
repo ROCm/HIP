@@ -15,6 +15,7 @@ set(TEST_SRC
     hipRuntimeGetVersion.cc
     hipSetDeviceFlags.cc
     hipSetGetDevice.cc
+    hipDeviceGetUuid.cc
 )
 
 hip_add_exe_to_target(NAME DeviceTest
