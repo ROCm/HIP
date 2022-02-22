@@ -7,8 +7,10 @@ set(TEST_SRC
     hipStreamAddCallback.cc
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
+    hipStreamSynchronize.cc
     hipStreamGetCUMask.cc
     hipAPIStreamDisable.cc
+    streamCommon.cc
 )
 
 #skipped in windows - duplicate HipTest::vector_square sym (compiler issue)
@@ -29,6 +31,7 @@ set(TEST_SRC
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
+    hipStreamSynchronize.cc
 )
 endif()
 
