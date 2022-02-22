@@ -7,6 +7,7 @@ set(TEST_SRC
     hipStreamAddCallback.cc
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
+    hipStreamSynchronize.cc
     hipStreamGetCUMask.cc
     hipAPIStreamDisable.cc
 )
@@ -29,6 +30,7 @@ set(TEST_SRC
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
+    hipStreamSynchronize.cc
 )
 endif()
 
