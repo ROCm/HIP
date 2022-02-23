@@ -22,7 +22,19 @@
 	   "Unit_hipMallocManaged_CoherentTst",
 	   "Unit_hipMallocManaged_CoherentTstWthAdvise",
 	   "Unit_hipMalloc_CoherentTst",
-	   "Unit_hipExtMallocWithFlags_CoherentTst"
+	   "Unit_hipExtMallocWithFlags_CoherentTst",
+	   "Unit_hipStreamSynchronize_NullStreamSynchronization",
+	   "Unit_hipStreamSynchronize_SynchronizeStreamAndQueryNullStream",
+      	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Gte_1",
+      	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Gte_2",
+      	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Nor_2",
+      	   "Unit_hipStreamValue_Wait32_Blocking_NoMask_Gte",
+      	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Gte_1",
+      	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Gte_2",
+      	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Nor_1",
+      	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Nor_2",
+      	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Gte",
+      	   "Unit_hipStreamValue_Negative_InvalidStream"
 	]
 
 }

@@ -12,6 +12,7 @@ set(TEST_SRC
     hipAPIStreamDisable.cc
     streamCommon.cc
     hipStreamQuery.cc
+    hipStreamValue.cc
 )
 
 #skipped in windows - duplicate HipTest::vector_square sym (compiler issue)
