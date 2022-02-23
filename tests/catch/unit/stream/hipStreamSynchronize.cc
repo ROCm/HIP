@@ -22,7 +22,7 @@ THE SOFTWARE.
 namespace hipStreamSynchronizeTest {
 const hipStream_t explicitStream = (hipStream_t)-1;
 const hipStream_t nullStream = (hipStream_t)0;
-const hipStream_t streamPerThread = (hipStream_t)2;
+const hipStream_t streamPerThread = hipStreamPerThread;
 
 __device__ int defaultSemaphore = 0;
 
@@ -90,6 +90,7 @@ TEST_CASE("Unit_hipStreamSynchronize_EmptyStream") {
   hipStream_t stream;
   HIP_CHECK(hipStreamCreate(&stream));
   HIP_CHECK(hipStreamSynchronize(stream));
+  HIP_CHECK(hipStreamDestroy(stream));
 }
 
 /**
@@ -110,7 +111,7 @@ TEST_CASE("Unit_hipStreamSynchronize_FinishWork") {
   HIP_CHECK(hipStreamQuery(stream));
   signalingThread.join();
 
-  if (stream == explicitStream) {
+  if (stream != nullStream && stream != streamPerThread) {
     HIP_CHECK(hipStreamDestroy(stream));
   }
 }
@@ -197,7 +198,7 @@ TEST_CASE("Unit_hipStreamSynchronize_SynchronizeStreamAndQueryNullStream") {
   waiting_kernel<<<1, 1, 0, stream1>>>(semaphore1);
   waiting_kernel<<<1, 1, 0, stream2>>>(semaphore2);
 
-  SECTION("Do Use NullStream") {}
+  SECTION("Do not use NullStream") {}
   // FIXME Report this bug
 #ifndef __HIP_PLATFORM_AMD__
   SECTION("Submit Kernel to NullStream") { emptyKernel<<<1, 1, 0, nullStream>>>(); }
