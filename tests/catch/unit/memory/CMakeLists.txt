@@ -36,6 +36,8 @@ set(TEST_SRC
     hipMemAdviseMmap.cc
     hipMemCoherencyTst.cc
     hipMallocManaged.cc
+    hipMemRangeGetAttribute.cc
+    hipHmmOvrSubscriptionTst.cc
     hipPtrGetAttribute.cc
 )
 else()
@@ -72,6 +74,8 @@ set(TEST_SRC
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
+    hipMemRangeGetAttribute.cc
+    hipHmmOvrSubscriptionTst.cc
     hipPtrGetAttribute.cc
 )
 endif()
