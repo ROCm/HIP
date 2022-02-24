@@ -69,9 +69,6 @@ int main() {
     HIP_CHECK(hipModuleLoad(&Module, fileName));
     HIP_CHECK(hipModuleGetFunction(&Function, Module, kernel_name));
 
-    uint32_t len = LEN;
-    uint32_t one = 1;
-
     struct {
         void* _Ad;
         void* _Bd;
