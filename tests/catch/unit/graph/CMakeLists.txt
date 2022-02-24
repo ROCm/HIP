@@ -28,6 +28,7 @@ set(TEST_SRC
   hipGraphClone.cc
   hipGraphInstantiateWithFlags.cc
   hipGraphAddHostNode.cc
+  hipGraphAddMemcpyNodeFromSymbol.cc
   hipGraphChildGraphNodeGetGraph.cc
 )
 
