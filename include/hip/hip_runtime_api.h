@@ -445,6 +445,8 @@ typedef enum hipDeviceAttribute_t {
                                                                 ///< hipStreamWaitValue64(), '0' otherwise.
     hipDeviceAttributeImageSupport,                             ///< '1' if Device supports image, '0' otherwise.
 
+    hipDeviceAttributeMultiprocessorBoostCount,                 ///< All available boost compute units for the device
+
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
     // Extended attributes for vendors
@@ -4411,6 +4413,18 @@ hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
+
+/**
+ * @brief Swaps the stream capture mode of a thread.
+ *
+ * @param [in] mode - Pointer to mode value to swap with the current mode
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ */
+hipError_t hipThreadExchangeStreamCaptureMode(hipStreamCaptureMode* mode);
 
 /**
  * @brief Creates a graph
