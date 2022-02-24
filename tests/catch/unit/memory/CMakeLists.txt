@@ -55,6 +55,9 @@ set(TEST_SRC
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
     hipMemCoherencyTst.cc
+    hipMallocManaged.cc
+    hipMemRangeGetAttribute.cc
+    hipHmmOvrSubscriptionTst.cc
     hipMemcpyFromSymbol.cc
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
@@ -93,6 +96,9 @@ set(TEST_SRC
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
+    hipMallocManaged.cc
+    hipMemRangeGetAttribute.cc
+    hipHmmOvrSubscriptionTst.cc
     hipMemcpyFromSymbol.cc
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
