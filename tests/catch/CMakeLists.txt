@@ -93,6 +93,17 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21.0)
 endif()
 message(STATUS "CMAKE HIP ARCHITECTURES: ${CMAKE_HIP_ARCHITECTURES}")
 
+
+# get the gpu targets list from cmd line
+# cmd line arch takes precedence over current device returned by rocm_agent_enumerator
+if (HIP_PLATFORM STREQUAL "amd")
+    if (DEFINED GPU_ARCH_LIST)
+        foreach(_hip_gpu_arch ${GPU_ARCH_LIST})
+            set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
+        endforeach()
+    endif()
+endif()
+
 # Identify the GPU Targets.
 # This is done due to limitation of rocm_agent_enumerator
 # While building test parallelly, rocm_agent_enumerator can fail and give out an empty target
@@ -112,19 +123,9 @@ if(NOT DEFINED OFFLOAD_ARCH_STR AND EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerat
 		foreach(_hip_gpu_arch ${HIP_GPU_ARCH_LIST})
 			set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
 		endforeach()
-		message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
     endif()
 endif()
-
-# In windows get the gpu targets list from cmd line
-if (HIP_PLATFORM STREQUAL "amd" AND NOT UNIX)
-    if (DEFINED GPU_ARCH_LIST)
-        foreach(_hip_gpu_arch ${GPU_ARCH_LIST})
-            set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
-        endforeach()
-    endif()
-    message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
-endif()
+message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
 
 
 if(DEFINED OFFLOAD_ARCH_STR)
