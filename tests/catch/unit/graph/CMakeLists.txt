@@ -25,6 +25,9 @@ set(TEST_SRC
   hipGraph.cc
   hipSimpleGraphWithKernel.cc
   hipGraphAddMemcpyNode.cc
+  hipGraphClone.cc
+  hipGraphInstantiateWithFlags.cc
+  hipGraphAddHostNode.cc
   hipGraphExecHostNodeSetParams.cc
 )
 
