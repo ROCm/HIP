@@ -4402,6 +4402,18 @@ hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t
                                               unsigned int flags __dparm(0));
 
 /**
+ * @brief Swaps the stream capture mode of a thread.
+ *
+ * @param [in] mode - Pointer to mode value to swap with the current mode
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ */
+hipError_t hipThreadExchangeStreamCaptureMode(hipStreamCaptureMode* mode);
+
+/**
  * @brief Creates a graph
  *
  * @param [out] pGraph - pointer to graph to create.
