@@ -27,6 +27,7 @@ set(TEST_SRC
   hipGraphAddMemcpyNode.cc
   hipGraphClone.cc
   hipGraphInstantiateWithFlags.cc
+  hipGraphAddHostNode.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest
