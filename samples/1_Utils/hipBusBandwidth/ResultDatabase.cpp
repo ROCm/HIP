@@ -401,7 +401,6 @@ void ResultDatabase::DumpCsv(string fileName) {
 // ****************************************************************************
 
 bool ResultDatabase::IsFileEmpty(string fileName) {
-    bool fileEmpty;
 
     ifstream file(fileName.c_str());
 
@@ -409,6 +408,7 @@ bool ResultDatabase::IsFileEmpty(string fileName) {
     if (!file.good()) {
         return true;
     } else {
+        bool fileEmpty;
         fileEmpty = (bool)(file.peek() == ifstream::traits_type::eof());
         file.close();
 

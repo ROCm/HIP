@@ -282,7 +282,7 @@ class Command {
 // HCC optimizes away fully NULL kernel calls, so run one that is nearly null:
 class ModuleKernelCommand : public Command {
    public:
-    ModuleKernelCommand(CommandStream* cmdStream, const std::vector<std::string> args)
+    ModuleKernelCommand(CommandStream* cmdStream, const std::vector<std::string>& args)
         : Command(cmdStream, args), _stream(cmdStream->currentStream()) {
         hipModule_t module;
         HIPCHECK(hipModuleLoad(&module, FILENAME));
@@ -316,7 +316,7 @@ class ModuleKernelCommand : public Command {
 class KernelCommand : public Command {
    public:
     enum Type { Null, VectorAdd };
-    KernelCommand(CommandStream* cmdStream, const std::vector<std::string> args, Type kind)
+    KernelCommand(CommandStream* cmdStream, const std::vector<std::string>& args, Type kind)
         : Command(cmdStream, args), _kind(kind), _stream(cmdStream->currentStream()){};
     ~KernelCommand(){};
 
@@ -390,7 +390,7 @@ class CopyCommand : public Command {
     };
 
 
-    void dealloc(void* p, MemType memType) {
+    static void dealloc(void* p, MemType memType) {
         if (memType == Device) {
             HIPCHECK(hipFree(p));
         } else if (memType == PinnedHost) {
@@ -433,7 +433,7 @@ class StreamSyncCommand : public Command {
     StreamSyncCommand(CommandStream* cmdStream, const std::vector<std::string>& args)
         : Command(cmdStream, args), _stream(cmdStream->currentStream()){};
 
-    const char* help() { return "synchronizes the current stream"; };
+    static const char* help() { return "synchronizes the current stream"; };
 
 
     void run() override { HIPCHECK(hipStreamSynchronize(_stream)); };
@@ -537,8 +537,8 @@ CopyCommand::CopyCommand(CommandStream* cmdStream, const std::vector<std::string
                          hipMemcpyKind kind, bool isAsync, bool isPinnedHost)
     : Command(cmdStream, args),
       _isAsync(isAsync),
-      _kind(kind),
-      _stream(cmdStream->currentStream()) {
+      _stream(cmdStream->currentStream()),
+      _kind(kind) {
     switch (kind) {
         case hipMemcpyDeviceToHost:
             _srcType = Device;
