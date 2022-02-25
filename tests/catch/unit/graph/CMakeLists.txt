@@ -38,6 +38,7 @@ set(TEST_SRC
   hipGraphDestroyNode.cc
   hipGraphGetNodes.cc
   hipGraphGetRootNodes.cc
+  hipGraphHostNodeSetParams.cc
   hipGraphAddMemcpyNode1D.cc
 )
 
