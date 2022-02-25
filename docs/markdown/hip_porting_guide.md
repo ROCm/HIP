@@ -23,7 +23,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Table of Architecture Properties](#table-of-architecture-properties)
 - [Finding HIP](#finding-hip)
 - [Identifying HIP Runtime](#identifying-hip-runtime)
-- [hipLaunchKernel](#hiplaunchkernel)
+- [hipLaunchKernelGGL](#hiplaunchkernelGGL)
 - [Compiler Options](#compiler-options)
 - [Linking Issues](#linking-issues)
   * [Linking With hipcc](#linking-with-hipcc)
@@ -294,37 +294,10 @@ On Nvidia platform, HIP is just a thin layer on top of CUDA.
 On non-AMD platform, HIP runtime determines if cuda is available and can be used. If available, HIP_PLATFORM is set to nvidia and underneath CUDA path is used.
 
 
-## hipLaunchKernel
+## hipLaunchKernelGGL
 
-hipLaunchKernel is a variadic macro which accepts as parameters the launch configurations (grid dims, group dims, stream, dynamic shared size) followed by a variable number of kernel arguments.
-This sequence is then expanded into the appropriate kernel launch syntax depending on the platform.
-While this can be a convenient single-line kernel launch syntax, the macro implementation can cause issues when nested inside other macros.  For example, consider the following:
-
-```
-// Will cause compile error:
-#define MY_LAUNCH(command, doTrace) \
-{\
-    if (doTrace) printf ("TRACE: %s\n", #command); \
-    (command);   /* The nested ( ) will cause compile error */\
-}
-
-MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCall");
-```
-
-Avoid nesting macro parameters inside parenthesis - here's an alternative that will work:
-
-```
-#define MY_LAUNCH(command, doTrace) \
-{\
-    if (doTrace) printf ("TRACE: %s\n", #command); \
-    command;\ 
-}
-
-MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCall");
-```
-
-
-
+hipLaunchKernelGGL is a macro that can serve as an alternative way to launch kernel, which accepts parameters of launch configurations (grid dims, group dims, stream, dynamic shared size) followed by a variable number of kernel arguments.
+It can replace <<< >>>, if the user so desires.
 
 ## Compiler Options
 
@@ -482,7 +455,7 @@ int main()
     HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
 
     HIP_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(Value), A, SIZE, 0, hipMemcpyHostToDevice));
-    hipLaunchKernel(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
+    hipLaunchKernelGGL(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
     HIP_ASSERT(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
 
     for(unsigned i=0;i<LEN;i++)
