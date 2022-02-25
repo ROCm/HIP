@@ -58,11 +58,18 @@ TEST_CASE("Unit_hipMemcpy2DToArrayAsync_Basic") {
   HIP_CHECK(hipMallocArray(&A_d, &desc, NUM_W, NUM_H, hipArrayDefault));
   HipTest::setDefaultData<float>(width*NUM_H, A_h, hData, nullptr);
   HIP_CHECK(hipStreamCreate(&stream));
-
-  HIP_CHECK(hipMemcpy2DToArrayAsync(A_d, 0, 0, hData, width,
-                                    width, NUM_H,
-                                    hipMemcpyHostToDevice, stream));
-  HIP_CHECK(hipStreamSynchronize(stream));
+  SECTION("Calling hipMemcpy2DToArrayAsync() with user declared stream obj") {
+    HIP_CHECK(hipMemcpy2DToArrayAsync(A_d, 0, 0, hData, width,
+                                      width, NUM_H,
+                                      hipMemcpyHostToDevice, stream));
+    HIP_CHECK(hipStreamSynchronize(stream));
+  }
+  SECTION("Calling hipMemcpy2DToArrayAsync() with hipStreamPerThread") {
+    HIP_CHECK(hipMemcpy2DToArrayAsync(A_d, 0, 0, hData, width,
+                                      width, NUM_H,
+                                      hipMemcpyHostToDevice, hipStreamPerThread));
+    HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+  }
   HIP_CHECK(hipMemcpy2DFromArray(A_h, width, A_d,
                                  0, 0, width, NUM_H,
                                  hipMemcpyDeviceToHost));

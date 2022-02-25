@@ -58,8 +58,8 @@ void run_test2() {
 
     HIP_ASSERT(hipFree(A_d));
     HIP_ASSERT(hipFree(B_d));
-    free(A_h);
-    free(B_h);
+    delete [] A_h;
+    delete [] B_h;
     std::cout << "Test Passed!\n";
 }
 

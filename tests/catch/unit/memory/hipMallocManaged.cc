@@ -17,12 +17,11 @@
    THE SOFTWARE.
  */
 
-/*
-  List of Test cases:
-  1)  Unit_hipMallocManaged_Basic
-  2) Unit_hipMallocManaged_MultiSize
-  3) Unit_hipMallocManaged_MultiKrnlHmmAccess
-  4) Unit_hipMallocManaged_KrnlWth2MemTypes
+/* Test Case Description:
+   1) This testcase verifies the hipMallocManaged basic scenario - supported on
+     all devices
+   2) This testcase verifies the hipMallocManaged basic scenario - supported
+       only on HMM enabled devices
 */
 
 #include <hip_test_common.hh>
@@ -32,12 +31,6 @@
 
 
 // Kernel functions
-__global__ void KrnlWth2MemTypes(int *Hmm, int *Dptr, size_t n) {
-  size_t index = blockIdx.x * blockDim.x + threadIdx.x;
-  for (size_t i = index; i < n; i++) {
-    Hmm[i] = Dptr[i] + 10;
-  }
-}
 
 __global__ void KernelMul_MngdMem(int *Hmm, int *Dptr, size_t n) {
   size_t index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -64,9 +57,6 @@ __global__ void KrnlWth2MemTypesC(unsigned char *Hmm, unsigned char *Dptr,
   }
 }
 
-// The following variable will be used to get the result of computation
-// from multiple threads
-static bool IfTestPassed = true;
 
 static int HmmAttrPrint() {
   int managed = 0;
@@ -90,62 +80,6 @@ static int HmmAttrPrint() {
                                   0));
   INFO("hipDeviceAttributeManagedMemory: " << managed);
   return managed;
-}
-
-
-static void LaunchKrnl4(size_t NumElms, int InitVal) {
-  int *Hmm = NULL, *Dptr = NULL, blockSize = 64, DataMismatch = 0;
-  hipStream_t strm;
-  HIP_CHECK(hipStreamCreate(&strm));
-  HIP_CHECK(hipMallocManaged(&Hmm, (sizeof(int) * NumElms)));
-  HIP_CHECK(hipMalloc(&Dptr, (sizeof(int) * NumElms)));
-  int *Hstptr = reinterpret_cast<int*>(new int[NumElms]);
-  for (size_t i = 0; i < NumElms; ++i) {
-    Hstptr[i] = InitVal;
-  }
-  HIP_CHECK(hipMemcpy(Dptr, Hstptr, (NumElms * sizeof(int)),
-                      hipMemcpyHostToDevice));
-  dim3 dimBlock(blockSize, 1, 1);
-  dim3 dimGrid((NumElms + blockSize -1)/blockSize, 1, 1);
-  KrnlWth2MemTypes<<<dimGrid, dimBlock, 0, strm>>>(Hmm, Dptr, NumElms);
-  HIP_CHECK(hipStreamSynchronize(strm));
-  for (size_t i = 0; i < NumElms; ++i) {
-    if (Hmm[i] != (InitVal + 10)) {
-      DataMismatch++;
-    }
-  }
-  if (DataMismatch != 0) {
-    INFO("Data Mismatch observed after the Kernel: KrnlWth2MemTypes!!\n");
-    REQUIRE(false);
-  }
-  DataMismatch = 0;
-  KernelMul_MngdMem<<<dimGrid, dimBlock, 0, strm>>>(Hmm, Dptr, NumElms);
-  HIP_CHECK(hipStreamSynchronize(strm));
-  // Verifying the result
-  for (size_t i = 0; i < NumElms; ++i) {
-    if (Hmm[i] != (InitVal * 10)) {
-      DataMismatch++;
-    }
-  }
-  if (DataMismatch != 0) {
-    INFO("Data Mismatch observedafter the Kernel: KernelMul_MngdMem!!\n");
-    REQUIRE(false);
-  }
-  DataMismatch = 0;
-  KernelMulAdd_MngdMem<<<dimGrid, dimBlock, 0, strm>>>(Hmm, NumElms);
-  HIP_CHECK(hipStreamSynchronize(strm));
-  // Verifying the result
-
-  for (size_t i = 0; i < NumElms; ++i) {
-    if (Hmm[i] != (InitVal * 10 * 2 + 10)) {
-      DataMismatch++;
-    }
-  }
-  if (DataMismatch != 0) {
-    INFO("Data Mismatch observedafter the Kernel: KernelMul_MngdMem!!\n");
-    REQUIRE(false);
-  }
-  delete[] Hstptr;
 }
 
 
@@ -241,104 +175,3 @@ TEST_CASE("Unit_hipMallocManaged_Advanced") {
   }
 }
 
-
-// The following test case tests the behavior of kernel with a HMM memory and
-// hipMalloc memory
-
-TEST_CASE("Unit_hipMallocManaged_KrnlWth2MemTypes") {
-  IfTestPassed = true;
-  int *Hmm = NULL, *Dptr = NULL, InitVal = 123;
-  size_t NumElms = (1024 * 1024);
-  int *Hptr = new int[NumElms], blockSize = 64, DataMismatch = 0;
-  int managed =  HmmAttrPrint();
-  if (managed == 1) {
-    hipStream_t strm;
-    HIP_CHECK(hipStreamCreate(&strm));
-    HIP_CHECK(hipMallocManaged(&Hmm, sizeof(int) * NumElms));
-    HIP_CHECK(hipMalloc(&Dptr, sizeof(int) * NumElms));
-    for (size_t i = 0; i < NumElms; ++i) {
-      Hmm[i] = 0;
-      Hptr[i] = InitVal;
-    }
-    HIP_CHECK(hipMemcpy(Dptr, Hptr, sizeof(int) * NumElms,
-                        hipMemcpyHostToDevice));
-    dim3 dimBlock(blockSize, 1, 1);
-    dim3 dimGrid((NumElms + blockSize -1)/blockSize, 1, 1);
-    KrnlWth2MemTypes<<<dimGrid, dimBlock, 0, strm>>>(Hmm, Dptr, NumElms);
-    HIP_CHECK(hipStreamSynchronize(strm));
-    // Verifying the results
-    for (size_t k = 0; k < NumElms; ++k) {
-      if (Hmm[k] != (InitVal + 10)) {
-        DataMismatch++;
-      }
-    }
-    if (DataMismatch != 0) {
-      WARN("DataMismatch observed!\n");
-      IfTestPassed = false;
-    }
-
-    HIP_CHECK(hipFree(Hmm));
-    HIP_CHECK(hipFree(Dptr));
-    delete[] Hptr;
-    REQUIRE(IfTestPassed);
-  } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
-           "attribute. Hence skipping the testing with Pass result.\n");
-  }
-}
-
-// The following test case tests when the same Hmm memory is used for
-// launching multiple different kernels will results in any issue
-TEST_CASE("Unit_hipMallocManaged_MultiKrnlHmmAccess") {
-  int managed = HmmAttrPrint();
-  if (managed) {
-    int InitVal = 123, NumElms = (1024 * 1024);
-    LaunchKrnl4(NumElms, InitVal);
-  } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
-           "attribute. Hence skipping the testing with Pass result.\n");
-  }
-}
-
-
-//  The following test case allocation, host access, device access of HMM
-//   memory from size 1 to 10KB
-
-TEST_CASE("Unit_hipMallocManaged_MultiSize") {
-  IfTestPassed = true;
-  int managed = HmmAttrPrint();
-  if (managed == 1) {
-    unsigned char *Hmm1 = NULL, *Hmm2 = NULL;
-    int InitVal = 100, blockSize = 64, DataMismatch = 0;
-    hipStream_t strm;
-    HIP_CHECK(hipStreamCreate(&strm));
-    dim3 dimBlock(blockSize, 1, 1);
-    for (int i = 1; i < (1024*1024); ++i) {
-      HIP_CHECK(hipMallocManaged(&Hmm1, i));
-      HIP_CHECK(hipMallocManaged(&Hmm2, i));
-      for (int j = 0; j < i; ++j) {
-        Hmm1[j] = InitVal;
-      }
-      dim3 dimGrid((i + blockSize -1)/blockSize, 1, 1);
-      KrnlWth2MemTypesC<<<dimGrid, dimBlock, 0, strm>>>(Hmm2, Hmm1, i);
-      HIP_CHECK(hipStreamSynchronize(strm));
-      //  Verifying the results
-      for (int k = 0; k < i; ++k) {
-        if (Hmm2[k] != (InitVal + 10)) {
-          DataMismatch++;
-        }
-      }
-      if (DataMismatch != 0) {
-        WARN("DataMismatch observed!\n");
-        IfTestPassed = false;
-      }
-      DataMismatch = 0;
-      HIP_CHECK(hipFree(Hmm1));
-      HIP_CHECK(hipFree(Hmm2));
-      REQUIRE(IfTestPassed);
-    }
-  } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
-           "attribute. Hence skipping the testing with Pass result.\n");
-  }
-}

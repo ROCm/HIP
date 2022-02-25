@@ -252,9 +252,9 @@ void RunBenchmark_H2D(ResultDatabase& resultDB) {
 
         case MallocUnpinned:
             if (p_alignedhost) {
-                delete[] hostMem;
-            } else {
                 free(hostMem);
+            } else {
+                delete[] hostMem;
             }
             break;
 
