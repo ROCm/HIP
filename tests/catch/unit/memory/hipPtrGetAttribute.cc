@@ -41,14 +41,11 @@ TEST_CASE("Unit_hipPtrGetAttribute_Simple") {
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   char* A_d;
   char* A_Pinned_h;
-  char* A_OSAlloc_h;
   char* A_Hmm;
-  hipError_t e;
 
   HIP_CHECK(hipMalloc(&A_d, Nbytes));
   HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&A_Pinned_h), Nbytes,
                          hipHostMallocDefault));
-  A_OSAlloc_h = reinterpret_cast<char*>(malloc(Nbytes));
   HIP_CHECK(hipMallocManaged(&A_Hmm, Nbytes));
 
   size_t free, total;
