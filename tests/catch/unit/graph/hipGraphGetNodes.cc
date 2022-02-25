@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,13 +18,20 @@ THE SOFTWARE.
 */
 
 /**
-Testcase Scenarios :
+Testcase Scenarios
+------------------
 Functional ::
 1) Add nodes to graph and get nodes. Verify the added nodes are present in returned list.
 2) Pass nodes as nullptr and verify numNodes returns actual number of nodes added to graph.
 3) If numNodes passed is greater than the actual number of nodes, the remaining entries in nodes
 will be set to NULL, and the number of nodes actually obtained will be returned in numNodes.
 
+Argument Validation ::
+1) Pass graph as nullptr and verify api returns error code.
+2) Pass numNodes as nullptr and other params as valid values. Expect api to return error code.
+3) When there are no nodes in graph, expect numNodes to be set to zero.
+4) Pass numNodes less than actual number of nodes. Expect api to populate requested number of node entries
+and does update numNodes.
 */
 
 #include <hip_test_common.hh>
@@ -32,7 +39,7 @@ will be set to NULL, and the number of nodes actually obtained will be returned 
 #include <hip_test_kernels.hh>
 
 /**
- * Functional Test for API fetching node list
+ * Functional Test for hipGraphGetNodes API fetching node list
  */
 TEST_CASE("Unit_hipGraphGetNodes_Functional") {
   constexpr size_t N = 1024;
@@ -130,4 +137,83 @@ TEST_CASE("Unit_hipGraphGetNodes_Functional") {
   HIP_CHECK(hipGraphDestroy(graph));
   HIP_CHECK(hipStreamDestroy(streamForGraph));
   free(nodes);
+}
+
+/**
+ * Test performs api parameter validation by passing various values
+ * as input and output parameters and validates the behavior.
+ * Test will include both negative and positive scenarios.
+ */
+TEST_CASE("Unit_hipGraphGetNodes_ParamValidation") {
+  hipStream_t stream{nullptr};
+  hipGraph_t graph{nullptr};
+  constexpr unsigned blocks = 512;
+  constexpr unsigned threadsPerBlock = 256;
+  constexpr size_t N = 1000000;
+  size_t Nbytes = N * sizeof(float), numNodes{};
+  float *A_d, *C_d;
+  float *A_h, *C_h;
+  A_h = reinterpret_cast<float*>(malloc(Nbytes));
+  C_h = reinterpret_cast<float*>(malloc(Nbytes));
+  REQUIRE(A_h != nullptr);
+  REQUIRE(C_h != nullptr);
+  HIP_CHECK(hipMalloc(&A_d, Nbytes));
+  HIP_CHECK(hipMalloc(&C_d, Nbytes));
+  REQUIRE(A_d != nullptr);
+  REQUIRE(C_d != nullptr);
+
+  HIP_CHECK(hipStreamCreate(&stream));
+  HIP_CHECK(hipStreamBeginCapture(stream, hipStreamCaptureModeGlobal));
+  HIP_CHECK(hipMemcpyAsync(A_d, A_h, Nbytes, hipMemcpyHostToDevice, stream));
+  HIP_CHECK(hipMemsetAsync(C_d, 0, Nbytes, stream));
+  hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
+                              dim3(threadsPerBlock), 0, stream, A_d, C_d, N);
+  HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, stream));
+  HIP_CHECK(hipStreamEndCapture(stream, &graph));
+  HIP_CHECK(hipGraphGetNodes(graph, nullptr, &numNodes));
+  INFO("Num of nodes returned by GetNodes : " << numNodes);
+
+  int numBytes = sizeof(hipGraphNode_t) * numNodes;
+  hipGraphNode_t* nodes = reinterpret_cast<hipGraphNode_t *>(malloc(numBytes));
+  REQUIRE(nodes != nullptr);
+
+  SECTION("graph as nullptr") {
+    hipError_t ret = hipGraphGetNodes(nullptr, nodes, &numNodes);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+
+  SECTION("numNodes as nullptr") {
+    hipError_t ret = hipGraphGetNodes(graph, nodes, nullptr);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+
+  SECTION("no nodes in graph") {
+    hipGraph_t emptyGraph{};
+    HIP_CHECK(hipGraphCreate(&emptyGraph, 0));
+    HIP_CHECK(hipGraphGetNodes(emptyGraph, nullptr, &numNodes));
+    REQUIRE(numNodes == 0);
+  }
+
+  SECTION("numNodes less than actual number of nodes") {
+    size_t numPartNodes = numNodes - 1;
+    hipGraphNodeType nodeType;
+    HIP_CHECK(hipGraphGetNodes(graph, nodes, &numPartNodes));
+
+    // verify numPartNodes is unchanged
+    REQUIRE(numPartNodes == numNodes - 1);
+    // verify partial node list returned has valid nodes
+    for (size_t i = 0; i < numPartNodes; i++) {
+      HIP_CHECK(hipGraphNodeGetType(nodes[i], &nodeType));
+      REQUIRE(nodeType >= 0);
+      REQUIRE(nodeType < hipGraphNodeTypeCount);
+    }
+  }
+
+  HIP_CHECK(hipGraphDestroy(graph));
+  HIP_CHECK(hipStreamDestroy(stream));
+  free(A_h);
+  free(C_h);
+  free(nodes);
+  HIP_CHECK(hipFree(A_d));
+  HIP_CHECK(hipFree(C_d));
 }

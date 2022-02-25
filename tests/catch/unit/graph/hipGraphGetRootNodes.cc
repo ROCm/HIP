@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,13 +18,21 @@ THE SOFTWARE.
 */
 
 /**
-Testcase Scenarios :
+Testcase Scenarios
+------------------
 Functional ::
  1) Add nodes to graph with and without dependencies, verify the api returns list of
  root nodes (i.e., nodes without dependencies).
  2) Pass nodes as nullptr and verify api returns actual number of root nodes added to graph.
  3) If NumRootNodes passed is greater than the actual number of root nodes, the remaining entries in
  nodes list will be set to NULL, and the number of nodes actually obtained will be returned in NumRootNodes.
+
+Argument Validation ::
+ 1) Pass graph as nullptr and verify api returns error code.
+ 2) Pass numRootNodes as nullptr and other params as valid values. Expect api to return error code.
+ 3) When there are no nodes in graph, expect numRootNodes to be set to zero.
+ 4) Pass numRootNodes less than actual number of nodes. Expect api to populate requested number of node entries
+ and does update numRootNodes.
 */
 
 #include <hip_test_common.hh>
@@ -41,6 +49,7 @@ TEST_CASE("Unit_hipGraphGetRootNodes_Functional") {
   constexpr auto threadsPerBlock = 256;
   constexpr auto addlEntries = 5;
   hipGraph_t graph;
+
   hipGraphNode_t memcpyNode, kernelNode;
   hipKernelNodeParams kernelNodeParams{};
   hipStream_t streamForGraph;
@@ -130,4 +139,101 @@ TEST_CASE("Unit_hipGraphGetRootNodes_Functional") {
   HIP_CHECK(hipGraphDestroy(graph));
   HIP_CHECK(hipStreamDestroy(streamForGraph));
   free(rootnodes);
+}
+
+/**
+ * Test performs api parameter validation by passing various values
+ * as input and output parameters and validates the behavior.
+ * Test will include both negative and positive scenarios.
+ */
+TEST_CASE("Unit_hipGraphGetRootNodes_ParamValidation") {
+  hipStream_t stream1{nullptr}, stream2{nullptr}, mstream{nullptr};
+  hipEvent_t memsetEvent1, memsetEvent2, forkStreamEvent;
+  hipGraph_t graph{nullptr};
+  constexpr unsigned blocks = 512;
+  constexpr unsigned threadsPerBlock = 256;
+  constexpr size_t N = 1000000;
+  size_t Nbytes = N * sizeof(float), numRootNodes{};
+  float *A_d, *C_d;
+  float *A_h, *C_h;
+  A_h = reinterpret_cast<float*>(malloc(Nbytes));
+  C_h = reinterpret_cast<float*>(malloc(Nbytes));
+  REQUIRE(A_h != nullptr);
+  REQUIRE(C_h != nullptr);
+  HIP_CHECK(hipMalloc(&A_d, Nbytes));
+  HIP_CHECK(hipMalloc(&C_d, Nbytes));
+  REQUIRE(A_d != nullptr);
+  REQUIRE(C_d != nullptr);
+
+  HIP_CHECK(hipStreamCreate(&stream1));
+  HIP_CHECK(hipStreamCreate(&stream2));
+  HIP_CHECK(hipStreamCreate(&mstream));
+  HIP_CHECK(hipEventCreate(&memsetEvent1));
+  HIP_CHECK(hipEventCreate(&memsetEvent2));
+  HIP_CHECK(hipEventCreate(&forkStreamEvent));
+  HIP_CHECK(hipStreamBeginCapture(mstream, hipStreamCaptureModeGlobal));
+  HIP_CHECK(hipEventRecord(forkStreamEvent, mstream));
+  HIP_CHECK(hipStreamWaitEvent(stream1, forkStreamEvent, 0));
+  HIP_CHECK(hipStreamWaitEvent(stream2, forkStreamEvent, 0));
+  HIP_CHECK(hipMemsetAsync(A_d, 0, Nbytes, stream1));
+  HIP_CHECK(hipEventRecord(memsetEvent1, stream1));
+  HIP_CHECK(hipMemsetAsync(C_d, 0, Nbytes, stream2));
+  HIP_CHECK(hipEventRecord(memsetEvent2, stream2));
+  HIP_CHECK(hipStreamWaitEvent(mstream, memsetEvent1, 0));
+  HIP_CHECK(hipStreamWaitEvent(mstream, memsetEvent2, 0));
+  HIP_CHECK(hipMemcpyAsync(A_d, A_h, Nbytes, hipMemcpyHostToDevice, mstream));
+  hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
+                              dim3(threadsPerBlock), 0, mstream, A_d, C_d, N);
+  HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, mstream));
+  HIP_CHECK(hipStreamEndCapture(mstream, &graph));
+  HIP_CHECK(hipGraphGetRootNodes(graph, nullptr, &numRootNodes));
+  INFO("Num of nodes returned by GetRootNodes : " << numRootNodes);
+  int numBytes = sizeof(hipGraphNode_t) * numRootNodes;
+  hipGraphNode_t* nodes = reinterpret_cast<hipGraphNode_t *>(malloc(numBytes));
+  REQUIRE(nodes != nullptr);
+
+  SECTION("graph as nullptr") {
+    hipError_t ret = hipGraphGetRootNodes(nullptr, nodes, &numRootNodes);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+
+  SECTION("numRootNodes as nullptr") {
+    hipError_t ret = hipGraphGetRootNodes(graph, nodes, nullptr);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+
+  SECTION("no nodes in graph") {
+    hipGraph_t emptyGraph{};
+    HIP_CHECK(hipGraphCreate(&emptyGraph, 0));
+    HIP_CHECK(hipGraphGetRootNodes(emptyGraph, nullptr, &numRootNodes));
+    REQUIRE(numRootNodes == 0);
+  }
+
+  SECTION("numRootNodes less than actual number of nodes") {
+    size_t numPartNodes = numRootNodes - 1;
+    hipGraphNodeType nodeType;
+    HIP_CHECK(hipGraphGetRootNodes(graph, nodes, &numPartNodes));
+
+    // verify numPartNodes is unchanged
+    REQUIRE(numPartNodes == numRootNodes - 1);
+    // verify partial node list returned has valid nodes
+    for (size_t i = 0; i < numPartNodes; i++) {
+      HIP_CHECK(hipGraphNodeGetType(nodes[i], &nodeType));
+      REQUIRE(nodeType >= 0);
+      REQUIRE(nodeType < hipGraphNodeTypeCount);
+    }
+  }
+
+  HIP_CHECK(hipGraphDestroy(graph));
+  HIP_CHECK(hipStreamDestroy(mstream));
+  HIP_CHECK(hipStreamDestroy(stream1));
+  HIP_CHECK(hipStreamDestroy(stream2));
+  HIP_CHECK(hipEventDestroy(forkStreamEvent));
+  HIP_CHECK(hipEventDestroy(memsetEvent1));
+  HIP_CHECK(hipEventDestroy(memsetEvent2));
+  free(A_h);
+  free(C_h);
+  free(nodes);
+  HIP_CHECK(hipFree(A_d));
+  HIP_CHECK(hipFree(C_d));
 }
