@@ -50,7 +50,6 @@ TEST_CASE("Unit_hipGraphGetRootNodes_Functional") {
   constexpr auto addlEntries = 5;
   hipGraph_t graph;
 
-
   hipGraphNode_t memcpyNode, kernelNode;
   hipKernelNodeParams kernelNodeParams{};
   hipStream_t streamForGraph;
