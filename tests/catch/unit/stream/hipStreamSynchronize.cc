@@ -20,14 +20,13 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 
 namespace hipStreamSynchronizeTest {
-const hipStream_t explicitStream = (hipStream_t)-1;
-const hipStream_t nullStream = (hipStream_t)0;
+const hipStream_t nullStream = nullptr;
 const hipStream_t streamPerThread = hipStreamPerThread;
 
 __device__ int defaultSemaphore = 0;
 
 /**
- * @brief Kernel that signals a semaphore to go change value from 0 to 1.
+ * @brief Kernel that signals a semaphore to change value from 0 to 1.
  *
  * @param semaphore the semaphore that needs to be signaled.
  */
@@ -99,6 +98,7 @@ TEST_CASE("Unit_hipStreamSynchronize_EmptyStream") {
  *
  */
 TEST_CASE("Unit_hipStreamSynchronize_FinishWork") {
+  const hipStream_t explicitStream = reinterpret_cast<hipStream_t>(-1);
   hipStream_t stream = GENERATE_COPY(explicitStream, nullStream, streamPerThread);
 
   if (stream == explicitStream) {
@@ -117,12 +117,11 @@ TEST_CASE("Unit_hipStreamSynchronize_FinishWork") {
 }
 
 /**
- * @brief Check that synchronising the Null Stream implicitly synchronises all executing streams.
+ * @brief Check that synchronising the nullStream implicitly synchronises all executing streams.
  *
  */
 TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
-
-//FIXME Report this bug to Amd
+// FIXME Report this bug to Amd
 #ifdef __HIP_PLATFORM_AMD__
   int totalStreams = 2;
 #else
@@ -135,7 +134,7 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
 
   for (int i = 0; i < totalStreams; ++i) {
     hipStream_t stream;
-    int* semaphore;
+    int* semaphore = nullptr;
     HIP_CHECK(hipStreamCreate(&stream));
     HIP_CHECK(hipMalloc(&semaphore, sizeof(int)));
     HIP_CHECK(hipMemset(semaphore, 0, sizeof(int)));
@@ -151,13 +150,12 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
     REQUIRE(hipStreamQuery(streams[i]) == hipErrorNotReady);
   }
 
-
+  REQUIRE(hipStreamQuery(nullStream) == hipErrorNotReady);
   for (int i = 0; i < totalStreams; ++i) {
     signalingThreads.push_back(startSignalingThread(semaphores[i]));
   }
 
-  REQUIRE(hipStreamQuery(nullStream) == hipErrorNotReady);
-  hipStreamSynchronize(nullStream);
+  HIP_CHECK(hipStreamSynchronize(nullStream));
   HIP_CHECK(hipStreamQuery(nullStream));
 
   for (int i = 0; i < totalStreams; ++i) {
@@ -168,7 +166,6 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
     HIP_CHECK(hipStreamQuery(streams[i]));
   }
 
-  hipDeviceSynchronize();
   for (int i = 0; i < totalStreams; ++i) {
     HIP_CHECK(hipStreamDestroy(streams[i]));
     HIP_CHECK(hipFree(semaphores[i]));
@@ -238,7 +235,7 @@ TEST_CASE("Unit_hipStreamSynchronize_SubmitWorkOnStreamAndQueryNullStream") {
 
     REQUIRE(hipStreamQuery(nullStream) == hipSuccess);
     waiting_kernel<<<1, 1, 0, stream>>>();
-    REQUIRE(hipStreamQuery(stream) == hipErrorNotReady);
+    REQUIRE(hipStreamQuery(nullStream) == hipErrorNotReady);
 
     std::thread signalingThread = startSignalingThread();
     HIP_CHECK(hipDeviceSynchronize());
@@ -264,7 +261,7 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamQuery") {
 }
 
 /**
- * @brief Check that synchronizing the Null stream also synchronizes the hipStreamPerThread
+ * @brief Check that synchronizing the nullStream also synchronizes the hipStreamPerThread
  * special stream.
  *
  */
