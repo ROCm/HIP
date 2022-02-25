@@ -1,2 +1,2 @@
-@IF DEFINED HIP_PATH (set HIPCONFIG="%HIP_PATH%/bin/hipconfig") ELSE (set HIPCONFIG="%CD%/hipconfig")
+set HIPCONFIG="%~dp0/hipconfig"
 @perl %HIPCONFIG% %*

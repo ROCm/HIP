@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Advanced Micro Devices, Inc. All Rights Reserved.
+# Copyright (c) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,21 @@ set(TEST_SRC
   hipGraph.cc
   hipSimpleGraphWithKernel.cc
   hipGraphAddMemcpyNode.cc
+  hipGraphClone.cc
+  hipGraphInstantiateWithFlags.cc
+  hipGraphAddHostNode.cc
+  hipGraphAddMemcpyNodeFromSymbol.cc
+  hipGraphChildGraphNodeGetGraph.cc
+  hipGraphNodeFindInClone.cc
+  hipGraphExecHostNodeSetParams.cc
+  hipGraphAddMemcpyNodeToSymbol.cc
+  hipGraphExecMemsetNodeSetParams.cc
+  hipGraphMemcpyNodeSetParamsToSymbol.cc
+  hipGraphDestroyNode.cc
   hipGraphGetNodes.cc
   hipGraphGetRootNodes.cc
 )
 
-# Create shared lib of all tests
-add_library(GraphsTest SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
-
-# Add dependency on build_tests to build it on this custom target
-add_dependencies(build_tests GraphsTest)
+hip_add_exe_to_target(NAME GraphsTest
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests)

@@ -10,6 +10,7 @@ set(TEST_SRC
     popc.cc
     ldg.cc
     threadfence_system.cc
+    hipTestDeviceSymbol.cc
 )
 
 # skipped for windows compiler issue - Illegal instruction detected

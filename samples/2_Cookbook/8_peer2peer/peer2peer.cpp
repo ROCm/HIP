@@ -174,6 +174,7 @@ int main() {
                     dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, gpuTransposeMatrix[0],
                     data[0], width);
+    HIPCHECK(hipDeviceSynchronize());
 
     HIPCHECK(hipSetDevice(peerGpu));
     TransposeMatrix[1] = (float*)malloc(NUM * sizeof(float));

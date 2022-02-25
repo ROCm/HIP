@@ -169,9 +169,12 @@ function(catch_discover_tests TARGET)
     VERBATIM
   )
 
+  file(RELATIVE_PATH ctestincludepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_include_file})
+  file(RELATIVE_PATH ctestfilepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_tests_file})
+
   file(WRITE "${ctest_include_file}"
-    "if(EXISTS \"${ctest_tests_file}\")\n"
-    "  include(\"${ctest_tests_file}\")\n"
+    "if(EXISTS \"${ctestfilepath}\")\n"
+    "  include(\"${ctestfilepath}\")\n"
     "else()\n"
     "  message(WARNING \"Test ${TARGET} not built yet.\")\n"
     "endif()\n"
@@ -180,14 +183,14 @@ function(catch_discover_tests TARGET)
   if(NOT ${CMAKE_VERSION} VERSION_LESS "3.10.0") 
     # Add discovered tests to directory TEST_INCLUDE_FILES
     set_property(DIRECTORY
-      APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_include_file}"
+      APPEND PROPERTY TEST_INCLUDE_FILES "${ctestincludepath}"
     )
   else()
     # Add discovered tests as directory TEST_INCLUDE_FILE if possible
     get_property(test_include_file_set DIRECTORY PROPERTY TEST_INCLUDE_FILE SET)
     if (NOT ${test_include_file_set})
       set_property(DIRECTORY
-        PROPERTY TEST_INCLUDE_FILE "${ctest_include_file}"
+        PROPERTY TEST_INCLUDE_FILE "${ctestincludepath}"
       )
     else()
       message(FATAL_ERROR

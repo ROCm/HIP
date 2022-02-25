@@ -61,7 +61,7 @@ static __global__ void reduceFinal(double* d_in, double* d_out) {
 static void init_input(float* a, size_t size) {
   unsigned int seed = time(nullptr);
   for (size_t i = 0; i < size; i++) {
-    a[i] = (rand_r(&seed) & 0xFF) / static_cast<float>(RAND_MAX);
+    a[i] = (HipTest::RAND_R(&seed) & 0xFF) / static_cast<float>(RAND_MAX);
   }
 }
 

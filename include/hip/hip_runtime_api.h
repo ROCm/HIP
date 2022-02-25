@@ -445,6 +445,8 @@ typedef enum hipDeviceAttribute_t {
                                                                 ///< hipStreamWaitValue64(), '0' otherwise.
     hipDeviceAttributeImageSupport,                             ///< '1' if Device supports image, '0' otherwise.
 
+    hipDeviceAttributeMultiprocessorBoostCount,                 ///< All available boost compute units for the device
+
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
     // Extended attributes for vendors
@@ -4276,7 +4278,7 @@ typedef enum hipGraphExecUpdateResult {
                                   ///< in the return value of the function
   hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
   hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
-  hipGraphExecUpdateErrorFunctionChanged = 
+  hipGraphExecUpdateErrorFunctionChanged =
       0x4,  ///< The update failed because the function of a kernel node changed
   hipGraphExecUpdateErrorParametersChanged =
       0x5,  ///< The update failed because the parameters changed in a way that is not supported
@@ -4301,6 +4303,11 @@ typedef enum hipStreamUpdateCaptureDependenciesFlags {
   hipStreamAddCaptureDependencies = 0,  ///< Add new nodes to the dependency set
   hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
 } hipStreamUpdateCaptureDependenciesFlags;
+
+typedef enum hipGraphInstantiateFlags {
+  hipGraphInstantiateFlagAutoFreeOnLaunch =
+      1,  ///< Automatically free memory allocated in a graph before relaunching.
+} hipGraphInstantiateFlags;
 
 /**
  * @brief Begins graph capture on a stream.
@@ -4398,6 +4405,31 @@ hipError_t hipStreamIsCapturing(hipStream_t stream, hipStreamCaptureStatus* pCap
 hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t* dependencies,
                                               size_t numDependencies,
                                               unsigned int flags __dparm(0));
+
+/**
+ * @brief Enqueues a host function call in a stream.
+ *
+ * @param [in] stream - stream to enqueue work to.
+ * @param [in] fn - function to call once operations enqueued preceeding are complete.
+ * @param [in] userData - User-specified data to be passed to the function.
+ * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
+ * #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
+
+/**
+ * @brief Swaps the stream capture mode of a thread.
+ *
+ * @param [in] mode - Pointer to mode value to swap with the current mode
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ */
+hipError_t hipThreadExchangeStreamCaptureMode(hipStreamCaptureMode* mode);
 
 /**
  * @brief Creates a graph
@@ -5223,6 +5255,7 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
  *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
  */
 typedef unsigned int GLuint;
+typedef unsigned int GLenum;
 
 // Queries devices associated with GL Context.
 hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
@@ -5230,9 +5263,15 @@ hipError_t hipGLGetDevices(unsigned int* pHipDeviceCount, int* pHipDevices,
 // Registers a GL Buffer for interop and returns corresponding graphics resource.
 hipError_t hipGraphicsGLRegisterBuffer(hipGraphicsResource** resource, GLuint buffer,
                                        unsigned int flags);
+// Register a GL Image for interop and returns the corresponding graphic resource
+hipError_t hipGraphicsGLRegisterImage(hipGraphicsResource** resource, GLuint image,
+                                      GLenum target, unsigned int flags);
 // Maps a graphics resource for hip access.
 hipError_t hipGraphicsMapResources(int count, hipGraphicsResource_t* resources,
                                    hipStream_t stream  __dparm(0) );
+// Get an array through which to access a subresource of a mapped graphics resource.
+hipError_t hipGraphicsSubResourceGetMappedArray(hipArray_t* array, hipGraphicsResource_t resource,
+                                                unsigned int arrayIndex, unsigned int mipLevel);
 // Gets device accessible address of a graphics resource.
 hipError_t hipGraphicsResourceGetMappedPointer(void** devPtr, size_t* size,
                                                hipGraphicsResource_t resource);

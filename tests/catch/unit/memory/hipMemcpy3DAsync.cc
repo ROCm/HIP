@@ -290,6 +290,7 @@ void Memcpy3DAsync<T>::NegativeTests() {
   HIP_CHECK(hipStreamCreate(&stream));
 
   // Initialization of data
+  memset(&myparms, 0, sizeof(myparms));
   myparms.srcPos = make_hipPos(0, 0, 0);
   myparms.dstPos = make_hipPos(0, 0, 0);
   myparms.extent = make_hipExtent(width , height, depth);
@@ -601,8 +602,14 @@ void Memcpy3DAsync<T>::simple_Memcpy3DAsync() {
 #else
   myparms.kind = hipMemcpyHostToDevice;
 #endif
-  REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
-  HIP_CHECK(hipStreamSynchronize(stream));
+  SECTION("Calling hipMemcpy3DAsync() using user declared stream obj") {
+    REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(stream));
+  }
+  SECTION("Calling hipMemcpy3DAsync() using hipStreamPerThread") {
+    REQUIRE(hipMemcpy3DAsync(&myparms, hipStreamPerThread) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+  }
 
   // Array to Array
   memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
