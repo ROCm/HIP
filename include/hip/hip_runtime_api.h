@@ -444,7 +444,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeCanUseStreamWaitValue,                    ///< '1' if Device supports hipStreamWaitValue32() and
                                                                 ///< hipStreamWaitValue64(), '0' otherwise.
     hipDeviceAttributeImageSupport,                             ///< '1' if Device supports image, '0' otherwise.
-
+    hipDeviceAttributePhysicalMultiProcessorCount,              ///< All available physical compute
+                                                                ///< units for the device
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
     // Extended attributes for vendors
