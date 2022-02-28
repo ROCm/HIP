@@ -17,15 +17,24 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+/* Test Case Description:
+   1) Allocate managed memory --> prefetch to gpu 0
+   call hipMemAdvise() on the memory and apply the flags ReadMostly,
+   AccessedBy, and PreferredLocation for gpus other than gpu 0 and verify
+   the flags using hipMemGetAttribute()
+   2) Allocate managed memory --> set AccessedBy using
+    hipMemAdvise() to gpu1 prefetch the memory to gpu 0 and then query for
+    AccessedBy using hipMemGetAttribute() and validate if AccessedBy is still
+    set to gpu1. Similar tests are done with ReadMostly and PreferredLocation
+    flags
+   3) Negative testing with hipMemPrefetchAsync() api
+   4) In this test case I am trying to allocate HMM memory
+   which is not multiple of page Size, but still trying to launch kernel and
+   see if we are getting values as expected.
+ */
+
 #include <hip_test_common.hh>
 // Kernel function
-__global__ void MemPrftchAsyncKernel(int* Hmm, const int* Hmm1, size_t N) {
-  size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-  size_t stride = hipBlockDim_x * hipGridDim_x;
-  for (size_t i = offset; i < N; i += stride) {
-    Hmm[i] = Hmm1[i] * Hmm1[i];
-  }
-}
 
 __global__ void MemPrftchAsyncKernel1(int* Hmm, size_t N) {
   size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
@@ -57,86 +66,6 @@ static int HmmAttrPrint() {
                                   0));
   WARN("hipDeviceAttributeManagedMemory: " << managed);
   return managed;
-}
-
-static void ReleaseResource(int *Hmm, int *Hmm1, hipStream_t *strm) {
-  HIP_CHECK(hipFree(Hmm));
-  HIP_CHECK(hipFree(Hmm1));
-  HIP_CHECK(hipStreamDestroy(*strm));
-}
-
-/* The following test allocates a managed memory and prefetch it in
-   one-to-all and all-to-one fahsion followed by kernel launch within available
-   devices*/
-TEST_CASE("Unit_hipMemPrefetchAsyncOneToAll") {
-  int MangdMem = HmmAttrPrint();
-  if (MangdMem == 1) {
-    int *Hmm = nullptr, *Hmm1 = nullptr, NumDevs, MemSz = (4096 * 4);
-    int InitVal = 123, NumElms = MemSz/4;
-    bool IfTestPassed = true;
-    HIP_CHECK(hipGetDeviceCount(&NumDevs));
-    HIP_CHECK(hipMallocManaged(&Hmm, MemSz));
-    HIP_CHECK(hipMallocManaged(&Hmm1, MemSz));
-    for (int i = 0; i < NumElms; ++i) {
-      Hmm1[i] = InitVal;
-    }
-    hipStream_t strm;
-    for (int i = -1; i < NumDevs; ++i) {
-      HIP_CHECK(hipMemPrefetchAsync(Hmm1, MemSz, i, 0));
-      for (int j = -1; j < NumDevs; ++j) {
-        if (i == j) {
-          continue;
-        }
-        if (j != -1) {
-          HIP_CHECK(hipSetDevice(j));
-        }
-        HIP_CHECK(hipStreamCreate(&strm));
-        // Prefetching memory from i to j
-        HIP_CHECK(hipMemPrefetchAsync(Hmm1, MemSz, j, strm));
-        HIP_CHECK(hipStreamSynchronize(strm));
-        MemPrftchAsyncKernel<<<(NumElms/32), 32, 0, strm>>>(Hmm, Hmm1, NumElms);
-        HIP_CHECK(hipStreamSynchronize(strm));
-        // Verifying the result
-        for (int m = 0; m < NumElms; ++m) {
-          if (Hmm[m] != (InitVal * InitVal)) {
-            IfTestPassed = false;
-          }
-        }
-        if (!IfTestPassed) {
-          ReleaseResource(Hmm, Hmm1, &strm);
-          INFO("Did not find expected value!");
-          REQUIRE(false);
-        }
-        // Resetting the values in Hmm
-        HIP_CHECK(hipMemset(Hmm, 0, MemSz));
-        // Prefetching memory from j to i
-        HIP_CHECK(hipMemPrefetchAsync(Hmm1, MemSz, i, strm));
-        HIP_CHECK(hipStreamSynchronize(strm));
-        MemPrftchAsyncKernel<<<(NumElms/32), 32, 0, strm>>>(Hmm, Hmm1, NumElms);
-        HIP_CHECK(hipStreamSynchronize(strm));
-        // Verifying the result
-        for (int m = 0; m < NumElms; ++m) {
-          if (Hmm[m] != (InitVal * InitVal)) {
-            IfTestPassed = false;
-          }
-        }
-        if (!IfTestPassed) {
-          ReleaseResource(Hmm, Hmm1, &strm);
-          INFO("Did not find expected value!");
-          REQUIRE(false);
-        }
-        // Resetting the values in Hmm
-        HIP_CHECK(hipMemset(Hmm, 0, MemSz));
-        HIP_CHECK(hipStreamDestroy(strm));
-      }
-    }
-    // Releasing the resources in case all the scenarios passed
-    HIP_CHECK(hipFree(Hmm));
-    HIP_CHECK(hipFree(Hmm1));
-  } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
-           "attribute. Hence skipping the testing with Pass result.\n");
-  }
 }
 
 /* Test Case Description: Allocate managed memory --> prefetch to gpu 0

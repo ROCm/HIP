@@ -97,15 +97,13 @@ hip-clang generates initializatiion and termination functions for each translati
 hip-clang emits a global variable `__hip_gpubin_handle` of void** type with linkonce linkage and inital value 0 for each host translation unit. Each initialization function checks `__hip_gpubin_handle` and register the fatbinary only if `__hip_gpubin_handle` is 0 and saves the return value of `__hip_gpubin_handle` to `__hip_gpubin_handle`. This is to guarantee that the fatbinary is only registered once. Similar check is done in the termination functions.
 
 #### Kernel Launching
-hip-clang supports kernel launching by CUDA `<<<>>>` syntax, hipLaunchKernel, and hipLaunchKernelGGL. The latter two are macros which expand to CUDA `<<<>>>` syntax.
+hip-clang supports kernel launching by CUDA `<<<>>>` syntax, hipLaunchKernelGGL. The latter one is macro which expand to CUDA `<<<>>>` syntax.
 
 When the executable or shared library is loaded by the dynamic linker, the initilization functions are called. In the initialization functions, when `__hipRegisterFatBinary` is called, the code objects containing all kernels are loaded; when `__hipRegisterFunction` is called, the stub functions are associated with the corresponding kernels in code objects.
 
 hip-clang implements two sets of kernel launching APIs.
 
 By default, in the host code, for the `<<<>>>` statement, hip-clang first emits call of hipConfigureCall to set up the threads and grids, then emits call of the stub function with the given arguments. In the stub function, hipSetupArgument is called for each kernel argument, then hipLaunchByPtr is called with a function pointer to the stub function. In hipLaunchByPtr, the real kernel associated with the stub function is launched.
-
-If HIP program is compiled with -fhip-new-launch-api, in the host code, for the `<<<>>>` statement, hip-clang first emits call of `__hipPushCallConfiguration` to save the grid dimension, block dimension, shared memory usage and stream to a stack, then emits call of the stub function with the given arguments. In the stub function, `__hipPopCallConfiguration` is called to get the saved grid dimension, block dimension, shared memory usage and stream, then hipLaunchKernel is called with a function pointer to the stub function. In hipLaunchKernel, the real kernel associated with the stub function is launched.
 
 ### NVCC Implementation Notes
 
