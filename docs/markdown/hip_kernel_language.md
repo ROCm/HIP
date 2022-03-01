@@ -31,7 +31,6 @@
 - [Surface Functions](#surface-functions)
 - [Timer Functions](#timer-functions)
 - [Atomic Functions](#atomic-functions)
-  * [Caveats and Features Under-Development:](#caveats-and-features-under-development)
 - [Warp Cross-Lane Functions](#warp-cross-lane-functions)
   * [Warp Vote and Ballot Functions](#warp-vote-and-ballot-functions)
   * [Warp Shuffle Functions](#warp-shuffle-functions)
@@ -101,8 +100,8 @@ HIP parses the `__noinline__` and `__forceinline__` keywords and converts them t
 ## Calling `__global__` Functions
 
 `__global__` functions are often referred to as *kernels,* and calling one is termed *launching the kernel.* These functions require the caller to specify an "execution configuration" that includes the grid and block dimensions. The execution configuration can also include other information for the launch, such as the amount of additional shared memory to allocate and the stream where the kernel should execute. HIP introduces a standard C++ calling convention to pass the execution configuration to the kernel in addition to the Cuda <<< >>> syntax. In HIP,
-- Kernels launch with either <<< >>> syntax or the "hipLaunchKernel" function
-- The first five parameters to hipLaunchKernel are the following:
+- Kernels launch with either <<< >>> syntax or the "hipLaunchKernelGGL" function
+- The first five parameters to hipLaunchKernelGGL are the following:
    - **symbol kernelName**: the name of the kernel to launch.  To support template kernels which contains "," use the HIP_KERNEL_NAME macro.   The hipify tools insert this automatically.
    - **dim3 gridDim**: 3D-grid dimensions specifying the number of blocks to launch.
    - **dim3 blockDim**: 3D-block dimensions specifying the number of threads in each block.
@@ -112,7 +111,7 @@ HIP parses the `__noinline__` and `__forceinline__` keywords and converts them t
 
 
 ```
-// Example pseudo code introducing hipLaunchKernel:
+// Example pseudo code introducing hipLaunchKernelGGL:
 __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
 {
 ...
@@ -120,11 +119,13 @@ __global__ MyKernel(hipLaunchParm lp, float *A, float *B, float *C, size_t N)
 
 MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
 // Alternatively, kernel can be launched by
-// hipLaunchKernel(MyKernel, dim3(gridDim), dim3(groupDim), 0/*dynamicShared*/, 0/*stream), a, b, c, n);
+// hipLaunchKernelGGL(MyKernel, dim3(gridDim), dim3(groupDim), 0/*dynamicShared*/, 0/*stream), a, b, c, n);
 
 ```
 
-The hipLaunchKernel macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernel, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernel parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (thread*, block*, grid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See [Coordinate Built-Ins](#coordinate-builtins).
+The hipLaunchKernelGGL macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernelGGL, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernelGGL parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (thread*, block*, grid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See [Coordinate Built-Ins](#coordinate-builtins).
+
+Please note, HIP does not support kernel launch with total work items defined in dimension with size gridDim x blockDim >= 2^32.
 
 
 ## Kernel-Launch Example
@@ -154,7 +155,7 @@ void callMyKernel()
 
     MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
     // Alternatively, kernel can be launched by
-    // hipLaunchKernel(MyKernel, dim3(N/blockSize), dim3(blockSize), 0, 0,  a,b,c,N);
+    // hipLaunchKernelGGL(MyKernel, dim3(N/blockSize), dim3(blockSize), 0, 0,  a,b,c,N);
 }
 ```
 
@@ -172,8 +173,7 @@ Previously, it was essential to declare dynamic shared memory using the HIP_DYNA
 Now, the HIP-Clang compiler provides support for extern shared declarations, and the HIP_DYNAMIC_SHARED option is no longer required..
 
 ### `__managed__`
-Managed memory, except the `__managed__` keyword, are supported in HIP combined host/device compilation.
-Support of `__managed__` keyword is under development.
+Managed memory, including the `__managed__` keyword, are supported in HIP combined host/device compilation.
 
 ### `__restrict__`
 The `__restrict__` keyword tells the compiler that the associated memory pointer will not alias with any other pointer in the kernel or function.  This feature can help the compiler generate better code. In most cases, all pointer arguments must use this keyword to realize the benefit.
@@ -182,25 +182,10 @@ The `__restrict__` keyword tells the compiler that the associated memory pointer
 ## Built-In Variables
 
 ### Coordinate Built-Ins
-These built-ins determine the coordinate of the active work item in the execution grid. They are defined in hip_runtime.h (rather than being implicitly defined by the compiler).
-
-| **HIP Syntax** | **Cuda Syntax** |
-| --- | --- |
-| threadIdx.x | threadIdx.x |
-| threadIdx.y | threadIdx.y |
-| threadIdx.z | threadIdx.z |
-|                |             |
-| blockIdx.x  | blockIdx.x  |
-| blockIdx.y  | blockIdx.y  |
-| blockIdx.z  | blockIdx.z  |
-|                |             |
-| blockDim.x  | blockDim.x  |
-| blockDim.y  | blockDim.y  |
-| blockDim.z  | blockDim.z  |
-|                |             |
-| gridDim.x   | gridDim.x   |
-| gridDim.y   | gridDim.y   |
-| gridDim.z   | gridDim.z   |
+Built-ins determine the coordinate of the active work item in the execution grid. They are defined in amd_hip_runtime.h (rather than being implicitly defined by the compiler).
+In HIP, built-ins coordinate variable definitions are the same as in Cuda, for instance:
+threadIdx.x, blockIdx.y, gridDim.y, etc. 
+The products gridDim.x * blockDim.x, gridDim.y * blockDim.y and gridDim.z * blockDim.z are always less than 2^32.
 
 ### warpSize
 The warpSize variable is of type int and contains the warp size (in threads) for the target device. Note that all current Nvidia devices return 32 for this variable, and all current AMD devices return 64. Device code should use the warpSize built-in to develop portable wave-aware code.
@@ -208,7 +193,7 @@ The warpSize variable is of type int and contains the warp size (in threads) for
 
 ## Vector Types
 
-Note that these types are defined in hip_runtime.h and are not automatically provided by the compiler. 
+Note that these types are defined in hip_runtime.h and are not automatically provided by the compiler.
 
 
 ### Short Vector Types
@@ -232,12 +217,12 @@ HIP supports the following short vector formats:
     - double1, double2, double3, double4
 
 ### dim3
-dim3 is a three-dimensional integer vector type commonly used to specify grid and group dimensions. Unspecified dimensions are initialized to 1. 
+dim3 is a three-dimensional integer vector type commonly used to specify grid and group dimensions. Unspecified dimensions are initialized to 1.
 ```
 typedef struct dim3 {
-  uint32_t x; 
-  uint32_t y; 
-  uint32_t z; 
+  uint32_t x;
+  uint32_t y;
+  uint32_t z;
 
   dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
 };
@@ -588,10 +573,6 @@ By default, this compilation flag is not set("0"), so hip runtime will use curre
 If this compilation flag is set to "1", that is, with the cmake option "-D__HIP_USE_CMPXCHG_FOR_FP_ATOMICS=1", the old float/double atomicAdd functions will be used instead, for compatibility with compilers not supporting floating point atomics.
 For details steps how to build hip runtime, please refer to the section "build HIPAMD" (https://github.com/ROCm-Developer-Tools/hipamd/blob/develop/INSTALL.md).
 
-### Caveats and Features Under-Development:
-
-- HIP enables atomic operations on 32-bit integers. Additionally, it supports an atomic float add. AMD hardware, however, implements the float add using a CAS loop, so this function may not perform efficiently.
-
 ## Warp Cross-Lane Functions
 
 Warp cross-lane functions operate across all lanes in a warp. The hardware guarantees that all warp lanes will execute in lockstep, so additional synchronization is unnecessary, and the instructions use no shared memory.
@@ -708,12 +689,31 @@ The Cuda `__prof_trigger()` instruction is not supported.
 
 ## Assert
 
-The assert function is under development.
-HIP does support an "abort" call which will terminate the process execution from inside the kernel.
+The assert function is supported in HIP.
+Assert function is used for debugging purpose, when the input expression equals to zero, the execution will be stopped.
+```
+void assert(int input)
+```
+
+There are two kinds of implementations for assert functions depending on the use sceneries,
+- One is for the host version of assert, which is defined in assert.h, 
+- Another is the device version of assert, which is implemented in hip/hip_runtime.h.
+Users need to include assert.h to use assert. For assert to work in both device and host functions, users need to include "hip/hip_runtime.h".
 
 ## Printf
 
-The printf function is under development.
+Printf function is supported in HIP.
+The following is a simple example to print information in the kernel.
+
+```
+#include <hip/hip_runtime.h>
+
+__global__ void run_printf() { printf("Hello World\n"); }
+
+int main() {
+  run_printf<<<dim3(1), dim3(1), 0, 0>>>();
+}
+```
 
 ## Device-Side Dynamic Global Memory Allocation
 
@@ -728,15 +728,15 @@ GPU multiprocessors have a fixed pool of resources (primarily registers and shar
 __launch_bounds__ allows the application to provide usage hints that influence the resources (primarily registers) used by the generated code.  It is a function attribute that must be attached to a __global__ function:
 
 ```
-__global__ void `__launch_bounds__`(MAX_THREADS_PER_BLOCK, MIN_WARPS_PER_EU) MyKernel(...) ...
+__global__ void `__launch_bounds__`(MAX_THREADS_PER_BLOCK, MIN_WARPS_PER_EXECUTION_UNIT)
 MyKernel(hipGridLaunch lp, ...)
 ...
 ```
 
 __launch_bounds__ supports two parameters:
 - MAX_THREADS_PER_BLOCK - The programmers guarantees that kernel will be launched with threads less than MAX_THREADS_PER_BLOCK. (On NVCC this maps to the .maxntid PTX directive). If no launch_bounds is specified, MAX_THREADS_PER_BLOCK is the maximum block size supported by the device (typically 1024 or larger). Specifying MAX_THREADS_PER_BLOCK less than the maximum effectively allows the compiler to use more resources than a default unconstrained compilation that supports all possible block sizes at launch time.
-The threads-per-block is the product of (hipBlockDim_x * hipBlockDim_y * hipBlockDim_z).
-- MIN_WARPS_PER_EU - directs the compiler to minimize resource usage so that the requested number of warps can be simultaneously active on a multi-processor. Since active warps compete for the same fixed pool of resources, the compiler must reduce resources required by each warp(primarily registers). MIN_WARPS_PER_EU is optional and defaults to 1 if not specified. Specifying a MIN_WARPS_PER_EU greater than the default 1 effectively constrains the compiler's resource usage.
+The threads-per-block is the product of (blockDim.x * blockDim.y * blockDim.z).
+- MIN_WARPS_PER_EXECUTION_UNIT - directs the compiler to minimize resource usage so that the requested number of warps can be simultaneously active on a multi-processor. Since active warps compete for the same fixed pool of resources, the compiler must reduce resources required by each warp(primarily registers). MIN_WARPS_PER_EXECUTION_UNIT is optional and defaults to 1 if not specified. Specifying a MIN_WARPS_PER_EXECUTION_UNIT greater than the default 1 effectively constrains the compiler's resource usage.
 
 When launch kernel with HIP APIs, for example, hipModuleLaunchKernel(), HIP will do validation to make sure input kernel dimension size is not larger than specified launch_bounds.
 In case exceeded, HIP would return launch failure, if AMD_LOG_LEVEL is set with proper value (for details, please refer to docs/markdown/hip_logging.md), detail information will be shown in the error log message, including
@@ -748,15 +748,15 @@ The compiler uses these parameters as follows:
 - Compilation fails if compiler cannot generate a kernel which meets the requirements of the specified launch bounds.
 - From MAX_THREADS_PER_BLOCK, the compiler derives the maximum number of warps/block that can be used at launch time.
 Values of MAX_THREADS_PER_BLOCK less than the default allows the compiler to use a larger pool of registers : each warp uses registers, and this hint constains the launch to a warps/block size which is less than maximum.
-- From MIN_WARPS_PER_EU, the compiler derives a maximum number of registers that can be used by the kernel (to meet the required #simultaneous active blocks).
-If MIN_WARPS_PER_EU is 1, then the kernel can use all registers supported by the multiprocessor.
+- From MIN_WARPS_PER_EXECUTION_UNIT, the compiler derives a maximum number of registers that can be used by the kernel (to meet the required #simultaneous active blocks).
+If MIN_WARPS_PER_EXECUTION_UNIT is 1, then the kernel can use all registers supported by the multiprocessor.
 - The compiler ensures that the registers used in the kernel is less than both allowed maximums, typically by spilling registers (to shared or global memory), or by using more instructions.
 - The compiler may use hueristics to increase register usage, or may simply be able to avoid spilling. The MAX_THREADS_PER_BLOCK is particularly useful in this cases, since it allows the compiler to use more registers and avoid situations where the compiler constrains the register usage (potentially spilling) to meet the requirements of a large block size that is never used at launch time.
 
 
 ### CU and EU Definitions
 A compute unit (CU) is responsible for executing the waves of a work-group. It is composed of one or more execution units (EU) which are responsible for executing waves. An EU can have enough resources to maintain the state of more than one executing wave. This allows an EU to hide latency by switching between waves in a similar way to symmetric multithreading on a CPU. In order to allow the state for multiple waves to fit on an EU, the resources used by a single wave have to be limited. Limiting such resources can allow greater latency hiding, but can result in having to spill some register state to memory. This attribute allows an advanced developer to tune the number of waves that are capable of fitting within the resources of an EU. It can be used to ensure at least a certain number will fit to help hide latency, and can also be used to ensure no more than a certain number will fit to limit cache thrashing.
- 
+
 ### Porting from CUDA __launch_bounds
 CUDA defines a __launch_bounds which is also designed to control occupancy:
 ```

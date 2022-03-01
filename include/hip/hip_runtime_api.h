@@ -160,7 +160,7 @@ typedef enum hipMemoryType {
     hipMemoryTypeArray,  ///< Array memory, physically located on device. (see deviceId for specific
                          ///< device)
     hipMemoryTypeUnified  ///< Not used currently
-}hipMemoryType;
+} hipMemoryType;
 
 
 /**
@@ -459,7 +459,7 @@ enum hipComputeMode {
 };
 
 /**
- *     @}
+ * @}
  */
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
@@ -543,67 +543,109 @@ enum hipLimit_t {
  * @addtogroup GlobalDefs More
  * @{
  */
-//! Flags that can be used with hipStreamCreateWithFlags
-#define hipStreamDefault                                                                           \
-    0x00  ///< Default stream creation flags. These are used with hipStreamCreate().
-#define hipStreamNonBlocking 0x01  ///< Stream does not implicitly synchronize with null stream
-//! Flags that can be used with hipEventCreateWithFlags:
-#define hipEventDefault 0x0  ///< Default flags
-#define hipEventBlockingSync                                                                       \
-    0x1  ///< Waiting will yield CPU.  Power-friendly and usage-friendly but may increase latency.
-#define hipEventDisableTiming                                                                      \
-    0x2  ///< Disable event's capability to record timing information.  May improve performance.
-#define hipEventInterprocess 0x4  ///< Event can support IPC.  @warning - not supported in HIP.
-#define hipEventReleaseToDevice                                                                    \
-    0x40000000  /// < Use a device-scope release when recording this event.  This flag is useful to
-                /// obtain more precise timings of commands between events.  The flag is a no-op on
-                /// CUDA platforms.
-#define hipEventReleaseToSystem                                                                    \
-    0x80000000  /// < Use a system-scope release when recording this event.  This flag is
-                /// useful to make non-coherent host memory visible to the host.  The flag is a
-                /// no-op on CUDA platforms.
-//! Flags that can be used with hipHostMalloc
+//Flags that can be used with hipStreamCreateWithFlags.
+/** Default stream creation flags. These are used with hipStreamCreate().*/
+#define hipStreamDefault  0x00
+
+/** Stream does not implicitly synchronize with null stream.*/
+#define hipStreamNonBlocking 0x01
+
+//Flags that can be used with hipEventCreateWithFlags.
+/** Default flags.*/
+#define hipEventDefault 0x0
+
+/** Waiting will yield CPU. Power-friendly and usage-friendly but may increase latency.*/
+#define hipEventBlockingSync 0x1
+
+/** Disable event's capability to record timing information. May improve performance.*/
+#define hipEventDisableTiming  0x2
+
+/** Event can support IPC. Warnig: It is not supported in HIP.*/
+#define hipEventInterprocess 0x4
+
+/** Use a device-scope release when recording this event. This flag is useful to obtain more
+ * precise timings of commands between events.  The flag is a no-op on CUDA platforms.*/
+#define hipEventReleaseToDevice  0x40000000
+
+/** Use a system-scope release when recording this event. This flag is useful to make
+ * non-coherent host memory visible to the host. The flag is a no-op on CUDA platforms.*/
+#define hipEventReleaseToSystem  0x80000000
+
+//Flags that can be used with hipHostMalloc.
+/** Default pinned memory allocation on the host.*/
 #define hipHostMallocDefault 0x0
-#define hipHostMallocPortable 0x1  ///< Memory is considered allocated by all contexts.
-#define hipHostMallocMapped                                                                        \
-    0x2  ///< Map the allocation into the address space for the current device.  The device pointer
-         ///< can be obtained with #hipHostGetDevicePointer.
+
+/** Memory is considered allocated by all contexts.*/
+#define hipHostMallocPortable 0x1
+
+/** Map the allocation into the address space for the current device. The device pointer
+ * can be obtained with #hipHostGetDevicePointer.*/
+#define hipHostMallocMapped  0x2
+
+/** Allocates the memory as write-combined. On some system configurations, write-combined allocation
+ * may be transferred faster across the PCI Express bus, however, could have low read efficiency by 
+ * most CPUs. It's a good option for data tranfer from host to device via mapped pinned memory.*/
 #define hipHostMallocWriteCombined 0x4
-#define hipHostMallocNumaUser                                                                      \
-    0x20000000  ///< Host memory allocation will follow numa policy set by user
-#define hipHostMallocCoherent                                                                      \
-    0x40000000  ///< Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
-                ///< allocation.
-#define hipHostMallocNonCoherent                                                                   \
-    0x80000000  ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
-                ///< allocation.
-#define hipMemAttachGlobal  0x01    ///< Memory can be accessed by any stream on any device
-#define hipMemAttachHost    0x02    ///< Memory cannot be accessed by any stream on any device
-#define hipMemAttachSingle  0x04    ///< Memory can only be accessed by a single stream on
-                                    ///< the associated device
+
+/** Host memory allocation will follow numa policy set by user.*/
+#define hipHostMallocNumaUser  0x20000000
+
+/** Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.*/
+#define hipHostMallocCoherent  0x40000000
+
+/** Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.*/
+#define hipHostMallocNonCoherent  0x80000000
+
+/** Memory can be accessed by any stream on any device*/
+#define hipMemAttachGlobal  0x01
+
+/** Memory cannot be accessed by any stream on any device.*/
+#define hipMemAttachHost    0x02
+
+/** Memory can only be accessed by a single stream on the associated device.*/
+#define hipMemAttachSingle  0x04
+
 #define hipDeviceMallocDefault 0x0
-#define hipDeviceMallocFinegrained 0x1  ///< Memory is allocated in fine grained region of device.
-#define hipMallocSignalMemory 0x2       ///< Memory represents a HSA signal.
-//! Flags that can be used with hipHostRegister
-#define hipHostRegisterDefault 0x0   ///< Memory is Mapped and Portable
-#define hipHostRegisterPortable 0x1  ///< Memory is considered registered by all contexts.
-#define hipHostRegisterMapped                                                                      \
-    0x2  ///< Map the allocation into the address space for the current device.  The device pointer
-         ///< can be obtained with #hipHostGetDevicePointer.
-#define hipHostRegisterIoMemory 0x4  ///< Not supported.
-#define hipExtHostRegisterCoarseGrained 0x8  ///< Coarse Grained host memory lock
-#define hipDeviceScheduleAuto 0x0  ///< Automatically select between Spin and Yield
-#define hipDeviceScheduleSpin                                                                      \
-    0x1  ///< Dedicate a CPU core to spin-wait.  Provides lowest latency, but burns a CPU core and
-         ///< may consume more power.
-#define hipDeviceScheduleYield                                                                     \
-    0x2  ///< Yield the CPU to the operating system when waiting.  May increase latency, but lowers
-         ///< power and is friendlier to other threads in the system.
+
+/** Memory is allocated in fine grained region of device.*/
+#define hipDeviceMallocFinegrained 0x1
+
+/** Memory represents a HSA signal.*/
+#define hipMallocSignalMemory 0x2
+
+//Flags that can be used with hipHostRegister.
+/** Memory is Mapped and Portable.*/
+#define hipHostRegisterDefault 0x0
+
+/** Memory is considered registered by all contexts.*/
+#define hipHostRegisterPortable 0x1
+
+/** Map the allocation into the address space for the current device. The device pointer
+ * can be obtained with #hipHostGetDevicePointer.*/
+#define hipHostRegisterMapped  0x2
+
+/** Not supported.*/
+#define hipHostRegisterIoMemory 0x4  
+
+/** Coarse Grained host memory lock.*/
+#define hipExtHostRegisterCoarseGrained 0x8  
+
+/** Automatically select between Spin and Yield.*/
+#define hipDeviceScheduleAuto 0x0  
+
+/** Dedicate a CPU core to spin-wait. Provides lowest latency, but burns a CPU core and may 
+ * consume more power.*/
+#define hipDeviceScheduleSpin  0x1  
+
+/** Yield the CPU to the operating system when waiting. May increase latency, but lowers power
+ * and is friendlier to other threads in the system.*/
+#define hipDeviceScheduleYield  0x2
 #define hipDeviceScheduleBlockingSync 0x4
 #define hipDeviceScheduleMask 0x7
 #define hipDeviceMapHost 0x8
 #define hipDeviceLmemResizeToMax 0x16
-#define hipArrayDefault 0x00  ///< Default HIP array allocation flag
+/** Default HIP array allocation flag.*/
+#define hipArrayDefault 0x00  
 #define hipArrayLayered 0x01
 #define hipArraySurfaceLoadStore 0x02
 #define hipArrayCubemap 0x04
@@ -613,15 +655,17 @@ enum hipLimit_t {
 #define hipCooperativeLaunchMultiDeviceNoPostSync 0x02
 #define hipCpuDeviceId ((int)-1)
 #define hipInvalidDeviceId ((int)-2)
-// Flags that can be used with hipExtLaunch Set of APIs
-#define hipExtAnyOrderLaunch 0x01  ///< AnyOrderLaunch of kernels
-// Flags to be used with hipStreamWaitValue32 and hipStreamWaitValue64
+//Flags that can be used with hipExtLaunch Set of APIs.
+/** AnyOrderLaunch of kernels.*/
+#define hipExtAnyOrderLaunch 0x01
+// Flags to be used with hipStreamWaitValue32 and hipStreamWaitValue64.
 #define hipStreamWaitValueGte 0x0
 #define hipStreamWaitValueEq 0x1
 #define hipStreamWaitValueAnd 0x2
 #define hipStreamWaitValueNor 0x3
 // Stream per thread
-#define hipStreamPerThread ((hipStream_t)2) ///< Implicit stream per application thread
+/** Implicit stream per application thread.*/
+#define hipStreamPerThread ((hipStream_t)2)
 /*
  * @brief HIP Memory Advise values
  * @enum
@@ -2596,8 +2640,8 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  *  If no variable of that name exists, it returns hipErrorNotFound. Both parameters dptr and bytes are optional.
  *  If one of them is NULL, it is ignored and hipSuccess is returned.
  *
- *  @param[out]  dptr  Returned global device pointer
- *  @param[out]  bytes Returned global size in bytes
+ *  @param[out]  dptr  Returns global device pointer
+ *  @param[out]  bytes Returns global size in bytes
  *  @param[in]   hmod  Module to retrieve global from
  *  @param[in]   name  Name of global to retrieve
  *
@@ -2606,17 +2650,97 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
+
+/**
+ *  @brief Gets device pointer associated with symbol on the device.
+ *
+ *  @param[out]  devPtr  pointer to the device associated the symbole
+ *  @param[in]   symbol  pointer to the symbole of the device
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
+
+/**
+ *  @brief Gets the size of the given symbol on the device.
+ *
+ *  @param[in]   symbol  pointer to the device symbole
+ *  @param[out]  size  pointer to the size
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
+
+/**
+ *  @brief Copies data to the given symbol on the device.
+ * Symbol HIP APIs allow a kernel to define a device-side data symbol which can be accessed on
+ * the host side. The symbol can be in __constant or device space.
+ * Note that the symbol name needs to be encased in the HIP_SYMBOL macro.
+ * This also applies to hipMemcpyFromSymbol, hipGetSymbolAddress, and hipGetSymbolSize.
+ * For detail usage, see the example at
+ * https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-5.0.x/docs/markdown/hip_porting_guide.md
+ *
+ *  @param[out]  symbol  pointer to the device symbole
+ *  @param[in]   src  pointer to the source address
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyToSymbol(const void* symbol, const void* src,
                              size_t sizeBytes, size_t offset __dparm(0),
                              hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
+
+/**
+ *  @brief Copies data to the given symbol on the device asynchronously.
+ *
+ *  @param[out]  symbol  pointer to the device symbole
+ *  @param[in]   src  pointer to the source address
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *  @param[in]   stream  stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src,
                                   size_t sizeBytes, size_t offset,
                                   hipMemcpyKind kind, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Copies data from the given symbol on the device.
+ *
+ *  @param[out]  dptr  Returns pointer to destinition memory address
+ *  @param[in]   symbol  pointer to the symbole address on the device
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from the start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol,
                                size_t sizeBytes, size_t offset __dparm(0),
                                hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
+
+/**
+ *  @brief Copies data from the given symbol on the device asynchronously.
+ *
+ *  @param[out]  dptr  Returns pointer to destinition memory address
+ *  @param[in]   symbol  pointer to the symbole address on the device
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from the start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *  @param[in]   stream  stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
@@ -3663,6 +3787,10 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and
  * must be in the memory layout and alignment expected by the kernel.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32. So gridDim.x * blockDim.x, gridDim.y * blockDim.y
+ * and gridDim.z * blockDim.z are always less than 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please
@@ -3685,6 +3813,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th
  * default stream is used with associated synchronization rules.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
  */
@@ -3736,6 +3867,9 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
 //TODO - Match CUoccupancyB2DSize
@@ -3751,6 +3885,9 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
@@ -3809,6 +3946,9 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
 hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
@@ -3864,6 +4004,9 @@ hipError_t hipProfilerStop();
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
@@ -3898,6 +4041,9 @@ hipError_t hipLaunchByPtr(const void* func);
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
@@ -3914,6 +4060,12 @@ hipError_t __hipPushCallConfiguration(dim3 gridDim,
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [out] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
@@ -3952,6 +4104,26 @@ hipError_t hipLaunchKernel(const void* function_address,
  */
 hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy);
 //TODO: Move this to hip_ext.h
+/**
+ * @brief Launches kernel from the pointer address, with arguments and shared memory on stream.
+ *
+ * @param [in] function_address pointer to the Kernel to launch.
+ * @param [in] numBlocks number of blocks.
+ * @param [in] dimBlocks dimension of a block.
+ * @param [in] args pointer to kernel arguments.
+ * @param [in] sharedMemBytes  Amount of dynamic shared memory to allocate for this kernel.
+ * HIP-Clang compiler provides support for extern shared declarations.
+ * @param [in] stream  Stream where the kernel should be dispatched.
+ * @param [in] startEvent  If non-null, specified event will be updated to track the start time of
+ * the kernel launch. The event must be created before calling this API.
+ * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
+ * the kernel launch. The event must be created before calling this API.
+ * May be 0, in which case the default stream is used with associated synchronization rules.
+ * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
+ * launched in any order.
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
+ *
+ */
 hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3 dimBlocks,
                               void** args, size_t sharedMemBytes, hipStream_t stream,
                               hipEvent_t startEvent, hipEvent_t stopEvent, int flags);
@@ -3966,31 +4138,117 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  *  @{
  *  This section describes the texture management functions of HIP runtime API.
  */
+
+/**
+ * @brief  Binds a mipmapped array to a texture.
+ *
+ * @param [in] tex  pointer to the texture reference to bind
+ * @param [in] mipmappedArray  memory mipmapped array on the device
+ * @param [in] desc  opointer to the channel format
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipBindTextureToMipmappedArray(
     const textureReference* tex,
     hipMipmappedArray_const_t mipmappedArray,
     const hipChannelFormatDesc* desc);
-hipError_t hipGetTextureReference(
+
+/**
+ * @brief Gets the texture reference related with the symbol.
+ *
+ * @param [out] texref  texture reference
+ * @param [in] symbol  pointer to the symbol related with the texture for the reference
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+ hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
+
+/**
+ * @brief Creates a texture object.
+ *
+ * @param [out] pTexObject  pointer to the texture object to create
+ * @param [in] pResDesc  pointer to resource descriptor
+ * @param [in] pTexDesc  pointer to texture descriptor
+ * @param [in] pResViewDesc  pointer to resource view descriptor
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipCreateTextureObject(
     hipTextureObject_t* pTexObject,
     const hipResourceDesc* pResDesc,
     const hipTextureDesc* pTexDesc,
     const struct hipResourceViewDesc* pResViewDesc);
+
+/**
+ * @brief Destroys a texture object.
+ *
+ * @param [in] textureObject  texture object to destroy
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets the channel descriptor in an array.
+ *
+ * @param [in] desc  pointer to channel format descriptor
+ * @param [out] array  memory array on the device
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetChannelDesc(
     hipChannelFormatDesc* desc,
     hipArray_const_t array);
+
+/**
+ * @brief Gets resource descriptor for the texture object.
+ *
+ * @param [out] pResDesc  pointer to resource descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetTextureObjectResourceDesc(
     hipResourceDesc* pResDesc,
     hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets resource view descriptor for the texture object.
+ *
+ * @param [out] pResViewDesc  pointer to resource view descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetTextureObjectResourceViewDesc(
     struct hipResourceViewDesc* pResViewDesc,
     hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets texture descriptor for the texture object.
+ *
+ * @param [out] pTexDesc  pointer to texture descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetTextureObjectTextureDesc(
     hipTextureDesc* pTexDesc,
     hipTextureObject_t textureObject);
+
+/**
+ *
+ */
 hipError_t hipTexRefSetAddressMode(
     textureReference* texRef,
     int dim,
@@ -4028,7 +4286,7 @@ hipError_t hipTexObjectGetTextureDesc(
 
 /**
  *
- *  @addtogroup TexturD Texture Management [Deprecated]
+ *  @addtogroup TextureD Texture Management [Deprecated]
  *  @{
  *  @ingroup Texture
  *  This section describes the deprecated texture management functions of HIP runtime API.
@@ -4124,6 +4382,7 @@ hipError_t hipTexRefSetMaxAnisotropy(
  * @}
  */
 
+
 // The following are not supported.
 /**
  *
@@ -4160,7 +4419,7 @@ hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
-// doxygen end Texture management unsupported
+// doxygen end unsuppported texture management
 /**
  * @}
  */
@@ -4206,7 +4465,7 @@ int hipGetStreamDeviceId(hipStream_t stream);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Management
+ *  @defgroup Graph Graph Management
  *  @{
  *  This section describes the graph management types & functions of HIP runtime API.
  */
@@ -5215,6 +5474,7 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
 /**
  * @}
  */
+
 
 /**
  *-------------------------------------------------------------------------------------------------
