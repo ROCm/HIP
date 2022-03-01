@@ -30,63 +30,58 @@ THE SOFTWARE.
 #define HIP_CHECK(error)                                                                           \
   {                                                                                                \
     hipError_t localError = error;                                                                 \
-    if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {          \
-      INFO("Error: " << hipGetErrorString(localError) << " Code: " << localError << " Str: "       \
-                     << #error << " In File: " << __FILE__ << " At line: " << __LINE__);           \
-      REQUIRE(false);                                                                              \
-    }                                                                                              \
+    INFO("Matching Error to hipSuccess or hipErrorPeerAccessAlreadyEnabled: "                      \
+         << hipGetErrorString(localError) << " Code: " << localError << " Str: " << #error         \
+         << " In File: " << __FILE__ << " At line: " << __LINE__);                                 \
+    REQUIRE(((localError == hipSuccess) || (localError == hipErrorPeerAccessAlreadyEnabled)));     \
   }
 
 // Check that an expression, errorExpr, evaluates to the expected error_t, expectedError.
 #define HIP_CHECK_ERROR(errorExpr, expectedError)                                                  \
   {                                                                                                \
     hipError_t localError = errorExpr;                                                             \
-    if (localError != expectedError) {                                                             \
-      INFO("Expected Error: " << hipGetErrorString(localError)                                     \
-                              << " Expected Code: " << expectedError << '\n'                       \
-                              << " Actual Error: " << hipGetErrorString(localError)                \
-                              << " Actual Code: " << localError << " Str: " << #errorExpr          \
-                              << " In File: " << __FILE__ << " At line: " << __LINE__);            \
-      REQUIRE(false);                                                                              \
-    }                                                                                              \
+    INFO("Matching Errors: " << hipGetErrorString(localError)                                      \
+                             << " Expected Error: " << expectedError << '\n'                       \
+                             << " Actual Error: " << hipGetErrorString(localError)                 \
+                             << " Actual Code: " << localError << " Str: " << #errorExpr           \
+                             << " In File: " << __FILE__ << " At line: " << __LINE__);             \
+    REQUIRE(localError == expectedError);                                                          \
   }
-
 
 #define HIPRTC_CHECK(error)                                                                        \
   {                                                                                                \
     auto localError = error;                                                                       \
-    if (localError != HIPRTC_SUCCESS) {                                                            \
-      INFO("Error: " << hiprtcGetErrorString(localError) << " Code: " << localError << " Str: "    \
-                     << #error << " In File: " << __FILE__ << " At line: " << __LINE__);           \
-      REQUIRE(false);                                                                              \
-    }                                                                                              \
+    INFO("Matching Error to HIPRTC_SUCCESS: "                                                      \
+         << hiprtcGetErrorString(localError) << " Code: " << localError << " Str: " << #error      \
+         << " In File: " << __FILE__ << " At line: " << __LINE__);                                 \
+    REQUIRE(error == HIPRTC_SUCCESS);                                                              \
   }
+
 // Although its assert, it will be evaluated at runtime
 #define HIP_ASSERT(x)                                                                              \
   { REQUIRE((x)); }
 
 #ifdef __cplusplus
-  #include <iostream>
-  #include <iomanip>
-  #include <chrono>
+#include <iostream>
+#include <iomanip>
+#include <chrono>
 #endif
 
 #define HIPCHECK(error)                                                                            \
-    {                                                                                              \
-        hipError_t localError = error;                                                             \
-        if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
-            printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(localError),            \
-                   localError, #error, __FILE__, __LINE__);                                        \
-            abort();                                                                               \
-        }                                                                                          \
-    }
+  {                                                                                                \
+    hipError_t localError = error;                                                                 \
+    if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {          \
+      printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(localError), localError,      \
+             #error, __FILE__, __LINE__);                                                          \
+      abort();                                                                                     \
+    }                                                                                              \
+  }
 
 #define HIPASSERT(condition)                                                                       \
-    if (!(condition)) {                                                                            \
-        printf("assertion %s at %s:%d \n", #condition, __FILE__, __LINE__);                        \
-        abort();                                                                                   \
-    }
-
+  if (!(condition)) {                                                                              \
+    printf("assertion %s at %s:%d \n", #condition, __FILE__, __LINE__);                            \
+    abort();                                                                                       \
+  }
 
 
 // Utility Functions
@@ -99,8 +94,8 @@ static inline int getDeviceCount() {
 
 // Returns the current system time in microseconds
 static inline long long get_time() {
-  return std::chrono::high_resolution_clock::now().time_since_epoch()
-      /std::chrono::microseconds(1);
+  return std::chrono::high_resolution_clock::now().time_since_epoch() /
+      std::chrono::microseconds(1);
 }
 
 static inline double elapsed_time(long long startTimeUs, long long stopTimeUs) {
@@ -121,13 +116,12 @@ static inline unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlo
   return blocks;
 }
 
-static inline int RAND_R(unsigned* rand_seed)
-{
-  #if defined(_WIN32) || defined(_WIN64)
-        srand(*rand_seed);
-        return rand();
-  #else
-      return rand_r(rand_seed);
-  #endif
+static inline int RAND_R(unsigned* rand_seed) {
+#if defined(_WIN32) || defined(_WIN64)
+  srand(*rand_seed);
+  return rand();
+#else
+  return rand_r(rand_seed);
+#endif
 }
-}
+}  // namespace HipTest
