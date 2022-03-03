@@ -22,7 +22,9 @@
 	   "Unit_hipMallocManaged_CoherentTst",
 	   "Unit_hipMallocManaged_CoherentTstWthAdvise",
 	   "Unit_hipMalloc_CoherentTst",
-	   "Unit_hipExtMallocWithFlags_CoherentTst"
+	   "Unit_hipExtMallocWithFlags_CoherentTst",
+	   "Unit_hipStreamSynchronize_NullStreamSynchronization",
+	   "Unit_hipStreamSynchronize_SynchronizeStreamAndQueryNullStream"
 	]
 
 }
