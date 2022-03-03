@@ -60,7 +60,7 @@ TEST_CASE("Unit_hipStreamSynchronize_FinishWork") {
 }
 
 /**
- * @brief Check that synchronising the nullStream implicitly synchronises all executing streams.
+ * @brief Check that synchronizing the nullStream implicitly synchronizes all executing streams.
  *
  * Note: Test is disabled due to EXSWCPHIPT-23
  */
@@ -98,11 +98,11 @@ TEST_CASE("Unit_hipStreamSynchronize_NullStreamSynchronization") {
   HIP_CHECK(hipStreamQuery(hip::nullStream));
 
   for (int i = 0; i < totalStreams; ++i) {
-    signalingThreads[i].join();
+    HIP_CHECK(hipStreamQuery(streams[i]));
   }
 
   for (int i = 0; i < totalStreams; ++i) {
-    HIP_CHECK(hipStreamQuery(streams[i]));
+    signalingThreads[i].join();
   }
 
   for (int i = 0; i < totalStreams; ++i) {
