@@ -28,7 +28,7 @@ inline namespace stream {
 bool checkStream(hipStream_t& stream);
 
 // Checks stream for valid flags and a particular value of priority
-bool checkStreamPriority(hipStream_t& stream, int priority);
+bool checkStreamPriorityAndFlags(hipStream_t& stream, int priority, unsigned int flags = hipStreamDefault);
 
 }  // namespace stream
 }  // namespace hip
