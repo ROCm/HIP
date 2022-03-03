@@ -68,7 +68,7 @@ inline namespace stream {
 
 bool checkStream(hipStream_t& stream) {
   {  // Check default flags
-    auto res = checkStreamFlags_(stream);
+    auto res = checkStreamFlags_(stream, true, hipStreamDefault);
     if (!res) return false;
   }
 
@@ -80,9 +80,9 @@ bool checkStream(hipStream_t& stream) {
   return true;
 }
 
-bool checkStreamPriority(hipStream_t& stream, int priority) {
-  {  // Check default flags
-    auto res = checkStreamFlags_(stream);
+bool checkStreamPriorityAndFlags(hipStream_t& stream, int priority, unsigned int flags) {
+  {  // Check flags
+    auto res = checkStreamFlags_(stream, true, flags);
     if (!res) return false;
   }
 
