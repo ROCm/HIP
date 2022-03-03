@@ -32,6 +32,8 @@ set(TEST_SRC
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
     hipStreamSynchronize.cc
+    streamCommon.cc
+    hipStreamQuery.cc
 )
 endif()
 
