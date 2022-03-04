@@ -602,8 +602,14 @@ void Memcpy3DAsync<T>::simple_Memcpy3DAsync() {
 #else
   myparms.kind = hipMemcpyHostToDevice;
 #endif
-  REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
-  HIP_CHECK(hipStreamSynchronize(stream));
+  SECTION("Calling hipMemcpy3DAsync() using user declared stream obj") {
+    REQUIRE(hipMemcpy3DAsync(&myparms, stream) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(stream));
+  }
+  SECTION("Calling hipMemcpy3DAsync() using hipStreamPerThread") {
+    REQUIRE(hipMemcpy3DAsync(&myparms, hipStreamPerThread) == hipSuccess);
+    HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+  }
 
   // Array to Array
   memset(&myparms, 0x0, sizeof(hipMemcpy3DParms));
