@@ -474,6 +474,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeImageSupport,                             ///< '1' if Device supports image, '0' otherwise.
     hipDeviceAttributePhysicalMultiProcessorCount,              ///< All available physical compute
                                                                 ///< units for the device
+    hipDeviceAttributeFineGrainSupport,                         ///< '1' if Device supports fine grain, '0' otherwise
+
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
     // Extended attributes for vendors
