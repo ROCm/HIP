@@ -295,8 +295,7 @@ static void threadFunc(int gpu) {
 
 /* Performs Argument Validation of api */
 TEST_CASE("Unit_hipMalloc_ArgumentValidation") {
-  int *ptr;
-  hipError_t ret;
+  int* ptr{nullptr};
 
   SECTION("hipMalloc() when size(0)") {
     HIP_CHECK(hipMalloc(&ptr, 0));
@@ -304,21 +303,17 @@ TEST_CASE("Unit_hipMalloc_ArgumentValidation") {
     REQUIRE(ptr == nullptr);
   }
 
-  SECTION("hipFree() when freeing nullptr ") {
-    ptr = nullptr;
-    // api should return success and shudnt crash
+  SECTION("hipFree() when freeing nullptr") {
     HIP_CHECK(hipFree(ptr));
   }
 
   SECTION("hipMalloc() with invalid argument") {
-    constexpr auto sizeBytes = 100;
-    ret = hipMalloc(nullptr, sizeBytes);
-    REQUIRE(ret != hipSuccess);
+    HIP_CHECK_ERROR(hipMalloc(nullptr, 100), hipErrorInvalidValue);
   }
 
   SECTION("hipMalloc() with max size_t") {
-    ret = hipMalloc(&ptr, std::numeric_limits<std::size_t>::max());
-    REQUIRE(ret != hipSuccess);
+    HIP_CHECK_ERROR(hipMalloc(&ptr, std::numeric_limits<std::size_t>::max()),
+                    hipErrorMemoryAllocation);
   }
 }
 
@@ -344,12 +339,12 @@ TEST_CASE("Unit_hipMalloc_LoopRegressionAllocFreeCycles") {
  * of time.
  */
 TEST_CASE("Unit_hipMalloc_AllocateAndPoolBuffers") {
-  size_t avail, tot, pavail, ptot;
-  bool ret;
-  hipError_t err;
-  std::vector<int *> ptrlist;
+  size_t avail{0}, tot{0}, pavail{0}, ptot{0};
+  bool ret{false};
+  hipError_t err{};
+  std::vector<int*> ptrlist{};
   constexpr auto BuffSize = 10;
-  int devCnt, *ptr;
+  int devCnt{0}, *ptr{nullptr};
 
   // Get GPU count
   HIP_CHECK(hipGetDeviceCount(&devCnt));
@@ -358,14 +353,13 @@ TEST_CASE("Unit_hipMalloc_AllocateAndPoolBuffers") {
   HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
 
   // Allocate small chunks of memory million times
-  for (int i = 0; i < MaxAllocPoolIter ; i++) {
+  for (int i = 0; i < MaxAllocPoolIter; i++) {
     if ((err = hipMalloc(&ptr, BuffSize)) != hipSuccess) {
       HIP_CHECK(hipMemGetInfo(&avail, &tot));
 
-      INFO("Loop regression pool allocation failure. " <<
-      "Total gpu memory " << tot/(1024.0*1024.0) <<", Free memory " <<
-      avail/(1024.0*1024.0) << " iter " << i << " error "
-      << hipGetErrorString(err));
+      INFO("Loop regression pool allocation failure. "
+           << "Total gpu memory " << tot / (1024.0 * 1024.0) << ", Free memory "
+           << avail / (1024.0 * 1024.0) << " iter " << i << " error " << hipGetErrorString(err));
 
       REQUIRE(false);
     }
@@ -375,7 +369,7 @@ TEST_CASE("Unit_hipMalloc_AllocateAndPoolBuffers") {
   }
 
   // Free ptrs at later point of time
-  for ( auto &t : ptrlist ) {
+  for (auto& t : ptrlist) {
     HIP_CHECK(hipFree(t));
   }
 
