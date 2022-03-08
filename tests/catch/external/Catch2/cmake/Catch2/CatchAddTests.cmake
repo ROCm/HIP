@@ -29,6 +29,8 @@ function(add_command NAME)
   set(script "${script}${NAME}(${_args})\n" PARENT_SCOPE)
 endfunction()
 
+get_filename_component(TEST_EXECUTABLE ${TEST_EXECUTABLE} ABSOLUTE)
+
 # Run test executable to get list of available tests
 if(NOT EXISTS "${TEST_EXECUTABLE}")
   message(FATAL_ERROR
