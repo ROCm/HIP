@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2020 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+   Copyright (c) 2020 - 2022 Advanced Micro Devices, Inc. All rights reserved.
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
    in the Software without restriction, including without limitation the rights
@@ -185,7 +185,6 @@ int main(int argc, char* argv[]) {
   bool testStatus = true;
   HipTest::parseStandardArguments(argc, argv, false);
   if (p_tests == 1) {
-    testStatus &= ConcurencyCheck_GlobalVar(1);
     testStatus &= ConcurencyCheck_GlobalVar(0);
   } else if (p_tests == 2) {
     testStatus &= KernelTimeExecution();
