@@ -69,6 +69,9 @@ find_package(Catch2 REQUIRED
 include(Catch)
 include(CTest)
 
+# path used for generating the *_include.cmake file
+set(CATCH2_INCLUDE ${CATCH2_PATH}/cmake/Catch2/catch_include.cmake.in)
+
 include_directories(
     ${CATCH2_PATH}
     "./include"
@@ -77,6 +80,9 @@ include_directories(
 )
 
 file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
+file(COPY ./external/Catch2/cmake/Catch2/CatchAddTests.cmake DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/script)
+set(ADD_SCRIPT_PATH ${CMAKE_CURRENT_BINARY_DIR}/script/CatchAddTests.cmake)
+
 
 if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
     add_compile_options(-Wall -Wextra -pedantic -Werror)

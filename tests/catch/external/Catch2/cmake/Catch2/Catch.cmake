@@ -142,43 +142,24 @@ function(catch_discover_tests TARGET)
   # Define rule to generate test list for aforementioned test executable
   set(ctest_include_file "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_include-${args_hash}.cmake")
   set(ctest_tests_file "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_tests-${args_hash}.cmake")
+  file(RELATIVE_PATH ctestincludepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_include_file})
+  file(RELATIVE_PATH ctestfilepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_tests_file})
+  file(RELATIVE_PATH _workdir ${CMAKE_CURRENT_BINARY_DIR} ${_WORKING_DIRECTORY})
+  file(RELATIVE_PATH _CATCH_ADD_TEST_SCRIPT ${CMAKE_CURRENT_BINARY_DIR} ${ADD_SCRIPT_PATH})
+
   get_property(crosscompiling_emulator
     TARGET ${TARGET}
     PROPERTY CROSSCOMPILING_EMULATOR
   )
-  add_custom_command(
-    TARGET ${TARGET} POST_BUILD
-    BYPRODUCTS "${ctest_tests_file}"
-    COMMAND "${CMAKE_COMMAND}"
-            -D "TEST_TARGET=${TARGET}"
-            -D "TEST_EXECUTABLE=$<TARGET_FILE:${TARGET}>"
-            -D "TEST_EXECUTOR=${crosscompiling_emulator}"
-            -D "TEST_WORKING_DIR=${_WORKING_DIRECTORY}"
-            -D "TEST_SPEC=${_TEST_SPEC}"
-            -D "TEST_EXTRA_ARGS=${_EXTRA_ARGS}"
-            -D "TEST_PROPERTIES=${_PROPERTIES}"
-            -D "TEST_PREFIX=${_TEST_PREFIX}"
-            -D "TEST_SUFFIX=${_TEST_SUFFIX}"
-            -D "TEST_LIST=${_TEST_LIST}"
-            -D "TEST_REPORTER=${_REPORTER}"
-            -D "TEST_OUTPUT_DIR=${_OUTPUT_DIR}"
-            -D "TEST_OUTPUT_PREFIX=${_OUTPUT_PREFIX}"
-            -D "TEST_OUTPUT_SUFFIX=${_OUTPUT_SUFFIX}"
-            -D "CTEST_FILE=${ctest_tests_file}"
-            -P "${_CATCH_DISCOVER_TESTS_SCRIPT}"
-    VERBATIM
-  )
 
-  file(RELATIVE_PATH ctestincludepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_include_file})
-  file(RELATIVE_PATH ctestfilepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_tests_file})
+  set(EXEC_NAME ${TARGET})
+  if(WIN32)
+    set(EXEC_NAME ${EXEC_NAME}.exe)
+  endif()
 
-  file(WRITE "${ctest_include_file}"
-    "if(EXISTS \"${ctestfilepath}\")\n"
-    "  include(\"${ctestfilepath}\")\n"
-    "else()\n"
-    "  message(WARNING \"Test ${TARGET} not built yet.\")\n"
-    "endif()\n"
-  )
+  # uses catch_include.cmake.in file to generate the *_include.cmake file
+  # *_include.cmake is used to generate the *_test.cmake during execution of ctest cmd
+  configure_file(${CATCH2_INCLUDE} ${TARGET}_include-${args_hash}.cmake @ONLY)
 
   if(NOT ${CMAKE_VERSION} VERSION_LESS "3.10.0") 
     # Add discovered tests to directory TEST_INCLUDE_FILES
