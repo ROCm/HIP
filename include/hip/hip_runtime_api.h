@@ -73,6 +73,9 @@ typedef struct {
     unsigned hasDynamicParallelism : 1;  ///< Dynamic parallelism.
 } hipDeviceArch_t;
 
+typedef struct hipUUID_t {
+    char bytes[16];
+} hipUUID;
 
 //---
 // Common headers for both NVCC and HCC paths:
@@ -998,6 +1001,18 @@ hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
+/**
+ * @brief Returns an UUID for the device.[BETA]
+ * @param [out] uuid
+ * @param [in] device
+ *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorNotInitialized,
+ * #hipErrorDeInitialized
+ */
+hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
 /**
  * @brief Returns a value for attr of link between two devices
  * @param [out] value
