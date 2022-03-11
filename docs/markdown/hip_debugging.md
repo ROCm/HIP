@@ -131,40 +131,63 @@ There are also other debugging tools available online developers can google and 
 
 ## Debugging HIP Applications
 
-Below is an example to show how to get useful information from the debugger while running an application, which caused an issue of GPUVM fault.
+Below is an example to show how to get useful information from the debugger while running a simple memory copy test, which caused an issue of segmentation fault.
 
 ```
-Memory access fault by GPU node-1 on address 0x5924000. Reason: Page not present or supervisor privilege.
+test: simpleTest2<?> numElements=4194304 sizeElements=4194304 bytes
+Segmentation fault (core dumped)
 
-Program received signal SIGABRT, Aborted.
-[Switching to Thread 0x7fffdffb5700 (LWP 14893)]
-0x00007ffff2057c37 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56
-56      ../nptl/sysdeps/unix/sysv/linux/raise.c: No such file or directory.
+(gdb) run
+Starting program: /home/test/hipamd/build/directed_tests/runtimeApi/memory/hipMemcpy_simple
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main (argc=1, argv=0x7fffffffdea8)
+    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:147
+147     int main(int argc, char* argv[]) {
+(gdb) c
+Continuing.
+[New Thread 0x7ffff64c4700 (LWP 146066)]
+
+Thread 1 "hipMemcpy_simpl" received signal SIGSEGV, Segmentation fault.
+0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
+    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
+104             A_h1[i] = 3.14f + 1000 * i;
 (gdb) bt
-#0  0x00007ffff2057c37 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56
-#1  0x00007ffff205b028 in __GI_abort () at abort.c:89
-#2  0x00007ffff6f960eb in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
-#3  0x00007ffff6f99ea5 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
-#4  0x00007ffff6f78107 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
-#5  0x00007ffff744f184 in start_thread (arg=0x7fffdffb5700) at pthread_create.c:312
-#6  0x00007ffff211b37d in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:111
-(gdb) info threads
-  Id   Target Id         Frame
-  4    Thread 0x7fffdd521700 (LWP 14895) "caffe" pthread_cond_wait@@GLIBC_2.3.2 () at ../nptl/sysdeps/unix/sysv/linux/x86_64/pthread_cond_wait.S:185
-  3    Thread 0x7fffddd22700 (LWP 14894) "caffe" pthread_cond_wait@@GLIBC_2.3.2 () at ../nptl/sysdeps/unix/sysv/linux/x86_64/pthread_cond_wait.S:185
-* 2    Thread 0x7fffdffb5700 (LWP 14893) "caffe" 0x00007ffff2057c37 in __GI_raise (sig=sig@entry=6) at ../nptl/sysdeps/unix/sysv/linux/raise.c:56
-  1    Thread 0x7ffff7fa6ac0 (LWP 14892) "caffe" 0x00007ffff6f934d5 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+#0  0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
+    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
+#1  0x000000000020e96c in main (argc=<optimized out>, argv=<optimized out>)
+    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:163
+(gdb) info thread
+  Id   Target Id                                            Frame
+* 1    Thread 0x7ffff64c5880 (LWP 146060) "hipMemcpy_simpl" 0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
+    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
+  2    Thread 0x7ffff64c4700 (LWP 146066) "hipMemcpy_simpl" 0x00007ffff6b0850b in ioctl
+    () from /lib/x86_64-linux-gnu/libc.so.6
+(gdb) thread 2
+[Switching to thread 2 (Thread 0x7ffff64c4700 (LWP 146066))]
+#0  0x00007ffff6b0850b in ioctl () from /lib/x86_64-linux-gnu/libc.so.6
+(gdb) bt
+#0  0x00007ffff6b0850b in ioctl () from /lib/x86_64-linux-gnu/libc.so.6
+#1  0x00007ffff6604568 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#2  0x00007ffff65fe73a in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#3  0x00007ffff659e4d6 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#4  0x00007ffff65807de in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#5  0x00007ffff65932a2 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#6  0x00007ffff654f547 in ?? () from /opt/rocm/lib/libhsa-runtime64.so.1
+#7  0x00007ffff7f76609 in start_thread () from /lib/x86_64-linux-gnu/libpthread.so.0
+#8  0x00007ffff6b13293 in clone () from /lib/x86_64-linux-gnu/libc.so.6
 (gdb) thread 1
-[Switching to thread 1 (Thread 0x7ffff7fa6ac0 (LWP 14892))]
-#0  0x00007ffff6f934d5 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
+[Switching to thread 1 (Thread 0x7ffff64c5880 (LWP 146060))]
+#0  0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
+    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
+104             A_h1[i] = 3.14f + 1000 * i;
 (gdb) bt
-#0  0x00007ffff6f934d5 in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
-#1  0x00007ffff6f929ba in ?? () from /opt/rocm/hsa/lib/libhsa-runtime64.so.1
-#2  0x00007fffe080beca in HSADispatch::waitComplete() () from /opt/rocm/hcc/lib/libmcwamp_hsa.so
-#3  0x00007fffe080415f in HSADispatch::dispatchKernelAsync(Kalmar::HSAQueue*, void const*, int, bool) () from /opt/rocm/hcc/lib/libmcwamp_hsa.so
-#4  0x00007fffe080238e in Kalmar::HSAQueue::dispatch_hsa_kernel(hsa_kernel_dispatch_packet_s const*, void const*, unsigned long, hc::completion_future*) () from /opt/rocm/hcc/lib/libmcwamp_hsa.so
-#5  0x00007ffff7bb7559 in hipModuleLaunchKernel () from /opt/rocm/hip/lib/libhip_hcc.so
-#6  0x00007ffff2e6cd2c in mlopen::HIPOCKernel::run (this=0x7fffffffb5a8, args=0x7fffffffb2a8, size=80) at /root/MIOpen/src/hipoc/hipoc_kernel.cpp:15
+#0  0x000000000020f78e in simpleTest2<float> (numElements=4194304, usePinnedHost=true)
+    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:104
+#1  0x000000000020e96c in main (argc=<optimized out>, argv=<optimized out>)
+    at /home/test/hip/tests/src/runtimeApi/memory/hipMemcpy_simple.cpp:163
+(gdb)
 ...
 ```
 
