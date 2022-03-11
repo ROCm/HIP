@@ -697,7 +697,6 @@ if ($HIP_PLATFORM eq "amd") {
         if ($DEVICE_LIB_PATH ne "$ROCM_PATH/amdgcn/bitcode") {
             $HIPCXXFLAGS .= " --hip-device-lib-path=\"$DEVICE_LIB_PATH\"";
         }
-        $HIPCXXFLAGS .= " -fhip-new-launch-api";
     }
     if (not $isWindows) {
         $HIPLDFLAGS .= " -lgcc_s -lgcc -lpthread -lm -lrt";
