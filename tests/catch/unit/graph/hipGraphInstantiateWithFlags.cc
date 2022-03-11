@@ -248,7 +248,19 @@ by creating dependency graph and instantiate, launching and verifying
 the result
 */
 TEST_CASE("Unit_hipGraphInstantiateWithFlags_DependencyGraph") {
-  GraphInstantiateWithFlags_DependencyGraph();
+  int numDevices = 0;
+  int canAccessPeer = 0;
+  HIP_CHECK(hipGetDeviceCount(&numDevices));
+  if (numDevices > 1) {
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
+    if (canAccessPeer) {
+      GraphInstantiateWithFlags_DependencyGraph();
+    } else {
+      SUCCEED("Machine does not seem to have P2P");
+    }
+  } else {
+    SUCCEED("skipped the testcase as no of devices is less than 2");
+  }
 }
 /*
 This testcase verifies hipGraphInstantiateWithFlags API
@@ -278,7 +290,19 @@ by creating capture graph and instantiate, launching and verifying
 the result
 */
 TEST_CASE("Unit_hipGraphInstantiateWithFlags_StreamCapture") {
-  GraphInstantiateWithFlags_StreamCapture();
+  int numDevices = 0;
+  int canAccessPeer = 0;
+  HIP_CHECK(hipGetDeviceCount(&numDevices));
+  if (numDevices > 1) {
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccessPeer, 0, 1));
+    if (canAccessPeer) {
+      GraphInstantiateWithFlags_StreamCapture();
+    } else {
+      SUCCEED("Machine does not seem to have P2P");
+    }
+  } else {
+    SUCCEED("skipped the testcase as no of devices is less than 2");
+  }
 }
 
 /*
