@@ -118,12 +118,12 @@ TEST_CASE("Unit_hipIpcMemAccess_Semaphores") {
       }
       for (int i = 0; i < Num_devices; ++i) {
         HIP_CHECK(hipSetDevice(i));
-        HIP_CHECK(hipMalloc(&C_d, Nbytes));
-        HIP_CHECK(hipIpcOpenMemHandle(reinterpret_cast<void **>(&B_d),
-                                      shrd_mem->memHandle,
-                                      hipIpcMemLazyEnablePeerAccess));
         HIP_CHECK(hipDeviceCanAccessPeer(&CanAccessPeer, i, shrd_mem->device));
         if (CanAccessPeer == 1) {
+          HIP_CHECK(hipMalloc(&C_d, Nbytes));
+          HIP_CHECK(hipIpcOpenMemHandle(reinterpret_cast<void **>(&B_d),
+                                        shrd_mem->memHandle,
+                                        hipIpcMemLazyEnablePeerAccess));
           HIP_CHECK(hipMemcpy(C_d, B_d, Nbytes, hipMemcpyDeviceToDevice));
           HIP_CHECK(hipMemcpy(C_h, C_d, Nbytes, hipMemcpyDeviceToHost));
           HipTest::checkTest<int>(A_h, C_h, N);
@@ -131,9 +131,9 @@ TEST_CASE("Unit_hipIpcMemAccess_Semaphores") {
           // Checking if the data obtained from Ipc shared memory is consistent
           HIP_CHECK(hipMemcpy(C_h, B_d, Nbytes, hipMemcpyDeviceToHost));
           HipTest::checkTest<int>(A_h, C_h, N);
-        }
         HIP_CHECK(hipIpcCloseMemHandle(reinterpret_cast<void*>(B_d)));
         HIP_CHECK(hipFree(C_d));
+        }
       }
       if ((sem_post(sem_ob2)) == -1) {
         shrd_mem->IfTestPassed = false;
