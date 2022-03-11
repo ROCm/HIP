@@ -56,7 +56,7 @@ struct hip_bfloat16
 
     enum truncate_t
     {
-        truncate_0
+        truncate
     };
 
     __host__ __device__ hip_bfloat16() = default;
