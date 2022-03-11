@@ -125,6 +125,8 @@ MyKernel<<<dim3(gridDim), dim3(groupDim), 0, 0>>> (a,b,c,n);
 
 The hipLaunchKernelGGL macro always starts with the five parameters specified above, followed by the kernel arguments. HIPIFY tools optionally convert Cuda launch syntax to hipLaunchKernelGGL, including conversion of optional arguments in <<< >>> to the five required hipLaunchKernelGGL parameters. The dim3 constructor accepts zero to three arguments and will by default initialize unspecified dimensions to 1. See [dim3](#dim3). The kernel uses the coordinate built-ins (thread*, block*, grid*) to determine coordinate index and coordinate bounds of the work item that’s currently executing. See [Coordinate Built-Ins](#coordinate-builtins).
 
+Please note, HIP does not support kernel launch with total work items defined in dimension with size gridDim x blockDim >= 2^32.
+
 
 ## Kernel-Launch Example
 ```
@@ -183,6 +185,7 @@ The `__restrict__` keyword tells the compiler that the associated memory pointer
 Built-ins determine the coordinate of the active work item in the execution grid. They are defined in amd_hip_runtime.h (rather than being implicitly defined by the compiler).
 In HIP, built-ins coordinate variable definitions are the same as in Cuda, for instance:
 threadIdx.x, blockIdx.y, gridDim.y, etc. 
+The products gridDim.x * blockDim.x, gridDim.y * blockDim.y and gridDim.z * blockDim.z are always less than 2^32.
 
 ### warpSize
 The warpSize variable is of type int and contains the warp size (in threads) for the target device. Note that all current Nvidia devices return 32 for this variable, and all current AMD devices return 64. Device code should use the warpSize built-in to develop portable wave-aware code.
@@ -214,12 +217,12 @@ HIP supports the following short vector formats:
     - double1, double2, double3, double4
 
 ### dim3
-dim3 is a three-dimensional integer vector type commonly used to specify grid and group dimensions. Unspecified dimensions are initialized to 1. 
+dim3 is a three-dimensional integer vector type commonly used to specify grid and group dimensions. Unspecified dimensions are initialized to 1.
 ```
 typedef struct dim3 {
-  uint32_t x; 
-  uint32_t y; 
-  uint32_t z; 
+  uint32_t x;
+  uint32_t y;
+  uint32_t z;
 
   dim3(uint32_t _x=1, uint32_t _y=1, uint32_t _z=1) : x(_x), y(_y), z(_z) {};
 };
