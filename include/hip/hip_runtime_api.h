@@ -2680,8 +2680,8 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  *  If no variable of that name exists, it returns hipErrorNotFound. Both parameters dptr and bytes are optional.
  *  If one of them is NULL, it is ignored and hipSuccess is returned.
  *
- *  @param[out]  dptr  Returned global device pointer
- *  @param[out]  bytes Returned global size in bytes
+ *  @param[out]  dptr  Returns global device pointer
+ *  @param[out]  bytes Returns global size in bytes
  *  @param[in]   hmod  Module to retrieve global from
  *  @param[in]   name  Name of global to retrieve
  *
@@ -2690,17 +2690,97 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
+
+/**
+ *  @brief Gets device pointer associated with symbol on the device.
+ *
+ *  @param[out]  devPtr  pointer to the device associated the symbole
+ *  @param[in]   symbol  pointer to the symbole of the device
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
+
+/**
+ *  @brief Gets the size of the given symbol on the device.
+ *
+ *  @param[in]   symbol  pointer to the device symbole
+ *  @param[out]  size  pointer to the size
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
+
+/**
+ *  @brief Copies data to the given symbol on the device.
+ * Symbol HIP APIs allow a kernel to define a device-side data symbol which can be accessed on
+ * the host side. The symbol can be in __constant or device space.
+ * Note that the symbol name needs to be encased in the HIP_SYMBOL macro.
+ * This also applies to hipMemcpyFromSymbol, hipGetSymbolAddress, and hipGetSymbolSize.
+ * For detail usage, see the example at
+ * https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-5.0.x/docs/markdown/hip_porting_guide.md
+ *
+ *  @param[out]  symbol  pointer to the device symbole
+ *  @param[in]   src  pointer to the source address
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyToSymbol(const void* symbol, const void* src,
                              size_t sizeBytes, size_t offset __dparm(0),
                              hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
+
+/**
+ *  @brief Copies data to the given symbol on the device asynchronously.
+ *
+ *  @param[out]  symbol  pointer to the device symbole
+ *  @param[in]   src  pointer to the source address
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *  @param[in]   stream  stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src,
                                   size_t sizeBytes, size_t offset,
                                   hipMemcpyKind kind, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Copies data from the given symbol on the device.
+ *
+ *  @param[out]  dptr  Returns pointer to destinition memory address
+ *  @param[in]   symbol  pointer to the symbole address on the device
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from the start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol,
                                size_t sizeBytes, size_t offset __dparm(0),
                                hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
+
+/**
+ *  @brief Copies data from the given symbol on the device asynchronously.
+ *
+ *  @param[out]  dptr  Returns pointer to destinition memory address
+ *  @param[in]   symbol  pointer to the symbole address on the device
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from the start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *  @param[in]   stream  stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
@@ -3747,6 +3827,10 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and
  * must be in the memory layout and alignment expected by the kernel.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32. So gridDim.x * blockDim.x, gridDim.y * blockDim.y
+ * and gridDim.z * blockDim.z are always less than 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please
@@ -3769,6 +3853,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th
  * default stream is used with associated synchronization rules.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
  */
@@ -3820,6 +3907,9 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
 //TODO - Match CUoccupancyB2DSize
@@ -3835,6 +3925,9 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
@@ -3893,6 +3986,9 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
 hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
@@ -3948,6 +4044,9 @@ hipError_t hipProfilerStop();
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
@@ -3982,6 +4081,9 @@ hipError_t hipLaunchByPtr(const void* func);
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
@@ -3998,6 +4100,12 @@ hipError_t __hipPushCallConfiguration(dim3 gridDim,
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [out] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
@@ -4070,6 +4178,152 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  *  @{
  *  This section describes the texture management functions of HIP runtime API.
  */
+
+/**
+ * @brief  Binds a mipmapped array to a texture.
+ *
+ * @param [in] tex  pointer to the texture reference to bind
+ * @param [in] mipmappedArray  memory mipmapped array on the device
+ * @param [in] desc  opointer to the channel format
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipBindTextureToMipmappedArray(
+    const textureReference* tex,
+    hipMipmappedArray_const_t mipmappedArray,
+    const hipChannelFormatDesc* desc);
+
+/**
+ * @brief Gets the texture reference related with the symbol.
+ *
+ * @param [out] texref  texture reference
+ * @param [in] symbol  pointer to the symbol related with the texture for the reference
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+ hipError_t hipGetTextureReference(
+    const textureReference** texref,
+    const void* symbol);
+
+/**
+ * @brief Creates a texture object.
+ *
+ * @param [out] pTexObject  pointer to the texture object to create
+ * @param [in] pResDesc  pointer to resource descriptor
+ * @param [in] pTexDesc  pointer to texture descriptor
+ * @param [in] pResViewDesc  pointer to resource view descriptor
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipCreateTextureObject(
+    hipTextureObject_t* pTexObject,
+    const hipResourceDesc* pResDesc,
+    const hipTextureDesc* pTexDesc,
+    const struct hipResourceViewDesc* pResViewDesc);
+
+/**
+ * @brief Destroys a texture object.
+ *
+ * @param [in] textureObject  texture object to destroy
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets the channel descriptor in an array.
+ *
+ * @param [in] desc  pointer to channel format descriptor
+ * @param [out] array  memory array on the device
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipGetChannelDesc(
+    hipChannelFormatDesc* desc,
+    hipArray_const_t array);
+
+/**
+ * @brief Gets resource descriptor for the texture object.
+ *
+ * @param [out] pResDesc  pointer to resource descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipGetTextureObjectResourceDesc(
+    hipResourceDesc* pResDesc,
+    hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets resource view descriptor for the texture object.
+ *
+ * @param [out] pResViewDesc  pointer to resource view descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipGetTextureObjectResourceViewDesc(
+    struct hipResourceViewDesc* pResViewDesc,
+    hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets texture descriptor for the texture object.
+ *
+ * @param [out] pTexDesc  pointer to texture descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipGetTextureObjectTextureDesc(
+    hipTextureDesc* pTexDesc,
+    hipTextureObject_t textureObject);
+
+/**
+ *
+ */
+hipError_t hipTexRefSetAddressMode(
+    textureReference* texRef,
+    int dim,
+    enum hipTextureAddressMode am);
+hipError_t hipTexRefSetArray(
+    textureReference* tex,
+    hipArray_const_t array,
+    unsigned int flags);
+hipError_t hipTexRefSetFilterMode(
+    textureReference* texRef,
+    enum hipTextureFilterMode fm);
+hipError_t hipTexRefSetFlags(
+    textureReference* texRef,
+    unsigned int Flags);
+hipError_t hipTexRefSetFormat(
+    textureReference* texRef,
+    hipArray_Format fmt,
+    int NumPackedComponents);
+hipError_t hipTexObjectCreate(
+    hipTextureObject_t* pTexObject,
+    const HIP_RESOURCE_DESC* pResDesc,
+    const HIP_TEXTURE_DESC* pTexDesc,
+    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+hipError_t hipTexObjectDestroy(
+    hipTextureObject_t texObject);
+hipError_t hipTexObjectGetResourceDesc(
+    HIP_RESOURCE_DESC* pResDesc,
+    hipTextureObject_t texObject);
+hipError_t hipTexObjectGetResourceViewDesc(
+    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+    hipTextureObject_t texObject);
+hipError_t hipTexObjectGetTextureDesc(
+    HIP_TEXTURE_DESC* pTexDesc,
+    hipTextureObject_t texObject);
+
 /**
  *
  *  @addtogroup TextureD Texture Management [Deprecated]
@@ -4167,73 +4421,7 @@ hipError_t hipTexRefSetMaxAnisotropy(
 /**
  * @}
  */
-hipError_t hipBindTextureToMipmappedArray(
-    const textureReference* tex,
-    hipMipmappedArray_const_t mipmappedArray,
-    const hipChannelFormatDesc* desc);
- hipError_t hipGetTextureReference(
-    const textureReference** texref,
-    const void* symbol);
-hipError_t hipCreateTextureObject(
-    hipTextureObject_t* pTexObject,
-    const hipResourceDesc* pResDesc,
-    const hipTextureDesc* pTexDesc,
-    const struct hipResourceViewDesc* pResViewDesc);
-hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
-hipError_t hipGetChannelDesc(
-    hipChannelFormatDesc* desc,
-    hipArray_const_t array);
-hipError_t hipGetTextureObjectResourceDesc(
-    hipResourceDesc* pResDesc,
-    hipTextureObject_t textureObject);
-hipError_t hipGetTextureObjectResourceViewDesc(
-    struct hipResourceViewDesc* pResViewDesc,
-    hipTextureObject_t textureObject);
-hipError_t hipGetTextureObjectTextureDesc(
-    hipTextureDesc* pTexDesc,
-    hipTextureObject_t textureObject);
 
-hipError_t hipTexRefSetAddressMode(
-    textureReference* texRef,
-    int dim,
-    enum hipTextureAddressMode am);
-hipError_t hipTexRefSetArray(
-    textureReference* tex,
-    hipArray_const_t array,
-    unsigned int flags);
-hipError_t hipTexRefSetFilterMode(
-    textureReference* texRef,
-    enum hipTextureFilterMode fm);
-hipError_t hipTexRefSetFlags(
-    textureReference* texRef,
-    unsigned int Flags);
-hipError_t hipTexRefSetFormat(
-    textureReference* texRef,
-    hipArray_Format fmt,
-    int NumPackedComponents);
-hipError_t hipTexObjectCreate(
-    hipTextureObject_t* pTexObject,
-    const HIP_RESOURCE_DESC* pResDesc,
-    const HIP_TEXTURE_DESC* pTexDesc,
-    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
-hipError_t hipTexObjectDestroy(
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetResourceDesc(
-    HIP_RESOURCE_DESC* pResDesc,
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetResourceViewDesc(
-    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetTextureDesc(
-    HIP_TEXTURE_DESC* pTexDesc,
-    hipTextureObject_t texObject);
-// doxygen end Texture management
-/**
- *  @addtogroup TextureU Texture Management [Unsupported]
- *  @{
- *  @ingroup Texture
- *  This section describes the unsupported texture management functions of HIP runtime API.
- */
 
 // The following are not supported.
 /**
@@ -4275,6 +4463,7 @@ hipError_t hipMipmappedArrayGetLevel(
 /**
  * @}
  */
+
 // doxygen end Texture management
 /**
  * @}
