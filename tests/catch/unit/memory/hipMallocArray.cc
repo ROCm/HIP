@@ -25,7 +25,6 @@ hipMallocArray API test scenarios
 4. Multithreaded scenario
 */
 
-
 #include <hip_test_common.hh>
 
 static constexpr auto NUM_W{4};
@@ -79,10 +78,6 @@ static void MallocArray_DiffSizes(int gpu) {
   }
 }
 
-static void MallocArrayThreadFunc(int gpu) {
-  MallocArray_DiffSizes(gpu);
-}
-
 /*
  * This testcase verifies the negative scenarios of
  * hipMallocArray API
@@ -123,20 +118,6 @@ TEST_CASE("Unit_hipMallocArray_Negative") {
             hipArrayDefault) != hipSuccess);
   }
 }
-/*
- * This testcase verifies the basic scenario of
- * hipMallocArray API for different datatypes
- * of size 10
- */
-TEMPLATE_TEST_CASE("Unit_hipMallocArray_Basic",
-                   "", int, unsigned int, float) {
-  hipArray* A_d;
-  hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
-  REQUIRE(hipMallocArray(&A_d, &desc,
-                         NUM_W, NUM_H,
-                         hipArrayDefault) == hipSuccess);
-  HIP_CHECK(hipFreeArray(A_d));
-}
 
 
 TEST_CASE("Unit_hipMallocArray_DiffSizes") {
@@ -156,7 +137,7 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
   size_t tot, avail, ptot, pavail;
   HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
   for (int i = 0; i < devCnt; i++) {
-    threadlist.push_back(std::thread(MallocArrayThreadFunc, i));
+    threadlist.push_back(std::thread(MallocArray_DiffSizes, i));
   }
 
   for (auto &t : threadlist) {
@@ -170,3 +151,282 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
   }
 }
 
+
+constexpr size_t BlockSize = 16;
+
+template <class T, size_t N> struct type_and_size {
+  using type = T;
+  static constexpr size_t size = N;
+};
+
+// scalars are interpreted as a vector of 1 length.
+// template <size_t N> using int_constant = std::integral_constant<size_t, N>;
+template <typename T> struct vector_info;
+template <> struct vector_info<int> : type_and_size<int, 1> {};
+template <> struct vector_info<float> : type_and_size<float, 1> {};
+template <> struct vector_info<short> : type_and_size<short, 1> {};
+template <> struct vector_info<char> : type_and_size<char, 1> {};
+template <> struct vector_info<unsigned int> : type_and_size<unsigned int, 1> {};
+template <> struct vector_info<unsigned short> : type_and_size<unsigned short, 1> {};
+template <> struct vector_info<unsigned char> : type_and_size<unsigned char, 1> {};
+
+template <> struct vector_info<int2> : type_and_size<int, 2> {};
+template <> struct vector_info<float2> : type_and_size<float, 2> {};
+template <> struct vector_info<short2> : type_and_size<short, 2> {};
+template <> struct vector_info<char2> : type_and_size<char, 2> {};
+template <> struct vector_info<uint2> : type_and_size<unsigned int, 2> {};
+template <> struct vector_info<ushort2> : type_and_size<unsigned short, 2> {};
+template <> struct vector_info<uchar2> : type_and_size<unsigned char, 2> {};
+
+template <> struct vector_info<int4> : type_and_size<int, 4> {};
+template <> struct vector_info<float4> : type_and_size<float, 4> {};
+template <> struct vector_info<short4> : type_and_size<short, 4> {};
+template <> struct vector_info<char4> : type_and_size<char, 4> {};
+template <> struct vector_info<uint4> : type_and_size<unsigned int, 4> {};
+template <> struct vector_info<ushort4> : type_and_size<unsigned short, 4> {};
+template <> struct vector_info<uchar4> : type_and_size<unsigned char, 4> {};
+
+// Kernels ///////////////////////////////////////
+
+// read from a texture using normalized coordinates
+constexpr size_t ChannelToRead = 1;
+template <typename T>
+__global__ void readFromTexture(T* output, hipTextureObject_t texObj, size_t width, size_t height,
+                                bool textureGather) {
+  // Calculate normalized texture coordinates
+  const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+  const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+  const float u = x / (float)width;
+
+  // Read from texture and write to global memory
+  if (height == 0) {
+    output[x] = tex1D<T>(texObj, u);
+  } else {
+    const float v = y / (float)height;
+    output[y * width + x] =
+        textureGather ? tex2Dgather<T>(texObj, u, v, ChannelToRead) : tex2D<T>(texObj, u, v);
+  }
+}
+
+template <typename T> __device__ void addOne(T* a) {
+  using scalar_type = typename vector_info<T>::type;
+  auto as = reinterpret_cast<scalar_type*>(a);
+  for (size_t i = 0; i < vector_info<T>::size; ++i) {
+    as[i] = as[i] + static_cast<scalar_type>(1);
+  }
+}
+
+// read from a surface and write to another
+template <typename T> __global__ void incSurface(hipSurfaceObject_t surf, size_t height) {
+  // Calculate surface coordinates
+  unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
+  unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
+  if (height == 0) {
+    T data;
+    surf1Dread(&data, surf, x * sizeof(T));
+    addOne(&data);  // change the value to show that write works
+    surf1Dwrite(data, surf, x * sizeof(T));
+  } else {
+    T data;
+    surf2Dread(&data, surf, x * sizeof(T), y);
+    addOne(&data);  // change the value to show that write works
+    surf2Dwrite(data, surf, x * sizeof(T), y);
+  }
+}
+
+// Helpers ///////////////////////////////////////
+
+template <typename T> size_t getAllocSize(const size_t width, const size_t height) noexcept {
+  return sizeof(T) * width * (height ? height : 1);
+}
+
+template <typename T> void checkDataIsAscending(const std::vector<T>& hostData) {
+  bool allMatch = true;
+  size_t i = 0;
+  for (; i < hostData.size(); ++i) {
+    allMatch = allMatch && hostData[i] == static_cast<T>(i);
+    if (!allMatch) break;
+  }
+  INFO("hostData[" << i << "] == " << static_cast<T>(hostData[i]));
+  REQUIRE(allMatch);
+}
+
+// Tests /////////////////////////////////////////
+
+// Test the default array by generating a texture from it then reading from that texture.
+// Textures are read-only so write to the array then copy from the texture into normal device memory
+template <typename T>
+void testArrayAsTexture(hipArray_t arrayPtr, const size_t width, const size_t height) {
+  using scalar_type = typename vector_info<T>::type;
+  constexpr auto vec_size = vector_info<T>::size;
+
+  const auto h = height ? height : 1;
+  const size_t pitch = width * sizeof(T);  // no padding
+  const auto size = pitch * h;
+
+  // create an array to initialize the hip array, then later use it to hold the result
+  std::vector<scalar_type> hostData(width * h * vec_size);
+
+  // Setup backing array
+  // assign ascending values to the data array to show indexing is working.
+  std::iota(std::begin(hostData), std::end(hostData), 0);
+  HIP_CHECK(
+      hipMemcpy2DToArray(arrayPtr, 0, 0, hostData.data(), pitch, pitch, h, hipMemcpyHostToDevice));
+
+
+  // create texture
+  hipTextureObject_t textObj{};
+  hipResourceDesc resDesc{};
+  memset(&resDesc, 0, sizeof(hipResourceDesc));
+  // enum to store how to resDesc.res union is being used
+  resDesc.resType = hipResourceTypeArray;
+  resDesc.res.array.array = arrayPtr;
+
+  hipTextureDesc textDesc{};
+  memset(&textDesc, 0, sizeof(hipTextureDesc));
+  textDesc.filterMode =
+      hipFilterModePoint;  // use the actual values in the texture, not normalized data
+  textDesc.readMode = hipReadModeElementType;  // don't convert the data to floats
+  textDesc.normalizedCoords = 1;               // use normalized coordinates (0.0-1.0)
+
+  HIP_CHECK(hipCreateTextureObject(&textObj, &resDesc, &textDesc, nullptr));
+
+
+  // run kernel
+  T* device_data{};
+  HIP_CHECK(hipMalloc(&device_data, size));
+  readFromTexture<<<dim3(width / BlockSize, height ? height / BlockSize : 1, 1),
+                    dim3(BlockSize, height ? BlockSize : 1, 1)>>>(device_data, textObj, width,
+                                                                  height, false);
+  HIP_CHECK(hipGetLastError());  // check for errors when running the kernel
+
+  // copy data back and then test it
+  std::fill(std::begin(hostData), std::end(hostData), 0);
+  HIP_CHECK(hipMemcpy(hostData.data(), device_data, size, hipMemcpyDeviceToHost));
+
+  checkDataIsAscending(hostData);
+
+  // clean up
+  HIP_CHECK(hipDestroyTextureObject(textObj));
+  HIP_CHECK(hipFree(device_data));
+}
+
+// Test the an array created with the SurfaceLoadStore flag by generating a surface and reading from
+// it and writing to it.
+template <typename T>
+void testArrayAsSurface(hipArray_t arrayPtr, const size_t width, const size_t height) {
+  using scalar_type = typename vector_info<T>::type;
+  constexpr auto vec_size = vector_info<T>::size;
+
+  const auto h = height ? height : 1;
+  const size_t pitch = width * sizeof(T);  // no padding
+  const auto size = pitch * h;
+
+  std::vector<scalar_type> hostData(width * h * vec_size);
+
+  // Setup backing array
+  // assign ascending values to the data array to show indexing is working.
+  std::iota(std::begin(hostData), std::end(hostData), 0);
+  HIP_CHECK(
+      hipMemcpy2DToArray(arrayPtr, 0, 0, hostData.data(), pitch, pitch, h, hipMemcpyHostToDevice));
+
+
+  // create surface
+  hipSurfaceObject_t surfObj{};
+  hipResourceDesc resDesc;
+  memset(&resDesc, 0, sizeof(hipResourceDesc));
+  resDesc.resType = hipResourceTypeArray;
+
+  resDesc.res.array.array = arrayPtr;
+  HIP_CHECK(hipCreateSurfaceObject(&surfObj, &resDesc));
+
+
+  // run kernel
+  T* device_data{};
+  HIP_CHECK(hipMalloc(&device_data, size));
+  // This will increment the values of the surface, so this is undone later
+  incSurface<T><<<dim3(width / BlockSize, height ? height / BlockSize : 1, 1),
+                  dim3(BlockSize, height ? BlockSize : 1, 1)>>>(surfObj, height);
+  HIP_CHECK(hipGetLastError());  // check for errors when running the kernel
+
+
+  // copy data back and then test it
+  std::fill(std::begin(hostData), std::end(hostData), 0);
+  HIP_CHECK(hipMemcpy2DFromArray(hostData.data(), pitch, arrayPtr, 0, 0, pitch, h,
+                                 hipMemcpyDeviceToHost));
+
+
+  // undo the increment
+  std::for_each(std::begin(hostData), std::end(hostData),
+                [](scalar_type& x) { x -= static_cast<scalar_type>(1); });
+  checkDataIsAscending(hostData);
+
+  // clean up
+  HIP_CHECK(hipDestroySurfaceObject(surfObj));
+  HIP_CHECK(hipFree(device_data));
+}
+
+size_t getFreeMem() {
+  size_t free = 0, total = 0;
+  HIP_CHECK(hipMemGetInfo(&free, &total));
+  return free;
+}
+
+// The happy path of a default array and a SurfaceLoadStore array should work
+// Selection of types chosen to reduce compile times
+TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, short2, char, uchar2,
+                   char4, float, float2, float4) {
+
+  #if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-62");
+  #endif
+
+  hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
+
+  size_t init_free = getFreeMem();
+
+  // pointer to the array in device memory
+  hipArray_t arrayPtr{};
+  size_t width = 1024;
+  size_t height = GENERATE(0, 1024);
+
+  SECTION("hipArrayDefault") {
+    INFO("flag is hipArrayDefault");
+    INFO("height: " << height);
+
+    HIP_CHECK(hipMallocArray(&arrayPtr, &desc, width, height, hipArrayDefault));
+    testArrayAsTexture<TestType>(arrayPtr, width, height);
+  }
+#if HT_NVIDIA  // surfaces and texture gather not supported on AMD
+  SECTION("hipArraySurfaceLoadStore") {
+    INFO("flag is hipArraySurfaceLoadStore");
+    INFO("height: " << height);
+
+    HIP_CHECK(hipMallocArray(&arrayPtr, &desc, width, height, hipArraySurfaceLoadStore));
+    testArrayAsSurface<TestType>(arrayPtr, width, height);
+  }
+#endif
+
+  size_t final_free = getFreeMem();
+
+  const size_t alloc_size = getAllocSize<TestType>(width, height);
+  // alloc will be chunked, so this is not exact
+  REQUIRE(init_free - final_free >= alloc_size);
+
+  HIP_CHECK(hipFreeArray(arrayPtr));
+}
+
+// cuda array description -
+// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#cuda-arrays
+
+// flags:  possible flags include:
+// * cudaArrayDefault           0x00 - 0
+// * cudaArraySurfaceLoadStore  0x02 - 2 (use maxSurface instead of maxTexture)
+// * cudaArrayTextureGather     0x08 - 8 (2D only) (use maxTexture2DGather instead of maxTexture)
+// * cudaArraySparse            0x40 - 32 (2D only)
+// * cudaArrayDeferredMapping   0x80 - 64
+//        flags that should not be used
+// * cudaArrayLayered           0x01 - 1
+// * cudaArrayCubemap           0x04 - 4
+// * cudaArraySparsePropertiesSingleMipTail 0x10 - 10 (not mentioned in cuda docs, something to do
+// with mipmapped arrays)

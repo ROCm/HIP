@@ -147,7 +147,16 @@ inline bool isImageSupported() {
   return imageSupport != 0;
 }
 
+/**
+ * Causes the test to stop and be skipped at runtime.
+ * reason: Message describing the reason the test has been skipped.
+ */
+static inline void HIP_SKIP_TEST(char const* const reason) noexcept {
+  // ctest is setup to parse for "HIP_SKIP_THIS_TEST", at which point it will skip the test.
+  std::cout << "Skipping test. Reason: " << reason << '\n' << "HIP_SKIP_THIS_TEST" << std::endl;
 }
+}
+
 
 // This must be called in the beginning of image test app's main() to indicate whether image
 // is supported.

@@ -23,6 +23,7 @@ if(HIP_PLATFORM MATCHES "amd")
 set(TEST_SRC
     memset.cc
     malloc.cc
+    hipMallocArray.cc
     hipMemcpy2DToArray.cc
     hipMemcpy2DToArrayAsync.cc
     hipMemcpy3D.cc
@@ -91,6 +92,7 @@ else()
 set(TEST_SRC
     memset.cc
     malloc.cc
+    hipMallocArray.cc
     hipMemcpy2DToArray.cc
     hipMemcpy2DToArrayAsync.cc
     hipMemcpy3D.cc

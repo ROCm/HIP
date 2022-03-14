@@ -75,5 +75,4 @@
 	   "Unit_hipMalloc3D_Negative",
 	   "Unit_hipPointerGetAttribute_MappedMem"
 	]
-
 }
