@@ -27,7 +27,7 @@ use File::Basename;
 
 $HIP_BASE_VERSION_MAJOR = "5";
 $HIP_BASE_VERSION_MINOR = "1";
-$HIP_BASE_VERSION_PATCH = "20560";
+$HIP_BASE_VERSION_PATCH = "20590";
 
 #---
 # Function to parse config file
