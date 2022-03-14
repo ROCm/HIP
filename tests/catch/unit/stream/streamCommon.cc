@@ -66,6 +66,45 @@ bool checkStreamFlags_(hipStream_t& stream, bool checkFlags = false, unsigned fl
 
 inline namespace stream {
 
+__device__ int defaultSemaphore = 0;
+
+__global__ void signaling_kernel(int* semaphore) {
+  size_t tid{blockIdx.x * blockDim.x + threadIdx.x};
+  if (tid == 0) {
+    if (semaphore == nullptr) {
+      atomicAdd(&defaultSemaphore, 1);
+    } else {
+      atomicAdd(semaphore, 1);
+    }
+  }
+}
+
+__global__ void waiting_kernel(int* semaphore) {
+  size_t tid{blockIdx.x * blockDim.x + threadIdx.x};
+  if (tid == 0) {
+    if (semaphore == nullptr) {
+      while (atomicCAS(&defaultSemaphore, 1, 2) == 0) {
+      }
+    } else {
+      while (atomicCAS(semaphore, 1, 2) == 0) {
+      }
+    }
+  }
+}
+
+std::thread startSignalingThread(int* semaphore) {
+  std::thread signalingThread([semaphore]() {
+    hipStream_t signalingStream;
+    HIP_CHECK(hipStreamCreateWithFlags(&signalingStream, hipStreamNonBlocking));
+
+    signaling_kernel<<<1, 1, 0, signalingStream>>>(semaphore);
+    HIP_CHECK(hipStreamSynchronize(signalingStream));
+    HIP_CHECK(hipStreamDestroy(signalingStream));
+  });
+
+  return signalingThread;
+}
+
 bool checkStream(hipStream_t& stream) {
   {  // Check default flags
     auto res = checkStreamFlags_(stream, true, hipStreamDefault);
