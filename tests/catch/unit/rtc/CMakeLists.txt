@@ -2,6 +2,7 @@
 set(TEST_SRC
     saxpy.cc
     warpsize.cc
+    hipRtcFunctional.cc
 )
 
 # AMD only tests
