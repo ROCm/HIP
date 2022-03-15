@@ -46,90 +46,44 @@ TEST_CASE("Unit_hipStreamGetPriority_InvalidPriorityPointer") {
 }
 
 /**
- * Create stream and check default priority of stream is within range.
+ * Create stream and check priority.
  */
-TEST_CASE("Unit_hipStreamGetPriority_default") {
+TEST_CASE("Unit_hipStreamGetPriority_happy") {
   int priority_low = 0;
   int priority_high = 0;
   int devID = GENERATE(range(0, HipTest::getDeviceCount()));
   HIP_CHECK(hipSetDevice(devID));
   HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
   hipStream_t stream{};
-  HIP_CHECK(hipStreamCreate(&stream));
   int priority = 0;
-  HIP_CHECK(hipStreamGetPriority(stream, &priority));
-  // valid priority
-  // Lower the value higher the priority, higher the value lower the priority
-  REQUIRE(priority_low >= priority);
-  REQUIRE(priority >= priority_high);
-  HIP_CHECK(hipStreamDestroy(stream));
-}
-
-/**
- * Create stream with high priority and check priority is set as expected.
- */
-TEST_CASE("Unit_hipStreamGetPriority_high") {
-  int priority_low = 0;
-  int priority_high = 0;
-  int devID = GENERATE(range(0, HipTest::getDeviceCount()));
-  HIP_CHECK(hipSetDevice(devID));
-  HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
-  hipStream_t stream{};
-  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_high));
-  int priority = 0;
-  HIP_CHECK(hipStreamGetPriority(stream, &priority));
-  REQUIRE(priority == priority_high);
-  HIP_CHECK(hipStreamDestroy(stream));
-}
-
-/**
- * Create stream with higher priority for the priority range returned.
- */
-TEST_CASE("Unit_hipStreamGetPriority_higher") {
-  int priority_low = 0;
-  int priority_high = 0;
-  int devID = GENERATE(range(0, HipTest::getDeviceCount()));
-  HIP_CHECK(hipSetDevice(devID));
-  HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
-  hipStream_t stream{};
-  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking, priority_high - 1));
-  int priority = 0;
-  HIP_CHECK(hipStreamGetPriority(stream, &priority));
-  REQUIRE(priority == priority_high);
-  HIP_CHECK(hipStreamDestroy(stream));
-}
-
-/**
- * Create stream with low priority and check priority is set as expected.
- */
-TEST_CASE("Unit_hipStreamGetPriority_low") {
-  int priority_low = 0;
-  int priority_high = 0;
-  int devID = GENERATE(range(0, HipTest::getDeviceCount()));
-  HIP_CHECK(hipSetDevice(devID));
-  HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
-  hipStream_t stream{};
-  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_low));
-  int priority = 0;
-  HIP_CHECK(hipStreamGetPriority(stream, &priority));
-  REQUIRE(priority_low == priority);
-  HIP_CHECK(hipStreamDestroy(stream));
-}
-
-/**
- * Create stream with lower priority for the priority range returned.
- */
-TEST_CASE("Unit_hipStreamGetPriority_lower") {
-  int priority_low = 0;
-  int priority_high = 0;
-  int devID = GENERATE(range(0, HipTest::getDeviceCount()));
-  HIP_CHECK(hipSetDevice(devID));
-  HIP_CHECK(hipDeviceGetStreamPriorityRange(&priority_low, &priority_high));
-  hipStream_t stream{};
-  HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking, priority_low + 1));
-  int priority = 0;
-  HIP_CHECK(hipStreamGetPriority(stream, &priority));
-  REQUIRE(priority_low == priority);
+  SECTION("Default Priority") {
+    HIP_CHECK(hipStreamCreate(&stream));
+    HIP_CHECK(hipStreamGetPriority(stream, &priority));
+    // valid priority
+    // Lower the value higher the priority, higher the value lower the priority
+    REQUIRE(priority_low >= priority);
+    REQUIRE(priority >= priority_high);
+  }
+  SECTION("High Priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_high));
+    HIP_CHECK(hipStreamGetPriority(stream, &priority));
+    REQUIRE(priority == priority_high);
+  }
+  SECTION("Higher Priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking, priority_high - 1));
+    HIP_CHECK(hipStreamGetPriority(stream, &priority));
+    REQUIRE(priority == priority_high);
+  }
+  SECTION("Low Priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_low));
+    HIP_CHECK(hipStreamGetPriority(stream, &priority));
+    REQUIRE(priority_low == priority);
+  }
+  SECTION("Lower Priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking, priority_low + 1));
+    HIP_CHECK(hipStreamGetPriority(stream, &priority));
+    REQUIRE(priority_low == priority);
+  }
   HIP_CHECK(hipStreamDestroy(stream));
 }
 
