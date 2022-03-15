@@ -62,10 +62,10 @@ __global__ void setting_kernel(int* x, size_t size) {
   }
 }
 
-__global__ void comparing_kernel(volatile int* x, size_t size) {
+__global__ void comparing_kernel(int* x, size_t size) {
   size_t tid{blockIdx.x * blockDim.x + threadIdx.x};
   if (tid < size) {
-    while (atomicCAS(x[tid], 1, 2)) {
+    while (atomicCAS(&x[tid], 1, 2)) {
     }
   }
 }
