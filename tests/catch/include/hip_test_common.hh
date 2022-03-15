@@ -40,11 +40,12 @@ THE SOFTWARE.
 #define HIP_CHECK_ERROR(errorExpr, expectedError)                                                  \
   {                                                                                                \
     hipError_t localError = errorExpr;                                                             \
-    INFO("Matching Errors: " << hipGetErrorString(localError)                                      \
-                             << " Expected Error: " << expectedError << '\n'                       \
-                             << " Actual Error: " << hipGetErrorString(localError)                 \
-                             << " Actual Code: " << localError << " Str: " << #errorExpr           \
-                             << " In File: " << __FILE__ << " At line: " << __LINE__);             \
+    INFO("Matching Errors: "                                                                       \
+         << " Expected Error: " << hipGetErrorString(expectedError)                                \
+         << " Expected Code: " << expectedError << '\n'                                            \
+         << "                  Actual Error:   " << hipGetErrorString(localError)                  \
+         << " Actual Code:   " << localError << "\nStr: " << #errorExpr                            \
+         << "\nIn File: " << __FILE__ << " At line: " << __LINE__);                                \
     REQUIRE(localError == expectedError);                                                          \
   }
 
