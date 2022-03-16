@@ -30,11 +30,13 @@ set(AMD_TEST_SRC
     bitExtract.cc
     bitInsert.cc
     floatTM.cc
+    hipMathFunctions.cc
 )
 
 if(HIP_PLATFORM MATCHES "amd")
     set(TEST_SRC ${TEST_SRC} ${AMD_TEST_SRC})
     set_source_files_properties(floatTM.cc PROPERTIES COMPILE_FLAGS -std=c++17)
+    set_source_files_properties(hipMathFunctions.cc PROPERTIES COMPILE_FLAGS "-Xclang -fallow-half-arguments-and-returns")
     hip_add_exe_to_target(NAME UnitDeviceTests
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests)
