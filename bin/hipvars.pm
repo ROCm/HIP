@@ -75,7 +75,9 @@ $isWindows =  ($^O eq 'MSWin32' or $^O eq 'msys');
 #
 $HIP_PATH=$ENV{'HIP_PATH'} // dirname(Cwd::abs_path("$0/../")); # use parent directory of hipcc
 if (-e "$HIP_PATH/../bin/rocm_agent_enumerator") {
-    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // dirname("$HIP_PATH"); # use parent directory of HIP_PATH ,FILE_REORG
+}elsif (-e "$HIP_PATH/bin/rocm_agent_enumerator") {
+    $ROCM_PATH=$ENV{'ROCM_PATH'} // "$HIP_PATH"; # use HIP_PATH
 } else {
     $ROCM_PATH=$ENV{'ROCM_PATH'} // "/opt/rocm";
 }
@@ -108,9 +110,11 @@ $HIP_RUNTIME = $ENV{'HIP_RUNTIME'} // $hipInfo{'HIP_RUNTIME'} // "rocclr";
 
 # If using ROCclr runtime, need to find HIP_ROCCLR_HOME
 if (defined $HIP_RUNTIME and $HIP_RUNTIME eq "rocclr" and !defined $HIP_ROCCLR_HOME) {
-    my $hipvars_dir = dirname($0);
+    my $hipvars_dir = dirname(Cwd::abs_path($0));
     if (-e "$hipvars_dir/../lib/bitcode") {
-        $HIP_ROCCLR_HOME = Cwd::abs_path($hipvars_dir . "/..");
+        $HIP_ROCCLR_HOME = Cwd::abs_path($hipvars_dir . "/.."); #FILE_REORG Backward compatibility
+    } elsif (-e "$hipvars_dir/lib/bitcode") {
+        $HIP_ROCCLR_HOME = Cwd::abs_path($hipvars_dir);
     } else {
         $HIP_ROCCLR_HOME = $HIP_PATH; # use HIP_PATH
     }
