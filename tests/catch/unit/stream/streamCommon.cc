@@ -23,7 +23,7 @@ namespace hip {
 
 inline namespace internal {
 
-bool checkStreamPriority_(hipStream_t& stream, bool checkPriority = false, int priority_ = 0) {
+bool checkStreamPriority_(hipStream_t stream, bool checkPriority = false, int priority_ = 0) {
   int priority{0};
   HIP_CHECK(hipStreamGetPriority(stream, &priority));
   if (checkPriority) {
@@ -44,7 +44,7 @@ bool checkStreamPriority_(hipStream_t& stream, bool checkPriority = false, int p
   return true;
 }
 
-bool checkStreamFlags_(hipStream_t& stream, bool checkFlags = false, unsigned flags_ = 0) {
+bool checkStreamFlags_(hipStream_t stream, bool checkFlags = false, unsigned flags_ = 0) {
   unsigned flags{0};
   HIP_CHECK(hipStreamGetFlags(stream, &flags));
   if (checkFlags) {
@@ -105,7 +105,7 @@ std::thread startSignalingThread(int* semaphore) {
   return signalingThread;
 }
 
-bool checkStream(hipStream_t& stream) {
+bool checkStream(hipStream_t stream) {
   {  // Check default flags
     auto res = checkStreamFlags_(stream, true, hipStreamDefault);
     if (!res) return false;
@@ -119,7 +119,7 @@ bool checkStream(hipStream_t& stream) {
   return true;
 }
 
-bool checkStreamPriorityAndFlags(hipStream_t& stream, int priority, unsigned int flags) {
+bool checkStreamPriorityAndFlags(hipStream_t stream, int priority, unsigned int flags) {
   {  // Check flags
     auto res = checkStreamFlags_(stream, true, flags);
     if (!res) return false;
