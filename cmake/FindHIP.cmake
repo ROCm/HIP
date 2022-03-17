@@ -59,6 +59,7 @@ if(NOT APPLE)
             HIP_ROOT_DIR
             NAMES bin/hipconfig
             PATHS
+            "$ENV{ROCM_PATH}"
             "$ENV{ROCM_PATH}/hip"
             ENV HIP_PATH
             ${_IMPORT_PREFIX}
@@ -241,9 +242,17 @@ elseif("${HIP_COMPILER}" STREQUAL "clang")
         elseif(DEFINED ENV{ROCM_PATH})
             set(HIP_CLANG_PATH "$ENV{ROCM_PATH}/llvm/bin")
         elseif(DEFINED ENV{HIP_PATH})
-            set(HIP_CLANG_PATH "$ENV{HIP_PATH}/../llvm/bin")
+            if(EXISTS "$ENV{HIP_PATH}/llvm/bin") #File Reorg backward compatibility
+                set(HIP_CLANG_PATH "$ENV{HIP_PATH}/llvm/bin")
+            else()
+                set(HIP_CLANG_PATH "$ENV{HIP_PATH}/../llvm/bin")
+            endif()
         elseif(DEFINED HIP_PATH)
-            set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
+            if(EXISTS "${HIP_PATH}/llvm/bin") #File Reorg backward compatibility
+                set(HIP_CLANG_PATH "${HIP_PATH}/llvm/bin")
+            else()
+                set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
+            endif()
         else()
             set(HIP_CLANG_PATH "/opt/rocm/llvm/bin")
         endif()
@@ -660,9 +669,17 @@ macro(HIP_ADD_EXECUTABLE hip_target)
             elseif(DEFINED ENV{ROCM_PATH})
                 set(HIP_CLANG_PATH "$ENV{ROCM_PATH}/llvm/bin")
             elseif(DEFINED ENV{HIP_PATH})
-                set(HIP_CLANG_PATH "$ENV{HIP_PATH}/../llvm/bin")
+                if(EXISTS "$ENV{HIP_PATH}/llvm/bin") #file reorg backward compatibility
+                    set(HIP_CLANG_PATH "$ENV{HIP_PATH}/llvm/bin")
+                else()
+                    set(HIP_CLANG_PATH "$ENV{HIP_PATH}/../llvm/bin")
+                endif()
             elseif(DEFINED HIP_PATH)
-                set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
+                if(EXISTS "${HIP_PATH}/llvm/bin") #file reorg backward compatibility
+                    set(HIP_CLANG_PATH "${HIP_PATH}/llvm/bin")
+                else()
+                    set(HIP_CLANG_PATH "${HIP_PATH}/../llvm/bin")
+                endif()
             else()
                 set(HIP_CLANG_PATH "/opt/rocm/llvm/bin")
             endif()
