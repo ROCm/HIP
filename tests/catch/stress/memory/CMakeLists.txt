@@ -4,6 +4,7 @@ set(TEST_SRC
     hipMemcpyMThreadMSize.cc
     hipMallocManagedStress.cc
     hipMemPrftchAsyncStressTst.cc
+    hipHostMalloc.cc
 )
 
 hip_add_exe_to_target(NAME memory

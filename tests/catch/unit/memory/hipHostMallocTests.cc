@@ -64,32 +64,3 @@ TEST_CASE("Unit_hipHostMalloc_ArgValidation") {
         hipErrorInvalidValue);
   }
 }
-
-// Stress allocation tests
-// Try to allocate as much memory as possible
-// But since max allocation can fail, we need to try the next value
-TEST_CASE("Stress_hipHostMalloc_MaxAllocation") {
-  size_t devMemAvail{0}, devMemFree{0};
-  HIP_CHECK(hipMemGetInfo(&devMemFree, &devMemAvail));
-  auto hostMemFree = HipTest::getMemoryAmount() /* In MB */ * 1024 * 1024;  // In bytes
-  REQUIRE(devMemFree > 0);
-  REQUIRE(devMemAvail > 0);
-  REQUIRE(hostMemFree > 0);
-
-  size_t memFree = std::min(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
-  char* d_ptr{nullptr};
-  size_t counter{0};
-
-  INFO("Max Allocation of " << memFree << " bytes!");
-  while (hipHostMalloc(&d_ptr, memFree) != hipSuccess && memFree > 1) {
-    counter++;
-    memFree >>= 1;  // reduce the memory to be allocated by half
-  }
-
-  HIP_CHECK(hipMemset(d_ptr, 1, memFree));
-  HIP_CHECK(hipDeviceSynchronize());  // Flush caches
-  REQUIRE(std::all_of(d_ptr, d_ptr + memFree, [](unsigned char n) { return n == 1; }));
-  HIP_CHECK(hipHostFree(d_ptr));
-  // Make sure that we are atleast able to allocate 1/4th of max memory
-  REQUIRE(counter <= 2);
-}
