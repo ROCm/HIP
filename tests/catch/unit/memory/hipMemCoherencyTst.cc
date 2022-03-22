@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+   Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
    in the Software without restriction, including without limitation the rights
@@ -34,17 +34,9 @@
 #include <hip_test_common.hh>
 #include <chrono>
 
-__global__  void CoherentTst(int *ptr, int PeakClk) {
-  // Incrementing the value by 1
-  int64_t GpuFrq = (PeakClk * 1000);
-  int64_t StrtTck = clock64();
-  atomicAdd(ptr, 1);
-  // The following while loop checks the value in ptr for around 3-4 seconds
-  while ((clock64() - StrtTck) <= (3 * GpuFrq)) {
-    if (*ptr == 3) {
-      atomicAdd(ptr, 1);
-      return;
-    }
+__global__ void CoherentTst(int* ptr) {  // ptr was set to 1
+  atomicAdd(ptr, 1);                     // now ptr is 2
+  while (atomicCAS(ptr, 3, 4) != 3) {    // wait till ptr is 3, then change it to 4
   }
 }
 
@@ -59,34 +51,30 @@ __global__  void SquareKrnl(int *ptr) {
 static bool YES_COHERENT = false;
 
 // The function tests the coherency of allocated memory
-static void TstCoherency(int *Ptr, bool HmmMem) {
-  int *Dptr = nullptr, peak_clk;
-  hipStream_t strm;
-  HIP_CHECK(hipStreamCreate(&strm));
+// If this test hangs, means there is issue in coherency
+static void TstCoherency(int* ptr, bool hmmMem) {
+  int* dptr = nullptr;
+  hipStream_t stream{};
+  HIP_CHECK(hipStreamCreate(&stream));
+
   // storing value 1 in the memory created above
-  *Ptr = 1;
-  // Getting gpu frequency
-  HIP_CHECK(hipDeviceGetAttribute(&peak_clk, hipDeviceAttributeClockRate, 0));
-  if (!HmmMem) {
-    HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void **>(&Dptr), Ptr,
-                                      0));
-    CoherentTst<<<1, 1, 0, strm>>>(Dptr, peak_clk);
+  *ptr = 1;
+
+  if (!hmmMem) {
+    HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void**>(&dptr), ptr, 0));
+    CoherentTst<<<1, 1, 0, stream>>>(dptr);
   } else {
-    CoherentTst<<<1, 1, 0, strm>>>(Ptr, peak_clk);
+    CoherentTst<<<1, 1, 0, stream>>>(ptr);
   }
-  // looping until the value is 2 for 3 seconds
-  std::chrono::steady_clock::time_point start =
-               std::chrono::steady_clock::now();
-  while (std::chrono::duration_cast<std::chrono::seconds>(
-         std::chrono::steady_clock::now() - start).count() < 3) {
-    if (*Ptr == 2) {
-      *Ptr += 1;
-      break;
-    }
-  }
-  HIP_CHECK(hipStreamSynchronize(strm));
-  HIP_CHECK(hipStreamDestroy(strm));
-  if (*Ptr == 4) {
+
+  while (*ptr == 2) {
+  }  // wait till ptr is 2 from kernel
+  *ptr += 1; // increment it to 3
+
+  HIP_CHECK(hipStreamSynchronize(stream));
+  HIP_CHECK(hipStreamDestroy(stream));
+
+  if (*ptr == 4) {
     YES_COHERENT = true;
   }
 }
