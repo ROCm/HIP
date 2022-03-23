@@ -166,32 +166,6 @@ typedef enum hipMemoryType {
 } hipMemoryType;
 
 /**
- * @brief hipKernelNodeAttrID
- * @enum
- *
- */
-typedef enum hipKernelNodeAttrID {
-    hipKernelNodeAttributeAccessPolicyWindow = 1,
-    hipKernelNodeAttributeCooperative = 2,
-} hipKernelNodeAttrID;
-typedef enum hipAccessProperty {
-    hipAccessPropertyNormal = 0,
-    hipAccessPropertyStreaming  = 1,
-    hipAccessPropertyPersisting = 2,
-} hipAccessProperty;
-typedef struct hipAccessPolicyWindow {
-    void* base_ptr;
-    hipAccessProperty hitProp;
-    float hitRatio;
-    hipAccessProperty missProp;
-    size_t num_bytes;
-} hipAccessPolicyWindow;
-typedef union hipKernelNodeAttrValue {
-    hipAccessPolicyWindow accessPolicyWindow;
-    int cooperative;
-} hipKernelNodeAttrValue;
-
-/**
  * Pointer attributes
  */
 typedef struct hipPointerAttribute_t {
@@ -1140,6 +1114,32 @@ typedef struct hipMemsetParams {
   unsigned int value;
   size_t width;
 } hipMemsetParams;
+
+/**
+ * @brief hipKernelNodeAttrID
+ * @enum
+ *
+ */
+typedef enum hipKernelNodeAttrID {
+    hipKernelNodeAttributeAccessPolicyWindow = 1,
+    hipKernelNodeAttributeCooperative = 2,
+} hipKernelNodeAttrID;
+typedef enum hipAccessProperty {
+    hipAccessPropertyNormal = 0,
+    hipAccessPropertyStreaming  = 1,
+    hipAccessPropertyPersisting = 2,
+} hipAccessProperty;
+typedef struct hipAccessPolicyWindow {
+    void* base_ptr;
+    hipAccessProperty hitProp;
+    float hitRatio;
+    hipAccessProperty missProp;
+    size_t num_bytes;
+} hipAccessPolicyWindow;
+typedef union hipKernelNodeAttrValue {
+    hipAccessPolicyWindow accessPolicyWindow;
+    int cooperative;
+} hipKernelNodeAttrValue;
 
 /**
  * @brief hipGraphExecUpdateResult
