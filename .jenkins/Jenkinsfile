@@ -16,7 +16,7 @@ def hipBuildTest(String backendLabel) {
 
             // Clone vdi and opencl for only amd backend server
             if (backendLabel =~ /.*amd.*/) {  
-               dir("${WORKSPACE}/ROCm-OpenCL-Runtime") {ctest
+               dir("${WORKSPACE}/ROCm-OpenCL-Runtime") {
                    git branch:'develop',
                    url: 'https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime'
                    env.OPENCL_DIR = "${WORKSPACE}" + "/ROCm-OpenCL-Runtime"
