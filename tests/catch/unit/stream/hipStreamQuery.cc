@@ -55,3 +55,92 @@ TEST_CASE("Unit_hipStreamQuery_NullStreamQuery") {
   HIP_CHECK(hipStreamSynchronize(hip::nullStream));
   signalingThread.join();
 }
+
+#ifdef __HIP_PLATFORM_AMD__
+/**
+ * @brief Check that submitting work to a destroyed stream sets its status as
+ * hipErrorContextIsDestroyed
+ *
+ * Test removed for Non-AMD devices because it returns unexpected error
+ */
+TEST_CASE("Unit_hipStreamQuery_WithDestroyedStream") {
+  hipStream_t stream{nullptr};
+  HIP_CHECK(hipStreamCreate(&stream));
+  HIP_CHECK(hipStreamDestroy(stream));
+  HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorContextIsDestroyed);
+}
+
+/**
+ * @brief Check that submitting work to an uninitialized stream sets its status as
+ * hipErrorContextIsDestroyed
+ *
+ * Test removed for Non-AMD devices because it returns unexpected error
+ */
+TEST_CASE("Unit_hipStreamQuery_WithUninitializedStream") {
+  hipStream_t stream{reinterpret_cast<hipStream_t>(0xFFFF)};
+  HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorContextIsDestroyed);
+}
+#endif
+
+/**
+ * @brief Check that querying a stream with no work returns hipSuccess
+ *
+ **/
+TEST_CASE("Unit_hipStreamQuery_WithNoWork") {
+  hipStream_t stream{nullptr};
+  HIP_CHECK(hipStreamCreate(&stream));
+  HIP_CHECK(hipStreamQuery(stream));
+  HIP_CHECK(hipStreamDestroy(stream));
+}
+
+/**
+ * @brief Check that querying a stream with pending work returns hipErrorNotReady
+ *
+ **/
+TEST_CASE("Unit_hipStreamQuery_WithPendingWork") {
+  hipStream_t waitingStream{nullptr};
+  hipStream_t writingStream{nullptr};
+  HIP_CHECK(hipStreamCreate(&waitingStream));
+  HIP_CHECK(hipStreamCreate(&writingStream));
+
+  int32_t* signalPtr;
+  HIP_CHECK(hipMalloc((void**)&signalPtr, sizeof(int32_t)));
+  int32_t initValue = 0;
+
+  hipMemcpy(signalPtr, &initValue, sizeof(int32_t), hipMemcpyHostToDevice);
+
+  // waiting kernel
+  hipLaunchKernelGGL(hip::stream::waiting_kernel, dim3(1), dim3(1), 0, waitingStream, signalPtr);
+  HIP_CHECK_ERROR(hipStreamQuery(waitingStream), hipErrorNotReady);
+  // signaling kernel
+  hipLaunchKernelGGL(hip::stream::signaling_kernel, dim3(1), dim3(1), 0, writingStream, signalPtr);
+
+  HIP_CHECK(hipStreamSynchronize(writingStream));
+  HIP_CHECK(hipStreamSynchronize(waitingStream));
+  HIP_CHECK(hipStreamQuery(waitingStream));
+
+  HIP_CHECK(hipFree(signalPtr));
+  HIP_CHECK(hipStreamDestroy(writingStream));
+  HIP_CHECK(hipStreamDestroy(waitingStream));
+}
+
+/**
+ * @brief Empty kernel to ensure work finishes on the stream quickly
+ *
+ **/
+__global__ void empty_kernel() {}
+
+/**
+ * @brief Check that querying a stream with finished work returns hipSuccess
+ *
+ **/
+TEST_CASE("Unit_hipStreamQuery_WithFinishedWork") {
+  hipStream_t stream{nullptr};
+  HIP_CHECK(hipStreamCreate(&stream));
+
+  hipLaunchKernelGGL(empty_kernel, dim3(1), dim3(1), 0, stream);
+  HIP_CHECK(hipStreamSynchronize(stream));
+
+  HIP_CHECK(hipStreamQuery(stream));
+  HIP_CHECK(hipStreamDestroy(stream));
+}
