@@ -56,12 +56,12 @@ TEST_CASE("Unit_hipStreamQuery_NullStreamQuery") {
   signalingThread.join();
 }
 
-#ifdef __HIP_PLATFORM_AMD__
+#if HT_NVIDIA==0
 /**
  * @brief Check that submitting work to a destroyed stream sets its status as
  * hipErrorContextIsDestroyed
  *
- * Test removed for Non-AMD devices because it returns unexpected error
+ * Test removed for Nvidia devices because it returns unexpected error
  */
 TEST_CASE("Unit_hipStreamQuery_WithDestroyedStream") {
   hipStream_t stream{nullptr};
@@ -74,7 +74,7 @@ TEST_CASE("Unit_hipStreamQuery_WithDestroyedStream") {
  * @brief Check that submitting work to an uninitialized stream sets its status as
  * hipErrorContextIsDestroyed
  *
- * Test removed for Non-AMD devices because it returns unexpected error
+ * Test removed for Nvidia devices because it returns unexpected error
  */
 TEST_CASE("Unit_hipStreamQuery_WithUninitializedStream") {
   hipStream_t stream{reinterpret_cast<hipStream_t>(0xFFFF)};
