@@ -23,7 +23,7 @@ THE SOFTWARE.
 // Through manual inspection of the reported timestamps, can determine if recording a NULL event
 // forces synchronization : set
 #include <hip_test_checkers.hh>
-#include <hip_test_kernels.hh>
+#include <kernels.hh>
 
 #include <hip_test_common.hh>
 
@@ -61,8 +61,12 @@ TEST_CASE("Unit_hipEventRecord") {
         // Record the start event
         HIP_CHECK(hipEventRecord(start, NULL));
 
-        hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
-                        static_cast<const float*>(A_d), static_cast<const float*>(B_d), C_d, N);
+
+
+        HipTest::launchKernel<float>(HipTest::vectorADD<float>, blocks, threadsPerBlock, 0, 0,
+static_cast<const float*>(A_d), static_cast<const float*>(B_d), C_d, N);
+        // hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
+        //                 static_cast<const float*>(A_d), static_cast<const float*>(B_d), C_d, N);
 
         HIP_CHECK(hipEventRecord(stop, NULL));
         HIP_CHECK(hipEventSynchronize(stop));
