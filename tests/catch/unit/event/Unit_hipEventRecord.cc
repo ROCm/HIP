@@ -61,12 +61,8 @@ TEST_CASE("Unit_hipEventRecord") {
         // Record the start event
         HIP_CHECK(hipEventRecord(start, NULL));
 
-
-
         HipTest::launchKernel<float>(HipTest::vectorADD<float>, blocks, threadsPerBlock, 0, 0,
 static_cast<const float*>(A_d), static_cast<const float*>(B_d), C_d, N);
-        // hipLaunchKernelGGL(HipTest::vectorADD, dim3(blocks), dim3(threadsPerBlock), 0, 0,
-        //                 static_cast<const float*>(A_d), static_cast<const float*>(B_d), C_d, N);
 
         HIP_CHECK(hipEventRecord(stop, NULL));
         HIP_CHECK(hipEventSynchronize(stop));

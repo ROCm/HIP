@@ -32,7 +32,6 @@ This testfile verifies the following scenarios of hipHostMalloc API
 #include<hip_test_checkers.hh>
 #include<kernels.hh>
 #include<hip_test_common.hh>
-// #include<Set.hpp>
 
 #define SYNC_EVENT 0
 #define SYNC_STREAM 1
@@ -41,11 +40,6 @@ This testfile verifies the following scenarios of hipHostMalloc API
 std::vector<std::string> syncMsg = {"event", "stream", "device"};
 static constexpr int numElements{1024 * 16};
 static constexpr size_t sizeBytes{numElements * sizeof(int)};
-
-// __global__ void Set(int* Ad, int val) {
-//     int tx = threadIdx.x + blockIdx.x * blockDim.x;
-//     Ad[tx] = val;
-// }
 
 void CheckHostPointer(int numElements, int* ptr, unsigned eventFlags,
                       int syncMethod, std::string msg) {
@@ -71,11 +65,9 @@ void CheckHostPointer(int numElements, int* ptr, unsigned eventFlags,
     const int expected = 13;
 
     // Init array to know state:
-    // hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, 0x0, ptr, -42);
     HipTest::launchKernel(Set, dimGrid, dimBlock, 0, 0x0, ptr, -42);
     HIP_CHECK(hipDeviceSynchronize());
 
-    // hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, s, ptr, expected);
     HipTest::launchKernel(Set, dimGrid, dimBlock, 0, s, ptr, expected);
     HIP_CHECK(hipEventRecord(e, s));
 
