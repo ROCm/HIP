@@ -6,6 +6,8 @@
 #ifndef RTC_ENABLED
 
 __global__ void Set(int* Ad, int val);
+
+/* Kernel Templates */
 #include "vectorADD.inl"
 
 #else
