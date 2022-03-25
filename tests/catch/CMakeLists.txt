@@ -69,6 +69,9 @@ find_package(Catch2 REQUIRED
 include(Catch)
 include(CTest)
 
+# path used for generating the *_include.cmake file
+set(CATCH2_INCLUDE ${CATCH2_PATH}/cmake/Catch2/catch_include.cmake.in)
+
 include_directories(
     ${CATCH2_PATH}
     "./include"
@@ -77,9 +80,12 @@ include_directories(
 )
 
 file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
+file(COPY ./external/Catch2/cmake/Catch2/CatchAddTests.cmake DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/script)
+set(ADD_SCRIPT_PATH ${CMAKE_CURRENT_BINARY_DIR}/script/CatchAddTests.cmake)
+
 
 if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    add_compile_options(-Wall -Wextra -pedantic -Werror -Wno-deprecated)
 endif()
 
 cmake_policy(PUSH)
@@ -103,16 +109,19 @@ if(NOT DEFINED OFFLOAD_ARCH_STR AND EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerat
          RESULT_VARIABLE ROCM_AGENT_ENUM_RESULT)
     # Trim out gfx000
     string(REPLACE "gfx000\n" "" HIP_GPU_ARCH ${HIP_GPU_ARCH})
-    string(LENGTH ${HIP_GPU_ARCH} HIP_GPU_ARCH_LEN)
-
-    # If string has more gfx target except gfx000
-    if(${HIP_GPU_ARCH_LEN} GREATER_EQUAL 1)
-		string(REGEX REPLACE "\n" ";" HIP_GPU_ARCH_LIST "${HIP_GPU_ARCH}")
-		set(OFFLOAD_ARCH_STR "")
-		foreach(_hip_gpu_arch ${HIP_GPU_ARCH_LIST})
-			set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
-		endforeach()
-		message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
+    if (NOT HIP_GPU_ARCH STREQUAL "")
+        string(LENGTH ${HIP_GPU_ARCH} HIP_GPU_ARCH_LEN)
+        # If string has more gfx target except gfx000
+        if(${HIP_GPU_ARCH_LEN} GREATER_EQUAL 1)
+            string(REGEX REPLACE "\n" ";" HIP_GPU_ARCH_LIST "${HIP_GPU_ARCH}")
+            set(OFFLOAD_ARCH_STR "")
+            foreach(_hip_gpu_arch ${HIP_GPU_ARCH_LIST})
+                set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
+            endforeach()
+            message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
+        endif()
+    else()
+        message(STATUS "ROCm Agent Enumurator found no valid architectures")
     endif()
 endif()
 
