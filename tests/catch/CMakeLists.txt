@@ -75,9 +75,16 @@ set(CATCH2_INCLUDE ${CATCH2_PATH}/cmake/Catch2/catch_include.cmake.in)
 include_directories(
     ${CATCH2_PATH}
     "./include"
+    "./kernels"
     ${HIP_PATH}/include
     ${JSON_PARSER}
 )
+
+#TODO Add this as configure variable to CMake
+# add_definitions(-DRTC_ENABLED=1)
+# set(RTC_ENABLED "1")
+add_definitions(-DKERNELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/kernels/")
+
 
 file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
 file(COPY ./external/Catch2/cmake/Catch2/CatchAddTests.cmake DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/script)
@@ -85,7 +92,7 @@ set(ADD_SCRIPT_PATH ${CMAKE_CURRENT_BINARY_DIR}/script/CatchAddTests.cmake)
 
 
 if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
-    add_compile_options(-Wall -Wextra -pedantic -Werror -Wno-deprecated)
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
 cmake_policy(PUSH)
