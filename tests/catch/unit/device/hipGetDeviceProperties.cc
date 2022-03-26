@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -182,14 +182,11 @@ TEST_CASE("Unit_hipGetDeviceProperties_ArchPropertiesTst") {
 TEST_CASE("Unit_hipGetDeviceProperties_NegTst") {
   hipDeviceProp_t prop;
 
-#if HT_AMD
   SECTION("props is nullptr") {
     int device;
     HIP_CHECK(hipGetDevice(&device));
-    // this test case results in segmentation fault on NVCC
     REQUIRE_FALSE(hipSuccess == hipGetDeviceProperties(nullptr, device));
   }
-#endif
 
   SECTION("device is -1") {
     REQUIRE_FALSE(hipSuccess == hipGetDeviceProperties(&prop, -1));

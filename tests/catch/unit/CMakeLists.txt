@@ -19,12 +19,11 @@
 # THE SOFTWARE.
 
 
-
-
-# Currently build fails for these two test sets
+# build fails in windows
 if (UNIX)
   add_subdirectory(memory)
   add_subdirectory(graph)
+  add_subdirectory(rtc)
 endif()
 add_subdirectory(module)
 add_subdirectory(deviceLib)
@@ -32,7 +31,6 @@ add_subdirectory(stream)
 add_subdirectory(event)
 add_subdirectory(occupancy)
 add_subdirectory(device)
-add_subdirectory(rtc)
 add_subdirectory(printf)
 add_subdirectory(printfExe)
 add_subdirectory(texture)

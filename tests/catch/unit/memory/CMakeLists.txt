@@ -62,6 +62,7 @@ set(TEST_SRC
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
+    hipPtrGetAttribute.cc
 )
 else()
 set(TEST_SRC
@@ -103,6 +104,7 @@ set(TEST_SRC
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
+    hipPtrGetAttribute.cc
 )
 endif()
 
