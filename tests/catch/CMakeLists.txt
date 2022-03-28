@@ -78,15 +78,15 @@ include_directories(
 )
 
 #TODO Add this as configure variable to CMake
-# add_definitions(-DRTC_ENABLED=1)
-# set(RTC_ENABLED "1")
+add_definitions(-DRTC_ENABLED=1)
+set(RTC_ENABLED "1")
 add_definitions(-DKERNELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/kernels/")
 
 
 file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
 
 if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
-    add_compile_options(-Wall -Wextra -pedantic -Werror -std=c++14)
+    add_compile_options(-Wall -Wextra -pedantic -Werror)
 endif()
 
 cmake_policy(PUSH)
