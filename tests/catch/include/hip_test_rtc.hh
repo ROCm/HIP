@@ -173,7 +173,7 @@ template <typename T> std::string getTypeName() {
  * 
  * @tparam Typenames A list of typenames used by the kernel (unused if the kernel is not a template).
  * @tparam Args A list of kernel arguments to be forwarded.
- * @param kernelName The name of the kernel to be launched.
+ * @param getKernelName A function wrapper that returns the name of the kernel to launch (check kernels.hh for more info)
  * @param numBlocks 
  * @param numThreads 
  * @param memPerBlock 
@@ -181,8 +181,9 @@ template <typename T> std::string getTypeName() {
  * @param packedArgs A list of kernel arguments to be forwarded.
  */
 template <typename... Typenames, typename... Args>
-void launchRTCKernel(std::string kernelName, dim3 numBlocks, dim3 numThreads,
+void launchRTCKernel(std::string (*getKernelName)(), dim3 numBlocks, dim3 numThreads,
                      std::uint32_t memPerBlock, hipStream_t stream, Args&&... packedArgs) {
+  std::string kernelName = (*getKernelName)();
   std::vector<std::string> kernelTypenames{std::string(HipTest::getTypeName<Typenames>())...};
   std::string kernelExpression = reconstructExpression(kernelName, kernelTypenames);
 

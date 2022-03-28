@@ -81,8 +81,8 @@ include_directories(
 )
 
 #TODO Add this as configure variable to CMake
-# add_definitions(-DRTC_ENABLED=1)
-# set(RTC_ENABLED "1")
+add_definitions(-DRTC_ENABLED=1)
+set(RTC_ENABLED "1")
 add_definitions(-DKERNELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/kernels/")
 
 
