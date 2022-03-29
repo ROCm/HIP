@@ -36,7 +36,7 @@ namespace HipTest {
 
 struct KernelArgument{
   const void* ptr;
-  size_t sizeRequirements;
+  size_t sizeRequirement;
   size_t alignmentRequirement;
 };
 
@@ -81,8 +81,8 @@ inline std::vector<char> alignArguments(std::vector<KernelArgument>& args) {
     alignedArguments.insert(std::end(alignedArguments), paddingNeeded, 0);
     count += paddingNeeded;
 
-    alignedArguments.insert(std::end(alignedArguments), argPtr, argPtr + arg.sizeRequirements);
-    count += arg.sizeRequirements;
+    alignedArguments.insert(std::end(alignedArguments), argPtr, argPtr + arg.sizeRequirement);
+    count += arg.sizeRequirement;
   }
   return alignedArguments;
 }
