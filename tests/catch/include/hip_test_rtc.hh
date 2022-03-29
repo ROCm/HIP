@@ -30,8 +30,15 @@ THE SOFTWARE.
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <set>
 
 namespace HipTest {
+
+struct KernelArgument{
+  const void* ptr;
+  size_t sizeRequirements;
+  size_t alignmentRequirement;
+};
 
 /**
  * @brief Reconstructs the name expression for the kernel.
@@ -55,31 +62,28 @@ inline std::string reconstructExpression(std::string& kernelName,
 }
 
 /**
- * @brief Packs the kernel arguments into the format expected by hipModuleLaunchKernel 
- * 
+ * @brief Packs the kernel arguments into the format expected by hipModuleLaunchKernel
+ *
  * @param args list of arguments for the kernel and their alignemnt requirements.
  * @return std::vector<char> the packed arguments ready to be passed on to hipModuleLaunchKernel
  */
-inline std::vector<char> alignArguments(
-    std::vector<std::tuple<const void*, size_t, size_t>>& args) {
+inline std::vector<char> alignArguments(std::vector<KernelArgument>& args) {
   std::vector<char> alignedArguments{};
   int count = 0;
   for (auto& arg : args) {
-    const char* argPtr{reinterpret_cast<const char*>(std::get<0>(arg))};
-    size_t sizeRequirements{std::get<1>(arg)};
-    size_t alignmentRequirement{std::get<2>(arg)};
+    const char* argPtr{reinterpret_cast<const char*>(arg.ptr)};
 
-    while (count % alignmentRequirement != 0) {
-      ++count;
-      alignedArguments.push_back(0);
-    }
+    /*
+     * Details about the padding formula can be found at:
+     * https://en.wikipedia.org/wiki/Data_structure_alignment#Data_structure_padding
+     */
+    int paddingNeeded = -count & (arg.alignmentRequirement - 1);
+    alignedArguments.insert(std::end(alignedArguments), paddingNeeded, 0);
+    count += paddingNeeded;
 
-    for (size_t j = 0; j < sizeRequirements; ++j) {
-      alignedArguments.push_back(argPtr[j]);
-      ++count;
-    }
+    alignedArguments.insert(std::end(alignedArguments), argPtr, argPtr + arg.sizeRequirements);
+    count += arg.sizeRequirements;
   }
-
   return alignedArguments;
 }
 
@@ -127,10 +131,21 @@ inline hiprtcProgram compileRTC(std::string& rtcKernel, std::string& kernelNameE
                       nullptr);
 
 #ifdef __HIP_PLATFORM_AMD__
-  hipDeviceProp_t props;
-  int device = 0;
-  REQUIRE(hipSuccess == hipGetDeviceProperties(&props, device));
-  std::string sarg = std::string("--gpu-architecture=") + props.gcnArchName;
+  
+  int deviceCount;
+  REQUIRE(hipSuccess == hipGetDeviceCount(&deviceCount));
+  
+  std::set<std::string> architectures{};
+  for (int i = 0; i < deviceCount; ++i) {
+    hipDeviceProp_t props;
+    REQUIRE(hipSuccess == hipGetDeviceProperties(&props, i));
+    architectures.insert(std::string{"--gpu-architecture="} + props.gcnArchName);
+  }
+
+  std::string sarg{};
+  for (const std::string& s: architectures) {
+    sarg += s + " ";
+  }
 #else
   std::string sarg = std::string("--fmad=false");
 #endif
@@ -200,8 +215,9 @@ void launchRTCKernel(std::string (*getKernelName)(), dim3 numBlocks, dim3 numThr
   REQUIRE(hipSuccess == hipModuleLoadData(&module, compiledCode.data()));
   REQUIRE(hipSuccess == hipModuleGetFunction(&kernelFunction, module, loweredName));
 
-  std::vector<std::tuple<const void*, size_t, size_t>> args = {
+  std::vector<KernelArgument> args = {
       {reinterpret_cast<const void*>(&packedArgs), sizeof(Args), alignof(Args)}...};
+
   std::vector<char> alignedArguments{alignArguments(args)};
   size_t argumentsSize{alignedArguments.size()};
 

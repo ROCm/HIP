@@ -33,7 +33,7 @@ __global__ void Set(int* Ad, int val);
 
 /*
  * Wrapper Macros that create a string representation of the kernel name.
- * In the case of kernel templates, an empty variadic template is used to ensure compatibility with
+ * In the case of kernel templates, a variadic template is used to ensure compatibility with
  * the launchKernel template when RTC is not enabled. If the kernel is inside a namespace, use the
  * "_NS" version of the Macro.
  */
