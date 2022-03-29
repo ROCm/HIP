@@ -77,11 +77,10 @@ include_directories(
     ${JSON_PARSER}
 )
 
-#TODO Add this as configure variable to CMake
-add_definitions(-DRTC_ENABLED=1)
-set(RTC_ENABLED "1")
+if (RTC_ENABLED EQUAL "1")
+    add_definitions(-DRTC_ENABLED=1)
+endif()
 add_definitions(-DKERNELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/kernels/")
-
 
 file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
 
