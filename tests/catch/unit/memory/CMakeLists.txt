@@ -38,6 +38,7 @@ set(TEST_SRC
     hipMemcpyAllApiNegative.cc
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
+    hipMalloc3D.cc
     hipMemPtrGetInfo.cc
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
@@ -82,6 +83,7 @@ set(TEST_SRC
     hipMemcpyAllApiNegative.cc
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
+    hipMalloc3D.cc
     hipHostGetFlags.cc
     hipMallocManaged_MultiScenario.cc
     hipMemsetInvalidPtr.cc
