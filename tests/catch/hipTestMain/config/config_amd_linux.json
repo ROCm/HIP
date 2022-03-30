@@ -1,6 +1,8 @@
 {
     "DisabledTests":
 	[
+	   "# Follow test is related to ticket EXSWCPHIPT-41",
+	   "Unit_hipStreamGetPriority_NullStream",
 	   "Unit_hipStreamPerThread_DeviceReset_1"
 	]
 

@@ -27,7 +27,7 @@ THE SOFTWARE.
 
 #define HIP_PRINT_STATUS(status) INFO(hipGetErrorName(status) << " at line: " << __LINE__);
 
-// Not thread-safe, use HIPCHECK for thread-safe version
+// Not thread-safe
 #define HIP_CHECK(error)                                                                           \
   {                                                                                                \
     hipError_t localError = error;                                                                 \
