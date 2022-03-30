@@ -203,7 +203,7 @@ function(hip_add_exe_to_target)
     "${list_args}"
   )
   # Create shared lib of all tests
-  if(NOT DEFINED RTC_ENABLED)
+  if(NOT ENABLE_RTC_TESTING)
   add_executable(${_NAME} EXCLUDE_FROM_ALL ${_TEST_SRC} $<TARGET_OBJECTS:Main_Object> $<TARGET_OBJECTS:KERNELS>)
   else ()
   add_executable(${_NAME} EXCLUDE_FROM_ALL ${_TEST_SRC} $<TARGET_OBJECTS:Main_Object>)
