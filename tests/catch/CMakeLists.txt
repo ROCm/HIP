@@ -77,8 +77,9 @@ include_directories(
     ${JSON_PARSER}
 )
 
-if (RTC_ENABLED EQUAL "1")
-    add_definitions(-DRTC_ENABLED=1)
+option(ENABLE_RTC_TESTING "Run tests using HIP RTC to compile the kernels" OFF)
+if (ENABLE_RTC_TESTING)
+    add_definitions(-DENABLE_RTC_TESTING=ON)
 endif()
 add_definitions(-DKERNELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/kernels/")
 
