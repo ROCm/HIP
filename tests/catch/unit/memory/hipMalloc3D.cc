@@ -30,7 +30,7 @@ THE SOFTWARE.
 TEST_CASE("Unit_hipMalloc3D_Negative") {
 
     hipPitchedPtr hipPitchedPtr;
-    hipExtent invalidExtent = GENERATE({0, 0, 0}, {0,0,1}, {0, 1, 0}, {1, 0, 0});
+    hipExtent invalidExtent = GENERATE(hipExtent{0, 0, 0}, hipExtent{0,0,1}, hipExtent{0, 1, 0}, hipExtent{1, 0, 0});
     HIP_CHECK(hipMalloc3D(&hipPitchedPtr, invalidExtent));
     HIP_CHECK(hipHostFree(hipPitchedPtr.ptr));
     /* TODO Get free memory */
