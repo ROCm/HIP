@@ -20,34 +20,10 @@
 
 # Common Tests - Test independent of all platforms
 set(TEST_SRC
-  hipGraphAddEmptyNode.cc
-  hipGraphAddDependencies.cc
-  hipGraph.cc
-  hipSimpleGraphWithKernel.cc
-  hipGraphAddMemcpyNode.cc
-  hipGraphClone.cc
-  hipGraphInstantiateWithFlags.cc
-  hipGraphAddHostNode.cc
-  hipGraphAddMemcpyNodeFromSymbol.cc
-  hipGraphChildGraphNodeGetGraph.cc
-  hipGraphNodeFindInClone.cc
-  hipGraphExecHostNodeSetParams.cc
-  hipGraphAddMemcpyNodeToSymbol.cc
-  hipGraphExecMemsetNodeSetParams.cc
-  hipGraphMemcpyNodeSetParamsToSymbol.cc
-  hipGraphDestroyNode.cc
-  hipGraphGetNodes.cc
-  hipGraphGetRootNodes.cc
-  hipGraphHostNodeSetParams.cc
-  hipGraphAddMemcpyNode1D.cc
-  hipGraphAddChildGraphNode.cc
-  hipGraphNodeGetType.cc
-  hipGraphExecMemcpyNodeSetParams1D.cc
-  hipGraphGetEdges.cc
-  hipGraphRemoveDependencies.cc
-  hipGraphExecEventRecordNodeSetEvent.cc
+    hipMemFaultStackAllocation.cc
+    hipLaunchBounds.cc
 )
 
-hip_add_exe_to_target(NAME GraphsTest
+hip_add_exe_to_target(NAME KernelTest
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests)
