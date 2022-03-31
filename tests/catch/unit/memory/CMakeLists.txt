@@ -62,6 +62,7 @@ set(TEST_SRC
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
+    hipMemPoolApi.cc
 )
 else()
 set(TEST_SRC
