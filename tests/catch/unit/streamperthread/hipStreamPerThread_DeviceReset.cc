@@ -77,13 +77,23 @@ TEST_CASE("Unit_hipStreamPerThread_DeviceReset_2") {
   for (unsigned int i = 0; i < ele_size; ++i) {
     A_h[i] = 123;
   }
-  hipMemcpyAsync(A_d, A_h, ele_size * sizeof(int), hipMemcpyHostToDevice,
+  status = hipMemcpyAsync(A_d, A_h, ele_size * sizeof(int), hipMemcpyHostToDevice,
                  hipStreamPerThread);
+  if (status != hipSuccess) return;
   hipStreamSynchronize(hipStreamPerThread);
 
   hipDeviceReset();
 
-  hipMemcpyAsync(A_d, A_h, ele_size * sizeof(int), hipMemcpyHostToDevice,
+  // After reset all memory objects will be destroyed hence allocating them again
+  // Intension is to use hipStreamPerThread successfully after reset hence not validating
+  // values after copy
+  status =  hipHostMalloc(&A_h, ele_size*sizeof(int));
+  if (status != hipSuccess) return;
+  status = hipMalloc(&A_d, ele_size * sizeof(int));
+  if (status != hipSuccess) return;
+
+  status = hipMemcpyAsync(A_d, A_h, ele_size * sizeof(int), hipMemcpyHostToDevice,
                  hipStreamPerThread);
+  if (status != hipSuccess) return;
   hipStreamSynchronize(hipStreamPerThread);
 }
