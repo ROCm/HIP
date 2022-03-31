@@ -20,6 +20,7 @@ THE SOFTWARE.
 /**
 Testcase Scenarios :
  1) Create and add empty node to graph and verify addition is successful.
+ 2) Negative Scenarios
 */
 
 #include <hip_test_common.hh>
@@ -52,6 +53,48 @@ TEST_CASE("Unit_hipGraphAddEmptyNode_Functional") {
                                                         dependencies.size()));
 
   REQUIRE(emptyNode != nullptr);
+  HIP_CHECK(hipFree(pOutBuff_d));
+  HIP_CHECK(hipGraphDestroy(graph));
+}
+
+/**
+ * Negative Scenarios hipGraphAddEmptyNode
+ */
+TEST_CASE("Unit_hipGraphAddEmptyNode_NegTest") {
+  char *pOutBuff_d{};
+  constexpr size_t size = 1024;
+  hipGraph_t graph;
+  hipGraphNode_t memsetNode{}, emptyNode{};
+  std::vector<hipGraphNode_t> dependencies;
+
+  HIP_CHECK(hipMalloc(&pOutBuff_d, size));
+  hipMemsetParams memsetParams{};
+  memsetParams.dst = reinterpret_cast<void*>(pOutBuff_d);
+  memsetParams.value = 0;
+  memsetParams.pitch = 0;
+  memsetParams.elementSize = sizeof(char);
+  memsetParams.width = size * sizeof(char);
+  memsetParams.height = 1;
+  HIP_CHECK(hipGraphCreate(&graph, 0));
+  HIP_CHECK(hipGraphAddMemsetNode(&memsetNode, graph, nullptr, 0,
+                                  &memsetParams));
+  dependencies.push_back(memsetNode);
+  // pGraphNode is nullptr
+  SECTION("Null Empty Graph Node") {
+    REQUIRE(hipErrorInvalidValue == hipGraphAddEmptyNode(nullptr, graph,
+                          dependencies.data(), dependencies.size()));
+  }
+  // graph is nullptr
+  SECTION("Null Graph") {
+    REQUIRE(hipErrorInvalidValue == hipGraphAddEmptyNode(&emptyNode, nullptr,
+                          dependencies.data(), dependencies.size()));
+  }
+  // pDependencies is nullptr
+  SECTION("Null Graph") {
+    REQUIRE(hipErrorInvalidValue == hipGraphAddEmptyNode(&emptyNode, graph,
+                          nullptr, dependencies.size()));
+  }
+
   HIP_CHECK(hipFree(pOutBuff_d));
   HIP_CHECK(hipGraphDestroy(graph));
 }
