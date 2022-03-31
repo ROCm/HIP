@@ -44,6 +44,8 @@ set(TEST_SRC
   hipGraphNodeGetType.cc
   hipGraphExecMemcpyNodeSetParams1D.cc
   hipGraphGetEdges.cc
+  hipGraphRemoveDependencies.cc
+  hipGraphInstantiate.cc
   hipGraphExecUpdate.cc
 )
 
