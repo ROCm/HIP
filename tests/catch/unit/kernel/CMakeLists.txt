@@ -21,6 +21,7 @@
 # Common Tests - Test independent of all platforms
 set(TEST_SRC
     hipMemFaultStackAllocation.cc
+    hipLaunchBounds.cc
 )
 
 hip_add_exe_to_target(NAME KernelTest
