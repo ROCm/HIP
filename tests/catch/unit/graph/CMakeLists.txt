@@ -46,6 +46,7 @@ set(TEST_SRC
   hipGraphGetEdges.cc
   hipGraphRemoveDependencies.cc
   hipGraphInstantiate.cc
+  hipGraphExecUpdate.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest
