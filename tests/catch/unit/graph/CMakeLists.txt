@@ -47,6 +47,7 @@ set(TEST_SRC
   hipGraphRemoveDependencies.cc
   hipGraphInstantiate.cc
   hipGraphExecUpdate.cc
+  hipGraphExecEventRecordNodeSetEvent.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest
