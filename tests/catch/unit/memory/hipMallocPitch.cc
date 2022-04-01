@@ -27,6 +27,11 @@ THE SOFTWARE.
 #include <cstring>
 #include <vector>
 
+/**
+ * @brief Test hipMalloc3D, hipMallocPitch and hipMemAllocPitch with multiple input values.
+ *        Checks that the memory has been allocated with the specified pitch and extent sizes.
+ */
+ 
 struct MemoryInfo {
   size_t freeMem;
   size_t totalMem;
