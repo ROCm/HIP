@@ -31,7 +31,7 @@ THE SOFTWARE.
  * @brief Test hipMalloc3D, hipMallocPitch and hipMemAllocPitch with multiple input values.
  *        Checks that the memory has been allocated with the specified pitch and extent sizes.
  */
- 
+
 struct MemoryInfo {
   size_t freeMem;
   size_t totalMem;
@@ -160,10 +160,17 @@ TEST_CASE("Unit_hipMemAllocPitch_ValidatePitch") {
   hipExtent validExtent{generateExtent(AllocationApi::hipMemAllocPitch)};
   MemoryInfo memBeforeAllocation{createMemoryInfo()};
   unsigned int elementSizeBytes = GENERATE(4, 8, 16);
+
+#if HT_NVIDIA
+  if (validExtent.width == 0 || validExtent.height == 0) {
+    return;
+  }
+#endif
+
   HIP_CHECK(
       hipMemAllocPitch(&ptr, &pitch, validExtent.width, validExtent.height, elementSizeBytes));
-  validateMemory(ptr, validExtent, pitch, memBeforeAllocation);
-  HIP_CHECK(hipFree(ptr));
+  validateMemory(reinterpret_cast<void*>(ptr), validExtent, pitch, memBeforeAllocation);
+  HIP_CHECK(hipFree(reinterpret_cast<void*>(ptr)));
 }
 TEST_CASE("Unit_hipMallocPitch_ValidatePitch") {
   size_t pitch;
@@ -187,6 +194,19 @@ TEST_CASE("Unit_hipMallocPitch_Negative") {
 
 TEST_CASE("Unit_hipMemAllocPitch_Negative") {
   size_t pitch;
+
+#if HT_NVIDIA
+  hipDeviceptr_t ptr{};
+  unsigned int invalidElementSizeBytes = GENERATE(0, 7, 12, 17);
+
+  /* Device synchronize is used here to initilize the device.
+   * Nvidia does not implicitly do it for this Api. And hipInit(0) does not work either.
+   */
+  HIP_CHECK(hipDeviceSynchronize());
+  HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, 1, 1, invalidElementSizeBytes),
+                  hipErrorInvalidValue);
+#endif
+
   unsigned int validElementSizeBytes{4};
   HIP_CHECK_ERROR(hipMemAllocPitch(nullptr, &pitch, 1, 1, validElementSizeBytes),
                   hipErrorInvalidValue);
