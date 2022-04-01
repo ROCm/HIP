@@ -31,6 +31,9 @@ set(TEST_SRC
     hipTextureRef2D.cc
     hipSimpleTexture2DLayered.cc
     hipTextureMipmapObj2D.cc
+    hipGetChanDesc.cc
+    hipTexObjPitch.cc
+    hipTextureObj1DFetch.cc
 )
 
 hip_add_exe_to_target(NAME TextureTest
