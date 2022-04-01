@@ -50,13 +50,15 @@ typedef struct
 #include <ostream>
 #include <type_traits>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wshadow"
 struct hip_bfloat16
 {
     uint16_t data;
 
     enum truncate_t
     {
-        truncate_0
+        truncate
     };
 
     __host__ __device__ hip_bfloat16() = default;
@@ -151,6 +153,7 @@ private:
         return uint16_t(u.int32 >> 16) | (!(~u.int32 & 0x7f800000) && (u.int32 & 0xffff));
     }
 };
+#pragma clang diagnostic pop
 
 typedef struct
 {

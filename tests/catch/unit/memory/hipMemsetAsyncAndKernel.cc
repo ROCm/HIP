@@ -189,6 +189,7 @@ TEST_CASE("Unit_hipMemsetAsync_VerifyExecutionWithKernel") {
     UseStrmPerThrd = true;
     ret = testhipMemsetAsyncWithKernel(UseStrmPerThrd);
     REQUIRE(ret == true);
+    HIP_CHECK(hipDeviceReset());
   }
 
   SECTION("hipMemsetD32Async With Kernel") {

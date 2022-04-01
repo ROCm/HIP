@@ -71,10 +71,12 @@ get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
 
-#need _IMPORT_PREFIX to be set
+#need _IMPORT_PREFIX to be set #FILE_REORG_BACKWARD_COMPATIBILITY
 file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${_IMPORT_PREFIX}/../llvm/lib/clang/*/include")
+file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG "${_IMPORT_PREFIX}/llvm/lib/clang/*/include")
 find_path(HIP_CLANG_INCLUDE_PATH __clang_cuda_math.h
     HINTS ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
+          ${HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG}
     NO_DEFAULT_PATH)
 get_filename_component(HIP_CLANG_INCLUDE_PATH "${HIP_CLANG_INCLUDE_PATH}" DIRECTORY)
 
@@ -86,7 +88,8 @@ endif()
 #if HSA is not under ROCm then provide CMAKE_PREFIX_PATH=<HSA_PATH>
 find_path(HSA_HEADER hsa/hsa.h
   PATHS
-    "${_IMPORT_PREFIX}/../include"
+    "${_IMPORT_PREFIX}/../include" #FILE_REORG_BACKWARD_COMPATIBILITY
+    "${_IMPORT_PREFIX}/include"
     "${ROCM_PATH}/include"
     /opt/rocm/include
 )
@@ -95,7 +98,8 @@ if (HSA_HEADER-NOTFOUND)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
-file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${CMAKE_HIP_COMPILER}/../lib/clang/*/lib/*")
+get_filename_component(HIP_COMPILER_INSTALL_PATH ${CMAKE_HIP_COMPILER} DIRECTORY)
+file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${HIP_COMPILER_INSTALL_PATH}/../lib/clang/*/lib/*")
 find_library(CLANGRT_BUILTINS
     NAMES
       clang_rt.builtins
@@ -103,10 +107,14 @@ find_library(CLANGRT_BUILTINS
     PATHS
       ${HIP_CLANGRT_LIB_SEARCH_PATHS}
       ${HIP_CLANG_INCLUDE_PATH}/../lib/linux)
-
+#FILE_REORG_BACKWARD_COMPATIBILITY
 set_target_properties(hip-lang::device PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;${HIP_CLANG_INCLUDE_PATH}>"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;${HIP_CLANG_INCLUDE_PATH}>"
+  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;
+                                   $<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;
+                                   ${HIP_CLANG_INCLUDE_PATH}>"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;
+                                          $<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;
+                                          ${HIP_CLANG_INCLUDE_PATH}>"
 )
 
 set_target_properties(hip-lang::amdhip64 PROPERTIES
