@@ -6174,6 +6174,282 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
 
 
 /**
+ * Memory allocation properties
+ */
+typedef struct hipMemAllocationProp {
+    unsigned char compressionType;                  ///< Compression type
+    hipMemLocation location;                        ///< Memory location
+    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
+    hipMemAllocationType type;                      ///< Memory allocation type
+    unsigned short usage;                           ///< Usage
+    void* win32HandleMetaData;                      ///< Metadata for Win32 handles
+} hipMemAllocationProp;
+
+/**
+ * Generic handle for memory allocation
+ */
+typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
+
+/**
+ * @brief Flags for granularity
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemAllocationGranularity_flags {
+    hipMemAllocationGranularityMinimum     = 0x0, ///< Minimum granularity
+    hipMemAllocationGranularityRecommended = 0x1  ///< Recommended granularity for performance
+} hipMemAllocationGranularity_flags;
+
+/**
+ * @brief Memory handle type
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemHandleType {
+    hipMemHandleTypeGeneric = 0x0 ///< Generic handle type
+} hipMemHandleType;
+
+/**
+ * @brief Memory operation types
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemOperationType {
+    hipMemOperationTypeMap   = 0x1, ///< Map operation
+    hipMemOperationTypeUnmap = 0x2  ///< Unmap operation
+} hipMemOperationType;
+
+/**
+ * @brief Subresource types for sparse arrays
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipArraySparseSubresourceType {
+    hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
+    hipArraySparseSubresourceTypeMiptail     = 0x1  ///< Miptail
+} hipArraySparseSubresourceType;
+
+/**
+ * Map info for arrays
+ */
+typedef struct hipArrayMapInfo {
+     hipResourceType resourceType;                  ///< Resource type
+     union {
+         hipMipmappedArray mipmap;
+         hipArray_t array;
+     } resource;
+     hipArraySparseSubresourceType subresourceType; ///< Sparse subresource type
+     union {
+         struct {
+             unsigned int level;                    ///< For mipmapped arrays must be a valid mipmap level. For arrays must be zero
+             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned int offsetX;                  ///< X offset in elements
+             unsigned int offsetY;                  ///< Y offset in elements
+             unsigned int offsetZ;                  ///< Z offset in elements
+             unsigned int extentWidth;              ///< Width in elements
+             unsigned int extentHeight;             ///< Height in elements
+             unsigned int extentDepth;              ///< Depth in elements
+         } sparseLevel;
+         struct {
+             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned long long offset;             ///< Offset within mip tail
+             unsigned long long size;               ///< Extent in bytes
+         } miptail;
+     } subresource;
+     hipMemOperationType memOperationType;          ///< Memory operation type
+     hipMemHandleType memHandleType;                ///< Memory handle type
+     union {
+         hipMemGenericAllocationHandle_t memHandle;
+     } memHandle;
+     unsigned long long offset;                     ///< Offset within the memory
+     unsigned int deviceBitMask;                    ///< Device ordinal bit mask
+     unsigned int flags;                            ///< flags for future use, must be zero now.
+     unsigned int reserved[2];                      ///< Reserved for future use, must be zero now.
+} hipArrayMapInfo;
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Virtual Memory Management
+ *  @{
+ *  This section describes the virtual memory management functions of HIP runtime API.
+ */
+
+/**
+ * @brief Frees an address range reservation made via hipMemAddressReserve
+ *
+ * @param [in] devPtr - starting address of the range.
+ * @param [in] size - size of the range.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemAddressFree(void* devPtr, size_t size);
+
+/**
+ * @brief Reserves an address range
+ *
+ * @param [out] ptr - starting address of the reserved range.
+ * @param [in] size - size of the reservation.
+ * @param [in] alignment - alignment of the address.
+ * @param [in] addr - requested starting address of the range.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemAddressReserve(void** ptr, size_t size, size_t alignment, void* addr, unsigned long long flags);
+
+/**
+ * @brief Creates a memory allocation described by the properties and size
+ *
+ * @param [out] handle - value of the returned handle.
+ * @param [in] size - size of the allocation.
+ * @param [in] prop - properties of the allocation.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemCreate(hipMemGenericAllocationHandle_t* handle, size_t size, const hipMemAllocationProp* prop, unsigned long long flags);
+
+/**
+ * @brief Exports an allocation to a requested shareable handle type.
+ *
+ * @param [out] shareableHandle - value of the returned handle.
+ * @param [in] handle - handle to share.
+ * @param [in] handleType - type of the shareable handle.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemExportToShareableHandle(void* shareableHandle, hipMemGenericAllocationHandle_t handle, hipMemAllocationHandleType handleType, unsigned long long flags);
+
+/**
+ * @brief Get the access flags set for the given location and ptr.
+ *
+ * @param [out] flags - flags for this location.
+ * @param [in] location - target location.
+ * @param [in] ptr - address to check the access flags.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAccess(unsigned long long* flags, const hipMemLocation* location, void* ptr);
+
+/**
+ * @brief Calculates either the minimal or recommended granularity.
+ *
+ * @param [out] granularity - returned granularity.
+ * @param [in] prop - location properties.
+ * @param [in] option - determines which granularity to return.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAllocationGranularity(size_t* granularity, const hipMemAllocationProp* prop, hipMemAllocationGranularity_flags option);
+
+/**
+ * @brief Retrieve the property structure of the given handle.
+ *
+ * @param [out] prop - properties of the given handle.
+ * @param [in] handle - handle to perform the query on.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAllocationPropertiesFromHandle(hipMemAllocationProp* prop, hipMemGenericAllocationHandle_t handle);
+
+/**
+ * @brief Imports an allocation from a requested shareable handle type.
+ *
+ * @param [out] handle - returned value.
+ * @param [in] osHandle - shareable handle representing the memory allocation.
+ * @param [in] shHandleType - handle type.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemImportFromShareableHandle(hipMemGenericAllocationHandle_t* handle, void* osHandle, hipMemAllocationHandleType shHandleType);
+
+/**
+ * @brief Maps an allocation handle to a reserved virtual address range.
+ *
+ * @param [in] ptr - address where the memory will be mapped.
+ * @param [in] size - size of the mapping.
+ * @param [in] offset - offset into the memory, currently must be zero.
+ * @param [in] handle - memory allocation to be mapped.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemMap(void* ptr, size_t size, size_t offset, hipMemGenericAllocationHandle_t handle, unsigned long long flags);
+
+/**
+ * @brief Maps or unmaps subregions of sparse HIP arrays and sparse HIP mipmapped arrays.
+ *
+ * @param [in] mapInfoList - list of hipArrayMapInfo.
+ * @param [in] count - number of hipArrayMapInfo in mapInfoList.
+ * @param [in] stream - stream identifier for the stream to use for map or unmap operations.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemMapArrayAsync(hipArrayMapInfo* mapInfoList, unsigned int  count, hipStream_t stream);
+
+/**
+ * @brief Release a memory handle representing a memory allocation which was previously allocated through hipMemCreate.
+ *
+ * @param [in] handle - handle of the memory allocation.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemRelease(hipMemGenericAllocationHandle_t handle);
+
+/**
+ * @brief Returns the allocation handle of the backing memory allocation given the address.
+ *
+ * @param [out] handle - handle representing addr.
+ * @param [in] addr - address to look up.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemRetainAllocationHandle(hipMemGenericAllocationHandle_t* handle, void* addr);
+
+/**
+ * @brief Set the access flags for each location specified in desc for the given virtual address range.
+ *
+ * @param [in] ptr - starting address of the virtual address range.
+ * @param [in] size - size of the range.
+ * @param [in] desc - array of hipMemAccessDesc.
+ * @param [in] count - number of hipMemAccessDesc in desc.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemSetAccess(void* ptr, size_t size, const hipMemAccessDesc* desc, size_t count);
+
+/**
+ * @brief Unmap memory allocation of a given address range.
+ *
+ * @param [in] ptr - starting address of the range to unmap.
+ * @param [in] size - size of the virtual address range.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemUnmap(void* ptr, size_t size);
+
+// doxygen end virtual memory management API
+/**
+ * @}
+ */
+
+/**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
  *  @defgroup GL Interop
