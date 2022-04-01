@@ -4,6 +4,12 @@
 HIP allows you to compile kernels at runtime with its ```hiprtc*``` APIs.
 Kernels can be store as a text string and can be passed on to hiprtc APIs alongside options to guide the compilation.
 
+NOTE:
+
+  - This library can be used on systems without HIP install nor AMD GPU driver installed at all (offline compilation). Therefore it does not depend on any HIP runtime library.
+  - But it does depend on COMGr. We may try to statically link COMGr into hipRTC to avoid any ambiguity.
+  - Developers can decide to bundle this library with their application.
+
 ## Example
 To use hiprtc functionality, hiprtc header needs to be included first.
 ```#include <hip/hiprtc.h>```
@@ -84,6 +90,9 @@ Please have a look at saxpy.cpp and hiprtcGetLoweredName.cpp files for a detaile
 ## HIPRTC specific options
 HIPRTC provides a few hiprtc specific flags
  - ```--gpu-architecture``` : This flag can guide the code object generation for a specific gpu arch. Example: ```--gpu-architecture=gfx906:sramecc+:xnack-```, its equivalent to ```--offload-arch```.
+    - This option is compulsory if compilation is done on a system without AMD GPUs supported by HIP runtime.
+    - Otherwise, hipRTC will load the hip runtime and gather the current device and its architecture info and use it as option.
 
 ## Deprecation notice
-Users will be required to link to libhiprtc.so/libhiprtc.dll in future releases. Currently all symbols are present in libhipamd64.so/libhipamd64.dll and there is a plan in action to separate HIPRTC APIs from HIP APIs.
+Currently HIPRTC APIs are separated from HIP APIs and HIPRTC is available as a separate library libhiprtc.so/libhiprtc.dll. But hiprtc symbols are present in libhipamd64.so/libhipamd64.dll in order to support the existing applications. Gradually, these symbols will be removed from HIP library and applications using HIPRTC will be required to explictly link to HIPRTC library.
+
