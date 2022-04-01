@@ -1085,6 +1085,104 @@ typedef struct _hipGraphicsResource hipGraphicsResource;
 
 typedef hipGraphicsResource* hipGraphicsResource_t;
 
+/**
+ * An opaque value that represents a hip graph
+ */
+typedef struct ihipGraph* hipGraph_t;
+/**
+ * An opaque value that represents a hip graph node
+ */
+typedef struct hipGraphNode* hipGraphNode_t;
+/**
+ * An opaque value that represents a hip graph Exec
+ */
+typedef struct hipGraphExec* hipGraphExec_t;
+
+/**
+ * @brief hipGraphNodeType
+ * @enum
+ *
+ */
+typedef enum hipGraphNodeType {
+  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
+  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
+  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
+  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
+  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
+  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
+  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
+  hipGraphNodeTypeCount
+} hipGraphNodeType;
+
+typedef void (*hipHostFn_t)(void* userData);
+typedef struct hipHostNodeParams {
+  hipHostFn_t fn;
+  void* userData;
+} hipHostNodeParams;
+typedef struct hipKernelNodeParams {
+  dim3 blockDim;
+  void** extra;
+  void* func;
+  dim3 gridDim;
+  void** kernelParams;
+  unsigned int sharedMemBytes;
+} hipKernelNodeParams;
+typedef struct hipMemsetParams {
+  void* dst;
+  unsigned int elementSize;
+  size_t height;
+  size_t pitch;
+  unsigned int value;
+  size_t width;
+} hipMemsetParams;
+
+/**
+ * @brief hipGraphExecUpdateResult
+ * @enum
+ *
+ */
+typedef enum hipGraphExecUpdateResult {
+  hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
+  hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
+                                  ///< in the return value of the function
+  hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
+  hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
+  hipGraphExecUpdateErrorFunctionChanged =
+      0x4,  ///< The update failed because the function of a kernel node changed
+  hipGraphExecUpdateErrorParametersChanged =
+      0x5,  ///< The update failed because the parameters changed in a way that is not supported
+  hipGraphExecUpdateErrorNotSupported =
+      0x6,  ///< The update failed because something about the node is not supported
+  hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
+} hipGraphExecUpdateResult;
+
+typedef enum hipStreamCaptureMode {
+  hipStreamCaptureModeGlobal = 0,
+  hipStreamCaptureModeThreadLocal,
+  hipStreamCaptureModeRelaxed
+} hipStreamCaptureMode;
+typedef enum hipStreamCaptureStatus {
+  hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
+  hipStreamCaptureStatusActive,      ///< Stream is actively capturing
+  hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
+                                     ///< invalidated, but not terminated
+} hipStreamCaptureStatus;
+
+typedef enum hipStreamUpdateCaptureDependenciesFlags {
+  hipStreamAddCaptureDependencies = 0,  ///< Add new nodes to the dependency set
+  hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
+} hipStreamUpdateCaptureDependenciesFlags;
+
+typedef enum hipGraphInstantiateFlags {
+  hipGraphInstantiateFlagAutoFreeOnLaunch =
+      1,  ///< Automatically free memory allocated in a graph before relaunching.
+} hipGraphInstantiateFlags;
+#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
+
 // Doxygen end group GlobalDefs
 /**  @} */
 //-------------------------------------------------------------------------------------------------
@@ -5111,103 +5209,6 @@ int hipGetStreamDeviceId(hipStream_t stream);
  *  @{
  *  This section describes the graph management types & functions of HIP runtime API.
  */
-
-/**
- * An opaque value that represents a hip graph
- */
-typedef struct ihipGraph* hipGraph_t;
-/**
- * An opaque value that represents a hip graph node
- */
-typedef struct hipGraphNode* hipGraphNode_t;
-/**
- * An opaque value that represents a hip graph Exec
- */
-typedef struct hipGraphExec* hipGraphExec_t;
-
-/**
- * @brief hipGraphNodeType
- * @enum
- *
- */
-typedef enum hipGraphNodeType {
-  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
-  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
-  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
-  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
-  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
-  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
-  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
-  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
-  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
-  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
-  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
-  hipGraphNodeTypeCount
-} hipGraphNodeType;
-
-typedef void (*hipHostFn_t)(void* userData);
-typedef struct hipHostNodeParams {
-  hipHostFn_t fn;
-  void* userData;
-} hipHostNodeParams;
-typedef struct hipKernelNodeParams {
-  dim3 blockDim;
-  void** extra;
-  void* func;
-  dim3 gridDim;
-  void** kernelParams;
-  unsigned int sharedMemBytes;
-} hipKernelNodeParams;
-typedef struct hipMemsetParams {
-  void* dst;
-  unsigned int elementSize;
-  size_t height;
-  size_t pitch;
-  unsigned int value;
-  size_t width;
-} hipMemsetParams;
-
-/**
- * @brief hipGraphExecUpdateResult
- * @enum
- *
- */
-typedef enum hipGraphExecUpdateResult {
-  hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
-  hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
-                                  ///< in the return value of the function
-  hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
-  hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
-  hipGraphExecUpdateErrorFunctionChanged =
-      0x4,  ///< The update failed because the function of a kernel node changed
-  hipGraphExecUpdateErrorParametersChanged =
-      0x5,  ///< The update failed because the parameters changed in a way that is not supported
-  hipGraphExecUpdateErrorNotSupported =
-      0x6,  ///< The update failed because something about the node is not supported
-  hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
-} hipGraphExecUpdateResult;
-
-typedef enum hipStreamCaptureMode {
-  hipStreamCaptureModeGlobal = 0,
-  hipStreamCaptureModeThreadLocal,
-  hipStreamCaptureModeRelaxed
-} hipStreamCaptureMode;
-typedef enum hipStreamCaptureStatus {
-  hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
-  hipStreamCaptureStatusActive,      ///< Stream is actively capturing
-  hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
-                                     ///< invalidated, but not terminated
-} hipStreamCaptureStatus;
-
-typedef enum hipStreamUpdateCaptureDependenciesFlags {
-  hipStreamAddCaptureDependencies = 0,  ///< Add new nodes to the dependency set
-  hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
-} hipStreamUpdateCaptureDependenciesFlags;
-
-typedef enum hipGraphInstantiateFlags {
-  hipGraphInstantiateFlagAutoFreeOnLaunch =
-      1,  ///< Automatically free memory allocated in a graph before relaunching.
-} hipGraphInstantiateFlags;
 
 /**
  * @brief Begins graph capture on a stream.
