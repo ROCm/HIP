@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+   Copyright (c) 2021 - 2022 Advanced Micro Devices, Inc. All rights reserved.
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
    in the Software without restriction, including without limitation the rights
@@ -128,7 +128,7 @@ TEST_CASE("Unit_malloc_CoherentTst") {
     //  Read string from child and close reading end.
     read(fd1[0], GpuId, 2 * sizeof(int));
     close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[0] == 1)) {
+    if ((GpuId[0] == 1) || (GpuId[1] == 1)) {
       WARN("This test is not applicable on MI60 & MI100."
               "Skipping the test!!");
       exit(0);
@@ -223,7 +223,7 @@ TEST_CASE("Unit_malloc_CoherentTstWthAdvise") {
     //  Read string from child and close reading end.
     read(fd1[0], GpuId, 2 * sizeof(int));
     close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[0] == 1)) {
+    if ((GpuId[0] == 1) || (GpuId[1] == 1)) {
       WARN("This test is not applicable on MI60 & MI100."
               "Skipping the test!!");
       exit(0);
@@ -320,7 +320,7 @@ TEST_CASE("Unit_mmap_CoherentTst") {
     //  Read string from child and close reading end.
     read(fd1[0], GpuId, 2 * sizeof(int));
     close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[0] == 1)) {
+    if ((GpuId[0] == 1) || (GpuId[1] == 1)) {
       WARN("This test is not applicable on MI60 & MI100."
               "Skipping the test!!");
       exit(0);
@@ -418,7 +418,7 @@ TEST_CASE("Unit_mmap_CoherentTstWthAdvise") {
     //  Read string from child and close reading end.
     read(fd1[0], GpuId, 2 * sizeof(int));
     close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[0] == 1)) {
+    if ((GpuId[0] == 1) || (GpuId[1] == 1)) {
       WARN("This test is not applicable on MI60 & MI100."
               "Skipping the test!!");
       exit(0);

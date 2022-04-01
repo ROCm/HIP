@@ -62,6 +62,7 @@ set(TEST_SRC
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
+    hipPtrGetAttribute.cc
     hipManagedKeyword.cc
     hipMallocMngdMultiThread.cc
 )
@@ -105,6 +106,7 @@ set(TEST_SRC
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
+    hipPtrGetAttribute.cc
 )
 endif()
 
