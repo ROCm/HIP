@@ -1,6 +1,7 @@
 # AMD Tests
 set(TEST_SRC
     saxpy.cc
+    warpsize.cc
 )
 
 if(HIP_PLATFORM MATCHES "nvidia")
