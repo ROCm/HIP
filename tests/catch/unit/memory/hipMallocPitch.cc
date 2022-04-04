@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include "hip/driver_types.h"
 #include <cstring>
 #include <vector>
+#include <limits>
 
 /**
  * @brief Test hipMalloc3D, hipMallocPitch and hipMemAllocPitch with multiple input values.
@@ -45,21 +46,25 @@ inline static MemoryInfo createMemoryInfo() {
 
 static void validateMemory(void* devPtr, hipExtent extent, size_t pitch,
                            MemoryInfo memBeforeAllocation) {
+  INFO("Width: " << extent.width << " Height: " << extent.height << " Depth: " << extent.depth);
+
   MemoryInfo memAfterAllocation{createMemoryInfo()};
   const size_t theoreticalAllocatedMemory{pitch * extent.height * extent.depth};
   const size_t allocatedMemory = memBeforeAllocation.freeMem - memAfterAllocation.freeMem;
 
   if (theoreticalAllocatedMemory == 0) {
     REQUIRE(theoreticalAllocatedMemory == allocatedMemory);
+    return; /* If there was no memory allocated then we don't need to do further checks. */
   } else {
     REQUIRE(theoreticalAllocatedMemory <= allocatedMemory);
   }
 
-  void* hostPtr = std::malloc(theoreticalAllocatedMemory);
-  std::memset(hostPtr, 2, theoreticalAllocatedMemory);
+  // void* hostPtr = std::malloc(theoreticalAllocatedMemory);
+  std::unique_ptr<char[]> hostPtr{new char[theoreticalAllocatedMemory]};
+  std::memset(hostPtr.get(), 2, theoreticalAllocatedMemory);
 
   hipPitchedPtr devPitchedPtr{devPtr, pitch, extent.width, extent.height};
-  hipPitchedPtr hostPitchedPtr{hostPtr, pitch, extent.width, extent.height};
+  hipPitchedPtr hostPitchedPtr{hostPtr.get(), pitch, extent.width, extent.height};
 
   HIP_CHECK(hipMemset3D(devPitchedPtr, 1, extent));
 
@@ -74,7 +79,7 @@ static void validateMemory(void* devPtr, hipExtent extent, size_t pitch,
   for (size_t width = 0; width < extent.width; ++width) {
     for (size_t height = 0; height < extent.height; ++height) {
       for (size_t depth = 0; depth < extent.depth; ++depth) {
-        char* reinterpretedPtr = reinterpret_cast<char*>(hostPtr);
+        char* reinterpretedPtr = reinterpret_cast<char*>(hostPtr.get());
         size_t index = (pitch * extent.height * depth) + (pitch * height) + width;
         if (*(reinterpretedPtr + index) != 1) {
           mismatch = true;
@@ -82,22 +87,17 @@ static void validateMemory(void* devPtr, hipExtent extent, size_t pitch,
       }
     }
   }
-  INFO("Width: " << extent.width << " Height: " << extent.height << " Depth: " << extent.depth);
   REQUIRE(!mismatch);
-
-  free(hostPtr);
 }
 
 class ExtentGenerator {
  public:
-  static constexpr size_t minWidth{1};
-  static constexpr size_t maxWidth{1024};
-  static constexpr size_t minHeight{1};
-  static constexpr size_t maxHeight{100};
-  static constexpr size_t minDepth{1};
-  static constexpr size_t maxDepth{100};
   static constexpr size_t totalRandomValues{20};
   static constexpr size_t seed{1337};
+
+  std::uniform_int_distribution<size_t> width_distribution{1, 1024};
+  std::uniform_int_distribution<size_t> height_distribution{1, 100};
+  std::uniform_int_distribution<size_t> depth_distribution{1, 100};
 
   std::vector<hipExtent> extents2D{};
   std::vector<hipExtent> extents3D{};
@@ -114,16 +114,16 @@ class ExtentGenerator {
                                        hipExtent{0, 0, 1}};
 
     for (size_t i = 0; i < totalRandomValues; ++i) {
-      extents3D.push_back(hipExtent{minWidth + randomGenerator() % maxWidth,
-                                    minHeight + randomGenerator() % maxHeight,
-                                    minDepth + randomGenerator() % maxDepth});
+      extents3D.push_back(hipExtent{width_distribution(randomGenerator),
+                                    height_distribution(randomGenerator),
+                                    depth_distribution(randomGenerator)});
     }
 
     extents2D = std::vector<hipExtent>{hipExtent{0, 0, 1}, hipExtent{1, 0, 1}, hipExtent{0, 1, 1}};
 
     for (size_t i = 0; i < totalRandomValues; ++i) {
-      extents2D.push_back(hipExtent{minWidth + randomGenerator() % maxWidth,
-                                    minHeight + randomGenerator() % maxHeight, 1});
+      extents2D.push_back(
+          hipExtent{width_distribution(randomGenerator), height_distribution(randomGenerator), 1});
     }
   }
 };
@@ -161,7 +161,7 @@ TEST_CASE("Unit_hipMemAllocPitch_ValidatePitch") {
   MemoryInfo memBeforeAllocation{createMemoryInfo()};
   unsigned int elementSizeBytes = GENERATE(4, 8, 16);
 
-#if HT_NVIDIA
+#if HT_NVIDIA /* EXSWCPHIPT-46 */
   if (validExtent.width == 0 || validExtent.height == 0) {
     return;
   }
@@ -172,6 +172,7 @@ TEST_CASE("Unit_hipMemAllocPitch_ValidatePitch") {
   validateMemory(reinterpret_cast<void*>(ptr), validExtent, pitch, memBeforeAllocation);
   HIP_CHECK(hipFree(reinterpret_cast<void*>(ptr)));
 }
+
 TEST_CASE("Unit_hipMallocPitch_ValidatePitch") {
   size_t pitch;
   void* ptr;
@@ -183,31 +184,114 @@ TEST_CASE("Unit_hipMallocPitch_ValidatePitch") {
 }
 
 TEST_CASE("Unit_hipMalloc3D_Negative") {
-  hipExtent validExtent{1, 1, 1};
-  HIP_CHECK_ERROR(hipMalloc3D(nullptr, validExtent), hipErrorInvalidValue);
+  SECTION("Invalid ptr") {
+    hipExtent validExtent{1, 1, 1};
+    HIP_CHECK_ERROR(hipMalloc3D(nullptr, validExtent), hipErrorInvalidValue);
+  }
+
+  hipPitchedPtr ptr;
+  constexpr size_t maxSizeT = std::numeric_limits<size_t>::max();
+
+  SECTION("Max size_t width") {
+    hipExtent validExtent{maxSizeT, 1, 1};
+#if HT_AMD /* EXSWCPHIPT-46 */
+    HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
+#else
+    HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorInvalidValue);
+#endif
+  }
+
+  SECTION("Max size_t height") {
+    hipExtent validExtent{1, maxSizeT, 1};
+    HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
+  }
+
+  SECTION("Max size_t width") {
+    hipExtent validExtent{1, 1, maxSizeT};
+    HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
+  }
 }
 
 TEST_CASE("Unit_hipMallocPitch_Negative") {
   size_t pitch;
-  HIP_CHECK_ERROR(hipMallocPitch(nullptr, &pitch, 1, 1), hipErrorInvalidValue);
+  void* ptr;
+  constexpr size_t maxSizeT = std::numeric_limits<size_t>::max();
+
+  SECTION("Invalid ptr") {
+    HIP_CHECK_ERROR(hipMallocPitch(nullptr, &pitch, 1, 1), hipErrorInvalidValue);
+  }
+
+#if !HT_AMD /* EXSWCPHIPT-48 */
+  SECTION("Invalid pitch") {
+    HIP_CHECK_ERROR(hipMallocPitch(&ptr, nullptr, 1, 1), hipErrorInvalidValue);
+  }
+#endif
+
+  SECTION("Max size_t width") {
+#if HT_AMD /* EXSWCPHIPT-46 */
+    HIP_CHECK_ERROR(hipMallocPitch(&ptr, &pitch, maxSizeT, 1), hipErrorOutOfMemory);
+#else
+    HIP_CHECK_ERROR(hipMallocPitch(&ptr, &pitch, maxSizeT, 1), hipErrorInvalidValue);
+#endif
+  }
+
+  SECTION("Max size_t height") {
+    HIP_CHECK_ERROR(hipMallocPitch(&ptr, &pitch, 1, maxSizeT), hipErrorOutOfMemory);
+  }
 }
 
 TEST_CASE("Unit_hipMemAllocPitch_Negative") {
   size_t pitch;
+  hipDeviceptr_t ptr{};
+  unsigned int validElementSizeBytes{4};
+  constexpr size_t maxSizeT = std::numeric_limits<size_t>::max();
 
 #if HT_NVIDIA
-  hipDeviceptr_t ptr{};
-  unsigned int invalidElementSizeBytes = GENERATE(0, 7, 12, 17);
-
-  /* Device synchronize is used here to initilize the device.
+  /* Device synchronize is used here to initialize the device.
    * Nvidia does not implicitly do it for this Api. And hipInit(0) does not work either.
    */
   HIP_CHECK(hipDeviceSynchronize());
-  HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, 1, 1, invalidElementSizeBytes),
-                  hipErrorInvalidValue);
+
+  SECTION("Invalid elementSizeBytes") {
+    unsigned int invalidElementSizeBytes = GENERATE(0, 7, 12, 17);
+    HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, 1, 1, invalidElementSizeBytes),
+                    hipErrorInvalidValue);
+  }
+
+  SECTION("Zero width") {
+    HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, 0, 1, validElementSizeBytes),
+                    hipErrorInvalidValue);
+  }
+  SECTION("Zero height") {
+    HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, 1, 0, validElementSizeBytes),
+                    hipErrorInvalidValue);
+  }
 #endif
 
-  unsigned int validElementSizeBytes{4};
-  HIP_CHECK_ERROR(hipMemAllocPitch(nullptr, &pitch, 1, 1, validElementSizeBytes),
-                  hipErrorInvalidValue);
+  SECTION("Invalid dptr") {
+    HIP_CHECK_ERROR(hipMemAllocPitch(nullptr, &pitch, 1, 1, validElementSizeBytes),
+                    hipErrorInvalidValue);
+  }
+
+#if !HT_AMD /* EXSWCPHIPT-48 */
+  SECTION("Invalid pitch") {
+    HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, nullptr, 1, 1, validElementSizeBytes),
+                    hipErrorInvalidValue);
+  }
+#endif
+
+  SECTION("Max size_t width") {
+#if HT_AMD /* EXSWCPHIPT-46 */
+    HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, maxSizeT, 1, validElementSizeBytes),
+                    hipErrorOutOfMemory);
+#else
+    HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, maxSizeT, 1, validElementSizeBytes),
+                    hipErrorInvalidValue);
+#endif
+  }
+
+  SECTION("Max size_t height") {
+    HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, 1, maxSizeT, validElementSizeBytes),
+                    hipErrorOutOfMemory);
+  }
 }
