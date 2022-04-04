@@ -41,6 +41,7 @@ set(TEST_SRC
     hipMemPtrGetInfo.cc
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
+    hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
     hipMemsetInvalidPtr.cc
     hipMemset.cc
@@ -84,6 +85,7 @@ set(TEST_SRC
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
     hipHostGetFlags.cc
+    hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
     hipMemsetInvalidPtr.cc
     hipMemset.cc
