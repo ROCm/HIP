@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,10 @@ THE SOFTWARE.
 #pragma once
 #include "hip_test_common.hh"
 #include <iostream>
+#include<fstream>
+#include<regex>
+#include <type_traits>
+
 #define guarantee(cond, str)                                                                        \
    {                                                                                                \
      if (!(cond)) {                                                                                 \
@@ -235,5 +239,55 @@ unsigned setNumBlocks(T blocksPerCU, T threadsPerBlock,
   }
   return blocks;
 }
-
+template<typename T>
+static bool assemblyFile_Verification(std::string assemfilename, std::string inst) {
+  std::string filePath = "./catch/unit/deviceLib/";
+  bool result = false;
+  std::string filename;
+  filename = filePath + assemfilename;
+  std::ifstream file(filename.c_str(), std::ios::out);
+  if (file) {
+    std::string line;
+    int line_pos = 0, start_pos = 0;
+    int last_pos = 0;
+    int start_match = 0;
+    while (getline(file, line)) {
+      line_pos++;
+      if ((std::is_same<T, float>::value)) {
+        if (!start_pos &&
+            std::regex_search(line,
+              std::regex("Begin function (.*)AtomicCheck"))) {
+          start_pos = line_pos;
+        }
+        if (!last_pos &&
+            std::regex_search(line,
+              std::regex(".Lfunc_end0-(.*)AtomicCheck"))) {
+          last_pos = line_pos;
+          break;
+        }
+      } else {
+        if ((start_match != 2) && std::regex_search(line,
+              std::regex("Begin function (.*)AtomicCheck"))) {
+          start_match++;
+          if (start_match == 2)
+            start_pos = line_pos;
+        }
+        if (!last_pos && std::regex_search(line,
+              std::regex("func_end1-(.*)AtomicCheck"))) {
+          last_pos = line_pos;
+          break;
+        }
+      }
+      if (start_pos) {
+        result = std::regex_search(line, std::regex(inst));
+        if (result)
+          break;
+      }
+    }
+  } else {
+    result = true;
+    SUCCEED("Assembly file does not exist");
+  }
+  return result;
+}
 }  // namespace HipTest
