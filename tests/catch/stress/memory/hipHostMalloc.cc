@@ -17,10 +17,13 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
+#include "hip_test_common.hh"
+#include "hip_test_helper.hh"
 
 // Stress allocation tests
 // Try to allocate as much memory as possible
 // But since max allocation can fail, we need to try the next value
+
 TEST_CASE("Stress_hipHostMalloc_MaxAllocation") {
   size_t devMemAvail{0}, devMemFree{0};
   HIP_CHECK(hipMemGetInfo(&devMemFree, &devMemAvail));
@@ -36,7 +39,7 @@ TEST_CASE("Stress_hipHostMalloc_MaxAllocation") {
   INFO("Max Allocation of " << memFree << " bytes!");
   while (hipHostMalloc(&d_ptr, memFree) != hipSuccess && memFree > 1) {
     counter++;
-    INFO("Attempt to allocate " << memFree " bytes out of " << devMemFree << "bytes Failed!");
+    INFO("Attempt to allocate " << memFree << " bytes out of " << devMemFree << "bytes Failed!");
     memFree >>= 1;          // reduce the memory to be allocated by half
     REQUIRE(counter <= 2);  // Make sure that we are atleast able to allocate 1/4th of max memory
   }
@@ -46,3 +49,4 @@ TEST_CASE("Stress_hipHostMalloc_MaxAllocation") {
   REQUIRE(std::all_of(d_ptr, d_ptr + memFree, [](unsigned char n) { return n == 1; }));
   HIP_CHECK(hipHostFree(d_ptr));
 }
+

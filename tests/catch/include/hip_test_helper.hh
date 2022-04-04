@@ -51,8 +51,7 @@ static size_t getMemoryAmount() {
 #endif
 }
 
-static size_t getHostThreadCount(const size_t memPerThread,
-                                           const size_t maxThreads) {
+static inline size_t getHostThreadCount(const size_t memPerThread, const size_t maxThreads) {
   if (memPerThread == 0) return 0;
   auto memAmount = getMemoryAmount();
   const auto processor_count = std::thread::hardware_concurrency();

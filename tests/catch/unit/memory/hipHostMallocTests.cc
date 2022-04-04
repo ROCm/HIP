@@ -35,7 +35,6 @@ Testcase Scenarios :
  * Performs argument validation of hipHostMalloc api.
  */
 TEST_CASE("Unit_hipHostMalloc_ArgValidation") {
-  hipError_t ret;
   constexpr size_t allocSize = 1000;
   char* ptr;
 
