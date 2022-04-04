@@ -59,7 +59,6 @@ static void validateMemory(void* devPtr, hipExtent extent, size_t pitch,
     REQUIRE(theoreticalAllocatedMemory <= allocatedMemory);
   }
 
-  // void* hostPtr = std::malloc(theoreticalAllocatedMemory);
   std::unique_ptr<char[]> hostPtr{new char[theoreticalAllocatedMemory]};
   std::memset(hostPtr.get(), 2, theoreticalAllocatedMemory);
 
