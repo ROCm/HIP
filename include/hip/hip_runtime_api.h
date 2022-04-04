@@ -1177,6 +1177,13 @@ typedef enum hipStreamUpdateCaptureDependenciesFlags {
   hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
 } hipStreamUpdateCaptureDependenciesFlags;
 
+typedef enum hipGraphMemAttributeType {
+  hipGraphMemAttrUsedMemCurrent = 0, ///< Amount of memory, in bytes, currently associated with graphs
+  hipGraphMemAttrUsedMemHigh,        ///< High watermark of memory, in bytes, associated with graphs since the last time.
+  hipGraphMemAttrReservedMemCurrent, ///< Amount of memory, in bytes, currently allocated for graphs.
+  hipGraphMemAttrReservedMemHigh,    ///< High watermark of memory, in bytes, currently allocated for graphs
+}hipGraphMemAttributeType;
+
 typedef enum hipGraphInstantiateFlags {
   hipGraphInstantiateFlagAutoFreeOnLaunch =
       1,  ///< Automatically free memory allocated in a graph before relaunching.
@@ -6167,6 +6174,38 @@ hipError_t hipGraphEventWaitNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
 hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                              hipEvent_t event);
 
+/**
+ * @brief Get the mem attribute for graphs.
+ *
+ * @param [in] device - device the attr is get for.
+ * @param [in] attr - attr to get.
+ * @param [out] value - value for specific attr.
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGetGraphMemAttribute(int device, hipGraphMemAttributeType attr, void* value);
+
+/**
+ * @brief Set the mem attribute for graphs.
+ *
+ * @param [in] device - device the attr is set for.
+ * @param [in] attr - attr to set.
+ * @param [in] value - value for specific attr.
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceSetGraphMemAttribute(int device, hipGraphMemAttributeType attr, void* value);
+
+/**
+ * @brief Free unused memory on specific device used for graph back to OS.
+ *
+ * @param [in] device - device the memory is used for graphs
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGraphMemTrim(int device);
 // doxygen end graph API
 /**
  * @}
