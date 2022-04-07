@@ -42,7 +42,7 @@ set(TEST_SRC
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
     hipMallocManaged_MultiScenario.cc
-    hipMemsetInvalidPtr.cc
+    hipMemsetNegative.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemset3D.cc
@@ -85,7 +85,7 @@ set(TEST_SRC
     hipHostRegister.cc
     hipHostGetFlags.cc
     hipMallocManaged_MultiScenario.cc
-    hipMemsetInvalidPtr.cc
+    hipMemsetNegative.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemset3D.cc
