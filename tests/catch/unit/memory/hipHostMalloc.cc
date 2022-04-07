@@ -231,4 +231,16 @@ TEST_CASE("Unit_hipHostMalloc_Default") {
   CheckHostPointer(numElements, A, 0, SYNC_DEVICE, ptrType);
   CheckHostPointer(numElements, A, 0, SYNC_STREAM, ptrType);
   CheckHostPointer(numElements, A, 0, SYNC_EVENT, ptrType);
+
 }
+
+TEST_CASE("Unit_hipHostGetDevicePointer_NullCheck") {
+  int* d_a;
+  HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&d_a), sizeof(int)));
+
+  auto res = hipHostGetDevicePointer(nullptr,d_a,0);
+  REQUIRE(res == hipErrorInvalidValue);
+
+  HIP_CHECK(hipHostFree(d_a));
+}
+
