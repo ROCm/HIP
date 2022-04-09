@@ -20,9 +20,10 @@
 
 # build fails in windows
 if (UNIX)
-  add_subdirectory(rtc)
   add_subdirectory(deviceLib)
 endif()
+
+add_subdirectory(rtc)
 add_subdirectory(graph)
 add_subdirectory(memory)
 add_subdirectory(stream)
