@@ -71,6 +71,50 @@ TEST_CASE("Unit_hipStreamGetPriority_lower") {
   HIP_CHECK(hipStreamDestroy(stream));
 }
 
+/**
+ * both stream and priority passed as nullptr.
+ */
+TEST_CASE("Unit_hipStreamGetPriority_nullptr_nullptr") {
+  auto res = hipStreamGetPriority(nullptr,nullptr);
+  REQUIRE(res == hipErrorInvalidValue);
+}
+
+
+/**
+ * valid stream and priority passed as nullptr.
+ */
+TEST_CASE("Unit_hipStreamGetPriority_stream_nullptr") {
+  hipStream_t stream = nullptr;
+  HIP_CHECK(hipStreamCreate(&stream));
+
+  auto res = hipStreamGetPriority(stream,nullptr);
+  REQUIRE(res == hipErrorInvalidValue);
+
+  HIP_CHECK(hipStreamDestroy(stream));
+}
+
+
+/**
+ * nullptr stream and valid priority
+ */
+TEST_CASE("Unit_hipStreamGetPriority_nullptr_priority") {
+  int priority = -1;
+  HIP_CHECK(hipStreamGetPriority(nullptr,&priority));
+}
+
+/**
+ * both stream and priority passed as valid.
+ */
+TEST_CASE("Unit_hipStreamGetPriority_stream_priority") {
+  int priority = -1;
+  hipStream_t stream = nullptr;
+  HIP_CHECK(hipStreamCreate(&stream));
+
+  HIP_CHECK(hipStreamGetPriority(stream,&priority));
+
+  HIP_CHECK(hipStreamDestroy(stream));
+}
+
 #if HT_AMD
 /**
  * Create stream with CUMask and check priority is returned as expected.
