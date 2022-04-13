@@ -1,2 +1,2 @@
-set HIPCONFIG="%~dp0/hipconfig"
+@set HIPCONFIG="%~dp0/hipconfig"
 @perl %HIPCONFIG% %*
