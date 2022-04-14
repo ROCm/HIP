@@ -28,6 +28,32 @@ static constexpr size_t width{validExtent.width};
 static constexpr int widthInBytes = validExtent.width * sizeof(char);
 static constexpr hipStream_t nullStream{nullptr};
 
+inline void testHipMemsetApis(void* dst, int value, size_t sizeBytes,
+                              hipError_t expectedReturn = hipErrorInvalidValue) {
+  HIP_CHECK_ERROR(hipMemset(dst, value, sizeBytes), expectedReturn);
+  HIP_CHECK_ERROR(hipMemsetAsync(dst, value, sizeBytes, nullStream), expectedReturn);
+
+  hipDeviceptr_t devicePtrDst = reinterpret_cast<hipDeviceptr_t>(dst);
+  HIP_CHECK_ERROR(hipMemsetD32(devicePtrDst, value, sizeBytes), expectedReturn);
+  HIP_CHECK_ERROR(hipMemsetD32Async(devicePtrDst, value, sizeBytes, nullStream), expectedReturn);
+  HIP_CHECK_ERROR(hipMemsetD16(devicePtrDst, value, sizeBytes), expectedReturn);
+  HIP_CHECK_ERROR(hipMemsetD16Async(devicePtrDst, value, sizeBytes, nullStream), expectedReturn);
+  HIP_CHECK_ERROR(hipMemsetD8(devicePtrDst, value, sizeBytes), expectedReturn);
+  HIP_CHECK_ERROR(hipMemsetD8Async(devicePtrDst, value, sizeBytes, nullStream), expectedReturn);
+}
+
+inline void testHipMemset2DApis(void* dst, size_t pitch, int value, size_t width, size_t height,
+                                hipError_t expectedReturn = hipErrorInvalidValue) {
+  HIP_CHECK_ERROR(hipMemset2D(dst, pitch, value, width, height), expectedReturn);
+  HIP_CHECK_ERROR(hipMemset2DAsync(dst, pitch, value, width, height, nullStream), expectedReturn);
+}
+
+
+inline void testHipMemset3DApis(hipPitchedPtr& pitchedDevPtr, int value, const hipExtent& extent,
+                                hipError_t expectedReturn = hipErrorInvalidValue) {
+  HIP_CHECK_ERROR(hipMemset3D(pitchedDevPtr, value, extent), expectedReturn);
+  HIP_CHECK_ERROR(hipMemset3DAsync(pitchedDevPtr, value, extent, nullStream), expectedReturn);
+}
 
 TEST_CASE("Unit_hipMemset_Negative_InvalidPtr") {
   void* dst;
@@ -41,23 +67,7 @@ TEST_CASE("Unit_hipMemset_Negative_InvalidPtr") {
     dst = hostPtr.get();
   }
 
-  HIP_CHECK_ERROR(hipMemset(dst, memsetVal, widthInBytes), hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetAsync(dst, memsetVal, widthInBytes, nullStream), hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD32(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, widthInBytes),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(
-      hipMemsetD32Async(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, widthInBytes, nullStream),
-      hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD16(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, widthInBytes),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(
-      hipMemsetD16Async(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, widthInBytes, nullStream),
-      hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD8(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, widthInBytes),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(
-      hipMemsetD8Async(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, widthInBytes, nullStream),
-      hipErrorInvalidValue);
+  testHipMemsetApis(dst, memsetVal, widthInBytes);
 }
 
 
@@ -71,25 +81,7 @@ TEST_CASE("Unit_hipMemset_Negative_OutOfBoundsSize") {
   constexpr size_t outOfBoundsSize{widthInBytes + 1};
   HIP_CHECK(hipMalloc(&dst, widthInBytes));
 
-  HIP_CHECK_ERROR(hipMemset(dst, memsetVal, outOfBoundsSize), hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetAsync(dst, memsetVal, outOfBoundsSize, nullStream),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD32(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, outOfBoundsSize),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD32Async(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal,
-                                    outOfBoundsSize, nullStream),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD16(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, outOfBoundsSize),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD16Async(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal,
-                                    outOfBoundsSize, nullStream),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD8(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal, outOfBoundsSize),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetD8Async(reinterpret_cast<hipDeviceptr_t>(dst), memsetVal,
-                                   outOfBoundsSize, nullStream),
-                  hipErrorInvalidValue);
-
+  testHipMemsetApis(dst, memsetVal, outOfBoundsSize);
   HIP_CHECK(hipFree(dst));
 #endif
 }
@@ -98,9 +90,7 @@ TEST_CASE("Unit_hipMemset_Negative_OutOfBoundsPtr") {
   void* dst;
   HIP_CHECK(hipMalloc(&dst, widthInBytes));
   void* outOfBoundsPtr{reinterpret_cast<char*>(dst) + widthInBytes + 1};
-  HIP_CHECK_ERROR(hipMemset(outOfBoundsPtr, memsetVal, widthInBytes), hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemsetAsync(outOfBoundsPtr, memsetVal, widthInBytes, nullStream),
-                  hipErrorInvalidValue);
+  testHipMemsetApis(outOfBoundsPtr, memsetVal, widthInBytes);
   HIP_CHECK(hipFree(dst));
 }
 
@@ -118,9 +108,7 @@ TEST_CASE("Unit_hipMemset2D_Negative_InvalidPtr") {
   void* A_d;
   size_t pitch_A;
   HIP_CHECK(hipMallocPitch(&A_d, &pitch_A, widthInBytes, height));
-  HIP_CHECK_ERROR(hipMemset2D(dst, pitch_A, memsetVal, width, height), hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemset2DAsync(dst, pitch_A, memsetVal, width, height, nullStream),
-                  hipErrorInvalidValue);
+  testHipMemset2DApis(dst, pitch_A, memsetVal, width, height);
   hipFree(A_d);
 }
 
@@ -135,27 +123,18 @@ TEST_CASE("Unit_hipMemset2D_Negative_InvalidSizes") {
 
   SECTION("Invalid Pitch") {
     size_t invalidPitch = 1;
-
-    HIP_CHECK_ERROR(hipMemset2D(dst, invalidPitch, memsetVal, width, height), hipErrorInvalidValue);
-    HIP_CHECK_ERROR(hipMemset2DAsync(dst, invalidPitch, memsetVal, width, height, nullStream),
-                    hipErrorInvalidValue);
+    testHipMemset2DApis(dst, invalidPitch, memsetVal, width, height);
   }
 
   SECTION("Invalid Width") {
     size_t invalidWidth = realPitch + 1;
-    HIP_CHECK_ERROR(hipMemset2D(dst, realPitch, memsetVal, invalidWidth, height),
-                    hipErrorInvalidValue);
-    HIP_CHECK_ERROR(hipMemset2DAsync(dst, realPitch, memsetVal, invalidWidth, height, nullStream),
-                    hipErrorInvalidValue);
+    testHipMemset2DApis(dst, realPitch, memsetVal, invalidWidth, height);
   }
 
 #if !HT_AMD /* EXSWCPHIPT-52 */
   SECTION("Invalid height") {
     size_t invalidHeight = height + 1;
-    HIP_CHECK_ERROR(hipMemset2D(dst, realPitch, memsetVal, width, invalidHeight),
-                    hipErrorInvalidValue);
-    HIP_CHECK_ERROR(hipMemset2DAsync(dst, realPitch, memsetVal, width, invalidHeight, nullStream),
-                    hipErrorInvalidValue);
+    testHipMemset2DApis(dst, realPitch, memsetVal, width, invalidHeight);
   }
 #endif
   HIP_CHECK(hipFree(dst));
@@ -167,11 +146,7 @@ TEST_CASE("Unit_hipMemset2D_Negative_OutOfBoundsPtr") {
 
   HIP_CHECK(hipMallocPitch(&dst, &realPitch, widthInBytes, height));
   void* outOfBoundsPtr{reinterpret_cast<char*>(dst) + realPitch * height + 1};
-  HIP_CHECK_ERROR(hipMemset2D(outOfBoundsPtr, realPitch, memsetVal, width, height),
-                  hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemset2DAsync(outOfBoundsPtr, realPitch, memsetVal, width, height, nullStream),
-                  hipErrorInvalidValue);
-
+  testHipMemset2DApis(outOfBoundsPtr, realPitch, memsetVal, width, height);
   HIP_CHECK(hipFree(dst));
 }
 
@@ -182,9 +157,7 @@ TEST_CASE("Unit_hipMemset3D_Negative_InvalidPtr") {
   SECTION("Uninitialized PitchedDevPtr") {}
   SECTION("Zero Initialized PitchedDevPtr") { pitchedDevPtr = {}; }
 
-  HIP_CHECK_ERROR(hipMemset3D(pitchedDevPtr, memsetVal, validExtent), hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemset3DAsync(pitchedDevPtr, memsetVal, validExtent, nullStream),
-                  hipErrorInvalidValue);
+  testHipMemset3DApis(pitchedDevPtr, memsetVal, validExtent);
 }
 
 TEST_CASE("Unit_hipMemset3D_Negative_ModifiedPtr") {
@@ -204,9 +177,7 @@ TEST_CASE("Unit_hipMemset3D_Negative_ModifiedPtr") {
   SECTION("Invalid Pitch") { pitchedDevPtr.pitch = 1; }
 
   CAPTURE(pitchedDevPtr.ptr, pitchedDevPtr.pitch, pitchedDevPtr.xsize, pitchedDevPtr.ysize);
-  HIP_CHECK_ERROR(hipMemset3D(pitchedDevPtr, memsetVal, validExtent), hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemset3DAsync(pitchedDevPtr, memsetVal, validExtent, nullStream),
-                  hipErrorInvalidValue);
+  testHipMemset3DApis(pitchedDevPtr, memsetVal, validExtent);
   HIP_CHECK(hipFree(allocatedMemory));
 }
 
@@ -236,9 +207,7 @@ TEST_CASE("Unit_hipMemset3D_Negative_InvalidSizes") {
 #endif
 
   CAPTURE(invalidExtent.width, invalidExtent.height, invalidExtent.depth);
-  HIP_CHECK_ERROR(hipMemset3D(pitchedDevPtr, memsetVal, invalidExtent), hipErrorInvalidValue);
-  HIP_CHECK_ERROR(hipMemset3DAsync(pitchedDevPtr, memsetVal, invalidExtent, nullStream),
-                  hipErrorInvalidValue);
+  testHipMemset3DApis(pitchedDevPtr, memsetVal, invalidExtent);
   HIP_CHECK(hipFree(pitchedDevPtr.ptr));
 }
 
@@ -252,15 +221,10 @@ TEST_CASE("Unit_hipMemset3D_Negative_OutOfBounds") {
 
   SECTION("Extent Equal to 0") {
     hipExtent zeroExtent{0, 0, 0};
-    HIP_CHECK(hipMemset3D(outOfBoundsPtr, memsetVal, zeroExtent));
-    HIP_CHECK(hipMemset3DAsync(outOfBoundsPtr, memsetVal, zeroExtent, nullStream));
+    testHipMemset3DApis(outOfBoundsPtr, memsetVal, zeroExtent, hipSuccess);
   }
 
-  SECTION("Valid Extent") {
-    HIP_CHECK_ERROR(hipMemset3D(outOfBoundsPtr, memsetVal, validExtent), hipErrorInvalidValue);
-    HIP_CHECK_ERROR(hipMemset3DAsync(outOfBoundsPtr, memsetVal, validExtent, nullStream),
-                    hipErrorInvalidValue);
-  }
+  SECTION("Valid Extent") { testHipMemset3DApis(outOfBoundsPtr, memsetVal, validExtent); }
 
   HIP_CHECK(hipFree(pitchedDevPtr.ptr));
 }
