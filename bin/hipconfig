@@ -22,6 +22,7 @@
 # Need perl > 5.10 to use logic-defined or
 use 5.006; use v5.10.1;
 
+use strict;
 use warnings;
 
 use File::Basename;
@@ -34,30 +35,13 @@ my $SCRIPT_DIR=dirname(__FILE__);
 if ($HIPCONFIG_USE_PERL_SCRIPT) {
     #Invoke hipconfig.pl
     my $HIPCONFIG_PERL=catfile($SCRIPT_DIR, '/hipconfig.pl');
-    system("$^X $HIPCONFIG_PERL @ARGV");
+    exec($^X, $HIPCONFIG_PERL, @ARGV);
 } else {
-    $isWindows =  ($^O eq 'MSWin32' or $^O eq 'msys');
-    $BIN_NAME="/hipconfig.bin";
-    if ($isWindows) {
-        $BIN_NAME="/hipconfig.bin.exe";
-    }
-    my $HIPCONFIG_BIN=catfile($SCRIPT_DIR, $BIN_NAME);
+    #Invoke hipconfig.bin
+    my $HIPCONFIG_BIN=catfile($SCRIPT_DIR, '/hipconfig.bin');
     if ( -e $HIPCONFIG_BIN ) {
-        #Invoke hipconfig.bin
-        my $output = qx($HIPCONFIG_BIN @ARGV);
-        print ("$output\n");
+        exec($HIPCONFIG_BIN, @ARGV);
     } else {
         print "hipconfig.bin not present; Install HIPCC binaries before proceeding";
-        exit(-1);
     }
 }
-if ($? == -1) {
-    exit($?);
-}
-elsif ($? & 127) {
-    exit($?);
-}
-else {
-     $CMD_EXIT_CODE = $? >> 8;
-}
-exit($CMD_EXIT_CODE);

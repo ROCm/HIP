@@ -207,7 +207,15 @@ function(hip_add_exe_to_target)
   catch_discover_tests(${_NAME} PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
   if(UNIX)
     set(_LINKER_LIBS ${_LINKER_LIBS} stdc++fs)
+  else()
+    # res files are built resource files using rc files.
+    # use llvm-rc exe to build the res files
+    # Thes are used to populate the properties of the built executables
+    if(EXISTS "${PROP_RC}/catchProp.res")
+      set(_LINKER_LIBS ${_LINKER_LIBS} "${PROP_RC}/catchProp.res")
+    endif()
   endif()
+
   if(DEFINED _LINKER_LIBS)
     target_link_libraries(${_NAME} ${_LINKER_LIBS})
   endif()
