@@ -25,7 +25,6 @@ static constexpr size_t memsetVal{0x42};
 static constexpr hipExtent validExtent{184, 57, 16};
 static constexpr size_t height{validExtent.height};
 static constexpr size_t width{validExtent.width};
-static constexpr int widthInBytes = validExtent.width * sizeof(char);
 static constexpr hipStream_t nullStream{nullptr};
 
 inline void testHipMemsetApis(void* dst, int value, size_t sizeBytes,
@@ -63,11 +62,11 @@ TEST_CASE("Unit_hipMemset_Negative_InvalidPtr") {
 
   std::unique_ptr<char[]> hostPtr;
   SECTION("Host Pointer as Dst") {
-    hostPtr.reset(new char[widthInBytes]);
+    hostPtr.reset(new char[width]);
     dst = hostPtr.get();
   }
 
-  testHipMemsetApis(dst, memsetVal, widthInBytes);
+  testHipMemsetApis(dst, memsetVal, width);
 }
 
 
@@ -78,8 +77,8 @@ TEST_CASE("Unit_hipMemset_Negative_OutOfBoundsSize") {
 
 #if !HT_AMD
   void* dst;
-  constexpr size_t outOfBoundsSize{widthInBytes + 1};
-  HIP_CHECK(hipMalloc(&dst, widthInBytes));
+  constexpr size_t outOfBoundsSize{width + 1};
+  HIP_CHECK(hipMalloc(&dst, width));
 
   testHipMemsetApis(dst, memsetVal, outOfBoundsSize);
   HIP_CHECK(hipFree(dst));
@@ -88,9 +87,9 @@ TEST_CASE("Unit_hipMemset_Negative_OutOfBoundsSize") {
 
 TEST_CASE("Unit_hipMemset_Negative_OutOfBoundsPtr") {
   void* dst;
-  HIP_CHECK(hipMalloc(&dst, widthInBytes));
-  void* outOfBoundsPtr{reinterpret_cast<char*>(dst) + widthInBytes + 1};
-  testHipMemsetApis(outOfBoundsPtr, memsetVal, widthInBytes);
+  HIP_CHECK(hipMalloc(&dst, width));
+  void* outOfBoundsPtr{reinterpret_cast<char*>(dst) + width + 1};
+  testHipMemsetApis(outOfBoundsPtr, memsetVal, width);
   HIP_CHECK(hipFree(dst));
 }
 
@@ -107,7 +106,7 @@ TEST_CASE("Unit_hipMemset2D_Negative_InvalidPtr") {
 
   void* A_d;
   size_t pitch_A;
-  HIP_CHECK(hipMallocPitch(&A_d, &pitch_A, widthInBytes, height));
+  HIP_CHECK(hipMallocPitch(&A_d, &pitch_A, width, height));
   testHipMemset2DApis(dst, pitch_A, memsetVal, width, height);
   hipFree(A_d);
 }
@@ -119,7 +118,7 @@ TEST_CASE("Unit_hipMemset2D_Negative_InvalidSizes") {
 
   void* dst;
   size_t realPitch;
-  HIP_CHECK(hipMallocPitch(&dst, &realPitch, widthInBytes, height));
+  HIP_CHECK(hipMallocPitch(&dst, &realPitch, width, height));
 
   SECTION("Invalid Pitch") {
     size_t invalidPitch = 1;
@@ -144,7 +143,7 @@ TEST_CASE("Unit_hipMemset2D_Negative_OutOfBoundsPtr") {
   void* dst;
   size_t realPitch;
 
-  HIP_CHECK(hipMallocPitch(&dst, &realPitch, widthInBytes, height));
+  HIP_CHECK(hipMallocPitch(&dst, &realPitch, width, height));
   void* outOfBoundsPtr{reinterpret_cast<char*>(dst) + realPitch * height + 1};
   testHipMemset2DApis(outOfBoundsPtr, realPitch, memsetVal, width, height);
   HIP_CHECK(hipFree(dst));
