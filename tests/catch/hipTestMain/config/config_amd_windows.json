@@ -59,7 +59,9 @@
 	   "Unit_hipGraphExecEventRecordNodeSetEvent_Negative",
 	   "Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative",
 	   "Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Functional",
-	   "Unit_hipPtrGetAttribute_Simple"
+	   "Unit_hipPtrGetAttribute_Simple",
+	   "Unit_hipStreamCreateWithPriority_ValidateWithEvents",
+	   "Unit_hipEvent"
 	]
 
 }
