@@ -105,7 +105,11 @@ TEST_CASE("Unit_hipMemcpyFromToSymbol_Negative") {
 }
 
 /*
- * Test Verifies hipMemcpyToSymbol/hipMemcpyFromSymbol and Async Variants for simple use case */
+ * Test Verifies hipMemcpyToSymbol/hipMemcpyFromSymbol and Async Variants for simple use case 
+ * For single valuea To and From Symbol
+ * For Array Values To and From Symbol
+ * For Array Values with offset To and From Symbol
+ * For Sync and Async Variants*/
 TEST_CASE("Unit_hipMemcpyToFromSymbol_SyncAndAsync") {
   enum StreamTestType { NullStream = 0, StreamPerThread, CreatedStream, NoStream };
 
