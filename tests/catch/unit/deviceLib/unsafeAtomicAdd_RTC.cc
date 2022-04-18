@@ -125,8 +125,9 @@ TEMPLATE_TEST_CASE("Unit_unsafeAtomicAdd_CoherentRTCnounsafeatomicflag", "",
       void* config_d[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args_f,
         HIP_LAUNCH_PARAM_BUFFER_SIZE,
         &size, HIP_LAUNCH_PARAM_END};
-      hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
-          nullptr, nullptr, config_d);
+      HIP_CHECK(
+        hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
+          nullptr, nullptr, config_d));
       HIP_CHECK(hipDeviceSynchronize());
       REQUIRE(A_h[0] == INITIAL_VAL);
       REQUIRE(*result == 0);
@@ -217,8 +218,9 @@ TEMPLATE_TEST_CASE("Unit_unsafeAtomicAdd_CoherentRTCunsafeatomicflag", "",
       void* config_d[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args_f,
         HIP_LAUNCH_PARAM_BUFFER_SIZE,
         &size, HIP_LAUNCH_PARAM_END};
-      hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
-          nullptr, nullptr, config_d);
+      HIP_CHECK(
+        hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
+          nullptr, nullptr, config_d));
       HIP_CHECK(hipDeviceSynchronize());
       REQUIRE(A_h[0] == INITIAL_VAL);
       REQUIRE(*result == 0);
@@ -305,8 +307,9 @@ TEMPLATE_TEST_CASE("Unit_unsafeAtomicAdd_CoherentRTCwithoutflag", "",
       void* config_d[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args_f,
                           HIP_LAUNCH_PARAM_BUFFER_SIZE,
                           &size, HIP_LAUNCH_PARAM_END};
-      hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1,
-                            1, 0, nullptr, nullptr, config_d);
+      HIP_CHECK(
+        hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1,
+                            1, 0, nullptr, nullptr, config_d));
       HIP_CHECK(hipDeviceSynchronize());
       REQUIRE(A_h[0] == INITIAL_VAL);
       REQUIRE(*result == 0);
@@ -391,8 +394,9 @@ TEMPLATE_TEST_CASE("Unit_unsafeAtomicAdd_NonCoherentRTCnounsafeatomicflag", "",
       void* config_d[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args_f,
         HIP_LAUNCH_PARAM_BUFFER_SIZE,
         &size, HIP_LAUNCH_PARAM_END};
-      hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
-                            nullptr, nullptr, config_d);
+      HIP_CHECK(
+        hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
+                            nullptr, nullptr, config_d));
       HIP_CHECK(hipDeviceSynchronize());
       REQUIRE(A_h[0] == INITIAL_VAL + INCREMENT_VAL);
       REQUIRE(*result == INITIAL_VAL);
@@ -479,8 +483,9 @@ TEMPLATE_TEST_CASE("Unit_unsafeAtomicAdd_NonCoherentRTCunsafeatomicflag", "",
       void* config_d[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args_f,
         HIP_LAUNCH_PARAM_BUFFER_SIZE,
         &size, HIP_LAUNCH_PARAM_END};
-      hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
-                            nullptr, nullptr, config_d);
+      HIP_CHECK(
+        hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
+                            nullptr, nullptr, config_d));
       HIP_CHECK(hipDeviceSynchronize());
       REQUIRE(A_h[0] == INITIAL_VAL + INCREMENT_VAL);
       REQUIRE(*result == INITIAL_VAL);
@@ -567,8 +572,9 @@ TEMPLATE_TEST_CASE("Unit_unsafeAtomicAdd_NonCoherentRTC", "",
       void* config_d[] = {HIP_LAUNCH_PARAM_BUFFER_POINTER, &args_f,
                           HIP_LAUNCH_PARAM_BUFFER_SIZE,
                           &size, HIP_LAUNCH_PARAM_END};
-      hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
-                            nullptr, nullptr, config_d);
+      HIP_CHECK(
+        hipModuleLaunchKernel(f_kernel, 1, 1, 1, 1, 1, 1, 0,
+                            nullptr, nullptr, config_d));
       HIP_CHECK(hipDeviceSynchronize());
       REQUIRE(A_h[0] == INITIAL_VAL + INCREMENT_VAL);
       REQUIRE(*result == INITIAL_VAL);
