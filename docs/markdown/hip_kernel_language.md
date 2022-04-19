@@ -500,7 +500,7 @@ Returns the value of counter that is incremented every clock cycle on device. Di
 
 Atomic functions execute as read-modify-write operations residing in global or shared memory. No other device or thread can observe or modify the memory location during an atomic operation. If multiple instructions from different devices or threads target the same memory location, the instructions are serialized in an undefined order.
 
-HIP adds new APIs with _system as suffix to support system scope atomic operations. For example,  atomicAnd atomic is dedicated to the GPU device, atomicAnd_system will allow developers to extend the atomic operation to system scope, from the GPU device to other CPUs and GPU devices in the system.  
+HIP adds new APIs with _system as suffix to support system scope atomic operations. For example, the `atomicAnd` function is meant to be atomic and coherent within the GPU device executing the function. `atomicAnd_system` will allow developers to extend the atomic operation to system scope, from the GPU device to other CPUs and GPU devices in the system.
 
 HIP supports the following atomic operations.
 
@@ -516,6 +516,10 @@ HIP supports the following atomic operations.
 | float atomicAdd_system(float* address, float val)                                                                    |  ✓                    |  ✓                     |
 | double atomicAdd(double* address, double val)                                                                        |  ✓                    |  ✓                     |
 | double atomicAdd_system(double* address, double val)                                                                 |  ✓                    |  ✓                     |
+| float unsafeAtomicAdd(float* address, float val)                                                                     |  ✓                    |  ✗                     |
+| float safeAtomicAdd(float* address, float val)                                                                       |  ✓                    |  ✗                     |
+| double unsafeAtomicAdd(double* address, double val)                                                                  |  ✓                    |  ✗                     |
+| double safeAtomicAdd(double* address, double val)                                                                    |  ✓                    |  ✗                     |
 | int atomicSub(int* address, int val)                                                                                 |  ✓                    |  ✓                     |
 | int atomicSub_system(int* address, int val)                                                                          |  ✓                    |  ✓                     |
 | unsigned int atomicSub(unsigned int* address,unsigned int val)                                                       |  ✓                    |  ✓                     |
@@ -566,12 +570,35 @@ HIP supports the following atomic operations.
 | unsigned long long atomicXor(unsigned long long* address,unsigned long long val))                                    |  ✓                    |  ✓                     |
 | unsigned long long atomicXor_system(unsigned long long* address, unsigned long long val)                             |  ✓                    |  ✓                     |
 
-Note, in order to keep backwards compitability in float/double atomicAdd functions, in ROCm4.4 release, we introduce a new compilation flag as an option in CMake file,
-__HIP_USE_CMPXCHG_FOR_FP_ATOMICS
+### Unsafe Floating-Point Atomic RMW Operations
 
-By default, this compilation flag is not set("0"), so hip runtime will use current float/double atomicAdd functions.
-If this compilation flag is set to "1", that is, with the cmake option "-D__HIP_USE_CMPXCHG_FOR_FP_ATOMICS=1", the old float/double atomicAdd functions will be used instead, for compatibility with compilers not supporting floating point atomics.
-For details steps how to build hip runtime, please refer to the section "build HIPAMD" (https://github.com/ROCm-Developer-Tools/hipamd/blob/develop/INSTALL.md).
+Some HIP devices support fast atomic read-modify-write (RMW) operations on floating-point values.
+For example, `atomicAdd` on single- or double-precision floating-point values may generate a hardware RMW instruction that is faster than emulating the atomic operation using an atomic compare-and-swap (CAS) loop.
+
+On some devices, these fast atomic RMW instructions can produce different results when compared with the same functions implemented with atomic CAS loops.
+For example, some devices will produce incorrect answers if a fast atomic floating-point RMW instruction targets fine-grained memory allocations.
+As another example, some devices will use different rounding or denormal modes when using fast atomic floating-point RMW instructions.
+
+As such, the HIP-Clang compiler offers a compile-time option for users to choose whether their code will use the fast, potentially unsafe, atomic instructions.
+On devices that support these fast, but unsafe, floating-point atomic RMW instructions, the compiler option `-munsafe-fp-atomics` will allow the compiler to generate them when it sees appropriate atomic RMW function calls.
+By passing the `-munsafe-fp-atomics` flag to the compiler, the user is indicating that all floating-point atomic function calls are allowed to use an unsafe version if one exists.
+For instance, on some devices, this flag indicates to the compiler that that no floating-point `atomicAdd` function targets fine-grained memory.
+
+If the user instead compiles with `-mno-unsafe-fp-atomics`, the user is telling the compiler to never use a floating-point atomic RMW that may not be safe.
+The compiler will default to not producing unsafe floating-point atomic RMW instructions, so the `-mno-unsafe-fp-atomics` compilation option is not strictly necessary.
+Explicitly passing this flag to the compiler is good practice, however.
+
+Whenever either of the two options described above, `-munsafe-fp-atomics` and `-mno-unsafe-fp-atomics` are passed to the compiler's command line, they are applied globally for that entire compilation.
+If only a subset of the atomic RMW function calls could safely use the faster floating-point atomic RMW instructions, the developer would instead need to compile with `-mno-unsafe-fp-atomics` in order to ensure the remaining atomic RMW function calls produce correct results.
+Towards this end, HIP has four extra functions to help developers more precisely control which floating-point atomic RMW functions produce unsafe atomic RMW instructions:
+
+- `float unsafeAtomicAdd(float* address, float val)`
+- `double unsafeAtomicAdd(double* address, double val)`
+   - These functions will always produce fast atomic RMW instructions on devices that have them, even when `-mno-unsafe-fp-atomics` is set
+
+- `float safeAtomicAdd(float* address, float val)`
+- `double safeAtomicAdd(double* address, double val)`
+   - These functions will always produce safe atomic RMW operations, even when `-munsafe-fp-atomics` is set
 
 ## Warp Cross-Lane Functions
 
