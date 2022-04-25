@@ -86,6 +86,7 @@ static inline void hipCheckAndFail(hipError_t errval,
   do { hipCheckAndFail((errval), __FILE__, __LINE__); } while (0)
 
 __global__ void test_kernel(uint32_t loops, unsigned long long *array, long long totalTicks) {
+  cooperative_groups::thread_block tb = cooperative_groups::this_thread_block();
   unsigned int rank = blockIdx.x * blockDim.x + threadIdx.x;
 
   for (int i = 0; i < loops; i++) {
@@ -100,6 +101,7 @@ __global__ void test_kernel(uint32_t loops, unsigned long long *array, long long
       // So just ignore those slipped cycles.
       last_clock = cur_clock;
     } while(time_diff < totalTicks);
+    tb.sync();
     array[rank] += clock64();
   }
 }
