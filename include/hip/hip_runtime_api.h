@@ -1077,6 +1077,12 @@ typedef struct hipGraphNode* hipGraphNode_t;
 typedef struct hipGraphExec* hipGraphExec_t;
 
 /**
+ * An opaque value that represents a user obj
+ */
+typedef struct hipUserObject* hipUserObject_t;
+
+
+/**
  * @brief hipGraphNodeType
  * @enum
  *
@@ -1188,6 +1194,13 @@ typedef enum hipGraphMemAttributeType {
   hipGraphMemAttrReservedMemCurrent, ///< Amount of memory, in bytes, currently allocated for graphs.
   hipGraphMemAttrReservedMemHigh,    ///< High watermark of memory, in bytes, currently allocated for graphs
 }hipGraphMemAttributeType;
+typedef enum hipUserObjectFlags {
+  hipUserObjectNoDestructorSync = 0x1, ///< Destructor execution is not synchronized.
+} hipUserObjectFlags;
+
+typedef enum hipUserObjectRetainFlags {
+  hipGraphUserObjectMove = 0x1, ///< Add new reference or retain.
+} hipUserObjectRetainFlags;
 
 typedef enum hipGraphInstantiateFlags {
   hipGraphInstantiateFlagAutoFreeOnLaunch =
@@ -6243,6 +6256,67 @@ hipError_t hipDeviceSetGraphMemAttribute(int device, hipGraphMemAttributeType at
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipDeviceGraphMemTrim(int device);
+
+/**
+ * @brief Create an instance of userObject to manage lifetime of a resource.
+ *
+ * @param [out] object_out - pointer to instace of userobj.
+ * @param [in] ptr - pointer to pass to destroy function.
+ * @param [in] destroy - destroy callback to remove resource.
+ * @param [in] initialRefcount - reference to resource.
+ * @param [in] flags - flags passed to API.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipUserObjectCreate(hipUserObject_t* object_out, void* ptr, hipHostFn_t destroy, unsigned int initialRefcount, unsigned int flags);
+
+/**
+ * @brief Release number of references to resource.
+ *
+ * @param [in] object - pointer to instace of userobj.
+ * @param [in] count - reference to resource to be retained.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipUserObjectRelease(hipUserObject_t object, unsigned int count);
+
+/**
+ * @brief Retain number of references to resource.
+ *
+ * @param [in] object - pointer to instace of userobj.
+ * @param [in] count - reference to resource to be retained.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipUserObjectRetain(hipUserObject_t object, unsigned int count);
+
+/**
+ * @brief Retain user object for graphs.
+ *
+ * @param [in] graph - pointer to graph to retain the user object for.
+ * @param [in] object - pointer to instace of userobj.
+ * @param [in] count - reference to resource to be retained.
+ * @param [in] flags - flags passed to API.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphRetainUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count, unsigned int flags);
+
+/**
+ * @brief Release user object from graphs.
+ *
+ * @param [in] graph - pointer to graph to retain the user object for.
+ * @param [in] object - pointer to instace of userobj.
+ * @param [in] count - reference to resource to be retained.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphReleaseUserObject(hipGraph_t graph, hipUserObject_t object, unsigned int count);
 // doxygen end graph API
 /**
  * @}
