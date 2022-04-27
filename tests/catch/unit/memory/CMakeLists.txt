@@ -57,11 +57,11 @@ set(TEST_SRC
     hipMemCoherencyTst.cc
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
-    hipHmmOvrSubscriptionTst.cc
     hipMemcpyFromSymbol.cc
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
+    hipPtrGetAttribute.cc
 )
 else()
 set(TEST_SRC
@@ -98,11 +98,11 @@ set(TEST_SRC
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
-    hipHmmOvrSubscriptionTst.cc
     hipMemcpyFromSymbol.cc
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
+    hipPtrGetAttribute.cc
 )
 endif()
 
@@ -122,7 +122,8 @@ if(UNIX)
                  hipMemoryAllocateCoherent.cc
                  hipHostMalloc.cc
                  hipMemcpy.cc
-                 hipMemcpyAsync.cc)
+                 hipMemcpyAsync.cc
+                 hipHmmOvrSubscriptionTst.cc)
 endif()
 
 hip_add_exe_to_target(NAME MemoryTest
