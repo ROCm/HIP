@@ -57,7 +57,7 @@ def hipBuildTest(String backendLabel) {
                     set -x
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
-                        LLVM_PATH=/opt/rocm/llvm ctest
+                        LLVM_PATH=/opt/rocm/llvm ctest -E 'cooperative_streams_least_capacity.tst|cooperative_streams_half_capacity.tst|cooperative_streams_full_capacity.tst|grid_group_data_sharing.tst'
                     else
                         make test
                     fi
@@ -97,7 +97,7 @@ def hipBuildTest(String backendLabel) {
                     set -x
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
-                        LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional'
+                        LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional|Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative'
                     else
                         make test
                     fi

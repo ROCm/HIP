@@ -59,7 +59,13 @@
 	   "Unit_hipGraphExecEventRecordNodeSetEvent_Negative",
 	   "Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative",
 	   "Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Functional",
-	   "Unit_hipPtrGetAttribute_Simple"
+	   "Unit_hipPtrGetAttribute_Simple",
+	   "Unit_hipStreamCreateWithPriority_ValidateWithEvents",
+	   "Unit_hipEvent",
+	   "Unit_hipHostMalloc_NonCoherent",
+	   "Unit_hipHostMalloc_Coherent",
+	   "Unit_hipHostMalloc_Default",
+	   "Unit_hipStreamCreate_MultistreamBasicFunctionalities"
 	]
 
 }
