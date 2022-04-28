@@ -56,14 +56,16 @@ static void __global__ vector_square(int *B_d, int *D_d) {
   }
 }
 static void vectorsquare_callback(void* ptr) {
-  // The callback func is not working with zero parameters
-  // Temporary fix for adding the below 2 lines and ticket
-  // has been raised for the same.
+  // The callback func is hipHostFn_t which is
+  // of type void (*)(void*). This test is designed to
+  // work with global variables, hence the workaround to
+  // print this *ptr value to avoid type mismatch errors.
   int *A = reinterpret_cast<int *>(ptr);
-  A++;
+
   for (int i = 0; i < SIZE; i++) {
     if (D_h[i] != B_h[i] * B_h[i]) {
       INFO("Validation failed " << D_h[i] << B_h[i]);
+      INFO("Ignore this garbage value" << *A);
       REQUIRE(false);
     }
   }
