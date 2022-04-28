@@ -18,11 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# build fails in windows
-if (UNIX)
-  add_subdirectory(rtc)
-endif()
-
+add_subdirectory(rtc)
 add_subdirectory(deviceLib)
 add_subdirectory(graph)
 add_subdirectory(memory)
