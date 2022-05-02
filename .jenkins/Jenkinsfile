@@ -65,7 +65,7 @@ def hipBuildTest(String backendLabel) {
                         """
                 }
             }
-        }    
+        }
         stage("Build - Catch2 framework") {
             // Running the build on hipamd workspace
             dir("${WORKSPACE}/hipamd") {
@@ -105,7 +105,7 @@ def hipBuildTest(String backendLabel) {
                         """
                 }
             }
-        }    
+        }
     }
 }
 
