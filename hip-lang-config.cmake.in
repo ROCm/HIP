@@ -94,7 +94,7 @@ find_path(HSA_HEADER hsa/hsa.h
     /opt/rocm/include
 )
 
-if (HSA_HEADER-NOTFOUND)
+if (NOT HSA_HEADER)
   message (FATAL_ERROR "HSA header not found! ROCM_PATH environment not set")
 endif()
 
@@ -141,7 +141,7 @@ set_property(TARGET hip-lang::device APPEND PROPERTY
 )
 
 # Add support for __fp16 and _Float16, explicitly link with compiler-rt
-if(CLANGRT_BUILTINS-NOTFOUND)
+if(NOT CLANGRT_BUILTINS)
     message(FATAL_ERROR "clangrt builtins lib not found")
 else()
   set_property(TARGET hip-lang::device APPEND PROPERTY
