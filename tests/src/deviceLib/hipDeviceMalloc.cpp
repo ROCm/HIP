@@ -17,8 +17,8 @@ OUT OF OR INN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* HIT_START
- * BUILD: %t %s NVCC_OPTIONS -std=c++11 EXCLUDE_HIP_PLATFORM all
- * TEST: %t EXCLUDE_HIP_PLATFORM all
+ * BUILD: %t %s ../../src/test_common.cpp
+ * TEST: %t
  * HIT_END
  */
 #include "test_common.h"
@@ -82,10 +82,10 @@ __device__ __host__ FloatT calc(FloatT A, FloatT B, enum CalcKind CK) {
 // Copy value from A, B to allocated memory.
 template <typename FloatT>
 __global__ void kernel_alloc(FloatT* A, FloatT* B, FloatT** pA, FloatT** pB) {
-    int tx = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x
-        + (hipThreadIdx_y + hipBlockDim_y * hipBlockIdx_y) * hipBlockDim_x
-        + (hipThreadIdx_z + hipBlockDim_z * hipBlockIdx_z) * hipBlockDim_x
-        * hipBlockDim_y;
+    int tx = threadIdx.x + blockDim.x * blockIdx.x
+        + (threadIdx.y + blockDim.y * blockIdx.y) * blockDim.x
+        + (threadIdx.z + blockDim.z * blockIdx.z) * blockDim.x
+        * blockDim.y;
     if (tx == 0) {
         *pA = (FloatT*)malloc(sizeof(FloatT) * LEN);
         *pB = (FloatT*)malloc(sizeof(FloatT) * LEN);
@@ -100,10 +100,10 @@ __global__ void kernel_alloc(FloatT* A, FloatT* B, FloatT** pA, FloatT** pB) {
 // containing the address of the device-side allocated array.
 template <typename FloatT>
 __global__ void kernel_free(FloatT** pA, FloatT** pB, FloatT* C, enum CalcKind CK) {
-    int tx = hipThreadIdx_x + hipBlockDim_x * hipBlockIdx_x
-        + (hipThreadIdx_y + hipBlockDim_y * hipBlockIdx_y) * hipBlockDim_x
-        + (hipThreadIdx_z + hipBlockDim_z * hipBlockIdx_z) * hipBlockDim_x
-        * hipBlockDim_y;
+    int tx = threadIdx.x + blockDim.x * blockIdx.x
+        + (threadIdx.y + blockDim.y * blockIdx.y) * blockDim.x
+        + (threadIdx.z + blockDim.z * blockIdx.z) * blockDim.x
+        * blockDim.y;
     C[tx] = calc<FloatT>((*pA)[tx], (*pB)[tx], CK);
     if (tx == 0) {
         free(*pA);
