@@ -51,17 +51,19 @@ def hipBuildTest(String backendLabel) {
                     """
             }
         }
-        stage('HIP Unit Tests - HIT framework') {
-            dir("${WORKSPACE}/hipamd/build") {
-                sh  """#!/usr/bin/env bash
-                    set -x
-                    # Check if backend label contains string "amd" or backend host is a server with amd gpu
-                    if [[ $backendLabel =~ amd ]]; then
-                        LLVM_PATH=/opt/rocm/llvm ctest -E 'cooperative_streams_least_capacity.tst|cooperative_streams_half_capacity.tst|cooperative_streams_full_capacity.tst|grid_group_data_sharing.tst'
-                    else
-                        make test
-                    fi
-                    """
+        timeout(time: 1, unit: 'HOURS') {
+            stage('HIP Unit Tests - HIT framework') {
+                dir("${WORKSPACE}/hipamd/build") {
+                    sh  """#!/usr/bin/env bash
+                        set -x
+                        # Check if backend label contains string "amd" or backend host is a server with amd gpu
+                        if [[ $backendLabel =~ amd ]]; then
+                            LLVM_PATH=/opt/rocm/llvm ctest -E 'cooperative_streams_least_capacity.tst|cooperative_streams_half_capacity.tst|cooperative_streams_full_capacity.tst|grid_group_data_sharing.tst'
+                        else
+                            make test
+                        fi
+                        """
+                }
             }
         }
         stage("Build - Catch2 framework") {
@@ -80,9 +82,7 @@ def hipBuildTest(String backendLabel) {
                         export HIP_RUNTIME=cuda
                         cmake -DHIP_CATCH_TEST=1 -DHIP_PATH=\$PWD/install -DHIP_COMMON_DIR=$HIP_DIR -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
                     fi
-
                     make install  -j\$(nproc)
-
                     if [[ $backendLabel =~ amd ]]; then
                         make build_tests  -j\$(nproc)
                     else
@@ -91,17 +91,19 @@ def hipBuildTest(String backendLabel) {
                     """
             }
         }
-        stage('HIP Unit Tests - Catch2 framework') {
-            dir("${WORKSPACE}/hipamd/build") {
-                sh  """#!/usr/bin/env bash
-                    set -x
-                    # Check if backend label contains string "amd" or backend host is a server with amd gpu
-                    if [[ $backendLabel =~ amd ]]; then
-                        LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional|Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative'
-                    else
-                        make test
-                    fi
-                    """
+        timeout(time: 1, unit: 'HOURS') {
+            stage('HIP Unit Tests - Catch2 framework') {
+                dir("${WORKSPACE}/hipamd/build") {
+                    sh  """#!/usr/bin/env bash
+                        set -x
+                        # Check if backend label contains string "amd" or backend host is a server with amd gpu
+                        if [[ $backendLabel =~ amd ]]; then
+                            LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional|Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative'
+                        else
+                            make test
+                        fi
+                        """
+                }
             }
         }
     }
