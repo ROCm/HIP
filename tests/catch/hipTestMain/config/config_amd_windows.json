@@ -65,7 +65,8 @@
 	   "Unit_hipHostMalloc_NonCoherent",
 	   "Unit_hipHostMalloc_Coherent",
 	   "Unit_hipHostMalloc_Default",
-	   "Unit_hipStreamCreate_MultistreamBasicFunctionalities"
+	   "Unit_hipStreamCreate_MultistreamBasicFunctionalities",
+	   "Unit_hipEventIpc"
 	]
 
 }
