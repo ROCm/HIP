@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /*HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -32,16 +32,18 @@ texture<TYPE_t, 2, hipReadModeElementType> tex;
 
 // texture object is a kernel argument
 __global__ void texture2dCopyKernel( TYPE_t* dst) {
-
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     int x = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
     int y = hipThreadIdx_y + hipBlockIdx_y * hipBlockDim_y;
     if ( (x< SIZE_W) && (y< SIZE_H) ){
         dst[SIZE_W*y+x] = tex2D(tex, x, y);
     }
+#endif
 }
 
 int main (void)
 {
+    checkImageSupport();
     TYPE_t* B;
     TYPE_t* A;
     TYPE_t* devPtrB;
@@ -49,8 +51,8 @@ int main (void)
 
     B = new TYPE_t[SIZE_H*SIZE_W];
     A = new TYPE_t[SIZE_H*SIZE_W];
-    for(size_t i=1; i <= (SIZE_H*SIZE_W); i++){
-        A[i-1] = i;
+    for (size_t i = 0; i < (SIZE_H * SIZE_W); i++) {
+      A[i] = i + 1;
     }
 
     size_t devPitchA, tex_ofs;
@@ -58,12 +60,14 @@ int main (void)
     HIPCHECK(hipMemcpy2D(devPtrA, devPitchA, A, SIZE_W*sizeof(TYPE_t),
             SIZE_W*sizeof(TYPE_t), SIZE_H, hipMemcpyHostToDevice));
 
+    tex.addressMode[0] = hipAddressModeClamp;
+    tex.addressMode[1] = hipAddressModeClamp;
     tex.normalized = false;
     HIPCHECK(hipBindTexture2D(&tex_ofs, &tex, devPtrA, &tex.channelDesc,
                                        SIZE_W, SIZE_H, devPitchA));
     HIPCHECK(hipMalloc((void**)&devPtrB, SIZE_W*sizeof(TYPE_t)*SIZE_H)) ;
 
-    hipLaunchKernelGGL(texture2dCopyKernel, dim3(4,4,1), dim3(32,32,1), 0, 0, devPtrB);
+    hipLaunchKernelGGL(texture2dCopyKernel, dim3(3, 2, 1), dim3(4, 4, 1), 0, 0, devPtrB);
     hipDeviceSynchronize();
     HIPCHECK(hipMemcpy2D(B, SIZE_W*sizeof(TYPE_t), devPtrB, SIZE_W*sizeof(TYPE_t),
             SIZE_W*sizeof(TYPE_t), SIZE_H, hipMemcpyDeviceToHost));
