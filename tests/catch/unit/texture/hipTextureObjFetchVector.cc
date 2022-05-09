@@ -23,10 +23,12 @@ THE SOFTWARE.
 
 template <typename T>
 __global__ void tex1dKernelFetch(T *val, hipTextureObject_t obj, int N) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   int k = blockIdx.x * blockDim.x + threadIdx.x;
   if (k < N) {
     val[k] = tex1Dfetch<T>(obj, k);
   }
+#endif
 }
 
 template <typename T>
@@ -203,6 +205,8 @@ bool runTest(const char *description) {
 }
 
 TEST_CASE("Unit_hipTextureFetch_vector") {
+  checkImageSupport();
+
   // test for char
   runTest<char1>("char1");
   runTest<char2>("char2");
