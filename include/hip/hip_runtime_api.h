@@ -6177,12 +6177,15 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
  * Memory allocation properties
  */
 typedef struct hipMemAllocationProp {
-    unsigned char compressionType;                  ///< Compression type
-    hipMemLocation location;                        ///< Memory location
-    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
     hipMemAllocationType type;                      ///< Memory allocation type
-    unsigned short usage;                           ///< Usage
+    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
+    hipMemLocation location;                        ///< Memory location
     void* win32HandleMetaData;                      ///< Metadata for Win32 handles
+    struct {
+        unsigned char compressionType;              ///< Compression type
+        unsigned char gpuDirectRDMACapable;         ///< RDMA capable
+        unsigned short usage;                       ///< Usage
+    } allocFlags;
 } hipMemAllocationProp;
 
 /**
