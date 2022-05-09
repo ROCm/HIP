@@ -57,7 +57,6 @@ The HIP API documentation describes each API and its limitations, if any, compar
 At a high-level, the following features are not supported:
 - Textures (partial support available)
 - Dynamic parallelism (CUDA 5.0)
-- Managed memory (CUDA 6.5)
 - Graphics interoperability with OpenGL or Direct3D
 - CUDA IPC Functions (Under Development)
 - CUDA array, mipmappedArray and pitched memory
@@ -70,8 +69,7 @@ See the [API Support Table](CUDA_Runtime_API_functions_supported_by_HIP.md) for 
 - Virtual functions, indirect functions and try/catch (CUDA 4.0)
 - `__prof_trigger`
 - PTX assembly (CUDA 4.0).  HIP-Clang supports inline GCN assembly.
-- Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.  These include:
-  - printf
+- Several kernel features are under development.  See the [HIP Kernel Language](hip_kernel_language.md) for more information.
 
 
 ### Is HIP a drop-in replacement for CUDA?
@@ -233,6 +231,7 @@ See the [HIP Logging](hip_logging.md) for more information.
 
 ### What is maximum limit of kernel launching parameter?
 Product of block.x, block.y, and block.z should be less than 1024.
+Please note, HIP does not support kernel launch with total work items defined in dimension with size gridDim x blockDim >= 2^32, so gridDim.x * blockDim.x, gridDim.y * blockDim.y and gridDim.z * blockDim.z are always less than 2^32.
 
 ### Are __shfl_*_sync functions supported on HIP platform?
 __shfl_*_sync is not supported on HIP but for nvcc path CUDA 9.0 and above all shuffle calls get redirected to it's sync version.

@@ -184,7 +184,7 @@ The `__restrict__` keyword tells the compiler that the associated memory pointer
 ### Coordinate Built-Ins
 Built-ins determine the coordinate of the active work item in the execution grid. They are defined in amd_hip_runtime.h (rather than being implicitly defined by the compiler).
 In HIP, built-ins coordinate variable definitions are the same as in Cuda, for instance:
-threadIdx.x, blockIdx.y, gridDim.y, etc. 
+threadIdx.x, blockIdx.y, gridDim.y, etc.
 The products gridDim.x * blockDim.x, gridDim.y * blockDim.y and gridDim.z * blockDim.z are always less than 2^32.
 
 ### warpSize
@@ -696,7 +696,7 @@ void assert(int input)
 ```
 
 There are two kinds of implementations for assert functions depending on the use sceneries,
-- One is for the host version of assert, which is defined in assert.h, 
+- One is for the host version of assert, which is defined in assert.h,
 - Another is the device version of assert, which is implemented in hip/hip_runtime.h.
 Users need to include assert.h to use assert. For assert to work in both device and host functions, users need to include "hip/hip_runtime.h".
 
