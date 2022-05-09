@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /*HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -32,14 +32,18 @@ THE SOFTWARE.
 #define N 512
 
 __global__ void tex1dKernel(float *val, hipTextureObject_t obj) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     int k = blockIdx.x * blockDim.x + threadIdx.x;
     if (k < N)
         val[k] = tex1Dfetch<float>(obj, k);
+#endif
 }
 
 int runTest(void);
 
 int main(int argc, char **argv) {
+    checkImageSupport();
+
     int testResult = runTest();
     if(testResult) {
         passed();
@@ -72,6 +76,7 @@ int runTest() {
     hipTextureDesc texDesc;
     memset(&texDesc, 0, sizeof(texDesc));
     texDesc.readMode = hipReadModeElementType;
+    texDesc.addressMode[0]= hipAddressModeClamp;
 
     // Creating texture object
     hipTextureObject_t texObj = 0;

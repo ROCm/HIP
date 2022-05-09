@@ -25,7 +25,9 @@ THE SOFTWARE.
 texture<float, 2, hipReadModeElementType> tex;
 
 extern "C" __global__ void tex2dKernel(float* outputData, int width, int height) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
     int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
     outputData[y * width + x] = tex2D(tex, x, y);
+#endif
 }

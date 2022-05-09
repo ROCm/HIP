@@ -1,5 +1,5 @@
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -14,14 +14,18 @@ texture<float, 2, hipReadModeElementType> tex;
 
 __global__ void tex2DKernel(float* outputData,
                             int width, int height) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     outputData[y * width + x] = tex2D(tex, x, y);
+#endif
 }
 
 int runTest(int argc, char** argv);
 
 int main(int argc, char** argv) {
+    checkImageSupport();
+
     int testResult = runTest(argc, argv);
     if (testResult) {
         passed();
@@ -54,8 +58,8 @@ int runTest(int argc, char** argv) {
 
     hipMemcpyToArray(hipArray, 0, 0, hData, size, hipMemcpyHostToDevice);
 
-    tex.addressMode[0] = hipAddressModeWrap;
-    tex.addressMode[1] = hipAddressModeWrap;
+    tex.addressMode[0] = hipAddressModeClamp;
+    tex.addressMode[1] = hipAddressModeClamp;
     tex.filterMode = hipFilterModePoint;
     tex.normalized = 0;
 

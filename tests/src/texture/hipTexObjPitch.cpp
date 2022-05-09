@@ -96,13 +96,8 @@ void texture2Dtest()
 
 int main()
 {
-    int imageSupport = 0;
-    hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
-                              p_gpuDevice);
-    if (!imageSupport) {
-      printf("Texture is not support on the device\n");
-      passed();
-    }
+    checkImageSupport();
+
     texture2Dtest<float>();
     texture2Dtest<int>();
     texture2Dtest<unsigned char>();

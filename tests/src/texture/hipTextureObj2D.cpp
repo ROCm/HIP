@@ -22,13 +22,8 @@ __global__ void tex2DKernel(float* outputData, hipTextureObject_t textureObject,
 int runTest(int argc, char** argv);
 
 int main(int argc, char** argv) {
-    int imageSupport = 0;
-    hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
-                              p_gpuDevice);
-    if (!imageSupport) {
-      printf("Texture is not support on the device\n");
-      passed();
-    }
+    checkImageSupport();
+
     int testResult = runTest(argc, argv);
 
     if (testResult) {
@@ -70,8 +65,8 @@ int runTest(int argc, char** argv) {
     // Specify texture object parameters
     hipTextureDesc texDesc;
     memset(&texDesc, 0, sizeof(texDesc));
-    texDesc.addressMode[0] = hipAddressModeWrap;
-    texDesc.addressMode[1] = hipAddressModeWrap;
+    texDesc.addressMode[0] = hipAddressModeClamp;
+    texDesc.addressMode[1] = hipAddressModeClamp;
     texDesc.filterMode = hipFilterModePoint;
     texDesc.readMode = hipReadModeElementType;
     texDesc.normalizedCoords = 0;

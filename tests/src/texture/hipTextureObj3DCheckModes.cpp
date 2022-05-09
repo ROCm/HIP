@@ -16,6 +16,7 @@ template<bool normalizedCoords>
 __global__ void tex3DKernel(float *outputData, hipTextureObject_t textureObject,
                             int width, int height, int depth, float offsetX,
                             float offsetY, float offsetZ) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
   int z = blockIdx.z * blockDim.z + threadIdx.z;
@@ -23,6 +24,7 @@ __global__ void tex3DKernel(float *outputData, hipTextureObject_t textureObject,
                         normalizedCoords ? (x + offsetX) / width : x + offsetX,
                         normalizedCoords ? (y + offsetY) / height : y + offsetY,
                         normalizedCoords ? (z + offsetZ) / depth : z + offsetZ);
+#endif
 }
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool normalizedCoords>
@@ -119,6 +121,8 @@ line1:
 }
 
 int main(int argc, char **argv) {
+  checkImageSupport();
+
   bool testResult = true;
 
   testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, 256, -3.9, 6.1, 9.5);

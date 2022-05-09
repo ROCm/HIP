@@ -135,6 +135,7 @@ bool textureTest(texture<T, hipTextureType1D, hipReadModeNormalizedFloat> *tex)
     T hData[] = {65, 66, 67, 68, 69, 70, 71, 72, 73, 74};
     HIPCHECK(hipMemcpy2DToArray(dData, 0, 0, hData, sizeof(T)*SIZE, sizeof(T)*SIZE, 1, hipMemcpyHostToDevice));
 
+    tex->addressMode[0] = hipAddressModeClamp;
     tex->normalized = true;
     tex->channelDesc = desc;
     tex->filterMode = fMode;
@@ -172,15 +173,10 @@ bool runTest() {
 
 int main(int argc, char** argv)
 {
-    int imageSupport = 0;
-    hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
-                              p_gpuDevice);
-    if (!imageSupport) {
-      printf("Texture is not support on the device\n");
-      passed();
-    }
     HipTest::parseStandardArguments(argc, argv, true);
-    int device = 0;
+    checkImageSupport();
+
+    int device = p_gpuDevice;
     bool status = false;
     HIPCHECK(hipSetDevice(device));
     hipDeviceProp_t props;

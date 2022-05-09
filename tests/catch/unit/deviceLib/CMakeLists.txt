@@ -10,16 +10,10 @@ set(TEST_SRC
     popc.cc
     ldg.cc
     threadfence_system.cc
+    syncthreadsand.cc
+    syncthreadscount.cc
+    syncthreadsor.cc
 )
-
-# skipped for windows compiler issue - Illegal instruction detected
-if(UNIX)
-    set(TEST_SRC ${TEST_SRC}
-                 syncthreadsand.cc
-                 syncthreadscount.cc
-                 syncthreadsor.cc)
-endif()
-
 
 # AMD only tests
 set(AMD_TEST_SRC
