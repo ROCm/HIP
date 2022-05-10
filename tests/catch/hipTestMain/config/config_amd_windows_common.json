@@ -73,6 +73,9 @@
 	   "Unit_hipMultiThreadDevice_NearZero",
 	   "Unit_hipStreamPerThread_DeviceReset_1",
 	   "Unit_hipStreamCreateWithPriority_ValidateWithEvents",
-	   "Unit_hipStreamPerThread_StrmWaitEvt"
+	   "Unit_hipStreamPerThread_StrmWaitEvt",
+	   "Unit_hipGraphHostNodeGetParams_ClonedGraphwithHostNode",
+	   "Unit_hipGraphHostNodeGetParams_BasicFunc",
+	   "Unit_hipGraphHostNodeGetParams_SetParams"
 	]
 }
