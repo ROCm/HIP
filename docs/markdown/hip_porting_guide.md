@@ -467,7 +467,8 @@ int main()
 ```
 
 ## CU_POINTER_ATTRIBUTE_MEMORY_TYPE
-To get pointer's memory type in HIP/HIP-Clang one should use hipPointerGetAttributes API. First parameter of the API is hipPointerAttribute_t which has 'memoryType' as member variable. 'memoryType' indicates input pointer is allocated on device or host.
+
+To get pointer's memory type in HIP/HIP-Clang, developers should use hipPointerGetAttributes API. First parameter of the API is hipPointerAttribute_t which has 'memoryType' as member variable. 'memoryType' indicates input pointer is allocated on device or host.
 
 For example:
 ```
@@ -481,6 +482,33 @@ hipHostMalloc(&ptrHost, sizeof(double));
 hipPointerAttribute_t attr;
 hipPointerGetAttributes(&attr, ptrHost); /*attr.memoryType will have value as hipMemoryTypeHost*/
 ```
+Please note, hipMemoryType enum values are different from cudaMemoryType enum values.
+
+For example, on AMD platform, memoryType is defined in hip_runtime_api.h,
+typedef enum hipMemoryType {
+    hipMemoryTypeHost,    ///< Memory is physically located on host
+    hipMemoryTypeDevice,  ///< Memory is physically located on device.
+    hipMemoryTypeArray,  ///< Array memory, physically located on device.
+    hipMemoryTypeUnified  ///< Not used currently
+} hipMemoryType;
+
+Looking into CUDA toolkit, it defines memoryType as following,
+enum cudaMemoryType
+{
+  cudaMemoryTypeUnregistered = 0, // Unregistered memory.
+  cudaMemoryTypeHost = 1, // Host memory.
+  cudaMemoryTypeDevice = 2, // Device memory.
+  cudaMemoryTypeManaged = 3, // Managed memory
+}
+
+In this case, memoryType translation for hipPointerGetAttributes needs to be handled properly on nvidia platform to get the correct memory type in CUDA, which is done in the file nvidia_hip_runtime_api.h.
+
+So in any HIP applications which use HIP APIs involving memory types, developers should use #ifdef in order to assign the correct enum values depending on Nvidia or AMD platform.
+
+As an example, please see the code from the link,
+github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/catch/unit/memory/hipMemcpyParam2D.cc#L77-L96.
+
+With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
 
 ## threadfence_system
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.
