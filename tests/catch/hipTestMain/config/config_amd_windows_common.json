@@ -73,6 +73,8 @@
 	   "Unit_hipMultiThreadDevice_NearZero",
 	   "Unit_hipStreamPerThread_DeviceReset_1",
 	   "Unit_hipStreamCreateWithPriority_ValidateWithEvents",
-	   "Unit_hipStreamPerThread_StrmWaitEvt"
+	   "Unit_hipStreamPerThread_StrmWaitEvt",
+	   "Unit_hipGraphExecChildGraphNodeSetParams_BasicFunc",
+	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology"
 	]
 }
