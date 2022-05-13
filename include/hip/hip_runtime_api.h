@@ -449,6 +449,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeUuid,                             ///< Cuda only. Unique ID in 16 byte.
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
+    hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
 
     hipDeviceAttributeCudaCompatibleEnd = 9999,
     hipDeviceAttributeAmdSpecificBegin = 10000,
@@ -6177,12 +6178,15 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
  * Memory allocation properties
  */
 typedef struct hipMemAllocationProp {
-    unsigned char compressionType;                  ///< Compression type
-    hipMemLocation location;                        ///< Memory location
-    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
     hipMemAllocationType type;                      ///< Memory allocation type
-    unsigned short usage;                           ///< Usage
+    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
+    hipMemLocation location;                        ///< Memory location
     void* win32HandleMetaData;                      ///< Metadata for Win32 handles
+    struct {
+        unsigned char compressionType;              ///< Compression type
+        unsigned char gpuDirectRDMACapable;         ///< RDMA capable
+        unsigned short usage;                       ///< Usage
+    } allocFlags;
 } hipMemAllocationProp;
 
 /**

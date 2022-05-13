@@ -564,5 +564,20 @@ struct MemTraits<MemcpyAsync> {
     }
 };
 
+inline bool isImageSupported() {
+    int imageSupport = 1;
+#ifdef __HIP_PLATFORM_AMD__
+    HIPCHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                              p_gpuDevice));
+#endif
+  return imageSupport != 0;
+}
+
 };  // namespace HipTest
+
+// This must be called in the beginning of image test app's main() to indicate whether image
+// is supported.
+#define checkImageSupport()                                                                \
+    if (!HipTest::isImageSupported())                                                      \
+        { printf("Texture is not support on the device. Skipped.\n"); passed(); }
 #endif //__cplusplus
