@@ -30,6 +30,20 @@ if(NOT DEFINED HIP_PATH)
 endif()
 message(STATUS "HIP Path: ${HIP_PATH}")
 
+# Set ROCM Path
+if(NOT DEFINED ROCM_PATH)
+    if(DEFINED ENV{ROCM_PATH})
+        set(ROCM_PATH $ENV{ROCM_PATH} CACHE STRING "ROCM Path")
+    else()
+        cmake_path(GET HIP_PATH PARENT_PATH ROCM_PATH)
+        if (NOT EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerator")
+            set(ROCM_PATH "/opt/rocm/")
+        endif()
+    endif()
+endif()
+message(STATUS "ROCM Path: ${ROCM_PATH}")
+
+
 if(UNIX)
     set(CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc")
     set(CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc")
