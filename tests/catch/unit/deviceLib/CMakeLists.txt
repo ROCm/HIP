@@ -10,17 +10,11 @@ set(TEST_SRC
     popc.cc
     ldg.cc
     threadfence_system.cc
+    syncthreadsand.cc
+    syncthreadscount.cc
+    syncthreadsor.cc
     deviceAllocation.cc
 )
-
-# skipped for windows compiler issue - Illegal instruction detected
-if(UNIX)
-    set(TEST_SRC ${TEST_SRC}
-                 syncthreadsand.cc
-                 syncthreadscount.cc
-                 syncthreadsor.cc)
-endif()
-
 
 # AMD only tests
 set(AMD_TEST_SRC
@@ -56,7 +50,13 @@ add_custom_target(kerDevFreeMultCO.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${
 add_custom_target(kerDevAllocSingleKer.code COMMAND ${CMAKE_CXX_COMPILER} --genco ${CMAKE_CURRENT_SOURCE_DIR}/kerDevAllocSingleKer.cc -o ${CMAKE_CURRENT_BINARY_DIR}/../../unit/deviceLib/kerDevAllocSingleKer.code -I${CMAKE_CURRENT_SOURCE_DIR}/../../../../include/ -I${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
 if(HIP_PLATFORM MATCHES "amd")
-    string(FIND ${OFFLOAD_ARCH_STR} "gfx90a" ARCH_CHECK)
+    if (DEFINED OFFLOAD_ARCH_STR)
+      string(FIND ${OFFLOAD_ARCH_STR} "gfx90a" ARCH_CHECK)
+    elseif(DEFINED $ENV{HCC_AMDGPU_TARGET})
+      string(FIND $ENV{HCC_AMDGPU_TARGET} "gfx90a" ARCH_CHECK)
+    else()
+      set(ARCH_CHECK -1)
+    endif()
     set(TEST_SRC ${TEST_SRC} ${AMD_TEST_SRC})
     set_source_files_properties(floatTM.cc PROPERTIES COMPILE_FLAGS -std=c++17)
 if(${ARCH_CHECK} GREATER_EQUAL 0)
@@ -76,7 +76,8 @@ if(${ARCH_CHECK} GREATER_EQUAL 0)
 endif()
     hip_add_exe_to_target(NAME UnitDeviceTests
                       TEST_SRC ${TEST_SRC}
-                      TEST_TARGET_NAME build_tests)
+                      TEST_TARGET_NAME build_tests
+                      LINKER_LIBS hiprtc)
 elseif(HIP_PLATFORM MATCHES "nvidia")
     hip_add_exe_to_target(NAME UnitDeviceTests
                       TEST_SRC ${TEST_SRC}
