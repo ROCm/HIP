@@ -449,6 +449,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeUuid,                             ///< Cuda only. Unique ID in 16 byte.
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
+    hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
 
     hipDeviceAttributeCudaCompatibleEnd = 9999,
     hipDeviceAttributeAmdSpecificBegin = 10000,
@@ -1084,6 +1085,111 @@ typedef enum hipGraphicsRegisterFlags {
 typedef struct _hipGraphicsResource hipGraphicsResource;
 
 typedef hipGraphicsResource* hipGraphicsResource_t;
+
+/**
+ * An opaque value that represents a hip graph
+ */
+typedef struct ihipGraph* hipGraph_t;
+/**
+ * An opaque value that represents a hip graph node
+ */
+typedef struct hipGraphNode* hipGraphNode_t;
+/**
+ * An opaque value that represents a hip graph Exec
+ */
+typedef struct hipGraphExec* hipGraphExec_t;
+
+/**
+ * @brief hipGraphNodeType
+ * @enum
+ *
+ */
+typedef enum hipGraphNodeType {
+  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
+  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
+  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
+  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
+  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
+  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
+  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
+  hipGraphNodeTypeCount
+} hipGraphNodeType;
+
+typedef void (*hipHostFn_t)(void* userData);
+typedef struct hipHostNodeParams {
+  hipHostFn_t fn;
+  void* userData;
+} hipHostNodeParams;
+typedef struct hipKernelNodeParams {
+  dim3 blockDim;
+  void** extra;
+  void* func;
+  dim3 gridDim;
+  void** kernelParams;
+  unsigned int sharedMemBytes;
+} hipKernelNodeParams;
+typedef struct hipMemsetParams {
+  void* dst;
+  unsigned int elementSize;
+  size_t height;
+  size_t pitch;
+  unsigned int value;
+  size_t width;
+} hipMemsetParams;
+
+/**
+ * @brief hipGraphExecUpdateResult
+ * @enum
+ *
+ */
+typedef enum hipGraphExecUpdateResult {
+  hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
+  hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
+                                  ///< in the return value of the function
+  hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
+  hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
+  hipGraphExecUpdateErrorFunctionChanged =
+      0x4,  ///< The update failed because the function of a kernel node changed
+  hipGraphExecUpdateErrorParametersChanged =
+      0x5,  ///< The update failed because the parameters changed in a way that is not supported
+  hipGraphExecUpdateErrorNotSupported =
+      0x6,  ///< The update failed because something about the node is not supported
+  hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
+} hipGraphExecUpdateResult;
+
+typedef enum hipStreamCaptureMode {
+  hipStreamCaptureModeGlobal = 0,
+  hipStreamCaptureModeThreadLocal,
+  hipStreamCaptureModeRelaxed
+} hipStreamCaptureMode;
+typedef enum hipStreamCaptureStatus {
+  hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
+  hipStreamCaptureStatusActive,      ///< Stream is actively capturing
+  hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
+                                     ///< invalidated, but not terminated
+} hipStreamCaptureStatus;
+
+typedef enum hipStreamUpdateCaptureDependenciesFlags {
+  hipStreamAddCaptureDependencies = 0,  ///< Add new nodes to the dependency set
+  hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
+} hipStreamUpdateCaptureDependenciesFlags;
+
+typedef enum hipGraphMemAttributeType {
+  hipGraphMemAttrUsedMemCurrent = 0, ///< Amount of memory, in bytes, currently associated with graphs
+  hipGraphMemAttrUsedMemHigh,        ///< High watermark of memory, in bytes, associated with graphs since the last time.
+  hipGraphMemAttrReservedMemCurrent, ///< Amount of memory, in bytes, currently allocated for graphs.
+  hipGraphMemAttrReservedMemHigh,    ///< High watermark of memory, in bytes, currently allocated for graphs
+}hipGraphMemAttributeType;
+
+typedef enum hipGraphInstantiateFlags {
+  hipGraphInstantiateFlagAutoFreeOnLaunch =
+      1,  ///< Automatically free memory allocated in a graph before relaunching.
+} hipGraphInstantiateFlags;
+#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
 
 // Doxygen end group GlobalDefs
 /**  @} */
@@ -4805,6 +4911,7 @@ hipError_t hipBindTextureToMipmappedArray(
  * @returns hipSuccess, hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
  hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
@@ -4891,20 +4998,25 @@ hipError_t hipGetTextureObjectTextureDesc(
 /**
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddressMode(
     textureReference* texRef,
     int dim,
     enum hipTextureAddressMode am);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetArray(
     textureReference* tex,
     hipArray_const_t array,
     unsigned int flags);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFlags(
     textureReference* texRef,
     unsigned int Flags);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFormat(
     textureReference* texRef,
     hipArray_Format fmt,
@@ -5037,16 +5149,20 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapLevelBias(
     textureReference* texRef,
     float bias);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapLevelClamp(
     textureReference* texRef,
     float minMipMapLevelClamp,
     float maxMipMapLevelClamp);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmappedArray(
     textureReference* texRef,
     struct hipMipmappedArray* mipmappedArray,
@@ -5111,103 +5227,6 @@ int hipGetStreamDeviceId(hipStream_t stream);
  *  @{
  *  This section describes the graph management types & functions of HIP runtime API.
  */
-
-/**
- * An opaque value that represents a hip graph
- */
-typedef struct ihipGraph* hipGraph_t;
-/**
- * An opaque value that represents a hip graph node
- */
-typedef struct hipGraphNode* hipGraphNode_t;
-/**
- * An opaque value that represents a hip graph Exec
- */
-typedef struct hipGraphExec* hipGraphExec_t;
-
-/**
- * @brief hipGraphNodeType
- * @enum
- *
- */
-typedef enum hipGraphNodeType {
-  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
-  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
-  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
-  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
-  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
-  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
-  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
-  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
-  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
-  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
-  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
-  hipGraphNodeTypeCount
-} hipGraphNodeType;
-
-typedef void (*hipHostFn_t)(void* userData);
-typedef struct hipHostNodeParams {
-  hipHostFn_t fn;
-  void* userData;
-} hipHostNodeParams;
-typedef struct hipKernelNodeParams {
-  dim3 blockDim;
-  void** extra;
-  void* func;
-  dim3 gridDim;
-  void** kernelParams;
-  unsigned int sharedMemBytes;
-} hipKernelNodeParams;
-typedef struct hipMemsetParams {
-  void* dst;
-  unsigned int elementSize;
-  size_t height;
-  size_t pitch;
-  unsigned int value;
-  size_t width;
-} hipMemsetParams;
-
-/**
- * @brief hipGraphExecUpdateResult
- * @enum
- *
- */
-typedef enum hipGraphExecUpdateResult {
-  hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
-  hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
-                                  ///< in the return value of the function
-  hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
-  hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
-  hipGraphExecUpdateErrorFunctionChanged =
-      0x4,  ///< The update failed because the function of a kernel node changed
-  hipGraphExecUpdateErrorParametersChanged =
-      0x5,  ///< The update failed because the parameters changed in a way that is not supported
-  hipGraphExecUpdateErrorNotSupported =
-      0x6,  ///< The update failed because something about the node is not supported
-  hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
-} hipGraphExecUpdateResult;
-
-typedef enum hipStreamCaptureMode {
-  hipStreamCaptureModeGlobal = 0,
-  hipStreamCaptureModeThreadLocal,
-  hipStreamCaptureModeRelaxed
-} hipStreamCaptureMode;
-typedef enum hipStreamCaptureStatus {
-  hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
-  hipStreamCaptureStatusActive,      ///< Stream is actively capturing
-  hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
-                                     ///< invalidated, but not terminated
-} hipStreamCaptureStatus;
-
-typedef enum hipStreamUpdateCaptureDependenciesFlags {
-  hipStreamAddCaptureDependencies = 0,  ///< Add new nodes to the dependency set
-  hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
-} hipStreamUpdateCaptureDependenciesFlags;
-
-typedef enum hipGraphInstantiateFlags {
-  hipGraphInstantiateFlagAutoFreeOnLaunch =
-      1,  ///< Automatically free memory allocated in a graph before relaunching.
-} hipGraphInstantiateFlags;
 
 /**
  * @brief Begins graph capture on a stream.
@@ -6166,11 +6185,322 @@ hipError_t hipGraphEventWaitNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
 hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                              hipEvent_t event);
 
+/**
+ * @brief Get the mem attribute for graphs.
+ *
+ * @param [in] device - device the attr is get for.
+ * @param [in] attr - attr to get.
+ * @param [out] value - value for specific attr.
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGetGraphMemAttribute(int device, hipGraphMemAttributeType attr, void* value);
+
+/**
+ * @brief Set the mem attribute for graphs.
+ *
+ * @param [in] device - device the attr is set for.
+ * @param [in] attr - attr to set.
+ * @param [in] value - value for specific attr.
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceSetGraphMemAttribute(int device, hipGraphMemAttributeType attr, void* value);
+
+/**
+ * @brief Free unused memory on specific device used for graph back to OS.
+ *
+ * @param [in] device - device the memory is used for graphs
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGraphMemTrim(int device);
 // doxygen end graph API
 /**
  * @}
  */
 
+
+/**
+ * Memory allocation properties
+ */
+typedef struct hipMemAllocationProp {
+    hipMemAllocationType type;                      ///< Memory allocation type
+    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
+    hipMemLocation location;                        ///< Memory location
+    void* win32HandleMetaData;                      ///< Metadata for Win32 handles
+    struct {
+        unsigned char compressionType;              ///< Compression type
+        unsigned char gpuDirectRDMACapable;         ///< RDMA capable
+        unsigned short usage;                       ///< Usage
+    } allocFlags;
+} hipMemAllocationProp;
+
+/**
+ * Generic handle for memory allocation
+ */
+typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
+
+/**
+ * @brief Flags for granularity
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemAllocationGranularity_flags {
+    hipMemAllocationGranularityMinimum     = 0x0, ///< Minimum granularity
+    hipMemAllocationGranularityRecommended = 0x1  ///< Recommended granularity for performance
+} hipMemAllocationGranularity_flags;
+
+/**
+ * @brief Memory handle type
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemHandleType {
+    hipMemHandleTypeGeneric = 0x0 ///< Generic handle type
+} hipMemHandleType;
+
+/**
+ * @brief Memory operation types
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemOperationType {
+    hipMemOperationTypeMap   = 0x1, ///< Map operation
+    hipMemOperationTypeUnmap = 0x2  ///< Unmap operation
+} hipMemOperationType;
+
+/**
+ * @brief Subresource types for sparse arrays
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipArraySparseSubresourceType {
+    hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
+    hipArraySparseSubresourceTypeMiptail     = 0x1  ///< Miptail
+} hipArraySparseSubresourceType;
+
+/**
+ * Map info for arrays
+ */
+typedef struct hipArrayMapInfo {
+     hipResourceType resourceType;                  ///< Resource type
+     union {
+         hipMipmappedArray mipmap;
+         hipArray_t array;
+     } resource;
+     hipArraySparseSubresourceType subresourceType; ///< Sparse subresource type
+     union {
+         struct {
+             unsigned int level;                    ///< For mipmapped arrays must be a valid mipmap level. For arrays must be zero
+             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned int offsetX;                  ///< X offset in elements
+             unsigned int offsetY;                  ///< Y offset in elements
+             unsigned int offsetZ;                  ///< Z offset in elements
+             unsigned int extentWidth;              ///< Width in elements
+             unsigned int extentHeight;             ///< Height in elements
+             unsigned int extentDepth;              ///< Depth in elements
+         } sparseLevel;
+         struct {
+             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned long long offset;             ///< Offset within mip tail
+             unsigned long long size;               ///< Extent in bytes
+         } miptail;
+     } subresource;
+     hipMemOperationType memOperationType;          ///< Memory operation type
+     hipMemHandleType memHandleType;                ///< Memory handle type
+     union {
+         hipMemGenericAllocationHandle_t memHandle;
+     } memHandle;
+     unsigned long long offset;                     ///< Offset within the memory
+     unsigned int deviceBitMask;                    ///< Device ordinal bit mask
+     unsigned int flags;                            ///< flags for future use, must be zero now.
+     unsigned int reserved[2];                      ///< Reserved for future use, must be zero now.
+} hipArrayMapInfo;
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Virtual Memory Management
+ *  @{
+ *  This section describes the virtual memory management functions of HIP runtime API.
+ */
+
+/**
+ * @brief Frees an address range reservation made via hipMemAddressReserve
+ *
+ * @param [in] devPtr - starting address of the range.
+ * @param [in] size - size of the range.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemAddressFree(void* devPtr, size_t size);
+
+/**
+ * @brief Reserves an address range
+ *
+ * @param [out] ptr - starting address of the reserved range.
+ * @param [in] size - size of the reservation.
+ * @param [in] alignment - alignment of the address.
+ * @param [in] addr - requested starting address of the range.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemAddressReserve(void** ptr, size_t size, size_t alignment, void* addr, unsigned long long flags);
+
+/**
+ * @brief Creates a memory allocation described by the properties and size
+ *
+ * @param [out] handle - value of the returned handle.
+ * @param [in] size - size of the allocation.
+ * @param [in] prop - properties of the allocation.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemCreate(hipMemGenericAllocationHandle_t* handle, size_t size, const hipMemAllocationProp* prop, unsigned long long flags);
+
+/**
+ * @brief Exports an allocation to a requested shareable handle type.
+ *
+ * @param [out] shareableHandle - value of the returned handle.
+ * @param [in] handle - handle to share.
+ * @param [in] handleType - type of the shareable handle.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemExportToShareableHandle(void* shareableHandle, hipMemGenericAllocationHandle_t handle, hipMemAllocationHandleType handleType, unsigned long long flags);
+
+/**
+ * @brief Get the access flags set for the given location and ptr.
+ *
+ * @param [out] flags - flags for this location.
+ * @param [in] location - target location.
+ * @param [in] ptr - address to check the access flags.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAccess(unsigned long long* flags, const hipMemLocation* location, void* ptr);
+
+/**
+ * @brief Calculates either the minimal or recommended granularity.
+ *
+ * @param [out] granularity - returned granularity.
+ * @param [in] prop - location properties.
+ * @param [in] option - determines which granularity to return.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAllocationGranularity(size_t* granularity, const hipMemAllocationProp* prop, hipMemAllocationGranularity_flags option);
+
+/**
+ * @brief Retrieve the property structure of the given handle.
+ *
+ * @param [out] prop - properties of the given handle.
+ * @param [in] handle - handle to perform the query on.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAllocationPropertiesFromHandle(hipMemAllocationProp* prop, hipMemGenericAllocationHandle_t handle);
+
+/**
+ * @brief Imports an allocation from a requested shareable handle type.
+ *
+ * @param [out] handle - returned value.
+ * @param [in] osHandle - shareable handle representing the memory allocation.
+ * @param [in] shHandleType - handle type.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemImportFromShareableHandle(hipMemGenericAllocationHandle_t* handle, void* osHandle, hipMemAllocationHandleType shHandleType);
+
+/**
+ * @brief Maps an allocation handle to a reserved virtual address range.
+ *
+ * @param [in] ptr - address where the memory will be mapped.
+ * @param [in] size - size of the mapping.
+ * @param [in] offset - offset into the memory, currently must be zero.
+ * @param [in] handle - memory allocation to be mapped.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemMap(void* ptr, size_t size, size_t offset, hipMemGenericAllocationHandle_t handle, unsigned long long flags);
+
+/**
+ * @brief Maps or unmaps subregions of sparse HIP arrays and sparse HIP mipmapped arrays.
+ *
+ * @param [in] mapInfoList - list of hipArrayMapInfo.
+ * @param [in] count - number of hipArrayMapInfo in mapInfoList.
+ * @param [in] stream - stream identifier for the stream to use for map or unmap operations.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemMapArrayAsync(hipArrayMapInfo* mapInfoList, unsigned int  count, hipStream_t stream);
+
+/**
+ * @brief Release a memory handle representing a memory allocation which was previously allocated through hipMemCreate.
+ *
+ * @param [in] handle - handle of the memory allocation.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemRelease(hipMemGenericAllocationHandle_t handle);
+
+/**
+ * @brief Returns the allocation handle of the backing memory allocation given the address.
+ *
+ * @param [out] handle - handle representing addr.
+ * @param [in] addr - address to look up.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemRetainAllocationHandle(hipMemGenericAllocationHandle_t* handle, void* addr);
+
+/**
+ * @brief Set the access flags for each location specified in desc for the given virtual address range.
+ *
+ * @param [in] ptr - starting address of the virtual address range.
+ * @param [in] size - size of the range.
+ * @param [in] desc - array of hipMemAccessDesc.
+ * @param [in] count - number of hipMemAccessDesc in desc.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemSetAccess(void* ptr, size_t size, const hipMemAccessDesc* desc, size_t count);
+
+/**
+ * @brief Unmap memory allocation of a given address range.
+ *
+ * @param [in] ptr - starting address of the range to unmap.
+ * @param [in] size - size of the virtual address range.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemUnmap(void* ptr, size_t size);
+
+// doxygen end virtual memory management API
+/**
+ * @}
+ */
 
 /**
  *-------------------------------------------------------------------------------------------------
