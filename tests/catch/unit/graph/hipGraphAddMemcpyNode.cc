@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,13 +18,36 @@ THE SOFTWARE.
 */
 
 /**
-Testcase Scenarios :
-1) Add memcpy node to graph and verify memcpy operation is success for all memcpy kinds(H2D, D2H and D2D).
-Memcpy nodes are added and assigned to default device.
-2) Perform memcpy operation for 1D, 2D and 3D arrays on default device and verify the results.
-3) Add memcpy node to graph and verify memcpy operation is success for all memcpy kinds(H2D, D2H and D2D).
-Memcpy nodes are added and assigned to Peer device.
-4) Perform memcpy operation for 1D, 2D and 3D arrays on Peer device and verify the results.
+Testcase Scenarios : Negative
+1) Pass pGraphNode as nullptr and check if api returns error.
+2) When graph is un-initialized argument(skipping graph creation),
+   api should return error code.
+3) Passing pDependencies as nullptr, api should return success.
+4) When numDependencies is max(size_t) and pDependencies is not valid ptr,
+   api expected to return error code.
+5) When pDependencies is nullptr, but numDependencies is non-zero,
+   api expected to return error.
+6) When pCopyParams is nullptr, api expected to return error code.
+7) API expects atleast one memcpy src pointer to be set.
+   When hipMemcpy3DParms::srcArray and hipMemcpy3DParms::srcPtr.ptr both
+   are nullptr, api expected to return error code.
+8) API expects atleast one memcpy dst pointer to be set.
+   When hipMemcpy3DParms::dstArray and hipMemcpy3DParms::dstPtr.ptr both
+   are nullptr, api expected to return error code.
+9) Passing different element size for hipMemcpy3DParms::srcArray and
+   hipMemcpy3DParms::dstArray is expected to return error code.
+
+Testcase Scenarios : Functional
+1) Add memcpy node to graph and verify memcpy operation is success for all
+   memcpy kinds(H2D, D2H and D2D).
+   Memcpy nodes are added and assigned to default device.
+2) Perform memcpy operation for 1D, 2D and 3D arrays on default device and
+   verify the results.
+3) Add memcpy node to graph and verify memcpy operation is success for all
+   memcpy kinds(H2D, D2H and D2D).
+   Memcpy nodes are added and assigned to Peer device.
+4) Perform memcpy operation for 1D, 2D and 3D arrays on Peer device and
+   verify the results.
 */
 
 #include <hip_test_common.hh>
@@ -34,7 +57,121 @@ Memcpy nodes are added and assigned to Peer device.
 #define YSIZE 32
 #define XSIZE 32
 
-void validateMemcpyNode3DArray(bool peerAccess = false) {
+/* Test verifies hipGraphAddMemcpyNode API Negative scenarios.
+ */
+
+TEST_CASE("Unit_hipGraphAddMemcpyNode_Negative") {
+  constexpr int width{10}, height{10}, depth{10};
+  hipArray *devArray1;
+  hipChannelFormatKind formatKind = hipChannelFormatKindSigned;
+  hipMemcpy3DParms myparams;
+  uint32_t size = width * height * depth * sizeof(int);
+  hipGraph_t graph;
+  hipGraphNode_t memcpyNode;
+  hipStream_t streamForGraph;
+  hipError_t ret;
+
+  int *hData = reinterpret_cast<int*>(malloc(size));
+  int *hOutputData = reinterpret_cast<int *>(malloc(size));
+
+  REQUIRE(hData != nullptr);
+  REQUIRE(hOutputData != nullptr);
+  memset(hData, 0, size);
+  memset(hOutputData, 0,  size);
+
+  HIP_CHECK(hipStreamCreate(&streamForGraph));
+  HIP_CHECK(hipGraphCreate(&graph, 0));
+
+  // Initialize host buffer
+  for (int i = 0; i < depth; i++) {
+    for (int j = 0; j < height; j++) {
+      for (int k = 0; k < width; k++) {
+        hData[i*width*height + j*width + k] = i*width*height + j*width + k;
+      }
+    }
+  }
+
+  hipChannelFormatDesc channelDesc = hipCreateChannelDesc(sizeof(int)*8,
+                                                          0, 0, 0, formatKind);
+  HIP_CHECK(hipMalloc3DArray(&devArray1, &channelDesc,
+                       make_hipExtent(width, height, depth), hipArrayDefault));
+
+  // Host to Device
+  memset(&myparams, 0x0, sizeof(hipMemcpy3DParms));
+  myparams.srcPos = make_hipPos(0, 0, 0);
+  myparams.dstPos = make_hipPos(0, 0, 0);
+  myparams.extent = make_hipExtent(width , height, depth);
+  myparams.srcPtr = make_hipPitchedPtr(hData, width * sizeof(int),
+                                      width, height);
+  myparams.dstArray = devArray1;
+  myparams.kind = hipMemcpyHostToDevice;
+
+  SECTION("Pass pGraphNode as nullptr") {
+    ret = hipGraphAddMemcpyNode(nullptr, graph, nullptr, 0, &myparams);
+    REQUIRE(hipErrorInvalidValue == ret);
+  }
+  SECTION("When graph is nullptr") {
+    ret = hipGraphAddMemcpyNode(&memcpyNode, nullptr,  nullptr, 0, &myparams);
+    REQUIRE(hipErrorInvalidValue == ret);
+  }
+  SECTION("Passing pDependencies as nullptr") {
+    ret = hipGraphAddMemcpyNode(&memcpyNode, graph, nullptr, 0, &myparams);
+    REQUIRE(hipSuccess == ret);
+  }
+  SECTION("When numDependencies is max and pDependencies is not valid ptr") {
+    ret = hipGraphAddMemcpyNode(&memcpyNode, graph,
+                                nullptr, INT_MAX, &myparams);
+    REQUIRE(hipErrorInvalidValue == ret);
+  }
+  SECTION("When pDependencies is nullptr, but numDependencies is non-zero") {
+    ret = hipGraphAddMemcpyNode(&memcpyNode, graph, nullptr, 11, &myparams);
+    REQUIRE(hipErrorInvalidValue == ret);
+  }
+  SECTION("Pass pCopyParams as nullptr") {
+    ret = hipGraphAddMemcpyNode(&memcpyNode, graph, nullptr, 0, nullptr);
+    REQUIRE(hipErrorInvalidValue == ret);
+  }
+  SECTION("API expects atleast one memcpy src pointer to be set") {
+    memset(&myparams, 0x0, sizeof(hipMemcpy3DParms));
+    myparams.srcPos = make_hipPos(0, 0, 0);
+    myparams.dstPos = make_hipPos(0, 0, 0);
+    myparams.extent = make_hipExtent(width , height, depth);
+    myparams.dstArray = devArray1;
+    myparams.kind = hipMemcpyHostToDevice;
+    ret = hipGraphAddMemcpyNode(&memcpyNode, graph, nullptr, 0, &myparams);
+    REQUIRE(hipErrorInvalidValue == ret);
+  }
+  SECTION("API expects atleast one memcpy dst pointer to be set") {
+    memset(&myparams, 0x0, sizeof(hipMemcpy3DParms));
+    myparams.srcPos = make_hipPos(0, 0, 0);
+    myparams.dstPos = make_hipPos(0, 0, 0);
+    myparams.extent = make_hipExtent(width , height, depth);
+    myparams.srcPtr = make_hipPitchedPtr(hData, width * sizeof(int),
+                                      width, height);
+    myparams.kind = hipMemcpyHostToDevice;
+    ret = hipGraphAddMemcpyNode(&memcpyNode, graph, nullptr, 0, &myparams);
+    REQUIRE(hipErrorInvalidValue == ret);
+  }
+  SECTION("Passing different element size for hipMemcpy3DParms::srcArray"
+                   "and hipMemcpy3DParms::dstArray") {
+    myparams.srcArray = devArray1;
+    hipArray *devArray2;
+    HIP_CHECK(hipMalloc3DArray(&devArray2, &channelDesc,
+              make_hipExtent(width+1, height+1, depth+1), hipArrayDefault));
+    myparams.dstArray = devArray2;
+    ret = hipGraphAddMemcpyNode(&memcpyNode, graph, nullptr, 0, &myparams);
+    REQUIRE(hipErrorInvalidValue == ret);
+    hipFreeArray(devArray2);
+  }
+
+  HIP_CHECK(hipGraphDestroy(graph));
+  HIP_CHECK(hipStreamDestroy(streamForGraph));
+  hipFreeArray(devArray1);
+  free(hData);
+  free(hOutputData);
+}
+
+static void validateMemcpyNode3DArray(bool peerAccess = false) {
   constexpr int width{10}, height{10}, depth{10};
   hipArray *devArray1, *devArray2;
   hipChannelFormatKind formatKind = hipChannelFormatKindSigned;
@@ -137,7 +274,7 @@ void validateMemcpyNode3DArray(bool peerAccess = false) {
   free(hOutputData);
 }
 
-void validateMemcpyNode2DArray(bool peerAccess = false) {
+static void validateMemcpyNode2DArray(bool peerAccess = false) {
   int harray2D[YSIZE][XSIZE]{};
   int harray2Dres[YSIZE][XSIZE]{};
   constexpr int width{XSIZE}, height{YSIZE};
@@ -236,7 +373,7 @@ void validateMemcpyNode2DArray(bool peerAccess = false) {
   hipFreeArray(devArray2);
 }
 
-void validateMemcpyNode1DArray(bool peerAccess = false) {
+static void validateMemcpyNode1DArray(bool peerAccess = false) {
   int harray1D[XSIZE]{};
   int harray1Dres[XSIZE]{};
   constexpr int width{XSIZE};
@@ -380,3 +517,4 @@ TEST_CASE("Unit_hipGraphAddMemcpyNode_PeerAccessFunctional") {
     validateMemcpyNode1DArray(true);
   }
 }
+

@@ -75,6 +75,15 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
 )
 else()
 set(TEST_SRC
@@ -129,6 +138,15 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
 )
 endif()
 
