@@ -75,6 +75,11 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
 )
 else()
 set(TEST_SRC
@@ -129,6 +134,11 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
 )
 endif()
 
