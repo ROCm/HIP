@@ -261,7 +261,7 @@ The following is the summary of the most useful environment variables in HIP.
 | AMD_SERIALIZE_KERNEL <br><sub> Serialize kernel enqueue. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |
 | AMD_SERIALIZE_COPY <br><sub> Serialize copies. </sub> |  0  | 1: Wait for completion before enqueue. <br> 2: Wait for completion after enqueue. <br> 3: Both. |
 | HIP_HOST_COHERENT <br><sub> Coherent memory in hipHostMalloc. </sub> |  0  |  0: memory is not coherent between host and GPU. <br> 1: memory is coherent with host. |
-| AMD_DIRECT_DISPATCH <br><sub> Enable direct kernel dispatch. </sub> | 0  | 0: Disable. <br> 1: Enable. |
+| AMD_DIRECT_DISPATCH <br><sub> Enable direct kernel dispatch. </sub> | 1  | 0: Disable. <br> 1: Enable. |
 
 
 ## General Debugging Tips
