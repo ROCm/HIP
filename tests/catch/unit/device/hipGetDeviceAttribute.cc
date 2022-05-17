@@ -232,6 +232,40 @@ TEST_CASE("Unit_hipGetDeviceAttribute_CheckAttrValues") {
 }
 
 /**
+ * Validate the hipDeviceAttributeFineGrainSupport property in AMD.
+ */
+#if HT_AMD
+// This is AMD specific property test
+TEST_CASE("Unit_hipGetDeviceAttribute_CheckFineGrainSupport") {
+  int deviceId;
+  int deviceCount = 0;
+  HIP_CHECK(hipGetDeviceCount(&deviceCount));
+  REQUIRE(deviceCount > 0);
+  // Check hipDeviceAttributeFineGrainSupport for all available device
+  // in system.
+  for (int dev = 0; dev < deviceCount; dev++) {
+    HIP_CHECK(hipSetDevice(dev));
+    HIP_CHECK(hipGetDevice(&deviceId));
+    hipDeviceProp_t props;
+    HIP_CHECK(hipGetDeviceProperties(&props, deviceId));
+    int value = 0;
+    HIP_CHECK(hipDeviceGetAttribute(&value,
+        hipDeviceAttributeFineGrainSupport, deviceId));
+    std::string gpu_arch_name(props.gcnArchName);
+    if (std::string::npos != gpu_arch_name.find("gfx90a")) {
+      // Current GPU is gfx90a architecture
+      REQUIRE(value == 1);
+    } else if (std::string::npos != gpu_arch_name.find("gfx906")) {
+      // Current GPU is gfx906 architecture
+      REQUIRE(value == 0);
+    } else if (std::string::npos != gpu_arch_name.find("gfx908")) {
+      // Current GPU is gfx908 architecture
+      REQUIRE(value == 0);
+    }
+  }
+}
+#endif
+/**
  * Validates negative scenarios for hipDeviceGetAttribute
  * scenario1: pi = nullptr
  * scenario2: device = -1 (Invalid Device)
