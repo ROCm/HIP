@@ -52,6 +52,7 @@ set(TEST_SRC
   hipGraphMemsetNodeGetParams.cc
   hipGraphMemsetNodeSetParams.cc
   hipGraphExecMemcpyNodeSetParamsFromSymbol.cc
+  hipGraphEventRecordNodeGetEvent.cc
   hipGraphEventWaitNodeGetEvent.cc
   hipGraphExecMemcpyNodeSetParams.cc
 )
