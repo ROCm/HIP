@@ -142,7 +142,7 @@ The tools also struggle with more complex CUDA applications, in particular, thos
 - For Nvidia platforms, HIP requires Unified Memory and should run on any device supporting CUDA SDK 6.0 or newer. We have tested the Nvidia Titan and Tesla K40.
 
 ### Do HIPIFY tools automatically convert all source code?
-Typically, HIPIFY tools can automatically convert almost all run-time code, and the coordinate indexing device code ( threadIdx.x -> hipThreadIdx_x ).
+Typically, HIPIFY tools can automatically convert almost all run-time code.
 Most device code needs no additional conversion since HIP and CUDA have similar names for math and built-in functions.
 The hipify-clang tool will automatically modify the kernel signature as needed (automating a step that used to be done manually).
 Additional porting may be required to deal with architecture feature queries or with CUDA capabilities that HIP doesn't support.
