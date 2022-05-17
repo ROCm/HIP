@@ -80,6 +80,8 @@ set(TEST_SRC
     hipMalloc3D.cc
     hipMalloc3DArray.cc
     hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
 )
 else()
 set(TEST_SRC
@@ -139,6 +141,8 @@ set(TEST_SRC
     hipMalloc3D.cc
     hipMalloc3DArray.cc
     hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
 )
 endif()
 
