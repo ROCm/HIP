@@ -84,6 +84,7 @@ set(TEST_SRC
     hipDrvMemcpy3DAsync.cc
     hipPointerGetAttribute.cc
     hipDrvPtrGetAttributes.cc
+    hipMallocMngdMultiThread.cc
 )
 else()
 set(TEST_SRC
