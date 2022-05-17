@@ -69,9 +69,10 @@ static void TstCoherency(int* ptr, bool hmmMem) {
 
   std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
   while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start)
-                 .count() < 3 ||
+                 .count() < 3 &&
          *ptr == 2) {
-  }          // wait till ptr is 2 from kernel
+  }          // wait till ptr is 2 from kernel or 3 seconds
+
   *ptr += 1; // increment it to 3
 
   HIP_CHECK(hipStreamSynchronize(stream));
