@@ -57,12 +57,24 @@ set(TEST_SRC
     hipMemCoherencyTst.cc
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
-    hipHmmOvrSubscriptionTst.cc
     hipMemcpyFromSymbol.cc
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
+    hipMemcpyPeer.cc
+    hipMemcpyPeerAsync.cc
+    hipMemcpyWithStream.cc
+    hipMemcpyWithStreamMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
+    hipMallocManaged.cc
+    hipMallocConcurrency.cc
+    hipMemcpyDtoD.cc
+    hipMemcpyDtoDAsync.cc
+    hipHostMalloc.cc
+    hipMemcpy.cc
+    hipMemcpyAsync.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
 )
@@ -101,34 +113,35 @@ set(TEST_SRC
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
-    hipHmmOvrSubscriptionTst.cc
     hipMemcpyFromSymbol.cc
     hipMemcpyFromSymbolAsync.cc
     hipMemcpyToSymbol.cc
     hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
+    hipMemcpyPeer.cc
+    hipMemcpyPeerAsync.cc
+    hipMemcpyWithStream.cc
+    hipMemcpyWithStreamMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
+    hipMallocManaged.cc
+    hipMallocConcurrency.cc
+    hipMemcpyDtoD.cc
+    hipMemcpyDtoDAsync.cc
+    hipHostMalloc.cc
+    hipMemcpy.cc
+    hipMemcpyAsync.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
 )
 endif()
 
-#skipped in windows -duplicate HipTest::vectorADD sym (compiler issue)
+# skipped due to os related code in tests
+# need to work on them when all the tests are enabled
 if(UNIX)
     set(TEST_SRC ${TEST_SRC}
-                 hipMemcpyPeer.cc
-                 hipMemcpyPeerAsync.cc
-                 hipMemcpyWithStream.cc
-                 hipMemcpyWithStreamMultiThread.cc
-                 hipMemsetAsyncAndKernel.cc
-                 hipMemset2DAsyncMultiThreadAndKernel.cc
-                 hipMallocManaged.cc
-                 hipMallocConcurrency.cc
-                 hipMemcpyDtoD.cc
-                 hipMemcpyDtoDAsync.cc
-                 hipMemoryAllocateCoherent.cc
-                 hipHostMalloc.cc
-                 hipMemcpy.cc
-                 hipMemcpyAsync.cc)
+                 hipHmmOvrSubscriptionTst.cc
+                 hipMemoryAllocateCoherent.cc)
 endif()
 
 hip_add_exe_to_target(NAME MemoryTest
