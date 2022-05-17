@@ -73,7 +73,11 @@
 	   "Unit_hipGraphAddEventRecordNode_Functional_WithFlags",
 	   "Unit_hipGraphAddEventRecordNode_MultipleRun",
 	   "Unit_hipMalloc3D_Negative",
-	   "Unit_hipPointerGetAttribute_MappedMem"
+	   "Unit_hipPointerGetAttribute_MappedMem",
+	   "Unit_hipStreamGetCaptureInfo_BasicFunctional",
+	   "Unit_hipStreamGetCaptureInfo_hipStreamPerThread",
+	   "Unit_hipStreamGetCaptureInfo_UniqueID",
+	   "Unit_hipStreamGetCaptureInfo_ArgValidation"
 	]
 
 }
