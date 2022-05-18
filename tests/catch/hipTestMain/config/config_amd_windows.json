@@ -73,7 +73,9 @@
 	   "Unit_hipGraphAddEventRecordNode_Functional_WithFlags",
 	   "Unit_hipGraphAddEventRecordNode_MultipleRun",
 	   "Unit_hipMalloc3D_Negative",
-	   "Unit_hipPointerGetAttribute_MappedMem"
+	   "Unit_hipPointerGetAttribute_MappedMem",
+	   "Unit_hipGraphAddMemcpyNode1D_Functional",
+	   "Unit_hipGraphAddMemcpyNode1D_Negative"
 	]
 
 }
