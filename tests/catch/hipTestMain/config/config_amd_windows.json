@@ -67,7 +67,7 @@
 	   "Unit_hipHostMalloc_Default",
 	   "Unit_hipStreamCreate_MultistreamBasicFunctionalities",
 	   "Unit_hipEventIpc",
-	   "# Follow test is related to ticket EXSWCPHIPT-41",
-	   "Unit_hipStreamGetPriority_NullStream"
+	   "# Following test is related to ticket EXSWCPHIPT-41",
+	   "Unit_hipStreamGetPriority_happy"
 	]
 }
