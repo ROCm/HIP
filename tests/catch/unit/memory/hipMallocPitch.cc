@@ -111,6 +111,7 @@ static void threadFunc(int gpu) {
 /*
  * This testcase verifies the negative scenarios of hipMallocPitch API
  */
+#if 0 //TODO: Review, fix and re-enable test
 TEST_CASE("Unit_hipMallocPitch_Negative") {
   float* A_d;
   size_t pitch_A;
@@ -142,6 +143,7 @@ TEST_CASE("Unit_hipMallocPitch_Negative") {
                            std::numeric_limits<int>::max()) != hipSuccess);
   }
 }
+#endif
 /*
  * This testcase verifies the basic scenario of
  * hipMallocPitch API for different datatypes
