@@ -82,6 +82,10 @@ set(TEST_SRC
     hipArrayCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
+    hipMallocMngdMultiThread.cc
+    hipMemPrefetchAsync.cc
 )
 else()
 set(TEST_SRC
@@ -143,6 +147,9 @@ set(TEST_SRC
     hipArrayCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
+    hipMemPrefetchAsync.cc
 )
 endif()
 

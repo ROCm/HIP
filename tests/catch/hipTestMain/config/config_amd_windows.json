@@ -67,6 +67,13 @@
 	   "Unit_hipHostMalloc_Default",
 	   "Unit_hipStreamCreate_MultistreamBasicFunctionalities",
 	   "Unit_hipEventIpc",
+	   "Unit_hipGraphAddDependencies_NegTest",
+	   "Unit_hipGraphAddEventRecordNode_Functional_WithoutFlags",
+	   "Unit_hipGraphAddEventRecordNode_Functional_ElapsedTime",
+	   "Unit_hipGraphAddEventRecordNode_Functional_WithFlags",
+	   "Unit_hipGraphAddEventRecordNode_MultipleRun",
+	   "Unit_hipMalloc3D_Negative",
+	   "Unit_hipPointerGetAttribute_MappedMem",
 	   "# Following test is related to ticket EXSWCPHIPT-41",
 	   "Unit_hipStreamGetPriority_happy"
 	]
