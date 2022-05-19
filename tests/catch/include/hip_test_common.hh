@@ -115,4 +115,22 @@ static inline int RAND_R(unsigned* rand_seed)
       return rand_r(rand_seed);
   #endif
 }
+
+inline bool isImageSupported() {
+    int imageSupport = 1;
+#ifdef __HIP_PLATFORM_AMD__
+    int device;
+    HIP_CHECK(hipGetDevice(&device));
+    HIPCHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                                   device));
+#endif
+  return imageSupport != 0;
 }
+
+}
+
+// This must be called in the beginning of image test app's main() to indicate whether image
+// is supported.
+#define checkImageSupport()                                                                \
+    if (!HipTest::isImageSupported())                                                      \
+        { printf("Texture is not support on the device. Skipped.\n"); return; }
