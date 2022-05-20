@@ -113,9 +113,8 @@ TEST_CASE("Unit_malloc_CoherentTst") {
     REQUIRE(false);
   }
 
-  /* GpuId[0] for gfx906 exists--> 1 for yes and 0 for no
-     GpuId[0] for gfx908 exists--> 1 for yes and 0 for no*/
-  int GpuId[2] = {0, 0};
+  /* GpuId[0] for gfx90a exists--> 1 for yes and 0 for no*/
+  int GpuId[1] = {0};
   p = fork();
 
   if (p < 0) {
@@ -128,8 +127,8 @@ TEST_CASE("Unit_malloc_CoherentTst") {
     //  Read string from child and close reading end.
     read(fd1[0], GpuId, 2 * sizeof(int));
     close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[1] == 1)) {
-      WARN("This test is not applicable on MI60 & MI100."
+    if (GpuId[0] == 0) {
+      WARN("This test is applicable for MI200."
               "Skipping the test!!");
       exit(0);
     }
@@ -138,15 +137,10 @@ TEST_CASE("Unit_malloc_CoherentTst") {
     hipDeviceProp_t prop;
     HIPCHECK(hipGetDeviceProperties(&prop, 0));
     char *p = NULL;
-    p = strstr(prop.gcnArchName, "gfx906");
+    p = strstr(prop.gcnArchName, "gfx90a");
     if (p) {
-      WARN("gfx906 gpu found on this system!!");
+      WARN("gfx90a gpu found on this system!!");
       GpuId[0] = 1;
-    }
-    p = strstr(prop.gcnArchName, "gfx908");
-    if (p) {
-      WARN("gfx908 gpu found on this system!!");
-      GpuId[1] = 1;
     }
     // Write concatenated string and close writing end
     write(fd1[1], GpuId, 2 * sizeof(int));
@@ -208,9 +202,8 @@ TEST_CASE("Unit_malloc_CoherentTstWthAdvise") {
     REQUIRE(false);
   }
 
-  /* GpuId[0] for gfx906 exists--> 1 for yes and 0 for no
-     GpuId[0] for gfx908 exists--> 1 for yes and 0 for no*/
-  int GpuId[2] = {0, 0};
+  /* GpuId[0] for gfx90a exists--> 1 for yes and 0 for no */
+  int GpuId[1] = {0};
   p = fork();
 
   if (p < 0) {
@@ -223,8 +216,8 @@ TEST_CASE("Unit_malloc_CoherentTstWthAdvise") {
     //  Read string from child and close reading end.
     read(fd1[0], GpuId, 2 * sizeof(int));
     close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[1] == 1)) {
-      WARN("This test is not applicable on MI60 & MI100."
+    if (GpuId[0] == 0) {
+      WARN("This test is applicable for MI200."
               "Skipping the test!!");
       exit(0);
     }
@@ -233,15 +226,10 @@ TEST_CASE("Unit_malloc_CoherentTstWthAdvise") {
     hipDeviceProp_t prop;
     HIPCHECK(hipGetDeviceProperties(&prop, 0));
     char *p = NULL;
-    p = strstr(prop.gcnArchName, "gfx906");
+    p = strstr(prop.gcnArchName, "gfx90a");
     if (p) {
-      WARN("gfx906 gpu found on this system!!");
+      WARN("gfx90a gpu found on this system!!");
       GpuId[0] = 1;
-    }
-    p = strstr(prop.gcnArchName, "gfx908");
-    if (p) {
-      WARN("gfx908 gpu found on this system!!");
-      GpuId[1] = 1;
     }
     // Write concatenated string and close writing end
     write(fd1[1], GpuId, 2 * sizeof(int));
@@ -305,9 +293,8 @@ TEST_CASE("Unit_mmap_CoherentTst") {
     REQUIRE(false);
   }
 
-  /* GpuId[0] for gfx906 exists--> 1 for yes and 0 for no
-     GpuId[0] for gfx908 exists--> 1 for yes and 0 for no*/
-  int GpuId[2] = {0, 0};
+  /* GpuId[0] for gfx90a exists--> 1 for yes and 0 for no */
+  int GpuId[1] = {0};
   p = fork();
 
   if (p < 0) {
@@ -320,8 +307,8 @@ TEST_CASE("Unit_mmap_CoherentTst") {
     //  Read string from child and close reading end.
     read(fd1[0], GpuId, 2 * sizeof(int));
     close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[1] == 1)) {
-      WARN("This test is not applicable on MI60 & MI100."
+    if (GpuId[0] == 0) {
+      WARN("This test is not applicable for MI200."
               "Skipping the test!!");
       exit(0);
     }
@@ -330,15 +317,10 @@ TEST_CASE("Unit_mmap_CoherentTst") {
     hipDeviceProp_t prop;
     HIPCHECK(hipGetDeviceProperties(&prop, 0));
     char *p = NULL;
-    p = strstr(prop.gcnArchName, "gfx906");
+    p = strstr(prop.gcnArchName, "gfx90a");
     if (p) {
-      WARN("gfx906 gpu found on this system!!");
+      WARN("gfx90a gpu found on this system!!");
       GpuId[0] = 1;
-    }
-    p = strstr(prop.gcnArchName, "gfx908");
-    if (p) {
-      WARN("gfx908 gpu found on this system!!");
-      GpuId[1] = 1;
     }
     // Write concatenated string and close writing end
     write(fd1[1], GpuId, 2 * sizeof(int));
@@ -403,9 +385,8 @@ TEST_CASE("Unit_mmap_CoherentTstWthAdvise") {
     REQUIRE(false);
   }
 
-  /* GpuId[0] for gfx906 exists--> 1 for yes and 0 for no
-     GpuId[0] for gfx908 exists--> 1 for yes and 0 for no*/
-  int GpuId[2] = {0, 0};
+  /* GpuId[0] for gfx90a exists--> 1 for yes and 0 for no */
+  int GpuId[1] = {0};
   p = fork();
 
   if (p < 0) {
@@ -418,8 +399,8 @@ TEST_CASE("Unit_mmap_CoherentTstWthAdvise") {
     //  Read string from child and close reading end.
     read(fd1[0], GpuId, 2 * sizeof(int));
     close(fd1[0]);
-    if ((GpuId[0] == 1) || (GpuId[1] == 1)) {
-      WARN("This test is not applicable on MI60 & MI100."
+    if (GpuId[0] == 0) {
+      WARN("This test is applicable for MI200."
               "Skipping the test!!");
       exit(0);
     }
@@ -428,15 +409,10 @@ TEST_CASE("Unit_mmap_CoherentTstWthAdvise") {
     hipDeviceProp_t prop;
     HIPCHECK(hipGetDeviceProperties(&prop, 0));
     char *p = NULL;
-    p = strstr(prop.gcnArchName, "gfx906");
+    p = strstr(prop.gcnArchName, "gfx90a");
     if (p) {
-      WARN("gfx906 gpu found on this system!!");
+      WARN("gfx90a gpu found on this system!!");
       GpuId[0] = 1;
-    }
-    p = strstr(prop.gcnArchName, "gfx908");
-    if (p) {
-      WARN("gfx908 gpu found on this system!!");
-      GpuId[1] = 1;
     }
     // Write concatenated string and close writing end
     write(fd1[1], GpuId, 2 * sizeof(int));
@@ -497,7 +473,7 @@ TEST_CASE("Unit_mmap_CoherentTstWthAdvise") {
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg1") {
   if ((setenv("HIP_HOST_COHERENT", "0", 1)) != 0) {
-      WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
+      WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
   int stat = 0;
@@ -538,7 +514,7 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg1") {
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg2") {
   if ((setenv("HIP_HOST_COHERENT", "0", 1)) != 0) {
-      WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
+      WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
   int stat = 0;
@@ -579,7 +555,7 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg2") {
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg3") {
   if ((setenv("HIP_HOST_COHERENT", "0", 1)) != 0) {
-      WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
+      WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
   int stat = 0;
@@ -587,7 +563,7 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg3") {
     int *Ptr = nullptr, *PtrD = nullptr, SIZE = sizeof(int);
     YES_COHERENT = false;
     // Allocating hipHostMalloc() memory
-     HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocNumaUser));
+    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocNumaUser));
     *Ptr = 4;
     hipStream_t strm;
     HIP_CHECK(hipStreamCreate(&strm));
@@ -620,7 +596,7 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg3") {
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg4") {
   if ((setenv("HIP_HOST_COHERENT", "0", 1)) != 0) {
-      WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
+      WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
   int stat = 0;
@@ -662,33 +638,43 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv0Flg4") {
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_WthEnv1") {
   if ((setenv("HIP_HOST_COHERENT", "1", 1)) != 0) {
-      WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
+      WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
-  int stat = 0;
-  if (fork() == 0) {  // child process
-    int *Ptr = nullptr, SIZE = sizeof(int);
-    bool HmmMem = false;
-    YES_COHERENT = false;
-    // Allocating hipHostMalloc() memory
-    HIP_CHECK(hipHostMalloc(&Ptr, SIZE));
-    *Ptr = 4;
-    TstCoherency(Ptr, HmmMem);
-    if (YES_COHERENT) {
-      // exit() with code 10 which indicates pass
-      HIP_CHECK(hipHostFree(Ptr));
-      exit(10);
-    } else {
-      // exit() with code 9 which indicates fail
-      HIP_CHECK(hipHostFree(Ptr));
-      exit(9);
+  int stat = 0, Pageable = 0;
+
+  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
+                                 hipDeviceAttributePageableMemoryAccess, 0));
+  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
+
+  if (Pageable) {
+    if (fork() == 0) {  // child process
+      int *Ptr = nullptr, SIZE = sizeof(int);
+      bool HmmMem = false;
+      YES_COHERENT = false;
+      // Allocating hipHostMalloc() memory
+      HIP_CHECK(hipHostMalloc(&Ptr, SIZE));
+      *Ptr = 4;
+      TstCoherency(Ptr, HmmMem);
+      if (YES_COHERENT) {
+        // exit() with code 10 which indicates pass
+        HIP_CHECK(hipHostFree(Ptr));
+        exit(10);
+      } else {
+        // exit() with code 9 which indicates fail
+        HIP_CHECK(hipHostFree(Ptr));
+        exit(9);
+      }
+    } else {  // parent process
+      wait(&stat);
+      int Result = WEXITSTATUS(stat);
+      if (Result != 10) {
+        REQUIRE(false);
+      }
     }
-  } else {  // parent process
-    wait(&stat);
-    int Result = WEXITSTATUS(stat);
-    if (Result != 10) {
-      REQUIRE(false);
-    }
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+               "attribute. Hence skipping the test with Pass result.\n"); 
   }
 }
 #endif
@@ -700,33 +686,43 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv1") {
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_WthEnv1Flg1") {
   if ((setenv("HIP_HOST_COHERENT", "1", 1)) != 0) {
-      WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
+      WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
-  int stat = 0;
-  if (fork() == 0) {  // child process
-    int *Ptr = nullptr, SIZE = sizeof(int);
-    bool HmmMem = false;
-    YES_COHERENT = false;
-    // Allocating hipHostMalloc() memory
-    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocPortable));
-    *Ptr = 1;
-    TstCoherency(Ptr, HmmMem);
-    if (YES_COHERENT) {
-      // exit() with code 10 which indicates pass
-      HIP_CHECK(hipHostFree(Ptr));
-      exit(10);
-    } else {
-      // exit() with code 9 which indicates fail
-      HIP_CHECK(hipHostFree(Ptr));
-      exit(9);
+  int stat = 0, Pageable = 0;
+
+  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
+                                 hipDeviceAttributePageableMemoryAccess, 0));
+  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
+
+  if (Pageable) {
+    if (fork() == 0) {  // child process
+      int *Ptr = nullptr, SIZE = sizeof(int);
+      bool HmmMem = false;
+      YES_COHERENT = false;
+      // Allocating hipHostMalloc() memory
+      HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocPortable));
+      *Ptr = 1;
+      TstCoherency(Ptr, HmmMem);
+      if (YES_COHERENT) {
+        // exit() with code 10 which indicates pass
+        HIP_CHECK(hipHostFree(Ptr));
+        exit(10);
+      } else {
+        // exit() with code 9 which indicates fail
+        HIP_CHECK(hipHostFree(Ptr));
+        exit(9);
+      }
+    } else {  // parent process
+      wait(&stat);
+      int Result = WEXITSTATUS(stat);
+      if (Result != 10) {
+        REQUIRE(false);
+      }
     }
-  } else {  // parent process
-    wait(&stat);
-    int Result = WEXITSTATUS(stat);
-    if (Result != 10) {
-      REQUIRE(false);
-    }
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+               "attribute. Hence skipping the test with Pass result.\n"); 
   }
 }
 #endif
@@ -737,33 +733,43 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv1Flg1") {
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_WthEnv1Flg2") {
   if ((setenv("HIP_HOST_COHERENT", "1", 1)) != 0) {
-      WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
+      WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
-  int stat = 0;
-  if (fork() == 0) {  // child process
-    int *Ptr = nullptr, SIZE = sizeof(int);
-    bool HmmMem = false;
-    YES_COHERENT = false;
-    // Allocating hipHostMalloc() memory
-    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocWriteCombined));
-    *Ptr = 4;
-    TstCoherency(Ptr, HmmMem);
-    if (YES_COHERENT) {
-      // exit() with code 10 which indicates pass
-      HIP_CHECK(hipHostFree(Ptr));
-      exit(10);
-    } else {
-      // exit() with code 9 which indicates fail
-      HIP_CHECK(hipHostFree(Ptr));
-      exit(9);
+  int stat = 0, Pageable = 0;
+
+  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
+                                 hipDeviceAttributePageableMemoryAccess, 0));
+  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
+
+  if (Pageable) {
+    if (fork() == 0) {  // child process
+      int *Ptr = nullptr, SIZE = sizeof(int);
+      bool HmmMem = false;
+      YES_COHERENT = false;
+      // Allocating hipHostMalloc() memory
+      HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocWriteCombined));
+      *Ptr = 4;
+      TstCoherency(Ptr, HmmMem);
+      if (YES_COHERENT) {
+        // exit() with code 10 which indicates pass
+        HIP_CHECK(hipHostFree(Ptr));
+        exit(10);
+      } else {
+        // exit() with code 9 which indicates fail
+        HIP_CHECK(hipHostFree(Ptr));
+        exit(9);
+      }
+    } else {  // parent process
+      wait(&stat);
+      int Result = WEXITSTATUS(stat);
+      if (Result != 10) {
+        REQUIRE(false);
+      }
     }
-  } else {  // parent process
-    wait(&stat);
-    int Result = WEXITSTATUS(stat);
-    if (Result != 10) {
-      REQUIRE(false);
-    }
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+               "attribute. Hence skipping the test with Pass result.\n"); 
   }
 }
 #endif
@@ -775,33 +781,43 @@ TEST_CASE("Unit_hipHostMalloc_WthEnv1Flg2") {
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_WthEnv1Flg3") {
   if ((setenv("HIP_HOST_COHERENT", "1", 1)) != 0) {
-      WARN("Unable to turn on HSA_XNACK, hence terminating the Test case!");
+      WARN("Unable to turn on HIP_HOST_COHERENT, hence terminating the Test case!");
       REQUIRE(false);
   }
-  int stat = 0;
-  if (fork() == 0) {  // child process
-    int *Ptr = nullptr, SIZE = sizeof(int);
-    bool HmmMem = false;
-    YES_COHERENT = false;
-    // Allocating hipHostMalloc() memory
-    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocNumaUser));
-    *Ptr = 1;
-    TstCoherency(Ptr, HmmMem);
-    if (YES_COHERENT) {
-      // exit() with code 10 which indicates pass
-      HIP_CHECK(hipHostFree(Ptr));
-      exit(10);
-    } else {
-      // exit() with code 9 which indicates fail
-      HIP_CHECK(hipHostFree(Ptr));
-      exit(9);
+  int stat = 0, Pageable = 0;
+
+  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
+                                 hipDeviceAttributePageableMemoryAccess, 0));
+  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
+
+  if (Pageable) {
+    if (fork() == 0) {  // child process
+      int *Ptr = nullptr, SIZE = sizeof(int);
+      bool HmmMem = false;
+      YES_COHERENT = false;
+      // Allocating hipHostMalloc() memory
+      HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocNumaUser));
+      *Ptr = 1;
+      TstCoherency(Ptr, HmmMem);
+      if (YES_COHERENT) {
+        // exit() with code 10 which indicates pass
+        HIP_CHECK(hipHostFree(Ptr));
+        exit(10);
+      } else {
+        // exit() with code 9 which indicates fail
+        HIP_CHECK(hipHostFree(Ptr));
+        exit(9);
+      }
+    } else {  // parent process
+      wait(&stat);
+      int Result = WEXITSTATUS(stat);
+      if (Result != 10) {
+        REQUIRE(false);
+      }
     }
-  } else {  // parent process
-    wait(&stat);
-    int Result = WEXITSTATUS(stat);
-    if (Result != 10) {
-      REQUIRE(false);
-    }
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+               "attribute. Hence skipping the test with Pass result.\n"); 
   }
 }
 #endif

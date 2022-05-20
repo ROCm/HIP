@@ -57,12 +57,58 @@ typedef enum hiprtcResult {
     HIPRTC_ERROR_INVALID_PROGRAM = 4,
     HIPRTC_ERROR_INVALID_OPTION = 5,
     HIPRTC_ERROR_COMPILATION = 6,
-    HIPRTC_ERROR_BUILTIN_OPERATION_FAILURE = 7,
-    HIPRTC_ERROR_NO_NAME_EXPRESSIONS_AFTER_COMPILATION = 8,
-    HIPRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION = 9,
-    HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID = 10,
-    HIPRTC_ERROR_INTERNAL_ERROR = 11
+    HIPRTC_ERROR_LINKING = 7,
+    HIPRTC_ERROR_BUILTIN_OPERATION_FAILURE = 8,
+    HIPRTC_ERROR_NO_NAME_EXPRESSIONS_AFTER_COMPILATION = 9,
+    HIPRTC_ERROR_NO_LOWERED_NAMES_BEFORE_COMPILATION = 10,
+    HIPRTC_ERROR_NAME_EXPRESSION_NOT_VALID = 11,
+    HIPRTC_ERROR_INTERNAL_ERROR = 12
 } hiprtcResult;
+
+typedef enum hiprtcJIT_option {
+  HIPRTC_JIT_MAX_REGISTERS = 0,
+  HIPRTC_JIT_THREADS_PER_BLOCK,
+  HIPRTC_JIT_WALL_TIME,
+  HIPRTC_JIT_INFO_LOG_BUFFER,
+  HIPRTC_JIT_INFO_LOG_BUFFER_SIZE_BYTES,
+  HIPRTC_JIT_ERROR_LOG_BUFFER,
+  HIPRTC_JIT_ERROR_LOG_BUFFER_SIZE_BYTES,
+  HIPRTC_JIT_OPTIMIZATION_LEVEL,
+  HIPRTC_JIT_TARGET_FROM_HIPCONTEXT,
+  HIPRTC_JIT_TARGET,
+  HIPRTC_JIT_FALLBACK_STRATEGY,
+  HIPRTC_JIT_GENERATE_DEBUG_INFO,
+  HIPRTC_JIT_LOG_VERBOSE,
+  HIPRTC_JIT_GENERATE_LINE_INFO,
+  HIPRTC_JIT_CACHE_MODE,
+  HIPRTC_JIT_NEW_SM3X_OPT,
+  HIPRTC_JIT_FAST_COMPILE,
+  HIPRTC_JIT_GLOBAL_SYMBOL_NAMES,
+  HIPRTC_JIT_GLOBAL_SYMBOL_ADDRESS,
+  HIPRTC_JIT_GLOBAL_SYMBOL_COUNT,
+  HIPRTC_JIT_LTO,
+  HIPRTC_JIT_FTZ,
+  HIPRTC_JIT_PREC_DIV,
+  HIPRTC_JIT_PREC_SQRT,
+  HIPRTC_JIT_FMA,
+  HIPRTC_JIT_NUM_OPTIONS,
+} hiprtcJIT_option;
+
+typedef enum hiprtcJITInputType {
+  HIPRTC_JIT_INPUT_CUBIN = 0,
+  HIPRTC_JIT_INPUT_PTX,
+  HIPRTC_JIT_INPUT_FATBINARY,
+  HIPRTC_JIT_INPUT_OBJECT,
+  HIPRTC_JIT_INPUT_LIBRARY,
+  HIPRTC_JIT_INPUT_NVVM,
+  HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES,
+  HIPRTC_JIT_INPUT_LLVM_BITCODE = 100,
+  HIPRTC_JIT_INPUT_LLVM_BUNDLED_BITCODE = 101,
+  HIPRTC_JIT_INPUT_LLVM_ARCHIVES_OF_BUNDLED_BITCODE = 102,
+  HIPRTC_JIT_NUM_INPUT_TYPES = (HIPRTC_JIT_NUM_LEGACY_INPUT_TYPES + 3)
+} hiprtcJITInputType;
+
+typedef struct ihiprtcLinkState* hiprtcLinkState;
 
  /**
  * @brief Returns text string message to explain the error which occurred
@@ -222,6 +268,83 @@ hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* code);
  * @see hiprtcResult
  */
 hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* codeSizeRet);
+
+/**
+ * @brief Creates the link instance via hiprtc APIs.
+ *
+ * @param [in] hip_jit_options
+ * @param [out] hiprtc link state instance
+ * @return HIPRTC_SUCCESS
+ *
+ * @see hiprtcResult
+ */
+hiprtcResult hiprtcLinkCreate(unsigned int num_options, hiprtcJIT_option* option_ptr,
+                              void** option_vals_pptr, hiprtcLinkState* hip_link_state_ptr);
+
+/**
+ * @brief Adds a file with bit code to be linked with options
+ *
+ * @param [in] hiprtc link state, jit input type, file path,
+ *        option reated parameters.
+ * @param [out] None.
+ * @return HIPRTC_SUCCESS
+ *
+ * If input values are invalid, it will
+ * @return HIPRTC_ERROR_INVALID_INPUT
+ *
+ * @see hiprtcResult
+ */
+
+hiprtcResult hiprtcLinkAddFile(hiprtcLinkState hip_link_state, hiprtcJITInputType input_type,
+                               const char* file_path, unsigned int num_options,
+                               hiprtcJIT_option* options_ptr, void** option_values);
+
+/**
+ * @brief Completes the linking of the given program.
+ *
+ * @param [in] hiprtc link state, jit input type, image_ptr ,
+ *        option reated parameters.
+ * @param [out] None.
+ * @return HIPRTC_SUCCESS
+ *
+ * If adding the file fails, it will
+ * @return HIPRTC_ERROR_PROGRAM_CREATION_FAILURE
+ *
+ * @see hiprtcResult
+ */
+
+hiprtcResult hiprtcLinkAddData(hiprtcLinkState hip_link_state, hiprtcJITInputType input_type, 
+                               void* image, size_t image_size, const char* name,
+                               unsigned int num_options, hiprtcJIT_option* options_ptr,
+                               void** option_values);
+
+/**
+ * @brief Completes the linking of the given program.
+ *
+ * @param [in] hiprtc link state instance
+ * @param [out] linked_binary, linked_binary_size.
+ * @return HIPRTC_SUCCESS
+ *
+ * If adding the data fails, it will
+ * @return HIPRTC_ERROR_PROGRAM_CREATION_FAILURE
+ *
+ * @see hiprtcResult
+ */
+hiprtcResult hiprtcLinkComplete(hiprtcLinkState hip_link_state, void** bin_out, size_t* size_out);
+
+/**
+ * @brief Deletes the link instance via hiprtc APIs.
+ *
+ * @param [in] hiprtc link state instance
+ * @param [out] code  the size of binary.
+ * @return HIPRTC_SUCCESS
+ *
+ * If linking fails, it will
+ * @return HIPRTC_ERROR_LINKING
+ *
+ * @see hiprtcResult
+ */
+hiprtcResult hiprtcLinkDestroy(hiprtcLinkState hip_link_state);
 
 #if !defined(_WIN32)
 #pragma GCC visibility pop
