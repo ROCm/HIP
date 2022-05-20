@@ -85,7 +85,7 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
   size_t tot, avail, ptot, pavail;
   HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
   for (int i = 0; i < devCnt; i++) {
-    // FIXME: the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
+    // FIXME: HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(MallocArray_DiffSizes, i));
   }
 
@@ -450,32 +450,32 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
 // EXSWCPHIPT-71 - no equivalent value for maxSurface and maxTexture2DGather.
 TEMPLATE_TEST_CASE("Unit_hipMallocArray_MaxTexture_Default", "", uint, int4, ushort, short2, char,
                    char4, float2, float4) {
-  int device;
-  HIP_CHECK(hipGetDevice(&device));
-  hipDeviceProp_t prop;
-  HIP_CHECK(hipGetDeviceProperties(&prop, device));
-
   size_t width, height;
   hipArray_t array{};
   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
   const unsigned int flag = hipArrayDefault;
 
+  const Sizes sizes(flag);
+  CAPTURE(sizes.max1D, sizes.max2D, sizes.max3D);
+
+  const size_t s = 64;
+
   SECTION("Happy") {
     SECTION("1D - Max") {
-      width = prop.maxTexture1D;
+      width = sizes.max1D;
       height = 0;
     }
     SECTION("2D - Max Width") {
-      width = prop.maxTexture2D[0];
-      height = 64;
+      width = sizes.max2D[0];
+      height = s;
     }
     SECTION("2D - Max Height") {
-      width = 64;
-      height = prop.maxTexture2D[1];
+      width = s;
+      height = sizes.max2D[1];
     }
     SECTION("2D - Max Width and Height") {
-      width = prop.maxTexture2D[0];
-      height = prop.maxTexture2D[1];
+      width = sizes.max2D[0];
+      height = sizes.max2D[1];
     }
     auto maxArrayCreateError = hipMallocArray(&array, &desc, width, height, flag);
     // this can try to alloc many GB of memory, so out of memory is acceptable
@@ -485,20 +485,20 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_MaxTexture_Default", "", uint, int4, ush
   }
   SECTION("Negative") {
     SECTION("1D - More Than Max") {
-      width = prop.maxTexture1D + 1;
+      width = sizes.max1D + 1;
       height = 0;
     }
     SECTION("2D - More Than Max Width") {
-      width = prop.maxTexture2D[0] + 1;
-      height = 64;
+      width = sizes.max2D[0] + 1;
+      height = s;
     }
     SECTION("2D - More Than Max Height") {
-      width = 64;
-      height = prop.maxTexture2D[1] + 1;
+      width = s;
+      height = sizes.max2D[1] + 1;
     }
     SECTION("2D - More Than Max Width and Height") {
-      width = prop.maxTexture2D[0] + 1;
-      height = prop.maxTexture2D[1] + 1;
+      width = sizes.max2D[0] + 1;
+      height = sizes.max2D[1] + 1;
     }
     HIP_CHECK_ERROR(hipMallocArray(&array, &desc, width, height, flag), hipErrorInvalidValue);
   }

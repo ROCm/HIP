@@ -90,7 +90,7 @@ TEST_CASE("Unit_hipArrayCreate_MultiThread") {
 
   const size_t pavail = getFreeMem();
   for (int i = 0; i < devCnt; i++) {
-    // FIXME: the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
+    // FIXME: HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(ArrayCreate_DiffSizes, i));
   }
 
@@ -282,28 +282,26 @@ TEMPLATE_TEST_CASE("Unit_hipArrayCreate_maxTexture", "", uint, int, int4, ushort
   desc.Format = vec_info::format;
   desc.NumChannels = vec_info::size;
 
-  int device;
-  HIP_CHECK(hipGetDevice(&device));
-  hipDeviceProp_t prop;
-  HIP_CHECK(hipGetDeviceProperties(&prop, device));
+  const Sizes sizes(hipArrayDefault);
+  const size_t s = 64;
 
   hiparray array{};
   SECTION("Happy") {
     SECTION("1D - Max") {
-      desc.Width = prop.maxTexture1D;
+      desc.Width = sizes.max1D;
       desc.Height = 0;
     }
     SECTION("2D - Max Width") {
-      desc.Width = prop.maxTexture2D[0];
-      desc.Height = 64;
+      desc.Width = sizes.max2D[0];
+      desc.Height = s;
     }
     SECTION("2D - Max Height") {
-      desc.Width = 64;
-      desc.Height = prop.maxTexture2D[1];
+      desc.Width = s;
+      desc.Height = sizes.max2D[1];
     }
     SECTION("2D - Max Width and Height") {
-      desc.Width = prop.maxTexture2D[0];
-      desc.Height = prop.maxTexture2D[1];
+      desc.Width = sizes.max2D[0];
+      desc.Height = sizes.max2D[1];
     }
     auto maxArrayCreateError = hipArrayCreate(&array, &desc);
     // this can try to alloc many GB of memory, so out of memory is acceptable
@@ -314,20 +312,20 @@ TEMPLATE_TEST_CASE("Unit_hipArrayCreate_maxTexture", "", uint, int, int4, ushort
   }
   SECTION("Negative") {
     SECTION("1D - More Than Max") {
-      desc.Width = prop.maxTexture1D + 1;
+      desc.Width = sizes.max1D + 1;
       desc.Height = 0;
     }
     SECTION("2D - More Than Max Width") {
-      desc.Width = prop.maxTexture2D[0] + 1;
-      desc.Height = 64;
+      desc.Width = sizes.max2D[0] + 1;
+      desc.Height = s;
     }
     SECTION("2D - More Than Max Height") {
-      desc.Width = 64;
-      desc.Height = prop.maxTexture2D[1] + 1;
+      desc.Width = s;
+      desc.Height = sizes.max2D[1] + 1;
     }
     SECTION("2D - More Than Max Width and Height") {
-      desc.Width = prop.maxTexture2D[0] + 1;
-      desc.Height = prop.maxTexture2D[1] + 1;
+      desc.Width = sizes.max2D[0] + 1;
+      desc.Height = sizes.max2D[1] + 1;
     }
     HIP_CHECK_ERROR(hipArrayCreate(&array, &desc), hipErrorInvalidValue);
   }
