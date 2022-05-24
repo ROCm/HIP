@@ -1,12 +1,7 @@
 {
-  "DisabledTests" : [
-    "Unit_hipStreamPerThread_DeviceReset_1", "# Following test fails due to EXSWCPHIPT-59",
-    "Unit_hipMallocArray_Negative_ChannelAfterZeroChannel",
-    "# Following test fails due to EXSWCPHIPT-59",
-    "Unit_hipMallocArray_Negative_DifferentChannelSizes",
-    "# Following test fails due to EXSWCPHIPT-45", "Unit_hipMallocArray_Negative_NullArrayPtr",
-    "# Following test fails due to EXSWCPHIPT-83", "Unit_hipMallocArray_Negative_NullDescPtr",
-    "# Following test fails due to EXSWCPHIPT-62", "Unit_hipMallocArray_happy*",
-    "# Following test fails due to EXSWCPHIPT-72", "Unit_hipMallocArray_Negative_BadFlags"
-  ]
+    "DisabledTests":
+	[
+	   "Unit_hipStreamPerThread_DeviceReset_1"
+	]
+
 }

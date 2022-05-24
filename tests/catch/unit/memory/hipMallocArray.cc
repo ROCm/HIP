@@ -52,20 +52,16 @@ static void MallocArray_DiffSizes(int gpu) {
   std::vector<size_t> array_size;
   array_size.push_back(NUM_W);
   array_size.push_back(BIGNUM_W);
-  for (auto &size : array_size) {
+  for (auto& size : array_size) {
     hipArray* A_d[ARRAY_LOOP];
     size_t tot, avail, ptot, pavail;
     hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
     HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
     for (int i = 0; i < ARRAY_LOOP; i++) {
       if (size == NUM_W) {
-        HIP_CHECK(hipMallocArray(&A_d[i], &desc,
-              NUM_W, NUM_H,
-              hipArrayDefault));
+        HIP_CHECK(hipMallocArray(&A_d[i], &desc, NUM_W, NUM_H, hipArrayDefault));
       } else {
-        HIP_CHECK(hipMallocArray(&A_d[i], &desc,
-              BIGNUM_W, BIGNUM_H,
-              hipArrayDefault));
+        HIP_CHECK(hipMallocArray(&A_d[i], &desc, BIGNUM_W, BIGNUM_H, hipArrayDefault));
       }
     }
     for (int i = 0; i < ARRAY_LOOP; i++) {
@@ -87,42 +83,31 @@ TEST_CASE("Unit_hipMallocArray_Negative") {
   hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
 #if HT_NVIDIA
   SECTION("NullPointer to Array") {
-    REQUIRE(hipMallocArray(nullptr, &desc,
-            NUM_W, NUM_H, hipArrayDefault) != hipSuccess);
+    REQUIRE(hipMallocArray(nullptr, &desc, NUM_W, NUM_H, hipArrayDefault) != hipSuccess);
   }
 
   SECTION("NullPointer to Channel Descriptor") {
-    REQUIRE(hipMallocArray(&A_d, nullptr,
-            NUM_W, NUM_H, hipArrayDefault) != hipSuccess);
+    REQUIRE(hipMallocArray(&A_d, nullptr, NUM_W, NUM_H, hipArrayDefault) != hipSuccess);
   }
 #endif
   SECTION("Width 0 in hipMallocArray") {
-    REQUIRE(hipMallocArray(&A_d, &desc,
-            0, NUM_H, hipArrayDefault) != hipSuccess);
+    REQUIRE(hipMallocArray(&A_d, &desc, 0, NUM_H, hipArrayDefault) != hipSuccess);
   }
 
   SECTION("Height 0 in hipMallocArray") {
-    REQUIRE(hipMallocArray(&A_d, &desc,
-            NUM_W, 0, hipArrayDefault) == hipSuccess);
+    REQUIRE(hipMallocArray(&A_d, &desc, NUM_W, 0, hipArrayDefault) == hipSuccess);
   }
 
-  SECTION("Invalid Flag") {
-    REQUIRE(hipMallocArray(&A_d, &desc,
-            NUM_W, NUM_H, 100) != hipSuccess);
-  }
+  SECTION("Invalid Flag") { REQUIRE(hipMallocArray(&A_d, &desc, NUM_W, NUM_H, 100) != hipSuccess); }
 
   SECTION("Max int values") {
-    REQUIRE(hipMallocArray(&A_d, &desc,
-            std::numeric_limits<int>::max(),
-            std::numeric_limits<int>::max(),
-            hipArrayDefault) != hipSuccess);
+    REQUIRE(hipMallocArray(&A_d, &desc, std::numeric_limits<int>::max(),
+                           std::numeric_limits<int>::max(), hipArrayDefault) != hipSuccess);
   }
 }
 
 
-TEST_CASE("Unit_hipMallocArray_DiffSizes") {
-  MallocArray_DiffSizes(0);
-}
+TEST_CASE("Unit_hipMallocArray_DiffSizes") { MallocArray_DiffSizes(0); }
 
 
 /*
@@ -140,7 +125,7 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
     threadlist.push_back(std::thread(MallocArray_DiffSizes, i));
   }
 
-  for (auto &t : threadlist) {
+  for (auto& t : threadlist) {
     t.join();
   }
   HIP_CHECK(hipMemGetInfo(&avail, &tot));
@@ -376,10 +361,9 @@ size_t getFreeMem() {
 // Selection of types chosen to reduce compile times
 TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, short2, char, uchar2,
                    char4, float, float2, float4) {
-
-  #if HT_AMD
+#if HT_AMD
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-62");
-  #endif
+#endif
 
   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
 
@@ -415,18 +399,3 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
 
   HIP_CHECK(hipFreeArray(arrayPtr));
 }
-
-// cuda array description -
-// https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#cuda-arrays
-
-// flags:  possible flags include:
-// * cudaArrayDefault           0x00 - 0
-// * cudaArraySurfaceLoadStore  0x02 - 2 (use maxSurface instead of maxTexture)
-// * cudaArrayTextureGather     0x08 - 8 (2D only) (use maxTexture2DGather instead of maxTexture)
-// * cudaArraySparse            0x40 - 32 (2D only)
-// * cudaArrayDeferredMapping   0x80 - 64
-//        flags that should not be used
-// * cudaArrayLayered           0x01 - 1
-// * cudaArrayCubemap           0x04 - 4
-// * cudaArraySparsePropertiesSingleMipTail 0x10 - 10 (not mentioned in cuda docs, something to do
-// with mipmapped arrays)
