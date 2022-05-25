@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 
-
 #include <hip_test_common.hh>
 #include <thread>
 #include <vector>
@@ -117,8 +116,7 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocLarge") {
   // allocate an extra quarter of free mem
   auto Malloc2Size = Malloc1Size >> 1;
   fixAllocSize(Malloc2Size);
-  HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc2Size));
-
+  HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&B_mem), Malloc2Size));
 
   HIP_CHECK(hipMemGetInfo(&freeMemRet, &totalMemRet));
 
@@ -534,6 +532,10 @@ TEST_CASE("Unit_hipMemGetInfo_ParaMultiSmall") {
 
 
 TEST_CASE("Unit_hipMemGetInfo_Negative") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST(" EXSWCPHIPT-61");
+  return;
+#endif
   size_t freeMemInit;
   size_t totalMemInit;
   HIP_CHECK(hipMemGetInfo(&freeMemInit, &totalMemInit));
