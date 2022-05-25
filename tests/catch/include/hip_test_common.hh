@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 #define HIP_PRINT_STATUS(status) INFO(hipGetErrorName(status) << " at line: " << __LINE__);
 
+// Not thread-safe
 #define HIP_CHECK(error)                                                                           \
   {                                                                                                \
     hipError_t localError = error;                                                                 \
@@ -37,6 +38,20 @@ THE SOFTWARE.
     }                                                                                              \
   }
 
+// Check that an expression, errorExpr, evaluates to the expected error_t, expectedError.
+#define HIP_CHECK_ERROR(errorExpr, expectedError)                                                  \
+  {                                                                                                \
+    hipError_t localError = errorExpr;                                                             \
+    INFO("Matching Errors: "                                                                       \
+         << " Expected Error: " << hipGetErrorString(expectedError)                                \
+         << " Expected Code: " << expectedError << '\n'                                            \
+         << "                  Actual Error:   " << hipGetErrorString(localError)                  \
+         << " Actual Code:   " << localError << "\nStr: " << #errorExpr                            \
+         << "\nIn File: " << __FILE__ << " At line: " << __LINE__);                                \
+    REQUIRE(localError == expectedError);                                                          \
+  }
+
+// Not thread-safe
 #define HIPRTC_CHECK(error)                                                                        \
   {                                                                                                \
     auto localError = error;                                                                       \
@@ -46,25 +61,26 @@ THE SOFTWARE.
       REQUIRE(false);                                                                              \
     }                                                                                              \
   }
+
 // Although its assert, it will be evaluated at runtime
 #define HIP_ASSERT(x)                                                                              \
   { REQUIRE((x)); }
 
 #ifdef __cplusplus
-  #include <iostream>
-  #include <iomanip>
-  #include <chrono>
+#include <iostream>
+#include <iomanip>
+#include <chrono>
 #endif
 
 #define HIPCHECK(error)                                                                            \
-    {                                                                                              \
-        hipError_t localError = error;                                                             \
-        if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
-            printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(localError),            \
-                   localError, #error, __FILE__, __LINE__);                                        \
-            abort();                                                                               \
-        }                                                                                          \
-    }
+  {                                                                                                \
+    hipError_t localError = error;                                                                 \
+    if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {          \
+      printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(localError), localError,      \
+             #error, __FILE__, __LINE__);                                                          \
+      abort();                                                                                     \
+    }                                                                                              \
+  }
 
 #define HIPASSERT(condition)                                                                       \
     if (!(condition)) {                                                                            \
@@ -104,8 +120,8 @@ static inline int getDeviceCount() {
 
 // Returns the current system time in microseconds
 static inline long long get_time() {
-  return std::chrono::high_resolution_clock::now().time_since_epoch()
-      /std::chrono::microseconds(1);
+  return std::chrono::high_resolution_clock::now().time_since_epoch() /
+      std::chrono::microseconds(1);
 }
 
 static inline double elapsed_time(long long startTimeUs, long long stopTimeUs) {
