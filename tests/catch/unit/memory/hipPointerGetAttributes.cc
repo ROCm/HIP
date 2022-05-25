@@ -336,3 +336,72 @@ TEST_CASE("Unit_hipPointerGetAttributes_MultiThread") {
     std::thread t4(clusterAllocs, 1000, 1, 4);
     if (serialize) t4.join();
 }
+
+TEST_CASE("Unit_hipPointerGetAttributes_Negative") {
+  SECTION("Invalid Attributes Pointer") {
+    int* dPtr{nullptr};
+    HIP_CHECK(hipMalloc(&dPtr, sizeof(int)));
+    HIP_CHECK_ERROR(hipPointerGetAttributes(nullptr, dPtr), hipErrorInvalidValue);
+    HIP_CHECK(hipFree(dPtr));
+  }
+
+  SECTION("Invalid Device Pointer") {
+    hipPointerAttribute_t attributes{};
+    HIP_CHECK_ERROR(hipPointerGetAttributes(&attributes, nullptr), hipErrorInvalidValue);
+  }
+}
+
+// Run this test for all devices for DeviceMemory, HostMemory, ManagedMemory and MappedMemory
+TEST_CASE("Unit_hipPointerGetAttributes_GpuIter") {
+  int deviceCount{0};
+  HIP_CHECK(hipGetDeviceCount(&deviceCount));
+  REQUIRE(deviceCount != 0);
+
+  // Memory Types
+  enum MemoryTypes { DeviceMemory = 0, HostMemory, MappedMemory };
+  auto MemoryType =
+      GENERATE(MemoryTypes::DeviceMemory, MemoryTypes::HostMemory, MemoryTypes::MappedMemory);
+
+  INFO("Memory Type: " << MemoryType);
+
+  int* ptr{nullptr};
+  for (int i = 0; i < deviceCount; i++) {
+    HIP_CHECK(hipSetDevice(i));
+
+    ptr = nullptr;
+    if (MemoryType == MemoryTypes::DeviceMemory) {
+      HIP_CHECK(hipMalloc(&ptr, sizeof(int)));
+    } else if (MemoryType == MemoryTypes::HostMemory) {
+      HIP_CHECK(hipHostMalloc(&ptr, sizeof(int)));
+    } else if (MemoryType == MemoryTypes::MappedMemory) {
+      HIP_CHECK(hipHostMalloc(&ptr, sizeof(int), hipHostMallocMapped));
+    }
+
+    REQUIRE(ptr != nullptr);
+    hipPointerAttribute_t attributes{};
+    HIP_CHECK(hipPointerGetAttributes(&attributes, ptr));
+
+    REQUIRE(attributes.device == i);  // Device Check
+
+    // Memory address and type check
+    if (MemoryType == MemoryTypes::DeviceMemory) {
+      REQUIRE(attributes.memoryType == hipMemoryTypeDevice);
+      REQUIRE(attributes.devicePointer == ptr);
+      REQUIRE(attributes.hostPointer == nullptr);
+    } else if (MemoryType == MemoryTypes::HostMemory) {
+      REQUIRE(attributes.memoryType == hipMemoryTypeHost);
+      REQUIRE(attributes.hostPointer == ptr);
+    } else if (MemoryType == MemoryTypes::MappedMemory) {
+      int* devicePtr{nullptr};
+      HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void**>(&devicePtr), ptr, 0));
+      REQUIRE(attributes.hostPointer == ptr);
+      REQUIRE(attributes.hostPointer == devicePtr);
+    }
+
+    if (MemoryType == MemoryTypes::DeviceMemory) {
+      HIP_CHECK(hipFree(ptr));
+    } else if (MemoryType == MemoryTypes::MappedMemory || MemoryType == MemoryTypes::HostMemory) {
+      HIP_CHECK(hipHostFree(ptr));
+    }
+  }
+}
