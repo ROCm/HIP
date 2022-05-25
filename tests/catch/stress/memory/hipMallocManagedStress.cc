@@ -150,7 +150,7 @@ static int HmmAttrPrint() {
 //  The following test case allocation, host access, device access of HMM
 //   memory from size 1 to 10KB
 
-TEST_CASE("Unit_hipMallocManaged_MultiSize") {
+TEST_CASE("Stress_hipMallocManaged_MultiSize") {
   IfTestPassed = true;
   int managed = HmmAttrPrint();
   if (managed == 1) {
@@ -196,7 +196,7 @@ TEST_CASE("Unit_hipMallocManaged_MultiSize") {
 // The following test case tests the behavior of kernel with a HMM memory and
 // hipMalloc memory
 
-TEST_CASE("Unit_hipMallocManaged_KrnlWth2MemTypes") {
+TEST_CASE("Stress_hipMallocManaged_KrnlWth2MemTypes") {
   IfTestPassed = true;
   int *Hmm = NULL, *Dptr = NULL, InitVal = 123;
   size_t NumElms = (1024 * 1024);
@@ -241,7 +241,7 @@ TEST_CASE("Unit_hipMallocManaged_KrnlWth2MemTypes") {
 
 // The following test case tests when the same Hmm memory is used for
 // launching multiple different kernels will results in any issue
-TEST_CASE("Unit_hipMallocManaged_MultiKrnlHmmAccess") {
+TEST_CASE("Stress_hipMallocManaged_MultiKrnlHmmAccess") {
   int managed = HmmAttrPrint();
   if (managed) {
     int InitVal = 123, NumElms = (1024 * 1024);
@@ -253,7 +253,7 @@ TEST_CASE("Unit_hipMallocManaged_MultiKrnlHmmAccess") {
 }
 
 // Testing the allocation of/scenarios around max possible memory
-TEST_CASE("Unit_hipMallocManaged_ExtremeSizes") {
+TEST_CASE("Stress_hipMallocManaged_ExtremeSizes") {
   int managed = HmmAttrPrint();
   if (managed == 1) {
     bool IfTestPassed = true;
