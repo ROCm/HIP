@@ -675,9 +675,8 @@ TEST_CASE("Unit_hipMallocArray_Negative_NumericLimit") {
   size_t size = std::numeric_limits<size_t>::max();
 #if HT_AMD
   unsigned int flag = hipArrayDefault;
-  HIP_CHECK_ERROR(hipMallocArray(&arrayPtr, &desc, size, size, flag), hipErrorInvalidValue);
 #else
   unsigned int flag = GENERATE(hipArrayDefault, hipArraySurfaceLoadStore, hipArrayTextureGather);
-  HIP_CHECK_ERROR(hipMallocArray(&arrayPtr, &desc, size, size, flag), hipErrorUnknown);
 #endif
+  HIP_CHECK_ERROR(hipMallocArray(&arrayPtr, &desc, size, size, flag), hipErrorInvalidValue);
 }
