@@ -271,6 +271,135 @@ void testArrayAsTexture(hipArray_t arrayPtr, const size_t width, const size_t he
   HIP_CHECK(hipFree(device_data));
 }
 
+// Test an array created with the TextureGather flag.
+// First generating a texture from the array then reading from that texture.
+// Textures are read-only so first write to the array then copy from the texture into normal device
+// memory. Texture Gather works by taking the nth channel from the 4 elements used for sampling from
+// the texture using bilinear filtering (bilinear interpolation)
+//
+//  Example
+//
+//  |
+//  | A     B
+//  |     x
+//  |
+//  | C     D
+//  |___________
+//
+// if `x` is the point sampled, texture gather is set to query the 3nd channel, and A=(1,2,3,4),
+// B=(5,6,7,8), C=(9,a,b,c) D=(d,e,f,0) then the output of the sample would be (3,7,b,f) (assuming
+// the points are chosen in that order)
+// when the channel queried doesn't exist, the value 0 should be returned.
+template <typename T>
+void testArrayAsTextureWithGather(hipArray_t arrayPtr, const size_t width, const size_t height) {
+  REQUIRE(height != 0);  // 1D TextureGather isn't allowed
+  using scalar_type = typename vector_info<T>::type;
+  constexpr auto vec_size = vector_info<T>::size;
+
+  const size_t pitch = width * sizeof(T);  // no padding
+  const auto size = pitch * height;
+
+  std::vector<scalar_type> hostData(width * height * vec_size);
+
+  // Setup backing array
+  // assign ascending values to the data array to show indexing is working.
+  std::iota(std::begin(hostData), std::end(hostData), 0);
+  HIP_CHECK(hipMemcpy2DToArray(arrayPtr, 0, 0, hostData.data(), pitch, pitch, height,
+                               hipMemcpyHostToDevice));
+
+  // create texture
+  hipTextureObject_t textObj{};
+  hipResourceDesc resDesc{};
+  memset(&resDesc, 0, sizeof(hipResourceDesc));
+  resDesc.resType = hipResourceTypeArray;
+  resDesc.res.array.array = arrayPtr;
+
+  hipTextureDesc textDesc{};
+  memset(&textDesc, 0, sizeof(hipTextureDesc));
+  textDesc.filterMode =
+      hipFilterModePoint;  // use the actual values in the texture, not normalized data
+  textDesc.readMode = hipReadModeElementType;    // don't convert the data to floats
+  textDesc.addressMode[0] = hipAddressModeWrap;  // for queries outside the texture...
+  textDesc.addressMode[1] = hipAddressModeWrap;  // wrap around in all dimensions
+  textDesc.addressMode[2] = hipAddressModeWrap;
+  textDesc.normalizedCoords = 1;  // use normalized coordinates (0.0 - 1.0)
+
+  HIP_CHECK(hipCreateTextureObject(&textObj, &resDesc, &textDesc, nullptr));
+
+  // run kernel
+  T* device_data{};
+  HIP_CHECK(hipMalloc(&device_data, size));
+  readFromTexture<T>
+      <<<dim3(width / BlockSize, height / BlockSize, 1), dim3(BlockSize, BlockSize, 1)>>>(
+          device_data, textObj, width, height, true);
+  HIP_CHECK(hipGetLastError());
+
+  // copy data back
+  std::fill(std::begin(hostData), std::end(hostData), 0);
+  HIP_CHECK(hipMemcpy(hostData.data(), device_data, size, hipMemcpyDeviceToHost));
+
+  if (ChannelToRead >= vec_size) {
+    // we expect all the values to be zero
+    auto not_zero_idx = std::find_if(std::begin(hostData), std::end(hostData), [](scalar_type& x) {
+      return x != static_cast<scalar_type>(0);
+    });
+    CAPTURE(std::distance(std::begin(hostData), not_zero_idx));
+    REQUIRE(not_zero_idx == std::end(hostData));
+  } else {
+    // convert a row and column of the element into the index of the first channel of the element
+    // also accounts for the wrap-around
+    // use int to deal with negative indexes
+    auto toIndex = [width, height](int row, int column) -> size_t {
+      auto wrap = [](int value, int wrapSize) {
+        auto v = value % wrapSize;
+        return v < 0 ? wrapSize + v : v;
+      };
+      const auto c = wrap(column, width);
+      const auto r = wrap(row, height);
+      return vec_size * (width * r + c);
+    };
+
+    // calculate the index of the values that would have been used for bilinear filtering
+    // then check that the values in the element are those indexes
+    bool allMatch = true;
+    size_t dataIdx = 0;
+    for (size_t row = 0; allMatch && row < height; ++row) {
+      for (size_t col = 0; allMatch && col < width; ++col) {
+        // coordinates of the elements used for bilinear filtering
+        std::array<scalar_type, 4> elementIndexes = {
+            static_cast<scalar_type>(toIndex(row, static_cast<int>(col) - 1)),
+            static_cast<scalar_type>(toIndex(row, col)),
+            static_cast<scalar_type>(toIndex(static_cast<int>(row) - 1, col)),
+            static_cast<scalar_type>(
+                toIndex(static_cast<int>(row) - 1, static_cast<int>(col) - 1))};
+
+        // add offset for the channel that is selected
+        std::for_each(std::begin(elementIndexes), std::end(elementIndexes),
+                      [](scalar_type& x) { x += static_cast<scalar_type>(ChannelToRead); });
+
+        // calculate the output we are looking at
+        dataIdx = vec_size * (width * row + col);
+
+        // test each value sampled
+        for (int channel = 0; channel < vec_size; ++channel) {
+          allMatch = allMatch && hostData[dataIdx + channel] == elementIndexes[channel];
+        }
+      }
+    }
+    CAPTURE(dataIdx, hostData[dataIdx], hostData[dataIdx + 1], hostData[dataIdx + 2],
+            hostData[dataIdx + 3],
+            static_cast<scalar_type>(toIndex(0, -1)) + static_cast<scalar_type>(ChannelToRead),
+            static_cast<scalar_type>(toIndex(0, 0)) + static_cast<scalar_type>(ChannelToRead),
+            static_cast<scalar_type>(toIndex(-1, 0)) + static_cast<scalar_type>(ChannelToRead),
+            static_cast<scalar_type>(toIndex(-1, -1)) + static_cast<scalar_type>(ChannelToRead));
+    REQUIRE(allMatch);
+  }
+
+  // clean up
+  HIP_CHECK(hipDestroyTextureObject(textObj));
+  HIP_CHECK(hipFree(device_data));
+}
+
 // Test the an array created with the SurfaceLoadStore flag by generating a surface and reading from
 // it and writing to it.
 template <typename T>
@@ -348,9 +477,10 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
   // pointer to the array in device memory
   hipArray_t arrayPtr{};
   size_t width = 1024;
-  size_t height = GENERATE(0, 1024);
+  size_t height;
 
   SECTION("hipArrayDefault") {
+    height = GENERATE(0, 1024);
     INFO("flag is hipArrayDefault");
     INFO("height: " << height);
 
@@ -359,11 +489,20 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
   }
 #if HT_NVIDIA  // surfaces not supported on AMD
   SECTION("hipArraySurfaceLoadStore") {
+    height = GENERATE(0, 1024);
     INFO("flag is hipArraySurfaceLoadStore");
     INFO("height: " << height);
 
     HIP_CHECK(hipMallocArray(&arrayPtr, &desc, width, height, hipArraySurfaceLoadStore));
     testArrayAsSurface<TestType>(arrayPtr, width, height);
+  }
+  SECTION("hipArrayTextureGather") {
+    height = 1024;
+    INFO("flag is hipArrayTextureGather");
+    INFO("height: " << height);
+
+    HIP_CHECK(hipMallocArray(&arrayPtr, &desc, width, height, hipArrayTextureGather));
+    testArrayAsTextureWithGather<TestType>(arrayPtr, width, height);
   }
 #endif
 
