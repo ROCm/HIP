@@ -75,6 +75,7 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMemsetFunctional.cc
 )
 else()
 set(TEST_SRC
@@ -129,6 +130,7 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMemsetFunctional.cc
 )
 endif()
 
