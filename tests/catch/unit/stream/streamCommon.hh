@@ -24,6 +24,32 @@ THE SOFTWARE.
 namespace hip {
 inline namespace stream {
 
+const hipStream_t nullStream = nullptr;
+const hipStream_t streamPerThread = hipStreamPerThread;
+
+/**
+ * @brief Kernel that signals a semaphore to change value from 0 to 1.
+ *
+ * @param semaphore the semaphore that needs to be signaled.
+ */
+__global__ void signaling_kernel(int* semaphore = nullptr);
+
+/**
+ * @brief Kernel that busy waits until the specified semaphore goes from 0 to 1.
+ *
+ * @param semaphore the semaphore to wait for.
+ */
+__global__ void waiting_kernel(int* semaphore = nullptr);
+
+/**
+ * @brief Creates a thread that runs a signaling_kernel on a non-blocking stream.
+ * hipStreamNonBlocking is used here to avoid interfering with tests for the Null Stream.
+ *
+ * @param semaphore memory location to signal
+ * @return std::thread thread that has to be joined after the testing is done.
+ */
+std::thread startSignalingThread(int* semaphore = nullptr);
+
 // Checks stream for valid values of flags and priority
 bool checkStream(hipStream_t stream);
 

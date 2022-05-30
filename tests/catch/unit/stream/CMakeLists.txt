@@ -11,15 +11,6 @@ set(TEST_SRC
     hipAPIStreamDisable.cc
     streamCommon.cc
     hipStreamValue.cc
-)
-
-#skipped in windows - duplicate HipTest::vector_square sym (compiler issue)
-if(UNIX)
-    set(TEST_SRC ${TEST_SRC}
-                 hipStreamWithCUMask.cc
-                 hipStreamACb_MultiThread.cc)
-endif()
-
     hipStreamWithCUMask.cc
     hipStreamACb_MultiThread.cc
     )
@@ -35,7 +26,8 @@ set(TEST_SRC
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
     streamCommon.cc
-)
+    hipStreamValue.cc
+    )
 endif()
 
 hip_add_exe_to_target(NAME StreamTest
