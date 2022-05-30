@@ -44,10 +44,10 @@ template <typename intT> struct TEST_WAIT {
 
   TEST_WAIT(int compareOp, uintT mask, uintT waitValue, intT signalValueFail, intT signalValuePass)
       : compareOp{compareOp},
+        mask{mask},
         waitValue{waitValue},
         signalValueFail{signalValueFail},
-        signalValuePass{signalValuePass},
-        mask{mask} {}
+        signalValuePass{signalValuePass} {}
 };
 typedef TEST_WAIT<int32_t> TEST_WAIT32;
 typedef TEST_WAIT<int64_t> TEST_WAIT64;
@@ -358,7 +358,6 @@ DEFINE_STREAM_WAIT_VAL_TEST_CASES_INT64("NoMask_Nor",
 
 TEST_CASE("Unit_hipStreamValue_Negative_InvalidStream") {
   hipStream_t stream{nullptr};
-  hipEvent_t event{nullptr};
 
   HIP_CHECK(hipStreamCreate(&stream));
 
@@ -412,7 +411,6 @@ TEST_CASE("Unit_hipStreamValue_Negative_InvalidStream") {
 
 TEST_CASE("Unit_hipStreamValue_Negative_InvalidMemory") {
   hipStream_t stream{nullptr};
-  hipEvent_t event{nullptr};
 
   HIP_CHECK(hipStreamCreate(&stream));
 
@@ -458,8 +456,13 @@ TEST_CASE("Unit_hipStreamValue_Negative_InvalidMemory") {
 }
 
 TEST_CASE("Unit_hipStreamWaitValue_Negative_InvalidFlag") {
+  
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-96");
+  return;
+#endif
+
   hipStream_t stream{nullptr};
-  hipEvent_t event{nullptr};
 
   HIP_CHECK(hipStreamCreate(&stream));
 
@@ -477,14 +480,11 @@ TEST_CASE("Unit_hipStreamWaitValue_Negative_InvalidFlag") {
   *hostPtr64 = 0x0;
   *hostPtr32 = 0x0;
 
-  SECTION("Invalid flags hipStreamWaitValue32") {
-    INFO("Testing Invalid flag for hipStreamWaitValue32");
-    NEG_TEST_ERROR_CHECK(Wait, 32, hipErrorInvalidValue, stream, hostPtr32.get(), 0, -1)
-  }
-  SECTION("Invalid Flags hipStreamWaitValue64") {
-    INFO("Testing Invalid flag for hipStreamWaitValue64");
-    NEG_TEST_ERROR_CHECK(Wait, 64, hipErrorInvalidValue, stream, hostPtr64.get(), 0, -1)
-  }
+  /* EXSWCPHIPT-96 */
+  INFO("Testing Invalid flag for hipStreamWaitValue32");
+  NEG_TEST_ERROR_CHECK(Wait, 32, hipErrorNotSupported, stream, hostPtr32.get(), 0, -1)
+  INFO("Testing Invalid flag for hipStreamWaitValue64");
+  NEG_TEST_ERROR_CHECK(Wait, 64, hipErrorNotSupported, stream, hostPtr64.get(), 0, -1)
 
   // Cleanup
   HIP_CHECK(hipHostUnregister(hostPtr32.get()));

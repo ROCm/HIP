@@ -31,23 +31,11 @@ THE SOFTWARE.
 #define HIP_CHECK(error)                                                                           \
   {                                                                                                \
     hipError_t localError = error;                                                                 \
-    INFO("Matching Error to hipSuccess or hipErrorPeerAccessAlreadyEnabled: "                      \
-         << hipGetErrorString(localError) << " Code: " << localError << " Str: " << #error         \
-         << " In File: " << __FILE__ << " At line: " << __LINE__);                                 \
-    REQUIRE(((localError == hipSuccess) || (localError == hipErrorPeerAccessAlreadyEnabled)));     \
-  }
-
-// Check that an expression, errorExpr, evaluates to the expected error_t, expectedError.
-#define HIP_CHECK_ERROR(errorExpr, expectedError)                                                  \
-  {                                                                                                \
-    hipError_t localError = errorExpr;                                                             \
-    INFO("Matching Errors: "                                                                       \
-         << " Expected Error: " << hipGetErrorString(expectedError)                                \
-         << " Expected Code: " << expectedError << '\n'                                            \
-         << "                  Actual Error:   " << hipGetErrorString(localError)                  \
-         << " Actual Code:   " << localError << "\nStr: " << #errorExpr                            \
-         << "\nIn File: " << __FILE__ << " At line: " << __LINE__);                                \
-    REQUIRE(localError == expectedError);                                                          \
+    if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {          \
+      INFO("Error: " << hipGetErrorString(localError) << " Code: " << localError << " Str: "       \
+                     << #error << " In File: " << __FILE__ << " At line: " << __LINE__);           \
+      REQUIRE(false);                                                                              \
+    }                                                                                              \
   }
 
 // Check that an expression, errorExpr, evaluates to the expected error_t, expectedError.
@@ -67,10 +55,11 @@ THE SOFTWARE.
 #define HIPRTC_CHECK(error)                                                                        \
   {                                                                                                \
     auto localError = error;                                                                       \
-    INFO("Matching Error to HIPRTC_SUCCESS: "                                                      \
-         << hiprtcGetErrorString(localError) << " Code: " << localError << " Str: " << #error      \
-         << " In File: " << __FILE__ << " At line: " << __LINE__);                                 \
-    REQUIRE(error == HIPRTC_SUCCESS);                                                              \
+    if (localError != HIPRTC_SUCCESS) {                                                            \
+      INFO("Error: " << hiprtcGetErrorString(localError) << " Code: " << localError << " Str: "    \
+                     << #error << " In File: " << __FILE__ << " At line: " << __LINE__);           \
+      REQUIRE(false);                                                                              \
+    }                                                                                              \
   }
 
 // Although its assert, it will be evaluated at runtime
