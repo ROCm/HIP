@@ -123,7 +123,7 @@ TEST_CASE("Unit_hipMallocManaged_Advanced") {
     SUCCEED("hipMemRangeGetAttribute error device = " << device);
   }
 
-  for (int i = 0; i < numElements; i++) {
+  for (size_t i = 0; i < numElements; i++) {
     maxError = fmax(maxError, fabs(B[i] - 3.0f));
   }
   HIP_CHECK(hipFree(A));
