@@ -7,7 +7,6 @@ set(TEST_SRC
     hipStreamAddCallback.cc
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
-    hipStreamSynchronize.cc
     hipStreamGetCUMask.cc
     hipAPIStreamDisable.cc
     streamCommon.cc
@@ -36,7 +35,7 @@ set(TEST_SRC
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
     streamCommon.cc
-    )
+)
 endif()
 
 hip_add_exe_to_target(NAME StreamTest
