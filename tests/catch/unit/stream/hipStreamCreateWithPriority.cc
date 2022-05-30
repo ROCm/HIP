@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -500,6 +500,8 @@ bool validateStreamPrioritiesWithEvents() {
 
 }  // namespace hipStreamCreateWithPriorityTest
 
+
+
 /**
 Tests following scenarios.
  1)Create streams with default flag for all available priority levels and
@@ -597,33 +599,25 @@ TEST_CASE("Unit_hipStreamCreateWithPriority") {
   SECTION("Setting high priority") {
     HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_high));
     REQUIRE(stream != nullptr);
-    REQUIRE(hip::checkStreamPriorityAndFlags(stream, priority_high));
+    REQUIRE(hip::checkStreamPriority(stream, priority_high));
   }
 
   SECTION("Setting low priority") {
     HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, priority_low));
     REQUIRE(stream != nullptr);
-    REQUIRE(hip::checkStreamPriorityAndFlags(stream, priority_low));
+    REQUIRE(hip::checkStreamPriority(stream, priority_low));
   }
 
-  SECTION("Setting lowest possible priority") {
-    HIP_CHECK(
-        hipStreamCreateWithPriority(&stream, hipStreamDefault, std::numeric_limits<int>::max()));
+  SECTION("Setting lowest possible value priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, INT_MAX));
     REQUIRE(stream != nullptr);
-    REQUIRE(hip::checkStreamPriorityAndFlags(stream, priority_low));
+    REQUIRE(hip::checkStreamPriority(stream, priority_low));
   }
 
-  SECTION("Setting highest possible priority") {
-    HIP_CHECK(
-        hipStreamCreateWithPriority(&stream, hipStreamDefault, std::numeric_limits<int>::min()));
+  SECTION("Setting highest possible value priority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, INT_MIN));
     REQUIRE(stream != nullptr);
-    REQUIRE(hip::checkStreamPriorityAndFlags(stream, priority_high));
-  }
-
-  SECTION("Setting flags to hipStreamNonBlocking") {
-    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking, priority_high));
-    REQUIRE(stream != nullptr);
-    REQUIRE(hip::checkStreamPriorityAndFlags(stream, priority_high, hipStreamNonBlocking));
+    REQUIRE(hip::checkStreamPriority(stream, priority_high));
   }
 
   HIP_CHECK(hipStreamDestroy(stream));

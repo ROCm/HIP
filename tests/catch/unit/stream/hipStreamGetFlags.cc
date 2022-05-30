@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -27,43 +27,52 @@ Testcase Scenarios :
 #include <hip_test_common.hh>
 
 /**
- * @brief Check that hipStreamGetFlags returns the same flags that were used to create the stream.
- *
+ * Test flag value of stream created with various types.
  */
-TEST_CASE("Unit_hipStreamGetFlags_Basic") {
-  unsigned int expectedFlag = GENERATE(hipStreamDefault, hipStreamNonBlocking);
-  unsigned int returnedFlags;
+TEST_CASE("Unit_hipStreamGetFlags_BasicFunctionalities") {
   hipStream_t stream;
-
-  HIP_CHECK(hipStreamCreateWithFlags(&stream, expectedFlag));
-  HIP_CHECK(hipStreamGetFlags(stream, &returnedFlags));
-  REQUIRE((returnedFlags & expectedFlag) == expectedFlag);
-  HIP_CHECK(hipStreamDestroy(stream));
+  unsigned int flags;
+  // Check flag value of stream created with hipStreamCreateWithFlags
+  SECTION("Check flag value of streams hipStreamCreateWithFlags") {
+    HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamDefault));
+    HIP_CHECK(hipStreamGetFlags(stream, &flags));
+    REQUIRE(flags == hipStreamDefault);
+    HIP_CHECK(hipStreamDestroy(stream));
+    HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamNonBlocking));
+    HIP_CHECK(hipStreamGetFlags(stream, &flags));
+    REQUIRE(flags == hipStreamNonBlocking);
+    HIP_CHECK(hipStreamDestroy(stream));
+  }
+  // Check flag value of stream created with hipStreamCreate
+  SECTION("Check flag value of streams hipStreamCreate") {
+    HIP_CHECK(hipStreamCreate(&stream));
+    HIP_CHECK(hipStreamGetFlags(stream, &flags));
+    REQUIRE(flags == hipStreamDefault);
+    HIP_CHECK(hipStreamDestroy(stream));
+  }
+  // Check flag value of stream created with hipStreamCreateWithPriority
+  SECTION("Check flag value of streams hipStreamCreateWithPriority") {
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamDefault, 0));
+    HIP_CHECK(hipStreamGetFlags(stream, &flags));
+    REQUIRE(flags == hipStreamDefault);
+    HIP_CHECK(hipStreamDestroy(stream));
+    HIP_CHECK(hipStreamCreateWithPriority(&stream, hipStreamNonBlocking, 0));
+    HIP_CHECK(hipStreamGetFlags(stream, &flags));
+    REQUIRE(flags == hipStreamNonBlocking);
+    HIP_CHECK(hipStreamDestroy(stream));
+  }
 }
 
 /**
- * @brief Negative scenarios for hipStreamGetFlags.
- *
+ * Negative Scenarios
  */
 TEST_CASE("Unit_hipStreamGetFlags_Negative") {
-  hipStream_t validStream;
-  unsigned int flags;
-
-  HIP_CHECK(hipStreamCreate(&validStream));
-
-  SECTION("Nullptr Stream && Valid Flags") { /* EXSWCPHIPT-17 */
-#if HT_AMD
-    HIP_CHECK_ERROR(hipStreamGetFlags(nullptr, &flags), hipErrorInvalidValue);
-#elif HT_NVIDIA
-    HIP_CHECK(hipStreamGetFlags(nullptr, &flags));
-#endif
-  }
-
-  SECTION("Valid Stream && Nullptr Flags") {
-    HIP_CHECK_ERROR(hipStreamGetFlags(validStream, nullptr), hipErrorInvalidValue);
-  }
-
-  HIP_CHECK(hipStreamDestroy(validStream));
+  hipStream_t stream;
+  HIP_CHECK(hipStreamCreate(&stream));
+  // nullptr check
+  REQUIRE(hipStreamGetFlags(stream, nullptr) != hipSuccess);
+  REQUIRE(hipStreamGetFlags(nullptr, hipStreamDefault) != hipSuccess);
+  HIP_CHECK(hipStreamDestroy(stream));
 }
 
 #if HT_AMD
