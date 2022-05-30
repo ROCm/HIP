@@ -127,7 +127,20 @@ bool runTest(int argc, char** argv) {
     return testResult;
 }
 
+inline bool isImageSupported() {
+    int imageSupport = 1;
+#ifdef __HIP_PLATFORM_AMD__
+    HIP_CHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                              0));
+#endif
+  return imageSupport != 0;
+}
+
 int main(int argc, char** argv) {
+    if (!isImageSupported()) {
+      printf("Texture is not support on the device. Skipped.\n");
+      return 0;
+    }
     hipInit(0);
     testResult = runTest(argc, argv);
     printf("%s ...\n", testResult ? "PASSED" : "FAILED");

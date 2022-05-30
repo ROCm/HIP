@@ -58,7 +58,7 @@ def hipBuildTest(String backendLabel) {
                         set -x
                         # Check if backend label contains string "amd" or backend host is a server with amd gpu
                         if [[ $backendLabel =~ amd ]]; then
-                            LLVM_PATH=/opt/rocm/llvm ctest -E 'cooperative_streams_least_capacity.tst|cooperative_streams_half_capacity.tst|cooperative_streams_full_capacity.tst|grid_group_data_sharing.tst'
+                            LLVM_PATH=/opt/rocm/llvm ctest -E 'cooperative_streams_least_capacity.tst|cooperative_streams_half_capacity.tst|cooperative_streams_full_capacity.tst|grid_group_data_sharing.tst|hipIpcMemAccessTest.tst|p2p_copy_coherency.tst'
                         else
                             make test
                         fi
@@ -75,6 +75,7 @@ def hipBuildTest(String backendLabel) {
                     cd build
                     # Check if backend label contains string "amd" or backend host is a server with amd gpu
                     if [[ $backendLabel =~ amd ]]; then
+                        export HT_CONFIG_FILE="$HIP_DIR/tests/catch/hipTestMain/config/config_amd_linux.json"
                         cmake -DHIP_CATCH_TEST=1 -DHIP_PATH=\$PWD/install -DHIP_COMMON_DIR=$HIP_DIR -DAMD_OPENCL_PATH=\$OPENCL_DIR -DROCCLR_PATH=\$ROCclr_DIR -DCMAKE_PREFIX_PATH="/opt/rocm/" -DCMAKE_INSTALL_PREFIX=\$PWD/install ..
                     else
                         export HIP_PLATFORM=nvidia
@@ -98,6 +99,7 @@ def hipBuildTest(String backendLabel) {
                         set -x
                         # Check if backend label contains string "amd" or backend host is a server with amd gpu
                         if [[ $backendLabel =~ amd ]]; then
+                            export HT_CONFIG_FILE="$HIP_DIR/tests/catch/hipTestMain/config/config_amd_linux.json"
                             LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional|Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative'
                         else
                             make test

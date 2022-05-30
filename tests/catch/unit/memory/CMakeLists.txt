@@ -42,14 +42,13 @@ set(TEST_SRC
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
     hipMallocManaged_MultiScenario.cc
-    hipMemsetInvalidPtr.cc
+    hipMemsetNegative.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemset3D.cc
     hipMemset2D.cc
     hipHostMallocTests.cc
     hipMemset3DFunctional.cc
-    hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
@@ -76,6 +75,17 @@ set(TEST_SRC
     hipMemcpy.cc
     hipMemcpyAsync.cc
     hipMemsetFunctional.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
+    hipMallocMngdMultiThread.cc
+    hipMemPrefetchAsync.cc
 )
 else()
 set(TEST_SRC
@@ -98,14 +108,13 @@ set(TEST_SRC
     hipHostRegister.cc
     hipHostGetFlags.cc
     hipMallocManaged_MultiScenario.cc
-    hipMemsetInvalidPtr.cc
+    hipMemsetNegative.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemset3D.cc
     hipMemset2D.cc
     hipHostMallocTests.cc
     hipMemset3DFunctional.cc
-    hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
@@ -131,6 +140,16 @@ set(TEST_SRC
     hipMemcpy.cc
     hipMemcpyAsync.cc
     hipMemsetFunctional.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
+    hipMemPrefetchAsync.cc
 )
 endif()
 
