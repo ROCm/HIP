@@ -51,10 +51,11 @@ __global__ void waiting_kernel(int* semaphore = nullptr);
 std::thread startSignalingThread(int* semaphore = nullptr);
 
 // Checks stream for valid values of flags and priority
-bool checkStream(hipStream_t& stream);
+bool checkStream(hipStream_t stream);
 
 // Checks stream for valid flags and a particular value of priority
-bool checkStreamPriorityAndFlags(hipStream_t& stream, int priority, unsigned int flags = hipStreamDefault);
+bool checkStreamPriorityAndFlags(hipStream_t stream, int priority,
+                                 unsigned int flags = hipStreamDefault);
 
 }  // namespace stream
 }  // namespace hip

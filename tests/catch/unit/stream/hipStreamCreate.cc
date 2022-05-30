@@ -33,20 +33,3 @@ TEST_CASE("Unit_hipStreamCreate_default") {
 TEST_CASE("Unit_hipStreamCreate_Negative") {
   REQUIRE(hipErrorInvalidValue == hipStreamCreate(nullptr));
 }
-
-TEST_CASE("Unit_hipStreamCreateWithFlags_Negative") {
-  hipStream_t stream;
-  auto status = hipStreamCreateWithFlags(&stream, 0xFF);
-  REQUIRE(status == hipErrorInvalidValue);
-  status = hipStreamCreateWithFlags(nullptr, hipStreamDefault);
-  REQUIRE(status == hipErrorInvalidValue);
-}
-
-TEST_CASE("Unit_hipStreamCreateWithFlags") {
-  hipStream_t stream;
-  HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamDefault));
-  HIP_CHECK(hipStreamDestroy(stream));
-  HIP_CHECK(hipStreamCreateWithFlags(&stream, hipStreamNonBlocking));
-  HIP_CHECK(hipStreamDestroy(stream));
-}
-

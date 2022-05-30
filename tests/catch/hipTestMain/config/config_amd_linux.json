@@ -1,19 +1,9 @@
 {
     "DisabledTests":
 	[
-	   "Unit_hipStreamPerThread_DeviceReset_1",
-	   "Unit_hipStreamSynchronize_NullStreamSynchronization",
-	   "Unit_hipStreamSynchronize_SynchronizeStreamAndQueryNullStream",
-     	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Gte_1",
-      	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Gte_2",
-      	   "Unit_hipStreamValue_Wait32_Blocking_Mask_Nor_2",
-      	   "Unit_hipStreamValue_Wait32_Blocking_NoMask_Gte",
-      	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Gte_1",
-      	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Gte_2",
-      	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Nor_1",
-      	   "Unit_hipStreamValue_Wait64_Blocking_Mask_Nor_2",
-      	   "Unit_hipStreamValue_Wait64_Blocking_NoMask_Gte",
-      	   "Unit_hipStreamValue_Negative_InvalidStream"
+	   "# Following test is related to ticket EXSWCPHIPT-41",
+	   "Unit_hipStreamGetPriority_happy",
+	   "Unit_hipStreamPerThread_DeviceReset_1"
 	]
 
 }

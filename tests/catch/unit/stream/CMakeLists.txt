@@ -11,7 +11,6 @@ set(TEST_SRC
     hipStreamGetCUMask.cc
     hipAPIStreamDisable.cc
     streamCommon.cc
-    hipStreamQuery.cc
     hipStreamValue.cc
 )
 
@@ -22,6 +21,9 @@ if(UNIX)
                  hipStreamACb_MultiThread.cc)
 endif()
 
+    hipStreamWithCUMask.cc
+    hipStreamACb_MultiThread.cc
+    )
 else()
 set(TEST_SRC
     hipStreamCreate.cc
@@ -33,10 +35,8 @@ set(TEST_SRC
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
-    hipStreamSynchronize.cc
     streamCommon.cc
-    hipStreamQuery.cc
-)
+    )
 endif()
 
 hip_add_exe_to_target(NAME StreamTest
