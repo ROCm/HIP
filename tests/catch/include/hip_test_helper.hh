@@ -38,7 +38,7 @@ static inline int getGeviceCount() {
 }
 
 // Get Free Memory from the system
-static size_t getMemoryAmount() {
+static inline size_t getMemoryAmount() {
 #ifdef __linux__
   struct sysinfo info{};
   sysinfo(&info);
@@ -51,7 +51,7 @@ static size_t getMemoryAmount() {
 #endif
 }
 
-static size_t getHostThreadCount(const size_t memPerThread,
+static inline size_t getHostThreadCount(const size_t memPerThread,
                                            const size_t maxThreads) {
   if (memPerThread == 0) return 0;
   auto memAmount = getMemoryAmount();
