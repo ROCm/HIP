@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Advanced Micro Devices, Inc. All Rights Reserved.
+# Copyright (c) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,40 @@
 set(TEST_SRC
   hipGraphAddEmptyNode.cc
   hipGraphAddDependencies.cc
+  hipGraphAddEventRecordNode.cc
   hipGraph.cc
   hipSimpleGraphWithKernel.cc
   hipGraphAddMemcpyNode.cc
+  hipGraphClone.cc
+  hipGraphInstantiateWithFlags.cc
+  hipGraphAddHostNode.cc
+  hipGraphAddMemcpyNodeFromSymbol.cc
+  hipGraphChildGraphNodeGetGraph.cc
+  hipGraphNodeFindInClone.cc
+  hipGraphExecHostNodeSetParams.cc
+  hipGraphAddMemcpyNodeToSymbol.cc
+  hipGraphExecMemsetNodeSetParams.cc
+  hipGraphMemcpyNodeSetParamsToSymbol.cc
+  hipGraphDestroyNode.cc
+  hipGraphGetNodes.cc
+  hipGraphGetRootNodes.cc
+  hipGraphHostNodeSetParams.cc
+  hipGraphAddMemcpyNode1D.cc
+  hipGraphAddChildGraphNode.cc
+  hipGraphNodeGetType.cc
+  hipGraphExecMemcpyNodeSetParams1D.cc
+  hipGraphGetEdges.cc
+  hipGraphRemoveDependencies.cc
+  hipGraphInstantiate.cc
+  hipGraphExecUpdate.cc
+  hipGraphExecEventRecordNodeSetEvent.cc
+  hipGraphMemsetNodeGetParams.cc
+  hipGraphMemsetNodeSetParams.cc
+  hipGraphExecMemcpyNodeSetParamsFromSymbol.cc
+  hipGraphEventRecordNodeGetEvent.cc
+  hipGraphEventRecordNodeSetEvent.cc
+  hipGraphEventWaitNodeGetEvent.cc
+  hipGraphExecMemcpyNodeSetParams.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest

@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -29,18 +29,22 @@ THE SOFTWARE.
 #define N 16
 #define offset 3
 __global__ void tex1dKernel(float *val, hipTextureObject_t obj) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     int k = blockIdx.x * blockDim.x + threadIdx.x;
     if (k < N)
         val[k] = tex1Dfetch<float>(obj, k+offset);
+#endif
 }
 
 int runTest(hipTextureAddressMode, hipTextureFilterMode);
 
 int main(int argc, char **argv) {
+    checkImageSupport();
+
     int testResult = runTest(hipAddressModeClamp,hipFilterModePoint);
-    testResult = runTest(hipAddressModeClamp,hipFilterModeLinear);
-    testResult = runTest(hipAddressModeWrap,hipFilterModePoint);
-    testResult = runTest(hipAddressModeWrap,hipFilterModeLinear);
+    testResult = testResult & runTest(hipAddressModeClamp,hipFilterModeLinear);
+    testResult = testResult & runTest(hipAddressModeBorder,hipFilterModePoint);
+    testResult = testResult & runTest(hipAddressModeBorder,hipFilterModeLinear);
     if(testResult) {
         passed();
     } else {
@@ -84,7 +88,6 @@ int runTest(hipTextureAddressMode addressMode, hipTextureFilterMode filterMode) 
     texDesc.readMode = hipReadModeElementType;
 
     texDesc.addressMode[0] = addressMode;
-    texDesc.addressMode[1] = addressMode;
     texDesc.filterMode = filterMode;
     texDesc.normalizedCoords = false;
 
@@ -107,16 +110,12 @@ int runTest(hipTextureAddressMode addressMode, hipTextureFilterMode filterMode) 
             break;
         }
     }
-    if(testResult){
-        for(int i = N-offset; i < N; i++){
-           if (output[i] != 0){
-               testResult = 0;
-               break;
-           }
-        }
-    }
+    // For hipResourceTypeLinear, reading of out-of-boundary address is undefined!
+    // So we won't verify those data
+
     HIPCHECK(hipDestroyTextureObject(texObj));
     HIPCHECK(hipFree(texBuf));
     HIPCHECK(hipFree(texBufOut));
+    printf("%s(addressMode %d, filterMode %d) %s\n", __FUNCTION__, addressMode, filterMode, testResult ? "succeed" : "failed");
     return testResult;
 }

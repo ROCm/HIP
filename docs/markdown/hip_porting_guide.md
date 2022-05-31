@@ -23,7 +23,7 @@ and provides practical suggestions on how to port CUDA code and work through com
   * [Table of Architecture Properties](#table-of-architecture-properties)
 - [Finding HIP](#finding-hip)
 - [Identifying HIP Runtime](#identifying-hip-runtime)
-- [hipLaunchKernel](#hiplaunchkernel)
+- [hipLaunchKernelGGL](#hiplaunchkernelGGL)
 - [Compiler Options](#compiler-options)
 - [Linking Issues](#linking-issues)
   * [Linking With hipcc](#linking-with-hipcc)
@@ -294,37 +294,10 @@ On Nvidia platform, HIP is just a thin layer on top of CUDA.
 On non-AMD platform, HIP runtime determines if cuda is available and can be used. If available, HIP_PLATFORM is set to nvidia and underneath CUDA path is used.
 
 
-## hipLaunchKernel
+## hipLaunchKernelGGL
 
-hipLaunchKernel is a variadic macro which accepts as parameters the launch configurations (grid dims, group dims, stream, dynamic shared size) followed by a variable number of kernel arguments.
-This sequence is then expanded into the appropriate kernel launch syntax depending on the platform.
-While this can be a convenient single-line kernel launch syntax, the macro implementation can cause issues when nested inside other macros.  For example, consider the following:
-
-```
-// Will cause compile error:
-#define MY_LAUNCH(command, doTrace) \
-{\
-    if (doTrace) printf ("TRACE: %s\n", #command); \
-    (command);   /* The nested ( ) will cause compile error */\
-}
-
-MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCall");
-```
-
-Avoid nesting macro parameters inside parenthesis - here's an alternative that will work:
-
-```
-#define MY_LAUNCH(command, doTrace) \
-{\
-    if (doTrace) printf ("TRACE: %s\n", #command); \
-    command;\ 
-}
-
-MY_LAUNCH (hipLaunchKernel(vAdd, dim3(1024), dim3(1), 0, 0, Ad), true, "firstCall");
-```
-
-
-
+hipLaunchKernelGGL is a macro that can serve as an alternative way to launch kernel, which accepts parameters of launch configurations (grid dims, group dims, stream, dynamic shared size) followed by a variable number of kernel arguments.
+It can replace <<< >>>, if the user so desires.
 
 ## Compiler Options
 
@@ -482,7 +455,7 @@ int main()
     HIP_ASSERT(hipMalloc((void**)&Ad, SIZE));
 
     HIP_ASSERT(hipMemcpyToSymbol(HIP_SYMBOL(Value), A, SIZE, 0, hipMemcpyHostToDevice));
-    hipLaunchKernel(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
+    hipLaunchKernelGGL(Get, dim3(1,1,1), dim3(LEN,1,1), 0, 0, Ad);
     HIP_ASSERT(hipMemcpy(B, Ad, SIZE, hipMemcpyDeviceToHost));
 
     for(unsigned i=0;i<LEN;i++)
@@ -494,7 +467,8 @@ int main()
 ```
 
 ## CU_POINTER_ATTRIBUTE_MEMORY_TYPE
-To get pointer's memory type in HIP/HIP-Clang one should use hipPointerGetAttributes API. First parameter of the API is hipPointerAttribute_t which has 'memoryType' as member variable. 'memoryType' indicates input pointer is allocated on device or host.
+
+To get pointer's memory type in HIP/HIP-Clang, developers should use hipPointerGetAttributes API. First parameter of the API is hipPointerAttribute_t which has 'memoryType' as member variable. 'memoryType' indicates input pointer is allocated on device or host.
 
 For example:
 ```
@@ -508,6 +482,33 @@ hipHostMalloc(&ptrHost, sizeof(double));
 hipPointerAttribute_t attr;
 hipPointerGetAttributes(&attr, ptrHost); /*attr.memoryType will have value as hipMemoryTypeHost*/
 ```
+Please note, hipMemoryType enum values are different from cudaMemoryType enum values.
+
+For example, on AMD platform, memoryType is defined in hip_runtime_api.h,
+typedef enum hipMemoryType {
+    hipMemoryTypeHost,    ///< Memory is physically located on host
+    hipMemoryTypeDevice,  ///< Memory is physically located on device.
+    hipMemoryTypeArray,  ///< Array memory, physically located on device.
+    hipMemoryTypeUnified  ///< Not used currently
+} hipMemoryType;
+
+Looking into CUDA toolkit, it defines memoryType as following,
+enum cudaMemoryType
+{
+  cudaMemoryTypeUnregistered = 0, // Unregistered memory.
+  cudaMemoryTypeHost = 1, // Host memory.
+  cudaMemoryTypeDevice = 2, // Device memory.
+  cudaMemoryTypeManaged = 3, // Managed memory
+}
+
+In this case, memoryType translation for hipPointerGetAttributes needs to be handled properly on nvidia platform to get the correct memory type in CUDA, which is done in the file nvidia_hip_runtime_api.h.
+
+So in any HIP applications which use HIP APIs involving memory types, developers should use #ifdef in order to assign the correct enum values depending on Nvidia or AMD platform.
+
+As an example, please see the code from the link,
+github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/catch/unit/memory/hipMemcpyParam2D.cc#L77-L96.
+
+With the #ifdef condition, HIP APIs work as expected on both AMD and NVIDIA platforms.
 
 ## threadfence_system
 Threadfence_system makes all device memory writes, all writes to mapped host memory, and all writes to peer memory visible to CPU and other GPU devices.

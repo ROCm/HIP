@@ -87,16 +87,13 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
     myparms.srcPtr = make_hipPitchedPtr(hData, width * sizeof(T), width, height);
     myparms.dstArray = arr;
     myparms.extent = make_hipExtent(width, height, depth);
-#ifdef __HIP_PLATFORM_NVIDIA__
-    myparms.kind = cudaMemcpyHostToDevice;
-#else
     myparms.kind = hipMemcpyHostToDevice;
-#endif
+
     HIPCHECK(hipMemcpy3D(&myparms));
 
     // set texture parameters
-    tex->addressMode[0] = hipAddressModeWrap;
-    tex->addressMode[1] = hipAddressModeWrap;
+    tex->addressMode[0] = hipAddressModeClamp;
+    tex->addressMode[1] = hipAddressModeClamp;
     tex->filterMode = hipFilterModePoint;
     tex->normalized = false;
 
@@ -129,13 +126,8 @@ void runTest(int width,int height,int depth,texture<T, hipTextureType3D, hipRead
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-    int imageSupport = 0;
-    hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
-                              p_gpuDevice);
-    if (!imageSupport) {
-      printf("Texture is not support on the device\n");
-      passed();
-    }
+    checkImageSupport();
+
     printf("%s starting...\n", sampleName);
     for(int i=1;i<25;i++)
     {

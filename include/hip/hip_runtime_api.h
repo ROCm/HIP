@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -73,6 +73,9 @@ typedef struct {
     unsigned hasDynamicParallelism : 1;  ///< Dynamic parallelism.
 } hipDeviceArch_t;
 
+typedef struct hipUUID_t {
+    char bytes[16];
+} hipUUID;
 
 //---
 // Common headers for both NVCC and HCC paths:
@@ -160,8 +163,7 @@ typedef enum hipMemoryType {
     hipMemoryTypeArray,  ///< Array memory, physically located on device. (see deviceId for specific
                          ///< device)
     hipMemoryTypeUnified  ///< Not used currently
-}hipMemoryType;
-
+} hipMemoryType;
 
 /**
  * Pointer attributes
@@ -420,6 +422,8 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeUnifiedAddressing,                ///< Cuda only. An unified address space shared with the host.
     hipDeviceAttributeUuid,                             ///< Cuda only. Unique ID in 16 byte.
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
+    hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
+    hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
 
     hipDeviceAttributeCudaCompatibleEnd = 9999,
     hipDeviceAttributeAmdSpecificBegin = 10000,
@@ -444,6 +448,9 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeCanUseStreamWaitValue,                    ///< '1' if Device supports hipStreamWaitValue32() and
                                                                 ///< hipStreamWaitValue64(), '0' otherwise.
     hipDeviceAttributeImageSupport,                             ///< '1' if Device supports image, '0' otherwise.
+    hipDeviceAttributePhysicalMultiProcessorCount,              ///< All available physical compute
+                                                                ///< units for the device
+    hipDeviceAttributeFineGrainSupport,                         ///< '1' if Device supports fine grain, '0' otherwise
 
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
@@ -458,7 +465,7 @@ enum hipComputeMode {
 };
 
 /**
- *     @}
+ * @}
  */
 
 #if (defined(__HIP_PLATFORM_HCC__) || defined(__HIP_PLATFORM_AMD__)) && !(defined(__HIP_PLATFORM_NVCC__) || defined(__HIP_PLATFORM_NVIDIA__))
@@ -521,6 +528,11 @@ typedef struct hipIpcEventHandle_st {
 } hipIpcEventHandle_t;
 typedef struct ihipModule_t* hipModule_t;
 typedef struct ihipModuleSymbol_t* hipFunction_t;
+/**
+ * HIP memory pool
+ */
+typedef struct ihipMemPoolHandle_t* hipMemPool_t;
+
 typedef struct hipFuncAttributes {
     int binaryVersion;
     int cacheModeCA;
@@ -542,67 +554,109 @@ enum hipLimit_t {
  * @addtogroup GlobalDefs More
  * @{
  */
-//! Flags that can be used with hipStreamCreateWithFlags
-#define hipStreamDefault                                                                           \
-    0x00  ///< Default stream creation flags. These are used with hipStreamCreate().
-#define hipStreamNonBlocking 0x01  ///< Stream does not implicitly synchronize with null stream
-//! Flags that can be used with hipEventCreateWithFlags:
-#define hipEventDefault 0x0  ///< Default flags
-#define hipEventBlockingSync                                                                       \
-    0x1  ///< Waiting will yield CPU.  Power-friendly and usage-friendly but may increase latency.
-#define hipEventDisableTiming                                                                      \
-    0x2  ///< Disable event's capability to record timing information.  May improve performance.
-#define hipEventInterprocess 0x4  ///< Event can support IPC.  @warning - not supported in HIP.
-#define hipEventReleaseToDevice                                                                    \
-    0x40000000  /// < Use a device-scope release when recording this event.  This flag is useful to
-                /// obtain more precise timings of commands between events.  The flag is a no-op on
-                /// CUDA platforms.
-#define hipEventReleaseToSystem                                                                    \
-    0x80000000  /// < Use a system-scope release when recording this event.  This flag is
-                /// useful to make non-coherent host memory visible to the host.  The flag is a
-                /// no-op on CUDA platforms.
-//! Flags that can be used with hipHostMalloc
+//Flags that can be used with hipStreamCreateWithFlags.
+/** Default stream creation flags. These are used with hipStreamCreate().*/
+#define hipStreamDefault  0x00
+
+/** Stream does not implicitly synchronize with null stream.*/
+#define hipStreamNonBlocking 0x01
+
+//Flags that can be used with hipEventCreateWithFlags.
+/** Default flags.*/
+#define hipEventDefault 0x0
+
+/** Waiting will yield CPU. Power-friendly and usage-friendly but may increase latency.*/
+#define hipEventBlockingSync 0x1
+
+/** Disable event's capability to record timing information. May improve performance.*/
+#define hipEventDisableTiming  0x2
+
+/** Event can support IPC. Warnig: It is not supported in HIP.*/
+#define hipEventInterprocess 0x4
+
+/** Use a device-scope release when recording this event. This flag is useful to obtain more
+ * precise timings of commands between events.  The flag is a no-op on CUDA platforms.*/
+#define hipEventReleaseToDevice  0x40000000
+
+/** Use a system-scope release when recording this event. This flag is useful to make
+ * non-coherent host memory visible to the host. The flag is a no-op on CUDA platforms.*/
+#define hipEventReleaseToSystem  0x80000000
+
+//Flags that can be used with hipHostMalloc.
+/** Default pinned memory allocation on the host.*/
 #define hipHostMallocDefault 0x0
-#define hipHostMallocPortable 0x1  ///< Memory is considered allocated by all contexts.
-#define hipHostMallocMapped                                                                        \
-    0x2  ///< Map the allocation into the address space for the current device.  The device pointer
-         ///< can be obtained with #hipHostGetDevicePointer.
+
+/** Memory is considered allocated by all contexts.*/
+#define hipHostMallocPortable 0x1
+
+/** Map the allocation into the address space for the current device. The device pointer
+ * can be obtained with #hipHostGetDevicePointer.*/
+#define hipHostMallocMapped  0x2
+
+/** Allocates the memory as write-combined. On some system configurations, write-combined allocation
+ * may be transferred faster across the PCI Express bus, however, could have low read efficiency by
+ * most CPUs. It's a good option for data tranfer from host to device via mapped pinned memory.*/
 #define hipHostMallocWriteCombined 0x4
-#define hipHostMallocNumaUser                                                                      \
-    0x20000000  ///< Host memory allocation will follow numa policy set by user
-#define hipHostMallocCoherent                                                                      \
-    0x40000000  ///< Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
-                ///< allocation.
-#define hipHostMallocNonCoherent                                                                   \
-    0x80000000  ///< Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific
-                ///< allocation.
-#define hipMemAttachGlobal  0x01    ///< Memory can be accessed by any stream on any device
-#define hipMemAttachHost    0x02    ///< Memory cannot be accessed by any stream on any device
-#define hipMemAttachSingle  0x04    ///< Memory can only be accessed by a single stream on
-                                    ///< the associated device
+
+/** Host memory allocation will follow numa policy set by user.*/
+#define hipHostMallocNumaUser  0x20000000
+
+/** Allocate coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.*/
+#define hipHostMallocCoherent  0x40000000
+
+/** Allocate non-coherent memory. Overrides HIP_COHERENT_HOST_ALLOC for specific allocation.*/
+#define hipHostMallocNonCoherent  0x80000000
+
+/** Memory can be accessed by any stream on any device*/
+#define hipMemAttachGlobal  0x01
+
+/** Memory cannot be accessed by any stream on any device.*/
+#define hipMemAttachHost    0x02
+
+/** Memory can only be accessed by a single stream on the associated device.*/
+#define hipMemAttachSingle  0x04
+
 #define hipDeviceMallocDefault 0x0
-#define hipDeviceMallocFinegrained 0x1  ///< Memory is allocated in fine grained region of device.
-#define hipMallocSignalMemory 0x2       ///< Memory represents a HSA signal.
-//! Flags that can be used with hipHostRegister
-#define hipHostRegisterDefault 0x0   ///< Memory is Mapped and Portable
-#define hipHostRegisterPortable 0x1  ///< Memory is considered registered by all contexts.
-#define hipHostRegisterMapped                                                                      \
-    0x2  ///< Map the allocation into the address space for the current device.  The device pointer
-         ///< can be obtained with #hipHostGetDevicePointer.
-#define hipHostRegisterIoMemory 0x4  ///< Not supported.
-#define hipExtHostRegisterCoarseGrained 0x8  ///< Coarse Grained host memory lock
-#define hipDeviceScheduleAuto 0x0  ///< Automatically select between Spin and Yield
-#define hipDeviceScheduleSpin                                                                      \
-    0x1  ///< Dedicate a CPU core to spin-wait.  Provides lowest latency, but burns a CPU core and
-         ///< may consume more power.
-#define hipDeviceScheduleYield                                                                     \
-    0x2  ///< Yield the CPU to the operating system when waiting.  May increase latency, but lowers
-         ///< power and is friendlier to other threads in the system.
+
+/** Memory is allocated in fine grained region of device.*/
+#define hipDeviceMallocFinegrained 0x1
+
+/** Memory represents a HSA signal.*/
+#define hipMallocSignalMemory 0x2
+
+//Flags that can be used with hipHostRegister.
+/** Memory is Mapped and Portable.*/
+#define hipHostRegisterDefault 0x0
+
+/** Memory is considered registered by all contexts.*/
+#define hipHostRegisterPortable 0x1
+
+/** Map the allocation into the address space for the current device. The device pointer
+ * can be obtained with #hipHostGetDevicePointer.*/
+#define hipHostRegisterMapped  0x2
+
+/** Not supported.*/
+#define hipHostRegisterIoMemory 0x4
+
+/** Coarse Grained host memory lock.*/
+#define hipExtHostRegisterCoarseGrained 0x8
+
+/** Automatically select between Spin and Yield.*/
+#define hipDeviceScheduleAuto 0x0
+
+/** Dedicate a CPU core to spin-wait. Provides lowest latency, but burns a CPU core and may
+ * consume more power.*/
+#define hipDeviceScheduleSpin  0x1
+
+/** Yield the CPU to the operating system when waiting. May increase latency, but lowers power
+ * and is friendlier to other threads in the system.*/
+#define hipDeviceScheduleYield  0x2
 #define hipDeviceScheduleBlockingSync 0x4
 #define hipDeviceScheduleMask 0x7
 #define hipDeviceMapHost 0x8
 #define hipDeviceLmemResizeToMax 0x16
-#define hipArrayDefault 0x00  ///< Default HIP array allocation flag
+/** Default HIP array allocation flag.*/
+#define hipArrayDefault 0x00
 #define hipArrayLayered 0x01
 #define hipArraySurfaceLoadStore 0x02
 #define hipArrayCubemap 0x04
@@ -612,15 +666,17 @@ enum hipLimit_t {
 #define hipCooperativeLaunchMultiDeviceNoPostSync 0x02
 #define hipCpuDeviceId ((int)-1)
 #define hipInvalidDeviceId ((int)-2)
-// Flags that can be used with hipExtLaunch Set of APIs
-#define hipExtAnyOrderLaunch 0x01  ///< AnyOrderLaunch of kernels
-// Flags to be used with hipStreamWaitValue32 and hipStreamWaitValue64
+//Flags that can be used with hipExtLaunch Set of APIs.
+/** AnyOrderLaunch of kernels.*/
+#define hipExtAnyOrderLaunch 0x01
+// Flags to be used with hipStreamWaitValue32 and hipStreamWaitValue64.
 #define hipStreamWaitValueGte 0x0
 #define hipStreamWaitValueEq 0x1
 #define hipStreamWaitValueAnd 0x2
 #define hipStreamWaitValueNor 0x3
 // Stream per thread
-#define hipStreamPerThread ((hipStream_t)2) ///< Implicit stream per application thread
+/** Implicit stream per application thread.*/
+#define hipStreamPerThread ((hipStream_t)2)
 /*
  * @brief HIP Memory Advise values
  * @enum
@@ -674,6 +730,147 @@ typedef enum hipMemRangeAttribute {
     hipMemRangeAttributeCoherencyMode = 100,    ///< Returns coherency mode
                                                 ///< @ref hipMemRangeCoherencyMode for the range
 } hipMemRangeAttribute;
+
+/**
+ * @brief HIP memory pool attributes
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemPoolAttr
+{
+    /**
+     * (value type = int)
+     * Allow @p hipMemAllocAsync to use memory asynchronously freed
+     * in another streams as long as a stream ordering dependency
+     * of the allocating stream on the free action exists.
+     * hip events and null stream interactions can create the required
+     * stream ordered dependencies. (default enabled)
+     */
+    hipMemPoolReuseFollowEventDependencies   = 0x1,
+    /**
+     * (value type = int)
+     * Allow reuse of already completed frees when there is no dependency
+     * between the free and allocation. (default enabled)
+     */
+    hipMemPoolReuseAllowOpportunistic        = 0x2,
+    /**
+     * (value type = int)
+     * Allow @p hipMemAllocAsync to insert new stream dependencies
+     * in order to establish the stream ordering required to reuse
+     * a piece of memory released by cuFreeAsync (default enabled).
+     */
+    hipMemPoolReuseAllowInternalDependencies = 0x3,
+    /**
+     * (value type = uint64_t)
+     * Amount of reserved memory in bytes to hold onto before trying
+     * to release memory back to the OS. When more than the release
+     * threshold bytes of memory are held by the memory pool, the
+     * allocator will try to release memory back to the OS on the
+     * next call to stream, event or context synchronize. (default 0)
+     */
+    hipMemPoolAttrReleaseThreshold           = 0x4,
+    /**
+     * (value type = uint64_t)
+     * Amount of backing memory currently allocated for the mempool.
+     */
+    hipMemPoolAttrReservedMemCurrent         = 0x5,
+    /**
+     * (value type = uint64_t)
+     * High watermark of backing memory allocated for the mempool since the
+     * last time it was reset. High watermark can only be reset to zero.
+     */
+    hipMemPoolAttrReservedMemHigh            = 0x6,
+    /**
+     * (value type = uint64_t)
+     * Amount of memory from the pool that is currently in use by the application.
+     */
+    hipMemPoolAttrUsedMemCurrent             = 0x7,
+    /**
+     * (value type = uint64_t)
+     * High watermark of the amount of memory from the pool that was in use by the application since
+     * the last time it was reset. High watermark can only be reset to zero.
+     */
+    hipMemPoolAttrUsedMemHigh                = 0x8
+} hipMemPoolAttr;
+/**
+ * @brief Specifies the type of location
+ * @enum
+ * @ingroup Enumerations
+ */
+ typedef enum hipMemLocationType {
+    hipMemLocationTypeInvalid = 0,
+    hipMemLocationTypeDevice = 1    ///< Device location, thus it's HIP device ID
+} hipMemLocationType;
+/**
+ * Specifies a memory location.
+ *
+ * To specify a gpu, set type = @p hipMemLocationTypeDevice and set id = the gpu's device ID
+ */
+typedef struct hipMemLocation {
+    hipMemLocationType type;  ///< Specifies the location type, which describes the meaning of id
+    int id;                   ///< Identifier for the provided location type @p hipMemLocationType
+} hipMemLocation;
+/**
+ * @brief Specifies the memory protection flags for mapping
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemAccessFlags {
+    hipMemAccessFlagsProtNone      = 0,  ///< Default, make the address range not accessible
+    hipMemAccessFlagsProtRead      = 1,  ///< Set the address range read accessible
+    hipMemAccessFlagsProtReadWrite = 3   ///< Set the address range read-write accessible
+} hipMemAccessFlags;
+/**
+ * Memory access descriptor
+ */
+typedef struct hipMemAccessDesc {
+    hipMemLocation      location; ///< Location on which the accessibility has to change
+    hipMemAccessFlags   flags;    ///< Accessibility flags to set
+} hipMemAccessDesc;
+/**
+ * @brief Defines the allocation types
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemAllocationType {
+    hipMemAllocationTypeInvalid = 0x0,
+    /** This allocation type is 'pinned', i.e. cannot migrate from its current
+      * location while the application is actively using it
+      */
+    hipMemAllocationTypePinned  = 0x1,
+    hipMemAllocationTypeMax     = 0x7FFFFFFF
+} hipMemAllocationType;
+/**
+ * @brief Flags for specifying handle types for memory pool allocations
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemAllocationHandleType {
+    hipMemHandleTypeNone                    = 0x0,  ///< Does not allow any export mechanism
+    hipMemHandleTypePosixFileDescriptor     = 0x1,  ///< Allows a file descriptor for exporting. Permitted only on POSIX systems
+    hipMemHandleTypeWin32                   = 0x2,  ///< Allows a Win32 NT handle for exporting. (HANDLE)
+    hipMemHandleTypeWin32Kmt                = 0x4   ///< Allows a Win32 KMT handle for exporting. (D3DKMT_HANDLE)
+} hipMemAllocationHandleType;
+/**
+ * Specifies the properties of allocations made from the pool.
+ */
+typedef struct hipMemPoolProps {
+    hipMemAllocationType       allocType;   ///< Allocation type. Currently must be specified as @p hipMemAllocationTypePinned
+    hipMemAllocationHandleType handleTypes; ///< Handle types that will be supported by allocations from the pool
+    hipMemLocation             location;    ///< Location where allocations should reside
+    /**
+     * Windows-specific LPSECURITYATTRIBUTES required when @p hipMemHandleTypeWin32 is specified
+     */
+    void*                       win32SecurityAttributes;
+    unsigned char               reserved[64]; ///< Reserved for future use, must be 0
+} hipMemPoolProps;
+/**
+ * Opaque data structure for exporting a pool allocation
+ */
+typedef struct hipMemPoolPtrExportData {
+    unsigned char reserved[64];
+} hipMemPoolPtrExportData;
+
 /*
  * @brief hipJitOption
  * @enum
@@ -863,6 +1060,137 @@ typedef struct _hipGraphicsResource hipGraphicsResource;
 
 typedef hipGraphicsResource* hipGraphicsResource_t;
 
+/**
+ * An opaque value that represents a hip graph
+ */
+typedef struct ihipGraph* hipGraph_t;
+/**
+ * An opaque value that represents a hip graph node
+ */
+typedef struct hipGraphNode* hipGraphNode_t;
+/**
+ * An opaque value that represents a hip graph Exec
+ */
+typedef struct hipGraphExec* hipGraphExec_t;
+
+/**
+ * @brief hipGraphNodeType
+ * @enum
+ *
+ */
+typedef enum hipGraphNodeType {
+  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
+  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
+  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
+  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
+  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
+  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
+  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
+  hipGraphNodeTypeCount
+} hipGraphNodeType;
+
+typedef void (*hipHostFn_t)(void* userData);
+typedef struct hipHostNodeParams {
+  hipHostFn_t fn;
+  void* userData;
+} hipHostNodeParams;
+typedef struct hipKernelNodeParams {
+  dim3 blockDim;
+  void** extra;
+  void* func;
+  dim3 gridDim;
+  void** kernelParams;
+  unsigned int sharedMemBytes;
+} hipKernelNodeParams;
+typedef struct hipMemsetParams {
+  void* dst;
+  unsigned int elementSize;
+  size_t height;
+  size_t pitch;
+  unsigned int value;
+  size_t width;
+} hipMemsetParams;
+
+/**
+ * @brief hipKernelNodeAttrID
+ * @enum
+ *
+ */
+typedef enum hipKernelNodeAttrID {
+    hipKernelNodeAttributeAccessPolicyWindow = 1,
+    hipKernelNodeAttributeCooperative = 2,
+} hipKernelNodeAttrID;
+typedef enum hipAccessProperty {
+    hipAccessPropertyNormal = 0,
+    hipAccessPropertyStreaming  = 1,
+    hipAccessPropertyPersisting = 2,
+} hipAccessProperty;
+typedef struct hipAccessPolicyWindow {
+    void* base_ptr;
+    hipAccessProperty hitProp;
+    float hitRatio;
+    hipAccessProperty missProp;
+    size_t num_bytes;
+} hipAccessPolicyWindow;
+typedef union hipKernelNodeAttrValue {
+    hipAccessPolicyWindow accessPolicyWindow;
+    int cooperative;
+} hipKernelNodeAttrValue;
+
+/**
+ * @brief hipGraphExecUpdateResult
+ * @enum
+ *
+ */
+typedef enum hipGraphExecUpdateResult {
+  hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
+  hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
+                                  ///< in the return value of the function
+  hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
+  hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
+  hipGraphExecUpdateErrorFunctionChanged =
+      0x4,  ///< The update failed because the function of a kernel node changed
+  hipGraphExecUpdateErrorParametersChanged =
+      0x5,  ///< The update failed because the parameters changed in a way that is not supported
+  hipGraphExecUpdateErrorNotSupported =
+      0x6,  ///< The update failed because something about the node is not supported
+  hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
+} hipGraphExecUpdateResult;
+
+typedef enum hipStreamCaptureMode {
+  hipStreamCaptureModeGlobal = 0,
+  hipStreamCaptureModeThreadLocal,
+  hipStreamCaptureModeRelaxed
+} hipStreamCaptureMode;
+typedef enum hipStreamCaptureStatus {
+  hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
+  hipStreamCaptureStatusActive,      ///< Stream is actively capturing
+  hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
+                                     ///< invalidated, but not terminated
+} hipStreamCaptureStatus;
+
+typedef enum hipStreamUpdateCaptureDependenciesFlags {
+  hipStreamAddCaptureDependencies = 0,  ///< Add new nodes to the dependency set
+  hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
+} hipStreamUpdateCaptureDependenciesFlags;
+
+typedef enum hipGraphMemAttributeType {
+  hipGraphMemAttrUsedMemCurrent = 0, ///< Amount of memory, in bytes, currently associated with graphs
+  hipGraphMemAttrUsedMemHigh,        ///< High watermark of memory, in bytes, associated with graphs since the last time.
+  hipGraphMemAttrReservedMemCurrent, ///< Amount of memory, in bytes, currently allocated for graphs.
+  hipGraphMemAttrReservedMemHigh,    ///< High watermark of memory, in bytes, currently allocated for graphs
+}hipGraphMemAttributeType;
+
+typedef enum hipGraphInstantiateFlags {
+  hipGraphInstantiateFlagAutoFreeOnLaunch =
+      1,  ///< Automatically free memory allocated in a graph before relaunching.
+} hipGraphInstantiateFlags;
+#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
+
 // Doxygen end group GlobalDefs
 /**  @} */
 //-------------------------------------------------------------------------------------------------
@@ -953,6 +1281,18 @@ hipError_t hipDeviceComputeCapability(int* major, int* minor, hipDevice_t device
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
 hipError_t hipDeviceGetName(char* name, int len, hipDevice_t device);
+/**
+ * @brief Returns an UUID for the device.[BETA]
+ * @param [out] uuid
+ * @param [in] device
+ *
+ * @beta This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorNotInitialized,
+ * #hipErrorDeInitialized
+ */
+hipError_t hipDeviceGetUuid(hipUUID* uuid, hipDevice_t device);
 /**
  * @brief Returns a value for attr of link between two devices
  * @param [out] value
@@ -1090,6 +1430,63 @@ hipError_t hipGetDeviceCount(int* count);
  * @returns #hipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue
  */
 hipError_t hipDeviceGetAttribute(int* pi, hipDeviceAttribute_t attr, int deviceId);
+/**
+ * @brief Returns the default memory pool of the specified device
+ *
+ * @param [out] mem_pool Default memory pool to return
+ * @param [in] device    Device index for query the default memory pool
+ *
+ * @returns #chipSuccess, #hipErrorInvalidDevice, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
+ * @see hipDeviceGetDefaultMemPool, hipMallocAsync, hipMemPoolTrimTo, hipMemPoolGetAttribute,
+ * hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGetDefaultMemPool(hipMemPool_t* mem_pool, int device);
+/**
+ * @brief Sets the current memory pool of a device
+ *
+ * The memory pool must be local to the specified device.
+ * @p hipMallocAsync allocates from the current mempool of the provided stream's device.
+ * By default, a device's current memory pool is its default memory pool.
+ *
+ * @note Use @p hipMallocFromPoolAsync for asynchronous memory allocations from a device
+ * different than the one the stream runs on.
+ *
+ * @param [in] device   Device index for the update
+ * @param [in] mem_pool Memory pool for update as the current on the specified device
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorInvalidDevice, #hipErrorNotSupported
+ *
+ * @see hipDeviceGetDefaultMemPool, hipMallocAsync, hipMemPoolTrimTo, hipMemPoolGetAttribute,
+ * hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceSetMemPool(int device, hipMemPool_t mem_pool);
+/**
+ * @brief Gets the current memory pool for the specified device
+ *
+ * Returns the last pool provided to @p hipDeviceSetMemPool for this device
+ * or the device's default memory pool if @p hipDeviceSetMemPool has never been called.
+ * By default the current mempool is the default mempool for a device,
+ * otherwise the returned pool must have been set with @p hipDeviceSetMemPool.
+ *
+ * @param [out] mem_pool Current memory pool on the specified device
+ * @param [in] device    Device index to query the current memory pool
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
+ * @see hipDeviceGetDefaultMemPool, hipMallocAsync, hipMemPoolTrimTo, hipMemPoolGetAttribute,
+ * hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGetMemPool(hipMemPool_t* mem_pool, int device);
 /**
  * @brief Returns device properties.
  *
@@ -2283,6 +2680,402 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream,
 /**
  * @}
  */
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ * @addtogroup Stream Ordered Memory Allocator
+ * @{
+ * @ingroup Memory
+ * This section describes Stream Ordered Memory Allocator functions of HIP runtime API.
+ *
+ * The asynchronous allocator allows the user to allocate and free in stream order.
+ * All asynchronous accesses of the allocation must happen between the stream executions of
+ * the allocation and the free. If the memory is accessed outside of the promised stream order,
+ * a use before allocation / use after free error  will cause undefined behavior.
+ *
+ * The allocator is free to reallocate the memory as long as it can guarantee that compliant memory
+ * accesses will not overlap temporally. The allocator may refer to internal stream ordering as well
+ * as inter-stream dependencies (such as HIP events and null stream dependencies) when establishing
+ * the temporal guarantee. The allocator may also insert inter-stream dependencies to establish
+ * the temporal guarantee.  Whether or not a device supports the integrated stream ordered memory
+ * allocator may be queried by calling @p hipDeviceGetAttribute with the device attribute
+ * @p hipDeviceAttributeMemoryPoolsSupported
+ */
+
+/**
+ * @brief Allocates memory with stream ordered semantics
+ *
+ * Inserts a memory allocation operation into @p stream.
+ * A pointer to the allocated memory is returned immediately in *dptr.
+ * The allocation must not be accessed until the the allocation operation completes.
+ * The allocation comes from the memory pool associated with the stream's device.
+ *
+ * @note The default memory pool of a device contains device memory from that device.
+ * @note Basic stream ordering allows future work submitted into the same stream to use the allocation.
+ * Stream query, stream synchronize, and HIP events can be used to guarantee that the allocation
+ * operation completes before work submitted in a separate stream runs.
+ * @note During stream capture, this function results in the creation of an allocation node. In this case,
+ * the allocation is owned by the graph instead of the memory pool. The memory pool's properties
+ * are used to set the node's creation parameters.
+ *
+ * @param [out] dev_ptr  Returned device pointer of memory allocation
+ * @param [in] size      Number of bytes to allocate
+ * @param [in] stream    The stream establishing the stream ordering contract and
+ *                       the memory pool to allocate from
+ *
+ * @return #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported, #hipErrorOutOfMemory
+ *
+ * @see hipMallocFromPoolAsync, hipFreeAsync, hipMemPoolTrimTo, hipMemPoolGetAttribute,
+ * hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMallocAsync(void** dev_ptr, size_t size, hipStream_t stream);
+/**
+ * @brief Frees memory with stream ordered semantics
+ *
+ * Inserts a free operation into @p stream.
+ * The allocation must not be used after stream execution reaches the free.
+ * After this API returns, accessing the memory from any subsequent work launched on the GPU
+ * or querying its pointer attributes results in undefined behavior.
+ *
+ * @note During stream capture, this function results in the creation of a free node and
+ * must therefore be passed the address of a graph allocation.
+ *
+ * @param [in] dev_ptr Pointer to device memory to free
+ * @param [in] stream  The stream, where the destruciton will occur according to the execution order
+ *
+ * @returns hipSuccess, hipErrorInvalidValue, hipErrorNotSupported
+ *
+ * @see hipMallocFromPoolAsync, hipMallocAsync, hipMemPoolTrimTo, hipMemPoolGetAttribute,
+ * hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipFreeAsync(void* dev_ptr, hipStream_t stream);
+/**
+ * @brief Releases freed memory back to the OS
+ *
+ * Releases memory back to the OS until the pool contains fewer than @p min_bytes_to_keep
+ * reserved bytes, or there is no more memory that the allocator can safely release.
+ * The allocator cannot release OS allocations that back outstanding asynchronous allocations.
+ * The OS allocations may happen at different granularity from the user allocations.
+ *
+ * @note: Allocations that have not been freed count as outstanding.
+ * @note: Allocations that have been asynchronously freed but whose completion has
+ * not been observed on the host (eg. by a synchronize) can count as outstanding.
+ *
+ * @param[in] mem_pool          The memory pool to trim allocations
+ * @param[in] min_bytes_to_hold If the pool has less than min_bytes_to_hold reserved,
+ * then the TrimTo operation is a no-op.  Otherwise the memory pool will contain
+ * at least min_bytes_to_hold bytes reserved after the operation.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipMallocFromPoolAsync, hipMallocAsync, hipFreeAsync, hipMemPoolGetAttribute,
+ * hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolTrimTo(hipMemPool_t mem_pool, size_t min_bytes_to_hold);
+/**
+ * @brief Sets attributes of a memory pool
+ *
+ * Supported attributes are:
+ * - @p hipMemPoolAttrReleaseThreshold: (value type = cuuint64_t)
+ *                                  Amount of reserved memory in bytes to hold onto before trying
+ *                                  to release memory back to the OS. When more than the release
+ *                                  threshold bytes of memory are held by the memory pool, the
+ *                                  allocator will try to release memory back to the OS on the
+ *                                  next call to stream, event or context synchronize. (default 0)
+ * - @p hipMemPoolReuseFollowEventDependencies: (value type = int)
+ *                                  Allow @p hipMallocAsync to use memory asynchronously freed
+ *                                  in another stream as long as a stream ordering dependency
+ *                                  of the allocating stream on the free action exists.
+ *                                  HIP events and null stream interactions can create the required
+ *                                  stream ordered dependencies. (default enabled)
+ * - @p hipMemPoolReuseAllowOpportunistic: (value type = int)
+ *                                  Allow reuse of already completed frees when there is no dependency
+ *                                  between the free and allocation. (default enabled)
+ * - @p hipMemPoolReuseAllowInternalDependencies: (value type = int)
+ *                                  Allow @p hipMallocAsync to insert new stream dependencies
+ *                                  in order to establish the stream ordering required to reuse
+ *                                  a piece of memory released by @p hipFreeAsync (default enabled).
+ *
+ * @param [in] mem_pool The memory pool to modify
+ * @param [in] attr     The attribute to modify
+ * @param [in] value    Pointer to the value to assign
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipMallocFromPoolAsync, hipMallocAsync, hipFreeAsync, hipMemPoolGetAttribute,
+ * hipMemPoolTrimTo, hipDeviceSetMemPool, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolSetAttribute(hipMemPool_t mem_pool, hipMemPoolAttr attr, void* value);
+/**
+ * @brief Gets attributes of a memory pool
+ *
+ * Supported attributes are:
+ * - @p hipMemPoolAttrReleaseThreshold: (value type = cuuint64_t)
+ *                                  Amount of reserved memory in bytes to hold onto before trying
+ *                                  to release memory back to the OS. When more than the release
+ *                                  threshold bytes of memory are held by the memory pool, the
+ *                                  allocator will try to release memory back to the OS on the
+ *                                  next call to stream, event or context synchronize. (default 0)
+ * - @p hipMemPoolReuseFollowEventDependencies: (value type = int)
+ *                                  Allow @p hipMallocAsync to use memory asynchronously freed
+ *                                  in another stream as long as a stream ordering dependency
+ *                                  of the allocating stream on the free action exists.
+ *                                  HIP events and null stream interactions can create the required
+ *                                  stream ordered dependencies. (default enabled)
+ * - @p hipMemPoolReuseAllowOpportunistic: (value type = int)
+ *                                  Allow reuse of already completed frees when there is no dependency
+ *                                  between the free and allocation. (default enabled)
+ * - @p hipMemPoolReuseAllowInternalDependencies: (value type = int)
+ *                                  Allow @p hipMallocAsync to insert new stream dependencies
+ *                                  in order to establish the stream ordering required to reuse
+ *                                  a piece of memory released by @p hipFreeAsync (default enabled).
+ *
+ * @param [in] mem_pool The memory pool to get attributes of
+ * @param [in] attr     The attribute to get
+ * @param [in] value    Retrieved value
+ *
+ * @returns  #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipMallocFromPoolAsync, hipMallocAsync, hipFreeAsync,
+ * hipMemPoolTrimTo, hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolGetAttribute(hipMemPool_t mem_pool, hipMemPoolAttr attr, void* value);
+/**
+ * @brief Controls visibility of the specified pool between devices
+ *
+ * @param [in] mem_pool   Memory pool for acccess change
+ * @param [in] desc_list  Array of access descriptors. Each descriptor instructs the access to enable for a single gpu
+ * @param [in] count  Number of descriptors in the map array.
+ *
+ * @returns  #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipMallocFromPoolAsync, hipMallocAsync, hipFreeAsync, hipMemPoolGetAttribute,
+ * hipMemPoolTrimTo, hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolSetAccess(hipMemPool_t mem_pool, const hipMemAccessDesc* desc_list, size_t count);
+/**
+ * @brief Returns the accessibility of a pool from a device
+ *
+ * Returns the accessibility of the pool's memory from the specified location.
+ *
+ * @param [out] flags    Accessibility of the memory pool from the specified location/device
+ * @param [in] mem_pool   Memory pool being queried
+ * @param [in] location  Location/device for memory pool access
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipMallocFromPoolAsync, hipMallocAsync, hipFreeAsync, hipMemPoolGetAttribute,
+ * hipMemPoolTrimTo, hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolGetAccess(hipMemAccessFlags* flags, hipMemPool_t mem_pool, hipMemLocation* location);
+/**
+ * @brief Creates a memory pool
+ *
+ * Creates a HIP memory pool and returns the handle in @p mem_pool. The @p pool_props determines
+ * the properties of the pool such as the backing device and IPC capabilities.
+ *
+ * By default, the memory pool will be accessible from the device it is allocated on.
+ *
+ * @param [out] mem_pool    Contains createed memory pool
+ * @param [in] pool_props   Memory pool properties
+ *
+ * @note Specifying hipMemHandleTypeNone creates a memory pool that will not support IPC.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ *
+ * @see hipMallocFromPoolAsync, hipMallocAsync, hipFreeAsync, hipMemPoolGetAttribute, hipMemPoolDestroy,
+ * hipMemPoolTrimTo, hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolCreate(hipMemPool_t* mem_pool, const hipMemPoolProps* pool_props);
+/**
+ * @brief Destroys the specified memory pool
+ *
+ * If any pointers obtained from this pool haven't been freed or
+ * the pool has free operations that haven't completed
+ * when @p hipMemPoolDestroy is invoked, the function will return immediately and the
+ * resources associated with the pool will be released automatically
+ * once there are no more outstanding allocations.
+ *
+ * Destroying the current mempool of a device sets the default mempool of
+ * that device as the current mempool for that device.
+ *
+ * @param [in] mem_pool Memory pool for destruction
+ *
+ * @note A device's default memory pool cannot be destroyed.
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @see hipMallocFromPoolAsync, hipMallocAsync, hipFreeAsync, hipMemPoolGetAttribute, hipMemPoolCreate
+ * hipMemPoolTrimTo, hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolDestroy(hipMemPool_t mem_pool);
+/**
+ * @brief Allocates memory from a specified pool with stream ordered semantics.
+ *
+ * Inserts an allocation operation into @p stream.
+ * A pointer to the allocated memory is returned immediately in @p dev_ptr.
+ * The allocation must not be accessed until the the allocation operation completes.
+ * The allocation comes from the specified memory pool.
+ *
+ * @note The specified memory pool may be from a device different than that of the specified @p stream.
+ *
+ * Basic stream ordering allows future work submitted into the same stream to use the allocation.
+ * Stream query, stream synchronize, and HIP events can be used to guarantee that the allocation
+ * operation completes before work submitted in a separate stream runs.
+ *
+ * @note During stream capture, this function results in the creation of an allocation node. In this case,
+ * the allocation is owned by the graph instead of the memory pool. The memory pool's properties
+ * are used to set the node's creation parameters.
+ *
+ * @param [out] dev_ptr Returned device pointer
+ * @param [in] size     Number of bytes to allocate
+ * @param [in] mem_pool The pool to allocate from
+ * @param [in] stream   The stream establishing the stream ordering semantic
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported, #hipErrorOutOfMemory
+ *
+ * @see hipMallocAsync, hipFreeAsync, hipMemPoolGetAttribute, hipMemPoolCreate
+ * hipMemPoolTrimTo, hipDeviceSetMemPool, hipMemPoolSetAttribute, hipMemPoolSetAccess, hipMemPoolGetAccess,
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMallocFromPoolAsync(void** dev_ptr, size_t size, hipMemPool_t mem_pool, hipStream_t stream);
+/**
+ * @brief Exports a memory pool to the requested handle type.
+ *
+ * Given an IPC capable mempool, create an OS handle to share the pool with another process.
+ * A recipient process can convert the shareable handle into a mempool with @p hipMemPoolImportFromShareableHandle.
+ * Individual pointers can then be shared with the @p hipMemPoolExportPointer and @p hipMemPoolImportPointer APIs.
+ * The implementation of what the shareable handle is and how it can be transferred is defined by the requested
+ * handle type.
+ *
+ * @note: To create an IPC capable mempool, create a mempool with a @p hipMemAllocationHandleType other
+ * than @p hipMemHandleTypeNone.
+ *
+ * @param [out] shared_handle Pointer to the location in which to store the requested handle
+ * @param [in] mem_pool       Pool to export
+ * @param [in] handle_type    The type of handle to create
+ * @param [in] flags          Must be 0
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorOutOfMemory
+ *
+ * @see hipMemPoolImportFromShareableHandle
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolExportToShareableHandle(
+    void*                      shared_handle,
+    hipMemPool_t               mem_pool,
+    hipMemAllocationHandleType handle_type,
+    unsigned int               flags);
+/**
+ * @brief Imports a memory pool from a shared handle.
+ *
+ * Specific allocations can be imported from the imported pool with @p hipMemPoolImportPointer.
+ *
+ * @note Imported memory pools do not support creating new allocations.
+ * As such imported memory pools may not be used in @p hipDeviceSetMemPool
+ * or @p hipMallocFromPoolAsync calls.
+ *
+ * @param [out] mem_pool     Returned memory pool
+ * @param [in] shared_handle OS handle of the pool to open
+ * @param [in] handle_type   The type of handle being imported
+ * @param [in] flags         Must be 0
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorOutOfMemory
+ *
+ * @see hipMemPoolExportToShareableHandle
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolImportFromShareableHandle(
+    hipMemPool_t*              mem_pool,
+    void*                      shared_handle,
+    hipMemAllocationHandleType handle_type,
+    unsigned int               flags);
+/**
+ * @brief Export data to share a memory pool allocation between processes.
+ *
+ * Constructs @p export_data for sharing a specific allocation from an already shared memory pool.
+ * The recipient process can import the allocation with the @p hipMemPoolImportPointer api.
+ * The data is not a handle and may be shared through any IPC mechanism.
+ *
+ * @param[out] export_data  Returned export data
+ * @param[in] dev_ptr       Pointer to memory being exported
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorOutOfMemory
+ *
+ * @see hipMemPoolImportPointer
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolExportPointer(hipMemPoolPtrExportData* export_data, void* dev_ptr);
+/**
+ * @brief Import a memory pool allocation from another process.
+ *
+ * Returns in @p dev_ptr a pointer to the imported memory.
+ * The imported memory must not be accessed before the allocation operation completes
+ * in the exporting process. The imported memory must be freed from all importing processes before
+ * being freed in the exporting process. The pointer may be freed with @p hipFree
+ * or @p hipFreeAsync. If @p hipFreeAsync is used, the free must be completed
+ * on the importing process before the free operation on the exporting process.
+ *
+ * @note The @p hipFreeAsync api may be used in the exporting process before
+ * the @p hipFreeAsync operation completes in its stream as long as the
+ * @p hipFreeAsync in the exporting process specifies a stream with
+ * a stream dependency on the importing process's @p hipFreeAsync.
+ *
+ * @param [out] dev_ptr     Pointer to imported memory
+ * @param [in] mem_pool     Memory pool from which to import a pointer
+ * @param [in] export_data  Data specifying the memory to import
+ *
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotInitialized, #hipErrorOutOfMemory
+ *
+ * @see hipMemPoolExportPointer
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemPoolImportPointer(
+    void**                   dev_ptr,
+    hipMemPool_t             mem_pool,
+    hipMemPoolPtrExportData* export_data);
+/**
+ * @}
+ */
+
 /**
  *  @brief Allocate device accessible page locked host memory [Deprecated]
  *
@@ -2595,8 +3388,8 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  *  If no variable of that name exists, it returns hipErrorNotFound. Both parameters dptr and bytes are optional.
  *  If one of them is NULL, it is ignored and hipSuccess is returned.
  *
- *  @param[out]  dptr  Returned global device pointer
- *  @param[out]  bytes Returned global size in bytes
+ *  @param[out]  dptr  Returns global device pointer
+ *  @param[out]  bytes Returns global size in bytes
  *  @param[in]   hmod  Module to retrieve global from
  *  @param[in]   name  Name of global to retrieve
  *
@@ -2605,17 +3398,97 @@ hipError_t hipMemcpyDtoDAsync(hipDeviceptr_t dst, hipDeviceptr_t src, size_t siz
  */
 hipError_t hipModuleGetGlobal(hipDeviceptr_t* dptr, size_t* bytes,
     hipModule_t hmod, const char* name);
+
+/**
+ *  @brief Gets device pointer associated with symbol on the device.
+ *
+ *  @param[out]  devPtr  pointer to the device associated the symbole
+ *  @param[in]   symbol  pointer to the symbole of the device
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetSymbolAddress(void** devPtr, const void* symbol);
+
+/**
+ *  @brief Gets the size of the given symbol on the device.
+ *
+ *  @param[in]   symbol  pointer to the device symbole
+ *  @param[out]  size  pointer to the size
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetSymbolSize(size_t* size, const void* symbol);
+
+/**
+ *  @brief Copies data to the given symbol on the device.
+ * Symbol HIP APIs allow a kernel to define a device-side data symbol which can be accessed on
+ * the host side. The symbol can be in __constant or device space.
+ * Note that the symbol name needs to be encased in the HIP_SYMBOL macro.
+ * This also applies to hipMemcpyFromSymbol, hipGetSymbolAddress, and hipGetSymbolSize.
+ * For detail usage, see the example at
+ * https://github.com/ROCm-Developer-Tools/HIP/blob/rocm-5.0.x/docs/markdown/hip_porting_guide.md
+ *
+ *  @param[out]  symbol  pointer to the device symbole
+ *  @param[in]   src  pointer to the source address
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyToSymbol(const void* symbol, const void* src,
                              size_t sizeBytes, size_t offset __dparm(0),
                              hipMemcpyKind kind __dparm(hipMemcpyHostToDevice));
+
+/**
+ *  @brief Copies data to the given symbol on the device asynchronously.
+ *
+ *  @param[out]  symbol  pointer to the device symbole
+ *  @param[in]   src  pointer to the source address
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *  @param[in]   stream  stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyToSymbolAsync(const void* symbol, const void* src,
                                   size_t sizeBytes, size_t offset,
                                   hipMemcpyKind kind, hipStream_t stream __dparm(0));
+
+/**
+ *  @brief Copies data from the given symbol on the device.
+ *
+ *  @param[out]  dptr  Returns pointer to destinition memory address
+ *  @param[in]   symbol  pointer to the symbole address on the device
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from the start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyFromSymbol(void* dst, const void* symbol,
                                size_t sizeBytes, size_t offset __dparm(0),
                                hipMemcpyKind kind __dparm(hipMemcpyDeviceToHost));
+
+/**
+ *  @brief Copies data from the given symbol on the device asynchronously.
+ *
+ *  @param[out]  dptr  Returns pointer to destinition memory address
+ *  @param[in]   symbol  pointer to the symbole address on the device
+ *  @param[in]   sizeBytes  size in bytes to copy
+ *  @param[in]   offset  offset in bytes from the start of symbole
+ *  @param[in]   kind  type of memory transfer
+ *  @param[in]   stream  stream identifier
+ *
+ *  @return #hipSuccess, #hipErrorInvalidValue
+ *
+ */
 hipError_t hipMemcpyFromSymbolAsync(void* dst, const void* symbol,
                                     size_t sizeBytes, size_t offset,
                                     hipMemcpyKind kind,
@@ -3662,6 +4535,10 @@ hipError_t hipModuleLoadDataEx(hipModule_t* module, const void* image, unsigned 
  * @param [in] extra     Pointer to kernel arguments.   These are passed directly to the kernel and
  * must be in the memory layout and alignment expected by the kernel.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32. So gridDim.x * blockDim.x, gridDim.y * blockDim.y
+ * and gridDim.z * blockDim.z are always less than 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  * @warning kernellParams argument is not yet implemented in HIP. Please use extra instead. Please
@@ -3684,6 +4561,9 @@ hipError_t hipModuleLaunchKernel(hipFunction_t f, unsigned int gridDimX, unsigne
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case th
  * default stream is used with associated synchronization rules.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue, hipErrorCooperativeLaunchTooLarge
  */
@@ -3735,6 +4615,9 @@ hipError_t hipExtLaunchMultiKernelMultiDevice(hipLaunchParams* launchParamsList,
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
 //TODO - Match CUoccupancyB2DSize
@@ -3750,6 +4633,9 @@ hipError_t hipModuleOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  * @param [in]  flags            Extra flags for occupancy calculation (only default supported)
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
@@ -3808,6 +4694,9 @@ hipError_t hipOccupancyMaxActiveBlocksPerMultiprocessorWithFlags(
  * @param [in]  dynSharedMemPerBlk dynamic shared memory usage (in bytes) intended for each block
  * @param [in]  blockSizeLimit     the maximum block size for the kernel, use 0 for no limit
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorInvalidValue
  */
 hipError_t hipOccupancyMaxPotentialBlockSize(int* gridSize, int* blockSize,
@@ -3863,6 +4752,9 @@ hipError_t hipProfilerStop();
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
@@ -3897,6 +4789,9 @@ hipError_t hipLaunchByPtr(const void* func);
  * @param [in] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
  *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
  */
@@ -3913,6 +4808,12 @@ hipError_t __hipPushCallConfiguration(dim3 gridDim,
  * HIP-Clang compiler provides support for extern shared declarations.
  * @param [out] stream    Stream where the kernel should be dispatched.  May be 0, in which case the
  * default stream is used with associated synchronization rules.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
+ *
+ * Please note, HIP does not support kernel launch with total work items defined in dimension with
+ * size gridDim x blockDim >= 2^32.
  *
  * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue
  *
@@ -3951,6 +4852,26 @@ hipError_t hipLaunchKernel(const void* function_address,
  */
 hipError_t hipDrvMemcpy2DUnaligned(const hip_Memcpy2D* pCopy);
 //TODO: Move this to hip_ext.h
+/**
+ * @brief Launches kernel from the pointer address, with arguments and shared memory on stream.
+ *
+ * @param [in] function_address pointer to the Kernel to launch.
+ * @param [in] numBlocks number of blocks.
+ * @param [in] dimBlocks dimension of a block.
+ * @param [in] args pointer to kernel arguments.
+ * @param [in] sharedMemBytes  Amount of dynamic shared memory to allocate for this kernel.
+ * HIP-Clang compiler provides support for extern shared declarations.
+ * @param [in] stream  Stream where the kernel should be dispatched.
+ * @param [in] startEvent  If non-null, specified event will be updated to track the start time of
+ * the kernel launch. The event must be created before calling this API.
+ * @param [in] stopEvent  If non-null, specified event will be updated to track the stop time of
+ * the kernel launch. The event must be created before calling this API.
+ * May be 0, in which case the default stream is used with associated synchronization rules.
+ * @param [in] flags. The value of hipExtAnyOrderLaunch, signifies if kernel can be
+ * launched in any order.
+ * @returns hipSuccess, hipInvalidDevice, hipErrorNotInitialized, hipErrorInvalidValue.
+ *
+ */
 hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3 dimBlocks,
                               void** args, size_t sharedMemBytes, hipStream_t stream,
                               hipEvent_t startEvent, hipEvent_t stopEvent, int flags);
@@ -3965,45 +4886,137 @@ hipError_t hipExtLaunchKernel(const void* function_address, dim3 numBlocks, dim3
  *  @{
  *  This section describes the texture management functions of HIP runtime API.
  */
+
+/**
+ * @brief  Binds a mipmapped array to a texture.
+ *
+ * @param [in] tex  pointer to the texture reference to bind
+ * @param [in] mipmappedArray  memory mipmapped array on the device
+ * @param [in] desc  opointer to the channel format
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipBindTextureToMipmappedArray(
     const textureReference* tex,
     hipMipmappedArray_const_t mipmappedArray,
     const hipChannelFormatDesc* desc);
-hipError_t hipGetTextureReference(
+
+/**
+ * @brief Gets the texture reference related with the symbol.
+ *
+ * @param [out] texref  texture reference
+ * @param [in] symbol  pointer to the symbol related with the texture for the reference
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+ hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
+
+/**
+ * @brief Creates a texture object.
+ *
+ * @param [out] pTexObject  pointer to the texture object to create
+ * @param [in] pResDesc  pointer to resource descriptor
+ * @param [in] pTexDesc  pointer to texture descriptor
+ * @param [in] pResViewDesc  pointer to resource view descriptor
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipCreateTextureObject(
     hipTextureObject_t* pTexObject,
     const hipResourceDesc* pResDesc,
     const hipTextureDesc* pTexDesc,
     const struct hipResourceViewDesc* pResViewDesc);
+
+/**
+ * @brief Destroys a texture object.
+ *
+ * @param [in] textureObject  texture object to destroy
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipDestroyTextureObject(hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets the channel descriptor in an array.
+ *
+ * @param [in] desc  pointer to channel format descriptor
+ * @param [out] array  memory array on the device
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetChannelDesc(
     hipChannelFormatDesc* desc,
     hipArray_const_t array);
+
+/**
+ * @brief Gets resource descriptor for the texture object.
+ *
+ * @param [out] pResDesc  pointer to resource descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetTextureObjectResourceDesc(
     hipResourceDesc* pResDesc,
     hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets resource view descriptor for the texture object.
+ *
+ * @param [out] pResViewDesc  pointer to resource view descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetTextureObjectResourceViewDesc(
     struct hipResourceViewDesc* pResViewDesc,
     hipTextureObject_t textureObject);
+
+/**
+ * @brief Gets texture descriptor for the texture object.
+ *
+ * @param [out] pTexDesc  pointer to texture descriptor
+ * @param [in] textureObject  texture object
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
 hipError_t hipGetTextureObjectTextureDesc(
     hipTextureDesc* pTexDesc,
     hipTextureObject_t textureObject);
+
+/**
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddressMode(
     textureReference* texRef,
     int dim,
     enum hipTextureAddressMode am);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetArray(
     textureReference* tex,
     hipArray_const_t array,
     unsigned int flags);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFlags(
     textureReference* texRef,
     unsigned int Flags);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFormat(
     textureReference* texRef,
     hipArray_Format fmt,
@@ -4027,7 +5040,7 @@ hipError_t hipTexObjectGetTextureDesc(
 
 /**
  *
- *  @addtogroup TexturD Texture Management [Deprecated]
+ *  @addtogroup TextureD Texture Management [Deprecated]
  *  @{
  *  @ingroup Texture
  *  This section describes the deprecated texture management functions of HIP runtime API.
@@ -4123,6 +5136,7 @@ hipError_t hipTexRefSetMaxAnisotropy(
  * @}
  */
 
+
 // The following are not supported.
 /**
  *
@@ -4135,16 +5149,20 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapLevelBias(
     textureReference* texRef,
     float bias);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapLevelClamp(
     textureReference* texRef,
     float minMipMapLevelClamp,
     float maxMipMapLevelClamp);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmappedArray(
     textureReference* texRef,
     struct hipMipmappedArray* mipmappedArray,
@@ -4159,7 +5177,7 @@ hipError_t hipMipmappedArrayGetLevel(
     hipArray_t* pLevelArray,
     hipMipmappedArray_t hMipMappedArray,
     unsigned int level);
-// doxygen end Texture management unsupported
+// doxygen end unsuppported texture management
 /**
  * @}
  */
@@ -4205,102 +5223,10 @@ int hipGetStreamDeviceId(hipStream_t stream);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Graph Management
+ *  @defgroup Graph Graph Management
  *  @{
  *  This section describes the graph management types & functions of HIP runtime API.
  */
-
-/**
- * An opaque value that represents a hip graph
- */
-typedef struct ihipGraph* hipGraph_t;
-/**
- * An opaque value that represents a hip graph node
- */
-typedef struct hipGraphNode* hipGraphNode_t;
-/**
- * An opaque value that represents a hip graph Exec
- */
-typedef struct hipGraphExec* hipGraphExec_t;
-
-/**
- * @brief hipGraphNodeType
- * @enum
- *
- */
-typedef enum hipGraphNodeType {
-  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
-  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
-  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
-  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
-  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
-  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
-  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
-  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
-  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
-  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
-  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
-  hipGraphNodeTypeCount
-} hipGraphNodeType;
-
-typedef void (*hipHostFn_t)(void* userData);
-typedef struct hipHostNodeParams {
-  hipHostFn_t fn;
-  void* userData;
-} hipHostNodeParams;
-typedef struct hipKernelNodeParams {
-  dim3 blockDim;
-  void** extra;
-  void* func;
-  dim3 gridDim;
-  void** kernelParams;
-  unsigned int sharedMemBytes;
-} hipKernelNodeParams;
-typedef struct hipMemsetParams {
-  void* dst;
-  unsigned int elementSize;
-  size_t height;
-  size_t pitch;
-  unsigned int value;
-  size_t width;
-} hipMemsetParams;
-
-/**
- * @brief hipGraphExecUpdateResult
- * @enum
- *
- */
-typedef enum hipGraphExecUpdateResult {
-  hipGraphExecUpdateSuccess = 0x0,  ///< The update succeeded
-  hipGraphExecUpdateError = 0x1,  ///< The update failed for an unexpected reason which is described
-                                  ///< in the return value of the function
-  hipGraphExecUpdateErrorTopologyChanged = 0x2,  ///< The update failed because the topology changed
-  hipGraphExecUpdateErrorNodeTypeChanged = 0x3,  ///< The update failed because a node type changed
-  hipGraphExecUpdateErrorFunctionChanged =
-      0x4,  ///< The update failed because the function of a kernel node changed
-  hipGraphExecUpdateErrorParametersChanged =
-      0x5,  ///< The update failed because the parameters changed in a way that is not supported
-  hipGraphExecUpdateErrorNotSupported =
-      0x6,  ///< The update failed because something about the node is not supported
-  hipGraphExecUpdateErrorUnsupportedFunctionChange = 0x7
-} hipGraphExecUpdateResult;
-
-typedef enum hipStreamCaptureMode {
-  hipStreamCaptureModeGlobal = 0,
-  hipStreamCaptureModeThreadLocal,
-  hipStreamCaptureModeRelaxed
-} hipStreamCaptureMode;
-typedef enum hipStreamCaptureStatus {
-  hipStreamCaptureStatusNone = 0,    ///< Stream is not capturing
-  hipStreamCaptureStatusActive,      ///< Stream is actively capturing
-  hipStreamCaptureStatusInvalidated  ///< Stream is part of a capture sequence that has been
-                                     ///< invalidated, but not terminated
-} hipStreamCaptureStatus;
-
-typedef enum hipStreamUpdateCaptureDependenciesFlags {
-  hipStreamAddCaptureDependencies = 0,  ///< Add new nodes to the dependency set
-  hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
-} hipStreamUpdateCaptureDependenciesFlags;
 
 /**
  * @brief Begins graph capture on a stream.
@@ -4398,6 +5324,31 @@ hipError_t hipStreamIsCapturing(hipStream_t stream, hipStreamCaptureStatus* pCap
 hipError_t hipStreamUpdateCaptureDependencies(hipStream_t stream, hipGraphNode_t* dependencies,
                                               size_t numDependencies,
                                               unsigned int flags __dparm(0));
+
+/**
+ * @brief Enqueues a host function call in a stream.
+ *
+ * @param [in] stream - stream to enqueue work to.
+ * @param [in] fn - function to call once operations enqueued preceeding are complete.
+ * @param [in] userData - User-specified data to be passed to the function.
+ * @returns #hipSuccess, #hipErrorInvalidResourceHandle, #hipErrorInvalidValue,
+ * #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipLaunchHostFunc(hipStream_t stream, hipHostFn_t fn, void* userData);
+
+/**
+ * @brief Swaps the stream capture mode of a thread.
+ *
+ * @param [in] mode - Pointer to mode value to swap with the current mode
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ *
+ */
+hipError_t hipThreadExchangeStreamCaptureMode(hipStreamCaptureMode* mode);
 
 /**
  * @brief Creates a graph
@@ -4771,6 +5722,30 @@ hipError_t hipGraphMemcpyNodeGetParams(hipGraphNode_t node, hipMemcpy3DParms* pN
  */
 hipError_t hipGraphMemcpyNodeSetParams(hipGraphNode_t node, const hipMemcpy3DParms* pNodeParams);
 
+/**
+ * @brief Sets a node attribute.
+ *
+ * @param [in] hNode - instance of the node to set parameters to.
+ * @param [in] attr - the attribute node is set to.
+ * @param [in] value - const pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphKernelNodeSetAttribute(hipGraphNode_t hNode, hipKernelNodeAttrID attr,
+                                          const hipKernelNodeAttrValue* value);
+/**
+ * @brief Gets a node attribute.
+ *
+ * @param [in] hNode - instance of the node to set parameters to.
+ * @param [in] attr - the attribute node is set to.
+ * @param [in] value - const pointer to the parameters.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphKernelNodeGetAttribute(hipGraphNode_t hNode, hipKernelNodeAttrID attr,
+                                          hipKernelNodeAttrValue* value);
 /**
  * @brief Sets the parameters for a memcpy node in the given graphExec.
  *
@@ -5210,7 +6185,319 @@ hipError_t hipGraphEventWaitNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
 hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                              hipEvent_t event);
 
+/**
+ * @brief Get the mem attribute for graphs.
+ *
+ * @param [in] device - device the attr is get for.
+ * @param [in] attr - attr to get.
+ * @param [out] value - value for specific attr.
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGetGraphMemAttribute(int device, hipGraphMemAttributeType attr, void* value);
+
+/**
+ * @brief Set the mem attribute for graphs.
+ *
+ * @param [in] device - device the attr is set for.
+ * @param [in] attr - attr to set.
+ * @param [in] value - value for specific attr.
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceSetGraphMemAttribute(int device, hipGraphMemAttributeType attr, void* value);
+
+/**
+ * @brief Free unused memory on specific device used for graph back to OS.
+ *
+ * @param [in] device - device the memory is used for graphs
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGraphMemTrim(int device);
 // doxygen end graph API
+/**
+ * @}
+ */
+
+
+/**
+ * Memory allocation properties
+ */
+typedef struct hipMemAllocationProp {
+    hipMemAllocationType type;                      ///< Memory allocation type
+    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
+    hipMemLocation location;                        ///< Memory location
+    void* win32HandleMetaData;                      ///< Metadata for Win32 handles
+    struct {
+        unsigned char compressionType;              ///< Compression type
+        unsigned char gpuDirectRDMACapable;         ///< RDMA capable
+        unsigned short usage;                       ///< Usage
+    } allocFlags;
+} hipMemAllocationProp;
+
+/**
+ * Generic handle for memory allocation
+ */
+typedef struct ihipMemGenericAllocationHandle* hipMemGenericAllocationHandle_t;
+
+/**
+ * @brief Flags for granularity
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemAllocationGranularity_flags {
+    hipMemAllocationGranularityMinimum     = 0x0, ///< Minimum granularity
+    hipMemAllocationGranularityRecommended = 0x1  ///< Recommended granularity for performance
+} hipMemAllocationGranularity_flags;
+
+/**
+ * @brief Memory handle type
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemHandleType {
+    hipMemHandleTypeGeneric = 0x0 ///< Generic handle type
+} hipMemHandleType;
+
+/**
+ * @brief Memory operation types
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipMemOperationType {
+    hipMemOperationTypeMap   = 0x1, ///< Map operation
+    hipMemOperationTypeUnmap = 0x2  ///< Unmap operation
+} hipMemOperationType;
+
+/**
+ * @brief Subresource types for sparse arrays
+ * @enum
+ * @ingroup Enumerations
+ */
+typedef enum hipArraySparseSubresourceType {
+    hipArraySparseSubresourceTypeSparseLevel = 0x0, ///< Sparse level
+    hipArraySparseSubresourceTypeMiptail     = 0x1  ///< Miptail
+} hipArraySparseSubresourceType;
+
+/**
+ * Map info for arrays
+ */
+typedef struct hipArrayMapInfo {
+     hipResourceType resourceType;                  ///< Resource type
+     union {
+         hipMipmappedArray mipmap;
+         hipArray_t array;
+     } resource;
+     hipArraySparseSubresourceType subresourceType; ///< Sparse subresource type
+     union {
+         struct {
+             unsigned int level;                    ///< For mipmapped arrays must be a valid mipmap level. For arrays must be zero
+             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned int offsetX;                  ///< X offset in elements
+             unsigned int offsetY;                  ///< Y offset in elements
+             unsigned int offsetZ;                  ///< Z offset in elements
+             unsigned int extentWidth;              ///< Width in elements
+             unsigned int extentHeight;             ///< Height in elements
+             unsigned int extentDepth;              ///< Depth in elements
+         } sparseLevel;
+         struct {
+             unsigned int layer;                    ///< For layered arrays must be a valid layer index. Otherwise, must be zero
+             unsigned long long offset;             ///< Offset within mip tail
+             unsigned long long size;               ///< Extent in bytes
+         } miptail;
+     } subresource;
+     hipMemOperationType memOperationType;          ///< Memory operation type
+     hipMemHandleType memHandleType;                ///< Memory handle type
+     union {
+         hipMemGenericAllocationHandle_t memHandle;
+     } memHandle;
+     unsigned long long offset;                     ///< Offset within the memory
+     unsigned int deviceBitMask;                    ///< Device ordinal bit mask
+     unsigned int flags;                            ///< flags for future use, must be zero now.
+     unsigned int reserved[2];                      ///< Reserved for future use, must be zero now.
+} hipArrayMapInfo;
+
+/**
+ *-------------------------------------------------------------------------------------------------
+ *-------------------------------------------------------------------------------------------------
+ *  @defgroup Virtual Memory Management
+ *  @{
+ *  This section describes the virtual memory management functions of HIP runtime API.
+ */
+
+/**
+ * @brief Frees an address range reservation made via hipMemAddressReserve
+ *
+ * @param [in] devPtr - starting address of the range.
+ * @param [in] size - size of the range.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemAddressFree(void* devPtr, size_t size);
+
+/**
+ * @brief Reserves an address range
+ *
+ * @param [out] ptr - starting address of the reserved range.
+ * @param [in] size - size of the reservation.
+ * @param [in] alignment - alignment of the address.
+ * @param [in] addr - requested starting address of the range.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemAddressReserve(void** ptr, size_t size, size_t alignment, void* addr, unsigned long long flags);
+
+/**
+ * @brief Creates a memory allocation described by the properties and size
+ *
+ * @param [out] handle - value of the returned handle.
+ * @param [in] size - size of the allocation.
+ * @param [in] prop - properties of the allocation.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemCreate(hipMemGenericAllocationHandle_t* handle, size_t size, const hipMemAllocationProp* prop, unsigned long long flags);
+
+/**
+ * @brief Exports an allocation to a requested shareable handle type.
+ *
+ * @param [out] shareableHandle - value of the returned handle.
+ * @param [in] handle - handle to share.
+ * @param [in] handleType - type of the shareable handle.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemExportToShareableHandle(void* shareableHandle, hipMemGenericAllocationHandle_t handle, hipMemAllocationHandleType handleType, unsigned long long flags);
+
+/**
+ * @brief Get the access flags set for the given location and ptr.
+ *
+ * @param [out] flags - flags for this location.
+ * @param [in] location - target location.
+ * @param [in] ptr - address to check the access flags.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAccess(unsigned long long* flags, const hipMemLocation* location, void* ptr);
+
+/**
+ * @brief Calculates either the minimal or recommended granularity.
+ *
+ * @param [out] granularity - returned granularity.
+ * @param [in] prop - location properties.
+ * @param [in] option - determines which granularity to return.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAllocationGranularity(size_t* granularity, const hipMemAllocationProp* prop, hipMemAllocationGranularity_flags option);
+
+/**
+ * @brief Retrieve the property structure of the given handle.
+ *
+ * @param [out] prop - properties of the given handle.
+ * @param [in] handle - handle to perform the query on.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemGetAllocationPropertiesFromHandle(hipMemAllocationProp* prop, hipMemGenericAllocationHandle_t handle);
+
+/**
+ * @brief Imports an allocation from a requested shareable handle type.
+ *
+ * @param [out] handle - returned value.
+ * @param [in] osHandle - shareable handle representing the memory allocation.
+ * @param [in] shHandleType - handle type.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemImportFromShareableHandle(hipMemGenericAllocationHandle_t* handle, void* osHandle, hipMemAllocationHandleType shHandleType);
+
+/**
+ * @brief Maps an allocation handle to a reserved virtual address range.
+ *
+ * @param [in] ptr - address where the memory will be mapped.
+ * @param [in] size - size of the mapping.
+ * @param [in] offset - offset into the memory, currently must be zero.
+ * @param [in] handle - memory allocation to be mapped.
+ * @param [in] flags - currently unused, must be zero.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemMap(void* ptr, size_t size, size_t offset, hipMemGenericAllocationHandle_t handle, unsigned long long flags);
+
+/**
+ * @brief Maps or unmaps subregions of sparse HIP arrays and sparse HIP mipmapped arrays.
+ *
+ * @param [in] mapInfoList - list of hipArrayMapInfo.
+ * @param [in] count - number of hipArrayMapInfo in mapInfoList.
+ * @param [in] stream - stream identifier for the stream to use for map or unmap operations.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemMapArrayAsync(hipArrayMapInfo* mapInfoList, unsigned int  count, hipStream_t stream);
+
+/**
+ * @brief Release a memory handle representing a memory allocation which was previously allocated through hipMemCreate.
+ *
+ * @param [in] handle - handle of the memory allocation.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemRelease(hipMemGenericAllocationHandle_t handle);
+
+/**
+ * @brief Returns the allocation handle of the backing memory allocation given the address.
+ *
+ * @param [out] handle - handle representing addr.
+ * @param [in] addr - address to look up.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemRetainAllocationHandle(hipMemGenericAllocationHandle_t* handle, void* addr);
+
+/**
+ * @brief Set the access flags for each location specified in desc for the given virtual address range.
+ *
+ * @param [in] ptr - starting address of the virtual address range.
+ * @param [in] size - size of the range.
+ * @param [in] desc - array of hipMemAccessDesc.
+ * @param [in] count - number of hipMemAccessDesc in desc.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemSetAccess(void* ptr, size_t size, const hipMemAccessDesc* desc, size_t count);
+
+/**
+ * @brief Unmap memory allocation of a given address range.
+ *
+ * @param [in] ptr - starting address of the range to unmap.
+ * @param [in] size - size of the virtual address range.
+ * @returns #hipSuccess, #hipErrorInvalidValue, #hipErrorNotSupported
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipMemUnmap(void* ptr, size_t size);
+
+// doxygen end virtual memory management API
 /**
  * @}
  */
@@ -5421,8 +6708,46 @@ static inline hipError_t hipUnbindTexture(
 {
     return hipUnbindTexture(&tex);
 }
+/**
+ * @brief C++ wrappers for allocations from a memory pool
+ *
+ * This is an alternate C++ calls for @p hipMallocFromPoolAsync made available through function overloading.
+ *
+ * @see hipMallocFromPoolAsync
+ */
+static inline hipError_t hipMallocAsync(
+  void**        dev_ptr,
+  size_t        size,
+  hipMemPool_t  mem_pool,
+  hipStream_t   stream) {
+  return hipMallocFromPoolAsync(dev_ptr, size, mem_pool, stream);
+}
 
+template<class T>
+static inline hipError_t hipMallocAsync(
+  T**           dev_ptr,
+  size_t        size,
+  hipMemPool_t  mem_pool,
+  hipStream_t   stream) {
+  return hipMallocFromPoolAsync(reinterpret_cast<void**>(dev_ptr), size, mem_pool, stream);
+}
 
+template<class T>
+static inline hipError_t hipMallocAsync(
+  T**           dev_ptr,
+  size_t        size,
+  hipStream_t   stream) {
+  return hipMallocAsync(reinterpret_cast<void**>(dev_ptr), size, stream);
+}
+
+template<class T>
+static inline hipError_t hipMallocFromPoolAsync(
+  T**           dev_ptr,
+  size_t        size,
+  hipMemPool_t  mem_pool,
+  hipStream_t   stream) {
+  return hipMallocFromPoolAsync(reinterpret_cast<void**>(dev_ptr), size, mem_pool, stream);
+}
 #endif // __cplusplus
 
 #ifdef __GNUC__
@@ -5470,6 +6795,7 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
                                        unsigned int flags = hipMemAttachGlobal) {
     return hipMallocManaged((void**)devPtr, size, flags);
 }
+
 #endif
 #endif
 
