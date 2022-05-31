@@ -101,8 +101,8 @@ __global__ void empty_kernel() {}
 TEST_CASE("Unit_hipStreamQuery_WithFinishedWork") {
   hipStream_t stream{nullptr};
   HIP_CHECK(hipStreamCreate(&stream));
-
-  hipLaunchKernelGGL(empty_kernel, dim3(1), dim3(1), 0, stream);
+  
+  empty_kernel<<<dim3(1), dim3(1), 0, stream>>>();
   HIP_CHECK(hipStreamSynchronize(stream));
 
   HIP_CHECK(hipStreamQuery(stream));
