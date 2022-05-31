@@ -60,8 +60,9 @@ HIP supports Stream Memory Operations to enable direct synchronization between N
   hipStreamWriteValue64
 
 Note, CPU access to the semaphore's memory requires volatile keyword to disable CPU compiler's optimizations on memory access.
-
 For more details, please check the documentation HIP-API.pdf.
+
+Please note, HIP stream does not gurantee concurrency on AMD hardware for the case of multiple (at least 6) long running streams executing concurrently, using hipStreamSynchronize(nullptr) for synchronization.
 
 ### Coherency Controls
 ROCm defines two coherency options for host memory:
@@ -130,7 +131,10 @@ The link here(https://github.com/ROCm-Developer-Tools/HIP/blob/main/tests/src/hi
 
 ## Device-Side Malloc
 
-HIP-Clang currently doesn't supports device-side malloc and free.
+HIP-Clang now supports device-side malloc and free.
+This implementation does not require the use of `hipDeviceSetLimit(hipLimitMallocHeapSize,value)` nor respects any setting. The heap is fully dynamic and can grow until the available free memory on the device is consumed.
+
+The test codes in the link (https://github.com/ROCm-Developer-Tools/HIP/blob/develop/tests/src/deviceLib/hipDeviceMalloc.cpp) show how to implement application using malloc and free functions in device kernels.
 
 ## Use of Long Double Type
 
