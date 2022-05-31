@@ -7,20 +7,12 @@ set(TEST_SRC
     hipStreamAddCallback.cc
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
-    hipStreamSynchronize.cc
     hipStreamGetCUMask.cc
     hipAPIStreamDisable.cc
     streamCommon.cc
-    hipStreamQuery.cc
-)
-
-#skipped in windows - duplicate HipTest::vector_square sym (compiler issue)
-if(UNIX)
-    set(TEST_SRC ${TEST_SRC}
-                 hipStreamWithCUMask.cc
-                 hipStreamACb_MultiThread.cc)
-endif()
-
+    hipStreamWithCUMask.cc
+    hipStreamACb_MultiThread.cc
+    )
 else()
 set(TEST_SRC
     hipStreamCreate.cc
@@ -32,10 +24,8 @@ set(TEST_SRC
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
-    hipStreamSynchronize.cc
     streamCommon.cc
-    hipStreamQuery.cc
-)
+    )
 endif()
 
 hip_add_exe_to_target(NAME StreamTest

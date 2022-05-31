@@ -20,42 +20,6 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include "streamCommon.hh"
 
-/**
- * @brief Check that submitting work to a stream sets the status of the nullStream to
- * hipErrorNotReady
- *
- */
-TEST_CASE("Unit_hipStreamQuery_SubmitWorkOnStreamAndQueryNullStream") {
-  {
-    hipStream_t stream;
-    HIP_CHECK(hipStreamCreate(&stream));
-
-    HIP_CHECK(hipStreamQuery(hip::nullStream));
-    hip::stream::waiting_kernel<<<1, 1, 0, stream>>>();
-    HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipErrorNotReady);
-
-    std::thread signalingThread = hip::stream::startSignalingThread();
-    HIP_CHECK(hipDeviceSynchronize());
-    signalingThread.join();
-    HIP_CHECK(hipStreamDestroy(stream));
-  }
-}
-
-/**
- * @brief Check that submitting work to the nullStream properly sets its status as
- * hipErrorNotReady.
- *
- */
-TEST_CASE("Unit_hipStreamQuery_NullStreamQuery") {
-  HIP_CHECK(hipStreamQuery(hip::nullStream));
-  hip::stream::waiting_kernel<<<1, 1, 0, hip::nullStream>>>();
-  HIP_CHECK_ERROR(hipStreamQuery(hip::nullStream), hipErrorNotReady);
-
-  std::thread signalingThread = hip::stream::startSignalingThread();
-  HIP_CHECK(hipStreamSynchronize(hip::nullStream));
-  signalingThread.join();
-}
-
 #if HT_NVIDIA==0
 /**
  * @brief Check that submitting work to a destroyed stream sets its status as
