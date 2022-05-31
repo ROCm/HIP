@@ -10,6 +10,7 @@ set(TEST_SRC
     hipStreamGetCUMask.cc
     hipAPIStreamDisable.cc
     streamCommon.cc
+    hipStreamQuery.cc
     hipStreamWithCUMask.cc
     hipStreamACb_MultiThread.cc
     )
@@ -25,6 +26,7 @@ set(TEST_SRC
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
     streamCommon.cc
+    hipStreamQuery.cc
     )
 endif()
 
