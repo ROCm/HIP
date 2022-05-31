@@ -18,11 +18,20 @@ THE SOFTWARE.
 */
 #include <hip_test_common.hh>
 
+constexpr unsigned int writeFlag = 0;
+
+#define DEFINE_HIP_STREAM_VALUE(TYPE, BITS, ...) hipStream##TYPE##Value##BITS(__VA_ARGS__)
+
+#define CHECK_HIP_STREAM_VALUE(TYPE, BITS, ...)                                                    \
+  HIP_CHECK(DEFINE_HIP_STREAM_VALUE(TYPE, BITS, __VA_ARGS__));
+
+#define NEG_TEST_ERROR_CHECK(TYPE, BITS, errorCode, ...)                                           \
+  HIP_CHECK_ERROR(DEFINE_HIP_STREAM_VALUE(TYPE, BITS, __VA_ARGS__), errorCode);
+
+#if HT_AMD
 // Random predefiend 32 and 64 bit values
 constexpr uint32_t value32 = 0x70F0F0FF;
 constexpr uint64_t value64 = 0x7FFF0000FFFF0000;
-constexpr unsigned int writeFlag = 0;
-
 constexpr uint32_t DATA_INIT = 0x1234;
 constexpr uint32_t DATA_UPDATE = 0X4321;
 
@@ -188,11 +197,6 @@ template <typename intT> void cleanup(hipStream_t& stream, intT* dataPtr, int64_
   HIP_CHECK(hipStreamDestroy(stream));
 }
 
-#define DEFINE_HIP_STREAM_VALUE(TYPE, BITS, ...) hipStream##TYPE##Value##BITS(__VA_ARGS__)
-
-#define CHECK_HIP_STREAM_VALUE(TYPE, BITS, ...)                                                    \
-  HIP_CHECK(DEFINE_HIP_STREAM_VALUE(TYPE, BITS, __VA_ARGS__));
-
 template <typename intT, bool isBlocking, typename TEST_T> void testWait(TEST_T tc) {
   if (!streamWaitValueSupported()) {
     UNSCOPED_INFO(" hipStreamWaitValue: not supported on this device , skipping ...");
@@ -352,64 +356,16 @@ DEFINE_STREAM_WAIT_VAL_TEST_CASES_INT64("NoMask_Nor",
                                                     static_cast<int64_t>(0xbddbddbdbddbddb3)))
 #undef DEFINE_STREAM_WAIT_VAL_TEST_CASES_INT64
 
+#endif
+
 // Negative Tests
-#define NEG_TEST_ERROR_CHECK(TYPE, BITS, errorCode, ...)                                           \
-  HIP_CHECK_ERROR(DEFINE_HIP_STREAM_VALUE(TYPE, BITS, __VA_ARGS__), errorCode);
-
-TEST_CASE("Unit_hipStreamValue_Negative_InvalidStream") {
-  hipStream_t stream{nullptr};
-
-  HIP_CHECK(hipStreamCreate(&stream));
-
-  REQUIRE(stream != nullptr);
-
-  // Allocate Host Memory
-  auto hostPtr32 = std::unique_ptr<uint32_t>(new uint32_t(1));
-  auto hostPtr64 = std::unique_ptr<uint64_t>(new uint64_t(1));
-
-  // Register Host Memory
-  HIP_CHECK(hipHostRegister(hostPtr32.get(), sizeof(int32_t), 0));
-  HIP_CHECK(hipHostRegister(hostPtr64.get(), sizeof(int64_t), 0));
-
-  // Set dummy data
-  *hostPtr64 = 0x0;
-  *hostPtr32 = 0x0;
-
-  auto compareOp = hipStreamWaitValueGte;
-
-  // Stream Negative tests
-  hipStream_t definitelyNotAStream{reinterpret_cast<hipStream_t>(0xFFFF)};
-  SECTION("Invalid Stream hipStreamWriteValue32") {
-    INFO("Testing Uncreated Stream for hipStreamWriteValue32");
-    NEG_TEST_ERROR_CHECK(Write, 32, hipErrorInvalidResourceHandle, definitelyNotAStream,
-                         hostPtr32.get(), 0, writeFlag)
-  }
-
-  SECTION("Invalid Stream hipStreamWriteValue64") {
-    INFO("Testing Uncreated Stream for hipStreamWriteValue64");
-    NEG_TEST_ERROR_CHECK(Write, 64, hipErrorInvalidResourceHandle, definitelyNotAStream,
-                         hostPtr64.get(), 0, writeFlag)
-  }
-
-  SECTION("Invalid Stream hipStreamWaitValue32") {
-    INFO("Testing Uncreated Stream for hipStreamWaitValue32");
-    NEG_TEST_ERROR_CHECK(Wait, 32, hipErrorInvalidResourceHandle, definitelyNotAStream,
-                         hostPtr32.get(), 0, compareOp)
-  }
-
-  SECTION("Invalid Stream hipStreamWaitValue64") {
-    INFO("Testing Uncreated Stream for hipStreamWaitValue64");
-    NEG_TEST_ERROR_CHECK(Write, 64, hipErrorInvalidResourceHandle, definitelyNotAStream,
-                         hostPtr64.get(), 0, compareOp)
-  }
-
-  // Cleanup
-  HIP_CHECK(hipHostUnregister(hostPtr32.get()));
-  HIP_CHECK(hipHostUnregister(hostPtr64.get()));
-  HIP_CHECK(hipStreamDestroy(stream));
-}
-
 TEST_CASE("Unit_hipStreamValue_Negative_InvalidMemory") {
+
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-96");
+  return;
+#endif
+
   hipStream_t stream{nullptr};
 
   HIP_CHECK(hipStreamCreate(&stream));
@@ -431,23 +387,18 @@ TEST_CASE("Unit_hipStreamValue_Negative_InvalidMemory") {
   auto compareOp = hipStreamWaitValueGte;
 
   // Memory pointer negative tests
-  SECTION("Invalid Memory Pointer hipStreamWriteValue32") {
-    INFO("Testing Invalid Memory Pointer for hipStreamWriteValue32");
-    NEG_TEST_ERROR_CHECK(Write, 32, hipErrorInvalidValue, stream, nullptr, 0, writeFlag)
-    // REQUIRE(hipErrorInvalidResourceHandle == hipStreamWaitEvent(stream, nullptr, 0));
-  }
-  SECTION("Invalid Memory Pointer hipStreamWriteValue64") {
-    INFO("Testing Invalid Memory Pointer for hipStreamWriteValue64");
-    NEG_TEST_ERROR_CHECK(Write, 64, hipErrorInvalidValue, stream, nullptr, 0, writeFlag)
-  }
-  SECTION("Invalid Memory Pointer hipStreamWaitValue32") {
-    INFO("Testing Invalid Memory Pointer for hipStreamWaitValue32");
-    NEG_TEST_ERROR_CHECK(Wait, 32, hipErrorInvalidValue, stream, nullptr, 0, compareOp)
-  }
-  SECTION("Invalid Memory Pointer hipStreamWaitValue64") {
-    INFO("Testing Invalid Memory Pointer for hipStreamWaitValue64");
-    NEG_TEST_ERROR_CHECK(Wait, 64, hipErrorInvalidValue, stream, nullptr, 0, compareOp)
-  }
+
+  INFO("Testing Invalid Memory Pointer for hipStreamWriteValue32");
+  NEG_TEST_ERROR_CHECK(Write, 32, hipErrorNotSupported, stream, nullptr, 0, writeFlag)
+
+  INFO("Testing Invalid Memory Pointer for hipStreamWriteValue64");
+  NEG_TEST_ERROR_CHECK(Write, 64, hipErrorNotSupported, stream, nullptr, 0, writeFlag)
+
+  INFO("Testing Invalid Memory Pointer for hipStreamWaitValue32");
+  NEG_TEST_ERROR_CHECK(Wait, 32, hipErrorNotSupported, stream, nullptr, 0, compareOp)
+
+  INFO("Testing Invalid Memory Pointer for hipStreamWaitValue64");
+  NEG_TEST_ERROR_CHECK(Wait, 64, hipErrorNotSupported, stream, nullptr, 0, compareOp)
 
   // Cleanup
   HIP_CHECK(hipHostUnregister(hostPtr32.get()));
@@ -456,7 +407,6 @@ TEST_CASE("Unit_hipStreamValue_Negative_InvalidMemory") {
 }
 
 TEST_CASE("Unit_hipStreamWaitValue_Negative_InvalidFlag") {
-  
 #if HT_AMD
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-96");
   return;
