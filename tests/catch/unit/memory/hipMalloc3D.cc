@@ -65,26 +65,6 @@ static void Malloc3DThreadFunc(int gpu) {
 }
 
 /*
- * This verifies the negative scenarios of hipMalloc3D API
- */
-TEST_CASE("Unit_hipMalloc3D_Negative") {
-  size_t width = SMALL_SIZE * sizeof(char);
-  size_t height{SMALL_SIZE}, depth{SMALL_SIZE};
-  hipPitchedPtr devPitchedPtr;
-
-  SECTION("Passing nullptr to device pitched pointer") {
-    hipExtent extent = make_hipExtent(width, height, depth);
-    REQUIRE(hipMalloc3D(nullptr, extent) != hipSuccess);
-  }
-
-  SECTION("Passing Max values to extent") {
-    hipExtent extent = make_hipExtent(std::numeric_limits<size_t>::max(),
-                                      std::numeric_limits<size_t>::max(),
-                                      std::numeric_limits<size_t>::max());
-    REQUIRE(hipMalloc3D(&devPitchedPtr, extent) != hipSuccess);
-  }
-}
-/*
  * This verifies the hipMalloc3D API by
  * assigning width,height and depth as 10
  */

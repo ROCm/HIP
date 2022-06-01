@@ -211,6 +211,11 @@ TEST_CASE("Unit_hipMalloc3D_Negative") {
     hipExtent validExtent{1, 1, maxSizeT};
     HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
   }
+
+  SECTION("Max size_t all dimensions") {
+    hipExtent validExtent{maxSizeT, maxSizeT, maxSizeT};
+    HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
+  }
 }
 
 TEST_CASE("Unit_hipMallocPitch_Negative") {
