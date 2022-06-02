@@ -107,14 +107,9 @@ find_library(CLANGRT_BUILTINS
     PATHS
       ${HIP_CLANGRT_LIB_SEARCH_PATHS}
       ${HIP_CLANG_INCLUDE_PATH}/../lib/linux)
-#FILE_REORG_BACKWARD_COMPATIBILITY
 set_target_properties(hip-lang::device PROPERTIES
-  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;
-                                   $<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;
-                                   ${HIP_CLANG_INCLUDE_PATH}>"
-  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/../include;
-                                          $<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;
-                                          ${HIP_CLANG_INCLUDE_PATH}>"
+  INTERFACE_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HIP_CLANG_INCLUDE_PATH}>"
+  INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "$<$<COMPILE_LANGUAGE:HIP>:${_IMPORT_PREFIX}/include;${HIP_CLANG_INCLUDE_PATH}>"
 )
 
 set_target_properties(hip-lang::amdhip64 PROPERTIES
