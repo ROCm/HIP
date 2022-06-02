@@ -77,7 +77,8 @@
 	   "Unit_hipStreamGetCaptureInfo_BasicFunctional",
 	   "Unit_hipStreamGetCaptureInfo_hipStreamPerThread",
 	   "Unit_hipStreamGetCaptureInfo_UniqueID",
-	   "Unit_hipStreamGetCaptureInfo_ArgValidation"
+	   "Unit_hipStreamGetCaptureInfo_ArgValidation",
+	   "# Following test is related to ticket EXSWCPHIPT-41",
+	   "Unit_hipStreamGetPriority_happy"
 	]
-
 }
