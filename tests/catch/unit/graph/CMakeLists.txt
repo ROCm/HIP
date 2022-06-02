@@ -57,6 +57,7 @@ set(TEST_SRC
   hipGraphEventWaitNodeGetEvent.cc
   hipGraphExecMemcpyNodeSetParams.cc
   hipStreamBeginCapture.cc
+  hipGraphAddMemcpyNode1D.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest
