@@ -76,6 +76,8 @@
 	   "Unit_hipPointerGetAttribute_MappedMem",
 	   "Unit_hipGraphAddMemcpyNode1D_Functional",
 	   "Unit_hipGraphAddMemcpyNode1D_Negative",
+	   "Unit_hipStreamBeginCapture_BasicFunctional",
+	   "Unit_hipStreamBeginCapture_hipStreamPerThread",
 	   "# Following test is related to ticket EXSWCPHIPT-41",
 	   "Unit_hipStreamGetPriority_happy"
 	]
