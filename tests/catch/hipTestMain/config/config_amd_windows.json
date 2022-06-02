@@ -74,8 +74,9 @@
 	   "Unit_hipGraphAddEventRecordNode_MultipleRun",
 	   "Unit_hipMalloc3D_Negative",
 	   "Unit_hipPointerGetAttribute_MappedMem",
-           "Unit_hipStreamBeginCapture_BasicFunctional",
-           "Unit_hipStreamBeginCapture_hipStreamPerThread"
+     "Unit_hipStreamBeginCapture_BasicFunctional",
+     "Unit_hipStreamBeginCapture_hipStreamPerThread",
+	   "# Following test is related to ticket EXSWCPHIPT-41",
+	   "Unit_hipStreamGetPriority_happy"
 	]
-
 }
