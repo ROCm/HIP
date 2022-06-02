@@ -82,6 +82,7 @@ set(TEST_SRC
     hipMalloc3D.cc
     hipMalloc3DArray.cc
     hipArrayCreate.cc
+    hipArray3DCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
     hipPointerGetAttribute.cc
@@ -150,6 +151,7 @@ set(TEST_SRC
     hipMalloc3D.cc
     hipMalloc3DArray.cc
     hipArrayCreate.cc
+    hipArray3DCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
     hipPointerGetAttribute.cc
