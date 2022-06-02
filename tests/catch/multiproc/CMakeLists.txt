@@ -12,6 +12,7 @@ set(LINUX_TEST_SRC
     hipHostMallocTestsMproc.cc
     hipMallocConcurrencyMproc.cc
     hipMemCoherencyTstMProc.cc
+    hipIpcEventHandle.cc
     hipIpcMemAccessTest.cc
 )
 
