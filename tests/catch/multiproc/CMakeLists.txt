@@ -13,6 +13,7 @@ set(LINUX_TEST_SRC
     hipMallocConcurrencyMproc.cc
     hipMemCoherencyTstMProc.cc
     hipIpcEventHandle.cc
+    hipIpcMemAccessTest.cc
 )
 
 # the last argument linker libraries is required for this test but optional to the function
