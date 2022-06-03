@@ -36,7 +36,6 @@ __global__ void reduce(float* d_in, double* d_out, size_t inputSize, size_t outp
     __syncthreads();
   }
   if (tid == 0) {
-    int blkx = blockIdx.x;
     d_out[blockIdx.x] = d_in[myId];
   }
 }
@@ -255,6 +254,7 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
                                    hipMemcpyDeviceToHost));
   nodeDependencies.clear();
   nodeDependencies.push_back(memcpyNode);
+
   hipGraphNode_t hostNode;
   hipHostNodeParams hostParams = {0};
   hostParams.fn = myHostNodeCallback;
@@ -274,6 +274,13 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
   HIPCHECK(hipGraphGetRootNodes(graph, nodes, &numNodes));
   printf("Num of root nodes in the graph created using hipGraphsManual API = %zu\n", numNodes);
   HIPCHECK(hipGraphInstantiate(&graphExec, graph, NULL, NULL, 0));
+
+  hipGraph_t clonedGraph;
+  hipGraphExec_t clonedGraphExec;
+  HIPCHECK(hipGraphClone(&clonedGraph, graph));
+
+  HIPCHECK(hipGraphInstantiate(&clonedGraphExec, clonedGraph, NULL, NULL, 0));
+
   auto start1 = std::chrono::high_resolution_clock::now();
   for (int i = 0; i < GRAPH_LAUNCH_ITERATIONS; i++) {
     HIPCHECK(hipGraphLaunch(graphExec, streamForGraph));
@@ -288,6 +295,22 @@ bool hipGraphsManual(float* inputVec_h, float* inputVec_d, double* outputVec_d, 
             << std::chrono::duration_cast<std::chrono::milliseconds>(resultWithoutInit).count()
             << " milliseconds " << std::endl;
 
+  printf("\n\nCloned Graph Output.. \n");
+
+  hipGraphNode_t clonedNode;
+  hipGraphNodeFindInClone(&clonedNode, memcpyNode, clonedGraph);
+
+  hipGraphNodeType clonedNodeType, origNodeType;
+  hipGraphNodeGetType(clonedNode, &clonedNodeType);
+  hipGraphNodeGetType(memcpyNode, &origNodeType);
+
+  std::cout << "Original node type:" << origNodeType << " cloned node type:" << clonedNodeType
+            << std::endl;
+
+  for (int i = 0; i < GRAPH_LAUNCH_ITERATIONS; i++) {
+    HIPCHECK(hipGraphLaunch(clonedGraphExec, streamForGraph));
+  }
+  HIPCHECK(hipStreamSynchronize(streamForGraph));
   HIPCHECK(hipGraphExecDestroy(graphExec));
   HIPCHECK(hipGraphDestroy(graph));
   HIPCHECK(hipStreamDestroy(streamForGraph));
