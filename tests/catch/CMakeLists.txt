@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.16.8)
+
+# to skip the simple compiler test
+set(CMAKE_C_COMPILER_WORKS 1)
+set(CMAKE_CXX_COMPILER_WORKS 1)
+
 project(hiptests)
+
 
 # Check if platform and compiler are set
 if(HIP_PLATFORM STREQUAL "amd")
@@ -24,7 +30,45 @@ if(NOT DEFINED HIP_PATH)
 endif()
 message(STATUS "HIP Path: ${HIP_PATH}")
 
-set(CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc")
+# Set ROCM Path
+if(NOT DEFINED ROCM_PATH)
+    if(DEFINED ENV{ROCM_PATH})
+        set(ROCM_PATH $ENV{ROCM_PATH} CACHE STRING "ROCM Path")
+    else()
+        cmake_path(GET HIP_PATH PARENT_PATH ROCM_PATH)
+        if (NOT EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerator")
+            set(ROCM_PATH "/opt/rocm/")
+        endif()
+    endif()
+endif()
+message(STATUS "ROCM Path: ${ROCM_PATH}")
+
+
+if(UNIX)
+    set(CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc")
+    set(CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc")
+    set(HIPCONFIG_EXECUTABLE "${HIP_PATH}/bin/hipconfig")
+    execute_process(COMMAND perl ${HIPCONFIG_EXECUTABLE} --version
+                    OUTPUT_VARIABLE HIP_VERSION
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+else()
+    # using cmake_path as it handles path correctly.
+    # Set both compilers else windows cmake complains of mismatch
+    cmake_path(SET CMAKE_CXX_COMPILER "${HIP_PATH}/bin/hipcc.bat")
+    cmake_path(SET CMAKE_C_COMPILER "${HIP_PATH}/bin/hipcc.bat")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --rocm-path=${ROCM_PATH}")
+    set(HIPCONFIG_EXECUTABLE "${HIP_PATH}/bin/hipconfig.bat")
+    execute_process(COMMAND ${HIPCONFIG_EXECUTABLE} --version
+                    OUTPUT_VARIABLE HIP_VERSION
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+endif()
+
+string(REPLACE "." ";" VERSION_LIST ${HIP_VERSION})
+list(GET VERSION_LIST 0 HIP_VERSION_MAJOR)
+list(GET VERSION_LIST 1 HIP_VERSION_MINOR)
+list(GET VERSION_LIST 2 HIP_VERSION_PATCH_GITHASH)
+string(REPLACE "-" ";" VERSION_LIST ${HIP_VERSION_PATCH_GITHASH})
+list(GET VERSION_LIST 0 HIP_VERSION_PATCH)
 
 if(NOT DEFINED CATCH2_PATH)
     if(DEFINED ENV{CATCH2_PATH})
@@ -54,6 +98,9 @@ find_package(Catch2 REQUIRED
 include(Catch)
 include(CTest)
 
+# path used for generating the *_include.cmake file
+set(CATCH2_INCLUDE ${CATCH2_PATH}/cmake/Catch2/catch_include.cmake.in)
+
 include_directories(
     ${CATCH2_PATH}
     "./include"
@@ -61,8 +108,24 @@ include_directories(
     ${JSON_PARSER}
 )
 
+file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
+file(COPY ./external/Catch2/cmake/Catch2/CatchAddTests.cmake DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/script)
+set(ADD_SCRIPT_PATH ${CMAKE_CURRENT_BINARY_DIR}/script/CatchAddTests.cmake)
+
+if (WIN32)
+  configure_file(catchProp_in_rc.in ${CMAKE_CURRENT_BINARY_DIR}/catchProp.rc @ONLY)
+  cmake_path(SET LLVM_RC_PATH "${HIP_PATH}/../lc/bin/llvm-rc.exe")
+  cmake_path(SET LLVM_RC_PATH NORMALIZE "${LLVM_RC_PATH}")
+
+  # generates the .res files to be used by executables to populate the properties
+  # expects LC folder with clang, llvm-rc to be present one level up of HIP
+  execute_process(COMMAND ${LLVM_RC_PATH} ${CMAKE_CURRENT_BINARY_DIR}/catchProp.rc
+                  OUTPUT_VARIABLE RC_OUTPUT)
+  set(PROP_RC ${CMAKE_CURRENT_BINARY_DIR})
+endif()
+
 if(HIP_PLATFORM MATCHES "amd" AND HIP_COMPILER MATCHES "clang")
-    add_compile_options(-Wall -Wextra -pedantic -Werror)
+    add_compile_options(-Wall -Wextra -pedantic -Werror -Wno-deprecated)
 endif()
 
 cmake_policy(PUSH)
@@ -86,26 +149,24 @@ if(NOT DEFINED OFFLOAD_ARCH_STR AND EXISTS "${ROCM_PATH}/bin/rocm_agent_enumerat
          RESULT_VARIABLE ROCM_AGENT_ENUM_RESULT)
     # Trim out gfx000
     string(REPLACE "gfx000\n" "" HIP_GPU_ARCH ${HIP_GPU_ARCH})
-    string(LENGTH ${HIP_GPU_ARCH} HIP_GPU_ARCH_LEN)
-
-    # If string has more gfx target except gfx000
-    if(${HIP_GPU_ARCH_LEN} GREATER_EQUAL 1)
-		string(REGEX REPLACE "\n" ";" HIP_GPU_ARCH_LIST "${HIP_GPU_ARCH}")
-		set(OFFLOAD_ARCH_STR "")
-		foreach(_hip_gpu_arch ${HIP_GPU_ARCH_LIST})
-			set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
-		endforeach()
-		message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
+    if (NOT HIP_GPU_ARCH STREQUAL "")
+        string(LENGTH ${HIP_GPU_ARCH} HIP_GPU_ARCH_LEN)
+        # If string has more gfx target except gfx000
+        if(${HIP_GPU_ARCH_LEN} GREATER_EQUAL 1)
+            string(REGEX REPLACE "\n" ";" HIP_GPU_ARCH_LIST "${HIP_GPU_ARCH}")
+            set(OFFLOAD_ARCH_STR "")
+            foreach(_hip_gpu_arch ${HIP_GPU_ARCH_LIST})
+                set(OFFLOAD_ARCH_STR " ${OFFLOAD_ARCH_STR} --offload-arch=${_hip_gpu_arch} ")
+            endforeach()
+            message(STATUS "Using offload arch string: ${OFFLOAD_ARCH_STR}")
+        endif()
+    else()
+        message(STATUS "ROCm Agent Enumurator found no valid architectures")
     endif()
 endif()
 
 if(DEFINED OFFLOAD_ARCH_STR)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OFFLOAD_ARCH_STR} ")
-endif()
-
-# Use clang as host compiler with nvcc
-if(HIP_COMPILER MATCHES "nvcc")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ccbin clang")
 endif()
 
 # Disable CXX extensions (gnu++11 etc)
@@ -119,7 +180,6 @@ add_subdirectory(ABM)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
 add_subdirectory(TypeQualifiers)
-
 if(UNIX)
     add_subdirectory(multiproc)
 endif()

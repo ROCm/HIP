@@ -29,11 +29,12 @@ THE SOFTWARE.
 // texture object is a kernel argument
 template <typename TYPE_t>
 __global__ void texture2dCopyKernel( hipTextureObject_t texObj, TYPE_t* dst,TYPE_t* A) {
-
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     for(int i =0;i<SIZE_H;i++)
         for(int j = 0;j<SIZE_W;j++)
             dst[SIZE_W*i+j] = tex2D<TYPE_t>(texObj, j, i);
     __syncthreads();
+#endif
 }
 
 template <typename TYPE_t>
@@ -49,12 +50,12 @@ void texture2Dtest()
     for(size_t i=1; i <= (SIZE_H*SIZE_W); i++){
         A[i-1] = i;
     }
-    
+
     size_t devPitchA;
     HIPCHECK(hipMallocPitch((void**)&devPtrA, &devPitchA ,SIZE_W*sizeof(TYPE_t), SIZE_H)) ;
     HIPCHECK(hipMemcpy2D(devPtrA, devPitchA, A, SIZE_W*sizeof(TYPE_t),
             SIZE_W*sizeof(TYPE_t), SIZE_H, hipMemcpyHostToDevice));
-    
+
     // Use the texture object
     hipResourceDesc texRes;
     memset(&texRes, 0, sizeof(texRes));
@@ -76,7 +77,7 @@ void texture2Dtest()
     texDescr.readMode = hipReadModeElementType;
 
     hipTextureObject_t texObj;
-    HIPCHECK( hipCreateTextureObject(&texObj, &texRes, &texDescr, NULL));
+    HIPCHECK(hipCreateTextureObject(&texObj, &texRes, &texDescr, NULL));
 
     HIPCHECK(hipMalloc((void**)&devPtrB, SIZE_W*sizeof(TYPE_t)*SIZE_H)) ;
 
@@ -95,6 +96,8 @@ void texture2Dtest()
 
 int main()
 {
+    checkImageSupport();
+
     texture2Dtest<float>();
     texture2Dtest<int>();
     texture2Dtest<unsigned char>();

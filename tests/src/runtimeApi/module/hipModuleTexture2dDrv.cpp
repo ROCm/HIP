@@ -592,6 +592,8 @@ bool testTexSingleStreamMultGPU(unsigned int numOfGPUs,
 
 int main(int argc, char** argv) {
   HipTest::parseStandardArguments(argc, argv, true);
+  checkImageSupport();
+
   bool TestPassed = true;
   if (p_tests == 0x01) {
     TestPassed = testTexType<float>(HIP_AD_FORMAT_FLOAT,

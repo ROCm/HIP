@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -41,8 +41,6 @@ TEST_CASE("Unit_hipChooseDevice_ValidateDevId") {
  * Scenario1: Validates if dev = nullptr returns error code
  * Scenario2: Validates if prop = nullptr returns error code
  */
-#if HT_AMD
-// These test scenarios fail on NVIDIA.
 TEST_CASE("Unit_hipChooseDevice_NegTst") {
   hipDeviceProp_t prop;
   int dev = -1;
@@ -57,4 +55,3 @@ TEST_CASE("Unit_hipChooseDevice_NegTst") {
     REQUIRE_FALSE(hipSuccess == hipChooseDevice(&dev, nullptr));
   }
 }
-#endif

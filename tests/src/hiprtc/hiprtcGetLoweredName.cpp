@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,7 +20,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp NVCC_OPTIONS -lnvrtc
+ * BUILD: %t %s ../test_common.cpp HIPCC_OPTIONS -lhiprtc NVCC_OPTIONS -lnvrtc
  * TEST: %t
  * HIT_END
  */

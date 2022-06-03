@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -35,15 +35,19 @@ THE SOFTWARE.
 texture<float, 1, hipReadModeElementType> tex;
 
 __global__ void kernel(float *out) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   if(x<N){
       out[x] = tex1Dfetch(tex, x);
   }
+#endif
 }
 
 int runTest(void);
 
 int main(int argc, char **argv) {
+    checkImageSupport();
+
     int testResult = runTest();
     if (testResult) {
         passed();
@@ -68,9 +72,8 @@ int runTest() {
     HIPCHECK(hipMalloc(&texBuf, N * sizeof(float)));
     HIPCHECK(hipMalloc(&devBuf, N * sizeof(float)));
     HIPCHECK(hipMemcpy(texBuf, val, N * sizeof(float), hipMemcpyHostToDevice));
-  
+
     tex.addressMode[0] = hipAddressModeClamp;
-    tex.addressMode[1] = hipAddressModeClamp;
     tex.filterMode = hipFilterModePoint;
     tex.normalized = 0;
 

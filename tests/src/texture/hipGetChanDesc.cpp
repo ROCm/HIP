@@ -36,6 +36,8 @@ using namespace std;
 bool runTest(void);
 
 int main(int argc, char** argv) {
+    checkImageSupport();
+
     bool testResult=runTest();
 
     if (testResult) {
@@ -53,7 +55,7 @@ hipArray *hipArray;
 HIPCHECK(hipMallocArray(&hipArray, &chan_desc,C,R,0));
 HIPCHECK(hipGetChannelDesc(&chan_test,hipArray));
 
-if((chan_test.x == 32)&&(chan_test.y == 0)&&(chan_test.z == 0)&&(chan_test.f == 0))
+if((chan_test.x == 32)&&(chan_test.y == 0)&&(chan_test.z == 0)&&(chan_test.f == hipChannelFormatKindSigned))
 	testResult=true;
 else
 	testResult=false;

@@ -1,4 +1,8 @@
-HIP_PATH?= $(wildcard /opt/rocm/hip)
+ifeq ($(OS),Windows_NT)
+ $(error Makefile is not supported on windows platform. Please use cmake instead to build sample.)
+endif
+ROCM_PATH?= $(wildcard /opt/rocm/)
+HIP_PATH?= $(wildcard $(ROCM_PATH)/hip)
 ifeq (,$(HIP_PATH))
 	HIP_PATH=../../..
 endif

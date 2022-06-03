@@ -29,6 +29,8 @@ function(add_command NAME)
   set(script "${script}${NAME}(${_args})\n" PARENT_SCOPE)
 endfunction()
 
+get_filename_component(TEST_EXECUTABLE ${TEST_EXECUTABLE} ABSOLUTE)
+
 # Run test executable to get list of available tests
 if(NOT EXISTS "${TEST_EXECUTABLE}")
   message(FATAL_ERROR
@@ -107,12 +109,14 @@ foreach(line ${output})
     string(REGEX REPLACE "[^A-Za-z0-9_]" "_" test_name_clean ${test_name})
     set(output_dir_arg "--out ${output_dir}/${output_prefix}${test_name_clean}${output_suffix}")
   endif()
-  
+
+  file(RELATIVE_PATH exe_path ${CMAKE_CURRENT_BINARY_DIR} ${TEST_EXECUTABLE})
+
   # ...and add to script
   add_command(add_test
     "${prefix}${test}${suffix}"
     ${TEST_EXECUTOR}
-    "${TEST_EXECUTABLE}"
+    "${exe_path}"
     "${test_name}"
     ${extra_args}
     "${reporter_arg}"
@@ -121,7 +125,6 @@ foreach(line ${output})
   add_command(set_tests_properties
     "${prefix}${test}${suffix}"
     PROPERTIES
-    WORKING_DIRECTORY "${TEST_WORKING_DIR}"
     ${properties}
   )
   list(APPEND tests "${prefix}${test}${suffix}")

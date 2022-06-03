@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 
 /* HIT_START
- * BUILD: %t %s ../test_common.cpp EXCLUDE_HIP_RUNTIME rocclr
+ * BUILD: %t %s ../test_common.cpp
  * TEST: %t
  * HIT_END
  */
@@ -34,9 +34,11 @@ texture<float, hipTextureType2DLayered> tex2DL;
 
 __global__ void simpleKernelLayeredArray(T* outputData,int width,int height,int layer)
 {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
     outputData[layer*width*height + y*width + x] = tex2DLayered(tex2DL, x, y, layer);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -67,8 +69,8 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
     HIPCHECK(hipMemcpy3D(&myparms));
 
     // set texture parameters
-    tex->addressMode[0] = hipAddressModeWrap;
-    tex->addressMode[1] = hipAddressModeWrap;
+    tex->addressMode[0] = hipAddressModeClamp;
+    tex->addressMode[1] = hipAddressModeClamp;
     tex->filterMode = hipFilterModePoint;
     tex->normalized = false;
 
@@ -82,7 +84,7 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
     dim3 dimGrid(width / dimBlock.x, height / dimBlock.y, 1);
     for (unsigned int layer = 0; layer < num_layers; layer++)
         hipLaunchKernelGGL(simpleKernelLayeredArray, dimGrid, dimBlock, 0, 0, dData, width, height, layer);
-    
+
     HIPCHECK(hipDeviceSynchronize());
     // Allocate mem for the result on host side
     T *hOutputData = (T*) malloc(size);
@@ -90,7 +92,7 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
 
     // copy result from device to host
     HIPCHECK(hipMemcpy(hOutputData, dData, size, hipMemcpyDeviceToHost));
-    HipTest::checkArray(hData,hOutputData,width,height,num_layers); 
+    HipTest::checkArray(hData,hOutputData,width,height,num_layers);
 
     hipFree(dData);
     hipFreeArray(arr);
@@ -103,6 +105,8 @@ void runTest(int width,int height,int num_layers,texture<T, hipTextureType2DLaye
 ////////////////////////////////////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+    checkImageSupport();
+
     runTest(512,512,5,&tex2DL);
     passed();
 }

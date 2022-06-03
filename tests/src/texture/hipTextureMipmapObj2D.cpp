@@ -40,9 +40,11 @@ std::vector<unsigned int> mip_vector = {8, 4, 2, 1};
 __global__ void tex2DKernel(float* outputData, hipTextureObject_t textureObject, int width,
                             int height, float level) {
 #ifndef __gfx90a__
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
   outputData[y * width + x] = tex2DLod<float>(textureObject, x, y, level);
+#endif
 #endif
 }
 
@@ -148,6 +150,7 @@ bool runMipMapTest(unsigned int width, unsigned int height, unsigned int mipmap_
   hipDestroyTextureObject(textureObject);
   hipFree(dData);
   hipFreeArray(hipArray);
+  free(hData);
   return testResult;
 }
 
@@ -168,8 +171,9 @@ bool runTest(int argc, char** argv) {
 }
 
 int main(int argc, char** argv) {
-  bool testResult = true;
+  checkImageSupport();
 
+  bool testResult = true;
 #ifdef _WIN32
   testResult = runTest(argc, argv);
 #else

@@ -12,14 +12,18 @@
 
 __global__ void tex2DKernel(float* outputData, hipTextureObject_t textureObject, int width,
                             int height) {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
     outputData[y * width + x] = tex2D<float>(textureObject, x, y);
+#endif
 }
 
 int runTest(int argc, char** argv);
 
 int main(int argc, char** argv) {
+    checkImageSupport();
+
     int testResult = runTest(argc, argv);
 
     if (testResult) {
@@ -61,8 +65,8 @@ int runTest(int argc, char** argv) {
     // Specify texture object parameters
     hipTextureDesc texDesc;
     memset(&texDesc, 0, sizeof(texDesc));
-    texDesc.addressMode[0] = hipAddressModeWrap;
-    texDesc.addressMode[1] = hipAddressModeWrap;
+    texDesc.addressMode[0] = hipAddressModeClamp;
+    texDesc.addressMode[1] = hipAddressModeClamp;
     texDesc.filterMode = hipFilterModePoint;
     texDesc.readMode = hipReadModeElementType;
     texDesc.normalizedCoords = 0;
@@ -70,7 +74,6 @@ int runTest(int argc, char** argv) {
     // Create texture object
     hipTextureObject_t textureObject = 0;
     hipCreateTextureObject(&textureObject, &resDesc, &texDesc, NULL);
-
     float* dData = NULL;
     hipMalloc((void**)&dData, size);
 
@@ -104,5 +107,6 @@ int runTest(int argc, char** argv) {
     hipDestroyTextureObject(textureObject);
     hipFree(dData);
     hipFreeArray(hipArray);
+    free(hData);
     return testResult;
 }

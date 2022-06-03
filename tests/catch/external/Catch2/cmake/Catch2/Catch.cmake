@@ -142,52 +142,36 @@ function(catch_discover_tests TARGET)
   # Define rule to generate test list for aforementioned test executable
   set(ctest_include_file "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_include-${args_hash}.cmake")
   set(ctest_tests_file "${CMAKE_CURRENT_BINARY_DIR}/${TARGET}_tests-${args_hash}.cmake")
+  file(RELATIVE_PATH ctestincludepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_include_file})
+  file(RELATIVE_PATH ctestfilepath ${CMAKE_CURRENT_BINARY_DIR} ${ctest_tests_file})
+  file(RELATIVE_PATH _workdir ${CMAKE_CURRENT_BINARY_DIR} ${_WORKING_DIRECTORY})
+  file(RELATIVE_PATH _CATCH_ADD_TEST_SCRIPT ${CMAKE_CURRENT_BINARY_DIR} ${ADD_SCRIPT_PATH})
+
   get_property(crosscompiling_emulator
     TARGET ${TARGET}
     PROPERTY CROSSCOMPILING_EMULATOR
   )
-  add_custom_command(
-    TARGET ${TARGET} POST_BUILD
-    BYPRODUCTS "${ctest_tests_file}"
-    COMMAND "${CMAKE_COMMAND}"
-            -D "TEST_TARGET=${TARGET}"
-            -D "TEST_EXECUTABLE=$<TARGET_FILE:${TARGET}>"
-            -D "TEST_EXECUTOR=${crosscompiling_emulator}"
-            -D "TEST_WORKING_DIR=${_WORKING_DIRECTORY}"
-            -D "TEST_SPEC=${_TEST_SPEC}"
-            -D "TEST_EXTRA_ARGS=${_EXTRA_ARGS}"
-            -D "TEST_PROPERTIES=${_PROPERTIES}"
-            -D "TEST_PREFIX=${_TEST_PREFIX}"
-            -D "TEST_SUFFIX=${_TEST_SUFFIX}"
-            -D "TEST_LIST=${_TEST_LIST}"
-            -D "TEST_REPORTER=${_REPORTER}"
-            -D "TEST_OUTPUT_DIR=${_OUTPUT_DIR}"
-            -D "TEST_OUTPUT_PREFIX=${_OUTPUT_PREFIX}"
-            -D "TEST_OUTPUT_SUFFIX=${_OUTPUT_SUFFIX}"
-            -D "CTEST_FILE=${ctest_tests_file}"
-            -P "${_CATCH_DISCOVER_TESTS_SCRIPT}"
-    VERBATIM
-  )
 
-  file(WRITE "${ctest_include_file}"
-    "if(EXISTS \"${ctest_tests_file}\")\n"
-    "  include(\"${ctest_tests_file}\")\n"
-    "else()\n"
-    "  add_test(${TARGET}_NOT_BUILT-${args_hash} ${TARGET}_NOT_BUILT-${args_hash})\n"
-    "endif()\n"
-  )
+  set(EXEC_NAME ${TARGET})
+  if(WIN32)
+    set(EXEC_NAME ${EXEC_NAME}.exe)
+  endif()
+
+  # uses catch_include.cmake.in file to generate the *_include.cmake file
+  # *_include.cmake is used to generate the *_test.cmake during execution of ctest cmd
+  configure_file(${CATCH2_INCLUDE} ${TARGET}_include-${args_hash}.cmake @ONLY)
 
   if(NOT ${CMAKE_VERSION} VERSION_LESS "3.10.0") 
     # Add discovered tests to directory TEST_INCLUDE_FILES
     set_property(DIRECTORY
-      APPEND PROPERTY TEST_INCLUDE_FILES "${ctest_include_file}"
+      APPEND PROPERTY TEST_INCLUDE_FILES "${ctestincludepath}"
     )
   else()
     # Add discovered tests as directory TEST_INCLUDE_FILE if possible
     get_property(test_include_file_set DIRECTORY PROPERTY TEST_INCLUDE_FILE SET)
     if (NOT ${test_include_file_set})
       set_property(DIRECTORY
-        PROPERTY TEST_INCLUDE_FILE "${ctest_include_file}"
+        PROPERTY TEST_INCLUDE_FILE "${ctestincludepath}"
       )
     else()
       message(FATAL_ERROR
@@ -204,3 +188,52 @@ set(_CATCH_DISCOVER_TESTS_SCRIPT
   ${CMAKE_CURRENT_LIST_DIR}/CatchAddTests.cmake
   CACHE INTERNAL "Catch2 full path to CatchAddTests.cmake helper file"
 )
+
+###############################################################################
+# function to be called by all tests
+function(hip_add_exe_to_target)
+  set(options)
+  set(args NAME TEST_TARGET_NAME PLATFORM COMPILE_OPTIONS)
+  set(list_args TEST_SRC LINKER_LIBS PROPERTY)
+  cmake_parse_arguments(
+    PARSE_ARGV 0
+    "" # variable prefix
+    "${options}"
+    "${args}"
+    "${list_args}"
+  )
+  # Create shared lib of all tests
+  add_executable(${_NAME} EXCLUDE_FROM_ALL ${_TEST_SRC} $<TARGET_OBJECTS:Main_Object>)
+  catch_discover_tests(${_NAME} PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
+  if(UNIX)
+    set(_LINKER_LIBS ${_LINKER_LIBS} stdc++fs)
+  else()
+    # res files are built resource files using rc files.
+    # use llvm-rc exe to build the res files
+    # Thes are used to populate the properties of the built executables
+    if(EXISTS "${PROP_RC}/catchProp.res")
+      set(_LINKER_LIBS ${_LINKER_LIBS} "${PROP_RC}/catchProp.res")
+    endif()
+  endif()
+
+  if(DEFINED _LINKER_LIBS)
+    target_link_libraries(${_NAME} ${_LINKER_LIBS})
+  endif()
+
+  # Add dependency on build_tests to build it on this custom target
+  add_dependencies(${_TEST_TARGET_NAME} ${_NAME})
+
+  if (DEFINED _PROPERTY)
+    set_property(TARGET ${_NAME} PROPERTY ${_PROPERTY})
+  endif()
+
+  if (DEFINED _COMPILE_OPTIONS)
+    target_compile_options(${_NAME} PUBLIC ${_COMPILE_OPTIONS})
+  endif()
+
+  foreach(arg IN LISTS _UNPARSED_ARGUMENTS)
+      message(WARNING "Unparsed arguments: ${arg}")
+  endforeach()
+endfunction()
+
+

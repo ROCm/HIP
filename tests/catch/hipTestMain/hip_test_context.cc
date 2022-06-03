@@ -2,18 +2,8 @@
 #include <picojson.h>
 #include <fstream>
 #include <sstream>
-
-#if __has_include(<filesystem>)
-#include <filesystem>
-namespace fs = std::filesystem;
-#elif __has_include(<experimental/filesystem>)
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#else
-#error "gg filesystem"
-#endif
-
 #include <regex>
+#include "hip_test_filesystem.hh"
 
 void TestContext::detectOS() {
 #if (HT_WIN == 1)
@@ -31,7 +21,79 @@ void TestContext::detectPlatform() {
 #endif
 }
 
+std::string TestContext::substringFound(std::vector<std::string> list, std::string filename) {
+  std::string match = "";
+  for(unsigned int i = 0; i < list.size() ; i++) {
+    if (filename.find(list.at(i)) != std::string::npos) {
+        match = list.at(i);
+        break;
+    }
+  }
+  return match;
+}
+
+
+std::string TestContext::getMatchingConfigFile(std::string config_dir) {
+  std::string configFileToUse;
+  for(auto& p: fs::recursive_directory_iterator(config_dir)) {
+    fs::path filename = p.path();
+    std::string cur_arch = "TODO";
+    std::string arch = substringFound(amd_arch_list_,filename.filename().string());
+    std::string platform = substringFound(platform_list_,filename.filename().string());
+    std::string os = substringFound(os_list_,filename.filename().string());
+    // if arch found then use that exit from loop
+    if(arch == cur_arch) {
+      configFileToUse = filename.string();
+      break;
+    // match the platform/os and continue to look
+    } else if((platform == config_.platform) &&
+              (os == config_.os || os == "all")) {
+      configFileToUse  = filename.string();
+    }
+  }
+  return configFileToUse;
+}
+
+
+std::string& TestContext::getJsonFile() {
+  fs::path config_dir = exe_path;
+  config_dir = config_dir.parent_path();
+  int levels = 0;
+  bool configFolderFound = false;
+  std::vector <std::string> configList;
+  std::string configFile;
+  // check a max of 5 levels down the executable path
+  while(levels < 5) {
+    fs::path temp_path = config_dir;
+    temp_path /= "hipTestMain";
+    temp_path /= "config";
+    if (fs::exists(temp_path)) {
+      config_dir = fs::absolute(temp_path);
+      configFolderFound = true;
+      break;
+    } else {
+      config_dir = config_dir.parent_path();
+      levels++;
+    }
+  }
+
+  // get config.json files if config folder.
+  if (configFolderFound) {
+    json_file_ = getMatchingConfigFile(config_dir.string());
+  }
+  return json_file_;
+}
+
+
 void TestContext::fillConfig() {
+  config_.platform = (amd ? "amd" : (nvidia ? "nvidia" : "unknown"));
+  config_.os = (p_windows ? "windows" : (p_linux ? "linux" : "unknown"));
+
+  if (config_.os == "unknown" || config_.platform == "unknown") {
+    LogPrintf("%s", "Either Config or Os is unknown, this wont end well");
+    abort();
+  }
+
   const char* env_config = std::getenv("HT_CONFIG_FILE");
   LogPrintf("Env Config file: %s",
             (env_config != nullptr) ? env_config : "Not found, using default config");
@@ -49,19 +111,11 @@ void TestContext::fillConfig() {
   if (config_path.has_parent_path() && config_path.has_filename()) {
     config_.json_file = config_str;
   } else if (config_path.has_parent_path()) {
-    config_.json_file = config_path / def_config_json;
+    config_.json_file = config_path.string() + def_config_json;
   } else {
-    config_.json_file = exe_path + def_config_json;
+    config_.json_file = getJsonFile();
   }
   LogPrintf("Config file path: %s", config_.json_file.c_str());
-
-  config_.platform = (amd ? "amd" : (nvidia ? "nvidia" : "unknown"));
-  config_.os = (p_windows ? "windows" : (p_linux ? "linux" : "unknown"));
-
-  if (config_.os == "unknown" || config_.platform == "unknown") {
-    LogPrintf("%s", "Either Config or Os is unknown, this wont end well");
-    abort();
-  }
 }
 
 TestContext::TestContext(int argc, char** argv) {

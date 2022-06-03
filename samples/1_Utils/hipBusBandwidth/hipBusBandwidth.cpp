@@ -137,7 +137,11 @@ void RunBenchmark_H2D(ResultDatabase& resultDB) {
         }
     } else if (p_malloc_mode == MallocUnpinned) {
         if (p_alignedhost) {
-            hostMem = (float*)aligned_alloc(p_alignedhost, numMaxFloats * sizeof(float));
+	#ifdef _WIN32
+	 hostMem = (float*)_aligned_malloc(numMaxFloats * sizeof(float),p_alignedhost);
+	#else
+         hostMem = (float*)aligned_alloc(p_alignedhost, numMaxFloats * sizeof(float));
+	#endif
         } else {
             hostMem = new float[numMaxFloats];
         }
@@ -252,9 +256,9 @@ void RunBenchmark_H2D(ResultDatabase& resultDB) {
 
         case MallocUnpinned:
             if (p_alignedhost) {
-                delete[] hostMem;
-            } else {
                 free(hostMem);
+            } else {
+                delete[] hostMem;
             }
             break;
 

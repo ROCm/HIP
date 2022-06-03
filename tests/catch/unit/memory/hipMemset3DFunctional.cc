@@ -184,11 +184,17 @@ static void testMemsetMaxValue(bool bAsync) {
 
   HIP_CHECK(hipMalloc3D(&devPitchedPtr, extent));
   if (bAsync) {
-    hipStream_t stream;
-    HIP_CHECK(hipStreamCreate(&stream));
-    HIP_CHECK(hipMemset3DAsync(devPitchedPtr, memsetval, extent, stream));
-    HIP_CHECK(hipStreamSynchronize(stream));
-    HIP_CHECK(hipStreamDestroy(stream));
+    SECTION("Using user created stream") {
+      hipStream_t stream;
+      HIP_CHECK(hipStreamCreate(&stream));
+      HIP_CHECK(hipMemset3DAsync(devPitchedPtr, memsetval, extent, stream));
+      HIP_CHECK(hipStreamSynchronize(stream));
+      HIP_CHECK(hipStreamDestroy(stream));
+    }
+    SECTION("Using hipStreamPerThread") {
+      HIP_CHECK(hipMemset3DAsync(devPitchedPtr, memsetval, extent, hipStreamPerThread));
+      HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+    }
   } else {
     HIP_CHECK(hipMemset3D(devPitchedPtr, memsetval, extent));
   }
@@ -236,7 +242,7 @@ static void seekAndSet3DArraySlice(bool bAsync) {
 
   // select random slice for memset
   unsigned int seed = time(nullptr);
-  int slice_index = rand_r(&seed) % ZSIZE_S;
+  int slice_index = HipTest::RAND_R(&seed) % ZSIZE_S;
 
   INFO("memset3d for sliceindex " << slice_index);
 

@@ -37,8 +37,8 @@ THE SOFTWARE.
 __global__ void matrixTranspose(float* out, float* in, const int width) {
     extern __shared__ float sharedMem[];
 
-    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-    int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
 
     sharedMem[y * width + x] = in[x * width + y];
 

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 - present Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 - present Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -124,6 +124,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_KernelLaunch", "", int, float,
 
   HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost, stream));
   HIP_CHECK(hipStreamSynchronize(stream));
+  HIP_CHECK(hipStreamDestroy(stream));
 
   HipTest::checkVectorADD(A_h, B_h, C_h, NUM_ELM);
 
@@ -239,6 +240,8 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_H2H-H2D-D2H-H2PinMem", "", char, int,
     }
   }
 
+  HIP_CHECK(hipStreamDestroy(stream));
+
   HipTest::freeArrays<TestType>(A_d, B_d, nullptr, A_h, B_h, nullptr, false);
   HipTest::freeArrays<TestType>(nullptr, nullptr, nullptr, A_Ph,
                                 B_Ph, nullptr, true);
@@ -350,7 +353,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpyAsync_PinnedRegMemWithKernelLaunch",
     HipTest::checkVectorADD(A_h, B_h, C_h, NUM_ELM);
 
     unsigned int seed = time(0);
-    HIP_CHECK(hipSetDevice(rand_r(&seed) % (numDevices-1)+1));
+    HIP_CHECK(hipSetDevice(HipTest::RAND_R(&seed) % (numDevices-1)+1));
 
     int device;
     HIP_CHECK(hipGetDevice(&device));

@@ -24,10 +24,21 @@ set(TEST_SRC
     hipCreateTextureObject_Linear.cc
     hipCreateTextureObject_Pitch2D.cc
     hipCreateTextureObject_Array.cc
+    hipTextureObjFetchVector.cc
+    hipNormalizedFloatValueTex.cc
+    hipTextureObj2D.cc
+    hipSimpleTexture3D.cc
+    hipTextureRef2D.cc
+    hipSimpleTexture2DLayered.cc
+    hipTextureMipmapObj2D.cc
+    hipBindTex2DPitch.cc
+    hipBindTexRef1DFetch.cc
+    hipTex1DFetchCheckModes.cc
+    hipGetChanDesc.cc
+    hipTexObjPitch.cc
+    hipTextureObj1DFetch.cc
 )
 
-# Create shared lib of all tests
-add_library(TextureTest SHARED EXCLUDE_FROM_ALL ${TEST_SRC})
-
-# Add dependency on build_tests to build it on this custom target
-add_dependencies(build_tests TextureTest)
+hip_add_exe_to_target(NAME TextureTest
+                      TEST_SRC ${TEST_SRC}
+                      TEST_TARGET_NAME build_tests)

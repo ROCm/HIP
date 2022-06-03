@@ -1,16 +1,16 @@
 /*
 Copyright (c) 2019 - 2021 Advanced Micro Devices, Inc. All rights reserved.
- 
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
 furnished to do so, subject to the following conditions:
- 
+
 The above copyright notice and this permission notice shall be included in
 all copies or substantial portions of the Software.
- 
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
@@ -32,8 +32,7 @@ THE SOFTWARE.
 #include "test_common.h"
 #include <math.h>
 #define SIZE 10
-#define EPSILON     0.00001
-#define THRESH_HOLD 0.01  // For filter mode
+#include "hipTextureHelper.hpp"
 
 static float getNormalizedValue(const float value,
                                 const hipChannelFormatDesc& desc) {
@@ -60,6 +59,7 @@ texture<unsigned short, hipTextureType1D, hipReadModeNormalizedFloat> texus;
 template<typename T>
 __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
 {
+#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
     unsigned int elementID = hipThreadIdx_x;
     if(elementID >= numElements)
         return;
@@ -72,6 +72,7 @@ __global__ void normalizedValTextureTest(unsigned int numElements, float* pDst)
         pDst[elementID] = tex1D(texs, coord);
     else if(std::is_same<T, unsigned short>::value)
         pDst[elementID] = tex1D(texus, coord);
+#endif
 }
 
 bool textureVerifyFilterModePoint(float *hOutputData, float *expected, size_t size) {
@@ -102,8 +103,8 @@ bool textureVerifyFilterModeLinear(float *hOutputData, float *expected,  size_t 
     bool testResult = true;
     for (int i = 0; i < size; i++) {
       float mean = (fabs(expected[i]) + fabs(hOutputData[i])) / 2;
-      float ratio = fabs(expected[i] - hOutputData[i]) / (mean + EPSILON);
-      if (ratio > THRESH_HOLD) {
+      float ratio = fabs(expected[i] - hOutputData[i]) / (mean + HIP_SAMPLING_VERIFY_EPSILON);
+      if (ratio > HIP_SAMPLING_VERIFY_RELATIVE_THRESHOLD) {
         printf("mismatch at output[%d]:%f expected[%d]:%f, ratio:%f\n", i,
                hOutputData[i], i, expected[i], ratio);
         testResult = false;
@@ -129,11 +130,12 @@ bool textureTest(texture<T, hipTextureType1D, hipReadModeNormalizedFloat> *tex)
 {
     hipChannelFormatDesc desc = hipCreateChannelDesc<T>();
     hipArray_t dData;
-    HIPCHECK(hipMallocArray(&dData, &desc, SIZE, 1, hipArrayDefault));
+    HIPCHECK(hipMallocArray(&dData, &desc, SIZE));
 
     T hData[] = {65, 66, 67, 68, 69, 70, 71, 72, 73, 74};
     HIPCHECK(hipMemcpy2DToArray(dData, 0, 0, hData, sizeof(T)*SIZE, sizeof(T)*SIZE, 1, hipMemcpyHostToDevice));
 
+    tex->addressMode[0] = hipAddressModeClamp;
     tex->normalized = true;
     tex->channelDesc = desc;
     tex->filterMode = fMode;
@@ -172,7 +174,9 @@ bool runTest() {
 int main(int argc, char** argv)
 {
     HipTest::parseStandardArguments(argc, argv, true);
-    int device = 0;
+    checkImageSupport();
+
+    int device = p_gpuDevice;
     bool status = false;
     HIPCHECK(hipSetDevice(device));
     hipDeviceProp_t props;
@@ -181,13 +185,14 @@ int main(int argc, char** argv)
     #ifdef __HIP_PLATFORM_AMD__
     std::cout << "Arch - AMD GPU :: " << props.gcnArch << std::endl;
     #endif
-    
+
     if(textureFilterMode == 0) {
       printf("Test hipFilterModePoint\n");
       status = runTest<hipFilterModePoint>();
     } else if(textureFilterMode == 1) {
       printf("Test hipFilterModeLinear\n");
-      printf("THRESH_HOLD:%f, EPSILON:%f\n", THRESH_HOLD, EPSILON);
+      printf("THRESH_HOLD:%f, EPSILON:%f\n", HIP_SAMPLING_VERIFY_RELATIVE_THRESHOLD,
+             HIP_SAMPLING_VERIFY_EPSILON);
       status = runTest<hipFilterModeLinear>();
     } else {
       printf("Wrong argument!\n");

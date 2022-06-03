@@ -18,13 +18,16 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-add_subdirectory(memory)
+add_subdirectory(rtc)
 add_subdirectory(deviceLib)
+add_subdirectory(graph)
+add_subdirectory(memory)
 add_subdirectory(stream)
 add_subdirectory(event)
 add_subdirectory(occupancy)
 add_subdirectory(device)
-add_subdirectory(rtc)
 add_subdirectory(printf)
 add_subdirectory(printfExe)
 add_subdirectory(texture)
+add_subdirectory(streamperthread)
+add_subdirectory(kernel)

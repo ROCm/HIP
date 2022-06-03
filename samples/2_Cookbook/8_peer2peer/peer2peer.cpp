@@ -110,8 +110,8 @@ __global__ void matrixTranspose_static_shared(float* out, float* in,
                                               const int width) {
     __shared__ float sharedMem[WIDTH * WIDTH];
 
-    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-    int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
 
     sharedMem[y * width + x] = in[x * width + y];
 
@@ -124,8 +124,8 @@ __global__ void matrixTranspose_dynamic_shared(float* out, float* in,
                                                const int width) {
     extern __shared__ float sharedMem[];
 
-    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-    int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
+    int y = blockDim.y * blockIdx.y + threadIdx.y;
 
     sharedMem[y * width + x] = in[x * width + y];
 
@@ -174,6 +174,7 @@ int main() {
                     dim3(WIDTH / THREADS_PER_BLOCK_X, WIDTH / THREADS_PER_BLOCK_Y),
                     dim3(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y), 0, 0, gpuTransposeMatrix[0],
                     data[0], width);
+    HIPCHECK(hipDeviceSynchronize());
 
     HIPCHECK(hipSetDevice(peerGpu));
     TransposeMatrix[1] = (float*)malloc(NUM * sizeof(float));

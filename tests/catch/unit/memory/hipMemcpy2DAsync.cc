@@ -83,22 +83,40 @@ TEMPLATE_TEST_CASE("Unit_hipMemcpy2DAsync_Host&PinnedMem", ""
 
   // Initialize the data
   HipTest::setDefaultData<TestType>(NUM_W*NUM_H, A_h, B_h, C_h);
+  SECTION("Calling Async apis with stream object created by user") {
+    // Host to Device
+    HIP_CHECK(hipMemcpy2DAsync(A_d, pitch_A, A_h, COLUMNS*sizeof(TestType),
+                               COLUMNS*sizeof(TestType), ROWS,
+                               hipMemcpyHostToDevice, stream));
 
-  // Host to Device
-  HIP_CHECK(hipMemcpy2DAsync(A_d, pitch_A, A_h, COLUMNS*sizeof(TestType),
-                             COLUMNS*sizeof(TestType), ROWS,
-                             hipMemcpyHostToDevice, stream));
+    // Performs D2D on same GPU device
+    HIP_CHECK(hipMemcpy2DAsync(B_d, pitch_B, A_d,
+                               pitch_A, COLUMNS*sizeof(TestType),
+                               ROWS, hipMemcpyDeviceToDevice, stream));
 
-  // Performs D2D on same GPU device
-  HIP_CHECK(hipMemcpy2DAsync(B_d, pitch_B, A_d,
-                             pitch_A, COLUMNS*sizeof(TestType),
-                             ROWS, hipMemcpyDeviceToDevice, stream));
+    // hipMemcpy2DAsync Device to Host
+    HIP_CHECK(hipMemcpy2DAsync(B_h, COLUMNS*sizeof(TestType), B_d, pitch_B,
+                               COLUMNS*sizeof(TestType), ROWS,
+                               hipMemcpyDeviceToHost, stream));
+    HIP_CHECK(hipStreamSynchronize(stream));
+  }
+  SECTION("Calling Async apis with hipStreamPerThread") {
+    // Host to Device
+    HIP_CHECK(hipMemcpy2DAsync(A_d, pitch_A, A_h, COLUMNS*sizeof(TestType),
+                               COLUMNS*sizeof(TestType), ROWS,
+                               hipMemcpyHostToDevice, hipStreamPerThread));
 
-  // hipMemcpy2DAsync Device to Host
-  HIP_CHECK(hipMemcpy2DAsync(B_h, COLUMNS*sizeof(TestType), B_d, pitch_B,
-                             COLUMNS*sizeof(TestType), ROWS,
-                             hipMemcpyDeviceToHost, stream));
-  HIP_CHECK(hipStreamSynchronize(stream));
+    // Performs D2D on same GPU device
+    HIP_CHECK(hipMemcpy2DAsync(B_d, pitch_B, A_d,
+                               pitch_A, COLUMNS*sizeof(TestType),
+                               ROWS, hipMemcpyDeviceToDevice, hipStreamPerThread));
+
+    // hipMemcpy2DAsync Device to Host
+    HIP_CHECK(hipMemcpy2DAsync(B_h, COLUMNS*sizeof(TestType), B_d, pitch_B,
+                               COLUMNS*sizeof(TestType), ROWS,
+                               hipMemcpyDeviceToHost, hipStreamPerThread));
+    HIP_CHECK(hipStreamSynchronize(hipStreamPerThread));
+  }
 
   // Validating the result
   REQUIRE(HipTest::checkArray<TestType>(A_h, B_h, COLUMNS, ROWS) == true);
