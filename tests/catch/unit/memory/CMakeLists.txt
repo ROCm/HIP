@@ -164,8 +164,11 @@ set(TEST_SRC
     hipMemPrefetchAsync.cc
     hipMemGetInfo.cc
     hipFree.cc
+<<<<<<< HEAD
     hipMemsetSync.cc
     hipMemsetAsync.cc
+=======
+>>>>>>> Added testing for hipFree APIs
 )
 endif()
 
