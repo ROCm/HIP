@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,9 +22,11 @@ THE SOFTWARE.
 
 #pragma once
 #include <hip/hip_runtime.h>
+#include <hip/hiprtc.h>
 #include <vector>
 #include <string>
 #include <set>
+#include <unordered_map>
 
 #if defined(_WIN32)
 #define HT_WIN 1
@@ -57,9 +59,9 @@ static int _log_enable = (std::getenv("HT_LOG_ENABLE") ? 1 : 0);
   }
 
 typedef struct Config_ {
-  std::string json_file;              // Json file
-  std::string platform;               // amd/nvidia
-  std::string os;                     // windows/linux
+  std::string json_file;  // Json file
+  std::string platform;   // amd/nvidia
+  std::string os;         // windows/linux
 } Config;
 
 class TestContext {
@@ -69,14 +71,13 @@ class TestContext {
   std::string current_test;
   std::set<std::string> skip_test;
   std::string json_file_;
-  std::vector<std::string>  platform_list_ = {"amd" , "nvidia"};
-  std::vector<std::string>  os_list_ = {"windows", "linux", "all"};
-  std::vector<std::string>  amd_arch_list_ = {};
+  std::vector<std::string> platform_list_ = {"amd", "nvidia"};
+  std::vector<std::string> os_list_ = {"windows", "linux", "all"};
+  std::vector<std::string> amd_arch_list_ = {};
 
   Config config_;
   std::string& getJsonFile();
-  std::string substringFound( std::vector<std::string> list,
-                              std::string filename);
+  std::string substringFound(std::vector<std::string> list, std::string filename);
   void detectOS();
   void detectPlatform();
   void fillConfig();
@@ -89,7 +90,7 @@ class TestContext {
   TestContext(int argc, char** argv);
 
  public:
-  static const TestContext& get(int argc = 0, char** argv = nullptr) {
+  static TestContext& get(int argc = 0, char** argv = nullptr) {
     static TestContext instance(argc, argv);
     return instance;
   }
@@ -103,6 +104,47 @@ class TestContext {
   const std::string& getCurrentTest() const { return current_test; }
   std::string currentPath() const;
 
+  /**
+   * @brief Unload all loaded modules.
+   * Note: This function needs to be called at the end of each test that uses RTC.
+   *       It is not possible to unload the loaded modules without adding explicit code to the end
+   * of each test. This function exists only to provide a clean way to exit a test when using RTC.
+   *       However, not unloading a module explicitly shouldn't have any effect on the outcome of
+   * the test. The function is defined outside #ifdef to avoid having to add RTC specific defines to
+   * every test.
+   */
+  void cleanContext();
+
   TestContext(const TestContext&) = delete;
   void operator=(const TestContext&) = delete;
+
+#ifdef RTC_TESTING
+
+ private:
+  struct rtcState {
+    hipModule_t module;
+    hipFunction_t kernelFunction;
+  };
+
+  std::unordered_map<std::string, rtcState> compiledKernels{};
+
+ public:
+  /**
+   * @brief Keeps track of all the already compiled rtc kernels.
+   *
+   * @param kernelNameExpression The name expression (e.g. hipTest::vectorAdd<float>).
+   * @param loadedModule  The loaded module.
+   * @param kernelFunction The hipFunction that will be used to run the kernel in the future.
+   */
+  void trackRtcState(std::string kernelNameExpression, hipModule_t loadedModule,
+                     hipFunction_t kernelFunction);
+
+  /**
+   * @brief Get the already compiled hip rtc kernel function if it exists.
+   *
+   * @param kernelNameExpression The name expression (e.g. hipTest::vectorAdd<float>).
+   * @return the hipFunction if it exists. nullptr otherwise
+   */
+  hipFunction_t getFunction(const std::string kernelNameExpression);
+#endif
 };
