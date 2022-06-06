@@ -27,6 +27,9 @@ hipMallocArray API test scenarios
 
 #include <hip_test_common.hh>
 #include <limits>
+#if defined(_WIN32) || defined(_WIN64)
+#include <numeric>
+#endif
 
 static constexpr auto NUM_W{4};
 static constexpr auto BIGNUM_W{100};
