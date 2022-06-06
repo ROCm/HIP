@@ -21,7 +21,6 @@ THE SOFTWARE.
 */
 
 #include "hipArrayCommon.hh"
-#include "MemUtils.hh"
 #include "DriverContext.hh"
 #include "MemUtils.hh"
 
@@ -131,30 +130,6 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     HIP_CHECK(hipStreamQuery(nullptr));
   }
 }
-<<<<<<< HEAD
-=======
-
-// On Nvidia devices the CUarray is used when calling hipArrayDestroy
-#if HT_NVIDIA
-TEST_CASE("Unit_hipFreeImplicitSyncArrayD") {
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-81");
-  return;
-  hiparray cuArrayPtr{};
-  CTX_CREATE()
-
-  HIP_ARRAY_DESCRIPTOR cuDesc;
-  cuDesc.Width = 32;
-  cuDesc.Height = 32;
-  cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
-  cuDesc.NumChannels = 2;
-  HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
-  launchLongRunningKernel(50);
-  // make sure device is busy
-  HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
-  SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, ArrayDestroy)); }
-  CTX_DESTROY()
-}
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 #endif
 
 // Freeing a invalid pointer with on device
@@ -299,10 +274,15 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTDev", "", char, int, float2, float4) {
   std::vector<std::thread> threads;
 
   for (auto ptr : ptrs) {
+<<<<<<< HEAD
     threads.emplace_back(([ptr] {
       HIP_CHECK_THREAD(hipFree(ptr));
       HIP_CHECK_THREAD(hipStreamQuery(nullptr));
     }));
+=======
+    threads.push_back(
+        std::thread([ptr] { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, DevFree)); }));
+>>>>>>> Added testing for hipFree APIs
   }
 
   for (auto& t : threads) {
@@ -322,10 +302,15 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTHost", "", char, int, float2, float4) {
   std::vector<std::thread> threads;
 
   for (auto ptr : ptrs) {
+<<<<<<< HEAD
     threads.emplace_back(([ptr] {
       HIP_CHECK_THREAD(hipHostFree(ptr));
       HIP_CHECK_THREAD(hipStreamQuery(nullptr));
     }));
+=======
+    threads.push_back(
+        std::thread([ptr] { HIP_CHECK_THREAD(workIsDoneCheck<TestType*>(ptr, HostFree)); }));
+>>>>>>> Added testing for hipFree APIs
   }
 
   for (auto& t : threads) {
@@ -357,10 +342,17 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
 
     for (auto& ptr : ptrs) {
+<<<<<<< HEAD
       threads.emplace_back(([ptr] {
         HIP_CHECK_THREAD(hipArrayDestroy(ptr));
         HIP_CHECK_THREAD(hipStreamQuery(nullptr));
       }));
+=======
+      SECTION("ArrayDestroy") {
+        threads.push_back(std::thread(
+            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hiparray>(ptr, ArrayDestroy)); }));
+      }
+>>>>>>> Added testing for hipFree APIs
     }
     for (auto& t : threads) {
       t.join();
@@ -381,10 +373,19 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
     for (auto ptr : ptrs) {
       SECTION("ArrayFree") {
+<<<<<<< HEAD
         threads.emplace_back(([ptr] {
           HIP_CHECK_THREAD(hipFreeArray(ptr));
           HIP_CHECK_THREAD(hipStreamQuery(nullptr));
         }));
+=======
+        threads.push_back(std::thread(
+            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayFree)); }));
+      }
+      SECTION("ArrayDestroy") {
+        threads.push_back(std::thread(
+            [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayDestroy)); }));
+>>>>>>> Added testing for hipFree APIs
       }
     }
     for (auto& t : threads) {
@@ -405,6 +406,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
 
   std::vector<std::thread> threads;
 
+<<<<<<< HEAD
   SECTION("ArrayFree") {
     std::vector<hipArray_t> ptrs(numAllocs);
     for (auto& ptr : ptrs) {
@@ -430,6 +432,16 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
         HIP_CHECK_THREAD(hipArrayDestroy(ptr));
         HIP_CHECK_THREAD(hipStreamQuery(nullptr));
       });
+=======
+  for (auto ptr : ptrs) {
+    SECTION("ArrayFree") {
+      threads.push_back(
+          std::thread([ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayFree)); }));
+    }
+    SECTION("ArrayDestroy") {
+      threads.push_back(std::thread(
+          [ptr] { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayDestroy)); }));
+>>>>>>> Added testing for hipFree APIs
     }
   }
   for (auto& t : threads) {
