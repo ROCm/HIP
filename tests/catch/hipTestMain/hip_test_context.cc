@@ -215,8 +215,6 @@ void TestContext::cleanContext() {
   }
 }
 
-#ifdef RTC_TESTING
-
 void TestContext::trackRtcState(std::string kernelNameExpression, hipModule_t loadedModule,
                                 hipFunction_t kernelFunction) {
   rtcState state{loadedModule, kernelFunction};
@@ -232,4 +230,3 @@ hipFunction_t TestContext::getFunction(const std::string kernelNameExpression) {
     return nullptr;
   }
 }
-#endif

@@ -75,6 +75,13 @@ class TestContext {
   std::vector<std::string> os_list_ = {"windows", "linux", "all"};
   std::vector<std::string> amd_arch_list_ = {};
 
+  struct rtcState {
+    hipModule_t module;
+    hipFunction_t kernelFunction;
+  };
+
+  std::unordered_map<std::string, rtcState> compiledKernels{};
+
   Config config_;
   std::string& getJsonFile();
   std::string substringFound(std::vector<std::string> list, std::string filename);
@@ -86,6 +93,7 @@ class TestContext {
   bool parseJsonFile();
   std::string getMatchingConfigFile(std::string config_dir);
   const Config& getConfig() const { return config_; }
+
 
   TestContext(int argc, char** argv);
 
@@ -110,29 +118,14 @@ class TestContext {
    *       It is not possible to unload the loaded modules without adding explicit code to the end
    * of each test. This function exists only to provide a clean way to exit a test when using RTC.
    *       However, not unloading a module explicitly shouldn't have any effect on the outcome of
-   * the test. The function is defined outside #ifdef to avoid having to add RTC specific defines to
-   * every test.
+   * the test.
    */
   void cleanContext();
 
-  TestContext(const TestContext&) = delete;
-  void operator=(const TestContext&) = delete;
-
-#ifdef RTC_TESTING
-
- private:
-  struct rtcState {
-    hipModule_t module;
-    hipFunction_t kernelFunction;
-  };
-
-  std::unordered_map<std::string, rtcState> compiledKernels{};
-
- public:
   /**
    * @brief Keeps track of all the already compiled rtc kernels.
    *
-   * @param kernelNameExpression The name expression (e.g. hipTest::vectorAdd<float>).
+   * @param kernelNameExpression The name expression (e.g. hipTest::vectorADD<float>).
    * @param loadedModule  The loaded module.
    * @param kernelFunction The hipFunction that will be used to run the kernel in the future.
    */
@@ -142,9 +135,11 @@ class TestContext {
   /**
    * @brief Get the already compiled hip rtc kernel function if it exists.
    *
-   * @param kernelNameExpression The name expression (e.g. hipTest::vectorAdd<float>).
+   * @param kernelNameExpression The name expression (e.g. hipTest::vectorADD<float>).
    * @return the hipFunction if it exists. nullptr otherwise
    */
   hipFunction_t getFunction(const std::string kernelNameExpression);
-#endif
+
+  TestContext(const TestContext&) = delete;
+  void operator=(const TestContext&) = delete;
 };
