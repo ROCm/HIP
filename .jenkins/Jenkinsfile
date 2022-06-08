@@ -101,7 +101,7 @@ def hipBuildTest(String backendLabel) {
                         # Check if backend label contains string "amd" or backend host is a server with amd gpu
                         if [[ $backendLabel =~ amd ]]; then
                             export HT_CONFIG_FILE="$HIP_DIR/tests/catch/hipTestMain/config/config_amd_linux.json"
-                            LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional|Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative'
+                            LLVM_PATH=/opt/rocm/llvm ctest -E 'Unit_hipGraphChildGraphNodeGetGraph_Functional|Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative|Unit_hipPtrGetAttribute_Simple'
                             sleep 120
                         else
                             make test
