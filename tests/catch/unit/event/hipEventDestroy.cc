@@ -1,9 +1,6 @@
-#include <cstddef>
 #include <hip_test_checkers.hh>
 #include <hip_test_kernels.hh>
-
 #include <hip_test_common.hh>
-#include "hip/amd_detail/amd_hip_runtime.h"
 
 static constexpr size_t vectorSize{16384};
 
