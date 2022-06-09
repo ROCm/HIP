@@ -5,6 +5,7 @@ set(TEST_SRC
     Unit_hipEventElapsedTime.cc
     Unit_hipEventRecord.cc
     Unit_hipEventIpc.cc
+    hipEventDestroy.cc
 )
 
 hip_add_exe_to_target(NAME EventTest
