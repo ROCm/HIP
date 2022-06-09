@@ -47,8 +47,16 @@ TEST_CASE("Unit_hiprtc_functional") {
   using namespace std;
   hiprtcProgram prog;
   HIPRTC_CHECK(hiprtcCreateProgram(&prog, code, nullptr, 0, nullptr, nullptr));
-
-  hiprtcResult compileResult{hiprtcCompileProgram(prog, 0, 0)};
+  hipDeviceProp_t props;
+  int device = 0;
+  HIP_CHECK(hipGetDeviceProperties(&props, device));
+#ifdef __HIP_PLATFORM_AMD__
+  std::string sarg = std::string("--gpu-architecture=") + props.gcnArchName;
+#else
+  std::string sarg = std::string("--fmad=false");
+#endif
+  const char* options[] = {sarg.c_str()};
+  hiprtcResult compileResult{hiprtcCompileProgram(prog, 1, options)};
   size_t logSize;
   HIPRTC_CHECK(hiprtcGetProgramLogSize(prog, &logSize));
   if (logSize) {
