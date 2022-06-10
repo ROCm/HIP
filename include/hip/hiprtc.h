@@ -270,6 +270,29 @@ hiprtcResult hiprtcGetCode(hiprtcProgram prog, char* code);
 hiprtcResult hiprtcGetCodeSize(hiprtcProgram prog, size_t* codeSizeRet);
 
 /**
+ * @brief Gets the pointer of compiled bitcode by the runtime compilation program instance.
+ *
+ * @param [in] prog  runtime compilation program instance.
+ * @param [out] code  char pointer to bitcode.
+ * @return HIPRTC_SUCCESS
+ *
+ * @see hiprtcResult
+ */
+hiprtcResult hiprtcGetBitcode(hiprtcProgram prog, char* bitcode);
+
+/**
+ * @brief Gets the size of compiled bitcode by the runtime compilation program instance.
+ *
+ *
+ * @param [in] prog  runtime compilation program instance.
+ * @param [out] code  the size of bitcode.
+ * @return HIPRTC_SUCCESS
+ *
+ * @see hiprtcResult
+ */
+hiprtcResult hiprtcGetBitcodeSize(hiprtcProgram prog, size_t* bitcode_size);
+
+/**
  * @brief Creates the link instance via hiprtc APIs.
  *
  * @param [in] hip_jit_options
