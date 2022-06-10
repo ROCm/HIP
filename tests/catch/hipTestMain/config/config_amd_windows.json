@@ -78,6 +78,8 @@
 	   "Unit_hipGraphAddMemcpyNode1D_Negative",
 	   "Unit_hipStreamBeginCapture_BasicFunctional",
 	   "Unit_hipStreamBeginCapture_hipStreamPerThread",
+	   "Unit_hiprtc_functional",
+	   "Unit_hipStreamValue_Write",
 	   "# Following test is related to ticket EXSWCPHIPT-41",
 	   "Unit_hipStreamGetPriority_happy"
 	]
