@@ -22,7 +22,7 @@ project(bit_extract)
 
 cmake_minimum_required(VERSION 3.10)
 
-if(NOT DEFINED __HIP_ENABLE_PCH)
+if(NOT WIN32 AND NOT DEFINED __HIP_ENABLE_PCH)
   set(__HIP_ENABLE_PCH ON CACHE BOOL "enable/disable pre-compiled hip headers")
 endif()
 

@@ -95,7 +95,6 @@ TEST_CASE("Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative") {
   // Instantiate the graph
   HIP_CHECK(hipGraphInstantiate(&graphExec, graph, nullptr, nullptr, 0));
 
-#if HT_NVIDIA
   SECTION("Pass hGraphExec as nullptr") {
     ret = hipGraphExecMemcpyNodeSetParamsFromSymbol(nullptr,
                                                 memcpyFromSymbolNode, B_d,
@@ -104,7 +103,6 @@ TEST_CASE("Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative") {
                                                 hipMemcpyDeviceToDevice);
     REQUIRE(hipErrorInvalidValue == ret);
   }
-#endif
   SECTION("Pass GraphNode as nullptr") {
     ret = hipGraphExecMemcpyNodeSetParamsFromSymbol(graphExec,
                                                 nullptr, B_d,
@@ -113,7 +111,6 @@ TEST_CASE("Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative") {
                                                 hipMemcpyDeviceToDevice);
     REQUIRE(hipErrorInvalidValue == ret);
   }
-#if HT_NVIDIA
   SECTION("Pass destination ptr as nullptr") {
     ret = hipGraphExecMemcpyNodeSetParamsFromSymbol(graphExec,
                                                 memcpyFromSymbolNode, nullptr,
@@ -122,7 +119,6 @@ TEST_CASE("Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative") {
                                                 hipMemcpyDeviceToDevice);
     REQUIRE(hipErrorInvalidValue == ret);
   }
-#endif
   SECTION("Pass symbol ptr as nullptr") {
     ret = hipGraphExecMemcpyNodeSetParamsFromSymbol(graphExec,
                                                 memcpyFromSymbolNode, B_d,
@@ -131,7 +127,6 @@ TEST_CASE("Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative") {
                                                 hipMemcpyDeviceToDevice);
     REQUIRE(hipErrorInvalidSymbol == ret);
   }
-#if HT_NVIDIA
   SECTION("Pass count as zero") {
     ret = hipGraphExecMemcpyNodeSetParamsFromSymbol(graphExec,
                                                 memcpyFromSymbolNode, B_d,
@@ -173,20 +168,10 @@ TEST_CASE("Unit_hipGraphExecMemcpyNodeSetParamsFromSymbol_Negative") {
                                                 HIP_SYMBOL(globalOut),
                                                 Nbytes, 0,
                                                 hipMemcpyDeviceToDevice);
-    REQUIRE(hipErrorInvalidValue == ret);
+    REQUIRE(hipSuccess != ret);
   }
-#endif
   SECTION("Check with other graph node") {
-    hipGraph_t graph1;
     hipGraphNode_t memcpyFromSymbolNode1{};
-    HIP_CHECK(hipGraphCreate(&graph1, 0));
-    HIP_CHECK(hipGraphAddMemcpyNodeFromSymbol(&memcpyFromSymbolNode1, graph1,
-                                            nullptr,
-                                            0,
-                                            B_h,
-                                            HIP_SYMBOL(globalConst),
-                                            Nbytes, 0,
-                                            hipMemcpyDeviceToHost));
     ret = hipGraphExecMemcpyNodeSetParamsFromSymbol(graphExec,
                                                 memcpyFromSymbolNode1,
                                                 B_d,

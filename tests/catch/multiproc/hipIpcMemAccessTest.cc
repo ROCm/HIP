@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -18,8 +18,9 @@ THE SOFTWARE.
 */
 
 /*
-This testcase verifies the hipIpcMemAccess APIs by creating memory handle
+ 1)Testcase verifies the hipIpcMemAccess APIs by creating memory handle
 in parent process and access it in child process.
+ 2)Test case performs Parameter validation of hipIpcMemAccess APIs.
 */
 
 #include <hip_test_common.hh>
@@ -33,11 +34,17 @@ in parent process and access it in child process.
 #include <semaphore.h>
 #include <unistd.h>
 
+
+#define NUM_ELMTS 1024
+#define NUM_THREADS 10
+
+
 typedef struct mem_handle {
   int device;
   hipIpcMemHandle_t memHandle;
   bool IfTestPassed;
 } hip_ipc_t;
+
 
 
 // This testcase verifies the hipIpcMemAccess APIs as follows
@@ -153,4 +160,63 @@ TEST_CASE("Unit_hipIpcMemAccess_Semaphores") {
   waitpid(pid, &rFlag, 0);
   REQUIRE(shrd_mem->IfTestPassed == true);
 }
+
+TEST_CASE("Unit_hipIpcMemAccess_ParameterValidation") {
+  hipIpcMemHandle_t MemHandle;
+  hipIpcMemHandle_t MemHandleUninit;
+  void *Ad{}, *Ad2{};
+  hipError_t ret;
+
+  HIP_CHECK(hipMalloc(&Ad, 1024));
+
+#if HT_AMD
+  // Test is disabled for nvidia as api resulting in seg fault.
+  SECTION("Get mem handle with handle as nullptr") {
+    ret = hipIpcGetMemHandle(nullptr, Ad);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+#endif
+  SECTION("Get mem handle with devptr as nullptr") {
+    ret = hipIpcGetMemHandle(&MemHandle, nullptr);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+
+  SECTION("Get mem handle with handle/devptr as nullptr") {
+    ret = hipIpcGetMemHandle(nullptr, nullptr);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+
+  SECTION("Get mem handle with valid devptr") {
+    ret = hipIpcGetMemHandle(&MemHandle, Ad);
+    REQUIRE(ret == hipSuccess);
+  }
+
+  SECTION("Open mem handle with devptr as nullptr") {
+    ret = hipIpcOpenMemHandle(nullptr, MemHandle,
+                                           hipIpcMemLazyEnablePeerAccess);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+
+  SECTION("Open mem handle with handle as un-initialized") {
+    ret = hipIpcOpenMemHandle(&Ad2, MemHandleUninit,
+                                           hipIpcMemLazyEnablePeerAccess);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+#if HT_AMD
+  // Test is disabled for nvidia as api not returning expected value.
+  SECTION("Open mem handle with flags as random value") {
+    constexpr unsigned int flags = 123;
+    HIP_CHECK(hipIpcGetMemHandle(&MemHandle, Ad));
+    ret = hipIpcOpenMemHandle(&Ad2, MemHandle, flags);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+#endif
+  SECTION("Close mem handle with devptr(nullptr)") {
+    ret = hipIpcCloseMemHandle(nullptr);
+    REQUIRE(ret == hipErrorInvalidValue);
+  }
+
+  HIP_CHECK(hipFree(Ad));
+}
+
 #endif
