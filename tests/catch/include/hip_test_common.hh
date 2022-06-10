@@ -27,6 +27,7 @@ THE SOFTWARE.
 
 #define HIP_PRINT_STATUS(status) INFO(hipGetErrorName(status) << " at line: " << __LINE__);
 
+// Not thread-safe
 #define HIP_CHECK(error)                                                                           \
   {                                                                                                \
     hipError_t localError = error;                                                                 \
@@ -37,6 +38,20 @@ THE SOFTWARE.
     }                                                                                              \
   }
 
+// Check that an expression, errorExpr, evaluates to the expected error_t, expectedError.
+#define HIP_CHECK_ERROR(errorExpr, expectedError)                                                  \
+  {                                                                                                \
+    hipError_t localError = errorExpr;                                                             \
+    INFO("Matching Errors: "                                                                       \
+         << " Expected Error: " << hipGetErrorString(expectedError)                                \
+         << " Expected Code: " << expectedError << '\n'                                            \
+         << "                  Actual Error:   " << hipGetErrorString(localError)                  \
+         << " Actual Code:   " << localError << "\nStr: " << #errorExpr                            \
+         << "\nIn File: " << __FILE__ << " At line: " << __LINE__);                                \
+    REQUIRE(localError == expectedError);                                                          \
+  }
+
+// Not thread-safe
 #define HIPRTC_CHECK(error)                                                                        \
   {                                                                                                \
     auto localError = error;                                                                       \
@@ -46,32 +61,53 @@ THE SOFTWARE.
       REQUIRE(false);                                                                              \
     }                                                                                              \
   }
+
 // Although its assert, it will be evaluated at runtime
 #define HIP_ASSERT(x)                                                                              \
   { REQUIRE((x)); }
 
 #ifdef __cplusplus
-  #include <iostream>
-  #include <iomanip>
-  #include <chrono>
+#include <iostream>
+#include <iomanip>
+#include <chrono>
 #endif
 
 #define HIPCHECK(error)                                                                            \
-    {                                                                                              \
-        hipError_t localError = error;                                                             \
-        if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {      \
-            printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(localError),            \
-                   localError, #error, __FILE__, __LINE__);                                        \
-            abort();                                                                               \
-        }                                                                                          \
-    }
+  {                                                                                                \
+    hipError_t localError = error;                                                                 \
+    if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {          \
+      printf("error: '%s'(%d) from %s at %s:%d\n", hipGetErrorString(localError), localError,      \
+             #error, __FILE__, __LINE__);                                                          \
+      abort();                                                                                     \
+    }                                                                                              \
+  }
 
 #define HIPASSERT(condition)                                                                       \
     if (!(condition)) {                                                                            \
         printf("assertion %s at %s:%d \n", #condition, __FILE__, __LINE__);                        \
         abort();                                                                                   \
     }
-
+#if HT_NVIDIA
+#define CTX_CREATE() \
+  hipCtx_t context;\
+  initHipCtx(&context);
+#define CTX_DESTROY() HIPCHECK(hipCtxDestroy(context));
+#define ARRAY_DESTROY(array) HIPCHECK(hipArrayDestroy(array));
+#define HIP_TEX_REFERENCE hipTexRef
+#define HIP_ARRAY hiparray
+static void initHipCtx(hipCtx_t *pcontext) {
+  HIPCHECK(hipInit(0));
+  hipDevice_t device;
+  HIPCHECK(hipDeviceGet(&device, 0));
+  HIPCHECK(hipCtxCreate(pcontext, 0, device));
+}
+#else
+#define CTX_CREATE()
+#define CTX_DESTROY()
+#define ARRAY_DESTROY(array) HIPCHECK(hipFreeArray(array));
+#define HIP_TEX_REFERENCE textureReference*
+#define HIP_ARRAY hipArray*
+#endif
 
 
 // Utility Functions
@@ -84,8 +120,8 @@ static inline int getDeviceCount() {
 
 // Returns the current system time in microseconds
 static inline long long get_time() {
-  return std::chrono::high_resolution_clock::now().time_since_epoch()
-      /std::chrono::microseconds(1);
+  return std::chrono::high_resolution_clock::now().time_since_epoch() /
+      std::chrono::microseconds(1);
 }
 
 static inline double elapsed_time(long long startTimeUs, long long stopTimeUs) {
@@ -115,4 +151,31 @@ static inline int RAND_R(unsigned* rand_seed)
       return rand_r(rand_seed);
   #endif
 }
+
+inline bool isImageSupported() {
+    int imageSupport = 1;
+#ifdef __HIP_PLATFORM_AMD__
+    int device;
+    HIP_CHECK(hipGetDevice(&device));
+    HIPCHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+                                   device));
+#endif
+  return imageSupport != 0;
 }
+
+/**
+ * Causes the test to stop and be skipped at runtime.
+ * reason: Message describing the reason the test has been skipped.
+ */
+static inline void HIP_SKIP_TEST(char const* const reason) noexcept {
+  // ctest is setup to parse for "HIP_SKIP_THIS_TEST", at which point it will skip the test.
+  std::cout << "Skipping test. Reason: " << reason << '\n' << "HIP_SKIP_THIS_TEST" << std::endl;
+}
+}
+
+
+// This must be called in the beginning of image test app's main() to indicate whether image
+// is supported.
+#define checkImageSupport()                                                                \
+    if (!HipTest::isImageSupported())                                                      \
+        { printf("Texture is not support on the device. Skipped.\n"); return; }

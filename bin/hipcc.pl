@@ -152,7 +152,11 @@ if ($HIP_PLATFORM eq "amd") {
         $HIPCC="$HIP_CLANG_PATH/clang" . $execExtension;
         $HIPLDFLAGS = "--driver-mode=g++";
     }
-
+    # to avoid using dk linker or MSVC linker
+    if($isWindows) {
+        $HIPLDFLAGS .= " -fuse-ld=lld";
+        $HIPLDFLAGS .= " --ld-path=$HIP_CLANG_PATH/lld-link.exe";
+    }
     $HIP_CLANG_VERSION = `$HIPCC --version`;
     $HIP_CLANG_VERSION=~/.*clang version (\S+).*/;
     $HIP_CLANG_VERSION=$1;
