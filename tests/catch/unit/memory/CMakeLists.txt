@@ -58,9 +58,6 @@ set(TEST_SRC
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
     hipMemcpyFromSymbol.cc
-    hipMemcpyFromSymbolAsync.cc
-    hipMemcpyToSymbol.cc
-    hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
     hipMemcpyPeer.cc
     hipMemcpyPeerAsync.cc
@@ -123,9 +120,6 @@ set(TEST_SRC
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
     hipMemcpyFromSymbol.cc
-    hipMemcpyFromSymbolAsync.cc
-    hipMemcpyToSymbol.cc
-    hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
     hipMemcpyPeer.cc
     hipMemcpyPeerAsync.cc
