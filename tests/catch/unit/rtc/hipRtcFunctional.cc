@@ -73,7 +73,7 @@ TEST_CASE("Unit_hiprtc_functional") {
   HIPRTC_CHECK(hiprtcDestroyProgram(&prog));
 
 #if HT_NVIDIA
-  int device = 0;
+  device = 0;
   HIPCHECK(hipInit(0));
   hipCtx_t ctx;
   HIPCHECK(hipCtxCreate(&ctx, 0, device));
