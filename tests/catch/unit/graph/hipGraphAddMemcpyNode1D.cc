@@ -19,6 +19,12 @@ THE SOFTWARE.
 
 /**
 Testcase Scenarios :
+Functional -
+1) Add 1D memcpy node to graph and verify memcpy operation is success for all memcpy kinds(H2D, D2H and D2D).
+ Memcpy nodes are added and assigned to default device.
+2) Allocate memory on default device(Dev 0), Perform memcpy operation for 1D arrays on Peer device(Dev 1) and
+ verify the results.
+
 Negative -
 1) Pass pGraphNode as nullptr and check if api returns error.
 2) When graph is un-initialized argument(skipping graph creation), api should return error code.
@@ -32,6 +38,101 @@ Negative -
 */
 
 #include <hip_test_common.hh>
+#include <hip_test_checkers.hh>
+
+
+static void validateMemcpyNode1DArray(bool peerAccess) {
+  constexpr int SIZE{32};
+  int harray1D[SIZE]{};
+  int harray1Dres[SIZE]{};
+  hipGraph_t graph;
+  hipArray *devArray1, *devArray2;
+  hipGraphNode_t memcpyH2D, memcpyD2H, memcpyD2D;
+  constexpr int numBytes{SIZE * sizeof(int)};
+  hipStream_t streamForGraph;
+  hipGraphExec_t graphExec;
+
+  HIP_CHECK(hipSetDevice(0));
+  HIP_CHECK(hipStreamCreate(&streamForGraph));
+  HIP_CHECK(hipMalloc(&devArray1, numBytes));
+  HIP_CHECK(hipMalloc(&devArray2, numBytes));
+
+  // Initialize 1D object
+  for (int i = 0; i < SIZE; i++) {
+    harray1D[i] = i + 1;
+  }
+
+  HIP_CHECK(hipGraphCreate(&graph, 0));
+
+  // For peer access test, Memory is allocated on device(0)
+  // while memcpy nodes are allocated and assigned to peer device(1)
+  if (peerAccess) {
+    HIP_CHECK(hipSetDevice(1));
+  }
+
+  // Host to Device (harray1D -> devArray1)
+  HIP_CHECK(hipGraphAddMemcpyNode1D(&memcpyH2D, graph, nullptr, 0,
+                     devArray1, harray1D, numBytes, hipMemcpyHostToDevice));
+
+  // Device to Device (devArray1 -> devArray2)
+  HIP_CHECK(hipGraphAddMemcpyNode1D(&memcpyD2D, graph, &memcpyH2D, 1,
+                     devArray2, devArray1, numBytes, hipMemcpyDeviceToDevice));
+
+  // Device to host (devArray2 -> harray1Dres)
+  HIP_CHECK(hipGraphAddMemcpyNode1D(&memcpyD2H, graph, &memcpyD2D, 1,
+                     harray1Dres, devArray2, numBytes, hipMemcpyDeviceToHost));
+
+  // Instantiate and launch the graph
+  HIP_CHECK(hipGraphInstantiate(&graphExec, graph, nullptr, nullptr, 0));
+  HIP_CHECK(hipGraphLaunch(graphExec, streamForGraph));
+  HIP_CHECK(hipStreamSynchronize(streamForGraph));
+
+  // Validate result
+  for (int i = 0; i < SIZE; i++) {
+    if (harray1D[i] != harray1Dres[i]) {
+      INFO("harray1D: " << harray1D[i] << " harray1Dres: " << harray1Dres[i]
+            << " mismatch at : " << i);
+      REQUIRE(false);
+    }
+  }
+  HIP_CHECK(hipGraphExecDestroy(graphExec));
+  HIP_CHECK(hipGraphDestroy(graph));
+  HIP_CHECK(hipStreamDestroy(streamForGraph));
+  HIP_CHECK(hipFree(devArray1));
+  HIP_CHECK(hipFree(devArray2));
+}
+
+
+/**
+ * Functional Tests adds memcpy 1D nodes of types H2D, D2D and D2H to graph
+ * and verifies execution sequence by launching graph.
+ *
+ * For Default device test: Memory allocations and memory operations
+ * are performed from device(0).
+ * For Peer device test: Memory allocations happen on device(0) and memcpy operations
+ * are performed from device(1).
+ */
+TEST_CASE("Unit_hipGraphAddMemcpyNode1D_Functional") {
+  SECTION("Memcpy with 1D array on default device") {
+    validateMemcpyNode1DArray(false);
+  }
+
+  SECTION("Memcpy with 1D array on peer device") {
+    int numDevices{}, peerAccess{};
+    HIP_CHECK(hipGetDeviceCount(&numDevices));
+    if (numDevices > 1) {
+      HIP_CHECK(hipDeviceCanAccessPeer(&peerAccess, 1, 0));
+    }
+
+    if (!peerAccess) {
+      WARN("Skipping test as peer device access is not found!");
+      return;
+    }
+    validateMemcpyNode1DArray(true);
+  }
+}
+
+
 
 /**
  * Negative Test for API hipGraphAddMemcpyNode1D

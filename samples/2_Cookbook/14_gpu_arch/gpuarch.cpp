@@ -36,7 +36,7 @@ THE SOFTWARE.
 // 'out'
 //              but it will update with "NOT_SUPPORTED" for any other gfx archs.
 __global__ void incrementKernel(int32_t* in, int32_t* out, int32_t value, size_t buffSize) {
-  int index = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+  int index = blockDim.x * blockIdx.x + threadIdx.x;
   if (index < buffSize) {
 #if defined(__gfx908__)
     out[index] = in[index] + value;

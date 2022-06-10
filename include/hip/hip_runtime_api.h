@@ -160,9 +160,10 @@ typedef enum hipMemoryType {
     hipMemoryTypeHost,    ///< Memory is physically located on host
     hipMemoryTypeDevice,  ///< Memory is physically located on device. (see deviceId for specific
                           ///< device)
-    hipMemoryTypeArray,  ///< Array memory, physically located on device. (see deviceId for specific
-                         ///< device)
-    hipMemoryTypeUnified  ///< Not used currently
+    hipMemoryTypeArray,   ///< Array memory, physically located on device. (see deviceId for specific
+                          ///< device)
+    hipMemoryTypeUnified, ///< Not used currently
+    hipMemoryTypeManaged  ///< Managed memory, automaticallly managed by the unified memory system
 } hipMemoryType;
 
 /**
@@ -547,8 +548,10 @@ typedef struct hipFuncAttributes {
 } hipFuncAttributes;
 typedef struct ihipEvent_t* hipEvent_t;
 enum hipLimit_t {
-    hipLimitPrintfFifoSize = 0x01,
-    hipLimitMallocHeapSize = 0x02,
+    hipLimitStackSize = 0x0,        // limit device stack size
+    hipLimitPrintfFifoSize = 0x01,  // limit printf fifo size
+    hipLimitMallocHeapSize = 0x02,  // limit heap size
+    hipLimitRange                   // supported limit range
 };
 /**
  * @addtogroup GlobalDefs More
@@ -1263,6 +1266,7 @@ hipError_t hipRuntimeGetVersion(int* runtimeVersion);
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
 hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
+
 /**
  * @brief Returns the compute capability of the device
  * @param [out] major
@@ -1534,6 +1538,16 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
  *
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
+/**
+ * @brief Set Resource limits of current device
+ *
+ * @param [in] limit
+ * @param [in] value
+ *
+ * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
+ *
+ */
+hipError_t hipDeviceSetLimit ( enum hipLimit_t limit, size_t value );
 /**
  * @brief Returns bank width of shared memory for current device
  *

@@ -17,7 +17,9 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
-
+ifeq ($(OS),Windows_NT)
+ $(error Makefile is not supported on windows platform. Please use cmake instead to build sample.)
+endif
 ROCM_PATH?= $(wildcard /opt/rocm/)
 HIP_PATH?= $(wildcard $(ROCM_PATH)/hip)
 ifeq (,$(HIP_PATH))

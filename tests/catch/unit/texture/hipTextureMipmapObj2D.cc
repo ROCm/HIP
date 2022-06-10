@@ -23,21 +23,16 @@ THE SOFTWARE.
 std::vector<unsigned int> hw_vector = {2048, 1024, 512, 256, 64};
 std::vector<unsigned int> mip_vector = {8, 4, 2, 1};
 
-__global__ void tex2DKernel(float* outputData,
-                            hipTextureObject_t textureObject,
-                            int width, float level) {
-#ifndef __gfx90a__
-#if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
+// MipMap is currently supported only on windows
+#if (defined(_WIN32) && !defined(__HIP_NO_IMAGE_SUPPORT))
+__global__ void tex2DKernel(float* outputData, hipTextureObject_t textureObject, int width,
+                            float level) {
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
   outputData[y * width + x] = tex2DLod<float>(textureObject, x, y, level);
-#endif
-#endif
 }
 
-#ifdef _WIN32  // MipMap is currently supported only on windows
-static void runMipMapTest(unsigned int width, unsigned int height,
-                          unsigned int mipmap_level) {
+static void runMipMapTest(unsigned int width, unsigned int height, unsigned int mipmap_level) {
   INFO("Width: " << width << "Height: " << height << "mip: " << mipmap_level);
 
   // Create new width & height to be tested
@@ -57,26 +52,23 @@ static void runMipMapTest(unsigned int width, unsigned int height,
     }
   }
 
-  hipChannelFormatDesc channelDesc = hipCreateChannelDesc(32, 0, 0, 0,
-                                            hipChannelFormatKindFloat);
+  hipChannelFormatDesc channelDesc = hipCreateChannelDesc(32, 0, 0, 0, hipChannelFormatKindFloat);
   HIP_ARRAY3D_DESCRIPTOR mipmapped_array_desc;
   memset(&mipmapped_array_desc, 0x00, sizeof(HIP_ARRAY3D_DESCRIPTOR));
   mipmapped_array_desc.Width = orig_width;
   mipmapped_array_desc.Height = orig_height;
   mipmapped_array_desc.Depth = 0;
   mipmapped_array_desc.Format = HIP_AD_FORMAT_FLOAT;
-  mipmapped_array_desc.NumChannels = ((channelDesc.x != 0) +
-      (channelDesc.y != 0) + (channelDesc.z != 0) + (channelDesc.w != 0));
+  mipmapped_array_desc.NumChannels =
+      ((channelDesc.x != 0) + (channelDesc.y != 0) + (channelDesc.z != 0) + (channelDesc.w != 0));
   mipmapped_array_desc.Flags = 0;
 
   hipMipmappedArray* mip_array_ptr;
-  HIP_CHECK(hipMipmappedArrayCreate(&mip_array_ptr, &mipmapped_array_desc,
-                                    2 * mipmap_level));
+  HIP_CHECK(hipMipmappedArrayCreate(&mip_array_ptr, &mipmapped_array_desc, 2 * mipmap_level));
 
-  hipArray *hipArray = nullptr;
+  hipArray* hipArray = nullptr;
   HIP_CHECK(hipMipmappedArrayGetLevel(&hipArray, mip_array_ptr, mipmap_level));
-  HIP_CHECK(hipMemcpyToArray(hipArray, 0, 0, hData, size,
-                             hipMemcpyHostToDevice));
+  HIP_CHECK(hipMemcpyToArray(hipArray, 0, 0, hData, size, hipMemcpyHostToDevice));
 
   hipResourceDesc resDesc;
   memset(&resDesc, 0, sizeof(resDesc));
@@ -94,8 +86,7 @@ static void runMipMapTest(unsigned int width, unsigned int height,
 
   // Create texture object
   hipTextureObject_t textureObject = 0;
-  HIP_CHECK(hipCreateTextureObject(&textureObject, &resDesc,
-                                   &texDesc, nullptr));
+  HIP_CHECK(hipCreateTextureObject(&textureObject, &resDesc, &texDesc, nullptr));
 
   float* dData = nullptr;
   HIP_CHECK(hipMalloc(&dData, size));
@@ -104,8 +95,8 @@ static void runMipMapTest(unsigned int width, unsigned int height,
   dim3 dimBlock(16, 16, 1);
   dim3 dimGrid(width / dimBlock.x, height / dimBlock.y, 1);
 
-  hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData,
-                     textureObject, width, (2 * mipmap_level));
+  hipLaunchKernelGGL(tex2DKernel, dim3(dimGrid), dim3(dimBlock), 0, 0, dData, textureObject, width,
+                     (2 * mipmap_level));
   hipDeviceSynchronize();
 
   float* hOutputData = reinterpret_cast<float*>(malloc(size));
@@ -116,8 +107,8 @@ static void runMipMapTest(unsigned int width, unsigned int height,
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
       if (hData[i * width + j] != hOutputData[i * width + j]) {
-        INFO("Difference found at [ " << i << j << " ]: " <<
-              hData[i * width + j] << hOutputData[i * width + j]);
+        INFO("Difference found at [ " << i << j << " ]: " << hData[i * width + j]
+                                      << hOutputData[i * width + j]);
         REQUIRE(false);
       }
     }
@@ -132,8 +123,7 @@ static void runMipMapTest(unsigned int width, unsigned int height,
 TEST_CASE("Unit_hipTextureMipmapObj2D_Check") {
 #if HT_AMD
   int imageSupport{};
-  HIP_CHECK(hipDeviceGetAttribute(&imageSupport,
-                           hipDeviceAttributeImageSupport, 0));
+  HIP_CHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport, 0));
   if (!imageSupport) {
     INFO("Texture is not supported on the device. Test is skipped");
     return;

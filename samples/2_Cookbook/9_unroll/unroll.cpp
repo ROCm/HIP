@@ -43,7 +43,7 @@ void matrixRowSum(int* input, int* output, int width) {
 
 // Device (kernel) function
 __global__ void gpuMatrixRowSum(int* input, int* output, int width) {
-    int index = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+    int index = blockDim.x * blockIdx.x + threadIdx.x;
 #pragma unroll
     for (int i = 0; i < width; i++) {
         output[index] += input[index * width + i];
