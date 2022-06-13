@@ -58,6 +58,7 @@ constexpr unsigned int writeFlag = 0;
 constexpr float SLEEP_MS = 100;
 constexpr uint32_t DATA_INIT = 0x1234;
 constexpr uint32_t DATA_UPDATE = 0X4321;
+constexpr unsigned int ARR_SIZE = 5;
 
 struct TEST_WAIT {
   int compareOp;
@@ -203,31 +204,49 @@ void testWrite() {
 
   uint64_t* host_ptr64 = (uint64_t *) malloc(sizeof(uint64_t));
   uint32_t* host_ptr32 = (uint32_t *) malloc(sizeof(uint32_t));
+  uint64_t h_mem64[ARR_SIZE];
+  uint32_t h_mem32[ARR_SIZE];
+  uint64_t* h_mem64ptr = h_mem64;
+  uint32_t* h_mem32ptr = h_mem32;
   std::cout << " hipStreamWriteValue: testing ... \n";
 
   HIPCHECK(hipExtMallocWithFlags((void **)&signalPtr, 8, hipMallocSignalMemory));
 
   void* device_ptr64;
   void* device_ptr32;
-
+  uint64_t* d_mem64ptr;
+  uint32_t* d_mem32ptr;
   *host_ptr64 = 0x0;
   *host_ptr32 = 0x0;
   *signalPtr = 0x0;
 
   hipHostRegister(host_ptr64, sizeof(uint64_t), 0);
   hipHostRegister(host_ptr32, sizeof(uint32_t), 0);
+  hipHostRegister(h_mem64ptr, sizeof(uint64_t) * ARR_SIZE, 0);
+  hipHostRegister(h_mem32ptr, sizeof(uint32_t) * ARR_SIZE, 0);
 
   // Test writting registered host pointer
   HIPCHECK(hipStreamWriteValue64(stream, host_ptr64, value64, writeFlag));
   HIPCHECK(hipStreamWriteValue32(stream, host_ptr32, value32, writeFlag));
+  //test writting to an array
+  for (int indx = 0; indx < ARR_SIZE; indx++) {
+    HIPCHECK(hipStreamWriteValue64(stream, h_mem64ptr + indx, ARR_SIZE - indx, writeFlag));
+    HIPCHECK(hipStreamWriteValue32(stream, h_mem32ptr + indx, ARR_SIZE - indx, writeFlag));
+  }
+
   hipStreamSynchronize(stream);
 
   HIPASSERT(*host_ptr64 == value64);
   HIPASSERT(*host_ptr32 == value32);
-
+  for (int indx = 0; indx < ARR_SIZE ; indx++) {
+    HIPASSERT(*(h_mem64ptr + indx) == (ARR_SIZE - indx));
+    HIPASSERT(*(h_mem32ptr + indx) == (ARR_SIZE - indx));
+  }
   // Test writting device pointer
   hipHostGetDevicePointer((void**)&device_ptr64, host_ptr64, 0);
   hipHostGetDevicePointer((void**)&device_ptr32, host_ptr32, 0);
+  hipHostGetDevicePointer((void**)&d_mem64ptr, h_mem64ptr, 0);
+  hipHostGetDevicePointer((void**)&d_mem32ptr, h_mem32ptr, 0);
 
   // Reset values
   *host_ptr64 = 0x0;
@@ -235,10 +254,19 @@ void testWrite() {
 
   HIPCHECK(hipStreamWriteValue64(stream, device_ptr64, value64, writeFlag));
   HIPCHECK(hipStreamWriteValue32(stream, device_ptr32, value32, writeFlag));
+  for (int indx = 0; indx < ARR_SIZE; indx++) {
+    HIPCHECK(hipStreamWriteValue64(stream, d_mem64ptr + indx, indx, writeFlag));
+    HIPCHECK(hipStreamWriteValue32(stream, d_mem32ptr + indx, indx, writeFlag));
+  }
+
   hipStreamSynchronize(stream);
 
   HIPASSERT(*host_ptr64 == value64);
   HIPASSERT(*host_ptr32 == value32);
+  for (int indx = 0; indx < ARR_SIZE ; indx++) {
+    HIPASSERT(*(h_mem64ptr + indx) == indx);
+    HIPASSERT(*(h_mem32ptr + indx) == indx);
+  }
 
   // Test Writing to Signal Memory
   HIPCHECK(hipStreamWriteValue64(stream, signalPtr, value64, writeFlag));

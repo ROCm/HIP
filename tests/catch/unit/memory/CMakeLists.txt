@@ -42,6 +42,7 @@ set(TEST_SRC
     hipMemPtrGetInfo.cc
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
+    hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
     hipMemsetNegative.cc
     hipMemset.cc
@@ -58,10 +59,8 @@ set(TEST_SRC
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
     hipMemcpyFromSymbol.cc
-    hipMemcpyFromSymbolAsync.cc
-    hipMemcpyToSymbol.cc
-    hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
+    hipMemPoolApi.cc
     hipMemcpyPeer.cc
     hipMemcpyPeerAsync.cc
     hipMemcpyWithStream.cc
@@ -108,6 +107,7 @@ set(TEST_SRC
     hipHostRegister.cc
     hipMallocPitch.cc
     hipHostGetFlags.cc
+    hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
     hipMemsetNegative.cc
     hipMemset.cc
@@ -123,9 +123,6 @@ set(TEST_SRC
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
     hipMemcpyFromSymbol.cc
-    hipMemcpyFromSymbolAsync.cc
-    hipMemcpyToSymbol.cc
-    hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
     hipMemcpyPeer.cc
     hipMemcpyPeerAsync.cc
