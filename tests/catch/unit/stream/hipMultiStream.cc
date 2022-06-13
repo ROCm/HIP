@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -51,6 +51,7 @@ TEST_CASE("Unit_hipMultiStream_sameDevice") {
     hipLaunchKernelGGL(kernel, dim3(1), dim3(1), 0, streams[i], data[i], xd, NN);
     hipLaunchKernelGGL(HIP_KERNEL_NAME(nKernel), dim3(1), dim3(1), 0, 0, yd);
     HIP_CHECK(hipFree(data[i]));
+    HIP_CHECK(hipStreamDestroy(streams[i]));
   }
   HIP_CHECK(hipMemcpy(&x, xd, sizeof(float), hipMemcpyDeviceToHost));
   HIP_CHECK(hipMemcpy(&y, yd, sizeof(float), hipMemcpyDeviceToHost));

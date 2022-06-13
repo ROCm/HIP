@@ -41,15 +41,15 @@ set(TEST_SRC
     hipMemPtrGetInfo.cc
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
+    hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
-    hipMemsetInvalidPtr.cc
+    hipMemsetNegative.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemset3D.cc
     hipMemset2D.cc
     hipHostMallocTests.cc
     hipMemset3DFunctional.cc
-    hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
@@ -58,9 +58,6 @@ set(TEST_SRC
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
     hipMemcpyFromSymbol.cc
-    hipMemcpyFromSymbolAsync.cc
-    hipMemcpyToSymbol.cc
-    hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
     hipMemPoolApi.cc
     hipMemcpyPeer.cc
@@ -76,7 +73,17 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
-
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
+    hipMallocMngdMultiThread.cc
+    hipMemPrefetchAsync.cc
 )
 else()
 set(TEST_SRC
@@ -98,15 +105,15 @@ set(TEST_SRC
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
     hipHostGetFlags.cc
+    hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
-    hipMemsetInvalidPtr.cc
+    hipMemsetNegative.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemset3D.cc
     hipMemset2D.cc
     hipHostMallocTests.cc
     hipMemset3DFunctional.cc
-    hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
@@ -114,9 +121,6 @@ set(TEST_SRC
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
     hipMemcpyFromSymbol.cc
-    hipMemcpyFromSymbolAsync.cc
-    hipMemcpyToSymbol.cc
-    hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
     hipMemcpyPeer.cc
     hipMemcpyPeerAsync.cc
@@ -131,6 +135,16 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
+    hipMemPrefetchAsync.cc
 )
 endif()
 

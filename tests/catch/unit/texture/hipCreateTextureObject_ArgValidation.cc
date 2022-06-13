@@ -25,6 +25,8 @@ THE SOFTWARE.
  * Validate argument list of texture object api.
  */
 TEST_CASE("Unit_hipCreateTextureObject_ArgValidation") {
+  checkImageSupport();
+
   float *texBuf;
   hipError_t ret;
   constexpr int xsize = 32;

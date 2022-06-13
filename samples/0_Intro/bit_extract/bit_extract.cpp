@@ -35,8 +35,8 @@ THE SOFTWARE.
     }
 
 __global__ void bit_extract_kernel(uint32_t* C_d, const uint32_t* A_d, size_t N) {
-    size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-    size_t stride = hipBlockDim_x * hipGridDim_x;
+    size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+    size_t stride = blockDim.x * gridDim.x;
 
     for (size_t i = offset; i < N; i += stride) {
 #ifdef __HIP_PLATFORM_AMD__

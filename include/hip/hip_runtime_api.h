@@ -160,36 +160,11 @@ typedef enum hipMemoryType {
     hipMemoryTypeHost,    ///< Memory is physically located on host
     hipMemoryTypeDevice,  ///< Memory is physically located on device. (see deviceId for specific
                           ///< device)
-    hipMemoryTypeArray,  ///< Array memory, physically located on device. (see deviceId for specific
-                         ///< device)
-    hipMemoryTypeUnified  ///< Not used currently
+    hipMemoryTypeArray,   ///< Array memory, physically located on device. (see deviceId for specific
+                          ///< device)
+    hipMemoryTypeUnified, ///< Not used currently
+    hipMemoryTypeManaged  ///< Managed memory, automaticallly managed by the unified memory system
 } hipMemoryType;
-
-/**
- * @brief hipKernelNodeAttrID
- * @enum
- *
- */
-typedef enum hipKernelNodeAttrID {
-    hipKernelNodeAttributeAccessPolicyWindow = 1,
-    hipKernelNodeAttributeCooperative = 2,
-} hipKernelNodeAttrID;
-typedef enum hipAccessProperty {
-    hipAccessPropertyNormal = 0,
-    hipAccessPropertyStreaming  = 1,
-    hipAccessPropertyPersisting = 2,
-} hipAccessProperty;
-typedef struct hipAccessPolicyWindow {
-    void* base_ptr;
-    hipAccessProperty hitProp;
-    float hitRatio;
-    hipAccessProperty missProp;
-    size_t num_bytes;
-} hipAccessPolicyWindow;
-typedef union hipKernelNodeAttrValue {
-    hipAccessPolicyWindow accessPolicyWindow;
-    int cooperative;
-} hipKernelNodeAttrValue;
 
 /**
  * Pointer attributes
@@ -449,6 +424,7 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeUuid,                             ///< Cuda only. Unique ID in 16 byte.
     hipDeviceAttributeWarpSize,                         ///< Warp size in threads.
     hipDeviceAttributeMemoryPoolsSupported,             ///< Device supports HIP Stream Ordered Memory Allocator
+    hipDeviceAttributeVirtualMemoryManagementSupported, ///< Device supports HIP virtual memory management
 
     hipDeviceAttributeCudaCompatibleEnd = 9999,
     hipDeviceAttributeAmdSpecificBegin = 10000,
@@ -572,8 +548,10 @@ typedef struct hipFuncAttributes {
 } hipFuncAttributes;
 typedef struct ihipEvent_t* hipEvent_t;
 enum hipLimit_t {
-    hipLimitPrintfFifoSize = 0x01,
-    hipLimitMallocHeapSize = 0x02,
+    hipLimitStackSize = 0x0,        // limit device stack size
+    hipLimitPrintfFifoSize = 0x01,  // limit printf fifo size
+    hipLimitMallocHeapSize = 0x02,  // limit heap size
+    hipLimitRange                   // supported limit range
 };
 /**
  * @addtogroup GlobalDefs More
@@ -1141,6 +1119,32 @@ typedef struct hipMemsetParams {
 } hipMemsetParams;
 
 /**
+ * @brief hipKernelNodeAttrID
+ * @enum
+ *
+ */
+typedef enum hipKernelNodeAttrID {
+    hipKernelNodeAttributeAccessPolicyWindow = 1,
+    hipKernelNodeAttributeCooperative = 2,
+} hipKernelNodeAttrID;
+typedef enum hipAccessProperty {
+    hipAccessPropertyNormal = 0,
+    hipAccessPropertyStreaming  = 1,
+    hipAccessPropertyPersisting = 2,
+} hipAccessProperty;
+typedef struct hipAccessPolicyWindow {
+    void* base_ptr;
+    hipAccessProperty hitProp;
+    float hitRatio;
+    hipAccessProperty missProp;
+    size_t num_bytes;
+} hipAccessPolicyWindow;
+typedef union hipKernelNodeAttrValue {
+    hipAccessPolicyWindow accessPolicyWindow;
+    int cooperative;
+} hipKernelNodeAttrValue;
+
+/**
  * @brief hipGraphExecUpdateResult
  * @enum
  *
@@ -1176,6 +1180,13 @@ typedef enum hipStreamUpdateCaptureDependenciesFlags {
   hipStreamAddCaptureDependencies = 0,  ///< Add new nodes to the dependency set
   hipStreamSetCaptureDependencies,      ///< Replace the dependency set with the new nodes
 } hipStreamUpdateCaptureDependenciesFlags;
+
+typedef enum hipGraphMemAttributeType {
+  hipGraphMemAttrUsedMemCurrent = 0, ///< Amount of memory, in bytes, currently associated with graphs
+  hipGraphMemAttrUsedMemHigh,        ///< High watermark of memory, in bytes, associated with graphs since the last time.
+  hipGraphMemAttrReservedMemCurrent, ///< Amount of memory, in bytes, currently allocated for graphs.
+  hipGraphMemAttrReservedMemHigh,    ///< High watermark of memory, in bytes, currently allocated for graphs
+}hipGraphMemAttributeType;
 
 typedef enum hipGraphInstantiateFlags {
   hipGraphInstantiateFlagAutoFreeOnLaunch =
@@ -1255,6 +1266,7 @@ hipError_t hipRuntimeGetVersion(int* runtimeVersion);
  * @returns #hipSuccess, #hipErrorInavlidDevice
  */
 hipError_t hipDeviceGet(hipDevice_t* device, int ordinal);
+
 /**
  * @brief Returns the compute capability of the device
  * @param [out] major
@@ -1526,6 +1538,16 @@ hipError_t hipDeviceGetCacheConfig(hipFuncCache_t* cacheConfig);
  *
  */
 hipError_t hipDeviceGetLimit(size_t* pValue, enum hipLimit_t limit);
+/**
+ * @brief Set Resource limits of current device
+ *
+ * @param [in] limit
+ * @param [in] value
+ *
+ * @returns #hipSuccess, #hipErrorUnsupportedLimit, #hipErrorInvalidValue
+ *
+ */
+hipError_t hipDeviceSetLimit ( enum hipLimit_t limit, size_t value );
 /**
  * @brief Returns bank width of shared memory for current device
  *
@@ -4903,6 +4925,7 @@ hipError_t hipBindTextureToMipmappedArray(
  * @returns hipSuccess, hipErrorInvalidValue
  *
  */
+DEPRECATED(DEPRECATED_MSG)
  hipError_t hipGetTextureReference(
     const textureReference** texref,
     const void* symbol);
@@ -4989,20 +5012,25 @@ hipError_t hipGetTextureObjectTextureDesc(
 /**
  *
  */
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddressMode(
     textureReference* texRef,
     int dim,
     enum hipTextureAddressMode am);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetArray(
     textureReference* tex,
     hipArray_const_t array,
     unsigned int flags);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFlags(
     textureReference* texRef,
     unsigned int Flags);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetFormat(
     textureReference* texRef,
     hipArray_Format fmt,
@@ -5135,16 +5163,20 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapFilterMode(
     textureReference* texRef,
     enum hipTextureFilterMode fm);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapLevelBias(
     textureReference* texRef,
     float bias);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmapLevelClamp(
     textureReference* texRef,
     float minMipMapLevelClamp,
     float maxMipMapLevelClamp);
+DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMipmappedArray(
     textureReference* texRef,
     struct hipMipmappedArray* mipmappedArray,
@@ -6167,6 +6199,38 @@ hipError_t hipGraphEventWaitNodeSetEvent(hipGraphNode_t node, hipEvent_t event);
 hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraphNode_t hNode,
                                              hipEvent_t event);
 
+/**
+ * @brief Get the mem attribute for graphs.
+ *
+ * @param [in] device - device the attr is get for.
+ * @param [in] attr - attr to get.
+ * @param [out] value - value for specific attr.
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGetGraphMemAttribute(int device, hipGraphMemAttributeType attr, void* value);
+
+/**
+ * @brief Set the mem attribute for graphs.
+ *
+ * @param [in] device - device the attr is set for.
+ * @param [in] attr - attr to set.
+ * @param [in] value - value for specific attr.
+ * @returns #hipSuccess, #hipErrorInvalidDevice
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceSetGraphMemAttribute(int device, hipGraphMemAttributeType attr, void* value);
+
+/**
+ * @brief Free unused memory on specific device used for graph back to OS.
+ *
+ * @param [in] device - device the memory is used for graphs
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipDeviceGraphMemTrim(int device);
 // doxygen end graph API
 /**
  * @}
@@ -6177,12 +6241,15 @@ hipError_t hipGraphExecEventWaitNodeSetEvent(hipGraphExec_t hGraphExec, hipGraph
  * Memory allocation properties
  */
 typedef struct hipMemAllocationProp {
-    unsigned char compressionType;                  ///< Compression type
-    hipMemLocation location;                        ///< Memory location
-    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
     hipMemAllocationType type;                      ///< Memory allocation type
-    unsigned short usage;                           ///< Usage
+    hipMemAllocationHandleType requestedHandleType; ///< Requested handle type
+    hipMemLocation location;                        ///< Memory location
     void* win32HandleMetaData;                      ///< Metadata for Win32 handles
+    struct {
+        unsigned char compressionType;              ///< Compression type
+        unsigned char gpuDirectRDMACapable;         ///< RDMA capable
+        unsigned short usage;                       ///< Usage
+    } allocFlags;
 } hipMemAllocationProp;
 
 /**
