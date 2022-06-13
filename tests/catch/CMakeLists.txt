@@ -104,9 +104,16 @@ set(CATCH2_INCLUDE ${CATCH2_PATH}/cmake/Catch2/catch_include.cmake.in)
 include_directories(
     ${CATCH2_PATH}
     "./include"
+    "./kernels"
     ${HIP_PATH}/include
     ${JSON_PARSER}
 )
+
+option(RTC_TESTING "Run tests using HIP RTC to compile the kernels" OFF)
+if (RTC_TESTING)
+    add_definitions(-DRTC_TESTING=ON)
+endif()
+add_definitions(-DKERNELS_PATH="${CMAKE_CURRENT_SOURCE_DIR}/kernels/")
 
 file(COPY ./hipTestMain/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/hipTestMain)
 file(COPY ./external/Catch2/cmake/Catch2/CatchAddTests.cmake DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/script)
@@ -177,6 +184,7 @@ add_custom_target(build_tests)
 # Tests folder
 add_subdirectory(unit)
 add_subdirectory(ABM)
+add_subdirectory(kernels)
 add_subdirectory(hipTestMain)
 add_subdirectory(stress)
 add_subdirectory(TypeQualifiers)
