@@ -85,7 +85,7 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
   size_t tot, avail, ptot, pavail;
   HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
   for (int i = 0; i < devCnt; i++) {
-    // TODO the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
+    // FIXME: the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(MallocArray_DiffSizes, i));
   }
 

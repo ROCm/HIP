@@ -53,8 +53,8 @@ static constexpr auto ARRAY_LOOP{100};
 static void ArrayCreate_DiffSizes(int gpu) {
   HIP_CHECK(hipSetDevice(gpu));
   std::vector<std::pair<size_t, size_t>> array_size{{NUM_W, NUM_H}, {BIGNUM_W, BIGNUM_H}};
-  for (auto &size : array_size) {
-    std::array<HIP_ARRAY,ARRAY_LOOP> array;
+  for (auto& size : array_size) {
+    std::array<HIP_ARRAY, ARRAY_LOOP> array;
     const size_t pavail = getFreeMem();
     HIP_ARRAY_DESCRIPTOR desc;
     desc.NumChannels = 1;
@@ -75,9 +75,7 @@ static void ArrayCreate_DiffSizes(int gpu) {
 }
 
 /* This testcase verifies hipArrayCreate API for small and big chunks data*/
-TEST_CASE("Unit_hipArrayCreate_DiffSizes") {
-  ArrayCreate_DiffSizes(0);
-}
+TEST_CASE("Unit_hipArrayCreate_DiffSizes") { ArrayCreate_DiffSizes(0); }
 
 /*
 This testcase verifies the hipArrayCreate API in multithreaded
@@ -92,11 +90,11 @@ TEST_CASE("Unit_hipArrayCreate_MultiThread") {
 
   const size_t pavail = getFreeMem();
   for (int i = 0; i < devCnt; i++) {
-    // TODO the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
+    // FIXME: the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(ArrayCreate_DiffSizes, i));
   }
 
-  for (auto &t : threadlist) {
+  for (auto& t : threadlist) {
     t.join();
   }
   const size_t avail = getFreeMem();
@@ -133,8 +131,9 @@ const char* formatToString(hipArray_Format f) {
       return "Float 16";
     case HIP_AD_FORMAT_FLOAT:
       return "Float 32";
+    default:
+      return "not found";
   }
-  return "not found";
 }
 
 // Tests /////////////////////////////////////////
@@ -157,8 +156,8 @@ template <typename T>
 void copyToArray(hiparray dst, const std::vector<T>& src, const size_t height) {
   const auto sizeInBytes = src.size() * sizeof(T);
   if (height == 0) {
-    // TODO(EXSWCPHIPT-64) remove cast when API is fixed (will require major version change)
-    HIP_CHECK(hipMemcpyHtoA((hipArray*)dst, 0, src.data(), sizeInBytes));
+    // FIXME(EXSWCPHIPT-64) remove cast when API is fixed (will require major version change)
+    HIP_CHECK(hipMemcpyHtoA(reinterpret_cast<hipArray*>(dst), 0, src.data(), sizeInBytes));
   } else {
     const auto pitch = sizeInBytes / height;
     hip_Memcpy2D copyParams{};
@@ -213,7 +212,7 @@ void testArrayAsTexture(hiparray array, const size_t width, const size_t height)
   // Use normalized coordinates and also read the data in the original data type
   texDesc.flags |= NORMALIZED_COORDINATES | READ_AS_INTEGER;
 
-  hipTexObjectCreate(&textObj, &resDesc, &texDesc, nullptr);
+  HIP_CHECK(hipTexObjectCreate(&textObj, &resDesc, &texDesc, nullptr));
 
   // run kernel
   T* device_data{};
@@ -348,7 +347,7 @@ TEST_CASE("Unit_hipArrayCreate_ZeroWidth") {
   HIP_CHECK_ERROR(hipArrayCreate(&array, &desc), hipErrorInvalidValue);
 }
 
-// HipAarryCreate will return an error when nullptr is used as the array argument
+// HipArrayCreate will return an error when nullptr is used as the array argument
 TEST_CASE("Unit_hipArrayCreate_Nullptr") {
 #if HT_AMD
   HipTest::HIP_SKIP_TEST("Probably EXSWCPHIPT-45");

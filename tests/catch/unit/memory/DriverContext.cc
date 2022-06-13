@@ -24,13 +24,17 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 
 DriverContext::DriverContext() {
+#if HT_NVIDIA
   HIP_CHECK(hipInit(0));
   HIP_CHECK(hipDeviceGet(&device, 0));
   HIP_CHECK(hipDevicePrimaryCtxRetain(&ctx, device));
   HIP_CHECK(hipCtxPushCurrent(ctx));
+#endif
 }
 
 DriverContext::~DriverContext() {
+#if HT_NVIDIA
   HIP_CHECK(hipCtxPopCurrent(&ctx));
   HIP_CHECK(hipDevicePrimaryCtxRelease(device));
+#endif
 }
