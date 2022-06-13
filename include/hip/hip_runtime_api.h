@@ -160,9 +160,10 @@ typedef enum hipMemoryType {
     hipMemoryTypeHost,    ///< Memory is physically located on host
     hipMemoryTypeDevice,  ///< Memory is physically located on device. (see deviceId for specific
                           ///< device)
-    hipMemoryTypeArray,  ///< Array memory, physically located on device. (see deviceId for specific
-                         ///< device)
-    hipMemoryTypeUnified  ///< Not used currently
+    hipMemoryTypeArray,   ///< Array memory, physically located on device. (see deviceId for specific
+                          ///< device)
+    hipMemoryTypeUnified, ///< Not used currently
+    hipMemoryTypeManaged  ///< Managed memory, automaticallly managed by the unified memory system
 } hipMemoryType;
 
 /**
