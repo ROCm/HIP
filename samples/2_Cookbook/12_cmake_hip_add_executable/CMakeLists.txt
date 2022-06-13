@@ -31,7 +31,7 @@ if(NOT DEFINED HIP_PATH)
     endif()
 endif()
 set(CMAKE_MODULE_PATH "${HIP_PATH}/cmake" ${CMAKE_MODULE_PATH})
-
+set(CMAKE_HIP_ARCHITECTURES OFF)
 project(12_cmake)
 
 set(HIP_CLANG_NUM_PARALLEL_JOBS 2)
