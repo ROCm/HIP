@@ -59,6 +59,7 @@
 	   "Unit_hipMemPoolApi_BasicReuse",
 	   "Unit_hipMemPoolApi_Opportunistic",
 	   "Unit_hipMemPoolApi_Default",
-	   "Unit_hipDeviceGetUuid"
+	   "Unit_hipDeviceGetUuid",
+	   "Unit_hipGraphMemcpyNodeSetParams_Functional"
 	]
 }
