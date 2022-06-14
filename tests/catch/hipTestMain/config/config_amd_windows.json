@@ -80,6 +80,10 @@
 	   "Unit_hipStreamBeginCapture_hipStreamPerThread",
 	   "Unit_hiprtc_functional",
 	   "Unit_hipStreamValue_Write",
+	   "Unit_hipStreamGetCaptureInfo_BasicFunctional",
+	   "Unit_hipStreamGetCaptureInfo_hipStreamPerThread",
+	   "Unit_hipStreamGetCaptureInfo_UniqueID",
+	   "Unit_hipStreamGetCaptureInfo_ArgValidation",
 	   "# Following test is related to ticket EXSWCPHIPT-41",
 	   "Unit_hipStreamGetPriority_happy"
 	]
