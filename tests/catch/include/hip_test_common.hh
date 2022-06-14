@@ -217,8 +217,8 @@ template <typename... Typenames, typename K, typename Dim, typename... Args>
 void launchKernel(K kernel, Dim numBlocks, Dim numThreads, std::uint32_t memPerBlock,
                   hipStream_t stream, Args&&... packedArgs) {
 #ifndef RTC_TESTING
-    validateArguments(kernel, packedArgs...);
-    kernel<<<numBlocks, numThreads, memPerBlock, stream>>>(std::forward<Args>(packedArgs)...);
+  validateArguments(kernel, packedArgs...);
+  kernel<<<numBlocks, numThreads, memPerBlock, stream>>>(std::forward<Args>(packedArgs)...);
 #else
   launchRTCKernel<Typenames...>(kernel, numBlocks, numThreads, memPerBlock, stream,
                                 std::forward<Args>(packedArgs)...);
