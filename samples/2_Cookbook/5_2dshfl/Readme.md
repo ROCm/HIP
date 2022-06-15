@@ -31,7 +31,7 @@ We will be using the Simple Matrix Transpose application from the previous tutor
 
 In the same sourcecode, we used for MatrixTranspose. We'll add the following:
 ```
-	int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+	int y = blockDim.y * blockIdx.y + threadIdx.y;
 	out[x*width + y] = __shfl(val,y*width + x);
 ```
 
