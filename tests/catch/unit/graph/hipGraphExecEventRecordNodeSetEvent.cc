@@ -57,7 +57,7 @@ Testcase Scenarios :
  * Kernel Functions to copy.
  */
 static __global__ void copy_ker_func(int* a, int* b) {
-  int tx = hipBlockIdx_x*hipBlockDim_x + hipThreadIdx_x;
+  int tx = blockIdx.x*blockDim.x + threadIdx.x;
   if (tx < LEN) b[tx] = a[tx];
 }
 
