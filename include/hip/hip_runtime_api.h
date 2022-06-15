@@ -1192,7 +1192,6 @@ typedef enum hipGraphInstantiateFlags {
   hipGraphInstantiateFlagAutoFreeOnLaunch =
       1,  ///< Automatically free memory allocated in a graph before relaunching.
 } hipGraphInstantiateFlags;
-#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
 
 // Doxygen end group GlobalDefs
 /**  @} */
@@ -6812,6 +6811,8 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
 
 #endif
 #endif
+
+#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
 
 #if USE_PROF_API
 #include <hip/amd_detail/hip_prof_str.h>
