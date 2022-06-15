@@ -1516,9 +1516,9 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  */
 hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
 /**
- * @brief Set Cache configuration for a specific function
+ * @brief Get Cache configuration for a specific Device
  *
- * @param [in] cacheConfig
+ * @param [out] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
