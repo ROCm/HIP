@@ -269,6 +269,7 @@ void hipGraphExecMemcpyNodeSetParamsFromSymbol_GlobalMem(bool useConstVar) {
   }
 
   HIP_CHECK(hipGraphLaunch(graphExec, 0));
+  HIP_CHECK(hipStreamSynchronize(0));
 
   // Validating the result
   for (int i = 0; i < SIZE; i++) {
