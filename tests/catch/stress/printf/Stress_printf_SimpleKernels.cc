@@ -85,7 +85,7 @@ __global__ void kernel_printf_conststr(uint iterCount) {
 // 'g' grid size such that (total bytes per iteration)*n*b*g ≈ N GB,
 // where N is user input.
 __global__ void kernel_printf_two_conditionalstr(uint iterCount) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   uint mod_tid = (tid % 2);
   if (0 == mod_tid) {
     for (uint count = 0; count < iterCount; count++) {
@@ -101,7 +101,7 @@ __global__ void kernel_printf_two_conditionalstr(uint iterCount) {
 // iterations per thread using 'b' block size and 'g' grid size such that
 // (total bytes per iteration)*n*b*g ≈ N GB, where N is user input.
 __global__ void kernel_printf_single_conditionalstr(uint iterCount) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   uint mod_tid = (tid % 2);
   if (0 == mod_tid) {
     for (uint count = 0; count < iterCount; count++) {
@@ -115,7 +115,7 @@ __global__ void kernel_printf_single_conditionalstr(uint iterCount) {
 // iterations per thread using 'b' block size and 'g' grid size such
 // that (total bytes per iteration)*n*b*g ≈ N GB, where N is user input.
 __global__ void kernel_printf_variablestr(uint iterCount, int *ret) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   int retlocal = 0;
   const char *const_str =
   "Hello World from Device.Iam printing (threadID,number)=";
@@ -134,7 +134,7 @@ __global__ void kernel_printf_variablestr(uint iterCount, int *ret) {
 // size and 'g' grid size such that
 // (total bytes per iteration)*n*b*g ≈ N GB, where N is user input.
 __global__ void kernel_dependent_calc(uint32_t iterCount, int *ret) {
-  uint32_t tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint32_t tid = threadIdx.x + blockIdx.x * blockDim.x;
   int retlocal = 0;
   const char *const_str =
   "Hello World from Device.Iam printing number=";
@@ -158,7 +158,7 @@ __global__ void kernel_dependent_calc(uint32_t iterCount, int *ret) {
 // (total bytes per iteration)*n*b*g ≈ N GB, where N is user input.
 __global__ void kernel_dependent_calc_atomic(uint32_t iterCount,
                                              int *ret) {
-  uint32_t tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint32_t tid = threadIdx.x + blockIdx.x * blockDim.x;
   int retlocal = 0;
   const char *const_str =
   "Hello World from Device.Iam printing number=";
@@ -209,7 +209,7 @@ __global__ void kernel_shared_mem() {
   __shared__ uint32_t sharedMem;
   sharedMem = 0;
   __syncthreads();
-  atomicAdd(&sharedMem, hipThreadIdx_x);
+  atomicAdd(&sharedMem, threadIdx.x);
   __syncthreads();
   printf("%s%u\n", CONST_STR3, sharedMem);
 }

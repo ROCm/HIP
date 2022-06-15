@@ -20,8 +20,8 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 // Kernel function
 __global__ void MemPrftchAsyncKernel(int* C_d, const int* A_d, size_t N) {
-  size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-  size_t stride = hipBlockDim_x * hipGridDim_x;
+  size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+  size_t stride = blockDim.x * gridDim.x;
   for (size_t i = offset; i < N; i += stride) {
     C_d[i] = A_d[i] * A_d[i];
   }
