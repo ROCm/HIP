@@ -226,7 +226,7 @@ void launchRTCKernel(std::string (*getKernelName)(), dim3 numBlocks, dim3 numThr
   std::vector<std::string> kernelTypenames{std::string(HipTest::getTypeName<Typenames>())...};
   std::string kernelExpression = reconstructExpression(kernelName, kernelTypenames);
 
-  static std::mutex mutex;
+  static std::mutex mutex{};
   {
     std::lock_guard<std::mutex> lockGuard(mutex);
     if (testContext.getFunction(kernelExpression) == nullptr) {
