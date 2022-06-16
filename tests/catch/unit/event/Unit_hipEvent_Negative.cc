@@ -52,6 +52,7 @@ TEST_CASE("Unit_hipEventCreate_IncompatibleFlags") {
 
 #if HT_AMD
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-106");
+  return;
 #endif
 
   HIP_CHECK_ERROR(hipEventCreateWithFlags(&event, hipEventInterprocess), hipErrorInvalidValue);
