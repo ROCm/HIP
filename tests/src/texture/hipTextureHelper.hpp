@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 #define HIP_SAMPLING_VERIFY_EPSILON     0.00001
 // The internal precision varies by the GPU family and sometimes within the family.
@@ -158,7 +159,7 @@ float getExpectedValue(const int width, const int height, float x, float y, cons
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode>
 float getExpectedValue(const int width, const int height, const int depth,
-                      float x, float y, float z, const float *data) {
+                      float x, float y, float z, const float *data, std::string gfxName) {
   float result = std::numeric_limits<float>::lowest();
   switch (filterMode) {
     case hipFilterModePoint: {
@@ -189,6 +190,11 @@ float getExpectedValue(const int width, const int height, const int depth,
       float a = x - i1;
       float b = y - j1;
       float c = z - k1;
+      if (gfxName.find("gfx90a") != std::string::npos) {
+        // For MI2xx GPUs, don't do trilinear interpolation along depth(z) plane
+        // Instead, directly pick bilinear interpolated value from nearest integer depth(z) plane
+        c = round(c);
+      }
 
       hipTextureGetAddress < addressMode > (i1, width);
       hipTextureGetAddress < addressMode > (i2, width);

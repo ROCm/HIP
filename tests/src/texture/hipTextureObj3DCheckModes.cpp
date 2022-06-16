@@ -5,7 +5,7 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
+#include <string>
 
 #include <hip/hip_runtime.h>
 #include "test_common.h"
@@ -20,7 +20,7 @@ __global__ void tex3DKernel(float *outputData, hipTextureObject_t textureObject,
   int x = blockIdx.x * blockDim.x + threadIdx.x;
   int y = blockIdx.y * blockDim.y + threadIdx.y;
   int z = blockIdx.z * blockDim.z + threadIdx.z;
-  outputData[z * width * depth + y * width + x] = tex3D<float>(textureObject,
+  outputData[z * width * height + y * width + x] = tex3D<float>(textureObject,
                         normalizedCoords ? (x + offsetX) / width : x + offsetX,
                         normalizedCoords ? (y + offsetY) / height : y + offsetY,
                         normalizedCoords ? (z + offsetZ) / depth : z + offsetZ);
@@ -28,7 +28,8 @@ __global__ void tex3DKernel(float *outputData, hipTextureObject_t textureObject,
 }
 
 template<hipTextureAddressMode addressMode, hipTextureFilterMode filterMode, bool normalizedCoords>
-bool runTest(const int width, const int height, const int depth, const float offsetX, const float offsetY, const float offsetZ) {
+bool runTest(const int width, const int height, const int depth,
+              const float offsetX, const float offsetY, const float offsetZ, std::string gfxName) {
   printf("%s(addressMode=%d, filterMode=%d, normalizedCoords=%d, width=%d, height=%d, depth=%d, offsetX=%f, offsetY=%f, offsetZ=%f)\n",
       __FUNCTION__, addressMode, filterMode, normalizedCoords, width, height,
       depth, offsetX, offsetY, offsetZ);
@@ -40,7 +41,7 @@ bool runTest(const int width, const int height, const int depth, const float off
   for (int i = 0; i < depth; i++) {
     for (int j = 0; j < height; j++) {
       for (int k = 0; k < width; k++) {
-        int index = i * width * depth + j * width + k;
+        int index = i * width * height + j * width + k;
         hData[index] = index;
       }
     }
@@ -98,9 +99,9 @@ bool runTest(const int width, const int height, const int depth, const float off
   for (int i = 0; i < depth; i++) {
     for (int j = 0; j < height; j++) {
       for (int k = 0; k < width; k++) {
-        int index = i * width * depth + j * width + k;
+        int index = i * width * height + j * width + k;
         float expectedValue = getExpectedValue<addressMode, filterMode>(
-            width, height, depth, offsetX + k, offsetY + j, offsetZ + i, hData);
+            width, height, depth, offsetX + k, offsetY + j, offsetZ + i, hData, gfxName);
 
         if (!hipTextureSamplingVerify<float, filterMode>(hOutputData[index], expectedValue)) {
           printf("mismatched [ %d %d %d]:%f ----%f\n", k, j, i, hOutputData[index], expectedValue);
@@ -123,31 +124,52 @@ line1:
 int main(int argc, char **argv) {
   checkImageSupport();
 
+  int device = 0;
+  hipDeviceProp_t props;
+  HIPCHECK(hipGetDeviceProperties(&props, device));
+  std::string gfxName(props.gcnArchName);
+
   bool testResult = true;
 
-  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, 256, -3.9, 6.1, 9.5);
-  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, false>(256, 256, 256, 4.4, -7.0, 5.3);
+  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, false>(
+                256, 256, 256, -3.9, 6.1, 9.5, gfxName);
+  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, false>(
+                256, 256, 256, 4.4, -7.0, 5.3, gfxName);
 
-  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModePoint, false>(256, 256, 256, -8.5, 2.9, 5.8);
-  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModePoint, false>(256, 256, 256, 12.5, 6.7, 11.4);
+  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModePoint, false>(
+                256, 256, 256, -8.5, 2.9, 5.8, gfxName);
+  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModePoint, false>(
+                256, 256, 256, 12.5, 6.7, 11.4, gfxName);
 
-  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModeLinear, false>(256, 256, 256, -0.4, -0.4, -0.4);
-  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModeLinear, false>(256, 256, 256, 4, 14.6, -0.3);
+  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModeLinear, false>(
+                256, 256, 256, -0.4, -0.4, -0.4, gfxName);
+  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModeLinear, false>(
+                256, 256, 256, 4, 14.6, -0.3, gfxName);
 
-  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModeLinear, false>(256, 256, 256, 6.9, 7.4, 0.4);
-  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModeLinear, false>(256, 256, 256, 12.5, 23.7, 0.34);
+  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModeLinear, false>(
+                256, 256, 256, 6.9, 7.4, 0.4, gfxName);
+  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModeLinear, false>(
+                256, 256, 256, 12.5, 23.7, 0.34, gfxName);
 
-  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, true>(256, 256, 256, -3, 8.9, -4);
-  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, true>(256, 256, 256, 4, -0.1, 8.2);
+  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, true>(
+                256, 256, 256, -3, 8.9, -4, gfxName);
+  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModePoint, true>(
+                256, 256, 256, 4, -0.1, 8.2, gfxName);
 
-  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModePoint, true>(256, 256, 256, -8.5, 15.9, 0.1);
-  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModePoint, true>(256, 256, 256, 12.5, -17.9, -0.35);
+  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModePoint, true>(
+                256, 256, 256, -8.5, 15.9, 0.1, gfxName);
+  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModePoint, true>(
+                256, 256, 256, 12.5, -17.9, -0.35, gfxName);
 
-  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModeLinear, true>(256, 256, 256, -3, 5.8, 0.89);
-  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModeLinear, true>(256, 256, 256, 4, 9.1, 2.08);
+  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModeLinear, true>(
+                256, 256, 256, -3, 5.8, 0.89, gfxName);
+  testResult = testResult && runTest<hipAddressModeClamp, hipFilterModeLinear, true>(
+                256, 256, 256, 4, 9.1, 2.08, gfxName);
 
-  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModeLinear, true>(256, 256, 256, -8.5, 6.6, 3.67);
-  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModeLinear, true>(256, 256, 256, 12.5, 0.01, -9.9);
+  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModeLinear, true>(
+                256, 256, 256, -8.5, 6.6, 3.67, gfxName);
+  testResult = testResult && runTest<hipAddressModeBorder, hipFilterModeLinear, true>(
+                256, 256, 256, 12.5, 0.01, -9.9, gfxName);
 
   if (testResult) {
     passed();
