@@ -41,15 +41,15 @@ set(TEST_SRC
     hipMemPtrGetInfo.cc
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
+    hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
-    hipMemsetInvalidPtr.cc
+    hipMemsetNegative.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemset3D.cc
     hipMemset2D.cc
     hipHostMallocTests.cc
     hipMemset3DFunctional.cc
-    hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
@@ -57,12 +57,33 @@ set(TEST_SRC
     hipMemCoherencyTst.cc
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
-    hipHmmOvrSubscriptionTst.cc
     hipMemcpyFromSymbol.cc
-    hipMemcpyFromSymbolAsync.cc
-    hipMemcpyToSymbol.cc
-    hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
+    hipMemPoolApi.cc
+    hipMemcpyPeer.cc
+    hipMemcpyPeerAsync.cc
+    hipMemcpyWithStream.cc
+    hipMemcpyWithStreamMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
+    hipMallocManaged.cc
+    hipMallocConcurrency.cc
+    hipMemcpyDtoD.cc
+    hipMemcpyDtoDAsync.cc
+    hipHostMalloc.cc
+    hipMemcpy.cc
+    hipMemcpyAsync.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
+    hipMallocMngdMultiThread.cc
+    hipMemPrefetchAsync.cc
 )
 else()
 set(TEST_SRC
@@ -84,47 +105,55 @@ set(TEST_SRC
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
     hipHostGetFlags.cc
+    hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
-    hipMemsetInvalidPtr.cc
+    hipMemsetNegative.cc
     hipMemset.cc
     hipMemsetAsyncMultiThread.cc
     hipMemset3D.cc
     hipMemset2D.cc
     hipHostMallocTests.cc
     hipMemset3DFunctional.cc
-    hipMemset3DNegative.cc
     hipMemset3DRegressMultiThread.cc
     hipMallocManagedFlagsTst.cc
     hipMemPrefetchAsyncExtTsts.cc
     hipMemAdviseMmap.cc
     hipMallocManaged.cc
     hipMemRangeGetAttribute.cc
-    hipHmmOvrSubscriptionTst.cc
     hipMemcpyFromSymbol.cc
-    hipMemcpyFromSymbolAsync.cc
-    hipMemcpyToSymbol.cc
-    hipMemcpyToSymbolAsync.cc
     hipPtrGetAttribute.cc
+    hipMemcpyPeer.cc
+    hipMemcpyPeerAsync.cc
+    hipMemcpyWithStream.cc
+    hipMemcpyWithStreamMultiThread.cc
+    hipMemsetAsyncAndKernel.cc
+    hipMemset2DAsyncMultiThreadAndKernel.cc
+    hipMallocManaged.cc
+    hipMallocConcurrency.cc
+    hipMemcpyDtoD.cc
+    hipMemcpyDtoDAsync.cc
+    hipHostMalloc.cc
+    hipMemcpy.cc
+    hipMemcpyAsync.cc
+    hipMallocPitch.cc
+    hipMallocArray.cc
+    hipMalloc3D.cc
+    hipMalloc3DArray.cc
+    hipArrayCreate.cc
+    hipDrvMemcpy3D.cc
+    hipDrvMemcpy3DAsync.cc
+    hipPointerGetAttribute.cc
+    hipDrvPtrGetAttributes.cc
+    hipMemPrefetchAsync.cc
 )
 endif()
 
-#skipped in windows -duplicate HipTest::vectorADD sym (compiler issue)
+# skipped due to os related code in tests
+# need to work on them when all the tests are enabled
 if(UNIX)
     set(TEST_SRC ${TEST_SRC}
-                 hipMemcpyPeer.cc
-                 hipMemcpyPeerAsync.cc
-                 hipMemcpyWithStream.cc
-                 hipMemcpyWithStreamMultiThread.cc
-                 hipMemsetAsyncAndKernel.cc
-                 hipMemset2DAsyncMultiThreadAndKernel.cc
-                 hipMallocManaged.cc
-                 hipMallocConcurrency.cc
-                 hipMemcpyDtoD.cc
-                 hipMemcpyDtoDAsync.cc
-                 hipMemoryAllocateCoherent.cc
-                 hipHostMalloc.cc
-                 hipMemcpy.cc
-                 hipMemcpyAsync.cc)
+                 hipHmmOvrSubscriptionTst.cc
+                 hipMemoryAllocateCoherent.cc)
 endif()
 
 hip_add_exe_to_target(NAME MemoryTest

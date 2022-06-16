@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2015 - 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -121,6 +121,8 @@ void test13452() {
 
     HIPASSERT(Ah[10] == Bh[10]);
     HIPASSERT(Eh[10] == Dh[10] + T(1));
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -160,6 +162,8 @@ void test14523() {
 
     HIPASSERT(Ah[10] == Bh[10]);
     HIPASSERT(Ch[10] + T(1) == Eh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -197,6 +201,8 @@ void test15234() {
 
     HIPASSERT(Ah[10] == Bh[10]);
     HIPASSERT(Eh[10] == Dh[10] + T(1));
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -223,6 +229,8 @@ void test23451() {
     H2HAsync(Ch, Bh, size, stream);
     HIPCHECK(hipDeviceSynchronize());
     HIPASSERT(Ah[10] + T(1) == Ch[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -261,6 +269,8 @@ void test24513() {
 
     HIPASSERT(Eh[0] == Dh[0] + T(1));
     HIPASSERT(Ah[0] == Ch[0]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -300,6 +310,8 @@ void test25134() {
 
     HIPASSERT(Ah[10] == Ch[10]);
     HIPASSERT(Dh[10] + T(1) == Eh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -332,6 +344,8 @@ void test21345() {
 
     HIPASSERT(Bh[10] == Ch[10]);
     HIPASSERT(Ah[10] + T(1) == Dh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -368,6 +382,8 @@ void test34512() {
 
     HIPCHECK(hipDeviceSynchronize());
     HIPASSERT(Ah[10] + T(1) == Dh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -404,6 +420,8 @@ void test35124() {
     HIPCHECK(hipDeviceSynchronize());
 
     HIPASSERT(Dh[10] + T(1) == Ch[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -442,6 +460,8 @@ void test31245() {
 
     HIPASSERT(Dh[10] + T(1) == Eh[10]);
     HIPASSERT(Bh[10] == Ch[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 
@@ -479,6 +499,8 @@ void test32451() {
 
     HIPASSERT(Ah[10] == Ch[10]);
     HIPASSERT(Eh[10] + T(1) == Dh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -512,6 +534,8 @@ void test45123() {
     HIPCHECK(hipDeviceSynchronize());
 
     HIPASSERT(Dh[10] + T(1) == Ch[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 
@@ -545,6 +569,8 @@ void test41235() {
     HIPCHECK(hipDeviceSynchronize());
 
     HIPASSERT(Ch[10] + T(1) == Bh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -583,6 +609,8 @@ void test42351() {
     HIPCHECK(hipDeviceSynchronize());
     HIPASSERT(Dh[10] == Eh[10]);
     HIPASSERT(Ah[10] + T(1) == Ch[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -617,6 +645,8 @@ void test43512() {
     D2H(Ch, Cd, size);
     HIPCHECK(hipDeviceSynchronize());
     HIPASSERT(Dh[10] + T(1) == Ch[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -653,6 +683,8 @@ void test51234() {
     HIPCHECK(hipDeviceSynchronize());
 
     HIPASSERT(Ch[10] == Dh[10] + T(1));
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -691,6 +723,8 @@ void test52341() {
 
     HIPASSERT(Eh[10] + T(1) == Dh[10]);
     HIPASSERT(Ch[10] == Bh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -734,6 +768,8 @@ void test53412() {
     HIPASSERT(Ah[10] == Dh[10]);
     HIPASSERT(Eh[10] + T(1) == Fh[10]);
     HIPASSERT(Bh[10] == Gh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 template <typename T>
@@ -779,6 +815,8 @@ void test54123() {
     HIPASSERT(Dh[10] == Ah[10]);
     HIPASSERT(Eh[10] == Fh[10]);
     HIPASSERT(Bh[10] + T(1) == Gh[10]);
+
+    HIPCHECK(hipStreamDestroy(stream));
 }
 
 int main(int argc, char* argv[]) {

@@ -29,7 +29,29 @@
 	   "Unit_hipTextureMipmapObj2D_Check",
 	   "Unit_hipStreamPerThread_DeviceReset_1",
 	   "Unit_hipStreamPerThread_DeviceReset_2",
-	   "Unit_hipManagedKeyword_MultiGpu"	   
+	   "Unit_hipManagedKeyword_MultiGpu",
+	   "Unit_hipGraphAddHostNode_ClonedGraphwithHostNode",
+	   "Unit_hipGraphAddChildGraphNode_OrgGraphAsChildGraph",
+	   "Unit_hipGraphAddChildGraphNode_SingleChildNode",
+	   "Unit_hipPtrGetAttribute_Simple",
+	   "Unit_hipStreamCreateWithPriority_ValidateWithEvents",
+	   "Unit_hipEvent",
+	   "Unit_hipHostMalloc_NonCoherent",
+	   "Unit_hipHostMalloc_Coherent",
+	   "Unit_hipHostMalloc_Default",
+	   "Unit_hipStreamCreate_MultistreamBasicFunctionalities",
+	   "Unit_hipEventIpc",
+	   "Unit_hipMalloc3D_Negative",
+	   "Unit_hipPointerGetAttribute_MappedMem",
+	   "Unit_hipStreamBeginCapture_BasicFunctional",
+	   "Unit_hipStreamBeginCapture_hipStreamPerThread",
+	   "Unit_hiprtc_functional",
+	   "Unit_hipStreamValue_Write",
+	   "Unit_hipStreamGetCaptureInfo_BasicFunctional",
+	   "Unit_hipStreamGetCaptureInfo_hipStreamPerThread",
+	   "Unit_hipStreamGetCaptureInfo_UniqueID",
+	   "Unit_hipStreamGetCaptureInfo_ArgValidation",
+	   "# Following test is related to ticket EXSWCPHIPT-41",
+	   "Unit_hipStreamGetPriority_happy"
 	]
-
 }

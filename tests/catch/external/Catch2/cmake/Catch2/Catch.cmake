@@ -203,11 +203,29 @@ function(hip_add_exe_to_target)
     "${list_args}"
   )
   # Create shared lib of all tests
+  if(NOT RTC_TESTING)
+  add_executable(${_NAME} EXCLUDE_FROM_ALL ${_TEST_SRC} $<TARGET_OBJECTS:Main_Object> $<TARGET_OBJECTS:KERNELS>)
+  else ()
   add_executable(${_NAME} EXCLUDE_FROM_ALL ${_TEST_SRC} $<TARGET_OBJECTS:Main_Object>)
+    if(HIP_PLATFORM STREQUAL "amd")
+      target_link_libraries(${_NAME} hiprtc)
+    else()
+      target_link_libraries(${_NAME} nvrtc)
+    endif()
+  endif()
   catch_discover_tests(${_NAME} PROPERTIES  SKIP_REGULAR_EXPRESSION "HIP_SKIP_THIS_TEST")
   if(UNIX)
     set(_LINKER_LIBS ${_LINKER_LIBS} stdc++fs)
+    set(_LINKER_LIBS ${_LINKER_LIBS} -ldl)
+  else()
+    # res files are built resource files using rc files.
+    # use llvm-rc exe to build the res files
+    # Thes are used to populate the properties of the built executables
+    if(EXISTS "${PROP_RC}/catchProp.res")
+      set(_LINKER_LIBS ${_LINKER_LIBS} "${PROP_RC}/catchProp.res")
+    endif()
   endif()
+
   if(DEFINED _LINKER_LIBS)
     target_link_libraries(${_NAME} ${_LINKER_LIBS})
   endif()

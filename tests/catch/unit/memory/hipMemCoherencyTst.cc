@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+   Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
    Permission is hereby granted, free of charge, to any person obtaining a copy
    of this software and associated documentation files (the "Software"), to deal
    in the Software without restriction, including without limitation the rights
@@ -34,17 +34,9 @@
 #include <hip_test_common.hh>
 #include <chrono>
 
-__global__  void CoherentTst(int *ptr, int PeakClk) {
-  // Incrementing the value by 1
-  int64_t GpuFrq = (PeakClk * 1000);
-  int64_t StrtTck = clock64();
-  atomicAdd(ptr, 1);
-  // The following while loop checks the value in ptr for around 3-4 seconds
-  while ((clock64() - StrtTck) <= (3 * GpuFrq)) {
-    if (*ptr == 3) {
-      atomicAdd(ptr, 1);
-      return;
-    }
+__global__ void CoherentTst(int* ptr) {  // ptr was set to 1
+  atomicAdd(ptr, 1);                     // now ptr is 2
+  while (atomicCAS(ptr, 3, 4) != 3) {    // wait till ptr is 3, then change it to 4
   }
 }
 
@@ -59,62 +51,37 @@ __global__  void SquareKrnl(int *ptr) {
 static bool YES_COHERENT = false;
 
 // The function tests the coherency of allocated memory
-static void TstCoherency(int *Ptr, bool HmmMem) {
-  int *Dptr = nullptr, peak_clk;
-  hipStream_t strm;
-  HIP_CHECK(hipStreamCreate(&strm));
+// If this test hangs, means there is issue in coherency
+static void TstCoherency(int* ptr, bool hmmMem) {
+  int* dptr = nullptr;
+  hipStream_t stream{};
+  HIP_CHECK(hipStreamCreate(&stream));
+
   // storing value 1 in the memory created above
-  *Ptr = 1;
-  // Getting gpu frequency
-  HIP_CHECK(hipDeviceGetAttribute(&peak_clk, hipDeviceAttributeClockRate, 0));
-  if (!HmmMem) {
-    HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void **>(&Dptr), Ptr,
-                                      0));
-    CoherentTst<<<1, 1, 0, strm>>>(Dptr, peak_clk);
+  *ptr = 1;
+
+  if (!hmmMem) {
+    HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void**>(&dptr), ptr, 0));
+    CoherentTst<<<1, 1, 0, stream>>>(dptr);
   } else {
-    CoherentTst<<<1, 1, 0, strm>>>(Ptr, peak_clk);
+    CoherentTst<<<1, 1, 0, stream>>>(ptr);
   }
-  // looping until the value is 2 for 3 seconds
-  std::chrono::steady_clock::time_point start =
-               std::chrono::steady_clock::now();
-  while (std::chrono::duration_cast<std::chrono::seconds>(
-         std::chrono::steady_clock::now() - start).count() < 3) {
-    if (*Ptr == 2) {
-      *Ptr += 1;
-      break;
-    }
-  }
-  HIP_CHECK(hipStreamSynchronize(strm));
-  HIP_CHECK(hipStreamDestroy(strm));
-  if (*Ptr == 4) {
+
+  std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+  while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start)
+                 .count() < 3 &&
+         *ptr == 2) {
+  }          // wait till ptr is 2 from kernel or 3 seconds
+
+  *ptr += 1; // increment it to 3
+
+  HIP_CHECK(hipStreamSynchronize(stream));
+  HIP_CHECK(hipStreamDestroy(stream));
+
+  if (*ptr == 4) {
     YES_COHERENT = true;
   }
 }
-
-static int HmmAttrPrint() {
-  int managed = 0;
-  INFO("The following are the attribute values related to HMM for"
-         " device 0:\n");
-  HIP_CHECK(hipDeviceGetAttribute(&managed,
-              hipDeviceAttributeDirectManagedMemAccessFromHost, 0));
-  INFO("hipDeviceAttributeDirectManagedMemAccessFromHost: " << managed);
-  HIP_CHECK(hipDeviceGetAttribute(&managed,
-                                 hipDeviceAttributeConcurrentManagedAccess, 0));
-  INFO("hipDeviceAttributeConcurrentManagedAccess: " << managed);
-  HIP_CHECK(hipDeviceGetAttribute(&managed,
-                                 hipDeviceAttributePageableMemoryAccess, 0));
-  INFO("hipDeviceAttributePageableMemoryAccess: " << managed);
-  HIP_CHECK(hipDeviceGetAttribute(&managed,
-              hipDeviceAttributePageableMemoryAccessUsesHostPageTables, 0));
-  INFO("hipDeviceAttributePageableMemoryAccessUsesHostPageTables:"
-         << managed);
-
-  HIP_CHECK(hipDeviceGetAttribute(&managed, hipDeviceAttributeManagedMemory,
-                                  0));
-  INFO("hipDeviceAttributeManagedMemory: " << managed);
-  return managed;
-}
-
 
 /* Test case description: The following test validates if fine grain
    behavior is observed or not with memory allocated using hipHostMalloc()*/
@@ -122,23 +89,33 @@ static int HmmAttrPrint() {
 // passing
 #if HT_AMD
 TEST_CASE("Unit_hipHostMalloc_CoherentTst") {
-  int *Ptr = nullptr,  SIZE = sizeof(int);
+  int *Ptr = nullptr,  SIZE = sizeof(int), Pageable = 0;
   bool HmmMem = false;
   YES_COHERENT = false;
-  // Allocating hipHostMalloc() memory with hipHostMallocCoherent flag
-  SECTION("hipHostMalloc with hipHostMallocCoherent flag") {
-    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocCoherent));
-  }
-  SECTION("hipHostMalloc with Default flag") {
-    HIP_CHECK(hipHostMalloc(&Ptr, SIZE));
-  }
-  SECTION("hipHostMalloc with hipHostMallocMapped flag") {
-    HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocMapped));
-  }
 
-  TstCoherency(Ptr, HmmMem);
-  HIP_CHECK(hipHostFree(Ptr));
-  REQUIRE(YES_COHERENT);
+  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
+                                 hipDeviceAttributePageableMemoryAccess, 0));
+  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
+
+  if (Pageable == 1) {
+    // Allocating hipHostMalloc() memory with hipHostMallocCoherent flag
+    SECTION("hipHostMalloc with hipHostMallocCoherent flag") {
+      HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocCoherent));
+    }
+    SECTION("hipHostMalloc with Default flag") {
+      HIP_CHECK(hipHostMalloc(&Ptr, SIZE));
+    }
+    SECTION("hipHostMalloc with hipHostMallocMapped flag") {
+      HIP_CHECK(hipHostMalloc(&Ptr, SIZE, hipHostMallocMapped));
+    }
+
+    TstCoherency(Ptr, HmmMem);
+    HIP_CHECK(hipHostFree(Ptr));
+    REQUIRE(YES_COHERENT);
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributePageableMemoryAccess "
+             "attribute. Hence skipping the test with Pass result.\n");
+  }
 }
 #endif
 
@@ -149,12 +126,19 @@ TEST_CASE("Unit_hipHostMalloc_CoherentTst") {
 // passing
 #if HT_AMD
 TEST_CASE("Unit_hipMallocManaged_CoherentTst") {
-  int *Ptr = nullptr, SIZE = sizeof(int);
+  int *Ptr = nullptr, SIZE = sizeof(int), Pageable = 0, managed = 0;
   bool HmmMem = true;
   YES_COHERENT = false;
 
-  int managed =  HmmAttrPrint();
-  if (managed == 1) {
+  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
+                                 hipDeviceAttributePageableMemoryAccess, 0));
+  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
+
+  HIP_CHECK(hipDeviceGetAttribute(&managed, hipDeviceAttributeManagedMemory,
+                                  0));
+  INFO("hipDeviceAttributeManagedMemory: " << managed);
+
+  if (managed == 1 && Pageable == 1) {
     // Allocating hipMallocManaged() memory
     SECTION("hipMallocManaged with hipMemAttachGlobal flag") {
       HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachGlobal));
@@ -166,8 +150,8 @@ TEST_CASE("Unit_hipMallocManaged_CoherentTst") {
     HIP_CHECK(hipFree(Ptr));
     REQUIRE(YES_COHERENT);
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
-           "attribute. Hence skipping the testing with Pass result.\n");
+    SUCCEED("GPU 0 doesn't support ManagedMemory or PageableMemoryAccess"
+           "device attribute. Hence skipping the test with Pass result.\n");
   }
 }
 #endif
@@ -175,30 +159,40 @@ TEST_CASE("Unit_hipMallocManaged_CoherentTst") {
 /* Test case description: The following test validates if memory access is fine
    with memory allocated using hipMallocManaged() and CoarseGrain Advise*/
 TEST_CASE("Unit_hipMallocManaged_CoherentTstWthAdvise") {
-  int *Ptr = nullptr, SIZE = sizeof(int);
+  int *Ptr = nullptr, SIZE = sizeof(int), managed = 0;
   YES_COHERENT = false;
-  // Allocating hipMallocManaged() memory
-  SECTION("hipMallocManaged with hipMemAttachGlobal flag") {
-    HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachGlobal));
-  }
-  SECTION("hipMallocManaged with hipMemAttachHost flag") {
-    HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachHost));
-  }
+
+  HIP_CHECK(hipDeviceGetAttribute(&managed, hipDeviceAttributeManagedMemory,
+                                  0));
+  INFO("hipDeviceAttributeManagedMemory: " << managed);
+
+  if (managed == 1) {
+    // Allocating hipMallocManaged() memory
+    SECTION("hipMallocManaged with hipMemAttachGlobal flag") {
+      HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachGlobal));
+    }
+    SECTION("hipMallocManaged with hipMemAttachHost flag") {
+      HIP_CHECK(hipMallocManaged(&Ptr, SIZE, hipMemAttachHost));
+    }
 #if HT_AMD
-  HIP_CHECK(hipMemAdvise(Ptr, SIZE, hipMemAdviseSetCoarseGrain, 0));
+    HIP_CHECK(hipMemAdvise(Ptr, SIZE, hipMemAdviseSetCoarseGrain, 0));
 #endif
-  // Initializing Ptr memory with 9
-  *Ptr = 9;
-  hipStream_t strm;
-  HIP_CHECK(hipStreamCreate(&strm));
-  SquareKrnl<<<1, 1, 0, strm>>>(Ptr);
-  HIP_CHECK(hipStreamSynchronize(strm));
-  if (*Ptr == 81) {
-    YES_COHERENT = true;
+    // Initializing Ptr memory with 9
+    *Ptr = 9;
+    hipStream_t strm;
+    HIP_CHECK(hipStreamCreate(&strm));
+    SquareKrnl<<<1, 1, 0, strm>>>(Ptr);
+    HIP_CHECK(hipStreamSynchronize(strm));
+    if (*Ptr == 81) {
+      YES_COHERENT = true;
+    }
+    HIP_CHECK(hipFree(Ptr));
+    HIP_CHECK(hipStreamDestroy(strm));
+    REQUIRE(YES_COHERENT);
+  } else {
+    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
+             "attribute. Hence skipping the test with Pass result.\n");
   }
-  HIP_CHECK(hipFree(Ptr));
-  HIP_CHECK(hipStreamDestroy(strm));
-  REQUIRE(YES_COHERENT);
 }
 
 
@@ -226,12 +220,18 @@ TEST_CASE("Unit_hipMalloc_CoherentTst") {
    hipExtMallocWithFlags()*/
 #if HT_AMD
 TEST_CASE("Unit_hipExtMallocWithFlags_CoherentTst") {
-  int *Ptr = nullptr, SIZE = sizeof(int), InitVal = 9;
+  int *Ptr = nullptr, SIZE = sizeof(int), InitVal = 9, Pageable = 0, managed = 0;
   bool FineGrain = true;
   YES_COHERENT = false;
 
-  int managed =  HmmAttrPrint();
-  if (managed == 1) {
+  HIP_CHECK(hipDeviceGetAttribute(&Pageable,
+                                 hipDeviceAttributePageableMemoryAccess, 0));
+  INFO("hipDeviceAttributePageableMemoryAccess: " << Pageable);
+
+  HIP_CHECK(hipDeviceGetAttribute(&managed, hipDeviceAttributeManagedMemory,
+                                  0));
+  INFO("hipDeviceAttributeManagedMemory: " << managed);
+  if (managed == 1 && Pageable == 1) {
     // Allocating hipExtMallocWithFlags() memory with flags
     SECTION("hipExtMallocWithFlags with hipDeviceMallocFinegrained flag") {
       HIP_CHECK(hipExtMallocWithFlags(reinterpret_cast<void**>(&Ptr), SIZE*2,
@@ -264,8 +264,8 @@ TEST_CASE("Unit_hipExtMallocWithFlags_CoherentTst") {
     HIP_CHECK(hipFree(Ptr));
     REQUIRE(YES_COHERENT);
   } else {
-    SUCCEED("GPU 0 doesn't support hipDeviceAttributeManagedMemory "
-           "attribute. Hence skipping the testing with Pass result.\n");
+    SUCCEED("GPU 0 doesn't support ManagedMemory or PageableMemoryAccess"
+           "device attribute. Hence skipping the test with Pass result.\n");
   }
 }
 #endif
