@@ -230,19 +230,19 @@ __device__ __host__ struct printInfo startPrint(uint32_t tid,
 // This kernel is launched only in X dimension
 __global__ void kernel_complex_opX(uint32_t *a, uint32_t *b,
                                   uint32_t iterCount) {
-  uint32_t tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint32_t tid = threadIdx.x + blockIdx.x * blockDim.x;
   startPrint(tid, iterCount, a, b);
 }
 // This kernel is launched only in Y dimension
 __global__ void kernel_complex_opY(uint32_t *a, uint32_t *b,
                                   uint32_t iterCount) {
-  uint32_t tid = hipThreadIdx_y + hipBlockIdx_y * hipBlockDim_y;
+  uint32_t tid = threadIdx.y + blockIdx.y * blockDim.y;
   startPrint(tid, iterCount, a, b);
 }
 // This kernel is launched only in Z dimension
 __global__ void kernel_complex_opZ(uint32_t *a, uint32_t *b,
                                   uint32_t iterCount) {
-  uint32_t tid = hipThreadIdx_z + hipBlockIdx_z * hipBlockDim_z;
+  uint32_t tid = threadIdx.z + blockIdx.z * blockDim.z;
   startPrint(tid, iterCount, a, b);
 }
 #ifdef __linux__

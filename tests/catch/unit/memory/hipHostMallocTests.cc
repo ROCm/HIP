@@ -46,12 +46,12 @@ TEST_CASE("Unit_hipHostMalloc_ArgValidation") {
   }
 
   SECTION("Size as max(size_t)") {
-    HIP_CHECK_ERROR(hipHostMalloc(&ptr, std::numeric_limits<std::size_t>::max()),
+    HIP_CHECK_ERROR(hipHostMalloc(&ptr, (std::numeric_limits<std::size_t>::max)()),
                     hipErrorMemoryAllocation);
   }
 
   SECTION("Flags as max(uint)") {
-    HIP_CHECK_ERROR(hipHostMalloc(&ptr, allocSize, std::numeric_limits<unsigned int>::max()),
+    HIP_CHECK_ERROR(hipHostMalloc(&ptr, allocSize, (std::numeric_limits<unsigned int>::max)()),
                     hipErrorInvalidValue);
   }
 
