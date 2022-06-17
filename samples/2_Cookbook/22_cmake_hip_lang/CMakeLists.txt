@@ -1,5 +1,4 @@
-#!/usr/bin/env perl
-# Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+# Copyright (C) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -19,35 +18,10 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# Need perl > 5.10 to use logic-defined or
-use 5.006; use v5.10.1;
+cmake_minimum_required(VERSION 3.21.3)
 
-use warnings;
-
-use File::Basename;
-use File::Spec::Functions 'catfile';
-
-# TODO: By default select perl script until change incorporated in HIP build script.
-my $HIPCC_USE_PERL_SCRIPT = 1;
-my $isWindows =  ($^O eq 'MSWin32' or $^O eq 'msys');
-# escapes args with quotes SWDEV-341955
-foreach $arg (@ARGV) {
-  if ($isWindows) {
-    $arg =~ s/[^-a-zA-Z0-9_=+,.:\/\\]/\\$&/g;
-  }
-}
-
-my $SCRIPT_DIR=dirname(__FILE__);
-if ($HIPCC_USE_PERL_SCRIPT) {
-    #Invoke hipcc.pl
-    my $HIPCC_PERL=catfile($SCRIPT_DIR, '/hipcc.pl');
-    exec($^X, $HIPCC_PERL, @ARGV);
-} else {
-    #Invoke hipcc.bin
-    my $HIPCC_BIN=catfile($SCRIPT_DIR, '/hipcc.bin');
-    if ( -e $HIPCC_BIN ) {
-        exec($HIPCC_BIN, @ARGV);
-    } else {
-        print "hipcc.bin not present; Install HIPCC binaries before proceeding";
-    }
-}
+project(cmake_hip_lang_support VERSION 1.0
+        DESCRIPTION "HIP Language Support with upstream CMake"
+        LANGUAGES HIP)
+# Create the executable
+add_executable(square square.hip)
