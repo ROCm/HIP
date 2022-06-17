@@ -74,7 +74,12 @@ void HostKernelDouble(float* Hmm, float* hPtr, size_t n) {
    This testcase verifies the concurrent access of hipMallocManaged Memory on host and device.
  */
 TEST_CASE("Unit_hipMallocManaged_HostDeviceConcurrent") {
-  HmmAttrPrint();
+  auto managed = HmmAttrPrint();
+  if (managed != 1) {
+    HipTest::HIP_SKIP_TEST("GPU doesn't support managed memory so skipping test.");
+    return;
+  }
+
   float *Hmm = nullptr, *hPtr = nullptr, *dPtr = nullptr, *resPtr = nullptr;
   hipStream_t stream{nullptr};
 
@@ -110,7 +115,12 @@ TEST_CASE("Unit_hipMallocManaged_HostDeviceConcurrent") {
 // kernel is launched on acessed chunk of hmm memory
 // and checks if there are any inconsistencies or access issues
 TEST_CASE("Unit_hipMallocManaged_MultiChunkSingleDevice") {
-  HmmAttrPrint();
+  auto managed = HmmAttrPrint();
+  if (managed != 1) {
+    HipTest::HIP_SKIP_TEST("GPU doesn't support managed memory so skipping test.");
+    return;
+  }
+
   std::atomic<int> DataMismatch{0};
   constexpr int Chunks = 4;
   int Counter = 0;
@@ -157,7 +167,12 @@ TEST_CASE("Unit_hipMallocManaged_MultiChunkSingleDevice") {
 // kernel is launched on acessed chunk of hmm memory
 // and checks if there are any inconsistencies or access issues
 TEST_CASE("Unit_hipMallocManaged_MultiChunkMultiDevice") {
-  HmmAttrPrint();
+  auto managed = HmmAttrPrint();
+  if (managed != 1) {
+    HipTest::HIP_SKIP_TEST("GPU doesn't support managed memory so skipping test.");
+    return;
+  }
+
   std::atomic<int> DataMismatch{0};
   int Counter = 0;
   int NumDevices = 0;
@@ -209,7 +224,12 @@ TEST_CASE("Unit_hipMallocManaged_MultiChunkMultiDevice") {
 // The following tests oversubscription hipMallocManaged() api
 // Currently disabled.
 TEST_CASE("Unit_hipMallocManaged_OverSubscription") {
-  HmmAttrPrint();
+  auto managed = HmmAttrPrint();
+  if (managed != 1) {
+    HipTest::HIP_SKIP_TEST("GPU doesn't support managed memory so skipping test.");
+    return;
+  }
+
   void* A = nullptr;
   size_t total = 0, free = 0;
   HIP_CHECK(hipMemGetInfo(&free, &total));
@@ -224,7 +244,6 @@ TEST_CASE("Unit_hipMallocManaged_OverSubscription") {
 // The following test does negative testing of hipMallocManaged() api
 // by passing invalid values and check if the behavior is as expected
 TEST_CASE("Unit_hipMallocManaged_Negative") {
-  HmmAttrPrint();
   void* A;
   size_t total = 0, free = 0;
   HIP_CHECK(hipMemGetInfo(&free, &total));
@@ -290,7 +309,12 @@ TEST_CASE("Unit_hipMallocManaged_Negative") {
 // then launch kernel using these pointers directly and
 // later validate the content without using any Memcpy.
 TEMPLATE_TEST_CASE("Unit_hipMallocManaged_TwoPointers", "", int, float, double) {
-  HmmAttrPrint();
+  auto managed = HmmAttrPrint();
+  if (managed != 1) {
+    HipTest::HIP_SKIP_TEST("GPU doesn't support managed memory so skipping test.");
+    return;
+  }
+
   int NumDevices = 0;
   HIP_CHECK(hipGetDeviceCount(&NumDevices));
   TestType *Hmm1 = nullptr, *Hmm2 = nullptr;
@@ -326,7 +350,12 @@ TEMPLATE_TEST_CASE("Unit_hipMallocManaged_TwoPointers", "", int, float, double) 
 
 TEMPLATE_TEST_CASE("Unit_hipMallocManaged_DeviceContextChange", "", unsigned char, int, float,
                    double) {
-  HmmAttrPrint();
+  auto managed = HmmAttrPrint();
+  if (managed != 1) {
+    HipTest::HIP_SKIP_TEST("GPU doesn't support managed memory so skipping test.");
+    return;
+  }
+
   std::atomic<unsigned int> DataMismatch;
   TestType *Ah1 = new TestType[N], *Ah2 = new TestType[N], *Ad = nullptr, *Hmm = nullptr;
   int NumDevices = 0;

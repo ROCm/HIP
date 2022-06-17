@@ -56,7 +56,13 @@ static unsigned threadsPerBlock{256};
    This testcase verifies the hipMallocManaged basic scenario - supported on all devices
  */
 TEST_CASE("Unit_hipMallocManaged_Basic") {
-  HmmAttrPrint();
+  auto managed = HmmAttrPrint();
+  if (managed != 1) {
+    WARN(
+        "GPU doesn't support hipDeviceAttributeManagedMemory attribute so defaulting to system "
+        "memory.");
+  }
+
   float *A, *B, *C;
 
   HIP_CHECK(hipMallocManaged(&A, numElements * sizeof(float)));
@@ -74,6 +80,7 @@ TEST_CASE("Unit_hipMallocManaged_Advanced") {
     HipTest::HIP_SKIP_TEST("GPU doesn't support managed memory so skipping test.");
     return;
   }
+
   float *A, *B, *C;
 
   HIP_CHECK(hipMallocManaged(&A, numElements * sizeof(float)));
