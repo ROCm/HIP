@@ -49,6 +49,7 @@ set(TEST_SRC
   hipGraphInstantiate.cc
   hipGraphExecUpdate.cc
   hipGraphExecEventRecordNodeSetEvent.cc
+  hipGraphEventWaitNodeSetEvent.cc
   hipGraphMemsetNodeGetParams.cc
   hipGraphMemsetNodeSetParams.cc
   hipGraphExecMemcpyNodeSetParamsFromSymbol.cc
@@ -56,6 +57,11 @@ set(TEST_SRC
   hipGraphEventRecordNodeSetEvent.cc
   hipGraphEventWaitNodeGetEvent.cc
   hipGraphExecMemcpyNodeSetParams.cc
+  hipStreamBeginCapture.cc
+  hipGraphAddMemcpyNode1D.cc
+  hipStreamIsCapturing.cc
+  hipStreamGetCaptureInfo.cc
+  hipStreamEndCapture.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest
