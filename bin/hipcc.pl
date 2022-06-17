@@ -595,8 +595,11 @@ foreach $arg (@ARGV)
     # common characters such as alphanumerics.
     # Do the quoting here because sometimes the $arg is changed in the loop
     # Important to have all of '-Xlinker' in the set of unquoted characters.
-    if (not $isWindows and $escapeArg) {       # Windows needs different quoting, ignore for now
+    if (not $isWindows and $escapeArg) {
         $arg =~ s/[^-a-zA-Z0-9_=+,.\/]/\\$&/g;
+    }
+    if ($isWindows and $escapeArg) {
+        $arg =~ s/[^-a-zA-Z0-9_=+,.:\/\\]/\\$&/g;
     }
     $toolArgs .= " $arg" unless $swallowArg;
     $prevArg = $arg;
