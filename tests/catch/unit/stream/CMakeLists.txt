@@ -29,6 +29,8 @@ set(TEST_SRC
     streamCommon.cc
     hipStreamValue.cc
     )
+
+    set_source_files_properties(hipStreamAttachMemAsync.cc PROPERTIES COMPILE_FLAGS -std=c++17)
 endif()
 
 hip_add_exe_to_target(NAME StreamTest
