@@ -13,6 +13,7 @@ set(TEST_SRC
     hipStreamValue.cc
     hipStreamWithCUMask.cc
     hipStreamACb_MultiThread.cc
+    hipStreamWaitEvent.cc
     )
 else()
 set(TEST_SRC
@@ -27,6 +28,7 @@ set(TEST_SRC
     hipAPIStreamDisable.cc
     streamCommon.cc
     hipStreamValue.cc
+    hipStreamWaitEvent.cc
     )
 endif()
 

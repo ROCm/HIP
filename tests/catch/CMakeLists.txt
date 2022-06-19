@@ -176,6 +176,11 @@ if(DEFINED OFFLOAD_ARCH_STR)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OFFLOAD_ARCH_STR} ")
 endif()
 
+# Enable device lambda on nvidia platforms
+if(HIP_COMPILER MATCHES "nvcc")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --extended-lambda")
+endif()
+
 # Disable CXX extensions (gnu++11 etc)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
