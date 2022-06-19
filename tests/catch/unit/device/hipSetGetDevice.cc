@@ -23,21 +23,90 @@
  */
 
 #include <hip_test_common.hh>
+#include <thread>
 
 TEST_CASE("Unit_hipSetDevice_BasicSetGet") {
   int numDevices = 0;
-  int device;
-  int validateCount = 0;
+  int device{};
   HIP_CHECK(hipGetDeviceCount(&numDevices));
   REQUIRE(numDevices != 0);
 
   for (int i = 0; i < numDevices; i++) {
     HIP_CHECK(hipSetDevice(i));
     HIP_CHECK(hipGetDevice(&device));
-    if (device == i) {
-      validateCount+= 1;
+    REQUIRE(device == i);
+
+    // Check for hipDevice_t as well
+    hipDevice_t device;
+    HIP_CHECK(hipDeviceGet(&device, i));
+  }
+}
+
+TEST_CASE("Unit_hipGetSetDevice_MultiThreaded") {
+  auto maxThreads = std::thread::hardware_concurrency();
+  auto deviceCount = HipTest::getDeviceCount();
+
+  auto thread = [&]() {
+    for (int i = 0; i < deviceCount; i++) {
+      HIP_CHECK_THREAD(hipSetDevice(i));
+      int get = -1;
+      HIP_CHECK_THREAD(hipGetDevice(&get));
+      REQUIRE_THREAD(get == i);
+
+      // check hipDeviceGet
+      hipDevice_t device;
+      HIP_CHECK_THREAD(hipDeviceGet(&device, i));
+
+      // Alloc some memory and set it
+      unsigned int* ptr{nullptr};
+      HIP_CHECK_THREAD(hipMalloc(&ptr, sizeof(unsigned int)));
+      REQUIRE_THREAD(ptr != nullptr);
+      HIP_CHECK_THREAD(hipMemset(ptr, 0x0A, sizeof(unsigned int)));
+      int res{0};
+      HIP_CHECK_THREAD(hipMemcpy(&res, ptr, sizeof(unsigned int), hipMemcpyDeviceToHost));
+      REQUIRE_THREAD(res == 0x0A0A0A0A);
+      HIP_CHECK_THREAD(hipFree(ptr));
     }
+  };
+
+  std::vector<std::thread> pool;
+  pool.reserve(maxThreads);
+
+  for (int i = 0; i < maxThreads; i++) {
+    pool.emplace_back(std::thread(thread));
   }
 
-  REQUIRE(numDevices == validateCount);
+  for (auto& i : pool) {
+    i.join();
+  }
+
+  HIP_CHECK_THREAD_FINALIZE();
+}
+
+TEST_CASE("Unit_hipSetGetDevice_Negative") {
+  SECTION("Get Device - nullptr") { HIP_CHECK_ERROR(hipGetDevice(nullptr), hipErrorInvalidValue); }
+
+  SECTION("Set Device - -1") { HIP_CHECK_ERROR(hipSetDevice(-1), hipErrorInvalidDevice); }
+
+  SECTION("Set Device - NumDevices + 1") {
+    HIP_CHECK_ERROR(hipSetDevice(HipTest::getDeviceCount()), hipErrorInvalidDevice);
+  }
+}
+
+TEST_CASE("Unit_hipDeviceGet_Negative") {
+  // TODO enable after EXSWCPHIPT-104 is fixed
+#if HT_NVIDIA
+  SECTION("Nullptr as handle") { HIP_CHECK_ERROR(hipDeviceGet(nullptr, 0), hipErrorInvalidValue); }
+#endif
+
+  SECTION("Out of bound ordial - positive") {
+    hipDevice_t device{};
+    auto totalDevices = HipTest::getDeviceCount();
+    HIP_CHECK_ERROR(hipDeviceGet(&device, totalDevices), hipErrorInvalidDevice);
+  }
+
+  SECTION("Out of bound ordial - negative") {
+    hipDevice_t device{};
+    HIP_CHECK_ERROR(hipDeviceGet(&device, -1), hipErrorInvalidDevice);
+  }
 }
