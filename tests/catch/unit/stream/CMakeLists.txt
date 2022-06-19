@@ -25,6 +25,7 @@ set(TEST_SRC
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
+    hipStreamAttachMemAsync.cc   # Currently only for nvidia
     streamCommon.cc
     hipStreamValue.cc
     )
