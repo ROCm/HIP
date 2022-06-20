@@ -26,6 +26,7 @@ THE SOFTWARE.
 #include <hip_test_kernels.hh>
 #include "hipArrayCommon.hh"
 #include "DriverContext.hh"
+#include "MemUtils.hh"
 
 /*
  * This testcase verifies [ hipFree || hipFreeArray || hipFreeType::ArrayDestroy ||
@@ -45,70 +46,28 @@ THE SOFTWARE.
 
 enum class FreeType { DevFree, ArrayFree, ArrayDestroy, HostFree };
 
-__global__ void waitKernel(clock_t offset) {
-  auto time = clock();
-  while (clock() - time < offset) {
-  }
-}
-
-static __global__ void clock_kernel(clock_t clock_count, size_t* co) {
-  clock_t start_clock = clock();
-  clock_t clock_offset = 0;
-  while (clock_offset < clock_count) {
-    clock_offset = clock() - start_clock;
-  }
-  *co = clock_offset;
-}
-
-// number of clocks the device is running at (device frequency)
-static size_t ticksPerMillisecond = 0;
-// Amount of time kernel should wait
-constexpr size_t delay = 50;
-// Var used in multithreaded test cases
-constexpr size_t numAllocs = 10;
-
-
-// helper function used to set the device frequency variable
-
-static size_t findTicks() {
-  hipDeviceProp_t prop;
-  int device;
-  size_t* clockOffset;
-  HIP_CHECK(hipMalloc(&clockOffset, sizeof(size_t)));
-  hipEvent_t start, stop;
-  HIP_CHECK(hipEventCreate(&start));
-  HIP_CHECK(hipEventCreate(&stop));
-  HIP_CHECK(hipGetDevice(&device));
-  HIP_CHECK(hipGetDeviceProperties(&prop, device));
-
-  constexpr float milliseconds = 1000;
-  constexpr float tolerance = 0.02 * milliseconds;
-
-  clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
-  clock_t time = devFreq * milliseconds;
-  // Warmup
-  hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockOffset);
-  HIP_CHECK(hipGetLastError());
-  HIP_CHECK(hipDeviceSynchronize());
-
-  // try 10 times to find device frequency
-  // after 10 attempts the result is likely good enough so just accept it
-  size_t co = 0;
-
-  for (int attempts = 10; attempts > 0; attempts--) {
-    HIP_CHECK(hipEventRecord(start));
-    hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, 0, time, clockOffset);
-    HIP_CHECK(hipEventRecord(stop));
-    HIP_CHECK(hipGetLastError());
-    HIP_CHECK(hipEventSynchronize(stop));
-
-    float executionTime = 0;
-    HIP_CHECK(hipEventElapsedTime(&executionTime, start, stop));
-
-    HIP_CHECK(hipMemcpy(&co, clockOffset, sizeof(size_t), hipMemcpyDeviceToHost));
-    if (executionTime >= (milliseconds - tolerance) &&
-        executionTime <= (milliseconds + tolerance)) {
-      // Timing is within accepted tolerance, break here
+// helper functions to release memory
+template <typename T> hipError_t freeStuff(T ptr, FreeType type) {
+  switch (type) {
+    case DevFree:
+      return hipFree(ptr);
+      break;
+    case HostFree:
+      return hipHostFree(ptr);
+      break;
+    case ArrayFree: {
+      auto arrPtr = reinterpret_cast<hipArray_t>(ptr);
+      return hipFreeArray(arrPtr);
+      break;
+    }
+    case ArrayDestroy: {
+#if HT_NVIDIA
+      auto arrPtr = reinterpret_cast<hiparray>(ptr);
+      return hipArrayDestroy(arrPtr);
+#else
+      auto arrPtr = reinterpret_cast<hipArray_t>(ptr);
+      return hipFreeArray(arrPtr);
+#endif
       break;
     } else {
       auto off = fabs(milliseconds - executionTime) / milliseconds;
@@ -146,7 +105,11 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float
   size_t size_mult = GENERATE(1, 32, 64, 128, 256);
   HIP_CHECK(hipMalloc(&devPtr, sizeof(TestType) * size_mult));
 
+<<<<<<< HEAD
   runKernelForMs(delay);
+=======
+  launchLongRunningKernel(50);
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(hipFree(devPtr));
@@ -159,7 +122,11 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncHost", "", char, float, float2, floa
 
   HIP_CHECK(hipHostMalloc(&hostPtr, sizeof(TestType) * size_mult));
 
+<<<<<<< HEAD
   runKernelForMs(delay);
+=======
+  launchLongRunningKernel(50);
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(hipHostFree(hostPtr));
@@ -205,6 +172,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
 #else  // AMD
 
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, float4) {
+<<<<<<< HEAD
   hipArray_t arrayPtr{};
   hipExtent extent{};
   extent.width = GENERATE(32, 128, 256, 512, 1024);
@@ -224,8 +192,47 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     HIP_CHECK(hipFreeArray(arrayPtr));
     HIP_CHECK(hipStreamQuery(nullptr));
   }
+=======
+  enum StreamType { NULLSTR, CREATEDSTR };
+  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
+  hipStream_t stream{nullptr};
+  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
+
+  size_t width = GENERATE(32, 512, 1024);
+  size_t height = GENERATE(32, 512, 1024);
+
+  HIP_CHECK(hipMallocArray(&arrayPtr, &desc, extent.width, extent.height, hipArrayDefault));
+  launchLongRunningKernel(50);
+  // make sure device is busy
+  HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
+  // Second free segfaults
+  SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayDestroy)); }
+  SECTION("ArrayFree") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayFree)); }
+
+  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 }
 
+// On Nvidia devices the CUarray is used when calling hipArrayDestroy
+#if HT_NVIDIA
+TEST_CASE("Unit_hipFreeImplicitSyncArrayD") {
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-81");
+  return;
+  hiparray cuArrayPtr{};
+  CTX_CREATE()
+
+  HIP_ARRAY_DESCRIPTOR cuDesc;
+  cuDesc.Width = 32;
+  cuDesc.Height = 32;
+  cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
+  cuDesc.NumChannels = 2;
+  HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
+  launchLongRunningKernel(50);
+  // make sure device is busy
+  HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
+  SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, ArrayDestroy)); }
+  CTX_DESTROY()
+}
 #endif
 
 // Freeing a invalid pointer with on device
