@@ -168,16 +168,9 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Negative", "", int, float, double) {
     HIP_CHECK_ERROR(hipHostRegister(hostPtr, 1, 0), hipErrorInvalidValue);
   }
 
-// Different error codes are reported for AMD and Nvidia devices
-#if HT_AMD
-  auto errorCode = hipErrorOutOfMemory;
-#else
-  auto errorCode = hipErrorInvalidValue;
-#endif
-
   hostPtr = reinterpret_cast<TestType*>(malloc(sizeBytes));
   SECTION("hipHostRegister Negative Test - zero size") {
-    HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), errorCode);
+    HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), hipErrorInvalidValue);
   }
 
 #if HT_NVIDIA
@@ -197,11 +190,11 @@ TEMPLATE_TEST_CASE("Unit_hipHostRegister_Negative", "", int, float, double) {
   size_t memFree = std::min(devMemFree, hostMemFree);  // which is the limiter cpu or gpu
 
   SECTION("hipHostRegister Negative Test - invalid memory size") {
-    HIP_CHECK_ERROR(hipHostRegister(hostPtr, memFree, 0), errorCode);
+    HIP_CHECK_ERROR(hipHostRegister(hostPtr, memFree, 0), hipErrorInvalidValue);
   }
 
   free(hostPtr);
   SECTION("hipHostRegister Negative Test - freed memory") {
-    HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), errorCode);
+    HIP_CHECK_ERROR(hipHostRegister(hostPtr, 0, 0), hipErrorInvalidValue);
   }
 }
