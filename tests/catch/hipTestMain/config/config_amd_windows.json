@@ -52,6 +52,13 @@
 	   "Unit_hipStreamGetCaptureInfo_UniqueID",
 	   "Unit_hipStreamGetCaptureInfo_ArgValidation",
 	   "# Following test is related to ticket EXSWCPHIPT-41",
-	   "Unit_hipStreamGetPriority_happy"
+	   "Unit_hipStreamGetPriority_happy",
+	   "Unit_hipMemPoolApi_Basic",
+	   "Unit_hipMemPoolApi_BasicAlloc",
+	   "Unit_hipMemPoolApi_BasicTrim",
+	   "Unit_hipMemPoolApi_BasicReuse",
+	   "Unit_hipMemPoolApi_Opportunistic",
+	   "Unit_hipMemPoolApi_Default",
+	   "Unit_hipDeviceGetUuid"
 	]
 }
