@@ -166,7 +166,6 @@ set(TEST_SRC
     hipFree.cc
     hipMemsetAsync.cc
     hipMemsetSync.cc
-
 )
 endif()
 
