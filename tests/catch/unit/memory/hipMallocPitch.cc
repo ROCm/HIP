@@ -162,11 +162,9 @@ TEST_CASE("Unit_hipMemAllocPitch_ValidatePitch") {
   MemoryInfo memBeforeAllocation{createMemoryInfo()};
   unsigned int elementSizeBytes = GENERATE(4, 8, 16);
 
-#if HT_NVIDIA /* EXSWCPHIPT-46 */
   if (validExtent.width == 0 || validExtent.height == 0) {
     return;
   }
-#endif
 
   HIP_CHECK(
       hipMemAllocPitch(&ptr, &pitch, validExtent.width, validExtent.height, elementSizeBytes));
@@ -195,11 +193,7 @@ TEST_CASE("Unit_hipMalloc3D_Negative") {
 
   SECTION("Max size_t width") {
     hipExtent validExtent{maxSizeT, 1, 1};
-#if HT_AMD /* EXSWCPHIPT-46 */
-    HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
-#else
     HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorInvalidValue);
-#endif
   }
 
   SECTION("Max size_t height") {
@@ -207,14 +201,14 @@ TEST_CASE("Unit_hipMalloc3D_Negative") {
     HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
   }
 
-  SECTION("Max size_t width") {
+  SECTION("Max size_t depth") {
     hipExtent validExtent{1, 1, maxSizeT};
     HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
   }
 
   SECTION("Max size_t all dimensions") {
     hipExtent validExtent{maxSizeT, maxSizeT, maxSizeT};
-    HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorOutOfMemory);
+    HIP_CHECK_ERROR(hipMalloc3D(&ptr, validExtent), hipErrorInvalidValue);
   }
 }
 
@@ -227,18 +221,12 @@ TEST_CASE("Unit_hipMallocPitch_Negative") {
     HIP_CHECK_ERROR(hipMallocPitch(nullptr, &pitch, 1, 1), hipErrorInvalidValue);
   }
 
-#if !HT_AMD /* EXSWCPHIPT-48 */
   SECTION("Invalid pitch") {
     HIP_CHECK_ERROR(hipMallocPitch(&ptr, nullptr, 1, 1), hipErrorInvalidValue);
   }
-#endif
 
   SECTION("Max size_t width") {
-#if HT_AMD /* EXSWCPHIPT-46 */
-    HIP_CHECK_ERROR(hipMallocPitch(&ptr, &pitch, maxSizeT, 1), hipErrorOutOfMemory);
-#else
     HIP_CHECK_ERROR(hipMallocPitch(&ptr, &pitch, maxSizeT, 1), hipErrorInvalidValue);
-#endif
   }
 
   SECTION("Max size_t height") {
@@ -279,21 +267,14 @@ TEST_CASE("Unit_hipMemAllocPitch_Negative") {
                     hipErrorInvalidValue);
   }
 
-#if !HT_AMD /* EXSWCPHIPT-48 */
   SECTION("Invalid pitch") {
     HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, nullptr, 1, 1, validElementSizeBytes),
                     hipErrorInvalidValue);
   }
-#endif
 
   SECTION("Max size_t width") {
-#if HT_AMD /* EXSWCPHIPT-46 */
-    HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, maxSizeT, 1, validElementSizeBytes),
-                    hipErrorOutOfMemory);
-#else
     HIP_CHECK_ERROR(hipMemAllocPitch(&ptr, &pitch, maxSizeT, 1, validElementSizeBytes),
                     hipErrorInvalidValue);
-#endif
   }
 
   SECTION("Max size_t height") {
@@ -304,12 +285,11 @@ TEST_CASE("Unit_hipMemAllocPitch_Negative") {
 
 /*
 Test Scenarios of hipMallocPitch API
-1. Negative Scenarios
-2. Basic Functionality Scenario
-3. Allocate memory using hipMallocPitch API, Launch Kernel validate result.
-4. Allocate Memory in small chunks and large chunks and check for possible memory leaks
-5. Allocate Memory using hipMallocPitch API, Memcpy2D on the allocated variables.
-6. Multithreaded scenario
+1. Basic Functionality Scenario
+2. Allocate memory using hipMallocPitch API, Launch Kernel validate result.
+3. Allocate Memory in small chunks and large chunks and check for possible memory leaks
+4. Allocate Memory using hipMallocPitch API, Memcpy2D on the allocated variables.
+5. Multithreaded scenario
 */
 
 static constexpr auto SMALLCHUNK_NUMW{4};
