@@ -501,4 +501,8 @@ TEST_CASE("Unit_hipMemset3DSync") {
   data.depth = GENERATE(1, 256);
 
   doMemsetTest<char>(mallocType, memset_type, data);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
