@@ -164,7 +164,10 @@ set(TEST_SRC
     hipMemGetInfo.cc
     hipFree.cc
     hipMemsetSync.cc
+<<<<<<< HEAD
     hipMemsetAsync.cc
+=======
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 )
 endif()
 

@@ -23,6 +23,7 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include "hipArrayCommon.hh"
 #include "DriverContext.hh"
+#include "MemUtils.hh"
 
 /*
  * This testcase verifies [ hipFree || hipFreeArray || hipFreeType::ArrayDestroy ||
