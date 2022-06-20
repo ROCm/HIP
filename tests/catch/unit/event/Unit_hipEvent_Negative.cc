@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -45,4 +45,35 @@ TEST_CASE("Unit_hipEventQuery_NullCheck") {
 TEST_CASE("Unit_hipEventDestroy_NullCheck") {
   auto res = hipEventDestroy(nullptr);
   REQUIRE(res != hipSuccess);
+}
+
+TEST_CASE("Unit_hipEventCreate_IncompatibleFlags") {
+  hipEvent_t event;
+
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-106");
+  return;
+#endif
+
+  HIP_CHECK_ERROR(hipEventCreateWithFlags(&event, hipEventInterprocess), hipErrorInvalidValue);
+
+#if HT_AMD
+  HIP_CHECK_ERROR(
+      hipEventCreateWithFlags(&event, hipEventReleaseToDevice | hipEventReleaseToSystem),
+      hipErrorInvalidValue);
+#endif
+
+  unsigned allFlags{hipEventReleaseToDevice | hipEventReleaseToSystem | hipEventBlockingSync |
+                    hipEventDisableTiming | hipEventDefault | hipEventInterprocess};
+
+#if HT_AMD
+  HIP_CHECK_ERROR(hipEventCreateWithFlags(&event, allFlags), hipErrorInvalidValue);
+#else
+  /* Works on Non-AMD because hipEventReleaseToDevice / hipEventReleaseToSystem have no meaning in
+   * that case */
+  HIP_CHECK(hipEventCreateWithFlags(&event, allFlags));
+#endif
+
+  unsigned invalidFlag{0x08000000};
+  HIP_CHECK_ERROR(hipEventCreateWithFlags(&event, invalidFlag), hipErrorInvalidValue);
 }
