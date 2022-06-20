@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -17,27 +17,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip_test_common.hh>
-#define SIZE 1024
+#pragma once
 
-/* Test verifies hipMemcpyToSymbol API Negative scenarios.
- */
+#include <map>
 
-TEST_CASE("Unit_hipMemcpyToSymbol_Negative") {
-  void *Sd;
-  char S[SIZE]="This is not a device symbol";
-
-  HIP_CHECK(hipMalloc(&Sd, SIZE));
-
-  SECTION("Passing void pointer") {
-    REQUIRE(hipSuccess != hipMemcpyToSymbol(HIP_SYMBOL(Sd), S,
-                              SIZE, 0, hipMemcpyDeviceToHost));
-  }
-
-  SECTION("Passing NULL Pointer") {
-    REQUIRE(hipSuccess != hipMemcpyToSymbol(nullptr, S,
-                              SIZE, 0, hipMemcpyDeviceToHost));
-  }
-
-  HIP_CHECK(hipFree(Sd));
-}
+const std::map<std::string, std::string> mapKernelToFileName{
+  {"Set", "Set.cpp"},
+  {"HipTest::vectorADD", "vectorADD.inl"},
+};
