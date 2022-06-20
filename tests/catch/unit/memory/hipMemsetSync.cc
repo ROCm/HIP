@@ -21,6 +21,7 @@ THE SOFTWARE.
 */
 
 #include <hip_test_common.hh>
+#include <memory>
 /*
  * These testcases verify that synchronous memset functions are asynchronous with respect to the
  * host except when the target is pinned host memory or a Unified Memory region
