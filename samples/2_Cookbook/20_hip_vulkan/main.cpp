@@ -37,7 +37,7 @@
 #include <chrono>
 #include <algorithm>
 #include "linmath.h"
-#include "hip_runtime.h"
+#include "hip/hip_runtime.h"
 #include "SineWaveSimulation.h"
 
 
@@ -48,6 +48,18 @@ std::string execution_path;
 #define ENABLE_VALIDATION (false)
 #else
 #define ENABLE_VALIDATION (true)
+#endif
+
+#ifndef _WIN64
+#define MAX_PATH 260
+
+int GetModuleFileName(void* hndl, char* name, int size)
+{
+  FILE* stream = fopen("/proc/self/cmdline", "r");
+  fgets(name, size, stream);
+  fclose(stream);
+  return strlen(name);
+}
 #endif
 
 class VulkanCudaSineWave : public VulkanBaseApp
@@ -93,7 +105,7 @@ public:
             throw std::runtime_error("Requested height and width is too large for this sample!");
         }
         // Add our compiled vulkan shader files
-		TCHAR buffer[MAX_PATH] = { 0 };
+		char buffer[MAX_PATH] = { 0 }; //assuming none unicode
 		GetModuleFileName(NULL, buffer, MAX_PATH);
 		std::string str3 = std::string(buffer);
         std::string str1 = "vert.spv" ; //sdkFindFilePath("sinewave.vert", execution_path.c_str());

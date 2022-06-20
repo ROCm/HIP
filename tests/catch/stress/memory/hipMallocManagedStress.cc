@@ -67,7 +67,6 @@ __global__ void KernelMul_MngdMem(int *Hmm, int *Dptr, size_t n) {
     Hmm[i] = Dptr[i] * 10;
   }
 }
-static bool IfTestPassed = true;
 
 static void LaunchKrnl4(size_t NumElms, int InitVal) {
   int *Hmm = NULL, *Dptr = NULL, blockSize = 64, DataMismatch = 0;

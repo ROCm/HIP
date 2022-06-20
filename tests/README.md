@@ -147,6 +147,22 @@ For example,
 Here "-C performance" indicate the "performance" configuration of ctest.
 ```
 
+### RTC Testing
+
+To enable RTC testing, cmake needs to be passed the DRTC_TESTING=1 options.
+
+When this option is passed, all tests that support this functionality will be run using HIP RTC to compile and run.
+
+To enable HIP RTC support for a specific test:
+    1 - Move all its kernels to tests/catch/kernels (one file per kernel)
+    2 - Update tests/catch/kernels/CMakeLists.txt
+    3 - Update tests/catch/include/kernels.hh
+    4 - Update tests/catch/include/kernel_mapping.hh
+    5 - Include kernels.hh
+    6 - Call hipTest::launchKernel() function instead of hipLaunchKernelGGL()
+
+Note: HIP RTC does not do implicit casting of kernel parameters. This requires the test writer to explicitly do all the casting before running the kernel. The code will not compile otherwise.
+
 ### If a test fails - how to debug a test
 
 Find the test and commandline that fail:

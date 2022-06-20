@@ -43,7 +43,7 @@ template<typename T>
 __global__ void normalizedValTextureTest(unsigned int numElements,
                                          float* pDst) {
 #if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
-  unsigned int elementID = hipThreadIdx_x;
+  unsigned int elementID = threadIdx.x;
   if (elementID >= numElements)
     return;
   float coord = elementID/static_cast<float>(numElements);
