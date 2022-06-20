@@ -23,7 +23,11 @@ THE SOFTWARE.
 #pragma once
 #include <hip/hip_runtime.h>
 #include <hip/hiprtc.h>
+
+#include <atomic>
+#include <mutex>
 #include <vector>
+#include <iostream>
 #include <string>
 #include <set>
 #include <unordered_map>
@@ -64,6 +68,18 @@ typedef struct Config_ {
   std::string os;         // windows/linux
 } Config;
 
+// Store Multi threaded results
+struct HCResult {
+  size_t line;            // Line of check (HIP_CHECK_THREAD or REQUIRE_THREAD)
+  std::string file;       // File name of the check
+  hipError_t result;      // hipResult for HIP_CHECK_THREAD, for conditions its hipSuccess
+  std::string call;       // Call of HIP API or a bool condition
+  bool conditionsResult;  // If bool condition, result of call. For HIP Calls its true
+  HCResult(size_t l, std::string f, hipError_t r, std::string c, bool b = true)
+      : line(l), file(f), result(r), call(c), conditionsResult(b) {}
+};
+
+
 class TestContext {
   bool p_windows = false, p_linux = false;  // OS
   bool amd = false, nvidia = false;         // HIP Platform
@@ -97,6 +113,11 @@ class TestContext {
 
   TestContext(int argc, char** argv);
 
+  // Multi threaded checks helpers
+  std::mutex resultMutex;
+  std::vector<HCResult> results;  // Multi threaded test results buffer
+  std::atomic<bool> hasErrorOccured_{false};
+
  public:
   static TestContext& get(int argc = 0, char** argv = nullptr) {
     static TestContext instance(argc, argv);
@@ -111,6 +132,11 @@ class TestContext {
 
   const std::string& getCurrentTest() const { return current_test; }
   std::string currentPath() const;
+
+  // Multi threaded results helpers
+  void addResults(HCResult r);  // Add multi threaded results
+  void finalizeResults();       // Validate on all results
+  bool hasErrorOccured();       // Query if error has occured
 
   /**
    * @brief Unload all loaded modules.
@@ -142,4 +168,6 @@ class TestContext {
 
   TestContext(const TestContext&) = delete;
   void operator=(const TestContext&) = delete;
+
+  ~TestContext();
 };

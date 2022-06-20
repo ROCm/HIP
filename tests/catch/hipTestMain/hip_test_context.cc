@@ -230,3 +230,41 @@ hipFunction_t TestContext::getFunction(const std::string kernelNameExpression) {
     return nullptr;
   }
 }
+
+void TestContext::addResults(HCResult r) {
+  std::unique_lock<std::mutex> lock(resultMutex);
+  results.push_back(r);
+  if ((!r.conditionsResult) ||
+      ((r.result != hipSuccess) && (r.result != hipErrorPeerAccessAlreadyEnabled))) {
+    hasErrorOccured_.store(true);
+  }
+}
+
+void TestContext::finalizeResults() {
+  std::unique_lock<std::mutex> lock(resultMutex);
+  // clear the results whatever happens
+  std::shared_ptr<void> emptyVec(nullptr, [this](auto) { results.clear(); });
+
+  for (const auto& i : results) {
+    INFO("HIP API Result check\n    File:: "
+         << i.file << "\n    Line:: " << i.line << "\n    API:: " << i.call
+         << "\n    Result:: " << i.result << "\n    Result Str:: " << hipGetErrorString(i.result));
+    REQUIRE(((i.result == hipSuccess) || (i.result == hipErrorPeerAccessAlreadyEnabled)));
+    REQUIRE(i.conditionsResult);
+  }
+  hasErrorOccured_.store(false);  // Clear the flag
+}
+
+bool TestContext::hasErrorOccured() { return hasErrorOccured_.load(); }
+
+TestContext::~TestContext() {
+  // Show this message when there are unchecked results
+  if (results.size() != 0) {
+    std::cerr << "HIP_CHECK_THREAD_FINALIZE() has not been called after HIP_CHECK_THREAD\n"
+              << "Please call HIP_CHECK_THREAD_FINALIZE after joining threads\n"
+              << "There is/are " << results.size() << " unchecked results from threads."
+              << std::endl;
+    std::abort();  // Crash to bring users attention to this message and avoid accidental passing of
+                   // tests without checking for errors
+  }
+}

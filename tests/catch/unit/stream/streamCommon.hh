@@ -44,6 +44,7 @@ __global__ void waiting_kernel(int* semaphore = nullptr);
 /**
  * @brief Creates a thread that runs a signaling_kernel on a non-blocking stream.
  * hipStreamNonBlocking is used here to avoid interfering with tests for the Null Stream.
+ * You must call HIP_CHECK_THREAD_FINALIZE after joining this thread.
  *
  * @param semaphore memory location to signal
  * @return std::thread thread that has to be joined after the testing is done.

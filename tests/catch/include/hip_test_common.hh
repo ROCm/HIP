@@ -22,9 +22,14 @@ THE SOFTWARE.
 
 #pragma once
 #include "hip_test_context.hh"
-#include <hip_test_rtc.hh>
 #include <catch.hpp>
+#include <atomic>
+#include <chrono>
 #include <stdlib.h>
+#include <iostream>
+#include <iomanip>
+#include <mutex>
+#include <cstdlib>
 
 #define HIP_PRINT_STATUS(status) INFO(hipGetErrorName(status) << " at line: " << __LINE__);
 
@@ -33,22 +38,51 @@ THE SOFTWARE.
   {                                                                                                \
     hipError_t localError = error;                                                                 \
     if ((localError != hipSuccess) && (localError != hipErrorPeerAccessAlreadyEnabled)) {          \
-      INFO("Error: " << hipGetErrorString(localError) << " Code: " << localError << " Str: "       \
-                     << #error << " In File: " << __FILE__ << " At line: " << __LINE__);           \
+      INFO("Error: " << hipGetErrorString(localError) << "\n    Code: " << localError              \
+                     << "\n    Str: " << #error << "\n    In File: " << __FILE__                   \
+                     << "\n    At line: " << __LINE__);                                            \
       REQUIRE(false);                                                                              \
     }                                                                                              \
   }
+
+// Threaded HIP_CHECKs
+#define HIP_CHECK_THREAD(error)                                                                    \
+  {                                                                                                \
+    /*To see if error has occured in previous threads, stop execution */                           \
+    if (TestContext::get().hasErrorOccured() == true) {                                            \
+      return; /*This will only work with std::thread and not with std::async*/                     \
+    }                                                                                              \
+    auto localError = error;                                                                       \
+    HCResult result(__LINE__, __FILE__, localError, #error);                                       \
+    TestContext::get().addResults(result);                                                         \
+  }
+
+#define REQUIRE_THREAD(condition)                                                                  \
+  {                                                                                                \
+    /*To see if error has occured in previous threads, stop execution */                           \
+    if (TestContext::get().hasErrorOccured() == true) {                                            \
+      return; /*This will only work with std::thread and not with std::async*/                     \
+    }                                                                                              \
+    auto localResult = (condition);                                                                \
+    HCResult result(__LINE__, __FILE__, hipSuccess, #condition, localResult);                      \
+    TestContext::get().addResults(result);                                                         \
+  }
+
+// Do not call before all threads have joined
+#define HIP_CHECK_THREAD_FINALIZE()                                                                \
+  { TestContext::get().finalizeResults(); }
+
 
 // Check that an expression, errorExpr, evaluates to the expected error_t, expectedError.
 #define HIP_CHECK_ERROR(errorExpr, expectedError)                                                  \
   {                                                                                                \
     hipError_t localError = errorExpr;                                                             \
     INFO("Matching Errors: "                                                                       \
-         << " Expected Error: " << hipGetErrorString(expectedError)                                \
-         << " Expected Code: " << expectedError << '\n'                                            \
+         << "\n    Expected Error: " << hipGetErrorString(expectedError)                           \
+         << "\n    Expected Code: " << expectedError << '\n'                                       \
          << "                  Actual Error:   " << hipGetErrorString(localError)                  \
-         << " Actual Code:   " << localError << "\nStr: " << #errorExpr                            \
-         << "\nIn File: " << __FILE__ << " At line: " << __LINE__);                                \
+         << "\n    Actual Code:   " << localError << "\nStr: " << #errorExpr                       \
+         << "\n    In File: " << __FILE__ << "\n    At line: " << __LINE__);                       \
     REQUIRE(localError == expectedError);                                                          \
   }
 
@@ -57,8 +91,9 @@ THE SOFTWARE.
   {                                                                                                \
     auto localError = error;                                                                       \
     if (localError != HIPRTC_SUCCESS) {                                                            \
-      INFO("Error: " << hiprtcGetErrorString(localError) << " Code: " << localError << " Str: "    \
-                     << #error << " In File: " << __FILE__ << " At line: " << __LINE__);           \
+      INFO("Error: " << hiprtcGetErrorString(localError) << "\n    Code: " << localError           \
+                     << "\n    Str: " << #error << "\n    In File: " << __FILE__                   \
+                     << "\n    At line: " << __LINE__);                                            \
       REQUIRE(false);                                                                              \
     }                                                                                              \
   }
@@ -66,12 +101,6 @@ THE SOFTWARE.
 // Although its assert, it will be evaluated at runtime
 #define HIP_ASSERT(x)                                                                              \
   { REQUIRE((x)); }
-
-#ifdef __cplusplus
-#include <iostream>
-#include <iomanip>
-#include <chrono>
-#endif
 
 #define HIPCHECK(error)                                                                            \
   {                                                                                                \
@@ -84,19 +113,20 @@ THE SOFTWARE.
   }
 
 #define HIPASSERT(condition)                                                                       \
-    if (!(condition)) {                                                                            \
-        printf("assertion %s at %s:%d \n", #condition, __FILE__, __LINE__);                        \
-        abort();                                                                                   \
-    }
+  if (!(condition)) {                                                                              \
+    printf("assertion %s at %s:%d \n", #condition, __FILE__, __LINE__);                            \
+    abort();                                                                                       \
+  }
+
 #if HT_NVIDIA
-#define CTX_CREATE() \
-  hipCtx_t context;\
+#define CTX_CREATE()                                                                               \
+  hipCtx_t context;                                                                                \
   initHipCtx(&context);
 #define CTX_DESTROY() HIPCHECK(hipCtxDestroy(context));
 #define ARRAY_DESTROY(array) HIPCHECK(hipArrayDestroy(array));
 #define HIP_TEX_REFERENCE hipTexRef
 #define HIP_ARRAY hiparray
-static void initHipCtx(hipCtx_t *pcontext) {
+static void initHipCtx(hipCtx_t* pcontext) {
   HIPCHECK(hipInit(0));
   hipDevice_t device;
   HIPCHECK(hipDeviceGet(&device, 0));
@@ -130,9 +160,9 @@ static inline double elapsed_time(long long startTimeUs, long long stopTimeUs) {
 }
 
 static inline unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N) {
-  int device;
+  int device{0};
   HIP_CHECK(hipGetDevice(&device));
-  hipDeviceProp_t props;
+  hipDeviceProp_t props{};
   HIP_CHECK(hipGetDeviceProperties(&props, device));
 
   unsigned blocks = props.multiProcessorCount * blocksPerCU;
@@ -143,23 +173,40 @@ static inline unsigned setNumBlocks(unsigned blocksPerCU, unsigned threadsPerBlo
   return blocks;
 }
 
-static inline int RAND_R(unsigned* rand_seed)
-{
-  #if defined(_WIN32) || defined(_WIN64)
-        srand(*rand_seed);
-        return rand();
-  #else
-      return rand_r(rand_seed);
-  #endif
+// Threaded version of setNumBlocks - to be used in multi threaded test
+// Why? because catch2 does not support multithreaded macro calls
+// Make sure you call HIP_CHECK_THREAD_FINALIZE after your threads join
+// Also you can not return in threaded functions, due to how HIP_CHECK_THREAD works
+static inline void setNumBlocksThread(unsigned blocksPerCU, unsigned threadsPerBlock, size_t N,
+                                      unsigned& blocks) {
+  int device{0};
+  blocks = 0;  // incase error has occured in some other thread and the next call might not execute,
+               // we set the blocks size to 0
+  HIP_CHECK_THREAD(hipGetDevice(&device));
+  hipDeviceProp_t props{};
+  HIP_CHECK_THREAD(hipGetDeviceProperties(&props, device));
+
+  blocks = props.multiProcessorCount * blocksPerCU;
+  if (blocks * threadsPerBlock > N) {
+    blocks = (N + threadsPerBlock - 1) / threadsPerBlock;
+  }
+}
+
+static inline int RAND_R(unsigned* rand_seed) {
+#if defined(_WIN32) || defined(_WIN64)
+  srand(*rand_seed);
+  return rand();
+#else
+  return rand_r(rand_seed);
+#endif
 }
 
 inline bool isImageSupported() {
-    int imageSupport = 1;
+  int imageSupport = 1;
 #ifdef __HIP_PLATFORM_AMD__
-    int device;
-    HIP_CHECK(hipGetDevice(&device));
-    HIPCHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
-                                   device));
+  int device;
+  HIP_CHECK(hipGetDevice(&device));
+  HIPCHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport, device));
 #endif
   return imageSupport != 0;
 }
@@ -217,8 +264,8 @@ template <typename... Typenames, typename K, typename Dim, typename... Args>
 void launchKernel(K kernel, Dim numBlocks, Dim numThreads, std::uint32_t memPerBlock,
                   hipStream_t stream, Args&&... packedArgs) {
 #ifndef RTC_TESTING
-    validateArguments(kernel, packedArgs...);
-    kernel<<<numBlocks, numThreads, memPerBlock, stream>>>(std::forward<Args>(packedArgs)...);
+  validateArguments(kernel, packedArgs...);
+  kernel<<<numBlocks, numThreads, memPerBlock, stream>>>(std::forward<Args>(packedArgs)...);
 #else
   launchRTCKernel<Typenames...>(kernel, numBlocks, numThreads, memPerBlock, stream,
                                 std::forward<Args>(packedArgs)...);
@@ -229,6 +276,8 @@ void launchKernel(K kernel, Dim numBlocks, Dim numThreads, std::uint32_t memPerB
 
 // This must be called in the beginning of image test app's main() to indicate whether image
 // is supported.
-#define checkImageSupport()                                                                \
-    if (!HipTest::isImageSupported())                                                      \
-        { printf("Texture is not support on the device. Skipped.\n"); return; }
+#define checkImageSupport()                                                                        \
+  if (!HipTest::isImageSupported()) {                                                              \
+    printf("Texture is not support on the device. Skipped.\n");                                    \
+    return;                                                                                        \
+  }
