@@ -63,8 +63,14 @@ class SpawnProc {
     }
   }
 
-  int run() {
+  int run(std::string commandLineArgs = "") {
     std::string execCmd = exeName;
+
+    // Append command line args
+    if (commandLineArgs.size() > 0) {
+      execCmd += commandLineArgs;
+    }
+
     if (captureOutput) {
       execCmd += " > ";
       execCmd += tmpFileName;

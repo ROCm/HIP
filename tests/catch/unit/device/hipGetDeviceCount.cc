@@ -23,6 +23,7 @@ THE SOFTWARE.
  */
 
 #include <hip_test_common.hh>
+#include <hip_test_process.hh>
 
 /**
  * hipGetDeviceCount tests
@@ -31,4 +32,27 @@ THE SOFTWARE.
 TEST_CASE("Unit_hipGetDeviceCount_NegTst") {
   // Scenario1
   REQUIRE_FALSE(hipGetDeviceCount(nullptr) == hipSuccess);
+}
+
+TEST_CASE("Unit_hipGetDeviceCount_HideDevices") {
+  int deviceCount = HipTest::getDeviceCount();
+  if (deviceCount < 2) {
+    HipTest::HIP_SKIP_TEST("This test requires more than 2 GPUs. Skipping.");
+    return;
+  }
+
+  for (int i = 0; i < deviceCount; i++) {
+    std::string visibleStr;
+    for (int j = 0; j < deviceCount; j++) {  // Generate a string which has all devices except ith
+      if (j != i) {
+        visibleStr += std::to_string(i);
+        if (j != (deviceCount - 1)) {
+          visibleStr += ",";
+        }
+      }
+    }
+
+    hip::SpawnProc proc("selfContainedExe/getDeviceCount");
+    REQUIRE(proc.run(visibleStr) == (deviceCount - 1));
+  }
 }

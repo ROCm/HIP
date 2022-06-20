@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,76 +20,34 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip_test_common.hh>
-#include <hip_test_process.hh>
+#include <hip/hip_runtime.h>
 
-TEST_CASE("Unit_printf_specifier") {
-#ifdef __HIP_PLATFORM_NVIDIA__
-  std::string reference(R"here(xyzzy
-%
-hello % world
-%s
-%s0xf01dab1eca55e77e
-%cxyzzy
-sep
--42
-42
-123.456000
--123.456000
--1.234560e+02
-1.234560E+02
-123.456
--123.456
-x
-(null)
-(nil)
-3.14159000    hello 0xf01dab1eca55e77e
-)here");
-#elif !defined(_WIN32)
-  std::string reference(R"here(xyzzy
-%
-hello % world
-%s
-%s0xf01dab1eca55e77e
-%cxyzzy
-sep
--42
-42
-123.456000
--123.456000
--1.234560e+02
-1.234560E+02
-123.456
--123.456
-x
+// Expects 1 command line arg, which is the Device Visible String
+int main(int argc, char** argv) {
+  if (argc != 2) {
+    return -1;
+  }
 
-(nil)
-3.14159000    hello 0xf01dab1eca55e77e
-)here");
+  // disable visible_devices env from shell
+#ifdef __HIP_PLATFORM_NVCC__
+  unsetenv("CUDA_VISIBLE_DEVICES");
+  setenv("CUDA_VISIBLE_DEVICES", argv[1], 1);
+  HIP_CHECK(hipInit(0));
 #else
-  std::string reference(R"here(xyzzy
-%
-hello % world
-%s
-%sF01DAB1ECA55E77E
-%cxyzzy
-sep
--42
-42
-123.456000
--123.456000
--1.234560e+02
-1.234560E+02
-123.456
--123.456
-x
-
-0000000000000000
-3.14159000    hello F01DAB1ECA55E77E
-)here");
+  unsetenv("ROCR_VISIBLE_DEVICES");
+  unsetenv("HIP_VISIBLE_DEVICES");
+  setenv("ROCR_VISIBLE_DEVICES", argv[1], 1);
+  setenv("HIP_VISIBLE_DEVICES", argv[1], 1);
 #endif
 
-  hip::SpawnProc proc("selfContainedExe/printfSepcifiers", true);
-  REQUIRE(0 == proc.run());
-  REQUIRE(proc.getOutput() == reference);
+  int count = 0;
+  if (hipSuccess != hipGetDeviceCount(&count)) return -1;
+
+#ifdef __HIP_PLATFORM_NVCC__
+  unsetenv("CUDA_VISIBLE_DEVICES");
+#else
+  unsetenv("ROCR_VISIBLE_DEVICES");
+  unsetenv("HIP_VISIBLE_DEVICES");
+#endif
+  return count;
 }

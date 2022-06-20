@@ -166,7 +166,7 @@ hip::SpawnProc proc(<relative path of exe with test folder>, <optional bool valu
 REQUIRE(0 == proc.run()); // Test of return value of the proc
 REQUIRE(exepctedOutput == proc.getOutput()); // Test on expected output of the process
 ```
-The process can be a standalone exe (see tests/catch/unit/printfExe for more information).
+The process can be a standalone exe (see tests/catch/unit/selfContainedExe for more information).
 
 ## Enabling New Tests
 Initially, the new tests can be enabled via using ```-DHIP_CATCH_TEST=1```. After porting existing tests, this will be turned on by default.
