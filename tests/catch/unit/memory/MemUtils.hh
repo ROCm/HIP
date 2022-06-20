@@ -24,6 +24,38 @@ THE SOFTWARE.
 #include <memory>
 #include <hip_test_common.hh>
 
+<<<<<<< HEAD
+=======
+static __global__ void clock_kernel(clock_t clock_count) {
+  clock_t start_clock = clock();
+  clock_t clock_offset = 0;
+  while (clock_offset < clock_count) {
+    clock_offset = clock() - start_clock;
+  }
+}
+
+/*
+ * Helper func which gets the clock frequency of device
+ * and provide access to a long running time based kernel
+ */
+
+<<<<<<< HEAD
+static inline void launchLongRunningKernel(clock_t milliseconds, hipStream_t stream = nullptr) {
+=======
+static void launchLongRunningKernel(clock_t milliseconds, hipStream_t stream = nullptr) {
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
+  hipDeviceProp_t prop;
+  int device;
+  HIP_CHECK(hipGetDevice(&device));
+  HIP_CHECK(hipGetDeviceProperties(&prop, device));
+
+  clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
+  clock_t time = devFreq * milliseconds;
+  hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, stream, time);
+};
+<<<<<<< HEAD
+
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 namespace memset_utils {
 
 enum class allocType { deviceMalloc, hostMalloc, hostRegisted, devRegistered };
@@ -443,3 +475,5 @@ static inline void doMemsetTest(F func, fArgs... funcArgs) {
 
 
 }  // namespace memset_utils
+=======
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
