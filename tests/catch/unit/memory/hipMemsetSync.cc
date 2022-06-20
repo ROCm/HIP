@@ -89,11 +89,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemsetDSync", "", int8_t, int16_t, uint32_t) {
     memset_type = memSetType::hipMemsetD32;
   }
 
-<<<<<<< HEAD
   doMemsetTest<TestType>(runTests<char>, mallocType, memset_type, data);
-=======
-  doMemsetTest<TestType>(mallocType, memset_type, data);
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 }
 
 TEST_CASE("Unit_hipMemset2DSync") {
@@ -108,11 +104,7 @@ TEST_CASE("Unit_hipMemset2DSync") {
   data.width = GENERATE(1, 1024);
   data.height = GENERATE(1, 1024);
 
-<<<<<<< HEAD
   doMemsetTest<char>(runTests<char>, mallocType, memset_type, data);
-=======
-  doMemsetTest<char>(mallocType, memset_type, data);
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 }
 
 TEST_CASE("Unit_hipMemset3DSync") {
@@ -133,8 +125,15 @@ TEST_CASE("Unit_hipMemset3DSync") {
 }
 =======
   doMemsetTest<char>(mallocType, memset_type, data);
+<<<<<<< HEAD
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 =======
 >>>>>>> Fix rebase issues
+=======
+=======
+}
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
+>>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour

@@ -20,10 +20,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip_test_common.hh>
 #include "hipArrayCommon.hh"
-#include "DriverContext.hh"
 #include "MemUtils.hh"
+#include "DriverContext.hh"
 
 /*
  * This testcase verifies [ hipFree || hipFreeArray || hipFreeType::ArrayDestroy ||
@@ -130,6 +129,27 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     HIP_CHECK(hipFreeArray(arrayPtr));
     HIP_CHECK(hipStreamQuery(nullptr));
   }
+}
+
+// On Nvidia devices the CUarray is used when calling hipArrayDestroy
+#if HT_NVIDIA
+TEST_CASE("Unit_hipFreeImplicitSyncArrayD") {
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-81");
+  return;
+  hiparray cuArrayPtr{};
+  CTX_CREATE()
+
+  HIP_ARRAY_DESCRIPTOR cuDesc;
+  cuDesc.Width = 32;
+  cuDesc.Height = 32;
+  cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
+  cuDesc.NumChannels = 2;
+  HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
+  launchLongRunningKernel(50);
+  // make sure device is busy
+  HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
+  SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, ArrayDestroy)); }
+  CTX_DESTROY()
 }
 #endif
 
