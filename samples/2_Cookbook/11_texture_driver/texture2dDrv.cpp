@@ -130,7 +130,7 @@ bool runTest(int argc, char** argv) {
 inline bool isImageSupported() {
     int imageSupport = 1;
 #ifdef __HIP_PLATFORM_AMD__
-    HIPCHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
+    HIP_CHECK(hipDeviceGetAttribute(&imageSupport, hipDeviceAttributeImageSupport,
                               0));
 #endif
   return imageSupport != 0;
