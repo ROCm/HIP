@@ -2091,7 +2091,7 @@ hipError_t hipStreamAddCallback(hipStream_t stream, hipStreamCallback_t callback
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Stream Memory Operations
+ *  @defgroup StreamM Stream Memory Operations
  *  @{
  *  This section describes Stream Memory Wait and Write functions of HIP runtime API.
  */
@@ -2590,7 +2590,7 @@ hipError_t hipHostMalloc(void** ptr, size_t size, unsigned int flags);
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @addtogroup Memory Managed Memory
+ *  @addtogroup MemoryM Managed Memory
  *  @{
  *  @ingroup Memory
  *  This section describes the managed memory management functions of HIP runtime API.
@@ -2698,7 +2698,7 @@ hipError_t hipStreamAttachMemAsync(hipStream_t stream,
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- * @addtogroup Stream Ordered Memory Allocator
+ * @addtogroup StreamO Ordered Memory Allocator
  * @{
  * @ingroup Memory
  * This section describes Stream Ordered Memory Allocator functions of HIP runtime API.
@@ -3086,6 +3086,7 @@ hipError_t hipMemPoolImportPointer(
     void**                   dev_ptr,
     hipMemPool_t             mem_pool,
     hipMemPoolPtrExportData* export_data);
+// Doxygen end of ordered memory allocator
 /**
  * @}
  */
@@ -4917,20 +4918,6 @@ hipError_t hipBindTextureToMipmappedArray(
     const hipChannelFormatDesc* desc);
 
 /**
- * @brief Gets the texture reference related with the symbol.
- *
- * @param [out] texref  texture reference
- * @param [in] symbol  pointer to the symbol related with the texture for the reference
- *
- * @returns hipSuccess, hipErrorInvalidValue
- *
- */
-DEPRECATED(DEPRECATED_MSG)
- hipError_t hipGetTextureReference(
-    const textureReference** texref,
-    const void* symbol);
-
-/**
  * @brief Creates a texture object.
  *
  * @param [out] pTexObject  pointer to the texture object to create
@@ -5010,8 +4997,93 @@ hipError_t hipGetTextureObjectTextureDesc(
     hipTextureObject_t textureObject);
 
 /**
+ * @brief Creates a texture object.
+ *
+ * @param [out] pTexObject  pointer to texture object to create
+ * @param [in] pResDesc  pointer to resource descriptor
+ * @param [in] pTexDesc  pointer to texture descriptor
+ * @param [in] pResViewDesc  pointer to resource view descriptor
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
  *
  */
+hipError_t hipTexObjectCreate(
+    hipTextureObject_t* pTexObject,
+    const HIP_RESOURCE_DESC* pResDesc,
+    const HIP_TEXTURE_DESC* pTexDesc,
+    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
+
+/**
+ * @brief Destroys a texture object.
+ *
+ * @param [in] texObject  texture object to destroy
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+hipError_t hipTexObjectDestroy(
+    hipTextureObject_t texObject);
+
+/**
+ * @brief Gets resource descriptor of a texture object.
+ *
+ * @param [out] pResDesc  pointer to resource descriptor
+ * @param [in] texObject  texture object
+ *
+ * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ *
+ */
+hipError_t hipTexObjectGetResourceDesc(
+    HIP_RESOURCE_DESC* pResDesc,
+    hipTextureObject_t texObject);
+
+/**
+ * @brief Gets resource view descriptor of a texture object.
+ *
+ * @param [out] pResViewDesc  pointer to resource view descriptor
+ * @param [in] texObject  texture object
+ *
+ * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ *
+ */
+hipError_t hipTexObjectGetResourceViewDesc(
+    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
+    hipTextureObject_t texObject);
+
+/**
+ * @brief Gets texture descriptor of a texture object.
+ *
+ * @param [out] pTexDesc  pointer to texture descriptor
+ * @param [in] texObject  texture object
+ *
+ * @returns hipSuccess, hipErrorNotSupported, hipErrorInvalidValue
+ *
+ */
+hipError_t hipTexObjectGetTextureDesc(
+    HIP_TEXTURE_DESC* pTexDesc,
+    hipTextureObject_t texObject);
+
+/**
+ *
+ *  @addtogroup TextureD Texture Management [Deprecated]
+ *  @{
+ *  @ingroup Texture
+ *  This section describes the deprecated texture management functions of HIP runtime API.
+ */
+/**
+ * @brief Gets the texture reference related with the symbol.
+ *
+ * @param [out] texref  texture reference
+ * @param [in] symbol  pointer to the symbol related with the texture for the reference
+ *
+ * @returns hipSuccess, hipErrorInvalidValue
+ *
+ */
+DEPRECATED(DEPRECATED_MSG)
+ hipError_t hipGetTextureReference(
+    const textureReference** texref,
+    const void* symbol);
+
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetAddressMode(
     textureReference* texRef,
@@ -5035,30 +5107,6 @@ hipError_t hipTexRefSetFormat(
     textureReference* texRef,
     hipArray_Format fmt,
     int NumPackedComponents);
-hipError_t hipTexObjectCreate(
-    hipTextureObject_t* pTexObject,
-    const HIP_RESOURCE_DESC* pResDesc,
-    const HIP_TEXTURE_DESC* pTexDesc,
-    const HIP_RESOURCE_VIEW_DESC* pResViewDesc);
-hipError_t hipTexObjectDestroy(
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetResourceDesc(
-    HIP_RESOURCE_DESC* pResDesc,
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetResourceViewDesc(
-    HIP_RESOURCE_VIEW_DESC* pResViewDesc,
-    hipTextureObject_t texObject);
-hipError_t hipTexObjectGetTextureDesc(
-    HIP_TEXTURE_DESC* pTexDesc,
-    hipTextureObject_t texObject);
-
-/**
- *
- *  @addtogroup TextureD Texture Management [Deprecated]
- *  @{
- *  @ingroup Texture
- *  This section describes the deprecated texture management functions of HIP runtime API.
- */
 DEPRECATED(DEPRECATED_MSG)
 hipError_t hipBindTexture(
     size_t* offset,
@@ -5145,21 +5193,7 @@ DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetMaxAnisotropy(
     textureReference* texRef,
     unsigned int maxAniso);
-// doxygen end deprecated texture management
-/**
- * @}
- */
-
-
-// The following are not supported.
-/**
- *
- *  @addtogroup TextureU Texture Management [Not supported]
- *  @{
- *  @ingroup Texture
- *  This section describes the texture management functions currently unsupported in HIP runtime.
- */
-DEPRECATED(DEPRECATED_MSG)
+    DEPRECATED(DEPRECATED_MSG)
 hipError_t hipTexRefSetBorderColor(
     textureReference* texRef,
     float* pBorderColor);
@@ -5181,6 +5215,21 @@ hipError_t hipTexRefSetMipmappedArray(
     textureReference* texRef,
     struct hipMipmappedArray* mipmappedArray,
     unsigned int Flags);
+
+// doxygen end deprecated texture management
+/**
+ * @}
+ */
+
+// The following are not supported.
+/**
+ *
+ *  @addtogroup TextureU Texture Management [Not supported]
+ *  @{
+ *  @ingroup Texture
+ *  This section describes the texture management functions currently unsupported in HIP runtime.
+ */
+
 hipError_t hipMipmappedArrayCreate(
     hipMipmappedArray_t* pHandle,
     HIP_ARRAY3D_DESCRIPTOR* pMipmappedArrayDesc,
@@ -6349,7 +6398,7 @@ typedef struct hipArrayMapInfo {
 /**
  *-------------------------------------------------------------------------------------------------
  *-------------------------------------------------------------------------------------------------
- *  @defgroup Virtual Memory Management
+ *  @defgroup Virtual Virtual Memory Management
  *  @{
  *  This section describes the virtual memory management functions of HIP runtime API.
  */
