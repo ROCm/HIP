@@ -34,7 +34,7 @@ __device__ int getSquareOfGlobalFloat() {
 }
 
 extern "C" __global__ void testWeightedCopy(int* a, int* b) {
-  int tx = hipThreadIdx_x;
+  int tx = threadIdx.x;
   b[tx] = deviceGlobalInt1*a[tx] + deviceGlobalInt2 +
   static_cast<int>(deviceGlobalShort) + static_cast<int>(deviceGlobalChar)
   + getSquareOfGlobalFloat();
