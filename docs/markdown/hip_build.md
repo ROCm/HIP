@@ -141,7 +141,7 @@ After build and install HIP commands, catch tests can be built via the following
 ```
 cd "$HIP_DIR"
 mkdir -p build; cd build
-export HIP_PATH=$HIPAMD_DIR/build
+export HIP_PATH=$HIPAMD_DIR/build/install
 cmake  ../tests/catch/ -DHIP_PLATFORM=amd
 make -j$(nproc) build_tests
 ctest # run tests
