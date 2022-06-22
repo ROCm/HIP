@@ -31,8 +31,8 @@ __device__ float deviceGlobalFloat;
 extern "C" __global__ void tex2dKernelFloat(float* outputData,
                                        int width, int height) {
 #if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
-  int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-  int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
   if ((x < width) && (y < width)) {
     outputData[y * width + x] = tex2D(ftex, x, y);
   }
@@ -42,8 +42,8 @@ extern "C" __global__ void tex2dKernelFloat(float* outputData,
 extern "C" __global__ void tex2dKernelInt(int* outputData,
                                           int width, int height) {
 #if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
-  int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-  int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
   if ((x < width) && (y < width)) {
     outputData[y * width + x] = tex2D(itex, x, y);
   }
@@ -53,8 +53,8 @@ extern "C" __global__ void tex2dKernelInt(int* outputData,
 extern "C" __global__ void tex2dKernelInt16(short* outputData,
                                           int width, int height) {
 #if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
-  int x = hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x;
-  int y = hipBlockIdx_y * hipBlockDim_y + hipThreadIdx_y;
+  int x = blockIdx.x * blockDim.x + threadIdx.x;
+  int y = blockIdx.y * blockDim.y + threadIdx.y;
   if ((x < width) && (y < width)) {
     outputData[y * width + x] = tex2D(stex, x, y);
   }
