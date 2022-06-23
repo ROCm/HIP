@@ -79,6 +79,7 @@ class SpawnProc {
 
     // Append command line args
     if (commandLineArgs.size() > 0) {
+      execCmd += " "; // Add space for command line args
       execCmd += commandLineArgs;
     }
 
