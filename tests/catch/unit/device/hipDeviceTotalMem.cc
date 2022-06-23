@@ -82,6 +82,7 @@ TEST_CASE("Unit_hipDeviceTotalMem_NonSelectedDevice") {
   auto deviceCount = HipTest::getDeviceCount();
   if (deviceCount < 2) {
     HipTest::HIP_SKIP_TEST("Multi Device Test, will not run on single gpu systems. Skipping.");
+    return;
   }
 
   for (int i = 1; i < deviceCount; i++) {
