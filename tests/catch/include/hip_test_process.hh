@@ -34,8 +34,12 @@ THE SOFTWARE.
 namespace hip {
 /*
 Class to spawn a process in isolation and test its standard output and return status
-
 Good for printf tests and environment variable tests
+
+How to use:
+Have the stand alone exe in the same folder
+Init a class using hip::SpawnProc proc("ExeName", yes_or_no_to_capture_output);
+proc.run("Optional command line args");
 */
 class SpawnProc {
   std::string exeName;

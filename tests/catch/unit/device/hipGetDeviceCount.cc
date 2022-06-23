@@ -41,14 +41,12 @@ TEST_CASE("Unit_hipGetDeviceCount_HideDevices") {
     return;
   }
 
-  for (int i = 0; i < deviceCount; i++) {
+  for (int i = deviceCount - 1; i >= 0; i--) {
     std::string visibleStr;
-    for (int j = 0; j < deviceCount; j++) {  // Generate a string which has all devices except ith
-      if (j != i) {
-        visibleStr += std::to_string(i);
-        if (j != (deviceCount - 1)) {
-          visibleStr += ",";
-        }
+    for (int j = 0; j < i; j++) {  // Generate a string which has all devices except ith
+      visibleStr += std::to_string(j);
+      if (j != (i - 1)) {
+        visibleStr += ",";
       }
     }
 
