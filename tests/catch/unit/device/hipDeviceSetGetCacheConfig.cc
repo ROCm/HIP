@@ -37,5 +37,9 @@ TEST_CASE("Unit_hipDeviceGetCacheConfig_FuncTst") {
                 (cacheConfig != hipFuncCachePreferEqual)));
   // This code exists to test the dummy implementation of
   // hipDeviceSetCacheConfig.
+#if HT_NVIDIA
   HIP_CHECK(hipDeviceSetCacheConfig(cacheConfig));
+#else
+  REQUIRE_FALSE(hipSuccess == hipDeviceSetCacheConfig(cacheConfig));
+#endif
 }

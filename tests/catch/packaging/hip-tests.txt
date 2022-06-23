@@ -1,0 +1,73 @@
+
+# Copyright (c) 2016 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+cmake_minimum_required(VERSION 3.16.8)
+project(tests)
+install(DIRECTORY @PROJECT_BINARY_DIR@/@CATCH_BUILD_DIR@
+        DESTINATION .
+        USE_SOURCE_PERMISSIONS)
+install(FILES @PROJECT_BINARY_DIR@/CTestTestfile.cmake
+        DESTINATION .)
+
+#############################
+# Packaging steps
+#############################
+set(CPACK_SET_DESTDIR TRUE)
+set(CPACK_INSTALL_PREFIX @ROCM_PATH@/test/hip/)
+set(PKG_NAME catch-@HIP_PLATFORM@)
+set(CPACK_PACKAGE_NAME ${PKG_NAME})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [CATCH TESTS]")
+set(CPACK_PACKAGE_DESCRIPTION "HIP:
+          Heterogenous-computing Interface for Portability [CATCH TESTS]")
+set(CPACK_PACKAGE_VENDOR "Advanced Micro Devices, Inc.")
+set(CPACK_PACKAGE_CONTACT "HIP Support <hip.support@amd.com>")
+set(CPACK_PACKAGE_VERSION @HIP_VERSION_MAJOR@.@HIP_VERSION_MINOR@.@HIP_VERSION_PATCH_GITHASH@)
+
+
+if(NOT WIN32)
+set(CPACK_GENERATOR "TGZ;DEB;RPM" CACHE STRING "Linux package types for catch tests")
+set(CPACK_BINARY_DEB "ON")
+set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+set(CPACK_DEBIAN_PACKAGE_PROVIDES "catch")
+set(CPACK_BINARY_RPM "ON")
+set(CPACK_RPM_FILE_NAME "RPM-DEFAULT")
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION "/opt")
+if (CPACK_PACKAGE_VERSION MATCHES "local" )
+  #If building locally default value will cause build failure
+  #DEBUG SYMBOL pacaking require SOURCE_DIR to be small
+  set(CPACK_RPM_BUILD_SOURCE_DIRS_PREFIX ${CPACK_INSTALL_PREFIX})
+endif()
+
+set(CPACK_SOURCE_GENERATOR "TGZ")
+# Install license file
+set ( CPACK_RESOURCE_FILE_LICENSE "@CMAKE_CURRENT_LIST_DIR@/../../LICENSE.txt" )
+install(FILES ${CPACK_RESOURCE_FILE_LICENSE} DESTINATION .)
+set(CPACK_RPM_PACKAGE_LICENSE "MIT")
+
+else()
+# windows packaging
+set(CPACK_INSTALL_PREFIX "")
+set(CPACK_GENERATOR "ZIP" CACHE STRING "Windows package types for catch tests")
+set(CPACK_TGZ_FILE_NAME "ZIP-DEFAULT")
+set(CPACK_TEST_ZIP "ON")
+set(CPACK_ZIP_TEST_PACKAGE_NAME "catch")
+endif()
+
+include(CPack)

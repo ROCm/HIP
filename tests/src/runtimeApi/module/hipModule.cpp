@@ -134,7 +134,7 @@ bool testMultiTargArchCodeObj() {
   std::string CodeObjL1 = "#include \"hip/hip_runtime.h\"\n";
   std::string CodeObjL2 =
        "extern \"C\" __global__ void hello_world(float* a, float* b) {\n";
-  std::string CodeObjL3 = "  int tx = hipThreadIdx_x;\n";
+  std::string CodeObjL3 = "  int tx = threadIdx.x;\n";
   std::string CodeObjL4 = "  b[tx] = a[tx];\n";
   std::string CodeObjL5 = "}";
   // Creating the full code object string
