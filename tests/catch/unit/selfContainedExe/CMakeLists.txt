@@ -1,7 +1,0 @@
-add_executable(printfFlags EXCLUDE_FROM_ALL printfFlags.cc)
-add_executable(printfSepcifiers EXCLUDE_FROM_ALL printfSepcifiers.cc)
-add_executable(getDeviceCount EXCLUDE_FROM_ALL getDeviceCount.cc)
-
-add_dependencies(build_tests printfFlags)
-add_dependencies(build_tests printfSepcifiers)
-add_dependencies(build_tests getDeviceCount)

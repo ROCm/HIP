@@ -24,4 +24,4 @@ hip_add_exe_to_target(NAME DeviceTest
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests)
 
-add_dependencies(DeviceTest getDeviceCount_exe)
+add_dependencies(build_tests getDeviceCount_exe)
