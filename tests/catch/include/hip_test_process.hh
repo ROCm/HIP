@@ -73,8 +73,8 @@ class SpawnProc {
       auto path = fs::temp_directory_path();
       path /= getRandomString();
       tmpFileName = path.string();
-      INFO("Testing for capture file exists: " << exeName);
-      REQUIRE(fs::exists(tmpFileName));
+      INFO("Testing for capture file to not exists: " << tmpFileName);
+      REQUIRE(!fs::exists(tmpFileName));
     }
   }
 
