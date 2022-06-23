@@ -19,7 +19,7 @@ endif()
 
 # Standalone exes
 add_executable(printfFlags EXCLUDE_FROM_ALL printfFlags_exe.cc)
-add_executable(printfSepcifiers EXCLUDE_FROM_ALL printfSepcifiers_exe.cc)
+add_executable(printfSpecifiers EXCLUDE_FROM_ALL printfSpecifiers_exe.cc)
 
 add_dependencies(printfTests printfFlags)
-add_dependencies(printfTests printfSepcifiers)
+add_dependencies(printfTests printfSpecifiers)

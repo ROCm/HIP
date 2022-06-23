@@ -89,7 +89,7 @@ x
 )here");
 #endif
 
-  hip::SpawnProc proc("selfContainedExe/printfSepcifiers", true);
+  hip::SpawnProc proc("printfSepcifiers", true);
   REQUIRE(0 == proc.run());
   REQUIRE(proc.getOutput() == reference);
 }

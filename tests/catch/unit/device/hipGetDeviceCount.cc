@@ -41,7 +41,7 @@ TEST_CASE("Unit_hipGetDeviceCount_HideDevices") {
     return;
   }
 
-  for (int i = deviceCount - 1; i >= 0; i--) {
+  for (int i = deviceCount; i >= 1; i--) {
     std::string visibleStr;
     for (int j = 0; j < i; j++) {  // Generate a string which has all devices except ith
       visibleStr += std::to_string(j);
@@ -51,6 +51,6 @@ TEST_CASE("Unit_hipGetDeviceCount_HideDevices") {
     }
 
     hip::SpawnProc proc("getDeviceCount");
-    REQUIRE(proc.run(visibleStr) == (deviceCount - 1));
+    REQUIRE(proc.run(visibleStr) == i);
   }
 }

@@ -83,7 +83,7 @@ class SpawnProc {
 
     // Append command line args
     if (commandLineArgs.size() > 0) {
-      execCmd += " "; // Add space for command line args
+      execCmd += " ";  // Add space for command line args
       execCmd += commandLineArgs;
     }
 
@@ -99,7 +99,11 @@ class SpawnProc {
       resultStr =
           std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
     }
+#if HT_LINUX
+    return WEXITSTATUS(res);
+#else
     return res;
+#endif
   }
 
   std::string getOutput() { return resultStr; }
