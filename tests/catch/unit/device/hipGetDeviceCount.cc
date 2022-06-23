@@ -52,7 +52,7 @@ TEST_CASE("Unit_hipGetDeviceCount_HideDevices") {
       }
     }
 
-    hip::SpawnProc proc("selfContainedExe/getDeviceCount");
+    hip::SpawnProc proc("getDeviceCount");
     REQUIRE(proc.run(visibleStr) == (deviceCount - 1));
   }
 }

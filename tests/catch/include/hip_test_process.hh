@@ -32,6 +32,11 @@ THE SOFTWARE.
 #include "hip_test_filesystem.hh"
 
 namespace hip {
+/*
+Class to spawn a process in isolation and test its standard output and return status
+
+Good for printf tests and environment variable tests
+*/
 class SpawnProc {
   std::string exeName;
   std::string resultStr;
@@ -53,13 +58,19 @@ class SpawnProc {
  public:
   SpawnProc(std::string exeName_, bool captureOutput_ = false)
       : exeName(exeName_), captureOutput(captureOutput_) {
-    auto dir = fs::path(TestContext::get().currentPath()).parent_path();
+    auto dir = fs::path(TestContext::get().currentPath());
     dir /= exeName;
     exeName = dir.string();
+
+    INFO("Testing for exe exists: " << exeName);
+    REQUIRE(fs::exists(exeName));
+
     if (captureOutput) {
       auto path = fs::temp_directory_path();
       path /= getRandomString();
       tmpFileName = path.string();
+      INFO("Testing for capture file exists: " << exeName);
+      REQUIRE(fs::exists(tmpFileName));
     }
   }
 

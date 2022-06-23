@@ -18,6 +18,10 @@ set(TEST_SRC
     hipDeviceGetUuid.cc
 )
 
+add_executable(getDeviceCount EXCLUDE_FROM_ALL getDeviceCount_exe.cc)
+
 hip_add_exe_to_target(NAME DeviceTest
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests)
+
+add_dependencies(DeviceTest getDeviceCount_exe)
