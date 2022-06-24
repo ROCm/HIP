@@ -16,14 +16,18 @@ set(TEST_SRC
     hipSetDeviceFlags.cc
     hipSetGetDevice.cc
     hipDeviceGetUuid.cc
+    hipDeviceGetP2PAttribute.cc
 )
 
 set_source_files_properties(hipGetDeviceCount.cc PROPERTIES COMPILE_FLAGS -std=c++17)
+set_source_files_properties(hipDeviceGetP2PAttribute.cc PROPERTIES COMPILE_FLAGS -std=c++17)
 
 add_executable(getDeviceCount EXCLUDE_FROM_ALL getDeviceCount_exe.cc)
+add_executable(hipDeviceGetP2PAttribute EXCLUDE_FROM_ALL hipDeviceGetP2PAttribute_exe.cc)
 
 hip_add_exe_to_target(NAME DeviceTest
                       TEST_SRC ${TEST_SRC}
                       TEST_TARGET_NAME build_tests)
 
 add_dependencies(DeviceTest getDeviceCount)
+add_dependencies(DeviceTest hipDeviceGetP2PAttribute)
