@@ -24,6 +24,7 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include <hip_test_checkers.hh>
 #include <hip_test_kernels.hh>
+#include "DriverContext.hh"
 
 /*
  * This testcase verifies [ hipFree || hipFreeArray || hipArrayDestroy || hipHostFree with
@@ -53,31 +54,17 @@ __global__ void longRunningKernel(clock_t clock_count) {
 }
 
 
-// Helper function which gets the clock frequency of device
-struct ClockRate {
- private:
-  clock_t value;
-  ClockRate() {
-    hipDeviceProp_t prop;
-    int device;
-    HIP_CHECK(hipGetDevice(&device));
-    HIP_CHECK(hipGetDeviceProperties(&prop, device));
-
-    value = static_cast<clock_t>(prop.clockRate);  // in kHz
-  }
-
- public:
-  static clock_t Get() {
-    static ClockRate instance;
-    return instance.value;
-  }
-};
-
 // Helper function for long running kernel launch
 void lauchLongRunningKernel(clock_t miliseconds) {
-  auto devFreq = ClockRate::Get();
-  auto time = devFreq * miliseconds;
-  hipLaunchKernelGGL(longRunningKernel, dim3(1), dim3(1), 0, 0, reinterpret_cast<clock_t>(time));
+  hipDeviceProp_t prop;
+  int device;
+  HIP_CHECK(hipGetDevice(&device));
+  HIP_CHECK(hipGetDeviceProperties(&prop, device));
+
+  clock_t value = static_cast<clock_t>(prop.clockRate);
+  clock_t time = value * miliseconds;
+
+  longRunningKernel<<<dim3(1), dim3(1), 0, 0>>>(time);
 }
 
 // helper functions to release memory
@@ -89,55 +76,26 @@ template <typename T> hipError_t freeStuff(T ptr, FreeType type) {
     case HostFree:
       return hipHostFree(ptr);
       break;
-    default:
-      return hipErrorIllegalState;
+    case ArrayFree: {
+      auto arrPtr = reinterpret_cast<hipArray_t>(ptr);
+      return hipFreeArray(arrPtr);
       break;
-  }
-}
-
+    }
+    case ArrayDestroy: {
 #if HT_NVIDIA
-template <> hipError_t freeStuff<hipArray_t>(hipArray_t ptr, FreeType type) {
-  switch (type) {
-    case ArrayFree:
-      return hipFreeArray(ptr);
-      break;
-    case ArrayDestroy:
-      return hipErrorIllegalState;
-      break;
-    default:
-      return hipErrorIllegalState;
-      break;
-  }
-}
-
-template <> hipError_t freeStuff<hiparray>(CUarray ptr, FreeType type) {
-  switch (type) {
-    case ArrayFree:
-      return hipErrorIllegalState;
-      break;
-    case ArrayDestroy:
-      return hipArrayDestroy(ptr);
-      break;
-    default:
-      return hipErrorIllegalState;
-      break;
-  }
-}
+      auto arrPtr = reinterpret_cast<hiparray>(ptr);
+      return hipArrayDestroy(arrPtr);
 #else
-template <> hipError_t freeStuff<hipArray_t>(hipArray_t ptr, FreeType type) {
-  switch (type) {
-    case ArrayFree:
-      return hipFreeArray(ptr);
+      auto arrPtr = reinterpret_cast<hipArray_t>(ptr);
+      return hipFreeArray(arrPtr);
+#endif
       break;
-    case ArrayDestroy:
-      return hipArrayDestroy(ptr);
-      break;
+    }
     default:
       return hipErrorIllegalState;
       break;
   }
 }
-#endif
 
 // Helper function to check if work on device is done
 template <typename T> hipError_t workIsDoneCheck(T ptr, FreeType fType) {
@@ -145,14 +103,7 @@ template <typename T> hipError_t workIsDoneCheck(T ptr, FreeType fType) {
   // free memory
   error = freeStuff(ptr, fType);
   if (error != hipSuccess) {
-    printf("Breaking on first free \n");
-    return error;
-  }
-  // ensure memory is freed
-  // SegFaults the when using hipFreeArray or hipArrayDestroy  </3
-  error = freeStuff(ptr, fType);
-  if (error != hipErrorInvalidValue) {
-    printf("Breaking on second free \n");
+    printf("Breaking on free \n");
     return error;
   }
   // verify synchronization
@@ -160,7 +111,6 @@ template <typename T> hipError_t workIsDoneCheck(T ptr, FreeType fType) {
   if (error != hipSuccess) {
     printf("Breaking on hipStreamQuery free \n");
   }
-
   return error;
 }
 
@@ -200,10 +150,49 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncHost", "", char, float, float2, floa
   if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
 
+#if HT_NVIDIA
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, float4) {
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-79");
-  return;
+  DriverContext ctx;
 
+  size_t width = GENERATE(32, 512, 1024);
+  size_t height = GENERATE(32, 512, 1024);
+
+  enum StreamType { NULLSTR, CREATEDSTR };
+  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
+  hipStream_t stream{nullptr};
+  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
+
+  SECTION("ArrayFree") {
+    hipArray_t arrayPtr{};
+    hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
+
+    HIP_CHECK(hipMallocArray(&arrayPtr, &desc, width, height, hipArrayDefault));
+    lauchLongRunningKernel(50);
+    // make sure device is busy
+    HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
+    // Second free segfaults
+    HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayFree));
+  }
+  SECTION("ArrayDestroy") {
+    hiparray cuArrayPtr{};
+
+    HIP_ARRAY_DESCRIPTOR cuDesc;
+    cuDesc.Width = width;
+    cuDesc.Height = height;
+    cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
+    cuDesc.NumChannels = 2;
+    HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
+    lauchLongRunningKernel(50);
+    // make sure device is busy
+    HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
+    HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, ArrayDestroy));
+  }
+
+  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
+}
+#else  // AMD
+
+TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, float4) {
   enum StreamType { NULLSTR, CREATEDSTR };
   auto streamType = GENERATE(NULLSTR, CREATEDSTR);
   hipStream_t stream{nullptr};
@@ -220,34 +209,12 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   // Second free segfaults
-#if HT_AMD
   SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayDestroy)); }
-#endif
   SECTION("ArrayFree") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayFree)); }
 
   if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
 }
 
-// On Nvidia devices the CUarray is used when calling hipArrayDestroy
-#if HT_NVIDIA
-TEST_CASE("Unit_hipFreeImplicitSyncArrayD") {
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-81");
-  return;
-  hiparray cuArrayPtr{};
-  CTX_CREATE()
-
-  HIP_ARRAY_DESCRIPTOR cuDesc;
-  cuDesc.Width = 32;
-  cuDesc.Height = 32;
-  cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
-  cuDesc.NumChannels = 2;
-  HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
-  lauchLongRunningKernel(50);
-  // make sure device is busy
-  HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
-  SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, ArrayDestroy)); }
-  CTX_DESTROY()
-}
 #endif
 
 // Freeing a invalid pointer with on device
@@ -266,19 +233,7 @@ TEST_CASE("Unit_hipFreeNegativeDev") {
 
 // Freeing a invalid pointer with on device
 TEST_CASE("Unit_hipFreeNegativeHost") {
-#ifdef HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-82");
-  return;
-#endif
   char* hostPtr{nullptr};
-  SECTION("hipHostRegister") {
-    hostPtr = new char;
-    auto flag = GENERATE(hipHostRegisterDefault, hipHostRegisterPortable, hipHostRegisterMapped);
-    HIP_CHECK(hipHostRegister((void*)hostPtr, sizeof(char), flag));
-    HIP_CHECK_ERROR(freeStuff(hostPtr, HostFree), hipErrorInvalidValue);
-    HIP_CHECK(hipHostUnregister(hostPtr));
-    free(hostPtr);
-  }
   SECTION("NullPtr") {
     hostPtr = nullptr;
     HIP_CHECK(freeStuff(hostPtr, HostFree));
@@ -286,57 +241,130 @@ TEST_CASE("Unit_hipFreeNegativeHost") {
   SECTION("InvalidPtr") {
     hostPtr = new (char);
     HIP_CHECK_ERROR(freeStuff(hostPtr, HostFree), hipErrorInvalidValue);
-    free(hostPtr);
+  }
+  SECTION("hipHostRegister") {
+    hostPtr = new char;
+    auto flag = GENERATE(hipHostRegisterDefault, hipHostRegisterPortable, hipHostRegisterMapped);
+    HIP_CHECK(hipHostRegister((void*)hostPtr, sizeof(char), flag));
+    HIP_CHECK_ERROR(freeStuff(hostPtr, HostFree), hipErrorInvalidValue);
   }
 }
 
-// Freeing a invalid pointer with array
-TEST_CASE("Unit_hipFreeNegativeArray") {
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-80&81");
-  return;
-
-  CTX_CREATE()
-  hipArray_t arrayPtr{};
 #if HT_NVIDIA
+TEST_CASE("Unit_hipFreeNegativeArray") {
+  DriverContext ctx;
+  hipArray_t arrayPtr{};
   hiparray cuArrayPtr{};
-#endif
+
   SECTION("InvalidPtr") {
     arrayPtr = static_cast<hipArray*>(malloc(sizeof(char)));
 
     SECTION("ArrayFree") {
-      // on Nvidia returns  "context is destroyed" error 709
-      // on AMD return success
-      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorInvalidValue);
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorContextIsDestroyed);
     }
     SECTION("ArrayDestroy") {
-#if HT_NVIDIA
-      // on Nvidia returns "invalid resource handle" error 400
-      HIP_CHECK_ERROR(freeStuff(cuArrayPtr, ArrayDestroy), hipErrorInvalidValue);
-#else
-      // on AMD return success
-      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayDestroy), hipErrorInvalidValue);
-#endif
+      HIP_CHECK_ERROR(freeStuff(cuArrayPtr, ArrayDestroy), hipErrorInvalidResourceHandle);
     }
     free(arrayPtr);
   }
   SECTION("NullPtr") {
     arrayPtr = nullptr;
-    SECTION("ArrayFree") {
-      // on AMD returns "invalid value" error 1
-      HIP_CHECK(freeStuff(arrayPtr, ArrayFree));
-    }
+    SECTION("ArrayFree") { HIP_CHECK(freeStuff(arrayPtr, ArrayFree)); }
     SECTION("ArrayDestroy") {
-#if HT_NVIDIA
-      // on Nvidia returns "invalid resource handle" error 400
-      HIP_CHECK(freeStuff(cuArrayPtr, ArrayDestroy));
-#else
-      // on AMD returns "invalid value" error 1
-      HIP_CHECK(freeStuff(arrayPtr, ArrayDestroy));
-#endif
+      HIP_CHECK_ERROR(freeStuff(cuArrayPtr, ArrayDestroy), hipErrorInvalidResourceHandle);
     }
   }
-  CTX_DESTROY()
 }
+#else
+
+// Freeing a invalid pointer with array
+TEST_CASE("Unit_hipFreeNegativeArray") {
+  hipArray_t arrayPtr{};
+
+  SECTION("InvalidPtr") {
+    arrayPtr = static_cast<hipArray*>(malloc(sizeof(char)));
+
+    SECTION("ArrayFree") {
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorContextIsDestroyed);
+    }
+    SECTION("ArrayDestroy") {
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayDestroy), hipErrorContextIsDestroyed);
+    }
+  }
+
+  SECTION("NullPtr") {
+    arrayPtr = nullptr;
+    SECTION("ArrayFree") { HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorInvalidValue); }
+    SECTION("ArrayDestroy") {
+      HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayDestroy), hipErrorInvalidValue);
+    }
+  }
+}
+
+#endif
+
+
+TEST_CASE("Unit_hipFreeDoubleDevice") {
+  size_t width = GENERATE(32, 512, 1024);
+  char* ptr{};
+  size_t size_mult = width;
+  HIP_CHECK(hipMalloc(&ptr, sizeof(char) * size_mult));
+
+  HIP_CHECK(freeStuff(ptr, DevFree));
+  HIP_CHECK_ERROR(freeStuff(ptr, DevFree), hipErrorInvalidValue);
+}
+TEST_CASE("Unit_hipFreeDoubleHost") {
+  size_t width = GENERATE(32, 512, 1024);
+  char* ptr{};
+  size_t size_mult = width;
+
+  HIP_CHECK(hipHostMalloc(&ptr, sizeof(char) * size_mult));
+
+  HIP_CHECK(freeStuff(ptr, HostFree));
+  HIP_CHECK_ERROR(freeStuff(ptr, HostFree), hipErrorInvalidValue);
+}
+TEST_CASE("Unit_hipFreeDoubleArrayFree") {
+#if HT_NVIDIA
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-120");
+  return;
+#endif
+  size_t width = GENERATE(32, 512, 1024);
+  size_t height = GENERATE(0, 32, 512, 1024);
+  hipArray_t arrayPtr{};
+  hipExtent extent{};
+  extent.width = width;
+  extent.height = height;
+  hipChannelFormatDesc desc = hipCreateChannelDesc<char>();
+
+  HIP_CHECK(hipMallocArray(&arrayPtr, &desc, extent.width, extent.height, hipArrayDefault));
+
+  HIP_CHECK(freeStuff(arrayPtr, ArrayFree));
+  HIP_CHECK_ERROR(freeStuff(arrayPtr, ArrayFree), hipErrorContextIsDestroyed);
+}
+#if HT_NVIDIA
+TEST_CASE("Unit_hipFreeDoubleArrayDestroy") {
+#if HT_NVIDIA
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-120");
+  return;
+#endif
+  size_t width = GENERATE(32, 512, 1024);
+  size_t height = GENERATE(0, 32, 512, 1024);
+  DriverContext ctx{};
+  // HipTest::HIP_SKIP_TEST("EXSWCPHIPT-81");
+  // return;
+
+  hiparray ArrayPtr{};
+  HIP_ARRAY_DESCRIPTOR cuDesc;
+  cuDesc.Width = width;
+  cuDesc.Height = height;
+  cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
+  cuDesc.NumChannels = 2;
+  HIP_CHECK(hipArrayCreate(&ArrayPtr, &cuDesc));
+  HIP_CHECK(freeStuff(ArrayPtr, ArrayDestroy));
+  HIP_CHECK_ERROR(freeStuff(ArrayPtr, ArrayDestroy), hipErrorContextIsDestroyed);
+}
+#endif
+
 
 // DevFree, ArrayFree, ArrayDestroy, HostFree Mutithreaded
 TEMPLATE_TEST_CASE("Unit_hipFreeMultiTDev", "", char, int, float2, float4) {
@@ -383,10 +411,72 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTHost", "", char, int, float2, float4) {
   HIP_CHECK_THREAD_FINALIZE();
 }
 
+#if HT_NVIDIA
 TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-79&81");
-  return;
+  constexpr size_t numAllocs = 10;
+  size_t width = GENERATE(32, 128, 256, 512, 1024);
+  size_t height = GENERATE(32, 128, 256, 512, 1024);
+  DriverContext ctx;
 
+
+  SECTION("ArrayDestroy") {
+    std::vector<hiparray> ptrs(numAllocs);
+    HIP_ARRAY_DESCRIPTOR cuDesc;
+    cuDesc.Width = width;
+    cuDesc.Height = height;
+    cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
+    cuDesc.NumChannels = 2;
+    for (auto& ptr : ptrs) {
+      HIP_CHECK(hipArrayCreate(&ptr, &cuDesc));
+    }
+
+    std::vector<std::thread> threads;
+
+    for (auto& ptr : ptrs) {
+      SECTION("ArrayDestroy") {
+        threads.push_back(std::thread(
+            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hiparray>(ptr, ArrayDestroy)); }));
+      }
+    }
+    for (auto& t : threads) {
+      t.join();
+    }
+    HIP_CHECK_THREAD_FINALIZE();
+  };
+
+  SECTION("ArrayFree") {
+    constexpr size_t numAllocs = 10;
+    std::vector<hipArray_t> ptrs(numAllocs);
+    hipExtent extent{};
+    extent.width = width;
+    extent.height = height;
+    hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
+
+    for (auto& ptr : ptrs) {
+      HIP_CHECK(hipMallocArray(&ptr, &desc, extent.width, extent.height, hipArrayDefault));
+    }
+
+    std::vector<std::thread> threads;
+
+    for (auto ptr : ptrs) {
+      SECTION("ArrayFree") {
+        threads.push_back(std::thread(
+            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayFree)); }));
+      }
+      SECTION("ArrayDestroy") {
+        threads.push_back(std::thread(
+            [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayDestroy)); }));
+      }
+    }
+    for (auto& t : threads) {
+      t.join();
+    }
+    HIP_CHECK_THREAD_FINALIZE();
+  }
+}
+#else
+
+TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
   constexpr size_t numAllocs = 10;
   std::vector<hipArray_t> ptrs(numAllocs);
   hipExtent extent{};
@@ -405,12 +495,10 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
       threads.push_back(
           std::thread([ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayFree)); }));
     }
-#if HT_AMD
     SECTION("ArrayDestroy") {
       threads.push_back(std::thread(
           [ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hipArray_t>(ptr, ArrayDestroy)); }));
     }
-#endif
   }
   for (auto& t : threads) {
     t.join();
@@ -418,35 +506,4 @@ TEMPLATE_TEST_CASE("Unit_hipFreeMultiTArray", "", char, int, float2, float4) {
   HIP_CHECK_THREAD_FINALIZE();
 }
 
-// On Nvidia devices the CUarray is used when calling hipArrayDestroy
-#if HT_NVIDIA
-TEST_CASE("Unit_hipFreeMultiTArrayDestroy") {
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-81");
-  return;
-  constexpr size_t numAllocs = 10;
-  CTX_CREATE();
-  std::vector<hiparray> ptrs(numAllocs);
-  HIP_ARRAY_DESCRIPTOR cuDesc;
-  cuDesc.Width = GENERATE(32, 128, 256, 512, 1024);
-  cuDesc.Height = GENERATE(32, 128, 256, 512, 1024);
-  cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
-  cuDesc.NumChannels = 2;
-  for (auto& ptr : ptrs) {
-    HIP_CHECK(hipArrayCreate(&ptr, &cuDesc));
-  }
-
-  std::vector<std::thread> threads;
-
-  for (auto& ptr : ptrs) {
-    SECTION("ArrayDestroy") {
-      threads.push_back(
-          std::thread([ptr]() { HIP_CHECK_THREAD(workIsDoneCheck<hiparray>(ptr, ArrayDestroy)); }));
-    }
-  }
-  for (auto& t : threads) {
-    t.join();
-  }
-  HIP_CHECK_THREAD_FINALIZE();
-  CTX_DESTROY();
-}
 #endif
