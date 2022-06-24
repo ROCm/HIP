@@ -39,7 +39,11 @@ int main(int argc, char** argv) {
 #ifdef __HIP_PLATFORM_NVCC__
   unsetenv("CUDA_VISIBLE_DEVICES");
   setenv("CUDA_VISIBLE_DEVICES", argv[1], 1);
-  HIP_CHECK(hipInit(0));
+  auto init_res = hipInit(0);
+  if (hipSuccess != init_res) {
+    std::cerr << "CUDA INIT API returned : " << hipGetErrorString(res) << std::endl;
+    return -1;
+  }
 #else
   unsetenv("ROCR_VISIBLE_DEVICES");
   unsetenv("HIP_VISIBLE_DEVICES");
