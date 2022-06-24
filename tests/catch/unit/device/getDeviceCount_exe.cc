@@ -21,10 +21,17 @@ THE SOFTWARE.
 */
 
 #include <hip/hip_runtime.h>
+#include <iostream>
 
 // Expects 1 command line arg, which is the Device Visible String
 int main(int argc, char** argv) {
   if (argc != 2) {
+    std::cerr << "Invalid number of args passed.\n"
+              << "argc : " << argc << std::endl;
+    for (int i = 0; i < argc; i++) {
+      std::cerr << "  argv[" << i << "] : " << argv[0] << std::endl;
+    }
+    std::cerr << "The program expects device visibility string i.e. 0,1,2" << std::endl;
     return -1;
   }
 
@@ -41,7 +48,11 @@ int main(int argc, char** argv) {
 #endif
 
   int count = 0;
-  if (hipSuccess != hipGetDeviceCount(&count)) return -1;
+  auto res = hipGetDeviceCount(&count);
+  if (hipSuccess != res) {
+    std::cerr << "HIP API returned : " << hipGetErrorString(res) << std::endl;
+    return -1;
+  }
 
 #ifdef __HIP_PLATFORM_NVCC__
   unsetenv("CUDA_VISIBLE_DEVICES");

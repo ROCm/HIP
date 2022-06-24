@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #pragma once
+
 #include "hip_test_common.hh"
+#include "hip_test_filesystem.hh"
 
 #include <string>
 #include <array>
@@ -29,7 +31,6 @@ THE SOFTWARE.
 #include <random>
 #include <fstream>
 #include <streambuf>
-#include "hip_test_filesystem.hh"
 
 namespace hip {
 /*
@@ -66,14 +67,14 @@ class SpawnProc {
     dir /= exeName;
     exeName = dir.string();
 
-    INFO("Testing for exe exists: " << exeName);
+    INFO("Testing that exe exists: " << exeName);
     REQUIRE(fs::exists(exeName));
 
     if (captureOutput) {
       auto path = fs::temp_directory_path();
       path /= getRandomString();
       tmpFileName = path.string();
-      INFO("Testing for capture file to not exists: " << tmpFileName);
+      INFO("Testing that capture file does not exist already: " << tmpFileName);
       REQUIRE(!fs::exists(tmpFileName));
     }
   }

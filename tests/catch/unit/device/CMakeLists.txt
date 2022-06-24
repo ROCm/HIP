@@ -18,6 +18,8 @@ set(TEST_SRC
     hipDeviceGetUuid.cc
 )
 
+set_source_files_properties(hipGetDeviceCount.cc PROPERTIES COMPILE_FLAGS -std=c++17)
+
 add_executable(getDeviceCount EXCLUDE_FROM_ALL getDeviceCount_exe.cc)
 
 hip_add_exe_to_target(NAME DeviceTest

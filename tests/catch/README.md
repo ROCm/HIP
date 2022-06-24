@@ -144,7 +144,7 @@ If there arises a condition where certain flag is disabled and due to which a te
   ```cpp
   TEST_CASE("TestOnlyOnXnack") {
     if(!XNACKEnabled) {
-      HIP_SKIP_TEST("Test only runs on system with XNACK enabled");
+      HipTest::HIP_SKIP_TEST("Test only runs on system with XNACK enabled");
       return;
     }
     // Rest of test functionality
@@ -166,7 +166,7 @@ hip::SpawnProc proc(<name of exe>, <optional bool value, if output is to be reco
 REQUIRE(0 == proc.run()); // Test of return value of the proc
 REQUIRE(exepctedOutput == proc.getOutput()); // Test on expected output of the process
 ```
-The process can be a standalone exe, inside the same folder as other tests.
+The process must be a standalone exe inside the same folder as other tests.
 
 ## Enabling New Tests
 Initially, the new tests can be enabled via using ```-DHIP_CATCH_TEST=1```. After porting existing tests, this will be turned on by default.
