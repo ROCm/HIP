@@ -50,7 +50,8 @@ TEST_CASE("Unit_hipGetDeviceCount_HideDevices") {
       }
     }
 
-    hip::SpawnProc proc("getDeviceCount");
+    hip::SpawnProc proc("getDeviceCount", true);
+    INFO("Output from process : " << proc.getOutput());
     REQUIRE(proc.run(visibleStr) == i);
   }
 }
