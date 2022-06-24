@@ -43,7 +43,7 @@ TEST_CASE("Unit_hipGetDeviceCount_HideDevices") {
 
   for (int i = deviceCount; i >= 1; i--) {
     std::string visibleStr;
-    for (int j = 0; j < i; j++) {  // Generate a string which has all devices except ith
+    for (int j = 0; j < i; j++) {  // Generate a string which has first i devices
       visibleStr += std::to_string(j);
       if (j != (i - 1)) {
         visibleStr += ",";
