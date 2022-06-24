@@ -105,11 +105,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncDev", "", char, float, float2, float
   size_t size_mult = GENERATE(1, 32, 64, 128, 256);
   HIP_CHECK(hipMalloc(&devPtr, sizeof(TestType) * size_mult));
 
-<<<<<<< HEAD
   runKernelForMs(delay);
-=======
-  launchLongRunningKernel(50);
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(hipFree(devPtr));
@@ -122,11 +118,7 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncHost", "", char, float, float2, floa
 
   HIP_CHECK(hipHostMalloc(&hostPtr, sizeof(TestType) * size_mult));
 
-<<<<<<< HEAD
   runKernelForMs(delay);
-=======
-  launchLongRunningKernel(50);
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
   // make sure device is busy
   HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
   HIP_CHECK(hipHostFree(hostPtr));
@@ -172,7 +164,6 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
 #else  // AMD
 
 TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, float4) {
-<<<<<<< HEAD
   hipArray_t arrayPtr{};
   hipExtent extent{};
   extent.width = GENERATE(32, 128, 256, 512, 1024);
@@ -192,46 +183,6 @@ TEMPLATE_TEST_CASE("Unit_hipFreeImplicitSyncArray", "", char, float, float2, flo
     HIP_CHECK(hipFreeArray(arrayPtr));
     HIP_CHECK(hipStreamQuery(nullptr));
   }
-=======
-  enum StreamType { NULLSTR, CREATEDSTR };
-  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
-  hipStream_t stream{nullptr};
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
-
-  size_t width = GENERATE(32, 512, 1024);
-  size_t height = GENERATE(32, 512, 1024);
-
-  HIP_CHECK(hipMallocArray(&arrayPtr, &desc, extent.width, extent.height, hipArrayDefault));
-  launchLongRunningKernel(50);
-  // make sure device is busy
-  HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
-  // Second free segfaults
-  SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayDestroy)); }
-  SECTION("ArrayFree") { HIP_CHECK(workIsDoneCheck<hipArray_t>(arrayPtr, ArrayFree)); }
-
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
-}
-
-// On Nvidia devices the CUarray is used when calling hipArrayDestroy
-#if HT_NVIDIA
-TEST_CASE("Unit_hipFreeImplicitSyncArrayD") {
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-81");
-  return;
-  hiparray cuArrayPtr{};
-  CTX_CREATE()
-
-  HIP_ARRAY_DESCRIPTOR cuDesc;
-  cuDesc.Width = 32;
-  cuDesc.Height = 32;
-  cuDesc.Format = HIP_AD_FORMAT_UNSIGNED_INT8;
-  cuDesc.NumChannels = 2;
-  HIP_CHECK(hipArrayCreate(&cuArrayPtr, &cuDesc));
-  launchLongRunningKernel(50);
-  // make sure device is busy
-  HIP_CHECK_ERROR(hipStreamQuery(nullptr), hipErrorNotReady);
-  SECTION("ArrayDestroy") { HIP_CHECK(workIsDoneCheck<hiparray>(cuArrayPtr, ArrayDestroy)); }
-  CTX_DESTROY()
 }
 #endif
 
