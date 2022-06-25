@@ -60,6 +60,7 @@
 	   "Unit_hipMemPoolApi_Opportunistic",
 	   "Unit_hipMemPoolApi_Default",
 	   "Unit_hipDeviceGetUuid",
+	   "Unit_hipGraphMemcpyNodeSetParamsFromSymbol_Functional",
 	   "Unit_hipGraphExecEventWaitNodeSetEvent_Negative",
 	   "Unit_hipGraphExecEventWaitNodeSetEvent_SetAndVerifyMemory"
 	]

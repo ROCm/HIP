@@ -18,7 +18,7 @@ THE SOFTWARE.
 */
 
 /**
-Testcase Scenarios :
+Testcase Scenarios : Functional
  1) Initiate stream capture with different modes on custom stream.
  Capture stream sequence and replay the sequence in multiple iterations.
  2) End capture and validate that API returns captured graph for
@@ -183,3 +183,46 @@ TEST_CASE("Unit_hipStreamBeginCapture_hipStreamPerThread") {
   HIP_CHECK(hipFree(A_d));
   HIP_CHECK(hipFree(C_d));
 }
+
+
+/* Test verifies hipStreamBeginCapture API Negative scenarios.
+ */
+
+TEST_CASE("Unit_hipStreamBeginCapture_Negative") {
+  hipError_t ret;
+  hipStream_t stream{};
+  HIP_CHECK(hipStreamCreate(&stream));
+
+  SECTION("Stream capture on legacy/null stream returns error code.") {
+    ret = hipStreamBeginCapture(nullptr, hipStreamCaptureModeGlobal);
+    REQUIRE(hipErrorStreamCaptureUnsupported == ret);
+  }
+  SECTION("Capturing hipStream status with same stream again") {
+    HIP_CHECK(hipStreamBeginCapture(stream, hipStreamCaptureModeGlobal));
+    ret = hipStreamBeginCapture(stream, hipStreamCaptureModeGlobal);
+    REQUIRE(hipErrorIllegalState == ret);
+  }
+  SECTION("Creating hipStream with invalid mode") {
+    ret = hipStreamBeginCapture(stream, hipStreamCaptureMode(-1));
+    REQUIRE(hipErrorInvalidValue == ret);
+  }
+  HIP_CHECK(hipStreamDestroy(stream));
+}
+
+TEST_CASE("Unit_hipStreamBeginCapture_Basic") {
+  hipStream_t s1, s2, s3;
+
+  HIP_CHECK(hipStreamCreate(&s1));
+  HIP_CHECK(hipStreamBeginCapture(s1, hipStreamCaptureModeGlobal));
+
+  HIP_CHECK(hipStreamCreate(&s2));
+  HIP_CHECK(hipStreamBeginCapture(s2, hipStreamCaptureModeThreadLocal));
+
+  HIP_CHECK(hipStreamCreate(&s3));
+  HIP_CHECK(hipStreamBeginCapture(s3, hipStreamCaptureModeRelaxed));
+
+  HIP_CHECK(hipStreamDestroy(s1));
+  HIP_CHECK(hipStreamDestroy(s2));
+  HIP_CHECK(hipStreamDestroy(s3));
+}
+
