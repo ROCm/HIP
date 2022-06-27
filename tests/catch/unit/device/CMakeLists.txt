@@ -15,7 +15,7 @@ set(TEST_SRC
     hipRuntimeGetVersion.cc
     hipGetSetDeviceFlags.cc
     hipSetGetDevice.cc
-    hipDeviceGetUuid.cc
+    #hipDeviceGetUuid.cc
 )
 
 set_source_files_properties(hipGetDeviceCount.cc PROPERTIES COMPILE_FLAGS -std=c++17)
