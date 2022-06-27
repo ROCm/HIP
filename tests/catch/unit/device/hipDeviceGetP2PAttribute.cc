@@ -33,7 +33,7 @@ TEST_CASE("Unit_hipDeviceGetP2PAttribute_Basic") {
 #if HT_AMD
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-119");
   return;
-#endif
+#else
 
   int deviceCount = HipTest::getGeviceCount();
   if (deviceCount < 2) {
@@ -61,6 +61,7 @@ TEST_CASE("Unit_hipDeviceGetP2PAttribute_Basic") {
       }
     }
   }
+#endif
 }
 
 /**
@@ -68,12 +69,10 @@ TEST_CASE("Unit_hipDeviceGetP2PAttribute_Basic") {
  *
  */
 TEST_CASE("Unit_hipDeviceGetP2PAttribute_Negative") {
-
 #if HT_AMD
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-122");
   return;
-#endif
-
+#else
 
   int deviceCount = HipTest::getGeviceCount();
   if (deviceCount < 2) {
@@ -123,4 +122,5 @@ TEST_CASE("Unit_hipDeviceGetP2PAttribute_Negative") {
       REQUIRE(hip::SpawnProc("hipDeviceGetP2PAttribute").run("2,1") == hipErrorNoDevice);
     }
   }
+#endif
 }
