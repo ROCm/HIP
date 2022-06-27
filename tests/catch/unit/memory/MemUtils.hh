@@ -24,89 +24,48 @@ THE SOFTWARE.
 #include <memory>
 #include <hip_test_common.hh>
 
-<<<<<<< HEAD
-=======
-static __global__ void clock_kernel(clock_t clock_count) {
-  clock_t start_clock = clock();
-  clock_t clock_offset = 0;
-  while (clock_offset < clock_count) {
-    clock_offset = clock() - start_clock;
-  }
-}
 
-/*
- * Helper func which gets the clock frequency of device
- * and provide access to a long running time based kernel
- */
-
-<<<<<<< HEAD
-static inline void launchLongRunningKernel(clock_t milliseconds, hipStream_t stream = nullptr) {
-=======
-static void launchLongRunningKernel(clock_t milliseconds, hipStream_t stream = nullptr) {
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
-  hipDeviceProp_t prop;
-  int device;
-  HIP_CHECK(hipGetDevice(&device));
-  HIP_CHECK(hipGetDeviceProperties(&prop, device));
-
-  clock_t devFreq = static_cast<clock_t>(prop.clockRate);  // in kHz
-  clock_t time = devFreq * milliseconds;
-  hipLaunchKernelGGL(clock_kernel, dim3(1), dim3(1), 0, stream, time);
-};
-<<<<<<< HEAD
-
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
-namespace memset_utils {
+namespace mem_utils {
 
 enum class allocType { deviceMalloc, hostMalloc, hostRegisted, devRegistered };
-enum class memSetType {
-  hipMemset,
-  hipMemsetD8,
-  hipMemsetD16,
-  hipMemsetD32,
-  hipMemset2D,
-  hipMemset3D
-};
+enum class memType { hipMem, hipMemsetD8, hipMemsetD16, hipMemsetD32, hipMem2D, hipMem3D };
 
-// helper struct containing vars needed for 2D and 3D memset Testing
+// helper struct containing vars needed for 2D and 3D mem Testing
 struct MultiDData {
   size_t width{};  // in elements not bytes
   // set to 0 for 1D
-  size_t height{};  // in elements not bytes
+  size_t height{};                                     // in elements not bytes
+  size_t getH() { return height == 0 ? 1 : height; };  // return 1 if height == 0 || height
   // set to 0 for 2D
-  size_t depth{};   // in elements not bytes
-  size_t pitch{};   // pitch = (width * sizeofData) + alignment
-  size_t offset{};  // for simplicity use same offset for x,y and z dimensions of memory
+  size_t depth{};                                    // in elements not bytes
+  size_t getD() { return depth == 0 ? 1 : depth; };  // return 1 if depth == 0 || depth
+  size_t pitch{};                                    // pitch = (width * sizeofData) + alignment
+  size_t offset{};  // for simplicity use same offset for x,y and z dimentions of memory
+  size_t getCount() { return width * getH() * getD(); }
 };
 
 // set of helper functions to tidy the nested switch statements
 template <typename T>
-static inline std::pair<T*, T*> deviceMallocHelper(memSetType memType, size_t dataW, size_t dataH,
+static inline std::pair<T*, T*> deviceMallocHelper(memType memType, size_t dataW, size_t dataH,
                                                    size_t dataD, size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
+  constexpr size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   T* aPtr{};
   switch (memType) {
-    case memSetType::hipMemset3D: {
-      hipPitchedPtr pitchedAPtr{};
-      hipExtent extent;
-      extent.width = dataW * elementSize;
-      extent.height = dataH;
-      extent.depth = dataD;
+    case memType::hipMem3D: {
+      hipPitchedPtr pitchedAPtr;
+      hipExtent extent = make_hipExtent(dataW * elementSize, dataH, dataD);
 
-      pitchedAPtr =
-          make_hipPitchedPtr(aPtr, extent.width, extent.width / elementSize, extent.height);
       HIP_CHECK(hipMalloc3D(&pitchedAPtr, extent));
       aPtr = reinterpret_cast<T*>(pitchedAPtr.ptr);
       dataPitch = pitchedAPtr.pitch;
       break;
     }
 
-    case memSetType::hipMemset2D:
+    case memType::hipMem2D:
       HIP_CHECK(
           hipMallocPitch(reinterpret_cast<void**>(&aPtr), &dataPitch, dataW * elementSize, dataH));
 
-      dataPitch = dataW * elementSize;
       break;
 
     default:
@@ -114,49 +73,49 @@ static inline std::pair<T*, T*> deviceMallocHelper(memSetType memType, size_t da
       dataPitch = dataW * elementSize;
       break;
   }
-  return std::make_pair(aPtr, nullptr);
+  return {aPtr, nullptr};
 }
 
 template <typename T>
 static inline std::pair<T*, T*> hostMallocHelper(size_t dataW, size_t dataH, size_t dataD,
                                                  size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
+  constexpr size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   T* aPtr;
 
   HIP_CHECK(hipHostMalloc(&aPtr, sizeInBytes));
   dataPitch = dataW * elementSize;
 
-  return std::make_pair(aPtr, nullptr);
+  return {aPtr, nullptr};
 }
 
 template <typename T>
 static inline std::pair<T*, T*> hostRegisteredHelper(size_t dataW, size_t dataH, size_t dataD,
                                                      size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
+  constexpr size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   T* aPtr = new T[dataW * dataH * dataD];
 
   HIP_CHECK(hipHostRegister(aPtr, sizeInBytes, hipHostRegisterDefault));
 
   dataPitch = dataW * elementSize;
-  return std::make_pair(aPtr, nullptr);
+  return {aPtr, nullptr};
 }
 
 template <typename T>
 static inline std::pair<T*, T*> devRegisteredHelper(size_t dataW, size_t dataH, size_t dataD,
                                                     size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
+  constexpr size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   T* aPtr = new T[dataW * dataH * dataD];
-  T* retPtr;
+  T* retPtr{};
 
   HIP_CHECK(hipHostRegister(aPtr, sizeInBytes, hipHostRegisterDefault));
   HIP_CHECK(hipHostGetDevicePointer(reinterpret_cast<void**>(&retPtr), aPtr, 0));
 
   dataPitch = dataW * elementSize;
   // keep the address of the host memory
-  return std::make_pair(retPtr, aPtr);
+  return {retPtr, aPtr};
 }
 
 /*
@@ -165,26 +124,24 @@ static inline std::pair<T*, T*> devRegisteredHelper(size_t dataW, size_t dataH, 
  * the pointer to host memory to be able to unregister and free it
  */
 template <typename T>
-static inline std::pair<T*, T*> initMemory(allocType type, memSetType memType, MultiDData& data) {
-  size_t dataH = data.height == 0 ? 1 : data.height;
-  size_t dataD = data.depth == 0 ? 1 : data.depth;
+static inline std::pair<T*, T*> initMemory(allocType type, memType memType, MultiDData& data) {
   std::pair<T*, T*> retPtr{};
   // check different types of allocation
   switch (type) {
     case allocType::deviceMalloc:
-      retPtr = deviceMallocHelper<T>(memType, data.width, dataH, dataD, data.pitch);
+      retPtr = deviceMallocHelper<T>(memType, data.width, data.getH(), data.getD(), data.pitch);
       break;
 
     case allocType::hostMalloc:
-      retPtr = hostMallocHelper<T>(data.width, dataH, dataD, data.pitch);
+      retPtr = hostMallocHelper<T>(data.width, data.getH(), data.getD(), data.pitch);
       break;
 
     case allocType::hostRegisted:
-      retPtr = hostRegisteredHelper<T>(data.width, dataH, dataD, data.pitch);
+      retPtr = hostRegisteredHelper<T>(data.width, data.getH(), data.getD(), data.pitch);
       break;
 
     case allocType::devRegistered:
-      retPtr = devRegisteredHelper<T>(data.width, dataH, dataD, data.pitch);
+      retPtr = devRegisteredHelper<T>(data.width, data.getH(), data.getD(), data.pitch);
       break;
 
     default:
@@ -193,34 +150,45 @@ static inline std::pair<T*, T*> initMemory(allocType type, memSetType memType, M
   }
   return retPtr;
 }
+// create a hipMemcpy3DParams struct for the 3d version of memcpy to verify the memset operation
+template <typename T>
+hipMemcpy3DParms createParams(hipMemcpyKind kind, T* aPtr, T* hostMem, size_t dataPitch,
+                              size_t dataW, size_t dataH, size_t dataD) {
+  auto devPitchedPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
+  hipMemcpy3DParms p = {};
+  p.kind = kind;
+
+  p.srcPtr.ptr = devPitchedPtr.ptr;
+  p.srcPtr.pitch = devPitchedPtr.pitch;
+  p.srcPtr.xsize = dataW;
+  p.srcPtr.ysize = dataH;
+
+  p.dstPtr.ptr = hostMem;
+  p.dstPtr.pitch = dataW * sizeof(char);
+  p.dstPtr.xsize = dataW;
+  p.dstPtr.ysize = dataH;
+
+  hipExtent extent = make_hipExtent(dataW * sizeof(T), dataH, dataD);
+  p.extent = extent;
+
+  return p;
+}
 
 // set of helper functions to tidy the nested switch statements
 template <typename T>
-static inline void deviceMallocCopy(memSetType memType, T* aPtr, T* hostMem, size_t dataW,
+static inline void deviceMallocCopy(memType memType, T* aPtr, T* hostMem, size_t dataW,
                                     size_t dataH, size_t dataD, size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
+  constexpr size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   switch (memType) {
-    case memSetType::hipMemset3D: {
-      hipMemcpy3DParms params{};
-      params.kind = hipMemcpyDeviceToHost;
-      params.srcPos = make_hipPos(0, 0, 0);
-      params.srcPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
-      params.dstPos = make_hipPos(0, 0, 0);
-      params.dstPtr = make_hipPitchedPtr(hostMem, dataW, dataW, dataH);
-
-      hipExtent extent;
-      extent.width = dataW;
-      extent.height = dataH;
-      extent.depth = dataD;
-
-      params.extent = extent;
-
+    case memType::hipMem3D: {
+      hipMemcpy3DParms params =
+          createParams(hipMemcpyDeviceToHost, aPtr, hostMem, dataPitch, dataW, dataH, dataD);
       HIP_CHECK(hipMemcpy3D(&params));
       break;
     }
 
-    case memSetType::hipMemset2D:
+    case memType::hipMem2D:
       HIP_CHECK(hipMemcpy2D(hostMem, dataW * elementSize, aPtr, dataPitch, dataW, dataH,
                             hipMemcpyDeviceToHost));
       break;
@@ -232,31 +200,20 @@ static inline void deviceMallocCopy(memSetType memType, T* aPtr, T* hostMem, siz
 }
 
 template <typename T>
-static inline void hostCopy(memSetType memType, T* aPtr, T* hostMem, size_t dataW, size_t dataH,
+static inline void hostCopy(memType memType, T* aPtr, T* hostMem, size_t dataW, size_t dataH,
                             size_t dataD, size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
+  constexpr size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   switch (memType) {
-    case memSetType::hipMemset3D: {
-      hipMemcpy3DParms params{};
-      params.kind = hipMemcpyHostToHost;
-      params.srcPos = make_hipPos(0, 0, 0);
-      params.dstPos = make_hipPos(0, 0, 0);
-      params.srcPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
-      params.dstPtr = make_hipPitchedPtr(hostMem, dataW, dataW, dataH);
-
-      hipExtent extent;
-      extent.width = dataW;
-      extent.height = dataH;
-      extent.depth = dataD;
-
-      params.extent = extent;
+    case memType::hipMem3D: {
+      hipMemcpy3DParms params =
+          createParams(hipMemcpyHostToHost, aPtr, hostMem, dataPitch, dataW, dataH, dataD);
 
       HIP_CHECK(hipMemcpy3D(&params));
       break;
     }
 
-    case memSetType::hipMemset2D:
+    case memType::hipMem2D:
       HIP_CHECK(hipMemcpy2D(hostMem, dataW * elementSize, aPtr, dataPitch, dataW, dataH,
                             hipMemcpyHostToHost));
       break;
@@ -268,31 +225,20 @@ static inline void hostCopy(memSetType memType, T* aPtr, T* hostMem, size_t data
 }
 
 template <typename T>
-static inline void devRegisteredCopy(memSetType memType, T* aPtr, T* hostMem, size_t dataW,
+static inline void devRegisteredCopy(memType memType, T* aPtr, T* hostMem, size_t dataW,
                                      size_t dataH, size_t dataD, size_t& dataPitch) {
-  size_t elementSize = sizeof(T);
+  constexpr size_t elementSize = sizeof(T);
 
   switch (memType) {
-    case memSetType::hipMemset3D: {
-      hipMemcpy3DParms params{};
-      params.kind = hipMemcpyDeviceToHost;
-      params.srcPos = make_hipPos(0, 0, 0);
-      params.dstPos = make_hipPos(0, 0, 0);
-      params.srcPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
-      params.dstPtr = make_hipPitchedPtr(hostMem, dataW, dataW, dataH);
-
-      hipExtent extent;
-      extent.width = dataW;
-      extent.height = dataH;
-      extent.depth = dataD;
-
-      params.extent = extent;
+    case memType::hipMem3D: {
+      hipMemcpy3DParms params =
+          createParams(hipMemcpyDeviceToHost, aPtr, hostMem, dataPitch, dataW, dataH, dataD);
 
       HIP_CHECK(hipMemcpy3D(&params));
       break;
     }
 
-    case memSetType::hipMemset2D:
+    case memType::hipMem2D:
       HIP_CHECK(hipMemcpy2D(hostMem, dataW * elementSize, aPtr, dataPitch, dataW, dataH,
                             hipMemcpyDeviceToHost));
       break;
@@ -325,15 +271,12 @@ static inline size_t getPtrOffset(MultiDData data) {
  * offset
  */
 template <typename T>
-static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, MultiDData& data,
+static inline void memsetCheck(T* aPtr, size_t value, memType memType, MultiDData& data,
                                hipStream_t stream = nullptr, bool async = true) {
-  size_t dataW = data.width;
-  size_t dataH = data.height == 0 ? 1 : data.height;
-  size_t dataD = data.depth == 0 ? 1 : data.depth;
-  size_t count = dataW * dataH * dataD;
+  size_t count = data.getCount();
   size_t ptrOffset{};
-  switch (memsetType) {
-    case memSetType::hipMemset:
+  switch (memType) {
+    case memType::hipMem:
       if (async) {
         HIP_CHECK(hipMemsetAsync(aPtr + data.offset, value, count * sizeof(T), stream));
       } else {
@@ -341,7 +284,7 @@ static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, Mul
       }
       break;
 
-    case memSetType::hipMemsetD8:
+    case memType::hipMemsetD8:
       if (async) {
         HIP_CHECK(hipMemsetD8Async(reinterpret_cast<hipDeviceptr_t>(aPtr + data.offset), value,
                                    count, stream));
@@ -350,7 +293,7 @@ static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, Mul
       }
       break;
 
-    case memSetType::hipMemsetD16:
+    case memType::hipMemsetD16:
       if (async) {
         HIP_CHECK(hipMemsetD16Async(reinterpret_cast<hipDeviceptr_t>(aPtr + data.offset), value,
                                     count, stream));
@@ -359,7 +302,7 @@ static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, Mul
       }
       break;
 
-    case memSetType::hipMemsetD32:
+    case memType::hipMemsetD32:
       if (async) {
         HIP_CHECK(hipMemsetD32Async(reinterpret_cast<hipDeviceptr_t>(aPtr + data.offset), value,
                                     count, stream));
@@ -368,7 +311,7 @@ static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, Mul
       }
       break;
 
-    case memSetType::hipMemset2D:
+    case memType::hipMem2D:
       ptrOffset = getPtrOffset(data);
       if (async) {
         HIP_CHECK(
@@ -378,12 +321,10 @@ static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, Mul
       }
       break;
 
-    case memSetType::hipMemset3D:
+    case memType::hipMem3D: {
       ptrOffset = getPtrOffset(data);
-      hipExtent extent;
-      extent.width = data.width;
-      extent.height = data.height;
-      extent.depth = data.depth;
+      hipExtent extent = make_hipExtent(data.width * sizeof(T), data.height, data.depth);
+
       if (async) {
         HIP_CHECK(hipMemset3DAsync(
             make_hipPitchedPtr(aPtr + ptrOffset, data.pitch, data.width, data.height), value,
@@ -394,12 +335,13 @@ static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, Mul
                         value, extent));
       }
       break;
-
+    }
     default:
       REQUIRE(false);
       break;
   }
 }
+
 template <typename T> static inline void freeStuff(T* aPtr, allocType type) {
   switch (type) {
     case allocType::deviceMalloc:
@@ -421,38 +363,30 @@ template <typename T> static inline void freeStuff(T* aPtr, allocType type) {
  */
 template <typename T>
 static inline void verifyData(T* aPtr, size_t value, MultiDData& data, allocType type,
-                              memSetType memType) {
-  auto dataH = data.height == 0 ? 1 : data.height;
-  auto dataD = data.depth == 0 ? 1 : data.depth;
-  size_t sizeInBytes = data.pitch * dataH * dataD;
+                              memType memType) {
+  size_t sizeInBytes = data.width * data.getH() * data.getD();
   std::unique_ptr<T[]> hostPtr = std::make_unique<T[]>(sizeInBytes);
   switch (type) {
     case allocType::deviceMalloc:
-      deviceMallocCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, dataH, dataD,
-                       data.pitch);
-      break;
-    case allocType::hostMalloc:
-      hostCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, dataH, dataD,
-               data.pitch);
-      break;
-    case allocType::hostRegisted:
-      hostCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, dataH, dataD,
-               data.pitch);
+      deviceMallocCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, data.getH(),
+                       data.getD(), data.pitch);
       break;
     case allocType::devRegistered:
-      devRegisteredCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, dataH, dataD,
-                        data.pitch);
+      devRegisteredCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, data.getH(),
+                        data.getD(), data.pitch);
       break;
-    default:
+    default:  // host malloc and host registered
+      hostCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, data.getH(),
+               data.getD(), data.pitch);
       break;
   }
 
   size_t idx;
   bool allMatch{true};
-  for (size_t k = 0; k < dataD; k++) {
-    for (size_t j = 0; j < dataH; j++) {
+  for (size_t k = 0; k < data.getD(); k++) {
+    for (size_t j = 0; j < data.getH(); j++) {
       for (size_t i = 0; i < data.width; i++) {
-        idx = data.width * dataH * k + data.width * j + i;
+        idx = data.width * data.getH() * k + data.width * j + i;
         allMatch = allMatch && static_cast<size_t>(hostPtr.get()[idx]) == value;
         if (!allMatch) REQUIRE(false);
       }
@@ -462,7 +396,7 @@ static inline void verifyData(T* aPtr, size_t value, MultiDData& data, allocType
 
 // function used to abstract the test
 template <typename T, typename F, typename... fArgs>
-static inline void doMemsetTest(F func, fArgs... funcArgs) {
+static inline void doMemTest(F func, fArgs... funcArgs) {
   SECTION("Synchronous") { func(nullptr, false, funcArgs...); }
   SECTION("Asynchronous - null stream") { func(nullptr, true, funcArgs...); }
   SECTION("Asynchronous - created stream") {
@@ -472,8 +406,4 @@ static inline void doMemsetTest(F func, fArgs... funcArgs) {
     HIP_CHECK(hipStreamDestroy(stream));
   }
 }
-
-
-}  // namespace memset_utils
-=======
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
+}  // namespace mem_utils

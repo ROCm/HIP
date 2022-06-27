@@ -27,9 +27,9 @@ THE SOFTWARE.
  * host except when the target is pinned host memory or a Unified Memory region
  */
 
-<<<<<<< HEAD
-using namespace memset_utils;
+using namespace mem_utils;
 
+<<<<<<< HEAD
 // value used for memset operations
 constexpr int testValue = 0x11;
 
@@ -429,6 +429,18 @@ void runTests(hipStream_t stream, bool async, allocType type, memSetType memsetT
   memsetCheck(aPtr.first, testValue, memsetType, data, async, stream);
 >>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 
+=======
+// value used for memset operations
+constexpr int testValue = 0x11;
+
+// Helper function to run tests for hipMemset allocation types
+template <typename T>
+void runTests(hipStream_t stream, bool async, allocType type, memType memType, MultiDData data) {
+  CAPTURE(type, memType, data.width, data.height, data.depth, stream, async);
+  std::pair<T*, T*> aPtr = initMemory<T>(type, memType, data);
+  launchLongRunningKernel(300, stream);
+  memsetCheck(aPtr.first, testValue, memType, data, stream, async);
+>>>>>>> Refactored testing to use common header
   if (async || type == allocType::deviceMalloc) {
     HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);
   } else {
@@ -436,7 +448,7 @@ void runTests(hipStream_t stream, bool async, allocType type, memSetType memsetT
   }
 
   HIP_CHECK(hipStreamSynchronize(stream));
-  verifyData(aPtr.first, testValue, data, type, memsetType);
+  verifyData(aPtr.first, testValue, data, type, memType);
 
   if (type == allocType::devRegistered) {
     freeStuff(aPtr.second, type);
@@ -452,10 +464,14 @@ TEST_CASE("Unit_hipMemsetSync") {
 #endif
   allocType type = GENERATE(allocType::deviceMalloc, allocType::hostMalloc, allocType::hostRegisted,
                             allocType::devRegistered);
-  memSetType memset_type = memSetType::hipMemset;
+  memType memset_type = memType::hipMem;
   MultiDData data;
   data.width = GENERATE(1, 1024);
+<<<<<<< HEAD
   doMemsetTest<char>(runTests<char>, type, memset_type, data);
+=======
+  doMemTest<char>(runTests<char>, type, memset_type, data);
+>>>>>>> Refactored testing to use common header
 }
 
 TEMPLATE_TEST_CASE("Unit_hipMemsetDSync", "", int8_t, int16_t, uint32_t) {
@@ -465,19 +481,23 @@ TEMPLATE_TEST_CASE("Unit_hipMemsetDSync", "", int8_t, int16_t, uint32_t) {
 #endif
   allocType mallocType = GENERATE(allocType::hostRegisted, allocType::deviceMalloc,
                                   allocType::hostMalloc, allocType::devRegistered);
-  memSetType memset_type;
+  memType memset_type;
   MultiDData data;
   data.width = GENERATE(1, 1024);
 
   if (std::is_same<int8_t, TestType>::value) {
-    memset_type = memSetType::hipMemsetD8;
+    memset_type = memType::hipMemsetD8;
   } else if (std::is_same<int16_t, TestType>::value) {
-    memset_type = memSetType::hipMemsetD16;
+    memset_type = memType::hipMemsetD16;
   } else if (std::is_same<uint32_t, TestType>::value) {
-    memset_type = memSetType::hipMemsetD32;
+    memset_type = memType::hipMemsetD32;
   }
 
+<<<<<<< HEAD
   doMemsetTest<TestType>(runTests<char>, mallocType, memset_type, data);
+=======
+  doMemTest<TestType>(runTests<TestType>, mallocType, memset_type, data);
+>>>>>>> Refactored testing to use common header
 }
 
 TEST_CASE("Unit_hipMemset2DSync") {
@@ -487,12 +507,16 @@ TEST_CASE("Unit_hipMemset2DSync") {
 #endif
   allocType mallocType = GENERATE(allocType::deviceMalloc, allocType::hostMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
-  memSetType memset_type = memSetType::hipMemset2D;
+  memType memset_type = memType::hipMem2D;
   MultiDData data;
   data.width = GENERATE(1, 1024);
   data.height = GENERATE(1, 1024);
 
+<<<<<<< HEAD
   doMemsetTest<char>(runTests<char>, mallocType, memset_type, data);
+=======
+  doMemTest<char>(runTests<char>, mallocType, memset_type, data);
+>>>>>>> Refactored testing to use common header
 }
 
 TEST_CASE("Unit_hipMemset3DSync") {
@@ -502,12 +526,13 @@ TEST_CASE("Unit_hipMemset3DSync") {
 #endif
   allocType mallocType = GENERATE(allocType::deviceMalloc, allocType::hostMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
-  memSetType memset_type = memSetType::hipMemset3D;
+  memType memset_type = memType::hipMem3D;
   MultiDData data;
   data.width = GENERATE(1, 256);
   data.height = GENERATE(1, 256);
   data.depth = GENERATE(1, 256);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   doMemsetTest<char>(runTests<char>, mallocType, memset_type, data);
 }
@@ -534,3 +559,7 @@ TEST_CASE("Unit_hipMemset3DSync") {
 =======
 >>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 >>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
+=======
+  doMemTest<char>(runTests<char>, mallocType, memset_type, data);
+}
+>>>>>>> Refactored testing to use common header

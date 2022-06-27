@@ -31,7 +31,7 @@ constexpr int testValue1 = 97;
 constexpr int testValue2 = 98;
 
 
-using namespace memset_utils;
+using namespace mem_utils;
 
 // Helper function to run tests for hipMemset allocation types
 template <typename T>
@@ -44,16 +44,16 @@ void runAsyncTests(hipStream_t stream, bool async, allocType type, memSetType me
   totalRange.width = data1.width + data2.width;
   totalRange.height = data1.height + data2.height;
   totalRange.depth = data1.depth + data2.depth;
-  aPtr = initMemory<T>(type, memsetType, totalRange);
+  aPtr = initMemory<T>(type, memType, totalRange);
   data1.pitch = totalRange.pitch;
   data2.pitch = totalRange.pitch;
 
-  memsetCheck(aPtr.first, testValue1, memsetType, data1, stream);
-  memsetCheck(aPtr.first, testValue2, memsetType, data2, stream);
+  memsetCheck(aPtr.first, testValue1, memType, data1, stream);
+  memsetCheck(aPtr.first, testValue2, memType, data2, stream);
 
   HIP_CHECK(hipStreamSynchronize(stream));
-  verifyData(aPtr.first, testValue1, data1, type, memsetType);
-  verifyData(aPtr.first, testValue2, data2, type, memsetType);
+  verifyData(aPtr.first, testValue1, data1, type, memType);
+  verifyData(aPtr.first, testValue2, data2, type, memType);
 
 
   if (type == allocType::devRegistered) {
@@ -74,7 +74,7 @@ TEST_CASE("Unit_hipMemsetASyncMulti") {
 #endif
   allocType mallocType = GENERATE(allocType::hostMalloc, allocType::deviceMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
-  memSetType memset_type = memSetType::hipMemset;
+  memType memset_type = memType::hipMem;
   MultiDData data1;
   data1.offset = 0;
   data1.width = GENERATE(1, 256);
@@ -82,7 +82,7 @@ TEST_CASE("Unit_hipMemsetASyncMulti") {
   data2.width = data1.width;
 
   data2.offset = data1.width;
-  doMemsetTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
+  doMemTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
 }
 
 /*
@@ -95,7 +95,7 @@ TEMPLATE_TEST_CASE("Unit_hipMemsetDASyncMulti", "", int8_t, int16_t, uint32_t) {
 #endif
   allocType mallocType = GENERATE(allocType::hostRegisted, allocType::deviceMalloc,
                                   allocType::hostMalloc, allocType::devRegistered);
-  memSetType memset_type;
+  memType memset_type;
   MultiDData data1;
   data1.offset = 0;
   data1.width = GENERATE(1, 256);
@@ -104,13 +104,13 @@ TEMPLATE_TEST_CASE("Unit_hipMemsetDASyncMulti", "", int8_t, int16_t, uint32_t) {
   data2.offset = data1.width;
 
   if (std::is_same<int8_t, TestType>::value) {
-    memset_type = memSetType::hipMemsetD8;
+    memset_type = memType::hipMemsetD8;
   } else if (std::is_same<int16_t, TestType>::value) {
-    memset_type = memSetType::hipMemsetD16;
+    memset_type = memType::hipMemsetD16;
   } else if (std::is_same<uint32_t, TestType>::value) {
-    memset_type = memSetType::hipMemsetD32;
+    memset_type = memType::hipMemsetD32;
   }
-  doMemsetTest<TestType>(runAsyncTests<TestType>, mallocType, memset_type, data1, data2);
+  doMemTest<TestType>(runAsyncTests<TestType>, mallocType, memset_type, data1, data2);
 }
 /*
  * test 2 async hipMemset2D's on the same memory at different offsets
@@ -122,7 +122,7 @@ TEST_CASE("Unit_hipMemset2DASyncMulti") {
 #endif
   allocType mallocType = GENERATE(allocType::deviceMalloc, allocType::hostMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
-  memSetType memset_type = memSetType::hipMemset2D;
+  memType memset_type = memType::hipMem2D;
   MultiDData data1;
   data1.offset = 0;
   data1.width = GENERATE(1, 256);
@@ -132,7 +132,7 @@ TEST_CASE("Unit_hipMemset2DASyncMulti") {
   data2.height = data1.height;
   data2.offset = data1.width;
 
-  doMemsetTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
+  doMemTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
 }
 /*
  * test 2 async hipMemset3D's on the same memory at different offsets
@@ -144,7 +144,7 @@ TEST_CASE("Unit_hipMemset3DASyncMulti") {
 #endif
   allocType mallocType = GENERATE(allocType::deviceMalloc, allocType::hostMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
-  memSetType memset_type = memSetType::hipMemset3D;
+  memType memset_type = memType::hipMem3D;
   MultiDData data1;
   data1.offset = 0;
   data1.width = GENERATE(1, 256);
@@ -166,5 +166,5 @@ TEST_CASE("Unit_hipMemset3DASyncMulti") {
 >>>>>>> Fixed versions 2D and 3D of memset Async
   data2.offset = data1.width;
 
-  doMemsetTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
+  doMemTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
 }
