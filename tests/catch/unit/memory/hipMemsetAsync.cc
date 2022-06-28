@@ -30,6 +30,10 @@ THE SOFTWARE.
  * host except when the target is pinned host memory or a Unified Memory region
  */
 
+constexpr int testValue1 = 97;
+constexpr int testValue2 = 98;
+
+
 using namespace memset_utils;
 
 // Helper function to run tests for hipMemset allocation types
@@ -44,14 +48,13 @@ void runAsyncTests(hipStream_t stream, allocType type, memSetType memsetType, Mu
   aPtr = initMemory<T>(type, memsetType, totalRange);
   data1.pitch = totalRange.pitch;
   data2.pitch = totalRange.pitch - data2.offset;
-  printf("  \n");
-  memsetCheck(aPtr.first, 'a', memsetType, data1, stream);
-  memsetCheck(aPtr.first, 'b', memsetType, data2, stream);
 
-  printf("after \n");
+  memsetCheck(aPtr.first, testValue1, memsetType, data1, stream);
+  memsetCheck(aPtr.first, testValue2, memsetType, data2, stream);
+
   HIP_CHECK(hipStreamSynchronize(stream));
-  verifyData(aPtr.first, 0x11, totalRange, type, memsetType);
-  // verifyData(aPtr.first, 0x22, data2, type, memsetType);
+  verifyData(aPtr.first, testValue1, data1, type, memsetType);
+  verifyData(aPtr.first, testValue2, data2, type, memsetType);
 
 
   if (type == allocType::devRegistered) {
@@ -71,7 +74,7 @@ TEST_CASE("Unit_hipMemsetASyncMulti") {
   memSetType memset_type = memSetType::hipMemset;
   MultiDData data1;
   data1.offset = 0;
-  data1.width = GENERATE(1, 6);
+  data1.width = GENERATE(1, 256);
   MultiDData data2;
   data2.width = data1.width;
 
@@ -88,9 +91,10 @@ TEMPLATE_TEST_CASE("Unit_hipMemsetDASyncMulti", "", int8_t, int16_t, uint32_t) {
   memSetType memset_type;
   MultiDData data1;
   data1.offset = 0;
-  data1.width = GENERATE(1, 512);
+  data1.width = GENERATE(1, 256);
   MultiDData data2;
   data2.width = data1.width;
+  data2.offset = data1.width;
 
   if (std::is_same<int8_t, TestType>::value) {
     memset_type = memSetType::hipMemsetD8;
@@ -111,11 +115,12 @@ TEMPLATE_TEST_CASE("Unit_hipMemset2DASyncMulti", "", char) {
   memSetType memset_type = memSetType::hipMemset2D;
   MultiDData data1;
   data1.offset = 0;
-  data1.width = GENERATE(1, 512);
-  data1.height = GENERATE(1, 512);
+  data1.width = GENERATE(1, 256);
+  data1.height = data1.width;
   MultiDData data2;
   data2.width = data1.width;
   data2.height = data1.height;
+  data2.offset = data1.width;
 
   doMemsetTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
 }
@@ -128,13 +133,14 @@ TEMPLATE_TEST_CASE("Unit_hipMemset3DASyncMulti", "", char) {
   memSetType memset_type = memSetType::hipMemset3D;
   MultiDData data1;
   data1.offset = 0;
-  data1.width = GENERATE(1, 128);
-  data1.height = GENERATE(1, 128);
-  data1.depth = GENERATE(1, 128);
+  data1.width = GENERATE(1, 256);
+  data1.height = data1.width;
+  data1.depth = data1.width;
   MultiDData data2;
   data2.width = data1.width;
   data2.height = data1.height;
   data2.depth = data1.depth;
+  data2.offset = data1.width;
 
   doMemsetTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
 }
