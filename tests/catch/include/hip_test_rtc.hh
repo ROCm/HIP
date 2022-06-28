@@ -31,6 +31,7 @@ THE SOFTWARE.
 #include <fstream>
 #include <sstream>
 #include <set>
+#include <mutex>
 #include "hip/hip_runtime_api.h"
 #include "hip_test_context.hh"
 
@@ -218,7 +219,6 @@ static inline void printInfo() {
 template <typename... Typenames, typename... Args>
 void launchRTCKernel(std::string (*getKernelName)(), dim3 numBlocks, dim3 numThreads,
                      std::uint32_t memPerBlock, hipStream_t stream, Args&&... packedArgs) {
-
   printInfo();
   TestContext& testContext = TestContext::get();
   std::string kernelName = (*getKernelName)();
@@ -226,25 +226,29 @@ void launchRTCKernel(std::string (*getKernelName)(), dim3 numBlocks, dim3 numThr
   std::vector<std::string> kernelTypenames{std::string(HipTest::getTypeName<Typenames>())...};
   std::string kernelExpression = reconstructExpression(kernelName, kernelTypenames);
 
-  if (testContext.getFunction(kernelExpression) == nullptr) {
-    hiprtcProgram rtcProgram{compileRTC(kernelName, kernelExpression)};
-    std::vector<char> compiledCode{getKernelCode(rtcProgram)};
+  static std::mutex mutex{};
+  {
+    std::lock_guard<std::mutex> lockGuard(mutex);
+    if (testContext.getFunction(kernelExpression) == nullptr) {
+      hiprtcProgram rtcProgram{compileRTC(kernelName, kernelExpression)};
+      std::vector<char> compiledCode{getKernelCode(rtcProgram)};
 
-    hipModule_t module;
+      hipModule_t module;
 
-    REQUIRE(hipSuccess == hipModuleLoadData(&module, compiledCode.data()));
+      REQUIRE(hipSuccess == hipModuleLoadData(&module, compiledCode.data()));
 
       hipFunction_t kernelFunction;
 
-    const char* loweredName;
-    REQUIRE(HIPRTC_SUCCESS ==
-          hiprtcGetLoweredName(rtcProgram, kernelExpression.c_str(), &loweredName));
-    REQUIRE(hipSuccess == hipModuleGetFunction(&kernelFunction, module, loweredName));
+      const char* loweredName;
+      REQUIRE(HIPRTC_SUCCESS ==
+              hiprtcGetLoweredName(rtcProgram, kernelExpression.c_str(), &loweredName));
+      REQUIRE(hipSuccess == hipModuleGetFunction(&kernelFunction, module, loweredName));
 
-    /* After obtaining the kernelFunction, the program is no longer needed. So it can be destroyed */
-    REQUIRE(HIPRTC_SUCCESS == hiprtcDestroyProgram(&rtcProgram));
+      /* After obtaining the kernelFunction, the program is no longer needed. So it can be destroyed */
+      REQUIRE(HIPRTC_SUCCESS == hiprtcDestroyProgram(&rtcProgram));
 
-    testContext.trackRtcState(kernelExpression, module, kernelFunction);
+      testContext.trackRtcState(kernelExpression, module, kernelFunction);
+    }
   }
 
   hipFunction_t kernelFunction = testContext.getFunction(kernelExpression);

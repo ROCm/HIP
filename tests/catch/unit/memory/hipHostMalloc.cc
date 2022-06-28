@@ -144,7 +144,6 @@ TEST_CASE("Unit_hipHostMalloc_Basic") {
     HIP_CHECK(hipHostFree(A_h));
     HIP_CHECK(hipHostFree(B_h));
     HIP_CHECK(hipHostFree(C_h));
-    TestContext::get().cleanContext();
   }
 }
 /*
@@ -182,7 +181,6 @@ TEST_CASE("Unit_hipHostMalloc_NonCoherent") {
                    SYNC_STREAM, ptrType);
   CheckHostPointer(numElements, A, hipEventReleaseToSystem,
                    SYNC_EVENT, ptrType);
-  TestContext::get().cleanContext();
 }
 
 /*
