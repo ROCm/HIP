@@ -122,10 +122,14 @@ TEST_CASE("Unit_hipPtrGetAttribute_Simple") {
 
   // HIP_POINTER_ATTRIBUTE_DEVICE_ORDINAL
   if (numDevices > 1) {
-    HIP_CHECK(hipSetDevice(1));
-    HIP_CHECK(hipPointerGetAttribute(&datatype, HIP_POINTER_ATTRIBUTE_DEVICE_ORDINAL,
-              reinterpret_cast<hipDeviceptr_t>(A_d)));
-    REQUIRE(datatype == 0);
+    int canAccess = -1;
+    HIP_CHECK(hipDeviceCanAccessPeer(&canAccess, 1, 0));
+    if (canAccess == 1) {
+      HIP_CHECK(hipSetDevice(1));
+      HIP_CHECK(hipPointerGetAttribute(&datatype, HIP_POINTER_ATTRIBUTE_DEVICE_ORDINAL,
+                reinterpret_cast<hipDeviceptr_t>(A_d)));
+      REQUIRE(datatype == 0);
+    }
   }
 
   // HIP_POINTER_ATTRIBUTE_MAPPED

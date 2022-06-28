@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <hip_test_common.hh>
 #include <picojson.h>
 #include <fstream>
@@ -211,7 +212,10 @@ bool TestContext::parseJsonFile() {
 
 void TestContext::cleanContext() {
   for (auto& pair : compiledKernels) {
-    REQUIRE(hipSuccess == hipModuleUnload(pair.second.module));
+    hipError_t error = hipModuleUnload(pair.second.module);
+    if (error != hipSuccess) {
+      throw std::runtime_error("Unable to unload rtc module");
+    }
   }
 }
 
