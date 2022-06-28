@@ -152,8 +152,13 @@ TEST_CASE("Unit_hipMemset3DASyncMulti") {
   data1.depth = data1.width;
   MultiDData data2;
   data2.width = data1.width;
+<<<<<<< HEAD
   data2.height = data1.width;
   data2.depth = data1.width;
+=======
+  data2.height = data1.height;
+  data2.depth = data1.depth;
+>>>>>>> All cases passing on Nvidia
   data2.offset = data1.width;
 
   doMemsetTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
