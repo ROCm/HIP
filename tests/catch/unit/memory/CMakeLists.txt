@@ -95,6 +95,7 @@ set(TEST_SRC
     hipFree.cc
     hipMemsetSync.cc
     hipMemsetAsync.cc
+    hipArray.cc
 )
 else()
 set(TEST_SRC
