@@ -1,7 +1,7 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
+Permission is hereby granted, free of intge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
@@ -28,7 +28,7 @@ THE SOFTWARE.
 /*
  * This testcase verifies hipMemGetInfo API
  * 1. Different memory chunk allocation
- *  1.1. hipMalloc
+ *  1.1. hipMalloc - smallest memory chunk that can be allocated is 1024
  *  1.2. hipMallocArray
  *  1.3. hipMalloc3D
  *  1.3. hipMalloc3DArray

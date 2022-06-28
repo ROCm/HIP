@@ -93,7 +93,7 @@ set(TEST_SRC
     hipMemVmm.cc
     hipMemGetInfo.cc
     hipFree.cc
-    hipMemsetSync.cc
+    hipArray.cc
 )
 else()
 set(TEST_SRC
