@@ -574,7 +574,7 @@ enum hipLimit_t {
 /** Disable event's capability to record timing information. May improve performance.*/
 #define hipEventDisableTiming  0x2
 
-/** Event can support IPC. Warnig: It is not supported in HIP.*/
+/** Event can support IPC. hipEventDisableTiming also must be set.*/
 #define hipEventInterprocess 0x4
 
 /** Use a device-scope release when recording this event. This flag is useful to obtain more
@@ -1713,13 +1713,13 @@ hipError_t hipIpcCloseMemHandle(void* devPtr);
 /**
  * @brief Gets an opaque interprocess handle for an event.
  *
- * This opaque handle may be copied into other processes and opened with cudaIpcOpenEventHandle.
- * Then cudaEventRecord, cudaEventSynchronize, cudaStreamWaitEvent and cudaEventQuery may be used in
+ * This opaque handle may be copied into other processes and opened with hipIpcOpenEventHandle.
+ * Then hipEventRecord, hipEventSynchronize, hipStreamWaitEvent and hipEventQuery may be used in
  * either process. Operations on the imported event after the exported event has been freed with hipEventDestroy
  * will result in undefined behavior.
  *
- * @param[out]  handle Pointer to cudaIpcEventHandle to return the opaque event handle
- * @param[in]   event  Event allocated with cudaEventInterprocess and cudaEventDisableTiming flags
+ * @param[out]  handle Pointer to hipIpcEventHandle to return the opaque event handle
+ * @param[in]   event  Event allocated with hipEventInterprocess and hipEventDisableTiming flags
  *
  * @returns #hipSuccess, #hipErrorInvalidConfiguration, #hipErrorInvalidValue
  *
@@ -2227,8 +2227,8 @@ hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, 
  for the synchroniation but can result in lower power and more resources for other CPU threads.
  * #hipEventDisableTiming : Disable recording of timing information. Events created with this flag
  would not record profiling data and provide best performance if used for synchronization.
- * @warning On AMD platform, hipEventInterprocess support is under development.  Use of this flag
- will return an error.
+ * #hipEventInterprocess : The event can be used as an interprocess event. hipEventDisableTiming
+ flag also must be set when hipEventInterprocess flag is set.
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
  #hipErrorLaunchFailure, #hipErrorOutOfMemory
