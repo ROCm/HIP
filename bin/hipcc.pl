@@ -52,6 +52,19 @@ if(scalar @ARGV == 0){
     exit(-1);
 }
 
+# retrieve --rocm-path hipcc option from command line.
+# We need to respect this over the env var ROCM_PATH for this compilation.
+sub get_rocm_path_option {
+  my $rocm_path="";
+  my @CLArgs = @ARGV;
+  foreach $arg (@CLArgs) {
+    if (index($arg,"--rocm-path=") != -1) {
+      ($rocm_path) = $arg=~ /=\s*(.*)\s*$/;
+    }
+  }
+  return $rocm_path;
+}
+
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
 
@@ -88,12 +101,18 @@ sub delete_temp_dirs {
 }
 
 my $base_dir;
+my $rocmPath;
 BEGIN {
     $base_dir = dirname(Cwd::realpath(__FILE__) );
+    $rocmPath = get_rocm_path_option();
+    if ($rocmPath ne '') {
+      # --rocm-path takes precedence over ENV{ROCM_PATH}
+      $ENV{ROCM_PATH}=$rocmPath;
+    }
 }
 use lib "$base_dir/";
-use hipvars;
 
+use hipvars;
 $isWindows      =   $hipvars::isWindows;
 $HIP_RUNTIME    =   $hipvars::HIP_RUNTIME;
 $HIP_PLATFORM   =   $hipvars::HIP_PLATFORM;
