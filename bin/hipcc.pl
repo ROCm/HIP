@@ -52,6 +52,19 @@ if(scalar @ARGV == 0){
     exit(-1);
 }
 
+# retrieve --rocm-path hipcc option from command line.
+# We need to respect this over the env var ROCM_PATH for this compilation.
+sub get_rocm_path_option {
+  my $rocm_path="";
+  my @CLArgs = @ARGV;
+  foreach $arg (@CLArgs) {
+    if (index($arg,"--rocm-path=") != -1) {
+      ($rocm_path) = $arg=~ /=\s*(.*)\s*$/;
+    }
+  }
+  return $rocm_path;
+}
+
 $verbose = $ENV{'HIPCC_VERBOSE'} // 0;
 # Verbose: 0x1=commands, 0x2=paths, 0x4=hipcc args
 
@@ -92,8 +105,17 @@ BEGIN {
     $base_dir = dirname(Cwd::realpath(__FILE__) );
 }
 use lib "$base_dir/";
-use hipvars;
 
+# check to see if --rocm-path has been specified in the command line, 
+# and if so, use that for ROCM_PATH only for the duration of this perl script.
+my $rocmPath = get_rocm_path_option ();
+if ($rocmPath ne "") {
+  BEGIN {
+    $ENV{ROCM_PATH} = $rocmPath
+  }
+}
+
+use hipvars;
 $isWindows      =   $hipvars::isWindows;
 $HIP_RUNTIME    =   $hipvars::HIP_RUNTIME;
 $HIP_PLATFORM   =   $hipvars::HIP_PLATFORM;
