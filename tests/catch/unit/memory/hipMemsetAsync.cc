@@ -46,8 +46,8 @@ void runAsyncTests(hipStream_t stream, allocType type, memSetType memsetType, Mu
   totalRange.height = data1.height + data2.height;
   totalRange.depth = data1.depth + data2.depth;
   aPtr = initMemory<T>(type, memsetType, totalRange);
-  data1.pitch = totalRange.pitch;
-  data2.pitch = totalRange.pitch - data2.offset;
+  data1.pitch = totalRange.pitch / 2;
+  data2.pitch = totalRange.pitch / 2;
 
   memsetCheck(aPtr.first, testValue1, memsetType, data1, stream);
   memsetCheck(aPtr.first, testValue2, memsetType, data2, stream);
@@ -69,6 +69,10 @@ void runAsyncTests(hipStream_t stream, allocType type, memSetType memsetType, Mu
  */
 
 TEST_CASE("Unit_hipMemsetASyncMulti") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-127");
+  return;
+#endif
   allocType mallocType = GENERATE(allocType::hostMalloc, allocType::deviceMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
   memSetType memset_type = memSetType::hipMemset;
@@ -86,6 +90,10 @@ TEST_CASE("Unit_hipMemsetASyncMulti") {
  * test 2 async hipMemsetD[8,16,32]'s on the same memory at different offsets
  */
 TEMPLATE_TEST_CASE("Unit_hipMemsetDASyncMulti", "", int8_t, int16_t, uint32_t) {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-127");
+  return;
+#endif
   allocType mallocType = GENERATE(allocType::hostRegisted, allocType::deviceMalloc,
                                   allocType::hostMalloc, allocType::devRegistered);
   memSetType memset_type;
@@ -103,13 +111,16 @@ TEMPLATE_TEST_CASE("Unit_hipMemsetDASyncMulti", "", int8_t, int16_t, uint32_t) {
   } else if (std::is_same<uint32_t, TestType>::value) {
     memset_type = memSetType::hipMemsetD32;
   }
-
-  doMemsetTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);
+  doMemsetTest<TestType>(runAsyncTests<TestType>, mallocType, memset_type, data1, data2);
 }
 /*
  * test 2 async hipMemset2D's on the same memory at different offsets
  */
-TEMPLATE_TEST_CASE("Unit_hipMemset2DASyncMulti", "", char) {
+TEST_CASE("Unit_hipMemset2DASyncMulti") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-127");
+  return;
+#endif
   allocType mallocType = GENERATE(allocType::deviceMalloc, allocType::hostMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
   memSetType memset_type = memSetType::hipMemset2D;
@@ -127,7 +138,11 @@ TEMPLATE_TEST_CASE("Unit_hipMemset2DASyncMulti", "", char) {
 /*
  * test 2 async hipMemset3D's on the same memory at different offsets
  */
-TEMPLATE_TEST_CASE("Unit_hipMemset3DASyncMulti", "", char) {
+TEST_CASE("Unit_hipMemset3DASyncMulti") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-127");
+  return;
+#endif
   allocType mallocType = GENERATE(allocType::deviceMalloc, allocType::hostMalloc,
                                   allocType::hostRegisted, allocType::devRegistered);
   memSetType memset_type = memSetType::hipMemset3D;
@@ -138,8 +153,8 @@ TEMPLATE_TEST_CASE("Unit_hipMemset3DASyncMulti", "", char) {
   data1.depth = data1.width;
   MultiDData data2;
   data2.width = data1.width;
-  data2.height = data1.height;
-  data2.depth = data1.depth;
+  data2.height = data1.width;
+  data2.depth = data1.width;
   data2.offset = data1.width;
 
   doMemsetTest<char>(runAsyncTests<char>, mallocType, memset_type, data1, data2);

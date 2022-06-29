@@ -66,7 +66,7 @@ struct MultiDData {
 // set of helper functions to tidy the nested switch statements
 template <typename T>
 static inline std::pair<T*, T*> deviceMallocHelper(memSetType memType, size_t dataW, size_t dataH,
-                                                  size_t dataD, size_t& dataPitch) {
+                                                   size_t dataD, size_t& dataPitch) {
   size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   T* aPtr{};
@@ -103,7 +103,7 @@ static inline std::pair<T*, T*> deviceMallocHelper(memSetType memType, size_t da
 
 template <typename T>
 static inline std::pair<T*, T*> hostMallocHelper(size_t dataW, size_t dataH, size_t dataD,
-                                                size_t& dataPitch) {
+                                                 size_t& dataPitch) {
   size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   T* aPtr;
@@ -116,7 +116,7 @@ static inline std::pair<T*, T*> hostMallocHelper(size_t dataW, size_t dataH, siz
 
 template <typename T>
 static inline std::pair<T*, T*> hostRegisteredHelper(size_t dataW, size_t dataH, size_t dataD,
-                                                    size_t& dataPitch) {
+                                                     size_t& dataPitch) {
   size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   T* aPtr = new T[dataW * dataH * dataD];
@@ -129,7 +129,7 @@ static inline std::pair<T*, T*> hostRegisteredHelper(size_t dataW, size_t dataH,
 
 template <typename T>
 static inline std::pair<T*, T*> devRegisteredHelper(size_t dataW, size_t dataH, size_t dataD,
-                                                   size_t& dataPitch) {
+                                                    size_t& dataPitch) {
   size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   T* aPtr = new T[dataW * dataH * dataD];
@@ -181,7 +181,7 @@ static inline std::pair<T*, T*> initMemory(allocType type, memSetType memType, M
 // set of helper functions to tidy the nested switch statements
 template <typename T>
 static inline void deviceMallocCopy(memSetType memType, T* aPtr, T* hostMem, size_t dataW,
-                                   size_t dataH, size_t dataD, size_t& dataPitch) {
+                                    size_t dataH, size_t dataD, size_t& dataPitch) {
   size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   switch (memType) {
@@ -217,7 +217,7 @@ static inline void deviceMallocCopy(memSetType memType, T* aPtr, T* hostMem, siz
 
 template <typename T>
 static inline void hostCopy(memSetType memType, T* aPtr, T* hostMem, size_t dataW, size_t dataH,
-                           size_t dataD, size_t& dataPitch) {
+                            size_t dataD, size_t& dataPitch) {
   size_t elementSize = sizeof(T);
   size_t sizeInBytes = elementSize * dataW * dataH * dataD;
   switch (memType) {
@@ -253,7 +253,7 @@ static inline void hostCopy(memSetType memType, T* aPtr, T* hostMem, size_t data
 
 template <typename T>
 static inline void devRegisteredCopy(memSetType memType, T* aPtr, T* hostMem, size_t dataW,
-                                    size_t dataH, size_t dataD, size_t& dataPitch) {
+                                     size_t dataH, size_t dataD, size_t& dataPitch) {
   size_t elementSize = sizeof(T);
 
   switch (memType) {
@@ -297,11 +297,12 @@ static inline void devRegisteredCopy(memSetType memType, T* aPtr, T* hostMem, si
 static inline size_t getPtrOffset(MultiDData data) {
   if (data.height == 0) {  // 1D
     return data.offset;
+  } else if (data.depth == 0) {
+    return (data.offset + (data.pitch * data.offset));
   } else {  // 2D or 3D
     return (data.offset + (data.pitch * data.offset) + (data.pitch * data.offset * data.height));
   }
 }
-
 
 /*
  * Function to allow reuse of functions for testing versions of the memset API, at a specified
@@ -309,12 +310,12 @@ static inline size_t getPtrOffset(MultiDData data) {
  */
 template <typename T>
 static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, MultiDData& data,
-                              hipStream_t stream = nullptr, bool async = true) {
+                               hipStream_t stream = nullptr, bool async = true) {
   size_t dataW = data.width;
   size_t dataH = data.height == 0 ? 1 : data.height;
   size_t dataD = data.depth == 0 ? 1 : data.depth;
   size_t count = dataW * dataH * dataD;
-  size_t ptrOffset = getPtrOffset(data);
+  size_t ptrOffset{};
   switch (memsetType) {
     case memSetType::hipMemset:
       if (async) {
@@ -352,7 +353,7 @@ static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, Mul
       break;
 
     case memSetType::hipMemset2D:
-      data.pitch = data.pitch - data.offset;
+      ptrOffset = getPtrOffset(data);
       if (async) {
         HIP_CHECK(
             hipMemset2DAsync(aPtr + ptrOffset, data.pitch, value, data.width, data.height, stream));
@@ -362,12 +363,11 @@ static inline void memsetCheck(T* aPtr, size_t value, memSetType memsetType, Mul
       break;
 
     case memSetType::hipMemset3D:
+      ptrOffset = getPtrOffset(data);
       hipExtent extent;
       extent.width = data.width;
       extent.height = data.height;
       extent.depth = data.depth;
-      ptrOffset = getPtrOffset(data);
-      data.pitch = data.pitch - data.offset;
       if (async) {
         HIP_CHECK(hipMemset3DAsync(
             make_hipPitchedPtr(aPtr + ptrOffset, data.pitch, data.width, data.height), value,
@@ -409,7 +409,7 @@ static inline void verifyData(T* aPtr, size_t value, MultiDData& data, allocType
   auto dataH = data.height == 0 ? 1 : data.height;
   auto dataD = data.depth == 0 ? 1 : data.depth;
   size_t sizeInBytes = data.pitch * dataH * dataD;
-  std::unique_ptr<T[]> hostPtr = std::make_unique<T[]>(data.pitch * dataH * dataD);
+  std::unique_ptr<T[]> hostPtr = std::make_unique<T[]>(sizeInBytes);
   switch (type) {
     case allocType::deviceMalloc:
       deviceMallocCopy(memType, aPtr + getPtrOffset(data), hostPtr.get(), data.width, dataH, dataD,
