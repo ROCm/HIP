@@ -438,8 +438,6 @@ static inline void verifyData(T* aPtr, size_t value, MultiDData& data, allocType
       for (size_t i = 0; i < data.width; i++) {
         idx = data.pitch * dataH * k + data.pitch * j + i;
         allMatch = allMatch && static_cast<size_t>(hostPtr.get()[idx]) == value;
-        CAPTURE(sizeInBytes, i, j, k, value, data.pitch, reinterpret_cast<long>(aPtr), type,
-                memType, value, hostPtr.get()[idx]);
         if (!allMatch) REQUIRE(false);
       }
     }
