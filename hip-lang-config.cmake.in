@@ -70,16 +70,6 @@ include( "${CMAKE_CURRENT_LIST_DIR}/hip-lang-targets.cmake" )
 get_filename_component(_DIR "${CMAKE_CURRENT_LIST_DIR}" REALPATH)
 get_filename_component(_IMPORT_PREFIX "${_DIR}/../../../" REALPATH)
 
-
-#need _IMPORT_PREFIX to be set #FILE_REORG_BACKWARD_COMPATIBILITY
-file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${_IMPORT_PREFIX}/../llvm/lib/clang/*/include")
-file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG "${_IMPORT_PREFIX}/llvm/lib/clang/*/include")
-find_path(HIP_CLANG_INCLUDE_PATH __clang_cuda_math.h
-    HINTS ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
-          ${HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG}
-    NO_DEFAULT_PATH)
-get_filename_component(HIP_CLANG_INCLUDE_PATH "${HIP_CLANG_INCLUDE_PATH}" DIRECTORY)
-
 #If HIP isnot installed under ROCm, need this to find HSA assuming HSA is under ROCm
 if( DEFINED ENV{ROCM_PATH} )
   set(ROCM_PATH "$ENV{ROCM_PATH}")
@@ -99,6 +89,21 @@ if (NOT HSA_HEADER)
 endif()
 
 get_filename_component(HIP_COMPILER_INSTALL_PATH ${CMAKE_HIP_COMPILER} DIRECTORY)
+# locate device compilation include path HIP_CLANG_INCLUDE_PATH
+# generic case
+file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS "${HIP_COMPILER_INSTALL_PATH}/../lib/clang/*/include")
+# <ROCM_PATH>/bin/amdclang++
+file(GLOB HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG "${HIP_COMPILER_INSTALL_PATH}/../llvm/lib/clang/*/include")
+find_path(HIP_CLANG_INCLUDE_PATH __clang_cuda_math.h
+    HINTS ${HIP_CLANG_INCLUDE_SEARCH_PATHS}
+          ${HIP_CLANG_INCLUDE_SEARCH_PATHS_REORG}
+    NO_DEFAULT_PATH)
+
+if (NOT HIP_CLANG_INCLUDE_PATH)
+  message (FATAL_ERROR "Incorrect HIP_CLANG_INCLUDE_PATH. __clang_cuda_math.h not found!")
+endif()
+
+# locate device library CLANGRT_BUILTINS
 file(GLOB HIP_CLANGRT_LIB_SEARCH_PATHS "${HIP_COMPILER_INSTALL_PATH}/../lib/clang/*/lib/*")
 find_library(CLANGRT_BUILTINS
     NAMES
