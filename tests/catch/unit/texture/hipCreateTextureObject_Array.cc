@@ -23,6 +23,8 @@ THE SOFTWARE.
  * Validates Array Resource texture object with negative/functional tests.
  */
 TEST_CASE("Unit_hipCreateTextureObject_ArrayResource") {
+  checkImageSupport();
+
   hipError_t ret;
   hipResourceDesc resDesc;
   hipTextureDesc texDesc;
@@ -47,6 +49,8 @@ TEST_CASE("Unit_hipCreateTextureObject_ArrayResource") {
  * with negative/functional tests.
  */
 TEST_CASE("Unit_hipCreateTextureObject_MmArrayResource") {
+  checkImageSupport();
+
   hipError_t ret;
   hipResourceDesc resDesc;
   hipTextureDesc texDesc;
