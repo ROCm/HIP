@@ -69,6 +69,8 @@
 	   "Unit_hipGraphHostNodeGetParams_BasicFunc",
 	   "Unit_hipGraphHostNodeGetParams_SetParams",
 	   "Unit_hipGraphExecChildGraphNodeSetParams_BasicFunc",
-	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology"
+	   "Unit_hipGraphExecChildGraphNodeSetParams_ChildTopology",
+       "Unit_hipGraphDestroy_Negative",
+       "Unit_hipGraphExecDestroy_Sequence"
 	]
 }
