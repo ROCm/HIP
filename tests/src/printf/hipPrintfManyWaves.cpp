@@ -38,7 +38,7 @@ DECLARE_DATA();
 __global__ void kernel_mixed0(int *retval) {
   DECLARE_DATA();
 
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
 
   // Three strings passed as divergent values to the same hostcall.
   const char *msg;
@@ -107,7 +107,7 @@ static void test_mixed0(int *retval, uint num_blocks, uint threads_per_block) {
 __global__ void kernel_mixed1(int *retval) {
   DECLARE_DATA();
 
-  const uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  const uint tid = threadIdx.x + blockIdx.x * blockDim.x;
 
   // Three strings passed to divergent hostcalls.
   switch (tid % 3) {
@@ -173,7 +173,7 @@ static void test_mixed1(int *retval, uint num_blocks, uint threads_per_block) {
 __global__ void kernel_mixed2(int *retval) {
   DECLARE_DATA();
 
-  const uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  const uint tid = threadIdx.x + blockIdx.x * blockDim.x;
 
   // Three different strings. All workitems print all three, but
   // in different orders.
@@ -230,7 +230,7 @@ static void test_mixed2(int *retval, uint num_blocks, uint threads_per_block) {
 __global__ void kernel_mixed3(int *retval) {
   DECLARE_DATA();
 
-  const uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  const uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   int result = 0;
 
   result += printf("%s\n", msg_long1);
@@ -300,7 +300,7 @@ static void test_mixed3(int *retval, uint num_blocks, uint threads_per_block) {
 }
 
 __global__ void kernel_numbers() {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   for (uint i = 0; i != 7; ++i) {
     uint base = tid * 21 + i * 3;
     printf("%d %d %d\n", base, base + 1, base + 2);
