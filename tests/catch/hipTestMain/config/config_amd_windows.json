@@ -44,6 +44,7 @@
 	   "Unit_hipGraphKernelNodeSetParams_Functional",
 	   "Unit_hipGraphExecKernelNodeSetParams_Negative",
 	   "Unit_hipGraphExecKernelNodeSetParams_Functional",
-	   "Unit_hipGraphMemcpyNodeSetParams1D_Functional"
+	   "Unit_hipGraphMemcpyNodeSetParams1D_Functional",
+	   "Unit_hipGraphExecMemcpyNodeSetParamsToSymbol_Functional"
 	]
 }
