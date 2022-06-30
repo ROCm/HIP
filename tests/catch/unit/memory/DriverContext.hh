@@ -191,10 +191,10 @@ static inline void deviceMallocCopy(memSetType memType, T* aPtr, T* hostMem, siz
       params.srcPos = make_hipPos(0, 0, 0);
       params.srcPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
       params.dstPos = make_hipPos(0, 0, 0);
-      params.dstPtr = make_hipPitchedPtr(hostMem, dataPitch, dataW, dataH);
+      params.dstPtr = make_hipPitchedPtr(hostMem, dataW, dataW, dataH);
 
       hipExtent extent;
-      extent.width = dataPitch;
+      extent.width = dataW;
       extent.height = dataH;
       extent.depth = dataD;
 
