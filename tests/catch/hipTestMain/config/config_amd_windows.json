@@ -46,6 +46,7 @@
 	   "Unit_hipArrayCreate_happy - float",
 	   "Unit_hipArrayCreate_happy - float2",
 	   "Unit_hipArrayCreate_happy - float4",
-	   "Unit_hipMemVmm_Basic"
+	   "Unit_hipMemVmm_Basic",
+	   "Unit_hipGraphMemcpyNodeSetParams1D_Functional"
 	]
 }
