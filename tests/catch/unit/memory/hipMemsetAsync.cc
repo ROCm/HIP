@@ -46,8 +46,8 @@ void runAsyncTests(hipStream_t stream, allocType type, memSetType memsetType, Mu
   totalRange.height = data1.height + data2.height;
   totalRange.depth = data1.depth + data2.depth;
   aPtr = initMemory<T>(type, memsetType, totalRange);
-  data1.pitch = totalRange.pitch / 2;
-  data2.pitch = totalRange.pitch / 2;
+  data1.pitch = totalRange.pitch;
+  data2.pitch = totalRange.pitch;
 
   memsetCheck(aPtr.first, testValue1, memsetType, data1, stream);
   memsetCheck(aPtr.first, testValue2, memsetType, data2, stream);

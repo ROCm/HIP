@@ -436,7 +436,7 @@ static inline void verifyData(T* aPtr, size_t value, MultiDData& data, allocType
   for (size_t k = 0; k < dataD; k++) {
     for (size_t j = 0; j < dataH; j++) {
       for (size_t i = 0; i < data.width; i++) {
-        idx = data.pitch * dataH * k + data.pitch * j + i;
+        idx = data.width * dataH * k + data.width * j + i;
         allMatch = allMatch && static_cast<size_t>(hostPtr.get()[idx]) == value;
         if (!allMatch) REQUIRE(false);
       }
