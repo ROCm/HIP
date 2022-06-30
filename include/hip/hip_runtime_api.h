@@ -1082,17 +1082,18 @@ typedef struct hipGraphExec* hipGraphExec_t;
  *
  */
 typedef enum hipGraphNodeType {
-  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
-  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
-  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
-  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
-  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
-  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
-  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
-  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
-  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
-  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
-  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
+  hipGraphNodeTypeKernel = 0, ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 1, ///< Memcpy node
+  hipGraphNodeTypeMemset = 2, ///< Memset node
+  hipGraphNodeTypeHost = 3, ///< Host (executable) node
+  hipGraphNodeTypeGraph = 4, ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 5, ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 6, ///< External event wait node
+  hipGraphNodeTypeEventRecord = 7, ///< External event record node
+  hipGraphNodeTypeExtSemaphoreSignal = 8, ///< External Semaphore signal node
+  hipGraphNodeTypeExtSemaphoreWait = 9, ///< External Semaphore wait node
+  hipGraphNodeTypeMemcpyFromSymbol = 10, ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 11, ///< MemcpyToSymbol node
   hipGraphNodeTypeCount
 } hipGraphNodeType;
 
@@ -5616,6 +5617,18 @@ hipError_t hipGraphInstantiateWithFlags(hipGraphExec_t* pGraphExec, hipGraph_t g
  * it is still open to changes and may have outstanding issues.
  */
 hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
+
+/**
+ * @brief uploads an executable graph in a stream
+ *
+ * @param [in] graphExec - instance of executable graph to launch.
+ * @param [in] stream - instance of stream in which to launch executable graph.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphUpload(hipGraphExec_t graphExec, hipStream_t stream);
 
 /**
  * @brief Destroys an executable graph

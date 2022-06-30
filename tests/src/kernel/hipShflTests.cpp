@@ -40,7 +40,7 @@ THE SOFTWARE.
 // Device (Kernel) function, it must be void
 template <typename T>
 __global__ void matrixTranspose(T* out, T* in, const int width) {
-    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
     T val = in[x];
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < width; j++) out[i * width + j] = __shfl(val, j * width + i);

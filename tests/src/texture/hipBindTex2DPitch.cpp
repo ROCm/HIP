@@ -33,8 +33,8 @@ texture<TYPE_t, 2, hipReadModeElementType> tex;
 // texture object is a kernel argument
 __global__ void texture2dCopyKernel( TYPE_t* dst) {
 #if !defined(__HIP_NO_IMAGE_SUPPORT) || !__HIP_NO_IMAGE_SUPPORT
-    int x = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
-    int y = hipThreadIdx_y + hipBlockIdx_y * hipBlockDim_y;
+    int x = threadIdx.x + blockIdx.x * blockDim.x;
+    int y = threadIdx.y + blockIdx.y * blockDim.y;
     if ( (x< SIZE_W) && (y< SIZE_H) ){
         dst[SIZE_W*y+x] = tex2D(tex, x, y);
     }

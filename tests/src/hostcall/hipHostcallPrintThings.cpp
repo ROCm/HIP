@@ -43,7 +43,7 @@ void print_things_0(ulong* output, ulong* input) {
 }
 
 __global__ void kernel0(ulong fptr, ulong* retval) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   ulong arg0 = fptr;
 
   const char* str = "(%lu -> %lu)\n";
@@ -77,7 +77,7 @@ void print_things_1(ulong* output, const ulong* input) {
 }
 
 __global__ void kernel1(ulong fptr, ulong name, ulong* retval) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   ulong arg0 = fptr;
   ulong arg1 = name;
   ulong arg2 = tid;
