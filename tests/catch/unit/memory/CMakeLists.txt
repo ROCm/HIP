@@ -84,6 +84,7 @@ set(TEST_SRC
     hipDrvPtrGetAttributes.cc
     hipMallocMngdMultiThread.cc
     hipMemPrefetchAsync.cc
+    hipArray.cc
 )
 else()
 set(TEST_SRC
