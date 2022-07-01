@@ -36,7 +36,7 @@ THE SOFTWARE.
 DECLARE_DATA();
 
 __global__ void kernel_uniform0(int *retval) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   retval[tid] = printf("Hello World\n"); // In Hip-Rocclr, printf returns number of characters printed.
                                          // In Cuda, printf returns the number of arguments parsed.
 }
@@ -78,7 +78,7 @@ static void test_uniform0(int *retval, uint num_blocks,
 }
 
 __global__ void kernel_uniform1(int *retval) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   retval[tid] = printf("Six times Eight is %d\n", 42);
 }
 
@@ -119,7 +119,7 @@ static void test_uniform1(int *retval, uint num_blocks,
 }
 
 __global__ void kernel_divergent0(int *retval) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   retval[tid] = printf("Thread ID: %d\n", tid);
 }
 
@@ -171,7 +171,7 @@ static void test_divergent0(int *retval, uint num_blocks,
 }
 
 __global__ void kernel_divergent1(int *retval) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   if (tid % 2) {
     retval[tid] = printf("Hello World\n");
   } else {
@@ -222,7 +222,7 @@ static void test_divergent1(int *retval, uint num_blocks,
 __global__ void kernel_series(int *retval) {
   DECLARE_DATA();
 
-  const uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  const uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   int result = 0;
   result += printf("%s\n", msg_long1);
   result += printf("%s\n", msg_short);
@@ -269,7 +269,7 @@ static void test_series(int *retval, uint num_blocks, uint threads_per_block) {
 }
 
 __global__ void kernel_divergent_loop() {
-  const uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  const uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   int result = 0;
 
   for (int i = 0; i <= tid; ++i) {

@@ -9,5 +9,8 @@ int main(int argc, char** argv) {
     std::cout << "HIP_SKIP_THIS_TEST" << std::endl;
     return 0;
   }
-  return Catch::Session().run(argc, argv);
+  int out = Catch::Session().run(argc, argv);
+  TestContext::get().cleanContext();
+  return out;
+  
 }
