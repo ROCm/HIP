@@ -149,19 +149,25 @@ Here "-C performance" indicate the "performance" configuration of ctest.
 
 ### RTC Testing
 
-To enable RTC testing, cmake needs to be passed the DRTC_TESTING=1 options.
+To enable RTC testing, cmake needs to be passed the `-DRTC_TESTING=1` option.
 
 When this option is passed, all tests that support this functionality will be run using HIP RTC to compile and run.
 
 To enable HIP RTC support for a specific test:
-    1 - Move all its kernels to tests/catch/kernels (one file per kernel)
-    2 - Update tests/catch/kernels/CMakeLists.txt
-    3 - Update tests/catch/include/kernels.hh
-    4 - Update tests/catch/include/kernel_mapping.hh
-    5 - Include kernels.hh
-    6 - Call hipTest::launchKernel() function instead of hipLaunchKernelGGL()
 
-Note: HIP RTC does not do implicit casting of kernel parameters. This requires the test writer to explicitly do all the casting before running the kernel. The code will not compile otherwise.
+1. Move all its kernels to `tests/catch/kernels` (one file per kernel):
+    1. Kernel **functions** should use the file extension `.cpp` and include `kernels.hh`
+    2. Kernel **templates** should use the file extension `.inl`
+2. Update `tests/catch/kernels/CMakeLists.txt` (i.e. add the new kernel **functions** to `TEST_SRC`)
+3. Update `tests/catch/include/kernels.hh`:
+    1. Declare the new kernel **functions**
+    2. Include the new .inl files that contain kernel **templates**
+    3. Call the `FUNCTION_WRAPPER` and `TEMPLATE_WRAPPER` macros for each new function and template respectively.
+4. Update `tests/catch/include/kernel_mapping.hh` with the mapping between the new files and respective function / template names.
+5. Include `kernels.hh`
+6. Call the `hipTest::launchKernel()` function instead of `hipLaunchKernelGGL()`
+
+**Note:** HIP RTC does not do implicit casting of kernel parameters. This **requires** the test writer to explicitly do all the casting before running the kernel. There is a `static_assert` inside `hipTest::launchKernel()` that checks that this was done correctly. However, due to limitations, the assertion is only performed when  `-DRTC_TESTING` option is **disabled**. This means that runtime errors can occur if the casts are not performed correctly and `-DRTC_TESTING` is enabled.
 
 ### If a test fails - how to debug a test
 

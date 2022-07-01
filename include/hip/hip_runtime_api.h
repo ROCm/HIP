@@ -574,7 +574,7 @@ enum hipLimit_t {
 /** Disable event's capability to record timing information. May improve performance.*/
 #define hipEventDisableTiming  0x2
 
-/** Event can support IPC. Warnig: It is not supported in HIP.*/
+/** Event can support IPC. hipEventDisableTiming also must be set.*/
 #define hipEventInterprocess 0x4
 
 /** Use a device-scope release when recording this event. This flag is useful to obtain more
@@ -1082,17 +1082,18 @@ typedef struct hipGraphExec* hipGraphExec_t;
  *
  */
 typedef enum hipGraphNodeType {
-  hipGraphNodeTypeKernel = 1,             ///< GPU kernel node
-  hipGraphNodeTypeMemcpy = 2,             ///< Memcpy 3D node
-  hipGraphNodeTypeMemset = 3,             ///< Memset 1D node
-  hipGraphNodeTypeHost = 4,               ///< Host (executable) node
-  hipGraphNodeTypeGraph = 5,              ///< Node which executes an embedded graph
-  hipGraphNodeTypeEmpty = 6,              ///< Empty (no-op) node
-  hipGraphNodeTypeWaitEvent = 7,          ///< External event wait node
-  hipGraphNodeTypeEventRecord = 8,        ///< External event record node
-  hipGraphNodeTypeMemcpy1D = 9,           ///< Memcpy 1D node
-  hipGraphNodeTypeMemcpyFromSymbol = 10,  ///< MemcpyFromSymbol node
-  hipGraphNodeTypeMemcpyToSymbol = 11,    ///< MemcpyToSymbol node
+  hipGraphNodeTypeKernel = 0, ///< GPU kernel node
+  hipGraphNodeTypeMemcpy = 1, ///< Memcpy node
+  hipGraphNodeTypeMemset = 2, ///< Memset node
+  hipGraphNodeTypeHost = 3, ///< Host (executable) node
+  hipGraphNodeTypeGraph = 4, ///< Node which executes an embedded graph
+  hipGraphNodeTypeEmpty = 5, ///< Empty (no-op) node
+  hipGraphNodeTypeWaitEvent = 6, ///< External event wait node
+  hipGraphNodeTypeEventRecord = 7, ///< External event record node
+  hipGraphNodeTypeExtSemaphoreSignal = 8, ///< External Semaphore signal node
+  hipGraphNodeTypeExtSemaphoreWait = 9, ///< External Semaphore wait node
+  hipGraphNodeTypeMemcpyFromSymbol = 10, ///< MemcpyFromSymbol node
+  hipGraphNodeTypeMemcpyToSymbol = 11, ///< MemcpyToSymbol node
   hipGraphNodeTypeCount
 } hipGraphNodeType;
 
@@ -1192,7 +1193,6 @@ typedef enum hipGraphInstantiateFlags {
   hipGraphInstantiateFlagAutoFreeOnLaunch =
       1,  ///< Automatically free memory allocated in a graph before relaunching.
 } hipGraphInstantiateFlags;
-#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
 
 // Doxygen end group GlobalDefs
 /**  @} */
@@ -1517,9 +1517,9 @@ hipError_t hipGetDeviceProperties(hipDeviceProp_t* prop, int deviceId);
  */
 hipError_t hipDeviceSetCacheConfig(hipFuncCache_t cacheConfig);
 /**
- * @brief Set Cache configuration for a specific function
+ * @brief Get Cache configuration for a specific Device
  *
- * @param [in] cacheConfig
+ * @param [out] cacheConfig
  *
  * @returns #hipSuccess, #hipErrorNotInitialized
  * Note: AMD devices and some Nvidia GPUS do not support reconfigurable cache.  This hint is ignored
@@ -1714,13 +1714,13 @@ hipError_t hipIpcCloseMemHandle(void* devPtr);
 /**
  * @brief Gets an opaque interprocess handle for an event.
  *
- * This opaque handle may be copied into other processes and opened with cudaIpcOpenEventHandle.
- * Then cudaEventRecord, cudaEventSynchronize, cudaStreamWaitEvent and cudaEventQuery may be used in
+ * This opaque handle may be copied into other processes and opened with hipIpcOpenEventHandle.
+ * Then hipEventRecord, hipEventSynchronize, hipStreamWaitEvent and hipEventQuery may be used in
  * either process. Operations on the imported event after the exported event has been freed with hipEventDestroy
  * will result in undefined behavior.
  *
- * @param[out]  handle Pointer to cudaIpcEventHandle to return the opaque event handle
- * @param[in]   event  Event allocated with cudaEventInterprocess and cudaEventDisableTiming flags
+ * @param[out]  handle Pointer to hipIpcEventHandle to return the opaque event handle
+ * @param[in]   event  Event allocated with hipEventInterprocess and hipEventDisableTiming flags
  *
  * @returns #hipSuccess, #hipErrorInvalidConfiguration, #hipErrorInvalidValue
  *
@@ -2228,8 +2228,8 @@ hipError_t hipStreamWriteValue64(hipStream_t stream, void* ptr, uint64_t value, 
  for the synchroniation but can result in lower power and more resources for other CPU threads.
  * #hipEventDisableTiming : Disable recording of timing information. Events created with this flag
  would not record profiling data and provide best performance if used for synchronization.
- * @warning On AMD platform, hipEventInterprocess support is under development.  Use of this flag
- will return an error.
+ * #hipEventInterprocess : The event can be used as an interprocess event. hipEventDisableTiming
+ flag also must be set when hipEventInterprocess flag is set.
  *
  * @returns #hipSuccess, #hipErrorNotInitialized, #hipErrorInvalidValue,
  #hipErrorLaunchFailure, #hipErrorOutOfMemory
@@ -5619,6 +5619,18 @@ hipError_t hipGraphInstantiateWithFlags(hipGraphExec_t* pGraphExec, hipGraph_t g
 hipError_t hipGraphLaunch(hipGraphExec_t graphExec, hipStream_t stream);
 
 /**
+ * @brief uploads an executable graph in a stream
+ *
+ * @param [in] graphExec - instance of executable graph to launch.
+ * @param [in] stream - instance of stream in which to launch executable graph.
+ * @returns #hipSuccess, #hipErrorInvalidValue
+ *
+ * @warning : This API is marked as beta, meaning, while this is feature complete,
+ * it is still open to changes and may have outstanding issues.
+ */
+hipError_t hipGraphUpload(hipGraphExec_t graphExec, hipStream_t stream);
+
+/**
  * @brief Destroys an executable graph
  *
  * @param [in] pGraphExec - instance of executable graph to destry.
@@ -6812,6 +6824,8 @@ static inline hipError_t hipMallocManaged(T** devPtr, size_t size,
 
 #endif
 #endif
+
+#include <hip/amd_detail/amd_hip_runtime_pt_api.h>
 
 #if USE_PROF_API
 #include <hip/amd_detail/hip_prof_str.h>
