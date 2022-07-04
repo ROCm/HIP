@@ -157,6 +157,7 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_ValidateCallbackFunc") {
   const unsigned threadsPerBlock = BLOCKSIZE;
   hipLaunchKernelGGL((HipTest::vector_square), dim3(blocks),
                      dim3(threadsPerBlock), 0, mystream, A_d, C_d, N);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipMemcpyAsync(C_h, C_d, Nbytes, hipMemcpyDeviceToHost,
           mystream));
   HIP_CHECK(hipStreamAddCallback(mystream, Callback, nullptr, 0));
@@ -244,6 +245,7 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_Functionality") {
 
   hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
                      dim3(threadsPerBlock), 0, streams[0], dA[0], dC[0], N);
+  HIP_CHECK(hipGetLastError());
   HIP_CHECK(hipDeviceSynchronize());
 
   auto single_end = std::chrono::steady_clock::now();
@@ -263,6 +265,7 @@ TEST_CASE("Unit_hipExtStreamCreateWithCUMask_Functionality") {
     << streams[np] << " with CU mask: 0x" << ss[np].str().c_str());
     hipLaunchKernelGGL(HipTest::vector_square, dim3(blocks),
     dim3(threadsPerBlock), 0, streams[np], dA[np], dC[np], N);
+    HIP_CHECK(hipGetLastError());
   }
   HIP_CHECK(hipDeviceSynchronize());
 

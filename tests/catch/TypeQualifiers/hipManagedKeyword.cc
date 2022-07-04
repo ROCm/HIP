@@ -53,6 +53,7 @@ TEST_CASE("Unit_hipManagedKeyword_SingleGpu") {
   hipLaunchKernelGGL(add, dimGrid, dimBlock, 0, 0, static_cast<const float*>(A),
                      static_cast<float*>(B));
 
+  HIP_CHECK(hipGetLastError());
   hipDeviceSynchronize();
 
   float maxError = 0.0f;
