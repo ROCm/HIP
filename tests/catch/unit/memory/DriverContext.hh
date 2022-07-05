@@ -60,7 +60,7 @@ struct MultiDData {
   // set to 0 for 2D
   size_t depth{};   // in elements not bytes
   size_t pitch{};   // pitch = (width * sizeofData) + alignment
-  size_t offset{};  // for simplicity use same offset for x,y and z dimentions of memory
+  size_t offset{};  // for simplicity use same offset for x,y and z dimensions of memory
 };
 
 // set of helper functions to tidy the nested switch statements
@@ -259,7 +259,7 @@ static inline void devRegisteredCopy(memSetType memType, T* aPtr, T* hostMem, si
   switch (memType) {
     case memSetType::hipMemset3D: {
       hipMemcpy3DParms params{};
-      params.kind = hipMemcpyHostToHost;
+      params.kind = hipMemcpyDeviceToHost;
       params.srcPos = make_hipPos(0, 0, 0);
       params.dstPos = make_hipPos(0, 0, 0);
       params.srcPtr = make_hipPitchedPtr(aPtr, dataPitch, dataW, dataH);
