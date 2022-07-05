@@ -86,10 +86,7 @@ inline void checkFlags(unsigned int expected, unsigned int obtained) {
 }
 
 TEST_CASE("Unit_hipHostGetFlags_flagCombos") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-54");
-  return;
-#endif
+
   constexpr auto SIZE{LEN * sizeof(int)};
   int* A_h{nullptr};
 
@@ -123,10 +120,6 @@ TEST_CASE("Unit_hipHostGetFlags_flagCombos") {
 
 // Test Allocation with flags and getting flags in another thread
 TEST_CASE("Unit_hipHostGetFlags_DifferentThreads") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-54");
-  return;
-#endif
   constexpr auto SIZE{LEN * sizeof(int)};
   int* A_h{nullptr};
 
@@ -160,10 +153,6 @@ TEST_CASE("Unit_hipHostGetFlags_DifferentThreads") {
 
 // Test behaviour of hipHostGetFlags with invalid args
 TEST_CASE("Unit_hipHostGetFlags_InvalidArgs") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-54");
-  return;
-#endif
   constexpr auto SIZE{LEN * sizeof(int)};
   int* A_h{nullptr};
 
