@@ -44,6 +44,14 @@
 	   "Unit_hipGraphKernelNodeSetParams_Functional",
 	   "Unit_hipGraphExecKernelNodeSetParams_Negative",
 	   "Unit_hipGraphExecKernelNodeSetParams_Functional",
-	   "Unit_hipGraphMemcpyNodeSetParams1D_Functional"
+	   "Unit_hipGraphMemcpyNodeSetParams1D_Functional",
+	   "Unit_hipMallocManaged_MultiChunkMultiDevice",
+	   "Unit_hipMallocManaged_TwoPointers - int",
+	   "Unit_hipMallocManaged_TwoPointers - float",
+	   "Unit_hipMallocManaged_TwoPointers - double",
+	   "Unit_hipMallocManaged_DeviceContextChange - unsigned char",
+	   "Unit_hipMallocManaged_DeviceContextChange - int",
+	   "Unit_hipMallocManaged_DeviceContextChange - float",
+	   "Unit_hipMallocManaged_DeviceContextChange - double"
 	]
 }
