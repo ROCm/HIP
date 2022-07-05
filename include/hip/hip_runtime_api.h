@@ -657,7 +657,7 @@ enum hipLimit_t {
 #define hipDeviceScheduleBlockingSync 0x4
 #define hipDeviceScheduleMask 0x7
 #define hipDeviceMapHost 0x8
-#define hipDeviceLmemResizeToMax 0x16
+#define hipDeviceLmemResizeToMax 0x10
 /** Default HIP array allocation flag.*/
 #define hipArrayDefault 0x00
 #define hipArrayLayered 0x01
