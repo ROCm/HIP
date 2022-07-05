@@ -295,6 +295,7 @@ TEST_CASE("Unit_hipGraphClone_MultiThreaded") {
     HIP_CHECK(hipGraphInstantiate(&graphExec, clonedgraph, nullptr,
           nullptr, 0));
     HIP_CHECK(hipGraphLaunch(graphExec, 0));
+    HIP_CHECK(hipStreamSynchronize(0));
 
     for (size_t i = 0; i < N; i++) {
       if (A_h[i] != B_h[i]) {

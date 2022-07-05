@@ -27,8 +27,8 @@ __global__ void matrixTranspose(float *out,
                                 const int width,
                                 const int height)
 {
-    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
-    int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;
+    int x = blockDim.x * blockIdx.x + bhreadIdx.x;
+    int y = blockDim.y * blockIdx.y + bhreadIdx.y;
 
     out[y * width + x] = in[x * height + y];
 }
@@ -39,7 +39,7 @@ other function-type qualifiers are:
 `__device__` functions are Executed on the device and Called from the device only
 `__host__` functions are Executed on the host and Called from the host
 
-`__host__` can combine with `__device__`, in which case the function compiles for both the host and device. These functions cannot use the HIP grid coordinate functions (for example, "hipThreadIdx_x", will talk about it latter). A possible workaround is to pass the necessary coordinate info as an argument to the function.
+`__host__` can combine with `__device__`, in which case the function compiles for both the host and device. These functions cannot use the HIP grid coordinate functions (for example, "threadIdx.x", will talk about it latter). A possible workaround is to pass the necessary coordinate info as an argument to the function.
 `__host__` cannot combine with `__global__`.
 
 `__global__` functions are often referred to as *kernels*, and calling one is termed *launching the kernel*.
@@ -47,9 +47,9 @@ other function-type qualifiers are:
 Next keyword is `void`. HIP `__global__` functions must have a `void` return type. Global functions require the caller to specify an "execution configuration" that includes the grid and block dimensions. The execution configuration can also include other information for the launch, such as the amount of additional shared memory to allocate and the stream where the kernel should execute.
 
 The kernel function begins with
-`    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;`
-`    int y = hipBlockDim_y * hipBlockIdx_y + hipThreadIdx_y;`
-here the keyword hipBlockIdx_x, hipBlockIdx_y and hipBlockIdx_z(not used here) are the built-in functions to identify the threads in a block. The keyword hipBlockDim_x, hipBlockDim_y and hipBlockDim_z(not used here) are to identify the dimensions of the block.
+`    int x = blockDim.x * blockIdx.x + threadIdx.x;`
+`    int y = blockDim.y * blockIdx.y + threadIdx.y;`
+here the keyword blockIdx.x, blockIdx.y and blockIdx.z(not used here) are the built-in functions to identify the threads in a block. The keyword blockDim.x, blockDim.y and blockDim.z(not used here) are to identify the dimensions of the block.
 
 We are familiar with rest of the code on device-side.
 
