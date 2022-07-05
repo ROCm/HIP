@@ -141,7 +141,7 @@ TEST_CASE("Unit_hipMemGetInfo_DifferentMallocSmall") {
   size_t freeMemRet;
   size_t totalMemRet;
   // allocate smaller chunk than minimum
-  size_t Malloc1Size = 64;
+  size_t Malloc1Size = 1;
 
   HIP_CHECK(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc1Size));
 
@@ -285,9 +285,9 @@ TEST_CASE("Unit_hipMemGetInfo_Malloc3D") {
   // Allocate 3D object
   hipExtent extent{};
   // extent is given in bytes for with
-  extent.width = GENERATE(32, 128, 256, 512, 1024);
-  extent.height = GENERATE(32, 128, 256, 512, 1024);
-  extent.depth = GENERATE(32, 128, 256, 512, 1024);
+  extent.width = GENERATE(32, 128, 256);
+  extent.height = GENERATE(32, 128, 256);
+  extent.depth = GENERATE(32, 128, 256);
   hipPitchedPtr A_mem{};
   HIP_CHECK(hipMalloc3D(&A_mem, extent));
 
@@ -426,7 +426,7 @@ TEST_CASE("Unit_hipMemGetInfo_ParaSmall") {
   HIP_CHECK(hipMemGetInfo(&freeMemInit, &totalMemInit));
   unsigned int* A_mem{nullptr};
   // allocate smaller chunk than minimum
-  size_t Malloc1Size = 64;
+  size_t Malloc1Size = 1;
 
   std::thread t1(
       [&]() { HIP_CHECK_THREAD(hipMalloc(reinterpret_cast<void**>(&A_mem), Malloc1Size)) });
