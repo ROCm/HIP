@@ -25,7 +25,8 @@ THE SOFTWARE.
 #include "MemUtils.hh"
 
 /*
- * Description goes in here
+ * These testcases verify that synchronization behaviour for memcpy functions with respect to
+ * the host.
  */
 
 using namespace mem_utils;
@@ -84,7 +85,7 @@ TEST_CASE("Unit_hipMemcpySync") {
                             allocType::devRegistered);
   memType memcpy_type = memType::hipMem;
   MultiDData data;
-  data.width = GENERATE(1, 32);
+  data.width = 1;
 
   doMemTest<char>(runMemcpyTests<char>, type, memcpy_type, data);
 }
@@ -95,8 +96,8 @@ TEST_CASE("Unit_hipMemcpy2DSync") {
 
   memType memcpy_type = memType::hipMem2D;
   MultiDData data;
-  data.width = GENERATE(1, 32);
-  data.height = GENERATE(1, 32);
+  data.width = 1;
+  data.height = 1;
 
   doMemTest<char>(runMemcpyTests<char>, mallocType, memcpy_type, data);
 }
@@ -107,9 +108,9 @@ TEST_CASE("Unit_hipMemcpy3DSync") {
 
   memType memcpy_type = memType::hipMem3D;
   MultiDData data;
-  data.width = GENERATE(1, 8);
-  data.height = GENERATE(1, 8);
-  data.depth = GENERATE(1, 8);
+  data.width = 1;
+  data.height = 1;
+  data.depth = 1;
 
   doMemTest<char>(runMemcpyTests<char>, mallocType, memcpy_type, data);
 }
