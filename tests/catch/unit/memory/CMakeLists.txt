@@ -93,8 +93,6 @@ set(TEST_SRC
     hipMemVmm.cc
     hipMemGetInfo.cc
     hipFree.cc
-    hipMemsetSync.cc
-    hipMemsetAsync.cc
     hipArray.cc
     hipMemsetSync.cc
     hipMemsetAsync.cc
