@@ -81,6 +81,10 @@ static void runMemcpyTests(hipStream_t stream, bool async, allocType type, memTy
 }
 
 TEST_CASE("Unit_hipMemcpySync") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-127 - Sync behaviour differs on AMD and Nvidia");
+  return;
+#endif
   allocType type = GENERATE(allocType::deviceMalloc, allocType::hostMalloc, allocType::hostRegisted,
                             allocType::devRegistered);
   memType memcpy_type = memType::hipMem;
