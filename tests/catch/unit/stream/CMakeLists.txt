@@ -25,7 +25,8 @@ set(TEST_SRC
     hipStreamCreateWithFlags.cc
     hipStreamCreateWithPriority.cc
     hipAPIStreamDisable.cc
-    hipStreamAttachMemAsync.cc   # Currently only for nvidia
+    # hipStreamAttachMemAsync.cc   # Disabling it on nvidia due to issue in function definition of hipStreamAttachMemAsync
+                                   # Fixing would break ABI, to be re-enabled when the fix is made.
     streamCommon.cc
     hipStreamValue.cc
     )
