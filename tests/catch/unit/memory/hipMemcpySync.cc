@@ -39,13 +39,6 @@ static void checkForHostSync(hipStream_t stream, bool async, allocType type) {
   } else {
     REQUIRE(true);
   }
-  //if (async && type == allocType::deviceMalloc) {
-  //  HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);
-  //} else if (!stream && type == allocType::deviceMalloc && !async) {
-  //  HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);
-  //} else {
-  //  HIP_CHECK(hipStreamQuery(stream));
-  //}
 }
 
 static void checkForDeviceSync(hipStream_t stream) { HIP_CHECK(hipStreamQuery(stream)); }
@@ -61,6 +54,9 @@ static void runMemcpyTests(hipStream_t stream, bool async, allocType type, memTy
 
   std::pair<T*, T*> aPtr = initMemory<T>(type, memType, data);
   size_t sizeInBytes = data.width * dataH * dataD;
+
+  // filler data for device memory created beforehand as it uses memset
+  // which might interfere with synchronization testing
   createFillerData<T>(sizeInBytes, testValue);
   CAPTURE(type, memType, data.width, data.height, data.depth, stream, async, fromHost, sizeInBytes);
 
@@ -70,7 +66,7 @@ static void runMemcpyTests(hipStream_t stream, bool async, allocType type, memTy
     checkForHostSync(stream, async, type);
 
   } else {
-    deviceMemcpyCheck(aPtr.first, type, testValue, memType, data, stream, async);
+    deviceMemcpyCheck(aPtr.first, type, memType, data, stream, async);
     checkForDeviceSync(stream);
   }
   // verify
