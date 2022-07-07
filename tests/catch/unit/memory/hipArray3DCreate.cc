@@ -22,19 +22,21 @@ THE SOFTWARE.
 
 namespace {
 void checkArrayIsExpected(const hiparray array, const HIP_ARRAY3D_DESCRIPTOR& expected_desc) {
+// hipArray3DGetDescriptor doesn't currently exist (EXSWCPHIPT-87)
+#if HT_AMD
   std::ignore = array;
   std::ignore = expected_desc;
+#else
+  CUDA_ARRAY3D_DESCRIPTOR queried_desc;
+  cuArray3DGetDescriptor(&queried_desc, array);
 
-  // hipArray3DGetDescriptor doesn't currently exist (EXSWCPHIPT-87)
-  // HIP_ARRAY3D_DESCRIPTOR queried_desc;
-  // hipArray3DGetDescriptor(queried_desc, array);
-
-  // REQUIRE(queried_desc.Width == expected_desc.Width);
-  // REQUIRE(queried_desc.Height == expected_desc.Height);
-  // REQUIRE(queried_desc.Depth == expected_desc.Depth);
-  // REQUIRE(queried_desc.Format == expected_desc.Format);
-  // REQUIRE(queried_desc.NumChannels == expected_desc.NumChannels);
-  // REQUIRE(queried_desc.Flags == expected_desc.Flags);
+  REQUIRE(queried_desc.Width == expected_desc.Width);
+  REQUIRE(queried_desc.Height == expected_desc.Height);
+  REQUIRE(queried_desc.Depth == expected_desc.Depth);
+  REQUIRE(queried_desc.Format == expected_desc.Format);
+  REQUIRE(queried_desc.NumChannels == expected_desc.NumChannels);
+  REQUIRE(queried_desc.Flags == expected_desc.Flags);
+#endif
 }
 }  // namespace
 
