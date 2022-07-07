@@ -145,28 +145,30 @@ TEST_CASE("Unit_hipMalloc3DArray_MultiThread") {
 
 void checkArrayIsExpected(hipArray_t array, const hipChannelFormatDesc& expected_desc,
                           const hipExtent& expected_extent, const unsigned int expected_flags) {
+// hipArrayGetInfo doesn't currently exist (EXSWCPHIPT-87)
+#if HT_AMD
   std::ignore = array;
   std::ignore = expected_desc;
   std::ignore = expected_extent;
   std::ignore = expected_flags;
-  // hipArrayGetInfo doesn't currently exist (EXSWCPHIPT-87)
+#else
+  cudaChannelFormatDesc queried_desc;
+  cudaExtent queried_extent;
+  unsigned int queried_flags;
 
-  // hipChannelFormatDesc queried_desc;
-  // hipExtent queried_extent;
-  // unsigned int queried_flags;
+  cudaArrayGetInfo(&queried_desc, &queried_extent, &queried_flags, array);
 
-  // hipArrayGetInfo(queried_desc, queried_extent, queried_flags, array);
+  REQUIRE(expected_desc.x == queried_desc.x);
+  REQUIRE(expected_desc.y == queried_desc.y);
+  REQUIRE(expected_desc.z == queried_desc.z);
+  REQUIRE(expected_desc.f == queried_desc.f);
 
-  // REQUIRE(expected_desc.x == queried_desc.x);
-  // REQUIRE(expected_desc.y == queried_desc.y);
-  // REQUIRE(expected_desc.z == queried_desc.z);
-  // REQUIRE(expected_desc.f == queried_desc.f);
+  REQUIRE(expected_extent.width == queried_extent.width);
+  REQUIRE(expected_extent.height == queried_extent.height);
+  REQUIRE(expected_extent.depth == queried_extent.depth);
 
-  // REQUIRE(expected_extent.width == queried_extent.width);
-  // REQUIRE(expected_extent.height == queried_extent.height);
-  // REQUIRE(expected_extent.depth == queried_extent.height);
-
-  // REQUIRE(expected_flags == queried_flags);
+  REQUIRE(expected_flags == queried_flags);
+#endif
 }
 
 TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_happy", "", char, uchar2, uint2, int4, short4, float,
