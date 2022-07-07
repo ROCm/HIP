@@ -30,11 +30,11 @@ hipMallocArray API test scenarios
 #include <numeric>
 #include "hipArrayCommon.hh"
 
-static constexpr auto NUM_W{4};
-static constexpr auto BIGNUM_W{100};
-static constexpr auto BIGNUM_H{100};
-static constexpr auto NUM_H{4};
-static constexpr auto ARRAY_LOOP{100};
+static constexpr size_t NUM_W{4};
+static constexpr size_t NUM_H{4};
+static constexpr size_t BIGNUM_W{100};
+static constexpr size_t BIGNUM_H{100};
+static constexpr int ARRAY_LOOP{100};
 
 /*
  * This API verifies  memory allocations for small and
@@ -50,28 +50,30 @@ static constexpr auto ARRAY_LOOP{100};
  *
  */
 static void MallocArray_DiffSizes(int gpu) {
-  HIP_CHECK(hipSetDevice(gpu));
-  std::vector<std::pair<size_t, size_t>> array_size{{NUM_W, NUM_H}, {BIGNUM_W, BIGNUM_H}};
-  for (auto& size : array_size) {
-    std::array<hipArray_t, ARRAY_LOOP> A_d;
-    size_t tot, avail, ptot, pavail;
-    hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
-    HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
-    for (int i = 0; i < ARRAY_LOOP; i++) {
-      HIP_CHECK(
-          hipMallocArray(&A_d[i], &desc, std::get<0>(size), std::get<1>(size), hipArrayDefault));
-    }
-    for (int i = 0; i < ARRAY_LOOP; i++) {
-      HIP_CHECK(hipFreeArray(A_d[i]));
-    }
-    HIP_CHECK(hipMemGetInfo(&avail, &tot));
-    if ((pavail != avail)) {
-      HIPASSERT(false);
-    }
+  HIP_CHECK_THREAD(hipSetDevice(gpu));
+  std::pair<size_t, size_t> size =
+      GENERATE(std::make_pair(NUM_W, NUM_H), std::make_pair(BIGNUM_W, BIGNUM_H));
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
+  std::array<hipArray_t, ARRAY_LOOP> A_d;
+  size_t pavail, avail;
+  HIP_CHECK_THREAD(hipMemGetInfo(&pavail, nullptr));
+
+  for (int i = 0; i < ARRAY_LOOP; i++) {
+    HIP_CHECK_THREAD(
+        hipMallocArray(&A_d[i], &desc, std::get<0>(size), std::get<1>(size), hipArrayDefault));
   }
+  for (int i = 0; i < ARRAY_LOOP; i++) {
+    HIP_CHECK_THREAD(hipFreeArray(A_d[i]));
+  }
+
+  HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
+  REQUIRE_THREAD(pavail == avail);
 }
 
-TEST_CASE("Unit_hipMallocArray_DiffSizes") { MallocArray_DiffSizes(0); }
+TEST_CASE("Unit_hipMallocArray_DiffSizes") {
+  MallocArray_DiffSizes(0);
+  HIP_CHECK_THREAD_FINALIZE();
+}
 
 /*
 This testcase verifies the hipMallocArray API in multithreaded
@@ -82,18 +84,17 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
   std::vector<std::thread> threadlist;
   int devCnt = 0;
   devCnt = HipTest::getDeviceCount();
-  size_t tot, avail, ptot, pavail;
-  HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
+  const auto pavail = getFreeMem();
   for (int i = 0; i < devCnt; i++) {
-    // FIXME: HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(MallocArray_DiffSizes, i));
   }
 
   for (auto& t : threadlist) {
     t.join();
   }
-  HIP_CHECK(hipMemGetInfo(&avail, &tot));
+  HIP_CHECK_THREAD_FINALIZE();
 
+  const auto avail = getFreeMem();
   if (pavail != avail) {
     WARN("Memory leak of hipMalloc3D API in multithreaded scenario");
     REQUIRE(false);

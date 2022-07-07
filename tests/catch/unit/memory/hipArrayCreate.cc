@@ -30,10 +30,10 @@ hipArrayCreate API test scenarios
 #include "hipArrayCommon.hh"
 #include "DriverContext.hh"
 
-static constexpr auto NUM_W{4};
-static constexpr auto BIGNUM_W{100};
-static constexpr auto NUM_H{4};
-static constexpr auto BIGNUM_H{100};
+static constexpr size_t NUM_W{4};
+static constexpr size_t BIGNUM_W{100};
+static constexpr size_t NUM_H{4};
+static constexpr size_t BIGNUM_H{100};
 static constexpr auto ARRAY_LOOP{100};
 
 /*
@@ -51,31 +51,34 @@ static constexpr auto ARRAY_LOOP{100};
  */
 
 static void ArrayCreate_DiffSizes(int gpu) {
-  HIP_CHECK(hipSetDevice(gpu));
-  std::vector<std::pair<size_t, size_t>> array_size{{NUM_W, NUM_H}, {BIGNUM_W, BIGNUM_H}};
-  for (auto& size : array_size) {
-    std::array<HIP_ARRAY, ARRAY_LOOP> array;
-    const size_t pavail = getFreeMem();
-    HIP_ARRAY_DESCRIPTOR desc;
-    desc.NumChannels = 1;
-    desc.Width = std::get<0>(size);
-    desc.Height = std::get<1>(size);
-    desc.Format = HIP_AD_FORMAT_FLOAT;
-    for (int i = 0; i < ARRAY_LOOP; i++) {
-      HIP_CHECK(hipArrayCreate(&array[i], &desc));
-    }
-    for (int i = 0; i < ARRAY_LOOP; i++) {
-      HIP_CHECK(hipArrayDestroy(array[i]));
-    }
-    const size_t avail = getFreeMem();
-    if (pavail != avail) {
-      HIPASSERT(false);
-    }
+  HIP_CHECK_THREAD(hipSetDevice(gpu));
+  std::pair<size_t, size_t> size =
+      GENERATE(std::make_pair(NUM_W, NUM_H), std::make_pair(BIGNUM_W, BIGNUM_H));
+  std::array<HIP_ARRAY, ARRAY_LOOP> array;
+  size_t pavail, avail;
+  HIP_CHECK_THREAD(hipMemGetInfo(&pavail, nullptr));
+  HIP_ARRAY_DESCRIPTOR desc;
+  desc.NumChannels = 1;
+  desc.Width = std::get<0>(size);
+  desc.Height = std::get<1>(size);
+  desc.Format = HIP_AD_FORMAT_FLOAT;
+
+  for (int i = 0; i < ARRAY_LOOP; i++) {
+    HIP_CHECK_THREAD(hipArrayCreate(&array[i], &desc));
   }
+  for (int i = 0; i < ARRAY_LOOP; i++) {
+    HIP_CHECK_THREAD(hipArrayDestroy(array[i]));
+  }
+
+  HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
+  REQUIRE_THREAD(pavail == avail);
 }
 
 /* This testcase verifies hipArrayCreate API for small and big chunks data*/
-TEST_CASE("Unit_hipArrayCreate_DiffSizes") { ArrayCreate_DiffSizes(0); }
+TEST_CASE("Unit_hipArrayCreate_DiffSizes") {
+  ArrayCreate_DiffSizes(0);
+  HIP_CHECK_THREAD_FINALIZE();
+}
 
 /*
 This testcase verifies the hipArrayCreate API in multithreaded
@@ -90,13 +93,13 @@ TEST_CASE("Unit_hipArrayCreate_MultiThread") {
 
   const size_t pavail = getFreeMem();
   for (int i = 0; i < devCnt; i++) {
-    // FIXME: HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(ArrayCreate_DiffSizes, i));
   }
 
   for (auto& t : threadlist) {
     t.join();
   }
+  HIP_CHECK_THREAD_FINALIZE();
   const size_t avail = getFreeMem();
 
   if (pavail != avail) {

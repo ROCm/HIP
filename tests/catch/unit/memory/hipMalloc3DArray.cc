@@ -47,25 +47,24 @@ static constexpr auto ARRAY_LOOP{100};
  *
  */
 static void Malloc3DArray_DiffSizes(int gpu) {
-  HIP_CHECK(hipSetDevice(gpu));
-  std::vector<int> array_size{ARRAY_SIZE, BIG_ARRAY_SIZE};
-  for (auto& size : array_size) {
-    int width{size}, height{size}, depth{size};
-    hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
-    std::array<hipArray_t, ARRAY_LOOP> arr;
-    const auto pavail = getFreeMem();
-    for (int i = 0; i < ARRAY_LOOP; i++) {
-      HIP_CHECK(hipMalloc3DArray(&arr[i], &channelDesc, make_hipExtent(width, height, depth),
-                                 hipArrayDefault));
-    }
-    for (int i = 0; i < ARRAY_LOOP; i++) {
-      HIP_CHECK(hipFreeArray(arr[i]));
-    }
-    const auto avail = getFreeMem();
-    if (pavail != avail) {
-      HIPASSERT(false);
-    }
+  HIP_CHECK_THREAD(hipSetDevice(gpu));
+  const int size = GENERATE(ARRAY_SIZE, BIG_ARRAY_SIZE);
+  int width{size}, height{size}, depth{size};
+  hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
+  std::array<hipArray_t, ARRAY_LOOP> arr;
+  size_t pavail, avail;
+  HIP_CHECK_THREAD(hipMemGetInfo(&pavail, nullptr));
+
+  for (int i = 0; i < ARRAY_LOOP; i++) {
+    HIP_CHECK_THREAD(hipMalloc3DArray(&arr[i], &channelDesc, make_hipExtent(width, height, depth),
+                                      hipArrayDefault));
   }
+  for (int i = 0; i < ARRAY_LOOP; i++) {
+    HIP_CHECK_THREAD(hipFreeArray(arr[i]));
+  }
+
+  HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
+  REQUIRE_THREAD(pavail == avail);
 }
 
 /*
@@ -115,7 +114,10 @@ TEST_CASE("Unit_hipMalloc3DArray_Negative") {
   }
 }
 
-TEST_CASE("Unit_hipMalloc3DArray_DiffSizes") { Malloc3DArray_DiffSizes(0); }
+TEST_CASE("Unit_hipMalloc3DArray_DiffSizes") {
+  Malloc3DArray_DiffSizes(0);
+  HIP_CHECK_THREAD_FINALIZE();
+}
 
 /*
 This testcase verifies the hipMalloc3DArray API in multithreaded
@@ -128,13 +130,13 @@ TEST_CASE("Unit_hipMalloc3DArray_MultiThread") {
   devCnt = HipTest::getDeviceCount();
   const auto pavail = getFreeMem();
   for (int i = 0; i < devCnt; i++) {
-    // FIXME: HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(Malloc3DArray_DiffSizes, i));
   }
 
   for (auto& t : threadlist) {
     t.join();
   }
+  HIP_CHECK_THREAD_FINALIZE();
   const auto avail = getFreeMem();
 
   if (pavail != avail) {
