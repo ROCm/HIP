@@ -29,6 +29,7 @@
 	   "Unit_hipDeviceGetUuid",
 	   "Unit_hipGraphMemcpyNodeSetParamsFromSymbol_Functional",
 	   "Unit_hipGraphExecEventWaitNodeSetEvent_Negative",
-	   "Unit_hipGraphExecEventWaitNodeSetEvent_SetAndVerifyMemory"
+	   "Unit_hipGraphExecEventWaitNodeSetEvent_SetAndVerifyMemory",
+	   "Unit_hipGraphMemcpyNodeSetParams_Functional"
 	]
 }
