@@ -27,9 +27,8 @@ hipMallocArray API test scenarios
 
 #include <hip_test_common.hh>
 #include <limits>
-#if defined(_WIN32) || defined(_WIN64)
 #include <numeric>
-#endif
+#include "hipArrayCommon.hh"
 
 static constexpr auto NUM_W{4};
 static constexpr auto BIGNUM_W{100};
@@ -86,7 +85,7 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
   size_t tot, avail, ptot, pavail;
   HIP_CHECK(hipMemGetInfo(&pavail, &ptot));
   for (int i = 0; i < devCnt; i++) {
-    // TODO the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
+    // FIXME: the HIP_CHECK and HIPASSERT are not threadsafe so this test is broken.
     threadlist.push_back(std::thread(MallocArray_DiffSizes, i));
   }
 
@@ -101,62 +100,7 @@ TEST_CASE("Unit_hipMallocArray_MultiThread") {
   }
 }
 
-
-constexpr size_t BlockSize = 16;
-
-template <class T, size_t N> struct type_and_size {
-  using type = T;
-  static constexpr size_t size = N;
-};
-
-// scalars are interpreted as a vector of 1 length.
-// template <size_t N> using int_constant = std::integral_constant<size_t, N>;
-template <typename T> struct vector_info;
-template <> struct vector_info<int> : type_and_size<int, 1> {};
-template <> struct vector_info<float> : type_and_size<float, 1> {};
-template <> struct vector_info<short> : type_and_size<short, 1> {};
-template <> struct vector_info<char> : type_and_size<char, 1> {};
-template <> struct vector_info<unsigned int> : type_and_size<unsigned int, 1> {};
-template <> struct vector_info<unsigned short> : type_and_size<unsigned short, 1> {};
-template <> struct vector_info<unsigned char> : type_and_size<unsigned char, 1> {};
-
-template <> struct vector_info<int2> : type_and_size<int, 2> {};
-template <> struct vector_info<float2> : type_and_size<float, 2> {};
-template <> struct vector_info<short2> : type_and_size<short, 2> {};
-template <> struct vector_info<char2> : type_and_size<char, 2> {};
-template <> struct vector_info<uint2> : type_and_size<unsigned int, 2> {};
-template <> struct vector_info<ushort2> : type_and_size<unsigned short, 2> {};
-template <> struct vector_info<uchar2> : type_and_size<unsigned char, 2> {};
-
-template <> struct vector_info<int4> : type_and_size<int, 4> {};
-template <> struct vector_info<float4> : type_and_size<float, 4> {};
-template <> struct vector_info<short4> : type_and_size<short, 4> {};
-template <> struct vector_info<char4> : type_and_size<char, 4> {};
-template <> struct vector_info<uint4> : type_and_size<unsigned int, 4> {};
-template <> struct vector_info<ushort4> : type_and_size<unsigned short, 4> {};
-template <> struct vector_info<uchar4> : type_and_size<unsigned char, 4> {};
-
 // Kernels ///////////////////////////////////////
-
-// read from a texture using normalized coordinates
-constexpr size_t ChannelToRead = 1;
-template <typename T>
-__global__ void readFromTexture(T* output, hipTextureObject_t texObj, size_t width, size_t height,
-                                bool textureGather) {
-  // Calculate normalized texture coordinates
-  const unsigned int x = blockIdx.x * blockDim.x + threadIdx.x;
-  const unsigned int y = blockIdx.y * blockDim.y + threadIdx.y;
-  const float u = x / (float)width;
-
-  // Read from texture and write to global memory
-  if (height == 0) {
-    output[x] = tex1D<T>(texObj, u);
-  } else {
-    const float v = y / (float)height;
-    output[y * width + x] =
-        textureGather ? tex2Dgather<T>(texObj, u, v, ChannelToRead) : tex2D<T>(texObj, u, v);
-  }
-}
 
 template <typename T> __device__ void addOne(T* a) {
   using scalar_type = typename vector_info<T>::type;
@@ -190,16 +134,6 @@ template <typename T> size_t getAllocSize(const size_t width, const size_t heigh
   return sizeof(T) * width * (height ? height : 1);
 }
 
-template <typename T> void checkDataIsAscending(const std::vector<T>& hostData) {
-  bool allMatch = true;
-  size_t i = 0;
-  for (; i < hostData.size(); ++i) {
-    allMatch = allMatch && hostData[i] == static_cast<T>(i);
-    if (!allMatch) break;
-  }
-  INFO("hostData[" << i << "] == " << static_cast<T>(hostData[i]));
-  REQUIRE(allMatch);
-}
 
 const char* channelFormatString(hipChannelFormatKind formatKind) noexcept {
   switch (formatKind) {
@@ -458,12 +392,6 @@ void testArrayAsSurface(hipArray_t arrayPtr, const size_t width, const size_t he
   HIP_CHECK(hipFree(device_data));
 }
 
-size_t getFreeMem() {
-  size_t free = 0, total = 0;
-  HIP_CHECK(hipMemGetInfo(&free, &total));
-  return free;
-}
-
 // The happy path of a default array and a SurfaceLoadStore array should work
 // Selection of types chosen to reduce compile times
 TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, short2, char, uchar2,
@@ -526,6 +454,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_MaxTexture_Default", "", uint, int4, ush
   HIP_CHECK(hipGetDevice(&device));
   hipDeviceProp_t prop;
   HIP_CHECK(hipGetDeviceProperties(&prop, device));
+
   size_t width, height;
   hipArray_t array{};
   hipChannelFormatDesc desc = hipCreateChannelDesc<TestType>();
@@ -549,7 +478,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_MaxTexture_Default", "", uint, int4, ush
       height = prop.maxTexture2D[1];
     }
     auto maxArrayCreateError = hipMallocArray(&array, &desc, width, height, flag);
-    // this can try to alloc many GB of memory, so out of memory is fair
+    // this can try to alloc many GB of memory, so out of memory is acceptable
     if (maxArrayCreateError == hipErrorOutOfMemory) return;
     HIP_CHECK(maxArrayCreateError);
     HIP_CHECK(hipFreeArray(array));
