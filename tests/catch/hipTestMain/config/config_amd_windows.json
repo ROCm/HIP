@@ -30,6 +30,8 @@
 	   "Unit_hipGraphMemcpyNodeSetParamsFromSymbol_Functional",
 	   "Unit_hipGraphExecEventWaitNodeSetEvent_Negative",
 	   "Unit_hipGraphExecEventWaitNodeSetEvent_SetAndVerifyMemory",
-	   "Unit_hipGraphMemcpyNodeSetParams_Functional"
+	   "Unit_hipGraphMemcpyNodeSetParams_Functional",
+	   "Unit_hipMalloc3D_ValidatePitch",
+	   "Unit_hipArrayCreate_happy"
 	]
 }
