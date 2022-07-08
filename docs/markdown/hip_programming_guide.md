@@ -129,6 +129,9 @@ For more details on hipRTC APIs, refer to HIP-API.pdf in GitHub (https://github.
 
 The link here(https://github.com/ROCm-Developer-Tools/HIP/blob/main/tests/src/hiprtc/saxpy.cpp) shows an example how to program HIP application using runtime compilation mechanism, and detail hipRTC programming guide is also available in Github (https://github.com/ROCm-Developer-Tools/HIP/blob/main/docs/markdown/hip_rtc.md).
 
+## HIP Graph
+HIP graph is supported. For more details, refer to the HIP API Guide.
+
 ## Device-Side Malloc
 
 HIP-Clang now supports device-side malloc and free.
