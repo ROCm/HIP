@@ -81,15 +81,12 @@ TEST_CASE("Unit_hipMallocManaged_HostDeviceConcurrent") {
   }
 
   float *Hmm = nullptr, *hPtr = nullptr, *dPtr = nullptr, *resPtr = nullptr;
-  hipStream_t stream{nullptr};
 
   hPtr = reinterpret_cast<float*>(malloc(N * sizeof(float)));
   resPtr = reinterpret_cast<float*>(malloc(N * sizeof(float)));
 
-  HIP_CHECK(hipStreamCreate(&stream));
   HIP_CHECK(hipMalloc(&dPtr, N * sizeof(float)));
   HIP_CHECK(hipMallocManaged(&Hmm, N * sizeof(float)));
-  HIP_CHECK(hipStreamSynchronize(stream));
   memset(Hmm, 2.0, N * sizeof(float));
 
   unsigned blocks = HipTest::setNumBlocks(blocksPerCU, threadsPerBlock, N);
@@ -97,7 +94,6 @@ TEST_CASE("Unit_hipMallocManaged_HostDeviceConcurrent") {
   KernelDouble<<<dim3(blocks), dim3(threadsPerBlock), 0, 0>>>(Hmm, dPtr, N);
   host_thread.join();
   hipMemcpy(resPtr, dPtr, N * sizeof(float), hipMemcpyDeviceToHost);
-  HIP_CHECK(hipStreamSynchronize(stream));
 
   for (size_t i = 0; i < N; i++) {
     REQUIRE(hPtr[i] == resPtr[i]);
@@ -106,7 +102,6 @@ TEST_CASE("Unit_hipMallocManaged_HostDeviceConcurrent") {
   free(hPtr);
   HIP_CHECK(hipFree(dPtr));
   HIP_CHECK(hipFree(Hmm));
-  HIP_CHECK(hipStreamDestroy(stream));
 }
 
 // The following Test case tests the following scenario:
