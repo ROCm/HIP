@@ -88,6 +88,7 @@ set(TEST_SRC
     hipMallocMngdMultiThread.cc
     hipMemPrefetchAsync.cc
     hipArray.cc
+    hipMemVmm.cc
 )
 else()
 set(TEST_SRC
