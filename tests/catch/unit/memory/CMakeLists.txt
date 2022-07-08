@@ -84,6 +84,7 @@ set(TEST_SRC
     hipDrvPtrGetAttributes.cc
     hipMallocMngdMultiThread.cc
     hipMemPrefetchAsync.cc
+    hipMemsetFunctional.cc
 )
 else()
 set(TEST_SRC
@@ -145,6 +146,7 @@ set(TEST_SRC
     hipPointerGetAttribute.cc
     hipDrvPtrGetAttributes.cc
     hipMemPrefetchAsync.cc
+    hipMemsetFunctional.cc
 )
 endif()
 
