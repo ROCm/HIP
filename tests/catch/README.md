@@ -34,6 +34,22 @@ Some useful functions are:
 
 This information can be accessed in any test via using: `TestContext::get().isAmd()`.
 
+## Adding test for a specific platform
+There might be some functionality which is not present on some platforms. Those tests can be hidden inside following macros.
+
+- ```HT_AMD``` is 1 when tests are running on AMD platform and 0 on NVIDIA.
+- ```HT_NVIDIA``` is 1 when tests are running on NVIDIA platform and 0 on AMD
+
+Usage:
+
+```cpp
+#if HT_AMD
+TEST_CASE("hipExtAPIs") {
+  // ...
+}
+#endif
+```
+
 ## Config file schema
 Some tests can be skipped using a config file placed in hipTestMain/config folder. Multiple config files can be defined for different configurations.
 The naming convention for the file needs to be "config_platform_os_archname.json"
@@ -56,16 +72,108 @@ The schema of the json file is as follows:
 }
 ```
 
-## Env Variables
+## Environment Variables
 - `HT_CONFIG_FILE` : This variable can be set to the config file name or full path. Disabled tests will be read from this.
 - `HT_LOG_ENABLE` : This is for debugging the HIP Test Framework itself. Setting it to 1, all `LogPrintf` will be printed on screen
 
+## Test Macros
+### Single Thread Macros
+These macros are to be used when your test is calling HIP APIs via the main thread.
+
+- `HIP_CHECK` : This macro takes in a HIP API and tests for its result to be either ```hipSuccess``` or ```hipErrorPeerAccessAlreadyEnabled```.
+
+  - Usage: ```HIP_CHECK(hipMalloc(&dPtr, 10));```
+
+- ```HIP_CHECK_ERROR``` : This macro takes in a HIP API and tests its result against a provided result. This can be used when the API is expected to fail with a particular result.
+
+  - Usage: ```HIP_CHECK_ERROR(hipMalloc(&dPtr, 0), hipErrorInvalidValue);```
+
+- ```HIPRTC_CHECK``` : This macro takes in a HIPRTC API and tests its result against HIPRTC_SUCCESS.
+
+  - Usage: ```HIPRTC_CHECK(hiprtcCompileProgram(prog, count, options));```
+
+- ```HIP_ASSERT``` : This macro takes in a bool condition as input and does a ```REQUIRE``` on the condition.
+
+  - Usage: ```HIP_ASSERT(result == 10);```
+
+### Multi Thread Macros
+These macros are to be used when you call HIP APIs in a multi threaded way. They exist because Catch2 ```REQUIRE``` and ```CHECK``` macros can not handle multi threaded calls. To solve this problem, two macros are added```HIP_CHECK_THREAD``` and ```REQUIRE_THREAD``` which can be used to check result of HIP APIs and test assertions respectively. The results can be validate after the threads join via ```HIP_CHECK_THREAD_FINALIZE```.
+
+Note: These should used in ```std::thread``` only. For multi proc guidelines look at [MultiProc Macros](#multi-process-macros) and [SpawnProc Class](#multiproc-management-class)
+
+- ```HIP_CHECK_THREAD``` : This macro takes in a HIP API and tests for its result to be either ```hipSuccess``` or ```hipErrorPeerAccessAlreadyEnabled```. It can also tell other threads if an error has occured in one of the HIP API and can prematurely stop the threads.
+
+- ```REQUIRE_THREAD``` : This macro takes in a bool condition and tests for its result to be true. If this check fails, it can signal other threads to terminate early.
+
+- ```HIP_CHECK_THREAD_FINALIZE``` : This macro checks for the results logged by ```HIP_CHECK_THREAD```. This needs to be called after the threads have joined.
+
+Please also note that you can not return values in functions calling ```HIP_CHECK_THREAD``` or ```REQUIRE_THREAD``` macro.
+
+  Usage:
+
+  ```cpp
+  auto threadFunc = []() {
+      int *dPtr{nullptr};
+      HIP_CHECK_THREAD(hipMalloc(&dPtr, 10));
+      REQUIRE_THREAD(dPtr != nullptr);
+      // Some other work
+    };
+
+    // Launch threads
+    std::vector<std::thread> threadPool;
+    for(...) {
+        threadPool.emplace_back(std::thread(threadFunc));
+    }
+
+    // Join threads
+    for(auto &i : threadPool) {
+        i.join();
+    }
+
+    // Validate all results
+    HIP_CHECK_THREAD_FINALIZE();
+  ```
+
+### Skipping Tests if certain criteria is not met
+If there arises a condition where certain flag is disabled and due to which a test can not run at that time, the following macro can be of use. It will highlight the test in ctest report as well.
+
+- ```HIP_SKIP_TEST``` : The api takes in an input of the reason as well and prints out the line HIP_SKIP_THIS_TEST. This causes ctest to mark the test as skipped and the test shows up in the report as skipped prompting proper response from the team.
+
+  Usage:
+
+  ```cpp
+  TEST_CASE("TestOnlyOnXnack") {
+    if(!XNACKEnabled) {
+      HIP_SKIP_TEST("Test only runs on system with XNACK enabled");
+      return;
+    }
+    // Rest of test functionality
+  }
+  ```
+
+### Multi Process Macros
+These macros are to be called in multi process tests, inside a process which gets spawned. The reasoning is the same, Catch2 does not support multi process checks.
+
+- ```HIPCHECK``` : Same as ```HIP_CHECK``` but will not call Catch2's ```REQUIRE``` on the HIP API. It will print if there is a mismatch and exit the process.
+
+- ```HIPASSERT``` : Same as ```HIP_ASSERT``` but will not call Catch2's ```REQUIRE``` on the HIP API. It will print if there is a mismatch and exit the process.
+
+## MultiProc Management Class
+There is a special interface available for process isolation. ```hip::SpawnProc``` in ```hip_test_process.hh```. Using this interface test can spawn a process and place passing conditions on its return value or its output to stdout. This can be useful for testing printf output.
+Sample Usage:
+```cpp
+hip::SpawnProc proc(<relative path of exe with test folder>, <optional bool value, if output is to be recorded>);
+REQUIRE(0 == proc.run()); // Test of return value of the proc
+REQUIRE(exepctedOutput == proc.getOutput()); // Test on expected output of the process
+```
+The process can be a standalone exe (see tests/catch/unit/printfExe for more information).
+
 ## Enabling New Tests
-Initially, the new tests can be enabled via using ```-DHIP_CATCH_TEST=ON```. After porting existing tests, this will be turned on by default.
+Initially, the new tests can be enabled via using ```-DHIP_CATCH_TEST=1```. After porting existing tests, this will be turned on by default.
 
 ## Building a single test
 ```bash
-hipcc <path_to_test.cpp> -I<HIP_SRC_DIR>/tests/newTests/include <HIP_SRC_DIR>/tests/newTests/hipTestMain/standalone_main.cc -I<HIP_SRC_DIR>/tests/newTests/external/Catch2 -g -o <out_file_name>
+hipcc <path_to_test.cpp> -I<HIP_SRC_DIR>/tests/catch/include <HIP_SRC_DIR>/tests/catch/hipTestMain/standalone_main.cc -I<HIP_SRC_DIR>/tests/catch/external/Catch2 -g -o <out_file_name>
 ```
 
 ## Debugging support
@@ -87,16 +195,7 @@ Tests fall in 5 categories and its file name prefix are as follows:
  - Multi Process tests (Prefix: MultiProc_\*API\*_\*Optional Scenario\*, example: MultiProc_hipIPCMemHandle_GetDataFromProc): These tests are multi process tests and will only run on linux. They are used to test HIP APIs in multi process environment
  - Performance tests(Prefix: Perf_\*Intent\*_\*Optional Scenario\*, example: Perf_DispatchLatenc  y): Performance tests are used to get results of HIP APIs.
 
-There is a special interface available for process isolation. ```hip::SpawnProc``` in ```hip_test_process.hh```. Using this interface test can spawn of process and place passing conditions on its return value or its output to stdout. This can be useful for testing printf tests.
-Sample Usage:
-```cpp
-hip::SpawnProc proc(<relative path of exe with test folder>, <optional bool value, if output is to be recorded>);
-REQUIRE(0 == proc.run()); // Test of return value of the proc
-REQUIRE(exepctedOutput == proc.getOutput()); // Test on expected output of the process
-```
-The process can be a standalone exe (see tests/catch/unit/printfExe for more information).
-
-General Guidelines:
+# General Guidelines:
  - Do not use the catch2 tags. Tags wont be used for filtering
  - Add as many INFO() as you can in tests which prints state of the t est, this will help the debugger when the test fails (INFO macro only prints when the test fails)
  - Check return of each HIP API and fail whenever there is a misma    tch with hipSuccess or hiprtcSuccess.
