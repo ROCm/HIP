@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015 - 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -20,9 +20,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include "hip/hip_runtime.h"
+#include "DriverContext.hh"
+#include <hip_test_common.hh>
 
-extern "C" __global__ void hello_world(float* a, float* b) {
-    int tx = threadIdx.x;
-    b[tx] = a[tx];
+DriverContext::DriverContext() {
+#if HT_NVIDIA
+  HIP_CHECK(hipInit(0));
+  HIP_CHECK(hipDeviceGet(&device, 0));
+  HIP_CHECK(hipDevicePrimaryCtxRetain(&ctx, device));
+  HIP_CHECK(hipCtxPushCurrent(ctx));
+#endif
+}
+
+DriverContext::~DriverContext() {
+#if HT_NVIDIA
+  HIP_CHECK(hipCtxPopCurrent(&ctx));
+  HIP_CHECK(hipDevicePrimaryCtxRelease(device));
+#endif
 }

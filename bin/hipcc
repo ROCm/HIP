@@ -38,16 +38,36 @@ foreach $arg (@ARGV) {
 }
 
 my $SCRIPT_DIR=dirname(__FILE__);
+
 if ($HIPCC_USE_PERL_SCRIPT) {
     #Invoke hipcc.pl
     my $HIPCC_PERL=catfile($SCRIPT_DIR, '/hipcc.pl');
-    exec($^X, $HIPCC_PERL, @ARGV);
+    system($^X, $HIPCC_PERL, @ARGV);
 } else {
-    #Invoke hipcc.bin
-    my $HIPCC_BIN=catfile($SCRIPT_DIR, '/hipcc.bin');
+    $BIN_NAME="/hipcc.bin";
+    if ($isWindows) {
+        $BIN_NAME="/hipcc.bin.exe";
+    }
+    my $HIPCC_BIN=catfile($SCRIPT_DIR, $BIN_NAME);
     if ( -e $HIPCC_BIN ) {
-        exec($HIPCC_BIN, @ARGV);
+        #Invoke hipcc.bin
+        system($HIPCC_BIN, @ARGV);
     } else {
         print "hipcc.bin not present; Install HIPCC binaries before proceeding";
+        exit(-1);
     }
 }
+
+# Because of this wrapper we need to check
+# the output of the system command for perl and bin
+# else the failures are ignored and build fails silently
+if ($? == -1) {
+    exit($?);
+}
+elsif ($? & 127) {
+    exit($?);
+}
+else {
+     $CMD_EXIT_CODE = $? >> 8;
+}
+exit($CMD_EXIT_CODE);

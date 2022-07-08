@@ -75,7 +75,7 @@ bool p_atomicNoRet = false;
 
 template <typename T>
 __global__ void atomicnoret_manywaves(T* C_d) {
-  size_t tid = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
+  size_t tid = (blockIdx.x * blockDim.x + threadIdx.x);
   switch (tid % 9) {
     case 0:
       atomicAddNoRet(C_d, INCREMENT_VALUE);
