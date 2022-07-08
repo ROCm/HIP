@@ -30,7 +30,7 @@ install(FILES @PROJECT_BINARY_DIR@/CTestTestfile.cmake
 # Packaging steps
 #############################
 set(CPACK_SET_DESTDIR TRUE)
-set(CPACK_INSTALL_PREFIX @ROCM_PATH@/test/hip/)
+set(CPACK_INSTALL_PREFIX "@ROCM_PATH@/test/hip/")
 set(PKG_NAME catch-@HIP_PLATFORM@)
 set(CPACK_PACKAGE_NAME ${PKG_NAME})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "HIP: Heterogenous-computing Interface for Portability [CATCH TESTS]")
