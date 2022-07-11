@@ -27,7 +27,7 @@ THE SOFTWARE.
 bool UNSETENV(std::string var) {
   int result = -1;
   #ifdef __unix__
-    result = unsetenv(var);
+    result = unsetenv(var.c_str());
   #else
     result = _putenv((var + '=').c_str());
   #endif
@@ -37,7 +37,7 @@ bool UNSETENV(std::string var) {
 bool SETENV(std::string var, std::string value, int overwrite) {
   int result = -1;
   #ifdef __unix__
-    result = setenv(var, value, overwrite);
+    result = setenv(var.c_str(), value.c_str(), overwrite);
   #else
     result = _putenv((var + '=' + value).c_str());
   #endif
