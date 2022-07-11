@@ -22,22 +22,27 @@ THE SOFTWARE.
 
 #include <hip/hip_runtime.h>
 #include <iostream>
+#include <stdlib.h>
 
-#define UNSETENV(var) ({\
-            if(UNIX) {\
-              unsetenv(var);\
-            } else {\
-              _putenv((var + '=').c_str());
-            }\
-           })
+bool UNSETENV(std::string var) {
+  int result = -1;
+  #ifdef __unix__
+    result = unsetenv(var);
+  #else
+    result = _putenv((var + '=').c_str());
+  #endif
+  return (result == 0) ? true: false;
+}
 
-#define SETENV(var, value, overwrite) ({\
-            if(UNIX) {\
-              setenv(var, value, overwrite);\
-            } else {\
-              _putenv(var + '=' + value);
-            }\
-           })
+bool SETENV(std::string var, std::string value, int overwrite) {
+  int result = -1;
+  #ifdef __unix__
+    result = setenv(var, value, overwrite);
+  #else
+    result = _putenv((var + '=' + value).c_str());
+  #endif
+  return (result == 0) ? true: false;
+}
 
 // Expects 1 command line arg, which is the Device Visible String
 int main(int argc, char** argv) {
