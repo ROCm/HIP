@@ -38,6 +38,7 @@ THE SOFTWARE.
 #include <chrono>
 #ifdef _WIN32
   #include <Windows.h>
+  #define sleep(x) _sleep(x)
 #endif
 #ifdef __linux__
   #include <unistd.h>
@@ -172,12 +173,12 @@ static void HIPRT_CB CallBackFunctn(hipStream_t strm, hipError_t err,
 }
 
 static void EventSync() {
-  int *Ad = nullptr, *Ah = nullptr, NumElms = 4096, CONST = 123;
+  int *Ad = nullptr, *Ah = nullptr, NumElms = 4096, CONST_NUM = 123;
   int blockSize = 32, peak_clk;
   HIP_CHECK(hipMalloc(&Ad, NumElms * sizeof(int)));
   Ah = new int[NumElms];
   for (int i = 0; i < NumElms; ++i) {
-    Ah[i] = CONST;
+    Ah[i] = CONST_NUM;
   }
   // creating event objects
   hipEvent_t start, end;
@@ -195,7 +196,7 @@ static void EventSync() {
   HIP_CHECK(hipMemcpy(Ah, Ad, NumElms * sizeof(int), hipMemcpyDeviceToHost));
   int MisMatch = 0;
   for (int i = 0; i < NumElms; ++i) {
-    if (Ah[i] != (CONST + 10)) {
+    if (Ah[i] != (CONST_NUM + 10)) {
       MisMatch++;
     }
   }
@@ -212,13 +213,13 @@ static void EventSync() {
 /* Launch a kernel in hipStreamPerThread, while it is in flight check for
    hipStreamQuery(hipStreamPerThread) it should return hipErrorNotReady.*/
 TEST_CASE("Unit_hipStreamPerThreadTst_StrmQuery") {
-  int *Ad = nullptr, *Ah = nullptr, NumElms = 4096, CONST = 123;
+  int *Ad = nullptr, *Ah = nullptr, NumElms = 4096, CONST_NUM = 123;
   int blockSize = 32, peak_clk;
   hipError_t err;
   HIP_CHECK(hipMalloc(&Ad, NumElms * sizeof(int)));
   Ah = new int[NumElms];
   for (int i = 0; i < NumElms; ++i) {
-    Ah[i] = CONST;
+    Ah[i] = CONST_NUM;
   }
   HIP_CHECK(hipMemcpy(Ad, Ah, NumElms * sizeof(int), hipMemcpyHostToDevice));
   HIP_CHECK(hipDeviceGetAttribute(&peak_clk, hipDeviceAttributeClockRate, 0));
@@ -256,17 +257,17 @@ TEST_CASE("Unit_hipStreamPerThread_MangdMem") {
   HIP_CHECK(hipDeviceGetAttribute(&managed, hipDeviceAttributeManagedMemory,
                                   0));
   if (managed == 1) {
-    int *Hmm = nullptr, NumElms = 4096, CONST = 123, blockSize = 32;
+    int *Hmm = nullptr, NumElms = 4096, CONST_NUM = 123, blockSize = 32;
     SECTION("Using Managed memory") {
       HIP_CHECK(hipMallocManaged(&Hmm, NumElms * sizeof(int)));
       for (int i = 0; i < NumElms; ++i) {
-        Hmm[i] = CONST;
+        Hmm[i] = CONST_NUM;
       }
     }
     SECTION("Prefetching Managed memory to device") {
       HIP_CHECK(hipMallocManaged(&Hmm, NumElms * sizeof(int)));
       for (int i = 0; i < NumElms; ++i) {
-        Hmm[i] = CONST;
+        Hmm[i] = CONST_NUM;
       }
       HIP_CHECK(hipMemPrefetchAsync(Hmm, NumElms * sizeof(int), 0,
                 hipStreamPerThread));
@@ -281,7 +282,7 @@ TEST_CASE("Unit_hipStreamPerThread_MangdMem") {
     // Validating the result
     int MisMatch = 0;
     for (int i = 0; i < NumElms; ++i) {
-      if (Hmm[i] != (CONST + 10)) {
+      if (Hmm[i] != (CONST_NUM + 10)) {
         MisMatch++;
       }
     }
@@ -300,12 +301,12 @@ TEST_CASE("Unit_hipStreamPerThread_MangdMem") {
 #ifdef __linux__
 TEST_CASE("Unit_hipStreamPerThread_ChildProc") {
   if (fork() == 0) {  //  child process
-    int *Ad = nullptr, *Ah = nullptr, NumElms = 4096, CONST = 123;
+    int *Ad = nullptr, *Ah = nullptr, NumElms = 4096, CONST_NUM = 123;
     int blockSize = 32, peak_clk;
     HIP_CHECK(hipMalloc(&Ad, NumElms * sizeof(int)));
     Ah = new int[NumElms];
     for (int i = 0; i < NumElms; ++i) {
-      Ah[i] = CONST;
+      Ah[i] = CONST_NUM;
     }
     HIP_CHECK(hipMemcpy(Ad, Ah, NumElms * sizeof(int), hipMemcpyHostToDevice));
     HIP_CHECK(hipDeviceGetAttribute(&peak_clk, hipDeviceAttributeClockRate, 0));
@@ -317,7 +318,7 @@ TEST_CASE("Unit_hipStreamPerThread_ChildProc") {
     HIP_CHECK(hipMemcpy(Ah, Ad, NumElms * sizeof(int), hipMemcpyDeviceToHost));
     int MisMatch = 0;
     for (int i = 0; i < NumElms; ++i) {
-      if (Ah[i] != (CONST + 10)) {
+      if (Ah[i] != (CONST_NUM + 10)) {
         MisMatch++;
       }
     }
@@ -359,14 +360,14 @@ TEST_CASE("Unit_hipStreamPerThread_EvtRcrdMThrd") {
    hipStreamWaitEvent()*/
 TEST_CASE("Unit_hipStreamPerThread_StrmWaitEvt") {
   IfTestPassed = true;
-  int *Ad = nullptr, NumElms = 4096, CONST = 123, blockSize = 32, *Ah = nullptr;
+  int *Ad = nullptr, NumElms = 4096, CONST_NUM = 123, blockSize = 32, *Ah = nullptr;
   int *Ad1 = nullptr, *Ah1 = nullptr;
   Ah = new int[NumElms];
   Ah1 = new int;
   hipStream_t Strm;
   HIP_CHECK(hipStreamCreate(&Strm));
   for (int i = 0; i < NumElms; ++i) {
-    Ah[i] = CONST;
+    Ah[i] = CONST_NUM;
   }
   Ah1[0] = 0;
   HIP_CHECK(hipMalloc(&Ad, NumElms * sizeof(int)));
@@ -399,7 +400,7 @@ TEST_CASE("Unit_hipStreamPerThread_StrmWaitEvt") {
   HIP_CHECK(hipMemcpy(Ah, Ad, NumElms * sizeof(int), hipMemcpyDeviceToHost));
   int MisMatch = 0;
   for (int i = 0; i < NumElms; ++i) {
-    if (Ah[i] != (CONST + 10)) {
+    if (Ah[i] != (CONST_NUM + 10)) {
       MisMatch++;
     }
   }
@@ -542,7 +543,7 @@ TEST_CASE("Unit_hipStreamPerThread_CoopLaunchMDev") {
       WARN("GPU(" << i << ") Block size: " << dimBlock.x <<
         " Num blocks per CU: " << numBlocks << "\n");
 
-      dimGrid.x = deviceProp[i].multiProcessorCount * std::min(numBlocks, 32);
+      dimGrid.x = deviceProp[i].multiProcessorCount * (std::min)(numBlocks, 32);
 
       args[i * NumKernelArgs]     = reinterpret_cast<void*>(&dA[i]);
       args[i * NumKernelArgs + 1] = reinterpret_cast<void*>(&copySizeInDwords);
