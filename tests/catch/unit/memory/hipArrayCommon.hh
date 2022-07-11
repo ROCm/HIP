@@ -122,3 +122,39 @@ inline size_t getFreeMem() {
   HIP_CHECK(hipMemGetInfo(&free, &total));
   return free;
 }
+
+struct Sizes {
+  int max1D;
+  std::array<int, 2> max2D;
+  std::array<int, 3> max3D;
+
+  Sizes(unsigned int flag) {
+    int device;
+    HIP_CHECK(hipGetDevice(&device));
+    switch (flag) {
+      case hipArrayDefault: {
+        hipDeviceProp_t prop;
+        HIP_CHECK(hipGetDeviceProperties(&prop, device));
+        max1D = prop.maxTexture1D;
+        max2D = {prop.maxTexture2D[0], prop.maxTexture2D[1]};
+        max3D = {prop.maxTexture3D[0], prop.maxTexture3D[1], prop.maxTexture3D[2]};
+        return;
+      }
+      case hipArraySurfaceLoadStore: {
+        int value;
+        HIP_CHECK(hipDeviceGetAttribute(&value, hipDeviceAttributeMaxSurface1D, device));
+        max1D = value;
+        HIP_CHECK(hipDeviceGetAttribute(&value, hipDeviceAttributeMaxSurface2D, device));
+        max2D = {value, value};
+        HIP_CHECK(hipDeviceGetAttribute(&value, hipDeviceAttributeMaxSurface3D, device));
+        max3D = {value, value, value};
+        return;
+      }
+      default: {
+        INFO("Array flag not supported");
+        REQUIRE(false);
+        return;
+      }
+    }
+  }
+};
