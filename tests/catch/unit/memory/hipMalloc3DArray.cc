@@ -145,6 +145,7 @@ TEST_CASE("Unit_hipMalloc3DArray_MultiThread") {
   }
 }
 
+namespace {
 void checkArrayIsExpected(hipArray_t array, const hipChannelFormatDesc& expected_desc,
                           const hipExtent& expected_extent, const unsigned int expected_flags) {
 // hipArrayGetInfo doesn't currently exist (EXSWCPHIPT-87)
@@ -172,6 +173,7 @@ void checkArrayIsExpected(hipArray_t array, const hipChannelFormatDesc& expected
   REQUIRE(expected_flags == queried_flags);
 #endif
 }
+}
 
 TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_happy", "", char, uchar2, uint2, int4, short4, float,
                    float2, float4) {
@@ -187,19 +189,16 @@ TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_happy", "", char, uchar2, uint2, int4,
 
   SECTION("1D Array") {
     extent = make_hipExtent(size, 0, 0);
-    HIP_CHECK(hipMalloc3DArray(&array, &desc, extent, flags));
   }
   SECTION("2D Array") {
     extent = make_hipExtent(size, size, 0);
-    HIP_CHECK(hipMalloc3DArray(&array, &desc, extent, flags));
   }
   SECTION("3D Array") {
     extent = make_hipExtent(size, size, size);
-    HIP_CHECK(hipMalloc3DArray(&array, &desc, extent, flags));
   }
 
+  HIP_CHECK(hipMalloc3DArray(&array, &desc, extent, flags));
   checkArrayIsExpected(array, desc, extent, flags);
-
   HIP_CHECK(hipFreeArray(array));
 }
 
