@@ -23,6 +23,22 @@ THE SOFTWARE.
 #include <hip/hip_runtime.h>
 #include <iostream>
 
+#define UNSETENV(var) ({\
+            if(UNIX) {\
+              unsetenv(var);\
+            } else {\
+              _putenv((var + '=').c_str());
+            }\
+           })
+
+#define SETENV(var, value, overwrite) ({\
+            if(UNIX) {\
+              setenv(var, value, overwrite);\
+            } else {\
+              _putenv(var + '=' + value);
+            }\
+           })
+
 // Expects 1 command line arg, which is the Device Visible String
 int main(int argc, char** argv) {
   if (argc != 2) {
@@ -37,18 +53,18 @@ int main(int argc, char** argv) {
 
   // disable visible_devices env from shell
 #ifdef __HIP_PLATFORM_NVCC__
-  unsetenv("CUDA_VISIBLE_DEVICES");
-  setenv("CUDA_VISIBLE_DEVICES", argv[1], 1);
+  UNSETENV("CUDA_VISIBLE_DEVICES");
+  SETENV("CUDA_VISIBLE_DEVICES", argv[1], 1);
   auto init_res = hipInit(0);
   if (hipSuccess != init_res) {
     std::cerr << "CUDA INIT API returned : " << hipGetErrorString(init_res) << std::endl;
     return -1;
   }
 #else
-  unsetenv("ROCR_VISIBLE_DEVICES");
-  unsetenv("HIP_VISIBLE_DEVICES");
-  setenv("ROCR_VISIBLE_DEVICES", argv[1], 1);
-  setenv("HIP_VISIBLE_DEVICES", argv[1], 1);
+  UNSETENV("ROCR_VISIBLE_DEVICES");
+  UNSETENV("HIP_VISIBLE_DEVICES");
+  SETENV("ROCR_VISIBLE_DEVICES", argv[1], 1);
+  SETENV("HIP_VISIBLE_DEVICES", argv[1], 1);
 #endif
 
   int count = 0;
@@ -59,10 +75,10 @@ int main(int argc, char** argv) {
   }
 
 #ifdef __HIP_PLATFORM_NVCC__
-  unsetenv("CUDA_VISIBLE_DEVICES");
+  UNSETENV("CUDA_VISIBLE_DEVICES");
 #else
-  unsetenv("ROCR_VISIBLE_DEVICES");
-  unsetenv("HIP_VISIBLE_DEVICES");
+  UNSETENV("ROCR_VISIBLE_DEVICES");
+  UNSETENV("HIP_VISIBLE_DEVICES");
 #endif
   return count;
 }
