@@ -144,7 +144,7 @@ If there arises a condition where certain flag is disabled and due to which a te
   ```cpp
   TEST_CASE("TestOnlyOnXnack") {
     if(!XNACKEnabled) {
-      HIP_SKIP_TEST("Test only runs on system with XNACK enabled");
+      HipTest::HIP_SKIP_TEST("Test only runs on system with XNACK enabled");
       return;
     }
     // Rest of test functionality
@@ -162,11 +162,11 @@ These macros are to be called in multi process tests, inside a process which get
 There is a special interface available for process isolation. ```hip::SpawnProc``` in ```hip_test_process.hh```. Using this interface test can spawn a process and place passing conditions on its return value or its output to stdout. This can be useful for testing printf output.
 Sample Usage:
 ```cpp
-hip::SpawnProc proc(<relative path of exe with test folder>, <optional bool value, if output is to be recorded>);
+hip::SpawnProc proc(<name of exe>, <optional bool value, if output is to be recorded>);
 REQUIRE(0 == proc.run()); // Test of return value of the proc
 REQUIRE(exepctedOutput == proc.getOutput()); // Test on expected output of the process
 ```
-The process can be a standalone exe (see tests/catch/unit/printfExe for more information).
+The process must be a standalone exe inside the same folder as other tests.
 
 ## Enabling New Tests
 Initially, the new tests can be enabled via using ```-DHIP_CATCH_TEST=1```. After porting existing tests, this will be turned on by default.
