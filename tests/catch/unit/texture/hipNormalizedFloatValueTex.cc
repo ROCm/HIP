@@ -154,7 +154,7 @@ TEST_CASE("Unit_hipNormalizedFloatValueTex_CheckModes") {
   HIP_CHECK(hipSetDevice(0));
   HIP_CHECK(hipGetDeviceProperties(&props, 0));
   INFO("Device :: " << props.name);
-  INFO("Arch - AMD GPU :: " << props.gcnArch);
+  INFO("Arch - AMD GPU :: " << props.gcnArchName);
 #endif
 
   SECTION("hipNormalizedFloatValueTexture for hipFilterModePoint") {

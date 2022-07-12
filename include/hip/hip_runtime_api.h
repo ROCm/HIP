@@ -117,7 +117,6 @@ typedef struct hipDeviceProp_t {
     size_t maxSharedMemoryPerMultiProcessor;  ///< Maximum Shared Memory Per Multiprocessor.
     int isMultiGpuBoard;                      ///< 1 if device is on a multi-GPU board, 0 if not.
     int canMapHostMemory;                     ///< Check whether HIP can map host memory
-    int gcnArch;                              ///< DEPRECATED: use gcnArchName instead
     char gcnArchName[256];                    ///< AMD GCN Arch Name.
     int integrated;            ///< APU vs dGPU
     int cooperativeLaunch;            ///< HIP device supports cooperative launch
@@ -150,6 +149,7 @@ typedef struct hipDeviceProp_t {
     int pageableMemoryAccess;        ///< Device supports coherently accessing pageable memory
                                      ///< without calling hipHostRegister on it
     int pageableMemoryAccessUsesHostPageTables; ///< Device accesses pageable memory via the host's page tables
+    int gcnArch;                              ///< DO NOT USE. To be deprecated. Use gcnArchName instead
 } hipDeviceProp_t;
 
 
@@ -432,7 +432,6 @@ typedef enum hipDeviceAttribute_t {
     hipDeviceAttributeClockInstructionRate = hipDeviceAttributeAmdSpecificBegin,  ///< Frequency in khz of the timer used by the device-side "clock*"
     hipDeviceAttributeArch,                                     ///< Device architecture
     hipDeviceAttributeMaxSharedMemoryPerMultiprocessor,         ///< Maximum Shared Memory PerMultiprocessor.
-    hipDeviceAttributeGcnArch,                                  ///< Device gcn architecture
     hipDeviceAttributeGcnArchName,                              ///< Device gcnArch name in 256 bytes
     hipDeviceAttributeHdpMemFlushCntl,                          ///< Address of the HDP_MEM_COHERENCY_FLUSH_CNTL register
     hipDeviceAttributeHdpRegFlushCntl,                          ///< Address of the HDP_REG_COHERENCY_FLUSH_CNTL register
@@ -455,6 +454,7 @@ typedef enum hipDeviceAttribute_t {
 
     hipDeviceAttributeAmdSpecificEnd = 19999,
     hipDeviceAttributeVendorSpecificBegin = 20000,
+    hipDeviceAttributeGcnArch,                                  ///< To be deprecated
     // Extended attributes for vendors
 } hipDeviceAttribute_t;
 
