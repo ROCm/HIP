@@ -166,3 +166,46 @@ struct Sizes {
     }
   }
 };
+
+inline const char* channelFormatString(hipChannelFormatKind formatKind) noexcept {
+  switch (formatKind) {
+    case hipChannelFormatKindFloat:
+      return "float";
+    case hipChannelFormatKindSigned:
+      return "signed";
+    case hipChannelFormatKindUnsigned:
+      return "unsigned";
+    default:
+      return "error";
+  }
+}
+
+// All the possible formats for channel data in an array.
+static const std::vector<hipArray_Format> driverFormats{
+    HIP_AD_FORMAT_UNSIGNED_INT8, HIP_AD_FORMAT_UNSIGNED_INT16, HIP_AD_FORMAT_UNSIGNED_INT32,
+    HIP_AD_FORMAT_SIGNED_INT8,   HIP_AD_FORMAT_SIGNED_INT16,   HIP_AD_FORMAT_SIGNED_INT32,
+    HIP_AD_FORMAT_HALF,          HIP_AD_FORMAT_FLOAT};
+
+// Helpful for printing errors
+inline const char* formatToString(hipArray_Format f) {
+  switch (f) {
+    case HIP_AD_FORMAT_UNSIGNED_INT8:
+      return "Unsigned Int 8";
+    case HIP_AD_FORMAT_UNSIGNED_INT16:
+      return "Unsigned Int 16";
+    case HIP_AD_FORMAT_UNSIGNED_INT32:
+      return "Unsigned Int 32";
+    case HIP_AD_FORMAT_SIGNED_INT8:
+      return "Signed Int 8";
+    case HIP_AD_FORMAT_SIGNED_INT16:
+      return "Signed Int 16";
+    case HIP_AD_FORMAT_SIGNED_INT32:
+      return "Signed Int 32";
+    case HIP_AD_FORMAT_HALF:
+      return "Float 16";
+    case HIP_AD_FORMAT_FLOAT:
+      return "Float 32";
+    default:
+      return "not found";
+  }
+}
