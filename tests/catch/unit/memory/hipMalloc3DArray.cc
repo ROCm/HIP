@@ -33,6 +33,7 @@ static constexpr auto ARRAY_SIZE{4};
 static constexpr auto BIG_ARRAY_SIZE{100};
 static constexpr auto ARRAY_LOOP{100};
 
+
 /*
  * This API verifies  memory allocations for small and
  * bigger chunks of data.
@@ -65,53 +66,6 @@ static void Malloc3DArray_DiffSizes(int gpu) {
 
   HIP_CHECK_THREAD(hipMemGetInfo(&avail, nullptr));
   REQUIRE_THREAD(pavail == avail);
-}
-
-/*
- * Verifies the negative scenarios of hipMalloc3DArray API
- */
-TEST_CASE("Unit_hipMalloc3DArray_Negative") {
-  constexpr int width{ARRAY_SIZE}, height{ARRAY_SIZE}, depth{ARRAY_SIZE};
-  hipChannelFormatDesc channelDesc = hipCreateChannelDesc<float>();
-  hipArray* arr;
-#if HT_NVIDIA
-  SECTION("NullPointer to Array") {
-    REQUIRE(hipMalloc3DArray(nullptr, &channelDesc, make_hipExtent(width, height, depth),
-                             hipArrayDefault) != hipSuccess);
-  }
-
-  SECTION("NullPointer to Channel Descriptor") {
-    REQUIRE(hipMalloc3DArray(&arr, nullptr, make_hipExtent(width, height, depth),
-                             hipArrayDefault) != hipSuccess);
-  }
-#endif
-  SECTION("Width 0 in hipExtent") {
-    REQUIRE(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(0, height, width),
-                             hipArrayDefault) != hipSuccess);
-  }
-
-  SECTION("Height 0 in hipExtent") {
-    REQUIRE(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, 0, width),
-                             hipArrayDefault) != hipSuccess);
-  }
-
-  SECTION("Invalid Flag") {
-    REQUIRE(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(width, height, depth), 100) !=
-            hipSuccess);
-  }
-
-  SECTION("Width,Height & Depth 0 in hipExtent") {
-    REQUIRE(hipMalloc3DArray(&arr, &channelDesc, make_hipExtent(0, 0, 0), hipArrayDefault) !=
-            hipSuccess);
-  }
-
-  SECTION("Max int values to extent") {
-    REQUIRE(hipMalloc3DArray(
-                &arr, &channelDesc,
-                make_hipExtent(std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
-                               std::numeric_limits<int>::max()),
-                hipArrayDefault) != hipSuccess);
-  }
 }
 
 TEST_CASE("Unit_hipMalloc3DArray_DiffSizes") {
@@ -173,7 +127,7 @@ void checkArrayIsExpected(hipArray_t array, const hipChannelFormatDesc& expected
   REQUIRE(expected_flags == queried_flags);
 #endif
 }
-}
+}  // namespace
 
 TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_happy", "", char, uchar2, uint2, int4, short4, float,
                    float2, float4) {
@@ -187,15 +141,9 @@ TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_happy", "", char, uchar2, uint2, int4,
   constexpr size_t size = 64;
   hipExtent extent;
 
-  SECTION("1D Array") {
-    extent = make_hipExtent(size, 0, 0);
-  }
-  SECTION("2D Array") {
-    extent = make_hipExtent(size, size, 0);
-  }
-  SECTION("3D Array") {
-    extent = make_hipExtent(size, size, size);
-  }
+  SECTION("1D Array") { extent = make_hipExtent(size, 0, 0); }
+  SECTION("2D Array") { extent = make_hipExtent(size, size, 0); }
+  SECTION("3D Array") { extent = make_hipExtent(size, size, size); }
 
   HIP_CHECK(hipMalloc3DArray(&array, &desc, extent, flags));
   checkArrayIsExpected(array, desc, extent, flags);
@@ -271,4 +219,204 @@ TEMPLATE_TEST_CASE("Unit_hipMalloc3DArray_MaxTexture", "", int, uint4, short, us
     CAPTURE(extent.width, extent.height, extent.depth);
     HIP_CHECK_ERROR(hipMalloc3DArray(&array, &desc, extent, flag), hipErrorInvalidValue);
   }
+}
+
+
+#if HT_AMD
+constexpr std::array<unsigned int, 1> validFlags{hipArrayDefault};
+#else
+constexpr std::array<unsigned int, 9> validFlags{
+    hipArrayDefault,
+    hipArrayDefault | hipArraySurfaceLoadStore,
+    hipArrayLayered,
+    hipArrayLayered | hipArraySurfaceLoadStore,
+    hipArrayCubemap,
+    hipArrayCubemap | hipArrayLayered,
+    hipArrayCubemap | hipArraySurfaceLoadStore,
+    hipArrayCubemap | hipArrayLayered | hipArraySurfaceLoadStore,
+    hipArrayTextureGather};
+#endif
+
+hipExtent makeExtent(unsigned int flag, size_t s) {
+  if (flag == hipArrayTextureGather) {
+    return make_hipExtent(s, s, 0);
+  }
+  return make_hipExtent(s, s, s);
+}
+
+
+// Providing the array pointer as nullptr should return an error
+TEST_CASE("Unit_hipMalloc3DArray_Negative_NullArrayPtr") {
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
+  constexpr size_t s = 6;
+
+  const auto flag = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
+  HIP_CHECK_ERROR(hipMalloc3DArray(nullptr, &desc, makeExtent(flag, s), flag),
+                  hipErrorInvalidValue);
+}
+
+// Providing the description pointer as nullptr should return an error
+TEST_CASE("Unit_hipMalloc3DArray_Negative_NullDescPtr") {
+  constexpr size_t s = 6;  // 6 to keep cubemap happy
+  hipArray_t array;
+
+  const auto flag = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
+
+  HIP_CHECK_ERROR(hipMalloc3DArray(&array, nullptr, makeExtent(flag, s), flag),
+                  hipErrorInvalidValue);
+}
+
+// Zero width arrays are not allowed
+TEST_CASE("Unit_hipMalloc3DArray_Negative_ZeroWidth") {
+  constexpr size_t s = 6;  // 6 to keep cubemap happy
+  hipArray_t array;
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
+
+  const auto flag = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
+
+  HIP_CHECK_ERROR(hipMalloc3DArray(&array, &desc, make_hipExtent(0, s, s), flag),
+                  hipErrorInvalidValue);
+}
+
+// Zero height arrays are only allowed for 1D arrays and layered arrays
+TEST_CASE("Unit_hipMalloc3DArray_Negative_ZeroHeight") {
+  constexpr size_t s = 6;  // 6 to keep cubemap happy
+  hipArray_t array;
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
+  std::array<unsigned int, 2> exceptions{hipArrayLayered,
+                                         hipArrayLayered | hipArraySurfaceLoadStore};
+
+  const auto flag = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
+
+  if (std::find(std::begin(exceptions), std::end(exceptions), flag) == std::end(exceptions)) {
+    // flag is not in list of exceptions
+    HIP_CHECK_ERROR(hipMalloc3DArray(&array, &desc, make_hipExtent(s, 0, s), flag),
+                    hipErrorInvalidValue);
+  }
+}
+
+TEST_CASE("Unit_hipMalloc3DArray_Negative_InvalidFlags") {
+  constexpr size_t s = 6;  // 6 to keep cubemap happy
+  hipArray_t array;
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
+
+#if HT_AMD
+  const unsigned int flag = 0xDEADBEEF;
+#else
+  const unsigned int flag =
+      GENERATE(0xDEADBEEF, hipArrayTextureGather | hipArraySurfaceLoadStore,
+               hipArrayTextureGather | hipArrayCubemap,
+               hipArrayTextureGather | hipArraySurfaceLoadStore | hipArrayCubemap);
+#endif
+
+  CAPTURE(flag);
+
+  REQUIRE(std::find(std::begin(validFlags), std::end(validFlags), flag) == std::end(validFlags));
+
+  HIP_CHECK_ERROR(hipMalloc3DArray(&array, &desc, makeExtent(flag, s), flag), hipErrorInvalidValue);
+}
+
+void testInvalidDescription(hipChannelFormatDesc desc){
+  constexpr size_t s = 6;  // 6 to keep cubemap happy
+  hipArray_t array;
+
+#if HT_NVIDIA
+  hipError_t expectedError = hipErrorUnknown;
+#else
+  hipError_t expectedError = hipErrorInvalidValue;
+#endif
+
+  const auto flag = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
+  HIP_CHECK_ERROR(hipMalloc3DArray(&array, &desc, makeExtent(flag, s), flag), expectedError);
+}
+
+TEST_CASE("Unit_hipMalloc3DArray_Negative_InvalidFormat") {
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
+  desc.f = GENERATE(hipChannelFormatKindNone, 0xBEEF);
+  testInvalidDescription(desc);
+}
+
+TEST_CASE("Unit_hipMalloc3DArray_Negative_BadChannelLayout") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
+  return;
+#endif
+
+  const int bits = GENERATE(8, 16, 32);
+  const hipChannelFormatKind formatKind =
+      GENERATE(hipChannelFormatKindSigned, hipChannelFormatKindUnsigned, hipChannelFormatKindFloat);
+  if (bits == 8 && formatKind == hipChannelFormatKindFloat) return;
+
+
+  hipChannelFormatDesc desc = GENERATE_COPY(hipCreateChannelDesc(bits, bits, bits, 0, formatKind),
+                                            hipCreateChannelDesc(0, bits, bits, 0, formatKind),
+                                            hipCreateChannelDesc(0, bits, bits, bits, formatKind),
+                                            hipCreateChannelDesc(bits, 0, bits, 0, formatKind),
+                                            hipCreateChannelDesc(bits, bits, 0, bits, formatKind),
+                                            hipCreateChannelDesc(0, 0, bits, 0, formatKind),
+                                            hipCreateChannelDesc(0, 0, bits, bits, formatKind));
+
+  INFO("kind: " << channelFormatString(formatKind));
+  INFO("x: " << desc.x << ", y: " << desc.y << ", z: " << desc.z << ", w: " << desc.w);
+
+  testInvalidDescription(desc);
+}
+
+TEST_CASE("Unit_hipMalloc3DArray_Negative_8BitFloat") {
+  hipChannelFormatDesc desc = GENERATE(hipCreateChannelDesc(8, 0, 0, 0, hipChannelFormatKindFloat),
+                                       hipCreateChannelDesc(8, 8, 0, 0, hipChannelFormatKindFloat),
+                                       hipCreateChannelDesc(8, 8, 8, 8, hipChannelFormatKindFloat));
+
+  testInvalidDescription(desc);
+}
+
+TEST_CASE("Unit_hipMalloc3DArray_Negative_DifferentChannelSizes") {
+#if HT_AMD
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
+  return;
+#endif
+
+  const int bitsX = GENERATE(8, 16, 32);
+  const int bitsY = GENERATE(8, 16, 32);
+  const int bitsZ = GENERATE(8, 16, 32);
+  const int bitsW = GENERATE(8, 16, 32);
+  if (bitsX == bitsY && bitsY == bitsZ && bitsZ == bitsW) return;  // skip when they are equal
+
+  const hipChannelFormatKind channelFormat =
+      GENERATE(hipChannelFormatKindSigned, hipChannelFormatKindUnsigned, hipChannelFormatKindFloat);
+
+  if (channelFormat == hipChannelFormatKindFloat &&
+      (bitsX == 8 || bitsY == 8 || bitsZ == 8 || bitsW == 8))
+    return;  // 8 bit floats aren't allowed
+
+  hipChannelFormatDesc desc = hipCreateChannelDesc(bitsX, bitsY, bitsZ, bitsW, channelFormat);
+
+  INFO("format: " << channelFormatString(channelFormat) << ", x bits: " << bitsX
+                  << ", y bits: " << bitsY << ", z bits: " << bitsZ << ", w bits: " << bitsW);
+
+
+  testInvalidDescription(desc);
+}
+
+TEST_CASE("Unit_hipMalloc3DArray_Negative_BadChannelSize") {
+  const int badBits = GENERATE(-1, 0, 10, 100);
+  const hipChannelFormatKind formatKind =
+      GENERATE(hipChannelFormatKindSigned, hipChannelFormatKindUnsigned, hipChannelFormatKindFloat);
+  hipChannelFormatDesc desc = hipCreateChannelDesc(badBits, badBits, badBits, badBits, formatKind);
+
+  INFO("Number of bits: " << badBits);
+
+  testInvalidDescription(desc);
+}
+
+
+// hipMalloc3DArray should handle the max numeric value gracefully.
+TEST_CASE("Unit_hipMalloc3DArray_Negative_NumericLimit") {
+  hipArray_t arrayPtr;
+  hipChannelFormatDesc desc = hipCreateChannelDesc<float>();
+
+  size_t size = std::numeric_limits<size_t>::max();
+  const auto flag = GENERATE(from_range(std::begin(validFlags), std::end(validFlags)));
+  HIP_CHECK_ERROR(hipMalloc3DArray(&arrayPtr, &desc, makeExtent(flag, size), flag),
+                  hipErrorInvalidValue);
 }

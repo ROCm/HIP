@@ -109,36 +109,6 @@ TEST_CASE("Unit_hipArrayCreate_MultiThread") {
 }
 
 
-// All the possible formats for channel data in an array.
-static const std::vector<hipArray_Format> formats{
-    HIP_AD_FORMAT_UNSIGNED_INT8, HIP_AD_FORMAT_UNSIGNED_INT16, HIP_AD_FORMAT_UNSIGNED_INT32,
-    HIP_AD_FORMAT_SIGNED_INT8,   HIP_AD_FORMAT_SIGNED_INT16,   HIP_AD_FORMAT_SIGNED_INT32,
-    HIP_AD_FORMAT_HALF,          HIP_AD_FORMAT_FLOAT};
-
-// Helpful for printing errors
-const char* formatToString(hipArray_Format f) {
-  switch (f) {
-    case HIP_AD_FORMAT_UNSIGNED_INT8:
-      return "Unsigned Int 8";
-    case HIP_AD_FORMAT_UNSIGNED_INT16:
-      return "Unsigned Int 16";
-    case HIP_AD_FORMAT_UNSIGNED_INT32:
-      return "Unsigned Int 32";
-    case HIP_AD_FORMAT_SIGNED_INT8:
-      return "Signed Int 8";
-    case HIP_AD_FORMAT_SIGNED_INT16:
-      return "Signed Int 16";
-    case HIP_AD_FORMAT_SIGNED_INT32:
-      return "Signed Int 32";
-    case HIP_AD_FORMAT_HALF:
-      return "Float 16";
-    case HIP_AD_FORMAT_FLOAT:
-      return "Float 32";
-    default:
-      return "not found";
-  }
-}
-
 // Tests /////////////////////////////////////////
 
 #if HT_AMD
@@ -338,7 +308,7 @@ TEMPLATE_TEST_CASE("Unit_hipArrayCreate_maxTexture", "", uint, int, int4, ushort
 TEST_CASE("Unit_hipArrayCreate_ZeroWidth") {
   DriverContext ctx;
   HIP_ARRAY_DESCRIPTOR desc;
-  desc.Format = formats[0];
+  desc.Format = driverFormats[0];
   desc.NumChannels = 4;
   desc.Width = 0;
   desc.Height = GENERATE(0, 1024);
@@ -351,13 +321,13 @@ TEST_CASE("Unit_hipArrayCreate_ZeroWidth") {
 // HipArrayCreate will return an error when nullptr is used as the array argument
 TEST_CASE("Unit_hipArrayCreate_Nullptr") {
 #if HT_AMD
-  HipTest::HIP_SKIP_TEST("Probably EXSWCPHIPT-45");
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-130");
   return;
 #endif
   DriverContext ctx;
   SECTION("Null array") {
     HIP_ARRAY_DESCRIPTOR desc;
-    desc.Format = formats[0];
+    desc.Format = driverFormats[0];
     desc.NumChannels = 4;
     desc.Width = 1024;
     desc.Height = 1024;
@@ -374,7 +344,7 @@ TEST_CASE("Unit_hipArrayCreate_Nullptr") {
 TEST_CASE("Unit_hipArrayCreate_BadNumberChannelElement") {
   DriverContext ctx;
   HIP_ARRAY_DESCRIPTOR desc;
-  desc.Format = GENERATE(from_range(std::begin(formats), std::end(formats)));
+  desc.Format = GENERATE(from_range(std::begin(driverFormats), std::end(driverFormats)));
   desc.NumChannels = GENERATE(-1, 0, 3, 5, 8);
   desc.Width = 1024;
   desc.Height = GENERATE(0, 1024);
@@ -393,9 +363,9 @@ TEST_CASE("Unit_hipArrayCreate_BadChannelFormat") {
 
   // create a bad format
   desc.Format =
-      std::accumulate(std::begin(formats), std::end(formats), formats[0],
+      std::accumulate(std::begin(driverFormats), std::end(driverFormats), driverFormats[0],
                       [](auto i, auto f) { return static_cast<decltype(desc.Format)>(i + f); });
-  for (auto&& format : formats) {
+  for (auto&& format : driverFormats) {
     REQUIRE(desc.Format != format);
   }
 

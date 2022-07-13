@@ -135,20 +135,6 @@ template <typename T> size_t getAllocSize(const size_t width, const size_t heigh
   return sizeof(T) * width * (height ? height : 1);
 }
 
-
-const char* channelFormatString(hipChannelFormatKind formatKind) noexcept {
-  switch (formatKind) {
-    case hipChannelFormatKindFloat:
-      return "float";
-    case hipChannelFormatKindSigned:
-      return "signed";
-    case hipChannelFormatKindUnsigned:
-      return "unsigned";
-    default:
-      return "error";
-  }
-}
-
 // Tests /////////////////////////////////////////
 
 // Test the default array by generating a texture from it then reading from that texture.
@@ -409,7 +395,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_happy", "", uint, int, int4, ushort, sho
   // pointer to the array in device memory
   hipArray_t arrayPtr{};
   size_t width = 1024;
-  size_t height;
+  size_t height{};
 
   SECTION("hipArrayDefault") {
     height = GENERATE(0, 1024);
@@ -509,7 +495,7 @@ TEMPLATE_TEST_CASE("Unit_hipMallocArray_MaxTexture_Default", "", uint, int4, ush
 // Arrays with channels of different size are not allowed.
 TEST_CASE("Unit_hipMallocArray_Negative_DifferentChannelSizes") {
 #if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-59");
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
   return;
 #endif
   const int bitsX = GENERATE(8, 16, 32);
@@ -564,10 +550,6 @@ TEST_CASE("Unit_hipMallocArray_Negative_ZeroWidth") {
 
 // Providing the array pointer as nullptr should return an error
 TEST_CASE("Unit_hipMallocArray_Negative_NullArrayPtr") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-45");
-  return;
-#endif
   hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
 
   HIP_CHECK_ERROR(hipMallocArray(nullptr, &desc, 1024, 0, hipArrayDefault), hipErrorInvalidValue);
@@ -575,10 +557,6 @@ TEST_CASE("Unit_hipMallocArray_Negative_NullArrayPtr") {
 
 // Providing the desc pointer as nullptr should return an error
 TEST_CASE("Unit_hipMallocArray_Negative_NullDescPtr") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-83");
-  return;
-#endif
   hipArray_t arrayPtr;
   HIP_CHECK_ERROR(hipMallocArray(&arrayPtr, nullptr, 1024, 0, hipArrayDefault),
                   hipErrorInvalidValue);
@@ -586,10 +564,6 @@ TEST_CASE("Unit_hipMallocArray_Negative_NullDescPtr") {
 
 // Inappropriate but related flags should still return an error
 TEST_CASE("Unit_hipMallocArray_Negative_BadFlags") {
-#if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-72");
-  return;
-#endif
   hipChannelFormatDesc desc = hipCreateChannelDesc<float4>();
 
   hipArray_t arrayPtr;
@@ -687,7 +661,7 @@ TEST_CASE("Unit_hipMallocArray_Negative_3ChannelElement") {
 // The bit channel description should not allow any channels after a zero channel
 TEST_CASE("Unit_hipMallocArray_Negative_ChannelAfterZeroChannel") {
 #if HT_AMD
-  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-59");
+  HipTest::HIP_SKIP_TEST("EXSWCPHIPT-129");
   return;
 #endif
   const int bits = GENERATE(8, 16, 32);
