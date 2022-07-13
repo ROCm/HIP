@@ -36,7 +36,7 @@ static void callee(uint64_t* output, uint64_t* input) {
 }
 
 __global__ void kernel(uint64_t fptr, uint64_t* retval0, uint64_t* retval1) {
-  uint tid = hipThreadIdx_x + hipBlockIdx_x * hipBlockDim_x;
+  uint tid = threadIdx.x + blockIdx.x * blockDim.x;
   uint64_t arg0 = (uint64_t)fptr;
   uint64_t arg1 = tid;
   uint64_t arg2 = 42;

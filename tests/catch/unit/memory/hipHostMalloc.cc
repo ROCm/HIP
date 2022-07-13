@@ -30,8 +30,9 @@ This testfile verifies the following scenarios of hipHostMalloc API
 */
 
 #include<hip_test_checkers.hh>
-#include<hip_test_kernels.hh>
+#include<kernels.hh>
 #include<hip_test_common.hh>
+#include <hip_test_context.hh>
 
 #define SYNC_EVENT 0
 #define SYNC_STREAM 1
@@ -40,11 +41,6 @@ This testfile verifies the following scenarios of hipHostMalloc API
 std::vector<std::string> syncMsg = {"event", "stream", "device"};
 static constexpr int numElements{1024 * 16};
 static constexpr size_t sizeBytes{numElements * sizeof(int)};
-
-__global__ void Set(int* Ad, int val) {
-    int tx = threadIdx.x + blockIdx.x * blockDim.x;
-    Ad[tx] = val;
-}
 
 void CheckHostPointer(int numElements, int* ptr, unsigned eventFlags,
                       int syncMethod, std::string msg) {
@@ -70,10 +66,10 @@ void CheckHostPointer(int numElements, int* ptr, unsigned eventFlags,
     const int expected = 13;
 
     // Init array to know state:
-    hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, 0x0, ptr, -42);
+    HipTest::launchKernel(Set, dimGrid, dimBlock, 0, 0x0, ptr, -42);
     HIP_CHECK(hipDeviceSynchronize());
 
-    hipLaunchKernelGGL(Set, dimGrid, dimBlock, 0, s, ptr, expected);
+    HipTest::launchKernel(Set, dimGrid, dimBlock, 0, s, ptr, expected);
     HIP_CHECK(hipEventRecord(e, s));
 
     // Host waits for event :
@@ -137,9 +133,9 @@ TEST_CASE("Unit_hipHostMalloc_Basic") {
 
     dim3 dimGrid(LEN / 512, 1, 1);
     dim3 dimBlock(512, 1, 1);
-    hipLaunchKernelGGL(HipTest::vectorADD, dimGrid, dimBlock,
+    HipTest::launchKernel<float>(HipTest::vectorADD<float>, dimGrid, dimBlock,
                        0, 0, static_cast<const float*>(A_d),
-                       static_cast<const float*>(B_d), C_d, LEN);
+                       static_cast<const float*>(B_d), C_d, static_cast<size_t>(LEN));
     HIP_CHECK(hipMemcpy(C_h, C_d, LEN*sizeof(float),
                         hipMemcpyDeviceToHost));
     HIP_CHECK(hipDeviceSynchronize());
@@ -233,4 +229,16 @@ TEST_CASE("Unit_hipHostMalloc_Default") {
   CheckHostPointer(numElements, A, 0, SYNC_DEVICE, ptrType);
   CheckHostPointer(numElements, A, 0, SYNC_STREAM, ptrType);
   CheckHostPointer(numElements, A, 0, SYNC_EVENT, ptrType);
+
 }
+
+TEST_CASE("Unit_hipHostGetDevicePointer_NullCheck") {
+  int* d_a;
+  HIP_CHECK(hipHostMalloc(reinterpret_cast<void**>(&d_a), sizeof(int)));
+
+  auto res = hipHostGetDevicePointer(nullptr,d_a,0);
+  REQUIRE(res == hipErrorInvalidValue);
+
+  HIP_CHECK(hipHostFree(d_a));
+}
+

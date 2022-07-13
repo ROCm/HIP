@@ -26,8 +26,8 @@ THE SOFTWARE.
 
 // Kernel function
 __global__ void MemPrftchAsyncKernel1(int* Hmm, size_t N) {
-  size_t offset = (hipBlockIdx_x * hipBlockDim_x + hipThreadIdx_x);
-  size_t stride = hipBlockDim_x * hipGridDim_x;
+  size_t offset = (blockIdx.x * blockDim.x + threadIdx.x);
+  size_t stride = blockDim.x * gridDim.x;
   for (size_t i = offset; i < N; i += stride) {
     Hmm[i] = Hmm[i] * Hmm[i];
   }

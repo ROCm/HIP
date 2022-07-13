@@ -36,7 +36,7 @@ THE SOFTWARE.
 
 // Device (Kernel) function, it must be void
 __global__ void matrixTranspose(float* out, float* in, const int width) {
-    int x = hipBlockDim_x * hipBlockIdx_x + hipThreadIdx_x;
+    int x = blockDim.x * blockIdx.x + threadIdx.x;
 
     float val = in[x];
 

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,9 @@ THE SOFTWARE.
 */
 
 #pragma once
+
 #include "hip_test_common.hh"
+#include "hip_test_filesystem.hh"
 
 #include <string>
 #include <array>
@@ -29,9 +31,17 @@ THE SOFTWARE.
 #include <random>
 #include <fstream>
 #include <streambuf>
-#include "hip_test_filesystem.hh"
 
 namespace hip {
+/*
+Class to spawn a process in isolation and test its standard output and return status
+Good for printf tests and environment variable tests
+
+How to use:
+Have the stand alone exe in the same folder
+Init a class using hip::SpawnProc proc("ExeName", yes_or_no_to_capture_output);
+proc.run("Optional command line args");
+*/
 class SpawnProc {
   std::string exeName;
   std::string resultStr;
@@ -53,18 +63,31 @@ class SpawnProc {
  public:
   SpawnProc(std::string exeName_, bool captureOutput_ = false)
       : exeName(exeName_), captureOutput(captureOutput_) {
-    auto dir = fs::path(TestContext::get().currentPath()).parent_path();
+    auto dir = fs::path(TestContext::get().currentPath());
     dir /= exeName;
     exeName = dir.string();
+
+    INFO("Testing that exe exists: " << exeName);
+    REQUIRE(fs::exists(exeName));
+
     if (captureOutput) {
       auto path = fs::temp_directory_path();
       path /= getRandomString();
       tmpFileName = path.string();
+      INFO("Testing that capture file does not exist already: " << tmpFileName);
+      REQUIRE(!fs::exists(tmpFileName));
     }
   }
 
-  int run() {
+  int run(std::string commandLineArgs = "") {
     std::string execCmd = exeName;
+
+    // Append command line args
+    if (commandLineArgs.size() > 0) {
+      execCmd += " ";  // Add space for command line args
+      execCmd += commandLineArgs;
+    }
+
     if (captureOutput) {
       execCmd += " > ";
       execCmd += tmpFileName;
@@ -77,7 +100,11 @@ class SpawnProc {
       resultStr =
           std::string((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
     }
+#if HT_LINUX
+    return WEXITSTATUS(res);
+#else
     return res;
+#endif
   }
 
   std::string getOutput() { return resultStr; }
