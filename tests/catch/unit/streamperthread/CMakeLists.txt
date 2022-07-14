@@ -4,6 +4,7 @@ set(TEST_SRC
   hipStreamPerThread_Event.cc
   hipStreamPerThread_MultiThread.cc
   hipStreamPerThread_DeviceReset.cc
+  hipStreamPerThrdTsts.cc
 )
 
 hip_add_exe_to_target(NAME StreamPerThreadTest

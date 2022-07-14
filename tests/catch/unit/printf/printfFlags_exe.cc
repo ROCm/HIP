@@ -20,76 +20,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip_test_common.hh>
-#include <hip_test_process.hh>
+#include <hip/hip_runtime.h>
 
-TEST_CASE("Unit_printf_specifier") {
-#ifdef __HIP_PLATFORM_NVIDIA__
-  std::string reference(R"here(xyzzy
-%
-hello % world
-%s
-%s0xf01dab1eca55e77e
-%cxyzzy
-sep
--42
-42
-123.456000
--123.456000
--1.234560e+02
-1.234560E+02
-123.456
--123.456
-x
-(null)
-(nil)
-3.14159000    hello 0xf01dab1eca55e77e
-)here");
-#elif !defined(_WIN32)
-  std::string reference(R"here(xyzzy
-%
-hello % world
-%s
-%s0xf01dab1eca55e77e
-%cxyzzy
-sep
--42
-42
-123.456000
--123.456000
--1.234560e+02
-1.234560E+02
-123.456
--123.456
-x
+__global__ void test_kernel() {
+  printf("%08d\n", 42);
+  printf("%08i\n", -42);
+  printf("%08u\n", 42);
+  printf("%08g\n", 123.456);
+  printf("%0+8d\n", 42);
+  printf("%+d\n", -42);
+  printf("%+08d\n", 42);
+  printf("%-8s\n", "xyzzy");
+  printf("% i\n", -42);
+  printf("%-16.8d\n", 42);
+  printf("%16.8d\n", 42);
+}
 
-(nil)
-3.14159000    hello 0xf01dab1eca55e77e
-)here");
-#else
-  std::string reference(R"here(xyzzy
-%
-hello % world
-%s
-%sF01DAB1ECA55E77E
-%cxyzzy
-sep
--42
-42
-123.456000
--123.456000
--1.234560e+02
-1.234560E+02
-123.456
--123.456
-x
-
-0000000000000000
-3.14159000    hello F01DAB1ECA55E77E
-)here");
-#endif
-
-  hip::SpawnProc proc("printfSpecifiers", true);
-  REQUIRE(0 == proc.run());
-  REQUIRE(proc.getOutput() == reference);
+int main() {
+  test_kernel<<<1, 1>>>();
+  static_cast<void>(hipDeviceSynchronize());
 }

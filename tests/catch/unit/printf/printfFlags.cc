@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2021 Advanced Micro Devices, Inc. All rights reserved.
+Copyright (c) 2022 Advanced Micro Devices, Inc. All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,20 +23,6 @@ THE SOFTWARE.
 #include <hip_test_common.hh>
 #include <hip_test_process.hh>
 
-__global__ void test_kernel() {
-  printf("%08d\n", 42);
-  printf("%08i\n", -42);
-  printf("%08u\n", 42);
-  printf("%08g\n", 123.456);
-  printf("%0+8d\n", 42);
-  printf("%+d\n", -42);
-  printf("%+08d\n", 42);
-  printf("%-8s\n", "xyzzy");
-  printf("% i\n", -42);
-  printf("%-16.8d\n", 42);
-  printf("%16.8d\n", 42);
-}
-
 TEST_CASE("Unit_printf_flags") {
   std::string reference(R"here(00000042
 -0000042
@@ -51,7 +37,7 @@ xyzzy
         00000042
 )here");
 
-  hip::SpawnProc proc("printfExe/printfFlags", true);
+  hip::SpawnProc proc("printfFlags", true);
   REQUIRE(proc.run() == 0);
   REQUIRE(proc.getOutput() == reference);
 }
