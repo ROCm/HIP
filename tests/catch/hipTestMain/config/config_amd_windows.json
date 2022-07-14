@@ -45,6 +45,7 @@
 	   "Unit_hipArrayCreate_happy - char4",
 	   "Unit_hipArrayCreate_happy - float",
 	   "Unit_hipArrayCreate_happy - float2",
-	   "Unit_hipArrayCreate_happy - float4"
+	   "Unit_hipArrayCreate_happy - float4",
+	   "Unit_hipMemVmm_Basic"
 	]
 }
