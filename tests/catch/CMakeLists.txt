@@ -41,6 +41,7 @@ if(NOT DEFINED ROCM_PATH)
         endif()
     endif()
 endif()
+file(TO_CMAKE_PATH "${ROCM_PATH}" ROCM_PATH)
 message(STATUS "ROCM Path: ${ROCM_PATH}")
 
 
@@ -179,6 +180,8 @@ if(NOT DEFINED OFFLOAD_ARCH_STR
     else()
         message(STATUS "ROCm Agent Enumurator found no valid architectures")
     endif()
+elseif(DEFINED OFFLOAD_ARCH_STR)
+    string(REPLACE "--offload-arch=" "" HIP_GPU_ARCH_LIST ${OFFLOAD_ARCH_STR})
 endif()
 
 if(DEFINED OFFLOAD_ARCH_STR)

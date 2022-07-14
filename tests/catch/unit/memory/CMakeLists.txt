@@ -1,4 +1,4 @@
-# Copyright (c) 2021 Advanced Micro Devices, Inc. All Rights Reserved.
+# Copyright (c) 2022 Advanced Micro Devices, Inc. All Rights Reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -21,6 +21,7 @@
 # Common Tests - Test independent of all platforms
 if(HIP_PLATFORM MATCHES "amd")
 set(TEST_SRC
+    DriverContext.cc
     memset.cc
     malloc.cc
     hipMemcpy2DToArray.cc
@@ -38,6 +39,8 @@ set(TEST_SRC
     hipMemcpyAllApiNegative.cc
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
+    hipHostUnregister.cc
+    hipMallocPitch.cc
     hipMemPtrGetInfo.cc
     hipPointerGetAttributes.cc
     hipHostGetFlags.cc
@@ -73,11 +76,13 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMemsetFunctional.cc
     hipMallocPitch.cc
     hipMallocArray.cc
     hipMalloc3D.cc
     hipMalloc3DArray.cc
     hipArrayCreate.cc
+    hipArray3DCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
     hipPointerGetAttribute.cc
@@ -85,9 +90,11 @@ set(TEST_SRC
     hipMallocMngdMultiThread.cc
     hipMemPrefetchAsync.cc
     hipArray.cc
+    hipMemVmm.cc
 )
 else()
 set(TEST_SRC
+    DriverContext.cc
     memset.cc
     malloc.cc
     hipMemcpy2DToArray.cc
@@ -105,6 +112,8 @@ set(TEST_SRC
     hipMemcpyAllApiNegative.cc
     hipMemcpy_MultiThread.cc
     hipHostRegister.cc
+    hipHostUnregister.cc
+    hipMallocPitch.cc
     hipHostGetFlags.cc
     hipHostGetDevicePointer.cc
     hipMallocManaged_MultiScenario.cc
@@ -136,11 +145,13 @@ set(TEST_SRC
     hipHostMalloc.cc
     hipMemcpy.cc
     hipMemcpyAsync.cc
+    hipMemsetFunctional.cc
     hipMallocPitch.cc
     hipMallocArray.cc
     hipMalloc3D.cc
     hipMalloc3DArray.cc
     hipArrayCreate.cc
+    hipArray3DCreate.cc
     hipDrvMemcpy3D.cc
     hipDrvMemcpy3DAsync.cc
     hipPointerGetAttribute.cc
@@ -159,4 +170,5 @@ endif()
 
 hip_add_exe_to_target(NAME MemoryTest
                       TEST_SRC ${TEST_SRC}
-                      TEST_TARGET_NAME build_tests)
+                      TEST_TARGET_NAME build_tests
+                      COMPILE_OPTIONS -std=c++14)

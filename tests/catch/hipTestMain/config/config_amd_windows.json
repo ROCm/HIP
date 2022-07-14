@@ -29,6 +29,23 @@
 	   "Unit_hipDeviceGetUuid",
 	   "Unit_hipGraphMemcpyNodeSetParamsFromSymbol_Functional",
 	   "Unit_hipGraphExecEventWaitNodeSetEvent_Negative",
-	   "Unit_hipGraphExecEventWaitNodeSetEvent_SetAndVerifyMemory"
+	   "Unit_hipGraphExecEventWaitNodeSetEvent_SetAndVerifyMemory",
+	   "Unit_hipGraphMemcpyNodeSetParams_Functional",
+	   "Unit_hipMalloc3D_ValidatePitch",
+	   "Unit_hipArrayCreate_happy",
+	   "Unit_hipGraphAddKernelNode_Negative",
+	   "Unit_hipHostRegister_Negative - int",
+	   "Unit_hipHostRegister_Negative - float",
+	   "Unit_hipHostRegister_Negative - double",
+	   "Unit_hipMemAllocPitch_ValidatePitch",
+	   "Unit_hipArrayCreate_happy - int",
+	   "Unit_hipArrayCreate_happy - int4",
+	   "Unit_hipArrayCreate_happy - short2",
+	   "Unit_hipArrayCreate_happy - char",
+	   "Unit_hipArrayCreate_happy - char4",
+	   "Unit_hipArrayCreate_happy - float",
+	   "Unit_hipArrayCreate_happy - float2",
+	   "Unit_hipArrayCreate_happy - float4",
+	   "Unit_hipMemVmm_Basic"
 	]
 }
