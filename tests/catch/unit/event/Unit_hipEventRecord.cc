@@ -87,5 +87,4 @@ static_cast<const float*>(A_d), static_cast<const float*>(B_d), C_d, N);
     HIP_CHECK(hipEventDestroy(stop));
 
     HipTest::checkVectorADD(A_h, B_h, C_h, N, true);
-    TestContext::get().cleanContext();
 }
