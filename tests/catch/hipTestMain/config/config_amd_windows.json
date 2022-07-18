@@ -5,19 +5,11 @@
 	   "Unit_printf_flags",
 	   "Unit_printf_specifier",
 	   "Unit_hipTextureMipmapObj2D_Check",
-	   "Unit_hipManagedKeyword_MultiGpu",
 	   "Unit_hipGraphAddHostNode_ClonedGraphwithHostNode",
 	   "Unit_hipEventIpc",
 	   "Unit_hipMalloc3D_Negative",
 	   "Unit_hipPointerGetAttribute_MappedMem",
-	   "Unit_hipStreamBeginCapture_BasicFunctional",
-	   "Unit_hipStreamBeginCapture_hipStreamPerThread",
-	   "Unit_hiprtc_functional",
 	   "Unit_hipStreamValue_Write",
-	   "Unit_hipStreamGetCaptureInfo_BasicFunctional",
-	   "Unit_hipStreamGetCaptureInfo_hipStreamPerThread",
-	   "Unit_hipStreamGetCaptureInfo_UniqueID",
-	   "Unit_hipStreamGetCaptureInfo_ArgValidation",
 	   "Unit_hipMemPoolApi_Basic",
 	   "Unit_hipMemPoolApi_BasicAlloc",
 	   "Unit_hipMemPoolApi_BasicTrim",
@@ -40,10 +32,6 @@
 	   "Unit_hipArrayCreate_happy - float",
 	   "Unit_hipArrayCreate_happy - float2",
 	   "Unit_hipArrayCreate_happy - float4",
-	   "Unit_hipMemVmm_Basic",
-	   "Unit_hipGraphKernelNodeSetParams_Functional",
-	   "Unit_hipGraphExecKernelNodeSetParams_Negative",
-	   "Unit_hipGraphExecKernelNodeSetParams_Functional",
-	   "Unit_hipGraphMemcpyNodeSetParams1D_Functional"
+	   "Unit_hipMemVmm_Basic"
 	]
 }
