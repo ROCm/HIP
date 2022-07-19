@@ -72,6 +72,7 @@ set(TEST_SRC
   hipGraphKernelNodeSetParams.cc
   hipGraphExecKernelNodeSetParams.cc
   hipGraphLaunch.cc
+  hipGraphMemcpyNodeSetParams1D.cc
 )
 
 hip_add_exe_to_target(NAME GraphsTest
