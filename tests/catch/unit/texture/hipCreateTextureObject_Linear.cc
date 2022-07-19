@@ -26,7 +26,7 @@ THE SOFTWARE.
  * Validates Linear Resource texture object with negative/functional tests.
  */
 TEST_CASE("Unit_hipCreateTextureObject_LinearResource") {
-  checkImageSupport();
+  CHECK_IMAGE_SUPPORT
 
   float *texBuf;
   hipError_t ret;

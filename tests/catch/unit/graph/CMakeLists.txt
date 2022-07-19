@@ -68,6 +68,10 @@ set(TEST_SRC
   hipGraphAddKernelNode.cc
   hipGraphMemcpyNodeGetParams.cc
   hipGraphMemcpyNodeSetParams.cc
+  hipGraphKernelNodeGetParams.cc
+  hipGraphKernelNodeSetParams.cc
+  hipGraphExecKernelNodeSetParams.cc
+  hipGraphLaunch.cc
   hipGraphMemcpyNodeSetParams1D.cc
 )
 
