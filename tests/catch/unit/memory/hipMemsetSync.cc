@@ -20,8 +20,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 */
 
-#include <hip_test_common.hh>
-#include <memory>
 #include "MemUtils.hh"
 /*
  * These testcases verify that synchronous memset functions are asynchronous with respect to the

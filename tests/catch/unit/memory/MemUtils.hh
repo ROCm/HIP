@@ -21,6 +21,8 @@ THE SOFTWARE.
 */
 
 #pragma once
+#include <memory>
+#include <hip_test_common.hh>
 
 static __global__ void clock_kernel(clock_t clock_count) {
   clock_t start_clock = clock();
