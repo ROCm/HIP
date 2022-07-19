@@ -125,8 +125,8 @@ TEST_CASE("Unit_hipMemset3DSync") {
 }
 =======
   doMemsetTest<char>(mallocType, memset_type, data);
-<<<<<<< HEAD
 }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 >>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
@@ -137,3 +137,5 @@ TEST_CASE("Unit_hipMemset3DSync") {
 }
 >>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 >>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
+=======
+>>>>>>> Fix rebase issues
