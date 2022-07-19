@@ -69,8 +69,7 @@ static inline hipMemcpyKind getMemcpyType(allocType type, bool fromHost) {
 
 template <typename T>
 static inline void memcpyCheck(allocType type, memType memType, T* aPtr, MultiDData& data,
-                               T* fillerData, bool async, hipStream_t stream,
-                               bool fromHost) {
+                               T* fillerData, bool async, hipStream_t stream, bool fromHost) {
   auto cpyType = getMemcpyType(type, fromHost);
   auto sizeInBytes = data.pitch * data.getH() * data.getD() * sizeof(T);
   switch (memType) {
@@ -113,10 +112,10 @@ static inline void memcpyCheck(allocType type, memType memType, T* aPtr, MultiDD
     default:
       break;
   }
-  if(fromHost) {
+  if (fromHost) {
     delete[] fillerData;
   } else {
-  HIP_CHECK(hipFree(fillerData));
+    HIP_CHECK(hipFree(fillerData));
   }
 }
 
@@ -135,10 +134,10 @@ template <typename T> static inline T* createFillerData(size_t count, size_t val
 
 static void checkForSync(hipStream_t stream, bool async, allocType type, bool fromHost) {
   if (fromHost) {
-    if (async && type == allocType::deviceMalloc) {
+    if (type == allocType::deviceMalloc) {
       HIP_CHECK_ERROR(hipStreamQuery(stream), hipErrorNotReady);
     } else {
-      REQUIRE(true);
+      HIP_CHECK(hipStreamQuery(stream));
     }
   } else {
     HIP_CHECK(hipStreamQuery(stream));
