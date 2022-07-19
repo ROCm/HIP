@@ -57,22 +57,6 @@ void runTests(hipStream_t stream, bool async, allocType type, memSetType memsetT
   }
 }
 
-<<<<<<< HEAD
-=======
-template <typename T>
-static void doMemsetTest(allocType mallocType, memSetType memset_type, MultiDData data) {
-  enum StreamType { NULLSTR, CREATEDSTR };
-  auto streamType = GENERATE(NULLSTR, CREATEDSTR);
-  hipStream_t stream{nullptr};
-
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamCreate(&stream));
-
-  runTests<T>(mallocType, memset_type, data, stream);
-
-  if (streamType == CREATEDSTR) HIP_CHECK(hipStreamDestroy(stream));
-}
-
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 TEST_CASE("Unit_hipMemsetSync") {
 #if HT_AMD
   HipTest::HIP_SKIP_TEST("EXSWCPHIPT-86");
@@ -83,11 +67,7 @@ TEST_CASE("Unit_hipMemsetSync") {
   memSetType memset_type = memSetType::hipMemset;
   MultiDData data;
   data.width = GENERATE(1, 1024);
-<<<<<<< HEAD
   doMemsetTest<char>(runTests<char>, type, memset_type, data);
-=======
-  doMemsetTest<char>(type, memset_type, data);
->>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
 }
 
 TEMPLATE_TEST_CASE("Unit_hipMemsetDSync", "", int8_t, int16_t, uint32_t) {
@@ -154,4 +134,7 @@ TEST_CASE("Unit_hipMemset3DSync") {
 =======
   doMemsetTest<char>(mallocType, memset_type, data);
 }
+<<<<<<< HEAD
 >>>>>>> EXSWCPHIPT-118 - Added testing for hipMemset Synchronous behavoiour
+=======
+>>>>>>> Fix rebase issues
